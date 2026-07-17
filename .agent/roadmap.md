@@ -23,7 +23,7 @@ Pins (`git ls-remote`, 2026-07-18):
 - AceRules (tkuhn) `master` = `5b7afb7bdfbce56027997307f9b798af53551223` (semantics reference: courteous logic / stable models)
 - RACE: no source (webservice only) → reasoner is ours (M4)
 
-### M0.1 OPEN — governance doc + contracts
+### M0.1 DONE — governance doc + contracts (main=36% 98K/272K, impl=20% 53K/272K)
 Scope: create `docs/provenance.md` (pins above, roles, licenses, TCB boundary definition, per-vendor-dir license layout). Decide Clex: default = exclude (GPL); start from APE bundled lexicon + project-owned declarative lexicon manifest compiled to APE user-lexicon facts — record decision + revisit trigger. Repo top-level license = proposal only, flag for user (requirement-level). Verify Claude Code dynamic-workflows availability in installed version + persistence semantics (docs: resume is session-local) → write /goal persistence contract into M6 seed (durable on-disk registry, idempotent rounds, BLOCKED-proposal mechanism for licensing/semantic escalations, termination = bounded registry + documented frontier empty).
 Acceptance: provenance doc committed; Clex decision recorded w/ rationale; /goal contract banked in M6 seed; user-facing license proposal flagged in close report.
 
@@ -49,3 +49,12 @@ Acceptance: build/load result + patch inventory + fixture DRS evidence banked in
 
 ### M5–M6
 - Durable state before automation: guideline registry (URL/version/date, content digest, licensing/redistribution status, may-commit flag), mapping store, item states + blocked reasons; M5 proves one manual idempotent round (stop/restart, no dup/lost work). M6 wraps in dynamic workflow: parallel source research, serialized registry/ACE/compiler writes; no mid-run user input → escalations become BLOCKED proposals.
+- Dynamic-workflow availability (verified 2026-07-18): Claude Code `2.1.211` ≥ required `2.1.154`; neither project nor user `.claude/settings.json` sets `disableWorkflows`, and `CLAUDE_CODE_DISABLE_WORKFLOWS` is unset; user confirmed the feature is enabled for their account (2026-07-18) → available, no residual gate. Official refs: `code.claude.com/docs/en/workflows`, `code.claude.com/docs/en/goal`, `code.claude.com/docs/en/skills`.
+- Semantics: dynamic workflows = JavaScript scripts orchestrating subagents. Active run state is **not** durable across CLI exit; docs: exiting mid-run ⇒ “the next session starts the workflow fresh.” Definitions under `.claude/workflows/` are durable + invokable as `/<name>`, but invocation reruns the definition rather than resuming engine state. `/goal` = session-scoped Stop-hook completion loop; active goal restoration requires `--resume` of the same saved session. Agent repository writes persist normally.
+- M6 persistence contract = **repository files only**:
+  1. **State:** all round state in-repo = guideline registry + mapping store + item states/blocked reasons.
+  2. **Round:** pure function of disk state: read registry → select work → write atomically (temp + rename; registry last).
+  3. **Recovery:** content-digest-keyed items + idempotent transitions; rerun after any interruption ⇒ no duplicate or lost work.
+  4. **Escalation:** no mid-run user input; licensing/semantic decisions become `BLOCKED` proposal registry entries.
+  5. **Termination:** registry bounded ∧ every item ∈ `{DONE, BLOCKED}` ∧ discovery frontier empty under the documented search strategy.
+  6. **Invocation:** saved workflow `/<name>` = durable definition; every invocation starts fresh + resumes solely from repository state. `/goal` MAY drive in-session completion; it MUST NOT serve as persistence.
