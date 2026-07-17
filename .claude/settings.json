@@ -1,7 +1,8 @@
 {
   "permissions": {
     "deny": [
-      "Read(/.tokensave/**)"
+      "Read(/.tokensave/**)",
+      "Read(/.serena/cache/**)"
     ]
   }
 }
