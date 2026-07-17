@@ -6,7 +6,7 @@ M0.1 governance baseline. `MUST`/`MUST NOT` = normative.
 
 | upstream | repo URL | pinned commit | license | role | vendor status |
 |---|---|---|---|---|---|
-| e-- | `https://github.com/frmoded/e--` | `da8c3b34d2493180da8df65b127a3841f9a4e609` | Apache-2.0 | canonical E-- → derived Python compiler | fork vendored M1 |
+| e-- | `https://github.com/frmoded/e--` | `da8c3b34d2493180da8df65b127a3841f9a4e609`; tags `v0.1.0`, `v0.2.0` = `a6cb6cae0ae1149f51b6065748d96e926ba4890b` | Apache-2.0 | canonical E-- → derived Python compiler | fork vendored M1 |
 | APE | `https://github.com/Attempto/APE` | `5f4d5354a45fb772763bf1a9543f508f15b28982` | LGPL-3.0-or-later | ACE → DRS parser, isolated SWI-Prolog process | fork vendored M2 |
 | Clex | `https://github.com/Attempto/Clex` | `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` | GPL-3.0 | general-English lexicon candidate | **EXCLUDED** — decision below |
 | AceRules | `https://github.com/tkuhn/acerules` | `5b7afb7bdfbce56027997307f9b798af53551223` | LGPL-3.0; `only`/`or-later` option unstated | semantics reference only: courteous logic + stable models | never vendored; no code reuse; reuse ⇒ license-review escalation |
@@ -22,7 +22,7 @@ AceRules license evidence at its pin: `LICENSE.txt`, first nonblank line = `GNU 
 - Python generation MUST use the deterministic compiler path only: normalization off; zero `{{ ... }}` slots before emission.
 - ACE → DRS → IR → Prolog MUST be deterministic; accepted IR/Prolog bytes come only from that path.
 - ACE MUST be the sole authored source for every clinical or guideline-specific rule.
-- Hand-authored Prolog allowlist = APE-fork adapter; DRS → IR lowering; IR → Prolog compiler; validators; explanation machinery; generic inference kernel. Clinical rule content MUST NOT enter this layer.
+- Hand-authored Prolog allowlist = parser layer — vendored APE fork incl. enumerated local modifications + the narrow adapter; DRS → IR lowering; IR → Prolog compiler; validators; explanation machinery; generic inference kernel. Clinical rule content MUST NOT enter this layer.
 - Python = byte transport, orchestration, and integration only. It MUST NOT inspect DRS semantics or encode clinical semantics.
 
 ## TCB boundary
@@ -51,7 +51,7 @@ Directories land in M1/M2; this layout is binding before import.
 
 ### `vendor/ape/`
 
-- retain upstream LGPL-3.0-or-later `COPYING` files verbatim;
+- retain upstream `LICENSE.txt` (LGPL-3.0-or-later) verbatim, byte-identical to the pinned upstream file;
 - fork modifications remain LGPL-3.0-or-later;
 - carry `PROVENANCE`: upstream URL, pinned fork commit, and local-patch policy;
 - local patches MUST be enumerated, minimal, and independently re-applicable;
@@ -62,6 +62,8 @@ A future root license MUST NOT replace or obscure either vendor license.
 ## Clex decision
 
 **Status: DECIDED — exclude Clex.**
+
+Exclusion scope = repository content + product/lexicon use. Upstream-APE regression testing MAY fetch full Clex at pin `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` into gitignored scratch, test-only; it MUST NOT be committed, vendored, or distributed.
 
 Rationale:
 
