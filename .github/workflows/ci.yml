@@ -58,7 +58,8 @@ jobs:
           bash -n tests/regen-harness.sh
           bash -n tests/ape-vendor-harness.sh
           bash -n tests/adapter-harness.sh
-          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh
+          bash -n tests/pipeline-harness.sh
+          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh
 
       - name: Run strict compiler harness
         run: bash tests/strict-harness.sh
@@ -76,7 +77,7 @@ jobs:
       - name: Install job tooling
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends git ca-certificates make curl
+          apt-get install -y --no-install-recommends git ca-certificates make curl python3
 
       - name: Check out repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -99,6 +100,9 @@ jobs:
 
       - name: Run adapter harness
         run: bash tests/adapter-harness.sh
+
+      - name: Run pipeline harness
+        run: bash tests/pipeline-harness.sh
 
       - name: Verify APE vendor cleanliness
         run: |

@@ -1,0 +1,155 @@
+Use argparse.
+Use hashlib.
+Use os.
+Use pathlib.
+Use subprocess.
+Use sys.
+
+Define [[fail]] taking category, detail:
+    Set safe_detail to [[detail.replace]]("\n", "\\n").
+    Set safe_detail to [[safe_detail.replace]]("\r", "\\r").
+    Do [[print]]("ace-front-end: " plus category plus ": " plus safe_detail, file=sys.stderr).
+    Exit with 2.
+
+Define [[sha256_hex]] taking data:
+    Set digest to [[hashlib.sha256]](data).
+    Set hex_text to [[digest.hexdigest]]().
+    Give back hex_text.
+
+Define [[valid_docid]] taking docid:
+    Set allowed to [[set]]("abcdefghijklmnopqrstuvwxyz0123456789-").
+    Set chars to [[set]](docid).
+    Set subset to [[chars.issubset]](allowed).
+    Set leading_dash to [[docid.startswith]]("-").
+    If not docid:
+        Give back False.
+    If leading_dash:
+        Give back False.
+    Give back subset.
+
+Define [[collect_documents]] taking docs_path:
+    If not [[docs_path.is_dir]]():
+        Do [[fail]]("docs-dir", "not a directory: " plus [[str]](docs_path)).
+    Set ace_paths to {}.
+    Set ulex_paths to {}.
+    Set ace_docids to <>.
+    Set ulex_docids to <>.
+    Set entries to [[sorted]]([[docs_path.iterdir]]()).
+    For each entry in entries:
+        Set entry_name to entry.name.
+        Set regular to [[entry.is_file]]().
+        Set symlink to [[entry.is_symlink]]().
+        If not regular:
+            Do [[fail]]("docs-dir", "entry is not a regular file: " plus entry_name).
+        If symlink:
+            Do [[fail]]("docs-dir", "entry is not a regular file: " plus entry_name).
+        Set is_ace to [[entry_name.endswith]](".ace").
+        Set is_ulex to [[entry_name.endswith]](".ulex").
+        If not is_ace:
+            If not is_ulex:
+                Do [[fail]]("docs-dir", "unsupported entry: " plus entry_name).
+        If is_ace:
+            Set docid to [[entry_name.removesuffix]](".ace").
+            If not [[valid_docid]](docid):
+                Do [[fail]]("docid", "invalid document id: " plus docid).
+            Do [[ace_paths.update]]({docid: entry}).
+            Do [[ace_docids.append]](docid).
+        Otherwise:
+            Set docid to [[entry_name.removesuffix]](".ulex").
+            If not [[valid_docid]](docid):
+                Do [[fail]]("docid", "invalid document id: " plus docid).
+            Do [[ulex_paths.update]]({docid: entry}).
+            Do [[ulex_docids.append]](docid).
+    If not ace_docids:
+        Do [[fail]]("docs-dir", "no .ace documents").
+    For each ulex_docid in [[sorted]](ulex_docids):
+        If not (ulex_docid is in ace_docids):
+            Do [[fail]]("docs-dir", "orphan user lexicon: " plus ulex_docid plus ".ulex").
+    Give back <ace_paths, ulex_paths, [[sorted]](ace_docids)>.
+
+Define [[check_out_dir]] taking out_path:
+    Set out_exists to [[out_path.exists]]().
+    Set out_symlink to [[out_path.is_symlink]]().
+    If out_exists:
+        Do [[fail]]("out-dir", "already exists: " plus [[str]](out_path)).
+    If out_symlink:
+        Do [[fail]]("out-dir", "already exists: " plus [[str]](out_path)).
+    Set parent to out_path.parent.
+    If not [[parent.is_dir]]():
+        Do [[fail]]("out-dir", "parent is not a directory: " plus [[str]](parent)).
+
+Define [[adapter_command]] taking swipl, ape_tree, ulex_path:
+    Set command to <swipl, "-q", "-f", "none", "-F", "none", "-s", "src/prolog/adapter.pl", "-g", "main", "-t", "halt(9)", "--", ape_tree>.
+    If ulex_path does not equal None:
+        Do [[command.append]]([[str]](ulex_path)).
+    Give back command.
+
+Define [[run_document]] taking swipl, ape_tree, docid, source_bytes, ulex_path:
+    Set command to [[adapter_command]](swipl, ape_tree, ulex_path).
+    Set result to [[subprocess.run]](command, input=source_bytes, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[sys.stderr.buffer.write]](result.stderr).
+        Exit with result.returncode.
+    If not result.stdout:
+        Do [[fail]]("adapter-stdout", "empty stdout for document: " plus docid).
+    Give back result.stdout.
+
+Define [[build_record]] taking docid, source_bytes, ulex_path, drs_bytes:
+    Set source_hex to [[sha256_hex]](source_bytes).
+    Set ulex_term to "none".
+    If ulex_path does not equal None:
+        Set ulex_bytes to [[ulex_path.read_bytes]]().
+        Set ulex_hex to [[sha256_hex]](ulex_bytes).
+        Set ulex_term to "sha256('" plus ulex_hex plus "')".
+    Set header to "ace_front_end_record(1).\ndocument(docid('" plus docid plus "'),source_sha256('" plus source_hex plus "'),ulex(" plus ulex_term plus ")).\n".
+    Set header_bytes to [[header.encode]]("utf-8").
+    Give back header_bytes plus drs_bytes.
+
+Define [[compile_documents]] taking swipl, ape_tree, ace_paths, ulex_paths, docids:
+    Set records to {}.
+    Set manifest_lines to <>.
+    For each docid in docids:
+        Set ace_path to [[ace_paths.get]](docid).
+        Set ulex_path to [[ulex_paths.get]](docid).
+        Set source_bytes to [[ace_path.read_bytes]]().
+        Set drs_bytes to [[run_document]](swipl, ape_tree, docid, source_bytes, ulex_path).
+        Set record_bytes to [[build_record]](docid, source_bytes, ulex_path, drs_bytes).
+        Set record_name to docid plus ".drs.pl".
+        Do [[records.update]]({record_name: record_bytes}).
+        Set source_hex to [[sha256_hex]](source_bytes).
+        Set record_hex to [[sha256_hex]](record_bytes).
+        Set manifest_line to "document(docid('" plus docid plus "'),source_sha256('" plus source_hex plus "'),record_sha256('" plus record_hex plus "')).\n".
+        Do [[manifest_lines.append]](manifest_line).
+    Set manifest_text to "ace_front_end_manifest(1).\n".
+    For each manifest_line in manifest_lines:
+        Set manifest_text to manifest_text plus manifest_line.
+    Set manifest_bytes to [[manifest_text.encode]]("utf-8").
+    Do [[records.update]]({"manifest.pl": manifest_bytes}).
+    Give back records.
+
+Define [[write_outputs]] taking out_path, records, document_count:
+    Do [[out_path.mkdir]]().
+    For each filename in [[sorted]](records):
+        Set payload to [[records.get]](filename).
+        Set target to [[out_path.joinpath]](filename).
+        Do [[target.write_bytes]](payload).
+        Do [[print]]("ace-front-end: wrote " plus [[str]](target)).
+    Do [[print]]("ace-front-end: ok " plus [[str]](document_count) plus " documents").
+
+Set adapter_path to [[pathlib.Path]]("src/prolog/adapter.pl").
+Require that [[adapter_path.is_file]]().
+Set parser to [[argparse.ArgumentParser]](prog="ace_front_end").
+Do [[parser.add_argument]]("ape_tree_dir").
+Do [[parser.add_argument]]("docs_dir").
+Do [[parser.add_argument]]("out_dir").
+Set args to [[parser.parse_args]]().
+Set docs_path to [[pathlib.Path]](args.docs_dir).
+Set out_path to [[pathlib.Path]](args.out_dir).
+Set collected to [[collect_documents]](docs_path).
+Set ace_paths to [[collected.pop]](0).
+Set ulex_paths to [[collected.pop]](0).
+Set docids to [[collected.pop]](0).
+Do [[check_out_dir]](out_path).
+Set swipl to [[os.environ.get]]("SWIPL", "swipl").
+Set records to [[compile_documents]](swipl, args.ape_tree_dir, ace_paths, ulex_paths, docids).
+Do [[write_outputs]](out_path, records, [[len]](docids)).

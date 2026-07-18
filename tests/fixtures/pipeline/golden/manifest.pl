@@ -1,0 +1,4 @@
+ace_front_end_manifest(1).
+document(docid('anchor'),source_sha256('5fce0e582a46d910e1d1fb9c59a0931eec92cc0def2f0535ba3720cf6ea49200'),record_sha256('6e1394675db57db725b008638e3f46af6e0a90fb8c32006d2a891c761a258fda')).
+document(docid('twosent'),source_sha256('46adfb554acf82c1d4454768f2cd931b597d41ca6fe4a7a8ea862c65633b431c'),record_sha256('b7d74740e93a11b9fbba205b0ea4ce338b037e9c62561ddd5a81ed9df8ceacb5')).
+document(docid('zorbomat'),source_sha256('16d917887b0ad2b436909665c6a3e1c1ad180b2ea62497c992208f13946edd58'),record_sha256('2713e8e70adc2d48ad7aefbf94f76eac9cbfc922071717ee1a2ab9be1fd131ed')).

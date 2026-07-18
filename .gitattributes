@@ -14,4 +14,5 @@ NOTICE text eol=lf
 *.ace text eol=lf
 *.ulex text eol=lf
 *.pl text eol=lf
+tests/fixtures/pipeline/golden/** -text
 vendor/** -text
