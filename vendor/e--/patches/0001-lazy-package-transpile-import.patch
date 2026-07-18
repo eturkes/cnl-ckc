@@ -1,0 +1,39 @@
+From d97692d812f09e4563b7d1e56aeba522949402d7 Mon Sep 17 00:00:00 2001
+From: Emir Turkes <eturkes@bu.edu>
+Date: Sat, 18 Jul 2026 11:28:11 +0900
+Subject: [PATCH 1/2] lazy package transpile import
+
+---
+ src/e_minus_minus/__init__.py | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/e_minus_minus/__init__.py b/src/e_minus_minus/__init__.py
+index e1e42ee..ae71699 100644
+--- a/src/e_minus_minus/__init__.py
++++ b/src/e_minus_minus/__init__.py
+@@ -8,13 +8,21 @@ Public API:
+ For CLI usage, install the package and use the `emm-transpile` command.
+ """
+ 
+-from .transpiler import transpile
+ from .errors import (
+     EmmSyntaxError,
+     EmmResolveError,
+     EmmNormalizeError,
+ )
+ 
++
++def __getattr__(name):
++    if name == "transpile":
++        from .transpiler import transpile
++        globals()[name] = transpile
++        return transpile
++    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
++
++
+ __version__ = "0.2.0"
+ 
+ __all__ = [
+-- 
+2.47.3
+

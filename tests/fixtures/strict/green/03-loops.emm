@@ -1,0 +1,5 @@
+Set count to 0.
+While count is less than 3:
+    Set count to count plus 1.
+For each item in <1, 2, 3>:
+    Do [[print]](item).

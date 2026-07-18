@@ -1,0 +1,7 @@
+Define [[combine]] taking left, right defaulting to 2, flag defaulting to True:
+    Set result to left plus right.
+    If flag:
+        Give back result.
+    Otherwise:
+        Give back 0.
+Set combined to [[combine]](3, right=4, flag=False).

@@ -1,0 +1,7 @@
+def combine(left, right=2, flag=True):
+    result = left + right
+    if flag:
+        return result
+    else:
+        return 0
+combined = combine(3, right=4, flag=False)

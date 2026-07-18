@@ -3,4 +3,5 @@
 *.sh text eol=lf
 *.md text eol=lf
 *.yml text eol=lf
+*.golden -text
 vendor/** -text

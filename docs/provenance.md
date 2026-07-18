@@ -6,7 +6,7 @@ M0.1 governance baseline. `MUST`/`MUST NOT` = normative.
 
 | upstream | repo URL | pinned commit | license | role | vendor status |
 |---|---|---|---|---|---|
-| e-- | `https://github.com/frmoded/e--` | `da8c3b34d2493180da8df65b127a3841f9a4e609`; tag `v0.1.0` = `3a21f0b26d3729b29c4d8cae4af465a0c26e2037`; tag `v0.2.0` = `a6cb6cae0ae1149f51b6065748d96e926ba4890b` | Apache-2.0 | canonical E-- → derived Python compiler | vendored at `vendor/e--/` (M1.1) |
+| e-- | `https://github.com/frmoded/e--` | `da8c3b34d2493180da8df65b127a3841f9a4e609`; tag `v0.1.0` = `3a21f0b26d3729b29c4d8cae4af465a0c26e2037`; tag `v0.2.0` = `a6cb6cae0ae1149f51b6065748d96e926ba4890b` | Apache-2.0 | canonical E-- → derived Python compiler | vendored at `vendor/e--/`; fork pin carries 2 M1.2 patches: `0001-lazy-package-transpile-import.patch` defers the quarantined legacy import, `0002-add-strict-compilation-entrypoint.patch` adds the stdlib-only validated compiler; strict entry point exists at `e_minus_minus.strict` |
 | APE | `https://github.com/Attempto/APE` | `5f4d5354a45fb772763bf1a9543f508f15b28982` | LGPL-3.0-or-later | ACE → DRS parser, isolated SWI-Prolog process | fork vendored M2 |
 | Clex | `https://github.com/Attempto/Clex` | `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` | GPL-3.0 | general-English lexicon candidate | **EXCLUDED** — decision below |
 | AceRules | `https://github.com/tkuhn/acerules` | `5b7afb7bdfbce56027997307f9b798af53551223` | LGPL-3.0; `only`/`or-later` option unstated | semantics reference only: courteous logic + stable models | never vendored; no code reuse; reuse ⇒ license-review escalation |

@@ -1,0 +1,7 @@
+score = 7
+if score > 10:
+    label = "high"
+elif score == 10:
+    label = "exact"
+else:
+    label = "low"

@@ -1,0 +1,7 @@
+Set score to 7.
+If score is greater than 10:
+    Set label to "high".
+Otherwise if score equals 10:
+    Set label to "exact".
+Otherwise:
+    Set label to "low".

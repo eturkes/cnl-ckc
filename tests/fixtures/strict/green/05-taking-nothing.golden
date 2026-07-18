@@ -1,0 +1,3 @@
+def message():
+    return "ready"
+print(message())

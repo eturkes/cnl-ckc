@@ -1,0 +1,5 @@
+Set total to (1 plus 2) times 3.
+Set ratio to 10 divided by 4.
+Set values to <1, -2, 3.5, True, False, Nothing>.
+Set mapping to {"line": "first\nsecond", "answer": 42}.
+Set greeting to "café".

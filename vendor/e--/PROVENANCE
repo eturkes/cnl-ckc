@@ -8,7 +8,12 @@ License: Apache-2.0. The upstream `LICENSE` is retained verbatim in this directo
 
 The vendored fork identity (the "fork pin") is the base pin plus the ordered `patches/` set plus the SHA-256 tree manifest `MANIFEST.sha256`.
 
-Patches MUST be git-format patches named `NNNN-<slug>.patch`, applied in lexical order on top of the base pin. Each patch MUST be minimal and independently re-applicable. There are currently zero patches, so the vendored upstream file tree is byte-identical to the base pin.
+Patches MUST be git-format patches named `NNNN-<slug>.patch`, applied in lexical order on top of the base pin. Each patch MUST be minimal and independently re-applicable. The ordered patch set is:
+
+- `0001-lazy-package-transpile-import.patch` — defer the quarantined legacy transpiler import with PEP 562 while preserving the public API.
+- `0002-add-strict-compilation-entrypoint.patch` — add the stdlib-only validated compiler entry point.
+
+The vendored upstream file tree is byte-identical to the base pin plus this ordered patch set.
 
 Any TCB change MUST pass the "bump fork pin" gate: update the patch set, regenerate `MANIFEST.sha256`, and update `docs/provenance.md`.
 
@@ -30,7 +35,7 @@ QUARANTINED — retained for upstream fidelity; the strict path MUST NEVER load 
 - `src/e_minus_minus/resolver.py` — slot-resolution path.
 - `src/e_minus_minus/cli.py` — legacy CLI path.
 
-`src/e_minus_minus/__init__.py` is retained for upstream fidelity and is patched in M1.2 to use lazy imports (PEP 562).
+`src/e_minus_minus/__init__.py` is retained for upstream fidelity; `0001-lazy-package-transpile-import.patch` supplies its M1.2 PEP 562 lazy import.
 
 Quarantine is a deny-list, not an "imports only" rule: the strict path MUST NOT import or otherwise load `transpiler`, `normalizer`, `resolver`, `cli`, or `anthropic`. Standard-library imports and the CORE modules, including `ast_nodes` and `errors`, are legal.
 
