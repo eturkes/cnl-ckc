@@ -1,0 +1,3 @@
+Use pathlib.
+Set path to [[pathlib.Path]]("folder/file.txt").
+Do [[print]](path.name).

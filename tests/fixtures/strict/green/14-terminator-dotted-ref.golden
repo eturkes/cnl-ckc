@@ -1,0 +1,4 @@
+import types
+a = types.SimpleNamespace(b="terminator")
+x = a.b
+print(x)

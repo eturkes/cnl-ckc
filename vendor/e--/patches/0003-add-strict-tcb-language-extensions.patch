@@ -1,0 +1,225 @@
+From bf4ec4eb8e937b166ce7efade61e8497eb4a5d78 Mon Sep 17 00:00:00 2001
+From: Emir Turkes <eturkes@bu.edu>
+Date: Sat, 18 Jul 2026 12:05:00 +0900
+Subject: [PATCH 3/3] add strict TCB language extensions
+
+---
+ src/e_minus_minus/ast_nodes.py | 15 ++++++++
+ src/e_minus_minus/emitter.py   | 12 ++++++-
+ src/e_minus_minus/lexer.py     |  3 ++
+ src/e_minus_minus/parser.py    | 66 ++++++++++++++++++++++++++++++----
+ 4 files changed, 88 insertions(+), 8 deletions(-)
+
+diff --git a/src/e_minus_minus/ast_nodes.py b/src/e_minus_minus/ast_nodes.py
+index e447a86..8b4f7f9 100644
+--- a/src/e_minus_minus/ast_nodes.py
++++ b/src/e_minus_minus/ast_nodes.py
+@@ -99,6 +99,21 @@ class Return:
+     value: object  # expression node
+ 
+ 
++@dataclass
++class Use:
++    module: str
++
++
++@dataclass
++class Require:
++    condition: object
++
++
++@dataclass
++class Exit:
++    value: object
++
++
+ @dataclass
+ class If:
+     cond: object
+diff --git a/src/e_minus_minus/emitter.py b/src/e_minus_minus/emitter.py
+index e978c9d..3f0b0cc 100644
+--- a/src/e_minus_minus/emitter.py
++++ b/src/e_minus_minus/emitter.py
+@@ -9,7 +9,7 @@ callable, whose return value is spliced in as already-literal Python text
+ from __future__ import annotations
+ 
+ from .ast_nodes import (
+-    Assign, Do, Return, If, While, ForEach, Define, Program,
++    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Define, Program,
+     Num, Str, Bool, NoneLit, Var, Call, ListLit, DictLit, LlmSlot, Group,
+     BinOp, UnaryOp,
+ )
+@@ -52,6 +52,16 @@ def _emit_stmt(stmt, level, resolve_slot):
+         return [f"{pad}{_emit_expr(stmt.call, resolve_slot)}"]
+     if isinstance(stmt, Return):
+         return [f"{pad}return {_emit_expr(stmt.value, resolve_slot)}"]
++    if isinstance(stmt, Use):
++        return [f"{pad}import {stmt.module}"]
++    if isinstance(stmt, Require):
++        condition = _emit_expr(stmt.condition, resolve_slot)
++        return [
++            f"{pad}if not ({condition}):",
++            f'{pad}{INDENT_UNIT}raise AssertionError("requirement failed")',
++        ]
++    if isinstance(stmt, Exit):
++        return [f"{pad}raise SystemExit({_emit_expr(stmt.value, resolve_slot)})"]
+     if isinstance(stmt, If):
+         lines = [f"{pad}if {_emit_expr(stmt.cond, resolve_slot)}:"]
+         lines += _emit_body(stmt.body, level + 1, resolve_slot)
+diff --git a/src/e_minus_minus/lexer.py b/src/e_minus_minus/lexer.py
+index b2f9011..d5d94db 100644
+--- a/src/e_minus_minus/lexer.py
++++ b/src/e_minus_minus/lexer.py
+@@ -22,6 +22,9 @@ class Token:
+ # Keyword / verb / literal phrases (case-sensitive). Maps word-tuple -> kind.
+ # Value stored on the token is the joined phrase.
+ _KEYWORDS = {
++    ("Use",): "USE",
++    ("Require", "that"): "REQUIRE",
++    ("Exit", "with"): "EXIT",
+     ("Set",): "SET",
+     ("to",): "TO",
+     ("Do",): "DO",
+diff --git a/src/e_minus_minus/parser.py b/src/e_minus_minus/parser.py
+index bdb6a29..02a574c 100644
+--- a/src/e_minus_minus/parser.py
++++ b/src/e_minus_minus/parser.py
+@@ -11,7 +11,7 @@ from __future__ import annotations
+ from .errors import EmmSyntaxError
+ from .lexer import tokenize
+ from .ast_nodes import (
+-    Assign, Do, Return, If, While, ForEach, Define, Program,
++    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Define, Program,
+     Num, Str, Bool, NoneLit, Var, Call, ListLit, DictLit, LlmSlot, Group,
+     BinOp, UnaryOp,
+ )
+@@ -45,7 +45,23 @@ def parse(tokens) -> Program:
+     statements = []
+     while s.peek().kind != "EOF":
+         statements.append(_statement(s))
+-    return Program(statements)
++    program = Program(statements)
++    _validate_use_scope(program.statements, top_level=True)
++    return program
++
++
++def _validate_use_scope(statements, *, top_level):
++    for stmt in statements:
++        if isinstance(stmt, Use) and not top_level:
++            raise EmmSyntaxError("'Use' is only allowed at top level")
++        if isinstance(stmt, If):
++            _validate_use_scope(stmt.body, top_level=False)
++            for _, body in stmt.elifs:
++                _validate_use_scope(body, top_level=False)
++            if stmt.else_body is not None:
++                _validate_use_scope(stmt.else_body, top_level=False)
++        elif isinstance(stmt, (While, ForEach, Define)):
++            _validate_use_scope(stmt.body, top_level=False)
+ 
+ 
+ # --- Statements ----------------------------------------------------------
+@@ -62,6 +78,12 @@ def _statement(s: _Stream):
+         tok = s.next()
+         s.expect("NEWLINE")
+         return LlmSlot(tok.value, position="statement")
++    if kind == "USE":
++        s.next()
++        module = _dotted_name(s)
++        s.expect("DOT")
++        s.expect("NEWLINE")
++        return Use(module)
+     if kind == "SET":
+         s.next()
+         name = s.expect("IDENT").value
+@@ -86,6 +108,18 @@ def _statement(s: _Stream):
+         s.expect("DOT")
+         s.expect("NEWLINE")
+         return Return(value)
++    if kind == "REQUIRE":
++        s.next()
++        condition = _expression(s)
++        s.expect("DOT")
++        s.expect("NEWLINE")
++        return Require(condition)
++    if kind == "EXIT":
++        s.next()
++        value = _expression(s)
++        s.expect("DOT")
++        s.expect("NEWLINE")
++        return Exit(value)
+     if kind == "IF":
+         s.next()
+         cond = _expression(s)
+@@ -150,8 +184,9 @@ def _statement(s: _Stream):
+ def _statement_head(s: _Stream):
+     """Parse a single statement *or* block header, WITHOUT a following block.
+ 
+-    Simple statements (``Set``/``Do``/``Give back``) are parsed through their
+-    terminating ``.``; compound/continuation forms (``If``/``Otherwise if``/
++    Simple statements (``Use``/``Set``/``Do``/``Give back``/``Require that``/
++    ``Exit with``) are parsed through their terminating ``.``;
++    compound/continuation forms (``If``/``Otherwise if``/
+     ``Otherwise``/``While``/``For each``/``Define``) are parsed through their
+     ``:`` header only. Used by the single-line canonical detector — it never
+     consumes a block, so a header with no body still validates.
+@@ -162,6 +197,8 @@ def _statement_head(s: _Stream):
+     if kind == "SLOT":
+         s.next()
+         return
++    if kind == "USE":
++        s.next(); _dotted_name(s); s.expect("DOT"); return
+     if kind == "SET":
+         s.next(); s.expect("IDENT"); s.expect("TO"); _expression(s)
+         s.expect("DOT"); return
+@@ -172,6 +209,10 @@ def _statement_head(s: _Stream):
+         s.expect("DOT"); return
+     if kind == "GIVEBACK":
+         s.next(); _expression(s); s.expect("DOT"); return
++    if kind == "REQUIRE":
++        s.next(); _expression(s); s.expect("DOT"); return
++    if kind == "EXIT":
++        s.next(); _expression(s); s.expect("DOT"); return
+     if kind == "IF":
+         s.next(); _expression(s); s.expect("COLON"); return
+     if kind == "OTHERWISE_IF":
+@@ -257,6 +298,18 @@ def _params(s: _Stream):
+ 
+ # --- Expressions ---------------------------------------------------------
+ 
++def _dotted_name(s: _Stream) -> str:
++    parts = [s.expect("IDENT").value]
++    while (
++        s.peek().kind == "DOT"
++        and s.i + 1 < len(s.tokens)
++        and s.tokens[s.i + 1].kind == "IDENT"
++    ):
++        s.next()
++        parts.append(s.next().value)
++    return ".".join(parts)
++
++
+ def _expression(s: _Stream):
+     # Prefix `not`: binds a single operand; cannot combine with infix unless
+     # grouped (spec §4.3).
+@@ -316,8 +369,7 @@ def _operand(s: _Stream):
+         s.next()
+         return LlmSlot(tok.value)
+     if kind == "IDENT":
+-        s.next()
+-        return Var(tok.value)
++        return Var(_dotted_name(s))
+     if kind == "LCALL":
+         return _call(s)
+     if kind == "LANGLE":
+@@ -339,7 +391,7 @@ def _operand(s: _Stream):
+ 
+ def _call(s: _Stream):
+     s.expect("LCALL")
+-    name = s.expect("IDENT").value
++    name = _dotted_name(s)
+     s.expect("RCALL")
+     s.expect("LPAREN")  # call args: '(' immediately follows ']]'
+     args = []
+-- 
+2.47.3
+

@@ -1,0 +1,4 @@
+Use types.
+Set a to [[types.SimpleNamespace]](b="terminator").
+Set x to a.b.
+Do [[print]](x).

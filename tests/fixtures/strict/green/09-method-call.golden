@@ -1,0 +1,3 @@
+import io
+fh = io.StringIO("method")
+print(fh.read())

@@ -9,7 +9,7 @@ callable, whose return value is spliced in as already-literal Python text
 from __future__ import annotations
 
 from .ast_nodes import (
-    Assign, Do, Return, If, While, ForEach, Define, Program,
+    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Define, Program,
     Num, Str, Bool, NoneLit, Var, Call, ListLit, DictLit, LlmSlot, Group,
     BinOp, UnaryOp,
 )
@@ -52,6 +52,16 @@ def _emit_stmt(stmt, level, resolve_slot):
         return [f"{pad}{_emit_expr(stmt.call, resolve_slot)}"]
     if isinstance(stmt, Return):
         return [f"{pad}return {_emit_expr(stmt.value, resolve_slot)}"]
+    if isinstance(stmt, Use):
+        return [f"{pad}import {stmt.module}"]
+    if isinstance(stmt, Require):
+        condition = _emit_expr(stmt.condition, resolve_slot)
+        return [
+            f"{pad}if not ({condition}):",
+            f'{pad}{INDENT_UNIT}raise AssertionError("requirement failed")',
+        ]
+    if isinstance(stmt, Exit):
+        return [f"{pad}raise SystemExit({_emit_expr(stmt.value, resolve_slot)})"]
     if isinstance(stmt, If):
         lines = [f"{pad}if {_emit_expr(stmt.cond, resolve_slot)}:"]
         lines += _emit_body(stmt.body, level + 1, resolve_slot)

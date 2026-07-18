@@ -1,0 +1,6 @@
+import types
+inner = types.SimpleNamespace(value="chain")
+outer = types.SimpleNamespace(child=inner)
+child = outer.child
+value = child.value
+print(value)

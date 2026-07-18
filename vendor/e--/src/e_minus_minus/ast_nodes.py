@@ -100,6 +100,21 @@ class Return:
 
 
 @dataclass
+class Use:
+    module: str
+
+
+@dataclass
+class Require:
+    condition: object
+
+
+@dataclass
+class Exit:
+    value: object
+
+
+@dataclass
 class If:
     cond: object
     body: list  # list of statement nodes (the governing If branch)

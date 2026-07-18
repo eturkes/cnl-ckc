@@ -20,6 +20,13 @@ PYTHONPATH=vendor/e--/src PYTHONDONTWRITEBYTECODE=1 python3 -P -m e_minus_minus.
 
 `-P` keeps the current working directory off Python's import path; the canonical `PYTHONPATH` selects the fork-pinned compiler.
 
+## Trusted language extensions
+
+- `Use IDENT (DOT IDENT)*.` imports that module and is accepted only at top level. One-segment and multi-segment module names are valid; a nested `Use` is a syntax failure.
+- Expression operands and `[[...]]` call targets accept `IDENT (DOT IDENT)*`. A dot followed by an identifier extends the name; the final dot terminates the statement. Assignment targets remain a single identifier, so dotted assignment is rejected.
+- `Require that EXPR.` emits `if not (EXPR):` followed by a four-space-indented `raise AssertionError("requirement failed")`. The expression is evaluated once, and failure remains active under `python3 -O`.
+- `Exit with EXPR.` emits `raise SystemExit(EXPR)`.
+
 ## Ordered pipeline
 
 The implementation applies every stage in this order:

@@ -22,6 +22,9 @@ class Token:
 # Keyword / verb / literal phrases (case-sensitive). Maps word-tuple -> kind.
 # Value stored on the token is the joined phrase.
 _KEYWORDS = {
+    ("Use",): "USE",
+    ("Require", "that"): "REQUIRE",
+    ("Exit", "with"): "EXIT",
     ("Set",): "SET",
     ("to",): "TO",
     ("Do",): "DO",

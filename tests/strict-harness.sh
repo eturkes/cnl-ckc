@@ -14,6 +14,7 @@ export RG_FFF_NO_FUZZY_FALLBACK=1
 
 GREEN="$ROOT/tests/fixtures/strict/green"
 RED="$ROOT/tests/fixtures/strict/red"
+BEHAVIOR_RED="$ROOT/tests/fixtures/strict/behavior-red"
 SCRATCH="$ROOT/.scratch/strict-harness.$$"
 rm -rf "$SCRATCH"
 mkdir -p "$SCRATCH/alternate-cwd" "$SCRATCH/atomic"
@@ -191,6 +192,107 @@ check_import_isolation() {
     fi
 }
 
+check_runtime() {
+    local name=$1
+    local input=$2
+    local expected_status=$3
+    local expected_stdout=$4
+    local expected_stderr=$5
+    local python_path="$SCRATCH/runtime.py"
+    local compile_stdout="$SCRATCH/runtime-compile.stdout"
+    local compile_stderr="$SCRATCH/runtime-compile.stderr"
+    local runtime_stdout="$SCRATCH/runtime.stdout"
+    local runtime_stderr="$SCRATCH/runtime.stderr"
+    local expected_stdout_path="$SCRATCH/runtime-expected.stdout"
+    local expected_stderr_path="$SCRATCH/runtime-expected.stderr"
+    local status
+
+    rm -f "$python_path"
+    : > "$expected_stdout_path"
+    : > "$expected_stderr_path"
+    if [ -n "$expected_stdout" ]; then
+        printf '%s\n' "$expected_stdout" > "$expected_stdout_path"
+    fi
+    if [ -n "$expected_stderr" ]; then
+        printf '%s\n' "$expected_stderr" > "$expected_stderr_path"
+    fi
+
+    run_strict "$compile_stdout" "$compile_stderr" -o "$python_path" "$input"
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "$name" "compile exit $RUN_STATUS, expected 0"
+    elif [ -s "$compile_stdout" ]; then
+        fail_case "$name" "compiler wrote stdout in -o mode"
+    elif [ -s "$compile_stderr" ]; then
+        fail_case "$name" "compiler stderr is not empty"
+    else
+        if python3 -P "$python_path" >"$runtime_stdout" 2>"$runtime_stderr"; then
+            status=0
+        else
+            status=$?
+        fi
+        if [ "$status" -ne "$expected_status" ]; then
+            fail_case "$name" "runtime exit $status, expected $expected_status"
+        elif ! cmp -s "$runtime_stdout" "$expected_stdout_path"; then
+            fail_case "$name" "runtime stdout differs"
+        elif ! cmp -s "$runtime_stderr" "$expected_stderr_path"; then
+            fail_case "$name" "runtime stderr differs"
+        else
+            pass_case "$name"
+        fi
+    fi
+}
+
+check_require_failure() {
+    local input="$BEHAVIOR_RED/01-require-fail.emm"
+    local python_path="$SCRATCH/require-fail.py"
+    local compile_stdout="$SCRATCH/require-compile.stdout"
+    local compile_stderr="$SCRATCH/require-compile.stderr"
+    local normal_stdout="$SCRATCH/require-normal.stdout"
+    local normal_stderr="$SCRATCH/require-normal.stderr"
+    local optimized_stdout="$SCRATCH/require-optimized.stdout"
+    local optimized_stderr="$SCRATCH/require-optimized.stderr"
+    local normal_status
+    local optimized_status
+
+    rm -f "$python_path"
+    run_strict "$compile_stdout" "$compile_stderr" -o "$python_path" "$input"
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "behavior/require-fail" \
+            "compile exit $RUN_STATUS, expected 0"
+    elif [ -s "$compile_stdout" ] || [ -s "$compile_stderr" ]; then
+        fail_case "behavior/require-fail" "compiler produced output"
+    else
+        if python3 -P "$python_path" >"$normal_stdout" 2>"$normal_stderr"; then
+            normal_status=0
+        else
+            normal_status=$?
+        fi
+        if python3 -P -O "$python_path" \
+            >"$optimized_stdout" 2>"$optimized_stderr"; then
+            optimized_status=0
+        else
+            optimized_status=$?
+        fi
+
+        if [ "$normal_status" -eq 0 ] || [ "$optimized_status" -eq 0 ]; then
+            fail_case "behavior/require-fail" \
+                "runtime exits $normal_status/$optimized_status, expected nonzero/nonzero"
+        elif [ -s "$normal_stdout" ] || [ -s "$optimized_stdout" ]; then
+            fail_case "behavior/require-fail" "runtime stdout is not empty"
+        elif ! command grep -F -q 'AssertionError: requirement failed' \
+            "$normal_stderr"; then
+            fail_case "behavior/require-fail" \
+                "normal stderr lacks requirement failure"
+        elif ! command grep -F -q 'AssertionError: requirement failed' \
+            "$optimized_stderr"; then
+            fail_case "behavior/require-fail" \
+                "-O stderr lacks requirement failure"
+        else
+            pass_case "behavior/require-fail"
+        fi
+    fi
+}
+
 for input in "$GREEN"/*.emm; do
     check_green "$input"
 done
@@ -205,6 +307,8 @@ check_failure "red/truncated-hex-escape" 1 python-invalid \
 check_failure "red/invalid-escape" 1 python-invalid "$RED/07-invalid-escape.emm"
 check_failure "red/duplicate-params" 1 python-invalid "$RED/08-duplicate-params.emm"
 check_failure "red/top-level-return" 1 python-invalid "$RED/09-top-level-return.emm"
+check_failure "red/nested-use" 1 syntax "$RED/10-nested-use.emm"
+check_failure "red/dotted-assignment" 1 syntax "$RED/11-dotted-assignment.emm"
 
 printf 'Set x to 1.\015\012' > "$SCRATCH/crlf.emm"
 printf 'Set\011x to 1.\012' > "$SCRATCH/tab.emm"
@@ -242,6 +346,19 @@ check_failure "cli/no-args" 2 usage
 check_failure "cli/unknown-flag" 2 usage --unknown
 check_failure "cli/extra-arg" 2 usage "$GREEN/01-values.emm" extra
 check_failure "cli/missing-input" 2 io "$SCRATCH/missing.emm"
+
+check_runtime "behavior/use-os" "$GREEN/06-use-os.emm" 0 "single" ""
+check_runtime "behavior/use-os-path" "$GREEN/07-use-os-path.emm" 0 "multi.txt" ""
+check_runtime "behavior/pathlib-path" "$GREEN/08-pathlib-path.emm" 0 "file.txt" ""
+check_runtime "behavior/method-call" "$GREEN/09-method-call.emm" 0 "method" ""
+check_runtime "behavior/dotted-ref-chain" \
+    "$GREEN/10-dotted-ref-chain.emm" 0 "chain" ""
+check_runtime "behavior/require-pass" "$GREEN/11-require-pass.emm" 0 "required" ""
+check_runtime "behavior/exit-int" "$GREEN/12-exit-int.emm" 7 "" ""
+check_runtime "behavior/exit-string" "$GREEN/13-exit-string.emm" 1 "" "goodbye"
+check_runtime "behavior/terminator-dotted-ref" \
+    "$GREEN/14-terminator-dotted-ref.emm" 0 "terminator" ""
+check_require_failure
 
 check_determinism "$GREEN/01-values.emm"
 check_determinism "$GREEN/04-functions.emm"

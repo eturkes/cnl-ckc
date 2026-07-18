@@ -1,0 +1,6 @@
+Use types.
+Set inner to [[types.SimpleNamespace]](value="chain").
+Set outer to [[types.SimpleNamespace]](child=inner).
+Set child to outer.child.
+Set value to child.value.
+Do [[print]](value).

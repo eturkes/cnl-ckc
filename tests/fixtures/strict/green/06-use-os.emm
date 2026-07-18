@@ -1,0 +1,2 @@
+Use os.
+Do [[print]]([[os.fspath]]("single")).

@@ -12,6 +12,9 @@ Patches MUST be git-format patches named `NNNN-<slug>.patch`, applied in lexical
 
 - `0001-lazy-package-transpile-import.patch` — defer the quarantined legacy transpiler import with PEP 562 while preserving the public API.
 - `0002-add-strict-compilation-entrypoint.patch` — add the stdlib-only validated compiler entry point.
+- `0003-add-strict-tcb-language-extensions.patch` — add top-level imports, dotted references and call targets, requirements, and explicit exits.
+
+Compatibility note: `Use`, `Require that`, and `Exit with` become statement keywords at head position. A grep of upstream tests and examples found zero collisions (exit 1; verified 2026-07-18).
 
 The vendored upstream file tree is byte-identical to the base pin plus this ordered patch set.
 

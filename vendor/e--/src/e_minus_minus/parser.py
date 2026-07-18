@@ -11,7 +11,7 @@ from __future__ import annotations
 from .errors import EmmSyntaxError
 from .lexer import tokenize
 from .ast_nodes import (
-    Assign, Do, Return, If, While, ForEach, Define, Program,
+    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Define, Program,
     Num, Str, Bool, NoneLit, Var, Call, ListLit, DictLit, LlmSlot, Group,
     BinOp, UnaryOp,
 )
@@ -45,7 +45,23 @@ def parse(tokens) -> Program:
     statements = []
     while s.peek().kind != "EOF":
         statements.append(_statement(s))
-    return Program(statements)
+    program = Program(statements)
+    _validate_use_scope(program.statements, top_level=True)
+    return program
+
+
+def _validate_use_scope(statements, *, top_level):
+    for stmt in statements:
+        if isinstance(stmt, Use) and not top_level:
+            raise EmmSyntaxError("'Use' is only allowed at top level")
+        if isinstance(stmt, If):
+            _validate_use_scope(stmt.body, top_level=False)
+            for _, body in stmt.elifs:
+                _validate_use_scope(body, top_level=False)
+            if stmt.else_body is not None:
+                _validate_use_scope(stmt.else_body, top_level=False)
+        elif isinstance(stmt, (While, ForEach, Define)):
+            _validate_use_scope(stmt.body, top_level=False)
 
 
 # --- Statements ----------------------------------------------------------
@@ -62,6 +78,12 @@ def _statement(s: _Stream):
         tok = s.next()
         s.expect("NEWLINE")
         return LlmSlot(tok.value, position="statement")
+    if kind == "USE":
+        s.next()
+        module = _dotted_name(s)
+        s.expect("DOT")
+        s.expect("NEWLINE")
+        return Use(module)
     if kind == "SET":
         s.next()
         name = s.expect("IDENT").value
@@ -86,6 +108,18 @@ def _statement(s: _Stream):
         s.expect("DOT")
         s.expect("NEWLINE")
         return Return(value)
+    if kind == "REQUIRE":
+        s.next()
+        condition = _expression(s)
+        s.expect("DOT")
+        s.expect("NEWLINE")
+        return Require(condition)
+    if kind == "EXIT":
+        s.next()
+        value = _expression(s)
+        s.expect("DOT")
+        s.expect("NEWLINE")
+        return Exit(value)
     if kind == "IF":
         s.next()
         cond = _expression(s)
@@ -150,8 +184,9 @@ def _statement(s: _Stream):
 def _statement_head(s: _Stream):
     """Parse a single statement *or* block header, WITHOUT a following block.
 
-    Simple statements (``Set``/``Do``/``Give back``) are parsed through their
-    terminating ``.``; compound/continuation forms (``If``/``Otherwise if``/
+    Simple statements (``Use``/``Set``/``Do``/``Give back``/``Require that``/
+    ``Exit with``) are parsed through their terminating ``.``;
+    compound/continuation forms (``If``/``Otherwise if``/
     ``Otherwise``/``While``/``For each``/``Define``) are parsed through their
     ``:`` header only. Used by the single-line canonical detector — it never
     consumes a block, so a header with no body still validates.
@@ -162,6 +197,8 @@ def _statement_head(s: _Stream):
     if kind == "SLOT":
         s.next()
         return
+    if kind == "USE":
+        s.next(); _dotted_name(s); s.expect("DOT"); return
     if kind == "SET":
         s.next(); s.expect("IDENT"); s.expect("TO"); _expression(s)
         s.expect("DOT"); return
@@ -171,6 +208,10 @@ def _statement_head(s: _Stream):
             raise EmmSyntaxError("'Do' requires a call")
         s.expect("DOT"); return
     if kind == "GIVEBACK":
+        s.next(); _expression(s); s.expect("DOT"); return
+    if kind == "REQUIRE":
+        s.next(); _expression(s); s.expect("DOT"); return
+    if kind == "EXIT":
         s.next(); _expression(s); s.expect("DOT"); return
     if kind == "IF":
         s.next(); _expression(s); s.expect("COLON"); return
@@ -257,6 +298,18 @@ def _params(s: _Stream):
 
 # --- Expressions ---------------------------------------------------------
 
+def _dotted_name(s: _Stream) -> str:
+    parts = [s.expect("IDENT").value]
+    while (
+        s.peek().kind == "DOT"
+        and s.i + 1 < len(s.tokens)
+        and s.tokens[s.i + 1].kind == "IDENT"
+    ):
+        s.next()
+        parts.append(s.next().value)
+    return ".".join(parts)
+
+
 def _expression(s: _Stream):
     # Prefix `not`: binds a single operand; cannot combine with infix unless
     # grouped (spec §4.3).
@@ -316,8 +369,7 @@ def _operand(s: _Stream):
         s.next()
         return LlmSlot(tok.value)
     if kind == "IDENT":
-        s.next()
-        return Var(tok.value)
+        return Var(_dotted_name(s))
     if kind == "LCALL":
         return _call(s)
     if kind == "LANGLE":
@@ -339,7 +391,7 @@ def _operand(s: _Stream):
 
 def _call(s: _Stream):
     s.expect("LCALL")
-    name = s.expect("IDENT").value
+    name = _dotted_name(s)
     s.expect("RCALL")
     s.expect("LPAREN")  # call args: '(' immediately follows ']]'
     args = []
