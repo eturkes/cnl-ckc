@@ -1,0 +1,1 @@
+drs([],[=>(drs([A,B],[-(object(A,man,countable,na,eq,1),/(1,2)),-(predicate(B,wait,A),/(1,4))]),drs([C,D],[-(object(C,car,countable,na,eq,1),/(1,7)),-(predicate(D,like,A,C),/(1,5))]))]).
