@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "e-minus-minus"
+version = "0.2.0"
+description = "A programming language you write in plain, canonical English — and that compiles deterministically to Python."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Oded Fuhrmann" },
+]
+keywords = ["transpiler", "language", "python-codegen", "canonical-english", "e--"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Compilers",
+]
+dependencies = []
+
+[project.optional-dependencies]
+llm = ["anthropic>=0.30"]
+
+[project.scripts]
+emm-transpile = "e_minus_minus.cli:_entry"
+
+[project.urls]
+Homepage = "https://github.com/frmoded/e--"
+Source = "https://github.com/frmoded/e--"
+Documentation = "https://github.com/frmoded/e--/blob/main/docs/spec.md"
+Issues = "https://github.com/frmoded/e--/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/e_minus_minus"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/e_minus_minus",
+    "docs",
+    "examples",
+    "tests",
+    "README.md",
+    "LICENSE",
+]

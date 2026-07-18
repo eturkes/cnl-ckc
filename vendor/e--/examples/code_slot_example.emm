@@ -1,0 +1,9 @@
+Define [[summarize]] taking numbers:
+    {{ compute the mean, median and count of numbers into named variables mean_v median_v and count_v }}
+    Do [[print]](count_v).
+    Do [[print]](mean_v).
+    Do [[print]](median_v).
+    Give back mean_v.
+
+Set data to <2, 3, 5, 7, 11, 13>.
+Do [[summarize]](data).

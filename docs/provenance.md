@@ -6,7 +6,7 @@ M0.1 governance baseline. `MUST`/`MUST NOT` = normative.
 
 | upstream | repo URL | pinned commit | license | role | vendor status |
 |---|---|---|---|---|---|
-| e-- | `https://github.com/frmoded/e--` | `da8c3b34d2493180da8df65b127a3841f9a4e609`; tags `v0.1.0`, `v0.2.0` = `a6cb6cae0ae1149f51b6065748d96e926ba4890b` | Apache-2.0 | canonical E-- → derived Python compiler | fork vendored M1 |
+| e-- | `https://github.com/frmoded/e--` | `da8c3b34d2493180da8df65b127a3841f9a4e609`; tag `v0.1.0` = `3a21f0b26d3729b29c4d8cae4af465a0c26e2037`; tag `v0.2.0` = `a6cb6cae0ae1149f51b6065748d96e926ba4890b` | Apache-2.0 | canonical E-- → derived Python compiler | vendored at `vendor/e--/` (M1.1) |
 | APE | `https://github.com/Attempto/APE` | `5f4d5354a45fb772763bf1a9543f508f15b28982` | LGPL-3.0-or-later | ACE → DRS parser, isolated SWI-Prolog process | fork vendored M2 |
 | Clex | `https://github.com/Attempto/Clex` | `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` | GPL-3.0 | general-English lexicon candidate | **EXCLUDED** — decision below |
 | AceRules | `https://github.com/tkuhn/acerules` | `5b7afb7bdfbce56027997307f9b798af53551223` | LGPL-3.0; `only`/`or-later` option unstated | semantics reference only: courteous logic + stable models | never vendored; no code reuse; reuse ⇒ license-review escalation |
@@ -47,7 +47,10 @@ Directories land in M1/M2; this layout is binding before import.
 
 - retain upstream Apache-2.0 `LICENSE` verbatim;
 - carry `PROVENANCE`: upstream URL, pinned fork commit, and local-patch policy;
-- local patches MUST be enumerated, minimal, and independently re-applicable.
+- local patches MUST be enumerated, minimal, and independently re-applicable;
+- fork pin = base commit + ordered `patches/` (git-format, lexical order, re-applicable) + SHA-256 tree manifest `MANIFEST.sha256`;
+- fidelity-check procedure is documented in `vendor/e--/PROVENANCE`;
+- TCB-change gate 1 ("bump the fork-commit pin") = update the patch set + regenerate `MANIFEST.sha256` + update this provenance.
 
 ### `vendor/ape/`
 

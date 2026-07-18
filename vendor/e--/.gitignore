@@ -1,0 +1,13 @@
+prompts/
+.DS_Store
+__pycache__/
+*.pyc
+
+# scratch transpiler outputs (regenerable; --out / --canonical-out targets)
+out.em
+out.py
+
+# Packaging build artifacts (regenerable via `python -m build`)
+dist/
+build/
+*.egg-info/
