@@ -12,5 +12,6 @@ NOTICE text eol=lf
 *.golden -text
 *.pdf -text
 *.ace text eol=lf
+*.ulex text eol=lf
 *.pl text eol=lf
 vendor/** -text

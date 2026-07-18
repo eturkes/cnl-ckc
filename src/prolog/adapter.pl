@@ -12,8 +12,9 @@ user:message_hook(_, Level, _) :-
 
 /*
 Run: swipl -q -f none -F none -s src/prolog/adapter.pl -g main -t 'halt(9)' -- <ape-tree-dir>
+  or swipl -q -f none -F none -s src/prolog/adapter.pl -g main -t 'halt(9)' -- <ape-tree-dir> <ulex-file>
 I/O: UTF-8 ACE stdin → accepted canonical DRS stdout; rejection stdout = 0 bytes.
-Exit: 0=accepted; 1=ape_messages|empty_drs; 2=usage|ape_load|uncaught.
+Exit: 0=accepted; 1=ape_messages|empty_drs; 2=usage|ape_load|ulex_load|uncaught.
 Error: stderr = one canonical adapter_error(Class, Detail) line.
 */
 main :-
@@ -24,8 +25,9 @@ run :-
     set_stream(user_output, encoding(utf8)),
     set_stream(user_error, encoding(utf8)),
     current_prolog_flag(argv, Argv),
-    require_tree_arg(Argv, Tree),
+    require_args(Argv, Tree, Ulex),
     load_ape(Tree),
+    maybe_load_ulex(Ulex),
     read_string(user_input, _, Input),
     atom_string(Text, Input),
     ( ace_to_drs:acetext_to_drs(Text, off, off, _Sentences, _SyntaxTrees,
@@ -34,10 +36,23 @@ run :-
     ; throw(error(ape_call_failed, context(adapter:run/0, Text)))
     ).
 
-require_tree_arg([Tree], Tree) :-
+require_args([Tree], Tree, none) :-
     !.
-require_tree_arg(Argv, _) :-
+require_args([Tree, File], Tree, file(File)) :-
+    !.
+require_args(Argv, _, _) :-
     emit_error(usage, argv(Argv), 2).
+
+maybe_load_ulex(none).
+maybe_load_ulex(file(File)) :-
+    catch(load_ulex_checked(File), Error, emit_error(ulex_load, Error, 2)).
+
+load_ulex_checked(File) :-
+    ulex:discard_ulex,
+    setup_call_cleanup(
+        open(File, read, Stream, [encoding(utf8)]),
+        ulex:read_ulex(Stream),
+        close(Stream)).
 
 load_ape(Tree) :-
     catch(load_ape_checked(Tree), Error, emit_error(ape_load, Error, 2)).
@@ -100,5 +115,6 @@ fallback_error_line(ape_messages, "adapter_error(ape_messages,unserializable).\n
 fallback_error_line(empty_drs, "adapter_error(empty_drs,unserializable).\n") :- !.
 fallback_error_line(usage, "adapter_error(usage,unserializable).\n") :- !.
 fallback_error_line(ape_load, "adapter_error(ape_load,unserializable).\n") :- !.
+fallback_error_line(ulex_load, "adapter_error(ulex_load,unserializable).\n") :- !.
 fallback_error_line(uncaught, "adapter_error(uncaught,unserializable).\n") :- !.
 fallback_error_line(_, "adapter_error(uncaught,unserializable).\n").

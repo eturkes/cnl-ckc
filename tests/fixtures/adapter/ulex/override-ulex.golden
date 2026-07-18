@@ -1,0 +1,1 @@
+drs([A,B],[-(object(A,ulexman,countable,na,eq,1),/(1,2)),-(predicate(B,wait,A),/(1,3))]).

@@ -11,6 +11,7 @@ fi
 SWIPL=${SWIPL:-swipl}
 GREEN="$ROOT/tests/fixtures/adapter/green"
 RED="$ROOT/tests/fixtures/adapter/red"
+ULEX="$ROOT/tests/fixtures/adapter/ulex"
 SCRATCH="$ROOT/.scratch/adapter-harness"
 TREE="$SCRATCH/tree"
 FAKE_SHAPE="$SCRATCH/fake-shape"
@@ -90,7 +91,7 @@ else
 fi
 
 rm -rf "$SCRATCH"
-mkdir -p "$TREE" "$SCRATCH/green" "$SCRATCH/red" "$SCRATCH/env"
+mkdir -p "$TREE" "$SCRATCH/green" "$SCRATCH/red" "$SCRATCH/ulex" "$SCRATCH/env"
 trap 'rm -rf "$SCRATCH"' EXIT
 cp -a "$ROOT/vendor/ape/." "$TREE/"
 pass_case "vendor/copy"
@@ -172,6 +173,111 @@ stdout_path="$SCRATCH/red/empty.stdout"
 stderr_path="$SCRATCH/red/empty.stderr"
 run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$TREE"
 check_rejection "red/empty" 1 empty_drs 'drs([],[])' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/ulex/oov-red.stdout"
+stderr_path="$SCRATCH/ulex/oov-red.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE"
+check_rejection "ulex/oov-red" 1 ape_messages 'message(error,word,' "$stdout_path" "$stderr_path"
+
+zorbomat_run1="$SCRATCH/ulex/zorbomat.run1.stdout"
+stderr_path="$SCRATCH/ulex/zorbomat.run1.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$zorbomat_run1" "$stderr_path" "$TREE" "$ULEX/zorbomat.ulex"
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "ulex/zorbomat/status" "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$stderr_path" ]; then
+    fail_case "ulex/zorbomat/stderr" "expected zero bytes"
+fi
+if ! cmp "$zorbomat_run1" "$ULEX/zorbomat.golden"; then
+    fail_case "ulex/zorbomat/stdout" "golden mismatch"
+fi
+pass_case "ulex/zorbomat"
+
+override_clex_run1="$SCRATCH/ulex/override-clex.run1.stdout"
+stderr_path="$SCRATCH/ulex/override-clex.run1.stderr"
+run_adapter "$ULEX/override.ace" "$override_clex_run1" "$stderr_path" "$TREE"
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "ulex/override-clex/status" "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$stderr_path" ]; then
+    fail_case "ulex/override-clex/stderr" "expected zero bytes"
+fi
+if ! cmp "$override_clex_run1" "$ULEX/override-clex.golden"; then
+    fail_case "ulex/override-clex/stdout" "golden mismatch"
+fi
+pass_case "ulex/override-clex"
+
+override_ulex_run1="$SCRATCH/ulex/override-ulex.run1.stdout"
+stderr_path="$SCRATCH/ulex/override-ulex.run1.stderr"
+run_adapter "$ULEX/override.ace" "$override_ulex_run1" "$stderr_path" "$TREE" "$ULEX/override.ulex"
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "ulex/override-ulex/status" "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$stderr_path" ]; then
+    fail_case "ulex/override-ulex/stderr" "expected zero bytes"
+fi
+if ! cmp "$override_ulex_run1" "$ULEX/override-ulex.golden"; then
+    fail_case "ulex/override-ulex/stdout" "golden mismatch"
+fi
+pass_case "ulex/override-ulex"
+
+if cmp -s "$ULEX/override-clex.golden" "$ULEX/override-ulex.golden"; then
+    fail_case "ulex/override-differs" "Clex and Ulex goldens are byte-identical"
+fi
+pass_case "ulex/override-differs"
+
+zorbomat_run2="$SCRATCH/ulex/zorbomat.run2.stdout"
+stderr_path="$SCRATCH/ulex/zorbomat.run2.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$zorbomat_run2" "$stderr_path" "$TREE" "$ULEX/zorbomat.ulex"
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "ulex/determinism-zorbomat/status" "second run exited $RUN_STATUS"
+fi
+if [ -s "$stderr_path" ]; then
+    fail_case "ulex/determinism-zorbomat/stderr" "second run wrote stderr"
+fi
+if ! cmp "$zorbomat_run1" "$zorbomat_run2"; then
+    fail_case "ulex/determinism-zorbomat/bytes" "fresh runs differ"
+fi
+pass_case "ulex/determinism-zorbomat"
+
+override_ulex_run2="$SCRATCH/ulex/override-ulex.run2.stdout"
+stderr_path="$SCRATCH/ulex/override-ulex.run2.stderr"
+run_adapter "$ULEX/override.ace" "$override_ulex_run2" "$stderr_path" "$TREE" "$ULEX/override.ulex"
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "ulex/determinism-override/status" "second run exited $RUN_STATUS"
+fi
+if [ -s "$stderr_path" ]; then
+    fail_case "ulex/determinism-override/stderr" "second run wrote stderr"
+fi
+if ! cmp "$override_ulex_run1" "$override_ulex_run2"; then
+    fail_case "ulex/determinism-override/bytes" "fresh runs differ"
+fi
+pass_case "ulex/determinism-override"
+
+stdout_path="$SCRATCH/ulex/isolation.stdout"
+stderr_path="$SCRATCH/ulex/isolation.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE"
+check_rejection "ulex/isolation" 1 ape_messages 'message(error,word,' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/ulex/missing-file.stdout"
+stderr_path="$SCRATCH/ulex/missing-file.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE" "$SCRATCH/no-such.ulex"
+check_rejection "ulex/missing-file" 2 ulex_load 'existence_error(source_sink,' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/ulex/malformed-file.stdout"
+stderr_path="$SCRATCH/ulex/malformed-file.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE" "$ULEX/malformed-file.ulex"
+check_rejection "ulex/malformed-file" 1 ape_messages 'Malformed file.' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/ulex/malformed-entry.stdout"
+stderr_path="$SCRATCH/ulex/malformed-entry.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE" "$ULEX/malformed-entry.ulex"
+check_rejection "ulex/malformed-entry" 1 ape_messages 'Malformed entry.' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/env/usage-extra.stdout"
+stderr_path="$SCRATCH/env/usage-extra.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE" "$ULEX/zorbomat.ulex" extra
+check_rejection "env/usage-extra" 2 usage 'argv([' "$stdout_path" "$stderr_path"
 
 stdout_path="$SCRATCH/env/usage.stdout"
 stderr_path="$SCRATCH/env/usage.stderr"
