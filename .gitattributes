@@ -10,4 +10,5 @@ LICENSE text eol=lf
 NOTICE text eol=lf
 *.json text eol=lf
 *.golden -text
+*.pdf -text
 vendor/** -text
