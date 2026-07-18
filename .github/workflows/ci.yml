@@ -63,3 +63,40 @@ jobs:
 
       - name: Run regeneration harness
         run: bash tests/regen-harness.sh
+
+  ape:
+    runs-on: ubuntu-24.04
+    container:
+      image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
+    env:
+      SWIPL_VER: 9.2.9
+    steps:
+      - name: Install job tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates make curl
+
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Trust workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Verify SWI-Prolog version
+        run: |
+          set -eu
+          out=$(swipl --version)
+          printf '%s\n' "$out"
+          printf '%s\n' "$out" | grep -Fq "SWI-Prolog version $SWIPL_VER "
+
+      - name: Verify APE vendor integrity
+        run: (cd vendor/ape && sha256sum --quiet -c MANIFEST.sha256)
+
+      - name: Run APE vendor harness
+        run: bash tests/ape-vendor-harness.sh
+
+      - name: Verify APE vendor cleanliness
+        run: |
+          set -eu
+          git diff --exit-code -- vendor/
+          test -z "$(git status --porcelain -- vendor/)"

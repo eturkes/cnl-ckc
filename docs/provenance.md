@@ -7,11 +7,13 @@ M0.1 governance baseline. `MUST`/`MUST NOT` = normative.
 | upstream | repo URL | pinned commit | license | role | vendor status |
 |---|---|---|---|---|---|
 | e-- | `https://github.com/frmoded/e--` | `da8c3b34d2493180da8df65b127a3841f9a4e609`; tag `v0.1.0` = `3a21f0b26d3729b29c4d8cae4af465a0c26e2037`; tag `v0.2.0` = `a6cb6cae0ae1149f51b6065748d96e926ba4890b` | Apache-2.0 | canonical E-- → derived Python compiler | vendored at `vendor/e--/`; fork pin carries 4 ordered M1 patches: `0001-lazy-package-transpile-import.patch` defers the quarantined legacy import, `0002-add-strict-compilation-entrypoint.patch` adds the stdlib-only validated compiler, `0003-add-strict-tcb-language-extensions.patch` adds `Use`/dotted names/`Require`/`Exit`, `0004-add-apache-modification-notices.patch` adds Apache-2.0 §4(b) notices; strict entry point exists at `e_minus_minus.strict` |
-| APE | `https://github.com/Attempto/APE` | `5f4d5354a45fb772763bf1a9543f508f15b28982` | LGPL-3.0-or-later | ACE → DRS parser, isolated SWI-Prolog process | fork vendored M2 |
+| APE | `https://github.com/Attempto/APE` | `5f4d5354a45fb772763bf1a9543f508f15b28982` | LGPL-3.0-or-later | ACE → DRS parser, isolated SWI-Prolog process | vendored at `vendor/ape/` (M2.1); fork pin = base + ordered `patches/` (currently empty) + `MANIFEST.sha256` |
 | Clex | `https://github.com/Attempto/Clex` | `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` | GPL-3.0 | general-English lexicon candidate | **EXCLUDED** — decision below |
 | AceRules | `https://github.com/tkuhn/acerules` | `5b7afb7bdfbce56027997307f9b798af53551223` | LGPL-3.0; `only`/`or-later` option unstated | semantics reference only: courteous logic + stable models | never vendored; no code reuse; reuse ⇒ license-review escalation |
 | RACE | no source repository; Attempto webservice only | — | N/A — no acquired source | historical reasoner reference only | zero dependency; reasoner = first-party M4 |
 | SWI-Prolog | `https://github.com/SWI-Prolog/swipl-devel` | `V9.2.9` → `e3b19512e69a544f05b1bffbd14f3a0b519ad04d` | BSD-2-Clause | system Prolog runtime | never vendored |
+
+CI provisions SWI-Prolog == 9.2.9 through the digest-pinned official Debian bookworm container image `docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f`. The Ubuntu noble PPA no longer serves a complete 9.2.9 package set: 9.2.9 was superseded by 10.0.2 and the pool retains only `swi-prolog-x` (recorded 2026-07-18).
 
 AceRules license evidence at its pin: `LICENSE.txt`, first nonblank line = `GNU LESSER GENERAL PUBLIC LICENSE`; next line = `Version 3, 29 June 2007`. `README.md` states `The code is available under the LGPL license. See LICENSE.txt for the details.` License family + version are verified; repository-level text does not select SPDX `only` vs `or-later`. Code reuse remains prohibited unless escalated for license review.
 
@@ -66,7 +68,7 @@ A future root license MUST NOT replace or obscure either vendor license.
 
 **Status: DECIDED — exclude Clex.**
 
-Exclusion scope = repository content + product/lexicon use. Upstream-APE regression testing MAY fetch full Clex at pin `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` into gitignored scratch, test-only; it MUST NOT be committed, vendored, or distributed.
+Exclusion scope = repository content + product/lexicon use. Upstream-APE regression testing MAY fetch full Clex at pin `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2`, file SHA-256 `2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec`, into gitignored `.scratch/`, test-only; it MUST NOT be committed, vendored, or distributed.
 
 Rationale:
 

@@ -1,0 +1,73 @@
+# APE fork provenance
+
+Upstream: https://github.com/Attempto/APE
+Base pin: 5f4d5354a45fb772763bf1a9543f508f15b28982
+License: LGPL-3.0-or-later. The upstream `LICENSE.txt` is retained verbatim in this directory.
+
+## Fork pin
+
+The vendored fork identity (the "fork pin") is the base pin plus the ordered `patches/` set plus the SHA-256 tree manifest `MANIFEST.sha256`.
+
+Patches MUST be git-format patches named `NNNN-<slug>.patch`, applied in lexical order on top of the base pin. Each patch MUST be minimal and independently re-applicable. The ordered patch set is currently empty.
+
+Any patch that modifies an upstream file MUST add a prominent in-file modification notice with a relevant date. LGPL-3.0-or-later incorporates GPL-3.0 §5(a), which requires such notices for modified files; the notice MUST travel in the same ordered patch set as the modification. This contract mirrors the prominent in-file notices carried by `vendor/e--/patches/0004-add-apache-modification-notices.patch`.
+
+The vendored upstream file tree is byte-identical to the base pin plus this ordered patch set.
+
+Any APE change MUST pass the "bump fork pin" gate: update the patch set, regenerate `MANIFEST.sha256`, and update `docs/provenance.md`.
+
+## Trust posture
+
+APE is trusted parser input to the compilation pipeline, but it is not part of the Python TCB. It runs in a separate SWI-Prolog process; Python moves bytes only. The narrow first-party adapter lands in M2.2 and does not change this boundary.
+
+## Regression lexicon
+
+The full Clex lexicon is GPL-3.0 and EXCLUDED from the repository, product, vendor tree, and distributions. Regression testing may fetch only the pinned file `clex_lexicon.pl` from commit `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` into gitignored `.scratch/`; it MUST never be committed or vendored. The pinned raw file is:
+
+- URL: https://raw.githubusercontent.com/Attempto/Clex/20960a5ce07776cb211a8cfb25dc8c81fcdf25e2/clex_lexicon.pl
+- SHA-256: `2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec`
+
+## Fidelity checks
+
+Run from the repository root. Clone upstream into scratch (or reuse a local clone), check out the base pin, archive it into a clean scratch tree, apply every local patch in lexical order, hash both comparable trees, and compare them:
+
+```sh
+set -eu
+ROOT=$PWD
+PIN=5f4d5354a45fb772763bf1a9543f508f15b28982
+UPSTREAM="$ROOT/.scratch/ape-upstream"
+WORK="$ROOT/.scratch/ape-fidelity"
+export GIT_CEILING_DIRECTORIES="$ROOT/.scratch"
+
+# Omit clone when reusing an existing local clone.
+git clone https://github.com/Attempto/APE "$UPSTREAM"
+git -C "$UPSTREAM" checkout --detach "$PIN"
+rm -rf "$WORK"
+mkdir -p "$WORK"
+git -C "$UPSTREAM" archive "$PIN" | tar -x -C "$WORK"
+
+for patch in "$ROOT"/vendor/ape/patches/*.patch; do
+    [ -e "$patch" ] || break
+    (cd "$WORK" && git apply "$patch")
+done
+
+(
+    cd "$WORK"
+    find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+) > "$ROOT/.scratch/ape-base.sha256"
+(
+    cd "$ROOT/vendor/ape"
+    find . -type f \
+        ! -path './PROVENANCE' \
+        ! -path './MANIFEST.sha256' \
+        ! -path './patches/*' \
+        -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+) > "$ROOT/.scratch/ape-vendor.sha256"
+diff -u "$ROOT/.scratch/ape-base.sha256" "$ROOT/.scratch/ape-vendor.sha256"
+```
+
+With patches present, the vendor tree MUST equal the base pin plus those patches applied in lexical order. The in-tree integrity check is:
+
+```sh
+cd vendor/ape && sha256sum -c MANIFEST.sha256
+```
