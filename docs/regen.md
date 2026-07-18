@@ -11,9 +11,11 @@ PYTHONDONTWRITEBYTECODE=1 python3 -P tools/regen.py --check
 PYTHONDONTWRITEBYTECODE=1 python3 -P tools/regen.py --regenerate
 ```
 
-Check mode is the default; `--check` makes it explicit. Discovery produces sorted POSIX
-relative paths for every `*.emm` under a root, and each source is compiled in a fresh
-vendored strict-CLI subprocess.
+Check mode is the default; `--check` makes it explicit. Discovery recursively walks each
+root with sorted `Path.iterdir` calls, producing sorted POSIX relative paths for every
+`*.emm`; generation roots do not prune dot-directories. Each source is compiled in a
+fresh vendored strict-CLI subprocess. The repository-wide `conftest.py` sweep prunes
+dot-directory entries before descent.
 
 Violation lines use `regen: <category>: <path>`. Categories have fixed order and sorted paths:
 
@@ -32,12 +34,14 @@ Exit 0 means success. Exit 1 means violations, compile failures, or an uncaught 
 traceback. Exit 2 is an argparse usage error.
 
 Environment failures are fail-loud by design: filesystem, Git, decode, and subprocess
-exceptions remain uncaught. A `Require` assertion checks the vendored strict source, so a
+exceptions remain uncaught. Missing generation roots and unreadable directories reached by
+either generation traversal or the non-hidden `conftest.py` sweep therefore produce an
+uncaught traceback and exit 1. A `Require` assertion checks the vendored strict source, so a
 wrong working directory fails immediately.
 
-Regeneration compiles every source once before any write and aborts on any failure. After a
-clean first pass, it compiles each source again, writes same-directory `*.tmp.<pid>` bytes,
-and atomically installs them with `os.replace`.
+Regeneration compiles every source exactly once and buffers each successful stdout payload
+before any write. Any compile failure aborts with zero writes. After all sources compile,
+it writes same-directory `*.tmp.<pid>` bytes and atomically installs them with `os.replace`.
 
 CI runs the vendored suite, verifies vendor integrity, strict-compiles `regen.emm` and `cmp`s
 it with committed `regen.py`, runs the self-check, lints both shell harnesses, then runs the

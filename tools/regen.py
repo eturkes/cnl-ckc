@@ -3,12 +3,29 @@ import os
 import pathlib
 import subprocess
 import sys
+def walk_tree(dir_path, prune_hidden):
+    entries = []
+    for entry in sorted(dir_path.iterdir()):
+        hidden = False
+        if prune_hidden:
+            entry_name = entry.name
+            if entry_name.startswith("."):
+                hidden = True
+        if not hidden:
+            if entry.is_dir(follow_symlinks=False):
+                nested = walk_tree(entry, prune_hidden)
+                for nested_entry in nested:
+                    entries.append(nested_entry)
+            else:
+                entries.append(entry)
+    return entries
 def discover(roots):
     sources = []
     for root_name in roots:
         root_path = pathlib.Path(root_name)
-        for source_path in sorted(root_path.rglob("*.emm")):
-            sources.append(source_path.as_posix())
+        for source_path in walk_tree(root_path, False):
+            if source_path.suffix == ".emm":
+                sources.append(source_path.as_posix())
     return sorted(sources)
 def python_path_for(source_rel):
     source_path = pathlib.Path(source_rel)
@@ -40,10 +57,11 @@ def orphan_python_paths(roots):
     orphans = []
     for root_name in roots:
         root_path = pathlib.Path(root_name)
-        for candidate in sorted(root_path.rglob("*.py")):
-            source_path = candidate.with_suffix(".emm")
-            if not source_path.is_file():
-                orphans.append(candidate.as_posix())
+        for candidate in walk_tree(root_path, False):
+            if candidate.suffix == ".py":
+                source_path = candidate.with_suffix(".emm")
+                if not source_path.is_file():
+                    orphans.append(candidate.as_posix())
     return sorted(orphans)
 def unauthorized_python_paths(generated):
     allowed = vendor_python_paths() + generated
@@ -57,14 +75,10 @@ def unauthorized_python_paths(generated):
 def conftest_paths():
     repo_path = pathlib.Path(".")
     found = []
-    for candidate in sorted(repo_path.rglob("conftest.py")):
-        hidden = False
-        for part in candidate.parts:
-            if part.startswith("."):
-                hidden = True
-        if not hidden:
+    for candidate in walk_tree(repo_path, True):
+        if candidate.name == "conftest.py":
             found.append(candidate.as_posix())
-    return found
+    return sorted(found)
 def report_paths(category, paths):
     for path in sorted(paths):
         print("regen: " + category + ": " + path)
@@ -107,24 +121,25 @@ def check_mode(roots, sources, exe, env):
     print("regen: check ok")
 def regenerate_mode(sources, exe, env):
     compile_errors = []
+    staged = {}
     for source_rel in sources:
         res = compile_one(source_rel, exe, env)
         if res.returncode != 0:
             compile_errors.append(source_rel)
+        else:
+            target_rel = python_path_for(source_rel)
+            staged.update({target_rel: res.stdout})
     report_paths("compile-error", compile_errors)
     violations = len(compile_errors)
     if violations > 0:
         print("regen: violations: " + str(violations))
         raise SystemExit(1)
     pid_text = str(os.getpid())
-    for source_rel in sources:
-        res = compile_one(source_rel, exe, env)
-        if not (res.returncode == 0):
-            raise AssertionError("requirement failed")
-        target_rel = python_path_for(source_rel)
+    for target_rel in sorted(staged):
+        payload = staged.pop(target_rel)
         temp_rel = target_rel + ".tmp." + pid_text
         temp_path = pathlib.Path(temp_rel)
-        temp_path.write_bytes(res.stdout)
+        temp_path.write_bytes(payload)
         os.replace(temp_rel, target_rel)
         print("regen: wrote " + target_rel)
     print("regen: regenerate ok")

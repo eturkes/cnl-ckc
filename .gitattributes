@@ -3,5 +3,11 @@
 *.sh text eol=lf
 *.md text eol=lf
 *.yml text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+.python-version text eol=lf
+LICENSE text eol=lf
+NOTICE text eol=lf
+*.json text eol=lf
 *.golden -text
 vendor/** -text

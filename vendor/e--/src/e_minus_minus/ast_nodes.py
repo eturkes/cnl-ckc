@@ -1,3 +1,4 @@
+# Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE and patches/.
 """AST node definitions for the E-- deterministic core.
 
 Statements and expressions are plain dataclasses. The parser produces a

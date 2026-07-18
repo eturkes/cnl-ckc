@@ -21,7 +21,7 @@ FAIL_COUNT=0
 
 rm -rf "$SCRATCH"
 mkdir -p "$SCRATCH"
-trap 'rm -rf "$SCRATCH"' EXIT
+trap 'chmod -R u+rwX "$SCRATCH" 2>/dev/null || true; rm -rf "$SCRATCH"' EXIT
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -66,6 +66,19 @@ expect_report() {
         fail_case "$label" "exit $RUN_STATUS, expected 1"
     elif ! has_line "$RUN_STDOUT" "$expected"; then
         fail_case "$label" "missing report: $expected"
+    else
+        pass_case "$label"
+    fi
+}
+
+expect_traceback() {
+    local label=$1
+    if [ "$RUN_STATUS" -ne 1 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 1"
+    elif ! command grep -F -q 'Traceback' "$RUN_STDERR"; then
+        fail_case "$label" "stderr lacks Traceback"
+    elif has_line "$RUN_STDOUT" "regen: check ok"; then
+        fail_case "$label" "printed success report"
     else
         pass_case "$label"
     fi
@@ -165,6 +178,80 @@ check_conftest() {
     expect_report "$label" "regen: conftest: tests/conftest.py"
 }
 
+check_unreadable_generation_dir() {
+    local label="check/unreadable-generation-dir"
+    local blocked="$SCAFFOLD/tools/blocked"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    mkdir -p "$blocked"
+    printf 'Set x to 1.\n' >"$blocked/x.emm"
+    chmod 000 "$blocked"
+    run_regen_at "$SCAFFOLD" --check
+    if ! chmod 700 "$blocked"; then
+        fail_case "$label" "could not restore directory permissions"
+        return
+    fi
+    expect_traceback "$label"
+}
+
+check_unreadable_conftest_dir() {
+    local label="check/unreadable-conftest-dir"
+    local blocked="$SCAFFOLD/sub"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    mkdir -p "$blocked"
+    printf 'pass\n' >"$blocked/conftest.py"
+    chmod 000 "$blocked"
+    run_regen_at "$SCAFFOLD" --check
+    if ! chmod 700 "$blocked"; then
+        fail_case "$label" "could not restore directory permissions"
+        return
+    fi
+    expect_traceback "$label"
+}
+
+check_hidden_unreadable_dir_pruned() {
+    local label="check/hidden-unreadable-dir-pruned"
+    local blocked="$SCAFFOLD/.blocked"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    mkdir -p "$blocked"
+    printf 'pass\n' >"$blocked/conftest.py"
+    chmod 000 "$blocked"
+    run_regen_at "$SCAFFOLD" --check
+    if ! chmod 700 "$blocked"; then
+        fail_case "$label" "could not restore directory permissions"
+        return
+    fi
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 0"
+    elif [ -s "$RUN_STDERR" ]; then
+        fail_case "$label" "stderr is not empty"
+    elif ! has_line "$RUN_STDOUT" "regen: check ok"; then
+        fail_case "$label" "missing success report"
+    else
+        pass_case "$label"
+    fi
+}
+
+check_hidden_generation_source() {
+    local label="check/hidden-generation-source"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    mkdir -p "$SCAFFOLD/tools/.hidden"
+    printf 'Set x to 1.\n' >"$SCAFFOLD/tools/.hidden/x.emm"
+    run_regen_at "$SCAFFOLD" --check
+    expect_report "$label" "regen: missing: tools/.hidden/x.py"
+}
+
 check_regenerate_restores() {
     local label="regenerate/restores-drift"
     local pristine="$SCRATCH/pristine.py"
@@ -205,7 +292,9 @@ check_regenerate_zero_writes() {
         "regen: compile-error: tools/bad.emm"; then
         fail_case "$label" "missing compile-error report"
     elif ! cmp -s "$SCAFFOLD/tools/regen.py" "$perturbed"; then
-        fail_case "$label" "regen.py changed after failed pass one"
+        fail_case "$label" "regen.py changed after failed compile pass"
+    elif command grep -F -q 'regen: wrote ' "$RUN_STDOUT"; then
+        fail_case "$label" "printed a write report after compile failure"
     elif has_temp_remnants; then
         fail_case "$label" "temporary output remains"
     else
@@ -274,6 +363,10 @@ check_compile_error
 check_orphan
 check_unauthorized
 check_conftest
+check_unreadable_generation_dir
+check_unreadable_conftest_dir
+check_hidden_unreadable_dir_pruned
+check_hidden_generation_source
 check_regenerate_restores
 check_regenerate_zero_writes
 check_usage

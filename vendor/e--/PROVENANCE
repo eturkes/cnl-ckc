@@ -13,6 +13,9 @@ Patches MUST be git-format patches named `NNNN-<slug>.patch`, applied in lexical
 - `0001-lazy-package-transpile-import.patch` — defer the quarantined legacy transpiler import with PEP 562 while preserving the public API.
 - `0002-add-strict-compilation-entrypoint.patch` — add the stdlib-only validated compiler entry point.
 - `0003-add-strict-tcb-language-extensions.patch` — add top-level imports, dotted references and call targets, requirements, and explicit exits.
+- `0004-add-apache-modification-notices.patch` — add prominent modification notices to patched upstream source files.
+
+The `0004` notices satisfy Apache-2.0 §4(b) for modified upstream files.
 
 Compatibility note: `Use`, `Require that`, and `Exit with` become statement keywords at head position. A grep of upstream tests and examples found zero collisions (exit 1; verified 2026-07-18).
 

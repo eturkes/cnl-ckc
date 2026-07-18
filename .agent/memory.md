@@ -3,8 +3,7 @@
 - Charter = `.agent/initial-prompt.md` — user's initial prompt, verbatim (2026-07-18), authoritative for scope + constraints; read before planning.
 - Pins + license facts + governance decisions = `docs/provenance.md` (sole authority).
 - Upstream state: e-- vendored M1; APE vendored M2; AceRules reference-only (reuse ⇒ license escalation); Clex excluded (test-only fetch at pin allowed, never committed); RACE no source.
-- Scratch/probe work stays inside the project in a gitignored dir (`.scratch/`) — `CLAUDE.md` launch-dir rule covers throwaway clones; M0.2 used `/tmp` (violation; cleaned up 2026-07-18; evidence location-independent, M2 re-verifies at vendor time).
-- WebSearch safety layer false-positives on medical/disease vocabulary → phrase queries by tool/org names only (hit again this session on an APE/SWI query).
-- Fidelity archives under project-local `.scratch/` still sit beneath the parent Git worktree; set `GIT_CEILING_DIRECTORIES="$ROOT/.scratch"` for standalone `git apply`, and use `rtk proxy diff` when an empty diff is the acceptance signal.
-- E-- bootstrap authoring: comments are unsupported; bind a call result before invoking another method when postfix chains would be needed; retain the loop's final value to extract the last split field.
-- Regeneration zero-write rule: compile every discovered source once and abort on any error, then deterministically compile each source again and atomically replace its generated target.
+- Scratch/probe/fidelity work stays in project-local gitignored `.scratch/`; for standalone `git apply`/git ops there set `GIT_CEILING_DIRECTORIES="$ROOT/.scratch"`, and use `rtk proxy diff` when an empty diff is the acceptance signal.
+- WebSearch safety layer false-positives on medical/disease vocabulary → phrase queries by tool/org names only.
+- Strict E-- + regeneration contracts live in `docs/strict-profile.md` + `docs/regen.md`; authoring gaps not captured there: comments, indexing, and postfix chains are unsupported, so bind intermediate call results and retain a loop's final value when the last item is needed.
+- Apache-2.0 §4(b): patching a vendored upstream file requires a prominent in-file modification notice — ship it as part of the ordered patch set (e-- patch 0004 is the template).

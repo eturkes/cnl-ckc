@@ -1,3 +1,4 @@
+# Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE and patches/.
 """E-- (English--) — a deterministic English-to-Python transpiler.
 
 Public API:

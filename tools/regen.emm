@@ -4,12 +4,30 @@ Use pathlib.
 Use subprocess.
 Use sys.
 
+Define [[walk_tree]] taking dir_path, prune_hidden:
+    Set entries to <>.
+    For each entry in [[sorted]]([[dir_path.iterdir]]()):
+        Set hidden to False.
+        If prune_hidden:
+            Set entry_name to entry.name.
+            If [[entry_name.startswith]]("."):
+                Set hidden to True.
+        If not hidden:
+            If [[entry.is_dir]](follow_symlinks=False):
+                Set nested to [[walk_tree]](entry, prune_hidden).
+                For each nested_entry in nested:
+                    Do [[entries.append]](nested_entry).
+            Otherwise:
+                Do [[entries.append]](entry).
+    Give back entries.
+
 Define [[discover]] taking roots:
     Set sources to <>.
     For each root_name in roots:
         Set root_path to [[pathlib.Path]](root_name).
-        For each source_path in [[sorted]]([[root_path.rglob]]("*.emm")):
-            Do [[sources.append]]([[source_path.as_posix]]()).
+        For each source_path in [[walk_tree]](root_path, False):
+            If source_path.suffix equals ".emm":
+                Do [[sources.append]]([[source_path.as_posix]]()).
     Give back [[sorted]](sources).
 
 Define [[python_path_for]] taking source_rel:
@@ -46,10 +64,11 @@ Define [[orphan_python_paths]] taking roots:
     Set orphans to <>.
     For each root_name in roots:
         Set root_path to [[pathlib.Path]](root_name).
-        For each candidate in [[sorted]]([[root_path.rglob]]("*.py")):
-            Set source_path to [[candidate.with_suffix]](".emm").
-            If not [[source_path.is_file]]():
-                Do [[orphans.append]]([[candidate.as_posix]]()).
+        For each candidate in [[walk_tree]](root_path, False):
+            If candidate.suffix equals ".py":
+                Set source_path to [[candidate.with_suffix]](".emm").
+                If not [[source_path.is_file]]():
+                    Do [[orphans.append]]([[candidate.as_posix]]()).
     Give back [[sorted]](orphans).
 
 Define [[unauthorized_python_paths]] taking generated:
@@ -65,14 +84,10 @@ Define [[unauthorized_python_paths]] taking generated:
 Define [[conftest_paths]] taking nothing:
     Set repo_path to [[pathlib.Path]](".").
     Set found to <>.
-    For each candidate in [[sorted]]([[repo_path.rglob]]("conftest.py")):
-        Set hidden to False.
-        For each part in candidate.parts:
-            If [[part.startswith]]("."):
-                Set hidden to True.
-        If not hidden:
+    For each candidate in [[walk_tree]](repo_path, True):
+        If candidate.name equals "conftest.py":
             Do [[found.append]]([[candidate.as_posix]]()).
-    Give back found.
+    Give back [[sorted]](found).
 
 Define [[report_paths]] taking category, paths:
     For each path in [[sorted]](paths):
@@ -118,23 +133,25 @@ Define [[check_mode]] taking roots, sources, exe, env:
 
 Define [[regenerate_mode]] taking sources, exe, env:
     Set compile_errors to <>.
+    Set staged to {}.
     For each source_rel in sources:
         Set res to [[compile_one]](source_rel, exe, env).
         If res.returncode does not equal 0:
             Do [[compile_errors.append]](source_rel).
+        Otherwise:
+            Set target_rel to [[python_path_for]](source_rel).
+            Do [[staged.update]]({target_rel: res.stdout}).
     Do [[report_paths]]("compile-error", compile_errors).
     Set violations to [[len]](compile_errors).
     If violations is greater than 0:
         Do [[print]]("regen: violations: " plus [[str]](violations)).
         Exit with 1.
     Set pid_text to [[str]]([[os.getpid]]()).
-    For each source_rel in sources:
-        Set res to [[compile_one]](source_rel, exe, env).
-        Require that res.returncode equals 0.
-        Set target_rel to [[python_path_for]](source_rel).
+    For each target_rel in [[sorted]](staged):
+        Set payload to [[staged.pop]](target_rel).
         Set temp_rel to target_rel plus ".tmp." plus pid_text.
         Set temp_path to [[pathlib.Path]](temp_rel).
-        Do [[temp_path.write_bytes]](res.stdout).
+        Do [[temp_path.write_bytes]](payload).
         Do [[os.replace]](temp_rel, target_rel).
         Do [[print]]("regen: wrote " plus target_rel).
     Do [[print]]("regen: regenerate ok").

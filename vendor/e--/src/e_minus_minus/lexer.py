@@ -1,3 +1,4 @@
+# Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE and patches/.
 """Lexer for canonical E-- source.
 
 Produces a flat list of ``Token`` objects with Python-style INDENT / DEDENT /
