@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version-file: .python-version
+
+      - name: Run vendored suite
+        run: |
+          set -eu
+          if ! out="$(cd vendor/e-- && PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests 2>&1)"; then
+            printf '%s\n' "$out"
+            exit 1
+          fi
+          printf '%s\n' "$out"
+          printf '%s\n' "$out" | grep -q '^Ran 95 tests'
+          printf '%s\n' "$out" | grep -qx 'OK'
+          ! printf '%s\n' "$out" | grep -qi 'skip'
+
+      - name: Verify vendor integrity
+        run: |
+          set -eu
+          git diff --exit-code -- vendor/
+          test -z "$(git status --porcelain -- vendor/)"
+          (cd vendor/e-- && sha256sum --quiet -c MANIFEST.sha256)
+
+      - name: Verify regeneration bootstrap identity
+        run: |
+          set -eu
+          PYTHONPATH=vendor/e--/src PYTHONDONTWRITEBYTECODE=1 python3 -P -m e_minus_minus.strict tools/regen.emm >"$RUNNER_TEMP/regen.py.out"
+          cmp "$RUNNER_TEMP/regen.py.out" tools/regen.py
+
+      - name: Check generated Python
+        run: |
+          set -eu
+          PYTHONDONTWRITEBYTECODE=1 python3 -P tools/regen.py --check
+
+      - name: Lint shell harnesses
+        run: |
+          set -eu
+          bash -n tests/strict-harness.sh
+          bash -n tests/regen-harness.sh
+          shellcheck tests/strict-harness.sh tests/regen-harness.sh
+
+      - name: Run strict compiler harness
+        run: bash tests/strict-harness.sh
+
+      - name: Run regeneration harness
+        run: bash tests/regen-harness.sh

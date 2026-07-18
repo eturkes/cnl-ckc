@@ -1,0 +1,156 @@
+Use argparse.
+Use os.
+Use pathlib.
+Use subprocess.
+Use sys.
+
+Define [[discover]] taking roots:
+    Set sources to <>.
+    For each root_name in roots:
+        Set root_path to [[pathlib.Path]](root_name).
+        For each source_path in [[sorted]]([[root_path.rglob]]("*.emm")):
+            Do [[sources.append]]([[source_path.as_posix]]()).
+    Give back [[sorted]](sources).
+
+Define [[python_path_for]] taking source_rel:
+    Set source_path to [[pathlib.Path]](source_rel).
+    Set target_path to [[source_path.with_suffix]](".py").
+    Give back [[target_path.as_posix]]().
+
+Define [[generated_paths_for]] taking sources:
+    Set generated to <>.
+    For each source_rel in sources:
+        Do [[generated.append]]([[python_path_for]](source_rel)).
+    Give back [[sorted]](generated).
+
+Define [[compile_one]] taking source_rel, exe, env:
+    Set res to [[subprocess.run]](<exe, "-P", "-m", "e_minus_minus.strict", source_rel>, capture_output=True, env=env).
+    Give back res.
+
+Define [[vendor_python_paths]] taking nothing:
+    Set manifest_path to [[pathlib.Path]]("vendor/e--/MANIFEST.sha256").
+    Set manifest_text to [[manifest_path.read_text]](encoding="utf-8").
+    Set vendor_paths to <>.
+    For each line in [[manifest_text.splitlines]]():
+        If line:
+            Set relative_path to "".
+            For each piece in [[line.split]]("  "):
+                Set relative_path to piece.
+            Set relative_path to [[relative_path.removeprefix]]("./").
+            Set full_path to "vendor/e--/" plus relative_path.
+            If [[full_path.endswith]](".py"):
+                Do [[vendor_paths.append]](full_path).
+    Give back [[sorted]](vendor_paths).
+
+Define [[orphan_python_paths]] taking roots:
+    Set orphans to <>.
+    For each root_name in roots:
+        Set root_path to [[pathlib.Path]](root_name).
+        For each candidate in [[sorted]]([[root_path.rglob]]("*.py")):
+            Set source_path to [[candidate.with_suffix]](".emm").
+            If not [[source_path.is_file]]():
+                Do [[orphans.append]]([[candidate.as_posix]]()).
+    Give back [[sorted]](orphans).
+
+Define [[unauthorized_python_paths]] taking generated:
+    Set allowed to [[vendor_python_paths]]() plus generated.
+    Set git_res to [[subprocess.run]](<"git", "ls-files", "--", "*.py">, capture_output=True, check=True).
+    Set tracked_text to [[git_res.stdout.decode]]("utf-8").
+    Set unauthorized to <>.
+    For each tracked in [[sorted]]([[tracked_text.splitlines]]()):
+        If not (tracked is in allowed):
+            Do [[unauthorized.append]](tracked).
+    Give back unauthorized.
+
+Define [[conftest_paths]] taking nothing:
+    Set repo_path to [[pathlib.Path]](".").
+    Set found to <>.
+    For each candidate in [[sorted]]([[repo_path.rglob]]("conftest.py")):
+        Set hidden to False.
+        For each part in candidate.parts:
+            If [[part.startswith]]("."):
+                Set hidden to True.
+        If not hidden:
+            Do [[found.append]]([[candidate.as_posix]]()).
+    Give back found.
+
+Define [[report_paths]] taking category, paths:
+    For each path in [[sorted]](paths):
+        Do [[print]]("regen: " plus category plus ": " plus path).
+
+Define [[check_mode]] taking roots, sources, exe, env:
+    Set compile_errors to <>.
+    Set missing to <>.
+    Set drift to <>.
+    For each source_rel in sources:
+        Set res to [[compile_one]](source_rel, exe, env).
+        If res.returncode does not equal 0:
+            Do [[compile_errors.append]](source_rel).
+        Otherwise:
+            Set target_rel to [[python_path_for]](source_rel).
+            Set target_path to [[pathlib.Path]](target_rel).
+            If not [[target_path.is_file]]():
+                Do [[missing.append]](target_rel).
+            Otherwise:
+                Set current_bytes to [[target_path.read_bytes]]().
+                If current_bytes does not equal res.stdout:
+                    Do [[drift.append]](target_rel).
+    Set generated to [[generated_paths_for]](sources).
+    Set orphans to [[orphan_python_paths]](roots).
+    Set unauthorized to [[unauthorized_python_paths]](generated).
+    Set conftests to [[conftest_paths]]().
+    Do [[report_paths]]("compile-error", compile_errors).
+    Do [[report_paths]]("missing", missing).
+    Do [[report_paths]]("drift", drift).
+    Do [[report_paths]]("orphan", orphans).
+    Do [[report_paths]]("unauthorized", unauthorized).
+    Do [[report_paths]]("conftest", conftests).
+    Set violations to [[len]](compile_errors).
+    Set violations to violations plus [[len]](missing).
+    Set violations to violations plus [[len]](drift).
+    Set violations to violations plus [[len]](orphans).
+    Set violations to violations plus [[len]](unauthorized).
+    Set violations to violations plus [[len]](conftests).
+    If violations is greater than 0:
+        Do [[print]]("regen: violations: " plus [[str]](violations)).
+        Exit with 1.
+    Do [[print]]("regen: check ok").
+
+Define [[regenerate_mode]] taking sources, exe, env:
+    Set compile_errors to <>.
+    For each source_rel in sources:
+        Set res to [[compile_one]](source_rel, exe, env).
+        If res.returncode does not equal 0:
+            Do [[compile_errors.append]](source_rel).
+    Do [[report_paths]]("compile-error", compile_errors).
+    Set violations to [[len]](compile_errors).
+    If violations is greater than 0:
+        Do [[print]]("regen: violations: " plus [[str]](violations)).
+        Exit with 1.
+    Set pid_text to [[str]]([[os.getpid]]()).
+    For each source_rel in sources:
+        Set res to [[compile_one]](source_rel, exe, env).
+        Require that res.returncode equals 0.
+        Set target_rel to [[python_path_for]](source_rel).
+        Set temp_rel to target_rel plus ".tmp." plus pid_text.
+        Set temp_path to [[pathlib.Path]](temp_rel).
+        Do [[temp_path.write_bytes]](res.stdout).
+        Do [[os.replace]](temp_rel, target_rel).
+        Do [[print]]("regen: wrote " plus target_rel).
+    Do [[print]]("regen: regenerate ok").
+
+Set roots to <"tools">.
+Set strict_src to [[pathlib.Path]]("vendor/e--/src/e_minus_minus/strict.py").
+Require that [[strict_src.is_file]]().
+Set parser to [[argparse.ArgumentParser]](prog="regen").
+Do [[parser.add_argument]]("--check", action="store_true").
+Do [[parser.add_argument]]("--regenerate", action="store_true").
+Set args to [[parser.parse_args]]().
+Set exe to sys.executable.
+Set env to [[os.environ.copy]]().
+Do [[env.update]]({"PYTHONPATH": "vendor/e--/src", "PYTHONDONTWRITEBYTECODE": "1"}).
+Set sources to [[discover]](roots).
+If args.regenerate:
+    Do [[regenerate_mode]](sources, exe, env).
+Otherwise:
+    Do [[check_mode]](roots, sources, exe, env).

@@ -1,0 +1,287 @@
+#!/usr/bin/env bash
+set -u
+
+ROOT=$PWD
+if ! [ -d vendor/e-- ] || ! [ -f tools/regen.py ]; then
+    printf 'FAIL repo-root: run from cnl-ckc repository root\n'
+    printf 'SUMMARY: 0 passed, 1 failed\n'
+    exit 1
+fi
+
+export PYTHONDONTWRITEBYTECODE=1
+export RG_FFF_NO_FUZZY_FALLBACK=1
+
+SCRATCH="$ROOT/.scratch/regen-harness.$$"
+SCAFFOLD="$SCRATCH/repo"
+RUN_STDOUT="$SCRATCH/run.stdout"
+RUN_STDERR="$SCRATCH/run.stderr"
+RUN_STATUS=0
+PASS_COUNT=0
+FAIL_COUNT=0
+
+rm -rf "$SCRATCH"
+mkdir -p "$SCRATCH"
+trap 'rm -rf "$SCRATCH"' EXIT
+
+pass_case() {
+    PASS_COUNT=$((PASS_COUNT + 1))
+    printf 'PASS %s\n' "$1"
+}
+
+fail_case() {
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+    printf 'FAIL %s: %s\n' "$1" "$2"
+}
+
+build_scaffold() {
+    rm -rf "$SCAFFOLD"
+    mkdir -p "$SCAFFOLD/vendor/e--" "$SCAFFOLD/tools" || return 1
+    cp "$ROOT/vendor/e--/MANIFEST.sha256" \
+        "$SCAFFOLD/vendor/e--/MANIFEST.sha256" || return 1
+    cp -R "$ROOT/vendor/e--/src" "$SCAFFOLD/vendor/e--/src" || return 1
+    cp "$ROOT/tools/regen.emm" "$ROOT/tools/regen.py" \
+        "$SCAFFOLD/tools/" || return 1
+    (cd "$SCAFFOLD" && git init -q && git add -A)
+}
+
+run_regen_at() {
+    local repo=$1
+    shift
+    if (cd "$repo" && python3 -P tools/regen.py "$@") \
+        >"$RUN_STDOUT" 2>"$RUN_STDERR"; then
+        RUN_STATUS=0
+    else
+        RUN_STATUS=$?
+    fi
+}
+
+has_line() {
+    command grep -F -x -q -- "$2" "$1"
+}
+
+expect_report() {
+    local label=$1
+    local expected=$2
+    if [ "$RUN_STATUS" -ne 1 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 1"
+    elif ! has_line "$RUN_STDOUT" "$expected"; then
+        fail_case "$label" "missing report: $expected"
+    else
+        pass_case "$label"
+    fi
+}
+
+has_temp_remnants() {
+    local -a remnants
+    shopt -s nullglob
+    remnants=("$SCAFFOLD"/tools/*.tmp.*)
+    shopt -u nullglob
+    [ "${#remnants[@]}" -ne 0 ]
+}
+
+check_scaffold_clean() {
+    local label="check/scaffold-clean"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    run_regen_at "$SCAFFOLD" --check
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 0"
+    elif [ -s "$RUN_STDERR" ]; then
+        fail_case "$label" "stderr is not empty"
+    elif ! has_line "$RUN_STDOUT" "regen: check ok"; then
+        fail_case "$label" "missing success report"
+    else
+        pass_case "$label"
+    fi
+}
+
+check_drift() {
+    local label="check/drift"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    printf '#' >>"$SCAFFOLD/tools/regen.py"
+    run_regen_at "$SCAFFOLD" --check
+    expect_report "$label" "regen: drift: tools/regen.py"
+}
+
+check_missing() {
+    local label="check/missing"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    printf 'Set x to 1.\n' >"$SCAFFOLD/tools/extra.emm"
+    run_regen_at "$SCAFFOLD" --check
+    expect_report "$label" "regen: missing: tools/extra.py"
+}
+
+check_compile_error() {
+    local label="check/compile-error"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    printf 'Frobnicate.\n' >"$SCAFFOLD/tools/bad.emm"
+    run_regen_at "$SCAFFOLD" --check
+    expect_report "$label" "regen: compile-error: tools/bad.emm"
+}
+
+check_orphan() {
+    local label="check/orphan"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    printf 'pass\n' >"$SCAFFOLD/tools/orphan.py"
+    run_regen_at "$SCAFFOLD" --check
+    expect_report "$label" "regen: orphan: tools/orphan.py"
+}
+
+check_unauthorized() {
+    local label="check/unauthorized"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    printf 'pass\n' >"$SCAFFOLD/evil.py"
+    (cd "$SCAFFOLD" && git add evil.py)
+    run_regen_at "$SCAFFOLD" --check
+    expect_report "$label" "regen: unauthorized: evil.py"
+}
+
+check_conftest() {
+    local label="check/conftest"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    mkdir -p "$SCAFFOLD/tests"
+    printf 'pass\n' >"$SCAFFOLD/tests/conftest.py"
+    run_regen_at "$SCAFFOLD" --check
+    expect_report "$label" "regen: conftest: tests/conftest.py"
+}
+
+check_regenerate_restores() {
+    local label="regenerate/restores-drift"
+    local pristine="$SCRATCH/pristine.py"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    cp "$SCAFFOLD/tools/regen.py" "$pristine"
+    printf '#' >>"$SCAFFOLD/tools/regen.py"
+    run_regen_at "$SCAFFOLD" --regenerate
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 0"
+    elif ! has_line "$RUN_STDOUT" "regen: regenerate ok"; then
+        fail_case "$label" "missing success report"
+    elif ! cmp -s "$SCAFFOLD/tools/regen.py" "$pristine"; then
+        fail_case "$label" "regenerated bytes differ from pristine"
+    elif has_temp_remnants; then
+        fail_case "$label" "temporary output remains"
+    else
+        pass_case "$label"
+    fi
+}
+
+check_regenerate_zero_writes() {
+    local label="regenerate/zero-writes-on-failure"
+    local perturbed="$SCRATCH/perturbed.py"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    printf '#' >>"$SCAFFOLD/tools/regen.py"
+    cp "$SCAFFOLD/tools/regen.py" "$perturbed"
+    printf 'Frobnicate.\n' >"$SCAFFOLD/tools/bad.emm"
+    run_regen_at "$SCAFFOLD" --regenerate
+    if [ "$RUN_STATUS" -ne 1 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 1"
+    elif ! has_line "$RUN_STDOUT" \
+        "regen: compile-error: tools/bad.emm"; then
+        fail_case "$label" "missing compile-error report"
+    elif ! cmp -s "$SCAFFOLD/tools/regen.py" "$perturbed"; then
+        fail_case "$label" "regen.py changed after failed pass one"
+    elif has_temp_remnants; then
+        fail_case "$label" "temporary output remains"
+    else
+        pass_case "$label"
+    fi
+}
+
+check_usage() {
+    local label="cli/usage"
+    if ! build_scaffold; then
+        fail_case "$label" "could not build scaffold"
+        return
+    fi
+    run_regen_at "$SCAFFOLD" --bogus
+    if [ "$RUN_STATUS" -ne 2 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 2"
+    elif ! command grep -q '^usage: regen' "$RUN_STDERR"; then
+        fail_case "$label" "stderr lacks argparse usage"
+    else
+        pass_case "$label"
+    fi
+}
+
+check_real_tree() {
+    local label="check/real-tree-fixed-point"
+    run_regen_at "$ROOT" --check
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "$label" "exit $RUN_STATUS, expected 0"
+    elif [ -s "$RUN_STDERR" ]; then
+        fail_case "$label" "stderr is not empty"
+    elif ! has_line "$RUN_STDOUT" "regen: check ok"; then
+        fail_case "$label" "missing success report"
+    else
+        pass_case "$label"
+    fi
+}
+
+check_bootstrap_identity() {
+    local label="bootstrap/byte-identity"
+    local fresh="$SCRATCH/bootstrap.py"
+    local stderr_path="$SCRATCH/bootstrap.stderr"
+    local status
+    if (cd "$ROOT" && \
+        PYTHONPATH=vendor/e--/src PYTHONDONTWRITEBYTECODE=1 \
+        python3 -P -m e_minus_minus.strict tools/regen.emm) \
+        >"$fresh" 2>"$stderr_path"; then
+        status=0
+    else
+        status=$?
+    fi
+    if [ "$status" -ne 0 ]; then
+        fail_case "$label" "strict compile exit $status, expected 0"
+    elif [ -s "$stderr_path" ]; then
+        fail_case "$label" "strict compile stderr is not empty"
+    elif ! cmp -s "$fresh" "$ROOT/tools/regen.py"; then
+        fail_case "$label" "fresh compile differs from tools/regen.py"
+    else
+        pass_case "$label"
+    fi
+}
+
+check_scaffold_clean
+check_drift
+check_missing
+check_compile_error
+check_orphan
+check_unauthorized
+check_conftest
+check_regenerate_restores
+check_regenerate_zero_writes
+check_usage
+check_real_tree
+check_bootstrap_identity
+
+printf 'SUMMARY: %s passed, %s failed\n' "$PASS_COUNT" "$FAIL_COUNT"
+if [ "$FAIL_COUNT" -eq 0 ]; then
+    exit 0
+fi
+exit 1
