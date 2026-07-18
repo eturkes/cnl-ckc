@@ -1,0 +1,7 @@
+cnl-ckc
+Copyright 2026 Emir Turkes
+
+First-party work: Apache-2.0 WITH LLVM-exception (root LICENSE).
+Vendored directories carry their own licenses and are excluded from the root
+license: vendor/e-- (Apache-2.0), vendor/ape (LGPL-3.0-or-later). See
+docs/provenance.md for pins, roles, and the licensing split.

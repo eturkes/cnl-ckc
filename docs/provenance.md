@@ -73,8 +73,12 @@ Rationale:
 
 Revisit trigger: M5 guideline authoring demonstrates general-English coverage gaps that the project manifest cannot economically fill. Required response = create a **BLOCKED** proposal for user decision; do not import Clex implicitly. Proposal options: accept GPL for an isolated lexicon-only artifact, or generate coverage from a permissively licensed wordlist.
 
-## Top-level license — proposal only
+## Top-level license
 
-**Status: PROPOSAL, requirement-level, awaiting user decision. No top-level license is selected.**
+**Status: DECIDED (user, 2026-07-18) — `Apache-2.0 WITH LLVM-exception` for all first-party work.** Root `LICENSE` = canonical Apache-2.0 text + verbatim LLVM exceptions; `NOTICE` documents the vendor split. Vendor directories retain their own licenses (layout above); root license MUST NOT replace or obscure them.
 
-Proposed default = Apache-2.0 for all first-party work: matches e-- upstream + supplies an explicit patent grant. Vendor directories retain their own licenses; future root `LICENSE` + `NOTICE` MUST document the split. Alternative = MIT.
+Basis (recorded so fork/Clex futures do not reopen the decision):
+
+- Apache-2.0 → GPLv3 compatibility is one-way in our favor: Clex `LICENSE` at pin = GPL-3.0 (verified; the Apache conflict exists only vs GPLv2-only). Clex fetched-not-conveyed (test-only scratch, above) triggers no GPL obligations; if the M5 BLOCKED proposal ever vendors Clex, the distributed combination conveys under GPLv3 while first-party files keep Apache headers + permissive reusability. Root GPL would solve no conflict and forecloses permissive reuse of glue/IR/kernel that never touch GPL code.
+- Vendor forks are chartered (M1 e--, M2 APE) and license-neutral to the root: a fork's license follows its upstream — e-- fork stays plain Apache-2.0 (patches upstreamable verbatim; the LLVM exception applies to first-party files only), APE fork mods stay LGPL-3.0-or-later inside `vendor/ape/` (binding above), AceRules = clean-room semantics reimplementation only (no code reuse), RACE has no source.
+- Guard (binding): clinical/lexicon vocabulary MUST enter the first-party manifest → `-ulexfile` facts, never a Clex fork — GPL would capture entries added there.
