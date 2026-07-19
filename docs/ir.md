@@ -128,7 +128,7 @@ Canonical serialization is performed on copies because `canonical_line/2` number
 
 ## Validator
 
-`src/prolog/ir_validate.pl` owns semantic passes 4-10. `src/prolog/ir_tool.pl` owns byte decoding, parsing, the canonical fixed point, CLI framing, buffering, and error emission. The first failing pass wins. Within a pass, the first offending term in stream order wins; deterministic within-term checks use the order stated below.
+`src/prolog/ir_validate.pl` owns semantic passes 4-10. `src/prolog/drs_to_ir.pl` owns the M2 envelope and DRS-to-IR semantics. `src/prolog/ir_tool.pl` owns byte decoding, parsing, the canonical fixed point, CLI framing, buffering, and error emission. The first failing pass wins. Within a pass, the first offending term in stream order wins; deterministic within-term checks use the order stated below.
 
 1. **Stream/UTF-8** - read stdin as bytes and apply the strict decoder.
 2. **Term syntax** - parse a sequence of Prolog terms with pinned reader flags and syntax errors promoted to exceptions.
@@ -145,21 +145,58 @@ Canonical serialization is performed on copies because `canonical_line/2` number
 
 | Class | Pass/stage | Meaning | Exit |
 |---|---|---|---:|
-| `input_utf8` | 1 | Stdin is not strict RFC 3629 UTF-8. | 1 |
-| `syntax` | 2 | The decoded term stream cannot be parsed. A leading UTF-8 BOM reaches this class under pinned SWI 9.2.9. | 1 |
-| `canonical` | 3 | Reserialized text differs, or a term is outside the canonical serializer's domain. | 1 |
-| `envelope` | 4 | Header/document envelope is missing or wrong, or content follows the sole query. | 1 |
-| `query_count` | 4 | The record has zero or more than one `query/3` item. | 1 |
-| `section_order` | 4 | A fact occurs after the rule section begins. | 1 |
-| `shape` | 5 | A constructor, arity, list, or admitted atomic kind is invalid. | 1 |
-| `identity` | 6 | Document identity, ID kind, ordinal bound, or sentence agreement is invalid. | 1 |
-| `ordering` | 7 | An ID is duplicated/out of section order, or token ordinals are not strictly ascending. | 1 |
-| `scope` | 8 | A variable occurs outside a rule or rule numbering is not dense first-occurrence order. | 1 |
-| `naf` | 9 | A reserved `naf/1` literal occurs. | 1 |
-| `safety` | 9 | A rule body is empty or a head variable lacks positive-body coverage. | 1 |
-| `cycle` | 10 | A positive predicate dependency closes a cycle or self-loop. | 1 |
-| `usage` | CLI | Arguments are not exactly `validate`. | 2 |
+| `input_utf8` | Framing 1 | Stdin is not strict RFC 3629 UTF-8. | 1 |
+| `syntax` | Framing 2 | The decoded term stream cannot be parsed. A leading UTF-8 BOM reaches this class under pinned SWI 9.2.9. | 1 |
+| `canonical` | Framing 3 | Reserialized text differs, or a term is outside the canonical serializer's domain. | 1 |
+| `envelope` | Validate 4 / lower | The selected record envelope is missing, malformed, wrong-versioned, or has trailing content. | 1 |
+| `query_count` | Validate 4 | The IR record has zero or more than one `query/3` item. | 1 |
+| `section_order` | Validate 4 | A fact occurs after the rule section begins. | 1 |
+| `shape` | Validate 5 | A constructor, arity, list, or admitted atomic kind is invalid. | 1 |
+| `identity` | Validate 6 | Document identity, ID kind, ordinal bound, or sentence agreement is invalid. | 1 |
+| `ordering` | Validate 7 | An ID is duplicated/out of section order, or token ordinals are not strictly ascending. | 1 |
+| `scope` | Validate 8 | A variable occurs outside a rule or rule numbering is not dense first-occurrence order. | 1 |
+| `naf` | Validate 9 | A reserved `naf/1` literal occurs. | 1 |
+| `safety` | Validate 9 | A rule body is empty or a head variable lacks positive-body coverage. | 1 |
+| `cycle` | Validate 10 | A positive predicate dependency closes a cycle or self-loop. | 1 |
+| `question_count` | Lower | The root DRS has zero or multiple questions, or its sole question is not final. | 1 |
+| `wh_query` | Lower | A `query/2` wh condition occurs; v1 requires one ground yes/no query. | 1 |
+| `copula` | Lower | A factual `object/6` and `be` pair is malformed, ambiguous, or unpaired. | 1 |
+| `referent` | Lower | A DRS referent is undeclared, redeclared, unconsumed, unbound, role-reused, or not losslessly erasable as an event. | 1 |
+| `unsupported` | Lower | A constructor or arrangement is outside the admitted DRS profile, provenance is not one-sentence canonical data, or lowering cannot produce valid v1 IR without loss. | 1 |
+| `usage` | CLI | Arguments do not select exactly one implemented command (`lower` or `validate`). | 2 |
 | `uncaught` | Any | An unexpected internal exception escaped a stage. | 2 |
+
+## DRS lowering
+
+Canonical lowering invocation from repository root:
+
+```sh
+swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- lower <record.drs.pl >record.ir.pl
+```
+
+Input is exactly one canonical M2 record with three terms and no trailing content:
+
+```prolog
+ace_front_end_record(1).
+document(docid('<docid>'),source_sha256('<hex>'),ulex(<ulex-term>)).
+drs(Domain,Conditions).
+```
+
+The input passes the same strict UTF-8 decoder, pinned term parser, and canonical fixed-point gate as IR validation. Term 2 uses the same forced-quote document serializer. Consequently an admitted `document/3` line is copied byte-for-byte into output term 2. Lowering is buffered: no real stdout bytes are written until the complete output has passed IR v1 validation.
+
+The admitted DRS profile is deliberately total and small:
+
+- Root factual conditions may be exact copula pairs or ground intransitive predicates. `object(X,Class,countable,na,eq,1)` paired in the same root DRS with `predicate(E,be,named(Name),X)` becomes `pred(Class,[named(Name)])`. Both anchors contribute provenance. Every other factual `object` or `be` arrangement is rejected rather than approximated.
+- `predicate(E,Verb,named(Name))` becomes one ground fact. A root fact may not retain a discourse referent as its subject.
+- A rule is exactly `=>(drs(ADom,AConds),drs(CDom,CConds))`. Its antecedent is a non-empty list of positive exact `object/6` and intransitive `predicate/3` conditions. Its consequent is one intransitive `predicate/3` head. Antecedent referents remain in scope in the consequent; named subjects are also admitted. Nested implication, disjunction, negation, copulae inside rules, and all other constructors are rejected.
+- Exactly one `question(drs(QDom,QConds))` must be the final root condition. It contains one ground intransitive predicate and becomes the sole IR query. Any `query/2` wh condition is rejected.
+- A predicate event referent is erased only when it is declared by that same DRS domain, used exactly once as an event argument, and never reused as an entity. Domain declarations are unique across the admitted DRS tree. Every declared referent must be consumed by copula normalization, erased under this event law, or bound as a rule variable; undeclared, redeclared, unconsumed, event-reused, or unbound-head referents are errors.
+- Rule variables are data terms `var(N)`. Numbering is dense in the validator's traversal order: head arguments first, then antecedent body literals in DRS order, each by first occurrence.
+- An output item's sentence is the common `S` from every consumed `/(S,T)` anchor. Mixed-sentence items are rejected. Tokens are deduplicated and sorted strictly ascending. Clause IDs are per-sentence 1-based counters in root emission order. Facts must precede rules, each emitted section must have ascending `(S,C)` IDs, and the query remains final.
+
+All other DRS content is a hard error. Lowering never drops a condition, silently weakens a term, or emits a partial record.
+
+Lowering is also first-failure deterministic. Its order is: M2 envelope; root-domain shape; root question count/position; cross-DRS declaration uniqueness; root factual and rule conditions in DRS order; root referent accounting; final-question semantics; output section/order checks; generated-IR validation. A condition-local shape, copula, or groundness error therefore wins over later whole-scope referent accounting. For example, a root predicate whose subject is a domain referent is `unsupported` before a possible later event/entity-role conflict is considered.
 
 ## CLI
 
@@ -169,16 +206,19 @@ Canonical validation invocation from repository root:
 swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- validate <record.pl
 ```
 
-The planned command surface is `lower | validate | compile | run`. In this unit only `validate` is implemented. Missing arguments, an unimplemented/unknown command, or extra arguments are `usage` errors.
+The planned command surface is `lower | validate | compile | run`. This unit implements `lower` and `validate`; `compile` and `run` remain unimplemented. Missing arguments, an unimplemented/unknown command, or extra arguments are `usage` errors.
 
 The tool pins encoding, double-quote, back-quote, character-escape, syntax-error, and writer behavior; it does not depend on ambient SWI defaults. `-f none -F none` remains part of every canonical process invocation.
 
 I/O contract:
 
 - Validate success: exit 0, zero stdout, zero stderr.
+- Lower success: exit 0, one canonical IR v1 record on stdout, zero stderr.
 - Any input-content rejection: exit 1, zero stdout, exactly one LF-terminated stderr line.
 - Usage or uncaught internal failure: exit 2, zero stdout, exactly one LF-terminated stderr line.
 - All prospective stage output is captured in memory. Real stdout is flushed once, only after a successful stage; this framing also applies to later output-producing subcommands.
+
+These byte guarantees cover record processing with writable output streams. An operating-system sink failure after the single stdout commit begins is outside the transactional input-error surface because already accepted pipe or file bytes cannot be retracted.
 
 Error form:
 
@@ -186,7 +226,7 @@ Error form:
 ir_tool_error(Stage,Class,Detail).
 ```
 
-`Stage` is `validate` after successful subcommand dispatch. Pre-dispatch usage errors use `cli`. The error term uses the same canonical writer. If its detail cannot be serialized, the deterministic replacement detail is `unserializable`; a final fixed `ir_tool_error(cli,uncaught,unserializable).` line is the serialization backstop.
+`Stage` is `lower` or `validate` after successful subcommand dispatch. Pre-dispatch usage errors use `cli`. The error term uses the same canonical writer. If its detail cannot be serialized, the deterministic replacement detail is `unserializable`; a final fixed `ir_tool_error(cli,uncaught,unserializable).` line is the serialization backstop.
 
 ## Versioning
 

@@ -1,0 +1,3 @@
+ace_front_end_manifest(1).
+document(docid('slice'),source_sha256('bf432c59846951be8568be538cfa2c5fcdc41d35b7ede4d0bc0fd5c4aff7c2c4'),record_sha256('df3e032c7488cfab962d2836dc892eae191660d3bc551d66f2b68fdcb62e98a3')).
+document(docid('slice-unknown'),source_sha256('4e9c59b62f4920a805975af2aa754f822f4fe5c6685000338ccb7f252bfbf76a'),record_sha256('847a30c67bafdaf495f900d29844a256988009efeaab68c44453d339f04c82d5')).

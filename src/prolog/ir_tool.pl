@@ -4,11 +4,13 @@
 
 :- use_module(library(readutil), [read_stream_to_codes/2]).
 :- use_module(drs_canon, [canonical_line/2]).
+:- use_module(drs_to_ir, [lower_terms/2]).
 :- use_module(ir_validate, [validate_terms/1]).
 
 /*
-Run: swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- validate
-Input: strict RFC 3629 UTF-8 term stream. Validate success writes no bytes.
+Run: swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- lower|validate
+Input: strict RFC 3629 UTF-8 canonical term stream. Validate writes no bytes;
+lower writes one buffered canonical IR record.
 Failure: stdout empty; stderr is one canonical ir_tool_error(Stage,Class,Detail).
 Exit: 0=success; 1=input-content rejection; 2=usage or uncaught internal error.
 All stage output is captured in memory and flushed to real stdout only on success.
@@ -44,6 +46,8 @@ pin_flags :-
 
 error_stage([validate], validate) :-
     !.
+error_stage([lower], lower) :-
+    !.
 error_stage(_, cli).
 
 run_cli([validate], Input, Output) :-
@@ -52,14 +56,29 @@ run_cli([validate], Input, Output) :-
     format(Output, '~s', [Buffer]),
     flush_output(Output),
     halt(0).
+run_cli([lower], Input, Output) :-
+    !,
+    with_output_to(string(Buffer), lower_input(Input)),
+    format(Output, '~s', [Buffer]),
+    flush_output(Output),
+    halt(0).
 run_cli(Argv, _, _) :-
     throw(ir_tool_failure(cli, usage, argv(Argv), 2)).
 
 validate_input(Input) :-
+    read_canonical_terms(Input, Terms),
+    validate_terms(Terms).
+
+lower_input(Input) :-
+    read_canonical_terms(Input, Terms),
+    lower_terms(Terms, IrTerms),
+    canonical_codes(IrTerms, 1, Codes),
+    format('~s', [Codes]).
+
+read_canonical_terms(Input, Terms) :-
     read_utf8_input(Input, Text, Codes),
     parse_terms(Text, Terms),
-    canonical_fixed_point(Terms, Codes),
-    validate_terms(Terms).
+    canonical_fixed_point(Terms, Codes).
 
 read_utf8_input(Input, Text, Codes) :-
     read_stream_to_codes(Input, Bytes),
