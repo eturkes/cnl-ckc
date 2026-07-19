@@ -95,13 +95,48 @@ else
     fail_case "swipl/version" "could not run $SWIPL"
 fi
 
+if ! vendor_copy_status=$(git status --porcelain --ignored -- vendor/); then
+    fail_case "vendor/precopy-clean" "git status failed"
+fi
+if [ -n "$vendor_copy_status" ]; then
+    printf '%s\n' "$vendor_copy_status"
+    fail_case "vendor/precopy-clean" "vendor tree has tracked or ignored artifacts"
+fi
+pass_case "vendor/precopy-clean"
+
+for shared_anchor in \
+    "$DOCS/anchor.ace" \
+    "$RED/badid/Bad_Name.ace" \
+    "$RED/orphan/anchor.ace" \
+    "$RED/buffered/anchor.ace"; do
+    if ! cmp "$shared_anchor" "$ROOT/tests/fixtures/adapter/green/anchor.ace"; then
+        fail_case "fixtures/shared-equality" "anchor ACE copy differs: $shared_anchor"
+    fi
+done
+for shared_zorbomat in \
+    "$DOCS/zorbomat.ace" \
+    "$RED/oov/zorbomat.ace" \
+    "$RED/buffered/zz-oov.ace"; do
+    if ! cmp "$shared_zorbomat" "$ROOT/tests/fixtures/adapter/ulex/zorbomat.ace"; then
+        fail_case "fixtures/shared-equality" "zorbomat ACE copy differs: $shared_zorbomat"
+    fi
+done
+for shared_ulex in \
+    "$DOCS/zorbomat.ulex" \
+    "$RED/orphan/other.ulex"; do
+    if ! cmp "$shared_ulex" "$ROOT/tests/fixtures/adapter/ulex/zorbomat.ulex"; then
+        fail_case "fixtures/shared-equality" "zorbomat ulex copy differs: $shared_ulex"
+    fi
+done
+pass_case "fixtures/shared-equality"
+
 rm -rf "$SCRATCH"
 mkdir -p "$TREE" "$SCRATCH/run1" "$SCRATCH/run2" "$SCRATCH/red"
 trap 'rm -rf "$SCRATCH"' EXIT
 cp -a "$ROOT/vendor/ape/." "$TREE/"
 pass_case "vendor/copy"
 
-if ! make -C "$TREE" plp "swipl=$SWIPL"; then
+if ! make -C "$TREE" plp "swipl=$SWIPL -f none"; then
     fail_case "vendor/plp" "make plp failed"
 fi
 if ! [ -f "$TREE/prolog/parser/grammar.plp" ]; then
@@ -190,6 +225,12 @@ oov_stderr="$SCRATCH/red/oov.stderr"
 run_front_end "$oov_stdout" "$oov_stderr" "$TREE" "$RED/oov" "$oov_out"
 check_failure "red/oov" 1 'adapter_error(ape_messages,' "$oov_out" "$oov_stdout" "$oov_stderr"
 
+buffered_out="$SCRATCH/red/buffered-out"
+buffered_stdout="$SCRATCH/red/buffered.stdout"
+buffered_stderr="$SCRATCH/red/buffered.stderr"
+run_front_end "$buffered_stdout" "$buffered_stderr" "$TREE" "$RED/buffered" "$buffered_out"
+check_failure "red/buffered-zero-write" 1 'adapter_error(ape_messages,' "$buffered_out" "$buffered_stdout" "$buffered_stderr"
+
 badid_out="$SCRATCH/red/badid-out"
 badid_stdout="$SCRATCH/red/badid.stdout"
 badid_stderr="$SCRATCH/red/badid.stderr"
@@ -206,6 +247,11 @@ exists_out="$SCRATCH/red/exists-out"
 exists_stdout="$SCRATCH/red/exists.stdout"
 exists_stderr="$SCRATCH/red/exists.stderr"
 mkdir "$exists_out"
+exists_sentinel_expected="$SCRATCH/red/exists-sentinel.expected"
+printf '%s\n' 'preserve-this-sentinel-byte-for-byte' >"$exists_sentinel_expected"
+cp "$exists_sentinel_expected" "$exists_out/sentinel"
+exists_file_set_before="$SCRATCH/red/exists-files.before"
+write_file_set "$exists_out" "$exists_file_set_before"
 run_front_end "$exists_stdout" "$exists_stderr" "$TREE" "$DOCS" "$exists_out"
 if [ "$RUN_STATUS" -ne 2 ]; then
     fail_case "red/out-dir-exists/status" "expected 2, got $RUN_STATUS"
@@ -222,6 +268,14 @@ if [ "$exists_line_count" -ne 1 ]; then
 fi
 if ! printf '%s\n' "$(<"$exists_stderr")" | cmp - "$exists_stderr"; then
     fail_case "red/out-dir-exists/stderr" "expected exactly one LF-terminated line"
+fi
+if ! cmp "$exists_out/sentinel" "$exists_sentinel_expected"; then
+    fail_case "red/out-dir-exists/sentinel" "sentinel bytes changed"
+fi
+exists_file_set_after="$SCRATCH/red/exists-files.after"
+write_file_set "$exists_out" "$exists_file_set_after"
+if ! cmp "$exists_file_set_before" "$exists_file_set_after"; then
+    fail_case "red/out-dir-exists/file-set" "pre-existing directory contents changed"
 fi
 pass_case "red/out-dir-exists"
 
@@ -251,6 +305,83 @@ SWIPL=$empty_swipl
 run_front_end "$empty_adapter_stdout" "$empty_adapter_stderr" "$TREE" "$DOCS" "$empty_adapter_out"
 SWIPL=$real_swipl
 check_failure "red/empty-adapter-stdout" 2 'ace-front-end: adapter-stdout:' "$empty_adapter_out" "$empty_adapter_stdout" "$empty_adapter_stderr"
+
+stderr_swipl="$SCRATCH/red/stderr-swipl"
+printf '%s\n' \
+    '#!/usr/bin/env sh' \
+    "printf '%s\\n' 'adapter-sentinel-stderr' >&2" \
+    "printf '%s\\n' 'drs([A],[]).'" \
+    >"$stderr_swipl"
+chmod +x "$stderr_swipl"
+adapter_stderr_out="$SCRATCH/red/adapter-stderr-out"
+adapter_stderr_stdout="$SCRATCH/red/adapter-stderr.stdout"
+adapter_stderr_stderr="$SCRATCH/red/adapter-stderr.stderr"
+SWIPL=$stderr_swipl
+run_front_end "$adapter_stderr_stdout" "$adapter_stderr_stderr" "$TREE" "$DOCS" "$adapter_stderr_out"
+SWIPL=$real_swipl
+if command grep -Fq 'adapter-sentinel-stderr' "$adapter_stderr_stderr"; then
+    fail_case "red/adapter-stderr/relay" "adapter stderr bytes were relayed"
+fi
+check_failure "red/adapter-stderr" 2 'ace-front-end: adapter-stderr:' "$adapter_stderr_out" "$adapter_stderr_stdout" "$adapter_stderr_stderr"
+
+two_line_swipl="$SCRATCH/red/two-line-swipl"
+printf '%s\n' \
+    '#!/usr/bin/env sh' \
+    "printf '%s\\n%s\\n' 'drs([A],[]).' 'second-line'" \
+    >"$two_line_swipl"
+chmod +x "$two_line_swipl"
+two_line_out="$SCRATCH/red/two-line-out"
+two_line_stdout="$SCRATCH/red/two-line.stdout"
+two_line_stderr="$SCRATCH/red/two-line.stderr"
+SWIPL=$two_line_swipl
+run_front_end "$two_line_stdout" "$two_line_stderr" "$TREE" "$DOCS" "$two_line_out"
+SWIPL=$real_swipl
+check_failure "red/adapter-stdout-two-lines" 2 'ace-front-end: adapter-stdout:' "$two_line_out" "$two_line_stdout" "$two_line_stderr"
+
+no_lf_swipl="$SCRATCH/red/no-lf-swipl"
+printf '%s\n' \
+    '#!/usr/bin/env sh' \
+    "printf '%s' 'drs([A],[]).'" \
+    >"$no_lf_swipl"
+chmod +x "$no_lf_swipl"
+no_lf_out="$SCRATCH/red/no-lf-out"
+no_lf_stdout="$SCRATCH/red/no-lf.stdout"
+no_lf_stderr="$SCRATCH/red/no-lf.stderr"
+SWIPL=$no_lf_swipl
+run_front_end "$no_lf_stdout" "$no_lf_stderr" "$TREE" "$DOCS" "$no_lf_out"
+SWIPL=$real_swipl
+check_failure "red/adapter-stdout-no-lf" 2 'ace-front-end: adapter-stdout:' "$no_lf_out" "$no_lf_stdout" "$no_lf_stderr"
+
+missing_exec_out="$SCRATCH/red/missing-exec-out"
+missing_exec_stdout="$SCRATCH/red/missing-exec.stdout"
+missing_exec_stderr="$SCRATCH/red/missing-exec.stderr"
+SWIPL=/nonexistent
+run_front_end "$missing_exec_stdout" "$missing_exec_stderr" "$TREE" "$DOCS" "$missing_exec_out"
+SWIPL=$real_swipl
+if command grep -Fq 'Traceback' "$missing_exec_stderr"; then
+    fail_case "red/adapter-exec/traceback" "stderr contains traceback"
+fi
+check_failure "red/adapter-exec" 2 'ace-front-end: adapter-exec:' "$missing_exec_out" "$missing_exec_stdout" "$missing_exec_stderr"
+
+ulex_change_swipl="$SCRATCH/red/ulex-change-swipl"
+printf '%s\n' \
+    '#!/usr/bin/env sh' \
+    'last=' \
+    "for arg do last=\$arg; done" \
+    "case \$last in *.ulex) printf \"\\\\n\" >>\"\$last\";; esac" \
+    "printf '%s\\n' 'drs([A],[]).'" \
+    >"$ulex_change_swipl"
+chmod +x "$ulex_change_swipl"
+ulex_change_docs="$SCRATCH/red/ulex-change-docs"
+mkdir "$ulex_change_docs"
+cp -a "$DOCS/." "$ulex_change_docs/"
+ulex_change_out="$SCRATCH/red/ulex-change-out"
+ulex_change_stdout="$SCRATCH/red/ulex-change.stdout"
+ulex_change_stderr="$SCRATCH/red/ulex-change.stderr"
+SWIPL=$ulex_change_swipl
+run_front_end "$ulex_change_stdout" "$ulex_change_stderr" "$TREE" "$ulex_change_docs" "$ulex_change_out"
+SWIPL=$real_swipl
+check_failure "red/ulex-changed" 2 'ace-front-end: ulex-changed:' "$ulex_change_out" "$ulex_change_stdout" "$ulex_change_stderr"
 
 missing_tree_out="$SCRATCH/red/missing-tree-out"
 missing_tree_stdout="$SCRATCH/red/missing-tree.stdout"

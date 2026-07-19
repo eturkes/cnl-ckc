@@ -2,6 +2,7 @@ Use argparse.
 Use hashlib.
 Use os.
 Use pathlib.
+Use shutil.
 Use subprocess.
 Use sys.
 
@@ -84,21 +85,33 @@ Define [[adapter_command]] taking swipl, ape_tree, ulex_path:
         Do [[command.append]]([[str]](ulex_path)).
     Give back command.
 
-Define [[run_document]] taking swipl, ape_tree, docid, source_bytes, ulex_path:
+Define [[run_document]] taking swipl, ape_tree, docid, source_bytes, ulex_path, ulex_bytes:
     Set command to [[adapter_command]](swipl, ape_tree, ulex_path).
     Set result to [[subprocess.run]](command, input=source_bytes, capture_output=True).
     If result.returncode does not equal 0:
         Do [[sys.stderr.buffer.write]](result.stderr).
         Exit with result.returncode.
+    If result.stderr:
+        Do [[fail]]("adapter-stderr", "non-empty stderr for document: " plus docid).
     If not result.stdout:
         Do [[fail]]("adapter-stdout", "empty stdout for document: " plus docid).
+    Set newline_bytes to [[bytes]](<10>).
+    Set newline_count to [[result.stdout.count]](newline_bytes).
+    Set final_newline to [[result.stdout.endswith]](newline_bytes).
+    If newline_count does not equal 1:
+        Do [[fail]]("adapter-stdout", "stdout is not one LF-terminated line for document: " plus docid).
+    If not final_newline:
+        Do [[fail]]("adapter-stdout", "stdout is not one LF-terminated line for document: " plus docid).
+    If ulex_path does not equal None:
+        Set current_ulex_bytes to [[ulex_path.read_bytes]]().
+        If current_ulex_bytes does not equal ulex_bytes:
+            Do [[fail]]("ulex-changed", "changed during adapter run: " plus docid plus ".ulex").
     Give back result.stdout.
 
-Define [[build_record]] taking docid, source_bytes, ulex_path, drs_bytes:
+Define [[build_record]] taking docid, source_bytes, ulex_bytes, drs_bytes:
     Set source_hex to [[sha256_hex]](source_bytes).
     Set ulex_term to "none".
-    If ulex_path does not equal None:
-        Set ulex_bytes to [[ulex_path.read_bytes]]().
+    If ulex_bytes does not equal None:
         Set ulex_hex to [[sha256_hex]](ulex_bytes).
         Set ulex_term to "sha256('" plus ulex_hex plus "')".
     Set header to "ace_front_end_record(1).\ndocument(docid('" plus docid plus "'),source_sha256('" plus source_hex plus "'),ulex(" plus ulex_term plus ")).\n".
@@ -106,14 +119,21 @@ Define [[build_record]] taking docid, source_bytes, ulex_path, drs_bytes:
     Give back header_bytes plus drs_bytes.
 
 Define [[compile_documents]] taking swipl, ape_tree, ace_paths, ulex_paths, docids:
+    Set ulex_bytes_by_docid to {}.
+    For each docid in docids:
+        Set ulex_path to [[ulex_paths.get]](docid).
+        If ulex_path does not equal None:
+            Set ulex_bytes to [[ulex_path.read_bytes]]().
+            Do [[ulex_bytes_by_docid.update]]({docid: ulex_bytes}).
     Set records to {}.
     Set manifest_lines to <>.
     For each docid in docids:
         Set ace_path to [[ace_paths.get]](docid).
         Set ulex_path to [[ulex_paths.get]](docid).
+        Set ulex_bytes to [[ulex_bytes_by_docid.get]](docid).
         Set source_bytes to [[ace_path.read_bytes]]().
-        Set drs_bytes to [[run_document]](swipl, ape_tree, docid, source_bytes, ulex_path).
-        Set record_bytes to [[build_record]](docid, source_bytes, ulex_path, drs_bytes).
+        Set drs_bytes to [[run_document]](swipl, ape_tree, docid, source_bytes, ulex_path, ulex_bytes).
+        Set record_bytes to [[build_record]](docid, source_bytes, ulex_bytes, drs_bytes).
         Set record_name to docid plus ".drs.pl".
         Do [[records.update]]({record_name: record_bytes}).
         Set source_hex to [[sha256_hex]](source_bytes).
@@ -151,5 +171,8 @@ Set ulex_paths to [[collected.pop]](0).
 Set docids to [[collected.pop]](0).
 Do [[check_out_dir]](out_path).
 Set swipl to [[os.environ.get]]("SWIPL", "swipl").
-Set records to [[compile_documents]](swipl, args.ape_tree_dir, ace_paths, ulex_paths, docids).
+Set swipl_executable to [[shutil.which]](swipl).
+If swipl_executable equals None:
+    Do [[fail]]("adapter-exec", "not executable: " plus swipl).
+Set records to [[compile_documents]](swipl_executable, args.ape_tree_dir, ace_paths, ulex_paths, docids).
 Do [[write_outputs]](out_path, records, [[len]](docids)).

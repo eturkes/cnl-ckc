@@ -10,7 +10,7 @@ Run from the repository root:
 PYTHONDONTWRITEBYTECODE=1 python3 -P tools/ace_front_end.py APE_TREE_DIR DOCS_DIR OUT_DIR
 ```
 
-`APE_TREE_DIR` is a scratch copy of `vendor/ape/` after `make plp` has produced `prolog/parser/grammar.plp`. `DOCS_DIR` is the input directory, and `OUT_DIR` is a new output directory. The `SWIPL` environment variable selects the SWI-Prolog executable; its default is `swipl`.
+`APE_TREE_DIR` is a scratch copy of `vendor/ape/` after `make plp` has produced `prolog/parser/grammar.plp`. `DOCS_DIR` is the input directory, and `OUT_DIR` is a new output directory. The `SWIPL` environment variable selects the SWI-Prolog executable; its default is `swipl`. Before any adapter run, the glue resolves that value with `shutil.which` and requires an executable.
 
 The generated program has a strict `Require` guard for `src/prolog/adapter.pl`, so repository-root execution is a precondition. Each document uses this adapter command, with a final Ulex argument only when the matching file exists:
 
@@ -42,6 +42,8 @@ A document's durable identity is the pair of its `docid` and the SHA-256 digest 
 
 APE's `-SentId/TokId` annotations restart at 1 because every document is parsed in a fresh process. Within one record, `/(SentId,TokId)` therefore identifies `(sentence ordinal, token ordinal)` under that record's `source_sha256`. A sentence's durable provenance is the document digest plus its sentence ordinal. Raw sentence or token ordinals must never be cited without the containing record's document identity.
 
+For a document with a sibling Ulex file, its SHA-256 is computed from one upfront read of the raw `.ulex` bytes. After the adapter run, the path is read again and must match that upfront byte snapshot. This re-verification enforces the record's exact-per-run Ulex binding.
+
 ## Record format
 
 The file name is `<docid>.drs.pl`. Its bytes are exactly two UTF-8 header lines followed by the adapter stdout bytes verbatim:
@@ -69,11 +71,11 @@ document(docid('<docid>'),source_sha256('<source-hex>'),record_sha256('<record-h
 
 ## User lexicon wiring
 
-A same-stem `.ulex` file is passed as the adapter's optional final argument. The adapter loads it after APE and before reading or parsing ACE input. Fresh per-document processes prevent Ulex state from carrying into another document. Entry forms, priority over Clex, rejection rules, and producer requirements are defined in [the Ulex contract](ulex.md); the glue adds no lexicon semantics. Recording the raw Ulex digest binds a record to the exact per-run vocabulary bytes.
+A same-stem `.ulex` file is passed as the adapter's optional final argument. The adapter loads it after APE and before reading or parsing ACE input. Fresh per-document processes prevent Ulex state from carrying into another document. Entry forms, priority over Clex, rejection rules, and producer requirements are defined in [the Ulex contract](ulex.md); the glue adds no lexicon semantics.
 
 ## Fail-closed behavior
 
-All validation and every adapter run complete before `OUT_DIR` is created. Processing stops at the first failing document, which is deterministic because document IDs are sorted.
+All validation and every adapter run complete before `OUT_DIR` is created. Processing stops at the first failing document, which is deterministic because document IDs are sorted. The four glue integrity failures below all exit 2, emit zero stdout, leave `OUT_DIR` absent, and emit one sanitized `ace-front-end: <class>: <detail>` line.
 
 | Condition | Exit | Stdout | Stderr |
 |---|---:|---|---|
@@ -81,17 +83,20 @@ All validation and every adapter run complete before `OUT_DIR` is created. Proce
 | Invalid or empty input set, unsupported entry, non-regular entry, or orphan Ulex | 2 | Empty | Exactly one `ace-front-end: docs-dir: <detail>` line. |
 | Invalid ACE or Ulex filename stem | 2 | Empty | Exactly one `ace-front-end: docid: <detail>` line. |
 | Existing `OUT_DIR` or missing/non-directory parent | 2 | Empty | Exactly one `ace-front-end: out-dir: <detail>` line. |
-| Adapter exits 0 with empty stdout | 2 | Empty | Exactly one `ace-front-end: adapter-stdout: <detail>` line. |
+| Selected `SWIPL` is not found or is not executable (`shutil.which` preflight) | 2 | Empty | Exactly one `ace-front-end: adapter-exec: <detail>` line. |
+| Adapter exits 0 after emitting any stderr bytes | 2 | Empty | Exactly one `ace-front-end: adapter-stderr: <detail>` line. |
+| Adapter exits 0 with empty stdout or stdout that is not exactly one LF-terminated line | 2 | Empty | Exactly one `ace-front-end: adapter-stdout: <detail>` line. |
+| Ulex bytes differ from the upfront snapshot after the adapter run | 2 | Empty | Exactly one `ace-front-end: ulex-changed: <detail>` line. |
 | Adapter rejects ACE or Ulex | 1 | Empty | Captured adapter stderr bytes relayed verbatim. |
 | Adapter setup or APE/Ulex load fails | 2 | Empty | Captured adapter stderr bytes relayed verbatim. |
 | Any other nonzero adapter status | Adapter status | Empty | Captured adapter stderr bytes relayed verbatim. |
 | Success | 0 | One `ace-front-end: wrote OUT_DIR/<filename>` line per file in sorted filename order, then `ace-front-end: ok <N> documents`. | Empty. |
 
-Known adapter classes and their exact Prolog-side stream contract remain normative in `src/prolog/adapter.pl`.
+The adapter's own exit surface is 0 = accepted; 1 = `input_utf8` (stdin fails strict RFC 3629 validation, including overlong, surrogate, out-of-range, or truncated sequences), `ape_messages`, or `empty_drs`; 2 = `usage`, `ape_load`, `ulex_load`, or `uncaught`. APE load-time warnings as well as errors fail as `ape_load`. The exact Prolog-side stream contract remains normative in `src/prolog/adapter.pl`.
 
 ## Writes and crash recovery
 
-Validation failures, adapter failures, and the empty-adapter-stdout guard leave `OUT_DIR` absent: records, the manifest, and even the directory are buffered until every document succeeds. On success, the glue creates `OUT_DIR` with a plain `mkdir`, then writes each buffered file with an ordinary file write. These post-`mkdir` writes are intentionally not an atomic directory transaction. If the process or filesystem fails during that write phase, remove the partial `OUT_DIR` before rerunning.
+Validation failures, adapter failures, and successful-adapter output guards leave `OUT_DIR` absent: records, the manifest, and even the directory are buffered until every document succeeds. On success, the glue creates `OUT_DIR` with a plain `mkdir`, then writes each buffered file with an ordinary file write. These post-`mkdir` writes are intentionally not an atomic directory transaction. If the process or filesystem fails during that write phase, remove the partial `OUT_DIR` before rerunning.
 
 The absent-output precondition prevents accidental overwrite and makes a completed run immutable by convention.
 
@@ -107,6 +112,6 @@ Byte stability follows from the following constraints:
 - manifest rows use sorted document-ID order, and files are written in sorted filename order;
 - accepted artifacts contain no timings, banners, host paths, or other run-specific data.
 
-`tests/pipeline-harness.sh` builds a fresh scratch APE tree, runs the entire three-document chain twice, compares both file sets and every output byte, and compares the first run to committed goldens. Its two-sentence fixture also requires both `/(1,` and `/(2,` annotations. Rejection gates cover an OOV document, invalid ID, orphan Ulex, existing output directory, CLI usage, empty successful adapter stdout, missing APE tree, zero writes, and vendor cleanliness.
+`tests/pipeline-harness.sh` builds a fresh scratch APE tree, runs the entire three-document chain twice, compares both file sets and every output byte, and compares the first run to committed goldens. Its two-sentence fixture also requires both `/(1,` and `/(2,` annotations. Rejection gates cover an OOV document, invalid ID, orphan Ulex, existing output directory, CLI usage, successful-adapter stderr, empty or malformed successful stdout, missing executable, Ulex mutation, missing APE tree, zero writes, and vendor cleanliness.
 
 The CI `test` job checks regeneration identity and lints the pipeline harness. The SWI 9.2.9 `ape` job runs the pipeline harness after the adapter harness and before its final repository-cleanliness check.

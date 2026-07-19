@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 def fail(category, detail):
@@ -77,34 +78,53 @@ def adapter_command(swipl, ape_tree, ulex_path):
     if ulex_path != None:
         command.append(str(ulex_path))
     return command
-def run_document(swipl, ape_tree, docid, source_bytes, ulex_path):
+def run_document(swipl, ape_tree, docid, source_bytes, ulex_path, ulex_bytes):
     command = adapter_command(swipl, ape_tree, ulex_path)
     result = subprocess.run(command, input=source_bytes, capture_output=True)
     if result.returncode != 0:
         sys.stderr.buffer.write(result.stderr)
         raise SystemExit(result.returncode)
+    if result.stderr:
+        fail("adapter-stderr", "non-empty stderr for document: " + docid)
     if not result.stdout:
         fail("adapter-stdout", "empty stdout for document: " + docid)
+    newline_bytes = bytes([10])
+    newline_count = result.stdout.count(newline_bytes)
+    final_newline = result.stdout.endswith(newline_bytes)
+    if newline_count != 1:
+        fail("adapter-stdout", "stdout is not one LF-terminated line for document: " + docid)
+    if not final_newline:
+        fail("adapter-stdout", "stdout is not one LF-terminated line for document: " + docid)
+    if ulex_path != None:
+        current_ulex_bytes = ulex_path.read_bytes()
+        if current_ulex_bytes != ulex_bytes:
+            fail("ulex-changed", "changed during adapter run: " + docid + ".ulex")
     return result.stdout
-def build_record(docid, source_bytes, ulex_path, drs_bytes):
+def build_record(docid, source_bytes, ulex_bytes, drs_bytes):
     source_hex = sha256_hex(source_bytes)
     ulex_term = "none"
-    if ulex_path != None:
-        ulex_bytes = ulex_path.read_bytes()
+    if ulex_bytes != None:
         ulex_hex = sha256_hex(ulex_bytes)
         ulex_term = "sha256('" + ulex_hex + "')"
     header = "ace_front_end_record(1).\ndocument(docid('" + docid + "'),source_sha256('" + source_hex + "'),ulex(" + ulex_term + ")).\n"
     header_bytes = header.encode("utf-8")
     return header_bytes + drs_bytes
 def compile_documents(swipl, ape_tree, ace_paths, ulex_paths, docids):
+    ulex_bytes_by_docid = {}
+    for docid in docids:
+        ulex_path = ulex_paths.get(docid)
+        if ulex_path != None:
+            ulex_bytes = ulex_path.read_bytes()
+            ulex_bytes_by_docid.update({docid: ulex_bytes})
     records = {}
     manifest_lines = []
     for docid in docids:
         ace_path = ace_paths.get(docid)
         ulex_path = ulex_paths.get(docid)
+        ulex_bytes = ulex_bytes_by_docid.get(docid)
         source_bytes = ace_path.read_bytes()
-        drs_bytes = run_document(swipl, ape_tree, docid, source_bytes, ulex_path)
-        record_bytes = build_record(docid, source_bytes, ulex_path, drs_bytes)
+        drs_bytes = run_document(swipl, ape_tree, docid, source_bytes, ulex_path, ulex_bytes)
+        record_bytes = build_record(docid, source_bytes, ulex_bytes, drs_bytes)
         record_name = docid + ".drs.pl"
         records.update({record_name: record_bytes})
         source_hex = sha256_hex(source_bytes)
@@ -141,5 +161,8 @@ ulex_paths = collected.pop(0)
 docids = collected.pop(0)
 check_out_dir(out_path)
 swipl = os.environ.get("SWIPL", "swipl")
-records = compile_documents(swipl, args.ape_tree_dir, ace_paths, ulex_paths, docids)
+swipl_executable = shutil.which(swipl)
+if swipl_executable == None:
+    fail("adapter-exec", "not executable: " + swipl)
+records = compile_documents(swipl_executable, args.ape_tree_dir, ace_paths, ulex_paths, docids)
 write_outputs(out_path, records, len(docids))

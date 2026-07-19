@@ -16,6 +16,11 @@ SCRATCH="$ROOT/.scratch/adapter-harness"
 TREE="$SCRATCH/tree"
 FAKE_SHAPE="$SCRATCH/fake-shape"
 FAKE_ATTVAR="$SCRATCH/fake-attvar"
+FAKE_BLOB="$SCRATCH/fake-blob"
+FAKE_ULEX_FAIL="$SCRATCH/fake-ulex-fail"
+FAKE_NOISY_LOAD="$SCRATCH/fake-noisy-load"
+FAKE_NOISY_PARSE="$SCRATCH/fake-noisy-parse"
+FAKE_WARNING_LOAD="$SCRATCH/fake-warning-load"
 PASS_COUNT=0
 RUN_STATUS=0
 
@@ -90,13 +95,22 @@ else
     fail_case "swipl/version" "could not run $SWIPL"
 fi
 
+if ! vendor_copy_status=$(git status --porcelain --ignored -- vendor/); then
+    fail_case "vendor/precopy-clean" "git status failed"
+fi
+if [ -n "$vendor_copy_status" ]; then
+    printf '%s\n' "$vendor_copy_status"
+    fail_case "vendor/precopy-clean" "vendor tree has tracked or ignored artifacts"
+fi
+pass_case "vendor/precopy-clean"
+
 rm -rf "$SCRATCH"
 mkdir -p "$TREE" "$SCRATCH/green" "$SCRATCH/red" "$SCRATCH/ulex" "$SCRATCH/env"
 trap 'rm -rf "$SCRATCH"' EXIT
 cp -a "$ROOT/vendor/ape/." "$TREE/"
 pass_case "vendor/copy"
 
-if ! make -C "$TREE" plp "swipl=$SWIPL"; then
+if ! make -C "$TREE" plp "swipl=$SWIPL -f none"; then
     fail_case "vendor/plp" "make plp failed"
 fi
 if ! [ -f "$TREE/prolog/parser/grammar.plp" ]; then
@@ -154,6 +168,35 @@ for input in "$GREEN"/*.ace; do
     pass_case "determinism/$stem"
 done
 
+printf '\xffJohn waits.\n' >"$SCRATCH/red/utf8-before.ace"
+printf 'John wa\xffits.\n' >"$SCRATCH/red/utf8-inside.ace"
+printf 'John waits.\n\xff' >"$SCRATCH/red/utf8-after.ace"
+for position in before inside after; do
+    stdout_path="$SCRATCH/red/utf8-$position.stdout"
+    stderr_path="$SCRATCH/red/utf8-$position.stderr"
+    run_adapter "$SCRATCH/red/utf8-$position.ace" "$stdout_path" "$stderr_path" "$TREE"
+    check_rejection "utf8/$position" 1 input_utf8 '' "$stdout_path" "$stderr_path"
+done
+
+stdout_path="$SCRATCH/green/anchor.locale-c.stdout"
+stderr_path="$SCRATCH/green/anchor.locale-c.stderr"
+LC_ALL=C run_adapter "$GREEN/anchor.ace" "$stdout_path" "$stderr_path" "$TREE"
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "locale-c/anchor/status" "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$stderr_path" ]; then
+    fail_case "locale-c/anchor/stderr" "expected zero bytes"
+fi
+if ! cmp "$stdout_path" "$GREEN/anchor.golden"; then
+    fail_case "locale-c/anchor/stdout" "golden mismatch"
+fi
+pass_case "locale-c/anchor"
+
+stdout_path="$SCRATCH/red/noperiod.locale-c.stdout"
+stderr_path="$SCRATCH/red/noperiod.locale-c.stderr"
+LC_ALL=C run_adapter "$RED/noperiod.ace" "$stdout_path" "$stderr_path" "$TREE"
+check_rejection "locale-c/noperiod" 1 ape_messages 'message(error,sentence,' "$stdout_path" "$stderr_path"
+
 stdout_path="$SCRATCH/red/noperiod.stdout"
 stderr_path="$SCRATCH/red/noperiod.stderr"
 run_adapter "$RED/noperiod.ace" "$stdout_path" "$stderr_path" "$TREE"
@@ -178,6 +221,17 @@ stdout_path="$SCRATCH/ulex/oov-red.stdout"
 stderr_path="$SCRATCH/ulex/oov-red.stderr"
 run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE"
 check_rejection "ulex/oov-red" 1 ape_messages 'message(error,word,' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/ulex/duplicate-entry.stdout"
+stderr_path="$SCRATCH/ulex/duplicate-entry.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE" "$ULEX/duplicate-entry.ulex"
+check_rejection "ulex/duplicate-warning" 1 ape_messages 'This singular noun is defined twice.' "$stdout_path" "$stderr_path"
+
+printf '%s\n' "noun_sg(zorbomat, '\$VAR'(0), neutr)." >"$SCRATCH/ulex/poison-var.ulex"
+stdout_path="$SCRATCH/ulex/poison-var.stdout"
+stderr_path="$SCRATCH/ulex/poison-var.stderr"
+run_adapter "$ULEX/zorbomat.ace" "$stdout_path" "$stderr_path" "$TREE" "$SCRATCH/ulex/poison-var.ulex"
+check_rejection "ulex/poison-var" 2 uncaught '' "$stdout_path" "$stderr_path"
 
 zorbomat_run1="$SCRATCH/ulex/zorbomat.run1.stdout"
 stderr_path="$SCRATCH/ulex/zorbomat.run1.stderr"
@@ -290,7 +344,14 @@ run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$SCRATCH/no-such-tre
 check_rejection "env/ape-load" 2 ape_load 'existence_error(source_sink,' "$stdout_path" "$stderr_path"
 
 # Fake parser modules exercise adapter boundaries without touching vendor.
-mkdir -p "$FAKE_SHAPE/prolog/parser" "$FAKE_ATTVAR/prolog/parser"
+mkdir -p \
+    "$FAKE_SHAPE/prolog/parser" \
+    "$FAKE_ATTVAR/prolog/parser" \
+    "$FAKE_BLOB/prolog/parser" \
+    "$FAKE_ULEX_FAIL/prolog/parser" \
+    "$FAKE_NOISY_LOAD/prolog/parser" \
+    "$FAKE_NOISY_PARSE/prolog/parser" \
+    "$FAKE_WARNING_LOAD/prolog/parser"
 printf '%s\n\n%s\n' \
     ':- module(ace_to_drs, [acetext_to_drs/8]).' \
     'acetext_to_drs(_, off, off, [], [], not_a_drs, [], 0).' \
@@ -300,6 +361,45 @@ printf '%s\n\n%s\n%s\n' \
     'acetext_to_drs(_, off, off, [], [], drs([x], []), [poison(Var)], 0) :-' \
     '    put_attr(Var, ace_to_drs, poison).' \
     >"$FAKE_ATTVAR/prolog/parser/ace_to_drs.pl"
+printf '%s\n\n%s\n%s\n' \
+    ':- module(ace_to_drs, [acetext_to_drs/8]).' \
+    'acetext_to_drs(_, off, off, [], [], drs([], [blob(Stream)]), [], 0) :-' \
+    '    current_output(Stream).' \
+    >"$FAKE_BLOB/prolog/parser/ace_to_drs.pl"
+printf '%s\n%s\n%s\n\n%s\n' \
+    ':- module(ace_to_drs, [acetext_to_drs/8]).' \
+    ':- use_module(ulex, []).' \
+    ':- use_module(error_logger, []).' \
+    'acetext_to_drs(_, off, off, [], [], drs([x], []), [], 0).' \
+    >"$FAKE_ULEX_FAIL/prolog/parser/ace_to_drs.pl"
+printf '%s\n\n%s\n%s\n' \
+    ':- module(ulex, [discard_ulex/0, read_ulex/1]).' \
+    'discard_ulex.' \
+    'read_ulex(_) :- fail.' \
+    >"$FAKE_ULEX_FAIL/prolog/parser/ulex.pl"
+printf '%s\n\n%s\n%s\n%s\n' \
+    ':- module(error_logger, [clear_messages/1, get_messages_with_type/2, add_error_message_once/4]).' \
+    'clear_messages(_).' \
+    'get_messages_with_type(_, []).' \
+    'add_error_message_once(_, _, _, _).' \
+    >"$FAKE_ULEX_FAIL/prolog/parser/error_logger.pl"
+printf '%s\n\n%s\n%s\n%s\n' \
+    ':- module(ace_to_drs, [acetext_to_drs/8]).' \
+    ':- format(user_output, "vendor-load-stdout~n", []).' \
+    ':- format(user_error, "vendor-load-stderr~n", []).' \
+    ':- throw(error(noisy_load_failed, context(ace_to_drs, load))).' \
+    >"$FAKE_NOISY_LOAD/prolog/parser/ace_to_drs.pl"
+printf '%s\n\n%s\n%s\n%s\n' \
+    ':- module(ace_to_drs, [acetext_to_drs/8]).' \
+    'acetext_to_drs(_, off, off, [], [], drs([_], []), [], 0) :-' \
+    '    format(user_output, "vendor-parse-stdout~n", []),' \
+    '    format(user_error, "vendor-parse-stderr~n", []).' \
+    >"$FAKE_NOISY_PARSE/prolog/parser/ace_to_drs.pl"
+printf '%s\n%s\n\n%s\n' \
+    ':- module(ace_to_drs, [acetext_to_drs/8]).' \
+    ':- print_message(warning, format("w", [])).' \
+    'acetext_to_drs(_, off, off, [], [], drs([x], []), [], 0).' \
+    >"$FAKE_WARNING_LOAD/prolog/parser/ace_to_drs.pl"
 
 stdout_path="$SCRATCH/env/fake-shape.stdout"
 stderr_path="$SCRATCH/env/fake-shape.stderr"
@@ -310,6 +410,76 @@ stdout_path="$SCRATCH/env/fake-attvar.stdout"
 stderr_path="$SCRATCH/env/fake-attvar.stderr"
 run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$FAKE_ATTVAR"
 check_rejection "fake/attvar" 1 ape_messages 'adapter_error(ape_messages,unserializable).' "$stdout_path" "$stderr_path"
+
+blob_stdout1="$SCRATCH/env/fake-blob.run1.stdout"
+blob_stderr1="$SCRATCH/env/fake-blob.run1.stderr"
+run_adapter "$RED/empty.ace" "$blob_stdout1" "$blob_stderr1" "$FAKE_BLOB"
+if [ "$RUN_STATUS" -ne 2 ]; then
+    fail_case "fake/blob-determinism/status-run1" "expected 2, got $RUN_STATUS"
+fi
+if [ -s "$blob_stdout1" ]; then
+    fail_case "fake/blob-determinism/stdout-run1" "expected zero bytes"
+fi
+blob_stdout2="$SCRATCH/env/fake-blob.run2.stdout"
+blob_stderr2="$SCRATCH/env/fake-blob.run2.stderr"
+run_adapter "$RED/empty.ace" "$blob_stdout2" "$blob_stderr2" "$FAKE_BLOB"
+if [ "$RUN_STATUS" -ne 2 ]; then
+    fail_case "fake/blob-determinism/status-run2" "expected 2, got $RUN_STATUS"
+fi
+if [ -s "$blob_stdout2" ]; then
+    fail_case "fake/blob-determinism/stdout-run2" "expected zero bytes"
+fi
+for stderr_path in "$blob_stderr1" "$blob_stderr2"; do
+    line_count=$(grep -c '^' "$stderr_path" || :)
+    if [ "$line_count" -ne 1 ]; then
+        fail_case "fake/blob-determinism/stderr" "expected one line, got $line_count"
+    fi
+    if ! printf '%s\n' "$(<"$stderr_path")" | cmp - "$stderr_path"; then
+        fail_case "fake/blob-determinism/stderr" "expected exactly one LF-terminated line"
+    fi
+    if ! grep -Fxq 'adapter_error(uncaught,unserializable).' "$stderr_path"; then
+        fail_case "fake/blob-determinism/class" "unexpected error line"
+    fi
+done
+if ! cmp "$blob_stderr1" "$blob_stderr2"; then
+    fail_case "fake/blob-determinism/stderr" "fresh runs differ"
+fi
+pass_case "fake/blob-determinism"
+
+stdout_path="$SCRATCH/env/ulex-fail.stdout"
+stderr_path="$SCRATCH/env/ulex-fail.stderr"
+run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$FAKE_ULEX_FAIL" "$ULEX/zorbomat.ulex"
+check_rejection "ulex/plain-failure" 2 ulex_load '' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/env/ulex-missing-module.stdout"
+stderr_path="$SCRATCH/env/ulex-missing-module.stderr"
+run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$FAKE_SHAPE" "$ULEX/zorbomat.ulex"
+check_rejection "ulex/missing-module" 2 ulex_load '' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/env/noisy-load.stdout"
+stderr_path="$SCRATCH/env/noisy-load.stderr"
+run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$FAKE_NOISY_LOAD"
+check_rejection "quarantine/noisy-load" 2 ape_load '' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/env/warning-load.stdout"
+stderr_path="$SCRATCH/env/warning-load.stderr"
+run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$FAKE_WARNING_LOAD"
+check_rejection "quarantine/warning-load" 2 ape_load '' "$stdout_path" "$stderr_path"
+
+stdout_path="$SCRATCH/env/noisy-parse.stdout"
+stderr_path="$SCRATCH/env/noisy-parse.stderr"
+run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$FAKE_NOISY_PARSE"
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "quarantine/noisy-parse/status" "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$stderr_path" ]; then
+    fail_case "quarantine/noisy-parse/stderr" "expected zero bytes"
+fi
+printf '%s\n' 'drs([A],[]).' >"$SCRATCH/env/noisy-parse.expected"
+if ! cmp "$stdout_path" "$SCRATCH/env/noisy-parse.expected"; then
+    fail_case "quarantine/noisy-parse/stdout" "canonical output mismatch"
+fi
+pass_case "quarantine/noisy-parse"
 
 if ! vendor_status=$(git status --porcelain -- vendor/); then
     fail_case "vendor/clean" "git status failed"

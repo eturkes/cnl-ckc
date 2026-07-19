@@ -11,9 +11,11 @@ swipl -q -f none -F none -s src/prolog/adapter.pl -g main -t 'halt(9)' -- <ape-t
 ## Load and lookup semantics
 
 The optional file is loaded after APE and before ACE input is read or parsed. The
-adapter calls `ulex:discard_ulex/0`, opens the file as UTF-8, and calls
-`ulex:read_ulex/1` with cleanup-guaranteed stream closure. With no Ulex argument,
-it does not call the Ulex module.
+adapter pre-reads the whole Ulex file as binary and applies strict UTF-8 validation
+before handing its in-memory text to APE; `ulex:read_ulex/1` must consume through
+physical EOF. It calls `ulex:discard_ulex/0` and `ulex:read_ulex/1` with
+cleanup-guaranteed stream closure. With no Ulex argument, it does not call the
+Ulex module.
 
 Run a fresh SWI-Prolog process for each document. Thus Ulex state is per document
 and cannot carry into another parse. Within a run, Ulex clauses have lookup
@@ -78,6 +80,7 @@ for lexical syntax and category details.
 | Condition | Adapter result |
 |---|---|
 | Missing or unreadable Ulex file | Exit 2, `ulex_load`; zero stdout. |
+| Missing `ulex` module in the parser tree or plain `ulex:read_ulex/1` failure | Exit 2, `ulex_load`; zero stdout. |
 | Malformed Prolog file or malformed entry | APE records a `lexicon` error; exit 1, `ape_messages`; zero stdout. |
 | Function-word redefinition, duplicate entry, or forbidden category intersection | APE records a `lexicon` warning (including “defined twice” or “Bad intersection”); exit 1, `ape_messages`; zero stdout. |
 

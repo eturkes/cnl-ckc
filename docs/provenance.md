@@ -13,7 +13,7 @@ M0.1 governance baseline. `MUST`/`MUST NOT` = normative.
 | RACE | no source repository; Attempto webservice only | — | N/A — no acquired source | historical reasoner reference only | zero dependency; reasoner = first-party M4 |
 | SWI-Prolog | `https://github.com/SWI-Prolog/swipl-devel` | `V9.2.9` → `e3b19512e69a544f05b1bffbd14f3a0b519ad04d` | BSD-2-Clause | system Prolog runtime | never vendored |
 
-CI provisions SWI-Prolog == 9.2.9 through the digest-pinned official Debian bookworm container image `docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f`. The Ubuntu noble PPA no longer serves a complete 9.2.9 package set: 9.2.9 was superseded by 10.0.2 and the pool retains only `swi-prolog-x` (recorded 2026-07-18).
+CI provisions SWI-Prolog == 9.2.9 through the digest-pinned official Debian bookworm container image `docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f`.
 
 AceRules license evidence at its pin: `LICENSE.txt`, first nonblank line = `GNU LESSER GENERAL PUBLIC LICENSE`; next line = `Version 3, 29 June 2007`. `README.md` states `The code is available under the LGPL license. See LICENSE.txt for the details.` License family + version are verified; repository-level text does not select SPDX `only` vs `or-later`. Code reuse remains prohibited unless escalated for license review.
 
@@ -43,7 +43,7 @@ A compiler dependency-set/hash change is a TCB change and follows the same gates
 
 ## Vendor-directory license layout
 
-Directories land in M1/M2; this layout is binding before import.
+M1 and M2 are implemented, and their vendor directories have landed; this layout is binding.
 
 ### `vendor/e--/`
 
@@ -74,7 +74,7 @@ Rationale:
 
 - Clex = GPL-3.0 → propagation risk + licensing complexity conflict with the intended Apache-2.0 first-party / LGPL APE posture.
 - APE already bundles LGPL `prolog/lexicon/clex_lexicon.pl` with roughly a few thousand entries → sufficient bootstrap coverage.
-- Clinical vocabulary is domain-specific → a project-owned declarative lexicon manifest is required regardless; compile it deterministically to APE user-lexicon facts consumed through `-ulexfile`.
+- Clinical vocabulary is domain-specific → a project-owned declarative lexicon manifest is required regardless; compile it deterministically to APE user-lexicon facts supplied as the adapter's optional positional Ulex file argument and loaded through APE's `ulex:read_ulex/1`.
 
 Revisit trigger: M5 guideline authoring demonstrates general-English coverage gaps that the project manifest cannot economically fill. Required response = create a **BLOCKED** proposal for user decision; do not import Clex implicitly. Proposal options: accept GPL for an isolated lexicon-only artifact, or generate coverage from a permissively licensed wordlist.
 
@@ -86,4 +86,4 @@ Basis (recorded so fork/Clex futures do not reopen the decision):
 
 - Apache-2.0 → GPLv3 compatibility is one-way in our favor: Clex `LICENSE` at pin = GPL-3.0 (verified; the Apache conflict exists only vs GPLv2-only). Clex fetched-not-conveyed (test-only scratch, above) triggers no GPL obligations; if the M5 BLOCKED proposal ever vendors Clex, the distributed combination conveys under GPLv3 while first-party files keep Apache headers + permissive reusability. Root GPL would solve no conflict and forecloses permissive reuse of glue/IR/kernel that never touch GPL code.
 - Vendor forks are chartered (M1 e--, M2 APE) and license-neutral to the root: a fork's license follows its upstream — e-- fork stays plain Apache-2.0 (patches upstreamable verbatim; the LLVM exception applies to first-party files only), APE fork mods stay LGPL-3.0-or-later inside `vendor/ape/` (binding above), AceRules = clean-room semantics reimplementation only (no code reuse), RACE has no source.
-- Guard (binding): clinical/lexicon vocabulary MUST enter the first-party manifest → `-ulexfile` facts, never a Clex fork — GPL would capture entries added there.
+- Guard (binding): clinical/lexicon vocabulary MUST enter the first-party manifest → facts supplied as the adapter's optional positional Ulex file argument and loaded through APE's `ulex:read_ulex/1`, never a Clex fork — GPL would capture entries added there.

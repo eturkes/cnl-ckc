@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -euo pipefail
 
 ROOT=$PWD
 if ! [ -d vendor/ape ]; then
@@ -41,13 +41,44 @@ else
     fail_case "swipl/version" "could not run $SWIPL"
 fi
 
+vendor_status=''
+if ! vendor_status=$(git status --porcelain --ignored -- vendor/); then
+    fail_case "vendor/status" "git status failed"
+fi
+if [ -n "$vendor_status" ]; then
+    fail_case "vendor/status" "git status --porcelain --ignored -- vendor/ was not empty"
+fi
+pass_case "vendor/status"
+
 rm -rf "$SCRATCH"
 mkdir -p "$TREE"
-cp -a "$ROOT/vendor/ape/." "$TREE/"
 trap 'rm -rf "$SCRATCH"' EXIT
+
+manifest_paths="$SCRATCH/manifest.paths"
+tracked_paths="$SCRATCH/tracked.paths"
+if ! cut -c67- "$ROOT/vendor/ape/MANIFEST.sha256" |
+    sed 's#^\./##' |
+    LC_ALL=C sort >"$manifest_paths"; then
+    fail_case "vendor/manifest-paths" "could not normalize MANIFEST.sha256 paths"
+fi
+if ! git ls-files vendor/ape |
+    sed -e 's#^vendor/ape/##' \
+        -e '/^PROVENANCE$/d' \
+        -e '/^PROVENANCE\.md$/d' \
+        -e '/^MANIFEST\.sha256$/d' \
+        -e '/^patches\//d' |
+    LC_ALL=C sort >"$tracked_paths"; then
+    fail_case "vendor/manifest-paths" "could not normalize tracked vendor/ape paths"
+fi
+if ! cmp -s "$manifest_paths" "$tracked_paths"; then
+    fail_case "vendor/manifest-paths" "MANIFEST.sha256 paths differ from tracked vendor/ape files"
+fi
+pass_case "vendor/manifest-paths"
+
+cp -a "$ROOT/vendor/ape/." "$TREE/"
 pass_case "vendor/copy"
 
-if ! make -C "$TREE" install; then
+if ! make -C "$TREE" install "swipl=$SWIPL"; then
     fail_case "vendor/build" "make install failed"
 fi
 if ! [ -x "$TREE/ape.exe" ]; then
@@ -73,6 +104,7 @@ direct_stderr="$SCRATCH/direct-source.stderr"
 if (
     cd "$TREE"
     "$SWIPL" -q \
+        -f none -F none \
         -s prolog/parser/ace_to_drs.pl \
         -g "(ace_to_drs:acetext_to_drs('John waits.',off,off,_S,_T,Drs,Msgs,_Time)->(Drs\\=drs([],[])->(Msgs==[]->halt(0);halt(8));halt(7));halt(6))" \
         -t 'halt(9)'
@@ -109,7 +141,7 @@ regression_stdout="$SCRATCH/test-ape.stdout"
 regression_stderr="$SCRATCH/test-ape.stderr"
 if (
     cd "$TREE/tests"
-    "$SWIPL" -f test_ape.pl -g main -t halt -q
+    "$SWIPL" -f test_ape.pl -F none -g main -t halt -q
 ) >"$regression_stdout" 2>"$regression_stderr"; then
     regression_status=0
 else
