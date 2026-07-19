@@ -120,8 +120,8 @@ jobs:
       - name: Run slice harness
         run: bash tests/slice-harness.sh
 
-      - name: Verify APE vendor cleanliness
+      - name: Verify repository cleanliness
         run: |
           set -eu
-          git diff --exit-code -- vendor/
-          test -z "$(git status --porcelain -- vendor/)"
+          git diff --exit-code
+          test -z "$(git status --porcelain)"

@@ -9,13 +9,14 @@ if ! [ -d vendor/ape ]; then
 fi
 
 SWIPL=${SWIPL:-swipl}
-SCRATCH="$ROOT/.scratch/ape-vendor-harness"
+SCRATCH="$ROOT/.scratch/ape-vendor-harness.$$"
 TREE="$SCRATCH/tree"
 CLEX_DIR="$ROOT/.scratch/clex"
 CLEX="$CLEX_DIR/clex_lexicon.pl"
 CLEX_URL=https://raw.githubusercontent.com/Attempto/Clex/20960a5ce07776cb211a8cfb25dc8c81fcdf25e2/clex_lexicon.pl
 CLEX_SHA256=2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec
 PASS_COUNT=0
+EXPECTED_PASS_COUNT=10
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -166,4 +167,8 @@ if [ "$pass_count" -ne 2813 ] || [ "$zero_count" -ne 920 ] || \
 fi
 pass_case "regression/counts"
 
+if [ "$PASS_COUNT" -ne "$EXPECTED_PASS_COUNT" ]; then
+    fail_case "harness/pass-count" \
+        "expected $EXPECTED_PASS_COUNT, got $PASS_COUNT"
+fi
 printf 'SUMMARY: %s passed, 0 failed\n' "$PASS_COUNT"

@@ -12,12 +12,13 @@ SWIPL=${SWIPL:-swipl}
 DOCS="$ROOT/tests/fixtures/pipeline/docs"
 GOLDEN="$ROOT/tests/fixtures/pipeline/golden"
 RED="$ROOT/tests/fixtures/pipeline/red"
-SCRATCH="$ROOT/.scratch/pipeline-harness"
+SCRATCH="$ROOT/.scratch/pipeline-harness.$$"
 TREE="$SCRATCH/tree"
 OUT1="$SCRATCH/out1"
 OUT2="$SCRATCH/out2"
 PASS_COUNT=0
 RUN_STATUS=0
+EXPECTED_PASS_COUNT=27
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -398,4 +399,8 @@ if [ -n "$vendor_status" ]; then
 fi
 pass_case "vendor/clean"
 
+if [ "$PASS_COUNT" -ne "$EXPECTED_PASS_COUNT" ]; then
+    fail_case "harness/pass-count" \
+        "expected $EXPECTED_PASS_COUNT, got $PASS_COUNT"
+fi
 printf 'SUMMARY: %s passed, 0 failed\n' "$PASS_COUNT"

@@ -91,7 +91,8 @@ validate_input(Input) :-
 lower_input(Input) :-
     read_canonical_terms(Input, Terms),
     lower_terms(Terms, IrTerms),
-    canonical_codes(IrTerms, 1, Codes),
+    generated_record_call(lower_serialization,
+        canonical_codes(IrTerms, 1, Codes)),
     format('~s', [Codes]).
 
 compile_input(Input) :-
@@ -107,6 +108,10 @@ run_input(Input) :-
     format('~s', [Codes]).
 
 self_checked_canonical_codes(Terms, Codes) :-
+    generated_record_call(output_self_check,
+        self_checked_canonical_codes_(Terms, Codes)).
+
+self_checked_canonical_codes_(Terms, Codes) :-
     canonical_codes(Terms, 1, Codes),
     string_codes(Text, Codes),
     parse_terms(Text, Parsed),
@@ -115,6 +120,12 @@ self_checked_canonical_codes(Terms, Codes) :-
         true
     ; throw(error(generated_term_round_trip, context(ir_tool, output)))
     ).
+
+generated_record_call(Context, Goal) :-
+    catch(Goal,
+        ir_reject(Class, Detail),
+        throw(error(generated_record_invalid(Class, Detail),
+            context(ir_tool, Context)))).
 
 read_canonical_terms(Input, Terms) :-
     read_utf8_input(Input, Text, Codes),
@@ -214,12 +225,12 @@ canonical_codes([Term|Terms], Index, Codes) :-
     canonical_codes(Terms, Next, Rest),
     append(Here, Rest, Codes).
 
-/* M2 deliberately quotes every document identity atom; preserve that line. */
+/* Preserve M2 identity quoting only after the complete shape serializes. */
 canonical_record_line(2, Term, Line) :-
     compound(Term),
     functor(Term, document, 3),
-    !,
-    canonical_document_line(Term, Line).
+    canonical_document_line(Term, Line),
+    !.
 canonical_record_line(_, Term, Line) :-
     canonical_line(Term, Line).
 
@@ -232,8 +243,12 @@ canonical_document_line(
         "document(docid(~s),source_sha256(~s),ulex(~s)).\n",
         [DocidText, SourceHashText, UlexText]).
 
-canonical_ulex_text(none, "none").
-canonical_ulex_text(sha256(Hash), Text) :-
+canonical_ulex_text(Ulex, "none") :-
+    Ulex == none.
+canonical_ulex_text(Ulex, Text) :-
+    compound(Ulex),
+    functor(Ulex, sha256, 1),
+    arg(1, Ulex, Hash),
     forced_quoted_atom(Hash, HashText),
     format(string(Text), "sha256(~s)", [HashText]).
 

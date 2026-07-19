@@ -23,6 +23,7 @@ trap 'rm -rf "$SCRATCH"' EXIT
 PASS_COUNT=0
 FAIL_COUNT=0
 RUN_STATUS=0
+EXPECTED_PASS_COUNT=57
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -365,6 +366,10 @@ check_determinism "$GREEN/04-functions.emm"
 check_atomic_output
 check_import_isolation
 
+if [ "$PASS_COUNT" -ne "$EXPECTED_PASS_COUNT" ]; then
+    fail_case "harness/pass-count" \
+        "expected $EXPECTED_PASS_COUNT, got $PASS_COUNT"
+fi
 printf 'SUMMARY: %s passed, %s failed\n' "$PASS_COUNT" "$FAIL_COUNT"
 if [ "$FAIL_COUNT" -eq 0 ]; then
     exit 0

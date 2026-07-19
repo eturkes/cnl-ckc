@@ -95,6 +95,7 @@ child_atoms(Children, []) :-
     Children == [],
     !.
 child_atoms(Children, [Atom|Atoms]) :-
+    has_functor(Children, '[|]', 2),
     arg(1, Children, Child),
     arg(2, Children, Rest),
     has_functor(Child, proof, 3),
@@ -105,6 +106,7 @@ replay_children(Children) :-
     Children == [],
     !.
 replay_children(Children) :-
+    has_functor(Children, '[|]', 2),
     arg(1, Children, Child),
     arg(2, Children, Rest),
     replay_node(Child),

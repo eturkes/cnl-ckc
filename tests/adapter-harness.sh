@@ -12,7 +12,7 @@ SWIPL=${SWIPL:-swipl}
 GREEN="$ROOT/tests/fixtures/adapter/green"
 RED="$ROOT/tests/fixtures/adapter/red"
 ULEX="$ROOT/tests/fixtures/adapter/ulex"
-SCRATCH="$ROOT/.scratch/adapter-harness"
+SCRATCH="$ROOT/.scratch/adapter-harness.$$"
 TREE="$SCRATCH/tree"
 FAKE_SHAPE="$SCRATCH/fake-shape"
 FAKE_ATTVAR="$SCRATCH/fake-attvar"
@@ -23,6 +23,7 @@ FAKE_NOISY_PARSE="$SCRATCH/fake-noisy-parse"
 FAKE_WARNING_LOAD="$SCRATCH/fake-warning-load"
 PASS_COUNT=0
 RUN_STATUS=0
+EXPECTED_PASS_COUNT=45
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -490,4 +491,8 @@ if [ -n "$vendor_status" ]; then
 fi
 pass_case "vendor/clean"
 
+if [ "$PASS_COUNT" -ne "$EXPECTED_PASS_COUNT" ]; then
+    fail_case "harness/pass-count" \
+        "expected $EXPECTED_PASS_COUNT, got $PASS_COUNT"
+fi
 printf 'SUMMARY: %s passed, 0 failed\n' "$PASS_COUNT"

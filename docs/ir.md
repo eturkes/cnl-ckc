@@ -120,11 +120,11 @@ write_term(Term,[
 
 The writer appends `.` and LF. Terms must be acyclic, contain no attributed variables or pre-existing `'$VAR'/1` term, and use only the canonical writer's admitted term kinds.
 
-The M2 document line is the deliberate exception: M2 always single-quotes all three identity atoms, while `canonical_line/2` removes unnecessary quotes from plain atoms. The shared IR/program/answer record serializer uses the same atom escaping and writer options but forces those identity atoms to remain single-quoted whenever `document/3` is term 2. This is the only way to satisfy byte-verbatim document provenance across all three record kinds and a fixed byte representation.
+The M2 document line is the deliberate exception: M2 always single-quotes all three identity atoms, while `canonical_line/2` removes unnecessary quotes from plain atoms. The shared IR/program/answer record serializer uses the same atom escaping and writer options but forces those identity atoms to remain single-quoted only when term 2 has the complete `document(docid(Atom),source_sha256(Atom),ulex(none|sha256(Atom)))` serialization shape. Malformed document terms fall through to `canonical_line/2`, allowing the lower envelope or IR/program validator to assign its documented `envelope`, `shape`, or `identity` class instead of preempting it as unserializable. This forced-quote exception is the only way to satisfy byte-verbatim document provenance across all three record kinds and a fixed byte representation.
 
 Validation reserializes the parsed term stream with that record serializer and requires exact equality with the decoded input. Strict UTF-8 makes text equality equivalent to byte equality. Therefore comments, blank lines, CRLF, a missing final LF, extra spaces, alternate operator/list notation, and alternate atom quoting fail the fixed-point gate. Every accepted record ends in exactly one LF.
 
-Canonical serialization is performed on copies because `canonical_line/2` numbers native variables destructively. A native variable can survive the byte gate only in its canonical variable spelling; shape validation then rejects it. SWI strings and rationals lie outside `canonical_line/2` and therefore fail as `canonical` before shape. Floats are serializable but fail `shape`.
+Canonical serialization is performed on copies because `canonical_line/2` numbers native variables destructively. A native variable can survive the byte gate only in its canonical variable spelling; shape validation then rejects it. SWI strings and rationals lie outside `canonical_line/2` and therefore fail as `canonical` before shape. Floats are serializable in every field position, including all term-2 document fields, but no v1 field shape admits them, so they fail `shape`.
 
 ## Validator
 
@@ -166,9 +166,9 @@ Program validation uses the same pass numbers, class vocabulary, first-failure r
 | `referent` | Lower | A DRS referent is undeclared, redeclared, unconsumed, unbound, role-reused, or not losslessly erasable as an event. | 1 |
 | `unsupported` | Lower | A constructor or arrangement is outside the admitted DRS profile, provenance is not one-sentence canonical data, or lowering cannot produce valid v1 IR without loss. | 1 |
 | `usage` | CLI | Arguments do not select exactly one implemented command (`lower`, `validate`, `compile`, or `run`). | 2 |
-| `uncaught` | Any | An unexpected internal exception, including certificate replay failure, escaped a stage. | 2 |
+| `uncaught` | Any | An unexpected internal exception, including certificate replay failure or generated-record validation/serialization failure, escaped a stage. | 2 |
 
-The stage atom is one of `cli`, `validate`, `lower`, `compile`, or `run`. The validation classes above are also the complete tamper-rejection surface for program artifacts read by `run`; compilation surfaces IR validation failures at stage `compile`.
+The stage atom is one of `cli`, `validate`, `lower`, `compile`, or `run`. The framing classes (`input_utf8`, `syntax`, `canonical`) plus the validation classes above are together the complete tamper-rejection surface for program artifacts read by `run`; compilation surfaces IR validation failures at stage `compile`.
 
 ## DRS lowering
 
@@ -231,7 +231,7 @@ Program identity binds clause kind to body shape: `fact_id` if and only if the b
 Canonical inference invocation from repository root:
 
 ```sh
-swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- run <record.program.pl >record.answer.pl
+swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- run <record.program.pl >record.result.pl
 ```
 
 A result record is a ground term stream in one of these exact forms:
@@ -249,9 +249,9 @@ document(docid('<docid>'),source_sha256('<hex>'),ulex(<ulex-term>)).
 answer(query_id(sentence(S),clause(C)),pred(Name,[GroundArg,...]),not_proved).
 ```
 
-The document line is byte-verbatim from the program record. Exactly one `proof/3` term is present if and only if the answer is `proved`; it is the final term. `Atom` is a derived ground `pred/2`, `ClauseId` is the cited `fact_id` or `rule_id`, and subproofs correspond one-for-one with the cited clause body literals in body order. A fact proof has `[]`. The root atom is `==` to both the answer atom and the program goal. `not_proved` remains unknown and carries no proof.
+The document line is byte-verbatim from the program record. Exactly one `proof/3` term is present if and only if the answer is `proved`; it is the final term. `Atom` is a derived ground `pred/2`, `ClauseId` is the cited `fact_id` or `rule_id`, and subproofs correspond one-for-one with the cited clause body literals in body order. A fact proof has `[]`. The root atom is `==` to both the answer atom and the program goal. `not_proved` remains unknown and carries no proof. V1 certificates are trees without shared subproofs, so their size can grow exponentially with rule structure; DAG sharing and proof-resource bounds remain deferred.
 
-`run` validates a program artifact independently rather than trusting the compiler. This is the defense-in-depth tamper boundary: the same `envelope`, `query_count`, `section_order`, `shape`, `identity`, `ordering`, `scope`, `naf`, `safety`, and `cycle` classes define all content rejections. A result record deliberately does not bind a program digest in v1; digest binding is deferred to M4.
+`run` validates a program artifact independently rather than trusting the compiler. This is the defense-in-depth tamper boundary: after the shared framing gates (`input_utf8`, `syntax`, `canonical`), the same `envelope`, `query_count`, `section_order`, `shape`, `identity`, `ordering`, `scope`, `naf`, `safety`, and `cycle` classes define all content rejections. A result record deliberately does not bind a program digest in v1; digest binding is deferred to M4.
 
 The deterministic least-Herbrand-model schedule is normative:
 
@@ -264,7 +264,7 @@ The deterministic least-Herbrand-model schedule is normative:
 
 The constant universe is finite and validated positive dependencies are acyclic, so this schedule terminates. Predicate names are always data, including names that collide with Prolog predicates or database operations.
 
-For a proved goal, `src/prolog/explanation.pl` expands retained witnesses recursively into one ground proof tree and then independently replays it before any output is emitted. Replay requires: (a) root conclusion `==` the goal; (b) every cited clause exists and admits a total ground substitution over all of its `var(N)` values such that the substituted head is `==` the node atom and substituted body atoms are pairwise `==` child conclusions in order; and (c) every child recursively satisfies the same checks. Replay uses its own structural matcher. Failure is an internal invariant break and surfaces as stage `run`, class `uncaught`, exit 2. Only after replay succeeds is the result stream canonically serialized, reparsed, checked as its own fixed point, and committed once to stdout.
+For a proved goal, `src/prolog/explanation.pl` expands retained witnesses recursively into one ground proof tree and then independently replays it before any output is emitted. Replay requires: (a) root conclusion `==` the goal; (b) every cited clause exists and admits a total ground substitution over all of its `var(N)` values such that the substituted head is `==` the node atom and substituted body atoms are pairwise `==` child conclusions in order; and (c) every child recursively satisfies the same checks. Replay uses its own structural matcher. It certifies derivability (soundness) only; first-witness and schedule integrity are enforced by the kernel's deterministic schedule and fresh-process determinism gates, not by replay. Failure is an internal invariant break and surfaces as stage `run`, class `uncaught`, exit 2. Only after replay succeeds is the result stream canonically serialized, reparsed, checked as its own fixed point, and committed once to stdout.
 
 ## End-to-end document chain
 
@@ -293,7 +293,7 @@ swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
 
 `validate` succeeds with zero stdout and stderr; each transforming stage commits one complete canonical record only after its own checks pass. Byte authorities live under `tests/fixtures/slice/`: `golden/manifest.pl` and `golden/<docid>.drs.pl`, then `ir/<docid>.ir.pl`, `program/<docid>.program.pl`, and `result/<docid>.result.pl`. A generated mismatch is a contract failure, not a regeneration instruction.
 
-`tests/slice-harness.sh` stages and builds a fresh APE copy, produces two fresh front-end output trees, and chains each fresh DRS through `lower` → `validate` → `compile` → `run`. It checks every stage against the committed byte golden before continuing, proves the two complete runs byte-identical, reuses the chain driver on a trailing-term rejection to prove zero non-empty downstream artifacts, and verifies `vendor/` cleanliness. CI runs this harness in the pinned SWI 9.2.9 `ape` job after `tests/pipeline-harness.sh` and before the final vendor-cleanliness gate.
+`tests/slice-harness.sh` stages and builds a fresh APE copy, produces two fresh front-end output trees, and chains each fresh DRS through `lower` → `validate` → `compile` → `run`. It byte-compares each artifact-producing stage to its committed golden before continuing and treats `validate` as a separate zero-stream success gate, pins each pass's complete chain file inventory, proves the two passes' complete artifact sets byte-identical, proves the staged APE tree unchanged across both passes, reuses the chain driver on a trailing-term rejection to prove zero non-empty downstream artifacts, and verifies `vendor/` cleanliness before staging and after both passes. CI runs this harness in the pinned SWI 9.2.9 `ape` job after `tests/pipeline-harness.sh` and before the final vendor-cleanliness gate.
 
 ## CLI
 
@@ -363,7 +363,7 @@ is represented as:
 
 ```prolog
 cnl_ir_record(1).
-document(docid('slice'),source_sha256('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),ulex(sha256('1111111111111111111111111111111111111111111111111111111111111111'))).
+document(docid('slice'),source_sha256('bf432c59846951be8568be538cfa2c5fcdc41d35b7ede4d0bc0fd5c4aff7c2c4'),ulex(sha256('6015f9a18e4d4957b30e04342d2ff2700bf0e18b13bf3b95452a2d5563c5b614'))).
 fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([2,4]))).
 fact(fact_id(sentence(2),clause(1)),pred(wait,[named('John')]),source(sentence(2),tokens([2]))).
 rule(rule_id(sentence(3),clause(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])]),source(sentence(3),tokens([2,4,5]))).

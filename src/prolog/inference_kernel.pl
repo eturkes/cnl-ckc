@@ -601,8 +601,9 @@ evaluate_program(Document, Goal, ClauseCount, ResultTerms) :-
 
 /*
 Repeated-pass schedule. Each clause sees a snapshot taken at clause entry;
-new atoms become visible only to later clauses in the same pass. Candidate body
-matches use leftmost-outermost DFS over snapshot insertion order.
+new atoms become visible only to later clauses in the same pass. Body solutions
+use leftmost-outermost DFS over snapshot insertion order and are deduplicated
+into the growing store as they are enumerated.
 */
 least_model(ClauseCount, Store) :-
     fixpoint(ClauseCount, [], Store).
@@ -620,17 +621,35 @@ program_pass(Seq, ClauseCount, Store, Store, Added, Added) :-
 program_pass(Seq, ClauseCount, Store0, Store, Added0, Added) :-
     once(cnl_program_db:program_clause(Seq, Id, Head, Body)),
     Snapshot = Store0,
-    clause_candidates(Head, Body, Snapshot, Candidates),
-    add_candidates(Candidates, Id, Store0, Store1, Added0, Added1),
+    add_clause_solutions(Head, Body, Snapshot, Id,
+        Store0, Store1, Added0, Added1),
     Next is Seq + 1,
     program_pass(Next, ClauseCount, Store1, Store, Added1, Added).
 
-clause_candidates(Head, Body, Snapshot, Candidates) :-
-    findall(candidate(GroundHead, GroundBody),
+/*
+forall preserves schedule enumeration while discarding solution bindings;
+nb_setarg mutates only this holder and copies each new list, leaving Snapshot
+untouched while retaining only the growing deduplicated store.
+*/
+add_clause_solutions(Head, Body, Snapshot, Id,
+        Store0, Store, Added0, Added) :-
+    State = candidate_state(Store0, Added0),
+    forall(
         ( body_solution(Body, Snapshot, [], Bindings, GroundBody),
           substitute_predicate(Head, Bindings, GroundHead)
         ),
-        Candidates).
+        insert_clause_solution(GroundHead, GroundBody, Id, State)),
+    arg(1, State, Store),
+    arg(2, State, Added).
+
+insert_clause_solution(Atom, BodyAtoms, Id, State) :-
+    arg(1, State, Store0),
+    ( atom_present(Atom, Store0) ->
+        true
+    ; append(Store0, [entry(Atom, by(Id, BodyAtoms))], Store),
+      nb_setarg(1, State, Store),
+      nb_setarg(2, State, true)
+    ).
 
 body_solution(Body, _, Bindings, Bindings, []) :-
     Body == [],
@@ -713,17 +732,6 @@ substitute_argument(Arg, _, Arg) :-
 substitute_argument(Arg, Bindings, Ground) :-
     arg(1, Arg, Number),
     binding_value(Number, Bindings, Ground).
-
-add_candidates([], _, Store, Store, Added, Added).
-add_candidates([candidate(Atom, BodyAtoms)|Candidates], Id,
-        Store0, Store, Added0, Added) :-
-    ( atom_present(Atom, Store0) ->
-        Store1 = Store0,
-        Added1 = Added0
-    ; append(Store0, [entry(Atom, by(Id, BodyAtoms))], Store1),
-      Added1 = true
-    ),
-    add_candidates(Candidates, Id, Store1, Store, Added1, Added).
 
 atom_present(Atom, [entry(Stored, _)|_]) :-
     Stored == Atom,

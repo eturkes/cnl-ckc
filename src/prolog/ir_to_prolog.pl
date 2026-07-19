@@ -14,7 +14,13 @@ Generated output is validated before it can reach the caller's output buffer.
 compile_terms(IrTerms, ProgramTerms) :-
     validate_terms(IrTerms),
     transform_record(IrTerms, ProgramTerms),
-    validate_program_terms(ProgramTerms, _, _, _).
+    validate_generated_program(ProgramTerms).
+
+validate_generated_program(ProgramTerms) :-
+    catch(validate_program_terms(ProgramTerms, _, _, _),
+        ir_reject(Class, Detail),
+        throw(error(generated_record_invalid(Class, Detail),
+            context(ir_to_prolog, program_validation)))).
 
 transform_record([Header, Document|Items], ProgramTerms) :-
     Header == cnl_ir_record(1),

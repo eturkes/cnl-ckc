@@ -26,10 +26,10 @@ RESULT="$ROOT/tests/fixtures/slice/result"
 GREEN="$ROOT/tests/fixtures/run/green"
 RED="$ROOT/tests/fixtures/run/red"
 IR_RED="$ROOT/tests/fixtures/ir/red"
-SCRATCH="$ROOT/.scratch/ir-run-harness"
+SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=31
+EXPECTED_PASS_COUNT=39
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -52,6 +52,27 @@ run_tool() {
     if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/ir_tool.pl" \
         -g main -t 'halt(9)' -- "$@" \
         <"$input" >"$stdout_path" 2>"$stderr_path"; then
+        RUN_STATUS=0
+    else
+        RUN_STATUS=$?
+    fi
+}
+
+run_tool_with_limits() {
+    local seconds max_kib input stdout_path stderr_path
+    seconds=$1
+    max_kib=$2
+    input=$3
+    stdout_path=$4
+    stderr_path=$5
+    shift 5
+
+    if (
+        ulimit -v "$max_kib" || exit 125
+        timeout "$seconds" "$SWIPL" -q -f none -F none \
+            -s "$ROOT/src/prolog/ir_tool.pl" -g main -t 'halt(9)' -- "$@" \
+            <"$input" >"$stdout_path" 2>"$stderr_path"
+    ); then
         RUN_STATUS=0
     else
         RUN_STATUS=$?
@@ -121,23 +142,23 @@ if [ "$#" -ne 2 ]; then
     fail_case "fixtures/count" "expected 2 result goldens, got $#"
 fi
 set -- "$GREEN"/*.program.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 hand-green programs, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 hand-green programs, got $#"
 fi
 set -- "$GREEN"/*.result.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 hand-green results, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 hand-green results, got $#"
 fi
 set -- "$RED"/*.program.pl
-if [ "$#" -ne 14 ]; then
-    fail_case "fixtures/count" "expected 14 red programs, got $#"
+if [ "$#" -ne 15 ]; then
+    fail_case "fixtures/count" "expected 15 red programs, got $#"
 fi
 pass_case "fixtures/count"
 
 rm -rf "$SCRATCH"
 mkdir -p "$SCRATCH/chain" "$SCRATCH/green" "$SCRATCH/red" \
     "$SCRATCH/stage-pin" "$SCRATCH/scratch" "$SCRATCH/usage" \
-    "$SCRATCH/determinism"
+    "$SCRATCH/probes" "$SCRATCH/determinism"
 trap 'rm -rf "$SCRATCH"' EXIT
 
 for input in "$GOLDEN"/*.drs.pl; do
@@ -212,7 +233,12 @@ for input in "$GREEN"/*.program.pl; do
     if ! [ -f "$expected" ]; then
         fail_case "green/$stem/pair" "missing result golden"
     fi
-    run_tool "$input" "$stdout_path" "$stderr_path" run
+    if [ "$stem" = wide-join ]; then
+        run_tool_with_limits 30 98304 \
+            "$input" "$stdout_path" "$stderr_path" run
+    else
+        run_tool "$input" "$stdout_path" "$stderr_path" run
+    fi
     if [ "$RUN_STATUS" -ne 0 ]; then
         fail_case "green/$stem/status" "expected 0, got $RUN_STATUS"
     fi
@@ -224,6 +250,27 @@ for input in "$GREEN"/*.program.pl; do
     fi
     pass_case "green/$stem"
 done
+
+competing_input="$GREEN/competing-witness.program.pl"
+competing_expected="$GREEN/competing-witness.result.pl"
+competing_first="$SCRATCH/green/competing-witness.stdout"
+competing_rerun_stdout="$SCRATCH/determinism/competing-witness.stdout"
+competing_rerun_stderr="$SCRATCH/determinism/competing-witness.stderr"
+run_tool "$competing_input" "$competing_rerun_stdout" \
+    "$competing_rerun_stderr" run
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "determinism/competing-witness/status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$competing_rerun_stderr" ]; then
+    fail_case "determinism/competing-witness/stderr" "expected zero bytes"
+fi
+if ! cmp "$competing_first" "$competing_rerun_stdout" || \
+        ! cmp "$competing_rerun_stdout" "$competing_expected"; then
+    fail_case "determinism/competing-witness/stdout" \
+        "fresh runs or golden differ"
+fi
+pass_case "determinism/competing-witness"
 
 run_committed_red() {
     local name expected_class stdout_path stderr_path
@@ -237,6 +284,7 @@ run_committed_red() {
 }
 
 run_committed_red cycle-self-loop cycle
+run_committed_red document-float shape
 run_committed_red envelope-missing-document envelope
 run_committed_red envelope-trailing-after-goal envelope
 run_committed_red envelope-wrong-header envelope
@@ -290,6 +338,76 @@ usage_stderr="$SCRATCH/usage/run-extra.stderr"
 run_tool "$base_program" "$usage_stdout" "$usage_stderr" run extra-arg
 check_rejection "usage/run-extra" 2 cli usage \
     "$usage_stdout" "$usage_stderr"
+
+replay_stdout="$SCRATCH/probes/replay-list.stdout"
+replay_stderr="$SCRATCH/probes/replay-list.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
+        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(q,[named(a)]),[pred(p,[named(a)])])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(p,[named(a)]),[])),Child=proof(pred(p,[named(a)]),fact_id(sentence(2),clause(1)),[]),Proof=proof(pred(q,[named(a)]),rule_id(sentence(1),clause(1)),weird(Child,[],x)),catch(explanation:replay_certificate(pred(q,[named(a)]),Proof),Error,true),\+explanation:replay_children(weird(Child,[],x)),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$replay_stdout" 2>"$replay_stderr"; then
+    replay_status=0
+else
+    replay_status=$?
+fi
+if [ "$replay_status" -ne 0 ]; then
+    fail_case "probe/replay-list-shape" "expected invariant rejection"
+fi
+if [ -s "$replay_stdout" ] || [ -s "$replay_stderr" ]; then
+    fail_case "probe/replay-list-shape" "expected zero bytes"
+fi
+pass_case "probe/replay-list-shape"
+
+generated_ir_stdout="$SCRATCH/probes/generated-ir.stdout"
+generated_ir_stderr="$SCRATCH/probes/generated-ir.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/drs_to_ir.pl" \
+        -g '(catch(drs_to_ir:validate_generated_ir([bad]),Error,true),nonvar(Error),Error=error(generated_record_invalid(envelope,_),context(drs_to_ir,ir_validation))->halt(0);halt(1))' \
+        -t 'halt(9)' >"$generated_ir_stdout" 2>"$generated_ir_stderr"; then
+    generated_ir_status=0
+else
+    generated_ir_status=$?
+fi
+if [ "$generated_ir_status" -ne 0 ]; then
+    fail_case "probe/generated-ir" "expected wrapped internal exception"
+fi
+if [ -s "$generated_ir_stdout" ] || [ -s "$generated_ir_stderr" ]; then
+    fail_case "probe/generated-ir" "expected zero bytes"
+fi
+pass_case "probe/generated-ir"
+
+generated_program_stdout="$SCRATCH/probes/generated-program.stdout"
+generated_program_stderr="$SCRATCH/probes/generated-program.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/ir_to_prolog.pl" \
+        -g '(catch(ir_to_prolog:validate_generated_program([bad]),Error,true),nonvar(Error),Error=error(generated_record_invalid(envelope,_),context(ir_to_prolog,program_validation))->halt(0);halt(1))' \
+        -t 'halt(9)' >"$generated_program_stdout" \
+        2>"$generated_program_stderr"; then
+    generated_program_status=0
+else
+    generated_program_status=$?
+fi
+if [ "$generated_program_status" -ne 0 ]; then
+    fail_case "probe/generated-program" "expected wrapped internal exception"
+fi
+if [ -s "$generated_program_stdout" ] || \
+        [ -s "$generated_program_stderr" ]; then
+    fail_case "probe/generated-program" "expected zero bytes"
+fi
+pass_case "probe/generated-program"
+
+generated_stdout="$SCRATCH/probes/generated-record.stdout"
+generated_stderr="$SCRATCH/probes/generated-record.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/ir_tool.pl" \
+        -g '(ir_tool:pin_flags,catch(ir_tool:self_checked_canonical_codes([bad("x")],_),Error,true),nonvar(Error),Error=error(generated_record_invalid(canonical,term(1,unserializable)),_)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$generated_stdout" 2>"$generated_stderr"; then
+    generated_status=0
+else
+    generated_status=$?
+fi
+if [ "$generated_status" -ne 0 ]; then
+    fail_case "probe/generated-record" "expected wrapped internal exception"
+fi
+if [ -s "$generated_stdout" ] || [ -s "$generated_stderr" ]; then
+    fail_case "probe/generated-record" "expected zero bytes"
+fi
+pass_case "probe/generated-record"
 
 compile_stdout1="$SCRATCH/determinism/compile.run1.stdout"
 compile_stderr1="$SCRATCH/determinism/compile.run1.stderr"

@@ -28,7 +28,7 @@ GOLDEN="$ROOT/tests/fixtures/slice/golden"
 IR="$ROOT/tests/fixtures/slice/ir"
 PROGRAM="$ROOT/tests/fixtures/slice/program"
 RESULT="$ROOT/tests/fixtures/slice/result"
-SCRATCH="$ROOT/.scratch/slice-harness"
+SCRATCH="$ROOT/.scratch/slice-harness.$$"
 TREE="$SCRATCH/tree"
 OUT1="$SCRATCH/out1"
 OUT2="$SCRATCH/out2"
@@ -37,7 +37,7 @@ RUN_STATUS=0
 CHAIN_STAGE=
 CHAIN_STATUS=0
 CHAIN_REASON=
-EXPECTED_PASS_COUNT=21
+EXPECTED_PASS_COUNT=25
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -88,6 +88,30 @@ write_file_set() {
     output_path=$2
     find "$directory" -mindepth 1 -maxdepth 1 -printf '%f\n' | \
         LC_ALL=C sort >"$output_path"
+}
+
+write_chain_expected() {
+    local output_path stem
+    output_path=$1
+    shift
+    for stem in "$@"; do
+        printf '%s\n' \
+            "$stem.ir.pl" \
+            "$stem.lower.stderr" \
+            "$stem.validate.stdout" \
+            "$stem.validate.stderr" \
+            "$stem.program.pl" \
+            "$stem.compile.stderr" \
+            "$stem.result.pl" \
+            "$stem.run.stderr"
+    done | LC_ALL=C sort >"$output_path"
+}
+
+tree_content_hash() {
+    find "$TREE" -type f -print0 | \
+        LC_ALL=C sort -z | \
+        xargs -0 sha256sum | \
+        sha256sum
 }
 
 write_front_end_expected() {
@@ -252,6 +276,10 @@ printf '%s\n' \
 printf '%s\n' \
     slice-unknown.result.pl \
     slice.result.pl | LC_ALL=C sort >"$SCRATCH/expected/result"
+write_chain_expected "$SCRATCH/expected/chain" slice-unknown slice
+printf '%s\n' \
+    slice-invalid.ir.pl \
+    slice-invalid.lower.stderr | LC_ALL=C sort >"$SCRATCH/expected/red-chain"
 
 write_file_set "$DOCS" "$SCRATCH/expected/docs.actual"
 write_file_set "$GOLDEN" "$SCRATCH/expected/golden.actual"
@@ -285,6 +313,15 @@ for fixture in \
 done
 pass_case "fixtures/set"
 
+if ! vendor_copy_status=$(git status --porcelain --ignored -- vendor/); then
+    fail_case "vendor/precopy-clean" "git status failed"
+fi
+if [ -n "$vendor_copy_status" ]; then
+    printf '%s\n' "$vendor_copy_status"
+    fail_case "vendor/precopy-clean" "vendor tree has tracked or ignored artifacts"
+fi
+pass_case "vendor/precopy-clean"
+
 cp -a "$ROOT/vendor/ape/." "$TREE/"
 pass_case "vendor/copy"
 
@@ -295,6 +332,10 @@ if ! [ -f "$TREE/prolog/parser/grammar.plp" ]; then
     fail_case "vendor/plp" "grammar.plp is missing"
 fi
 pass_case "vendor/plp"
+
+if ! tree_hash_before=$(tree_content_hash); then
+    fail_case "tree/immutable" "could not hash staged APE tree"
+fi
 
 run1_stdout="$SCRATCH/logs/run1.stdout"
 run1_stderr="$SCRATCH/logs/run1.stderr"
@@ -333,6 +374,11 @@ for stem in slice-unknown slice; do
     fi
     pass_case "chain/run1/$stem"
 done
+write_file_set "$SCRATCH/run1-chain" "$SCRATCH/logs/run1-chain.files"
+if ! cmp "$SCRATCH/logs/run1-chain.files" "$SCRATCH/expected/chain"; then
+    fail_case "chain/run1-files" "chain file set differs from the pinned set"
+fi
+pass_case "chain/run1-files"
 
 run2_stdout="$SCRATCH/logs/run2.stdout"
 run2_stderr="$SCRATCH/logs/run2.stderr"
@@ -371,6 +417,19 @@ for stem in slice-unknown slice; do
     fi
     pass_case "chain/run2/$stem"
 done
+write_file_set "$SCRATCH/run2-chain" "$SCRATCH/logs/run2-chain.files"
+if ! cmp "$SCRATCH/logs/run2-chain.files" "$SCRATCH/expected/chain"; then
+    fail_case "chain/run2-files" "chain file set differs from the pinned set"
+fi
+pass_case "chain/run2-files"
+
+if ! tree_hash_after=$(tree_content_hash); then
+    fail_case "tree/immutable" "could not re-hash staged APE tree"
+fi
+if [ "$tree_hash_before" != "$tree_hash_after" ]; then
+    fail_case "tree/immutable" "staged APE tree changed across the two passes"
+fi
+pass_case "tree/immutable"
 
 for name in manifest.pl slice-unknown.drs.pl slice.drs.pl; do
     if ! cmp "$OUT1/$name" "$OUT2/$name"; then
@@ -379,41 +438,51 @@ for name in manifest.pl slice-unknown.drs.pl slice.drs.pl; do
 done
 pass_case "determinism/front-end"
 
-for stem in slice-unknown slice; do
-    for suffix in ir.pl program.pl result.pl; do
-        if ! cmp "$SCRATCH/run1-chain/$stem.$suffix" \
-                "$SCRATCH/run2-chain/$stem.$suffix"; then
-            fail_case "determinism/downstream" \
-                "fresh chains differ: $stem.$suffix"
-        fi
-    done
-done
+while IFS= read -r name; do
+    if ! cmp "$SCRATCH/run1-chain/$name" "$SCRATCH/run2-chain/$name"; then
+        fail_case "determinism/downstream" "fresh chains differ: $name"
+    fi
+done <"$SCRATCH/expected/chain"
 pass_case "determinism/downstream"
 
 bad_input="$SCRATCH/slice-invalid.drs.pl"
 cp "$OUT1/slice.drs.pl" "$bad_input"
 printf '%s\n' 'unexpected_term.' >>"$bad_input"
 if run_chain "$bad_input" slice-invalid "$SCRATCH/red-chain"; then
-    fail_case "zero-downstream-write" "invalid DRS unexpectedly completed"
+    fail_case "red/no-nonempty-downstream" "invalid DRS unexpectedly completed"
 fi
 if [ "$CHAIN_STAGE" != lower ] || [ "$CHAIN_REASON" != status ] || \
         [ "$CHAIN_STATUS" -ne 1 ]; then
-    fail_case "zero-downstream-write" \
+    fail_case "red/no-nonempty-downstream" \
         "expected lower/status 1, got $CHAIN_STAGE/$CHAIN_REASON $CHAIN_STATUS"
 fi
-if ! command grep -Eq '^ir_tool_error\(lower,envelope,.*\)\.$' \
-        "$SCRATCH/red-chain/slice-invalid.lower.stderr"; then
-    fail_case "zero-downstream-write" "expected lower envelope rejection"
+red_stderr="$SCRATCH/red-chain/slice-invalid.lower.stderr"
+red_line_count=$(wc -l <"$red_stderr")
+if [ "$red_line_count" -ne 1 ]; then
+    fail_case "red/no-nonempty-downstream" \
+        "expected one stderr line, got $red_line_count"
+fi
+if ! printf '%s\n' "$(<"$red_stderr")" | cmp - "$red_stderr"; then
+    fail_case "red/no-nonempty-downstream" \
+        "expected exactly one LF-terminated stderr line"
+fi
+if ! command grep -Eq '^ir_tool_error\(lower,envelope,.*\)\.$' "$red_stderr"; then
+    fail_case "red/no-nonempty-downstream" "expected lower envelope rejection"
+fi
+write_file_set "$SCRATCH/red-chain" "$SCRATCH/logs/red-chain.files"
+if ! cmp "$SCRATCH/logs/red-chain.files" "$SCRATCH/expected/red-chain"; then
+    fail_case "red/no-nonempty-downstream" \
+        "red chain file set differs from the pinned lower-failure set"
 fi
 for artifact in \
     "$SCRATCH/red-chain/slice-invalid.ir.pl" \
     "$SCRATCH/red-chain/slice-invalid.program.pl" \
     "$SCRATCH/red-chain/slice-invalid.result.pl"; do
     if [ -s "$artifact" ]; then
-        fail_case "zero-downstream-write" "non-empty artifact: $artifact"
+        fail_case "red/no-nonempty-downstream" "non-empty artifact: $artifact"
     fi
 done
-pass_case "zero-downstream-write"
+pass_case "red/no-nonempty-downstream"
 
 if ! git diff --exit-code -- vendor/; then
     fail_case "vendor/clean" "tracked vendor bytes changed"

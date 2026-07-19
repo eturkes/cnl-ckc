@@ -18,6 +18,7 @@ RUN_STDERR="$SCRATCH/run.stderr"
 RUN_STATUS=0
 PASS_COUNT=0
 FAIL_COUNT=0
+EXPECTED_PASS_COUNT=16
 
 rm -rf "$SCRATCH"
 mkdir -p "$SCRATCH"
@@ -373,6 +374,10 @@ check_usage
 check_real_tree
 check_bootstrap_identity
 
+if [ "$PASS_COUNT" -ne "$EXPECTED_PASS_COUNT" ]; then
+    fail_case "harness/pass-count" \
+        "expected $EXPECTED_PASS_COUNT, got $PASS_COUNT"
+fi
 printf 'SUMMARY: %s passed, %s failed\n' "$PASS_COUNT" "$FAIL_COUNT"
 if [ "$FAIL_COUNT" -eq 0 ]; then
     exit 0

@@ -882,7 +882,8 @@ term_signature(_, other).
 validate_generated_ir(IrTerms) :-
     catch(validate_terms(IrTerms),
         ir_reject(Class, Detail),
-        reject(unsupported, generated_ir(Class, Detail))).
+        throw(error(generated_record_invalid(Class, Detail),
+            context(drs_to_ir, ir_validation)))).
 
 reject(Class, Detail) :-
     throw(ir_reject(Class, Detail)).

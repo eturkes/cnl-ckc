@@ -16,10 +16,10 @@ DOCS="$ROOT/tests/fixtures/slice/docs"
 GOLDEN="$ROOT/tests/fixtures/slice/golden"
 IR="$ROOT/tests/fixtures/slice/ir"
 RED="$ROOT/tests/fixtures/lower/red"
-SCRATCH="$ROOT/.scratch/ir-lower-harness"
+SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=27
+EXPECTED_PASS_COUNT=34
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -115,8 +115,8 @@ if [ "$#" -ne 2 ]; then
     fail_case "fixtures/count" "expected 2 IR goldens, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 18 ]; then
-    fail_case "fixtures/count" "expected 18 red fixtures, got $#"
+if [ "$#" -ne 25 ]; then
+    fail_case "fixtures/count" "expected 25 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -174,13 +174,20 @@ run_committed_red unpaired-be copula
 run_committed_red be-non-named copula
 run_committed_red object-wrong-fields copula
 run_committed_red object-field-alias-event copula
+run_committed_red reversed-copula-orientation copula
 run_committed_red rule-object-field-alias-event unsupported
 run_committed_red event-reuse referent
+run_committed_red role-reuse referent
+run_committed_red cross-drs-redeclaration referent
+run_committed_red unbound-head-variable referent
 run_committed_red unconsumed-domain referent
 run_committed_red undeclared-referent referent
+run_committed_red body-only-variable-fact unsupported
+run_committed_red mixed-sentence-anchors unsupported
 run_committed_red unknown-condition unsupported
 run_committed_red nested-implication unsupported
 run_committed_red envelope-wrong-header envelope
+run_committed_red malformed-document envelope
 run_committed_red envelope-missing-drs envelope
 run_committed_red envelope-trailing-term envelope
 

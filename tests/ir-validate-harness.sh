@@ -11,10 +11,10 @@ fi
 SWIPL=${SWIPL:-swipl}
 GREEN="$ROOT/tests/fixtures/ir/green"
 RED="$ROOT/tests/fixtures/ir/red"
-SCRATCH="$ROOT/.scratch/ir-validate-harness"
+SCRATCH="$ROOT/.scratch/ir-validate-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=53
+EXPECTED_PASS_COUNT=60
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -44,13 +44,14 @@ run_tool() {
 
 check_rejection() {
     local label expected_status expected_stage expected_class stdout_path stderr_path
-    local line_count
+    local expected_line line_count
     label=$1
     expected_status=$2
     expected_stage=$3
     expected_class=$4
     stdout_path=$5
     stderr_path=$6
+    expected_line=${7-}
 
     if [ "$RUN_STATUS" -ne "$expected_status" ]; then
         fail_case "$label/status" "expected $expected_status, got $RUN_STATUS"
@@ -67,6 +68,10 @@ check_rejection() {
     fi
     if ! command grep -Eq "^ir_tool_error\\(${expected_stage},${expected_class},.*\\)\\.$" "$stderr_path"; then
         fail_case "$label/class" "expected ir_tool_error($expected_stage,$expected_class,...)"
+    fi
+    if [ -n "$expected_line" ] && \
+            ! printf '%s\n' "$expected_line" | cmp - "$stderr_path"; then
+        fail_case "$label/detail" "stderr differs from exact expected line"
     fi
     pass_case "$label"
 }
@@ -89,8 +94,8 @@ if [ "$#" -ne 3 ]; then
     fail_case "fixtures/count" "expected 3 green fixtures, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 31 ]; then
-    fail_case "fixtures/count" "expected 31 red fixtures, got $#"
+if [ "$#" -ne 33 ]; then
+    fail_case "fixtures/count" "expected 33 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -133,6 +138,8 @@ run_committed_red query-two query_count
 run_committed_red section-interleave section_order
 run_committed_red envelope-trailing-term envelope
 run_committed_red shape-unknown-constructor shape
+run_committed_red document-arity shape
+run_committed_red document-float shape
 run_committed_red shape-bad-float shape
 run_committed_red canonical-string-atomic canonical
 run_committed_red shape-bad-string-codes shape
@@ -159,7 +166,13 @@ run_committed_red cycle-two-rule cycle
 run_committed_red cycle-self-loop cycle
 
 base="$GREEN/minimal.pl"
+utf8_atom=$(printf 'caf\303\251 patient')
+if ! command sed "s/named(alice)/named('$utf8_atom')/g" "$base" \
+        >"$SCRATCH/green/utf8-multibyte.pl"; then
+    fail_case "scratch/generate" "could not create multibyte green"
+fi
 printf '\xff' >"$SCRATCH/red/utf8-lone-ff.pl"
+printf '\x80' >"$SCRATCH/red/utf8-bare-continuation.pl"
 printf '\xc0\xaf' >"$SCRATCH/red/utf8-overlong.pl"
 printf '\xed\xa0\x80' >"$SCRATCH/red/utf8-surrogate.pl"
 printf '\xf4\x90\x80\x80' >"$SCRATCH/red/utf8-out-of-range.pl"
@@ -183,18 +196,68 @@ fi
 if ! command sed '3s/\[named(alice)\]/[named(alice)|[]]/' "$base" >"$SCRATCH/red/operator-notation.pl"; then
     fail_case "scratch/generate" "could not create operator case"
 fi
+if ! command sed "2s/docid('minimal')/docid(minimal)/" "$base" \
+        >"$SCRATCH/red/unquoted-docid.pl"; then
+    fail_case "scratch/generate" "could not create unquoted document case"
+fi
+if ! command sed '3s/\[named(bob)\]/[]/' \
+        "$RED/ordering-out-of-order.pl" \
+        >"$SCRATCH/red/priority-shape-before-ordering.pl"; then
+    fail_case "scratch/generate" "could not create shape/ordering priority case"
+fi
+if ! command sed '3s/fact_id/rule_id/' "$RED/scope-var-in-query.pl" \
+        >"$SCRATCH/red/priority-identity-before-scope.pl"; then
+    fail_case "scratch/generate" "could not create identity/scope priority case"
+fi
 
 run_scratch_red() {
-    local name expected_class stdout_path stderr_path
+    local name expected_class expected_line stdout_path stderr_path
     name=$1
     expected_class=$2
+    expected_line=${3-}
     stdout_path="$SCRATCH/red/$name.stdout"
     stderr_path="$SCRATCH/red/$name.stderr"
     run_tool "$SCRATCH/red/$name.pl" "$stdout_path" "$stderr_path" validate
-    check_rejection "scratch/$name" 1 validate "$expected_class" "$stdout_path" "$stderr_path"
+    check_rejection "scratch/$name" 1 validate "$expected_class" \
+        "$stdout_path" "$stderr_path" "$expected_line"
 }
 
+utf8_input="$SCRATCH/green/utf8-multibyte.pl"
+utf8_validate_stdout="$SCRATCH/green/utf8-multibyte.validate.stdout"
+utf8_validate_stderr="$SCRATCH/green/utf8-multibyte.validate.stderr"
+run_tool "$utf8_input" "$utf8_validate_stdout" "$utf8_validate_stderr" validate
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "scratch/utf8-multibyte/status" \
+        "expected validate status 0, got $RUN_STATUS"
+fi
+if [ -s "$utf8_validate_stdout" ] || [ -s "$utf8_validate_stderr" ]; then
+    fail_case "scratch/utf8-multibyte/validate-streams" "expected zero bytes"
+fi
+utf8_roundtrip_stdout="$SCRATCH/green/utf8-multibyte.roundtrip.stdout"
+utf8_roundtrip_stderr="$SCRATCH/green/utf8-multibyte.roundtrip.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/ir_tool.pl" \
+        -g "(ir_tool:pin_flags,current_input(Input),set_stream(Input,type(binary)),current_output(Output),set_stream(Output,encoding(utf8)),ir_tool:read_canonical_terms(Input,Terms),ir_validate:validate_terms(Terms),ir_tool:canonical_codes(Terms,1,Codes),format(Output,\"~s\",[Codes]),flush_output(Output),halt(0))" \
+        -t 'halt(9)' <"$utf8_input" >"$utf8_roundtrip_stdout" \
+        2>"$utf8_roundtrip_stderr"; then
+    utf8_roundtrip_status=0
+else
+    utf8_roundtrip_status=$?
+fi
+if [ "$utf8_roundtrip_status" -ne 0 ]; then
+    fail_case "scratch/utf8-multibyte/roundtrip-status" \
+        "expected 0, got $utf8_roundtrip_status"
+fi
+if [ -s "$utf8_roundtrip_stderr" ]; then
+    fail_case "scratch/utf8-multibyte/roundtrip-stderr" "expected zero bytes"
+fi
+if ! cmp "$utf8_input" "$utf8_roundtrip_stdout"; then
+    fail_case "scratch/utf8-multibyte/roundtrip-bytes" \
+        "canonical bytes differ from input"
+fi
+pass_case "scratch/utf8-multibyte"
+
 run_scratch_red utf8-lone-ff input_utf8
+run_scratch_red utf8-bare-continuation input_utf8
 run_scratch_red utf8-overlong input_utf8
 run_scratch_red utf8-surrogate input_utf8
 run_scratch_red utf8-out-of-range input_utf8
@@ -206,6 +269,11 @@ run_scratch_red empty envelope
 run_scratch_red syntax syntax
 run_scratch_red noncanonical-spacing canonical
 run_scratch_red operator-notation canonical
+run_scratch_red unquoted-docid canonical
+run_scratch_red priority-shape-before-ordering shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_scratch_red priority-identity-before-scope identity \
+    'ir_tool_error(validate,identity,term(3,id_kind(fact,rule))).'
 
 usage_case() {
     local label stdout_path stderr_path
