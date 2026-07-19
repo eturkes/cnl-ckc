@@ -13,3 +13,4 @@
 - `numbervars/3` collides with pre-existing `'$VAR'/1` terms; validate acyclicity, attributed variables, atomic kinds, and reserved `'$VAR'/1` subterms before numbering, including error terms so fallback bytes stay deterministic.
 - APE noun copula fixtures require the indefinite article (`John is a patient.`); bare `John is patient.` fails ACE parsing, and the admitted noun anchor is token 4.
 - Prolog profile validators must not match admitted constants by unifying input terms: decompose first and compare with `==`/numeric checks. Canonical native variables can otherwise be silently instantiated, including aliases to already-validated referents.
+- Vertical-slice gates must feed each stage the fresh prior-stage bytes, compare them with that stage's golden before advancing, and define zero-write as no non-empty artifact: shell redirection pre-creates the failing stage's empty output file.

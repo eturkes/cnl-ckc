@@ -266,6 +266,35 @@ The constant universe is finite and validated positive dependencies are acyclic,
 
 For a proved goal, `src/prolog/explanation.pl` expands retained witnesses recursively into one ground proof tree and then independently replays it before any output is emitted. Replay requires: (a) root conclusion `==` the goal; (b) every cited clause exists and admits a total ground substitution over all of its `var(N)` values such that the substituted head is `==` the node atom and substituted body atoms are pairwise `==` child conclusions in order; and (c) every child recursively satisfies the same checks. Replay uses its own structural matcher. Failure is an internal invariant break and surfaces as stage `run`, class `uncaught`, exit 2. Only after replay succeeds is the result stream canonically serialized, reparsed, checked as its own fixed point, and committed once to stdout.
 
+## End-to-end document chain
+
+For each `<docid>`, the project-owned artifact chain is
+`<docid>.drs.pl` → `<docid>.ir.pl` → `<docid>.program.pl` → `<docid>.result.pl`.
+
+The front end emits `<docid>.drs.pl` plus `manifest.pl` for the complete validated document set. Lowering, validation, compilation, and inference then run in separate ambient-init-free SWI processes. Canonical repository-root invocations are:
+
+```sh
+ape_tree=/path/to/fresh-ape-tree
+docs_dir=/path/to/docs
+out_dir=/path/to/new-output
+docid=slice
+
+SWIPL=swipl PYTHONDONTWRITEBYTECODE=1 \
+  python3 -P tools/ace_front_end.py "$ape_tree" "$docs_dir" "$out_dir"
+swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
+  lower <"$out_dir/$docid.drs.pl" >"$out_dir/$docid.ir.pl"
+swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
+  validate <"$out_dir/$docid.ir.pl"
+swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
+  compile <"$out_dir/$docid.ir.pl" >"$out_dir/$docid.program.pl"
+swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
+  run <"$out_dir/$docid.program.pl" >"$out_dir/$docid.result.pl"
+```
+
+`validate` succeeds with zero stdout and stderr; each transforming stage commits one complete canonical record only after its own checks pass. Byte authorities live under `tests/fixtures/slice/`: `golden/manifest.pl` and `golden/<docid>.drs.pl`, then `ir/<docid>.ir.pl`, `program/<docid>.program.pl`, and `result/<docid>.result.pl`. A generated mismatch is a contract failure, not a regeneration instruction.
+
+`tests/slice-harness.sh` stages and builds a fresh APE copy, produces two fresh front-end output trees, and chains each fresh DRS through `lower` → `validate` → `compile` → `run`. It checks every stage against the committed byte golden before continuing, proves the two complete runs byte-identical, reuses the chain driver on a trailing-term rejection to prove zero non-empty downstream artifacts, and verifies `vendor/` cleanliness. CI runs this harness in the pinned SWI 9.2.9 `ape` job after `tests/pipeline-harness.sh` and before the final vendor-cleanliness gate.
+
 ## CLI
 
 Canonical IR validation invocation from repository root:
