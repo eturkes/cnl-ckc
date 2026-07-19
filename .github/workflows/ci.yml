@@ -59,7 +59,8 @@ jobs:
           bash -n tests/ape-vendor-harness.sh
           bash -n tests/adapter-harness.sh
           bash -n tests/pipeline-harness.sh
-          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh
+          bash -n tests/ir-validate-harness.sh
+          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh
 
       - name: Run strict compiler harness
         run: bash tests/strict-harness.sh
@@ -94,6 +95,9 @@ jobs:
 
       - name: Verify APE vendor integrity
         run: (cd vendor/ape && sha256sum --quiet -c MANIFEST.sha256)
+
+      - name: Run IR validate harness
+        run: bash tests/ir-validate-harness.sh
 
       - name: Run APE vendor harness
         run: bash tests/ape-vendor-harness.sh
