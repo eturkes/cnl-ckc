@@ -61,7 +61,8 @@ jobs:
           bash -n tests/pipeline-harness.sh
           bash -n tests/ir-validate-harness.sh
           bash -n tests/ir-lower-harness.sh
-          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh tests/ir-lower-harness.sh
+          bash -n tests/ir-run-harness.sh
+          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh tests/ir-lower-harness.sh tests/ir-run-harness.sh
 
       - name: Run strict compiler harness
         run: bash tests/strict-harness.sh
@@ -102,6 +103,9 @@ jobs:
 
       - name: Run IR lower harness
         run: bash tests/ir-lower-harness.sh
+
+      - name: Run IR run harness
+        run: bash tests/ir-run-harness.sh
 
       - name: Run APE vendor harness
         run: bash tests/ape-vendor-harness.sh

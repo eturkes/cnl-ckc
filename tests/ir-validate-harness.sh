@@ -218,7 +218,7 @@ usage_case() {
 }
 
 usage_case no-args
-usage_case unknown compile
+usage_case unknown unknown-command
 usage_case extra validate extra
 
 red_stdout1="$SCRATCH/determinism/red.run1.stdout"

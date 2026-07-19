@@ -6,11 +6,14 @@
 :- use_module(drs_canon, [canonical_line/2]).
 :- use_module(drs_to_ir, [lower_terms/2]).
 :- use_module(ir_validate, [validate_terms/1]).
+:- use_module(ir_to_prolog, [compile_terms/2]).
+:- use_module(inference_kernel, [run_terms/2]).
 
 /*
-Run: swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- lower|validate
+Run: swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' --
+     lower|validate|compile|run
 Input: strict RFC 3629 UTF-8 canonical term stream. Validate writes no bytes;
-lower writes one buffered canonical IR record.
+other commands write one buffered canonical record of their stage's output kind.
 Failure: stdout empty; stderr is one canonical ir_tool_error(Stage,Class,Detail).
 Exit: 0=success; 1=input-content rejection; 2=usage or uncaught internal error.
 All stage output is captured in memory and flushed to real stdout only on success.
@@ -48,6 +51,10 @@ error_stage([validate], validate) :-
     !.
 error_stage([lower], lower) :-
     !.
+error_stage([compile], compile) :-
+    !.
+error_stage([run], run) :-
+    !.
 error_stage(_, cli).
 
 run_cli([validate], Input, Output) :-
@@ -59,6 +66,18 @@ run_cli([validate], Input, Output) :-
 run_cli([lower], Input, Output) :-
     !,
     with_output_to(string(Buffer), lower_input(Input)),
+    format(Output, '~s', [Buffer]),
+    flush_output(Output),
+    halt(0).
+run_cli([compile], Input, Output) :-
+    !,
+    with_output_to(string(Buffer), compile_input(Input)),
+    format(Output, '~s', [Buffer]),
+    flush_output(Output),
+    halt(0).
+run_cli([run], Input, Output) :-
+    !,
+    with_output_to(string(Buffer), run_input(Input)),
     format(Output, '~s', [Buffer]),
     flush_output(Output),
     halt(0).
@@ -74,6 +93,28 @@ lower_input(Input) :-
     lower_terms(Terms, IrTerms),
     canonical_codes(IrTerms, 1, Codes),
     format('~s', [Codes]).
+
+compile_input(Input) :-
+    read_canonical_terms(Input, Terms),
+    compile_terms(Terms, ProgramTerms),
+    self_checked_canonical_codes(ProgramTerms, Codes),
+    format('~s', [Codes]).
+
+run_input(Input) :-
+    read_canonical_terms(Input, Terms),
+    run_terms(Terms, ResultTerms),
+    self_checked_canonical_codes(ResultTerms, Codes),
+    format('~s', [Codes]).
+
+self_checked_canonical_codes(Terms, Codes) :-
+    canonical_codes(Terms, 1, Codes),
+    string_codes(Text, Codes),
+    parse_terms(Text, Parsed),
+    canonical_fixed_point(Parsed, Codes),
+    ( Parsed == Terms ->
+        true
+    ; throw(error(generated_term_round_trip, context(ir_tool, output)))
+    ).
 
 read_canonical_terms(Input, Terms) :-
     read_utf8_input(Input, Text, Codes),
