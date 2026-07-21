@@ -37,7 +37,7 @@ RUN_STATUS=0
 CHAIN_STAGE=
 CHAIN_STATUS=0
 CHAIN_REASON=
-EXPECTED_PASS_COUNT=25
+EXPECTED_PASS_COUNT=29
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -120,9 +120,11 @@ write_front_end_expected() {
     output_path=$2
     printf '%s\n' \
         "ace-front-end: wrote $out_dir/manifest.pl" \
+        "ace-front-end: wrote $out_dir/slice-naf.drs.pl" \
         "ace-front-end: wrote $out_dir/slice-unknown.drs.pl" \
+        "ace-front-end: wrote $out_dir/slice-wh.drs.pl" \
         "ace-front-end: wrote $out_dir/slice.drs.pl" \
-        'ace-front-end: ok 2 documents' \
+        'ace-front-end: ok 4 documents' \
         >"$output_path"
 }
 
@@ -224,32 +226,32 @@ else
 fi
 
 set -- "$DOCS"/*.ace
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 ACE fixtures, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 ACE fixtures, got $#"
 fi
 set -- "$DOCS"/*.ulex
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 Ulex fixtures, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 Ulex fixtures, got $#"
 fi
 set -- "$GOLDEN"/*.drs.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 DRS goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 DRS goldens, got $#"
 fi
 set -- "$GOLDEN"/*.pl
-if [ "$#" -ne 3 ]; then
-    fail_case "fixtures/count" "expected manifest plus 2 DRS goldens, got $# files"
+if [ "$#" -ne 5 ]; then
+    fail_case "fixtures/count" "expected manifest plus 4 DRS goldens, got $# files"
 fi
 set -- "$IR"/*.ir.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 IR goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 IR goldens, got $#"
 fi
 set -- "$PROGRAM"/*.program.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 program goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 program goldens, got $#"
 fi
 set -- "$RESULT"/*.result.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 result goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 result goldens, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -259,24 +261,37 @@ mkdir -p "$SCRATCH/expected" "$TREE" "$SCRATCH/run1-chain" \
 trap 'rm -rf "$SCRATCH"' EXIT
 
 printf '%s\n' \
+    slice-naf.ace \
+    slice-naf.ulex \
     slice-unknown.ace \
     slice-unknown.ulex \
+    slice-wh.ace \
+    slice-wh.ulex \
     slice.ace \
     slice.ulex | LC_ALL=C sort >"$SCRATCH/expected/docs"
 printf '%s\n' \
     manifest.pl \
+    slice-naf.drs.pl \
     slice-unknown.drs.pl \
+    slice-wh.drs.pl \
     slice.drs.pl | LC_ALL=C sort >"$SCRATCH/expected/golden"
 printf '%s\n' \
+    slice-naf.ir.pl \
     slice-unknown.ir.pl \
+    slice-wh.ir.pl \
     slice.ir.pl | LC_ALL=C sort >"$SCRATCH/expected/ir"
 printf '%s\n' \
+    slice-naf.program.pl \
     slice-unknown.program.pl \
+    slice-wh.program.pl \
     slice.program.pl | LC_ALL=C sort >"$SCRATCH/expected/program"
 printf '%s\n' \
+    slice-naf.result.pl \
     slice-unknown.result.pl \
+    slice-wh.result.pl \
     slice.result.pl | LC_ALL=C sort >"$SCRATCH/expected/result"
-write_chain_expected "$SCRATCH/expected/chain" slice-unknown slice
+write_chain_expected "$SCRATCH/expected/chain" \
+    slice-unknown slice slice-naf slice-wh
 printf '%s\n' \
     slice-invalid.ir.pl \
     slice-invalid.lower.stderr | LC_ALL=C sort >"$SCRATCH/expected/red-chain"
@@ -294,18 +309,30 @@ if ! cmp "$SCRATCH/expected/docs" "$SCRATCH/expected/docs.actual" || \
     fail_case "fixtures/set" "slice fixture names differ from the pinned set"
 fi
 for fixture in \
+    "$DOCS/slice-naf.ace" \
+    "$DOCS/slice-naf.ulex" \
     "$DOCS/slice-unknown.ace" \
     "$DOCS/slice-unknown.ulex" \
+    "$DOCS/slice-wh.ace" \
+    "$DOCS/slice-wh.ulex" \
     "$DOCS/slice.ace" \
     "$DOCS/slice.ulex" \
     "$GOLDEN/manifest.pl" \
+    "$GOLDEN/slice-naf.drs.pl" \
     "$GOLDEN/slice-unknown.drs.pl" \
+    "$GOLDEN/slice-wh.drs.pl" \
     "$GOLDEN/slice.drs.pl" \
+    "$IR/slice-naf.ir.pl" \
     "$IR/slice-unknown.ir.pl" \
+    "$IR/slice-wh.ir.pl" \
     "$IR/slice.ir.pl" \
+    "$PROGRAM/slice-naf.program.pl" \
     "$PROGRAM/slice-unknown.program.pl" \
+    "$PROGRAM/slice-wh.program.pl" \
     "$PROGRAM/slice.program.pl" \
+    "$RESULT/slice-naf.result.pl" \
     "$RESULT/slice-unknown.result.pl" \
+    "$RESULT/slice-wh.result.pl" \
     "$RESULT/slice.result.pl"; do
     if ! [ -f "$fixture" ] || [ -L "$fixture" ]; then
         fail_case "fixtures/set" "expected regular non-symlink file: $fixture"
@@ -360,14 +387,15 @@ if ! cmp "$SCRATCH/logs/out1.files" "$SCRATCH/expected/golden"; then
 fi
 pass_case "front-end/run1-files"
 
-for name in manifest.pl slice-unknown.drs.pl slice.drs.pl; do
+for name in manifest.pl slice-naf.drs.pl slice-unknown.drs.pl \
+        slice-wh.drs.pl slice.drs.pl; do
     if ! cmp "$OUT1/$name" "$GOLDEN/$name"; then
         fail_case "front-end/run1-goldens" "mismatch: $name"
     fi
 done
 pass_case "front-end/run1-goldens"
 
-for stem in slice-unknown slice; do
+for stem in slice-unknown slice slice-naf slice-wh; do
     if ! run_chain "$OUT1/$stem.drs.pl" "$stem" "$SCRATCH/run1-chain"; then
         fail_case "chain/run1/$stem" \
             "$CHAIN_STAGE/$CHAIN_REASON, status $CHAIN_STATUS"
@@ -403,14 +431,15 @@ if ! cmp "$SCRATCH/logs/out2.files" "$SCRATCH/expected/golden"; then
 fi
 pass_case "front-end/run2-files"
 
-for name in manifest.pl slice-unknown.drs.pl slice.drs.pl; do
+for name in manifest.pl slice-naf.drs.pl slice-unknown.drs.pl \
+        slice-wh.drs.pl slice.drs.pl; do
     if ! cmp "$OUT2/$name" "$GOLDEN/$name"; then
         fail_case "front-end/run2-goldens" "mismatch: $name"
     fi
 done
 pass_case "front-end/run2-goldens"
 
-for stem in slice-unknown slice; do
+for stem in slice-unknown slice slice-naf slice-wh; do
     if ! run_chain "$OUT2/$stem.drs.pl" "$stem" "$SCRATCH/run2-chain"; then
         fail_case "chain/run2/$stem" \
             "$CHAIN_STAGE/$CHAIN_REASON, status $CHAIN_STATUS"
@@ -431,7 +460,8 @@ if [ "$tree_hash_before" != "$tree_hash_after" ]; then
 fi
 pass_case "tree/immutable"
 
-for name in manifest.pl slice-unknown.drs.pl slice.drs.pl; do
+for name in manifest.pl slice-naf.drs.pl slice-unknown.drs.pl \
+        slice-wh.drs.pl slice.drs.pl; do
     if ! cmp "$OUT1/$name" "$OUT2/$name"; then
         fail_case "determinism/front-end" "fresh runs differ: $name"
     fi

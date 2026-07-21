@@ -96,6 +96,19 @@ jobs:
           printf '%s\n' "$out"
           printf '%s\n' "$out" | grep -Fq "SWI-Prolog version $SWIPL_VER "
 
+      - name: Verify SWI-Prolog crypto SHA-256
+        run: |
+          set -eu
+          expected=da2cb6ad175bc966de5e79c6e16777f8a98b610c2424a894132df2815be50677
+          swipl -q -f none -F none \
+            -g "use_module(library(crypto),[crypto_data_hash/3]),crypto_data_hash([0,1,2,127,128,255],Hash,[algorithm(sha256),encoding(octet)]),(Hash=='da2cb6ad175bc966de5e79c6e16777f8a98b610c2424a894132df2815be50677'->halt(0);halt(1))" \
+            -t 'halt(9)'
+          printf 'SWI-Prolog: %s\n' "$expected"
+          sha_output=$(printf '\000\001\002\177\200\377' | sha256sum)
+          sha_hex=${sha_output%% *}
+          printf 'sha256sum: %s\n' "$sha_hex"
+          test "$sha_hex" = "$expected"
+
       - name: Verify APE vendor integrity
         run: (cd vendor/ape && sha256sum --quiet -c MANIFEST.sha256)
 

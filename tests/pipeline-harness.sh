@@ -129,6 +129,24 @@ for shared_ulex in \
         fail_case "fixtures/shared-equality" "zorbomat ulex copy differs: $shared_ulex"
     fi
 done
+for shared_slice_doc in \
+    "$DOCS/slice-naf.ace" \
+    "$DOCS/slice-naf.ulex" \
+    "$DOCS/slice-wh.ace" \
+    "$DOCS/slice-wh.ulex"; do
+    name=${shared_slice_doc##*/}
+    if ! cmp "$shared_slice_doc" "$ROOT/tests/fixtures/slice/docs/$name"; then
+        fail_case "fixtures/shared-equality" "slice document copy differs: $shared_slice_doc"
+    fi
+done
+for shared_slice_golden in \
+    "$GOLDEN/slice-naf.drs.pl" \
+    "$GOLDEN/slice-wh.drs.pl"; do
+    name=${shared_slice_golden##*/}
+    if ! cmp "$shared_slice_golden" "$ROOT/tests/fixtures/slice/golden/$name"; then
+        fail_case "fixtures/shared-equality" "slice DRS copy differs: $shared_slice_golden"
+    fi
+done
 pass_case "fixtures/shared-equality"
 
 rm -rf "$SCRATCH"
@@ -160,9 +178,11 @@ run1_expected="$SCRATCH/run1/expected-stdout"
 printf '%s\n' \
     "ace-front-end: wrote $OUT1/anchor.drs.pl" \
     "ace-front-end: wrote $OUT1/manifest.pl" \
+    "ace-front-end: wrote $OUT1/slice-naf.drs.pl" \
+    "ace-front-end: wrote $OUT1/slice-wh.drs.pl" \
     "ace-front-end: wrote $OUT1/twosent.drs.pl" \
     "ace-front-end: wrote $OUT1/zorbomat.drs.pl" \
-    "ace-front-end: ok 3 documents" \
+    "ace-front-end: ok 5 documents" \
     >"$run1_expected"
 if ! cmp "$run1_stdout" "$run1_expected"; then
     fail_case "green/run1-stdout" "success output differs"

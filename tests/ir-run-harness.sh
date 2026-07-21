@@ -31,7 +31,7 @@ IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=77
+EXPECTED_PASS_COUNT=81
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -164,20 +164,20 @@ else
 fi
 
 set -- "$GOLDEN"/*.drs.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 DRS goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 DRS goldens, got $#"
 fi
 set -- "$IR"/*.ir.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 IR goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 IR goldens, got $#"
 fi
 set -- "$PROGRAM"/*.program.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 program goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 program goldens, got $#"
 fi
 set -- "$RESULT"/*.result.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 result goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 result goldens, got $#"
 fi
 set -- "$GREEN"/*.program.pl
 if [ "$#" -ne 10 ]; then

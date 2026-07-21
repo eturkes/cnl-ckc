@@ -13,7 +13,7 @@ M0.1 governance baseline. `MUST`/`MUST NOT` = normative.
 | RACE | no source repository; Attempto webservice only | — | N/A — no acquired source | historical reasoner reference only | zero dependency; reasoner = first-party M4 |
 | SWI-Prolog | `https://github.com/SWI-Prolog/swipl-devel` | `V9.2.9` → `e3b19512e69a544f05b1bffbd14f3a0b519ad04d` | BSD-2-Clause | system Prolog runtime | never vendored |
 
-CI provisions SWI-Prolog == 9.2.9 through the digest-pinned official Debian bookworm container image `docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f`.
+CI provisions SWI-Prolog == 9.2.9 through the digest-pinned official Debian bookworm container image `docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f`. That image digest transitively pins the runtime-provided `library(crypto)` and linked OpenSSL `libcrypto` bytes; no separate OpenSSL version or commit pin is claimed.
 
 AceRules license evidence at its pin: `LICENSE.txt`, first nonblank line = `GNU LESSER GENERAL PUBLIC LICENSE`; next line = `Version 3, 29 June 2007`. `README.md` states `The code is available under the LGPL license. See LICENSE.txt for the details.` License family + version are verified; repository-level text does not select SPDX `only` vs `or-later`. Code reuse remains prohibited unless escalated for license review.
 
@@ -29,9 +29,11 @@ AceRules license evidence at its pin: `LICENSE.txt`, first nonblank line = `GNU 
 
 ## TCB boundary
 
-TCB = vendored, hash-pinned e-- compiler fork + its unchanged external dependencies. This narrow boundary is the sole manually maintained Python exception; every first-party Python file outside it MUST compile from canonical E--.
+Python-generation TCB = vendored, hash-pinned e-- compiler fork + its unchanged external dependencies. This narrow boundary is the sole manually maintained Python exception; every first-party Python file outside it MUST compile from canonical E--.
 
 Vendored APE = trusted parser input to the compilation pipeline, but **not** part of the Python TCB: it runs in a separate SWI-Prolog process; Python moves bytes only and never inspects DRS.
+
+Answer-record program-digest computation has a separate active runtime TCB: SWI-Prolog `library(crypto)` and the OpenSSL `libcrypto` linked by the pinned SWI 9.2.9 runtime. The digest line MUST use `crypto_data_hash/3` with `encoding(octet)` over the exact program bytes. CI probes SHA-256 over the octets `00 01 02 7f 80 ff` in the digest-pinned container; the resulting digest is an integrity binding, not authentication.
 
 Every TCB change requires all three gates:
 

@@ -401,7 +401,7 @@ swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
 
 `validate` succeeds with zero stdout and stderr; each transforming stage commits one complete canonical record only after its own checks pass. Byte authorities live under `tests/fixtures/slice/`: `golden/manifest.pl` and `golden/<docid>.drs.pl`, then `ir/<docid>.ir.pl`, `program/<docid>.program.pl`, and `result/<docid>.result.pl`. A generated mismatch is a contract failure, not a regeneration instruction.
 
-`tests/slice-harness.sh` stages and builds a fresh APE copy, produces two fresh front-end output trees, and chains each fresh DRS through `lower` → `validate` → `compile` → `run`. It byte-compares each artifact-producing stage to its committed golden before continuing and treats `validate` as a separate zero-stream success gate, pins each pass's complete chain file inventory, proves the two passes' complete artifact sets byte-identical, proves the staged APE tree unchanged across both passes, reuses the chain driver on a trailing-term rejection to prove zero non-empty downstream artifacts, and verifies `vendor/` cleanliness before staging and after both passes. CI runs this harness in the pinned SWI 9.2.9 `ape` job after `tests/pipeline-harness.sh` and before the final repository-cleanliness gate.
+`tests/slice-harness.sh` stages and builds a fresh APE copy, produces two fresh front-end output trees, and chains all four fresh DRS records—`slice-naf`, `slice-unknown`, `slice-wh`, and `slice`—through `lower` → `validate` → `compile` → `run`. It byte-compares each artifact-producing stage to its committed golden before continuing and treats `validate` as a separate zero-stream success gate, pins each pass's complete chain file inventory, proves the two passes' complete artifact sets byte-identical, proves the staged APE tree unchanged across both passes, reuses the chain driver on a trailing-term rejection to prove zero non-empty downstream artifacts, and verifies `vendor/` cleanliness before staging and after both passes. CI runs this harness in the pinned SWI 9.2.9 `ape` job after `tests/pipeline-harness.sh` and before the final repository-cleanliness gate.
 
 ## CLI
 
@@ -446,14 +446,15 @@ The independently versioned envelopes are `cnl_ir_record(2)`, `cnl_program_recor
 | Intervals and rationals | No constructors; reject. |
 | Temporal and dose algebra | No constructors; reject. |
 | Direction, strength, and certainty | No annotations; reject. |
+| Labeled exception IDs and closed-world declarations | No constructors; reject. |
 | Explicit negation and a false outcome | Absent; `not_proved` remains unknown. |
 | NAF execution and ACE lowering | **Shipped:** exact antecedent `~/1` profiles lower to IR v2 NAF literals, compile unchanged to program v2, execute under the stratified model, and replay as ground absence-checked leaves. |
 | Recursion and tabling | Any signed predicate cycle, including a positive-only cycle, is rejected. |
 | Conflict detection | No rule-pair conflict analysis. |
-| Proof enumeration and DAG sharing | First witness only; certificates remain trees. |
+| Proof enumeration and DAG sharing | First witness only; certificates remain trees and DAG structure sharing remains deferred. |
 | Proof and answer resource preflight | **Shipped:** `certificate_node_cap(1000000)` bounds the total expanded nodes across all trees emitted by one record. |
 | Prose rendering | Outside these records. |
-| Program-digest binding inside answer records | **Shipped:** answer v2 line 3 binds the exact raw program bytes with SHA-256. |
+| Program-digest binding inside answer records | **Shipped:** answer v2 line 3 binds the exact raw program bytes with SHA-256 for integrity only; it is not authentication. Digest authentication remains deferred. |
 | Wh answers | **Shipped:** program v2 executes exact `wh(who)` goals and emits canonically byte-sorted `answers/1` with ordered first-witness proofs or explicit `answers([])`. |
 | Multi-document composition | Exactly one document record per run. |
 
@@ -477,6 +478,63 @@ fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentenc
 fact(fact_id(sentence(2),clause(1)),pred(wait,[named('John')]),source(sentence(2),tokens([2]))).
 rule(rule_id(sentence(3),clause(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])]),source(sentence(3),tokens([2,4,5]))).
 query(query_id(sentence(4),clause(1)),pred(recover,[named('John')]),source(sentence(4),tokens([3]))).
+```
+
+## NAF grounding example
+
+The committed `slice-naf` document is:
+
+```text
+John is a patient.
+Every patient that does not provably smoke recovers.
+Does John recover?
+```
+
+Its committed IR bytes are:
+
+```prolog
+cnl_ir_record(2).
+document(docid('slice-naf'),source_sha256('074d6ca7f0e5127e06af01f24a04ce434010ed1e9e80613a85fd9ad81f78ff6e'),ulex(sha256('7be3ff7a729f2d12bbc7d204b70ab93c419f936f6ad751afd8018c3c09cc0bdc'))).
+fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([2,4]))).
+rule(rule_id(sentence(2),clause(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),naf(pred(smoke,[var(1)]))]),source(sentence(2),tokens([2,7,8]))).
+query(query_id(sentence(3),clause(1)),pred(recover,[named('John')]),source(sentence(3),tokens([3]))).
+```
+
+This exercises the first admitted antecedent `~/1` profile: the positive
+`patient` condition binds the outer entity before the unanchored nested
+intransitive `smoke` condition becomes an NAF literal over the same `var(1)`.
+The committed result contains this ground absence-checked proof leaf:
+
+```prolog
+proof(pred(recover,[named('John')]),rule_id(sentence(2),clause(1)),[proof(pred(patient,[named('John')]),fact_id(sentence(1),clause(1)),[]),naf(pred(smoke,[named('John')]))]).
+```
+
+## Wh grounding example
+
+The committed `slice-wh` document is:
+
+```text
+John is a patient.
+John waits.
+Every patient that waits recovers.
+Who recovers?
+```
+
+Its committed IR bytes include the exact query/4 constructor:
+
+```prolog
+cnl_ir_record(2).
+document(docid('slice-wh'),source_sha256('80cf551d677bcd4ccf6b94b7299a147a92b827b84bd624312780c2f0f2c91775'),ulex(sha256('6015f9a18e4d4957b30e04342d2ff2700bf0e18b13bf3b95452a2d5563c5b614'))).
+fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([2,4]))).
+fact(fact_id(sentence(2),clause(1)),pred(wait,[named('John')]),source(sentence(2),tokens([2]))).
+rule(rule_id(sentence(3),clause(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])]),source(sentence(3),tokens([2,4,5]))).
+query(query_id(sentence(4),clause(1)),wh(who),pred(recover,[var(1)]),source(sentence(4),tokens([1,2]))).
+```
+
+The committed answer line grounds that pattern to `John`:
+
+```prolog
+answer(query_id(sentence(4),clause(1)),wh(who),pred(recover,[var(1)]),answers([pred(recover,[named('John')])])).
 ```
 
 ## Wh answer grounding example

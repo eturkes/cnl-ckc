@@ -1,0 +1,6 @@
+iv_finsg(recovers, recover).
+iv_finsg(smokes, smoke).
+iv_infpl(recover, recover).
+iv_infpl(smoke, smoke).
+noun_sg(patient, patient, human).
+noun_sg(smoker, smoker, human).

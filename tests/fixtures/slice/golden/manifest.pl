@@ -1,3 +1,5 @@
 ace_front_end_manifest(1).
 document(docid('slice'),source_sha256('bf432c59846951be8568be538cfa2c5fcdc41d35b7ede4d0bc0fd5c4aff7c2c4'),record_sha256('df3e032c7488cfab962d2836dc892eae191660d3bc551d66f2b68fdcb62e98a3')).
+document(docid('slice-naf'),source_sha256('074d6ca7f0e5127e06af01f24a04ce434010ed1e9e80613a85fd9ad81f78ff6e'),record_sha256('79efef59797ad57f854b1308c9569ef575bf1399410304a78cd2eb0417715b85')).
 document(docid('slice-unknown'),source_sha256('4e9c59b62f4920a805975af2aa754f822f4fe5c6685000338ccb7f252bfbf76a'),record_sha256('847a30c67bafdaf495f900d29844a256988009efeaab68c44453d339f04c82d5')).
+document(docid('slice-wh'),source_sha256('80cf551d677bcd4ccf6b94b7299a147a92b827b84bd624312780c2f0f2c91775'),record_sha256('f52e4590aad9a9aa329b051562fb4ef0227ec020093caf73b6bf086418744153')).

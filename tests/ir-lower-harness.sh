@@ -21,7 +21,7 @@ RED="$ROOT/tests/fixtures/lower/red"
 SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=48
+EXPECTED_PASS_COUNT=50
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -97,24 +97,24 @@ else
 fi
 
 set -- "$DOCS"/*.ace
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 ACE fixtures, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 ACE fixtures, got $#"
 fi
 set -- "$DOCS"/*.ulex
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 Ulex fixtures, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 Ulex fixtures, got $#"
 fi
 set -- "$GOLDEN"/*.drs.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 DRS goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 DRS goldens, got $#"
 fi
 set -- "$GOLDEN"/*.pl
-if [ "$#" -ne 3 ]; then
-    fail_case "fixtures/count" "expected 3 front-end goldens, got $#"
+if [ "$#" -ne 5 ]; then
+    fail_case "fixtures/count" "expected 5 front-end goldens, got $#"
 fi
 set -- "$IR"/*.ir.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 IR goldens, got $#"
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.drs.pl
 if [ "$#" -ne 4 ]; then
