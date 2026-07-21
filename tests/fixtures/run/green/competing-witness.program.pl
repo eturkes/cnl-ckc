@@ -1,4 +1,4 @@
-cnl_program_record(1).
+cnl_program_record(2).
 document(docid('competing-witness'),source_sha256('2222222222222222222222222222222222222222222222222222222222222222'),ulex(none)).
 clause(fact_id(sentence(1),clause(1)),pred(p,[named(a)]),body([])).
 clause(fact_id(sentence(2),clause(1)),pred(r,[named(a)]),body([])).

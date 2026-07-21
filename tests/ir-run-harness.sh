@@ -29,7 +29,7 @@ IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=39
+EXPECTED_PASS_COUNT=60
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -111,6 +111,42 @@ check_rejection() {
     pass_case "$label"
 }
 
+extract_result_digest() {
+    local label result_path line_count line
+    label=$1
+    result_path=$2
+
+    line_count=$(command grep -Ec \
+        "^program\\(sha256\\('[0-9a-f]{64}'\\)\\)\\.$" \
+        "$result_path" || :)
+    if [ "$line_count" -ne 1 ]; then
+        fail_case "$label/digest-line" \
+            "expected one forced-quoted lowercase SHA-256 line, got $line_count"
+    fi
+    line=$(command grep -E \
+        "^program\\(sha256\\('[0-9a-f]{64}'\\)\\)\\.$" \
+        "$result_path" || :)
+    printf '%s\n' "${line:16:64}"
+}
+
+check_result_digest() {
+    local label program_path result_path sha_output expected actual
+    label=$1
+    program_path=$2
+    result_path=$3
+
+    if ! sha_output=$(sha256sum "$program_path"); then
+        fail_case "$label/sha256sum" "could not hash program bytes"
+    fi
+    expected=${sha_output%% *}
+    actual=$(extract_result_digest "$label" "$result_path")
+    if [ "$actual" != "$expected" ]; then
+        fail_case "$label/digest" \
+            "expected $expected from program bytes, got $actual"
+    fi
+    pass_case "$label"
+}
+
 if swipl_version=$("$SWIPL" --version 2>&1); then
     case $swipl_version in
         *'SWI-Prolog version 9.2.9 '*)
@@ -142,16 +178,16 @@ if [ "$#" -ne 2 ]; then
     fail_case "fixtures/count" "expected 2 result goldens, got $#"
 fi
 set -- "$GREEN"/*.program.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 hand-green programs, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 hand-green programs, got $#"
 fi
 set -- "$GREEN"/*.result.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 hand-green results, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 hand-green results, got $#"
 fi
 set -- "$RED"/*.program.pl
-if [ "$#" -ne 15 ]; then
-    fail_case "fixtures/count" "expected 15 red programs, got $#"
+if [ "$#" -ne 20 ]; then
+    fail_case "fixtures/count" "expected 20 red programs, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -204,6 +240,8 @@ for input in "$GOLDEN"/*.drs.pl; do
     if ! cmp "$run_stdout" "$RESULT/$stem.result.pl"; then
         fail_case "chain/$stem/run-bytes" "output differs from result golden"
     fi
+    check_result_digest "digest/chain/$stem" \
+        "$PROGRAM/$stem.program.pl" "$RESULT/$stem.result.pl"
     pass_case "chain/$stem"
 done
 
@@ -233,6 +271,11 @@ for input in "$GREEN"/*.program.pl; do
     if ! [ -f "$expected" ]; then
         fail_case "green/$stem/pair" "missing result golden"
     fi
+    if [ "$stem" = naf-open ] && \
+            ! command grep -Fq "named('café patient')" "$input"; then
+        fail_case "green/$stem/multibyte" \
+            "expected committed quoted multibyte constant"
+    fi
     if [ "$stem" = wide-join ]; then
         run_tool_with_limits 30 98304 \
             "$input" "$stdout_path" "$stderr_path" run
@@ -248,8 +291,14 @@ for input in "$GREEN"/*.program.pl; do
     if ! cmp "$stdout_path" "$expected"; then
         fail_case "green/$stem/bytes" "run output differs from golden"
     fi
+    check_result_digest "digest/green/$stem" "$input" "$expected"
     pass_case "green/$stem"
 done
+
+if ! command grep -q 'naf(pred(' "$GREEN/naf-open.result.pl"; then
+    fail_case "answer/naf-open-leaf" "expected a positional NAF proof leaf"
+fi
+pass_case "answer/naf-open-leaf"
 
 competing_input="$GREEN/competing-witness.program.pl"
 competing_expected="$GREEN/competing-witness.result.pl"
@@ -284,20 +333,25 @@ run_committed_red() {
 }
 
 run_committed_red cycle-self-loop cycle
+run_committed_red cycle-signed-transitive cycle
 run_committed_red document-float shape
 run_committed_red envelope-missing-document envelope
 run_committed_red envelope-trailing-after-goal envelope
+run_committed_red envelope-v1-record envelope
 run_committed_red envelope-wrong-header envelope
 run_committed_red identity-fact-with-body identity
-run_committed_red naf-literal naf
 run_committed_red ordering-duplicate-id ordering
 run_committed_red query-count-two query_count
 run_committed_red query-count-zero query_count
 run_committed_red safety-head-uncovered safety
+run_committed_red safety-naf-order-interleave safety
+run_committed_red safety-naf-var-uncovered safety
 run_committed_red scope-non-dense scope
 run_committed_red section-order-fact-after-rule section_order
+run_committed_red shape-naf-goal-position shape
 run_committed_red shape-native-variable shape
 run_committed_red shape-unknown-constructor shape
+run_committed_red wh-goal-transient wh_query
 
 pin_stdout="$SCRATCH/stage-pin/compile-naf.stdout"
 pin_stderr="$SCRATCH/stage-pin/compile-naf.stderr"
@@ -327,6 +381,44 @@ run_scratch_red() {
 run_scratch_red noncanonical canonical
 run_scratch_red bad-utf8 input_utf8
 
+tampered_program="$SCRATCH/scratch/digest-tampered.program.pl"
+tampered_result="$SCRATCH/scratch/digest-tampered.result.pl"
+tampered_stderr="$SCRATCH/scratch/digest-tampered.stderr"
+if ! command sed "s/docid('slice')/docid('sljce')/" \
+        "$base_program" >"$tampered_program"; then
+    fail_case "digest/tamper-binding/generate" \
+        "could not create canonical byte tamper"
+fi
+if cmp -s "$tampered_program" "$base_program"; then
+    fail_case "digest/tamper-binding/generate" "tamper changed no bytes"
+fi
+run_tool "$tampered_program" "$tampered_result" "$tampered_stderr" run
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "digest/tamper-binding/status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$tampered_stderr" ]; then
+    fail_case "digest/tamper-binding/stderr" "expected zero bytes"
+fi
+if ! tampered_sha_output=$(sha256sum "$tampered_program"); then
+    fail_case "digest/tamper-binding/sha256sum" \
+        "could not hash tampered bytes"
+fi
+tampered_expected=${tampered_sha_output%% *}
+tampered_actual=$(extract_result_digest \
+    "digest/tamper-binding" "$tampered_result")
+committed_actual=$(extract_result_digest \
+    "digest/tamper-binding/committed" "$RESULT/slice.result.pl")
+if [ "$tampered_actual" != "$tampered_expected" ]; then
+    fail_case "digest/tamper-binding/value" \
+        "tampered result does not bind tampered program bytes"
+fi
+if [ "$tampered_actual" = "$committed_actual" ]; then
+    fail_case "digest/tamper-binding/change" \
+        "tampered and committed digests unexpectedly match"
+fi
+pass_case "digest/tamper-binding"
+
 usage_stdout="$SCRATCH/usage/compile-extra.stdout"
 usage_stderr="$SCRATCH/usage/compile-extra.stderr"
 run_tool "$IR/slice.ir.pl" "$usage_stdout" "$usage_stderr" compile extra-arg
@@ -342,7 +434,7 @@ check_rejection "usage/run-extra" 2 cli usage \
 replay_stdout="$SCRATCH/probes/replay-list.stdout"
 replay_stderr="$SCRATCH/probes/replay-list.stderr"
 if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
-        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(q,[named(a)]),[pred(p,[named(a)])])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(p,[named(a)]),[])),Child=proof(pred(p,[named(a)]),fact_id(sentence(2),clause(1)),[]),Proof=proof(pred(q,[named(a)]),rule_id(sentence(1),clause(1)),weird(Child,[],x)),catch(explanation:replay_certificate(pred(q,[named(a)]),Proof),Error,true),\+explanation:replay_children(weird(Child,[],x)),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
+        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(q,[named(a)]),[pred(p,[named(a)])])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(p,[named(a)]),[])),Child=proof(pred(p,[named(a)]),fact_id(sentence(2),clause(1)),[]),Proof=proof(pred(q,[named(a)]),rule_id(sentence(1),clause(1)),weird(Child,[],x)),catch(explanation:replay_certificate(pred(q,[named(a)]),Proof,[]),Error,true),\+explanation:replay_children(weird(Child,[],x),[]),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
         -t 'halt(9)' >"$replay_stdout" 2>"$replay_stderr"; then
     replay_status=0
 else
@@ -355,6 +447,24 @@ if [ -s "$replay_stdout" ] || [ -s "$replay_stderr" ]; then
     fail_case "probe/replay-list-shape" "expected zero bytes"
 fi
 pass_case "probe/replay-list-shape"
+
+replay_naf_stdout="$SCRATCH/probes/replay-naf-absence.stdout"
+replay_naf_stderr="$SCRATCH/probes/replay-naf-absence.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
+        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(recover,[var(1)]),[pred(patient,[var(1)]),naf(pred(smoke,[var(1)]))])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(patient,[named(a)]),[])),Proof=proof(pred(recover,[named(a)]),rule_id(sentence(1),clause(1)),[proof(pred(patient,[named(a)]),fact_id(sentence(2),clause(1)),[]),naf(pred(smoke,[named(a)]))]),explanation:replay_certificate(pred(recover,[named(a)]),Proof,[]),Store=[entry(pred(smoke,[named(a)]),by(fact_id(sentence(3),clause(1)),[]))],catch(explanation:replay_certificate(pred(recover,[named(a)]),Proof,Store),Error,true),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$replay_naf_stdout" 2>"$replay_naf_stderr"; then
+    replay_naf_status=0
+else
+    replay_naf_status=$?
+fi
+if [ "$replay_naf_status" -ne 0 ]; then
+    fail_case "probe/replay-naf-absence" \
+        "expected absent-store success and present-store rejection"
+fi
+if [ -s "$replay_naf_stdout" ] || [ -s "$replay_naf_stderr" ]; then
+    fail_case "probe/replay-naf-absence" "expected zero bytes"
+fi
+pass_case "probe/replay-naf-absence"
 
 generated_ir_stdout="$SCRATCH/probes/generated-ir.stdout"
 generated_ir_stderr="$SCRATCH/probes/generated-ir.stderr"
@@ -408,6 +518,25 @@ if [ -s "$generated_stdout" ] || [ -s "$generated_stderr" ]; then
     fail_case "probe/generated-record" "expected zero bytes"
 fi
 pass_case "probe/generated-record"
+
+digest_probe_stdout="$SCRATCH/probes/program-digest-shape.stdout"
+digest_probe_stderr="$SCRATCH/probes/program-digest-shape.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/ir_tool.pl" \
+        -g '(ir_tool:pin_flags,ir_tool:canonical_record_line(3,program(sha256(123)),Generic),Generic=="program(sha256(123)).\n",ir_tool:canonical_record_line(3,program(sha256(abc)),Quoted),string_codes(Quoted,Codes),nth0(15,Codes,39)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$digest_probe_stdout" \
+        2>"$digest_probe_stderr"; then
+    digest_probe_status=0
+else
+    digest_probe_status=$?
+fi
+if [ "$digest_probe_status" -ne 0 ]; then
+    fail_case "probe/program-digest-shape" \
+        "expected malformed digest fallback and atom forced quoting"
+fi
+if [ -s "$digest_probe_stdout" ] || [ -s "$digest_probe_stderr" ]; then
+    fail_case "probe/program-digest-shape" "expected zero bytes"
+fi
+pass_case "probe/program-digest-shape"
 
 compile_stdout1="$SCRATCH/determinism/compile.run1.stdout"
 compile_stderr1="$SCRATCH/determinism/compile.run1.stderr"

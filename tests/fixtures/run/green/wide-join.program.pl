@@ -1,4 +1,4 @@
-cnl_program_record(1).
+cnl_program_record(2).
 document(docid('wide-join'),source_sha256('2222222222222222222222222222222222222222222222222222222222222222'),ulex(none)).
 clause(fact_id(sentence(1),clause(1)),pred(choice,[named(a)]),body([])).
 clause(fact_id(sentence(1),clause(2)),pred(choice,[named(b)]),body([])).

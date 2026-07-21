@@ -1,17 +1,19 @@
-:- module(inference_kernel, [validate_program_terms/4, run_terms/2]).
+:- module(inference_kernel, [validate_program_terms/4, run_terms/3]).
 
 :- set_prolog_flag(encoding, utf8).
 
 :- use_module(library(lists), [append/3]).
-:- use_module(explanation, [assemble_result_terms/6]).
+:- use_module(explanation, [assemble_result_terms/7]).
 
 :- dynamic cnl_program_db:program_clause/4.
+:- dynamic cnl_program_db:program_stratum/2.
 
 /*
-Program-record validator and deterministic positive-Datalog kernel. Input terms
-have already passed strict UTF-8, syntax, and canonical-byte framing gates.
-Validation rejects with ir_reject(Class, Detail). Evaluation installs only data
-facts in private module cnl_program_db and tears them down around every run.
+Program-record validator and deterministic stratified-Datalog kernel. Input
+terms have already passed strict UTF-8, syntax, and canonical-byte framing
+gates. Validation rejects with ir_reject(Class, Detail). Evaluation installs
+only data facts in private module cnl_program_db and tears them down around
+every run.
 */
 validate_program_terms(Terms, Document, Clauses, Goal) :-
     envelope_pass(Terms, Document, Items),
@@ -20,24 +22,34 @@ validate_program_terms(Terms, Document, Clauses, Goal) :-
     ordering_pass(Items),
     scope_pass(Items),
     safety_naf_pass(Items),
-    cycle_pass(Items),
-    collect_program(Items, 1, Clauses, Goal).
+    cycle_pass(Items, Edges),
+    collect_program(Items, 1, RawClauses, Goal),
+    assign_clause_strata(RawClauses, Edges, Clauses).
 
-run_terms(Terms, ResultTerms) :-
+run_terms(Terms, ProgramDigest, ResultTerms) :-
     validate_program_terms(Terms, Document, Clauses, Goal),
-    length(Clauses, ClauseCount),
-    setup_call_cleanup(
-        install_program(Clauses),
-        evaluate_program(Document, Goal, ClauseCount, ResultTerms),
-        teardown_program).
+    arg(1, Goal, GoalKind),
+    arg(2, Goal, GoalId),
+    ( GoalKind == wh(who) ->
+        reject(wh_query, goal(GoalId))
+    ; valid_sha256(ProgramDigest) ->
+        length(Clauses, ClauseCount),
+        max_clause_stratum(Clauses, MaxStratum),
+        setup_call_cleanup(
+            install_program(Clauses),
+            evaluate_program(Document, ProgramDigest, Goal, ClauseCount,
+                MaxStratum, ResultTerms),
+            teardown_program)
+    ; kernel_invariant(program_digest(ProgramDigest))
+    ).
 
 /* Pass 4: exact envelope, one final goal, and facts before rules. */
 envelope_pass([], _, _) :-
     reject(envelope, term(1, missing_header)).
 envelope_pass([Header|Rest], Document, Items) :-
-    ( Header == cnl_program_record(1) ->
+    ( Header == cnl_program_record(2) ->
         true
-    ; reject(envelope, term(1, expected(cnl_program_record(1))))
+    ; reject(envelope, term(1, expected(cnl_program_record(2))))
     ),
     require_document(Rest, Document, RawItems),
     index_terms(RawItems, 3, Items),
@@ -66,11 +78,17 @@ index_terms([Term|Terms], Index, [indexed(Index, Term)|Indexed]) :-
 
 goal_positions([], []).
 goal_positions([indexed(Index, Term)|Items], Positions) :-
-    ( has_functor(Term, goal, 2) ->
+    ( goal_term(Term) ->
         Positions = [Index|Rest]
     ; Positions = Rest
     ),
     goal_positions(Items, Rest).
+
+goal_term(Term) :-
+    has_functor(Term, goal, 2),
+    !.
+goal_term(Term) :-
+    has_functor(Term, goal, 3).
 
 require_one_goal([_]) :-
     !.
@@ -83,7 +101,7 @@ require_one_goal(Positions) :-
 
 split_goal([Item|Items], Prefix, Goal, Tail) :-
     Item = indexed(_, Term),
-    ( has_functor(Term, goal, 2) ->
+    ( goal_term(Term) ->
         Prefix = [],
         Goal = Item,
         Tail = Items
@@ -153,7 +171,7 @@ shape_items([indexed(Index, Term)|Items]) :-
         ( shape_clause(Term) -> true
         ; reject(shape, term(Index, clause))
         )
-    ; has_functor(Term, goal, 2) ->
+    ; goal_term(Term) ->
         ( shape_goal(Term) -> true
         ; reject(shape, term(Index, goal))
         )
@@ -170,10 +188,27 @@ shape_clause(Term) :-
     shape_body(Body).
 
 shape_goal(Term) :-
+    has_functor(Term, goal, 2),
     arg(1, Term, Id),
     arg(2, Term, Predicate),
     shape_id(Id),
-    shape_predicate(Predicate).
+    shape_predicate(Predicate),
+    !.
+shape_goal(Term) :-
+    has_functor(Term, goal, 3),
+    arg(1, Term, Id),
+    arg(2, Term, Marker),
+    arg(3, Term, Predicate),
+    shape_id(Id),
+    Marker == wh(who),
+    shape_wh_predicate(Predicate).
+
+shape_wh_predicate(Predicate) :-
+    has_functor(Predicate, pred, 2),
+    arg(1, Predicate, Name),
+    arg(2, Predicate, Args),
+    atom(Name),
+    Args == [var(1)].
 
 shape_id(Id) :-
     compound(Id),
@@ -389,8 +424,10 @@ scope_items([indexed(Index, Term)|Items]) :-
         arg(3, Term, BodyTerm),
         arg(1, BodyTerm, Body),
         check_clause_scope(Kind, Index, Head, Body)
-    ; arg(2, Term, Predicate),
-      reject_if_predicate_variable(Index, Predicate)
+    ; has_functor(Term, goal, 2) ->
+        arg(2, Term, Predicate),
+        reject_if_predicate_variable(Index, Predicate)
+    ; true
     ),
     scope_items(Items).
 
@@ -451,7 +488,11 @@ dense_first_occurrence(Index, [Number|Numbers], Seen, Next, Position) :-
     Position1 is Position + 1,
     dense_first_occurrence(Index, Numbers, Seen1, Next1, Position1).
 
-/* Pass 9: NAF is reserved/rejected and rule heads are body-covered. */
+/*
+Pass 9: within each rule, reject in this exact order: a positive literal after
+NAF, an empty body, an NAF variable not covered by a positive literal, then a
+head variable not covered by a positive literal.
+*/
 safety_naf_pass(Items) :-
     safety_naf_items(Items).
 
@@ -472,42 +513,73 @@ safety_naf_items([indexed(Index, Term)|Items]) :-
     safety_naf_items(Items).
 
 validate_rule_safety(Index, _Head, Body) :-
-    first_naf(Body, 1, Position),
+    first_positive_after_naf(Body, 1, false, Position),
     !,
-    reject(naf, term(Index, body_literal(Position))).
+    reject(safety, term(Index, positive_after_naf(Position))).
+validate_rule_safety(Index, _Head, Body) :-
+    Body == [],
+    !,
+    reject(safety, term(Index, empty_body)).
 validate_rule_safety(Index, Head, Body) :-
-    predicate_vars(Head, HeadVars),
-    positive_body_vars(Body, BodyVars),
-    ( first_missing_var(HeadVars, BodyVars, Missing) ->
-        reject(safety, term(Index, head_var_not_in_body(Missing)))
-    ; true
+    positive_body_vars(Body, PositiveVars),
+    naf_body_vars(Body, NafVars),
+    ( first_missing_var(NafVars, PositiveVars, MissingNaf) ->
+        reject(safety,
+            term(Index, naf_var_not_in_positive_body(MissingNaf)))
+    ; predicate_vars(Head, HeadVars),
+      ( first_missing_var(HeadVars, PositiveVars, MissingHead) ->
+          reject(safety,
+              term(Index, head_var_not_in_positive_body(MissingHead)))
+      ; true
+      )
     ).
 
-first_naf([Literal|_], Position, Position) :-
-    has_functor(Literal, naf, 1),
-    !.
-first_naf([_|Literals], Position0, Position) :-
-    Position1 is Position0 + 1,
-    first_naf(Literals, Position1, Position).
+first_positive_after_naf([], _, _, _) :-
+    fail.
+first_positive_after_naf([Literal|Literals], Position0, SeenNaf, Position) :-
+    ( has_functor(Literal, naf, 1) ->
+        SeenNaf1 = true,
+        Position1 is Position0 + 1,
+        first_positive_after_naf(
+            Literals, Position1, SeenNaf1, Position)
+    ; SeenNaf == true ->
+        Position = Position0
+    ; Position1 is Position0 + 1,
+      first_positive_after_naf(
+          Literals, Position1, SeenNaf, Position)
+    ).
 
 positive_body_vars([], []).
-positive_body_vars([Predicate|Literals], Vars) :-
-    predicate_vars(Predicate, Here),
+positive_body_vars([Literal|Literals], Vars) :-
+    ( has_functor(Literal, naf, 1) ->
+        Here = []
+    ; predicate_vars(Literal, Here)
+    ),
     positive_body_vars(Literals, Rest),
     append(Here, Rest, Vars).
 
-first_missing_var([Number|_], BodyVars, Number) :-
-    \+ member_number(Number, BodyVars),
+naf_body_vars([], []).
+naf_body_vars([Literal|Literals], Vars) :-
+    ( has_functor(Literal, naf, 1) ->
+        arg(1, Literal, Predicate),
+        predicate_vars(Predicate, Here)
+    ; Here = []
+    ),
+    naf_body_vars(Literals, Rest),
+    append(Here, Rest, Vars).
+
+first_missing_var([Number|_], CoveredVars, Number) :-
+    \+ member_number(Number, CoveredVars),
     !.
-first_missing_var([_|Numbers], BodyVars, Missing) :-
-    first_missing_var(Numbers, BodyVars, Missing).
+first_missing_var([_|Numbers], CoveredVars, Missing) :-
+    first_missing_var(Numbers, CoveredVars, Missing).
 
-/* Pass 10: reject the first positive dependency edge closing a cycle. */
-cycle_pass(Items) :-
-    cycle_items(Items, []).
+/* Pass 10: reject the first signed dependency edge closing any cycle. */
+cycle_pass(Items, Edges) :-
+    cycle_items(Items, [], Edges).
 
-cycle_items([], _).
-cycle_items([indexed(Index, Term)|Items], Edges0) :-
+cycle_items([], Edges, Edges).
+cycle_items([indexed(Index, Term)|Items], Edges0, Edges) :-
     ( has_functor(Term, clause, 3) ->
         arg(1, Term, Id),
         id_parts(Id, Kind, _, _),
@@ -516,25 +588,33 @@ cycle_items([indexed(Index, Term)|Items], Edges0) :-
             arg(3, Term, BodyTerm),
             arg(1, BodyTerm, Body),
             predicate_key(Head, HeadKey),
-            add_body_edges(Body, Index, 1, HeadKey, Edges0, Edges)
-        ; Edges = Edges0
+            add_body_edges(Body, Index, 1, HeadKey, Edges0, Edges1)
+        ; Edges1 = Edges0
         )
-    ; Edges = Edges0
+    ; Edges1 = Edges0
     ),
-    cycle_items(Items, Edges).
+    cycle_items(Items, Edges1, Edges).
 
 add_body_edges([], _, _, _, Edges, Edges).
-add_body_edges([Predicate|Predicates], Index, Position, HeadKey,
+add_body_edges([Literal|Literals], Index, Position, HeadKey,
         Edges0, Edges) :-
+    dependency_literal(Literal, Polarity, Predicate),
     predicate_key(Predicate, BodyKey),
     ( creates_cycle(HeadKey, BodyKey, Edges0) ->
         reject(cycle,
             term(Index,
-                body_literal(Position, dependency(HeadKey, BodyKey))))
-    ; Edges1 = [edge(HeadKey, BodyKey)|Edges0]
+                body_literal(Position,
+                    signed_dependency(Polarity, HeadKey, BodyKey))))
+    ; Edges1 = [edge(Polarity, HeadKey, BodyKey)|Edges0]
     ),
     Position1 is Position + 1,
-    add_body_edges(Predicates, Index, Position1, HeadKey, Edges1, Edges).
+    add_body_edges(Literals, Index, Position1, HeadKey, Edges1, Edges).
+
+dependency_literal(Literal, naf, Predicate) :-
+    has_functor(Literal, naf, 1),
+    arg(1, Literal, Predicate),
+    !.
+dependency_literal(Predicate, positive, Predicate).
 
 predicate_key(Predicate, pred(Name, Arity)) :-
     arg(1, Predicate, Name),
@@ -555,10 +635,81 @@ reachable(Node, Target, Edges, Visited) :-
     edge_from(Node, Edges, Next),
     reachable(Next, Target, Edges, [Node|Visited]).
 
-edge_from(Node, [edge(From, To)|_], To) :-
+edge_from(Node, [edge(_, From, To)|_], To) :-
     From == Node.
 edge_from(Node, [_|Edges], Next) :-
     edge_from(Node, Edges, Next).
+
+/*
+A predicate's stratum is the maximum required by every clause defining that
+predicate: positive dependencies retain their target stratum, NAF dependencies
+add one, and every predicate has minimum stratum 1. The signed graph is already
+known finite and cycle-free here.
+*/
+assign_clause_strata(RawClauses, Edges, Clauses) :-
+    clause_head_keys(RawClauses, HeadKeys),
+    compute_predicate_strata(HeadKeys, Edges, [], Strata),
+    attach_clause_strata(RawClauses, Strata, Clauses).
+
+clause_head_keys([], []).
+clause_head_keys([validated_clause(_, _, Head, _)|Clauses],
+        [Key|Keys]) :-
+    predicate_key(Head, Key),
+    clause_head_keys(Clauses, Keys).
+
+compute_predicate_strata([], _, Strata, Strata).
+compute_predicate_strata([Key|Keys], Edges, Strata0, Strata) :-
+    predicate_stratum(Key, Edges, Strata0, Strata1, _),
+    compute_predicate_strata(Keys, Edges, Strata1, Strata).
+
+predicate_stratum(Key, _, Strata, Strata, Value) :-
+    stratum_value(Key, Strata, Value),
+    !.
+predicate_stratum(Key, Edges, Strata0, Strata, Value) :-
+    outgoing_dependencies(Key, Edges, Dependencies),
+    dependency_max_stratum(
+        Dependencies, Edges, Strata0, Strata1, 1, Value),
+    Strata = [stratum(Key, Value)|Strata1].
+
+outgoing_dependencies(_, [], []).
+outgoing_dependencies(Key, [edge(Polarity, From, To)|Edges], Dependencies) :-
+    ( From == Key ->
+        Dependencies = [dependency(Polarity, To)|Rest]
+    ; Dependencies = Rest
+    ),
+    outgoing_dependencies(Key, Edges, Rest).
+
+dependency_max_stratum([], _, Strata, Strata, Value, Value).
+dependency_max_stratum([dependency(Polarity, Key)|Dependencies], Edges,
+        Strata0, Strata, Value0, Value) :-
+    predicate_stratum(Key, Edges, Strata0, Strata1, DependencyStratum),
+    required_stratum(Polarity, DependencyStratum, Required),
+    ( Required > Value0 -> Value1 = Required ; Value1 = Value0 ),
+    dependency_max_stratum(
+        Dependencies, Edges, Strata1, Strata, Value1, Value).
+
+required_stratum(positive, DependencyStratum, DependencyStratum).
+required_stratum(naf, DependencyStratum, Required) :-
+    Required is DependencyStratum + 1.
+
+stratum_value(Key, [stratum(StoredKey, Value)|_], Value) :-
+    StoredKey == Key,
+    !.
+stratum_value(Key, [_|Strata], Value) :-
+    stratum_value(Key, Strata, Value).
+
+attach_clause_strata([], _, []).
+attach_clause_strata(
+        [validated_clause(Seq, Id, Head, Body)|RawClauses], Strata,
+        [validated_clause(Seq, Stratum, Id, Head, Body)|Clauses]) :-
+    predicate_key(Head, Key),
+    stratum_value(Key, Strata, Stratum),
+    attach_clause_strata(RawClauses, Strata, Clauses).
+
+max_clause_stratum([], 0).
+max_clause_stratum([validated_clause(_, Stratum, _, _, _)|Clauses], Max) :-
+    max_clause_stratum(Clauses, RestMax),
+    ( Stratum > RestMax -> Max = Stratum ; Max = RestMax ).
 
 /* Preserve stream order while assigning private database sequence numbers. */
 collect_program([indexed(_, Term)|Items], Seq0, Clauses, Goal) :-
@@ -570,61 +721,89 @@ collect_program([indexed(_, Term)|Items], Seq0, Clauses, Goal) :-
         Clauses = [validated_clause(Seq0, Id, Head, Body)|Rest],
         Seq is Seq0 + 1,
         collect_program(Items, Seq, Rest, Goal)
+    ; has_functor(Term, goal, 2) ->
+        arg(1, Term, GoalId),
+        arg(2, Term, GoalAtom),
+        Clauses = [],
+        Goal = goal(yes_no, GoalId, GoalAtom)
     ; arg(1, Term, GoalId),
-      arg(2, Term, GoalAtom),
+      arg(2, Term, GoalKind),
+      arg(3, Term, GoalAtom),
       Clauses = [],
-      Goal = goal(GoalId, GoalAtom)
+      Goal = goal(GoalKind, GoalId, GoalAtom)
     ).
 
 install_program(Clauses) :-
     retractall(cnl_program_db:program_clause(_, _, _, _)),
+    retractall(cnl_program_db:program_stratum(_, _)),
     assert_program_clauses(Clauses).
 
 assert_program_clauses([]).
-assert_program_clauses([validated_clause(Seq, Id, Head, Body)|Clauses]) :-
+assert_program_clauses(
+        [validated_clause(Seq, Stratum, Id, Head, Body)|Clauses]) :-
     assertz(cnl_program_db:program_clause(Seq, Id, Head, Body)),
+    assertz(cnl_program_db:program_stratum(Seq, Stratum)),
     assert_program_clauses(Clauses).
 
 teardown_program :-
-    retractall(cnl_program_db:program_clause(_, _, _, _)).
+    retractall(cnl_program_db:program_clause(_, _, _, _)),
+    retractall(cnl_program_db:program_stratum(_, _)).
 
-evaluate_program(Document, Goal, ClauseCount, ResultTerms) :-
-    least_model(ClauseCount, Store),
-    arg(1, Goal, GoalId),
-    arg(2, Goal, GoalAtom),
+evaluate_program(Document, ProgramDigest, Goal, ClauseCount, MaxStratum,
+        ResultTerms) :-
+    stratified_model(MaxStratum, ClauseCount, Store),
+    arg(2, Goal, GoalId),
+    arg(3, Goal, GoalAtom),
     ( atom_present(GoalAtom, Store) ->
         Outcome = proved
     ; Outcome = not_proved
     ),
     assemble_result_terms(
-        Document, GoalId, GoalAtom, Outcome, Store, ResultTerms).
+        Document, ProgramDigest, GoalId, GoalAtom, Outcome, Store,
+        ResultTerms).
 
 /*
-Repeated-pass schedule. Each clause sees a snapshot taken at clause entry;
-new atoms become visible only to later clauses in the same pass. Body solutions
-use leftmost-outermost DFS over snapshot insertion order and are deduplicated
-into the growing store as they are enumerated.
+Strata run in ascending order over one insertion-ordered store. Within each
+stratum, the v1 repeated-pass schedule is unchanged: each participating clause
+sees a snapshot taken at clause entry, new atoms become visible only to later
+clauses in the same pass, and passes repeat to a fixpoint.
 */
-least_model(ClauseCount, Store) :-
-    fixpoint(ClauseCount, [], Store).
+stratified_model(MaxStratum, ClauseCount, Store) :-
+    evaluate_strata(1, MaxStratum, ClauseCount, [], Store).
 
-fixpoint(ClauseCount, Store0, Store) :-
-    program_pass(1, ClauseCount, Store0, Store1, false, Added),
+evaluate_strata(Stratum, MaxStratum, _, Store, Store) :-
+    Stratum > MaxStratum,
+    !.
+evaluate_strata(Stratum, MaxStratum, ClauseCount, Store0, Store) :-
+    stratum_fixpoint(Stratum, ClauseCount, Store0, Store1),
+    Next is Stratum + 1,
+    evaluate_strata(Next, MaxStratum, ClauseCount, Store1, Store).
+
+stratum_fixpoint(Stratum, ClauseCount, Store0, Store) :-
+    stratum_program_pass(
+        1, ClauseCount, Stratum, Store0, Store1, false, Added),
     ( Added == true ->
-        fixpoint(ClauseCount, Store1, Store)
+        stratum_fixpoint(Stratum, ClauseCount, Store1, Store)
     ; Store = Store1
     ).
 
-program_pass(Seq, ClauseCount, Store, Store, Added, Added) :-
+stratum_program_pass(Seq, ClauseCount, _, Store, Store, Added, Added) :-
     Seq > ClauseCount,
     !.
-program_pass(Seq, ClauseCount, Store0, Store, Added0, Added) :-
+stratum_program_pass(Seq, ClauseCount, Stratum, Store0, Store,
+        Added0, Added) :-
     once(cnl_program_db:program_clause(Seq, Id, Head, Body)),
-    Snapshot = Store0,
-    add_clause_solutions(Head, Body, Snapshot, Id,
-        Store0, Store1, Added0, Added1),
+    once(cnl_program_db:program_stratum(Seq, ClauseStratum)),
+    ( ClauseStratum =:= Stratum ->
+        Snapshot = Store0,
+        add_clause_solutions(Head, Body, Snapshot, Id,
+            Store0, Store1, Added0, Added1)
+    ; Store1 = Store0,
+      Added1 = Added0
+    ),
     Next is Seq + 1,
-    program_pass(Next, ClauseCount, Store1, Store, Added1, Added).
+    stratum_program_pass(
+        Next, ClauseCount, Stratum, Store1, Store, Added1, Added).
 
 /*
 forall preserves schedule enumeration while discarding solution bindings;
@@ -654,6 +833,20 @@ insert_clause_solution(Atom, BodyAtoms, Id, State) :-
 body_solution(Body, _, Bindings, Bindings, []) :-
     Body == [],
     !.
+body_solution(Body, Snapshot, Bindings0, Bindings,
+        [naf(GroundAtom)|Grounds]) :-
+    arg(1, Body, Literal),
+    has_functor(Literal, naf, 1),
+    !,
+    arg(1, Literal, Pattern),
+    ( substitute_predicate(Pattern, Bindings0, GroundAtom),
+      kernel_ground_predicate(GroundAtom) ->
+        true
+    ; kernel_invariant(naf_not_ground(Pattern))
+    ),
+    \+ atom_present(GroundAtom, Snapshot),
+    arg(2, Body, Rest),
+    body_solution(Rest, Snapshot, Bindings0, Bindings, Grounds).
 body_solution(Body, Snapshot, Bindings0, Bindings, [Ground|Grounds]) :-
     arg(1, Body, Pattern),
     arg(2, Body, Rest),
@@ -706,6 +899,20 @@ named_ground(Ground) :-
     arg(1, Ground, Name),
     atom(Name).
 
+kernel_ground_predicate(Predicate) :-
+    has_functor(Predicate, pred, 2),
+    arg(1, Predicate, Name),
+    arg(2, Predicate, Args),
+    atom(Name),
+    Args = [_|_],
+    kernel_ground_arguments(Args),
+    ground(Predicate).
+
+kernel_ground_arguments([]).
+kernel_ground_arguments([Arg|Args]) :-
+    named_ground(Arg),
+    kernel_ground_arguments(Args).
+
 binding_value(Number, [binding(Here, Value)|_], Value) :-
     Here =:= Number,
     !.
@@ -754,6 +961,9 @@ member_number(Number, [_|Members]) :-
 has_functor(Term, Name, Arity) :-
     compound(Term),
     functor(Term, Name, Arity).
+
+kernel_invariant(Detail) :-
+    throw(inference_invariant(Detail)).
 
 reject(Class, Detail) :-
     throw(ir_reject(Class, Detail)).

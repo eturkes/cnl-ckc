@@ -6,7 +6,7 @@
 :- use_module(inference_kernel, [validate_program_terms/4]).
 
 /*
-IR v1 to program-record compiler. Input has already passed framing gates.
+IR v1 to program-record v2 compiler. Input has already passed framing gates.
 Compilation is a total, order-preserving map on valid IR: provenance is dropped,
 facts and rules become clauses, and the sole query becomes the final goal.
 Generated output is validated before it can reach the caller's output buffer.
@@ -25,7 +25,7 @@ validate_generated_program(ProgramTerms) :-
 transform_record([Header, Document|Items], ProgramTerms) :-
     Header == cnl_ir_record(1),
     transform_items(Items, ProgramItems),
-    ProgramTerms = [cnl_program_record(1), Document|ProgramItems].
+    ProgramTerms = [cnl_program_record(2), Document|ProgramItems].
 
 transform_items([], []).
 transform_items([Item|Items], [ProgramItem|ProgramItems]) :-

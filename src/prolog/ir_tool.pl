@@ -3,11 +3,12 @@
 :- set_prolog_flag(encoding, utf8).
 
 :- use_module(library(readutil), [read_stream_to_codes/2]).
+:- use_module(library(crypto), [crypto_data_hash/3]).
 :- use_module(drs_canon, [canonical_line/2]).
 :- use_module(drs_to_ir, [lower_terms/2]).
 :- use_module(ir_validate, [validate_terms/1]).
 :- use_module(ir_to_prolog, [compile_terms/2]).
-:- use_module(inference_kernel, [run_terms/2]).
+:- use_module(inference_kernel, [run_terms/3]).
 
 /*
 Run: swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' --
@@ -102,10 +103,32 @@ compile_input(Input) :-
     format('~s', [Codes]).
 
 run_input(Input) :-
-    read_canonical_terms(Input, Terms),
-    run_terms(Terms, ResultTerms),
+    read_canonical_terms(Input, Terms, Bytes),
+    program_digest(Bytes, ProgramDigest),
+    run_terms(Terms, ProgramDigest, ResultTerms),
     self_checked_canonical_codes(ResultTerms, Codes),
     format('~s', [Codes]).
+
+program_digest(Bytes, Digest) :-
+    crypto_data_hash(
+        Bytes, Digest, [algorithm(sha256), encoding(octet)]),
+    ( valid_digest_atom(Digest) ->
+        true
+    ; throw(error(invalid_program_digest(Digest),
+          context(ir_tool, program_digest)))
+    ).
+
+valid_digest_atom(Digest) :-
+    atom_codes(Digest, Codes),
+    length(Codes, 64),
+    lower_hex_codes(Codes).
+
+lower_hex_codes([]).
+lower_hex_codes([Code|Codes]) :-
+    ( Code >= 0'0, Code =< 0'9
+    ; Code >= 0'a, Code =< 0'f
+    ),
+    lower_hex_codes(Codes).
 
 self_checked_canonical_codes(Terms, Codes) :-
     generated_record_call(output_self_check,
@@ -128,11 +151,17 @@ generated_record_call(Context, Goal) :-
             context(ir_tool, Context)))).
 
 read_canonical_terms(Input, Terms) :-
-    read_utf8_input(Input, Text, Codes),
+    read_canonical_terms(Input, Terms, _).
+
+read_canonical_terms(Input, Terms, Bytes) :-
+    read_utf8_input(Input, Text, Codes, Bytes),
     parse_terms(Text, Terms),
     canonical_fixed_point(Terms, Codes).
 
 read_utf8_input(Input, Text, Codes) :-
+    read_utf8_input(Input, Text, Codes, _).
+
+read_utf8_input(Input, Text, Codes, Bytes) :-
     read_stream_to_codes(Input, Bytes),
     decode_utf8(Bytes, Codes, 0),
     string_codes(Text, Codes).
@@ -225,14 +254,31 @@ canonical_codes([Term|Terms], Index, Codes) :-
     canonical_codes(Terms, Next, Rest),
     append(Here, Rest, Codes).
 
-/* Preserve M2 identity quoting only after the complete shape serializes. */
+/*
+Preserve forced quoting only after the complete document or answer-digest line
+shape has been proved. All malformed lookalikes fall through to canonical_line.
+*/
 canonical_record_line(2, Term, Line) :-
     compound(Term),
     functor(Term, document, 3),
     canonical_document_line(Term, Line),
     !.
+canonical_record_line(3, Term, Line) :-
+    canonical_program_digest_line(Term, Line),
+    !.
 canonical_record_line(_, Term, Line) :-
     canonical_line(Term, Line).
+
+canonical_program_digest_line(Term, Line) :-
+    compound(Term),
+    functor(Term, program, 1),
+    arg(1, Term, Sha256),
+    compound(Sha256),
+    functor(Sha256, sha256, 1),
+    arg(1, Sha256, Digest),
+    atom(Digest),
+    forced_quoted_atom(Digest, DigestText),
+    format(string(Line), "program(sha256(~s)).\n", [DigestText]).
 
 canonical_document_line(
         document(docid(Docid), source_sha256(SourceHash), ulex(Ulex)), Line) :-
