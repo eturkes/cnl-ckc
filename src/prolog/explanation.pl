@@ -1,8 +1,9 @@
-:- module(explanation, [assemble_result_terms/7]).
+:- module(explanation, [assemble_result_terms/7, validate_answer_terms/1]).
 
 :- set_prolog_flag(encoding, utf8).
 
 :- use_module(library(lists), [append/3]).
+:- use_module(drs_canon, [canonical_line/2]).
 
 /*
 Witness expansion and proof-certificate replay. Construction follows the first
@@ -32,7 +33,206 @@ assemble_result_terms(Document, ProgramDigest, GoalId, GoalAtom, Outcome,
                   program(sha256(ProgramDigest)),
                   answer(GoalId, GoalAtom, not_proved)
                 ]
+    ; has_functor(Outcome, answers, 1) ->
+        arg(1, Outcome, Answers),
+        build_wh_certificates(Answers, Store, Proofs),
+        Prefix = [ cnl_answer_record(2),
+                   Document,
+                   program(sha256(ProgramDigest)),
+                   answer(GoalId, wh(who), GoalAtom, answers(Answers))
+                 ],
+        append(Prefix, Proofs, Terms)
     ; invariant(outcome(Outcome))
+    ).
+
+build_wh_certificates(Answers, _, []) :-
+    Answers == [],
+    !.
+build_wh_certificates(Answers, Store, [Proof|Proofs]) :-
+    has_functor(Answers, '[|]', 2),
+    !,
+    arg(1, Answers, Atom),
+    arg(2, Answers, Rest),
+    build_certificate(Atom, Store, Proof),
+    replay_certificate(Atom, Proof, Store),
+    build_wh_certificates(Rest, Store, Proofs).
+build_wh_certificates(_, _, _) :-
+    invariant(wh_answers_shape).
+
+/*
+The run CLI calls this only on reparsed generated terms. Existing yes/no
+self-check behavior remains the generic canonical round-trip; an answer/4 term
+selects the additional wh-v2 grammar, ordering, and proof-correspondence gate.
+*/
+validate_answer_terms(Terms) :-
+    ( contains_answer4(Terms) ->
+        ( answer_record_layout(
+              Terms, Header, Document, Program, Answer, Proofs) ->
+            validate_wh_answer_record(
+                Header, Document, Program, Answer, Proofs)
+        ; invariant(generated_wh_answer_layout)
+        )
+    ; true
+    ).
+
+contains_answer4(Terms) :-
+    has_functor(Terms, '[|]', 2),
+    arg(1, Terms, Term),
+    arg(2, Terms, Rest),
+    ( has_functor(Term, answer, 4) ->
+        true
+    ; contains_answer4(Rest)
+    ).
+
+answer_record_layout(Terms, Header, Document, Program, Answer, Proofs) :-
+    list_head_tail(Terms, Header, Rest1),
+    list_head_tail(Rest1, Document, Rest2),
+    list_head_tail(Rest2, Program, Rest3),
+    list_head_tail(Rest3, Answer, Proofs).
+
+list_head_tail(List, Head, Tail) :-
+    has_functor(List, '[|]', 2),
+    arg(1, List, Head),
+    arg(2, List, Tail).
+
+validate_wh_answer_record(Header, Document, Program, Answer, Proofs) :-
+    ( Header == cnl_answer_record(2),
+      has_functor(Document, document, 3),
+      generated_program_digest(Program),
+      has_functor(Answer, answer, 4),
+      arg(1, Answer, GoalId),
+      generated_query_id(GoalId),
+      arg(2, Answer, Marker),
+      Marker == wh(who),
+      arg(3, Answer, Pattern),
+      generated_wh_pattern(Pattern, Name),
+      arg(4, Answer, AnswerSet),
+      has_functor(AnswerSet, answers, 1),
+      arg(1, AnswerSet, Answers) ->
+        validate_wh_answers(Answers, Name),
+        validate_wh_proofs(Answers, Proofs)
+    ; invariant(generated_wh_answer_shape)
+    ).
+
+generated_program_digest(Program) :-
+    has_functor(Program, program, 1),
+    arg(1, Program, Sha256),
+    has_functor(Sha256, sha256, 1),
+    arg(1, Sha256, Digest),
+    atom(Digest).
+
+generated_query_id(GoalId) :-
+    has_functor(GoalId, query_id, 2),
+    arg(1, GoalId, Sentence),
+    arg(2, GoalId, Clause),
+    has_functor(Sentence, sentence, 1),
+    has_functor(Clause, clause, 1),
+    arg(1, Sentence, S),
+    arg(1, Clause, C),
+    integer(S),
+    S > 0,
+    integer(C),
+    C > 0.
+
+generated_wh_pattern(Pattern, Name) :-
+    has_functor(Pattern, pred, 2),
+    arg(1, Pattern, Name),
+    atom(Name),
+    arg(2, Pattern, Args),
+    has_functor(Args, '[|]', 2),
+    arg(1, Args, Variable),
+    arg(2, Args, Tail),
+    Variable == var(1),
+    Tail == [].
+
+validate_wh_answers(Answers, _) :-
+    Answers == [],
+    !.
+validate_wh_answers(Answers, Name) :-
+    ( has_functor(Answers, '[|]', 2) ->
+        arg(1, Answers, Atom),
+        arg(2, Answers, Rest),
+        ( generated_wh_answer_atom(Name, Atom),
+          canonical_answer_key(Atom, Key) ->
+            validate_wh_answer_tail(Rest, Name, Key)
+        ; invariant(generated_wh_answers_shape)
+        )
+    ; invariant(generated_wh_answers_shape)
+    ).
+
+validate_wh_answer_tail(Answers, _, _) :-
+    Answers == [],
+    !.
+validate_wh_answer_tail(Answers, Name, PreviousKey) :-
+    ( has_functor(Answers, '[|]', 2) ->
+        arg(1, Answers, Atom),
+        arg(2, Answers, Rest),
+        ( generated_wh_answer_atom(Name, Atom),
+          canonical_answer_key(Atom, Key) ->
+            ( PreviousKey @< Key ->
+                validate_wh_answer_tail(Rest, Name, Key)
+            ; invariant(generated_wh_answer_order)
+            )
+        ; invariant(generated_wh_answers_shape)
+        )
+    ; invariant(generated_wh_answers_shape)
+    ).
+
+generated_wh_answer_atom(Name, Atom) :-
+    generated_ground_predicate(Atom),
+    arg(1, Atom, StoredName),
+    StoredName == Name,
+    arg(2, Atom, Args),
+    has_functor(Args, '[|]', 2),
+    arg(2, Args, Tail),
+    Tail == [].
+
+generated_ground_predicate(Term) :-
+    has_functor(Term, pred, 2),
+    arg(1, Term, Name),
+    atom(Name),
+    arg(2, Term, Args),
+    has_functor(Args, '[|]', 2),
+    generated_ground_arguments(Args),
+    ground(Term).
+
+generated_ground_arguments(Args) :-
+    ( Args == [] ->
+        true
+    ; has_functor(Args, '[|]', 2),
+      arg(1, Args, Arg),
+      arg(2, Args, Rest),
+      replay_named_ground(Arg),
+      generated_ground_arguments(Rest)
+    ).
+
+canonical_answer_key(Atom, Key) :-
+    copy_term(Atom, Copy),
+    ( catch(canonical_line(Copy, Line), _, fail) ->
+        string_codes(Line, Key)
+    ; invariant(generated_wh_answer_canonical)
+    ).
+
+validate_wh_proofs(Answers, Proofs) :-
+    ( Answers == [] ->
+        ( Proofs == [] ->
+            true
+        ; invariant(generated_wh_empty_proofs)
+        )
+    ; has_functor(Answers, '[|]', 2),
+      has_functor(Proofs, '[|]', 2) ->
+        arg(1, Answers, Atom),
+        arg(2, Answers, AnswerRest),
+        arg(1, Proofs, Proof),
+        arg(2, Proofs, ProofRest),
+        ( ground(Proof),
+          has_functor(Proof, proof, 3),
+          arg(1, Proof, Root),
+          Root == Atom ->
+            validate_wh_proofs(AnswerRest, ProofRest)
+        ; invariant(generated_wh_proof_root)
+        )
+    ; invariant(generated_wh_proof_count)
     ).
 
 build_certificate(Atom, Store, Proof) :-

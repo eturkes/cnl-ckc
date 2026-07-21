@@ -3,6 +3,7 @@
 :- set_prolog_flag(encoding, utf8).
 
 :- use_module(library(lists), [append/3]).
+:- use_module(drs_canon, [canonical_line/2]).
 :- use_module(explanation, [assemble_result_terms/7]).
 
 :- dynamic cnl_program_db:program_clause/4.
@@ -28,11 +29,7 @@ validate_program_terms(Terms, Document, Clauses, Goal) :-
 
 run_terms(Terms, ProgramDigest, ResultTerms) :-
     validate_program_terms(Terms, Document, Clauses, Goal),
-    arg(1, Goal, GoalKind),
-    arg(2, Goal, GoalId),
-    ( GoalKind == wh(who) ->
-        reject(wh_query, goal(GoalId))
-    ; valid_sha256(ProgramDigest) ->
+    ( valid_sha256(ProgramDigest) ->
         length(Clauses, ClauseCount),
         max_clause_stratum(Clauses, MaxStratum),
         setup_call_cleanup(
@@ -752,15 +749,176 @@ teardown_program :-
 evaluate_program(Document, ProgramDigest, Goal, ClauseCount, MaxStratum,
         ResultTerms) :-
     stratified_model(MaxStratum, ClauseCount, Store),
+    arg(1, Goal, GoalKind),
     arg(2, Goal, GoalId),
     arg(3, Goal, GoalAtom),
-    ( atom_present(GoalAtom, Store) ->
-        Outcome = proved
-    ; Outcome = not_proved
-    ),
+    evaluation_outcome(GoalKind, GoalAtom, Store, Outcome, Roots),
+    certificate_preflight(Roots, Store),
     assemble_result_terms(
         Document, ProgramDigest, GoalId, GoalAtom, Outcome, Store,
         ResultTerms).
+
+evaluation_outcome(GoalKind, GoalAtom, Store, Outcome, Roots) :-
+    ( GoalKind == yes_no ->
+        ( atom_present(GoalAtom, Store) ->
+            Outcome = proved,
+            Roots = [GoalAtom]
+        ; Outcome = not_proved,
+          Roots = []
+        )
+    ; GoalKind == wh(who) ->
+        wh_answer_atoms(GoalAtom, Store, Answers),
+        Outcome = answers(Answers),
+        Roots = Answers
+    ; kernel_invariant(goal_kind(GoalKind))
+    ).
+
+wh_answer_atoms(Pattern, Store, Answers) :-
+    ( wh_pattern_name(Pattern, Name) ->
+        collect_wh_store_atoms(Name, Store, Atoms),
+        canonical_atom_pairs(Atoms, Pairs),
+        keysort(Pairs, SortedPairs),
+        pair_atoms(SortedPairs, Answers)
+    ; kernel_invariant(wh_pattern(Pattern))
+    ).
+
+wh_pattern_name(Pattern, Name) :-
+    has_functor(Pattern, pred, 2),
+    arg(1, Pattern, Name),
+    atom(Name),
+    arg(2, Pattern, Args),
+    has_functor(Args, '[|]', 2),
+    arg(1, Args, Variable),
+    arg(2, Args, Tail),
+    Variable == var(1),
+    Tail == [].
+
+collect_wh_store_atoms(_, [], []).
+collect_wh_store_atoms(Name, [Entry|Entries], Atoms) :-
+    arg(1, Entry, Atom),
+    ( wh_store_instance(Name, Atom) ->
+        Atoms = [Atom|Rest]
+    ; Atoms = Rest
+    ),
+    collect_wh_store_atoms(Name, Entries, Rest).
+
+wh_store_instance(Name, Atom) :-
+    has_functor(Atom, pred, 2),
+    arg(1, Atom, StoredName),
+    StoredName == Name,
+    arg(2, Atom, Args),
+    has_functor(Args, '[|]', 2),
+    arg(2, Args, Tail),
+    Tail == [],
+    kernel_ground_predicate(Atom).
+
+canonical_atom_pairs([], []).
+canonical_atom_pairs([Atom|Atoms], [Key-Atom|Pairs]) :-
+    copy_term(Atom, Copy),
+    ( catch(canonical_line(Copy, Line), _, fail) ->
+        string_codes(Line, Key)
+    ; kernel_invariant(canonical_wh_atom)
+    ),
+    canonical_atom_pairs(Atoms, Pairs).
+
+pair_atoms([], []).
+pair_atoms([_-Atom|Pairs], [Atom|Atoms]) :-
+    pair_atoms(Pairs, Atoms).
+
+certificate_node_cap(1000000).
+
+certificate_preflight(Roots, Store) :-
+    certificate_node_cap(Cap),
+    Limit is Cap + 1,
+    certificate_root_total(
+        Roots, Store, Limit, [], _, 0, Total),
+    ( Total > Cap ->
+        reject(resource, certificate_nodes_exceed_cap(Cap))
+    ; true
+    ).
+
+certificate_root_total(_, _, Limit, Memo, Memo, Total, Total) :-
+    Total >= Limit,
+    !.
+certificate_root_total([], _, _, Memo, Memo, Total, Total).
+certificate_root_total([Atom|Atoms], Store, Limit, Memo0, Memo,
+        Total0, Total) :-
+    certificate_atom_count(Atom, Store, Limit, Memo0, Memo1, Count),
+    saturating_add(Total0, Count, Limit, Total1),
+    certificate_root_total(
+        Atoms, Store, Limit, Memo1, Memo, Total1, Total).
+
+certificate_atom_count(Atom, Store, Limit, Memo0, Memo, Count) :-
+    ( certificate_memo_count(Atom, Memo0, Count) ->
+        Memo = Memo0
+    ; certificate_store_body(Atom, Store, Body) ->
+        certificate_body_count(
+            Body, Store, Limit, Memo0, Memo1, Count),
+        Memo = [certificate_count(Atom, Count)|Memo1]
+    ; kernel_invariant(certificate_missing_witness(Atom))
+    ).
+
+certificate_body_count(Body, Store, Limit, Memo0, Memo, Count) :-
+    certificate_body_count_(
+        Body, Store, Limit, Memo0, Memo, 1, Count).
+
+certificate_body_count_(_, _, Limit, Memo, Memo, Count, Count) :-
+    Count >= Limit,
+    !.
+certificate_body_count_(Body, _, _, Memo, Memo, Count, Count) :-
+    Body == [],
+    !.
+certificate_body_count_(Body, Store, Limit, Memo0, Memo,
+        Count0, Count) :-
+    ( has_functor(Body, '[|]', 2) ->
+        arg(1, Body, Item),
+        arg(2, Body, Rest),
+        certificate_item_count(
+            Item, Store, Limit, Memo0, Memo1, ItemCount),
+        saturating_add(Count0, ItemCount, Limit, Count1),
+        certificate_body_count_(
+            Rest, Store, Limit, Memo1, Memo, Count1, Count)
+    ; kernel_invariant(certificate_body_shape)
+    ).
+
+certificate_item_count(Item, _, _, Memo, Memo, 1) :-
+    has_functor(Item, naf, 1),
+    !.
+certificate_item_count(Item, Store, Limit, Memo0, Memo, Count) :-
+    ( has_functor(Item, pred, 2) ->
+        certificate_atom_count(
+            Item, Store, Limit, Memo0, Memo, Count)
+    ; kernel_invariant(certificate_body_item)
+    ).
+
+certificate_store_body(Atom, [Entry|_], Body) :-
+    arg(1, Entry, Stored),
+    Stored == Atom,
+    arg(2, Entry, Witness),
+    has_functor(Witness, by, 2),
+    arg(2, Witness, Body),
+    !.
+certificate_store_body(Atom, [_|Entries], Body) :-
+    certificate_store_body(Atom, Entries, Body).
+
+certificate_memo_count(Atom,
+        [certificate_count(Stored, Count)|_], Count) :-
+    Stored == Atom,
+    !.
+certificate_memo_count(Atom, [_|Memo], Count) :-
+    certificate_memo_count(Atom, Memo, Count).
+
+saturating_add(Left, Right, Limit, Sum) :-
+    ( Left >= Limit ->
+        Sum = Limit
+    ; Right >= Limit ->
+        Sum = Limit
+    ; Remaining is Limit - Left,
+      ( Right >= Remaining ->
+          Sum = Limit
+      ; Sum is Left + Right
+      )
+    ).
 
 /*
 Strata run in ascending order over one insertion-ordered store. Within each

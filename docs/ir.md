@@ -2,7 +2,7 @@
 
 Status: normative for the project-owned ACE-to-Prolog boundary and the run-side execution artifacts.
 
-This document defines IR v1, program record v2, and answer record v2. IR v1 is one ground, function-free, positive Datalog record per ACE document. It preserves document identity, sentence/clause identity, and token provenance. It does not carry native Prolog variables or executable Prolog syntax. Program v2 adds run-side negation as failure and a staged wh-goal shape; answer v2 binds the exact program bytes and extends certificates for NAF.
+This document defines IR v1, program record v2, and answer record v2. IR v1 is one ground, function-free, positive Datalog record per ACE document. It preserves document identity, sentence/clause identity, and token provenance. It does not carry native Prolog variables or executable Prolog syntax. Program v2 adds run-side negation as failure and executable `wh(who)` goals; answer v2 binds the exact program bytes and carries NAF and wh certificates.
 
 ## IR v1 record grammar
 
@@ -159,7 +159,8 @@ Program validation uses the same pass numbers, class vocabulary, first-failure r
 | `safety` | Validate/program 9 | An IR rule body is empty or its head lacks positive-body coverage; or a program v2 rule violates positives-then-NAF order, has an NAF variable absent from its positive literals, or has a head variable absent from its positive literals. Program `rule_id` plus `body([])` fails earlier as `identity`. | 1 |
 | `cycle` | Validate/program 10 | A positive edge closes a cycle in IR v1, or a positive or negative edge closes a cycle in the program v2 signed dependency graph; self-loops count. | 1 |
 | `question_count` | Lower | The root DRS has zero or multiple questions, or its sole question is not final. | 1 |
-| `wh_query` | Lower / run | Lowering still rejects an ACE `query/2` wh condition for IR v1. Transiently in M4.1a, a valid program v2 wh goal passes validation but `run` rejects it before evaluation; M4.1b removes this run-stage guard. | 1 |
+| `wh_query` | Lower | Lowering still rejects an ACE `query/2` wh condition for IR v1. Program v2 `run` executes the exact admitted `wh(who)` goal and does not emit this class. | 1 |
+| `resource` | Run | The total expanded nodes across all proof trees the answer record would emit exceeds `certificate_node_cap(1000000)`. | 1 |
 | `copula` | Lower | A factual `object/6` and `be` pair is malformed, ambiguous, or unpaired. | 1 |
 | `referent` | Lower | A DRS referent is undeclared, redeclared, unconsumed, unbound, role-reused, or not losslessly erasable as an event. | 1 |
 | `unsupported` | Lower | A constructor or arrangement is outside the admitted DRS profile, provenance is not one-sentence canonical data, or lowering cannot produce valid v1 IR without loss. | 1 |
@@ -318,7 +319,9 @@ Replay independently checks a total ground substitution for every cited clause. 
 
 The trust boundary is explicit. Saturation and first-witness selection are kernel responsibilities. Replay checks NAF absence against the kernel's completed store, not against syntax alone. Fresh-process deterministic runs make that store reproducible, but an external verifier must recompute the standard model from the bound program bytes to verify both derivability and NAF absence independently. Replay certifies the emitted tree's sound correspondence to the completed store; it does not replace saturation.
 
-Certificates remain trees without shared subproofs, so their size can grow exponentially with rule structure. DAG sharing and proof-resource bounds remain deferred. A replay failure is an internal invariant break and surfaces as stage `run`, class `uncaught`, exit 2. Only after replay succeeds is the result stream canonically serialized, reparsed, checked as its own fixed point, and committed once to stdout.
+Certificates remain trees without shared subproofs, so their size can grow exponentially with rule structure. DAG sharing remains deferred. The kernel predicate `certificate_node_cap(1000000)` defines the proof-emission preflight bound. After the completed model and the complete answer set are known, but before any proof tree is constructed, the kernel memoizes an expanded-node count for each retained first-witness atom using `==` keys. An atom contributes one node plus each witness-body position: a positive child contributes that child's memoized count, and an NAF leaf contributes one. Every count and sum saturates at `Cap+1`.
+
+The preflight total is the sum across every tree the record would emit: all wh answers, the one proved yes/no answer tree, or zero for `not_proved` and `answers([])`. A total above the cap deterministically rejects at stage `run`, class `resource`, exit 1, with zero stdout and detail `certificate_nodes_exceed_cap(1000000)`. A replay failure remains an internal invariant break and surfaces as stage `run`, class `uncaught`, exit 2. Only after the preflight, construction, and replay succeed is the result stream canonically serialized, reparsed, validated as an answer-v2 fixed point, and committed once to stdout.
 
 For a wh goal, answer v2 uses this documented form:
 
@@ -338,11 +341,9 @@ proof(GroundAtom,ClauseId,[SubProof,...]).
 
 `answers/1` lists all derived ground instances of the goal pattern. The list is sorted ascending by the canonical serialization bytes of each ground query atom, a project-owned order independent of evaluation schedule. Zero matches are represented explicitly as `answers([])`. Each listed atom has its own first-witness proof tree, and those top-level proof terms follow the answer term in the same order. The constant universe is exactly the `named/1` constants present anywhere in the program record; wh execution invents no constants.
 
-**Transient M4.1a staging note:** the exact wh goal validates in program v2, but `run` currently rejects it after validation with stage `run`, class `wh_query`, exit 1, and zero stdout. M4.1b implements wh execution, answer emission, and the resource preflight, then removes both this guard and this note.
+Answer-record consumers must require exactly `cnl_answer_record(2)` and reject every other answer envelope version. Answer records are terminal in-tree artifacts, so the current CLI produces and self-checks them rather than accepting them as another stage's input. For wh output, the reparsed self-check requires the exact `wh(who)` marker and `pred(Name,[var(1)])` pattern, a proper canonically byte-sorted `answers/1` list of ground unary `pred/2` atoms with `named/1` arguments, and one ordered top-level proof per answer with an identical root atom; `answers([])` requires zero proofs.
 
-Answer-record consumers must require exactly `cnl_answer_record(2)` and reject every other answer envelope version. Answer records are terminal in-tree artifacts, so the current CLI produces and self-checks them rather than accepting them as another stage's input.
-
-`run` validates the program artifact independently rather than trusting the compiler. After the shared framing gates (`input_utf8`, `syntax`, `canonical`), program v2 content rejection is owned by `envelope`, `query_count`, `section_order`, `shape`, `identity`, `ordering`, `scope`, `safety`, and `cycle`, plus the transient post-validation `wh_query` guard. Program-side `naf` is no longer a rejection class. Failure emits no result prefix.
+`run` validates the program artifact independently rather than trusting the compiler. After the shared framing gates (`input_utf8`, `syntax`, `canonical`), program v2 content rejection is owned by `envelope`, `query_count`, `section_order`, `shape`, `identity`, `ordering`, `scope`, `safety`, and `cycle`. The post-model certificate preflight can additionally reject `resource`. Program-side `naf` is no longer a rejection class. Failure emits no result prefix.
 
 ## End-to-end document chain
 
@@ -421,10 +422,10 @@ The independently versioned envelopes are `cnl_ir_record(1)`, `cnl_program_recor
 | Recursion and tabling | Any signed predicate cycle, including a positive-only cycle, is rejected. |
 | Conflict detection | No rule-pair conflict analysis. |
 | Proof enumeration and DAG sharing | First witness only; certificates remain trees. |
-| Proof and answer resource preflight | Deferred to M4.1b. |
+| Proof and answer resource preflight | **Shipped:** `certificate_node_cap(1000000)` bounds the total expanded nodes across all trees emitted by one record. |
 | Prose rendering | Outside these records. |
 | Program-digest binding inside answer records | **Shipped:** answer v2 line 3 binds the exact raw program bytes with SHA-256. |
-| Wh answers | Grammar, ordering, empty-answer form, and proof layout are documented; emission lands in M4.1b under the transient staging note above. |
+| Wh answers | **Shipped:** program v2 executes exact `wh(who)` goals and emits canonically byte-sorted `answers/1` with ordered first-witness proofs or explicit `answers([])`. |
 | Multi-document composition | Exactly one document record per run. |
 
 ## Grounding example
@@ -448,3 +449,29 @@ fact(fact_id(sentence(2),clause(1)),pred(wait,[named('John')]),source(sentence(2
 rule(rule_id(sentence(3),clause(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])]),source(sentence(3),tokens([2,4,5]))).
 query(query_id(sentence(4),clause(1)),pred(recover,[named('John')]),source(sentence(4),tokens([3]))).
 ```
+
+## Wh answer grounding example
+
+The committed `tests/fixtures/run/green/wh-multi-order.program.pl` fixture inserts `named(a)` before `named('z z')`, then derives both `recover/1` atoms:
+
+```prolog
+cnl_program_record(2).
+document(docid('wh-multi-order'),source_sha256('4444444444444444444444444444444444444444444444444444444444444444'),ulex(none)).
+clause(fact_id(sentence(1),clause(1)),pred(patient,[named(a)]),body([])).
+clause(fact_id(sentence(2),clause(1)),pred(patient,[named('z z')]),body([])).
+clause(rule_id(sentence(3),clause(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)])])).
+goal(query_id(sentence(4),clause(1)),wh(who),pred(recover,[var(1)])).
+```
+
+The exact fixture-backed answer bytes are:
+
+```prolog
+cnl_answer_record(2).
+document(docid('wh-multi-order'),source_sha256('4444444444444444444444444444444444444444444444444444444444444444'),ulex(none)).
+program(sha256('b8aabde529e4a544979f104e7e65df4d19feb899651c32981f3a4d75ae2adadd')).
+answer(query_id(sentence(4),clause(1)),wh(who),pred(recover,[var(1)]),answers([pred(recover,[named('z z')]),pred(recover,[named(a)])])).
+proof(pred(recover,[named('z z')]),rule_id(sentence(3),clause(1)),[proof(pred(patient,[named('z z')]),fact_id(sentence(2),clause(1)),[])]).
+proof(pred(recover,[named(a)]),rule_id(sentence(3),clause(1)),[proof(pred(patient,[named(a)]),fact_id(sentence(1),clause(1)),[])]).
+```
+
+This order differs both from store insertion order and from SWI standard term order. At the first differing byte inside the canonical atom serialization, quoted `'z z'` begins with `0x27` while unquoted `a` begins with `0x61`, so the project-owned canonical-byte order places `'z z'` first.

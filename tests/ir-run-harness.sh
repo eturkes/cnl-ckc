@@ -29,7 +29,7 @@ IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=60
+EXPECTED_PASS_COUNT=67
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -178,12 +178,12 @@ if [ "$#" -ne 2 ]; then
     fail_case "fixtures/count" "expected 2 result goldens, got $#"
 fi
 set -- "$GREEN"/*.program.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 hand-green programs, got $#"
+if [ "$#" -ne 10 ]; then
+    fail_case "fixtures/count" "expected 10 hand-green programs, got $#"
 fi
 set -- "$GREEN"/*.result.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 hand-green results, got $#"
+if [ "$#" -ne 10 ]; then
+    fail_case "fixtures/count" "expected 10 hand-green results, got $#"
 fi
 set -- "$RED"/*.program.pl
 if [ "$#" -ne 20 ]; then
@@ -291,6 +291,26 @@ for input in "$GREEN"/*.program.pl; do
     if ! cmp "$stdout_path" "$expected"; then
         fail_case "green/$stem/bytes" "run output differs from golden"
     fi
+
+    rerun_stdout="$SCRATCH/determinism/$stem.stdout"
+    rerun_stderr="$SCRATCH/determinism/$stem.stderr"
+    if [ "$stem" = wide-join ]; then
+        run_tool_with_limits 30 98304 \
+            "$input" "$rerun_stdout" "$rerun_stderr" run
+    else
+        run_tool "$input" "$rerun_stdout" "$rerun_stderr" run
+    fi
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "green/$stem/determinism-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$rerun_stderr" ]; then
+        fail_case "green/$stem/determinism-stderr" "expected zero bytes"
+    fi
+    if ! cmp "$stdout_path" "$rerun_stdout"; then
+        fail_case "green/$stem/determinism-bytes" "fresh runs differ"
+    fi
+
     check_result_digest "digest/green/$stem" "$input" "$expected"
     pass_case "green/$stem"
 done
@@ -299,6 +319,14 @@ if ! command grep -q 'naf(pred(' "$GREEN/naf-open.result.pl"; then
     fail_case "answer/naf-open-leaf" "expected a positional NAF proof leaf"
 fi
 pass_case "answer/naf-open-leaf"
+
+wh_order_line="answer(query_id(sentence(4),clause(1)),wh(who),pred(recover,[var(1)]),answers([pred(recover,[named('z z')]),pred(recover,[named(a)])]))."
+if ! command grep -Fxq "$wh_order_line" \
+        "$GREEN/wh-multi-order.result.pl"; then
+    fail_case "answer/wh-byte-order" \
+        "expected quoted z-space-z answer before unquoted a"
+fi
+pass_case "answer/wh-byte-order"
 
 competing_input="$GREEN/competing-witness.program.pl"
 competing_expected="$GREEN/competing-witness.result.pl"
@@ -351,7 +379,7 @@ run_committed_red section-order-fact-after-rule section_order
 run_committed_red shape-naf-goal-position shape
 run_committed_red shape-native-variable shape
 run_committed_red shape-unknown-constructor shape
-run_committed_red wh-goal-transient wh_query
+run_committed_red resource-cap resource
 
 pin_stdout="$SCRATCH/stage-pin/compile-naf.stdout"
 pin_stderr="$SCRATCH/stage-pin/compile-naf.stderr"

@@ -9,6 +9,7 @@
 :- use_module(ir_validate, [validate_terms/1]).
 :- use_module(ir_to_prolog, [compile_terms/2]).
 :- use_module(inference_kernel, [run_terms/3]).
+:- use_module(explanation, [validate_answer_terms/1]).
 
 /*
 Run: swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' --
@@ -106,7 +107,7 @@ run_input(Input) :-
     read_canonical_terms(Input, Terms, Bytes),
     program_digest(Bytes, ProgramDigest),
     run_terms(Terms, ProgramDigest, ResultTerms),
-    self_checked_canonical_codes(ResultTerms, Codes),
+    self_checked_answer_codes(ResultTerms, Codes),
     format('~s', [Codes]).
 
 program_digest(Bytes, Digest) :-
@@ -139,6 +140,21 @@ self_checked_canonical_codes_(Terms, Codes) :-
     string_codes(Text, Codes),
     parse_terms(Text, Parsed),
     canonical_fixed_point(Parsed, Codes),
+    ( Parsed == Terms ->
+        true
+    ; throw(error(generated_term_round_trip, context(ir_tool, output)))
+    ).
+
+self_checked_answer_codes(Terms, Codes) :-
+    generated_record_call(output_self_check,
+        self_checked_answer_codes_(Terms, Codes)).
+
+self_checked_answer_codes_(Terms, Codes) :-
+    canonical_codes(Terms, 1, Codes),
+    string_codes(Text, Codes),
+    parse_terms(Text, Parsed),
+    canonical_fixed_point(Parsed, Codes),
+    validate_answer_terms(Parsed),
     ( Parsed == Terms ->
         true
     ; throw(error(generated_term_round_trip, context(ir_tool, output)))

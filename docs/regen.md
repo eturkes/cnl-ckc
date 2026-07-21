@@ -48,7 +48,7 @@ it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints
 shell harnesses: `tests/strict-harness.sh` (57 gates), `tests/regen-harness.sh` (16),
 `tests/adapter-harness.sh` (45), `tests/pipeline-harness.sh` (27),
 `tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (60),
-`tests/ir-lower-harness.sh` (34), `tests/ir-run-harness.sh` (60), and
+`tests/ir-lower-harness.sh` (34), `tests/ir-run-harness.sh` (67), and
 `tests/slice-harness.sh` (25). The explicit comparison breaks the self-check trust circle.
 Actions are SHA-pinned. The `test` job stays offline after provisioning; the `ape` job performs
 one pinned-Clex network fetch inside `tests/ape-vendor-harness.sh` and accepts it only after
