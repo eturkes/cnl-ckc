@@ -2,14 +2,14 @@
 
 Status: normative for the project-owned ACE-to-Prolog boundary and the run-side execution artifacts.
 
-This document defines IR v1, program record v2, and answer record v2. IR v1 is one ground, function-free, positive Datalog record per ACE document. It preserves document identity, sentence/clause identity, and token provenance. It does not carry native Prolog variables or executable Prolog syntax. Program v2 adds run-side negation as failure and executable `wh(who)` goals; answer v2 binds the exact program bytes and carries NAF and wh certificates.
+This document defines IR v2, program record v2, and answer record v2. IR v2 is one function-free Datalog record per ACE document. It preserves document identity, sentence/clause identity, and token provenance. Native Prolog variables and executable Prolog syntax remain outside the artifact language: rule variables and the wh query variable are explicit `var(N)` data. IR v2 admits rule-body negation as failure and one exact `wh(who)` query form; program v2 executes those forms, and answer v2 binds the exact program bytes and carries NAF and wh certificates.
 
-## IR v1 record grammar
+## IR v2 record grammar
 
 A record is a UTF-8 term stream in this exact order:
 
 ```text
-cnl_ir_record(1).
+cnl_ir_record(2).
 <document>
 <fact>*
 <rule>*
@@ -43,8 +43,15 @@ query(
     source(sentence(S),tokens([T1,...]))
 ).
 
-GroundArg  ::= named(Atom)
-RuleArg    ::= named(Atom) | var(N)
+query(
+    query_id(sentence(S),clause(C)),
+    wh(who),
+    pred(Name,[var(1)]),
+    source(sentence(S),tokens([T1,...]))
+).
+
+GroundArg ::= named(Atom)
+RuleArg ::= named(Atom) | var(N)
 BodyLiteral ::= pred(Name,[RuleArg,...])
               | naf(pred(Name,[RuleArg,...]))
 ```
@@ -55,13 +62,14 @@ Constraints:
 
 - `S`, `C`, `N`, and every `T` are integers at least 1.
 - `Name` is an open atom. Predicate identity is the pair `Name/Arity`.
-- Predicate argument lists are proper and non-empty. Zero-arity predicates are outside v1.
+- Predicate argument lists are proper and non-empty. Zero-arity predicates are outside v2.
 - `named(Atom)` is the sole constant form. The atom is open.
 - `var(N)` is data, not a native Prolog variable. Native variables are invalid.
-- The sole sort is `entity`. V1 has no sort annotation constructor; every argument has that sort.
+- The sole sort is `entity`. V2 has no sort annotation constructor; every argument has that sort.
 - Floats, strings, rationals, lists used as argument values, and other atomic or compound argument forms are invalid.
 - A rule body is proper and non-empty in an accepted record.
-- `naf/1` is reserved syntax. Its shape is parsed, but every occurrence is rejected in v1.
+- `naf/1` is admitted only as a rule-body literal around one well-shaped `pred/2`. It is invalid in a fact or rule head, either query predicate slot, a predicate argument, or any other non-body position.
+- A wh query is exactly `query(query_id(...),wh(who),pred(Name,[var(1)]),source(...))`. No other marker, pattern arity, or pattern argument is admitted.
 - Unknown constructors, arities, fields, or literal forms are hard errors. No pass drops or approximates unsupported content.
 
 The second line is the `document/3` line copied byte-for-byte from the corresponding M2 `ace_front_end_record(1)` record. `<docid>` is non-empty, contains only `[a-z0-9-]`, and does not begin with `-`. `<hex>` is exactly 64 lowercase hexadecimal characters. Identity atoms remain single-quoted exactly as M2 emits them.
@@ -78,28 +86,27 @@ The ID sentence must equal the item's `source/2` sentence. `(S,C)` pairs are glo
 
 `source(sentence(S),tokens([T1,...]))` contains a non-empty, strictly ascending list of positive token ordinals. Ordinals refer to the M2 record identified by the same document line: source SHA-256 plus sentence ordinal gives sentence identity, and the token ordinal is local to that sentence.
 
-## IR v1 variables and safety
+## IR v2 variables and safety
 
-A rule's `var(N)` values are local to that rule. Numbering is dense `1..k` in first-occurrence order while scanning the serialized rule left-to-right: head arguments first, then body literals and their arguments in list order. Repeated occurrences retain their first number.
+A rule's `var(N)` values are local to that rule. Numbering is dense `1..k` in first-occurrence order while scanning the serialized rule left-to-right: head arguments first, then body literals and their arguments in list order. NAF-literal arguments participate in the same scan. Repeated occurrences retain their first number.
 
-Every head variable must occur in a positive body literal. Body-only variables are admitted: a head tuple is derived when some assignment to those body-only variables satisfies the body. Facts and queries are ground; a `var/1` in either is a `scope` error.
+Canonical body order is all positive literals followed by all NAF literals, preserving source order within each block. A positive literal after an NAF literal is invalid. Every variable in an NAF literal must occur in a positive literal of the same rule. Every head variable must likewise occur in a positive body literal; NAF provides no coverage. Body-only variables remain admitted.
 
-## IR v1 semantics
+Facts and yes/no queries are ground. The wh query pattern's sole variable is admitted only in the exact data form `var(1)` described above.
 
-Ignoring provenance and IDs, a record denotes a finite positive, function-free Datalog program:
+## IR v2 semantics
 
-1. Each `fact/3` contributes its ground `pred/2` atom.
-2. Each `rule/4` contributes one positive implication from its body atoms to its head atom.
-3. The program meaning is its least Herbrand model over the `named/1` constants present in the record.
-4. The single ground query is `proved` exactly when its atom belongs to that model; otherwise its outcome is `not_proved`.
+Ignoring provenance and IDs, compilation is a total map to the program v2 record defined below: facts become empty-body clauses, rules preserve their positive and NAF body literals in order, a yes/no query becomes `goal/2`, and a wh query becomes the exact `goal/3` form.
 
-`not_proved` is rendered as unknown, never false. V1 has no `false` outcome and no explicit-negation constructor.
+When no NAF literal is present, the record denotes a finite positive, function-free Datalog program whose meaning is its least Herbrand model over the `named/1` constants present in the record. With NAF present, there is generally no global least model. IR v2 therefore inherits program v2's standard stratified-model semantics, including per-stratum least fixpoints with lower strata frozen, ground absence tests, and the documented coincidence with the unique perfect, stable, and total well-founded models on this finite cycle-free profile.
 
-Positive dependencies are directed from each rule-head predicate key to each positive body predicate key. Any directed cycle, including a self-loop, is rejected in v1. Recursion is deferred rather than assigned an implementation-dependent operational meaning.
+The signed predicate dependency graph has a positive edge from each rule-head key to each positive body key and a negative edge to each NAF target key. Any directed cycle over the combined graph, including a positive-only cycle, a mixed-polarity cycle, or a self-loop, is rejected. This full cycle prohibition is stronger than stratification and remains a sufficiency-only restriction.
 
-### Reserved negation as failure
+A yes/no query is `proved` exactly when its ground atom belongs to the completed model; otherwise its outcome is `not_proved`. A wh query enumerates all completed-model instances as specified under answer record v2. `not_proved` is unknown, never false. V2 has no `false` outcome and no explicit-negation constructor.
 
-`naf(pred(Name,Args))` is the sole reserved NAF body-literal form. IR v1 still rejects every occurrence with class `naf`; the same rejection is surfaced at stage `compile` when an IR v1 artifact containing NAF reaches compilation. Program record v2, defined below, admits and executes this form only in rule bodies. ACE-side NAF lowering remains outside IR v1 and is deferred to M4.2.
+### Negation as failure
+
+`naf(pred(Name,Args))` is the sole NAF form and is admitted only in rule bodies. `not provably P` means that the ground instance of `P` has no derivation under the closed program; it never means classical falsity. The validator requires positive coverage for every NAF variable, and the kernel asserts the substituted atom is ground before testing its absence. ACE `~/1` lowering is restricted to the two exact antecedent profiles documented below; ACE classical `-/1` remains rejected.
 
 ## Canonical bytes
 
@@ -131,15 +138,15 @@ Canonical serialization is performed on copies because `canonical_line/2` number
 1. **Stream/UTF-8** - read stdin as bytes and apply the strict decoder.
 2. **Term syntax** - parse a sequence of Prolog terms with pinned reader flags and syntax errors promoted to exceptions.
 3. **Canonical fixed point** - serialize every parsed term and compare the complete text.
-4. **Envelope** - IR validation requires `cnl_ir_record(1)`, the document line, exactly one query, no term after it, and facts before rules before the query. Query count is checked before trailing-term and interleave checks.
-5. **Shape** - require the exact constructors, arities, proper lists, non-empty predicate arguments and token lists, and admitted atomic kinds. In IR v1, `body([])` and well-shaped `naf/1` deliberately survive this pass for dedicated errors later.
-6. **Identity** - validate document fields; item-ID kind; positive ID/source/token ordinals; and ID/source sentence equality.
+4. **Envelope** - IR validation requires `cnl_ir_record(2)`, the document line, exactly one query across admitted `query/3` and `query/4` arities, no term after it, and facts before rules before the query. Query count is checked before trailing-term and interleave checks. IR v1 and every other version are `envelope` errors.
+5. **Shape** - require the exact constructors, arities, proper lists, non-empty predicate arguments and token lists, and admitted atomic kinds. `naf/1` is admitted only as a rule-body literal. A fact or query predicate slot containing NAF, NAF used as a predicate argument, or any other non-body occurrence is `shape`. The wh constructor must have exactly marker `wh(who)` and unary pattern `pred(Name,[var(1)])`. `body([])` deliberately survives this pass for the IR-specific safety error.
+6. **Identity** - validate document fields; item-ID kind; positive ID/source/token ordinals; and ID/source sentence equality. Both query arities require `query_id`.
 7. **Ordering/uniqueness** - per item, check global duplicate `(S,C)`, then section order, then strict token order.
-8. **Scope** - reject data variables in IR facts/queries and enforce dense rule-local first-occurrence numbering.
-9. **Safety/NAF** - in IR v1, reject the first NAF literal before checking empty body or head-variable coverage, preserving the dedicated `naf` class.
-10. **Cycles** - in IR v1, scan rules and positive body literals in record order and reject the first positive edge that closes a dependency cycle.
+8. **Scope** - keep facts and yes/no queries ground, admit the wh pattern variable only as exact `var(1)`, and enforce dense rule-local first-occurrence numbering across head arguments followed by every positive and NAF body argument.
+9. **Safety/NAF** - for each rule, check in this exact order: a positive literal after any NAF literal, an empty body, the first NAF variable absent from all positive literals, then the first head variable absent from all positive literals. Every violation is `safety`.
+10. **Cycles** - scan positive and negative body edges in rule/body stream order and reject the first edge that closes any directed cycle.
 
-Program validation uses the same pass numbers, class vocabulary, first-failure rule, and stream-order discipline, but applies the program v2 rules. Its envelope is `cnl_program_record(2)`, `document/3`, zero or more clauses, and one final goal. A goal is either yes/no `goal/2` or the exact admitted wh `goal/3`; zero or multiple goals are `query_count`. Shape admits `naf(pred(...))` only as a rule-body literal and admits only the exact wh marker and pattern defined below. NAF in a head, goal predicate slot, predicate argument, or any other non-body position belongs to the position-owning shape check and is `shape`. Identity owns clause-kind/body-shape agreement: a `fact_id` with a non-empty body or a `rule_id` with `body([])` fails pass 6 as `identity`. Scope keeps facts and yes/no goals ground, admits the wh query variable exactly as `var(1)`, and retains dense rule-local numbering. For rules that reach pass 9, the implementation checks in this exact deterministic order: a positive literal after any NAF literal, a defensive empty-body assertion, the first NAF variable absent from all positive literals, then the first head variable absent from all positive literals. The empty-body assertion is not externally reachable because pass 6 owns `rule_id` plus `body([])`; the remaining violations are `safety`. Pass 10 scans positive and negative body edges in rule/body stream order and rejects the first edge that closes any directed cycle.
+Program validation uses the same pass numbers, class vocabulary, first-failure rule, and stream-order discipline. Its envelope is `cnl_program_record(2)`, `document/3`, zero or more clauses, and one final goal across admitted `goal/2` and `goal/3` arities. Shape, scope, safety, and signed-cycle rules mirror IR v2. The deliberate identity asymmetry is clause ownership: in a program record, `fact_id` if and only if the body is `[]`, and `rule_id` if and only if the body is non-empty. Therefore program `rule_id` plus `body([])` fails pass 6 as `identity`, while IR retains distinct `fact/3` and `rule/4` constructors and reports `rule(...,body([]),...)` at pass 9 as `safety`.
 
 ### Error classes
 
@@ -148,22 +155,22 @@ Program validation uses the same pass numbers, class vocabulary, first-failure r
 | `input_utf8` | Framing 1 | Stdin is not strict RFC 3629 UTF-8. | 1 |
 | `syntax` | Framing 2 | The decoded term stream cannot be parsed. A leading UTF-8 BOM reaches this class under pinned SWI 9.2.9. | 1 |
 | `canonical` | Framing 3 | Reserialized text differs, or a term is outside the canonical serializer's domain. | 1 |
-| `envelope` | Validate/program 4 / lower | The selected record envelope is missing, malformed, wrong-versioned, or has trailing content. | 1 |
-| `query_count` | Validate/program 4 | An IR record has zero or multiple `query/3` items, or a program v2 record has zero or multiple final goals across admitted `goal/2` and `goal/3` arities. | 1 |
+| `envelope` | Validate/program 4 / lower | The selected record envelope is missing, malformed, wrong-versioned, or has trailing content. IR readers require v2 and reject v1. | 1 |
+| `query_count` | Validate/program 4 | An IR record has zero or multiple final queries across admitted `query/3` and `query/4` arities, or a program v2 record has zero or multiple final goals across admitted `goal/2` and `goal/3` arities. | 1 |
 | `section_order` | Validate/program 4 | A fact occurs after the rule section begins. | 1 |
-| `shape` | Validate/program 5 | A constructor, arity, list, or admitted atomic kind is invalid. | 1 |
-| `identity` | Validate/program 6 | Document identity, ID kind, body-kind agreement, ordinal bound, or IR sentence agreement is invalid. In program v2, `rule_id` with `body([])` and `fact_id` with a non-empty body are body-kind mismatches. | 1 |
+| `shape` | Validate/program 5 | A constructor, arity, list, admitted atomic kind, NAF position, or exact wh marker/pattern shape is invalid. | 1 |
+| `identity` | Validate/program 6 | Document identity, ID kind, body-kind agreement, ordinal bound, or IR sentence agreement is invalid. Program v2 owns clause kind by body shape; IR retains distinct item constructors. | 1 |
 | `ordering` | Validate/program 7 | An ID is duplicated or out of section order, or IR token ordinals are not strictly ascending. | 1 |
-| `scope` | Validate/program 8 | A variable occurs outside its admitted position, or rule numbering is not dense first-occurrence order. Program v2's exact wh query variable `var(1)` is admitted. | 1 |
-| `naf` | IR validate 9 / compile | A reserved `naf/1` literal occurs in IR v1. Compilation surfaces the same IR-v1 rejection at stage `compile`; program v2 has no blanket `naf` rejection. | 1 |
-| `safety` | Validate/program 9 | An IR rule body is empty or its head lacks positive-body coverage; or a program v2 rule violates positives-then-NAF order, has an NAF variable absent from its positive literals, or has a head variable absent from its positive literals. Program `rule_id` plus `body([])` fails earlier as `identity`. | 1 |
-| `cycle` | Validate/program 10 | A positive edge closes a cycle in IR v1, or a positive or negative edge closes a cycle in the program v2 signed dependency graph; self-loops count. | 1 |
+| `scope` | Validate/program 8 | A variable occurs outside its admitted position, or rule numbering is not dense first-occurrence order across positive and NAF literals. The exact wh query variable `var(1)` is admitted. | 1 |
+| `safety` | Validate/program 9 | A rule violates positives-then-NAF order, an NAF or head variable lacks positive-body coverage, or an IR rule body is empty. Program `rule_id` plus `body([])` fails earlier as `identity`. | 1 |
+| `cycle` | Validate/program 10 | A positive or negative dependency edge closes any cycle in the signed predicate graph; self-loops count. | 1 |
 | `question_count` | Lower | The root DRS has zero or multiple questions, or its sole question is not final. | 1 |
-| `wh_query` | Lower | Lowering still rejects an ACE `query/2` wh condition for IR v1. Program v2 `run` executes the exact admitted `wh(who)` goal and does not emit this class. | 1 |
+| `negation` | Lower | Classical `-/1`, non-antecedent or nested `~/1`, a malformed admitted NAF profile, or positive-after-NAF antecedent order is invalid. The `-/2` provenance wrapper is not negation. | 1 |
+| `wh_query` | Lower | A `query/2` condition is outside the exact admitted anchored `who` plus intransitive-predicate arrangement, including non-`who`, copular, restricted, multiple, unanchored, extra-condition, or unconsumed-query-variable forms. | 1 |
 | `resource` | Run | The total expanded nodes across all proof trees the answer record would emit exceeds `certificate_node_cap(1000000)`. | 1 |
 | `copula` | Lower | A factual `object/6` and `be` pair is malformed, ambiguous, or unpaired. | 1 |
 | `referent` | Lower | A DRS referent is undeclared, redeclared, unconsumed, unbound, role-reused, or not losslessly erasable as an event. | 1 |
-| `unsupported` | Lower | A constructor or arrangement is outside the admitted DRS profile, provenance is not one-sentence canonical data, or lowering cannot produce valid v1 IR without loss. | 1 |
+| `unsupported` | Lower | A constructor or arrangement is outside the admitted DRS profile, provenance is not one-sentence canonical data, or lowering cannot produce valid v2 IR without loss. | 1 |
 | `usage` | CLI | Arguments do not select exactly one implemented command (`lower`, `validate`, `compile`, or `run`). | 2 |
 | `uncaught` | Any | An unexpected internal exception, including certificate replay failure or generated-record validation/serialization failure, escaped a stage. | 2 |
 
@@ -185,21 +192,43 @@ document(docid('<docid>'),source_sha256('<hex>'),ulex(<ulex-term>)).
 drs(Domain,Conditions).
 ```
 
-The input passes the same strict UTF-8 decoder, pinned term parser, and canonical fixed-point gate as IR validation. Term 2 uses the same forced-quote document serializer. Consequently an admitted `document/3` line is copied byte-for-byte into output term 2. Lowering is buffered: no real stdout bytes are written until the complete output has passed IR v1 validation.
+The input passes the same strict UTF-8 decoder, pinned term parser, and canonical fixed-point gate as IR validation. Term 2 uses the same forced-quote document serializer. Consequently an admitted `document/3` line is copied byte-for-byte into output term 2. Lowering is buffered: no real stdout bytes are written until the complete output has passed IR v2 validation.
 
 The admitted DRS profile is deliberately total and small:
 
 - Root factual conditions may be exact copula pairs or ground intransitive predicates. `object(X,Class,countable,na,eq,1)` paired in the same root DRS with `predicate(E,be,named(Name),X)` becomes `pred(Class,[named(Name)])`. Both anchors contribute provenance. Every other factual `object` or `be` arrangement is rejected rather than approximated.
 - `predicate(E,Verb,named(Name))` becomes one ground fact. A root fact may not retain a discourse referent as its subject.
-- A rule is exactly `=>(drs(ADom,AConds),drs(CDom,CConds))`. Its antecedent is a non-empty list of positive exact `object/6` and intransitive `predicate/3` conditions. Its consequent is one intransitive `predicate/3` head. Antecedent referents remain in scope in the consequent; named subjects are also admitted. Nested implication, disjunction, negation, copulae inside rules, and all other constructors are rejected.
-- Exactly one `question(drs(QDom,QConds))` must be the final root condition. It contains one ground intransitive predicate and becomes the sole IR query. Any `query/2` wh condition is rejected.
-- A predicate event referent is erased only when it is declared by that same DRS domain, used exactly once as an event argument, and never reused as an entity. Domain declarations are unique across the admitted DRS tree. Every declared referent must be consumed by copula normalization, erased under this event law, or bound as a rule variable; undeclared, redeclared, unconsumed, event-reused, or unbound-head referents are errors.
-- Rule variables are data terms `var(N)`. Numbering is dense in the validator's traversal order: head arguments first, then antecedent body literals in DRS order, each by first occurrence.
-- An output item's sentence is the common `S` from every consumed `/(S,T)` anchor. Mixed-sentence items are rejected. Tokens are deduplicated and sorted strictly ascending. Clause IDs are per-sentence 1-based counters in root emission order. Facts must precede rules, each emitted section must have ascending `(S,C)` IDs, and the query remains final.
+- A rule is exactly `=>(drs(ADom,AConds),drs(CDom,CConds))`. Its consequent is one intransitive `predicate/3` head. Antecedent referents remain in scope in the consequent; named head subjects remain admitted.
+- A positive antecedent condition is the existing exact `object/6` or intransitive `predicate/3` form. Positive conditions retain DRS order.
+- An NAF antecedent condition is an unanchored `~/1` around exactly one of the following sub-DRS profiles. The outer entity `X` must already occur in a positive condition of the enclosing antecedent. The nested domain declares exactly the local referents consumed by the profile.
 
-All other DRS content is a hard error. Lowering never drops a condition, silently weakens a term, or emits a partial record.
+```prolog
+~(drs([E],[-(predicate(E,Verb,X),/(S,T))]))
+```
 
-Lowering is also first-failure deterministic. Its order is: M2 envelope; root-domain shape; root question count/position; cross-DRS declaration uniqueness; root factual and rule conditions in DRS order; root referent accounting; final-question semantics; output section/order checks; generated-IR validation. A condition-local shape, copula, or groundness error therefore wins over later whole-scope referent accounting. For example, a root predicate whose subject is a domain referent is `unsupported` before a possible later event/entity-role conflict is considered.
+This becomes `naf(pred(Verb,[var(N)]))`.
+
+```prolog
+~(drs([D,E],[
+    -(object(D,Class,countable,na,eq,1),/(S,T1)),
+    -(predicate(E,be,X,D),/(S,T2))
+]))
+```
+
+This becomes `naf(pred(Class,[var(N)]))`. The copula orientation is the same normalization law as the factual form: outer antecedent entity `X` is the subject and local `D` is the copular object.
+
+- All positive antecedent conditions must precede every `~/1` condition. Lowering preserves source order and rejects a later positive condition with class `negation`; it never silently regroups conditions.
+- Exactly one `question(drs(QDom,QConds))` must be the final root condition. A yes/no question remains one anchored ground intransitive predicate.
+- The admitted wh question is exactly two anchored conditions in this order: `query(A,who)` followed by one intransitive `predicate(B,Verb,A)`. `QDom` is exactly `[A,B]`; `B` is the erasable event and `A` becomes the IR pattern variable `var(1)`. Both anchors contribute provenance. This yields `query(query_id(...),wh(who),pred(Verb,[var(1)]),source(...))`.
+- A predicate event referent is erased only when it is declared by that same DRS domain, used exactly once as an event argument, and never reused as an entity. Domain declarations are unique across the admitted DRS tree, including admitted NAF sub-DRSs. Every declared referent must be consumed by copula normalization, erased under this event law, bound as a rule variable, or used as the exact wh query referent.
+- Rule variables are data terms `var(N)`. Numbering is dense in validator traversal order: head arguments first, then antecedent body literals in DRS order. NAF targets reuse the number established by their positive antecedent binding.
+- An output item's sentence is the common `S` from every consumed `/(S,T)` anchor. Mixed-sentence items are rejected. Tokens are deduplicated and sorted strictly ascending. Clause IDs are per-sentence 1-based counters in root emission order. Facts precede rules, each emitted section has ascending `(S,C)` IDs, and the query remains final.
+
+Classical `-/1` negation is never admitted. Root, consequent, or question `~/1`; nested `~/1` and `-/1`; malformed NAF sub-DRS domains or contents; an unbound NAF entity; and positive-after-NAF antecedent order are all `negation`. The arity-two `-(Condition,/(S,T))` constructor remains the provenance wrapper and is never itself negation.
+
+`wh_query` owns every `query/2` outside the exact admitted profile: non-`who` markers; the `which` restriction form; copular wh questions; multiple, unanchored, or extra conditions; a query outside the final question; or a query referent not consumed as the predicate subject. Other unknown DRS content remains `unsupported`. Lowering never drops a condition, silently weakens a term, or emits a partial record.
+
+Lowering is first-failure deterministic. Its order is: M2 envelope; root-domain shape; root question count/position; cross-DRS declaration uniqueness; root factual and rule conditions in DRS order; root referent accounting; final-question semantics; output section/order checks; generated-IR validation. Within a rule, consequent shape establishes head numbering before antecedent conditions are lowered; the antecedent order check precedes NAF variable-coverage checks. A recognized unary negation operator is classified as `negation` at its owning condition before generic `unsupported`; a `query/2` outside the admitted final-question profile is similarly classified as `wh_query`.
 
 ## Program compilation and program record v2
 
@@ -249,7 +278,7 @@ ProgramBodyLiteral ::= pred(Name,[RuleArg,...])
 
 Facts and rules may be absent. Exactly one goal is required and is final. Fact clauses precede rule clauses. Program identity binds clause kind to body shape: `fact_id` if and only if the body is `[]`, and `rule_id` if and only if the body is non-empty. The goal ID is `query_id`. `(S,C)` is globally unique across clauses and the goal, and IDs are strictly ascending within the fact section and within the rule section.
 
-A yes/no goal remains `goal(query_id(sentence(S),clause(C)),pred(Name,[GroundArg,...]))`; its predicate is ground. The admitted wh form is exactly `goal(query_id(sentence(S),clause(C)),wh(who),pred(Name,[var(1)]))`. The marker must be exactly `wh(who)`, the predicate must have exactly one argument, and that argument must be exactly the query variable `var(1)`. Any other `goal/3` content is `shape`. Program v2 documents and validates this wh constructor now; execution and answer emission are staged as described below.
+A yes/no goal remains `goal(query_id(sentence(S),clause(C)),pred(Name,[GroundArg,...]))`; its predicate is ground. The admitted wh form is exactly `goal(query_id(sentence(S),clause(C)),wh(who),pred(Name,[var(1)]))`. The marker must be exactly `wh(who)`, the predicate must have exactly one argument, and that argument must be exactly the query variable `var(1)`. Any other `goal/3` content is `shape`. Program v2 executes this constructor and emits the complete answer-v2 wh form defined below.
 
 A rule body may contain positive `pred/2` literals and NAF literals of the sole form `naf(pred(Name,Args))`. Canonical body order is all positive literals first and then all NAF literals, preserving source order within each block. Any positive literal after an NAF literal is `safety`. Every variable in an NAF literal must occur in some positive literal of the same rule. Every head variable must likewise occur in a positive body literal; NAF does not provide head-variable coverage. A ground NAF-only body is admitted, but a rule body remains non-empty. NAF in a head, a yes/no goal's predicate slot, a wh goal's pattern, a predicate argument, or any other non-body position is owned by that position's shape pass and is `shape`; program v2 has no blanket `naf` class.
 
@@ -273,7 +302,7 @@ An NAF literal first substitutes its pattern under the bindings established by p
 
 A single-stratum NAF-free program evaluates exactly as v1. Apart from the required program/answer envelope changes and the answer digest line, its result bytes and first-witness proof tree are unchanged.
 
-Compilation first applies full IR v1 validation. It drops every `source/2`, maps a fact to an empty-body `clause/3`, maps a rule to `clause/3` without changing its head, body order, or `var(N)` numbering, and maps the query to the final yes/no `goal/2`. Item order and IDs are preserved. This is a total map from valid IR v1 to program v2; IR v1 does not yet emit NAF or wh goals. Before serialization, the generated program stream passes the program v2 validator, so no partially transformed or internally invalid program can reach stdout.
+Compilation first applies full IR v2 validation. It drops every `source/2`, maps a fact to an empty-body `clause/3`, and maps a rule to `clause/3` without changing its head, positive/NAF body order, or `var(N)` numbering. A yes/no `query/3` becomes the final `goal/2`; an exact wh `query/4` becomes `goal(query_id(...),wh(who),pred(Name,[var(1)]))`. Item order and IDs are preserved. This is a total v2-to-v2 map: NAF body literals pass through unchanged, and no compile-stage blanket NAF rejection exists. Before serialization, the generated program stream passes the program v2 validator, so no partially transformed or internally invalid program can reach stdout.
 
 The `run` reader requires exactly `cnl_program_record(2)`. A program v1 record and every other header version fail `envelope` before later shape or safety checks.
 
@@ -382,14 +411,14 @@ Canonical IR validation invocation from repository root:
 swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- validate <record.ir.pl
 ```
 
-All four commands are implemented: `lower | validate | compile | run`. `lower` accepts one canonical M2 DRS record, `validate` accepts one canonical IR v1 record, `compile` accepts one canonical IR v1 record, and `run` accepts one canonical program v2 record. Missing arguments, an unknown command, or extra arguments are `usage` errors.
+All four commands are implemented: `lower | validate | compile | run`. `lower` accepts one canonical M2 DRS record, `validate` accepts one canonical IR v2 record, `compile` accepts one canonical IR v2 record, and `run` accepts one canonical program v2 record. Missing arguments, an unknown command, or extra arguments are `usage` errors.
 
 The tool pins encoding, double-quote, back-quote, character-escape, syntax-error, and writer behavior; it does not depend on ambient SWI defaults. `-f none -F none` remains part of every canonical process invocation.
 
 I/O contract:
 
 - Validate success: exit 0, zero stdout, zero stderr.
-- Lower success: exit 0, one canonical IR v1 record on stdout, zero stderr.
+- Lower success: exit 0, one canonical IR v2 record on stdout, zero stderr.
 - Compile success: exit 0, one canonical program v2 record on stdout, zero stderr.
 - Run success: exit 0, one canonical answer v2 record on stdout, zero stderr.
 - Any input-content rejection: exit 1, zero stdout, exactly one LF-terminated stderr line.
@@ -408,7 +437,7 @@ After successful dispatch, `Stage` is `lower`, `validate`, `compile`, or `run`; 
 
 ## Versioning
 
-The independently versioned envelopes are `cnl_ir_record(1)`, `cnl_program_record(2)`, and `cnl_answer_record(2)`. Any change to a record's constructors, arities, admitted argument forms, section cardinality or order, identity/provenance rules, canonical bytes, or logical semantics requires a new version of that envelope. Each reader rejects every other version of the envelope it owns. In particular, `run` rejects program v1 records as `envelope`; answer consumers reject non-v2 answer records. No defined version has an ignored extension field.
+The independently versioned envelopes are `cnl_ir_record(2)`, `cnl_program_record(2)`, and `cnl_answer_record(2)`. Any change to a record's constructors, arities, admitted argument forms, section cardinality or order, identity/provenance rules, canonical bytes, or logical semantics requires a new version of that envelope. Each reader rejects every other version of the envelope it owns. In particular, `validate` and `compile` reject IR v1 records as `envelope`, `run` rejects program v1 records as `envelope`, and answer consumers reject non-v2 answer records. No defined version has an ignored extension field.
 
 ## Deferred and staged work
 
@@ -418,7 +447,7 @@ The independently versioned envelopes are `cnl_ir_record(1)`, `cnl_program_recor
 | Temporal and dose algebra | No constructors; reject. |
 | Direction, strength, and certainty | No annotations; reject. |
 | Explicit negation and a false outcome | Absent; `not_proved` remains unknown. |
-| NAF execution and ACE lowering | NAF executes in program v2 rule bodies; ACE-to-IR lowering and IR support remain deferred to M4.2. |
+| NAF execution and ACE lowering | **Shipped:** exact antecedent `~/1` profiles lower to IR v2 NAF literals, compile unchanged to program v2, execute under the stratified model, and replay as ground absence-checked leaves. |
 | Recursion and tabling | Any signed predicate cycle, including a positive-only cycle, is rejected. |
 | Conflict detection | No rule-pair conflict analysis. |
 | Proof enumeration and DAG sharing | First witness only; certificates remain trees. |
@@ -442,7 +471,7 @@ Does John recover?
 is represented as:
 
 ```prolog
-cnl_ir_record(1).
+cnl_ir_record(2).
 document(docid('slice'),source_sha256('bf432c59846951be8568be538cfa2c5fcdc41d35b7ede4d0bc0fd5c4aff7c2c4'),ulex(sha256('6015f9a18e4d4957b30e04342d2ff2700bf0e18b13bf3b95452a2d5563c5b614'))).
 fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([2,4]))).
 fact(fact_id(sentence(2),clause(1)),pred(wait,[named('John')]),source(sentence(2),tokens([2]))).

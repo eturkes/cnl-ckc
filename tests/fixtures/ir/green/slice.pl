@@ -1,4 +1,4 @@
-cnl_ir_record(1).
+cnl_ir_record(2).
 document(docid('slice'),source_sha256('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),ulex(sha256('1111111111111111111111111111111111111111111111111111111111111111'))).
 fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([2,4]))).
 fact(fact_id(sentence(2),clause(1)),pred(wait,[named('John')]),source(sentence(2),tokens([2]))).

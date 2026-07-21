@@ -6,10 +6,11 @@
 :- use_module(inference_kernel, [validate_program_terms/4]).
 
 /*
-IR v1 to program-record v2 compiler. Input has already passed framing gates.
+IR v2 to program-record v2 compiler. Input has already passed framing gates.
 Compilation is a total, order-preserving map on valid IR: provenance is dropped,
-facts and rules become clauses, and the sole query becomes the final goal.
-Generated output is validated before it can reach the caller's output buffer.
+facts and rules become clauses, and the sole yes/no or wh query becomes the
+final goal. Generated output is validated before it can reach the caller's
+output buffer.
 */
 compile_terms(IrTerms, ProgramTerms) :-
     validate_terms(IrTerms),
@@ -23,7 +24,7 @@ validate_generated_program(ProgramTerms) :-
             context(ir_to_prolog, program_validation)))).
 
 transform_record([Header, Document|Items], ProgramTerms) :-
-    Header == cnl_ir_record(1),
+    Header == cnl_ir_record(2),
     transform_items(Items, ProgramItems),
     ProgramTerms = [cnl_program_record(2), Document|ProgramItems].
 
@@ -48,3 +49,9 @@ transform_item(Item, goal(Id, Predicate)) :-
     functor(Item, query, 3),
     arg(1, Item, Id),
     arg(2, Item, Predicate).
+transform_item(Item, goal(Id, Marker, Predicate)) :-
+    compound(Item),
+    functor(Item, query, 4),
+    arg(1, Item, Id),
+    arg(2, Item, Marker),
+    arg(3, Item, Predicate).

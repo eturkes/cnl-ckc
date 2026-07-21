@@ -5,6 +5,7 @@ ROOT=$PWD
 if ! [ -f src/prolog/ir_tool.pl ] || ! [ -f src/prolog/drs_to_ir.pl ] || \
         ! [ -d tests/fixtures/slice/golden ] || \
         ! [ -d tests/fixtures/slice/ir ] || \
+        ! [ -d tests/fixtures/lower/green ] || \
         ! [ -d tests/fixtures/lower/red ]; then
     printf 'FAIL repo-root: run from cnl-ckc repository root\n'
     printf 'SUMMARY: 0 passed, 1 failed\n'
@@ -15,11 +16,12 @@ SWIPL=${SWIPL:-swipl}
 DOCS="$ROOT/tests/fixtures/slice/docs"
 GOLDEN="$ROOT/tests/fixtures/slice/golden"
 IR="$ROOT/tests/fixtures/slice/ir"
+LOWER_GREEN="$ROOT/tests/fixtures/lower/green"
 RED="$ROOT/tests/fixtures/lower/red"
 SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=34
+EXPECTED_PASS_COUNT=48
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -114,9 +116,25 @@ set -- "$IR"/*.ir.pl
 if [ "$#" -ne 2 ]; then
     fail_case "fixtures/count" "expected 2 IR goldens, got $#"
 fi
+set -- "$LOWER_GREEN"/*.drs.pl
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 lower DRS greens, got $#"
+fi
+set -- "$LOWER_GREEN"/*.ir.pl
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 lower IR goldens, got $#"
+fi
+set -- "$LOWER_GREEN"/*.program.pl
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 lower program goldens, got $#"
+fi
+set -- "$LOWER_GREEN"/*.result.pl
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 lower result goldens, got $#"
+fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 25 ]; then
-    fail_case "fixtures/count" "expected 25 red fixtures, got $#"
+if [ "$#" -ne 35 ]; then
+    fail_case "fixtures/count" "expected 35 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -154,6 +172,53 @@ for input in "$GOLDEN"/*.drs.pl; do
     pass_case "green/$stem"
 done
 
+# Hand-authored probe-pinned M2 inputs carry CLI-generated IR goldens. Each
+# committed green is lowered twice so the admitted NAF/wh paths are byte-stable.
+for input in "$LOWER_GREEN"/*.drs.pl; do
+    name=${input##*/}
+    stem=${name%.drs.pl}
+    expected="$LOWER_GREEN/$stem.ir.pl"
+    stdout_path="$SCRATCH/green/$stem.lower.stdout"
+    stderr_path="$SCRATCH/green/$stem.lower.stderr"
+    run_tool "$input" "$stdout_path" "$stderr_path" lower
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "green/lower/$stem/status" "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$stderr_path" ]; then
+        fail_case "green/lower/$stem/stderr" "expected zero bytes"
+    fi
+    if ! cmp "$stdout_path" "$expected"; then
+        fail_case "green/lower/$stem/bytes" "lower output differs from golden"
+    fi
+
+    rerun_stdout="$SCRATCH/determinism/$stem.lower.stdout"
+    rerun_stderr="$SCRATCH/determinism/$stem.lower.stderr"
+    run_tool "$input" "$rerun_stdout" "$rerun_stderr" lower
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "green/lower/$stem/determinism-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$rerun_stderr" ]; then
+        fail_case "green/lower/$stem/determinism-stderr" \
+            "expected zero bytes"
+    fi
+    if ! cmp "$stdout_path" "$rerun_stdout"; then
+        fail_case "green/lower/$stem/determinism-bytes" "fresh runs differ"
+    fi
+
+    validate_stdout="$SCRATCH/green/$stem.validate.stdout"
+    validate_stderr="$SCRATCH/green/$stem.validate.stderr"
+    run_tool "$expected" "$validate_stdout" "$validate_stderr" validate
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "green/lower/$stem/validate-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$validate_stdout" ] || [ -s "$validate_stderr" ]; then
+        fail_case "green/lower/$stem/validate-streams" "expected zero bytes"
+    fi
+    pass_case "green/lower/$stem"
+done
+
 run_committed_red() {
     local name expected_class stdout_path stderr_path
     name=$1
@@ -166,6 +231,16 @@ run_committed_red() {
 }
 
 run_committed_red wh-query wh_query
+run_committed_red p07-which-query wh_query
+run_committed_red p08-wh-copula wh_query
+run_committed_red p02-antecedent-classical-negation negation
+run_committed_red p03-root-classical-negation negation
+run_committed_red p04-negated-consequent negation
+run_committed_red p06-negated-antecedent-copula negation
+run_committed_red p09-negated-question negation
+run_committed_red p14-root-naf negation
+run_committed_red p16-nested-negation negation
+run_committed_red naf-positive-interleave negation
 run_committed_red zero-question question_count
 run_committed_red two-questions question_count
 run_committed_red non-final-question question_count

@@ -12,7 +12,8 @@ if ! [ -f src/prolog/ir_tool.pl ] || \
         ! [ -d tests/fixtures/slice/result ] || \
         ! [ -d tests/fixtures/run/green ] || \
         ! [ -d tests/fixtures/run/red ] || \
-        ! [ -f tests/fixtures/ir/red/naf-literal.pl ]; then
+        ! [ -d tests/fixtures/lower/green ] || \
+        ! [ -f tests/fixtures/ir/red/envelope-v1-record.pl ]; then
     printf 'FAIL repo-root: run from cnl-ckc repository root\n'
     printf 'SUMMARY: 0 passed, 1 failed\n'
     exit 1
@@ -25,11 +26,12 @@ PROGRAM="$ROOT/tests/fixtures/slice/program"
 RESULT="$ROOT/tests/fixtures/slice/result"
 GREEN="$ROOT/tests/fixtures/run/green"
 RED="$ROOT/tests/fixtures/run/red"
+LOWER_GREEN="$ROOT/tests/fixtures/lower/green"
 IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=67
+EXPECTED_PASS_COUNT=77
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -189,6 +191,18 @@ set -- "$RED"/*.program.pl
 if [ "$#" -ne 20 ]; then
     fail_case "fixtures/count" "expected 20 red programs, got $#"
 fi
+set -- "$LOWER_GREEN"/*.ir.pl
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 lower IR goldens, got $#"
+fi
+set -- "$LOWER_GREEN"/*.program.pl
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 lower program goldens, got $#"
+fi
+set -- "$LOWER_GREEN"/*.result.pl
+if [ "$#" -ne 4 ]; then
+    fail_case "fixtures/count" "expected 4 lower result goldens, got $#"
+fi
 pass_case "fixtures/count"
 
 rm -rf "$SCRATCH"
@@ -243,6 +257,49 @@ for input in "$GOLDEN"/*.drs.pl; do
     check_result_digest "digest/chain/$stem" \
         "$PROGRAM/$stem.program.pl" "$RESULT/$stem.result.pl"
     pass_case "chain/$stem"
+done
+
+# M4.2 chain pin: the lower fixture directory owns CLI-generated IR, program,
+# and result goldens. Compiling and running all four proves both admitted NAF
+# profiles and both admitted who-question records reach the shipped v2 kernel.
+for ir in "$LOWER_GREEN"/*.ir.pl; do
+    name=${ir##*/}
+    stem=${name%.ir.pl}
+    expected_program="$LOWER_GREEN/$stem.program.pl"
+    expected_result="$LOWER_GREEN/$stem.result.pl"
+
+    compile_stdout="$SCRATCH/chain/lower-$stem.compile.stdout"
+    compile_stderr="$SCRATCH/chain/lower-$stem.compile.stderr"
+    run_tool "$ir" "$compile_stdout" "$compile_stderr" compile
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "chain/lower/$stem/compile-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$compile_stderr" ]; then
+        fail_case "chain/lower/$stem/compile-stderr" "expected zero bytes"
+    fi
+    if ! cmp "$compile_stdout" "$expected_program"; then
+        fail_case "chain/lower/$stem/compile-bytes" \
+            "output differs from program golden"
+    fi
+
+    run_stdout="$SCRATCH/chain/lower-$stem.run.stdout"
+    run_stderr="$SCRATCH/chain/lower-$stem.run.stderr"
+    run_tool "$compile_stdout" "$run_stdout" "$run_stderr" run
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "chain/lower/$stem/run-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$run_stderr" ]; then
+        fail_case "chain/lower/$stem/run-stderr" "expected zero bytes"
+    fi
+    if ! cmp "$run_stdout" "$expected_result"; then
+        fail_case "chain/lower/$stem/run-bytes" \
+            "output differs from result golden"
+    fi
+    check_result_digest "digest/lower/$stem" \
+        "$expected_program" "$expected_result"
+    pass_case "chain/lower/$stem"
 done
 
 if ! command grep -Eq '^answer\(.*,proved\)\.$' \
@@ -320,6 +377,21 @@ if ! command grep -q 'naf(pred(' "$GREEN/naf-open.result.pl"; then
 fi
 pass_case "answer/naf-open-leaf"
 
+if ! command grep -Fq "naf(pred(smoke,[named('John')]))" \
+        "$LOWER_GREEN/p13-naf-intransitive.result.pl"; then
+    fail_case "answer/lower-p13-naf-leaf" \
+        "expected the lowered P13 rule's positional NAF leaf"
+fi
+pass_case "answer/lower-p13-naf-leaf"
+
+p10_answer_line="answer(query_id(sentence(4),clause(1)),wh(who),pred(recover,[var(1)]),answers([pred(recover,[named('John')])]))."
+if ! command grep -Fxq "$p10_answer_line" \
+        "$LOWER_GREEN/p10-wh-prefix.result.pl"; then
+    fail_case "answer/lower-p10-wh" \
+        "expected the lowered who query's complete John answer"
+fi
+pass_case "answer/lower-p10-wh"
+
 wh_order_line="answer(query_id(sentence(4),clause(1)),wh(who),pred(recover,[var(1)]),answers([pred(recover,[named('z z')]),pred(recover,[named(a)])]))."
 if ! command grep -Fxq "$wh_order_line" \
         "$GREEN/wh-multi-order.result.pl"; then
@@ -381,10 +453,10 @@ run_committed_red shape-native-variable shape
 run_committed_red shape-unknown-constructor shape
 run_committed_red resource-cap resource
 
-pin_stdout="$SCRATCH/stage-pin/compile-naf.stdout"
-pin_stderr="$SCRATCH/stage-pin/compile-naf.stderr"
-run_tool "$IR_RED/naf-literal.pl" "$pin_stdout" "$pin_stderr" compile
-check_rejection "stage-pin/compile-naf" 1 compile naf \
+pin_stdout="$SCRATCH/stage-pin/compile-v1-envelope.stdout"
+pin_stderr="$SCRATCH/stage-pin/compile-v1-envelope.stderr"
+run_tool "$IR_RED/envelope-v1-record.pl" "$pin_stdout" "$pin_stderr" compile
+check_rejection "stage-pin/compile-v1-envelope" 1 compile envelope \
     "$pin_stdout" "$pin_stderr"
 
 base_program="$PROGRAM/slice.program.pl"

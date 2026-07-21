@@ -2,10 +2,10 @@
 
 :- set_prolog_flag(encoding, utf8).
 
-:- use_module(library(lists), [append/3, member/2, memberchk/2]).
+:- use_module(library(lists), [append/3, memberchk/2]).
 
 /*
-IR v1 semantic validator. Input is the parsed term stream after strict UTF-8,
+IR v2 semantic validator. Input is the parsed term stream after strict UTF-8,
 syntax, and canonical-byte gates. Pass order is part of the public contract:
 envelope, shape, identity, ordering, scope, safety/NAF, dependency cycles.
 Every rejection throws ir_reject(Class, Detail); callers own framing and exits.
@@ -23,9 +23,9 @@ validate_terms(Terms) :-
 envelope_pass([], _, _) :-
     reject(envelope, term(1, missing_header)).
 envelope_pass([Header|Rest], Document, Items) :-
-    ( Header == cnl_ir_record(1) ->
+    ( Header == cnl_ir_record(2) ->
         true
-    ; reject(envelope, term(1, expected(cnl_ir_record(1))))
+    ; reject(envelope, term(1, expected(cnl_ir_record(2))))
     ),
     require_document(Rest, Document, RawItems),
     index_terms(RawItems, 3, Items),
@@ -54,11 +54,17 @@ index_terms([Term|Terms], Index, [indexed(Index, Term)|Indexed]) :-
 
 query_positions([], []).
 query_positions([indexed(Index, Term)|Items], Positions) :-
-    ( has_functor(Term, query, 3) ->
+    ( query_term(Term) ->
         Positions = [Index|Rest]
     ; Positions = Rest
     ),
     query_positions(Items, Rest).
+
+query_term(Term) :-
+    has_functor(Term, query, 3),
+    !.
+query_term(Term) :-
+    has_functor(Term, query, 4).
 
 require_one_query([_]) :-
     !.
@@ -71,7 +77,7 @@ require_one_query(Positions) :-
 
 split_query([Item|Items], Prefix, Query, Tail) :-
     Item = indexed(_, Term),
-    ( has_functor(Term, query, 3) ->
+    ( query_term(Term) ->
         Prefix = [],
         Query = Item,
         Tail = Items
@@ -128,7 +134,7 @@ shape_items([indexed(Index, Term)|Items]) :-
         ( shape_rule(Term) -> true
         ; reject(shape, term(Index, rule))
         )
-    ; has_functor(Term, query, 3) ->
+    ; query_term(Term) ->
         ( shape_query(Term) -> true
         ; reject(shape, term(Index, query))
         )
@@ -150,7 +156,25 @@ shape_rule(rule(Id, Head, Body, Source)) :-
 shape_query(query(Id, Predicate, Source)) :-
     shape_id(Id),
     shape_predicate(Predicate),
+    shape_source(Source),
+    !.
+shape_query(Term) :-
+    has_functor(Term, query, 4),
+    arg(1, Term, Id),
+    arg(2, Term, Marker),
+    arg(3, Term, Predicate),
+    arg(4, Term, Source),
+    shape_id(Id),
+    Marker == wh(who),
+    shape_wh_predicate(Predicate),
     shape_source(Source).
+
+shape_wh_predicate(Predicate) :-
+    has_functor(Predicate, pred, 2),
+    arg(1, Predicate, Name),
+    arg(2, Predicate, Args),
+    atom(Name),
+    Args == [var(1)].
 
 shape_id(Id) :-
     compound(Id),
@@ -181,9 +205,14 @@ shape_args([Arg|Args]) :-
     shape_arg(Arg),
     shape_args(Args).
 
-shape_arg(named(Name)) :-
-    atom(Name).
-shape_arg(var(Number)) :-
+shape_arg(Arg) :-
+    has_functor(Arg, named, 1),
+    arg(1, Arg, Name),
+    atom(Name),
+    !.
+shape_arg(Arg) :-
+    has_functor(Arg, var, 1),
+    arg(1, Arg, Number),
     integer(Number).
 
 shape_body(body(Literals)) :-
@@ -195,10 +224,13 @@ shape_literals([Literal|Literals]) :-
     shape_literal(Literal),
     shape_literals(Literals).
 
-shape_literal(Predicate) :-
-    has_functor(Predicate, pred, 2),
-    shape_predicate(Predicate).
-shape_literal(naf(Predicate)) :-
+shape_literal(Literal) :-
+    has_functor(Literal, pred, 2),
+    shape_predicate(Literal),
+    !.
+shape_literal(Literal) :-
+    has_functor(Literal, naf, 1),
+    arg(1, Literal, Predicate),
     shape_predicate(Predicate).
 
 shape_source(source(Sentence, Tokens)) :-
@@ -282,6 +314,7 @@ identity_items([indexed(Index, Term)|Items]) :-
 item_identity_parts(fact(Id, _, Source), fact, Id, Source).
 item_identity_parts(rule(Id, _, _, Source), rule, Id, Source).
 item_identity_parts(query(Id, _, Source), query, Id, Source).
+item_identity_parts(query(Id, _, _, Source), query, Id, Source).
 
 id_parts(Id, Kind, Sentence, Clause) :-
     functor(Id, IdName, 2),
@@ -359,15 +392,21 @@ scope_pass(Items) :-
 
 scope_items([]).
 scope_items([indexed(Index, Term)|Items]) :-
-    ( Term = fact(_, Predicate, _) ->
+    ( has_functor(Term, fact, 3) ->
+        arg(2, Term, Predicate),
         reject_if_predicate_variable(Index, Predicate)
-    ; Term = query(_, Predicate, _) ->
+    ; has_functor(Term, query, 3) ->
+        arg(2, Term, Predicate),
         reject_if_predicate_variable(Index, Predicate)
-    ; Term = rule(_, Head, body(Body), _) ->
+    ; has_functor(Term, rule, 4) ->
+        arg(2, Term, Head),
+        arg(3, Term, BodyTerm),
+        arg(1, BodyTerm, Body),
         predicate_vars(Head, HeadVars),
         literal_vars(Body, BodyVars),
         append(HeadVars, BodyVars, Vars),
         dense_first_occurrence(Index, Vars, [], 1, 1)
+    ; true
     ),
     scope_items(Items).
 
@@ -414,58 +453,97 @@ dense_first_occurrence(Index, [Number|Numbers], Seen, Next, Position) :-
     Position1 is Position + 1,
     dense_first_occurrence(Index, Numbers, Seen1, Next1, Position1).
 
-/* Pass 9: NAF is reserved/rejected; positive rules must be safe. */
+/*
+Pass 9: within each rule, reject in this exact order: a positive literal after
+NAF, an empty body, an NAF variable not covered by a positive literal, then a
+head variable not covered by a positive literal.
+*/
 safety_naf_pass(Items) :-
     safety_naf_items(Items).
 
 safety_naf_items([]).
 safety_naf_items([indexed(Index, Term)|Items]) :-
-    ( Term = rule(_, Head, body(Body), _) ->
+    ( has_functor(Term, rule, 4) ->
+        arg(2, Term, Head),
+        arg(3, Term, BodyTerm),
+        arg(1, BodyTerm, Body),
         validate_rule_safety(Index, Head, Body)
     ; true
     ),
     safety_naf_items(Items).
 
 validate_rule_safety(Index, _Head, Body) :-
-    first_naf(Body, 1, Position),
+    first_positive_after_naf(Body, 1, false, Position),
     !,
-    reject(naf, term(Index, body_literal(Position))).
-validate_rule_safety(Index, _, []) :-
+    reject(safety, term(Index, positive_after_naf(Position))).
+validate_rule_safety(Index, _Head, Body) :-
+    Body == [],
     !,
     reject(safety, term(Index, empty_body)).
 validate_rule_safety(Index, Head, Body) :-
-    predicate_vars(Head, HeadVars),
-    positive_body_vars(Body, BodyVars),
-    ( first_missing_var(HeadVars, BodyVars, Missing) ->
-        reject(safety, term(Index, head_var_not_in_body(Missing)))
-    ; true
+    positive_body_vars(Body, PositiveVars),
+    naf_body_vars(Body, NafVars),
+    ( first_missing_var(NafVars, PositiveVars, MissingNaf) ->
+        reject(safety,
+            term(Index, naf_var_not_in_positive_body(MissingNaf)))
+    ; predicate_vars(Head, HeadVars),
+      ( first_missing_var(HeadVars, PositiveVars, MissingHead) ->
+          reject(safety,
+              term(Index, head_var_not_in_positive_body(MissingHead)))
+      ; true
+      )
     ).
 
-first_naf([naf(_)|_], Position, Position) :-
-    !.
-first_naf([_|Literals], Position0, Position) :-
-    Position1 is Position0 + 1,
-    first_naf(Literals, Position1, Position).
+first_positive_after_naf([], _, _, _) :-
+    fail.
+first_positive_after_naf([Literal|Literals], Position0, SeenNaf, Position) :-
+    ( has_functor(Literal, naf, 1) ->
+        SeenNaf1 = true,
+        Position1 is Position0 + 1,
+        first_positive_after_naf(
+            Literals, Position1, SeenNaf1, Position)
+    ; SeenNaf == true ->
+        Position = Position0
+    ; Position1 is Position0 + 1,
+      first_positive_after_naf(
+          Literals, Position1, SeenNaf, Position)
+    ).
 
 positive_body_vars([], []).
-positive_body_vars([Predicate|Literals], Vars) :-
-    predicate_vars(Predicate, Here),
+positive_body_vars([Literal|Literals], Vars) :-
+    ( has_functor(Literal, naf, 1) ->
+        Here = []
+    ; predicate_vars(Literal, Here)
+    ),
     positive_body_vars(Literals, Rest),
     append(Here, Rest, Vars).
 
-first_missing_var([Number|_], BodyVars, Number) :-
-    \+ memberchk(Number, BodyVars),
-    !.
-first_missing_var([_|Numbers], BodyVars, Missing) :-
-    first_missing_var(Numbers, BodyVars, Missing).
+naf_body_vars([], []).
+naf_body_vars([Literal|Literals], Vars) :-
+    ( has_functor(Literal, naf, 1) ->
+        arg(1, Literal, Predicate),
+        predicate_vars(Predicate, Here)
+    ; Here = []
+    ),
+    naf_body_vars(Literals, Rest),
+    append(Here, Rest, Vars).
 
-/* Pass 10: reject the first positive dependency edge closing a cycle. */
+first_missing_var([Number|_], CoveredVars, Number) :-
+    \+ memberchk(Number, CoveredVars),
+    !.
+first_missing_var([_|Numbers], CoveredVars, Missing) :-
+    first_missing_var(Numbers, CoveredVars, Missing).
+
+/* Pass 10: reject the first signed dependency edge closing any cycle. */
 cycle_pass(Items) :-
     cycle_items(Items, []).
 
 cycle_items([], _).
 cycle_items([indexed(Index, Term)|Items], Edges0) :-
-    ( Term = rule(_, Head, body(Body), _) ->
+    ( has_functor(Term, rule, 4) ->
+        arg(2, Term, Head),
+        arg(3, Term, BodyTerm),
+        arg(1, BodyTerm, Body),
         predicate_key(Head, HeadKey),
         add_body_edges(Body, Index, 1, HeadKey, Edges0, Edges)
     ; Edges = Edges0
@@ -473,17 +551,25 @@ cycle_items([indexed(Index, Term)|Items], Edges0) :-
     cycle_items(Items, Edges).
 
 add_body_edges([], _, _, _, Edges, Edges).
-add_body_edges([Predicate|Predicates], Index, Position, HeadKey,
+add_body_edges([Literal|Literals], Index, Position, HeadKey,
         Edges0, Edges) :-
+    dependency_literal(Literal, Polarity, Predicate),
     predicate_key(Predicate, BodyKey),
     ( creates_cycle(HeadKey, BodyKey, Edges0) ->
         reject(cycle,
             term(Index,
-                body_literal(Position, dependency(HeadKey, BodyKey))))
-    ; Edges1 = [edge(HeadKey, BodyKey)|Edges0]
+                body_literal(Position,
+                    signed_dependency(Polarity, HeadKey, BodyKey))))
+    ; Edges1 = [edge(Polarity, HeadKey, BodyKey)|Edges0]
     ),
     Position1 is Position + 1,
-    add_body_edges(Predicates, Index, Position1, HeadKey, Edges1, Edges).
+    add_body_edges(Literals, Index, Position1, HeadKey, Edges1, Edges).
+
+dependency_literal(Literal, naf, Predicate) :-
+    has_functor(Literal, naf, 1),
+    arg(1, Literal, Predicate),
+    !.
+dependency_literal(Predicate, positive, Predicate).
 
 predicate_key(pred(Name, Args), pred(Name, Arity)) :-
     length(Args, Arity).
@@ -499,8 +585,13 @@ reachable(Node, Target, _, _) :-
     !.
 reachable(Node, Target, Edges, Visited) :-
     \+ memberchk(Node, Visited),
-    member(edge(Node, Next), Edges),
+    edge_from(Node, Edges, Next),
     reachable(Next, Target, Edges, [Node|Visited]).
+
+edge_from(Node, [edge(_, From, To)|_], To) :-
+    From == Node.
+edge_from(Node, [_|Edges], Next) :-
+    edge_from(Node, Edges, Next).
 
 has_functor(Term, Name, Arity) :-
     compound(Term),

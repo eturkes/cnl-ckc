@@ -1,4 +1,4 @@
-cnl_ir_record(1).
+cnl_ir_record(2).
 document(docid('quoted-case'),source_sha256('23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01'),ulex(none)).
 fact(fact_id(sentence(1),clause(1)),pred(clinician,[named('Dr O\'Neil')]),source(sentence(1),tokens([1,2]))).
 fact(fact_id(sentence(1),clause(2)),pred(treats,[named('Dr O\'Neil'),named('Case-7')]),source(sentence(1),tokens([3,4]))).

@@ -14,7 +14,7 @@ RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-validate-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=60
+EXPECTED_PASS_COUNT=73
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -90,12 +90,12 @@ else
 fi
 
 set -- "$GREEN"/*.pl
-if [ "$#" -ne 3 ]; then
-    fail_case "fixtures/count" "expected 3 green fixtures, got $#"
+if [ "$#" -ne 5 ]; then
+    fail_case "fixtures/count" "expected 5 green fixtures, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 33 ]; then
-    fail_case "fixtures/count" "expected 33 red fixtures, got $#"
+if [ "$#" -ne 44 ]; then
+    fail_case "fixtures/count" "expected 44 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -132,9 +132,11 @@ run_committed_red() {
 }
 
 run_committed_red envelope-wrong-version envelope
+run_committed_red envelope-v1-record envelope
 run_committed_red envelope-missing-document envelope
 run_committed_red query-zero query_count
 run_committed_red query-two query_count
+run_committed_red query-two-mixed query_count
 run_committed_red section-interleave section_order
 run_committed_red envelope-trailing-term envelope
 run_committed_red shape-unknown-constructor shape
@@ -146,6 +148,12 @@ run_committed_red shape-bad-string-codes shape
 run_committed_red shape-native-variable shape
 run_committed_red shape-empty-args shape
 run_committed_red shape-empty-tokens shape
+run_committed_red shape-naf-fact-position shape
+run_committed_red shape-naf-query-position shape
+run_committed_red shape-naf-argument-position shape
+run_committed_red shape-wh-marker shape
+run_committed_red shape-wh-pattern-arity shape
+run_committed_red shape-wh-pattern-arg shape
 run_committed_red identity-kind-mismatch identity
 run_committed_red identity-sentence-mismatch identity
 run_committed_red identity-zero-ordinal identity
@@ -158,11 +166,14 @@ run_committed_red ordering-descending-tokens ordering
 run_committed_red scope-var-in-fact scope
 run_committed_red scope-var-in-query scope
 run_committed_red scope-non-dense scope
+run_committed_red scope-naf-non-dense scope
 run_committed_red scope-wrong-first-occurrence scope
 run_committed_red safety-head-var safety
 run_committed_red safety-empty-body safety
-run_committed_red naf-literal naf
+run_committed_red safety-naf-order-interleave safety
+run_committed_red safety-naf-var-uncovered safety
 run_committed_red cycle-two-rule cycle
+run_committed_red cycle-signed-transitive cycle
 run_committed_red cycle-self-loop cycle
 
 base="$GREEN/minimal.pl"
@@ -189,7 +200,7 @@ fi
     dd if="$base" status=none
 } >"$SCRATCH/red/bom.pl"
 : >"$SCRATCH/red/empty.pl"
-printf '%s\n' 'cnl_ir_record(1).' 'document(.' >"$SCRATCH/red/syntax.pl"
+printf '%s\n' 'cnl_ir_record(2).' 'document(.' >"$SCRATCH/red/syntax.pl"
 if ! command sed '3s/,/, /' "$base" >"$SCRATCH/red/noncanonical-spacing.pl"; then
     fail_case "scratch/generate" "could not create spacing case"
 fi
@@ -291,11 +302,11 @@ usage_case extra validate extra
 
 red_stdout1="$SCRATCH/determinism/red.run1.stdout"
 red_stderr1="$SCRATCH/determinism/red.run1.stderr"
-run_tool "$RED/naf-literal.pl" "$red_stdout1" "$red_stderr1" validate
+run_tool "$RED/envelope-v1-record.pl" "$red_stdout1" "$red_stderr1" validate
 red_status1=$RUN_STATUS
 red_stdout2="$SCRATCH/determinism/red.run2.stdout"
 red_stderr2="$SCRATCH/determinism/red.run2.stderr"
-run_tool "$RED/naf-literal.pl" "$red_stdout2" "$red_stderr2" validate
+run_tool "$RED/envelope-v1-record.pl" "$red_stdout2" "$red_stderr2" validate
 red_status2=$RUN_STATUS
 if [ "$red_status1" -ne 1 ] || [ "$red_status2" -ne 1 ]; then
     fail_case "determinism/red/status" "expected two status-1 runs, got $red_status1 and $red_status2"
@@ -306,18 +317,18 @@ fi
 if ! cmp "$red_stderr1" "$red_stderr2"; then
     fail_case "determinism/red/stderr" "fresh runs differ"
 fi
-if ! command grep -Eq '^ir_tool_error\(validate,naf,.*\)\.$' "$red_stderr1"; then
-    fail_case "determinism/red/class" "expected naf rejection"
+if ! command grep -Eq '^ir_tool_error\(validate,envelope,.*\)\.$' "$red_stderr1"; then
+    fail_case "determinism/red/class" "expected envelope rejection"
 fi
 pass_case "determinism/red"
 
 green_stdout1="$SCRATCH/determinism/green.run1.stdout"
 green_stderr1="$SCRATCH/determinism/green.run1.stderr"
-run_tool "$GREEN/slice.pl" "$green_stdout1" "$green_stderr1" validate
+run_tool "$GREEN/naf-rule.pl" "$green_stdout1" "$green_stderr1" validate
 green_status1=$RUN_STATUS
 green_stdout2="$SCRATCH/determinism/green.run2.stdout"
 green_stderr2="$SCRATCH/determinism/green.run2.stderr"
-run_tool "$GREEN/slice.pl" "$green_stdout2" "$green_stderr2" validate
+run_tool "$GREEN/naf-rule.pl" "$green_stdout2" "$green_stderr2" validate
 green_status2=$RUN_STATUS
 if [ "$green_status1" -ne 0 ] || [ "$green_status2" -ne 0 ]; then
     fail_case "determinism/green/status" "expected two status-0 runs, got $green_status1 and $green_status2"

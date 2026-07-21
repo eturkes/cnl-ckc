@@ -6,7 +6,7 @@
 :- use_module(ir_validate, [validate_terms/1]).
 
 /*
-Lossless lowering for the deliberately small M3.2 DRS profile. The caller owns
+Lossless lowering for the deliberately small IR v2 DRS profile. The caller owns
 UTF-8, syntax, canonical-byte framing, output buffering, and error emission.
 This module owns the M2 envelope and every admitted DRS semantic decision.
 */
@@ -26,7 +26,7 @@ lower_terms(Terms, IrTerms) :-
     require_section_order(fact, Facts),
     require_section_order(rule, Rules),
     append(Facts, Rules, Prefix),
-    append([cnl_ir_record(1), Document|Prefix], [Query], IrTerms),
+    append([cnl_ir_record(2), Document|Prefix], [Query], IrTerms),
     validate_generated_ir(IrTerms).
 
 /* M2 record envelope and durable document identity. */
@@ -155,25 +155,51 @@ validate_nested_domain_declarations([Condition|Conditions], Seen0, Seen) :-
     add_fresh_domains(Domains, Seen0, Seen1),
     validate_nested_domain_declarations(Conditions, Seen1, Seen).
 
-direct_nested_domains(Condition, [AnteDomain, ConsequentDomain]) :-
+direct_nested_domains(Condition, Domains) :-
+    condition_nested_domains(Condition, Domains).
+
+condition_nested_domains(Condition, Domains) :-
     has_functor(Condition, '=>', 2),
     arg(1, Condition, Antecedent),
     arg(2, Condition, Consequent),
-    has_functor(Antecedent, drs, 2),
-    has_functor(Consequent, drs, 2),
-    arg(1, Antecedent, AnteDomain),
-    arg(1, Consequent, ConsequentDomain),
-    is_list(AnteDomain),
-    is_list(ConsequentDomain),
-    !.
-direct_nested_domains(Condition, [Domain]) :-
+    nested_drs_domains(Antecedent, AnteDomains),
+    nested_drs_domains(Consequent, ConsequentDomains),
+    AnteDomains = [_|_],
+    ConsequentDomains = [_|_],
+    !,
+    append(AnteDomains, ConsequentDomains, Domains).
+condition_nested_domains(Condition, Domains) :-
     has_functor(Condition, question, 1),
     arg(1, Condition, Drs),
-    has_functor(Drs, drs, 2),
-    arg(1, Drs, Domain),
-    is_list(Domain),
+    nested_drs_domains(Drs, Domains),
+    Domains = [_|_],
     !.
-direct_nested_domains(_, []).
+condition_nested_domains(Condition, Domains) :-
+    unary_negation_argument(Condition, Argument),
+    !,
+    ( nested_drs_domains(Argument, Direct), Direct = [_|_] ->
+        Domains = Direct
+    ; condition_nested_domains(Argument, Domains)
+    ).
+condition_nested_domains(_, []).
+
+nested_drs_domains(Drs, Domains) :-
+    ( has_functor(Drs, drs, 2) ->
+        arg(1, Drs, Domain),
+        arg(2, Drs, Conditions),
+        ( is_list(Domain), is_list(Conditions) ->
+            nested_condition_domains(Conditions, Nested),
+            Domains = [Domain|Nested]
+        ; Domains = []
+        )
+    ; Domains = []
+    ).
+
+nested_condition_domains([], []).
+nested_condition_domains([Condition|Conditions], Domains) :-
+    condition_nested_domains(Condition, Here),
+    nested_condition_domains(Conditions, Rest),
+    append(Here, Rest, Domains).
 
 add_fresh_domains([], Seen, Seen).
 add_fresh_domains([Domain|Domains], Seen0, Seen) :-
@@ -224,7 +250,9 @@ lower_root_condition(Position, Condition, All, Domain, Consumed,
         Consumed1, Draft, Events, Entities) :-
     anchored_condition(Condition, Inner, Anchor),
     !,
-    ( has_functor(Inner, query, 2) ->
+    ( contains_negation(Inner) ->
+        reject(negation, root_condition(Position))
+    ; has_functor(Inner, query, 2) ->
         reject(wh_query, root_condition(Position))
     ; functor_name(Inner, object) ->
         lower_copula_from_object(Position, Inner, Anchor, All, Domain,
@@ -242,7 +270,9 @@ lower_root_condition(Position, Condition, All, Domain, Consumed,
     ).
 lower_root_condition(Position, Condition, _All, _Domain, _Consumed,
         _, _, _, _) :-
-    ( contains_query2(Condition) ->
+    ( contains_negation(Condition) ->
+        reject(negation, root_condition(Position))
+    ; contains_query2(Condition) ->
         reject(wh_query, root_condition(Position))
     ; unsupported_condition(root_condition(Position), Condition)
     ).
@@ -400,7 +430,7 @@ require_ground_subject(Location, Subject, Domain, Arg) :-
     ; reject(unsupported, Location-subject)
     ).
 
-/* One positive implication becomes one IR rule. */
+/* One implication in the admitted positive/NAF profile becomes one IR rule. */
 lower_rule(Position, Rule, Draft) :-
     arg(1, Rule, Antecedent),
     arg(2, Rule, Consequent),
@@ -411,15 +441,10 @@ lower_rule(Position, Rule, Draft) :-
     validate_domain(antecedent(Position), AnteDomain),
     validate_domain(consequent(Position), ConsequentDomain),
     require_disjoint_domains(rule(Position), AnteDomain, ConsequentDomain),
-    ( ( contains_query2(AnteConditions)
-      ; contains_query2(ConsequentConditions)
-      ) ->
-        reject(wh_query, rule(Position))
-    ; true
-    ),
     lower_rule_head(Position, ConsequentConditions, AnteDomain,
         ConsequentDomain, [], Bindings1, 1, Next1, Head, HeadAnchors,
         ConsequentEvents, HeadOuterRefs),
+    require_naf_suffix(Position, AnteConditions),
     lower_rule_body(Position, AnteConditions, AnteDomain,
         Bindings1, _Bindings, Next1, _Next, Body, BodyAnchors,
         AnteEvents, BodyEntityRefs),
@@ -448,9 +473,30 @@ require_nested_drs(Location, Drs, Domain, Conditions) :-
     ; reject(unsupported, Location-drs_shape)
     ).
 
+require_naf_suffix(Position, Conditions) :-
+    require_naf_suffix(Position, Conditions, 1, false).
+
+require_naf_suffix(_, [], _, _).
+require_naf_suffix(Position, [Condition|Conditions], Index, SeenNaf) :-
+    ( has_functor(Condition, '~', 1) ->
+        SeenNaf1 = true
+    ; SeenNaf == true ->
+        reject(negation,
+            rule(Position, antecedent_condition(Index, positive_after_naf)))
+    ; SeenNaf1 = false
+    ),
+    Next is Index + 1,
+    require_naf_suffix(Position, Conditions, Next, SeenNaf1).
+
 lower_rule_head(Position, Conditions, AnteDomain, ConsequentDomain,
         Bindings0, Bindings, Next0, Next, Head, [Anchor], [Event],
         OuterRefs) :-
+    ( contains_negation(Conditions) ->
+        reject(negation, rule(Position, consequent))
+    ; contains_query2(Conditions) ->
+        reject(wh_query, rule(Position, consequent))
+    ; true
+    ),
     ( Conditions = [Condition] ->
         true
     ; length(Conditions, Count),
@@ -490,23 +536,113 @@ rule_head_subject(Position, Subject, AnteDomain, ConsequentDomain,
     ; reject(unsupported, rule(Position, head_subject))
     ).
 
-lower_rule_body(_, [], _, Bindings, Bindings, Next, Next, [], [], [], []).
-lower_rule_body(Position, [Condition|Conditions], Domain,
-        Bindings0, Bindings, Next0, Next, [Literal|Literals],
-        [Anchor|Anchors], Events, Entities) :-
-    ( anchored_condition(Condition, Inner, Anchor) ->
-        true
-    ; ( contains_query2(Condition) ->
-          reject(wh_query, rule(Position, antecedent))
-      ; unsupported_condition(rule(Position, antecedent), Condition)
-      )
-    ),
-    lower_body_literal(Position, Inner, Domain, Bindings0, Bindings1,
-        Next0, Next1, Literal, HereEvents, HereEntities),
-    lower_rule_body(Position, Conditions, Domain, Bindings1, Bindings,
-        Next1, Next, Literals, Anchors, RestEvents, RestEntities),
+lower_rule_body(Position, Conditions, Domain, Bindings0, Bindings,
+        Next0, Next, Literals, Anchors, Events, Entities) :-
+    lower_rule_body_conditions(Position, Conditions, Domain,
+        Bindings0, Bindings, Next0, Next, [], _PositiveRefs, 1,
+        Literals, Anchors, Events, Entities).
+
+lower_rule_body_conditions(_, [], _, Bindings, Bindings, Next, Next,
+        PositiveRefs, PositiveRefs, _, [], [], [], []).
+lower_rule_body_conditions(Position, [Condition|Conditions], Domain,
+        Bindings0, Bindings, Next0, Next, PositiveRefs0, PositiveRefs,
+        Index, [Literal|Literals], Anchors, Events, Entities) :-
+    lower_rule_condition(Position, Index, Condition, Domain, PositiveRefs0,
+        Bindings0, Bindings1, Next0, Next1, Literal, HereAnchors,
+        HereEvents, HereEntities, HerePositiveRefs),
+    append(HerePositiveRefs, PositiveRefs0, PositiveRefs1),
+    NextIndex is Index + 1,
+    lower_rule_body_conditions(Position, Conditions, Domain,
+        Bindings1, Bindings, Next1, Next, PositiveRefs1, PositiveRefs,
+        NextIndex, Literals, RestAnchors, RestEvents, RestEntities),
+    append(HereAnchors, RestAnchors, Anchors),
     append(HereEvents, RestEvents, Events),
     append(HereEntities, RestEntities, Entities).
+
+lower_rule_condition(Position, Index, Condition, Domain, PositiveRefs,
+        Bindings0, Bindings, Next0, Next, Literal, Anchors, Events,
+        Entities, HerePositiveRefs) :-
+    ( has_functor(Condition, '~', 1) ->
+        lower_naf_body_literal(Position, Index, Condition, Domain,
+            PositiveRefs, Bindings0, Literal, Anchors),
+        Bindings = Bindings0,
+        Next = Next0,
+        Events = [],
+        Entities = [],
+        HerePositiveRefs = []
+    ; contains_negation(Condition) ->
+        reject(negation, rule(Position, antecedent_condition(Index)))
+    ; anchored_condition(Condition, Inner, Anchor) ->
+        lower_body_literal(Position, Inner, Domain, Bindings0, Bindings,
+            Next0, Next, Literal, Events, Entities),
+        Anchors = [Anchor],
+        HerePositiveRefs = Entities
+    ; contains_query2(Condition) ->
+        reject(wh_query, rule(Position, antecedent_condition(Index)))
+    ; unsupported_condition(
+          rule(Position, antecedent_condition(Index)), Condition)
+    ).
+
+lower_naf_body_literal(Position, Index, Condition, OuterDomain,
+        PositiveRefs, Bindings, Literal, Anchors) :-
+    arg(1, Condition, Drs),
+    ( has_functor(Drs, drs, 2) ->
+        arg(1, Drs, Domain),
+        arg(2, Drs, Conditions),
+        ( is_list(Domain), is_list(Conditions) ->
+            true
+        ; reject(negation,
+              rule(Position, antecedent_condition(Index, drs_lists)))
+        )
+    ; reject(negation,
+          rule(Position, antecedent_condition(Index, drs_shape)))
+    ),
+    ( naf_intransitive_profile(Domain, Conditions, OuterDomain,
+          PositiveRefs, Bindings, Literal, Anchors) ->
+        true
+    ; naf_copula_profile(Domain, Conditions, OuterDomain,
+          PositiveRefs, Bindings, Literal, Anchors) ->
+        true
+    ; reject(negation,
+          rule(Position, antecedent_condition(Index, profile)))
+    ).
+
+naf_intransitive_profile(Domain, Conditions, OuterDomain, PositiveRefs,
+        Bindings, Literal, [Anchor]) :-
+    Conditions = [Condition],
+    anchored_condition(Condition, Predicate, Anchor),
+    predicate3_parts(Predicate, Event, Verb, Subject),
+    var(Event),
+    atom(Verb),
+    Verb \== be,
+    var(Subject),
+    Domain == [Event],
+    ref_member(Subject, OuterDomain),
+    ref_member(Subject, PositiveRefs),
+    lookup_binding(Subject, Bindings, Number),
+    Literal = naf(pred(Verb, [var(Number)])).
+
+naf_copula_profile(Domain, Conditions, OuterDomain, PositiveRefs,
+        Bindings, Literal, [ObjectAnchor, BeAnchor]) :-
+    Conditions = [ObjectCondition, BeCondition],
+    anchored_condition(ObjectCondition, Object, ObjectAnchor),
+    exact_object(Object, ObjectReferent, Class),
+    anchored_condition(BeCondition, Be, BeAnchor),
+    has_functor(Be, predicate, 4),
+    arg(1, Be, Event),
+    arg(2, Be, Verb),
+    arg(3, Be, Subject),
+    arg(4, Be, BeObjectReferent),
+    Verb == be,
+    var(Event),
+    var(Subject),
+    BeObjectReferent == ObjectReferent,
+    ObjectReferent \== Event,
+    Domain == [ObjectReferent, Event],
+    ref_member(Subject, OuterDomain),
+    ref_member(Subject, PositiveRefs),
+    lookup_binding(Subject, Bindings, Number),
+    Literal = naf(pred(Class, [var(Number)])).
 
 lower_body_literal(Position, Inner, Domain, Bindings0, Bindings,
         Next0, Next, Literal, [], [Referent]) :-
@@ -578,18 +714,22 @@ require_bound_head_refs(Position, [Referent|Referents], BodyRefs) :-
     ),
     require_bound_head_refs(Position, Referents, BodyRefs).
 
-/* A final question is one anchored, ground, intransitive predicate. */
+/* A final question is either ground yes/no or the exact admitted who shape. */
 lower_question(Question, Draft) :-
-    ( contains_query2(Question) ->
-        reject(wh_query, question)
-    ; true
-    ),
     ( has_functor(Question, question, 1) ->
         arg(1, Question, Drs)
     ; reject(unsupported, question(shape))
     ),
     require_nested_drs(question, Drs, Domain, Conditions),
     validate_domain(question, Domain),
+    ( contains_negation(Conditions) ->
+        reject(negation, question)
+    ; contains_query2(Conditions) ->
+        lower_wh_question(Domain, Conditions, Draft)
+    ; lower_yes_no_question(Domain, Conditions, Draft)
+    ).
+
+lower_yes_no_question(Domain, Conditions, Draft) :-
     ( Conditions = [Condition] ->
         true
     ; length(Conditions, Count),
@@ -610,6 +750,35 @@ lower_question(Question, Draft) :-
     validate_scope_accounting(question, Domain, [Event], []),
     source_from_anchors(question, [Anchor], Sentence, Tokens),
     Draft = draft_query(pred(Verb, [Arg]), Sentence, Tokens).
+
+lower_wh_question(Domain, Conditions, Draft) :-
+    ( wh_question_profile(Domain, Conditions, Verb, QueryAnchor,
+          PredicateAnchor, QueryReferent, Event) ->
+        validate_scope_accounting(question, Domain, [Event],
+            [QueryReferent]),
+        source_from_anchors(question, [QueryAnchor, PredicateAnchor],
+            Sentence, Tokens),
+        Draft = draft_wh_query(wh(who), pred(Verb, [var(1)]),
+            Sentence, Tokens)
+    ; reject(wh_query, question)
+    ).
+
+wh_question_profile(Domain, Conditions, Verb, QueryAnchor,
+        PredicateAnchor, QueryReferent, Event) :-
+    Conditions = [QueryCondition, PredicateCondition],
+    anchored_condition(QueryCondition, Query, QueryAnchor),
+    has_functor(Query, query, 2),
+    arg(1, Query, QueryReferent),
+    arg(2, Query, Marker),
+    var(QueryReferent),
+    Marker == who,
+    anchored_condition(PredicateCondition, Predicate, PredicateAnchor),
+    predicate3_parts(Predicate, Event, Verb, Subject),
+    var(Event),
+    atom(Verb),
+    Verb \== be,
+    Subject == QueryReferent,
+    Domain == [QueryReferent, Event].
 
 require_query_subject(Subject, Domain, Arg) :-
     ( named_atom(Subject, Name) ->
@@ -753,6 +922,11 @@ finalize_draft(draft_query(Predicate, Sentence, Tokens), Counters0, Counters,
         query(query_id(sentence(Sentence), clause(Clause)), Predicate,
             source(sentence(Sentence), tokens(Tokens)))) :-
     next_clause(Sentence, Counters0, Counters, Clause).
+finalize_draft(draft_wh_query(Marker, Predicate, Sentence, Tokens),
+        Counters0, Counters,
+        query(query_id(sentence(Sentence), clause(Clause)), Marker,
+            Predicate, source(sentence(Sentence), tokens(Tokens)))) :-
+    next_clause(Sentence, Counters0, Counters, Clause).
 
 next_clause(Sentence, [], [counter(Sentence, 2)], 1).
 next_clause(Sentence, [counter(Here, Next0)|Counters], Updated, Clause) :-
@@ -835,6 +1009,33 @@ functor_name(Term, Name) :-
 has_functor(Term, Name, Arity) :-
     compound(Term),
     functor(Term, Name, Arity).
+
+contains_negation(Term) :-
+    nonvar(Term),
+    compound(Term),
+    ( unary_negation_argument(Term, _) ->
+        true
+    ; functor(Term, _, Arity),
+      contains_negation_arg(1, Arity, Term)
+    ).
+
+contains_negation_arg(Index, Arity, _) :-
+    Index > Arity,
+    !,
+    fail.
+contains_negation_arg(Index, Arity, Term) :-
+    arg(Index, Term, Arg),
+    ( contains_negation(Arg) ->
+        true
+    ; Next is Index + 1,
+      contains_negation_arg(Next, Arity, Term)
+    ).
+
+unary_negation_argument(Term, Argument) :-
+    ( has_functor(Term, '-', 1)
+    ; has_functor(Term, '~', 1)
+    ),
+    arg(1, Term, Argument).
 
 contains_query2(Term) :-
     nonvar(Term),
