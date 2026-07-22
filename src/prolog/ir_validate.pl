@@ -529,10 +529,16 @@ naf_body_vars([Literal|Literals], Vars) :-
     append(Here, Rest, Vars).
 
 first_missing_var([Number|_], CoveredVars, Number) :-
-    \+ memberchk(Number, CoveredVars),
+    \+ member_number(Number, CoveredVars),
     !.
 first_missing_var([_|Numbers], CoveredVars, Missing) :-
     first_missing_var(Numbers, CoveredVars, Missing).
+
+member_number(Number, [Member|_]) :-
+    Member =:= Number,
+    !.
+member_number(Number, [_|Members]) :-
+    member_number(Number, Members).
 
 /* Pass 10: reject the first signed dependency edge closing any cycle. */
 cycle_pass(Items) :-

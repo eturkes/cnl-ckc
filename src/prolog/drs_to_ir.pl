@@ -607,10 +607,20 @@ lower_naf_body_literal(Position, Index, Condition, OuterDomain,
           rule(Position, antecedent_condition(Index, profile)))
     ).
 
+naf_anchor(Anchor, Sentence) :-
+    has_functor(Anchor, '/', 2),
+    arg(1, Anchor, Sentence),
+    arg(2, Anchor, Token),
+    integer(Sentence),
+    Sentence > 0,
+    integer(Token),
+    Token > 0.
+
 naf_intransitive_profile(Domain, Conditions, OuterDomain, PositiveRefs,
         Bindings, Literal, [Anchor]) :-
     Conditions = [Condition],
     anchored_condition(Condition, Predicate, Anchor),
+    naf_anchor(Anchor, _),
     predicate3_parts(Predicate, Event, Verb, Subject),
     var(Event),
     atom(Verb),
@@ -626,8 +636,11 @@ naf_copula_profile(Domain, Conditions, OuterDomain, PositiveRefs,
         Bindings, Literal, [ObjectAnchor, BeAnchor]) :-
     Conditions = [ObjectCondition, BeCondition],
     anchored_condition(ObjectCondition, Object, ObjectAnchor),
+    naf_anchor(ObjectAnchor, Sentence),
     exact_object(Object, ObjectReferent, Class),
     anchored_condition(BeCondition, Be, BeAnchor),
+    naf_anchor(BeAnchor, BeSentence),
+    Sentence =:= BeSentence,
     has_functor(Be, predicate, 4),
     arg(1, Be, Event),
     arg(2, Be, Verb),

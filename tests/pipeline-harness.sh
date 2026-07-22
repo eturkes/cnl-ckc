@@ -18,7 +18,7 @@ OUT1="$SCRATCH/out1"
 OUT2="$SCRATCH/out2"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=27
+EXPECTED_PASS_COUNT=28
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -224,6 +224,21 @@ if [ -s "$run2_stderr" ]; then
     fail_case "determinism/run2/stderr" "expected zero bytes"
 fi
 pass_case "determinism/run2"
+
+run2_expected="$SCRATCH/run2/expected-stdout"
+printf '%s\n' \
+    "ace-front-end: wrote $OUT2/anchor.drs.pl" \
+    "ace-front-end: wrote $OUT2/manifest.pl" \
+    "ace-front-end: wrote $OUT2/slice-naf.drs.pl" \
+    "ace-front-end: wrote $OUT2/slice-wh.drs.pl" \
+    "ace-front-end: wrote $OUT2/twosent.drs.pl" \
+    "ace-front-end: wrote $OUT2/zorbomat.drs.pl" \
+    "ace-front-end: ok 5 documents" \
+    >"$run2_expected"
+if ! cmp "$run2_stdout" "$run2_expected"; then
+    fail_case "determinism/run2-stdout" "success output differs"
+fi
+pass_case "determinism/run2-stdout"
 
 out2_files="$SCRATCH/run2/out-files"
 write_file_set "$OUT2" "$out2_files"

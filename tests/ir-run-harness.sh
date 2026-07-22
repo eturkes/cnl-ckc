@@ -31,7 +31,7 @@ IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=81
+EXPECTED_PASS_COUNT=93
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -83,13 +83,14 @@ run_tool_with_limits() {
 
 check_rejection() {
     local label expected_status expected_stage expected_class stdout_path stderr_path
-    local line_count
+    local expected_line line_count
     label=$1
     expected_status=$2
     expected_stage=$3
     expected_class=$4
     stdout_path=$5
     stderr_path=$6
+    expected_line=${7-}
 
     if [ "$RUN_STATUS" -ne "$expected_status" ]; then
         fail_case "$label/status" "expected $expected_status, got $RUN_STATUS"
@@ -109,6 +110,10 @@ check_rejection() {
         "$stderr_path"; then
         fail_case "$label/class" \
             "expected ir_tool_error($expected_stage,$expected_class,...)"
+    fi
+    if [ -n "$expected_line" ] && \
+            ! printf '%s\n' "$expected_line" | cmp - "$stderr_path"; then
+        fail_case "$label/detail" "stderr differs from exact expected line"
     fi
     pass_case "$label"
 }
@@ -188,8 +193,8 @@ if [ "$#" -ne 10 ]; then
     fail_case "fixtures/count" "expected 10 hand-green results, got $#"
 fi
 set -- "$RED"/*.program.pl
-if [ "$#" -ne 20 ]; then
-    fail_case "fixtures/count" "expected 20 red programs, got $#"
+if [ "$#" -ne 28 ]; then
+    fail_case "fixtures/count" "expected 28 red programs, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
 if [ "$#" -ne 4 ]; then
@@ -259,7 +264,7 @@ for input in "$GOLDEN"/*.drs.pl; do
     pass_case "chain/$stem"
 done
 
-# M4.2 chain pin: the lower fixture directory owns CLI-generated IR, program,
+# Lower-chain pin: the lower fixture directory owns CLI-generated IR, program,
 # and result goldens. Compiling and running all four proves both admitted NAF
 # profiles and both admitted who-question records reach the shipped v2 kernel.
 for ir in "$LOWER_GREEN"/*.ir.pl; do
@@ -422,35 +427,56 @@ fi
 pass_case "determinism/competing-witness"
 
 run_committed_red() {
-    local name expected_class stdout_path stderr_path
+    local name expected_class expected_line stdout_path stderr_path
     name=$1
     expected_class=$2
+    expected_line=${3-}
     stdout_path="$SCRATCH/red/$name.stdout"
     stderr_path="$SCRATCH/red/$name.stderr"
     run_tool "$RED/$name.program.pl" "$stdout_path" "$stderr_path" run
     check_rejection "red/$name" 1 run "$expected_class" \
-        "$stdout_path" "$stderr_path"
+        "$stdout_path" "$stderr_path" "$expected_line"
 }
 
 run_committed_red cycle-self-loop cycle
-run_committed_red cycle-signed-transitive cycle
+run_committed_red cycle-signed-transitive cycle \
+    'ir_tool_error(run,cycle,term(5,body_literal(2,signed_dependency(naf,pred(r,1),pred(p,1))))).'
 run_committed_red document-float shape
 run_committed_red envelope-missing-document envelope
 run_committed_red envelope-trailing-after-goal envelope
 run_committed_red envelope-v1-record envelope
 run_committed_red envelope-wrong-header envelope
 run_committed_red identity-fact-with-body identity
+run_committed_red identity-rule-empty-body identity \
+    'ir_tool_error(run,identity,term(3,id_kind(fact,rule))).'
 run_committed_red ordering-duplicate-id ordering
 run_committed_red query-count-two query_count
+run_committed_red query-count-two-mixed query_count \
+    'ir_tool_error(run,query_count,count(2,second_term(4))).'
 run_committed_red query-count-zero query_count
 run_committed_red safety-head-uncovered safety
-run_committed_red safety-naf-order-interleave safety
-run_committed_red safety-naf-var-uncovered safety
+run_committed_red safety-naf-order-interleave safety \
+    'ir_tool_error(run,safety,term(3,positive_after_naf(2))).'
+run_committed_red safety-naf-var-uncovered safety \
+    'ir_tool_error(run,safety,term(3,naf_var_not_in_positive_body(2))).'
+run_committed_red scope-naf-non-dense scope \
+    'ir_tool_error(run,scope,term(3,variable_sequence(expected(2),found(3),occurrence(3)))).'
 run_committed_red scope-non-dense scope
 run_committed_red section-order-fact-after-rule section_order
-run_committed_red shape-naf-goal-position shape
+run_committed_red shape-naf-argument-position shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red shape-naf-goal-position shape \
+    'ir_tool_error(run,shape,term(3,goal)).'
+run_committed_red shape-naf-head-position shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
 run_committed_red shape-native-variable shape
 run_committed_red shape-unknown-constructor shape
+run_committed_red shape-wh-marker shape \
+    'ir_tool_error(run,shape,term(3,goal)).'
+run_committed_red shape-wh-pattern-arg shape \
+    'ir_tool_error(run,shape,term(3,goal)).'
+run_committed_red shape-wh-pattern-arity shape \
+    'ir_tool_error(run,shape,term(3,goal)).'
 run_committed_red resource-cap resource
 
 pin_stdout="$SCRATCH/stage-pin/compile-v1-envelope.stdout"
@@ -458,6 +484,67 @@ pin_stderr="$SCRATCH/stage-pin/compile-v1-envelope.stderr"
 run_tool "$IR_RED/envelope-v1-record.pl" "$pin_stdout" "$pin_stderr" compile
 check_rejection "stage-pin/compile-v1-envelope" 1 compile envelope \
     "$pin_stdout" "$pin_stderr"
+
+for input in "$IR_RED"/*.pl; do
+    name=${input##*/}
+    stem=${name%.pl}
+    validate_stdout="$SCRATCH/stage-pin/$stem.validate.stdout"
+    validate_stderr="$SCRATCH/stage-pin/$stem.validate.stderr"
+    compile_stdout="$SCRATCH/stage-pin/$stem.compile.stdout"
+    compile_stderr="$SCRATCH/stage-pin/$stem.compile.stderr"
+    expected_stderr="$SCRATCH/stage-pin/$stem.expected.stderr"
+
+    run_tool "$input" "$validate_stdout" "$validate_stderr" validate
+    validate_status=$RUN_STATUS
+    if [ "$validate_status" -ne 1 ]; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "validate expected status 1, got $validate_status"
+    fi
+    if [ -s "$validate_stdout" ]; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "validate wrote stdout"
+    fi
+    validate_line_count=$(command grep -c '^' "$validate_stderr" || :)
+    if [ "$validate_line_count" -ne 1 ] || \
+            ! printf '%s\n' "$(<"$validate_stderr")" | \
+                cmp - "$validate_stderr"; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "validate expected one LF-terminated stderr line"
+    fi
+    if ! command grep -q '^ir_tool_error(validate,' "$validate_stderr"; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "validate stderr has wrong stage"
+    fi
+
+    run_tool "$input" "$compile_stdout" "$compile_stderr" compile
+    compile_status=$RUN_STATUS
+    if [ "$compile_status" -ne 1 ]; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "compile expected status 1, got $compile_status"
+    fi
+    if [ -s "$compile_stdout" ]; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "compile wrote stdout"
+    fi
+    compile_line_count=$(command grep -c '^' "$compile_stderr" || :)
+    if [ "$compile_line_count" -ne 1 ] || \
+            ! printf '%s\n' "$(<"$compile_stderr")" | \
+                cmp - "$compile_stderr"; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "compile expected one LF-terminated stderr line"
+    fi
+    if ! command sed \
+            's/^ir_tool_error(validate,/ir_tool_error(compile,/' \
+            "$validate_stderr" >"$expected_stderr"; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "could not derive expected compile stderr"
+    fi
+    if ! cmp "$expected_stderr" "$compile_stderr"; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "compile stderr differs from validate stderr after stage rewrite"
+    fi
+done
+pass_case "stage-pin/compile-ir-red-ownership"
 
 base_program="$PROGRAM/slice.program.pl"
 if ! command sed '3s/,/, /' "$base_program" \
@@ -565,6 +652,62 @@ if [ -s "$replay_naf_stdout" ] || [ -s "$replay_naf_stderr" ]; then
     fail_case "probe/replay-naf-absence" "expected zero bytes"
 fi
 pass_case "probe/replay-naf-absence"
+
+answer_yes_no_stdout="$SCRATCH/probes/answer-v2-yes-no.stdout"
+answer_yes_no_stderr="$SCRATCH/probes/answer-v2-yes-no.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
+        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),Atom=pred(p,[named(a)]),Proof=proof(Atom,fact_id(sentence(1),clause(1)),[]),explanation:validate_answer_terms([cnl_answer_record(2),Doc,Program,answer(Id,Atom,proved),Proof]),explanation:validate_answer_terms([cnl_answer_record(2),Doc,Program,answer(Id,Atom,not_proved)])->halt(0);halt(1))' \
+        -t 'halt(9)' >"$answer_yes_no_stdout" \
+        2>"$answer_yes_no_stderr"; then
+    answer_yes_no_status=0
+else
+    answer_yes_no_status=$?
+fi
+if [ "$answer_yes_no_status" -ne 0 ]; then
+    fail_case "probe/answer-v2-yes-no" \
+        "expected proved and not_proved v2 records to pass"
+fi
+if [ -s "$answer_yes_no_stdout" ] || [ -s "$answer_yes_no_stderr" ]; then
+    fail_case "probe/answer-v2-yes-no" "expected zero bytes"
+fi
+pass_case "probe/answer-v2-yes-no"
+
+answer_version_stdout="$SCRATCH/probes/answer-version-rejection.stdout"
+answer_version_stderr="$SCRATCH/probes/answer-version-rejection.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
+        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),Atom=pred(p,[named(a)]),Proof=proof(Atom,fact_id(sentence(1),clause(1)),[]),catch(explanation:validate_answer_terms([cnl_answer_record(1),Doc,Program,answer(Id,Atom,proved),Proof]),Error1,true),catch(explanation:validate_answer_terms([cnl_answer_record(3),Doc,Program,answer(Id,Atom,not_proved)]),Error3,true),Error1==explanation_invariant(generated_answer_envelope),Error3==explanation_invariant(generated_answer_envelope)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$answer_version_stdout" \
+        2>"$answer_version_stderr"; then
+    answer_version_status=0
+else
+    answer_version_status=$?
+fi
+if [ "$answer_version_status" -ne 0 ]; then
+    fail_case "probe/answer-version-rejection" \
+        "expected yes/no v1 and v3 records to reject"
+fi
+if [ -s "$answer_version_stdout" ] || [ -s "$answer_version_stderr" ]; then
+    fail_case "probe/answer-version-rejection" "expected zero bytes"
+fi
+pass_case "probe/answer-version-rejection"
+
+answer_wh_v1_stdout="$SCRATCH/probes/answer-wh-v1-rejection.stdout"
+answer_wh_v1_stderr="$SCRATCH/probes/answer-wh-v1-rejection.stderr"
+if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
+        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),catch(explanation:validate_answer_terms([cnl_answer_record(1),Doc,Program,answer(Id,wh(who),pred(p,[var(1)]),answers([]))]),Error,true),Error==explanation_invariant(generated_answer_envelope)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$answer_wh_v1_stdout" \
+        2>"$answer_wh_v1_stderr"; then
+    answer_wh_v1_status=0
+else
+    answer_wh_v1_status=$?
+fi
+if [ "$answer_wh_v1_status" -ne 0 ]; then
+    fail_case "probe/answer-wh-v1-rejection" "expected wh v1 record to reject"
+fi
+if [ -s "$answer_wh_v1_stdout" ] || [ -s "$answer_wh_v1_stderr" ]; then
+    fail_case "probe/answer-wh-v1-rejection" "expected zero bytes"
+fi
+pass_case "probe/answer-wh-v1-rejection"
 
 generated_ir_stdout="$SCRATCH/probes/generated-ir.stdout"
 generated_ir_stderr="$SCRATCH/probes/generated-ir.stderr"

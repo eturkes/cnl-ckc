@@ -60,28 +60,67 @@ build_wh_certificates(_, _, _) :-
     invariant(wh_answers_shape).
 
 /*
-The run CLI calls this only on reparsed generated terms. Existing yes/no
-self-check behavior remains the generic canonical round-trip; an answer/4 term
-selects the additional wh-v2 grammar, ordering, and proof-correspondence gate.
+The run CLI calls this only on reparsed generated terms. Every answer record
+first passes the shared v2 envelope/layout gate; the payload then selects the
+yes/no or wh grammar and exact proof-correspondence gate.
 */
 validate_answer_terms(Terms) :-
-    ( contains_answer4(Terms) ->
-        ( answer_record_layout(
-              Terms, Header, Document, Program, Answer, Proofs) ->
-            validate_wh_answer_record(
-                Header, Document, Program, Answer, Proofs)
-        ; invariant(generated_wh_answer_layout)
-        )
-    ; true
+    ( answer_record_layout(
+          Terms, Header, Document, Program, Answer, Proofs) ->
+        validate_answer_common_layout(Header, Document, Program),
+        validate_answer_payload(
+            Header, Document, Program, Answer, Proofs)
+    ; invariant(generated_answer_layout)
     ).
 
-contains_answer4(Terms) :-
-    has_functor(Terms, '[|]', 2),
-    arg(1, Terms, Term),
-    arg(2, Terms, Rest),
-    ( has_functor(Term, answer, 4) ->
+validate_answer_common_layout(Header, Document, Program) :-
+    ( Header == cnl_answer_record(2),
+      has_functor(Document, document, 3),
+      generated_program_digest(Program) ->
         true
-    ; contains_answer4(Rest)
+    ; invariant(generated_answer_envelope)
+    ).
+
+validate_answer_payload(Header, Document, Program, Answer, Proofs) :-
+    ( has_functor(Answer, answer, 4) ->
+        validate_wh_answer_record(
+            Header, Document, Program, Answer, Proofs)
+    ; has_functor(Answer, answer, 3) ->
+        validate_yes_no_answer_record(Answer, Proofs)
+    ; invariant(generated_answer_shape)
+    ).
+
+validate_yes_no_answer_record(Answer, Proofs) :-
+    arg(1, Answer, GoalId),
+    arg(2, Answer, GoalAtom),
+    arg(3, Answer, Outcome),
+    ( generated_query_id(GoalId) ->
+        validate_yes_no_outcome(Outcome, GoalAtom, Proofs)
+    ; invariant(generated_yes_no_answer_shape)
+    ).
+
+validate_yes_no_outcome(Outcome, GoalAtom, Proofs) :-
+    ( Outcome == proved ->
+        validate_yes_no_proof(GoalAtom, Proofs)
+    ; Outcome == not_proved ->
+        ( Proofs == [] ->
+            true
+        ; invariant(generated_yes_no_proof_count)
+        )
+    ; invariant(generated_yes_no_outcome)
+    ).
+
+validate_yes_no_proof(GoalAtom, Proofs) :-
+    ( has_functor(Proofs, '[|]', 2),
+      arg(1, Proofs, Proof),
+      arg(2, Proofs, Rest),
+      Rest == [],
+      ground(Proof),
+      has_functor(Proof, proof, 3),
+      arg(1, Proof, Root),
+      Root == GoalAtom ->
+        true
+    ; invariant(generated_yes_no_proof)
     ).
 
 answer_record_layout(Terms, Header, Document, Program, Answer, Proofs) :-

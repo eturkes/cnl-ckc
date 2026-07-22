@@ -21,7 +21,7 @@ RED="$ROOT/tests/fixtures/lower/red"
 SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=50
+EXPECTED_PASS_COUNT=51
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -133,8 +133,8 @@ if [ "$#" -ne 4 ]; then
     fail_case "fixtures/count" "expected 4 lower result goldens, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 35 ]; then
-    fail_case "fixtures/count" "expected 35 red fixtures, got $#"
+if [ "$#" -ne 36 ]; then
+    fail_case "fixtures/count" "expected 36 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -241,6 +241,7 @@ run_committed_red p09-negated-question negation
 run_committed_red p14-root-naf negation
 run_committed_red p16-nested-negation negation
 run_committed_red naf-positive-interleave negation
+run_committed_red naf-inner-unrecognized negation
 run_committed_red zero-question question_count
 run_committed_red two-questions question_count
 run_committed_red non-final-question question_count

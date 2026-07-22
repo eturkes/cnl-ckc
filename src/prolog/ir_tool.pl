@@ -174,9 +174,6 @@ read_canonical_terms(Input, Terms, Bytes) :-
     parse_terms(Text, Terms),
     canonical_fixed_point(Terms, Codes).
 
-read_utf8_input(Input, Text, Codes) :-
-    read_utf8_input(Input, Text, Codes, _).
-
 read_utf8_input(Input, Text, Codes, Bytes) :-
     read_stream_to_codes(Input, Bytes),
     decode_utf8(Bytes, Codes, 0),

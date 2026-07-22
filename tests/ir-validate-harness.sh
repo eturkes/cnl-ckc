@@ -122,13 +122,15 @@ for input in "$GREEN"/*.pl; do
 done
 
 run_committed_red() {
-    local name expected_class stdout_path stderr_path
+    local name expected_class expected_line stdout_path stderr_path
     name=$1
     expected_class=$2
+    expected_line=${3-}
     stdout_path="$SCRATCH/red/$name.stdout"
     stderr_path="$SCRATCH/red/$name.stderr"
     run_tool "$RED/$name.pl" "$stdout_path" "$stderr_path" validate
-    check_rejection "red/$name" 1 validate "$expected_class" "$stdout_path" "$stderr_path"
+    check_rejection "red/$name" 1 validate "$expected_class" \
+        "$stdout_path" "$stderr_path" "$expected_line"
 }
 
 run_committed_red envelope-wrong-version envelope
@@ -136,7 +138,8 @@ run_committed_red envelope-v1-record envelope
 run_committed_red envelope-missing-document envelope
 run_committed_red query-zero query_count
 run_committed_red query-two query_count
-run_committed_red query-two-mixed query_count
+run_committed_red query-two-mixed query_count \
+    'ir_tool_error(validate,query_count,count(2,second_term(4))).'
 run_committed_red section-interleave section_order
 run_committed_red envelope-trailing-term envelope
 run_committed_red shape-unknown-constructor shape
@@ -148,12 +151,18 @@ run_committed_red shape-bad-string-codes shape
 run_committed_red shape-native-variable shape
 run_committed_red shape-empty-args shape
 run_committed_red shape-empty-tokens shape
-run_committed_red shape-naf-fact-position shape
-run_committed_red shape-naf-query-position shape
-run_committed_red shape-naf-argument-position shape
-run_committed_red shape-wh-marker shape
-run_committed_red shape-wh-pattern-arity shape
-run_committed_red shape-wh-pattern-arg shape
+run_committed_red shape-naf-fact-position shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red shape-naf-query-position shape \
+    'ir_tool_error(validate,shape,term(3,query)).'
+run_committed_red shape-naf-argument-position shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red shape-wh-marker shape \
+    'ir_tool_error(validate,shape,term(3,query)).'
+run_committed_red shape-wh-pattern-arity shape \
+    'ir_tool_error(validate,shape,term(3,query)).'
+run_committed_red shape-wh-pattern-arg shape \
+    'ir_tool_error(validate,shape,term(3,query)).'
 run_committed_red identity-kind-mismatch identity
 run_committed_red identity-sentence-mismatch identity
 run_committed_red identity-zero-ordinal identity
@@ -166,14 +175,18 @@ run_committed_red ordering-descending-tokens ordering
 run_committed_red scope-var-in-fact scope
 run_committed_red scope-var-in-query scope
 run_committed_red scope-non-dense scope
-run_committed_red scope-naf-non-dense scope
+run_committed_red scope-naf-non-dense scope \
+    'ir_tool_error(validate,scope,term(3,variable_sequence(expected(2),found(3),occurrence(3)))).'
 run_committed_red scope-wrong-first-occurrence scope
 run_committed_red safety-head-var safety
 run_committed_red safety-empty-body safety
-run_committed_red safety-naf-order-interleave safety
-run_committed_red safety-naf-var-uncovered safety
+run_committed_red safety-naf-order-interleave safety \
+    'ir_tool_error(validate,safety,term(3,positive_after_naf(2))).'
+run_committed_red safety-naf-var-uncovered safety \
+    'ir_tool_error(validate,safety,term(3,naf_var_not_in_positive_body(2))).'
 run_committed_red cycle-two-rule cycle
-run_committed_red cycle-signed-transitive cycle
+run_committed_red cycle-signed-transitive cycle \
+    'ir_tool_error(validate,cycle,term(5,body_literal(2,signed_dependency(naf,pred(r,1),pred(p,1))))).'
 run_committed_red cycle-self-loop cycle
 
 base="$GREEN/minimal.pl"
