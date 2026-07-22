@@ -1,8 +1,8 @@
 # Deterministic regeneration
 
-`tools/regen.py` is derived bootstrap code and must never be corrected by hand.
-Edit `tools/regen.emm`, then regenerate its Python bytes. The explicit roots constant is
-`tools` only; fixtures are deliberately outside the generation roots.
+`tools/regen.py` is derived bootstrap code: every correction goes through `tools/regen.emm`,
+then regenerating its Python bytes — the emitted Python stays byte-authoritative. The explicit
+roots constant is `tools` only; fixtures are deliberately outside the generation roots.
 
 Run from the repository root:
 
