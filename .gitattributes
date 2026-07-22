@@ -11,6 +11,8 @@ NOTICE text eol=lf
 *.json text eol=lf
 *.golden -text
 *.pdf -text
+guidelines/cdc-2022-opioid/source/** -text
+tests/fixtures/registry/red/*.bin -text
 *.ace text eol=lf
 *.ulex text eol=lf
 *.pl text eol=lf

@@ -44,12 +44,13 @@ before any write. Any compile failure aborts with zero writes. After all sources
 it writes same-directory `*.tmp.<pid>` bytes and atomically installs them with `os.replace`.
 
 CI runs the vendored suite, verifies vendor integrity, strict-compiles `regen.emm` and `cmp`s
-it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints and runs nine
+it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints and runs ten
 shell harnesses: `tests/strict-harness.sh` (57 gates), `tests/regen-harness.sh` (16),
 `tests/adapter-harness.sh` (45), `tests/pipeline-harness.sh` (28),
 `tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (73),
-`tests/ir-lower-harness.sh` (51), `tests/ir-run-harness.sh` (93), and
-`tests/slice-harness.sh` (29). The explicit comparison breaks the self-check trust circle.
+`tests/ir-lower-harness.sh` (51), `tests/ir-run-harness.sh` (93),
+`tests/slice-harness.sh` (29), and `tests/registry-harness.sh` (62). The explicit
+comparison breaks the self-check trust circle.
 Actions are SHA-pinned. The `test` job stays offline after provisioning; the `ape` job performs
 one pinned-Clex network fetch inside `tests/ape-vendor-harness.sh` and accepts it only after
 digest verification.
