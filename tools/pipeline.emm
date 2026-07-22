@@ -1,0 +1,203 @@
+Use argparse.
+Use hashlib.
+Use os.
+Use pathlib.
+Use shutil.
+Use subprocess.
+Use sys.
+
+Define [[fail]] taking category, detail:
+    Set safe_detail to [[detail.replace]]("\n", "\\n").
+    Set safe_detail to [[safe_detail.replace]]("\r", "\\r").
+    Do [[print]]("pipeline: " plus category plus ": " plus safe_detail, file=sys.stderr).
+    Exit with 2.
+
+Define [[sha256_hex]] taking data:
+    Set digest to [[hashlib.sha256]](data).
+    Set hex_text to [[digest.hexdigest]]().
+    Give back hex_text.
+
+Define [[cleanup_and_fail]] taking staging_path, category, detail:
+    Do [[shutil.rmtree]](staging_path).
+    Do [[fail]](category, detail).
+
+Define [[relay_failure]] taking staging_path, result:
+    Do [[shutil.rmtree]](staging_path).
+    Do [[sys.stderr.buffer.write]](result.stderr).
+    Exit with result.returncode.
+
+Define [[preflight]] taking ape_path, docs_path, out_path:
+    If not [[ape_path.is_dir]]():
+        Do [[fail]]("ape-tree", "not a directory: " plus [[str]](ape_path)).
+    If not [[docs_path.is_dir]]():
+        Do [[fail]]("docs-dir", "not a directory: " plus [[str]](docs_path)).
+    Set out_exists to [[out_path.exists]]().
+    Set out_symlink to [[out_path.is_symlink]]().
+    If out_exists:
+        Do [[fail]]("out-dir", "already exists: " plus [[str]](out_path)).
+    If out_symlink:
+        Do [[fail]]("out-dir", "already exists: " plus [[str]](out_path)).
+    Set parent to out_path.parent.
+    If not [[parent.is_dir]]():
+        Do [[fail]]("out-dir", "parent is not a directory: " plus [[str]](parent)).
+    Set staging_prefix to out_path.name plus ".tmp.".
+    Set parent_entries to [[sorted]]([[parent.iterdir]]()).
+    For each entry in parent_entries:
+        Set entry_name to entry.name.
+        If [[entry_name.startswith]](staging_prefix):
+            Do [[fail]]("staging", "stale staging: " plus entry_name).
+    Set swipl to [[os.environ.get]]("SWIPL", "swipl").
+    Set swipl_executable to [[shutil.which]](swipl).
+    If swipl_executable equals None:
+        Do [[fail]]("swipl-exec", "not executable: " plus swipl).
+    Give back swipl_executable.
+
+Define [[run_front_end]] taking staging_path, ape_path, docs_path, front_path:
+    Set python_executable to sys.executable.
+    Set ape_text to [[str]](ape_path).
+    Set docs_text to [[str]](docs_path).
+    Set front_text to [[str]](front_path).
+    Set command to <python_executable, "-P", "tools/ace_front_end.py", ape_text, docs_text, front_text>.
+    Set result to [[subprocess.run]](command, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](staging_path, result).
+    If result.stderr:
+        Do [[cleanup_and_fail]](staging_path, "child-stderr", "non-empty stderr from ace front end").
+
+Define [[front_docids]] taking staging_path, front_path:
+    Set front_regular to [[front_path.is_dir]]().
+    Set front_symlink to [[front_path.is_symlink]]().
+    If not front_regular:
+        Do [[cleanup_and_fail]](staging_path, "front-out", "front output is not a directory").
+    If front_symlink:
+        Do [[cleanup_and_fail]](staging_path, "front-out", "front output is not a directory").
+    Set docids to <>.
+    Set found_manifest to False.
+    Set entries to [[sorted]]([[front_path.iterdir]]()).
+    For each entry in entries:
+        Set entry_name to entry.name.
+        Set regular to [[entry.is_file]]().
+        Set symlink to [[entry.is_symlink]]().
+        If not regular:
+            Do [[cleanup_and_fail]](staging_path, "front-out", "entry is not a regular file: " plus entry_name).
+        If symlink:
+            Do [[cleanup_and_fail]](staging_path, "front-out", "entry is not a regular file: " plus entry_name).
+        If entry_name equals "manifest.pl":
+            Set found_manifest to True.
+        Otherwise:
+            If not [[entry_name.endswith]](".drs.pl"):
+                Do [[cleanup_and_fail]](staging_path, "front-out", "unsupported entry: " plus entry_name).
+            Set docid to [[entry_name.removesuffix]](".drs.pl").
+            Do [[docids.append]](docid).
+    If not found_manifest:
+        Do [[cleanup_and_fail]](staging_path, "front-out", "missing manifest.pl").
+    If not docids:
+        Do [[cleanup_and_fail]](staging_path, "front-out", "no .drs.pl documents").
+    Give back [[sorted]](docids).
+
+Define [[stage_command]] taking swipl_executable, stage:
+    Set command to <swipl_executable, "-q", "-f", "none", "-F", "none", "-s", "src/prolog/ir_tool.pl", "-g", "main", "-t", "halt(9)", "--", stage>.
+    Give back command.
+
+Define [[run_transform]] taking staging_path, swipl_executable, stage, docid, input_path, output_path:
+    Set input_bytes to [[input_path.read_bytes]]().
+    Set command to [[stage_command]](swipl_executable, stage).
+    Set result to [[subprocess.run]](command, input=input_bytes, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](staging_path, result).
+    If result.stderr:
+        Do [[cleanup_and_fail]](staging_path, "stage-stderr", "non-empty stderr for stage: " plus stage plus " document: " plus docid).
+    If not result.stdout:
+        Do [[cleanup_and_fail]](staging_path, "stage-stdout", "empty stdout for stage: " plus stage plus " document: " plus docid).
+    Do [[output_path.write_bytes]](result.stdout).
+
+Define [[run_validate]] taking staging_path, swipl_executable, docid, input_path:
+    Set input_bytes to [[input_path.read_bytes]]().
+    Set stage to "validate".
+    Set command to [[stage_command]](swipl_executable, stage).
+    Set result to [[subprocess.run]](command, input=input_bytes, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](staging_path, result).
+    If result.stdout:
+        Do [[cleanup_and_fail]](staging_path, "stage-stdout", "non-empty stdout for stage: validate document: " plus docid).
+    If result.stderr:
+        Do [[cleanup_and_fail]](staging_path, "stage-stderr", "non-empty stderr for stage: validate document: " plus docid).
+
+Define [[run_chain]] taking staging_path, swipl_executable, front_path, chain_path, docids:
+    For each docid in docids:
+        Set drs_path to [[front_path.joinpath]](docid plus ".drs.pl").
+        Set ir_path to [[chain_path.joinpath]](docid plus ".ir.pl").
+        Set program_path to [[chain_path.joinpath]](docid plus ".program.pl").
+        Set result_path to [[chain_path.joinpath]](docid plus ".result.pl").
+        Do [[run_transform]](staging_path, swipl_executable, "lower", docid, drs_path, ir_path).
+        Do [[run_validate]](staging_path, swipl_executable, docid, ir_path).
+        Do [[run_transform]](staging_path, swipl_executable, "compile", docid, ir_path, program_path).
+        Do [[run_transform]](staging_path, swipl_executable, "run", docid, program_path, result_path).
+
+Define [[write_manifest]] taking staging_path, front_path, chain_path, docids:
+    Set manifest_text to "cnl_pipeline_manifest(1).\n".
+    Set front_manifest_path to [[front_path.joinpath]]("manifest.pl").
+    For each docid in docids:
+        Set drs_path to [[front_path.joinpath]](docid plus ".drs.pl").
+        Set ir_path to [[chain_path.joinpath]](docid plus ".ir.pl").
+        Set program_path to [[chain_path.joinpath]](docid plus ".program.pl").
+        Set result_path to [[chain_path.joinpath]](docid plus ".result.pl").
+        Set drs_bytes to [[drs_path.read_bytes]]().
+        Set ir_bytes to [[ir_path.read_bytes]]().
+        Set program_bytes to [[program_path.read_bytes]]().
+        Set result_bytes to [[result_path.read_bytes]]().
+        Set front_manifest_bytes to [[front_manifest_path.read_bytes]]().
+        Set drs_hex to [[sha256_hex]](drs_bytes).
+        Set ir_hex to [[sha256_hex]](ir_bytes).
+        Set program_hex to [[sha256_hex]](program_bytes).
+        Set result_hex to [[sha256_hex]](result_bytes).
+        Set front_manifest_hex to [[sha256_hex]](front_manifest_bytes).
+        Set manifest_line to "document(docid('" plus docid plus "'),drs_sha256('" plus drs_hex plus "'),ir_sha256('" plus ir_hex plus "'),program_sha256('" plus program_hex plus "'),result_sha256('" plus result_hex plus "'),front_manifest_sha256('" plus front_manifest_hex plus "')).\n".
+        Set manifest_text to manifest_text plus manifest_line.
+    Set manifest_bytes to [[manifest_text.encode]]("utf-8").
+    Set manifest_path to [[staging_path.joinpath]]("manifest.pl").
+    Do [[manifest_path.write_bytes]](manifest_bytes).
+
+Define [[published_relpaths]] taking docids:
+    Set relpaths to <"front/manifest.pl", "manifest.pl">.
+    For each docid in docids:
+        Do [[relpaths.append]]("front/" plus docid plus ".drs.pl").
+        Do [[relpaths.append]]("chain/" plus docid plus ".ir.pl").
+        Do [[relpaths.append]]("chain/" plus docid plus ".program.pl").
+        Do [[relpaths.append]]("chain/" plus docid plus ".result.pl").
+    Give back [[sorted]](relpaths).
+
+Define [[publish]] taking staging_path, out_path, docids:
+    Set relpaths to [[published_relpaths]](docids).
+    Do [[os.replace]](staging_path, out_path).
+    For each relpath in relpaths:
+        Set target to [[out_path.joinpath]](relpath).
+        Do [[print]]("pipeline: wrote " plus [[str]](target)).
+    Do [[print]]("pipeline: ok " plus [[str]]([[len]](docids)) plus " documents").
+
+Set ir_tool_path to [[pathlib.Path]]("src/prolog/ir_tool.pl").
+Require that [[ir_tool_path.is_file]]().
+Set front_end_path to [[pathlib.Path]]("tools/ace_front_end.py").
+Require that [[front_end_path.is_file]]().
+Set parser to [[argparse.ArgumentParser]](prog="pipeline").
+Do [[parser.add_argument]]("ape_tree_dir").
+Do [[parser.add_argument]]("docs_dir").
+Do [[parser.add_argument]]("out_dir").
+Set args to [[parser.parse_args]]().
+Set ape_path to [[pathlib.Path]](args.ape_tree_dir).
+Set docs_path to [[pathlib.Path]](args.docs_dir).
+Set out_path to [[pathlib.Path]](args.out_dir).
+Set swipl_executable to [[preflight]](ape_path, docs_path, out_path).
+Set pid_text to [[str]]([[os.getpid]]()).
+Set staging_name to out_path.name plus ".tmp." plus pid_text.
+Set parent to out_path.parent.
+Set staging_path to [[parent.joinpath]](staging_name).
+Do [[staging_path.mkdir]]().
+Set front_path to [[staging_path.joinpath]]("front").
+Do [[run_front_end]](staging_path, ape_path, docs_path, front_path).
+Set docids to [[front_docids]](staging_path, front_path).
+Set chain_path to [[staging_path.joinpath]]("chain").
+Do [[chain_path.mkdir]]().
+Do [[run_chain]](staging_path, swipl_executable, front_path, chain_path, docids).
+Do [[write_manifest]](staging_path, front_path, chain_path, docids).
+Do [[publish]](staging_path, out_path, docids).

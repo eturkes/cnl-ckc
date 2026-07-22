@@ -56,6 +56,7 @@ jobs:
           set -eu
           bash -n tests/strict-harness.sh
           bash -n tests/regen-harness.sh
+          bash -n tests/pipeline-cli-harness.sh
           bash -n tests/ape-vendor-harness.sh
           bash -n tests/adapter-harness.sh
           bash -n tests/pipeline-harness.sh
@@ -64,13 +65,16 @@ jobs:
           bash -n tests/ir-run-harness.sh
           bash -n tests/slice-harness.sh
           bash -n tests/registry-harness.sh
-          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh tests/ir-lower-harness.sh tests/ir-run-harness.sh tests/slice-harness.sh tests/registry-harness.sh
+          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/pipeline-cli-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh tests/ir-lower-harness.sh tests/ir-run-harness.sh tests/slice-harness.sh tests/registry-harness.sh
 
       - name: Run strict compiler harness
         run: bash tests/strict-harness.sh
 
       - name: Run regeneration harness
         run: bash tests/regen-harness.sh
+
+      - name: Run pipeline CLI harness
+        run: bash tests/pipeline-cli-harness.sh
 
   ape:
     runs-on: ubuntu-24.04

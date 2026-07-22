@@ -44,9 +44,10 @@ before any write. Any compile failure aborts with zero writes. After all sources
 it writes same-directory `*.tmp.<pid>` bytes and atomically installs them with `os.replace`.
 
 CI runs the vendored suite, verifies vendor integrity, strict-compiles `regen.emm` and `cmp`s
-it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints and runs ten
+it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints and runs eleven
 shell harnesses: `tests/strict-harness.sh` (57 gates), `tests/regen-harness.sh` (16),
-`tests/adapter-harness.sh` (45), `tests/pipeline-harness.sh` (28),
+`tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (45),
+`tests/pipeline-harness.sh` (28),
 `tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (73),
 `tests/ir-lower-harness.sh` (51), `tests/ir-run-harness.sh` (93),
 `tests/slice-harness.sh` (29), and `tests/registry-harness.sh` (94). The explicit
