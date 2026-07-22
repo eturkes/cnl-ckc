@@ -1,0 +1,3 @@
+ace_front_end_record(1).
+document(docid('cdc2022-opioid-rec08'),source_sha256('03f8f2ea32e635777708e8e0ada2c8726f8b01a134a7a5c55a1e6bfcf76025fd'),ulex(sha256('36b580ac58e5ca0eb85e47ffe01815a27b3a38cd87ee4a8d63d151a4a5dd63a9'))).
+drs([A,B,C,D],[-(object(A,'risk-mitigation-clinician',countable,na,eq,1),/(1,4)),-(predicate(B,be,named('Rec08-clinician'),A),/(1,2)),-(object(C,'risk-mitigation-clinician',countable,na,eq,1),/(2,4)),-(predicate(D,be,named('Rec08-peer'),C),/(2,2)),=>(drs([E],[-(object(E,'risk-mitigation-clinician',countable,na,eq,1),/(3,2))]),drs([F],[-(predicate(F,'offer-naloxone',E),/(3,3))])),question(drs([G,H],[-(query(G,who),/(4,1)),-(predicate(H,'offer-naloxone',G),/(4,2))]))]).

@@ -17,4 +17,5 @@ tests/fixtures/registry/red/*.bin -text
 *.ulex text eol=lf
 *.pl text eol=lf
 tests/fixtures/pipeline/golden/** -text
+guidelines/cdc-2022-opioid/golden/** -text
 vendor/** -text

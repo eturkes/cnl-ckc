@@ -1,0 +1,3 @@
+ace_front_end_record(1).
+document(docid('cdc2022-opioid-rec05'),source_sha256('65b66ef8b6cf5af09e9c0054f325c7cddda88ffaf563b2c5e6d1e1e659ec72c8'),ulex(sha256('36b580ac58e5ca0eb85e47ffe01815a27b3a38cd87ee4a8d63d151a4a5dd63a9'))).
+drs([A,B],[-(object(A,'dosage-change-clinician',countable,na,eq,1),/(1,4)),-(predicate(B,be,named('Rec05-clinician'),A),/(1,2)),=>(drs([C],[-(object(C,'dosage-change-clinician',countable,na,eq,1),/(2,2)),~(drs([D],[-(predicate(D,'detect-life-threatening-warning',C),/(2,7))]))]),drs([E],[-(predicate(E,'avoid-abrupt-discontinuation',C),/(2,8))])),question(drs([F],[-(predicate(F,'avoid-abrupt-discontinuation',named('Rec05-clinician')),/(3,3))]))]).
