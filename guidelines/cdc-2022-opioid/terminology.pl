@@ -34,7 +34,6 @@ terminology_entry('lex.pdmp-review-clinician.noun-sg',noun_sg('pdmp-review-clini
 terminology_entry('lex.risk-mitigation-clinician.noun-sg',noun_sg('risk-mitigation-clinician','risk-mitigation-clinician',human),english_surface('risk mitigation clinician')).
 terminology_entry('lex.starting-opioid-clinician.noun-sg',noun_sg('starting-opioid-clinician','starting-opioid-clinician',human),english_surface('starting opioid clinician')).
 terminology_entry('lex.subacute-chronic-pain-clinician.noun-sg',noun_sg('subacute-chronic-pain-clinician','subacute-chronic-pain-clinician',human),english_surface('subacute or chronic pain clinician')).
-terminology_entry('lex.toxicology-testing-clinician.noun-sg',noun_sg('toxicology-testing-clinician','toxicology-testing-clinician',human),english_surface('toxicology testing clinician')).
 terminology_entry('lex.rec01-clinician.pn-sg',pn_sg('Rec01-clinician','Rec01-clinician',human),english_surface('Rec01 clinician')).
 terminology_entry('lex.rec02-clinician.pn-sg',pn_sg('Rec02-clinician','Rec02-clinician',human),english_surface('Rec02 clinician')).
 terminology_entry('lex.rec03-clinician.pn-sg',pn_sg('Rec03-clinician','Rec03-clinician',human),english_surface('Rec03 clinician')).

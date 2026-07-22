@@ -1,3 +1,3 @@
 ace_front_end_record(1).
-document(docid('cdc2022-opioid-rec04'),source_sha256('1a151ce7d02368aab8e51c8744194f5567199863872d64469891783ae242ead4'),ulex(sha256('36b580ac58e5ca0eb85e47ffe01815a27b3a38cd87ee4a8d63d151a4a5dd63a9'))).
+document(docid('cdc2022-opioid-rec04'),source_sha256('1a151ce7d02368aab8e51c8744194f5567199863872d64469891783ae242ead4'),ulex(sha256('7926023c0fffd5d10d6e87f7d250ae2232508730e5a50cdbdef79bb29aa7613b'))).
 drs([A,B],[-(object(A,'opioid-dosage-clinician',countable,na,eq,1),/(1,4)),-(predicate(B,be,named('Rec04-clinician'),A),/(1,2)),=>(drs([C],[-(object(C,'opioid-dosage-clinician',countable,na,eq,1),/(2,2))]),drs([D],[-(predicate(D,'prescribe-lowest-effective-dosage',C),/(2,3))])),question(drs([E],[-(predicate(E,'prescribe-lowest-effective-dosage',named('Rec04-clinician')),/(3,3))]))]).

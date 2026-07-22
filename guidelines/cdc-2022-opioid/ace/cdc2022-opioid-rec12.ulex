@@ -33,7 +33,6 @@ noun_sg('pdmp-review-clinician','pdmp-review-clinician',human).
 noun_sg('risk-mitigation-clinician','risk-mitigation-clinician',human).
 noun_sg('starting-opioid-clinician','starting-opioid-clinician',human).
 noun_sg('subacute-chronic-pain-clinician','subacute-chronic-pain-clinician',human).
-noun_sg('toxicology-testing-clinician','toxicology-testing-clinician',human).
 pn_sg('Rec01-clinician','Rec01-clinician',human).
 pn_sg('Rec02-clinician','Rec02-clinician',human).
 pn_sg('Rec03-clinician','Rec03-clinician',human).

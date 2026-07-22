@@ -1,3 +1,3 @@
 ace_front_end_record(1).
-document(docid('cdc2022-opioid-rec03'),source_sha256('65bafa8f9ffab76dd476a936f9b124e6baf210182ed1e23b4314ea3268db2e7f'),ulex(sha256('36b580ac58e5ca0eb85e47ffe01815a27b3a38cd87ee4a8d63d151a4a5dd63a9'))).
+document(docid('cdc2022-opioid-rec03'),source_sha256('65bafa8f9ffab76dd476a936f9b124e6baf210182ed1e23b4314ea3268db2e7f'),ulex(sha256('7926023c0fffd5d10d6e87f7d250ae2232508730e5a50cdbdef79bb29aa7613b'))).
 drs([A,B],[-(object(A,'starting-opioid-clinician',countable,na,eq,1),/(1,4)),-(predicate(B,be,named('Rec03-clinician'),A),/(1,2)),=>(drs([C],[-(object(C,'starting-opioid-clinician',countable,na,eq,1),/(2,2))]),drs([D],[-(predicate(D,'prescribe-immediate-release',C),/(2,3))])),question(drs([E],[-(predicate(E,'prescribe-immediate-release',named('Rec03-clinician')),/(3,3))]))]).
