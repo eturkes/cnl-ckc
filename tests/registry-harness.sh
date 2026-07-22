@@ -24,7 +24,7 @@ EXTRACTION="$ROOT/guidelines/cdc-2022-opioid/source/box3-extraction.txt"
 SCRATCH="${TMPDIR:-/tmp}/cnl-ckc-registry-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=62
+EXPECTED_PASS_COUNT=94
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -119,12 +119,12 @@ else
 fi
 
 set -- "$GREEN"/*.pl
-if [ "$#" -ne 2 ]; then
-    fail_case "fixtures/count" "expected 2 green Prolog fixtures, got $#"
+if [ "$#" -ne 3 ]; then
+    fail_case "fixtures/count" "expected 3 green Prolog fixtures, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 15 ]; then
-    fail_case "fixtures/count" "expected 15 red Prolog fixtures, got $#"
+if [ "$#" -ne 40 ]; then
+    fail_case "fixtures/count" "expected 40 red Prolog fixtures, got $#"
 fi
 set -- "$RED"/*.bin
 if [ "$#" -ne 8 ]; then
@@ -154,6 +154,11 @@ terminology_stderr="$SCRATCH/green/terminology.stderr"
 run_tool "$GREEN/terminology.pl" "$terminology_stdout" \
     "$terminology_stderr" terminology
 check_success "green/terminology" "$terminology_stdout" "$terminology_stderr"
+
+mapping_stdout="$SCRATCH/green/mapping.stdout"
+mapping_stderr="$SCRATCH/green/mapping.stderr"
+run_tool "$GREEN/mapping.pl" "$mapping_stdout" "$mapping_stderr" mapping
+check_success "green/mapping" "$mapping_stdout" "$mapping_stderr"
 
 ulex_stdout1="$SCRATCH/green/terminology.ulex.1"
 ulex_stderr1="$SCRATCH/green/terminology.ulex.1.stderr"
@@ -242,6 +247,66 @@ run_red terminology-bad-gender.pl terminology \
 run_red terminology-unsorted.pl terminology \
     'registry_tool_error(terminology,ordering,term(3,terminology_key(adv,quickly,after(noun_sg,patient,previous_term(2))))).'
 
+mapping_utf8_stdout="$SCRATCH/red/mapping-invalid-utf8.stdout"
+mapping_utf8_stderr="$SCRATCH/red/mapping-invalid-utf8.stderr"
+run_tool "$RED/invalid-utf8.bin" "$mapping_utf8_stdout" \
+    "$mapping_utf8_stderr" mapping
+check_rejection "red/mapping-invalid-utf8.bin" 1 \
+    "$mapping_utf8_stdout" "$mapping_utf8_stderr" \
+    'registry_tool_error(mapping,input_utf8,byte_offset(0)).'
+
+run_red mapping-required-region.pl mapping \
+    'registry_tool_error(mapping,row,required(mapping_region)).'
+run_red mapping-unknown-row.pl mapping \
+    'registry_tool_error(mapping,row,term(2,unknown_constructor(mystery,1))).'
+run_red mapping-undeclared-region-claim.pl mapping \
+    "registry_tool_error(mapping,reference,term(4,region('synthetic-guideline','region-b')))."
+run_red mapping-undeclared-region-residual.pl mapping \
+    "registry_tool_error(mapping,reference,term(4,region('synthetic-guideline','region-b')))."
+run_red mapping-unknown-document.pl mapping \
+    "registry_tool_error(mapping,reference,term(4,docid('synthetic-guideline','doc-b')))."
+run_red mapping-unknown-residual-class.pl mapping \
+    'registry_tool_error(mapping,residual,term(3,class(unknown_class))).'
+run_red mapping-coverage-uncovered-region.pl mapping \
+    "registry_tool_error(mapping,coverage,term(3,region_uncovered('synthetic-guideline','region-a')))."
+run_red mapping-coverage-claim-without-residual.pl mapping \
+    "registry_tool_error(mapping,coverage,term(3,claim_without_residual('synthetic-guideline','region-a')))."
+run_red mapping-coverage-unreferenced-document.pl mapping \
+    "registry_tool_error(mapping,coverage,term(3,document_unreferenced('doc-b')))."
+run_red mapping-duplicate-claim-id.pl mapping \
+    "registry_tool_error(mapping,duplicate,term(6,duplicate(claim_id,'claim-shared',first_term(5))))."
+run_red mapping-duplicate-region.pl mapping \
+    "registry_tool_error(mapping,duplicate,term(3,duplicate(region_key,['synthetic-guideline','region-a'],first_term(2))))."
+run_red mapping-ordering-sections.pl mapping \
+    'registry_tool_error(mapping,ordering,term(5,section(claim,after(residual,previous_term(4))))).'
+run_red mapping-ordering-key.pl mapping \
+    "registry_tool_error(mapping,ordering,term(3,key(document,['synthetic-guideline','doc-a'],after(['synthetic-guideline','doc-b'],previous_term(2)))))."
+run_red mapping-bad-expected-answer.pl mapping \
+    'registry_tool_error(mapping,shape,term(4,field(expected_answer))).'
+run_red mapping-wh-unsorted.pl mapping \
+    'registry_tool_error(mapping,ordering,term(4,expected_answer_answers)).'
+run_red mapping-wh-name-mismatch.pl mapping \
+    'registry_tool_error(mapping,shape,term(4,field(expected_answer))).'
+run_red mapping-items-no-query.pl mapping \
+    'registry_tool_error(mapping,shape,term(4,field(items))).'
+run_red mapping-items-two-queries.pl mapping \
+    'registry_tool_error(mapping,shape,term(4,field(items))).'
+run_red mapping-items-fact-id.pl mapping \
+    'registry_tool_error(mapping,shape,term(4,field(items))).'
+run_red mapping-items-unsorted.pl mapping \
+    'registry_tool_error(mapping,ordering,term(4,items)).'
+run_red mapping-query-mismatch.pl mapping \
+    'registry_tool_error(mapping,shape,term(4,field(expected_answer_query))).'
+run_red mapping-docid-bad-stem.pl mapping \
+    'registry_tool_error(mapping,shape,term(2,field(docid))).'
+run_red mapping-relpath-stem-mismatch.pl mapping \
+    'registry_tool_error(mapping,shape,term(2,field(ace_relpath))).'
+run_red mapping-bad-digest.pl mapping \
+    'registry_tool_error(mapping,digest,term(2,digest(ace_sha256,length(expected(64),found(63))))).'
+run_red mapping-bad-projection.pl mapping \
+    'registry_tool_error(mapping,shape,term(4,field(projection))).'
+
+
 printf 'cnl_guideline_registry(1).\r\n' >"$SCRATCH/red/crlf.pl"
 printf 'cnl_guideline_registry(1).' >"$SCRATCH/red/missing-final-lf.pl"
 for scratch_name in crlf missing-final-lf; do
@@ -274,6 +339,42 @@ run_tool "$GREEN/registry.pl" "$swap_stdout" "$swap_stderr" ulex
 check_rejection "stage-swap/registry-to-ulex" 1 \
     "$swap_stdout" "$swap_stderr" \
     'registry_tool_error(ulex,version,term(1,expected(cnl_guideline_terminology(1),found(cnl_guideline_registry(1))))).'
+
+swap_stdout="$SCRATCH/red/swap-mapping-to-registry.stdout"
+swap_stderr="$SCRATCH/red/swap-mapping-to-registry.stderr"
+run_tool "$GREEN/mapping.pl" "$swap_stdout" "$swap_stderr" registry
+check_rejection "stage-swap/mapping-to-registry" 1 \
+    "$swap_stdout" "$swap_stderr" \
+    'registry_tool_error(registry,version,term(1,expected(cnl_guideline_registry(1),found(cnl_guideline_mapping(1))))).'
+
+swap_stdout="$SCRATCH/red/swap-mapping-to-terminology.stdout"
+swap_stderr="$SCRATCH/red/swap-mapping-to-terminology.stderr"
+run_tool "$GREEN/mapping.pl" "$swap_stdout" "$swap_stderr" terminology
+check_rejection "stage-swap/mapping-to-terminology" 1 \
+    "$swap_stdout" "$swap_stderr" \
+    'registry_tool_error(terminology,version,term(1,expected(cnl_guideline_terminology(1),found(cnl_guideline_mapping(1))))).'
+
+swap_stdout="$SCRATCH/red/swap-mapping-to-ulex.stdout"
+swap_stderr="$SCRATCH/red/swap-mapping-to-ulex.stderr"
+run_tool "$GREEN/mapping.pl" "$swap_stdout" "$swap_stderr" ulex
+check_rejection "stage-swap/mapping-to-ulex" 1 \
+    "$swap_stdout" "$swap_stderr" \
+    'registry_tool_error(ulex,version,term(1,expected(cnl_guideline_terminology(1),found(cnl_guideline_mapping(1))))).'
+
+swap_stdout="$SCRATCH/red/swap-registry-to-mapping.stdout"
+swap_stderr="$SCRATCH/red/swap-registry-to-mapping.stderr"
+run_tool "$GREEN/registry.pl" "$swap_stdout" "$swap_stderr" mapping
+check_rejection "stage-swap/registry-to-mapping" 1 \
+    "$swap_stdout" "$swap_stderr" \
+    'registry_tool_error(mapping,version,term(1,expected(cnl_guideline_mapping(1),found(cnl_guideline_registry(1))))).'
+
+swap_stdout="$SCRATCH/red/swap-terminology-to-mapping.stdout"
+swap_stderr="$SCRATCH/red/swap-terminology-to-mapping.stderr"
+run_tool "$GREEN/terminology.pl" "$swap_stdout" "$swap_stderr" mapping
+check_rejection "stage-swap/terminology-to-mapping" 1 \
+    "$swap_stdout" "$swap_stderr" \
+    'registry_tool_error(mapping,version,term(1,expected(cnl_guideline_mapping(1),found(cnl_guideline_terminology(1))))).'
+
 
 usage_stdout="$SCRATCH/usage/no-args.stdout"
 usage_stderr="$SCRATCH/usage/no-args.stderr"

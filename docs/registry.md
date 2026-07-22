@@ -5,7 +5,8 @@ evidence, and byte-addressed source regions. A separate terminology registry rec
 versioned lexical entries from which production Ulex bytes are emitted. Both formats are
 strict UTF-8 canonical Prolog term streams.
 
-The mapping-store grammar for claims and typed residuals is added by M5.1b.
+The project-owned mapping store is specified in the **Mapping v1 grammar** section below;
+it records bounded claims and typed residuals against guideline regions.
 
 ## Tool interface
 
@@ -14,12 +15,13 @@ Run the validator from the repository root:
 ```text
 swipl -q -f none -F none -s src/prolog/registry_tool.pl -g main -t 'halt(9)' -- registry
 swipl -q -f none -F none -s src/prolog/registry_tool.pl -g main -t 'halt(9)' -- terminology
+swipl -q -f none -F none -s src/prolog/registry_tool.pl -g main -t 'halt(9)' -- mapping
 swipl -q -f none -F none -s src/prolog/registry_tool.pl -g main -t 'halt(9)' -- ulex
 ```
 
-Each command reads exactly one file from binary stdin. `registry` and `terminology` emit
-zero bytes on success. `ulex` validates a terminology file and emits the derived canonical
-Ulex stream. Output is buffered and reaches stdout only after the complete operation
+Each command reads exactly one file from binary stdin. `registry`, `terminology`, and
+`mapping` emit zero bytes on success. `ulex` validates a terminology file and emits the
+derived canonical Ulex stream. Output is buffered and reaches stdout only after the complete operation
 succeeds.
 
 Input must be strict RFC 3629 UTF-8 with LF line endings and no byte-order mark. Every term
@@ -202,12 +204,201 @@ This emission contract is the deterministic-production requirement in
 when the generated file is loaded; registry validation proves template shape, ordering, and
 uniqueness, not the complete APE cross-category intersection policy.
 
+## Mapping v1 grammar
+
+The first term is exactly:
+
+```prolog
+cnl_guideline_mapping(1).
+```
+
+It is followed by zero or more document rows, one or more region rows, zero or more claim
+rows, and zero or more residual rows, in that fixed section order:
+
+1. `mapping_document/4`
+2. `mapping_region/2`
+3. `mapping_claim/7`
+4. `mapping_residual/5`
+
+Rows within each section are strictly increasing by the key documented below. Atom
+comparison uses Unicode scalar order, as for the registry grammar.
+
+### Mapping document rows
+
+```prolog
+mapping_document(
+    GuidelineId,
+    Docid,
+    ace(relpath(AcePath),ace_sha256(AceHash)),
+    ulex(relpath(UlexPath),ulex_sha256(UlexHash))).
+```
+
+The key is `(GuidelineId, Docid)`. `GuidelineId` is a stable ID. `Docid` follows the
+front-end filename-stem contract: it is a nonempty atom containing only lowercase ASCII
+letters, digits, and `-`, and it does not begin with `-`. Docids are globally unique in the
+mapping file.
+
+Both paths satisfy the repository-relative path grammar. The final path segment of
+`AcePath` is exactly `Docid.ace`, and the final path segment of `UlexPath` is exactly
+`Docid.ulex`. `AceHash` and `UlexHash` are 64-character lowercase hexadecimal SHA-256
+atoms under the distinct fields `ace_sha256` and `ulex_sha256`.
+
+### Mapping region rows
+
+```prolog
+mapping_region(GuidelineId,RegionId).
+```
+
+The key is `(GuidelineId, RegionId)`. Both values are stable IDs. At least one region row is
+required. Region identity is local to the mapping file during validation; the cross-file tie
+to the guideline registry is harness-owned.
+
+### Mapping claim rows
+
+```prolog
+mapping_claim(
+    GuidelineId,
+    RegionId,
+    ClaimId,
+    projection(Projection),
+    docid(Docid),
+    items(Items),
+    expected_answer(Answer)).
+```
+
+The key is `(GuidelineId, RegionId, ClaimId)`. `ClaimId` is a globally unique stable ID.
+`GuidelineId` and `RegionId` must name a mapping-region row, and `Docid` must name a mapping
+document row for the same guideline.
+
+`Projection` is exactly `applicability` or `action_kind`. It labels the limited projection
+being asserted: `applicability` records a bounded applicability claim, while `action_kind`
+records a bounded action classification. Every claim is explicitly a partial projection of
+the source region, not a statement that the region's full semantics has been represented.
+Unprojected semantics belongs in residual rows.
+
+`Items` is a proper list containing at least one exact rule ID and exactly one exact query
+ID:
+
+```prolog
+rule_id(sentence(S),clause(C))
+query_id(sentence(S),clause(C))
+```
+
+Every `S` and `C` is a positive integer. `fact_id` and all other constructors are rejected.
+The complete list is strictly ascending and duplicate-free by `drs_canon:canonical_line/2`
+bytes applied to a copy of each item. The query inside `Answer` must be `==` to the sole
+query ID in `Items`.
+
+`Answer` is exactly one of these three forms:
+
+```prolog
+answer(Query,pred(Name,PredArgs),proved)
+answer(Query,pred(Name,PredArgs),not_proved)
+answer(Query,wh(who),pred(Name,[var(1)]),answers(AnswerList))
+```
+
+In the yes/no forms, `Name` is a nonempty atom and `PredArgs` is a nonempty proper list whose
+every member is `named(NonemptyAtom)`. In the wh form, `AnswerList` is a possibly empty
+proper list whose every member is `pred(Name,[named(NonemptyAtom)])` with the same predicate
+`Name` as the pattern. The wh answer list is strictly ascending by canonical serialization
+bytes and is therefore duplicate-free. Quoting participates in this order, so an answer
+containing `named('z z')` sorts before one containing `named(a)`.
+
+For these ground expected-answer terms, the registry canonical bytes coincide with ordinary
+`drs_canon:canonical_line/2` bytes: the forced-quote positions reserved by answer-record v2
+do not occur inside the stored forms above.
+
+### Mapping residual rows
+
+```prolog
+mapping_residual(
+    GuidelineId,
+    RegionId,
+    ResidualId,
+    class(Class),
+    detail(quote(Quote),note(Note))).
+```
+
+The key is `(GuidelineId, RegionId, ResidualId)`. `ResidualId` is a globally unique stable
+ID, and the region must be declared by a mapping-region row. `Quote` and `Note` are nonempty
+atoms. Together they must preserve enough source wording and analysis to derive a concrete
+constructor or profile requirement: the quote anchors the source semantics, and the note
+states what representation work remains.
+
+The v1 residual vocabulary is closed:
+
+| Class | Cause | Meaning |
+|---|---|---|
+| `copula_head` | profile wall | A copular head relation lies outside the admitted projection profile. |
+| `transitive_relation` | profile wall | The projection needs a transitive relation outside the admitted profile. |
+| `property` | profile wall | A qualifying property lies outside the admitted projection profile. |
+| `dose_quantity` | no constructor | A dose, value, or unit expression has no mapping constructor. |
+| `temporal` | no constructor | Timing, duration, interval, or frequency has no mapping constructor. |
+| `direction_strength` | no constructor | Recommendation direction or strength has no mapping constructor. |
+| `certainty` | no constructor | Certainty or evidence-quality modality has no mapping constructor. |
+| `population_threshold` | no constructor | A numeric or categorical population threshold has no mapping constructor. |
+| `labeled_exception` | no constructor | A labeled exception has no explicit mapping constructor. |
+| `multi_entity` | no constructor | A relation among multiple entities has no mapping constructor. |
+| `disjunction` | no constructor | Alternatives have no explicit disjunction constructor. |
+| `scope_deferred` | scope | Attachment or quantifier scope is intentionally deferred for later resolution. |
+
+An atom outside this table rejects under the exact schema:
+
+```prolog
+registry_tool_error(mapping,residual,term(Index,class(Class))).
+```
+
+
+Residuals are the requirements worklist for M6. A hard authoring error in the artifact chain
+is a rejection, not a residual: malformed canonical bytes, invalid ACE or IR, broken IDs,
+digests, references, answer shapes, or ordering must be repaired before a mapping file is
+accepted.
+
+### Mapping references and coverage
+
+The mapping file is self-contained. Claims resolve their region and document against rows in
+the same stream; residuals resolve their region there as well. Each declared region must be
+in exactly one admitted coverage state: residual-only, or one or more claims plus one or
+more residuals. A region with neither is uncovered, and any claim implies at least one
+residual for that region. Every mapping document must be referenced by at least one claim.
+
+Coverage-accounting failures use these exact schemas:
+
+```prolog
+registry_tool_error(mapping,coverage,term(Index,region_uncovered(GuidelineId,RegionId))).
+registry_tool_error(mapping,coverage,term(Index,claim_without_residual(GuidelineId,RegionId))).
+registry_tool_error(mapping,coverage,term(Index,document_unreferenced(Docid))).
+```
+
+
+The validator does not read the guideline registry, ACE files, Ulex files, or answer records.
+Cross-file checks tying guideline and region IDs to the registry, and tying document paths,
+digests, and artifact-chain bytes to their files, are owned by integration harnesses.
+
+Mapping first-failure order is deterministic:
+
+1. Check the exact version term.
+2. Validate every row constructor, arity, and field in stream order, including digest,
+   residual-class, item-list, and wh-answer-list checks.
+3. Require at least one `mapping_region/2` row.
+4. Resolve claim region then claim document, and residual region, in stream order.
+5. Reject repeated document keys or docids, region keys, claim keys or claim IDs, and
+   residual keys or residual IDs.
+6. Enforce fixed section order and strict key order.
+7. Check regions in stream order for uncovered or claim-without-residual states, then check
+   documents in stream order for unreferenced docids.
+
+
 ## Naming rules
 
-Guideline, extraction, region, entry, item, and proposal IDs are lowercase ASCII stable IDs.
+Guideline, extraction, region, entry, item, proposal, claim, and residual IDs are lowercase
+ASCII stable IDs.
 They start with a letter, contain letters or digits inside each segment, and use single `-`
 or `.` separators between nonempty segments. Underscores are reserved for Prolog constructor
 names. IDs are permanent provenance handles and must not be reassigned after publication.
+
+Mapping docids use the stricter front-end filename-stem contract: they are nonempty atoms
+made only from lowercase ASCII letters, digits, and `-`, and they do not begin with `-`.
 
 Repository paths are nonempty POSIX-relative atoms: no leading `/`, empty segment, `.`
 segment, or `..` segment is legal. URLs, media types, timestamps, titles, labels, reasons,
@@ -223,7 +414,7 @@ stdout:
 registry_tool_error(Stage,Class,Detail).
 ```
 
-`Stage` is `registry`, `terminology`, `ulex`, or `cli`. The version fact is checked before
+`Stage` is `registry`, `terminology`, `mapping`, `ulex`, or `cli`. The version fact is checked before
 any row, so a file supplied to the wrong subcommand deterministically fails with class
 `version` rather than with a row error.
 
@@ -233,21 +424,23 @@ any row, so a file supplied to the wrong subcommand deterministically fails with
 | `syntax` | The decoded Prolog stream cannot be parsed. | 1 |
 | `canonical` | Canonical reserialization differs from input. | 1 |
 | `version` | The required v1 version fact is missing or different. | 1 |
-| `row` | A row constructor or arity is unknown, or no required source/entry row exists. | 1 |
-| `shape` | A nested constructor, scalar type, ID, path, enum, count, page locator, or list is invalid. | 1 |
+| `row` | A row constructor or arity is unknown, or a required source, entry, or mapping-region row is absent. | 1 |
+| `shape` | A nested constructor, scalar type, ID, docid, path, enum, projection, count, page locator, item list, or expected answer is invalid. | 1 |
 | `digest` | A digest is not exactly 64 lowercase hexadecimal characters. | 1 |
 | `range` | A byte range or page interval is reversed or empty. | 1 |
-| `reference` | A source, artifact, extraction, state, or blocked-state reference does not resolve. | 1 |
-| `duplicate` | A stable ID or semantic key is repeated. | 1 |
-| `ordering` | Registry sections or rows are not in strict key order. | 1 |
+| `residual` | A residual class atom is outside the admitted vocabulary. | 1 |
+| `reference` | A source, artifact, extraction, state, blocked-state, mapping-region, or mapping-document reference does not resolve. | 1 |
+| `duplicate` | A stable ID, docid, or semantic key is repeated. | 1 |
+| `ordering` | Registry or mapping sections, rows, item IDs, or wh answers are not in their required strict order. | 1 |
+| `coverage` | The region coverage identity or claim/document accounting fails. | 1 |
 | `template` | A terminology template kind or arity is not one of the 27 admitted forms. | 1 |
 | `gender` | A gender atom is outside the admitted vocabulary. | 1 |
 | `usage` | Arguments do not select exactly one subcommand. | 2 |
 | `uncaught` | An unexpected internal exception escaped validation or serialization. | 2 |
 
 Exit 0 means success, exit 1 means input-content rejection, and exit 2 means usage or
-internal failure. Validation is deterministic and reports the first failure in the pass
-order above.
+internal failure. Validation is deterministic and reports the first failure in the selected
+grammar's documented pass order.
 
 ## Rights posture
 

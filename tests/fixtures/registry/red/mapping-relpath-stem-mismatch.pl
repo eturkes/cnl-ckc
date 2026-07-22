@@ -1,0 +1,2 @@
+cnl_guideline_mapping(1).
+mapping_document('synthetic-guideline','doc-a',ace(relpath('x/wrong.ace'),ace_sha256('0000000000000000000000000000000000000000000000000000000000000000')),ulex(relpath('x/doc-a.ulex'),ulex_sha256('1111111111111111111111111111111111111111111111111111111111111111'))).

@@ -7,10 +7,10 @@
 
 /*
 Run: swipl -q -f none -F none -s src/prolog/registry_tool.pl -g main
-     -t 'halt(9)' -- registry|terminology|ulex
-Input: one strict RFC 3629 UTF-8 canonical registry or terminology term stream.
-Registry and terminology validation write no bytes. Ulex writes the buffered
-canonical template stream. Failure writes one canonical
+     -t 'halt(9)' -- registry|terminology|mapping|ulex
+Input: one strict RFC 3629 UTF-8 canonical registry, terminology, or mapping
+term stream. Registry, terminology, and mapping validation write no bytes.
+Ulex writes the buffered canonical template stream. Failure writes one canonical
 registry_tool_error(Stage,Class,Detail) line and no stdout bytes.
 Exit: 0=success; 1=input-content rejection; 2=usage or uncaught internal error.
 */
@@ -47,6 +47,8 @@ error_stage([registry], registry) :-
     !.
 error_stage([terminology], terminology) :-
     !.
+error_stage([mapping], mapping) :-
+    !.
 error_stage([ulex], ulex) :-
     !.
 error_stage(_, cli).
@@ -60,6 +62,12 @@ run_cli([registry], Input, Output) :-
 run_cli([terminology], Input, Output) :-
     !,
     with_output_to(string(Buffer), terminology_input(Input)),
+    format(Output, '~s', [Buffer]),
+    flush_output(Output),
+    halt(0).
+run_cli([mapping], Input, Output) :-
+    !,
+    with_output_to(string(Buffer), mapping_input(Input)),
     format(Output, '~s', [Buffer]),
     flush_output(Output),
     halt(0).
@@ -79,6 +87,10 @@ registry_input(Input) :-
 terminology_input(Input) :-
     read_canonical_terms(Input, Terms),
     validate_terminology(Terms, _).
+
+mapping_input(Input) :-
+    read_canonical_terms(Input, Terms),
+    validate_mapping(Terms).
 
 ulex_input(Input) :-
     read_canonical_terms(Input, Terms),
@@ -768,6 +780,580 @@ record_rank(record(Kind, _, _, _), Rank) :-
     ; Kind == item_state -> Rank = 4
     ; Rank = 5
     ).
+
+validate_mapping(Terms) :-
+    require_version(Terms, cnl_guideline_mapping(1), Rows),
+    validate_mapping_rows(Rows, 2, Records),
+    require_mapping_region(Records),
+    validate_mapping_references(Records),
+    validate_mapping_duplicates(Records),
+    validate_mapping_ordering(Records),
+    validate_mapping_coverage(Records).
+
+validate_mapping_rows([], _, []).
+validate_mapping_rows([Term|Terms], Index, [Record|Records]) :-
+    mapping_row_kind(Term, Index, Kind),
+    validate_mapping_row(Kind, Term, Index, Record),
+    Next is Index + 1,
+    validate_mapping_rows(Terms, Next, Records).
+
+mapping_row_kind(Term, Index, Kind) :-
+    term_name_arity(Term, Name, Arity),
+    ( Name == mapping_document ->
+        require_row_arity(Name, Arity, 4, Index),
+        Kind = document
+    ; Name == mapping_region ->
+        require_row_arity(Name, Arity, 2, Index),
+        Kind = region
+    ; Name == mapping_claim ->
+        require_row_arity(Name, Arity, 7, Index),
+        Kind = claim
+    ; Name == mapping_residual ->
+        require_row_arity(Name, Arity, 5, Index),
+        Kind = residual
+    ; throw(registry_reject(row,
+          term(Index, unknown_constructor(Name, Arity))))
+    ).
+
+validate_mapping_row(Kind, Term, Index, Record) :-
+    ( Kind == document ->
+        validate_mapping_document_row(Term, Index, Record)
+    ; Kind == region ->
+        validate_mapping_region_row(Term, Index, Record)
+    ; Kind == claim ->
+        validate_mapping_claim_row(Term, Index, Record)
+    ; validate_mapping_residual_row(Term, Index, Record)
+    ).
+
+validate_mapping_document_row(Term, Index,
+        mapping_record(document, [GuidelineId, Docid], Index,
+            document(GuidelineId, Docid))) :-
+    arg(1, Term, GuidelineId),
+    expect_stable_id(GuidelineId, Index, guideline_id),
+    arg(2, Term, Docid),
+    expect_mapping_docid(Docid, Index),
+    arg(3, Term, Ace),
+    validate_mapping_document_artifact(
+        Ace, ace, ace_relpath, ace_sha256, '.ace', Docid, Index),
+    arg(4, Term, Ulex),
+    validate_mapping_document_artifact(
+        Ulex, ulex, ulex_relpath, ulex_sha256, '.ulex', Docid, Index).
+
+validate_mapping_document_artifact(Term, Constructor, PathField,
+        DigestField, Suffix, Docid, Index) :-
+    expect_compound(Term, Constructor, 2, Index, Constructor),
+    arg(1, Term, PathTerm),
+    wrapper_value(PathTerm, relpath, Index, PathField, Path),
+    expect_relpath(Path, Index, PathField),
+    mapping_path_final_segment(Path, FinalSegment),
+    atom_concat(Docid, Suffix, ExpectedSegment),
+    ( FinalSegment == ExpectedSegment ->
+        true
+    ; throw(registry_reject(shape, term(Index, field(PathField))))
+    ),
+    arg(2, Term, DigestTerm),
+    wrapper_value(DigestTerm, DigestField, Index,
+        DigestField, Digest),
+    validate_digest(Digest, Index, DigestField).
+
+mapping_path_final_segment(Path, FinalSegment) :-
+    atomic_list_concat(Segments, '/', Path),
+    mapping_last_segment(Segments, FinalSegment).
+
+mapping_last_segment([Segment], Segment).
+mapping_last_segment([_|Segments], FinalSegment) :-
+    mapping_last_segment(Segments, FinalSegment).
+
+expect_mapping_docid(Value, Index) :-
+    ( valid_mapping_docid(Value) ->
+        true
+    ; throw(registry_reject(shape, term(Index, field(docid))))
+    ).
+
+valid_mapping_docid(Value) :-
+    atom(Value),
+    atom_codes(Value, [First|Rest]),
+    First =\= 0'-,
+    valid_mapping_docid_codes([First|Rest]).
+
+valid_mapping_docid_codes([]).
+valid_mapping_docid_codes([Code|Codes]) :-
+    ( ascii_lower_or_digit(Code) ; Code =:= 0'- ),
+    valid_mapping_docid_codes(Codes).
+
+validate_mapping_region_row(Term, Index,
+        mapping_record(region, [GuidelineId, RegionId], Index,
+            region(GuidelineId, RegionId))) :-
+    arg(1, Term, GuidelineId),
+    expect_stable_id(GuidelineId, Index, guideline_id),
+    arg(2, Term, RegionId),
+    expect_stable_id(RegionId, Index, region_id).
+
+validate_mapping_claim_row(Term, Index,
+        mapping_record(claim, [GuidelineId, RegionId, ClaimId], Index,
+            claim(GuidelineId, RegionId, ClaimId, Docid))) :-
+    arg(1, Term, GuidelineId),
+    expect_stable_id(GuidelineId, Index, guideline_id),
+    arg(2, Term, RegionId),
+    expect_stable_id(RegionId, Index, region_id),
+    arg(3, Term, ClaimId),
+    expect_stable_id(ClaimId, Index, claim_id),
+    arg(4, Term, ProjectionTerm),
+    wrapper_value(ProjectionTerm, projection, Index,
+        projection, Projection),
+    expect_enum(Projection, [applicability, action_kind],
+        Index, projection),
+    arg(5, Term, DocidTerm),
+    wrapper_value(DocidTerm, docid, Index, docid, Docid),
+    expect_mapping_docid(Docid, Index),
+    arg(6, Term, ItemsTerm),
+    wrapper_value(ItemsTerm, items, Index, items, Items),
+    validate_mapping_items(Items, Index, Query),
+    arg(7, Term, AnswerTerm),
+    wrapper_value(AnswerTerm, expected_answer, Index,
+        expected_answer, Answer),
+    validate_mapping_answer(Answer, Index, AnswerQuery),
+    ( AnswerQuery == Query ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer_query))))
+    ).
+
+validate_mapping_items(Items, Index, Query) :-
+    ( is_list(Items) ->
+        true
+    ; throw(registry_reject(shape, term(Index, field(items))))
+    ),
+    validate_mapping_items_(Items, Index, 0, 0, none,
+        RuleCount, QueryCount, QueryState),
+    ( RuleCount >= 1,
+      QueryCount =:= 1,
+      QueryState = query(Query) ->
+        true
+    ; throw(registry_reject(shape, term(Index, field(items))))
+    ),
+    validate_mapping_canonical_order(Items, Index, items).
+
+validate_mapping_items_([], _, RuleCount, QueryCount, QueryState,
+        RuleCount, QueryCount, QueryState).
+validate_mapping_items_([Item|Items], Index,
+        RuleCount0, QueryCount0, QueryState0,
+        RuleCount, QueryCount, QueryState) :-
+    term_name_arity(Item, Name, Arity),
+    ( Name == rule_id, Arity =:= 2 ->
+        validate_mapping_item_id(Item, Index),
+        RuleCount1 is RuleCount0 + 1,
+        QueryCount1 = QueryCount0,
+        QueryState1 = QueryState0
+    ; Name == query_id, Arity =:= 2 ->
+        validate_mapping_item_id(Item, Index),
+        RuleCount1 = RuleCount0,
+        QueryCount1 is QueryCount0 + 1,
+        ( QueryState0 == none ->
+            QueryState1 = query(Item)
+        ; QueryState1 = QueryState0
+        )
+    ; throw(registry_reject(shape, term(Index, field(items))))
+    ),
+    validate_mapping_items_(Items, Index,
+        RuleCount1, QueryCount1, QueryState1,
+        RuleCount, QueryCount, QueryState).
+
+validate_mapping_item_id(Term, Index) :-
+    arg(1, Term, SentenceTerm),
+    expect_compound(SentenceTerm, sentence, 1, Index, items),
+    arg(1, SentenceTerm, Sentence),
+    expect_positive_integer(Sentence, Index, items),
+    arg(2, Term, ClauseTerm),
+    expect_compound(ClauseTerm, clause, 1, Index, items),
+    arg(1, ClauseTerm, Clause),
+    expect_positive_integer(Clause, Index, items).
+
+validate_mapping_answer(Answer, Index, Query) :-
+    term_name_arity(Answer, Name, Arity),
+    ( Name == answer, Arity =:= 3 ->
+        validate_mapping_yes_no_answer(Answer, Index, Query)
+    ; Name == answer, Arity =:= 4 ->
+        validate_mapping_wh_answer(Answer, Index, Query)
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ).
+
+validate_mapping_yes_no_answer(Answer, Index, Query) :-
+    arg(1, Answer, Query),
+    arg(2, Answer, Predicate),
+    validate_mapping_ground_predicate(Predicate, Index),
+    arg(3, Answer, Outcome),
+    ( ( Outcome == proved ; Outcome == not_proved ) ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ).
+
+validate_mapping_ground_predicate(Term, Index) :-
+    expect_compound(Term, pred, 2, Index, expected_answer),
+    arg(1, Term, Name),
+    expect_nonempty_atom(Name, Index, expected_answer),
+    arg(2, Term, Arguments),
+    ( is_list(Arguments), Arguments = [_|_] ->
+        validate_mapping_named_arguments(Arguments, Index)
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ).
+
+validate_mapping_named_arguments([], _).
+validate_mapping_named_arguments([Argument|Arguments], Index) :-
+    expect_compound(Argument, named, 1, Index, expected_answer),
+    arg(1, Argument, Value),
+    expect_nonempty_atom(Value, Index, expected_answer),
+    validate_mapping_named_arguments(Arguments, Index).
+
+validate_mapping_wh_answer(Answer, Index, Query) :-
+    arg(1, Answer, Query),
+    arg(2, Answer, Wh),
+    expect_compound(Wh, wh, 1, Index, expected_answer),
+    arg(1, Wh, Who),
+    ( Who == who ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ),
+    arg(3, Answer, Pattern),
+    validate_mapping_wh_pattern(Pattern, Index, Name),
+    arg(4, Answer, AnswersTerm),
+    wrapper_value(AnswersTerm, answers, Index,
+        expected_answer, Answers),
+    ( is_list(Answers) ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ),
+    validate_mapping_wh_answers(Answers, Name, Index),
+    validate_mapping_canonical_order(
+        Answers, Index, expected_answer_answers).
+
+validate_mapping_wh_pattern(Term, Index, Name) :-
+    expect_compound(Term, pred, 2, Index, expected_answer),
+    arg(1, Term, Name),
+    expect_nonempty_atom(Name, Index, expected_answer),
+    arg(2, Term, Arguments),
+    ( is_list(Arguments), Arguments = [Variable] ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ),
+    expect_compound(Variable, var, 1, Index, expected_answer),
+    arg(1, Variable, Number),
+    ( Number == 1 ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ).
+
+validate_mapping_wh_answers([], _, _).
+validate_mapping_wh_answers([Answer|Answers], Name, Index) :-
+    expect_compound(Answer, pred, 2, Index, expected_answer),
+    arg(1, Answer, AnswerName),
+    expect_nonempty_atom(AnswerName, Index, expected_answer),
+    ( AnswerName == Name ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ),
+    arg(2, Answer, Arguments),
+    ( is_list(Arguments), Arguments = [Named] ->
+        true
+    ; throw(registry_reject(shape,
+          term(Index, field(expected_answer))))
+    ),
+    expect_compound(Named, named, 1, Index, expected_answer),
+    arg(1, Named, Value),
+    expect_nonempty_atom(Value, Index, expected_answer),
+    validate_mapping_wh_answers(Answers, Name, Index).
+
+validate_mapping_canonical_order([], _, _).
+validate_mapping_canonical_order([_], _, _).
+validate_mapping_canonical_order([Left,Right|Rest], Index, Detail) :-
+    mapping_canonical_codes(Left, LeftCodes),
+    mapping_canonical_codes(Right, RightCodes),
+    compare_code_lists(Order, RightCodes, LeftCodes),
+    ( Order == (>) ->
+        validate_mapping_canonical_order([Right|Rest], Index, Detail)
+    ; throw(registry_reject(ordering, term(Index, Detail)))
+    ).
+
+mapping_canonical_codes(Term, Codes) :-
+    copy_term(Term, Copy),
+    canonical_line(Copy, Line),
+    string_codes(Line, Codes).
+
+validate_mapping_residual_row(Term, Index,
+        mapping_record(residual,
+            [GuidelineId, RegionId, ResidualId], Index,
+            residual(GuidelineId, RegionId, ResidualId))) :-
+    arg(1, Term, GuidelineId),
+    expect_stable_id(GuidelineId, Index, guideline_id),
+    arg(2, Term, RegionId),
+    expect_stable_id(RegionId, Index, region_id),
+    arg(3, Term, ResidualId),
+    expect_stable_id(ResidualId, Index, residual_id),
+    arg(4, Term, ClassTerm),
+    wrapper_value(ClassTerm, class, Index, class, Class),
+    ( valid_mapping_residual_class(Class) ->
+        true
+    ; throw(registry_reject(residual,
+          term(Index, class(Class))))
+    ),
+    arg(5, Term, Detail),
+    expect_compound(Detail, detail, 2, Index, detail),
+    arg(1, Detail, QuoteTerm),
+    wrapper_value(QuoteTerm, quote, Index, quote, Quote),
+    expect_nonempty_atom(Quote, Index, quote),
+    arg(2, Detail, NoteTerm),
+    wrapper_value(NoteTerm, note, Index, note, Note),
+    expect_nonempty_atom(Note, Index, note).
+
+valid_mapping_residual_class(Class) :-
+    member_eq(Class,
+        [ copula_head,
+          transitive_relation,
+          property,
+          dose_quantity,
+          temporal,
+          direction_strength,
+          certainty,
+          population_threshold,
+          labeled_exception,
+          multi_entity,
+          disjunction,
+          scope_deferred
+        ]).
+
+require_mapping_region(Records) :-
+    ( mapping_has_kind(Records, region) ->
+        true
+    ; throw(registry_reject(row, required(mapping_region)))
+    ).
+
+mapping_has_kind([mapping_record(Kind0, _, _, _)|_], Kind) :-
+    Kind0 == Kind,
+    !.
+mapping_has_kind([_|Records], Kind) :-
+    mapping_has_kind(Records, Kind).
+
+validate_mapping_references(Records) :-
+    validate_mapping_references_(Records, Records).
+
+validate_mapping_references_([], _).
+validate_mapping_references_([Record|Records], All) :-
+    validate_mapping_record_references(Record, All),
+    validate_mapping_references_(Records, All).
+
+validate_mapping_record_references(
+        mapping_record(document, _, _, _), _).
+validate_mapping_record_references(
+        mapping_record(region, _, _, _), _).
+validate_mapping_record_references(
+        mapping_record(claim, _, Index,
+            claim(GuidelineId, RegionId, _, Docid)), Records) :-
+    ( find_mapping_region(Records, GuidelineId, RegionId) ->
+        true
+    ; throw(registry_reject(reference,
+          term(Index, region(GuidelineId, RegionId))))
+    ),
+    ( find_mapping_document(Records, GuidelineId, Docid) ->
+        true
+    ; throw(registry_reject(reference,
+          term(Index, docid(GuidelineId, Docid))))
+    ).
+validate_mapping_record_references(
+        mapping_record(residual, _, Index,
+            residual(GuidelineId, RegionId, _)), Records) :-
+    ( find_mapping_region(Records, GuidelineId, RegionId) ->
+        true
+    ; throw(registry_reject(reference,
+          term(Index, region(GuidelineId, RegionId))))
+    ).
+
+find_mapping_document(
+        [mapping_record(document, _, _, document(GuidelineId0, Docid0))|_],
+        GuidelineId, Docid) :-
+    GuidelineId0 == GuidelineId,
+    Docid0 == Docid,
+    !.
+find_mapping_document([_|Records], GuidelineId, Docid) :-
+    find_mapping_document(Records, GuidelineId, Docid).
+
+find_mapping_region(
+        [mapping_record(region, _, _, region(GuidelineId0, RegionId0))|_],
+        GuidelineId, RegionId) :-
+    GuidelineId0 == GuidelineId,
+    RegionId0 == RegionId,
+    !.
+find_mapping_region([_|Records], GuidelineId, RegionId) :-
+    find_mapping_region(Records, GuidelineId, RegionId).
+
+validate_mapping_duplicates(Records) :-
+    validate_mapping_duplicate_records(Records,
+        [], [], [], [], [], [], []).
+
+validate_mapping_duplicate_records([], _, _, _, _, _, _, _).
+validate_mapping_duplicate_records(
+        [mapping_record(Kind, Key, Index, Data)|Records],
+        DocumentKeySeen, DocidSeen, RegionKeySeen,
+        ClaimKeySeen, ClaimIdSeen, ResidualKeySeen, ResidualIdSeen) :-
+    ( Kind == document ->
+        Data = document(_, Docid),
+        check_seen(Key, Index, document_key, DocumentKeySeen),
+        check_seen(Docid, Index, docid, DocidSeen),
+        NextDocumentKeySeen = [seen(Key, Index)|DocumentKeySeen],
+        NextDocidSeen = [seen(Docid, Index)|DocidSeen],
+        NextRegionKeySeen = RegionKeySeen,
+        NextClaimKeySeen = ClaimKeySeen,
+        NextClaimIdSeen = ClaimIdSeen,
+        NextResidualKeySeen = ResidualKeySeen,
+        NextResidualIdSeen = ResidualIdSeen
+    ; Kind == region ->
+        check_seen(Key, Index, region_key, RegionKeySeen),
+        NextDocumentKeySeen = DocumentKeySeen,
+        NextDocidSeen = DocidSeen,
+        NextRegionKeySeen = [seen(Key, Index)|RegionKeySeen],
+        NextClaimKeySeen = ClaimKeySeen,
+        NextClaimIdSeen = ClaimIdSeen,
+        NextResidualKeySeen = ResidualKeySeen,
+        NextResidualIdSeen = ResidualIdSeen
+    ; Kind == claim ->
+        Data = claim(_, _, ClaimId, _),
+        check_seen(Key, Index, claim_key, ClaimKeySeen),
+        check_seen(ClaimId, Index, claim_id, ClaimIdSeen),
+        NextDocumentKeySeen = DocumentKeySeen,
+        NextDocidSeen = DocidSeen,
+        NextRegionKeySeen = RegionKeySeen,
+        NextClaimKeySeen = [seen(Key, Index)|ClaimKeySeen],
+        NextClaimIdSeen = [seen(ClaimId, Index)|ClaimIdSeen],
+        NextResidualKeySeen = ResidualKeySeen,
+        NextResidualIdSeen = ResidualIdSeen
+    ; Data = residual(_, _, ResidualId),
+      check_seen(Key, Index, residual_key, ResidualKeySeen),
+      check_seen(ResidualId, Index, residual_id, ResidualIdSeen),
+      NextDocumentKeySeen = DocumentKeySeen,
+      NextDocidSeen = DocidSeen,
+      NextRegionKeySeen = RegionKeySeen,
+      NextClaimKeySeen = ClaimKeySeen,
+      NextClaimIdSeen = ClaimIdSeen,
+      NextResidualKeySeen = [seen(Key, Index)|ResidualKeySeen],
+      NextResidualIdSeen = [seen(ResidualId, Index)|ResidualIdSeen]
+    ),
+    validate_mapping_duplicate_records(Records,
+        NextDocumentKeySeen, NextDocidSeen, NextRegionKeySeen,
+        NextClaimKeySeen, NextClaimIdSeen,
+        NextResidualKeySeen, NextResidualIdSeen).
+
+validate_mapping_ordering([]).
+validate_mapping_ordering([Record|Records]) :-
+    validate_mapping_ordering_(Records, Record).
+
+validate_mapping_ordering_([], _).
+validate_mapping_ordering_([Record|Records], Previous) :-
+    mapping_record_rank(Previous, PreviousRank),
+    mapping_record_rank(Record, Rank),
+    Record = mapping_record(Kind, Key, Index, _),
+    Previous = mapping_record(PreviousKind, PreviousKey, PreviousIndex, _),
+    ( Rank > PreviousRank ->
+        true
+    ; Rank < PreviousRank ->
+        throw(registry_reject(ordering,
+          term(Index, section(Kind, after(PreviousKind,
+              previous_term(PreviousIndex))))))
+    ; compare_atom_key(Order, Key, PreviousKey),
+      ( Order == (>) ->
+          true
+      ; throw(registry_reject(ordering,
+            term(Index, key(Kind, Key,
+                after(PreviousKey, previous_term(PreviousIndex))))))
+      )
+    ),
+    validate_mapping_ordering_(Records, Record).
+
+mapping_record_rank(mapping_record(Kind, _, _, _), Rank) :-
+    ( Kind == document ->
+        Rank = 1
+    ; Kind == region ->
+        Rank = 2
+    ; Kind == claim ->
+        Rank = 3
+    ; Rank = 4
+    ).
+
+validate_mapping_coverage(Records) :-
+    validate_mapping_region_coverage(Records, Records),
+    validate_mapping_document_coverage(Records, Records).
+
+validate_mapping_region_coverage([], _).
+validate_mapping_region_coverage(
+        [mapping_record(Kind, _, Index, Data)|Records], All) :-
+    ( Kind == region ->
+        Data = region(GuidelineId, RegionId),
+        ( mapping_has_claim(All, GuidelineId, RegionId) ->
+            ( mapping_has_residual(All, GuidelineId, RegionId) ->
+                true
+            ; throw(registry_reject(coverage,
+                  term(Index, claim_without_residual(
+                      GuidelineId, RegionId))))
+            )
+        ; mapping_has_residual(All, GuidelineId, RegionId) ->
+            true
+        ; throw(registry_reject(coverage,
+              term(Index, region_uncovered(GuidelineId, RegionId))))
+        )
+    ; true
+    ),
+    validate_mapping_region_coverage(Records, All).
+
+validate_mapping_document_coverage([], _).
+validate_mapping_document_coverage(
+        [mapping_record(Kind, _, Index, Data)|Records], All) :-
+    ( Kind == document ->
+        Data = document(GuidelineId, Docid),
+        ( mapping_document_has_claim(All, GuidelineId, Docid) ->
+            true
+        ; throw(registry_reject(coverage,
+              term(Index, document_unreferenced(Docid))))
+        )
+    ; true
+    ),
+    validate_mapping_document_coverage(Records, All).
+
+mapping_has_claim(
+        [mapping_record(claim, _, _,
+            claim(GuidelineId0, RegionId0, _, _))|_],
+        GuidelineId, RegionId) :-
+    GuidelineId0 == GuidelineId,
+    RegionId0 == RegionId,
+    !.
+mapping_has_claim([_|Records], GuidelineId, RegionId) :-
+    mapping_has_claim(Records, GuidelineId, RegionId).
+
+mapping_has_residual(
+        [mapping_record(residual, _, _,
+            residual(GuidelineId0, RegionId0, _))|_],
+        GuidelineId, RegionId) :-
+    GuidelineId0 == GuidelineId,
+    RegionId0 == RegionId,
+    !.
+mapping_has_residual([_|Records], GuidelineId, RegionId) :-
+    mapping_has_residual(Records, GuidelineId, RegionId).
+
+mapping_document_has_claim(
+        [mapping_record(claim, _, _,
+            claim(GuidelineId0, _, _, Docid0))|_],
+        GuidelineId, Docid) :-
+    GuidelineId0 == GuidelineId,
+    Docid0 == Docid,
+    !.
+mapping_document_has_claim([_|Records], GuidelineId, Docid) :-
+    mapping_document_has_claim(Records, GuidelineId, Docid).
+
 
 validate_terminology(Terms, Entries) :-
     require_version(Terms, cnl_guideline_terminology(1), Rows),
