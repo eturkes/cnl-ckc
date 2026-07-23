@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eu
+set -o pipefail
 
 ROOT=$PWD
 if ! [ -f tools/pipeline.py ] || \
@@ -36,13 +37,18 @@ fail_case() {
 }
 
 run_pipeline() {
-    local stdout_path stderr_path swipl_value
+    local stdout_path stderr_path swipl_value stub_log_path
     stdout_path=$1
     stderr_path=$2
     swipl_value=$3
     shift 3
+    stub_log_path=${STUB_LOG_PATH:-}
 
-    if SWIPL="$swipl_value" PYTHONDONTWRITEBYTECODE=1 \
+    if SWIPL="$swipl_value" \
+        PIPELINE_CLI_STUB_LOG="$stub_log_path" \
+        PIPELINE_CLI_EXPECTED_APE_TREE="$APE_TREE" \
+        PIPELINE_CLI_EXPECTED_ULEX="$DOCS/doc-b.ulex" \
+        PYTHONDONTWRITEBYTECODE=1 \
         python3 -P tools/pipeline.py "$@" >"$stdout_path" 2>"$stderr_path"; then
         RUN_STATUS=0
     else
@@ -147,6 +153,41 @@ write_expected_stdout() {
         >"$output_path"
 }
 
+append_argv_record() {
+    local output_path argument
+    output_path=$1
+    shift
+
+    {
+        printf 'argc=%s' "$#"
+        for argument in "$@"; do
+            printf '\t%q' "$argument"
+        done
+        printf '\n'
+    } >>"$output_path"
+}
+
+write_expected_swipl_argv() {
+    local output_path document_index stage
+    output_path=$1
+
+    : >"$output_path"
+    append_argv_record "$output_path" \
+        -q -f none -F none -s src/prolog/adapter.pl \
+        -g main -t 'halt(9)' -- "$APE_TREE"
+    append_argv_record "$output_path" \
+        -q -f none -F none -s src/prolog/adapter.pl \
+        -g main -t 'halt(9)' -- "$APE_TREE" "$DOCS/doc-b.ulex"
+    for document_index in 1 2; do
+        : "$document_index"
+        for stage in lower validate compile run; do
+            append_argv_record "$output_path" \
+                -q -f none -F none -s src/prolog/ir_tool.pl \
+                -g main -t 'halt(9)' -- "$stage"
+        done
+    done
+}
+
 sha256_file() {
     local output
     output=$(sha256sum "$1")
@@ -196,10 +237,22 @@ if [ "$1" != -q ] || \
     invalid_argv
 fi
 
+expected_ape=${PIPELINE_CLI_EXPECTED_APE_TREE:-}
+expected_ulex=${PIPELINE_CLI_EXPECTED_ULEX:-}
+if [ -z "$expected_ape" ] || [ -z "$expected_ulex" ]; then
+    invalid_argv
+fi
+
 mode=
 stage=
 case $7 in
     src/prolog/adapter.pl)
+        if [ "${13}" != "$expected_ape" ]; then
+            invalid_argv
+        fi
+        if [ "$#" -eq 14 ] && [ "${14}" != "$expected_ulex" ]; then
+            invalid_argv
+        fi
         mode=adapter
         ;;
     src/prolog/ir_tool.pl)
@@ -208,11 +261,25 @@ case $7 in
         fi
         mode=ir-tool
         stage=${13}
+        case $stage in
+            lower|validate|compile|run) ;;
+            *) invalid_argv ;;
+        esac
         ;;
     *)
         invalid_argv
         ;;
 esac
+
+if [ -n "${PIPELINE_CLI_STUB_LOG:-}" ]; then
+    {
+        printf 'argc=%s' "$#"
+        for argument in "$@"; do
+            printf '\t%q' "$argument"
+        done
+        printf '\n'
+    } >>"$PIPELINE_CLI_STUB_LOG"
+fi
 
 input_file=$(mktemp "${TMPDIR:-/tmp}/pipeline-cli-stub.XXXXXX")
 trap 'rm -f "$input_file"' EXIT
@@ -282,9 +349,15 @@ esac
 STUB
 chmod 755 "$STUB"
 
+expected_argv="$SCRATCH/expected-swipl.argv"
+write_expected_swipl_argv "$expected_argv"
 run1_stdout="$SCRATCH/run1/stdout"
 run1_stderr="$SCRATCH/run1/stderr"
+run1_argv="$SCRATCH/run1/swipl.argv"
+: >"$run1_argv"
+STUB_LOG_PATH=$run1_argv
 run_pipeline "$run1_stdout" "$run1_stderr" "$STUB" "$APE_TREE" "$DOCS" "$OUT1"
+STUB_LOG_PATH=
 if [ "$RUN_STATUS" -ne 0 ]; then
     fail_case "green/publish/status" "expected 0, got $RUN_STATUS"
 fi
@@ -297,12 +370,19 @@ if ! cmp "$run1_stdout" "$run1_expected"; then
     fail_case "green/publish/stdout" "success stdout differs"
 fi
 compare_trees "green/golden" "$OUT1" "$GOLDEN"
+if ! cmp "$run1_argv" "$expected_argv"; then
+    fail_case "green/publish/argv" "SWIPL invocation sequence differs"
+fi
 assert_no_staging "green/publish" "$OUT1"
 pass_case "green/publish"
 
 run2_stdout="$SCRATCH/run2/stdout"
 run2_stderr="$SCRATCH/run2/stderr"
+run2_argv="$SCRATCH/run2/swipl.argv"
+: >"$run2_argv"
+STUB_LOG_PATH=$run2_argv
 run_pipeline "$run2_stdout" "$run2_stderr" "$STUB" "$APE_TREE" "$DOCS" "$OUT2"
+STUB_LOG_PATH=
 if [ "$RUN_STATUS" -ne 0 ]; then
     fail_case "green/determinism/status" "expected 0, got $RUN_STATUS"
 fi
@@ -315,6 +395,11 @@ if ! cmp "$run2_stdout" "$run2_expected"; then
     fail_case "green/determinism/stdout" "success stdout differs"
 fi
 compare_trees "green/determinism" "$OUT1" "$OUT2"
+if ! cmp "$run2_argv" "$expected_argv" || \
+    ! cmp "$run1_argv" "$run2_argv"; then
+    fail_case "green/determinism/argv" \
+        "SWIPL invocation sequence differs from expected or run 1"
+fi
 assert_no_staging "green/determinism" "$OUT2"
 pass_case "green/determinism"
 
@@ -346,8 +431,13 @@ fi
 if [ -s "$usage_stdout" ]; then
     fail_case "red/usage/stdout" "expected zero bytes"
 fi
-if ! command grep -Fq 'usage:' "$usage_stderr"; then
-    fail_case "red/usage/stderr" "missing usage diagnostic"
+usage_expected="$SCRATCH/red/usage.expected"
+printf '%s\n' \
+    'usage: pipeline [-h] ape_tree_dir docs_dir out_dir' \
+    'pipeline: error: unrecognized arguments: extra' \
+    >"$usage_expected"
+if ! cmp "$usage_stderr" "$usage_expected"; then
+    fail_case "red/usage/stderr" "stderr differs"
 fi
 assert_out_absent "red/usage" "$usage_out"
 assert_no_staging "red/usage" "$usage_out"

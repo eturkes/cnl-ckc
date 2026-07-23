@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eu
+set -o pipefail
 
 export LC_ALL=C
 
@@ -680,8 +681,10 @@ if [ "$RUN_STATUS" -ne 1 ] || [ -s "$SCRATCH/clex/pipeline.stdout" ] || \
    [ -s "$SCRATCH/clex/staging.entries" ] || [ "$clex_stderr_lines" -ne 1 ]; then
     fail_case "clex-independence" "expected clean rc 1 OOV rejection"
 fi
-if ! printf '%s\n' "$(<"$SCRATCH/clex/pipeline.stderr")" | \
-        cmp -s - "$SCRATCH/clex/pipeline.stderr" || \
+printf '%s\n' "$(<"$SCRATCH/clex/pipeline.stderr")" \
+    >"$SCRATCH/clex/pipeline.stderr.one-line"
+if ! cmp -s "$SCRATCH/clex/pipeline.stderr.one-line" \
+        "$SCRATCH/clex/pipeline.stderr" || \
    ! command grep -Eq '^adapter_error\(ape_messages,.*\)\.$' \
         "$SCRATCH/clex/pipeline.stderr" || \
    ! command grep -Fq 'acute-pain-clinician' \

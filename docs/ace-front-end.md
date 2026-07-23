@@ -30,7 +30,7 @@ The argument-vector invocation does not involve a shell. The ACE file's raw byte
 - At least one `.ace` file exists.
 - Every `.ulex` file has a same-stem `.ace` sibling.
 
-A document ID is the filename with its final `.ace` suffix removed. It is an interim filename-stem ID until the M5 guideline registry assigns IDs. It must be non-empty, contain only `[a-z0-9-]`, and not begin with `-`. The same rule applies to a Ulex filename stem. Filesystem filenames make the ACE stems unique.
+A document ID is the filename with its final `.ace` suffix removed. This filename-stem ID must be non-empty, contain only `[a-z0-9-]`, and not begin with `-`. The same rule applies to a Ulex filename stem, and filesystem filenames make the ACE stems unique. Registered guideline inputs are bound externally by `mapping_document/4` rows, which record ACE and Ulex relpaths and digests and require both final path segments to use the same docid stem. The generic front end remains registry-agnostic.
 
 `OUT_DIR` must not exist, including as a symlink, and its parent must already be a directory. This condition is also checked before any adapter process starts.
 
@@ -75,7 +75,7 @@ A same-stem `.ulex` file is passed as the adapter's optional final argument. The
 
 ## Fail-closed behavior
 
-All validation and every adapter run complete before `OUT_DIR` is created. Processing stops at the first failing document, which is deterministic because document IDs are sorted. The four glue integrity failures below all exit 2, emit zero stdout, leave `OUT_DIR` absent, and emit one sanitized `ace-front-end: <class>: <detail>` line.
+All validation and every adapter run complete before `OUT_DIR` is created. Processing stops at the first failing document, which is deterministic because document IDs are sorted. Every glue-owned integrity failure identified by a sanitized `ace-front-end: <class>: <detail>` row below exits 2, emits zero stdout, and leaves `OUT_DIR` absent.
 
 | Condition | Exit | Stdout | Stderr |
 |---|---:|---|---|
@@ -116,4 +116,4 @@ Byte stability follows from the following constraints:
 
 `tests/slice-harness.sh` independently stages a fresh APE tree and runs all four committed slice documents twice from ACE + Ulex through DRS, IR, program, and answer records. Each front-end set contains five files (four DRS records plus `manifest.pl`), and each downstream IR, program, and result set contains four files. The harness pins front-end stdout and file sets, byte-compares each artifact-producing stage to its authoritative golden before continuing, treats validation as a separate zero-stream gate, proves the two passes' complete artifact sets are byte-identical, checks lower-stage failure leaves no non-empty downstream artifact, and verifies vendor cleanliness.
 
-The CI `test` job checks regeneration identity and lints all shell harnesses. The pinned SWI 9.2.9 `ape` job runs the adapter and pipeline harnesses, then the slice harness immediately after the pipeline harness and before its final repository-cleanliness check.
+The CI `test` job runs the vendored e-- suite and integrity gate, verifies regeneration bootstrap identity and generated Python, lints every shell harness, then runs the strict compiler, regeneration, and pipeline CLI harnesses. The pinned SWI 9.2.9 `ape` job verifies the runtime and APE vendor, runs the IR validate, lower, and run harnesses and the APE vendor harness, then runs the adapter, pipeline, slice, registry, and guideline harnesses in that order before the final repository-cleanliness gate.

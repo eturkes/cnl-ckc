@@ -110,9 +110,12 @@ guideline_region(GuidelineId,RegionId,ExtractionId,pdf_pages(PhysicalFirst,Physi
 
 The ordering key is `(GuidelineId, RegionId)`, while `RegionId` itself is globally unique.
 The source and extraction IDs must exist. Page numbers are positive integers with first not
-greater than last. `Start` and `End` are nonnegative integer byte offsets into the named
-extraction file, interpreted as the 0-based half-open range `[Start, End)`; `Start` must be
-less than `End`. `region_sha256` is the SHA-256 of exactly those bytes.
+greater than last. `Start` and `End` must be integers, and the pair is valid exactly when
+`0 =< Start` and `Start < End`. They are byte offsets into the named extraction file,
+interpreted as the 0-based half-open range `[Start, End)`. A non-`byte_range/2` term or a
+non-integer endpoint rejects as `shape`; any integer pair violating either inequality,
+including a negative start, an empty range, or a reversed range, rejects as `range`.
+`region_sha256` is the SHA-256 of exactly those bytes.
 
 The CDC Box 3 identifiers are `box3.rec.01` through `box3.rec.12` for recommendation
 statements and `box3.grp.01` through `box3.grp.04` for group headings. HTML ordered-list
@@ -133,6 +136,15 @@ The item-state key is `(GuidelineId, ItemId)` and `State` is exactly one of `don
 state must be `blocked`, and `Reason` is a nonempty atom. These rows are legal but optional
 in v1; they reserve stable vocabulary for the later workflow milestone rather than adding
 frontier behavior here.
+
+Registry first-failure order is deterministic:
+
+1. Check the exact version term.
+2. Validate every row constructor, arity, and field in stream order.
+3. Require at least one `guideline_source/11` row.
+4. Resolve cross-row references in stream order.
+5. Reject repeated stable IDs and semantic keys.
+6. Enforce fixed section order and strict key order.
 
 ## Terminology v1 grammar
 
@@ -206,6 +218,17 @@ This emission contract is the deterministic-production requirement in
 [the user lexicon contract](ulex.md). Intersection checks remain the responsibility of APE
 when the generated file is loaded; registry validation proves template shape, ordering, and
 uniqueness, not the complete APE cross-category intersection policy.
+
+Terminology and Ulex first-failure order is deterministic:
+
+1. Check the exact version term.
+2. Validate every row constructor, arity, entry field, template, and gender in stream order.
+3. Require at least one `terminology_entry/3` row.
+4. Reject repeated entry IDs and `(kind, WordForm)` keys.
+5. Enforce strict `(kind, WordForm)` order.
+
+The `ulex` subcommand completes all five validation passes before it extracts and canonically
+serializes the templates; a rejected terminology stream therefore emits no Ulex prefix.
 
 ## Mapping v1 grammar
 
@@ -345,7 +368,11 @@ The v1 residual vocabulary is closed:
 | `disjunction` | no constructor | Alternatives have no explicit disjunction constructor. |
 | `scope_deferred` | scope | Attachment or quantifier scope is intentionally deferred for later resolution. |
 
-An atom outside this table rejects under the exact schema:
+Any `Class` value outside this exact 12-atom vocabulary rejects under the exact schema
+below. This membership failure is `residual` for every payload kind, including compound
+terms, numbers, and native variables. A malformed or missing `class/1` wrapper instead
+rejects as `shape`, while an invalid `mapping_residual/5` constructor or arity rejects as
+`row`.
 
 ```prolog
 registry_tool_error(mapping,residual,term(Index,class(Class))).
@@ -431,10 +458,10 @@ any row, so a file supplied to the wrong subcommand deterministically fails with
 | `canonical` | Canonical reserialization differs from input. | 1 |
 | `version` | The required v1 version fact is missing or different. | 1 |
 | `row` | A row constructor or arity is unknown, or a required source, entry, or mapping-region row is absent. | 1 |
-| `shape` | A nested constructor, scalar type, ID, docid, path, enum, projection, count, page locator, item list, or expected answer is invalid. | 1 |
+| `shape` | A nested constructor or wrapper is malformed, or a field other than a residual-class payload has an invalid scalar type, ID, docid, path, enum, projection, count, page locator, item list, or expected answer. | 1 |
 | `digest` | A digest is not exactly 64 lowercase hexadecimal characters. | 1 |
-| `range` | A byte range or page interval is reversed or empty. | 1 |
-| `residual` | A residual class atom is outside the admitted vocabulary. | 1 |
+| `range` | A `byte_range/2` integer pair violates `0 =< Start` and `Start < End`, or a positive-integer page interval is reversed. | 1 |
+| `residual` | A mapping residual `class/1` payload is not exactly one of the 12 admitted atoms, including when it is a non-atom term or native variable. | 1 |
 | `reference` | A source, artifact, extraction, state, blocked-state, mapping-region, or mapping-document reference does not resolve. | 1 |
 | `duplicate` | A stable ID, docid, or semantic key is repeated. | 1 |
 | `ordering` | Registry or mapping sections, rows, item IDs, or wh answers are not in their required strict order. | 1 |

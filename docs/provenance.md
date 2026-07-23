@@ -17,6 +17,12 @@ CI provisions SWI-Prolog == 9.2.9 through the digest-pinned official Debian book
 
 AceRules license evidence at its pin: `LICENSE.txt`, first nonblank line = `GNU LESSER GENERAL PUBLIC LICENSE`; next line = `Version 3, 29 June 2007`. `README.md` states `The code is available under the LGPL license. See LICENSE.txt for the details.` License family + version are verified; repository-level text does not select SPDX `only` vs `or-later`. Code reuse remains prohibited unless escalated for license review.
 
+## Guideline-artifact rights authority
+
+Guideline-artifact rights, licensing, redistribution, and commit-permission facts MUST be recorded normatively in each guideline's validated registry. In the current tree, `guidelines/registry.pl` carries those facts in `guideline_source/11` rows; `src/prolog/registry_tool.pl` validates them under the [registry contract](registry.md).
+
+This document remains the authority for vendored code, pinned tools and runtimes, TCB decisions, and repository-level governance. It delegates guideline-specific rights facts and MUST NOT duplicate them.
+
 ## Roles + trust
 
 - E-- MUST be the sole authored source for all first-party Python glue, tests, and tooling.

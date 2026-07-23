@@ -379,29 +379,35 @@ Answer-record consumers must require exactly `cnl_answer_record(2)` and reject e
 For each `<docid>`, the project-owned artifact chain is
 `<docid>.drs.pl` → `<docid>.ir.pl` → `<docid>.program.pl` → `<docid>.result.pl`.
 
-The front end emits `<docid>.drs.pl` plus `manifest.pl` for the complete validated document set. Lowering, validation, compilation, and inference then run in separate ambient-init-free SWI processes. Canonical repository-root invocations are:
+`tools/pipeline.py` is the production orchestrator. The [pipeline contract](pipeline.md)
+owns its pre-flight checks, sibling `front/` and `chain/` staging layout, child-failure relay,
+manifest bindings, and transactional publication. The front end populates `front/` with its
+manifest and DRS records; downstream IR, program, and result records are written to the
+sibling `chain/` directory.
 
-```sh
-ape_tree=/path/to/fresh-ape-tree
-docs_dir=/path/to/docs
-out_dir=/path/to/new-output
-docid=slice
+For each sorted document ID, the pipeline runs `lower`, `validate`, `compile`, and `run` in
+separate ambient-init-free SWI-Prolog processes. Every process receives a fresh disk read of
+the preceding artifact. `validate` succeeds with zero stdout and zero stderr; each
+transforming stage emits one complete canonical record only after its checks pass. The
+individual `ir_tool` commands specified below remain the low-level fixture and diagnostic
+interface, but their outputs belong in separate scratch destinations and must never be
+appended to a completed front-end `OUT_DIR`.
 
-SWIPL=swipl PYTHONDONTWRITEBYTECODE=1 \
-  python3 -P tools/ace_front_end.py "$ape_tree" "$docs_dir" "$out_dir"
-swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
-  lower <"$out_dir/$docid.drs.pl" >"$out_dir/$docid.ir.pl"
-swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
-  validate <"$out_dir/$docid.ir.pl"
-swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
-  compile <"$out_dir/$docid.ir.pl" >"$out_dir/$docid.program.pl"
-swipl -q -f none -F none -s src/prolog/ir_tool.pl -g main -t 'halt(9)' -- \
-  run <"$out_dir/$docid.program.pl" >"$out_dir/$docid.result.pl"
-```
+The slice byte authorities are `tests/fixtures/slice/golden/manifest.pl`,
+`tests/fixtures/slice/golden/<docid>.drs.pl`,
+`tests/fixtures/slice/ir/<docid>.ir.pl`,
+`tests/fixtures/slice/program/<docid>.program.pl`, and
+`tests/fixtures/slice/result/<docid>.result.pl`. A generated mismatch is a contract failure,
+not a regeneration instruction.
 
-`validate` succeeds with zero stdout and stderr; each transforming stage commits one complete canonical record only after its own checks pass. Byte authorities live under `tests/fixtures/slice/`: `golden/manifest.pl` and `golden/<docid>.drs.pl`, then `ir/<docid>.ir.pl`, `program/<docid>.program.pl`, and `result/<docid>.result.pl`. A generated mismatch is a contract failure, not a regeneration instruction.
-
-`tests/slice-harness.sh` stages and builds a fresh APE copy, produces two fresh front-end output trees, and chains all four fresh DRS records—`slice-naf`, `slice-unknown`, `slice-wh`, and `slice`—through `lower` → `validate` → `compile` → `run`. It byte-compares each artifact-producing stage to its committed golden before continuing and treats `validate` as a separate zero-stream success gate, pins each pass's complete chain file inventory, proves the two passes' complete artifact sets byte-identical, proves the staged APE tree unchanged across both passes, reuses the chain driver on a trailing-term rejection to prove zero non-empty downstream artifacts, and verifies `vendor/` cleanliness before staging and after both passes. CI runs this harness in the pinned SWI 9.2.9 `ape` job after `tests/pipeline-harness.sh` and before the final repository-cleanliness gate.
+`tests/slice-harness.sh` stages and builds a fresh APE copy, runs all four committed slice
+documents twice through the complete chain, compares every artifact-producing stage to its
+golden before continuing, and treats validation as a separate zero-stream gate. It also
+pins each pass's complete inventory, proves both passes byte-identical, checks that a
+lower-stage rejection leaves no non-empty downstream artifact, and verifies staged and
+vendored APE cleanliness. In the pinned SWI 9.2.9 CI job, it runs after
+`tests/pipeline-harness.sh` and before the registry harness, guideline harness, and final
+repository-cleanliness gate.
 
 ## CLI
 
