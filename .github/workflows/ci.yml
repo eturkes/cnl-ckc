@@ -65,7 +65,8 @@ jobs:
           bash -n tests/ir-run-harness.sh
           bash -n tests/slice-harness.sh
           bash -n tests/registry-harness.sh
-          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/pipeline-cli-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh tests/ir-lower-harness.sh tests/ir-run-harness.sh tests/slice-harness.sh tests/registry-harness.sh
+          bash -n tests/guideline-harness.sh
+          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/pipeline-cli-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh tests/ir-lower-harness.sh tests/ir-run-harness.sh tests/slice-harness.sh tests/registry-harness.sh tests/guideline-harness.sh
 
       - name: Run strict compiler harness
         run: bash tests/strict-harness.sh
@@ -140,6 +141,9 @@ jobs:
 
       - name: Run registry harness
         run: bash tests/registry-harness.sh
+
+      - name: Run guideline harness
+        run: bash tests/guideline-harness.sh
 
       - name: Verify repository cleanliness
         run: |

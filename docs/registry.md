@@ -2,8 +2,9 @@
 
 The guideline registry records acquired source artifacts, rights evidence, extraction
 evidence, and byte-addressed source regions. A separate terminology registry records the
-versioned lexical entries from which production Ulex bytes are emitted. Both formats are
-strict UTF-8 canonical Prolog term streams.
+versioned lexical entries from which production Ulex bytes are emitted. The guideline
+registry, terminology registry, and mapping store are all strict UTF-8 canonical Prolog term
+streams.
 
 The project-owned mapping store is specified in the **Mapping v1 grammar** section below;
 it records bounded claims and typed residuals against guideline regions.
@@ -197,7 +198,9 @@ aliases.
 The output is UTF-8 with LF line endings, one canonical fact per line ending in `.`, in the
 validated strict `(kind, WordForm)` order. The output contains no version fact, entry ID, or
 `english_surface/1` wrapper. Consequently identical terminology bytes produce identical
-Ulex bytes in fresh processes.
+Ulex bytes in fresh processes. `tests/guideline-harness.sh` runs the real terminology
+stream through the `ulex` subcommand in fresh processes and cmp-gates the emission
+against all 12 committed per-document Ulex sidecars.
 
 This emission contract is the deterministic-production requirement in
 [the user lexicon contract](ulex.md). Intersection checks remain the responsibility of APE
@@ -251,7 +254,7 @@ mapping_region(GuidelineId,RegionId).
 
 The key is `(GuidelineId, RegionId)`. Both values are stable IDs. At least one region row is
 required. Region identity is local to the mapping file during validation; the cross-file tie
-to the guideline registry is harness-owned.
+to the guideline registry is owned by `tests/guideline-harness.sh`.
 
 ### Mapping claim rows
 
@@ -372,8 +375,11 @@ registry_tool_error(mapping,coverage,term(Index,document_unreferenced(Docid))).
 
 
 The validator does not read the guideline registry, ACE files, Ulex files, or answer records.
-Cross-file checks tying guideline and region IDs to the registry, and tying document paths,
-digests, and artifact-chain bytes to their files, are owned by integration harnesses.
+`tests/guideline-harness.sh` owns the cross-file ties: guideline and region IDs against the
+registry; mapping-document paths and ACE/Ulex digests against committed files; manifest
+hashes against fresh artifact-chain bytes; complete fresh pipeline trees against committed
+goldens; expected answers against fresh result records; query and rule items against fresh
+results and programs; and complete region coverage.
 
 Mapping first-failure order is deterministic:
 

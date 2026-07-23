@@ -99,7 +99,12 @@ conflict, including degree-form duplicates and forbidden cross-category reuse.
 Those conflicts produce `lexicon` warnings and are rejected. Identical Ulex bytes
 and ACE input must produce identical canonical DRS bytes in fresh processes.
 
-For M5, production Ulex files will be generated from the versioned terminology
-registry, with a stable lemma-to-registry-ID mapping and the generated Ulex hash
-recorded in provenance, following `docs/research/cnl-ace.md` §5. Hand-written
-Ulex files are test fixtures only.
+The production path takes the rows in the versioned `terminology.pl` through the
+`ulex` subcommand of `src/prolog/registry_tool.pl`, as specified by the
+[registry contract](registry.md). The CDC guideline's 12 committed per-document
+sidecars are byte-equal to that canonical emission, with
+`tests/guideline-harness.sh` cmp-gating every sidecar and each `ulex_sha256`
+recorded in its `mapping_document/4` row. This 12-way equality is the CDC
+shared-registry policy, not a general Ulex invariant: per-document sidecars may
+diverge. Hand-written Ulex files are test fixtures only; slice and adapter fixture
+sidecars may intentionally differ from the production emission.
