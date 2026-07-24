@@ -22,7 +22,7 @@ APE is trusted parser input to the compilation pipeline, but it is not part of t
 
 ## Regression lexicon
 
-The full Clex lexicon is GPL-3.0 and EXCLUDED from the repository, product, vendor tree, and distributions. Regression testing may fetch only the pinned file `clex_lexicon.pl` from commit `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` into gitignored `.scratch/`; it MUST never be committed or vendored. The pinned raw file is:
+The full external Clex lexicon (GPL-3.0) is PERMITTED for vendoring and use at any time; the authoritative decision, pin, licensing analysis, and first-party-Ulex layering guard live in the Clex decision of `docs/provenance.md`. This tree currently obtains Clex on demand: regression testing fetches the pinned file `clex_lexicon.pl` from commit `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` into gitignored `.scratch/` and accepts it only after digest verification. The pinned raw file is:
 
 - URL: https://raw.githubusercontent.com/Attempto/Clex/20960a5ce07776cb211a8cfb25dc8c81fcdf25e2/clex_lexicon.pl
 - SHA-256: `2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec`

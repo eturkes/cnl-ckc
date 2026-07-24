@@ -102,7 +102,9 @@ ACE handles function words in the grammar and content words in a compiled/common
 (Clex) and runtime user lexicon (Ulex). Ulex entries override matching Clex entries. APE
 loads them with `-ulexfile` or `-ulextext`; `-noclex` disables the compiled content lexicon,
 and `-guess` enables unknown-word class guessing. The clinical adapter should keep guessing
-off and normally run without the broad Clex vocabulary.
+off. Broad Clex vocabulary may be reused for general English — the full external Clex is
+permitted repo-wide (see [the Clex decision](../provenance.md)) — while clinical vocabulary
+itself comes from the generated Ulex, which overrides Clex.
 
 Ulex entries are Prolog facts. The specification covers count and mass nouns, measurement
 nouns, proper names, three verb valencies, adjectives, adverbs, and prepositions. For
@@ -124,8 +126,9 @@ facts carry anaphora-related gender. Multiword terms use hyphenation rather than
 Generate project-owned Ulex facts from a versioned terminology registry, including stable
 concept ID, surfaces, part of speech, inflections, valency, count/mass status, and terminology
 code. Sort and hash the exact facts. Reject unknown tokens, unregistered names, lexical
-ambiguity, wrong valency, and aliases with multiple meanings. Broad Clex vocabulary should
-not define production Clinical ACE.
+ambiguity, wrong valency, and aliases with multiple meanings. Broad Clex vocabulary supplies
+at most general English; the clinical vocabulary of production Clinical ACE is defined by
+the first-party registry-to-Ulex route, which keeps it Apache-2.0 and permissively reusable.
 
 ## 6. Clinical-guideline findings from Shiffman et al.
 
