@@ -14,7 +14,7 @@ RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-validate-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=73
+EXPECTED_PASS_COUNT=77
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -90,12 +90,12 @@ else
 fi
 
 set -- "$GREEN"/*.pl
-if [ "$#" -ne 5 ]; then
-    fail_case "fixtures/count" "expected 5 green fixtures, got $#"
+if [ "$#" -ne 8 ]; then
+    fail_case "fixtures/count" "expected 8 green fixtures, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 44 ]; then
-    fail_case "fixtures/count" "expected 44 red fixtures, got $#"
+if [ "$#" -ne 45 ]; then
+    fail_case "fixtures/count" "expected 45 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -133,8 +133,10 @@ run_committed_red() {
         "$stdout_path" "$stderr_path" "$expected_line"
 }
 
-run_committed_red envelope-wrong-version envelope
-run_committed_red envelope-v1-record envelope
+run_committed_red envelope-wrong-version envelope \
+    'ir_tool_error(validate,envelope,term(1,expected(cnl_ir_record(3)))).'
+run_committed_red envelope-v1-record envelope \
+    'ir_tool_error(validate,envelope,term(1,expected(cnl_ir_record(3)))).'
 run_committed_red envelope-missing-document envelope
 run_committed_red query-zero query_count
 run_committed_red query-two query_count
@@ -150,6 +152,8 @@ run_committed_red canonical-string-atomic canonical
 run_committed_red shape-bad-string-codes shape
 run_committed_red shape-native-variable shape
 run_committed_red shape-empty-args shape
+run_committed_red shape-improper-args shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
 run_committed_red shape-empty-tokens shape
 run_committed_red shape-naf-fact-position shape \
     'ir_tool_error(validate,shape,term(3,fact)).'
@@ -213,7 +217,7 @@ fi
     dd if="$base" status=none
 } >"$SCRATCH/red/bom.pl"
 : >"$SCRATCH/red/empty.pl"
-printf '%s\n' 'cnl_ir_record(2).' 'document(.' >"$SCRATCH/red/syntax.pl"
+printf '%s\n' 'cnl_ir_record(3).' 'document(.' >"$SCRATCH/red/syntax.pl"
 if ! command sed '3s/,/, /' "$base" >"$SCRATCH/red/noncanonical-spacing.pl"; then
     fail_case "scratch/generate" "could not create spacing case"
 fi

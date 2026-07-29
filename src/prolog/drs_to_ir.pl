@@ -6,7 +6,7 @@
 :- use_module(ir_validate, [validate_terms/1]).
 
 /*
-Lossless lowering for the deliberately small IR v2 DRS profile. The caller owns
+Lossless lowering for the deliberately small IR v3 DRS profile. The caller owns
 UTF-8, syntax, canonical-byte framing, output buffering, and error emission.
 This module owns the M2 envelope and every admitted DRS semantic decision.
 */
@@ -15,8 +15,9 @@ lower_terms(Terms, IrTerms) :-
     validate_domain(root, RootDomain),
     require_final_question(RootConditions, FactualConditions, Question),
     validate_nested_domain_declarations(RootConditions, RootDomain),
+    index_conditions(RootConditions, 1, AllConditions),
     index_conditions(FactualConditions, 1, IndexedConditions),
-    lower_root_items(IndexedConditions, IndexedConditions, RootDomain, [],
+    lower_root_items(IndexedConditions, AllConditions, RootDomain, [],
         [], Counters0, FactualItems, RootEvents, RootEntities),
     validate_scope_accounting(root, RootDomain, RootEvents, RootEntities),
     lower_question(Question, QueryDraft),
@@ -26,7 +27,7 @@ lower_terms(Terms, IrTerms) :-
     require_section_order(fact, Facts),
     require_section_order(rule, Rules),
     append(Facts, Rules, Prefix),
-    append([cnl_ir_record(2), Document|Prefix], [Query], IrTerms),
+    append([cnl_ir_record(3), Document|Prefix], [Query], IrTerms),
     validate_generated_ir(IrTerms).
 
 /* M2 record envelope and durable document identity. */
@@ -260,8 +261,16 @@ lower_root_condition(Position, Condition, All, Domain, Consumed,
     ; predicate_named_be(Inner) ->
         lower_copula_from_be(Position, Inner, Anchor, All, Domain,
             Consumed, Consumed1, Draft, Events, Entities)
+    ; has_functor(Inner, predicate, 4) ->
+        lower_root_transitive(Position, Inner, Anchor, All, Domain, Draft,
+            Events, Entities),
+        Consumed1 = [Position|Consumed]
     ; has_functor(Inner, predicate, 3) ->
         lower_root_predicate(Position, Inner, Anchor, Domain, Draft,
+            Events, Entities),
+        Consumed1 = [Position|Consumed]
+    ; has_functor(Inner, relation, 3) ->
+        lower_root_relation(Position, Inner, Anchor, All, Domain, Draft,
             Events, Entities),
         Consumed1 = [Position|Consumed]
     ; has_functor(Inner, '=>', 2) ->
@@ -419,6 +428,112 @@ predicate3_parts(Predicate, Event, Verb, Subject) :-
     arg(2, Predicate, Verb),
     arg(3, Predicate, Subject).
 
+predicate4_parts(Predicate, Event, Verb, Subject, Object) :-
+    has_functor(Predicate, predicate, 4),
+    arg(1, Predicate, Event),
+    arg(2, Predicate, Verb),
+    arg(3, Predicate, Subject),
+    arg(4, Predicate, Object).
+
+relation3_parts(Relation, Left, Name, Right) :-
+    has_functor(Relation, relation, 3),
+    arg(1, Relation, Left),
+    arg(2, Relation, Name),
+    arg(3, Relation, Right).
+
+lower_root_transitive(Position, Predicate, Anchor, All, Domain, Draft,
+        [Event], []) :-
+    predicate4_parts(Predicate, Event, Verb, Subject, Object),
+    ( atom(Verb), Verb \== be ->
+        true
+    ; reject(unsupported, root_condition(Position, predicate_name))
+    ),
+    require_erasable_event(
+        root_condition(Position), Event, Domain, All),
+    require_ground_argument(
+        root_condition(Position), 1, Subject, Domain, SubjectArg),
+    require_ground_argument(
+        root_condition(Position), 2, Object, Domain, ObjectArg),
+    source_from_anchors(root_condition(Position), [Anchor], Sentence, Tokens),
+    Draft = draft_fact(
+        pred(Verb, [SubjectArg, ObjectArg]), Sentence, Tokens).
+
+lower_root_relation(Position, Relation, Anchor, All, Domain, Draft,
+        [], Entities) :-
+    require_of_relation(root_condition(Position), Relation, Left, Right),
+    root_relation_arguments([Left, Right], Position, All, Domain, 1,
+        Args, BindingAnchors, Entities),
+    source_from_anchors(root_condition(Position), [Anchor|BindingAnchors],
+        Sentence, Tokens),
+    Draft = draft_fact(pred(of, Args), Sentence, Tokens).
+
+require_of_relation(Location, Relation, Left, Right) :-
+    relation3_parts(Relation, Left, Name, Right),
+    ( Name == of ->
+        true
+    ; reject(unsupported, Location-relation_name)
+    ).
+
+root_relation_arguments([], _, _, _, _, [], [], []).
+root_relation_arguments([Term|Terms], Position, All, Domain, Index,
+        [Arg|Args], Anchors, Entities) :-
+    root_relation_argument(Term, Position, All, Domain, Index, Arg,
+        HereAnchors, HereEntities),
+    Next is Index + 1,
+    root_relation_arguments(Terms, Position, All, Domain, Next,
+        Args, RestAnchors, RestEntities),
+    append(HereAnchors, RestAnchors, Anchors),
+    append(HereEntities, RestEntities, Entities).
+
+root_relation_argument(Term, _, _, _, _, named(Name), [], []) :-
+    named_atom(Term, Name),
+    !.
+root_relation_argument(Term, Position, All, Domain, Index, named(Name),
+        [Anchor], [Term]) :-
+    var(Term),
+    !,
+    require_declared_entity(root_condition(Position), Term, Domain),
+    root_named_binding(Term, Position, Index, All, Name, Anchor).
+root_relation_argument(_, Position, _, _, Index, _, _, _) :-
+    reject(unsupported,
+        root_condition(Position, relation_argument(Index, shape))).
+
+root_named_binding(Referent, Position, Index, All, Name, Anchor) :-
+    root_named_binding_matches(Referent, All, Matches),
+    ( Matches = [named_binding(Name0, Anchor0)] ->
+        Name = Name0,
+        Anchor = Anchor0
+    ; Matches == [] ->
+        reject(referent,
+            root_condition(Position, relation_argument(Index, unbound)))
+    ; reject(referent,
+          root_condition(Position, relation_argument(Index, ambiguous)))
+    ).
+
+root_named_binding_matches(_, [], []).
+root_named_binding_matches(Referent,
+        [indexed(_, Condition)|Conditions], Matches) :-
+    ( anchored_condition(Condition, Inner, Anchor),
+      exact_be(Inner, _Event, Name, ObjectReferent),
+      ObjectReferent == Referent ->
+        Matches = [named_binding(Name, Anchor)|Rest]
+    ; Matches = Rest
+    ),
+    root_named_binding_matches(Referent, Conditions, Rest).
+
+require_ground_argument(_, _, Term, _, named(Name)) :-
+    named_atom(Term, Name),
+    !.
+require_ground_argument(Location, Index, Term, Domain, _) :-
+    var(Term),
+    !,
+    ( ref_member(Term, Domain) ->
+        reject(unsupported, Location-nonground_argument(Index))
+    ; reject(referent, Location-undeclared_argument(Index))
+    ).
+require_ground_argument(Location, Index, _, _, _) :-
+    reject(unsupported, Location-argument(Index)).
+
 require_ground_subject(Location, Subject, Domain, Arg) :-
     ( named_atom(Subject, Name) ->
         Arg = named(Name)
@@ -489,8 +604,8 @@ require_naf_suffix(Position, [Condition|Conditions], Index, SeenNaf) :-
     require_naf_suffix(Position, Conditions, Next, SeenNaf1).
 
 lower_rule_head(Position, Conditions, AnteDomain, ConsequentDomain,
-        Bindings0, Bindings, Next0, Next, Head, [Anchor], [Event],
-        OuterRefs) :-
+        Bindings0, Bindings, Next0, Next, Head, [Anchor],
+        ConsequentEvents, OuterRefs) :-
     ( contains_negation(Conditions) ->
         reject(negation, rule(Position, consequent))
     ; contains_query2(Conditions) ->
@@ -509,14 +624,31 @@ lower_rule_head(Position, Conditions, AnteDomain, ConsequentDomain,
     ( predicate_named_be(Inner) ->
         reject(unsupported, rule(Position, consequent_be))
     ; predicate3_parts(Inner, Event, Verb, Subject), atom(Verb) ->
-        true
+        require_local_event(rule(Position, consequent), Event,
+            ConsequentDomain),
+        rule_head_subject(Position, Subject, AnteDomain, ConsequentDomain,
+            Bindings0, Bindings, Next0, Next, Arg, OuterRefs),
+        Head = pred(Verb, [Arg]),
+        ConsequentEvents = [Event]
+    ; predicate4_parts(Inner, Event, Verb, Subject, Object),
+          atom(Verb), Verb \== be ->
+        require_erasable_event(rule(Position, consequent), Event,
+            ConsequentDomain, Conditions),
+        rule_head_arguments([Subject, Object], Position, AnteDomain,
+            ConsequentDomain, Bindings0, Bindings, Next0, Next, 1,
+            Args, OuterRefs),
+        Head = pred(Verb, Args),
+        ConsequentEvents = [Event]
+    ; has_functor(Inner, relation, 3) ->
+        require_of_relation(rule(Position, consequent),
+            Inner, Left, Right),
+        rule_head_arguments([Left, Right], Position, AnteDomain,
+            ConsequentDomain, Bindings0, Bindings, Next0, Next, 1,
+            Args, OuterRefs),
+        Head = pred(of, Args),
+        ConsequentEvents = []
     ; unsupported_condition(rule(Position, consequent), Inner)
-    ),
-    require_local_event(rule(Position, consequent), Event,
-        ConsequentDomain),
-    rule_head_subject(Position, Subject, AnteDomain, ConsequentDomain,
-        Bindings0, Bindings, Next0, Next, Arg, OuterRefs),
-    Head = pred(Verb, [Arg]).
+    ).
 
 rule_head_subject(Position, Subject, AnteDomain, ConsequentDomain,
         Bindings0, Bindings, Next0, Next, Arg, OuterRefs) :-
@@ -536,32 +668,61 @@ rule_head_subject(Position, Subject, AnteDomain, ConsequentDomain,
     ; reject(unsupported, rule(Position, head_subject))
     ).
 
+rule_head_arguments([], _, _, _, Bindings, Bindings, Next, Next, _,
+        [], []).
+rule_head_arguments([Term|Terms], Position, AnteDomain, ConsequentDomain,
+        Bindings0, Bindings, Next0, Next, Index, [Arg|Args], OuterRefs) :-
+    rule_head_argument(Term, Position, AnteDomain, ConsequentDomain,
+        Bindings0, Bindings1, Next0, Next1, Index, Arg, HereRefs),
+    NextIndex is Index + 1,
+    rule_head_arguments(Terms, Position, AnteDomain, ConsequentDomain,
+        Bindings1, Bindings, Next1, Next, NextIndex, Args, RestRefs),
+    append(HereRefs, RestRefs, OuterRefs).
+
+rule_head_argument(Term, _, _, _, Bindings, Bindings, Next, Next, _,
+        named(Name), []) :-
+    named_atom(Term, Name),
+    !.
+rule_head_argument(Term, Position, AnteDomain, ConsequentDomain,
+        Bindings0, Bindings, Next0, Next, Index, Arg, [Term]) :-
+    var(Term),
+    !,
+    ( ref_member(Term, AnteDomain) ->
+        binding_arg(Term, Bindings0, Bindings, Next0, Next, Arg)
+    ; ref_member(Term, ConsequentDomain) ->
+        reject(referent,
+            rule(Position, consequent_local_argument(Index)))
+    ; reject(referent, rule(Position, undeclared_head_argument(Index)))
+    ).
+rule_head_argument(_, Position, _, _, _, _, _, _, Index, _, _) :-
+    reject(unsupported, rule(Position, head_argument(Index))).
+
 lower_rule_body(Position, Conditions, Domain, Bindings0, Bindings,
         Next0, Next, Literals, Anchors, Events, Entities) :-
-    lower_rule_body_conditions(Position, Conditions, Domain,
+    lower_rule_body_conditions(Position, Conditions, Conditions, Domain,
         Bindings0, Bindings, Next0, Next, [], _PositiveRefs, 1,
         Literals, Anchors, Events, Entities).
 
-lower_rule_body_conditions(_, [], _, Bindings, Bindings, Next, Next,
+lower_rule_body_conditions(_, [], _, _, Bindings, Bindings, Next, Next,
         PositiveRefs, PositiveRefs, _, [], [], [], []).
-lower_rule_body_conditions(Position, [Condition|Conditions], Domain,
+lower_rule_body_conditions(Position, [Condition|Conditions], All, Domain,
         Bindings0, Bindings, Next0, Next, PositiveRefs0, PositiveRefs,
         Index, [Literal|Literals], Anchors, Events, Entities) :-
-    lower_rule_condition(Position, Index, Condition, Domain, PositiveRefs0,
-        Bindings0, Bindings1, Next0, Next1, Literal, HereAnchors,
-        HereEvents, HereEntities, HerePositiveRefs),
+    lower_rule_condition(Position, Index, Condition, All, Domain,
+        PositiveRefs0, Bindings0, Bindings1, Next0, Next1, Literal,
+        HereAnchors, HereEvents, HereEntities, HerePositiveRefs),
     append(HerePositiveRefs, PositiveRefs0, PositiveRefs1),
     NextIndex is Index + 1,
-    lower_rule_body_conditions(Position, Conditions, Domain,
+    lower_rule_body_conditions(Position, Conditions, All, Domain,
         Bindings1, Bindings, Next1, Next, PositiveRefs1, PositiveRefs,
         NextIndex, Literals, RestAnchors, RestEvents, RestEntities),
     append(HereAnchors, RestAnchors, Anchors),
     append(HereEvents, RestEvents, Events),
     append(HereEntities, RestEntities, Entities).
 
-lower_rule_condition(Position, Index, Condition, Domain, PositiveRefs,
-        Bindings0, Bindings, Next0, Next, Literal, Anchors, Events,
-        Entities, HerePositiveRefs) :-
+lower_rule_condition(Position, Index, Condition, All, Domain,
+        PositiveRefs, Bindings0, Bindings, Next0, Next, Literal, Anchors,
+        Events, Entities, HerePositiveRefs) :-
     ( has_functor(Condition, '~', 1) ->
         lower_naf_body_literal(Position, Index, Condition, Domain,
             PositiveRefs, Bindings0, Literal, Anchors),
@@ -573,8 +734,8 @@ lower_rule_condition(Position, Index, Condition, Domain, PositiveRefs,
     ; contains_negation(Condition) ->
         reject(negation, rule(Position, antecedent_condition(Index)))
     ; anchored_condition(Condition, Inner, Anchor) ->
-        lower_body_literal(Position, Inner, Domain, Bindings0, Bindings,
-            Next0, Next, Literal, Events, Entities),
+        lower_body_literal(Position, Inner, All, Domain,
+            Bindings0, Bindings, Next0, Next, Literal, Events, Entities),
         Anchors = [Anchor],
         HerePositiveRefs = Entities
     ; contains_query2(Condition) ->
@@ -657,8 +818,8 @@ naf_copula_profile(Domain, Conditions, OuterDomain, PositiveRefs,
     lookup_binding(Subject, Bindings, Number),
     Literal = naf(pred(Class, [var(Number)])).
 
-lower_body_literal(Position, Inner, Domain, Bindings0, Bindings,
-        Next0, Next, Literal, [], [Referent]) :-
+lower_body_literal(Position, Inner, _All, Domain,
+        Bindings0, Bindings, Next0, Next, Literal, [], [Referent]) :-
     functor_name(Inner, object),
     !,
     ( exact_object(Inner, Referent0, Class) ->
@@ -668,21 +829,37 @@ lower_body_literal(Position, Inner, Domain, Bindings0, Bindings,
     require_declared_entity(rule(Position, antecedent), Referent, Domain),
     binding_arg(Referent, Bindings0, Bindings, Next0, Next, Arg),
     Literal = pred(Class, [Arg]).
-lower_body_literal(Position, Inner, Domain, Bindings0, Bindings,
-        Next0, Next, Literal, [Event], EntityRefs) :-
+lower_body_literal(Position, Inner, _All, Domain,
+        Bindings0, Bindings, Next0, Next, Literal, [], EntityRefs) :-
+    has_functor(Inner, relation, 3),
+    !,
+    require_of_relation(rule(Position, antecedent), Inner, Left, Right),
+    rule_body_arguments([Left, Right], Position, Domain,
+        Bindings0, Bindings, Next0, Next, 1, Args, EntityRefs),
+    Literal = pred(of, Args).
+lower_body_literal(Position, Inner, All, Domain,
+        Bindings0, Bindings, Next0, Next, Literal, Events, EntityRefs) :-
     functor_name(Inner, predicate),
     !,
     ( predicate_named_be(Inner) ->
         reject(unsupported, rule(Position, antecedent_be))
     ; predicate3_parts(Inner, Event, Verb, Subject), atom(Verb) ->
-        true
+        require_local_event(rule(Position, antecedent), Event, Domain),
+        rule_body_subject(Position, Subject, Domain, Bindings0, Bindings,
+            Next0, Next, Arg, EntityRefs),
+        Literal = pred(Verb, [Arg]),
+        Events = [Event]
+    ; predicate4_parts(Inner, Event, Verb, Subject, Object),
+          atom(Verb), Verb \== be ->
+        require_erasable_event(rule(Position, antecedent), Event,
+            Domain, All),
+        rule_body_arguments([Subject, Object], Position, Domain,
+            Bindings0, Bindings, Next0, Next, 1, Args, EntityRefs),
+        Literal = pred(Verb, Args),
+        Events = [Event]
     ; reject(unsupported, rule(Position, antecedent_predicate))
-    ),
-    require_local_event(rule(Position, antecedent), Event, Domain),
-    rule_body_subject(Position, Subject, Domain, Bindings0, Bindings,
-        Next0, Next, Arg, EntityRefs),
-    Literal = pred(Verb, [Arg]).
-lower_body_literal(Position, Inner, _, _, _, _, _, _, _, _) :-
+    ).
+lower_body_literal(Position, Inner, _, _, _, _, _, _, _, _, _) :-
     ( contains_query2(Inner) ->
         reject(wh_query, rule(Position, antecedent))
     ; has_functor(Inner, '=>', 2) ->
@@ -705,6 +882,31 @@ rule_body_subject(Position, Subject, Domain, Bindings0, Bindings,
         )
     ; reject(unsupported, rule(Position, body_subject))
     ).
+
+rule_body_arguments([], _, _, Bindings, Bindings, Next, Next, _, [], []).
+rule_body_arguments([Term|Terms], Position, Domain,
+        Bindings0, Bindings, Next0, Next, Index, [Arg|Args], EntityRefs) :-
+    rule_body_argument(Term, Position, Domain, Bindings0, Bindings1,
+        Next0, Next1, Index, Arg, HereRefs),
+    NextIndex is Index + 1,
+    rule_body_arguments(Terms, Position, Domain, Bindings1, Bindings,
+        Next1, Next, NextIndex, Args, RestRefs),
+    append(HereRefs, RestRefs, EntityRefs).
+
+rule_body_argument(Term, _, _, Bindings, Bindings, Next, Next, _,
+        named(Name), []) :-
+    named_atom(Term, Name),
+    !.
+rule_body_argument(Term, Position, Domain, Bindings0, Bindings,
+        Next0, Next, Index, Arg, [Term]) :-
+    var(Term),
+    !,
+    ( ref_member(Term, Domain) ->
+        binding_arg(Term, Bindings0, Bindings, Next0, Next, Arg)
+    ; reject(referent, rule(Position, undeclared_body_argument(Index)))
+    ).
+rule_body_argument(_, Position, _, _, _, _, _, Index, _, _) :-
+    reject(unsupported, rule(Position, body_argument(Index))).
 
 binding_arg(Referent, Bindings, Bindings, Next, Next, var(Number)) :-
     lookup_binding(Referent, Bindings, Number),
@@ -755,14 +957,28 @@ lower_yes_no_question(Domain, Conditions, Draft) :-
     ( predicate_named_be(Inner) ->
         reject(unsupported, question(copula))
     ; predicate3_parts(Inner, Event, Verb, Subject), atom(Verb) ->
-        true
+        require_local_event(question, Event, Domain),
+        require_query_subject(Subject, Domain, Arg),
+        Predicate = pred(Verb, [Arg]),
+        Events = [Event]
+    ; predicate4_parts(Inner, Event, Verb, Subject, Object),
+          atom(Verb), Verb \== be ->
+        require_erasable_event(question, Event, Domain, Conditions),
+        require_ground_argument(question, 1, Subject, Domain, SubjectArg),
+        require_ground_argument(question, 2, Object, Domain, ObjectArg),
+        Predicate = pred(Verb, [SubjectArg, ObjectArg]),
+        Events = [Event]
+    ; has_functor(Inner, relation, 3) ->
+        require_of_relation(question, Inner, Left, Right),
+        require_ground_argument(question, 1, Left, Domain, LeftArg),
+        require_ground_argument(question, 2, Right, Domain, RightArg),
+        Predicate = pred(of, [LeftArg, RightArg]),
+        Events = []
     ; unsupported_condition(question, Inner)
     ),
-    require_local_event(question, Event, Domain),
-    require_query_subject(Subject, Domain, Arg),
-    validate_scope_accounting(question, Domain, [Event], []),
+    validate_scope_accounting(question, Domain, Events, []),
     source_from_anchors(question, [Anchor], Sentence, Tokens),
-    Draft = draft_query(pred(Verb, [Arg]), Sentence, Tokens).
+    Draft = draft_query(Predicate, Sentence, Tokens).
 
 lower_wh_question(Domain, Conditions, Draft) :-
     ( wh_question_profile(Domain, Conditions, Verb, QueryAnchor,
@@ -841,6 +1057,34 @@ require_local_event(Location, Event, Domain) :-
         )
     ; reject(referent, Location-event_not_variable)
     ).
+
+require_erasable_event(Location, Event, Domain, Conditions) :-
+    require_local_event(Location, Event, Domain),
+    ref_occurrence_count(Event, Conditions, Count),
+    ( Count =:= 1 ->
+        true
+    ; reject(referent, Location-event_in_use)
+    ).
+
+ref_occurrence_count(Referent, Term, Count) :-
+    ( var(Term) ->
+        ( Term == Referent -> Count = 1 ; Count = 0 )
+    ; compound(Term) ->
+        functor(Term, _, Arity),
+        ref_occurrence_count_args(Referent, Term, 1, Arity, 0, Count)
+    ; Count = 0
+    ).
+
+ref_occurrence_count_args(_, _, Index, Arity, Count, Count) :-
+    Index > Arity,
+    !.
+ref_occurrence_count_args(Referent, Term, Index, Arity, Count0, Count) :-
+    arg(Index, Term, Arg),
+    ref_occurrence_count(Referent, Arg, Here),
+    Count1 is Count0 + Here,
+    Next is Index + 1,
+    ref_occurrence_count_args(
+        Referent, Term, Next, Arity, Count1, Count).
 
 require_declared_entity(Location, Referent, Domain) :-
     ( var(Referent), ref_member(Referent, Domain) ->
@@ -1096,8 +1340,14 @@ term_signature(_, other).
 validate_generated_ir(IrTerms) :-
     catch(validate_terms(IrTerms),
         ir_reject(Class, Detail),
-        throw(error(generated_record_invalid(Class, Detail),
-            context(drs_to_ir, ir_validation)))).
+        handle_generated_ir_rejection(Class, Detail)).
+
+handle_generated_ir_rejection(cycle, Detail) :-
+    !,
+    reject(cycle, Detail).
+handle_generated_ir_rejection(Class, Detail) :-
+    throw(error(generated_record_invalid(Class, Detail),
+        context(drs_to_ir, ir_validation))).
 
 reject(Class, Detail) :-
     throw(ir_reject(Class, Detail)).

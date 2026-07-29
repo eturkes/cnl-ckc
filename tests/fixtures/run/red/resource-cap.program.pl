@@ -1,4 +1,4 @@
-cnl_program_record(2).
+cnl_program_record(3).
 document(docid('resource-cap'),source_sha256('0000000000000000000000000000000000000000000000000000000000000000'),ulex(none)).
 clause(fact_id(sentence(1),clause(1)),pred(p0,[named(a)]),body([])).
 clause(rule_id(sentence(2),clause(1)),pred(p1,[var(1)]),body([pred(p0,[var(1)]),pred(p0,[var(1)])])).

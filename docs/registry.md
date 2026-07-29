@@ -331,7 +331,7 @@ bytes and is therefore duplicate-free. Quoting participates in this order, so an
 containing `named('z z')` sorts before one containing `named(a)`.
 
 For these ground expected-answer terms, the registry canonical bytes coincide with ordinary
-`drs_canon:canonical_line/2` bytes: the forced-quote positions reserved by answer-record v2
+`drs_canon:canonical_line/2` bytes: the forced-quote positions reserved by answer-record v3
 do not occur inside the stored forms above.
 
 ### Mapping residual rows

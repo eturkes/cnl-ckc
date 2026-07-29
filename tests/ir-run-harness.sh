@@ -13,6 +13,7 @@ if ! [ -f src/prolog/ir_tool.pl ] || \
         ! [ -d tests/fixtures/run/green ] || \
         ! [ -d tests/fixtures/run/red ] || \
         ! [ -d tests/fixtures/lower/green ] || \
+        ! [ -d tests/fixtures/ir/green ] || \
         ! [ -f tests/fixtures/ir/red/envelope-v1-record.pl ]; then
     printf 'FAIL repo-root: run from cnl-ckc repository root\n'
     printf 'SUMMARY: 0 passed, 1 failed\n'
@@ -27,11 +28,12 @@ RESULT="$ROOT/tests/fixtures/slice/result"
 GREEN="$ROOT/tests/fixtures/run/green"
 RED="$ROOT/tests/fixtures/run/red"
 LOWER_GREEN="$ROOT/tests/fixtures/lower/green"
+IR_GREEN="$ROOT/tests/fixtures/ir/green"
 IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=93
+EXPECTED_PASS_COUNT=110
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -185,28 +187,28 @@ if [ "$#" -ne 4 ]; then
     fail_case "fixtures/count" "expected 4 result goldens, got $#"
 fi
 set -- "$GREEN"/*.program.pl
-if [ "$#" -ne 10 ]; then
-    fail_case "fixtures/count" "expected 10 hand-green programs, got $#"
+if [ "$#" -ne 13 ]; then
+    fail_case "fixtures/count" "expected 13 hand-green programs, got $#"
 fi
 set -- "$GREEN"/*.result.pl
-if [ "$#" -ne 10 ]; then
-    fail_case "fixtures/count" "expected 10 hand-green results, got $#"
+if [ "$#" -ne 13 ]; then
+    fail_case "fixtures/count" "expected 13 hand-green results, got $#"
 fi
 set -- "$RED"/*.program.pl
-if [ "$#" -ne 28 ]; then
-    fail_case "fixtures/count" "expected 28 red programs, got $#"
+if [ "$#" -ne 30 ]; then
+    fail_case "fixtures/count" "expected 30 red programs, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 lower IR goldens, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 lower program goldens, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 lower result goldens, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 lower result goldens, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -265,8 +267,8 @@ for input in "$GOLDEN"/*.drs.pl; do
 done
 
 # Lower-chain pin: the lower fixture directory owns CLI-generated IR, program,
-# and result goldens. Compiling and running all four proves both admitted NAF
-# profiles and both admitted who-question records reach the shipped v2 kernel.
+# and result goldens. Compiling and running all seven proves the covered NAF,
+# wh, transitive, and of-role records reach the shipped v3 kernel.
 for ir in "$LOWER_GREEN"/*.ir.pl; do
     name=${ir##*/}
     stem=${name%.ir.pl}
@@ -306,6 +308,134 @@ for ir in "$LOWER_GREEN"/*.ir.pl; do
         "$expected_program" "$expected_result"
     pass_case "chain/lower/$stem"
 done
+
+nary_ir="$IR_GREEN/nary-binary.pl"
+nary_validate_stdout="$SCRATCH/chain/nary-binary.validate.stdout"
+nary_validate_stderr="$SCRATCH/chain/nary-binary.validate.stderr"
+run_tool "$nary_ir" "$nary_validate_stdout" "$nary_validate_stderr" validate
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-binary/validate-status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$nary_validate_stdout" ] || [ -s "$nary_validate_stderr" ]; then
+    fail_case "chain/nary-binary/validate-streams" "expected zero bytes"
+fi
+nary_compile_stdout="$SCRATCH/chain/nary-binary.compile.stdout"
+nary_compile_stderr="$SCRATCH/chain/nary-binary.compile.stderr"
+run_tool "$nary_ir" "$nary_compile_stdout" "$nary_compile_stderr" compile
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-binary/compile-status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$nary_compile_stderr" ]; then
+    fail_case "chain/nary-binary/compile-stderr" "expected zero bytes"
+fi
+if ! cmp "$nary_compile_stdout" "$GREEN/nary-binary.program.pl"; then
+    fail_case "chain/nary-binary/compile-bytes" \
+        "output differs from program golden"
+fi
+nary_run_stdout="$SCRATCH/chain/nary-binary.run.stdout"
+nary_run_stderr="$SCRATCH/chain/nary-binary.run.stderr"
+run_tool "$nary_compile_stdout" "$nary_run_stdout" "$nary_run_stderr" run
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-binary/run-status" "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$nary_run_stderr" ]; then
+    fail_case "chain/nary-binary/run-stderr" "expected zero bytes"
+fi
+if ! cmp "$nary_run_stdout" "$GREEN/nary-binary.result.pl"; then
+    fail_case "chain/nary-binary/run-bytes" "output differs from result golden"
+fi
+pass_case "chain/nary-binary"
+
+ternary_ir="$IR_GREEN/nary-ternary.pl"
+ternary_validate_stdout="$SCRATCH/chain/nary-ternary.validate.stdout"
+ternary_validate_stderr="$SCRATCH/chain/nary-ternary.validate.stderr"
+run_tool "$ternary_ir" "$ternary_validate_stdout" "$ternary_validate_stderr" validate
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-ternary/validate-status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$ternary_validate_stdout" ] || [ -s "$ternary_validate_stderr" ]; then
+    fail_case "chain/nary-ternary/validate-streams" "expected zero bytes"
+fi
+ternary_compile_stdout="$SCRATCH/chain/nary-ternary.compile.stdout"
+ternary_compile_stderr="$SCRATCH/chain/nary-ternary.compile.stderr"
+run_tool "$ternary_ir" "$ternary_compile_stdout" "$ternary_compile_stderr" compile
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-ternary/compile-status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$ternary_compile_stderr" ]; then
+    fail_case "chain/nary-ternary/compile-stderr" "expected zero bytes"
+fi
+if ! cmp "$ternary_compile_stdout" "$GREEN/nary-ternary.program.pl"; then
+    fail_case "chain/nary-ternary/compile-bytes" \
+        "output differs from program golden"
+fi
+ternary_run_stdout="$SCRATCH/chain/nary-ternary.run.stdout"
+ternary_run_stderr="$SCRATCH/chain/nary-ternary.run.stderr"
+run_tool "$ternary_compile_stdout" "$ternary_run_stdout" "$ternary_run_stderr" run
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-ternary/run-status" "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$ternary_run_stderr" ]; then
+    fail_case "chain/nary-ternary/run-stderr" "expected zero bytes"
+fi
+if ! cmp "$ternary_run_stdout" "$GREEN/nary-ternary.result.pl"; then
+    fail_case "chain/nary-ternary/run-bytes" "output differs from result golden"
+fi
+pass_case "chain/nary-ternary"
+
+cross_arity_ir="$IR_GREEN/nary-same-name-cross-arity.pl"
+cross_arity_validate_stdout="$SCRATCH/chain/nary-same-name-cross-arity.validate.stdout"
+cross_arity_validate_stderr="$SCRATCH/chain/nary-same-name-cross-arity.validate.stderr"
+run_tool "$cross_arity_ir" "$cross_arity_validate_stdout" \
+    "$cross_arity_validate_stderr" validate
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-same-name-cross-arity/validate-status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$cross_arity_validate_stdout" ] || \
+        [ -s "$cross_arity_validate_stderr" ]; then
+    fail_case "chain/nary-same-name-cross-arity/validate-streams" \
+        "expected zero bytes"
+fi
+cross_arity_compile_stdout="$SCRATCH/chain/nary-same-name-cross-arity.compile.stdout"
+cross_arity_compile_stderr="$SCRATCH/chain/nary-same-name-cross-arity.compile.stderr"
+run_tool "$cross_arity_ir" "$cross_arity_compile_stdout" \
+    "$cross_arity_compile_stderr" compile
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-same-name-cross-arity/compile-status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$cross_arity_compile_stderr" ]; then
+    fail_case "chain/nary-same-name-cross-arity/compile-stderr" \
+        "expected zero bytes"
+fi
+if ! cmp "$cross_arity_compile_stdout" \
+        "$GREEN/nary-same-name-cross-arity.program.pl"; then
+    fail_case "chain/nary-same-name-cross-arity/compile-bytes" \
+        "output differs from program golden"
+fi
+cross_arity_run_stdout="$SCRATCH/chain/nary-same-name-cross-arity.run.stdout"
+cross_arity_run_stderr="$SCRATCH/chain/nary-same-name-cross-arity.run.stderr"
+run_tool "$cross_arity_compile_stdout" "$cross_arity_run_stdout" \
+    "$cross_arity_run_stderr" run
+if [ "$RUN_STATUS" -ne 0 ]; then
+    fail_case "chain/nary-same-name-cross-arity/run-status" \
+        "expected 0, got $RUN_STATUS"
+fi
+if [ -s "$cross_arity_run_stderr" ]; then
+    fail_case "chain/nary-same-name-cross-arity/run-stderr" \
+        "expected zero bytes"
+fi
+if ! cmp "$cross_arity_run_stdout" \
+        "$GREEN/nary-same-name-cross-arity.result.pl"; then
+    fail_case "chain/nary-same-name-cross-arity/run-bytes" \
+        "output differs from result golden"
+fi
+pass_case "chain/nary-same-name-cross-arity"
 
 if ! command grep -Eq '^answer\(.*,proved\)\.$' \
         "$RESULT/slice.result.pl"; then
@@ -444,8 +574,10 @@ run_committed_red cycle-signed-transitive cycle \
 run_committed_red document-float shape
 run_committed_red envelope-missing-document envelope
 run_committed_red envelope-trailing-after-goal envelope
-run_committed_red envelope-v1-record envelope
-run_committed_red envelope-wrong-header envelope
+run_committed_red envelope-v1-record envelope \
+    'ir_tool_error(run,envelope,term(1,expected(cnl_program_record(3)))).'
+run_committed_red envelope-wrong-header envelope \
+    'ir_tool_error(run,envelope,term(1,expected(cnl_program_record(3)))).'
 run_committed_red identity-fact-with-body identity
 run_committed_red identity-rule-empty-body identity \
     'ir_tool_error(run,identity,term(3,id_kind(fact,rule))).'
@@ -470,6 +602,10 @@ run_committed_red shape-naf-goal-position shape \
 run_committed_red shape-naf-head-position shape \
     'ir_tool_error(run,shape,term(3,clause)).'
 run_committed_red shape-native-variable shape
+run_committed_red shape-empty-args shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red shape-improper-args shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
 run_committed_red shape-unknown-constructor shape
 run_committed_red shape-wh-marker shape \
     'ir_tool_error(run,shape,term(3,goal)).'
@@ -483,7 +619,8 @@ pin_stdout="$SCRATCH/stage-pin/compile-v1-envelope.stdout"
 pin_stderr="$SCRATCH/stage-pin/compile-v1-envelope.stderr"
 run_tool "$IR_RED/envelope-v1-record.pl" "$pin_stdout" "$pin_stderr" compile
 check_rejection "stage-pin/compile-v1-envelope" 1 compile envelope \
-    "$pin_stdout" "$pin_stderr"
+    "$pin_stdout" "$pin_stderr" \
+    'ir_tool_error(compile,envelope,term(1,expected(cnl_ir_record(3)))).'
 
 for input in "$IR_RED"/*.pl; do
     name=${input##*/}
@@ -653,10 +790,10 @@ if [ -s "$replay_naf_stdout" ] || [ -s "$replay_naf_stderr" ]; then
 fi
 pass_case "probe/replay-naf-absence"
 
-answer_yes_no_stdout="$SCRATCH/probes/answer-v2-yes-no.stdout"
-answer_yes_no_stderr="$SCRATCH/probes/answer-v2-yes-no.stderr"
+answer_yes_no_stdout="$SCRATCH/probes/answer-v3-yes-no.stdout"
+answer_yes_no_stderr="$SCRATCH/probes/answer-v3-yes-no.stderr"
 if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
-        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),Atom=pred(p,[named(a)]),Proof=proof(Atom,fact_id(sentence(1),clause(1)),[]),explanation:validate_answer_terms([cnl_answer_record(2),Doc,Program,answer(Id,Atom,proved),Proof]),explanation:validate_answer_terms([cnl_answer_record(2),Doc,Program,answer(Id,Atom,not_proved)])->halt(0);halt(1))' \
+        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),Atom=pred(p,[named(a)]),Proof=proof(Atom,fact_id(sentence(1),clause(1)),[]),explanation:validate_answer_terms([cnl_answer_record(3),Doc,Program,answer(Id,Atom,proved),Proof]),explanation:validate_answer_terms([cnl_answer_record(3),Doc,Program,answer(Id,Atom,not_proved)])->halt(0);halt(1))' \
         -t 'halt(9)' >"$answer_yes_no_stdout" \
         2>"$answer_yes_no_stderr"; then
     answer_yes_no_status=0
@@ -664,18 +801,18 @@ else
     answer_yes_no_status=$?
 fi
 if [ "$answer_yes_no_status" -ne 0 ]; then
-    fail_case "probe/answer-v2-yes-no" \
-        "expected proved and not_proved v2 records to pass"
+    fail_case "probe/answer-v3-yes-no" \
+        "expected proved and not_proved v3 records to pass"
 fi
 if [ -s "$answer_yes_no_stdout" ] || [ -s "$answer_yes_no_stderr" ]; then
-    fail_case "probe/answer-v2-yes-no" "expected zero bytes"
+    fail_case "probe/answer-v3-yes-no" "expected zero bytes"
 fi
-pass_case "probe/answer-v2-yes-no"
+pass_case "probe/answer-v3-yes-no"
 
 answer_version_stdout="$SCRATCH/probes/answer-version-rejection.stdout"
 answer_version_stderr="$SCRATCH/probes/answer-version-rejection.stderr"
 if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
-        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),Atom=pred(p,[named(a)]),Proof=proof(Atom,fact_id(sentence(1),clause(1)),[]),catch(explanation:validate_answer_terms([cnl_answer_record(1),Doc,Program,answer(Id,Atom,proved),Proof]),Error1,true),catch(explanation:validate_answer_terms([cnl_answer_record(3),Doc,Program,answer(Id,Atom,not_proved)]),Error3,true),Error1==explanation_invariant(generated_answer_envelope),Error3==explanation_invariant(generated_answer_envelope)->halt(0);halt(1))' \
+        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),Atom=pred(p,[named(a)]),Proof=proof(Atom,fact_id(sentence(1),clause(1)),[]),catch(explanation:validate_answer_terms([cnl_answer_record(2),Doc,Program,answer(Id,Atom,proved),Proof]),Error2,true),catch(explanation:validate_answer_terms([cnl_answer_record(4),Doc,Program,answer(Id,Atom,not_proved)]),Error4,true),Error2==explanation_invariant(generated_answer_envelope),Error4==explanation_invariant(generated_answer_envelope)->halt(0);halt(1))' \
         -t 'halt(9)' >"$answer_version_stdout" \
         2>"$answer_version_stderr"; then
     answer_version_status=0
@@ -684,30 +821,30 @@ else
 fi
 if [ "$answer_version_status" -ne 0 ]; then
     fail_case "probe/answer-version-rejection" \
-        "expected yes/no v1 and v3 records to reject"
+        "expected yes/no v2 and v4 records to reject"
 fi
 if [ -s "$answer_version_stdout" ] || [ -s "$answer_version_stderr" ]; then
     fail_case "probe/answer-version-rejection" "expected zero bytes"
 fi
 pass_case "probe/answer-version-rejection"
 
-answer_wh_v1_stdout="$SCRATCH/probes/answer-wh-v1-rejection.stdout"
-answer_wh_v1_stderr="$SCRATCH/probes/answer-wh-v1-rejection.stderr"
+answer_wh_v2_stdout="$SCRATCH/probes/answer-wh-v2-rejection.stdout"
+answer_wh_v2_stderr="$SCRATCH/probes/answer-wh-v2-rejection.stderr"
 if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
-        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),catch(explanation:validate_answer_terms([cnl_answer_record(1),Doc,Program,answer(Id,wh(who),pred(p,[var(1)]),answers([]))]),Error,true),Error==explanation_invariant(generated_answer_envelope)->halt(0);halt(1))' \
-        -t 'halt(9)' >"$answer_wh_v1_stdout" \
-        2>"$answer_wh_v1_stderr"; then
-    answer_wh_v1_status=0
+        -g '(Doc=document(docid(d),source_sha256(s),ulex([])),Program=program(sha256(h)),Id=query_id(sentence(1),clause(1)),catch(explanation:validate_answer_terms([cnl_answer_record(2),Doc,Program,answer(Id,wh(who),pred(p,[var(1)]),answers([]))]),Error,true),Error==explanation_invariant(generated_answer_envelope)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$answer_wh_v2_stdout" \
+        2>"$answer_wh_v2_stderr"; then
+    answer_wh_v2_status=0
 else
-    answer_wh_v1_status=$?
+    answer_wh_v2_status=$?
 fi
-if [ "$answer_wh_v1_status" -ne 0 ]; then
-    fail_case "probe/answer-wh-v1-rejection" "expected wh v1 record to reject"
+if [ "$answer_wh_v2_status" -ne 0 ]; then
+    fail_case "probe/answer-wh-v2-rejection" "expected wh v2 record to reject"
 fi
-if [ -s "$answer_wh_v1_stdout" ] || [ -s "$answer_wh_v1_stderr" ]; then
-    fail_case "probe/answer-wh-v1-rejection" "expected zero bytes"
+if [ -s "$answer_wh_v2_stdout" ] || [ -s "$answer_wh_v2_stderr" ]; then
+    fail_case "probe/answer-wh-v2-rejection" "expected zero bytes"
 fi
-pass_case "probe/answer-wh-v1-rejection"
+pass_case "probe/answer-wh-v2-rejection"
 
 generated_ir_stdout="$SCRATCH/probes/generated-ir.stdout"
 generated_ir_stderr="$SCRATCH/probes/generated-ir.stderr"

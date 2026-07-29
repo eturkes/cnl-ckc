@@ -44,9 +44,9 @@ run_terms(Terms, ProgramDigest, ResultTerms) :-
 envelope_pass([], _, _) :-
     reject(envelope, term(1, missing_header)).
 envelope_pass([Header|Rest], Document, Items) :-
-    ( Header == cnl_program_record(2) ->
+    ( Header == cnl_program_record(3) ->
         true
-    ; reject(envelope, term(1, expected(cnl_program_record(2))))
+    ; reject(envelope, term(1, expected(cnl_program_record(3))))
     ),
     require_document(Rest, Document, RawItems),
     index_terms(RawItems, 3, Items),

@@ -1,4 +1,4 @@
-cnl_ir_record(2).
+cnl_ir_record(3).
 document(docid('p10-wh-prefix'),source_sha256('1010101010101010101010101010101010101010101010101010101010101010'),ulex(none)).
 fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([2,4]))).
 fact(fact_id(sentence(2),clause(1)),pred(wait,[named('John')]),source(sentence(2),tokens([2]))).

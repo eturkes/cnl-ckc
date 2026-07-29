@@ -21,7 +21,7 @@ RED="$ROOT/tests/fixtures/lower/red"
 SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=51
+EXPECTED_PASS_COUNT=66
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -52,13 +52,14 @@ run_tool() {
 
 check_rejection() {
     local label expected_status expected_stage expected_class stdout_path stderr_path
-    local line_count
+    local expected_line line_count
     label=$1
     expected_status=$2
     expected_stage=$3
     expected_class=$4
     stdout_path=$5
     stderr_path=$6
+    expected_line=${7-}
 
     if [ "$RUN_STATUS" -ne "$expected_status" ]; then
         fail_case "$label/status" "expected $expected_status, got $RUN_STATUS"
@@ -78,6 +79,10 @@ check_rejection() {
         "$stderr_path"; then
         fail_case "$label/class" \
             "expected ir_tool_error($expected_stage,$expected_class,...)"
+    fi
+    if [ -n "$expected_line" ] && \
+            ! printf '%s\n' "$expected_line" | cmp - "$stderr_path"; then
+        fail_case "$label/detail" "stderr differs from exact expected line"
     fi
     pass_case "$label"
 }
@@ -117,24 +122,24 @@ if [ "$#" -ne 4 ]; then
     fail_case "fixtures/count" "expected 4 IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.drs.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 lower DRS greens, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 lower DRS greens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 lower IR goldens, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 lower program goldens, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 4 ]; then
-    fail_case "fixtures/count" "expected 4 lower result goldens, got $#"
+if [ "$#" -ne 7 ]; then
+    fail_case "fixtures/count" "expected 7 lower result goldens, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 36 ]; then
-    fail_case "fixtures/count" "expected 36 red fixtures, got $#"
+if [ "$#" -ne 48 ]; then
+    fail_case "fixtures/count" "expected 48 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -173,7 +178,7 @@ for input in "$GOLDEN"/*.drs.pl; do
 done
 
 # Hand-authored probe-pinned M2 inputs carry CLI-generated IR goldens. Each
-# committed green is lowered twice so the admitted NAF/wh paths are byte-stable.
+# committed green is lowered twice so every covered NAF/wh/binary path is byte-stable.
 for input in "$LOWER_GREEN"/*.drs.pl; do
     name=${input##*/}
     stem=${name%.drs.pl}
@@ -220,14 +225,15 @@ for input in "$LOWER_GREEN"/*.drs.pl; do
 done
 
 run_committed_red() {
-    local name expected_class stdout_path stderr_path
+    local name expected_class expected_line stdout_path stderr_path
     name=$1
     expected_class=$2
+    expected_line=${3-}
     stdout_path="$SCRATCH/red/$name.stdout"
     stderr_path="$SCRATCH/red/$name.stderr"
     run_tool "$RED/$name.pl" "$stdout_path" "$stderr_path" lower
     check_rejection "red/$name" 1 lower "$expected_class" \
-        "$stdout_path" "$stderr_path"
+        "$stdout_path" "$stderr_path" "$expected_line"
 }
 
 run_committed_red wh-query wh_query
@@ -246,6 +252,8 @@ run_committed_red zero-question question_count
 run_committed_red two-questions question_count
 run_committed_red non-final-question question_count
 run_committed_red unpaired-object copula
+run_committed_red relation-unpaired-object-precedence copula \
+    'ir_tool_error(lower,copula,root_condition(1,unpaired_object)).'
 run_committed_red unpaired-be copula
 run_committed_red be-non-named copula
 run_committed_red object-wrong-fields copula
@@ -258,9 +266,31 @@ run_committed_red cross-drs-redeclaration referent
 run_committed_red unbound-head-variable referent
 run_committed_red unconsumed-domain referent
 run_committed_red undeclared-referent referent
+run_committed_red relation-unbound-referent referent \
+    'ir_tool_error(lower,referent,root_condition(1,relation_argument(1,unbound))).'
+run_committed_red relation-ambiguous-referent referent \
+    'ir_tool_error(lower,referent,root_condition(1,relation_argument(1,ambiguous))).'
+run_committed_red transitive-event-in-use referent \
+    'ir_tool_error(lower,referent,-(root_condition(1),event_in_use)).'
+run_committed_red transitive-event-in-question referent \
+    'ir_tool_error(lower,referent,-(root_condition(1),event_in_use)).'
+run_committed_red transitive-rule-body-event-in-use referent \
+    'ir_tool_error(lower,referent,-(rule(1,antecedent),event_in_use)).'
+run_committed_red transitive-rule-head-event-in-use referent \
+    'ir_tool_error(lower,referent,-(rule(1,consequent),event_in_use)).'
+run_committed_red transitive-question-event-in-use referent \
+    'ir_tool_error(lower,referent,-(question,event_in_use)).'
+run_committed_red transitive-cycle-self-loop cycle \
+    'ir_tool_error(lower,cycle,term(3,body_literal(1,signed_dependency(positive,pred(like,2),pred(like,2))))).'
+run_committed_red relation-cycle-self-loop cycle \
+    'ir_tool_error(lower,cycle,term(3,body_literal(1,signed_dependency(positive,pred(of,2),pred(of,2))))).'
+run_committed_red transitive-nonground-fact unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),nonground_argument(1))).'
 run_committed_red body-only-variable-fact unsupported
 run_committed_red mixed-sentence-anchors unsupported
 run_committed_red unknown-condition unsupported
+run_committed_red relation-non-of unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),relation_name)).'
 run_committed_red nested-implication unsupported
 run_committed_red envelope-wrong-header envelope
 run_committed_red malformed-document envelope

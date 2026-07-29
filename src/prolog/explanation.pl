@@ -17,7 +17,7 @@ assemble_result_terms(Document, ProgramDigest, GoalId, GoalAtom, Outcome,
     ( Outcome == proved ->
         build_certificate(GoalAtom, Store, Proof),
         replay_certificate(GoalAtom, Proof, Store),
-        Terms = [ cnl_answer_record(2),
+        Terms = [ cnl_answer_record(3),
                   Document,
                   program(sha256(ProgramDigest)),
                   answer(GoalId, GoalAtom, proved),
@@ -28,7 +28,7 @@ assemble_result_terms(Document, ProgramDigest, GoalId, GoalAtom, Outcome,
             invariant(not_proved_goal_has_witness)
         ; true
         ),
-        Terms = [ cnl_answer_record(2),
+        Terms = [ cnl_answer_record(3),
                   Document,
                   program(sha256(ProgramDigest)),
                   answer(GoalId, GoalAtom, not_proved)
@@ -36,7 +36,7 @@ assemble_result_terms(Document, ProgramDigest, GoalId, GoalAtom, Outcome,
     ; has_functor(Outcome, answers, 1) ->
         arg(1, Outcome, Answers),
         build_wh_certificates(Answers, Store, Proofs),
-        Prefix = [ cnl_answer_record(2),
+        Prefix = [ cnl_answer_record(3),
                    Document,
                    program(sha256(ProgramDigest)),
                    answer(GoalId, wh(who), GoalAtom, answers(Answers))
@@ -61,7 +61,7 @@ build_wh_certificates(_, _, _) :-
 
 /*
 The run CLI calls this only on reparsed generated terms. Every answer record
-first passes the shared v2 envelope/layout gate; the payload then selects the
+first passes the shared v3 envelope/layout gate; the payload then selects the
 yes/no or wh grammar and exact proof-correspondence gate.
 */
 validate_answer_terms(Terms) :-
@@ -74,7 +74,7 @@ validate_answer_terms(Terms) :-
     ).
 
 validate_answer_common_layout(Header, Document, Program) :-
-    ( Header == cnl_answer_record(2),
+    ( Header == cnl_answer_record(3),
       has_functor(Document, document, 3),
       generated_program_digest(Program) ->
         true
@@ -135,7 +135,7 @@ list_head_tail(List, Head, Tail) :-
     arg(2, List, Tail).
 
 validate_wh_answer_record(Header, Document, Program, Answer, Proofs) :-
-    ( Header == cnl_answer_record(2),
+    ( Header == cnl_answer_record(3),
       has_functor(Document, document, 3),
       generated_program_digest(Program),
       has_functor(Answer, answer, 4),

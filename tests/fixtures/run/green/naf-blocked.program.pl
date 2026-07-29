@@ -1,4 +1,4 @@
-cnl_program_record(2).
+cnl_program_record(3).
 document(docid('naf-blocked'),source_sha256('4444444444444444444444444444444444444444444444444444444444444444'),ulex(none)).
 clause(fact_id(sentence(1),clause(1)),pred(patient,[named('café patient')]),body([])).
 clause(fact_id(sentence(1),clause(2)),pred(smoke,[named('café patient')]),body([])).

@@ -1,4 +1,4 @@
-cnl_ir_record(2).
+cnl_ir_record(3).
 document(docid('cycle-signed-transitive'),source_sha256('0000000000000000000000000000000000000000000000000000000000000000'),ulex(none)).
 rule(rule_id(sentence(1),clause(1)),pred(p,[var(1)]),body([pred(q,[var(1)])]),source(sentence(1),tokens([1]))).
 rule(rule_id(sentence(2),clause(1)),pred(q,[var(1)]),body([pred(r,[var(1)])]),source(sentence(2),tokens([1]))).
