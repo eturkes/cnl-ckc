@@ -7,11 +7,11 @@ MODE ← active-milestone status (state-changing closes use a scoped commit; an 
 - IMPLEMENTED (all units DONE; review pending) → MILESTONE-REVIEW
 
 Execution map:
-- Every MODE fans work out to subagents (`Agent`, private/unnamed; this command = standing opt-in); batch independent dispatches in one block so they run in parallel. A supplied task uses the same fan-out when MAIN judges it beneficial or the user requests it.
+- Every MODE fans work out to subagents (this command = standing opt-in): private/unnamed agents for one-shot scopes (research, review, fix batches); a named teammate where iterating on retained context pays (WORK-UNIT implementation). Batch independent dispatches in one block so they run in parallel. A supplied task uses the same fan-out when MAIN judges it beneficial or the user requests it.
 - MAIN owns the one-line scope + acceptance restatement, precondition confirmation, per-agent task definitions, and close; MAIN alone creates repository commits. MAIN verifies independently: inspects every returned diff, reruns the decisive gates, and accepts evidence that traces permitted real inputs.
 - Implementation agents land the accepted scope as working-tree changes: reuse project modules/style, run the required lint/format/type-check/tests, confirm touched scripts exit cleanly, route durable guidance, and return diff + evidence. Parallel implementation agents only on disjoint file sets.
 - Review agents stay analysis-only; findings return to MAIN.
-- Agent hygiene: scope every agent to finish inside ~200K; web-research agents get a bounded question set + an explicit WebSearch allowance (session budget = 200, shared) + BrowserOS MCP for authenticated/paywalled sources; a missing/empty result ⇒ check the transcript tail before re-dispatching; resolve every agent (result or `TaskStop`) before close.
+- Agent hygiene: scope every agent to finish inside ~200K; web-research agents get a bounded question set + an explicit WebSearch allowance (session budget = 200, shared) + BrowserOS MCP for authenticated/paywalled sources; a missing/empty result ⇒ check the transcript tail before re-dispatching; teammates signal nothing on completion/death ⇒ poll the teammate transcript for its assigned completion marker, revive an API-dead teammate via `SendMessage`; resolve every agent (result, or `TaskStop` for teammates/stragglers) before close.
 - Context: PLANNING + MILESTONE-REVIEW run past auto-compaction — MAIN checkpoints coherently before each and continues after. Every other run completes within one window, and WORK-UNIT records its usage at close.
 
 PLANNING — split scope into milestones as needed; plan the next milestone.
@@ -24,8 +24,8 @@ PLANNING — split scope into milestones as needed; plan the next milestone.
 WORK-UNIT.
 - Read the last completed unit's commit(s), or the planning commit(s) for the milestone's first unit.
 - Precondition transition: recheck BLOCKED first. Met ⇒ clear block, set OPEN, continue. Unmet ⇒ retain BLOCKED; materially changed evidence ⇒ update + commit `roadmap (M<m>.<u> block): …`; stable evidence ⇒ read-only close. OPEN + unmet ⇒ set BLOCKED, record condition/evidence, make block commit, close.
-- Implement: one implementation agent carries the accepted scope, locations, constraints, quality gates + acceptance checks.
-- Review: a fresh review agent scrutinizes the returned diff adversarially (correctness/spec, claim soundness, guarantee-vs-claim gaps) against scope + acceptance + project conventions; MAIN validates findings, lands accepted fixes (directly or via one fix agent), and reruns the decisive gates.
+- Implement: one implementation teammate (named `impl-m<m>u<u>`) carries the accepted scope, locations, constraints, quality gates + acceptance checks; its report ends with marker `UNIT-DONE`.
+- Review: a fresh private review agent scrutinizes the returned diff adversarially (correctness/spec, claim soundness, guarantee-vs-claim gaps) against scope + acceptance + project conventions; MAIN validates findings and `SendMessage`s accepted fixes to the implementation teammate (retained unit context; fix reports end `FIXES-DONE`), re-reviewing material changes; MAIN reruns the decisive gates and `TaskStop`s the teammate before close.
 - Close: record `main=<.agent/context.sh full pct used/240K>` + `impl=<peak implementing agent's transcript final pct used/240K>` in the roadmap. Set the unit DONE and, once all units are DONE, the milestone IMPLEMENTED; commit `<scope> (M<m>.<u>): …`.
 
 MILESTONE-REVIEW.
