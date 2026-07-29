@@ -2,7 +2,8 @@
 set -eu
 
 ROOT=$PWD
-if ! [ -d vendor/ape ] || ! [ -f src/prolog/adapter.pl ]; then
+if ! [ -d vendor/ape ] || ! [ -f vendor/clex/clex_lexicon.pl ] || \
+    ! [ -f src/prolog/adapter.pl ]; then
     printf 'FAIL repo-root: run from cnl-ckc repository root\n'
     printf 'SUMMARY: 0 passed, 1 failed\n'
     exit 1
@@ -23,7 +24,7 @@ FAKE_NOISY_PARSE="$SCRATCH/fake-noisy-parse"
 FAKE_WARNING_LOAD="$SCRATCH/fake-warning-load"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=45
+EXPECTED_PASS_COUNT=47
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -109,6 +110,7 @@ rm -rf "$SCRATCH"
 mkdir -p "$TREE" "$SCRATCH/green" "$SCRATCH/red" "$SCRATCH/ulex" "$SCRATCH/env"
 trap 'rm -rf "$SCRATCH"' EXIT
 cp -a "$ROOT/vendor/ape/." "$TREE/"
+cp "$ROOT/vendor/clex/clex_lexicon.pl" "$TREE/prolog/lexicon/clex_lexicon.pl"
 pass_case "vendor/copy"
 
 if ! make -C "$TREE" plp "swipl=$SWIPL -f none"; then

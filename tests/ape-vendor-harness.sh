@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT=$PWD
-if ! [ -d vendor/ape ]; then
+if ! [ -d vendor/ape ] || ! [ -f vendor/clex/clex_lexicon.pl ]; then
     printf 'FAIL repo-root: run from cnl-ckc repository root\n'
     printf 'SUMMARY: 0 passed, 1 failed\n'
     exit 1
@@ -11,10 +11,7 @@ fi
 SWIPL=${SWIPL:-swipl}
 SCRATCH="$ROOT/.scratch/ape-vendor-harness.$$"
 TREE="$SCRATCH/tree"
-CLEX_DIR="$ROOT/.scratch/clex"
-CLEX="$CLEX_DIR/clex_lexicon.pl"
-CLEX_URL=https://raw.githubusercontent.com/Attempto/Clex/20960a5ce07776cb211a8cfb25dc8c81fcdf25e2/clex_lexicon.pl
-CLEX_SHA256=2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec
+CLEX="$ROOT/vendor/clex/clex_lexicon.pl"
 PASS_COUNT=0
 EXPECTED_PASS_COUNT=10
 
@@ -119,21 +116,28 @@ if [ "$direct_status" -ne 0 ]; then
 fi
 pass_case "anchor/direct-source"
 
-mkdir -p "$CLEX_DIR"
-if ! [ -f "$CLEX" ]; then
-    clex_tmp="$CLEX.tmp.$$"
-    rm -f "$clex_tmp"
-    if ! curl -fsSL "$CLEX_URL" -o "$clex_tmp"; then
-        rm -f "$clex_tmp"
-        fail_case "clex/fetch" "pinned download failed"
-    fi
-    mv "$clex_tmp" "$CLEX"
-    pass_case "clex/fetch"
-else
-    pass_case "clex/cache"
+clex_manifest_paths="$SCRATCH/clex-manifest.paths"
+clex_tracked_paths="$SCRATCH/clex-tracked.paths"
+if ! cut -c67- "$ROOT/vendor/clex/MANIFEST.sha256" |
+    sed 's#^\./##' |
+    LC_ALL=C sort >"$clex_manifest_paths"; then
+    fail_case "clex/manifest-paths" "could not normalize MANIFEST.sha256 paths"
 fi
-if ! printf '%s  %s\n' "$CLEX_SHA256" "$CLEX" | sha256sum -c -; then
-    fail_case "clex/digest" "SHA-256 mismatch"
+if ! git ls-files vendor/clex |
+    sed -e 's#^vendor/clex/##' \
+        -e '/^PROVENANCE$/d' \
+        -e '/^MANIFEST\.sha256$/d' |
+    LC_ALL=C sort >"$clex_tracked_paths"; then
+    fail_case "clex/manifest-paths" "could not normalize tracked vendor/clex paths"
+fi
+if ! cmp -s "$clex_manifest_paths" "$clex_tracked_paths"; then
+    fail_case "clex/manifest-paths" \
+        "MANIFEST.sha256 paths differ from tracked vendor/clex files"
+fi
+pass_case "clex/manifest-paths"
+
+if ! (cd "$ROOT/vendor/clex" && sha256sum --quiet -c MANIFEST.sha256); then
+    fail_case "clex/digest" "MANIFEST.sha256 verification failed"
 fi
 pass_case "clex/digest"
 cp "$CLEX" "$TREE/tests/clex_lexicon.pl"

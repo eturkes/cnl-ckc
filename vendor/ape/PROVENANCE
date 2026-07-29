@@ -20,12 +20,9 @@ Any APE change MUST pass the "bump fork pin" gate: update the patch set, regener
 
 APE is trusted parser input to the compilation pipeline, but it is not part of the Python TCB. It runs in a separate SWI-Prolog process; Python moves bytes only. The narrow first-party adapter lands in M2.2 and does not change this boundary.
 
-## Regression lexicon
+## Full Clex lexicon
 
-The full external Clex lexicon (GPL-3.0) is PERMITTED for vendoring and use at any time; the authoritative decision, pin, licensing analysis, and first-party-Ulex layering guard live in the Clex decision of `docs/provenance.md`. This tree currently obtains Clex on demand: regression testing fetches the pinned file `clex_lexicon.pl` from commit `20960a5ce07776cb211a8cfb25dc8c81fcdf25e2` into gitignored `.scratch/` and accepts it only after digest verification. The pinned raw file is:
-
-- URL: https://raw.githubusercontent.com/Attempto/Clex/20960a5ce07776cb211a8cfb25dc8c81fcdf25e2/clex_lexicon.pl
-- SHA-256: `2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec`
+The full external Clex lexicon is vendored at `vendor/clex/` (own `PROVENANCE` + `MANIFEST.sha256`); the authoritative decision, pin, licensing analysis, and first-party-Ulex layering guard live in the Clex decision of `docs/provenance.md`. This tree stays verbatim at the base pin: every staged copy of this tree receives `vendor/clex/clex_lexicon.pl` over `prolog/lexicon/clex_lexicon.pl` at staging time, and `tests/ape-vendor-harness.sh` feeds the same vendored file to the upstream regression suite.
 
 ## Fidelity checks
 

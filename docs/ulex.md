@@ -20,7 +20,12 @@ Ulex module.
 Run a fresh SWI-Prolog process for each document. Thus Ulex state is per document
 and cannot carry into another parse. Within a run, Ulex clauses have lookup
 priority over Clex clauses because `lexicon_interface.pl` tries `ulex:` before
-`clex:`.
+`clex:`. Every staged APE tree carries the full vendored Clex
+(`vendor/clex/clex_lexicon.pl` copied over the demo
+`prolog/lexicon/clex_lexicon.pl`; see `vendor/clex/PROVENANCE`), so general
+English resolves from Clex while the first-party terminology→Ulex route keeps
+lookup priority and supplies all clinical/domain vocabulary per the binding
+guard in the [provenance Clex decision](provenance.md).
 
 ## Entry forms
 

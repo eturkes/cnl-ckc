@@ -49,13 +49,13 @@ it writes same-directory `*.tmp.<pid>` bytes and atomically installs them with `
 CI runs the vendored suite, verifies vendor integrity, strict-compiles `regen.emm` and `cmp`s
 it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints and runs twelve
 shell harnesses: `tests/strict-harness.sh` (57 gates), `tests/regen-harness.sh` (16),
-`tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (45),
+`tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (47),
 `tests/pipeline-harness.sh` (28),
 `tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (73),
 `tests/ir-lower-harness.sh` (51), `tests/ir-run-harness.sh` (93),
 `tests/slice-harness.sh` (29), `tests/registry-harness.sh` (94), and
 `tests/guideline-harness.sh` (45). The explicit
 comparison breaks the self-check trust circle.
-Actions are SHA-pinned. The `test` job stays offline after provisioning; the `ape` job performs
-one pinned-Clex network fetch inside `tests/ape-vendor-harness.sh` and accepts it only after
-digest verification.
+Actions are SHA-pinned. Every job stays offline after provisioning:
+`tests/ape-vendor-harness.sh` consumes the vendored `vendor/clex/clex_lexicon.pl`
+under its manifest gates instead of any network fetch.

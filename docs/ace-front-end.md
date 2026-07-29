@@ -10,7 +10,7 @@ Run from the repository root:
 PYTHONDONTWRITEBYTECODE=1 python3 -P tools/ace_front_end.py APE_TREE_DIR DOCS_DIR OUT_DIR
 ```
 
-`APE_TREE_DIR` is a scratch copy of `vendor/ape/` after `make plp` has produced `prolog/parser/grammar.plp`. `DOCS_DIR` is the input directory, and `OUT_DIR` is a new output directory. The `SWIPL` environment variable selects the SWI-Prolog executable; its default is `swipl`. Before any adapter run, the glue resolves that value with `shutil.which` and requires an executable.
+`APE_TREE_DIR` is a scratch copy of `vendor/ape/` with `vendor/clex/clex_lexicon.pl` copied over `prolog/lexicon/clex_lexicon.pl` (full general-English Clex staged over the demo lexicon), after `make plp` has produced `prolog/parser/grammar.plp`. `DOCS_DIR` is the input directory, and `OUT_DIR` is a new output directory. The `SWIPL` environment variable selects the SWI-Prolog executable; its default is `swipl`. Before any adapter run, the glue resolves that value with `shutil.which` and requires an executable.
 
 The generated program has a strict `Require` guard for `src/prolog/adapter.pl`, so repository-root execution is a precondition. Each document uses this adapter command, with a final Ulex argument only when the matching file exists:
 

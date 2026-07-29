@@ -1,0 +1,52 @@
+# Clex vendor provenance
+
+Upstream: https://github.com/Attempto/Clex
+Base pin: 20960a5ce07776cb211a8cfb25dc8c81fcdf25e2
+License: GPL-3.0-or-later per the in-file `clex_lexicon.pl` header; the upstream `LICENSE` (GPLv3 text) is retained verbatim in this directory. Licensing analysis, the distributed-combination conveyance record, and the binding first-party-Ulex layering guard live in the Clex decision of `docs/provenance.md`.
+
+## Vendor pin
+
+The vendored tree is the complete upstream tree at the base pin, verbatim, plus this `PROVENANCE` and the SHA-256 tree manifest `MANIFEST.sha256`. The ordered patch set is empty and intentionally absent; any future patch MUST follow the `vendor/ape/PROVENANCE` patch contract, including the prominent in-file modification notice required by GPL-3.0 §5(a), and MUST bump this pin record, regenerate `MANIFEST.sha256`, and update `docs/provenance.md`.
+
+## Role
+
+`clex_lexicon.pl` (97,541 lines, COMLEX-derived) is the general-English base lexicon for the ACE front end. Upstream documents it as a drop-in replacement for the demo `prolog/lexicon/clex_lexicon.pl` shipped inside the APE source tree. Every staged APE tree copies this file over that demo file after `cp -a vendor/ape/. <tree>/`; APE's `prolog/lexicon/clex.pl` loader consults it at process start. First-party Ulex entries keep lookup priority over every Clex entry (`docs/ulex.md`), and clinical/domain vocabulary stays in the first-party terminology→Ulex route per the binding guard. `tests/ape-vendor-harness.sh` also feeds this file to the upstream APE regression suite.
+
+## Fidelity check
+
+Run from the repository root. Clone upstream into scratch (or reuse a local clone), check out the base pin, archive it into a clean scratch tree, hash both comparable trees, and compare them:
+
+```sh
+set -eu
+ROOT=$PWD
+PIN=20960a5ce07776cb211a8cfb25dc8c81fcdf25e2
+UPSTREAM="$ROOT/.scratch/clex-upstream"
+WORK="$ROOT/.scratch/clex-fidelity"
+export GIT_CEILING_DIRECTORIES="$ROOT/.scratch"
+
+# Omit clone when reusing an existing local clone.
+git clone https://github.com/Attempto/Clex "$UPSTREAM"
+git -C "$UPSTREAM" checkout --detach "$PIN"
+rm -rf "$WORK"
+mkdir -p "$WORK"
+git -C "$UPSTREAM" archive "$PIN" | tar -x -C "$WORK"
+
+(
+    cd "$WORK"
+    find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+) > "$ROOT/.scratch/clex-base.sha256"
+(
+    cd "$ROOT/vendor/clex"
+    find . -type f \
+        ! -path './PROVENANCE' \
+        ! -path './MANIFEST.sha256' \
+        -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+) > "$ROOT/.scratch/clex-vendor.sha256"
+diff -u "$ROOT/.scratch/clex-base.sha256" "$ROOT/.scratch/clex-vendor.sha256"
+```
+
+The in-tree integrity check is:
+
+```sh
+cd vendor/clex && sha256sum -c MANIFEST.sha256
+```

@@ -2,7 +2,8 @@
 set -eu
 
 ROOT=$PWD
-if ! [ -d vendor/ape ] || ! [ -f tools/ace_front_end.py ]; then
+if ! [ -d vendor/ape ] || ! [ -f vendor/clex/clex_lexicon.pl ] || \
+    ! [ -f tools/ace_front_end.py ]; then
     printf 'FAIL repo-root: run from cnl-ckc repository root\n'
     printf 'SUMMARY: 0 passed, 1 failed\n'
     exit 1
@@ -153,6 +154,7 @@ rm -rf "$SCRATCH"
 mkdir -p "$TREE" "$SCRATCH/run1" "$SCRATCH/run2" "$SCRATCH/red"
 trap 'rm -rf "$SCRATCH"' EXIT
 cp -a "$ROOT/vendor/ape/." "$TREE/"
+cp "$ROOT/vendor/clex/clex_lexicon.pl" "$TREE/prolog/lexicon/clex_lexicon.pl"
 pass_case "vendor/copy"
 
 if ! make -C "$TREE" plp "swipl=$SWIPL -f none"; then

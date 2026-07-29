@@ -8,6 +8,7 @@ ROOT=$PWD
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null || :)
 if [ "$repo_root" != "$ROOT" ] || \
    ! [ -f "$ROOT/vendor/ape/Makefile" ] || \
+   ! [ -f "$ROOT/vendor/clex/clex_lexicon.pl" ] || \
    ! [ -f "$ROOT/tools/pipeline.py" ] || \
    ! [ -f "$ROOT/tools/ace_front_end.py" ] || \
    ! [ -f "$ROOT/src/prolog/registry_tool.pl" ] || \
@@ -312,6 +313,11 @@ mkdir -p "$TREE"
 if ! cp -a "$ROOT/vendor/ape/." "$TREE/" \
     >"$SCRATCH/logs/vendor-copy.stdout" 2>"$SCRATCH/logs/vendor-copy.stderr"; then
     fail_case "vendor/copy" "cp -a failed"
+fi
+if ! cp "$ROOT/vendor/clex/clex_lexicon.pl" \
+    "$TREE/prolog/lexicon/clex_lexicon.pl" \
+    >>"$SCRATCH/logs/vendor-copy.stdout" 2>>"$SCRATCH/logs/vendor-copy.stderr"; then
+    fail_case "vendor/copy" "clex overlay failed"
 fi
 pass_case "vendor/copy"
 

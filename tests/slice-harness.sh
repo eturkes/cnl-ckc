@@ -5,6 +5,7 @@ ROOT=$PWD
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null || :)
 if [ "$repo_root" != "$ROOT" ] || \
         ! [ -f vendor/ape/Makefile ] || \
+        ! [ -f vendor/clex/clex_lexicon.pl ] || \
         ! [ -f tools/ace_front_end.py ] || \
         ! [ -f src/prolog/adapter.pl ] || \
         ! [ -f src/prolog/ir_tool.pl ] || \
@@ -350,6 +351,7 @@ fi
 pass_case "vendor/precopy-clean"
 
 cp -a "$ROOT/vendor/ape/." "$TREE/"
+cp "$ROOT/vendor/clex/clex_lexicon.pl" "$TREE/prolog/lexicon/clex_lexicon.pl"
 pass_case "vendor/copy"
 
 if ! make -C "$TREE" plp "swipl=$SWIPL -f none"; then

@@ -102,9 +102,10 @@ ACE handles function words in the grammar and content words in a compiled/common
 (Clex) and runtime user lexicon (Ulex). Ulex entries override matching Clex entries. APE
 loads them with `-ulexfile` or `-ulextext`; `-noclex` disables the compiled content lexicon,
 and `-guess` enables unknown-word class guessing. The clinical adapter should keep guessing
-off. Broad Clex vocabulary may be reused for general English — the full external Clex is
-permitted repo-wide (see [the Clex decision](../provenance.md)) — while clinical vocabulary
-itself comes from the generated Ulex, which overrides Clex.
+off. Broad Clex vocabulary is reused for general English — the full external Clex is
+vendored at `vendor/clex/` and staged into every APE tree (see
+[the Clex decision](../provenance.md)) — while clinical vocabulary itself comes from the
+generated Ulex, which overrides Clex.
 
 Ulex entries are Prolog facts. The specification covers count and mass nouns, measurement
 nouns, proper names, three verb valencies, adjectives, adverbs, and prepositions. For
