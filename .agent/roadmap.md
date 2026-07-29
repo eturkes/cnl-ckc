@@ -14,6 +14,7 @@ Charter = `.agent/initial-prompt.md`. Pipeline: E-- → Python (glue only) | ACE
 | M5 | first guideline + manual pipeline | E---generated CLI orchestrating full chain; one real guideline authored in ACE e2e; guideline registry + English↔ACE mapping store; full-chain acceptance | M4 | REVIEWED |
 | M6 | semantics coverage widening | minimal IR/profile/kernel extensions converting the M5 residual inventory into executable semantics (ideal = zero residuals on the first guideline; survivors carry a recorded impossibility rationale); per-class least-intrusive-deviation decision — deterministic Prolog first, other formalisms (ProbLog-class or other) only if required | M5 | IN-PROGRESS |
 | M7 | resumable /goal workflow | registry-driven idempotent dynamic workflow; durable cross-session state; bounded termination (registry + discovery frontier empty) | M6 | UNPLANNED |
+| M8 | formally verified answer checking | small human-read formal spec + machine-checked (AI-written, unread) checker certifying chain answers — human certifies by reading the spec + running the checker | M6 (v3 final) | UNPLANNED |
 
 ## M0 — feasibility + governance (REVIEWED)
 
@@ -118,6 +119,14 @@ Full Clex vendored at `vendor/clex/` (pin/manifest per `vendor/clex/PROVENANCE`)
 - M6.6 BLOCKED(M6.5) (~200K) — corpus re-authoring + conversion rec01–rec06: richer ACE (general English from the staged vendored Clex) + domain-delta terminology growth + residual→claim conversion + golden regeneration.
 - M6.7 BLOCKED(M6.6) (~200K) — same for rec07–rec12 + the four grp regions (shared golden manifest serializes after M6.6).
 - M6.8 BLOCKED(M6.7) (~120K) — full-chain acceptance + closure: guideline-harness + CI updates, docs truth-alignment (capability matrix flips, regen inventory), residual end-state audit (zero or documented-impossible with recorded rationale).
+
+## M8 — formally verified answer checking (UNPLANNED; seeded 2026-07-29)
+
+Directive (user, 2026-07-29): adopt the exemplar outcome of `github.com/schildep/verified-3d-mesh-intersection` — a human certifies correctness by reading a ~100-line formal spec + running the Lean checker while AI-written implementation (1000+ lines) and proofs (60K+ lines) stay unread — as an eventual goal for this chain's answer computation.
+- Planning basis = `docs/research/formal-verification.md` (exemplar re-verified at its pin incl. rerun build/axiom checks; boundary candidates B1–B4 with measured v2 spec surface; Lean-4-first toolchain fit + vendoring profile + alternatives; prior art incl. DatalogCert ITP 2017 + certifying-algorithms framework).
+- Candidate target (M8 planning finalizes): one Lean package — reviewed spec module (v3 record byte grammar + decoder relation + stratified standard-model semantics + 4-way contract theorems) + unread AI checker/proofs; phases `check-model` (B2 complete answer relation: soundness + completeness incl. `not_proved`/`answers([])`/wh totality) + `check-cert` (B1 certificate replay against the recomputed model) + separable `check-compile` (B3a IR→program). Prolog kernel/compiler leave the trusted base for answer correctness; ACE→IR meaning stays human-audited via ACE + registry/mapping (charter unchanged).
+- Gate = M6 REVIEWED: v3 grammars final (est. +40–80% spec surface lands in M6); verifying v2 now = pure migration churn. M7-independent. Safe pre-gate work if idle: decoder prototype + boundary theorem statements over v2 fixtures as regression vectors.
+- In-flight pressure on M6 units: every constructor/certificate shape added lands in the future trusted spec → keep record/certificate grammars minimal, total, canonical.
 
 ## Seeds (banked)
 
