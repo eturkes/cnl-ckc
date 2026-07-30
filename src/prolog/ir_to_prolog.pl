@@ -44,6 +44,19 @@ transform_item(Item, clause(Id, Head, Body)) :-
     arg(1, Item, Id),
     arg(2, Item, Head),
     arg(3, Item, Body).
+transform_item(Item, Item) :-
+    compound(Item),
+    functor(Item, closed_world, 3).
+transform_item(Item, alternative_set(Id, Members, Body,
+        Satisfaction, Exclusivity, Exhaustiveness)) :-
+    compound(Item),
+    functor(Item, alternative_set, 7),
+    arg(1, Item, Id),
+    arg(2, Item, Members),
+    arg(3, Item, Body),
+    arg(4, Item, Satisfaction),
+    arg(5, Item, Exclusivity),
+    arg(6, Item, Exhaustiveness).
 transform_item(Item, goal(Id, Predicate)) :-
     compound(Item),
     functor(Item, query, 3),

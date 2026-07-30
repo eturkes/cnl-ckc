@@ -14,7 +14,7 @@ RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-validate-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=77
+EXPECTED_PASS_COUNT=107
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -90,12 +90,12 @@ else
 fi
 
 set -- "$GREEN"/*.pl
-if [ "$#" -ne 8 ]; then
-    fail_case "fixtures/count" "expected 8 green fixtures, got $#"
+if [ "$#" -ne 11 ]; then
+    fail_case "fixtures/count" "expected 11 green fixtures, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 45 ]; then
-    fail_case "fixtures/count" "expected 45 red fixtures, got $#"
+if [ "$#" -ne 72 ]; then
+    fail_case "fixtures/count" "expected 72 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -123,16 +123,84 @@ done
 
 run_committed_red() {
     local name expected_class expected_line stdout_path stderr_path
+    local first_status rerun_stdout rerun_stderr
     name=$1
     expected_class=$2
     expected_line=${3-}
     stdout_path="$SCRATCH/red/$name.stdout"
     stderr_path="$SCRATCH/red/$name.stderr"
     run_tool "$RED/$name.pl" "$stdout_path" "$stderr_path" validate
+    first_status=$RUN_STATUS
     check_rejection "red/$name" 1 validate "$expected_class" \
         "$stdout_path" "$stderr_path" "$expected_line"
+
+    rerun_stdout="$SCRATCH/determinism/$name.red.stdout"
+    rerun_stderr="$SCRATCH/determinism/$name.red.stderr"
+    run_tool "$RED/$name.pl" "$rerun_stdout" "$rerun_stderr" validate
+    if [ "$RUN_STATUS" -ne "$first_status" ]; then
+        fail_case "red/$name/determinism-status" \
+            "fresh runs differ: $first_status and $RUN_STATUS"
+    fi
+    if ! cmp "$stdout_path" "$rerun_stdout" || \
+            ! cmp "$stderr_path" "$rerun_stderr"; then
+        fail_case "red/$name/determinism-bytes" "fresh runs differ"
+    fi
 }
 
+run_committed_red ordering-branch-gap ordering \
+    'ir_tool_error(validate,ordering,term(6,branch_sequence(expected(2),found(3)))).'
+run_committed_red ordering-branch-singleton ordering \
+    'ir_tool_error(validate,ordering,term(5,branch_group_singleton(rule,pair(3,1)))).'
+run_committed_red ordering-branch-head-mismatch ordering \
+    'ir_tool_error(validate,ordering,term(5,branch_payload_mismatch(rule,pair(3,1)))).'
+run_committed_red ordering-alternative-branch-members-mismatch ordering \
+    'ir_tool_error(validate,ordering,term(5,branch_payload_mismatch(alternative_set,pair(3,1)))).'
+run_committed_red exception-undeclared exception \
+    'ir_tool_error(validate,exception,term(5,undeclared_labeled_target(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))))).'
+run_committed_red shape-closed-world shape \
+    'ir_tool_error(validate,shape,term(4,closed_world)).'
+run_committed_red exception-affected-mismatch exception \
+    'ir_tool_error(validate,exception,term(4,affected_rule_mismatch(rule_id(sentence(3),clause(1)),rule_id(sentence(2),clause(1))))).'
+run_committed_red exception-target-not-defined exception \
+    'ir_tool_error(validate,exception,term(4,target_not_defined(predicate_key(cough,arity(1))))).'
+run_committed_red exception-target-mismatch exception \
+    'ir_tool_error(validate,exception,term(6,undeclared_labeled_target(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))))).'
+run_committed_red exception-unused-declaration exception \
+    'ir_tool_error(validate,exception,term(4,unused_declaration(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))))).'
+run_committed_red shape-alternative-policy shape \
+    'ir_tool_error(validate,shape,term(5,alternative_set)).'
+run_committed_red safety-alternative-member safety \
+    'ir_tool_error(validate,safety,term(5,alternative_member_var_not_in_body(1))).'
+run_committed_red shape-alternative-members shape \
+    'ir_tool_error(validate,shape,term(5,alternative_set)).'
+run_committed_red alternative-set-duplicate-members shape \
+    'ir_tool_error(validate,shape,term(4,alternative_set)).'
+run_committed_red alternative-set-member-scope-order scope \
+    'ir_tool_error(validate,scope,term(3,variable_sequence(expected(1),found(2),occurrence(1)))).'
+run_committed_red alternative-set-body-naf safety \
+    'ir_tool_error(validate,safety,term(3,alternative_set_naf(2))).'
+run_committed_red branch-wrapper-float shape \
+    'ir_tool_error(validate,shape,term(5,branch_id)).'
+run_committed_red branch-wrapper-atom shape \
+    'ir_tool_error(validate,shape,term(5,branch_id)).'
+run_committed_red exception-label-position exception \
+    'ir_tool_error(validate,exception,term(6,label_position(expected(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))),found(exception_id(rule(rule_id(sentence(3),clause(1))),literal(1)))))).'
+run_committed_red exception-label-target-swap exception \
+    'ir_tool_error(validate,exception,term(8,undeclared_labeled_target(exception_id(rule(rule_id(sentence(4),clause(1))),literal(2))))).'
+run_committed_red exception-declaration-order exception \
+    'ir_tool_error(validate,exception,term(5,declaration_order_after(key(4,1,0,3)))).'
+run_committed_red shape-labeled-naf-id shape \
+    'ir_tool_error(validate,shape,term(6,rule)).'
+run_committed_red identity-branch-zero identity \
+    'ir_tool_error(validate,identity,term(5,ordinal(id_branch,0))).'
+run_committed_red ordering-branched-duplicate-id ordering \
+    'ir_tool_error(validate,ordering,term(6,duplicate_id(rule_id(sentence(3),clause(1),branch(1))))).'
+run_committed_red exception-duplicate-declaration exception \
+    'ir_tool_error(validate,exception,term(5,duplicate_exception_id(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))))).'
+run_committed_red exception-missing-affected-rule exception \
+    'ir_tool_error(validate,exception,term(4,affected_rule_missing(rule_id(sentence(9),clause(1))))).'
+run_committed_red cycle-labeled-mixed cycle \
+    'ir_tool_error(validate,cycle,term(6,body_literal(2,signed_dependency(naf,pred(r,1),pred(p,1))))).'
 run_committed_red envelope-wrong-version envelope \
     'ir_tool_error(validate,envelope,term(1,expected(cnl_ir_record(3)))).'
 run_committed_red envelope-v1-record envelope \

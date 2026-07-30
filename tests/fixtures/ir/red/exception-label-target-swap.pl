@@ -1,0 +1,9 @@
+cnl_ir_record(3).
+document(docid('multi-exception'),source_sha256('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'),ulex(none)).
+fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([1]))).
+closed_world(exception_id(rule(rule_id(sentence(4),clause(1))),literal(2)),affects(rule_id(sentence(4),clause(1))),predicate_key(cougher,arity(1))).
+closed_world(exception_id(rule(rule_id(sentence(4),clause(1))),literal(3)),affects(rule_id(sentence(4),clause(1))),predicate_key(smoker,arity(1))).
+rule(rule_id(sentence(2),clause(1)),pred(smoker,[var(1)]),body([pred(patient,[var(1)])]),source(sentence(2),tokens([1]))).
+rule(rule_id(sentence(3),clause(1)),pred(cougher,[var(1)]),body([pred(patient,[var(1)])]),source(sentence(3),tokens([1]))).
+rule(rule_id(sentence(4),clause(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),naf(exception_id(rule(rule_id(sentence(4),clause(1))),literal(2)),pred(smoker,[var(1)])),naf(exception_id(rule(rule_id(sentence(4),clause(1))),literal(3)),pred(cougher,[var(1)]))]),source(sentence(4),tokens([1,2,3]))).
+query(query_id(sentence(5),clause(1)),pred(recover,[named('John')]),source(sentence(5),tokens([1]))).

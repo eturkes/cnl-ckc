@@ -1,0 +1,3 @@
+ace_front_end_record(1).
+document(docid('m6-disjunction-exception'),source_sha256('4444444444444444444444444444444444444444444444444444444444444444'),ulex(none)).
+drs([A,B],[-(object(A,patient,countable,na,eq,1),/(1,4)),-(predicate(B,be,named('John'),A),/(1,2)),=>(drs([C],[-(object(C,patient,countable,na,eq,1),/(2,2)),v(drs([D],[-(predicate(D,cough,C),/(2,4))]),drs([E],[-(predicate(E,sleep,C),/(2,7))]))]),drs([F,G],[-(object(F,smoker,countable,na,eq,1),/(2,10)),-(predicate(G,be,C,F),/(2,8))])),=>(drs([H],[-(object(H,patient,countable,na,eq,1),/(3,2)),~(drs([I,J],[-(object(I,smoker,countable,na,eq,1),/(3,8)),-(predicate(J,be,H,I),/(3,4))]))]),drs([K],[-(predicate(K,recover,H),/(3,9))])),question(drs([L],[-(predicate(L,recover,named('John')),/(4,3))]))]).

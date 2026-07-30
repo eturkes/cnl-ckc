@@ -49,10 +49,10 @@ it writes same-directory `*.tmp.<pid>` bytes and atomically installs them with `
 CI runs the vendored suite, verifies vendor integrity, strict-compiles `regen.emm` and `cmp`s
 it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints and runs twelve
 shell harnesses: `tests/strict-harness.sh` (57 gates), `tests/regen-harness.sh` (16),
-`tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (47),
+`tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (51),
 `tests/pipeline-harness.sh` (28),
-`tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (77),
-`tests/ir-lower-harness.sh` (95), `tests/ir-run-harness.sh` (120),
+`tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (107),
+`tests/ir-lower-harness.sh` (115), `tests/ir-run-harness.sh` (175),
 `tests/slice-harness.sh` (29), `tests/registry-harness.sh` (94), and
 `tests/guideline-harness.sh` (45). The explicit
 comparison breaks the self-check trust circle.

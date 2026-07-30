@@ -33,7 +33,7 @@ IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=120
+EXPECTED_PASS_COUNT=175
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -195,20 +195,20 @@ if [ "$#" -ne 13 ]; then
     fail_case "fixtures/count" "expected 13 hand-green results, got $#"
 fi
 set -- "$RED"/*.program.pl
-if [ "$#" -ne 30 ]; then
-    fail_case "fixtures/count" "expected 30 red programs, got $#"
+if [ "$#" -ne 52 ]; then
+    fail_case "fixtures/count" "expected 52 red programs, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 12 ]; then
-    fail_case "fixtures/count" "expected 12 lower IR goldens, got $#"
+if [ "$#" -ne 21 ]; then
+    fail_case "fixtures/count" "expected 21 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 12 ]; then
-    fail_case "fixtures/count" "expected 12 lower program goldens, got $#"
+if [ "$#" -ne 21 ]; then
+    fail_case "fixtures/count" "expected 21 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 12 ]; then
-    fail_case "fixtures/count" "expected 12 lower result goldens, got $#"
+if [ "$#" -ne 21 ]; then
+    fail_case "fixtures/count" "expected 21 lower result goldens, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -267,9 +267,9 @@ for input in "$GOLDEN"/*.drs.pl; do
 done
 
 # Lower-chain pin: the lower fixture directory owns CLI-generated IR, program,
-# and result goldens. Compiling and running all twelve proves the covered NAF,
-# wh, transitive, of-role, property, comparative, and copular-head records reach
-# the shipped v3 kernel.
+# and result goldens. Compiling and running every committed chain proves the
+# covered NAF, wh, transitive, relation, property, branch, exception, and
+# alternative records reach the shipped v3 kernel.
 for ir in "$LOWER_GREEN"/*.ir.pl; do
     name=${ir##*/}
     stem=${name%.ir.pl}
@@ -305,10 +305,146 @@ for ir in "$LOWER_GREEN"/*.ir.pl; do
         fail_case "chain/lower/$stem/run-bytes" \
             "output differs from result golden"
     fi
+
+    rerun_compile_stdout="$SCRATCH/determinism/lower-$stem.compile.stdout"
+    rerun_compile_stderr="$SCRATCH/determinism/lower-$stem.compile.stderr"
+    run_tool "$ir" "$rerun_compile_stdout" "$rerun_compile_stderr" compile
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "chain/lower/$stem/compile-determinism-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$rerun_compile_stderr" ]; then
+        fail_case "chain/lower/$stem/compile-determinism-stderr" \
+            "expected zero bytes"
+    fi
+    if ! cmp "$compile_stdout" "$rerun_compile_stdout"; then
+        fail_case "chain/lower/$stem/compile-determinism-bytes" \
+            "fresh runs differ"
+    fi
+
+    rerun_run_stdout="$SCRATCH/determinism/lower-$stem.run.stdout"
+    rerun_run_stderr="$SCRATCH/determinism/lower-$stem.run.stderr"
+    run_tool "$rerun_compile_stdout" "$rerun_run_stdout" \
+        "$rerun_run_stderr" run
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "chain/lower/$stem/run-determinism-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$rerun_run_stderr" ]; then
+        fail_case "chain/lower/$stem/run-determinism-stderr" \
+            "expected zero bytes"
+    fi
+    if ! cmp "$run_stdout" "$rerun_run_stdout"; then
+        fail_case "chain/lower/$stem/run-determinism-bytes" \
+            "fresh runs differ"
+    fi
+
     check_result_digest "digest/lower/$stem" \
         "$expected_program" "$expected_result"
     pass_case "chain/lower/$stem"
 done
+
+if ! command grep -Fq \
+        "rule_id(sentence(3),clause(1),branch(1))" \
+        "$LOWER_GREEN/m6-disjunction.result.pl"; then
+    fail_case "answer/lower-m6-disjunction-branch" \
+        "expected generated branch(1) certificate rule ID"
+fi
+pass_case "answer/lower-m6-disjunction-branch"
+
+mixed_ir="$LOWER_GREEN/m6-disjunction-mixed.ir.pl"
+if ! command grep -Fq \
+        "branch(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])])" \
+        "$mixed_ir" || \
+        ! command grep -Fq \
+        "branch(2)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(sleep,[var(1)]),pred(cough,[var(1)])])" \
+        "$mixed_ir" || \
+        ! command grep -Fq \
+        "branch(3)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(smoke,[var(1)])])" \
+        "$mixed_ir"; then
+    fail_case "answer/lower-m6-disjunction-mixed" \
+        "expected left-to-right DNF branches without conjunction flattening"
+fi
+pass_case "answer/lower-m6-disjunction-mixed"
+
+labeled_leaf="naf(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2)),pred(smoker,[named('John')]))"
+if ! command grep -Fq "$labeled_leaf" \
+        "$LOWER_GREEN/m6-labeled-exception.result.pl"; then
+    fail_case "answer/lower-m6-labeled-exception" \
+        "expected labeled absence certificate leaf"
+fi
+pass_case "answer/lower-m6-labeled-exception"
+
+composition_program="$LOWER_GREEN/m6-disjunction-exception.program.pl"
+if ! command grep -Fq "closed_world(exception_id(" \
+        "$composition_program" || \
+        ! command grep -Fq \
+        "rule_id(sentence(2),clause(1),branch(1))" \
+        "$composition_program" || \
+        ! command grep -Fq \
+        "rule_id(sentence(2),clause(1),branch(2))" \
+        "$composition_program" || \
+        ! command grep -Fq "$labeled_leaf" \
+        "$LOWER_GREEN/m6-disjunction-exception.result.pl"; then
+    fail_case "answer/lower-m6-disjunction-exception" \
+        "expected split exception definitions and labeled absence leaf"
+fi
+pass_case "answer/lower-m6-disjunction-exception"
+
+alternative_result="$LOWER_GREEN/m6-alternative-set.result.pl"
+if ! command grep -Fq \
+        "members([pred(offer,[var(1),named('Mary')]),pred(arrange,[var(1),named('Mary')])])" \
+        "$alternative_result" || \
+        ! command grep -Fq "satisfaction(any_member)" \
+        "$alternative_result" || \
+        ! command grep -Fq "exclusivity(not_asserted)" \
+        "$alternative_result" || \
+        ! command grep -Fq "exhaustiveness(not_asserted)" \
+        "$alternative_result"; then
+    fail_case "answer/lower-m6-alternative-set" \
+        "expected record-visible any-member alternative metadata"
+fi
+pass_case "answer/lower-m6-alternative-set"
+
+if ! command grep -Fq \
+        "rule_id(sentence(3),clause(1),branch(64))" \
+        "$LOWER_GREEN/m6-disjunction-cap.result.pl"; then
+    fail_case "answer/lower-m6-disjunction-cap" \
+        "expected accepted cap boundary branch(64) proof"
+fi
+pass_case "answer/lower-m6-disjunction-cap"
+
+root_alternative_line="alternative_set(alternative_set_id(sentence(1),clause(1)),members([pred(offer,[named('John'),named('Mary')]),pred(arrange,[named('John'),named('Mary')])]),body([]),satisfaction(any_member),exclusivity(not_asserted),exhaustiveness(not_asserted),source(sentence(1),tokens([2,5])))."
+if ! command grep -Fxq "$root_alternative_line" \
+        "$LOWER_GREEN/m6-root-alternative-order.ir.pl"; then
+    fail_case "answer/lower-m6-root-alternative-order" \
+        "expected exact left-then-right root member order"
+fi
+pass_case "answer/lower-m6-root-alternative-order"
+
+first_declaration="closed_world(exception_id(rule(rule_id(sentence(4),clause(1))),literal(2)),affects(rule_id(sentence(4),clause(1))),predicate_key(smoker,arity(1)))."
+second_declaration="closed_world(exception_id(rule(rule_id(sentence(5),clause(1))),literal(2)),affects(rule_id(sentence(5),clause(1))),predicate_key(sleeper,arity(1)))."
+two_declaration_ir="$LOWER_GREEN/m6-two-generated-declarations.ir.pl"
+if [ "$(command grep -n -Fx "$first_declaration" "$two_declaration_ir" || :)" != \
+        "4:$first_declaration" ] || \
+        [ "$(command grep -n -Fx "$second_declaration" "$two_declaration_ir" || :)" != \
+        "5:$second_declaration" ]; then
+    fail_case "answer/lower-m6-two-generated-declarations" \
+        "expected exact ordered closed-world rows"
+fi
+pass_case "answer/lower-m6-two-generated-declarations"
+
+composition_ir="$LOWER_GREEN/m6-branch-alternative-composition.ir.pl"
+composition_first="alternative_set(alternative_set_id(sentence(3),clause(1),branch(1)),members([pred(offer,[var(1),named('Mary')]),pred(arrange,[var(1),named('Mary')])]),body([pred(patient,[var(1)]),pred(wait,[var(1)])]),satisfaction(any_member),exclusivity(not_asserted),exhaustiveness(not_asserted),source(sentence(3),tokens([2,4,8,11])))."
+composition_second="alternative_set(alternative_set_id(sentence(3),clause(1),branch(2)),members([pred(offer,[var(1),named('Mary')]),pred(arrange,[var(1),named('Mary')])]),body([pred(patient,[var(1)]),pred(sleep,[var(1)])]),satisfaction(any_member),exclusivity(not_asserted),exhaustiveness(not_asserted),source(sentence(3),tokens([2,7,8,11])))."
+composition_count=$(command grep -c '^alternative_set(' "$composition_ir" || :)
+if [ "$composition_count" -ne 2 ] || \
+        ! command grep -Fxq "$composition_first" "$composition_ir" || \
+        ! command grep -Fxq "$composition_second" "$composition_ir"; then
+    fail_case "answer/lower-m6-branch-alternative-composition" \
+        "expected exactly two ordered branched alternative rows"
+fi
+pass_case "answer/lower-m6-branch-alternative-composition"
 
 nary_ir="$IR_GREEN/nary-binary.pl"
 nary_validate_stdout="$SCRATCH/chain/nary-binary.validate.stdout"
@@ -559,16 +695,74 @@ pass_case "determinism/competing-witness"
 
 run_committed_red() {
     local name expected_class expected_line stdout_path stderr_path
+    local first_status rerun_stdout rerun_stderr
     name=$1
     expected_class=$2
     expected_line=${3-}
     stdout_path="$SCRATCH/red/$name.stdout"
     stderr_path="$SCRATCH/red/$name.stderr"
     run_tool "$RED/$name.program.pl" "$stdout_path" "$stderr_path" run
+    first_status=$RUN_STATUS
     check_rejection "red/$name" 1 run "$expected_class" \
         "$stdout_path" "$stderr_path" "$expected_line"
+
+    rerun_stdout="$SCRATCH/determinism/$name.red.stdout"
+    rerun_stderr="$SCRATCH/determinism/$name.red.stderr"
+    run_tool "$RED/$name.program.pl" "$rerun_stdout" "$rerun_stderr" run
+    if [ "$RUN_STATUS" -ne "$first_status" ]; then
+        fail_case "red/$name/determinism-status" \
+            "fresh runs differ: $first_status and $RUN_STATUS"
+    fi
+    if ! cmp "$stdout_path" "$rerun_stdout" || \
+            ! cmp "$stderr_path" "$rerun_stderr"; then
+        fail_case "red/$name/determinism-bytes" "fresh runs differ"
+    fi
 }
 
+run_committed_red ordering-branch-gap ordering \
+    'ir_tool_error(run,ordering,term(6,branch_sequence(expected(2),found(3)))).'
+run_committed_red ordering-branch-singleton ordering \
+    'ir_tool_error(run,ordering,term(5,branch_group_singleton(rule,pair(3,1)))).'
+run_committed_red ordering-branch-head-mismatch ordering \
+    'ir_tool_error(run,ordering,term(5,branch_payload_mismatch(rule,pair(3,1)))).'
+run_committed_red ordering-alternative-branch-members-mismatch ordering \
+    'ir_tool_error(run,ordering,term(5,branch_payload_mismatch(alternative_set,pair(3,1)))).'
+run_committed_red exception-undeclared exception \
+    'ir_tool_error(run,exception,term(5,undeclared_labeled_target(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))))).'
+run_committed_red shape-closed-world shape \
+    'ir_tool_error(run,shape,term(4,closed_world)).'
+run_committed_red exception-affected-mismatch exception \
+    'ir_tool_error(run,exception,term(4,affected_rule_mismatch(rule_id(sentence(3),clause(1)),rule_id(sentence(2),clause(1))))).'
+run_committed_red exception-target-not-defined exception \
+    'ir_tool_error(run,exception,term(4,target_not_defined(predicate_key(cough,arity(1))))).'
+run_committed_red exception-target-mismatch exception \
+    'ir_tool_error(run,exception,term(6,undeclared_labeled_target(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))))).'
+run_committed_red exception-unused-declaration exception \
+    'ir_tool_error(run,exception,term(4,unused_declaration(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))))).'
+run_committed_red shape-alternative-policy shape \
+    'ir_tool_error(run,shape,term(5,alternative_set)).'
+run_committed_red safety-alternative-member safety \
+    'ir_tool_error(run,safety,term(5,alternative_member_var_not_in_body(1))).'
+run_committed_red shape-alternative-members shape \
+    'ir_tool_error(run,shape,term(5,alternative_set)).'
+run_committed_red alternative-set-duplicate-members shape \
+    'ir_tool_error(run,shape,term(4,alternative_set)).'
+run_committed_red alternative-set-member-scope-order scope \
+    'ir_tool_error(run,scope,term(3,variable_sequence(expected(1),found(2),occurrence(1)))).'
+run_committed_red alternative-set-body-naf safety \
+    'ir_tool_error(run,safety,term(3,alternative_set_naf(2))).'
+run_committed_red branch-wrapper-float shape \
+    'ir_tool_error(run,shape,term(5,branch_id)).'
+run_committed_red branch-wrapper-atom shape \
+    'ir_tool_error(run,shape,term(5,branch_id)).'
+run_committed_red exception-label-position exception \
+    'ir_tool_error(run,exception,term(6,label_position(expected(exception_id(rule(rule_id(sentence(3),clause(1))),literal(2))),found(exception_id(rule(rule_id(sentence(3),clause(1))),literal(1)))))).'
+run_committed_red exception-label-target-swap exception \
+    'ir_tool_error(run,exception,term(8,undeclared_labeled_target(exception_id(rule(rule_id(sentence(4),clause(1))),literal(2))))).'
+run_committed_red exception-declaration-order exception \
+    'ir_tool_error(run,exception,term(5,declaration_order_after(key(4,1,0,3)))).'
+run_committed_red cycle-labeled-mixed cycle \
+    'ir_tool_error(run,cycle,term(6,body_literal(2,signed_dependency(naf,pred(r,1),pred(p,1))))).'
 run_committed_red cycle-self-loop cycle
 run_committed_red cycle-signed-transitive cycle \
     'ir_tool_error(run,cycle,term(5,body_literal(2,signed_dependency(naf,pred(r,1),pred(p,1))))).'
@@ -616,6 +810,66 @@ run_committed_red shape-wh-pattern-arity shape \
     'ir_tool_error(run,shape,term(3,goal)).'
 run_committed_red resource-cap resource
 
+for stem in \
+        alternative-set-duplicate-members \
+        alternative-set-member-scope-order \
+        alternative-set-body-naf \
+        exception-label-position \
+        exception-label-target-swap \
+        exception-declaration-order \
+        branch-wrapper-float \
+        branch-wrapper-atom \
+        cycle-labeled-mixed; do
+    pair_validate_stdout="$SCRATCH/stage-pin/$stem.pair.validate.stdout"
+    pair_validate_stderr="$SCRATCH/stage-pin/$stem.pair.validate.stderr"
+    pair_compile_stdout="$SCRATCH/stage-pin/$stem.pair.compile.stdout"
+    pair_compile_stderr="$SCRATCH/stage-pin/$stem.pair.compile.stderr"
+    pair_run_stdout="$SCRATCH/stage-pin/$stem.pair.run.stdout"
+    pair_run_stderr="$SCRATCH/stage-pin/$stem.pair.run.stderr"
+    pair_expected="$SCRATCH/stage-pin/$stem.pair.expected.stderr"
+    pair_actual="$SCRATCH/stage-pin/$stem.pair.actual.stderr"
+
+    run_tool "$IR_RED/$stem.pl" "$pair_validate_stdout" \
+        "$pair_validate_stderr" validate
+    pair_validate_status=$RUN_STATUS
+    run_tool "$IR_RED/$stem.pl" "$pair_compile_stdout" \
+        "$pair_compile_stderr" compile
+    pair_compile_status=$RUN_STATUS
+    run_tool "$RED/$stem.program.pl" "$pair_run_stdout" \
+        "$pair_run_stderr" run
+    pair_run_status=$RUN_STATUS
+    if [ "$pair_validate_status" -ne 1 ] || \
+            [ "$pair_compile_status" -ne 1 ] || \
+            [ "$pair_run_status" -ne 1 ]; then
+        fail_case "stage-pin/paired-errors/$stem/status" \
+            "expected validate/compile/run status 1"
+    fi
+    if [ -s "$pair_validate_stdout" ] || \
+            [ -s "$pair_compile_stdout" ] || \
+            [ -s "$pair_run_stdout" ]; then
+        fail_case "stage-pin/paired-errors/$stem/stdout" \
+            "expected zero bytes"
+    fi
+    command sed \
+        's/^ir_tool_error(validate,/ir_tool_error(STAGE,/' \
+        "$pair_validate_stderr" >"$pair_expected"
+    command sed \
+        's/^ir_tool_error(compile,/ir_tool_error(STAGE,/' \
+        "$pair_compile_stderr" >"$pair_actual"
+    if ! cmp "$pair_expected" "$pair_actual"; then
+        fail_case "stage-pin/paired-errors/$stem/compile" \
+            "stderr differs after stage-only rewrite"
+    fi
+    command sed \
+        's/^ir_tool_error(run,/ir_tool_error(STAGE,/' \
+        "$pair_run_stderr" >"$pair_actual"
+    if ! cmp "$pair_expected" "$pair_actual"; then
+        fail_case "stage-pin/paired-errors/$stem/run" \
+            "stderr differs after stage-only rewrite"
+    fi
+done
+pass_case "stage-pin/paired-errors"
+
 pin_stdout="$SCRATCH/stage-pin/compile-v1-envelope.stdout"
 pin_stderr="$SCRATCH/stage-pin/compile-v1-envelope.stderr"
 run_tool "$IR_RED/envelope-v1-record.pl" "$pin_stdout" "$pin_stderr" compile
@@ -653,6 +907,16 @@ for input in "$IR_RED"/*.pl; do
         fail_case "stage-pin/compile-ir-red-ownership/$stem" \
             "validate stderr has wrong stage"
     fi
+    validate_rerun_stdout="$SCRATCH/determinism/$stem.stage-pin.validate.stdout"
+    validate_rerun_stderr="$SCRATCH/determinism/$stem.stage-pin.validate.stderr"
+    run_tool "$input" "$validate_rerun_stdout" \
+        "$validate_rerun_stderr" validate
+    if [ "$RUN_STATUS" -ne "$validate_status" ] || \
+            ! cmp "$validate_stdout" "$validate_rerun_stdout" || \
+            ! cmp "$validate_stderr" "$validate_rerun_stderr"; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "validate fresh runs differ"
+    fi
 
     run_tool "$input" "$compile_stdout" "$compile_stderr" compile
     compile_status=$RUN_STATUS
@@ -680,6 +944,16 @@ for input in "$IR_RED"/*.pl; do
     if ! cmp "$expected_stderr" "$compile_stderr"; then
         fail_case "stage-pin/compile-ir-red-ownership/$stem" \
             "compile stderr differs from validate stderr after stage rewrite"
+    fi
+    compile_rerun_stdout="$SCRATCH/determinism/$stem.stage-pin.compile.stdout"
+    compile_rerun_stderr="$SCRATCH/determinism/$stem.stage-pin.compile.stderr"
+    run_tool "$input" "$compile_rerun_stdout" \
+        "$compile_rerun_stderr" compile
+    if [ "$RUN_STATUS" -ne "$compile_status" ] || \
+            ! cmp "$compile_stdout" "$compile_rerun_stdout" || \
+            ! cmp "$compile_stderr" "$compile_rerun_stderr"; then
+        fail_case "stage-pin/compile-ir-red-ownership/$stem" \
+            "compile fresh runs differ"
     fi
 done
 pass_case "stage-pin/compile-ir-red-ownership"
@@ -759,7 +1033,7 @@ check_rejection "usage/run-extra" 2 cli usage \
 replay_stdout="$SCRATCH/probes/replay-list.stdout"
 replay_stderr="$SCRATCH/probes/replay-list.stderr"
 if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
-        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(q,[named(a)]),[pred(p,[named(a)])])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(p,[named(a)]),[])),Child=proof(pred(p,[named(a)]),fact_id(sentence(2),clause(1)),[]),Proof=proof(pred(q,[named(a)]),rule_id(sentence(1),clause(1)),weird(Child,[],x)),catch(explanation:replay_certificate(pred(q,[named(a)]),Proof,[]),Error,true),\+explanation:replay_children(weird(Child,[],x),[]),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
+        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(q,[named(a)]),[pred(p,[named(a)])])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(p,[named(a)]),[])),Child=proof(pred(p,[named(a)]),fact_id(sentence(2),clause(1)),[]),Proof=proof(pred(q,[named(a)]),rule_id(sentence(1),clause(1)),weird(Child,[],x)),Store=[entry(pred(q,[named(a)]),by(rule_id(sentence(1),clause(1)),[pred(p,[named(a)])])),entry(pred(p,[named(a)]),by(fact_id(sentence(2),clause(1)),[]))],catch(explanation:replay_certificate(pred(q,[named(a)]),Proof,Store),Error,true),\+explanation:replay_children(weird(Child,[],x),Store),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
         -t 'halt(9)' >"$replay_stdout" 2>"$replay_stderr"; then
     replay_status=0
 else
@@ -776,7 +1050,7 @@ pass_case "probe/replay-list-shape"
 replay_naf_stdout="$SCRATCH/probes/replay-naf-absence.stdout"
 replay_naf_stderr="$SCRATCH/probes/replay-naf-absence.stderr"
 if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
-        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(recover,[var(1)]),[pred(patient,[var(1)]),naf(pred(smoke,[var(1)]))])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(patient,[named(a)]),[])),Proof=proof(pred(recover,[named(a)]),rule_id(sentence(1),clause(1)),[proof(pred(patient,[named(a)]),fact_id(sentence(2),clause(1)),[]),naf(pred(smoke,[named(a)]))]),explanation:replay_certificate(pred(recover,[named(a)]),Proof,[]),Store=[entry(pred(smoke,[named(a)]),by(fact_id(sentence(3),clause(1)),[]))],catch(explanation:replay_certificate(pred(recover,[named(a)]),Proof,Store),Error,true),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
+        -g '(assertz(cnl_program_db:program_clause(1,rule_id(sentence(1),clause(1)),pred(recover,[var(1)]),[pred(patient,[var(1)]),naf(pred(smoke,[var(1)]))])),assertz(cnl_program_db:program_clause(2,fact_id(sentence(2),clause(1)),pred(patient,[named(a)]),[])),Proof=proof(pred(recover,[named(a)]),rule_id(sentence(1),clause(1)),[proof(pred(patient,[named(a)]),fact_id(sentence(2),clause(1)),[]),naf(pred(smoke,[named(a)]))]),Store=[entry(pred(recover,[named(a)]),by(rule_id(sentence(1),clause(1)),[pred(patient,[named(a)]),naf(pred(smoke,[named(a)]))])),entry(pred(patient,[named(a)]),by(fact_id(sentence(2),clause(1)),[]))],explanation:replay_certificate(pred(recover,[named(a)]),Proof,Store),PresentStore=[entry(pred(recover,[named(a)]),by(rule_id(sentence(1),clause(1)),[pred(patient,[named(a)]),naf(pred(smoke,[named(a)]))])),entry(pred(patient,[named(a)]),by(fact_id(sentence(2),clause(1)),[])),entry(pred(smoke,[named(a)]),by(fact_id(sentence(3),clause(1)),[]))],catch(explanation:replay_certificate(pred(recover,[named(a)]),Proof,PresentStore),Error,true),retractall(cnl_program_db:program_clause(_,_,_,_)),Error==explanation_invariant(replay_failed)->halt(0);halt(1))' \
         -t 'halt(9)' >"$replay_naf_stdout" 2>"$replay_naf_stderr"; then
     replay_naf_status=0
 else
@@ -790,6 +1064,28 @@ if [ -s "$replay_naf_stdout" ] || [ -s "$replay_naf_stderr" ]; then
     fail_case "probe/replay-naf-absence" "expected zero bytes"
 fi
 pass_case "probe/replay-naf-absence"
+
+replay_witness_stdout="$SCRATCH/probes/replay-identical-witness.stdout"
+replay_witness_stderr="$SCRATCH/probes/replay-identical-witness.stderr"
+if "$SWIPL" -q -f none -F none \
+        -s "$ROOT/src/prolog/inference_kernel.pl" \
+        -g '(Terms=[cnl_program_record(3),document(docid(d16),source_sha256('\''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'\''),ulex(none)),clause(fact_id(sentence(1),clause(1)),pred(patient,[named(a)]),body([])),clause(fact_id(sentence(2),clause(1)),pred(wait,[named(a)]),body([])),clause(rule_id(sentence(3),clause(1),branch(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])])),clause(rule_id(sentence(3),clause(1),branch(2)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])])),goal(query_id(sentence(4),clause(1)),pred(recover,[named(a)]))],inference_kernel:validate_program_terms(Terms,_,Clauses,_),length(Clauses,Count),inference_kernel:max_clause_stratum(Clauses,Max),setup_call_cleanup(inference_kernel:install_program(Clauses),(inference_kernel:stratified_model(Max,Count,Store),Goal=pred(recover,[named(a)]),explanation:build_certificate(Goal,Store,Proof),arg(2,Proof,FirstId),FirstId==rule_id(sentence(3),clause(1),branch(1)),explanation:replay_certificate(Goal,Proof,Store),copy_term(Proof,Swapped),setarg(2,Swapped,rule_id(sentence(3),clause(1),branch(2))),catch(explanation:replay_certificate(Goal,Swapped,Store),Error,true),Error==explanation_invariant(replay_failed)),inference_kernel:teardown_program)->halt(0);halt(1))' \
+        -t 'halt(9)' >"$replay_witness_stdout" \
+        2>"$replay_witness_stderr"; then
+    replay_witness_status=0
+else
+    replay_witness_status=$?
+fi
+if [ "$replay_witness_status" -ne 0 ]; then
+    fail_case "probe/replay-identical-witness" \
+        "expected retained branch(1) replay and branch(2) rejection"
+fi
+if [ -s "$replay_witness_stdout" ] || \
+        [ -s "$replay_witness_stderr" ]; then
+    fail_case "probe/replay-identical-witness" "expected zero bytes"
+fi
+pass_case "probe/replay-identical-witness-valid"
+pass_case "probe/replay-identical-witness-swap"
 
 answer_yes_no_stdout="$SCRATCH/probes/answer-v3-yes-no.stdout"
 answer_yes_no_stderr="$SCRATCH/probes/answer-v3-yes-no.stderr"
@@ -809,6 +1105,37 @@ if [ -s "$answer_yes_no_stdout" ] || [ -s "$answer_yes_no_stderr" ]; then
     fail_case "probe/answer-v3-yes-no" "expected zero bytes"
 fi
 pass_case "probe/answer-v3-yes-no"
+
+run_answer_alternative_tamper() {
+    local name alternative stdout_path stderr_path goal status
+    name=$1
+    alternative=$2
+    stdout_path="$SCRATCH/probes/$name.stdout"
+    stderr_path="$SCRATCH/probes/$name.stderr"
+    goal="(Doc=document(docid(d),source_sha256(s),ulex(none)),Program=program(sha256(h)),Id=query_id(sentence(2),clause(1)),Atom=pred(q,[named(x)]),Alternative=$alternative,catch(explanation:validate_answer_terms([cnl_answer_record(3),Doc,Program,Alternative,answer(Id,Atom,not_proved)]),Error,true),Error==explanation_invariant(generated_answer_envelope)->halt(0);halt(1))"
+    if "$SWIPL" -q -f none -F none \
+            -s "$ROOT/src/prolog/explanation.pl" -g "$goal" \
+            -t 'halt(9)' >"$stdout_path" 2>"$stderr_path"; then
+        status=0
+    else
+        status=$?
+    fi
+    if [ "$status" -ne 0 ]; then
+        fail_case "probe/$name" \
+            "expected generated_answer_envelope rejection"
+    fi
+    if [ -s "$stdout_path" ] || [ -s "$stderr_path" ]; then
+        fail_case "probe/$name" "expected zero bytes"
+    fi
+    pass_case "probe/$name"
+}
+
+run_answer_alternative_tamper answer-alternative-duplicate-members \
+    'alternative_set(alternative_set_id(sentence(1),clause(1)),members([pred(a,[named(x)]),pred(a,[named(x)])]),body([]),satisfaction(any_member),exclusivity(not_asserted),exhaustiveness(not_asserted))'
+run_answer_alternative_tamper answer-alternative-policy \
+    'alternative_set(alternative_set_id(sentence(1),clause(1)),members([pred(a,[named(x)]),pred(b,[named(x)])]),body([]),satisfaction(all_members),exclusivity(not_asserted),exhaustiveness(not_asserted))'
+run_answer_alternative_tamper answer-alternative-member-count \
+    'alternative_set(alternative_set_id(sentence(1),clause(1)),members([pred(a,[named(x)])]),body([]),satisfaction(any_member),exclusivity(not_asserted),exhaustiveness(not_asserted))'
 
 answer_version_stdout="$SCRATCH/probes/answer-version-rejection.stdout"
 answer_version_stderr="$SCRATCH/probes/answer-version-rejection.stderr"

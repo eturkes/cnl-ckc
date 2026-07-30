@@ -1,0 +1,1 @@
+drs([],[v(drs([A],[-(predicate(A,offer,named('John'),named('Mary')),/(1,2))]),drs([B],[-(predicate(B,arrange,named('John'),named('Mary')),/(1,5))]))]).

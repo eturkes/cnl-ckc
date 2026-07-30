@@ -1,0 +1,3 @@
+ace_front_end_record(1).
+document(docid('m6-labeled-exception'),source_sha256('2222222222222222222222222222222222222222222222222222222222222222'),ulex(none)).
+drs([A,B],[-(object(A,patient,countable,na,eq,1),/(1,4)),-(predicate(B,be,named('John'),A),/(1,2)),=>(drs([C,D],[-(object(C,patient,countable,na,eq,1),/(2,2)),-(predicate(D,cough,C),/(2,4))]),drs([E,F],[-(object(E,smoker,countable,na,eq,1),/(2,7)),-(predicate(F,be,C,E),/(2,5))])),=>(drs([G],[-(object(G,patient,countable,na,eq,1),/(3,2)),~(drs([H,I],[-(object(H,smoker,countable,na,eq,1),/(3,8)),-(predicate(I,be,G,H),/(3,4))]))]),drs([J],[-(predicate(J,recover,G),/(3,9))])),question(drs([K],[-(predicate(K,recover,named('John')),/(4,3))]))]).

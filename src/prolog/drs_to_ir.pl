@@ -23,10 +23,14 @@ lower_terms(Terms, IrTerms) :-
     lower_question(Question, QueryDraft),
     finalize_draft(QueryDraft, Counters0, _Counters, Query),
     require_factual_section_order(FactualItems),
-    split_factual_items(FactualItems, Facts, Rules),
+    split_factual_items(FactualItems, Facts, Rules0, AlternativeSets),
+    label_defined_exceptions(Facts, Rules0, Rules, ClosedWorld),
     require_section_order(fact, Facts),
     require_section_order(rule, Rules),
-    append(Facts, Rules, Prefix),
+    require_section_order(alternative_set, AlternativeSets),
+    append(Facts, ClosedWorld, Prefix0),
+    append(Prefix0, Rules, Prefix1),
+    append(Prefix1, AlternativeSets, Prefix),
     append([cnl_ir_record(3), Document|Prefix], [Query], IrTerms),
     validate_generated_ir(IrTerms).
 
@@ -170,6 +174,16 @@ condition_nested_domains(Condition, Domains) :-
     !,
     append(AnteDomains, ConsequentDomains, Domains).
 condition_nested_domains(Condition, Domains) :-
+    has_functor(Condition, v, 2),
+    arg(1, Condition, Left),
+    arg(2, Condition, Right),
+    nested_drs_domains(Left, LeftDomains),
+    nested_drs_domains(Right, RightDomains),
+    LeftDomains = [_|_],
+    RightDomains = [_|_],
+    !,
+    append(LeftDomains, RightDomains, Domains).
+condition_nested_domains(Condition, Domains) :-
     has_functor(Condition, question, 1),
     arg(1, Condition, Drs),
     nested_drs_domains(Drs, Domains),
@@ -229,24 +243,33 @@ lower_root_items([indexed(Position, Condition)|Conditions], All, Domain,
     ( memberchk(Position, Consumed) ->
         lower_root_items(Conditions, All, Domain, Consumed,
             Counters0, Counters, Items, Events, Entities)
-    ; lower_root_condition(Position, Condition, All, Domain, Consumed,
-          Consumed1, Draft, HereEvents, HereEntities),
-      finalize_draft(Draft, Counters0, Counters1, Item),
+    ; lower_root_condition_drafts(Position, Condition, All, Domain,
+          Consumed, Consumed1, Drafts, HereEvents, HereEntities),
+      finalize_draft_group(Drafts, Counters0, Counters1, HereItems),
       lower_root_items(Conditions, All, Domain, Consumed1,
           Counters1, Counters, RestItems, RestEvents, RestEntities),
-      Items = [Item|RestItems],
+      append(HereItems, RestItems, Items),
       append(HereEvents, RestEvents, Events),
       append(HereEntities, RestEntities, Entities)
     ).
 
-lower_root_condition(Position, Condition, _All, _Domain, Consumed,
-        Consumed1, Draft, Events, Entities) :-
+lower_root_condition_drafts(Position, Condition, _All, _Domain, Consumed,
+        Consumed1, Drafts, [], []) :-
     has_functor(Condition, '=>', 2),
     !,
-    lower_rule(Position, Condition, Draft),
-    Consumed1 = [Position|Consumed],
-    Events = [],
-    Entities = [].
+    lower_rule(Position, Condition, Drafts),
+    Consumed1 = [Position|Consumed].
+lower_root_condition_drafts(Position, Condition, _All, _Domain, Consumed,
+        Consumed1, [Draft], [], []) :-
+    has_functor(Condition, v, 2),
+    !,
+    lower_root_alternative_set(Position, Condition, Draft),
+    Consumed1 = [Position|Consumed].
+lower_root_condition_drafts(Position, Condition, All, Domain, Consumed,
+        Consumed1, [Draft], Events, Entities) :-
+    lower_root_condition(Position, Condition, All, Domain, Consumed,
+        Consumed1, Draft, Events, Entities).
+
 lower_root_condition(Position, Condition, All, Domain, Consumed,
         Consumed1, Draft, Events, Entities) :-
     anchored_condition(Condition, Inner, Anchor),
@@ -288,6 +311,74 @@ lower_root_condition(Position, Condition, _All, _Domain, _Consumed,
         reject(wh_query, root_condition(Position))
     ; unsupported_condition(root_condition(Position), Condition)
     ).
+
+lower_root_alternative_set(Position, Disjunction, Draft) :-
+    arg(1, Disjunction, LeftDrs),
+    arg(2, Disjunction, RightDrs),
+    lower_root_alternative_member(
+        LeftDrs, Position, left, Left, LeftAnchors),
+    lower_root_alternative_member(
+        RightDrs, Position, right, Right, RightAnchors),
+    Members = [Left, Right],
+    require_distinct_alternative_members(root_condition(Position), Members),
+    append(LeftAnchors, RightAnchors, Anchors),
+    source_from_anchors(
+        root_condition(Position), Anchors, Sentence, Tokens),
+    Draft = draft_alternative_set(Members, [], Sentence, Tokens).
+
+lower_root_alternative_member(Drs, Position, Side, Member, [Anchor]) :-
+    ( has_functor(Drs, drs, 2) ->
+        arg(1, Drs, Domain),
+        arg(2, Drs, Conditions)
+    ; reject(alternative_set,
+          root_condition(Position, branch(Side, drs_shape)))
+    ),
+    ( is_list(Domain), is_list(Conditions) -> true
+    ; reject(alternative_set,
+          root_condition(Position, branch(Side, drs_lists)))
+    ),
+    validate_domain(alternative_root(Position, Side), Domain),
+    ( Conditions = [Condition],
+      anchored_condition(Condition, Predicate, Anchor),
+      predicate4_parts(Predicate, Event, Verb, Subject, Object) ->
+        require_non_be_verb(root_condition(Position), Verb),
+        require_erasable_event(
+            alternative_root(Position, Side), Event, Domain, Conditions),
+        require_alternative_ground_argument(
+            Position, Side, 1, Subject, SubjectArg),
+        require_alternative_ground_argument(
+            Position, Side, 2, Object, ObjectArg),
+        validate_scope_accounting(
+            alternative_root(Position, Side), Domain, [Event], []),
+        Member = pred(Verb, [SubjectArg, ObjectArg])
+    ; reject(alternative_set,
+          root_condition(Position, branch(Side, profile)))
+    ).
+
+require_alternative_ground_argument(_, _, _, Term, named(Name)) :-
+    named_atom(Term, Name),
+    !.
+require_alternative_ground_argument(Position, Side, Index, _, _) :-
+    reject(alternative_set,
+        root_condition(Position, branch(Side, argument(Index)))).
+
+require_distinct_alternative_members(Location, Members) :-
+    ( first_duplicate_term(Members, _) ->
+        reject(alternative_set, Location-duplicate_member)
+    ; true
+    ).
+
+first_duplicate_term([Term|Terms], Term) :-
+    term_member_eq(Term, Terms),
+    !.
+first_duplicate_term([_|Terms], Duplicate) :-
+    first_duplicate_term(Terms, Duplicate).
+
+term_member_eq(Term, [Member|_]) :-
+    Term == Member,
+    !.
+term_member_eq(Term, [_|Members]) :-
+    term_member_eq(Term, Members).
 
 lower_copula_from_object(Position, Object, ObjectAnchor, All, Domain,
         Consumed, Consumed1, Draft, [Event], [Referent]) :-
@@ -639,8 +730,8 @@ require_ground_subject(Location, Subject, Domain, Arg) :-
     ; reject(unsupported, Location-subject)
     ).
 
-/* One implication in the admitted positive/NAF profile becomes one IR rule. */
-lower_rule(Position, Rule, Draft) :-
+/* One implication becomes one rule per deterministic antecedent DNF branch. */
+lower_rule(Position, Rule, Drafts) :-
     arg(1, Rule, Antecedent),
     arg(2, Rule, Consequent),
     require_nested_drs(rule(Position, antecedent), Antecedent,
@@ -650,25 +741,266 @@ lower_rule(Position, Rule, Draft) :-
     validate_domain(antecedent(Position), AnteDomain),
     validate_domain(consequent(Position), ConsequentDomain),
     require_disjoint_domains(rule(Position), AnteDomain, ConsequentDomain),
-    lower_rule_head(Position, ConsequentConditions, AnteDomain,
-        ConsequentDomain, [], Bindings1, 1, Next1, Head, HeadAnchors,
+    lower_rule_consequent(Position, ConsequentConditions, AnteDomain,
+        ConsequentDomain, ConsequentSpec, Bindings1, Next1, HeadAnchors,
         ConsequentEvents, ConsequentEntities, HeadOuterRefs),
-    require_naf_suffix(Position, AnteConditions),
-    lower_rule_body(Position, AnteConditions, AnteDomain,
-        Bindings1, _Bindings, Next1, _Next, Body, BodyAnchors,
+    expand_rule_antecedent(
+        Position, AnteDomain, AnteConditions, Branches),
+    length(Branches, BranchCount),
+    lower_rule_branches(Branches, 1, BranchCount, Position,
+        ConsequentDomain, ConsequentSpec, Bindings1, Next1, HeadAnchors,
+        ConsequentEvents, ConsequentEntities, HeadOuterRefs, Drafts).
+
+lower_rule_consequent(Position, Conditions, AnteDomain, ConsequentDomain,
+        alternative(Members), Bindings, Next, Anchors, [], [], OuterRefs) :-
+    Conditions = [Disjunction],
+    has_functor(Disjunction, v, 2),
+    !,
+    ( ConsequentDomain == [] -> true
+    ; reject(alternative_set,
+          rule(Position, consequent_outer_domain))
+    ),
+    lower_rule_alternative_members(Disjunction, Position, AnteDomain,
+        [], Bindings, 1, Next, Members, Anchors, OuterRefs),
+    require_distinct_alternative_members(
+        rule(Position, consequent), Members).
+lower_rule_consequent(Position, Conditions, AnteDomain, ConsequentDomain,
+        rule(Head), Bindings, Next, Anchors, Events, Entities, OuterRefs) :-
+    lower_rule_head(Position, Conditions, AnteDomain, ConsequentDomain,
+        [], Bindings, 1, Next, Head, Anchors, Events, Entities,
+        OuterRefs).
+
+lower_rule_alternative_members(Disjunction, Position, AnteDomain,
+        Bindings0, Bindings, Next0, Next, [Left, Right], Anchors,
+        OuterRefs) :-
+    arg(1, Disjunction, LeftDrs),
+    arg(2, Disjunction, RightDrs),
+    lower_rule_alternative_member(LeftDrs, Position, left, AnteDomain,
+        Bindings0, Bindings1, Next0, Next1, Left, LeftAnchors,
+        LeftRefs),
+    lower_rule_alternative_member(RightDrs, Position, right, AnteDomain,
+        Bindings1, Bindings, Next1, Next, Right, RightAnchors,
+        RightRefs),
+    append(LeftAnchors, RightAnchors, Anchors),
+    append(LeftRefs, RightRefs, OuterRefs).
+
+lower_rule_alternative_member(Drs, Position, Side, AnteDomain,
+        Bindings0, Bindings, Next0, Next, Member, [Anchor], OuterRefs) :-
+    ( has_functor(Drs, drs, 2) ->
+        arg(1, Drs, Domain),
+        arg(2, Drs, Conditions)
+    ; reject(alternative_set,
+          rule(Position, consequent_branch(Side, drs_shape)))
+    ),
+    ( is_list(Domain), is_list(Conditions) -> true
+    ; reject(alternative_set,
+          rule(Position, consequent_branch(Side, drs_lists)))
+    ),
+    validate_domain(alternative_consequent(Position, Side), Domain),
+    require_disjoint_domains(
+        alternative_consequent(Position, Side), AnteDomain, Domain),
+    ( Conditions = [Condition],
+      anchored_condition(Condition, Predicate, Anchor),
+      predicate4_parts(Predicate, Event, Verb, Subject, Object) ->
+        require_non_be_verb(rule(Position, consequent), Verb),
+        require_erasable_event(
+            alternative_consequent(Position, Side), Event, Domain,
+            Conditions),
+        rule_head_arguments([Subject, Object], Position, AnteDomain,
+            Domain, Bindings0, Bindings, Next0, Next, 1, Args,
+            OuterRefs),
+        validate_scope_accounting(
+            alternative_consequent(Position, Side), Domain, [Event], []),
+        Member = pred(Verb, Args)
+    ; reject(alternative_set,
+          rule(Position, consequent_branch(Side, profile)))
+    ).
+
+lower_rule_branches([], _, _, _, _, _, _, _, _, _, _, _, []).
+lower_rule_branches([branch(Domain, Conditions)|Branches], Index,
+        BranchCount, Position, ConsequentDomain, ConsequentSpec,
+        Bindings0, Next0, HeadAnchors, ConsequentEvents,
+        ConsequentEntities, HeadOuterRefs, [Draft|Drafts]) :-
+    require_naf_suffix(Position, Conditions),
+    require_alternative_positive_body(
+        Position, ConsequentSpec, Conditions),
+    lower_rule_body(Position, Conditions, Domain,
+        Bindings0, _Bindings, Next0, _Next, Body, BodyAnchors,
         AnteEvents, BodyEntityRefs, BodyPositiveRefs),
     ( Body == [] ->
         reject(unsupported, rule(Position, empty_antecedent))
     ; true
     ),
     require_bound_head_refs(Position, HeadOuterRefs, BodyPositiveRefs),
-    validate_scope_accounting(antecedent(Position), AnteDomain,
+    validate_scope_accounting(antecedent(Position), Domain,
         AnteEvents, BodyEntityRefs),
-    validate_scope_accounting(consequent(Position), ConsequentDomain,
-        ConsequentEvents, ConsequentEntities),
+    ( ConsequentSpec = rule(_) ->
+        validate_scope_accounting(consequent(Position), ConsequentDomain,
+            ConsequentEvents, ConsequentEntities)
+    ; true
+    ),
     append(BodyAnchors, HeadAnchors, Anchors),
     source_from_anchors(rule(Position), Anchors, Sentence, Tokens),
-    Draft = draft_rule(Head, Body, Sentence, Tokens).
+    make_rule_draft(ConsequentSpec, BranchCount, Index, Body,
+        Sentence, Tokens, Draft),
+    NextIndex is Index + 1,
+    lower_rule_branches(Branches, NextIndex, BranchCount, Position,
+        ConsequentDomain, ConsequentSpec, Bindings0, Next0, HeadAnchors,
+        ConsequentEvents, ConsequentEntities, HeadOuterRefs, Drafts).
+
+require_alternative_positive_body(Position, alternative(_), Conditions) :-
+    !,
+    ( contains_tilde(Conditions) ->
+        reject(alternative_set, rule(Position, alternative_body_naf))
+    ; true
+    ).
+require_alternative_positive_body(_, _, _).
+
+make_rule_draft(rule(Head), 1, _, Body, Sentence, Tokens,
+        draft_rule(Head, Body, Sentence, Tokens)).
+make_rule_draft(rule(Head), Count, Index, Body, Sentence, Tokens,
+        draft_rule_branch(Index, Head, Body, Sentence, Tokens)) :-
+    Count > 1.
+make_rule_draft(alternative(Members), 1, _, Body, Sentence, Tokens,
+        draft_alternative_set(Members, Body, Sentence, Tokens)).
+make_rule_draft(alternative(Members), Count, Index, Body, Sentence, Tokens,
+        draft_alternative_set_branch(
+            Index, Members, Body, Sentence, Tokens)) :-
+    Count > 1.
+
+dnf_branch_cap(64).
+
+expand_rule_antecedent(Position, OuterDomain, Conditions, Branches) :-
+    dnf_branch_cap(Cap),
+    Limit is Cap + 1,
+    dnf_count_conditions(Position, Conditions, Limit, Count),
+    ( Count > Cap ->
+        reject(disjunction,
+            rule(Position, antecedent_branch_cap_exceeded(Cap)))
+    ; dnf_expand_conditions(Position, Conditions, Expanded),
+      add_outer_domain(Expanded, OuterDomain, Branches)
+    ).
+
+dnf_count_conditions(_, [], _, 1).
+dnf_count_conditions(Position, [Condition|Conditions], Limit, Count) :-
+    dnf_count_condition(Position, Condition, Limit, Here),
+    dnf_count_conditions(Position, Conditions, Limit, Rest),
+    saturating_multiply(Here, Rest, Limit, Count).
+
+dnf_count_condition(Position, Condition, Limit, Count) :-
+    ( has_functor(Condition, v, 2) ->
+        require_dnf_disjunction(Position, Condition,
+            LeftDomain, LeftConditions, RightDomain, RightConditions),
+        validate_domain(dnf_branch(Position, left), LeftDomain),
+        validate_domain(dnf_branch(Position, right), RightDomain),
+        dnf_count_conditions(Position, LeftConditions, Limit, LeftCount),
+        dnf_count_conditions(Position, RightConditions, Limit, RightCount),
+        saturating_add_count(LeftCount, RightCount, Limit, Count)
+    ; has_functor(Condition, '~', 1),
+      contains_v(Condition) ->
+        reject(disjunction,
+            rule(Position, v_under_naf))
+    ; contains_v(Condition) ->
+        reject(disjunction,
+            rule(Position, antecedent_malformed_nested_v))
+    ; Count = 1
+    ).
+
+require_dnf_disjunction(Position, Disjunction, LeftDomain, LeftConditions,
+        RightDomain, RightConditions) :-
+    arg(1, Disjunction, Left),
+    arg(2, Disjunction, Right),
+    require_dnf_branch_drs(Position, left, Left,
+        LeftDomain, LeftConditions),
+    require_dnf_branch_drs(Position, right, Right,
+        RightDomain, RightConditions),
+    ( contains_tilde(LeftConditions) ->
+        reject(disjunction,
+            rule(Position, naf_inside_disjunct(left)))
+    ; contains_tilde(RightConditions) ->
+        reject(disjunction,
+            rule(Position, naf_inside_disjunct(right)))
+    ; true
+    ).
+
+require_dnf_branch_drs(Position, Side, Drs, Domain, Conditions) :-
+    ( has_functor(Drs, drs, 2) ->
+        arg(1, Drs, Domain0),
+        arg(2, Drs, Conditions0),
+        ( is_list(Domain0), is_list(Conditions0) ->
+            ( Conditions0 = [_|_] ->
+                Domain = Domain0,
+                Conditions = Conditions0
+            ; reject(disjunction,
+                  rule(Position, empty_disjunct(Side)))
+            )
+        ; reject(disjunction,
+              rule(Position, disjunct_lists(Side)))
+        )
+    ; reject(disjunction,
+          rule(Position, disjunct_shape(Side)))
+    ).
+
+dnf_expand_conditions(_, [], [dnf([], [])]).
+dnf_expand_conditions(Position, [Condition|Conditions], Expanded) :-
+    dnf_expand_condition(Position, Condition, Here),
+    dnf_expand_conditions(Position, Conditions, Rest),
+    dnf_product(Here, Rest, Expanded).
+
+dnf_expand_condition(Position, Condition, Expanded) :-
+    has_functor(Condition, v, 2),
+    !,
+    require_dnf_disjunction(Position, Condition,
+        LeftDomain, LeftConditions, RightDomain, RightConditions),
+    dnf_expand_conditions(Position, LeftConditions, Left0),
+    dnf_expand_conditions(Position, RightConditions, Right0),
+    prepend_dnf_domain(Left0, LeftDomain, Left),
+    prepend_dnf_domain(Right0, RightDomain, Right),
+    append(Left, Right, Expanded).
+dnf_expand_condition(_, Condition, [dnf([], [Condition])]).
+
+dnf_product([], _, []).
+dnf_product([dnf(LeftDomain, LeftConditions)|Left], Right, Product) :-
+    dnf_product_row(LeftDomain, LeftConditions, Right, Row),
+    dnf_product(Left, Right, Rest),
+    append(Row, Rest, Product).
+
+dnf_product_row(_, _, [], []).
+dnf_product_row(LeftDomain, LeftConditions,
+        [dnf(RightDomain, RightConditions)|Right],
+        [dnf(Domain, Conditions)|Rows]) :-
+    append(LeftDomain, RightDomain, Domain),
+    append(LeftConditions, RightConditions, Conditions),
+    dnf_product_row(LeftDomain, LeftConditions, Right, Rows).
+
+prepend_dnf_domain([], _, []).
+prepend_dnf_domain([dnf(Domain0, Conditions)|Branches], Prefix,
+        [dnf(Domain, Conditions)|Rest]) :-
+    append(Prefix, Domain0, Domain),
+    prepend_dnf_domain(Branches, Prefix, Rest).
+
+add_outer_domain([], _, []).
+add_outer_domain([dnf(ExtraDomain, Conditions)|Expanded], OuterDomain,
+        [branch(Domain, Conditions)|Branches]) :-
+    append(OuterDomain, ExtraDomain, Domain),
+    add_outer_domain(Expanded, OuterDomain, Branches).
+
+saturating_add_count(Left, Right, Limit, Count) :-
+    ( Left >= Limit -> Count = Limit
+    ; Right >= Limit -> Count = Limit
+    ; Sum is Left + Right,
+      ( Sum >= Limit -> Count = Limit ; Count = Sum )
+    ).
+
+saturating_multiply(Left, Right, Limit, Count) :-
+    ( Left =:= 0 -> Count = 0
+    ; Right =:= 0 -> Count = 0
+    ; Left >= Limit -> Count = Limit
+    ; Right >= Limit -> Count = Limit
+    ; Left > Limit // Right -> Count = Limit
+    ; Product is Left * Right,
+      ( Product >= Limit -> Count = Limit ; Count = Product )
+    ).
 
 require_nested_drs(Location, Drs, Domain, Conditions) :-
     ( has_functor(Drs, drs, 2) ->
@@ -978,6 +1310,11 @@ rule_property_be_matches(Carrier,
 lower_naf_body_literal(Position, Index, Condition, OuterDomain,
         PositiveRefs, Bindings, Literal, Anchors) :-
     arg(1, Condition, Drs),
+    ( contains_v(Drs) ->
+        reject(disjunction,
+            rule(Position, antecedent_condition(Index, v_under_naf)))
+    ; true
+    ),
     ( has_functor(Drs, drs, 2) ->
         arg(1, Drs, Domain),
         arg(2, Drs, Conditions),
@@ -1172,7 +1509,9 @@ lower_question(Question, Draft) :-
     ),
     require_nested_drs(question, Drs, Domain, Conditions),
     validate_domain(question, Domain),
-    ( contains_negation(Conditions) ->
+    ( contains_v(Conditions) ->
+        reject(disjunction, question)
+    ; contains_negation(Conditions) ->
         reject(negation, question)
     ; contains_query2(Conditions) ->
         lower_wh_question(Domain, Conditions, Draft)
@@ -1466,12 +1805,70 @@ anchor_parts(Location, Anchor, Sentence, Token) :-
     ; reject(unsupported, Location-anchor_shape)
     ).
 
+finalize_draft_group([draft_rule_branch(
+        Branch, Head, Body, Sentence, Tokens)|Drafts], Counters0, Counters,
+        Items) :-
+    !,
+    next_clause(Sentence, Counters0, Counters, Clause),
+    finalize_rule_branch_drafts(
+        [draft_rule_branch(Branch, Head, Body, Sentence, Tokens)|Drafts],
+        Sentence, Clause, Items).
+finalize_draft_group([draft_alternative_set_branch(
+        Branch, Members, Body, Sentence, Tokens)|Drafts],
+        Counters0, Counters, Items) :-
+    !,
+    next_clause(Sentence, Counters0, Counters, Clause),
+    finalize_alternative_branch_drafts(
+        [draft_alternative_set_branch(
+            Branch, Members, Body, Sentence, Tokens)|Drafts],
+        Sentence, Clause, Items).
+finalize_draft_group([Draft], Counters0, Counters, [Item]) :-
+    finalize_draft(Draft, Counters0, Counters, Item).
+
+finalize_rule_branch_drafts([], _, _, []).
+finalize_rule_branch_drafts(
+        [draft_rule_branch(Branch, Head, Body, Sentence, Tokens)|Drafts],
+        ExpectedSentence, Clause,
+        [rule(rule_id(sentence(Sentence), clause(Clause), branch(Branch)),
+            Head, body(Body),
+            source(sentence(Sentence), tokens(Tokens)))|Items]) :-
+    ( Sentence =:= ExpectedSentence -> true
+    ; reject(unsupported, rule(branch_sentence_mismatch))
+    ),
+    finalize_rule_branch_drafts(
+        Drafts, ExpectedSentence, Clause, Items).
+
+finalize_alternative_branch_drafts([], _, _, []).
+finalize_alternative_branch_drafts(
+        [draft_alternative_set_branch(
+            Branch, Members, Body, Sentence, Tokens)|Drafts],
+        ExpectedSentence, Clause,
+        [alternative_set(
+            alternative_set_id(
+                sentence(Sentence), clause(Clause), branch(Branch)),
+            members(Members), body(Body), satisfaction(any_member),
+            exclusivity(not_asserted), exhaustiveness(not_asserted),
+            source(sentence(Sentence), tokens(Tokens)))|Items]) :-
+    ( Sentence =:= ExpectedSentence -> true
+    ; reject(unsupported, alternative_set(branch_sentence_mismatch))
+    ),
+    finalize_alternative_branch_drafts(
+        Drafts, ExpectedSentence, Clause, Items).
+
 finalize_draft(draft_fact(Predicate, Sentence, Tokens), Counters0, Counters,
         fact(fact_id(sentence(Sentence), clause(Clause)), Predicate,
             source(sentence(Sentence), tokens(Tokens)))) :-
     next_clause(Sentence, Counters0, Counters, Clause).
 finalize_draft(draft_rule(Head, Body, Sentence, Tokens), Counters0, Counters,
         rule(rule_id(sentence(Sentence), clause(Clause)), Head, body(Body),
+            source(sentence(Sentence), tokens(Tokens)))) :-
+    next_clause(Sentence, Counters0, Counters, Clause).
+finalize_draft(draft_alternative_set(Members, Body, Sentence, Tokens),
+        Counters0, Counters,
+        alternative_set(
+            alternative_set_id(sentence(Sentence), clause(Clause)),
+            members(Members), body(Body), satisfaction(any_member),
+            exclusivity(not_asserted), exhaustiveness(not_asserted),
             source(sentence(Sentence), tokens(Tokens)))) :-
     next_clause(Sentence, Counters0, Counters, Clause).
 finalize_draft(draft_query(Predicate, Sentence, Tokens), Counters0, Counters,
@@ -1494,6 +1891,55 @@ next_clause(Sentence, [counter(Here, Next0)|Counters], Updated, Clause) :-
       next_clause(Sentence, Counters, Rest, Clause)
     ).
 
+label_defined_exceptions(Facts, Rules0, Rules, ClosedWorld) :-
+    defined_predicate_keys(Facts, Rules0, Keys),
+    label_exception_rules(Rules0, Keys, Rules, ClosedWorld).
+
+defined_predicate_keys(Facts, Rules, Keys) :-
+    item_head_keys(Facts, FactKeys),
+    item_head_keys(Rules, RuleKeys),
+    append(FactKeys, RuleKeys, RawKeys),
+    sort(RawKeys, Keys).
+
+item_head_keys([], []).
+item_head_keys([Item|Items], [Key|Keys]) :-
+    ( has_functor(Item, fact, 3) -> arg(2, Item, Head)
+    ; arg(2, Item, Head)
+    ),
+    lower_predicate_key(Head, Key),
+    item_head_keys(Items, Keys).
+
+label_exception_rules([], _, [], []).
+label_exception_rules([Rule0|Rules0], Keys, [Rule|Rules], ClosedWorld) :-
+    Rule0 = rule(Id, Head, body(Body0), Source),
+    label_exception_body(Body0, 1, Id, Keys, Body, HereClosedWorld),
+    Rule = rule(Id, Head, body(Body), Source),
+    label_exception_rules(Rules0, Keys, Rules, RestClosedWorld),
+    append(HereClosedWorld, RestClosedWorld, ClosedWorld).
+
+label_exception_body([], _, _, _, [], []).
+label_exception_body([Literal0|Literals0], Position, RuleId, Keys,
+        [Literal|Literals], ClosedWorld) :-
+    ( has_functor(Literal0, naf, 1),
+      arg(1, Literal0, Predicate),
+      lower_predicate_key(Predicate, Key),
+      term_member_eq(Key, Keys) ->
+        Key = predicate_key(Name, arity(Arity)),
+        ExceptionId = exception_id(rule(RuleId), literal(Position)),
+        Literal = naf(ExceptionId, Predicate),
+        ClosedWorld = [closed_world(ExceptionId, affects(RuleId),
+            predicate_key(Name, arity(Arity)))|RestClosedWorld]
+    ; Literal = Literal0,
+      ClosedWorld = RestClosedWorld
+    ),
+    Next is Position + 1,
+    label_exception_body(Literals0, Next, RuleId, Keys,
+        Literals, RestClosedWorld).
+
+lower_predicate_key(pred(Name, Args),
+        predicate_key(Name, arity(Arity))) :-
+    length(Args, Arity).
+
 require_factual_section_order(Items) :-
     require_factual_section_order(Items, facts).
 
@@ -1506,43 +1952,67 @@ require_factual_section_order([Item|Items], State0) :-
         )
     ; has_functor(Item, rule, 4) ->
         State = rules
+    ; has_functor(Item, alternative_set, 7) ->
+        State = State0
     ; reject(unsupported, generated_item)
     ),
     require_factual_section_order(Items, State).
 
-split_factual_items([], [], []).
-split_factual_items([Item|Items], Facts, Rules) :-
+split_factual_items([], [], [], []).
+split_factual_items([Item|Items], Facts, Rules, AlternativeSets) :-
     ( has_functor(Item, fact, 3) ->
         Facts = [Item|RestFacts],
-        Rules = RestRules
+        Rules = RestRules,
+        AlternativeSets = RestAlternatives
     ; has_functor(Item, rule, 4) ->
         Facts = RestFacts,
-        Rules = [Item|RestRules]
+        Rules = [Item|RestRules],
+        AlternativeSets = RestAlternatives
+    ; has_functor(Item, alternative_set, 7) ->
+        Facts = RestFacts,
+        Rules = RestRules,
+        AlternativeSets = [Item|RestAlternatives]
     ; reject(unsupported, generated_item)
     ),
-    split_factual_items(Items, RestFacts, RestRules).
+    split_factual_items(
+        Items, RestFacts, RestRules, RestAlternatives).
 
 require_section_order(_, []).
 require_section_order(Section, [Item|Items]) :-
-    item_pair(Item, First),
+    item_order_key(Item, First),
     require_section_order_after(Section, Items, First).
 
 require_section_order_after(_, [], _).
 require_section_order_after(Section, [Item|Items], Previous) :-
-    item_pair(Item, Pair),
-    ( pair_less(Previous, Pair) ->
+    item_order_key(Item, Key),
+    ( order_key_less(Previous, Key) ->
         true
     ; reject(unsupported, section_order(Section))
     ),
-    require_section_order_after(Section, Items, Pair).
+    require_section_order_after(Section, Items, Key).
 
-item_pair(fact(fact_id(sentence(S), clause(C)), _, _), pair(S, C)).
-item_pair(rule(rule_id(sentence(S), clause(C)), _, _, _), pair(S, C)).
+item_order_key(fact(fact_id(sentence(S), clause(C)), _, _),
+    key(S, C, 0)).
+item_order_key(rule(rule_id(sentence(S), clause(C)), _, _, _),
+    key(S, C, 0)).
+item_order_key(rule(
+        rule_id(sentence(S), clause(C), branch(B)), _, _, _),
+    key(S, C, B)).
+item_order_key(alternative_set(
+        alternative_set_id(sentence(S), clause(C)), _, _, _, _, _, _),
+    key(S, C, 0)).
+item_order_key(alternative_set(
+        alternative_set_id(sentence(S), clause(C), branch(B)),
+        _, _, _, _, _, _),
+    key(S, C, B)).
 
-pair_less(pair(S0, C0), pair(S, C)) :-
+order_key_less(key(S0, C0, B0), key(S, C, B)) :-
     ( S0 < S
     ; S0 =:= S,
       C0 < C
+    ; S0 =:= S,
+      C0 =:= C,
+      B0 < B
     ).
 
 /* Structural helpers and generated-IR backstop. */
@@ -1565,6 +2035,34 @@ functor_name(Term, Name) :-
 has_functor(Term, Name, Arity) :-
     compound(Term),
     functor(Term, Name, Arity).
+
+contains_v(Term) :-
+    contains_functor(Term, v, 2).
+
+contains_tilde(Term) :-
+    contains_functor(Term, '~', 1).
+
+contains_functor(Term, Name, Arity) :-
+    nonvar(Term),
+    compound(Term),
+    ( functor(Term, Name, Arity) ->
+        true
+    ; functor(Term, _, TermArity),
+      contains_functor_arg(1, TermArity, Term, Name, Arity)
+    ).
+
+contains_functor_arg(Index, Arity, _, _, _) :-
+    Index > Arity,
+    !,
+    fail.
+contains_functor_arg(Index, Arity, Term, Name, WantedArity) :-
+    arg(Index, Term, Arg),
+    ( contains_functor(Arg, Name, WantedArity) ->
+        true
+    ; Next is Index + 1,
+      contains_functor_arg(
+          Next, Arity, Term, Name, WantedArity)
+    ).
 
 contains_negation(Term) :-
     nonvar(Term),

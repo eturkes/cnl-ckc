@@ -21,7 +21,7 @@ RED="$ROOT/tests/fixtures/lower/red"
 SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=95
+EXPECTED_PASS_COUNT=115
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -122,24 +122,24 @@ if [ "$#" -ne 4 ]; then
     fail_case "fixtures/count" "expected 4 IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.drs.pl
-if [ "$#" -ne 12 ]; then
-    fail_case "fixtures/count" "expected 12 lower DRS greens, got $#"
+if [ "$#" -ne 21 ]; then
+    fail_case "fixtures/count" "expected 21 lower DRS greens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 12 ]; then
-    fail_case "fixtures/count" "expected 12 lower IR goldens, got $#"
+if [ "$#" -ne 21 ]; then
+    fail_case "fixtures/count" "expected 21 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 12 ]; then
-    fail_case "fixtures/count" "expected 12 lower program goldens, got $#"
+if [ "$#" -ne 21 ]; then
+    fail_case "fixtures/count" "expected 21 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 12 ]; then
-    fail_case "fixtures/count" "expected 12 lower result goldens, got $#"
+if [ "$#" -ne 21 ]; then
+    fail_case "fixtures/count" "expected 21 lower result goldens, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 72 ]; then
-    fail_case "fixtures/count" "expected 72 red fixtures, got $#"
+if [ "$#" -ne 83 ]; then
+    fail_case "fixtures/count" "expected 83 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -221,6 +221,20 @@ for input in "$LOWER_GREEN"/*.drs.pl; do
     if [ -s "$validate_stdout" ] || [ -s "$validate_stderr" ]; then
         fail_case "green/lower/$stem/validate-streams" "expected zero bytes"
     fi
+
+    rerun_validate_stdout="$SCRATCH/determinism/$stem.validate.stdout"
+    rerun_validate_stderr="$SCRATCH/determinism/$stem.validate.stderr"
+    run_tool "$expected" "$rerun_validate_stdout" \
+        "$rerun_validate_stderr" validate
+    if [ "$RUN_STATUS" -ne 0 ]; then
+        fail_case "green/lower/$stem/validate-determinism-status" \
+            "expected 0, got $RUN_STATUS"
+    fi
+    if [ -s "$rerun_validate_stdout" ] || \
+            [ -s "$rerun_validate_stderr" ]; then
+        fail_case "green/lower/$stem/validate-determinism-streams" \
+            "expected zero bytes"
+    fi
     pass_case "green/lower/$stem"
 done
 
@@ -236,6 +250,28 @@ run_committed_red() {
         "$stdout_path" "$stderr_path" "$expected_line"
 }
 
+run_committed_red disjunction-root-outside alternative_set \
+    'ir_tool_error(lower,alternative_set,root_condition(1,branch(left,profile))).'
+run_committed_red disjunction-consequent-outside alternative_set \
+    'ir_tool_error(lower,alternative_set,rule(1,consequent_branch(left,profile))).'
+run_committed_red disjunction-question disjunction \
+    'ir_tool_error(lower,disjunction,question).'
+run_committed_red disjunction-v-under-naf disjunction \
+    'ir_tool_error(lower,disjunction,rule(1,v_under_naf)).'
+run_committed_red disjunction-naf-under-v disjunction \
+    'ir_tool_error(lower,disjunction,rule(1,naf_inside_disjunct(left))).'
+run_committed_red disjunction-malformed disjunction \
+    'ir_tool_error(lower,disjunction,rule(1,disjunct_shape(left))).'
+run_committed_red disjunction-cap-exceeded disjunction \
+    'ir_tool_error(lower,disjunction,rule(4,antecedent_branch_cap_exceeded(64))).'
+run_committed_red alternative-set-root-argument alternative_set \
+    'ir_tool_error(lower,alternative_set,root_condition(1,branch(left,argument(2)))).'
+run_committed_red alternative-set-duplicate-member alternative_set \
+    'ir_tool_error(lower,alternative_set,-(root_condition(1),duplicate_member)).'
+run_committed_red alternative-set-consequent-domain alternative_set \
+    'ir_tool_error(lower,alternative_set,rule(1,consequent_outer_domain)).'
+run_committed_red alternative-set-antecedent-naf alternative_set \
+    'ir_tool_error(lower,alternative_set,rule(1,alternative_body_naf)).'
 run_committed_red property-degree-comp unsupported \
     'ir_tool_error(lower,unsupported,-(root_condition(1),property_degree(comp))).'
 run_committed_red property-degree-sup unsupported \

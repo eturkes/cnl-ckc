@@ -1,9 +1,10 @@
-:- module(explanation, [assemble_result_terms/7, validate_answer_terms/1]).
+:- module(explanation, [assemble_result_terms/8, validate_answer_terms/1]).
 
 :- set_prolog_flag(encoding, utf8).
 
 :- use_module(library(lists), [append/3]).
 :- use_module(drs_canon, [canonical_line/2]).
+:- use_module(validation_common, [terms_pairwise_distinct/1]).
 
 /*
 Witness expansion and proof-certificate replay. Construction follows the first
@@ -13,35 +14,31 @@ completed kernel store before any result term is returned. A replay failure is
 an internal invariant exception, never an input rejection.
 */
 assemble_result_terms(Document, ProgramDigest, GoalId, GoalAtom, Outcome,
-        Store, Terms) :-
+        Store, AlternativeSets, Terms) :-
+    Base = [ cnl_answer_record(3),
+             Document,
+             program(sha256(ProgramDigest))
+           ],
+    append(Base, AlternativeSets, Prefix),
     ( Outcome == proved ->
         build_certificate(GoalAtom, Store, Proof),
         replay_certificate(GoalAtom, Proof, Store),
-        Terms = [ cnl_answer_record(3),
-                  Document,
-                  program(sha256(ProgramDigest)),
-                  answer(GoalId, GoalAtom, proved),
-                  Proof
-                ]
+        append(Prefix,
+            [answer(GoalId, GoalAtom, proved), Proof], Terms)
     ; Outcome == not_proved ->
         ( store_witness(GoalAtom, Store, _) ->
             invariant(not_proved_goal_has_witness)
         ; true
         ),
-        Terms = [ cnl_answer_record(3),
-                  Document,
-                  program(sha256(ProgramDigest)),
-                  answer(GoalId, GoalAtom, not_proved)
-                ]
+        append(Prefix,
+            [answer(GoalId, GoalAtom, not_proved)], Terms)
     ; has_functor(Outcome, answers, 1) ->
         arg(1, Outcome, Answers),
         build_wh_certificates(Answers, Store, Proofs),
-        Prefix = [ cnl_answer_record(3),
-                   Document,
-                   program(sha256(ProgramDigest)),
-                   answer(GoalId, wh(who), GoalAtom, answers(Answers))
-                 ],
-        append(Prefix, Proofs, Terms)
+        append(Prefix,
+            [answer(GoalId, wh(who), GoalAtom, answers(Answers))],
+            AnswerPrefix),
+        append(AnswerPrefix, Proofs, Terms)
     ; invariant(outcome(Outcome))
     ).
 
@@ -66,17 +63,21 @@ yes/no or wh grammar and exact proof-correspondence gate.
 */
 validate_answer_terms(Terms) :-
     ( answer_record_layout(
-          Terms, Header, Document, Program, Answer, Proofs) ->
-        validate_answer_common_layout(Header, Document, Program),
+          Terms, Header, Document, Program, AlternativeSets,
+          Answer, Proofs) ->
+        validate_answer_common_layout(
+            Header, Document, Program, AlternativeSets),
         validate_answer_payload(
             Header, Document, Program, Answer, Proofs)
     ; invariant(generated_answer_layout)
     ).
 
-validate_answer_common_layout(Header, Document, Program) :-
+validate_answer_common_layout(
+        Header, Document, Program, AlternativeSets) :-
     ( Header == cnl_answer_record(3),
       has_functor(Document, document, 3),
-      generated_program_digest(Program) ->
+      generated_program_digest(Program),
+      generated_alternative_sets(AlternativeSets) ->
         true
     ; invariant(generated_answer_envelope)
     ).
@@ -123,11 +124,23 @@ validate_yes_no_proof(GoalAtom, Proofs) :-
     ; invariant(generated_yes_no_proof)
     ).
 
-answer_record_layout(Terms, Header, Document, Program, Answer, Proofs) :-
+answer_record_layout(Terms, Header, Document, Program,
+        AlternativeSets, Answer, Proofs) :-
     list_head_tail(Terms, Header, Rest1),
     list_head_tail(Rest1, Document, Rest2),
     list_head_tail(Rest2, Program, Rest3),
-    list_head_tail(Rest3, Answer, Proofs).
+    split_answer_alternatives(
+        Rest3, AlternativeSets, Answer, Proofs).
+
+split_answer_alternatives(Terms, AlternativeSets, Answer, Proofs) :-
+    list_head_tail(Terms, Term, Rest),
+    ( has_functor(Term, alternative_set, 6) ->
+        AlternativeSets = [Term|More],
+        split_answer_alternatives(Rest, More, Answer, Proofs)
+    ; AlternativeSets = [],
+      Answer = Term,
+      Proofs = Rest
+    ).
 
 list_head_tail(List, Head, Tail) :-
     has_functor(List, '[|]', 2),
@@ -159,6 +172,68 @@ generated_program_digest(Program) :-
     has_functor(Sha256, sha256, 1),
     arg(1, Sha256, Digest),
     atom(Digest).
+
+generated_alternative_sets([]).
+generated_alternative_sets([Alternative|Alternatives]) :-
+    generated_alternative_set(Alternative),
+    generated_alternative_sets(Alternatives).
+
+generated_alternative_set(Alternative) :-
+    has_functor(Alternative, alternative_set, 6),
+    arg(1, Alternative, Id),
+    generated_alternative_id(Id),
+    arg(2, Alternative, members(Members)),
+    Members = [_,_|_],
+    generated_pattern_predicates(Members),
+    terms_pairwise_distinct(Members),
+    arg(3, Alternative, body(Body)),
+    generated_positive_literals(Body),
+    arg(4, Alternative, Satisfaction),
+    Satisfaction == satisfaction(any_member),
+    arg(5, Alternative, Exclusivity),
+    Exclusivity == exclusivity(not_asserted),
+    arg(6, Alternative, Exhaustiveness),
+    Exhaustiveness == exhaustiveness(not_asserted),
+    ground(Alternative).
+
+generated_alternative_id(Id) :-
+    compound(Id),
+    functor(Id, alternative_set_id, Arity),
+    ( Arity =:= 2 ; Arity =:= 3 ),
+    arg(1, Id, sentence(S)),
+    arg(2, Id, clause(C)),
+    integer(S), S > 0,
+    integer(C), C > 0,
+    ( Arity =:= 2 -> true
+    ; arg(3, Id, branch(B)), integer(B), B > 0
+    ).
+
+generated_pattern_predicates([]).
+generated_pattern_predicates([Predicate|Predicates]) :-
+    generated_pattern_predicate(Predicate),
+    generated_pattern_predicates(Predicates).
+
+generated_pattern_predicate(Predicate) :-
+    has_functor(Predicate, pred, 2),
+    arg(1, Predicate, Name),
+    atom(Name),
+    arg(2, Predicate, Args),
+    Args = [_|_],
+    generated_pattern_arguments(Args).
+
+generated_pattern_arguments([]).
+generated_pattern_arguments([Arg|Args]) :-
+    ( replay_named_ground(Arg)
+    ; has_functor(Arg, var, 1),
+      arg(1, Arg, Number),
+      integer(Number), Number > 0
+    ),
+    generated_pattern_arguments(Args).
+
+generated_positive_literals([]).
+generated_positive_literals([Predicate|Predicates]) :-
+    generated_pattern_predicate(Predicate),
+    generated_positive_literals(Predicates).
 
 generated_query_id(GoalId) :-
     has_functor(GoalId, query_id, 2),
@@ -306,6 +381,13 @@ build_subproof(Item, _, naf(Atom)) :-
     arg(1, Item, Atom),
     replay_ground_predicate(Atom),
     !.
+build_subproof(Item, _, naf(ExceptionId, Atom)) :-
+    has_functor(Item, naf, 2),
+    arg(1, Item, ExceptionId),
+    arg(2, Item, Atom),
+    ground(ExceptionId),
+    replay_ground_predicate(Atom),
+    !.
 build_subproof(Item, Store, Proof) :-
     has_functor(Item, pred, 2),
     !,
@@ -328,6 +410,9 @@ replay_node(Proof, Store) :-
     arg(1, Proof, NodeAtom),
     arg(2, Proof, ClauseId),
     arg(3, Proof, Children),
+    store_witness(NodeAtom, Store, RetainedWitness),
+    arg(1, RetainedWitness, RetainedClauseId),
+    ClauseId == RetainedClauseId,
     program_clause_by_id(ClauseId, Head, Body),
     replay_match_predicate(Head, NodeAtom, [], Bindings1),
     replay_match_body(Body, Children, Bindings1, Bindings, Store),
@@ -364,6 +449,13 @@ child_item_evidence(Child, Atom) :-
 child_item_evidence(Child, Child) :-
     has_functor(Child, naf, 1),
     arg(1, Child, Atom),
+    replay_ground_predicate(Atom),
+    !.
+child_item_evidence(Child, Child) :-
+    has_functor(Child, naf, 2),
+    arg(1, Child, ExceptionId),
+    arg(2, Child, Atom),
+    ground(ExceptionId),
     replay_ground_predicate(Atom).
 
 replay_children(Children, _) :-
@@ -383,6 +475,14 @@ replay_child(Child, Store) :-
 replay_child(Child, Store) :-
     has_functor(Child, naf, 1),
     arg(1, Child, Atom),
+    replay_ground_predicate(Atom),
+    replay_atom_absent(Atom, Store),
+    !.
+replay_child(Child, Store) :-
+    has_functor(Child, naf, 2),
+    arg(1, Child, ExceptionId),
+    arg(2, Child, Atom),
+    ground(ExceptionId),
     replay_ground_predicate(Atom),
     replay_atom_absent(Atom, Store).
 
@@ -443,11 +543,10 @@ replay_match_body(Body, Children, Bindings0, Bindings, Store) :-
         BodyRest, ChildRest, Bindings1, Bindings, Store).
 
 replay_match_literal(Pattern, Child, Bindings, Bindings, Store) :-
-    has_functor(Pattern, naf, 1),
+    replay_naf_pattern(Pattern, Label, NafPattern),
     !,
-    has_functor(Child, naf, 1),
-    arg(1, Pattern, NafPattern),
-    arg(1, Child, Atom),
+    replay_naf_child(Child, ChildLabel, Atom),
+    Label == ChildLabel,
     replay_ground_predicate(Atom),
     replay_substitute_predicate(NafPattern, Bindings, Expected),
     Expected == Atom,
@@ -456,6 +555,24 @@ replay_match_literal(Pattern, Child, Bindings0, Bindings, _) :-
     has_functor(Child, proof, 3),
     arg(1, Child, Ground),
     replay_match_predicate(Pattern, Ground, Bindings0, Bindings).
+
+replay_naf_pattern(Pattern, bare, Predicate) :-
+    has_functor(Pattern, naf, 1),
+    arg(1, Pattern, Predicate),
+    !.
+replay_naf_pattern(Pattern, labeled(ExceptionId), Predicate) :-
+    has_functor(Pattern, naf, 2),
+    arg(1, Pattern, ExceptionId),
+    arg(2, Pattern, Predicate).
+
+replay_naf_child(Child, bare, Atom) :-
+    has_functor(Child, naf, 1),
+    arg(1, Child, Atom),
+    !.
+replay_naf_child(Child, labeled(ExceptionId), Atom) :-
+    has_functor(Child, naf, 2),
+    arg(1, Child, ExceptionId),
+    arg(2, Child, Atom).
 
 clause_variables(Head, Body, Variables) :-
     replay_predicate_vars(Head, HeadVars),
@@ -493,6 +610,8 @@ replay_body_vars(Body, Variables) :-
 replay_literal_predicate(Literal, Predicate) :-
     ( has_functor(Literal, naf, 1) ->
         arg(1, Literal, Predicate)
+    ; has_functor(Literal, naf, 2) ->
+        arg(2, Literal, Predicate)
     ; Predicate = Literal
     ).
 
@@ -562,6 +681,13 @@ replay_substitute_literal(Literal, Bindings, naf(Ground)) :-
     has_functor(Literal, naf, 1),
     !,
     arg(1, Literal, Pattern),
+    replay_substitute_predicate(Pattern, Bindings, Ground).
+replay_substitute_literal(Literal, Bindings,
+        naf(ExceptionId, Ground)) :-
+    has_functor(Literal, naf, 2),
+    !,
+    arg(1, Literal, ExceptionId),
+    arg(2, Literal, Pattern),
     replay_substitute_predicate(Pattern, Bindings, Ground).
 replay_substitute_literal(Pattern, Bindings, Ground) :-
     replay_substitute_predicate(Pattern, Bindings, Ground).
