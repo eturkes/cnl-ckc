@@ -1,0 +1,3 @@
+ace_front_end_record(1).
+document(docid('m6-prop-pred'),source_sha256('ec3e558cf7b833e6815c03ce2f81fb8f18e2d5f55be9e0df01b7b734e4ca54f9'),ulex(none)).
+drs([A,B,C,D],[-(property(A,helpful,pos),/(1,3)),-(predicate(B,be,named('Mary'),A),/(1,2)),-(object(C,patient,countable,na,eq,1),/(2,4)),-(predicate(D,be,named('John'),C),/(2,2)),=>(drs([E],[-(object(E,patient,countable,na,eq,1),/(3,2))]),drs([F,G],[-(property(F,helpful,pos),/(3,4)),-(predicate(G,be,E,F),/(3,3))])),=>(drs([H,I,J],[-(object(H,patient,countable,na,eq,1),/(4,2)),-(property(I,helpful,pos),/(4,5)),-(predicate(J,be,H,I),/(4,4))]),drs([K],[-(predicate(K,recover,H),/(4,6))])),question(drs([L,M],[-(property(L,helpful,pos),/(5,3)),-(predicate(M,be,named('John'),L),/(5,1))]))]).

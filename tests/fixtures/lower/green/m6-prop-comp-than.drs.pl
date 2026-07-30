@@ -1,0 +1,3 @@
+ace_front_end_record(1).
+document(docid('m6-prop-comp-than'),source_sha256('831e6b3421728f133ea6f7c74c3b4038b58440403fcc6ab0db9274712d8fe48b'),ulex(none)).
+drs([A,B,C,D],[-(property(A,helpful,comp_than,named('John')),/(1,4)),-(predicate(B,be,named('Mary'),A),/(1,2)),-(object(C,patient,countable,na,eq,1),/(2,4)),-(predicate(D,be,named('John'),C),/(2,2)),=>(drs([E],[-(object(E,patient,countable,na,eq,1),/(3,2))]),drs([F,G],[-(property(F,helpful,comp_than,named('Mary')),/(3,5)),-(predicate(G,be,E,F),/(3,3))])),question(drs([H,I],[-(property(H,helpful,comp_than,named('Mary')),/(4,4)),-(predicate(I,be,named('John'),H),/(4,1))]))]).

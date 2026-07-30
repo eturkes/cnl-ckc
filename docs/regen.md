@@ -52,7 +52,7 @@ shell harnesses: `tests/strict-harness.sh` (57 gates), `tests/regen-harness.sh` 
 `tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (47),
 `tests/pipeline-harness.sh` (28),
 `tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (77),
-`tests/ir-lower-harness.sh` (66), `tests/ir-run-harness.sh` (110),
+`tests/ir-lower-harness.sh` (95), `tests/ir-run-harness.sh` (120),
 `tests/slice-harness.sh` (29), `tests/registry-harness.sh` (94), and
 `tests/guideline-harness.sh` (45). The explicit
 comparison breaks the self-check trust circle.

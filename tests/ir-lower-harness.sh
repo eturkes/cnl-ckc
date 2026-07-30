@@ -21,7 +21,7 @@ RED="$ROOT/tests/fixtures/lower/red"
 SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=66
+EXPECTED_PASS_COUNT=95
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -122,24 +122,24 @@ if [ "$#" -ne 4 ]; then
     fail_case "fixtures/count" "expected 4 IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.drs.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 lower DRS greens, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 lower DRS greens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 lower IR goldens, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 lower program goldens, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 lower result goldens, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 lower result goldens, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 48 ]; then
-    fail_case "fixtures/count" "expected 48 red fixtures, got $#"
+if [ "$#" -ne 72 ]; then
+    fail_case "fixtures/count" "expected 72 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -236,6 +236,54 @@ run_committed_red() {
         "$stdout_path" "$stderr_path" "$expected_line"
 }
 
+run_committed_red property-degree-comp unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),property_degree(comp))).'
+run_committed_red property-degree-sup unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),property_degree(sup))).'
+run_committed_red property-arity-six unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),property_arity(6))).'
+run_committed_red property-naf negation \
+    'ir_tool_error(lower,negation,rule(1,antecedent_condition(2,profile))).'
+run_committed_red property-attributive-consequent unsupported \
+    'ir_tool_error(lower,unsupported,rule(1,consequent_count(3))).'
+run_committed_red property-wh-query wh_query \
+    'ir_tool_error(lower,wh_query,question).'
+run_committed_red property-comparative-unbound referent \
+    'ir_tool_error(lower,referent,root_condition(1,property_subject(unbound))).'
+run_committed_red property-comparative-ambiguous referent \
+    'ir_tool_error(lower,referent,root_condition(1,property_subject(ambiguous))).'
+run_committed_red property-antecedent-ambiguous referent \
+    'ir_tool_error(lower,referent,rule(1,antecedent_condition(2,property_subject(ambiguous)))).'
+run_committed_red property-carrier-head referent \
+    'ir_tool_error(lower,referent,rule(1,unbound_head_referent)).'
+run_committed_red property-root-event-in-use referent \
+    'ir_tool_error(lower,referent,-(root_condition(1),event_in_use)).'
+run_committed_red property-rule-body-event-in-use referent \
+    'ir_tool_error(lower,referent,-(rule(1,antecedent),event_in_use)).'
+run_committed_red property-rule-head-event-in-use referent \
+    'ir_tool_error(lower,referent,-(rule(1,consequent),event_in_use)).'
+run_committed_red property-question-event-in-use referent \
+    'ir_tool_error(lower,referent,-(question,event_in_use)).'
+run_committed_red separator-naf-verb unsupported \
+    'ir_tool_error(lower,unsupported,-(rule_naf,lemma_space(verb))).'
+run_committed_red separator-naf-object-class unsupported \
+    'ir_tool_error(lower,unsupported,-(rule_naf,lemma_space(object_class))).'
+run_committed_red separator-question-adjective unsupported \
+    'ir_tool_error(lower,unsupported,-(question,lemma_space(adjective))).'
+run_committed_red separator-rule-body-object-class unsupported \
+    'ir_tool_error(lower,unsupported,-(rule(1,antecedent),lemma_space(object_class))).'
+run_committed_red property-question-unpaired unsupported \
+    'ir_tool_error(lower,unsupported,question(copula_profile)).'
+run_committed_red property-rule-head-unpaired unsupported \
+    'ir_tool_error(lower,unsupported,rule(1,consequent_copula)).'
+run_committed_red property-separator-adjective unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),lemma_space(adjective))).'
+run_committed_red separator-verb unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),lemma_space(verb))).'
+run_committed_red separator-object-class unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),lemma_space(object_class))).'
+run_committed_red separator-relation unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),lemma_space(relation))).'
 run_committed_red wh-query wh_query
 run_committed_red p07-which-query wh_query
 run_committed_red p08-wh-copula wh_query

@@ -261,6 +261,9 @@ lower_root_condition(Position, Condition, All, Domain, Consumed,
     ; predicate_named_be(Inner) ->
         lower_copula_from_be(Position, Inner, Anchor, All, Domain,
             Consumed, Consumed1, Draft, Events, Entities)
+    ; functor_name(Inner, property) ->
+        lower_root_property(Position, Inner, Anchor, All, Domain,
+            Consumed, Consumed1, Draft, Events, Entities)
     ; has_functor(Inner, predicate, 4) ->
         lower_root_transitive(Position, Inner, Anchor, All, Domain, Draft,
             Events, Entities),
@@ -313,6 +316,7 @@ lower_copula_from_be(Position, Be, BeAnchor, All, Domain, Consumed,
 
 require_root_object(Position, Object, Referent, Class) :-
     ( exact_object(Object, Referent0, Class0) ->
+        require_lemma(root_condition(Position), object_class, Class0),
         Referent = Referent0,
         Class = Class0
     ; reject(copula, root_condition(Position, object_fields))
@@ -410,13 +414,61 @@ require_one_object(Position,
 require_one_object(Position, [_,_|_], _, _, _) :-
     reject(copula, root_condition(Position, multiple_object)).
 
+lower_root_property(Position, Property, PropertyAnchor, All, Domain,
+        Consumed, Consumed1, Draft, Events, [Carrier]) :-
+    property_parts(root_condition(Position), Property, Carrier, Name,
+        ComparisonTerms),
+    require_declared_entity(root_condition(Position), Carrier, Domain),
+    root_property_be_matches(Carrier, All, Matches),
+    require_one_root_property_be(Position, Matches, BePosition, Event,
+        SubjectName, BeAnchor),
+    require_erasable_event(root_condition(Position), Event, Domain, All),
+    root_property_comparison_args(ComparisonTerms, Position, Domain, 2,
+        ComparisonArgs),
+    ( memberchk(BePosition, Consumed) ->
+        Events = [],
+        Consumed1 = [Position|Consumed]
+    ; Events = [Event],
+      Consumed1 = [Position, BePosition|Consumed]
+    ),
+    source_from_anchors(root_condition(Position),
+        [PropertyAnchor, BeAnchor], Sentence, Tokens),
+    Draft = draft_fact(
+        pred(Name, [named(SubjectName)|ComparisonArgs]), Sentence, Tokens).
+
+root_property_be_matches(_, [], []).
+root_property_be_matches(Carrier,
+        [indexed(Position, Condition)|Conditions], Matches) :-
+    ( anchored_condition(Condition, Inner, Anchor),
+      exact_be(Inner, Event, Name, ObjectReferent),
+      ObjectReferent == Carrier ->
+        Matches = [property_be_match(
+            Position, Event, Name, Anchor)|Rest]
+    ; Matches = Rest
+    ),
+    root_property_be_matches(Carrier, Conditions, Rest).
+
+require_one_root_property_be(Position, [], _, _, _, _) :-
+    reject(referent, root_condition(Position, property_subject(unbound))).
+require_one_root_property_be(_,
+        [property_be_match(BePosition, Event, Name, Anchor)],
+        BePosition, Event, Name, Anchor) :-
+    !.
+require_one_root_property_be(Position, [_,_|_], _, _, _, _) :-
+    reject(referent, root_condition(Position, property_subject(ambiguous))).
+
+root_property_comparison_args([], _, _, _, []).
+root_property_comparison_args([Term|Terms], Position, Domain, Index,
+        [Arg|Args]) :-
+    require_ground_argument(
+        root_condition(Position), Index, Term, Domain, Arg),
+    Next is Index + 1,
+    root_property_comparison_args(Terms, Position, Domain, Next, Args).
+
 lower_root_predicate(Position, Predicate, Anchor, Domain, Draft,
         [Event], []) :-
     predicate3_parts(Predicate, Event, Verb, Subject),
-    ( atom(Verb), Verb \== be ->
-        true
-    ; reject(unsupported, root_condition(Position, predicate_name))
-    ),
+    require_non_be_verb(root_condition(Position), Verb),
     require_local_event(root_condition(Position), Event, Domain),
     require_ground_subject(root_condition(Position), Subject, Domain, Arg),
     source_from_anchors(root_condition(Position), [Anchor], Sentence, Tokens),
@@ -441,13 +493,54 @@ relation3_parts(Relation, Left, Name, Right) :-
     arg(2, Relation, Name),
     arg(3, Relation, Right).
 
+property_parts(Location, Property, Referent, Name, ComparisonTerms) :-
+    compound(Property),
+    functor(Property, property, Arity),
+    ( Arity =:= 3 ->
+        arg(1, Property, Referent),
+        arg(2, Property, Adjective),
+        arg(3, Property, Degree),
+        require_lemma(Location, adjective, Adjective),
+        ( Degree == pos ->
+            Name = Adjective,
+            ComparisonTerms = []
+        ; reject(unsupported, Location-property_degree(Degree))
+        )
+    ; Arity =:= 4 ->
+        arg(1, Property, Referent),
+        arg(2, Property, Adjective),
+        arg(3, Property, Degree),
+        arg(4, Property, Comparison),
+        require_lemma(Location, adjective, Adjective),
+        ( ( Degree == comp_than ; Degree == pos_as ) ->
+            atom_concat(Adjective, ' ', Prefix),
+            atom_concat(Prefix, Degree, Name),
+            ComparisonTerms = [Comparison]
+        ; reject(unsupported, Location-property_degree(Degree))
+        )
+    ; reject(unsupported, Location-property_arity(Arity))
+    ).
+
+require_non_be_verb(Location, Verb) :-
+    require_lemma(Location, verb, Verb),
+    ( Verb \== be ->
+        true
+    ; reject(unsupported, Location-predicate_name)
+    ).
+
+require_lemma(Location, Kind, Lemma) :-
+    ( atom(Lemma) ->
+        ( sub_atom(Lemma, _, 1, _, ' ') ->
+            reject(unsupported, Location-lemma_space(Kind))
+        ; true
+        )
+    ; reject(unsupported, Location-lemma_shape(Kind))
+    ).
+
 lower_root_transitive(Position, Predicate, Anchor, All, Domain, Draft,
         [Event], []) :-
     predicate4_parts(Predicate, Event, Verb, Subject, Object),
-    ( atom(Verb), Verb \== be ->
-        true
-    ; reject(unsupported, root_condition(Position, predicate_name))
-    ),
+    require_non_be_verb(root_condition(Position), Verb),
     require_erasable_event(
         root_condition(Position), Event, Domain, All),
     require_ground_argument(
@@ -469,6 +562,7 @@ lower_root_relation(Position, Relation, Anchor, All, Domain, Draft,
 
 require_of_relation(Location, Relation, Left, Right) :-
     relation3_parts(Relation, Left, Name, Right),
+    require_lemma(Location, relation, Name),
     ( Name == of ->
         true
     ; reject(unsupported, Location-relation_name)
@@ -558,20 +652,20 @@ lower_rule(Position, Rule, Draft) :-
     require_disjoint_domains(rule(Position), AnteDomain, ConsequentDomain),
     lower_rule_head(Position, ConsequentConditions, AnteDomain,
         ConsequentDomain, [], Bindings1, 1, Next1, Head, HeadAnchors,
-        ConsequentEvents, HeadOuterRefs),
+        ConsequentEvents, ConsequentEntities, HeadOuterRefs),
     require_naf_suffix(Position, AnteConditions),
     lower_rule_body(Position, AnteConditions, AnteDomain,
         Bindings1, _Bindings, Next1, _Next, Body, BodyAnchors,
-        AnteEvents, BodyEntityRefs),
+        AnteEvents, BodyEntityRefs, BodyPositiveRefs),
     ( Body == [] ->
         reject(unsupported, rule(Position, empty_antecedent))
     ; true
     ),
-    require_bound_head_refs(Position, HeadOuterRefs, BodyEntityRefs),
+    require_bound_head_refs(Position, HeadOuterRefs, BodyPositiveRefs),
     validate_scope_accounting(antecedent(Position), AnteDomain,
         AnteEvents, BodyEntityRefs),
     validate_scope_accounting(consequent(Position), ConsequentDomain,
-        ConsequentEvents, []),
+        ConsequentEvents, ConsequentEntities),
     append(BodyAnchors, HeadAnchors, Anchors),
     source_from_anchors(rule(Position), Anchors, Sentence, Tokens),
     Draft = draft_rule(Head, Body, Sentence, Tokens).
@@ -604,14 +698,43 @@ require_naf_suffix(Position, [Condition|Conditions], Index, SeenNaf) :-
     require_naf_suffix(Position, Conditions, Next, SeenNaf1).
 
 lower_rule_head(Position, Conditions, AnteDomain, ConsequentDomain,
-        Bindings0, Bindings, Next0, Next, Head, [Anchor],
-        ConsequentEvents, OuterRefs) :-
+        Bindings0, Bindings, Next0, Next, Head, Anchors,
+        ConsequentEvents, ConsequentEntities, OuterRefs) :-
     ( contains_negation(Conditions) ->
         reject(negation, rule(Position, consequent))
     ; contains_query2(Conditions) ->
         reject(wh_query, rule(Position, consequent))
     ; true
     ),
+    lower_rule_head_conditions(Position, Conditions, AnteDomain,
+        ConsequentDomain, Bindings0, Bindings, Next0, Next, Head,
+        Anchors, ConsequentEvents, ConsequentEntities, OuterRefs).
+
+lower_rule_head_conditions(Position, Conditions, AnteDomain,
+        ConsequentDomain, Bindings0, Bindings, Next0, Next, Head,
+        [CarrierAnchor, BeAnchor], [Event], [Carrier], OuterRefs) :-
+    Conditions = [CarrierCondition, BeCondition],
+    anchored_condition(CarrierCondition, CarrierTerm, CarrierAnchor),
+    copular_carrier_term(CarrierTerm),
+    !,
+    rule_copular_carrier(Position, CarrierTerm, Carrier,
+        PredicateName, ComparisonTerms),
+    ( anchored_condition(BeCondition, Be, BeAnchor) ->
+        true
+    ; reject(unsupported, rule(Position, consequent_copula))
+    ),
+    require_rule_copular_be(Position, Be, Carrier, Event, Subject),
+    require_declared_entity(rule(Position, consequent),
+        Carrier, ConsequentDomain),
+    require_erasable_event(rule(Position, consequent), Event,
+        ConsequentDomain, Conditions),
+    rule_head_arguments([Subject|ComparisonTerms], Position, AnteDomain,
+        ConsequentDomain, Bindings0, Bindings, Next0, Next, 1,
+        Args, OuterRefs),
+    Head = pred(PredicateName, Args).
+lower_rule_head_conditions(Position, Conditions, AnteDomain,
+        ConsequentDomain, Bindings0, Bindings, Next0, Next, Head,
+        [Anchor], ConsequentEvents, [], OuterRefs) :-
     ( Conditions = [Condition] ->
         true
     ; length(Conditions, Count),
@@ -623,15 +746,16 @@ lower_rule_head(Position, Conditions, AnteDomain, ConsequentDomain,
     ),
     ( predicate_named_be(Inner) ->
         reject(unsupported, rule(Position, consequent_be))
-    ; predicate3_parts(Inner, Event, Verb, Subject), atom(Verb) ->
+    ; predicate3_parts(Inner, Event, Verb, Subject) ->
+        require_non_be_verb(rule(Position, consequent), Verb),
         require_local_event(rule(Position, consequent), Event,
             ConsequentDomain),
         rule_head_subject(Position, Subject, AnteDomain, ConsequentDomain,
             Bindings0, Bindings, Next0, Next, Arg, OuterRefs),
         Head = pred(Verb, [Arg]),
         ConsequentEvents = [Event]
-    ; predicate4_parts(Inner, Event, Verb, Subject, Object),
-          atom(Verb), Verb \== be ->
+    ; predicate4_parts(Inner, Event, Verb, Subject, Object) ->
+        require_non_be_verb(rule(Position, consequent), Verb),
         require_erasable_event(rule(Position, consequent), Event,
             ConsequentDomain, Conditions),
         rule_head_arguments([Subject, Object], Position, AnteDomain,
@@ -647,7 +771,41 @@ lower_rule_head(Position, Conditions, AnteDomain, ConsequentDomain,
             Args, OuterRefs),
         Head = pred(of, Args),
         ConsequentEvents = []
+    ; functor_name(Inner, property) ->
+        reject(unsupported, rule(Position, consequent_copula))
+    ; functor_name(Inner, object) ->
+        reject(unsupported, rule(Position, consequent_copula))
     ; unsupported_condition(rule(Position, consequent), Inner)
+    ).
+
+copular_carrier_term(Term) :-
+    functor_name(Term, object),
+    !.
+copular_carrier_term(Term) :-
+    functor_name(Term, property).
+
+rule_copular_carrier(Position, CarrierTerm, Carrier,
+        PredicateName, ComparisonTerms) :-
+    ( functor_name(CarrierTerm, object) ->
+        ( exact_object(CarrierTerm, Carrier0, Class) ->
+            require_lemma(rule(Position, consequent), object_class, Class),
+            Carrier = Carrier0,
+            PredicateName = Class,
+            ComparisonTerms = []
+        ; reject(unsupported, rule(Position, consequent_object))
+        )
+    ; property_parts(rule(Position, consequent), CarrierTerm, Carrier,
+          PredicateName, ComparisonTerms)
+    ).
+
+require_rule_copular_be(Position, Be, Carrier, Event, Subject) :-
+    ( predicate4_parts(Be, Event0, Verb, Subject0, Object),
+      Verb == be,
+      var(Event0),
+      Object == Carrier ->
+        Event = Event0,
+        Subject = Subject0
+    ; reject(unsupported, rule(Position, consequent_copula))
     ).
 
 rule_head_subject(Position, Subject, AnteDomain, ConsequentDomain,
@@ -698,34 +856,46 @@ rule_head_argument(_, Position, _, _, _, _, _, _, Index, _, _) :-
     reject(unsupported, rule(Position, head_argument(Index))).
 
 lower_rule_body(Position, Conditions, Domain, Bindings0, Bindings,
-        Next0, Next, Literals, Anchors, Events, Entities) :-
-    lower_rule_body_conditions(Position, Conditions, Conditions, Domain,
-        Bindings0, Bindings, Next0, Next, [], _PositiveRefs, 1,
+        Next0, Next, Literals, Anchors, Events, Entities, PositiveRefs) :-
+    index_conditions(Conditions, 1, Indexed),
+    lower_rule_body_conditions(Position, Indexed, Indexed, Domain,
+        [], Bindings0, Bindings, Next0, Next, [], PositiveRefs,
         Literals, Anchors, Events, Entities).
 
-lower_rule_body_conditions(_, [], _, _, Bindings, Bindings, Next, Next,
-        PositiveRefs, PositiveRefs, _, [], [], [], []).
-lower_rule_body_conditions(Position, [Condition|Conditions], All, Domain,
+lower_rule_body_conditions(_, [], _, _, _, Bindings, Bindings,
+        Next, Next, PositiveRefs, PositiveRefs, [], [], [], []).
+lower_rule_body_conditions(Position,
+        [indexed(Index, Condition)|Conditions], All, Domain, Consumed,
         Bindings0, Bindings, Next0, Next, PositiveRefs0, PositiveRefs,
-        Index, [Literal|Literals], Anchors, Events, Entities) :-
-    lower_rule_condition(Position, Index, Condition, All, Domain,
-        PositiveRefs0, Bindings0, Bindings1, Next0, Next1, Literal,
-        HereAnchors, HereEvents, HereEntities, HerePositiveRefs),
-    append(HerePositiveRefs, PositiveRefs0, PositiveRefs1),
-    NextIndex is Index + 1,
-    lower_rule_body_conditions(Position, Conditions, All, Domain,
-        Bindings1, Bindings, Next1, Next, PositiveRefs1, PositiveRefs,
-        NextIndex, Literals, RestAnchors, RestEvents, RestEntities),
-    append(HereAnchors, RestAnchors, Anchors),
-    append(HereEvents, RestEvents, Events),
-    append(HereEntities, RestEntities, Entities).
+        Literals, Anchors, Events, Entities) :-
+    ( memberchk(Index, Consumed) ->
+        lower_rule_body_conditions(Position, Conditions, All, Domain,
+            Consumed, Bindings0, Bindings, Next0, Next,
+            PositiveRefs0, PositiveRefs, Literals, Anchors, Events,
+            Entities)
+    ; lower_rule_condition(Position, Index, Condition, All, Domain,
+          PositiveRefs0, Consumed, Consumed1, Bindings0, Bindings1,
+          Next0, Next1, Literal, HereAnchors, HereEvents, HereEntities,
+          HerePositiveRefs),
+      append(HerePositiveRefs, PositiveRefs0, PositiveRefs1),
+      lower_rule_body_conditions(Position, Conditions, All, Domain,
+          Consumed1, Bindings1, Bindings, Next1, Next,
+          PositiveRefs1, PositiveRefs, RestLiterals, RestAnchors,
+          RestEvents, RestEntities),
+      Literals = [Literal|RestLiterals],
+      append(HereAnchors, RestAnchors, Anchors),
+      append(HereEvents, RestEvents, Events),
+      append(HereEntities, RestEntities, Entities)
+    ).
 
 lower_rule_condition(Position, Index, Condition, All, Domain,
-        PositiveRefs, Bindings0, Bindings, Next0, Next, Literal, Anchors,
-        Events, Entities, HerePositiveRefs) :-
+        PositiveRefs, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literal, Anchors, Events, Entities,
+        HerePositiveRefs) :-
     ( has_functor(Condition, '~', 1) ->
         lower_naf_body_literal(Position, Index, Condition, Domain,
             PositiveRefs, Bindings0, Literal, Anchors),
+        Consumed = [Index|Consumed0],
         Bindings = Bindings0,
         Next = Next0,
         Events = [],
@@ -734,15 +904,76 @@ lower_rule_condition(Position, Index, Condition, All, Domain,
     ; contains_negation(Condition) ->
         reject(negation, rule(Position, antecedent_condition(Index)))
     ; anchored_condition(Condition, Inner, Anchor) ->
-        lower_body_literal(Position, Inner, All, Domain,
-            Bindings0, Bindings, Next0, Next, Literal, Events, Entities),
-        Anchors = [Anchor],
-        HerePositiveRefs = Entities
+        ( functor_name(Inner, property) ->
+            lower_body_property(Position, Index, Inner, Anchor, All,
+                Domain, Consumed0, Consumed, Bindings0, Bindings,
+                Next0, Next, Literal, Anchors, Events, Entities,
+                HerePositiveRefs)
+        ; lower_body_literal(Position, Inner, All, Domain,
+              Bindings0, Bindings, Next0, Next, Literal, Events,
+              Entities),
+          Consumed = [Index|Consumed0],
+          Anchors = [Anchor],
+          HerePositiveRefs = Entities
+        )
     ; contains_query2(Condition) ->
         reject(wh_query, rule(Position, antecedent_condition(Index)))
     ; unsupported_condition(
           rule(Position, antecedent_condition(Index)), Condition)
     ).
+
+lower_body_property(Position, Index, Property, PropertyAnchor, All,
+        Domain, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literal, Anchors, Events, Entities, PositiveRefs) :-
+    Location = rule(Position, antecedent_condition(Index)),
+    property_parts(Location, Property, Carrier, Name, ComparisonTerms),
+    require_declared_entity(rule(Position, antecedent), Carrier, Domain),
+    rule_property_be_matches(Carrier, All, Matches),
+    lower_body_property_with_matches(Matches, Position, Index, Carrier,
+        Name, ComparisonTerms, PropertyAnchor, All, Domain, Consumed0,
+        Consumed, Bindings0, Bindings, Next0, Next, Literal, Anchors,
+        Events, Entities, PositiveRefs).
+
+lower_body_property_with_matches([], Position, Index, Carrier, Name,
+        ComparisonTerms, PropertyAnchor, _All, Domain, Consumed0,
+        [Index|Consumed0], Bindings0, Bindings, Next0, Next,
+        pred(Name, Args), [PropertyAnchor], [], EntityRefs, EntityRefs) :-
+    rule_body_arguments([Carrier|ComparisonTerms], Position, Domain,
+        Bindings0, Bindings, Next0, Next, 1, Args, EntityRefs).
+lower_body_property_with_matches(
+        [property_be_match(BePosition, Event, Subject, BeAnchor)],
+        Position, Index, Carrier, Name, ComparisonTerms, PropertyAnchor,
+        All, Domain, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, pred(Name, Args), [PropertyAnchor, BeAnchor],
+        Events, [Carrier|EntityRefs], EntityRefs) :-
+    !,
+    require_erasable_event(rule(Position, antecedent), Event, Domain, All),
+    rule_body_arguments([Subject|ComparisonTerms], Position, Domain,
+        Bindings0, Bindings, Next0, Next, 1, Args, EntityRefs),
+    ( memberchk(BePosition, Consumed0) ->
+        Events = [],
+        Consumed = [Index|Consumed0]
+    ; Events = [Event],
+      Consumed = [Index, BePosition|Consumed0]
+    ).
+lower_body_property_with_matches([_,_|_], Position, Index, _, _, _, _,
+        _, _, _, _, _, _, _, _, _, _, _, _, _) :-
+    reject(referent,
+        rule(Position, antecedent_condition(
+            Index, property_subject(ambiguous)))).
+
+rule_property_be_matches(_, [], []).
+rule_property_be_matches(Carrier,
+        [indexed(Position, Condition)|Conditions], Matches) :-
+    ( anchored_condition(Condition, Inner, Anchor),
+      predicate4_parts(Inner, Event, Verb, Subject, Object),
+      Verb == be,
+      Object == Carrier ->
+        Matches = [property_be_match(
+            Position, Event, Subject, Anchor)|Rest]
+    ; Matches = Rest
+    ),
+    rule_property_be_matches(Carrier, Conditions, Rest).
 
 lower_naf_body_literal(Position, Index, Condition, OuterDomain,
         PositiveRefs, Bindings, Literal, Anchors) :-
@@ -785,6 +1016,7 @@ naf_intransitive_profile(Domain, Conditions, OuterDomain, PositiveRefs,
     predicate3_parts(Predicate, Event, Verb, Subject),
     var(Event),
     atom(Verb),
+    require_lemma(rule_naf, verb, Verb),
     Verb \== be,
     var(Subject),
     Domain == [Event],
@@ -799,6 +1031,7 @@ naf_copula_profile(Domain, Conditions, OuterDomain, PositiveRefs,
     anchored_condition(ObjectCondition, Object, ObjectAnchor),
     naf_anchor(ObjectAnchor, Sentence),
     exact_object(Object, ObjectReferent, Class),
+    require_lemma(rule_naf, object_class, Class),
     anchored_condition(BeCondition, Be, BeAnchor),
     naf_anchor(BeAnchor, BeSentence),
     Sentence =:= BeSentence,
@@ -823,6 +1056,7 @@ lower_body_literal(Position, Inner, _All, Domain,
     functor_name(Inner, object),
     !,
     ( exact_object(Inner, Referent0, Class) ->
+        require_lemma(rule(Position, antecedent), object_class, Class),
         Referent = Referent0
     ; reject(unsupported, rule(Position, antecedent_object))
     ),
@@ -843,14 +1077,15 @@ lower_body_literal(Position, Inner, All, Domain,
     !,
     ( predicate_named_be(Inner) ->
         reject(unsupported, rule(Position, antecedent_be))
-    ; predicate3_parts(Inner, Event, Verb, Subject), atom(Verb) ->
+    ; predicate3_parts(Inner, Event, Verb, Subject) ->
+        require_non_be_verb(rule(Position, antecedent), Verb),
         require_local_event(rule(Position, antecedent), Event, Domain),
         rule_body_subject(Position, Subject, Domain, Bindings0, Bindings,
             Next0, Next, Arg, EntityRefs),
         Literal = pred(Verb, [Arg]),
         Events = [Event]
-    ; predicate4_parts(Inner, Event, Verb, Subject, Object),
-          atom(Verb), Verb \== be ->
+    ; predicate4_parts(Inner, Event, Verb, Subject, Object) ->
+        require_non_be_verb(rule(Position, antecedent), Verb),
         require_erasable_event(rule(Position, antecedent), Event,
             Domain, All),
         rule_body_arguments([Subject, Object], Position, Domain,
@@ -945,6 +1180,67 @@ lower_question(Question, Draft) :-
     ).
 
 lower_yes_no_question(Domain, Conditions, Draft) :-
+    ( question_copular_candidate(Conditions) ->
+        lower_question_copula(Domain, Conditions, Predicate, Anchors,
+            Events, Entities)
+    ; lower_question_single(Domain, Conditions, Predicate, Anchors,
+          Events, Entities)
+    ),
+    validate_scope_accounting(question, Domain, Events, Entities),
+    source_from_anchors(question, Anchors, Sentence, Tokens),
+    Draft = draft_query(Predicate, Sentence, Tokens).
+
+question_copular_candidate([Condition, _]) :-
+    anchored_condition(Condition, Inner, _),
+    copular_carrier_term(Inner).
+
+lower_question_copula(Domain, Conditions, Predicate,
+        [CarrierAnchor, BeAnchor], [Event], [Carrier]) :-
+    Conditions = [CarrierCondition, BeCondition],
+    anchored_condition(CarrierCondition, CarrierTerm, CarrierAnchor),
+    question_copular_carrier(
+        CarrierTerm, Carrier, Name, ComparisonTerms),
+    ( anchored_condition(BeCondition, Be, BeAnchor) ->
+        true
+    ; reject(unsupported, question(copula_profile))
+    ),
+    require_question_copular_be(Be, Carrier, Event, SubjectName),
+    require_declared_entity(question, Carrier, Domain),
+    require_erasable_event(question, Event, Domain, Conditions),
+    question_property_args(ComparisonTerms, Domain, 2, ComparisonArgs),
+    Predicate = pred(Name, [named(SubjectName)|ComparisonArgs]).
+
+question_copular_carrier(CarrierTerm, Carrier, Name, ComparisonTerms) :-
+    ( functor_name(CarrierTerm, object) ->
+        ( exact_object(CarrierTerm, Carrier0, Class) ->
+            require_lemma(question, object_class, Class),
+            Carrier = Carrier0,
+            Name = Class,
+            ComparisonTerms = []
+        ; reject(unsupported, question(copula_profile))
+        )
+    ; property_parts(question, CarrierTerm, Carrier, Name,
+          ComparisonTerms)
+    ).
+
+require_question_copular_be(Be, Carrier, Event, SubjectName) :-
+    ( predicate4_parts(Be, Event0, Verb, Subject, Object),
+      Verb == be,
+      var(Event0),
+      named_atom(Subject, Name),
+      Object == Carrier ->
+        Event = Event0,
+        SubjectName = Name
+    ; reject(unsupported, question(copula_profile))
+    ).
+
+question_property_args([], _, _, []).
+question_property_args([Term|Terms], Domain, Index, [Arg|Args]) :-
+    require_ground_argument(question, Index, Term, Domain, Arg),
+    Next is Index + 1,
+    question_property_args(Terms, Domain, Next, Args).
+
+lower_question_single(Domain, Conditions, Predicate, [Anchor], Events, []) :-
     ( Conditions = [Condition] ->
         true
     ; length(Conditions, Count),
@@ -956,13 +1252,14 @@ lower_yes_no_question(Domain, Conditions, Draft) :-
     ),
     ( predicate_named_be(Inner) ->
         reject(unsupported, question(copula))
-    ; predicate3_parts(Inner, Event, Verb, Subject), atom(Verb) ->
+    ; predicate3_parts(Inner, Event, Verb, Subject) ->
+        require_non_be_verb(question, Verb),
         require_local_event(question, Event, Domain),
         require_query_subject(Subject, Domain, Arg),
         Predicate = pred(Verb, [Arg]),
         Events = [Event]
-    ; predicate4_parts(Inner, Event, Verb, Subject, Object),
-          atom(Verb), Verb \== be ->
+    ; predicate4_parts(Inner, Event, Verb, Subject, Object) ->
+        require_non_be_verb(question, Verb),
         require_erasable_event(question, Event, Domain, Conditions),
         require_ground_argument(question, 1, Subject, Domain, SubjectArg),
         require_ground_argument(question, 2, Object, Domain, ObjectArg),
@@ -974,15 +1271,17 @@ lower_yes_no_question(Domain, Conditions, Draft) :-
         require_ground_argument(question, 2, Right, Domain, RightArg),
         Predicate = pred(of, [LeftArg, RightArg]),
         Events = []
+    ; functor_name(Inner, property) ->
+        reject(unsupported, question(copula_profile))
+    ; functor_name(Inner, object) ->
+        reject(unsupported, question(copula_profile))
     ; unsupported_condition(question, Inner)
-    ),
-    validate_scope_accounting(question, Domain, Events, []),
-    source_from_anchors(question, [Anchor], Sentence, Tokens),
-    Draft = draft_query(Predicate, Sentence, Tokens).
+    ).
 
 lower_wh_question(Domain, Conditions, Draft) :-
     ( wh_question_profile(Domain, Conditions, Verb, QueryAnchor,
           PredicateAnchor, QueryReferent, Event) ->
+        require_lemma(question, verb, Verb),
         validate_scope_accounting(question, Domain, [Event],
             [QueryReferent]),
         source_from_anchors(question, [QueryAnchor, PredicateAnchor],

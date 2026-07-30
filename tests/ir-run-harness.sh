@@ -33,7 +33,7 @@ IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=110
+EXPECTED_PASS_COUNT=120
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -199,16 +199,16 @@ if [ "$#" -ne 30 ]; then
     fail_case "fixtures/count" "expected 30 red programs, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 lower IR goldens, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 lower program goldens, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 7 ]; then
-    fail_case "fixtures/count" "expected 7 lower result goldens, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 lower result goldens, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -267,8 +267,9 @@ for input in "$GOLDEN"/*.drs.pl; do
 done
 
 # Lower-chain pin: the lower fixture directory owns CLI-generated IR, program,
-# and result goldens. Compiling and running all seven proves the covered NAF,
-# wh, transitive, and of-role records reach the shipped v3 kernel.
+# and result goldens. Compiling and running all twelve proves the covered NAF,
+# wh, transitive, of-role, property, comparative, and copular-head records reach
+# the shipped v3 kernel.
 for ir in "$LOWER_GREEN"/*.ir.pl; do
     name=${ir##*/}
     stem=${name%.ir.pl}
