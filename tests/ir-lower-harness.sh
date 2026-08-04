@@ -21,7 +21,7 @@ RED="$ROOT/tests/fixtures/lower/red"
 SCRATCH="$ROOT/.scratch/ir-lower-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=115
+EXPECTED_PASS_COUNT=151
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -122,24 +122,24 @@ if [ "$#" -ne 4 ]; then
     fail_case "fixtures/count" "expected 4 IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.drs.pl
-if [ "$#" -ne 21 ]; then
-    fail_case "fixtures/count" "expected 21 lower DRS greens, got $#"
+if [ "$#" -ne 38 ]; then
+    fail_case "fixtures/count" "expected 38 lower DRS greens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 21 ]; then
-    fail_case "fixtures/count" "expected 21 lower IR goldens, got $#"
+if [ "$#" -ne 38 ]; then
+    fail_case "fixtures/count" "expected 38 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 21 ]; then
-    fail_case "fixtures/count" "expected 21 lower program goldens, got $#"
+if [ "$#" -ne 38 ]; then
+    fail_case "fixtures/count" "expected 38 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 21 ]; then
-    fail_case "fixtures/count" "expected 21 lower result goldens, got $#"
+if [ "$#" -ne 38 ]; then
+    fail_case "fixtures/count" "expected 38 lower result goldens, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 83 ]; then
-    fail_case "fixtures/count" "expected 83 red fixtures, got $#"
+if [ "$#" -ne 100 ]; then
+    fail_case "fixtures/count" "expected 100 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -147,6 +147,8 @@ rm -rf "$SCRATCH"
 mkdir -p "$SCRATCH/green" "$SCRATCH/red" "$SCRATCH/scratch" \
     "$SCRATCH/usage" "$SCRATCH/determinism"
 trap 'rm -rf "$SCRATCH"' EXIT
+: >"$SCRATCH/dispatched-green-stems"
+: >"$SCRATCH/dispatched-red-stems"
 
 for input in "$GOLDEN"/*.drs.pl; do
     name=${input##*/}
@@ -182,6 +184,7 @@ done
 for input in "$LOWER_GREEN"/*.drs.pl; do
     name=${input##*/}
     stem=${name%.drs.pl}
+    printf '%s\n' "$stem" >>"$SCRATCH/dispatched-green-stems"
     expected="$LOWER_GREEN/$stem.ir.pl"
     stdout_path="$SCRATCH/green/$stem.lower.stdout"
     stderr_path="$SCRATCH/green/$stem.lower.stderr"
@@ -238,16 +241,44 @@ for input in "$LOWER_GREEN"/*.drs.pl; do
     pass_case "green/lower/$stem"
 done
 
+for input in "$LOWER_GREEN"/*.drs.pl; do
+    name=${input##*/}
+    printf '%s\n' "${name%.drs.pl}"
+done | LC_ALL=C sort >"$SCRATCH/green-fixture-stems"
+LC_ALL=C sort "$SCRATCH/dispatched-green-stems" \
+    >"$SCRATCH/green-dispatched-stems"
+if ! cmp "$SCRATCH/green-fixture-stems" \
+        "$SCRATCH/green-dispatched-stems"; then
+    fail_case "inventory/green-dispatch" \
+        "fixture and dispatched stems differ"
+fi
+pass_case "inventory/green-dispatch"
+
 run_committed_red() {
     local name expected_class expected_line stdout_path stderr_path
+    local first_status rerun_stdout rerun_stderr
     name=$1
     expected_class=$2
     expected_line=${3-}
+    printf '%s\n' "$name" >>"$SCRATCH/dispatched-red-stems"
     stdout_path="$SCRATCH/red/$name.stdout"
     stderr_path="$SCRATCH/red/$name.stderr"
     run_tool "$RED/$name.pl" "$stdout_path" "$stderr_path" lower
+    first_status=$RUN_STATUS
     check_rejection "red/$name" 1 lower "$expected_class" \
         "$stdout_path" "$stderr_path" "$expected_line"
+
+    rerun_stdout="$SCRATCH/determinism/$name.red.stdout"
+    rerun_stderr="$SCRATCH/determinism/$name.red.stderr"
+    run_tool "$RED/$name.pl" "$rerun_stdout" "$rerun_stderr" lower
+    if [ "$RUN_STATUS" -ne "$first_status" ]; then
+        fail_case "red/$name/determinism-status" \
+            "fresh runs differ: $first_status and $RUN_STATUS"
+    fi
+    if ! cmp "$stdout_path" "$rerun_stdout" || \
+            ! cmp "$stderr_path" "$rerun_stderr"; then
+        fail_case "red/$name/determinism-bytes" "fresh runs differ"
+    fi
 }
 
 run_committed_red disjunction-root-outside alternative_set \
@@ -376,10 +407,57 @@ run_committed_red unknown-condition unsupported
 run_committed_red relation-non-of unsupported \
     'ir_tool_error(lower,unsupported,-(root_condition(1),relation_name)).'
 run_committed_red nested-implication unsupported
+run_committed_red m6u3-real-quantity quantity \
+    'ir_tool_error(lower,quantity,real_not_integer).'
+run_committed_red m6u3-scalar-cross-unit quantity \
+    "ir_tool_error(lower,quantity,scalar_cross_unit('morphine-milligram-equivalent',day))."
+run_committed_red m6u3-false-friend-window temporal \
+    'ir_tool_error(lower,temporal,false_friend_within_to_range).'
+run_committed_red m6u3-malformed-bound-wrapper quantity \
+    'ir_tool_error(lower,quantity,-(root,condition_wrapper)).'
+run_committed_red m6u3-unknown-bound quantity \
+    'ir_tool_error(lower,quantity,object_bound_relation(gte)).'
+run_committed_red m6u3-scalar-no-be quantity \
+    'ir_tool_error(lower,quantity,-(root_condition(1),scalar_comparison_be(missing))).'
+run_committed_red m6u3-scalar-named-be quantity \
+    'ir_tool_error(lower,quantity,-(root_condition(1),scalar_comparison_actual_operand)).'
+run_committed_red m6u3-scalar-question-actual quantity \
+    'ir_tool_error(lower,quantity,-(question,scalar_comparison_actual_operand)).'
+run_committed_red m6u3-window-mixed-anchor temporal \
+    'ir_tool_error(lower,temporal,window_condition(1,mixed_sentence_anchors)).'
+run_committed_red m6u3-scalar-before-fact unsupported \
+    'ir_tool_error(lower,unsupported,root_section_order).'
+run_committed_red m6u3-quantity-object-fields-owner copula \
+    'ir_tool_error(lower,copula,root_condition(1,object_fields)).'
+run_committed_red m6u3-window-six-of-seven-owner unsupported \
+    'ir_tool_error(lower,unsupported,-(root_condition(1),constructor(/(has_part,2)))).'
+run_committed_red m6u3-temporal-reused-event temporal \
+    'ir_tool_error(lower,temporal,-(root_condition(1),event_in_use)).'
+run_committed_red m6u3-temporal-anchor-variable temporal \
+    'ir_tool_error(lower,temporal,root_condition(1,modifier_profile)).'
+run_committed_red m6u3-temporal-anchor-ambiguous temporal \
+    'ir_tool_error(lower,temporal,root_condition(1,modifier_profile)).'
+run_committed_red m6u3-temporal-relation-unknown temporal \
+    'ir_tool_error(lower,temporal,root_condition(1,modifier_profile)).'
+run_committed_red m6u3-count-one-root copula \
+    'ir_tool_error(lower,copula,root_condition(1,unpaired_object)).'
 run_committed_red envelope-wrong-header envelope
 run_committed_red malformed-document envelope
 run_committed_red envelope-missing-drs envelope
 run_committed_red envelope-trailing-term envelope
+
+for input in "$RED"/*.pl; do
+    name=${input##*/}
+    printf '%s\n' "${name%.pl}"
+done | LC_ALL=C sort >"$SCRATCH/red-fixture-stems"
+LC_ALL=C sort "$SCRATCH/dispatched-red-stems" \
+    >"$SCRATCH/red-dispatched-stems"
+if ! cmp "$SCRATCH/red-fixture-stems" \
+        "$SCRATCH/red-dispatched-stems"; then
+    fail_case "inventory/red-dispatch" \
+        "fixture and dispatched stems differ"
+fi
+pass_case "inventory/red-dispatch"
 
 base="$GOLDEN/slice.drs.pl"
 if ! command sed '3s/,/, /' "$base" >"$SCRATCH/scratch/noncanonical.pl"; then

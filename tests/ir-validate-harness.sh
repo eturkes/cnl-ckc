@@ -14,7 +14,7 @@ RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-validate-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=107
+EXPECTED_PASS_COUNT=122
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -90,12 +90,12 @@ else
 fi
 
 set -- "$GREEN"/*.pl
-if [ "$#" -ne 11 ]; then
-    fail_case "fixtures/count" "expected 11 green fixtures, got $#"
+if [ "$#" -ne 12 ]; then
+    fail_case "fixtures/count" "expected 12 green fixtures, got $#"
 fi
 set -- "$RED"/*.pl
-if [ "$#" -ne 72 ]; then
-    fail_case "fixtures/count" "expected 72 red fixtures, got $#"
+if [ "$#" -ne 86 ]; then
+    fail_case "fixtures/count" "expected 86 red fixtures, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -201,6 +201,34 @@ run_committed_red exception-missing-affected-rule exception \
     'ir_tool_error(validate,exception,term(4,affected_rule_missing(rule_id(sentence(9),clause(1))))).'
 run_committed_red cycle-labeled-mixed cycle \
     'ir_tool_error(validate,cycle,term(6,body_literal(2,signed_dependency(naf,pred(r,1),pred(p,1))))).'
+run_committed_red m6u3-shape-quantity-float shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red m6u3-shape-quantity-unit shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red m6u3-shape-bound-endpoint shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red m6u3-shape-compare-head shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red m6u3-shape-temporal-relation shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red m6u3-quantity-cross-unit quantity \
+    'ir_tool_error(validate,quantity,term(3,body_literal(1,cross_unit(year,day)))).'
+run_committed_red m6u3-safety-quantity-unbound safety \
+    'ir_tool_error(validate,safety,term(3,quantity_var_not_bound(2,body_literal(2)))).'
+run_committed_red m6u3-temporal-cross-unit temporal \
+    'ir_tool_error(validate,temporal,term(3,fact_temporal_window(cross_unit(week,day)))).'
+run_committed_red m6u3-temporal-reversed temporal \
+    'ir_tool_error(validate,temporal,term(3,fact_temporal_window(reversed_interval(4,1)))).'
+run_committed_red m6u3-shape-bound-eq-open shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red m6u3-shape-bound-unknown-operator shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
+run_committed_red m6u3-safety-guard-before-binder safety \
+    'ir_tool_error(validate,safety,term(3,quantity_var_not_bound(2,body_literal(2)))).'
+run_committed_red m6u3-temporal-equal-open temporal \
+    'ir_tool_error(validate,temporal,term(3,fact_temporal_window(empty_interval(2)))).'
+run_committed_red m6u3-shape-temporal-window-direction shape \
+    'ir_tool_error(validate,shape,term(3,fact)).'
 run_committed_red envelope-wrong-version envelope \
     'ir_tool_error(validate,envelope,term(1,expected(cnl_ir_record(3)))).'
 run_committed_red envelope-v1-record envelope \

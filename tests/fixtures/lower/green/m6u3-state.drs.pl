@@ -1,0 +1,3 @@
+ace_front_end_record(1).
+document(docid('state-ongoing'),source_sha256('0000000000000000000000000000000000000000000000000000000000000000'),ulex(none)).
+drs([A,B],[-(object(A,patient,countable,na,eq,1),/(1,4)),-(property(A,ongoing,pos),/(1,3)),-(predicate(B,be,named('John'),A),/(1,2)),=>(drs([C],[-(object(C,patient,countable,na,eq,1),/(2,3)),-(property(C,ongoing,pos),/(2,2))]),drs([D],[-(predicate(D,wait,C),/(2,4))])),question(drs([E],[-(predicate(E,wait,named('John')),/(3,3))]))]).

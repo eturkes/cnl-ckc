@@ -4,7 +4,17 @@
 
 :- use_module(library(lists), [append/3]).
 :- use_module(drs_canon, [canonical_line/2]).
-:- use_module(validation_common, [terms_pairwise_distinct/1]).
+:- use_module(validation_common, [
+    terms_pairwise_distinct/1,
+    shape_ground_argument/1,
+    shape_data_atom/1,
+    shape_quantity_compare/1,
+    data_atom_vars/2,
+    quantity_compare_vars/2,
+    ground_argument/1,
+    ground_data_atom/1,
+    quantity_compare_outcome/3
+]).
 
 /*
 Witness expansion and proof-certificate replay. Construction follows the first
@@ -95,7 +105,8 @@ validate_yes_no_answer_record(Answer, Proofs) :-
     arg(1, Answer, GoalId),
     arg(2, Answer, GoalAtom),
     arg(3, Answer, Outcome),
-    ( generated_query_id(GoalId) ->
+    ( generated_query_id(GoalId),
+      replay_ground_predicate(GoalAtom) ->
         validate_yes_no_outcome(Outcome, GoalAtom, Proofs)
     ; invariant(generated_yes_no_answer_shape)
     ).
@@ -223,7 +234,7 @@ generated_pattern_predicate(Predicate) :-
 
 generated_pattern_arguments([]).
 generated_pattern_arguments([Arg|Args]) :-
-    ( replay_named_ground(Arg)
+    ( shape_ground_argument(Arg)
     ; has_functor(Arg, var, 1),
       arg(1, Arg, Number),
       integer(Number), Number > 0
@@ -298,6 +309,8 @@ generated_wh_answer_atom(Name, Atom) :-
     StoredName == Name,
     arg(2, Atom, Args),
     has_functor(Args, '[|]', 2),
+    arg(1, Args, AnswerArg),
+    replay_named_ground(AnswerArg),
     arg(2, Args, Tail),
     Tail == [].
 
@@ -388,8 +401,14 @@ build_subproof(Item, _, naf(ExceptionId, Atom)) :-
     ground(ExceptionId),
     replay_ground_predicate(Atom),
     !.
+build_subproof(Item, _, Item) :-
+    shape_quantity_compare(Item),
+    arg(1, Item, ItemActual),
+    arg(2, Item, ItemBound),
+    quantity_compare_outcome(ItemActual, ItemBound, true),
+    !.
 build_subproof(Item, Store, Proof) :-
-    has_functor(Item, pred, 2),
+    shape_data_atom(Item),
     !,
     build_certificate(Item, Store, Proof).
 build_subproof(Item, _, _) :-
@@ -414,11 +433,11 @@ replay_node(Proof, Store) :-
     arg(1, RetainedWitness, RetainedClauseId),
     ClauseId == RetainedClauseId,
     program_clause_by_id(ClauseId, Head, Body),
-    replay_match_predicate(Head, NodeAtom, [], Bindings1),
+    replay_match_data_atom(Head, NodeAtom, [], Bindings1),
     replay_match_body(Body, Children, Bindings1, Bindings, Store),
     clause_variables(Head, Body, Variables),
     total_ground_bindings(Variables, Bindings),
-    replay_substitute_predicate(Head, Bindings, GroundHead),
+    replay_substitute_data_atom(Head, Bindings, GroundHead),
     replay_substitute_body(Body, Bindings, GroundBody),
     child_evidence(Children, ChildEvidence),
     GroundHead == NodeAtom,
@@ -447,6 +466,9 @@ child_item_evidence(Child, Atom) :-
     arg(1, Child, Atom),
     !.
 child_item_evidence(Child, Child) :-
+    shape_quantity_compare(Child),
+    !.
+child_item_evidence(Child, Child) :-
     has_functor(Child, naf, 1),
     arg(1, Child, Atom),
     replay_ground_predicate(Atom),
@@ -472,6 +494,12 @@ replay_child(Child, Store) :-
     has_functor(Child, proof, 3),
     !,
     replay_node(Child, Store).
+replay_child(Child, _) :-
+    shape_quantity_compare(Child),
+    arg(1, Child, Actual),
+    arg(2, Child, Bound),
+    quantity_compare_outcome(Actual, Bound, true),
+    !.
 replay_child(Child, Store) :-
     has_functor(Child, naf, 1),
     arg(1, Child, Atom),
@@ -487,6 +515,48 @@ replay_child(Child, Store) :-
     replay_atom_absent(Atom, Store).
 
 /* Independent structural matcher used only by the replay gate. */
+replay_match_data_atom(Pattern, Ground, Bindings0, Bindings) :-
+    ( has_functor(Pattern, pred, 2),
+      has_functor(Ground, pred, 2) ->
+        replay_match_predicate(
+            Pattern, Ground, Bindings0, Bindings)
+    ; has_functor(Pattern, temporal, 3),
+      has_functor(Ground, temporal, 3) ->
+        arg(1, Pattern, PatternRelation),
+        arg(1, Ground, GroundRelation),
+        PatternRelation == GroundRelation,
+        arg(2, Pattern, PatternEvent),
+        arg(2, Ground, GroundEvent),
+        replay_match_predicate(
+            PatternEvent, GroundEvent, Bindings0, Bindings1),
+        arg(3, Pattern, PatternAnchor),
+        arg(3, Ground, GroundAnchor),
+        replay_match_anchor(
+            PatternAnchor, GroundAnchor, Bindings1, Bindings)
+    ; has_functor(Pattern, temporal_window, 4),
+      has_functor(Ground, temporal_window, 4),
+      arg(1, Pattern, PatternDirection),
+      arg(1, Ground, GroundDirection),
+      PatternDirection == GroundDirection,
+      arg(2, Pattern, PatternEvent),
+      arg(2, Ground, GroundEvent),
+      replay_match_predicate(
+          PatternEvent, GroundEvent, Bindings0, Bindings1),
+      arg(3, Pattern, PatternAnchor),
+      arg(3, Ground, GroundAnchor),
+      replay_match_anchor(
+          PatternAnchor, GroundAnchor, Bindings1, Bindings),
+      arg(4, Pattern, PatternInterval),
+      arg(4, Ground, GroundInterval),
+      PatternInterval == GroundInterval
+    ).
+
+replay_match_anchor(Pattern, Ground, Bindings0, Bindings) :-
+    arg(1, Pattern, PatternArg),
+    arg(1, Ground, GroundArg),
+    replay_match_argument(
+        PatternArg, GroundArg, Bindings0, Bindings).
+
 replay_match_predicate(Pattern, Ground, Bindings0, Bindings) :-
     has_functor(Pattern, pred, 2),
     has_functor(Ground, pred, 2),
@@ -514,12 +584,12 @@ replay_match_arguments(PatternArgs, GroundArgs, Bindings0, Bindings) :-
         PatternRest, GroundRest, Bindings1, Bindings).
 
 replay_match_argument(Pattern, Ground, Bindings, Bindings) :-
-    has_functor(Pattern, named, 1),
+    shape_ground_argument(Pattern),
     Pattern == Ground,
     !.
 replay_match_argument(Pattern, Ground, Bindings0, Bindings) :-
     has_functor(Pattern, var, 1),
-    replay_named_ground(Ground),
+    ground_argument(Ground),
     arg(1, Pattern, Number),
     ( replay_binding(Number, Bindings0, Bound) ->
         Bound == Ground,
@@ -551,10 +621,19 @@ replay_match_literal(Pattern, Child, Bindings, Bindings, Store) :-
     replay_substitute_predicate(NafPattern, Bindings, Expected),
     Expected == Atom,
     replay_atom_absent(Atom, Store).
+replay_match_literal(Pattern, Child, Bindings, Bindings, _) :-
+    shape_quantity_compare(Pattern),
+    !,
+    arg(1, Pattern, ActualPattern),
+    arg(2, Pattern, Bound),
+    replay_substitute_argument(ActualPattern, Bindings, Actual),
+    Expected = quantity_compare(Actual, Bound),
+    Expected == Child,
+    quantity_compare_outcome(Actual, Bound, true).
 replay_match_literal(Pattern, Child, Bindings0, Bindings, _) :-
     has_functor(Child, proof, 3),
     arg(1, Child, Ground),
-    replay_match_predicate(Pattern, Ground, Bindings0, Bindings).
+    replay_match_data_atom(Pattern, Ground, Bindings0, Bindings).
 
 replay_naf_pattern(Pattern, bare, Predicate) :-
     has_functor(Pattern, naf, 1),
@@ -575,26 +654,9 @@ replay_naf_child(Child, labeled(ExceptionId), Atom) :-
     arg(2, Child, Atom).
 
 clause_variables(Head, Body, Variables) :-
-    replay_predicate_vars(Head, HeadVars),
+    data_atom_vars(Head, HeadVars),
     replay_body_vars(Body, BodyVars),
     append(HeadVars, BodyVars, Variables).
-
-replay_predicate_vars(Predicate, Variables) :-
-    arg(2, Predicate, Args),
-    replay_argument_vars(Args, Variables, []).
-
-replay_argument_vars(Args, Variables, Variables) :-
-    Args == [],
-    !.
-replay_argument_vars(Args, Variables0, Variables) :-
-    arg(1, Args, Arg),
-    arg(2, Args, Rest),
-    ( has_functor(Arg, var, 1) ->
-        arg(1, Arg, Number),
-        Variables0 = [Number|Tail]
-    ; Tail = Variables0
-    ),
-    replay_argument_vars(Rest, Tail, Variables).
 
 replay_body_vars(Body, []) :-
     Body == [],
@@ -602,23 +664,26 @@ replay_body_vars(Body, []) :-
 replay_body_vars(Body, Variables) :-
     arg(1, Body, Literal),
     arg(2, Body, Rest),
-    replay_literal_predicate(Literal, Predicate),
-    replay_predicate_vars(Predicate, Here),
+    replay_literal_vars(Literal, Here),
     replay_body_vars(Rest, Tail),
     append(Here, Tail, Variables).
 
-replay_literal_predicate(Literal, Predicate) :-
+replay_literal_vars(Literal, Variables) :-
     ( has_functor(Literal, naf, 1) ->
-        arg(1, Literal, Predicate)
+        arg(1, Literal, Predicate),
+        data_atom_vars(Predicate, Variables)
     ; has_functor(Literal, naf, 2) ->
-        arg(2, Literal, Predicate)
-    ; Predicate = Literal
+        arg(2, Literal, Predicate),
+        data_atom_vars(Predicate, Variables)
+    ; shape_quantity_compare(Literal) ->
+        quantity_compare_vars(Literal, Variables)
+    ; data_atom_vars(Literal, Variables)
     ).
 
 total_ground_bindings([], _).
 total_ground_bindings([Number|Numbers], Bindings) :-
     replay_binding(Number, Bindings, Value),
-    replay_named_ground(Value),
+    ground_argument(Value),
     ground(Value),
     total_ground_bindings(Numbers, Bindings).
 
@@ -638,7 +703,7 @@ replay_ground_predicate(Term) :-
 
 replay_ground_arguments([]).
 replay_ground_arguments([Arg|Args]) :-
-    replay_named_ground(Arg),
+    ground_argument(Arg),
     replay_ground_arguments(Args).
 
 replay_binding(Number, [binding(Here, Value)|_], Value) :-
@@ -646,6 +711,30 @@ replay_binding(Number, [binding(Here, Value)|_], Value) :-
     !.
 replay_binding(Number, [_|Bindings], Value) :-
     replay_binding(Number, Bindings, Value).
+
+replay_substitute_data_atom(Pattern, Bindings, Ground) :-
+    ( has_functor(Pattern, pred, 2) ->
+        replay_substitute_predicate(Pattern, Bindings, Ground)
+    ; has_functor(Pattern, temporal, 3) ->
+        arg(1, Pattern, Relation),
+        arg(2, Pattern, EventPattern),
+        arg(3, Pattern, AnchorPattern),
+        replay_substitute_predicate(EventPattern, Bindings, Event),
+        replay_substitute_anchor(AnchorPattern, Bindings, Anchor),
+        Ground = temporal(Relation, Event, Anchor)
+    ; has_functor(Pattern, temporal_window, 4),
+      arg(1, Pattern, Direction),
+      arg(2, Pattern, EventPattern),
+      arg(3, Pattern, AnchorPattern),
+      arg(4, Pattern, Interval),
+      replay_substitute_predicate(EventPattern, Bindings, Event),
+      replay_substitute_anchor(AnchorPattern, Bindings, Anchor),
+      Ground = temporal_window(Direction, Event, Anchor, Interval)
+    ).
+
+replay_substitute_anchor(Pattern, Bindings, anchor(GroundArg)) :-
+    arg(1, Pattern, Arg),
+    replay_substitute_argument(Arg, Bindings, GroundArg).
 
 replay_substitute_predicate(Pattern, Bindings, pred(Name, GroundArgs)) :-
     arg(1, Pattern, Name),
@@ -662,7 +751,7 @@ replay_substitute_arguments(Args, Bindings, [Ground|Grounds]) :-
     replay_substitute_arguments(Rest, Bindings, Grounds).
 
 replay_substitute_argument(Arg, _, Arg) :-
-    has_functor(Arg, named, 1),
+    shape_ground_argument(Arg),
     !.
 replay_substitute_argument(Arg, Bindings, Ground) :-
     arg(1, Arg, Number),
@@ -689,8 +778,15 @@ replay_substitute_literal(Literal, Bindings,
     arg(1, Literal, ExceptionId),
     arg(2, Literal, Pattern),
     replay_substitute_predicate(Pattern, Bindings, Ground).
+replay_substitute_literal(Pattern, Bindings,
+        quantity_compare(Actual, Bound)) :-
+    shape_quantity_compare(Pattern),
+    !,
+    arg(1, Pattern, ActualPattern),
+    arg(2, Pattern, Bound),
+    replay_substitute_argument(ActualPattern, Bindings, Actual).
 replay_substitute_literal(Pattern, Bindings, Ground) :-
-    replay_substitute_predicate(Pattern, Bindings, Ground).
+    replay_substitute_data_atom(Pattern, Bindings, Ground).
 
 replay_atom_absent(Atom, Store) :-
     \+ replay_atom_present(Atom, Store).

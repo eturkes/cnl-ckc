@@ -11,7 +11,12 @@ UTF-8, syntax, canonical-byte framing, output buffering, and error emission.
 This module owns the M2 envelope and every admitted DRS semantic decision.
 */
 lower_terms(Terms, IrTerms) :-
-    lower_envelope(Terms, Document, RootDomain, RootConditions),
+    lower_envelope(Terms, Document, RootDomain, RawRootConditions),
+    normalize_condition_list(root, RawRootConditions, RootConditions),
+    reject_real_quantities(RootConditions),
+    reject_invalid_quantity_objects(RootConditions),
+    reject_false_friend_windows(RootConditions),
+    reject_scalar_cross_units(RootConditions),
     validate_domain(root, RootDomain),
     require_final_question(RootConditions, FactualConditions, Question),
     validate_nested_domain_declarations(RootConditions, RootDomain),
@@ -124,6 +129,243 @@ valid_ulex(Ulex) :-
     has_functor(Ulex, sha256, 1),
     arg(1, Ulex, Hash),
     valid_sha256(Hash).
+
+normalize_condition_list(_, [], []).
+normalize_condition_list(Location, [Condition0|Conditions0],
+        [Condition|Conditions]) :-
+    normalize_condition_wrapper(Location, Condition0, Condition),
+    normalize_condition_list(Location, Conditions0, Conditions).
+
+normalize_condition_wrapper(_, [Condition], Condition) :-
+    anchored_condition(Condition, Inner, _),
+    unit_bound_object_parts(Inner, _, _, _, Relation, _),
+    Relation == leq,
+    !.
+normalize_condition_wrapper(Location, Condition, _) :-
+    is_list(Condition),
+    !,
+    reject(quantity, Location-condition_wrapper).
+normalize_condition_wrapper(_, Condition, Condition).
+
+reject_real_quantities(Term) :-
+    ( var(Term) ->
+        true
+    ; has_functor(Term, real, 2) ->
+        reject(quantity, real_not_integer)
+    ; compound(Term) ->
+        functor(Term, _, Arity),
+        reject_real_quantity_args(Term, 1, Arity)
+    ; true
+    ).
+
+reject_real_quantity_args(_, Index, Arity) :-
+    Index > Arity,
+    !.
+reject_real_quantity_args(Term, Index, Arity) :-
+    arg(Index, Term, Arg),
+    reject_real_quantities(Arg),
+    Next is Index + 1,
+    reject_real_quantity_args(Term, Next, Arity).
+
+reject_invalid_quantity_objects(Term) :-
+    ( var(Term) ->
+        true
+    ; has_functor(Term, object, 6),
+      arg(3, Term, Countability),
+      Countability == mass,
+      arg(4, Term, Unit),
+      atom(Unit),
+      arg(5, Term, Relation),
+      arg(6, Term, Value),
+      integer(Value),
+      \+ admitted_quantity_relation(Relation) ->
+        reject(quantity, object_bound_relation(Relation))
+    ; compound(Term) ->
+        functor(Term, _, Arity),
+        reject_invalid_quantity_object_args(Term, 1, Arity)
+    ; true
+    ).
+
+reject_invalid_quantity_object_args(_, Index, Arity) :-
+    Index > Arity,
+    !.
+reject_invalid_quantity_object_args(Term, Index, Arity) :-
+    arg(Index, Term, Arg),
+    reject_invalid_quantity_objects(Arg),
+    Next is Index + 1,
+    reject_invalid_quantity_object_args(Term, Next, Arity).
+
+reject_false_friend_windows(Term) :-
+    ( var(Term) ->
+        true
+    ; is_list(Term) ->
+        reject_false_friend_condition_list(Term),
+        reject_false_friend_members(Term)
+    ; compound(Term) ->
+        functor(Term, _, Arity),
+        reject_false_friend_args(Term, 1, Arity)
+    ; true
+    ).
+
+reject_false_friend_condition_list(Conditions) :-
+    ( condition_modifier(Conditions, Event, within, WithinArg),
+      has_functor(WithinArg, int, 1),
+      condition_modifier(Conditions, ToEvent, to, _),
+      Event == ToEvent ->
+        reject(temporal, false_friend_within_to_range)
+    ; true
+    ).
+
+reject_false_friend_members([]).
+reject_false_friend_members([Term|Terms]) :-
+    reject_false_friend_windows(Term),
+    reject_false_friend_members(Terms).
+
+reject_false_friend_args(_, Index, Arity) :-
+    Index > Arity,
+    !.
+reject_false_friend_args(Term, Index, Arity) :-
+    arg(Index, Term, Arg),
+    reject_false_friend_windows(Arg),
+    Next is Index + 1,
+    reject_false_friend_args(Term, Next, Arity).
+
+reject_scalar_cross_units(Term) :-
+    ( var(Term) ->
+        true
+    ; is_list(Term) ->
+        reject_scalar_cross_units_in_list(Term, Term),
+        reject_scalar_cross_unit_members(Term)
+    ; compound(Term) ->
+        functor(Term, _, Arity),
+        reject_scalar_cross_unit_args(Term, 1, Arity)
+    ; true
+    ).
+
+reject_scalar_cross_units_in_list([], _).
+reject_scalar_cross_units_in_list([Condition|Conditions], All) :-
+    ( anchored_condition(Condition, Property, _),
+      scalar_comparison_property(Property, Carrier, Comparison),
+      scalar_comparison_be(All, Carrier, Actual),
+      scalar_quantity_operand(Actual, All, _, ActualUnit),
+      scalar_quantity_operand(Comparison, All, _, ComparisonUnit),
+      ActualUnit \== ComparisonUnit ->
+        reject(quantity,
+            scalar_cross_unit(ActualUnit, ComparisonUnit))
+    ; true
+    ),
+    reject_scalar_cross_units_in_list(Conditions, All).
+
+reject_scalar_cross_unit_members([]).
+reject_scalar_cross_unit_members([Term|Terms]) :-
+    reject_scalar_cross_units(Term),
+    reject_scalar_cross_unit_members(Terms).
+
+reject_scalar_cross_unit_args(_, Index, Arity) :-
+    Index > Arity,
+    !.
+reject_scalar_cross_unit_args(Term, Index, Arity) :-
+    arg(Index, Term, Arg),
+    reject_scalar_cross_units(Arg),
+    Next is Index + 1,
+    reject_scalar_cross_unit_args(Term, Next, Arity).
+
+scalar_comparison_property(Property, Carrier, Comparison) :-
+    has_functor(Property, property, 4),
+    arg(1, Property, Carrier),
+    arg(2, Property, Adjective),
+    arg(3, Property, Degree),
+    arg(4, Property, Comparison),
+    Adjective == great,
+    Degree == comp_than.
+
+scalar_comparison_be(Conditions, Carrier, Actual) :-
+    condition_inner(Conditions, Be),
+    predicate4_parts(Be, _, Verb, Actual, Object),
+    Verb == be,
+    Object == Carrier.
+
+scalar_quantity_operand(Term, _, Quantity, Unit) :-
+    quantity_from_int(Term, Quantity, Unit),
+    !.
+scalar_quantity_operand(Term, Conditions, Quantity, Unit) :-
+    var(Term),
+    condition_inner(Conditions, Object),
+    count_quantity_object_parts(
+        Object, Referent, Unit, eq, Value),
+    Referent == Term,
+    Quantity = quantity(integer(Value), unit(Unit)).
+
+condition_modifier(Conditions, Event, Relation, Arg) :-
+    condition_inner(Conditions, Modifier),
+    has_functor(Modifier, modifier_pp, 3),
+    arg(1, Modifier, Event),
+    arg(2, Modifier, Relation),
+    arg(3, Modifier, Arg).
+
+condition_inner([Condition|_], Inner) :-
+    anchored_condition(Condition, Inner, _).
+condition_inner([_|Conditions], Inner) :-
+    condition_inner(Conditions, Inner).
+
+quantity_from_int(Term, quantity(integer(Value), unit(Unit)), Unit) :-
+    has_functor(Term, int, 2),
+    arg(1, Term, Value),
+    arg(2, Term, Unit),
+    integer(Value),
+    atom(Unit).
+
+unit_bound_object_parts(Object, Referent, Class, Unit, Relation, Value) :-
+    has_functor(Object, object, 6),
+    arg(1, Object, Referent),
+    arg(2, Object, Class),
+    arg(3, Object, Countability),
+    arg(4, Object, Unit),
+    arg(5, Object, Relation),
+    arg(6, Object, Value),
+    var(Referent),
+    atom(Class),
+    Countability == mass,
+    atom(Unit),
+    admitted_quantity_relation(Relation),
+    integer(Value).
+
+count_quantity_object_parts(Object, Referent, Unit, Relation, Value) :-
+    has_functor(Object, object, 6),
+    arg(1, Object, Referent),
+    arg(2, Object, Unit),
+    arg(3, Object, Countability),
+    arg(4, Object, Definiteness),
+    arg(5, Object, Relation),
+    arg(6, Object, Value),
+    var(Referent),
+    atom(Unit),
+    Countability == countable,
+    Definiteness == na,
+    admitted_quantity_relation(Relation),
+    integer(Value),
+    ( Relation \== eq ; Value =\= 1 ).
+
+admitted_quantity_relation(Relation) :-
+    ( Relation == eq
+    ; Relation == geq
+    ; Relation == leq
+    ; Relation == greater
+    ; Relation == less
+    ).
+
+quantity_bound_from_relation(Relation, Value, Unit,
+        quantity_bound(Relation, Endpoint,
+            quantity(integer(Value), unit(Unit)))) :-
+    quantity_relation_endpoint(Relation, Endpoint).
+
+quantity_relation_endpoint(Relation, Endpoint) :-
+    ( Relation == eq -> Endpoint = closed
+    ; Relation == geq -> Endpoint = closed
+    ; Relation == leq -> Endpoint = closed
+    ; Relation == greater -> Endpoint = open
+    ; Relation == less -> Endpoint = open
+    ).
 
 /* A root record must have one final yes/no question. */
 require_final_question(Conditions, Factual, Question) :-
@@ -272,17 +514,40 @@ lower_root_condition_drafts(Position, Condition, All, Domain, Consumed,
 
 lower_root_condition(Position, Condition, All, Domain, Consumed,
         Consumed1, Draft, Events, Entities) :-
+    temporal_window_profile(Position, Condition, All, Window),
+    !,
+    lower_root_temporal_window(Position, Window, All, Domain,
+        Consumed, Consumed1, Draft, Events, Entities).
+lower_root_condition(Position, Condition, All, Domain, Consumed,
+        Consumed1, Draft, Events, Entities) :-
     anchored_condition(Condition, Inner, Anchor),
     !,
     ( contains_negation(Inner) ->
         reject(negation, root_condition(Position))
     ; has_functor(Inner, query, 2) ->
         reject(wh_query, root_condition(Position))
+    ; unit_bound_object_parts(Inner, _, _, _, _, _) ->
+        lower_root_unit_bound_object(Position, Inner, Anchor, Domain,
+            Consumed, Consumed1, Draft, Events, Entities)
+    ; measurement_object_pair(Inner, All, _) ->
+        lower_root_measurement(Position, Inner, Anchor, All, Domain,
+            Consumed, Consumed1, Draft, Events, Entities)
+    ; count_quantity_object_parts(Inner, _, _, _, _),
+      root_count_quantity_pair(Inner, All, _) ->
+        lower_root_count_quantity(Position, Inner, Anchor, All, Domain,
+            Consumed, Consumed1, Draft, Events, Entities)
     ; functor_name(Inner, object) ->
         lower_copula_from_object(Position, Inner, Anchor, All, Domain,
             Consumed, Consumed1, Draft, Events, Entities)
     ; predicate_named_be(Inner) ->
         lower_copula_from_be(Position, Inner, Anchor, All, Domain,
+            Consumed, Consumed1, Draft, Events, Entities)
+    ; scalar_comparison_property(Inner, _, _) ->
+        lower_root_scalar_comparison(Position, Inner, Anchor, All, Domain,
+            Consumed, Consumed1, Draft, Events, Entities)
+    ; predicate_event(Inner, ModifierEvent),
+      event_has_modifier(ModifierEvent, All) ->
+        lower_root_temporal(Position, Inner, Anchor, All, Domain,
             Consumed, Consumed1, Draft, Events, Entities)
     ; functor_name(Inner, property) ->
         lower_root_property(Position, Inner, Anchor, All, Domain,
@@ -379,6 +644,381 @@ term_member_eq(Term, [Member|_]) :-
     !.
 term_member_eq(Term, [_|Members]) :-
     term_member_eq(Term, Members).
+
+predicate_event(Predicate, Event) :-
+    compound(Predicate),
+    functor(Predicate, predicate, Arity),
+    ( Arity =:= 3 ; Arity =:= 4 ),
+    arg(1, Predicate, Event).
+
+event_has_modifier(Event, Conditions) :-
+    event_modifier_entries(Event, Conditions, [_|_]).
+
+event_modifier_entries(_, [], []).
+event_modifier_entries(Event,
+        [indexed(Position, Condition)|Conditions], Entries) :-
+    ( anchored_condition(Condition, Modifier, Anchor),
+      has_functor(Modifier, modifier_pp, 3),
+      arg(1, Modifier, StoredEvent),
+      StoredEvent == Event ->
+        arg(2, Modifier, Relation),
+        arg(3, Modifier, Argument),
+        Entries = [modifier_entry(
+            Position, Relation, Argument, Anchor)|Rest]
+    ; Entries = Rest
+    ),
+    event_modifier_entries(Event, Conditions, Rest).
+
+admitted_temporal_relation(Relation) :-
+    ( Relation == before
+    ; Relation == after
+    ; Relation == during
+    ; Relation == within
+    ).
+
+lower_root_temporal(Position, Predicate, PredicateAnchor, All, Domain,
+        Consumed0, Consumed, Draft, [Event], Entities) :-
+    predicate_event(Predicate, Event),
+    event_modifier_entries(Event, All, Modifiers),
+    ( Modifiers = [modifier_entry(
+          ModifierPosition, Relation, AnchorTerm, ModifierAnchor)],
+      admitted_temporal_relation(Relation),
+      named_atom(AnchorTerm, AnchorName) ->
+        true
+    ; reject(temporal, root_condition(Position, modifier_profile))
+    ),
+    require_event_occurrences(
+        root_condition(Position), Event, All, 2),
+    root_temporal_event_atom(
+        Position, Predicate, Domain, EventAtom, Entities),
+    source_from_anchors(root_condition(Position),
+        [PredicateAnchor, ModifierAnchor], Sentence, Tokens),
+    Temporal = temporal(Relation, EventAtom, anchor(named(AnchorName))),
+    Draft = draft_fact(Temporal, Sentence, Tokens),
+    Consumed = [Position, ModifierPosition|Consumed0].
+
+root_temporal_event_atom(Position, Predicate, Domain,
+        pred(Verb, [Arg]), []) :-
+    predicate3_parts(Predicate, Event, Verb, Subject),
+    !,
+    require_non_be_verb(root_condition(Position), Verb),
+    require_local_event(root_condition(Position), Event, Domain),
+    require_ground_subject(root_condition(Position), Subject, Domain, Arg).
+root_temporal_event_atom(Position, Predicate, Domain,
+        pred(Verb, [SubjectArg, ObjectArg]), []) :-
+    predicate4_parts(Predicate, Event, Verb, Subject, Object),
+    require_non_be_verb(root_condition(Position), Verb),
+    require_local_event(root_condition(Position), Event, Domain),
+    require_ground_argument(
+        root_condition(Position), 1, Subject, Domain, SubjectArg),
+    require_ground_argument(
+        root_condition(Position), 2, Object, Domain, ObjectArg).
+
+require_event_occurrences(Location, Event, Conditions, Expected) :-
+    ref_occurrence_count(Event, Conditions, Count),
+    ( Count =:= Expected ->
+        true
+    ; reject(temporal, Location-event_in_use)
+    ).
+
+temporal_window_profile(Position, Condition, All,
+        window(Event, Predicate, Direction, AnchorName,
+            Range, UpperReferent, Lower, Upper, Unit,
+            Positions, SourceAnchors)) :-
+    anchored_condition(Condition, LowerPart, LowerPartAnchor),
+    has_functor(LowerPart, has_part, 2),
+    arg(1, LowerPart, Range),
+    arg(2, LowerPart, LowerTerm),
+    has_functor(LowerTerm, int, 1),
+    arg(1, LowerTerm, Lower),
+    integer(Lower),
+    window_between_entry(Range, All,
+        BetweenPosition, Event, BetweenAnchor),
+    window_direction_entry(Event, All,
+        DirectionPosition, Direction, AnchorName, DirectionAnchor),
+    window_predicate_entry(Event, All,
+        PredicatePosition, Predicate, PredicateAnchor),
+    window_upper_part_entry(Range, All,
+        UpperPartPosition, UpperReferent, UpperPartAnchor),
+    window_upper_object_entry(UpperReferent, All,
+        UpperObjectPosition, Unit, Upper, UpperAnchor),
+    window_range_object_entry(
+        Range, All, RangeObjectPosition, RangeObjectAnchor),
+    require_window_order(Lower, Upper),
+    require_exact_ref_occurrences(
+        temporal_window, Event, All, 3),
+    require_exact_ref_occurrences(
+        temporal_window, Range, All, 4),
+    require_exact_ref_occurrences(
+        temporal_window, UpperReferent, All, 2),
+    Positions = [Position, PredicatePosition, DirectionPosition,
+        BetweenPosition, UpperObjectPosition, UpperPartPosition,
+        RangeObjectPosition],
+    require_distinct_positions(Positions),
+    AllSourceAnchors = [LowerPartAnchor, PredicateAnchor,
+        DirectionAnchor, BetweenAnchor, UpperAnchor,
+        UpperPartAnchor, RangeObjectAnchor],
+    window_profile_source_anchors(
+        Position, AllSourceAnchors, SourceAnchors).
+
+temporal_window_profile(_, _, _, _) :-
+    fail.
+
+window_between_entry(Range,
+        [indexed(Position, Condition)|_], Position, Event, Anchor) :-
+    anchored_condition(Condition, Modifier, Anchor),
+    has_functor(Modifier, modifier_pp, 3),
+    arg(1, Modifier, Event),
+    arg(2, Modifier, Relation),
+    arg(3, Modifier, StoredRange),
+    Relation == between,
+    StoredRange == Range,
+    !.
+window_between_entry(Range, [_|Conditions], Position, Event, Anchor) :-
+    window_between_entry(Range, Conditions, Position, Event, Anchor).
+
+window_direction_entry(Event,
+        [indexed(Position, Condition)|_], Position,
+        Direction, AnchorName, Anchor) :-
+    anchored_condition(Condition, Modifier, Anchor),
+    has_functor(Modifier, modifier_pp, 3),
+    arg(1, Modifier, StoredEvent),
+    arg(2, Modifier, Direction),
+    arg(3, Modifier, AnchorTerm),
+    StoredEvent == Event,
+    ( Direction == after ; Direction == before ),
+    named_atom(AnchorTerm, AnchorName),
+    !.
+window_direction_entry(Event, [_|Conditions], Position,
+        Direction, AnchorName, Anchor) :-
+    window_direction_entry(Event, Conditions, Position,
+        Direction, AnchorName, Anchor).
+
+window_predicate_entry(Event,
+        [indexed(Position, Condition)|_], Position, Predicate, Anchor) :-
+    anchored_condition(Condition, Predicate, Anchor),
+    predicate_event(Predicate, StoredEvent),
+    StoredEvent == Event,
+    !.
+window_predicate_entry(Event, [_|Conditions], Position, Predicate, Anchor) :-
+    window_predicate_entry(Event, Conditions, Position, Predicate, Anchor).
+
+window_upper_part_entry(Range,
+        [indexed(Position, Condition)|_], Position, UpperReferent, Anchor) :-
+    anchored_condition(Condition, Part, Anchor),
+    has_functor(Part, has_part, 2),
+    arg(1, Part, StoredRange),
+    arg(2, Part, UpperReferent),
+    StoredRange == Range,
+    var(UpperReferent),
+    !.
+window_upper_part_entry(Range, [_|Conditions], Position,
+        UpperReferent, Anchor) :-
+    window_upper_part_entry(
+        Range, Conditions, Position, UpperReferent, Anchor).
+
+window_upper_object_entry(UpperReferent,
+        [indexed(Position, Condition)|_], Position,
+        Unit, Upper, Anchor) :-
+    anchored_condition(Condition, Object, Anchor),
+    has_functor(Object, object, 6),
+    arg(1, Object, StoredReferent),
+    arg(2, Object, Unit),
+    arg(3, Object, Countability),
+    arg(4, Object, Definiteness),
+    arg(5, Object, Relation),
+    arg(6, Object, Upper),
+    StoredReferent == UpperReferent,
+    atom(Unit),
+    Countability == countable,
+    Definiteness == na,
+    Relation == eq,
+    integer(Upper),
+    !.
+window_upper_object_entry(UpperReferent, [_|Conditions], Position,
+        Unit, Upper, Anchor) :-
+    window_upper_object_entry(UpperReferent, Conditions,
+        Position, Unit, Upper, Anchor).
+
+window_range_object_entry(Range,
+        [indexed(Position, Condition)|_], Position, Anchor) :-
+    anchored_condition(Condition, Object, Anchor),
+    has_functor(Object, object, 6),
+    arg(1, Object, StoredRange),
+    arg(2, Object, Class),
+    arg(3, Object, Countability),
+    arg(4, Object, Definiteness),
+    arg(5, Object, Relation),
+    arg(6, Object, Count),
+    StoredRange == Range,
+    Class == na,
+    Countability == countable,
+    Definiteness == na,
+    Relation == eq,
+    Count == 2,
+    !.
+window_range_object_entry(Range, [_|Conditions], Position, Anchor) :-
+    window_range_object_entry(Range, Conditions, Position, Anchor).
+
+require_window_order(Lower, Upper) :-
+    ( Lower =< Upper ->
+        true
+    ; reject(temporal, reversed_window(Lower, Upper))
+    ).
+
+require_exact_ref_occurrences(Location, Referent, Conditions, Expected) :-
+    ref_occurrence_count(Referent, Conditions, Count),
+    ( Count =:= Expected ->
+        true
+    ; reject(temporal, Location-referent_in_use)
+    ).
+
+require_distinct_positions(Positions) :-
+    ( first_duplicate_term(Positions, _) ->
+        reject(temporal, window_condition_reuse)
+    ; true
+    ).
+
+window_profile_source_anchors(Position, [First|Anchors], SourceAnchors) :-
+    window_anchor_parts(Position, First, Sentence, FirstKeep),
+    window_profile_source_anchors_(
+        Anchors, Position, Sentence, RestKeep),
+    append(FirstKeep, RestKeep, SourceAnchors).
+
+window_profile_source_anchors_([], _, _, []).
+window_profile_source_anchors_([Anchor|Anchors], Position, Sentence,
+        SourceAnchors) :-
+    window_anchor_parts(Position, Anchor, HereSentence, HereKeep),
+    ( HereSentence =:= Sentence ->
+        true
+    ; reject(temporal,
+          window_condition(Position, mixed_sentence_anchors))
+    ),
+    window_profile_source_anchors_(
+        Anchors, Position, Sentence, RestKeep),
+    append(HereKeep, RestKeep, SourceAnchors).
+
+window_anchor_parts(Position, Anchor, Sentence, Keep) :-
+    ( has_functor(Anchor, '/', 2) ->
+        arg(1, Anchor, Sentence0),
+        arg(2, Anchor, Token),
+        ( integer(Sentence0), Sentence0 >= 1 ->
+            Sentence = Sentence0
+        ; reject(temporal,
+              window_condition(Position, anchor_ordinals))
+        ),
+        ( integer(Token), Token >= 1 ->
+            Keep = [Anchor]
+        ; Token == '' ->
+            Keep = []
+        ; reject(temporal,
+              window_condition(Position, anchor_ordinals))
+        )
+    ; reject(temporal, window_condition(Position, anchor_shape))
+    ).
+
+lower_root_temporal_window(Position,
+        window(Event, Predicate, Direction, AnchorName,
+            Range, UpperReferent, Lower, Upper, Unit,
+            Positions, SourceAnchors), _All, Domain,
+        Consumed0, Consumed, Draft, [Event], Entities) :-
+    require_local_event(root_condition(Position), Event, Domain),
+    require_declared_entity(root_condition(Position), Range, Domain),
+    require_declared_entity(
+        root_condition(Position), UpperReferent, Domain),
+    root_temporal_event_atom(
+        Position, Predicate, Domain, EventAtom, EventEntities),
+    quantity_bound_from_relation(geq, Lower, Unit, LowerBound),
+    quantity_bound_from_relation(leq, Upper, Unit, UpperBound),
+    Window = temporal_window(Direction, EventAtom,
+        anchor(named(AnchorName)), interval(LowerBound, UpperBound)),
+    source_from_anchors(root_condition(Position), SourceAnchors,
+        Sentence, Tokens),
+    Draft = draft_fact(Window, Sentence, Tokens),
+    append(Positions, Consumed0, Consumed),
+    append([Range, UpperReferent], EventEntities, Entities).
+
+measurement_object_pair(Object, All, BePosition) :-
+    exact_object(Object, Referent, _),
+    measurement_be_entry(Referent, All,
+        BePosition, _, _, _).
+
+measurement_be_entry(Referent,
+        [indexed(Position, Condition)|_], Position,
+        Event, Quantity, Anchor) :-
+    anchored_condition(Condition, Be, Anchor),
+    predicate4_parts(Be, Event, Verb, Subject, QuantityTerm),
+    Verb == be,
+    Subject == Referent,
+    quantity_from_int(QuantityTerm, Quantity, _),
+    !.
+measurement_be_entry(Referent, [_|Conditions],
+        Position, Event, Quantity, Anchor) :-
+    measurement_be_entry(Referent, Conditions,
+        Position, Event, Quantity, Anchor).
+
+lower_root_measurement(Position, Object, ObjectAnchor, All, Domain,
+        Consumed0, Consumed, Draft, [Event], [Referent]) :-
+    exact_object(Object, Referent, Class),
+    require_lemma(root_condition(Position), object_class, Class),
+    require_declared_entity(root_condition(Position), Referent, Domain),
+    measurement_be_entry(Referent, All,
+        BePosition, Event, Quantity, BeAnchor),
+    require_erasable_event(root_condition(Position), Event, Domain, All),
+    source_from_anchors(root_condition(Position),
+        [ObjectAnchor, BeAnchor], Sentence, Tokens),
+    Draft = draft_fact(pred(Class, [Quantity]), Sentence, Tokens),
+    Consumed = [Position, BePosition|Consumed0].
+
+lower_root_unit_bound_object(Position, Object, Anchor, Domain,
+        Consumed0, [Position|Consumed0], Draft, [], [Referent]) :-
+    unit_bound_object_parts(
+        Object, Referent, Class, Unit, Relation, Value),
+    require_declared_entity(root_condition(Position), Referent, Domain),
+    require_lemma(root_condition(Position), object_class, Class),
+    quantity_bound_from_relation(Relation, Value, Unit, Bound),
+    source_from_anchors(root_condition(Position), [Anchor],
+        Sentence, Tokens),
+    Draft = draft_fact(pred(Class, [Bound]), Sentence, Tokens).
+
+root_count_quantity_pair(Object, All, PredicatePosition) :-
+    count_quantity_object_parts(Object, Referent, _, _, _),
+    quantity_transitive_entry(Referent, All,
+        PredicatePosition, _, _, _, _).
+
+lower_root_count_quantity(Position, Object, ObjectAnchor, All, Domain,
+        Consumed0, Consumed, Draft, [Event], [Referent]) :-
+    count_quantity_object_parts(
+        Object, Referent, Unit, Relation, Value),
+    require_declared_entity(root_condition(Position), Referent, Domain),
+    quantity_transitive_entry(Referent, All,
+        PredicatePosition, Event, Verb, Subject, PredicateAnchor),
+    require_non_be_verb(root_condition(Position), Verb),
+    require_erasable_event(root_condition(Position), Event, Domain, All),
+    require_ground_argument(
+        root_condition(Position), 1, Subject, Domain, SubjectArg),
+    ( Relation == eq ->
+        QuantityArg = quantity(integer(Value), unit(Unit))
+    ; quantity_bound_from_relation(Relation, Value, Unit, QuantityArg)
+    ),
+    source_from_anchors(root_condition(Position),
+        [ObjectAnchor, PredicateAnchor], Sentence, Tokens),
+    Draft = draft_fact(
+        pred(Verb, [SubjectArg, QuantityArg]), Sentence, Tokens),
+    Consumed = [Position, PredicatePosition|Consumed0].
+
+quantity_transitive_entry(Referent,
+        [indexed(Position, Condition)|_], Position,
+        Event, Verb, Subject, Anchor) :-
+    anchored_condition(Condition, Predicate, Anchor),
+    predicate4_parts(Predicate, Event, Verb, Subject, Object),
+    Object == Referent,
+    Verb \== be,
+    !.
+quantity_transitive_entry(Referent, [_|Conditions], Position,
+        Event, Verb, Subject, Anchor) :-
+    quantity_transitive_entry(Referent, Conditions, Position,
+        Event, Verb, Subject, Anchor).
 
 lower_copula_from_object(Position, Object, ObjectAnchor, All, Domain,
         Consumed, Consumed1, Draft, [Event], [Referent]) :-
@@ -505,6 +1145,97 @@ require_one_object(Position,
 require_one_object(Position, [_,_|_], _, _, _) :-
     reject(copula, root_condition(Position, multiple_object)).
 
+lower_root_scalar_comparison(Position, Property, PropertyAnchor, All,
+        Domain, Consumed0, Consumed, Draft, [Event], Entities) :-
+    scalar_comparison_property(Property, Carrier, ComparisonTerm),
+    require_declared_entity(root_condition(Position), Carrier, Domain),
+    require_scalar_comparison_be(
+        root_condition(Position), Carrier, All,
+        BePosition, Event, ActualTerm, BeAnchor),
+    require_erasable_event(root_condition(Position), Event, Domain, All),
+    require_scalar_quantity_operand(
+        root_condition(Position), ActualTerm, All, Actual, ActualUnit),
+    scalar_root_operand(ComparisonTerm, All, Comparison,
+        ComparisonUnit, OperandPositions, OperandAnchors, OperandEntities),
+    ( ActualUnit == ComparisonUnit ->
+        true
+    ; reject(quantity,
+          scalar_cross_unit(ActualUnit, ComparisonUnit))
+    ),
+    property_parts(root_condition(Position), Property, _, Name,
+        [ComparisonTerm]),
+    quantity_bound_from_relation(
+        greater, ComparisonValue, ComparisonUnit, Bound),
+    quantity_value(Comparison, ComparisonValue),
+    append([PropertyAnchor, BeAnchor], OperandAnchors, Anchors),
+    source_from_anchors(root_condition(Position), Anchors,
+        Sentence, Tokens),
+    Head = pred(Name, [Actual, Comparison]),
+    Draft = draft_rule(Head,
+        [quantity_compare(Actual, Bound)], Sentence, Tokens),
+    append([Position, BePosition|Consumed0], OperandPositions, Consumed),
+    Entities = [Carrier|OperandEntities].
+
+require_scalar_comparison_be(Location, Carrier, Conditions,
+        Position, Event, Actual, Anchor) :-
+    scalar_comparison_be_entries(Carrier, Conditions, Entries),
+    ( Entries = [scalar_be(Position0, Event0, Actual0, Anchor0)] ->
+        Position = Position0,
+        Event = Event0,
+        Actual = Actual0,
+        Anchor = Anchor0
+    ; Entries == [] ->
+        reject(quantity, Location-scalar_comparison_be(missing))
+    ; reject(quantity, Location-scalar_comparison_be(multiple))
+    ).
+
+scalar_comparison_be_entries(_, [], []).
+scalar_comparison_be_entries(Carrier,
+        [indexed(Position, Condition)|Conditions], Entries) :-
+    ( anchored_condition(Condition, Be, Anchor),
+      predicate4_parts(Be, Event, Verb, Actual, Object),
+      Verb == be,
+      Object == Carrier ->
+        Entries = [scalar_be(Position, Event, Actual, Anchor)|Rest]
+    ; Entries = Rest
+    ),
+    scalar_comparison_be_entries(Carrier, Conditions, Rest).
+
+require_scalar_quantity_operand(Location, Term, Conditions,
+        Quantity, Unit) :-
+    ( scalar_quantity_operand(Term, Conditions, Quantity0, Unit0) ->
+        Quantity = Quantity0,
+        Unit = Unit0
+    ; reject(quantity, Location-scalar_comparison_actual_operand)
+    ).
+
+scalar_root_operand(Term, _, Quantity, Unit, [], [], []) :-
+    quantity_from_int(Term, Quantity, Unit),
+    !.
+scalar_root_operand(Term, All, Quantity, Unit,
+        [Position], [Anchor], [Term]) :-
+    var(Term),
+    scalar_object_entry(Term, All, Position, Unit, Value, Anchor),
+    Quantity = quantity(integer(Value), unit(Unit)),
+    !.
+scalar_root_operand(_, _, _, _, _, _, _) :-
+    reject(quantity, scalar_comparison_operand).
+
+scalar_object_entry(Referent,
+        [indexed(Position, Condition)|_], Position, Unit, Value, Anchor) :-
+    anchored_condition(Condition, Object, Anchor),
+    count_quantity_object_parts(Object, Stored, Unit, eq, Value),
+    Stored == Referent,
+    !.
+scalar_object_entry(Referent, [_|Conditions],
+        Position, Unit, Value, Anchor) :-
+    scalar_object_entry(
+        Referent, Conditions, Position, Unit, Value, Anchor).
+
+quantity_value(Quantity, Value) :-
+    arg(1, Quantity, IntegerTerm),
+    arg(1, IntegerTerm, Value).
+
 lower_root_property(Position, Property, PropertyAnchor, All, Domain,
         Consumed, Consumed1, Draft, Events, [Carrier]) :-
     property_parts(root_condition(Position), Property, Carrier, Name,
@@ -594,6 +1325,11 @@ property_parts(Location, Property, Referent, Name, ComparisonTerms) :-
         require_lemma(Location, adjective, Adjective),
         ( Degree == pos ->
             Name = Adjective,
+            ComparisonTerms = []
+        ; ( Degree == comp ; Degree == sup ),
+          ( Adjective == low ; Adjective == high ) ->
+            atom_concat(Adjective, ' ', Prefix),
+            atom_concat(Prefix, Degree, Name),
             ComparisonTerms = []
         ; reject(unsupported, Location-property_degree(Degree))
         )
@@ -708,6 +1444,9 @@ root_named_binding_matches(Referent,
 
 require_ground_argument(_, _, Term, _, named(Name)) :-
     named_atom(Term, Name),
+    !.
+require_ground_argument(_, _, Term, _, Quantity) :-
+    quantity_from_int(Term, Quantity, _),
     !.
 require_ground_argument(Location, Index, Term, Domain, _) :-
     var(Term),
@@ -1008,7 +1747,7 @@ require_nested_drs(Location, Drs, Domain, Conditions) :-
         arg(2, Drs, Conditions0),
         ( is_list(Domain0), is_list(Conditions0) ->
             Domain = Domain0,
-            Conditions = Conditions0
+            normalize_condition_list(Location, Conditions0, Conditions)
         ; reject(unsupported, Location-drs_lists)
         )
     ; reject(unsupported, Location-drs_shape)
@@ -1173,6 +1912,10 @@ rule_head_argument(Term, _, _, _, Bindings, Bindings, Next, Next, _,
         named(Name), []) :-
     named_atom(Term, Name),
     !.
+rule_head_argument(Term, _, _, _, Bindings, Bindings, Next, Next, _,
+        Quantity, []) :-
+    quantity_from_int(Term, Quantity, _),
+    !.
 rule_head_argument(Term, Position, AnteDomain, ConsequentDomain,
         Bindings0, Bindings, Next0, Next, Index, Arg, [Term]) :-
     var(Term),
@@ -1205,20 +1948,146 @@ lower_rule_body_conditions(Position,
             Consumed, Bindings0, Bindings, Next0, Next,
             PositiveRefs0, PositiveRefs, Literals, Anchors, Events,
             Entities)
-    ; lower_rule_condition(Position, Index, Condition, All, Domain,
+    ; lower_rule_condition_group(Position, Index, Condition, All, Domain,
           PositiveRefs0, Consumed, Consumed1, Bindings0, Bindings1,
-          Next0, Next1, Literal, HereAnchors, HereEvents, HereEntities,
-          HerePositiveRefs),
+          Next0, Next1, HereLiterals, HereAnchors, HereEvents,
+          HereEntities, HerePositiveRefs),
       append(HerePositiveRefs, PositiveRefs0, PositiveRefs1),
       lower_rule_body_conditions(Position, Conditions, All, Domain,
           Consumed1, Bindings1, Bindings, Next1, Next,
           PositiveRefs1, PositiveRefs, RestLiterals, RestAnchors,
           RestEvents, RestEntities),
-      Literals = [Literal|RestLiterals],
+      append(HereLiterals, RestLiterals, Literals),
       append(HereAnchors, RestAnchors, Anchors),
       append(HereEvents, RestEvents, Events),
       append(HereEntities, RestEntities, Entities)
     ).
+
+lower_rule_condition_group(Position, Index, Condition, All, Domain,
+        _PositiveRefs, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literals, Anchors, Events, Entities,
+        HerePositiveRefs) :-
+    temporal_window_profile(Index, Condition, All, Window),
+    !,
+    lower_rule_temporal_window(Position, Index, Window, Domain,
+        Consumed0, Consumed, Bindings0, Bindings, Next0, Next,
+        Literals, Anchors, Events, Entities, HerePositiveRefs).
+lower_rule_condition_group(Position, Index, Condition, All, Domain,
+        _PositiveRefs, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literals, Anchors, Events, Entities,
+        HerePositiveRefs) :-
+    anchored_condition(Condition, Object, ObjectAnchor),
+    count_quantity_object_parts(Object, _, _, _, _),
+    root_count_quantity_pair(Object, All, _),
+    !,
+    lower_rule_numeric_quantity(Position, Index, Object, ObjectAnchor,
+        All, Domain, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literals, Anchors, Events, Entities,
+        HerePositiveRefs).
+lower_rule_condition_group(Position, Index, Condition, All, Domain,
+        _PositiveRefs, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literals, Anchors, Events, Entities,
+        HerePositiveRefs) :-
+    anchored_condition(Condition, Predicate, PredicateAnchor),
+    predicate_event(Predicate, Event),
+    event_has_modifier(Event, All),
+    !,
+    lower_rule_temporal(Position, Index, Predicate, PredicateAnchor,
+        All, Domain, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literals, Anchors, Events, Entities,
+        HerePositiveRefs).
+lower_rule_condition_group(Position, Index, Condition, All, Domain,
+        PositiveRefs, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, [Literal], Anchors, Events, Entities,
+        HerePositiveRefs) :-
+    lower_rule_condition(Position, Index, Condition, All, Domain,
+        PositiveRefs, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, Literal, Anchors, Events, Entities,
+        HerePositiveRefs).
+
+lower_rule_numeric_quantity(Position, Index, Object, ObjectAnchor,
+        All, Domain, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, [PredicateLiteral, CompareLiteral],
+        [ObjectAnchor, PredicateAnchor], [Event], Entities,
+        PositiveRefs) :-
+    count_quantity_object_parts(
+        Object, Referent, Unit, Relation, Value),
+    require_declared_entity(rule(Position, antecedent), Referent, Domain),
+    quantity_transitive_entry(Referent, All,
+        PredicatePosition, Event, Verb, Subject, PredicateAnchor),
+    require_non_be_verb(rule(Position, antecedent), Verb),
+    require_erasable_event(rule(Position, antecedent), Event, Domain, All),
+    rule_body_argument(Subject, Position, Domain,
+        Bindings0, Bindings1, Next0, Next1, 1,
+        SubjectArg, SubjectRefs),
+    binding_arg(Referent, Bindings1, Bindings, Next1, Next, QuantityArg),
+    quantity_bound_from_relation(Relation, Value, Unit, Bound),
+    PredicateLiteral = pred(Verb, [SubjectArg, QuantityArg]),
+    CompareLiteral = quantity_compare(QuantityArg, Bound),
+    Consumed = [Index, PredicatePosition|Consumed0],
+    append(SubjectRefs, [Referent], Entities),
+    PositiveRefs = Entities.
+
+lower_rule_temporal(Position, Index, Predicate, PredicateAnchor,
+        All, Domain, Consumed0, Consumed, Bindings0, Bindings,
+        Next0, Next, [Temporal], [PredicateAnchor, ModifierAnchor],
+        [Event], EntityRefs, EntityRefs) :-
+    predicate_event(Predicate, Event),
+    event_modifier_entries(Event, All, Modifiers),
+    ( Modifiers = [modifier_entry(
+          ModifierPosition, Relation, AnchorTerm, ModifierAnchor)],
+      admitted_temporal_relation(Relation),
+      named_atom(AnchorTerm, AnchorName) ->
+        true
+    ; reject(temporal,
+          rule(Position, antecedent_condition(Index, modifier_profile)))
+    ),
+    require_event_occurrences(
+        rule(Position, antecedent_condition(Index)), Event, All, 2),
+    rule_temporal_event_atom(Position, Predicate, Domain,
+        Bindings0, Bindings, Next0, Next, EventAtom, EntityRefs),
+    Temporal = temporal(Relation, EventAtom, anchor(named(AnchorName))),
+    Consumed = [Index, ModifierPosition|Consumed0].
+
+rule_temporal_event_atom(Position, Predicate, Domain,
+        Bindings0, Bindings, Next0, Next,
+        pred(Verb, [Arg]), EntityRefs) :-
+    predicate3_parts(Predicate, Event, Verb, Subject),
+    !,
+    require_non_be_verb(rule(Position, antecedent), Verb),
+    require_local_event(rule(Position, antecedent), Event, Domain),
+    rule_body_subject(Position, Subject, Domain,
+        Bindings0, Bindings, Next0, Next, Arg, EntityRefs).
+rule_temporal_event_atom(Position, Predicate, Domain,
+        Bindings0, Bindings, Next0, Next,
+        pred(Verb, Args), EntityRefs) :-
+    predicate4_parts(Predicate, Event, Verb, Subject, Object),
+    require_non_be_verb(rule(Position, antecedent), Verb),
+    require_local_event(rule(Position, antecedent), Event, Domain),
+    rule_body_arguments([Subject, Object], Position, Domain,
+        Bindings0, Bindings, Next0, Next, 1, Args, EntityRefs).
+
+lower_rule_temporal_window(Position, Index,
+        window(Event, Predicate, Direction, AnchorName,
+            Range, UpperReferent, Lower, Upper, Unit,
+            Positions, SourceAnchors), Domain,
+        Consumed0, Consumed, Bindings0, Bindings, Next0, Next,
+        [Window], SourceAnchors, [Event], Entities, PositiveRefs) :-
+    require_local_event(
+        rule(Position, antecedent_condition(Index)), Event, Domain),
+    require_declared_entity(
+        rule(Position, antecedent), Range, Domain),
+    require_declared_entity(
+        rule(Position, antecedent), UpperReferent, Domain),
+    rule_temporal_event_atom(Position, Predicate, Domain,
+        Bindings0, Bindings, Next0, Next, EventAtom, EventEntities),
+    quantity_bound_from_relation(geq, Lower, Unit, LowerBound),
+    quantity_bound_from_relation(leq, Upper, Unit, UpperBound),
+    Window = temporal_window(Direction, EventAtom,
+        anchor(named(AnchorName)), interval(LowerBound, UpperBound)),
+    append(Positions, Consumed0, Consumed),
+    append([Range, UpperReferent], EventEntities, Entities),
+    PositiveRefs = EventEntities.
 
 lower_rule_condition(Position, Index, Condition, All, Domain,
         PositiveRefs, Consumed0, Consumed, Bindings0, Bindings,
@@ -1469,6 +2338,10 @@ rule_body_argument(Term, _, _, Bindings, Bindings, Next, Next, _,
         named(Name), []) :-
     named_atom(Term, Name),
     !.
+rule_body_argument(Term, _, _, Bindings, Bindings, Next, Next, _,
+        Quantity, []) :-
+    quantity_from_int(Term, Quantity, _),
+    !.
 rule_body_argument(Term, Position, Domain, Bindings0, Bindings,
         Next0, Next, Index, Arg, [Term]) :-
     var(Term),
@@ -1519,7 +2392,10 @@ lower_question(Question, Draft) :-
     ).
 
 lower_yes_no_question(Domain, Conditions, Draft) :-
-    ( question_copular_candidate(Conditions) ->
+    ( scalar_question_candidate(Conditions) ->
+        lower_scalar_question(Domain, Conditions, Predicate, Anchors,
+            Events, Entities)
+    ; question_copular_candidate(Conditions) ->
         lower_question_copula(Domain, Conditions, Predicate, Anchors,
             Events, Entities)
     ; lower_question_single(Domain, Conditions, Predicate, Anchors,
@@ -1528,6 +2404,55 @@ lower_yes_no_question(Domain, Conditions, Draft) :-
     validate_scope_accounting(question, Domain, Events, Entities),
     source_from_anchors(question, Anchors, Sentence, Tokens),
     Draft = draft_query(Predicate, Sentence, Tokens).
+
+scalar_question_candidate(Conditions) :-
+    condition_inner(Conditions, Property),
+    scalar_comparison_property(Property, _, _),
+    !.
+
+lower_scalar_question(Domain, Conditions, Predicate,
+        [PropertyAnchor, BeAnchor], [Event], Entities) :-
+    scalar_question_parts(Conditions, Property, PropertyAnchor,
+        Carrier, ComparisonTerm, Event, ActualTerm, BeAnchor),
+    require_declared_entity(question, Carrier, Domain),
+    require_erasable_event(question, Event, Domain, Conditions),
+    require_scalar_quantity_operand(
+        question, ActualTerm, Conditions, Actual, ActualUnit),
+    scalar_question_operand(ComparisonTerm, Conditions,
+        Comparison, ComparisonUnit, OperandEntities),
+    ( ActualUnit == ComparisonUnit ->
+        true
+    ; reject(quantity,
+          scalar_cross_unit(ActualUnit, ComparisonUnit))
+    ),
+    property_parts(question, Property, _, Name, [ComparisonTerm]),
+    Predicate = pred(Name, [Actual, Comparison]),
+    Entities = [Carrier|OperandEntities].
+
+scalar_question_parts([PropertyCondition, BeCondition], Property,
+        PropertyAnchor, Carrier, Comparison, Event, Actual, BeAnchor) :-
+    anchored_condition(PropertyCondition, Property, PropertyAnchor),
+    scalar_comparison_property(Property, Carrier, Comparison),
+    anchored_condition(BeCondition, Be, BeAnchor),
+    predicate4_parts(Be, Event, Verb, Actual, Object),
+    Verb == be,
+    Object == Carrier,
+    !.
+scalar_question_parts(_, _, _, _, _, _, _, _) :-
+    reject(quantity, question_scalar_comparison_profile).
+
+scalar_question_operand(Term, _, Quantity, Unit, []) :-
+    quantity_from_int(Term, Quantity, Unit),
+    !.
+scalar_question_operand(Term, Conditions, Quantity, Unit, [Term]) :-
+    var(Term),
+    condition_inner(Conditions, Object),
+    count_quantity_object_parts(Object, Stored, Unit, eq, Value),
+    Stored == Term,
+    Quantity = quantity(integer(Value), unit(Unit)),
+    !.
+scalar_question_operand(_, _, _, _, _) :-
+    reject(quantity, question_scalar_comparison_operand).
 
 question_copular_candidate([Condition, _]) :-
     anchored_condition(Condition, Inner, _),
@@ -1579,6 +2504,16 @@ question_property_args([Term|Terms], Domain, Index, [Arg|Args]) :-
     Next is Index + 1,
     question_property_args(Terms, Domain, Next, Args).
 
+lower_question_single(Domain, [Condition], Predicate,
+        [Anchor], [], [Referent]) :-
+    anchored_condition(Condition, Object, Anchor),
+    unit_bound_object_parts(
+        Object, Referent, Class, Unit, Relation, Value),
+    !,
+    require_declared_entity(question, Referent, Domain),
+    require_lemma(question, object_class, Class),
+    quantity_bound_from_relation(Relation, Value, Unit, Bound),
+    Predicate = pred(Class, [Bound]).
 lower_question_single(Domain, Conditions, Predicate, [Anchor], Events, []) :-
     ( Conditions = [Condition] ->
         true
@@ -1902,12 +2837,16 @@ defined_predicate_keys(Facts, Rules, Keys) :-
     sort(RawKeys, Keys).
 
 item_head_keys([], []).
-item_head_keys([Item|Items], [Key|Keys]) :-
+item_head_keys([Item|Items], Keys) :-
     ( has_functor(Item, fact, 3) -> arg(2, Item, Head)
     ; arg(2, Item, Head)
     ),
-    lower_predicate_key(Head, Key),
-    item_head_keys(Items, Keys).
+    ( has_functor(Head, pred, 2) ->
+        lower_predicate_key(Head, Key),
+        Keys = [Key|Rest]
+    ; Keys = Rest
+    ),
+    item_head_keys(Items, Rest).
 
 label_exception_rules([], _, [], []).
 label_exception_rules([Rule0|Rules0], Keys, [Rule|Rules], ClosedWorld) :-

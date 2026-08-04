@@ -49,13 +49,15 @@ it writes same-directory `*.tmp.<pid>` bytes and atomically installs them with `
 CI runs the vendored suite, verifies vendor integrity, strict-compiles `regen.emm` and `cmp`s
 it with committed `regen.py`, and runs the self-check. Across its jobs, CI lints and runs twelve
 shell harnesses: `tests/strict-harness.sh` (57 gates), `tests/regen-harness.sh` (16),
-`tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (51),
+`tests/pipeline-cli-harness.sh` (17), `tests/adapter-harness.sh` (80),
 `tests/pipeline-harness.sh` (28),
-`tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (107),
-`tests/ir-lower-harness.sh` (115), `tests/ir-run-harness.sh` (175),
+`tests/ape-vendor-harness.sh` (10), `tests/ir-validate-harness.sh` (122),
+`tests/ir-lower-harness.sh` (151), `tests/ir-run-harness.sh` (258),
 `tests/slice-harness.sh` (29), `tests/registry-harness.sh` (94), and
 `tests/guideline-harness.sh` (45). The explicit
 comparison breaks the self-check trust circle.
+The IR fixture inventory is pinned before execution: adapter = 18 green ACE/golden pairs and 6 red ACE inputs; direct IR = 12 green and 86 red records; lower chain = 38 complete DRS/IR/program/result stems and 100 red DRS records; direct run = 17 program/result pairs and 70 red programs. The adapter harness compares ACE, golden, and executed green stems plus red ACE and explicit red-dispatch stems; the lower harness compares fixture and executed stems. M6.3 contributes 12 adapter greens plus 2 parser-wall reds, 1 direct-IR green plus 14 paired IR/program reds, 17 complete lower-chain stems plus 17 lower reds, and 4 direct-run greens plus 4 runtime-only reds. Fixture counts, dispatch inventories, semantic negative controls, and expected gate totals are separate assertions.
+
 Actions are SHA-pinned. Every job stays offline after provisioning:
 `tests/ape-vendor-harness.sh` consumes the vendored `vendor/clex/clex_lexicon.pl`
 under its manifest gates instead of any network fetch.

@@ -1,0 +1,1 @@
+drs([A,B],[-(object(A,dosage,countable,na,eq,1),/(1,5)),-(property(A,high,comp),/(1,4)),-(predicate(B,be,named('Dose'),A),/(1,2))]).

@@ -6,6 +6,7 @@ if ! [ -f src/prolog/ir_tool.pl ] || \
         ! [ -f src/prolog/ir_to_prolog.pl ] || \
         ! [ -f src/prolog/inference_kernel.pl ] || \
         ! [ -f src/prolog/explanation.pl ] || \
+        ! [ -f tests/prolog/m6u3_review_gates.pl ] || \
         ! [ -d tests/fixtures/slice/golden ] || \
         ! [ -d tests/fixtures/slice/ir ] || \
         ! [ -d tests/fixtures/slice/program ] || \
@@ -33,7 +34,7 @@ IR_RED="$ROOT/tests/fixtures/ir/red"
 SCRATCH="$ROOT/.scratch/ir-run-harness.$$"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=175
+EXPECTED_PASS_COUNT=258
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -156,6 +157,33 @@ check_result_digest() {
     pass_case "$label"
 }
 
+m6u3_population_leaf() {
+    command grep -Fq \
+        "quantity_compare(quantity(integer(70),unit(year)),quantity_bound(greater,open,quantity(integer(64),unit(year))))" \
+        "$1"
+}
+
+run_review_gate() {
+    local name stdout_path stderr_path status
+    name=$1
+    stdout_path="$SCRATCH/probes/$name.stdout"
+    stderr_path="$SCRATCH/probes/$name.stderr"
+    if "$SWIPL" -q -f none -F none \
+            -s "$ROOT/tests/prolog/m6u3_review_gates.pl" \
+            -g "(m6u3_review_gates:$name->halt(0);halt(1))" \
+            -t 'halt(9)' >"$stdout_path" 2>"$stderr_path"; then
+        status=0
+    else
+        status=$?
+    fi
+    if [ "$status" -ne 0 ]; then
+        fail_case "probe/$name/status" "expected 0, got $status"
+    fi
+    if [ -s "$stdout_path" ] || [ -s "$stderr_path" ]; then
+        fail_case "probe/$name/streams" "expected zero bytes"
+    fi
+}
+
 if swipl_version=$("$SWIPL" --version 2>&1); then
     case $swipl_version in
         *'SWI-Prolog version 9.2.9 '*)
@@ -187,28 +215,28 @@ if [ "$#" -ne 4 ]; then
     fail_case "fixtures/count" "expected 4 result goldens, got $#"
 fi
 set -- "$GREEN"/*.program.pl
-if [ "$#" -ne 13 ]; then
-    fail_case "fixtures/count" "expected 13 hand-green programs, got $#"
+if [ "$#" -ne 17 ]; then
+    fail_case "fixtures/count" "expected 17 hand-green programs, got $#"
 fi
 set -- "$GREEN"/*.result.pl
-if [ "$#" -ne 13 ]; then
-    fail_case "fixtures/count" "expected 13 hand-green results, got $#"
+if [ "$#" -ne 17 ]; then
+    fail_case "fixtures/count" "expected 17 hand-green results, got $#"
 fi
 set -- "$RED"/*.program.pl
-if [ "$#" -ne 52 ]; then
-    fail_case "fixtures/count" "expected 52 red programs, got $#"
+if [ "$#" -ne 70 ]; then
+    fail_case "fixtures/count" "expected 70 red programs, got $#"
 fi
 set -- "$LOWER_GREEN"/*.ir.pl
-if [ "$#" -ne 21 ]; then
-    fail_case "fixtures/count" "expected 21 lower IR goldens, got $#"
+if [ "$#" -ne 38 ]; then
+    fail_case "fixtures/count" "expected 38 lower IR goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.program.pl
-if [ "$#" -ne 21 ]; then
-    fail_case "fixtures/count" "expected 21 lower program goldens, got $#"
+if [ "$#" -ne 38 ]; then
+    fail_case "fixtures/count" "expected 38 lower program goldens, got $#"
 fi
 set -- "$LOWER_GREEN"/*.result.pl
-if [ "$#" -ne 21 ]; then
-    fail_case "fixtures/count" "expected 21 lower result goldens, got $#"
+if [ "$#" -ne 38 ]; then
+    fail_case "fixtures/count" "expected 38 lower result goldens, got $#"
 fi
 pass_case "fixtures/count"
 
@@ -672,6 +700,69 @@ if ! command grep -Fxq "$wh_order_line" \
 fi
 pass_case "answer/wh-byte-order"
 
+population_result="$LOWER_GREEN/m6u3-population.result.pl"
+if ! m6u3_population_leaf "$population_result"; then
+    fail_case "answer/m6u3-comparison-leaf" \
+        "expected exact ground population comparison leaf"
+fi
+pass_case "answer/m6u3-comparison-leaf"
+
+population_tampered="$SCRATCH/probes/m6u3-population-tampered.result.pl"
+while IFS= read -r line || [ -n "$line" ]; do
+    printf '%s\n' "${line/quantity_compare(quantity(integer(70),unit(year)),quantity_bound(greater,open,quantity(integer(64),unit(year))))/quantity_compare(quantity(integer(71),unit(year)),quantity_bound(greater,open,quantity(integer(64),unit(year))))}"
+done <"$population_result" >"$population_tampered"
+if m6u3_population_leaf "$population_tampered"; then
+    fail_case "answer/m6u3-comparison-leaf-negative" \
+        "tampered comparison leaf passed semantic checker"
+fi
+pass_case "answer/m6u3-comparison-leaf-negative"
+
+comparison_false="$GREEN/m6u3-comparison-false.result.pl"
+if ! command grep -Fq \
+        "answer(query_id(sentence(2),clause(1)),pred(eligible,[named(a)]),not_proved)." \
+        "$comparison_false" || command grep -q '^proof(' "$comparison_false"; then
+    fail_case "answer/m6u3-comparison-false" \
+        "expected not_proved with no fabricated proof"
+fi
+pass_case "answer/m6u3-comparison-false"
+
+if ! command grep -Fq "proof(temporal_window(after" \
+        "$LOWER_GREEN/m6u3-temporal-window.result.pl" || \
+        ! command grep -Fq \
+            "source(sentence(2),tokens([1,2,3,5,6,7,8]))" \
+            "$LOWER_GREEN/m6u3-temporal-window.ir.pl" || \
+        ! command grep -Fq "proof(temporal_window(before" \
+            "$LOWER_GREEN/m6u3-temporal-window-before.result.pl"; then
+    fail_case "answer/m6u3-temporal-proof" \
+        "expected full-provenance before/after window proof nodes"
+fi
+pass_case "answer/m6u3-temporal-proof"
+
+temporal_matrix="$GREEN/m6u3-temporal-matrix.program.pl"
+if ! command grep -Fq "temporal_window(before" "$temporal_matrix" || \
+        ! command grep -Fq "quantity_bound(greater,open" \
+            "$temporal_matrix" || \
+        ! command grep -Fq "quantity_bound(leq,closed,quantity(integer(2),unit(week)))" \
+            "$temporal_matrix" || \
+        ! command grep -Fq "anchor(var(2))" "$temporal_matrix"; then
+    fail_case "answer/m6u3-temporal-matrix" \
+        "expected before/open/equal-closed/variable-anchor matrix"
+fi
+pass_case "answer/m6u3-temporal-matrix"
+
+if ! command grep -Fq "pred('low comp',[named('Dose')])" \
+        "$LOWER_GREEN/m6u3-qualitative-low.result.pl" || \
+        ! command grep -Fq "pred('high comp',[named('Dose')])" \
+        "$LOWER_GREEN/m6u3-qualitative-high.result.pl" || \
+        ! command grep -Fq "pred('low sup',[named('Dose')])" \
+        "$LOWER_GREEN/m6u3-qualitative-lowest.result.pl" || \
+        ! command grep -Fq "pred('high sup',[named('Dose')])" \
+        "$LOWER_GREEN/m6u3-qualitative-highest.result.pl"; then
+    fail_case "answer/m6u3-qualitative-order" \
+        "expected byte-distinct low/high comp/sup predicates"
+fi
+pass_case "answer/m6u3-qualitative-order"
+
 competing_input="$GREEN/competing-witness.program.pl"
 competing_expected="$GREEN/competing-witness.result.pl"
 competing_first="$SCRATCH/green/competing-witness.stdout"
@@ -808,7 +899,47 @@ run_committed_red shape-wh-pattern-arg shape \
     'ir_tool_error(run,shape,term(3,goal)).'
 run_committed_red shape-wh-pattern-arity shape \
     'ir_tool_error(run,shape,term(3,goal)).'
+run_committed_red m6u3-shape-quantity-float shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-shape-quantity-unit shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-shape-bound-endpoint shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-shape-compare-head shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-shape-temporal-relation shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-quantity-cross-unit quantity \
+    'ir_tool_error(run,quantity,term(3,body_literal(1,cross_unit(year,day)))).'
+run_committed_red m6u3-safety-quantity-unbound safety \
+    'ir_tool_error(run,safety,term(3,quantity_var_not_bound(2,body_literal(2)))).'
+run_committed_red m6u3-temporal-cross-unit temporal \
+    'ir_tool_error(run,temporal,term(3,fact_temporal_window(cross_unit(week,day)))).'
+run_committed_red m6u3-temporal-reversed temporal \
+    'ir_tool_error(run,temporal,term(3,fact_temporal_window(reversed_interval(4,1)))).'
+run_committed_red m6u3-runtime-cross-unit quantity \
+    'ir_tool_error(run,quantity,runtime_cross_unit(year,day)).'
+run_committed_red m6u3-runtime-not-quantity quantity \
+    'ir_tool_error(run,quantity,runtime_actual_not_quantity(named(old))).'
+run_committed_red m6u3-shape-bound-eq-open shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-shape-bound-unknown-operator shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-safety-guard-before-binder safety \
+    'ir_tool_error(run,safety,term(3,quantity_var_not_bound(2,body_literal(2)))).'
+run_committed_red m6u3-temporal-equal-open temporal \
+    'ir_tool_error(run,temporal,term(3,fact_temporal_window(empty_interval(2)))).'
+run_committed_red m6u3-shape-temporal-window-direction shape \
+    'ir_tool_error(run,shape,term(3,clause)).'
+run_committed_red m6u3-runtime-cross-unit-false quantity \
+    'ir_tool_error(run,quantity,runtime_cross_unit(year,day)).'
+run_committed_red m6u3-typed-wh-answer wh_query \
+    'ir_tool_error(run,wh_query,answer_argument_not_named(quantity(integer(1),unit(mg)))).'
 run_committed_red resource-cap resource
+
+run_review_gate resource_boundary
+pass_case "probe/m6u3-resource-typed-leaf-cap"
+pass_case "probe/m6u3-resource-typed-leaf-cap-plus-one"
 
 for stem in \
         alternative-set-duplicate-members \
@@ -819,6 +950,12 @@ for stem in \
         exception-declaration-order \
         branch-wrapper-float \
         branch-wrapper-atom \
+        m6u3-quantity-cross-unit \
+        m6u3-safety-quantity-unbound \
+        m6u3-safety-guard-before-binder \
+        m6u3-temporal-cross-unit \
+        m6u3-temporal-reversed \
+        m6u3-temporal-equal-open \
         cycle-labeled-mixed; do
     pair_validate_stdout="$SCRATCH/stage-pin/$stem.pair.validate.stdout"
     pair_validate_stderr="$SCRATCH/stage-pin/$stem.pair.validate.stderr"
@@ -1087,6 +1224,23 @@ fi
 pass_case "probe/replay-identical-witness-valid"
 pass_case "probe/replay-identical-witness-swap"
 
+run_review_gate quantity_matrix
+pass_case "probe/m6u3-quantity-truth"
+
+run_review_gate replay_matrix
+pass_case "probe/m6u3-quantity-replay-control"
+pass_case "probe/m6u3-quantity-replay-actual-value"
+pass_case "probe/m6u3-quantity-replay-actual-unit"
+pass_case "probe/m6u3-quantity-replay-operator"
+pass_case "probe/m6u3-quantity-replay-endpoint"
+pass_case "probe/m6u3-quantity-replay-bound-value"
+pass_case "probe/m6u3-quantity-replay-bound-unit"
+pass_case "probe/m6u3-quantity-replay-missing"
+pass_case "probe/m6u3-quantity-replay-extra"
+pass_case "probe/m6u3-quantity-replay-swapped-operand"
+pass_case "probe/m6u3-quantity-replay-two-guard-swap"
+pass_case "probe/m6u3-quantity-replay-two-guard-duplicate"
+
 answer_yes_no_stdout="$SCRATCH/probes/answer-v3-yes-no.stdout"
 answer_yes_no_stderr="$SCRATCH/probes/answer-v3-yes-no.stderr"
 if "$SWIPL" -q -f none -F none -s "$ROOT/src/prolog/explanation.pl" \
@@ -1105,6 +1259,10 @@ if [ -s "$answer_yes_no_stdout" ] || [ -s "$answer_yes_no_stderr" ]; then
     fail_case "probe/answer-v3-yes-no" "expected zero bytes"
 fi
 pass_case "probe/answer-v3-yes-no"
+
+run_review_gate answer_self_check
+pass_case "probe/answer-self-check-exported-var-rejection"
+pass_case "probe/answer-self-check-tool-var-rejection"
 
 run_answer_alternative_tamper() {
     local name alternative stdout_path stderr_path goal status

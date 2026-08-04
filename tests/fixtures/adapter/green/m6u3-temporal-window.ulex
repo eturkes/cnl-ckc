@@ -1,0 +1,3 @@
+mn_pl(weeks,week).
+mn_sg(week,week).
+pn_sg('Therapy-start','Therapy-start',neutr).

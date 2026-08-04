@@ -1,0 +1,1 @@
+drs([A],[-(predicate(A,wait,named('John')),/(1,2)),-(modifier_pp(A,before,named('Therapy-start')),/(1,3))]).

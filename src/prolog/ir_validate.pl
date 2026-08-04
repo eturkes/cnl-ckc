@@ -6,7 +6,16 @@
 :- use_module(validation_common, [
     branch_shape_detail/2,
     shape_optional_branch/2,
-    terms_pairwise_distinct/1
+    terms_pairwise_distinct/1,
+    shape_argument/1,
+    shape_predicate_term/1,
+    shape_data_atom/1,
+    shape_quantity_compare/1,
+    data_atom_vars/2,
+    quantity_compare_vars/2,
+    quantity_compare_outcome/3,
+    temporal_window_error/2,
+    data_atom_key/2
 ]).
 
 /*
@@ -18,6 +27,7 @@ Every rejection throws ir_reject(Class, Detail); callers own framing and exits.
 validate_terms(Terms) :-
     envelope_pass(Terms, Document, Items),
     shape_pass(Document, Items),
+    constructor_semantics_pass(Items),
     identity_pass(Document, Items),
     ordering_pass(Items),
     scope_pass(Items),
@@ -186,9 +196,9 @@ shape_items([indexed(Index, Term)|Items]) :-
     ),
     shape_items(Items).
 
-shape_fact(fact(Id, Predicate, Source)) :-
+shape_fact(fact(Id, Atom, Source)) :-
     shape_id(Id),
-    shape_predicate(Predicate),
+    shape_data_atom(Atom),
     shape_source(Source).
 
 shape_rule(rule(Id, Head, Body, Source)) :-
@@ -229,7 +239,7 @@ shape_alternative_set(alternative_set(Id, MembersTerm, Body,
     Members = [_,_|_],
     shape_predicates(Members),
     terms_pairwise_distinct(Members),
-    shape_body(Body),
+    shape_alternative_body(Body),
     Satisfaction == satisfaction(any_member),
     Exclusivity == exclusivity(not_asserted),
     Exhaustiveness == exhaustiveness(not_asserted),
@@ -303,11 +313,8 @@ shape_integer_wrapper(Term, Name) :-
     arg(1, Term, Value),
     integer(Value).
 
-shape_predicate(pred(Name, Args)) :-
-    atom(Name),
-    is_list(Args),
-    Args = [_|_],
-    shape_args(Args).
+shape_predicate(Predicate) :-
+    shape_predicate_term(Predicate).
 
 shape_args([]).
 shape_args([Arg|Args]) :-
@@ -315,18 +322,29 @@ shape_args([Arg|Args]) :-
     shape_args(Args).
 
 shape_arg(Arg) :-
-    has_functor(Arg, named, 1),
-    arg(1, Arg, Name),
-    atom(Name),
-    !.
-shape_arg(Arg) :-
-    has_functor(Arg, var, 1),
-    arg(1, Arg, Number),
-    integer(Number).
+    shape_argument(Arg).
 
 shape_body(body(Literals)) :-
     is_list(Literals),
     shape_literals(Literals).
+
+shape_alternative_body(body(Literals)) :-
+    is_list(Literals),
+    shape_alternative_literals(Literals).
+
+shape_alternative_literals([]).
+shape_alternative_literals([Literal|Literals]) :-
+    ( shape_predicate(Literal)
+    ; has_functor(Literal, naf, 1),
+      arg(1, Literal, BarePredicate),
+      shape_predicate(BarePredicate)
+    ; has_functor(Literal, naf, 2),
+      arg(1, Literal, ExceptionId),
+      arg(2, Literal, LabeledPredicate),
+      shape_exception_id(ExceptionId),
+      shape_predicate(LabeledPredicate)
+    ),
+    shape_alternative_literals(Literals).
 
 shape_literals([]).
 shape_literals([Literal|Literals]) :-
@@ -334,8 +352,10 @@ shape_literals([Literal|Literals]) :-
     shape_literals(Literals).
 
 shape_literal(Literal) :-
-    has_functor(Literal, pred, 2),
-    shape_predicate(Literal),
+    shape_data_atom(Literal),
+    !.
+shape_literal(Literal) :-
+    shape_quantity_compare(Literal),
     !.
 shape_literal(Literal) :-
     has_functor(Literal, naf, 1),
@@ -361,6 +381,53 @@ integer_list([]).
 integer_list([Value|Values]) :-
     integer(Value),
     integer_list(Values).
+
+constructor_semantics_pass(Items) :-
+    constructor_semantics_items(Items).
+
+constructor_semantics_items([]).
+constructor_semantics_items([indexed(Index, Term)|Items]) :-
+    ( has_functor(Term, fact, 3) ->
+        arg(2, Term, Atom),
+        check_data_atom_semantics(Index, fact, 0, Atom)
+    ; has_functor(Term, rule, 4) ->
+        arg(3, Term, body(Body)),
+        check_body_constructor_semantics(Body, Index, 1)
+    ; true
+    ),
+    constructor_semantics_items(Items).
+
+check_body_constructor_semantics([], _, _).
+check_body_constructor_semantics([Literal|Literals], Index, Position) :-
+    ( shape_quantity_compare(Literal) ->
+        arg(1, Literal, Actual),
+        arg(2, Literal, Bound),
+        quantity_compare_outcome(Actual, Bound, Outcome),
+        ( Outcome = cross_unit(ActualUnit, BoundUnit) ->
+            reject(quantity,
+                term(Index,
+                    body_literal(Position,
+                        cross_unit(ActualUnit, BoundUnit))))
+        ; true
+        )
+    ; shape_data_atom(Literal) ->
+        check_data_atom_semantics(Index, body, Position, Literal)
+    ; true
+    ),
+    Next is Position + 1,
+    check_body_constructor_semantics(Literals, Index, Next).
+
+check_data_atom_semantics(Index, Context, Position, Atom) :-
+    ( has_functor(Atom, temporal_window, 4),
+      temporal_window_error(Atom, Error) ->
+        temporal_error_detail(Context, Position, Error, Detail),
+        reject(temporal, term(Index, Detail))
+    ; true
+    ).
+
+temporal_error_detail(fact, _, Error, fact_temporal_window(Error)).
+temporal_error_detail(body, Position, Error,
+    body_literal(Position, temporal_window(Error))).
 
 /* Pass 6: document identity, ID kind/bounds, and provenance agreement. */
 identity_pass(document(docid(Docid), source_sha256(SourceHash), ulex(Ulex)),
@@ -661,8 +728,8 @@ scope_pass(Items) :-
 scope_items([]).
 scope_items([indexed(Index, Term)|Items]) :-
     ( has_functor(Term, fact, 3) ->
-        arg(2, Term, Predicate),
-        reject_if_predicate_variable(Index, Predicate)
+        arg(2, Term, Atom),
+        reject_if_data_atom_variable(Index, Atom)
     ; has_functor(Term, query, 3) ->
         arg(2, Term, Predicate),
         reject_if_predicate_variable(Index, Predicate)
@@ -685,15 +752,22 @@ scope_items([indexed(Index, Term)|Items]) :-
     ),
     scope_items(Items).
 
+reject_if_data_atom_variable(Index, Atom) :-
+    data_atom_vars(Atom, Vars),
+    reject_if_variable_list(Index, Vars).
+
 reject_if_predicate_variable(Index, Predicate) :-
     predicate_vars(Predicate, Vars),
+    reject_if_variable_list(Index, Vars).
+
+reject_if_variable_list(Index, Vars) :-
     ( Vars = [Number|_] ->
         reject(scope, term(Index, var_outside_rule(Number)))
     ; true
     ).
 
-predicate_vars(pred(_, Args), Vars) :-
-    arg_vars(Args, Vars, []).
+predicate_vars(Predicate, Vars) :-
+    data_atom_vars(Predicate, Vars).
 
 predicate_list_vars([], []).
 predicate_list_vars([Predicate|Predicates], Vars) :-
@@ -701,23 +775,34 @@ predicate_list_vars([Predicate|Predicates], Vars) :-
     predicate_list_vars(Predicates, Rest),
     append(Here, Rest, Vars).
 
-arg_vars([], Vars, Vars).
-arg_vars([named(_)|Args], Vars0, Vars) :-
-    arg_vars(Args, Vars0, Vars).
-arg_vars([var(Number)|Args], [Number|Vars0], Vars) :-
-    arg_vars(Args, Vars0, Vars).
-
 literal_vars([], []).
 literal_vars([Literal|Literals], Vars) :-
-    literal_predicate(Literal, Predicate),
-    predicate_vars(Predicate, Here),
+    ( shape_quantity_compare(Literal) ->
+        quantity_compare_vars(Literal, Here)
+    ; literal_data_atom(Literal, Atom) ->
+        data_atom_vars(Atom, Here)
+    ),
     literal_vars(Literals, Rest),
     append(Here, Rest, Vars).
 
-literal_predicate(Predicate, Predicate) :-
-    has_functor(Predicate, pred, 2).
-literal_predicate(naf(Predicate), Predicate).
-literal_predicate(naf(_, Predicate), Predicate).
+literal_data_atom(Literal, Predicate) :-
+    has_functor(Literal, naf, 1),
+    arg(1, Literal, Predicate),
+    !.
+literal_data_atom(Literal, Predicate) :-
+    has_functor(Literal, naf, 2),
+    arg(2, Literal, Predicate),
+    !.
+literal_data_atom(Literal, Literal) :-
+    shape_data_atom(Literal).
+
+literal_predicate(Literal, Predicate) :-
+    ( has_functor(Literal, naf, 1) ->
+        arg(1, Literal, Predicate)
+    ; has_functor(Literal, naf, 2) ->
+        arg(2, Literal, Predicate)
+    ; Predicate = Literal
+    ).
 
 dense_first_occurrence(_, [], _, _, _).
 dense_first_occurrence(Index, [Number|Numbers], Seen, Next, Position) :-
@@ -780,28 +865,6 @@ first_naf_literal([_|Literals], Position0, Position) :-
     Position1 is Position0 + 1,
     first_naf_literal(Literals, Position1, Position).
 
-validate_rule_safety(Index, _Head, Body) :-
-    first_positive_after_naf(Body, 1, false, Position),
-    !,
-    reject(safety, term(Index, positive_after_naf(Position))).
-validate_rule_safety(Index, _Head, Body) :-
-    Body == [],
-    !,
-    reject(safety, term(Index, empty_body)).
-validate_rule_safety(Index, Head, Body) :-
-    positive_body_vars(Body, PositiveVars),
-    naf_body_vars(Body, NafVars),
-    ( first_missing_var(NafVars, PositiveVars, MissingNaf) ->
-        reject(safety,
-            term(Index, naf_var_not_in_positive_body(MissingNaf)))
-    ; predicate_vars(Head, HeadVars),
-      ( first_missing_var(HeadVars, PositiveVars, MissingHead) ->
-          reject(safety,
-              term(Index, head_var_not_in_positive_body(MissingHead)))
-      ; true
-      )
-    ).
-
 naf_literal(Literal) :-
     has_functor(Literal, naf, 1),
     !.
@@ -823,11 +886,65 @@ first_positive_after_naf([Literal|Literals], Position0, SeenNaf, Position) :-
           Literals, Position1, SeenNaf, Position)
     ).
 
+validate_rule_safety(Index, _Head, Body) :-
+    first_positive_after_naf(Body, 1, false, Position),
+    !,
+    reject(safety, term(Index, positive_after_naf(Position))).
+validate_rule_safety(Index, _Head, Body) :-
+    Body == [],
+    !,
+    reject(safety, term(Index, empty_body)).
+validate_rule_safety(Index, _Head, Body) :-
+    first_unbound_quantity_compare(Body, 1, [], Position, Missing),
+    !,
+    reject(safety,
+        term(Index,
+            quantity_var_not_bound(Missing, body_literal(Position)))).
+validate_rule_safety(Index, Head, Body) :-
+    positive_body_vars(Body, PositiveVars),
+    naf_body_vars(Body, NafVars),
+    ( first_missing_var(NafVars, PositiveVars, MissingNaf) ->
+        reject(safety,
+            term(Index, naf_var_not_in_positive_body(MissingNaf)))
+    ; predicate_vars(Head, HeadVars),
+      ( first_missing_var(HeadVars, PositiveVars, MissingHead) ->
+          reject(safety,
+              term(Index, head_var_not_in_positive_body(MissingHead)))
+      ; true
+      )
+    ).
+
+first_unbound_quantity_compare([], _, _, _, _) :-
+    fail.
+first_unbound_quantity_compare([Literal|Literals], Position, Covered0,
+        FoundPosition, Missing) :-
+    ( shape_quantity_compare(Literal) ->
+        quantity_compare_vars(Literal, CompareVars),
+        ( first_missing_var(CompareVars, Covered0, Missing0) ->
+            FoundPosition = Position,
+            Missing = Missing0
+        ; Next is Position + 1,
+          first_unbound_quantity_compare(
+              Literals, Next, Covered0, FoundPosition, Missing)
+        )
+    ; naf_literal(Literal) ->
+        Next is Position + 1,
+        first_unbound_quantity_compare(
+            Literals, Next, Covered0, FoundPosition, Missing)
+    ; data_atom_vars(Literal, Here),
+      append(Here, Covered0, Covered),
+      Next is Position + 1,
+      first_unbound_quantity_compare(
+          Literals, Next, Covered, FoundPosition, Missing)
+    ).
+
 positive_body_vars([], []).
 positive_body_vars([Literal|Literals], Vars) :-
     ( naf_literal(Literal) ->
         Here = []
-    ; predicate_vars(Literal, Here)
+    ; shape_quantity_compare(Literal) ->
+        Here = []
+    ; data_atom_vars(Literal, Here)
     ),
     positive_body_vars(Literals, Rest),
     append(Here, Rest, Vars).
@@ -873,8 +990,9 @@ collect_closed_world([indexed(Index, Term)|Items], Declarations) :-
 
 collect_defined_keys([], []).
 collect_defined_keys([indexed(_, Term)|Items], Keys) :-
-    ( has_functor(Term, fact, 3) ->
-        arg(2, Term, Head),
+    ( has_functor(Term, fact, 3),
+      arg(2, Term, Head),
+      has_functor(Head, pred, 2) ->
         record_predicate_key(Head, Key),
         Keys = [Key|Rest]
     ; has_functor(Term, rule, 4) ->
@@ -1023,14 +1141,16 @@ cycle_items([indexed(Index, Term)|Items], Edges0) :-
 add_body_edges([], _, _, _, Edges, Edges).
 add_body_edges([Literal|Literals], Index, Position, HeadKey,
         Edges0, Edges) :-
-    dependency_literal(Literal, Polarity, Predicate),
-    predicate_key(Predicate, BodyKey),
-    ( creates_cycle(HeadKey, BodyKey, Edges0) ->
-        reject(cycle,
-            term(Index,
-                body_literal(Position,
-                    signed_dependency(Polarity, HeadKey, BodyKey))))
-    ; Edges1 = [edge(Polarity, HeadKey, BodyKey)|Edges0]
+    ( dependency_literal(Literal, Polarity, Atom) ->
+        predicate_key(Atom, BodyKey),
+        ( creates_cycle(HeadKey, BodyKey, Edges0) ->
+            reject(cycle,
+                term(Index,
+                    body_literal(Position,
+                        signed_dependency(Polarity, HeadKey, BodyKey))))
+        ; Edges1 = [edge(Polarity, HeadKey, BodyKey)|Edges0]
+        )
+    ; Edges1 = Edges0
     ),
     Position1 is Position + 1,
     add_body_edges(Literals, Index, Position1, HeadKey, Edges1, Edges).
@@ -1043,10 +1163,11 @@ dependency_literal(Literal, naf, Predicate) :-
     has_functor(Literal, naf, 2),
     arg(2, Literal, Predicate),
     !.
-dependency_literal(Predicate, positive, Predicate).
+dependency_literal(Literal, positive, Literal) :-
+    shape_data_atom(Literal).
 
-predicate_key(pred(Name, Args), pred(Name, Arity)) :-
-    length(Args, Arity).
+predicate_key(Atom, Key) :-
+    data_atom_key(Atom, Key).
 
 creates_cycle(From, To, _) :-
     From == To,

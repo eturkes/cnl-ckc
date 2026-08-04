@@ -24,7 +24,7 @@ FAKE_NOISY_PARSE="$SCRATCH/fake-noisy-parse"
 FAKE_WARNING_LOAD="$SCRATCH/fake-warning-load"
 PASS_COUNT=0
 RUN_STATUS=0
-EXPECTED_PASS_COUNT=51
+EXPECTED_PASS_COUNT=80
 
 pass_case() {
     PASS_COUNT=$((PASS_COUNT + 1))
@@ -84,6 +84,26 @@ check_rejection() {
     pass_case "$label"
 }
 
+rerun_adapter_red() {
+    local name first_stdout first_stderr input rerun_stdout rerun_stderr
+    name=$1
+    first_stdout=$2
+    first_stderr=$3
+    input=$4
+    shift 4
+    rerun_stdout="$SCRATCH/red/$name.rerun.stdout"
+    rerun_stderr="$SCRATCH/red/$name.rerun.stderr"
+    run_adapter "$input" "$rerun_stdout" "$rerun_stderr" "$@"
+    if [ "$RUN_STATUS" -ne 1 ]; then
+        fail_case "red/$name/determinism-status" \
+            "expected 1, got $RUN_STATUS"
+    fi
+    if ! cmp "$first_stdout" "$rerun_stdout" || \
+            ! cmp "$first_stderr" "$rerun_stderr"; then
+        fail_case "red/$name/determinism-bytes" "fresh runs differ"
+    fi
+}
+
 if swipl_version=$("$SWIPL" --version 2>&1); then
     case $swipl_version in
         *'SWI-Prolog version 9.2.9 '*)
@@ -97,6 +117,20 @@ else
     fail_case "swipl/version" "could not run $SWIPL"
 fi
 
+set -- "$GREEN"/*.ace
+if [ "$#" -ne 18 ]; then
+    fail_case "fixtures/count" "expected 18 green ACE fixtures, got $#"
+fi
+set -- "$GREEN"/*.golden
+if [ "$#" -ne 18 ]; then
+    fail_case "fixtures/count" "expected 18 green goldens, got $#"
+fi
+set -- "$RED"/*.ace
+if [ "$#" -ne 6 ]; then
+    fail_case "fixtures/count" "expected 6 red ACE fixtures, got $#"
+fi
+pass_case "fixtures/count"
+
 if ! vendor_copy_status=$(git status --porcelain --ignored -- vendor/); then
     fail_case "vendor/precopy-clean" "git status failed"
 fi
@@ -109,6 +143,8 @@ pass_case "vendor/precopy-clean"
 rm -rf "$SCRATCH"
 mkdir -p "$TREE" "$SCRATCH/green" "$SCRATCH/red" "$SCRATCH/ulex" "$SCRATCH/env"
 trap 'rm -rf "$SCRATCH"' EXIT
+: >"$SCRATCH/dispatched-green-stems"
+: >"$SCRATCH/dispatched-red-stems"
 cp -a "$ROOT/vendor/ape/." "$TREE/"
 cp "$ROOT/vendor/clex/clex_lexicon.pl" "$TREE/prolog/lexicon/clex_lexicon.pl"
 pass_case "vendor/copy"
@@ -124,6 +160,7 @@ pass_case "vendor/plp"
 for input in "$GREEN"/*.ace; do
     name=${input##*/}
     stem=${name%.ace}
+    printf '%s\n' "$stem" >>"$SCRATCH/dispatched-green-stems"
     golden="$GREEN/$stem.golden"
     stdout_path="$SCRATCH/green/$stem.run1.stdout"
     stderr_path="$SCRATCH/green/$stem.run1.stderr"
@@ -131,7 +168,12 @@ for input in "$GREEN"/*.ace; do
     if ! [ -f "$golden" ]; then
         fail_case "green/$stem/golden" "missing $golden"
     fi
-    run_adapter "$input" "$stdout_path" "$stderr_path" "$TREE"
+    if [ -f "$GREEN/$stem.ulex" ]; then
+        run_adapter "$input" "$stdout_path" "$stderr_path" \
+            "$TREE" "$GREEN/$stem.ulex"
+    else
+        run_adapter "$input" "$stdout_path" "$stderr_path" "$TREE"
+    fi
     if [ "$RUN_STATUS" -ne 0 ]; then
         fail_case "green/$stem/status" "expected 0, got $RUN_STATUS"
     fi
@@ -143,6 +185,24 @@ for input in "$GREEN"/*.ace; do
     fi
     pass_case "green/$stem"
 done
+
+for input in "$GREEN"/*.ace; do
+    name=${input##*/}
+    printf '%s\n' "${name%.ace}"
+done | LC_ALL=C sort >"$SCRATCH/green-ace-stems"
+for input in "$GREEN"/*.golden; do
+    name=${input##*/}
+    printf '%s\n' "${name%.golden}"
+done | LC_ALL=C sort >"$SCRATCH/green-golden-stems"
+LC_ALL=C sort "$SCRATCH/dispatched-green-stems" \
+    >"$SCRATCH/green-dispatched-stems"
+if ! cmp "$SCRATCH/green-ace-stems" "$SCRATCH/green-golden-stems" || \
+        ! cmp "$SCRATCH/green-ace-stems" \
+            "$SCRATCH/green-dispatched-stems"; then
+    fail_case "inventory/green" \
+        "ACE, golden, and dispatched stems differ"
+fi
+pass_case "inventory/green"
 
 anchor_expected="$SCRATCH/anchor.expected"
 printf '%s\n' "drs([A],[-(predicate(A,wait,named('John')),/(1,2))])." >"$anchor_expected"
@@ -158,7 +218,12 @@ for input in "$GREEN"/*.ace; do
     second_stdout="$SCRATCH/green/$stem.run2.stdout"
     second_stderr="$SCRATCH/green/$stem.run2.stderr"
 
-    run_adapter "$input" "$second_stdout" "$second_stderr" "$TREE"
+    if [ -f "$GREEN/$stem.ulex" ]; then
+        run_adapter "$input" "$second_stdout" "$second_stderr" \
+            "$TREE" "$GREEN/$stem.ulex"
+    else
+        run_adapter "$input" "$second_stdout" "$second_stderr" "$TREE"
+    fi
     if [ "$RUN_STATUS" -ne 0 ]; then
         fail_case "determinism/$stem/status" "second run exited $RUN_STATUS"
     fi
@@ -200,25 +265,71 @@ stderr_path="$SCRATCH/red/noperiod.locale-c.stderr"
 LC_ALL=C run_adapter "$RED/noperiod.ace" "$stdout_path" "$stderr_path" "$TREE"
 check_rejection "locale-c/noperiod" 1 ape_messages 'message(error,sentence,' "$stdout_path" "$stderr_path"
 
+printf '%s\n' noperiod >>"$SCRATCH/dispatched-red-stems"
 stdout_path="$SCRATCH/red/noperiod.stdout"
 stderr_path="$SCRATCH/red/noperiod.stderr"
 run_adapter "$RED/noperiod.ace" "$stdout_path" "$stderr_path" "$TREE"
 check_rejection "red/noperiod" 1 ape_messages 'message(error,sentence,' "$stdout_path" "$stderr_path"
 
+printf '%s\n' oov >>"$SCRATCH/dispatched-red-stems"
 stdout_path="$SCRATCH/red/oov.stdout"
 stderr_path="$SCRATCH/red/oov.stderr"
 run_adapter "$RED/oov.ace" "$stdout_path" "$stderr_path" "$TREE"
 check_rejection "red/oov" 1 ape_messages 'message(error,word,' "$stdout_path" "$stderr_path"
 
+printf '%s\n' warnonly >>"$SCRATCH/dispatched-red-stems"
 stdout_path="$SCRATCH/red/warnonly.stdout"
 stderr_path="$SCRATCH/red/warnonly.stderr"
 run_adapter "$RED/warnonly.ace" "$stdout_path" "$stderr_path" "$TREE"
 check_rejection "red/warnonly" 1 ape_messages 'message(warning,' "$stdout_path" "$stderr_path"
 
+printf '%s\n' m6u3-during >>"$SCRATCH/dispatched-red-stems"
+stdout_path="$SCRATCH/red/m6u3-during.stdout"
+stderr_path="$SCRATCH/red/m6u3-during.stderr"
+run_adapter "$RED/m6u3-during.ace" "$stdout_path" "$stderr_path" \
+    "$TREE" "$RED/m6u3-during.ulex"
+check_rejection "red/m6u3-during" 1 ape_messages \
+    "A clinician waits during opioid-therapy <>." \
+    "$stdout_path" "$stderr_path"
+expected="adapter_error(ape_messages,[message(error,sentence,-(1,6),'A clinician waits during opioid-therapy <>.','This is the first sentence that was not ACE. The sign <> indicates the position where parsing failed.')])."
+if ! printf '%s\n' "$expected" | cmp - "$stderr_path"; then
+    fail_case "red/m6u3-during/exact" "stderr differs from pinned wall"
+fi
+rerun_adapter_red m6u3-during "$stdout_path" "$stderr_path" \
+    "$RED/m6u3-during.ace" "$TREE" "$RED/m6u3-during.ulex"
+
+printf '%s\n' m6u3-lowest >>"$SCRATCH/dispatched-red-stems"
+stdout_path="$SCRATCH/red/m6u3-lowest.stdout"
+stderr_path="$SCRATCH/red/m6u3-lowest.stderr"
+run_adapter "$RED/m6u3-lowest.ace" "$stdout_path" "$stderr_path" \
+    "$TREE" "$RED/m6u3-lowest.ulex"
+check_rejection "red/m6u3-lowest" 1 ape_messages \
+    "A clinician prescribes the lowest <> effective dosage." \
+    "$stdout_path" "$stderr_path"
+expected="adapter_error(ape_messages,[message(error,sentence,-(1,6),'A clinician prescribes the lowest <> effective dosage.','This is the first sentence that was not ACE. The sign <> indicates the position where parsing failed.')])."
+if ! printf '%s\n' "$expected" | cmp - "$stderr_path"; then
+    fail_case "red/m6u3-lowest/exact" "stderr differs from pinned wall"
+fi
+rerun_adapter_red m6u3-lowest "$stdout_path" "$stderr_path" \
+    "$RED/m6u3-lowest.ace" "$TREE" "$RED/m6u3-lowest.ulex"
+
+printf '%s\n' empty >>"$SCRATCH/dispatched-red-stems"
 stdout_path="$SCRATCH/red/empty.stdout"
 stderr_path="$SCRATCH/red/empty.stderr"
 run_adapter "$RED/empty.ace" "$stdout_path" "$stderr_path" "$TREE"
 check_rejection "red/empty" 1 empty_drs 'drs([],[])' "$stdout_path" "$stderr_path"
+
+for input in "$RED"/*.ace; do
+    name=${input##*/}
+    printf '%s\n' "${name%.ace}"
+done | LC_ALL=C sort >"$SCRATCH/red-fixture-stems"
+LC_ALL=C sort "$SCRATCH/dispatched-red-stems" \
+    >"$SCRATCH/red-dispatched-stems"
+if ! cmp "$SCRATCH/red-fixture-stems" \
+        "$SCRATCH/red-dispatched-stems"; then
+    fail_case "inventory/red" "ACE and dispatched stems differ"
+fi
+pass_case "inventory/red"
 
 stdout_path="$SCRATCH/ulex/oov-red.stdout"
 stderr_path="$SCRATCH/ulex/oov-red.stderr"
@@ -484,7 +595,7 @@ if ! cmp "$stdout_path" "$SCRATCH/env/noisy-parse.expected"; then
 fi
 pass_case "quarantine/noisy-parse"
 
-if ! vendor_status=$(git status --porcelain -- vendor/); then
+if ! vendor_status=$(git status --porcelain --ignored -- vendor/); then
     fail_case "vendor/clean" "git status failed"
 fi
 if [ -n "$vendor_status" ]; then

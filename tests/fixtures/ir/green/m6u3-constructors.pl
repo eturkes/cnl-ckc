@@ -1,0 +1,11 @@
+cnl_ir_record(3).
+document(docid('m6u3-constructors'),source_sha256('2222222222222222222222222222222222222222222222222222222222222222'),ulex(none)).
+fact(fact_id(sentence(1),clause(1)),pred(adult,[named('John')]),source(sentence(1),tokens([1]))).
+fact(fact_id(sentence(1),clause(2)),pred(have,[named('John'),quantity(integer(70),unit(year))]),source(sentence(1),tokens([2]))).
+fact(fact_id(sentence(1),clause(3)),temporal(before,pred(wait,[named('John')]),anchor(named('Therapy-start'))),source(sentence(1),tokens([3]))).
+fact(fact_id(sentence(1),clause(4)),temporal(after,pred(wait,[named('John')]),anchor(named('Therapy-start'))),source(sentence(1),tokens([4]))).
+fact(fact_id(sentence(1),clause(5)),temporal(within,pred(wait,[named('John')]),anchor(named('Therapy-start'))),source(sentence(1),tokens([5]))).
+fact(fact_id(sentence(1),clause(6)),temporal(during,pred(wait,[named('John')]),anchor(named('Therapy-start'))),source(sentence(1),tokens([6]))).
+fact(fact_id(sentence(1),clause(7)),temporal_window(after,pred(wait,[named('John')]),anchor(named('Therapy-start')),interval(quantity_bound(geq,closed,quantity(integer(1),unit(week))),quantity_bound(leq,closed,quantity(integer(4),unit(week))))),source(sentence(1),tokens([7]))).
+rule(rule_id(sentence(2),clause(1)),pred(eligible,[var(1)]),body([pred(adult,[var(1)]),pred(have,[var(1),var(2)]),quantity_compare(var(2),quantity_bound(greater,open,quantity(integer(64),unit(year)))),temporal(during,pred(wait,[var(1)]),anchor(named('Therapy-start')))]),source(sentence(2),tokens([1,2,3,4]))).
+query(query_id(sentence(3),clause(1)),pred(eligible,[named('John')]),source(sentence(3),tokens([1]))).
