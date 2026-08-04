@@ -15,6 +15,7 @@ Charter = `.agent/initial-prompt.md`. Pipeline: E-- → Python (glue only) | ACE
 | M6 | semantics coverage widening | minimal IR/profile/kernel extensions converting the M5 residual inventory into executable semantics (ideal = zero residuals on the first guideline; survivors carry a recorded impossibility rationale); per-class least-intrusive-deviation decision — deterministic Prolog first, other formalisms (ProbLog-class or other) only if required | M5 | IN-PROGRESS |
 | M7 | resumable /goal driver | registry-driven idempotent subagent-orchestrated completion driver; durable cross-session state; bounded termination (registry + discovery frontier empty) | M6 | UNPLANNED |
 | M8 | formally verified answer checking | small human-read formal spec + machine-checked (AI-written, unread) checker certifying chain answers — human certifies by reading the spec + running the checker | M6 (v3 final) | UNPLANNED |
+| M9 | total derivational coverage + semantic traceability | Bash acceptance surface into the derived graph; E-- `[[...]]` call-target semantics covered (no concealed Python); hand-Prolog transformation laws represented in natural-language form w/ machine-tied coverage | M6 | UNPLANNED |
 
 ## M0 — feasibility + governance (REVIEWED)
 
@@ -127,6 +128,26 @@ Directive (user, 2026-07-29): adopt the exemplar outcome of `github.com/schildep
 - Candidate target (M8 planning finalizes): one Lean package — reviewed spec module (v3 record byte grammar + decoder relation + stratified standard-model semantics + 4-way contract theorems) + unread AI checker/proofs; phases `check-model` (B2 complete answer relation: soundness + completeness incl. `not_proved`/`answers([])`/wh totality) + `check-cert` (B1 certificate replay against the recomputed model) + separable `check-compile` (B3a IR→program). Prolog kernel/compiler leave the trusted base for answer correctness; ACE→IR meaning stays human-audited via ACE + registry/mapping (charter unchanged).
 - Gate = M6 REVIEWED: v3 grammars final (est. +40–80% spec surface lands in M6); verifying v2 now = pure migration churn. M7-independent. Safe pre-gate work if idle: decoder prototype + boundary theorem statements over v2 fixtures as regression vectors.
 - In-flight pressure on M6 units: every constructor/certificate shape added lands in the future trusted spec → keep record/certificate grammars minimal, total, canonical.
+
+## M9 — total derivational coverage + semantic traceability (UNPLANNED; seeded 2026-08-04)
+
+Directive (user, 2026-08-04): reproducibility today is partial — E--→Python (regen-gated) + ACE→IR→Prolog (pipeline/golden-gated) — and must become total derivational coverage with strong semantic traceability. Named gaps: Bash outside the graph; arbitrary `[[...]]` E-- expressions concealing Python semantics; substantial handwritten Prolog defining transformations with no natural-language representation.
+
+Measured gap inventory (session-verified at seed):
+- **A Bash**: 13 first-party `.sh` = 7,015 lines (12 acceptance harnesses 6,964 + `.agent/context-gauge.sh` 51) + `.github/workflows/ci.yml` 155 — the entire acceptance authority is hand-Bash, underived, gated only by itself. Charter already names tests as E-- scope ("sole authored source for all first-party Python glue, tests, and tooling"); Bash escapes that sentence only by not being Python.
+- **B `[[...]]`**: E--'s call marker (spec: `[[name]](args)`) — the sole call syntax, so elimination ≠ removal; concealment = strict profile admits `IDENT (DOT IDENT)*` targets reaching arbitrary Python callables whose semantics E-- neither defines nor constrains. Production tools saturated: `pipeline.emm` 134 `[[`-lines/203, `ace_front_end.emm` 106/178, `regen.emm` 105/173 (345 sites); imports argparse/hashlib/os/pathlib/shutil/subprocess/sys. E--→py derivation holds; semantic traceability stops at the marker exactly on the lines that matter (hashing, spawn, fs transactions).
+- **C hand-Prolog**: `src/prolog/` 10 modules 9,705 lines (drs_to_ir 3,089, inference_kernel 1,824, registry_tool 1,692, ir_validate 1,196, explanation 806, ir_tool 365, validation_common 347, adapter 263, ir_to_prolog 70, drs_canon 53). Charter sanctions the hand boundary ("parser, compiler, validator, explanation machinery, inference kernel" — all 10 fit); directive amends ambition: lowering/validation/kernel/replay laws live only as Prolog + `docs/ir.md` prose, no NL-form representation, no machine tie doc↔clause.
+
+Direction candidates (planning selects per gap, least-intrusive first, sized from M6 actuals; scale ≈ M6-class: A parallelizable across 12 disjoint harnesses, B ~520 authored lines + TCB patch, C spec-corpus units per module family):
+- A: port harnesses to E---authored runners (E--→py trusted; subprocess/cmp/env patterns exist in `pipeline.emm`) > E--→Bash backend (new TCB surface, no gain). Conversion proof = paired old/new runs on identical trees, green + seeded-red parity per gate, then Bash deleted; CI yml shrinks to invoking derived runners (residual declared surface or generated).
+- B: typed E-- vocabulary via TCB patch (named constructs w/ defined semantics for hash/spawn/fs/argv; strict profile then rejects dotted `[[...]]` targets outside the blessed set) > allowlist + per-callable English contract registry validated at strict-check (lighter; traceability w/o closure). Regeneration-only corrections unchanged.
+- C: controlled-English specification corpus machine-tied to the Prolog (spec row ↔ predicate/clause/error-class, coverage validator CI-gated; ACE where expressible) > CNL-authored rule tables compiled to Prolog data consumed by a smaller hand interpreter (shrinks the hand-semantics core; fits table-like surfaces: DRS-shape→constructor maps, error-class maps) > full self-hosting (expected infeasible; survivors carry a recorded impossibility rationale, M6-style).
+- Residual out-of-graph set gets explicit per-item disposition (in-graph | declared-TCB | out-of-product w/ rationale): CI yml, `context-gauge.sh`, fixture probe inputs (hand test vectors), data rows (already verbatim-source-anchored + validator-gated), docs prose, agent-instruction files.
+- M8 interaction: complementary — M8 certifies answer semantics from v3 records; C covers the ACE→IR→program side M8 leaves human-audited, and C's spec corpus is candidate input to M8's human-read spec. The same minimality pressure on record/certificate grammars serves both.
+
+Gate = M6 REVIEWED (v3 + harness inventory stable; avoids double retrofit). At M6 close M7/M8/M9 are all plannable — sequencing = user decision then; A churns every gate file → schedule before further large harness growth.
+
+In-flight pressure on M6.4–M6.8: new gates keep the uniform harness pattern (mechanical A-port later); new `.emm` lines minimal; every new Prolog law lands `docs/ir.md`-stated at introduction (future spec-corpus rows).
 
 ## Seeds (banked)
 
