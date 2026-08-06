@@ -23,7 +23,7 @@ removed components are available in git history at the fork base recorded in
 
 ## Use
 
-Never run from this tree directly: `tools/goal.py` stages a scratch copy
+Always run through `tools/goal.py`: it stages a scratch copy
 (`shutil.copytree`), builds the grammar (`swipl -g "[fit_to_plp], halt."`
 inside `prolog/parser/`), and invokes the compiler there. License:
 LGPL-3.0-or-later (`LICENSE.txt`).

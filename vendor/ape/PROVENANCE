@@ -19,4 +19,4 @@ First-party additions:
 
 Trust posture: APE runs in separate SWI-Prolog processes over a scratch copy
 staged by `tools/goal.py` (`shutil.copytree` + `fit_to_plp` grammar build);
-Python moves bytes only and never interprets DRS content.
+Python moves bytes only; DRS interpretation lives entirely in Prolog.

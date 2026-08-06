@@ -40,7 +40,9 @@ was published with.
   proper names shared by all twelve documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog compiled from the ACE by
   `vendor/ape/prolog/ace_to_pl.pl`; regenerate via
-  `python3 -P tools/goal.py compile cdc-2022-opioid`; never edit by hand.
+  `python3 -P tools/goal.py compile cdc-2022-opioid` — the compiler is
+  their sole author.
 
-These derivatives are project-authored, not altered CDC text, and must not be
-presented as CDC-authored formalizations.
+These derivatives are project-authored formal projections; present them as
+the project's own work, with CDC credited as the source of the underlying
+recommendations.

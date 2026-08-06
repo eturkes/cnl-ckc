@@ -64,7 +64,7 @@ Guideline work runs as goal rounds in a Claude Code session opened at the
 repository root, driven by the built-in `/goal` stop-condition command:
 
 ```
-/goal Process American clinical guidelines through the pipeline as described in README.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, .agent/queue.md holds no open entries, and web search finds no eligible American clinical guideline still uncovered.
+/goal Process American clinical guidelines through the pipeline as described in README.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and web search confirms every eligible American clinical guideline available online is covered.
 ```
 
 The goal re-arms each time Claude tries to stop and survives session resume,
@@ -108,10 +108,10 @@ the queue, or discovered online and queued: acquire the document and
 persist it immutably under `guidelines/<id>/source/` before any generative
 processing; record URL, retrieval date, SHA-256, byte length, and a rights
 quote in `guidelines/<id>/README.md` (model:
-`guidelines/cdc-2022-opioid/`); commit the source record on its own, so a
-halt never loses it. Ids follow `[a-z0-9-]+`, chosen once per source; an
+`guidelines/cdc-2022-opioid/`); commit the source record on its own, so it
+survives any halt. Ids follow `[a-z0-9-]+`, chosen once per source; an
 already-fetched URL keeps its recorded id, and changed remote content
-becomes a new versioned id rather than a mutation of a recorded source. A
+becomes a new versioned id while every recorded source stays immutable. A
 paywall or rights gate is recorded as a queue blocker and the round moves
 on.
 
