@@ -16,6 +16,23 @@ Rep 2022;71(No. RR-3):1–95. DOI `http://dx.doi.org/10.15585/mmwr.rr7103a1`.
   recommendations; PDF pages 13–14). SHA-256
   `6776a52087f893b462c1f1092c1ed8799353438809368e0cfd123ca4244d0ac5`. Number
   labels in the extraction are presentation scaffolding, not CDC text edits.
+- `source/front-matter-extraction.txt` — verbatim extraction of the
+  normative statements on physical PDF pages 3–18 (Summary, Introduction,
+  Box 1, Box 2, Scope and Audience, Methods, category framing, guiding
+  principles; 54 payload regions). SHA-256
+  `f3866abbc7a89e12273053bfb6e8d299bbaa733ced2523aefa3a2d999de83ed9`.
+- `source/rec01-05-body-extraction.txt` — verbatim extraction of the
+  normative statements on physical PDF pages 19–39 (Box 4 and the
+  recommendation 1–5 subsections: restated statements, supporting
+  rationale, implementation considerations; 309 payload regions). SHA-256
+  `2f700711ca5e216524c3224450153ed1b816bfdb73c2cb0b77bf4fd950db0848`.
+- `source/rec06-12-body-extraction.txt` — verbatim extraction of the
+  normative statements on physical PDF pages 40–63 (recommendation 6–12
+  subsections and end matter through the Conclusion; 320 payload regions).
+  SHA-256
+  `d20c05eb8331c1c1f76f6136d8e05a4a524dc88187377f8a21fcaa191f2ec988`.
+  Each extraction file's header states its locator and scaffolding
+  conventions; the statement payloads are byte-range regions of the file.
 
 ## Rights and attribution
 
@@ -45,4 +62,27 @@ was published with.
 
 These derivatives are project-authored formal projections; present them as
 the project's own work, with CDC credited as the source of the underlying
-recommendations.
+recommendations. Named individuals (`RecNN`, `RecNN-clinician`) and every
+query are project-authored probe fixtures that exercise the compiled
+rules; they are not CDC statements, and query proofs establish internal
+consistency of the projection, not guideline conclusions.
+
+## Coverage
+
+- Verbatim extraction evidence spans the whole document: pages 3–18, the
+  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63 — 699 payload
+  regions across the four extraction files. Physical pages 64–100 hold
+  references, the appendix evidence reviews, and the publication notice;
+  the project's sweep of those pages found no clinical normative
+  statements (an epistemic caution about interpreting findings on p82 and
+  the standard MMWR access/contact/public-domain notices on p100).
+- Formalization is Box 3 only, at one document per recommendation: each of
+  the twelve ACE documents preserves its recommendation's exact
+  category/evidence parenthetical and one simplified action rule. The
+  rules do not yet encode deontic modality ("should"), conditions,
+  objects, timing, or alternatives; Box 3's multi-sentence recommendations
+  contain further normative sentences beyond the twelve projected rules,
+  and the 683 payload regions outside Box 3 await per-statement ruling —
+  formalize, record as uncovered with a reason, or link as a restatement
+  of a covered statement. A per-statement coverage manifest is the next
+  planned increment.

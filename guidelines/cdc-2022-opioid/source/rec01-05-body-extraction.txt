@@ -1,0 +1,626 @@
+CDC Clinical Practice Guideline for Prescribing Opioids for Pain — United States, 2022
+recommendations 1–5 body extraction evidence (verbatim rendered text)
+Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
+Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
+PDF locator: physical PDF pages 19–39; physical page 40 used only to complete a statement beginning on page 39; printed MMWR pages 17–37
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 309 payloads below.
+Scaffolding convention: locator lines plus bullet/table glyphs and numeric labels are presentation scaffolding outside payload ranges; each following LF-terminated line is one payload with hard wraps joined, line-end word hyphenation repaired, and true hyphens preserved.
+
+[S19-01 | p19 | Box 4 > Guiding principle 1]
+Acute, subacute, and chronic pain needs to be appropriately assessed and treated independent of whether opioids are part of a treatment regimen.
+[S19-02 | p19 | Box 4 > Guiding principle 2a]
+Recommendations are voluntary and are intended to support, not supplant, individualized, person-centered care.
+[S19-03 | p19 | Box 4 > Guiding principle 2b]
+Flexibility to meet the care needs and the clinical circumstances of a specific patient is paramount.
+[S19-04 | p19 | Box 4 > Guiding principle 3]
+A multimodal and multidisciplinary approach to pain management attending to the physical health, behavioral health, long-term services and supports, and expected health outcomes and well-being of each person is critical.
+[S19-05 | p19 | Box 4 > Guiding principle 4]
+Special attention should be given to avoid misapplying this clinical practice guideline beyond its intended use or implementing policies purportedly derived from it that might lead to unintended and potentially harmful consequences for patients.
+[S19-06 | p19 | Box 4 > Guiding principle 5]
+Clinicians, practices, health systems, and payers should vigilantly attend to health inequities; provide culturally and linguistically appropriate communication, including communication that is accessible to persons with disabilities; and ensure access to an appropriate, affordable, diversified, coordinated, and effective nonpharmacologic and pharmacologic pain management regimen for all persons.
+[S19-07 | p19 | Guiding principles > Main-text list item 5]
+Clinicians, practices, health systems, and payers should vigilantly attend to health inequities; provide culturally and linguistically appropriate communication (117), including communication that is accessible to persons with disabilities; and ensure access to an appropriate, affordable, diversified, coordinated, and effective nonpharmacologic and pharmacologic pain management regimen for all persons.
+[S19-08 | p19 | Recommendations 1–2 area > Introductory principle]
+All patients with pain should receive treatment that provides the greatest benefits relative to risks.
+[S19-09 | p19 | Rec 1 > Recommendation statement]
+Nonopioid therapies are at least as effective as opioids for many common types of acute pain. Clinicians should maximize use of nonpharmacologic and nonopioid pharmacologic therapies as appropriate for the specific condition and patient and only consider opioid therapy for acute pain if benefits are anticipated to outweigh risks to the patient. Before prescribing opioid therapy for acute pain, clinicians should discuss with patients the realistic benefits and known risks of opioid therapy (recommendation category: B; evidence type: 3).
+[S19-10 | p19 | Rec 1 > Implementation considerations]
+Clinicians should maximize use of nonopioid pharmacologic (e.g., topical or oral NSAIDs, acetaminophen) and nonpharmacologic (e.g., ice, heat, elevation, rest, immobilization, or exercise) therapies as appropriate for the specific condition.
+[S19-11 | p19 | Rec 1 > Implementation considerations]
+When diagnosis and severity of acute pain warrant the use of opioids, clinicians should prescribe immediate-release opioids (see Recommendation 3) at the lowest effective dose (see Recommendation 4) and for no longer than the expected duration of pain severe enough to require opioids (see Recommendation 6).
+[S19-12 | p19 | Rec 1 > Implementation considerations]
+Clinicians should prescribe and advise opioid use only as needed (e.g., hydrocodone 5 mg/acetaminophen 325 mg, one tablet not more frequently than every 4 hours as needed for moderate to severe pain) rather than on a scheduled basis (e.g., one tablet every 4 hours) and encourage and recommend an opioid taper if opioids are taken around the clock for more than a few days (see Recommendation 6).
+[S20-01 | p20 | Rec 1 > Implementation considerations]
+If patients already receiving opioids long term require additional medication for acute pain, nonopioid medications should be used when possible and, if additional opioids are required (e.g., for superimposed severe acute pain), they should be continued only for the duration of pain severe enough to require additional opioids, returning to the patient’s baseline opioid dosage as soon as possible, including a taper to baseline dosage if additional opioids were used around the clock for more than a few days (see Recommendation 6).
+[S20-02 | p20 | Rec 1 > Implementation considerations]
+Clinicians should ensure that patients are aware of expected benefits of, common risks of, serious risks of, and alternatives to opioids before starting or continuing opioid therapy and should involve patients meaningfully in decisions about whether to start opioid therapy.
+[S20-03 | p20 | Rec 1 > Supporting rationale]
+Evaluation of the patient is critical to appropriate management.
+[S20-04 | p20 | Rec 1 > Supporting rationale]
+To guide patient-specific selection of therapy, clinicians should evaluate patients and establish or confirm the diagnosis.
+[S20-05 | p20 | Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain]
+The American College of Physicians (ACP) recommends nonpharmacologic treatment with superficial heat, massage, acupuncture, or spinal manipulation as a cornerstone of treatment for acute low back pain (119).
+[S20-06 | p20 | Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain]
+ACP and the American Academy of Family Physicians (AAFP) suggest acupressure to improve pain and function and transcutaneous electrical nerve stimulation to reduce pain in patients with acute musculoskeletal injuries (120).
+[S20-07 | p20 | Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain]
+Health insurers and health systems can contribute to improved pain management and reduced medication use by increasing access to noninvasive nonpharmacologic therapies with evidence of effectiveness (9,43).
+[S20-08 | p20 | Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain]
+Noninvasive nonpharmacologic approaches should be used as appropriate to alleviate acute pain, including ice and elevation to reduce swelling and discomfort from musculoskeletal injuries, heat to alleviate low back pain, and other modalities depending on the cause of the acute pain.
+[S20-09 | p20 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+ACP recommends NSAIDs or skeletal muscle relaxants if pharmacologic treatment is desired to treat low back pain (119).
+[S20-10 | p20 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+For acute musculoskeletal injuries other than low back pain, ACP and AAFP recommend topical NSAIDs with or without menthol gel as first-line therapy and suggest oral NSAIDs to relieve pain or improve function or oral acetaminophen to reduce pain (120).
+[S20-11 | p20 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+The American Dental Association (ADA) recommends NSAIDs as first-line treatment for acute dental pain management (123).
+[S20-12 | p20 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+For acute kidney stone pain, NSAIDs are at least as effective as opioids (124–127), can decrease the ureteral smooth muscle tone and ureteral spasm (128) causing kidney stone pain, and are preferred for kidney stone pain if not contraindicated.
+[S21-01 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+Adverse events related to these newer medications require further study; however, their mechanisms of action are believed to be nonvasoconstrictive (130) and potentially carry lower risks than vasoactive medications in patients with cardiovascular risk factors (11).
+[S21-02 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+When not contraindicated, NSAIDs should be used for low back pain, painful musculoskeletal injuries (including minor pain related to fractures), dental pain, postoperative pain, and kidney stone pain; triptans, NSAIDs, or their combinations should be used along with antiemetics as needed for acute pain related to episodic migraine.
+[S21-03 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+NSAID use has been associated with serious gastrointestinal events and major coronary events (8), particularly in patients with cardiovascular or gastrointestinal comorbidities, and clinicians should weigh risks and benefits of use, dose, and duration of NSAIDs when treating older adults as well as patients with hypertension, renal insufficiency, heart failure, or those with risk for peptic ulcer disease or cardiovascular disease.
+[S21-04 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+Vasoactive effects of triptans and ergot alkaloids might preclude their use in patients with migraine who also have cardiovascular risk factors (11,131,132).
+[S21-05 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+Clinicians should review FDA-approved labeling, including boxed warnings, before initiating treatment with any pharmacologic therapy.
+[S21-06 | p21 | Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons]
+For pain management in the postpartum period, the American College of Obstetricians and Gynecologists (ACOG) recommends stepwise, multimodal, shared decision-making, incorporating pharmacologic treatments that might include opioids.
+[S21-07 | p21 | Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons]
+After vaginal delivery, ACOG recommends acetaminophen or NSAIDs, and if needed, adding an opioid.
+[S21-08 | p21 | Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons]
+After cesarean delivery, ACOG recommends standard oral and parenteral medications such as acetaminophen, NSAIDs, or low-dose, low-potency, short-acting opioids with duration of opioid use limited to the shortest reasonable course expected for treating acute pain (133).
+[S21-09 | p21 | Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons]
+ACOG recommends counseling persons who are prescribed opioids about the risk for central nervous system depression in the postpartum person and in the breastfed infant (133), noting that if a codeine-containing medication is selected, duration of therapy and neonatal signs of toxicity should be reviewed with patients and their families (133).
+[S21-10 | p21 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+For acute low back pain, ACP found insufficient evidence for effectiveness of opioids and recommends nonopioid medications (see Nonopioid Medications for Acute Pain) if choosing pharmacologic treatment (119).
+[S21-11 | p21 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+ACP and AAFP suggest against treating patients with acute pain from musculoskeletal injuries with opioids, including tramadol (120).
+[S21-12 | p21 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+ADA recommends NSAIDs as the first-line therapy for acute pain management (see Nonopioid Medications for Acute Pain) (123).
+[S22-01 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+The American Headache Society recommends against prescribing opioid or butalbital-containing medications as first-line treatment for recurrent headache disorders (152), and the American Academy of Neurology also recommends against use of both of these classes of medications for treatment of migraine, except as a last resort (153).
+[S22-02 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Because of equivalent or lesser effectiveness for pain relief compared with NSAIDs and risks for long-term opioid use after using opioids for acute pain, opioids are not recommended as first-line therapy for many common acute pain conditions, including low back pain, neck pain, pain related to other musculoskeletal injuries (e.g., sprains, strains, tendonitis, and bursitis), pain related to minor surgeries typically associated with minimal tissue injury and only mild postoperative pain (e.g., simple dental extraction), dental pain, kidney stone pain, and headaches including episodic migraine.
+[S22-03 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+When diagnosis and severity of acute pain warrant the use of opioids, clinicians should prescribe immediate-release opioids (see Recommendation 3) at the lowest effective dose (see Recommendation 4) and for no longer than the expected duration of pain severe enough to require opioids (see Recommendation 6) to minimize unintentional initiation of long-term opioid use.
+[S22-04 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Clinicians should maximize use of nonopioid pharmacologic (e.g., NSAIDs, acetaminophen, or both) and nonpharmacologic (e.g., ice, heat, elevation, rest, immobilization, or exercise) therapies as appropriate for the specific condition and continue these therapies as needed after opioids are discontinued.
+[S22-05 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Clinicians should work with patients to prevent prolonged opioid use, prescribe and advise opioid use only as needed (e.g., hydrocodone 5 mg/acetaminophen 325 mg, one tablet not more frequently than every 4 hours as needed for moderate to severe pain) rather than on a scheduled basis (e.g., one tablet every 4 hours), and encourage and include an opioid taper if opioids will be taken around the clock for more than a few days (see Recommendation 6).
+[S22-06 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Clinicians should consider concurrent medical conditions, including sleep apnea, pregnancy, renal or hepatic insufficiency, mental health conditions, and substance use disorders, in assessing risks of opioid therapy (see Recommendation 8); offer naloxone, particularly if the patient or a household member has risk factors for opioid overdose (see Recommendation 8); use particular caution when prescribing benzodiazepines or other sedating medications with opioid pain medication (see Recommendation 11); and check the prescription drug monitoring program (PDMP) database to ensure a new opioid prescription will not contribute to cumulative opioid dosages or medication combinations that put the patient at risk for overdose (see Recommendation 9).
+[S22-07 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+If signs of opioid use disorder are present, clinicians should address concerns with the patient, offer or arrange medication treatment for patients who meet criteria for opioid use disorder, and use nonpharmacologic and pharmacologic treatments as appropriate to manage the patient’s pain (see Recommendation 12 and the ASAM National Practice Guideline for the Treatment of Opioid Use Disorder: 2020 Focused Update) (96).
+[S22-08 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Therefore, strategies that minimize opioid use should be implemented for both opioid-naïve and opioid-tolerant patients with acute pain when possible.
+[S22-09 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+If patients receiving long-term opioid therapy require additional medication for acute pain, nonopioid medications should be used when possible.
+[S22-10 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+If additional opioids are required (e.g., for superimposed severe acute pain), they should be continued only for the duration of pain severe enough to require additional opioids, returning to the patient’s baseline opioid dosage as soon as possible, including an appropriate taper to baseline dosage if additional opioids were used around the clock for more than a few days (see Recommendation 6).
+[S22-11 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Patient education and discussion before starting outpatient opioid therapy are critical so that patient preferences and values can be understood and used to inform clinical decisions.
+[S22-12 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Clinicians should ensure that patients are aware of expected benefits of, common risks of, serious risks of, and alternatives to opioids before starting or continuing opioid therapy and should involve patients in decisions about whether to start opioid therapy.
+[S22-13 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Advise patients that short-term opioid use can lead to unintended long-term opioid use and of the importance of working toward planned discontinuation of opioid use as soon as feasible, including a plan to appropriately taper opioids as pain resolves if opioids have been used around the clock for more than a few days (see Recommendation 6).
+[S23-01 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Review communication mechanisms and protocols patients can use to tell clinicians of severe or uncontrolled pain and to arrange for timely reassessment and management.
+[S23-02 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Advise patients about serious adverse effects of opioids, including potentially fatal respiratory depression and development of a potentially serious opioid use disorder (see Recommendation 12) that can cause distress and inability to fulfill major role obligations at work, school, or home.
+[S23-03 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Advise patients about common effects of opioids, such as constipation, dry mouth, nausea, vomiting, drowsiness, confusion, tolerance, physical dependence, and withdrawal symptoms when stopping opioids.
+[S23-04 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+To prevent constipation associated with opioid use, advise patients to increase hydration and fiber intake and to maintain or increase physical activity as they are able.
+[S23-05 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Prophylactic pharmacologic therapy (e.g., a stimulant laxative such as senna, with or without a stool softener) might be needed to ensure regular bowel movements if opioids are used for more than a few days.
+[S23-06 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Stool softeners or fiber laxatives without another laxative should be avoided.
+[S23-07 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+To minimize withdrawal symptoms, clinicians should provide and discuss an opioid tapering plan when opioids will be used around the clock for more than a few days (see Recommendation 6).
+[S23-08 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+If formulations are prescribed that combine opioids with acetaminophen, advise patients of the risks of taking additional over-the-counter products containing acetaminophen.
+[S23-09 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+To help patients assess when a dose of opioids is needed, explain that the goal is to reduce pain to make it manageable rather than to eliminate pain.
+[S23-10 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Discuss effects that opioids might have on a person’s ability to safely operate a vehicle or other machinery, particularly when opioids are initiated or when other central nervous system depressants (e.g., benzodiazepines or alcohol) are used concurrently.
+[S23-11 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Discuss the potential for workplace toxicology testing programs to detect therapeutic opioid use.
+[S23-12 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Discuss increased risks for opioid use disorder, respiratory depression, and death at higher dosages, along with the importance of taking only the amount of opioids prescribed (i.e., not taking more opioids than prescribed or taking them more often).
+[S23-13 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Review increased risks for respiratory depression when opioids are taken with benzodiazepines, other sedatives, alcohol, nonprescribed or illicit drugs (e.g., heroin), or other opioids (see Recommendations 8 and 11).
+[S23-14 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Discuss risks to household members and other persons if opioids are intentionally or unintentionally shared with others for whom they are not prescribed, including the possibility that others might experience overdose at the same or lower dosage than prescribed for the patient and that young children and pets are susceptible to unintentional ingestion.
+[S23-15 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Discuss storage of opioids in a secure and preferably locked location, options for safe disposal of unused opioids (154), and the value of having naloxone available.
+[S23-16 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Discuss planned use of precautions to reduce risks, including naloxone for overdose reversal (see Recommendation 8) and clinician use of PDMP information (see Recommendation 9).
+[S23-17 | p23 | Rec 2 > Recommendation statement]
+Nonopioid therapies are preferred for subacute and chronic pain. Clinicians should maximize use of nonpharmacologic and nonopioid pharmacologic therapies as appropriate for the specific condition and patient and only consider initiating opioid therapy if expected benefits for pain and function are anticipated to outweigh risks to the patient. Before starting opioid therapy for subacute or chronic pain, clinicians should discuss with patients the realistic benefits and known risks of opioid therapy, should work with patients to establish treatment goals for pain and function, and should consider how opioid therapy will be discontinued if benefits do not outweigh risks (recommendation category: A; evidence type: 2).
+[S23-18 | p23 | Rec 2 > Implementation considerations]
+To guide patient-specific selection of therapy, clinicians should evaluate patients and establish or confirm the diagnosis.
+[S23-19 | p23 | Rec 2 > Implementation considerations]
+Clinicians should recommend appropriate noninvasive nonpharmacologic approaches to help manage chronic pain, such as exercise (e.g., aerobic, aquatic, or resistance exercises) or exercise therapy (a prominent modality in physical therapy) for back pain, fibromyalgia, and hip or knee osteoarthritis; weight loss for knee osteoarthritis; manual therapies for hip osteoarthritis; psychological therapy, spinal manipulation, low-level laser therapy, massage, mindfulness-based stress reduction, yoga, acupuncture, and multidisciplinary rehabilitation for low back pain; mind-body practices (e.g., yoga, tai chi, or qigong), massage, and acupuncture for neck pain; cognitive behavioral therapy, myofascial release massage, mindfulness practices, tai chi, qigong, acupuncture, and multidisciplinary rehabilitation for fibromyalgia; and spinal manipulation for tension headache.
+[S24-01 | p24 | Rec 2 > Implementation considerations]
+Physical therapy can be helpful, particularly for patients who have limited access to safe public spaces or public recreation facilities for exercise or whose pain has not improved with low-intensity physical exercise.
+[S24-02 | p24 | Rec 2 > Implementation considerations]
+Health insurers and health systems can improve pain management and reduce medication use and associated risks by increasing reimbursement for and access to noninvasive nonpharmacologic therapies with evidence for effectiveness.
+[S24-03 | p24 | Rec 2 > Implementation considerations]
+Clinicians should review FDA-approved labeling, including boxed warnings, and weigh benefits and risks before initiating treatment with any pharmacologic therapy.
+[S24-04 | p24 | Rec 2 > Implementation considerations]
+When patients affected by osteoarthritis have an insufficient response to nonpharmacologic interventions such as exercise for arthritis pain, topical NSAIDs can be used in patients with pain in a single or few joints near the surface of the skin (e.g., knee).
+[S24-05 | p24 | Rec 2 > Implementation considerations]
+For patients with osteoarthritis pain in multiple joints or incompletely controlled with topical NSAIDs, duloxetine or systemic NSAIDs can be considered.
+[S24-06 | p24 | Rec 2 > Implementation considerations]
+NSAIDs should be used at the lowest effective dose and shortest duration needed and should be used with caution, particularly in older adults and in patients with cardiovascular comorbidities, chronic renal failure, or previous gastrointestinal bleeding.
+[S24-07 | p24 | Rec 2 > Implementation considerations]
+When patients with chronic low back pain have had an insufficient response to nonpharmacologic approaches such as exercise, clinicians can consider NSAIDs or duloxetine for patients without contraindications.
+[S24-08 | p24 | Rec 2 > Implementation considerations]
+Tricyclic, tetracyclic, and SNRI antidepressants; selected anticonvulsants (e.g., pregabalin, gabapentin enacarbil, oxcarbazepine); and capsaicin and lidocaine patches can be considered for neuropathic pain.
+[S24-09 | p24 | Rec 2 > Implementation considerations]
+In older adults, decisions to use tricyclic antidepressants should be made judiciously on a case-by-case basis because of risks for confusion and falls.
+[S24-10 | p24 | Rec 2 > Implementation considerations]
+In older adults, decisions to use tricyclic antidepressants should be made judiciously on a case-by-case basis because of risks for confusion and falls.
+[S24-11 | p24 | Rec 2 > Implementation considerations]
+Patients with co-occurring pain and depression might be especially likely to benefit from antidepressant medication (see Recommendation 8).
+[S24-12 | p24 | Rec 2 > Implementation considerations]
+Opioids should not be considered first-line or routine therapy for subacute or chronic pain.
+[S24-13 | p24 | Rec 2 > Implementation considerations]
+This does not mean that patients should be required to sequentially fail nonpharmacologic and nonopioid pharmacologic therapy or be required to use any specific treatment before proceeding to opioid therapy.
+[S24-14 | p24 | Rec 2 > Implementation considerations]
+Rather, expected benefits specific to the clinical context should be weighed against risks before initiating therapy.
+[S24-15 | p24 | Rec 2 > Implementation considerations]
+In some clinical contexts (e.g., serious illness in a patient with poor prognosis for return to previous level of function, contraindications to other therapies, and clinician and patient agreement that the overriding goal is patient comfort), opioids might be appropriate regardless of previous therapies used.
+[S24-16 | p24 | Rec 2 > Implementation considerations]
+Opioid therapy should not be initiated without consideration by the clinician and patient of an exit strategy to be used if opioid therapy is unsuccessful.
+[S24-17 | p24 | Rec 2 > Implementation considerations]
+Before opioid therapy is initiated for subacute or chronic pain, clinicians should determine jointly with patients how functional benefit will be evaluated and establish specific, measurable treatment goals.
+[S24-18 | p24 | Rec 2 > Implementation considerations]
+For patients with subacute pain who started opioid therapy for acute pain and have been treated with opioid therapy for ≥30 days, clinicians should ensure that potentially reversible causes of chronic pain are addressed and that opioid prescribing for acute pain does not unintentionally become long-term opioid therapy simply because medications are continued without reassessment.
+[S24-19 | p24 | Rec 2 > Implementation considerations]
+Continuation of opioid therapy at this point might represent initiation of long-term opioid therapy, which should occur only as an intentional decision that benefits are likely to outweigh risks after informed discussion between the clinician and patient and as part of a comprehensive pain management approach.
+[S24-20 | p24 | Rec 2 > Implementation considerations]
+Clinicians seeing new patients already receiving opioids should establish treatment goals, including functional goals, for continued opioid therapy.
+[S24-21 | p24 | Rec 2 > Implementation considerations]
+Clinicians should avoid rapid tapering or abrupt discontinuation of opioids (see Recommendation 5).
+[S24-22 | p24 | Rec 2 > Implementation considerations]
+Patient education and discussion before starting opioid therapy are critical so that patient preferences and values can be understood and used to inform clinical decisions.
+[S25-01 | p25 | Rec 2 > Implementation considerations]
+Clinicians should review available low-cost options for pain management for all patients and particularly for patients who have low incomes, do not have health insurance, or have inadequate insurance.
+[S25-02 | p25 | Rec 2 > Implementation considerations]
+Clinicians should ensure that patients are aware of expected benefits of, common risks of, serious risks of, and alternatives to opioids before starting or continuing opioid therapy and should involve patients in decisions about whether to start opioid therapy.
+[S25-03 | p25 | Rec 2 > Supporting rationale]
+To guide patient-specific selection of therapy, clinicians should evaluate patients and establish or confirm the diagnosis (155).
+[S25-04 | p25 | Rec 2 > Supporting rationale]
+Evaluation should include a focused history, including history and characteristics of pain and potential contributing factors (e.g., function, work history and current work demands, psychosocial stressors, and sleep), and physical examination, with imaging or other diagnostic testing only if indicated (e.g., if severe or progressive neurologic deficits are present or if serious underlying conditions are suspected) (158,159).
+[S25-05 | p25 | Rec 2 > Supporting rationale]
+For complex pain syndromes, consultation with a pain specialist can be considered to assist with diagnosis and management.
+[S25-06 | p25 | Rec 2 > Supporting rationale]
+Tricyclic antidepressants, SNRI antidepressants, selected anticonvulsants, or transdermal lidocaine are recommended for neuropathic pain syndromes (e.g., diabetic neuropathy or postherpetic neuralgia) (156).
+[S25-07 | p25 | Rec 2 > Supporting rationale]
+Review of the patient’s history and context beyond the presenting pain syndrome is helpful in selection of pain treatments.
+[S25-08 | p25 | Rec 2 > Supporting rationale]
+In particular, medications should be used only after assessment and determination that expected benefits outweigh risks, considering patient-specific factors.
+[S25-09 | p25 | Rec 2 > Supporting rationale]
+For example, clinicians should consider fall risk when selecting and dosing potentially sedating medications (e.g., tricyclic antidepressants, anticonvulsants, and opioids) and should weigh benefits and risks of use, dosage, and duration of NSAIDs when treating older adults and patients with hypertension, renal insufficiency, heart failure, or those with risk for peptic ulcer disease or cardiovascular disease.
+[S25-10 | p25 | Rec 2 > Supporting rationale]
+Some guidelines recommend topical NSAIDs for localized osteoarthritis (e.g., knee osteoarthritis) over oral NSAIDs in patients aged ≥75 years to minimize systemic effects (166).
+[S25-11 | p25 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Previous guidelines have recommended aerobic, aquatic, or resistance exercises for persons with chronic pain, including osteoarthritis of the knee or hip, back pain, and fibromyalgia (119,156,166,171).
+[S26-01 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Active approaches that engage the patient should be used when possible, with a supplementary role for more passive approaches, to reduce pain and improve function.
+[S26-02 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Health insurers and health systems can improve pain management and reduce medication use and associated risks by increasing reimbursement for and access to noninvasive nonpharmacologic therapies with evidence for effectiveness (9,43).
+[S26-03 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+In addition, for many patients, aspects of these approaches can be used even when access to specialty care is limited.
+[S26-04 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+For example, previous guidelines have strongly recommended aerobic, aquatic, or resistance exercises for patients with osteoarthritis of the knee or hip (166) and maintenance of physical activity, including normal daily activities, for patients with low back pain (158).
+[S26-05 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Low-cost options to integrate exercise include walking in public spaces or use of public recreation facilities for group exercise.
+[S26-06 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Physical therapy can be helpful, particularly for patients who have limited access to safe public spaces or public recreation facilities for exercise or whose pain has not improved with low-intensity physical exercise.
+[S26-07 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+In addition, primary care clinicians can integrate elements of psychosocial therapies such as cognitive behavioral therapy, which addresses psychosocial contributors to pain and improves function (177), by encouraging patients to take an active role in the care plan, supporting patients in engaging in activities such as exercise that are typically beneficial but that might initially be associated with fear of exacerbating pain (159), or providing education in relaxation techniques and coping strategies.
+[S26-08 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Clinicians should become familiar with such options within their communities so they can refer patients to low-cost services.
+[S26-09 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Patients with higher levels of anxiety or fear related to pain or other clinically significant psychological distress can be referred for treatment with a mental health specialist (e.g., psychologist, psychiatrist, or clinical social worker).
+[S26-10 | p26 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Clinicians should review FDA-approved labeling, including boxed warnings, before initiating treatment with any pharmacologic therapy.
+[S26-11 | p26 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Acetaminophen has limited evidence for effectiveness (8) and is no longer considered a first-line treatment for osteoarthritis (161).
+[S27-01 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+When patients have an insufficient response to nonpharmacologic interventions (e.g., exercise for arthritis pain), and if a single or a few joints near the surface of the skin (e.g., knee) are affected by osteoarthritis, use of topical NSAIDs is recommended (161).
+[S27-02 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+In patients with osteoarthritis pain in multiple joints or incompletely controlled pain with topical NSAIDs, systemic NSAIDs or duloxetine can be used.
+[S27-03 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+However, systemic NSAIDs should be used at the lowest effective dosage and shortest duration needed because risks might increase with longer use and at higher dosages (178).
+[S27-04 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Oral NSAIDs should be used with caution, particularly in older persons and in patients with cardiovascular comorbidities, chronic renal failure, or previous gastrointestinal bleeding.
+[S27-05 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+In patients with gastrointestinal comorbidities but without current or previous gastrointestinal bleeding, cyclooxygenase-2 inhibitors or NSAIDs with proton pump inhibitors can be used to minimize risk compared with risk with use of NSAIDs alone (161).
+[S27-06 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+When patients with low back pain have had an insufficient response to nonpharmacologic approaches such as exercise, clinicians can consider NSAIDs or duloxetine (119) for patients without contraindications.
+[S27-07 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+For temporomandibular disorder pain that is not sufficiently improved with nonpharmacologic interventions, NSAIDs can be effective (179,180).
+[S27-08 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Tricyclic, tetracyclic, and SNRI antidepressants; selected anticonvulsants; and capsaicin and lidocaine patches are recommended for neuropathic pain (156).
+[S27-09 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Duloxetine, milnacipran, and pregabalin are FDA-approved for and are recommended for the treatment of fibromyalgia (156).
+[S27-10 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Tricyclic antidepressant amitriptyline often is used and recommended for patients with fibromyalgia (156), although evidence for its effectiveness is limited (8).
+[S27-11 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Because patients with chronic pain might experience concurrent depression (181) and depression can exacerbate physical symptoms including pain (182), patients with co-occurring pain and depression might be especially likely to benefit from antidepressant medication (see Recommendation 8).
+[S28-01 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Opioids should not be considered first-line or routine therapy for subacute or chronic pain.
+[S28-02 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+This does not mean that patients should be required to sequentially fail nonpharmacologic and nonopioid pharmacologic therapy or be required to use any specific treatment before proceeding to opioid therapy.
+[S28-03 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Rather, expected benefits specific to the clinical context should be weighed against risks before initiating therapy.
+[S28-04 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+In some clinical contexts (e.g., serious illness in a patient with poor prognosis for return to previous level of function, contraindications to other therapies, and clinician and patient agreement that the overriding goal is patient comfort), opioids might be appropriate regardless of previous therapies used.
+[S28-05 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Therefore, opioid therapy should only be initiated with consideration by the clinician and patient of an exit strategy that could be used if opioid therapy is unsuccessful in improving pain and pain-related function.
+[S28-06 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Before opioid therapy is initiated for subacute or chronic pain, clinicians should determine with patients how functional benefit will be evaluated and establish treatment goals.
+[S28-07 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Goals ideally include improvement in function (including social, emotional, and physical dimensions), pain, and quality of life.
+[S28-08 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Goals can be tailored to specific patient and clinical circumstances.
+[S28-09 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+For example, for some patients with diseases typically associated with progressive functional impairment or catastrophic injuries such as spinal cord trauma, reductions in pain without improvement in physical function might be more realistic.
+[S28-10 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Clinicians can assess and then follow function, pain severity, and quality of life using tools such as the three-item PEG (Pain average, interference with Enjoyment of life, and interference with General activity) assessment scale (184) (see Recommendation 7).
+[S28-11 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Clinicians can ask patients about functional goals that have meaning for them (e.g., walking the dog or walking around the block, returning to part-time work, and attending family events or recreational activities), and then use these goals in assessing benefits of opioid therapy and weighing benefits against risks of continued opioid therapy for individual patients (see Recommendation 7).
+[S28-12 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Patients with subacute pain might be at a particularly critical point, both for potential transition to chronic pain and potential transition to long-term opioid therapy.
+[S28-13 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Clinicians should reevaluate patients with subacute pain and their treatment course, ensure that potentially reversible causes of ongoing pain are addressed, and optimize pain management as needed.
+[S28-14 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+For patients with subacute pain who started opioid therapy for acute pain and have been treated with opioid therapy for ≥30 days, clinicians should ensure that opioid prescribing for acute pain does not unintentionally become long-term opioid prescribing simply because medications are continued without reassessment.
+[S28-15 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Continuation of opioid therapy at this point might represent initiation of long-term opioid therapy, which should occur only as an intentional decision that benefits are likely to outweigh risks after informed discussion between the clinician and patient and as part of a comprehensive pain management approach.
+[S28-16 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Clinicians seeing new patients already using opioid medication should establish treatment goals, including functional goals, for continued opioid therapy.
+[S28-17 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Clinicians should avoid rapid tapering or abrupt discontinuation of opioids (see Recommendation 5).
+[S28-18 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Patient education and discussion before starting opioid therapy are critical so that patient preferences and values can be understood and used to inform clinical decisions.
+[S28-19 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Clinicians should ensure that patients are aware of expected benefits of, common risks of, serious risks of, and alternatives to opioids before starting or continuing opioid therapy and should involve patients in decisions about whether to start opioid therapy.
+[S29-01 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Review available low-cost options for pain management for all patients, and particularly for patients who have low incomes, do not have health insurance, or have inadequate insurance.
+[S29-02 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Review considerations related to access to care because of the clinical oversight needed to initiate and continue opioid therapy and other treatments for pain.
+[S29-03 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Be explicit and realistic about expected benefits of opioids, explaining that there is not robust evidence that opioids improve pain or function with long-term use and that complete elimination of pain is unlikely.
+[S29-04 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Emphasize improvement in function as a primary goal and that function can improve even when pain is not eliminated.
+[S29-05 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Advise patients about serious adverse effects of opioids, including potentially fatal respiratory depression and development of a potentially serious opioid use disorder that can cause distress and inability to fulfill major obligations at work, school, or home.
+[S29-06 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Advise patients about common effects of opioids, such as constipation, dry mouth, nausea, vomiting, drowsiness, confusion, tolerance, physical dependence, and withdrawal symptoms when stopping opioids.
+[S29-07 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+To prevent constipation associated with opioid use, advise patients to increase hydration and fiber intake and to maintain or increase physical activity.
+[S29-08 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Prophylactic pharmacologic therapy (e.g., a stimulant laxative such as senna, with or without a stool softener) is usually needed to ensure regular bowel movements if opioids are taken regularly.
+[S29-09 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Stool softeners or fiber laxatives without another laxative should be avoided.
+[S29-10 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+If formulations are prescribed that combine opioids with acetaminophen, advise patients of the risks for taking additional over-the-counter products containing acetaminophen.
+[S29-11 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss effects that opioids might have on ability to safely operate a vehicle or other machinery, particularly when opioids are initiated, when dosages are increased, or when other central nervous system depressants, such as benzodiazepines or alcohol, are used concurrently.
+[S29-12 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss the potential for workplace toxicology testing programs to detect therapeutic opioid use.
+[S29-13 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss increased risks for opioid use disorder, respiratory depression, and death at higher dosages, along with the importance of taking only the amount of opioids prescribed (i.e., not taking more opioids than prescribed or taking them more often).
+[S29-14 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Review increased risks for respiratory depression when opioids are taken with benzodiazepines, other sedatives, alcohol, nonprescribed drugs such as heroin, or other opioids.
+[S29-15 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss risks for household members and other persons if opioids are intentionally or unintentionally shared with others for whom they are not prescribed, including the possibility that others might experience overdose at the same or at lower dosage than prescribed for the patient and that young children are susceptible to unintentional ingestion.
+[S29-16 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss storage of opioids in a secure, preferably locked location and options for safe disposal of unused opioids (154).
+[S29-17 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss the importance of periodic reassessment to ensure that opioids are helping to meet patient goals and, if opioids are not effective or are harmful, to allow opportunities for consideration of opioid tapering and dosage reduction or discontinuation and of additional nonpharmacologic or nonopioid pharmacologic treatment options.
+[S29-18 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss expectations for clinician and patient responsibilities to mitigate risks of opioid therapy and planned use of precautions to reduce risks, including naloxone for overdose reversal (see Recommendation 8) and clinician use of PDMP information (see Recommendation 9) and toxicology screening (see Recommendation 10).
+[S29-19 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Consider whether cognitive status might interfere with management of opioid therapy and, if so, determine whether a caregiver can responsibly comanage medication therapy.
+[S29-20 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Discuss the importance of reassessing medication use over time with both the patient and caregiver, as appropriate.
+[S29-21 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Because of the possibility that benefits of opioid therapy might diminish or that risks might become more prominent over time, clinicians should elicit patients’ experiences and preferences and review expected benefits and risks of continued opioid therapy with patients periodically (see Recommendation 7).
+[S29-22 | p29 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
+Office-based interventional approaches, such as arthrocentesis and intra-articular glucocorticoid injection for pain associated with rheumatoid arthritis (186) or osteoarthritis (187) and subacromial corticosteroid injection for rotator cuff disease (188), can provide short-term improvement in pain and function to supplement or facilitate exercise, physical therapy, and other conservative approaches.
+[S29-23 | p29 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
+Interventional pain management specialists offer additional interventions that can alleviate pain as part of a comprehensive pain management approach (6) for patients with indications including back pain, persistent pain after spinal surgery, neuropathic pain, and complex regional pain syndrome.
+[S30-01 | p30 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
+Level of evidence for effectiveness and risks varies by procedure, and additional research is needed to establish the clinical benefits as well as risks of specific interventional procedures for specific pain conditions (6,189) compared with risks of opioid pain medications and other pharmacologic therapies.
+[S30-02 | p30 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
+Interventional procedures should be performed by properly trained clinicians following meticulous infection control protocols.
+[S30-03 | p30 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
+Clinicians can consult with a qualified pain management specialist who is well versed in benefits and risks of diagnostic and therapeutic options to determine potential appropriateness of specific interventional procedures for their patients’ indications and clinical circumstances.
+[S30-04 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+Integrated pain management requires coordination of medical, psychological, and social aspects of health care and includes primary care, mental and behavioral health care, and specialist services when needed (191).
+[S30-05 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+When needed, medications should ideally be combined with nonpharmacologic therapy to provide greater benefits to patients in improving pain and function.
+[S30-06 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+Multimodal therapies should be considered for patients not responding to single-modality therapy, and combinations should be tailored depending on patient needs, cost, convenience, and other individual factors.
+[S30-07 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+Depending on patient comorbidities and benefit-to-risk ratios in individual patients, combinations of medications (e.g., two nonopioid medications with different mechanisms of action or a nonopioid with an opioid medication) also might be used.
+[S30-08 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+However, this approach should be used with caution to avoid synergistic risks of medications.
+[S30-09 | p30 | Rec 3 > Recommendation statement]
+When starting opioid therapy for acute, subacute, or chronic pain, clinicians should prescribe immediate-release opioids instead of extended-release and long-acting (ER/LA) opioids (recommendation category: A; evidence type: 4).
+[S30-10 | p30 | Rec 3 > Implementation considerations]
+Clinicians should not treat acute pain with ER/LA opioids or initiate opioid treatment for subacute or chronic pain with ER/LA opioids, and clinicians should not prescribe ER/LA opioids for intermittent or as-needed use.
+[S30-11 | p30 | Rec 3 > Implementation considerations]
+ER/LA opioids should be reserved for severe, continuous pain.
+[S30-12 | p30 | Rec 3 > Implementation considerations]
+FDA has noted that some ER/LA opioids should be considered only for patients who have received certain dosages of opioids of immediate-release opioids daily for at least 1 week.
+[S30-13 | p30 | Rec 3 > Implementation considerations]
+When changing to an ER/LA opioid for a patient previously receiving a different immediate-release opioid, clinicians should consult product labeling and reduce total daily dosage to account for incomplete opioid cross-tolerance.
+[S30-14 | p30 | Rec 3 > Implementation considerations]
+Clinicians should use additional caution with ER/LA opioids and consider a longer dosing interval when prescribing to patients with renal or hepatic dysfunction because decreased clearance of medications among these patients can lead to accumulation of drugs to toxic levels and persistence in the body for longer durations.
+[S30-15 | p30 | Rec 3 > Implementation considerations]
+Methadone should not be the first choice for an ER/LA opioid.
+[S30-16 | p30 | Rec 3 > Implementation considerations]
+Only clinicians who are familiar with methadone’s unique risk profile and who are prepared to educate and closely monitor their patients, including assessing risk for QT prolongation and considering electrocardiographic monitoring, should consider prescribing methadone for pain.
+[S30-17 | p30 | Rec 3 > Implementation considerations]
+Only clinicians who are familiar with the dosing and absorption properties of the ER/LA opioid transdermal fentanyl and are prepared to educate their patients about its use should consider prescribing it.
+[S31-01 | p31 | Rec 3 > Supporting rationale]
+In 2014, FDA modified the labeling for ER/LA opioid pain medications, noting serious risks and recommending that ER/LA opioids be reserved for management of pain severe enough to require daily, around-the-clock, long-term opioid treatment when alternative treatment options (e.g., nonopioid analgesics or immediate-release opioids) are ineffective, not tolerated, or would be otherwise inadequate to provide sufficient management of pain and not used as as-needed pain relievers (49).
+[S31-02 | p31 | Rec 3 > Supporting rationale]
+Clinicians should not treat acute pain with ER/LA opioids or initiate opioid treatment for subacute or chronic pain with ER/LA opioids, and clinicians should not prescribe ER/LA opioids for intermittent use.
+[S31-03 | p31 | Rec 3 > Supporting rationale]
+Because of the longer half-life and longer duration of effects (e.g., respiratory depression) of ER/LA opioids (e.g., methadone, fentanyl patches, or extended-release versions of oxycodone, hydromorphone, hydrocodone, or morphine), clinicians should not prescribe ER/LA opioids for the treatment of acute pain.
+[S31-04 | p31 | Rec 3 > Supporting rationale]
+ER/LA opioids should be reserved for severe, continuous pain and should be considered only for patients who have received certain dosages of immediate-release opioids daily (e.g., 60 mg daily of oral morphine, 30 mg daily of oral oxycodone, or equianalgesic dosages of other opioids) for at least 1 week (193).
+[S31-05 | p31 | Rec 3 > Supporting rationale]
+When changing to an ER/LA opioid for a patient previously receiving a different immediate-release opioid, clinicians should consult product labeling and reduce total daily dosage to account for incomplete opioid cross-tolerance.
+[S32-01 | p32 | Rec 3 > Supporting rationale]
+Clinicians should use additional caution with ER/LA opioids and consider a longer dosing interval when prescribing to patients with renal or hepatic dysfunction because decreased clearance of medications among these patients can lead to accumulation of medications to toxic levels and persistence in the body for longer durations.
+[S32-02 | p32 | Rec 3 > Supporting rationale]
+Although in certain situations clinicians might need to prescribe immediate-release and ER/LA opioids together (e.g., when transitioning patients from ER/LA opioids to immediate-release opioids by temporarily using lower dosages of both, for temporary postoperative use of short-term opioids in a patient already receiving ER/LA opioids, or in patients with opioid use disorder treated and stabilized on methadone who need short-acting opioids for acute pain), clinicians should consider the potential for increased overdose risk and use caution when prescribing immediate-release opioids in combination with ER/LA opioids.
+[S32-03 | p32 | Rec 3 > Supporting rationale]
+When an ER/LA opioid is prescribed, using one with predictable pharmacokinetics and pharmacodynamics is preferred to minimize unintentional overdose risk.
+[S32-04 | p32 | Rec 3 > Supporting rationale]
+Methadone should not be the first choice for an ER/LA opioid.
+[S32-05 | p32 | Rec 3 > Supporting rationale]
+Only clinicians who are familiar with methadone’s unique risk profile and who are prepared to educate and closely monitor their patients, including risk assessment for QT prolongation and consideration of electrocardiographic monitoring, should consider prescribing methadone for pain.
+[S32-06 | p32 | Rec 3 > Supporting rationale]
+Because dosing effects of transdermal fentanyl often are misunderstood by both clinicians and patients, only clinicians who are familiar with its dosing and absorption properties of and are prepared to educate their patients about its use should consider prescribing transdermal fentanyl.
+[S32-07 | p32 | Rec 4 > Recommendation statement]
+When opioids are initiated for opioid-naïve patients with acute, subacute, or chronic pain, clinicians should prescribe the lowest effective dosage. If opioids are continued for subacute or chronic pain, clinicians should use caution when prescribing opioids at any dosage, should carefully evaluate individual benefits and risks when considering increasing dosage, and should avoid increasing dosage above levels likely to yield diminishing returns in benefits relative to risks to patients (recommendation category: A; evidence type: 3).
+[S32-08 | p32 | Rec 4 > Implementation considerations]
+The recommendations related to opioid dosages are not intended to be used as an inflexible, rigid standard of care; rather, they are intended to be guideposts to help inform clinician-patient decision-making.
+[S32-09 | p32 | Rec 4 > Implementation considerations]
+Therefore, the recommendation language emphasizes that clinicians should avoid increasing dosage above levels likely to yield diminishing returns in benefits relative to risks to patients rather than emphasizing a single specific numeric threshold.
+[S32-10 | p32 | Rec 4 > Implementation considerations]
+Further, these recommendations apply specifically to starting opioids or to increasing opioid dosages, and a different set of benefits and risks applies to reducing opioid dosages (see Recommendation 5).
+[S32-11 | p32 | Rec 4 > Implementation considerations]
+When opioids are initiated for opioid-naïve patients with acute, subacute, or chronic pain, clinicians should prescribe the lowest effective dosage.
+[S32-12 | p32 | Rec 4 > Implementation considerations]
+For patients not already taking opioids, the lowest effective dose can be determined using product labeling as a starting point with calibration as needed based on the severity of pain and other clinical factors such as renal or hepatic insufficiency (see Recommendation 8).
+[S32-13 | p32 | Rec 4 > Implementation considerations]
+If opioids are continued for subacute or chronic pain, clinicians should use caution when prescribing opioids at any dosage and should generally avoid dosage increases when possible.
+[S32-14 | p32 | Rec 4 > Implementation considerations]
+Therefore, before increasing total opioid dosage to ≥50 MME/day, clinicians should pause and carefully reassess evidence of individual benefits and risks.
+[S32-15 | p32 | Rec 4 > Implementation considerations]
+If a decision is made to increase dosage, clinicians should use caution and increase dosage by the smallest practical amount.
+[S32-16 | p32 | Rec 4 > Implementation considerations]
+The recommendations related to opioid dosages are not intended to be used as an inflexible, rigid standard of care; rather, they are intended to be guideposts to help inform clinician-patient decision-making.
+[S32-17 | p32 | Rec 4 > Implementation considerations]
+Clinicians should carefully evaluate a decision to further increase dosage on the basis of individualized assessment of benefits and risks and weighing factors such as diagnosis, incremental benefits for pain and function relative to risks with previous dosage increases, other treatments and effectiveness, and patient values and preferences.
+[S32-18 | p32 | Rec 4 > Implementation considerations]
+The recommendations related to opioid dosages are not intended to be used as an inflexible, rigid standard of care; rather, they are intended to be guideposts to help inform clinician-patient decision-making.
+[S33-01 | p33 | Rec 4 > Supporting rationale > Table footnote instruction]
+Multiply the dose for each opioid by the conversion factor to determine the dose in MMEs.
+[S33-02 | p33 | Rec 4 > Supporting rationale > Table footnote caution lead-in]
+The following cautions should be noted:
+[S33-03 | p33 | Rec 4 > Supporting rationale > Table footnote caution 3]
+Do not use the calculated dose in MMEs to determine the doses to use when converting one opioid to another; when converting opioids, the new opioid is typically dosed at a substantially lower dose than the calculated MME dose to avoid overdose because of incomplete cross-tolerance and individual variability in opioid pharmacokinetics.
+[S33-04 | p33 | Rec 4 > Supporting rationale > Table footnote caution 4]
+Use particular caution with methadone dose conversions because methadone has a long and variable half-life, and peak respiratory depressant effect occurs later and lasts longer than peak analgesic effect.
+[S33-05 | p33 | Rec 4 > Supporting rationale > Table footnote caution 5]
+Use particular caution with transdermal fentanyl because it is dosed in mcg/hr instead of mg/day, and its absorption is affected by heat and other factors.
+[S33-06 | p33 | Rec 4 > Supporting rationale > Table footnote caution 7]
+These conversion factors should not be applied to dosage decisions related to the management of opioid use disorder.
+[S34-01 | p34 | Rec 4 > Supporting rationale]
+When opioids are used for acute, subacute, or chronic pain, clinicians should start opioids at the lowest possible effective dosage.
+[S34-02 | p34 | Rec 4 > Supporting rationale]
+For patients not already taking opioids, the lowest effective dose can be determined using product labeling as a starting point with calibration as needed on the basis of the severity of pain and other clinical factors, such as renal or hepatic insufficiency (see Recommendation 8).
+[S34-03 | p34 | Rec 4 > Supporting rationale]
+For example, a label for hydrocodone bitartrate (5 mg) and acetaminophen (300 mg) (207) states that the usual adult dosage is one or two tablets every 4–6 hours as needed for pain, and the total daily dosage should not exceed eight tablets.
+[S34-04 | p34 | Rec 4 > Supporting rationale]
+Clinicians should use additional caution when initiating opioids for patients aged ≥65 years and patients with renal or hepatic insufficiency because of a potentially smaller therapeutic window between safe dosages and dosages associated with respiratory depression and overdose (see Recommendation 8).
+[S34-05 | p34 | Rec 4 > Supporting rationale]
+In addition to opioids, clinicians should consider cumulative dosages of other medications, such as acetaminophen, that are combined with opioids in many formulations and for which decreased clearance of medications might result in accumulation of medications to toxic levels.
+[S34-06 | p34 | Rec 4 > Supporting rationale]
+Clinicians should generally avoid unnecessary dosage increases, use caution when increasing opioid dosages, and increase dosage by the smallest practical amount because overdose risk increases with increases in opioid dosage.
+[S34-07 | p34 | Rec 4 > Supporting rationale]
+For opioid-naïve outpatients with acute pain treated with an opioid for a few days or less, dosage increases are usually unnecessary and should not be attempted without close monitoring because of the risks for respiratory depression.
+[S34-08 | p34 | Rec 4 > Supporting rationale]
+In the context of long-term opioid use, when dosage is increased, clinicians should reevaluate patients after increasing dosage for changes in pain, function, and risk for harm (see Recommendation 7).
+[S34-09 | p34 | Rec 4 > Supporting rationale]
+Before increasing total opioid dosage to ≥50 MME/day, clinicians should pause, considering that dosage increases to >50 MME/day are unlikely to provide substantially improved pain control for most patients while overdose risk increases with dosage, and carefully reassess evidence of benefits and risks.
+[S34-10 | p34 | Rec 4 > Supporting rationale]
+If a patient’s opioid dosage for all sources of opioids combined reaches or exceeds 50 MME/day, clinicians should implement additional precautions, including increased frequency of follow-up (see Recommendation 7), and offer naloxone and overdose prevention education to both the patient and the patient’s household members (see Recommendation 8).
+[S34-11 | p34 | Rec 4 > Supporting rationale]
+Clinicians should carefully evaluate a decision to increase dosage after an individualized assessment of benefits and risks and weighing factors such as diagnosis, incremental benefits for pain and function relative to risks with previous dosage increases, other treatments and effectiveness, and patient values and preferences.
+[S34-12 | p34 | Rec 4 > Supporting rationale]
+Certain states require clinicians to implement clinical protocols at specific dosage levels.
+[S34-13 | p34 | Rec 4 > Supporting rationale]
+For example, before increasing long-term opioid therapy dosage to >120 MME/day, clinicians in Washington state must obtain consultation from a pain specialist who agrees that the increase is indicated and appropriate (208).
+[S34-14 | p34 | Rec 4 > Supporting rationale]
+Clinicians should be aware of policies related to MME thresholds and associated clinical protocols established by their states.
+[S34-15 | p34 | Rec 5 > Recommendation statement]
+For patients already receiving opioid therapy, clinicians should carefully weigh benefits and risks and exercise care when changing opioid dosage. If benefits outweigh risks of continued opioid therapy, clinicians should work closely with patients to optimize nonopioid therapies while continuing opioid therapy. If benefits do not outweigh risks of continued opioid therapy, clinicians should optimize other therapies and work closely with patients to gradually taper to lower dosages or, if warranted based on the individual circumstances of the patient, appropriately taper and discontinue opioids. Unless there are indications of a life-threatening issue such as warning signs of impending overdose (e.g., confusion, sedation, or slurred speech), opioid therapy should not be discontinued abruptly, and clinicians should not rapidly reduce opioid dosages from higher dosages (recommendation category: B; evidence type: 4).
+[S35-01 | p35 | Rec 5 > Implementation considerations]
+Clinicians should carefully weigh both the benefits and risks of continuing opioid medications and the benefits and risks of tapering opioids.
+[S35-02 | p35 | Rec 5 > Implementation considerations]
+If benefits outweigh risks of continued opioid therapy, clinicians should work closely with patients to optimize nonopioid therapies while continuing opioid therapy.
+[S35-03 | p35 | Rec 5 > Implementation considerations]
+When benefits (including avoiding risks of tapering) do not outweigh risks of continued opioid therapy, clinicians should optimize other therapies and work closely with patients to gradually taper to a reduced opioid dosage or, if warranted based on the individual clinical circumstances of the patient, appropriately taper and discontinue opioid therapy.
+[S35-04 | p35 | Rec 5 > Implementation considerations]
+In situations where benefits and risks of continuing opioids are considered to be close or unclear, shared decision-making with patients is particularly important.
+[S35-05 | p35 | Rec 5 > Implementation considerations]
+When patients and clinicians are unable to arrive at a consensus on the assessment of benefits and risks, clinicians should acknowledge this discordance, express empathy, and seek to implement treatment changes in a patient-centered manner while avoiding patient abandonment.
+[S35-06 | p35 | Rec 5 > Implementation considerations]
+For patients agreeing to taper to lower opioid dosages and for those remaining on higher opioid dosages, clinicians should establish goals with the patient for continued opioid therapy (see Recommendations 2 and 7) and maximize pain treatment with nonpharmacologic and nonopioid pharmacologic treatments as appropriate (see Recommendation 2).
+[S35-07 | p35 | Rec 5 > Implementation considerations]
+Clinicians should collaborate with the patient on the tapering plan, including patients in decisions such as how quickly tapering will occur and when pauses in the taper might be warranted.
+[S35-08 | p35 | Rec 5 > Implementation considerations]
+Clinicians should follow up frequently (at least monthly) with patients engaging in opioid tapering.
+[S35-09 | p35 | Rec 5 > Implementation considerations]
+Team members (e.g., nurses, pharmacists, and behavioral health professionals) can support the clinician and patient during the ongoing taper process through telephone contact, telehealth visits, or face-to-face visits.
+[S35-10 | p35 | Rec 5 > Implementation considerations]
+When opioids are reduced or discontinued, a taper slow enough to minimize symptoms and signs of opioid withdrawal (e.g., anxiety, insomnia, abdominal pain, vomiting, diarrhea, diaphoresis, mydriasis, tremor, tachycardia, or piloerection) should be used.
+[S35-11 | p35 | Rec 5 > Implementation considerations]
+Longer duration of previous opioid therapy might require a longer taper.
+[S35-12 | p35 | Rec 5 > Implementation considerations]
+For patients who have taken opioids long-term (e.g., for ≥1 year), tapers can be completed over several months to years depending on the opioid dosage and should be individualized based on patient goals and concerns.
+[S35-13 | p35 | Rec 5 > Implementation considerations]
+For patients struggling to tolerate a taper, clinicians should maximize nonopioid treatments for pain and should address behavioral distress.
+[S35-14 | p35 | Rec 5 > Implementation considerations]
+Clinically significant opioid withdrawal symptoms can signal the need to further slow the taper rate.
+[S35-15 | p35 | Rec 5 > Implementation considerations]
+At times, tapers might have to be paused and restarted again when the patient is ready and might have to be slowed as patients reach low dosages.
+[S35-16 | p35 | Rec 5 > Implementation considerations]
+Before reversing a taper, clinicians should carefully assess and discuss with the patient the benefits and risks of increasing opioid dosage.
+[S35-17 | p35 | Rec 5 > Implementation considerations]
+Goals of the taper might vary (e.g., some patients might achieve discontinuation whereas others might attain a reduced dosage at which functional benefits outweigh risks).
+[S35-18 | p35 | Rec 5 > Implementation considerations]
+If the clinician has determined with the patient that the ultimate goal of tapering is discontinuing opioids, after the smallest available dose is reached the interval between doses can be extended and opioids can be stopped when taken less frequently than once a day.
+[S35-19 | p35 | Rec 5 > Implementation considerations]
+Clinicians should access appropriate expertise if considering tapering opioids during pregnancy because of possible risks to the pregnant patient and the fetus if the patient goes into withdrawal.
+[S35-20 | p35 | Rec 5 > Implementation considerations]
+Clinicians should advise patients of an increased risk for overdose on abrupt return to a previously prescribed higher dose because of loss of opioid tolerance, provide opioid overdose education, and offer naloxone.
+[S35-21 | p35 | Rec 5 > Implementation considerations]
+Clinicians should remain alert to signs of and screen for anxiety, depression, and opioid misuse or opioid use disorder (see Recommendations 8 and 12) that might be revealed by an opioid taper and provide treatment or arrange for management of these comorbidities.
+[S35-22 | p35 | Rec 5 > Implementation considerations]
+Clinicians should closely monitor patients who are unable to taper and who continue on high-dose or otherwise high-risk opioid regimens (e.g., opioids prescribed concurrently with benzodiazepines) and should work with patients to mitigate overdose risk (e.g., by providing overdose education and naloxone) (see Recommendation 8).
+[S36-01 | p36 | Rec 5 > Implementation considerations]
+Clinicians can use periodic and strategic motivational questions and statements to encourage movement toward appropriate therapeutic changes and functional goals.
+[S36-02 | p36 | Rec 5 > Implementation considerations]
+Clinicians have a responsibility to provide or arrange for coordinated management of patients’ pain and opioid-related problems, including opioid use disorder.
+[S36-03 | p36 | Rec 5 > Implementation considerations]
+Payers, health systems, and state medical boards should not use this clinical practice guideline to set rigid standards or performance incentives related to dose or duration of opioid therapy; should ensure that policies based on cautionary dosage thresholds do not result in rapid tapers or abrupt discontinuation of opioids; and should ensure that policies do not penalize clinicians for accepting new patients who are using prescribed opioids for chronic pain, including those receiving high dosages of opioids, or for refraining from rapidly tapering patients prescribed long-term opioid medications.
+[S36-04 | p36 | Rec 5 > Implementation considerations]
+Although Recommendation 5 specifically refers to patients using long-term opioid therapy for subacute or chronic pain, many of the principles in these implementation considerations and supporting rationale, including communication with patients, pain management, behavioral support, and slower taper rates, also are relevant when discontinuing opioids in patients who have received them for shorter durations (see Recommendations 6 and 7).
+[S37-01 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+The benefits and risks of opioid therapy change over time and should be reevaluated periodically (see Recommendations 6 and 7).
+[S37-02 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Opioid therapy should be limited to circumstances where benefits of therapy outweigh risks.
+[S37-03 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+In situations where benefits and risks of continuing opioids are considered to be close or unclear, shared decision-making with patients is particularly important.
+[S37-04 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+When patients and clinicians are unable to arrive at a consensus on the assessment of benefits and risks, clinicians should acknowledge this discordance, express empathy, and seek to implement treatment changes in a patient-centered manner while avoiding patient abandonment.
+[S37-05 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Unless there is a life-threatening issue such as warning signs of an imminent overdose, the benefits of rapidly tapering or abruptly discontinuing opioids are unlikely to outweigh the substantial risks of these practices (71,219).
+[S37-06 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Clinicians and patients should consider whether opioids continue to meet treatment goals, including functional goals; whether opioids are exposing the patient to an increased risk for serious adverse events or opioid use disorder; and whether benefits continue to outweigh risks of opioids.
+[S37-07 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Clinicians should not insist on opioid tapering or discontinuation when opioid use might be warranted (i.e., when benefits of opioids outweigh risks) (66,219).
+[S37-08 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Clinicians should access appropriate expertise if considering tapering opioids during pregnancy because of possible risk to the pregnant patient and the fetus if the patient goes into withdrawal.
+[S37-09 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+For pregnant persons with opioid use disorder, medications for opioid use disorder are preferred over withdrawal management (i.e., discontinuation of opioids through either short- or medium-term tapering) (220,221).
+[S37-10 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Some patients using more than one respiratory depressant (e.g., benzodiazepines and opioids) might require tapering one or more medications to reduce risk for respiratory depression.
+[S37-11 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Tapering decisions and plans should be coordinated with prescribers of all respiratory depressant medications (see Recommendation 11).
+[S37-12 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Benzodiazepines should be tapered gradually because of risks (anxiety, hallucinations, seizures, delirium tremens, and, rarely, death) of benzodiazepine withdrawal (222,223).
+[S37-13 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Patients who are not taking prescribed opioids (e.g., patients who are diverting all opioids they obtain) do not require tapers.
+[S37-14 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Consistent with the HHS Guide for Clinicians on the Appropriate Dosage Reduction or Discontinuation of Long-Term Opioid Analgesics (219), clinicians should consider tapering to a reduced opioid dosage or tapering and discontinuing opioid therapy and discuss these approaches with patients before initiating changes when
+[S37-15 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+However, patients should be offered the opportunity to reevaluate their continued use of opioids.
+[S37-16 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Clinicians should review benefits and risks of continued opioid therapy with empathy.
+[S37-17 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Whenever possible, clinicians should collaborate with patients and share decision-making about whether and how to taper opioids.
+[S37-18 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Clinicians should review benefits and risks of opioid therapy with the patient and decide whether tapering is appropriate for the patient.
+[S37-19 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+If the existing opioid regimen does not put the patient at imminent risk for overdose or other injury, tapering does not need to occur immediately, and clinicians can take time to reach agreement with patients (224).
+[S38-01 | p38 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+For patients who agree to taper opioids to lower dosages, clinicians should collaborate with the patient on a tapering plan.
+[S38-02 | p38 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Open discussion between the clinician and patient should take place, whether the goal of the taper is stopping opioids or reducing opioids to a point where benefits outweigh risks; the goal will depend on the patient’s circumstances and an individualized assessment of benefits and risks.
+[S38-03 | p38 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Clinicians can discuss with patients the patient’s perceptions of benefits, risks, and adverse effects of continued opioid therapy; include patient concerns in taper planning; and include patients in making decisions such as which medication will be decreased first (e.g., in patients prescribed more than one opioid) and how quickly tapering will occur.
+[S38-04 | p38 | Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering]
+Clinicians should advise patients that overall, after voluntary reduction of long-term opioid dosages, most patients report stable or improved function, anxiety, and mood without worsening pain or with decreased pain levels (66,218,225–228).
+[S38-05 | p38 | Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering]
+Patients can be counseled that worsening of pain is a frequent symptom of opioid withdrawal that tends to diminish over time (219).
+[S38-06 | p38 | Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering]
+Clinicians should advise patients about the increased risk for overdose with abrupt return to a previously prescribed higher dosage because of loss of opioid tolerance and warn of a risk for overdose if the patient returns to their original dosage (219).
+[S38-07 | p38 | Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering]
+Clinicians should provide opioid overdose education and offer naloxone.
+[S38-08 | p38 | Rec 5 > Supporting rationale > Pain Management During Tapering]
+Clinicians should commit to working with patients to improve function and decrease pain, whether or not opioids are tapered.
+[S38-09 | p38 | Rec 5 > Supporting rationale > Pain Management During Tapering]
+Nonpharmacologic and nonopioid treatments should be integrated into patients’ pain management plans after an individualized assessment of benefits and risks that considers the patient’s diagnosis, circumstances, and unique needs (see Recommendation 2).
+[S38-10 | p38 | Rec 5 > Supporting rationale > Pain Management During Tapering]
+Whether patients are agreeing to taper to lower opioid dosages or remaining on higher opioid dosages, clinicians should work with them to establish functional goals for continued opioid therapy (see Recommendations 2 and 7) and maximize pain treatment with nonpharmacologic and nonopioid pharmacologic treatments as appropriate (see Recommendation 2).
+[S38-11 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Primary care clinicians should collaborate with mental health specialists and with other specialty clinicians as needed to optimize nonopioid pain management (see Recommendation 2) and provide psychosocial support for patients who have anxiety related to the taper.
+[S38-12 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Clinicians should consider arranging for consultation with a behavioral health specialist before initiating a taper in patients with serious mental illness who are at high risk for suicide or with suicidal ideation (219).
+[S38-13 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Clinicians should remain alert to signs of and screen for anxiety, depression, and opioid misuse or opioid use disorder (see Recommendations 8 and 12) that might be revealed by an opioid taper and provide treatment or arrange for management of these comorbidities.
+[S38-14 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Successful tapering studies have used at least weekly follow-up (218), and clinicians should follow up frequently (at least monthly) with patients engaging in opioid tapering.
+[S38-15 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Team members (e.g., nurses, pharmacists, and behavioral health professionals) can support the clinician and patient during the ongoing taper process through telephone contact, telehealth visits, or face-to-face visits.
+[S38-16 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Clinicians can acknowledge patient fears about tapering (232), ask how they can support the patient (232), and make sure patients receive appropriate and accessible psychosocial support (228).
+[S38-17 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Many patients fear withdrawal symptoms, pain, or abandonment (233), and clinicians can help patients by telling them what to expect (e.g., the rate will be kept slow to minimize withdrawal symptoms and pain might worsen at first but usually improves over time) and that they will be supporting them through the process.
+[S38-18 | p38 | Rec 5 > Supporting rationale > Tapering Rate]
+The rate of tapering should be individualized based on the patient’s clinical situation.
+[S38-19 | p38 | Rec 5 > Supporting rationale > Tapering Rate]
+When opioids are reduced or discontinued, a taper slow enough to minimize symptoms and signs of opioid withdrawal (e.g., anxiety, insomnia, abdominal pain, vomiting, diarrhea, diaphoresis, mydriasis, tremor, tachycardia, or piloerection) should be used.
+[S38-20 | p38 | Rec 5 > Supporting rationale > Tapering Rate]
+Tapers can be completed over several months to years depending on the opioid dosage and should be individualized based on patient goals and concerns.
+[S38-21 | p38 | Rec 5 > Supporting rationale > Tapering Rate]
+Longer durations of previous opioid therapy might require longer tapers.
+[S38-22 | p38 | Rec 5 > Supporting rationale > Tapering Rate]
+Tapers of approximately 10% per month or slower are likely to be better tolerated than more rapid tapers when patients have been taking opioids for longer durations (e.g., ≥1 year) (219).
+[S39-01 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+When patients have taken opioids for shorter durations (e.g., weeks to months rather than years), a decrease of 10% of the original dose per week or slower (until approximately 30% of the original dose is reached, followed by a weekly decrease of approximately 10% of the remaining dose) is less likely to trigger withdrawal (225) and can be successful for some patients.
+[S39-02 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+For patients struggling to tolerate a taper, clinicians should maximize nonopioid treatments for pain and should address behavioral distress (234).
+[S39-03 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+Clinically significant opioid withdrawal symptoms can signal the need to further slow the taper rate.
+[S39-04 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+At times, tapers might have to be paused and restarted again when the patient is ready and might have to be slowed as patients reach low dosages to allow gradual accommodation to lower opioid dosages and development of new skills for nonopioid management of pain and emotional distress.
+[S39-05 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+Before reversing a taper, clinicians should carefully assess and discuss with patients benefits and risks of increasing opioid dosage.
+[S39-06 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+If the clinician and patient have determined that the goal is discontinuing opioids, after the smallest available dose is reached, the interval between doses can be extended and opioids can be stopped when taken less frequently than once a day.
+[S39-07 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+More rapid tapers might be needed for patient safety under certain circumstances (e.g., for patients who have experienced overdose on their current dosage) (219).
+[S39-08 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+However, unless there are indications of a life-threatening issue, such as warning signs of impending overdose, opioid therapy should not be discontinued abruptly, and clinicians should not rapidly reduce opioid dosages from higher dosages.
+[S39-09 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+Ultrarapid detoxification under anesthesia is associated with substantial risks, including death, and should not be used (235).
+[S39-10 | p39 | Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering]
+The first approach to withdrawal symptoms and signs should generally be consideration of slowing or pausing the taper rate.
+[S39-11 | p39 | Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering]
+If needed, short-term oral medications might also help manage withdrawal symptoms (232).
+[S39-12 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Therefore, patients experiencing such challenges should be assessed for opioid use disorder using Diagnostic and Statistical Manual of Mental Disorders, Fifth Edition (DSM-5) criteria and, if criteria for opioid use disorder are met, offered evidence-based medication treatment (see Recommendation 12) and naloxone for opioid overdose reversal (see Recommendation 8).
+[S39-13 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Emerging evidence suggests that patients for whom risks of continued high-dose opioid use outweigh benefits but who are unable to taper and who do not meet criteria for opioid use disorder might benefit from transition to buprenorphine (219,237,238).
+[S39-14 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Although prescription of buprenorphine for treatment of opioid use disorder requires the clinician to have a waiver from SAMHSA (see Recommendation 12), prescription of buprenorphine for treatment of chronic pain does not require a waiver (237).
+[S39-15 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+To avoid precipitating withdrawal, transitioning any patient taking full agonist opioids to buprenorphine requires specific timing of the initial buprenorphine dose (219) (see Recommendation 12 for application to patients with opioid use disorder).
+[S39-16 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Patients should be in mild to moderate withdrawal from full agonist opioids before the first buprenorphine dose (219).

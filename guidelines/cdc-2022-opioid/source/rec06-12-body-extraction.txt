@@ -1,0 +1,967 @@
+CDC Clinical Practice Guideline for Prescribing Opioids for Pain — United States, 2022
+recommendations 6–12 body + end matter extraction evidence (verbatim rendered text)
+Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
+Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
+PDF locator: physical PDF pages 40–63; physical page 64 consulted only for completion of any page-63-starting statement
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 320 payloads below.
+Scaffolding convention: each bracketed locator line and each blank separator is outside its statement region; bullet glyphs and list labels are presentation scaffolding omitted from payloads; composite recommendation-header and nested-list regions are flattened with one space.
+
+[S40-01 | p40 | Pre-Rec 6 > Transitioning to buprenorphine]
+To do this, experts have advised that clinicians and patients should wait at least 8–12 hours after the last dose of short-acting full agonist opioids and longer after the last dose of long-acting full agonist opioids (e.g., at least 12–24 hours after the last dose of an ER/LA full agonist opioid, and longer for methadone) before the first dose of buprenorphine is administered (229).
+
+[S40-02 | p40 | Pre-Rec 6 > Continuing High-Dosage Opioids]
+Clinicians should closely monitor patients who are unable to taper and who continue on high-dosage or otherwise high-risk opioid regimens (e.g., opioids prescribed concurrently with benzodiazepines) and should work with patients to mitigate overdose risk (e.g., by providing overdose education and naloxone) (see Recommendation 8).
+
+[S40-03 | p40 | Pre-Rec 6 > Continuing High-Dosage Opioids]
+Clinicians can use periodic and strategic motivational questions and statements to encourage movement toward appropriate therapeutic changes (224).
+
+[S40-04 | p40 | Pre-Rec 6 > Continuing High-Dosage Opioids]
+However, clinicians have a responsibility to provide or arrange for coordinated management of patients’ pain and opioid-related challenges.
+
+[S40-05 | p40 | Pre-Rec 6 > Continuing High-Dosage Opioids]
+Payers and health systems should not use this clinical practice guideline to set rigid standards related to dosage or duration of opioid therapy and should ensure that policies based on cautionary dosage thresholds do not result in rapid tapers or abrupt discontinuation of opioids, do not penalize clinicians for accepting new patients who are receiving opioids for chronic pain, and do not provide incentives to clinicians to implement rapid tapering.
+
+[S40-06 | p40 | Rec 6]
+When opioids are needed for acute pain, clinicians should prescribe no greater quantity than needed for the expected duration of pain severe enough to require opioids (recommendation category: A; evidence type: 4).
+
+[S40-07 | p40 | Rec 6 > Implementation considerations]
+When the diagnosis and severity of acute pain warrant use of opioids, clinicians should prescribe no greater quantity than needed for the expected duration of pain severe enough to require opioids.
+
+[S40-08 | p40 | Rec 6 > Implementation considerations]
+However, durations should be individualized to the patient’s clinical circumstances.
+
+[S40-09 | p40 | Rec 6 > Implementation considerations]
+Clinicians should generally avoid prescribing additional opioids to patients just in case pain continues longer than expected.
+
+[S40-10 | p40 | Rec 6 > Implementation considerations]
+To minimize unintended effects on patients, clinicians, practices, and health systems should have mechanisms in place for the subset of patients who experience severe acute pain that continues longer than the expected duration.
+
+[S40-11 | p40 | Rec 6 > Implementation considerations]
+These mechanisms should allow for timely reevaluation to confirm or revise the initial diagnosis and adjust pain management accordingly.
+
+[S40-12 | p40 | Rec 6 > Implementation considerations]
+Clinicians, practices, and health systems can help minimize disparities in access to and affordability of care and refills by ensuring all patients can obtain and afford additional evaluation and treatment, as needed.
+
+[S40-13 | p40 | Rec 6 > Implementation considerations]
+Patients should be evaluated at least every 2 weeks if they continue to receive opioids for acute pain.
+
+[S40-14 | p40 | Rec 6 > Implementation considerations]
+If opioids are continued for ≥1 month, clinicians should ensure that potentially reversible causes of chronic pain are addressed and that opioid prescribing for acute pain does not unintentionally become long-term opioid therapy simply because medications are continued without reassessment.
+
+[S41-01 | p41 | Rec 6 > Implementation considerations]
+Continuation of opioid therapy at this point might represent initiation of long-term opioid therapy, which should occur only as an intentional decision that benefits are likely to outweigh risks after discussion between the clinician and patient and as part of a comprehensive pain management approach.
+
+[S41-02 | p41 | Rec 6 > Implementation considerations]
+Clinicians should refer to recommendations on subacute and chronic pain for initiation (Recommendation 2), follow-up (Recommendation 7), and tapering (Recommendation 5) of ongoing opioid therapy.
+
+[S41-03 | p41 | Rec 6 > Implementation considerations]
+If patients already receiving long-term opioid therapy require additional opioids for superimposed severe acute pain (e.g., major surgery), opioids should be continued only for the duration of pain severe enough to require additional opioids, returning to the patient’s baseline opioid dosage as soon as possible, including a taper to baseline dosage if additional opioids were used around the clock for more than a few days.
+
+[S41-04 | p41 | Rec 6 > Implementation considerations]
+If opioids are used continuously (around the clock) for more than a few days for acute pain, clinicians should prescribe a brief taper to minimize withdrawal symptoms on discontinuation of opioids.
+
+[S41-05 | p41 | Rec 6 > Implementation considerations]
+If a taper is needed, taper durations might need to be adjusted depending on the duration of the initial opioid prescription (see Supporting Rationale for this recommendation for additional details).
+
+[S41-06 | p41 | Rec 6 > Implementation considerations]
+Tapering plans should be discussed with the patient before hospital discharge and with clinicians coordinating the patient’s care as an outpatient.
+
+[S42-01 | p42 | Rec 6 > Supporting rationale]
+When the diagnosis and severity of acute pain warrant the use of opioids, clinicians should prescribe no greater quantity than needed for the expected duration of pain severe enough to require opioids.
+
+[S42-02 | p42 | Rec 6 > Supporting rationale]
+Certain circumstances (e.g., severe traumatic injuries) might require use of opioids for durations of >7 days.
+
+[S42-03 | p42 | Rec 6 > Supporting rationale]
+Durations should be individualized based on the patient’s clinical circumstances.
+
+[S42-04 | p42 | Rec 6 > Supporting rationale]
+Clinicians should generally not prescribe additional opioids to patients just in case pain continues longer than expected.
+
+[S42-05 | p42 | Rec 6 > Supporting rationale]
+Clinicians, practices, and health systems should have mechanisms in place for the subset of patients who experience severe acute pain that continues longer than the expected duration.
+
+[S42-06 | p42 | Rec 6 > Supporting rationale]
+These mechanisms should allow for timely reevaluation to confirm or revise the initial diagnosis and adjust pain management accordingly.
+
+[S42-07 | p42 | Rec 6 > Supporting rationale]
+In particular, clinicians, practices, and health systems should ensure all patients can obtain and afford additional evaluation and treatment as needed to minimize disparities in access to and affordability of care and refills.
+
+[S42-08 | p42 | Rec 6 > Supporting rationale]
+Patients should be evaluated at least every 2 weeks if they continue to receive opioids for acute pain.
+
+[S42-09 | p42 | Rec 6 > Supporting rationale]
+If opioids are continued for ≥1 month, clinicians should ensure that potentially reversible causes of chronic pain are addressed and that opioid prescribing for acute pain does not unintentionally become long-term opioid therapy simply because medications are continued without reassessment.
+
+[S42-10 | p42 | Rec 6 > Supporting rationale]
+Continuation of opioid therapy at this point might represent initiation of long-term opioid therapy, which should occur only as an intentional decision that benefits are likely to outweigh risks after discussion between the clinician and patient and as part of a comprehensive pain management approach.
+
+[S42-11 | p42 | Rec 6 > Supporting rationale]
+Clinicians should refer to recommendations on subacute and chronic pain for initiation (Recommendation 2), follow-up (Recommendation 7), and tapering (Recommendation 5) of ongoing opioid therapy.
+
+[S42-12 | p42 | Rec 6 > Supporting rationale]
+If patients already receiving long-term opioids require additional opioids for superimposed severe acute pain (e.g., major surgery), opioids should be continued only for the duration of pain severe enough to require additional opioids, returning to the patient’s baseline opioid dosage as soon as possible, including a taper to baseline dosage if additional opioids were used around the clock for more than a few days.
+
+[S42-13 | p42 | Rec 6 > Supporting rationale]
+If opioids are used continuously (around the clock) for more than a few days for acute pain, clinicians should prescribe a brief taper to minimize withdrawal symptoms on discontinuation of opioids.
+
+[S42-14 | p42 | Rec 6 > Supporting rationale]
+Taper durations might need to be adjusted depending on the duration of the initial opioid prescription.
+
+[S42-15 | p42 | Rec 6 > Supporting rationale]
+For example, if opioids are used continuously for >3 days but for <1 week, clinicians can consider reducing the daily dosage to 50% for 2 days to ameliorate withdrawal symptoms when discontinuing opioids.
+
+[S42-16 | p42 | Rec 6 > Supporting rationale]
+When patients have taken opioids continuously for ≥1 week but <1 month, clinicians might consider a slower taper (e.g., reducing the daily dosage by approximately 20% every 2 days, a range consistent with tapering rates successfully used in studies of postoperative opioid prescribing) (256,257).
+
+[S42-17 | p42 | Rec 6 > Supporting rationale]
+Tapering plans should be discussed with the patient before discharge and with clinicians coordinating the patient’s care as an outpatient.
+
+[S42-18 | p42 | Rec 7]
+Clinicians should evaluate benefits and risks with patients within 1–4 weeks of starting opioid therapy for subacute or chronic pain or of dosage escalation. Clinicians should regularly reevaluate benefits and risks of continued opioid therapy with patients (recommendation category: A; evidence type: 4).
+
+[S42-19 | p42 | Rec 7 > Implementation considerations]
+In addition to evaluating benefits and risks of opioids before starting opioid therapy (see Recommendation 2), clinicians should evaluate patients to assess benefits and risks of opioids within 1–4 weeks of starting long-term opioid therapy or of dosage escalation.
+
+[S42-20 | p42 | Rec 7 > Implementation considerations]
+Clinicians should consider follow-up intervals within the lower end of this range when ER/LA opioids are started or increased, because of the increased risk for overdose within the first 2 weeks of treatment, or when total daily opioid dosage is ≥50 MME/day.
+
+[S43-01 | p43 | Rec 7 > Implementation considerations]
+Shorter follow-up intervals (every 2–3 days for the first week) should be strongly considered when starting or increasing the dosage of methadone because of the variable half-life of this drug (see Recommendation 3) and the potential for drug accumulation during initiation and during upward titration of dosage.
+
+[S43-02 | p43 | Rec 7 > Implementation considerations]
+An initial follow-up interval closer to 4 weeks can be considered when starting immediate-release opioids at a dosage of <50 MME/day.
+
+[S43-03 | p43 | Rec 7 > Implementation considerations]
+Clinicians should follow up with and evaluate patients with subacute pain who started opioid therapy for acute pain and have been treated with opioid therapy for 30 days to reassess the patient’s pain, function, and treatment course; ensure that potentially reversible causes of chronic pain are addressed; and prevent unintentional initiation of long-term opioid therapy.
+
+[S43-04 | p43 | Rec 7 > Implementation considerations]
+Continuation of opioid therapy at this point might represent initiation of long-term opioid therapy, which should occur only as an intentional decision that benefits are likely to outweigh risks after discussion between the clinician and patient and as part of a comprehensive pain management approach (see Recommendation 2).
+
+[S43-05 | p43 | Rec 7 > Implementation considerations]
+Clinicians should regularly reassess all patients receiving long-term opioid therapy, including patients who are new to the clinician but on long-term opioid therapy, with a suggested interval of every 3 months or more frequently for most patients.
+
+[S43-06 | p43 | Rec 7 > Implementation considerations]
+Clinicians seeing new patients already receiving opioids should establish treatment goals, including functional goals, for continued opioid therapy (see Recommendation 2).
+
+[S43-07 | p43 | Rec 7 > Implementation considerations]
+Clinicians should reevaluate patients who are at higher risk for opioid use disorder or overdose (e.g., patients with depression or other mental health conditions, a history of substance use disorder, a history of overdose, taking ≥50 MME/day, or taking other central nervous system depressants with opioids) more frequently than every 3 months.
+
+[S43-08 | p43 | Rec 7 > Implementation considerations]
+Clinicians should regularly screen all patients for these conditions, which can change during the course of treatment (see Recommendation 8).
+
+[S43-09 | p43 | Rec 7 > Implementation considerations]
+Clinicians, practices, and health systems can help minimize unintended effects on patients by ensuring all patients can access and afford follow-up evaluation.
+
+[S43-10 | p43 | Rec 7 > Implementation considerations]
+In practice contexts where virtual visits are part of standard care (e.g., in remote areas where distance or other context makes follow-up visits challenging), or for patients for whom in-person follow-up visits are challenging (e.g., frail patients), follow-up assessments that allow the clinician to communicate with and observe the patient through telehealth modalities might be conducted.
+
+[S43-11 | p43 | Rec 7 > Implementation considerations]
+At follow-up, clinicians should review patient perspectives and goals, determine whether opioids continue to meet treatment goals, including sustained improvement in pain and function, and determine whether the patient has experienced common or serious adverse events or early warning signs of serious adverse events or has signs of opioid use disorder.
+
+[S43-12 | p43 | Rec 7 > Implementation considerations]
+Clinicians should ensure that treatment for depression, anxiety, or other psychological comorbidities is optimized.
+
+[S43-13 | p43 | Rec 7 > Implementation considerations]
+Clinicians should ask patients about their preferences for continuing opioids, considering their effects on pain and function relative to any adverse effects experienced.
+
+[S43-14 | p43 | Rec 7 > Implementation considerations]
+If risks outweigh benefits of continued opioid therapy (e.g., if patients do not experience meaningful, sustained improvements in pain and function compared with before initiation of opioid therapy; if patients are taking higher-risk regimens [e.g., dosages of ≥50 MME/day or opioids combined with benzodiazepines] without evidence of benefit; if patients believe benefits no longer outweigh risks; if patients request dosage reduction or discontinuation; or if patients experience overdose or other serious adverse events), clinicians should work with patients to taper and reduce opioid dosage or taper and discontinue opioids when possible (see from Recommendation 5).
+
+[S43-15 | p43 | Rec 7 > Implementation considerations]
+Clinicians should maximize pain treatment with nonpharmacologic and nonopioid pharmacologic treatments as appropriate (see Recommendation 2).
+
+[S44-01 | p44 | Rec 7 > Supporting rationale]
+Experts further noted that social determinants of health affecting ability to return frequently for care (e.g., role as unpaid caregiver or work at a job with minimal paid time off ) or payer issues (e.g., copays) could have consequences when recommending frequent visits and should be considered.
+
+[S44-02 | p44 | Rec 7 > Supporting rationale]
+Clinicians should evaluate patients to assess benefits and risks of opioids within 1–4 weeks of starting long-term opioid therapy or of dosage escalation.
+
+[S44-03 | p44 | Rec 7 > Supporting rationale]
+Clinicians should consider follow-up intervals within the lower end of this range when ER/LA opioids are started or increased, because of the increased risk for overdose within the first 2 weeks of treatment (192), or when total daily opioid dosage is ≥50 MME/day, because the overdose risk is doubled across multiple studies for dosages of 50 to <100 MME/day relative to <20 MME/day (see Recommendation 4).
+
+[S44-04 | p44 | Rec 7 > Supporting rationale]
+Shorter follow-up intervals (every 2–3 days for the first week) should be strongly considered when starting or increasing the dosage of methadone because of the variable half-life of this drug (see Recommendation 3) and the potential for drug accumulation during initiation and during upward titration of dosage.
+
+[S44-05 | p44 | Rec 7 > Supporting rationale]
+An initial follow-up interval closer to 4 weeks can be considered when starting immediate-release opioids at a dosage of <50 MME/day.
+
+[S44-06 | p44 | Rec 7 > Supporting rationale]
+Clinicians should follow up with and evaluate patients with subacute pain who have been treated with opioid therapy for 30 days.
+
+[S44-07 | p44 | Rec 7 > Supporting rationale]
+Clinicians should ensure that opioid prescribing for acute pain does not unintentionally become long-term opioid therapy simply because medications are continued without reassessment, but only as an intentional decision that benefits are likely to outweigh risks after discussion between the clinician and patient.
+
+[S44-08 | p44 | Rec 7 > Supporting rationale]
+Clinicians should reassess the patient’s pain, function, and treatment course; ensure that potentially reversible causes of chronic pain are addressed; and optimize pain management as needed (see Recommendation 2).
+
+[S44-09 | p44 | Rec 7 > Supporting rationale]
+Because of potential changes in the balance of benefits and risks of opioid therapy over time, clinicians should regularly reassess all patients receiving long-term opioid therapy, including patients who are new to the clinician but on long-term opioid therapy, with a suggested interval of every 3 months or more frequently.
+
+[S44-10 | p44 | Rec 7 > Supporting rationale]
+Clinicians seeing new patients already receiving opioids should establish treatment goals, including functional goals, for continued opioid therapy (see Recommendation 2).
+
+[S44-11 | p44 | Rec 7 > Supporting rationale]
+Clinicians should reevaluate patients who are at greater risk for opioid use disorder or overdose (e.g., patients with depression or other mental health conditions, a history of substance use disorder, a history of overdose, taking ≥50 MME/day, or taking other central nervous system depressants with opioids) more frequently than every 3 months.
+
+[S44-12 | p44 | Rec 7 > Supporting rationale]
+Clinicians should regularly screen all patients for these conditions, which can change during the course of treatment (see Recommendation 8).
+
+[S44-13 | p44 | Rec 7 > Supporting rationale]
+Clinicians, practices, and health systems can help minimize unintended effects on patients by ensuring all patients can access and afford follow-up evaluation (86).
+
+[S44-14 | p44 | Rec 7 > Supporting rationale]
+In addition, policymakers can consider evidence-based methods of minimizing barriers to care (e.g., paid sick leave) (259).
+
+[S44-15 | p44 | Rec 7 > Supporting rationale]
+In practice contexts where virtual visits are part of standard care (e.g., in remote areas where distance or other context makes follow-up visits challenging), or for patients for whom in-person follow-up visits are challenging (e.g., frail patients), follow-up assessments that allow the clinician to communicate with and observe the patient through telehealth modalities might be conducted when available.
+
+[S44-16 | p44 | Rec 7 > Supporting rationale]
+At follow-up, clinicians should review patient perspectives on progress and challenges in moving toward treatment goals; determine whether opioids continue to meet treatment goals, including sustained improvement in pain and function; determine whether the patient has experienced common or serious adverse events or early warning signs of serious adverse events or has signs of opioid misuse or opioid use disorder (e.g., difficulty controlling use, cravings, work, and social or family problems related to opioid use); determine whether benefits of opioids continue to outweigh risks; and determine whether there is a need for opioid dosage reduction or discontinuation.
+
+[S44-17 | p44 | Rec 7 > Supporting rationale]
+Clinicians should assess benefits in function, pain control, and quality of life by asking patients about progress toward person-centered functional goals that have meaning for them (see Recommendation 2) or by using tools such as the three-item PEG assessment scale (184); clinically meaningful improvement has been defined as a 30% improvement in scores for both pain and function (185).
+
+[S44-18 | p44 | Rec 7 > Supporting rationale]
+Clinicians also should ask patients about common adverse effects such as constipation and drowsiness (see Recommendation 2) and should ask about and assess for effects that might be early warning signs for more serious problems such as overdose (e.g., sedation or slurred speech) or opioid use disorder (e.g., craving, wanting to take opioids in greater quantities or more frequently than prescribed, difficulty controlling use, or work, social, or family problems related to opioid use).
+
+[S45-01 | p45 | Rec 7 > Supporting rationale]
+Clinicians can use validated screening tools such as the Drug Abuse Screening Test (DAST) (260), the Tobacco, Alcohol, Prescription medication, and other Substance use Tool (TAPS) (261), and the three-question version of the Alcohol Use Disorders Identification Test (AUDIT-C) (262,263) (see Recommendations 8 and 12).
+
+[S45-02 | p45 | Rec 7 > Supporting rationale]
+Because depression, anxiety, and other psychological comorbidities often coexist with and can interfere with resolution of pain, clinicians should use validated instruments to assess for these conditions (see Recommendation 8) and ensure that treatment for these conditions is optimized.
+
+[S45-03 | p45 | Rec 7 > Supporting rationale]
+Clinicians should ask patients about their preferences for continuing opioids considering their effects on pain and function relative to any adverse effects experienced.
+
+[S45-04 | p45 | Rec 7 > Supporting rationale]
+If risks outweigh benefits of continued opioid therapy (e.g., if patients do not experience meaningful, sustained improvements in pain and function compared with before initiation of opioid therapy; if patients are taking higher-risk regimens [e.g., dosages of ≥50 MME/day or opioids combined with benzodiazepines] without evidence of benefit; if patients believe benefits no longer outweigh risks; if patients request dosage reduction or discontinuation; or if patients experience overdose or other serious adverse events), clinicians should work with patients to taper and reduce opioid dosage or to taper and discontinue opioids when possible (see Recommendation 5).
+
+[S45-05 | p45 | Rec 7 > Supporting rationale]
+Clinicians should maximize pain treatment with nonpharmacologic and nonopioid pharmacologic treatments as appropriate (see Recommendation 2).
+
+[S45-06 | p45 | Rec 8]
+Before starting and periodically during continuation of opioid therapy, clinicians should evaluate risk for opioid-related harms and discuss risk with patients. Clinicians should work with patients to incorporate into the management plan strategies to mitigate risk, including offering naloxone (recommendation category: A; evidence type: 4).
+
+[S45-07 | p45 | Rec 8 > Implementation considerations]
+Clinicians should ask patients about their drug and alcohol use and use validated tools or consult with behavioral specialists to screen for and assess mental health and substance use disorders.
+
+[S45-08 | p45 | Rec 8 > Implementation considerations]
+When considering initiating long-term opioid therapy, clinicians should ensure that treatment for depression and other mental health conditions is optimized, consulting with behavioral health specialists when needed.
+
+[S45-09 | p45 | Rec 8 > Implementation considerations]
+Clinicians should offer naloxone when prescribing opioids, particularly to patients at increased risk for overdose, including patients with a history of overdose, patients with a history of substance use disorder, patients with sleep-disordered breathing, patients taking higher dosages of opioids (e.g., ≥50 MME/day), patients taking benzodiazepines with opioids (see Recommendation 11), and patients at risk for returning to a high dose to which they have lost tolerance (e.g., patients undergoing tapering or recently released from prison).
+
+[S45-10 | p45 | Rec 8 > Implementation considerations]
+Practices should educate patients on overdose prevention and naloxone use and offer to provide education to members of their households.
+
+[S45-11 | p45 | Rec 8 > Implementation considerations]
+Naloxone coprescribing can be facilitated by clinics or practices with resources to provide naloxone training, by collaborative practice models with pharmacists, or through statewide protocols or standing orders for naloxone at pharmacies.
+
+[S45-12 | p45 | Rec 8 > Implementation considerations]
+In part because of concerns about cost of naloxone and access for some patients and reports that purchasing of naloxone has in some cases been required to fill opioid prescriptions, including for patients without a way to afford naloxone, this recommendation specifies that naloxone should be offered to patients.
+
+[S45-13 | p45 | Rec 8 > Implementation considerations]
+To that end, clinicians, health systems, and payers can work to ensure patients can obtain naloxone, a potentially lifesaving treatment.
+
+[S45-14 | p45 | Rec 8 > Implementation considerations]
+Clinicians should avoid prescribing opioids to patients with moderate or severe sleep-disordered breathing when possible to minimize risk for respiratory depression.
+
+[S45-15 | p45 | Rec 8 > Implementation considerations]
+When making decisions about whether to initiate opioid therapy for pain during pregnancy, clinicians and patients together should carefully weigh benefits and risks.
+
+[S45-16 | p45 | Rec 8 > Implementation considerations]
+For pregnant persons already receiving opioids, clinicians should access appropriate expertise if tapering is being considered because of possible risks to the pregnant patient and the fetus if the patient goes into withdrawal (see Recommendation 5).
+
+[S45-17 | p45 | Rec 8 > Implementation considerations]
+For pregnant persons with opioid use disorder, medication for opioid use disorder (buprenorphine or methadone) is the recommended therapy and should be offered as early as possible in pregnancy to prevent harms to both the patient and the fetus (see Recommendation 12).
+
+[S46-01 | p46 | Rec 8 > Implementation considerations]
+Clinicians should use additional caution and increased monitoring (see Recommendation 7) to minimize risks of opioids prescribed for patients with renal or hepatic insufficiency and for patients aged ≥65 years.
+
+[S46-02 | p46 | Rec 8 > Implementation considerations]
+Clinicians should implement interventions to mitigate common risks of opioid therapy among older adults, such as exercise or bowel regimens to prevent constipation, risk assessment for falls, and patient monitoring for cognitive impairment.
+
+[S46-03 | p46 | Rec 8 > Implementation considerations]
+For patients with jobs that involve potentially hazardous tasks and who are receiving opioids or other medications that can negatively affect sleep, cognition, balance, or coordination, clinicians should assess patients’ abilities to safely perform the potentially hazardous tasks (e.g., driving, use of heavy equipment, climbing ladders, working at heights or around moving machinery, or working with high-voltage equipment).
+
+[S46-04 | p46 | Rec 8 > Implementation considerations]
+Clinicians should use PDMP data (see Recommendation 9) and toxicology screening (see Recommendation 10) as appropriate to assess for concurrent substance use that might place patients at higher risk for opioid use disorder and overdose.
+
+[S46-05 | p46 | Rec 8 > Implementation considerations]
+Clinicians should provide specific counseling on increased risks for overdose when opioids are combined with other drugs or alcohol (see Recommendation 2) and ensure that patients are provided or receive effective treatment for substance use disorders when needed (see Recommendation 12).
+
+[S46-06 | p46 | Rec 8 > Implementation considerations]
+Although substance use disorders can alter the expected benefits and risks of opioid therapy for pain, patients with co-occurring pain and substance use disorder require ongoing pain management that maximizes benefits relative to risks.
+
+[S46-07 | p46 | Rec 8 > Implementation considerations]
+If clinicians consider opioid therapy for chronic pain for patients with substance use disorder, they should discuss increased risks for opioid use disorder and overdose with patients, carefully consider whether benefits of opioids outweigh increased risks, and incorporate strategies to mitigate risk into the management plan (e.g., offering naloxone [see Offering Naloxone to Patients] and increasing frequency of monitoring [see Recommendation 7]).
+
+[S46-08 | p46 | Rec 8 > Implementation considerations]
+If patients experience nonfatal opioid overdose, clinicians should evaluate for opioid use disorder and treat or arrange treatment if needed.
+
+[S46-09 | p46 | Rec 8 > Implementation considerations]
+Clinicians should work with patients to reduce opioid dosage and to discontinue opioids when indicated (see Recommendation 5) and should ensure continued close monitoring and support for patients prescribed or not prescribed opioids.
+
+[S46-10 | p46 | Rec 8 > Implementation considerations]
+If clinicians continue opioid therapy in patients with previous opioid overdose, they should discuss increased risks for overdose with patients, carefully consider whether benefits of opioids outweigh substantial risks, and incorporate strategies to mitigate risk into the management plan (e.g., offering naloxone and increasing frequency of monitoring [see Recommendation 7]).
+
+[S46-11 | p46 | Rec 8 > Supporting rationale]
+Clinicians should assess these risk factors periodically, with frequency individualized to patient comorbidities and other risk factors.
+
+[S46-12 | p46 | Rec 8 > Supporting rationale]
+For example, factors that vary over time, such as alcohol use, require more frequent assessment.
+
+[S46-13 | p46 | Rec 8 > Supporting rationale]
+Clinicians should offer naloxone and reevaluate patients more frequently (see Recommendation 7) when factors are present that increase risk for harm, such as sleep-disordered breathing, history of overdose, history of substance use disorder, higher dosages of opioids (e.g., ≥50 MME/day), and concurrent use of benzodiazepines with opioids.
+
+[S46-14 | p46 | Rec 8 > Supporting rationale]
+In part because of these concerns and because in certain settings naloxone is directly provided by a practice or health system to patients, “offering” naloxone (which can be done by offering a prescription or by offering naloxone directly) is recommended rather than specifying “prescribing” naloxone.
+
+[S46-15 | p46 | Rec 8 > Supporting rationale]
+Clinicians, health systems, and payers should work to ensure patients can obtain naloxone, a potentially lifesaving treatment.
+
+[S46-16 | p46 | Patients with Sleep-Disordered Breathing, Including Sleep Apnea]
+Careful monitoring and cautious dose titration should be used if opioids are prescribed for patients with mild sleep-disordered breathing.
+
+[S46-17 | p46 | Patients with Sleep-Disordered Breathing, Including Sleep Apnea]
+Clinicians should avoid prescribing opioids to patients with moderate or severe sleep-disordered breathing, whenever possible, to minimize risks for respiratory depression.
+
+[S47-01 | p47 | Pregnant Persons]
+Pregnant, postpartum, and parenting persons should receive compassionate, evidence-based care for pain or opioid use disorder.
+
+[S47-02 | p47 | Pregnant Persons]
+ACOG has noted that a cautious approach to prescribing opioids should be balanced with the need to address pain, and pregnancy should not be a reason to avoid treating acute pain (274).
+
+[S47-03 | p47 | Pregnant Persons]
+ACOG has emphasized that pregnancy should not be a reason to avoid treating acute pain because of concern for opioid misuse or neonatal abstinence syndrome and that neonatal abstinence syndrome is an expected and treatable condition that can follow prenatal exposure to opioid agonists.
+
+[S47-04 | p47 | Pregnant Persons]
+Clinicians and patients together should carefully weigh benefits and risks when making decisions about whether to initiate opioid therapy for pain during pregnancy.
+
+[S47-05 | p47 | Pregnant Persons]
+In addition, before initiating opioid therapy for persons who can become pregnant, clinicians and patients should discuss family planning and potential effects of long-term opioid use on any future pregnancy.
+
+[S47-06 | p47 | Pregnant Persons]
+For all persons with reproductive potential, discussing future pregnancy intentions and engaging in shared decision-making regarding contraception, if appropriate, is a core component of care.
+
+[S47-07 | p47 | Pregnant Persons]
+A review of all prescription and nonprescription medications is recommended during prepregnancy and interpregnancy care (276,277).
+
+[S47-08 | p47 | Pregnant Persons]
+Intentional application of a patient-centered reproductive justice framework and use of a shared decision-making model is the recommended approach for providing supportive contraceptive counseling and care to help patients to achieve their reproductive goals (278).
+
+[S47-09 | p47 | Pregnant Persons]
+Counseling should be noncoercive and include a discussion of all contraceptive options (276–278).
+
+[S47-10 | p47 | Pregnant Persons]
+When opioids are needed for treatment of acute pain in pregnant persons, the lowest effective dose (see Recommendation 4) should be used for no longer than the expected duration of pain severe enough to require opioids (see Recommendation 6).
+
+[S47-11 | p47 | Pregnant Persons]
+For pregnant persons with chronic pain, ACOG recommends that practice goals include strategies to avoid or minimize the use of opioids for pain management, highlighting alternative pain therapies such as nonpharmacologic (e.g., exercise, physical therapy, and behavioral approaches), and nonopioid pharmacologic treatments (274).
+
+[S47-12 | p47 | Pregnant Persons]
+Pharmacokinetic and physiologic changes occur during pregnancy, especially in the third trimester, and these changes might require dose adjustments (274).
+
+[S47-13 | p47 | Pregnant Persons]
+For pregnant persons already receiving opioids, clinicians should access appropriate expertise if considering tapering opioids because of possible risk to the pregnant patient and the fetus if the patient goes into withdrawal (see Recommendation 5).
+
+[S47-14 | p47 | Pregnant Persons]
+For pregnant persons with opioid use disorder, medication for opioid use disorder (buprenorphine or methadone) is the recommended therapy, has been associated with improved maternal outcomes, and should be offered as early as possible in pregnancy to prevent harms to both the patient and the fetus (274) (see Recommendation 12).
+
+[S47-15 | p47 | Pregnant Persons]
+The American Academy of Pediatrics (AAP) has published recommendations for the care of infants with neonatal opioid withdrawal syndrome, including that pregnant persons with opioid use disorder should receive antenatal counseling to provide education on the clinical signs of withdrawal and on postnatal treatment for neonatal opioid withdrawal syndrome (e.g., nonpharmacologic treatment, including breastfeeding, and pharmacotherapy) (280).
+
+[S47-16 | p47 | Pregnant Persons]
+In addition, all infants with long-term opioid exposure should be observed for at least 72 hours (4–7 days if exposed to buprenorphine or ER/LA opioids and 5–7 days if exposed to methadone) to monitor for the development of withdrawal (280).
+
+[S47-17 | p47 | Pregnant Persons]
+Clinicians caring for pregnant persons receiving prescribed or using nonprescribed opioids should arrange for delivery at a facility prepared to monitor, evaluate for, and treat neonatal opioid withdrawal syndrome.
+
+[S47-18 | p47 | Pregnant Persons]
+In instances when travel to such a facility would present an undue burden on the pregnant person, it is appropriate for the clinician to arrange delivery locally, monitor and evaluate the newborn for neonatal opioid withdrawal syndrome, and transfer the newborn for additional treatment if needed.
+
+[S47-19 | p47 | Pregnant Persons]
+Previous consensus recommendations have advised that if a codeine-containing medication is selected for postpartum management, clinicians should review duration of therapy and neonatal signs of toxicity with patients and their families (133).
+
+[S48-01 | p48 | Patients with Renal or Hepatic Insufficiency]
+Clinicians should use additional caution and increased monitoring (see Recommendation 7) to minimize risks of opioids prescribed for patients with renal or hepatic insufficiency because of their decreased ability to process and excrete medications, susceptibility to accumulation of opioids, and reduced therapeutic window between safe dosages and dosages associated with respiratory depression and overdose (281) (see Recommendations 3, 4, and 7).
+
+[S48-02 | p48 | Patients Aged ≥65 Years]
+Functional assessment is especially important in patients aged ≥65 years to better assess effects of pain on function and independence.
+
+[S48-03 | p48 | Patients Aged ≥65 Years]
+For certain older adults (e.g., older adults with serious illness that requires advanced management of pain or other distressing symptoms) (94), palliative care, which is beyond the scope of this guideline but addressed in other guidelines (93), is appropriate.
+
+[S48-04 | p48 | Patients Aged ≥65 Years]
+Clinicians should review all current medications, over-the-counter drugs, and natural remedies before prescribing any new drugs.
+
+[S48-05 | p48 | Patients Aged ≥65 Years]
+Clinicians should use additional caution and increased monitoring (see Recommendation 7) for patients aged ≥65 years to ensure pain is addressed and minimize risks of opioids prescribed.
+
+[S48-06 | p48 | Patients Aged ≥65 Years]
+Clinicians should educate older adults receiving opioids to avoid medication-related behaviors that increase risk, such as saving unused medications.
+
+[S48-07 | p48 | Patients Aged ≥65 Years]
+Clinicians also should implement interventions to mitigate common risks of opioid therapy among older adults, such as monitoring for cognitive impairment, risk assessment for falls, and exercise and bowel regimens to prevent constipation.
+
+[S48-08 | p48 | Patients in Safety Critical Jobs]
+For patients with safety critical jobs who are receiving opioids or other medications that can negatively affect sleep, cognition, balance, or coordination, clinicians should assess patients’ abilities to perform jobs that involve driving, using heavy equipment, climbing ladders, working at heights or around moving machinery, or working with high-voltage equipment.
+
+[S48-09 | p48 | Patients with Mental Health Conditions]
+Psychological distress frequently interferes with improvement of pain and function in patients with chronic pain; therefore, using validated instruments such as the Generalized Anxiety Disorder (GAD)-7 and the Patient Health Questionnaire (PHQ-9 or PHQ-4) to support assessment for anxiety, posttraumatic stress disorder (PTSD), and depression (284) might help clinicians improve overall pain treatment outcomes.
+
+[S48-10 | p48 | Patients with Mental Health Conditions]
+Additional caution and increased monitoring (see Recommendation 7) might lessen the increased risk for overdose among patients with depression (264,272).
+
+[S48-11 | p48 | Patients with Mental Health Conditions]
+Clinicians should ensure that treatment for depression and other mental health conditions as well as treatment for pain is optimized, consulting with behavioral health specialists when needed.
+
+[S48-12 | p48 | Patients with Mental Health Conditions]
+For treatment of chronic pain in patients with depression, clinicians should consider using tricyclic or SNRI antidepressants for analgesic as well as antidepressant effects if these medications are not otherwise contraindicated (see Recommendation 2).
+
+[S49-01 | p49 | Patients with Substance Use Disorders]
+Previous guidelines have recommended screening or risk assessment tools to identify patients at higher risk for opioid misuse or opioid use disorder.
+
+[S49-02 | p49 | Patients with Substance Use Disorders]
+If these tools are used, they should be supplemented with other assessments, such as discussions with patients, family, and caregivers; clinical records; PDMP data (see Recommendation 9); and toxicology screening data (see Recommendation 10).
+
+[S49-03 | p49 | Patients with Substance Use Disorders]
+Clinicians should always use caution when considering or prescribing opioids and should not overestimate the ability of available risk stratification tools to rule out risks of long-term opioid therapy.
+
+[S49-04 | p49 | Patients with Substance Use Disorders]
+Clinicians should ask patients about their drug (289) and alcohol use.
+
+[S49-05 | p49 | Patients with Substance Use Disorders]
+Single screening questions can be used (290).
+
+[S49-06 | p49 | Patients with Substance Use Disorders]
+Validated screening tools, such as the Drug Abuse Screening Test (DAST) (260); the Tobacco, Alcohol, Prescription medication, and other Substance use Tool (TAPS) (261); and the three-question version of the Alcohol Use Disorders Identification Test (AUDIT-C) (262,263), also can be used.
+
+[S49-07 | p49 | Patients with Substance Use Disorders]
+Clinicians should use PDMP data (see Recommendation 9) and toxicology screening (see Recommendation 10) as appropriate to assess for concurrent substance use that might place patients at higher risk for opioid use disorder and overdose.
+
+[S49-08 | p49 | Patients with Substance Use Disorders]
+Clinicians should also provide specific counseling on increased risks for overdose when opioids are combined with other drugs or alcohol (see Recommendation 2) and ensure that patients receive effective treatment for substance use disorders when needed (see Recommendation 12).
+
+[S49-09 | p49 | Patients with Substance Use Disorders]
+If clinicians consider prescribing opioid therapy for chronic pain to patients with substance use disorders, they should discuss increased risks for opioid use disorder and overdose with patients; carefully consider whether benefits of opioids outweigh increased risks; and incorporate strategies to mitigate risk into the management plan, such as offering naloxone (see Offering Naloxone to Patients) and increasing frequency of monitoring (see Recommendation 7) when opioids are prescribed.
+
+[S49-10 | p49 | Patients with Substance Use Disorders]
+Clinicians should communicate with patients’ substance use disorder treatment providers if opioids are prescribed.
+
+[S49-11 | p49 | Patients with Substance Use Disorders]
+Although substance use disorders can alter the expected benefits and risks of opioid therapy for pain, patients with co-occurring pain and substance use disorder require ongoing pain management that maximizes benefits relative to risks.
+
+[S49-12 | p49 | Patients with Previous Overdose]
+If patients experience nonfatal opioid overdose, clinicians should evaluate them for opioid use disorder and provide or arrange treatment if needed.
+
+[S49-13 | p49 | Patients with Previous Overdose]
+Clinicians should work with patients to reduce opioid dosage and discontinue opioids when indicated (see Recommendation 5) and should ensure continued close monitoring and support for patients prescribed or not prescribed opioids.
+
+[S49-14 | p49 | Patients with Previous Overdose]
+If clinicians continue opioid therapy in patients with previous opioid overdose, they should discuss increased risks for overdose with patients; carefully consider whether benefits of opioids outweigh substantial risks; and incorporate strategies to mitigate risk into the management plan, such as offering naloxone (see Offering Naloxone to Patients), involving patient-identified trusted family members, and increasing frequency of monitoring combined with shorter prescription durations (see Recommendation 7).
+
+[S50-01 | p50 | Offering Naloxone to Patients]
+Clinicians should offer naloxone when prescribing opioids, particularly to patients at increased risk for overdose, including patients with a history of overdose, patients with a history of substance use disorder, patients taking benzodiazepines with opioids (see Recommendation 11), patients at risk for returning to a high dose to which they have lost tolerance (e.g., patients undergoing tapering or recently released from prison), and patients taking higher dosages of opioids (≥50 MME/day).
+
+[S50-02 | p50 | Offering Naloxone to Patients]
+Practices should provide education on overdose prevention and naloxone use to patients receiving naloxone prescriptions and members of their households.
+
+[S50-03 | p50 | Offering Naloxone to Patients]
+Naloxone coprescribing can be facilitated by clinics or practices with resources to provide naloxone training and by collaborative practice models with pharmacists.
+
+[S50-04 | p50 | Rec 9]
+When prescribing initial opioid therapy for acute, subacute, or chronic pain, and periodically during opioid therapy for chronic pain, clinicians should review the patient’s history of controlled substance prescriptions using state prescription drug monitoring program (PDMP) data to determine whether the patient is receiving opioid dosages or combinations that put the patient at high risk for overdose (recommendation category: B; evidence type: 4).
+
+[S50-05 | p50 | Rec 9 > Implementation considerations]
+Ideally, PDMP data should be reviewed before every opioid prescription for acute, subacute, or chronic pain.
+
+[S50-06 | p50 | Rec 9 > Implementation considerations]
+This practice is recommended in all jurisdictions where PDMP availability and access policies, as well as clinical practice settings, make it practicable (e.g., clinician and delegate access permitted).
+
+[S50-07 | p50 | Rec 9 > Implementation considerations]
+At a minimum, during long-term opioid therapy, PDMP data should be reviewed before an initial opioid prescription and then every 3 months or more frequently.
+
+[S50-08 | p50 | Rec 9 > Implementation considerations]
+However, because PDMP information can be most helpful when results are unexpected and, to minimize bias in application, clinicians should apply this recommendation when feasible to all patients rather than differentially on the basis of assumptions about what they will learn about specific patients.
+
+[S50-09 | p50 | Rec 9 > Implementation considerations]
+Clinicians should use specific PDMP information about medications prescribed to their patient in the context of other clinical information, including their patient’s history, physical findings, and other relevant testing, to help them communicate with and protect their patient.
+
+[S50-10 | p50 | Rec 9 > Implementation considerations]
+Clinicians should review PDMP data specifically for prescription opioids and other controlled medications patients have received from additional prescribers to determine whether a patient is receiving total opioid dosages or combinations (e.g., opioids combined with benzodiazepines) that put the patient at risk for overdose.
+
+[S50-11 | p50 | Rec 9 > Implementation considerations]
+PDMP-generated risk scores have not been validated against clinical outcomes such as overdose and should not take the place of clinical judgment.
+
+[S50-12 | p50 | Rec 9 > Implementation considerations]
+Clinicians should not dismiss patients from their practice on the basis of PDMP information.
+
+[S50-13 | p50 | Rec 9 > Implementation considerations]
+Clinicians should take actions to improve patient safety:
+
+[S50-14 | p50 | Rec 9 > Implementation considerations]
+Discuss information from the PDMP with the patient and confirm that the patient is aware of any additional prescriptions.
+
+[S50-15 | p50 | Rec 9 > Implementation considerations]
+Because clinicians often work as part of teams, prescriptions might appropriately be written by more than one clinician coordinating the patient’s care.
+
+[S50-16 | p50 | Rec 9 > Implementation considerations]
+Discuss safety concerns, including increased risk for respiratory depression and overdose, with patients found to be receiving overlapping prescription opioids from multiple clinicians who are not coordinating the patient’s care or patients who are receiving medications that increase risk when combined with opioids (e.g., benzodiazepines) (see Recommendation 11), and offer naloxone (see Recommendation 8).
+
+[S51-01 | p51 | Rec 9 > Implementation considerations]
+Use particular caution when prescribing opioid pain medication and benzodiazepines concurrently, understanding that some patient circumstances warrant prescribing of these medications concomitantly.
+
+[S51-02 | p51 | Rec 9 > Implementation considerations]
+Clinicians should communicate with others managing the patient to discuss the patient’s needs, prioritize patient goals, weigh risks of concurrent benzodiazepine and opioid exposure, and coordinate care (see Recommendation 11).
+
+[S51-03 | p51 | Rec 9 > Implementation considerations]
+Consider the total MME/day for concurrent opioid prescriptions to help assess the patient’s overdose risk (see Recommendation 4).
+
+[S51-04 | p51 | Rec 9 > Implementation considerations]
+Buprenorphine should not be counted in the total MME/day in calculations because of its partial agonist properties at opioid receptors that confer a ceiling effect on respiratory depression.
+
+[S51-05 | p51 | Rec 9 > Implementation considerations]
+If a patient is found to be receiving total daily dosages of opioids that put them at risk for overdose, discuss safety concerns with the patient, consider in collaboration with the patient whether or not benefits of tapering outweigh risks of tapering (see Recommendation 5), and offer naloxone (see Recommendation 8).
+
+[S51-06 | p51 | Rec 9 > Implementation considerations]
+Discuss safety concerns with other clinicians who are prescribing controlled substances for the patient.
+
+[S51-07 | p51 | Rec 9 > Implementation considerations]
+Ideally, clinicians should first discuss concerns with the patient and inform them that they plan to coordinate care with their other clinicians to improve the patient’s safety.
+
+[S51-08 | p51 | Rec 9 > Implementation considerations]
+Screen for substance use and discuss concerns with the patient in a nonjudgmental manner (see Recommendations 8 and 12).
+
+[S51-09 | p51 | Rec 9 > Implementation considerations]
+When diverting (sharing or selling prescription opioids and not taking them) might be likely, consider toxicology testing to assist in determining whether prescription opioids can be discontinued without causing withdrawal (see Recommendations 5 and 10).
+
+[S51-10 | p51 | Rec 9 > Implementation considerations]
+A negative toxicology test for prescribed opioids might indicate the patient is not taking prescribed opioids, although clinicians should consider other possible reasons for this test result (e.g., false-negative results or misinterpretation of results) (see Recommendation 10).
+
+[S51-11 | p51 | Rec 9 > Supporting rationale]
+Special attention should be paid to ensure that PDMP information is not used in a way that is harmful to patients.
+
+[S51-12 | p51 | Rec 9 > Supporting rationale]
+Many state laws require PDMP use under specific circumstances (301).
+
+[S51-13 | p51 | Rec 9 > Supporting rationale]
+Such risk scores should not take the place of clinical judgment.
+
+[S51-14 | p51 | Rec 9 > Supporting rationale]
+Rather, clinicians should use specific PDMP information about medications prescribed to their patient in the context of other clinical information, including their patient’s history, physical findings, and other relevant testing, to help them communicate with and protect their patient.
+
+[S51-15 | p51 | Rec 9 > Supporting rationale]
+Experts raised varying points regarding frequency of PDMP use, with many agreeing that PDMPs should be consulted before every opioid prescription, several agreeing that universal application would mitigate bias in application to different patients, and others believing it might not be warranted or feasible to check the PDMP in all cases, particularly before prescribing opioids for acute pain for a small number of days.
+
+[S52-01 | p52 | Rec 9 > Supporting rationale]
+Ideally, PDMP data should be reviewed before every opioid prescription for acute, subacute, or chronic pain.
+
+[S52-02 | p52 | Rec 9 > Supporting rationale]
+This practice is recommended in all jurisdictions where PDMP availability and access policies make it practicable (e.g., clinician and delegate access permitted).
+
+[S52-03 | p52 | Rec 9 > Supporting rationale]
+At a minimum, PDMP data should be reviewed before initial opioid prescriptions for subacute or chronic pain and then every 3 months or more frequently during long-term opioid therapy.
+
+[S52-04 | p52 | Rec 9 > Supporting rationale]
+However, because PDMP information can be most helpful when results are unexpected and, to minimize bias in application, clinicians should apply this recommendation when feasible to all patients rather than differentially on the basis of assumptions about what they will learn about specific patients.
+
+[S52-05 | p52 | Rec 9 > Supporting rationale]
+Clinicians should review PDMP data for prescription opioids and other controlled medications patients might have received from additional prescribers to determine the total amount of MME prescribed and to assess if the total dosage or combinations (e.g., opioids combined with benzodiazepines) put the patient at high risk for overdose.
+
+[S52-06 | p52 | Rec 9 > Supporting rationale]
+If patients are found to have total opioid dosages or combinations of medications that might put them at risk for overdose, or multiple controlled substance prescriptions written by different clinicians, clinicians should take actions to improve patient safety (see Recommendation 9, Implementation Considerations).
+
+[S52-07 | p52 | Rec 10]
+When prescribing opioids for subacute or chronic pain, clinicians should consider the benefits and risks of toxicology testing to assess for prescribed medications as well as other prescribed and nonprescribed controlled substances (recommendation category: B; evidence type: 4).
+
+[S52-08 | p52 | Rec 10 > Implementation considerations]
+Toxicology testing should not be used in a punitive manner but should be used in the context of other clinical information to inform and improve patient care.
+
+[S52-09 | p52 | Rec 10 > Implementation considerations]
+Clinicians should not dismiss patients from care on the basis of a toxicology test result.
+
+[S52-10 | p52 | Rec 10 > Implementation considerations]
+Before starting opioids and periodically (at least annually) during opioid therapy, clinicians should consider the benefits and risks of toxicology testing to assess for prescribed opioids and other prescription and nonprescription controlled substances that increase risk for overdose when combined with opioids, including nonprescribed and illicit opioids and benzodiazepines.
+
+[S52-11 | p52 | Rec 10 > Implementation considerations]
+Clinicians, practices, and health systems should aim to minimize bias in testing and should not apply this recommendation differentially on the basis of assumptions about patients.
+
+[S52-12 | p52 | Rec 10 > Implementation considerations]
+Clinicians should consider toxicology screening results as potentially useful data, in the context of other clinical information, for all patients and consider toxicology screening whenever its potential limitations can be addressed.
+
+[S52-13 | p52 | Rec 10 > Implementation considerations]
+Clinicians should explain to patients that toxicology testing will not be used to dismiss patients from care and is intended to improve their safety.
+
+[S52-14 | p52 | Rec 10 > Implementation considerations]
+Clinicians should explain expected results (e.g., presence of prescribed medication and absence of drugs, including nonprescribed controlled substances not reported by the patient) and ask patients in a nonjudgmental manner about use of prescribed and other drugs and whether there might be unexpected results.
+
+[S52-15 | p52 | Rec 10 > Implementation considerations]
+Limited toxicology screening can be performed with a relatively inexpensive presumptive immunoassay panel that tests for opiates as a class, benzodiazepines as a class, and several nonprescribed substances.
+
+[S52-16 | p52 | Rec 10 > Implementation considerations]
+Clinicians should be familiar with the drugs included in toxicology screening panels used in their practice and should understand how to interpret results for these drugs.
+
+[S52-17 | p52 | Rec 10 > Implementation considerations]
+Confirmatory testing should be used when toxicology results will inform decisions with major clinical or nonclinical implications for the patient; a need exists to detect specific opioids or other drugs within a class, such as those that are being prescribed, or those that cannot be identified on standard immunoassays; or a need exists to confirm unexpected screening toxicology test results.
+
+[S53-01 | p53 | Rec 10 > Implementation considerations]
+Clinicians might want to discuss unexpected results with the local laboratory or toxicologist and should discuss unexpected results with the patient.
+
+[S53-02 | p53 | Rec 10 > Implementation considerations]
+Clinicians should discuss unexpected results with patients in a nonjudgmental manner, avoiding use of potentially stigmatizing language (e.g., avoid describing a specimen as testing “clean” or “dirty”).
+
+[S53-03 | p53 | Rec 10 > Implementation considerations]
+If unexpected results from toxicology screening are not explained, a confirmatory test on the same sample using a method selective enough to differentiate specific opioids and metabolites (e.g., gas or liquid chromatography–mass spectrometry) might be warranted.
+
+[S53-04 | p53 | Rec 10 > Implementation considerations]
+Clinicians should use unexpected results to improve patient safety (e.g., optimize pain management strategy [see Recommendation 2], carefully weigh benefits and risks of reducing or continuing opioid dosage [see Recommendation 5], reevaluate more frequently [see Recommendation 7], offer naloxone [see Recommendation 8], and offer treatment or refer the patient for treatment with medications for opioid use disorder [see Recommendation 12], all as appropriate).
+
+[S53-05 | p53 | Rec 10 > Supporting rationale]
+Because of these concerns, the recommendation is rated category B. However, clinicians, practices, and health systems should aim to minimize bias in its application and should not apply this recommendation differentially on the basis of assumptions about what they will learn about specific patients.
+
+[S53-06 | p53 | Rec 10 > Supporting rationale]
+Rather, clinicians should consider toxicology test results as potentially useful data, in the context of other clinical information, for all patients and consider toxicology testing whenever its potential problems can be mitigated.
+
+[S53-07 | p53 | Rec 10 > Supporting rationale]
+For example, clinicians can become familiar with the drugs included in toxicology testing panels used in their practice and understand how to interpret results; practices and health systems can ensure a laboratorian or toxicologist is available to discuss unexpected results, that costs to patients are not burdensome, and that practice policies regarding testing and frequency can minimize bias.
+
+[S54-01 | p54 | Rec 10 > Supporting rationale]
+Before starting opioids and periodically (at least annually) during opioid therapy, clinicians should consider benefits and risks of toxicology testing to assess for prescribed opioids and other prescription and nonprescribed substances that increase risk for overdose when combined with opioids, including nonprescribed and illicit opioids and benzodiazepines.
+
+[S54-02 | p54 | Rec 10 > Supporting rationale]
+Before ordering toxicology testing, clinicians should have a plan for responding to unexpected results.
+
+[S54-03 | p54 | Rec 10 > Supporting rationale]
+Clinicians should explain to patients that toxicology testing will not be used punitively (e.g., will not be used to dismiss patients from care) and is intended to improve their safety.
+
+[S54-04 | p54 | Rec 10 > Supporting rationale]
+Clinicians should also explain expected results (e.g., presence of prescribed medication and absence of substances, including nonprescribed substances, not reported by the patient).
+
+[S54-05 | p54 | Rec 10 > Supporting rationale]
+Clinicians should ask patients about use of prescribed medications and other substances and ask whether there might be unexpected results.
+
+[S54-06 | p54 | Rec 10 > Supporting rationale]
+In most situations, initial toxicology testing can be performed with a relatively inexpensive immunoassay panel that tests for opiates and benzodiazepines as classes and for multiple nonprescribed substances.
+
+[S54-07 | p54 | Rec 10 > Supporting rationale]
+Patients prescribed oxycodone or nonmorphine-based opioids (e.g., buprenorphine or methadone) require specific testing for those agents.
+
+[S54-08 | p54 | Rec 10 > Supporting rationale]
+The use of confirmatory testing can add costs and should be used when toxicology results will inform decisions with major clinical or nonclinical implications for the patient, a need exists to detect a specific opioid that is prescribed or that cannot be identified on standard immunoassays, or to confirm unexpected toxicology screening results for which there is no other explanation.
+
+[S54-09 | p54 | Rec 10 > Supporting rationale]
+Clinicians and health systems can work to minimize inequitable cost burdens for patients and limit specific testing to situations when it is necessary.
+
+[S54-10 | p54 | Rec 10 > Supporting rationale]
+Clinicians should be familiar with the compounds included in toxicology testing panels used in their practice and should understand how to interpret results.
+
+[S54-11 | p54 | Rec 10 > Supporting rationale]
+Many laboratories use an oxycodone immunoassay that detects oxycodone and oxymorphone; however, these agents might need to be ordered or identified separately in a toxicology testing panel.
+
+[S54-12 | p54 | Rec 10 > Supporting rationale]
+Clinicians might want to discuss unexpected results with the local laboratory or toxicologist and should discuss unexpected results with the patient.
+
+[S54-13 | p54 | Rec 10 > Supporting rationale]
+If unexpected results are not explained, a confirmatory test using a method selective enough to differentiate specific opioids and metabolites (e.g., gas or liquid chromatography–mass spectrometry) might be warranted to clarify the situation.
+
+[S54-14 | p54 | Rec 10 > Supporting rationale]
+Clinicians should use unexpected results to improve patient safety (e.g., change pain management strategy [see Recommendation 2], carefully weigh benefits and risks of reducing or continuing opioid dosage [see Recommendation 5], reevaluate more frequently [see Recommendation 7], offer naloxone [see Recommendation 8], and offer or refer patients for substance use disorder treatment [see Recommendation 12], all as appropriate).
+
+[S54-15 | p54 | Rec 10 > Supporting rationale]
+If tests for prescribed opioids are repeatedly negative, including confirmatory tests, and the clinician has verified that the patient is not taking the prescribed opioid, clinicians can discontinue the prescription without a taper and discuss options for safe disposal of unused opioids (154).
+
+[S54-16 | p54 | Rec 10 > Supporting rationale]
+Clinicians should not dismiss patients from care on the basis of a toxicology test result.
+
+[S54-17 | p54 | Rec 11]
+Clinicians should use particular caution when prescribing opioid pain medication and benzodiazepines concurrently and consider whether benefits outweigh risks of concurrent prescribing of opioids and other central nervous system depressants (recommendation category: B; evidence type: 3).
+
+[S55-01 | p55 | Rec 11 > Implementation considerations]
+Although in some circumstances it might be appropriate to prescribe opioids to a patient who is also prescribed benzodiazepines (e.g., severe acute pain in a patient taking long-term, stable low-dose benzodiazepine therapy), clinicians should use particular caution when prescribing opioid pain medication and benzodiazepines concurrently.
+
+[S55-02 | p55 | Rec 11 > Implementation considerations]
+In addition, clinicians should consider whether benefits outweigh risks for concurrent use of opioids with other central nervous system depressants (e.g., muscle relaxants, nonbenzodiazepine sedative hypnotics, and potentially sedating anticonvulsant medications such as gabapentin and pregabalin).
+
+[S55-03 | p55 | Rec 11 > Implementation considerations]
+Buprenorphine or methadone for opioid use disorder should not be withheld from patients taking benzodiazepines or other medications that depress the central nervous system.
+
+[S55-04 | p55 | Rec 11 > Implementation considerations]
+Clinicians should check the PDMP for concurrent controlled medications prescribed by other clinicians (see Recommendation 9) and should consider involving pharmacists as part of the management team when opioids are coprescribed with other central nervous system depressants.
+
+[S55-05 | p55 | Rec 11 > Implementation considerations]
+In patients receiving opioids and benzodiazepines long term, clinicians should carefully weigh the benefits and risks of continuing therapy with opioids and benzodiazepines and discuss with patients and other members of the patient’s care team.
+
+[S55-06 | p55 | Rec 11 > Implementation considerations]
+Clinicians should taper benzodiazepines gradually before discontinuation because abrupt withdrawal can be associated with rebound anxiety, hallucinations, seizures, delirium tremens, and, rarely, death.
+
+[S55-07 | p55 | Rec 11 > Implementation considerations]
+The rate of tapering should be individualized.
+
+[S55-08 | p55 | Rec 11 > Implementation considerations]
+If benzodiazepines prescribed for anxiety are tapered or discontinued, or if patients receiving opioids require treatment for anxiety, evidence-based psychotherapies (e.g., cognitive behavioral therapy), specific antidepressants or other nonbenzodiazepine medications approved for anxiety, or both, should be offered.
+
+[S55-09 | p55 | Rec 11 > Implementation considerations]
+Clinicians should communicate with other clinicians managing the patient to discuss the patient’s needs, prioritize patient goals, weigh risks of concurrent benzodiazepine and opioid exposure, and coordinate care.
+
+[S55-10 | p55 | Rec 11 > Supporting rationale]
+Because of these considerations, multiple experts indicated that recommending extreme caution with concurrent prescription of opioid pain medications and benzodiazepines was more appropriate than a recommendation to avoid prescribing opioid pain medication and benzodiazepines concurrently and that category B would be more appropriate than category A for this recommendation.
+
+[S55-11 | p55 | Rec 11 > Supporting rationale]
+Although in certain circumstances it might be appropriate to prescribe opioids to a patient receiving benzodiazepines (e.g., severe acute pain in a patient taking long-term, stable low-dosage benzodiazepine therapy), clinicians should use particular caution when prescribing opioid pain medication and benzodiazepines concurrently.
+
+[S55-12 | p55 | Rec 11 > Supporting rationale]
+In addition, because other central nervous system depressants (e.g., muscle relaxants, nonbenzodiazepine sedative hypnotics, and potentially sedating anticonvulsant medications such as gabapentin and pregabalin) (312) can potentiate respiratory depression associated with opioids, clinicians should consider whether benefits outweigh risks of concurrent use of these medications.
+
+[S56-01 | p56 | Rec 11 > Supporting rationale]
+Clinicians should check PDMPs for concurrent controlled medications prescribed by other clinicians (see Recommendation 9) and should consider involving pharmacists as part of the management team when opioids are coprescribed with other central nervous system depressants.
+
+[S56-02 | p56 | Rec 11 > Supporting rationale]
+In patients receiving opioids and benzodiazepines long-term, clinicians should carefully weigh the benefits and risks of continuing therapy with opioids and benzodiazepines and discuss with patients and other members of the patient’s care team, as appropriate.
+
+[S56-03 | p56 | Rec 11 > Supporting rationale]
+As emphasized in an FDA advisory (313), buprenorphine or methadone for opioid use disorder should not be withheld from patients taking benzodiazepines or other medications that depress the central nervous system.
+
+[S56-04 | p56 | Rec 11 > Supporting rationale]
+If risks are determined to outweigh benefits of continuing opioids for pain and benzodiazepine therapy at current dosages, decisions about tapering medications (e.g., whether to taper opioids first, taper benzodiazepines first, or consider carefully transitioning from full agonist opioids to buprenorphine before tapering benzodiazepines) should be individualized and reevaluated over time.
+
+[S56-05 | p56 | Rec 11 > Supporting rationale]
+Clinicians should taper benzodiazepines gradually before discontinuation because abrupt withdrawal can be associated with rebound anxiety, hallucinations, seizures, delirium tremens, and, rarely, death (222,223).
+
+[S56-06 | p56 | Rec 11 > Supporting rationale]
+Tapering rates should be individualized.
+
+[S56-07 | p56 | Rec 11 > Supporting rationale]
+If benzodiazepines prescribed for anxiety are tapered or discontinued, or if patients receiving opioids require treatment for anxiety, evidence-based psychotherapies (e.g., cognitive behavioral therapy), specific antidepressants or other nonbenzodiazepine medications approved for anxiety, or both, should be offered.
+
+[S56-08 | p56 | Rec 11 > Supporting rationale]
+Clinicians should communicate with mental health professionals managing the patient to discuss the patient’s needs, prioritize patient goals, weigh risks of concurrent benzodiazepine and opioid exposure, and coordinate care.
+
+[S56-09 | p56 | Rec 12]
+Clinicians should offer or arrange treatment with evidence-based medications to treat patients with opioid use disorder. Detoxification on its own, without medications for opioid use disorder, is not recommended for opioid use disorder because of increased risks for resuming drug use, overdose, and overdose death (recommendation category: A; evidence type: 1).
+
+[S56-10 | p56 | Rec 12 > Implementation considerations]
+If clinicians suspect opioid use disorder, they should discuss their concern with their patient in a nonjudgmental manner and provide an opportunity for the patient to disclose related concerns or problems.
+
+[S56-11 | p56 | Rec 12 > Implementation considerations]
+Clinicians should assess for the presence of opioid use disorder using DSM-5 criteria.
+
+[S56-12 | p56 | Rec 12 > Implementation considerations]
+For patients meeting criteria for opioid use disorder, particularly if moderate or severe, clinicians should offer or arrange for patients to receive evidence-based treatment with medications for opioid use disorder.
+
+[S56-13 | p56 | Rec 12 > Implementation considerations]
+Clinicians should not dismiss patients from their practice because of opioid use disorder because this can adversely affect patient safety.
+
+[S56-14 | p56 | Rec 12 > Implementation considerations]
+Identification of opioid use disorder represents an opportunity for a clinician to initiate potentially life-saving interventions, and the clinician should collaborate with the patient regarding their safety to increase the likelihood of successful treatment.
+
+[S56-15 | p56 | Rec 12 > Implementation considerations]
+For pregnant persons with opioid use disorder, medication for opioid use disorder (buprenorphine or methadone) is the recommended therapy and should be offered as early as possible in pregnancy to prevent harms to both the patient and the fetus.
+
+[S56-16 | p56 | Rec 12 > Implementation considerations]
+Clinicians unable to provide treatment themselves should arrange for patients with opioid use disorder to receive care from a substance use disorder treatment specialist (e.g., an office-based buprenorphine or naltrexone treatment provider), or from an opioid treatment program certified by SAMHSA to provide methadone or buprenorphine for patients with opioid use disorder.
+
+[S56-17 | p56 | Rec 12 > Implementation considerations]
+All clinicians, and particularly clinicians prescribing opioids in communities without sufficient treatment capacity for opioid use disorder, should obtain a waiver to prescribe buprenorphine for opioid use disorder.
+
+[S57-01 | p57 | Rec 12 > Implementation considerations]
+Clinicians prescribing opioids should identify treatment resources for opioid use disorder in the community, establish a network of referral options that span the levels of care that patients might need to enable rapid collaboration and referral, when needed, and work together to ensure sufficient treatment capacity for opioid use disorder at the practice level.
+
+[S57-02 | p57 | Rec 12 > Implementation considerations]
+Although identification of an opioid use disorder can alter the expected benefits and risks of opioid therapy for pain, patients with co-occurring pain and opioid use disorder require ongoing pain management that maximizes benefits relative to risks.
+
+[S57-03 | p57 | Rec 12 > Supporting rationale]
+Experts from OWG stated that partial agonist opioid, full agonist opioid, and opioid antagonist treatment should not be framed as equal options for opioid use disorder, noting that partial and full agonist opioid treatments have stronger evidence for better outcomes, do not require abstinence, have less challenges with initiation, and are much more widely used than opioid antagonist treatment.
+
+[S58-01 | p58 | Rec 12 > Supporting rationale]
+Naltrexone (an opioid antagonist) also can be used for opioid use disorder, particularly for highly motivated persons (331,332).
+
+[S58-02 | p58 | Rec 12 > Supporting rationale]
+Naltrexone requires adherence to monthly, long-acting injections.
+
+[S58-03 | p58 | Rec 12 > Supporting rationale]
+The effectiveness of oral naltrexone can be limited by poor medication adherence (332), and oral naltrexone should not be used except under very limited circumstances (96) (e.g., for patients who would be able to comply with observed daily dosing to enhance adherence) (96,317).
+
+[S58-04 | p58 | Rec 12 > Supporting rationale]
+Naltrexone also must be started after full withdrawal from opioids, which is a challenge for some patients; however, for patients who have completed or are able to complete withdrawal, naltrexone has comparable effectiveness as buprenorphine in prevention of return to drug use (333).
+
+[S58-05 | p58 | Rec 12 > Supporting rationale]
+Recommendations for treatment of opioid use disorder include assessing the patient’s psychosocial needs and offering or referring the patient to psychosocial treatment in collaboration with qualified behavioral health care providers based on those needs; however, a patient’s decision to decline psychosocial treatment or the absence of available psychosocial treatment should not preclude or delay medications for opioid use disorder (96).
+
+[S58-06 | p58 | Rec 12 > Supporting rationale]
+If clinicians suspect opioid use disorder on the basis of patient concerns or behaviors or on findings in PDMP data (see Recommendation 9) or from toxicology testing (see Recommendation 10), they should discuss their concern with their patient and provide an opportunity for the patient to disclose related concerns or problems.
+
+[S58-07 | p58 | Rec 12 > Supporting rationale]
+Clinicians should assess for the presence of opioid use disorder using DSM-5 criteria (317).
+
+[S58-08 | p58 | Rec 12 > Supporting rationale]
+Opioid use disorder can coexist with other substance use disorders, and patients who are actively using substances during opioid use disorder treatment might require greater support, potentially including involvement of an addiction specialist (96).
+
+[S58-09 | p58 | Rec 12 > Supporting rationale]
+Clinicians should ask about use of alcohol and other substances (see Recommendation 8).
+
+[S58-10 | p58 | Rec 12 > Supporting rationale]
+Alternatively, clinicians can arrange for a substance use disorder treatment specialist to assess for the presence of opioid and other substance use disorders.
+
+[S58-11 | p58 | Rec 12 > Supporting rationale]
+For patients meeting criteria for opioid use disorder, particularly if moderate or severe, clinicians should offer or arrange for patients to receive evidence-based treatment with medications for opioid use disorder.
+
+[S58-12 | p58 | Rec 12 > Supporting rationale]
+Patients with opioid use disorder might benefit from counseling and referrals to mutual help groups such as Narcotics Anonymous (336), although this should not take the place of treatment with medication.
+
+[S58-13 | p58 | Rec 12 > Supporting rationale]
+Clinicians also should offer naloxone and training on proper use for overdose reversal to patients with opioid use disorder and to their household members and significant others (96) (see Recommendation 8).
+
+[S58-14 | p58 | Rec 12 > Supporting rationale]
+Clinicians should not dismiss patients from their practice because of opioid use disorder because this can adversely affect patient safety.
+
+[S58-15 | p58 | Rec 12 > Supporting rationale]
+Identification of opioid use disorder represents an opportunity for a clinician to initiate potentially life-saving interventions, and it is important for the clinician to collaborate with the patient regarding their safety to increase the likelihood of successful treatment.
+
+[S58-16 | p58 | Rec 12 > Supporting rationale]
+Detoxification on its own, without medications for opioid use disorder, is not recommended for opioid use disorder because of increased risks for return to drug use, overdose, and overdose death (96).
+
+[S58-17 | p58 | Rec 12 > Supporting rationale]
+For pregnant persons with opioid use disorder, medications for opioid use disorder (buprenorphine or methadone) have been associated with improved maternal outcomes and should be offered as early as possible in pregnancy to prevent harms to both the patient and the fetus (see Recommendation 8) (133,220).
+
+[S58-18 | p58 | Rec 12 > Supporting rationale]
+Previous recommendations have suggested that transmucosal buprenorphine (without naloxone) is preferred during pregnancy to avoid potential prenatal exposure to naloxone, especially if injected, and evidence on the safety of naloxone in pregnant persons remains limited (96,274).
+
+[S58-19 | p58 | Rec 12 > Supporting rationale]
+ACOG also recommends that if a person is stable on naltrexone before pregnancy, the decision regarding whether to continue naltrexone treatment during pregnancy should involve a careful discussion between the clinician and the patient, weighing the limited safety data on naltrexone with the potential risk for return to drug use with discontinuation of treatment (274).
+
+[S59-01 | p59 | Rec 12 > Supporting rationale]
+For persons receiving buprenorphine or methadone for opioid use disorder and considering breastfeeding, AAP recommends breastfeeding be supported if there has been no return to drug use for ≥90 days and there are no other contraindications, considered if there has been no return to drug use within 30–90 days, and discouraged if there is active substance use or has been a return to drug use within the last 30 days (280).
+
+[S59-02 | p59 | Rec 12 > Supporting rationale]
+To prescribe buprenorphine for opioid use disorder for up to 30 patients in an office-based setting, clinicians can forgo or choose to undertake training but must still receive a waiver from SAMHSA.
+
+[S59-03 | p59 | Rec 12 > Supporting rationale]
+As a partial agonist, buprenorphine should generally not be initiated until there are objective signs of withdrawal, to avoid precipitating withdrawal.
+
+[S59-04 | p59 | Rec 12 > Supporting rationale]
+Low-dose buprenorphine initiation is a potential option for patients with opioid use disorder who are taking opioid medications for pain.
+
+[S59-05 | p59 | Rec 12 > Supporting rationale]
+With this dosing strategy, full agonist opioids can be continued while buprenorphine is initiated, and the patient does not need to experience opioid withdrawal symptoms.
+
+[S59-06 | p59 | Rec 12 > Supporting rationale]
+For standard (not low-dose) buprenorphine initiation, after objective signs of withdrawal are observed, buprenorphine should be initiated (96) and titrated upward under supervision at approximately 2-hour intervals as needed to control withdrawal symptoms.
+
+[S59-07 | p59 | Rec 12 > Supporting rationale]
+If discontinued, buprenorphine should be tapered very gradually (over several months) (96).
+
+[S59-08 | p59 | Rec 12 > Supporting rationale]
+Compared with buprenorphine, which can be prescribed by clinicians with a waiver in any setting or dispensed from a SAMHSA-certified opioid treatment program, ongoing methadone treatment for opioid use disorder can only be provided through an opioid treatment program.
+
+[S59-09 | p59 | Rec 12 > Supporting rationale]
+As short-term exceptions, any clinician may administer (but not prescribe) methadone or buprenorphine to treat acute opioid withdrawal for up to 3 days, while working to refer the patient to opioid use disorder treatment (346).
+
+[S59-10 | p59 | Rec 12 > Supporting rationale]
+Patients already receiving treatment for opioid use disorder and admitted for other medical reasons may continue to directly receive methadone or buprenorphine treatment in an emergency department or in a hospital throughout inpatient hospitalization (336,346,349).
+
+[S59-11 | p59 | Rec 12 > Supporting rationale]
+Naltrexone does not require a waiver and can be prescribed in any setting.
+
+[S59-12 | p59 | Rec 12 > Supporting rationale]
+A minimum of 7–10 days free of opioids is recommended before the first naltrexone dose to avoid precipitation of severe opioid withdrawal (350).
+
+[S59-13 | p59 | Rec 12 > Supporting rationale]
+Certain patients, including those who metabolize naltrexone more rapidly, might benefit from dosing as frequently as every 3 weeks (96).
+
+[S59-14 | p59 | Rec 12 > Supporting rationale]
+Oral naltrexone is no longer recommended and should not be used except under very limited circumstances (96).
+
+[S60-01 | p60 | Rec 12 > Supporting rationale]
+If discontinued, naltrexone can be stopped abruptly without precipitating withdrawal symptoms (96).
+
+[S60-02 | p60 | Rec 12 > Supporting rationale]
+Clinicians should warn patients who discontinue naltrexone of the risk for potentially fatal opioid overdose if opioid use is resumed (96), because of the loss of tolerance to the previous opioid dosage.
+
+[S60-03 | p60 | Rec 12 > Supporting rationale]
+Clinicians are strongly encouraged to provide medication treatment for their patients with opioid use disorder.
+
+[S60-04 | p60 | Rec 12 > Supporting rationale]
+Those unable to provide treatment themselves should arrange for patients with opioid use disorder to receive care from a colleague who is able to provide treatment, from a substance use disorder treatment specialist (e.g., an office-based buprenorphine or naltrexone treatment clinician), or from an opioid treatment program certified by SAMHSA to provide methadone or buprenorphine for patients with opioid use disorder.
+
+[S60-05 | p60 | Rec 12 > Supporting rationale]
+Clinicians should assist patients in finding qualified treatment specialists, should arrange for patients to follow up with these specialists, and should coordinate continuing care with these specialists.
+
+[S60-06 | p60 | Rec 12 > Supporting rationale]
+Clinicians prescribing opioids in communities without sufficient treatment capacity for opioid use disorder should obtain a waiver to prescribe buprenorphine.
+
+[S60-07 | p60 | Rec 12 > Supporting rationale]
+Clinicians prescribing opioids should identify treatment resources for substance use disorders including opioid use disorders in the community, establish a network of referral options that span the levels of care that patients might need to enable rapid collaboration and referral, when needed, and work together to ensure sufficient treatment capacity at the practice level.
+
+[S60-08 | p60 | Management of Opioid Misuse That Does Not Meet Criteria for Opioid Use Disorder]
+For patients with opioid misuse that does not meet criteria for opioid use disorder (e.g., taking opioids in larger amounts than intended without meeting other criteria for opioid use disorder), clinicians should reassess the patient’s pain, ensure that therapies for pain management have been optimized (see Recommendation 2), discuss with patients, and carefully weigh benefits and risks of continuing opioids at the current dosage (see Recommendation 5).
+
+[S60-09 | p60 | Management of Opioid Misuse That Does Not Meet Criteria for Opioid Use Disorder]
+For patients who choose to but are unable to taper, clinicians can reassess for opioid use disorder and offer buprenorphine treatment or refer for buprenorphine or methadone treatment if criteria for opioid use disorder are met.
+
+[S60-10 | p60 | Management of Opioid Misuse That Does Not Meet Criteria for Opioid Use Disorder]
+Even without a diagnosis of opioid use disorder, transitioning to buprenorphine for pain also can be considered because of reduced risk for overdose with buprenorphine compared with risk associated with full agonist opioids (see Recommendation 5).
+
+[S60-11 | p60 | Pain Management for Patients with Opioid Use Disorder]
+Although identification of an opioid use disorder can alter the expected benefits and risks of opioid therapy for pain, patients with co-occurring pain and substance use disorder require ongoing pain management that maximizes benefits relative to risks.
+
+[S60-12 | p60 | Pain Management for Patients with Opioid Use Disorder]
+Clinicians should use nonpharmacologic and nonopioid pharmacologic pain treatments as appropriate (96) (see Recommendations 1 and 2) to provide optimal pain management.
+
+[S60-13 | p60 | Pain Management for Patients with Opioid Use Disorder]
+For patients with pain who have an active opioid use disorder but are not in treatment, clinicians should consider buprenorphine or methadone treatment for opioid use disorder, which also can help with concurrent management of pain (96).
+
+[S60-14 | p60 | Pain Management for Patients with Opioid Use Disorder]
+For patients who are treated with buprenorphine for opioid use disorder and experience acute pain, clinicians can consider temporarily increasing the buprenorphine dosing frequency (e.g., to twice per day) (96) to help manage pain because the duration of effects of buprenorphine is shorter for pain than for suppression of withdrawal (242).
+
+[S60-15 | p60 | Pain Management for Patients with Opioid Use Disorder]
+For severe acute pain (e.g., from trauma or unplanned major surgery) in patients receiving buprenorphine for opioid use disorder, clinicians can consider additional as-needed doses of buprenorphine.
+
+[S60-16 | p60 | Pain Management for Patients with Opioid Use Disorder]
+In supervised settings, adding a short-acting full agonist opioid to the patient’s regular dosage of buprenorphine can be considered without discontinuing the patient’s regular buprenorphine dosage; however, if a decision is made to discontinue buprenorphine to allow for more µ-opioid receptor availability, patients should be monitored closely because high doses of a full agonist opioid might be required, potentially leading to oversedation and respiratory depression as buprenorphine’s partial agonist effect lessens (96).
+
+[S60-17 | p60 | Pain Management for Patients with Opioid Use Disorder]
+For patients receiving naltrexone for opioid use disorder, short-term use of higher-potency nonopioid analgesics (e.g., NSAIDs) can be considered to manage severe acute pain (96).
+
+[S60-18 | p60 | Pain Management for Patients with Opioid Use Disorder]
+Patients receiving methadone for opioid use disorder who require additional opioids as treatment for severe acute pain management should be monitored carefully, and when feasible, should optimally be treated by a clinician experienced in the treatment of pain in consultation with their opioid treatment program (96).
+
+[S61-01 | p61 | Conclusion and Future Directions]
+Specifically, the clinical practice guideline outlines how clinicians and patients should work together in assessing the benefits and risks of continued opioid use and if or when to taper opioids to a lower dosage or discontinue opioids altogether in accordance with the HHS Tapering Guide (219,353).
+
+[S61-02 | p61 | Conclusion and Future Directions]
+A central tenet of this clinical practice guideline is that acute, subacute, and chronic pain needs to be appropriately and effectively treated regardless of whether opioids are part of a treatment regimen.
+
+[S61-03 | p61 | Conclusion and Future Directions]
+Clinicians should select nonpharmacologic or pharmacologic treatment modalities, or both, that maximize patient safety and optimize outcomes in pain, function, and quality of life.
+
+[S61-04 | p61 | Conclusion and Future Directions]
+A multimodal and multidisciplinary approach to pain management that considers the biologic, psychological, and social characteristics of each person is critical (6).
+
+[S61-05 | p61 | Conclusion and Future Directions]
+The care provided needs to be individualized and person centered (6).
+
+[S61-06 | p61 | Conclusion and Future Directions]
+Clinicians and patients should work together to identify treatment goals, including functional goals, and tailor an approach that considers both the benefits and risks of available options (6).
+
+[S61-07 | p61 | Conclusion and Future Directions]
+Progress should be monitored over time and treatment protocols adjusted accordingly.
+
+[S61-08 | p61 | Conclusion and Future Directions]
+Health systems and payers can work to ensure multimodal treatment options are available, accessible, and reimbursed for patients.
+
+[S61-09 | p61 | Conclusion and Future Directions]
+Public and private payers can support a broader array of nonpharmacologic interventions such as exercise, multidisciplinary rehabilitation, mind-body interventions, cognitive behavioral therapy, and certain complementary and integrative medicine therapies (e.g., acupuncture and spinal manipulation) that increasingly are known to be effective (9).
+
+[S62-01 | p62 | Conclusion and Future Directions]
+Clinicians, practices, health systems, and payers should attend to health inequities to protect patient safety; guard against unnecessary risks; and ensure access to appropriate, diversified, effective nonpharmacologic and pharmacologic pain management options that are person centered, affordable, accessible, and well coordinated.
+
+[S62-02 | p62 | Conclusion and Future Directions]
+To avoid unintended consequences for patients, this clinical practice guideline should not be misapplied, or policies derived from it, beyond its intended use (67).
+
+[S62-03 | p62 | Conclusion and Future Directions]
+Robust coverage and access (e.g., limited utilization management and cost sharing for evidence-based treatments) and decision support (e.g., adjustment of EHR prescribing defaults) can be used to facilitate and encourage evidence-based treatments as default treatments for pain (357,358).
+
+[S62-04 | p62 | Conclusion and Future Directions]
+Communication between clinicians and patients about the benefits and risks of opioids should be central to treatment decisions for patients in pain.

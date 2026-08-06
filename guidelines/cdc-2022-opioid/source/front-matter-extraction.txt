@@ -1,0 +1,169 @@
+CDC Clinical Practice Guideline for Prescribing Opioids for Pain — United States, 2022
+front matter extraction evidence (verbatim rendered text)
+Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
+Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
+PDF locator: physical PDF pages 3–18; S18-07 continues onto physical page 19
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 54 payloads below.
+Scaffolding convention: bracketed locator lines and PDF list numerals/bullet glyphs are outside payload regions; wrapped list stems/items are joined in reading order with CDC punctuation retained.
+
+[S3-01 | p3 | Summary]
+CDC recommends that persons with pain receive appropriate pain treatment, with careful consideration of the benefits and risks of all treatment options in the context of the patient’s circumstances.
+
+[S3-02 | p3 | Summary]
+Recommendations should not be applied as inflexible standards of care across patient populations.
+
+[S4-01 | p4 | Introduction > Background]
+Differentially untreated or undertreated pain as a result of clinician biases persists and demands immediate and sustained attention and action (37–40).
+
+[S4-02 | p4 | Introduction > Background]
+Because of the clinical, psychological, and social consequences associated with pain, including limitations in activities, lost work productivity, reduced quality of life, and pervasive stigma, it is essential that clinicians have the training, education, guidance, and resources to provide appropriate, holistic, and compassionate care for patients with pain (2,6).
+
+[S4-03 | p4 | Introduction > Background]
+An important aim of pain management is the provision of person-centered care built on trust between patients and clinicians.
+
+[S4-04 | p4 | Introduction > Background]
+Such care includes appropriate evaluation to identify potentially reversible causes of pain and establish a diagnosis and measurable treatment outcomes that focus on optimizing function and quality of life (6).
+
+[S4-05 | p4 | Introduction > Background]
+To achieve this aim, it is important that clinicians consider the full range of pharmacologic and nonpharmacologic treatments for pain care, and that health systems, payers, and governmental programs and entities make the full spectrum of evidence-based treatments accessible to patients with pain and their treating clinicians.
+
+[S4-06 | p4 | Introduction > Background]
+In 2014, on the basis of accumulating evidence of potential risks to patients, the Food and Drug Administration (FDA) required new safety labeling changes for extended-release and long-acting opioids.
+
+[S5-01 | p5 | Introduction > Background]
+The limited evidence of long-term effectiveness of opioids for chronic pain, coupled with risks to patients and to persons using prescription opioids that were not prescribed to them, underscored the importance of reducing inappropriate opioid prescribing while advancing evidence-based pain care to improve the lives of persons living with pain.
+
+[S5-02 | p5 | Introduction > Background]
+Approximately half of all states have passed legislation limiting initial opioid prescriptions for acute pain to a ≤7-day supply (63), and many insurers, pharmacy benefit managers, and pharmacies have enacted similar policies (64).
+
+[S5-03 | p5 | Introduction > Background]
+At least 17 states have passed laws requiring or recommending the coprescription of naloxone in the presence of overdose risk factors, such as high dosages of opioids or concomitant opioid pain medications and benzodiazepines (65).
+
+[S5-04 | p5 | Introduction > Background]
+Although some laws, regulations, and policies that appear to support recommendations in the 2016 CDC Opioid Prescribing Guideline might have had positive results for some patients, they are inconsistent with a central tenet of the guideline: that the recommendations are voluntary and intended to be flexible to support, not supplant, individualized, patient-centered care.
+
+[S6-01 | p6 | Introduction > Rationale]
+This clinical practice guideline provides recommendations but does not replace clinical judgment and individualized, patient-centered decision-making.
+
+[S6-02 | p6 | Introduction > Rationale]
+The recommendations are based on emerging evidence, including observational studies or randomized clinical trials with notable limitations; thus, they should be considered in the context of the clinician-patient relationship built on shared understanding and a whole-person approach that considers such factors as the patient’s physical and psychological functioning, support needs, expected health outcomes and well-being, home environment, and home and work responsibilities.
+
+[S6-03 | p6 | Introduction > Rationale]
+Flexibility for clinicians and patients is paramount when making patient-centered clinical treatment decisions.
+
+[S8-01 | p8 | BOX 1 > Executive summary]
+Recommendation statements emphasize that opioids should be used only when benefits for pain and function are expected to outweigh risks.
+
+[S8-02 | p8 | BOX 1 > Executive summary]
+Before initiating opioid therapy for patients with pain, clinicians should discuss with patients the realistic benefits and known risks of opioid therapy.
+
+[S8-03 | p8 | BOX 1 > Executive summary]
+Before starting ongoing opioid therapy for patients with subacute or chronic pain, clinicians should work with patients to establish treatment goals for pain and function and consider how opioid therapy will be discontinued if benefits do not outweigh risks.
+
+[S8-04 | p8 | BOX 1 > Executive summary]
+When opioids are initiated, clinicians should prescribe the lowest effective dosage of immediate-release opioids for no longer than needed for the expected duration of pain severe enough to require opioids.
+
+[S8-05 | p8 | BOX 1 > Executive summary]
+During ongoing opioid therapy, clinicians should collaborate with patients to evaluate and carefully weigh benefits and risks of continuing opioid therapy and exercise care when increasing, continuing, or reducing opioid dosage.
+
+[S8-06 | p8 | BOX 1 > Executive summary]
+Before starting and periodically during continuation of opioid therapy, clinicians should evaluate risk for opioid-related harms and should work with patients to incorporate relevant strategies to mitigate risk, including offering naloxone and reviewing potential interactions with any other prescribed medications or substances used.
+
+[S8-07 | p8 | BOX 1 > Executive summary]
+Clinicians should offer or arrange treatment with evidence-based medications to treat patients with opioid use disorder.
+
+[S8-08 | p8 | BOX 1 > Executive summary]
+CDC recommends that persons with pain receive appropriate pain treatment with careful consideration of the benefits and risks of all treatment options in the context of the patient’s circumstances.
+
+[S8-09 | p8 | BOX 1 > Executive summary]
+Clinicians should collaborate with patients when making treatment decisions and designing a treatment plan, including when initiating or changing pain management strategies and particularly when considering initiating, increasing, tapering, or discontinuing opioids.
+
+[S8-10 | p8 | BOX 1 > Executive summary]
+Clinicians should avoid abrupt discontinuation of opioids, especially for patients receiving high dosages of opioids, should avoid dismissing patients from care, and should ensure (provide or arrange) appropriate care for patients with pain and patients with complications from opioid use (e.g., opioid use disorder).
+
+[S8-11 | p8 | BOX 1 > Executive summary]
+Quality and equitable care across sociodemographic groups requires attention to mitigation of potential barriers to care, such as through linguistically tailored care and cost-assistance programs to ensure access to appropriate pharmacotherapy, psychological support, and physical therapy as needed.
+
+[S8-12 | p8 | BOX 1 > Executive summary]
+This voluntary clinical practice guideline provides recommendations only and is intended to support, not supplant, clinical judgment and individualized, person-centered decision-making.
+
+[S8-13 | p8 | BOX 1 > Executive summary]
+This clinical practice guideline should not be applied as inflexible standards of care across patient populations by health care professionals; health systems; pharmacies; third-party payers; or state, local, or federal organizations or entities.
+
+[S9-01 | p9 | BOX 2 > Intended use > prohibited uses]
+This clinical practice guideline is not a replacement for clinical judgment or individualized, person-centered care; intended to be applied as inflexible standards of care across patients or patient populations by health care professionals, health systems, pharmacies, third-party payers, or governmental jurisdictions or to lead to the rapid tapering or abrupt discontinuation of opioids for patients; a law, regulation, or policy that dictates clinical practice or as a substitute for Food and Drug Administration–approved labeling; applicable to management of pain related to sickle cell disease, management of cancer-related pain, or palliative care or end-of-life care; or focused on opioids prescribed for opioid use disorder.
+
+[S9-02 | p9 | BOX 2 > Intended use]
+This clinical practice guideline provides voluntary clinical practice recommendations for clinicians that should not be used as inflexible standards of care.
+
+[S9-03 | p9 | BOX 2 > Intended use]
+The recommendations are not intended to be implemented as absolute limits for policy or practice across populations by organizations, health care systems, or government entities.
+
+[S9-04 | p9 | Scope and Audience]
+These time-bound definitions are not meant to be absolute but rather to be approximate guides to facilitate the consideration and practical use of the recommendations by clinicians and patients.
+
+[S10-01 | p10 | Scope and Audience]
+This does not imply that any other types of pain are more or less worthy of effective treatment, only that clinicians are referred to existing clinical guidelines that more specifically address unique considerations for management of pain related to sickle cell disease, cancer-related pain treatment, palliative care, and end-of-life care.
+
+[S10-02 | p10 | Scope and Audience]
+Because of unique considerations in management of pain related to sickle cell disease, which can change the balance of benefits and risks of the use of opioids, clinicians should refer to the American Society of Hematology (ASH) 2020 Guidelines for Sickle Cell Disease: Management of Acute and Chronic Pain (87).
+
+[S12-01 | p12 | Clinical Practice Guideline Development Methods > Recommendation Development]
+Category A recommendations typically apply to all persons in the group addressed in the recommendation and indicate a course of action that can be followed in most circumstances.
+
+[S12-02 | p12 | Clinical Practice Guideline Development Methods > Recommendation Development]
+Category B recommendations indicate that the recommendation might not apply to all persons in the group addressed in the recommendation; therefore, different choices will be appropriate for different patients, and decisions should be made based on the patient’s circumstances.
+
+[S12-03 | p12 | Clinical Practice Guideline Development Methods > Recommendation Development]
+For category B recommendations, clinicians must help patients arrive at a decision consistent with patient values and preferences and specific clinical situations (shared decision-making) (106).
+
+[S14-01 | p14 | BOX 3 > Recommendation categories]
+Category A recommendation: Applies to all persons; most patients should receive the recommended course of action.
+
+[S14-02 | p14 | BOX 3 > Recommendation categories]
+Category B recommendation: Individual decision-making needed; different choices will be appropriate for different patients.
+
+[S14-03 | p14 | BOX 3 > Recommendation categories]
+Clinicians help patients arrive at a decision consistent with patient values and preferences and specific clinical situations.
+
+[S14-04 | p14 | Federal Advisory Committee Review and Recommendation]
+Members are required to complete the Office of Government Ethics Form 450 annually to disclose relevant interests and report on their disclosures during meetings.
+
+[S15-01 | p15 | Federal Advisory Committee Review and Recommendation]
+Persons interested in being considered for the workgroup were encouraged to submit self-nominations from December 4, 2019, through February 4, 2020.
+
+[S15-02 | p15 | Federal Advisory Committee Review and Recommendation]
+In accordance with CDC guidance (109,110) that at least two BSC/NCIPC members must serve on OWG and one of the two members must serve as the workgroup chair, OWG included a total of three BSC/NCIPC members, with one BSC/NCIPC member serving as the OWG chair.
+
+[S16-01 | p16 | Federal Advisory Committee Review and Recommendation]
+After hearing additional CDC presentations on the process and progress of the draft clinical practice guideline, discussion of the OWG report, and a 2-hour public comment period, BSC/NCIPC voted unanimously that CDC adopt the OWG report, while considering ideas and suggestions raised by BSC/NCIPC and the public during the meeting, and that OWG’s work be considered complete and that OWG be sunsetted.
+
+[S17-01 | p17 | Peer Review]
+Therefore, peer review of the draft clinical practice guideline was required per the final information quality bulletin for peer review (https://www.whitehouse.gov/wp-content/uploads/2019/04/M-19-15.pdf ).
+
+[S17-02 | p17 | Recommendations]
+The recommendations are not intended to be implemented as absolute limits of policy or practice across populations by organizations, health care systems, or government entities.
+
+[S17-03 | p17 | Recommendations > Category framing]
+Category A recommendations indicate that most patients should receive the recommended course of action; category B recommendations indicate that different choices will be appropriate for different patients, requiring clinicians to help patients arrive at a decision consistent with patient values and preferences and specific clinical situations.
+
+[S18-01 | p18 | Recommendations > Implementation framing]
+The implementation considerations offer practical insights, context, and specific examples meant to further inform clinician-patient decision-making for the respective recommendation and are not meant to be rigidly or inflexibly followed.
+
+[S18-02 | p18 | Recommendations > Guiding principles]
+In addition, these five guiding principles should broadly inform implementation across recommendations (Box 4):
+
+[S18-03 | p18 | Recommendations > Guiding principles]
+Acute, subacute, and chronic pain needs to be appropriately assessed and treated independent of whether opioids are part of a treatment regimen.
+
+[S18-04 | p18 | Recommendations > Guiding principles]
+Recommendations are voluntary and are intended to support, not supplant, individualized, person-centered care.
+
+[S18-05 | p18 | Recommendations > Guiding principles]
+Flexibility to meet the care needs and the clinical circumstances of a specific patient is paramount.
+
+[S18-06 | p18 | Recommendations > Guiding principles]
+A multimodal and multidisciplinary approach to pain management attending to the physical health, behavioral health, long-term services and supports, and expected health outcomes and well-being of each person is critical.
+
+[S18-07 | p18 | Recommendations > Guiding principles]
+Special attention should be given to avoid misapplying this clinical practice guideline beyond its intended use or implementing policies purportedly derived from it that might lead to unintended and potentially harmful consequences for patients.
