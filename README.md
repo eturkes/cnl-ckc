@@ -64,39 +64,53 @@ Guideline work runs as goal rounds in a Claude Code session opened at the
 repository root, driven by the built-in `/goal` stop-condition command:
 
 ```
-/goal Process American clinical guidelines through the pipeline, one round per guideline as described in README.md "Operating", until the .agent/roadmap.md queue is empty, tools/goal.py check passes for every guideline, and web search finds no eligible American clinical guideline still uncovered.
+/goal Process American clinical guidelines through the pipeline as described in README.md "Operating": work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, .agent/queue.md holds no open entries, and web search finds no eligible American clinical guideline still uncovered.
 ```
 
 The goal re-arms each time Claude tries to stop and survives session resume,
 so halting at any moment is safe: the repository is the only persistence,
-and every round starts by deriving state from it — read the queue in
-`.agent/roadmap.md`, `git status`, and `tools/goal.py check`, then finish or
-discard incomplete work before fetching anything new.
+and every round starts by deriving state from it — `.agent/queue.md`,
+`git status`, `tools/goal.py check`, and the in-progress guideline README's
+coverage statement — then finishes or discards incomplete work before
+taking on anything new.
 
-A round covers one guideline:
+Exactly one source document is in progress at a time and is worked to
+completion — across as many rounds as it takes — before the next one is
+fetched. A source document is complete when every normative statement in it
+has been extracted verbatim into `source/` evidence and either authored as
+ACE and compiled, or recorded in the guideline README as uncovered with a
+reason, and `python3 -P tools/goal.py check` is green.
 
-1. **Fetch** — acquire the source document and persist it immutably under
-   `guidelines/<id>/source/` before any generative processing; record URL,
-   retrieval date, SHA-256, byte length, and a rights quote in
-   `guidelines/<id>/README.md` (model: `guidelines/cdc-2022-opioid/`);
-   commit the source record on its own, so a halt never loses it. Ids
-   follow `[a-z0-9-]+`, chosen once per source; an already-fetched URL
-   keeps its recorded id, and changed remote content becomes a new
-   versioned id rather than a mutation of a recorded source. A paywall or
-   rights gate is recorded as a queue blocker and the round moves on.
-2. **Normalize** — extract the normative statements verbatim into `source/`
-   evidence, then author one ACE document per statement under `ace/` plus
-   the shared `lexicon.ulex` (supported constructs: the header of
-   `vendor/ape/prolog/ace_to_pl.pl`). ACE is a minimal faithful projection;
-   the guideline README states honest coverage.
+While a document is in progress, a round advances it one increment:
+
+1. **Extract** — the next batch of normative statements, verbatim, into
+   `guidelines/<id>/source/` evidence files.
+2. **Normalize** — one ACE document per statement under `ace/` plus the
+   shared `lexicon.ulex` (supported constructs: the header of
+   `vendor/ape/prolog/ace_to_pl.pl`). Each ACE document is a minimal
+   faithful projection of its statement; the guideline README states honest
+   coverage.
 3. **Compile** — `python3 -P tools/goal.py compile <id>`. A rejection means
    the ACE or lexicon is adjusted first; only a genuinely new construct
    extends the `ace_to_pl.pl` translation, minimally, keeping totality
    (every sentence compiles to exactly one clause; unrecognized shapes
    reject) and adding `tests/red/` probes for the new rejection boundary.
 4. **Close** — `python3 -P tools/goal.py check` green, plus
-   `python3 -P tools/regen.py --check` when E-- sources changed; one scoped
-   commit for the guideline; queue updated.
+   `python3 -P tools/regen.py --check` when E-- sources changed; a scoped
+   commit; `.agent/queue.md` and the guideline README's coverage statement
+   updated.
+
+When no document is in progress, the round fetches the next source — from
+the queue, or discovered online and queued: acquire the document and
+persist it immutably under `guidelines/<id>/source/` before any generative
+processing; record URL, retrieval date, SHA-256, byte length, and a rights
+quote in `guidelines/<id>/README.md` (model:
+`guidelines/cdc-2022-opioid/`); commit the source record on its own, so a
+halt never loses it. Ids follow `[a-z0-9-]+`, chosen once per source; an
+already-fetched URL keeps its recorded id, and changed remote content
+becomes a new versioned id rather than a mutation of a recorded source. A
+paywall or rights gate is recorded as a queue blocker and the round moves
+on.
 
 ## Licensing
 
