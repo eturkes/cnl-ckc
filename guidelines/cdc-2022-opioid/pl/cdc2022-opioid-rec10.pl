@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec10.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec10',ace_sha256(e4c37f7f8732adbef380acc5b0d6a1dac1c0309bcc0395b9aa2f629ff7084375),ulex(sha256('3ffe6d9f23ab3109d7803e1121935f32d53a7768425248b943679743da1ed101'))).
+guideline_document('cdc2022-opioid-rec10',ace_sha256(e4c37f7f8732adbef380acc5b0d6a1dac1c0309bcc0395b9aa2f629ff7084375),ulex(sha256('453749766e15fefa9c2dbb81ef07028b238ee2cb462770b45c2c584b7cbc92e7'))).
 % S1: Rec10-clinician is a subacute-chronic-pain-clinician.
 'subacute-chronic-pain-clinician'('Rec10-clinician').
 % S2: Rec10 is a category-b-recommendation.

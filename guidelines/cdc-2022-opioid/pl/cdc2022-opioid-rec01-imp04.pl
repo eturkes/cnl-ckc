@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec01-imp04.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec01-imp04',ace_sha256(b06ed2ec3fb2db3b4479d3c6079b14676ba6bcfdc4fc03184a98f38439bbe218),ulex(sha256('3ffe6d9f23ab3109d7803e1121935f32d53a7768425248b943679743da1ed101'))).
+guideline_document('cdc2022-opioid-rec01-imp04',ace_sha256(b06ed2ec3fb2db3b4479d3c6079b14676ba6bcfdc4fc03184a98f38439bbe218),ulex(sha256('453749766e15fefa9c2dbb81ef07028b238ee2cb462770b45c2c584b7cbc92e7'))).
 % S1: Rec01-imp04-clinician is an acute-pain-clinician.
 'acute-pain-clinician'('Rec01-imp04-clinician').
 % S2: Every acute-pain-clinician uses-nonopioids-when-possible-and-limits-additional-opioids-to-severe-pain-duration-for-long-term-opioid-patients-with-acute-pain.

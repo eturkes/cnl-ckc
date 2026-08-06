@@ -96,7 +96,7 @@ S19-09	source/rec01-05-body-extraction.txt	p19	Rec 1 > Recommendation statement	
 S19-10	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp01)
 S19-11	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp02)
 S19-12	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp03)
-S19-13	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerations	pending
+S19-13	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp06)
 S20-01	source/rec01-05-body-extraction.txt	p20	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp04)
 S20-02	source/rec01-05-body-extraction.txt	p20	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp05)
 S20-03	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale	uncovered(aim: states an aspiration without operative directive)
@@ -258,14 +258,14 @@ S30-06	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Mu
 S30-07	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	pending
 S30-08	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	pending
 S30-09	source/rec01-05-body-extraction.txt	p30	Rec 3 > Recommendation statement	restates(B3-05)
-S30-10	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	pending
-S30-11	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	pending
+S30-10	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp01)
+S30-11	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp02)
 S30-12	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	uncovered(external: reports third-party guidance or policy)
-S30-13	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	pending
-S30-14	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	pending
-S30-15	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	pending
-S30-16	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	pending
-S30-17	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	pending
+S30-13	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp04)
+S30-14	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp05)
+S30-15	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp06)
+S30-16	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp07)
+S30-17	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp08)
 S31-01	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S31-02	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	restates(S30-10)
 S31-03	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	restates(S30-10)
@@ -278,15 +278,15 @@ S32-04	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	rest
 S32-05	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	restates(S30-16)
 S32-06	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	restates(S30-17)
 S32-07	source/rec01-05-body-extraction.txt	p32	Rec 4 > Recommendation statement	restates(B3-06)
-S32-08	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	pending
+S32-08	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp01)
 S32-09	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	restates(B3-06)
-S32-10	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	pending
+S32-10	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp03)
 S32-11	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	restates(B3-06)
-S32-12	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	pending
+S32-12	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp05)
 S32-13	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	restates(B3-06)
-S32-14	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	pending
-S32-15	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	pending
-S32-17	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	pending
+S32-14	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp07)
+S32-15	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp08)
+S32-17	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp09)
 S33-01	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote instruction	pending
 S33-02	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution lead-in	uncovered(heading: structural label without directive)
 S33-03	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 3	pending
@@ -312,30 +312,30 @@ S34-15	source/rec01-05-body-extraction.txt	p34	Rec 5 > Recommendation statement	
 S35-01	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	restates(B3-07)
 S35-02	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	restates(B3-07)
 S35-03	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	restates(B3-07)
-S35-04	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-05	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-06	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-07	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-08	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-09	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-10	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-11	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-12	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-13	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-14	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-15	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-16	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
+S35-04	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp04)
+S35-05	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp05)
+S35-06	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp06)
+S35-07	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp07)
+S35-08	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp08)
+S35-09	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp09)
+S35-10	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp10)
+S35-11	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp11)
+S35-12	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp12)
+S35-13	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp13)
+S35-14	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp14)
+S35-15	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp15)
+S35-16	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp16)
 S35-17	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	uncovered(aim: states an aspiration without operative directive)
-S35-18	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-19	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-20	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-21	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-22	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S35-23	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	pending
-S36-01	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	pending
-S36-02	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	pending
-S36-03	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	pending
-S36-04	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	pending
+S35-18	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp18)
+S35-19	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp19)
+S35-20	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp20)
+S35-21	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp21)
+S35-22	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp22)
+S35-23	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp27)
+S36-01	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp23)
+S36-02	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp24)
+S36-03	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp25)
+S36-04	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp26)
 S37-01	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
 S37-02	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
 S37-03	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending

@@ -53,17 +53,23 @@ was published with.
   guard), and probe queries for the rule and both class facts — not a
   complete formalization of the clinical semantics, conditions, or qualifiers
   of the CDC text. Read the ACE next to the extraction to judge coverage.
-- `ace/cdc2022-opioid-rec01-impKK.ace`, `ace/cdc2022-opioid-rec02-impKK.ace`
-  — one ACE document per implementation-consideration payload region of
-  recommendations 1 and 2 (30 documents; `rec02-imp12` is intentionally
-  absent — its region was a phantom duplicate removed from the evidence).
+- `ace/cdc2022-opioid-recNN-impKK.ace` (NN = 01–05) — one ACE document per
+  formalized implementation-consideration payload region of
+  recommendations 1–5 (67 documents; `rec02-imp12` is intentionally
+  absent — its region was a phantom duplicate removed from the evidence —
+  and other skipped KK ordinals mark impl-list regions ruled
+  `restates(...)` or `uncovered(...)` in `coverage.tsv`, their ordinals
+  held reserved).
   Each holds a witness actor-class fact, one universal rule projecting the
   region's directive — or, for regions stating a benefit or possibility
   rather than an imperative, the clinician consideration it supports,
   per `audit/projection-notes.tsv` — and a
   probe query; implementation considerations carry no category/evidence
-  parenthetical. The one non-clinician actor region (S24-02, health
-  insurers and health systems) uses the class `health-insurer-or-health-system`.
+  parenthetical. Three non-clinician actor regions use their own classes:
+  S24-02 `health-insurer-or-health-system` (neutral), S36-03
+  `payer-health-system-or-state-medical-board` (neutral), and S35-09
+  `taper-support-team-member` (human — nurses, pharmacists, and
+  behavioral-health specialists serving as taper-support team members).
 - `lexicon.ulex` — the guideline's APE user lexicon (domain compounds and
   proper names shared by all documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog compiled from the ACE by
@@ -91,16 +97,17 @@ consistency of the projection, not guideline conclusions.
 - Formalization: Box 3 at one document per recommendation (twelve
   documents, each preserving its recommendation's exact category/evidence
   parenthetical and one simplified action rule), plus one document per
-  recommendation 1–2 implementation-consideration region (30 documents).
+  formalized recommendation 1–5 implementation-consideration region
+  (67 documents).
   The rules do not yet encode deontic modality ("should"), conditions,
   objects, timing, or alternatives; Box 3's multi-sentence recommendations
   contain further normative sentences beyond the twelve projected rules.
 - `coverage.tsv` records one status row per payload region (all 718):
-  `ace(<docid>)` formalized (42), `restates(<id>)` verbatim or
+  `ace(<docid>)` formalized (79), `restates(<id>)` verbatim or
   near-verbatim repetition of another region (122), `uncovered(<class>:
   <reason>)` deliberately not formalized (69 — classes: heading,
   process, external, aim, descriptive, notice), or `pending` awaiting a
-  ruling (485); 233 rows are ruled, 485 pending. Restatement links
+  ruling (448); 270 rows are ruled, 448 pending. Restatement links
   target the canonical full statement — the Box 3 text for
   recommendation restatements, the main-text list for the guiding
   principles — and otherwise the earliest occurrence, so a link may
