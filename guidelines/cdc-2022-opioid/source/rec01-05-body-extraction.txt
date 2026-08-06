@@ -3,7 +3,7 @@ recommendations 1–5 body extraction evidence (verbatim rendered text)
 Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
 Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
 PDF locator: physical PDF pages 19–39; physical page 40 used only to complete a statement beginning on page 39; printed MMWR pages 17–37
-Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 309 payloads below.
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 305 payloads below.
 Scaffolding convention: locator lines plus bullet/table glyphs and numeric labels are presentation scaffolding outside payload ranges; each following LF-terminated line is one payload with hard wraps joined, line-end word hyphenation repaired, and true hyphens preserved.
 
 [S19-01 | p19 | Box 4 > Guiding principle 1]
@@ -160,8 +160,6 @@ When patients with chronic low back pain have had an insufficient response to no
 Tricyclic, tetracyclic, and SNRI antidepressants; selected anticonvulsants (e.g., pregabalin, gabapentin enacarbil, oxcarbazepine); and capsaicin and lidocaine patches can be considered for neuropathic pain.
 [S24-09 | p24 | Rec 2 > Implementation considerations]
 In older adults, decisions to use tricyclic antidepressants should be made judiciously on a case-by-case basis because of risks for confusion and falls.
-[S24-10 | p24 | Rec 2 > Implementation considerations]
-In older adults, decisions to use tricyclic antidepressants should be made judiciously on a case-by-case basis because of risks for confusion and falls.
 [S24-11 | p24 | Rec 2 > Implementation considerations]
 Patients with co-occurring pain and depression might be especially likely to benefit from antidepressant medication (see Recommendation 8).
 [S24-12 | p24 | Rec 2 > Implementation considerations]
@@ -288,8 +286,6 @@ Clinicians seeing new patients already using opioid medication should establish 
 Clinicians should avoid rapid tapering or abrupt discontinuation of opioids (see Recommendation 5).
 [S28-18 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
 Patient education and discussion before starting opioid therapy are critical so that patient preferences and values can be understood and used to inform clinical decisions.
-[S28-19 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
-Clinicians should ensure that patients are aware of expected benefits of, common risks of, serious risks of, and alternatives to opioids before starting or continuing opioid therapy and should involve patients in decisions about whether to start opioid therapy.
 [S29-01 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
 Review available low-cost options for pain management for all patients, and particularly for patients who have low incomes, do not have health insurance, or have inadequate insurance.
 [S29-02 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
@@ -378,8 +374,6 @@ Clinicians should not treat acute pain with ER/LA opioids or initiate opioid tre
 Because of the longer half-life and longer duration of effects (e.g., respiratory depression) of ER/LA opioids (e.g., methadone, fentanyl patches, or extended-release versions of oxycodone, hydromorphone, hydrocodone, or morphine), clinicians should not prescribe ER/LA opioids for the treatment of acute pain.
 [S31-04 | p31 | Rec 3 > Supporting rationale]
 ER/LA opioids should be reserved for severe, continuous pain and should be considered only for patients who have received certain dosages of immediate-release opioids daily (e.g., 60 mg daily of oral morphine, 30 mg daily of oral oxycodone, or equianalgesic dosages of other opioids) for at least 1 week (193).
-[S31-05 | p31 | Rec 3 > Supporting rationale]
-When changing to an ER/LA opioid for a patient previously receiving a different immediate-release opioid, clinicians should consult product labeling and reduce total daily dosage to account for incomplete opioid cross-tolerance.
 [S32-01 | p32 | Rec 3 > Supporting rationale]
 Clinicians should use additional caution with ER/LA opioids and consider a longer dosing interval when prescribing to patients with renal or hepatic dysfunction because decreased clearance of medications among these patients can lead to accumulation of medications to toxic levels and persistence in the body for longer durations.
 [S32-02 | p32 | Rec 3 > Supporting rationale]
@@ -410,12 +404,8 @@ If opioids are continued for subacute or chronic pain, clinicians should use cau
 Therefore, before increasing total opioid dosage to ≥50 MME/day, clinicians should pause and carefully reassess evidence of individual benefits and risks.
 [S32-15 | p32 | Rec 4 > Implementation considerations]
 If a decision is made to increase dosage, clinicians should use caution and increase dosage by the smallest practical amount.
-[S32-16 | p32 | Rec 4 > Implementation considerations]
-The recommendations related to opioid dosages are not intended to be used as an inflexible, rigid standard of care; rather, they are intended to be guideposts to help inform clinician-patient decision-making.
 [S32-17 | p32 | Rec 4 > Implementation considerations]
 Clinicians should carefully evaluate a decision to further increase dosage on the basis of individualized assessment of benefits and risks and weighing factors such as diagnosis, incremental benefits for pain and function relative to risks with previous dosage increases, other treatments and effectiveness, and patient values and preferences.
-[S32-18 | p32 | Rec 4 > Implementation considerations]
-The recommendations related to opioid dosages are not intended to be used as an inflexible, rigid standard of care; rather, they are intended to be guideposts to help inform clinician-patient decision-making.
 [S33-01 | p33 | Rec 4 > Supporting rationale > Table footnote instruction]
 Multiply the dose for each opioid by the conversion factor to determine the dose in MMEs.
 [S33-02 | p33 | Rec 4 > Supporting rationale > Table footnote caution lead-in]
@@ -428,6 +418,8 @@ Use particular caution with methadone dose conversions because methadone has a l
 Use particular caution with transdermal fentanyl because it is dosed in mcg/hr instead of mg/day, and its absorption is affected by heat and other factors.
 [S33-06 | p33 | Rec 4 > Supporting rationale > Table footnote caution 7]
 These conversion factors should not be applied to dosage decisions related to the management of opioid use disorder.
+[S33-07 | p33 | Rec 4 > Supporting rationale > Table footnote guidepost statement]
+The recommendations related to opioid dosages are not intended to be used as an inflexible, rigid standard of care; rather, they are intended to be guideposts to help inform clinician-patient decision-making.
 [S34-01 | p34 | Rec 4 > Supporting rationale]
 When opioids are used for acute, subacute, or chronic pain, clinicians should start opioids at the lowest possible effective dosage.
 [S34-02 | p34 | Rec 4 > Supporting rationale]

@@ -24,13 +24,13 @@ Rep 2022;71(No. RR-3):1–95. DOI `http://dx.doi.org/10.15585/mmwr.rr7103a1`.
 - `source/rec01-05-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 19–39 (Box 4 and the
   recommendation 1–5 subsections: restated statements, supporting
-  rationale, implementation considerations; 309 payload regions). SHA-256
-  `2f700711ca5e216524c3224450153ed1b816bfdb73c2cb0b77bf4fd950db0848`.
+  rationale, implementation considerations; 305 payload regions). SHA-256
+  `ef73b04adf0347d7d14d0b20b936c0498be7041149bd3d3b40621e824862004f`.
 - `source/rec06-12-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 40–63 (recommendation 6–12
-  subsections and end matter through the Conclusion; 320 payload regions).
+  subsections and end matter through the Conclusion; 318 payload regions).
   SHA-256
-  `d20c05eb8331c1c1f76f6136d8e05a4a524dc88187377f8a21fcaa191f2ec988`.
+  `a35d75c6ff054fef51d772ae3ad56cbcc639f323d4e5cfb616a2321c3fd4a459`.
   Each extraction file's header states its locator and scaffolding
   conventions; the statement payloads are byte-range regions of the file.
 
@@ -70,8 +70,9 @@ consistency of the projection, not guideline conclusions.
 ## Coverage
 
 - Verbatim extraction evidence spans the whole document: pages 3–18, the
-  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63 — 699 payload
-  regions across the four extraction files. Physical pages 64–100 hold
+  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63 — 693 payload
+  regions across the four extraction files, each verified as rendered PDF
+  text with duplicate regions held to the source's own repetition count. Physical pages 64–100 hold
   references, the appendix evidence reviews, and the publication notice;
   the project's sweep of those pages found no clinical normative
   statements (an epistemic caution about interpreting findings on p82 and
@@ -82,7 +83,7 @@ consistency of the projection, not guideline conclusions.
   rules do not yet encode deontic modality ("should"), conditions,
   objects, timing, or alternatives; Box 3's multi-sentence recommendations
   contain further normative sentences beyond the twelve projected rules,
-  and the 683 payload regions outside Box 3 await per-statement ruling —
+  and the 677 payload regions outside Box 3 await per-statement ruling —
   formalize, record as uncovered with a reason, or link as a restatement
   of a covered statement. A per-statement coverage manifest is the next
   planned increment.

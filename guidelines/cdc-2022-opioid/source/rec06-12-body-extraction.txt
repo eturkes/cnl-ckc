@@ -3,7 +3,7 @@ recommendations 6–12 body + end matter extraction evidence (verbatim rendered 
 Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
 Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
 PDF locator: physical PDF pages 40–63; physical page 64 consulted only for completion of any page-63-starting statement
-Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 320 payloads below.
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 318 payloads below.
 Scaffolding convention: each bracketed locator line and each blank separator is outside its statement region; bullet glyphs and list labels are presentation scaffolding omitted from payloads; composite recommendation-header and nested-list regions are flattened with one space.
 
 [S40-01 | p40 | Pre-Rec 6 > Transitioning to buprenorphine]
@@ -93,8 +93,6 @@ Patients should be evaluated at least every 2 weeks if they continue to receive 
 [S42-09 | p42 | Rec 6 > Supporting rationale]
 If opioids are continued for ≥1 month, clinicians should ensure that potentially reversible causes of chronic pain are addressed and that opioid prescribing for acute pain does not unintentionally become long-term opioid therapy simply because medications are continued without reassessment.
 
-[S42-10 | p42 | Rec 6 > Supporting rationale]
-Continuation of opioid therapy at this point might represent initiation of long-term opioid therapy, which should occur only as an intentional decision that benefits are likely to outweigh risks after discussion between the clinician and patient and as part of a comprehensive pain management approach.
 
 [S42-11 | p42 | Rec 6 > Supporting rationale]
 Clinicians should refer to recommendations on subacute and chronic pain for initiation (Recommendation 2), follow-up (Recommendation 7), and tapering (Recommendation 5) of ongoing opioid therapy.
@@ -126,8 +124,6 @@ In addition to evaluating benefits and risks of opioids before starting opioid t
 [S42-20 | p42 | Rec 7 > Implementation considerations]
 Clinicians should consider follow-up intervals within the lower end of this range when ER/LA opioids are started or increased, because of the increased risk for overdose within the first 2 weeks of treatment, or when total daily opioid dosage is ≥50 MME/day.
 
-[S43-01 | p43 | Rec 7 > Implementation considerations]
-Shorter follow-up intervals (every 2–3 days for the first week) should be strongly considered when starting or increasing the dosage of methadone because of the variable half-life of this drug (see Recommendation 3) and the potential for drug accumulation during initiation and during upward titration of dosage.
 
 [S43-02 | p43 | Rec 7 > Implementation considerations]
 An initial follow-up interval closer to 4 weeks can be considered when starting immediate-release opioids at a dosage of <50 MME/day.
