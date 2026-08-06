@@ -33,23 +33,23 @@ queues BrowserOS verifications to the holder's worklist. Auth, captcha,
 2FA, or any human gate → teammate flags it in its report; MAIN batches
 the gates and asks the user immediately while other waves continue.
 
-- M1.1 OPEN — schema + protocol + seed roster. MAIN authors
-  `.agent/compendium.md` header: eligibility criteria (American issuing
-  body; clinical practice guideline bearing patient-care recommendations;
-  current version available online; edge rules recorded as rulings —
-  US-led multi-society/international collaborations, federal panels,
-  retired/superseded versions), row format, queue-promotion + ordering
-  rule, per-org `swept` provenance line. `res` wave enumerates the
-  issuing-org universe: federal (CDC, USPSTF, NIH panels, AHRQ, VA/DoD,
-  SAMHSA, …), specialty societies (AMA specialty-society frame), and
-  aggregators (ECRI Guidelines Trust, PubMed practice-guideline filter,
-  Guideline Central). Gate: header committed; org roster confirmed
-  against ≥2 independent enumeration sources; one seed row per org.
+- M1.1 DONE — schema + protocol + seed roster. `.agent/compendium.md`
+  ships the header (eligibility + rulings, three-layer discovery
+  protocol, independence definition, row formats, enumeration-source
+  legend, queue promotion + ordering) with 447 organization rows
+  (federal 15/3/12, society 75/283/6, other 7/37/9 as yes/unverified/no)
+  and 88 seed guideline rows. Gate green: every `CPGs=yes` row carries ≥2
+  independent enumeration sources under the owner rule, every such org
+  holds ≥1 seed, and all structural/ordering/vocabulary predicates pass
+  (`.scratch/check_compendium.py`; M1.4 ports them into `goal.py check`).
+  main=83% 198K/240K, mate=86% 207K/240K.
 - M1.2 OPEN — per-org index harvest. `res` waves sweep each org's
   guideline index → one compendium row per eligible guideline, URL
   verified live, access class recorded; the BrowserOS holder clears the
-  paywalled/login verification worklist. Gate: every M1.1 org swept or
-  `blocked(<why>)`; MAIN re-verifies a sample of rows per wave.
+  paywalled/login verification worklist. The sweep also resolves the 13
+  `provisional(…)` seed rows and the 323 `unverified` organization rows
+  M1.1 left standing. Gate: every M1.1 org swept or `blocked(<why>)`;
+  zero `provisional(…)` rows remain; MAIN re-verifies a sample per wave.
 - M1.3 OPEN — completeness cross-check. Aggregator sweeps diffed against
   the org-derived list; gaps feed back as rows; MAIN dedupes to one row
   per guideline (latest current version) and rules eligibility edge
@@ -58,9 +58,11 @@ the gates and asks the user immediately while other waves continue.
 - M1.4 OPEN — integration. Root `README.md` § Operating + the canonical
   `/goal` argument rewritten → terminal condition = compendium
   exhaustion; `.agent/queue.md` feeds from the compendium (promotion
-  rule); cdc-2022-opioid linked to its compendium row; `memory.md`
-  delta. Gate: `tools/goal.py check` green; docs mutually consistent;
-  scoped commits.
+  rule); cdc-2022-opioid linked to its compendium row; the M1.1 gate
+  predicates ported from `.scratch/check_compendium.py` into E-- →
+  `tools/goal.py check`; `memory.md` delta. Gate: `tools/goal.py check`
+  green incl. compendium predicates; `regen.py --check` green; docs
+  mutually consistent; scoped commits.
 
 Unit/milestone close per session-prompt WORK-UNIT/MILESTONE-REVIEW
 protocol (gauges recorded, commits `compendium (M1.<u>): …`).
