@@ -37,16 +37,16 @@ S6-03	source/front-matter-extraction.txt	p6	Introduction > Rationale	uncovered(a
 S7-01	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
 S7-02	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
 S7-03	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
-S8-01	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-02)
+S8-01	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-02	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-02)
 S8-03	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-03)
-S8-04	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-05)
+S8-04	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-05	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-07)
-S8-06	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-12)
+S8-06	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-07	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-16)
 S8-08	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S3-01)
-S8-09	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-07)
-S8-10	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-07)
+S8-09	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
+S8-10	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-11	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-12	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-13	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S3-02)
@@ -66,17 +66,17 @@ S10-06	source/front-matter-extraction.txt	p10	Scope and Audience	pending
 S11-01	source/front-matter-extraction.txt	p11	Scope and Audience	pending
 S12-01	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
 S12-02	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
-S12-03	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	restates(S12-02)
+S12-03	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
 S14-01	source/front-matter-extraction.txt	p14	BOX 3 > Recommendation categories	restates(S12-01)
 S14-02	source/front-matter-extraction.txt	p14	BOX 3 > Recommendation categories	restates(S12-02)
-S14-03	source/front-matter-extraction.txt	p14	BOX 3 > Recommendation categories	restates(S12-02)
+S14-03	source/front-matter-extraction.txt	p14	BOX 3 > Recommendation categories	restates(S12-03)
 S14-04	source/front-matter-extraction.txt	p14	Federal Advisory Committee Review and Recommendation	uncovered(process: reports guideline-development procedure)
 S15-01	source/front-matter-extraction.txt	p15	Federal Advisory Committee Review and Recommendation	uncovered(process: reports guideline-development procedure)
 S15-02	source/front-matter-extraction.txt	p15	Federal Advisory Committee Review and Recommendation	uncovered(process: reports guideline-development procedure)
 S16-01	source/front-matter-extraction.txt	p16	Federal Advisory Committee Review and Recommendation	uncovered(process: reports guideline-development procedure)
 S17-01	source/front-matter-extraction.txt	p17	Peer Review	uncovered(process: reports guideline-development procedure)
 S17-02	source/front-matter-extraction.txt	p17	Recommendations	restates(S3-02)
-S17-03	source/front-matter-extraction.txt	p17	Recommendations > Category framing	restates(S12-02)
+S17-03	source/front-matter-extraction.txt	p17	Recommendations > Category framing	pending
 S18-01	source/front-matter-extraction.txt	p18	Recommendations > Implementation framing	pending
 S18-02	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	pending
 S18-03	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	pending
@@ -131,7 +131,7 @@ S22-07	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Op
 S22-08	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S22-09	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S20-01)
 S22-10	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S20-01)
-S22-11	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	uncovered(aim: states an aspiration without operative directive)
+S22-11	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S22-12	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S20-02)
 S22-13	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S22-14	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-13)
@@ -451,7 +451,7 @@ S43-15	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerat
 S44-01	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
 S44-02	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
 S44-03	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-04	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-01)
+S44-04	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
 S44-05	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
 S44-06	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
 S44-07	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
@@ -667,7 +667,7 @@ S58-11	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	res
 S58-12	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
 S58-13	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
 S58-14	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S56-13)
-S58-15	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(aim: states an aspiration without operative directive)
+S58-15	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S56-14)
 S58-16	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(B3-16)
 S58-17	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
 S58-18	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
@@ -706,7 +706,7 @@ S60-14	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with
 S60-15	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S60-16	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S60-17	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
-S60-18	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	uncovered(external: reports third-party guidance or policy)
+S60-18	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S61-01	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
 S61-02	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
 S61-03	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending

@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec02.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec02',ace_sha256('728c80f5ad1de89dfe2d81cfe057a22929802aab3f172559783c0ef69f1fd06f'),ulex(sha256('7855e6f992b6a70f49da5dbd1de6620893b143919a2f28e6b50d67c2eabb7dff'))).
+guideline_document('cdc2022-opioid-rec02',ace_sha256('728c80f5ad1de89dfe2d81cfe057a22929802aab3f172559783c0ef69f1fd06f'),ulex(sha256('3ffe6d9f23ab3109d7803e1121935f32d53a7768425248b943679743da1ed101'))).
 % S1: Rec02-clinician is a subacute-chronic-pain-clinician.
 'subacute-chronic-pain-clinician'('Rec02-clinician').
 % S2: Rec02 is a category-a-recommendation.
