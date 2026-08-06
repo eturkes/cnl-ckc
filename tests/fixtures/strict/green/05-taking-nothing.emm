@@ -1,3 +1,0 @@
-Define [[message]] taking nothing:
-    Give back "ready".
-Do [[print]]([[message]]()).

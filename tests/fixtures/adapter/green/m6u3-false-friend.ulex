@@ -1,4 +1,0 @@
-mn_pl(weeks,week).
-mn_sg(week,week).
-noun_sg(clinician,clinician,human).
-noun_sg('therapy-start','therapy-start',neutr).

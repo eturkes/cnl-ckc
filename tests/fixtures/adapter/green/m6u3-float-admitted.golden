@@ -1,1 +1,0 @@
-drs([A,B],[-(object(A,dosage,countable,na,eq,1),/(1,2)),-(predicate(B,be,A,real(50.5,'morphine-milligram-equivalent')),/(1,3))]).

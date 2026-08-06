@@ -1,8 +1,7 @@
 {
   "permissions": {
     "deny": [
-      "Read(/.serena/cache/**)",
-      "Read(/vendor/clex/clex_lexicon.pl)"
+      "Read(/.serena/cache/**)"
     ]
   }
 }

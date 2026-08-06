@@ -1,0 +1,435 @@
+Use os.
+Use pathlib.
+Use shutil.
+Use subprocess.
+Use sys.
+
+Define [[fail]] taking category, detail:
+    Set safe_detail to [[detail.replace]]("\n", "\\n").
+    Set safe_detail to [[safe_detail.replace]]("\r", "\\r").
+    Do [[print]]("goal: " plus category plus ": " plus safe_detail, file=sys.stderr).
+    Exit with 2.
+
+Define [[violation]] taking category, detail:
+    Set safe_detail to [[detail.replace]]("\n", "\\n").
+    Set safe_detail to [[safe_detail.replace]]("\r", "\\r").
+    Do [[print]]("goal: " plus category plus ": " plus safe_detail).
+    Exit with 1.
+
+Define [[cleanup_and_fail]] taking scratch_path, category, detail:
+    Do [[shutil.rmtree]](scratch_path).
+    Do [[fail]](category, detail).
+
+Define [[cleanup_violation]] taking scratch_path, category, detail:
+    Do [[shutil.rmtree]](scratch_path).
+    Do [[violation]](category, detail).
+
+Define [[relay_failure]] taking scratch_path, result:
+    Do [[shutil.rmtree]](scratch_path).
+    Do [[sys.stderr.buffer.write]](result.stderr).
+    Exit with result.returncode.
+
+Define [[valid_docid]] taking docid:
+    Set allowed to [[set]]("abcdefghijklmnopqrstuvwxyz0123456789-").
+    Set chars to [[set]](docid).
+    Set subset to [[chars.issubset]](allowed).
+    Set leading_dash to [[docid.startswith]]("-").
+    If not docid:
+        Give back False.
+    If leading_dash:
+        Give back False.
+    Give back subset.
+
+Define [[resolve_swipl]] taking nothing:
+    Set swipl to [[os.environ.get]]("SWIPL", "swipl").
+    Set swipl_executable to [[shutil.which]](swipl).
+    If swipl_executable equals None:
+        Do [[fail]]("swipl-exec", "not executable: " plus swipl).
+    Give back swipl_executable.
+
+Define [[make_scratch]] taking nothing:
+    Set pid_text to [[str]]([[os.getpid]]()).
+    Set scratch_path to [[pathlib.Path]](".goal.tmp." plus pid_text).
+    If [[scratch_path.exists]]():
+        Do [[fail]]("scratch", "already exists: " plus [[str]](scratch_path)).
+    Do [[scratch_path.mkdir]]().
+    Give back scratch_path.
+
+Define [[stage_ape]] taking scratch_path, swipl_executable:
+    Set stage_path to [[scratch_path.joinpath]]("ape-stage").
+    Do [[shutil.copytree]]("vendor/ape", stage_path).
+    Set parser_dir to [[stage_path.joinpath]]("prolog", "parser").
+    Set build_goal to "working_directory(_, '" plus [[parser_dir.as_posix]]() plus "'), [fit_to_plp], halt.".
+    Set command to <swipl_executable, "-O", "-f", "none", "-F", "none", "-g", build_goal, "-t", "halt">.
+    Set result to [[subprocess.run]](command, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](scratch_path, result).
+    Set grammar_path to [[parser_dir.joinpath]]("grammar.plp").
+    If not [[grammar_path.is_file]]():
+        Do [[cleanup_and_fail]](scratch_path, "ape-stage", "missing grammar.plp after build").
+    Give back stage_path.
+
+Define [[compiler_command]] taking swipl_executable, stage_path, tail_args:
+    Set compiler_path to [[stage_path.joinpath]]("prolog", "ace_to_pl.pl").
+    Set command to <swipl_executable, "-q", "-f", "none", "-F", "none", "-s", [[str]](compiler_path), "-g", "main", "-t", "halt(9)", "--">.
+    For each tail_arg in tail_args:
+        Do [[command.append]](tail_arg).
+    Give back command.
+
+Define [[compile_doc]] taking scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path:
+    Set ace_bytes to [[ace_path.read_bytes]]().
+    Set tail_args to <[[str]](stage_path), docid>.
+    If lexicon_path does not equal None:
+        Do [[tail_args.append]]([[str]](lexicon_path)).
+    Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
+    Set result to [[subprocess.run]](command, input=ace_bytes, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](scratch_path, result).
+    If result.stderr:
+        Do [[cleanup_and_fail]](scratch_path, "compiler-stderr", "non-empty stderr for document: " plus docid).
+    If not result.stdout:
+        Do [[cleanup_and_fail]](scratch_path, "compiler-stdout", "empty stdout for document: " plus docid).
+    Set newline_bytes to [[bytes]](<10>).
+    Set final_newline to [[result.stdout.endswith]](newline_bytes).
+    If not final_newline:
+        Do [[cleanup_and_fail]](scratch_path, "compiler-stdout", "missing final newline for document: " plus docid).
+    Give back result.stdout.
+
+Define [[check_doc_queries]] taking scratch_path, swipl_executable, stage_path, pl_path:
+    Set tail_args to <"check", [[str]](pl_path)>.
+    Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
+    Set result to [[subprocess.run]](command, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](scratch_path, result).
+    If result.stdout:
+        Do [[cleanup_and_fail]](scratch_path, "check-stdout", "non-empty stdout for: " plus [[str]](pl_path)).
+    If result.stderr:
+        Do [[cleanup_and_fail]](scratch_path, "check-stderr", "non-empty stderr for: " plus [[str]](pl_path)).
+
+Define [[collect_guideline]] taking guideline_path:
+    Set ace_dir to [[guideline_path.joinpath]]("ace").
+    Set ace_symlink to [[ace_dir.is_symlink]]().
+    If ace_symlink:
+        Do [[fail]]("guideline", "ace directory is a symlink: " plus [[str]](ace_dir)).
+    If not [[ace_dir.is_dir]]():
+        Do [[fail]]("guideline", "missing ace directory: " plus [[str]](ace_dir)).
+    Set ace_paths to {}.
+    Set docids to <>.
+    For each entry in [[sorted]]([[ace_dir.iterdir]]()):
+        Set entry_name to entry.name.
+        Set regular to [[entry.is_file]]().
+        Set symlink to [[entry.is_symlink]]().
+        If not regular:
+            Do [[fail]]("guideline", "entry is not a regular file: " plus entry_name).
+        If symlink:
+            Do [[fail]]("guideline", "entry is not a regular file: " plus entry_name).
+        If not [[entry_name.endswith]](".ace"):
+            Do [[fail]]("guideline", "unsupported ace entry: " plus entry_name).
+        Set docid to [[entry_name.removesuffix]](".ace").
+        If not [[valid_docid]](docid):
+            Do [[fail]]("docid", "invalid document id: " plus docid).
+        Do [[ace_paths.update]]({docid: entry}).
+        Do [[docids.append]](docid).
+    If not docids:
+        Do [[fail]]("guideline", "no .ace documents in: " plus [[str]](ace_dir)).
+    Set lexicon_path to [[guideline_path.joinpath]]("lexicon.ulex").
+    Set lexicon_symlink to [[lexicon_path.is_symlink]]().
+    If lexicon_symlink:
+        Do [[fail]]("guideline", "lexicon is a symlink: " plus [[str]](lexicon_path)).
+    Set lexicon_present to [[lexicon_path.is_file]]().
+    If not lexicon_present:
+        Set lexicon_path to None.
+    Give back <ace_paths, [[sorted]](docids), lexicon_path>.
+
+Define [[check_source_record]] taking guideline_path:
+    Set readme_path to [[guideline_path.joinpath]]("README.md").
+    Set readme_symlink to [[readme_path.is_symlink]]().
+    If readme_symlink:
+        Do [[violation]]("source-record", "README.md is a symlink under: " plus [[str]](guideline_path)).
+    If not [[readme_path.is_file]]():
+        Do [[violation]]("source-record", "missing README.md under: " plus [[str]](guideline_path)).
+    Set source_dir to [[guideline_path.joinpath]]("source").
+    Set source_symlink to [[source_dir.is_symlink]]().
+    If source_symlink:
+        Do [[violation]]("source-record", "source is a symlink under: " plus [[str]](guideline_path)).
+    If not [[source_dir.is_dir]]():
+        Do [[violation]]("source-record", "missing source directory under: " plus [[str]](guideline_path)).
+    Set record_count to 0.
+    For each entry in [[sorted]]([[source_dir.iterdir]]()):
+        Set symlink to [[entry.is_symlink]]().
+        If symlink:
+            Do [[violation]]("source-record", "symlink under source: " plus entry.name).
+        Set regular to [[entry.is_file]]().
+        If regular:
+            Set record_count to record_count plus 1.
+    If record_count equals 0:
+        Do [[violation]]("source-record", "no source files under: " plus [[str]](guideline_path)).
+
+Define [[check_pl_inventory]] taking guideline_path, docids:
+    Set pl_dir to [[guideline_path.joinpath]]("pl").
+    Set pl_symlink to [[pl_dir.is_symlink]]().
+    If pl_symlink:
+        Do [[violation]]("pl-dir", "is a symlink: " plus [[str]](pl_dir)).
+    If not [[pl_dir.is_dir]]():
+        Do [[violation]]("missing-pl", [[str]](pl_dir)).
+    Set expected_names to <>.
+    For each docid in docids:
+        Do [[expected_names.append]](docid plus ".pl").
+    Set actual_names to <>.
+    For each entry in [[sorted]]([[pl_dir.iterdir]]()):
+        Set entry_name to entry.name.
+        Set regular to [[entry.is_file]]().
+        Set symlink to [[entry.is_symlink]]().
+        If not regular:
+            Do [[violation]]("pl-entry", "not a regular file: " plus entry_name).
+        If symlink:
+            Do [[violation]]("pl-entry", "not a regular file: " plus entry_name).
+        Do [[actual_names.append]](entry_name).
+    If [[sorted]](expected_names) does not equal actual_names:
+        Do [[violation]]("pl-inventory", "committed pl/ does not match ace/ document set").
+
+Define [[compiled_pl_path]] taking tracked:
+    Set parts to [[tracked.split]]("/").
+    If [[len]](parts) does not equal 4:
+        Give back False.
+    Set root_part to [[parts.pop]](0).
+    Set id_part to [[parts.pop]](0).
+    Set dir_part to [[parts.pop]](0).
+    Set file_part to [[parts.pop]](0).
+    If root_part does not equal "guidelines":
+        Give back False.
+    If not [[valid_docid]](id_part):
+        Give back False.
+    If dir_part does not equal "pl":
+        Give back False.
+    If not [[file_part.endswith]](".pl"):
+        Give back False.
+    Set stem to [[file_part.removesuffix]](".pl").
+    Give back [[valid_docid]](stem).
+
+Define [[check_prolog_inventory]] taking nothing:
+    Set git_res to [[subprocess.run]](<"git", "ls-files", "--", "*.pl">, capture_output=True, check=True).
+    Set tracked_text to [[git_res.stdout.decode]]("utf-8").
+    For each tracked in [[sorted]]([[tracked_text.splitlines]]()):
+        Set vendored to [[tracked.startswith]]("vendor/ape/").
+        Set compiled to [[compiled_pl_path]](tracked).
+        If not vendored:
+            If not compiled:
+                Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
+
+Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, guideline_path, ace_paths, docids, lexicon_path:
+    Set pl_dir to [[guideline_path.joinpath]]("pl").
+    For each docid in docids:
+        Set ace_path to [[ace_paths.get]](docid).
+        Set first_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path).
+        Set second_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path).
+        If first_bytes does not equal second_bytes:
+            Do [[cleanup_violation]](scratch_path, "determinism", "two compiles differ for document: " plus docid).
+        Set committed_path to [[pl_dir.joinpath]](docid plus ".pl").
+        Set committed_bytes to [[committed_path.read_bytes]]().
+        If first_bytes does not equal committed_bytes:
+            Do [[cleanup_violation]](scratch_path, "stale", "committed pl differs from fresh compile: " plus [[str]](committed_path)).
+        Do [[check_doc_queries]](scratch_path, swipl_executable, stage_path, committed_path).
+
+Define [[compile_command]] taking guideline_id:
+    If not [[valid_docid]](guideline_id):
+        Do [[fail]]("guideline", "invalid guideline id: " plus guideline_id).
+    Set guidelines_root to [[pathlib.Path]]("guidelines").
+    Set guideline_path to [[guidelines_root.joinpath]](guideline_id).
+    Set guideline_symlink to [[guideline_path.is_symlink]]().
+    If guideline_symlink:
+        Do [[fail]]("guideline", "is a symlink: " plus [[str]](guideline_path)).
+    If not [[guideline_path.is_dir]]():
+        Do [[fail]]("guideline", "not a directory: " plus [[str]](guideline_path)).
+    Set collected to [[collect_guideline]](guideline_path).
+    Set ace_paths to [[collected.pop]](0).
+    Set docids to [[collected.pop]](0).
+    Set lexicon_path to [[collected.pop]](0).
+    Set pl_dir to [[guideline_path.joinpath]]("pl").
+    Set pl_symlink to [[pl_dir.is_symlink]]().
+    If pl_symlink:
+        Do [[fail]]("pl-dir", "is a symlink: " plus [[str]](pl_dir)).
+    Set pl_exists to [[pl_dir.exists]]().
+    If pl_exists:
+        If not [[pl_dir.is_dir]]():
+            Do [[fail]]("pl-dir", "not a directory: " plus [[str]](pl_dir)).
+    Set swipl_executable to [[resolve_swipl]]().
+    Set scratch_path to [[make_scratch]]().
+    Set stage_path to [[stage_ape]](scratch_path, swipl_executable).
+    Set outputs to {}.
+    For each docid in docids:
+        Set ace_path to [[ace_paths.get]](docid).
+        Set pl_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path).
+        Do [[outputs.update]]({docid: pl_bytes}).
+    Set new_dir to [[scratch_path.joinpath]]("pl-new").
+    Do [[new_dir.mkdir]]().
+    For each docid in [[sorted]](outputs):
+        Set payload to [[outputs.get]](docid).
+        Set target to [[new_dir.joinpath]](docid plus ".pl").
+        Do [[target.write_bytes]](payload).
+    If pl_exists:
+        Set backup_dir to [[scratch_path.joinpath]]("pl-old").
+        Do [[os.rename]](pl_dir, backup_dir).
+    Do [[os.rename]](new_dir, pl_dir).
+    Do [[shutil.rmtree]](scratch_path).
+    For each docid in [[sorted]](outputs):
+        Do [[print]]("goal: wrote " plus [[str]]([[pl_dir.joinpath]](docid plus ".pl"))).
+    Do [[print]]("goal: compile ok " plus [[str]]([[len]](outputs)) plus " documents").
+
+Define [[red_probe_class]] taking probe_name:
+    Set stem to [[probe_name.removesuffix]](".ace").
+    Set parts to [[stem.split]]("--").
+    If [[len]](parts) is greater than 1:
+        Set class_name to [[parts.pop]](0).
+        If class_name:
+            Give back class_name.
+    Do [[violation]]("red-probe", "probe name lacks <class>-- prefix: " plus probe_name).
+
+Define [[red_expected_exit]] taking class_name:
+    Set exit_one to <"input_utf8", "ape_messages", "empty_drs", "sentence_lines", "unsupported", "safety", "query_failed">.
+    Set exit_two to <"usage", "ape_load", "ulex_load", "check_load", "uncaught">.
+    Set is_one to class_name is in exit_one.
+    Set is_two to class_name is in exit_two.
+    If is_one:
+        Give back 1.
+    If is_two:
+        Give back 2.
+    Do [[violation]]("red-class", "unknown error class: " plus class_name).
+
+Define [[collect_red_probes]] taking nothing:
+    Set red_dir to [[pathlib.Path]]("tests/red").
+    Set red_symlink to [[red_dir.is_symlink]]().
+    If red_symlink:
+        Do [[violation]]("red-dir", "is a symlink: " plus [[str]](red_dir)).
+    If not [[red_dir.is_dir]]():
+        Do [[violation]]("red-dir", "missing: " plus [[str]](red_dir)).
+    Set probes to <>.
+    Set ace_stems to <>.
+    Set ulex_stems to <>.
+    For each entry in [[sorted]]([[red_dir.iterdir]]()):
+        Set entry_name to entry.name.
+        Set regular to [[entry.is_file]]().
+        Set symlink to [[entry.is_symlink]]().
+        If not regular:
+            Do [[violation]]("red-entry", "not a regular file: " plus entry_name).
+        If symlink:
+            Do [[violation]]("red-entry", "not a regular file: " plus entry_name).
+        Set is_ace to [[entry_name.endswith]](".ace").
+        Set is_ulex to [[entry_name.endswith]](".ulex").
+        If is_ace:
+            Set class_name to [[red_probe_class]](entry_name).
+            Set expected_exit to [[red_expected_exit]](class_name).
+            Set probe_record to <entry, class_name, expected_exit>.
+            Do [[probes.append]](probe_record).
+            Do [[ace_stems.append]]([[entry_name.removesuffix]](".ace")).
+        Otherwise:
+            If is_ulex:
+                Do [[ulex_stems.append]]([[entry_name.removesuffix]](".ulex")).
+            Otherwise:
+                Do [[violation]]("red-entry", "unsupported entry: " plus entry_name).
+    For each ulex_stem in ulex_stems:
+        Set paired to ulex_stem is in ace_stems.
+        If not paired:
+            Do [[violation]]("red-entry", "orphan ulex without ace probe: " plus ulex_stem).
+    If not probes:
+        Do [[violation]]("red-dir", "no red probes found").
+    Give back probes.
+
+Define [[run_red_probe]] taking scratch_path, swipl_executable, stage_path, probe_path, class_name, expected_exit:
+    Set probe_name to probe_path.name.
+    Set probe_bytes to [[probe_path.read_bytes]]().
+    Set lexicon_path to [[probe_path.with_suffix]](".ulex").
+    Set lexicon_present to [[lexicon_path.is_file]]().
+    Set tail_args to <[[str]](stage_path), "red-probe">.
+    If lexicon_present:
+        Do [[tail_args.append]]([[str]](lexicon_path)).
+    Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
+    Set result to [[subprocess.run]](command, input=probe_bytes, capture_output=True).
+    If result.returncode does not equal expected_exit:
+        Do [[cleanup_violation]](scratch_path, "red-exit", "status " plus [[str]](result.returncode) plus " for probe: " plus probe_name).
+    If result.stdout:
+        Do [[cleanup_violation]](scratch_path, "red-stdout", "non-empty stdout for probe: " plus probe_name).
+    Set newline_bytes to [[bytes]](<10>).
+    Set newline_count to [[result.stderr.count]](newline_bytes).
+    Set final_newline to [[result.stderr.endswith]](newline_bytes).
+    If newline_count does not equal 1:
+        Do [[cleanup_violation]](scratch_path, "red-stderr", "stderr is not one LF line for probe: " plus probe_name).
+    If not final_newline:
+        Do [[cleanup_violation]](scratch_path, "red-stderr", "stderr is not one LF line for probe: " plus probe_name).
+    Set stderr_text to [[result.stderr.decode]]("utf-8", errors="replace").
+    Set expected_prefix to "ace_to_pl_error(" plus class_name plus ",".
+    If not [[stderr_text.startswith]](expected_prefix):
+        Do [[cleanup_violation]](scratch_path, "red-class", "stderr class mismatch for probe: " plus probe_name).
+    If not [[stderr_text.endswith]](").\n"):
+        Do [[cleanup_violation]](scratch_path, "red-stderr", "stderr lacks canonical term suffix for probe: " plus probe_name).
+
+Define [[check_command]] taking nothing:
+    Set guidelines_root to [[pathlib.Path]]("guidelines").
+    Set root_symlink to [[guidelines_root.is_symlink]]().
+    If root_symlink:
+        Do [[fail]]("guidelines", "guidelines directory is a symlink").
+    If not [[guidelines_root.is_dir]]():
+        Do [[fail]]("guidelines", "missing guidelines directory").
+    Set plans to <>.
+    For each entry in [[sorted]]([[guidelines_root.iterdir]]()):
+        Set entry_name to entry.name.
+        If [[entry.is_symlink]]():
+            Do [[violation]]("guideline-entry", "symlink: " plus entry_name).
+        If not [[entry.is_dir]]():
+            Do [[violation]]("guideline-entry", "not a directory: " plus entry_name).
+        If not [[valid_docid]](entry_name):
+            Do [[violation]]("guideline-entry", "invalid guideline id: " plus entry_name).
+        Do [[check_source_record]](entry).
+        Set collected to [[collect_guideline]](entry).
+        Set ace_paths to [[collected.pop]](0).
+        Set docids to [[collected.pop]](0).
+        Set lexicon_path to [[collected.pop]](0).
+        Do [[check_pl_inventory]](entry, docids).
+        Set plan_record to <entry, ace_paths, docids, lexicon_path>.
+        Do [[plans.append]](plan_record).
+    If not plans:
+        Do [[violation]]("guidelines", "no guideline directories").
+    Set red_plan to [[collect_red_probes]]().
+    Do [[check_prolog_inventory]]().
+    Set swipl_executable to [[resolve_swipl]]().
+    Set scratch_path to [[make_scratch]]().
+    Set stage_path to [[stage_ape]](scratch_path, swipl_executable).
+    Set guideline_count to 0.
+    Set document_count to 0.
+    For each plan_record in plans:
+        Set guideline_path to [[plan_record.pop]](0).
+        Set ace_paths to [[plan_record.pop]](0).
+        Set docids to [[plan_record.pop]](0).
+        Set lexicon_path to [[plan_record.pop]](0).
+        Do [[check_documents]](scratch_path, swipl_executable, stage_path, guideline_path, ace_paths, docids, lexicon_path).
+        Set guideline_count to guideline_count plus 1.
+        Set document_count to document_count plus [[len]](docids).
+    Set probe_count to 0.
+    For each probe_record in red_plan:
+        Set probe_path to [[probe_record.pop]](0).
+        Set class_name to [[probe_record.pop]](0).
+        Set expected_exit to [[probe_record.pop]](0).
+        Do [[run_red_probe]](scratch_path, swipl_executable, stage_path, probe_path, class_name, expected_exit).
+        Set probe_count to probe_count plus 1.
+    Do [[shutil.rmtree]](scratch_path).
+    Do [[print]]("goal: check ok " plus [[str]](guideline_count) plus " guidelines " plus [[str]](document_count) plus " documents " plus [[str]](probe_count) plus " red probes").
+
+Set compiler_source to [[pathlib.Path]]("vendor/ape/prolog/ace_to_pl.pl").
+Require that [[compiler_source.is_file]]().
+Set argv to [[list]](sys.argv).
+Do [[argv.pop]](0).
+If [[len]](argv) equals 0:
+    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check").
+Set subcommand to [[argv.pop]](0).
+If subcommand equals "compile":
+    If [[len]](argv) does not equal 1:
+        Do [[fail]]("usage", "expected: goal compile <guideline-id>").
+    Set guideline_id to [[argv.pop]](0).
+    Do [[compile_command]](guideline_id).
+Otherwise:
+    If subcommand equals "check":
+        If [[len]](argv) does not equal 0:
+            Do [[fail]]("usage", "expected: goal check").
+        Do [[check_command]]().
+    Otherwise:
+        Do [[fail]]("usage", "unknown subcommand: " plus subcommand).

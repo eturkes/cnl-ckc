@@ -1,3 +1,0 @@
-ace_front_end_record(1).
-document(docid('branch-alternative-composition'),source_sha256('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),ulex(none)).
-drs([A,B,C],[-(object(A,patient,countable,na,eq,1),/(1,4)),-(predicate(B,be,named('John'),A),/(1,2)),-(predicate(C,wait,named('John')),/(2,2)),=>(drs([D],[-(object(D,patient,countable,na,eq,1),/(3,2)),v(drs([E],[-(predicate(E,wait,D),/(3,4))]),drs([F],[-(predicate(F,sleep,D),/(3,7))]))]),drs([],[v(drs([G],[-(predicate(G,offer,D,named('Mary')),/(3,8))]),drs([H],[-(predicate(H,arrange,D,named('Mary')),/(3,11))]))])),question(drs([I],[-(predicate(I,wait,named('John')),/(4,3))]))]).

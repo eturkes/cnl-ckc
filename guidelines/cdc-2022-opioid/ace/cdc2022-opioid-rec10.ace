@@ -1,4 +1,4 @@
 Rec10-clinician is a subacute-chronic-pain-clinician.
 Rec10-peer is an acute-pain-clinician.
 Every subacute-chronic-pain-clinician considers-toxicology-testing.
-Does Rec10-peer consider-toxicology-testing?
+Does Rec10-clinician consider-toxicology-testing?

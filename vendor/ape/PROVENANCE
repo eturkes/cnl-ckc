@@ -1,70 +1,22 @@
 # APE fork provenance
 
 Upstream: https://github.com/Attempto/APE
-Base pin: 5f4d5354a45fb772763bf1a9543f508f15b28982
+Fork base: 5f4d5354a45fb772763bf1a9543f508f15b28982
 License: LGPL-3.0-or-later. The upstream `LICENSE.txt` is retained verbatim in this directory.
 
-## Fork pin
+This tree is a liberal in-place fork: upstream files are edited directly,
+first-party modules are added directly, and everything outside the compiler's
+load and build closure is deleted. Git history against the fork base is the
+complete change record. Every modified upstream file carries a prominent
+dated in-file modification notice (GPL-3.0 §5(a) via LGPL-3.0-or-later);
+first-party additions state their origin and license in their file header.
 
-The vendored fork identity (the "fork pin") is the base pin plus the ordered `patches/` set plus the SHA-256 tree manifest `MANIFEST.sha256`.
+First-party additions:
 
-Patches MUST be git-format patches named `NNNN-<slug>.patch`, applied in lexical order on top of the base pin. Each patch MUST be minimal and independently re-applicable. The ordered patch set is currently empty.
+- `prolog/ace_to_pl.pl` — ACE → plain-Prolog compiler over the APE parser
+  (LGPL-3.0-or-later, APE derivative). Sole first-party entry point into this
+  tree; contract in its header.
 
-Any patch that modifies an upstream file MUST add a prominent in-file modification notice with a relevant date. LGPL-3.0-or-later incorporates GPL-3.0 §5(a), which requires such notices for modified files; the notice MUST travel in the same ordered patch set as the modification. This contract mirrors the prominent in-file notices carried by `vendor/e--/patches/0004-add-apache-modification-notices.patch`.
-
-The vendored upstream file tree is byte-identical to the base pin plus this ordered patch set.
-
-Any APE change MUST pass the "bump fork pin" gate: update the patch set, regenerate `MANIFEST.sha256`, and update `docs/provenance.md`.
-
-## Trust posture
-
-APE is trusted parser input to the compilation pipeline, but it is not part of the Python TCB. It runs in a separate SWI-Prolog process; Python moves bytes only. The narrow first-party adapter lands in M2.2 and does not change this boundary.
-
-## Full Clex lexicon
-
-The full external Clex lexicon is vendored at `vendor/clex/` (own `PROVENANCE` + `MANIFEST.sha256`); the authoritative decision, pin, licensing analysis, and first-party-Ulex layering guard live in the Clex decision of `docs/provenance.md`. This tree stays verbatim at the base pin: every staged copy of this tree receives `vendor/clex/clex_lexicon.pl` over `prolog/lexicon/clex_lexicon.pl` at staging time, and `tests/ape-vendor-harness.sh` feeds the same vendored file to the upstream regression suite.
-
-## Fidelity checks
-
-Run from the repository root. Clone upstream into scratch (or reuse a local clone), check out the base pin, archive it into a clean scratch tree, apply every local patch in lexical order, hash both comparable trees, and compare them:
-
-```sh
-set -eu
-ROOT=$PWD
-PIN=5f4d5354a45fb772763bf1a9543f508f15b28982
-UPSTREAM="$ROOT/.scratch/ape-upstream"
-WORK="$ROOT/.scratch/ape-fidelity"
-export GIT_CEILING_DIRECTORIES="$ROOT/.scratch"
-
-# Omit clone when reusing an existing local clone.
-git clone https://github.com/Attempto/APE "$UPSTREAM"
-git -C "$UPSTREAM" checkout --detach "$PIN"
-rm -rf "$WORK"
-mkdir -p "$WORK"
-git -C "$UPSTREAM" archive "$PIN" | tar -x -C "$WORK"
-
-for patch in "$ROOT"/vendor/ape/patches/*.patch; do
-    [ -e "$patch" ] || break
-    (cd "$WORK" && git apply "$patch")
-done
-
-(
-    cd "$WORK"
-    find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
-) > "$ROOT/.scratch/ape-base.sha256"
-(
-    cd "$ROOT/vendor/ape"
-    find . -type f \
-        ! -path './PROVENANCE' \
-        ! -path './MANIFEST.sha256' \
-        ! -path './patches/*' \
-        -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
-) > "$ROOT/.scratch/ape-vendor.sha256"
-diff -u "$ROOT/.scratch/ape-base.sha256" "$ROOT/.scratch/ape-vendor.sha256"
-```
-
-With patches present, the vendor tree MUST equal the base pin plus those patches applied in lexical order. The in-tree integrity check is:
-
-```sh
-cd vendor/ape && sha256sum -c MANIFEST.sha256
-```
+Trust posture: APE runs in separate SWI-Prolog processes over a scratch copy
+staged by `tools/goal.py` (`shutil.copytree` + `fit_to_plp` grammar build);
+Python moves bytes only and never interprets DRS content.

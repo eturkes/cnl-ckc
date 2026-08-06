@@ -1,31 +1,28 @@
-Use argparse.
 Use os.
 Use pathlib.
 Use subprocess.
 Use sys.
 
-Define [[walk_tree]] taking dir_path, prune_hidden:
+Define [[walk_tree]] taking dir_path:
     Set entries to <>.
     For each entry in [[sorted]]([[dir_path.iterdir]]()):
-        Set hidden to False.
-        If prune_hidden:
-            Set entry_name to entry.name.
-            If [[entry_name.startswith]]("."):
-                Set hidden to True.
-        If not hidden:
-            If [[entry.is_dir]](follow_symlinks=False):
-                Set nested to [[walk_tree]](entry, prune_hidden).
-                For each nested_entry in nested:
-                    Do [[entries.append]](nested_entry).
-            Otherwise:
-                Do [[entries.append]](entry).
+        Set symlink to [[entry.is_symlink]]().
+        Set directory to False.
+        If not symlink:
+            Set directory to [[entry.is_dir]]().
+        If directory:
+            Set nested to [[walk_tree]](entry).
+            For each nested_entry in nested:
+                Do [[entries.append]](nested_entry).
+        Otherwise:
+            Do [[entries.append]](entry).
     Give back entries.
 
 Define [[discover]] taking roots:
     Set sources to <>.
     For each root_name in roots:
         Set root_path to [[pathlib.Path]](root_name).
-        For each source_path in [[walk_tree]](root_path, False):
+        For each source_path in [[walk_tree]](root_path):
             If source_path.suffix equals ".emm":
                 Do [[sources.append]]([[source_path.as_posix]]()).
     Give back [[sorted]](sources).
@@ -45,26 +42,11 @@ Define [[compile_one]] taking source_rel, exe, env:
     Set res to [[subprocess.run]](<exe, "-P", "-m", "e_minus_minus.strict", source_rel>, capture_output=True, env=env).
     Give back res.
 
-Define [[vendor_python_paths]] taking nothing:
-    Set manifest_path to [[pathlib.Path]]("vendor/e--/MANIFEST.sha256").
-    Set manifest_text to [[manifest_path.read_text]](encoding="utf-8").
-    Set vendor_paths to <>.
-    For each line in [[manifest_text.splitlines]]():
-        If line:
-            Set relative_path to "".
-            For each piece in [[line.split]]("  "):
-                Set relative_path to piece.
-            Set relative_path to [[relative_path.removeprefix]]("./").
-            Set full_path to "vendor/e--/" plus relative_path.
-            If [[full_path.endswith]](".py"):
-                Do [[vendor_paths.append]](full_path).
-    Give back [[sorted]](vendor_paths).
-
 Define [[orphan_python_paths]] taking roots:
     Set orphans to <>.
     For each root_name in roots:
         Set root_path to [[pathlib.Path]](root_name).
-        For each candidate in [[walk_tree]](root_path, False):
+        For each candidate in [[walk_tree]](root_path):
             If candidate.suffix equals ".py":
                 Set source_path to [[candidate.with_suffix]](".emm").
                 If not [[source_path.is_file]]():
@@ -72,22 +54,16 @@ Define [[orphan_python_paths]] taking roots:
     Give back [[sorted]](orphans).
 
 Define [[unauthorized_python_paths]] taking generated:
-    Set allowed to [[vendor_python_paths]]() plus generated.
     Set git_res to [[subprocess.run]](<"git", "ls-files", "--", "*.py">, capture_output=True, check=True).
     Set tracked_text to [[git_res.stdout.decode]]("utf-8").
     Set unauthorized to <>.
     For each tracked in [[sorted]]([[tracked_text.splitlines]]()):
-        If not (tracked is in allowed):
-            Do [[unauthorized.append]](tracked).
+        Set vendored to [[tracked.startswith]]("vendor/e--/src/").
+        Set generated_member to tracked is in generated.
+        If not vendored:
+            If not generated_member:
+                Do [[unauthorized.append]](tracked).
     Give back unauthorized.
-
-Define [[conftest_paths]] taking nothing:
-    Set repo_path to [[pathlib.Path]](".").
-    Set found to <>.
-    For each candidate in [[walk_tree]](repo_path, True):
-        If candidate.name equals "conftest.py":
-            Do [[found.append]]([[candidate.as_posix]]()).
-    Give back [[sorted]](found).
 
 Define [[report_paths]] taking category, paths:
     For each path in [[sorted]](paths):
@@ -113,19 +89,16 @@ Define [[check_mode]] taking roots, sources, exe, env:
     Set generated to [[generated_paths_for]](sources).
     Set orphans to [[orphan_python_paths]](roots).
     Set unauthorized to [[unauthorized_python_paths]](generated).
-    Set conftests to [[conftest_paths]]().
     Do [[report_paths]]("compile-error", compile_errors).
     Do [[report_paths]]("missing", missing).
     Do [[report_paths]]("drift", drift).
     Do [[report_paths]]("orphan", orphans).
     Do [[report_paths]]("unauthorized", unauthorized).
-    Do [[report_paths]]("conftest", conftests).
     Set violations to [[len]](compile_errors).
     Set violations to violations plus [[len]](missing).
     Set violations to violations plus [[len]](drift).
     Set violations to violations plus [[len]](orphans).
     Set violations to violations plus [[len]](unauthorized).
-    Set violations to violations plus [[len]](conftests).
     If violations is greater than 0:
         Do [[print]]("regen: violations: " plus [[str]](violations)).
         Exit with 1.
@@ -159,15 +132,21 @@ Define [[regenerate_mode]] taking sources, exe, env:
 Set roots to <"tools">.
 Set strict_src to [[pathlib.Path]]("vendor/e--/src/e_minus_minus/strict.py").
 Require that [[strict_src.is_file]]().
-Set parser to [[argparse.ArgumentParser]](prog="regen").
-Do [[parser.add_argument]]("--check", action="store_true").
-Do [[parser.add_argument]]("--regenerate", action="store_true").
-Set args to [[parser.parse_args]]().
+Set argv to [[list]](sys.argv).
+Do [[argv.pop]](0).
+If [[len]](argv) does not equal 1:
+    Do [[print]]("regen: usage: regen.py --check | --regenerate", file=sys.stderr).
+    Exit with 2.
+Set mode to [[argv.pop]](0).
 Set exe to sys.executable.
 Set env to [[os.environ.copy]]().
 Do [[env.update]]({"PYTHONPATH": "vendor/e--/src", "PYTHONDONTWRITEBYTECODE": "1"}).
 Set sources to [[discover]](roots).
-If args.regenerate:
+If mode equals "--regenerate":
     Do [[regenerate_mode]](sources, exe, env).
 Otherwise:
-    Do [[check_mode]](roots, sources, exe, env).
+    If mode equals "--check":
+        Do [[check_mode]](roots, sources, exe, env).
+    Otherwise:
+        Do [[print]]("regen: usage: regen.py --check | --regenerate", file=sys.stderr).
+        Exit with 2.

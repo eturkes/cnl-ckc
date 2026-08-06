@@ -1,3 +1,0 @@
-import pathlib
-path = pathlib.Path("folder/file.txt")
-print(path.name)

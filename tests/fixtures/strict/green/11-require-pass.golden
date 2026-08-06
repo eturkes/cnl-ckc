@@ -1,3 +1,0 @@
-if not ((2 + 2) == 4):
-    raise AssertionError("requirement failed")
-print("required")

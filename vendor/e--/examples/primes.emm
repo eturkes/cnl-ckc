@@ -1,2 +1,0 @@
-For each p in {{the first five prime numbers, as a Python list}}:
-    Do [[print]](p).

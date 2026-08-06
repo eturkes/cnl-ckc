@@ -1,3 +1,0 @@
-ace_front_end_record(1).
-document(docid('cdc2022-opioid-rec10'),source_sha256('d28d0c2f2a893dc418d646e852d8dd4a0ebbeadcc8577ea970153af95ecf0c7a'),ulex(sha256('7926023c0fffd5d10d6e87f7d250ae2232508730e5a50cdbdef79bb29aa7613b'))).
-drs([A,B,C,D],[-(object(A,'subacute-chronic-pain-clinician',countable,na,eq,1),/(1,4)),-(predicate(B,be,named('Rec10-clinician'),A),/(1,2)),-(object(C,'acute-pain-clinician',countable,na,eq,1),/(2,4)),-(predicate(D,be,named('Rec10-peer'),C),/(2,2)),=>(drs([E],[-(object(E,'subacute-chronic-pain-clinician',countable,na,eq,1),/(3,2))]),drs([F],[-(predicate(F,'consider-toxicology-testing',E),/(3,3))])),question(drs([G],[-(predicate(G,'consider-toxicology-testing',named('Rec10-peer')),/(4,3))]))]).

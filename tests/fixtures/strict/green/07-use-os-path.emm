@@ -1,2 +1,0 @@
-Use os.path.
-Do [[print]]([[os.path.basename]]("/tmp/multi.txt")).

@@ -1,5 +1,0 @@
-total = (1 + 2) * 3
-ratio = 10 / 4
-values = [1, -2, 3.5, True, False, None]
-mapping = {"line": "first\nsecond", "answer": 42}
-greeting = "café"

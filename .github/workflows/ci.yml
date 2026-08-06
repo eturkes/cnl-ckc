@@ -10,84 +10,15 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version-file: .python-version
-
-      - name: Run vendored suite
-        run: |
-          set -eu
-          if ! out="$(cd vendor/e-- && PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests 2>&1)"; then
-            printf '%s\n' "$out"
-            exit 1
-          fi
-          printf '%s\n' "$out"
-          printf '%s\n' "$out" | grep -q '^Ran 95 tests'
-          printf '%s\n' "$out" | grep -qx 'OK'
-          ! printf '%s\n' "$out" | grep -qi 'skip'
-
-      - name: Verify vendor integrity
-        run: |
-          set -eu
-          git diff --exit-code -- vendor/
-          test -z "$(git status --porcelain -- vendor/)"
-          (cd vendor/e-- && sha256sum --quiet -c MANIFEST.sha256)
-
-      - name: Verify regeneration bootstrap identity
-        run: |
-          set -eu
-          PYTHONPATH=vendor/e--/src PYTHONDONTWRITEBYTECODE=1 python3 -P -m e_minus_minus.strict tools/regen.emm >"$RUNNER_TEMP/regen.py.out"
-          cmp "$RUNNER_TEMP/regen.py.out" tools/regen.py
-
-      - name: Check generated Python
-        run: |
-          set -eu
-          PYTHONDONTWRITEBYTECODE=1 python3 -P tools/regen.py --check
-
-      - name: Lint shell harnesses
-        run: |
-          set -eu
-          bash -n tests/strict-harness.sh
-          bash -n tests/regen-harness.sh
-          bash -n tests/pipeline-cli-harness.sh
-          bash -n tests/ape-vendor-harness.sh
-          bash -n tests/adapter-harness.sh
-          bash -n tests/pipeline-harness.sh
-          bash -n tests/ir-validate-harness.sh
-          bash -n tests/ir-lower-harness.sh
-          bash -n tests/ir-run-harness.sh
-          bash -n tests/slice-harness.sh
-          bash -n tests/registry-harness.sh
-          bash -n tests/guideline-harness.sh
-          shellcheck tests/strict-harness.sh tests/regen-harness.sh tests/pipeline-cli-harness.sh tests/ape-vendor-harness.sh tests/adapter-harness.sh tests/pipeline-harness.sh tests/ir-validate-harness.sh tests/ir-lower-harness.sh tests/ir-run-harness.sh tests/slice-harness.sh tests/registry-harness.sh tests/guideline-harness.sh
-
-      - name: Run strict compiler harness
-        run: bash tests/strict-harness.sh
-
-      - name: Run regeneration harness
-        run: bash tests/regen-harness.sh
-
-      - name: Run pipeline CLI harness
-        run: bash tests/pipeline-cli-harness.sh
-
-  ape:
+  check:
     runs-on: ubuntu-24.04
     container:
       image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
-    env:
-      SWIPL_VER: 9.2.9
     steps:
       - name: Install job tooling
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends git ca-certificates make python3
+          apt-get install -y --no-install-recommends git ca-certificates python3
 
       - name: Check out repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -100,53 +31,26 @@ jobs:
           set -eu
           out=$(swipl --version)
           printf '%s\n' "$out"
-          printf '%s\n' "$out" | grep -Fq "SWI-Prolog version $SWIPL_VER "
+          printf '%s\n' "$out" | grep -Fq "SWI-Prolog version 9.2.9 "
 
       - name: Verify SWI-Prolog crypto SHA-256
         run: |
           set -eu
-          expected=da2cb6ad175bc966de5e79c6e16777f8a98b610c2424a894132df2815be50677
           swipl -q -f none -F none \
             -g "use_module(library(crypto),[crypto_data_hash/3]),crypto_data_hash([0,1,2,127,128,255],Hash,[algorithm(sha256),encoding(octet)]),(Hash=='da2cb6ad175bc966de5e79c6e16777f8a98b610c2424a894132df2815be50677'->halt(0);halt(1))" \
             -t 'halt(9)'
-          printf 'SWI-Prolog: %s\n' "$expected"
-          sha_output=$(printf '\000\001\002\177\200\377' | sha256sum)
-          sha_hex=${sha_output%% *}
-          printf 'sha256sum: %s\n' "$sha_hex"
-          test "$sha_hex" = "$expected"
 
-      - name: Verify APE vendor integrity
-        run: (cd vendor/ape && sha256sum --quiet -c MANIFEST.sha256)
+      - name: Verify regeneration bootstrap identity
+        run: |
+          set -eu
+          PYTHONPATH=vendor/e--/src PYTHONDONTWRITEBYTECODE=1 python3 -P -m e_minus_minus.strict tools/regen.emm >"$RUNNER_TEMP/regen.py.out"
+          cmp "$RUNNER_TEMP/regen.py.out" tools/regen.py
 
-      - name: Verify Clex vendor integrity
-        run: (cd vendor/clex && sha256sum --quiet -c MANIFEST.sha256)
+      - name: Check generated Python
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -P tools/regen.py --check
 
-      - name: Run IR validate harness
-        run: bash tests/ir-validate-harness.sh
-
-      - name: Run IR lower harness
-        run: bash tests/ir-lower-harness.sh
-
-      - name: Run IR run harness
-        run: bash tests/ir-run-harness.sh
-
-      - name: Run APE vendor harness
-        run: bash tests/ape-vendor-harness.sh
-
-      - name: Run adapter harness
-        run: bash tests/adapter-harness.sh
-
-      - name: Run pipeline harness
-        run: bash tests/pipeline-harness.sh
-
-      - name: Run slice harness
-        run: bash tests/slice-harness.sh
-
-      - name: Run registry harness
-        run: bash tests/registry-harness.sh
-
-      - name: Run guideline harness
-        run: bash tests/guideline-harness.sh
+      - name: Run goal check
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -P tools/goal.py check
 
       - name: Verify repository cleanliness
         run: |

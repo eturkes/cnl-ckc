@@ -1,3 +1,0 @@
-ace_front_end_record(1).
-document(docid('m6-disjunction-mixed'),source_sha256('5555555555555555555555555555555555555555555555555555555555555555'),ulex(none)).
-drs([A,B,C,D],[-(object(A,patient,countable,na,eq,1),/(1,4)),-(predicate(B,be,named('John'),A),/(1,2)),-(predicate(C,sleep,named('John')),/(2,2)),-(predicate(D,cough,named('John')),/(3,2)),=>(drs([E],[-(object(E,patient,countable,na,eq,1),/(4,2)),v(drs([F],[-(predicate(F,wait,E),/(4,4))]),drs([],[v(drs([G,H],[-(predicate(G,sleep,E),/(4,7)),-(predicate(H,cough,E),/(4,10))]),drs([I],[-(predicate(I,smoke,E),/(4,13))]))]))]),drs([J],[-(predicate(J,recover,E),/(4,14))])),question(drs([K],[-(predicate(K,recover,named('John')),/(5,3))]))]).

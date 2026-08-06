@@ -1,3 +1,0 @@
-Use io.
-Set fh to [[io.StringIO]]("method").
-Do [[print]]([[fh.read]]()).

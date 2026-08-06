@@ -1,92 +1,31 @@
 # e-- fork provenance
 
 Upstream: https://github.com/frmoded/e--
-Base pin: da8c3b34d2493180da8df65b127a3841f9a4e609
+Fork base: da8c3b34d2493180da8df65b127a3841f9a4e609
 License: Apache-2.0. The upstream `LICENSE` is retained verbatim in this directory.
 
-## Fork pin
+This tree is a liberal in-place fork: upstream files are edited directly. Git
+history against the fork base is the complete change record. Every modified
+upstream file carries a prominent Apache-2.0 §4(b) modification notice
+in-file.
 
-The vendored fork identity (the "fork pin") is the base pin plus the ordered `patches/` set plus the SHA-256 tree manifest `MANIFEST.sha256`.
+## Strict compilation path (the Python TCB)
 
-Patches MUST be git-format patches named `NNNN-<slug>.patch`, applied in lexical order on top of the base pin. Each patch MUST be minimal and independently re-applicable. The ordered patch set is:
-
-- `0001-lazy-package-transpile-import.patch` — defer the quarantined legacy transpiler import with PEP 562 while preserving the public API.
-- `0002-add-strict-compilation-entrypoint.patch` — add the stdlib-only validated compiler entry point.
-- `0003-add-strict-tcb-language-extensions.patch` — add top-level imports, dotted references and call targets, requirements, and explicit exits.
-- `0004-add-apache-modification-notices.patch` — add prominent modification notices to patched upstream source files.
-
-The `0004` notices satisfy Apache-2.0 §4(b) for modified upstream files.
-
-Compatibility note: `Use`, `Require that`, and `Exit with` become statement keywords at head position. A grep of upstream tests and examples found zero collisions (exit 1; verified 2026-07-18).
-
-The vendored upstream file tree is byte-identical to the base pin plus this ordered patch set.
-
-Any TCB change MUST pass the "bump fork pin" gate: update the patch set, regenerate `MANIFEST.sha256`, and update `docs/provenance.md`.
-
-## Python TCB file allowlist
-
-CORE — strict compilation path:
-
+- `src/e_minus_minus/__init__.py` — package initialization (docstring only;
+  executes before `strict` under `python3 -m`).
+- `src/e_minus_minus/strict.py` — strict compilation entry point.
 - `src/e_minus_minus/lexer.py` — lexical analysis.
 - `src/e_minus_minus/parser.py` — parsing into the compiler AST.
 - `src/e_minus_minus/emitter.py` — Python emission.
 - `src/e_minus_minus/ast_nodes.py` — compiler AST definitions.
 - `src/e_minus_minus/errors.py` — compiler error definitions.
-- `src/e_minus_minus/strict.py` — strict compilation entry point, added in M1.2.
 
-QUARANTINED — retained for upstream fidelity; the strict path MUST NEVER load these files:
+This list is the complete package: the upstream legacy pipeline
+(`transpiler.py`, `normalizer.py`, `resolver.py`, `cli.py`) is deleted in
+this fork. `strict.py` still poisons those module names plus `anthropic` in
+`sys.modules` as an import backstop.
 
-- `src/e_minus_minus/transpiler.py` — legacy high-level transpilation path.
-- `src/e_minus_minus/normalizer.py` — normalization path.
-- `src/e_minus_minus/resolver.py` — slot-resolution path.
-- `src/e_minus_minus/cli.py` — legacy CLI path.
-
-`src/e_minus_minus/__init__.py` is retained for upstream fidelity; `0001-lazy-package-transpile-import.patch` supplies its M1.2 PEP 562 lazy import.
-
-Quarantine is a deny-list, not an "imports only" rule: the strict path MUST NOT import or otherwise load `transpiler`, `normalizer`, `resolver`, `cli`, or `anthropic`. Standard-library imports and the CORE modules, including `ast_nodes` and `errors`, are legal.
-
-Upstream `tests/` is vendored third-party test code, not first-party Python.
-
-## Fidelity checks
-
-Run from the repository root. Clone upstream into scratch (or reuse a local clone), check out the base pin, archive it into a clean scratch tree, apply every local patch in lexical order, hash both comparable trees, and compare them:
-
-```sh
-set -eu
-ROOT=$PWD
-PIN=da8c3b34d2493180da8df65b127a3841f9a4e609
-UPSTREAM="$ROOT/.scratch/e---upstream"
-WORK="$ROOT/.scratch/e---fidelity"
-
-# Omit clone when reusing an existing local clone.
-git clone https://github.com/frmoded/e-- "$UPSTREAM"
-git -C "$UPSTREAM" checkout --detach "$PIN"
-rm -rf "$WORK"
-mkdir -p "$WORK"
-git -C "$UPSTREAM" archive "$PIN" | tar -x -C "$WORK"
-
-for patch in "$ROOT"/vendor/e--/patches/*.patch; do
-    [ -e "$patch" ] || break
-    (cd "$WORK" && git apply "$patch")
-done
-
-(
-    cd "$WORK"
-    find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
-) > "$ROOT/.scratch/e---base.sha256"
-(
-    cd "$ROOT/vendor/e--"
-    find . -type f \
-        ! -path './PROVENANCE' \
-        ! -path './MANIFEST.sha256' \
-        ! -path './patches/*' \
-        -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
-) > "$ROOT/.scratch/e---vendor.sha256"
-diff -u "$ROOT/.scratch/e---base.sha256" "$ROOT/.scratch/e---vendor.sha256"
-```
-
-With patches present, the vendor tree MUST equal the base pin plus those patches applied in lexical order. The in-tree integrity check is:
-
-```sh
-cd vendor/e-- && sha256sum -c MANIFEST.sha256
-```
+Strict-profile extensions over upstream: `Use`, `Require that`, and
+`Exit with` are statement keywords at head position; top-level imports, dotted
+references and call targets are admitted. The language contract is
+`docs/spec.md` plus the strict entry point's validation.

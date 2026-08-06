@@ -1,4 +1,4 @@
-# Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE and patches/.
+# Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE.
 """Python emitter for the E-- deterministic core.
 
 Walks a ``Program`` AST and produces Python source text with 4-space

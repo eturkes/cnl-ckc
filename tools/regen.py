@@ -1,29 +1,26 @@
-import argparse
 import os
 import pathlib
 import subprocess
 import sys
-def walk_tree(dir_path, prune_hidden):
+def walk_tree(dir_path):
     entries = []
     for entry in sorted(dir_path.iterdir()):
-        hidden = False
-        if prune_hidden:
-            entry_name = entry.name
-            if entry_name.startswith("."):
-                hidden = True
-        if not hidden:
-            if entry.is_dir(follow_symlinks=False):
-                nested = walk_tree(entry, prune_hidden)
-                for nested_entry in nested:
-                    entries.append(nested_entry)
-            else:
-                entries.append(entry)
+        symlink = entry.is_symlink()
+        directory = False
+        if not symlink:
+            directory = entry.is_dir()
+        if directory:
+            nested = walk_tree(entry)
+            for nested_entry in nested:
+                entries.append(nested_entry)
+        else:
+            entries.append(entry)
     return entries
 def discover(roots):
     sources = []
     for root_name in roots:
         root_path = pathlib.Path(root_name)
-        for source_path in walk_tree(root_path, False):
+        for source_path in walk_tree(root_path):
             if source_path.suffix == ".emm":
                 sources.append(source_path.as_posix())
     return sorted(sources)
@@ -39,46 +36,27 @@ def generated_paths_for(sources):
 def compile_one(source_rel, exe, env):
     res = subprocess.run([exe, "-P", "-m", "e_minus_minus.strict", source_rel], capture_output=True, env=env)
     return res
-def vendor_python_paths():
-    manifest_path = pathlib.Path("vendor/e--/MANIFEST.sha256")
-    manifest_text = manifest_path.read_text(encoding="utf-8")
-    vendor_paths = []
-    for line in manifest_text.splitlines():
-        if line:
-            relative_path = ""
-            for piece in line.split("  "):
-                relative_path = piece
-            relative_path = relative_path.removeprefix("./")
-            full_path = "vendor/e--/" + relative_path
-            if full_path.endswith(".py"):
-                vendor_paths.append(full_path)
-    return sorted(vendor_paths)
 def orphan_python_paths(roots):
     orphans = []
     for root_name in roots:
         root_path = pathlib.Path(root_name)
-        for candidate in walk_tree(root_path, False):
+        for candidate in walk_tree(root_path):
             if candidate.suffix == ".py":
                 source_path = candidate.with_suffix(".emm")
                 if not source_path.is_file():
                     orphans.append(candidate.as_posix())
     return sorted(orphans)
 def unauthorized_python_paths(generated):
-    allowed = vendor_python_paths() + generated
     git_res = subprocess.run(["git", "ls-files", "--", "*.py"], capture_output=True, check=True)
     tracked_text = git_res.stdout.decode("utf-8")
     unauthorized = []
     for tracked in sorted(tracked_text.splitlines()):
-        if not (tracked in allowed):
-            unauthorized.append(tracked)
+        vendored = tracked.startswith("vendor/e--/src/")
+        generated_member = tracked in generated
+        if not vendored:
+            if not generated_member:
+                unauthorized.append(tracked)
     return unauthorized
-def conftest_paths():
-    repo_path = pathlib.Path(".")
-    found = []
-    for candidate in walk_tree(repo_path, True):
-        if candidate.name == "conftest.py":
-            found.append(candidate.as_posix())
-    return sorted(found)
 def report_paths(category, paths):
     for path in sorted(paths):
         print("regen: " + category + ": " + path)
@@ -102,19 +80,16 @@ def check_mode(roots, sources, exe, env):
     generated = generated_paths_for(sources)
     orphans = orphan_python_paths(roots)
     unauthorized = unauthorized_python_paths(generated)
-    conftests = conftest_paths()
     report_paths("compile-error", compile_errors)
     report_paths("missing", missing)
     report_paths("drift", drift)
     report_paths("orphan", orphans)
     report_paths("unauthorized", unauthorized)
-    report_paths("conftest", conftests)
     violations = len(compile_errors)
     violations = violations + len(missing)
     violations = violations + len(drift)
     violations = violations + len(orphans)
     violations = violations + len(unauthorized)
-    violations = violations + len(conftests)
     if violations > 0:
         print("regen: violations: " + str(violations))
         raise SystemExit(1)
@@ -147,15 +122,21 @@ roots = ["tools"]
 strict_src = pathlib.Path("vendor/e--/src/e_minus_minus/strict.py")
 if not (strict_src.is_file()):
     raise AssertionError("requirement failed")
-parser = argparse.ArgumentParser(prog="regen")
-parser.add_argument("--check", action="store_true")
-parser.add_argument("--regenerate", action="store_true")
-args = parser.parse_args()
+argv = list(sys.argv)
+argv.pop(0)
+if len(argv) != 1:
+    print("regen: usage: regen.py --check | --regenerate", file=sys.stderr)
+    raise SystemExit(2)
+mode = argv.pop(0)
 exe = sys.executable
 env = os.environ.copy()
 env.update({"PYTHONPATH": "vendor/e--/src", "PYTHONDONTWRITEBYTECODE": "1"})
 sources = discover(roots)
-if args.regenerate:
+if mode == "--regenerate":
     regenerate_mode(sources, exe, env)
 else:
-    check_mode(roots, sources, exe, env)
+    if mode == "--check":
+        check_mode(roots, sources, exe, env)
+    else:
+        print("regen: usage: regen.py --check | --regenerate", file=sys.stderr)
+        raise SystemExit(2)

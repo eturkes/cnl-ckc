@@ -1,3 +1,0 @@
-ace_front_end_record(1).
-document(docid('cdc2022-opioid-rec12'),source_sha256('0e8bc74eac108b480eddf0a7510697523afee483f24ca8921ebdfafd9e03a6f5'),ulex(sha256('7926023c0fffd5d10d6e87f7d250ae2232508730e5a50cdbdef79bb29aa7613b'))).
-drs([A,B],[-(object(A,'opioid-use-disorder-clinician',countable,na,eq,1),/(1,4)),-(predicate(B,be,named('Rec12-clinician'),A),/(1,2)),=>(drs([C],[-(object(C,'opioid-use-disorder-clinician',countable,na,eq,1),/(2,2))]),drs([D],[-(predicate(D,'offer-medication-treatment',C),/(2,3))])),question(drs([E],[-(predicate(E,'offer-medication-treatment',named('Rec12-clinician')),/(3,3))]))]).

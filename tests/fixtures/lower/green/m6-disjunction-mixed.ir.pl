@@ -1,9 +1,0 @@
-cnl_ir_record(3).
-document(docid('m6-disjunction-mixed'),source_sha256('5555555555555555555555555555555555555555555555555555555555555555'),ulex(none)).
-fact(fact_id(sentence(1),clause(1)),pred(patient,[named('John')]),source(sentence(1),tokens([2,4]))).
-fact(fact_id(sentence(2),clause(1)),pred(sleep,[named('John')]),source(sentence(2),tokens([2]))).
-fact(fact_id(sentence(3),clause(1)),pred(cough,[named('John')]),source(sentence(3),tokens([2]))).
-rule(rule_id(sentence(4),clause(1),branch(1)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(wait,[var(1)])]),source(sentence(4),tokens([2,4,14]))).
-rule(rule_id(sentence(4),clause(1),branch(2)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(sleep,[var(1)]),pred(cough,[var(1)])]),source(sentence(4),tokens([2,7,10,14]))).
-rule(rule_id(sentence(4),clause(1),branch(3)),pred(recover,[var(1)]),body([pred(patient,[var(1)]),pred(smoke,[var(1)])]),source(sentence(4),tokens([2,13,14]))).
-query(query_id(sentence(5),clause(1)),pred(recover,[named('John')]),source(sentence(5),tokens([3]))).

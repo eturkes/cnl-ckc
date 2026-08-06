@@ -1,4 +1,4 @@
-# Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE and patches/.
+# Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE.
 """Recursive-descent parser for canonical E-- (spec §4, §5).
 
 Consumes the token list from ``lexer.tokenize`` and produces a ``Program``.
