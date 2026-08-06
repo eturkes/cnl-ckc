@@ -40,3 +40,13 @@ reused); MAIN batch-rules the statement inventory (project / uncovered with
 reason); `ace` teammates draft against ruled batches while MAIN reviews the
 previous batch; MAIN authors the lexicon delta, compiles, runs check; `rev`
 attacks the assembled round pre-commit; MAIN fixes, reruns gates, commits.
+
+Round close (standing loop and one-round invocations alike): gate green
+(`export PATH="<repo>/.toolchain/bin:$PATH"` → `python3 -P tools/goal.py
+compile <id>` + `check`) → ledgers current (coverage.tsv, `audit/`,
+guideline README, `.agent/queue.md` — pending list stays ordered, next
+round first) → scoped commit(s) on main → every teammate harvested (report
+read, artifacts byte-verified or re-derived) + TaskStopped, its watcher
+killed, worktree removed + `wt/<name>` branch deleted → roster updated. A
+blocked round closes the same way with `blocked(<why>)` recorded in
+queue.md.
