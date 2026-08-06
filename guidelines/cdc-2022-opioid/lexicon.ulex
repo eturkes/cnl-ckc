@@ -55,12 +55,10 @@ pn_sg('Rec07','Rec07',neutr).
 pn_sg('Rec07-clinician','Rec07-clinician',human).
 pn_sg('Rec08','Rec08',neutr).
 pn_sg('Rec08-clinician','Rec08-clinician',human).
-pn_sg('Rec08-peer','Rec08-peer',human).
 pn_sg('Rec09','Rec09',neutr).
 pn_sg('Rec09-clinician','Rec09-clinician',human).
 pn_sg('Rec10','Rec10',neutr).
 pn_sg('Rec10-clinician','Rec10-clinician',human).
-pn_sg('Rec10-peer','Rec10-peer',human).
 pn_sg('Rec11','Rec11',neutr).
 pn_sg('Rec11-clinician','Rec11-clinician',human).
 pn_sg('Rec12','Rec12',neutr).

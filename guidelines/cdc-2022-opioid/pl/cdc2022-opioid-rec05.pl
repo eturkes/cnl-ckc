@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec05.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec05',ace_sha256(ab806900a94e8d674028534465fd08ac53c54b48c61c038f8a179b14d08af27c),ulex(sha256('82f2a92d7aab48ce88f0c83434cf9c92e9f416cfb2d06b7685499dbaf95dc4d2'))).
+guideline_document('cdc2022-opioid-rec05',ace_sha256(ab806900a94e8d674028534465fd08ac53c54b48c61c038f8a179b14d08af27c),ulex(sha256('3006a2a125138b9e3f7c52e9f411829b69d4de097d4f147de53aea6239a294b9'))).
 :- dynamic('detect-life-threatening-warning'/1).
 % S1: Rec05-clinician is a dosage-change-clinician.
 'dosage-change-clinician'('Rec05-clinician').

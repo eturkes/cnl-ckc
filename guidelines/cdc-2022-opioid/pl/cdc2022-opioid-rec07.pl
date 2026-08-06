@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec07.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec07',ace_sha256('2be5e96b6b52886f8684cb7e75b73abbfcf84f94b7a4546807dde1f51cd9d1a3'),ulex(sha256('82f2a92d7aab48ce88f0c83434cf9c92e9f416cfb2d06b7685499dbaf95dc4d2'))).
+guideline_document('cdc2022-opioid-rec07',ace_sha256('2be5e96b6b52886f8684cb7e75b73abbfcf84f94b7a4546807dde1f51cd9d1a3'),ulex(sha256('3006a2a125138b9e3f7c52e9f411829b69d4de097d4f147de53aea6239a294b9'))).
 % S1: Rec07-clinician is a follow-up-clinician.
 'follow-up-clinician'('Rec07-clinician').
 % S2: Rec07 is a category-a-recommendation.

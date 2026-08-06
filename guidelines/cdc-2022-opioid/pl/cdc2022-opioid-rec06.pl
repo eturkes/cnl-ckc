@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec06.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec06',ace_sha256('190146a9ecc7a3a6357cf2233df9365d445c9c101b676359ec7f9e8aabd687f3'),ulex(sha256('82f2a92d7aab48ce88f0c83434cf9c92e9f416cfb2d06b7685499dbaf95dc4d2'))).
+guideline_document('cdc2022-opioid-rec06',ace_sha256('190146a9ecc7a3a6357cf2233df9365d445c9c101b676359ec7f9e8aabd687f3'),ulex(sha256('3006a2a125138b9e3f7c52e9f411829b69d4de097d4f147de53aea6239a294b9'))).
 % S1: Rec06-clinician is an acute-opioid-clinician.
 'acute-opioid-clinician'('Rec06-clinician').
 % S2: Rec06 is a category-a-recommendation.
