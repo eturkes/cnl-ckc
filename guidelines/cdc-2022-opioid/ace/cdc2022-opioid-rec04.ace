@@ -1,3 +1,7 @@
 Rec04-clinician is an opioid-dosage-clinician.
+Rec04 is a category-a-recommendation.
+Rec04 is an evidence-type-3-recommendation.
 Every opioid-dosage-clinician prescribes-lowest-effective-dosage.
 Does Rec04-clinician prescribe-lowest-effective-dosage?
+Is Rec04 a category-a-recommendation?
+Is Rec04 an evidence-type-3-recommendation?

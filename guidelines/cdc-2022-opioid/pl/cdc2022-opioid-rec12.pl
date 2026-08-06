@@ -1,8 +1,16 @@
 % cdc2022-opioid-rec12.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec12',ace_sha256('0e8bc74eac108b480eddf0a7510697523afee483f24ca8921ebdfafd9e03a6f5'),ulex(sha256('7926023c0fffd5d10d6e87f7d250ae2232508730e5a50cdbdef79bb29aa7613b'))).
+guideline_document('cdc2022-opioid-rec12',ace_sha256(ef096ece35f3a6a59bff4c95a3ca899d5c4a75187978e1f3e96b0ede56f994d3),ulex(sha256('82f2a92d7aab48ce88f0c83434cf9c92e9f416cfb2d06b7685499dbaf95dc4d2'))).
 % S1: Rec12-clinician is an opioid-use-disorder-clinician.
 'opioid-use-disorder-clinician'('Rec12-clinician').
-% S2: Every opioid-use-disorder-clinician offers-medication-treatment.
+% S2: Rec12 is a category-a-recommendation.
+'category-a-recommendation'('Rec12').
+% S3: Rec12 is an evidence-type-1-recommendation.
+'evidence-type-1-recommendation'('Rec12').
+% S4: Every opioid-use-disorder-clinician offers-medication-treatment.
 'offer-medication-treatment'(A) :- 'opioid-use-disorder-clinician'(A).
-% S3: Does Rec12-clinician offer-medication-treatment?
+% S5: Does Rec12-clinician offer-medication-treatment?
 guideline_query(yesno,'offer-medication-treatment'('Rec12-clinician')).
+% S6: Is Rec12 a category-a-recommendation?
+guideline_query(yesno,'category-a-recommendation'('Rec12')).
+% S7: Is Rec12 an evidence-type-1-recommendation?
+guideline_query(yesno,'evidence-type-1-recommendation'('Rec12')).

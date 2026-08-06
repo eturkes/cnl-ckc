@@ -30,10 +30,12 @@ was published with.
 
 - `ace/cdc2022-opioid-recNN.ace` (NN = 01–12) — one ACE document per Box 3
   recommendation NN. Each document is a deliberately minimal formal projection
-  of its recommendation — an actor-class fact, one universal rule (rec05 adds
-  a negation-as-failure guard), and a probe query — not a complete
-  formalization of the clinical semantics, conditions, or qualifiers of the
-  CDC text. Read the ACE next to the extraction to judge coverage.
+  of its recommendation — an actor-class fact, the recommendation's category
+  and evidence type (the Box 3 closing parenthetical) as class facts on the
+  named recommendation, one universal rule (rec05 adds a negation-as-failure
+  guard), and probe queries for the rule and both class facts — not a
+  complete formalization of the clinical semantics, conditions, or qualifiers
+  of the CDC text. Read the ACE next to the extraction to judge coverage.
 - `lexicon.ulex` — the guideline's APE user lexicon (domain compounds and
   proper names shared by all twelve documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog compiled from the ACE by

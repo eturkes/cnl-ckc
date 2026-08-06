@@ -1,8 +1,16 @@
 % cdc2022-opioid-rec06.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec06',ace_sha256('4f45424d645b948f4e32145ed673c2718c58129c0325962658bab91b1d7291dd'),ulex(sha256('7926023c0fffd5d10d6e87f7d250ae2232508730e5a50cdbdef79bb29aa7613b'))).
+guideline_document('cdc2022-opioid-rec06',ace_sha256('190146a9ecc7a3a6357cf2233df9365d445c9c101b676359ec7f9e8aabd687f3'),ulex(sha256('82f2a92d7aab48ce88f0c83434cf9c92e9f416cfb2d06b7685499dbaf95dc4d2'))).
 % S1: Rec06-clinician is an acute-opioid-clinician.
 'acute-opioid-clinician'('Rec06-clinician').
-% S2: Every acute-opioid-clinician limits-prescription-quantity.
+% S2: Rec06 is a category-a-recommendation.
+'category-a-recommendation'('Rec06').
+% S3: Rec06 is an evidence-type-4-recommendation.
+'evidence-type-4-recommendation'('Rec06').
+% S4: Every acute-opioid-clinician limits-prescription-quantity.
 'limit-prescription-quantity'(A) :- 'acute-opioid-clinician'(A).
-% S3: Does Rec06-clinician limit-prescription-quantity?
+% S5: Does Rec06-clinician limit-prescription-quantity?
 guideline_query(yesno,'limit-prescription-quantity'('Rec06-clinician')).
+% S6: Is Rec06 a category-a-recommendation?
+guideline_query(yesno,'category-a-recommendation'('Rec06')).
+% S7: Is Rec06 an evidence-type-4-recommendation?
+guideline_query(yesno,'evidence-type-4-recommendation'('Rec06')).

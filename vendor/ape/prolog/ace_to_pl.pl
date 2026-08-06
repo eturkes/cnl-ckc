@@ -22,7 +22,8 @@
 %   ground fact   predicate(E,V,Named...)                                     ->  'V'(Names...).
 %   rule          =>(drs Ante, drs Cons): Ante = objects/predicates/~(single
 %                 predicate); Cons = one predicate                            ->  Head :- Body.
-%   question      question(drs): one predicate, optional query(W,who)         ->  guideline_query/2.
+%   question      question(drs): one predicate + optional query(W,who), or
+%                 object + be over a named individual (yesno)                 ->  guideline_query/2.
 % Event referents are erased; each must be box-local with exactly one
 % occurrence. Head and NAF variables must be bound by positive body literals.
 % NAF-only predicates (no fact or rule head in the document) get a
@@ -504,14 +505,8 @@ translate_sentence(Group, _, _, _, _, _) :-
 copula_fact([anchored(Obj), anchored(Pred)], Dom, RootConds, Bindings0,
         Bindings, Fact) :-
     object_shape(Obj, Ref, Noun),
-    nonvar(Pred),
-    functor(Pred, predicate, 4),
-    arg(1, Pred, Event),
-    arg(2, Pred, Be),
-    Be == be,
-    arg(3, Pred, NamedArg),
+    be_predicate_shape(Pred, Event, NamedArg, Ref2),
     named_atom(NamedArg, Name),
-    arg(4, Pred, Ref2),
     Ref2 == Ref,
     erasable_event(Event, Dom, RootConds),
     unbound_referent(Ref, Bindings0),
@@ -558,6 +553,15 @@ pred_args(Index, Arity, Pred, [Arg|Args]) :-
     arg(Index, Pred, Arg),
     Next is Index + 1,
     pred_args(Next, Arity, Pred, Args).
+
+be_predicate_shape(Pred, Event, NamedArg, Ref) :-
+    nonvar(Pred),
+    functor(Pred, predicate, 4),
+    arg(2, Pred, Be),
+    Be == be,
+    arg(1, Pred, Event),
+    arg(3, Pred, NamedArg),
+    arg(4, Pred, Ref).
 
 named_atom(Term, Name) :-
     nonvar(Term),
@@ -796,29 +800,38 @@ all_bound([V|Vs], Bound) :-
 
 translate_question(QDrs, Bindings, query(Kind, Goal)) :-
     drs_parts(QDrs, QDom, QConds),
-    partition_query_conds(QConds, Markers, Preds),
-    ( Preds = [pred(Event, Verb, Args0)] ->
-        true
-    ; reject(unsupported, question_shape(QConds))
-    ),
-    erasable_event(Event, QDom, QDrs),
-    ( Markers == [] ->
+    partition_query_conds(QConds, Markers, Preds, Objs, BePreds),
+    ( Markers == [], Objs == [], BePreds == [],
+      Preds = [pred(Event, Verb, Args0)] ->
         Kind = yesno,
+        erasable_event(Event, QDom, QDrs),
         resolve_ground_args(Args0, Bindings, Args),
         Goal =.. [Verb|Args]
-    ; Markers = [WhRef] ->
+    ; Markers = [WhRef], Objs == [], BePreds == [],
+      Preds = [pred(Event, Verb, Args0)] ->
         Kind = who(WhRef),
+        erasable_event(Event, QDom, QDrs),
         wh_args(Args0, Bindings, WhRef, Args),
         Goal =.. [Verb|Args],
         ( strict_member(WhRef, Args) ->
             true
         ; reject(unsupported, wh_variable_unused)
         )
-    ; reject(unsupported, multiple_wh_markers)
+    ; Markers == [], Preds == [],
+      Objs = [obj(Ref, Noun)],
+      BePreds = [be(Event, NamedArg, Ref2)],
+      Ref2 == Ref,
+      strict_member(Ref, QDom),
+      named_atom(NamedArg, Name) ->
+        /* copular question mirroring the copula fact shape */
+        Kind = yesno,
+        erasable_event(Event, QDom, QDrs),
+        Goal =.. [Noun, Name]
+    ; reject(unsupported, question_shape(QConds))
     ).
 
-partition_query_conds([], [], []).
-partition_query_conds([Cond|Conds], Markers, Preds) :-
+partition_query_conds([], [], [], [], []).
+partition_query_conds([Cond|Conds], Markers, Preds, Objs, BePreds) :-
     ( nonvar(Cond),
       functor(Cond, -, 2),
       arg(1, Cond, Inner),
@@ -834,10 +847,16 @@ partition_query_conds([Cond|Conds], Markers, Preds) :-
       arg(2, Inner, Who),
       Who == who ->
         Markers = [Ref|MarkersRest],
-        partition_query_conds(Conds, MarkersRest, Preds)
+        partition_query_conds(Conds, MarkersRest, Preds, Objs, BePreds)
     ; predicate_shape(Inner, Event, Verb, Args) ->
         Preds = [pred(Event, Verb, Args)|PredsRest],
-        partition_query_conds(Conds, Markers, PredsRest)
+        partition_query_conds(Conds, Markers, PredsRest, Objs, BePreds)
+    ; be_predicate_shape(Inner, Event, NamedArg, Ref) ->
+        BePreds = [be(Event, NamedArg, Ref)|BePredsRest],
+        partition_query_conds(Conds, Markers, Preds, Objs, BePredsRest)
+    ; object_shape(Inner, Ref, Noun) ->
+        Objs = [obj(Ref, Noun)|ObjsRest],
+        partition_query_conds(Conds, Markers, Preds, ObjsRest, BePreds)
     ; reject(unsupported, question_condition(Inner))
     ).
 

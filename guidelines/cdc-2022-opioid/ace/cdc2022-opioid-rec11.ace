@@ -1,3 +1,7 @@
 Rec11-clinician is a concurrent-medication-clinician.
+Rec11 is a category-b-recommendation.
+Rec11 is an evidence-type-3-recommendation.
 Every concurrent-medication-clinician uses-particular-caution.
 Does Rec11-clinician use-particular-caution?
+Is Rec11 a category-b-recommendation?
+Is Rec11 an evidence-type-3-recommendation?

@@ -1,3 +1,7 @@
 Rec05-clinician is a dosage-change-clinician.
+Rec05 is a category-b-recommendation.
+Rec05 is an evidence-type-4-recommendation.
 Every dosage-change-clinician that does not provably detect-life-threatening-warning avoids-abrupt-discontinuation.
 Does Rec05-clinician avoid-abrupt-discontinuation?
+Is Rec05 a category-b-recommendation?
+Is Rec05 an evidence-type-4-recommendation?
