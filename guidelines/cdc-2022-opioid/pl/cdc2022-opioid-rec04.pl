@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec04.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec04',ace_sha256('58e8de0553d2860167522a090632fe75556004b6777df591aedb80683451da78'),ulex(sha256('3006a2a125138b9e3f7c52e9f411829b69d4de097d4f147de53aea6239a294b9'))).
+guideline_document('cdc2022-opioid-rec04',ace_sha256('58e8de0553d2860167522a090632fe75556004b6777df591aedb80683451da78'),ulex(sha256('7855e6f992b6a70f49da5dbd1de6620893b143919a2f28e6b50d67c2eabb7dff'))).
 % S1: Rec04-clinician is an opioid-dosage-clinician.
 'opioid-dosage-clinician'('Rec04-clinician').
 % S2: Rec04 is a category-a-recommendation.

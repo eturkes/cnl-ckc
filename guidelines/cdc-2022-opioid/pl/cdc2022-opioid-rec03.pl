@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec03.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec03',ace_sha256('83bef199d00f3816d682222a0fcbe55109f7d3c066b2471e186d8fe1051d1a3f'),ulex(sha256('3006a2a125138b9e3f7c52e9f411829b69d4de097d4f147de53aea6239a294b9'))).
+guideline_document('cdc2022-opioid-rec03',ace_sha256('83bef199d00f3816d682222a0fcbe55109f7d3c066b2471e186d8fe1051d1a3f'),ulex(sha256('7855e6f992b6a70f49da5dbd1de6620893b143919a2f28e6b50d67c2eabb7dff'))).
 % S1: Rec03-clinician is a starting-opioid-clinician.
 'starting-opioid-clinician'('Rec03-clinician').
 % S2: Rec03 is a category-a-recommendation.

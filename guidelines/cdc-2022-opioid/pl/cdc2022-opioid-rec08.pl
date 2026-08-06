@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec08.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec08',ace_sha256('6ffee2042bcb7e56f9630b479f08b9dd97a770b7350afca246e2105c05ade0b6'),ulex(sha256('3006a2a125138b9e3f7c52e9f411829b69d4de097d4f147de53aea6239a294b9'))).
+guideline_document('cdc2022-opioid-rec08',ace_sha256('6ffee2042bcb7e56f9630b479f08b9dd97a770b7350afca246e2105c05ade0b6'),ulex(sha256('7855e6f992b6a70f49da5dbd1de6620893b143919a2f28e6b50d67c2eabb7dff'))).
 % S1: Rec08-clinician is a risk-mitigation-clinician.
 'risk-mitigation-clinician'('Rec08-clinician').
 % S2: Rec08 is a category-a-recommendation.

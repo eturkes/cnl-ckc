@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec12.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec12',ace_sha256(ef096ece35f3a6a59bff4c95a3ca899d5c4a75187978e1f3e96b0ede56f994d3),ulex(sha256('3006a2a125138b9e3f7c52e9f411829b69d4de097d4f147de53aea6239a294b9'))).
+guideline_document('cdc2022-opioid-rec12',ace_sha256(ef096ece35f3a6a59bff4c95a3ca899d5c4a75187978e1f3e96b0ede56f994d3),ulex(sha256('7855e6f992b6a70f49da5dbd1de6620893b143919a2f28e6b50d67c2eabb7dff'))).
 % S1: Rec12-clinician is an opioid-use-disorder-clinician.
 'opioid-use-disorder-clinician'('Rec12-clinician').
 % S2: Rec12 is a category-a-recommendation.

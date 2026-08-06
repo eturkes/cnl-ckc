@@ -53,8 +53,17 @@ was published with.
   guard), and probe queries for the rule and both class facts — not a
   complete formalization of the clinical semantics, conditions, or qualifiers
   of the CDC text. Read the ACE next to the extraction to judge coverage.
+- `ace/cdc2022-opioid-rec01-impKK.ace`, `ace/cdc2022-opioid-rec02-impKK.ace`
+  — one ACE document per implementation-consideration payload region of
+  recommendations 1 and 2 (30 documents; `rec02-imp12` is intentionally
+  absent — its region was a phantom duplicate removed from the evidence).
+  Each holds a witness actor-class fact, one universal rule projecting the
+  region's core directive (NAF guard for "unless/except" gating), and a
+  probe query; implementation considerations carry no category/evidence
+  parenthetical. The one non-clinician actor region (S24-02, health
+  insurers and health systems) uses the class `health-insurer-or-health-system`.
 - `lexicon.ulex` — the guideline's APE user lexicon (domain compounds and
-  proper names shared by all twelve documents).
+  proper names shared by all documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog compiled from the ACE by
   `vendor/ape/prolog/ace_to_pl.pl`; regenerate via
   `python3 -P tools/goal.py compile cdc-2022-opioid` — the compiler is
@@ -77,13 +86,14 @@ consistency of the projection, not guideline conclusions.
   the project's sweep of those pages found no clinical normative
   statements (an epistemic caution about interpreting findings on p82 and
   the standard MMWR access/contact/public-domain notices on p100).
-- Formalization is Box 3 only, at one document per recommendation: each of
-  the twelve ACE documents preserves its recommendation's exact
-  category/evidence parenthetical and one simplified action rule. The
-  rules do not yet encode deontic modality ("should"), conditions,
+- Formalization: Box 3 at one document per recommendation (twelve
+  documents, each preserving its recommendation's exact category/evidence
+  parenthetical and one simplified action rule), plus one document per
+  recommendation 1–2 implementation-consideration region (30 documents).
+  The rules do not yet encode deontic modality ("should"), conditions,
   objects, timing, or alternatives; Box 3's multi-sentence recommendations
   contain further normative sentences beyond the twelve projected rules,
-  and the 677 payload regions outside Box 3 await per-statement ruling —
+  and the 647 payload regions outside these await per-statement ruling —
   formalize, record as uncovered with a reason, or link as a restatement
   of a covered statement. A per-statement coverage manifest is the next
   planned increment.
