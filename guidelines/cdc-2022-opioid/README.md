@@ -19,18 +19,18 @@ Rep 2022;71(No. RR-3):1–95. DOI `http://dx.doi.org/10.15585/mmwr.rr7103a1`.
 - `source/front-matter-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 3–18 (Summary, Introduction,
   Box 1, Box 2, Scope and Audience, Methods, category framing, guiding
-  principles; 54 payload regions). SHA-256
-  `f3866abbc7a89e12273053bfb6e8d299bbaa733ced2523aefa3a2d999de83ed9`.
+  principles; 66 payload regions). SHA-256
+  `aa3306c0eeb15dac65c55103bfdcbf4d64c46c85b5c82bc1c0dd40867281168b`.
 - `source/rec01-05-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 19–39 (Box 4 and the
   recommendation 1–5 subsections: restated statements, supporting
-  rationale, implementation considerations; 305 payload regions). SHA-256
-  `ef73b04adf0347d7d14d0b20b936c0498be7041149bd3d3b40621e824862004f`.
+  rationale, implementation considerations; 309 payload regions). SHA-256
+  `31fbc6cce791c4e09ff79e2e3fe4249db0e2635c82e6b5ec6b64e3d57c1dc4ff`.
 - `source/rec06-12-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 40–63 (recommendation 6–12
-  subsections and end matter through the Conclusion; 318 payload regions).
+  subsections and end matter through the Conclusion; 327 payload regions).
   SHA-256
-  `a35d75c6ff054fef51d772ae3ad56cbcc639f323d4e5cfb616a2321c3fd4a459`.
+  `0b6b3f1f2612e3d8ee17f0aa19a244dbeabeae2fee3b7ad7a9b214ab8d4857d6`.
   Each extraction file's header states its locator and scaffolding
   conventions; the statement payloads are byte-range regions of the file.
 
@@ -79,7 +79,7 @@ consistency of the projection, not guideline conclusions.
 ## Coverage
 
 - Verbatim extraction evidence spans the whole document: pages 3–18, the
-  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63 — 693 payload
+  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63 — 718 payload
   regions across the four extraction files, each verified as rendered PDF
   text with duplicate regions held to the source's own repetition count. Physical pages 64–100 hold
   references, the appendix evidence reviews, and the publication notice;
@@ -93,20 +93,19 @@ consistency of the projection, not guideline conclusions.
   The rules do not yet encode deontic modality ("should"), conditions,
   objects, timing, or alternatives; Box 3's multi-sentence recommendations
   contain further normative sentences beyond the twelve projected rules.
-- `coverage.tsv` records one ruling per payload region (all 693):
+- `coverage.tsv` records one ruling per payload region (all 718):
   `ace(<docid>)` formalized (42), `restates(<id>)` verbatim or
-  near-verbatim repetition of an earlier covered region (127),
+  near-verbatim repetition of an earlier covered region (129),
   `uncovered(<class>: <reason>)` deliberately not formalized (72 —
   classes: heading, process, external, aim, descriptive, notice), or
-  `pending` awaiting a ruling (452). Restatement links target the
+  `pending` awaiting a ruling (475). Restatement links target the
   earliest full occurrence; a region with its own ACE document keeps
   `ace(...)` even when it also repeats an earlier region.
 - Reconciliation against an independent 702-sentence census of the same
-  pages: 671 census sentences map to evidence regions; 4 census rows
-  are page-assignment artifacts whose sentences the census also counts
-  at their real pages; and of the 31 census sentences without a region,
-  4 are the deliberately excluded p82/p100 statements above and 27 are
-  genuine extraction gaps (25 sentences/composites — the largest being
-  Box 2's "is" bullet list and scope restatements on pp7–11) queued as
-  the next evidence increment; coverage.tsv gains their rows when the
-  regions land.
+  pages is closed: 698 census sentences map to evidence regions (the
+  27 the census exposed as extraction gaps were added as 25 regions —
+  the largest being Box 2's "is" bullet list — and verified with the
+  same fidelity checks), and the remaining 4 are the deliberately
+  excluded p82/p100 statements above; 4 further census rows are
+  page-assignment artifacts whose sentences the census also counts at
+  their real pages.

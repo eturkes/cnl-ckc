@@ -3,7 +3,7 @@ recommendations 6–12 body + end matter extraction evidence (verbatim rendered 
 Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
 Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
 PDF locator: physical PDF pages 40–63; physical page 64 consulted only for completion of any page-63-starting statement
-Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 318 payloads below.
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 327 payloads below.
 Scaffolding convention: each bracketed locator line and each blank separator is outside its statement region; bullet glyphs and list labels are presentation scaffolding omitted from payloads; composite recommendation-header and nested-list regions are flattened with one space.
 
 [S40-01 | p40 | Pre-Rec 6 > Transitioning to buprenorphine]
@@ -47,6 +47,9 @@ Patients should be evaluated at least every 2 weeks if they continue to receive 
 
 [S40-14 | p40 | Rec 6 > Implementation considerations]
 If opioids are continued for ≥1 month, clinicians should ensure that potentially reversible causes of chronic pain are addressed and that opioid prescribing for acute pain does not unintentionally become long-term opioid therapy simply because medications are continued without reassessment.
+
+[S40-15 | p40 | Rec 6 > Implementation considerations]
+For many common causes of nontraumatic, nonsurgical pain, when opioids are needed, a few days or less are often sufficient, and shorter courses can minimize the need to taper opioids to prevent withdrawal symptoms at the end of a course of opioids.
 
 [S41-01 | p41 | Rec 6 > Implementation considerations]
 Continuation of opioid therapy at this point might represent initiation of long-term opioid therapy, which should occur only as an intentional decision that benefits are likely to outweigh risks after discussion between the clinician and patient and as part of a comprehensive pain management approach.
@@ -123,6 +126,9 @@ In addition to evaluating benefits and risks of opioids before starting opioid t
 
 [S42-20 | p42 | Rec 7 > Implementation considerations]
 Clinicians should consider follow-up intervals within the lower end of this range when ER/LA opioids are started or increased, because of the increased risk for overdose within the first 2 weeks of treatment, or when total daily opioid dosage is ≥50 MME/day.
+
+[S42-21 | p42 | Rec 6 > Supporting rationale]
+A few days or less are often sufficient when opioids are needed for many common causes of nonsurgical acute pain, and limiting the duration of opioid therapy can minimize the need to taper to prevent withdrawal symptoms at the end of the course of opioids and limit unused opioids.
 
 
 [S43-02 | p43 | Rec 7 > Implementation considerations]
@@ -416,6 +422,9 @@ Clinicians should ensure that treatment for depression and other mental health c
 [S48-12 | p48 | Patients with Mental Health Conditions]
 For treatment of chronic pain in patients with depression, clinicians should consider using tricyclic or SNRI antidepressants for analgesic as well as antidepressant effects if these medications are not otherwise contraindicated (see Recommendation 2).
 
+[S48-13 | p48 | Patients Aged ≥65 Years]
+Caregivers can have an important role in management of opioid therapy for older persons with cognitive impairment.
+
 [S49-01 | p49 | Patients with Substance Use Disorders]
 Previous guidelines have recommended screening or risk assessment tools to identify patients at higher risk for opioid misuse or opioid use disorder.
 
@@ -623,6 +632,12 @@ Rather, clinicians should consider toxicology test results as potentially useful
 [S53-07 | p53 | Rec 10 > Supporting rationale]
 For example, clinicians can become familiar with the drugs included in toxicology testing panels used in their practice and understand how to interpret results; practices and health systems can ensure a laboratorian or toxicologist is available to discuss unexpected results, that costs to patients are not burdensome, and that practice policies regarding testing and frequency can minimize bias.
 
+[S53-08 | p53 | Rec 10 > Implementation considerations]
+Restricting confirmatory testing to situations and substances for which results can reasonably be expected to affect patient management can reduce costs of toxicology testing.
+
+[S53-09 | p53 | Rec 10 > Supporting rationale]
+Ideally, clinicians would only test for substances for which results could affect patient management.
+
 [S54-01 | p54 | Rec 10 > Supporting rationale]
 Before starting opioids and periodically (at least annually) during opioid therapy, clinicians should consider benefits and risks of toxicology testing to assess for prescribed opioids and other prescription and nonprescribed substances that increase risk for overdose when combined with opioids, including nonprescribed and illicit opioids and benzodiazepines.
 
@@ -673,6 +688,9 @@ Clinicians should not dismiss patients from care on the basis of a toxicology te
 
 [S54-17 | p54 | Rec 11]
 Clinicians should use particular caution when prescribing opioid pain medication and benzodiazepines concurrently and consider whether benefits outweigh risks of concurrent prescribing of opioids and other central nervous system depressants (recommendation category: B; evidence type: 3).
+
+[S54-18 | p54 | Rec 10 > Supporting rationale]
+Restricting confirmatory testing to situations and substances for which results can reasonably be expected to affect patient management can reduce costs of toxicology testing.
 
 [S55-01 | p55 | Rec 11 > Implementation considerations]
 Although in some circumstances it might be appropriate to prescribe opioids to a patient who is also prescribed benzodiazepines (e.g., severe acute pain in a patient taking long-term, stable low-dose benzodiazepine therapy), clinicians should use particular caution when prescribing opioid pain medication and benzodiazepines concurrently.
@@ -868,6 +886,15 @@ Certain patients, including those who metabolize naltrexone more rapidly, might 
 
 [S59-14 | p59 | Rec 12 > Supporting rationale]
 Oral naltrexone is no longer recommended and should not be used except under very limited circumstances (96).
+
+[S59-15 | p59 | Rec 12 > Supporting rationale]
+Importantly, opioid dosage thresholds for caution in the treatment of pain are not applicable to opioid agonist treatment of opioid use disorder (345) because recommended dosages of methadone and buprenorphine for opioid use disorder (96) differ from those for pain management.
+
+[S59-16 | p59 | Rec 12 > Supporting rationale]
+No recommended duration limit exists for treatment of opioid use disorder with buprenorphine or methadone, and discontinuation is associated with risks for return to drug use and opioid overdose (96).
+
+[S59-17 | p59 | Rec 12 > Supporting rationale]
+No recommended duration limit exists for treatment of opioid use disorder with naltrexone.
 
 [S60-01 | p60 | Rec 12 > Supporting rationale]
 If discontinued, naltrexone can be stopped abruptly without precipitating withdrawal symptoms (96).

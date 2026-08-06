@@ -3,7 +3,7 @@ recommendations 1–5 body extraction evidence (verbatim rendered text)
 Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
 Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
 PDF locator: physical PDF pages 19–39; physical page 40 used only to complete a statement beginning on page 39; printed MMWR pages 17–37
-Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 305 payloads below.
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 309 payloads below.
 Scaffolding convention: locator lines plus bullet/table glyphs and numeric labels are presentation scaffolding outside payload ranges; each following LF-terminated line is one payload with hard wraps joined, line-end word hyphenation repaired, and true hyphens preserved.
 
 [S19-01 | p19 | Box 4 > Guiding principle 1]
@@ -30,6 +30,8 @@ Clinicians should maximize use of nonopioid pharmacologic (e.g., topical or oral
 When diagnosis and severity of acute pain warrant the use of opioids, clinicians should prescribe immediate-release opioids (see Recommendation 3) at the lowest effective dose (see Recommendation 4) and for no longer than the expected duration of pain severe enough to require opioids (see Recommendation 6).
 [S19-12 | p19 | Rec 1 > Implementation considerations]
 Clinicians should prescribe and advise opioid use only as needed (e.g., hydrocodone 5 mg/acetaminophen 325 mg, one tablet not more frequently than every 4 hours as needed for moderate to severe pain) rather than on a scheduled basis (e.g., one tablet every 4 hours) and encourage and recommend an opioid taper if opioids are taken around the clock for more than a few days (see Recommendation 6).
+[S19-13 | p19 | Rec 1 > Implementation considerations]
+Opioid therapy has an important role for acute pain related to severe traumatic injuries (including crush injuries and burns), invasive surgeries typically associated with moderate to severe postoperative pain, and other severe acute pain when NSAIDs and other therapies are contraindicated or likely to be ineffective.
 [S20-01 | p20 | Rec 1 > Implementation considerations]
 If patients already receiving opioids long term require additional medication for acute pain, nonopioid medications should be used when possible and, if additional opioids are required (e.g., for superimposed severe acute pain), they should be continued only for the duration of pain severe enough to require additional opioids, returning to the patient’s baseline opioid dosage as soon as possible, including a taper to baseline dosage if additional opioids were used around the clock for more than a few days (see Recommendation 6).
 [S20-02 | p20 | Rec 1 > Implementation considerations]
@@ -104,6 +106,8 @@ Patient education and discussion before starting outpatient opioid therapy are c
 Clinicians should ensure that patients are aware of expected benefits of, common risks of, serious risks of, and alternatives to opioids before starting or continuing opioid therapy and should involve patients in decisions about whether to start opioid therapy.
 [S22-13 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
 Advise patients that short-term opioid use can lead to unintended long-term opioid use and of the importance of working toward planned discontinuation of opioid use as soon as feasible, including a plan to appropriately taper opioids as pain resolves if opioids have been used around the clock for more than a few days (see Recommendation 6).
+[S22-14 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Opioid therapy has an important role for acute pain related to severe traumatic injuries (including crush injuries and burns), invasive surgeries typically associated with moderate to severe postoperative pain, and other severe acute pain when NSAIDs and other therapies are contraindicated or likely to be ineffective.
 [S23-01 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
 Review communication mechanisms and protocols patients can use to tell clinicians of severe or uncontrolled pain and to arrange for timely reassessment and management.
 [S23-02 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
@@ -374,6 +378,8 @@ Clinicians should not treat acute pain with ER/LA opioids or initiate opioid tre
 Because of the longer half-life and longer duration of effects (e.g., respiratory depression) of ER/LA opioids (e.g., methadone, fentanyl patches, or extended-release versions of oxycodone, hydromorphone, hydrocodone, or morphine), clinicians should not prescribe ER/LA opioids for the treatment of acute pain.
 [S31-04 | p31 | Rec 3 > Supporting rationale]
 ER/LA opioids should be reserved for severe, continuous pain and should be considered only for patients who have received certain dosages of immediate-release opioids daily (e.g., 60 mg daily of oral morphine, 30 mg daily of oral oxycodone, or equianalgesic dosages of other opioids) for at least 1 week (193).
+[S31-06 | p31 | Rec 3 > Supporting rationale]
+FDA also noted that some ER/LA opioids are only appropriate for opioid-tolerant patients, defined as patients who have received certain dosages of opioids (e.g., 60 mg daily of oral morphine, 30 mg daily of oral oxycodone, or equianalgesic dosages of other opioids) for at least 1 week (193).
 [S32-01 | p32 | Rec 3 > Supporting rationale]
 Clinicians should use additional caution with ER/LA opioids and consider a longer dosing interval when prescribing to patients with renal or hepatic dysfunction because decreased clearance of medications among these patients can lead to accumulation of medications to toxic levels and persistence in the body for longer durations.
 [S32-02 | p32 | Rec 3 > Supporting rationale]
@@ -494,6 +500,8 @@ Clinicians should advise patients of an increased risk for overdose on abrupt re
 Clinicians should remain alert to signs of and screen for anxiety, depression, and opioid misuse or opioid use disorder (see Recommendations 8 and 12) that might be revealed by an opioid taper and provide treatment or arrange for management of these comorbidities.
 [S35-22 | p35 | Rec 5 > Implementation considerations]
 Clinicians should closely monitor patients who are unable to taper and who continue on high-dose or otherwise high-risk opioid regimens (e.g., opioids prescribed concurrently with benzodiazepines) and should work with patients to mitigate overdose risk (e.g., by providing overdose education and naloxone) (see Recommendation 8).
+[S35-23 | p35 | Rec 5 > Implementation considerations]
+When patients have been taking opioids for longer durations (e.g., for ≥1 year), tapers of 10% per month or slower are likely to be better tolerated than more rapid tapers.
 [S36-01 | p36 | Rec 5 > Implementation considerations]
 Clinicians can use periodic and strategic motivational questions and statements to encourage movement toward appropriate therapeutic changes and functional goals.
 [S36-02 | p36 | Rec 5 > Implementation considerations]
