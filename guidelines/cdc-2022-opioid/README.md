@@ -92,8 +92,21 @@ consistency of the projection, not guideline conclusions.
   recommendation 1–2 implementation-consideration region (30 documents).
   The rules do not yet encode deontic modality ("should"), conditions,
   objects, timing, or alternatives; Box 3's multi-sentence recommendations
-  contain further normative sentences beyond the twelve projected rules,
-  and the 647 payload regions outside these await per-statement ruling —
-  formalize, record as uncovered with a reason, or link as a restatement
-  of a covered statement. A per-statement coverage manifest is the next
-  planned increment.
+  contain further normative sentences beyond the twelve projected rules.
+- `coverage.tsv` records one ruling per payload region (all 693):
+  `ace(<docid>)` formalized (42), `restates(<id>)` verbatim or
+  near-verbatim repetition of an earlier covered region (127),
+  `uncovered(<class>: <reason>)` deliberately not formalized (72 —
+  classes: heading, process, external, aim, descriptive, notice), or
+  `pending` awaiting a ruling (452). Restatement links target the
+  earliest full occurrence; a region with its own ACE document keeps
+  `ace(...)` even when it also repeats an earlier region.
+- Reconciliation against an independent 702-sentence census of the same
+  pages: 671 census sentences map to evidence regions; 4 census rows
+  are page-assignment artifacts whose sentences the census also counts
+  at their real pages; and of the 31 census sentences without a region,
+  4 are the deliberately excluded p82/p100 statements above and 27 are
+  genuine extraction gaps (25 sentences/composites — the largest being
+  Box 2's "is" bullet list and scope restatements on pp7–11) queued as
+  the next evidence increment; coverage.tsv gains their rows when the
+  regions land.
