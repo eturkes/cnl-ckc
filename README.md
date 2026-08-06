@@ -64,7 +64,7 @@ Guideline work runs as goal rounds in a Claude Code session opened at the
 repository root, driven by the built-in `/goal` stop-condition command:
 
 ```
-/goal Process American clinical guidelines through the pipeline as described in README.md "Operating": work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, .agent/queue.md holds no open entries, and web search finds no eligible American clinical guideline still uncovered.
+/goal Process American clinical guidelines through the pipeline as described in README.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, .agent/queue.md holds no open entries, and web search finds no eligible American clinical guideline still uncovered.
 ```
 
 The goal re-arms each time Claude tries to stop and survives session resume,
@@ -72,7 +72,10 @@ so halting at any moment is safe: the repository is the only persistence,
 and every round starts by deriving state from it — `.agent/queue.md`,
 `git status`, `tools/goal.py check`, and the in-progress guideline README's
 coverage statement — then finishes or discards incomplete work before
-taking on anything new.
+taking on anything new. Bulk work (source reading, extraction drafting, ACE
+drafting, adversarial review) fans out to subagent teammates per
+`.agent/rounds.md`; the session lead alone writes the repository and
+commits.
 
 Exactly one source document is in progress at a time and is worked to
 completion — across as many rounds as it takes — before the next one is
