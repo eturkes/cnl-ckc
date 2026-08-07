@@ -15,7 +15,12 @@ guideline list is a seed roster, not the complete list.
 Coverage is also tiered. M1 harvests organizations whose index enumerates
 in ≤2 anonymous fetches and whose artifacts classify without an
 authenticated session; the rest carry `swept = blocked(<why>)` and are
-enumerated for a later harvest in roadmap M2. So a compendium satisfying
+enumerated for a later harvest in roadmap M2. A bounded fan-out is easy
+tier as well: an index whose entries are topic subindexes qualifies when
+the fan-out is enumerable from the index in one fetch, bounded (≤30
+subindexes), and every subindex is anonymous and static — enumeration then
+costs `1 + <subindexes>` fetches and the sweep method reads
+`per-topic-pages`. So a compendium satisfying
 the terminal condition below is exhaustive over its swept organizations
 and explicit about the organizations it defers — not a claim that every
 American clinical guideline holds a row.
@@ -61,12 +66,11 @@ Rulings (edge rules; extended as cases are ruled):
   eligible when they carry actionable patient-care recommendations;
   otherwise `excluded(no patient-care recommendations)`.
 - Endorsement without issuance never makes an org an issuer: a guideline
-  row belongs to its issuing org(s). Co-issued guideline = one row; the
-  org cell joins every issuing org with `+` and the row satisfies each
-  member's seed obligation. Each American co-issuer holds its own
-  organization row (co-issuance is issuance, so its `CPGs` reads `yes`);
-  foreign co-issuers stay out of the organization roster and out of the
-  org cell, named in `notes` instead.
+  row belongs to its issuing org(s). A co-issued guideline is one row that
+  satisfies every issuer's seed obligation, and each American co-issuer
+  holds its own organization row, co-issuance being issuance, so its
+  `CPGs` reads `yes`. Foreign co-issuers are not issuing orgs here and
+  stay out of the roster. (Row formats owns how both are written.)
 - Org-level `CPGs=yes` = the org issues ≥1 eligible artifact;
   artifact-level eligibility is ruled per row during the org's sweep.
 - Artifact type never decides eligibility by name — clinical guidance,
@@ -132,16 +136,37 @@ Organizations — `| org | abbrev | class | CPGs | index URL | enum sources | sw
   `YYYY-MM-DD <method>; <n> index entries -> <e> eligible + <x> excluded`,
   where `<e>` and `<x>` count that org's guideline rows below and are
   checked against them, so the provenance claim cannot drift from the
-  table it describes. `<n>` records what the index offered; `n > e + x`
-  means entries collapsed as duplicates, aliases, or superseded editions,
-  and the sweep report carries that reconciliation. `<method>` names the
+  table it describes. `<n>` counts the artifact entries the index offered
+  — navigation to another site's directory or clearinghouse is not an
+  entry; `n > e + x` means entries collapsed as duplicates, aliases,
+  superseded editions, or derivatives, and the sweep report carries that
+  reconciliation.
+
+  A manifest reconciles an index, so each row belongs to the sweep whose
+  index surfaced it. An entry one org indexes and another org issues takes
+  its row under the ISSUER, carries `indexed-by=<indexing org>` in notes,
+  and counts in the INDEXING org's manifest — review, input, or
+  endorsement is not issuance, so the indexer stays out of the org cell.
+  The marker names every index that carried the row, joined with ` + `,
+  which is what lets an artifact its issuers and a third org all index
+  count once in each of their manifests; naming exactly the issuers is
+  already the default, so the marker is then omitted.
+  A row no org index carried — a layer-3 cross-check find, or a current
+  artifact an index has yet to add — reads `off-index(<why>)` in notes and
+  belongs to no manifest at all, since there is no index to reconcile it
+  against. A co-issued artifact that BOTH issuers' indexes carry counts in
+  both manifests against the one row the table holds: each index did offer
+  that entry, so each sweep must account for it, and a silent sweep would
+  instead read as a collapse. Both reports emit the row identically and
+  the merge deduplicates it. `<method>` names the
   enumeration route: `static-list`, `pdf-index`, `per-topic-pages`,
   `paginated(<n> pages)`, `search-api(<endpoint>)`, `reader-proxy`, joined
   with `+` when a route needs more than one.
 
 Guidelines — `| org | title (year) | URL | access | status | notes |`
 
-- `org` = every American issuing org, joined with `+` for co-issued work.
+- `org` = every American issuing org, joined with ` + ` for co-issued
+  work; a foreign co-issuer is named in `notes` instead.
 - `title (year)` — year = the artifact's publication or version year; a
   guideline whose label year differs reads `title (label-year; pub
   YYYY)`.
@@ -173,7 +198,10 @@ Guidelines — `| org | title (year) | URL | access | status | notes |`
   asserted. An excluded row records a ruling and never promotes, so its
   `access` may stay `unverified` without a `provisional(...)` status.
 - `notes` carries `id=<id>` once fetched (id rules: root `README.md`
-  § Operating), foreign co-issuers, and version qualifiers.
+  § Operating), foreign co-issuers, version qualifiers,
+  `indexed-by=<org>[ + <org>...]` naming the indexes that surfaced the row
+  when they are not its issuers, and `off-index(<why>)` when none did. The
+  two provenance markers answer one question, so a row carries at most one.
 
 ## Enumeration sources
 
@@ -231,7 +259,7 @@ within a band, then version year descending and title within an org.
 
 | org | abbrev | class | CPGs | index URL | enum sources | swept |
 |---|---|---|---|---|---|---|
-| Advisory Committee on Immunization Practices | ACIP | federal | yes | https://www.cdc.gov/acip-recs/hcp/vaccine-specific/ | PubMed PMID 41505372; Immunize.org ACIP index | 2026-08-07 static-list + reader-proxy; 27 index entries -> 27 eligible + 0 excluded |
+| Advisory Committee on Immunization Practices | ACIP | federal | yes | https://www.cdc.gov/acip-recs/hcp/vaccine-specific/ | PubMed PMID 41505372; Immunize.org ACIP index | 2026-08-07 per-topic-pages; 67 index entries -> 63 eligible + 3 excluded |
 | Centers for Disease Control and Prevention | CDC | federal | yes | https://stacks.cdc.gov/cbrowse?parentId=cdc%3A100&pid=cdc%3A100 | GC-publishers; PubMed PMID 36327391; AAFP-PG | pending |
 | Defense Health Agency Joint Trauma System | DHA JTS | federal | yes | https://jts.health.mil/index.cfm/CPGs/cpgs | PubMed PMID 34529799; DOI 10.55460/zfqw-dwgr | 2026-08-07 pdf-index; 109 index entries -> 83 eligible + 20 excluded |
 | Federal Bureau of Prisons Health Services Division | BOP HSD | federal | yes | https://www.bop.gov/resources/health_care_mngmt.jsp | PubMed PMID 28089415; DOI 10.3201/eid3013.230799 | 2026-08-07 static-list; 47 index entries -> 39 eligible + 8 excluded |
@@ -239,7 +267,7 @@ within a band, then version year descending and title within an org.
 | Healthcare Infection Control Practices Advisory Committee | HICPAC | federal | yes | https://www.cdc.gov/infection-control/hcp/guidance/index.html | PubMed PMID 28467526; GovInfo GOVPUB-HE20_7000-PURL-gpo136862 | 2026-08-07 static-list + reader-proxy; 49 index entries -> 39 eligible + 8 excluded |
 | HHS HIV/AIDS guideline panels / NIH ClinicalInfo | ClinicalInfo panels | federal | yes | https://clinicalinfo.hiv.gov/en/guidelines | GC-publishers; PubMed PMID 11365496 | 2026-08-07 static-list + reader-proxy; 6 index entries -> 6 eligible + 0 excluded |
 | HHS Office of Population Affairs | OPA | federal | yes | https://opa.hhs.gov/reproductive-health/quality-family-planning | PubMed PMID 39570204; DOI 10.1016/j.amepre.2024.09.007 | pending |
-| Indian Health Service | IHS | federal | yes | https://www.ihs.gov/forproviders/clinicalresources/ | PubMed PMID 16125270; National Academies/NCBI federal-guideline chapter | 2026-08-07 per-topic-pages; 2 index entries -> 1 eligible + 0 excluded |
+| Indian Health Service | IHS | federal | yes | https://www.ihs.gov/forproviders/clinicalresources/ | PubMed PMID 16125270; National Academies/NCBI federal-guideline chapter | 2026-08-07 per-topic-pages; 1 index entries -> 1 eligible + 0 excluded |
 | National Asthma Education and Prevention Program | NAEPP | federal | yes | https://www.nhlbi.nih.gov/science/national-asthma-education-and-prevention-program-coordinating-committee-naeppcc | PMC7924476; DOI 10.1016/j.jaci.2020.10.003 | 2026-08-07 per-topic-pages; 1 index entries -> 1 eligible + 0 excluded |
 | National Institute of Allergy and Infectious Diseases expert-panel guidelines | NIAID panels | federal | yes | https://www.niaid.nih.gov/diseases-conditions/food-allergy-guidelines | PubMed PMID 28065278; DOI 10.1016/j.jaci.2016.10.010 | pending |
 | Substance Abuse and Mental Health Services Administration | SAMHSA | federal | yes | https://library.samhsa.gov/search-endpoint | NCBI Bookshelf NBK572951; DOI 10.1016/j.jsat.2012.01.008 | 2026-08-07 search-api(/search-endpoint); 74 index entries -> 40 eligible + 5 excluded |
@@ -685,31 +713,72 @@ within a band, then version year descending and title within an org.
 |---|---|---|---|---|---|
 | Advisory Committee on Immunization Practices | Prevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025) | https://www.cdc.gov/mmwr/volumes/74/wr/mm7432a2.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of Clesrovimab for Prevention of Severe Respiratory Syncytial Virus–Associated Lower Respiratory Tract Infections in Infants: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025 (2025) | https://www.cdc.gov/mmwr/volumes/74/wr/mm7432a3.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | Use of the GSK MenACWY-CRM/MenB-4C Pentavalent Meningococcal Vaccine Among Persons Aged ≥10 Years: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025 (2025; pub 2026) | https://www.cdc.gov/mmwr/volumes/75/wr/mm7501a2.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | Expanded Recommendations for Use of Pneumococcal Conjugate Vaccines Among Adults Aged ≥50 Years: Recommendations of the Advisory Committee on Immunization Practices — United States, 2024 (2024; pub 2025) | https://www.cdc.gov/mmwr/volumes/74/wr/mm7401a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of the GSK MenACWY-CRM/MenB-4C Pentavalent Meningococcal Vaccine Among Persons Aged ≥10 Years: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025 (2025; pub 2026) | https://www.cdc.gov/mmwr/volumes/75/wr/mm7501a2.htm | open | unqueued | off-index(no ACIP topic page lists it; meningococcal CURRENT omits this 2026-published 2025 recommendation) |
+| Advisory Committee on Immunization Practices | Expanded Recommendations for Use of Pneumococcal Conjugate Vaccines Among Adults Aged ≥50 Years : Recommendations of the Advisory Committee on Immunization Practices — United States, 2024 (2024; pub 2025) | https://www.cdc.gov/mmwr/volumes/74/wr/mm7401a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | New Dosing Interval and Schedule for the Bexsero MenB-4C Vaccine: Updated Recommendations of the Advisory Committee on Immunization Practices — United States, October 2024 (2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7349a3.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Updated Recommendation for Universal Hepatitis B Vaccination in Adults Aged 19–59 Years — United States, 2024 (2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7348a3.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of 21-Valent Pneumococcal Conjugate Vaccine Among U.S. Adults : Recommendations of the Advisory Committee on Immunization Practices — United States, 2024 (2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7336a3.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of Additional Doses of 2024–2025 COVID-19 Vaccine for Adults Aged ≥65 Years and Persons Aged ≥6 Months with Moderate or Severe Immunocompromise: Recommendations of the Advisory Committee on Immunization Practices — United States, 2024 (2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7349a2.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of COVID-19 Vaccines for Persons Aged ≥6 Months: Recommendations of the Advisory Committee on Immunization Practices — United States, 2024–2025 (2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7337e2.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of Haemophilus influenzae Type b–Containing Vaccines Among American Indian and Alaska Native Infants: Updated Recommendations of the Advisory Committee on Immunization Practices ― United States, 2024 (2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7336a4.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of Respiratory Syncytial Virus Vaccines in Adults Aged ≥60 Years: Updated Recommendations of the Advisory Committee on Immunization Practices — United States, 2024 (2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7332e1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | ACIP Updates: Recommendations for Use of 20-Valent Pneumococcal Conjugate Vaccine in Children ― United States, 2023 (2023) | https://www.cdc.gov/mmwr/volumes/72/wr/mm7239a5.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Pneumococcal Vaccine for Adults Aged ≥19 Years : Recommendations of the Advisory Committee on Immunization Practices, United States, 2023 (2023) | https://www.cdc.gov/mmwr/volumes/72/rr/rr7203a1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Tick-Borne Encephalitis Vaccine: Recommendations of the Advisory Committee on Immunization Practices, United States, 2023 (2023) | https://www.cdc.gov/mmwr/volumes/72/rr/rr7205a1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of Inactivated Polio Vaccine Among U.S. Adults: Updated Recommendations of the Advisory Committee on Immunization Practices — United States, 2023 (2023) | https://www.cdc.gov/mmwr/volumes/72/wr/mm7249a3.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | Use of JYNNEOS (Smallpox and Mpox Vaccine, Live, Nonreplicating) for Persons Aged ≥18 Years at Risk for Mpox During an Mpox Outbreak: Recommendations of the Advisory Committee on Immunization Practices — United States, 2023 (2023; pub 2025) | https://www.cdc.gov/mmwr/volumes/74/wr/mm7422a3.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of JYNNEOS (Smallpox and Mpox Vaccine, Live, Nonreplicating) for Persons Aged ≥18 Years at Risk for Mpox During an Mpox Outbreak: Recommendations of the Advisory Committee on Immunization Practices — United States, 2023 (2023; pub 2025) | https://www.cdc.gov/mmwr/volumes/74/wr/mm7422a3.htm | open | unqueued | off-index(no ACIP topic page lists it; smallpox-mpox CURRENT omits this 2025-published 2023 recommendation) |
+| Advisory Committee on Immunization Practices | Use of Nirsevimab for the Prevention of Respiratory Syncytial Virus Disease Among Infants and Young Children : Recommendations of the Advisory Committee on Immunization Practices — United States, 2023 (2023) | https://www.cdc.gov/mmwr/volumes/72/wr/mm7234a4.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of the Pfizer Pentavalent Meningococcal Vaccine Among Persons Aged ≥10 Years: Recommendations of the Advisory Committee on Immunization Practices ― United States, 2023 (2023; pub 2024) | https://www.cdc.gov/mmwr/volumes/73/wr/mm7315a4.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of the Pfizer Respiratory Syncytial Virus Vaccine During Pregnancy for the Prevention of Respiratory Syncytial Virus–Associated Lower Respiratory Tract Disease in Infants: Recommendations of the Advisory Committee on Immunization Practices — United States, 2023 (2023) | https://www.cdc.gov/mmwr/volumes/72/wr/mm7241e1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Cholera Vaccine: Recommendations of the Advisory Committee on Immunization Practices, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/rr/rr7102a1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Measles, Mumps, Rubella Vaccine (PRIORIX): Recommendations of the Advisory Committee on Immunization Practices — United States, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/wr/mm7146a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Universal Hepatitis B Vaccination in Adults Aged 19–59 Years: Updated Recommendations of the Advisory Committee on Immunization Practices — United States, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/wr/mm7113a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of 15-Valent Pneumococcal Conjugate Vaccine Among U.S. Children : Updated Recommendations of the Advisory Committee on Immunization Practices — United States, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/wr/mm7137a3.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of a Modified Preexposure Prophylaxis Vaccination Schedule to Prevent Human Rabies: Recommendations of the Advisory Committee on Immunization Practices — United States, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/wr/mm7118a2.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of JYNNEOS (Smallpox and Monkeypox Vaccine, Live, Nonreplicating) for Preexposure Vaccination of Persons at Risk for Occupational Exposure to Orthopoxviruses: Recommendations of the Advisory Committee on Immunization Practices — United States, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/wr/mm7122e1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of Recombinant Zoster Vaccine in Immunocompromised Adults Aged ≥19 Years: Recommendations of the Advisory Committee on Immunization Practices — United States, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/wr/mm7103a2.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Dengue Vaccine: Recommendations of the Advisory Committee on Immunization Practices, United States, 2021 (2021) | https://www.cdc.gov/mmwr/volumes/70/rr/rr7006a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of Ebola Vaccine in the United States (2021) | https://www.cdc.gov/mmwr/volumes/70/rr/rr7001a1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of Ebola Vaccine: Expansion of Recommendations of the Advisory Committee on Immunization Practices To Include Two Additional Populations — United States, 2021 (2021; pub 2022) | https://www.cdc.gov/mmwr/volumes/71/wr/mm7108a2.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Licensure of a Diphtheria and Tetanus Toxoids and Acellular Pertussis, Inactivated Poliovirus, Haemophilus influenzae Type b Conjugate, and Hepatitis B Vaccine, and Guidance for Use in Infants (2020) | https://www.cdc.gov/mmwr/volumes/69/wr/mm6905a5.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Meningococcal Vaccination: Recommendations of the Advisory Committee on Immunization Practices, United States, 2020 (2020) | https://www.cdc.gov/mmwr/volumes/69/rr/rr6909a1.htm | open | unqueued | MenB-4C dosing schedules superseded by mm7349a3 (2024); MenB-FHbp, MenACWY-TT/MenB-FHbp + booster recommendations unchanged |
 | Advisory Committee on Immunization Practices | Prevention of Hepatitis A Virus Infection in the United States: Recommendations of the Advisory Committee on Immunization Practices, 2020 (2020) | https://www.cdc.gov/mmwr/volumes/69/rr/rr6905a1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Human Papillomavirus Vaccination for Adults: Updated Recommendations of the Advisory Committee on Immunization Practices (2019) | https://www.cdc.gov/mmwr/volumes/68/wr/mm6832a3.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Japanese Encephalitis Vaccine: Recommendations of the Advisory Committee on Immunization Practices (2019) | https://www.cdc.gov/mmwr/volumes/68/rr/rr6802a1.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | Use of Anthrax Vaccine in the United States: Recommendations of the Advisory Committee on Immunization Practices, 2019 (2019) | https://www.cdc.gov/mmwr/volumes/68/rr/rr6804a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of Anthrax Vaccine in the United States (2019) | https://www.cdc.gov/mmwr/volumes/68/rr/rr6804a1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Use of Tetanus Toxoid, Reduced Diphtheria Toxoid, and Acellular Pertussis Vaccines: Updated Recommendations of the Advisory Committee on Immunization Practices — United States, 2019 (2019; pub 2020) | https://www.cdc.gov/mmwr/volumes/69/wr/mm6903a5.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | Updated Recommendations for the Use of Typhoid Vaccine — Advisory Committee on Immunization Practices, United States, 2015 (2015) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6411a4.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | Yellow Fever Vaccine Booster Doses: Recommendations of the Advisory Committee on Immunization Practices, 2015 (2015) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6423a5.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | FDA Approval of an Extended Period for Administering VariZIG for Postexposure Prophylaxis of Varicella (2012) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6112a4.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Prevention of Hepatitis B Virus Infection in the United States: Recommendations of the Advisory Committee on Immunization Practices (2018) | https://www.cdc.gov/mmwr/volumes/67/rr/rr6701a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Prevention of Pertussis, Tetanus, and Diphtheria with Vaccines in the United States: Recommendations of the Advisory Committee on Immunization Practices (ACIP) (2018) | https://www.cdc.gov/mmwr/volumes/67/rr/rr6702a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Recommendation of the Advisory Committee on Immunization Practices for Use of a Third Dose of Mumps Virus–Containing Vaccine in Persons at Increased Risk for Mumps During an Outbreak (2018) | https://www.cdc.gov/mmwr/volumes/67/wr/mm6701a7.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Recommendations of the Advisory Committee on Immunization Practices for Use of a Hepatitis B Vaccine with a Novel Adjuvant (2018) | https://www.cdc.gov/mmwr/volumes/67/wr/mm6715a5.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Recommendations of the Advisory Committee on Immunization Practices for Use of Herpes Zoster Vaccines (2018) | https://www.cdc.gov/mmwr/volumes/67/wr/mm6703a5.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Recommendations of the Advisory Committee on Immunization Practices for Use of Cholera Vaccine (2017) | https://www.cdc.gov/mmwr/volumes/66/wr/mm6618a6.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Food and Drug Administration Approval for Use of Hiberix as a 3-Dose Primary Haemophilus influenzae Type b (Hib) Vaccination Series (2016) | https://www.cdc.gov/mmwr/volumes/65/wr/mm6516a3.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of a 2-Dose Schedule for Human Papillomavirus Vaccination — Updated Recommendations of the Advisory Committee on Immunization Practices (2016) | https://www.cdc.gov/mmwr/volumes/65/wr/mm6549a5.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Updated Recommendations for the Use of Typhoid Vaccine (2015) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6411a4.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of 9-Valent Human Papillomavirus (HPV) Vaccine : Updated HPV Vaccination Recommendations of the Advisory Committee on Immunization Practices (2015) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6411a3.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of Vaccinia Virus Smallpox Vaccine in Laboratory and Health Care Personnel at Risk for Occupational Exposure to Orthopoxviruses — Recommendations of the Advisory Committee on Immunization Practices (ACIP), 2015 (2015; pub 2016) | https://www.cdc.gov/mmwr/volumes/65/wr/mm6510a2.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Yellow Fever Vaccine Booster Doses (2015) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6423a5.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Human Papillomavirus Vaccination: Recommendations of the Advisory Committee on Immunization Practices (ACIP) (2014) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr6305a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Prevention and Control of Haemophilus influenzae Type b Disease: Recommendations of the ACIP, 2014 (2014) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr6301a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Prevention of Measles, Rubella, Congenital Rubella Syndrome, and Mumps, 2013 Summary: Recommendations of the ACIP (2013) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr6204a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Updated Recommendations for Use of VariZIG — United States, 2013 (2013) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6228a4.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices | Addition of History of Intussusception as a Contraindication for Rotavirus Vaccination (2011) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6041a5.htm | open | unqueued | - |
-| Advisory Committee on Immunization Practices | Use of Combination Measles, Mumps, Rubella, and Varicella Vaccine (2010) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5903a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Immunization of Health-Care Personnel: Recommendations of the Advisory Committee on Immunization Practices (ACIP) (2011) | https://www.cdc.gov/mmwr/pdf/rr/rr6007.pdf | open | unqueued | indexed-by=Healthcare Infection Control Practices Advisory Committee |
+| Advisory Committee on Immunization Practices | Addition of Severe Combined Immunodeficiency as a Contraindication for Administration of Rotavirus Vaccine (2010) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm5922a3.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | MMRV—Use of Combination Measles, Mumps, Rubella, and Varicella Vaccine Recommendations of the ACIP (2010) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5903a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Use of a Reduced (4-Dose) Vaccine Schedule for Postexposure Prophylaxis to Prevent Human Rabies (2010) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5902a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Yellow Fever Vaccine (2010) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5907a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Prevention of Rotavirus Gastroenteritis Among Infants and Children Recommendations of the ACIP (2009) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5802a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Updated Recommendations of the ACIP Regarding Routine Poliovirus Vaccination (2009) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm5830a3.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Human Rabies Prevention—United States, 2008 (2008) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5703a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Notice to Readers: Newly Licensed Smallpox Vaccine to Replace Old Smallpox Vaccine (2008) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm5708a6.htm | open | excluded(administrative; vaccine replacement and destruction notice, no patient-care recommendation) | - |
+| Advisory Committee on Immunization Practices | Notice to Readers: Requirements for Use of a New International Certificate of Vaccination or Prophylaxis for Yellow Fever Vaccine (2008) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm5651a4.htm | open | excluded(administrative; certificate documentation requirement, no patient-care recommendation) | - |
+| Advisory Committee on Immunization Practices | Prevention of Herpes Zoster (2008) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5705a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Prevention of Varicella: Recommendations of the ACIP (2007) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5604a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Surveillance Guidelines for Smallpox Vaccine (vaccinia) Adverse Reactions (2006) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5501a1.htm | open | excluded(surveillance; case definitions and reporting criteria, not patient-care recommendation) | - |
+| Advisory Committee on Immunization Practices | Vaccinia (Smallpox) Vaccine (2001) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5010a1.htm | open | unqueued | - |
+| Advisory Committee on Immunization Practices | Poliomyelitis Prevention in the United States (2000) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr4905a1.htm | open | unqueued | - |
 | Advisory Committee on Immunization Practices + Healthcare Infection Control Practices Advisory Committee | Recommendations for Using Smallpox Vaccine in a Pre-Event Vaccination Program: Supplemental Recommendations of the Advisory Committee on Immunization Practices and the Healthcare Infection Control Practices Advisory Committee (2003) | https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5207a1.htm | open | unqueued | co-issued |
 | Centers for Disease Control and Prevention | CDC Clinical Practice Guideline for Prescribing Opioids for Pain — United States, 2022 (2022) | https://www.cdc.gov/mmwr/volumes/71/rr/rr7103a1.htm | open | in-progress | id=cdc-2022-opioid |
 | Defense Health Agency Joint Trauma System | (Acute Extremity) Compartment Syndrome (CS) and the Role of Fasciotomy in Extremity War Wounds (2026) | https://jts.health.mil/assets/docs/cpgs/Extremity_Compartment_Syndrome_and_Fasciotomy_ID17_21_May_2026.pdf | open | unqueued | - |
@@ -911,7 +980,6 @@ within a band, then version year descending and title within an org.
 | Healthcare Infection Control Practices Advisory Committee | Basic Infection Control and Prevention Plan for Outpatient Oncology Settings (2011) | https://www.cdc.gov/healthcare-associated-infections/hcp/prevention-healthcare/infection-control-outpatient-oncology.html | open | unqueued | - |
 | Healthcare Infection Control Practices Advisory Committee | Guideline for the Prevention and Control of Norovirus Gastroenteritis Outbreaks in Healthcare Settings (2011) | https://www.cdc.gov/infection-control/media/pdfs/Guideline-Norovirus-H.pdf | open | unqueued | - |
 | Healthcare Infection Control Practices Advisory Committee | Guidelines for the Prevention of Intravascular Catheter-Related Infections (2011) | https://www.cdc.gov/infection-control/media/pdfs/Guideline-BSI-H.pdf | open | unqueued | - |
-| Healthcare Infection Control Practices Advisory Committee | Immunization of Health-Care Personnel: Recommendations of the Advisory Committee on Immunization Practices (ACIP) (2011) | https://www.cdc.gov/mmwr/pdf/rr/rr6007.pdf | open | unqueued | - |
 | Healthcare Infection Control Practices Advisory Committee | Guideline for Prevention of Catheter-Associated Urinary Tract Infections (2009) | https://www.cdc.gov/infection-control/media/pdfs/Guideline-CAUTI-H.pdf | open | unqueued | - |
 | Healthcare Infection Control Practices Advisory Committee | Guideline for Disinfection and Sterilization in Healthcare Facilities (2008) | https://www.cdc.gov/infection-control/media/pdfs/Guideline-Disinfection-H.pdf | open | unqueued | - |
 | Healthcare Infection Control Practices Advisory Committee | Infection Control Requirements for Dialysis Facilities: Clarification Regarding Guidance on Parenteral Medication Vials (2008) | https://www.cdc.gov/mmwr/preview/mmwrhtml/mm5732a3.htm | open | unqueued | - |

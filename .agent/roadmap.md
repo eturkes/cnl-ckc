@@ -105,66 +105,118 @@ teammate.
     establish version years. The cervical-cancer row keeps its year,
     which the index states as a dated adoption.
   main=87% 210K/240K, mate=100% 240K/240K.
-- M1.2c OPEN — M1.2a review remediation. Adversarial review raised 8
-  findings; MAIN re-derived each against live artifacts before ruling.
-  Five are closed in the M1.2a commit range, each with its acceptance
-  check in `.scratch/gate_m1u2a.py` (26 tests) or the merge gate:
-  - F2 BOP — 5 rows reclassified `excluded(administrative; ...)`:
-    care-level classification states its purpose as classifying patients
-    for institution assignment, compassionate release supplies criteria
-    for a sentence determination, two are directories of external
-    programs, and pandemic module 4 handles the deceased. Manifest 44+3
-    → 39+8, recomputed from rows by
-    `.scratch/fix_m1u2c_eligibility.py`.
-  - F3 SAMHSA TIP 51 — row repointed from the KAP Keys derivative to the
-    parent protocol (NCBI Bookshelf NBK83252, 2009), access `open`
-    earned by its own probe.
-  - F5 access evidence — the fixer keyed idempotence on the exact
-    `provisional(...)` string, so rows an earlier version wrote against
-    another host were frozen beyond promotion; guard now matches any
-    `provisional(access unverified:`.
-  - F6 `probe_urls.py` — the per-host lock covered only the sleep, so
-    slow same-host requests overlapped while the docstring claimed one
-    at a time; the lock now spans the request and the gap runs from
-    completion. Measured: 4 concurrent before, 1 after.
-  - F7 manifest provenance — `sole <= claimed <= counting_co_issued`
-    accepted both an org counting a co-issued row its index omitted and
-    the co-issuer dropping the row its index carried. The exact check
-    lives in `.scratch/merge_rows.py`, where the reports still hold the
-    provenance the merged table loses: manifest `e/x` must equal the
-    rows that org's own report block emits. Exact only while co-issuers
-    are swept by separate reports.
-  Open, and the reason this unit stays open:
-  - F1 ACIP (HIGH, confirmed) — the 27 swept entries are family
-    subindexes, not guidelines. The live Rabies page carries a `CURRENT
-    Rabies Vaccine Recommendations` section listing the 2022 PrEP
-    update, the 2010 4-dose PEP update and the 2008 baseline, with
-    `ARCHIVED` explicitly empty; only the 2022 row exists. Reviewer
-    triage found 40 further current MMWR artifacts across 17 of the 27
-    pages (`.scratch/m1u2c/acip-current-missing.tsv`), none present in
-    the compendium. Re-sweep at artifact granularity, adjudicating each
-    of the 40 rather than assuming eligibility from a title.
-    Route ruling required first: enumerating the child pages costs 27
-    fetches, so ACIP does not meet the easy-tier `≤2 anonymous fetches`
-    test. Pick one and record it — an aggregate ≤2-fetch endpoint if one
-    exists, an explicit easy-tier exception with `swept` reading
-    `per-topic-pages`, or `blocked(...)` deferring ACIP to M2.
-  - F4 HICPAC rr6007 — MAIN rules the artifact ELIGIBLE against the
-    review: it presents vaccination recommendations per disease in two
-    graded categories, and consolidating prior ACIP output is what a
-    summary guideline does, so it is not a review without
-    recommendations. Its `does not contain any new recommendations or
-    policies` sentence describes novelty, not content. The real defect
-    is the issuer cell: the title reads `Recommendations of the Advisory
-    Committee on Immunization Practices (ACIP)` while the row names
-    HICPAC alone. Fix issuer attribution with the ACIP re-sweep, since
-    both manifests move together.
-  - F8 IHS (LOW) — manifest counts a navigation link to an external
-    clearinghouse as an index entry (`n=2`, one row emitted). Either
-    count artifact entries only, or admit navigation dispositions into
-    the header's reconciliation vocabulary and its gate.
-  Gate: each finding lands as a red test a fix turns green, or is
-  recorded as ruled-out with the probe that dismissed it.
+- M1.2c DONE — M1.2a review remediation + ACIP re-sweep + attribution
+  hardening. Compendium 395 → 435 guideline rows. Five findings closed in
+  the M1.2a commit range (BOP administrative exclusions 44+3 → 39+8; SAMHSA
+  TIP 51 repointed from its KAP Keys derivative to the parent protocol;
+  the access fixer's idempotence keyed on shape, not exact text; the
+  per-host probe lock widened to span the request — 4 concurrent before, 1
+  after; manifest `e/x` bound to the rows the org's own report emits).
+  Rulings, each landed in the compendium header as a general rule rather
+  than an ACIP special case:
+  - Bounded fan-out is easy tier — an index of topic subindexes qualifies
+    when the fan-out is enumerable from the index in one fetch, bounded
+    (≤30), and every subindex is anonymous + static. ACIP costs 1 + 27
+    fetches, cached in `.scratch/m1u2c/acip-pages/`. `blocked(...)` was
+    rejected: the fetches are paid and ACIP is a first-rank federal
+    issuer. No aggregate endpoint substitutes — `recs-by-date` stops at
+    2024, mixes current with superseded, and one row links the wrong
+    artifact, while the topic pages carry the CURRENT/ARCHIVED split the
+    versions rule needs.
+  - A manifest reconciles an INDEX; the org cell records ISSUANCE. Review,
+    liaison input and endorsement are not issuance, so rr6007 reads ACIP —
+    an ACIP work group wrote it, ACIP voted it — and carries
+    `indexed-by=HICPAC`, counting in HICPAC's manifest.
+  - `indexed-by=<org>[ + <org>...]` names the whole set of indexes that
+    carried the row, so an artifact its issuers and a third org all index
+    counts once in each manifest. Naming exactly the issuers is the
+    default and is refused as redundant.
+  - `<n>` counts artifact entries; navigation to another site's directory
+    is not an entry (IHS reads `1`), so `n − (e + x)` always means
+    collapse.
+  - `off-index(<why>)` = no index carried the row, so it belongs to no
+    manifest and no index sweep retracts it: silence from an index is not
+    evidence about a row that was never in one, and only a batch
+    re-emitting the artifact replaces it. Two ACIP rows (`mm7501a2`,
+    `mm7422a3`) sit there — real current guidelines CDC has yet to index.
+    This is the mechanism M1.4's cross-check gap rows need.
+  - One artifact in two indexes (`rr5207a1`, ACIP + HICPAC): both reports
+    emit it byte-identically, both manifests count it, the merge
+    deduplicates to one row and refuses any cell disagreement — decided
+    before lifecycle suppression, so a `queued|in-progress|done` row
+    cannot hide a disagreement until it clears. The alternative, one
+    emitting and one silent, would read as a collapse that never happened.
+  - Manifest exactness rests on the report being the row's provenance, so
+    it holds only while co-issuers are swept by separate reports. One
+    report holding every issuer must name the indexes explicitly or be
+    refused.
+  - `indexed-by=` and `off-index(` answer one question — a row carries at
+    most one, and never two `indexed-by=` markers.
+  - MMWR states a label year in the title and a publication year in the
+    volume (`year = 1951 + volume`); rows record `title (label-year; pub
+    YYYY)` when they differ, since the table sorts on version year. A
+    season range names no single label year and keeps the publication year
+    alone.
+  - Titles are the artifact's own, read off its suggested-citation line,
+    never an index's display shorthand.
+  - Two current artifacts may be scope-distinct because the later replaced
+    one component of the earlier; `notes` then carries the version
+    qualifier, quoted from the superseding artifact.
+  Harvest: ACIP re-swept at artifact granularity, 27 → 68 rows (66 index
+  artifacts + 2 off-index) = 63 eligible + 3 excluded, with 1 collapse for
+  the cross-topic duplicate `mm7336a4`. The exclusions state no
+  patient-care recommendation, each confirmed against its own text: a
+  vaccine replacement-and-destruction notice (`mm5708a6`), surveillance
+  case definitions (`rr5501a1`), a vaccination-certificate documentation
+  requirement (`mm5651a4`). All five reports merged in one batch, which the
+  co-issued row required.
+  Defects the unit found and fixed, beyond the review's list:
+  - ACIP's `mm6112a4` row (varicella VariZIG) was an ARCHIVED artifact, so
+    the M1.2a sweep took a superseded document as a topic's representative.
+  - 5 rows dropped the label year; 3 carried an index's shorthand title.
+  - The gate's own re-derivation of ACIP's index found 64 of 66 plus false
+    strays. Three parse traps cost one artifact each: `Archived
+    DTaP-IPV-Hib-HepB …` capitalizes ARCHIVED differently, a listing links
+    its own article with a tracking query, and one listing may link several
+    articles whose extras are its Print version and Appendix — parts of an
+    artifact, not artifacts.
+  - The label-year acceptance check was vacuous: it re-ran the fixer's own
+    detection regex over shipped rows with no positive control, so a
+    `(?!)` mutant of that regex left the whole gate green. It now drives
+    the fixer over synthetic positives and negatives, and that mutant kills
+    3 subtests. The fixer itself missed a month-qualified label year
+    (`— United States, December 2024 (2025)`).
+  - Merge and validator attribution: a lifecycle-protected row suppressed
+    both emissions of a shared artifact before they were compared; an
+    issuer's index sweep silently deleted `off-index` rows; a row could
+    carry contradictory provenance markers; one report sweeping every
+    issuer of a co-issued row counted it for each off no evidence.
+  Every repair is an idempotent `.scratch/fix_m1u2c_*.py` replaying to zero
+  edits (eligibility, attribution, ACIP supersede, label years, verbatim
+  titles, version qualifiers), so the wave re-derives from the reports.
+  Gates green from the merged tree: `check_compendium.py` bare and with
+  `--require-swept` over all 13 assigned orgs, and `gate_m1u2a.py` at 56
+  tests. Every accepted finding proved red against pre-change tool copies
+  in `.scratch/m1u2c/prechange/` and green after. Re-derived by MAIN over
+  the final tree: the attribution mutation campaign kills 33 of 33 mutants
+  (75.8% → 100% once the 8 survivors' kill tests were ported into the
+  gate), and merging the five reports in three different orders is
+  byte-identical and idempotent at SHA-256
+  `fdf76f4c7f3f5d57fb4dcb6846ccf7bfe92709c15899d932ba1eca73314c15ee`,
+  equal to the shipped compendium. MAIN re-verified 8 rows against live
+  artifacts through the authenticated browser — CDC returns 403 to
+  scripted fetches and to headless Chrome alike — 8 of 8 confirming title,
+  year, eligibility and access; a whole-corpus scan reconciles all 75 MMWR
+  rows to `1951 + volume`, the single exception being an issue cover-dated
+  into the next January.
+  Deferred to M1.3 with evidence: HICPAC's index carries other bodies'
+  guidelines well beyond rr6007. `rr6904a1` states it is a U.S. Public
+  Health Service Guideline naming HICPAC nowhere, and `rr6210` is CDC
+  guidance where HICPAC supplied liaisons — both shipped under HICPAC as
+  issuer. The correct issuer for the PHS artifacts has no organization
+  row, and sweeps never add org rows, so the audit belongs to the unit
+  that fixes the org universe.
+  main=94% 225K/240K, mate=98% 234K/240K.
 - M1.2b OPEN — society/other easy tier, 11 orgs ≈ 320 rows. ACOG 12 ·
   ACC ≈88 · AARC 37 · ASA ≥28 · AES 7 · ACG 62 · AASM 27 · CFF 38 ·
   APTA Orthopedics 20 · NPIAP 1 · AOCD → `CPGs=no`. The six
@@ -172,7 +224,10 @@ teammate.
   need their second owner-distinct enumeration source before `CPGs=yes`
   lands. Gate: as M1.2a.
 - M1.3 OPEN — determination pass over the remaining 314 `unverified`
-  orgs. Cheap per org (≤2 anonymous fetches): decide `CPGs=yes|no`, record
+  orgs, plus the HICPAC issuer audit M1.2c deferred here (every
+  HICPAC-indexed row re-attributed to the body that issued it, adding the
+  organization rows those issuers need — MAIN's authenticated browser is
+  the only route into CDC). Cheap per org (≤2 anonymous fetches): decide `CPGs=yes|no`, record
   `swept` date+method, and sweep inline when the org is both easy and
   small (`<15` rows); everything else takes `blocked(<why>)` and joins
   the M2 register. This is what fixes the org universe, so it precedes
