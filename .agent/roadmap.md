@@ -43,13 +43,29 @@ the gates and asks the user immediately while other waves continue.
   holds ≥1 seed, and all structural/ordering/vocabulary predicates pass
   (`.scratch/check_compendium.py`; M1.4 ports them into `goal.py check`).
   main=83% 198K/240K, mate=86% 207K/240K.
-- M1.2 OPEN — per-org index harvest. `res` waves sweep each org's
-  guideline index → one compendium row per eligible guideline, URL
-  verified live, access class recorded; the BrowserOS holder clears the
-  paywalled/login verification worklist. The sweep also resolves the 13
-  `provisional(…)` seed rows and the 323 `unverified` organization rows
-  M1.1 left standing. Gate: every M1.1 org swept or `blocked(<why>)`;
-  zero `provisional(…)` rows remain; MAIN re-verifies a sample per wave.
+- M1.2 BLOCKED(oversized as scoped; split ruling pending) — per-org index
+  harvest. `res` waves sweep each org's guideline index → one compendium
+  row per eligible guideline, URL verified live, access class recorded;
+  the BrowserOS holder clears the paywalled/login verification worklist.
+  The sweep also resolves the 11 `provisional(…)` seed rows and the 323
+  `unverified` organization rows M1.1 left standing. Gate: every M1.1 org
+  swept or `blocked(<why>)`; zero `provisional(…)` rows remain; MAIN
+  re-verifies a sample per wave — machine-checked by
+  `.scratch/check_compendium.py --terminal`, whose meter now reads
+  `unswept=420 unverified=323 provisional=11`.
+  Block evidence — 46-org measured sample, `.scratch/agents/scout-m1u2.md`:
+  sweep population = 420 orgs (97 `CPGs=yes` + 323 `unverified`); the 97
+  known issuers alone carry ≈4,400 eligible guideline rows (sensitivity
+  4,000–4,800, unresolved floors biasing upward). Teammate load = 4
+  ordinary orgs per ~180K window, `>80`-row orgs solo → ~105 teammate
+  assignments; 5 research teammates/wave fits the 200-call WebSearch
+  budget → ≈24 waves. M1.2 as written therefore spans ~20 sessions, not
+  one unit. Heavy tail: ACR 279, ASCO ≥139, DHA JTS 106, IDSA ≈105, NCCN
+  ≥91, USPSTF 90, ACC ≈88, AAN 65; VA PBM ≈582 prospective. Ready-to-apply
+  sweep findings: `index URL` is stale for ACIP, ADA-Dental (404) and AAFP
+  (methodology page, not an artifact index); 7 indexes sit behind
+  Cloudflare/Akamai and 6 more behind scripted-UA 403; AORN + NCCN need
+  the login holder. Unblock = ruling on the unit split.
 - M1.3 OPEN — completeness cross-check. Aggregator sweeps diffed against
   the org-derived list; gaps feed back as rows; MAIN dedupes to one row
   per guideline (latest current version) and rules eligibility edge
