@@ -57,19 +57,53 @@ the gates and asks the user immediately while other waves continue.
   main=83% 198K/240K, mate=86% 207K/240K.
 
 Harvest units run one shape: `prod` teammates sweep their assigned
-indexes behind `.scratch/check_compendium.py`, MAIN splices with the
-`.scratch/apply_fixes.py` sort, re-verifies a sample per wave, and
-records each swept org as `<date> <method>` or `blocked(<why>)`. Cap =
-~200 emitted rows or 4 ordinary orgs per teammate.
+indexes behind `.scratch/check_compendium.py`, MAIN merges with
+`.scratch/merge_rows.py` (the only row inserter; reports are the source
+of truth, so every repair edits a report and re-merges), re-verifies a
+sample per wave against live artifacts, and records each swept org as
+`<date> <method>; <n> index entries -> <e> eligible + <x> excluded` or
+`blocked(<why>)`. Cap = ~200 emitted rows or 4 ordinary orgs per
+teammate.
 
-- M1.2a OPEN — federal easy tier, 13 orgs ≈ 399 rows. ACIP 27 · DHA JTS
-  106 · BOP 44 · HRSA 14 · HICPAC 39 · ClinicalInfo 6 · USPSTF 90 (one
-  `data.uspreventiveservicestaskforce.org/api/json` fetch) · SAMHSA ≈32 ·
-  VA/DoD 38 · IHS 1 · NAEPP 1 · PHS tobacco 1 · NIOSH → `CPGs=no`
-  (2,058-publication index carries no patient-care CPG). Also repairs the
-  stale ACIP `index URL`. Gate: all 13 orgs carry a `swept` date+method,
-  every emitted row passes the validator, MAIN re-verifies ≥10 rows
-  against their live artifacts.
+- M1.2a DONE — federal easy tier, 13 orgs, 318 rows; compendium 88 → 395
+  guideline rows. Swept with dated manifests: DHA JTS 103 · BOP 47 ·
+  HICPAC 47 · SAMHSA 45 · ACIP 27 · VA/DoD 26 · HRSA 14 · ClinicalInfo 6
+  · IHS 1 · NAEPP 1 · PHS tobacco 1. Stale ACIP `index URL` repaired.
+  Gates green: `check_compendium.py --require-swept` over all 13 assigned
+  orgs, and the 25-test `gate_m1u2a.py`. MAIN re-verified 12 rows across
+  6 orgs against live artifacts (10 clean on title+year+access; 2 thin
+  reads verify nothing and are reported as such).
+  Scope corrections against the plan, each evidence-backed:
+  - USPSTF 90 → `blocked(...)`. Anonymous enumeration is exhausted: the
+    JSON API is key-gated behind a 202, the Drupal view carries no
+    `views` key in `drupal-settings-json`, there is no sitemap, and the
+    reader proxy returns the shell only. Seed rows preserved.
+  - NIOSH → `blocked(...)`, NOT `CPGs=no`: the digital radiography
+    guideline (DHHS Pub 2011-198) does qualify, so the org stays
+    `unverified` and joins M1.3 rather than being ruled out.
+  - VA/DoD 38 → 26: the live index carries 27 topics, one of them a
+    superseded 2012 external edition that collapses per the versions rule.
+  - SAMHSA ≈32 → 45, from 74 index entries: the TIP facet folds 48
+    numbered products into 26 concepts, the Advisory facet adds 14.
+  - JTS 106 → 103 rows, of which 20 are
+    `excluded(veterinary; not human patient care)` — the index carries
+    military-working-dog CPGs, and patient means human patient.
+  Rows left deliberately unresolved, both non-promoting by construction:
+  - 36 SAMHSA rows `unverified` + `provisional(...)`. `library.samhsa.gov`
+    meters anonymous requests per-IP and answers past the budget with 202
+    + zero bytes, its own site root included. 9 artifacts earned an
+    individual `open` verdict; the rest were never reached, and access is
+    classified from the artifact, so they cannot read `open`.
+    `.scratch/fix_m1u2a_samhsa_access.py` is convergent — rerun it after
+    `.scratch/probe_until_settled.py` collects more evidence and exactly
+    the newly proven rows promote.
+  - 13 HRSA/WPSI rows `provisional(year unresolved: ...)`. No version
+    year appears on a WPSI recommendation page under either a reader
+    proxy or a real browser, beside a service in the HRSA index, or on
+    the WPSI recommendations table; the sweep had reported those pages
+    establish version years. The cervical-cancer row keeps its year,
+    which the index states as a dated adoption.
+  main=87% 210K/240K, mate=100% 240K/240K.
 - M1.2b OPEN — society/other easy tier, 11 orgs ≈ 320 rows. ACOG 12 ·
   ACC ≈88 · AARC 37 · ASA ≥28 · AES 7 · ACG 62 · AASM 27 · CFF 38 ·
   APTA Orthopedics 20 · NPIAP 1 · AOCD → `CPGs=no`. The six
