@@ -85,9 +85,10 @@ teammate.
     superseded 2012 external edition that collapses per the versions rule.
   - SAMHSA ≈32 → 45, from 74 index entries: the TIP facet folds 48
     numbered products into 26 concepts, the Advisory facet adds 14.
-  - JTS 106 → 103 rows, of which 20 are
+  - JTS 106 → 103 rows, of which 20 are excluded: 15
     `excluded(veterinary; not human patient care)` — the index carries
-    military-working-dog CPGs, and patient means human patient.
+    military-working-dog CPGs, and patient means human patient — plus 3
+    parentless iCOVER derivatives and 2 process/author documents.
   Rows left deliberately unresolved, both non-promoting by construction:
   - 36 SAMHSA rows `unverified` + `provisional(...)`. `library.samhsa.gov`
     meters anonymous requests per-IP and answers past the budget with 202
@@ -104,23 +105,66 @@ teammate.
     establish version years. The cervical-cancer row keeps its year,
     which the index states as a dated adoption.
   main=87% 210K/240K, mate=100% 240K/240K.
-- M1.2c OPEN — M1.2a review remediation. Adversarial review of the
-  M1.2a harvest reported these; MAIN has NOT re-derived them, so each is
-  a review target to probe before acting, not an accepted defect:
-  - ACIP (HIGH, and the reason this unit exists): the 27 swept entries
-    are family subindexes, not one-guideline entries. The live Rabies
-    page reportedly labels the 2022 PrEP update, the 2010 PEP update and
-    the 2008 baseline all CURRENT while only the 2022 row exists, and a
-    reviewer pass reports 40 further current MMWR artifacts across the 27
-    pages. If it holds, ACIP needs a re-sweep at artifact rather than
-    family granularity, and the `27 index entries` manifest is wrong.
-  - SAMHSA TIP 51 retained as a KAP Keys derivative though the full
-    parent is reachable via NCBI/GovInfo — the derivative-collapse rule
-    says the parent is the row.
-  - BOP retains administrative/resource artifacts as eligible; HICPAC
-    retains at least one explicit no-new-recommendations summary.
-  Gate: each finding either lands as a red test that a fix turns green,
-  or is recorded as ruled-out with the probe that dismissed it.
+- M1.2c OPEN — M1.2a review remediation. Adversarial review raised 8
+  findings; MAIN re-derived each against live artifacts before ruling.
+  Five are closed in the M1.2a commit range, each with its acceptance
+  check in `.scratch/gate_m1u2a.py` (26 tests) or the merge gate:
+  - F2 BOP — 5 rows reclassified `excluded(administrative; ...)`:
+    care-level classification states its purpose as classifying patients
+    for institution assignment, compassionate release supplies criteria
+    for a sentence determination, two are directories of external
+    programs, and pandemic module 4 handles the deceased. Manifest 44+3
+    → 39+8, recomputed from rows by
+    `.scratch/fix_m1u2c_eligibility.py`.
+  - F3 SAMHSA TIP 51 — row repointed from the KAP Keys derivative to the
+    parent protocol (NCBI Bookshelf NBK83252, 2009), access `open`
+    earned by its own probe.
+  - F5 access evidence — the fixer keyed idempotence on the exact
+    `provisional(...)` string, so rows an earlier version wrote against
+    another host were frozen beyond promotion; guard now matches any
+    `provisional(access unverified:`.
+  - F6 `probe_urls.py` — the per-host lock covered only the sleep, so
+    slow same-host requests overlapped while the docstring claimed one
+    at a time; the lock now spans the request and the gap runs from
+    completion. Measured: 4 concurrent before, 1 after.
+  - F7 manifest provenance — `sole <= claimed <= counting_co_issued`
+    accepted both an org counting a co-issued row its index omitted and
+    the co-issuer dropping the row its index carried. The exact check
+    lives in `.scratch/merge_rows.py`, where the reports still hold the
+    provenance the merged table loses: manifest `e/x` must equal the
+    rows that org's own report block emits. Exact only while co-issuers
+    are swept by separate reports.
+  Open, and the reason this unit stays open:
+  - F1 ACIP (HIGH, confirmed) — the 27 swept entries are family
+    subindexes, not guidelines. The live Rabies page carries a `CURRENT
+    Rabies Vaccine Recommendations` section listing the 2022 PrEP
+    update, the 2010 4-dose PEP update and the 2008 baseline, with
+    `ARCHIVED` explicitly empty; only the 2022 row exists. Reviewer
+    triage found 40 further current MMWR artifacts across 17 of the 27
+    pages (`.scratch/m1u2c/acip-current-missing.tsv`), none present in
+    the compendium. Re-sweep at artifact granularity, adjudicating each
+    of the 40 rather than assuming eligibility from a title.
+    Route ruling required first: enumerating the child pages costs 27
+    fetches, so ACIP does not meet the easy-tier `≤2 anonymous fetches`
+    test. Pick one and record it — an aggregate ≤2-fetch endpoint if one
+    exists, an explicit easy-tier exception with `swept` reading
+    `per-topic-pages`, or `blocked(...)` deferring ACIP to M2.
+  - F4 HICPAC rr6007 — MAIN rules the artifact ELIGIBLE against the
+    review: it presents vaccination recommendations per disease in two
+    graded categories, and consolidating prior ACIP output is what a
+    summary guideline does, so it is not a review without
+    recommendations. Its `does not contain any new recommendations or
+    policies` sentence describes novelty, not content. The real defect
+    is the issuer cell: the title reads `Recommendations of the Advisory
+    Committee on Immunization Practices (ACIP)` while the row names
+    HICPAC alone. Fix issuer attribution with the ACIP re-sweep, since
+    both manifests move together.
+  - F8 IHS (LOW) — manifest counts a navigation link to an external
+    clearinghouse as an index entry (`n=2`, one row emitted). Either
+    count artifact entries only, or admit navigation dispositions into
+    the header's reconciliation vocabulary and its gate.
+  Gate: each finding lands as a red test a fix turns green, or is
+  recorded as ruled-out with the probe that dismissed it.
 - M1.2b OPEN — society/other easy tier, 11 orgs ≈ 320 rows. ACOG 12 ·
   ACC ≈88 · AARC 37 · ASA ≥28 · AES 7 · ACG 62 · AASM 27 · CFF 38 ·
   APTA Orthopedics 20 · NPIAP 1 · AOCD → `CPGs=no`. The six
