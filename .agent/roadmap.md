@@ -104,6 +104,23 @@ teammate.
     establish version years. The cervical-cancer row keeps its year,
     which the index states as a dated adoption.
   main=87% 210K/240K, mate=100% 240K/240K.
+- M1.2c OPEN — M1.2a review remediation. Adversarial review of the
+  M1.2a harvest reported these; MAIN has NOT re-derived them, so each is
+  a review target to probe before acting, not an accepted defect:
+  - ACIP (HIGH, and the reason this unit exists): the 27 swept entries
+    are family subindexes, not one-guideline entries. The live Rabies
+    page reportedly labels the 2022 PrEP update, the 2010 PEP update and
+    the 2008 baseline all CURRENT while only the 2022 row exists, and a
+    reviewer pass reports 40 further current MMWR artifacts across the 27
+    pages. If it holds, ACIP needs a re-sweep at artifact rather than
+    family granularity, and the `27 index entries` manifest is wrong.
+  - SAMHSA TIP 51 retained as a KAP Keys derivative though the full
+    parent is reachable via NCBI/GovInfo — the derivative-collapse rule
+    says the parent is the row.
+  - BOP retains administrative/resource artifacts as eligible; HICPAC
+    retains at least one explicit no-new-recommendations summary.
+  Gate: each finding either lands as a red test that a fix turns green,
+  or is recorded as ruled-out with the probe that dismissed it.
 - M1.2b OPEN — society/other easy tier, 11 orgs ≈ 320 rows. ACOG 12 ·
   ACC ≈88 · AARC 37 · ASA ≥28 · AES 7 · ACG 62 · AASM 27 · CFF 38 ·
   APTA Orthopedics 20 · NPIAP 1 · AOCD → `CPGs=no`. The six
