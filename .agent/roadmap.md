@@ -201,9 +201,14 @@ teammate.
   the final tree: the attribution mutation campaign kills 33 of 33 mutants
   (75.8% → 100% once the 8 survivors' kill tests were ported into the
   gate), and merging the five reports in three different orders is
-  byte-identical and idempotent at SHA-256
-  `fdf76f4c7f3f5d57fb4dcb6846ccf7bfe92709c15899d932ba1eca73314c15ee`,
-  equal to the shipped compendium. MAIN re-verified 8 rows against live
+  byte-identical and idempotent. M1.2b re-derived that claim and corrected
+  it: re-merging the five reports over the shipped compendium replays it
+  byte-identically (`git diff` empty, SHA-256 `8e30028b5d4158d8…`), and
+  replaying them over the pre-merge baseline `d250658` reproduces every
+  row while differing in the header prose that same commit authored —
+  the merge rewrites the two TABLES only. The SHA-256 recorded here
+  originally (`fdf76f4c…`) belongs to no shipped state.
+  MAIN re-verified 8 rows against live
   artifacts through the authenticated browser — CDC returns 403 to
   scripted fetches and to headless Chrome alike — 8 of 8 confirming title,
   year, eligibility and access; a whole-corpus scan reconciles all 75 MMWR
@@ -217,12 +222,56 @@ teammate.
   row, and sweeps never add org rows, so the audit belongs to the unit
   that fixes the org universe.
   main=94% 225K/240K, mate=98% 234K/240K.
-- M1.2b OPEN — society/other easy tier, 11 orgs ≈ 320 rows. ACOG 12 ·
-  ACC ≈88 · AARC 37 · ASA ≥28 · AES 7 · ACG 62 · AASM 27 · CFF 38 ·
-  APTA Orthopedics 20 · NPIAP 1 · AOCD → `CPGs=no`. The six
-  `unverified` orgs here (ACG, AASM, CFF, APTA Orthopedics, NPIAP, AOCD)
-  need their second owner-distinct enumeration source before `CPGs=yes`
-  lands. Gate: as M1.2a.
+- M1.2b OPEN, PREPARED — society/other easy tier, now 10 orgs ≈ 530
+  emitted rows (eligible + excluded), re-sized from wave-1 measurement
+  against the planned 11 orgs ≈ 320. Contract = `.scratch/contracts/m1u2b.md`
+  (R1 index identity · R2 out-of-universe issuance · R3 another rostered
+  issuer's artifact · R4 co-issued rows · R5 versions · R6 eligibility by
+  content with the class-adjudication economy · R7 titles · R8 year ·
+  R9 access earned · R10 notes · R11 seeds and off-index · R12 host
+  discipline; predicates P1-P9 with `merge_rows.py --dry-run` as the
+  producer's own gate). Resume = read that contract, harvest the wave-1
+  reports (`.scratch/agents/map-m1u2b-1.md`, `map-m1u2b-2.md`,
+  `res-m1u2b-1.md`), fill the contract's per-org index-identity table,
+  dispatch ~5 `prod` teammates, merge in ONE batch, gate, verify a live
+  sample, close. The harvest needs a full fresh window: preparation alone
+  spent one.
+  Scope rulings already made, each evidence-backed:
+  - ACOG → `blocked(...)` → M2, under contract R1. Its recorded index is
+    the `Clinical Practice Guideline` content-type facet: 61 of ~2,500
+    clinical records its own Coveo endpoint reports anonymously
+    (`.scratch/m1u2b/indexes/acog-facets.json` — Committee Opinion 1332,
+    Practice Bulletin 471, Practice Advisory 167, Clinical Updates 167,
+    Committee Statement 115, Position Statement 78, CPG 61, Obstetric Care
+    Consensus 53, Clinical Consensus 49, Task Force Report 25, Technology
+    Assessment 14). Enumeration is one API call; per-artifact version and
+    access adjudication is not, so sweeping the narrow facet would record
+    ACOG swept while hundreds of eligible artifacts held neither a row nor
+    a deferral.
+  - APTA Orthopedics holds its own organization row (one of 18 APTA
+    academy rows), so the `orthopt.org` sweep emits under it, not under
+    the parent APTA row — `APTA sections/academies` is parent-controlled
+    and never counts toward its ≥2 independent sources.
+  - NPIAP ≈1 was undercounted: it co-leads the fourth-edition
+    International Guideline (co-equal with EPUAP + PPPIA, NPIAP chairing
+    the governance group) and issues US-only current artifacts beside it.
+  - The five `unverified` orgs here (ACG, AASM, CFF, APTA Orthopedics,
+    NPIAP) resolve to `CPGs=yes`; ACG and AASM already carry ≥2
+    owner-distinct sources, CFF and NPIAP and APTA Orthopedics take the
+    additions `res-m1u2b-1` supplies. AOCD → `CPGs=no`.
+  Tooling shipped by this preparation: `merge_rows.py` lets an issuer's
+  sweep replace a co-issued row its own index carried, printing the diff
+  for a MAIN ruling. Tiering splits co-issuers across milestones — ACC
+  sweeps here while AHA, ADA and ASN wait for M2 — so the previous rule
+  ("sweep every issuer together to replace it") made a co-issued row
+  unmaintainable and would have refused ACC's own sweep of its seed row.
+  Replacement authority is ownership: being one of the row's issuers, or
+  the index that carried it; a third org reaching the same artifact is
+  still refused, and a `queued|in-progress|done` row is still suppressed
+  rather than replaced. `gate_m1u2a.py` 56 → 59 tests, all three proved
+  red first.
+  Gate: as M1.2a, plus every assigned org carrying a dated manifest or
+  `blocked(<why>)` under `--require-swept`.
 - M1.3 OPEN — determination pass over the remaining 314 `unverified`
   orgs, plus the HICPAC issuer audit M1.2c deferred here (every
   HICPAC-indexed row re-attributed to the body that issued it, adding the
@@ -263,6 +312,11 @@ rows — the real per-document cost of `/goal` is what should size it.
 Deferred classes, from the 46-org measurement
 (`.scratch/agents/scout-m1u2.md`):
 
+- Corpora whose breadth outruns the easy tier — enumeration is one
+  anonymous call but per-artifact version and access adjudication is not,
+  so the org defers whole rather than being swept against a narrow facet
+  (M1.2b ruling R1): ACOG (~2,500 clinical records across 11 guidance
+  types, of which the compendium's recorded index sees 61).
 - Browser-gated indexes — the authenticated browser is the only route:
   AAP, NKF, HRS, ASCO, ACCP (Cloudflare), CFF index (Akamai), OPA
   (Cloudflare), NIAID (JS CAPTCHA), CPIC (JS-only shell).
