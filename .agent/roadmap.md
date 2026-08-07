@@ -6,7 +6,7 @@ guideline coverage runs as built-in `/goal` rounds — procedure: root
 `README.md` § Operating; queue: `.agent/queue.md`. This file plans further
 project development; new tasks are planned in a new session on demand.
 
-## M1 — American clinical guideline source compendium — IN-PROGRESS
+## M1 — American clinical guideline source compendium (easy tier) — IN-PROGRESS
 
 Goal: `.agent/compendium.md` = the complete master list of eligible
 American clinical guidelines available online — one row per guideline:
@@ -20,6 +20,18 @@ condition — done = compendium exhaustion (every row
 `done|blocked|excluded`) — replacing the open-ended web-search clause.
 Planned directly with full session context at user direction; planning
 waves intentionally skipped.
+
+Tiering (user ruling, measured by `.scratch/agents/scout-m1u2.md`): the
+420-org sweep population carries ≈4,400 guideline rows for the 97 known
+issuers alone and runs ≈24 teammate waves, so M1 harvests the EASY TIER
+and defers the rest to M2 rather than stalling. An org is easy when its
+index enumerates in ≤2 anonymous fetches — `static-list`, `search-api`,
+`pdf-index`, or a scripted-UA 403 that the `r.jina.ai` reader clears —
+and its artifacts classify without an authenticated session. Everything
+else is deferred by recording the org's `swept` cell as
+`blocked(<why>)`, which the compendium's terminal condition already
+accepts, so M1 closes honestly with the deferral set enumerated rather
+than hidden. Deferred classes, each with named orgs, live in M2.
 
 Method (all units): research fan-out per `.agent/rounds.md` `res` role +
 the session-prompt brief spec. WebSearch budget = 200/session shared →
@@ -41,44 +53,94 @@ the gates and asks the user immediately while other waves continue.
   and 88 seed guideline rows. Gate green: every `CPGs=yes` row carries ≥2
   independent enumeration sources under the owner rule, every such org
   holds ≥1 seed, and all structural/ordering/vocabulary predicates pass
-  (`.scratch/check_compendium.py`; M1.4 ports them into `goal.py check`).
+  (`.scratch/check_compendium.py`; M1.5 ports them into `goal.py check`).
   main=83% 198K/240K, mate=86% 207K/240K.
-- M1.2 BLOCKED(oversized as scoped; split ruling pending) — per-org index
-  harvest. `res` waves sweep each org's guideline index → one compendium
-  row per eligible guideline, URL verified live, access class recorded;
-  the BrowserOS holder clears the paywalled/login verification worklist.
-  The sweep also resolves the 11 `provisional(…)` seed rows and the 323
-  `unverified` organization rows M1.1 left standing. Gate: every M1.1 org
-  swept or `blocked(<why>)`; zero `provisional(…)` rows remain; MAIN
-  re-verifies a sample per wave — machine-checked by
-  `.scratch/check_compendium.py --terminal`, whose meter now reads
-  `unswept=420 unverified=323 provisional=11`.
-  Block evidence — 46-org measured sample, `.scratch/agents/scout-m1u2.md`:
-  sweep population = 420 orgs (97 `CPGs=yes` + 323 `unverified`); the 97
-  known issuers alone carry ≈4,400 eligible guideline rows (sensitivity
-  4,000–4,800, unresolved floors biasing upward). Teammate load = 4
-  ordinary orgs per ~180K window, `>80`-row orgs solo → ~105 teammate
-  assignments; 5 research teammates/wave fits the 200-call WebSearch
-  budget → ≈24 waves. M1.2 as written therefore spans ~20 sessions, not
-  one unit. Heavy tail: ACR 279, ASCO ≥139, DHA JTS 106, IDSA ≈105, NCCN
-  ≥91, USPSTF 90, ACC ≈88, AAN 65; VA PBM ≈582 prospective. Ready-to-apply
-  sweep findings: `index URL` is stale for ACIP, ADA-Dental (404) and AAFP
-  (methodology page, not an artifact index); 7 indexes sit behind
-  Cloudflare/Akamai and 6 more behind scripted-UA 403; AORN + NCCN need
-  the login holder. Unblock = ruling on the unit split.
-- M1.3 OPEN — completeness cross-check. Aggregator sweeps diffed against
-  the org-derived list; gaps feed back as rows; MAIN dedupes to one row
-  per guideline (latest current version) and rules eligibility edge
-  cases. Gate: cross-check documented in the compendium header with the
-  gap list driven to zero; dedupe pass recorded.
-- M1.4 OPEN — integration. Root `README.md` § Operating + the canonical
+
+Harvest units run one shape: `prod` teammates sweep their assigned
+indexes behind `.scratch/check_compendium.py`, MAIN splices with the
+`.scratch/apply_fixes.py` sort, re-verifies a sample per wave, and
+records each swept org as `<date> <method>` or `blocked(<why>)`. Cap =
+~200 emitted rows or 4 ordinary orgs per teammate.
+
+- M1.2a OPEN — federal easy tier, 13 orgs ≈ 399 rows. ACIP 27 · DHA JTS
+  106 · BOP 44 · HRSA 14 · HICPAC 39 · ClinicalInfo 6 · USPSTF 90 (one
+  `data.uspreventiveservicestaskforce.org/api/json` fetch) · SAMHSA ≈32 ·
+  VA/DoD 38 · IHS 1 · NAEPP 1 · PHS tobacco 1 · NIOSH → `CPGs=no`
+  (2,058-publication index carries no patient-care CPG). Also repairs the
+  stale ACIP `index URL`. Gate: all 13 orgs carry a `swept` date+method,
+  every emitted row passes the validator, MAIN re-verifies ≥10 rows
+  against their live artifacts.
+- M1.2b OPEN — society/other easy tier, 11 orgs ≈ 320 rows. ACOG 12 ·
+  ACC ≈88 · AARC 37 · ASA ≥28 · AES 7 · ACG 62 · AASM 27 · CFF 38 ·
+  APTA Orthopedics 20 · NPIAP 1 · AOCD → `CPGs=no`. The six
+  `unverified` orgs here (ACG, AASM, CFF, APTA Orthopedics, NPIAP, AOCD)
+  need their second owner-distinct enumeration source before `CPGs=yes`
+  lands. Gate: as M1.2a.
+- M1.3 OPEN — determination pass over the remaining 314 `unverified`
+  orgs. Cheap per org (≤2 anonymous fetches): decide `CPGs=yes|no`, record
+  `swept` date+method, and sweep inline when the org is both easy and
+  small (`<15` rows); everything else takes `blocked(<why>)` and joins
+  the M2 register. This is what fixes the org universe, so it precedes
+  the cross-check. Gate: zero `unverified` org rows remain; every row
+  swept or blocked with a named reason.
+- M1.4 OPEN — completeness cross-check, scoped to the easy tier.
+  Aggregator sweeps diffed against the org-derived list; gaps feed back as
+  rows; MAIN dedupes to one row per guideline (latest current version) and
+  rules eligibility edge cases. A gap landing on a deferred org joins the
+  M2 register instead of the gap list. Gate: cross-check documented in the
+  compendium header with the easy-tier gap list driven to zero; dedupe
+  pass recorded.
+- M1.5 OPEN — integration. Root `README.md` § Operating + the canonical
   `/goal` argument rewritten → terminal condition = compendium
   exhaustion; `.agent/queue.md` feeds from the compendium (promotion
-  rule); cdc-2022-opioid linked to its compendium row; the M1.1 gate
-  predicates ported from `.scratch/check_compendium.py` into E-- →
+  rule); cdc-2022-opioid linked to its compendium row; the M1.1 + M1.2
+  gate predicates ported from `.scratch/check_compendium.py` into E-- →
   `tools/goal.py check`; `memory.md` delta. Gate: `tools/goal.py check`
   green incl. compendium predicates; `regen.py --check` green; docs
   mutually consistent; scoped commits.
 
 Unit/milestone close per session-prompt WORK-UNIT/MILESTONE-REVIEW
 protocol (gauges recorded, commits `compendium (M1.<u>): …`).
+
+## M2 — deferred hard-tier harvest — UNPLANNED
+
+The register of what M1 consciously skips. Every entry here is an org
+whose `swept` cell reads `blocked(<why>)`, so the compendium stays
+terminal-consistent while naming its own gaps. Plan this milestone only
+after M1 is REVIEWED and `/goal` has consumed a useful run of easy-tier
+rows — the real per-document cost of `/goal` is what should size it.
+
+Deferred classes, from the 46-org measurement
+(`.scratch/agents/scout-m1u2.md`):
+
+- Browser-gated indexes — the authenticated browser is the only route:
+  AAP, NKF, HRS, ASCO, ACCP (Cloudflare), CFF index (Akamai), OPA
+  (Cloudflare), NIAID (JS CAPTCHA), CPIC (JS-only shell).
+- Login corpora — one gate covers a whole corpus, so each is a single
+  holder pass: NCCN (free account, ≥91 rows), AORN (eGuidelines
+  subscription, 36 rows).
+- Heavy tail — enumeration is cheap but per-artifact resolution is not,
+  so each wants a solo teammate split by topic or pagination: ACR 279,
+  VA PBM ≈582, ASCO ≥139, IDSA ≈105 (109 fetches), AAN 65 (7 AJAX
+  pages), ACR-scale others surfacing during M1.3.
+- Version-ambiguous collections — the index mixes current with
+  superseded, so a version ruling must precede row emission: CDC Stacks
+  (786 records over 40 pages).
+- Missing or stale enumeration surfaces — a replacement index must be
+  found first: AAFP (methodology overview, no artifact index),
+  ADA-Dental (404), AUA + ATS + BTF (indexes expose only part of the
+  corpus), Endocrine Society (count needs the listing API).
+- Access classification deferred wholesale — M1 records `access` from
+  the artifact only where an anonymous fetch settles it; the remaining
+  rows keep `unverified` + `provisional(…)` and never promote, which is
+  the intended M2 worklist rather than a defect.
+- Storage format — at ≈4,400 rows the guideline table outgrows a
+  markdown file every agent reads whole. Moving guideline rows to
+  `.agent/compendium.tsv` (rules + org table staying in the `.md`,
+  matching the `coverage.tsv` precedent) is cheap now and expensive
+  later; M1 stays on markdown per the easy-first ruling.
+- Row granularity — the M1.1 header rules appropriate-use criteria and
+  committee opinions each into their own row, which is what puts ACR at
+  279 and drives the ≈4,400 total. A coarser rule (one row per guideline
+  series) would cut the compendium to ≈500 rows; revisiting it is a
+  header-level decision, not a harvest decision.

@@ -12,6 +12,14 @@ the guideline rows, and an aggregator cross-check closes the gap list.
 Until every organization row reaches a terminal sweep state, the
 guideline list is a seed roster, not the complete list.
 
+Coverage is also tiered. M1 harvests organizations whose index enumerates
+in ≤2 anonymous fetches and whose artifacts classify without an
+authenticated session; the rest carry `swept = blocked(<why>)` and are
+enumerated for a later harvest in roadmap M2. So a compendium satisfying
+the terminal condition below is exhaustive over its swept organizations
+and explicit about the organizations it defers — not a claim that every
+American clinical guideline holds a row.
+
 Terminal condition — compendium exhaustion, the standing goal's finite
 stop check, reached when both hold:
 
@@ -20,7 +28,7 @@ stop check, reached when both hold:
 - every guideline row is `done`, `blocked(<why>)`, or `excluded(<why>)`.
 
 Root `README.md` § Operating adopts this as the goal's terminal clause at
-roadmap M1.4; until that commit lands, the README's own completion clause
+roadmap M1.5; until that commit lands, the README's own completion clause
 governs the running goal.
 
 ## Eligibility
