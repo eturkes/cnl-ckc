@@ -467,12 +467,13 @@ figure.
   `library.samhsa.gov` and now cite NCBI Bookshelf NBK571020 + NBK539583,
   the host the compendium already uses for TIP 39 and TIP 51. TIP 61's
   year moved 2019 → 2018, the 2019 having come from the withdrawn PDF's
-  filename rather than from the artifact's own citation. One genuine
-  human gate survives: `Protracted Withdrawal` (sma10-4554) stays
-  `provisional(access unverified: ...)` because `library.samhsa.gov` PDF
-  paths answer 202/0 bytes anonymously and the WAF escalates to an image
-  CAPTCHA whose tiles do not take scripted clicks. A VA mirror serves the
-  artifact (200, 625,819 B) but is not the issuer's host.
+  filename rather than from the artifact's own citation. The fourth row,
+  `Protracted Withdrawal` (sma10-4554), needed the WAF's image CAPTCHA
+  cleared by the user; `.scratch/fix_samhsa_protracted.py` then promoted it
+  to `open`/`unqueued` and replays from a clean base to byte-identical
+  output. Read in the cleared session the issuer's own path serves the
+  artifact (200, `application/pdf`, 625,819 B, `%PDF-1.6`), matching the VA
+  mirror's byte count. SAMHSA now holds zero `provisional(...)` rows.
 - M1.4 OPEN — completeness cross-check, scoped to the 23 orgs M1 actually
   swept (21 dated manifests + USPSTF and NIOSH `blocked`). Aggregator
   sweeps diffed against the org-derived list; gaps feed back as rows;
