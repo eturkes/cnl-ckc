@@ -365,58 +365,93 @@ number: its 447 rows came from bulk frame extraction plus synthesis, not
 a per-org determination pass. The scouts' 3.2–3.4 is the only measured
 figure.
 
-- M1.3a OPEN — org-universe integrity + gate correctness, MAIN-authored.
-  The determination pass writes into these surfaces, so they are repaired
-  first. Content:
-  - Near-match duplicate org rows, found by normalising all 474 names
-    (`.scratch/m1u3/near-org-collisions.tsv`): `American Academy of
-    Otolaryngology—Head and Neck Surgery` (EM dash, `CPGs=yes`, 1
-    guideline row) beside `American Academy of Otolaryngology–Head and
-    Neck Surgery Foundation` (EN dash, `unverified`, 2 rows) — guideline
-    rows on BOTH sides, so canonicalisation is a row-level merge, not a
-    row deletion; and `American Society for Preventive Cardiology` (4
-    rows) beside `American Society of Preventive Cardiology` (0 rows).
-  - HICPAC issuer audit (deferred here by M1.2c): 46 rows re-attributed
-    to the body that issued each artifact, evidence gathered at
-    `.scratch/agents/res-m1u3-2.md` (rows 1–18) + `res-m1u3-3.md` (19–46)
-    with a verbatim attribution quote per row; MAIN rules each and adds
-    the organization rows the correct issuers need.
-  - `American College of Critical Care Medicine` attribution, unresolved
-    since M1.2b: SCCM's own listing carries neither ACCM artifact and
-    never claims ACCM work as its own.
-  - The R6 close-call inclusions the M1.2b producers flagged by id
-    (`.scratch/agents/prod-m1u2b-*.md` § findings for MAIN) — ~40 rows
-    spanning health advisories at the patient-education boundary,
-    population-prevention statements, technical testing standards, and a
-    cardiac-CT protocol whose own text disclaims guideline status. R6's
-    include-and-flag bias put them in; one pass rules them.
-  - Gate + tooling defects, each found by `.scratch/agents/map-m1u3.md`
-    and `map-m1u3-2.md`, each needing a red test before its fix:
-    - Terminal conflict: the header accepts an org row as terminal when
-      it carries `blocked(<why>)` whatever its `CPGs`, and protocol D3d
-      deliberately leaves an unreachable org `unverified` +
-      `blocked(...)`; `check_compendium.py --terminal` instead rejects
-      EVERY `unverified` row (`.scratch/check_compendium.py:153-155`).
-      The header governs → correct the checker.
-    - `APTA sections/academies` maps to owner `APTA` and COUNTS toward
-      the ≥2 (`.scratch/check_compendium.py:60`), though it is
-      parent-controlled for an APTA academy's own row. `qualifying()`
-      receives the source cell without the issuer, so the disqualification
-      cannot be expressed at all today — 17 APTA academy rows ride on it.
-    - `--require-swept` accepts any `<date> <anything>`, and the manifest
-      grammar/arithmetic check runs only when `CPGs=yes`, so a dated
-      nonsense manifest passes on every other row.
-    - No CPGs↔swept legality matrix: `yes|-`, `unverified|-` and
-      `no|pending` all pass the bare gate.
-    - `merge_rows.py` refuses a new org name by construction
-      (`.scratch/merge_rows.py:106-108`); M1.3 is the unit that widens the
-      universe, so it gains a validated org-row append keyed on the exact
-      `org` cell, with the canonical sort and replay idempotence retained.
-  Gate: no org-name collision survives dash/whitespace/affix
-  normalisation; every HICPAC row carries an issuer supported by a quoted
-  attribution or an explicit `unreachable` record; every flagged close
-  call ruled; each gate defect proved red against the pre-change tool and
-  green after.
+- M1.3a DONE — gate correctness + org-name collisions, MAIN-authored.
+  Contract `.scratch/contracts/m1u3a.md`. Measurement re-split the unit as
+  M1.3 itself was re-split: the five gate defects plus the collision merge
+  consumed MAIN's window, so the three ruling batches (HICPAC attribution,
+  ACCM, R6 close calls) move to M1.3a2 with their evidence banked rather
+  than being ruled at the end of a spent window. Shipped:
+  - Five gate defects fixed, each red first against `.scratch/m1u3a/prechange/`
+    (the tools snapshotted byte-identical before MAIN touched them) and green
+    after, under the diff-blind suite `.scratch/m1u3a/gate_m1u3a.py` (43 tests):
+    - G1 the terminal clause is the header's DISJUNCTION — `CPGs=no`, or a dated
+      manifest, or `blocked(<why>)` — so protocol D3d's `unverified` +
+      `blocked(...)` is terminal; `--terminal` had rejected every `unverified`
+      row, contradicting the rules it gates.
+    - G2 independence excludes a frame the org or its PARENT controls, which
+      `qualifying()` could not express while it received the sources cell
+      without the org. `FRAME_OWNER` names the org row behind each frame and
+      `CONTROLS` names component units (`APTA <name>` under APTA), so an
+      academy's own row no longer counts its parent's listing of it. A
+      third-party MEMBERSHIP roster stays independent for its members. The
+      existence check fires only for a CITED label: an unused label's owner
+      holding no row says nothing about the table.
+    - G3 the manifest grammar and arithmetic reach EVERY dated `swept` cell,
+      not `CPGs=yes` alone, and `--require-swept` now demands a well-formed
+      manifest rather than any `<date> <anything>`. A `CPGs=no` manifest must
+      claim 0 eligible, since a `no` ruling denies eligible issuance.
+    - G4 a CPGs x swept legality matrix, all 12 cells tested: `-` is legal
+      only under `no` (unswept and none owed), `pending` is illegal under `no`
+      (a sweep owed for a ruling already made), `blocked` is illegal under `no`
+      (that state is what D3d parks at `unverified`), and `unverified` + dated
+      is LEGAL and load-bearing — a swept org holding one independent source
+      cannot read `yes`.
+    - G5 `merge_rows.py` gains the validated append `compendium-orgs-new`; a
+      new name in the ordinary block stays an error, because that guard is what
+      catches a typo in an existing name. Appends validate class, CPGs, the G4
+      matrix, the `excluded:` reason, >=2 independent sources for `yes`, and no
+      ladder collision; an identical re-append is a no-op, so a replay converges.
+  - Organization-name identity, the independence tables and the canonical sorts
+    moved into `compendium_io.py`: the inserter and the gate decide the same
+    questions, and a second copy would let them disagree about whether two rows
+    name one body.
+  - Both ladder collisions resolved by `.scratch/fix_m1u3a_org_collisions.py`
+    (replays to byte-identical output), 474 -> 473 org rows with the guideline
+    count invariant at 1,118:
+    - AAO-HNS. `entnet.org` states the Academy and the Foundation are "two
+      separate and independent organizations, each incorporated in the District
+      of Columbia", and all three guideline artifacts name the FOUNDATION as
+      developer or publisher. The em-dash row was the Foundation misnamed — its
+      abbrev already read `AAO-HNSF` and it held the Foundation's CPG index — so
+      the two rows merge into the Foundation, the 2025 adult sinusitis row
+      repoints to it, and the Academy enters fresh as `unverified`, a real
+      distinct body with no eligible artifact yet evidenced. The pair is
+      allowlisted in `DISTINCT_ORGS` with that reason, which is the mechanism a
+      genuinely-distinct near-match takes.
+    - ASPC. The body's own history names the 2005 Connecticut incorporation
+      "The American Society for Preventive Cardiology" and no second entity
+      answers to the `of` spelling, so the `of` row is a variant absorbed into
+      the `for` row.
+  Gates green from the closing tree: `check_compendium.py` bare -> PASS (473
+  orgs, 1,118 guidelines, 0 rows below 2 independent sources), `gate_m1u2a.py`
+  71 tests, `gate_m1u3a.py` 43 tests.
+  main=82% 196K/240K, mate=65% 155K/240K.
+- M1.3a2 OPEN — attribution + eligibility rulings, MAIN-authored, gated by
+  nothing (its evidence is banked). Every input table already exists, so this
+  unit is batch-ruling and fixer authorship alone:
+  - HICPAC issuer audit, 46 rows. `.scratch/m1u3a/hicpac-verdicts.tsv` carries
+    a verdict per row with a verbatim attribution quote: 21 retain HICPAC, 25
+    move (CDC 22, U.S. Public Health Service 2, ACIP 1).
+    `.scratch/m1u3a/hicpac-new-orgs.tsv` carries the two organization rows the
+    moves need (U.S. Public Health Service, Society of Critical Care
+    Anesthesiologists), which the G5 append now inserts. A moved row keeps
+    counting in HICPAC's manifest through
+    `indexed-by=Healthcare Infection Control Practices Advisory Committee`, so
+    the manifest arithmetic survives re-attribution. Row 25 needs a MAIN ruling
+    the table flags: the report reads CDC + HICPAC while the quote is a CDC
+    suggested citation plus HICPAC approval, and approval is not issuance.
+  - R6 close calls. `.scratch/m1u3a/r6-close-calls.tsv` carries the flagged
+    inclusions with each artifact's own deciding sentence and a recommendation.
+    A call ruled ineligible converts in place to `excluded(<why>)` and MOVES
+    from `<e>` to `<x>`, so every affected org's manifest is rewritten in the
+    same pass.
+  - `American College of Critical Care Medicine` attribution, unresolved since
+    M1.2b; `.scratch/agents/res-m1u3a-1.md` Q3 holds whatever that research
+    settled.
+  Gate: `check_compendium.py` bare and `gate_m1u2a.py` + `gate_m1u3a.py` green;
+  every HICPAC row carries an issuer supported by a quoted attribution or an
+  explicit `unreachable` record; every flagged close call ruled; each repair an
+  idempotent `.scratch/fix_m1u3a2_*.py` replaying to byte-identical output.
 - M1.3b OPEN — determination prefilter + protocol v2, gated by M1.3a.
   Build the org→signal crosswalk over all 346 rows from the four bulk
   sources above (cached under `.scratch/m1u3/res-1/`), carrying per org:

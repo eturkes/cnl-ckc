@@ -322,7 +322,7 @@ within a band, then version year descending and title within an org.
 | American Academy of Neurology | AAN | society | yes | https://www.aan.com/practice/guidelines/ | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Academy of Ophthalmology | AAO | society | yes | https://www.aao.org/guidelines-browse | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
 | American Academy of Orthopaedic Surgeons | AAOS | society | yes | https://new.aaos.org/quality/quality-programs/clinical-practice-guidelines/ | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
-| American Academy of Otolaryngology—Head and Neck Surgery | AAO-HNSF | society | yes | https://www.entnet.org/quality-practice/quality-products/clinical-practice-guidelines/ | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
+| American Academy of Otolaryngology–Head and Neck Surgery Foundation | AAO-HNSF | society | yes | https://www.entnet.org/quality-practice/quality-products/clinical-practice-guidelines/ | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
 | American Academy of Pediatric Dentistry | - | society | yes | https://www.aapd.org/research/oral-health-policies--recommendations/ | NCRDSCB recognized specialties; official index; GC-publishers | pending |
 | American Academy of Pediatrics | AAP | society | yes | https://publications.aap.org/pediatrics/collection/523/Clinical-Practice-Guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Academy of Physical Medicine & Rehabilitation | AAPM&R | society | yes | https://www.aapmr.org/quality-practice/clinical-guidance | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
@@ -417,7 +417,7 @@ within a band, then version year descending and title within an org.
 | American Academy of Orofacial Pain | - | society | unverified | - | NCRDSCB recognized specialties | pending |
 | American Academy of Osteopathy | - | society | unverified | - | AOA specialty-college directory | pending |
 | American Academy of Otolaryngic Allergy | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
-| American Academy of Otolaryngology–Head and Neck Surgery Foundation | - | society | unverified | - | - | pending |
+| American Academy of Otolaryngology–Head and Neck Surgery | AAO-HNS | society | unverified | - | - | pending |
 | American Academy of Pain Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; AAFP-PG | pending |
 | American Academy of Periodontology | - | society | unverified | - | NCRDSCB recognized specialties | pending |
 | American Academy of Physician Associates | - | society | unverified | - | - | pending |
@@ -522,7 +522,7 @@ within a band, then version year descending and title within an org.
 | American Society for Microbiology | - | society | unverified | - | GC-publishers; ChoosingWisely | pending |
 | American Society for Nutrition | - | society | unverified | - | GC-publishers | pending |
 | American Society for Parenteral and Enteral Nutrition | - | society | unverified | - | major-issuer supplement; GC-publishers | pending |
-| American Society for Preventive Cardiology | - | society | unverified | - | - | pending |
+| American Society for Preventive Cardiology | - | society | unverified | - | GC-publishers | pending |
 | American Society for Reconstructive Microsurgery | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American Society for Surgery of the Hand | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American Society for Transplantation and Cellular Therapy | - | society | unverified | - | GC-publishers | pending |
@@ -544,7 +544,6 @@ within a band, then version year descending and title within an org.
 | American Society of Pediatric Hematology/Oncology | - | society | unverified | - | ChoosingWisely | pending |
 | American Society of Pediatric Nephrology | - | society | unverified | - | ChoosingWisely | pending |
 | American Society of PeriAnesthesia Nurses | - | society | unverified | - | ANA organizational affiliates | pending |
-| American Society of Preventive Cardiology | - | society | unverified | - | GC-publishers | pending |
 | American Society of Regional Anesthesia and Pain Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
 | American Society of Retina Specialists | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
 | American Society of Transplant Surgeons | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
