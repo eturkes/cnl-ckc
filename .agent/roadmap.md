@@ -222,21 +222,72 @@ teammate.
   row, and sweeps never add org rows, so the audit belongs to the unit
   that fixes the org universe.
   main=94% 225K/240K, mate=98% 234K/240K.
-- M1.2b OPEN, PREPARED — society/other easy tier, now 10 orgs ≈ 530
-  emitted rows (eligible + excluded), re-sized from wave-1 measurement
-  against the planned 11 orgs ≈ 320. Contract = `.scratch/contracts/m1u2b.md`
-  (R1 index identity · R2 out-of-universe issuance · R3 another rostered
-  issuer's artifact · R4 co-issued rows · R5 versions · R6 eligibility by
-  content with the class-adjudication economy · R7 titles · R8 year ·
-  R9 access earned · R10 notes · R11 seeds and off-index · R12 host
-  discipline; predicates P1-P9 with `merge_rows.py --dry-run` as the
-  producer's own gate). Resume = read that contract, harvest the wave-1
-  reports (`.scratch/agents/map-m1u2b-1.md`, `map-m1u2b-2.md`,
-  `res-m1u2b-1.md`), fill the contract's per-org index-identity table,
-  dispatch ~5 `prod` teammates, merge in ONE batch, gate, verify a live
-  sample, close. The harvest needs a full fresh window: preparation alone
-  spent one.
-  Scope rulings already made, each evidence-backed:
+- M1.2b DONE — society/other easy tier, 10 orgs. Compendium 435 → 1,118
+  guideline rows over 447 → 474 organization rows; access open=834
+  unverified=259 paywalled=19 login=6; status unqueued=802 excluded=257
+  provisional=58 in-progress=1. Six `prod` teammates merged in ONE batch
+  behind five idempotent post-merge fixers, every one replaying to
+  byte-identical output over the closing tree. Contract =
+  `.scratch/contracts/m1u2b.md` (R1 index identity · R2 out-of-universe
+  issuance · R3 another rostered issuer's artifact · R4 co-issued rows ·
+  R5 versions · R6 eligibility by content with the class-adjudication
+  economy · R7 titles · R8 year · R9 access earned · R10 notes · R11 seeds
+  and off-index · R12 host discipline; predicates P1-P9 with
+  `merge_rows.py --dry-run` as the producer's own gate).
+  Rulings, each landed in the compendium header:
+  - `CPGs=yes` means the org issues ≥1 ELIGIBLE artifact, and a `CPGs=no`
+    sweep is REQUIRED to emit `excluded(<why>)` rows for its index, so an
+    `excluded(` row naming a `CPGs=no` org agrees with the header rather
+    than contradicting it. The gate was wrong, not the data: it now skips
+    the contradiction for `excluded(` rows alone. Two tests added — the
+    accept case, proved red against the pre-change tool, and a scoping
+    test holding the carve-out away from `provisional(...)`, which names
+    an eligible row.
+  - Co-development is co-issuance. ACC/AHA bundles collaboration and
+    endorsement into one `Developed in Collaboration With and Endorsed by`
+    footnote, so the ROSTER SENTENCE decides and title billing does not:
+    the 2025 hypertension guideline names SGIM among the writing
+    committee's represented organizations, and the 2026 pulmonary embolism
+    guideline seats two `(SHM rep)` members. Both M1.1 `CPGs=no` rulings,
+    made from the orgs' own sites, are refuted → `unverified` +
+    `swept=pending`.
+  - `abbrev` is display shorthand, never a key, so the seeded
+    `American College of Chest Physicians (CHEST)` row was a second row
+    for one org: the plain name is canonical and absorbed it.
+  - Access is decided from the artifact, never from transport reaching a
+    landing page. Four rows corrected `open` → `paywalled(...)`, found by
+    two instruments that agree — `.scratch/audit_open_oa.py` screened the
+    184 DOI-carrying `open` rows against Unpaywall (105 flagged, 4 survived
+    confirmation against the live landing page) and the live sample flagged
+    one of the four independently. Two of the four are the pair
+    `prod-m1u2b-2`'s own report called paywalled while its cells shipped
+    `open`.
+  Access re-probe, the wave's largest correction: 66 rows sat
+  `provisional(access unverified: ...)` on challenge verdicts that were
+  largely `r.jina.ai` throttling. Re-probed
+  (`.scratch/m1u2b/probes/recheck.tsv`) → 33 open, 15 cloudflare, 9
+  cookie-wall, 3 http(404), 3 http(403), 3 human-verification; applying
+  them moved exactly 32 rows `unverified` → `open`.
+  Live sample: `verify_sample.py` seed 12, n=14 across the 9 swept orgs →
+  14 substantive, 14 clean on access, title and year. The first run's one
+  substantive miss was the verifier's, not the row's — a JACC AUC row
+  scored 0.23 because the direct route got a publisher shell while the
+  reader returns the artifact whole, so `verify_sample.py` now falls back
+  to the reader on a poor title match rather than only on refusal or
+  thinness, the better-MATCHING body winning with the stub guard intact.
+  SAMHSA (M1.2c rows, met incidentally): the recorded `per-IP metering`
+  cause was never measured. `library.samhsa.gov` runs an AWS WAF bot check
+  over `/sites/default/files` that escalates to an image CAPTCHA, while
+  product pages and `/search-endpoint` answer normally — an anti-bot gate
+  needing a human, not a budget needing waiting. Three of the four URLs
+  are dead (`Page Not Found` through a browser that had cleared the check)
+  and TIP 61 is gone from the library, its product page 404ing too. Rows
+  restated; relocation is M1.3's, and the CAPTCHA is a user gate.
+  Gate: `check_compendium.py` PASS bare and under `--require-swept` over
+  all 10 assigned orgs; `gate_m1u2a.py` 71 tests, the two new ones the
+  carve-out's accept case and its scoping bound.
+  main=85% 203K/240K, mate=100% 240K/240K.
+  Scope rulings made during preparation, each evidence-backed:
   - ACOG → `blocked(...)` → M2, under contract R1. Its recorded index is
     the `Clinical Practice Guideline` content-type facet: 61 of ~2,500
     clinical records its own Coveo endpoint reports anonymously
@@ -272,7 +323,7 @@ teammate.
   red first.
   Gate: as M1.2a, plus every assigned org carrying a dated manifest or
   `blocked(<why>)` under `--require-swept`.
-- M1.3 OPEN — determination pass over the remaining 314 `unverified`
+- M1.3 OPEN — determination pass over the remaining 346 `unverified`
   orgs, plus the HICPAC issuer audit M1.2c deferred here (every
   HICPAC-indexed row re-attributed to the body that issued it, adding the
   organization rows those issuers need — MAIN's authenticated browser is
@@ -282,6 +333,28 @@ teammate.
   the M2 register. This is what fixes the org universe, so it precedes
   the cross-check. Gate: zero `unverified` org rows remain; every row
   swept or blocked with a named reason.
+  Carried in from M1.2b, each an org-universe defect only this unit fixes:
+  - Near-match duplicate org rows, the CHEST defect's whole class:
+    `American Academy of Otolaryngology–Head and Neck Surgery Foundation`
+    (EN dash) beside `American Academy of Otolaryngology—Head and Neck
+    Surgery` (EM dash). Sweep the table for names equal under
+    dash/whitespace/`Foundation` normalisation and rule one canonical
+    each, since the org cell is the guideline table's join key.
+  - `American College of Critical Care Medicine` attribution unresolved.
+    Its row exists (`unverified` + `swept=pending`, 3 guideline rows) but
+    SCCM's own guideline listing carries neither ACCM artifact and never
+    says it publishes ACCM consensus statements as its own, so nothing yet
+    decides whether ACCM is the issuer or SCCM's naming for its own work.
+  - The `prod` reports flag their R6 close-call inclusions by id
+    (`.scratch/agents/prod-m1u2b-*.md` § findings for MAIN) — health
+    advisories near the patient-education boundary, population-prevention
+    statements, technical testing standards, and a cardiac-CT protocol
+    document whose own text disclaims being a guideline. R6's
+    include-and-flag bias put them in; one review pass rules them.
+  - SAMHSA relocation: three dead row URLs, TIP 61 delisted from the
+    library entirely. Reading a product page's download link needs the
+    `library.samhsa.gov` AWS WAF human check cleared, so it is a user-gate
+    item rather than an anonymous fetch.
 - M1.4 OPEN — completeness cross-check, scoped to the easy tier.
   Aggregator sweeps diffed against the org-derived list; gaps feed back as
   rows; MAIN dedupes to one row per guideline (latest current version) and

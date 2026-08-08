@@ -68,9 +68,33 @@ Rulings (edge rules; extended as cases are ruled):
 - Endorsement without issuance never makes an org an issuer: a guideline
   row belongs to its issuing org(s). A co-issued guideline is one row that
   satisfies every issuer's seed obligation, and each American co-issuer
-  holds its own organization row, co-issuance being issuance, so its
-  `CPGs` reads `yes`. Foreign co-issuers are not issuing orgs here and
-  stay out of the roster. (Row formats owns how both are written.)
+  holds its own organization row, co-issuance being issuance. That row
+  need not already read `CPGs=yes`: the artifact names who issued it,
+  while `CPGs` records whether ≥2 independent enumeration sources have
+  established the org as an issuer, which its own sweep settles. A
+  co-issuer a sweep discovers therefore enters the roster `unverified`
+  with `swept=pending`, and the guideline row ships immediately —
+  harvesting an artifact is never hostage to the org universe. Naming an
+  org that holds no row at all is a contradiction and fails the gate, as
+  does an ELIGIBLE row naming one ruled `CPGs=no`; an `excluded(<why>)`
+  row may name such an org, since `CPGs=no` denies eligible issuance while
+  that org's own sweep is required to record the entries it ruled out.
+  Discovering an eligible artifact the org co-issued refutes a `CPGs=no`
+  ruling — the row returns to `unverified` with `swept=pending`, its
+  `excluded:` reason dropped, because the ruling was made from the org's
+  own site and co-issuance is issuance wherever it is published. Foreign
+  co-issuers are not issuing orgs here and stay out of the roster. (Row
+  formats owns how both are written.)
+- A partner named in the artifact's own TITLE co-issued it when the
+  artifact records that partner in development — a writing-committee
+  representative it appointed, named in the committee roster sentence or
+  as a `<ABBR> rep` annotation. A body appearing only in an endorsement
+  list did not. ACC/AHA guidelines state both in one footnote
+  (`Developed in Collaboration With and Endorsed by`), so the roster is
+  what decides: SGIM sits in the 2025 hypertension guideline's
+  "writing committee included representatives from" sentence and SHM
+  appointed two named reps to the 2026 pulmonary embolism guideline, so
+  both co-issue despite each also endorsing.
 - Org-level `CPGs=yes` = the org issues ≥1 eligible artifact;
   artifact-level eligibility is ruled per row during the org's sweep.
 - Artifact type never decides eligibility by name — clinical guidance,
@@ -275,6 +299,8 @@ within a band, then version year descending and title within an org.
 | U.S. Public Health Service Tobacco Use and Dependence Guideline Panel | PHS tobacco panel | federal | yes | https://www.ahrq.gov/prevention/guidelines/tobacco/index.html | NCBI Bookshelf NBK63952; DOI 10.1016/j.amepre.2008.04.009 | 2026-08-07 per-topic-pages; 1 index entries -> 1 eligible + 0 excluded |
 | VA/DoD Clinical Practice Guideline Program | VA/DoD CPG | federal | yes | https://www.healthquality.va.gov/guidelines/ | PubMed PMID 39093266; National Academies/NCBI federal-guideline chapter; GC-publishers | 2026-08-07 per-topic-pages; 27 index entries -> 26 eligible + 0 excluded |
 | National Institute for Occupational Safety and Health | NIOSH | federal | unverified | https://www.cdc.gov/niosh/pubs/ | - | blocked(guideline products not separately indexed in the 2,058-item publication catalog; issuer determination and enumeration source pair pending) |
+| Office of the Surgeon General | - | federal | unverified | - | - | pending |
+| U.S. Army Surgeon General Health Policy and Services Proponency Office for Rehabilitation and Reintegration | - | federal | unverified | - | - | pending |
 | United States Department of Health and Human Services | - | federal | unverified | - | GC-publishers | pending |
 | Veterans Health Administration Pharmacy Benefits Management clinical guidance | VA PBM | federal | unverified | https://www.va.gov/formularyadvisor/doc/ | - | pending |
 | Advisory Committee on Heritable Disorders in Newborns and Children | ACHDNC | federal | no | https://www.hrsa.gov/advisory-committees/heritable-disorders/condition-nomination | excluded: committee terminated; recommendations archival | - |
@@ -300,13 +326,15 @@ within a band, then version year descending and title within an org.
 | American Academy of Pediatric Dentistry | - | society | yes | https://www.aapd.org/research/oral-health-policies--recommendations/ | NCRDSCB recognized specialties; official index; GC-publishers | pending |
 | American Academy of Pediatrics | AAP | society | yes | https://publications.aap.org/pediatrics/collection/523/Clinical-Practice-Guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Academy of Physical Medicine & Rehabilitation | AAPM&R | society | yes | https://www.aapmr.org/quality-practice/clinical-guidance | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
-| American Association for Respiratory Care | AARC | society | yes | https://www.aarc.org/resource/clinical-practice-guidelines/ | GC-publishers; PubMed PMID 40323974 | pending |
+| American Academy of Sleep Medicine | AASM | society | yes | https://aasm.org/clinical-resources/practice-standards/ | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely; AAFP-PG | 2026-08-08 static-list + per-topic-pages; 152 index entries -> 67 eligible + 18 excluded |
+| American Association for Respiratory Care | AARC | society | yes | https://www.aarc.org/resources/clinical-resources/clinical-practice-guidelines/ + https://www.aarc.org/resource/aarc-issue-papers-position-statements-and-guidance-documents/ | GC-publishers; PubMed PMID 40323974 | 2026-08-08 static-list; 156 index entries -> 76 eligible + 72 excluded |
 | American Association for the Study of Liver Diseases | AASLD | society | yes | https://www.aasld.org/practice-guidelines | CMSS current members; official index; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Association of Clinical Endocrinology | AACE | society | yes | https://pro.aace.com/clinical-guidance | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American College of Allergy, Asthma & Immunology | - | society | yes | - | PubMed PMID 41936423; DOI 10.1016/j.anai.2025.10.026; GC-publishers; AAFP-PG | pending |
-| American College of Cardiology | ACC | society | yes | https://www.acc.org/guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
-| American College of Chest Physicians (CHEST) | CHEST | society | yes | https://www.chestnet.org/guidelines-and-topic-collections/guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
+| American College of Cardiology | ACC | society | yes | https://www.acc.org/guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | 2026-08-08 static-list; 161 index entries -> 101 eligible + 60 excluded |
+| American College of Chest Physicians | CHEST | society | yes | https://www.chestnet.org/guidelines-and-topic-collections/guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American College of Emergency Physicians | ACEP | society | yes | https://www.acep.org/patient-care/clinical-policies | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
+| American College of Gastroenterology | - | society | yes | https://gi.org/guidelines/ | AMA HOD roster; AMA SSS roster; GC-publishers; AAFP-PG | 2026-08-08 static-list; 68 index entries -> 67 eligible + 0 excluded |
 | American College of Medical Genetics and Genomics | ACMG | society | yes | https://www.acmg.net/ACMG/Medical-Genetics-Practice-Resources/Practice-Guidelines.aspx | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
 | American College of Nuclear Medicine | - | society | yes | - | PubMed PMID 40169271; DOI 10.2967/jnmt.125.269834; GC-publishers | pending |
 | American College of Obstetricians and Gynecologists | ACOG | society | yes | https://www.acog.org/clinical/clinical-guidance/clinical-practice-guideline | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
@@ -317,7 +345,7 @@ within a band, then version year descending and title within an org.
 | American College of Surgeons | ACS | society | yes | https://www.facs.org/quality-programs/trauma/quality/best-practices-guidelines/ | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
 | American Dental Association | ADA-Dental | society | yes | https://www.ada.org/resources/research/science-and-research-institute/evidence-based-dental-research/clinical-practice-guidelines | major-issuer supplement; official index; GC-publishers; ChoosingWisely | pending |
 | American Diabetes Association | ADA | society | yes | https://professional.diabetes.org/standards-of-care | major-issuer supplement; official index; GC-publishers; AAFP-PG | pending |
-| American Epilepsy Society | AES | society | yes | https://www.aesnet.org/clinical-care/clinical-guidance | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
+| American Epilepsy Society | AES | society | yes | https://www.aesnet.org/clinical-care/clinical-guidance + https://www.aesnet.org/clinical-care/clinical-guidance/practice-parameters | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | 2026-08-08 static-list; 20 index entries -> 16 eligible + 2 excluded |
 | American Gastroenterological Association | AGA | society | yes | https://gastro.org/clinical-guidance/ | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Geriatrics Society | AGS | society | yes | https://www.americangeriatrics.org/publications-tools/guidelines-recommendations | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Heart Association | AHA | society | yes | https://professional.heart.org/en/guidelines-and-statements | major-issuer supplement; official index; GC-publishers; AAFP-PG | pending |
@@ -331,7 +359,7 @@ within a band, then version year descending and title within an org.
 | American Society for Radiation Oncology | ASTRO | society | yes | https://www.astro.org/provider-resources/guidelines/clinical-practice-guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
 | American Society for Reproductive Medicine | ASRM | society | yes | https://www.asrm.org/practice-guidance/practice-committee-documents/ | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Society of Addiction Medicine | ASAM | society | yes | https://www.asam.org/quality-care/clinical-guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; AAFP-PG | pending |
-| American Society of Anesthesiologists | ASA | society | yes | https://www.asahq.org/standards-and-practice-parameters | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
+| American Society of Anesthesiologists | ASA | society | yes | https://www.asahq.org/standards-and-practice-parameters | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | 2026-08-08 static-list; 139 index entries -> 85 eligible + 54 excluded |
 | American Society of Breast Surgeons | ASBrS | society | yes | https://www.breastsurgeons.org/resources/statements | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely | pending |
 | American Society of Clinical Oncology/Association for Clinical Oncology | ASCO | society | yes | https://ascopubs.org/guidelines?doi=10.1200%2FJCO&publicationCode=jco | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Society of Colon & Rectal Surgeons | ASCRS | society | yes | https://fascrs.org/healthcare-providers/education/clinical-practice-guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; AAFP-PG | pending |
@@ -342,6 +370,7 @@ within a band, then version year descending and title within an org.
 | American Society of Plastic Surgeons | ASPS | society | yes | https://www.plasticsurgery.org/for-medical-professionals/quality/evidence-based-clinical-practice-guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers | pending |
 | American Thoracic Society | ATS | society | yes | https://site.thoracic.org/clinicians-researchers/clinical-practice-guidelines-statements-reports | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Urological Association | AUA | society | yes | https://www.auanet.org/guidelines-and-quality/guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
+| APTA Orthopedics | - | society | yes | https://www.orthopt.org/content/practice/clinical-practice-guidelines + https://www.orthopt.org/content/publications/pub-cpg + https://www.orthopt.org/content/practice/clinical-practice-guidelines/other-related-guidelines | GC-publishers; PubMed PMID 33789434; Crossref 10.2519/jospt.2021.0302 | 2026-08-08 static-list + per-topic-pages; 29 index entries -> 24 eligible + 3 excluded |
 | Association for Molecular Pathology | - | society | yes | - | PubMed PMID 28165299; DOI 10.1200/JCO.2016.71.9807 | pending |
 | Association for the Advancement of Blood & Biotherapies | AABB | society | yes | https://www.aabb.org/news-resources/resources/clinical-practice-guidelines | GC-publishers; PubMed PMID 37824153 | pending |
 | Association of periOperative Registered Nurses | - | society | yes | https://www.aorn.org/guidelines-resources/guidelines-for-perioperative-practice | ANA organizational affiliates; official index; GC-publishers | pending |
@@ -388,10 +417,11 @@ within a band, then version year descending and title within an org.
 | American Academy of Orofacial Pain | - | society | unverified | - | NCRDSCB recognized specialties | pending |
 | American Academy of Osteopathy | - | society | unverified | - | AOA specialty-college directory | pending |
 | American Academy of Otolaryngic Allergy | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
+| American Academy of Otolaryngology–Head and Neck Surgery Foundation | - | society | unverified | - | - | pending |
 | American Academy of Pain Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; AAFP-PG | pending |
 | American Academy of Periodontology | - | society | unverified | - | NCRDSCB recognized specialties | pending |
+| American Academy of Physician Associates | - | society | unverified | - | - | pending |
 | American Academy of Psychiatry and the Law | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
-| American Academy of Sleep Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Academy of Thermology | - | society | unverified | - | GC-publishers | pending |
 | American Association for Geriatric Psychiatry | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American Association for Hand Surgery | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
@@ -399,6 +429,7 @@ within a band, then version year descending and title within an org.
 | American Association for the Surgery of Trauma | - | society | unverified | - | major-issuer supplement; GC-publishers | pending |
 | American Association for Thoracic Surgery | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; AAFP-PG | pending |
 | American Association of Bronchology and Interventional Pulmonology | - | society | unverified | - | GC-publishers | pending |
+| American Association of Cardiovascular and Pulmonary Rehabilitation | - | society | unverified | - | - | pending |
 | American Association of Clinical Urologists | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American Association of Critical-Care Nurses | - | society | unverified | - | ANA organizational affiliates | pending |
 | American Association of Endocrine Surgeons | - | society | unverified | - | AMA SSS roster; GC-publishers | pending |
@@ -409,6 +440,7 @@ within a band, then version year descending and title within an org.
 | American Association of Neuromuscular & Electrodiagnostic Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Association of Neuroscience Nurses | - | society | unverified | - | ANA organizational affiliates; GC-publishers; ChoosingWisely | pending |
 | American Association of Nurse Anesthesiology | - | society | unverified | - | ANA organizational affiliates | pending |
+| American Association of Nurse Practitioners | - | society | unverified | - | - | pending |
 | American Association of Oral and Maxillofacial Surgeons | - | society | unverified | - | NCRDSCB recognized specialties | pending |
 | American Association of Orthodontists | - | society | unverified | - | NCRDSCB recognized specialties | pending |
 | American Association of Physicians of Indian Origin | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
@@ -422,10 +454,11 @@ within a band, then version year descending and title within an org.
 | American Chiropractic Association | - | society | unverified | - | ChoosingWisely | pending |
 | American Clinical Neurophysiology Society | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
 | American College Health Association | - | society | unverified | - | GC-publishers | pending |
+| American College of Asthma, Allergy, and Immunology | - | society | unverified | - | - | pending |
 | American College of Clinical Pharmacy | ACCP | society | unverified | - | JCPP members; GC-publishers | pending |
 | American College of Correctional Physicians | - | society | unverified | - | AMA SSS roster | pending |
+| American College of Critical Care Medicine | - | society | unverified | - | - | pending |
 | American College of Foot and Ankle Surgeons | - | society | unverified | - | major-issuer supplement | pending |
-| American College of Gastroenterology | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; AAFP-PG | pending |
 | American College of Legal Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American College of Lifestyle Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
 | American College of Medical Quality | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
@@ -453,6 +486,7 @@ within a band, then version year descending and title within an org.
 | American Holistic Nurses Association | - | society | unverified | - | ANA organizational affiliates | pending |
 | American Institute of Ultrasound in Medicine | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
 | American Limb Preservation Society | - | society | unverified | - | GC-publishers | pending |
+| American Medical Association | - | society | unverified | - | - | pending |
 | American Medical Society for Sports Medicine | - | society | unverified | - | major-issuer supplement; GC-publishers; ChoosingWisely | pending |
 | American Medical Women's Association | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American Nephrology Nurses' Association | - | society | unverified | - | ANA organizational affiliates | pending |
@@ -466,7 +500,6 @@ within a band, then version year descending and title within an org.
 | American Osteopathic Association of Prolotherapy Regenerative Medicine | - | society | unverified | - | AOA specialty-college directory | pending |
 | American Osteopathic College of Allergy and Immunology | - | society | unverified | - | AOA specialty-college directory | pending |
 | American Osteopathic College of Anesthesiologists | - | society | unverified | - | AOA specialty-college directory | pending |
-| American Osteopathic College of Dermatology | - | society | unverified | - | AOA specialty-college directory | pending |
 | American Osteopathic College of Occupational and Preventive Medicine | - | society | unverified | - | AOA specialty-college directory | pending |
 | American Osteopathic College of Pathologists | - | society | unverified | - | AOA specialty-college directory | pending |
 | American Osteopathic College of Physical Medicine and Rehabilitation | - | society | unverified | - | AOA specialty-college directory | pending |
@@ -489,6 +522,7 @@ within a band, then version year descending and title within an org.
 | American Society for Microbiology | - | society | unverified | - | GC-publishers; ChoosingWisely | pending |
 | American Society for Nutrition | - | society | unverified | - | GC-publishers | pending |
 | American Society for Parenteral and Enteral Nutrition | - | society | unverified | - | major-issuer supplement; GC-publishers | pending |
+| American Society for Preventive Cardiology | - | society | unverified | - | - | pending |
 | American Society for Reconstructive Microsurgery | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American Society for Surgery of the Hand | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | American Society for Transplantation and Cellular Therapy | - | society | unverified | - | GC-publishers | pending |
@@ -534,7 +568,6 @@ within a band, then version year descending and title within an org.
 | APTA Leadership and Innovation | - | society | unverified | - | APTA sections/academies | pending |
 | APTA Neurology | - | society | unverified | - | APTA sections/academies | pending |
 | APTA Oncology | - | society | unverified | - | APTA sections/academies | pending |
-| APTA Orthopedics | - | society | unverified | - | APTA sections/academies; GC-publishers | pending |
 | APTA Pediatrics | - | society | unverified | - | APTA sections/academies | pending |
 | APTA Pelvic Health | - | society | unverified | - | APTA sections/academies | pending |
 | APTA Private Practice | - | society | unverified | - | APTA sections/academies | pending |
@@ -545,9 +578,11 @@ within a band, then version year descending and title within an org.
 | Association for Professionals in Infection Control and Epidemiology | - | society | unverified | - | GC-publishers | pending |
 | Association of Academic Physiatrists | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | Association of Academic Radiology | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
+| Association of Black Cardiologists | - | society | unverified | - | - | pending |
 | Association of Nurses in AIDS Care | - | society | unverified | - | ANA organizational affiliates | pending |
 | Association of Pediatric Hematology/Oncology Nurses | - | society | unverified | - | ANA organizational affiliates | pending |
 | Association of Physicians of Pakistani Descent of North America | - | society | unverified | - | AMA SSS roster | pending |
+| Association of Polysomnography Technologists | - | society | unverified | - | - | pending |
 | Association of Professors of Dermatology | - | society | unverified | - | AMA SSS roster | pending |
 | Association of Rehabilitation Nurses | - | society | unverified | - | ANA organizational affiliates | pending |
 | Association of Women's Health, Obstetric & Neonatal Nurses | - | society | unverified | - | ANA organizational affiliates | pending |
@@ -565,6 +600,7 @@ within a band, then version year descending and title within an org.
 | Health Ministries Association | - | society | unverified | - | ANA organizational affiliates | pending |
 | Heart Failure Society of America | - | society | unverified | - | major-issuer supplement; GC-publishers; AAFP-PG | pending |
 | Heart Rhythm Society | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; AAFP-PG | pending |
+| Heart Valve Society | - | society | unverified | - | - | pending |
 | Hematology/Oncology Pharmacy Association | - | society | unverified | - | JCPP members | pending |
 | HIV Medicine Association | - | society | unverified | - | major-issuer supplement; GC-publishers; ChoosingWisely | pending |
 | Hospice and Palliative Nurses Association | - | society | unverified | - | ANA organizational affiliates | pending |
@@ -574,6 +610,8 @@ within a band, then version year descending and title within an org.
 | International College of Surgeons—US Section | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | International Nurses Society on Addictions | - | society | unverified | - | ANA organizational affiliates | pending |
 | International Pain and Spine Intervention Society | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
+| International Society for Adult Congenital Heart Disease | - | society | unverified | - | - | pending |
+| International Society for Heart and Lung Transplantation | - | society | unverified | - | - | pending |
 | International Society for the Advancement of Spine Surgery | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | International Society of Hair Restoration Surgery | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | Korean American Medical Association | - | society | unverified | - | AMA SSS roster | pending |
@@ -601,6 +639,7 @@ within a band, then version year descending and title within an org.
 | Orthodox Jewish Nurses Association | - | society | unverified | - | ANA organizational affiliates | pending |
 | Orthopaedic Trauma Association | - | society | unverified | - | AMA SSS roster | pending |
 | Outpatient Endovascular and Interventional Society | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
+| Pediatric and Congenital Electrophysiology Society | - | society | unverified | - | - | pending |
 | Pediatric Endocrine Society | - | society | unverified | - | major-issuer supplement; GC-publishers | pending |
 | Pediatric Infectious Diseases Society | - | society | unverified | - | major-issuer supplement; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | Pediatric Orthopaedic Society of North America | - | society | unverified | - | GC-publishers; ChoosingWisely | pending |
@@ -610,8 +649,10 @@ within a band, then version year descending and title within an org.
 | Renal Physicians Association | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | Sigma | - | society | unverified | - | ANA organizational affiliates | pending |
 | Skin of Color Society | - | society | unverified | - | AMA SSS roster | pending |
+| Sleep Research Society | - | society | unverified | - | - | pending |
 | Society for Academic Emergency Medicine | - | society | unverified | - | GC-publishers | pending |
 | Society for Adolescent Health and Medicine | - | society | unverified | - | major-issuer supplement | pending |
+| Society for Atherosclerosis Imaging and Prevention | - | society | unverified | - | - | pending |
 | Society for Cardiovascular Angiography & Interventions | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
 | Society for Cardiovascular Magnetic Resonance | - | society | unverified | - | AMA HOD roster; AMA SSS roster; ChoosingWisely | pending |
 | Society for Developmental and Behavioral Pediatrics | - | society | unverified | - | GC-publishers | pending |
@@ -624,14 +665,20 @@ within a band, then version year descending and title within an org.
 | Society for Pediatric Dermatology | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | Society for the Advancement of Patient Blood Management | - | society | unverified | - | GC-publishers; ChoosingWisely | pending |
 | Society for Vascular Medicine | - | society | unverified | - | GC-publishers; ChoosingWisely; AAFP-PG | pending |
+| Society for Vascular Nursing | - | society | unverified | - | - | pending |
 | Society of Abdominal Radiology | - | society | unverified | - | GC-publishers | pending |
 | Society of American Gastrointestinal and Endoscopic Surgeons | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely | pending |
 | Society of Cardiovascular Anesthesiologists | - | society | unverified | - | GC-publishers | pending |
 | Society of Cardiovascular Computed Tomography | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely | pending |
+| Society of Cardiovascular Patient Care | - | society | unverified | - | - | pending |
 | Society of Dermatology Physician Associates | - | society | unverified | - | GC-publishers | pending |
+| Society of General Internal Medicine | SGIM | society | unverified | https://www.sgim.org/publications/position-statements/ | - | pending |
+| Society of Hospital Medicine | SHM | society | unverified | https://www.hospitalmedicine.org/clinical-topics/clinical-guidelines/ | - | pending |
 | Society of Infectious Diseases Pharmacists | - | society | unverified | - | GC-publishers | pending |
 | Society of Laparoscopic & Robotic Surgeons | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | Society of NeuroInterventional Surgery | - | society | unverified | - | GC-publishers | pending |
+| Society of Pediatric Cardiology Training Program Directors | - | society | unverified | - | - | pending |
+| Society of Pediatric Echocardiography | - | society | unverified | - | - | pending |
 | Society of Pediatric Nurses | - | society | unverified | - | ChoosingWisely | pending |
 | Society of Radiologists in Ultrasound | - | society | unverified | - | GC-publishers | pending |
 | Society of Thoracic Radiology | - | society | unverified | - | GC-publishers | pending |
@@ -643,6 +690,7 @@ within a band, then version year descending and title within an org.
 | The Triological Society | - | society | unverified | - | AMA HOD roster; AMA SSS roster | pending |
 | Undersea and Hyperbaric Medical Society | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers | pending |
 | Urgent Care College of Physicians | - | society | unverified | - | AMA SSS roster | pending |
+| Vascular and Endovascular Surgery Society | - | society | unverified | - | - | pending |
 | Western Trauma Association | - | society | unverified | - | major-issuer supplement | pending |
 | Wilderness Medical Society | - | society | unverified | - | major-issuer supplement; GC-publishers; AAFP-PG | pending |
 | Wound Healing Society | - | society | unverified | - | major-issuer supplement | pending |
@@ -651,15 +699,16 @@ within a band, then version year descending and title within an org.
 | American Medical Informatics Association | AMIA | society | no | https://amia.org/public-policy/current-policy-priorities | excluded: policy and implementation guidance, not disease-specific patient-care CPGs | - |
 | American Nurses Association | ANA | society | no | https://www.nursingworld.org/practice-policy/nursing-excellence/official-position-statements/ | excluded: position statements and standards, not disease-specific patient-care CPGs | - |
 | American Osteopathic Association | - | society | no | https://osteopathic.org/?s=clinical+practice+guideline | excluded: no current AOA-issued patient-care CPG or index found | - |
-| Society of General Internal Medicine | SGIM | society | no | https://www.sgim.org/publications/position-statements/ | excluded: position statements; no patient-care CPG program identified | - |
-| Society of Hospital Medicine | SHM | society | no | https://www.hospitalmedicine.org/clinical-topics/clinical-guidelines/ | excluded: clinical resources; no SHM-issued CPG library identified | - |
+| American Osteopathic College of Dermatology | - | society | no | - | excluded: disease database is patient education; no AOCD-issued CPG program identified | 2026-08-08 static-list; 0 index entries -> 0 eligible + 0 excluded |
 | Alzheimer's Association | - | other | yes | https://www.alz.org/professionals/health-systems-medical-professionals/clinical-practice-guidelines | GC-publishers; PubMed PMID 40729527 | pending |
 | American Cancer Society | ACS-Cancer | other | yes | https://www.cancer.org/health-care-professionals/american-cancer-society-prevention-early-detection-guidelines.html | major-issuer supplement; official index; GC-publishers; AAFP-PG | pending |
 | Brain Trauma Foundation | - | other | yes | https://braintrauma.org/guidelines | GC-publishers; PubMed PMID 23971957 | pending |
 | Clinical Pharmacogenetics Implementation Consortium | - | other | yes | https://www.clinpgx.org/cpic/guidelines | PubMed PMID 41979467; DOI 10.1002/cpt.70291 | pending |
+| Cystic Fibrosis Foundation | - | other | yes | https://www.cff.org/medical-professionals/clinical-care-guidelines | major-issuer supplement; GC-publishers; PubMed PMID 32115388; Crossref 10.1542/peds.2015-1784 | 2026-08-08 reader-proxy; 39 index entries -> 37 eligible + 2 excluded |
 | National Coalition for Hospice and Palliative Care | - | other | yes | https://www.nationalcoalitionhpc.org/ncp/ | GC-publishers; PubMed PMID 30915906 | pending |
 | National Comprehensive Cancer Network | NCCN | other | yes | https://www.nccn.org/guidelines/category_1 | PubMed PMID 39019058; DOI 10.6004/jnccn.2024.0035 | pending |
 | National Kidney Foundation | NKF | other | yes | https://www.ajkd.org/content/kdoqiguidelines | GC-publishers; PubMed PMID 32778223 | pending |
+| National Pressure Injury Advisory Panel | - | other | yes | https://npiap.com/page/InternationalGuidelines + https://npiap.com/page/PositionStatements | major-issuer supplement; GC-publishers; PubMed PMID 37929973; Crossref 10.1097/ASW.0000000000000079 | 2026-08-08 static-list; 10 index entries -> 3 eligible + 2 excluded |
 | Accreditation Council for Pharmacy Education | - | other | unverified | - | JCPP members | pending |
 | American Association of Colleges of Nursing | - | other | unverified | - | ANA organizational affiliates | pending |
 | American Association of Colleges of Pharmacy | - | other | unverified | - | JCPP members | pending |
@@ -671,9 +720,9 @@ within a band, then version year descending and title within an org.
 | Coalition for Health AI | - | other | unverified | - | CMSS associate members | pending |
 | Consortium of Multiple Sclerosis Centers | - | other | unverified | - | GC-publishers | pending |
 | Critical Care Societies Collaborative | - | other | unverified | - | ChoosingWisely | pending |
-| Cystic Fibrosis Foundation | - | other | unverified | - | major-issuer supplement; GC-publishers | pending |
 | Hidradenitis Suppurativa Foundation | - | other | unverified | - | GC-publishers | pending |
 | Institute for Addressing Strangulation | - | other | unverified | - | GC-publishers | pending |
+| Institute for Clinical Systems Improvement | - | other | unverified | - | - | pending |
 | International Essential Tremor Foundation | - | other | unverified | - | GC-publishers | pending |
 | Michigan Quality Improvement Consortium | - | other | unverified | - | major-issuer supplement | pending |
 | Muscular Dystrophy Association | - | other | unverified | - | GC-publishers | pending |
@@ -686,17 +735,19 @@ within a band, then version year descending and title within an org.
 | National Marrow Donor Program | - | other | unverified | - | GC-publishers | pending |
 | National Multiple Sclerosis Society | - | other | unverified | - | major-issuer supplement | pending |
 | National Network of Depression Centers | - | other | unverified | - | GC-publishers | pending |
-| National Pressure Injury Advisory Panel | - | other | unverified | - | major-issuer supplement; GC-publishers | pending |
 | National Psoriasis Foundation | - | other | unverified | - | GC-publishers; AAFP-PG | pending |
 | National Rosacea Society | - | other | unverified | - | GC-publishers | pending |
 | National Tuberculosis Coalition of America | - | other | unverified | - | GC-publishers | pending |
 | North American Imaging in MS Cooperative | - | other | unverified | - | GC-publishers | pending |
 | Obesity Action Coalition | - | other | unverified | - | GC-publishers | pending |
+| Pediatric Acute Lung Injury and Sepsis Investigators | - | other | unverified | - | - | pending |
+| Respiratory Therapy Access Working Group | - | other | unverified | - | - | pending |
 | Restless Legs Syndrome Foundation | - | other | unverified | - | GC-publishers | pending |
 | ROME Foundation | - | other | unverified | - | GC-publishers | pending |
 | Spondylitis Association of America | - | other | unverified | - | GC-publishers | pending |
 | The OrthoForum | - | other | unverified | - | AMA SSS roster | pending |
 | United States Cutaneous Lymphoma Consortium | - | other | unverified | - | GC-publishers | pending |
+| University HealthSystem Consortium Respiratory Care Network | - | other | unverified | - | - | pending |
 | Accreditation Council for Continuing Medical Education | - | other | no | - | excluded: training and accreditation body; no patient-care CPG program | - |
 | Accreditation Council for Graduate Medical Education | - | other | no | - | excluded: training and accreditation body; no patient-care CPG program | - |
 | American Board of Medical Specialties | - | other | no | - | excluded: certification body; no patient-care CPG program | - |
