@@ -33,6 +33,20 @@ else is deferred by recording the org's `swept` cell as
 accepts, so M1 closes honestly with the deferral set enumerated rather
 than hidden. Deferred classes, each with named orgs, live in M2.
 
+Terminal scope (user ruling, taken on M1.3's cost measurement): M1 closes
+at ORG-UNIVERSE completeness, not easy-tier harvest exhaustion. Every
+organization row ends terminal — `CPGs=yes|no`, `swept` dated or
+`blocked(<why>)` — while the guideline table stays at the 1,118 rows M1.2
+shipped. An org ruled `yes` whose index no M1 unit swept records
+`blocked(easy-tier harvest deferred; M2)`: a named gap rather than a
+hidden one, so the compendium is terminal-consistent the moment M1.3
+lands. This retires the ≈8–12 further harvest units that sweeping the
+whole easy tier would have cost — 150–190 orgs, being the 81 already
+`CPGs=yes` + unswept plus the ≈115 easy-tier orgs the determination pass
+will surface — and it keeps M2 sized by the real per-document cost of
+`/goal`, which cannot be measured until M1 is REVIEWED and `/goal` has
+consumed a useful run of easy-tier rows.
+
 Method (all units): research fan-out per `.agent/rounds.md` `res` role +
 the session-prompt brief spec. WebSearch budget = 200/session shared →
 explicit per-teammate allowances (~30–40); bulk index crawling goes
@@ -430,25 +444,44 @@ figure.
   crosswalk. Each org ends `CPGs=yes|no` with `swept` dated-or-blocked,
   or `unverified` + `blocked(<why>)` naming the mechanism that stopped
   it. Emit ZERO guideline rows: sweeping is what M1.3 was oversized by,
-  and an org ruled `yes` + easy records `swept=pending` for a harvest
-  unit to claim. Gate: no org row remains `CPGs=unverified` with
-  `swept=pending`; every verdict cites the artifact or listing it was
-  read off.
+  and under the terminal-scope ruling an org ruled `yes` records
+  `blocked(easy-tier harvest deferred; M2)` with its tier and index URL
+  preserved, so M2 inherits a costed worklist. The same pass writes that
+  cell for the 81 orgs sitting `CPGs=yes` + `swept=pending` since M1.1,
+  which no unit ever claimed — AAP, AAFP, ACR, ACP and AAOS among them,
+  and ACOG with them: M1.2b recorded an ACOG `blocked(...)` ruling that
+  never reached the compendium, whose row still reads `pending`, so only
+  USPSTF and NIOSH actually carry `blocked` today. Gate: no org row
+  carries `swept=pending`; every verdict cites the artifact or listing it
+  was read off.
   Already banked by `map-m1u3-2` and the scouts, to merge rather than
   re-derive: 40 scout verdicts; Office of the Surgeon General = `no`
   (population-health reports, not CPGs); SGIM = `yes`; SHM = `yes`;
   NIOSH already `blocked`; VA PBM issues but holds <2 independent
   sources; Army HP&R and the HHS umbrella row unsettled.
-  Deferred org-universe item, a user gate rather than a fetch: SAMHSA
-  relocation — three dead row URLs and TIP 61 delisted, reachable only
-  past `library.samhsa.gov`'s AWS WAF human check.
-- M1.4 OPEN — completeness cross-check, scoped to the easy tier.
-  Aggregator sweeps diffed against the org-derived list; gaps feed back as
-  rows; MAIN dedupes to one row per guideline (latest current version) and
-  rules eligibility edge cases. A gap landing on a deferred org joins the
-  M2 register instead of the gap list. Gate: cross-check documented in the
-  compendium header with the easy-tier gap list driven to zero; dedupe
-  pass recorded.
+  SAMHSA relocation is already DONE, ahead of this unit:
+  `.scratch/fix_samhsa_relocation.py` repoints all three dead URLs and
+  replays from a clean base to byte-identical output. PEP20-02-01-022
+  needed only lowercase → UPPERCASE, its artifact serving anonymously
+  (200, 427,172 B, `%PDF-`); TIP 42 and TIP 61 are delisted from
+  `library.samhsa.gov` and now cite NCBI Bookshelf NBK571020 + NBK539583,
+  the host the compendium already uses for TIP 39 and TIP 51. TIP 61's
+  year moved 2019 → 2018, the 2019 having come from the withdrawn PDF's
+  filename rather than from the artifact's own citation. One genuine
+  human gate survives: `Protracted Withdrawal` (sma10-4554) stays
+  `provisional(access unverified: ...)` because `library.samhsa.gov` PDF
+  paths answer 202/0 bytes anonymously and the WAF escalates to an image
+  CAPTCHA whose tiles do not take scripted clicks. A VA mirror serves the
+  artifact (200, 625,819 B) but is not the issuer's host.
+- M1.4 OPEN — completeness cross-check, scoped to the 23 orgs M1 actually
+  swept (21 dated manifests + USPSTF and NIOSH `blocked`). Aggregator
+  sweeps diffed against the org-derived list; gaps feed back as rows;
+  MAIN dedupes to one row per guideline (latest current version) and
+  rules eligibility edge cases. A gap landing on any org outside those 23
+  joins the M2 register instead of the gap list, which the terminal-scope
+  ruling makes the common case rather than the exception. Gate:
+  cross-check documented in the compendium header with the swept-org gap
+  list driven to zero; dedupe pass recorded.
 - M1.5 OPEN — integration. Root `README.md` § Operating + the canonical
   `/goal` argument rewritten → terminal condition = compendium
   exhaustion; `.agent/queue.md` feeds from the compendium (promotion
@@ -472,6 +505,11 @@ rows — the real per-document cost of `/goal` is what should size it.
 Deferred classes, from the 46-org measurement
 (`.scratch/agents/scout-m1u2.md`):
 
+- Easy-tier orgs determined but never harvested — the terminal-scope
+  ruling's direct output, and M2's largest and cheapest class: every org
+  ending `CPGs=yes` + `blocked(easy-tier harvest deferred; M2)`, each
+  carrying the index URL and tier M1.3 recorded. 150–190 orgs, and the
+  only class whose per-org sweep cost M1 has already measured.
 - Corpora whose breadth outruns the easy tier — enumeration is one
   anonymous call but per-artifact version and access adjudication is not,
   so the org defers whole rather than being swept against a narrow facet
