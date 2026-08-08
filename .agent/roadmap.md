@@ -323,38 +323,125 @@ teammate.
   red first.
   Gate: as M1.2a, plus every assigned org carrying a dated manifest or
   `blocked(<why>)` under `--require-swept`.
-- M1.3 OPEN — determination pass over the remaining 346 `unverified`
-  orgs, plus the HICPAC issuer audit M1.2c deferred here (every
-  HICPAC-indexed row re-attributed to the body that issued it, adding the
-  organization rows those issuers need — MAIN's authenticated browser is
-  the only route into CDC). Cheap per org (≤2 anonymous fetches): decide `CPGs=yes|no`, record
-  `swept` date+method, and sweep inline when the org is both easy and
-  small (`<15` rows); everything else takes `blocked(<why>)` and joins
-  the M2 register. This is what fixes the org universe, so it precedes
-  the cross-check. Gate: zero `unverified` org rows remain; every row
-  swept or blocked with a named reason.
-  Carried in from M1.2b, each an org-universe defect only this unit fixes:
-  - Near-match duplicate org rows, the CHEST defect's whole class:
-    `American Academy of Otolaryngology–Head and Neck Surgery Foundation`
-    (EN dash) beside `American Academy of Otolaryngology—Head and Neck
-    Surgery` (EM dash). Sweep the table for names equal under
-    dash/whitespace/`Foundation` normalisation and rule one canonical
-    each, since the org cell is the guideline table's join key.
-  - `American College of Critical Care Medicine` attribution unresolved.
-    Its row exists (`unverified` + `swept=pending`, 3 guideline rows) but
-    SCCM's own guideline listing carries neither ACCM artifact and never
-    says it publishes ACCM consensus statements as its own, so nothing yet
-    decides whether ACCM is the issuer or SCCM's naming for its own work.
-  - The `prod` reports flag their R6 close-call inclusions by id
-    (`.scratch/agents/prod-m1u2b-*.md` § findings for MAIN) — health
-    advisories near the patient-education boundary, population-prevention
-    statements, technical testing standards, and a cardiac-CT protocol
-    document whose own text disclaims being a guideline. R6's
-    include-and-flag bias put them in; one review pass rules them.
-  - SAMHSA relocation: three dead row URLs, TIP 61 delisted from the
-    library entirely. Reading a product page's download link needs the
-    `library.samhsa.gov` AWS WAF human check cleared, so it is a user-gate
-    item rather than an anonymous fetch.
+M1.3 was one unit; measurement re-split it into four. Two disjoint
+stratified samples of 20 orgs each (`.scratch/agents/scout-m1u3-1.md`,
+`.scratch/agents/scout-m1u3-2.md`) ran the draft protocol end to end:
+23 `CPGs=yes` + 15 `CPGs=no` + 2 unsettled ⇒ yes-rate ≈ 60%, and of the
+23 yes only 13 are easy tier. Cost = mean 3.2–3.4 tool calls/org, median
+3, worst 5, ~3.8K tokens/org ⇒ ~43 orgs before a teammate saturates. The
+binding constraint is not context but the 200/session WebSearch ceiling:
+at the measured 1.2–1.5 searches/org the 346 orgs cost ≈415–519
+searches. Second-source acquisition (D5), not index adjudication, is the
+dominant per-org cost in both samples — which is what M1.3b removes.
+
+Bulk prefilter, measured against a 12-org set whose truth the scouts
+established (`.scratch/agents/res-m1u3-1.md`): NGC ∪ Guideline Central ∪
+AAFP-PG ∪ PubMed corporate-author flags 9 of the 11 true-yes orgs and
+flagged none of the one true-no. Each is anonymous and bulk-extractable —
+GC = 482 society profiles (419 with counts) from ONE fetch of embedded
+Inertia JSON; NGC = a 293-org wayback directory plus a 9,984-summary XML
+dump; AAFP-PG = 676 records over 7 Coveo calls; PubMed = one ESearch per
+org at ≤3 req/s. Every hit is positive evidence only: an omission is
+silence, and a corporate-author hit needs `CollectiveName` validation (a
+`Heart Valve Society` hit resolves to the British society). ECRI
+Guidelines Trust is offline and enumerates nothing.
+
+M1.1 is NOT a cost analog and none of its reports supports a per-org
+number: its 447 rows came from bulk frame extraction plus synthesis, not
+a per-org determination pass. The scouts' 3.2–3.4 is the only measured
+figure.
+
+- M1.3a OPEN — org-universe integrity + gate correctness, MAIN-authored.
+  The determination pass writes into these surfaces, so they are repaired
+  first. Content:
+  - Near-match duplicate org rows, found by normalising all 474 names
+    (`.scratch/m1u3/near-org-collisions.tsv`): `American Academy of
+    Otolaryngology—Head and Neck Surgery` (EM dash, `CPGs=yes`, 1
+    guideline row) beside `American Academy of Otolaryngology–Head and
+    Neck Surgery Foundation` (EN dash, `unverified`, 2 rows) — guideline
+    rows on BOTH sides, so canonicalisation is a row-level merge, not a
+    row deletion; and `American Society for Preventive Cardiology` (4
+    rows) beside `American Society of Preventive Cardiology` (0 rows).
+  - HICPAC issuer audit (deferred here by M1.2c): 46 rows re-attributed
+    to the body that issued each artifact, evidence gathered at
+    `.scratch/agents/res-m1u3-2.md` (rows 1–18) + `res-m1u3-3.md` (19–46)
+    with a verbatim attribution quote per row; MAIN rules each and adds
+    the organization rows the correct issuers need.
+  - `American College of Critical Care Medicine` attribution, unresolved
+    since M1.2b: SCCM's own listing carries neither ACCM artifact and
+    never claims ACCM work as its own.
+  - The R6 close-call inclusions the M1.2b producers flagged by id
+    (`.scratch/agents/prod-m1u2b-*.md` § findings for MAIN) — ~40 rows
+    spanning health advisories at the patient-education boundary,
+    population-prevention statements, technical testing standards, and a
+    cardiac-CT protocol whose own text disclaims guideline status. R6's
+    include-and-flag bias put them in; one pass rules them.
+  - Gate + tooling defects, each found by `.scratch/agents/map-m1u3.md`
+    and `map-m1u3-2.md`, each needing a red test before its fix:
+    - Terminal conflict: the header accepts an org row as terminal when
+      it carries `blocked(<why>)` whatever its `CPGs`, and protocol D3d
+      deliberately leaves an unreachable org `unverified` +
+      `blocked(...)`; `check_compendium.py --terminal` instead rejects
+      EVERY `unverified` row (`.scratch/check_compendium.py:153-155`).
+      The header governs → correct the checker.
+    - `APTA sections/academies` maps to owner `APTA` and COUNTS toward
+      the ≥2 (`.scratch/check_compendium.py:60`), though it is
+      parent-controlled for an APTA academy's own row. `qualifying()`
+      receives the source cell without the issuer, so the disqualification
+      cannot be expressed at all today — 17 APTA academy rows ride on it.
+    - `--require-swept` accepts any `<date> <anything>`, and the manifest
+      grammar/arithmetic check runs only when `CPGs=yes`, so a dated
+      nonsense manifest passes on every other row.
+    - No CPGs↔swept legality matrix: `yes|-`, `unverified|-` and
+      `no|pending` all pass the bare gate.
+    - `merge_rows.py` refuses a new org name by construction
+      (`.scratch/merge_rows.py:106-108`); M1.3 is the unit that widens the
+      universe, so it gains a validated org-row append keyed on the exact
+      `org` cell, with the canonical sort and replay idempotence retained.
+  Gate: no org-name collision survives dash/whitespace/affix
+  normalisation; every HICPAC row carries an issuer supported by a quoted
+  attribution or an explicit `unreachable` record; every flagged close
+  call ruled; each gate defect proved red against the pre-change tool and
+  green after.
+- M1.3b OPEN — determination prefilter + protocol v2, gated by M1.3a.
+  Build the org→signal crosswalk over all 346 rows from the four bulk
+  sources above (cached under `.scratch/m1u3/res-1/`), carrying per org:
+  candidate domain, GC profile + count, NGC hit, AAFP-PG hit, validated
+  PubMed corporate-author hit + its newest record. Pre-resolve the frame
+  classes the scouts found batch-decidable rather than per-org: rows whose
+  only sources are `AMA HOD roster; AMA SSS roster` (one owner, so one
+  source — 104 rows), rows carrying only `major-issuer supplement` (zero
+  sources — 35 rows), the APTA academy alias/rename map, and a
+  merger/rename roster (a body merged into an active successor is a
+  terminal `no`, its historical guideline notwithstanding). MAIN then
+  writes protocol v2 as the unit contract, ruling the ten friction items
+  both scouts raised — chiefly that D2's two-fetch cap covers own-site
+  index discovery ONLY while D5 buys one bibliographic fetch; that
+  transport classification runs direct→reader BEFORE any artifact fetch;
+  that a `CPGs=no` needs affirmative evidence (function + exhaustive
+  own-site output taxonomy + a co-issuance check), never search silence;
+  and that `WPSI-program` does not count toward the ≥2, the draft having
+  had this backwards against the shipped checker. Gate: crosswalk covers
+  346/346 rows; its positive flags reproduce the scouts' 40 known
+  verdicts without contradicting one; protocol v2 has no predicate the
+  gate cannot express.
+- M1.3c OPEN, M1.3d OPEN — the determination pass itself, ~173 orgs per
+  unit, each unit ~4 `prod` teammates × ~43 orgs behind the M1.3b
+  crosswalk. Each org ends `CPGs=yes|no` with `swept` dated-or-blocked,
+  or `unverified` + `blocked(<why>)` naming the mechanism that stopped
+  it. Emit ZERO guideline rows: sweeping is what M1.3 was oversized by,
+  and an org ruled `yes` + easy records `swept=pending` for a harvest
+  unit to claim. Gate: no org row remains `CPGs=unverified` with
+  `swept=pending`; every verdict cites the artifact or listing it was
+  read off.
+  Already banked by `map-m1u3-2` and the scouts, to merge rather than
+  re-derive: 40 scout verdicts; Office of the Surgeon General = `no`
+  (population-health reports, not CPGs); SGIM = `yes`; SHM = `yes`;
+  NIOSH already `blocked`; VA PBM issues but holds <2 independent
+  sources; Army HP&R and the HHS umbrella row unsettled.
+  Deferred org-universe item, a user gate rather than a fetch: SAMHSA
+  relocation — three dead row URLs and TIP 61 delisted, reachable only
+  past `library.samhsa.gov`'s AWS WAF human check.
 - M1.4 OPEN — completeness cross-check, scoped to the easy tier.
   Aggregator sweeps diffed against the org-derived list; gaps feed back as
   rows; MAIN dedupes to one row per guideline (latest current version) and
