@@ -8,9 +8,9 @@ freely (extra audits, probes, cross-checks) — teammate cost ≈ 0, MAIN
 attention = the budget. Small rounds (single-statement fix-ups) run
 MAIN-direct; spawning must buy real bulk.
 
-Mechanics (worktrees, briefs, boundary blocks, markers, roster, gauges,
-trust shapes, harvest/TaskStop) = `/session-prompt` execution map + global
-`CLAUDE.md` Subagents. Round roles:
+Mechanics = global `CLAUDE.md` Subagents (worktrees, markers, roster,
+gauges, harvest/TaskStop, Close order) + `/session-prompt` execution map
+(briefs, boundary blocks, trust shapes). Round roles:
 
 - `extract-<id>-<k>` — bulk-reads the source document; drafts verbatim
   extraction evidence with page/byte anchors + a normative-statement
@@ -41,12 +41,12 @@ reason); `ace` teammates draft against ruled batches while MAIN reviews the
 previous batch; MAIN authors the lexicon delta, compiles, runs check; `rev`
 attacks the assembled round pre-commit; MAIN fixes, reruns gates, commits.
 
-Round close (standing loop and one-round invocations alike) =
-`/session-prompt` Close order, bound to this project: harvest = report
-read + artifacts byte-verified or re-derived; ledgers current ahead of
-the gate rerun (coverage.tsv, `audit/`, guideline README,
-`.agent/queue.md` — pending list stays ordered, next round first);
-decisive gate = `export PATH="<repo>/.toolchain/bin:$PATH"` →
+Round close (standing loop and one-round invocations alike) = global
+`CLAUDE.md` Close order, bound to this project: harvest = report read
++ artifacts byte-verified or re-derived; ledgers current ahead of the
+gate rerun (coverage.tsv, `audit/`, guideline README, `.agent/queue.md`
+— pending list stays ordered, next round first); decisive gate =
+`export PATH="<repo>/.toolchain/bin:$PATH"` →
 `python3 -P tools/goal.py compile <id>` + `check`; scoped commit(s)
 land on main. A blocked round closes the same way with `blocked(<why>)`
 recorded in queue.md.
