@@ -6,6 +6,29 @@ guideline coverage runs as built-in `/goal` rounds — procedure: root
 `README.md` § Operating; queue: `.agent/queue.md`. This file plans further
 project development; new tasks are planned in a new session on demand.
 
+## Standing direction
+
+- Product = the KB artifacts (`guidelines/*/{ace,pl}` + lexicons +
+  provenance/coverage ledgers); consumers load them into their own
+  engines. Compiled Prolog = a public interface once M3 lands:
+  engine-portable plain clauses, schema documented + versioned. No
+  query/serving layer in this repo — APIs, CDS integrations,
+  FHIR/CDS-Hooks adapters = downstream projects; the check's derived
+  probes are the sole in-repo query machinery (testing-grade by design).
+- Multilingual (Japanese first): a port = a new source-language CNL
+  frontend + jurisdiction-native corpus (Japanese guidelines, e.g. the
+  Minds clearinghouse), never corpus translation — verification requires
+  source-language comparison. DRS = the language-neutral waist
+  (`ace_to_pl` consumes DRS, not English); `vendor/ape` grammar + ulex
+  morphology = the English-specific components. Repo split (per-language
+  repos vs agnostic core) is decided when Japanese work is planned; until
+  then nothing English-specific enters `tools/`, `vendor/e--`, schemas or
+  ledger formats, and all machinery treats lemma symbols as opaque atoms.
+- Domain generalization: the pipeline is normative-document
+  formalization, not clinical-only; domain rules (eligibility, actor
+  classes, corpus protocol) stay in corpus data (compendium header,
+  per-guideline files), never in code.
+
 ## M1 — American clinical guideline source compendium (easy tier) — REVIEWED
 
 Goal: `.agent/compendium.md` = the complete master list of eligible
@@ -642,3 +665,38 @@ Deferred classes, from the 46-org measurement
   279 and drives the ≈4,400 total. A coarser rule (one row per guideline
   series) would cut the compendium to ≈500 rows; revisiting it is a
   header-level decision, not a harvest decision.
+
+## M3 — projection redesign (clinician-verifiable ACE) — UNPLANNED
+
+Gates all further ACE authoring (`.agent/queue.md` holds the ACE batches
+until this lands); plan in a fresh session. Settled direction:
+
+- ACE documents carry knowledge sentences only. Embedded fixtures leave:
+  compile/check derives each rule's witness + probe query mechanically
+  (equal assurance — the same modus ponens, generated); `pn_sg` fixture
+  entries leave the lexicons; `tests/red/` keeps the rejection boundary.
+- `ace_to_pl` grows to the DRS shapes natural sentences produce —
+  transitive verbs, PP modifiers, plural objects, multi-condition
+  consequents, modal wrappers (`should`/`must`/`can`/`may` all parse
+  natively in the vendored APE), if-then antecedents with
+  cross-implication anaphora — totality + reject-unknown retained.
+- Lexicon = small reusable domain vocabulary (nouns/verbs/preps,
+  O(domain) not O(statements)); hyphens only for genuine compounds; the
+  77 per-statement mega-verb pairs dissolve.
+- Authoring rule: preserve the source's own conditions, objects, numbers
+  and modality textually; never add structure without a source anchor —
+  bounds loss and over-engineering alike, and excludes probabilities
+  from the canonical layer (normative text states none; strength =
+  reified class facts). Modality compiles shallowly (marker, no
+  inference semantics); defeasibility (exceptions/conflicts) is the
+  expected first semantic deepening — s(CASP)/ASP-shaped, adopted only
+  on a named consumer question, as a backend swap (corpus untouched).
+  Backend-portability spike rejected: reversibility is architectural
+  (ACE = source of truth; a backend swap = one compiler backend +
+  recompile).
+- Region ↔ ACE document stays the traceability unit; sentences per
+  region free. Re-author the 79 cdc-2022-opioid documents + lexicon
+  under the new contract; `coverage.tsv`/projection-notes/census keys
+  (regions, docids) unchanged.
+- The compiled schema becomes a public interface here: document +
+  version it (Standing direction).
