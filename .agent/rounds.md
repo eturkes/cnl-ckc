@@ -9,7 +9,7 @@ attention = the budget. Small rounds (single-statement fix-ups) run
 MAIN-direct; spawning must buy real bulk.
 
 Mechanics = global `CLAUDE.md` Subagents (worktrees, markers, roster,
-gauges, harvest/TaskStop, Close order) + `/session-prompt` execution map
+gauges, harvest/TaskStop, Close order) + `/session-roadmap` execution map
 (briefs, boundary blocks, trust shapes). Round roles:
 
 - `extract-<id>-<k>` — bulk-reads the source document; drafts verbatim

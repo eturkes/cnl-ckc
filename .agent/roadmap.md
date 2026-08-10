@@ -61,7 +61,7 @@ the crosswalk's signal hand M2 a costed, prioritized worklist.
 Improvements off the spine land in the M2 register, never in new units.
 
 Method (all units): research fan-out per `.agent/rounds.md` `res` role +
-the session-prompt brief spec. WebSearch budget = 200/session shared →
+the session-roadmap brief spec. WebSearch budget = 200/session shared →
 explicit per-teammate allowances (~30–40); bulk index crawling goes
 through BrowserOS/WebFetch instead. BrowserOS (the authenticated
 day-to-day browser incl. university journal access) = the route for
@@ -539,7 +539,7 @@ figure.
   green incl. the ported predicates; `regen.py --check` green; scoped
   commits.
 
-Unit/milestone close per session-prompt WORK-UNIT/MILESTONE-REVIEW
+Unit/milestone close per session-roadmap WORK-UNIT/MILESTONE-REVIEW
 protocol (gauges recorded, commits `compendium (M1.<u>): …`).
 
 ## M2 — deferred hard-tier harvest — UNPLANNED
