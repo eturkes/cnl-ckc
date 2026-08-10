@@ -6,7 +6,7 @@ guideline coverage runs as built-in `/goal` rounds — procedure: root
 `README.md` § Operating; queue: `.agent/queue.md`. This file plans further
 project development; new tasks are planned in a new session on demand.
 
-## M1 — American clinical guideline source compendium (easy tier) — IN-PROGRESS
+## M1 — American clinical guideline source compendium (easy tier) — REVIEWED
 
 Goal: `.agent/compendium.md` = the complete master list of eligible
 American clinical guidelines available online — one row per guideline:
@@ -511,8 +511,7 @@ figure.
   Gate touches, pre-ruled or forced: seed-per-yes predicate removed
   (sources-only `yes`); org SWEPT regex → `BAL` (mechanism reasons nest
   parens; the status regex already did).
-  Cross-check (`diff-m1u3b`; three provider stream deaths ridden out by
-  in-place revival): 23 swept/blocked orgs × 4 sources → 669 candidate
+  Cross-check (`diff-m1u3b`): 23 swept/blocked orgs × 4 sources → 669 candidate
   gaps across 16 orgs at gap-list grade, recorded in compendium
   § Protocol layer 3 + the M2 register; NGC caches = org/count level, so
   zero fabricated titles; `build_gaps.py` cache-only replay `cmp` rc=0.
@@ -546,11 +545,21 @@ figure.
   `475 organizations 1118 rows; orgs=0 rows=847 provisional=54`.
   README § Operating + Audit story name the stage; memory delta landed.
   main=69% 166K/240K, mate=100% 239K/240K (rev-m1u5 peak; test 39%,
-  rev2 52%). Light review folds into this session per the re-cut
-  ruling: one reviewer over the session A+B commit range at data-tier
-  grade — live spot-check sample + claim consistency + CLAUDE.md
-  conformance — MAIN rules findings, fixes in-session, sets the
-  milestone REVIEWED.
+  rev2 52%).
+- M1 REVIEW DONE (data-grade, folded into session B per the re-cut
+  ruling) — rev-m1 over 80c7a07 + 5e75811 + 8e90d3c: claims 13/13
+  consistent (HICPAC 32-row recount, 475 orgs/1118 rows, terminalizer
+  427→0 isolated replay, M1.5 gate identities); gates 4/4 green; live
+  sample 10 = 5 pass, 1 partial → F-01, 4 CDC-hosted tool-403 rows
+  covered by the M1.3a2 authenticated 5/5 spot-check. F-01 (medium):
+  AASM infant-sleep advisory exclusion reason → `excluded(health
+  advisory without systematic development)` — live audience =
+  childcare providers/policy, so the patient-facing clause fell;
+  `.scratch/fix_m1rev_aasm_advisory.py` replays to 0 edits. F-02
+  (low): provenance narration pruned from roadmap + memory. Post-fix:
+  deep gate PASS 475/1118; unit gate 49 OK incl. live; full check
+  green, meter unchanged. main=80% 193K/240K, mate=55% 133K/240K
+  (rev-m1).
 
 Unit/milestone close per session-roadmap WORK-UNIT/MILESTONE-REVIEW
 protocol (gauges recorded, commits `compendium (M1.<u>): …`).
