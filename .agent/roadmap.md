@@ -441,7 +441,7 @@ figure.
   orgs, 1,118 guidelines, 0 rows below 2 independent sources), `gate_m1u2a.py`
   71 tests, `gate_m1u3a.py` 43 tests.
   main=82% 196K/240K, mate=65% 155K/240K.
-- M1.3a2 OPEN — attribution + eligibility rulings, MAIN-authored, session
+- M1.3a2 OPEN (tier=data) — attribution + eligibility rulings, MAIN-authored, session
   A opener; banked evidence only — an item unresolvable on it records the
   flag as-is, no new research. Every input table already exists, so this
   unit is batch-ruling and fixer authorship alone:
@@ -468,7 +468,7 @@ figure.
   every HICPAC row carries an issuer supported by a quoted attribution or an
   explicit `unreachable` record; every flagged close call ruled; each repair an
   idempotent `.scratch/fix_m1u3a2_*.py` replaying to byte-identical output.
-- M1.3b OPEN — org-universe terminalization + cross-check + integration,
+- M1.3b OPEN (tier=data) — org-universe terminalization + cross-check + integration,
   chained after M1.3a2 inside session A. One `prod` teammate builds the
   org→signal crosswalk over the 346 undetermined rows from the four bulk
   sources above (cached under `.scratch/m1u3/res-1/`), carrying per org:
@@ -523,7 +523,8 @@ figure.
   `.scratch/fix_samhsa_protracted.py` after the user cleared the WAF's
   image CAPTCHA (200, `application/pdf`, 625,819 B, matching the VA
   mirror). SAMHSA holds zero `provisional(...)` rows.
-- M1.5 OPEN — hardening close, session B. Port into E-- →
+- M1.5 OPEN (tier=kernel — the E-- port; review runs data-grade) —
+  hardening close, session B. Port into E-- →
   `tools/goal.py check` ONLY the predicates `/goal` consumes: row
   format/vocabulary, canonical ordering, promotion rule, terminal meter.
   The collision ladder, independence semantics, manifest arithmetic +
