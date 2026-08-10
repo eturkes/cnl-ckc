@@ -666,10 +666,11 @@ Deferred classes, from the 46-org measurement
   series) would cut the compendium to ≈500 rows; revisiting it is a
   header-level decision, not a harvest decision.
 
-## M3 — projection redesign (clinician-verifiable ACE) — UNPLANNED
+## M3 — projection redesign (clinician-verifiable ACE) — IN-PROGRESS
 
-Gates all further ACE authoring (`.agent/queue.md` holds the ACE batches
-until this lands); plan in a fresh session. Settled direction:
+Gates all further ACE authoring (`.agent/queue.md` holds the ACE batches;
+the gate lifts at M3 REVIEWED — the review close alone edits the queue).
+Settled direction:
 
 - ACE documents carry knowledge sentences only. Embedded fixtures leave:
   compile/check derives each rule's witness + probe query mechanically
@@ -700,3 +701,125 @@ until this lands); plan in a fresh session. Settled direction:
   (regions, docids) unchanged.
 - The compiled schema becomes a public interface here: document +
   version it (Standing direction).
+
+Plan. Evidence: all 17 target constructs parse in the vendored APE with
+verbatim DRS captured — the compiler is the sole growth surface; corpus =
+79 docs (12 Box-3 + 67 implementation), lexicon 154 mega-verb + 91
+fixture-pn + 20 noun entries, coverage ledgers byte-pinned at the plan
+commit (coverage.tsv SHA-256 `674f3537…`, census-map whole-file
+`49f0f096…`, projection-notes 79 ordered docid/region pairs `d0e16242…`).
+Wave reports `.scratch/agents/{map,scout,res,plan,planrev}-m3*.md`;
+regeneration = re-run planning waves from the settled direction. Probe
+corpus seed = `.scratch/m3scout/probes/` (17 ace+ulex pairs + extraction
+recipe). Aggregate-load probe: consulting all 79 compiled docs today
+yields 242 static-procedure redefinitions and one surviving
+`guideline_document/3` — the public schema REQUIRES a multi-document
+composition contract; per-doc greenness proves nothing about the corpus
+KB.
+
+Units (kernel = MAIN-authored full battery; prod behind the MAIN-authored
+migration validator; MAIN aim <180K/unit; the compiler header updates in
+the same unit as every accepted-shape change; durable gates rerun from
+committed state — scratch scripts = pre-commit evidence with regeneration
+contracts, byte-pinned per use; no absolute workstation paths in gate
+identities):
+
+- M3.1 OPEN (kernel, oracle) — candidate schema + core projector.
+  Teammate-produced parse-validated shape manifest FIRST (79 regions:
+  source features -> candidate ACE -> raw DRS family -> admit/defer;
+  bounds compiler scope by real corpus need before MAIN codes). Then
+  `ace_to_pl.pl` event-cluster normalization: transitive/ditransitive,
+  `modifier_pp` chains, plurals + `object/6` comparison ops preserved
+  verbatim (eq|geq|greater|leq|less|exactly|na + measurement units, no
+  arithmetic semantics), `property/3`+be pairs, relative clauses,
+  conjunctive antecedents, multi-cluster consequents. Rulings landed:
+  D1 totality restated — sentence i emits ordered K_i>=1 clauses, every
+  anchored DRS condition consumed exactly once, any leftover rejects the
+  document; D8 disjunctive consequent stays rejected, disjunctive
+  antecedent admitted only Horn-equivalently on a manifest-named source
+  case, NP groups stay explicit `has_part`; composition + namespace
+  design: aggregate 79-file load contract (portable, warning-as-failure
+  gate target) + reserved schema-predicate indicators with deterministic
+  collision rejection (red-cased). Schema doc = README section, explicitly
+  CANDIDATE until M3.3 freezes it. Old corpus still compiles
+  byte-identically; all legacy rejection classes keep their reds.
+- M3.2 BLOCKED(M3.1) (kernel, oracle) — modal/negation/strength/frontend.
+  D2 modality: one generic wrapper for `should|must|can|may(drs(...))`
+  reified as an exact operator tree, never flattened to marker+flag —
+  `¬SHOULD(P)` stays distinct from `SHOULD(¬P)`; operator atoms are DRS
+  functors (the language-neutral waist), documented as such. D3 negation
+  matrix by operator x position: antecedent NAF -> `\+` over one scoped
+  conjunction with earlier-bound outer vars + box-local existentials;
+  consequent NAF rejects; classical negation never lowers to `-/1` —
+  corpus-required negative trees survive only as reified shallow
+  polarity; NAF scope binds to the composition contract (document-local
+  vs corpus-global ruled with the aggregate ABI, generated obligations
+  run against the composition model). D6 Box-3 strength: reified class
+  facts through a generic source-entity relation keyed by opaque docid —
+  no recommendation vocabulary in compiler logic, no fixture pn_sg
+  survives. D9 `for`: smallest English-frontend fork (function-word gap),
+  LGPL §5(a) in-file notice + PROVENANCE/load-closure + conditional
+  NOTICE check; authoring contract states PP verb-attachment default +
+  relative/`of` for noun modification + determiner-required plurals. The
+  current `unsupported--modal.ace` red converts IN THIS UNIT (gate
+  coherence); the D2-ruled still-unsupported modal boundary takes its
+  place.
+- M3.3 BLOCKED(M3.2) (kernel, oracle) — derived proof + validator + v1
+  freeze. D5 implemented HERE, before any migration: compiler proof mode
+  derives per rule-group a witness world satisfying every positive body
+  literal (object/cardinality/PP/group structure respected; controlled
+  absence for NAF) + one proof obligation per emitted rule/clause-group —
+  obligation count = group count, derivation failure rejects; generated
+  identities = reserved namespace from (docid, sentence, referent
+  ordinal), collision-proof against ulex + product vocabulary; both check
+  compiles derive the payload independently and byte-compare; committed
+  product carries public clauses only. `goal.emm` orchestration + full
+  aggregate-load gate (79 docs, warning-as-failure, document records +
+  schema version + cross-document predicates asserted). Migration
+  validator (MAIN-authored, producers run never edit): ledger byte-pins,
+  knowledge-only + fixture-free + obsolete-lexeme checks, cumulative
+  `migrated=N/79` meter; durable predicates live in `goal.emm`, ledger
+  pins as committed checks or digest-recorded scratch with regeneration
+  contract. Schema freeze: `guideline_schema_version(1).` emitted;
+  transition-only `guideline_query/2` excluded from the public ABI.
+  Contract prose flips here with a transitional migrated-meter: README
+  Operating/Audit story, `.agent/rounds.md` authoring/review roles
+  (producers propose lexicon deltas in reports; MAIN authors the
+  consolidated delta), guideline README formal-derivatives; projection-
+  notes header rewritten once (schema + 79 pairs pinned thereafter).
+- M3.4 BLOCKED(M3.3) (data, prod) — production A: 18 docs = Box-3 12 +
+  rec01 imp01-06 (~1,034 source words, the heaviest batch — Box-3
+  multi-sentence recommendations + D6 strength facts + lexicon core).
+  Producer worktrees hold disjoint ACE files + assigned projection-note
+  rows ONLY; MAIN consolidates lexicon + regenerates `pl/` + live
+  source spot-checks. Validator + full check + aggregate gate green;
+  every migrated doc proves its generated obligations.
+- M3.5 BLOCKED(M3.4) (data, prod) — production B: 31 docs = rec02 all 25
+  + rec03 imp01,02,04,05,06,07 (~946 words). Two disjoint producers,
+  same holder discipline, meter `migrated=49/79`.
+- M3.6 BLOCKED(M3.5) (data, prod) — production C: 30 docs = rec03 imp08 +
+  rec04 imp01,03,05,07,08,09 + rec05 imp04-16,18-27 (~976 words; rec05
+  NAF rows exercise the D3 matrix) + global convergence: `migrated=79/79`,
+  zero fixture pn_sg, zero mega-verb pairs, every ulex entry referenced,
+  compiled inventory exactly 79.
+- M3.7 BLOCKED(M3.6) (kernel, oracle) — authored-question removal +
+  close. Question translation deleted (knowledge-only corpus makes it
+  dead); authored yes/no/who/copular/modal-question reds added, each
+  proving its intended class (same-stem ulex companions where vocabulary
+  needs them); transition validator clauses retired; full battery rerun
+  incl. the migration predicate set; final docs consistency pass (schema
+  section read-only — a semantic mismatch returns to its owning unit).
+  Queue stays gated; MILESTONE-REVIEW (next session) alone lifts it.
+
+Sizing (analogs: M1.5 main=166K narrow kernel; M1.3a main=196K; M1.2b
+main=203K oversized harvest; M1.3b main=179K): kernel units project
+~150-175K MAIN with a hard checkpoint at contract+manifest before
+implementation begins; oracle teammates may span planned successors
+(each dispatch <=~170K). Production batches budget by source words
+(~1,000/batch), not doc count; MAIN ~150-170K each. Off-spine items live
+in `.agent/polish.md`, never as units. Out of scope: defeasibility/
+s(CASP) (named consumer question first; backend swap = one backend +
+recompile), serving layer, recs 6-12 authoring (post-M3 `/goal` work),
+queue items 1-2 (pending-region rulings + coverage closure = `/goal`
+rounds), new coverage rulings, probabilities/thresholds/conversions
+absent from source.
