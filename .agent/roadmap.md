@@ -441,33 +441,47 @@ figure.
   orgs, 1,118 guidelines, 0 rows below 2 independent sources), `gate_m1u2a.py`
   71 tests, `gate_m1u3a.py` 43 tests.
   main=82% 196K/240K, mate=65% 155K/240K.
-- M1.3a2 OPEN (tier=data) — attribution + eligibility rulings, MAIN-authored, session
-  A opener; banked evidence only — an item unresolvable on it records the
-  flag as-is, no new research. Every input table already exists, so this
-  unit is batch-ruling and fixer authorship alone:
-  - HICPAC issuer audit, 46 rows. `.scratch/m1u3a/hicpac-verdicts.tsv` carries
-    a verdict per row with a verbatim attribution quote: 21 retain HICPAC, 25
-    move (CDC 22, U.S. Public Health Service 2, ACIP 1).
-    `.scratch/m1u3a/hicpac-new-orgs.tsv` carries the two organization rows the
-    moves need (U.S. Public Health Service, Society of Critical Care
-    Anesthesiologists), which the G5 append now inserts. A moved row keeps
-    counting in HICPAC's manifest through
-    `indexed-by=Healthcare Infection Control Practices Advisory Committee`, so
-    the manifest arithmetic survives re-attribution. Row 25 needs a MAIN ruling
-    the table flags: the report reads CDC + HICPAC while the quote is a CDC
-    suggested citation plus HICPAC approval, and approval is not issuance.
-  - R6 close calls. `.scratch/m1u3a/r6-close-calls.tsv` carries the flagged
-    inclusions with each artifact's own deciding sentence and a recommendation.
-    A call ruled ineligible converts in place to `excluded(<why>)` and MOVES
-    from `<e>` to `<x>`, so every affected org's manifest is rewritten in the
-    same pass.
-  - `American College of Critical Care Medicine` attribution, unresolved since
-    M1.2b; `.scratch/agents/res-m1u3a-1.md` Q3 holds whatever that research
-    settled.
-  Gate: `check_compendium.py` bare and `gate_m1u2a.py` + `gate_m1u3a.py` green;
-  every HICPAC row carries an issuer supported by a quoted attribution or an
-  explicit `unreachable` record; every flagged close call ruled; each repair an
-  idempotent `.scratch/fix_m1u3a2_*.py` replaying to byte-identical output.
+- M1.3a2 DONE (tier=data) — attribution + eligibility rulings from banked
+  evidence, MAIN-authored. Compendium 473 → 475 org rows (G5 appends: U.S.
+  Public Health Service — the tobacco-panel row is a distinct body, no
+  collision — and Society of Critical Care Anesthesiologists); guideline
+  count invariant at 1,118. Two idempotent fixers, each proved by a second
+  run reporting zero edits over byte-identical files:
+  - `fix_m1u3a2_hicpac.py`: 32 rows re-attributed per
+    `.scratch/m1u3a/hicpac-verdicts.tsv` — 25 leave the HICPAC org cell
+    (CDC 22, USPHS 2, ACIP 1), every one keeping
+    `indexed-by=Healthcare Infection Control Practices Advisory Committee`;
+    7 retained rows gain co-issuers (Hand Hygiene 2002 → +SHEA +APIC
+    +IDSA; BSI 2011 → its 15 working-group orgs incl. SOCCA; 5 rows →
+    CDC + HICPAC); 14 stay byte-identical. HICPAC's manifest
+    `49 -> 39e+8x` survives unchanged — every moved row still counts
+    there and nowhere new (row 46 stays out of ACIP's `67 -> 63e+3x`
+    exactly as rr6007 does). Row 25 ruled CDC alone: the artifact's
+    suggested-citation line names CDC and HICPAC's 2019-05-17 approval is
+    not issuance. Row 6's quote restored into the verdicts table from
+    `res-m1u3-2.md:10`.
+  - `fix_m1u3a2_r6.py`: all 58 close calls ruled — 44 keep-eligible (43
+    producer keeps stand; p1-01 OVERRIDDEN to keep: its disclaimer
+    describes evidence-grading form, and the header's artifact-type rule
+    + procedure-standards clause decide, consistent with the six kept
+    ATS/ERS technical standards) and 14 AASM conversions in place, no
+    collapses: methodology companion (a header "methodology document",
+    not a derivative rendering), endorsement letter (not systematically
+    developed), 12 health advisories ruled as a class
+    `excluded(patient-facing education alone; ...)` — two employer/carer
+    sentences do not change the document class. AASM manifest
+    `152 -> 67e+18x` → `-> 53e+32x`.
+  - ACCM: Q3a settled — honorary/special body within SCCM under SCCM
+    Council → `compendium_io.py` `CONTROLS` gains SCCM → ACCM; org row +
+    3 guideline rows stand (artifact attributions unresearched); audit →
+    M2 register.
+  Gates green from the closing tree: `check_compendium.py` bare (475
+  orgs, 1,118 guidelines, 0 short-sourced), `gate_m1u2a.py` 71,
+  `gate_m1u3a.py` 44. Live spot-check 5/5 substantive across all three
+  move classes + the advisory exclusion class (rr6210 CDC suggested
+  citation; rr6904a1 PHS; stacks cdc_143156 ACIP; core-practices title;
+  AASM advisory page).
+  main=84% 201K/240K, mate=- (no teammates).
 - M1.3b OPEN (tier=data) — org-universe terminalization + cross-check + integration,
   chained after M1.3a2 inside session A. One `prod` teammate builds the
   org→signal crosswalk over the 346 undetermined rows from the four bulk
@@ -574,6 +588,10 @@ Deferred classes, from the 46-org measurement
 - Cross-check gap adjudication — M1.3b's gap list over the 23
   swept/blocked orgs: eligibility, version + access ruled per gap, rows
   entering through the off-index mechanism.
+- ACCM artifact-attribution audit — Q3b/Q3c unresolved
+  (`.scratch/agents/res-m1u3a-1.md`); relationship settled (SCCM special
+  body; `CONTROLS` recorded); its 3 guideline rows' issuer cells stand
+  unverified against artifact text.
 - Corpora whose breadth outruns the easy tier — enumeration is one
   anonymous call but per-artifact version and access adjudication is not,
   so the org defers whole rather than being swept against a narrow facet

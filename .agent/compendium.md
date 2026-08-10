@@ -301,6 +301,7 @@ within a band, then version year descending and title within an org.
 | National Institute for Occupational Safety and Health | NIOSH | federal | unverified | https://www.cdc.gov/niosh/pubs/ | - | blocked(guideline products not separately indexed in the 2,058-item publication catalog; issuer determination and enumeration source pair pending) |
 | Office of the Surgeon General | - | federal | unverified | - | - | pending |
 | U.S. Army Surgeon General Health Policy and Services Proponency Office for Rehabilitation and Reintegration | - | federal | unverified | - | - | pending |
+| U.S. Public Health Service | USPHS | federal | unverified | - | - | pending |
 | United States Department of Health and Human Services | - | federal | unverified | - | GC-publishers | pending |
 | Veterans Health Administration Pharmacy Benefits Management clinical guidance | VA PBM | federal | unverified | https://www.va.gov/formularyadvisor/doc/ | - | pending |
 | Advisory Committee on Heritable Disorders in Newborns and Children | ACHDNC | federal | no | https://www.hrsa.gov/advisory-committees/heritable-disorders/condition-nomination | excluded: committee terminated; recommendations archival | - |
@@ -326,7 +327,7 @@ within a band, then version year descending and title within an org.
 | American Academy of Pediatric Dentistry | - | society | yes | https://www.aapd.org/research/oral-health-policies--recommendations/ | NCRDSCB recognized specialties; official index; GC-publishers | pending |
 | American Academy of Pediatrics | AAP | society | yes | https://publications.aap.org/pediatrics/collection/523/Clinical-Practice-Guidelines | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Academy of Physical Medicine & Rehabilitation | AAPM&R | society | yes | https://www.aapmr.org/quality-practice/clinical-guidance | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
-| American Academy of Sleep Medicine | AASM | society | yes | https://aasm.org/clinical-resources/practice-standards/ | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely; AAFP-PG | 2026-08-08 static-list + per-topic-pages; 152 index entries -> 67 eligible + 18 excluded |
+| American Academy of Sleep Medicine | AASM | society | yes | https://aasm.org/clinical-resources/practice-standards/ | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely; AAFP-PG | 2026-08-08 static-list + per-topic-pages; 152 index entries -> 53 eligible + 32 excluded |
 | American Association for Respiratory Care | AARC | society | yes | https://www.aarc.org/resources/clinical-resources/clinical-practice-guidelines/ + https://www.aarc.org/resource/aarc-issue-papers-position-statements-and-guidance-documents/ | GC-publishers; PubMed PMID 40323974 | 2026-08-08 static-list; 156 index entries -> 76 eligible + 72 excluded |
 | American Association for the Study of Liver Diseases | AASLD | society | yes | https://www.aasld.org/practice-guidelines | CMSS current members; official index; GC-publishers; ChoosingWisely; AAFP-PG | pending |
 | American Association of Clinical Endocrinology | AACE | society | yes | https://pro.aace.com/clinical-guidance | AMA HOD roster; AMA SSS roster; CMSS current members; GC-publishers; ChoosingWisely; AAFP-PG | pending |
@@ -670,6 +671,7 @@ within a band, then version year descending and title within an org.
 | Society of Cardiovascular Anesthesiologists | - | society | unverified | - | GC-publishers | pending |
 | Society of Cardiovascular Computed Tomography | - | society | unverified | - | AMA HOD roster; AMA SSS roster; GC-publishers; ChoosingWisely | pending |
 | Society of Cardiovascular Patient Care | - | society | unverified | - | - | pending |
+| Society of Critical Care Anesthesiologists | SOCCA | society | unverified | https://www.socca.org/recommendations | DOI 10.1093/cid/cir257; PubMed PMID 21460264 | pending |
 | Society of Dermatology Physician Associates | - | society | unverified | - | GC-publishers | pending |
 | Society of General Internal Medicine | SGIM | society | unverified | https://www.sgim.org/publications/position-statements/ | - | pending |
 | Society of Hospital Medicine | SHM | society | unverified | https://www.hospitalmedicine.org/clinical-topics/clinical-guidelines/ | - | pending |
