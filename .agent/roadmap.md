@@ -529,21 +529,28 @@ figure.
   SGIM + ANPT indexes 200.
   main=75% 179K/240K, mate=48% 116K/240K (diff-m1u3b peak; prod-m1u3b
   earlier).
-- M1.5 OPEN (tier=kernel — the E-- port; review runs data-grade) —
-  hardening close, session B. Port into E-- →
-  `tools/goal.py check` ONLY the predicates `/goal` consumes: row
-  format/vocabulary, canonical ordering, promotion rule, terminal meter.
+- M1.5 DONE (tier=kernel — the E-- port; review runs data-grade) —
+  hardening close, session B. Ported into E-- → `tools/goal.py check`
+  ONLY the predicates `/goal` consumes: row format/vocabulary (org table
+  + TSV), both canonical orderings, promotion invariant, terminal meter
+  — compendium stage runs FIRST in `check_command`; contract
+  `.scratch/contracts/m1u5.md` (P1-P14, divergences D1-D3 documented).
   The collision ladder, independence semantics, manifest arithmetic +
   unit-gate suites stay `.scratch/` with regeneration paths recorded in
   memory until an M2 harvest needs them — porting them whole would grow
-  the audited codebase against the charter. `memory.md` delta; docs
-  mutually consistent; roadmap gauges recorded. Light review folds into
-  this session per the re-cut ruling: one reviewer over the session A+B
-  commit range at data-tier grade — live spot-check sample + claim
-  consistency + CLAUDE.md conformance — MAIN rules findings, fixes
-  in-session, sets the milestone REVIEWED. Gate: `tools/goal.py check`
-  green incl. the ported predicates; `regen.py --check` green; scoped
-  commits.
+  the audited codebase against the charter. Assurance: 48-fixture dual
+  port/reference gate (45 both-verdict + D1/D2/D3 one each) green incl.
+  live case; 35/35 mutation kills (two independent campaigns + MAIN
+  kill check); adversarial review Q01-Q25 all green, findings F1-F4
+  fixed+green; `regen.py --check` green; full check green, meter
+  `475 organizations 1118 rows; orgs=0 rows=847 provisional=54`.
+  README § Operating + Audit story name the stage; memory delta landed.
+  main=69% 166K/240K, mate=100% 239K/240K (rev-m1u5 peak; test 39%,
+  rev2 52%). Light review folds into this session per the re-cut
+  ruling: one reviewer over the session A+B commit range at data-tier
+  grade — live spot-check sample + claim consistency + CLAUDE.md
+  conformance — MAIN rules findings, fixes in-session, sets the
+  milestone REVIEWED.
 
 Unit/milestone close per session-roadmap WORK-UNIT/MILESTONE-REVIEW
 protocol (gauges recorded, commits `compendium (M1.<u>): …`).

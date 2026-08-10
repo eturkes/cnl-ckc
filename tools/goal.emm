@@ -1,5 +1,6 @@
 Use os.
 Use pathlib.
+Use re.
 Use shutil.
 Use subprocess.
 Use sys.
@@ -363,7 +364,275 @@ Define [[run_red_probe]] taking scratch_path, swipl_executable, stage_path, prob
     If not [[stderr_text.endswith]](").\n"):
         Do [[cleanup_violation]](scratch_path, "red-stderr", "stderr lacks canonical term suffix for probe: " plus probe_name).
 
+Set bal_pattern to "(?:[^()]|\\([^()]*\\))*".
+Set access_rx to [[re.compile]]("^(open|unverified|paywalled\\([^)]+\\)|login\\([^)]+\\))$").
+Set status_rx to [[re.compile]]("^(unqueued|provisional\\(" plus bal_pattern plus "\\)|queued|in-progress|done|blocked\\(" plus bal_pattern plus "\\)|excluded\\(" plus bal_pattern plus "\\))$").
+Set swept_rx to [[re.compile]]("^(pending|-|\\d{4}-\\d{2}-\\d{2} .+|blocked\\(" plus bal_pattern plus "\\))$").
+Set year_rx to [[re.compile]]("\\((\\d{4})(;\\s*pub\\s*(\\d{4}))?\\)\\s*$").
+Set token_rx to [[re.compile]]("guestAccessKey|accessKey=|token=").
+Set org_header to <"org", "abbrev", "class", "CPGs", "index URL", "enum sources", "swept">.
+Set row_header to "org\ttitle (year)\tURL\taccess\tstatus\tnotes".
+Set class_names to <"federal", "society", "other">.
+Set cpgs_names to <"yes", "unverified", "no">.
+
+Define [[read_compendium_file]] taking path_text:
+    Set file_path to [[pathlib.Path]](path_text).
+    If [[file_path.is_symlink]]():
+        Do [[fail]]("compendium", "is a symlink: " plus path_text).
+    If not [[file_path.is_file]]():
+        Do [[fail]]("compendium", "missing: " plus path_text).
+    Give back [[file_path.read_text]](encoding="utf-8").
+
+Define [[org_section_text]] taking comp_text:
+    Set head_parts to [[comp_text.split]]("\n## Organizations\n", 1).
+    If [[len]](head_parts) does not equal 2:
+        Do [[violation]]("compendium-org-table", "missing `## Organizations` section in .agent/compendium.md").
+    Do [[head_parts.pop]](0).
+    Set tail_text to [[head_parts.pop]](0).
+    Set tail_parts to [[tail_text.split]]("\n## Guidelines\n", 1).
+    Set section_text to [[tail_parts.pop]](0).
+    Give back section_text.
+
+Define [[org_table_rows]] taking section_text:
+    Set rows to <>.
+    Set seen_header to False.
+    Set separator_chars to [[set]]("- ").
+    For each raw_line in [[section_text.split]]("\n"):
+        Set line_text to [[raw_line.strip]]().
+        Set starts_pipe to [[line_text.startswith]]("|").
+        Set ends_pipe to [[line_text.endswith]]("|").
+        If starts_pipe:
+            If ends_pipe:
+                Set inner_text to [[line_text.removeprefix]]("|").
+                Set inner_text to [[inner_text.removesuffix]]("|").
+                Set cell_list to <>.
+                For each cell_text in [[inner_text.split]]("|"):
+                    Do [[cell_list.append]]([[cell_text.strip]]()).
+                If not seen_header:
+                    If cell_list does not equal org_header:
+                        Do [[violation]]("compendium-org-table", "organization table header mismatch").
+                    Set seen_header to True.
+                Otherwise:
+                    Set joined_text to "".
+                    For each cell_text in cell_list:
+                        Set joined_text to joined_text plus cell_text.
+                    Set joined_chars to [[set]](joined_text).
+                    Set is_separator to [[joined_chars.issubset]](separator_chars).
+                    If not is_separator:
+                        If [[len]](cell_list) does not equal 7:
+                            Do [[violation]]("compendium-org-table", "organization row without 7 cells: " plus line_text).
+                        Do [[rows.append]](cell_list).
+    If not seen_header:
+        Do [[violation]]("compendium-org-table", "organization table absent - no header row found").
+    If not rows:
+        Do [[violation]]("compendium-org-table", "organization table holds no rows").
+    Give back rows.
+
+Define [[check_compendium_orgs]] taking orows:
+    Set org_class to {}.
+    Set seen_names to {}.
+    Set remaining to 0.
+    Set order_keys to <>.
+    For each row_cells in orows:
+        Set cells_copy to [[list]](row_cells).
+        Set org_name to [[cells_copy.pop]](0).
+        Set abbrev_cell to [[cells_copy.pop]](0).
+        Set class_cell to [[cells_copy.pop]](0).
+        Set cpgs_cell to [[cells_copy.pop]](0).
+        Set index_cell to [[cells_copy.pop]](0).
+        Set sources_cell to [[cells_copy.pop]](0).
+        Set swept_cell to [[cells_copy.pop]](0).
+        If not org_name:
+            Do [[violation]]("compendium-org", "empty org cell in organization row").
+        If not class_cell:
+            Do [[violation]]("compendium-org", "empty class cell for: " plus org_name).
+        If not cpgs_cell:
+            Do [[violation]]("compendium-org", "empty CPGs cell for: " plus org_name).
+        Set class_known to class_cell is in class_names.
+        If not class_known:
+            Do [[violation]]("compendium-org", "bad class `" plus class_cell plus "` for: " plus org_name).
+        Set cpgs_known to cpgs_cell is in cpgs_names.
+        If not cpgs_known:
+            Do [[violation]]("compendium-org", "bad CPGs `" plus cpgs_cell plus "` for: " plus org_name).
+        Set dup_org to org_name is in seen_names.
+        If dup_org:
+            Do [[violation]]("compendium-org", "duplicate organization row: " plus org_name).
+        Do [[seen_names.update]]({org_name: True}).
+        If not [[swept_rx.match]](swept_cell):
+            Do [[violation]]("compendium-org", "bad swept `" plus swept_cell plus "` for: " plus org_name).
+        Do [[org_class.update]]({org_name: class_cell}).
+        Set class_rank to [[class_names.index]](class_cell).
+        Set cpgs_rank to [[cpgs_names.index]](cpgs_cell).
+        Set folded_name to [[org_name.casefold]]().
+        Set order_key to <class_rank, cpgs_rank, folded_name>.
+        Do [[order_keys.append]](<order_key, org_name>).
+        Set is_blocked to [[swept_cell.startswith]]("blocked(").
+        Set is_dated to True.
+        If swept_cell equals "pending":
+            Set is_dated to False.
+        If swept_cell equals "-":
+            Set is_dated to False.
+        If is_blocked:
+            Set is_dated to False.
+        Set terminal to False.
+        If cpgs_cell equals "no":
+            Set terminal to True.
+        If is_blocked:
+            Set terminal to True.
+        If is_dated:
+            Set terminal to True.
+        If not terminal:
+            Set remaining to remaining plus 1.
+    Set prev_key to None.
+    Set prev_bound to False.
+    For each key_record in order_keys:
+        Set record_copy to [[list]](key_record).
+        Set current_key to [[record_copy.pop]](0).
+        Set current_name to [[record_copy.pop]](0).
+        If prev_bound:
+            Set out_of_order to current_key is less than prev_key.
+            If out_of_order:
+                Do [[violation]]("compendium-org-order", "organization order violates class -> CPGs -> alpha at: " plus current_name).
+        Set prev_key to current_key.
+        Set prev_bound to True.
+    Give back <org_class, remaining>.
+
+Define [[load_compendium_rows]] taking tsv_text:
+    Set line_list to [[tsv_text.split]]("\n").
+    Set header_line to [[line_list.pop]](0).
+    If header_line does not equal row_header:
+        Do [[violation]]("compendium-tsv", "first line of .agent/compendium.tsv is not the 6-column header").
+    Set rows to <>.
+    For each line_text in line_list:
+        If line_text:
+            Set cell_list to [[line_text.split]]("\t").
+            If [[len]](cell_list) does not equal 6:
+                Set first_cell to [[cell_list.pop]](0).
+                Do [[violation]]("compendium-tsv", "row without 6 cells starting: " plus first_cell).
+            Do [[rows.append]](cell_list).
+    Give back rows.
+
+Define [[check_compendium_rows]] taking grows, org_class:
+    Set active_count to 0.
+    Set remaining to 0.
+    Set provisional_count to 0.
+    Set seen_rows to {}.
+    Set url_titles to {}.
+    Set order_keys to <>.
+    For each row_cells in grows:
+        Set cells_copy to [[list]](row_cells).
+        Set org_cell to [[cells_copy.pop]](0).
+        Set title_cell to [[cells_copy.pop]](0).
+        Set url_cell to [[cells_copy.pop]](0).
+        Set access_cell to [[cells_copy.pop]](0).
+        Set status_cell to [[cells_copy.pop]](0).
+        Set notes_cell to [[cells_copy.pop]](0).
+        If not [[access_rx.match]](access_cell):
+            Do [[violation]]("compendium-row", "bad access `" plus access_cell plus "` for: " plus title_cell).
+        If not [[status_rx.match]](status_cell):
+            Do [[violation]]("compendium-row", "bad status `" plus status_cell plus "` for: " plus title_cell).
+        Set year_match to [[year_rx.search]](title_cell).
+        If not year_match:
+            Do [[violation]]("compendium-row", "title lacks terminal (year): " plus title_cell).
+        If not org_cell:
+            Do [[violation]]("compendium-row", "empty org cell for: " plus title_cell).
+        If not title_cell:
+            Do [[violation]]("compendium-row", "empty title cell").
+        If not url_cell:
+            Do [[violation]]("compendium-row", "empty URL cell for: " plus title_cell).
+        Set is_http to [[url_cell.startswith]]("http://").
+        Set is_https to [[url_cell.startswith]]("https://").
+        If not (is_http or is_https):
+            Do [[violation]]("compendium-row", "URL lacks http(s) scheme: " plus url_cell).
+        If [[token_rx.search]](url_cell):
+            Do [[violation]]("compendium-row", "capability-token URL: " plus url_cell).
+        Set is_queued to status_cell equals "queued".
+        Set is_progress to status_cell equals "in-progress".
+        If is_queued or is_progress:
+            Set active_count to active_count plus 1.
+        Set is_provisional to [[status_cell.startswith]]("provisional(").
+        Set is_excluded to [[status_cell.startswith]]("excluded(").
+        If access_cell equals "unverified":
+            If not (is_provisional or is_excluded):
+                Do [[violation]]("compendium-row", "unverified access must be provisional(...) or excluded(...): " plus title_cell).
+        If status_cell equals "unqueued":
+            Set has_unresolved to "unresolved" is in notes_cell.
+            If has_unresolved:
+                Do [[violation]]("compendium-row", "unresolved row must not be unqueued: " plus title_cell).
+        Set is_done to status_cell equals "done".
+        Set is_blocked_row to [[status_cell.startswith]]("blocked(").
+        Set row_terminal to False.
+        If is_done:
+            Set row_terminal to True.
+        If is_blocked_row:
+            Set row_terminal to True.
+        If is_excluded:
+            Set row_terminal to True.
+        If not row_terminal:
+            Set remaining to remaining plus 1.
+        If is_provisional:
+            Set provisional_count to provisional_count plus 1.
+        Set folded_title to [[title_cell.casefold]]().
+        Set row_key to folded_title plus "\t" plus url_cell.
+        Set dup_row to row_key is in seen_rows.
+        If dup_row:
+            Do [[violation]]("compendium-dup", "duplicate guideline row: " plus title_cell).
+        Do [[seen_rows.update]]({row_key: True}).
+        Set url_seen to url_cell is in url_titles.
+        If url_seen:
+            Set prior_title to [[url_titles.get]](url_cell).
+            If prior_title does not equal folded_title:
+                Do [[violation]]("compendium-dup", "URL shared by two rows: " plus url_cell).
+        Do [[url_titles.update]]({url_cell: folded_title}).
+        Set band to 1.
+        If access_cell equals "open":
+            Set band to 0.
+        Set org_parts to [[org_cell.split]]("+").
+        Set first_part to [[org_parts.pop]](0).
+        Set first_org to [[first_part.strip]]().
+        Set first_class to [[org_class.get]](first_org, "other").
+        Set class_rank to [[class_names.index]](first_class).
+        Set year_text to [[year_match.group]](1).
+        Set year_value to [[int]](year_text).
+        Set year_key to 0 minus year_value.
+        Set folded_org to [[org_cell.casefold]]().
+        Set order_key to <band, class_rank, folded_org, year_key, folded_title>.
+        Do [[order_keys.append]](<order_key, title_cell>).
+    If active_count is greater than 1:
+        Do [[violation]]("compendium-active", [[str]](active_count) plus " rows queued|in-progress (max 1)").
+    Set prev_key to None.
+    Set prev_bound to False.
+    For each key_record in order_keys:
+        Set record_copy to [[list]](key_record).
+        Set current_key to [[record_copy.pop]](0).
+        Set current_title to [[record_copy.pop]](0).
+        If prev_bound:
+            Set out_of_order to current_key is less than prev_key.
+            If out_of_order:
+                Do [[violation]]("compendium-row-order", "guideline order violates access -> class -> org -> year desc -> title at: " plus current_title).
+        Set prev_key to current_key.
+        Set prev_bound to True.
+    Give back <remaining, provisional_count>.
+
+Define [[check_compendium]] taking nothing:
+    Set comp_text to [[read_compendium_file]](".agent/compendium.md").
+    Set tsv_text to [[read_compendium_file]](".agent/compendium.tsv").
+    Set section_text to [[org_section_text]](comp_text).
+    Set orows to [[org_table_rows]](section_text).
+    Set org_count to [[len]](orows).
+    Set org_result to [[check_compendium_orgs]](orows).
+    Set org_class to [[org_result.pop]](0).
+    Set orgs_remaining to [[org_result.pop]](0).
+    Set grows to [[load_compendium_rows]](tsv_text).
+    Set row_count to [[len]](grows).
+    Set row_result to [[check_compendium_rows]](grows, org_class).
+    Set rows_remaining to [[row_result.pop]](0).
+    Set provisional_count to [[row_result.pop]](0).
+    Set summary to "goal: compendium ok " plus [[str]](org_count) plus " organizations " plus [[str]](row_count) plus " rows; terminal remaining: orgs=" plus [[str]](orgs_remaining) plus " rows=" plus [[str]](rows_remaining) plus " provisional=" plus [[str]](provisional_count).
+    Do [[print]](summary).
+
 Define [[check_command]] taking nothing:
+    Do [[check_compendium]]().
     Set guidelines_root to [[pathlib.Path]]("guidelines").
     Set root_symlink to [[guidelines_root.is_symlink]]().
     If root_symlink:

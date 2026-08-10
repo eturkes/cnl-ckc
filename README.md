@@ -41,8 +41,12 @@ compilation of it, or part of one small named compiler base:
   boundary. Git history is the change record.
 - **Tests are data.** `tests/red/` holds rejection probes named
   `<expected-error-class>--<name>.ace`. One `tools/goal.py check` invocation
-  is the full acceptance gate: it validates layout, source records, and
-  Prolog/lexicon inventory closure, recompiles every guideline twice
+  is the full acceptance gate: it validates the compendium ledger
+  (`.agent/compendium.md` organization table plus `.agent/compendium.tsv`
+  guideline rows — row vocabulary, canonical ordering, the
+  one-active-row promotion invariant — and prints the terminal meter the
+  `/goal` exhaustion clause reads), then validates layout, source records,
+  and Prolog/lexicon inventory closure, recompiles every guideline twice
   (byte-determinism), compares against the committed Prolog (freshness),
   proves every compiled query, and asserts each red probe is rejected with
   its named error class and exit status.
@@ -72,7 +76,12 @@ so halting at any moment is safe: the repository is the only persistence,
 and every round starts by deriving state from it — `.agent/queue.md`,
 `git status`, `tools/goal.py check`, and the in-progress guideline README's
 coverage statement — then finishes or discards incomplete work before
-taking on anything new. Bulk work (source reading, extraction drafting, ACE
+taking on anything new. The check's first stage validates the compendium
+(`.agent/compendium.md` organizations table plus `.agent/compendium.tsv`:
+row format and vocabulary, canonical ordering, the single-active-row
+promotion invariant) and prints a terminal meter — remaining
+non-terminal organizations and unfinished guideline rows — that measures
+the exhaustion clause directly. Bulk work (source reading, extraction drafting, ACE
 drafting, adversarial review) fans out to subagent teammates per
 `.agent/rounds.md`; the session lead alone writes the repository and
 commits.

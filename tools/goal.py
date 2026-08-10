@@ -1,5 +1,6 @@
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -339,7 +340,267 @@ def run_red_probe(scratch_path, swipl_executable, stage_path, probe_path, class_
         cleanup_violation(scratch_path, "red-class", "stderr class mismatch for probe: " + probe_name)
     if not stderr_text.endswith(").\n"):
         cleanup_violation(scratch_path, "red-stderr", "stderr lacks canonical term suffix for probe: " + probe_name)
+bal_pattern = "(?:[^()]|\\([^()]*\\))*"
+access_rx = re.compile("^(open|unverified|paywalled\\([^)]+\\)|login\\([^)]+\\))$")
+status_rx = re.compile("^(unqueued|provisional\\(" + bal_pattern + "\\)|queued|in-progress|done|blocked\\(" + bal_pattern + "\\)|excluded\\(" + bal_pattern + "\\))$")
+swept_rx = re.compile("^(pending|-|\\d{4}-\\d{2}-\\d{2} .+|blocked\\(" + bal_pattern + "\\))$")
+year_rx = re.compile("\\((\\d{4})(;\\s*pub\\s*(\\d{4}))?\\)\\s*$")
+token_rx = re.compile("guestAccessKey|accessKey=|token=")
+org_header = ["org", "abbrev", "class", "CPGs", "index URL", "enum sources", "swept"]
+row_header = "org\ttitle (year)\tURL\taccess\tstatus\tnotes"
+class_names = ["federal", "society", "other"]
+cpgs_names = ["yes", "unverified", "no"]
+def read_compendium_file(path_text):
+    file_path = pathlib.Path(path_text)
+    if file_path.is_symlink():
+        fail("compendium", "is a symlink: " + path_text)
+    if not file_path.is_file():
+        fail("compendium", "missing: " + path_text)
+    return file_path.read_text(encoding="utf-8")
+def org_section_text(comp_text):
+    head_parts = comp_text.split("\n## Organizations\n", 1)
+    if len(head_parts) != 2:
+        violation("compendium-org-table", "missing `## Organizations` section in .agent/compendium.md")
+    head_parts.pop(0)
+    tail_text = head_parts.pop(0)
+    tail_parts = tail_text.split("\n## Guidelines\n", 1)
+    section_text = tail_parts.pop(0)
+    return section_text
+def org_table_rows(section_text):
+    rows = []
+    seen_header = False
+    separator_chars = set("- ")
+    for raw_line in section_text.split("\n"):
+        line_text = raw_line.strip()
+        starts_pipe = line_text.startswith("|")
+        ends_pipe = line_text.endswith("|")
+        if starts_pipe:
+            if ends_pipe:
+                inner_text = line_text.removeprefix("|")
+                inner_text = inner_text.removesuffix("|")
+                cell_list = []
+                for cell_text in inner_text.split("|"):
+                    cell_list.append(cell_text.strip())
+                if not seen_header:
+                    if cell_list != org_header:
+                        violation("compendium-org-table", "organization table header mismatch")
+                    seen_header = True
+                else:
+                    joined_text = ""
+                    for cell_text in cell_list:
+                        joined_text = joined_text + cell_text
+                    joined_chars = set(joined_text)
+                    is_separator = joined_chars.issubset(separator_chars)
+                    if not is_separator:
+                        if len(cell_list) != 7:
+                            violation("compendium-org-table", "organization row without 7 cells: " + line_text)
+                        rows.append(cell_list)
+    if not seen_header:
+        violation("compendium-org-table", "organization table absent - no header row found")
+    if not rows:
+        violation("compendium-org-table", "organization table holds no rows")
+    return rows
+def check_compendium_orgs(orows):
+    org_class = {}
+    seen_names = {}
+    remaining = 0
+    order_keys = []
+    for row_cells in orows:
+        cells_copy = list(row_cells)
+        org_name = cells_copy.pop(0)
+        abbrev_cell = cells_copy.pop(0)
+        class_cell = cells_copy.pop(0)
+        cpgs_cell = cells_copy.pop(0)
+        index_cell = cells_copy.pop(0)
+        sources_cell = cells_copy.pop(0)
+        swept_cell = cells_copy.pop(0)
+        if not org_name:
+            violation("compendium-org", "empty org cell in organization row")
+        if not class_cell:
+            violation("compendium-org", "empty class cell for: " + org_name)
+        if not cpgs_cell:
+            violation("compendium-org", "empty CPGs cell for: " + org_name)
+        class_known = class_cell in class_names
+        if not class_known:
+            violation("compendium-org", "bad class `" + class_cell + "` for: " + org_name)
+        cpgs_known = cpgs_cell in cpgs_names
+        if not cpgs_known:
+            violation("compendium-org", "bad CPGs `" + cpgs_cell + "` for: " + org_name)
+        dup_org = org_name in seen_names
+        if dup_org:
+            violation("compendium-org", "duplicate organization row: " + org_name)
+        seen_names.update({org_name: True})
+        if not swept_rx.match(swept_cell):
+            violation("compendium-org", "bad swept `" + swept_cell + "` for: " + org_name)
+        org_class.update({org_name: class_cell})
+        class_rank = class_names.index(class_cell)
+        cpgs_rank = cpgs_names.index(cpgs_cell)
+        folded_name = org_name.casefold()
+        order_key = [class_rank, cpgs_rank, folded_name]
+        order_keys.append([order_key, org_name])
+        is_blocked = swept_cell.startswith("blocked(")
+        is_dated = True
+        if swept_cell == "pending":
+            is_dated = False
+        if swept_cell == "-":
+            is_dated = False
+        if is_blocked:
+            is_dated = False
+        terminal = False
+        if cpgs_cell == "no":
+            terminal = True
+        if is_blocked:
+            terminal = True
+        if is_dated:
+            terminal = True
+        if not terminal:
+            remaining = remaining + 1
+    prev_key = None
+    prev_bound = False
+    for key_record in order_keys:
+        record_copy = list(key_record)
+        current_key = record_copy.pop(0)
+        current_name = record_copy.pop(0)
+        if prev_bound:
+            out_of_order = current_key < prev_key
+            if out_of_order:
+                violation("compendium-org-order", "organization order violates class -> CPGs -> alpha at: " + current_name)
+        prev_key = current_key
+        prev_bound = True
+    return [org_class, remaining]
+def load_compendium_rows(tsv_text):
+    line_list = tsv_text.split("\n")
+    header_line = line_list.pop(0)
+    if header_line != row_header:
+        violation("compendium-tsv", "first line of .agent/compendium.tsv is not the 6-column header")
+    rows = []
+    for line_text in line_list:
+        if line_text:
+            cell_list = line_text.split("\t")
+            if len(cell_list) != 6:
+                first_cell = cell_list.pop(0)
+                violation("compendium-tsv", "row without 6 cells starting: " + first_cell)
+            rows.append(cell_list)
+    return rows
+def check_compendium_rows(grows, org_class):
+    active_count = 0
+    remaining = 0
+    provisional_count = 0
+    seen_rows = {}
+    url_titles = {}
+    order_keys = []
+    for row_cells in grows:
+        cells_copy = list(row_cells)
+        org_cell = cells_copy.pop(0)
+        title_cell = cells_copy.pop(0)
+        url_cell = cells_copy.pop(0)
+        access_cell = cells_copy.pop(0)
+        status_cell = cells_copy.pop(0)
+        notes_cell = cells_copy.pop(0)
+        if not access_rx.match(access_cell):
+            violation("compendium-row", "bad access `" + access_cell + "` for: " + title_cell)
+        if not status_rx.match(status_cell):
+            violation("compendium-row", "bad status `" + status_cell + "` for: " + title_cell)
+        year_match = year_rx.search(title_cell)
+        if not year_match:
+            violation("compendium-row", "title lacks terminal (year): " + title_cell)
+        if not org_cell:
+            violation("compendium-row", "empty org cell for: " + title_cell)
+        if not title_cell:
+            violation("compendium-row", "empty title cell")
+        if not url_cell:
+            violation("compendium-row", "empty URL cell for: " + title_cell)
+        is_http = url_cell.startswith("http://")
+        is_https = url_cell.startswith("https://")
+        if not (is_http or is_https):
+            violation("compendium-row", "URL lacks http(s) scheme: " + url_cell)
+        if token_rx.search(url_cell):
+            violation("compendium-row", "capability-token URL: " + url_cell)
+        is_queued = status_cell == "queued"
+        is_progress = status_cell == "in-progress"
+        if is_queued or is_progress:
+            active_count = active_count + 1
+        is_provisional = status_cell.startswith("provisional(")
+        is_excluded = status_cell.startswith("excluded(")
+        if access_cell == "unverified":
+            if not (is_provisional or is_excluded):
+                violation("compendium-row", "unverified access must be provisional(...) or excluded(...): " + title_cell)
+        if status_cell == "unqueued":
+            has_unresolved = "unresolved" in notes_cell
+            if has_unresolved:
+                violation("compendium-row", "unresolved row must not be unqueued: " + title_cell)
+        is_done = status_cell == "done"
+        is_blocked_row = status_cell.startswith("blocked(")
+        row_terminal = False
+        if is_done:
+            row_terminal = True
+        if is_blocked_row:
+            row_terminal = True
+        if is_excluded:
+            row_terminal = True
+        if not row_terminal:
+            remaining = remaining + 1
+        if is_provisional:
+            provisional_count = provisional_count + 1
+        folded_title = title_cell.casefold()
+        row_key = folded_title + "\t" + url_cell
+        dup_row = row_key in seen_rows
+        if dup_row:
+            violation("compendium-dup", "duplicate guideline row: " + title_cell)
+        seen_rows.update({row_key: True})
+        url_seen = url_cell in url_titles
+        if url_seen:
+            prior_title = url_titles.get(url_cell)
+            if prior_title != folded_title:
+                violation("compendium-dup", "URL shared by two rows: " + url_cell)
+        url_titles.update({url_cell: folded_title})
+        band = 1
+        if access_cell == "open":
+            band = 0
+        org_parts = org_cell.split("+")
+        first_part = org_parts.pop(0)
+        first_org = first_part.strip()
+        first_class = org_class.get(first_org, "other")
+        class_rank = class_names.index(first_class)
+        year_text = year_match.group(1)
+        year_value = int(year_text)
+        year_key = 0 - year_value
+        folded_org = org_cell.casefold()
+        order_key = [band, class_rank, folded_org, year_key, folded_title]
+        order_keys.append([order_key, title_cell])
+    if active_count > 1:
+        violation("compendium-active", str(active_count) + " rows queued|in-progress (max 1)")
+    prev_key = None
+    prev_bound = False
+    for key_record in order_keys:
+        record_copy = list(key_record)
+        current_key = record_copy.pop(0)
+        current_title = record_copy.pop(0)
+        if prev_bound:
+            out_of_order = current_key < prev_key
+            if out_of_order:
+                violation("compendium-row-order", "guideline order violates access -> class -> org -> year desc -> title at: " + current_title)
+        prev_key = current_key
+        prev_bound = True
+    return [remaining, provisional_count]
+def check_compendium():
+    comp_text = read_compendium_file(".agent/compendium.md")
+    tsv_text = read_compendium_file(".agent/compendium.tsv")
+    section_text = org_section_text(comp_text)
+    orows = org_table_rows(section_text)
+    org_count = len(orows)
+    org_result = check_compendium_orgs(orows)
+    org_class = org_result.pop(0)
+    orgs_remaining = org_result.pop(0)
+    grows = load_compendium_rows(tsv_text)
+    row_count = len(grows)
+    row_result = check_compendium_rows(grows, org_class)
+    rows_remaining = row_result.pop(0)
+    provisional_count = row_result.pop(0)
+    summary = "goal: compendium ok " + str(org_count) + " organizations " + str(row_count) + " rows; terminal remaining: orgs=" + str(orgs_remaining) + " rows=" + str(rows_remaining) + " provisional=" + str(provisional_count)
+    print(summary)
 def check_command():
+    check_compendium()
     guidelines_root = pathlib.Path("guidelines")
     root_symlink = guidelines_root.is_symlink()
     if root_symlink:
