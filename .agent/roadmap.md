@@ -47,6 +47,19 @@ will surface — and it keeps M2 sized by the real per-document cost of
 `/goal`, which cannot be measured until M1 is REVIEWED and `/goal` has
 consumed a useful run of easy-tier rows.
 
+Re-cut (user ruling): M1 finishes in one, at most two more sessions,
+MVP-first — the spine is what `/goal` consumes: a terminal org universe
+and the rewired terminal condition, nothing else. Session A runs M1.3a2
+(banked rulings) and chains into M1.3b (terminalization + cross-check +
+integration docs); session B runs M1.5 (minimal gate port + light
+review) and closes the milestone REVIEWED in the same session — the
+user bound overrides the separate-review-session default. The per-org
+determination pass defers to M2 whole: measured at 415–519 WebSearches
+against the 200/session ceiling, it is 2–3 sessions of spend buying
+`/goal` nothing it can consume now, while `blocked(...)` cells carrying
+the crosswalk's signal hand M2 a costed, prioritized worklist.
+Improvements off the spine land in the M2 register, never in new units.
+
 Method (all units): research fan-out per `.agent/rounds.md` `res` role +
 the session-prompt brief spec. WebSearch budget = 200/session shared →
 explicit per-teammate allowances (~30–40); bulk index crawling goes
@@ -67,7 +80,8 @@ the gates and asks the user immediately while other waves continue.
   and 88 seed guideline rows. Gate green: every `CPGs=yes` row carries ≥2
   independent enumeration sources under the owner rule, every such org
   holds ≥1 seed, and all structural/ordering/vocabulary predicates pass
-  (`.scratch/check_compendium.py`; M1.5 ports them into `goal.py check`).
+  (`.scratch/check_compendium.py`; M1.5 ports the `/goal`-consumed subset
+  into `goal.py check`).
   main=83% 198K/240K, mate=86% 207K/240K.
 
 Harvest units run one shape: `prod` teammates sweep their assigned
@@ -153,7 +167,7 @@ teammate.
     evidence about a row that was never in one, and only a batch
     re-emitting the artifact replaces it. Two ACIP rows (`mm7501a2`,
     `mm7422a3`) sit there — real current guidelines CDC has yet to index.
-    This is the mechanism M1.4's cross-check gap rows need.
+    This is the mechanism the cross-check's gap rows need.
   - One artifact in two indexes (`rr5207a1`, ACIP + HICPAC): both reports
     emit it byte-identically, both manifests count it, the merge
     deduplicates to one row and refuses any cell disagreement — decided
@@ -337,7 +351,7 @@ teammate.
   red first.
   Gate: as M1.2a, plus every assigned org carrying a dated manifest or
   `blocked(<why>)` under `--require-swept`.
-M1.3 was one unit; measurement re-split it into four. Two disjoint
+Determination cost, measured — two disjoint
 stratified samples of 20 orgs each (`.scratch/agents/scout-m1u3-1.md`,
 `.scratch/agents/scout-m1u3-2.md`) ran the draft protocol end to end:
 23 `CPGs=yes` + 15 `CPGs=no` + 2 unsettled ⇒ yes-rate ≈ 60%, and of the
@@ -346,7 +360,8 @@ stratified samples of 20 orgs each (`.scratch/agents/scout-m1u3-1.md`,
 binding constraint is not context but the 200/session WebSearch ceiling:
 at the measured 1.2–1.5 searches/org the 346 orgs cost ≈415–519
 searches. Second-source acquisition (D5), not index adjudication, is the
-dominant per-org cost in both samples — which is what M1.3b removes.
+dominant per-org cost in both samples — removed with the pass itself by
+the re-cut: determination is M2 work, the crosswalk its worklist.
 
 Bulk prefilter, measured against a 12-org set whose truth the scouts
 established (`.scratch/agents/res-m1u3-1.md`): NGC ∪ Guideline Central ∪
@@ -426,8 +441,9 @@ figure.
   orgs, 1,118 guidelines, 0 rows below 2 independent sources), `gate_m1u2a.py`
   71 tests, `gate_m1u3a.py` 43 tests.
   main=82% 196K/240K, mate=65% 155K/240K.
-- M1.3a2 OPEN — attribution + eligibility rulings, MAIN-authored, gated by
-  nothing (its evidence is banked). Every input table already exists, so this
+- M1.3a2 OPEN — attribution + eligibility rulings, MAIN-authored, session
+  A opener; banked evidence only — an item unresolvable on it records the
+  flag as-is, no new research. Every input table already exists, so this
   unit is batch-ruling and fixer authorship alone:
   - HICPAC issuer audit, 46 rows. `.scratch/m1u3a/hicpac-verdicts.tsv` carries
     a verdict per row with a verbatim attribution quote: 21 retain HICPAC, 25
@@ -452,80 +468,75 @@ figure.
   every HICPAC row carries an issuer supported by a quoted attribution or an
   explicit `unreachable` record; every flagged close call ruled; each repair an
   idempotent `.scratch/fix_m1u3a2_*.py` replaying to byte-identical output.
-- M1.3b OPEN — determination prefilter + protocol v2, gated by M1.3a.
-  Build the org→signal crosswalk over all 346 rows from the four bulk
+- M1.3b OPEN — org-universe terminalization + cross-check + integration,
+  chained after M1.3a2 inside session A. One `prod` teammate builds the
+  org→signal crosswalk over the 346 undetermined rows from the four bulk
   sources above (cached under `.scratch/m1u3/res-1/`), carrying per org:
   candidate domain, GC profile + count, NGC hit, AAFP-PG hit, validated
-  PubMed corporate-author hit + its newest record. Pre-resolve the frame
-  classes the scouts found batch-decidable rather than per-org: rows whose
-  only sources are `AMA HOD roster; AMA SSS roster` (one owner, so one
-  source — 104 rows), rows carrying only `major-issuer supplement` (zero
-  sources — 35 rows), the APTA academy alias/rename map, and a
-  merger/rename roster (a body merged into an active successor is a
-  terminal `no`, its historical guideline notwithstanding). MAIN then
-  writes protocol v2 as the unit contract, ruling the ten friction items
-  both scouts raised — chiefly that D2's two-fetch cap covers own-site
-  index discovery ONLY while D5 buys one bibliographic fetch; that
-  transport classification runs direct→reader BEFORE any artifact fetch;
-  that a `CPGs=no` needs affirmative evidence (function + exhaustive
-  own-site output taxonomy + a co-issuance check), never search silence;
-  and that `WPSI-program` does not count toward the ≥2, the draft having
-  had this backwards against the shipped checker. Gate: crosswalk covers
-  346/346 rows; its positive flags reproduce the scouts' 40 known
-  verdicts without contradicting one; protocol v2 has no predicate the
-  gate cannot express.
-- M1.3c OPEN, M1.3d OPEN — the determination pass itself, ~173 orgs per
-  unit, each unit ~4 `prod` teammates × ~43 orgs behind the M1.3b
-  crosswalk. Each org ends `CPGs=yes|no` with `swept` dated-or-blocked,
-  or `unverified` + `blocked(<why>)` naming the mechanism that stopped
-  it. Emit ZERO guideline rows: sweeping is what M1.3 was oversized by,
-  and under the terminal-scope ruling an org ruled `yes` records
-  `blocked(easy-tier harvest deferred; M2)` with its tier and index URL
-  preserved, so M2 inherits a costed worklist. The same pass writes that
-  cell for the 81 orgs sitting `CPGs=yes` + `swept=pending` since M1.1,
-  which no unit ever claimed — AAP, AAFP, ACR, ACP and AAOS among them,
-  and ACOG with them: M1.2b recorded an ACOG `blocked(...)` ruling that
-  never reached the compendium, whose row still reads `pending`, so only
-  USPSTF and NIOSH actually carry `blocked` today. Gate: no org row
-  carries `swept=pending`; every verdict cites the artifact or listing it
-  was read off.
-  Already banked by `map-m1u3-2` and the scouts, to merge rather than
-  re-derive: 40 scout verdicts; Office of the Surgeon General = `no`
-  (population-health reports, not CPGs); SGIM = `yes`; SHM = `yes`;
-  NIOSH already `blocked`; VA PBM issues but holds <2 independent
-  sources; Army HP&R and the HHS umbrella row unsettled.
+  PubMed corporate-author hit + its newest record — bulk fetches only,
+  zero per-org searching. Validator: covers 346/346 rows and reproduces
+  the scouts' 40 verdicts without contradicting one. MAIN then ends
+  every org row terminal through one idempotent fixer over the crosswalk
+  + banked verdict tables:
+  - Banked verdicts land as ruled: the 40 scout verdicts
+    (`.scratch/agents/scout-m1u3-1.md`, `-2.md`); Office of the Surgeon
+    General = `no` (population-health reports, not CPGs); SGIM = `yes`;
+    SHM = `yes`; VA PBM stays `unverified` (issues, <2 independent
+    sources) + blocked naming that; Army HP&R + the HHS umbrella row
+    record unsettled as their block reason; ACOG's M1.2b `blocked(...)`
+    ruling finally reaches its cell, which still reads `pending`.
+  - Every org `CPGs=yes` without a dated sweep — the 81 `swept=pending`
+    since M1.1 (AAP, AAFP, ACR, ACP, AAOS among them) + the scouts' new
+    `yes` rows — records `blocked(easy-tier harvest deferred; M2)` when
+    easy-tier, else `blocked(<mechanism>; M2)`, index URL + tier
+    preserved where known.
+  - Every remaining undetermined row → `unverified` +
+    `blocked(determination deferred; M2 — <crosswalk signal>)`, the
+    signal citing its sources (GC count, NGC, AAFP-PG, PubMed newest
+    year) so M2 prioritizes from the file alone. Batch classes resolve
+    wholesale, never per-org: `AMA HOD roster; AMA SSS roster`-only (one
+    owner, one source — 104 rows) and `major-issuer supplement`-only (35
+    rows) carry that fact in the reason; the APTA academy alias/rename
+    map + merger roster close absorbed/renamed bodies through the
+    collision mechanism (a body merged into an active successor is a
+    terminal `no`, its historical guideline notwithstanding).
+  - ZERO guideline rows emitted; the table stays at 1,118.
+  Cross-check, at gap-list grade: the same four sources diffed against
+  the shipped rows of the 23 orgs M1 swept or blocked (21 dated
+  manifests + USPSTF + NIOSH) → gap list recorded in the compendium
+  header + the M2 register; gaps adjudicate in M2, rows stay untouched.
+  Integration docs, the MVP close: root `README.md` § Operating + the
+  canonical `/goal` argument rewritten → terminal condition = compendium
+  exhaustion; `.agent/queue.md` promotion rule feeds from the
+  compendium; cdc-2022-opioid linked to its compendium row.
+  Gate: `check_compendium.py` bare green; `--terminal` green with meter
+  `unswept=0`; the crosswalk validator; gap list recorded. Known gate
+  touch, ruled now: a ≥1-seed-per-`yes` predicate, if live in the
+  shipped checker, relaxes to sources-only `yes` — the terminal-scope
+  ruling already decoupled `yes` from harvest.
   SAMHSA relocation is already DONE, ahead of this unit:
   `.scratch/fix_samhsa_relocation.py` repoints all three dead URLs and
-  replays from a clean base to byte-identical output. PEP20-02-01-022
-  needed only lowercase → UPPERCASE, its artifact serving anonymously
-  (200, 427,172 B, `%PDF-`); TIP 42 and TIP 61 are delisted from
-  `library.samhsa.gov` and now cite NCBI Bookshelf NBK571020 + NBK539583,
-  the host the compendium already uses for TIP 39 and TIP 51. TIP 61's
-  year moved 2019 → 2018, the 2019 having come from the withdrawn PDF's
-  filename rather than from the artifact's own citation. The fourth row,
-  `Protracted Withdrawal` (sma10-4554), needed the WAF's image CAPTCHA
-  cleared by the user; `.scratch/fix_samhsa_protracted.py` then promoted it
-  to `open`/`unqueued` and replays from a clean base to byte-identical
-  output. Read in the cleared session the issuer's own path serves the
-  artifact (200, `application/pdf`, 625,819 B, `%PDF-1.6`), matching the VA
-  mirror's byte count. SAMHSA now holds zero `provisional(...)` rows.
-- M1.4 OPEN — completeness cross-check, scoped to the 23 orgs M1 actually
-  swept (21 dated manifests + USPSTF and NIOSH `blocked`). Aggregator
-  sweeps diffed against the org-derived list; gaps feed back as rows;
-  MAIN dedupes to one row per guideline (latest current version) and
-  rules eligibility edge cases. A gap landing on any org outside those 23
-  joins the M2 register instead of the gap list, which the terminal-scope
-  ruling makes the common case rather than the exception. Gate:
-  cross-check documented in the compendium header with the swept-org gap
-  list driven to zero; dedupe pass recorded.
-- M1.5 OPEN — integration. Root `README.md` § Operating + the canonical
-  `/goal` argument rewritten → terminal condition = compendium
-  exhaustion; `.agent/queue.md` feeds from the compendium (promotion
-  rule); cdc-2022-opioid linked to its compendium row; the M1.1 + M1.2
-  gate predicates ported from `.scratch/check_compendium.py` into E-- →
-  `tools/goal.py check`; `memory.md` delta. Gate: `tools/goal.py check`
-  green incl. compendium predicates; `regen.py --check` green; docs
-  mutually consistent; scoped commits.
+  replays from a clean base to byte-identical output; TIP 42 + TIP 61
+  cite NCBI Bookshelf (NBK571020, NBK539583); TIP 61's year 2019 → 2018;
+  PEP20-02-01-022 lowercase → UPPERCASE (200, 427,172 B, `%PDF-`);
+  `Protracted Withdrawal` (sma10-4554) promoted `open` by
+  `.scratch/fix_samhsa_protracted.py` after the user cleared the WAF's
+  image CAPTCHA (200, `application/pdf`, 625,819 B, matching the VA
+  mirror). SAMHSA holds zero `provisional(...)` rows.
+- M1.5 OPEN — hardening close, session B. Port into E-- →
+  `tools/goal.py check` ONLY the predicates `/goal` consumes: row
+  format/vocabulary, canonical ordering, promotion rule, terminal meter.
+  The collision ladder, independence semantics, manifest arithmetic +
+  unit-gate suites stay `.scratch/` with regeneration paths recorded in
+  memory until an M2 harvest needs them — porting them whole would grow
+  the audited codebase against the charter. `memory.md` delta; docs
+  mutually consistent; roadmap gauges recorded. Light review folds into
+  this session per the re-cut ruling: one reviewer over the session A+B
+  commit range at data-tier grade — live spot-check sample + claim
+  consistency + CLAUDE.md conformance — MAIN rules findings, fixes
+  in-session, sets the milestone REVIEWED. Gate: `tools/goal.py check`
+  green incl. the ported predicates; `regen.py --check` green; scoped
+  commits.
 
 Unit/milestone close per session-prompt WORK-UNIT/MILESTONE-REVIEW
 protocol (gauges recorded, commits `compendium (M1.<u>): …`).
@@ -542,10 +553,26 @@ Deferred classes, from the 46-org measurement
 (`.scratch/agents/scout-m1u2.md`):
 
 - Easy-tier orgs determined but never harvested — the terminal-scope
-  ruling's direct output, and M2's largest and cheapest class: every org
-  ending `CPGs=yes` + `blocked(easy-tier harvest deferred; M2)`, each
-  carrying the index URL and tier M1.3 recorded. 150–190 orgs, and the
-  only class whose per-org sweep cost M1 has already measured.
+  ruling's direct output, and M2's cheapest class: every org ending
+  `CPGs=yes` + `blocked(easy-tier harvest deferred; M2)`, each carrying
+  the index URL and tier M1 recorded — ~94 known at the re-cut (81
+  pending-since-M1.1 + the scouts' easy-tier `yes`), growing as the
+  determination pass runs. The only class whose per-org sweep cost M1
+  has already measured.
+- Per-org determination pass — the re-cut's wholesale deferral: every
+  row `blocked(determination deferred; M2 — <crosswalk signal>)`, the
+  crosswalk its costed, prioritized worklist. Protocol-v2 friction
+  rulings stay banked in the scout reports: D2's two-fetch cap covers
+  own-site index discovery only while D5 buys one bibliographic fetch;
+  transport classification runs direct→reader before any artifact
+  fetch; a `CPGs=no` needs affirmative evidence (function + exhaustive
+  own-site output taxonomy + a co-issuance check), never search
+  silence; `WPSI-program` counts nothing toward the ≥2. Sized by the
+  measured 3.2–3.4 calls + 1.2–1.5 searches/org against the 200/session
+  WebSearch ceiling.
+- Cross-check gap adjudication — M1.3b's gap list over the 23
+  swept/blocked orgs: eligibility, version + access ruled per gap, rows
+  entering through the off-index mechanism.
 - Corpora whose breadth outruns the easy tier — enumeration is one
   anonymous call but per-artifact version and access adjudication is not,
   so the org defers whole rather than being swept against a narrow facet
@@ -572,11 +599,9 @@ Deferred classes, from the 46-org measurement
   the artifact only where an anonymous fetch settles it; the remaining
   rows keep `unverified` + `provisional(…)` and never promote, which is
   the intended M2 worklist rather than a defect.
-- Storage format — at ≈4,400 rows the guideline table outgrows a
-  markdown file every agent reads whole. Moving guideline rows to
-  `.agent/compendium.tsv` (rules + org table staying in the `.md`,
-  matching the `coverage.tsv` precedent) is cheap now and expensive
-  later; M1 stays on markdown per the easy-first ruling.
+- Storage format — guideline rows already live in `.agent/compendium.tsv`
+  (rules + org table in the `.md`). At ≈4,400 rows revisit whether the
+  org table follows.
 - Row granularity — the M1.1 header rules appropriate-use criteria and
   committee opinions each into their own row, which is what puts ACR at
   279 and drives the ≈4,400 total. A coarser rule (one row per guideline
