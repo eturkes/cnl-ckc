@@ -482,61 +482,53 @@ figure.
   citation; rr6904a1 PHS; stacks cdc_143156 ACIP; core-practices title;
   AASM advisory page).
   main=84% 201K/240K, mate=- (no teammates).
-- M1.3b OPEN (tier=data) — org-universe terminalization + cross-check + integration,
-  chained after M1.3a2 inside session A. One `prod` teammate builds the
-  org→signal crosswalk over the 346 undetermined rows from the four bulk
-  sources above (cached under `.scratch/m1u3/res-1/`), carrying per org:
-  candidate domain, GC profile + count, NGC hit, AAFP-PG hit, validated
-  PubMed corporate-author hit + its newest record — bulk fetches only,
-  zero per-org searching. Validator: covers 346/346 rows and reproduces
-  the scouts' 40 verdicts without contradicting one. MAIN then ends
-  every org row terminal through one idempotent fixer over the crosswalk
-  + banked verdict tables:
-  - Banked verdicts land as ruled: the 40 scout verdicts
-    (`.scratch/agents/scout-m1u3-1.md`, `-2.md`); Office of the Surgeon
-    General = `no` (population-health reports, not CPGs); SGIM = `yes`;
-    SHM = `yes`; VA PBM stays `unverified` (issues, <2 independent
-    sources) + blocked naming that; Army HP&R + the HHS umbrella row
-    record unsettled as their block reason; ACOG's M1.2b `blocked(...)`
-    ruling finally reaches its cell, which still reads `pending`.
-  - Every org `CPGs=yes` without a dated sweep — the 81 `swept=pending`
-    since M1.1 (AAP, AAFP, ACR, ACP, AAOS among them) + the scouts' new
-    `yes` rows — records `blocked(easy-tier harvest deferred; M2)` when
-    easy-tier, else `blocked(<mechanism>; M2)`, index URL + tier
-    preserved where known.
-  - Every remaining undetermined row → `unverified` +
-    `blocked(determination deferred; M2 — <crosswalk signal>)`, the
-    signal citing its sources (GC count, NGC, AAFP-PG, PubMed newest
-    year) so M2 prioritizes from the file alone. Batch classes resolve
-    wholesale, never per-org: `AMA HOD roster; AMA SSS roster`-only (one
-    owner, one source — 104 rows) and `major-issuer supplement`-only (35
-    rows) carry that fact in the reason; the APTA academy alias/rename
-    map + merger roster close absorbed/renamed bodies through the
-    collision mechanism (a body merged into an active successor is a
-    terminal `no`, its historical guideline notwithstanding).
-  - ZERO guideline rows emitted; the table stays at 1,118.
-  Cross-check, at gap-list grade: the same four sources diffed against
-  the shipped rows of the 23 orgs M1 swept or blocked (21 dated
-  manifests + USPSTF + NIOSH) → gap list recorded in the compendium
-  header + the M2 register; gaps adjudicate in M2, rows stay untouched.
-  Integration docs, the MVP close: root `README.md` § Operating + the
-  canonical `/goal` argument rewritten → terminal condition = compendium
-  exhaustion; `.agent/queue.md` promotion rule feeds from the
-  compendium; cdc-2022-opioid linked to its compendium row.
-  Gate: `check_compendium.py` bare green; `--terminal` green with meter
-  `unswept=0`; the crosswalk validator; gap list recorded. Known gate
-  touch, ruled now: a ≥1-seed-per-`yes` predicate, if live in the
-  shipped checker, relaxes to sources-only `yes` — the terminal-scope
-  ruling already decoupled `yes` from harvest.
-  SAMHSA relocation is already DONE, ahead of this unit:
-  `.scratch/fix_samhsa_relocation.py` repoints all three dead URLs and
-  replays from a clean base to byte-identical output; TIP 42 + TIP 61
-  cite NCBI Bookshelf (NBK571020, NBK539583); TIP 61's year 2019 → 2018;
-  PEP20-02-01-022 lowercase → UPPERCASE (200, 427,172 B, `%PDF-`);
-  `Protracted Withdrawal` (sma10-4554) promoted `open` by
-  `.scratch/fix_samhsa_protracted.py` after the user cleared the WAF's
-  image CAPTCHA (200, `application/pdf`, 625,819 B, matching the VA
-  mirror). SAMHSA holds zero `provisional(...)` rows.
+- M1.3b DONE (tier=data) — org-universe terminalization + cross-check +
+  integration; chained after M1.3a2 inside session A.
+  Crosswalk (`prod-m1u3b`): 347/347 unverified orgs × four bulk sources —
+  GC 145 profiles (128 count>0), NGC 67, AAFP-PG 30 orgs/61 records,
+  validated PubMed 126 of 1,044 fetched records (0 scout contradictions);
+  validator PASS at production time (post-fixer its coverage predicate
+  reports the ruled rows as extra BY DESIGN — terminal state is
+  `check_compendium.py --terminal`'s to gate); regeneration
+  `.scratch/m1u3b/build_crosswalk.py`, cache-only replay `cmp` rc=0.
+  Terminalization (`.scratch/fix_m1u3b_terminal.py`, idempotent: 427
+  edits, second run 0): scout verdicts 23 yes (13 easy + 10 hard carrying
+  their own mechanisms) + 12 no; named rulings — OSG `no` (its sole
+  attributed row is `excluded(derivative)`, gate-consistent), SGIM `yes`
+  (DOI 10.1016/j.jacc.2025.05.007 + PMID 40815242; index re-pointed:
+  banked URL 404s, live `/advocacy-policy/` path 200), SHM `yes`
+  (PMID 22534627 + GC-publishers), VA PBM `unverified` +
+  `blocked(<2 independent sources; heavy tail ~582; M2)`; unsettled:
+  Army HP&R, HHS umbrella, PCNA (AAFP-PG + PubMed-2014 signal = M2
+  priority), NABP; HVS + SCPC scout-`no` OVERRIDDEN → `unverified` +
+  `blocked(determination unsettled; M2 — …)`: each co-issues an eligible
+  shipped AUC row and the CPGs=no-vs-eligible-row predicate forbids `no`
+  while the row stands (SCPC merger in-cell). 81 `yes`+`pending` → M2
+  mechanism map (19) or easy-tier default (62); 301 undetermined →
+  `blocked(determination deferred; M2 — <signal>)` with AMA-roster-only /
+  supplement-only / issuer-of-N annotations. End state: 475 orgs =
+  127 yes / 309 unverified / 39 no; ZERO guideline rows touched (1,118).
+  Gate touches, pre-ruled or forced: seed-per-yes predicate removed
+  (sources-only `yes`); org SWEPT regex → `BAL` (mechanism reasons nest
+  parens; the status regex already did).
+  Cross-check (`diff-m1u3b`; three provider stream deaths ridden out by
+  in-place revival): 23 swept/blocked orgs × 4 sources → 669 candidate
+  gaps across 16 orgs at gap-list grade, recorded in compendium
+  § Protocol layer 3 + the M2 register; NGC caches = org/count level, so
+  zero fabricated titles; `build_gaps.py` cache-only replay `cmp` rc=0.
+  Integration (MVP close): README § Operating `/goal` argument →
+  compendium exhaustion clause; queue promotion feeds from
+  `.agent/compendium.tsv` (cdc-2022-opioid ↔ its row cross-linked);
+  header adoption sentence de-futured; memory regeneration bullet.
+  SAMHSA relocation (pre-unit): `.scratch/fix_samhsa_relocation.py` +
+  `fix_samhsa_protracted.py`, replayed byte-identical; zero
+  `provisional(...)` SAMHSA rows.
+  Gate: bare PASS; `--terminal` meter `unswept=0 unverified=309
+  provisional=54` (row-status violations = the intended `/goal`
+  worklist); `gate_m1u2a` 71 OK; `gate_m1u3a` 44 OK; live spot-checks
+  SGIM + ANPT indexes 200.
+  main=75% 179K/240K, mate=48% 116K/240K (diff-m1u3b peak; prod-m1u3b
+  earlier).
 - M1.5 OPEN (tier=kernel — the E-- port; review runs data-grade) —
   hardening close, session B. Port into E-- →
   `tools/goal.py check` ONLY the predicates `/goal` consumes: row
@@ -587,7 +579,15 @@ Deferred classes, from the 46-org measurement
   WebSearch ceiling.
 - Cross-check gap adjudication — M1.3b's gap list over the 23
   swept/blocked orgs: eligibility, version + access ruled per gap, rows
-  entering through the off-index mechanism.
+  entering through the off-index mechanism. Delivered: 669 candidate
+  gaps/16 orgs (`.scratch/m1u3b/gapcheck/gaps.tsv`; record in
+  compendium § Protocol layer 3). Determination-pass leads banked here:
+  historical-issuer PMIDs ACRO 14585480 (2003) + SCPC 23892939 (2013);
+  HVS + SCPC co-issuer attribution audit (eligible shipped AUC rows
+  name both while both sit `unverified` + unsettled-blocked); APTA
+  academy renames (APTA Neurology → Academy of Neurologic Physical
+  Therapy; scout-1's alias-map shortcut: parent-directory crosswalk →
+  active academy name/domain → own CPG page).
 - ACCM artifact-attribution audit — Q3b/Q3c unresolved
   (`.scratch/agents/res-m1u3a-1.md`); relationship settled (SCCM special
   body; `CONTROLS` recorded); its 3 guideline rows' issuer cells stand

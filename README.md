@@ -64,7 +64,7 @@ Guideline work runs as goal rounds in a Claude Code session opened at the
 repository root, driven by the built-in `/goal` stop-condition command:
 
 ```
-/goal Process American clinical guidelines through the pipeline as described in README.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and web search confirms every eligible American clinical guideline available online is covered.
+/goal Process American clinical guidelines through the pipeline as described in README.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
 ```
 
 The goal re-arms each time Claude tries to stop and survives session resume,
@@ -103,8 +103,10 @@ While a document is in progress, a round advances it one increment:
    commit; `.agent/queue.md` and the guideline README's coverage statement
    updated.
 
-When no document is in progress, the round fetches the next source — from
-the queue, or discovered online and queued: acquire the document and
+When no document is in progress, the round fetches the next source — the
+queue's next entry, the queue refilling from `.agent/compendium.tsv` per
+`.agent/compendium.md` § Queue promotion when it runs dry: acquire the
+document and
 persist it immutably under `guidelines/<id>/source/` before any generative
 processing; record URL, retrieval date, SHA-256, byte length, and a rights
 quote in `guidelines/<id>/README.md` (model:
