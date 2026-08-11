@@ -84,6 +84,7 @@ domain-neutral:
 | `guideline_arg(Context, EventRef, Position, Ref)` | participant at `Position` (1-based, DRS order) |
 | `guideline_pp(Context, EventRef, Preposition, Ref)` | prepositional attachment on the event |
 | `guideline_property(Context, PropertyRef, Lemma, Polarity)` | adjectival property (`pos` in v1) |
+| `guideline_operator(OuterContext, InnerContext, Operator)` | reified modal/negation wrapper: `InnerContext`'s content stands under `Operator` relative to `OuterContext` |
 
 `Comparison` is exactly one of `eq`, `geq`, `greater`, `leq`, `less`,
 `exactly`, `na`; units and counts are copied through as data. The
@@ -91,33 +92,88 @@ compiler performs no arithmetic, unit conversion, counting, or modal
 inference — a cardinality clause records what the sentence said, nothing
 more.
 
-`Context` is `actual` for asserted content. It exists as argument 1 from
-the start so that modality and negation can arrive (M3.2) as reified
-operator contexts without changing any signature.
+`Context` is `actual` for asserted content, or a generated operator
+context:
+
+```
+Context      ::= actual | '$guideline_id'(context, DocId, S, box(B), Deps)
+Operator     ::= should | must | can | may | '-'
+OperatorEdge ::= guideline_operator(OuterContext, InnerContext, Operator)
+```
+
+Modality and classical negation are reified as data, never inference:
+each DRS operator box becomes one `guideline_operator/3` edge from its
+enclosing context to a fresh box context, emitted before the box's
+payload clauses, which carry that box context in their own `Context`
+argument. The operator atoms are the DRS functors themselves (`-` is
+classical negation), so a non-English frontend produces the same tags;
+¬SHOULD(P) and SHOULD(¬P) stay structurally distinct, and the compiler
+performs no deontic, modal, or classical inference. `box(B)` numbers a
+sentence's operator boxes in whole-sentence preorder; `Deps` follows the
+Skolem dependency rule — empty for root facts, the antecedent's
+top-level referents for consequent boxes — so a consequent operator
+context is a per-antecedent-solution witness. In rule bodies an operator box binds an
+existential context variable (`guideline_operator(Outer, V, Op)` plus
+payload goals sharing `V`): matching is Horn-monotone structure
+satisfaction over whatever documents are loaded, so extra clauses under
+a producer context never block a match, and two body boxes may bind one
+producer context whose payload satisfies both. A consumer that wants unwrapped
+content only keeps `Context = actual`; an operator-aware consumer adds
+one recursive walk over `guideline_operator/3` edges (a `ctx_desc/2`
+descendant relation) to collect content under a modality.
+
+Negation-as-failure ("does not provably …") in a rule antecedent
+compiles to an executable `\+ (…)` over the box's goals. Its scope is
+the loaded aggregate: `\+` is evaluated against whatever document set is
+co-loaded, so absence is corpus-relative, never document-local.
+Negation-as-failure in a consequent or a root fact rejects —
+assertion-by-absence is meaningless.
 
 A universally quantified sentence becomes one Horn clause per consequent
-condition, all sharing one identical rendered body. Referents introduced
+condition, all sharing one identical rendered body per rule variant: a
+nested `if … then if … then …` consequent curries into one rule whose
+antecedent concatenates the nested domains, and an antecedent containing
+one disjunction splits into two variants whose bodies are the shared
+conditions plus that arm — the bundle keeps one sentence comment with
+variant-1 clauses then variant-2 clauses, contiguous. Referents introduced
 only in the consequent are Skolemized to
 `'$guideline_id'(product, DocId, SentenceId, ref(N), Deps)`, where `Deps`
-is the antecedent's referents in DRS order and `N` is the referent's
-first-occurrence position in that sentence's expansion. These terms name
+is the concatenation of every curried antecedent segment's top-level
+referents in DRS order (a split variant appends its arm's top-level
+referents) — referents introduced inside an operator or
+negation-as-failure (NAF) box contribute nothing to any `Deps` list;
+they are consequent-inaccessible and stay box-local existentials — and
+`N` is the
+referent's first-occurrence position in the sentence's unsplit
+expansion — both variants of a split mint the same `ref(N)`,
+distinguished by `Deps`. These terms name
 the compiler's chosen witness — not a source-given name, real-world
 identity, or uniqueness claim. Because facts and derived heads share one
 vocabulary, a rule body consumes another document's facts or heads by
 ordinary resolution.
 
 Every v1 document opens with the same declaration block — `multifile` and
-`discontiguous` for all seven indicators, whether or not it populates
+`discontiguous` for all eight indicators, whether or not it populates
 them — followed by the document record, then per sentence a
 `% S<n>: <verbatim sentence>` comment and that sentence's contiguous
 clauses in deterministic order. Any subset of v1 documents therefore
 co-loads into one engine in any order with no warnings. Names beginning
 `guideline_` and the identity constructor `'$guideline_id'` are reserved:
 a source word colliding with one rejects the document rather than
-silently shadowing schema vocabulary. `guideline_part/3` and
-`guideline_operator/3` are reserved for later units and unemitted in v1;
-shapes needing them (group coordination, modality, negation, disjunction)
-reject with a canonical `ace_to_pl_error(unsupported, …)` line.
+silently shadowing schema vocabulary. `guideline_part/3` is
+reserved for a later unit and unemitted in v1; shapes still outside the
+schema (group coordination, disjunctive consequents, rules scoped inside
+an operator, questions) reject with a canonical
+`ace_to_pl_error(unsupported, …)` line.
+
+Authoring notes (v1): one statement per sentence — split "…, and if A
+then B" into separate sentences. Keep quantified restrictors out of
+modal complements: a universally quantified rule nested inside a modal
+box rejects (`operator_scoped_rule`), so state the quantification in the
+antecedent and let the modal box wrap only the consequent. A
+prepositional phrase attaches to the verb; modify a noun with a relative
+clause or `of`. Count nouns take an explicit determiner. `for` as a
+preposition needs a `prep(for,for)` user-lexicon entry.
 
 ## Operating
 

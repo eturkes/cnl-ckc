@@ -21,22 +21,32 @@
 % identical bytes, and schema selection is an explicit input, never inferred
 % from content. The candidate v1 path lives under "v1 schema projection"
 % near the end of this file and is documented in README.md
-% "Compiled Prolog schema (candidate v1)".
+% "Compiled Prolog schema (candidate v1)". Beyond the legacy shapes, v1
+% admits modal/classical-negation operator wrappers (reified as
+% guideline_operator/3 edges over context ids), consequent currying,
+% antecedent Horn splits over one disjunction, and executable
+% negation-as-failure for top-level antecedent NAF boxes.
 %
-% Translation is total: every sentence becomes exactly one emitted clause
-% (fact | rule | guideline_query(yesno|who(Var), Goal)); any unrecognized
-% shape rejects the whole document. Supported DRS shapes:
+% LEGACY-path contract (the v1 path states its own in the v1 section):
+% translation is total — each sentence yields exactly one legacy clause
+% (fact | rule | guideline_query(yesno|who(Var), Goal)), while a v1
+% sentence yields an ordered bundle of one or more clauses; any
+% unrecognized shape rejects the whole document. Supported legacy DRS
+% shapes:
 %   copula fact   object(R,N,countable,na,eq,1) + predicate(E,be,named(P),R)  ->  'N'('P').
 %   ground fact   predicate(E,V,Named...)                                     ->  'V'(Names...).
 %   rule          =>(drs Ante, drs Cons): Ante = objects/predicates/~(single
 %                 predicate); Cons = one predicate                            ->  Head :- Body.
 %   question      question(drs): one predicate + optional query(W,who), or
 %                 object + be over a named individual (yesno)                 ->  guideline_query/2.
-% Event referents are erased; each must be box-local with exactly one
-% occurrence. Head and NAF variables must be bound by positive body literals.
-% NAF-only predicates (no fact or rule head in the document) get a
-% ":- dynamic." declaration after the header term, so \+ succeeds by
-% absence at load time; undefined positive references stay fail-loud.
+% Still legacy-only: event referents are erased (v1 reifies them), each
+% box-local with exactly one occurrence; head and NAF variables must be
+% bound by positive body literals (v1 additionally admits ground minted
+% identities); NAF-only predicates (no fact or rule head in the document)
+% get a ":- dynamic." declaration after the header term, so \+ succeeds
+% by absence at load time, while undefined positive references stay
+% fail-loud (v1 needs no dynamic declarations — its uniform multifile
+% indicator block plays that role).
 
 :- module(ace_to_pl, [main/0]).
 
@@ -983,6 +993,22 @@ write_body_literal(pos(Lit)) :-
 write_body_literal(naf(Lit)) :-
     write('\\+ '),
     write_canonical_part(Lit).
+write_body_literal(naf_conj([Goal])) :-
+    !,
+    write('\\+ '),
+    write_canonical_part(Goal).
+write_body_literal(naf_conj(Goals)) :-
+    write('\\+ ('),
+    write_naf_goals(Goals),
+    write(')').
+
+write_naf_goals([Goal]) :-
+    !,
+    write_canonical_part(Goal).
+write_naf_goals([Goal|Goals]) :-
+    write_canonical_part(Goal),
+    write(', '),
+    write_naf_goals(Goals).
 
 /* Validate the original, then number and write a copy: rendering never
    instantiates variables still shared with the DRS or later items. */
@@ -1046,17 +1072,30 @@ canonical_args(Index, Arity, Term) :-
    Selected by exact trailing argv token 'schema=v1'; the default path
    above stays byte-identical. Closed reserved vocabulary: source lemmas
    (nouns/verbs/adjectives/prepositions) are opaque data atoms, never
-   predicate functors. Context argument = actual throughout M3.1;
-   operator trees (M3.2) will occupy it without signature changes.
+   predicate functors. M3.2 operator boxes use generated context ids plus
+   guideline_operator/3 edges; antecedent edges remain existential joins.
    Consequent-local referents Skolemize to ground
    '$guideline_id'(product, DocId, S, ref(N), Deps) terms, Deps = the
-   antecedent box domain in DRS order. Referent ordinal N = position in
-   the sentence's first-occurrence enumeration over referent slots in
-   condition order (document-repeat referents occupy positions; minted
-   identities use their position). Every clause of a rule sentence
-   repeats one identical rendered body. See README section
-   "Compiled Prolog schema (candidate v1)". */
+   concatenation of every curried antecedent segment's domain in DRS
+   order (a Horn-split variant appends its arm's domain). Referent
+   ordinal N = position in the sentence's first-occurrence enumeration
+   over referent slots in condition order (document-repeat referents
+   occupy positions; minted identities use their position; NAF payload
+   slots count in place; the Horn split numbers from the UNSPLIT
+   traversal, so both variants mint the same ref(N) distinguished by
+   Deps). Every clause of a rule sentence repeats one identical
+   rendered body per Horn-split variant. Top-level antecedent NAF
+   renders executable \+ over the box's expansion; every other NAF
+   position rejects. Reject details introduced by this section:
+   operator_scoped_rule(Op,S), disjunctive_root(S),
+   disjunctive_antecedent(S), disjunctive_consequent(S),
+   forbidden_operator(Pos,naf,S), deferred_operator(Pos,Op,S),
+   naf_shape(Conds), naf_variable_not_bound, naf_local_escape,
+   invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
+   See README section "Compiled Prolog schema (candidate v1)". */
 
+/* Uniform declaration block (F2): every v1 document declares all eight
+   indicators regardless of population. */
 v1_indicators([
     guideline_document/3,
     guideline_entity/4,
@@ -1064,7 +1103,8 @@ v1_indicators([
     guideline_event/3,
     guideline_arg/4,
     guideline_pp/4,
-    guideline_property/4
+    guideline_property/4,
+    guideline_operator/3
 ]).
 
 v1_translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
@@ -1085,10 +1125,54 @@ v1_translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
     ),
     crypto_data_hash(Bytes, AceDigest, [algorithm(sha256), encoding(octet)]),
     v1_collision_scan(Conds),
-    tag_conditions(Conds, Tagged),
+    v1_tag_conditions(Conds, Tagged),
     group_by_sentence(1, SentenceCount, Tagged, Groups),
     v1_translate_groups(Groups, DocId, [], Bundles),
     v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes).
+
+/* v1 root tagging extends the legacy root inventory only for reified
+   unary operator boxes. Nested anchors still select exactly one source
+   sentence, preserving the common grouping/provenance machinery. */
+v1_tag_conditions([], []).
+v1_tag_conditions([Cond|Conds], [S-Tagged|Rest]) :-
+    v1_tag_condition(Cond, S, Tagged),
+    v1_tag_conditions(Conds, Rest).
+
+v1_tag_condition(Cond, S, anchored(Inner)) :-
+    nonvar(Cond),
+    functor(Cond, -, 2),
+    arg(1, Cond, Inner),
+    arg(2, Cond, Anchor),
+    anchor_sentence(Anchor, S),
+    nonvar(Inner),
+    !.
+v1_tag_condition(Cond, S, rule(Ante, Cons)) :-
+    nonvar(Cond),
+    functor(Cond, =>, 2),
+    arg(1, Cond, Ante),
+    arg(2, Cond, Cons),
+    !,
+    inner_sentence(Cond, S).
+v1_tag_condition(Cond, S, question(QDrs)) :-
+    nonvar(Cond),
+    functor(Cond, question, 1),
+    arg(1, Cond, QDrs),
+    !,
+    inner_sentence(Cond, S).
+v1_tag_condition(Cond, S, boxed(Cond)) :-
+    nonvar(Cond),
+    functor(Cond, Op, 1),
+    memberchk(Op, ['-', should, must, can, may]),
+    !,
+    inner_sentence(Cond, S).
+v1_tag_condition(Cond, S, _) :-
+    nonvar(Cond),
+    functor(Cond, ~, 1),
+    !,
+    inner_sentence(Cond, S),
+    reject(unsupported, forbidden_operator(root, naf, S)).
+v1_tag_condition(Cond, _, _) :-
+    reject(unsupported, root_condition(Cond)).
 
 /* Reserved vocabulary: any source lemma beginning `guideline_` or equal
    to the identity constructor name, and any source compound built with
@@ -1146,18 +1230,21 @@ v1_sentence(Group, S, DocId, Map0, Map, Clauses) :-
         v1_rule(Ante, Cons, S, DocId, Map0, Clauses)
     ; Group = [question(_)] ->
         reject(unsupported, question_not_supported(S))
-    ; v1_all_anchored(Group) ->
+    ; v1_root_group(Group) ->
         v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses)
     ; reject(unsupported, sentence_shape(Group))
     ).
 
-v1_all_anchored([]).
-v1_all_anchored([anchored(_)|Items]) :-
-    v1_all_anchored(Items).
+v1_root_group([]).
+v1_root_group([anchored(_)|Items]) :-
+    v1_root_group(Items).
+v1_root_group([boxed(_)|Items]) :-
+    v1_root_group(Items).
 
 /* ---------- v1 facts ---------- */
 
-v1_fact_bundle(Items, S, DocId, Map0, Map, Clauses) :-
+v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses) :-
+    v1_flatten_items(Group, root, S, DocId, [], actual, none, 1, _, Items),
     v1_ref_slots(Items, Slots),
     v1_first_occurrence(Slots, [], Ordered),
     v1_mint_ordinals(Ordered, 1, S, DocId, Map0, Map),
@@ -1178,16 +1265,138 @@ v1_mint_ordinals([V|Vs], N, S, DocId, Map0, Map) :-
 
 /* ---------- v1 rules ---------- */
 
+/* Rules: consequent currying first (P3) — a singleton bare implication
+   inside an empty-domain consequent box folds its antecedent into the
+   body, recursively; then the Horn split (P5) when the collected
+   top-level antecedent conditions hold exactly one v/2 disjunction. */
 v1_rule(Ante, Cons, S, DocId, Map, Clauses) :-
+    v1_curry(Ante, Cons, Segs, FinalCons),
+    v1_box(FinalCons, _CDom, CConds),
+    v1_seg_domain(Segs, ADom),
+    v1_split_scan(Segs, Shared, Vs),
+    ( Vs == [] ->
+        v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, Clauses)
+    ; Vs = [v(Arm1, Arm2)] ->
+        v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map,
+            Clauses)
+    ; reject(unsupported, disjunctive_antecedent(S))
+    ).
+
+v1_curry(Ante, Cons, [seg(ADom, AConds)|Segs], FinalCons) :-
     v1_box(Ante, ADom, AConds),
-    v1_box(Cons, _CDom, CConds),
-    v1_flatten_box(AConds, antecedent, S, AItems),
-    v1_flatten_box(CConds, consequent, S, CItems),
+    ( v1_curry_step(Cons, Ante2, Cons2) ->
+        v1_curry(Ante2, Cons2, Segs, FinalCons)
+    ; Segs = [],
+      FinalCons = Cons
+    ).
+
+/* Curry candidate: singleton bare implication under an EMPTY
+   intermediate domain (decomposed with arg/3 + ==; a non-empty domain
+   or sibling conditions fall through to the ordinary flatten rejects). */
+v1_curry_step(Cons, Ante2, Cons2) :-
+    nonvar(Cons),
+    functor(Cons, drs, 2),
+    arg(1, Cons, CDom),
+    CDom == [],
+    arg(2, Cons, CConds),
+    nonvar(CConds),
+    CConds = [Single|Rest],
+    Rest == [],
+    nonvar(Single),
+    functor(Single, =>, 2),
+    arg(1, Single, Ante2),
+    arg(2, Single, Cons2).
+
+v1_seg_domain([], []).
+v1_seg_domain([seg(Dom, _)|Segs], ADom) :-
+    v1_seg_domain(Segs, Tail),
+    append(Dom, Tail, ADom).
+
+/* Top-level v/2 scan across curried segments (P5): shared conditions
+   keep DRS order; exactly one v splits, two or more reject. */
+v1_split_scan([], [], []).
+v1_split_scan([seg(_, Conds)|Segs], Shared, Vs) :-
+    v1_split_conds(Conds, SharedHead, VsHead),
+    v1_split_scan(Segs, SharedTail, VsTail),
+    append(SharedHead, SharedTail, Shared),
+    append(VsHead, VsTail, Vs).
+
+v1_split_conds([], [], []).
+v1_split_conds([C|Cs], Shared, [v(Arm1, Arm2)|Vs]) :-
+    nonvar(C),
+    functor(C, v, 2),
+    !,
+    arg(1, C, Arm1),
+    arg(2, C, Arm2),
+    v1_split_conds(Cs, Shared, Vs).
+v1_split_conds([C|Cs], [C|Shared], Vs) :-
+    v1_split_conds(Cs, Shared, Vs).
+
+v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, Clauses) :-
+    v1_seg_items(Segs, S, DocId, 1, N1, AItems),
+    v1_flatten_items(CConds, consequent, S, DocId, ADom, actual, none,
+        N1, _, CItems),
+    v1_ante_refs(AItems, CItems, Map, Ordered, AnteRefs),
+    v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
+    v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
+    v1_variant(AItems, CItems, Map, Sko, S, Clauses).
+
+v1_seg_items([], _, _, N, N, []).
+v1_seg_items([seg(_, Conds)|Segs], S, DocId, N0, N, Items) :-
+    v1_flatten_items(Conds, antecedent, S, DocId, [], actual, none, N0,
+        N1, Head),
+    v1_seg_items(Segs, S, DocId, N1, N, Tail),
+    append(Head, Tail, Items).
+
+/* Horn split (P5): variant k's body = shared conditions then arm-k, its
+   Skolem Deps = outer domain then arm-k domain; referent ordinals and
+   box numbers come from the one UNSPLIT traversal — shared, arm 1,
+   arm 2, consequent — so both variants mint identical ref(N)/box(B)
+   values, distinguished by Deps alone. Bundle = variant-1 clauses then
+   variant-2 clauses under one sentence comment. */
+v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, Clauses) :-
+    v1_arm_box(Arm1, S, Dom1, Conds1),
+    v1_arm_box(Arm2, S, Dom2, Conds2),
+    v1_flatten_items(Shared, antecedent, S, DocId, [], actual, none,
+        1, NS, SharedItems),
+    v1_flatten_items(Conds1, antecedent, S, DocId, [], actual, none,
+        NS, NA1, Arm1Items),
+    v1_flatten_items(Conds2, antecedent, S, DocId, [], actual, none,
+        NA1, NA2, Arm2Items),
+    append(ADom, Dom1, Deps1),
+    append(ADom, Dom2, Deps2),
+    v1_flatten_items(CConds, consequent, S, DocId, Deps1, actual, none,
+        NA2, _, CItems1),
+    v1_flatten_items(CConds, consequent, S, DocId, Deps2, actual, none,
+        NA2, _, CItems2),
+    append(Arm1Items, Arm2Items, ArmItems),
+    append(SharedItems, ArmItems, AnteAll),
+    v1_ante_refs(AnteAll, CItems1, Map, Ordered, AnteRefs),
+    v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
+    v1_skolem_map(ConsLocals, Ordered, Deps1, S, DocId, Sko1),
+    v1_skolem_map(ConsLocals, Ordered, Deps2, S, DocId, Sko2),
+    append(SharedItems, Arm1Items, Ante1),
+    append(SharedItems, Arm2Items, Ante2),
+    v1_variant(Ante1, CItems1, Map, Sko1, S, Clauses1),
+    v1_variant(Ante2, CItems2, Map, Sko2, S, Clauses2),
+    append(Clauses1, Clauses2, Clauses).
+
+v1_arm_box(Arm, S, _, _) :-
+    nonvar(Arm),
+    functor(Arm, v, 2),
+    !,
+    reject(unsupported, disjunctive_antecedent(S)).
+v1_arm_box(Arm, _, Dom, Conds) :-
+    v1_box(Arm, Dom, Conds).
+
+v1_ante_refs(AItems, CItems, _, Ordered, AnteRefs) :-
     append(AItems, CItems, AllItems),
     v1_ref_slots(AllItems, Slots),
+    v1_ref_slots(AItems, AnteSlots),
     v1_first_occurrence(Slots, [], Ordered),
-    v1_cons_locals(Ordered, ADom, Map, ConsLocals),
-    v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
+    v1_first_occurrence(AnteSlots, [], AnteRefs).
+
+v1_variant(AItems, CItems, Map, Sko, S, Clauses) :-
     v1_expand_items(AItems, Map, Sko, Goals),
     ( Goals == [] ->
         reject(unsupported, sentence_shape(rule_without_antecedent(S)))
@@ -1199,6 +1408,7 @@ v1_rule(Ante, Cons, S, DocId, Map, Clauses) :-
     ; true
     ),
     v1_rule_clauses(Heads, Goals, Clauses),
+    v1_naf_safety(Clauses),
     maplist(v1_check_safety, Clauses).
 
 v1_box(Box, Dom, Conds) :-
@@ -1210,17 +1420,18 @@ v1_box(Box, Dom, Conds) :-
     ; reject(unsupported, invalid_drs_shape)
     ).
 
-/* Consequent-local referents = sentence referents that are neither
-   antecedent-domain members nor document-introduced. */
+/* Consequent-local referents = sentence referents that occur in no
+   antecedent payload (including operator-box locals) and are not
+   document-introduced. Context Skolem dependencies remain ADom. */
 v1_cons_locals([], _, _, []).
-v1_cons_locals([V|Vs], ADom, Map, Locals) :-
-    ( ( v1_var_member(V, ADom)
+v1_cons_locals([V|Vs], AnteRefs, Map, Locals) :-
+    ( ( v1_var_member(V, AnteRefs)
       ; v1_lookup(Map, V, _)
       ) ->
         Locals = Locals1
     ; Locals = [V|Locals1]
     ),
-    v1_cons_locals(Vs, ADom, Map, Locals1).
+    v1_cons_locals(Vs, AnteRefs, Map, Locals1).
 
 v1_skolem_map([], _, _, _, _, []).
 v1_skolem_map([V|Vs], Ordered, ADom, S, DocId, [V-Id|Pairs]) :-
@@ -1232,21 +1443,33 @@ v1_rule_clauses([], _, []).
 v1_rule_clauses([Head|Heads], Goals, [clause(Head, Goals)|Clauses]) :-
     v1_rule_clauses(Heads, Goals, Clauses).
 
-/* Box conditions: nested list groups flatten in order; operator and
-   disjunction wrappers reject with their deferral class before any
-   emission. */
-v1_flatten_box([], _, _, []).
-v1_flatten_box([C|Cs], Where, S, Items) :-
-    v1_flatten_cond(C, Where, S, Head),
-    v1_flatten_box(Cs, Where, S, Tail),
+/* Box conditions flatten left-to-right. Every modal/classical wrapper
+   contributes one operator edge before its recursively flattened payload
+   (F2); a top-level antecedent NAF box becomes one executable \+ goal
+   over its payload expansion (P4). Consequent/root contexts are
+   generated Skolems; antecedent contexts are body variables joined
+   through guideline_operator/3. Encl = none | op(Op) | naf names the
+   immediately enclosing wrapper. */
+v1_flatten_items([], _, _, _, _, _, _, N, N, []).
+v1_flatten_items([C|Cs], Where, S, DocId, Deps, Outer, Encl, N0, N,
+        Items) :-
+    v1_flatten_cond(C, Where, S, DocId, Deps, Outer, Encl, N0, N1, Head),
+    v1_flatten_items(Cs, Where, S, DocId, Deps, Outer, Encl, N1, N, Tail),
     append(Head, Tail, Items).
 
-v1_flatten_cond(C, Where, S, Items) :-
+v1_flatten_cond(C, Where, S, DocId, Deps, Outer, Encl, N0, N, Items) :-
     nonvar(C),
     is_list(C),
     !,
-    v1_flatten_box(C, Where, S, Items).
-v1_flatten_cond(C, _, _, [anchored(Inner)]) :-
+    v1_flatten_items(C, Where, S, DocId, Deps, Outer, Encl, N0, N, Items).
+v1_flatten_cond(anchored(Inner), _, _, _, _, Outer, _, N, N,
+        [anchored(Outer, Inner)]) :-
+    !.
+v1_flatten_cond(boxed(C), Where, S, DocId, Deps, Outer, Encl, N0, N,
+        Items) :-
+    !,
+    v1_flatten_cond(C, Where, S, DocId, Deps, Outer, Encl, N0, N, Items).
+v1_flatten_cond(C, _, _, _, _, Outer, _, N, N, [anchored(Outer, Inner)]) :-
     nonvar(C),
     functor(C, -, 2),
     arg(2, C, Anchor),
@@ -1254,57 +1477,118 @@ v1_flatten_cond(C, _, _, [anchored(Inner)]) :-
     anchor_sentence(Anchor, _),
     !,
     arg(1, C, Inner).
-v1_flatten_cond(C, Where, S, _) :-
+v1_flatten_cond(C, _, S, _, _, _, Encl, _, _, _) :-
+    nonvar(C),
+    functor(C, =>, 2),
+    !,
+    ( Encl = op(Op) ->
+        reject(unsupported, operator_scoped_rule(Op, S))
+    ; reject(unsupported, condition_shape(C))
+    ).
+v1_flatten_cond(C, Where, S, _, _, _, _, _, _, _) :-
     nonvar(C),
     functor(C, v, 2),
     !,
     v1_disjunction_reject(Where, S).
-v1_flatten_cond(C, Where, S, _) :-
+v1_flatten_cond(C, Where, S, DocId, Deps, Outer, Encl, N0, N, Items) :-
     nonvar(C),
     functor(C, ~, 1),
     !,
-    v1_naf_reject(Where, S).
-v1_flatten_cond(C, Where, S, _) :-
-    nonvar(C),
-    functor(C, -, 1),
-    !,
-    reject(unsupported, deferred_operator(Where, classical_not, S)).
-v1_flatten_cond(C, Where, S, _) :-
+    arg(1, C, Box),
+    v1_naf_items(Where, Encl, Box, S, DocId, Deps, Outer, N0, N, Items).
+v1_flatten_cond(C, Where, S, DocId, Deps, Outer, Encl, N0, N, Items) :-
     nonvar(C),
     functor(C, Op, 1),
-    memberchk(Op, [should, must, can, may]),
+    memberchk(Op, ['-', should, must, can, may]),
     !,
-    reject(unsupported, deferred_operator(Where, Op, S)).
-v1_flatten_cond(C, _, _, _) :-
+    ( Encl == naf ->
+        reject(unsupported, deferred_operator(Where, Op, S))
+    ; arg(1, C, Box),
+      v1_operator_items(Op, Box, C, Where, S, DocId, Deps, Outer, N0, N,
+          Items)
+    ).
+v1_flatten_cond(C, _, _, _, _, _, _, _, _, _) :-
     reject(unsupported, condition_shape(C)).
+
+v1_operator_items(Op, Box, Original, Where, S, DocId, Deps, Outer,
+        N0, N, [operator(Outer, Inner, Op)|Payload]) :-
+    v1_box(Box, _Dom, Conds),
+    v1_operator_context(Where, DocId, S, Deps, N0, N1, Inner),
+    v1_flatten_items(Conds, Where, S, DocId, Deps, Inner, op(Op), N1, N,
+        Payload),
+    ( v1_payload_condition(Payload) ->
+        true
+    ; reject(unsupported, condition_shape(Original))
+    ).
+
+/* box(B) numbering: whole-sentence preorder over operator boxes,
+   antecedent wrappers included — they consume a number and mint
+   nothing (their context stays an existential body variable). */
+v1_operator_context(antecedent, _, _, _, N, N2, _) :-
+    !,
+    N2 is N + 1.
+v1_operator_context(_, DocId, S, Deps, N, N2,
+        '$guideline_id'(context, DocId, S, box(N), Deps)) :-
+    N2 is N + 1.
+
+v1_payload_condition([anchored(_, _)|_]) :-
+    !.
+v1_payload_condition([_|Items]) :-
+    v1_payload_condition(Items).
+
+/* NAF by position x enclosure (P4): top-level antecedent NAF becomes
+   one executable goal; consequent NAF is forbidden; NAF nested inside
+   any wrapper stays a named deferral. */
+v1_naf_items(antecedent, none, Box, S, DocId, Deps, Outer, N0, N,
+        [naf(NDom, Payload)]) :-
+    !,
+    v1_box(Box, NDom, NConds),
+    v1_flatten_items(NConds, antecedent, S, DocId, Deps, Outer, naf,
+        N0, N, Payload),
+    ( v1_payload_condition(Payload) ->
+        true
+    ; reject(unsupported, naf_shape(NConds))
+    ).
+v1_naf_items(consequent, none, _, S, _, _, _, _, _, _) :-
+    !,
+    reject(unsupported, forbidden_operator(consequent, naf, S)).
+v1_naf_items(Where, _, _, S, _, _, _, _, _, _) :-
+    reject(unsupported, deferred_operator(Where, naf, S)).
 
 v1_disjunction_reject(antecedent, S) :-
     reject(unsupported, disjunctive_antecedent(S)).
 v1_disjunction_reject(consequent, S) :-
     reject(unsupported, disjunctive_consequent(S)).
-
-v1_naf_reject(antecedent, S) :-
-    reject(unsupported, deferred_operator(antecedent, naf, S)).
-v1_naf_reject(consequent, S) :-
-    reject(unsupported, forbidden_operator(consequent, naf, S)).
+v1_disjunction_reject(root, S) :-
+    reject(unsupported, disjunctive_root(S)).
 
 /* ---------- v1 condition expansion (shared by facts, bodies, heads) ---------- */
 
 v1_expand_items([], _, _, []).
-v1_expand_items([anchored(Inner)|Items], Map, Sko, Terms) :-
-    v1_condition(Inner, Map, Sko, Head),
+v1_expand_items([operator(Outer, Inner, Op)|Items], Map, Sko,
+        [guideline_operator(Outer, Inner, Op)|Terms]) :-
+    v1_expand_items(Items, Map, Sko, Terms).
+v1_expand_items([naf(NDom, Payload)|Items], Map, Sko,
+        [naf(NDom, Goals)|Terms]) :-
+    !,
+    v1_expand_items(Payload, Map, Sko, Goals),
+    v1_expand_items(Items, Map, Sko, Terms).
+v1_expand_items([anchored(Context, Inner)|Items], Map, Sko, Terms) :-
+    v1_condition(Context, Inner, Map, Sko, Head),
     v1_expand_items(Items, Map, Sko, Tail),
     append(Head, Tail, Terms).
 
-v1_condition(Inner, Map, Sko, [guideline_entity(actual, Ref, Noun, Class),
-        guideline_cardinality(actual, Ref, Unit, Op, Count)]) :-
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_entity(Context, Ref, Noun, Class),
+         guideline_cardinality(Context, Ref, Unit, Op, Count)]) :-
     nonvar(Inner),
     functor(Inner, object, 6),
     !,
     Inner = object(Ref0, Noun, Class, Unit, Op, Count),
     v1_check_operator(Op),
     v1_ref(Ref0, Map, Sko, Ref).
-v1_condition(Inner, Map, Sko, [guideline_event(actual, E, Lemma)|ArgTerms]) :-
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_event(Context, E, Lemma)|ArgTerms]) :-
     nonvar(Inner),
     functor(Inner, predicate, Arity),
     Arity >= 3,
@@ -1316,15 +1600,17 @@ v1_condition(Inner, Map, Sko, [guideline_event(actual, E, Lemma)|ArgTerms]) :-
     arg(1, Inner, E0),
     arg(2, Inner, Lemma),
     v1_ref(E0, Map, Sko, E),
-    v1_participants(3, Arity, Inner, Map, Sko, E, 1, ArgTerms).
-v1_condition(Inner, Map, Sko, [guideline_pp(actual, E, Prep, Obj)]) :-
+    v1_participants(3, Arity, Inner, Map, Sko, Context, E, 1, ArgTerms).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_pp(Context, E, Prep, Obj)]) :-
     nonvar(Inner),
     functor(Inner, modifier_pp, 3),
     !,
     Inner = modifier_pp(E0, Prep, Obj0),
     v1_ref(E0, Map, Sko, E),
     v1_ref(Obj0, Map, Sko, Obj).
-v1_condition(Inner, Map, Sko, [guideline_property(actual, P, Lemma, pos)]) :-
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_property(Context, P, Lemma, pos)]) :-
     nonvar(Inner),
     functor(Inner, property, 3),
     !,
@@ -1334,19 +1620,20 @@ v1_condition(Inner, Map, Sko, [guideline_property(actual, P, Lemma, pos)]) :-
     ; reject(unsupported, property_polarity(Polarity))
     ),
     v1_ref(P0, Map, Sko, P).
-v1_condition(Inner, _, _, _) :-
+v1_condition(_, Inner, _, _, _) :-
     reject(unsupported, condition_shape(Inner)).
 
-v1_participants(Index, Arity, _, _, _, _, _, []) :-
+v1_participants(Index, Arity, _, _, _, _, _, _, []) :-
     Index > Arity,
     !.
-v1_participants(Index, Arity, Inner, Map, Sko, E,
-        Pos, [guideline_arg(actual, E, Pos, Ref)|Terms]) :-
+v1_participants(Index, Arity, Inner, Map, Sko, Context, E,
+        Pos, [guideline_arg(Context, E, Pos, Ref)|Terms]) :-
     arg(Index, Inner, Arg),
     v1_ref(Arg, Map, Sko, Ref),
     NextIndex is Index + 1,
     NextPos is Pos + 1,
-    v1_participants(NextIndex, Arity, Inner, Map, Sko, E, NextPos, Terms).
+    v1_participants(NextIndex, Arity, Inner, Map, Sko, Context, E,
+        NextPos, Terms).
 
 v1_check_operator(Op) :-
     ( atom(Op),
@@ -1373,7 +1660,14 @@ v1_ref(Var, _, _, Var).
 /* ---------- v1 referent bookkeeping ---------- */
 
 v1_ref_slots([], []).
-v1_ref_slots([anchored(Inner)|Items], Slots) :-
+v1_ref_slots([operator(_, _, _)|Items], Slots) :-
+    v1_ref_slots(Items, Slots).
+v1_ref_slots([naf(_, Payload)|Items], Slots) :-
+    !,
+    v1_ref_slots(Payload, Head),
+    v1_ref_slots(Items, Tail),
+    append(Head, Tail, Slots).
+v1_ref_slots([anchored(_, Inner)|Items], Slots) :-
     v1_cond_refs(Inner, Head),
     v1_ref_slots(Items, Tail),
     append(Head, Tail, Slots).
@@ -1439,13 +1733,79 @@ v1_nth_var([X|Xs], V, K, N) :-
       v1_nth_var(Xs, V, K2, N)
     ).
 
+/* P10: head vars must be bound by POSITIVE body goals — a variable
+   occurring only under \+ is unbound at call time. */
 v1_check_safety(clause(Head, Goals)) :-
     term_variables(Head, HeadVars),
-    term_variables(Goals, GoalVars),
-    ( v1_vars_subset(HeadVars, GoalVars) ->
+    v1_positive_vars(Goals, [], BodyVars),
+    ( v1_vars_subset(HeadVars, BodyVars) ->
         true
     ; reject(safety, head_variable_not_bound_in_body)
     ).
+
+v1_positive_vars([], Vars, Vars).
+v1_positive_vars([naf(_, _)|Goals], Vars0, Vars) :-
+    !,
+    v1_positive_vars(Goals, Vars0, Vars).
+v1_positive_vars([Goal|Goals], Vars0, Vars) :-
+    term_variables(Goal, GoalVars),
+    merge_vars(GoalVars, Vars0, Vars1),
+    v1_positive_vars(Goals, Vars1, Vars).
+
+/* P4 NAF safety: inside a \+ goal, NAF-box-local variables (the box
+   domain) stay scoped; every other variable must be bound by an earlier
+   positive goal in the same body. P10: a box-local variable occurring
+   anywhere outside its own \+ goal is an escape. */
+v1_naf_safety(Clauses) :-
+    maplist(v1_naf_safe_clause, Clauses).
+
+v1_naf_safe_clause(clause(Head, Goals)) :-
+    v1_strip_naf(Goals, Stripped),
+    v1_naf_walk(Goals, [], clause(Head, Stripped)).
+
+/* Escape scanning counts occurrences in the clause as EMITTED: the
+   naf bookkeeping wrapper carries the box domain, which is not an
+   occurrence, so it is stripped to the payload goals first. */
+v1_strip_naf([], []).
+v1_strip_naf([naf(_, Sub)|Goals], [Sub|Stripped]) :-
+    !,
+    v1_strip_naf(Goals, Stripped).
+v1_strip_naf([Goal|Goals], [Goal|Stripped]) :-
+    v1_strip_naf(Goals, Stripped).
+
+v1_naf_walk([], _, _).
+v1_naf_walk([naf(NDom, Sub)|Goals], Bound, Clause) :-
+    !,
+    term_variables(Sub, Vars),
+    v1_naf_vars_ok(Vars, NDom, Bound),
+    v1_naf_escape_scan(NDom, Sub, Clause),
+    v1_naf_walk(Goals, Bound, Clause).
+v1_naf_walk([Goal|Goals], Bound0, Clause) :-
+    term_variables(Goal, GoalVars),
+    merge_vars(GoalVars, Bound0, Bound),
+    v1_naf_walk(Goals, Bound, Clause).
+
+v1_naf_vars_ok([], _, _).
+v1_naf_vars_ok([V|Vs], NDom, Bound) :-
+    ( strict_member(V, NDom) ->
+        true
+    ; strict_member(V, Bound) ->
+        true
+    ; reject(safety, naf_variable_not_bound)
+    ),
+    v1_naf_vars_ok(Vs, NDom, Bound).
+
+/* Occurrence counting: clauses hold no drs/2 boxes, so the legacy
+   condition-position counter counts plain occurrences here. */
+v1_naf_escape_scan([], _, _).
+v1_naf_escape_scan([V|Vs], Sub, Clause) :-
+    cond_occurrences(V, Clause, Total),
+    cond_occurrences(V, Sub, Inside),
+    ( Total =:= Inside ->
+        true
+    ; reject(safety, naf_local_escape)
+    ),
+    v1_naf_escape_scan(Vs, Sub, Clause).
 
 v1_vars_subset([], _).
 v1_vars_subset([V|Vs], Vars) :-
@@ -1488,12 +1848,15 @@ v1_render_item(clause(Head, [])) :-
     !,
     render_term_line(Head).
 v1_render_item(clause(Head, Goals)) :-
-    v1_wrap_pos(Goals, Wrapped),
+    v1_wrap_goals(Goals, Wrapped),
     render_item(rule(Head, Wrapped)).
 
-v1_wrap_pos([], []).
-v1_wrap_pos([Goal|Goals], [pos(Goal)|Wrapped]) :-
-    v1_wrap_pos(Goals, Wrapped).
+v1_wrap_goals([], []).
+v1_wrap_goals([naf(_, Sub)|Goals], [naf_conj(Sub)|Wrapped]) :-
+    !,
+    v1_wrap_goals(Goals, Wrapped).
+v1_wrap_goals([Goal|Goals], [pos(Goal)|Wrapped]) :-
+    v1_wrap_goals(Goals, Wrapped).
 
 /* ---------- canonical error emission ---------- */
 

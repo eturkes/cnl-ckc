@@ -1,0 +1,6 @@
+noun_sg(clinician,clinician,human).
+noun_sg(caution,caution,neutr).
+noun_sg(dosage,dosage,neutr).
+tv_finsg(heeds,heed).
+tv_infpl(heed,heed).
+prep(during,during).

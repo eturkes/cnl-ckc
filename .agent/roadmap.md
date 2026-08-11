@@ -768,45 +768,54 @@ identities):
   collision rejection (red-cased). Schema doc = README section, explicitly
   CANDIDATE until M3.3 freezes it. Old corpus still compiles
   byte-identically; all legacy rejection classes keep their reds.
-- M3.2 OPEN (kernel, oracle) — modal/negation/strength/frontend.
-  CONTRACT CHECKPOINT DONE (session A of this unit): wave-1 complete
-  (map-m3u2 + spikes ctxterm/ctxedge), contract FINAL at
-  `.scratch/contracts/m3u2.md`. F2 ruled ctx-edge: Context =
+- M3.2 DONE (kernel, oracle) — modal/negation/strength/frontend.
+  Shipped on the v1 path, legacy renderer byte-frozen (79/79 committed
+  docs recompile byte-identically; `guidelines/` clean after a fresh
+  compile). F2 ctx-edge as contracted: Context =
   `'$guideline_id'(context,DocId,S,box(B),Deps)` +
-  `guideline_operator(Outer,Inner,Op)` edges, Op ∈
-  should|must|can|may|'-'; ctx-term rejected (sibling-box collapse, its
-  own verdict). Key rulings: singleton consequent currying (the
-  corpus-dominant nested-universal shape); operator_scoped_rule reject
-  + one-statement-per-sentence ⇒ B3-06/B3-07/B3-15 candidates re-author
-  at M3.4; NAF scope = corpus-global; D6 = zero new machinery; D9 =
-  one-line functionwords.pl fork (validated + regressions); red set −2
-  +2 (=11). Corpus evidence: 75/79 admit=m3.2; spike deltas compile
-  71/75 (ctxterm, with currying) / 50+4 (ctxedge, without). Next
-  session: wave 2 (test/orc/rev-prep vs the FINAL contract), MAIN
-  implements ctx-edge + currying + D3 matrix + D8 split + D9 fork in
-  the primary tree, diff, reviews, close. main=session-A 96% 230K/240K,
-  mate=80% 192K/240K (map-m3u2 peak; spikes 67K/92K at steer).
-  D2 modality: one generic wrapper for `should|must|can|may(drs(...))`
-  reified as an exact operator tree, never flattened to marker+flag —
-  `¬SHOULD(P)` stays distinct from `SHOULD(¬P)`; operator atoms are DRS
-  functors (the language-neutral waist), documented as such. D3 negation
-  matrix by operator x position: antecedent NAF -> `\+` over one scoped
-  conjunction with earlier-bound outer vars + box-local existentials;
-  consequent NAF rejects; classical negation never lowers to `-/1` —
-  corpus-required negative trees survive only as reified shallow
-  polarity; NAF scope binds to the composition contract (document-local
-  vs corpus-global ruled with the aggregate ABI, generated obligations
-  run against the composition model). D6 Box-3 strength: reified class
-  facts through a generic source-entity relation keyed by opaque docid —
-  no recommendation vocabulary in compiler logic, no fixture pn_sg
-  survives. D9 `for`: smallest English-frontend fork (function-word gap),
-  LGPL §5(a) in-file notice + PROVENANCE/load-closure + conditional
-  NOTICE check; authoring contract states PP verb-attachment default +
-  relative/`of` for noun modification + determiner-required plurals. The
-  current `unsupported--modal.ace` red converts IN THIS UNIT (gate
-  coherence); the D2-ruled still-unsupported modal boundary takes its
-  place.
-- M3.3 BLOCKED(M3.2) (kernel, oracle) — derived proof + validator + v1
+  `guideline_operator(Outer,Inner,Op)` edges (Op ∈
+  should|must|can|may|'-'), edge before payload, `box(B)`
+  whole-sentence preorder, Deps = top-level antecedent domains ONLY
+  (P14 Q4: operator/NAF-box domains contribute nothing); antecedent
+  boxes bind existential edge vars, mint no document-local ids. P3
+  singleton consequent currying; P5 Horn split (one `v/2`, two
+  contiguous variants, unsplit ordinals, arm-appended Deps); P4 NAF
+  matrix (antecedent `\+` over box goals with binding/escape safety
+  scans — ACE-surface-unreachable per Q3, white-box-probed; consequent/
+  root/nested = canonical rejects); AD02 precedence: a forbidden-
+  POSITION NAF classifies without descent. P6 strength = plain fact
+  machinery. D9 `for` AMENDED: ulex `prep(for,for)` alone, NO vendor
+  fork (the planned functionwords.pl deletion had no red baseline;
+  vendor/ape stays byte-frozen). Red set −2+2 = 11. README
+  candidate-schema updated (operator row, grammar fence, Deps
+  accessibility boundary, NAF aggregate scope, authoring notes).
+  Corpus: 76/79 parse-validated candidates compile v1 green;
+  B3-06/B3-07/B3-15 = ruled authoring reds re-authoring at M3.4.
+  Evidence, MAIN-rerun green from this tree and reproduced by rev's
+  isolated git-clone replay (pre/post status byte-identical): the
+  contract's 6-command gate chain + trailing
+  `git diff --quiet -- guidelines/` (load-bearing tail, rev2 M27:
+  compile-first overwrites the byte oracle `check` reads) — goal check
+  79 docs/11 reds; gate_m3u1 24/10; gate_m3u2 7 deep greens + 5
+  detail-pinned reds + 73-case verdict suite (test-m3u2 phase-2
+  encoding of MAIN batch rulings, harvested `.scratch/m3u2/suite/`);
+  diff_m3u2 vs orc's contract-only oracle (harvested
+  `.scratch/m3u2/oracle/`, both sides re-derived live on the shared
+  unforked stage): 43 parse-real, 39 agree, 4 divergences all
+  bounded-ruled (2 oracle anchor-normalization, 2 oracle pre-P14 Deps;
+  exact `p14_transform` waiver — rev's 2-mutant F-04 red suite green),
+  4 kernel-only direct-DRS cells. Review: rev-m3u2 F-01..F-07 closed
+  (closing 4 / claims 4 / README 3 / mutation 2 suites green);
+  rev2-m3u2 27-mutant campaign: 25/27 killed by the amended 7-stage
+  chain (M21 → check_split contiguity assertion; M27 → the
+  guidelines-clean tail), M09/M10 (isolated `v1_curry_step/3` guard
+  flips — every surface negative couples both curry guards) closed by
+  white-box curry probes in gate_m3u2, red-proven against both
+  mutants. Contract = `.scratch/contracts/m3u2.md` (FINAL P1–P14 + F2
+  record); gate/suite/oracle/diff regeneration paths = memory.
+  main=93% 224K/240K (peak; close tail ran post-compaction),
+  mate=100% 239K/240K (rev-m3u2 peak).
+- M3.3 OPEN (kernel, oracle) — derived proof + validator + v1
   freeze. D5 implemented HERE, before any migration: compiler proof mode
   derives per rule-group a witness world satisfying every positive body
   literal (object/cardinality/PP/group structure respected; controlled
