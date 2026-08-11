@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp15',ace_sha256(c2de973e6032de4ba643657ba79ee29bae70e31c4222bce21c972dd975d940f2),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec02-imp15',ace_sha256(c2de973e6032de4ba643657ba79ee29bae70e31c4222bce21c972dd975d940f2),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: Every clinician should not impose a nonpharmacologic-failure-requirement before an opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

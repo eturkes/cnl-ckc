@@ -1,3 +1,2 @@
-Rec05-imp10-clinician is a dosage-change-clinician.
-Every dosage-change-clinician uses-taper-slow-enough-to-minimize-withdrawal-when-reducing-or-discontinuing-opioids.
-Does Rec05-imp10-clinician use-taper-slow-enough-to-minimize-withdrawal-when-reducing-or-discontinuing-opioids?
+If a clinician reduces an opioid then the clinician should use a withdrawal-minimizing-taper.
+If a clinician discontinues an opioid then the clinician should use a withdrawal-minimizing-taper.

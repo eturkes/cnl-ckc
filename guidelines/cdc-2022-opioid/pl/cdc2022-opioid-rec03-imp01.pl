@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec03-imp01',ace_sha256(fc567a2593eb1936b662fd028bf11e1f4e173351c408461e49e62b5ae704c9c1),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec03-imp01',ace_sha256(fc567a2593eb1936b662fd028bf11e1f4e173351c408461e49e62b5ae704c9c1),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: Every clinician should not treat an acute-pain with an ER-LA-opioid.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec03-imp01',1,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec03-imp01',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec03-imp01',1,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

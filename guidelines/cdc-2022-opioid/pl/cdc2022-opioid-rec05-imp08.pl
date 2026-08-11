@@ -1,8 +1,29 @@
 % cdc2022-opioid-rec05-imp08.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec05-imp08',ace_sha256('53ab702bd1373f43a92791f3b74f07d3d2012900a3c26ff77fc38e70ebb67c35'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
-% S1: Rec05-imp08-clinician is a dosage-change-clinician.
-'dosage-change-clinician'('Rec05-imp08-clinician').
-% S2: Every dosage-change-clinician follows-up-at-least-monthly-with-patients-engaging-in-opioid-tapering.
-'follow-up-at-least-monthly-with-patients-engaging-in-opioid-tapering'(A) :- 'dosage-change-clinician'(A).
-% S3: Does Rec05-imp08-clinician follow-up-at-least-monthly-with-patients-engaging-in-opioid-tapering?
-guideline_query(yesno,'follow-up-at-least-monthly-with-patients-engaging-in-opioid-tapering'('Rec05-imp08-clinician')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec05-imp08',ace_sha256('8d54372e2215933e970277407db550ba505dfa50b4b014db0d73a8380ec653df'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+% S1: If a patient engages in an opioid-taper then every clinician should conduct an at-least-monthly-follow-up with the patient.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(5),[A,B,C,D]),'at-least-monthly-follow-up',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(5),[A,B,C,D]),na,eq,1) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(6),[A,B,C,D]),conduct) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(6),[A,B,C,D]),1,D) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(6),[A,B,C,D]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(5),[A,B,C,D])) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
+guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(6),[A,B,C,D]),with,A) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

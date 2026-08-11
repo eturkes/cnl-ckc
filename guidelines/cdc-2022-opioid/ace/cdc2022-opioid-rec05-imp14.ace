@@ -1,3 +1,1 @@
-Rec05-imp14-clinician is a dosage-change-clinician.
-Every dosage-change-clinician considers-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper.
-Does Rec05-imp14-clinician consider-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper?
+A clinically-significant-withdrawal-symptom can signal a further-taper-slowing-need.

@@ -1,3 +1,3 @@
-Rec05-imp15-clinician is a dosage-change-clinician.
-Every dosage-change-clinician considers-pausing-and-restarting-tapers-when-patient-is-ready-and-slowing-tapers-near-low-dosages.
-Does Rec05-imp15-clinician consider-pausing-and-restarting-tapers-when-patient-is-ready-and-slowing-tapers-near-low-dosages?
+Every clinician may pause a taper.
+If a patient is ready then every clinician may restart a taper.
+If a patient reaches a low-opioid-dosage then every clinician may slow a taper.

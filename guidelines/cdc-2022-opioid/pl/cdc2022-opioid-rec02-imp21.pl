@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp21',ace_sha256('6852b5a8bf072224ff944f419e67de453fb1a8f236c1efbb464736fd454b599c'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec02-imp21',ace_sha256('6852b5a8bf072224ff944f419e67de453fb1a8f236c1efbb464736fd454b599c'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: An opioid-continuation may initiate a long-term-opioid-therapy after 30 days.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(1),[]),'opioid-continuation',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(1),[]),na,eq,1).

@@ -1,8 +1,30 @@
 % cdc2022-opioid-rec05-imp14.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec05-imp14',ace_sha256('13a734557adcecb7534734cd0e4da8b7533bdf72a894971c83b32b049ba69ff6'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
-% S1: Rec05-imp14-clinician is a dosage-change-clinician.
-'dosage-change-clinician'('Rec05-imp14-clinician').
-% S2: Every dosage-change-clinician considers-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper.
-'consider-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper'(A) :- 'dosage-change-clinician'(A).
-% S3: Does Rec05-imp14-clinician consider-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper?
-guideline_query(yesno,'consider-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper'('Rec05-imp14-clinician')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec05-imp14',ace_sha256(d165b315cf8de35816887c2f907f033e9cef9d6994ed0a1c7f6429ffe88cf7b8),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+% S1: A clinically-significant-withdrawal-symptom can signal a further-taper-slowing-need.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(1),[]),'clinically-significant-withdrawal-symptom',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(1),[]),na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp14',1,box(1),[]),can).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp14',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(2),[]),'further-taper-slowing-need',countable).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp14',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(2),[]),na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec05-imp14',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(3),[]),signal).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp14',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(1),[])).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp14',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(2),[])).

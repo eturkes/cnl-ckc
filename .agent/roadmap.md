@@ -941,12 +941,45 @@ identities):
   `.scratch/m3u5/harvest/`; regeneration paths = memory.
   main=92% 220K/240K (close, single window), mate=39% 95K/240K
   (prod-m3u5-1 peak).
-- M3.6 OPEN (data, prod) — production C: 30 docs = rec03 imp08 +
-  rec04 imp01,03,05,07,08,09 + rec05 imp04-16,18-27 (~976 words; rec05
-  NAF rows exercise the D3 matrix) + global convergence: `migrated=79/79`,
-  zero fixture pn_sg, zero mega-verb pairs, every ulex entry referenced,
-  compiled inventory exactly 79.
-- M3.7 BLOCKED(M3.6) (kernel, oracle) — authored-question removal +
+- M3.6 DONE (data, prod) — production C TERMINAL: 30 docs migrated
+  (rec03-imp08 + rec04 imp01,03,05,07,08,09 + rec05 imp04-16,18-27),
+  meter `migrated=79/79`, aggregate 79 documents 257 obligations
+  forward+reverse, compiled inventory exactly 79, compile byte-stable.
+  Wave-0 probe 30/30 candidates green → R5 economy. Contract
+  `.scratch/contracts/m3u6.md` = m3u4 P1-P6 + R6-applied (S30-17
+  only-restrictor re-authored: 3 classical prohibitions →
+  `should not consider a transdermal-fentanyl-prescription`), R9 S35-20
+  causal-clause PP dropped (temporal misread), R10 responsibility→must +
+  provide-or-arrange→ensure, R11 pre-cleared folds (S35-21 or→conjunction,
+  S36-03 policy-setter/threshold/penalize, e.g.-list compounds), R12 zero
+  NAF batch-wide — the plan's "rec05 NAF rows exercise the D3 matrix"
+  expectation did not materialize in final candidates; every negated
+  antecedent classical (`does not take/reach`, `cannot taper`). Two
+  producer worktrees (p1 16 docs, p2 14) held disjoint ACE + ulex + note
+  rows; MAIN re-derived every verdict: validator replay 30/30 PASS from
+  the primary tree (40 + 33 obligation groups at wt f6bd87d/5f46545),
+  fidelity 30/30 ACCEPT with zero MAIN fixes — producer revisions all
+  source-anchored improvements (imp06 agreement aspect, imp07 `on`-plan
+  D9, imp09 support split clinician+patient ×3 modes, imp12
+  depends-on-dosage fact, imp15 readiness gates restart only, imp18
+  joint determination, imp20 `abrupt-` restored, imp23 shared
+  modifiers). Lexicon terminal: 487 entries, 95 dead fixture-era
+  dropped, zero pn_sg, zero mega-verb pairs, per-LEXEME liveness green,
+  consolidation idempotent; notes ledger 30 rows respliced; v1_docids =
+  79 docid-sorted. Gate ruling: MV05's harness precondition (quoted
+  fixture-era mega iv entry) is vacuous at terminal state BY DESIGN —
+  entry-picker generalized to any iv lexeme, quoted branch + both-
+  inflection rename semantics preserved; 67/67. Live source cross-check
+  7/7 sentence probes verbatim on live rr7103a1 across both producer
+  sets. Evidence (MAIN-rerun decisive chain, this tree): check ok 79
+  docs 12 reds incl. fwd/rev aggregate, meter migrated=79/79; regen
+  --check; gate_m3u1 24/10; gate_m3u2 7/5/73; gate_m3u3 67/67;
+  diff_m3u3 88 cases 0 divergences; guidelines byte-stability tail
+  reruns from this commit (M3.4 convention). Replay input set =
+  `.scratch/m3u6/harvest/`; regeneration paths = memory.
+  main=87% 208K/240K (close, single window), mate=28% 67K/240K
+  (prod-m3u6-2 peak; p1 27%).
+- M3.7 OPEN (kernel, oracle) — authored-question removal +
   close. Question translation deleted (knowledge-only corpus makes it
   dead); authored yes/no/who/copular/modal-question reds added, each
   proving its intended class (same-stem ulex companions where vocabulary

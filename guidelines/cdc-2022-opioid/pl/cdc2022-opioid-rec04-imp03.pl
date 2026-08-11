@@ -1,8 +1,53 @@
 % cdc2022-opioid-rec04-imp03.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec04-imp03',ace_sha256('85f664fca16058edf75fa85d3650dd48156e06abb650cba3057b5fa2e40e983b'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
-% S1: Rec04-imp03-clinician is an opioid-dosage-clinician.
-'opioid-dosage-clinician'('Rec04-imp03-clinician').
-% S2: Every opioid-dosage-clinician applies-opioid-dosage-recommendations-to-starting-or-increasing-opioids-and-separately-assesses-dosage-reduction-benefits-and-risks.
-'apply-opioid-dosage-recommendations-to-starting-or-increasing-opioids-and-separately-assess-dosage-reduction-benefits-and-risks'(A) :- 'opioid-dosage-clinician'(A).
-% S3: Does Rec04-imp03-clinician apply-opioid-dosage-recommendations-to-starting-or-increasing-opioids-and-separately-assess-dosage-reduction-benefits-and-risks?
-guideline_query(yesno,'apply-opioid-dosage-recommendations-to-starting-or-increasing-opioids-and-separately-assess-dosage-reduction-benefits-and-risks'('Rec04-imp03-clinician')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec04-imp03',ace_sha256('5fdd549cbdae5ecd0399bfa22c7d29b17160dcd97470f4fdc3f5c62ab8d00a08'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+% S1: An opioid-dosage-recommendation applies during an opioid-initiation.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(1),[]),'opioid-dosage-recommendation',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(2),[]),'opioid-initiation',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(3),[]),apply).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(3),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(2),[])).
+% S2: An opioid-dosage-recommendation applies during a dosage-increase.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(1),[]),'opioid-dosage-recommendation',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(2),[]),'dosage-increase',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(3),[]),apply).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(3),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',2,ref(2),[])).
+% S3: A dosage-reduction has a different-benefit.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(1),[]),'dosage-reduction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(2),[]),'different-benefit',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(3),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(2),[])).
+% S4: A dosage-reduction has a different-risk.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(1),[]),'dosage-reduction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(2),[]),'different-risk',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(3),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(2),[])).

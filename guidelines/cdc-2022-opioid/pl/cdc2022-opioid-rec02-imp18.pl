@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp18',ace_sha256('60e214ddcda32fc9ee0bb48e60fbee171574ef638664bd8dec27c6c1728ef8eb'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec02-imp18',ace_sha256('60e214ddcda32fc9ee0bb48e60fbee171574ef638664bd8dec27c6c1728ef8eb'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: If a clinician does not consider an exit-strategy with a patient then the clinician should not initiate an opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp18',1,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'exit-strategy',countable), guideline_cardinality(B,C,na,eq,1), guideline_entity(B,D,patient,countable), guideline_cardinality(B,D,na,eq,1), guideline_event(B,E,consider), guideline_arg(B,E,1,A), guideline_arg(B,E,2,C), guideline_pp(B,E,with,D).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec02-imp18',1,box(2),[A]),'$guideline_id'(context,'cdc2022-opioid-rec02-imp18',1,box(3),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'exit-strategy',countable), guideline_cardinality(B,C,na,eq,1), guideline_entity(B,D,patient,countable), guideline_cardinality(B,D,na,eq,1), guideline_event(B,E,consider), guideline_arg(B,E,1,A), guideline_arg(B,E,2,C), guideline_pp(B,E,with,D).

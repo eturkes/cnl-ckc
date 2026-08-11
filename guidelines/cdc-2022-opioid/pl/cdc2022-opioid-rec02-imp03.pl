@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp03',ace_sha256(d20bcb3f2c7489785e46c0b343e2395be6f1e91847bb510eb3bb335c2662fee0),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec02-imp03',ace_sha256(d20bcb3f2c7489785e46c0b343e2395be6f1e91847bb510eb3bb335c2662fee0),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: If a patient has a limited-exercise-access then a physical-therapy can help the patient.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp03',1,ref(4),[A,B,C]),'physical-therapy',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'limited-exercise-access',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp03',1,ref(4),[A,B,C]),na,eq,1) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'limited-exercise-access',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

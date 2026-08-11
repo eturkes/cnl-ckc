@@ -1,8 +1,44 @@
 % cdc2022-opioid-rec05-imp20.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec05-imp20',ace_sha256('10fc4b151de3c08fc682182c23113e05169ced60aaa97ba5c612b99667ec62e3'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
-% S1: Rec05-imp20-clinician is a dosage-change-clinician.
-'dosage-change-clinician'('Rec05-imp20-clinician').
-% S2: Every dosage-change-clinician advises-about-overdose-risk-after-abrupt-return-to-higher-dose-provides-overdose-education-and-offers-naloxone.
-'advise-about-overdose-risk-after-abrupt-return-to-higher-dose-provide-overdose-education-and-offer-naloxone'(A) :- 'dosage-change-clinician'(A).
-% S3: Does Rec05-imp20-clinician advise-about-overdose-risk-after-abrupt-return-to-higher-dose-provide-overdose-education-and-offer-naloxone?
-guideline_query(yesno,'advise-about-overdose-risk-after-abrupt-return-to-higher-dose-provide-overdose-education-and-offer-naloxone'('Rec05-imp20-clinician')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec05-imp20',ace_sha256('12b7095a512dbcb298dd1d4c1b874ca3c012c1bd39d850d9c002ddfeeaa2fee1'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+% S1: Every clinician should explain an abrupt-previous-higher-dose-return-overdose-risk with a patient.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(2),[A]),'abrupt-previous-higher-dose-return-overdose-risk',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(3),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(3),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(4),[A]),explain) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(4),[A]),with,'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S2: Every clinician should provide an opioid-overdose-education and should offer a naloxone-dose.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(2),[A]),'opioid-overdose-education',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(3),[A]),provide) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(4),[A]),'naloxone-dose',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(4),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(5),[A]),offer) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(5),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp20',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(5),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp20',2,ref(4),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

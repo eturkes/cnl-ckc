@@ -1,8 +1,88 @@
 % cdc2022-opioid-rec04-imp09.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec04-imp09',ace_sha256('2b7a59381fdc45ce216c12ddf7bfff63321615e78a72d3bf848989df835906ff'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
-% S1: Rec04-imp09-clinician is an opioid-dosage-clinician.
-'opioid-dosage-clinician'('Rec04-imp09-clinician').
-% S2: Every opioid-dosage-clinician evaluates-further-dosage-increase-through-individualized-benefit-risk-assessment.
-'evaluate-further-dosage-increase-through-individualized-benefit-risk-assessment'(A) :- 'opioid-dosage-clinician'(A).
-% S3: Does Rec04-imp09-clinician evaluate-further-dosage-increase-through-individualized-benefit-risk-assessment?
-guideline_query(yesno,'evaluate-further-dosage-increase-through-individualized-benefit-risk-assessment'('Rec04-imp09-clinician')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec04-imp09',ace_sha256('952838224a7389bfe35c23a5a6aef985103b74a6150faf3306945e37d972da3b'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+% S1: Every clinician should evaluate a further-dosage-increase with an individualized-benefit-risk-assessment.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(2),[A]),'further-dosage-increase',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(3),[A]),'individualized-benefit-risk-assessment',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(3),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(4),[A]),evaluate) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(4),[A]),with,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S2: Every clinician should consider a diagnosis and should consider an incremental-pain-benefit and should consider an incremental-function-benefit during an individualized-benefit-risk-assessment.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(2),[A]),diagnosis,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(3),[A]),consider) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(4),[A]),'incremental-pain-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(4),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(5),[A]),consider) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(5),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(5),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(4),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(6),[A]),'incremental-function-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(6),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(7),[A]),'individualized-benefit-risk-assessment',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(7),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(8),[A]),consider) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(8),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(8),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(6),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',2,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(8),[A]),during,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',2,ref(7),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S3: Every clinician should compare a previous-increase-benefit against a previous-increase-risk and should evaluate an alternative-treatment and should evaluate a treatment-effectiveness.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(2),[A]),'previous-increase-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(3),[A]),'previous-increase-risk',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(3),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(4),[A]),compare) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(4),[A]),against,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(5),[A]),'alternative-treatment',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(5),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(6),[A]),evaluate) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(6),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(6),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(5),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(3),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(7),[A]),'treatment-effectiveness',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(7),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(8),[A]),evaluate) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(8),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',3,box(3),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(8),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',3,ref(7),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S4: Every clinician should consider a patient-value and should consider a patient-preference.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(2),[A]),'patient-value',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(3),[A]),consider) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(4),[A]),'patient-preference',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(4),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(5),[A]),consider) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(5),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',4,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(5),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',4,ref(4),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

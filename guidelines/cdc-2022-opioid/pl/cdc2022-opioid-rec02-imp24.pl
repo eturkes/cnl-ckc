@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp24',ace_sha256('9bff4ac26c083e9e6960bbfbeb66b608a8c099424327217a60e77565b1fb7a40'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec02-imp24',ace_sha256('9bff4ac26c083e9e6960bbfbeb66b608a8c099424327217a60e77565b1fb7a40'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: A patient-education is critical before an opioid-initiation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[]),'patient-education',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[]),na,eq,1).

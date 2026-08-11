@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec01-imp05',ace_sha256('3c03d82d961cff78e6423ae929e947963b1d635aefabed2d874f7643476c535a'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec01-imp05',ace_sha256('3c03d82d961cff78e6423ae929e947963b1d635aefabed2d874f7643476c535a'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: Every clinician should explain an expected-opioid-benefit with a patient before an opioid-initiation and should explain a common-opioid-risk with a patient before an opioid-initiation and should explain a serious-opioid-risk with a patient before an opioid-initiation and should explain an opioid-alternative with a patient before an opioid-initiation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec01-imp05',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec01-imp05',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec01-imp05',1,ref(2),[A]),'expected-opioid-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

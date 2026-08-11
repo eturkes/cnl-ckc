@@ -1,3 +1,3 @@
-Rec04-imp05-clinician is an opioid-dosage-clinician.
-Every opioid-dosage-clinician considers-using-product-labeling-as-starting-point-and-calibrating-for-pain-severity-and-renal-or-hepatic-insufficiency-to-determine-lowest-effective-dose-for-opioid-naive-patients.
-Does Rec04-imp05-clinician consider-using-product-labeling-as-starting-point-and-calibrating-for-pain-severity-and-renal-or-hepatic-insufficiency-to-determine-lowest-effective-dose-for-opioid-naive-patients?
+If a patient does not take an opioid then every clinician can determine a lowest-effective-dose with a product-labeling and can calibrate a lowest-effective-dose with a pain-severity.
+If a patient has a renal-insufficiency then every clinician can calibrate a lowest-effective-dose with a renal-insufficiency.
+If a patient has a hepatic-insufficiency then every clinician can calibrate a lowest-effective-dose with a hepatic-insufficiency.

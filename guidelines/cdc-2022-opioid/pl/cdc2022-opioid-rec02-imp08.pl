@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp08',ace_sha256(a0fb6ef73d0ef8e27ebeda924459ce19c73931eb50850bede2bd6d7addd35df3),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+guideline_document('cdc2022-opioid-rec02-imp08',ace_sha256(a0fb6ef73d0ef8e27ebeda924459ce19c73931eb50850bede2bd6d7addd35df3),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
 % S1: Every clinician should use an NSAID at a lowest-effective-dose during a shortest-needed-duration.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp08',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp08',1,ref(2),[A]),'NSAID',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
