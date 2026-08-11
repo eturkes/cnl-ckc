@@ -906,10 +906,42 @@ identities):
   `.scratch/m3u4/harvest/`; regeneration paths = memory.
   main=94% 225K/240K (window-1 peak → auto-compaction; close tail
   49% 117K/240K), mate=58% 139K/240K (prod-m3u4-2 peak).
-- M3.5 OPEN (data, prod) — production B: 31 docs = rec02 all 25
-  + rec03 imp01,02,04,05,06,07 (~946 words). Two disjoint producers,
-  same holder discipline, meter `migrated=49/79`.
-- M3.6 BLOCKED(M3.5) (data, prod) — production C: 30 docs = rec03 imp08 +
+- M3.5 DONE (data, prod) — production B shipped: 31 docs migrated (rec02
+  imp01-11+13-26 = all 25 + rec03 imp01,02,04,05,06,07), meter
+  `migrated=49/79`, aggregate 49 documents 184 obligations
+  forward+reverse. Wave-0 probe: 31/31 candidates compile+prove green
+  (zero authoring reds) → R5 economy governed. Contract
+  `.scratch/contracts/m3u5.md` = m3u4 P1-P6/R1-R5 + R6 only-restrictor →
+  conditional prohibition (R4 family; De Morgan Horn-split, one
+  prohibition per negated gate conjunct, classical negation), R7
+  might→may, R8 S24-13 meta-negation = prohibition reading. Two producer
+  worktrees (p1 rec02-imp01..16, 15 docs 454 w; p2 rec02-imp17..26 +
+  rec03 six, 16 docs 492 w) held disjoint ACE + ulex + note rows; MAIN
+  re-derived every verdict: validator replay 31/31 PASS (58 + 49
+  obligation groups), fidelity review 31/31 vs source extraction — the
+  candidate direction inversions at S24-19 + S30-16 re-authored per R6
+  (3 + 5 prohibition gates verified), S24-16 direction kept; all
+  accepted as delivered except rec03-imp07 MAIN-fixed (D9 `during a
+  pain`→`for a pain` ×5 + ulex prep swap + notes amendment) revalidated
+  PASS obligations=5. Notes-recorded approximations accepted
+  (does-not-control/-improve conservative negations, any→existential
+  PP, ensure-aware→explain). Lexicon consolidated: 433 entries, 276
+  legacy kept, 95 dead fixture-era dropped, zero conflicts, idempotent;
+  notes ledger 31 rows respliced idempotently; v1_docids = 49
+  docid-sorted. Live source cross-check: 7/7 sentence probes verbatim
+  on live rr7103a1 across both producer sets. Toolchain gotcha → memory:
+  PATH without `.toolchain/bin` leaks system swipl into goal.py,
+  failing compile `ace_to_pl_error(uncaught,unwind(halt(0)))` rc=2;
+  identical invocation under 9.2.9 green. Evidence (MAIN-rerun decisive
+  chain, this tree): check ok 79 docs 12 reds incl. fwd/rev aggregate,
+  meter migrated=49/79; regen --check; gate_m3u1 24/10; gate_m3u2
+  7/5/73; gate_m3u3 67/67; diff_m3u3 88 cases 0 divergences; manual
+  forward aggregate 49/184; guidelines byte-stability tail reruns from
+  this commit (M3.4 convention). Replay input set =
+  `.scratch/m3u5/harvest/`; regeneration paths = memory.
+  main=92% 220K/240K (close, single window), mate=39% 95K/240K
+  (prod-m3u5-1 peak).
+- M3.6 OPEN (data, prod) — production C: 30 docs = rec03 imp08 +
   rec04 imp01,03,05,07,08,09 + rec05 imp04-16,18-27 (~976 words; rec05
   NAF rows exercise the D3 matrix) + global convergence: `migrated=79/79`,
   zero fixture pn_sg, zero mega-verb pairs, every ulex entry referenced,

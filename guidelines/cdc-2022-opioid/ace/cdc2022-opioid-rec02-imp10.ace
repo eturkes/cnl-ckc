@@ -1,3 +1,6 @@
-Rec02-imp10-clinician is a subacute-chronic-pain-clinician.
-Every subacute-chronic-pain-clinician considers-selected-antidepressants-anticonvulsants-and-topical-agents-for-neuropathic-pain.
-Does Rec02-imp10-clinician consider-selected-antidepressants-anticonvulsants-and-topical-agents-for-neuropathic-pain?
+Every clinician can consider a tricyclic-antidepressant for a neuropathic-pain.
+Every clinician can consider a tetracyclic-antidepressant for a neuropathic-pain.
+Every clinician can consider an SNRI-antidepressant for a neuropathic-pain.
+Every clinician can consider a selected-anticonvulsant for a neuropathic-pain.
+Every clinician can consider a capsaicin-patch for a neuropathic-pain.
+Every clinician can consider a lidocaine-patch for a neuropathic-pain.

@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec05-imp11.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec05-imp11',ace_sha256('0ee85c27ad45486f79d84977069f7311b43fd5f02f1353b21e73c8dfc3845564'),ulex(sha256(c879b5696dbd7394030ca8105226a5d860b57777791e2f4772f9325c07278683))).
+guideline_document('cdc2022-opioid-rec05-imp11',ace_sha256('0ee85c27ad45486f79d84977069f7311b43fd5f02f1353b21e73c8dfc3845564'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
 % S1: Rec05-imp11-clinician is a dosage-change-clinician.
 'dosage-change-clinician'('Rec05-imp11-clinician').
 % S2: Every dosage-change-clinician considers-longer-taper-after-longer-duration-of-opioid-therapy.

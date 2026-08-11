@@ -1,8 +1,59 @@
 % cdc2022-opioid-rec02-imp24.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec02-imp24',ace_sha256('695df014b158f7afdaeb497a975a3104e58a479a6e90df1e4e41b465891a0f86'),ulex(sha256(c879b5696dbd7394030ca8105226a5d860b57777791e2f4772f9325c07278683))).
-% S1: Rec02-imp24-clinician is a subacute-chronic-pain-clinician.
-'subacute-chronic-pain-clinician'('Rec02-imp24-clinician').
-% S2: Every subacute-chronic-pain-clinician educates-patients-before-opioid-therapy-to-inform-preference-sensitive-decisions.
-'educate-patients-before-opioid-therapy-to-inform-preference-sensitive-decisions'(A) :- 'subacute-chronic-pain-clinician'(A).
-% S3: Does Rec02-imp24-clinician educate-patients-before-opioid-therapy-to-inform-preference-sensitive-decisions?
-guideline_query(yesno,'educate-patients-before-opioid-therapy-to-inform-preference-sensitive-decisions'('Rec02-imp24-clinician')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec02-imp24',ace_sha256('9bff4ac26c083e9e6960bbfbeb66b608a8c099424327217a60e77565b1fb7a40'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+% S1: A patient-education is critical before an opioid-initiation.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[]),'patient-education',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(2),[]),'opioid-initiation',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(2),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(3),[]),critical,pos).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),be).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(3),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(2),[])).
+% S2: A patient-discussion is critical before an opioid-initiation.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(1),[]),'patient-discussion',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(2),[]),'opioid-initiation',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(2),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(3),[]),critical,pos).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),be).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(3),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(2),[])).
+% S3: A patient-preference can inform a clinical-decision.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(1),[]),'patient-preference',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(1),[]),na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp24',3,box(1),[]),can).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',3,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(2),[]),'clinical-decision',countable).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',3,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(2),[]),na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',3,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(3),[]),inform).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',3,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(1),[])).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',3,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(2),[])).
+% S4: A patient-value can inform a clinical-decision.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(1),[]),'patient-value',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(1),[]),na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp24',4,box(1),[]),can).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',4,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(2),[]),'clinical-decision',countable).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',4,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(2),[]),na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',4,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(3),[]),inform).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',4,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(1),[])).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp24',4,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',4,ref(2),[])).

@@ -1,3 +1,3 @@
-Rec03-imp05-clinician is a starting-opioid-clinician.
-Every starting-opioid-clinician uses-additional-er-la-opioid-caution-and-considers-longer-dosing-interval-for-renal-or-hepatic-dysfunction.
-Does Rec03-imp05-clinician use-additional-er-la-opioid-caution-and-consider-longer-dosing-interval-for-renal-or-hepatic-dysfunction?
+If a patient has a renal-dysfunction and a clinician prescribes an ER-LA-opioid to the patient then the clinician should heed an additional-ER-LA-caution and should consider a longer-dosing-interval.
+If a patient has a hepatic-dysfunction and a clinician prescribes an ER-LA-opioid to the patient then the clinician should heed an additional-ER-LA-caution and should consider a longer-dosing-interval.
+A decreased-medication-clearance can cause a toxic-drug-accumulation and can cause a prolonged-drug-persistence.

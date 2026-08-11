@@ -1,3 +1,4 @@
-Rec02-imp08-clinician is a subacute-chronic-pain-clinician.
-Every subacute-chronic-pain-clinician uses-nsaids-at-lowest-effective-dose-for-shortest-duration-with-caution.
-Does Rec02-imp08-clinician use-nsaids-at-lowest-effective-dose-for-shortest-duration-with-caution?
+Every clinician should use an NSAID at a lowest-effective-dose during a shortest-needed-duration.
+If a patient is an older-adult then every clinician should heed an NSAID-caution.
+If a patient has a cardiovascular-comorbidity or has a chronic-renal-failure then every clinician should heed an NSAID-caution.
+If a patient has a previous-gastrointestinal-bleeding then every clinician should heed an NSAID-caution.

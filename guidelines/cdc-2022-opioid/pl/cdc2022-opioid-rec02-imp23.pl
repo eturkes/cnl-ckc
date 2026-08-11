@@ -1,8 +1,35 @@
 % cdc2022-opioid-rec02-imp23.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec02-imp23',ace_sha256('6d1dfec5c9ad028bcaeb063233fb84e8a2987e72ca69702c3f0da7da92c4504d'),ulex(sha256(c879b5696dbd7394030ca8105226a5d860b57777791e2f4772f9325c07278683))).
-% S1: Rec02-imp23-clinician is a subacute-chronic-pain-clinician.
-'subacute-chronic-pain-clinician'('Rec02-imp23-clinician').
-% S2: Every subacute-chronic-pain-clinician avoids-rapid-tapering-and-abrupt-opioid-discontinuation.
-'avoid-rapid-tapering-and-abrupt-opioid-discontinuation'(A) :- 'subacute-chronic-pain-clinician'(A).
-% S3: Does Rec02-imp23-clinician avoid-rapid-tapering-and-abrupt-opioid-discontinuation?
-guideline_query(yesno,'avoid-rapid-tapering-and-abrupt-opioid-discontinuation'('Rec02-imp23-clinician')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec02-imp23',ace_sha256('9d1a9d3a2296356d4b1d6776170be7eef0bf60d9e9dd21aac6e2a0b58e306337'),ulex(sha256('26c94eb4c3e425db0b6c278b6861f816b856b8629608554394634e35ee8e1f3c'))).
+% S1: Every clinician should avoid a rapid-opioid-taper.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',1,ref(2),[A]),'rapid-opioid-taper',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',1,ref(3),[A]),avoid) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',1,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',1,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S2: Every clinician should avoid an abrupt-opioid-discontinuation.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp23',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',2,ref(2),[A]),'abrupt-opioid-discontinuation',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',2,ref(3),[A]),avoid) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',2,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

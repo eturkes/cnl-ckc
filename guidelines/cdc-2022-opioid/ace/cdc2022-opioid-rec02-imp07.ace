@@ -1,3 +1,2 @@
-Rec02-imp07-clinician is a subacute-chronic-pain-clinician.
-Every subacute-chronic-pain-clinician considers-duloxetine-or-systemic-nsaids-for-multijoint-or-incompletely-controlled-osteoarthritis-pain.
-Does Rec02-imp07-clinician consider-duloxetine-or-systemic-nsaids-for-multijoint-or-incompletely-controlled-osteoarthritis-pain?
+If a patient has a multiple-joint-osteoarthritis then every clinician can consider a duloxetine and can consider a systemic-NSAID.
+If a patient has an osteoarthritis-pain and a topical-NSAID does not control the osteoarthritis-pain then every clinician can consider a duloxetine and can consider a systemic-NSAID.

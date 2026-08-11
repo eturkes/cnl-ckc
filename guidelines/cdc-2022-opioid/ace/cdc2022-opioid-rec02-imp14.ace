@@ -1,3 +1,4 @@
-Rec02-imp14-clinician is a subacute-chronic-pain-clinician.
-Every subacute-chronic-pain-clinician avoids-first-line-or-routine-opioid-therapy.
-Does Rec02-imp14-clinician avoid-first-line-or-routine-opioid-therapy?
+Every clinician should not consider a first-line-opioid-therapy for a subacute-pain.
+Every clinician should not consider a routine-opioid-therapy for a subacute-pain.
+Every clinician should not consider a first-line-opioid-therapy for a chronic-pain.
+Every clinician should not consider a routine-opioid-therapy for a chronic-pain.

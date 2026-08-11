@@ -1,3 +1,5 @@
-Rec03-imp07-clinician is a starting-opioid-clinician.
-Every starting-opioid-clinician considers-methadone-for-pain-only-with-risk-profile-familiarity-and-preparation-for-patient-education-close-monitoring-qt-risk-assessment-and-electrocardiographic-monitoring.
-Does Rec03-imp07-clinician consider-methadone-for-pain-only-with-risk-profile-familiarity-and-preparation-for-patient-education-close-monitoring-qt-risk-assessment-and-electrocardiographic-monitoring?
+If a clinician does not understand a methadone-risk-profile then the clinician should not consider a methadone-treatment for a pain.
+If a clinician does not prepare a patient-education then the clinician should not consider a methadone-treatment for a pain.
+If a clinician does not prepare a patient-monitoring then the clinician should not consider a methadone-treatment for a pain.
+If a clinician does not assess a QT-prolongation-risk then the clinician should not consider a methadone-treatment for a pain.
+If a clinician does not consider an electrocardiographic-monitoring then the clinician should not consider a methadone-treatment for a pain.

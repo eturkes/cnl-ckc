@@ -1,3 +1,4 @@
-Rec02-imp25-clinician is a subacute-chronic-pain-clinician.
-Every subacute-chronic-pain-clinician reviews-low-cost-pain-management-options-for-all-patients.
-Does Rec02-imp25-clinician review-low-cost-pain-management-options-for-all-patients?
+Every clinician should review an available low-cost-pain-management-option for a patient.
+If a patient has a low-income then every clinician should review an available low-cost-pain-management-option for the patient.
+If a patient does not have a health-insurance then every clinician should review an available low-cost-pain-management-option for the patient.
+If a patient has an inadequate-insurance then every clinician should review an available low-cost-pain-management-option for the patient.
