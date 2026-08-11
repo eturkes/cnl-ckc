@@ -1,7 +1,5 @@
-Rec05-clinician is a dosage-change-clinician.
-Rec05 is a category-b-recommendation.
-Rec05 is an evidence-type-4-recommendation.
-Every dosage-change-clinician that does not provably detect-life-threatening-warning avoids-abrupt-discontinuation.
-Does Rec05-clinician avoid-abrupt-discontinuation?
-Is Rec05 a category-b-recommendation?
-Is Rec05 an evidence-type-4-recommendation?
+A recommendation is a category-B-recommendation and is an evidence-type-4-recommendation.
+If a clinician changes an opioid-dosage for a patient that receives an opioid-therapy then the clinician should weigh a benefit against a risk and should heed a caution.
+If a benefit outweighs a risk then every clinician should work with a patient and should optimize a nonopioid-therapy and should continue an opioid-therapy.
+If a benefit does not outweigh a risk then every clinician should optimize a different-therapy and should work with a patient and should use a gradual-taper and should discontinue an opioid.
+Every clinician that does not provably detect a life-threatening-warning should avoid an abrupt-discontinuation and should avoid a rapid-dosage-reduction from a higher-dosage.

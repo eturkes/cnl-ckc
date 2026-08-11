@@ -1,7 +1,4 @@
-Rec12-clinician is an opioid-use-disorder-clinician.
-Rec12 is a category-a-recommendation.
-Rec12 is an evidence-type-1-recommendation.
-Every opioid-use-disorder-clinician offers-medication-treatment.
-Does Rec12-clinician offer-medication-treatment?
-Is Rec12 a category-a-recommendation?
-Is Rec12 an evidence-type-1-recommendation?
+A recommendation is a category-A-recommendation and is an evidence-type-1-recommendation.
+Every clinician should offer an evidence-based-medication-treatment for a patient who has an opioid-use-disorder.
+A medication-free-detoxification is not a recommended-treatment for an opioid-use-disorder.
+Every medication-free-detoxification increases a risk for a drug-use-resumption and increases a risk for an overdose and increases a risk for an overdose-death.

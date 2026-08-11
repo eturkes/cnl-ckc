@@ -1,7 +1,6 @@
-Rec09-clinician is a pdmp-review-clinician.
-Rec09 is a category-b-recommendation.
-Rec09 is an evidence-type-4-recommendation.
-Every pdmp-review-clinician reviews-pdmp-data.
-Does Rec09-clinician review-pdmp-data?
-Is Rec09 a category-b-recommendation?
-Is Rec09 an evidence-type-4-recommendation?
+A recommendation is a category-B-recommendation and is an evidence-type-4-recommendation.
+If a clinician prescribes an initial-opioid-therapy for an acute-pain then the clinician should review a controlled-substance-prescription-history with a state-PDMP-record.
+If a clinician prescribes an initial-opioid-therapy for a subacute-pain then the clinician should review a controlled-substance-prescription-history with a state-PDMP-record.
+If a clinician prescribes an initial-opioid-therapy for a chronic-pain then the clinician should review a controlled-substance-prescription-history with a state-PDMP-record.
+Every clinician should review a controlled-substance-prescription-history with a state-PDMP-record during a chronic-opioid-therapy.
+Every clinician should assess an opioid-dosage for a high-overdose-risk and should assess a medication-combination for a high-overdose-risk.

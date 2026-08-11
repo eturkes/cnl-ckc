@@ -867,14 +867,46 @@ identities):
   peak → auto-compaction; post-compaction close tail 59% 143K/240K),
   mate=100% 240K/240K (orc-m3u3 peak; test 82%, map 82%, rev2 45%,
   rev 42%).
-- M3.4 OPEN (data, prod) — production A: 18 docs = Box-3 12 +
-  rec01 imp01-06 (~1,034 source words, the heaviest batch — Box-3
-  multi-sentence recommendations + D6 strength facts + lexicon core).
-  Producer worktrees hold disjoint ACE files + assigned projection-note
-  rows ONLY; MAIN consolidates lexicon + regenerates `pl/` + live
-  source spot-checks. Validator + full check + aggregate gate green;
-  every migrated doc proves its generated obligations.
-- M3.5 BLOCKED(M3.4) (data, prod) — production B: 31 docs = rec02 all 25
+- M3.4 DONE (data, prod) — production A shipped: 18 docs migrated
+  (Box-3 rec01-rec12 + rec01 imp01-06), meter `migrated=18/79`,
+  aggregate 18 documents 77 obligations forward+reverse. Two producer
+  worktrees (p1 Box-3 12, p2 imp 6) held disjoint ACE + note rows;
+  MAIN re-derived every verdict: p1 12/12 validator PASS at wt commit
+  c906e47 (obligations 4,8,4,10,5,2,5,5,6,4,3,4), fidelity ACCEPT all
+  12 vs the Box-3 extraction + R1-R5 invariants + 12 D6 letter/type
+  pairs; p2 imp01-03,05,06 ACCEPT, imp04 MAIN-fixed (long-term-
+  opioid-use condition restored on all three rules,
+  `superimposed-severe-acute-pain`→`acute-pain`, dead ulex entry
+  dropped, notes row amended) revalidated PASS obligations=3. Live
+  source cross-check: 5/5 Box-3 sentence probes verbatim on live
+  rr7103a1. Lexicon consolidated: 371 entries, 194 legacy kept, 71
+  dead pre-migration entries dropped, zero conflicts; notes ledger 18
+  rows respliced; `v1_docids` = 18 docid-sorted.
+  KERNEL EDIT (M3.3-frozen ace_to_pl.pl; flag for MILESTONE-REVIEW):
+  the first real composition hung the forward aggregate —
+  classical-negation antecedents render body goals
+  `guideline_operator(actual,C,-)` with free C; `should not`
+  consequents emit `-` rule heads; body `-` goals resolve against
+  sibling `-` heads (own + other docs') before the witness fact ⇒
+  exponential backtracking, 2 docs suffice (bisected: rec01+rec02
+  rc=124, each single doc ok). Fix = `v1_bounded_head_call`
+  (depth 4000 + `call_with_inference_limit` 10^6) + asserta witness
+  order on both P7/P9 paths; exceedance = ordinary underivability
+  (DR06 family); ABI/product/payload bytes + rejection vocabulary
+  unchanged, legacy path untouched, verdicts search-only. Regression
+  AG10 (minimal 2-doc negation pair, 120s timeout harness): pre-fix
+  compiler rc=124 + suite-level FAIL, fixed tree green. MV07 mutator
+  now isolates meter arithmetic via empty `v1_docids` (its dropped
+  ledger row entered the migrated set). Contract bounded-search
+  amendment + README bounded-search sentence landed. Evidence
+  (MAIN-rerun decisive chain, this tree): check ok 79 docs 12 reds
+  incl. fwd/rev aggregate; regen --check; gate_m3u1 24/10; gate_m3u2
+  7/5/73; gate_m3u3 67/67; diff_m3u3 88 cases 0 divergences; fresh
+  compile + `git diff --quiet -- guidelines/`. Replay input set =
+  `.scratch/m3u4/harvest/`; regeneration paths = memory.
+  main=94% 225K/240K (window-1 peak → auto-compaction; close tail
+  49% 117K/240K), mate=58% 139K/240K (prod-m3u4-2 peak).
+- M3.5 OPEN (data, prod) — production B: 31 docs = rec02 all 25
   + rec03 imp01,02,04,05,06,07 (~946 words). Two disjoint producers,
   same holder discipline, meter `migrated=49/79`.
 - M3.6 BLOCKED(M3.5) (data, prod) — production C: 30 docs = rec03 imp08 +

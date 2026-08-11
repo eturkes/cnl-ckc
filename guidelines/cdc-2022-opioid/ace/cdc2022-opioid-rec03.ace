@@ -1,7 +1,4 @@
-Rec03-clinician is a starting-opioid-clinician.
-Rec03 is a category-a-recommendation.
-Rec03 is an evidence-type-4-recommendation.
-Every starting-opioid-clinician prescribes-immediate-release.
-Does Rec03-clinician prescribe-immediate-release?
-Is Rec03 a category-a-recommendation?
-Is Rec03 an evidence-type-4-recommendation?
+A recommendation is a category-A-recommendation and is an evidence-type-4-recommendation.
+If a clinician starts an opioid-therapy for an acute-pain then the clinician should prescribe an immediate-release-opioid and should avoid an extended-release-opioid and should avoid a long-acting-opioid.
+If a clinician starts an opioid-therapy for a subacute-pain then the clinician should prescribe an immediate-release-opioid and should avoid an extended-release-opioid and should avoid a long-acting-opioid.
+If a clinician starts an opioid-therapy for a chronic-pain then the clinician should prescribe an immediate-release-opioid and should avoid an extended-release-opioid and should avoid a long-acting-opioid.

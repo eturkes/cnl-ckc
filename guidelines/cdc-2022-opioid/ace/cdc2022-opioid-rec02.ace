@@ -1,7 +1,8 @@
-Rec02-clinician is a subacute-chronic-pain-clinician.
-Rec02 is a category-a-recommendation.
-Rec02 is an evidence-type-2-recommendation.
-Every subacute-chronic-pain-clinician maximizes-nonopioid-therapy.
-Does Rec02-clinician maximize-nonopioid-therapy?
-Is Rec02 a category-a-recommendation?
-Is Rec02 an evidence-type-2-recommendation?
+A recommendation is a category-A-recommendation and is an evidence-type-2-recommendation.
+Every clinician should maximize a nonopioid-therapy for a subacute-pain and should maximize a nonopioid-therapy for a chronic-pain.
+If an opioid-benefit does not outweigh an opioid-risk then every clinician should not consider an opioid-therapy.
+Every clinician should discuss a realistic-benefit with a patient before an initiation.
+Every clinician should discuss a known-risk with a patient before an initiation.
+Every clinician should establish a pain-goal with a patient.
+Every clinician should establish a function-goal with a patient.
+If an opioid-benefit does not outweigh an opioid-risk then every clinician should consider a discontinuation.

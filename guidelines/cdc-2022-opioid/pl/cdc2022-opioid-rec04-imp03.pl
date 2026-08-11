@@ -1,5 +1,5 @@
 % cdc2022-opioid-rec04-imp03.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec04-imp03',ace_sha256('85f664fca16058edf75fa85d3650dd48156e06abb650cba3057b5fa2e40e983b'),ulex(sha256('453749766e15fefa9c2dbb81ef07028b238ee2cb462770b45c2c584b7cbc92e7'))).
+guideline_document('cdc2022-opioid-rec04-imp03',ace_sha256('85f664fca16058edf75fa85d3650dd48156e06abb650cba3057b5fa2e40e983b'),ulex(sha256(c879b5696dbd7394030ca8105226a5d860b57777791e2f4772f9325c07278683))).
 % S1: Rec04-imp03-clinician is an opioid-dosage-clinician.
 'opioid-dosage-clinician'('Rec04-imp03-clinician').
 % S2: Every opioid-dosage-clinician applies-opioid-dosage-recommendations-to-starting-or-increasing-opioids-and-separately-assesses-dosage-reduction-benefits-and-risks.

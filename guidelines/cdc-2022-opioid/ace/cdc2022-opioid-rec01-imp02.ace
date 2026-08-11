@@ -1,3 +1,1 @@
-Rec01-imp02-clinician is an acute-pain-clinician.
-Every acute-pain-clinician prescribes-immediate-release-opioids-at-lowest-effective-dose-for-expected-severe-pain-duration.
-Does Rec01-imp02-clinician prescribe-immediate-release-opioids-at-lowest-effective-dose-for-expected-severe-pain-duration?
+If an acute-pain-diagnosis warrants an opioid-use and an acute-pain-severity warrants an opioid-use then every clinician should prescribe an immediate-release-opioid at a lowest-effective-dose for an expected-severe-pain-duration.

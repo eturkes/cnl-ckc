@@ -1,7 +1,4 @@
-Rec01-clinician is an acute-pain-clinician.
-Rec01 is a category-b-recommendation.
-Rec01 is an evidence-type-3-recommendation.
-Every acute-pain-clinician maximizes-nonopioid-therapy.
-Does Rec01-clinician maximize-nonopioid-therapy?
-Is Rec01 a category-b-recommendation?
-Is Rec01 an evidence-type-3-recommendation?
+A recommendation is a category-B-recommendation and is an evidence-type-3-recommendation.
+Every clinician should maximize a nonopioid-therapy for an acute-pain.
+If an opioid-benefit does not outweigh an opioid-risk then every clinician should not consider an opioid-therapy for an acute-pain.
+Every clinician should discuss a realistic-benefit with a patient before an opioid-prescription and should discuss a known-risk with a patient before an opioid-prescription.

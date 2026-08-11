@@ -397,15 +397,12 @@ aggregate_check_one(DocId, S, K, Facts, Heads, ErrorStream) :-
 
 aggregate_assert_witness([], []).
 aggregate_assert_witness([Fact|Facts], [Ref|Refs]) :-
-    assertz(user:Fact, Ref),
+    asserta(user:Fact, Ref),
     aggregate_assert_witness(Facts, Refs).
 
 aggregate_prove_heads([]).
 aggregate_prove_heads([Head|Heads]) :-
-    v1_proof_depth_limit(Limit),
-    call_with_depth_limit(user:Head, Limit, Result),
-    !,
-    Result \== depth_limit_exceeded,
+    v1_bounded_head_call(user:Head),
     aggregate_prove_heads(Heads).
 
 /* ---------- compile mode ---------- */
@@ -2248,13 +2245,31 @@ v1_wrap_goals([Goal|Goals], [pos(Goal)|Wrapped]) :-
 /* ---------- v1 derived proof obligations (P4-P7) ---------- */
 
 v1_proof_depth_limit(4000).
+v1_proof_inference_limit(1000000).
+
+/* Bounded obligation call, shared by per-document and aggregate
+   replay: the depth-limited search runs under a global inference
+   budget, so mutually-recursive rule clauses (a body negation goal
+   resolving against another rule's negation-edge head) fail finitely
+   instead of searching exponentially. Exceeding either bound counts
+   as ordinary underivability (DR06). */
+v1_bounded_head_call(Goal) :-
+    v1_proof_depth_limit(Depth),
+    v1_proof_inference_limit(Inferences),
+    call_with_inference_limit(
+        call_with_depth_limit(Goal, Depth, DepthResult), Inferences,
+        InferenceResult),
+    !,
+    InferenceResult \== inference_limit_exceeded,
+    DepthResult \== depth_limit_exceeded.
 
 /* Every v1 compile derives one ground obligation term per group and
    replays it against the document's own clauses in a private module:
-   witness facts asserted with refs, each obligation head called under
-   the depth limit, refs erased. Failure rejects the document (class
-   proof) — an underivable rule can never fire in any world satisfying
-   its body. Obligation construction copies clauses together with the
+   witness facts asserted front-of-predicate with refs so obligation
+   search reaches them before any rule clause, each obligation head
+   called under the shared bounds, refs erased. Failure rejects the
+   document (class proof) — an underivable rule can never fire in any
+   world satisfying its body. Obligation construction copies clauses together with the
    witness pairs, then binds the copies; the originals stay
    variable-clean for product rendering. */
 v1_derive_proofs(Bundles, DocId, Payload) :-
@@ -2365,7 +2380,7 @@ v1_check_obligation('$guideline_proof'(_, S, variant(K), witness(Facts),
 
 v1_assert_witness([], []).
 v1_assert_witness([Fact|Facts], [Ref|Refs]) :-
-    assertz(ace_to_pl_proof_world:Fact, Ref),
+    asserta(ace_to_pl_proof_world:Fact, Ref),
     v1_assert_witness(Facts, Refs).
 
 v1_erase_refs([]).
@@ -2373,13 +2388,9 @@ v1_erase_refs([Ref|Refs]) :-
     erase(Ref),
     v1_erase_refs(Refs).
 
-/* Depth-limit exceedance counts as ordinary underivability (DR06). */
 v1_prove_heads([]).
 v1_prove_heads([Head|Heads]) :-
-    v1_proof_depth_limit(Limit),
-    call_with_depth_limit(ace_to_pl_proof_world:Head, Limit, Result),
-    !,
-    Result \== depth_limit_exceeded,
+    v1_bounded_head_call(ace_to_pl_proof_world:Head),
     v1_prove_heads(Heads).
 
 /* Payload rendering (P6): one ground term per line through the shared

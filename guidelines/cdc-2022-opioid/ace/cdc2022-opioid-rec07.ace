@@ -1,7 +1,5 @@
-Rec07-clinician is a follow-up-clinician.
-Rec07 is a category-a-recommendation.
-Rec07 is an evidence-type-4-recommendation.
-Every follow-up-clinician reevaluates-benefits-and-risks.
-Does Rec07-clinician reevaluate-benefits-and-risks?
-Is Rec07 a category-a-recommendation?
-Is Rec07 an evidence-type-4-recommendation?
+A recommendation is a category-A-recommendation and is an evidence-type-4-recommendation.
+Every clinician should evaluate an opioid-benefit with a patient after 1 week before 4 weeks after a therapy-start for a subacute-pain and should evaluate an opioid-risk with a patient after 1 week before 4 weeks after a therapy-start for a subacute-pain.
+Every clinician should evaluate an opioid-benefit with a patient after 1 week before 4 weeks after a therapy-start for a chronic-pain and should evaluate an opioid-risk with a patient after 1 week before 4 weeks after a therapy-start for a chronic-pain.
+Every clinician should evaluate an opioid-benefit with a patient after 1 week before 4 weeks after a dosage-escalation and should evaluate an opioid-risk with a patient after 1 week before 4 weeks after a dosage-escalation.
+Every clinician should reevaluate an opioid-benefit with a patient during a regular-follow-up and should reevaluate an opioid-risk with a patient during a regular-follow-up.

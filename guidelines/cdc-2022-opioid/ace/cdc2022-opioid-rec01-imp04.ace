@@ -1,3 +1,3 @@
-Rec01-imp04-clinician is an acute-pain-clinician.
-Every acute-pain-clinician uses-nonopioids-when-possible-and-limits-additional-opioids-to-severe-pain-duration-for-long-term-opioid-patients-with-acute-pain.
-Does Rec01-imp04-clinician use-nonopioids-when-possible-and-limit-additional-opioids-to-severe-pain-duration-for-long-term-opioid-patients-with-acute-pain?
+If a patient has a long-term-opioid-use and needs an additional-medication for an acute-pain and a nonopioid-medication is possible then every clinician should use the nonopioid-medication.
+If a patient has a long-term-opioid-use and needs an additional-opioid for an acute-pain then every clinician should limit the additional-opioid for an expected-severe-pain-duration and should restore a baseline-opioid-dosage.
+If a patient has a long-term-opioid-use and has a prolonged-around-the-clock-additional-opioid-use for a few-day-period then every clinician should use a baseline-dosage-taper.

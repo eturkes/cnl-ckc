@@ -188,8 +188,10 @@ place of the document. The payload is one
 term per fact group and per rule variant, where `Facts` is that group's
 own positive body under a witness substitution — NAF boxes contribute
 nothing, by design — and `Heads` its clause heads under the same
-substitution. The compiler asserts each witness, proves every head under
-a depth limit, then retracts. A group whose heads stay non-ground under
+substitution. The compiler asserts each witness ahead of the document's
+rule clauses, proves every head under bounded search — a depth limit and
+an inference limit, either exceeded counting as underivable — then
+retracts. A group whose heads stay non-ground under
 its own witness rejects with `proof, nonground_obligation(…)`; one whose
 heads do not derive rejects with `proof, underivable_obligation(…)`. Both
 exit 1. Witness terms carry the document's own document, sentence, and

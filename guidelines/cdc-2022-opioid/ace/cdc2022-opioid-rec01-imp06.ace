@@ -1,3 +1,5 @@
-Rec01-imp06-clinician is an acute-pain-clinician.
-Every acute-pain-clinician considers-opioid-therapy-for-severe-traumatic-injuries-invasive-surgeries-and-other-severe-acute-pain-when-nsaids-and-other-therapies-are-contraindicated-or-likely-ineffective.
-Does Rec01-imp06-clinician consider-opioid-therapy-for-severe-traumatic-injuries-invasive-surgeries-and-other-severe-acute-pain-when-nsaids-and-other-therapies-are-contraindicated-or-likely-ineffective?
+An opioid-therapy has an important-role for an acute-pain that relates to a severe-traumatic-injury.
+An opioid-therapy has an important-role for an acute-pain that relates to a crush-injury.
+An opioid-therapy has an important-role for an acute-pain that relates to a burn.
+An opioid-therapy has an important-role for a moderate-to-severe-postoperative-pain that relates to an invasive-surgery.
+If an NSAID is contraindicated and an other-therapy is contraindicated or an NSAID is ineffective and an other-therapy is ineffective then an opioid-therapy has an important-role for an other-severe-acute-pain.

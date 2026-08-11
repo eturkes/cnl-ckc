@@ -1,16 +1,51 @@
 % cdc2022-opioid-rec11.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
-guideline_document('cdc2022-opioid-rec11',ace_sha256('4bb26e026937294eb007370a27c9b54208264ab4fb3facf6555f0a181d6c0274'),ulex(sha256('453749766e15fefa9c2dbb81ef07028b238ee2cb462770b45c2c584b7cbc92e7'))).
-% S1: Rec11-clinician is a concurrent-medication-clinician.
-'concurrent-medication-clinician'('Rec11-clinician').
-% S2: Rec11 is a category-b-recommendation.
-'category-b-recommendation'('Rec11').
-% S3: Rec11 is an evidence-type-3-recommendation.
-'evidence-type-3-recommendation'('Rec11').
-% S4: Every concurrent-medication-clinician uses-particular-caution.
-'use-particular-caution'(A) :- 'concurrent-medication-clinician'(A).
-% S5: Does Rec11-clinician use-particular-caution?
-guideline_query(yesno,'use-particular-caution'('Rec11-clinician')).
-% S6: Is Rec11 a category-b-recommendation?
-guideline_query(yesno,'category-b-recommendation'('Rec11')).
-% S7: Is Rec11 an evidence-type-3-recommendation?
-guideline_query(yesno,'evidence-type-3-recommendation'('Rec11')).
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document('cdc2022-opioid-rec11',ace_sha256('8456cfd0033e19598eef8a4530f8d944285b411b2b3564d537942bcb9f8fcb8d'),ulex(sha256(c879b5696dbd7394030ca8105226a5d860b57777791e2f4772f9325c07278683))).
+% S1: A recommendation is a category-B-recommendation and is an evidence-type-3-recommendation.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(1),[]),recommendation,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(2),[]),'category-B-recommendation',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(3),[]),be).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(2),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(4),[]),'evidence-type-3-recommendation',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(4),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(5),[]),be).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec11',1,ref(4),[])).
+% S2: If a clinician prescribes an opioid-pain-medication with a benzodiazepine then the clinician should heed a particular-caution.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec11',2,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-pain-medication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,benzodiazepine,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec11',2,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',2,ref(5),[A,B,C,D]),'particular-caution',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-pain-medication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,benzodiazepine,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec11',2,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',2,ref(5),[A,B,C,D]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-pain-medication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,benzodiazepine,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec11',2,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',2,ref(6),[A,B,C,D]),heed) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-pain-medication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,benzodiazepine,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec11',2,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',2,ref(6),[A,B,C,D]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-pain-medication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,benzodiazepine,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec11',2,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',2,ref(6),[A,B,C,D]),2,'$guideline_id'(product,'cdc2022-opioid-rec11',2,ref(5),[A,B,C,D])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-pain-medication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,benzodiazepine,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+% S3: If a clinician prescribes an opioid with a central-nervous-system-depressant then the clinician should weigh a benefit against a risk.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(5),[A,B,C,D]),benefit,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(5),[A,B,C,D]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(6),[A,B,C,D]),risk,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(6),[A,B,C,D]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(7),[A,B,C,D]),weigh) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(7),[A,B,C,D]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(7),[A,B,C,D]),2,'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(5),[A,B,C,D])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec11',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(7),[A,B,C,D]),against,'$guideline_id'(product,'cdc2022-opioid-rec11',3,ref(6),[A,B,C,D])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'central-nervous-system-depressant',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).

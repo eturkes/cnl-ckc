@@ -662,7 +662,7 @@ def check_compendium():
     summary = "goal: compendium ok " + str(org_count) + " organizations " + str(row_count) + " rows; terminal remaining: orgs=" + str(orgs_remaining) + " rows=" + str(rows_remaining) + " provisional=" + str(provisional_count)
     print(summary)
 migration_guideline_id = "cdc-2022-opioid"
-v1_docids = []
+v1_docids = ["cdc2022-opioid-rec01", "cdc2022-opioid-rec01-imp01", "cdc2022-opioid-rec01-imp02", "cdc2022-opioid-rec01-imp03", "cdc2022-opioid-rec01-imp04", "cdc2022-opioid-rec01-imp05", "cdc2022-opioid-rec01-imp06", "cdc2022-opioid-rec02", "cdc2022-opioid-rec03", "cdc2022-opioid-rec04", "cdc2022-opioid-rec05", "cdc2022-opioid-rec06", "cdc2022-opioid-rec07", "cdc2022-opioid-rec08", "cdc2022-opioid-rec09", "cdc2022-opioid-rec10", "cdc2022-opioid-rec11", "cdc2022-opioid-rec12"]
 coverage_pin = "674f3537f626adf6c31167e28a3758fd870ae51a839a59cfc3fdee79ccd73f0e"
 census_pin = "49f0f096a3a166733bb673733a03b047c3c52b755e6421e4bc07b50862c3e91c"
 projection_pair_pin = "d0e162420044e445b079c24ca0bf3a73494d5e707c4fe67c1da92da10a37a8cb"
