@@ -1,7 +1,7 @@
 # format: docid<TAB>region<TAB>kept<TAB>dropped
-# per-document loss record for the ACE projections: what each minimal rule retains from its
-# verbatim source region and what it deliberately drops or interprets; drafts were reviewed by
-# the lead and an adversarial reviewer, and three compounds carry review-fix notes.
+# per-document projection loss record: what each minimal rule keeps from its verbatim source
+# region and what it drops or interprets. Header bytes and the ordered (docid, region) pairs
+# are pinned in tools/goal.emm; kept/dropped prose stays migration-owned.
 cdc2022-opioid-rec01	B3-02	actor-class fact; category and evidence-type parenthetical as class facts; one action rule: maximizes-nonopioid-therapy	deontic should; the recommendation’s remaining sentences, conditions, and qualifiers (each ruled separately in coverage.tsv)
 cdc2022-opioid-rec01-imp01	S19-10	clinician actor + maximize nonopioid therapy	pharmacologic/nonpharmacologic examples; condition-specific appropriateness; deontic should
 cdc2022-opioid-rec01-imp02	S19-11	clinician actor; opioid-warranting acute-pain condition folded into atomic action; immediate release; lowest effective dose; expected severe-pain duration	cross-references; explicit diagnosis/severity test structure; deontic should

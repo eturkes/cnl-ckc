@@ -18,12 +18,18 @@ gauges, harvest/TaskStop, Close order) + `/session-roadmap` execution map
   attention-directing: MAIN spot-checks verbatim fidelity against the
   source before adopting anything.
 - `ace-<id>-<k>` — drafts ACE documents for a MAIN-ruled statement batch
-  per the corpus modeling pattern, compile+check-validated in its worktree;
-  proposed lexicon additions ship as a reported delta only. Faithfulness =
-  MAIN review, statement by statement.
+  per the corpus modeling pattern: knowledge-only (no witness seed facts,
+  proper-name stand-ins, or authored queries), validated in its worktree by
+  `compile` + `check` — which runs the migration validator — plus a
+  `schema=v1` + `proof` run per drafted document; proposed lexicon
+  additions ship as a reported delta only. Faithfulness = MAIN review,
+  statement by statement.
 - `rev-<id>-<k>` — adversarial: ACE↔extraction fidelity, coverage-claim
-  soundness, guideline README claims, CLAUDE.md conformance; findings as
-  `file:line` reports; disputed semantics ⇒ MAIN rules.
+  soundness, guideline README claims, knowledge-only/fixture-free status,
+  derived-obligation count + discharge per document,
+  `audit/projection-notes.tsv` kept/dropped fidelity, CLAUDE.md
+  conformance; findings as `file:line` reports; disputed semantics ⇒ MAIN
+  rules.
 - `audit-<id>-<k>` — diff-blind completeness sweep: normative statements in
   the source vs `ace/` inventory vs README uncovered-list; feeds the
   coverage statement and the /goal stop check.
@@ -32,8 +38,9 @@ gauges, harvest/TaskStop, Close order) + `/session-roadmap` execution map
   route per global `CLAUDE.md`).
 
 MAIN-retained: `ace_to_pl.pl` + lexicon edits, all primary-tree writes,
-guideline README + queue updates, id choice, rights rulings, statement
-batch verdicts, gate reruns, commits.
+`tools/goal.emm` migration pins (`v1_docids`, ledger digests, projection
+header), guideline README + queue updates, id choice, rights rulings,
+statement batch verdicts, gate reruns, commits.
 
 Round flow: spawn `extract` + `audit` early (the bulk read happens once,
 reused); MAIN batch-rules the statement inventory (project / uncovered with

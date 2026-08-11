@@ -25,7 +25,10 @@ compilation of it, or part of one small named compiler base:
 - **ACE → Prolog.** All guideline Prolog (`guidelines/*/pl/`) is compiled
   from ACE. The compiled files quote each source sentence beside its clause,
   and each carries the SHA-256 of the exact ACE and lexicon bytes it was
-  compiled from.
+  compiled from. On schema v1 the compiler also derives each sentence's
+  obligation and discharges it against the document's own clauses — alone
+  and co-loaded with the rest of the batch — so a shipped clause is one
+  the compiler has proved follows from the sentence it quotes.
 - **E-- → Python.** All first-party Python (`tools/goal.py`,
   `tools/regen.py`) is compiled from E-- (`tools/*.emm`), an English-like
   language. `tools/regen.py --check` proves every committed `.py` is
@@ -48,8 +51,11 @@ compilation of it, or part of one small named compiler base:
   `/goal` exhaustion clause reads), then validates layout, source records,
   and Prolog/lexicon inventory closure, recompiles every guideline twice
   (byte-determinism), compares against the committed Prolog (freshness),
-  proves every compiled query, and asserts each red probe is rejected with
-  its named error class and exit status.
+  proves every compiled query, derives and discharges every v1 document's
+  obligations alone and as one co-loaded composition, checks the
+  schema-migration ledgers (projection notes, lexicon liveness, and that
+  each migrated document's Prolog uses only v1 vocabulary), and asserts
+  each red probe is rejected with its named error class and exit status.
 
 ## Running
 
@@ -62,13 +68,16 @@ python3 -P tools/goal.py check                    # full acceptance gate
 python3 -P tools/regen.py --check                 # E-- → Python identity
 ```
 
-## Compiled Prolog schema (candidate v1)
+## Compiled Prolog schema (v1)
 
-Status: **candidate**. The committed corpus compiles on the default
-(pre-v1) path and is byte-frozen; v1 is selected explicitly by appending
-`schema=v1` to the compiler invocation, and no document ships on it yet.
-The schema freezes at M3.3, which starts emitting
-`guideline_schema_version(1).`; nothing emits a version term before then.
+Status: **frozen**. Every v1 document emits `guideline_schema_version(1).`,
+and the predicate set below is the public ABI — extending it requires a
+version bump. The committed corpus still compiles on the default (pre-v1)
+path and is byte-frozen; v1 is selected explicitly by appending
+`schema=v1` to the compiler invocation, and documents migrate onto it in
+batches (`tools/goal.py check` prints `goal: migration migrated=<N>/<D>`).
+`guideline_query/2` is a legacy-path predicate, excluded from the v1 ABI
+and never emitted on it.
 
 Sentences project onto a closed reserved vocabulary. Source words —
 nouns, verbs, adjectives, prepositions — stay opaque data atoms and never
@@ -77,6 +86,7 @@ domain-neutral:
 
 | Predicate | Meaning |
 | --- | --- |
+| `guideline_schema_version(Version)` | schema version of this document (`1`) |
 | `guideline_document(DocId, ace_sha256(H), ulex(none \| sha256(H)))` | document record + source digests |
 | `guideline_entity(Context, Ref, Noun, Class)` | an entity referent and its noun/class |
 | `guideline_cardinality(Context, Ref, Unit, Comparison, Count)` | that referent's quantity payload, verbatim |
@@ -146,27 +156,63 @@ they are consequent-inaccessible and stay box-local existentials — and
 `N` is the
 referent's first-occurrence position in the sentence's unsplit
 expansion — both variants of a split mint the same `ref(N)`,
-distinguished by `Deps`. These terms name
-the compiler's chosen witness — not a source-given name, real-world
-identity, or uniqueness claim. Because facts and derived heads share one
-vocabulary, a rule body consumes another document's facts or heads by
-ordinary resolution.
+distinguished by `Deps`. The constructor's first argument names what the
+term stands for: `context` for an operator box, `product` for a
+consequent referent, `witness` for a proof instance (below). All three
+name the compiler's own chosen stand-in — never a source-given name,
+real-world identity, or uniqueness claim. Because facts and derived heads
+share one vocabulary, a rule body consumes another document's facts or
+heads by ordinary resolution.
 
 Every v1 document opens with the same declaration block — `multifile` and
-`discontiguous` for all eight indicators, whether or not it populates
-them — followed by the document record, then per sentence a
+`discontiguous` for all nine indicators, whether or not it populates
+them — followed by `guideline_schema_version(1).`, the document record,
+then per sentence a
 `% S<n>: <verbatim sentence>` comment and that sentence's contiguous
 clauses in deterministic order. Any subset of v1 documents therefore
 co-loads into one engine in any order with no warnings. Names beginning
 `guideline_` and the identity constructor `'$guideline_id'` are reserved:
-a source word colliding with one rejects the document rather than
-silently shadowing schema vocabulary. `guideline_part/3` is
+a colliding name rejects the document rather than silently shadowing
+schema vocabulary, and the compiler scans both the parsed sentence and
+every lexicon entry — used or not — for one. `guideline_part/3` is
 reserved for a later unit and unemitted in v1; shapes still outside the
 schema (group coordination, disjunctive consequents, rules scoped inside
 an operator, questions) reject with a canonical
 `ace_to_pl_error(unsupported, …)` line.
 
-Authoring notes (v1): one statement per sentence — split "…, and if A
+Compilation is checked, not asserted. Every v1 compile derives the
+document's obligations and discharges them before emitting anything;
+appending `proof` to the invocation prints the derivation payload in
+place of the document. The payload is one
+`'$guideline_proof'(DocId, S, variant(K), witness(Facts), prove(Heads))`
+term per fact group and per rule variant, where `Facts` is that group's
+own positive body under a witness substitution — NAF boxes contribute
+nothing, by design — and `Heads` its clause heads under the same
+substitution. The compiler asserts each witness, proves every head under
+a depth limit, then retracts. A group whose heads stay non-ground under
+its own witness rejects with `proof, nonground_obligation(…)`; one whose
+heads do not derive rejects with `proof, underivable_obligation(…)`. Both
+exit 1. Witness terms carry the document's own document, sentence, and
+variant coordinates, so no foreign clause can discharge an obligation:
+success is modus ponens over that sentence's own projection.
+
+`aggregate-check <manifest>` replays those obligations across a
+composition. The manifest is strict: one `<compiled-pl>` TAB `<payload>`
+row per document, final newline required, a 0-byte file meaning the empty
+composition. The compiler loads every document into one engine (any load
+diagnostic is a failure), checks that the distinct `guideline_document/3`
+records equal the manifest row count and that the loaded schema-version
+set is exactly `[1]`, then re-derives every obligation against the whole
+batch — so co-loading can neither break a document's derivations nor
+silently repair them, and negation-as-failure is evaluated against the
+composition it will actually run in. It reports
+`ace_to_pl aggregate ok <N> documents <G> obligations`.
+
+Authoring notes (v1): an ACE document states guideline knowledge and
+nothing else — no witness seed facts, no proper-name stand-ins, no
+authored probe queries, since the compiler derives its own obligations —
+and `lexicon.ulex` carries reusable domain vocabulary rather than
+per-statement fixtures. One statement per sentence — split "…, and if A
 then B" into separate sentences. Keep quantified restrictors out of
 modal complements: a universally quantified rule nested inside a modal
 box rejects (`operator_scoped_rule`), so state the quantification in the
@@ -194,7 +240,10 @@ taking on anything new. The check's first stage validates the compendium
 row format and vocabulary, canonical ordering, the single-active-row
 promotion invariant) and prints a terminal meter — remaining
 non-terminal organizations and unfinished guideline rows — that measures
-the exhaustion clause directly. Bulk work (source reading, extraction drafting, ACE
+the exhaustion clause directly. It also prints the schema-migration meter
+`goal: migration migrated=<N>/<D>`, documents already compiled on v1 over
+the migration roster; the transition finishes when the two numbers meet
+and no fixture-era lexicon entry survives. Bulk work (source reading, extraction drafting, ACE
 drafting, adversarial review) fans out to subagent teammates per
 `.agent/rounds.md`; the session lead alone writes the repository and
 commits.
@@ -203,7 +252,8 @@ Exactly one source document is in progress at a time and is worked to
 completion — across as many rounds as it takes — before the next one is
 fetched. A source document is complete when every normative statement in it
 has been extracted verbatim into `source/` evidence and either authored as
-ACE and compiled, or recorded in the guideline README as uncovered with a
+knowledge-only ACE and compiled — obligations discharging alone and in
+aggregate — or recorded in the guideline README as uncovered with a
 reason, and `python3 -P tools/goal.py check` is green.
 
 While a document is in progress, a round advances it one increment:
@@ -218,8 +268,9 @@ While a document is in progress, a round advances it one increment:
 3. **Compile** — `python3 -P tools/goal.py compile <id>`. A rejection means
    the ACE or lexicon is adjusted first; only a genuinely new construct
    extends the `ace_to_pl.pl` translation, minimally, keeping totality
-   (every sentence compiles to exactly one clause; unrecognized shapes
-   reject) and adding `tests/red/` probes for the new rejection boundary.
+   (every sentence compiles to a determinate clause bundle whose
+   obligations discharge; unrecognized shapes reject) and adding
+   `tests/red/` probes for the new rejection boundary.
 4. **Close** — `python3 -P tools/goal.py check` green, plus
    `python3 -P tools/regen.py --check` when E-- sources changed; a scoped
    commit; `.agent/queue.md` and the guideline README's coverage statement

@@ -1,22 +1,32 @@
 % ace_to_pl.pl — ACE → plain-Prolog compiler over the APE parser.
-% First added to this APE fork 2026-08-06 (not part of upstream APE).
+% First added to this APE fork 2026-08-06; v1 freeze + derived proof
+% obligations added 2026-08-11 (not part of upstream APE).
 % Copyright 2026 Emir Turkes. Derivative of APE; licensed under
 % LGPL-3.0-or-later like the surrounding tree (see ../LICENSE.txt).
 %
 % Modes (argv after --):
 %   <ape-tree-dir> <docid>            compile; ACE bytes on stdin -> Prolog on stdout
 %   <ape-tree-dir> <docid> <ulex>     compile with user lexicon file
-%   ... schema=v1                     as above, projected onto the candidate v1
+%   ... schema=v1                     as above, projected onto the v1
 %                                     schema (exact trailing token; absent = legacy)
+%   ... schema=v1 proof               derive + emit the proof payload (one ground
+%                                     '$guideline_proof'/5 term per group) instead of
+%                                     the product; same derivation check either way
 %   check <file.pl>                   load compiled file into user (quarantined I/O; any load
 %                                     diagnostic rejects); every guideline_query goal must succeed
+%   aggregate-check <manifest>        load a composition (LF lines "<pl>\t<payload>",
+%                                     0-byte file = empty) and replay every payload
+%                                     obligation against the loaded whole
 %
 % Compile contract: stdin = strict RFC 3629 UTF-8; one ACE sentence per non-empty LF line.
 % <docid> = nonempty [a-z0-9-] with no leading dash.
 % Success: stdout = compiled Prolog document, stderr = 0 bytes, exit 0.
 % Reject: stdout = 0 bytes; stderr = one canonical ace_to_pl_error(Class,Detail) line.
-% Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|query_failed;
+% Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|query_failed|proof;
 %       2=usage|ape_load|ulex_load|check_load|uncaught.
+% v1 assurance: every v1 compile (product or proof emission) derives per-group
+% witness worlds + obligations and replays them against the document's own
+% clauses; an underivable obligation rejects the document (class proof).
 % The legacy path below is byte-frozen: the committed corpus recompiles to
 % identical bytes, and schema selection is an explicit input, never inferred
 % from content. The candidate v1 path lives under "v1 schema projection"
@@ -84,6 +94,9 @@ run(Input, Output, ErrorStream) :-
 dispatch([check, File], Input, Output, ErrorStream) :-
     !,
     check_mode(File, Input, Output, ErrorStream).
+dispatch(['aggregate-check', Manifest], Input, Output, ErrorStream) :-
+    !,
+    aggregate_check_mode(Manifest, Input, Output, ErrorStream).
 dispatch([Tree, DocId], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
@@ -91,17 +104,39 @@ dispatch([Tree, DocId], Input, Output, ErrorStream) :-
 dispatch([Tree, DocId, 'schema=v1'], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
-    compile_mode(v1, Tree, DocId, none, Input, Output, ErrorStream).
+    compile_mode(v1(product), Tree, DocId, none, Input, Output, ErrorStream).
+dispatch([Tree, DocId, 'schema=v1', proof], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    compile_mode(v1(proof), Tree, DocId, none, Input, Output, ErrorStream).
 dispatch([Tree, DocId, Ulex], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
+    validated_ulex_arg(Ulex, ErrorStream),
     compile_mode(legacy, Tree, DocId, file(Ulex), Input, Output, ErrorStream).
 dispatch([Tree, DocId, Ulex, 'schema=v1'], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
-    compile_mode(v1, Tree, DocId, file(Ulex), Input, Output, ErrorStream).
+    validated_ulex_arg(Ulex, ErrorStream),
+    compile_mode(v1(product), Tree, DocId, file(Ulex), Input, Output,
+        ErrorStream).
+dispatch([Tree, DocId, Ulex, 'schema=v1', proof], Input, Output,
+        ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    validated_ulex_arg(Ulex, ErrorStream),
+    compile_mode(v1(proof), Tree, DocId, file(Ulex), Input, Output,
+        ErrorStream).
 dispatch(Argv, _, _, ErrorStream) :-
     emit_error(ErrorStream, usage, argv(Argv), 2).
+
+/* `proof` is a reserved argv token (like `schema=v1`): a user lexicon
+   file literally named `proof` is unsupported. */
+validated_ulex_arg(Ulex, ErrorStream) :-
+    ( Ulex == proof ->
+        emit_error(ErrorStream, usage, ulex_arg(Ulex), 2)
+    ; true
+    ).
 
 /* Docid lands in the header term and a comment line; the grammar keeps
    both injection-free without escaping. */
@@ -144,19 +179,23 @@ check_mode(File, Input, Output, ErrorStream) :-
     halt(0).
 
 /* Load into user with messages captured; any warning or error message
-   (syntax errors, failed directives) rejects the whole file. */
+   (syntax errors, failed directives) rejects the whole file (or, for
+   the aggregate list form, the whole set). */
 check_load_captured(File) :-
+    check_load_captured_list([File], File).
+
+check_load_captured_list(Files, Label) :-
     setup_call_cleanup(
         ( nb_setval(ace_to_pl_load_capture, true),
           nb_setval(ace_to_pl_load_failed, false)
         ),
-        load_files(user:File, [silent(true)]),
+        load_files(user:Files, [silent(true)]),
         nb_setval(ace_to_pl_load_capture, false)),
     nb_getval(ace_to_pl_load_failed, Failed),
     ( Failed == false ->
         true
-    ; throw(error(check_load_diagnostics(File),
-          context(ace_to_pl:check_load_captured/1, File)))
+    ; throw(error(check_load_diagnostics(Label),
+          context(ace_to_pl:check_load_captured_list/2, Label)))
     ).
 
 prove_queries([], _, _, _).
@@ -174,6 +213,200 @@ prove_queries([query(Kind, Goal)|Queries], Input, Output, ErrorStream) :-
         emit_error(ErrorStream, query_failed, raised(Kind, RaisedError), 1)
     ; emit_error(ErrorStream, query_failed, Kind, 1)
     ).
+
+/* ---------- aggregate-check mode: whole-composition proof replay ---------- */
+
+/* P9: load every manifest pl into user under the capture hook (any
+   diagnostic fails), assert the structural invariants, then replay
+   every payload obligation against the loaded composition — NAF
+   evaluates against the whole batch by design. */
+aggregate_check_mode(Manifest, Input, Output, ErrorStream) :-
+    catch(
+        ( aggregate_read_manifest(Manifest, PlPaths, PayloadPaths) ->
+            true
+        ; throw(error(aggregate_manifest(Manifest),
+              context(ace_to_pl:aggregate_check_mode/4, plain_failure)))
+        ),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)),
+    ( PlPaths == [] ->
+        aggregate_report(Output, 0, 0)
+    ; aggregate_declare_indicators,
+      aggregate_load(PlPaths, Input, Output, ErrorStream),
+      aggregate_assertions(PlPaths, ErrorStream),
+      aggregate_obligations(PayloadPaths, ErrorStream, Count),
+      length(PlPaths, DocCount),
+      aggregate_report(Output, DocCount, Count)
+    ).
+
+/* The witness replay asserts into user, so the v1 ABI is declared
+   dynamic BEFORE loading — loaded clauses then join dynamic predicates
+   (a static procedure cannot be modified afterwards). */
+aggregate_declare_indicators :-
+    v1_indicators(Indicators),
+    aggregate_declare(Indicators).
+
+aggregate_declare([]).
+aggregate_declare([Name/Arity|Keys]) :-
+    dynamic(user:Name/Arity),
+    aggregate_declare(Keys).
+
+aggregate_report(Output, DocCount, Count) :-
+    format(Output, 'ace_to_pl aggregate ok ~d documents ~d obligations~n',
+        [DocCount, Count]),
+    halt(0).
+
+/* Manifest grammar (strict): UTF-8, LF-terminated lines
+   "<pl-path>\t<payload-path>", nonempty fields, exactly one tab, final
+   LF required; a 0-byte file = the empty composition. */
+aggregate_read_manifest(File, PlPaths, PayloadPaths) :-
+    read_utf8_file(File, Bytes, Text),
+    ( Bytes == [] ->
+        PlPaths = [],
+        PayloadPaths = []
+    ; atom_codes(Text, Codes),
+      ( append(_, [0'\n], Codes) ->
+          true
+      ; throw(error(aggregate_manifest(missing_final_newline),
+            context(ace_to_pl:aggregate_read_manifest/3, File)))
+      ),
+      aggregate_manifest_lines(Codes, File, PlPaths, PayloadPaths),
+      aggregate_manifest_readable(PlPaths, File),
+      aggregate_manifest_readable(PayloadPaths, File)
+    ).
+
+aggregate_manifest_readable([], _).
+aggregate_manifest_readable([Path|Paths], File) :-
+    ( exists_file(Path),
+      access_file(Path, read) ->
+        true
+    ; throw(error(aggregate_manifest(unreadable(Path)),
+          context(ace_to_pl:aggregate_read_manifest/3, File)))
+    ),
+    aggregate_manifest_readable(Paths, File).
+
+aggregate_manifest_lines([], _, [], []).
+aggregate_manifest_lines(Codes, File, [Pl|Pls], [Payload|Payloads]) :-
+    append(LineCodes, [0'\n|Rest], Codes),
+    !,
+    aggregate_manifest_entry(LineCodes, File, Pl, Payload),
+    aggregate_manifest_lines(Rest, File, Pls, Payloads).
+
+aggregate_manifest_entry(LineCodes, File, Pl, Payload) :-
+    ( append(PlCodes, [0'\t|PayloadCodes], LineCodes),
+      PlCodes \== [],
+      PayloadCodes \== [],
+      \+ memberchk(0'\t, PlCodes),
+      \+ memberchk(0'\t, PayloadCodes) ->
+        atom_codes(Pl, PlCodes),
+        atom_codes(Payload, PayloadCodes)
+    ; atom_codes(Line, LineCodes),
+      throw(error(aggregate_manifest(line(Line)),
+          context(ace_to_pl:aggregate_read_manifest/3, File)))
+    ).
+
+aggregate_load(PlPaths, Input, Output, ErrorStream) :-
+    catch(
+        ( quarantined_call(Input, Output, ErrorStream,
+              check_load_captured_list(PlPaths, PlPaths)) ->
+            true
+        ; throw(error(aggregate_load_failed,
+              context(ace_to_pl:aggregate_load/4, plain_failure)))
+        ),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)).
+
+/* Structural invariants (P9): distinct document records = manifest
+   rows; loaded schema-version set = [1]. */
+aggregate_assertions(PlPaths, ErrorStream) :-
+    length(PlPaths, Expected),
+    ( current_predicate(user:guideline_document/3) ->
+        findall(D, user:guideline_document(D, _, _), Ds)
+    ; Ds = []
+    ),
+    sort(Ds, DistinctIds),
+    length(DistinctIds, DistinctFound),
+    ( DistinctFound =:= Expected ->
+        true
+    ; emit_error(ErrorStream, proof,
+          document_records(Expected, DistinctFound), 1)
+    ),
+    ( current_predicate(user:guideline_schema_version/1) ->
+        findall(V, user:guideline_schema_version(V), Vs)
+    ; Vs = []
+    ),
+    sort(Vs, VersionSet),
+    ( VersionSet == [1] ->
+        true
+    ; emit_error(ErrorStream, proof, schema_versions(VersionSet), 1)
+    ).
+
+aggregate_obligations([], _, 0).
+aggregate_obligations([Path|Paths], ErrorStream, Count) :-
+    aggregate_payload_terms(Path, ErrorStream, Terms),
+    aggregate_run_terms(Terms, Path, ErrorStream, Head),
+    aggregate_obligations(Paths, ErrorStream, Tail),
+    Count is Head + Tail.
+
+aggregate_payload_terms(Path, ErrorStream, Terms) :-
+    catch(
+        ( aggregate_read_terms(Path, Terms) ->
+            true
+        ; throw(error(payload_read_failed(Path),
+              context(ace_to_pl:aggregate_payload_terms/3, plain_failure)))
+        ),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)).
+
+aggregate_read_terms(Path, Terms) :-
+    read_utf8_file(Path, _, Text),
+    setup_call_cleanup(
+        open_string(Text, Stream),
+        aggregate_stream_terms(Stream, Terms),
+        close(Stream)).
+
+aggregate_stream_terms(Stream, Terms) :-
+    read_term(Stream, Term, []),
+    ( Term == end_of_file ->
+        Terms = []
+    ; Terms = [Term|Rest],
+      aggregate_stream_terms(Stream, Rest)
+    ).
+
+aggregate_run_terms([], _, _, 0).
+aggregate_run_terms([Term|Terms], Path, ErrorStream, Count) :-
+    ( Term = '$guideline_proof'(DocId, S, variant(K), witness(Facts),
+          prove(Heads)),
+      is_list(Facts),
+      is_list(Heads),
+      ground(Term) ->
+        aggregate_check_one(DocId, S, K, Facts, Heads, ErrorStream)
+    ; emit_error(ErrorStream, check_load, payload_term(Path), 2)
+    ),
+    aggregate_run_terms(Terms, Path, ErrorStream, Tail),
+    Count is Tail + 1.
+
+aggregate_check_one(DocId, S, K, Facts, Heads, ErrorStream) :-
+    aggregate_assert_witness(Facts, Refs),
+    ( aggregate_prove_heads(Heads) ->
+        v1_erase_refs(Refs)
+    ; v1_erase_refs(Refs),
+      emit_error(ErrorStream, proof,
+          obligation_failed(DocId, S, variant(K)), 1)
+    ).
+
+aggregate_assert_witness([], []).
+aggregate_assert_witness([Fact|Facts], [Ref|Refs]) :-
+    assertz(user:Fact, Ref),
+    aggregate_assert_witness(Facts, Refs).
+
+aggregate_prove_heads([]).
+aggregate_prove_heads([Head|Heads]) :-
+    v1_proof_depth_limit(Limit),
+    call_with_depth_limit(user:Head, Limit, Result),
+    !,
+    Result \== depth_limit_exceeded,
+    aggregate_prove_heads(Heads).
 
 /* ---------- compile mode ---------- */
 
@@ -308,6 +541,7 @@ load_ulex_checked(File, Digest, Messages) :-
     ulex:discard_ulex,
     read_utf8_file(File, Bytes, Text),
     crypto_data_hash(Bytes, Digest, [algorithm(sha256), encoding(octet)]),
+    v1_scan_ulex_reserved(Text),
     error_logger:clear_messages(lexicon),
     setup_call_cleanup(
         open_string(Text, Stream),
@@ -323,6 +557,63 @@ read_utf8_file(File, Bytes, Text) :-
         open(File, read, Stream, [type(binary)]),
         read_utf8_input(Stream, Bytes, Text),
         close(Stream)).
+
+/* v1 ulex-wide reserved scan (P3): every entry, used or not; the first
+   offender in file order parks in a global the v1 path rejects through
+   the canonical machinery. Legacy compiles set the flag and never read
+   it. A term that fails to re-read as Prolog ends the scan (APE's own
+   reader already vetted the entry stream); the parsed-DRS scan stays
+   the used-entry backstop. */
+v1_scan_ulex_reserved(Text) :-
+    nb_setval(ace_to_pl_ulex_reserved, none),
+    setup_call_cleanup(
+        open_string(Text, Stream),
+        v1_scan_ulex_stream(Stream),
+        close(Stream)).
+
+v1_scan_ulex_stream(Stream) :-
+    catch(read_term(Stream, Term, []), _, Term = end_of_file),
+    ( Term == end_of_file ->
+        true
+    ; ( nb_getval(ace_to_pl_ulex_reserved, none),
+        v1_ulex_reserved_detail(Term, Detail) ->
+          nb_setval(ace_to_pl_ulex_reserved, Detail)
+      ; true
+      ),
+      v1_scan_ulex_stream(Stream)
+    ).
+
+/* Every ulex category writes the surface word form in the first argument
+   and the product-bound data — lemma, class, preposition — after it, so
+   the scan skips that first slot: a surface form never reaches the
+   compiled document, and skipping it keeps one canonical detail per
+   offending entry, identical to the parsed-DRS scan's. */
+v1_ulex_reserved_detail(Term, Detail) :-
+    compound(Term),
+    functor(Term, Name, _),
+    v1_reserved_atom(Name),
+    !,
+    Detail = reserved_constructor_collision(Term).
+v1_ulex_reserved_detail(Term, Detail) :-
+    compound(Term),
+    !,
+    Term =.. [_, _Surface | Rest],
+    member(Arg, Rest),
+    v1_reserved_subterm(Arg, Detail).
+v1_ulex_reserved_detail(Term, Detail) :-
+    v1_reserved_subterm(Term, Detail).
+
+v1_reserved_subterm(Term, Detail) :-
+    sub_term(Sub, Term),
+    nonvar(Sub),
+    ( compound(Sub),
+      functor(Sub, Name, _),
+      v1_reserved_atom(Name) ->
+        Detail = reserved_constructor_collision(Sub)
+    ; atom(Sub),
+      v1_reserved_atom(Sub),
+      Detail = reserved_name_collision(Sub)
+    ).
 
 ensure_ulex_consumed(_, Messages) :-
     Messages \== [],
@@ -390,10 +681,10 @@ mode_translate(legacy, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
         OutCodes) :-
     translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
         OutCodes).
-mode_translate(v1, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+mode_translate(v1(Emit), DocId, Bytes, Text, UlexDigest, Sentences, Drs,
         OutCodes) :-
-    v1_translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
-        OutCodes).
+    v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences,
+        Drs, OutCodes).
 
 reject(Class, Detail) :-
     throw(ace_to_pl_reject(Class, Detail)).
@@ -1097,6 +1388,7 @@ canonical_args(Index, Arity, Term) :-
 /* Uniform declaration block (F2): every v1 document declares all eight
    indicators regardless of population. */
 v1_indicators([
+    guideline_schema_version/1,
     guideline_document/3,
     guideline_entity/4,
     guideline_cardinality/5,
@@ -1107,7 +1399,7 @@ v1_indicators([
     guideline_operator/3
 ]).
 
-v1_translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
         OutCodes) :-
     ( nonvar(Drs),
       Drs = drs(Dom, Conds),
@@ -1124,11 +1416,27 @@ v1_translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
     ; reject(sentence_lines, counts(lines(LineCount), sentences(SentenceCount)))
     ),
     crypto_data_hash(Bytes, AceDigest, [algorithm(sha256), encoding(octet)]),
+    v1_ulex_reserved_check,
     v1_collision_scan(Conds),
     v1_tag_conditions(Conds, Tagged),
     group_by_sentence(1, SentenceCount, Tagged, Groups),
     v1_translate_groups(Groups, DocId, [], Bundles),
-    v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes).
+    v1_derive_proofs(Bundles, DocId, Payload),
+    ( Emit == product ->
+        v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles,
+            OutCodes)
+    ; v1_render_payload(Payload, OutCodes)
+    ).
+
+/* The ulex-wide reserved scan runs at load time (every entry, used or
+   not) and parks its first offender for the v1 path to reject inside
+   the canonical reject machinery; the legacy path never consults it. */
+v1_ulex_reserved_check :-
+    ( nb_current(ace_to_pl_ulex_reserved, Detail),
+      Detail \== none ->
+        reject(unsupported, Detail)
+    ; true
+    ).
 
 /* v1 root tagging extends the legacy root inventory only for reified
    unary operator boxes. Nested anchors still select exactly one source
@@ -1174,10 +1482,10 @@ v1_tag_condition(Cond, S, _) :-
 v1_tag_condition(Cond, _, _) :-
     reject(unsupported, root_condition(Cond)).
 
-/* Reserved vocabulary: any source lemma beginning `guideline_` or equal
-   to the identity constructor name, and any source compound built with
-   the constructor, rejects the whole document (first offender in
-   depth-first term order). */
+/* Reserved vocabulary: any source lemma beginning `guideline_` or
+   `$guideline_`, and any source compound whose functor name begins
+   either prefix (any arity), rejects the whole document (first offender
+   in depth-first term order). */
 v1_collision_scan(Conds) :-
     ( v1_collision(Conds, Detail) ->
         reject(unsupported, Detail)
@@ -1187,7 +1495,9 @@ v1_collision_scan(Conds) :-
 v1_collision(Term, Detail) :-
     sub_term(Sub, Term),
     nonvar(Sub),
-    ( functor(Sub, '$guideline_id', 5) ->
+    ( compound(Sub),
+      functor(Sub, Name, _),
+      v1_reserved_atom(Name) ->
         Detail = reserved_constructor_collision(Sub)
     ; v1_lemma_slot(Sub, Lemma),
       atom(Lemma),
@@ -1212,26 +1522,41 @@ v1_lemma_slot(Sub, Lemma) :-
 v1_reserved_atom(Atom) :-
     ( sub_atom(Atom, 0, _, _, guideline_) ->
         true
-    ; Atom == '$guideline_id'
+    ; sub_atom(Atom, 0, _, _, '$guideline_')
     ).
 
+/* Sentence groups are first-class IR (P2): a bundle holds an ordered
+   list of group(Kind, K, WitnessPairs, Clauses) — the root fact
+   cluster-set = one fact group, each Horn variant = one rule group.
+   WitnessPairs = Var-WitnessId assignments over the group's positive
+   body (P3-P4); the renderer flattens groups in order, so emitted
+   bytes stay identical to the pre-IR pipeline. */
 v1_translate_groups([], _, _, []).
-v1_translate_groups([S-Group|Groups], DocId, Map0, [bundle(S, Clauses)|Bundles]) :-
-    v1_sentence(Group, S, DocId, Map0, Map, Clauses),
-    ( Clauses == [] ->
+v1_translate_groups([S-Group|Groups], DocId, Map0,
+        [bundle(S, SGroups)|Bundles]) :-
+    v1_sentence(Group, S, DocId, Map0, Map, SGroups),
+    v1_groups_clause_count(SGroups, ClauseCount),
+    ( ClauseCount =:= 0 ->
         reject(unsupported, sentence_shape(Group))
     ; true
     ),
     v1_translate_groups(Groups, DocId, Map, Bundles).
 
-v1_sentence(Group, S, DocId, Map0, Map, Clauses) :-
+v1_groups_clause_count([], 0).
+v1_groups_clause_count([group(_, _, _, Clauses)|Groups], Count) :-
+    length(Clauses, Head),
+    v1_groups_clause_count(Groups, Tail),
+    Count is Head + Tail.
+
+v1_sentence(Group, S, DocId, Map0, Map, SGroups) :-
     ( Group = [rule(Ante, Cons)] ->
         Map = Map0,
-        v1_rule(Ante, Cons, S, DocId, Map0, Clauses)
+        v1_rule(Ante, Cons, S, DocId, Map0, SGroups)
     ; Group = [question(_)] ->
         reject(unsupported, question_not_supported(S))
     ; v1_root_group(Group) ->
-        v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses)
+        v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses),
+        SGroups = [group(fact, 1, [], Clauses)]
     ; reject(unsupported, sentence_shape(Group))
     ).
 
@@ -1269,16 +1594,16 @@ v1_mint_ordinals([V|Vs], N, S, DocId, Map0, Map) :-
    inside an empty-domain consequent box folds its antecedent into the
    body, recursively; then the Horn split (P5) when the collected
    top-level antecedent conditions hold exactly one v/2 disjunction. */
-v1_rule(Ante, Cons, S, DocId, Map, Clauses) :-
+v1_rule(Ante, Cons, S, DocId, Map, SGroups) :-
     v1_curry(Ante, Cons, Segs, FinalCons),
     v1_box(FinalCons, _CDom, CConds),
     v1_seg_domain(Segs, ADom),
     v1_split_scan(Segs, Shared, Vs),
     ( Vs == [] ->
-        v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, Clauses)
+        v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups)
     ; Vs = [v(Arm1, Arm2)] ->
         v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map,
-            Clauses)
+            SGroups)
     ; reject(unsupported, disjunctive_antecedent(S))
     ).
 
@@ -1332,14 +1657,16 @@ v1_split_conds([C|Cs], Shared, [v(Arm1, Arm2)|Vs]) :-
 v1_split_conds([C|Cs], [C|Shared], Vs) :-
     v1_split_conds(Cs, Shared, Vs).
 
-v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, Clauses) :-
+v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_seg_items(Segs, S, DocId, 1, N1, AItems),
     v1_flatten_items(CConds, consequent, S, DocId, ADom, actual, none,
         N1, _, CItems),
     v1_ante_refs(AItems, CItems, Map, Ordered, AnteRefs),
     v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
     v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
-    v1_variant(AItems, CItems, Map, Sko, S, Clauses).
+    v1_variant(AItems, CItems, Map, Sko, S, Clauses),
+    v1_witness_pairs(AItems, Ordered, Map, DocId, S, 1, Pairs),
+    SGroups = [group(rule, 1, Pairs, Clauses)].
 
 v1_seg_items([], _, _, N, N, []).
 v1_seg_items([seg(_, Conds)|Segs], S, DocId, N0, N, Items) :-
@@ -1354,7 +1681,7 @@ v1_seg_items([seg(_, Conds)|Segs], S, DocId, N0, N, Items) :-
    arm 2, consequent — so both variants mint identical ref(N)/box(B)
    values, distinguished by Deps alone. Bundle = variant-1 clauses then
    variant-2 clauses under one sentence comment. */
-v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, Clauses) :-
+v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_arm_box(Arm1, S, Dom1, Conds1),
     v1_arm_box(Arm2, S, Dom2, Conds2),
     v1_flatten_items(Shared, antecedent, S, DocId, [], actual, none,
@@ -1379,7 +1706,10 @@ v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, Clauses) :-
     append(SharedItems, Arm2Items, Ante2),
     v1_variant(Ante1, CItems1, Map, Sko1, S, Clauses1),
     v1_variant(Ante2, CItems2, Map, Sko2, S, Clauses2),
-    append(Clauses1, Clauses2, Clauses).
+    v1_witness_pairs(Ante1, Ordered, Map, DocId, S, 1, Pairs1),
+    v1_witness_pairs(Ante2, Ordered, Map, DocId, S, 2, Pairs2),
+    SGroups = [group(rule, 1, Pairs1, Clauses1),
+               group(rule, 2, Pairs2, Clauses2)].
 
 v1_arm_box(Arm, S, _, _) :-
     nonvar(Arm),
@@ -1510,8 +1840,10 @@ v1_flatten_cond(C, Where, S, DocId, Deps, Outer, Encl, N0, N, Items) :-
 v1_flatten_cond(C, _, _, _, _, _, _, _, _, _) :-
     reject(unsupported, condition_shape(C)).
 
+/* The flatten item records the consumed preorder number B (bookkeeping
+   for witness box(B) slots); the emitted edge stays guideline_operator/3. */
 v1_operator_items(Op, Box, Original, Where, S, DocId, Deps, Outer,
-        N0, N, [operator(Outer, Inner, Op)|Payload]) :-
+        N0, N, [operator(N0, Outer, Inner, Op)|Payload]) :-
     v1_box(Box, _Dom, Conds),
     v1_operator_context(Where, DocId, S, Deps, N0, N1, Inner),
     v1_flatten_items(Conds, Where, S, DocId, Deps, Inner, op(Op), N1, N,
@@ -1565,7 +1897,7 @@ v1_disjunction_reject(root, S) :-
 /* ---------- v1 condition expansion (shared by facts, bodies, heads) ---------- */
 
 v1_expand_items([], _, _, []).
-v1_expand_items([operator(Outer, Inner, Op)|Items], Map, Sko,
+v1_expand_items([operator(_, Outer, Inner, Op)|Items], Map, Sko,
         [guideline_operator(Outer, Inner, Op)|Terms]) :-
     v1_expand_items(Items, Map, Sko, Terms).
 v1_expand_items([naf(NDom, Payload)|Items], Map, Sko,
@@ -1660,7 +1992,7 @@ v1_ref(Var, _, _, Var).
 /* ---------- v1 referent bookkeeping ---------- */
 
 v1_ref_slots([], []).
-v1_ref_slots([operator(_, _, _)|Items], Slots) :-
+v1_ref_slots([operator(_, _, _, _)|Items], Slots) :-
     v1_ref_slots(Items, Slots).
 v1_ref_slots([naf(_, Payload)|Items], Slots) :-
     !,
@@ -1731,6 +2063,55 @@ v1_nth_var([X|Xs], V, K, N) :-
         N = K
     ; K2 is K + 1,
       v1_nth_var(Xs, V, K2, N)
+    ).
+
+/* Witness pair assembly (P3-P4): walk a variant's flattened antecedent
+   items, assigning each distinct positive-body variable its ground
+   witness identity — anchored referent slots take ref(N) from the
+   unsplit first-occurrence enumeration, operator items map their
+   existential context variable to the recorded box(B), NAF items
+   contribute nothing (controlled absence). Document-map definites stay
+   ground product identities and take no pair. */
+v1_witness_pairs(Items, Ordered, Map, DocId, S, K, Pairs) :-
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, [], Rev),
+    reverse(Rev, Pairs).
+
+v1_witness_items([], _, _, _, _, _, Acc, Acc).
+v1_witness_items([operator(B, _, Inner, _)|Items], Ordered, Map, DocId, S,
+        K, Acc0, Acc) :-
+    !,
+    ( var(Inner),
+      \+ v1_pair_member(Inner, Acc0) ->
+        Acc1 = [Inner-'$guideline_id'(witness, DocId, S, box(B),
+            variant(K))|Acc0]
+    ; Acc1 = Acc0
+    ),
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc1, Acc).
+v1_witness_items([naf(_, _)|Items], Ordered, Map, DocId, S, K, Acc0, Acc) :-
+    !,
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc0, Acc).
+v1_witness_items([anchored(_, Inner)|Items], Ordered, Map, DocId, S, K,
+        Acc0, Acc) :-
+    v1_cond_refs(Inner, Refs),
+    v1_witness_refs(Refs, Ordered, Map, DocId, S, K, Acc0, Acc1),
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc1, Acc).
+
+v1_witness_refs([], _, _, _, _, _, Acc, Acc).
+v1_witness_refs([Ref|Refs], Ordered, Map, DocId, S, K, Acc0, Acc) :-
+    ( var(Ref),
+      \+ v1_lookup(Map, Ref, _),
+      \+ v1_pair_member(Ref, Acc0),
+      v1_nth_var(Ordered, Ref, 1, N) ->
+        Acc1 = [Ref-'$guideline_id'(witness, DocId, S, ref(N),
+            variant(K))|Acc0]
+    ; Acc1 = Acc0
+    ),
+    v1_witness_refs(Refs, Ordered, Map, DocId, S, K, Acc1, Acc).
+
+v1_pair_member(V, [X-_|Pairs]) :-
+    ( V == X ->
+        true
+    ; v1_pair_member(V, Pairs)
     ).
 
 /* P10: head vars must be bound by POSITIVE body goals — a variable
@@ -1821,6 +2202,7 @@ v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes) :-
         ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.~n',
               [DocId]),
           v1_render_decls(Indicators),
+          render_term_line(guideline_schema_version(1)),
           render_term_line(Header),
           v1_render_bundles(Bundles, Lines)
         )),
@@ -1833,11 +2215,16 @@ v1_render_decls([Name/Arity|Keys]) :-
     v1_render_decls(Keys).
 
 v1_render_bundles([], _).
-v1_render_bundles([bundle(S, Clauses)|Bundles], Lines) :-
+v1_render_bundles([bundle(S, SGroups)|Bundles], Lines) :-
     nth1(S, Lines, LineCodes),
     format('% S~w: ~s~n', [S, LineCodes]),
-    v1_render_items(Clauses),
+    v1_render_groups(SGroups),
     v1_render_bundles(Bundles, Lines).
+
+v1_render_groups([]).
+v1_render_groups([group(_, _, _, Clauses)|Groups]) :-
+    v1_render_items(Clauses),
+    v1_render_groups(Groups).
 
 v1_render_items([]).
 v1_render_items([Clause|Clauses]) :-
@@ -1857,6 +2244,154 @@ v1_wrap_goals([naf(_, Sub)|Goals], [naf_conj(Sub)|Wrapped]) :-
     v1_wrap_goals(Goals, Wrapped).
 v1_wrap_goals([Goal|Goals], [pos(Goal)|Wrapped]) :-
     v1_wrap_goals(Goals, Wrapped).
+
+/* ---------- v1 derived proof obligations (P4-P7) ---------- */
+
+v1_proof_depth_limit(4000).
+
+/* Every v1 compile derives one ground obligation term per group and
+   replays it against the document's own clauses in a private module:
+   witness facts asserted with refs, each obligation head called under
+   the depth limit, refs erased. Failure rejects the document (class
+   proof) — an underivable rule can never fire in any world satisfying
+   its body. Obligation construction copies clauses together with the
+   witness pairs, then binds the copies; the originals stay
+   variable-clean for product rendering. */
+v1_derive_proofs(Bundles, DocId, Payload) :-
+    v1_load_proof_world(Bundles),
+    v1_prove_bundles(Bundles, DocId, Payload).
+
+v1_load_proof_world(Bundles) :-
+    v1_indicators(Indicators),
+    v1_declare_proof_world(Indicators),
+    v1_load_proof_bundles(Bundles).
+
+v1_declare_proof_world([]).
+v1_declare_proof_world([Name/Arity|Keys]) :-
+    dynamic(ace_to_pl_proof_world:Name/Arity),
+    v1_declare_proof_world(Keys).
+
+v1_load_proof_bundles([]).
+v1_load_proof_bundles([bundle(_, SGroups)|Bundles]) :-
+    v1_load_proof_groups(SGroups),
+    v1_load_proof_bundles(Bundles).
+
+v1_load_proof_groups([]).
+v1_load_proof_groups([group(_, _, _, Clauses)|Groups]) :-
+    v1_assert_doc_clauses(Clauses),
+    v1_load_proof_groups(Groups).
+
+v1_assert_doc_clauses([]).
+v1_assert_doc_clauses([Clause|Clauses]) :-
+    v1_assert_doc_clause(Clause),
+    v1_assert_doc_clauses(Clauses).
+
+v1_assert_doc_clause(clause(Head, [])) :-
+    !,
+    assertz(ace_to_pl_proof_world:Head).
+v1_assert_doc_clause(clause(Head, Goals)) :-
+    v1_proof_body(Goals, Body),
+    assertz(ace_to_pl_proof_world:(Head :- Body)).
+
+v1_proof_body([Goal], Converted) :-
+    !,
+    v1_proof_goal(Goal, Converted).
+v1_proof_body([Goal|Goals], (Converted, Rest)) :-
+    v1_proof_goal(Goal, Converted),
+    v1_proof_body(Goals, Rest).
+
+v1_proof_goal(naf(_, Sub), \+ Conj) :-
+    !,
+    v1_proof_conj(Sub, Conj).
+v1_proof_goal(Goal, Goal).
+
+v1_proof_conj([Goal], Goal) :-
+    !.
+v1_proof_conj([Goal|Goals], (Goal, Rest)) :-
+    v1_proof_conj(Goals, Rest).
+
+v1_prove_bundles([], _, []).
+v1_prove_bundles([bundle(S, SGroups)|Bundles], DocId, Payload) :-
+    v1_prove_groups(SGroups, DocId, S, Head),
+    v1_prove_bundles(Bundles, DocId, Tail),
+    append(Head, Tail, Payload).
+
+v1_prove_groups([], _, _, []).
+v1_prove_groups([Group|Groups], DocId, S, [Obligation|Obligations]) :-
+    v1_group_obligation(Group, DocId, S, Obligation),
+    v1_check_obligation(Obligation),
+    v1_prove_groups(Groups, DocId, S, Obligations).
+
+v1_group_obligation(group(Kind, K, Pairs, Clauses), DocId, S, Obligation) :-
+    copy_term(Clauses-Pairs, CopiedClauses-CopiedPairs),
+    v1_bind_witness(CopiedPairs),
+    ( Kind == fact ->
+        Facts = []
+    ; CopiedClauses = [clause(_, Goals)|_],
+      v1_positive_goals(Goals, Facts)
+    ),
+    v1_heads(CopiedClauses, Heads),
+    Obligation = '$guideline_proof'(DocId, S, variant(K), witness(Facts),
+        prove(Heads)),
+    ( ground(Obligation) ->
+        true
+    ; reject(proof, nonground_obligation(S, variant(K)))
+    ).
+
+v1_bind_witness([]).
+v1_bind_witness([Var-Id|Pairs]) :-
+    Var = Id,
+    v1_bind_witness(Pairs).
+
+v1_positive_goals([], []).
+v1_positive_goals([naf(_, _)|Goals], Facts) :-
+    !,
+    v1_positive_goals(Goals, Facts).
+v1_positive_goals([Goal|Goals], [Goal|Facts]) :-
+    v1_positive_goals(Goals, Facts).
+
+v1_heads([], []).
+v1_heads([clause(Head, _)|Clauses], [Head|Heads]) :-
+    v1_heads(Clauses, Heads).
+
+v1_check_obligation('$guideline_proof'(_, S, variant(K), witness(Facts),
+        prove(Heads))) :-
+    v1_assert_witness(Facts, Refs),
+    ( v1_prove_heads(Heads) ->
+        v1_erase_refs(Refs)
+    ; v1_erase_refs(Refs),
+      reject(proof, underivable_obligation(S, variant(K)))
+    ).
+
+v1_assert_witness([], []).
+v1_assert_witness([Fact|Facts], [Ref|Refs]) :-
+    assertz(ace_to_pl_proof_world:Fact, Ref),
+    v1_assert_witness(Facts, Refs).
+
+v1_erase_refs([]).
+v1_erase_refs([Ref|Refs]) :-
+    erase(Ref),
+    v1_erase_refs(Refs).
+
+/* Depth-limit exceedance counts as ordinary underivability (DR06). */
+v1_prove_heads([]).
+v1_prove_heads([Head|Heads]) :-
+    v1_proof_depth_limit(Limit),
+    call_with_depth_limit(ace_to_pl_proof_world:Head, Limit, Result),
+    !,
+    Result \== depth_limit_exceeded,
+    v1_prove_heads(Heads).
+
+/* Payload rendering (P6): one ground term per line through the shared
+   canonical writer; no comments, no environment traces. */
+v1_render_payload(Payload, OutCodes) :-
+    with_output_to(string(Out), v1_render_payload_terms(Payload)),
+    string_codes(Out, OutCodes).
+
+v1_render_payload_terms([]).
+v1_render_payload_terms([Term|Terms]) :-
+    render_term_line(Term),
+    v1_render_payload_terms(Terms).
 
 /* ---------- canonical error emission ---------- */
 
@@ -1891,6 +2426,7 @@ fallback_error_line(empty_drs, "ace_to_pl_error(empty_drs,unserializable).\n") :
 fallback_error_line(sentence_lines, "ace_to_pl_error(sentence_lines,unserializable).\n") :- !.
 fallback_error_line(unsupported, "ace_to_pl_error(unsupported,unserializable).\n") :- !.
 fallback_error_line(safety, "ace_to_pl_error(safety,unserializable).\n") :- !.
+fallback_error_line(proof, "ace_to_pl_error(proof,unserializable).\n") :- !.
 fallback_error_line(query_failed, "ace_to_pl_error(query_failed,unserializable).\n") :- !.
 fallback_error_line(usage, "ace_to_pl_error(usage,unserializable).\n") :- !.
 fallback_error_line(ape_load, "ace_to_pl_error(ape_load,unserializable).\n") :- !.

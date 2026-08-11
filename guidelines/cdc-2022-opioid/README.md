@@ -84,6 +84,15 @@ query are project-authored probe fixtures that exercise the compiled
 rules; they are not CDC statements, and query proofs establish internal
 consistency of the projection, not guideline conclusions.
 
+The corpus is migrating onto compiled schema v1, document by document;
+`python3 -P tools/goal.py check` prints the meter
+`goal: migration migrated=<N>/<D>`. A migrated document keeps neither
+device: the compiler derives each sentence's obligation and discharges it
+against the document's own clauses, so the named witnesses and probe
+queries drop out and the ACE states guideline knowledge alone. The
+fixture disclaimer above describes the documents still awaiting that
+move.
+
 ## Coverage
 
 - Verbatim extraction evidence spans the whole document: pages 3–18, the

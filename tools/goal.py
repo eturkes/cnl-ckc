@@ -1,3 +1,4 @@
+import hashlib
 import os
 import pathlib
 import re
@@ -66,11 +67,13 @@ def compiler_command(swipl_executable, stage_path, tail_args):
     for tail_arg in tail_args:
         command.append(tail_arg)
     return command
-def compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path):
+def compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args):
     ace_bytes = ace_path.read_bytes()
     tail_args = [str(stage_path), docid]
     if lexicon_path != None:
         tail_args.append(str(lexicon_path))
+    for extra_arg in extra_args:
+        tail_args.append(extra_arg)
     command = compiler_command(swipl_executable, stage_path, tail_args)
     result = subprocess.run(command, input=ace_bytes, capture_output=True)
     if result.returncode != 0:
@@ -202,17 +205,70 @@ def check_prolog_inventory():
                 violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
 def check_documents(scratch_path, swipl_executable, stage_path, guideline_path, ace_paths, docids, lexicon_path):
     pl_dir = guideline_path.joinpath("pl")
+    payload_dir = scratch_path.joinpath("payloads")
+    if not payload_dir.is_dir():
+        payload_dir.mkdir()
+    manifest_pairs = []
     for docid in docids:
         ace_path = ace_paths.get(docid)
-        first_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path)
-        second_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path)
+        migrated = docid in v1_docids
+        extra_args = []
+        if migrated:
+            extra_args.append("schema=v1")
+        first_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args)
+        second_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args)
         if first_bytes != second_bytes:
             cleanup_violation(scratch_path, "determinism", "two compiles differ for document: " + docid)
         committed_path = pl_dir.joinpath(docid + ".pl")
         committed_bytes = committed_path.read_bytes()
         if first_bytes != committed_bytes:
             cleanup_violation(scratch_path, "stale", "committed pl differs from fresh compile: " + str(committed_path))
+        if migrated:
+            proof_args = ["schema=v1", "proof"]
+            first_payload = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args)
+            second_payload = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args)
+            if first_payload != second_payload:
+                cleanup_violation(scratch_path, "determinism", "two proof runs differ for document: " + docid)
+            payload_path = payload_dir.joinpath(docid + ".proof")
+            payload_path.write_bytes(first_payload)
+            manifest_pairs.append([committed_path, payload_path])
         check_doc_queries(scratch_path, swipl_executable, stage_path, committed_path)
+    check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs)
+def write_manifest(manifest_path, manifest_pairs):
+    manifest_text = ""
+    for manifest_pair in manifest_pairs:
+        pair_copy = list(manifest_pair)
+        pl_path = pair_copy.pop(0)
+        payload_path = pair_copy.pop(0)
+        manifest_text = manifest_text + str(pl_path) + "\t" + str(payload_path) + "\n"
+    manifest_path.write_text(manifest_text, encoding="utf-8")
+def run_aggregate(scratch_path, swipl_executable, stage_path, manifest_path, doc_count):
+    tail_args = ["aggregate-check", str(manifest_path)]
+    command = compiler_command(swipl_executable, stage_path, tail_args)
+    result = subprocess.run(command, capture_output=True)
+    if result.returncode != 0:
+        relay_failure(scratch_path, result)
+    if result.stderr:
+        cleanup_and_fail(scratch_path, "aggregate-stderr", "non-empty stderr for manifest: " + str(manifest_path))
+    stdout_text = result.stdout.decode("utf-8", errors="replace")
+    expected_prefix = "ace_to_pl aggregate ok " + str(doc_count) + " documents "
+    if not stdout_text.startswith(expected_prefix):
+        cleanup_violation(scratch_path, "aggregate-report", "unexpected report: " + stdout_text.strip())
+    if not stdout_text.endswith(" obligations\n"):
+        cleanup_violation(scratch_path, "aggregate-report", "unexpected report: " + stdout_text.strip())
+    return stdout_text
+def check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs):
+    doc_count = len(manifest_pairs)
+    forward_path = scratch_path.joinpath("manifest-forward")
+    write_manifest(forward_path, manifest_pairs)
+    forward_report = run_aggregate(scratch_path, swipl_executable, stage_path, forward_path, doc_count)
+    reverse_pairs = list(manifest_pairs)
+    reverse_pairs.reverse()
+    reverse_path = scratch_path.joinpath("manifest-reverse")
+    write_manifest(reverse_path, reverse_pairs)
+    reverse_report = run_aggregate(scratch_path, swipl_executable, stage_path, reverse_path, doc_count)
+    if forward_report != reverse_report:
+        cleanup_violation(scratch_path, "aggregate-order", "forward and reverse manifests disagree")
 def compile_command(guideline_id):
     if not valid_docid(guideline_id):
         fail("guideline", "invalid guideline id: " + guideline_id)
@@ -241,7 +297,11 @@ def compile_command(guideline_id):
     outputs = {}
     for docid in docids:
         ace_path = ace_paths.get(docid)
-        pl_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path)
+        migrated = docid in v1_docids
+        extra_args = []
+        if migrated:
+            extra_args.append("schema=v1")
+        pl_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args)
         outputs.update({docid: pl_bytes})
     new_dir = scratch_path.joinpath("pl-new")
     new_dir.mkdir()
@@ -266,7 +326,7 @@ def red_probe_class(probe_name):
             return class_name
     violation("red-probe", "probe name lacks <class>-- prefix: " + probe_name)
 def red_expected_exit(class_name):
-    exit_one = ["input_utf8", "ape_messages", "empty_drs", "sentence_lines", "unsupported", "safety", "query_failed"]
+    exit_one = ["input_utf8", "ape_messages", "empty_drs", "sentence_lines", "unsupported", "safety", "query_failed", "proof"]
     exit_two = ["usage", "ape_load", "ulex_load", "check_load", "uncaught"]
     is_one = class_name in exit_one
     is_two = class_name in exit_two
@@ -601,6 +661,210 @@ def check_compendium():
     provisional_count = row_result.pop(0)
     summary = "goal: compendium ok " + str(org_count) + " organizations " + str(row_count) + " rows; terminal remaining: orgs=" + str(orgs_remaining) + " rows=" + str(rows_remaining) + " provisional=" + str(provisional_count)
     print(summary)
+migration_guideline_id = "cdc-2022-opioid"
+v1_docids = []
+coverage_pin = "674f3537f626adf6c31167e28a3758fd870ae51a839a59cfc3fdee79ccd73f0e"
+census_pin = "49f0f096a3a166733bb673733a03b047c3c52b755e6421e4bc07b50862c3e91c"
+projection_pair_pin = "d0e162420044e445b079c24ca0bf3a73494d5e707c4fe67c1da92da10a37a8cb"
+projection_header_text = "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes and the ordered (docid, region) pairs\n# are pinned in tools/goal.emm; kept/dropped prose stays migration-owned."
+mega_lemmas_text = "access-appropriate-expertise-when-considering-opioid-taper-during-pregnancy acknowledge-discordance-express-empathy-and-implement-patient-centered-treatment-changes-while-avoiding-abandonment-when-benefit-risk-consensus-is-unavailable address-reversible-causes-and-prevent-unreassessed-long-term-transition-after-thirty-days-of-acute-pain-opioids advise-about-overdose-risk-after-abrupt-return-to-higher-dose-provide-overdose-education-and-offer-naloxone apply-opioid-dosage-recommendations-to-starting-or-increasing-opioids-and-separately-assess-dosage-reduction-benefits-and-risks assess-and-discuss-increasing-dosage-benefits-and-risks-with-patient-before-reversing-taper avoid-abrupt-discontinuation avoid-er-la-opioids-for-acute-pain-and-for-subacute-or-chronic-treatment-initiation-and-intermittent-or-as-needed-use avoid-first-line-or-routine-opioid-therapy avoid-methadone-as-first-choice-er-la-opioid avoid-rapid-tapering-and-abrupt-opioid-discontinuation avoid-requiring-sequential-failure-or-specific-treatment-before-opioid-therapy avoid-rigid-opioid-dose-or-duration-standards-and-incentives-ensure-threshold-policies-prevent-rapid-tapers-or-abrupt-discontinuation-and-avoid-penalizing-clinicians-for-accepting-or-not-rapidly-tapering-long-term-opioid-patients collaborate-with-patients-on-taper-plans-including-speed-and-pause-decisions consider-antidepressants-for-cooccurring-pain-and-depression consider-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper consider-clinician-patient-exit-strategy-before-opioid-initiation consider-communication-pain-management-behavioral-support-and-slower-taper-principles-for-shorter-duration-opioid-discontinuation consider-duloxetine-or-systemic-nsaids-for-multijoint-or-incompletely-controlled-osteoarthritis-pain consider-extending-dose-intervals-after-smallest-dose-and-stopping-opioids-below-once-daily-when-patient-agreed-taper-goal-is-discontinuation consider-longer-taper-after-longer-duration-of-opioid-therapy consider-methadone-for-pain-only-with-risk-profile-familiarity-and-preparation-for-patient-education-close-monitoring-qt-risk-assessment-and-electrocardiographic-monitoring consider-months-to-years-individualized-taper-for-at-least-one-year-opioid-therapy-based-on-dosage-patient-goals-and-concerns consider-nsaids-or-duloxetine-for-noncontraindicated-patients-with-chronic-low-back-pain-after-insufficient-nonpharmacologic-response consider-opioid-therapy-for-severe-traumatic-injuries-invasive-surgeries-and-other-severe-acute-pain-when-nsaids-and-other-therapies-are-contraindicated-or-likely-ineffective consider-opioids-for-comfort-focused-or-alternative-limited-contexts consider-pausing-and-restarting-tapers-when-patient-is-ready-and-slowing-tapers-near-low-dosages consider-physical-therapy-for-exercise-access-or-response-barriers consider-selected-antidepressants-anticonvulsants-and-topical-agents-for-neuropathic-pain consider-supporting-clinician-and-patient-during-taper-through-telephone-telehealth-or-face-to-face-visits consider-tapers-of-ten-percent-per-month-or-slower-for-patients-taking-opioids-for-a-year-or-longer consider-toxicology-testing consider-transdermal-fentanyl-only-with-dosing-and-absorption-familiarity-and-preparation-for-patient-education consider-using-periodic-strategic-motivational-questions-and-statements-to-encourage-therapeutic-changes-and-functional-goals consider-using-product-labeling-as-starting-point-and-calibrating-for-pain-severity-and-renal-or-hepatic-insufficiency-to-determine-lowest-effective-dose-for-opioid-naive-patients consult-product-labeling-and-reduce-total-daily-dosage-for-incomplete-cross-tolerance-when-changing-from-different-immediate-release-opioid-to-er-la-opioid continue-opioids-long-term-only-after-intentional-informed-benefit-risk-decision decide-judiciously-case-by-case-about-tricyclic-antidepressants-in-older-adults detect-life-threatening-warning educate-patients-before-opioid-therapy-to-inform-preference-sensitive-decisions establish-continued-opioid-goals-and-maximize-nonpharmacologic-and-nonopioid-treatment-for-tapering-or-higher-dose-patients establish-functional-treatment-goals-for-new-patients-already-receiving-opioids evaluate-further-dosage-increase-through-individualized-benefit-risk-assessment evaluate-patients-and-confirm-diagnosis explain-opioid-benefits-risks-and-alternatives-and-involve-patients-in-start-decisions follow-up-at-least-monthly-with-patients-engaging-in-opioid-tapering increase-reimbursement-and-access-to-effective-noninvasive-therapies jointly-establish-functional-evaluation-and-measurable-goals-before-opioids limit-prescription-quantity maximize-nonopioid-pain-treatment-and-address-behavioral-distress-for-patients-struggling-to-tolerate-taper maximize-nonopioid-therapy monitor-patients-unable-to-taper-on-high-dose-or-high-risk-regimens-and-mitigate-overdose-risk-with-education-and-naloxone offer-medication-treatment offer-naloxone pause-and-reassess-benefits-and-risks-before-increasing-total-opioid-dosage-to-at-least-fifty-mme-per-day prescribe-immediate-release prescribe-immediate-release-opioids-at-lowest-effective-dose-for-expected-severe-pain-duration prescribe-lowest-effective-dosage prescribe-opioids-only-as-needed-and-encourage-taper-after-around-the-clock-use prioritize-shared-decision-making-with-patients-when-continuing-opioid-benefits-and-risks-are-close-or-unclear provide-or-arrange-coordinated-management-of-pain-and-opioid-related-problems-including-opioid-use-disorder recommend-appropriate-noninvasive-nonpharmacologic-approaches reevaluate-benefits-and-risks remain-alert-to-and-screen-for-anxiety-depression-opioid-misuse-or-opioid-use-disorder-during-taper-and-provide-or-arrange-management reserve-er-la-opioids-for-severe-continuous-pain review-drug-labeling-and-weigh-benefits-and-risks-before-pharmacologic-therapy review-low-cost-pain-management-options-for-all-patients review-pdmp-data use-additional-er-la-opioid-caution-and-consider-longer-dosing-interval-for-renal-or-hepatic-dysfunction use-caution-and-smallest-practical-increase-after-deciding-to-increase-dosage use-nonopioids-when-possible-and-limit-additional-opioids-to-severe-pain-duration-for-long-term-opioid-patients-with-acute-pain use-nsaids-at-lowest-effective-dose-for-shortest-duration-with-caution use-opioid-dosage-recommendations-as-flexible-guideposts-for-clinician-patient-decisions use-particular-caution use-taper-slow-enough-to-minimize-withdrawal-when-reducing-or-discontinuing-opioids use-topical-nsaids-for-superficial-joint-osteoarthritis-after-insufficient-nonpharmacologic-response weigh-context-specific-opioid-benefits-against-risks-before-initiation"
+v1_functors = ["guideline_schema_version", "guideline_document", "guideline_entity", "guideline_cardinality", "guideline_event", "guideline_arg", "guideline_pp", "guideline_property", "guideline_operator"]
+v1_directives = ["guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3"]
+v1_decl_kinds = ["multifile", "discontiguous"]
+token_strip_chars = ".,;:?!\"()"
+def sha256_hex(data):
+    digest = hashlib.sha256(data)
+    return digest.hexdigest()
+def read_pinned_file(file_path, category):
+    if file_path.is_symlink():
+        violation(category, "is a symlink: " + str(file_path))
+    if not file_path.is_file():
+        violation(category, "missing: " + str(file_path))
+    return file_path.read_bytes()
+def check_pinned_digest(file_path, pin, category):
+    data = read_pinned_file(file_path, category)
+    digest = sha256_hex(data)
+    if digest != pin:
+        violation(category, "digest drift: " + str(file_path) + " = " + digest)
+def check_projection_ledger(guideline_path):
+    ledger_path = guideline_path.joinpath("audit", "projection-notes.tsv")
+    data = read_pinned_file(ledger_path, "migration-projection")
+    text = data.decode("utf-8")
+    if not text.endswith("\n"):
+        violation("migration-projection", "ledger lacks final newline")
+    lines = text.splitlines()
+    if len(lines) < 5:
+        violation("migration-projection", "ledger holds no rows")
+    actual_header = ""
+    row_lines = []
+    index = 0
+    for line_text in lines:
+        if index < 4:
+            actual_header = actual_header + line_text + "\n"
+        else:
+            row_lines.append(line_text)
+        index = index + 1
+    expected_header = projection_header_text + "\n"
+    if actual_header != expected_header:
+        violation("migration-projection", "header bytes drift")
+    pair_text = ""
+    pinned_docids = []
+    for row_line in row_lines:
+        fields = row_line.split("\t")
+        if len(fields) != 4:
+            violation("migration-projection", "row without 4 columns: " + row_line)
+        docid = fields.pop(0)
+        region = fields.pop(0)
+        kept = fields.pop(0)
+        dropped = fields.pop(0)
+        if not valid_docid(docid):
+            violation("migration-projection", "invalid docid: " + docid)
+        if not region:
+            violation("migration-projection", "empty region for: " + docid)
+        if not kept:
+            violation("migration-projection", "empty kept column for: " + docid)
+        if not dropped:
+            violation("migration-projection", "empty dropped column for: " + docid)
+        pair_text = pair_text + docid + "\t" + region + "\n"
+        pinned_docids.append(docid)
+    pair_digest = sha256_hex(pair_text.encode("utf-8"))
+    if pair_digest != projection_pair_pin:
+        violation("migration-projection", "pair digest drift: " + pair_digest)
+    return pinned_docids
+def check_v1_docids(pinned_docids):
+    seen = {}
+    for docid in v1_docids:
+        duplicate = docid in seen
+        if duplicate:
+            violation("migration-docids", "duplicate v1 docid: " + docid)
+        seen.update({docid: True})
+        pinned = docid in pinned_docids
+        if not pinned:
+            violation("migration-docids", "v1 docid absent from pinned projection pairs: " + docid)
+def lexicon_entry(line_text):
+    head_parts = line_text.split("(", 1)
+    kind = head_parts.pop(0)
+    if len(head_parts) != 1:
+        violation("lexicon-entry", "malformed entry: " + line_text)
+    rest = head_parts.pop(0)
+    quoted = rest.split("'")
+    surface = ""
+    lemma = ""
+    if len(quoted) > 3:
+        quoted.pop(0)
+        surface = quoted.pop(0)
+        quoted.pop(0)
+        lemma = quoted.pop(0)
+    else:
+        plain = rest.split(",")
+        if len(plain) < 2:
+            violation("lexicon-entry", "malformed entry: " + line_text)
+        surface = plain.pop(0)
+        lemma = plain.pop(0)
+    return [kind, surface, lemma]
+def ace_token_set(ace_paths, docids):
+    tokens = {}
+    for docid in docids:
+        ace_path = ace_paths.get(docid)
+        text = ace_path.read_text(encoding="utf-8")
+        for raw_token in text.split():
+            token = raw_token.strip(token_strip_chars)
+            tokens.update({token: True})
+    return tokens
+def check_lexicon_migration(guideline_path, ace_paths, docids, migrated_count):
+    lexicon_path = guideline_path.joinpath("lexicon.ulex")
+    data = read_pinned_file(lexicon_path, "lexicon-file")
+    text = data.decode("utf-8")
+    all_tokens = ace_token_set(ace_paths, docids)
+    unmigrated_docids = []
+    for docid in docids:
+        migrated = docid in v1_docids
+        if not migrated:
+            unmigrated_docids.append(docid)
+    unmigrated_tokens = ace_token_set(ace_paths, unmigrated_docids)
+    mega_lemmas = mega_lemmas_text.split()
+    entries = []
+    live_lexemes = {}
+    live_unmigrated = {}
+    for raw_line in text.split("\n"):
+        line_text = raw_line.strip()
+        if line_text:
+            entry = lexicon_entry(line_text)
+            entries.append(entry)
+            entry_copy = list(entry)
+            entry_kind = entry_copy.pop(0)
+            entry_surface = entry_copy.pop(0)
+            entry_lemma = entry_copy.pop(0)
+            referenced = entry_surface in all_tokens
+            if referenced:
+                live_lexemes.update({entry_lemma: True})
+            referenced_unmigrated = entry_surface in unmigrated_tokens
+            if referenced_unmigrated:
+                live_unmigrated.update({entry_lemma: True})
+    fixture_count = 0
+    for entry in entries:
+        entry_copy = list(entry)
+        kind = entry_copy.pop(0)
+        surface = entry_copy.pop(0)
+        lemma = entry_copy.pop(0)
+        live = lemma in live_lexemes
+        if not live:
+            violation("lexicon-dead-lexeme", "no ace document references: " + surface)
+        is_pn = kind == "pn_sg"
+        is_mega = lemma in mega_lemmas
+        fixture = is_pn or is_mega
+        if fixture:
+            fixture_count = fixture_count + 1
+            live_before = lemma in live_unmigrated
+            if not live_before:
+                violation("lexicon-fixture-lexeme", "no unmigrated ace document references: " + surface)
+    doc_count = len(docids)
+    if migrated_count == doc_count:
+        if fixture_count > 0:
+            violation("lexicon-terminal", "fixture-era entries survive full migration: " + str(fixture_count))
+def check_migrated_product(guideline_path, docid):
+    pl_path = guideline_path.joinpath("pl", docid + ".pl")
+    data = read_pinned_file(pl_path, "migration-product")
+    text = data.decode("utf-8")
+    for raw_line in text.split("\n"):
+        line_text = raw_line.strip()
+        if line_text:
+            is_comment = line_text.startswith("%")
+            if not is_comment:
+                is_directive = line_text.startswith(":- ")
+                if is_directive:
+                    inner = line_text.removeprefix(":- ")
+                    inner = inner.removesuffix(").")
+                    decl_parts = inner.split("(", 1)
+                    decl_kind = decl_parts.pop(0)
+                    if len(decl_parts) != 1:
+                        violation("migration-product", "unauthorized directive in " + docid + ": " + line_text)
+                    decl_spec = decl_parts.pop(0)
+                    kind_known = decl_kind in v1_decl_kinds
+                    if not kind_known:
+                        violation("migration-product", "unauthorized directive in " + docid + ": " + line_text)
+                    spec_known = decl_spec in v1_directives
+                    if not spec_known:
+                        violation("migration-product", "undeclared indicator in " + docid + ": " + decl_spec)
+                else:
+                    functor_parts = line_text.split("(", 1)
+                    functor = functor_parts.pop(0)
+                    functor_known = functor in v1_functors
+                    if not functor_known:
+                        violation("migration-product", "unauthorized clause functor in " + docid + ": " + functor)
+def check_migration(guideline_path, ace_paths, docids):
+    coverage_path = guideline_path.joinpath("coverage.tsv")
+    check_pinned_digest(coverage_path, coverage_pin, "migration-coverage")
+    census_path = guideline_path.joinpath("audit", "census-map.tsv")
+    check_pinned_digest(census_path, census_pin, "migration-census")
+    pinned_docids = check_projection_ledger(guideline_path)
+    check_v1_docids(pinned_docids)
+    migrated_count = len(v1_docids)
+    check_lexicon_migration(guideline_path, ace_paths, docids, migrated_count)
+    for docid in v1_docids:
+        check_migrated_product(guideline_path, docid)
+    pinned_count = len(pinned_docids)
+    print("goal: migration migrated=" + str(migrated_count) + "/" + str(pinned_count))
 def check_command():
     check_compendium()
     guidelines_root = pathlib.Path("guidelines")
@@ -610,6 +874,7 @@ def check_command():
     if not guidelines_root.is_dir():
         fail("guidelines", "missing guidelines directory")
     plans = []
+    migration_plans = []
     for entry in sorted(guidelines_root.iterdir()):
         entry_name = entry.name
         if entry.is_symlink():
@@ -626,10 +891,19 @@ def check_command():
         check_pl_inventory(entry, docids)
         plan_record = [entry, ace_paths, docids, lexicon_path]
         plans.append(plan_record)
+        if entry_name == migration_guideline_id:
+            migration_record = [entry, ace_paths, docids]
+            migration_plans.append(migration_record)
     if not plans:
         violation("guidelines", "no guideline directories")
     red_plan = collect_red_probes()
     check_prolog_inventory()
+    for migration_record in migration_plans:
+        record_copy = list(migration_record)
+        migration_path = record_copy.pop(0)
+        migration_ace_paths = record_copy.pop(0)
+        migration_docids = record_copy.pop(0)
+        check_migration(migration_path, migration_ace_paths, migration_docids)
     swipl_executable = resolve_swipl()
     scratch_path = make_scratch()
     stage_path = stage_ape(scratch_path, swipl_executable)

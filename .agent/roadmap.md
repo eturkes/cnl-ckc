@@ -815,30 +815,59 @@ identities):
   record); gate/suite/oracle/diff regeneration paths = memory.
   main=93% 224K/240K (peak; close tail ran post-compaction),
   mate=100% 239K/240K (rev-m3u2 peak).
-- M3.3 OPEN (kernel, oracle) — derived proof + validator + v1
-  freeze. D5 implemented HERE, before any migration: compiler proof mode
-  derives per rule-group a witness world satisfying every positive body
-  literal (object/cardinality/PP/group structure respected; controlled
-  absence for NAF) + one proof obligation per emitted rule/clause-group —
-  obligation count = group count, derivation failure rejects; generated
-  identities = reserved namespace from (docid, sentence, referent
-  ordinal), collision-proof against ulex + product vocabulary; both check
-  compiles derive the payload independently and byte-compare; committed
-  product carries public clauses only. `goal.emm` orchestration + full
-  aggregate-load gate (79 docs, warning-as-failure, document records +
-  schema version + cross-document predicates asserted). Migration
-  validator (MAIN-authored, producers run never edit): ledger byte-pins,
-  knowledge-only + fixture-free + obsolete-lexeme checks, cumulative
-  `migrated=N/79` meter; durable predicates live in `goal.emm`, ledger
-  pins as committed checks or digest-recorded scratch with regeneration
-  contract. Schema freeze: `guideline_schema_version(1).` emitted;
-  transition-only `guideline_query/2` excluded from the public ABI.
-  Contract prose flips here with a transitional migrated-meter: README
-  Operating/Audit story, `.agent/rounds.md` authoring/review roles
-  (producers propose lexicon deltas in reports; MAIN authors the
-  consolidated delta), guideline README formal-derivatives; projection-
-  notes header rewritten once (schema + 79 pairs pinned thereafter).
-- M3.4 BLOCKED(M3.3) (data, prod) — production A: 18 docs = Box-3 12 +
+- M3.3 DONE (kernel, oracle) — derived proof + validator + v1 freeze.
+  Proof mode (`schema=v1` + `proof`): group IR = one group per fact
+  sentence and per rule variant; witness world σ_w over the group's own
+  rendered positive body (NAF boxes contribute nothing), heads under
+  σ_o proved by `call_with_depth_limit(_, 4000)` against the document's
+  own clauses; payload = one ground
+  `'$guideline_proof'(DocId,S,variant(K),witness(Facts),prove(Heads))`
+  per group, printed instead of the document. Rejects, class `proof`
+  rc=1: `nonground_obligation(S,variant(K))`,
+  `underivable_obligation(S,variant(K))`. Witness ids
+  `'$guideline_id'(witness,DocId,S,ref(N)|box(B),variant(K))` carry the
+  document's own coordinates ⇒ no foreign clause discharges an
+  obligation. `aggregate-check <manifest>` (strict
+  `<pl>\t<payload>` rows, exactly one tab, nonempty fields, final LF,
+  unreadable path ⇒ `check_load` rc=2; 0-byte = empty composition):
+  ABI dynamic-primed BEFORE load (else
+  `permission_error(modify,static_procedure)`), warning-as-failure load,
+  asserts distinct `guideline_document/3` records = row count and
+  version set `[1]`, replays every obligation NAF-visible to the whole
+  batch → `ace_to_pl aggregate ok <N> documents <G> obligations`.
+  Freeze: nine indicators, `guideline_schema_version/1` first, version
+  fact between declarations and header; `guideline_query/2` legacy-only,
+  outside the ABI. Collision-proofing widened to a load-time ulex-wide
+  scan (every entry, used or not, first offender in file order) over
+  lemma/data slots ONLY — surface forms never reach the product, so both
+  scans keep one canonical detail (M3.1's `collision-verb` ruling holds).
+  `goal.py check` gained: migration validator (coverage + census digest
+  pins, projection-notes ledger with pinned header bytes + (docid,region)
+  pair digest, `v1_docids` duplicate-free subset, per-LEXEME liveness +
+  fixture-era unmigrated reference + terminal zero, migrated-product
+  directive/functor vocabulary scan) run before swipl resolution, the v1
+  branch (schema=v1 ×2 + committed compare + proof ×2 + payload write)
+  and forward+reverse aggregate runs; meter
+  `goal: migration migrated=0/79`. Evidence (MAIN-rerun chain, this
+  tree): check ok 79 docs/12 reds; regen --check ok; gate_m3u1 24 green
+  10 red failures=0 (P6 pin re-ruled: nine indicators + version fact);
+  gate_m3u2 7 green 5 red 73 verdicts failures=0; gate_m3u3 66/66
+  (test-m3u3 phase-2 encoding of MAIN's batch rulings); diff_m3u3 88
+  cases (79 accept, 9 reject) divergences=0 vs orc's contract-only
+  oracle on product sha256 + payload sha256 + rejection bytes. Rulings:
+  OPEN-1 vacuous; OPEN-2 = `Every man that works and that does not
+  provably work sees a dog.`; per-LEXEME (not per-surface) lexicon
+  liveness — the shipped corpus has infpl-only and finsg-only lexemes.
+  Contract = `.scratch/contracts/m3u3.md` (P1-P14 + batch rulings);
+  suite/gate/oracle/diff regeneration paths = memory. Docs flipped with
+  the transitional meter: README (frozen schema, proof + aggregate
+  sections, nine-indicator table, knowledge-only authoring),
+  `.agent/rounds.md` roles, guideline README formal-derivatives,
+  projection-notes header rewritten once. main=102% 245K/240K (window-1
+  peak → auto-compaction; post-compaction close tail 59% 143K/240K),
+  mate=100% 240K/240K (orc-m3u3 peak; test 82%, map 82%, rev2 45%,
+  rev 42%).
+- M3.4 OPEN (data, prod) — production A: 18 docs = Box-3 12 +
   rec01 imp01-06 (~1,034 source words, the heaviest batch — Box-3
   multi-sentence recommendations + D6 strength facts + lexicon core).
   Producer worktrees hold disjoint ACE files + assigned projection-note
