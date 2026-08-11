@@ -768,7 +768,24 @@ identities):
   collision rejection (red-cased). Schema doc = README section, explicitly
   CANDIDATE until M3.3 freezes it. Old corpus still compiles
   byte-identically; all legacy rejection classes keep their reds.
-- M3.2 BLOCKED(M3.1) (kernel, oracle) — modal/negation/strength/frontend.
+- M3.2 OPEN (kernel, oracle) — modal/negation/strength/frontend.
+  CONTRACT CHECKPOINT DONE (session A of this unit): wave-1 complete
+  (map-m3u2 + spikes ctxterm/ctxedge), contract FINAL at
+  `.scratch/contracts/m3u2.md`. F2 ruled ctx-edge: Context =
+  `'$guideline_id'(context,DocId,S,box(B),Deps)` +
+  `guideline_operator(Outer,Inner,Op)` edges, Op ∈
+  should|must|can|may|'-'; ctx-term rejected (sibling-box collapse, its
+  own verdict). Key rulings: singleton consequent currying (the
+  corpus-dominant nested-universal shape); operator_scoped_rule reject
+  + one-statement-per-sentence ⇒ B3-06/B3-07/B3-15 candidates re-author
+  at M3.4; NAF scope = corpus-global; D6 = zero new machinery; D9 =
+  one-line functionwords.pl fork (validated + regressions); red set −2
+  +2 (=11). Corpus evidence: 75/79 admit=m3.2; spike deltas compile
+  71/75 (ctxterm, with currying) / 50+4 (ctxedge, without). Next
+  session: wave 2 (test/orc/rev-prep vs the FINAL contract), MAIN
+  implements ctx-edge + currying + D3 matrix + D8 split + D9 fork in
+  the primary tree, diff, reviews, close. main=session-A 96% 230K/240K,
+  mate=80% 192K/240K (map-m3u2 peak; spikes 67K/92K at steer).
   D2 modality: one generic wrapper for `should|must|can|may(drs(...))`
   reified as an exact operator tree, never flattened to marker+flag —
   `¬SHOULD(P)` stays distinct from `SHOULD(¬P)`; operator atoms are DRS
