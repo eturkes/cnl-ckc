@@ -344,6 +344,8 @@ Define [[run_red_probe]] taking scratch_path, swipl_executable, stage_path, prob
     Set tail_args to <[[str]](stage_path), "red-probe">.
     If lexicon_present:
         Do [[tail_args.append]]([[str]](lexicon_path)).
+    If "--v1-" is in probe_name:
+        Do [[tail_args.append]]("schema=v1").
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
     Set result to [[subprocess.run]](command, input=probe_bytes, capture_output=True).
     If result.returncode does not equal expected_exit:

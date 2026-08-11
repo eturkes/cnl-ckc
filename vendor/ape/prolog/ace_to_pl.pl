@@ -6,6 +6,8 @@
 % Modes (argv after --):
 %   <ape-tree-dir> <docid>            compile; ACE bytes on stdin -> Prolog on stdout
 %   <ape-tree-dir> <docid> <ulex>     compile with user lexicon file
+%   ... schema=v1                     as above, projected onto the candidate v1
+%                                     schema (exact trailing token; absent = legacy)
 %   check <file.pl>                   load compiled file into user (quarantined I/O; any load
 %                                     diagnostic rejects); every guideline_query goal must succeed
 %
@@ -15,6 +17,12 @@
 % Reject: stdout = 0 bytes; stderr = one canonical ace_to_pl_error(Class,Detail) line.
 % Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|query_failed;
 %       2=usage|ape_load|ulex_load|check_load|uncaught.
+% The legacy path below is byte-frozen: the committed corpus recompiles to
+% identical bytes, and schema selection is an explicit input, never inferred
+% from content. The candidate v1 path lives under "v1 schema projection"
+% near the end of this file and is documented in README.md
+% "Compiled Prolog schema (candidate v1)".
+%
 % Translation is total: every sentence becomes exactly one emitted clause
 % (fact | rule | guideline_query(yesno|who(Var), Goal)); any unrecognized
 % shape rejects the whole document. Supported DRS shapes:
@@ -69,11 +77,19 @@ dispatch([check, File], Input, Output, ErrorStream) :-
 dispatch([Tree, DocId], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
-    compile_mode(Tree, DocId, none, Input, Output, ErrorStream).
+    compile_mode(legacy, Tree, DocId, none, Input, Output, ErrorStream).
+dispatch([Tree, DocId, 'schema=v1'], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    compile_mode(v1, Tree, DocId, none, Input, Output, ErrorStream).
 dispatch([Tree, DocId, Ulex], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
-    compile_mode(Tree, DocId, file(Ulex), Input, Output, ErrorStream).
+    compile_mode(legacy, Tree, DocId, file(Ulex), Input, Output, ErrorStream).
+dispatch([Tree, DocId, Ulex, 'schema=v1'], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    compile_mode(v1, Tree, DocId, file(Ulex), Input, Output, ErrorStream).
 dispatch(Argv, _, _, ErrorStream) :-
     emit_error(ErrorStream, usage, argv(Argv), 2).
 
@@ -151,7 +167,7 @@ prove_queries([query(Kind, Goal)|Queries], Input, Output, ErrorStream) :-
 
 /* ---------- compile mode ---------- */
 
-compile_mode(Tree, DocId, Ulex, Input, Output, ErrorStream) :-
+compile_mode(Mode, Tree, DocId, Ulex, Input, Output, ErrorStream) :-
     set_stream(Input, type(binary)),
     prompt(_, ''),
     load_ape(Tree, Input, Output, ErrorStream),
@@ -160,9 +176,9 @@ compile_mode(Tree, DocId, Ulex, Input, Output, ErrorStream) :-
     ( quarantined_call(Input, Output, ErrorStream,
           ace_to_drs:acetext_to_drs(Text, off, off, Sentences, _SyntaxTrees,
               Drs, Messages, _Time)) ->
-        accept_or_reject(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+        accept_or_reject(Mode, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
             Messages, Output, ErrorStream)
-    ; throw(error(ape_call_failed, context(ace_to_pl:compile_mode/6, Text)))
+    ; throw(error(ape_call_failed, context(ace_to_pl:compile_mode/7, Text)))
     ).
 
 read_input(Input, ErrorStream, Bytes, Text) :-
@@ -333,18 +349,18 @@ close_quietly(Stream) :-
 
 /* ---------- accept/reject ---------- */
 
-accept_or_reject(_, _, _, _, _, _, Messages, _, ErrorStream) :-
+accept_or_reject(_, _, _, _, _, _, _, Messages, _, ErrorStream) :-
     Messages \== [],
     !,
     emit_error(ErrorStream, ape_messages, Messages, 1).
-accept_or_reject(_, _, _, _, _, Drs, [], _, ErrorStream) :-
+accept_or_reject(_, _, _, _, _, _, Drs, [], _, ErrorStream) :-
     Drs == drs([], []),
     !,
     emit_error(ErrorStream, empty_drs, Drs, 1).
-accept_or_reject(DocId, Bytes, Text, UlexDigest, Sentences, Drs, [], Output,
-        ErrorStream) :-
+accept_or_reject(Mode, DocId, Bytes, Text, UlexDigest, Sentences, Drs, [],
+        Output, ErrorStream) :-
     catch(
-        ( translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+        ( mode_translate(Mode, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
               OutCodes) ->
             Result = ok(OutCodes)
         ; Result = internal_failure
@@ -357,8 +373,17 @@ accept_or_reject(DocId, Bytes, Text, UlexDigest, Sentences, Drs, [], Output,
     ; Result = rejected(RClass, RDetail) ->
         emit_error(ErrorStream, RClass, RDetail, 1)
     ; throw(error(translate_failed(DocId),
-          context(ace_to_pl:accept_or_reject/9, plain_failure)))
+          context(ace_to_pl:accept_or_reject/10, plain_failure)))
     ).
+
+mode_translate(legacy, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes) :-
+    translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes).
+mode_translate(v1, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes) :-
+    v1_translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes).
 
 reject(Class, Detail) :-
     throw(ace_to_pl_reject(Class, Detail)).
@@ -1015,6 +1040,460 @@ canonical_args(Index, Arity, Term) :-
     canonical_tree(Arg),
     Next is Index + 1,
     canonical_args(Next, Arity, Term).
+
+/* ---------- v1 schema projection (candidate) ----------
+
+   Selected by exact trailing argv token 'schema=v1'; the default path
+   above stays byte-identical. Closed reserved vocabulary: source lemmas
+   (nouns/verbs/adjectives/prepositions) are opaque data atoms, never
+   predicate functors. Context argument = actual throughout M3.1;
+   operator trees (M3.2) will occupy it without signature changes.
+   Consequent-local referents Skolemize to ground
+   '$guideline_id'(product, DocId, S, ref(N), Deps) terms, Deps = the
+   antecedent box domain in DRS order. Referent ordinal N = position in
+   the sentence's first-occurrence enumeration over referent slots in
+   condition order (document-repeat referents occupy positions; minted
+   identities use their position). Every clause of a rule sentence
+   repeats one identical rendered body. See README section
+   "Compiled Prolog schema (candidate v1)". */
+
+v1_indicators([
+    guideline_document/3,
+    guideline_entity/4,
+    guideline_cardinality/5,
+    guideline_event/3,
+    guideline_arg/4,
+    guideline_pp/4,
+    guideline_property/4
+]).
+
+v1_translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes) :-
+    ( nonvar(Drs),
+      Drs = drs(Dom, Conds),
+      is_list(Dom),
+      is_list(Conds) ->
+        true
+    ; reject(unsupported, invalid_drs_shape)
+    ),
+    length(Sentences, SentenceCount),
+    input_lines(Text, Lines),
+    length(Lines, LineCount),
+    ( LineCount =:= SentenceCount ->
+        true
+    ; reject(sentence_lines, counts(lines(LineCount), sentences(SentenceCount)))
+    ),
+    crypto_data_hash(Bytes, AceDigest, [algorithm(sha256), encoding(octet)]),
+    v1_collision_scan(Conds),
+    tag_conditions(Conds, Tagged),
+    group_by_sentence(1, SentenceCount, Tagged, Groups),
+    v1_translate_groups(Groups, DocId, [], Bundles),
+    v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes).
+
+/* Reserved vocabulary: any source lemma beginning `guideline_` or equal
+   to the identity constructor name, and any source compound built with
+   the constructor, rejects the whole document (first offender in
+   depth-first term order). */
+v1_collision_scan(Conds) :-
+    ( v1_collision(Conds, Detail) ->
+        reject(unsupported, Detail)
+    ; true
+    ).
+
+v1_collision(Term, Detail) :-
+    sub_term(Sub, Term),
+    nonvar(Sub),
+    ( functor(Sub, '$guideline_id', 5) ->
+        Detail = reserved_constructor_collision(Sub)
+    ; v1_lemma_slot(Sub, Lemma),
+      atom(Lemma),
+      v1_reserved_atom(Lemma),
+      Detail = reserved_name_collision(Lemma)
+    ).
+
+v1_lemma_slot(Sub, Lemma) :-
+    functor(Sub, object, 6),
+    arg(2, Sub, Lemma).
+v1_lemma_slot(Sub, Lemma) :-
+    functor(Sub, predicate, Arity),
+    Arity >= 3,
+    arg(2, Sub, Lemma).
+v1_lemma_slot(Sub, Lemma) :-
+    functor(Sub, property, 3),
+    arg(2, Sub, Lemma).
+v1_lemma_slot(Sub, Lemma) :-
+    functor(Sub, modifier_pp, 3),
+    arg(2, Sub, Lemma).
+
+v1_reserved_atom(Atom) :-
+    ( sub_atom(Atom, 0, _, _, guideline_) ->
+        true
+    ; Atom == '$guideline_id'
+    ).
+
+v1_translate_groups([], _, _, []).
+v1_translate_groups([S-Group|Groups], DocId, Map0, [bundle(S, Clauses)|Bundles]) :-
+    v1_sentence(Group, S, DocId, Map0, Map, Clauses),
+    ( Clauses == [] ->
+        reject(unsupported, sentence_shape(Group))
+    ; true
+    ),
+    v1_translate_groups(Groups, DocId, Map, Bundles).
+
+v1_sentence(Group, S, DocId, Map0, Map, Clauses) :-
+    ( Group = [rule(Ante, Cons)] ->
+        Map = Map0,
+        v1_rule(Ante, Cons, S, DocId, Map0, Clauses)
+    ; Group = [question(_)] ->
+        reject(unsupported, question_not_supported(S))
+    ; v1_all_anchored(Group) ->
+        v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses)
+    ; reject(unsupported, sentence_shape(Group))
+    ).
+
+v1_all_anchored([]).
+v1_all_anchored([anchored(_)|Items]) :-
+    v1_all_anchored(Items).
+
+/* ---------- v1 facts ---------- */
+
+v1_fact_bundle(Items, S, DocId, Map0, Map, Clauses) :-
+    v1_ref_slots(Items, Slots),
+    v1_first_occurrence(Slots, [], Ordered),
+    v1_mint_ordinals(Ordered, 1, S, DocId, Map0, Map),
+    v1_expand_items(Items, Map, [], Heads),
+    maplist(v1_fact_clause, Heads, Clauses),
+    maplist(v1_check_safety, Clauses).
+
+v1_fact_clause(Head, clause(Head, [])).
+
+v1_mint_ordinals([], _, _, _, Map, Map).
+v1_mint_ordinals([V|Vs], N, S, DocId, Map0, Map) :-
+    ( v1_lookup(Map0, V, _) ->
+        Map1 = Map0
+    ; append(Map0, [V-'$guideline_id'(product, DocId, S, ref(N), [])], Map1)
+    ),
+    N2 is N + 1,
+    v1_mint_ordinals(Vs, N2, S, DocId, Map1, Map).
+
+/* ---------- v1 rules ---------- */
+
+v1_rule(Ante, Cons, S, DocId, Map, Clauses) :-
+    v1_box(Ante, ADom, AConds),
+    v1_box(Cons, _CDom, CConds),
+    v1_flatten_box(AConds, antecedent, S, AItems),
+    v1_flatten_box(CConds, consequent, S, CItems),
+    append(AItems, CItems, AllItems),
+    v1_ref_slots(AllItems, Slots),
+    v1_first_occurrence(Slots, [], Ordered),
+    v1_cons_locals(Ordered, ADom, Map, ConsLocals),
+    v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
+    v1_expand_items(AItems, Map, Sko, Goals),
+    ( Goals == [] ->
+        reject(unsupported, sentence_shape(rule_without_antecedent(S)))
+    ; true
+    ),
+    v1_expand_items(CItems, Map, Sko, Heads),
+    ( Heads == [] ->
+        reject(unsupported, sentence_shape(rule_without_consequent(S)))
+    ; true
+    ),
+    v1_rule_clauses(Heads, Goals, Clauses),
+    maplist(v1_check_safety, Clauses).
+
+v1_box(Box, Dom, Conds) :-
+    ( nonvar(Box),
+      Box = drs(Dom, Conds),
+      is_list(Dom),
+      is_list(Conds) ->
+        true
+    ; reject(unsupported, invalid_drs_shape)
+    ).
+
+/* Consequent-local referents = sentence referents that are neither
+   antecedent-domain members nor document-introduced. */
+v1_cons_locals([], _, _, []).
+v1_cons_locals([V|Vs], ADom, Map, Locals) :-
+    ( ( v1_var_member(V, ADom)
+      ; v1_lookup(Map, V, _)
+      ) ->
+        Locals = Locals1
+    ; Locals = [V|Locals1]
+    ),
+    v1_cons_locals(Vs, ADom, Map, Locals1).
+
+v1_skolem_map([], _, _, _, _, []).
+v1_skolem_map([V|Vs], Ordered, ADom, S, DocId, [V-Id|Pairs]) :-
+    v1_nth_var(Ordered, V, 1, N),
+    Id = '$guideline_id'(product, DocId, S, ref(N), ADom),
+    v1_skolem_map(Vs, Ordered, ADom, S, DocId, Pairs).
+
+v1_rule_clauses([], _, []).
+v1_rule_clauses([Head|Heads], Goals, [clause(Head, Goals)|Clauses]) :-
+    v1_rule_clauses(Heads, Goals, Clauses).
+
+/* Box conditions: nested list groups flatten in order; operator and
+   disjunction wrappers reject with their deferral class before any
+   emission. */
+v1_flatten_box([], _, _, []).
+v1_flatten_box([C|Cs], Where, S, Items) :-
+    v1_flatten_cond(C, Where, S, Head),
+    v1_flatten_box(Cs, Where, S, Tail),
+    append(Head, Tail, Items).
+
+v1_flatten_cond(C, Where, S, Items) :-
+    nonvar(C),
+    is_list(C),
+    !,
+    v1_flatten_box(C, Where, S, Items).
+v1_flatten_cond(C, _, _, [anchored(Inner)]) :-
+    nonvar(C),
+    functor(C, -, 2),
+    arg(2, C, Anchor),
+    nonvar(Anchor),
+    anchor_sentence(Anchor, _),
+    !,
+    arg(1, C, Inner).
+v1_flatten_cond(C, Where, S, _) :-
+    nonvar(C),
+    functor(C, v, 2),
+    !,
+    v1_disjunction_reject(Where, S).
+v1_flatten_cond(C, Where, S, _) :-
+    nonvar(C),
+    functor(C, ~, 1),
+    !,
+    v1_naf_reject(Where, S).
+v1_flatten_cond(C, Where, S, _) :-
+    nonvar(C),
+    functor(C, -, 1),
+    !,
+    reject(unsupported, deferred_operator(Where, classical_not, S)).
+v1_flatten_cond(C, Where, S, _) :-
+    nonvar(C),
+    functor(C, Op, 1),
+    memberchk(Op, [should, must, can, may]),
+    !,
+    reject(unsupported, deferred_operator(Where, Op, S)).
+v1_flatten_cond(C, _, _, _) :-
+    reject(unsupported, condition_shape(C)).
+
+v1_disjunction_reject(antecedent, S) :-
+    reject(unsupported, disjunctive_antecedent(S)).
+v1_disjunction_reject(consequent, S) :-
+    reject(unsupported, disjunctive_consequent(S)).
+
+v1_naf_reject(antecedent, S) :-
+    reject(unsupported, deferred_operator(antecedent, naf, S)).
+v1_naf_reject(consequent, S) :-
+    reject(unsupported, forbidden_operator(consequent, naf, S)).
+
+/* ---------- v1 condition expansion (shared by facts, bodies, heads) ---------- */
+
+v1_expand_items([], _, _, []).
+v1_expand_items([anchored(Inner)|Items], Map, Sko, Terms) :-
+    v1_condition(Inner, Map, Sko, Head),
+    v1_expand_items(Items, Map, Sko, Tail),
+    append(Head, Tail, Terms).
+
+v1_condition(Inner, Map, Sko, [guideline_entity(actual, Ref, Noun, Class),
+        guideline_cardinality(actual, Ref, Unit, Op, Count)]) :-
+    nonvar(Inner),
+    functor(Inner, object, 6),
+    !,
+    Inner = object(Ref0, Noun, Class, Unit, Op, Count),
+    v1_check_operator(Op),
+    v1_ref(Ref0, Map, Sko, Ref).
+v1_condition(Inner, Map, Sko, [guideline_event(actual, E, Lemma)|ArgTerms]) :-
+    nonvar(Inner),
+    functor(Inner, predicate, Arity),
+    Arity >= 3,
+    !,
+    ( Arity =< 5 ->
+        true
+    ; reject(unsupported, condition_shape(Inner))
+    ),
+    arg(1, Inner, E0),
+    arg(2, Inner, Lemma),
+    v1_ref(E0, Map, Sko, E),
+    v1_participants(3, Arity, Inner, Map, Sko, E, 1, ArgTerms).
+v1_condition(Inner, Map, Sko, [guideline_pp(actual, E, Prep, Obj)]) :-
+    nonvar(Inner),
+    functor(Inner, modifier_pp, 3),
+    !,
+    Inner = modifier_pp(E0, Prep, Obj0),
+    v1_ref(E0, Map, Sko, E),
+    v1_ref(Obj0, Map, Sko, Obj).
+v1_condition(Inner, Map, Sko, [guideline_property(actual, P, Lemma, pos)]) :-
+    nonvar(Inner),
+    functor(Inner, property, 3),
+    !,
+    Inner = property(P0, Lemma, Polarity),
+    ( Polarity == pos ->
+        true
+    ; reject(unsupported, property_polarity(Polarity))
+    ),
+    v1_ref(P0, Map, Sko, P).
+v1_condition(Inner, _, _, _) :-
+    reject(unsupported, condition_shape(Inner)).
+
+v1_participants(Index, Arity, _, _, _, _, _, []) :-
+    Index > Arity,
+    !.
+v1_participants(Index, Arity, Inner, Map, Sko, E,
+        Pos, [guideline_arg(actual, E, Pos, Ref)|Terms]) :-
+    arg(Index, Inner, Arg),
+    v1_ref(Arg, Map, Sko, Ref),
+    NextIndex is Index + 1,
+    NextPos is Pos + 1,
+    v1_participants(NextIndex, Arity, Inner, Map, Sko, E, NextPos, Terms).
+
+v1_check_operator(Op) :-
+    ( atom(Op),
+      memberchk(Op, [eq, geq, greater, leq, less, exactly, na]) ->
+        true
+    ; reject(unsupported, object_operator(Op))
+    ).
+
+/* Referent resolution: participants must be DRS variables; a variable
+   resolves to its document identity, else its Skolem identity, else
+   stays a body variable. */
+v1_ref(Arg, _, _, _) :-
+    nonvar(Arg),
+    !,
+    reject(unsupported, unresolved_argument(Arg)).
+v1_ref(Var, Map, _, Id) :-
+    v1_lookup(Map, Var, Id),
+    !.
+v1_ref(Var, _, Sko, Id) :-
+    v1_lookup(Sko, Var, Id),
+    !.
+v1_ref(Var, _, _, Var).
+
+/* ---------- v1 referent bookkeeping ---------- */
+
+v1_ref_slots([], []).
+v1_ref_slots([anchored(Inner)|Items], Slots) :-
+    v1_cond_refs(Inner, Head),
+    v1_ref_slots(Items, Tail),
+    append(Head, Tail, Slots).
+
+v1_cond_refs(Inner, [Ref]) :-
+    nonvar(Inner),
+    functor(Inner, object, 6),
+    !,
+    arg(1, Inner, Ref).
+v1_cond_refs(Inner, [E|Args]) :-
+    nonvar(Inner),
+    functor(Inner, predicate, Arity),
+    Arity >= 3,
+    !,
+    arg(1, Inner, E),
+    v1_arg_list(3, Arity, Inner, Args).
+v1_cond_refs(Inner, [E, Obj]) :-
+    nonvar(Inner),
+    functor(Inner, modifier_pp, 3),
+    !,
+    arg(1, Inner, E),
+    arg(3, Inner, Obj).
+v1_cond_refs(Inner, [P]) :-
+    nonvar(Inner),
+    functor(Inner, property, 3),
+    !,
+    arg(1, Inner, P).
+v1_cond_refs(_, []).
+
+v1_arg_list(Index, Arity, _, []) :-
+    Index > Arity,
+    !.
+v1_arg_list(Index, Arity, Inner, [Arg|Args]) :-
+    arg(Index, Inner, Arg),
+    Next is Index + 1,
+    v1_arg_list(Next, Arity, Inner, Args).
+
+v1_first_occurrence([], Acc, Ordered) :-
+    reverse(Acc, Ordered).
+v1_first_occurrence([V|Vs], Acc, Ordered) :-
+    ( var(V),
+      \+ v1_var_member(V, Acc) ->
+        v1_first_occurrence(Vs, [V|Acc], Ordered)
+    ; v1_first_occurrence(Vs, Acc, Ordered)
+    ).
+
+v1_lookup([Var0-Id0|Pairs], Var, Id) :-
+    ( Var0 == Var ->
+        Id = Id0
+    ; v1_lookup(Pairs, Var, Id)
+    ).
+
+v1_var_member(V, [X|Xs]) :-
+    ( V == X ->
+        true
+    ; v1_var_member(V, Xs)
+    ).
+
+v1_nth_var([X|Xs], V, K, N) :-
+    ( X == V ->
+        N = K
+    ; K2 is K + 1,
+      v1_nth_var(Xs, V, K2, N)
+    ).
+
+v1_check_safety(clause(Head, Goals)) :-
+    term_variables(Head, HeadVars),
+    term_variables(Goals, GoalVars),
+    ( v1_vars_subset(HeadVars, GoalVars) ->
+        true
+    ; reject(safety, head_variable_not_bound_in_body)
+    ).
+
+v1_vars_subset([], _).
+v1_vars_subset([V|Vs], Vars) :-
+    v1_var_member(V, Vars),
+    v1_vars_subset(Vs, Vars).
+
+/* ---------- v1 rendering ---------- */
+
+v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes) :-
+    header_term(DocId, AceDigest, UlexDigest, Header),
+    v1_indicators(Indicators),
+    with_output_to(string(Out),
+        ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.~n',
+              [DocId]),
+          v1_render_decls(Indicators),
+          render_term_line(Header),
+          v1_render_bundles(Bundles, Lines)
+        )),
+    string_codes(Out, OutCodes).
+
+v1_render_decls([]).
+v1_render_decls([Name/Arity|Keys]) :-
+    format(':- multifile(~q/~d).~n', [Name, Arity]),
+    format(':- discontiguous(~q/~d).~n', [Name, Arity]),
+    v1_render_decls(Keys).
+
+v1_render_bundles([], _).
+v1_render_bundles([bundle(S, Clauses)|Bundles], Lines) :-
+    nth1(S, Lines, LineCodes),
+    format('% S~w: ~s~n', [S, LineCodes]),
+    v1_render_items(Clauses),
+    v1_render_bundles(Bundles, Lines).
+
+v1_render_items([]).
+v1_render_items([Clause|Clauses]) :-
+    v1_render_item(Clause),
+    v1_render_items(Clauses).
+
+v1_render_item(clause(Head, [])) :-
+    !,
+    render_term_line(Head).
+v1_render_item(clause(Head, Goals)) :-
+    v1_wrap_pos(Goals, Wrapped),
+    render_item(rule(Head, Wrapped)).
+
+v1_wrap_pos([], []).
+v1_wrap_pos([Goal|Goals], [pos(Goal)|Wrapped]) :-
+    v1_wrap_pos(Goals, Wrapped).
 
 /* ---------- canonical error emission ---------- */
 

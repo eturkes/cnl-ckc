@@ -321,6 +321,8 @@ def run_red_probe(scratch_path, swipl_executable, stage_path, probe_path, class_
     tail_args = [str(stage_path), "red-probe"]
     if lexicon_present:
         tail_args.append(str(lexicon_path))
+    if "--v1-" in probe_name:
+        tail_args.append("schema=v1")
     command = compiler_command(swipl_executable, stage_path, tail_args)
     result = subprocess.run(command, input=probe_bytes, capture_output=True)
     if result.returncode != expected_exit:

@@ -62,6 +62,63 @@ python3 -P tools/goal.py check                    # full acceptance gate
 python3 -P tools/regen.py --check                 # E-- → Python identity
 ```
 
+## Compiled Prolog schema (candidate v1)
+
+Status: **candidate**. The committed corpus compiles on the default
+(pre-v1) path and is byte-frozen; v1 is selected explicitly by appending
+`schema=v1` to the compiler invocation, and no document ships on it yet.
+The schema freezes at M3.3, which starts emitting
+`guideline_schema_version(1).`; nothing emits a version term before then.
+
+Sentences project onto a closed reserved vocabulary. Source words —
+nouns, verbs, adjectives, prepositions — stay opaque data atoms and never
+become predicate functors, so the schema is language- and
+domain-neutral:
+
+| Predicate | Meaning |
+| --- | --- |
+| `guideline_document(DocId, ace_sha256(H), ulex(none \| sha256(H)))` | document record + source digests |
+| `guideline_entity(Context, Ref, Noun, Class)` | an entity referent and its noun/class |
+| `guideline_cardinality(Context, Ref, Unit, Comparison, Count)` | that referent's quantity payload, verbatim |
+| `guideline_event(Context, EventRef, Lemma)` | an event referent and its verb |
+| `guideline_arg(Context, EventRef, Position, Ref)` | participant at `Position` (1-based, DRS order) |
+| `guideline_pp(Context, EventRef, Preposition, Ref)` | prepositional attachment on the event |
+| `guideline_property(Context, PropertyRef, Lemma, Polarity)` | adjectival property (`pos` in v1) |
+
+`Comparison` is exactly one of `eq`, `geq`, `greater`, `leq`, `less`,
+`exactly`, `na`; units and counts are copied through as data. The
+compiler performs no arithmetic, unit conversion, counting, or modal
+inference — a cardinality clause records what the sentence said, nothing
+more.
+
+`Context` is `actual` for asserted content. It exists as argument 1 from
+the start so that modality and negation can arrive (M3.2) as reified
+operator contexts without changing any signature.
+
+A universally quantified sentence becomes one Horn clause per consequent
+condition, all sharing one identical rendered body. Referents introduced
+only in the consequent are Skolemized to
+`'$guideline_id'(product, DocId, SentenceId, ref(N), Deps)`, where `Deps`
+is the antecedent's referents in DRS order and `N` is the referent's
+first-occurrence position in that sentence's expansion. These terms name
+the compiler's chosen witness — not a source-given name, real-world
+identity, or uniqueness claim. Because facts and derived heads share one
+vocabulary, a rule body consumes another document's facts or heads by
+ordinary resolution.
+
+Every v1 document opens with the same declaration block — `multifile` and
+`discontiguous` for all seven indicators, whether or not it populates
+them — followed by the document record, then per sentence a
+`% S<n>: <verbatim sentence>` comment and that sentence's contiguous
+clauses in deterministic order. Any subset of v1 documents therefore
+co-loads into one engine in any order with no warnings. Names beginning
+`guideline_` and the identity constructor `'$guideline_id'` are reserved:
+a source word colliding with one rejects the document rather than
+silently shadowing schema vocabulary. `guideline_part/3` and
+`guideline_operator/3` are reserved for later units and unemitted in v1;
+shapes needing them (group coordination, modality, negation, disjunction)
+reject with a canonical `ace_to_pl_error(unsupported, …)` line.
+
 ## Operating
 
 Guideline work runs as goal rounds in a Claude Code session opened at the

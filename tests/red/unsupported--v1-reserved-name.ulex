@@ -1,0 +1,2 @@
+noun_sg('guideline-document',guideline_document,neutr).
+iv_finsg(exists,exist).

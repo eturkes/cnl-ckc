@@ -724,7 +724,32 @@ committed state — scratch scripts = pre-commit evidence with regeneration
 contracts, byte-pinned per use; no absolute workstation paths in gate
 identities):
 
-- M3.1 OPEN (kernel, oracle) — candidate schema + core projector.
+- M3.1 DONE (kernel, oracle) — candidate schema + core projector.
+  Shipped: explicit `schema=v1` selector (trailing argv token; absent =
+  legacy, never content-sniffed) + closed reserved vocabulary
+  `guideline_{document,entity,cardinality,event,arg,pp,property}` with
+  `Context` as argument 1 (M3.2 operators need no signature change) and
+  Skolem identities `'$guideline_id'(product,Doc,S,ref(N),Deps)`. Fork F1
+  ruled SKO over ARG: SKO's facts and derived heads share one vocabulary,
+  so rule bodies consume other documents' clauses by ordinary resolution
+  (proven by a two-rule chaining fixture in the gate), while ARG's
+  `ckc_object/5` descriptor IR cannot chain — its own spike named that
+  freeze-blocking. Collision class ruled `unsupported` /
+  `reserved_name_collision(<lemma>)` + `reserved_constructor_collision(
+  <compound>)`, `safety` staying variable-binding only. P9 ordinals ruled
+  to expansion-traversal first occurrence (recomputable from the emitted
+  document); P1 totality is structural — one left-to-right expansion, any
+  unexpandable condition rejects, so leftovers are unreachable rather than
+  detected. Modality/negation/disjunction/group/`named`/non-pos polarity
+  all reject with canonical details, deferring to M3.2. Evidence:
+  `gate_m3u1.py` 17 green x (layout, per-sentence provenance, head-var
+  safety, double-compile identity, consult) + 17 canonical reds +
+  aggregate co-load both orders; `diff_m3u1.py` vs an independent
+  contract-only oracle = 8/9 green cases clause-identical, 8/8 rejects
+  agreed, sole divergence = oracle ordinal numbering (ruled, non-semantic);
+  79/79 legacy documents byte-identical, all 11 reds (incl. the new v1
+  collision red) keeping class + exit. main=84% 202K/240K,
+  mate=80% 192K/240K.
   Teammate-produced parse-validated shape manifest FIRST (79 regions:
   source features -> candidate ACE -> raw DRS family -> admit/defer;
   bounds compiler scope by real corpus need before MAIN codes). Then
