@@ -20,10 +20,11 @@ gauges, harvest/TaskStop, Close order) + `/session-roadmap` execution map
 - `ace-<id>-<k>` — drafts ACE documents for a MAIN-ruled statement batch
   per the corpus modeling pattern: knowledge-only (no witness seed facts,
   proper-name stand-ins, or authored queries), validated in its worktree by
-  `compile` + `check` — which runs the migration validator — plus a
-  `schema=v1` + `proof` run per drafted document; proposed lexicon
-  additions ship as a reported delta only. Faithfulness = MAIN review,
-  statement by statement.
+  `compile` + `check` — the durable corpus validator: projection-ledger
+  totality, lexicon liveness, v1-only product vocabulary, derived
+  obligations discharged per document alone and aggregated; proposed
+  lexicon additions ship as a reported delta only. Faithfulness = MAIN
+  review, statement by statement.
 - `rev-<id>-<k>` — adversarial: ACE↔extraction fidelity, coverage-claim
   soundness, guideline README claims, knowledge-only/fixture-free status,
   derived-obligation count + discharge per document,
@@ -38,8 +39,8 @@ gauges, harvest/TaskStop, Close order) + `/session-roadmap` execution map
   route per global `CLAUDE.md`).
 
 MAIN-retained: `ace_to_pl.pl` + lexicon edits, all primary-tree writes,
-`tools/goal.emm` migration pins (`v1_docids`, ledger digests, projection
-header), guideline README + queue updates, id choice, rights rulings,
+`tools/goal.emm` validator pins (projection header text, v1 vocabulary),
+guideline README + queue updates, id choice, rights rulings,
 statement batch verdicts, gate reruns, commits.
 
 Round flow: spawn `extract` + `audit` early (the bulk read happens once,

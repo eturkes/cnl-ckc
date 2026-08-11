@@ -666,7 +666,7 @@ Deferred classes, from the 46-org measurement
   series) would cut the compendium to ≈500 rows; revisiting it is a
   header-level decision, not a harvest decision.
 
-## M3 — projection redesign (clinician-verifiable ACE) — IN-PROGRESS
+## M3 — projection redesign (clinician-verifiable ACE) — IMPLEMENTED
 
 Gates all further ACE authoring (`.agent/queue.md` holds the ACE batches;
 the gate lifts at M3 REVIEWED — the review close alone edits the queue).
@@ -979,14 +979,41 @@ identities):
   `.scratch/m3u6/harvest/`; regeneration paths = memory.
   main=87% 208K/240K (close, single window), mate=28% 67K/240K
   (prod-m3u6-2 peak; p1 27%).
-- M3.7 OPEN (kernel, oracle) — authored-question removal +
-  close. Question translation deleted (knowledge-only corpus makes it
-  dead); authored yes/no/who/copular/modal-question reds added, each
-  proving its intended class (same-stem ulex companions where vocabulary
-  needs them); transition validator clauses retired; full battery rerun
-  incl. the migration predicate set; final docs consistency pass (schema
-  section read-only — a semantic mismatch returns to its owning unit).
-  Queue stays gated; MILESTONE-REVIEW (next session) alone lifts it.
+- M3.7 DONE (kernel, oracle) — authored-question removal + terminal
+  close. Compiler: questions section deleted (translate_question/
+  partition_query_conds/wh_args, query IR, prove_queries, render
+  query arm, check-mode guideline_query tail, query_failed vocabulary);
+  rejection total both paths — class `unsupported`, rc1, stdout 0;
+  detail = `question_not_supported(S)` exactly when the question is the
+  first unsupported construct in the path's existing order (legacy =
+  tag stage in condition order; v1 = frozen sequential — #30/#31
+  reserved_name_collision, #39/F-04 unresolved_argument byte-identical
+  on 3ff8537 = freeze proof); no prescan either path. 6 authored
+  question reds + 5 ulex (3 change-proving — compiled pre-change; 3
+  boundary pins); 18 reds total. goal.emm terminal reshape:
+  check_corpus every guideline dir; ledger totality (set-equal,
+  dup-free, row order freed — reversed-rows full check green) +
+  header byte-prefix + CRLF ban; per-LEXEME liveness;
+  check_product_vocabulary all docids; check_doc_load; unconditional
+  schema=v1 + proof + aggregate; coverage/census digest pins retired
+  (/goal custody, pre-M3.3 posture). Docs transition prose landed
+  (README audit story + schema transition + meter clause; guideline
+  README derived-obligation reality; compiler header; vendor README;
+  rounds.md). Evidence (MAIN-rerun decisive chain, final tree): check
+  ok 79 docs 18 reds fwd+rev aggregate no meter; regen --check;
+  gate_m3u1 24/10; gate_m3u2 7/5/73; gate_m3u3 64/64; diff_m3u7 100
+  cases accept=79 reject=21 0 divergences; question suite 96/96; fresh
+  compile + pl/ace tail rc0; guidelines delta vs 3ff8537 = README +
+  projection-notes.tsv header only. rev F-01..F-07 closed; rev2
+  mutation campaign 35 mutants on closing source = 34 killed + MT-06
+  equivalent (results.json + logs, sentinel kills MAIN-re-derived);
+  MV02 gained the MT-26 header-as-rows discriminator (mutant-direction
+  FAIL proven); aggregate-totality assert + committed-suite port →
+  polish register. Port ruling: unit gates/suites/oracles = scratch
+  unit evidence with regeneration contracts (M1.5 precedent; memory
+  M3.7 bullet). Queue stays gated; MILESTONE-REVIEW lifts it.
+  main=93% 224K/240K (window-1 peak; close spans 2 windows),
+  mate=95% 227K/240K (rev-m3u7 peak; rev2 93% 224K).
 
 Sizing (analogs: M1.5 main=166K narrow kernel; M1.3a main=196K; M1.2b
 main=203K oversized harvest; M1.3b main=179K): kernel units project

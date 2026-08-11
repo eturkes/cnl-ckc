@@ -13,7 +13,7 @@
 %                                     '$guideline_proof'/5 term per group) instead of
 %                                     the product; same derivation check either way
 %   check <file.pl>                   load compiled file into user (quarantined I/O; any load
-%                                     diagnostic rejects); every guideline_query goal must succeed
+%                                     diagnostic rejects)
 %   aggregate-check <manifest>        load a composition (LF lines "<pl>\t<payload>",
 %                                     0-byte file = empty) and replay every payload
 %                                     obligation against the loaded whole
@@ -22,16 +22,16 @@
 % <docid> = nonempty [a-z0-9-] with no leading dash.
 % Success: stdout = compiled Prolog document, stderr = 0 bytes, exit 0.
 % Reject: stdout = 0 bytes; stderr = one canonical ace_to_pl_error(Class,Detail) line.
-% Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|query_failed|proof;
+% Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|proof;
 %       2=usage|ape_load|ulex_load|check_load|uncaught.
 % v1 assurance: every v1 compile (product or proof emission) derives per-group
 % witness worlds + obligations and replays them against the document's own
 % clauses; an underivable obligation rejects the document (class proof).
-% The legacy path below is byte-frozen: the committed corpus recompiles to
-% identical bytes, and schema selection is an explicit input, never inferred
-% from content. The candidate v1 path lives under "v1 schema projection"
+% The legacy path below stays byte-frozen for its knowledge shapes (facts
+% and rules), and schema selection is an explicit input, never inferred
+% from content. The frozen v1 path lives under "v1 schema projection"
 % near the end of this file and is documented in README.md
-% "Compiled Prolog schema (candidate v1)". Beyond the legacy shapes, v1
+% "Compiled Prolog schema (v1)". Beyond the legacy shapes, v1
 % admits modal/classical-negation operator wrappers (reified as
 % guideline_operator/3 edges over context ids), consequent currying,
 % antecedent Horn splits over one disjunction, and executable
@@ -39,16 +39,18 @@
 %
 % LEGACY-path contract (the v1 path states its own in the v1 section):
 % translation is total — each sentence yields exactly one legacy clause
-% (fact | rule | guideline_query(yesno|who(Var), Goal)), while a v1
+% (fact | rule), while a v1
 % sentence yields an ordered bundle of one or more clauses; any
-% unrecognized shape rejects the whole document. Supported legacy DRS
-% shapes:
+% unrecognized shape rejects the whole document. Authored questions
+% reject on both paths (class unsupported): each path reports
+% question_not_supported(S) when the question is the first unsupported
+% construct its existing processing order reaches; an earlier
+% unsupported construct keeps its own detail.
+% Supported legacy DRS shapes:
 %   copula fact   object(R,N,countable,na,eq,1) + predicate(E,be,named(P),R)  ->  'N'('P').
 %   ground fact   predicate(E,V,Named...)                                     ->  'V'(Names...).
 %   rule          =>(drs Ante, drs Cons): Ante = objects/predicates/~(single
 %                 predicate); Cons = one predicate                            ->  Head :- Body.
-%   question      question(drs): one predicate + optional query(W,who), or
-%                 object + be over a named individual (yesno)                 ->  guideline_query/2.
 % Still legacy-only: event referents are erased (v1 reifies them), each
 % box-local with exactly one occurrence; head and NAF variables must be
 % bound by positive body literals (v1 additionally admits ground minted
@@ -159,7 +161,7 @@ docid_code(Code) :- Code >= 0'a, Code =< 0'z, !.
 docid_code(Code) :- Code >= 0'0, Code =< 0'9, !.
 docid_code(0'-).
 
-/* ---------- check mode: consult one compiled document, prove its queries ---------- */
+/* ---------- check mode: load one compiled document ---------- */
 
 check_mode(File, Input, Output, ErrorStream) :-
     catch(
@@ -171,11 +173,6 @@ check_mode(File, Input, Output, ErrorStream) :-
         ),
         Error,
         emit_error(ErrorStream, check_load, Error, 2)),
-    ( current_predicate(user:guideline_query/2) ->
-        findall(query(Kind, Goal), user:guideline_query(Kind, Goal), Queries),
-        prove_queries(Queries, Input, Output, ErrorStream)
-    ; true
-    ),
     halt(0).
 
 /* Load into user with messages captured; any warning or error message
@@ -196,22 +193,6 @@ check_load_captured_list(Files, Label) :-
         true
     ; throw(error(check_load_diagnostics(Label),
           context(ace_to_pl:check_load_captured_list/2, Label)))
-    ).
-
-prove_queries([], _, _, _).
-prove_queries([query(Kind, Goal)|Queries], Input, Output, ErrorStream) :-
-    catch(
-        ( quarantined_call(Input, Output, ErrorStream, user:Goal) ->
-            Outcome = proven
-        ; Outcome = failed
-        ),
-        Error,
-        Outcome = raised(Error)),
-    ( Outcome == proven ->
-        prove_queries(Queries, Input, Output, ErrorStream)
-    ; Outcome = raised(RaisedError) ->
-        emit_error(ErrorStream, query_failed, raised(Kind, RaisedError), 1)
-    ; emit_error(ErrorStream, query_failed, Kind, 1)
     ).
 
 /* ---------- aggregate-check mode: whole-composition proof replay ---------- */
@@ -745,12 +726,12 @@ tag_condition(Cond, S, rule(Ante, Cons)) :-
     arg(2, Cond, Cons),
     !,
     inner_sentence(Cond, S).
-tag_condition(Cond, S, question(QDrs)) :-
+tag_condition(Cond, S, _) :-
     nonvar(Cond),
     functor(Cond, question, 1),
-    arg(1, Cond, QDrs),
     !,
-    inner_sentence(Cond, S).
+    inner_sentence(Cond, S),
+    reject(unsupported, question_not_supported(S)).
 tag_condition(Cond, _, _) :-
     reject(unsupported, root_condition(Cond)).
 
@@ -818,9 +799,6 @@ translate_sentence(Group, Dom, RootConds, Bindings, Bindings, fact(Fact)) :-
 translate_sentence([rule(Ante, Cons)], _, _, Bindings, Bindings, Item) :-
     !,
     translate_rule(Ante, Cons, Item).
-translate_sentence([question(QDrs)], _, _, Bindings, Bindings, Item) :-
-    !,
-    translate_question(QDrs, Bindings, Item).
 translate_sentence(Group, _, _, _, _, _) :-
     reject(unsupported, sentence_shape(Group)).
 
@@ -1119,79 +1097,6 @@ all_bound([V|Vs], Bound) :-
     strict_member(V, Bound),
     all_bound(Vs, Bound).
 
-/* ---------- questions ---------- */
-
-translate_question(QDrs, Bindings, query(Kind, Goal)) :-
-    drs_parts(QDrs, QDom, QConds),
-    partition_query_conds(QConds, Markers, Preds, Objs, BePreds),
-    ( Markers == [], Objs == [], BePreds == [],
-      Preds = [pred(Event, Verb, Args0)] ->
-        Kind = yesno,
-        erasable_event(Event, QDom, QDrs),
-        resolve_ground_args(Args0, Bindings, Args),
-        Goal =.. [Verb|Args]
-    ; Markers = [WhRef], Objs == [], BePreds == [],
-      Preds = [pred(Event, Verb, Args0)] ->
-        Kind = who(WhRef),
-        erasable_event(Event, QDom, QDrs),
-        wh_args(Args0, Bindings, WhRef, Args),
-        Goal =.. [Verb|Args],
-        ( strict_member(WhRef, Args) ->
-            true
-        ; reject(unsupported, wh_variable_unused)
-        )
-    ; Markers == [], Preds == [],
-      Objs = [obj(Ref, Noun)],
-      BePreds = [be(Event, NamedArg, Ref2)],
-      Ref2 == Ref,
-      strict_member(Ref, QDom),
-      named_atom(NamedArg, Name) ->
-        /* copular question mirroring the copula fact shape */
-        Kind = yesno,
-        erasable_event(Event, QDom, QDrs),
-        Goal =.. [Noun, Name]
-    ; reject(unsupported, question_shape(QConds))
-    ).
-
-partition_query_conds([], [], [], [], []).
-partition_query_conds([Cond|Conds], Markers, Preds, Objs, BePreds) :-
-    ( nonvar(Cond),
-      functor(Cond, -, 2),
-      arg(1, Cond, Inner),
-      arg(2, Cond, Anchor),
-      anchor_sentence(Anchor, _),
-      nonvar(Inner) ->
-        true
-    ; reject(unsupported, question_condition(Cond))
-    ),
-    ( functor(Inner, query, 2),
-      arg(1, Inner, Ref),
-      var(Ref),
-      arg(2, Inner, Who),
-      Who == who ->
-        Markers = [Ref|MarkersRest],
-        partition_query_conds(Conds, MarkersRest, Preds, Objs, BePreds)
-    ; predicate_shape(Inner, Event, Verb, Args) ->
-        Preds = [pred(Event, Verb, Args)|PredsRest],
-        partition_query_conds(Conds, Markers, PredsRest, Objs, BePreds)
-    ; be_predicate_shape(Inner, Event, NamedArg, Ref) ->
-        BePreds = [be(Event, NamedArg, Ref)|BePredsRest],
-        partition_query_conds(Conds, Markers, Preds, Objs, BePredsRest)
-    ; object_shape(Inner, Ref, Noun) ->
-        Objs = [obj(Ref, Noun)|ObjsRest],
-        partition_query_conds(Conds, Markers, Preds, ObjsRest, BePreds)
-    ; reject(unsupported, question_condition(Inner))
-    ).
-
-wh_args([], _, _, []).
-wh_args([Arg|Args0], Bindings, WhRef, [Out|Args]) :-
-    ( var(Arg),
-      Arg == WhRef ->
-        Out = Arg
-    ; resolve_ground(Bindings, Arg, Out)
-    ),
-    wh_args(Args0, Bindings, WhRef, Args).
-
 /* ---------- rendering ---------- */
 
 /* NAF literals over predicates with no clause among the document's facts
@@ -1265,8 +1170,6 @@ render_item(rule(Head, Body)) :-
     write_body(BodyCopy),
     write('.'),
     nl.
-render_item(query(Kind, Goal)) :-
-    render_term_line(guideline_query(Kind, Goal)).
 
 write_body([Lit]) :-
     !,
@@ -1380,9 +1283,9 @@ canonical_args(Index, Arity, Term) :-
    forbidden_operator(Pos,naf,S), deferred_operator(Pos,Op,S),
    naf_shape(Conds), naf_variable_not_bound, naf_local_escape,
    invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
-   See README section "Compiled Prolog schema (candidate v1)". */
+   See README section "Compiled Prolog schema (v1)". */
 
-/* Uniform declaration block (F2): every v1 document declares all eight
+/* Uniform declaration block (F2): every v1 document declares all nine
    indicators regardless of population. */
 v1_indicators([
     guideline_schema_version/1,
@@ -2438,7 +2341,6 @@ fallback_error_line(sentence_lines, "ace_to_pl_error(sentence_lines,unserializab
 fallback_error_line(unsupported, "ace_to_pl_error(unsupported,unserializable).\n") :- !.
 fallback_error_line(safety, "ace_to_pl_error(safety,unserializable).\n") :- !.
 fallback_error_line(proof, "ace_to_pl_error(proof,unserializable).\n") :- !.
-fallback_error_line(query_failed, "ace_to_pl_error(query_failed,unserializable).\n") :- !.
 fallback_error_line(usage, "ace_to_pl_error(usage,unserializable).\n") :- !.
 fallback_error_line(ape_load, "ace_to_pl_error(ape_load,unserializable).\n") :- !.
 fallback_error_line(ulex_load, "ace_to_pl_error(ulex_load,unserializable).\n") :- !.

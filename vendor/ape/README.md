@@ -11,7 +11,7 @@ removed components are available in git history at the fork base recorded in
 ## Layout
 
 - `prolog/ace_to_pl.pl` — first-party compiler entry point (stdin ACE →
-  stdout Prolog; `check` mode proves compiled queries).
+  stdout Prolog; `check` mode loads one compiled document).
 - `prolog/parser/` — ACE parser (`ace_to_drs.pl` and dependencies) plus the
   ProFIT grammar sources (`*.fit`) and their translator (`fit_to_plp.pl`,
   `prologfeatures.pl`), which build the untracked `*.plp` grammar files.

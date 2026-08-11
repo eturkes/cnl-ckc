@@ -47,10 +47,9 @@ was published with.
 
 - `ace/cdc2022-opioid-recNN.ace` (NN = 01–12) — one ACE document per Box 3
   recommendation NN. Each document is a deliberately minimal formal projection
-  of its recommendation — an actor-class fact, the recommendation's category
-  and evidence type (the Box 3 closing parenthetical) as class facts on the
-  named recommendation, one universal rule (rec05 adds a negation-as-failure
-  guard), and probe queries for the rule and both class facts — not a
+  of its recommendation — the recommendation's category and evidence type
+  (the Box 3 closing parenthetical) as knowledge facts plus universal rules
+  projecting the directive (rec05 adds a negation-as-failure guard) — not a
   complete formalization of the clinical semantics, conditions, or qualifiers
   of the CDC text. Read the ACE next to the extraction to judge coverage.
 - `ace/cdc2022-opioid-recNN-impKK.ace` (NN = 01–05) — one ACE document per
@@ -60,18 +59,16 @@ was published with.
   and other skipped KK ordinals mark impl-list regions ruled
   `restates(...)` or `uncovered(...)` in `coverage.tsv`, their ordinals
   held reserved).
-  Each holds a witness actor-class fact, one universal rule projecting the
-  region's directive — or, for regions stating a benefit or possibility
-  rather than an imperative, the clinician consideration it supports,
-  per `audit/projection-notes.tsv` — and a
-  probe query; implementation considerations carry no category/evidence
-  parenthetical. Three non-clinician actor regions use their own classes:
+  Each holds one universal rule projecting the region's directive — or,
+  for regions stating a benefit or possibility rather than an imperative,
+  the clinician consideration it supports, per `audit/projection-notes.tsv`;
+  implementation considerations carry no category/evidence parenthetical. Three non-clinician actor regions use their own classes:
   S24-02 `health-insurer-or-health-system` (neutral), S36-03
   `payer-health-system-or-state-medical-board` (neutral), and S35-09
   `taper-support-team-member` (human — nurses, pharmacists, and
   behavioral-health specialists serving as taper-support team members).
-- `lexicon.ulex` — the guideline's APE user lexicon (domain compounds and
-  proper names shared by all documents).
+- `lexicon.ulex` — the guideline's APE user lexicon (domain compounds
+  shared by all documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog compiled from the ACE by
   `vendor/ape/prolog/ace_to_pl.pl`; regenerate via
   `python3 -P tools/goal.py compile cdc-2022-opioid` — the compiler is
@@ -79,19 +76,12 @@ was published with.
 
 These derivatives are project-authored formal projections; present them as
 the project's own work, with CDC credited as the source of the underlying
-recommendations. Named individuals (`RecNN`, `RecNN-clinician`) and every
-query are project-authored probe fixtures that exercise the compiled
-rules; they are not CDC statements, and query proofs establish internal
-consistency of the projection, not guideline conclusions.
-
-The corpus is migrating onto compiled schema v1, document by document;
-`python3 -P tools/goal.py check` prints the meter
-`goal: migration migrated=<N>/<D>`. A migrated document keeps neither
-device: the compiler derives each sentence's obligation and discharges it
-against the document's own clauses, so the named witnesses and probe
-queries drop out and the ACE states guideline knowledge alone. The
-fixture disclaimer above describes the documents still awaiting that
-move.
+recommendations. Every document states guideline knowledge alone — no
+authored witnesses, probe queries, or named individuals. The compiler
+derives each sentence's proof obligation and discharges it against the
+document's own clauses, alone and co-loaded with the rest of the corpus;
+those proofs establish internal consistency of the projection, not
+guideline conclusions.
 
 ## Coverage
 
@@ -105,12 +95,13 @@ move.
   the standard MMWR access/contact/public-domain notices on p100).
 - Formalization: Box 3 at one document per recommendation (twelve
   documents, each preserving its recommendation's exact category/evidence
-  parenthetical and one simplified action rule), plus one document per
+  parenthetical and simplified action rules), plus one document per
   formalized recommendation 1–5 implementation-consideration region
   (67 documents).
-  The rules do not yet encode deontic modality ("should"), conditions,
-  objects, timing, or alternatives; Box 3's multi-sentence recommendations
-  contain further normative sentences beyond the twelve projected rules.
+  The rules encode deontic modality ("should"), conditions, and negation
+  where the source region states them; each document's remaining
+  simplifications are recorded per region in `audit/projection-notes.tsv`
+  (kept/dropped columns) and `coverage.tsv`.
 - `coverage.tsv` records one status row per payload region (all 718):
   `ace(<docid>)` formalized (79), `restates(<id>)` verbatim or
   near-verbatim repetition of another region (122), `uncovered(<class>:

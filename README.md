@@ -49,13 +49,14 @@ compilation of it, or part of one small named compiler base:
   guideline rows — row vocabulary, canonical ordering, the
   one-active-row promotion invariant — and prints the terminal meter the
   `/goal` exhaustion clause reads), then validates layout, source records,
-  and Prolog/lexicon inventory closure, recompiles every guideline twice
+  and Prolog/lexicon inventory closure, validates every guideline's corpus
+  ledgers (projection-notes header bytes and per-document totality, lexicon
+  liveness, v1-only product vocabulary), recompiles every guideline twice
   (byte-determinism), compares against the committed Prolog (freshness),
-  proves every compiled query, derives and discharges every v1 document's
-  obligations alone and as one co-loaded composition, checks the
-  schema-migration ledgers (projection notes, lexicon liveness, and that
-  each migrated document's Prolog uses only v1 vocabulary), and asserts
-  each red probe is rejected with its named error class and exit status.
+  load-checks every compiled document, derives and discharges every
+  document's proof obligations alone and as one co-loaded composition, and
+  asserts each red probe is rejected with its named error class and exit
+  status.
 
 ## Running
 
@@ -72,12 +73,10 @@ python3 -P tools/regen.py --check                 # E-- → Python identity
 
 Status: **frozen**. Every v1 document emits `guideline_schema_version(1).`,
 and the predicate set below is the public ABI — extending it requires a
-version bump. The committed corpus still compiles on the default (pre-v1)
-path and is byte-frozen; v1 is selected explicitly by appending
-`schema=v1` to the compiler invocation, and documents migrate onto it in
-batches (`tools/goal.py check` prints `goal: migration migrated=<N>/<D>`).
-`guideline_query/2` is a legacy-path predicate, excluded from the v1 ABI
-and never emitted on it.
+version bump. The committed corpus compiles on v1; `schema=v1` is an
+explicit compiler-invocation argument, never inferred from content. The
+default (pre-v1) legacy path stays byte-frozen for its knowledge shapes
+(facts and rules), and authored questions reject on both paths.
 
 Sentences project onto a closed reserved vocabulary. Source words —
 nouns, verbs, adjectives, prepositions — stay opaque data atoms and never
@@ -242,10 +241,9 @@ taking on anything new. The check's first stage validates the compendium
 row format and vocabulary, canonical ordering, the single-active-row
 promotion invariant) and prints a terminal meter — remaining
 non-terminal organizations and unfinished guideline rows — that measures
-the exhaustion clause directly. It also prints the schema-migration meter
-`goal: migration migrated=<N>/<D>`, documents already compiled on v1 over
-the migration roster; the transition finishes when the two numbers meet
-and no fixture-era lexicon entry survives. Bulk work (source reading, extraction drafting, ACE
+the exhaustion clause directly. Corpus validation (projection-ledger
+totality, lexicon liveness, v1-only product vocabulary) runs for every
+guideline on every check. Bulk work (source reading, extraction drafting, ACE
 drafting, adversarial review) fans out to subagent teammates per
 `.agent/rounds.md`; the session lead alone writes the repository and
 commits.

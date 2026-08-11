@@ -1,4 +1,3 @@
-Use hashlib.
 Use os.
 Use pathlib.
 Use re.
@@ -99,7 +98,7 @@ Define [[compile_doc]] taking scratch_path, swipl_executable, stage_path, docid,
         Do [[cleanup_and_fail]](scratch_path, "compiler-stdout", "missing final newline for document: " plus docid).
     Give back result.stdout.
 
-Define [[check_doc_queries]] taking scratch_path, swipl_executable, stage_path, pl_path:
+Define [[check_doc_load]] taking scratch_path, swipl_executable, stage_path, pl_path:
     Set tail_args to <"check", [[str]](pl_path)>.
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
     Set result to [[subprocess.run]](command, capture_output=True).
@@ -229,10 +228,7 @@ Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, gu
     Set manifest_pairs to <>.
     For each docid in docids:
         Set ace_path to [[ace_paths.get]](docid).
-        Set migrated to docid is in v1_docids.
-        Set extra_args to <>.
-        If migrated:
-            Do [[extra_args.append]]("schema=v1").
+        Set extra_args to <"schema=v1">.
         Set first_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args).
         Set second_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args).
         If first_bytes does not equal second_bytes:
@@ -241,16 +237,15 @@ Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, gu
         Set committed_bytes to [[committed_path.read_bytes]]().
         If first_bytes does not equal committed_bytes:
             Do [[cleanup_violation]](scratch_path, "stale", "committed pl differs from fresh compile: " plus [[str]](committed_path)).
-        If migrated:
-            Set proof_args to <"schema=v1", "proof">.
-            Set first_payload to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args).
-            Set second_payload to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args).
-            If first_payload does not equal second_payload:
-                Do [[cleanup_violation]](scratch_path, "determinism", "two proof runs differ for document: " plus docid).
-            Set payload_path to [[payload_dir.joinpath]](docid plus ".proof").
-            Do [[payload_path.write_bytes]](first_payload).
-            Do [[manifest_pairs.append]](<committed_path, payload_path>).
-        Do [[check_doc_queries]](scratch_path, swipl_executable, stage_path, committed_path).
+        Set proof_args to <"schema=v1", "proof">.
+        Set first_payload to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args).
+        Set second_payload to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args).
+        If first_payload does not equal second_payload:
+            Do [[cleanup_violation]](scratch_path, "determinism", "two proof runs differ for document: " plus docid).
+        Set payload_path to [[payload_dir.joinpath]](docid plus ".proof").
+        Do [[payload_path.write_bytes]](first_payload).
+        Do [[manifest_pairs.append]](<committed_path, payload_path>).
+        Do [[check_doc_load]](scratch_path, swipl_executable, stage_path, committed_path).
     Do [[check_aggregate]](scratch_path, swipl_executable, stage_path, manifest_pairs).
 
 Define [[write_manifest]] taking manifest_path, manifest_pairs:
@@ -319,10 +314,7 @@ Define [[compile_command]] taking guideline_id:
     Set outputs to {}.
     For each docid in docids:
         Set ace_path to [[ace_paths.get]](docid).
-        Set migrated to docid is in v1_docids.
-        Set extra_args to <>.
-        If migrated:
-            Do [[extra_args.append]]("schema=v1").
+        Set extra_args to <"schema=v1">.
         Set pl_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args).
         Do [[outputs.update]]({docid: pl_bytes}).
     Set new_dir to [[scratch_path.joinpath]]("pl-new").
@@ -350,7 +342,7 @@ Define [[red_probe_class]] taking probe_name:
     Do [[violation]]("red-probe", "probe name lacks <class>-- prefix: " plus probe_name).
 
 Define [[red_expected_exit]] taking class_name:
-    Set exit_one to <"input_utf8", "ape_messages", "empty_drs", "sentence_lines", "unsupported", "safety", "query_failed", "proof">.
+    Set exit_one to <"input_utf8", "ape_messages", "empty_drs", "sentence_lines", "unsupported", "safety", "proof">.
     Set exit_two to <"usage", "ape_load", "ulex_load", "check_load", "uncaught">.
     Set is_one to class_name is in exit_one.
     Set is_two to class_name is in exit_two.
@@ -696,91 +688,59 @@ Define [[check_compendium]] taking nothing:
     Set summary to "goal: compendium ok " plus [[str]](org_count) plus " organizations " plus [[str]](row_count) plus " rows; terminal remaining: orgs=" plus [[str]](orgs_remaining) plus " rows=" plus [[str]](rows_remaining) plus " provisional=" plus [[str]](provisional_count).
     Do [[print]](summary).
 
-Set migration_guideline_id to "cdc-2022-opioid".
-Set v1_docids to <"cdc2022-opioid-rec01", "cdc2022-opioid-rec01-imp01", "cdc2022-opioid-rec01-imp02", "cdc2022-opioid-rec01-imp03", "cdc2022-opioid-rec01-imp04", "cdc2022-opioid-rec01-imp05", "cdc2022-opioid-rec01-imp06", "cdc2022-opioid-rec02", "cdc2022-opioid-rec02-imp01", "cdc2022-opioid-rec02-imp02", "cdc2022-opioid-rec02-imp03", "cdc2022-opioid-rec02-imp04", "cdc2022-opioid-rec02-imp05", "cdc2022-opioid-rec02-imp06", "cdc2022-opioid-rec02-imp07", "cdc2022-opioid-rec02-imp08", "cdc2022-opioid-rec02-imp09", "cdc2022-opioid-rec02-imp10", "cdc2022-opioid-rec02-imp11", "cdc2022-opioid-rec02-imp13", "cdc2022-opioid-rec02-imp14", "cdc2022-opioid-rec02-imp15", "cdc2022-opioid-rec02-imp16", "cdc2022-opioid-rec02-imp17", "cdc2022-opioid-rec02-imp18", "cdc2022-opioid-rec02-imp19", "cdc2022-opioid-rec02-imp20", "cdc2022-opioid-rec02-imp21", "cdc2022-opioid-rec02-imp22", "cdc2022-opioid-rec02-imp23", "cdc2022-opioid-rec02-imp24", "cdc2022-opioid-rec02-imp25", "cdc2022-opioid-rec02-imp26", "cdc2022-opioid-rec03", "cdc2022-opioid-rec03-imp01", "cdc2022-opioid-rec03-imp02", "cdc2022-opioid-rec03-imp04", "cdc2022-opioid-rec03-imp05", "cdc2022-opioid-rec03-imp06", "cdc2022-opioid-rec03-imp07", "cdc2022-opioid-rec03-imp08", "cdc2022-opioid-rec04", "cdc2022-opioid-rec04-imp01", "cdc2022-opioid-rec04-imp03", "cdc2022-opioid-rec04-imp05", "cdc2022-opioid-rec04-imp07", "cdc2022-opioid-rec04-imp08", "cdc2022-opioid-rec04-imp09", "cdc2022-opioid-rec05", "cdc2022-opioid-rec05-imp04", "cdc2022-opioid-rec05-imp05", "cdc2022-opioid-rec05-imp06", "cdc2022-opioid-rec05-imp07", "cdc2022-opioid-rec05-imp08", "cdc2022-opioid-rec05-imp09", "cdc2022-opioid-rec05-imp10", "cdc2022-opioid-rec05-imp11", "cdc2022-opioid-rec05-imp12", "cdc2022-opioid-rec05-imp13", "cdc2022-opioid-rec05-imp14", "cdc2022-opioid-rec05-imp15", "cdc2022-opioid-rec05-imp16", "cdc2022-opioid-rec05-imp18", "cdc2022-opioid-rec05-imp19", "cdc2022-opioid-rec05-imp20", "cdc2022-opioid-rec05-imp21", "cdc2022-opioid-rec05-imp22", "cdc2022-opioid-rec05-imp23", "cdc2022-opioid-rec05-imp24", "cdc2022-opioid-rec05-imp25", "cdc2022-opioid-rec05-imp26", "cdc2022-opioid-rec05-imp27", "cdc2022-opioid-rec06", "cdc2022-opioid-rec07", "cdc2022-opioid-rec08", "cdc2022-opioid-rec09", "cdc2022-opioid-rec10", "cdc2022-opioid-rec11", "cdc2022-opioid-rec12">.
-Set coverage_pin to "674f3537f626adf6c31167e28a3758fd870ae51a839a59cfc3fdee79ccd73f0e".
-Set census_pin to "49f0f096a3a166733bb673733a03b047c3c52b755e6421e4bc07b50862c3e91c".
-Set projection_pair_pin to "d0e162420044e445b079c24ca0bf3a73494d5e707c4fe67c1da92da10a37a8cb".
-Set projection_header_text to "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes and the ordered (docid, region) pairs\n# are pinned in tools/goal.emm; kept/dropped prose stays migration-owned.".
-Set mega_lemmas_text to "access-appropriate-expertise-when-considering-opioid-taper-during-pregnancy acknowledge-discordance-express-empathy-and-implement-patient-centered-treatment-changes-while-avoiding-abandonment-when-benefit-risk-consensus-is-unavailable address-reversible-causes-and-prevent-unreassessed-long-term-transition-after-thirty-days-of-acute-pain-opioids advise-about-overdose-risk-after-abrupt-return-to-higher-dose-provide-overdose-education-and-offer-naloxone apply-opioid-dosage-recommendations-to-starting-or-increasing-opioids-and-separately-assess-dosage-reduction-benefits-and-risks assess-and-discuss-increasing-dosage-benefits-and-risks-with-patient-before-reversing-taper avoid-abrupt-discontinuation avoid-er-la-opioids-for-acute-pain-and-for-subacute-or-chronic-treatment-initiation-and-intermittent-or-as-needed-use avoid-first-line-or-routine-opioid-therapy avoid-methadone-as-first-choice-er-la-opioid avoid-rapid-tapering-and-abrupt-opioid-discontinuation avoid-requiring-sequential-failure-or-specific-treatment-before-opioid-therapy avoid-rigid-opioid-dose-or-duration-standards-and-incentives-ensure-threshold-policies-prevent-rapid-tapers-or-abrupt-discontinuation-and-avoid-penalizing-clinicians-for-accepting-or-not-rapidly-tapering-long-term-opioid-patients collaborate-with-patients-on-taper-plans-including-speed-and-pause-decisions consider-antidepressants-for-cooccurring-pain-and-depression consider-clinically-significant-withdrawal-symptoms-as-signal-to-further-slow-taper consider-clinician-patient-exit-strategy-before-opioid-initiation consider-communication-pain-management-behavioral-support-and-slower-taper-principles-for-shorter-duration-opioid-discontinuation consider-duloxetine-or-systemic-nsaids-for-multijoint-or-incompletely-controlled-osteoarthritis-pain consider-extending-dose-intervals-after-smallest-dose-and-stopping-opioids-below-once-daily-when-patient-agreed-taper-goal-is-discontinuation consider-longer-taper-after-longer-duration-of-opioid-therapy consider-methadone-for-pain-only-with-risk-profile-familiarity-and-preparation-for-patient-education-close-monitoring-qt-risk-assessment-and-electrocardiographic-monitoring consider-months-to-years-individualized-taper-for-at-least-one-year-opioid-therapy-based-on-dosage-patient-goals-and-concerns consider-nsaids-or-duloxetine-for-noncontraindicated-patients-with-chronic-low-back-pain-after-insufficient-nonpharmacologic-response consider-opioid-therapy-for-severe-traumatic-injuries-invasive-surgeries-and-other-severe-acute-pain-when-nsaids-and-other-therapies-are-contraindicated-or-likely-ineffective consider-opioids-for-comfort-focused-or-alternative-limited-contexts consider-pausing-and-restarting-tapers-when-patient-is-ready-and-slowing-tapers-near-low-dosages consider-physical-therapy-for-exercise-access-or-response-barriers consider-selected-antidepressants-anticonvulsants-and-topical-agents-for-neuropathic-pain consider-supporting-clinician-and-patient-during-taper-through-telephone-telehealth-or-face-to-face-visits consider-tapers-of-ten-percent-per-month-or-slower-for-patients-taking-opioids-for-a-year-or-longer consider-toxicology-testing consider-transdermal-fentanyl-only-with-dosing-and-absorption-familiarity-and-preparation-for-patient-education consider-using-periodic-strategic-motivational-questions-and-statements-to-encourage-therapeutic-changes-and-functional-goals consider-using-product-labeling-as-starting-point-and-calibrating-for-pain-severity-and-renal-or-hepatic-insufficiency-to-determine-lowest-effective-dose-for-opioid-naive-patients consult-product-labeling-and-reduce-total-daily-dosage-for-incomplete-cross-tolerance-when-changing-from-different-immediate-release-opioid-to-er-la-opioid continue-opioids-long-term-only-after-intentional-informed-benefit-risk-decision decide-judiciously-case-by-case-about-tricyclic-antidepressants-in-older-adults detect-life-threatening-warning educate-patients-before-opioid-therapy-to-inform-preference-sensitive-decisions establish-continued-opioid-goals-and-maximize-nonpharmacologic-and-nonopioid-treatment-for-tapering-or-higher-dose-patients establish-functional-treatment-goals-for-new-patients-already-receiving-opioids evaluate-further-dosage-increase-through-individualized-benefit-risk-assessment evaluate-patients-and-confirm-diagnosis explain-opioid-benefits-risks-and-alternatives-and-involve-patients-in-start-decisions follow-up-at-least-monthly-with-patients-engaging-in-opioid-tapering increase-reimbursement-and-access-to-effective-noninvasive-therapies jointly-establish-functional-evaluation-and-measurable-goals-before-opioids limit-prescription-quantity maximize-nonopioid-pain-treatment-and-address-behavioral-distress-for-patients-struggling-to-tolerate-taper maximize-nonopioid-therapy monitor-patients-unable-to-taper-on-high-dose-or-high-risk-regimens-and-mitigate-overdose-risk-with-education-and-naloxone offer-medication-treatment offer-naloxone pause-and-reassess-benefits-and-risks-before-increasing-total-opioid-dosage-to-at-least-fifty-mme-per-day prescribe-immediate-release prescribe-immediate-release-opioids-at-lowest-effective-dose-for-expected-severe-pain-duration prescribe-lowest-effective-dosage prescribe-opioids-only-as-needed-and-encourage-taper-after-around-the-clock-use prioritize-shared-decision-making-with-patients-when-continuing-opioid-benefits-and-risks-are-close-or-unclear provide-or-arrange-coordinated-management-of-pain-and-opioid-related-problems-including-opioid-use-disorder recommend-appropriate-noninvasive-nonpharmacologic-approaches reevaluate-benefits-and-risks remain-alert-to-and-screen-for-anxiety-depression-opioid-misuse-or-opioid-use-disorder-during-taper-and-provide-or-arrange-management reserve-er-la-opioids-for-severe-continuous-pain review-drug-labeling-and-weigh-benefits-and-risks-before-pharmacologic-therapy review-low-cost-pain-management-options-for-all-patients review-pdmp-data use-additional-er-la-opioid-caution-and-consider-longer-dosing-interval-for-renal-or-hepatic-dysfunction use-caution-and-smallest-practical-increase-after-deciding-to-increase-dosage use-nonopioids-when-possible-and-limit-additional-opioids-to-severe-pain-duration-for-long-term-opioid-patients-with-acute-pain use-nsaids-at-lowest-effective-dose-for-shortest-duration-with-caution use-opioid-dosage-recommendations-as-flexible-guideposts-for-clinician-patient-decisions use-particular-caution use-taper-slow-enough-to-minimize-withdrawal-when-reducing-or-discontinuing-opioids use-topical-nsaids-for-superficial-joint-osteoarthritis-after-insufficient-nonpharmacologic-response weigh-context-specific-opioid-benefits-against-risks-before-initiation".
+Set projection_header_text to "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes, row shape and per-document row\n# coverage are validated by goal.py check; kept/dropped prose stays document-owned.".
 Set v1_functors to <"guideline_schema_version", "guideline_document", "guideline_entity", "guideline_cardinality", "guideline_event", "guideline_arg", "guideline_pp", "guideline_property", "guideline_operator">.
 Set v1_directives to <"guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3">.
 Set v1_decl_kinds to <"multifile", "discontiguous">.
 Set token_strip_chars to ".,;:?!\"()".
 
-Define [[sha256_hex]] taking data:
-    Set digest to [[hashlib.sha256]](data).
-    Give back [[digest.hexdigest]]().
-
-Define [[read_pinned_file]] taking file_path, category:
+Define [[read_corpus_file]] taking file_path, category:
     If [[file_path.is_symlink]]():
         Do [[violation]](category, "is a symlink: " plus [[str]](file_path)).
     If not [[file_path.is_file]]():
         Do [[violation]](category, "missing: " plus [[str]](file_path)).
     Give back [[file_path.read_bytes]]().
 
-Define [[check_pinned_digest]] taking file_path, pin, category:
-    Set data to [[read_pinned_file]](file_path, category).
-    Set digest to [[sha256_hex]](data).
-    If digest does not equal pin:
-        Do [[violation]](category, "digest drift: " plus [[str]](file_path) plus " = " plus digest).
-
 Define [[check_projection_ledger]] taking guideline_path:
     Set ledger_path to [[guideline_path.joinpath]]("audit", "projection-notes.tsv").
-    Set data to [[read_pinned_file]](ledger_path, "migration-projection").
+    Set data to [[read_corpus_file]](ledger_path, "projection-ledger").
     Set text to [[data.decode]]("utf-8").
+    If "\r" is in text:
+        Do [[violation]]("projection-ledger", "carriage return byte in ledger").
     If not [[text.endswith]]("\n"):
-        Do [[violation]]("migration-projection", "ledger lacks final newline").
-    Set lines to [[text.splitlines]]().
-    If [[len]](lines) is less than 5:
-        Do [[violation]]("migration-projection", "ledger holds no rows").
-    Set actual_header to "".
-    Set row_lines to <>.
-    Set index to 0.
-    For each line_text in lines:
-        If index is less than 4:
-            Set actual_header to actual_header plus line_text plus "\n".
-        Otherwise:
-            Do [[row_lines.append]](line_text).
-        Set index to index plus 1.
+        Do [[violation]]("projection-ledger", "ledger lacks final newline").
     Set expected_header to projection_header_text plus "\n".
-    If actual_header does not equal expected_header:
-        Do [[violation]]("migration-projection", "header bytes drift").
-    Set pair_text to "".
-    Set pinned_docids to <>.
+    If not [[text.startswith]](expected_header):
+        Do [[violation]]("projection-ledger", "header bytes drift").
+    Set body to [[text.removeprefix]](expected_header).
+    Set row_lines to [[body.split]]("\n").
+    Do [[row_lines.pop]]().
+    If not row_lines:
+        Do [[violation]]("projection-ledger", "ledger holds no rows").
+    Set seen_docids to {}.
+    Set row_docids to <>.
     For each row_line in row_lines:
         Set fields to [[row_line.split]]("\t").
         If [[len]](fields) does not equal 4:
-            Do [[violation]]("migration-projection", "row without 4 columns: " plus row_line).
+            Do [[violation]]("projection-ledger", "row without 4 columns: " plus row_line).
         Set docid to [[fields.pop]](0).
         Set region to [[fields.pop]](0).
         Set kept to [[fields.pop]](0).
         Set dropped to [[fields.pop]](0).
         If not [[valid_docid]](docid):
-            Do [[violation]]("migration-projection", "invalid docid: " plus docid).
+            Do [[violation]]("projection-ledger", "invalid docid: " plus docid).
         If not region:
-            Do [[violation]]("migration-projection", "empty region for: " plus docid).
+            Do [[violation]]("projection-ledger", "empty region for: " plus docid).
         If not kept:
-            Do [[violation]]("migration-projection", "empty kept column for: " plus docid).
+            Do [[violation]]("projection-ledger", "empty kept column for: " plus docid).
         If not dropped:
-            Do [[violation]]("migration-projection", "empty dropped column for: " plus docid).
-        Set pair_text to pair_text plus docid plus "\t" plus region plus "\n".
-        Do [[pinned_docids.append]](docid).
-    Set pair_digest to [[sha256_hex]]([[pair_text.encode]]("utf-8")).
-    If pair_digest does not equal projection_pair_pin:
-        Do [[violation]]("migration-projection", "pair digest drift: " plus pair_digest).
-    Give back pinned_docids.
-
-Define [[check_v1_docids]] taking pinned_docids:
-    Set seen to {}.
-    For each docid in v1_docids:
-        Set duplicate to docid is in seen.
+            Do [[violation]]("projection-ledger", "empty dropped column for: " plus docid).
+        Set duplicate to docid is in seen_docids.
         If duplicate:
-            Do [[violation]]("migration-docids", "duplicate v1 docid: " plus docid).
-        Do [[seen.update]]({docid: True}).
-        Set pinned to docid is in pinned_docids.
-        If not pinned:
-            Do [[violation]]("migration-docids", "v1 docid absent from pinned projection pairs: " plus docid).
+            Do [[violation]]("projection-ledger", "duplicate row docid: " plus docid).
+        Do [[seen_docids.update]]({docid: True}).
+        Do [[row_docids.append]](docid).
+    Give back row_docids.
 
 Define [[lexicon_entry]] taking line_text:
     Set head_parts to [[line_text.split]]("(", 1).
@@ -814,21 +774,13 @@ Define [[ace_token_set]] taking ace_paths, docids:
             Do [[tokens.update]]({token: True}).
     Give back tokens.
 
-Define [[check_lexicon_migration]] taking guideline_path, ace_paths, docids, migrated_count:
+Define [[check_lexicon_liveness]] taking guideline_path, ace_paths, docids:
     Set lexicon_path to [[guideline_path.joinpath]]("lexicon.ulex").
-    Set data to [[read_pinned_file]](lexicon_path, "lexicon-file").
+    Set data to [[read_corpus_file]](lexicon_path, "lexicon-file").
     Set text to [[data.decode]]("utf-8").
     Set all_tokens to [[ace_token_set]](ace_paths, docids).
-    Set unmigrated_docids to <>.
-    For each docid in docids:
-        Set migrated to docid is in v1_docids.
-        If not migrated:
-            Do [[unmigrated_docids.append]](docid).
-    Set unmigrated_tokens to [[ace_token_set]](ace_paths, unmigrated_docids).
-    Set mega_lemmas to [[mega_lemmas_text.split]]().
     Set entries to <>.
     Set live_lexemes to {}.
-    Set live_unmigrated to {}.
     For each raw_line in [[text.split]]("\n"):
         Set line_text to [[raw_line.strip]]().
         If line_text:
@@ -841,10 +793,6 @@ Define [[check_lexicon_migration]] taking guideline_path, ace_paths, docids, mig
             Set referenced to entry_surface is in all_tokens.
             If referenced:
                 Do [[live_lexemes.update]]({entry_lemma: True}).
-            Set referenced_unmigrated to entry_surface is in unmigrated_tokens.
-            If referenced_unmigrated:
-                Do [[live_unmigrated.update]]({entry_lemma: True}).
-    Set fixture_count to 0.
     For each entry in entries:
         Set entry_copy to [[list]](entry).
         Set kind to [[entry_copy.pop]](0).
@@ -853,22 +801,10 @@ Define [[check_lexicon_migration]] taking guideline_path, ace_paths, docids, mig
         Set live to lemma is in live_lexemes.
         If not live:
             Do [[violation]]("lexicon-dead-lexeme", "no ace document references: " plus surface).
-        Set is_pn to kind equals "pn_sg".
-        Set is_mega to lemma is in mega_lemmas.
-        Set fixture to is_pn or is_mega.
-        If fixture:
-            Set fixture_count to fixture_count plus 1.
-            Set live_before to lemma is in live_unmigrated.
-            If not live_before:
-                Do [[violation]]("lexicon-fixture-lexeme", "no unmigrated ace document references: " plus surface).
-    Set doc_count to [[len]](docids).
-    If migrated_count equals doc_count:
-        If fixture_count is greater than 0:
-            Do [[violation]]("lexicon-terminal", "fixture-era entries survive full migration: " plus [[str]](fixture_count)).
 
-Define [[check_migrated_product]] taking guideline_path, docid:
+Define [[check_product_vocabulary]] taking guideline_path, docid:
     Set pl_path to [[guideline_path.joinpath]]("pl", docid plus ".pl").
-    Set data to [[read_pinned_file]](pl_path, "migration-product").
+    Set data to [[read_corpus_file]](pl_path, "product-vocabulary").
     Set text to [[data.decode]]("utf-8").
     For each raw_line in [[text.split]]("\n"):
         Set line_text to [[raw_line.strip]]().
@@ -882,34 +818,34 @@ Define [[check_migrated_product]] taking guideline_path, docid:
                     Set decl_parts to [[inner.split]]("(", 1).
                     Set decl_kind to [[decl_parts.pop]](0).
                     If [[len]](decl_parts) does not equal 1:
-                        Do [[violation]]("migration-product", "unauthorized directive in " plus docid plus ": " plus line_text).
+                        Do [[violation]]("product-vocabulary", "unauthorized directive in " plus docid plus ": " plus line_text).
                     Set decl_spec to [[decl_parts.pop]](0).
                     Set kind_known to decl_kind is in v1_decl_kinds.
                     If not kind_known:
-                        Do [[violation]]("migration-product", "unauthorized directive in " plus docid plus ": " plus line_text).
+                        Do [[violation]]("product-vocabulary", "unauthorized directive in " plus docid plus ": " plus line_text).
                     Set spec_known to decl_spec is in v1_directives.
                     If not spec_known:
-                        Do [[violation]]("migration-product", "undeclared indicator in " plus docid plus ": " plus decl_spec).
+                        Do [[violation]]("product-vocabulary", "undeclared indicator in " plus docid plus ": " plus decl_spec).
                 Otherwise:
                     Set functor_parts to [[line_text.split]]("(", 1).
                     Set functor to [[functor_parts.pop]](0).
                     Set functor_known to functor is in v1_functors.
                     If not functor_known:
-                        Do [[violation]]("migration-product", "unauthorized clause functor in " plus docid plus ": " plus functor).
+                        Do [[violation]]("product-vocabulary", "unauthorized clause functor in " plus docid plus ": " plus functor).
 
-Define [[check_migration]] taking guideline_path, ace_paths, docids:
-    Set coverage_path to [[guideline_path.joinpath]]("coverage.tsv").
-    Do [[check_pinned_digest]](coverage_path, coverage_pin, "migration-coverage").
-    Set census_path to [[guideline_path.joinpath]]("audit", "census-map.tsv").
-    Do [[check_pinned_digest]](census_path, census_pin, "migration-census").
-    Set pinned_docids to [[check_projection_ledger]](guideline_path).
-    Do [[check_v1_docids]](pinned_docids).
-    Set migrated_count to [[len]](v1_docids).
-    Do [[check_lexicon_migration]](guideline_path, ace_paths, docids, migrated_count).
-    For each docid in v1_docids:
-        Do [[check_migrated_product]](guideline_path, docid).
-    Set pinned_count to [[len]](pinned_docids).
-    Do [[print]]("goal: migration migrated=" plus [[str]](migrated_count) plus "/" plus [[str]](pinned_count)).
+Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
+    Set ledger_docids to [[check_projection_ledger]](guideline_path).
+    For each ledger_docid in ledger_docids:
+        Set known to ledger_docid is in docids.
+        If not known:
+            Do [[violation]]("projection-ledger", "row for unknown docid: " plus ledger_docid).
+    For each docid in docids:
+        Set covered to docid is in ledger_docids.
+        If not covered:
+            Do [[violation]]("projection-ledger", "docid missing projection row: " plus docid).
+        Do [[check_product_vocabulary]](guideline_path, docid).
+    If lexicon_path does not equal None:
+        Do [[check_lexicon_liveness]](guideline_path, ace_paths, docids).
 
 Define [[check_command]] taking nothing:
     Do [[check_compendium]]().
@@ -920,7 +856,6 @@ Define [[check_command]] taking nothing:
     If not [[guidelines_root.is_dir]]():
         Do [[fail]]("guidelines", "missing guidelines directory").
     Set plans to <>.
-    Set migration_plans to <>.
     For each entry in [[sorted]]([[guidelines_root.iterdir]]()):
         Set entry_name to entry.name.
         If [[entry.is_symlink]]():
@@ -937,19 +872,17 @@ Define [[check_command]] taking nothing:
         Do [[check_pl_inventory]](entry, docids).
         Set plan_record to <entry, ace_paths, docids, lexicon_path>.
         Do [[plans.append]](plan_record).
-        If entry_name equals migration_guideline_id:
-            Set migration_record to <entry, ace_paths, docids>.
-            Do [[migration_plans.append]](migration_record).
     If not plans:
         Do [[violation]]("guidelines", "no guideline directories").
     Set red_plan to [[collect_red_probes]]().
     Do [[check_prolog_inventory]]().
-    For each migration_record in migration_plans:
-        Set record_copy to [[list]](migration_record).
-        Set migration_path to [[record_copy.pop]](0).
-        Set migration_ace_paths to [[record_copy.pop]](0).
-        Set migration_docids to [[record_copy.pop]](0).
-        Do [[check_migration]](migration_path, migration_ace_paths, migration_docids).
+    For each plan_record in plans:
+        Set record_copy to [[list]](plan_record).
+        Set corpus_path to [[record_copy.pop]](0).
+        Set corpus_ace_paths to [[record_copy.pop]](0).
+        Set corpus_docids to [[record_copy.pop]](0).
+        Set corpus_lexicon_path to [[record_copy.pop]](0).
+        Do [[check_corpus]](corpus_path, corpus_ace_paths, corpus_docids, corpus_lexicon_path).
     Set swipl_executable to [[resolve_swipl]]().
     Set scratch_path to [[make_scratch]]().
     Set stage_path to [[stage_ape]](scratch_path, swipl_executable).
