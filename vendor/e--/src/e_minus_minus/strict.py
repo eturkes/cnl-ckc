@@ -1,3 +1,6 @@
+# strict.py — first-party addition to this e-- fork, no upstream counterpart.
+# Copyright 2026 Emir Turkes. Apache-2.0 like the surrounding tree (see
+# ../../LICENSE and ../../PROVENANCE).
 """Strict, deterministic E-- compilation entry point."""
 
 from __future__ import annotations

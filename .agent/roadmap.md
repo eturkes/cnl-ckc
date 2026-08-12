@@ -1,6 +1,6 @@
 # roadmap
 
-Charter: `.agent/initial-prompt.md`. Shipped: fetch→ACE→Prolog guideline
+Charter: `.agent/standing-instructions.md`. Shipped: fetch→ACE→Prolog guideline
 pipeline (`tools/goal.py compile <id> | check`, `tools/regen.py --check`);
 guideline coverage runs as built-in `/goal` rounds — procedure: root
 `README.md` § Operating; queue: `.agent/queue.md`. This file plans further
@@ -177,22 +177,12 @@ knowledge-only ACE; freeze an engine-portable public Prolog ABI; derive and
 replay proof obligations per document + aggregate; migrate the complete
 `cdc-2022-opioid` corpus without changing coverage/census/docid custody.
 
-Terminal state:
-
-- Corpus = 79 ACE = 79 compiled Prolog documents, one document per ruled
-  source region, sentences per region free (21 single-sentence, rest 2-25);
-  zero authored questions, zero witness fixtures.
-- Schema v1 = frozen nine-indicator ABI documented in root README + compiler
-  header; every corpus document compiles explicitly on v1. Legacy fact/rule
-  emission stays byte-frozen; authored questions reject on both paths.
-- Proof = 257 generated obligations, discharged per document and forward +
-  reverse aggregate under bounded search (depth 4000 inside 10^6 inferences;
-  either bound exceeded = underivable).
-- Lexicon = 487 live entries, zero `pn_sg`, zero 77-roster mega lemmas.
-- Custody = `audit/projection-notes.tsv` total, duplicate-free, set-equal to
-  the ACE inventory; `coverage.tsv` + census keys unchanged through M3.
-- Queue gate lifted in this review-close commit; further ACE authoring runs
-  under the frozen v1 knowledge-only contract.
+Terminal state (at review close 18ab5a1; live law = README schema section +
+the rulings below): 79 ACE = 79 compiled documents on frozen nine-indicator
+schema v1, 257 obligations discharged per document + aggregate under bounded
+search, lexicon 487 live entries, custody ledgers total + set-equal to the
+ACE inventory, queue gate lifted — corpus growth since = `/goal` rounds
+under the frozen v1 knowledge-only contract.
 
 Governing authoring rulings:
 
@@ -236,54 +226,15 @@ Assurance + evidence:
   mate=58% 139K - M3.5 main=92% 220K, mate=39% 95K - M3.6 main=87% 208K,
   mate=28% 67K - M3.7 main=93% 224K, mate=95% 227K.
 
-Review (9 teammates: 7 unit lenses + cross-cutting + claim-replay audit;
-26/28 audited claims replayed clean, the two misses being a stale brief claim
-and the README bounds numerals fixed here):
-
-- HIGH, fixed: aggregate payloads were self-certifying — an emptied payload
-  beside a real product reported `aggregate ok 1 documents 0 obligations`
-  rc0. Replay now checks the obligation set against the loaded composition
-  before proving any head (coverage equality with the sentence identities the
-  products carry, unique `(doc, sentence, variant)` keys, `1..K` variant
-  runs, nonempty head lists, final-LF payload bytes). Battery
-  `.scratch/m3rev/payload_battery.py` 9/9. Open residue: a dropped LAST
-  variant stays undetected — rule-head `Deps` are variables, so per-sentence
-  variant counts are not derivable under the frozen ABI (polish row).
-- MEDIUM, fixed: committed reds pinned class/rc/framing but not Detail — a
-  mutant rewriting both question details kept `goal.py check` green. Every
-  probe now carries a required `.expect` sidecar compared byte-exact;
-  orphan/missing pins are violations. 20 probes at review close (added: v1
-  GROUP root detail, `of` noun modifier).
-- MEDIUM, fixed: the ulex slot silently accepted the reserved basename
-  `schema=v1`; `reserved_argv_token/1` now rejects it like `proof`.
-- MEDIUM, fixed: the legacy witness covered only copula facts + one rule, so
-  deleting the ground-fact branch killed nothing. Widened to every documented
-  legacy family (copula, ground fact arity 1 + 2, positive rule, NAF rule
-  with its dynamic declaration); `.scratch/m3rev/test_legacy_families.py`
-  kills both branch mutants.
-- MEDIUM -> docs: compiled documents are a definite-clause program, so an
-  authored consequent entity feeding its own antecedent can diverge under
-  naive SLD in one load order and succeed in another (verified: reverse order
-  exhausts a 64 MiB stack, forward order proves). Our own replay is
-  fail-closed — the same query under the compiler's bounds fails finitely —
-  and no clause in the shipped corpus is left-recursive (scan 0/79, positive
-  control 1). README carries the consumer note; `goal.py check` runs the scan
-  over the shipped corpus through the compiler's `recursion-check` mode.
-- Docs corrected: schema label candidate -> frozen; fork notice reduced to one
-  §5(a)-relevant date plus git history; README gained the search-bound
-  numerals, the aggregate-integrity guarantees, the `of` rewrite recipe and
-  one-document-per-region wording; the guideline README's one-rule-per-impl
-  claim replaced with the measured 21 single-sentence / 2-25 range.
-- Deferred to `.agent/polish.md` with acceptance checks: last-variant residue,
-  committed legacy-family oracle, object-operator closed-set kill, root-NAF
-  precedence, vendor fork-notice gate.
-- Review rerun (decisive chain, this commit): check ok 475 organizations /
-  1,118 rows, terminal remaining orgs=0 rows=847 provisional=54, 1 guideline
-  79 documents 20 red probes; regen check ok; gate_m3u1 24/10/0; gate_m3u2
-  7/5/73; gate_m3u3 64/64; diff_m3u7 100 cases accept=79 reject=21
-  divergences=0; question suite 96/96; fresh compile leaves `pl/` + `ace/`
-  byte-identical. main=84% 200K/240K (review close; the wave spans 2
-  windows), mate=86% 206K/240K (mrev-m3u7 peak).
+Review DONE (9 lenses; 26/28 audited claims replayed clean): fixed HIGH
+self-certifying aggregate payloads (composition-derived coverage checks;
+battery `.scratch/m3rev/payload_battery.py`) + MED byte-exact `.expect`
+pins on every red probe, reserved `schema=v1` ulex basename, widened legacy
+witness; SLD-divergence risk documented in README + left-recursion scan in
+`goal.py check`; residues + deferred hardening = `.agent/polish.md` rows;
+decisive chain rerun green at close — narratives, rulings + rerun numbers =
+`git log --grep "(M3 review" -p -- .agent/roadmap.md` (close = 18ab5a1);
+gauges main=84% 200K close (wave spans 2 windows), mate=86% 206K peak.
 
 Out of scope remains: serving/query API; probabilities, thresholds, arithmetic
 or unit conversion absent from source; defeasibility/s(CASP) before a named

@@ -19,8 +19,8 @@ below).
 
 ## Audit story
 
-Every artifact a human needs to read is controlled natural language, a direct
-compilation of it, or part of one small named compiler base:
+Every program artifact a human needs to read is controlled natural language,
+a direct compilation of it, or part of one small named compiler base:
 
 - **ACE → Prolog.** All guideline Prolog (`guidelines/*/pl/`) is compiled
   from ACE. The compiled files quote each source sentence beside its clause,
@@ -50,7 +50,8 @@ compilation of it, or part of one small named compiler base:
   are exempt and state origin and license in their own headers.
 - **Tests are data.** `tests/red/` holds rejection probes named
   `<expected-error-class>--<name>.ace`. One `tools/goal.py check` invocation
-  is the full acceptance gate: it validates the compendium ledger
+  beside `tools/regen.py --check` (E-- → Python identity, above) is the
+  full acceptance gate: `check` validates the compendium ledger
   (`.agent/compendium.md` organization table plus `.agent/compendium.tsv`
   guideline rows — row vocabulary, canonical ordering, the
   one-active-row promotion invariant — and prints the terminal meter the
@@ -77,7 +78,7 @@ Requires SWI-Prolog 9.2.9 and Python ≥ 3.11 (the supported invocations use
 
 ```sh
 python3 -P tools/goal.py compile <guideline-id>   # ACE → Prolog
-python3 -P tools/goal.py check                    # full acceptance gate
+python3 -P tools/goal.py check                    # corpus acceptance gate
 python3 -P tools/regen.py --check                 # E-- → Python identity
 ```
 
@@ -88,7 +89,9 @@ and the predicate set below is the public ABI — extending it requires a
 version bump. The committed corpus compiles on v1; `schema=v1` is an
 explicit compiler-invocation argument, never inferred from content. The
 default (pre-v1) legacy path stays byte-frozen for its knowledge shapes
-(facts and rules), and authored questions reject on both paths.
+(facts and rules) — a maintained policy whose committed behavior witness is
+registered hardening (`.agent/polish.md`) — and authored questions reject on
+both paths.
 
 Sentences project onto a closed reserved vocabulary. Source words —
 nouns, verbs, adjectives, prepositions — stay opaque data atoms and never
@@ -278,7 +281,7 @@ Authoring notes (v1): an ACE document states guideline knowledge and
 nothing else — no witness seed facts, no proper-name stand-ins, no
 authored probe queries, since the compiler derives its own obligations —
 and `lexicon.ulex` carries reusable domain vocabulary rather than
-per-statement fixtures. Every ulex entry must be reachable: an entry whose
+per-statement fixtures. Every ulex lexeme must be reachable: an entry whose
 lexeme no document uses rejects, as does one repeated in the file or one the
 vendored Clex already provides byte-for-byte. One statement per sentence — split "…, and if A
 then B" into separate sentences. Keep quantified restrictors out of
