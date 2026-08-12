@@ -68,8 +68,8 @@ a direct compilation of it, or part of one small named compiler base:
   evidence file's own payload census and locator inventory, ace-row ↔
   document-set bijection, single-step restates targets — printing a
   per-guideline `ace/restates/uncovered/pending` meter; lexicon
-  liveness and minimality; v1-only product vocabulary), recompiles every
-  guideline twice
+  liveness and minimality; v1-only product vocabulary), verifies the
+  resolved SWI-Prolog is exactly 9.2.9, recompiles every guideline twice
   (byte-determinism), compares against the committed Prolog (freshness),
   load-checks every compiled document, derives and discharges every
   document's proof obligations alone and as one co-loaded composition whose

@@ -47,6 +47,21 @@ Define [[resolve_swipl]] taking nothing:
     Set swipl_executable to [[shutil.which]](swipl).
     If swipl_executable equals None:
         Do [[fail]]("swipl-exec", "not executable: " plus swipl).
+    Set version_result to [[subprocess.run]](<swipl_executable, "--version">, capture_output=True).
+    If version_result.returncode does not equal 0:
+        Do [[fail]]("swipl-version", "version probe failed: " plus swipl_executable).
+    Set version_text to [[version_result.stdout.decode]]("utf-8", errors="replace").
+    Set version_tokens to [[version_text.split]]().
+    Set version_value to "".
+    If [[len]](version_tokens) is greater than 2:
+        Set product_token to [[version_tokens.pop]](0).
+        Set label_token to [[version_tokens.pop]](0).
+        Set value_token to [[version_tokens.pop]](0).
+        If product_token equals "SWI-Prolog":
+            If label_token equals "version":
+                Set version_value to value_token.
+    If version_value does not equal swipl_version_required:
+        Do [[fail]]("swipl-version", "expected " plus swipl_version_required plus ", found: " plus [[version_text.strip]]()).
     Give back swipl_executable.
 
 Define [[make_scratch]] taking nothing:
@@ -959,6 +974,7 @@ Set v1_directives to <"guideline_schema_version/1", "guideline_document/3", "gui
 Set v1_decl_kinds to <"multifile", "discontiguous">.
 Set token_strip_chars to ".,;:?!\"()".
 Set clex_path_text to "vendor/clex/clex_lexicon.pl".
+Set swipl_version_required to "9.2.9".
 
 Define [[read_corpus_file]] taking file_path, category:
     If [[file_path.is_symlink]]():

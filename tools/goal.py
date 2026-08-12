@@ -40,6 +40,21 @@ def resolve_swipl():
     swipl_executable = shutil.which(swipl)
     if swipl_executable == None:
         fail("swipl-exec", "not executable: " + swipl)
+    version_result = subprocess.run([swipl_executable, "--version"], capture_output=True)
+    if version_result.returncode != 0:
+        fail("swipl-version", "version probe failed: " + swipl_executable)
+    version_text = version_result.stdout.decode("utf-8", errors="replace")
+    version_tokens = version_text.split()
+    version_value = ""
+    if len(version_tokens) > 2:
+        product_token = version_tokens.pop(0)
+        label_token = version_tokens.pop(0)
+        value_token = version_tokens.pop(0)
+        if product_token == "SWI-Prolog":
+            if label_token == "version":
+                version_value = value_token
+    if version_value != swipl_version_required:
+        fail("swipl-version", "expected " + swipl_version_required + ", found: " + version_text.strip())
     return swipl_executable
 def make_scratch():
     pid_text = str(os.getpid())
@@ -912,6 +927,7 @@ v1_directives = ["guideline_schema_version/1", "guideline_document/3", "guidelin
 v1_decl_kinds = ["multifile", "discontiguous"]
 token_strip_chars = ".,;:?!\"()"
 clex_path_text = "vendor/clex/clex_lexicon.pl"
+swipl_version_required = "9.2.9"
 def read_corpus_file(file_path, category):
     if file_path.is_symlink():
         violation(category, "is a symlink: " + str(file_path))
