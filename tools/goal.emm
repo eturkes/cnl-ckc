@@ -1191,11 +1191,12 @@ Define [[normalized_lexicon_entry]] taking line_text:
     Set text to [[text.replace]]("\t", "").
     Give back text.
 
-Define [[clex_entry_set]] taking nothing:
+Define [[clex_entry_maps]] taking nothing:
     Set clex_path to [[pathlib.Path]](clex_path_text).
     Set data to [[read_corpus_file]](clex_path, "clex-file").
     Set text to [[data.decode]]("utf-8").
     Set entries to {}.
+    Set surfaces to {}.
     For each raw_line in [[text.split]]("\n"):
         Set line_text to [[raw_line.strip]]().
         If line_text:
@@ -1203,15 +1204,67 @@ Define [[clex_entry_set]] taking nothing:
             Set is_directive to [[line_text.startswith]](":-").
             If not is_comment:
                 If not is_directive:
-                    Do [[entries.update]]({[[normalized_lexicon_entry]](line_text): True}).
-    Give back entries.
+                    Set normalized to [[normalized_lexicon_entry]](line_text).
+                    Do [[entries.update]]({normalized: True}).
+                    Set fact to [[lexicon_entry]](line_text).
+                    Set fact_copy to [[list]](fact).
+                    Set fact_kind to [[fact_copy.pop]](0).
+                    Set fact_surface to [[fact_copy.pop]](0).
+                    Set surface_known to fact_surface is in surfaces.
+                    If not surface_known:
+                        Do [[surfaces.update]]({fact_surface: <>}).
+                    Set surface_list to [[surfaces.get]](fact_surface).
+                    Set fact_present to normalized is in surface_list.
+                    If not fact_present:
+                        Do [[surface_list.append]](normalized).
+    Give back <entries, surfaces>.
+
+Set shadow_ruling_header to "ulex_entry\tclex_entries\truling".
+
+Define [[lexicon_shadow_rulings]] taking guideline_path:
+    Set rulings_path to [[guideline_path.joinpath]]("audit", "lexicon-shadow.tsv").
+    Set rulings to {}.
+    If [[rulings_path.is_symlink]]():
+        Do [[violation]]("lexicon-shadow-file", "is a symlink: " plus [[str]](rulings_path)).
+    If not [[rulings_path.is_file]]():
+        Give back rulings.
+    Set data to [[read_corpus_file]](rulings_path, "lexicon-shadow-file").
+    Set text to [[data.decode]]("utf-8").
+    Set line_list to [[text.split]]("\n").
+    Set header_line to [[line_list.pop]](0).
+    If header_line does not equal shadow_ruling_header:
+        Do [[violation]]("lexicon-shadow-file", "first line is not the 3-column header: " plus [[str]](rulings_path)).
+    For each line_text in line_list:
+        If line_text:
+            Set cell_list to [[line_text.split]]("\t").
+            If [[len]](cell_list) does not equal 3:
+                Do [[violation]]("lexicon-shadow-file", "row without 3 cells: " plus line_text).
+            Set ulex_cell to [[cell_list.pop]](0).
+            Set clex_cell to [[cell_list.pop]](0).
+            Set ruling_cell to [[cell_list.pop]](0).
+            If not ulex_cell:
+                Do [[violation]]("lexicon-shadow-file", "empty ulex_entry cell: " plus line_text).
+            If not clex_cell:
+                Do [[violation]]("lexicon-shadow-file", "empty clex_entries cell: " plus line_text).
+            If not ruling_cell:
+                Do [[violation]]("lexicon-shadow-file", "empty ruling for: " plus ulex_cell).
+            Set row_key to ulex_cell plus "\t" plus clex_cell.
+            Set dup_row to row_key is in rulings.
+            If dup_row:
+                Do [[violation]]("lexicon-shadow-file", "duplicate ruling row: " plus ulex_cell).
+            Do [[rulings.update]]({row_key: False}).
+    Give back rulings.
 
 Define [[check_lexicon]] taking guideline_path, ace_paths, docids:
     Set lexicon_path to [[guideline_path.joinpath]]("lexicon.ulex").
     Set data to [[read_corpus_file]](lexicon_path, "lexicon-file").
     Set text to [[data.decode]]("utf-8").
     Set all_tokens to [[ace_token_set]](ace_paths, docids).
-    Set clex_entries to [[clex_entry_set]]().
+    Set clex_maps to [[clex_entry_maps]]().
+    Set clex_entries to [[clex_maps.pop]](0).
+    Set clex_surfaces to [[clex_maps.pop]](0).
+    Set shadow_rulings to [[lexicon_shadow_rulings]](guideline_path).
+    Set ruled_count to 0.
     Set entries to <>.
     Set seen_entries to {}.
     Set live_lexemes to {}.
@@ -1232,9 +1285,31 @@ Define [[check_lexicon]] taking guideline_path, ace_paths, docids:
             Set entry_kind to [[entry_copy.pop]](0).
             Set entry_surface to [[entry_copy.pop]](0).
             Set entry_lemma to [[entry_copy.pop]](0).
+            Set covered to entry_surface is in clex_surfaces.
+            If covered:
+                Set clex_lines to [[clex_surfaces.get]](entry_surface).
+                Set clex_key to "".
+                For each clex_line in [[sorted]](clex_lines):
+                    If clex_key:
+                        Set clex_key to clex_key plus "+" plus clex_line.
+                    Otherwise:
+                        Set clex_key to clex_line.
+                Set shadow_key to normalized plus "\t" plus clex_key.
+                Set ruled to shadow_key is in shadow_rulings.
+                If ruled:
+                    Do [[shadow_rulings.update]]({shadow_key: True}).
+                    Set ruled_count to ruled_count plus 1.
+                Otherwise:
+                    Do [[violation]]("lexicon-shadow", "clex shares surface without ruling: " plus line_text plus " vs " plus clex_key).
             Set referenced to entry_surface is in all_tokens.
             If referenced:
                 Do [[live_lexemes.update]]({entry_lemma: True}).
+    For each row_key in shadow_rulings:
+        Set row_used to [[shadow_rulings.get]](row_key).
+        If not row_used:
+            Set key_parts to [[row_key.split]]("\t").
+            Set ulex_part to [[key_parts.pop]](0).
+            Do [[violation]]("lexicon-shadow", "stale ruling matches no live shadow: " plus ulex_part).
     For each entry in entries:
         Set entry_copy to [[list]](entry).
         Set kind to [[entry_copy.pop]](0).
@@ -1243,7 +1318,7 @@ Define [[check_lexicon]] taking guideline_path, ace_paths, docids:
         Set live to lemma is in live_lexemes.
         If not live:
             Do [[violation]]("lexicon-dead-lexeme", "no ace document references: " plus surface).
-    Do [[print]]("goal: lexicon ok " plus [[str]](lexicon_path) plus " " plus [[str]]([[len]](entries)) plus " entries " plus [[str]]([[len]](clex_entries)) plus " clex facts").
+    Do [[print]]("goal: lexicon ok " plus [[str]](lexicon_path) plus " " plus [[str]]([[len]](entries)) plus " entries " plus [[str]]([[len]](clex_entries)) plus " clex facts " plus [[str]](ruled_count) plus " ruled shadows").
 
 Define [[check_product_vocabulary]] taking guideline_path, docid:
     Set pl_path to [[guideline_path.joinpath]]("pl", docid plus ".pl").

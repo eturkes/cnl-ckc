@@ -1136,11 +1136,12 @@ def normalized_lexicon_entry(line_text):
     text = text.replace(" ", "")
     text = text.replace("\t", "")
     return text
-def clex_entry_set():
+def clex_entry_maps():
     clex_path = pathlib.Path(clex_path_text)
     data = read_corpus_file(clex_path, "clex-file")
     text = data.decode("utf-8")
     entries = {}
+    surfaces = {}
     for raw_line in text.split("\n"):
         line_text = raw_line.strip()
         if line_text:
@@ -1148,14 +1149,64 @@ def clex_entry_set():
             is_directive = line_text.startswith(":-")
             if not is_comment:
                 if not is_directive:
-                    entries.update({normalized_lexicon_entry(line_text): True})
-    return entries
+                    normalized = normalized_lexicon_entry(line_text)
+                    entries.update({normalized: True})
+                    fact = lexicon_entry(line_text)
+                    fact_copy = list(fact)
+                    fact_kind = fact_copy.pop(0)
+                    fact_surface = fact_copy.pop(0)
+                    surface_known = fact_surface in surfaces
+                    if not surface_known:
+                        surfaces.update({fact_surface: []})
+                    surface_list = surfaces.get(fact_surface)
+                    fact_present = normalized in surface_list
+                    if not fact_present:
+                        surface_list.append(normalized)
+    return [entries, surfaces]
+shadow_ruling_header = "ulex_entry\tclex_entries\truling"
+def lexicon_shadow_rulings(guideline_path):
+    rulings_path = guideline_path.joinpath("audit", "lexicon-shadow.tsv")
+    rulings = {}
+    if rulings_path.is_symlink():
+        violation("lexicon-shadow-file", "is a symlink: " + str(rulings_path))
+    if not rulings_path.is_file():
+        return rulings
+    data = read_corpus_file(rulings_path, "lexicon-shadow-file")
+    text = data.decode("utf-8")
+    line_list = text.split("\n")
+    header_line = line_list.pop(0)
+    if header_line != shadow_ruling_header:
+        violation("lexicon-shadow-file", "first line is not the 3-column header: " + str(rulings_path))
+    for line_text in line_list:
+        if line_text:
+            cell_list = line_text.split("\t")
+            if len(cell_list) != 3:
+                violation("lexicon-shadow-file", "row without 3 cells: " + line_text)
+            ulex_cell = cell_list.pop(0)
+            clex_cell = cell_list.pop(0)
+            ruling_cell = cell_list.pop(0)
+            if not ulex_cell:
+                violation("lexicon-shadow-file", "empty ulex_entry cell: " + line_text)
+            if not clex_cell:
+                violation("lexicon-shadow-file", "empty clex_entries cell: " + line_text)
+            if not ruling_cell:
+                violation("lexicon-shadow-file", "empty ruling for: " + ulex_cell)
+            row_key = ulex_cell + "\t" + clex_cell
+            dup_row = row_key in rulings
+            if dup_row:
+                violation("lexicon-shadow-file", "duplicate ruling row: " + ulex_cell)
+            rulings.update({row_key: False})
+    return rulings
 def check_lexicon(guideline_path, ace_paths, docids):
     lexicon_path = guideline_path.joinpath("lexicon.ulex")
     data = read_corpus_file(lexicon_path, "lexicon-file")
     text = data.decode("utf-8")
     all_tokens = ace_token_set(ace_paths, docids)
-    clex_entries = clex_entry_set()
+    clex_maps = clex_entry_maps()
+    clex_entries = clex_maps.pop(0)
+    clex_surfaces = clex_maps.pop(0)
+    shadow_rulings = lexicon_shadow_rulings(guideline_path)
+    ruled_count = 0
     entries = []
     seen_entries = {}
     live_lexemes = {}
@@ -1176,9 +1227,31 @@ def check_lexicon(guideline_path, ace_paths, docids):
             entry_kind = entry_copy.pop(0)
             entry_surface = entry_copy.pop(0)
             entry_lemma = entry_copy.pop(0)
+            covered = entry_surface in clex_surfaces
+            if covered:
+                clex_lines = clex_surfaces.get(entry_surface)
+                clex_key = ""
+                for clex_line in sorted(clex_lines):
+                    if clex_key:
+                        clex_key = clex_key + "+" + clex_line
+                    else:
+                        clex_key = clex_line
+                shadow_key = normalized + "\t" + clex_key
+                ruled = shadow_key in shadow_rulings
+                if ruled:
+                    shadow_rulings.update({shadow_key: True})
+                    ruled_count = ruled_count + 1
+                else:
+                    violation("lexicon-shadow", "clex shares surface without ruling: " + line_text + " vs " + clex_key)
             referenced = entry_surface in all_tokens
             if referenced:
                 live_lexemes.update({entry_lemma: True})
+    for row_key in shadow_rulings:
+        row_used = shadow_rulings.get(row_key)
+        if not row_used:
+            key_parts = row_key.split("\t")
+            ulex_part = key_parts.pop(0)
+            violation("lexicon-shadow", "stale ruling matches no live shadow: " + ulex_part)
     for entry in entries:
         entry_copy = list(entry)
         kind = entry_copy.pop(0)
@@ -1187,7 +1260,7 @@ def check_lexicon(guideline_path, ace_paths, docids):
         live = lemma in live_lexemes
         if not live:
             violation("lexicon-dead-lexeme", "no ace document references: " + surface)
-    print("goal: lexicon ok " + str(lexicon_path) + " " + str(len(entries)) + " entries " + str(len(clex_entries)) + " clex facts")
+    print("goal: lexicon ok " + str(lexicon_path) + " " + str(len(entries)) + " entries " + str(len(clex_entries)) + " clex facts " + str(ruled_count) + " ruled shadows")
 def check_product_vocabulary(guideline_path, docid):
     pl_path = guideline_path.joinpath("pl", docid + ".pl")
     data = read_corpus_file(pl_path, "product-vocabulary")
