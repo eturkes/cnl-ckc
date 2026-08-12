@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec04-imp03',ace_sha256('5fdd549cbdae5ecd0399bfa22c7d29b17160dcd97470f4fdc3f5c62ab8d00a08'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-rec04-imp03',ace_sha256('5fdd549cbdae5ecd0399bfa22c7d29b17160dcd97470f4fdc3f5c62ab8d00a08'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: An opioid-dosage-recommendation applies during an opioid-initiation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(1),[]),'opioid-dosage-recommendation',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp03',1,ref(1),[]),na,eq,1).

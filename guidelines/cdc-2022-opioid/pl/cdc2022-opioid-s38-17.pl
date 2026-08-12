@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s38-17',ace_sha256(e8d7a7031f22e66b4a25643d11c448382c89230053555806eb387b3dcecd5c89),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-s38-17',ace_sha256(e8d7a7031f22e66b4a25643d11c448382c89230053555806eb387b3dcecd5c89),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: Every clinician may explain a slow-withdrawal-minimizing-taper-expectation to a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-17',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-17',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-17',1,ref(2),[A]),'slow-withdrawal-minimizing-taper-expectation',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

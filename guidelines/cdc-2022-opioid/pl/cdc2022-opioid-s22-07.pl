@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s22-07',ace_sha256('8f60ff03f3cd98a2f3ac7863d487e7c68a3cf54ab4b3b9748cc3784c46357802'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-s22-07',ace_sha256('8f60ff03f3cd98a2f3ac7863d487e7c68a3cf54ab4b3b9748cc3784c46357802'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: If a patient has an opioid-use-disorder-sign then every clinician should address a patient-concern with the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s22-07',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-use-disorder-sign',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s22-07',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s22-07',1,ref(5),[A,B,C,D]),'patient-concern',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-use-disorder-sign',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

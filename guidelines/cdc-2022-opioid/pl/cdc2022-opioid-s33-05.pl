@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s33-05',ace_sha256(e6f6ec7a6415cfcce825430de29e48b17830cc36d9f095c0a62f70947fe13f95),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-s33-05',ace_sha256(e6f6ec7a6415cfcce825430de29e48b17830cc36d9f095c0a62f70947fe13f95),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: Every clinician should heed a particular-caution during a transdermal-fentanyl-prescription.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s33-05',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s33-05',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s33-05',1,ref(2),[A]),'particular-caution',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

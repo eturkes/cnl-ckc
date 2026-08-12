@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp10',ace_sha256('97da0e85f7e622b048c265d2b9d67662082d987f01ae10af1b1288220f20ade2'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-rec02-imp10',ace_sha256('97da0e85f7e622b048c265d2b9d67662082d987f01ae10af1b1288220f20ade2'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: Every clinician can consider a tricyclic-antidepressant for a neuropathic-pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp10',1,box(1),[A]),can) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp10',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',1,ref(2),[A]),'tricyclic-antidepressant',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

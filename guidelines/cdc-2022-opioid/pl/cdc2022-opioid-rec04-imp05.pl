@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec04-imp05',ace_sha256('37c5a2b7c0dcf3e05e5a4daea814b5528c9cb04cf3a5c1095712eb7ba50abbbb'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-rec04-imp05',ace_sha256('37c5a2b7c0dcf3e05e5a4daea814b5528c9cb04cf3a5c1095712eb7ba50abbbb'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: If a patient does not take an opioid then every clinician can determine a lowest-effective-dose with a product-labeling and can calibrate a lowest-effective-dose with a pain-severity.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp05',1,box(2),[A,B]),can) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,C,-), guideline_entity(C,D,opioid,countable), guideline_cardinality(C,D,na,eq,1), guideline_event(C,E,take), guideline_arg(C,E,1,A), guideline_arg(C,E,2,D), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp05',1,box(2),[A,B]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp05',1,ref(5),[A,B]),'lowest-effective-dose',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,C,-), guideline_entity(C,D,opioid,countable), guideline_cardinality(C,D,na,eq,1), guideline_event(C,E,take), guideline_arg(C,E,1,A), guideline_arg(C,E,2,D), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).

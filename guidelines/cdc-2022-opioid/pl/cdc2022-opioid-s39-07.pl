@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s39-07',ace_sha256('416d90f8e9944c97fbb389bfceb6e4e6fc97bcd6ea18dca4e023d86867202eaa'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-s39-07',ace_sha256('416d90f8e9944c97fbb389bfceb6e4e6fc97bcd6ea18dca4e023d86867202eaa'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: If a patient has a current-opioid-dosage-overdose-history then every clinician may consider a rapid-taper for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s39-07',1,box(1),[A,B,C,D]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'current-opioid-dosage-overdose-history',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s39-07',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s39-07',1,ref(5),[A,B,C,D]),'rapid-taper',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'current-opioid-dosage-overdose-history',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

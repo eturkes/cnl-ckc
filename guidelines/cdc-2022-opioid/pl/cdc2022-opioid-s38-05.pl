@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s38-05',ace_sha256(c49aa3860c2845ea3caabdac7f017710a9ea6d6d93a2a7a7b33535164cf9c837),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
+guideline_document('cdc2022-opioid-s38-05',ace_sha256(c49aa3860c2845ea3caabdac7f017710a9ea6d6d93a2a7a7b33535164cf9c837),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
 % S1: Every clinician may advise a patient about a frequent-and-time-diminishing-opioid-withdrawal-pain-worsening.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-05',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-05',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-05',1,ref(2),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

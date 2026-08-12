@@ -178,34 +178,34 @@ S24-22	source/rec01-05-body-extraction.txt	p24	Rec 2 > Implementation considerat
 S25-01	source/rec01-05-body-extraction.txt	p25	Rec 2 > Implementation considerations	ace(cdc2022-opioid-rec02-imp25)
 S25-02	source/rec01-05-body-extraction.txt	p25	Rec 2 > Implementation considerations	ace(cdc2022-opioid-rec02-imp26)
 S25-03	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	restates(S20-04)
-S25-04	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
-S25-05	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
+S25-04	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	ace(cdc2022-opioid-s25-04)
+S25-05	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	ace(cdc2022-opioid-s25-05)
 S25-06	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	restates(S24-08)
 S25-07	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
-S25-08	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
-S25-09	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
+S25-08	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	ace(cdc2022-opioid-s25-08)
+S25-09	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	ace(cdc2022-opioid-s25-09)
 S25-10	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S25-11	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(external: reports third-party guidance or policy)
-S26-01	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
+S26-01	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	ace(cdc2022-opioid-s26-01)
 S26-02	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	restates(S24-02)
 S26-03	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S26-04	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(external: reports third-party guidance or policy)
 S26-05	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S26-06	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	restates(S24-01)
-S26-07	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
-S26-08	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
-S26-09	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
+S26-07	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	ace(cdc2022-opioid-s26-07)
+S26-08	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	ace(cdc2022-opioid-s26-08)
+S26-09	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	ace(cdc2022-opioid-s26-09)
 S26-10	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S21-05)
 S26-11	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S27-01	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-04)
 S27-02	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-05)
 S27-03	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-06)
 S27-04	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-06)
-S27-05	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
+S27-05	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	ace(cdc2022-opioid-s27-05)
 S27-06	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-07)
 S27-07	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S27-08	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-08)
-S27-09	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
+S27-09	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	ace(cdc2022-opioid-s27-09)
 S27-10	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	uncovered(descriptive: reports common practice and hedged endorsement without a guideline directive)
 S27-11	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-11)
 S28-01	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-12)
@@ -217,19 +217,19 @@ S28-06	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Op
 S28-07	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	uncovered(aim: states an aspiration without operative directive)
 S28-08	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	uncovered(descriptive: states goal-flexibility context without an operative directive)
 S28-09	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
-S28-10	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
-S28-11	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S28-10	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s28-10)
+S28-11	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s28-11)
 S28-12	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
-S28-13	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S28-13	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s28-13)
 S28-14	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-18)
 S28-15	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-19)
 S28-16	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-20)
 S28-17	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-21)
 S28-18	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-22)
 S29-01	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S25-01)
-S29-02	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
-S29-03	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
-S29-04	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S29-02	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s29-02)
+S29-03	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s29-03)
+S29-04	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s29-04)
 S29-05	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-02)
 S29-06	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-03)
 S29-07	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-04)
@@ -242,21 +242,21 @@ S29-13	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Op
 S29-14	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-13)
 S29-15	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-14)
 S29-16	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-15)
-S29-17	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S29-17	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s29-17)
 S29-18	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-16)
-S29-19	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
-S29-20	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S29-19	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s29-19)
+S29-20	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	ace(cdc2022-opioid-s29-20)
 S29-21	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(B3-10)
 S29-22	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S29-23	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S30-01	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	uncovered(aim: states an aspiration without operative directive)
-S30-02	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	pending
-S30-03	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	pending
+S30-02	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	ace(cdc2022-opioid-s30-02)
+S30-03	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	ace(cdc2022-opioid-s30-03)
 S30-04	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
-S30-05	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	pending
-S30-06	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	pending
-S30-07	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	pending
-S30-08	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	pending
+S30-05	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	ace(cdc2022-opioid-s30-05)
+S30-06	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	ace(cdc2022-opioid-s30-06)
+S30-07	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	ace(cdc2022-opioid-s30-07)
+S30-08	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain	ace(cdc2022-opioid-s30-08)
 S30-09	source/rec01-05-body-extraction.txt	p30	Rec 3 > Recommendation statement	restates(B3-05)
 S30-10	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp01)
 S30-11	source/rec01-05-body-extraction.txt	p30	Rec 3 > Implementation considerations	ace(cdc2022-opioid-rec03-imp02)
@@ -272,8 +272,8 @@ S31-03	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	rest
 S31-04	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	restates(S30-11)
 S31-06	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S32-01	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	restates(S30-14)
-S32-02	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	pending
-S32-03	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	pending
+S32-02	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	ace(cdc2022-opioid-s32-02)
+S32-03	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	ace(cdc2022-opioid-s32-03)
 S32-04	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	restates(S30-15)
 S32-05	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	restates(S30-16)
 S32-06	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	restates(S30-17)
