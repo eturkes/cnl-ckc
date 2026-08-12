@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec04-imp09',ace_sha256('952838224a7389bfe35c23a5a6aef985103b74a6150faf3306945e37d972da3b'),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec04-imp09',ace_sha256('952838224a7389bfe35c23a5a6aef985103b74a6150faf3306945e37d972da3b'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: Every clinician should evaluate a further-dosage-increase with an individualized-benefit-risk-assessment.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp09',1,ref(2),[A]),'further-dosage-increase',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

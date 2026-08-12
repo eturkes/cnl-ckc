@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec01-imp03',ace_sha256('6c6d88e20b813c264b4044b1351ecee8e46c3da243257b0023954cc0e9e11f5e'),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec01-imp03',ace_sha256('6c6d88e20b813c264b4044b1351ecee8e46c3da243257b0023954cc0e9e11f5e'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: Every clinician should prescribe an as-needed-opioid for a moderate-to-severe-pain and should advise an as-needed-opioid for a moderate-to-severe-pain and should avoid a scheduled-opioid.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec01-imp03',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec01-imp03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',1,ref(2),[A]),'as-needed-opioid',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec03-imp07',ace_sha256(b78773db0f9f29f40dd618c6dddac4aafae15b5a5a02fcf51cdcceccedeca72f),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec03-imp07',ace_sha256(b78773db0f9f29f40dd618c6dddac4aafae15b5a5a02fcf51cdcceccedeca72f),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: If a clinician does not understand a methadone-risk-profile then the clinician should not consider a methadone-treatment for a pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec03-imp07',1,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'methadone-risk-profile',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,understand), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec03-imp07',1,box(2),[A]),'$guideline_id'(context,'cdc2022-opioid-rec03-imp07',1,box(3),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'methadone-risk-profile',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,understand), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).

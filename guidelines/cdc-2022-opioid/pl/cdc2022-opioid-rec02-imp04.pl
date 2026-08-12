@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp04',ace_sha256(b1dcac5936c91963eb5d0eee6083bc55ecd456c51aadf8392b896a2b6ae7db40),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec02-imp04',ace_sha256(b1dcac5936c91963eb5d0eee6083bc55ecd456c51aadf8392b896a2b6ae7db40),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: Every health-insurer can increase a therapy-reimbursement and can increase an effective-nonpharmacologic-therapy-access.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp04',1,box(1),[A]),can) :- guideline_entity(actual,A,'health-insurer',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp04',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp04',1,ref(2),[A]),'therapy-reimbursement',countable) :- guideline_entity(actual,A,'health-insurer',countable), guideline_cardinality(actual,A,na,eq,1).

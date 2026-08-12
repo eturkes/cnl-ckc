@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp19',ace_sha256('5c7643a39a8ab1afd1d22278d61b013fcf39066e982dd270bdba6c11b60386b2'),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec05-imp19',ace_sha256('5c7643a39a8ab1afd1d22278d61b013fcf39066e982dd270bdba6c11b60386b2'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: If a clinician considers an opioid-taper during a pregnancy then the clinician should access an appropriate-expertise.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp19',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,pregnancy,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,consider), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,during,C).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp19',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp19',1,ref(5),[A,B,C,D]),'appropriate-expertise',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,pregnancy,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,consider), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,during,C).

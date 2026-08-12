@@ -100,7 +100,7 @@ S19-13	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerat
 S20-01	source/rec01-05-body-extraction.txt	p20	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp04)
 S20-02	source/rec01-05-body-extraction.txt	p20	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp05)
 S20-03	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale	uncovered(aim: states an aspiration without operative directive)
-S20-04	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale	pending
+S20-04	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale	ace(cdc2022-opioid-s20-04)
 S20-05	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	uncovered(external: reports third-party guidance or policy)
 S20-06	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	uncovered(external: reports third-party guidance or policy)
 S20-07	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	restates(S24-02)
@@ -108,12 +108,12 @@ S20-08	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > No
 S20-09	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(external: reports third-party guidance or policy)
 S20-10	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(external: reports third-party guidance or policy)
 S20-11	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(external: reports third-party guidance or policy)
-S20-12	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
+S20-12	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	ace(cdc2022-opioid-s20-12)
 S21-01	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(aim: states an aspiration without operative directive)
-S21-02	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
-S21-03	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
+S21-02	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	ace(cdc2022-opioid-s21-02)
+S21-03	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	ace(cdc2022-opioid-s21-03)
 S21-04	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(descriptive: states context without an operative directive)
-S21-05	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
+S21-05	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	ace(cdc2022-opioid-s21-05)
 S21-06	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons	uncovered(external: reports third-party guidance or policy)
 S21-07	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons	uncovered(external: reports third-party guidance or policy)
 S21-08	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons	uncovered(external: reports third-party guidance or policy)
@@ -124,33 +124,33 @@ S21-12	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Op
 S22-01	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	uncovered(external: reports third-party guidance or policy)
 S22-02	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(B3-02)
 S22-03	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-11)
-S22-04	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S22-04	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s22-04)
 S22-05	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-12)
 S22-06	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	uncovered(descriptive: fuses recommendations 8, 9, and 11 duties without adding a directive; canonical at B3-12, B3-13, B3-15)
-S22-07	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S22-08	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S22-07	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s22-07)
+S22-08	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s22-08)
 S22-09	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S20-01)
 S22-10	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S20-01)
-S22-11	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S22-11	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s22-11)
 S22-12	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S20-02)
-S22-13	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S22-13	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s22-13)
 S22-14	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-13)
-S23-01	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-02	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-03	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-04	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-05	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-06	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S23-01	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-01)
+S23-02	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-02)
+S23-03	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-03)
+S23-04	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-04)
+S23-05	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-05)
+S23-06	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-06)
 S23-07	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-12)
-S23-08	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-09	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-10	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-11	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-12	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-13	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-14	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-15	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-16	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S23-08	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-08)
+S23-09	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-09)
+S23-10	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-10)
+S23-11	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-11)
+S23-12	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-12)
+S23-13	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-13)
+S23-14	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-14)
+S23-15	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-15)
+S23-16	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	ace(cdc2022-opioid-s23-16)
 S23-17	source/rec01-05-body-extraction.txt	p23	Rec 2 > Recommendation statement	restates(B3-03)
 S23-18	source/rec01-05-body-extraction.txt	p23	Rec 2 > Implementation considerations	ace(cdc2022-opioid-rec02-imp01)
 S23-19	source/rec01-05-body-extraction.txt	p23	Rec 2 > Implementation considerations	ace(cdc2022-opioid-rec02-imp02)

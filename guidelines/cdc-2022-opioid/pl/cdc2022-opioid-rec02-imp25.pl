@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp25',ace_sha256(c67751600154b9f5d8f90c2978a808e84302af9de7998b34dda2c0ec0262bcbd),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec02-imp25',ace_sha256(c67751600154b9f5d8f90c2978a808e84302af9de7998b34dda2c0ec0262bcbd),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: Every clinician should review an available low-cost-pain-management-option for a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp25',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp25',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp25',1,ref(2),[A]),'low-cost-pain-management-option',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

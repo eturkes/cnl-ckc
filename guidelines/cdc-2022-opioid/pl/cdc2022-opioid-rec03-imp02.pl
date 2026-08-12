@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec03-imp02',ace_sha256(af57f76352930e9a3d84aa7d3007b87fc5d1a0e26fe3aacfb547e3f358678d81),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec03-imp02',ace_sha256(af57f76352930e9a3d84aa7d3007b87fc5d1a0e26fe3aacfb547e3f358678d81),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: Every clinician should reserve an ER-LA-opioid for a severe-continuous-pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec03-imp02',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec03-imp02',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec03-imp02',1,ref(2),[A]),'ER-LA-opioid',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

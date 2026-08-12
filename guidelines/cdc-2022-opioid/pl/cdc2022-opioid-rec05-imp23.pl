@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp23',ace_sha256('4ee680699637e85007499508ec9181afcb9d44cf68aaeeb2345974d0b5cb73cc'),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
+guideline_document('cdc2022-opioid-rec05-imp23',ace_sha256('4ee680699637e85007499508ec9181afcb9d44cf68aaeeb2345974d0b5cb73cc'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
 % S1: Every clinician can use a periodic-and-strategic-motivational-question and can use a periodic-and-strategic-motivational-statement.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp23',1,box(1),[A]),can) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp23',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp23',1,ref(2),[A]),'periodic-and-strategic-motivational-question',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
