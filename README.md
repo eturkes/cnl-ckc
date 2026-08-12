@@ -7,7 +7,7 @@ executable Prolog through controlled natural language:
    `guidelines/<id>/source/` with digests, rights, and attribution in that
    guideline's `README.md`.
 2. **Normalize** — recommendations are authored as Attempto Controlled
-   English (ACE), one document per recommendation, under
+   English (ACE), one document per ruled source region, under
    `guidelines/<id>/ace/`, with domain vocabulary in
    `guidelines/<id>/lexicon.ulex`.
 3. **Compile** — `tools/goal.py` stages the vendored APE parser and compiles
@@ -188,9 +188,9 @@ term per fact group and per rule variant, where `Facts` is that group's
 own positive body under a witness substitution — NAF boxes contribute
 nothing, by design — and `Heads` its clause heads under the same
 substitution. The compiler asserts each witness ahead of the document's
-rule clauses, proves every head under bounded search — a depth limit and
-an inference limit, either exceeded counting as underivable — then
-retracts. A group whose heads stay non-ground under
+rule clauses, proves every head under bounded search — depth 4000 inside
+1,000,000 inferences, either bound exceeded counting as underivable —
+then retracts. A group whose heads stay non-ground under
 its own witness rejects with `proof, nonground_obligation(…)`; one whose
 heads do not derive rejects with `proof, underivable_obligation(…)`. Both
 exit 1. Witness terms carry the document's own document, sentence, and
@@ -209,6 +209,36 @@ silently repair them, and negation-as-failure is evaluated against the
 composition it will actually run in. It reports
 `ace_to_pl aggregate ok <N> documents <G> obligations`.
 
+Payloads are evidence, not authority: `<G>` is checked against the
+composition rather than taken from the payload stream. Before any head is
+proved, the obligation set must cover exactly the sentence identities the
+loaded documents themselves carry (`missing_obligation` /
+`extra_obligation`), its `(document, sentence, variant)` keys must be
+unique (`duplicate_obligation`) with variants numbered `1..K` per
+sentence (`variant_sequence`), no group may prove an empty head list
+(`empty_obligation`), and a nonempty payload file must end in the newline
+its last term wrote (`check_load, payload_bytes`). An emptied, truncated,
+repeated or misattributed payload therefore fails the replay instead of
+shrinking it. Manifest rows bind product to payload for provenance;
+replay soundness rests on that composition-wide coverage. One residue is
+open by construction: dropping the LAST variant of a multi-variant
+sentence leaves coverage complete and variant numbering contiguous, and
+the frozen ABI carries no per-sentence variant count to check it against.
+
+Compiled documents are a definite-clause program, so termination is the
+consuming engine's responsibility, not a property the schema can promise:
+facts and derived heads share one vocabulary by design (that is what lets
+one document's rules consume another's clauses), which also lets an
+authored rule whose consequent entity feeds its own antecedent form a
+cycle. Under naive SLD such a corpus can diverge in one clause order and
+succeed in another; an engine with tabling or bottom-up evaluation is
+immune. This repository's own gates are fail-closed against it: every
+obligation is proved under the bounded search above, so a divergent
+branch is cut by those bounds and reported as a failed obligation
+instead of hanging. In the shipped corpus no clause is left-recursive —
+no head unifies with its own leftmost body goal — which is the shape
+that makes an open query's termination depend on load order.
+
 Authoring notes (v1): an ACE document states guideline knowledge and
 nothing else — no witness seed facts, no proper-name stand-ins, no
 authored probe queries, since the compiler derives its own obligations —
@@ -218,9 +248,12 @@ then B" into separate sentences. Keep quantified restrictors out of
 modal complements: a universally quantified rule nested inside a modal
 box rejects (`operator_scoped_rule`), so state the quantification in the
 antecedent and let the modal box wrap only the consequent. A
-prepositional phrase attaches to the verb; modify a noun with a relative
-clause or `of`. Count nouns take an explicit determiner. `for` as a
-preposition needs a `prep(for,for)` user-lexicon entry.
+prepositional phrase attaches to the verb. Modifying a noun with `of`
+rejects (`condition_shape(relation(A,of,B))`) — `every clinician of a
+clinic` becomes either a relative clause, `every clinician who works at
+a clinic`, or one compound noun with its own lexicon entry,
+`every clinic-clinician`. Count nouns take an explicit determiner. `for`
+as a preposition needs a `prep(for,for)` user-lexicon entry.
 
 ## Operating
 
@@ -260,11 +293,12 @@ While a document is in progress, a round advances it one increment:
 
 1. **Extract** — the next batch of normative statements, verbatim, into
    `guidelines/<id>/source/` evidence files.
-2. **Normalize** — one ACE document per statement under `ace/` plus the
+2. **Normalize** — one ACE document per ruled source region under `ace/`,
+   holding one or more source-anchored knowledge sentences, plus the
    shared `lexicon.ulex` (supported constructs: the header of
    `vendor/ape/prolog/ace_to_pl.pl`). Each ACE document is a minimal
-   faithful projection of its statement; the guideline README states honest
-   coverage.
+   faithful projection of its region; the projection-notes ledger and the
+   guideline README's coverage statement use that same unit.
 3. **Compile** — `python3 -P tools/goal.py compile <id>`. A rejection means
    the ACE or lexicon is adjusted first; only a genuinely new construct
    extends the `ace_to_pl.pl` translation, minimally, keeping totality

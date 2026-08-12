@@ -337,6 +337,7 @@ def collect_red_probes():
     probes = []
     ace_stems = []
     ulex_stems = []
+    expect_stems = []
     for entry in sorted(red_dir.iterdir()):
         entry_name = entry.name
         regular = entry.is_file()
@@ -347,6 +348,7 @@ def collect_red_probes():
             violation("red-entry", "not a regular file: " + entry_name)
         is_ace = entry_name.endswith(".ace")
         is_ulex = entry_name.endswith(".ulex")
+        is_expect = entry_name.endswith(".expect")
         if is_ace:
             class_name = red_probe_class(entry_name)
             expected_exit = red_expected_exit(class_name)
@@ -357,11 +359,22 @@ def collect_red_probes():
             if is_ulex:
                 ulex_stems.append(entry_name.removesuffix(".ulex"))
             else:
-                violation("red-entry", "unsupported entry: " + entry_name)
+                if is_expect:
+                    expect_stems.append(entry_name.removesuffix(".expect"))
+                else:
+                    violation("red-entry", "unsupported entry: " + entry_name)
     for ulex_stem in ulex_stems:
         paired = ulex_stem in ace_stems
         if not paired:
             violation("red-entry", "orphan ulex without ace probe: " + ulex_stem)
+    for expect_stem in expect_stems:
+        expect_paired = expect_stem in ace_stems
+        if not expect_paired:
+            violation("red-entry", "orphan expect without ace probe: " + expect_stem)
+    for ace_stem in ace_stems:
+        pinned = ace_stem in expect_stems
+        if not pinned:
+            violation("red-entry", "probe lacks expect pin: " + ace_stem)
     if not probes:
         violation("red-dir", "no red probes found")
     return probes
@@ -388,6 +401,13 @@ def run_red_probe(scratch_path, swipl_executable, stage_path, probe_path, class_
         cleanup_violation(scratch_path, "red-stderr", "stderr is not one LF line for probe: " + probe_name)
     if not final_newline:
         cleanup_violation(scratch_path, "red-stderr", "stderr is not one LF line for probe: " + probe_name)
+    expect_path = probe_path.with_suffix(".expect")
+    expect_present = expect_path.is_file()
+    if not expect_present:
+        cleanup_violation(scratch_path, "red-expect", "missing expect pin for probe: " + probe_name)
+    expect_bytes = expect_path.read_bytes()
+    if result.stderr != expect_bytes:
+        cleanup_violation(scratch_path, "red-expect", "stderr differs from expect pin for probe: " + probe_name)
     stderr_text = result.stderr.decode("utf-8", errors="replace")
     expected_prefix = "ace_to_pl_error(" + class_name + ","
     if not stderr_text.startswith(expected_prefix):

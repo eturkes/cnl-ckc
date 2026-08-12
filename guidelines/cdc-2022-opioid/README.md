@@ -59,8 +59,10 @@ was published with.
   and other skipped KK ordinals mark impl-list regions ruled
   `restates(...)` or `uncovered(...)` in `coverage.tsv`, their ordinals
   held reserved).
-  Each holds one universal rule projecting the region's directive — or,
-  for regions stating a benefit or possibility rather than an imperative,
+  Each holds one or more knowledge sentences — typically universal rules
+  (21 documents hold a single sentence, the rest 2 to 25) — projecting the
+  region's directive, or, for regions stating a benefit or possibility
+  rather than an imperative,
   the clinician consideration it supports, per `audit/projection-notes.tsv`;
   implementation considerations carry no category/evidence parenthetical. Three non-clinician actor regions use their own classes:
   S24-02 `health-insurer-or-health-system` (neutral), S36-03

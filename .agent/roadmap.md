@@ -666,354 +666,118 @@ Deferred classes, from the 46-org measurement
   series) would cut the compendium to ≈500 rows; revisiting it is a
   header-level decision, not a harvest decision.
 
-## M3 — projection redesign (clinician-verifiable ACE) — IMPLEMENTED
+## M3 — projection redesign (clinician-verifiable ACE) — REVIEWED
 
-Gates all further ACE authoring (`.agent/queue.md` holds the ACE batches;
-the gate lifts at M3 REVIEWED — the review close alone edits the queue).
-Settled direction:
+Goal: replace fixture-bearing legacy projections with source-anchored,
+knowledge-only ACE; freeze an engine-portable public Prolog ABI; derive and
+replay proof obligations per document + aggregate; migrate the complete
+`cdc-2022-opioid` corpus without changing coverage/census/docid custody.
 
-- ACE documents carry knowledge sentences only. Embedded fixtures leave:
-  compile/check derives each rule's witness + probe query mechanically
-  (equal assurance — the same modus ponens, generated); `pn_sg` fixture
-  entries leave the lexicons; `tests/red/` keeps the rejection boundary.
-- `ace_to_pl` grows to the DRS shapes natural sentences produce —
-  transitive verbs, PP modifiers, plural objects, multi-condition
-  consequents, modal wrappers (`should`/`must`/`can`/`may` all parse
-  natively in the vendored APE), if-then antecedents with
-  cross-implication anaphora — totality + reject-unknown retained.
-- Lexicon = small reusable domain vocabulary (nouns/verbs/preps,
-  O(domain) not O(statements)); hyphens only for genuine compounds; the
-  77 per-statement mega-verb pairs dissolve.
-- Authoring rule: preserve the source's own conditions, objects, numbers
-  and modality textually; never add structure without a source anchor —
-  bounds loss and over-engineering alike, and excludes probabilities
-  from the canonical layer (normative text states none; strength =
-  reified class facts). Modality compiles shallowly (marker, no
-  inference semantics); defeasibility (exceptions/conflicts) is the
-  expected first semantic deepening — s(CASP)/ASP-shaped, adopted only
-  on a named consumer question, as a backend swap (corpus untouched).
-  Backend-portability spike rejected: reversibility is architectural
-  (ACE = source of truth; a backend swap = one compiler backend +
-  recompile).
-- Region ↔ ACE document stays the traceability unit; sentences per
-  region free. Re-author the 79 cdc-2022-opioid documents + lexicon
-  under the new contract; `coverage.tsv`/projection-notes/census keys
-  (regions, docids) unchanged.
-- The compiled schema becomes a public interface here: document +
-  version it (Standing direction).
+Terminal state:
 
-Plan. Evidence: all 17 target constructs parse in the vendored APE with
-verbatim DRS captured — the compiler is the sole growth surface; corpus =
-79 docs (12 Box-3 + 67 implementation), lexicon 154 mega-verb + 91
-fixture-pn + 20 noun entries, coverage ledgers byte-pinned at the plan
-commit (coverage.tsv SHA-256 `674f3537…`, census-map whole-file
-`49f0f096…`, projection-notes 79 ordered docid/region pairs `d0e16242…`).
-Wave reports `.scratch/agents/{map,scout,res,plan,planrev}-m3*.md`;
-regeneration = re-run planning waves from the settled direction. Probe
-corpus seed = `.scratch/m3scout/probes/` (17 ace+ulex pairs + extraction
-recipe). Aggregate-load probe: consulting all 79 compiled docs today
-yields 242 static-procedure redefinitions and one surviving
-`guideline_document/3` — the public schema REQUIRES a multi-document
-composition contract; per-doc greenness proves nothing about the corpus
-KB.
+- Corpus = 79 ACE = 79 compiled Prolog documents, one document per ruled
+  source region, sentences per region free (21 single-sentence, rest 2-25);
+  zero authored questions, zero witness fixtures.
+- Schema v1 = frozen nine-indicator ABI documented in root README + compiler
+  header; every corpus document compiles explicitly on v1. Legacy fact/rule
+  emission stays byte-frozen; authored questions reject on both paths.
+- Proof = 257 generated obligations, discharged per document and forward +
+  reverse aggregate under bounded search (depth 4000 inside 10^6 inferences;
+  either bound exceeded = underivable).
+- Lexicon = 487 live entries, zero `pn_sg`, zero 77-roster mega lemmas.
+- Custody = `audit/projection-notes.tsv` total, duplicate-free, set-equal to
+  the ACE inventory; `coverage.tsv` + census keys unchanged through M3.
+- Queue gate lifted in this review-close commit; further ACE authoring runs
+  under the frozen v1 knowledge-only contract.
 
-Units (kernel = MAIN-authored full battery; prod behind the MAIN-authored
-migration validator; MAIN aim <180K/unit; the compiler header updates in
-the same unit as every accepted-shape change; durable gates rerun from
-committed state — scratch scripts = pre-commit evidence with regeneration
-contracts, byte-pinned per use; no absolute workstation paths in gate
-identities):
+Governing authoring rulings:
 
-- M3.1 DONE (kernel, oracle) — candidate schema + core projector.
-  Shipped: explicit `schema=v1` selector (trailing argv token; absent =
-  legacy, never content-sniffed) + closed reserved vocabulary
-  `guideline_{document,entity,cardinality,event,arg,pp,property}` with
-  `Context` as argument 1 (M3.2 operators need no signature change) and
-  Skolem identities `'$guideline_id'(product,Doc,S,ref(N),Deps)`. Fork F1
-  ruled SKO over ARG: SKO's facts and derived heads share one vocabulary,
-  so rule bodies consume other documents' clauses by ordinary resolution
-  (proven by a two-rule chaining fixture in the gate), while ARG's
-  `ckc_object/5` descriptor IR cannot chain — its own spike named that
-  freeze-blocking. Collision class ruled `unsupported` /
-  `reserved_name_collision(<lemma>)` + `reserved_constructor_collision(
-  <compound>)`, `safety` staying variable-binding only. P9 ordinals ruled
-  to expansion-traversal first occurrence (recomputable from the emitted
-  document); P1 totality is structural — one left-to-right expansion, any
-  unexpandable condition rejects, so leftovers are unreachable rather than
-  detected. Modality/negation/disjunction/group/`named`/non-pos polarity
-  all reject with canonical details, deferring to M3.2. Evidence:
-  `gate_m3u1.py` 17 green x (layout, per-sentence provenance, head-var
-  safety, double-compile identity, consult) + 17 canonical reds +
-  aggregate co-load both orders; `diff_m3u1.py` vs an independent
-  contract-only oracle = 8/9 green cases clause-identical, 8/8 rejects
-  agreed, sole divergence = oracle ordinal numbering (ruled, non-semantic);
-  79/79 legacy documents byte-identical, all 11 reds (incl. the new v1
-  collision red) keeping class + exit. main=84% 202K/240K,
-  mate=80% 192K/240K.
-  Teammate-produced parse-validated shape manifest FIRST (79 regions:
-  source features -> candidate ACE -> raw DRS family -> admit/defer;
-  bounds compiler scope by real corpus need before MAIN codes). Then
-  `ace_to_pl.pl` event-cluster normalization: transitive/ditransitive,
-  `modifier_pp` chains, plurals + `object/6` comparison ops preserved
-  verbatim (eq|geq|greater|leq|less|exactly|na + measurement units, no
-  arithmetic semantics), `property/3`+be pairs, relative clauses,
-  conjunctive antecedents, multi-cluster consequents. Rulings landed:
-  D1 totality restated — sentence i emits ordered K_i>=1 clauses, every
-  anchored DRS condition consumed exactly once, any leftover rejects the
-  document; D8 disjunctive consequent stays rejected, disjunctive
-  antecedent admitted only Horn-equivalently on a manifest-named source
-  case, NP groups stay explicit `has_part`; composition + namespace
-  design: aggregate 79-file load contract (portable, warning-as-failure
-  gate target) + reserved schema-predicate indicators with deterministic
-  collision rejection (red-cased). Schema doc = README section, explicitly
-  CANDIDATE until M3.3 freezes it. Old corpus still compiles
-  byte-identically; all legacy rejection classes keep their reds.
-- M3.2 DONE (kernel, oracle) — modal/negation/strength/frontend.
-  Shipped on the v1 path, legacy renderer byte-frozen (79/79 committed
-  docs recompile byte-identically; `guidelines/` clean after a fresh
-  compile). F2 ctx-edge as contracted: Context =
-  `'$guideline_id'(context,DocId,S,box(B),Deps)` +
-  `guideline_operator(Outer,Inner,Op)` edges (Op ∈
-  should|must|can|may|'-'), edge before payload, `box(B)`
-  whole-sentence preorder, Deps = top-level antecedent domains ONLY
-  (P14 Q4: operator/NAF-box domains contribute nothing); antecedent
-  boxes bind existential edge vars, mint no document-local ids. P3
-  singleton consequent currying; P5 Horn split (one `v/2`, two
-  contiguous variants, unsplit ordinals, arm-appended Deps); P4 NAF
-  matrix (antecedent `\+` over box goals with binding/escape safety
-  scans — ACE-surface-unreachable per Q3, white-box-probed; consequent/
-  root/nested = canonical rejects); AD02 precedence: a forbidden-
-  POSITION NAF classifies without descent. P6 strength = plain fact
-  machinery. D9 `for` AMENDED: ulex `prep(for,for)` alone, NO vendor
-  fork (the planned functionwords.pl deletion had no red baseline;
-  vendor/ape stays byte-frozen). Red set −2+2 = 11. README
-  candidate-schema updated (operator row, grammar fence, Deps
-  accessibility boundary, NAF aggregate scope, authoring notes).
-  Corpus: 76/79 parse-validated candidates compile v1 green;
-  B3-06/B3-07/B3-15 = ruled authoring reds re-authoring at M3.4.
-  Evidence, MAIN-rerun green from this tree and reproduced by rev's
-  isolated git-clone replay (pre/post status byte-identical): the
-  contract's 6-command gate chain + trailing
-  `git diff --quiet -- guidelines/` (load-bearing tail, rev2 M27:
-  compile-first overwrites the byte oracle `check` reads) — goal check
-  79 docs/11 reds; gate_m3u1 24/10; gate_m3u2 7 deep greens + 5
-  detail-pinned reds + 73-case verdict suite (test-m3u2 phase-2
-  encoding of MAIN batch rulings, harvested `.scratch/m3u2/suite/`);
-  diff_m3u2 vs orc's contract-only oracle (harvested
-  `.scratch/m3u2/oracle/`, both sides re-derived live on the shared
-  unforked stage): 43 parse-real, 39 agree, 4 divergences all
-  bounded-ruled (2 oracle anchor-normalization, 2 oracle pre-P14 Deps;
-  exact `p14_transform` waiver — rev's 2-mutant F-04 red suite green),
-  4 kernel-only direct-DRS cells. Review: rev-m3u2 F-01..F-07 closed
-  (closing 4 / claims 4 / README 3 / mutation 2 suites green);
-  rev2-m3u2 27-mutant campaign: 25/27 killed by the amended 7-stage
-  chain (M21 → check_split contiguity assertion; M27 → the
-  guidelines-clean tail), M09/M10 (isolated `v1_curry_step/3` guard
-  flips — every surface negative couples both curry guards) closed by
-  white-box curry probes in gate_m3u2, red-proven against both
-  mutants. Contract = `.scratch/contracts/m3u2.md` (FINAL P1–P14 + F2
-  record); gate/suite/oracle/diff regeneration paths = memory.
-  main=93% 224K/240K (peak; close tail ran post-compaction),
-  mate=100% 239K/240K (rev-m3u2 peak).
-- M3.3 DONE (kernel, oracle) — derived proof + validator + v1 freeze.
-  Proof mode (`schema=v1` + `proof`): group IR = one group per fact
-  sentence and per rule variant; witness world σ_w over the group's own
-  rendered positive body (NAF boxes contribute nothing), heads under
-  σ_o proved by `call_with_depth_limit(_, 4000)` against the document's
-  own clauses; payload = one ground
-  `'$guideline_proof'(DocId,S,variant(K),witness(Facts),prove(Heads))`
-  per group, printed instead of the document. Rejects, class `proof`
-  rc=1: `nonground_obligation(S,variant(K))`,
-  `underivable_obligation(S,variant(K))`. Witness ids
-  `'$guideline_id'(witness,DocId,S,ref(N)|box(B),variant(K))` carry the
-  document's own coordinates ⇒ no foreign clause discharges an
-  obligation. `aggregate-check <manifest>` (strict
-  `<pl>\t<payload>` rows, exactly one tab, nonempty fields, final LF,
-  unreadable path ⇒ `check_load` rc=2; 0-byte = empty composition):
-  ABI dynamic-primed BEFORE load (else
-  `permission_error(modify,static_procedure)`), warning-as-failure load,
-  asserts distinct `guideline_document/3` records = row count and
-  version set `[1]`, replays every obligation NAF-visible to the whole
-  batch → `ace_to_pl aggregate ok <N> documents <G> obligations`.
-  Freeze: nine indicators, `guideline_schema_version/1` first, version
-  fact between declarations and header; `guideline_query/2` legacy-only,
-  outside the ABI. Collision-proofing widened to a load-time ulex-wide
-  scan (every entry, used or not, first offender in file order) over
-  lemma/data slots ONLY — surface forms never reach the product, so both
-  scans keep one canonical detail (M3.1's `collision-verb` ruling holds).
-  `goal.py check` gained: migration validator (coverage + census digest
-  pins, projection-notes ledger with pinned header bytes + (docid,region)
-  pair digest, `v1_docids` duplicate-free subset, per-LEXEME liveness +
-  fixture-era unmigrated reference + terminal zero, migrated-product
-  directive/functor vocabulary scan) run before swipl resolution, the v1
-  branch (schema=v1 ×2 + committed compare + proof ×2 + payload write)
-  and forward+reverse aggregate runs; meter
-  `goal: migration migrated=0/79`. Evidence (MAIN-rerun chain, this
-  tree): check ok 79 docs/12 reds; regen --check ok; gate_m3u1 24 green
-  10 red failures=0 (P6 pin re-ruled: nine indicators + version fact);
-  gate_m3u2 7 green 5 red 73 verdicts failures=0; gate_m3u3 66/66
-  (test-m3u3 phase-2 encoding of MAIN's batch rulings); diff_m3u3 88
-  cases (79 accept, 9 reject) divergences=0 vs orc's contract-only
-  oracle on product sha256 + payload sha256 + rejection bytes. Rulings:
-  OPEN-1 vacuous; OPEN-2 = `Every man that works and that does not
-  provably work sees a dog.`; per-LEXEME (not per-surface) lexicon
-  liveness — the shipped corpus has infpl-only and finsg-only lexemes.
-  Contract = `.scratch/contracts/m3u3.md` (P1-P14 + batch rulings);
-  suite/gate/oracle/diff regeneration paths = memory. Docs flipped with
-  the transitional meter: README (frozen schema, proof + aggregate
-  sections, nine-indicator table, knowledge-only authoring),
-  `.agent/rounds.md` roles, guideline README formal-derivatives,
-  projection-notes header rewritten once. main=102% 245K/240K (window-1
-  peak → auto-compaction; post-compaction close tail 59% 143K/240K),
-  mate=100% 240K/240K (orc-m3u3 peak; test 82%, map 82%, rev2 45%,
-  rev 42%).
-- M3.4 DONE (data, prod) — production A shipped: 18 docs migrated
-  (Box-3 rec01-rec12 + rec01 imp01-06), meter `migrated=18/79`,
-  aggregate 18 documents 77 obligations forward+reverse. Two producer
-  worktrees (p1 Box-3 12, p2 imp 6) held disjoint ACE + note rows;
-  MAIN re-derived every verdict: p1 12/12 validator PASS at wt commit
-  c906e47 (obligations 4,8,4,10,5,2,5,5,6,4,3,4), fidelity ACCEPT all
-  12 vs the Box-3 extraction + R1-R5 invariants + 12 D6 letter/type
-  pairs; p2 imp01-03,05,06 ACCEPT, imp04 MAIN-fixed (long-term-
-  opioid-use condition restored on all three rules,
-  `superimposed-severe-acute-pain`→`acute-pain`, dead ulex entry
-  dropped, notes row amended) revalidated PASS obligations=3. Live
-  source cross-check: 5/5 Box-3 sentence probes verbatim on live
-  rr7103a1. Lexicon consolidated: 371 entries, 194 legacy kept, 71
-  dead pre-migration entries dropped, zero conflicts; notes ledger 18
-  rows respliced; `v1_docids` = 18 docid-sorted.
-  KERNEL EDIT (M3.3-frozen ace_to_pl.pl; flag for MILESTONE-REVIEW):
-  the first real composition hung the forward aggregate —
-  classical-negation antecedents render body goals
-  `guideline_operator(actual,C,-)` with free C; `should not`
-  consequents emit `-` rule heads; body `-` goals resolve against
-  sibling `-` heads (own + other docs') before the witness fact ⇒
-  exponential backtracking, 2 docs suffice (bisected: rec01+rec02
-  rc=124, each single doc ok). Fix = `v1_bounded_head_call`
-  (depth 4000 + `call_with_inference_limit` 10^6) + asserta witness
-  order on both P7/P9 paths; exceedance = ordinary underivability
-  (DR06 family); ABI/product/payload bytes + rejection vocabulary
-  unchanged, legacy path untouched, verdicts search-only. Regression
-  AG10 (minimal 2-doc negation pair, 120s timeout harness): pre-fix
-  compiler rc=124 + suite-level FAIL, fixed tree green. MV07 mutator
-  now isolates meter arithmetic via empty `v1_docids` (its dropped
-  ledger row entered the migrated set). Contract bounded-search
-  amendment + README bounded-search sentence landed. Evidence
-  (MAIN-rerun decisive chain, this tree): check ok 79 docs 12 reds
-  incl. fwd/rev aggregate; regen --check; gate_m3u1 24/10; gate_m3u2
-  7/5/73; gate_m3u3 67/67; diff_m3u3 88 cases 0 divergences; fresh
-  compile + `git diff --quiet -- guidelines/`. Replay input set =
-  `.scratch/m3u4/harvest/`; regeneration paths = memory.
-  main=94% 225K/240K (window-1 peak → auto-compaction; close tail
-  49% 117K/240K), mate=58% 139K/240K (prod-m3u4-2 peak).
-- M3.5 DONE (data, prod) — production B shipped: 31 docs migrated (rec02
-  imp01-11+13-26 = all 25 + rec03 imp01,02,04,05,06,07), meter
-  `migrated=49/79`, aggregate 49 documents 184 obligations
-  forward+reverse. Wave-0 probe: 31/31 candidates compile+prove green
-  (zero authoring reds) → R5 economy governed. Contract
-  `.scratch/contracts/m3u5.md` = m3u4 P1-P6/R1-R5 + R6 only-restrictor →
-  conditional prohibition (R4 family; De Morgan Horn-split, one
-  prohibition per negated gate conjunct, classical negation), R7
-  might→may, R8 S24-13 meta-negation = prohibition reading. Two producer
-  worktrees (p1 rec02-imp01..16, 15 docs 454 w; p2 rec02-imp17..26 +
-  rec03 six, 16 docs 492 w) held disjoint ACE + ulex + note rows; MAIN
-  re-derived every verdict: validator replay 31/31 PASS (58 + 49
-  obligation groups), fidelity review 31/31 vs source extraction — the
-  candidate direction inversions at S24-19 + S30-16 re-authored per R6
-  (3 + 5 prohibition gates verified), S24-16 direction kept; all
-  accepted as delivered except rec03-imp07 MAIN-fixed (D9 `during a
-  pain`→`for a pain` ×5 + ulex prep swap + notes amendment) revalidated
-  PASS obligations=5. Notes-recorded approximations accepted
-  (does-not-control/-improve conservative negations, any→existential
-  PP, ensure-aware→explain). Lexicon consolidated: 433 entries, 276
-  legacy kept, 95 dead fixture-era dropped, zero conflicts, idempotent;
-  notes ledger 31 rows respliced idempotently; v1_docids = 49
-  docid-sorted. Live source cross-check: 7/7 sentence probes verbatim
-  on live rr7103a1 across both producer sets. Toolchain gotcha → memory:
-  PATH without `.toolchain/bin` leaks system swipl into goal.py,
-  failing compile `ace_to_pl_error(uncaught,unwind(halt(0)))` rc=2;
-  identical invocation under 9.2.9 green. Evidence (MAIN-rerun decisive
-  chain, this tree): check ok 79 docs 12 reds incl. fwd/rev aggregate,
-  meter migrated=49/79; regen --check; gate_m3u1 24/10; gate_m3u2
-  7/5/73; gate_m3u3 67/67; diff_m3u3 88 cases 0 divergences; manual
-  forward aggregate 49/184; guidelines byte-stability tail reruns from
-  this commit (M3.4 convention). Replay input set =
-  `.scratch/m3u5/harvest/`; regeneration paths = memory.
-  main=92% 220K/240K (close, single window), mate=39% 95K/240K
-  (prod-m3u5-1 peak).
-- M3.6 DONE (data, prod) — production C TERMINAL: 30 docs migrated
-  (rec03-imp08 + rec04 imp01,03,05,07,08,09 + rec05 imp04-16,18-27),
-  meter `migrated=79/79`, aggregate 79 documents 257 obligations
-  forward+reverse, compiled inventory exactly 79, compile byte-stable.
-  Wave-0 probe 30/30 candidates green → R5 economy. Contract
-  `.scratch/contracts/m3u6.md` = m3u4 P1-P6 + R6-applied (S30-17
-  only-restrictor re-authored: 3 classical prohibitions →
-  `should not consider a transdermal-fentanyl-prescription`), R9 S35-20
-  causal-clause PP dropped (temporal misread), R10 responsibility→must +
-  provide-or-arrange→ensure, R11 pre-cleared folds (S35-21 or→conjunction,
-  S36-03 policy-setter/threshold/penalize, e.g.-list compounds), R12 zero
-  NAF batch-wide — the plan's "rec05 NAF rows exercise the D3 matrix"
-  expectation did not materialize in final candidates; every negated
-  antecedent classical (`does not take/reach`, `cannot taper`). Two
-  producer worktrees (p1 16 docs, p2 14) held disjoint ACE + ulex + note
-  rows; MAIN re-derived every verdict: validator replay 30/30 PASS from
-  the primary tree (40 + 33 obligation groups at wt f6bd87d/5f46545),
-  fidelity 30/30 ACCEPT with zero MAIN fixes — producer revisions all
-  source-anchored improvements (imp06 agreement aspect, imp07 `on`-plan
-  D9, imp09 support split clinician+patient ×3 modes, imp12
-  depends-on-dosage fact, imp15 readiness gates restart only, imp18
-  joint determination, imp20 `abrupt-` restored, imp23 shared
-  modifiers). Lexicon terminal: 487 entries, 95 dead fixture-era
-  dropped, zero pn_sg, zero mega-verb pairs, per-LEXEME liveness green,
-  consolidation idempotent; notes ledger 30 rows respliced; v1_docids =
-  79 docid-sorted. Gate ruling: MV05's harness precondition (quoted
-  fixture-era mega iv entry) is vacuous at terminal state BY DESIGN —
-  entry-picker generalized to any iv lexeme, quoted branch + both-
-  inflection rename semantics preserved; 67/67. Live source cross-check
-  7/7 sentence probes verbatim on live rr7103a1 across both producer
-  sets. Evidence (MAIN-rerun decisive chain, this tree): check ok 79
-  docs 12 reds incl. fwd/rev aggregate, meter migrated=79/79; regen
-  --check; gate_m3u1 24/10; gate_m3u2 7/5/73; gate_m3u3 67/67;
-  diff_m3u3 88 cases 0 divergences; guidelines byte-stability tail
-  reruns from this commit (M3.4 convention). Replay input set =
-  `.scratch/m3u6/harvest/`; regeneration paths = memory.
-  main=87% 208K/240K (close, single window), mate=28% 67K/240K
-  (prod-m3u6-2 peak; p1 27%).
-- M3.7 DONE (kernel, oracle) — authored-question removal + terminal
-  close. Compiler: questions section deleted (translate_question/
-  partition_query_conds/wh_args, query IR, prove_queries, render
-  query arm, check-mode guideline_query tail, query_failed vocabulary);
-  rejection total both paths — class `unsupported`, rc1, stdout 0;
-  detail = `question_not_supported(S)` exactly when the question is the
-  first unsupported construct in the path's existing order (legacy =
-  tag stage in condition order; v1 = frozen sequential — #30/#31
-  reserved_name_collision, #39/F-04 unresolved_argument byte-identical
-  on 3ff8537 = freeze proof); no prescan either path. 6 authored
-  question reds + 5 ulex (3 change-proving — compiled pre-change; 3
-  boundary pins); 18 reds total. goal.emm terminal reshape:
-  check_corpus every guideline dir; ledger totality (set-equal,
-  dup-free, row order freed — reversed-rows full check green) +
-  header byte-prefix + CRLF ban; per-LEXEME liveness;
-  check_product_vocabulary all docids; check_doc_load; unconditional
-  schema=v1 + proof + aggregate; coverage/census digest pins retired
-  (/goal custody, pre-M3.3 posture). Docs transition prose landed
-  (README audit story + schema transition + meter clause; guideline
-  README derived-obligation reality; compiler header; vendor README;
-  rounds.md). Evidence (MAIN-rerun decisive chain, final tree): check
-  ok 79 docs 18 reds fwd+rev aggregate no meter; regen --check;
-  gate_m3u1 24/10; gate_m3u2 7/5/73; gate_m3u3 64/64; diff_m3u7 100
-  cases accept=79 reject=21 0 divergences; question suite 96/96; fresh
-  compile + pl/ace tail rc0; guidelines delta vs 3ff8537 = README +
-  projection-notes.tsv header only. rev F-01..F-07 closed; rev2
-  mutation campaign 35 mutants on closing source = 34 killed + MT-06
-  equivalent (results.json + logs, sentinel kills MAIN-re-derived);
-  MV02 gained the MT-26 header-as-rows discriminator (mutant-direction
-  FAIL proven); aggregate-totality assert + committed-suite port →
-  polish register. Port ruling: unit gates/suites/oracles = scratch
-  unit evidence with regeneration contracts (M1.5 precedent; memory
-  M3.7 bullet). Queue stays gated; MILESTONE-REVIEW lifts it.
-  main=93% 224K/240K (window-1 peak; close spans 2 windows),
-  mate=95% 227K/240K (rev-m3u7 peak; rev2 93% 224K).
+- Preserve source conditions, objects, numbers + modality; record every
+  approximation/drop in projection notes; introduce no unanchored structure.
+- Hoist universal restrictors out of modal complements into antecedents; split
+  compound "..., and if A then B" statements into separate ACE sentences.
+- Render "only ... should ..." restrictions as conditional prohibitions, one
+  rule per unmet conjunct; classical negation for unmet facts, NAF only for
+  evidentiary absence ("unless there are indications ...").
+- Map `might`->`may`, ability/option `can`->`can`, responsibility->`must`;
+  modality stays reified data with no deontic inference. Causal rationale never
+  becomes a temporal PP. Source `for` takes `prep(for,for)` + a determiner.
+- Noun modification = relative clause or compound noun; `of` rejects
+  (`condition_shape(relation(A,of,B))`).
+- Source "or" folds only where the notes name the approximation; disjunctive
+  consequents stay unsupported. Defeasibility/backend changes need a named
+  consumer question and recompile the unchanged ACE corpus.
+
+Assurance + evidence:
+
+- Durable acceptance = `python3 -P tools/goal.py check` (terminal corpus,
+  aggregate replay, 20 committed reds each pinning class + rc + byte-exact
+  stderr) + `python3 -P tools/regen.py --check`.
+- Closing M3 chain = durable gate -> `.scratch/m3u1/gate_m3u1.py` ->
+  `.scratch/m3u2/gate_m3u2.py` -> `.scratch/m3u3/gate_m3u3.py` ->
+  `.scratch/m3u7/diff_m3u7.py` -> fresh guideline compile ->
+  `git diff --quiet -- guidelines/`.
+- Question boundary = `.scratch/m3u7/suite/runner.py` 96 cells; contracts of
+  record = `.scratch/contracts/m3u1.md`...`m3u7.md`; regeneration + port
+  ownership = `.agent/memory.md` M3 evidence bullet + `.agent/polish.md`.
+- Unit gauges: M3.1 main=84% 202K, mate=80% 192K - M3.2 main=93% 224K,
+  mate=100% 239K - M3.3 main=102% 245K pre-compaction / 59% 143K close,
+  mate=100% 240K - M3.4 main=94% 225K pre-compaction / 49% 117K close,
+  mate=58% 139K - M3.5 main=92% 220K, mate=39% 95K - M3.6 main=87% 208K,
+  mate=28% 67K - M3.7 main=93% 224K, mate=95% 227K.
+
+Review (9 teammates: 7 unit lenses + cross-cutting + claim-replay audit;
+26/28 audited claims replayed clean, the two misses being a stale brief claim
+and the README bounds numerals fixed here):
+
+- HIGH, fixed: aggregate payloads were self-certifying — an emptied payload
+  beside a real product reported `aggregate ok 1 documents 0 obligations`
+  rc0. Replay now checks the obligation set against the loaded composition
+  before proving any head (coverage equality with the sentence identities the
+  products carry, unique `(doc, sentence, variant)` keys, `1..K` variant
+  runs, nonempty head lists, final-LF payload bytes). Battery
+  `.scratch/m3rev/payload_battery.py` 9/9. Open residue: a dropped LAST
+  variant stays undetected — rule-head `Deps` are variables, so per-sentence
+  variant counts are not derivable under the frozen ABI (polish row).
+- MEDIUM, fixed: committed reds pinned class/rc/framing but not Detail — a
+  mutant rewriting both question details kept `goal.py check` green. Every
+  probe now carries a required `.expect` sidecar compared byte-exact;
+  orphan/missing pins are violations. 20 probes (added: v1 GROUP root
+  detail, `of` noun modifier).
+- MEDIUM, fixed: the ulex slot silently accepted the reserved basename
+  `schema=v1`; `reserved_argv_token/1` now rejects it like `proof`.
+- MEDIUM, fixed: the legacy witness covered only copula facts + one rule, so
+  deleting the ground-fact branch killed nothing. Widened to every documented
+  legacy family (copula, ground fact arity 1 + 2, positive rule, NAF rule
+  with its dynamic declaration); `.scratch/m3rev/test_legacy_families.py`
+  kills both branch mutants.
+- MEDIUM -> docs: compiled documents are a definite-clause program, so an
+  authored consequent entity feeding its own antecedent can diverge under
+  naive SLD in one load order and succeed in another (verified: reverse order
+  exhausts a 64 MiB stack, forward order proves). Our own replay is
+  fail-closed — the same query under the compiler's bounds fails finitely —
+  and no clause in the shipped corpus is left-recursive (scan 0/79, positive
+  control 1). README carries the consumer note; the scan port is a polish row.
+- Docs corrected: schema label candidate -> frozen; fork notice reduced to one
+  §5(a)-relevant date plus git history; README gained the search-bound
+  numerals, the aggregate-integrity guarantees, the `of` rewrite recipe and
+  one-document-per-region wording; the guideline README's one-rule-per-impl
+  claim replaced with the measured 21 single-sentence / 2-25 range.
+- Deferred to `.agent/polish.md` with acceptance checks: last-variant residue,
+  committed legacy-family oracle, committed left-recursion scan, object-
+  operator closed-set kill, root-NAF precedence, vendor fork-notice gate.
+- Review rerun (decisive chain, this commit): check ok 475 organizations /
+  1,118 rows, terminal remaining orgs=0 rows=847 provisional=54, 1 guideline
+  79 documents 20 red probes; regen check ok; gate_m3u1 24/10/0; gate_m3u2
+  7/5/73; gate_m3u3 64/64; diff_m3u7 100 cases accept=79 reject=21
+  divergences=0; question suite 96/96; fresh compile leaves `pl/` + `ace/`
+  byte-identical. main=84% 200K/240K (review close; the wave spans 2
+  windows), mate=86% 206K/240K (mrev-m3u7 peak).
+
+Out of scope remains: serving/query API; probabilities, thresholds, arithmetic
+or unit conversion absent from source; defeasibility/s(CASP) before a named
+consumer question; rec6-12 authoring and pending-region/coverage closure,
+which return to `/goal` rounds after review.
 
 Sizing (analogs: M1.5 main=166K narrow kernel; M1.3a main=196K; M1.2b
 main=203K oversized harvest; M1.3b main=179K): kernel units project

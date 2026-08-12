@@ -1,0 +1,1 @@
+ace_to_pl_error(unsupported,root_condition(-(has_part(A,B),/(1,'')))).

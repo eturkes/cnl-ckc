@@ -362,6 +362,7 @@ Define [[collect_red_probes]] taking nothing:
     Set probes to <>.
     Set ace_stems to <>.
     Set ulex_stems to <>.
+    Set expect_stems to <>.
     For each entry in [[sorted]]([[red_dir.iterdir]]()):
         Set entry_name to entry.name.
         Set regular to [[entry.is_file]]().
@@ -372,6 +373,7 @@ Define [[collect_red_probes]] taking nothing:
             Do [[violation]]("red-entry", "not a regular file: " plus entry_name).
         Set is_ace to [[entry_name.endswith]](".ace").
         Set is_ulex to [[entry_name.endswith]](".ulex").
+        Set is_expect to [[entry_name.endswith]](".expect").
         If is_ace:
             Set class_name to [[red_probe_class]](entry_name).
             Set expected_exit to [[red_expected_exit]](class_name).
@@ -382,11 +384,22 @@ Define [[collect_red_probes]] taking nothing:
             If is_ulex:
                 Do [[ulex_stems.append]]([[entry_name.removesuffix]](".ulex")).
             Otherwise:
-                Do [[violation]]("red-entry", "unsupported entry: " plus entry_name).
+                If is_expect:
+                    Do [[expect_stems.append]]([[entry_name.removesuffix]](".expect")).
+                Otherwise:
+                    Do [[violation]]("red-entry", "unsupported entry: " plus entry_name).
     For each ulex_stem in ulex_stems:
         Set paired to ulex_stem is in ace_stems.
         If not paired:
             Do [[violation]]("red-entry", "orphan ulex without ace probe: " plus ulex_stem).
+    For each expect_stem in expect_stems:
+        Set expect_paired to expect_stem is in ace_stems.
+        If not expect_paired:
+            Do [[violation]]("red-entry", "orphan expect without ace probe: " plus expect_stem).
+    For each ace_stem in ace_stems:
+        Set pinned to ace_stem is in expect_stems.
+        If not pinned:
+            Do [[violation]]("red-entry", "probe lacks expect pin: " plus ace_stem).
     If not probes:
         Do [[violation]]("red-dir", "no red probes found").
     Give back probes.
@@ -414,6 +427,13 @@ Define [[run_red_probe]] taking scratch_path, swipl_executable, stage_path, prob
         Do [[cleanup_violation]](scratch_path, "red-stderr", "stderr is not one LF line for probe: " plus probe_name).
     If not final_newline:
         Do [[cleanup_violation]](scratch_path, "red-stderr", "stderr is not one LF line for probe: " plus probe_name).
+    Set expect_path to [[probe_path.with_suffix]](".expect").
+    Set expect_present to [[expect_path.is_file]]().
+    If not expect_present:
+        Do [[cleanup_violation]](scratch_path, "red-expect", "missing expect pin for probe: " plus probe_name).
+    Set expect_bytes to [[expect_path.read_bytes]]().
+    If result.stderr does not equal expect_bytes:
+        Do [[cleanup_violation]](scratch_path, "red-expect", "stderr differs from expect pin for probe: " plus probe_name).
     Set stderr_text to [[result.stderr.decode]]("utf-8", errors="replace").
     Set expected_prefix to "ace_to_pl_error(" plus class_name plus ",".
     If not [[stderr_text.startswith]](expected_prefix):

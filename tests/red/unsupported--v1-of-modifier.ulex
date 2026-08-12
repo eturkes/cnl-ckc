@@ -1,0 +1,4 @@
+noun_sg(clinician,clinician,human).
+noun_sg(clinic,clinic,neutr).
+noun_sg(patient,patient,human).
+tv_finsg(sees,see).

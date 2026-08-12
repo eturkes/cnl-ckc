@@ -1,0 +1,2 @@
+noun_sg('patient',patient,neutr).
+noun_pl('patients',patient,neutr).

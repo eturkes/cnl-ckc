@@ -1,6 +1,7 @@
 % ace_to_pl.pl — ACE → plain-Prolog compiler over the APE parser.
-% First added to this APE fork 2026-08-06; v1 freeze + derived proof
-% obligations added 2026-08-11 (not part of upstream APE).
+% Added to this APE fork 2026-08-06, not part of upstream APE (GPL-3.0
+% §5(a) via LGPL: modification notice + a relevant date); git history is
+% the change record for every later edit.
 % Copyright 2026 Emir Turkes. Derivative of APE; licensed under
 % LGPL-3.0-or-later like the surrounding tree (see ../LICENSE.txt).
 %
@@ -132,10 +133,16 @@ dispatch([Tree, DocId, Ulex, 'schema=v1', proof], Input, Output,
 dispatch(Argv, _, _, ErrorStream) :-
     emit_error(ErrorStream, usage, argv(Argv), 2).
 
-/* `proof` is a reserved argv token (like `schema=v1`): a user lexicon
-   file literally named `proof` is unsupported. */
+/* `proof` and `schema=v1` are reserved argv tokens: a user lexicon file
+   literally named either is unsupported and rejects as usage. The
+   selector is positional, so a two-argument `<tree> <docid> schema=v1`
+   invocation still reads its trailing token as the selector — pass a
+   lexicon under any other name. */
+reserved_argv_token(proof).
+reserved_argv_token('schema=v1').
+
 validated_ulex_arg(Ulex, ErrorStream) :-
-    ( Ulex == proof ->
+    ( reserved_argv_token(Ulex) ->
         emit_error(ErrorStream, usage, ulex_arg(Ulex), 2)
     ; true
     ).
@@ -200,7 +207,17 @@ check_load_captured_list(Files, Label) :-
 /* P9: load every manifest pl into user under the capture hook (any
    diagnostic fails), assert the structural invariants, then replay
    every payload obligation against the loaded composition — NAF
-   evaluates against the whole batch by design. */
+   evaluates against the whole batch by design.
+
+   Payloads are evidence, not authority: the obligation set is checked
+   against the loaded documents (unique keys, contiguous variants,
+   nonempty heads, coverage equality with the sentence identities the
+   products themselves carry) before any head is proved, so an emptied,
+   truncated, duplicated or misattributed payload fails rather than
+   shrinking the replay. Residue: dropping the LAST variant of a
+   multi-variant sentence keeps coverage complete and variants
+   contiguous; rule-head Deps are variables, so per-sentence variant
+   counts are not derivable from the product under the frozen ABI. */
 aggregate_check_mode(Manifest, Input, Output, ErrorStream) :-
     catch(
         ( aggregate_read_manifest(Manifest, PlPaths, PayloadPaths) ->
@@ -215,7 +232,11 @@ aggregate_check_mode(Manifest, Input, Output, ErrorStream) :-
     ; aggregate_declare_indicators,
       aggregate_load(PlPaths, Input, Output, ErrorStream),
       aggregate_assertions(PlPaths, ErrorStream),
-      aggregate_obligations(PayloadPaths, ErrorStream, Count),
+      aggregate_groups(PayloadPaths, ErrorStream, Groups),
+      aggregate_group_keys(Groups, ErrorStream),
+      aggregate_coverage(Groups, ErrorStream),
+      aggregate_prove_groups(Groups, ErrorStream),
+      length(Groups, Count),
       length(PlPaths, DocCount),
       aggregate_report(Output, DocCount, Count)
     ).
@@ -322,12 +343,131 @@ aggregate_assertions(PlPaths, ErrorStream) :-
     ; emit_error(ErrorStream, proof, schema_versions(VersionSet), 1)
     ).
 
-aggregate_obligations([], _, 0).
-aggregate_obligations([Path|Paths], ErrorStream, Count) :-
+/* Payload obligations are evidence, never authority: a payload that
+   omits, truncates, forges or repeats groups must fail rather than
+   shrink the replay. Groups are therefore read and validated whole,
+   their keys proved unique and their sentence coverage proved equal to
+   the sentence set the LOADED composition itself carries, before any
+   head is proved. Manifest rows bind product to payload for
+   provenance; replay soundness rests on that composition-wide
+   coverage, so a swapped pair changes nothing the replay claims. */
+aggregate_groups([], _, []).
+aggregate_groups([Path|Paths], ErrorStream, Groups) :-
     aggregate_payload_terms(Path, ErrorStream, Terms),
-    aggregate_run_terms(Terms, Path, ErrorStream, Head),
-    aggregate_obligations(Paths, ErrorStream, Tail),
-    Count is Head + Tail.
+    aggregate_path_groups(Terms, Path, ErrorStream, Head),
+    aggregate_groups(Paths, ErrorStream, Tail),
+    append(Head, Tail, Groups).
+
+aggregate_path_groups([], _, _, []).
+aggregate_path_groups([Term|Terms], Path, ErrorStream,
+        [group(DocId, S, K, Facts, Heads)|Groups]) :-
+    ( Term = '$guideline_proof'(DocId0, S0, variant(K0), witness(Facts0),
+          prove(Heads0)),
+      is_list(Facts0),
+      is_list(Heads0),
+      ground(Term) ->
+        DocId = DocId0, S = S0, K = K0, Facts = Facts0, Heads = Heads0
+    ; emit_error(ErrorStream, check_load, payload_term(Path), 2)
+    ),
+    ( Heads == [] ->
+        emit_error(ErrorStream, proof, empty_obligation(DocId, S,
+            variant(K)), 1)
+    ; true
+    ),
+    aggregate_path_groups(Terms, Path, ErrorStream, Groups).
+
+/* One group per (document, sentence, variant), variants numbered 1..N
+   per sentence: a dropped or repeated variant is a payload defect. */
+aggregate_group_keys(Groups, ErrorStream) :-
+    findall(DocId-S-K, member(group(DocId, S, K, _, _), Groups), Keys),
+    msort(Keys, Sorted),
+    aggregate_duplicate_key(Sorted, ErrorStream),
+    sort(Keys, Unique),
+    aggregate_variant_runs(Unique, ErrorStream).
+
+aggregate_duplicate_key([Key, Key|_], ErrorStream) :-
+    !,
+    Key = DocId-S-K,
+    emit_error(ErrorStream, proof,
+        duplicate_obligation(DocId, S, variant(K)), 1).
+aggregate_duplicate_key([_|Keys], ErrorStream) :-
+    !,
+    aggregate_duplicate_key(Keys, ErrorStream).
+aggregate_duplicate_key([], _).
+
+aggregate_variant_runs([], _).
+aggregate_variant_runs([DocId-S-K|Keys], ErrorStream) :-
+    aggregate_variant_run(Keys, DocId, S, [K], Ks, Rest),
+    ( aggregate_sequence(Ks, 1) ->
+        true
+    ; emit_error(ErrorStream, proof, variant_sequence(DocId, S, Ks), 1)
+    ),
+    aggregate_variant_runs(Rest, ErrorStream).
+
+aggregate_variant_run([DocId-S-K|Keys], DocId0, S0, Acc, Ks, Rest) :-
+    DocId == DocId0,
+    S == S0,
+    !,
+    append(Acc, [K], Acc1),
+    aggregate_variant_run(Keys, DocId0, S0, Acc1, Ks, Rest).
+aggregate_variant_run(Keys, _, _, Ks, Ks, Keys).
+
+aggregate_sequence([], _).
+aggregate_sequence([N|Ns], N) :-
+    N1 is N + 1,
+    aggregate_sequence(Ns, N1).
+
+/* Coverage oracle: the composition's own clauses carry every sentence
+   identity the projection emitted, so the obligation set is checked
+   against the products rather than against the payload's own count. */
+aggregate_coverage(Groups, ErrorStream) :-
+    aggregate_loaded_sentences(Loaded),
+    findall(DocId-S, member(group(DocId, S, _, _, _), Groups), Raw),
+    sort(Raw, Covered),
+    ( aggregate_first_absent(Loaded, Covered, MissingDoc-MissingS) ->
+        emit_error(ErrorStream, proof,
+            missing_obligation(MissingDoc, MissingS), 1)
+    ; aggregate_first_absent(Covered, Loaded, ExtraDoc-ExtraS) ->
+        emit_error(ErrorStream, proof,
+            extra_obligation(ExtraDoc, ExtraS), 1)
+    ; true
+    ).
+
+aggregate_first_absent([Pair|Pairs], Others, Absent) :-
+    ( memberchk(Pair, Others) ->
+        aggregate_first_absent(Pairs, Others, Absent)
+    ; Absent = Pair
+    ).
+
+aggregate_loaded_sentences(Pairs) :-
+    v1_indicators(Indicators),
+    findall(DocId-S,
+        ( member(Name/Arity, Indicators),
+          functor(Head, Name, Arity),
+          catch(clause(user:Head, Body), _, fail),
+          aggregate_identity((Head :- Body), DocId, S)
+        ),
+        Raw),
+    sort(Raw, Pairs).
+
+aggregate_identity(Term, DocId, S) :-
+    aggregate_subterm(Term, Sub),
+    nonvar(Sub),
+    Sub = '$guideline_id'(_, DocId, S, _, _),
+    atom(DocId),
+    integer(S).
+
+aggregate_subterm(Term, Term).
+aggregate_subterm(Term, Sub) :-
+    compound(Term),
+    arg(_, Term, Arg),
+    aggregate_subterm(Arg, Sub).
+
+aggregate_prove_groups([], _).
+aggregate_prove_groups([group(DocId, S, K, Facts, Heads)|Groups],
+        ErrorStream) :-
+    aggregate_check_one(DocId, S, K, Facts, Heads, ErrorStream),
+    aggregate_prove_groups(Groups, ErrorStream).
 
 aggregate_payload_terms(Path, ErrorStream, Terms) :-
     catch(
@@ -340,7 +480,8 @@ aggregate_payload_terms(Path, ErrorStream, Terms) :-
         emit_error(ErrorStream, check_load, Error, 2)).
 
 aggregate_read_terms(Path, Terms) :-
-    read_utf8_file(Path, _, Text),
+    read_utf8_file(Path, Bytes, Text),
+    aggregate_payload_bytes(Bytes, Path),
     setup_call_cleanup(
         open_string(Text, Stream),
         aggregate_stream_terms(Stream, Terms),
@@ -354,18 +495,17 @@ aggregate_stream_terms(Stream, Terms) :-
       aggregate_stream_terms(Stream, Rest)
     ).
 
-aggregate_run_terms([], _, _, 0).
-aggregate_run_terms([Term|Terms], Path, ErrorStream, Count) :-
-    ( Term = '$guideline_proof'(DocId, S, variant(K), witness(Facts),
-          prove(Heads)),
-      is_list(Facts),
-      is_list(Heads),
-      ground(Term) ->
-        aggregate_check_one(DocId, S, K, Facts, Heads, ErrorStream)
-    ; emit_error(ErrorStream, check_load, payload_term(Path), 2)
-    ),
-    aggregate_run_terms(Terms, Path, ErrorStream, Tail),
-    Count is Tail + 1.
+/* Payload bytes are canonical proof output: a nonempty file ends with
+   the LF its last term wrote, so a truncated tail is a defect rather
+   than a shorter obligation set. */
+aggregate_payload_bytes([], _) :- !.
+aggregate_payload_bytes(Bytes, Path) :-
+    last(Bytes, Last),
+    ( Last =:= 0'\n ->
+        true
+    ; throw(error(payload_bytes(Path),
+          context(ace_to_pl:aggregate_read_terms/2, plain_failure)))
+    ).
 
 aggregate_check_one(DocId, S, K, Facts, Heads, ErrorStream) :-
     aggregate_assert_witness(Facts, Refs),
@@ -1258,7 +1398,7 @@ canonical_args(Index, Arity, Term) :-
     Next is Index + 1,
     canonical_args(Next, Arity, Term).
 
-/* ---------- v1 schema projection (candidate) ----------
+/* ---------- v1 schema projection (frozen) ----------
 
    Selected by exact trailing argv token 'schema=v1'; the default path
    above stays byte-identical. Closed reserved vocabulary: source lemmas
