@@ -743,6 +743,7 @@ Set v1_functors to <"guideline_schema_version", "guideline_document", "guideline
 Set v1_directives to <"guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3">.
 Set v1_decl_kinds to <"multifile", "discontiguous">.
 Set token_strip_chars to ".,;:?!\"()".
+Set clex_path_text to "vendor/ape/prolog/lexicon/clex_lexicon.pl".
 
 Define [[read_corpus_file]] taking file_path, category:
     If [[file_path.is_symlink]]():
@@ -824,16 +825,49 @@ Define [[ace_token_set]] taking ace_paths, docids:
             Do [[tokens.update]]({token: True}).
     Give back tokens.
 
-Define [[check_lexicon_liveness]] taking guideline_path, ace_paths, docids:
+Define [[normalized_lexicon_entry]] taking line_text:
+    Set text to [[line_text.strip]]().
+    Set text to [[text.removesuffix]](".").
+    Set text to [[text.replace]]("'", "").
+    Set text to [[text.replace]](" ", "").
+    Set text to [[text.replace]]("\t", "").
+    Give back text.
+
+Define [[clex_entry_set]] taking nothing:
+    Set clex_path to [[pathlib.Path]](clex_path_text).
+    Set data to [[read_corpus_file]](clex_path, "clex-file").
+    Set text to [[data.decode]]("utf-8").
+    Set entries to {}.
+    For each raw_line in [[text.split]]("\n"):
+        Set line_text to [[raw_line.strip]]().
+        If line_text:
+            Set is_comment to [[line_text.startswith]]("%").
+            Set is_directive to [[line_text.startswith]](":-").
+            If not is_comment:
+                If not is_directive:
+                    Do [[entries.update]]({[[normalized_lexicon_entry]](line_text): True}).
+    Give back entries.
+
+Define [[check_lexicon]] taking guideline_path, ace_paths, docids:
     Set lexicon_path to [[guideline_path.joinpath]]("lexicon.ulex").
     Set data to [[read_corpus_file]](lexicon_path, "lexicon-file").
     Set text to [[data.decode]]("utf-8").
     Set all_tokens to [[ace_token_set]](ace_paths, docids).
+    Set clex_entries to [[clex_entry_set]]().
     Set entries to <>.
+    Set seen_entries to {}.
     Set live_lexemes to {}.
     For each raw_line in [[text.split]]("\n"):
         Set line_text to [[raw_line.strip]]().
         If line_text:
+            Set normalized to [[normalized_lexicon_entry]](line_text).
+            Set redundant to normalized is in clex_entries.
+            If redundant:
+                Do [[violation]]("lexicon-redundant", "clex already provides: " plus line_text).
+            Set repeated to normalized is in seen_entries.
+            If repeated:
+                Do [[violation]]("lexicon-duplicate", "entry repeated in lexicon: " plus line_text).
+            Do [[seen_entries.update]]({normalized: True}).
             Set entry to [[lexicon_entry]](line_text).
             Do [[entries.append]](entry).
             Set entry_copy to [[list]](entry).
@@ -851,6 +885,7 @@ Define [[check_lexicon_liveness]] taking guideline_path, ace_paths, docids:
         Set live to lemma is in live_lexemes.
         If not live:
             Do [[violation]]("lexicon-dead-lexeme", "no ace document references: " plus surface).
+    Do [[print]]("goal: lexicon ok " plus [[str]](lexicon_path) plus " " plus [[str]]([[len]](entries)) plus " entries " plus [[str]]([[len]](clex_entries)) plus " clex facts").
 
 Define [[check_product_vocabulary]] taking guideline_path, docid:
     Set pl_path to [[guideline_path.joinpath]]("pl", docid plus ".pl").
@@ -895,7 +930,7 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
             Do [[violation]]("projection-ledger", "docid missing projection row: " plus docid).
         Do [[check_product_vocabulary]](guideline_path, docid).
     If lexicon_path does not equal None:
-        Do [[check_lexicon_liveness]](guideline_path, ace_paths, docids).
+        Do [[check_lexicon]](guideline_path, ace_paths, docids).
 
 Define [[check_command]] taking nothing:
     Do [[check_compendium]]().

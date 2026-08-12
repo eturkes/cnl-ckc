@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp12',ace_sha256('6b4f3d22daa9868df63c2a3322011167d06365a4315fd47e5a4e991ed9cb8f67'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+guideline_document('cdc2022-opioid-rec05-imp12',ace_sha256('6b4f3d22daa9868df63c2a3322011167d06365a4315fd47e5a4e991ed9cb8f67'),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
 % S1: If a patient takes an opioid during at least 1 year then a taper can continue during some months and can continue during some years.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp12',1,ref(5),[A,B,C,D]),taper,countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,year,countable), guideline_cardinality(actual,C,na,geq,1), guideline_event(actual,D,take), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,during,C).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp12',1,ref(5),[A,B,C,D]),na,eq,1) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,year,countable), guideline_cardinality(actual,C,na,geq,1), guideline_event(actual,D,take), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,during,C).

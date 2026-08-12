@@ -51,7 +51,8 @@ compilation of it, or part of one small named compiler base:
   `/goal` exhaustion clause reads), then validates layout, source records,
   and Prolog/lexicon inventory closure, validates every guideline's corpus
   ledgers (projection-notes header bytes and per-document totality, lexicon
-  liveness, v1-only product vocabulary), recompiles every guideline twice
+  liveness and minimality, v1-only product vocabulary), recompiles every
+  guideline twice
   (byte-determinism), compares against the committed Prolog (freshness),
   load-checks every compiled document, derives and discharges every
   document's proof obligations alone and as one co-loaded composition whose
@@ -256,7 +257,9 @@ Authoring notes (v1): an ACE document states guideline knowledge and
 nothing else — no witness seed facts, no proper-name stand-ins, no
 authored probe queries, since the compiler derives its own obligations —
 and `lexicon.ulex` carries reusable domain vocabulary rather than
-per-statement fixtures. One statement per sentence — split "…, and if A
+per-statement fixtures. Every ulex entry must be reachable: an entry whose
+lexeme no document uses rejects, as does one repeated in the file or one the
+vendored Clex already provides byte-for-byte. One statement per sentence — split "…, and if A
 then B" into separate sentences. Keep quantified restrictors out of
 modal complements: a universally quantified rule nested inside a modal
 box rejects (`operator_scoped_rule`), so state the quantification in the
@@ -294,8 +297,8 @@ row format and vocabulary, canonical ordering, the single-active-row
 promotion invariant) and prints a terminal meter — remaining
 non-terminal organizations and unfinished guideline rows — that measures
 the exhaustion clause directly. Corpus validation (projection-ledger
-totality, lexicon liveness, v1-only product vocabulary) runs for every
-guideline on every check. Bulk work (source reading, extraction drafting, ACE
+totality, lexicon liveness and minimality, v1-only product vocabulary) runs
+for every guideline on every check. Bulk work (source reading, extraction drafting, ACE
 drafting, adversarial review) fans out to subagent teammates per
 `.agent/rounds.md`; the session lead alone writes the repository and
 commits.

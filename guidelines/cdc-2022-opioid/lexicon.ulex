@@ -19,7 +19,6 @@ iv_finsg(struggles,struggle).
 iv_infpl(collaborate,collaborate).
 iv_infpl(continue,continue).
 iv_infpl(improve,improve).
-iv_infpl(work,work).
 noun_pl('MME-units-per-day','MME-unit-per-day',neutr).
 noun_pl('acetaminophen-milligrams','acetaminophen-milligram',neutr).
 noun_pl(days,day,neutr).
@@ -402,7 +401,6 @@ tv_finsg(prescribes,prescribe).
 tv_finsg(reaches,reach).
 tv_finsg(receives,receive).
 tv_finsg(reduces,reduce).
-tv_finsg(sees,see).
 tv_finsg(starts,start).
 tv_finsg(takes,take).
 tv_finsg(uses,use).

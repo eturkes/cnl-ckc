@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp14',ace_sha256(d165b315cf8de35816887c2f907f033e9cef9d6994ed0a1c7f6429ffe88cf7b8),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+guideline_document('cdc2022-opioid-rec05-imp14',ace_sha256(d165b315cf8de35816887c2f907f033e9cef9d6994ed0a1c7f6429ffe88cf7b8),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
 % S1: A clinically-significant-withdrawal-symptom can signal a further-taper-slowing-need.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(1),[]),'clinically-significant-withdrawal-symptom',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp14',1,ref(1),[]),na,eq,1).

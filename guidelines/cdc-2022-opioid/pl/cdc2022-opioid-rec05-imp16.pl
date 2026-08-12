@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp16',ace_sha256('3b1efaa19919178f01c5732d34615689b791ecac1f62a982f4a67c45ebc3cd5d'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+guideline_document('cdc2022-opioid-rec05-imp16',ace_sha256('3b1efaa19919178f01c5732d34615689b791ecac1f62a982f4a67c45ebc3cd5d'),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
 % S1: Every clinician should assess a dosage-increase-benefit with a patient before a taper-reversal and should assess a dosage-increase-risk with a patient before a taper-reversal.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp16',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp16',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp16',1,ref(2),[A]),'dosage-increase-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

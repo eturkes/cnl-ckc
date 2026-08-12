@@ -706,6 +706,7 @@ v1_functors = ["guideline_schema_version", "guideline_document", "guideline_enti
 v1_directives = ["guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3"]
 v1_decl_kinds = ["multifile", "discontiguous"]
 token_strip_chars = ".,;:?!\"()"
+clex_path_text = "vendor/ape/prolog/lexicon/clex_lexicon.pl"
 def read_corpus_file(file_path, category):
     if file_path.is_symlink():
         violation(category, "is a symlink: " + str(file_path))
@@ -782,16 +783,47 @@ def ace_token_set(ace_paths, docids):
             token = raw_token.strip(token_strip_chars)
             tokens.update({token: True})
     return tokens
-def check_lexicon_liveness(guideline_path, ace_paths, docids):
+def normalized_lexicon_entry(line_text):
+    text = line_text.strip()
+    text = text.removesuffix(".")
+    text = text.replace("'", "")
+    text = text.replace(" ", "")
+    text = text.replace("\t", "")
+    return text
+def clex_entry_set():
+    clex_path = pathlib.Path(clex_path_text)
+    data = read_corpus_file(clex_path, "clex-file")
+    text = data.decode("utf-8")
+    entries = {}
+    for raw_line in text.split("\n"):
+        line_text = raw_line.strip()
+        if line_text:
+            is_comment = line_text.startswith("%")
+            is_directive = line_text.startswith(":-")
+            if not is_comment:
+                if not is_directive:
+                    entries.update({normalized_lexicon_entry(line_text): True})
+    return entries
+def check_lexicon(guideline_path, ace_paths, docids):
     lexicon_path = guideline_path.joinpath("lexicon.ulex")
     data = read_corpus_file(lexicon_path, "lexicon-file")
     text = data.decode("utf-8")
     all_tokens = ace_token_set(ace_paths, docids)
+    clex_entries = clex_entry_set()
     entries = []
+    seen_entries = {}
     live_lexemes = {}
     for raw_line in text.split("\n"):
         line_text = raw_line.strip()
         if line_text:
+            normalized = normalized_lexicon_entry(line_text)
+            redundant = normalized in clex_entries
+            if redundant:
+                violation("lexicon-redundant", "clex already provides: " + line_text)
+            repeated = normalized in seen_entries
+            if repeated:
+                violation("lexicon-duplicate", "entry repeated in lexicon: " + line_text)
+            seen_entries.update({normalized: True})
             entry = lexicon_entry(line_text)
             entries.append(entry)
             entry_copy = list(entry)
@@ -809,6 +841,7 @@ def check_lexicon_liveness(guideline_path, ace_paths, docids):
         live = lemma in live_lexemes
         if not live:
             violation("lexicon-dead-lexeme", "no ace document references: " + surface)
+    print("goal: lexicon ok " + str(lexicon_path) + " " + str(len(entries)) + " entries " + str(len(clex_entries)) + " clex facts")
 def check_product_vocabulary(guideline_path, docid):
     pl_path = guideline_path.joinpath("pl", docid + ".pl")
     data = read_corpus_file(pl_path, "product-vocabulary")
@@ -851,7 +884,7 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
             violation("projection-ledger", "docid missing projection row: " + docid)
         check_product_vocabulary(guideline_path, docid)
     if lexicon_path != None:
-        check_lexicon_liveness(guideline_path, ace_paths, docids)
+        check_lexicon(guideline_path, ace_paths, docids)
 def check_command():
     check_compendium()
     guidelines_root = pathlib.Path("guidelines")

@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp13',ace_sha256('68f959c19db27570cba6dda598ed8ccb384dd0c5a39e644dcb89010cee683e8b'),ulex(sha256(bac3441c3cba94d1d496ba3b04390eae38a0826cd30a0a0f713112b2172476ce))).
+guideline_document('cdc2022-opioid-rec05-imp13',ace_sha256('68f959c19db27570cba6dda598ed8ccb384dd0c5a39e644dcb89010cee683e8b'),ulex(sha256(e099ebb206cfb62cc396438935bd812a79998ee738ec876290f34a554836093e))).
 % S1: If a patient struggles with an opioid-taper then every clinician should maximize a nonopioid-pain-treatment and should address a behavioral-distress.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp13',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,struggle), guideline_arg(actual,C,1,A), guideline_pp(actual,C,with,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp13',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp13',1,ref(5),[A,B,C,D]),'nonopioid-pain-treatment',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,struggle), guideline_arg(actual,C,1,A), guideline_pp(actual,C,with,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
