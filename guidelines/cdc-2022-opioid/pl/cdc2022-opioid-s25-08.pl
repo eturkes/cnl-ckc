@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s25-08',ace_sha256('1576c07f1eae7ab610db4a3a38dc4dadf319d44939898340b744dc4a46b78a23'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
+guideline_document('cdc2022-opioid-s25-08',ace_sha256('1576c07f1eae7ab610db4a3a38dc4dadf319d44939898340b744dc4a46b78a23'),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
 % S1: If a clinician does not conduct a patient-specific-medication-assessment then the clinician should not use a medication.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s25-08',1,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'patient-specific-medication-assessment',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,conduct), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-s25-08',1,box(2),[A]),'$guideline_id'(context,'cdc2022-opioid-s25-08',1,box(3),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'patient-specific-medication-assessment',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,conduct), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).

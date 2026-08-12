@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s23-15',ace_sha256('5451bba6a267452e57ab54a0b9160fa7c9515a5205c13a9ded205b6c6f369c99'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
+guideline_document('cdc2022-opioid-s23-15',ace_sha256('5451bba6a267452e57ab54a0b9160fa7c9515a5205c13a9ded205b6c6f369c99'),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
 % S1: Every clinician should discuss a secure-and-preferably-locked-opioid-storage with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-15',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-15',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-15',1,ref(2),[A]),'secure-and-preferably-locked-opioid-storage',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

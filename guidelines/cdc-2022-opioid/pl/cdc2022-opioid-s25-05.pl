@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s25-05',ace_sha256('675cb90e7c031a99553b23ba24c6dda4ef35013f7774a1e3681da86e07f27efa'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
+guideline_document('cdc2022-opioid-s25-05',ace_sha256('675cb90e7c031a99553b23ba24c6dda4ef35013f7774a1e3681da86e07f27efa'),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
 % S1: If a patient has a complex-pain-syndrome then every clinician may consult a pain-specialist for a diagnosis.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s25-05',1,box(1),[A,B,C,D]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'complex-pain-syndrome',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s25-05',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s25-05',1,ref(5),[A,B,C,D]),'pain-specialist',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'complex-pain-syndrome',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

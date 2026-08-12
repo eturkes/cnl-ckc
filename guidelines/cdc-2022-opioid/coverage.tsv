@@ -18,9 +18,9 @@ B3-13	source/box3-extraction.txt	p14	BOX 3 > Recommendation 9	ace(cdc2022-opioid
 B3-14	source/box3-extraction.txt	p14	BOX 3 > Recommendation 10	ace(cdc2022-opioid-rec10)
 B3-15	source/box3-extraction.txt	p14	BOX 3 > Recommendation 11	ace(cdc2022-opioid-rec11)
 B3-16	source/box3-extraction.txt	p14	BOX 3 > Recommendation 12	ace(cdc2022-opioid-rec12)
-S3-01	source/front-matter-extraction.txt	p3	Summary	pending
-S3-02	source/front-matter-extraction.txt	p3	Summary	pending
-S3-03	source/front-matter-extraction.txt	p3	Summary	pending
+S3-01	source/front-matter-extraction.txt	p3	Summary	ace(cdc2022-opioid-s3-01)
+S3-02	source/front-matter-extraction.txt	p3	Summary	ace(cdc2022-opioid-s3-02)
+S3-03	source/front-matter-extraction.txt	p3	Summary	ace(cdc2022-opioid-s3-03)
 S4-01	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
 S4-02	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
 S4-03	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
@@ -32,41 +32,41 @@ S5-02	source/front-matter-extraction.txt	p5	Introduction > Background	uncovered(
 S5-03	source/front-matter-extraction.txt	p5	Introduction > Background	uncovered(external: reports third-party guidance or policy)
 S5-04	source/front-matter-extraction.txt	p5	Introduction > Background	uncovered(external: reports third-party guidance or policy)
 S6-01	source/front-matter-extraction.txt	p6	Introduction > Rationale	restates(S8-12)
-S6-02	source/front-matter-extraction.txt	p6	Introduction > Rationale	pending
+S6-02	source/front-matter-extraction.txt	p6	Introduction > Rationale	ace(cdc2022-opioid-s6-02)
 S6-03	source/front-matter-extraction.txt	p6	Introduction > Rationale	uncovered(aim: states an aspiration without operative directive)
 S7-01	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	restates(S3-03)
-S7-02	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
-S7-03	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
+S7-02	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	ace(cdc2022-opioid-s7-02)
+S7-03	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	ace(cdc2022-opioid-s7-03)
 S8-01	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	uncovered(descriptive: states context without an operative directive)
 S8-02	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-02)
 S8-03	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-03)
 S8-04	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	uncovered(descriptive: fuses recommendations 4, 5, and 6 without adding a directive; canonical at B3-06, B3-07, B3-09)
 S8-05	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-07)
-S8-06	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
+S8-06	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	ace(cdc2022-opioid-s8-06)
 S8-07	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-16)
 S8-08	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S3-01)
-S8-09	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
-S8-10	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
+S8-09	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	ace(cdc2022-opioid-s8-09)
+S8-10	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	ace(cdc2022-opioid-s8-10)
 S8-11	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S19-07)
-S8-12	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
+S8-12	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	ace(cdc2022-opioid-s8-12)
 S8-13	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S3-02)
-S9-01	source/front-matter-extraction.txt	p9	BOX 2 > Intended use > prohibited uses	pending
+S9-01	source/front-matter-extraction.txt	p9	BOX 2 > Intended use > prohibited uses	ace(cdc2022-opioid-s9-01)
 S9-02	source/front-matter-extraction.txt	p9	BOX 2 > Intended use	restates(S3-02)
 S9-03	source/front-matter-extraction.txt	p9	BOX 2 > Intended use	restates(S3-02)
-S9-04	source/front-matter-extraction.txt	p9	Scope and Audience	pending
-S9-05	source/front-matter-extraction.txt	p9	BOX 2 > Intended use > affirmative uses	pending
+S9-04	source/front-matter-extraction.txt	p9	Scope and Audience	ace(cdc2022-opioid-s9-04)
+S9-05	source/front-matter-extraction.txt	p9	BOX 2 > Intended use > affirmative uses	ace(cdc2022-opioid-s9-05)
 S9-06	source/front-matter-extraction.txt	p9	Scope and Audience	restates(S7-02)
 S9-07	source/front-matter-extraction.txt	p9	Scope and Audience	restates(S7-03)
 S10-01	source/front-matter-extraction.txt	p10	Scope and Audience	uncovered(descriptive: states context without an operative directive)
 S10-02	source/front-matter-extraction.txt	p10	Scope and Audience	uncovered(external: reports third-party guidance or policy)
 S10-03	source/front-matter-extraction.txt	p10	Scope and Audience	uncovered(descriptive: states context without an operative directive)
-S10-04	source/front-matter-extraction.txt	p10	Scope and Audience	pending
+S10-04	source/front-matter-extraction.txt	p10	Scope and Audience	ace(cdc2022-opioid-s10-04)
 S10-05	source/front-matter-extraction.txt	p10	Scope and Audience	restates(S3-03)
 S10-06	source/front-matter-extraction.txt	p10	Scope and Audience	restates(S3-03)
-S11-01	source/front-matter-extraction.txt	p11	Scope and Audience	pending
-S12-01	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
-S12-02	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
-S12-03	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
+S11-01	source/front-matter-extraction.txt	p11	Scope and Audience	ace(cdc2022-opioid-s11-01)
+S12-01	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	ace(cdc2022-opioid-s12-01)
+S12-02	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	ace(cdc2022-opioid-s12-02)
+S12-03	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	ace(cdc2022-opioid-s12-03)
 S14-01	source/front-matter-extraction.txt	p14	BOX 3 > Recommendation categories	restates(S12-01)
 S14-02	source/front-matter-extraction.txt	p14	BOX 3 > Recommendation categories	restates(S12-02)
 S14-03	source/front-matter-extraction.txt	p14	BOX 3 > Recommendation categories	restates(S12-03)
@@ -77,21 +77,21 @@ S16-01	source/front-matter-extraction.txt	p16	Federal Advisory Committee Review 
 S17-01	source/front-matter-extraction.txt	p17	Peer Review	uncovered(process: reports guideline-development procedure)
 S17-02	source/front-matter-extraction.txt	p17	Recommendations	restates(S3-02)
 S17-03	source/front-matter-extraction.txt	p17	Recommendations > Category framing	uncovered(descriptive: restates the category definitions without adding a directive; canonical at S12-01, S12-02, S12-03)
-S18-01	source/front-matter-extraction.txt	p18	Recommendations > Implementation framing	pending
+S18-01	source/front-matter-extraction.txt	p18	Recommendations > Implementation framing	ace(cdc2022-opioid-s18-01)
 S18-02	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	uncovered(heading: structural label without directive)
-S18-03	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	pending
+S18-03	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	ace(cdc2022-opioid-s18-03)
 S18-04	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	restates(S8-12)
 S18-05	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	restates(S6-03)
-S18-06	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	pending
-S18-07	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	pending
+S18-06	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	ace(cdc2022-opioid-s18-06)
+S18-07	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	ace(cdc2022-opioid-s18-07)
 S19-01	source/rec01-05-body-extraction.txt	p19	Box 4 > Guiding principle 1	restates(S18-03)
 S19-02	source/rec01-05-body-extraction.txt	p19	Box 4 > Guiding principle 2a	restates(S8-12)
 S19-03	source/rec01-05-body-extraction.txt	p19	Box 4 > Guiding principle 2b	restates(S6-03)
 S19-04	source/rec01-05-body-extraction.txt	p19	Box 4 > Guiding principle 3	restates(S18-06)
 S19-05	source/rec01-05-body-extraction.txt	p19	Box 4 > Guiding principle 4	restates(S18-07)
 S19-06	source/rec01-05-body-extraction.txt	p19	Box 4 > Guiding principle 5	restates(S19-07)
-S19-07	source/rec01-05-body-extraction.txt	p19	Guiding principles > Main-text list item 5	pending
-S19-08	source/rec01-05-body-extraction.txt	p19	Recommendations 1–2 area > Introductory principle	pending
+S19-07	source/rec01-05-body-extraction.txt	p19	Guiding principles > Main-text list item 5	ace(cdc2022-opioid-s19-07)
+S19-08	source/rec01-05-body-extraction.txt	p19	Recommendations 1–2 area > Introductory principle	ace(cdc2022-opioid-s19-08)
 S19-09	source/rec01-05-body-extraction.txt	p19	Rec 1 > Recommendation statement	restates(B3-02)
 S19-10	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp01)
 S19-11	source/rec01-05-body-extraction.txt	p19	Rec 1 > Implementation considerations	ace(cdc2022-opioid-rec01-imp02)

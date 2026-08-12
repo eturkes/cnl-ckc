@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s29-19',ace_sha256('10839e0e8342643b2aa38efe30d0ec8e95f23f218703ac94f1854e1083faf899'),ulex(sha256('06c1c26d6b6abe1436b8c94a276937ad072806062117417de2ab8086fdf9a3e9'))).
+guideline_document('cdc2022-opioid-s29-19',ace_sha256('10839e0e8342643b2aa38efe30d0ec8e95f23f218703ac94f1854e1083faf899'),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
 % S1: Every clinician should consider a cognitive-status-interference during an opioid-therapy-management.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-19',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-19',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s29-19',1,ref(2),[A]),'cognitive-status-interference',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
