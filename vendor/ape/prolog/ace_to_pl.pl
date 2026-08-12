@@ -46,6 +46,17 @@
 % authored questions reject (class unsupported, question_not_supported(S)
 % when the question is the first unsupported construct the processing
 % order reaches — an earlier unsupported construct keeps its own detail).
+% Discourse: one invocation = one document = one APE discourse. A later
+% sentence may resolve a definite NP or personal pronoun against an
+% accessible earlier sentence's referent; APE resolves silently and the
+% product pins the resolution explicitly — the referent keeps the
+% '$guideline_id' of its introducing sentence, and the resolving
+% sentence's guideline_arg/guideline_pp rows cite that id verbatim, so a
+% cross-sentence edge is a first-class product fact. Every non-resolving
+% reference is fail-closed: an absent or inaccessible antecedent and an
+% unresolved pronoun each raise an APE anaphor message (warning or
+% error), and any APE message rejects the document (class ape_messages),
+% so silent accommodation never reaches the product.
 
 :- module(ace_to_pl, [main/0]).
 

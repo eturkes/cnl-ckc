@@ -1,0 +1,1 @@
+ace_to_pl_error(ape_messages,[message(warning,anaphor,-(1,2),'The definite noun phrase \'the doctor\' does not have an antecedent and thus is not interpreted as anaphoric reference, but as a new indefinite noun phrase.','If the definite noun phrase \'the doctor\' should be an anaphoric reference then you must introduce an appropriate antecedent.')]).
