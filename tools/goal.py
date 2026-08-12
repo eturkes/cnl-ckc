@@ -263,6 +263,21 @@ def run_aggregate(scratch_path, swipl_executable, stage_path, manifest_path, doc
     if not stdout_text.endswith(" obligations\n"):
         cleanup_violation(scratch_path, "aggregate-report", "unexpected report: " + stdout_text.strip())
     return stdout_text
+def run_recursion(scratch_path, swipl_executable, stage_path, manifest_path, doc_count):
+    tail_args = ["recursion-check", str(manifest_path)]
+    command = compiler_command(swipl_executable, stage_path, tail_args)
+    result = subprocess.run(command, capture_output=True)
+    if result.returncode != 0:
+        relay_failure(scratch_path, result)
+    if result.stderr:
+        cleanup_and_fail(scratch_path, "recursion-stderr", "non-empty stderr for manifest: " + str(manifest_path))
+    stdout_text = result.stdout.decode("utf-8", errors="replace")
+    expected_prefix = "ace_to_pl recursion ok " + str(doc_count) + " documents "
+    if not stdout_text.startswith(expected_prefix):
+        cleanup_violation(scratch_path, "recursion-report", "unexpected report: " + stdout_text.strip())
+    if not stdout_text.endswith(" rule clauses\n"):
+        cleanup_violation(scratch_path, "recursion-report", "unexpected report: " + stdout_text.strip())
+    return stdout_text
 def check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs):
     doc_count = len(manifest_pairs)
     forward_path = scratch_path.joinpath("manifest-forward")
@@ -275,6 +290,8 @@ def check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs):
     reverse_report = run_aggregate(scratch_path, swipl_executable, stage_path, reverse_path, doc_count)
     if forward_report != reverse_report:
         cleanup_violation(scratch_path, "aggregate-order", "forward and reverse manifests disagree")
+    recursion_report = run_recursion(scratch_path, swipl_executable, stage_path, forward_path, doc_count)
+    print("goal: " + recursion_report.strip())
 def compile_command(guideline_id):
     if not valid_docid(guideline_id):
         fail("guideline", "invalid guideline id: " + guideline_id)

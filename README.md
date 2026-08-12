@@ -55,8 +55,9 @@ compilation of it, or part of one small named compiler base:
   (byte-determinism), compares against the committed Prolog (freshness),
   load-checks every compiled document, derives and discharges every
   document's proof obligations alone and as one co-loaded composition whose
-  manifest is pinned to the guideline's whole document set, and asserts each
-  red probe is rejected with its named error class and exit status.
+  manifest is pinned to the guideline's whole document set, scans that
+  composition for left recursion, and asserts each red probe is rejected
+  with its named error class and exit status.
 
 ## Running
 
@@ -209,6 +210,15 @@ silently repair them, and negation-as-failure is evaluated against the
 composition it will actually run in. It reports
 `ace_to_pl aggregate ok <N> documents <G> obligations`.
 
+`recursion-check <manifest>` loads that same composition (payload column
+ignored) and proves no clause head unifies with its own leftmost body
+goal, renaming the goal apart first the way SLD renames a clause. A
+match rejects as `proof, left_recursive(Site, Name, Arity)`, where
+`Site` is the offending clause's own `sentence(DocId, S)` when it
+carries one. The scan is structural, so its verdict is load-order
+independent; it reports `ace_to_pl recursion ok <N> documents <M> rule
+clauses`, the count naming what it read.
+
 Payloads are evidence, not authority: `<G>` is checked against the
 composition rather than taken from the payload stream. Before any head is
 proved, the obligation set must cover exactly the sentence identities the
@@ -235,9 +245,12 @@ succeed in another; an engine with tabling or bottom-up evaluation is
 immune. This repository's own gates are fail-closed against it: every
 obligation is proved under the bounded search above, so a divergent
 branch is cut by those bounds and reported as a failed obligation
-instead of hanging. In the shipped corpus no clause is left-recursive —
-no head unifies with its own leftmost body goal — which is the shape
-that makes an open query's termination depend on load order.
+instead of hanging. Left recursion — a head that unifies with its own
+leftmost body goal, the shape that makes an open query's termination
+depend on load order — is checked rather than asserted: every
+`tools/goal.py check` runs `recursion-check` over the loaded
+composition and rejects one, printing the rule-clause count it scanned.
+The shipped corpus holds none.
 
 Authoring notes (v1): an ACE document states guideline knowledge and
 nothing else — no witness seed facts, no proper-name stand-ins, no
@@ -253,7 +266,13 @@ rejects (`condition_shape(relation(A,of,B))`) — `every clinician of a
 clinic` becomes either a relative clause, `every clinician who works at
 a clinic`, or one compound noun with its own lexicon entry,
 `every clinic-clinician`. Count nouns take an explicit determiner. `for`
-as a preposition needs a `prep(for,for)` user-lexicon entry.
+as a preposition needs a `prep(for,for)` user-lexicon entry. An
+indefinite consequent entity that repeats the noun of the antecedent's
+first condition (`If a patient … then a patient …`) mints a fresh
+referent whose clause head unifies with its own leftmost body goal: the
+document compiles and `check` then rejects the composition as
+`proof, left_recursive(…)`. Refer back to the antecedent referent
+(`the patient`) or give the consequent entity its own noun.
 
 ## Operating
 

@@ -18,6 +18,12 @@
 %   aggregate-check <manifest>        load a composition (LF lines "<pl>\t<payload>",
 %                                     0-byte file = empty) and replay every payload
 %                                     obligation against the loaded whole
+%   recursion-check <manifest>        load the same composition (payload column
+%                                     ignored) and prove no clause head unifies with
+%                                     its own leftmost body goal — the load-order
+%                                     divergence shape; rejects
+%                                     proof,left_recursive(Site,Name,Arity), where
+%                                     Site = sentence(DocId,S) | unattributed
 %
 % Compile contract: stdin = strict RFC 3629 UTF-8; one ACE sentence per non-empty LF line.
 % <docid> = nonempty [a-z0-9-] with no leading dash.
@@ -100,6 +106,9 @@ dispatch([check, File], Input, Output, ErrorStream) :-
 dispatch(['aggregate-check', Manifest], Input, Output, ErrorStream) :-
     !,
     aggregate_check_mode(Manifest, Input, Output, ErrorStream).
+dispatch(['recursion-check', Manifest], Input, Output, ErrorStream) :-
+    !,
+    recursion_check_mode(Manifest, Input, Output, ErrorStream).
 dispatch([Tree, DocId], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
@@ -525,6 +534,88 @@ aggregate_prove_heads([]).
 aggregate_prove_heads([Head|Heads]) :-
     v1_bounded_head_call(user:Head),
     aggregate_prove_heads(Heads).
+
+/* ---------- recursion-check mode: composition left-recursion scan ---------- */
+
+/* Termination belongs to the consuming engine, but the one shape that
+   makes an open query's termination depend on load order is checkable
+   here: naive SLD selects the leftmost body goal, so a clause head that
+   unifies with it descends into itself. The scan is structural — no
+   payloads, no proving, load-order independent — and reports the rule
+   clauses it read, so a composition that loaded no rules is visible in
+   the report instead of passing silently. Manifest grammar and loading
+   are the aggregate replay's, minus the payload column. */
+recursion_check_mode(Manifest, Input, Output, ErrorStream) :-
+    catch(
+        ( aggregate_read_manifest(Manifest, PlPaths, _) ->
+            true
+        ; throw(error(aggregate_manifest(Manifest),
+              context(ace_to_pl:recursion_check_mode/4, plain_failure)))
+        ),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)),
+    ( PlPaths == [] ->
+        recursion_report(Output, 0, 0)
+    ; aggregate_declare_indicators,
+      aggregate_load(PlPaths, Input, Output, ErrorStream),
+      recursion_rules(Rules),
+      recursion_scan(Rules, ErrorStream),
+      length(Rules, RuleCount),
+      length(PlPaths, DocCount),
+      recursion_report(Output, DocCount, RuleCount)
+    ).
+
+recursion_report(Output, DocCount, RuleCount) :-
+    format(Output, 'ace_to_pl recursion ok ~d documents ~d rule clauses~n',
+        [DocCount, RuleCount]),
+    halt(0).
+
+recursion_rules(Rules) :-
+    v1_indicators(Indicators),
+    findall(rule(Name, Arity, Head, Body),
+        ( member(Name/Arity, Indicators),
+          functor(Head, Name, Arity),
+          catch(clause(user:Head, Body), _, fail),
+          Body \== true
+        ),
+        Rules).
+
+/* SLD renames a clause apart before resolving it, so the leftmost goal
+   is copied before the unifiability test — a head and goal that unify
+   only after renaming (p(X,a) :- p(b,X)) is the same descent. */
+recursion_scan([], _).
+recursion_scan([rule(Name, Arity, Head, Body)|Rules], ErrorStream) :-
+    ( recursion_leftmost(Body, Goal),
+      copy_term(Goal, Fresh),
+      \+ \+ Head = Fresh ->
+        recursion_site(Head, Body, Site),
+        emit_error(ErrorStream, proof, left_recursive(Site, Name, Arity), 1)
+    ; recursion_scan(Rules, ErrorStream)
+    ).
+
+recursion_site(Head, Body, Site) :-
+    ( aggregate_identity((Head :- Body), DocId, S) ->
+        Site = sentence(DocId, S)
+    ; Site = unattributed
+    ).
+
+recursion_leftmost(Body, _) :-
+    var(Body),
+    !,
+    fail.
+recursion_leftmost((A, _), Goal) :-
+    !,
+    recursion_leftmost(A, Goal).
+recursion_leftmost((A ; _), Goal) :-
+    !,
+    recursion_leftmost(A, Goal).
+recursion_leftmost(\+ A, Goal) :-
+    !,
+    recursion_leftmost(A, Goal).
+recursion_leftmost(user:A, Goal) :-
+    !,
+    recursion_leftmost(A, Goal).
+recursion_leftmost(Goal, Goal).
 
 /* ---------- compile mode ---------- */
 

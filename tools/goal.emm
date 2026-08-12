@@ -285,6 +285,22 @@ Define [[run_aggregate]] taking scratch_path, swipl_executable, stage_path, mani
         Do [[cleanup_violation]](scratch_path, "aggregate-report", "unexpected report: " plus [[stdout_text.strip]]()).
     Give back stdout_text.
 
+Define [[run_recursion]] taking scratch_path, swipl_executable, stage_path, manifest_path, doc_count:
+    Set tail_args to <"recursion-check", [[str]](manifest_path)>.
+    Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
+    Set result to [[subprocess.run]](command, capture_output=True).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](scratch_path, result).
+    If result.stderr:
+        Do [[cleanup_and_fail]](scratch_path, "recursion-stderr", "non-empty stderr for manifest: " plus [[str]](manifest_path)).
+    Set stdout_text to [[result.stdout.decode]]("utf-8", errors="replace").
+    Set expected_prefix to "ace_to_pl recursion ok " plus [[str]](doc_count) plus " documents ".
+    If not [[stdout_text.startswith]](expected_prefix):
+        Do [[cleanup_violation]](scratch_path, "recursion-report", "unexpected report: " plus [[stdout_text.strip]]()).
+    If not [[stdout_text.endswith]](" rule clauses\n"):
+        Do [[cleanup_violation]](scratch_path, "recursion-report", "unexpected report: " plus [[stdout_text.strip]]()).
+    Give back stdout_text.
+
 Define [[check_aggregate]] taking scratch_path, swipl_executable, stage_path, manifest_pairs:
     Set doc_count to [[len]](manifest_pairs).
     Set forward_path to [[scratch_path.joinpath]]("manifest-forward").
@@ -297,6 +313,8 @@ Define [[check_aggregate]] taking scratch_path, swipl_executable, stage_path, ma
     Set reverse_report to [[run_aggregate]](scratch_path, swipl_executable, stage_path, reverse_path, doc_count).
     If forward_report does not equal reverse_report:
         Do [[cleanup_violation]](scratch_path, "aggregate-order", "forward and reverse manifests disagree").
+    Set recursion_report to [[run_recursion]](scratch_path, swipl_executable, stage_path, forward_path, doc_count).
+    Do [[print]]("goal: " plus [[recursion_report.strip]]()).
 
 Define [[compile_command]] taking guideline_id:
     If not [[valid_docid]](guideline_id):
