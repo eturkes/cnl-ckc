@@ -951,7 +951,7 @@ def check_projection_ledger(guideline_path):
     if not row_lines:
         violation("projection-ledger", "ledger holds no rows")
     seen_docids = {}
-    row_docids = []
+    row_pairs = []
     for row_line in row_lines:
         fields = row_line.split("\t")
         if len(fields) != 4:
@@ -972,8 +972,8 @@ def check_projection_ledger(guideline_path):
         if duplicate:
             violation("projection-ledger", "duplicate row docid: " + docid)
         seen_docids.update({docid: True})
-        row_docids.append(docid)
-    return row_docids
+        row_pairs.append([docid, region])
+    return row_pairs
 def coverage_status_kind(row_id, status_text):
     if status_text == "pending":
         return ["pending", ""]
@@ -1169,6 +1169,7 @@ def check_coverage(guideline_path, docids):
                     violation("coverage", "coverage row without evidence region: " + claimed_id)
     meter = "goal: coverage ok " + guideline_path.name + " " + str(row_count) + " regions; ace=" + str(ace_count) + " restates=" + str(restates_count) + " uncovered=" + str(uncovered_count) + " pending=" + str(pending_count)
     print(meter)
+    return status_by_id
 def lexicon_entry(line_text):
     head_parts = line_text.split("(", 1)
     kind = head_parts.pop(0)
@@ -1362,7 +1363,12 @@ def check_product_vocabulary(guideline_path, docid):
                     if not functor_known:
                         violation("product-vocabulary", "unauthorized clause functor in " + docid + ": " + functor)
 def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
-    ledger_docids = check_projection_ledger(guideline_path)
+    ledger_pairs = check_projection_ledger(guideline_path)
+    ledger_docids = []
+    for ledger_pair in ledger_pairs:
+        pair_copy = list(ledger_pair)
+        ledger_docid = pair_copy.pop(0)
+        ledger_docids.append(ledger_docid)
     for ledger_docid in ledger_docids:
         known = ledger_docid in docids
         if not known:
@@ -1372,7 +1378,17 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
         if not covered:
             violation("projection-ledger", "docid missing projection row: " + docid)
         check_product_vocabulary(guideline_path, docid)
-    check_coverage(guideline_path, docids)
+    status_by_id = check_coverage(guideline_path, docids)
+    for ledger_pair in ledger_pairs:
+        pair_copy = list(ledger_pair)
+        ledger_docid = pair_copy.pop(0)
+        ledger_region = pair_copy.pop(0)
+        expected_status = "ace(" + ledger_docid + ")"
+        actual_status = status_by_id.get(ledger_region, "")
+        if actual_status == "":
+            violation("projection-coverage", "projection row names no coverage region: " + ledger_docid + " " + ledger_region)
+        if actual_status != expected_status:
+            violation("projection-coverage", "coverage region " + ledger_region + " does not carry ace(" + ledger_docid + "): " + actual_status)
     if lexicon_path != None:
         check_lexicon(guideline_path, ace_paths, docids)
 def check_command():

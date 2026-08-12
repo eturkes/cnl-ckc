@@ -63,7 +63,8 @@ a direct compilation of it, or part of one small named compiler base:
   one-active-row promotion invariant — and prints the terminal meter the
   `/goal` exhaustion clause reads), then validates layout, source records,
   and Prolog/lexicon inventory closure, validates every guideline's corpus
-  ledgers (projection-notes header bytes and per-document totality;
+  ledgers (projection-notes header bytes and per-document totality, each
+  row's region resolving to the coverage row carrying its ace(docid);
   coverage-ledger closure — row grammar, region totality against each
   evidence file's own payload census and locator inventory, ace-row ↔
   document-set bijection, single-step restates targets — printing a

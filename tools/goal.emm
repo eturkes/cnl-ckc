@@ -1000,7 +1000,7 @@ Define [[check_projection_ledger]] taking guideline_path:
     If not row_lines:
         Do [[violation]]("projection-ledger", "ledger holds no rows").
     Set seen_docids to {}.
-    Set row_docids to <>.
+    Set row_pairs to <>.
     For each row_line in row_lines:
         Set fields to [[row_line.split]]("\t").
         If [[len]](fields) does not equal 4:
@@ -1021,8 +1021,8 @@ Define [[check_projection_ledger]] taking guideline_path:
         If duplicate:
             Do [[violation]]("projection-ledger", "duplicate row docid: " plus docid).
         Do [[seen_docids.update]]({docid: True}).
-        Do [[row_docids.append]](docid).
-    Give back row_docids.
+        Do [[row_pairs.append]](<docid, region>).
+    Give back row_pairs.
 
 Define [[coverage_status_kind]] taking row_id, status_text:
     If status_text equals "pending":
@@ -1221,6 +1221,7 @@ Define [[check_coverage]] taking guideline_path, docids:
                     Do [[violation]]("coverage", "coverage row without evidence region: " plus claimed_id).
     Set meter to "goal: coverage ok " plus guideline_path.name plus " " plus [[str]](row_count) plus " regions; ace=" plus [[str]](ace_count) plus " restates=" plus [[str]](restates_count) plus " uncovered=" plus [[str]](uncovered_count) plus " pending=" plus [[str]](pending_count).
     Do [[print]](meter).
+    Give back status_by_id.
 
 Define [[lexicon_entry]] taking line_text:
     Set head_parts to [[line_text.split]]("(", 1).
@@ -1423,7 +1424,12 @@ Define [[check_product_vocabulary]] taking guideline_path, docid:
                         Do [[violation]]("product-vocabulary", "unauthorized clause functor in " plus docid plus ": " plus functor).
 
 Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
-    Set ledger_docids to [[check_projection_ledger]](guideline_path).
+    Set ledger_pairs to [[check_projection_ledger]](guideline_path).
+    Set ledger_docids to <>.
+    For each ledger_pair in ledger_pairs:
+        Set pair_copy to [[list]](ledger_pair).
+        Set ledger_docid to [[pair_copy.pop]](0).
+        Do [[ledger_docids.append]](ledger_docid).
     For each ledger_docid in ledger_docids:
         Set known to ledger_docid is in docids.
         If not known:
@@ -1433,7 +1439,17 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
         If not covered:
             Do [[violation]]("projection-ledger", "docid missing projection row: " plus docid).
         Do [[check_product_vocabulary]](guideline_path, docid).
-    Do [[check_coverage]](guideline_path, docids).
+    Set status_by_id to [[check_coverage]](guideline_path, docids).
+    For each ledger_pair in ledger_pairs:
+        Set pair_copy to [[list]](ledger_pair).
+        Set ledger_docid to [[pair_copy.pop]](0).
+        Set ledger_region to [[pair_copy.pop]](0).
+        Set expected_status to "ace(" plus ledger_docid plus ")".
+        Set actual_status to [[status_by_id.get]](ledger_region, "").
+        If actual_status equals "":
+            Do [[violation]]("projection-coverage", "projection row names no coverage region: " plus ledger_docid plus " " plus ledger_region).
+        If actual_status does not equal expected_status:
+            Do [[violation]]("projection-coverage", "coverage region " plus ledger_region plus " does not carry ace(" plus ledger_docid plus "): " plus actual_status).
     If lexicon_path does not equal None:
         Do [[check_lexicon]](guideline_path, ace_paths, docids).
 
