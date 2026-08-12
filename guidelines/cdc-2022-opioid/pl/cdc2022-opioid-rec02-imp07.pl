@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp07',ace_sha256('8920c5374806468c881bd226c78d1a7b35508314087202264e0bd5284f0550bd'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
+guideline_document('cdc2022-opioid-rec02-imp07',ace_sha256('8920c5374806468c881bd226c78d1a7b35508314087202264e0bd5284f0550bd'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
 % S1: If a patient has a multiple-joint-osteoarthritis then every clinician can consider a duloxetine and can consider a systemic-NSAID.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp07',1,box(1),[A,B,C,D]),can) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'multiple-joint-osteoarthritis',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp07',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp07',1,ref(5),[A,B,C,D]),duloxetine,countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'multiple-joint-osteoarthritis',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

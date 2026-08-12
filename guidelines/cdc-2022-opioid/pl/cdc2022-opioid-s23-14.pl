@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s23-14',ace_sha256('3bebde236bbf71aa1cef00a9d771826baec8b04d163b45f03fe154e5c4b86a23'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
+guideline_document('cdc2022-opioid-s23-14',ace_sha256('3bebde236bbf71aa1cef00a9d771826baec8b04d163b45f03fe154e5c4b86a23'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
 % S1: Every clinician should discuss an intentional-or-unintentional-opioid-sharing-risk-for-household-or-other-person with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-14',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-14',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-14',1,ref(2),[A]),'intentional-or-unintentional-opioid-sharing-risk-for-household-or-other-person',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

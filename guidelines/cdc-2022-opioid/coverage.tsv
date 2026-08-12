@@ -287,27 +287,27 @@ S32-13	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerat
 S32-14	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp07)
 S32-15	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp08)
 S32-17	source/rec01-05-body-extraction.txt	p32	Rec 4 > Implementation considerations	ace(cdc2022-opioid-rec04-imp09)
-S33-01	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote instruction	pending
+S33-01	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote instruction	ace(cdc2022-opioid-s33-01)
 S33-02	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution lead-in	uncovered(heading: structural label without directive)
-S33-03	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 3	pending
-S33-04	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 4	pending
-S33-05	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 5	pending
-S33-06	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 7	pending
+S33-03	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 3	ace(cdc2022-opioid-s33-03)
+S33-04	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 4	ace(cdc2022-opioid-s33-04)
+S33-05	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 5	ace(cdc2022-opioid-s33-05)
+S33-06	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote caution 7	ace(cdc2022-opioid-s33-06)
 S33-07	source/rec01-05-body-extraction.txt	p33	Rec 4 > Supporting rationale > Table footnote guidepost statement	restates(S32-08)
 S34-01	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(B3-06)
 S34-02	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(S32-12)
 S34-03	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
-S34-04	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
-S34-05	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
+S34-04	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	ace(cdc2022-opioid-s34-04)
+S34-05	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	ace(cdc2022-opioid-s34-05)
 S34-06	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(S32-15)
-S34-07	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
+S34-07	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	ace(cdc2022-opioid-s34-07)
 S34-08	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(B3-10)
 S34-09	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(S32-14)
-S34-10	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
+S34-10	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	ace(cdc2022-opioid-s34-10)
 S34-11	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(S32-17)
 S34-12	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S34-13	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
-S34-14	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
+S34-14	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	ace(cdc2022-opioid-s34-14)
 S34-15	source/rec01-05-body-extraction.txt	p34	Rec 5 > Recommendation statement	restates(B3-07)
 S35-01	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	restates(B3-07)
 S35-02	source/rec01-05-body-extraction.txt	p35	Rec 5 > Implementation considerations	restates(B3-07)
@@ -345,54 +345,54 @@ S37-06	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > De
 S37-07	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
 S37-08	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-19)
 S37-09	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-16)
-S37-10	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-11	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-12	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-13	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
+S37-10	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s37-10)
+S37-11	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s37-11)
+S37-12	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s37-12)
+S37-13	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s37-13)
 S37-14	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	uncovered(external: reports third-party guidance or policy)
-S37-15	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
+S37-15	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s37-15)
 S37-16	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
 S37-17	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-07)
 S37-18	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
-S37-19	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
+S37-19	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s37-19)
 S38-01	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-07)
-S38-02	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S38-03	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S38-04	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	pending
-S38-05	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	pending
+S38-02	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s38-02)
+S38-03	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	ace(cdc2022-opioid-s38-03)
+S38-04	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	ace(cdc2022-opioid-s38-04)
+S38-05	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	ace(cdc2022-opioid-s38-05)
 S38-06	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	restates(S35-20)
 S38-07	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	restates(S35-20)
-S38-08	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	pending
+S38-08	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	ace(cdc2022-opioid-s38-08)
 S38-09	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	restates(S35-06)
 S38-10	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	restates(S35-06)
-S38-11	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
-S38-12	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
+S38-11	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	ace(cdc2022-opioid-s38-11)
+S38-12	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	ace(cdc2022-opioid-s38-12)
 S38-13	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	restates(S35-21)
 S38-14	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	restates(S35-08)
 S38-15	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	restates(S35-09)
-S38-16	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
-S38-17	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
+S38-16	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	ace(cdc2022-opioid-s38-16)
+S38-17	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	ace(cdc2022-opioid-s38-17)
 S38-18	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-12)
 S38-19	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-10)
 S38-20	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-12)
 S38-21	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-11)
 S38-22	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-23)
-S39-01	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	pending
+S39-01	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	ace(cdc2022-opioid-s39-01)
 S39-02	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-13)
 S39-03	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-14)
 S39-04	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-15)
 S39-05	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-16)
 S39-06	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-18)
-S39-07	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	pending
+S39-07	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	ace(cdc2022-opioid-s39-07)
 S39-08	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(B3-07)
-S39-09	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	pending
-S39-10	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering	pending
+S39-09	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	ace(cdc2022-opioid-s39-09)
+S39-10	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering	ace(cdc2022-opioid-s39-10)
 S39-11	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering	uncovered(descriptive: states context without an operative directive)
-S39-12	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	pending
+S39-12	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	ace(cdc2022-opioid-s39-12)
 S39-13	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	uncovered(descriptive: states context without an operative directive)
 S39-14	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	uncovered(external: reports third-party guidance or policy)
 S39-15	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	restates(S39-16)
-S39-16	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	pending
+S39-16	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	ace(cdc2022-opioid-s39-16)
 S40-01	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Transitioning to buprenorphine	pending
 S40-02	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	restates(S35-22)
 S40-03	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	restates(S36-01)

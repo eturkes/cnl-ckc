@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp23',ace_sha256('9d1a9d3a2296356d4b1d6776170be7eef0bf60d9e9dd21aac6e2a0b58e306337'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
+guideline_document('cdc2022-opioid-rec02-imp23',ace_sha256('9d1a9d3a2296356d4b1d6776170be7eef0bf60d9e9dd21aac6e2a0b58e306337'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
 % S1: Every clinician should avoid a rapid-opioid-taper.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp23',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp23',1,ref(2),[A]),'rapid-opioid-taper',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

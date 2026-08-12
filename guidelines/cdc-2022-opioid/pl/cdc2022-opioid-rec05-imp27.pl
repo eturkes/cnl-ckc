@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp27',ace_sha256('4ad60836b51aa772c866a76341808739998aa19658b65e43264d4469ee1a1c3e'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
+guideline_document('cdc2022-opioid-rec05-imp27',ace_sha256('4ad60836b51aa772c866a76341808739998aa19658b65e43264d4469ee1a1c3e'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
 % S1: If a patient takes an opioid during at least 1 year then a ten-percent-per-month-or-slower-taper may outperform a rapid-taper during a tolerability-assessment.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp27',1,ref(5),[A,B,C,D]),'ten-percent-per-month-or-slower-taper',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,year,countable), guideline_cardinality(actual,C,na,geq,1), guideline_event(actual,D,take), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,during,C).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp27',1,ref(5),[A,B,C,D]),na,eq,1) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,year,countable), guideline_cardinality(actual,C,na,geq,1), guideline_event(actual,D,take), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,during,C).

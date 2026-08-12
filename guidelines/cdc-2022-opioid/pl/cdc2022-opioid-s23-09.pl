@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s23-09',ace_sha256('1c31ecaf6de39cc875796a14dfdcbdb56ffc26f2be246759561880b08c095dec'),ulex(sha256('9d39595833bb1358c343511806091b34e2442561f073b432f531f68ac385a15e'))).
+guideline_document('cdc2022-opioid-s23-09',ace_sha256('1c31ecaf6de39cc875796a14dfdcbdb56ffc26f2be246759561880b08c095dec'),ulex(sha256('0e8a9a04fd387b8eab12faf03224671330b94c03dff5f0bf39f23a8d14af88bd'))).
 % S1: Every clinician should explain a manageable-rather-than-eliminated-pain-goal with a patient during an opioid-dose-need-assessment.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-09',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-09',1,ref(2),[A]),'manageable-rather-than-eliminated-pain-goal',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
