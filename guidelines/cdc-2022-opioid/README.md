@@ -106,16 +106,32 @@ guideline conclusions.
   (kept/dropped columns) and `coverage.tsv`.
 - `coverage.tsv` records one status row per payload region (all 718):
   `ace(<docid>)` formalized (79), `restates(<id>)` verbatim or
-  near-verbatim repetition of another region (122), `uncovered(<class>:
-  <reason>)` deliberately not formalized (69 — classes: heading,
-  process, external, aim, descriptive, notice), or `pending` awaiting a
-  ruling (448); 270 rows are ruled, 448 pending. Restatement links
+  near-verbatim repetition of another region (262), `uncovered(<class>:
+  <reason>)` deliberately not formalized (119 — classes: heading,
+  process, external, aim, descriptive, notice), or `pending` ruled for
+  formalization with the ACE document not yet authored (258 — the
+  authoring worklist: 151 rec06-12, 85 rec01-05, 22 front matter); every
+  region carries a ruling. Restatement links
   target the canonical full statement — the Box 3 text for
   recommendation restatements, the main-text list for the guiding
   principles — and otherwise the earliest occurrence, so a link may
-  point later in page order than an abbreviated echo; a region with its
+  point later in page order than an abbreviated echo; links stay
+  single-step: when a target is itself re-ruled `restates`, inbound
+  links re-point to the transitive root (the echo relation is
+  transitive); a region with its
   own ACE document keeps `ace(...)` even when it also repeats another
   region.
+- Ruling tests: a CDC-voice imperative or endorsement with a trailing
+  citation is the guideline's own directive — formalize it;
+  `uncovered(external)` is reserved for reporting frames naming a
+  third-party body or document (S10-02, S31-06). A region fusing
+  several canonical duties without adding one takes
+  `uncovered(descriptive: … canonical at <ids>)` (S8-04, S17-03,
+  S22-06, S41-02). Weak-modality considerations ("can", "might be
+  needed") formalize as the consideration they support. A novel
+  condition, permission, or strategy added to an otherwise-canonical
+  echo makes the region formalize rather than restate (S49-14, S52-10,
+  S55-01); an emphasis qualifier alone does not (S56-12).
 - Reconciliation against an independent 702-sentence census of the same
   pages is closed and recorded row-by-row in `audit/census-map.tsv`:
   694 census sentences map to evidence regions (the 27 the census

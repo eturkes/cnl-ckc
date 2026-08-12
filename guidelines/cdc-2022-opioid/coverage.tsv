@@ -22,32 +22,32 @@ S3-01	source/front-matter-extraction.txt	p3	Summary	pending
 S3-02	source/front-matter-extraction.txt	p3	Summary	pending
 S3-03	source/front-matter-extraction.txt	p3	Summary	pending
 S4-01	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
-S4-02	source/front-matter-extraction.txt	p4	Introduction > Background	pending
+S4-02	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
 S4-03	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
-S4-04	source/front-matter-extraction.txt	p4	Introduction > Background	pending
-S4-05	source/front-matter-extraction.txt	p4	Introduction > Background	pending
+S4-04	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(descriptive: states context without an operative directive)
+S4-05	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
 S4-06	source/front-matter-extraction.txt	p4	Introduction > Background	uncovered(external: reports third-party guidance or policy)
 S5-01	source/front-matter-extraction.txt	p5	Introduction > Background	uncovered(aim: states an aspiration without operative directive)
 S5-02	source/front-matter-extraction.txt	p5	Introduction > Background	uncovered(external: reports third-party guidance or policy)
 S5-03	source/front-matter-extraction.txt	p5	Introduction > Background	uncovered(external: reports third-party guidance or policy)
 S5-04	source/front-matter-extraction.txt	p5	Introduction > Background	uncovered(external: reports third-party guidance or policy)
-S6-01	source/front-matter-extraction.txt	p6	Introduction > Rationale	pending
+S6-01	source/front-matter-extraction.txt	p6	Introduction > Rationale	restates(S8-12)
 S6-02	source/front-matter-extraction.txt	p6	Introduction > Rationale	pending
 S6-03	source/front-matter-extraction.txt	p6	Introduction > Rationale	uncovered(aim: states an aspiration without operative directive)
-S7-01	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
+S7-01	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	restates(S3-03)
 S7-02	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
 S7-03	source/front-matter-extraction.txt	p7	BOX 1 > Executive summary	pending
-S8-01	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
+S8-01	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	uncovered(descriptive: states context without an operative directive)
 S8-02	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-02)
 S8-03	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-03)
-S8-04	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
+S8-04	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	uncovered(descriptive: fuses recommendations 4, 5, and 6 without adding a directive; canonical at B3-06, B3-07, B3-09)
 S8-05	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-07)
 S8-06	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-07	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(B3-16)
 S8-08	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S3-01)
 S8-09	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-10	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
-S8-11	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
+S8-11	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S19-07)
 S8-12	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	pending
 S8-13	source/front-matter-extraction.txt	p8	BOX 1 > Executive summary	restates(S3-02)
 S9-01	source/front-matter-extraction.txt	p9	BOX 2 > Intended use > prohibited uses	pending
@@ -55,14 +55,14 @@ S9-02	source/front-matter-extraction.txt	p9	BOX 2 > Intended use	restates(S3-02)
 S9-03	source/front-matter-extraction.txt	p9	BOX 2 > Intended use	restates(S3-02)
 S9-04	source/front-matter-extraction.txt	p9	Scope and Audience	pending
 S9-05	source/front-matter-extraction.txt	p9	BOX 2 > Intended use > affirmative uses	pending
-S9-06	source/front-matter-extraction.txt	p9	Scope and Audience	pending
-S9-07	source/front-matter-extraction.txt	p9	Scope and Audience	pending
-S10-01	source/front-matter-extraction.txt	p10	Scope and Audience	pending
-S10-02	source/front-matter-extraction.txt	p10	Scope and Audience	pending
-S10-03	source/front-matter-extraction.txt	p10	Scope and Audience	pending
+S9-06	source/front-matter-extraction.txt	p9	Scope and Audience	restates(S7-02)
+S9-07	source/front-matter-extraction.txt	p9	Scope and Audience	restates(S7-03)
+S10-01	source/front-matter-extraction.txt	p10	Scope and Audience	uncovered(descriptive: states context without an operative directive)
+S10-02	source/front-matter-extraction.txt	p10	Scope and Audience	uncovered(external: reports third-party guidance or policy)
+S10-03	source/front-matter-extraction.txt	p10	Scope and Audience	uncovered(descriptive: states context without an operative directive)
 S10-04	source/front-matter-extraction.txt	p10	Scope and Audience	pending
-S10-05	source/front-matter-extraction.txt	p10	Scope and Audience	pending
-S10-06	source/front-matter-extraction.txt	p10	Scope and Audience	pending
+S10-05	source/front-matter-extraction.txt	p10	Scope and Audience	restates(S3-03)
+S10-06	source/front-matter-extraction.txt	p10	Scope and Audience	restates(S3-03)
 S11-01	source/front-matter-extraction.txt	p11	Scope and Audience	pending
 S12-01	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
 S12-02	source/front-matter-extraction.txt	p12	Clinical Practice Guideline Development Methods > Recommendation Development	pending
@@ -76,9 +76,9 @@ S15-02	source/front-matter-extraction.txt	p15	Federal Advisory Committee Review 
 S16-01	source/front-matter-extraction.txt	p16	Federal Advisory Committee Review and Recommendation	uncovered(process: reports guideline-development procedure)
 S17-01	source/front-matter-extraction.txt	p17	Peer Review	uncovered(process: reports guideline-development procedure)
 S17-02	source/front-matter-extraction.txt	p17	Recommendations	restates(S3-02)
-S17-03	source/front-matter-extraction.txt	p17	Recommendations > Category framing	pending
+S17-03	source/front-matter-extraction.txt	p17	Recommendations > Category framing	uncovered(descriptive: restates the category definitions without adding a directive; canonical at S12-01, S12-02, S12-03)
 S18-01	source/front-matter-extraction.txt	p18	Recommendations > Implementation framing	pending
-S18-02	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	pending
+S18-02	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	uncovered(heading: structural label without directive)
 S18-03	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	pending
 S18-04	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	restates(S8-12)
 S18-05	source/front-matter-extraction.txt	p18	Recommendations > Guiding principles	restates(S6-03)
@@ -103,8 +103,8 @@ S20-03	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale	unco
 S20-04	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale	pending
 S20-05	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	uncovered(external: reports third-party guidance or policy)
 S20-06	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	uncovered(external: reports third-party guidance or policy)
-S20-07	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	pending
-S20-08	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	pending
+S20-07	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	restates(S24-02)
+S20-08	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain	restates(S19-10)
 S20-09	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(external: reports third-party guidance or policy)
 S20-10	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(external: reports third-party guidance or policy)
 S20-11	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(external: reports third-party guidance or policy)
@@ -112,7 +112,7 @@ S20-12	source/rec01-05-body-extraction.txt	p20	Rec 1 > Supporting rationale > No
 S21-01	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(aim: states an aspiration without operative directive)
 S21-02	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
 S21-03	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
-S21-04	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
+S21-04	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	uncovered(descriptive: states context without an operative directive)
 S21-05	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain	pending
 S21-06	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons	uncovered(external: reports third-party guidance or policy)
 S21-07	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Pain Management for Pregnant and Postpartum Persons	uncovered(external: reports third-party guidance or policy)
@@ -122,11 +122,11 @@ S21-10	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Op
 S21-11	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	uncovered(external: reports third-party guidance or policy)
 S21-12	source/rec01-05-body-extraction.txt	p21	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	uncovered(external: reports third-party guidance or policy)
 S22-01	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	uncovered(external: reports third-party guidance or policy)
-S22-02	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S22-02	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(B3-02)
 S22-03	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-11)
 S22-04	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S22-05	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-12)
-S22-06	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S22-06	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	uncovered(descriptive: fuses recommendations 8, 9, and 11 duties without adding a directive; canonical at B3-12, B3-13, B3-15)
 S22-07	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S22-08	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S22-09	source/rec01-05-body-extraction.txt	p22	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S20-01)
@@ -141,7 +141,7 @@ S23-03	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Op
 S23-04	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S23-05	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S23-06	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
-S23-07	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
+S23-07	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	restates(S19-12)
 S23-08	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S23-09	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
 S23-10	source/rec01-05-body-extraction.txt	p23	Rec 1 > Supporting rationale > Opioid Medication for Acute Pain	pending
@@ -180,42 +180,42 @@ S25-02	source/rec01-05-body-extraction.txt	p25	Rec 2 > Implementation considerat
 S25-03	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	restates(S20-04)
 S25-04	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
 S25-05	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
-S25-06	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
-S25-07	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
+S25-06	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	restates(S24-08)
+S25-07	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
 S25-08	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
 S25-09	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	pending
 S25-10	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S25-11	source/rec01-05-body-extraction.txt	p25	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(external: reports third-party guidance or policy)
 S26-01	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
 S26-02	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	restates(S24-02)
-S26-03	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
+S26-03	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S26-04	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(external: reports third-party guidance or policy)
-S26-05	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
+S26-05	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S26-06	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	restates(S24-01)
 S26-07	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
 S26-08	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
 S26-09	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain	pending
 S26-10	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S21-05)
-S26-11	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-01	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-02	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-03	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-04	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
+S26-11	source/rec01-05-body-extraction.txt	p26	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
+S27-01	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-04)
+S27-02	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-05)
+S27-03	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-06)
+S27-04	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-06)
 S27-05	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-06	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-07	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-08	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
+S27-06	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-07)
+S27-07	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
+S27-08	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-08)
 S27-09	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-10	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
-S27-11	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	pending
+S27-10	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	uncovered(descriptive: reports common practice and hedged endorsement without a guideline directive)
+S27-11	source/rec01-05-body-extraction.txt	p27	Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain	restates(S24-11)
 S28-01	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-12)
 S28-02	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-13)
 S28-03	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-14)
-S28-04	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S28-04	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-15)
 S28-05	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-16)
 S28-06	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-17)
 S28-07	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	uncovered(aim: states an aspiration without operative directive)
-S28-08	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S28-08	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	uncovered(descriptive: states goal-flexibility context without an operative directive)
 S28-09	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S28-10	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
 S28-11	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
@@ -225,7 +225,7 @@ S28-14	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Op
 S28-15	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-19)
 S28-16	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-20)
 S28-17	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-21)
-S28-18	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S28-18	source/rec01-05-body-extraction.txt	p28	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S24-22)
 S29-01	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S25-01)
 S29-02	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
 S29-03	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
@@ -233,10 +233,10 @@ S29-04	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Op
 S29-05	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-02)
 S29-06	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-03)
 S29-07	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-04)
-S29-08	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S29-08	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-05)
 S29-09	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-06)
 S29-10	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-08)
-S29-11	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
+S29-11	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-10)
 S29-12	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-11)
 S29-13	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-12)
 S29-14	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-13)
@@ -246,9 +246,9 @@ S29-17	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Op
 S29-18	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(S23-16)
 S29-19	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
 S29-20	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
-S29-21	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	pending
-S29-22	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	pending
-S29-23	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	pending
+S29-21	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain	restates(B3-10)
+S29-22	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
+S29-23	source/rec01-05-body-extraction.txt	p29	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	uncovered(descriptive: states context without an operative directive)
 S30-01	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	uncovered(aim: states an aspiration without operative directive)
 S30-02	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	pending
 S30-03	source/rec01-05-body-extraction.txt	p30	Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain	pending
@@ -270,7 +270,7 @@ S31-01	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	unco
 S31-02	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	restates(S30-10)
 S31-03	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	restates(S30-10)
 S31-04	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	restates(S30-11)
-S31-06	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	pending
+S31-06	source/rec01-05-body-extraction.txt	p31	Rec 3 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S32-01	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	restates(S30-14)
 S32-02	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	pending
 S32-03	source/rec01-05-body-extraction.txt	p32	Rec 3 > Supporting rationale	pending
@@ -299,9 +299,9 @@ S34-02	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	rest
 S34-03	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S34-04	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
 S34-05	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
-S34-06	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
+S34-06	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(S32-15)
 S34-07	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
-S34-08	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
+S34-08	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(B3-10)
 S34-09	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(S32-14)
 S34-10	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	pending
 S34-11	source/rec01-05-body-extraction.txt	p34	Rec 4 > Supporting rationale	restates(S32-17)
@@ -336,24 +336,24 @@ S36-01	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerat
 S36-02	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp24)
 S36-03	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp25)
 S36-04	source/rec01-05-body-extraction.txt	p36	Rec 5 > Implementation considerations	ace(cdc2022-opioid-rec05-imp26)
-S37-01	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-02	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-03	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
+S37-01	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-10)
+S37-02	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
+S37-03	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-04)
 S37-04	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-05)
-S37-05	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-06	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-07	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
+S37-05	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
+S37-06	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
+S37-07	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
 S37-08	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-19)
-S37-09	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
+S37-09	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-16)
 S37-10	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
 S37-11	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
 S37-12	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
 S37-13	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
 S37-14	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	uncovered(external: reports third-party guidance or policy)
 S37-15	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-16	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-17	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
-S37-18	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
+S37-16	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
+S37-17	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-07)
+S37-18	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(B3-07)
 S37-19	source/rec01-05-body-extraction.txt	p37	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
 S38-01	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	restates(S35-07)
 S38-02	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids	pending
@@ -363,7 +363,7 @@ S38-05	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pr
 S38-06	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	restates(S35-20)
 S38-07	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Providing Advice to Patients Before Tapering	restates(S35-20)
 S38-08	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	pending
-S38-09	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	pending
+S38-09	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	restates(S35-06)
 S38-10	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Pain Management During Tapering	restates(S35-06)
 S38-11	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
 S38-12	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
@@ -372,11 +372,11 @@ S38-14	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Be
 S38-15	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	restates(S35-09)
 S38-16	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
 S38-17	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Behavioral Health Support During Tapering	pending
-S38-18	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	pending
+S38-18	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-12)
 S38-19	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-10)
 S38-20	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-12)
 S38-21	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-11)
-S38-22	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	pending
+S38-22	source/rec01-05-body-extraction.txt	p38	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-23)
 S39-01	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	pending
 S39-02	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-13)
 S39-03	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(S35-14)
@@ -387,17 +387,17 @@ S39-07	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Ta
 S39-08	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	restates(B3-07)
 S39-09	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Tapering Rate	pending
 S39-10	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering	pending
-S39-11	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering	pending
+S39-11	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering	uncovered(descriptive: states context without an operative directive)
 S39-12	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	pending
-S39-13	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	pending
+S39-13	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	uncovered(descriptive: states context without an operative directive)
 S39-14	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	uncovered(external: reports third-party guidance or policy)
-S39-15	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	pending
+S39-15	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	restates(S39-16)
 S39-16	source/rec01-05-body-extraction.txt	p39	Rec 5 > Supporting rationale > Challenges to Tapering	pending
 S40-01	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Transitioning to buprenorphine	pending
-S40-02	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	pending
-S40-03	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	pending
-S40-04	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	pending
-S40-05	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	pending
+S40-02	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	restates(S35-22)
+S40-03	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	restates(S36-01)
+S40-04	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	restates(S36-02)
+S40-05	source/rec06-12-body-extraction.txt	p40	Pre-Rec 6 > Continuing High-Dosage Opioids	restates(S36-03)
 S40-06	source/rec06-12-body-extraction.txt	p40	Rec 6	restates(B3-09)
 S40-07	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	restates(B3-09)
 S40-08	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	pending
@@ -406,39 +406,39 @@ S40-10	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerat
 S40-11	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	pending
 S40-12	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	pending
 S40-13	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	pending
-S40-14	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	pending
+S40-14	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	restates(S24-18)
 S40-15	source/rec06-12-body-extraction.txt	p40	Rec 6 > Implementation considerations	pending
-S41-01	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	pending
-S41-02	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	pending
-S41-03	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	pending
+S41-01	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	restates(S24-19)
+S41-02	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	uncovered(descriptive: cross-references Recommendations 2, 5, and 7 without adding a directive; canonical at B3-03, B3-07, B3-10)
+S41-03	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	restates(S20-01)
 S41-04	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	pending
 S41-05	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	pending
 S41-06	source/rec06-12-body-extraction.txt	p41	Rec 6 > Implementation considerations	pending
 S42-01	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(B3-09)
-S42-02	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
-S42-03	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
-S42-04	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
-S42-05	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
+S42-02	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S42-03	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-08)
+S42-04	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-09)
+S42-05	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-10)
 S42-06	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-11)
-S42-07	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
+S42-07	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-12)
 S42-08	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-13)
-S42-09	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-14)
+S42-09	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S24-18)
 S42-11	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S41-02)
-S42-12	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
+S42-12	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S20-01)
 S42-13	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S41-04)
-S42-14	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
+S42-14	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S41-05)
 S42-15	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
 S42-16	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
-S42-17	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
+S42-17	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S41-06)
 S42-18	source/rec06-12-body-extraction.txt	p42	Rec 7	restates(B3-10)
-S42-19	source/rec06-12-body-extraction.txt	p42	Rec 7 > Implementation considerations	pending
+S42-19	source/rec06-12-body-extraction.txt	p42	Rec 7 > Implementation considerations	restates(B3-10)
 S42-20	source/rec06-12-body-extraction.txt	p42	Rec 7 > Implementation considerations	pending
-S42-21	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	pending
+S42-21	source/rec06-12-body-extraction.txt	p42	Rec 6 > Supporting rationale	restates(S40-15)
 S43-02	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
 S43-03	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
-S43-04	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
+S43-04	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	restates(S24-19)
 S43-05	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
-S43-06	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
+S43-06	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	restates(S24-20)
 S43-07	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
 S43-08	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
 S43-09	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
@@ -447,30 +447,30 @@ S43-11	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerat
 S43-12	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
 S43-13	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
 S43-14	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
-S43-15	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	pending
-S44-01	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-02	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-03	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
+S43-15	source/rec06-12-body-extraction.txt	p43	Rec 7 > Implementation considerations	restates(B3-03)
+S44-01	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S44-02	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(B3-10)
+S44-03	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S42-20)
 S44-04	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-05	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-06	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-07	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-08	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-09	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-10	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-06)
-S44-11	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
+S44-05	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-02)
+S44-06	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-03)
+S44-07	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S24-19)
+S44-08	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-03)
+S44-09	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-05)
+S44-10	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S24-20)
+S44-11	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-07)
 S44-12	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-08)
-S44-13	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-14	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-15	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
-S44-16	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
+S44-13	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-09)
+S44-14	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S44-15	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-10)
+S44-16	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	restates(S43-11)
 S44-17	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
 S44-18	source/rec06-12-body-extraction.txt	p44	Rec 7 > Supporting rationale	pending
 S45-01	source/rec06-12-body-extraction.txt	p45	Rec 7 > Supporting rationale	pending
 S45-02	source/rec06-12-body-extraction.txt	p45	Rec 7 > Supporting rationale	pending
 S45-03	source/rec06-12-body-extraction.txt	p45	Rec 7 > Supporting rationale	restates(S43-13)
-S45-04	source/rec06-12-body-extraction.txt	p45	Rec 7 > Supporting rationale	pending
-S45-05	source/rec06-12-body-extraction.txt	p45	Rec 7 > Supporting rationale	restates(S43-15)
+S45-04	source/rec06-12-body-extraction.txt	p45	Rec 7 > Supporting rationale	restates(S43-14)
+S45-05	source/rec06-12-body-extraction.txt	p45	Rec 7 > Supporting rationale	restates(B3-03)
 S45-06	source/rec06-12-body-extraction.txt	p45	Rec 8	restates(B3-12)
 S45-07	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	pending
 S45-08	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	pending
@@ -481,7 +481,7 @@ S45-12	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerat
 S45-13	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	pending
 S45-14	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	pending
 S45-15	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	pending
-S45-16	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	pending
+S45-16	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	restates(S35-19)
 S45-17	source/rec06-12-body-extraction.txt	p45	Rec 8 > Implementation considerations	pending
 S46-01	source/rec06-12-body-extraction.txt	p46	Rec 8 > Implementation considerations	pending
 S46-02	source/rec06-12-body-extraction.txt	p46	Rec 8 > Implementation considerations	pending
@@ -494,61 +494,61 @@ S46-08	source/rec06-12-body-extraction.txt	p46	Rec 8 > Implementation considerat
 S46-09	source/rec06-12-body-extraction.txt	p46	Rec 8 > Implementation considerations	pending
 S46-10	source/rec06-12-body-extraction.txt	p46	Rec 8 > Implementation considerations	pending
 S46-11	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	pending
-S46-12	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	pending
-S46-13	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	pending
-S46-14	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	pending
-S46-15	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	pending
+S46-12	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S46-13	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	restates(S45-09)
+S46-14	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S46-15	source/rec06-12-body-extraction.txt	p46	Rec 8 > Supporting rationale	restates(S45-13)
 S46-16	source/rec06-12-body-extraction.txt	p46	Patients with Sleep-Disordered Breathing, Including Sleep Apnea	pending
-S46-17	source/rec06-12-body-extraction.txt	p46	Patients with Sleep-Disordered Breathing, Including Sleep Apnea	pending
+S46-17	source/rec06-12-body-extraction.txt	p46	Patients with Sleep-Disordered Breathing, Including Sleep Apnea	restates(S45-14)
 S47-01	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-02	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	uncovered(external: reports third-party guidance or policy)
 S47-03	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	uncovered(external: reports third-party guidance or policy)
-S47-04	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
+S47-04	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	restates(S45-15)
 S47-05	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-06	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-07	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-08	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-09	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
-S47-10	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
+S47-10	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	restates(S19-11)
 S47-11	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	uncovered(external: reports third-party guidance or policy)
-S47-12	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
-S47-13	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
-S47-14	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
+S47-12	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	uncovered(descriptive: states pregnancy pharmacokinetic context without an operative directive)
+S47-13	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	restates(S35-19)
+S47-14	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	restates(S45-17)
 S47-15	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	uncovered(external: reports third-party guidance or policy)
 S47-16	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-17	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-18	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	pending
 S47-19	source/rec06-12-body-extraction.txt	p47	Pregnant Persons	uncovered(external: reports third-party guidance or policy)
-S48-01	source/rec06-12-body-extraction.txt	p48	Patients with Renal or Hepatic Insufficiency	pending
+S48-01	source/rec06-12-body-extraction.txt	p48	Patients with Renal or Hepatic Insufficiency	restates(S46-01)
 S48-02	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	pending
-S48-03	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	pending
+S48-03	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	uncovered(external: refers older adults needing advanced symptom management to palliative-care guidance outside scope)
 S48-04	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	pending
-S48-05	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	pending
+S48-05	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	restates(S46-01)
 S48-06	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	pending
-S48-07	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	pending
-S48-08	source/rec06-12-body-extraction.txt	p48	Patients in Safety Critical Jobs	pending
+S48-07	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	restates(S46-02)
+S48-08	source/rec06-12-body-extraction.txt	p48	Patients in Safety Critical Jobs	restates(S46-03)
 S48-09	source/rec06-12-body-extraction.txt	p48	Patients with Mental Health Conditions	pending
 S48-10	source/rec06-12-body-extraction.txt	p48	Patients with Mental Health Conditions	pending
-S48-11	source/rec06-12-body-extraction.txt	p48	Patients with Mental Health Conditions	pending
+S48-11	source/rec06-12-body-extraction.txt	p48	Patients with Mental Health Conditions	restates(S45-08)
 S48-12	source/rec06-12-body-extraction.txt	p48	Patients with Mental Health Conditions	pending
-S48-13	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	pending
+S48-13	source/rec06-12-body-extraction.txt	p48	Patients Aged ≥65 Years	uncovered(descriptive: states caregiver context without an operative directive)
 S49-01	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	uncovered(external: reports third-party guidance or policy)
 S49-02	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
 S49-03	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
-S49-04	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
+S49-04	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	restates(S45-07)
 S49-05	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
-S49-06	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
+S49-06	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	restates(S45-01)
 S49-07	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	restates(S46-04)
-S49-08	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
-S49-09	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
+S49-08	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	restates(S46-05)
+S49-09	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	restates(S46-07)
 S49-10	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
-S49-11	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	pending
-S49-12	source/rec06-12-body-extraction.txt	p49	Patients with Previous Overdose	pending
-S49-13	source/rec06-12-body-extraction.txt	p49	Patients with Previous Overdose	pending
+S49-11	source/rec06-12-body-extraction.txt	p49	Patients with Substance Use Disorders	restates(S46-06)
+S49-12	source/rec06-12-body-extraction.txt	p49	Patients with Previous Overdose	restates(S46-08)
+S49-13	source/rec06-12-body-extraction.txt	p49	Patients with Previous Overdose	restates(S46-09)
 S49-14	source/rec06-12-body-extraction.txt	p49	Patients with Previous Overdose	pending
-S50-01	source/rec06-12-body-extraction.txt	p50	Offering Naloxone to Patients	pending
-S50-02	source/rec06-12-body-extraction.txt	p50	Offering Naloxone to Patients	pending
-S50-03	source/rec06-12-body-extraction.txt	p50	Offering Naloxone to Patients	pending
+S50-01	source/rec06-12-body-extraction.txt	p50	Offering Naloxone to Patients	restates(S45-09)
+S50-02	source/rec06-12-body-extraction.txt	p50	Offering Naloxone to Patients	restates(S45-10)
+S50-03	source/rec06-12-body-extraction.txt	p50	Offering Naloxone to Patients	restates(S45-11)
 S50-04	source/rec06-12-body-extraction.txt	p50	Rec 9	restates(B3-13)
 S50-05	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
 S50-06	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
@@ -558,9 +558,9 @@ S50-09	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerat
 S50-10	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
 S50-11	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
 S50-12	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
-S50-13	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
+S50-13	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	uncovered(heading: lead-in to nested patient-safety actions)
 S50-14	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
-S50-15	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
+S50-15	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	uncovered(descriptive: explains legitimate multi-clinician prescribing context)
 S50-16	source/rec06-12-body-extraction.txt	p50	Rec 9 > Implementation considerations	pending
 S51-01	source/rec06-12-body-extraction.txt	p51	Rec 9 > Implementation considerations	pending
 S51-02	source/rec06-12-body-extraction.txt	p51	Rec 9 > Implementation considerations	pending
@@ -574,15 +574,15 @@ S51-09	source/rec06-12-body-extraction.txt	p51	Rec 9 > Implementation considerat
 S51-10	source/rec06-12-body-extraction.txt	p51	Rec 9 > Implementation considerations	pending
 S51-11	source/rec06-12-body-extraction.txt	p51	Rec 9 > Supporting rationale	pending
 S51-12	source/rec06-12-body-extraction.txt	p51	Rec 9 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
-S51-13	source/rec06-12-body-extraction.txt	p51	Rec 9 > Supporting rationale	pending
-S51-14	source/rec06-12-body-extraction.txt	p51	Rec 9 > Supporting rationale	pending
+S51-13	source/rec06-12-body-extraction.txt	p51	Rec 9 > Supporting rationale	restates(S50-11)
+S51-14	source/rec06-12-body-extraction.txt	p51	Rec 9 > Supporting rationale	restates(S50-09)
 S51-15	source/rec06-12-body-extraction.txt	p51	Rec 9 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
 S52-01	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	restates(S50-05)
-S52-02	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	pending
-S52-03	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	pending
+S52-02	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	restates(S50-06)
+S52-03	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	restates(S50-07)
 S52-04	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	restates(S50-08)
-S52-05	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	pending
-S52-06	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	pending
+S52-05	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	restates(S50-10)
+S52-06	source/rec06-12-body-extraction.txt	p52	Rec 9 > Supporting rationale	restates(S50-16)
 S52-07	source/rec06-12-body-extraction.txt	p52	Rec 10	restates(B3-14)
 S52-08	source/rec06-12-body-extraction.txt	p52	Rec 10 > Implementation considerations	pending
 S52-09	source/rec06-12-body-extraction.txt	p52	Rec 10 > Implementation considerations	pending
@@ -598,125 +598,125 @@ S53-01	source/rec06-12-body-extraction.txt	p53	Rec 10 > Implementation considera
 S53-02	source/rec06-12-body-extraction.txt	p53	Rec 10 > Implementation considerations	pending
 S53-03	source/rec06-12-body-extraction.txt	p53	Rec 10 > Implementation considerations	pending
 S53-04	source/rec06-12-body-extraction.txt	p53	Rec 10 > Implementation considerations	pending
-S53-05	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	pending
-S53-06	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	pending
-S53-07	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	pending
-S53-08	source/rec06-12-body-extraction.txt	p53	Rec 10 > Implementation considerations	pending
-S53-09	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	pending
-S54-01	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
+S53-05	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	restates(S52-11)
+S53-06	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	restates(S52-12)
+S53-07	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	restates(S52-16)
+S53-08	source/rec06-12-body-extraction.txt	p53	Rec 10 > Implementation considerations	uncovered(descriptive: states cost rationale without an operative directive)
+S53-09	source/rec06-12-body-extraction.txt	p53	Rec 10 > Supporting rationale	restates(S53-08)
+S54-01	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-10)
 S54-02	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-03	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-04	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-05	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-06	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
+S54-03	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-13)
+S54-04	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-14)
+S54-05	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-14)
+S54-06	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-15)
 S54-07	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-08	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
+S54-08	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-17)
 S54-09	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-10	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
+S54-10	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-16)
 S54-11	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
-S54-12	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-13	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
-S54-14	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
+S54-12	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S53-01)
+S54-13	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S53-03)
+S54-14	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S53-04)
 S54-15	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	pending
 S54-16	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S52-09)
 S54-17	source/rec06-12-body-extraction.txt	p54	Rec 11	restates(B3-15)
 S54-18	source/rec06-12-body-extraction.txt	p54	Rec 10 > Supporting rationale	restates(S53-08)
 S55-01	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
-S55-02	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
+S55-02	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	restates(B3-15)
 S55-03	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
 S55-04	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
 S55-05	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
 S55-06	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
 S55-07	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
 S55-08	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
-S55-09	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	pending
+S55-09	source/rec06-12-body-extraction.txt	p55	Rec 11 > Implementation considerations	restates(S51-02)
 S55-10	source/rec06-12-body-extraction.txt	p55	Rec 11 > Supporting rationale	uncovered(process: reports guideline-development procedure)
-S55-11	source/rec06-12-body-extraction.txt	p55	Rec 11 > Supporting rationale	pending
-S55-12	source/rec06-12-body-extraction.txt	p55	Rec 11 > Supporting rationale	pending
-S56-01	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	pending
-S56-02	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	pending
+S55-11	source/rec06-12-body-extraction.txt	p55	Rec 11 > Supporting rationale	restates(S55-01)
+S55-12	source/rec06-12-body-extraction.txt	p55	Rec 11 > Supporting rationale	restates(B3-15)
+S56-01	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	restates(S55-04)
+S56-02	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	restates(S55-05)
 S56-03	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S56-04	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	pending
 S56-05	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	restates(S55-06)
-S56-06	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	pending
+S56-06	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	restates(S55-07)
 S56-07	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	restates(S55-08)
-S56-08	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	pending
+S56-08	source/rec06-12-body-extraction.txt	p56	Rec 11 > Supporting rationale	restates(S51-02)
 S56-09	source/rec06-12-body-extraction.txt	p56	Rec 12	restates(B3-16)
 S56-10	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
 S56-11	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
-S56-12	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
+S56-12	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	restates(B3-16)
 S56-13	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
 S56-14	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
-S56-15	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
+S56-15	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	restates(S45-17)
 S56-16	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
 S56-17	source/rec06-12-body-extraction.txt	p56	Rec 12 > Implementation considerations	pending
 S57-01	source/rec06-12-body-extraction.txt	p57	Rec 12 > Implementation considerations	pending
-S57-02	source/rec06-12-body-extraction.txt	p57	Rec 12 > Implementation considerations	pending
-S57-03	source/rec06-12-body-extraction.txt	p57	Rec 12 > Supporting rationale	pending
-S58-01	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
+S57-02	source/rec06-12-body-extraction.txt	p57	Rec 12 > Implementation considerations	restates(S46-06)
+S57-03	source/rec06-12-body-extraction.txt	p57	Rec 12 > Supporting rationale	uncovered(process: reports guideline-development procedure)
+S58-01	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
 S58-02	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
-S58-03	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
-S58-04	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
+S58-03	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
+S58-04	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
 S58-05	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
-S58-06	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
+S58-06	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S56-10)
 S58-07	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S56-11)
-S58-08	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
-S58-09	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
+S58-08	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S58-09	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S45-07)
 S58-10	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
-S58-11	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S56-12)
+S58-11	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(B3-16)
 S58-12	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
 S58-13	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
 S58-14	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S56-13)
 S58-15	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S56-14)
 S58-16	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(B3-16)
-S58-17	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	pending
+S58-17	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	restates(S45-17)
 S58-18	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S58-19	source/rec06-12-body-extraction.txt	p58	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S59-01	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S59-02	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S59-03	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
-S59-04	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
-S59-05	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
+S59-04	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S59-05	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
 S59-06	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
 S59-07	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
 S59-08	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S59-09	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
-S59-10	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
+S59-10	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S59-11	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S59-12	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
-S59-13	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
+S59-13	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
 S59-14	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
 S59-15	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
-S59-16	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
-S59-17	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	pending
-S60-01	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	pending
+S59-16	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S59-17	source/rec06-12-body-extraction.txt	p59	Rec 12 > Supporting rationale	uncovered(descriptive: states context without an operative directive)
+S60-01	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	uncovered(external: reports third-party guidance or policy)
 S60-02	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	pending
-S60-03	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	pending
-S60-04	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	pending
+S60-03	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	restates(B3-16)
+S60-04	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	restates(S56-16)
 S60-05	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	pending
-S60-06	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	pending
-S60-07	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	pending
+S60-06	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	restates(S56-17)
+S60-07	source/rec06-12-body-extraction.txt	p60	Rec 12 > Supporting rationale	restates(S57-01)
 S60-08	source/rec06-12-body-extraction.txt	p60	Management of Opioid Misuse That Does Not Meet Criteria for Opioid Use Disorder	pending
 S60-09	source/rec06-12-body-extraction.txt	p60	Management of Opioid Misuse That Does Not Meet Criteria for Opioid Use Disorder	pending
 S60-10	source/rec06-12-body-extraction.txt	p60	Management of Opioid Misuse That Does Not Meet Criteria for Opioid Use Disorder	pending
-S60-11	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
-S60-12	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
+S60-11	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	restates(S46-06)
+S60-12	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	restates(B3-03)
 S60-13	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S60-14	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S60-15	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S60-16	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S60-17	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
 S60-18	source/rec06-12-body-extraction.txt	p60	Pain Management for Patients with Opioid Use Disorder	pending
-S61-01	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
-S61-02	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
+S61-01	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	uncovered(descriptive: summarizes guideline coverage without adding an operative directive)
+S61-02	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	restates(S18-03)
 S61-03	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
-S61-04	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
-S61-05	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
-S61-06	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
+S61-04	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	restates(S18-06)
+S61-05	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	uncovered(aim: states an aspiration without operative directive)
+S61-06	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	restates(B3-03)
 S61-07	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
-S61-08	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
+S61-08	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	restates(S24-02)
 S61-09	source/rec06-12-body-extraction.txt	p61	Conclusion and Future Directions	pending
-S62-01	source/rec06-12-body-extraction.txt	p62	Conclusion and Future Directions	pending
-S62-02	source/rec06-12-body-extraction.txt	p62	Conclusion and Future Directions	pending
+S62-01	source/rec06-12-body-extraction.txt	p62	Conclusion and Future Directions	restates(S19-07)
+S62-02	source/rec06-12-body-extraction.txt	p62	Conclusion and Future Directions	restates(S18-07)
 S62-03	source/rec06-12-body-extraction.txt	p62	Conclusion and Future Directions	pending
 S62-04	source/rec06-12-body-extraction.txt	p62	Conclusion and Future Directions	pending
