@@ -898,6 +898,9 @@ Define [[check_compendium]] taking nothing:
     Do [[print]](summary).
 
 Set projection_header_text to "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes, row shape and per-document row\n# coverage are validated by goal.py check; kept/dropped prose stays document-owned.".
+Set coverage_header_text to "# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice".
+Set uncovered_class_names to <"heading", "process", "external", "aim", "descriptive", "notice">.
+Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
 Set v1_functors to <"guideline_schema_version", "guideline_document", "guideline_entity", "guideline_cardinality", "guideline_event", "guideline_arg", "guideline_pp", "guideline_property", "guideline_operator">.
 Set v1_directives to <"guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3">.
 Set v1_decl_kinds to <"multifile", "discontiguous">.
@@ -951,6 +954,204 @@ Define [[check_projection_ledger]] taking guideline_path:
         Do [[seen_docids.update]]({docid: True}).
         Do [[row_docids.append]](docid).
     Give back row_docids.
+
+Define [[coverage_status_kind]] taking row_id, status_text:
+    If status_text equals "pending":
+        Give back <"pending", "">.
+    If [[status_text.startswith]]("ace("):
+        Set closed to [[status_text.endswith]](")").
+        If not closed:
+            Do [[violation]]("coverage", "malformed status for " plus row_id plus ": " plus status_text).
+        Set inner to [[status_text.removeprefix]]("ace(").
+        Set inner to [[inner.removesuffix]](")").
+        If not [[valid_docid]](inner):
+            Do [[violation]]("coverage", "ace names invalid docid for " plus row_id plus ": " plus inner).
+        Give back <"ace", inner>.
+    If [[status_text.startswith]]("restates("):
+        Set closed to [[status_text.endswith]](")").
+        If not closed:
+            Do [[violation]]("coverage", "malformed status for " plus row_id plus ": " plus status_text).
+        Set inner to [[status_text.removeprefix]]("restates(").
+        Set inner to [[inner.removesuffix]](")").
+        If not inner:
+            Do [[violation]]("coverage", "empty restates target for " plus row_id).
+        Give back <"restates", inner>.
+    If [[status_text.startswith]]("uncovered("):
+        Set closed to [[status_text.endswith]](")").
+        If not closed:
+            Do [[violation]]("coverage", "malformed status for " plus row_id plus ": " plus status_text).
+        Set inner to [[status_text.removeprefix]]("uncovered(").
+        Set inner to [[inner.removesuffix]](")").
+        Set parts to [[inner.split]](": ", 1).
+        If [[len]](parts) does not equal 2:
+            Do [[violation]]("coverage", "uncovered without class and reason for " plus row_id plus ": " plus status_text).
+        Set class_name to [[parts.pop]](0).
+        Set reason_text to [[parts.pop]](0).
+        Set known_class to class_name is in uncovered_class_names.
+        If not known_class:
+            Do [[violation]]("coverage", "unknown uncovered class for " plus row_id plus ": " plus class_name).
+        If not reason_text:
+            Do [[violation]]("coverage", "empty uncovered reason for " plus row_id).
+        Give back <"uncovered", class_name>.
+    Do [[violation]]("coverage", "unknown status for " plus row_id plus ": " plus status_text).
+
+Define [[evidence_regions]] taking evidence_path:
+    Set data to [[read_corpus_file]](evidence_path, "coverage").
+    Set text to [[data.decode]]("utf-8").
+    Set census_hit to [[census_rx.search]](text).
+    If census_hit equals None:
+        Do [[violation]]("coverage", "evidence lacks region-authority census: " plus [[str]](evidence_path)).
+    Set census_text to [[census_hit.group]](1).
+    Set census_count to [[int]](census_text).
+    Set locator_ids to <>.
+    For each raw_line in [[text.split]]("\n"):
+        Set bracketed to [[raw_line.startswith]]("[").
+        If bracketed:
+            Set closed to [[raw_line.endswith]]("]").
+            Set delimited to " | " is in raw_line.
+            If closed:
+                If delimited:
+                    Set body_text to [[raw_line.removeprefix]]("[").
+                    Set parts to [[body_text.split]](" | ").
+                    Set region_id to [[parts.pop]](0).
+                    Set spaced to " " is in region_id.
+                    If region_id:
+                        If not spaced:
+                            Do [[locator_ids.append]](region_id).
+    Give back <census_count, locator_ids>.
+
+Define [[check_coverage]] taking guideline_path, docids:
+    Set coverage_path to [[guideline_path.joinpath]]("coverage.tsv").
+    Set data to [[read_corpus_file]](coverage_path, "coverage").
+    Set text to [[data.decode]]("utf-8").
+    If "\r" is in text:
+        Do [[violation]]("coverage", "carriage return byte in ledger").
+    If not [[text.endswith]]("\n"):
+        Do [[violation]]("coverage", "ledger lacks final newline").
+    Set expected_header to coverage_header_text plus "\n".
+    If not [[text.startswith]](expected_header):
+        Do [[violation]]("coverage", "header bytes drift").
+    Set body to [[text.removeprefix]](expected_header).
+    Set row_lines to [[body.split]]("\n").
+    Do [[row_lines.pop]]().
+    Set docid_known to {}.
+    For each docid in docids:
+        Do [[docid_known.update]]({docid: True}).
+    Set comment_zone to True.
+    Set row_count to 0.
+    Set ace_count to 0.
+    Set restates_count to 0.
+    Set uncovered_count to 0.
+    Set pending_count to 0.
+    Set status_by_id to {}.
+    Set ace_claims to {}.
+    Set restates_rows to <>.
+    Set restates_targets to <>.
+    Set file_order to <>.
+    Set file_ids to {}.
+    For each row_line in row_lines:
+        Set is_comment to [[row_line.startswith]]("#").
+        If is_comment:
+            If not comment_zone:
+                Do [[violation]]("coverage", "comment line after rows: " plus row_line).
+        Otherwise:
+            Set comment_zone to False.
+            Set fields to [[row_line.split]]("\t").
+            If [[len]](fields) does not equal 5:
+                Do [[violation]]("coverage", "row without 5 columns: " plus row_line).
+            Set row_id to [[fields.pop]](0).
+            Set file_field to [[fields.pop]](0).
+            Set page_field to [[fields.pop]](0).
+            Set section_field to [[fields.pop]](0).
+            Set status_field to [[fields.pop]](0).
+            If not row_id:
+                Do [[violation]]("coverage", "empty region id: " plus row_line).
+            Set spaced_id to " " is in row_id.
+            If spaced_id:
+                Do [[violation]]("coverage", "region id holds a space: " plus row_id).
+            Set under_source to [[file_field.startswith]]("source/").
+            If not under_source:
+                Do [[violation]]("coverage", "file outside source/ for " plus row_id plus ": " plus file_field).
+            Set dotted to ".." is in file_field.
+            If dotted:
+                Do [[violation]]("coverage", "file path traversal for " plus row_id plus ": " plus file_field).
+            If not page_field:
+                Do [[violation]]("coverage", "empty page for: " plus row_id).
+            If not section_field:
+                Do [[violation]]("coverage", "empty section for: " plus row_id).
+            Set duplicate to row_id is in status_by_id.
+            If duplicate:
+                Do [[violation]]("coverage", "duplicate region id: " plus row_id).
+            Do [[status_by_id.update]]({row_id: status_field}).
+            Set known_file to file_field is in file_ids.
+            If not known_file:
+                Do [[file_order.append]](file_field).
+                Set empty_ids to <>.
+                Do [[file_ids.update]]({file_field: empty_ids}).
+            Set claimed_ids to [[file_ids.get]](file_field).
+            Do [[claimed_ids.append]](row_id).
+            Set parsed to [[coverage_status_kind]](row_id, status_field).
+            Set kind to [[parsed.pop]](0).
+            Set payload to [[parsed.pop]](0).
+            Set row_count to row_count plus 1.
+            If kind equals "pending":
+                Set pending_count to pending_count plus 1.
+            If kind equals "ace":
+                Set ace_count to ace_count plus 1.
+                Set claimed_before to payload is in ace_claims.
+                If claimed_before:
+                    Do [[violation]]("coverage", "docid claimed by two rows: " plus payload).
+                Set known_docid to payload is in docid_known.
+                If not known_docid:
+                    Do [[violation]]("coverage", "ace names unknown docid for " plus row_id plus ": " plus payload).
+                Do [[ace_claims.update]]({payload: True}).
+            If kind equals "restates":
+                Set restates_count to restates_count plus 1.
+                Do [[restates_rows.append]](row_id).
+                Do [[restates_targets.append]](payload).
+            If kind equals "uncovered":
+                Set uncovered_count to uncovered_count plus 1.
+    If row_count equals 0:
+        Do [[violation]]("coverage", "ledger holds no rows").
+    For each target_id in restates_targets:
+        Set row_id to [[restates_rows.pop]](0).
+        If target_id equals row_id:
+            Do [[violation]]("coverage", "restates itself: " plus row_id).
+        Set target_status to [[status_by_id.get]](target_id, "").
+        If not target_status:
+            Do [[violation]]("coverage", "restates unknown region for " plus row_id plus ": " plus target_id).
+        Set chained to [[target_status.startswith]]("restates(").
+        If chained:
+            Do [[violation]]("coverage", "restates a restatement for " plus row_id plus ": " plus target_id).
+    For each docid in docids:
+        Set claimed to docid is in ace_claims.
+        If not claimed:
+            Do [[violation]]("coverage", "docid without a coverage row: " plus docid).
+    For each file_field in file_order:
+        Set evidence_path to [[guideline_path.joinpath]](file_field).
+        Set region_info to [[evidence_regions]](evidence_path).
+        Set census_count to [[region_info.pop]](0).
+        Set locator_ids to [[region_info.pop]](0).
+        Set claimed_ids to [[file_ids.get]](file_field).
+        Set claimed_count to [[len]](claimed_ids).
+        If claimed_count does not equal census_count:
+            Do [[violation]]("coverage", "rows " plus [[str]](claimed_count) plus " differ from census " plus [[str]](census_count) plus " for: " plus file_field).
+        If locator_ids:
+            Set locator_count to [[len]](locator_ids).
+            If locator_count does not equal census_count:
+                Do [[violation]]("coverage", "locators " plus [[str]](locator_count) plus " differ from census " plus [[str]](census_count) plus " for: " plus file_field).
+            Set locator_known to {}.
+            For each region_id in locator_ids:
+                Set seen_before to region_id is in locator_known.
+                If seen_before:
+                    Do [[violation]]("coverage", "duplicate evidence locator: " plus region_id).
+                Do [[locator_known.update]]({region_id: True}).
+            For each claimed_id in claimed_ids:
+                Set anchored to claimed_id is in locator_known.
+                If not anchored:
+                    Do [[violation]]("coverage", "coverage row without evidence region: " plus claimed_id).
+    Set meter to "goal: coverage ok " plus guideline_path.name plus " " plus [[str]](row_count) plus " regions; ace=" plus [[str]](ace_count) plus " restates=" plus [[str]](restates_count) plus " uncovered=" plus [[str]](uncovered_count) plus " pending=" plus [[str]](pending_count).
+    Do [[print]](meter).
 
 Define [[lexicon_entry]] taking line_text:
     Set head_parts to [[line_text.split]]("(", 1).
@@ -1088,6 +1289,7 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
         If not covered:
             Do [[violation]]("projection-ledger", "docid missing projection row: " plus docid).
         Do [[check_product_vocabulary]](guideline_path, docid).
+    Do [[check_coverage]](guideline_path, docids).
     If lexicon_path does not equal None:
         Do [[check_lexicon]](guideline_path, ace_paths, docids).
 

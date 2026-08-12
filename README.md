@@ -56,8 +56,12 @@ compilation of it, or part of one small named compiler base:
   one-active-row promotion invariant — and prints the terminal meter the
   `/goal` exhaustion clause reads), then validates layout, source records,
   and Prolog/lexicon inventory closure, validates every guideline's corpus
-  ledgers (projection-notes header bytes and per-document totality, lexicon
-  liveness and minimality, v1-only product vocabulary), recompiles every
+  ledgers (projection-notes header bytes and per-document totality;
+  coverage-ledger closure — row grammar, region totality against each
+  evidence file's own payload census and locator inventory, ace-row ↔
+  document-set bijection, single-step restates targets — printing a
+  per-guideline `ace/restates/uncovered/pending` meter; lexicon
+  liveness and minimality; v1-only product vocabulary), recompiles every
   guideline twice
   (byte-determinism), compares against the committed Prolog (freshness),
   load-checks every compiled document, derives and discharges every
@@ -314,7 +318,8 @@ row format and vocabulary, canonical ordering, the single-active-row
 promotion invariant) and prints a terminal meter — remaining
 non-terminal organizations and unfinished guideline rows — that measures
 the exhaustion clause directly. Corpus validation (projection-ledger
-totality, lexicon liveness and minimality, v1-only product vocabulary) runs
+totality, coverage-ledger closure with its region-status meter, lexicon
+liveness and minimality, v1-only product vocabulary) runs
 for every guideline on every check. Bulk work (source reading, extraction drafting, ACE
 drafting, adversarial review) fans out to subagent teammates per
 `.agent/rounds.md`; the session lead alone writes the repository and
@@ -326,7 +331,8 @@ fetched. A source document is complete when every normative statement in it
 has been extracted verbatim into `source/` evidence and either authored as
 knowledge-only ACE and compiled — obligations discharging alone and in
 aggregate — or recorded in the guideline README as uncovered with a
-reason, and `python3 -P tools/goal.py check` is green.
+reason, and `python3 -P tools/goal.py check` is green with the guideline's
+coverage meter reading `pending=0`.
 
 While a document is in progress, a round advances it one increment:
 

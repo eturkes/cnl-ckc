@@ -852,6 +852,9 @@ def check_compendium():
     summary = "goal: compendium ok " + str(org_count) + " organizations " + str(row_count) + " rows; terminal remaining: orgs=" + str(orgs_remaining) + " rows=" + str(rows_remaining) + " provisional=" + str(provisional_count)
     print(summary)
 projection_header_text = "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes, row shape and per-document row\n# coverage are validated by goal.py check; kept/dropped prose stays document-owned."
+coverage_header_text = "# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice"
+uncovered_class_names = ["heading", "process", "external", "aim", "descriptive", "notice"]
+census_rx = re.compile("identify the ([0-9]+) payloads below")
 v1_functors = ["guideline_schema_version", "guideline_document", "guideline_entity", "guideline_cardinality", "guideline_event", "guideline_arg", "guideline_pp", "guideline_property", "guideline_operator"]
 v1_directives = ["guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3"]
 v1_decl_kinds = ["multifile", "discontiguous"]
@@ -903,6 +906,201 @@ def check_projection_ledger(guideline_path):
         seen_docids.update({docid: True})
         row_docids.append(docid)
     return row_docids
+def coverage_status_kind(row_id, status_text):
+    if status_text == "pending":
+        return ["pending", ""]
+    if status_text.startswith("ace("):
+        closed = status_text.endswith(")")
+        if not closed:
+            violation("coverage", "malformed status for " + row_id + ": " + status_text)
+        inner = status_text.removeprefix("ace(")
+        inner = inner.removesuffix(")")
+        if not valid_docid(inner):
+            violation("coverage", "ace names invalid docid for " + row_id + ": " + inner)
+        return ["ace", inner]
+    if status_text.startswith("restates("):
+        closed = status_text.endswith(")")
+        if not closed:
+            violation("coverage", "malformed status for " + row_id + ": " + status_text)
+        inner = status_text.removeprefix("restates(")
+        inner = inner.removesuffix(")")
+        if not inner:
+            violation("coverage", "empty restates target for " + row_id)
+        return ["restates", inner]
+    if status_text.startswith("uncovered("):
+        closed = status_text.endswith(")")
+        if not closed:
+            violation("coverage", "malformed status for " + row_id + ": " + status_text)
+        inner = status_text.removeprefix("uncovered(")
+        inner = inner.removesuffix(")")
+        parts = inner.split(": ", 1)
+        if len(parts) != 2:
+            violation("coverage", "uncovered without class and reason for " + row_id + ": " + status_text)
+        class_name = parts.pop(0)
+        reason_text = parts.pop(0)
+        known_class = class_name in uncovered_class_names
+        if not known_class:
+            violation("coverage", "unknown uncovered class for " + row_id + ": " + class_name)
+        if not reason_text:
+            violation("coverage", "empty uncovered reason for " + row_id)
+        return ["uncovered", class_name]
+    violation("coverage", "unknown status for " + row_id + ": " + status_text)
+def evidence_regions(evidence_path):
+    data = read_corpus_file(evidence_path, "coverage")
+    text = data.decode("utf-8")
+    census_hit = census_rx.search(text)
+    if census_hit == None:
+        violation("coverage", "evidence lacks region-authority census: " + str(evidence_path))
+    census_text = census_hit.group(1)
+    census_count = int(census_text)
+    locator_ids = []
+    for raw_line in text.split("\n"):
+        bracketed = raw_line.startswith("[")
+        if bracketed:
+            closed = raw_line.endswith("]")
+            delimited = " | " in raw_line
+            if closed:
+                if delimited:
+                    body_text = raw_line.removeprefix("[")
+                    parts = body_text.split(" | ")
+                    region_id = parts.pop(0)
+                    spaced = " " in region_id
+                    if region_id:
+                        if not spaced:
+                            locator_ids.append(region_id)
+    return [census_count, locator_ids]
+def check_coverage(guideline_path, docids):
+    coverage_path = guideline_path.joinpath("coverage.tsv")
+    data = read_corpus_file(coverage_path, "coverage")
+    text = data.decode("utf-8")
+    if "\r" in text:
+        violation("coverage", "carriage return byte in ledger")
+    if not text.endswith("\n"):
+        violation("coverage", "ledger lacks final newline")
+    expected_header = coverage_header_text + "\n"
+    if not text.startswith(expected_header):
+        violation("coverage", "header bytes drift")
+    body = text.removeprefix(expected_header)
+    row_lines = body.split("\n")
+    row_lines.pop()
+    docid_known = {}
+    for docid in docids:
+        docid_known.update({docid: True})
+    comment_zone = True
+    row_count = 0
+    ace_count = 0
+    restates_count = 0
+    uncovered_count = 0
+    pending_count = 0
+    status_by_id = {}
+    ace_claims = {}
+    restates_rows = []
+    restates_targets = []
+    file_order = []
+    file_ids = {}
+    for row_line in row_lines:
+        is_comment = row_line.startswith("#")
+        if is_comment:
+            if not comment_zone:
+                violation("coverage", "comment line after rows: " + row_line)
+        else:
+            comment_zone = False
+            fields = row_line.split("\t")
+            if len(fields) != 5:
+                violation("coverage", "row without 5 columns: " + row_line)
+            row_id = fields.pop(0)
+            file_field = fields.pop(0)
+            page_field = fields.pop(0)
+            section_field = fields.pop(0)
+            status_field = fields.pop(0)
+            if not row_id:
+                violation("coverage", "empty region id: " + row_line)
+            spaced_id = " " in row_id
+            if spaced_id:
+                violation("coverage", "region id holds a space: " + row_id)
+            under_source = file_field.startswith("source/")
+            if not under_source:
+                violation("coverage", "file outside source/ for " + row_id + ": " + file_field)
+            dotted = ".." in file_field
+            if dotted:
+                violation("coverage", "file path traversal for " + row_id + ": " + file_field)
+            if not page_field:
+                violation("coverage", "empty page for: " + row_id)
+            if not section_field:
+                violation("coverage", "empty section for: " + row_id)
+            duplicate = row_id in status_by_id
+            if duplicate:
+                violation("coverage", "duplicate region id: " + row_id)
+            status_by_id.update({row_id: status_field})
+            known_file = file_field in file_ids
+            if not known_file:
+                file_order.append(file_field)
+                empty_ids = []
+                file_ids.update({file_field: empty_ids})
+            claimed_ids = file_ids.get(file_field)
+            claimed_ids.append(row_id)
+            parsed = coverage_status_kind(row_id, status_field)
+            kind = parsed.pop(0)
+            payload = parsed.pop(0)
+            row_count = row_count + 1
+            if kind == "pending":
+                pending_count = pending_count + 1
+            if kind == "ace":
+                ace_count = ace_count + 1
+                claimed_before = payload in ace_claims
+                if claimed_before:
+                    violation("coverage", "docid claimed by two rows: " + payload)
+                known_docid = payload in docid_known
+                if not known_docid:
+                    violation("coverage", "ace names unknown docid for " + row_id + ": " + payload)
+                ace_claims.update({payload: True})
+            if kind == "restates":
+                restates_count = restates_count + 1
+                restates_rows.append(row_id)
+                restates_targets.append(payload)
+            if kind == "uncovered":
+                uncovered_count = uncovered_count + 1
+    if row_count == 0:
+        violation("coverage", "ledger holds no rows")
+    for target_id in restates_targets:
+        row_id = restates_rows.pop(0)
+        if target_id == row_id:
+            violation("coverage", "restates itself: " + row_id)
+        target_status = status_by_id.get(target_id, "")
+        if not target_status:
+            violation("coverage", "restates unknown region for " + row_id + ": " + target_id)
+        chained = target_status.startswith("restates(")
+        if chained:
+            violation("coverage", "restates a restatement for " + row_id + ": " + target_id)
+    for docid in docids:
+        claimed = docid in ace_claims
+        if not claimed:
+            violation("coverage", "docid without a coverage row: " + docid)
+    for file_field in file_order:
+        evidence_path = guideline_path.joinpath(file_field)
+        region_info = evidence_regions(evidence_path)
+        census_count = region_info.pop(0)
+        locator_ids = region_info.pop(0)
+        claimed_ids = file_ids.get(file_field)
+        claimed_count = len(claimed_ids)
+        if claimed_count != census_count:
+            violation("coverage", "rows " + str(claimed_count) + " differ from census " + str(census_count) + " for: " + file_field)
+        if locator_ids:
+            locator_count = len(locator_ids)
+            if locator_count != census_count:
+                violation("coverage", "locators " + str(locator_count) + " differ from census " + str(census_count) + " for: " + file_field)
+            locator_known = {}
+            for region_id in locator_ids:
+                seen_before = region_id in locator_known
+                if seen_before:
+                    violation("coverage", "duplicate evidence locator: " + region_id)
+                locator_known.update({region_id: True})
+            for claimed_id in claimed_ids:
+                anchored = claimed_id in locator_known
+                if not anchored:
+                    violation("coverage", "coverage row without evidence region: " + claimed_id)
+    meter = "goal: coverage ok " + guideline_path.name + " " + str(row_count) + " regions; ace=" + str(ace_count) + " restates=" + str(restates_count) + " uncovered=" + str(uncovered_count) + " pending=" + str(pending_count)
+    print(meter)
 def lexicon_entry(line_text):
     head_parts = line_text.split("(", 1)
     kind = head_parts.pop(0)
@@ -1033,6 +1231,7 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
         if not covered:
             violation("projection-ledger", "docid missing projection row: " + docid)
         check_product_vocabulary(guideline_path, docid)
+    check_coverage(guideline_path, docids)
     if lexicon_path != None:
         check_lexicon(guideline_path, ace_paths, docids)
 def check_command():
