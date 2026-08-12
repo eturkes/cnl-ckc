@@ -6,11 +6,10 @@
 % LGPL-3.0-or-later like the surrounding tree (see ../LICENSE.txt).
 %
 % Modes (argv after --):
-%   <ape-tree-dir> <docid>            compile; ACE bytes on stdin -> Prolog on stdout
+%   <ape-tree-dir> <docid>            compile onto the v1 schema; ACE bytes on
+%                                     stdin -> Prolog on stdout
 %   <ape-tree-dir> <docid> <ulex>     compile with user lexicon file
-%   ... schema=v1                     as above, projected onto the v1
-%                                     schema (exact trailing token; absent = legacy)
-%   ... schema=v1 proof               derive + emit the proof payload (one ground
+%   ... proof                         derive + emit the proof payload (one ground
 %                                     '$guideline_proof'/5 term per group) instead of
 %                                     the product; same derivation check either way
 %   check <file.pl>                   load compiled file into user (quarantined I/O; any load
@@ -34,38 +33,19 @@
 % v1 assurance: every v1 compile (product or proof emission) derives per-group
 % witness worlds + obligations and replays them against the document's own
 % clauses; an underivable obligation rejects the document (class proof).
-% The legacy path below stays byte-frozen for its knowledge shapes (facts
-% and rules), and schema selection is an explicit input, never inferred
-% from content. The frozen v1 path lives under "v1 schema projection"
-% near the end of this file and is documented in README.md
-% "Compiled Prolog schema (v1)". Beyond the legacy shapes, v1
-% admits modal/classical-negation operator wrappers (reified as
-% guideline_operator/3 edges over context ids), consequent currying,
-% antecedent Horn splits over one disjunction, and executable
-% negation-as-failure for top-level antecedent NAF boxes.
-%
-% LEGACY-path contract (the v1 path states its own in the v1 section):
-% translation is total — each sentence yields exactly one legacy clause
-% (fact | rule), while a v1
-% sentence yields an ordered bundle of one or more clauses; any
-% unrecognized shape rejects the whole document. Authored questions
-% reject on both paths (class unsupported): each path reports
-% question_not_supported(S) when the question is the first unsupported
-% construct its existing processing order reaches; an earlier
-% unsupported construct keeps its own detail.
-% Supported legacy DRS shapes:
-%   copula fact   object(R,N,countable,na,eq,1) + predicate(E,be,named(P),R)  ->  'N'('P').
-%   ground fact   predicate(E,V,Named...)                                     ->  'V'(Names...).
-%   rule          =>(drs Ante, drs Cons): Ante = objects/predicates/~(single
-%                 predicate); Cons = one predicate                            ->  Head :- Body.
-% Still legacy-only: event referents are erased (v1 reifies them), each
-% box-local with exactly one occurrence; head and NAF variables must be
-% bound by positive body literals (v1 additionally admits ground minted
-% identities); NAF-only predicates (no fact or rule head in the document)
-% get a ":- dynamic." declaration after the header term, so \+ succeeds
-% by absence at load time, while undefined positive references stay
-% fail-loud (v1 needs no dynamic declarations — its uniform multifile
-% indicator block plays that role).
+% v1 is the sole schema: every compile projects onto it, and a future ABI
+% extension bumps the version and reintroduces an explicit selector. The
+% frozen v1 path lives under "v1 schema projection" near the end of this
+% file and is documented in README.md "Compiled Prolog schema (v1)". v1
+% admits copula/ground facts and Horn rules plus modal/classical-negation
+% operator wrappers (reified as guideline_operator/3 edges over context
+% ids), consequent currying, antecedent Horn splits over one disjunction,
+% and executable negation-as-failure for top-level antecedent NAF boxes.
+% Translation is total: a sentence yields an ordered bundle of one or
+% more clauses; any unrecognized shape rejects the whole document, and
+% authored questions reject (class unsupported, question_not_supported(S)
+% when the question is the first unsupported construct the processing
+% order reaches — an earlier unsupported construct keeps its own detail).
 
 :- module(ace_to_pl, [main/0]).
 
@@ -112,12 +92,8 @@ dispatch(['recursion-check', Manifest], Input, Output, ErrorStream) :-
 dispatch([Tree, DocId], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
-    compile_mode(legacy, Tree, DocId, none, Input, Output, ErrorStream).
-dispatch([Tree, DocId, 'schema=v1'], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(DocId, ErrorStream),
     compile_mode(v1(product), Tree, DocId, none, Input, Output, ErrorStream).
-dispatch([Tree, DocId, 'schema=v1', proof], Input, Output, ErrorStream) :-
+dispatch([Tree, DocId, proof], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
     compile_mode(v1(proof), Tree, DocId, none, Input, Output, ErrorStream).
@@ -125,15 +101,9 @@ dispatch([Tree, DocId, Ulex], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
     validated_ulex_arg(Ulex, ErrorStream),
-    compile_mode(legacy, Tree, DocId, file(Ulex), Input, Output, ErrorStream).
-dispatch([Tree, DocId, Ulex, 'schema=v1'], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(DocId, ErrorStream),
-    validated_ulex_arg(Ulex, ErrorStream),
     compile_mode(v1(product), Tree, DocId, file(Ulex), Input, Output,
         ErrorStream).
-dispatch([Tree, DocId, Ulex, 'schema=v1', proof], Input, Output,
-        ErrorStream) :-
+dispatch([Tree, DocId, Ulex, proof], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
     validated_ulex_arg(Ulex, ErrorStream),
@@ -142,13 +112,12 @@ dispatch([Tree, DocId, Ulex, 'schema=v1', proof], Input, Output,
 dispatch(Argv, _, _, ErrorStream) :-
     emit_error(ErrorStream, usage, argv(Argv), 2).
 
-/* `proof` and `schema=v1` are reserved argv tokens: a user lexicon file
-   literally named either is unsupported and rejects as usage. The
-   selector is positional, so a two-argument `<tree> <docid> schema=v1`
-   invocation still reads its trailing token as the selector — pass a
-   lexicon under any other name. */
+/* `proof` is a reserved argv token: a bare third slot spelling `proof`
+   reads as the proof mode, so a user lexicon file literally named
+   `proof` is unaddressable; the explicit ulex+proof form
+   (`<tree> <docid> proof proof`) rejects it as usage — pass a lexicon
+   under any other name. */
 reserved_argv_token(proof).
-reserved_argv_token('schema=v1').
 
 validated_ulex_arg(Ulex, ErrorStream) :-
     ( reserved_argv_token(Ulex) ->
@@ -768,11 +737,10 @@ read_utf8_file(File, Bytes, Text) :-
         close(Stream)).
 
 /* v1 ulex-wide reserved scan (P3): every entry, used or not; the first
-   offender in file order parks in a global the v1 path rejects through
-   the canonical machinery. Legacy compiles set the flag and never read
-   it. A term that fails to re-read as Prolog ends the scan (APE's own
-   reader already vetted the entry stream); the parsed-DRS scan stays
-   the used-entry backstop. */
+   offender in file order parks in a global that projection rejects
+   through the canonical machinery. A term that fails to re-read as
+   Prolog ends the scan (APE's own reader already vetted the entry
+   stream); the parsed-DRS scan stays the used-entry backstop. */
 v1_scan_ulex_reserved(Text) :-
     nb_setval(ace_to_pl_ulex_reserved, none),
     setup_call_cleanup(
@@ -886,10 +854,6 @@ accept_or_reject(Mode, DocId, Bytes, Text, UlexDigest, Sentences, Drs, [],
           context(ace_to_pl:accept_or_reject/10, plain_failure)))
     ).
 
-mode_translate(legacy, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
-        OutCodes) :-
-    translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs,
-        OutCodes).
 mode_translate(v1(Emit), DocId, Bytes, Text, UlexDigest, Sentences, Drs,
         OutCodes) :-
     v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences,
@@ -898,36 +862,51 @@ mode_translate(v1(Emit), DocId, Bytes, Text, UlexDigest, Sentences, Drs,
 reject(Class, Detail) :-
     throw(ace_to_pl_reject(Class, Detail)).
 
-/* ---------- translation ---------- */
+/* ---------- shared translation helpers (consumed by the v1 projection) ---------- */
 
-translate_document(DocId, Bytes, Text, UlexDigest, Sentences, Drs, OutCodes) :-
-    ( nonvar(Drs),
-      Drs = drs(Dom, Conds),
-      is_list(Dom),
-      is_list(Conds) ->
-        true
-    ; reject(unsupported, invalid_drs_shape)
-    ),
-    length(Sentences, SentenceCount),
-    input_lines(Text, Lines),
-    length(Lines, LineCount),
-    ( LineCount =:= SentenceCount ->
-        true
-    ; reject(sentence_lines,
-          counts(lines(LineCount), sentences(SentenceCount)))
-    ),
-    crypto_data_hash(Bytes, AceDigest, [algorithm(sha256), encoding(octet)]),
-    tag_conditions(Conds, Tagged),
-    group_by_sentence(1, SentenceCount, Tagged, Groups),
-    translate_groups(Groups, Dom, Conds, [], Items),
-    naf_dynamic_keys(Items, DynamicKeys),
-    render_document(DocId, AceDigest, UlexDigest, Lines, DynamicKeys, Items,
-        OutCodes).
+write_naf_goals([Goal]) :-
+    !,
+    write_canonical_part(Goal).
+write_naf_goals([Goal|Goals]) :-
+    write_canonical_part(Goal),
+    write(', '),
+    write_naf_goals(Goals).
 
-input_lines(Text, Lines) :-
-    atom_codes(Text, Codes),
-    split_lf(Codes, RawLines),
-    exclude(==([]), RawLines, Lines).
+write_body_literal(pos(Lit)) :-
+    write_canonical_part(Lit).
+write_body_literal(naf_conj([Goal])) :-
+    !,
+    write('\\+ '),
+    write_canonical_part(Goal).
+write_body_literal(naf_conj(Goals)) :-
+    write('\\+ ('),
+    write_naf_goals(Goals),
+    write(')').
+
+add_var(Ref, Vars0, Vars) :-
+    ( strict_member(Ref, Vars0) ->
+        Vars = Vars0
+    ; Vars = [Ref|Vars0]
+    ).
+
+canonical_args(Index, Arity, _) :-
+    Index > Arity,
+    !.
+canonical_args(Index, Arity, Term) :-
+    arg(Index, Term, Arg),
+    canonical_tree(Arg),
+    Next is Index + 1,
+    canonical_args(Next, Arity, Term).
+
+cond_occurrences_args(Index, Arity, _, _, Count, Count) :-
+    Index > Arity,
+    !.
+cond_occurrences_args(Index, Arity, Term, Var, Count0, Count) :-
+    arg(Index, Term, Arg),
+    cond_occurrences(Var, Arg, ArgCount),
+    Count1 is Count0 + ArgCount,
+    Next is Index + 1,
+    cond_occurrences_args(Next, Arity, Term, Var, Count1, Count).
 
 split_lf(Codes, [Line|Lines]) :-
     append(Line, [0'\n|Rest], Codes),
@@ -935,36 +914,53 @@ split_lf(Codes, [Line|Lines]) :-
     split_lf(Rest, Lines).
 split_lf(Codes, [Codes]).
 
+sub_anchor(Term, S) :-
+    sub_term(Sub, Term),
+    nonvar(Sub),
+    functor(Sub, -, 2),
+    arg(2, Sub, Anchor),
+    nonvar(Anchor),
+    anchor_sentence(Anchor, S).
+
+take_sentence([], _, [], []).
+take_sentence([Sx-Cond|Tagged], S, [Cond|Group], Rest) :-
+    Sx =:= S,
+    !,
+    take_sentence(Tagged, S, Group, Rest).
+take_sentence([Sx-Cond|Tagged], S, Group, [Sx-Cond|Rest]) :-
+    take_sentence(Tagged, S, Group, Rest).
+
+validate_emittable(Term) :-
+    ( acyclic_term(Term),
+      term_attvars(Term, []),
+      canonical_tree(Term) ->
+        true
+    ; reject(unsupported, unserializable_term)
+    ).
+
+write_body([Lit]) :-
+    !,
+    write_body_literal(Lit).
+write_body([Lit|Lits]) :-
+    write_body_literal(Lit),
+    write(', '),
+    write_body(Lits).
+
+write_canonical_part(Term) :-
+    write_term(Term,
+        [ quoted(true),
+          numbervars(true),
+          character_escapes(true),
+          ignore_ops(true)
+        ]).
+
+input_lines(Text, Lines) :-
+    atom_codes(Text, Codes),
+    split_lf(Codes, RawLines),
+    exclude(==([]), RawLines, Lines).
+
 /* Tag every root condition with its sentence id. Anchor extraction
    decomposes with arg/3 and never unifies into the DRS. */
-tag_conditions([], []).
-tag_conditions([Cond|Conds], [S-Tagged|Rest]) :-
-    tag_condition(Cond, S, Tagged),
-    tag_conditions(Conds, Rest).
-
-tag_condition(Cond, S, anchored(Inner)) :-
-    nonvar(Cond),
-    functor(Cond, -, 2),
-    arg(1, Cond, Inner),
-    arg(2, Cond, Anchor),
-    anchor_sentence(Anchor, S),
-    nonvar(Inner),
-    !.
-tag_condition(Cond, S, rule(Ante, Cons)) :-
-    nonvar(Cond),
-    functor(Cond, =>, 2),
-    arg(1, Cond, Ante),
-    arg(2, Cond, Cons),
-    !,
-    inner_sentence(Cond, S).
-tag_condition(Cond, S, _) :-
-    nonvar(Cond),
-    functor(Cond, question, 1),
-    !,
-    inner_sentence(Cond, S),
-    reject(unsupported, question_not_supported(S)).
-tag_condition(Cond, _, _) :-
-    reject(unsupported, root_condition(Cond)).
 
 anchor_sentence(Anchor, S) :-
     nonvar(Anchor),
@@ -983,14 +979,6 @@ inner_sentence(Term, S) :-
     ; reject(unsupported, mixed_or_missing_sentence_anchors(Sorted))
     ).
 
-sub_anchor(Term, S) :-
-    sub_term(Sub, Term),
-    nonvar(Sub),
-    functor(Sub, -, 2),
-    arg(2, Sub, Anchor),
-    nonvar(Anchor),
-    anchor_sentence(Anchor, S).
-
 /* Partition tagged conditions into per-sentence groups, preserving order
    and variable identity (no copying); every condition must land in 1..N. */
 group_by_sentence(S, SentenceCount, Tagged, []) :-
@@ -1005,138 +993,9 @@ group_by_sentence(S, SentenceCount, Tagged, [S-Group|Groups]) :-
     Next is S + 1,
     group_by_sentence(Next, SentenceCount, Rest, Groups).
 
-take_sentence([], _, [], []).
-take_sentence([Sx-Cond|Tagged], S, [Cond|Group], Rest) :-
-    Sx =:= S,
-    !,
-    take_sentence(Tagged, S, Group, Rest).
-take_sentence([Sx-Cond|Tagged], S, Group, [Sx-Cond|Rest]) :-
-    take_sentence(Tagged, S, Group, Rest).
-
-/* Each sentence yields exactly one emitted item. RootConds is the whole
-   root condition list: the scope for root event single-occurrence checks. */
-translate_groups([], _, _, _, []).
-translate_groups([S-Group|Groups], Dom, RootConds, Bindings0,
-        [item(S, Item)|Items]) :-
-    translate_sentence(Group, Dom, RootConds, Bindings0, Bindings, Item),
-    translate_groups(Groups, Dom, RootConds, Bindings, Items).
-
-translate_sentence(Group, Dom, RootConds, Bindings0, Bindings, fact(Fact)) :-
-    copula_fact(Group, Dom, RootConds, Bindings0, Bindings, Fact),
-    !.
-translate_sentence(Group, Dom, RootConds, Bindings, Bindings, fact(Fact)) :-
-    ground_fact(Group, Dom, RootConds, Bindings, Fact),
-    !.
-translate_sentence([rule(Ante, Cons)], _, _, Bindings, Bindings, Item) :-
-    !,
-    translate_rule(Ante, Cons, Item).
-translate_sentence(Group, _, _, _, _, _) :-
-    reject(unsupported, sentence_shape(Group)).
-
-/* copula fact: object + be-predicate introducing a named individual */
-copula_fact([anchored(Obj), anchored(Pred)], Dom, RootConds, Bindings0,
-        Bindings, Fact) :-
-    object_shape(Obj, Ref, Noun),
-    be_predicate_shape(Pred, Event, NamedArg, Ref2),
-    named_atom(NamedArg, Name),
-    Ref2 == Ref,
-    erasable_event(Event, Dom, RootConds),
-    unbound_referent(Ref, Bindings0),
-    Bindings = [binding(Ref, Name)|Bindings0],
-    Fact =.. [Noun, Name].
-
-/* ground fact: root predicate whose arguments all resolve to names */
-ground_fact([anchored(Pred)], Dom, RootConds, Bindings, Fact) :-
-    predicate_shape(Pred, Event, Verb, Args0),
-    erasable_event(Event, Dom, RootConds),
-    resolve_ground_args(Args0, Bindings, Args),
-    Fact =.. [Verb|Args].
-
-object_shape(Obj, Ref, Noun) :-
-    nonvar(Obj),
-    functor(Obj, object, 6),
-    arg(1, Obj, Ref),
-    var(Ref),
-    arg(2, Obj, Noun),
-    atom(Noun),
-    arg(3, Obj, Countable),
-    Countable == countable,
-    arg(4, Obj, Unit),
-    Unit == na,
-    arg(5, Obj, Op),
-    Op == eq,
-    arg(6, Obj, Count),
-    Count == 1.
-
-predicate_shape(Pred, Event, Verb, Args) :-
-    nonvar(Pred),
-    functor(Pred, predicate, Arity),
-    Arity >= 3,
-    arg(1, Pred, Event),
-    arg(2, Pred, Verb),
-    atom(Verb),
-    Verb \== be,
-    pred_args(3, Arity, Pred, Args).
-
-pred_args(Index, Arity, _, []) :-
-    Index > Arity,
-    !.
-pred_args(Index, Arity, Pred, [Arg|Args]) :-
-    arg(Index, Pred, Arg),
-    Next is Index + 1,
-    pred_args(Next, Arity, Pred, Args).
-
-be_predicate_shape(Pred, Event, NamedArg, Ref) :-
-    nonvar(Pred),
-    functor(Pred, predicate, 4),
-    arg(2, Pred, Be),
-    Be == be,
-    arg(1, Pred, Event),
-    arg(3, Pred, NamedArg),
-    arg(4, Pred, Ref).
-
-named_atom(Term, Name) :-
-    nonvar(Term),
-    functor(Term, named, 1),
-    arg(1, Term, Name),
-    atom(Name).
-
-unbound_referent(Ref, Bindings) :-
-    \+ ( member(binding(Existing, _), Bindings), Existing == Ref ).
-
-resolve_ground_args([], _, []).
-resolve_ground_args([Arg|Args0], Bindings, [Name|Args]) :-
-    resolve_ground(Bindings, Arg, Name),
-    resolve_ground_args(Args0, Bindings, Args).
-
-resolve_ground(_, Arg, Name) :-
-    named_atom(Arg, Name),
-    !.
-resolve_ground(Bindings, Ref, Name) :-
-    var(Ref),
-    member(binding(ExistingRef, ExistingName), Bindings),
-    ExistingRef == Ref,
-    !,
-    Name = ExistingName.
-resolve_ground(_, Arg, _) :-
-    reject(unsupported, unresolved_argument(Arg)).
-
-/* Event referents are erased. Requirements: unbound, member of the box
-   domain, exactly one occurrence at condition positions inside the scope
-   term. Domain lists are binders, not uses: cond_occurrences skips the
-   domain argument of every drs/2 box while counting. */
-erasable_event(Event, Dom, Scope) :-
-    var(Event),
-    is_list(Dom),
-    ( strict_member(Event, Dom) ->
-        true
-    ; reject(unsupported, event_not_local)
-    ),
-    cond_occurrences(Event, Scope, Occurrences),
-    ( Occurrences =:= 1 ->
-        true
-    ; reject(unsupported, event_reused)
-    ).
+/* Domain lists are binders, not uses: cond_occurrences skips the domain
+   argument of every drs/2 box while counting occurrences at condition
+   positions. */
 
 cond_occurrences(Var, Term, Count) :-
     ( Term == Var ->
@@ -1153,245 +1012,24 @@ cond_occurrences(Var, Term, Count) :-
     ; Count = 0
     ).
 
-cond_occurrences_args(Index, Arity, _, _, Count, Count) :-
-    Index > Arity,
-    !.
-cond_occurrences_args(Index, Arity, Term, Var, Count0, Count) :-
-    arg(Index, Term, Arg),
-    cond_occurrences(Var, Arg, ArgCount),
-    Count1 is Count0 + ArgCount,
-    Next is Index + 1,
-    cond_occurrences_args(Next, Arity, Term, Var, Count1, Count).
-
 strict_member(X, [Y|Ys]) :-
     ( X == Y ->
         true
     ; strict_member(X, Ys)
     ).
 
-/* ---------- rules ---------- */
-
-translate_rule(Ante, Cons, rule(Head, Body)) :-
-    drs_parts(Ante, ADom, AConds),
-    drs_parts(Cons, CDom, CConds),
-    body_literals(AConds, ADom, Ante, [], Body, HeadVars),
-    head_literal(CConds, CDom, =>(Ante, Cons), HeadVars, Head),
-    check_naf_safety(Body).
-
-drs_parts(Drs, Dom, Conds) :-
-    ( nonvar(Drs),
-      functor(Drs, drs, 2),
-      arg(1, Drs, Dom),
-      arg(2, Drs, Conds),
-      is_list(Dom),
-      is_list(Conds) ->
-        true
-    ; reject(unsupported, invalid_drs_shape)
-    ).
-
-/* Antecedent conditions in DRS order become body literals. Variables
-   accumulate from positive literals only. */
-body_literals([], _, _, Vars, [], Vars).
-body_literals([Cond|Conds], ADom, Scope, Vars0, [Lit|Lits], Vars) :-
-    body_literal(Cond, ADom, Scope, Vars0, Vars1, Lit),
-    body_literals(Conds, ADom, Scope, Vars1, Lits, Vars).
-
-body_literal(Cond, ADom, Scope, Vars0, Vars, pos(Lit)) :-
-    nonvar(Cond),
-    functor(Cond, -, 2),
-    arg(1, Cond, Inner),
-    arg(2, Cond, Anchor),
-    anchor_sentence(Anchor, _),
-    !,
-    positive_literal(Inner, ADom, Scope, Vars0, Vars, Lit).
-body_literal(Cond, _, _, Vars, Vars, naf(Lit)) :-
-    nonvar(Cond),
-    functor(Cond, ~, 1),
-    arg(1, Cond, NDrs),
-    !,
-    naf_literal(NDrs, Lit).
-body_literal(Cond, _, _, _, _, _) :-
-    reject(unsupported, antecedent_condition(Cond)).
-
-positive_literal(Inner, _, _, Vars0, Vars, Lit) :-
-    object_shape(Inner, Ref, Noun),
-    !,
-    add_var(Ref, Vars0, Vars),
-    Lit =.. [Noun, Ref].
-positive_literal(Inner, ADom, Scope, Vars0, Vars, Lit) :-
-    predicate_shape(Inner, Event, Verb, Args0),
-    !,
-    erasable_event(Event, ADom, Scope),
-    rule_args(Args0, Vars0, Vars, Args),
-    Lit =.. [Verb|Args].
-positive_literal(Inner, _, _, _, _, _) :-
-    reject(unsupported, antecedent_condition(Inner)).
-
-/* NAF box: exactly one anchored predicate, event local to the box. */
-naf_literal(NDrs, Lit) :-
-    drs_parts(NDrs, NDom, NConds),
-    ( NConds = [NCond],
-      nonvar(NCond),
-      functor(NCond, -, 2),
-      arg(1, NCond, Inner),
-      arg(2, NCond, Anchor),
-      anchor_sentence(Anchor, _),
-      predicate_shape(Inner, Event, Verb, Args0) ->
-        true
-    ; reject(unsupported, naf_shape(NConds))
-    ),
-    erasable_event(Event, NDom, NDrs),
-    naf_args(Args0, Args),
-    Lit =.. [Verb|Args].
-
-naf_args([], []).
-naf_args([Arg|Args0], [Out|Args]) :-
-    ( named_atom(Arg, Name) ->
-        Out = Name
-    ; var(Arg) ->
-        Out = Arg
-    ; reject(unsupported, naf_argument(Arg))
-    ),
-    naf_args(Args0, Args).
-
-rule_args([], Vars, Vars, []).
-rule_args([Arg|Args0], Vars0, Vars, [Out|Args]) :-
-    ( named_atom(Arg, Name) ->
-        Out = Name,
-        Vars1 = Vars0
-    ; var(Arg) ->
-        Out = Arg,
-        add_var(Arg, Vars0, Vars1)
-    ; reject(unsupported, rule_argument(Arg))
-    ),
-    rule_args(Args0, Vars1, Vars, Args).
-
-add_var(Ref, Vars0, Vars) :-
-    ( strict_member(Ref, Vars0) ->
-        Vars = Vars0
-    ; Vars = [Ref|Vars0]
-    ).
-
-/* The consequent contributes exactly one positive head literal. */
-head_literal(CConds, CDom, Scope, AllowedVars, Head) :-
-    ( CConds = [CCond],
-      nonvar(CCond),
-      functor(CCond, -, 2),
-      arg(1, CCond, Inner),
-      arg(2, CCond, Anchor),
-      anchor_sentence(Anchor, _),
-      predicate_shape(Inner, Event, Verb, Args0) ->
-        true
-    ; reject(unsupported, consequent_shape(CConds))
-    ),
-    erasable_event(Event, CDom, Scope),
-    head_args(Args0, AllowedVars, Args),
-    Head =.. [Verb|Args].
-
-head_args([], _, []).
-head_args([Arg|Args0], AllowedVars, [Out|Args]) :-
-    ( named_atom(Arg, Name) ->
-        Out = Name
-    ; var(Arg) ->
-        ( strict_member(Arg, AllowedVars) ->
-            Out = Arg
-        ; reject(safety, head_variable_not_bound_in_body)
-        )
-    ; reject(unsupported, head_argument(Arg))
-    ),
-    head_args(Args0, AllowedVars, Args).
-
-/* Every NAF literal variable must be bound by an earlier positive literal. */
-check_naf_safety(Body) :-
-    check_naf_safety(Body, []).
-
-check_naf_safety([], _).
-check_naf_safety([pos(Lit)|Lits], Bound0) :-
-    term_variables(Lit, Vars),
-    merge_vars(Vars, Bound0, Bound),
-    check_naf_safety(Lits, Bound).
-check_naf_safety([naf(Lit)|Lits], Bound) :-
-    term_variables(Lit, Vars),
-    ( all_bound(Vars, Bound) ->
-        true
-    ; reject(safety, naf_variable_not_bound)
-    ),
-    check_naf_safety(Lits, Bound).
-
 merge_vars([], Vars, Vars).
 merge_vars([V|Vs], Vars0, Vars) :-
     add_var(V, Vars0, Vars1),
     merge_vars(Vs, Vars1, Vars).
 
-all_bound([], _).
-all_bound([V|Vs], Bound) :-
-    strict_member(V, Bound),
-    all_bound(Vs, Bound).
-
 /* ---------- rendering ---------- */
-
-/* NAF literals over predicates with no clause among the document's facts
-   and rule heads get a dynamic declaration in the output, so \+ succeeds
-   by absence at load time while undefined positive references stay
-   fail-loud under unknown=error. */
-naf_dynamic_keys(Items, Keys) :-
-    findall(Key, naf_key(Items, Key), NafKeys),
-    findall(Key, defined_key(Items, Key), DefinedKeys),
-    subtract_keys(NafKeys, DefinedKeys, Missing),
-    sort(Missing, Keys).
-
-naf_key(Items, Name/Arity) :-
-    member(item(_, rule(_, Body)), Items),
-    member(naf(Lit), Body),
-    functor(Lit, Name, Arity).
-
-defined_key(Items, Name/Arity) :-
-    member(item(_, Item), Items),
-    ( Item = fact(Head) ->
-        true
-    ; Item = rule(Head, _)
-    ),
-    functor(Head, Name, Arity).
-
-subtract_keys([], _, []).
-subtract_keys([Key|Keys0], Removed, Keys) :-
-    ( memberchk(Key, Removed) ->
-        Keys = Keys1
-    ; Keys = [Key|Keys1]
-    ),
-    subtract_keys(Keys0, Removed, Keys1).
-
-render_document(DocId, AceDigest, UlexDigest, Lines, DynamicKeys, Items,
-        OutCodes) :-
-    header_term(DocId, AceDigest, UlexDigest, Header),
-    with_output_to(string(Out),
-        ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.~n',
-              [DocId]),
-          render_term_line(Header),
-          render_dynamic_decls(DynamicKeys),
-          render_items(Items, Lines)
-        )),
-    string_codes(Out, OutCodes).
-
-render_dynamic_decls([]).
-render_dynamic_decls([Name/Arity|Keys]) :-
-    format(':- dynamic(~q/~d).~n', [Name, Arity]),
-    render_dynamic_decls(Keys).
 
 header_term(DocId, AceDigest, none,
     guideline_document(DocId, ace_sha256(AceDigest), ulex(none))).
 header_term(DocId, AceDigest, sha256(Digest),
     guideline_document(DocId, ace_sha256(AceDigest), ulex(sha256(Digest)))).
 
-render_items([], _).
-render_items([item(S, Item)|Items], Lines) :-
-    nth1(S, Lines, LineCodes),
-    format('% S~w: ~s~n', [S, LineCodes]),
-    render_item(Item),
-    render_items(Items, Lines).
-
-render_item(fact(Fact)) :-
-    render_term_line(Fact).
 render_item(rule(Head, Body)) :-
     validate_emittable(rule(Head, Body)),
     copy_term(rule(Head, Body), rule(HeadCopy, BodyCopy)),
@@ -1401,36 +1039,6 @@ render_item(rule(Head, Body)) :-
     write_body(BodyCopy),
     write('.'),
     nl.
-
-write_body([Lit]) :-
-    !,
-    write_body_literal(Lit).
-write_body([Lit|Lits]) :-
-    write_body_literal(Lit),
-    write(', '),
-    write_body(Lits).
-
-write_body_literal(pos(Lit)) :-
-    write_canonical_part(Lit).
-write_body_literal(naf(Lit)) :-
-    write('\\+ '),
-    write_canonical_part(Lit).
-write_body_literal(naf_conj([Goal])) :-
-    !,
-    write('\\+ '),
-    write_canonical_part(Goal).
-write_body_literal(naf_conj(Goals)) :-
-    write('\\+ ('),
-    write_naf_goals(Goals),
-    write(')').
-
-write_naf_goals([Goal]) :-
-    !,
-    write_canonical_part(Goal).
-write_naf_goals([Goal|Goals]) :-
-    write_canonical_part(Goal),
-    write(', '),
-    write_naf_goals(Goals).
 
 /* Validate the original, then number and write a copy: rendering never
    instantiates variables still shared with the DRS or later items. */
@@ -1442,23 +1050,8 @@ render_term_line(Term) :-
     write('.'),
     nl.
 
-write_canonical_part(Term) :-
-    write_term(Term,
-        [ quoted(true),
-          numbervars(true),
-          character_escapes(true),
-          ignore_ops(true)
-        ]).
-
 /* Emittable terms: acyclic, no attvars, atom/integer/float atomics,
    no pre-existing '$VAR'/1. */
-validate_emittable(Term) :-
-    ( acyclic_term(Term),
-      term_attvars(Term, []),
-      canonical_tree(Term) ->
-        true
-    ; reject(unsupported, unserializable_term)
-    ).
 
 canonical_tree(Term) :-
     var(Term),
@@ -1480,19 +1073,9 @@ canonical_tree(Term) :-
     \+ ( Name == '$VAR', Arity =:= 1 ),
     canonical_args(1, Arity, Term).
 
-canonical_args(Index, Arity, _) :-
-    Index > Arity,
-    !.
-canonical_args(Index, Arity, Term) :-
-    arg(Index, Term, Arg),
-    canonical_tree(Arg),
-    Next is Index + 1,
-    canonical_args(Next, Arity, Term).
-
 /* ---------- v1 schema projection (frozen) ----------
 
-   Selected by exact trailing argv token 'schema=v1'; the default path
-   above stays byte-identical. Closed reserved vocabulary: source lemmas
+   The sole compile path. Closed reserved vocabulary: source lemmas
    (nouns/verbs/adjectives/prepositions) are opaque data atoms, never
    predicate functors. M3.2 operator boxes use generated context ids plus
    guideline_operator/3 edges; antecedent edges remain existential joins.
@@ -1560,8 +1143,8 @@ v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
     ).
 
 /* The ulex-wide reserved scan runs at load time (every entry, used or
-   not) and parks its first offender for the v1 path to reject inside
-   the canonical reject machinery; the legacy path never consults it. */
+   not) and parks its first offender for the compile path to reject
+   inside the canonical reject machinery. */
 v1_ulex_reserved_check :-
     ( nb_current(ace_to_pl_ulex_reserved, Detail),
       Detail \== none ->
@@ -1569,9 +1152,9 @@ v1_ulex_reserved_check :-
     ; true
     ).
 
-/* v1 root tagging extends the legacy root inventory only for reified
-   unary operator boxes. Nested anchors still select exactly one source
-   sentence, preserving the common grouping/provenance machinery. */
+/* v1 root tagging covers plain roots plus reified unary operator boxes.
+   Nested anchors still select exactly one source sentence, preserving
+   the common grouping/provenance machinery. */
 v1_tag_conditions([], []).
 v1_tag_conditions([Cond|Conds], [S-Tagged|Rest]) :-
     v1_tag_condition(Cond, S, Tagged),
@@ -2307,7 +1890,7 @@ v1_naf_vars_ok([V|Vs], NDom, Bound) :-
     ),
     v1_naf_vars_ok(Vs, NDom, Bound).
 
-/* Occurrence counting: clauses hold no drs/2 boxes, so the legacy
+/* Occurrence counting: clauses hold no drs/2 boxes, so the
    condition-position counter counts plain occurrences here. */
 v1_naf_escape_scan([], _, _).
 v1_naf_escape_scan([V|Vs], Sub, Clause) :-

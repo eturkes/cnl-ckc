@@ -211,7 +211,7 @@ Governing authoring rulings:
 Assurance + evidence:
 
 - Durable acceptance = `python3 -P tools/goal.py check` (terminal corpus,
-  aggregate replay, 21 committed reds each pinning class + rc + byte-exact
+  aggregate replay, 19 committed reds each pinning class + rc + byte-exact
   stderr) + `python3 -P tools/regen.py --check`.
 - Closing M3 chain = durable gate -> `.scratch/m3u1/gate_m3u1.py` ->
   `.scratch/m3u2/gate_m3u2.py` -> `.scratch/m3u3/gate_m3u3.py` ->
@@ -229,8 +229,9 @@ Assurance + evidence:
 Review DONE (9 lenses; 26/28 audited claims replayed clean): fixed HIGH
 self-certifying aggregate payloads (composition-derived coverage checks;
 battery `.scratch/m3rev/payload_battery.py`) + MED byte-exact `.expect`
-pins on every red probe, reserved `schema=v1` ulex basename, widened legacy
-witness; SLD-divergence risk documented in README + left-recursion scan in
+pins on every red probe, reserved `schema=v1` ulex basename + widened
+legacy witness (both retired with the pre-v1 path deletion); SLD-divergence
+risk documented in README + left-recursion scan in
 `goal.py check`; residues + deferred hardening = `.agent/polish.md` rows;
 decisive chain rerun green at close — narratives, rulings + rerun numbers =
 `git log --grep "(M3 review" -p -- .agent/roadmap.md` (close = 18ab5a1);

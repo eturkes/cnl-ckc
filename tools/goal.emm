@@ -387,7 +387,7 @@ Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, gu
     Set manifest_pairs to <>.
     For each docid in docids:
         Set ace_path to [[ace_paths.get]](docid).
-        Set extra_args to <"schema=v1">.
+        Set extra_args to <>.
         Set first_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args).
         Set second_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args).
         If first_bytes does not equal second_bytes:
@@ -396,7 +396,7 @@ Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, gu
         Set committed_bytes to [[committed_path.read_bytes]]().
         If first_bytes does not equal committed_bytes:
             Do [[cleanup_violation]](scratch_path, "stale", "committed pl differs from fresh compile: " plus [[str]](committed_path)).
-        Set proof_args to <"schema=v1", "proof">.
+        Set proof_args to <"proof">.
         Set first_payload to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args).
         Set second_payload to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args).
         If first_payload does not equal second_payload:
@@ -503,7 +503,7 @@ Define [[compile_command]] taking guideline_id:
     Set outputs to {}.
     For each docid in docids:
         Set ace_path to [[ace_paths.get]](docid).
-        Set extra_args to <"schema=v1">.
+        Set extra_args to <>.
         Set pl_bytes to [[compile_doc]](scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args).
         Do [[outputs.update]]({docid: pl_bytes}).
     Set new_dir to [[scratch_path.joinpath]]("pl-new").
@@ -601,8 +601,6 @@ Define [[run_red_probe]] taking scratch_path, swipl_executable, stage_path, prob
     Set tail_args to <[[str]](stage_path), "red-probe">.
     If lexicon_present:
         Do [[tail_args.append]]([[str]](lexicon_path)).
-    If "--v1-" is in probe_name:
-        Do [[tail_args.append]]("schema=v1").
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
     Set result to [[subprocess.run]](command, input=probe_bytes, capture_output=True).
     If result.returncode does not equal expected_exit:

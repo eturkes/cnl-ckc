@@ -360,7 +360,7 @@ def check_documents(scratch_path, swipl_executable, stage_path, guideline_path, 
     manifest_pairs = []
     for docid in docids:
         ace_path = ace_paths.get(docid)
-        extra_args = ["schema=v1"]
+        extra_args = []
         first_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args)
         second_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args)
         if first_bytes != second_bytes:
@@ -369,7 +369,7 @@ def check_documents(scratch_path, swipl_executable, stage_path, guideline_path, 
         committed_bytes = committed_path.read_bytes()
         if first_bytes != committed_bytes:
             cleanup_violation(scratch_path, "stale", "committed pl differs from fresh compile: " + str(committed_path))
-        proof_args = ["schema=v1", "proof"]
+        proof_args = ["proof"]
         first_payload = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args)
         second_payload = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, proof_args)
         if first_payload != second_payload:
@@ -470,7 +470,7 @@ def compile_command(guideline_id):
     outputs = {}
     for docid in docids:
         ace_path = ace_paths.get(docid)
-        extra_args = ["schema=v1"]
+        extra_args = []
         pl_bytes = compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lexicon_path, extra_args)
         outputs.update({docid: pl_bytes})
     new_dir = scratch_path.joinpath("pl-new")
@@ -564,8 +564,6 @@ def run_red_probe(scratch_path, swipl_executable, stage_path, probe_path, class_
     tail_args = [str(stage_path), "red-probe"]
     if lexicon_present:
         tail_args.append(str(lexicon_path))
-    if "--v1-" in probe_name:
-        tail_args.append("schema=v1")
     command = compiler_command(swipl_executable, stage_path, tail_args)
     result = subprocess.run(command, input=probe_bytes, capture_output=True)
     if result.returncode != expected_exit:

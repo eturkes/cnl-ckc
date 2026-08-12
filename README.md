@@ -25,7 +25,7 @@ a direct compilation of it, or part of one small named compiler base:
 - **ACE → Prolog.** All guideline Prolog (`guidelines/*/pl/`) is compiled
   from ACE. The compiled files quote each source sentence beside its clause,
   and each carries the SHA-256 of the exact ACE and lexicon bytes it was
-  compiled from. On schema v1 the compiler also derives each sentence's
+  compiled from. The compiler also derives each sentence's
   obligation and discharges it against the document's own clauses — alone
   and co-loaded with the rest of the batch — so a shipped clause is one
   the compiler has proved follows from the sentence it quotes.
@@ -84,14 +84,12 @@ python3 -P tools/regen.py --check                 # E-- → Python identity
 
 ## Compiled Prolog schema (v1)
 
-Status: **frozen**. Every v1 document emits `guideline_schema_version(1).`,
-and the predicate set below is the public ABI — extending it requires a
-version bump. The committed corpus compiles on v1; `schema=v1` is an
-explicit compiler-invocation argument, never inferred from content. The
-default (pre-v1) legacy path stays byte-frozen for its knowledge shapes
-(facts and rules) — a maintained policy whose committed behavior witness is
-registered hardening (`.agent/polish.md`) — and authored questions reject on
-both paths.
+Status: **frozen**. Every compiled document emits
+`guideline_schema_version(1).`, and the predicate set below is the public
+ABI — extending it requires a version bump. v1 is the compiler's sole
+schema; a future version would be selected by a new explicit invocation
+argument, never inferred from content. Authored questions reject as
+unsupported.
 
 Sentences project onto a closed reserved vocabulary. Source words —
 nouns, verbs, adjectives, prepositions — stay opaque data atoms and never
