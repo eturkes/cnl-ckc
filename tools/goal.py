@@ -202,6 +202,156 @@ def check_prolog_inventory():
         if not vendored:
             if not compiled:
                 violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
+def provenance_field(prov_lines, key):
+    prefix = key + ": "
+    value = ""
+    for prov_line in prov_lines:
+        starts = prov_line.startswith(prefix)
+        if starts:
+            rest = prov_line.removeprefix(prefix)
+            value = rest.strip()
+    return value
+def provenance_list_field(prov_lines, key):
+    value = provenance_field(prov_lines, key)
+    items = []
+    for part in value.split(","):
+        item = part.strip()
+        if item != "":
+            items.append(item)
+    return items
+def license_requires_date(tree_prefix, license_id):
+    gpl = license_id.startswith("GPL-")
+    lgpl = license_id.startswith("LGPL-")
+    agpl = license_id.startswith("AGPL-")
+    if gpl:
+        return True
+    if lgpl:
+        return True
+    if agpl:
+        return True
+    if license_id == "Apache-2.0":
+        return False
+    violation("fork-notice", "unrecognized license in " + tree_prefix + ": " + license_id)
+    return False
+def fork_notice_scan(file_path):
+    raw = file_path.read_bytes()
+    text = raw.decode("utf-8", "replace")
+    prominent = ""
+    buried = ""
+    seen = 0
+    for line in text.splitlines():
+        seen = seen + 1
+        marks = line.count("Modified")
+        forks = line.count("fork")
+        hit = 0
+        if marks > 0:
+            if forks > 0:
+                hit = 1
+        if seen > 40:
+            if hit > 0:
+                if buried == "":
+                    buried = line
+        else:
+            if hit > 0:
+                if prominent == "":
+                    prominent = line
+    return [prominent, buried]
+def notice_has_date(notice):
+    hits = re.findall("[0-9]{4}-[0-9]{2}-[0-9]{2}", notice)
+    count = len(hits)
+    if count > 0:
+        return True
+    return False
+def tracked_under(prefix):
+    git_res = subprocess.run(["git", "ls-files", "--", prefix], capture_output=True, check=True)
+    tracked_text = git_res.stdout.decode("utf-8")
+    items = tracked_text.splitlines()
+    return sorted(items)
+def touched_since(import_commit, prefix):
+    spec = import_commit + "..HEAD"
+    log_res = subprocess.run(["git", "log", "--name-only", "--pretty=format:", spec, "--", prefix], capture_output=True, check=True)
+    log_text = log_res.stdout.decode("utf-8")
+    diff_res = subprocess.run(["git", "diff", "--name-only", "HEAD", "--", prefix], capture_output=True, check=True)
+    diff_text = diff_res.stdout.decode("utf-8")
+    combined = log_text + "\n" + diff_text
+    touched = []
+    for log_line in combined.splitlines():
+        item = log_line.strip()
+        if item != "":
+            present = item in touched
+            if not present:
+                touched.append(item)
+    return touched
+def check_vendor_tree(tree_path):
+    tree_prefix = tree_path.as_posix()
+    prov_path = tree_path.joinpath("PROVENANCE")
+    if not prov_path.is_file():
+        violation("fork-notice", "missing PROVENANCE: " + tree_prefix)
+    prov_bytes = prov_path.read_bytes()
+    prov_text = prov_bytes.decode("utf-8")
+    prov_lines = prov_text.splitlines()
+    license_id = provenance_field(prov_lines, "License")
+    if license_id == "":
+        violation("fork-notice", "PROVENANCE states no License: " + tree_prefix)
+    import_commit = provenance_field(prov_lines, "Import commit")
+    if import_commit == "":
+        violation("fork-notice", "PROVENANCE states no Import commit: " + tree_prefix)
+    needs_date = license_requires_date(tree_prefix, license_id)
+    tracked = tracked_under(tree_prefix)
+    touched = touched_since(import_commit, tree_prefix)
+    declared = provenance_list_field(prov_lines, "First-party files")
+    first_party = []
+    for relative in declared:
+        declared_path = tree_prefix + "/" + relative
+        declared_tracked = declared_path in tracked
+        if not declared_tracked:
+            violation("fork-notice", "declared first-party file is untracked: " + declared_path)
+        first_party.append(declared_path)
+    modified_count = 0
+    for tracked_path in tracked:
+        exempt = tracked_path in first_party
+        if not exempt:
+            modified = tracked_path in touched
+            if modified:
+                modified_count = modified_count + 1
+            file_path = pathlib.Path(tracked_path)
+            scan = fork_notice_scan(file_path)
+            prominent = scan.pop(0)
+            buried = scan.pop(0)
+            if modified:
+                if prominent == "":
+                    if buried == "":
+                        violation("fork-notice", "modified vendored file carries no change notice: " + tracked_path)
+                    else:
+                        violation("fork-notice", "change notice is not prominent: " + tracked_path)
+                if needs_date:
+                    dated = notice_has_date(prominent)
+                    if not dated:
+                        violation("fork-notice", "change notice states no date: " + tracked_path)
+            else:
+                if prominent != "":
+                    violation("fork-notice", "unmodified vendored file carries a change notice: " + tracked_path)
+    return modified_count
+def check_fork_notices():
+    vendor_root = pathlib.Path("vendor")
+    if not vendor_root.is_dir():
+        violation("fork-notice", "missing vendor directory")
+    tree_count = 0
+    modified_total = 0
+    for entry in sorted(vendor_root.iterdir()):
+        entry_name = entry.as_posix()
+        if entry.is_symlink():
+            violation("fork-notice", "vendor entry is a symlink: " + entry_name)
+        if not entry.is_dir():
+            violation("fork-notice", "vendor entry is not a directory: " + entry_name)
+        tree_modified = check_vendor_tree(entry)
+        tree_count = tree_count + 1
+        modified_total = modified_total + tree_modified
+    if tree_count == 0:
+        violation("fork-notice", "no vendor trees found")
+    if modified_total == 0:
+        violation("fork-notice", "no modified vendored files found")
+    print("goal: fork notices ok " + str(tree_count) + " trees " + str(modified_total) + " modified files")
 def check_documents(scratch_path, swipl_executable, stage_path, guideline_path, ace_paths, docids, lexicon_path):
     pl_dir = guideline_path.joinpath("pl")
     payload_dir = scratch_path.joinpath("payloads")
@@ -886,6 +1036,7 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
     if lexicon_path != None:
         check_lexicon(guideline_path, ace_paths, docids)
 def check_command():
+    check_fork_notices()
     check_compendium()
     guidelines_root = pathlib.Path("guidelines")
     root_symlink = guidelines_root.is_symlink()

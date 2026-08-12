@@ -2,14 +2,20 @@
 
 Upstream: https://github.com/Attempto/APE
 Fork base: 5f4d5354a45fb772763bf1a9543f508f15b28982
-License: LGPL-3.0-or-later. The upstream `LICENSE.txt` is retained verbatim in this directory.
+Import commit: 7af31add39a430fb5904ecef2f84a4a5b575da69
+License: LGPL-3.0-or-later
+First-party files: PROVENANCE, prolog/ace_to_pl.pl
+
+The upstream `LICENSE.txt` is retained verbatim in this directory. The four
+fields above are machine-read by the `fork-notice` gate in `goal.py check`.
 
 This tree is a liberal in-place fork: upstream files are edited directly,
 first-party modules are added directly, and everything outside the compiler's
 load and build closure is deleted. Git history against the fork base is the
-complete change record. Every modified upstream file carries a prominent
-dated in-file modification notice (GPL-3.0 §5(a) via LGPL-3.0-or-later);
-first-party additions state their origin and license in their file header.
+complete change record. Every upstream file a commit after `Import commit`
+touched carries a prominent dated in-file modification notice (GPL-3.0 §5(a)
+via LGPL-3.0-or-later); first-party additions state their origin and license
+in their file header.
 
 First-party additions:
 

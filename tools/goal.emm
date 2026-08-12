@@ -220,6 +220,165 @@ Define [[check_prolog_inventory]] taking nothing:
             If not compiled:
                 Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
 
+Define [[provenance_field]] taking prov_lines, key:
+    Set prefix to key plus ": ".
+    Set value to "".
+    For each prov_line in prov_lines:
+        Set starts to [[prov_line.startswith]](prefix).
+        If starts:
+            Set rest to [[prov_line.removeprefix]](prefix).
+            Set value to [[rest.strip]]().
+    Give back value.
+
+Define [[provenance_list_field]] taking prov_lines, key:
+    Set value to [[provenance_field]](prov_lines, key).
+    Set items to <>.
+    For each part in [[value.split]](","):
+        Set item to [[part.strip]]().
+        If item does not equal "":
+            Do [[items.append]](item).
+    Give back items.
+
+Define [[license_requires_date]] taking tree_prefix, license_id:
+    Set gpl to [[license_id.startswith]]("GPL-").
+    Set lgpl to [[license_id.startswith]]("LGPL-").
+    Set agpl to [[license_id.startswith]]("AGPL-").
+    If gpl:
+        Give back True.
+    If lgpl:
+        Give back True.
+    If agpl:
+        Give back True.
+    If license_id equals "Apache-2.0":
+        Give back False.
+    Do [[violation]]("fork-notice", "unrecognized license in " plus tree_prefix plus ": " plus license_id).
+    Give back False.
+
+Define [[fork_notice_scan]] taking file_path:
+    Set raw to [[file_path.read_bytes]]().
+    Set text to [[raw.decode]]("utf-8", "replace").
+    Set prominent to "".
+    Set buried to "".
+    Set seen to 0.
+    For each line in [[text.splitlines]]():
+        Set seen to seen plus 1.
+        Set marks to [[line.count]]("Modified").
+        Set forks to [[line.count]]("fork").
+        Set hit to 0.
+        If marks is greater than 0:
+            If forks is greater than 0:
+                Set hit to 1.
+        If seen is greater than 40:
+            If hit is greater than 0:
+                If buried equals "":
+                    Set buried to line.
+        Otherwise:
+            If hit is greater than 0:
+                If prominent equals "":
+                    Set prominent to line.
+    Give back <prominent, buried>.
+
+Define [[notice_has_date]] taking notice:
+    Set hits to [[re.findall]]("[0-9]{4}-[0-9]{2}-[0-9]{2}", notice).
+    Set count to [[len]](hits).
+    If count is greater than 0:
+        Give back True.
+    Give back False.
+
+Define [[tracked_under]] taking prefix:
+    Set git_res to [[subprocess.run]](<"git", "ls-files", "--", prefix>, capture_output=True, check=True).
+    Set tracked_text to [[git_res.stdout.decode]]("utf-8").
+    Set items to [[tracked_text.splitlines]]().
+    Give back [[sorted]](items).
+
+Define [[touched_since]] taking import_commit, prefix:
+    Set spec to import_commit plus "..HEAD".
+    Set log_res to [[subprocess.run]](<"git", "log", "--name-only", "--pretty=format:", spec, "--", prefix>, capture_output=True, check=True).
+    Set log_text to [[log_res.stdout.decode]]("utf-8").
+    Set diff_res to [[subprocess.run]](<"git", "diff", "--name-only", "HEAD", "--", prefix>, capture_output=True, check=True).
+    Set diff_text to [[diff_res.stdout.decode]]("utf-8").
+    Set combined to log_text plus "\n" plus diff_text.
+    Set touched to <>.
+    For each log_line in [[combined.splitlines]]():
+        Set item to [[log_line.strip]]().
+        If item does not equal "":
+            Set present to item is in touched.
+            If not present:
+                Do [[touched.append]](item).
+    Give back touched.
+
+Define [[check_vendor_tree]] taking tree_path:
+    Set tree_prefix to [[tree_path.as_posix]]().
+    Set prov_path to [[tree_path.joinpath]]("PROVENANCE").
+    If not [[prov_path.is_file]]():
+        Do [[violation]]("fork-notice", "missing PROVENANCE: " plus tree_prefix).
+    Set prov_bytes to [[prov_path.read_bytes]]().
+    Set prov_text to [[prov_bytes.decode]]("utf-8").
+    Set prov_lines to [[prov_text.splitlines]]().
+    Set license_id to [[provenance_field]](prov_lines, "License").
+    If license_id equals "":
+        Do [[violation]]("fork-notice", "PROVENANCE states no License: " plus tree_prefix).
+    Set import_commit to [[provenance_field]](prov_lines, "Import commit").
+    If import_commit equals "":
+        Do [[violation]]("fork-notice", "PROVENANCE states no Import commit: " plus tree_prefix).
+    Set needs_date to [[license_requires_date]](tree_prefix, license_id).
+    Set tracked to [[tracked_under]](tree_prefix).
+    Set touched to [[touched_since]](import_commit, tree_prefix).
+    Set declared to [[provenance_list_field]](prov_lines, "First-party files").
+    Set first_party to <>.
+    For each relative in declared:
+        Set declared_path to tree_prefix plus "/" plus relative.
+        Set declared_tracked to declared_path is in tracked.
+        If not declared_tracked:
+            Do [[violation]]("fork-notice", "declared first-party file is untracked: " plus declared_path).
+        Do [[first_party.append]](declared_path).
+    Set modified_count to 0.
+    For each tracked_path in tracked:
+        Set exempt to tracked_path is in first_party.
+        If not exempt:
+            Set modified to tracked_path is in touched.
+            If modified:
+                Set modified_count to modified_count plus 1.
+            Set file_path to [[pathlib.Path]](tracked_path).
+            Set scan to [[fork_notice_scan]](file_path).
+            Set prominent to [[scan.pop]](0).
+            Set buried to [[scan.pop]](0).
+            If modified:
+                If prominent equals "":
+                    If buried equals "":
+                        Do [[violation]]("fork-notice", "modified vendored file carries no change notice: " plus tracked_path).
+                    Otherwise:
+                        Do [[violation]]("fork-notice", "change notice is not prominent: " plus tracked_path).
+                If needs_date:
+                    Set dated to [[notice_has_date]](prominent).
+                    If not dated:
+                        Do [[violation]]("fork-notice", "change notice states no date: " plus tracked_path).
+            Otherwise:
+                If prominent does not equal "":
+                    Do [[violation]]("fork-notice", "unmodified vendored file carries a change notice: " plus tracked_path).
+    Give back modified_count.
+
+Define [[check_fork_notices]] taking nothing:
+    Set vendor_root to [[pathlib.Path]]("vendor").
+    If not [[vendor_root.is_dir]]():
+        Do [[violation]]("fork-notice", "missing vendor directory").
+    Set tree_count to 0.
+    Set modified_total to 0.
+    For each entry in [[sorted]]([[vendor_root.iterdir]]()):
+        Set entry_name to [[entry.as_posix]]().
+        If [[entry.is_symlink]]():
+            Do [[violation]]("fork-notice", "vendor entry is a symlink: " plus entry_name).
+        If not [[entry.is_dir]]():
+            Do [[violation]]("fork-notice", "vendor entry is not a directory: " plus entry_name).
+        Set tree_modified to [[check_vendor_tree]](entry).
+        Set tree_count to tree_count plus 1.
+        Set modified_total to modified_total plus tree_modified.
+    If tree_count equals 0:
+        Do [[violation]]("fork-notice", "no vendor trees found").
+    If modified_total equals 0:
+        Do [[violation]]("fork-notice", "no modified vendored files found").
+    Do [[print]]("goal: fork notices ok " plus [[str]](tree_count) plus " trees " plus [[str]](modified_total) plus " modified files").
+
 Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, guideline_path, ace_paths, docids, lexicon_path:
     Set pl_dir to [[guideline_path.joinpath]]("pl").
     Set payload_dir to [[scratch_path.joinpath]]("payloads").
@@ -933,6 +1092,7 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
         Do [[check_lexicon]](guideline_path, ace_paths, docids).
 
 Define [[check_command]] taking nothing:
+    Do [[check_fork_notices]]().
     Do [[check_compendium]]().
     Set guidelines_root to [[pathlib.Path]]("guidelines").
     Set root_symlink to [[guidelines_root.is_symlink]]().

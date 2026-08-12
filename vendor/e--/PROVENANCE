@@ -2,12 +2,17 @@
 
 Upstream: https://github.com/frmoded/e--
 Fork base: da8c3b34d2493180da8df65b127a3841f9a4e609
-License: Apache-2.0. The upstream `LICENSE` is retained verbatim in this directory.
+Import commit: 743e90af84e06aa745f3fdca566a26cbf87da485
+License: Apache-2.0
+First-party files: PROVENANCE, src/e_minus_minus/strict.py
+
+The upstream `LICENSE` is retained verbatim in this directory. The four
+fields above are machine-read by the `fork-notice` gate in `goal.py check`.
 
 This tree is a liberal in-place fork: upstream files are edited directly. Git
-history against the fork base is the complete change record. Every modified
-upstream file carries a prominent Apache-2.0 §4(b) modification notice
-in-file.
+history against the fork base is the complete change record. Every upstream
+file a commit after `Import commit` touched carries a prominent Apache-2.0
+§4(b) modification notice in-file; §4(b) requires no date.
 
 ## Strict compilation path (the Python TCB)
 

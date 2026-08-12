@@ -40,8 +40,14 @@ compilation of it, or part of one small named compiler base:
   `prolog/ace_to_pl.pl` compiler, the one first-party Prolog artifact not
   itself compiled from ACE — and `vendor/e--/` — the hand-authored Python
   that compiles E--. Both trees are pruned to their load closures;
-  `vendor/*/PROVENANCE` records upstream, fork base, inventory, and trust
-  boundary. Git history is the change record.
+  `vendor/*/PROVENANCE` records upstream, fork base, import commit, license,
+  first-party inventory, and trust boundary. Git history is the change
+  record, and `goal.py check` reads it: every tracked vendored file a commit
+  after the recorded import commit touched — or the working tree edits —
+  must carry a change notice in its first 40 lines, dated where the tree's
+  license is a GPL family (§5(a)) and undated where it is Apache-2.0
+  (§4(b)); every untouched file must carry none. Declared first-party files
+  are exempt and state origin and license in their own headers.
 - **Tests are data.** `tests/red/` holds rejection probes named
   `<expected-error-class>--<name>.ace`. One `tools/goal.py check` invocation
   is the full acceptance gate: it validates the compendium ledger
