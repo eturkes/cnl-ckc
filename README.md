@@ -103,6 +103,17 @@ compiler performs no arithmetic, unit conversion, counting, or modal
 inference — a cardinality clause records what the sentence said, nothing
 more.
 
+Every one of those values is reachable, but not from every position. An
+upper-bounding determiner (`at most n`, `exactly n`, `less than n`) is
+scoped: at the root of an asserted sentence ACE groups the conditions it
+binds into a condition list, and v1 has no construct for that scope, so
+the document rejects with `unsupported, root_condition([…])` rather than
+flatten an upper bound into an existential claim — `tests/red/
+unsupported--v1-root-at-most.ace` pins the detail. The same phrase inside
+a rule or an operator box carries no group and compiles, emitting `leq`,
+`exactly` or `less` under that context; `at least n` and `more than n`
+bound below, are never grouped, and compile in any position.
+
 `Context` is `actual` for asserted content, or a generated operator
 context:
 

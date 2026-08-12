@@ -208,6 +208,12 @@ Governing authoring rulings:
   becomes a temporal PP. Source `for` takes `prep(for,for)` + a determiner.
 - Noun modification = relative clause or compound noun; `of` rejects
   (`condition_shape(relation(A,of,B))`).
+- Source upper bounds (`at most n`, `exactly n`, `less than n`) reject at the
+  root of an asserted sentence (`root_condition([...])`, ACE scoping them over
+  a grouped condition list) and compile inside a rule or operator box; a
+  root-position bound is hoisted under its modality or recorded as an
+  approximation in the notes. Lower bounds (`at least n`, `more than n`) carry
+  no group and compile anywhere.
 - Source "or" folds only where the notes name the approximation; disjunctive
   consequents stay unsupported. Defeasibility/backend changes need a named
   consumer question and recompile the unchanged ACE corpus.
@@ -215,7 +221,7 @@ Governing authoring rulings:
 Assurance + evidence:
 
 - Durable acceptance = `python3 -P tools/goal.py check` (terminal corpus,
-  aggregate replay, 20 committed reds each pinning class + rc + byte-exact
+  aggregate replay, 21 committed reds each pinning class + rc + byte-exact
   stderr) + `python3 -P tools/regen.py --check`.
 - Closing M3 chain = durable gate -> `.scratch/m3u1/gate_m3u1.py` ->
   `.scratch/m3u2/gate_m3u2.py` -> `.scratch/m3u3/gate_m3u3.py` ->
@@ -246,8 +252,8 @@ and the README bounds numerals fixed here):
 - MEDIUM, fixed: committed reds pinned class/rc/framing but not Detail — a
   mutant rewriting both question details kept `goal.py check` green. Every
   probe now carries a required `.expect` sidecar compared byte-exact;
-  orphan/missing pins are violations. 20 probes (added: v1 GROUP root
-  detail, `of` noun modifier).
+  orphan/missing pins are violations. 20 probes at review close (added: v1
+  GROUP root detail, `of` noun modifier).
 - MEDIUM, fixed: the ulex slot silently accepted the reserved basename
   `schema=v1`; `reserved_argv_token/1` now rejects it like `proof`.
 - MEDIUM, fixed: the legacy witness covered only copula facts + one rule, so
