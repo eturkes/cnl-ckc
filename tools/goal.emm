@@ -246,7 +246,19 @@ Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, gu
         Do [[payload_path.write_bytes]](first_payload).
         Do [[manifest_pairs.append]](<committed_path, payload_path>).
         Do [[check_doc_load]](scratch_path, swipl_executable, stage_path, committed_path).
+    Set manifest_ids to [[manifest_document_ids]](manifest_pairs).
+    If manifest_ids does not equal docids:
+        Do [[cleanup_violation]](scratch_path, "aggregate-totality", "manifest documents differ from corpus documents: " plus [[str]](guideline_path)).
     Do [[check_aggregate]](scratch_path, swipl_executable, stage_path, manifest_pairs).
+
+Define [[manifest_document_ids]] taking manifest_pairs:
+    Set docid_list to <>.
+    For each manifest_pair in manifest_pairs:
+        Set pair_copy to [[list]](manifest_pair).
+        Set pl_path to [[pair_copy.pop]](0).
+        Set pl_name to pl_path.name.
+        Do [[docid_list.append]]([[pl_name.removesuffix]](".pl")).
+    Give back docid_list.
 
 Define [[write_manifest]] taking manifest_path, manifest_pairs:
     Set manifest_text to "".

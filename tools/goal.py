@@ -228,7 +228,18 @@ def check_documents(scratch_path, swipl_executable, stage_path, guideline_path, 
         payload_path.write_bytes(first_payload)
         manifest_pairs.append([committed_path, payload_path])
         check_doc_load(scratch_path, swipl_executable, stage_path, committed_path)
+    manifest_ids = manifest_document_ids(manifest_pairs)
+    if manifest_ids != docids:
+        cleanup_violation(scratch_path, "aggregate-totality", "manifest documents differ from corpus documents: " + str(guideline_path))
     check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs)
+def manifest_document_ids(manifest_pairs):
+    docid_list = []
+    for manifest_pair in manifest_pairs:
+        pair_copy = list(manifest_pair)
+        pl_path = pair_copy.pop(0)
+        pl_name = pl_path.name
+        docid_list.append(pl_name.removesuffix(".pl"))
+    return docid_list
 def write_manifest(manifest_path, manifest_pairs):
     manifest_text = ""
     for manifest_pair in manifest_pairs:

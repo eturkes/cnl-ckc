@@ -54,9 +54,9 @@ compilation of it, or part of one small named compiler base:
   liveness, v1-only product vocabulary), recompiles every guideline twice
   (byte-determinism), compares against the committed Prolog (freshness),
   load-checks every compiled document, derives and discharges every
-  document's proof obligations alone and as one co-loaded composition, and
-  asserts each red probe is rejected with its named error class and exit
-  status.
+  document's proof obligations alone and as one co-loaded composition whose
+  manifest is pinned to the guideline's whole document set, and asserts each
+  red probe is rejected with its named error class and exit status.
 
 ## Running
 
