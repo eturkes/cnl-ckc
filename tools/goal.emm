@@ -1,3 +1,4 @@
+Use hashlib.
 Use os.
 Use pathlib.
 Use re.
@@ -215,10 +216,12 @@ Define [[check_prolog_inventory]] taking nothing:
     Set tracked_text to [[git_res.stdout.decode]]("utf-8").
     For each tracked in [[sorted]]([[tracked_text.splitlines]]()):
         Set vendored to [[tracked.startswith]]("vendor/ape/").
+        Set clex_base to tracked equals "vendor/clex/clex_lexicon.pl".
         Set compiled to [[compiled_pl_path]](tracked).
         If not vendored:
-            If not compiled:
-                Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
+            If not clex_base:
+                If not compiled:
+                    Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
 
 Define [[provenance_field]] taking prov_lines, key:
     Set prefix to key plus ": ".
@@ -307,6 +310,52 @@ Define [[touched_since]] taking import_commit, prefix:
                 Do [[touched.append]](item).
     Give back touched.
 
+Define [[check_pristine_tree]] taking tree_path, tree_prefix, tracked, first_party:
+    Set manifest_path to [[tree_path.joinpath]]("MANIFEST.sha256").
+    If not [[manifest_path.is_file]]():
+        Do [[violation]]("fork-notice", "pristine tree lacks MANIFEST.sha256: " plus tree_prefix).
+    Set manifest_bytes to [[manifest_path.read_bytes]]().
+    Set manifest_text to [[manifest_bytes.decode]]("utf-8").
+    Set manifest_map to {}.
+    For each manifest_line in [[manifest_text.splitlines]]():
+        If manifest_line:
+            Set line_parts to [[manifest_line.split]]("  ", 1).
+            If [[len]](line_parts) does not equal 2:
+                Do [[violation]]("fork-notice", "malformed manifest row in " plus tree_prefix plus ": " plus manifest_line).
+            Set digest_hex to [[line_parts.pop]](0).
+            Set rel_name to [[line_parts.pop]](0).
+            Set rel_clean to [[rel_name.removeprefix]]("./").
+            Set full_name to tree_prefix plus "/" plus rel_clean.
+            Do [[manifest_map.update]]({full_name: digest_hex}).
+    For each tracked_path in tracked:
+        Set exempt to tracked_path is in first_party.
+        If not exempt:
+            Set file_path to [[pathlib.Path]](tracked_path).
+            Set scan to [[fork_notice_scan]](file_path).
+            Set prominent to [[scan.pop]](0).
+            Set buried to [[scan.pop]](0).
+            If prominent does not equal "":
+                Do [[violation]]("fork-notice", "pristine vendored file carries a change notice: " plus tracked_path).
+            If buried does not equal "":
+                Do [[violation]]("fork-notice", "pristine vendored file carries a change notice: " plus tracked_path).
+            Set listed to tracked_path is in manifest_map.
+            If not listed:
+                Do [[violation]]("fork-notice", "pristine file missing from manifest: " plus tracked_path).
+            Set expected_digest to [[manifest_map.get]](tracked_path).
+            Set file_bytes to [[file_path.read_bytes]]().
+            Set digest_value to [[hashlib.sha256]](file_bytes).
+            Set actual_digest to [[digest_value.hexdigest]]().
+            If actual_digest does not equal expected_digest:
+                Do [[violation]]("fork-notice", "pristine file differs from manifest digest: " plus tracked_path).
+    For each full_name in manifest_map:
+        Set manifest_tracked to full_name is in tracked.
+        If not manifest_tracked:
+            Do [[violation]]("fork-notice", "manifest row without tracked file: " plus full_name).
+        Set manifest_first_party to full_name is in first_party.
+        If manifest_first_party:
+            Do [[violation]]("fork-notice", "manifest row names first-party file: " plus full_name).
+    Give back 0.
+
 Define [[check_vendor_tree]] taking tree_path:
     Set tree_prefix to [[tree_path.as_posix]]().
     Set prov_path to [[tree_path.joinpath]]("PROVENANCE").
@@ -332,6 +381,10 @@ Define [[check_vendor_tree]] taking tree_path:
         If not declared_tracked:
             Do [[violation]]("fork-notice", "declared first-party file is untracked: " plus declared_path).
         Do [[first_party.append]](declared_path).
+    Set pristine_flag to [[provenance_field]](prov_lines, "Pristine").
+    If pristine_flag equals "yes":
+        Set pristine_count to [[check_pristine_tree]](tree_path, tree_prefix, tracked, first_party).
+        Give back pristine_count.
     Set modified_count to 0.
     For each tracked_path in tracked:
         Set exempt to tracked_path is in first_party.

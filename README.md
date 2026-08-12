@@ -47,7 +47,12 @@ a direct compilation of it, or part of one small named compiler base:
   must carry a change notice in its first 40 lines, dated where the tree's
   license is a GPL family (§5(a)) and undated where it is Apache-2.0
   (§4(b)); every untouched file must carry none. Declared first-party files
-  are exempt and state origin and license in their own headers.
+  are exempt and state origin and license in their own headers. A third
+  vendored tree, `vendor/clex/` — the COMLEX-derived general-English base
+  lexicon consulted beneath every per-guideline `lexicon.ulex` — is not a
+  fork: its `PROVENANCE` declares `Pristine: yes`, and the same gate then
+  verifies content instead of history — every tracked non-first-party file
+  must match its `MANIFEST.sha256` digest and carry no change notice.
 - **Tests are data.** `tests/red/` holds rejection probes named
   `<expected-error-class>--<name>.ace`. One `tools/goal.py check` invocation
   beside `tools/regen.py --check` (E-- → Python identity, above) is the
@@ -381,4 +386,6 @@ First-party work outside `vendor/`: Apache-2.0 WITH LLVM-exception
 (`LICENSE`). First-party additions inside a vendored tree adopt that tree's
 license — `vendor/ape/prolog/ace_to_pl.pl` is LGPL-3.0-or-later. Vendored
 trees keep their own licenses: `vendor/e--` Apache-2.0, `vendor/ape`
-LGPL-3.0-or-later. See `NOTICE`.
+LGPL-3.0-or-later, `vendor/clex` GPL-3.0-or-later. Distribution of the full
+repository combination conveys under GPLv3; first-party work remains
+Apache-2.0 WITH LLVM-exception and independently reusable. See `NOTICE`.

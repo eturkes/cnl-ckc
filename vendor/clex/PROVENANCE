@@ -1,0 +1,30 @@
+# Clex vendor provenance
+
+Upstream: https://github.com/Attempto/Clex
+Fork base: 20960a5ce07776cb211a8cfb25dc8c81fcdf25e2
+Import commit: ace2759c713c547fdd3a26f10095b2c370e69e77
+License: GPL-3.0-or-later
+Pristine: yes
+First-party files: PROVENANCE, MANIFEST.sha256
+
+The upstream tree (clex_lexicon.pl, LICENSE, README.md) is vendored
+verbatim at the fork base pin. `Pristine: yes` binds the fork-notice
+gate to content verification: every tracked non-first-party file must
+match its MANIFEST.sha256 digest and carry no modification notice.
+In-tree check: cd vendor/clex && sha256sum -c MANIFEST.sha256.
+License is GPL-3.0-or-later per the clex_lexicon.pl in-file header;
+upstream LICENSE (GPLv3 text) retained verbatim. Combination
+conveyance record: root NOTICE.
+
+Role: clex_lexicon.pl (97,541 lines, COMLEX-derived) is the
+general-English base lexicon for the ACE front end. tools/goal.py
+stages APE (copytree of vendor/ape) and copies
+vendor/clex/clex_lexicon.pl over the staged demo
+prolog/lexicon/clex_lexicon.pl; APE's prolog/lexicon/clex.pl loader
+consults it per process. Ulex lookup precedence is unchanged;
+goal.py check owns the ulex↔clex boundary (lexicon-redundant,
+lexicon-shadow + audit/lexicon-shadow.tsv rulings).
+
+A future modification ends pristine status: drop `Pristine: yes`,
+follow vendor/ape's patch contract (prominent dated in-file notice per
+GPL-3.0 §5(a)), bump the pin record, regenerate MANIFEST.sha256.

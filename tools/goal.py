@@ -1,3 +1,4 @@
+import hashlib
 import os
 import pathlib
 import re
@@ -198,10 +199,12 @@ def check_prolog_inventory():
     tracked_text = git_res.stdout.decode("utf-8")
     for tracked in sorted(tracked_text.splitlines()):
         vendored = tracked.startswith("vendor/ape/")
+        clex_base = tracked == "vendor/clex/clex_lexicon.pl"
         compiled = compiled_pl_path(tracked)
         if not vendored:
-            if not compiled:
-                violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
+            if not clex_base:
+                if not compiled:
+                    violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
 def provenance_field(prov_lines, key):
     prefix = key + ": "
     value = ""
@@ -282,6 +285,51 @@ def touched_since(import_commit, prefix):
             if not present:
                 touched.append(item)
     return touched
+def check_pristine_tree(tree_path, tree_prefix, tracked, first_party):
+    manifest_path = tree_path.joinpath("MANIFEST.sha256")
+    if not manifest_path.is_file():
+        violation("fork-notice", "pristine tree lacks MANIFEST.sha256: " + tree_prefix)
+    manifest_bytes = manifest_path.read_bytes()
+    manifest_text = manifest_bytes.decode("utf-8")
+    manifest_map = {}
+    for manifest_line in manifest_text.splitlines():
+        if manifest_line:
+            line_parts = manifest_line.split("  ", 1)
+            if len(line_parts) != 2:
+                violation("fork-notice", "malformed manifest row in " + tree_prefix + ": " + manifest_line)
+            digest_hex = line_parts.pop(0)
+            rel_name = line_parts.pop(0)
+            rel_clean = rel_name.removeprefix("./")
+            full_name = tree_prefix + "/" + rel_clean
+            manifest_map.update({full_name: digest_hex})
+    for tracked_path in tracked:
+        exempt = tracked_path in first_party
+        if not exempt:
+            file_path = pathlib.Path(tracked_path)
+            scan = fork_notice_scan(file_path)
+            prominent = scan.pop(0)
+            buried = scan.pop(0)
+            if prominent != "":
+                violation("fork-notice", "pristine vendored file carries a change notice: " + tracked_path)
+            if buried != "":
+                violation("fork-notice", "pristine vendored file carries a change notice: " + tracked_path)
+            listed = tracked_path in manifest_map
+            if not listed:
+                violation("fork-notice", "pristine file missing from manifest: " + tracked_path)
+            expected_digest = manifest_map.get(tracked_path)
+            file_bytes = file_path.read_bytes()
+            digest_value = hashlib.sha256(file_bytes)
+            actual_digest = digest_value.hexdigest()
+            if actual_digest != expected_digest:
+                violation("fork-notice", "pristine file differs from manifest digest: " + tracked_path)
+    for full_name in manifest_map:
+        manifest_tracked = full_name in tracked
+        if not manifest_tracked:
+            violation("fork-notice", "manifest row without tracked file: " + full_name)
+        manifest_first_party = full_name in first_party
+        if manifest_first_party:
+            violation("fork-notice", "manifest row names first-party file: " + full_name)
+    return 0
 def check_vendor_tree(tree_path):
     tree_prefix = tree_path.as_posix()
     prov_path = tree_path.joinpath("PROVENANCE")
@@ -307,6 +355,10 @@ def check_vendor_tree(tree_path):
         if not declared_tracked:
             violation("fork-notice", "declared first-party file is untracked: " + declared_path)
         first_party.append(declared_path)
+    pristine_flag = provenance_field(prov_lines, "Pristine")
+    if pristine_flag == "yes":
+        pristine_count = check_pristine_tree(tree_path, tree_prefix, tracked, first_party)
+        return pristine_count
     modified_count = 0
     for tracked_path in tracked:
         exempt = tracked_path in first_party
