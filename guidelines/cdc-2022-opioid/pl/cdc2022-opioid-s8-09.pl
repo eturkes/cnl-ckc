@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s8-09',ace_sha256('30c4a289151646e231e0a798e1f2fcd331025e96a2340e6dac3ba745b2cdc504'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s8-09',ace_sha256('30c4a289151646e231e0a798e1f2fcd331025e96a2340e6dac3ba745b2cdc504'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: Every clinician should collaborate with a patient during a treatment-decision.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s8-09',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s8-09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s8-09',1,ref(2),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

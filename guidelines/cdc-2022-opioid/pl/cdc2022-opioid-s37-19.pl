@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s37-19',ace_sha256('8c5aeb573b4384f65159e208629b09c7c4d79a96360d309afd87edab992a1c49'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s37-19',ace_sha256('8c5aeb573b4384f65159e208629b09c7c4d79a96360d309afd87edab992a1c49'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: If a patient does not have an imminent-opioid-regimen-harm-risk then every clinician may delay an opioid-taper for the patient and may reach a taper-agreement with the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s37-19',1,box(2),[A,B]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,C,-), guideline_entity(C,D,'imminent-opioid-regimen-harm-risk',countable), guideline_cardinality(C,D,na,eq,1), guideline_event(C,E,have), guideline_arg(C,E,1,A), guideline_arg(C,E,2,D), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s37-19',1,box(2),[A,B]),'$guideline_id'(product,'cdc2022-opioid-s37-19',1,ref(5),[A,B]),'opioid-taper',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,C,-), guideline_entity(C,D,'imminent-opioid-regimen-harm-risk',countable), guideline_cardinality(C,D,na,eq,1), guideline_event(C,E,have), guideline_arg(C,E,1,A), guideline_arg(C,E,2,D), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).

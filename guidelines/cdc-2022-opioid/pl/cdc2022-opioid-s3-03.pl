@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s3-03',ace_sha256('34bf4c6964c27ffadbe103316fe41c00118807193d5dc666c94a6bb6654ded02'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s3-03',ace_sha256('34bf4c6964c27ffadbe103316fe41c00118807193d5dc666c94a6bb6654ded02'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: Every recommendation does not apply during a sickle-cell-disease-pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s3-03',1,box(1),[A]),-) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s3-03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s3-03',1,ref(2),[A]),'sickle-cell-disease-pain',countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).

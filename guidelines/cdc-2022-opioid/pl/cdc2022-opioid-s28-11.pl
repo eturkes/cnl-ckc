@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s28-11',ace_sha256(c6ef0854ffc7b4fb8bd7b120120fb37773cda24c33fbd5b373ef0852e8bd7e73),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s28-11',ace_sha256(c6ef0854ffc7b4fb8bd7b120120fb37773cda24c33fbd5b373ef0852e8bd7e73),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: Every clinician may elicit a meaningful-functional-goal from a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s28-11',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s28-11',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s28-11',1,ref(2),[A]),'meaningful-functional-goal',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

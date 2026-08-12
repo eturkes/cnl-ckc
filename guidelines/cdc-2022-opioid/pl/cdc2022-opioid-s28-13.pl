@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s28-13',ace_sha256('69c63a8d8ad5c624ec4076f460e828363782822633f16cc5e690fc328ce120c6'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s28-13',ace_sha256('69c63a8d8ad5c624ec4076f460e828363782822633f16cc5e690fc328ce120c6'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: If a patient has a subacute-pain then every clinician should reevaluate the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s28-13',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'subacute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s28-13',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s28-13',1,ref(5),[A,B,C,D]),reevaluate) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'subacute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

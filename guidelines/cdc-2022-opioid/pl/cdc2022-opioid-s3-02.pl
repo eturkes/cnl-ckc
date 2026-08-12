@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s3-02',ace_sha256('7067a4cc33f497750a42d2e1ea0c6a6f58d96272ace53e2ff600f6a6ad789623'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s3-02',ace_sha256('7067a4cc33f497750a42d2e1ea0c6a6f58d96272ace53e2ff600f6a6ad789623'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: Every recommendation is not an inflexible-standard.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s3-02',1,box(1),[A]),-) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s3-02',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s3-02',1,ref(2),[A]),'inflexible-standard',countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).

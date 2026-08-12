@@ -51,6 +51,8 @@ def make_scratch():
 def stage_ape(scratch_path, swipl_executable):
     stage_path = scratch_path.joinpath("ape-stage")
     shutil.copytree("vendor/ape", stage_path)
+    stage_clex = stage_path.joinpath("prolog", "lexicon", "clex_lexicon.pl")
+    shutil.copy(clex_path_text, stage_clex)
     parser_dir = stage_path.joinpath("prolog", "parser")
     build_goal = "working_directory(_, '" + parser_dir.as_posix() + "'), [fit_to_plp], halt."
     command = [swipl_executable, "-O", "-f", "none", "-F", "none", "-g", build_goal, "-t", "halt"]
@@ -909,7 +911,7 @@ v1_functors = ["guideline_schema_version", "guideline_document", "guideline_enti
 v1_directives = ["guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3"]
 v1_decl_kinds = ["multifile", "discontiguous"]
 token_strip_chars = ".,;:?!\"()"
-clex_path_text = "vendor/ape/prolog/lexicon/clex_lexicon.pl"
+clex_path_text = "vendor/clex/clex_lexicon.pl"
 def read_corpus_file(file_path, category):
     if file_path.is_symlink():
         violation(category, "is a symlink: " + str(file_path))

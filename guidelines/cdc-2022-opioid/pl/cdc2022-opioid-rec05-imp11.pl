@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp11',ace_sha256('210e34ae80e62b72a01ffa58c1c38bdb479b8bf95500698ca7d6d27944df295d'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-rec05-imp11',ace_sha256('210e34ae80e62b72a01ffa58c1c38bdb479b8bf95500698ca7d6d27944df295d'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: If an opioid-therapy has a longer-duration then a taper may require a longer-duration.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp11',1,ref(4),[A,B,C]),taper,countable) :- guideline_entity(actual,A,'opioid-therapy',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'longer-duration',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp11',1,ref(4),[A,B,C]),na,eq,1) :- guideline_entity(actual,A,'opioid-therapy',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'longer-duration',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

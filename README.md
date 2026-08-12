@@ -10,9 +10,10 @@ executable Prolog through controlled natural language:
    English (ACE), one document per ruled source region, under
    `guidelines/<id>/ace/`, with domain vocabulary in
    `guidelines/<id>/lexicon.ulex`.
-3. **Compile** — `tools/goal.py` stages the vendored APE parser and compiles
-   every ACE document to plain Prolog under `guidelines/<id>/pl/` via
-   `vendor/ape/prolog/ace_to_pl.pl`.
+3. **Compile** — `tools/goal.py` stages the vendored APE parser, overlays
+   `vendor/clex/clex_lexicon.pl` as the general-English base lexicon, and
+   compiles every ACE document to plain Prolog under `guidelines/<id>/pl/`
+   via `vendor/ape/prolog/ace_to_pl.pl`.
 
 Claude Code's built-in `/goal` command drives all three steps ("Operating"
 below).

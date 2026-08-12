@@ -24,5 +24,8 @@ First-party additions:
   tree; contract in its header.
 
 Trust posture: APE runs in separate SWI-Prolog processes over a scratch copy
-staged by `tools/goal.py` (`shutil.copytree` + `fit_to_plp` grammar build);
-Python moves bytes only; DRS interpretation lives entirely in Prolog.
+staged by `tools/goal.py` (`shutil.copytree`, then `vendor/clex/clex_lexicon.pl`
+overlaid on the staged demo `prolog/lexicon/clex_lexicon.pl`, then `fit_to_plp`
+grammar build); every staged parse — corpus and red probes — reads the full
+Clex, so the in-tree demo lexicon is unused at runtime. Python moves bytes
+only; DRS interpretation lives entirely in Prolog.

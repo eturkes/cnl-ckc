@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s37-11',ace_sha256('301ed83e2826216533350b20801171b058e52fe6bfddeea375a99400018feae1'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s37-11',ace_sha256('301ed83e2826216533350b20801171b058e52fe6bfddeea375a99400018feae1'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: Every clinician should coordinate a taper-decision with a respiratory-depressant-medication-prescriber.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s37-11',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s37-11',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s37-11',1,ref(2),[A]),'taper-decision',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

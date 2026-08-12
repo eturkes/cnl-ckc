@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s30-06',ace_sha256('337700aad4380438109675df74fd34765ebe2137d21139fef5d7f75119d519e6'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s30-06',ace_sha256('337700aad4380438109675df74fd34765ebe2137d21139fef5d7f75119d519e6'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: If a patient has a single-modality-therapy-nonresponse then every clinician should consider a multimodal-therapy for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s30-06',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'single-modality-therapy-nonresponse',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s30-06',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s30-06',1,ref(5),[A,B,C,D]),'multimodal-therapy',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'single-modality-therapy-nonresponse',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

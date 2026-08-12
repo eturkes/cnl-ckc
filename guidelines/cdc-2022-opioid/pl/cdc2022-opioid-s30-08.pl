@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s30-08',ace_sha256('379ec153de6e7b144285e32fc6a37296d79222597f1808cbf3505385473615e1'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s30-08',ace_sha256('379ec153de6e7b144285e32fc6a37296d79222597f1808cbf3505385473615e1'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: Every clinician should heed a medication-combination-caution during a medication-combination-use.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s30-08',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s30-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-08',1,ref(2),[A]),'medication-combination-caution',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

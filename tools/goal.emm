@@ -60,6 +60,8 @@ Define [[make_scratch]] taking nothing:
 Define [[stage_ape]] taking scratch_path, swipl_executable:
     Set stage_path to [[scratch_path.joinpath]]("ape-stage").
     Do [[shutil.copytree]]("vendor/ape", stage_path).
+    Set stage_clex to [[stage_path.joinpath]]("prolog", "lexicon", "clex_lexicon.pl").
+    Do [[shutil.copy]](clex_path_text, stage_clex).
     Set parser_dir to [[stage_path.joinpath]]("prolog", "parser").
     Set build_goal to "working_directory(_, '" plus [[parser_dir.as_posix]]() plus "'), [fit_to_plp], halt.".
     Set command to <swipl_executable, "-O", "-f", "none", "-F", "none", "-g", build_goal, "-t", "halt">.
@@ -956,7 +958,7 @@ Set v1_functors to <"guideline_schema_version", "guideline_document", "guideline
 Set v1_directives to <"guideline_schema_version/1", "guideline_document/3", "guideline_entity/4", "guideline_cardinality/5", "guideline_event/3", "guideline_arg/4", "guideline_pp/4", "guideline_property/4", "guideline_operator/3">.
 Set v1_decl_kinds to <"multifile", "discontiguous">.
 Set token_strip_chars to ".,;:?!\"()".
-Set clex_path_text to "vendor/ape/prolog/lexicon/clex_lexicon.pl".
+Set clex_path_text to "vendor/clex/clex_lexicon.pl".
 
 Define [[read_corpus_file]] taking file_path, category:
     If [[file_path.is_symlink]]():

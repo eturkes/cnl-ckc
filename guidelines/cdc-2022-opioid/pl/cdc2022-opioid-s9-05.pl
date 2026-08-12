@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s9-05',ace_sha256(d6c5c2777ee4172c29bbc13269ca5d67a1c6da6e271e22d1fbd8b77328e9f485),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
+guideline_document('cdc2022-opioid-s9-05',ace_sha256(d6c5c2777ee4172c29bbc13269ca5d67a1c6da6e271e22d1fbd8b77328e9f485),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
 % S1: Every opioid-pain-clinical-practice-guideline is a clinical-tool.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',1,ref(2),[A]),'clinical-tool',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).

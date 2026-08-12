@@ -87,7 +87,13 @@ was published with.
 - `pl/cdc2022-opioid-recNN.pl` — Prolog compiled from the ACE by
   `vendor/ape/prolog/ace_to_pl.pl`; regenerate via
   `python3 -P tools/goal.py compile cdc-2022-opioid` — the compiler is
-  their sole author.
+  their sole author. Under the full-Clex base lexicon, six documents
+  (s8-06, s26-07, s34-10, s37-15, s38-17, s39-12) read verb
+  `to`-complements as ditransitive third arguments
+  (`guideline_arg(...,3,...)`) where the trimmed demo lexicon had
+  yielded `guideline_pp(...,to,...)`; reviewed and accepted as the
+  tighter subcategorized reading. Same-surface ulex/Clex coexistence
+  rulings live in `audit/lexicon-shadow.tsv`.
 
 These derivatives are project-authored formal projections; present them as
 the project's own work, with CDC credited as the source of the underlying
