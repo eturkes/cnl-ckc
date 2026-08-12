@@ -304,7 +304,7 @@ Guideline work runs as goal rounds in a Claude Code session opened at the
 repository root, driven by the built-in `/goal` stop-condition command:
 
 ```
-/goal Process American clinical guidelines through the pipeline as described in README.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
+/goal Process American clinical guidelines through the pipeline as described in README.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when either (a) the user has asked to stop, pause, or wind down — the request alone meets this goal at any point, even mid-round with the worklist unfinished; start nothing new, state where work stands, and stop — or (b) every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
 ```
 
 The goal re-arms each time Claude tries to stop and survives session resume,
@@ -312,7 +312,12 @@ so halting at any moment is safe: the repository is the only persistence,
 and every round starts by deriving state from it — `.agent/queue.md`,
 `git status`, `tools/goal.py check`, and the in-progress guideline README's
 coverage statement — then finishes or discards incomplete work before
-taking on anything new. The check's first stage validates the compendium
+taking on anything new. A user request to stop is condition (a) of the
+goal itself: "let's stop here" satisfies the stop check at once —
+mid-round included — rather than re-arming against the unmet exhaustion
+clause, and the wind-down is to start nothing new, state where work
+stands, and stop; `/goal clear` remains the unconditional disarm. The
+check's first stage validates the compendium
 (`.agent/compendium.md` organizations table plus `.agent/compendium.tsv`:
 row format and vocabulary, canonical ordering, the single-active-row
 promotion invariant) and prints a terminal meter — remaining
