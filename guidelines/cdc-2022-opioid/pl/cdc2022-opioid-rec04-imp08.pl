@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec04-imp08',ace_sha256(ea4944bf60c52132b639f5a09af9ef3e34a7596219837ba1da8528456a383036),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
+guideline_document('cdc2022-opioid-rec04-imp08',ace_sha256(ea4944bf60c52132b639f5a09af9ef3e34a7596219837ba1da8528456a383036),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
 % S1: If a clinician decides a dosage-increase then the clinician should heed a caution and should use a smallest-practical-increase.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp08',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'dosage-increase',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,decide), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp08',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp08',1,ref(4),[A,B,C]),caution,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'dosage-increase',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,decide), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

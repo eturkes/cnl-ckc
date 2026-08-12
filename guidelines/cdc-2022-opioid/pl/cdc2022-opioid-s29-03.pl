@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s29-03',ace_sha256('7767f34b21443eb5a09eccb5784fe620e7ae36c37d30f98c1856316033af25c6'),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
+guideline_document('cdc2022-opioid-s29-03',ace_sha256('7767f34b21443eb5a09eccb5784fe620e7ae36c37d30f98c1856316033af25c6'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
 % S1: Every clinician should discuss a realistic-expected-opioid-benefit with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-03',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s29-03',1,ref(2),[A]),'realistic-expected-opioid-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

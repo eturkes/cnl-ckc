@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s23-06',ace_sha256('77706c97fe3020f34213eb251a640d375a85d93b1d1b3edf79780555299871da'),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
+guideline_document('cdc2022-opioid-s23-06',ace_sha256('77706c97fe3020f34213eb251a640d375a85d93b1d1b3edf79780555299871da'),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
 % S1: Every clinician should avoid a stool-softener-without-another-laxative.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-06',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-06',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-06',1,ref(2),[A]),'stool-softener-without-another-laxative',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

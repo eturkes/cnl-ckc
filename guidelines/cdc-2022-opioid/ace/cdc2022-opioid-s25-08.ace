@@ -1,2 +1,2 @@
-If a clinician does not conduct a patient-specific-medication-assessment then the clinician should not use a medication.
-If a clinician does not make an expected-benefit-risk-determination then the clinician should not use a medication.
+If a clinician considers a medication for a patient and the clinician does not conduct a patient-specific-medication-assessment for the patient then the clinician should not use the medication for the patient.
+If a clinician considers a medication for a patient and the clinician does not make an expected-benefit-over-risk-determination for the medication then the clinician should not use the medication for the patient.

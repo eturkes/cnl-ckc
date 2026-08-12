@@ -2,3 +2,4 @@
 /.claude/.headroom_wrap_marker.json
 /.scratch/
 /.toolchain/
+.goal.tmp.*/

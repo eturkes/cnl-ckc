@@ -75,7 +75,6 @@ noun_sg('hospital-care','hospital-care',neutr).
 noun_sg('implementation-consideration','implementation-consideration',neutr).
 noun_sg('individualized-person-centered-care-replacement','individualized-person-centered-care-replacement',neutr).
 noun_sg('individualized-person-centered-decision','individualized-person-centered-decision',neutr).
-noun_sg('inflexible-care-standard','inflexible-care-standard',neutr).
 noun_sg('inflexible-requirement','inflexible-requirement',neutr).
 noun_sg('informed-person-centered-pain-care-decision','informed-person-centered-pain-care-decision',neutr).
 noun_sg('linguistically-appropriate-communication','linguistically-appropriate-communication',neutr).
@@ -260,7 +259,7 @@ noun_sg('evidence-type-3-recommendation','evidence-type-3-recommendation',neutr)
 noun_sg('evidence-type-4-recommendation','evidence-type-4-recommendation',neutr).
 noun_sg('exercise-therapy','exercise-therapy',neutr).
 noun_sg('exit-strategy','exit-strategy',neutr).
-noun_sg('expected-benefit-risk-determination','expected-benefit-risk-determination',neutr).
+noun_sg('expected-benefit-over-risk-determination','expected-benefit-over-risk-determination',neutr).
 noun_sg('expected-opioid-benefit','expected-opioid-benefit',neutr).
 noun_sg('expected-severe-pain-duration','expected-severe-pain-duration',neutr).
 noun_sg('extended-release-opioid','extended-release-opioid',neutr).
@@ -447,7 +446,6 @@ noun_sg('opioid-quantity','opioid-quantity',neutr).
 noun_sg('opioid-related-harm','opioid-related-harm',neutr).
 noun_sg('opioid-risk','opioid-risk',neutr).
 noun_sg('opioid-start-decision','opioid-start-decision',neutr).
-noun_sg('opioid-stopping-withdrawal-symptom','opioid-stopping-withdrawal-symptom',neutr).
 noun_sg('opioid-taper','opioid-taper',neutr).
 noun_sg('opioid-taper-initiation','opioid-taper-initiation',neutr).
 noun_sg('opioid-taper-plan','opioid-taper-plan',neutr).
@@ -562,7 +560,6 @@ noun_sg('regular-follow-up','regular-follow-up',neutr).
 noun_sg('relaxation-technique-education','relaxation-technique-education',neutr).
 noun_sg('renal-dysfunction','renal-dysfunction',neutr).
 noun_sg('renal-insufficiency','renal-insufficiency',neutr).
-noun_sg('respiratory-depressant-medication','respiratory-depressant-medication',neutr).
 noun_sg('respiratory-depressant-medication-prescriber','respiratory-depressant-medication-prescriber',human).
 noun_sg('respiratory-depression-risk-reducing-medication-taper','respiratory-depression-risk-reducing-medication-taper',neutr).
 noun_sg('responsible-caregiver-medication-comanagement','responsible-caregiver-medication-comanagement',neutr).
@@ -699,6 +696,7 @@ prep(through,through).
 prep(to,to).
 prep(with,with).
 tv_finsg(changes,change).
+tv_finsg(conducts,conduct).
 tv_finsg(considers,consider).
 tv_finsg(contains,contain).
 tv_finsg(continues,continue).
@@ -768,7 +766,6 @@ tv_infpl(improve,improve).
 tv_infpl(include,include).
 tv_infpl(incorporate,incorporate).
 tv_infpl(increase,increase).
-tv_infpl(indicate,indicate).
 tv_infpl(individualize,individualize).
 tv_infpl(inform,inform).
 tv_infpl(initiate,initiate).

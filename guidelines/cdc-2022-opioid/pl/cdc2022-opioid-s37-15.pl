@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s37-15',ace_sha256(ae70c7cdc676ee26df8d9041885914632dfb31a86d484a7e4da8b81ab5df2856),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
+guideline_document('cdc2022-opioid-s37-15',ace_sha256(ae70c7cdc676ee26df8d9041885914632dfb31a86d484a7e4da8b81ab5df2856),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
 % S1: Every clinician should offer a continued-opioid-use-reevaluation-opportunity to a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s37-15',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s37-15',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s37-15',1,ref(2),[A]),'continued-opioid-use-reevaluation-opportunity',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s12-02',ace_sha256(d6eb20804bcc6d391de2ecc64980416e5dc638393a70f602697c7cdad43ba51c),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
+guideline_document('cdc2022-opioid-s12-02',ace_sha256(d6eb20804bcc6d391de2ecc64980416e5dc638393a70f602697c7cdad43ba51c),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
 % S1: Every category-B-recommendation has a possible-partial-person-applicability.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s12-02',1,ref(2),[A]),'possible-partial-person-applicability',countable) :- guideline_entity(actual,A,'category-B-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s12-02',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'category-B-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).

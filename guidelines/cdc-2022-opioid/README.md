@@ -69,6 +69,19 @@ was published with.
   `payer-health-system-or-state-medical-board` (neutral), and S35-09
   `taper-support-team-member` (human — nurses, pharmacists, and
   behavioral-health specialists serving as taper-support team members).
+- `ace/cdc2022-opioid-<region-id>.ace` — one ACE document per formalized
+  front-matter or recommendation 1–5 supporting-rationale region outside
+  the implementation-consideration lists (107 documents; docid = the
+  region id lowercased, S25-04 → `s25-04`), under the same knowledge-only
+  projection contract and `audit/projection-notes.tsv` discipline as the
+  implementation documents. Non-clinician actor classes ruled in:
+  `primary-care-clinician` and `pain-care-clinician` (human, the
+  source-named audiences), `respiratory-depressant-medication-prescriber`
+  (human), and `pain-equity-duty-holder` (neutral superclass sharing the
+  S19-07 inequity/communication/access duties across clinician,
+  clinical-practice-organization, health-system, and payer); guideline
+  scope and misapplication regions take the guideline or recommendation
+  itself as rule subject.
 - `lexicon.ulex` — the guideline's APE user lexicon (domain compounds
   shared by all documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog compiled from the ACE by
@@ -99,18 +112,19 @@ guideline conclusions.
   documents, each preserving its recommendation's exact category/evidence
   parenthetical and simplified action rules), plus one document per
   formalized recommendation 1–5 implementation-consideration region
-  (67 documents).
+  (67 documents), plus one document per formalized front-matter and
+  recommendation 1–5 rationale region (107 documents).
   The rules encode deontic modality ("should"), conditions, and negation
   where the source region states them; each document's remaining
   simplifications are recorded per region in `audit/projection-notes.tsv`
   (kept/dropped columns) and `coverage.tsv`.
 - `coverage.tsv` records one status row per payload region (all 718):
-  `ace(<docid>)` formalized (79), `restates(<id>)` verbatim or
+  `ace(<docid>)` formalized (186), `restates(<id>)` verbatim or
   near-verbatim repetition of another region (262), `uncovered(<class>:
   <reason>)` deliberately not formalized (119 — classes: heading,
   process, external, aim, descriptive, notice), or `pending` ruled for
-  formalization with the ACE document not yet authored (258 — the
-  authoring worklist: 151 rec06-12, 85 rec01-05, 22 front matter); every
+  formalization with the ACE document not yet authored (151 — the
+  authoring worklist, all in `source/rec06-12-body-extraction.txt`); every
   region carries a ruling. Restatement links
   target the canonical full statement — the Box 3 text for
   recommendation restatements, the main-text list for the guiding
@@ -132,6 +146,18 @@ guideline conclusions.
   condition, permission, or strategy added to an otherwise-canonical
   echo makes the region formalize rather than restate (S49-14, S52-10,
   S55-01); an emphasis qualifier alone does not (S56-12).
+- Projection rulings (wave-1 review): ACE "does not V a N" negates the
+  existential — a takes-none reading (S37-13). An unhedged source
+  endorsement ("preferred", "are recommended") renders as a should-shaped
+  duty; practice hedges ("typically", "generally", "ideally") drop with a
+  notes admission; "can"/"might" render as may. Source or-alternatives may
+  split into conjunctive consider/discuss duties or parallel non-exclusive
+  permissions, admitted in notes. "Only if"/"only after" restrictions
+  render as prohibition-unless-guard conditionals binding clinician,
+  object, and patient in one sentence (S25-04, S25-08 shapes).
+  Cross-sentence referential identity is not modeled: fresh existentials
+  per rule are the corpus idiom, and each identity or linkage loss lands
+  in the notes dropped column.
 - Reconciliation against an independent 702-sentence census of the same
   pages is closed and recorded row-by-row in `audit/census-map.tsv`:
   694 census sentences map to evidence regions (the 27 the census

@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s23-03',ace_sha256('47a8470d35f1ef28ca6a89f78a5bb2667f2d1315d8393064cdf90a6e71aa2fc6'),ulex(sha256('2a4a3e829c919b3dd3b20356e7a69585cfb305c3c57dfb531e3f2c1eb97637b6'))).
+guideline_document('cdc2022-opioid-s23-03',ace_sha256(fcc19657d5963dfaa8a525edfee197cae51269bf48971df34387c38a48638293),ulex(sha256('6bd0df91739d5a42b1a472d866e0dd72897517f8e4652458e4893adbed9cc663'))).
 % S1: Every clinician should advise a constipation with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-03',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',1,ref(2),[A]),constipation,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -99,9 +99,9 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-s23-03',8,box(1),[A]),'$
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s23-03',8,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',8,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s23-03',8,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',8,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s23-03',8,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s23-03',8,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',8,ref(4),[A]),with,'$guideline_id'(product,'cdc2022-opioid-s23-03',8,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-% S9: Every clinician should advise an opioid-stopping-withdrawal-symptom with a patient.
+% S9: Every clinician should advise an opioid-withdrawal-symptom with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-03',9,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-03',9,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',9,ref(2),[A]),'opioid-stopping-withdrawal-symptom',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-03',9,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',9,ref(2),[A]),'opioid-withdrawal-symptom',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s23-03',9,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',9,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-03',9,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',9,ref(3),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s23-03',9,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-03',9,ref(3),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
