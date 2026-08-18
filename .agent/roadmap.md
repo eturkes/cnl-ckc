@@ -388,7 +388,7 @@ time after 4.2); 4.12 last. Compiler-mode contracts + oracles (4.5/4.6/
 4.7/4.8) and the dist contract are parallel-prep-safe while the UI trunk
 lands; only the shared-file implementations serialize.
 
-- M4.1 OPEN (kernel) — strict E-- exception verbs: minimal
+- M4.1 DONE (kernel) — strict E-- exception verbs: minimal
   `Try:`/`Catch <name>:` block statements in the vendor/e-- fork
   (charter: extend E-- liberally) — spec.md append, lexer/parser/emitter
   + strict red tests, regen identity; scope = the smallest construct
@@ -510,6 +510,9 @@ lands; only the shared-file implementations serialize.
   guideline README + queue/rounds touch-ups; polish-register
   reconciliation (pulled rows pruned with acceptance evidence, deferred
   UI hardening rows appended with acceptance checks).
+
+- Unit gauges: M4.1 main=88% 212K close, mate=100% 239K (rev; map 69%
+  test 71% rev2 57%).
 
 Sizing (planrev L1: five of seven M3 MAIN kernels hit 200-245K
 pre-compaction; the ≤175K blanket was refuted): every unit sizes
