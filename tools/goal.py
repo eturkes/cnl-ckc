@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import os
 import pathlib
@@ -1099,6 +1100,7 @@ def check_projection_ledger(guideline_path):
         violation("projection-ledger", "ledger holds no rows")
     seen_docids = {}
     row_pairs = []
+    notes_row_by_docid = {}
     for row_line in row_lines:
         fields = row_line.split("\t")
         if len(fields) != 4:
@@ -1120,7 +1122,8 @@ def check_projection_ledger(guideline_path):
             violation("projection-ledger", "duplicate row docid: " + docid)
         seen_docids.update({docid: True})
         row_pairs.append([docid, region])
-    return row_pairs
+        notes_row_by_docid.update({docid: row_line + "\n"})
+    return [row_pairs, notes_row_by_docid]
 def coverage_status_kind(row_id, status_text):
     if status_text == "pending":
         return ["pending", ""]
@@ -1160,6 +1163,26 @@ def coverage_status_kind(row_id, status_text):
             violation("coverage", "empty uncovered reason for " + row_id)
         return ["uncovered", class_name]
     violation("coverage", "unknown status for " + row_id + ": " + status_text)
+def bind_locator_payload(evidence_path, region_id, payload_lines, payload_by_locator):
+    line_count = len(payload_lines)
+    if line_count != 1:
+        violation("coverage", "evidence region " + region_id + " carries " + str(line_count) + " content lines in: " + str(evidence_path))
+    payload_line = payload_lines.pop(0)
+    payload_by_locator.update({region_id: payload_line})
+def strip_list_label(payload_line):
+    label_parts = payload_line.split(". ", 1)
+    if len(label_parts) != 2:
+        return payload_line
+    head_text = label_parts.pop(0)
+    tail_text = label_parts.pop(0)
+    if not head_text:
+        return payload_line
+    digit_chars = set("0123456789")
+    head_chars = set(head_text)
+    all_digits = head_chars.issubset(digit_chars)
+    if not all_digits:
+        return payload_line
+    return tail_text
 def evidence_regions(evidence_path):
     data = read_corpus_file(evidence_path, "coverage")
     text = data.decode("utf-8")
@@ -1169,7 +1192,13 @@ def evidence_regions(evidence_path):
     census_text = census_hit.group(1)
     census_count = int(census_text)
     locator_ids = []
+    payload_by_locator = {}
+    current_locator = ""
+    current_payloads = []
+    past_first_blank = False
+    post_blank_lines = []
     for raw_line in text.split("\n"):
+        is_locator = False
         bracketed = raw_line.startswith("[")
         if bracketed:
             closed = raw_line.endswith("]")
@@ -1182,9 +1211,31 @@ def evidence_regions(evidence_path):
                     spaced = " " in region_id
                     if region_id:
                         if not spaced:
+                            is_locator = True
+                            if current_locator:
+                                bind_locator_payload(evidence_path, current_locator, current_payloads, payload_by_locator)
                             locator_ids.append(region_id)
-    return [census_count, locator_ids]
-def check_coverage(guideline_path, docids):
+                            current_locator = region_id
+                            current_payloads = []
+        if not is_locator:
+            if raw_line == "":
+                past_first_blank = True
+            else:
+                if current_locator:
+                    current_payloads.append(raw_line)
+                if past_first_blank:
+                    post_blank_lines.append(raw_line)
+    if current_locator:
+        bind_locator_payload(evidence_path, current_locator, current_payloads, payload_by_locator)
+    ordered_payloads = []
+    if not locator_ids:
+        payload_count = len(post_blank_lines)
+        if payload_count != census_count:
+            violation("coverage", "payload lines " + str(payload_count) + " differ from census " + str(census_count) + " for: " + str(evidence_path))
+        for post_blank_line in post_blank_lines:
+            ordered_payloads.append(strip_list_label(post_blank_line))
+    return [census_count, locator_ids, payload_by_locator, ordered_payloads]
+def check_coverage(guideline_path, docids, emit_meter):
     coverage_path = guideline_path.joinpath("coverage.tsv")
     data = read_corpus_file(coverage_path, "coverage")
     text = data.decode("utf-8")
@@ -1213,6 +1264,12 @@ def check_coverage(guideline_path, docids):
     restates_targets = []
     file_order = []
     file_ids = {}
+    ace_row_line_by_docid = {}
+    ace_file_by_docid = {}
+    ace_region_by_docid = {}
+    ace_ordinal_by_docid = {}
+    evidence_locator_payloads = {}
+    evidence_ordinal_payloads = {}
     for row_line in row_lines:
         is_comment = row_line.startswith("#")
         if is_comment:
@@ -1269,6 +1326,11 @@ def check_coverage(guideline_path, docids):
                 if not known_docid:
                     violation("coverage", "ace names unknown docid for " + row_id + ": " + payload)
                 ace_claims.update({payload: True})
+                ace_row_line_by_docid.update({payload: row_line + "\n"})
+                ace_file_by_docid.update({payload: file_field})
+                ace_region_by_docid.update({payload: row_id})
+                citing_count = len(claimed_ids)
+                ace_ordinal_by_docid.update({payload: citing_count - 1})
             if kind == "restates":
                 restates_count = restates_count + 1
                 restates_rows.append(row_id)
@@ -1296,6 +1358,8 @@ def check_coverage(guideline_path, docids):
         region_info = evidence_regions(evidence_path)
         census_count = region_info.pop(0)
         locator_ids = region_info.pop(0)
+        payload_by_locator = region_info.pop(0)
+        ordered_payloads = region_info.pop(0)
         claimed_ids = file_ids.get(file_field)
         claimed_count = len(claimed_ids)
         if claimed_count != census_count:
@@ -1314,9 +1378,34 @@ def check_coverage(guideline_path, docids):
                 anchored = claimed_id in locator_known
                 if not anchored:
                     violation("coverage", "coverage row without evidence region: " + claimed_id)
+            evidence_locator_payloads.update({file_field: payload_by_locator})
+        else:
+            payload_by_ordinal = {}
+            ordinal_counter = 0
+            for ordered_payload in ordered_payloads:
+                payload_by_ordinal.update({ordinal_counter: ordered_payload})
+                ordinal_counter = ordinal_counter + 1
+            evidence_ordinal_payloads.update({file_field: payload_by_ordinal})
+    payload_text_by_docid = {}
+    for docid in docids:
+        ace_file = ace_file_by_docid.get(docid, "")
+        locator_map = evidence_locator_payloads.get(ace_file, None)
+        if locator_map != None:
+            region_key = ace_region_by_docid.get(docid)
+            payload_text = locator_map.get(region_key, None)
+            if payload_text != None:
+                payload_text_by_docid.update({docid: payload_text})
+        else:
+            ordinal_map = evidence_ordinal_payloads.get(ace_file, None)
+            if ordinal_map != None:
+                ordinal_key = ace_ordinal_by_docid.get(docid)
+                payload_text = ordinal_map.get(ordinal_key, None)
+                if payload_text != None:
+                    payload_text_by_docid.update({docid: payload_text})
     meter = "goal: coverage ok " + guideline_path.name + " " + str(row_count) + " regions; ace=" + str(ace_count) + " restates=" + str(restates_count) + " uncovered=" + str(uncovered_count) + " pending=" + str(pending_count)
-    print(meter)
-    return status_by_id
+    if emit_meter:
+        print(meter)
+    return [status_by_id, ace_row_line_by_docid, payload_text_by_docid]
 def lexicon_entry(line_text):
     head_parts = line_text.split("(", 1)
     kind = head_parts.pop(0)
@@ -1509,8 +1598,414 @@ def check_product_vocabulary(guideline_path, docid):
                     functor_known = functor in v1_functors
                     if not functor_known:
                         violation("product-vocabulary", "unauthorized clause functor in " + docid + ": " + functor)
+adjudication_manifest_header_1 = "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256"
+adjudication_manifest_header_2 = "# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit."
+adjudication_ledger_header = "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
+manifest_component_names = ["ace_sha256", "coverage_row_sha256", "region_payload_sha256", "notes_row_sha256", "semantic_clause_sha256"]
+def sha256_hex(data):
+    digest_value = hashlib.sha256(data)
+    return digest_value.hexdigest()
+def valid_digest(digest_text):
+    if len(digest_text) != 64:
+        return False
+    allowed = set("0123456789abcdef")
+    chars = set(digest_text)
+    return chars.issubset(allowed)
+def semantic_clause_digest(pl_path, docid):
+    data = read_corpus_file(pl_path, "adjudication")
+    text = ""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        violation("adjudication", "compiled document encoding: " + docid)
+    if not text.endswith("\n"):
+        violation("adjudication", "compiled document lacks final newline: " + docid)
+    line_list = text.split("\n")
+    line_list.pop()
+    record_count = 0
+    retained_text = ""
+    for line_text in line_list:
+        is_record = line_text.startswith("guideline_document(")
+        if is_record:
+            record_count = record_count + 1
+            if not line_text.endswith("."):
+                violation("adjudication", "noncanonical document record in: " + docid)
+        else:
+            is_comment = line_text.startswith("%")
+            is_directive = line_text.startswith(":- ")
+            if not is_comment:
+                if not is_directive:
+                    if not line_text.endswith("."):
+                        violation("adjudication", "noncanonical clause line in: " + docid)
+                    retained_text = retained_text + line_text + "\n"
+    if record_count != 1:
+        violation("adjudication", "document record count " + str(record_count) + " for: " + docid)
+    return sha256_hex(retained_text.encode("utf-8"))
+def bundle_digest(docid, components):
+    component_copy = list(components)
+    ace_digest = component_copy.pop(0)
+    coverage_digest = component_copy.pop(0)
+    payload_digest = component_copy.pop(0)
+    notes_digest = component_copy.pop(0)
+    clause_digest = component_copy.pop(0)
+    block_text = "bundle v1 " + docid + "\n"
+    block_text = block_text + "ace " + ace_digest + "\n"
+    block_text = block_text + "coverage " + coverage_digest + "\n"
+    block_text = block_text + "payload " + payload_digest + "\n"
+    block_text = block_text + "notes " + notes_digest + "\n"
+    block_text = block_text + "clauses " + clause_digest + "\n"
+    return sha256_hex(block_text.encode("utf-8"))
+def derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid):
+    sorted_docids = sorted(docids)
+    manifest_text = adjudication_manifest_header_1 + "\n" + adjudication_manifest_header_2 + "\n"
+    bundle_by_docid = {}
+    for docid in sorted_docids:
+        ace_path = guideline_path.joinpath("ace", docid + ".ace")
+        ace_bytes = read_corpus_file(ace_path, "adjudication")
+        ace_digest = sha256_hex(ace_bytes)
+        coverage_row = ace_row_line_by_docid.get(docid, None)
+        if coverage_row == None:
+            violation("adjudication", "docid without coverage row bytes: " + docid)
+        coverage_digest = sha256_hex(coverage_row.encode("utf-8"))
+        payload_text = payload_text_by_docid.get(docid, None)
+        if payload_text == None:
+            violation("adjudication", "docid without region payload: " + docid)
+        payload_digest = sha256_hex(payload_text.encode("utf-8"))
+        notes_row = notes_row_by_docid.get(docid, None)
+        if notes_row == None:
+            violation("adjudication", "docid without projection row bytes: " + docid)
+        notes_digest = sha256_hex(notes_row.encode("utf-8"))
+        pl_path = guideline_path.joinpath("pl", docid + ".pl")
+        clause_digest = semantic_clause_digest(pl_path, docid)
+        components = [ace_digest, coverage_digest, payload_digest, notes_digest, clause_digest]
+        review_digest = bundle_digest(docid, components)
+        row_text = docid + "\t" + ace_digest + "\t" + coverage_digest + "\t" + payload_digest + "\t" + notes_digest + "\t" + clause_digest + "\t" + review_digest
+        manifest_text = manifest_text + row_text + "\n"
+        bundle_by_docid.update({docid: review_digest})
+    return [manifest_text, bundle_by_docid]
+def parse_review_manifest(data, manifest_path):
+    text = ""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        violation("adjudication", "manifest encoding")
+    if "\r" in text:
+        violation("adjudication", "manifest carriage-return")
+    if not text.endswith("\n"):
+        violation("adjudication", "manifest final-newline")
+    header_1 = adjudication_manifest_header_1 + "\n"
+    if not text.startswith(header_1):
+        violation("adjudication", "manifest header line 1")
+    remainder = text.removeprefix(header_1)
+    header_2 = adjudication_manifest_header_2 + "\n"
+    if not remainder.startswith(header_2):
+        violation("adjudication", "manifest header line 2")
+    body = remainder.removeprefix(header_2)
+    row_lines = body.split("\n")
+    row_lines.pop()
+    if not row_lines:
+        violation("adjudication", "manifest holds no rows: " + str(manifest_path))
+    bundle_by_docid = {}
+    row_number = 2
+    prev_docid = ""
+    for row_line in row_lines:
+        row_number = row_number + 1
+        fields = row_line.split("\t")
+        field_count = len(fields)
+        if field_count != 7:
+            violation("adjudication", "manifest row " + str(row_number) + " field-count " + str(field_count))
+        docid = fields.pop(0)
+        if not valid_docid(docid):
+            violation("adjudication", "manifest row " + str(row_number) + " docid-grammar")
+        duplicate = docid in bundle_by_docid
+        if duplicate:
+            violation("adjudication", "manifest row " + str(row_number) + " duplicate-docid " + docid)
+        if docid < prev_docid:
+            violation("adjudication", "manifest row " + str(row_number) + " sort-order " + docid + " after " + prev_docid)
+        prev_docid = docid
+        component_values = []
+        for component_name in manifest_component_names:
+            component_value = fields.pop(0)
+            if not valid_digest(component_value):
+                violation("adjudication", "manifest row " + str(row_number) + " " + component_name)
+            component_values.append(component_value)
+        review_value = fields.pop(0)
+        if not valid_digest(review_value):
+            violation("adjudication", "manifest row " + str(row_number) + " review_sha256")
+        recomputed = bundle_digest(docid, component_values)
+        if recomputed != review_value:
+            violation("adjudication", "manifest row " + str(row_number) + " review_sha256 self-consistency")
+        bundle_by_docid.update({docid: review_value})
+    return bundle_by_docid
+def reviewer_text_ok(field_text):
+    for char_text in field_text:
+        code_point = ord(char_text)
+        if code_point < 32:
+            return False
+        if code_point == 127:
+            return False
+    return True
+def valid_review_date(date_text):
+    if len(date_text) != 20:
+        return False
+    digit_chars = set("0123456789")
+    position = 0
+    for char_text in date_text:
+        expected = ""
+        if position == 4:
+            expected = "-"
+        if position == 7:
+            expected = "-"
+        if position == 10:
+            expected = "T"
+        if position == 13:
+            expected = ":"
+        if position == 16:
+            expected = ":"
+        if position == 19:
+            expected = "Z"
+        if expected:
+            if char_text != expected:
+                return False
+        else:
+            is_digit = char_text in digit_chars
+            if not is_digit:
+                return False
+        position = position + 1
+    try:
+        datetime.datetime.strptime(date_text, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return False
+    return True
+def validate_ledger(ledger_path, bundle_by_docid, label):
+    manifest_total = len(bundle_by_docid)
+    approved_count = 0
+    rejected_count = 0
+    stale_count = 0
+    reviewed_count = 0
+    if ledger_path.is_symlink():
+        violation("adjudication", "ledger is a symlink: " + str(ledger_path))
+    ledger_exists = ledger_path.exists()
+    if ledger_exists:
+        if not ledger_path.is_file():
+            violation("adjudication", "ledger is not a regular file: " + str(ledger_path))
+        data = ledger_path.read_bytes()
+        text = ""
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            violation("adjudication", "ledger encoding")
+        if "\r" in text:
+            violation("adjudication", "ledger carriage-return")
+        if not text.endswith("\n"):
+            violation("adjudication", "ledger final-newline")
+        header_line = adjudication_ledger_header + "\n"
+        if not text.startswith(header_line):
+            violation("adjudication", "ledger header")
+        body = text.removeprefix(header_line)
+        row_lines = body.split("\n")
+        row_lines.pop()
+        row_number = 1
+        prev_docid = ""
+        seen_row_docids = {}
+        for row_line in row_lines:
+            row_number = row_number + 1
+            if row_line.startswith("#"):
+                violation("adjudication", "ledger header")
+            fields = row_line.split("\t")
+            field_count = len(fields)
+            if field_count != 6:
+                violation("adjudication", "ledger row " + str(row_number) + " field-count " + str(field_count))
+            docid = fields.pop(0)
+            digest_field = fields.pop(0)
+            verdict_field = fields.pop(0)
+            reviewer_field = fields.pop(0)
+            date_field = fields.pop(0)
+            comment_field = fields.pop(0)
+            if not valid_docid(docid):
+                violation("adjudication", "ledger row " + str(row_number) + " docid-grammar")
+            known = docid in bundle_by_docid
+            if not known:
+                violation("adjudication", "ledger row " + str(row_number) + " unknown-docid " + docid)
+            duplicate = docid in seen_row_docids
+            if duplicate:
+                violation("adjudication", "ledger row " + str(row_number) + " duplicate-docid " + docid)
+            if docid < prev_docid:
+                violation("adjudication", "ledger row " + str(row_number) + " sort-order " + docid + " after " + prev_docid)
+            prev_docid = docid
+            seen_row_docids.update({docid: True})
+            if not valid_digest(digest_field):
+                violation("adjudication", "ledger row " + str(row_number) + " hex")
+            verdict_ok = False
+            if verdict_field == "approved":
+                verdict_ok = True
+            if verdict_field == "rejected":
+                verdict_ok = True
+            if not verdict_ok:
+                violation("adjudication", "ledger row " + str(row_number) + " verdict")
+            if not reviewer_field:
+                violation("adjudication", "ledger row " + str(row_number) + " reviewer")
+            if not reviewer_text_ok(reviewer_field):
+                violation("adjudication", "ledger row " + str(row_number) + " reviewer")
+            if not valid_review_date(date_field):
+                violation("adjudication", "ledger row " + str(row_number) + " date")
+            if not reviewer_text_ok(comment_field):
+                violation("adjudication", "ledger row " + str(row_number) + " comment")
+            current_digest = bundle_by_docid.get(docid)
+            reviewed_count = reviewed_count + 1
+            if digest_field == current_digest:
+                if verdict_field == "approved":
+                    approved_count = approved_count + 1
+                else:
+                    rejected_count = rejected_count + 1
+            else:
+                stale_count = stale_count + 1
+    unreviewed_count = manifest_total - reviewed_count
+    meter = "goal: adjudication " + label + " approved=" + str(approved_count) + " rejected=" + str(rejected_count) + " stale=" + str(stale_count) + " unreviewed=" + str(unreviewed_count)
+    print(meter)
+def check_adjudication(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid):
+    derived = derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
+    manifest_text = derived.pop(0)
+    bundle_by_docid = derived.pop(0)
+    manifest_path = guideline_path.joinpath("audit", "review-manifest.tsv")
+    regen_hint = "; regenerate: python3 -P tools/goal.py review-manifest " + guideline_path.name
+    if manifest_path.is_symlink():
+        violation("adjudication", "manifest is a symlink: " + str(manifest_path))
+    if not manifest_path.exists():
+        violation("adjudication", "manifest missing: " + str(manifest_path) + regen_hint)
+    if not manifest_path.is_file():
+        violation("adjudication", "manifest is not a regular file: " + str(manifest_path))
+    committed_bytes = manifest_path.read_bytes()
+    derived_bytes = manifest_text.encode("utf-8")
+    if committed_bytes != derived_bytes:
+        violation("adjudication", "manifest stale: " + str(manifest_path) + regen_hint)
+    ledger_path = guideline_path.joinpath("audit", "adjudication.tsv")
+    validate_ledger(ledger_path, bundle_by_docid, guideline_path.name)
+def review_manifest_command(guideline_id):
+    if not valid_docid(guideline_id):
+        fail("guideline", "invalid guideline id: " + guideline_id)
+    guidelines_root = pathlib.Path("guidelines")
+    guideline_path = guidelines_root.joinpath(guideline_id)
+    guideline_symlink = guideline_path.is_symlink()
+    if guideline_symlink:
+        fail("guideline", "is a symlink: " + str(guideline_path))
+    if not guideline_path.is_dir():
+        fail("guideline", "not a directory: " + str(guideline_path))
+    collected = collect_guideline(guideline_path)
+    ace_paths = collected.pop(0)
+    docids = collected.pop(0)
+    lexicon_path = collected.pop(0)
+    ledger_result = check_projection_ledger(guideline_path)
+    ledger_pairs = ledger_result.pop(0)
+    notes_row_by_docid = ledger_result.pop(0)
+    coverage_result = check_coverage(guideline_path, docids, False)
+    status_by_id = coverage_result.pop(0)
+    ace_row_line_by_docid = coverage_result.pop(0)
+    payload_text_by_docid = coverage_result.pop(0)
+    derived = derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
+    manifest_text = derived.pop(0)
+    bundle_by_docid = derived.pop(0)
+    manifest_path = guideline_path.joinpath("audit", "review-manifest.tsv")
+    if manifest_path.is_symlink():
+        violation("adjudication", "manifest is a symlink: " + str(manifest_path))
+    target_present = manifest_path.exists()
+    if target_present:
+        if not manifest_path.is_file():
+            violation("adjudication", "manifest is not a regular file: " + str(manifest_path))
+    manifest_path.write_bytes(manifest_text.encode("utf-8"))
+    print("goal: review-manifest " + guideline_id + " " + str(len(docids)) + " documents")
+def ledger_validate_command(ledger_arg, manifest_arg, label):
+    if not valid_docid(label):
+        fail("usage", "label must match [a-z0-9-]+: " + label)
+    manifest_path = pathlib.Path(manifest_arg)
+    if manifest_path.is_symlink():
+        violation("adjudication", "manifest is a symlink: " + str(manifest_path))
+    if not manifest_path.exists():
+        violation("adjudication", "manifest missing: " + str(manifest_path))
+    if not manifest_path.is_file():
+        violation("adjudication", "manifest is not a regular file: " + str(manifest_path))
+    data = manifest_path.read_bytes()
+    bundle_by_docid = parse_review_manifest(data, manifest_path)
+    ledger_path = pathlib.Path(ledger_arg)
+    validate_ledger(ledger_path, bundle_by_docid, label)
+def check_adjudication_fixtures():
+    fixtures_root = pathlib.Path("tests/adjudication")
+    if fixtures_root.is_symlink():
+        violation("adjudication-fixtures", "is a symlink: " + str(fixtures_root))
+    if not fixtures_root.is_dir():
+        violation("adjudication-fixtures", "missing: " + str(fixtures_root))
+    case_names = []
+    for entry in sorted(fixtures_root.iterdir()):
+        entry_name = entry.name
+        if entry.is_symlink():
+            violation("adjudication-fixtures", "not a case directory: " + entry_name)
+        if not entry.is_dir():
+            violation("adjudication-fixtures", "not a case directory: " + entry_name)
+        if not valid_docid(entry_name):
+            violation("adjudication-fixtures", "invalid case name: " + entry_name)
+        case_names.append(entry_name)
+    if not case_names:
+        violation("adjudication-fixtures", "no fixture cases found: " + str(fixtures_root))
+    member_names = ["expect", "golden", "ledger.tsv", "manifest.tsv"]
+    red_count = 0
+    green_count = 0
+    for case_name in case_names:
+        case_path = fixtures_root.joinpath(case_name)
+        has_manifest = False
+        has_expect = False
+        has_golden = False
+        for member in sorted(case_path.iterdir()):
+            member_name = member.name
+            member_known = member_name in member_names
+            if not member_known:
+                violation("adjudication-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+            if member.is_symlink():
+                violation("adjudication-fixtures", "not a regular file: " + case_name + "/" + member_name)
+            if not member.is_file():
+                violation("adjudication-fixtures", "not a regular file: " + case_name + "/" + member_name)
+            if member_name == "manifest.tsv":
+                has_manifest = True
+            if member_name == "expect":
+                has_expect = True
+            if member_name == "golden":
+                has_golden = True
+        if not has_manifest:
+            violation("adjudication-fixtures", "case without manifest.tsv: " + case_name)
+        if has_expect:
+            if has_golden:
+                violation("adjudication-fixtures", "case pins both expect and golden: " + case_name)
+        if not has_expect:
+            if not has_golden:
+                violation("adjudication-fixtures", "case without expect or golden pin: " + case_name)
+        ledger_arg = str(case_path.joinpath("ledger.tsv"))
+        manifest_arg = str(case_path.joinpath("manifest.tsv"))
+        command = [sys.executable, "-P", "tools/goal.py", "ledger-validate", ledger_arg, manifest_arg, "fx"]
+        result = subprocess.run(command, capture_output=True)
+        if has_expect:
+            if result.returncode != 1:
+                violation("adjudication-fixtures", "status " + str(result.returncode) + " for case: " + case_name)
+            if result.stderr:
+                violation("adjudication-fixtures", "non-empty stderr for case: " + case_name)
+            expect_path = case_path.joinpath("expect")
+            expect_bytes = expect_path.read_bytes()
+            if result.stdout != expect_bytes:
+                violation("adjudication-fixtures", "stdout differs from expect pin for case: " + case_name)
+            red_count = red_count + 1
+        else:
+            if result.returncode != 0:
+                violation("adjudication-fixtures", "status " + str(result.returncode) + " for case: " + case_name)
+            if result.stderr:
+                violation("adjudication-fixtures", "non-empty stderr for case: " + case_name)
+            golden_path = case_path.joinpath("golden")
+            golden_bytes = golden_path.read_bytes()
+            if result.stdout != golden_bytes:
+                violation("adjudication-fixtures", "stdout differs from golden for case: " + case_name)
+            green_count = green_count + 1
+    print("goal: adjudication fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
-    ledger_pairs = check_projection_ledger(guideline_path)
+    ledger_result = check_projection_ledger(guideline_path)
+    ledger_pairs = ledger_result.pop(0)
+    notes_row_by_docid = ledger_result.pop(0)
     ledger_docids = []
     for ledger_pair in ledger_pairs:
         pair_copy = list(ledger_pair)
@@ -1525,7 +2020,10 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
         if not covered:
             violation("projection-ledger", "docid missing projection row: " + docid)
         check_product_vocabulary(guideline_path, docid)
-    status_by_id = check_coverage(guideline_path, docids)
+    coverage_result = check_coverage(guideline_path, docids, True)
+    status_by_id = coverage_result.pop(0)
+    ace_row_line_by_docid = coverage_result.pop(0)
+    payload_text_by_docid = coverage_result.pop(0)
     for ledger_pair in ledger_pairs:
         pair_copy = list(ledger_pair)
         ledger_docid = pair_copy.pop(0)
@@ -1536,11 +2034,13 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
             violation("projection-coverage", "projection row names no coverage region: " + ledger_docid + " " + ledger_region)
         if actual_status != expected_status:
             violation("projection-coverage", "coverage region " + ledger_region + " does not carry ace(" + ledger_docid + "): " + actual_status)
+    check_adjudication(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
     if lexicon_path != None:
         check_lexicon(guideline_path, ace_paths, docids)
 def check_command():
     check_fork_notices()
     check_strict_fixtures()
+    check_adjudication_fixtures()
     check_compendium()
     guidelines_root = pathlib.Path("guidelines")
     root_symlink = guidelines_root.is_symlink()
@@ -1604,7 +2104,7 @@ if not (compiler_source.is_file()):
 argv = list(sys.argv)
 argv.pop(0)
 if len(argv) == 0:
-    fail("usage", "expected: goal compile <guideline-id> | goal check")
+    fail("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal ledger-validate <ledger-path> <manifest-path> <label>")
 subcommand = argv.pop(0)
 if subcommand == "compile":
     if len(argv) != 1:
@@ -1617,4 +2117,18 @@ else:
             fail("usage", "expected: goal check")
         check_command()
     else:
-        fail("usage", "unknown subcommand: " + subcommand)
+        if subcommand == "review-manifest":
+            if len(argv) != 1:
+                fail("usage", "expected: goal review-manifest <guideline-id>")
+            review_guideline_id = argv.pop(0)
+            review_manifest_command(review_guideline_id)
+        else:
+            if subcommand == "ledger-validate":
+                if len(argv) != 3:
+                    fail("usage", "expected: goal ledger-validate <ledger-path> <manifest-path> <label>")
+                ledger_arg = argv.pop(0)
+                manifest_arg = argv.pop(0)
+                label_arg = argv.pop(0)
+                ledger_validate_command(ledger_arg, manifest_arg, label_arg)
+            else:
+                fail("usage", "unknown subcommand: " + subcommand)

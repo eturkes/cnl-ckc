@@ -1,3 +1,4 @@
+Use datetime.
 Use hashlib.
 Use os.
 Use pathlib.
@@ -1156,6 +1157,7 @@ Define [[check_projection_ledger]] taking guideline_path:
         Do [[violation]]("projection-ledger", "ledger holds no rows").
     Set seen_docids to {}.
     Set row_pairs to <>.
+    Set notes_row_by_docid to {}.
     For each row_line in row_lines:
         Set fields to [[row_line.split]]("\t").
         If [[len]](fields) does not equal 4:
@@ -1177,7 +1179,8 @@ Define [[check_projection_ledger]] taking guideline_path:
             Do [[violation]]("projection-ledger", "duplicate row docid: " plus docid).
         Do [[seen_docids.update]]({docid: True}).
         Do [[row_pairs.append]](<docid, region>).
-    Give back row_pairs.
+        Do [[notes_row_by_docid.update]]({docid: row_line plus "\n"}).
+    Give back <row_pairs, notes_row_by_docid>.
 
 Define [[coverage_status_kind]] taking row_id, status_text:
     If status_text equals "pending":
@@ -1219,6 +1222,28 @@ Define [[coverage_status_kind]] taking row_id, status_text:
         Give back <"uncovered", class_name>.
     Do [[violation]]("coverage", "unknown status for " plus row_id plus ": " plus status_text).
 
+Define [[bind_locator_payload]] taking evidence_path, region_id, payload_lines, payload_by_locator:
+    Set line_count to [[len]](payload_lines).
+    If line_count does not equal 1:
+        Do [[violation]]("coverage", "evidence region " plus region_id plus " carries " plus [[str]](line_count) plus " content lines in: " plus [[str]](evidence_path)).
+    Set payload_line to [[payload_lines.pop]](0).
+    Do [[payload_by_locator.update]]({region_id: payload_line}).
+
+Define [[strip_list_label]] taking payload_line:
+    Set label_parts to [[payload_line.split]](". ", 1).
+    If [[len]](label_parts) does not equal 2:
+        Give back payload_line.
+    Set head_text to [[label_parts.pop]](0).
+    Set tail_text to [[label_parts.pop]](0).
+    If not head_text:
+        Give back payload_line.
+    Set digit_chars to [[set]]("0123456789").
+    Set head_chars to [[set]](head_text).
+    Set all_digits to [[head_chars.issubset]](digit_chars).
+    If not all_digits:
+        Give back payload_line.
+    Give back tail_text.
+
 Define [[evidence_regions]] taking evidence_path:
     Set data to [[read_corpus_file]](evidence_path, "coverage").
     Set text to [[data.decode]]("utf-8").
@@ -1228,7 +1253,13 @@ Define [[evidence_regions]] taking evidence_path:
     Set census_text to [[census_hit.group]](1).
     Set census_count to [[int]](census_text).
     Set locator_ids to <>.
+    Set payload_by_locator to {}.
+    Set current_locator to "".
+    Set current_payloads to <>.
+    Set past_first_blank to False.
+    Set post_blank_lines to <>.
     For each raw_line in [[text.split]]("\n"):
+        Set is_locator to False.
         Set bracketed to [[raw_line.startswith]]("[").
         If bracketed:
             Set closed to [[raw_line.endswith]]("]").
@@ -1241,10 +1272,32 @@ Define [[evidence_regions]] taking evidence_path:
                     Set spaced to " " is in region_id.
                     If region_id:
                         If not spaced:
+                            Set is_locator to True.
+                            If current_locator:
+                                Do [[bind_locator_payload]](evidence_path, current_locator, current_payloads, payload_by_locator).
                             Do [[locator_ids.append]](region_id).
-    Give back <census_count, locator_ids>.
+                            Set current_locator to region_id.
+                            Set current_payloads to <>.
+        If not is_locator:
+            If raw_line equals "":
+                Set past_first_blank to True.
+            Otherwise:
+                If current_locator:
+                    Do [[current_payloads.append]](raw_line).
+                If past_first_blank:
+                    Do [[post_blank_lines.append]](raw_line).
+    If current_locator:
+        Do [[bind_locator_payload]](evidence_path, current_locator, current_payloads, payload_by_locator).
+    Set ordered_payloads to <>.
+    If not locator_ids:
+        Set payload_count to [[len]](post_blank_lines).
+        If payload_count does not equal census_count:
+            Do [[violation]]("coverage", "payload lines " plus [[str]](payload_count) plus " differ from census " plus [[str]](census_count) plus " for: " plus [[str]](evidence_path)).
+        For each post_blank_line in post_blank_lines:
+            Do [[ordered_payloads.append]]([[strip_list_label]](post_blank_line)).
+    Give back <census_count, locator_ids, payload_by_locator, ordered_payloads>.
 
-Define [[check_coverage]] taking guideline_path, docids:
+Define [[check_coverage]] taking guideline_path, docids, emit_meter:
     Set coverage_path to [[guideline_path.joinpath]]("coverage.tsv").
     Set data to [[read_corpus_file]](coverage_path, "coverage").
     Set text to [[data.decode]]("utf-8").
@@ -1273,6 +1326,12 @@ Define [[check_coverage]] taking guideline_path, docids:
     Set restates_targets to <>.
     Set file_order to <>.
     Set file_ids to {}.
+    Set ace_row_line_by_docid to {}.
+    Set ace_file_by_docid to {}.
+    Set ace_region_by_docid to {}.
+    Set ace_ordinal_by_docid to {}.
+    Set evidence_locator_payloads to {}.
+    Set evidence_ordinal_payloads to {}.
     For each row_line in row_lines:
         Set is_comment to [[row_line.startswith]]("#").
         If is_comment:
@@ -1329,6 +1388,11 @@ Define [[check_coverage]] taking guideline_path, docids:
                 If not known_docid:
                     Do [[violation]]("coverage", "ace names unknown docid for " plus row_id plus ": " plus payload).
                 Do [[ace_claims.update]]({payload: True}).
+                Do [[ace_row_line_by_docid.update]]({payload: row_line plus "\n"}).
+                Do [[ace_file_by_docid.update]]({payload: file_field}).
+                Do [[ace_region_by_docid.update]]({payload: row_id}).
+                Set citing_count to [[len]](claimed_ids).
+                Do [[ace_ordinal_by_docid.update]]({payload: citing_count minus 1}).
             If kind equals "restates":
                 Set restates_count to restates_count plus 1.
                 Do [[restates_rows.append]](row_id).
@@ -1356,6 +1420,8 @@ Define [[check_coverage]] taking guideline_path, docids:
         Set region_info to [[evidence_regions]](evidence_path).
         Set census_count to [[region_info.pop]](0).
         Set locator_ids to [[region_info.pop]](0).
+        Set payload_by_locator to [[region_info.pop]](0).
+        Set ordered_payloads to [[region_info.pop]](0).
         Set claimed_ids to [[file_ids.get]](file_field).
         Set claimed_count to [[len]](claimed_ids).
         If claimed_count does not equal census_count:
@@ -1374,9 +1440,34 @@ Define [[check_coverage]] taking guideline_path, docids:
                 Set anchored to claimed_id is in locator_known.
                 If not anchored:
                     Do [[violation]]("coverage", "coverage row without evidence region: " plus claimed_id).
+            Do [[evidence_locator_payloads.update]]({file_field: payload_by_locator}).
+        Otherwise:
+            Set payload_by_ordinal to {}.
+            Set ordinal_counter to 0.
+            For each ordered_payload in ordered_payloads:
+                Do [[payload_by_ordinal.update]]({ordinal_counter: ordered_payload}).
+                Set ordinal_counter to ordinal_counter plus 1.
+            Do [[evidence_ordinal_payloads.update]]({file_field: payload_by_ordinal}).
+    Set payload_text_by_docid to {}.
+    For each docid in docids:
+        Set ace_file to [[ace_file_by_docid.get]](docid, "").
+        Set locator_map to [[evidence_locator_payloads.get]](ace_file, None).
+        If locator_map does not equal None:
+            Set region_key to [[ace_region_by_docid.get]](docid).
+            Set payload_text to [[locator_map.get]](region_key, None).
+            If payload_text does not equal None:
+                Do [[payload_text_by_docid.update]]({docid: payload_text}).
+        Otherwise:
+            Set ordinal_map to [[evidence_ordinal_payloads.get]](ace_file, None).
+            If ordinal_map does not equal None:
+                Set ordinal_key to [[ace_ordinal_by_docid.get]](docid).
+                Set payload_text to [[ordinal_map.get]](ordinal_key, None).
+                If payload_text does not equal None:
+                    Do [[payload_text_by_docid.update]]({docid: payload_text}).
     Set meter to "goal: coverage ok " plus guideline_path.name plus " " plus [[str]](row_count) plus " regions; ace=" plus [[str]](ace_count) plus " restates=" plus [[str]](restates_count) plus " uncovered=" plus [[str]](uncovered_count) plus " pending=" plus [[str]](pending_count).
-    Do [[print]](meter).
-    Give back status_by_id.
+    If emit_meter:
+        Do [[print]](meter).
+    Give back <status_by_id, ace_row_line_by_docid, payload_text_by_docid>.
 
 Define [[lexicon_entry]] taking line_text:
     Set head_parts to [[line_text.split]]("(", 1).
@@ -1578,8 +1669,428 @@ Define [[check_product_vocabulary]] taking guideline_path, docid:
                     If not functor_known:
                         Do [[violation]]("product-vocabulary", "unauthorized clause functor in " plus docid plus ": " plus functor).
 
+Set adjudication_manifest_header_1 to "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256".
+Set adjudication_manifest_header_2 to "# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.".
+Set adjudication_ledger_header to "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
+Set manifest_component_names to <"ace_sha256", "coverage_row_sha256", "region_payload_sha256", "notes_row_sha256", "semantic_clause_sha256">.
+
+Define [[sha256_hex]] taking data:
+    Set digest_value to [[hashlib.sha256]](data).
+    Give back [[digest_value.hexdigest]]().
+
+Define [[valid_digest]] taking digest_text:
+    If [[len]](digest_text) does not equal 64:
+        Give back False.
+    Set allowed to [[set]]("0123456789abcdef").
+    Set chars to [[set]](digest_text).
+    Give back [[chars.issubset]](allowed).
+
+Define [[semantic_clause_digest]] taking pl_path, docid:
+    Set data to [[read_corpus_file]](pl_path, "adjudication").
+    Set text to "".
+    Try:
+        Set text to [[data.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Do [[violation]]("adjudication", "compiled document encoding: " plus docid).
+    If not [[text.endswith]]("\n"):
+        Do [[violation]]("adjudication", "compiled document lacks final newline: " plus docid).
+    Set line_list to [[text.split]]("\n").
+    Do [[line_list.pop]]().
+    Set record_count to 0.
+    Set retained_text to "".
+    For each line_text in line_list:
+        Set is_record to [[line_text.startswith]]("guideline_document(").
+        If is_record:
+            Set record_count to record_count plus 1.
+            If not [[line_text.endswith]]("."):
+                Do [[violation]]("adjudication", "noncanonical document record in: " plus docid).
+        Otherwise:
+            Set is_comment to [[line_text.startswith]]("%").
+            Set is_directive to [[line_text.startswith]](":- ").
+            If not is_comment:
+                If not is_directive:
+                    If not [[line_text.endswith]]("."):
+                        Do [[violation]]("adjudication", "noncanonical clause line in: " plus docid).
+                    Set retained_text to retained_text plus line_text plus "\n".
+    If record_count does not equal 1:
+        Do [[violation]]("adjudication", "document record count " plus [[str]](record_count) plus " for: " plus docid).
+    Give back [[sha256_hex]]([[retained_text.encode]]("utf-8")).
+
+Define [[bundle_digest]] taking docid, components:
+    Set component_copy to [[list]](components).
+    Set ace_digest to [[component_copy.pop]](0).
+    Set coverage_digest to [[component_copy.pop]](0).
+    Set payload_digest to [[component_copy.pop]](0).
+    Set notes_digest to [[component_copy.pop]](0).
+    Set clause_digest to [[component_copy.pop]](0).
+    Set block_text to "bundle v1 " plus docid plus "\n".
+    Set block_text to block_text plus "ace " plus ace_digest plus "\n".
+    Set block_text to block_text plus "coverage " plus coverage_digest plus "\n".
+    Set block_text to block_text plus "payload " plus payload_digest plus "\n".
+    Set block_text to block_text plus "notes " plus notes_digest plus "\n".
+    Set block_text to block_text plus "clauses " plus clause_digest plus "\n".
+    Give back [[sha256_hex]]([[block_text.encode]]("utf-8")).
+
+Define [[derive_review_manifest]] taking guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid:
+    Set sorted_docids to [[sorted]](docids).
+    Set manifest_text to adjudication_manifest_header_1 plus "\n" plus adjudication_manifest_header_2 plus "\n".
+    Set bundle_by_docid to {}.
+    For each docid in sorted_docids:
+        Set ace_path to [[guideline_path.joinpath]]("ace", docid plus ".ace").
+        Set ace_bytes to [[read_corpus_file]](ace_path, "adjudication").
+        Set ace_digest to [[sha256_hex]](ace_bytes).
+        Set coverage_row to [[ace_row_line_by_docid.get]](docid, None).
+        If coverage_row equals None:
+            Do [[violation]]("adjudication", "docid without coverage row bytes: " plus docid).
+        Set coverage_digest to [[sha256_hex]]([[coverage_row.encode]]("utf-8")).
+        Set payload_text to [[payload_text_by_docid.get]](docid, None).
+        If payload_text equals None:
+            Do [[violation]]("adjudication", "docid without region payload: " plus docid).
+        Set payload_digest to [[sha256_hex]]([[payload_text.encode]]("utf-8")).
+        Set notes_row to [[notes_row_by_docid.get]](docid, None).
+        If notes_row equals None:
+            Do [[violation]]("adjudication", "docid without projection row bytes: " plus docid).
+        Set notes_digest to [[sha256_hex]]([[notes_row.encode]]("utf-8")).
+        Set pl_path to [[guideline_path.joinpath]]("pl", docid plus ".pl").
+        Set clause_digest to [[semantic_clause_digest]](pl_path, docid).
+        Set components to <ace_digest, coverage_digest, payload_digest, notes_digest, clause_digest>.
+        Set review_digest to [[bundle_digest]](docid, components).
+        Set row_text to docid plus "\t" plus ace_digest plus "\t" plus coverage_digest plus "\t" plus payload_digest plus "\t" plus notes_digest plus "\t" plus clause_digest plus "\t" plus review_digest.
+        Set manifest_text to manifest_text plus row_text plus "\n".
+        Do [[bundle_by_docid.update]]({docid: review_digest}).
+    Give back <manifest_text, bundle_by_docid>.
+
+Define [[parse_review_manifest]] taking data, manifest_path:
+    Set text to "".
+    Try:
+        Set text to [[data.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Do [[violation]]("adjudication", "manifest encoding").
+    If "\r" is in text:
+        Do [[violation]]("adjudication", "manifest carriage-return").
+    If not [[text.endswith]]("\n"):
+        Do [[violation]]("adjudication", "manifest final-newline").
+    Set header_1 to adjudication_manifest_header_1 plus "\n".
+    If not [[text.startswith]](header_1):
+        Do [[violation]]("adjudication", "manifest header line 1").
+    Set remainder to [[text.removeprefix]](header_1).
+    Set header_2 to adjudication_manifest_header_2 plus "\n".
+    If not [[remainder.startswith]](header_2):
+        Do [[violation]]("adjudication", "manifest header line 2").
+    Set body to [[remainder.removeprefix]](header_2).
+    Set row_lines to [[body.split]]("\n").
+    Do [[row_lines.pop]]().
+    If not row_lines:
+        Do [[violation]]("adjudication", "manifest holds no rows: " plus [[str]](manifest_path)).
+    Set bundle_by_docid to {}.
+    Set row_number to 2.
+    Set prev_docid to "".
+    For each row_line in row_lines:
+        Set row_number to row_number plus 1.
+        Set fields to [[row_line.split]]("\t").
+        Set field_count to [[len]](fields).
+        If field_count does not equal 7:
+            Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " field-count " plus [[str]](field_count)).
+        Set docid to [[fields.pop]](0).
+        If not [[valid_docid]](docid):
+            Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " docid-grammar").
+        Set duplicate to docid is in bundle_by_docid.
+        If duplicate:
+            Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " duplicate-docid " plus docid).
+        If docid is less than prev_docid:
+            Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " sort-order " plus docid plus " after " plus prev_docid).
+        Set prev_docid to docid.
+        Set component_values to <>.
+        For each component_name in manifest_component_names:
+            Set component_value to [[fields.pop]](0).
+            If not [[valid_digest]](component_value):
+                Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " " plus component_name).
+            Do [[component_values.append]](component_value).
+        Set review_value to [[fields.pop]](0).
+        If not [[valid_digest]](review_value):
+            Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " review_sha256").
+        Set recomputed to [[bundle_digest]](docid, component_values).
+        If recomputed does not equal review_value:
+            Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " review_sha256 self-consistency").
+        Do [[bundle_by_docid.update]]({docid: review_value}).
+    Give back bundle_by_docid.
+
+Define [[reviewer_text_ok]] taking field_text:
+    For each char_text in field_text:
+        Set code_point to [[ord]](char_text).
+        If code_point is less than 32:
+            Give back False.
+        If code_point equals 127:
+            Give back False.
+    Give back True.
+
+Define [[valid_review_date]] taking date_text:
+    If [[len]](date_text) does not equal 20:
+        Give back False.
+    Set digit_chars to [[set]]("0123456789").
+    Set position to 0.
+    For each char_text in date_text:
+        Set expected to "".
+        If position equals 4:
+            Set expected to "-".
+        If position equals 7:
+            Set expected to "-".
+        If position equals 10:
+            Set expected to "T".
+        If position equals 13:
+            Set expected to ":".
+        If position equals 16:
+            Set expected to ":".
+        If position equals 19:
+            Set expected to "Z".
+        If expected:
+            If char_text does not equal expected:
+                Give back False.
+        Otherwise:
+            Set is_digit to char_text is in digit_chars.
+            If not is_digit:
+                Give back False.
+        Set position to position plus 1.
+    Try:
+        Do [[datetime.datetime.strptime]](date_text, "%Y-%m-%dT%H:%M:%SZ").
+    Catch ValueError:
+        Give back False.
+    Give back True.
+
+Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
+    Set manifest_total to [[len]](bundle_by_docid).
+    Set approved_count to 0.
+    Set rejected_count to 0.
+    Set stale_count to 0.
+    Set reviewed_count to 0.
+    If [[ledger_path.is_symlink]]():
+        Do [[violation]]("adjudication", "ledger is a symlink: " plus [[str]](ledger_path)).
+    Set ledger_exists to [[ledger_path.exists]]().
+    If ledger_exists:
+        If not [[ledger_path.is_file]]():
+            Do [[violation]]("adjudication", "ledger is not a regular file: " plus [[str]](ledger_path)).
+        Set data to [[ledger_path.read_bytes]]().
+        Set text to "".
+        Try:
+            Set text to [[data.decode]]("utf-8").
+        Catch UnicodeDecodeError:
+            Do [[violation]]("adjudication", "ledger encoding").
+        If "\r" is in text:
+            Do [[violation]]("adjudication", "ledger carriage-return").
+        If not [[text.endswith]]("\n"):
+            Do [[violation]]("adjudication", "ledger final-newline").
+        Set header_line to adjudication_ledger_header plus "\n".
+        If not [[text.startswith]](header_line):
+            Do [[violation]]("adjudication", "ledger header").
+        Set body to [[text.removeprefix]](header_line).
+        Set row_lines to [[body.split]]("\n").
+        Do [[row_lines.pop]]().
+        Set row_number to 1.
+        Set prev_docid to "".
+        Set seen_row_docids to {}.
+        For each row_line in row_lines:
+            Set row_number to row_number plus 1.
+            If [[row_line.startswith]]("#"):
+                Do [[violation]]("adjudication", "ledger header").
+            Set fields to [[row_line.split]]("\t").
+            Set field_count to [[len]](fields).
+            If field_count does not equal 6:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " field-count " plus [[str]](field_count)).
+            Set docid to [[fields.pop]](0).
+            Set digest_field to [[fields.pop]](0).
+            Set verdict_field to [[fields.pop]](0).
+            Set reviewer_field to [[fields.pop]](0).
+            Set date_field to [[fields.pop]](0).
+            Set comment_field to [[fields.pop]](0).
+            If not [[valid_docid]](docid):
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " docid-grammar").
+            Set known to docid is in bundle_by_docid.
+            If not known:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " unknown-docid " plus docid).
+            Set duplicate to docid is in seen_row_docids.
+            If duplicate:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " duplicate-docid " plus docid).
+            If docid is less than prev_docid:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " sort-order " plus docid plus " after " plus prev_docid).
+            Set prev_docid to docid.
+            Do [[seen_row_docids.update]]({docid: True}).
+            If not [[valid_digest]](digest_field):
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " hex").
+            Set verdict_ok to False.
+            If verdict_field equals "approved":
+                Set verdict_ok to True.
+            If verdict_field equals "rejected":
+                Set verdict_ok to True.
+            If not verdict_ok:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " verdict").
+            If not reviewer_field:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " reviewer").
+            If not [[reviewer_text_ok]](reviewer_field):
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " reviewer").
+            If not [[valid_review_date]](date_field):
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " date").
+            If not [[reviewer_text_ok]](comment_field):
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " comment").
+            Set current_digest to [[bundle_by_docid.get]](docid).
+            Set reviewed_count to reviewed_count plus 1.
+            If digest_field equals current_digest:
+                If verdict_field equals "approved":
+                    Set approved_count to approved_count plus 1.
+                Otherwise:
+                    Set rejected_count to rejected_count plus 1.
+            Otherwise:
+                Set stale_count to stale_count plus 1.
+    Set unreviewed_count to manifest_total minus reviewed_count.
+    Set meter to "goal: adjudication " plus label plus " approved=" plus [[str]](approved_count) plus " rejected=" plus [[str]](rejected_count) plus " stale=" plus [[str]](stale_count) plus " unreviewed=" plus [[str]](unreviewed_count).
+    Do [[print]](meter).
+
+Define [[check_adjudication]] taking guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid:
+    Set derived to [[derive_review_manifest]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
+    Set manifest_text to [[derived.pop]](0).
+    Set bundle_by_docid to [[derived.pop]](0).
+    Set manifest_path to [[guideline_path.joinpath]]("audit", "review-manifest.tsv").
+    Set regen_hint to "; regenerate: python3 -P tools/goal.py review-manifest " plus guideline_path.name.
+    If [[manifest_path.is_symlink]]():
+        Do [[violation]]("adjudication", "manifest is a symlink: " plus [[str]](manifest_path)).
+    If not [[manifest_path.exists]]():
+        Do [[violation]]("adjudication", "manifest missing: " plus [[str]](manifest_path) plus regen_hint).
+    If not [[manifest_path.is_file]]():
+        Do [[violation]]("adjudication", "manifest is not a regular file: " plus [[str]](manifest_path)).
+    Set committed_bytes to [[manifest_path.read_bytes]]().
+    Set derived_bytes to [[manifest_text.encode]]("utf-8").
+    If committed_bytes does not equal derived_bytes:
+        Do [[violation]]("adjudication", "manifest stale: " plus [[str]](manifest_path) plus regen_hint).
+    Set ledger_path to [[guideline_path.joinpath]]("audit", "adjudication.tsv").
+    Do [[validate_ledger]](ledger_path, bundle_by_docid, guideline_path.name).
+
+Define [[review_manifest_command]] taking guideline_id:
+    If not [[valid_docid]](guideline_id):
+        Do [[fail]]("guideline", "invalid guideline id: " plus guideline_id).
+    Set guidelines_root to [[pathlib.Path]]("guidelines").
+    Set guideline_path to [[guidelines_root.joinpath]](guideline_id).
+    Set guideline_symlink to [[guideline_path.is_symlink]]().
+    If guideline_symlink:
+        Do [[fail]]("guideline", "is a symlink: " plus [[str]](guideline_path)).
+    If not [[guideline_path.is_dir]]():
+        Do [[fail]]("guideline", "not a directory: " plus [[str]](guideline_path)).
+    Set collected to [[collect_guideline]](guideline_path).
+    Set ace_paths to [[collected.pop]](0).
+    Set docids to [[collected.pop]](0).
+    Set lexicon_path to [[collected.pop]](0).
+    Set ledger_result to [[check_projection_ledger]](guideline_path).
+    Set ledger_pairs to [[ledger_result.pop]](0).
+    Set notes_row_by_docid to [[ledger_result.pop]](0).
+    Set coverage_result to [[check_coverage]](guideline_path, docids, False).
+    Set status_by_id to [[coverage_result.pop]](0).
+    Set ace_row_line_by_docid to [[coverage_result.pop]](0).
+    Set payload_text_by_docid to [[coverage_result.pop]](0).
+    Set derived to [[derive_review_manifest]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
+    Set manifest_text to [[derived.pop]](0).
+    Set bundle_by_docid to [[derived.pop]](0).
+    Set manifest_path to [[guideline_path.joinpath]]("audit", "review-manifest.tsv").
+    If [[manifest_path.is_symlink]]():
+        Do [[violation]]("adjudication", "manifest is a symlink: " plus [[str]](manifest_path)).
+    Set target_present to [[manifest_path.exists]]().
+    If target_present:
+        If not [[manifest_path.is_file]]():
+            Do [[violation]]("adjudication", "manifest is not a regular file: " plus [[str]](manifest_path)).
+    Do [[manifest_path.write_bytes]]([[manifest_text.encode]]("utf-8")).
+    Do [[print]]("goal: review-manifest " plus guideline_id plus " " plus [[str]]([[len]](docids)) plus " documents").
+
+Define [[ledger_validate_command]] taking ledger_arg, manifest_arg, label:
+    If not [[valid_docid]](label):
+        Do [[fail]]("usage", "label must match [a-z0-9-]+: " plus label).
+    Set manifest_path to [[pathlib.Path]](manifest_arg).
+    If [[manifest_path.is_symlink]]():
+        Do [[violation]]("adjudication", "manifest is a symlink: " plus [[str]](manifest_path)).
+    If not [[manifest_path.exists]]():
+        Do [[violation]]("adjudication", "manifest missing: " plus [[str]](manifest_path)).
+    If not [[manifest_path.is_file]]():
+        Do [[violation]]("adjudication", "manifest is not a regular file: " plus [[str]](manifest_path)).
+    Set data to [[manifest_path.read_bytes]]().
+    Set bundle_by_docid to [[parse_review_manifest]](data, manifest_path).
+    Set ledger_path to [[pathlib.Path]](ledger_arg).
+    Do [[validate_ledger]](ledger_path, bundle_by_docid, label).
+
+Define [[check_adjudication_fixtures]] taking nothing:
+    Set fixtures_root to [[pathlib.Path]]("tests/adjudication").
+    If [[fixtures_root.is_symlink]]():
+        Do [[violation]]("adjudication-fixtures", "is a symlink: " plus [[str]](fixtures_root)).
+    If not [[fixtures_root.is_dir]]():
+        Do [[violation]]("adjudication-fixtures", "missing: " plus [[str]](fixtures_root)).
+    Set case_names to <>.
+    For each entry in [[sorted]]([[fixtures_root.iterdir]]()):
+        Set entry_name to entry.name.
+        If [[entry.is_symlink]]():
+            Do [[violation]]("adjudication-fixtures", "not a case directory: " plus entry_name).
+        If not [[entry.is_dir]]():
+            Do [[violation]]("adjudication-fixtures", "not a case directory: " plus entry_name).
+        If not [[valid_docid]](entry_name):
+            Do [[violation]]("adjudication-fixtures", "invalid case name: " plus entry_name).
+        Do [[case_names.append]](entry_name).
+    If not case_names:
+        Do [[violation]]("adjudication-fixtures", "no fixture cases found: " plus [[str]](fixtures_root)).
+    Set member_names to <"expect", "golden", "ledger.tsv", "manifest.tsv">.
+    Set red_count to 0.
+    Set green_count to 0.
+    For each case_name in case_names:
+        Set case_path to [[fixtures_root.joinpath]](case_name).
+        Set has_manifest to False.
+        Set has_expect to False.
+        Set has_golden to False.
+        For each member in [[sorted]]([[case_path.iterdir]]()):
+            Set member_name to member.name.
+            Set member_known to member_name is in member_names.
+            If not member_known:
+                Do [[violation]]("adjudication-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+            If [[member.is_symlink]]():
+                Do [[violation]]("adjudication-fixtures", "not a regular file: " plus case_name plus "/" plus member_name).
+            If not [[member.is_file]]():
+                Do [[violation]]("adjudication-fixtures", "not a regular file: " plus case_name plus "/" plus member_name).
+            If member_name equals "manifest.tsv":
+                Set has_manifest to True.
+            If member_name equals "expect":
+                Set has_expect to True.
+            If member_name equals "golden":
+                Set has_golden to True.
+        If not has_manifest:
+            Do [[violation]]("adjudication-fixtures", "case without manifest.tsv: " plus case_name).
+        If has_expect:
+            If has_golden:
+                Do [[violation]]("adjudication-fixtures", "case pins both expect and golden: " plus case_name).
+        If not has_expect:
+            If not has_golden:
+                Do [[violation]]("adjudication-fixtures", "case without expect or golden pin: " plus case_name).
+        Set ledger_arg to [[str]]([[case_path.joinpath]]("ledger.tsv")).
+        Set manifest_arg to [[str]]([[case_path.joinpath]]("manifest.tsv")).
+        Set command to <sys.executable, "-P", "tools/goal.py", "ledger-validate", ledger_arg, manifest_arg, "fx">.
+        Set result to [[subprocess.run]](command, capture_output=True).
+        If has_expect:
+            If result.returncode does not equal 1:
+                Do [[violation]]("adjudication-fixtures", "status " plus [[str]](result.returncode) plus " for case: " plus case_name).
+            If result.stderr:
+                Do [[violation]]("adjudication-fixtures", "non-empty stderr for case: " plus case_name).
+            Set expect_path to [[case_path.joinpath]]("expect").
+            Set expect_bytes to [[expect_path.read_bytes]]().
+            If result.stdout does not equal expect_bytes:
+                Do [[violation]]("adjudication-fixtures", "stdout differs from expect pin for case: " plus case_name).
+            Set red_count to red_count plus 1.
+        Otherwise:
+            If result.returncode does not equal 0:
+                Do [[violation]]("adjudication-fixtures", "status " plus [[str]](result.returncode) plus " for case: " plus case_name).
+            If result.stderr:
+                Do [[violation]]("adjudication-fixtures", "non-empty stderr for case: " plus case_name).
+            Set golden_path to [[case_path.joinpath]]("golden").
+            Set golden_bytes to [[golden_path.read_bytes]]().
+            If result.stdout does not equal golden_bytes:
+                Do [[violation]]("adjudication-fixtures", "stdout differs from golden for case: " plus case_name).
+            Set green_count to green_count plus 1.
+    Do [[print]]("goal: adjudication fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
+
 Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
-    Set ledger_pairs to [[check_projection_ledger]](guideline_path).
+    Set ledger_result to [[check_projection_ledger]](guideline_path).
+    Set ledger_pairs to [[ledger_result.pop]](0).
+    Set notes_row_by_docid to [[ledger_result.pop]](0).
     Set ledger_docids to <>.
     For each ledger_pair in ledger_pairs:
         Set pair_copy to [[list]](ledger_pair).
@@ -1594,7 +2105,10 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
         If not covered:
             Do [[violation]]("projection-ledger", "docid missing projection row: " plus docid).
         Do [[check_product_vocabulary]](guideline_path, docid).
-    Set status_by_id to [[check_coverage]](guideline_path, docids).
+    Set coverage_result to [[check_coverage]](guideline_path, docids, True).
+    Set status_by_id to [[coverage_result.pop]](0).
+    Set ace_row_line_by_docid to [[coverage_result.pop]](0).
+    Set payload_text_by_docid to [[coverage_result.pop]](0).
     For each ledger_pair in ledger_pairs:
         Set pair_copy to [[list]](ledger_pair).
         Set ledger_docid to [[pair_copy.pop]](0).
@@ -1605,12 +2119,14 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
             Do [[violation]]("projection-coverage", "projection row names no coverage region: " plus ledger_docid plus " " plus ledger_region).
         If actual_status does not equal expected_status:
             Do [[violation]]("projection-coverage", "coverage region " plus ledger_region plus " does not carry ace(" plus ledger_docid plus "): " plus actual_status).
+    Do [[check_adjudication]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
     If lexicon_path does not equal None:
         Do [[check_lexicon]](guideline_path, ace_paths, docids).
 
 Define [[check_command]] taking nothing:
     Do [[check_fork_notices]]().
     Do [[check_strict_fixtures]]().
+    Do [[check_adjudication_fixtures]]().
     Do [[check_compendium]]().
     Set guidelines_root to [[pathlib.Path]]("guidelines").
     Set root_symlink to [[guidelines_root.is_symlink]]().
@@ -1674,7 +2190,7 @@ Require that [[compiler_source.is_file]]().
 Set argv to [[list]](sys.argv).
 Do [[argv.pop]](0).
 If [[len]](argv) equals 0:
-    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check").
+    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal ledger-validate <ledger-path> <manifest-path> <label>").
 Set subcommand to [[argv.pop]](0).
 If subcommand equals "compile":
     If [[len]](argv) does not equal 1:
@@ -1687,4 +2203,18 @@ Otherwise:
             Do [[fail]]("usage", "expected: goal check").
         Do [[check_command]]().
     Otherwise:
-        Do [[fail]]("usage", "unknown subcommand: " plus subcommand).
+        If subcommand equals "review-manifest":
+            If [[len]](argv) does not equal 1:
+                Do [[fail]]("usage", "expected: goal review-manifest <guideline-id>").
+            Set review_guideline_id to [[argv.pop]](0).
+            Do [[review_manifest_command]](review_guideline_id).
+        Otherwise:
+            If subcommand equals "ledger-validate":
+                If [[len]](argv) does not equal 3:
+                    Do [[fail]]("usage", "expected: goal ledger-validate <ledger-path> <manifest-path> <label>").
+                Set ledger_arg to [[argv.pop]](0).
+                Set manifest_arg to [[argv.pop]](0).
+                Set label_arg to [[argv.pop]](0).
+                Do [[ledger_validate_command]](ledger_arg, manifest_arg, label_arg).
+            Otherwise:
+                Do [[fail]]("usage", "unknown subcommand: " plus subcommand).

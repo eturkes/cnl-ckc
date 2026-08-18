@@ -396,7 +396,7 @@ lands; only the shared-file implementations serialize.
   outcomes around raising stdlib calls instead of generic wsgiref 500s
   (planrev L6; wsgiref handle_error stays the last-resort boundary).
   Apache fork notices per gate.
-- M4.2 OPEN (kernel) — adjudication ledger + staleness gate: pinned
+- M4.2 DONE (kernel) — adjudication ledger + staleness gate: pinned
   `audit/adjudication.tsv` (literal header + field grammar + transition
   table in the unit contract; `docid TAB review_sha256 TAB verdict TAB
   reviewer TAB date TAB comment`; verdict `approved|rejected`; ≤1
@@ -417,7 +417,10 @@ lands; only the shared-file implementations serialize.
   region (current corpus cardinality = exactly one region/doc; payload
   bytes = authority, section/page = display metadata), projection-notes
   kept/dropped, collapsible compiled Prolog, staleness explanation from
-  the review manifest. Route/HTTP table + CLI contract (port, unknown-id
+  the review manifest — pinned-vs-current review digest mismatch only
+  ("bundle differs"): the ledger pins the bundle digest alone, so
+  component attribution of historical drift is underivable from current
+  state (M4.2 P20). Route/HTTP table + CLI contract (port, unknown-id
   behavior, methods, status codes) = unit contract deliverables. Total
   view-model join gate over EVERY guideline/doc (each docid exactly
   once; every ace() region joined; every projection row joined; no
@@ -512,7 +515,9 @@ lands; only the shared-file implementations serialize.
   UI hardening rows appended with acceptance checks).
 
 - Unit gauges: M4.1 main=88% 212K close, mate=100% 239K (rev; map 69%
-  test 71% rev2 57%).
+  test 71% rev2 57%). M4.2 main=94% 226K pre-compaction mid-close (33%
+  80K post-compaction close), mate=89% 214K (rev; map 71% test 33%
+  rev2 76%).
 
 Sizing (planrev L1: five of seven M3 MAIN kernels hit 200-245K
 pre-compaction; the ≤175K blanket was refuted): every unit sizes

@@ -60,9 +60,10 @@ compiler base:
   non-first-party file must match its `MANIFEST.sha256` digest and must
   carry no change notice.
 - **Tests are data.** `tests/red/` holds rejection probes named
-  `<expected-error-class>--<name>.ace`. One `tools/goal.py check`
-  invocation beside `tools/regen.py --check` (the E-- → Python identity
-  above) is the full acceptance gate. `check`:
+  `<expected-error-class>--<name>.ace`. `tests/adjudication/` holds
+  ledger-validator fixtures pinned to exact output bytes. One
+  `tools/goal.py check` invocation beside `tools/regen.py --check` (the
+  E-- → Python identity above) is the full acceptance gate. `check`:
 
   1. validates the compendium ledger — the `.agent/compendium.md`
      organizations table plus the `.agent/compendium.tsv` guideline
@@ -77,7 +78,9 @@ compiler base:
      coverage-ledger closure (row grammar, region totality against each
      evidence file's own payload census and locator inventory, ace-row
      ↔ document-set bijection, single-step restates targets), with a
-     per-guideline `ace/restates/uncovered/pending` meter; lexicon
+     per-guideline `ace/restates/uncovered/pending` meter;
+     review-manifest freshness against a full re-derivation, then
+     adjudication-ledger validation with its verdict meter; lexicon
      liveness and minimality; v1-only product vocabulary;
   4. verifies that the resolved SWI-Prolog is exactly 9.2.9;
   5. recompiles every guideline twice (byte-determinism);
@@ -368,10 +371,21 @@ remaining non-terminal organizations and unfinished guideline rows —
 that measures the exhaustion clause directly. Corpus validation
 (projection-ledger totality, coverage-ledger closure with its
 region-status meter, lexicon liveness and minimality, v1-only product
-vocabulary) runs for every guideline on every check. Bulk work (source
+vocabulary) runs for every guideline on every check. The same pass
+re-derives each guideline's review manifest and validates its
+adjudication ledger. Bulk work (source
 reading, extraction drafting, ACE drafting, adversarial review) fans
 out to subagent teammates per `.agent/rounds.md`. The session lead
 alone writes the repository and commits.
+
+Reviewer verdicts live in each guideline's `audit/adjudication.tsv`,
+pinned to content digests in `audit/review-manifest.tsv`. When compiled
+content changes, regenerate the manifest with
+`python3 -P tools/goal.py review-manifest <id>`. Commit the ledger and
+the manifest together after each review batch; git history is the
+verdict history. Rejected and stale counts in the adjudication meter
+are worklist entries, not check failures. Live rejected documents
+outrank extraction, fetches, and all other new work.
 
 Exactly one source document is in progress at a time. That document
 reaches completion — across as many rounds as it takes — before the

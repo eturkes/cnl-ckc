@@ -1,0 +1,2 @@
+# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment
+ghost	2340df4371ba0eb409181c76222144f71bfa047be8b6017e0a8e0090e6cfe16b	approved	alice	2026-01-01T00:00:00Z	
