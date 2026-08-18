@@ -2,10 +2,10 @@
 
 Modified from upstream e-- in the cnl-ckc fork; see PROVENANCE.
 
-Pruned in-place fork of the E-- English-to-Python compiler, reduced to the
-strict deterministic pipeline. The upstream README, packaging, examples, and
-legacy transpiler pipeline are available in git history at the fork base
-recorded in `PROVENANCE`.
+This tree is a pruned in-place fork of the E-- English-to-Python compiler,
+reduced to the strict deterministic pipeline. The upstream README, packaging,
+examples, and legacy transpiler pipeline are available in git history at the
+fork base recorded in `PROVENANCE`.
 
 ## Layout
 

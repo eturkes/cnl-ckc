@@ -1,12 +1,12 @@
 # APE (Attempto Parsing Engine) — cnl-ckc fork
 
-Modified 2026-08-06 from upstream APE in the cnl-ckc fork; see `PROVENANCE`.
+Modified 2026-08-18 from upstream APE in the cnl-ckc fork; see `PROVENANCE`.
 
-Pruned in-place fork of the Attempto Parsing Engine, reduced to the load and
-build closure of `prolog/ace_to_pl.pl` — the ACE → plain-Prolog guideline
-compiler whose contract lives in its file header. The upstream README and all
-removed components are available in git history at the fork base recorded in
-`PROVENANCE`.
+This tree is a pruned in-place fork of the Attempto Parsing Engine. It is
+reduced to the load and build closure of `prolog/ace_to_pl.pl`, the ACE →
+plain-Prolog guideline compiler whose contract lives in its file header. The
+upstream README and all removed components are available in git history at
+the fork base recorded in `PROVENANCE`.
 
 ## Layout
 
