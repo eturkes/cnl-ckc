@@ -1,0 +1,5 @@
+def identity(value):
+    try:
+        return value
+    except Exception:
+        return None

@@ -12,7 +12,8 @@ from __future__ import annotations
 from .errors import EmmSyntaxError
 from .lexer import tokenize
 from .ast_nodes import (
-    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Define, Program,
+    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Try, Define,
+    Program,
     Num, Str, Bool, NoneLit, Var, Call, ListLit, DictLit, LlmSlot, Group,
     BinOp, UnaryOp,
 )
@@ -61,6 +62,10 @@ def _validate_use_scope(statements, *, top_level):
                 _validate_use_scope(body, top_level=False)
             if stmt.else_body is not None:
                 _validate_use_scope(stmt.else_body, top_level=False)
+        elif isinstance(stmt, Try):
+            _validate_use_scope(stmt.body, top_level=False)
+            for _, handler_body in stmt.handlers:
+                _validate_use_scope(handler_body, top_level=False)
         elif isinstance(stmt, (While, ForEach, Define)):
             _validate_use_scope(stmt.body, top_level=False)
 
@@ -152,6 +157,33 @@ def _statement(s: _Stream):
         tok = s.peek()
         raise EmmSyntaxError(
             f"line {tok.line}: '{tok.value}' without a matching 'If'")
+    if kind == "TRY":
+        try_line = s.peek().line
+        s.next()
+        s.expect("COLON")
+        body = _block(s)
+        handlers = []
+        seen_names = []
+        while s.peek().kind == "CATCH":
+            catch_line = s.peek().line
+            s.next()
+            exc_name = _dotted_name(s)
+            s.expect("COLON")
+            handler_body = _block(s)
+            if exc_name in seen_names:
+                raise EmmSyntaxError(
+                    f"line {catch_line}: duplicate 'Catch' for {exc_name!r} "
+                    f"in one 'Try' chain")
+            seen_names.append(exc_name)
+            handlers.append((exc_name, handler_body))
+        if not handlers:
+            raise EmmSyntaxError(
+                f"line {try_line}: 'Try' requires at least one 'Catch'")
+        return Try(body, handlers)
+    if kind == "CATCH":
+        tok = s.peek()
+        raise EmmSyntaxError(
+            f"line {tok.line}: 'Catch' without a matching 'Try'")
     if kind == "WHILE":
         s.next()
         cond = _expression(s)
@@ -188,8 +220,8 @@ def _statement_head(s: _Stream):
     Simple statements (``Use``/``Set``/``Do``/``Give back``/``Require that``/
     ``Exit with``) are parsed through their terminating ``.``;
     compound/continuation forms (``If``/``Otherwise if``/
-    ``Otherwise``/``While``/``For each``/``Define``) are parsed through their
-    ``:`` header only. Used by the single-line canonical detector — it never
+    ``Otherwise``/``While``/``For each``/``Try``/``Catch <name>``/``Define``)
+    are parsed through their ``:`` header only. Used by the single-line canonical detector — it never
     consumes a block, so a header with no body still validates.
     """
     kind = s.peek().kind
@@ -220,6 +252,10 @@ def _statement_head(s: _Stream):
         s.next(); _expression(s); s.expect("COLON"); return
     if kind == "OTHERWISE":
         s.next(); s.expect("COLON"); return
+    if kind == "TRY":
+        s.next(); s.expect("COLON"); return
+    if kind == "CATCH":
+        s.next(); _dotted_name(s); s.expect("COLON"); return
     if kind == "WHILE":
         s.next(); _expression(s); s.expect("COLON"); return
     if kind == "FOREACH":

@@ -1,0 +1,4 @@
+Try:
+    Set x to 1.
+Catch OSError as error:
+    Set x to 2.

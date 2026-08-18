@@ -3,3 +3,4 @@
 /.scratch/
 /.toolchain/
 .goal.tmp.*/
+__pycache__/

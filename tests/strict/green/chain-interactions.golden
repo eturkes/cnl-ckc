@@ -1,0 +1,11 @@
+if True:
+    before = 1
+else:
+    before = 2
+try:
+    if True:
+        inside = 1
+    else:
+        inside = 2
+except Exception:
+    inside = 3

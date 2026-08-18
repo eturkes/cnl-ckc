@@ -1,0 +1,6 @@
+Try:
+    Set x to 1.
+Catch a . b:
+    Set x to 2.
+Catch a.b:
+    Set x to 3.

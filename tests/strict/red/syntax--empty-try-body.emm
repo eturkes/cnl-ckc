@@ -1,0 +1,3 @@
+Try:
+Catch OSError:
+    Set x to 1.

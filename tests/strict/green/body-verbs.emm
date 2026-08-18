@@ -1,0 +1,10 @@
+Try:
+    Set x to 1.
+    Do [[print]](x).
+    Require that x equals 1.
+    Exit with 3.
+Catch Exception:
+    Set x to 2.
+    Do [[print]](x).
+    Require that x equals 2.
+    Exit with 4.

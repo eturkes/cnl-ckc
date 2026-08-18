@@ -1,0 +1,1 @@
+strict:syntax: line 5: duplicate 'Catch' for 'OSError' in one 'Try' chain

@@ -591,6 +591,161 @@ Define [[compile_command]] taking guideline_id:
         Do [[print]]("goal: wrote " plus [[str]]([[pl_dir.joinpath]](docid plus ".pl"))).
     Do [[print]]("goal: compile ok " plus [[str]]([[len]](outputs)) plus " documents").
 
+Define [[strict_expected_exit]] taking class_name:
+    Set exit_one to <"encoding", "bom", "control-char", "slot", "non-ascii", "syntax", "python-invalid">.
+    Set exit_two to <"usage", "io">.
+    Set is_one to class_name is in exit_one.
+    Set is_two to class_name is in exit_two.
+    If is_one:
+        Give back 1.
+    If is_two:
+        Give back 2.
+    Do [[violation]]("strict-class", "unknown strict error class: " plus class_name).
+
+Define [[strict_fixture_class]] taking fixture_name:
+    Set stem to [[fixture_name.removesuffix]](".emm").
+    Set parts to [[stem.split]]("--").
+    If [[len]](parts) is greater than 1:
+        Set class_name to [[parts.pop]](0).
+        Set case_head to [[parts.pop]](0).
+        If class_name and case_head:
+            Give back class_name.
+    Do [[violation]]("strict-fixture", "fixture name lacks <class>--<case> shape: " plus fixture_name).
+
+Define [[collect_strict_dir]] taking family_dir, sidecar_suffix, red_family:
+    Set dir_symlink to [[family_dir.is_symlink]]().
+    If dir_symlink:
+        Do [[violation]]("strict-dir", "is a symlink: " plus [[str]](family_dir)).
+    Set dir_present to [[family_dir.is_dir]]().
+    If not dir_present:
+        Do [[violation]]("strict-dir", "missing: " plus [[str]](family_dir)).
+    Set fixtures to <>.
+    Set fixture_stems to <>.
+    Set sidecar_stems to <>.
+    For each entry in [[sorted]]([[family_dir.iterdir]]()):
+        Set entry_name to entry.name.
+        Set regular to [[entry.is_file]]().
+        Set symlink to [[entry.is_symlink]]().
+        If not regular:
+            Do [[violation]]("strict-entry", "not a regular file: " plus entry_name).
+        If symlink:
+            Do [[violation]]("strict-entry", "not a regular file: " plus entry_name).
+        Set is_fixture to [[entry_name.endswith]](".emm").
+        Set is_sidecar to [[entry_name.endswith]](sidecar_suffix).
+        If is_fixture:
+            Set expected_exit to 0.
+            Set class_name to "".
+            If red_family:
+                Set class_name to [[strict_fixture_class]](entry_name).
+                Set expected_exit to [[strict_expected_exit]](class_name).
+            Set fixture_record to <entry, class_name, expected_exit>.
+            Do [[fixtures.append]](fixture_record).
+            Do [[fixture_stems.append]]([[entry_name.removesuffix]](".emm")).
+        Otherwise:
+            If is_sidecar:
+                Do [[sidecar_stems.append]]([[entry_name.removesuffix]](sidecar_suffix)).
+            Otherwise:
+                Do [[violation]]("strict-entry", "unsupported entry: " plus entry_name).
+    For each sidecar_stem in sidecar_stems:
+        Set paired to sidecar_stem is in fixture_stems.
+        If not paired:
+            Do [[violation]]("strict-entry", "orphan sidecar without fixture: " plus sidecar_stem).
+    For each fixture_stem in fixture_stems:
+        Set pinned to fixture_stem is in sidecar_stems.
+        If not pinned:
+            Do [[violation]]("strict-entry", "fixture lacks sidecar pin: " plus fixture_stem).
+    If not fixtures:
+        Do [[violation]]("strict-dir", "no fixtures found: " plus [[str]](family_dir)).
+    Give back fixtures.
+
+Define [[strict_compiler_env]] taking nothing:
+    Set env to [[os.environ.copy]]().
+    Do [[env.update]]({"PYTHONPATH": "vendor/e--/src", "PYTHONDONTWRITEBYTECODE": "1"}).
+    Give back env.
+
+Define [[run_strict_red]] taking env, fixture_path, class_name, expected_exit:
+    Set fixture_name to fixture_path.name.
+    Set command to <sys.executable, "-P", "-m", "e_minus_minus.strict", [[str]](fixture_path)>.
+    Set result to [[subprocess.run]](command, capture_output=True, env=env).
+    If result.returncode does not equal expected_exit:
+        Do [[violation]]("strict-exit", "status " plus [[str]](result.returncode) plus " for fixture: " plus fixture_name).
+    If result.stdout:
+        Do [[violation]]("strict-stdout", "non-empty stdout for fixture: " plus fixture_name).
+    Set newline_bytes to [[bytes]](<10>).
+    Set newline_count to [[result.stderr.count]](newline_bytes).
+    Set final_newline to [[result.stderr.endswith]](newline_bytes).
+    If newline_count does not equal 1:
+        Do [[violation]]("strict-stderr", "stderr is not one LF line for fixture: " plus fixture_name).
+    If not final_newline:
+        Do [[violation]]("strict-stderr", "stderr is not one LF line for fixture: " plus fixture_name).
+    Set stem to [[fixture_name.removesuffix]](".emm").
+    Set expect_path to [[fixture_path.parent.joinpath]](stem plus ".expect").
+    Set expect_bytes to [[expect_path.read_bytes]]().
+    If result.stderr does not equal expect_bytes:
+        Do [[violation]]("strict-expect", "stderr differs from expect pin for fixture: " plus fixture_name).
+    Set stderr_text to [[result.stderr.decode]]("utf-8", errors="replace").
+    Set expected_prefix to "strict:" plus class_name plus ":".
+    Set prefix_ok to [[stderr_text.startswith]](expected_prefix).
+    If not prefix_ok:
+        Do [[violation]]("strict-classline", "stderr class mismatch for fixture: " plus fixture_name).
+
+Define [[run_strict_green]] taking env, fixture_path:
+    Set fixture_name to fixture_path.name.
+    Set command to <sys.executable, "-P", "-m", "e_minus_minus.strict", [[str]](fixture_path)>.
+    Set result to [[subprocess.run]](command, capture_output=True, env=env).
+    If result.returncode does not equal 0:
+        Do [[violation]]("strict-exit", "status " plus [[str]](result.returncode) plus " for fixture: " plus fixture_name).
+    If result.stderr:
+        Do [[violation]]("strict-stderr", "non-empty stderr for fixture: " plus fixture_name).
+    Set stem to [[fixture_name.removesuffix]](".emm").
+    Set golden_path to [[fixture_path.parent.joinpath]](stem plus ".golden").
+    Set golden_bytes to [[golden_path.read_bytes]]().
+    If result.stdout does not equal golden_bytes:
+        Do [[violation]]("strict-golden", "stdout differs from golden for fixture: " plus fixture_name).
+
+Define [[check_strict_detector]] taking env:
+    Set detector_code to "import sys\nfrom e_minus_minus.parser import is_canonical_statement_line as f\nok = f('Try:') and f('Catch OSError:') and f('Catch urllib.error.HTTPError:') and not f('Try x:') and not f('Catch:') and not f('Catch a..b:')\nsys.exit(0 if ok else 1)".
+    Set command to <sys.executable, "-P", "-c", detector_code>.
+    Set result to [[subprocess.run]](command, capture_output=True, env=env).
+    If result.returncode does not equal 0:
+        Do [[violation]]("strict-detector", "canonical detector disagrees on Try/Catch headers").
+
+Define [[check_strict_fixtures]] taking nothing:
+    Set strict_root to [[pathlib.Path]]("tests/strict").
+    Set root_symlink to [[strict_root.is_symlink]]().
+    If root_symlink:
+        Do [[violation]]("strict-dir", "is a symlink: " plus [[str]](strict_root)).
+    Set root_present to [[strict_root.is_dir]]().
+    If not root_present:
+        Do [[violation]]("strict-dir", "missing: " plus [[str]](strict_root)).
+    Set family_names to <"red", "green">.
+    For each root_entry in [[sorted]]([[strict_root.iterdir]]()):
+        Set root_name to root_entry.name.
+        Set known to root_name is in family_names.
+        If not known:
+            Do [[violation]]("strict-dir", "unsupported entry: " plus root_name).
+    Set red_records to [[collect_strict_dir]]([[strict_root.joinpath]]("red"), ".expect", True).
+    Set green_records to [[collect_strict_dir]]([[strict_root.joinpath]]("green"), ".golden", False).
+    Set env to [[strict_compiler_env]]().
+    Do [[check_strict_detector]](env).
+    Set red_count to 0.
+    For each red_record in red_records:
+        Set record_copy to [[list]](red_record).
+        Set fixture_path to [[record_copy.pop]](0).
+        Set class_name to [[record_copy.pop]](0).
+        Set expected_exit to [[record_copy.pop]](0).
+        Do [[run_strict_red]](env, fixture_path, class_name, expected_exit).
+        Set red_count to red_count plus 1.
+    Set green_count to 0.
+    For each green_record in green_records:
+        Set green_copy to [[list]](green_record).
+        Set fixture_path to [[green_copy.pop]](0).
+        Set green_class to [[green_copy.pop]](0).
+        Set green_exit to [[green_copy.pop]](0).
+        Do [[run_strict_green]](env, fixture_path).
+        Set green_count to green_count plus 1.
+    Do [[print]]("goal: strict fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
+
 Define [[red_probe_class]] taking probe_name:
     Set stem to [[probe_name.removesuffix]](".ace").
     Set parts to [[stem.split]]("--").
@@ -1455,6 +1610,7 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
 
 Define [[check_command]] taking nothing:
     Do [[check_fork_notices]]().
+    Do [[check_strict_fixtures]]().
     Do [[check_compendium]]().
     Set guidelines_root to [[pathlib.Path]]("guidelines").
     Set root_symlink to [[guidelines_root.is_symlink]]().

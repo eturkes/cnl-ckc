@@ -1,0 +1,6 @@
+try:
+    fd = os.open(path, flags)
+except FileExistsError:
+    status = 409
+except OSError:
+    status = 500

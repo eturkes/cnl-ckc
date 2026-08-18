@@ -1,0 +1,6 @@
+try:
+    x = 1
+except OSError:
+    x = 2
+except oserror:
+    x = 3

@@ -137,6 +137,12 @@ class ForEach:
 
 
 @dataclass
+class Try:
+    body: list  # statement nodes of the try block
+    handlers: list  # ordered (exc_name: str, body: list) tuples, >= 1
+
+
+@dataclass
 class Define:
     name: str
     params: list  # list of (name, default_or_None) tuples

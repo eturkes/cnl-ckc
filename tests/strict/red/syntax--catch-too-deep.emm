@@ -1,0 +1,6 @@
+Try:
+    Set x to 1.
+    Catch OSError:
+        Set x to 2.
+Catch Exception:
+    Set x to 3.

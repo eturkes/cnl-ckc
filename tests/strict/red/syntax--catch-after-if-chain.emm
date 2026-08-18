@@ -1,0 +1,6 @@
+If True:
+    Set x to 1.
+Otherwise if False:
+    Set x to 2.
+Catch OSError:
+    Set x to 3.

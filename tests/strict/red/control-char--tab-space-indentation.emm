@@ -1,0 +1,5 @@
+Try:
+	Set x to 1.
+ Set y to 2.
+Catch Exception:
+    Set x to 3.

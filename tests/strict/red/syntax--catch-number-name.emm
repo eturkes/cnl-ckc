@@ -1,0 +1,4 @@
+Try:
+    Set x to 1.
+Catch 404:
+    Set x to 2.

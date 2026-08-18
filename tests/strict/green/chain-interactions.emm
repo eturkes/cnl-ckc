@@ -1,0 +1,11 @@
+If True:
+    Set before to 1.
+Otherwise:
+    Set before to 2.
+Try:
+    If True:
+        Set inside to 1.
+    Otherwise:
+        Set inside to 2.
+Catch Exception:
+    Set inside to 3.

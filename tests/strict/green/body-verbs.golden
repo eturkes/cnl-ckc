@@ -1,0 +1,12 @@
+try:
+    x = 1
+    print(x)
+    if not (x == 1):
+        raise AssertionError("requirement failed")
+    raise SystemExit(3)
+except Exception:
+    x = 2
+    print(x)
+    if not (x == 2):
+        raise AssertionError("requirement failed")
+    raise SystemExit(4)

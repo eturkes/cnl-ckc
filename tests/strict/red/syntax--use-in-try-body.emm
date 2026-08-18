@@ -1,0 +1,4 @@
+Try:
+    Use os.
+Catch Exception:
+    Set x to 2.

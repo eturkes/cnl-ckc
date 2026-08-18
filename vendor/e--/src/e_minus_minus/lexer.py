@@ -37,6 +37,8 @@ _KEYWORDS = {
     ("For", "each"): "FOREACH",
     ("in",): "IN",
     ("Define",): "DEFINE",
+    ("Try",): "TRY",
+    ("Catch",): "CATCH",
     ("taking",): "TAKING",
     ("nothing",): "NOTHING_PARAMS",
     ("defaulting", "to"): "DEFAULTING_TO",

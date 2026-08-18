@@ -556,6 +556,153 @@ def compile_command(guideline_id):
     for docid in sorted(outputs):
         print("goal: wrote " + str(pl_dir.joinpath(docid + ".pl")))
     print("goal: compile ok " + str(len(outputs)) + " documents")
+def strict_expected_exit(class_name):
+    exit_one = ["encoding", "bom", "control-char", "slot", "non-ascii", "syntax", "python-invalid"]
+    exit_two = ["usage", "io"]
+    is_one = class_name in exit_one
+    is_two = class_name in exit_two
+    if is_one:
+        return 1
+    if is_two:
+        return 2
+    violation("strict-class", "unknown strict error class: " + class_name)
+def strict_fixture_class(fixture_name):
+    stem = fixture_name.removesuffix(".emm")
+    parts = stem.split("--")
+    if len(parts) > 1:
+        class_name = parts.pop(0)
+        case_head = parts.pop(0)
+        if class_name and case_head:
+            return class_name
+    violation("strict-fixture", "fixture name lacks <class>--<case> shape: " + fixture_name)
+def collect_strict_dir(family_dir, sidecar_suffix, red_family):
+    dir_symlink = family_dir.is_symlink()
+    if dir_symlink:
+        violation("strict-dir", "is a symlink: " + str(family_dir))
+    dir_present = family_dir.is_dir()
+    if not dir_present:
+        violation("strict-dir", "missing: " + str(family_dir))
+    fixtures = []
+    fixture_stems = []
+    sidecar_stems = []
+    for entry in sorted(family_dir.iterdir()):
+        entry_name = entry.name
+        regular = entry.is_file()
+        symlink = entry.is_symlink()
+        if not regular:
+            violation("strict-entry", "not a regular file: " + entry_name)
+        if symlink:
+            violation("strict-entry", "not a regular file: " + entry_name)
+        is_fixture = entry_name.endswith(".emm")
+        is_sidecar = entry_name.endswith(sidecar_suffix)
+        if is_fixture:
+            expected_exit = 0
+            class_name = ""
+            if red_family:
+                class_name = strict_fixture_class(entry_name)
+                expected_exit = strict_expected_exit(class_name)
+            fixture_record = [entry, class_name, expected_exit]
+            fixtures.append(fixture_record)
+            fixture_stems.append(entry_name.removesuffix(".emm"))
+        else:
+            if is_sidecar:
+                sidecar_stems.append(entry_name.removesuffix(sidecar_suffix))
+            else:
+                violation("strict-entry", "unsupported entry: " + entry_name)
+    for sidecar_stem in sidecar_stems:
+        paired = sidecar_stem in fixture_stems
+        if not paired:
+            violation("strict-entry", "orphan sidecar without fixture: " + sidecar_stem)
+    for fixture_stem in fixture_stems:
+        pinned = fixture_stem in sidecar_stems
+        if not pinned:
+            violation("strict-entry", "fixture lacks sidecar pin: " + fixture_stem)
+    if not fixtures:
+        violation("strict-dir", "no fixtures found: " + str(family_dir))
+    return fixtures
+def strict_compiler_env():
+    env = os.environ.copy()
+    env.update({"PYTHONPATH": "vendor/e--/src", "PYTHONDONTWRITEBYTECODE": "1"})
+    return env
+def run_strict_red(env, fixture_path, class_name, expected_exit):
+    fixture_name = fixture_path.name
+    command = [sys.executable, "-P", "-m", "e_minus_minus.strict", str(fixture_path)]
+    result = subprocess.run(command, capture_output=True, env=env)
+    if result.returncode != expected_exit:
+        violation("strict-exit", "status " + str(result.returncode) + " for fixture: " + fixture_name)
+    if result.stdout:
+        violation("strict-stdout", "non-empty stdout for fixture: " + fixture_name)
+    newline_bytes = bytes([10])
+    newline_count = result.stderr.count(newline_bytes)
+    final_newline = result.stderr.endswith(newline_bytes)
+    if newline_count != 1:
+        violation("strict-stderr", "stderr is not one LF line for fixture: " + fixture_name)
+    if not final_newline:
+        violation("strict-stderr", "stderr is not one LF line for fixture: " + fixture_name)
+    stem = fixture_name.removesuffix(".emm")
+    expect_path = fixture_path.parent.joinpath(stem + ".expect")
+    expect_bytes = expect_path.read_bytes()
+    if result.stderr != expect_bytes:
+        violation("strict-expect", "stderr differs from expect pin for fixture: " + fixture_name)
+    stderr_text = result.stderr.decode("utf-8", errors="replace")
+    expected_prefix = "strict:" + class_name + ":"
+    prefix_ok = stderr_text.startswith(expected_prefix)
+    if not prefix_ok:
+        violation("strict-classline", "stderr class mismatch for fixture: " + fixture_name)
+def run_strict_green(env, fixture_path):
+    fixture_name = fixture_path.name
+    command = [sys.executable, "-P", "-m", "e_minus_minus.strict", str(fixture_path)]
+    result = subprocess.run(command, capture_output=True, env=env)
+    if result.returncode != 0:
+        violation("strict-exit", "status " + str(result.returncode) + " for fixture: " + fixture_name)
+    if result.stderr:
+        violation("strict-stderr", "non-empty stderr for fixture: " + fixture_name)
+    stem = fixture_name.removesuffix(".emm")
+    golden_path = fixture_path.parent.joinpath(stem + ".golden")
+    golden_bytes = golden_path.read_bytes()
+    if result.stdout != golden_bytes:
+        violation("strict-golden", "stdout differs from golden for fixture: " + fixture_name)
+def check_strict_detector(env):
+    detector_code = "import sys\nfrom e_minus_minus.parser import is_canonical_statement_line as f\nok = f('Try:') and f('Catch OSError:') and f('Catch urllib.error.HTTPError:') and not f('Try x:') and not f('Catch:') and not f('Catch a..b:')\nsys.exit(0 if ok else 1)"
+    command = [sys.executable, "-P", "-c", detector_code]
+    result = subprocess.run(command, capture_output=True, env=env)
+    if result.returncode != 0:
+        violation("strict-detector", "canonical detector disagrees on Try/Catch headers")
+def check_strict_fixtures():
+    strict_root = pathlib.Path("tests/strict")
+    root_symlink = strict_root.is_symlink()
+    if root_symlink:
+        violation("strict-dir", "is a symlink: " + str(strict_root))
+    root_present = strict_root.is_dir()
+    if not root_present:
+        violation("strict-dir", "missing: " + str(strict_root))
+    family_names = ["red", "green"]
+    for root_entry in sorted(strict_root.iterdir()):
+        root_name = root_entry.name
+        known = root_name in family_names
+        if not known:
+            violation("strict-dir", "unsupported entry: " + root_name)
+    red_records = collect_strict_dir(strict_root.joinpath("red"), ".expect", True)
+    green_records = collect_strict_dir(strict_root.joinpath("green"), ".golden", False)
+    env = strict_compiler_env()
+    check_strict_detector(env)
+    red_count = 0
+    for red_record in red_records:
+        record_copy = list(red_record)
+        fixture_path = record_copy.pop(0)
+        class_name = record_copy.pop(0)
+        expected_exit = record_copy.pop(0)
+        run_strict_red(env, fixture_path, class_name, expected_exit)
+        red_count = red_count + 1
+    green_count = 0
+    for green_record in green_records:
+        green_copy = list(green_record)
+        fixture_path = green_copy.pop(0)
+        green_class = green_copy.pop(0)
+        green_exit = green_copy.pop(0)
+        run_strict_green(env, fixture_path)
+        green_count = green_count + 1
+    print("goal: strict fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def red_probe_class(probe_name):
     stem = probe_name.removesuffix(".ace")
     parts = stem.split("--")
@@ -1393,6 +1540,7 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
         check_lexicon(guideline_path, ace_paths, docids)
 def check_command():
     check_fork_notices()
+    check_strict_fixtures()
     check_compendium()
     guidelines_root = pathlib.Path("guidelines")
     root_symlink = guidelines_root.is_symlink()

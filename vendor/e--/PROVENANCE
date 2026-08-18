@@ -31,6 +31,7 @@ this fork. `strict.py` still poisons those module names plus `anthropic` in
 `sys.modules` as an import backstop.
 
 Strict-profile extensions over upstream: `Use`, `Require that`, and
-`Exit with` are statement keywords at head position; top-level imports, dotted
-references and call targets are admitted. The language contract is
-`docs/spec.md` plus the strict entry point's validation.
+`Exit with` are statement keywords at head position. `Try` / `Catch <name>`
+are paired exception-handling block statements (spec §5.4). Top-level
+imports, dotted references and call targets are admitted. The language
+contract is `docs/spec.md` plus the strict entry point's validation.

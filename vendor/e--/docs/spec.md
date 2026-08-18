@@ -1,7 +1,9 @@
 # E-- (English--) — Language Specification
 
-**Version:** 0.1.7 (draft)
-**Status:** design — no implementation yet
+<!-- Modified from upstream e-- in the cnl-ckc fork (strict profile implemented); see PROVENANCE. -->
+
+**Version:** 0.1.8 (fork draft)
+**Status:** design; the cnl-ckc fork implements the strict profile in `src/e_minus_minus`
 **License:** Apache 2.0
 
 E-- is a programming language whose source code is written in a *canonical,
@@ -405,6 +407,7 @@ Otherwise: ...                  else branch            else:
 While <cond>: ...               loop                   while cond:
 For each <var> in <expr>: ...   loop                   for v in expr:
 Define [[f]] taking a, b: ...   function definition    def f(a, b):
+Try: ... Catch <name>: ...      exception handling     try: / except Name:
 {{ <english phrase> }}          code slot (v0.2.0)    one-or-more Python stmts
 ```
 
@@ -453,8 +456,9 @@ For each year in {{all 20th century prime years}}:
 ### 5.1 Statement terminator and blocks
 
 - A simple statement ends with a period `.`.
-- A compound statement (`If`, `While`, `For each`, `Define`) ends its header
-  with a colon `:` and owns an indented block, mirroring Python.
+- A compound statement (`If`, `While`, `For each`, `Define`, `Try`, `Catch`)
+  ends its header with a colon `:` and owns an indented block, mirroring
+  Python.
 
 **Blocks use significant indentation, Python-style** (decided 0.1.1). Block
 membership is determined by indentation depth exactly as in Python; there are no
@@ -549,6 +553,48 @@ mirrors Python's own `def f(a, b)` vs. `f(a, b + 1)` split.
 `**kwargs`), keyword-only parameters, type hints / annotations, nested function
 definitions, and decorators. See §8.
 
+### 5.4 Exception handling (`Try` / `Catch`) — fork addition (0.1.8)
+
+A `Try:` block followed by one or more `Catch <name>:` blocks maps onto
+Python `try` / `except`. `<name>` names the exception class to catch — a
+plain or dotted identifier, emitted verbatim as the dot-joined spelling.
+There is no binding form: a handler selects by exception class, and the
+exception value is not available. An exception that no `Catch` names keeps
+propagating.
+
+```
+Try:
+    Set fd to [[os.open]](path, flags).
+Catch FileExistsError:
+    Set status to 409.
+Catch OSError:
+    Set status to 500.
+```
+→
+```python
+try:
+    fd = os.open(path, flags)
+except FileExistsError:
+    status = 409
+except OSError:
+    status = 500
+```
+
+Rules:
+
+- `Catch <name>:` is only valid immediately following a `Try` block (or a
+  preceding `Catch` block) at matching indentation. A dangling `Catch`
+  with no governing `Try` is a syntax error.
+- A `Try` block must be followed by at least one `Catch` clause.
+- Handlers apply in source order, exactly as Python `except` clauses do.
+- Two `Catch` clauses in one chain must not name the same class (same
+  dot-joined spelling). The compiler does not know the class hierarchy, so
+  a narrower class that an earlier broader clause shadows is not detected.
+- Each body is an indented block (§5.1) with at least one statement.
+- There is no `as` binding, no bare `Catch:`, and no `Finally`. To catch
+  every ordinary exception, write `Catch Exception:` explicitly; this does
+  not catch `SystemExit` (`Exit with` inside a `Try` still exits).
+
 ---
 
 ## 6. Literals and collections
@@ -595,8 +641,8 @@ print(result)
 
 ## 8. Open questions
 
-- **Extended verb set.** `break`, `continue`, `import`, exception handling,
-  classes — added as future verbs.
+- **Extended verb set.** `break`, `continue`, `import`, classes — added as
+  future verbs.
 - **Extended function features.** Variadic params (`*args` / `**kwargs`),
   keyword-only params, type hints / annotations, nested function definitions,
   decorators (see §5.3).
@@ -609,6 +655,12 @@ print(result)
 
 ## Changelog
 
+- **0.1.8 (cnl-ckc fork)** — Exception handling (§5.4): `Try:` /
+  `Catch <name>:` block statements → Python `try` / `except <name>:`; one
+  or more class-named handlers in source order, no value binding, no
+  `finally`. `Try` and `Catch` become reserved words. Statement table (§5)
+  and compound-statement list (§5.1) gain the new verbs; exception
+  handling leaves the §8 open list.
 - **0.1.7** — `additive:` Keyword arguments at call sites (§4.1): `name=expression`
   with Python-identical semantics (positionals before keywords; mixed allowed).
   Grammar `arg-list` gains `keyword-arg`. Forward-compatible — all existing

@@ -1,0 +1,20 @@
+Define [[inside_define]] taking nothing:
+    Try:
+        Set a to 1.
+    Catch Exception:
+        Set a to 2.
+If True:
+    Try:
+        Set b to 1.
+    Catch Exception:
+        Set b to 2.
+While False:
+    Try:
+        Set c to 1.
+    Catch Exception:
+        Set c to 2.
+For each item in <1>:
+    Try:
+        Set d to item.
+    Catch Exception:
+        Set d to 0.

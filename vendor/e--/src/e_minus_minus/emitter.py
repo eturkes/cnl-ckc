@@ -10,7 +10,8 @@ callable, whose return value is spliced in as already-literal Python text
 from __future__ import annotations
 
 from .ast_nodes import (
-    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Define, Program,
+    Assign, Do, Return, Use, Require, Exit, If, While, ForEach, Try, Define,
+    Program,
     Num, Str, Bool, NoneLit, Var, Call, ListLit, DictLit, LlmSlot, Group,
     BinOp, UnaryOp,
 )
@@ -72,6 +73,13 @@ def _emit_stmt(stmt, level, resolve_slot):
         if stmt.else_body is not None:
             lines.append(f"{pad}else:")
             lines += _emit_body(stmt.else_body, level + 1, resolve_slot)
+        return lines
+    if isinstance(stmt, Try):
+        lines = [f"{pad}try:"]
+        lines += _emit_body(stmt.body, level + 1, resolve_slot)
+        for exc_name, handler_body in stmt.handlers:
+            lines.append(f"{pad}except {exc_name}:")
+            lines += _emit_body(handler_body, level + 1, resolve_slot)
         return lines
     if isinstance(stmt, While):
         head = f"{pad}while {_emit_expr(stmt.cond, resolve_slot)}:"
