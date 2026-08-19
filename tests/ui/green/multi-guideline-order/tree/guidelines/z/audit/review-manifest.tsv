@@ -1,0 +1,3 @@
+# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256
+# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.
+shared	0481304497c2e7d1dc3cd52a046c7b72613c4552870b8868725215bb90fcd88f	c0e0005c187414b7c610939b712a2aa1cc8f332416d98d04677c9dda553a1757	0909ba2729c290f42227ce9a729b82a879352587c616b8ec03f5c56e290ecc91	998e475d47c8a3dd6a09a3b912c65d3373e54fc13e396e1238726a64fed788a5	4e84cb2a719175dcb1d40db938e4d94068056f5faa6d37bdb3181197f05b8359	7244a70990d3027849699e657a096049f5dc391641f7905d00b3d4edd8b00a93

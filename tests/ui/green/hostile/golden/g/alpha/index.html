@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>alpha — cnl-ckc reviewer</title>
+<style>
+body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
+a { color: #1d4ed8; }
+a:focus-visible, summary:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 0; padding: 0.5rem 1rem; background: #ffffff; color: #1d4ed8; }
+.skip:focus { left: 0; z-index: 1; }
+nav.crumbs { padding: 1rem 0; border-bottom: 1px solid #e5e7eb; }
+h1 { font-size: 1.6rem; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+th { border-bottom: 2px solid #111827; }
+.chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+.chip-approved { color: #14532d; background: #dcfce7; }
+.chip-rejected { color: #7f1d1d; background: #fee2e2; }
+.chip-stale { color: #78350f; background: #fef3c7; }
+.chip-unreviewed { color: #1f2937; background: #e5e7eb; }
+pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; overflow-x: auto; }
+pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }
+pre.src { font-family: Georgia, serif; font-size: 1.05rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+dt { font-weight: 600; margin-top: 0.6rem; }
+dd { margin-left: 0; }
+summary { cursor: pointer; }
+section { margin: 1.5rem 0; }
+nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="crumbs"><a href="../../index.html">guidelines</a> / alpha</nav>
+<main id="main">
+<h1>&lt;/pre&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;pre&gt; &amp;lt;script&amp;gt; &amp; " ' 漢 ﷐ 😀 العربية https://example.test/?a=&lt;x&gt;&amp;b="q"</h1>
+<section>
+<h2>Meters</h2>
+<p>regions=3 ace=3 restates=0 uncovered=0 pending=0</p>
+<p>approved=0 rejected=0 stale=0 unreviewed=3</p>
+</section>
+<section>
+<h2>Documents</h2>
+<table>
+<thead><tr><th>document</th><th>status</th><th>region</th><th>section</th></tr></thead>
+<tbody><tr><td><a href="doc/a.html">a</a></td><td><span class="chip chip-unreviewed">unreviewed</span></td><td>r1</td><td>empty kept</td></tr>
+<tr><td><a href="doc/m.html">m</a></td><td><span class="chip chip-unreviewed">unreviewed</span></td><td>region-&lt;&amp;&gt;"'%?#漢😀العربية</td><td>&lt;/pre&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;pre&gt; &amp;lt;script&amp;gt; &amp; " ' 漢 ﷐ 😀 العربية https://example.test/?a=&lt;x&gt;&amp;b="q"</td></tr>
+<tr><td><a href="doc/z.html">z</a></td><td><span class="chip chip-unreviewed">unreviewed</span></td><td>r3</td><td>empty dropped</td></tr></tbody>
+</table>
+</section>
+<section>
+<h2>Regions without ACE</h2>
+<table>
+<thead><tr><th>region</th><th>status</th><th>section</th></tr></thead>
+<tbody></tbody>
+</table>
+</section>
+</main>
+</body>
+</html>

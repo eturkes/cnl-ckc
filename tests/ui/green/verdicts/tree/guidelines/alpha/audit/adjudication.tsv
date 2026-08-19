@@ -1,0 +1,4 @@
+# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment
+approved	5841e2d73629a692047f202f6d20dea413e3a3d4c921fb6ce59f89fb730840a9	approved	reviewer	2026-01-01T00:00:00Z	
+rejected	7fb5db9b597ef62cb07dfc2bf990aeb1554d60d9996fa62e8c20faec76954286	rejected	reviewer	2026-01-01T00:00:00Z	
+stale	8164cf771b60541c2978de40d64c061cd7ec07d310ff0a9ff2c8d9105415cc16	approved	reviewer	2026-01-01T00:00:00Z	

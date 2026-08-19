@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 def fail(category, detail):
     safe_detail = detail.replace("\n", "\\n")
     safe_detail = safe_detail.replace("\r", "\\r")
@@ -2002,6 +2003,292 @@ def check_adjudication_fixtures():
                 violation("adjudication-fixtures", "stdout differs from golden for case: " + case_name)
             green_count = green_count + 1
     print("goal: adjudication fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
+def ui_walk_files(base_path):
+    found = []
+    pending = [base_path]
+    while pending:
+        current = pending.pop(0)
+        for entry in sorted(current.iterdir()):
+            if entry.is_dir():
+                pending.append(entry)
+            else:
+                rel_path = entry.relative_to(base_path)
+                found.append(str(rel_path))
+    return sorted(found)
+def ui_fixture_stream(case_path, case_name, stream_name):
+    if stream_name == "-":
+        empty_text = ""
+        return empty_text.encode("utf-8")
+    stream_path = case_path.joinpath(stream_name)
+    if not stream_path.is_file():
+        violation("ui-fixtures", "missing stream fixture " + stream_name + " for case: " + case_name)
+    return stream_path.read_bytes()
+def ui_compare_golden(case_path, case_name, out_text):
+    golden_path = case_path.joinpath("golden")
+    if not golden_path.is_dir():
+        violation("ui-fixtures", "missing golden directory for case: " + case_name)
+    out_path = pathlib.Path(out_text)
+    golden_rel = ui_walk_files(golden_path)
+    out_rel = ui_walk_files(out_path)
+    if golden_rel != out_rel:
+        violation("ui-fixtures", "golden tree differs for case: " + case_name)
+    for rel_text in golden_rel:
+        golden_file = golden_path.joinpath(rel_text)
+        out_file = out_path.joinpath(rel_text)
+        golden_bytes = golden_file.read_bytes()
+        out_bytes = out_file.read_bytes()
+        if golden_bytes != out_bytes:
+            violation("ui-fixtures", "golden bytes differ for case: " + case_name + " " + rel_text)
+def ui_check_assertions(case_path, case_name):
+    assertions_path = case_path.joinpath("assertions.tsv")
+    if not assertions_path.is_file():
+        return 0
+    data = assertions_path.read_bytes()
+    text = ""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        violation("ui-fixtures", "assertions not UTF-8 for case: " + case_name)
+    applied = 0
+    for line_text in text.split("\n"):
+        is_comment = line_text.startswith("#")
+        if not is_comment:
+            if line_text:
+                fields = line_text.split("\t")
+                if len(fields) != 3:
+                    violation("ui-fixtures", "malformed assertion row for case: " + case_name)
+                page_rel = fields.pop(0)
+                op_name = fields.pop(0)
+                hex_text = fields.pop(0)
+                needle = ""
+                try:
+                    needle = bytes.fromhex(hex_text)
+                except ValueError:
+                    violation("ui-fixtures", "invalid assertion hex for case: " + case_name)
+                page_path = case_path.joinpath("golden", page_rel)
+                if not page_path.is_file():
+                    violation("ui-fixtures", "assertion page missing for case: " + case_name + " " + page_rel)
+                haystack = page_path.read_bytes()
+                found = needle in haystack
+                if op_name == "contains":
+                    if not found:
+                        violation("ui-fixtures", "assertion contains failed for case: " + case_name + " " + page_rel)
+                else:
+                    if op_name == "absent":
+                        if found:
+                            violation("ui-fixtures", "assertion absent failed for case: " + case_name + " " + page_rel)
+                    else:
+                        violation("ui-fixtures", "unknown assertion op for case: " + case_name)
+                applied = applied + 1
+    return applied
+def ui_safe_rel(rel_text, case_name):
+    backslash = chr(92)
+    bad = False
+    if rel_text == "":
+        bad = True
+    if rel_text.startswith("/"):
+        bad = True
+    if backslash in rel_text:
+        bad = True
+    parts = rel_text.split("/")
+    for part in parts:
+        if part == "..":
+            bad = True
+        if part == "":
+            bad = True
+    if bad:
+        violation("ui-fixtures", "unsafe sidecar path for case: " + case_name)
+def ui_read_sidecar_lines(sidecar_path, case_name):
+    data = sidecar_path.read_bytes()
+    text = ""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        violation("ui-fixtures", "sidecar not UTF-8 for case: " + case_name)
+    lines = []
+    for line_text in text.split("\n"):
+        is_comment = line_text.startswith("#")
+        if not is_comment:
+            if line_text:
+                ui_safe_rel(line_text, case_name)
+                lines.append(line_text)
+    return lines
+def ui_materialize_tree(case_path, case_name, tree_rel):
+    order_path = case_path.joinpath("tree-order.txt")
+    empties_path = case_path.joinpath("empty-dirs.txt")
+    has_order = order_path.is_file()
+    has_empties = empties_path.is_file()
+    if not has_order:
+        if not has_empties:
+            return [tree_rel, ""]
+    tree_path = case_path.joinpath("tree")
+    walk_list = ui_walk_files(tree_path)
+    listed = walk_list
+    if has_order:
+        listed = ui_read_sidecar_lines(order_path, case_name)
+        listed_sorted = sorted(listed)
+        if listed_sorted != walk_list:
+            violation("ui-fixtures", "tree-order mismatch: " + case_name)
+    scratch_text = tempfile.mkdtemp()
+    dest_root = pathlib.Path(scratch_text + "/tree")
+    for rel_text in listed:
+        src_file = tree_path.joinpath(rel_text)
+        dest_file = dest_root.joinpath(rel_text)
+        dest_parent = dest_file.parent
+        dest_parent.mkdir(parents=True, exist_ok=True)
+        payload = src_file.read_bytes()
+        dest_file.write_bytes(payload)
+    if has_empties:
+        empty_lines = ui_read_sidecar_lines(empties_path, case_name)
+        for rel_text in empty_lines:
+            empty_dir = dest_root.joinpath(rel_text)
+            empty_dir.mkdir(parents=True, exist_ok=True)
+    return [str(dest_root), scratch_text]
+def run_ui_fixture_case(color, case_name, case_path):
+    case_file = case_path.joinpath("case.tsv")
+    if not case_file.is_file():
+        violation("ui-fixtures", "missing case.tsv for case: " + case_name)
+    data = case_file.read_bytes()
+    text = ""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        violation("ui-fixtures", "case.tsv not UTF-8 for case: " + case_name)
+    tree_rel = "tests/ui/" + color + "/" + case_name + "/tree"
+    mat_pair = ui_materialize_tree(case_path, case_name, tree_rel)
+    mat_copy = list(mat_pair)
+    tree_text = mat_copy.pop(0)
+    mat_scratch = mat_copy.pop(0)
+    row_count = 0
+    for line_text in text.split("\n"):
+        is_comment = line_text.startswith("#")
+        if not is_comment:
+            if line_text:
+                fields = line_text.split("\t")
+                if len(fields) != 4:
+                    violation("ui-fixtures", "malformed case row for case: " + case_name)
+                argv_text = fields.pop(0)
+                rc_text = fields.pop(0)
+                stderr_name = fields.pop(0)
+                stdout_name = fields.pop(0)
+                expected_rc = 0
+                try:
+                    expected_rc = int(rc_text)
+                except ValueError:
+                    violation("ui-fixtures", "invalid rc for case: " + case_name)
+                scratch_text = tempfile.mkdtemp()
+                out_text = scratch_text + "/out"
+                tokens = argv_text.split(" ")
+                first_token = ""
+                built_tokens = [sys.executable, "-P", "tools/ui.py"]
+                for token in tokens:
+                    built = token
+                    if token == "@TREE@":
+                        built = tree_text
+                    if token == "@OUT@":
+                        built = out_text
+                    if first_token == "":
+                        first_token = token
+                    built_tokens.append(built)
+                if first_token == "serve":
+                    violation("ui-fixtures", "serve row for case: " + case_name)
+                result = subprocess.run(built_tokens, capture_output=True)
+                if result.returncode != expected_rc:
+                    violation("ui-fixtures", "status " + str(result.returncode) + " for case: " + case_name)
+                expected_stderr = ui_fixture_stream(case_path, case_name, stderr_name)
+                if result.stderr != expected_stderr:
+                    violation("ui-fixtures", "stderr differs for case: " + case_name)
+                expected_stdout = ui_fixture_stream(case_path, case_name, stdout_name)
+                if result.stdout != expected_stdout:
+                    violation("ui-fixtures", "stdout differs for case: " + case_name)
+                if first_token == "render":
+                    if color == "green":
+                        ui_compare_golden(case_path, case_name, out_text)
+                shutil.rmtree(scratch_text, ignore_errors=True)
+                row_count = row_count + 1
+    if row_count == 0:
+        violation("ui-fixtures", "no case rows for case: " + case_name)
+    if color == "green":
+        check_tokens = [sys.executable, "-P", "tools/ui.py", "check", tree_text]
+        check_result = subprocess.run(check_tokens, capture_output=True)
+        if check_result.returncode != 0:
+            violation("ui-fixtures", "ui check failed for case: " + case_name)
+        if check_result.stderr:
+            violation("ui-fixtures", "ui check stderr for case: " + case_name)
+        ui_check_assertions(case_path, case_name)
+    if mat_scratch:
+        shutil.rmtree(mat_scratch, ignore_errors=True)
+def check_ui():
+    command = [sys.executable, "-P", "tools/ui.py", "check"]
+    result = subprocess.run(command, capture_output=True)
+    if result.returncode != 0:
+        stderr_text = result.stderr.decode("utf-8", errors="replace")
+        relay = "ui check failed"
+        found_relay = False
+        for line_text in stderr_text.splitlines():
+            stripped = line_text.strip()
+            if stripped:
+                if not found_relay:
+                    relay = stripped
+                    found_relay = True
+        violation("ui", relay)
+    if result.stderr:
+        violation("ui", "non-empty stderr from ui check")
+    stdout_text = result.stdout.decode("utf-8", errors="replace")
+    ok_suffix = ""
+    check_ok_seen = False
+    for line_text in stdout_text.splitlines():
+        if line_text.startswith("ui: ok "):
+            ok_suffix = line_text.removeprefix("ui: ok ")
+        if line_text == "ui: check ok":
+            check_ok_seen = True
+    if ok_suffix == "":
+        violation("ui", "missing ui ok meter")
+    if not check_ok_seen:
+        violation("ui", "missing ui check ok line")
+    print("goal: ui ok " + ok_suffix)
+    fixtures_root = pathlib.Path("tests/ui")
+    if fixtures_root.is_symlink():
+        violation("ui-fixtures", "is a symlink: " + str(fixtures_root))
+    if not fixtures_root.is_dir():
+        violation("ui-fixtures", "missing: " + str(fixtures_root))
+    red_required = ["digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid"]
+    green_required = ["basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
+    red_count = 0
+    green_count = 0
+    red_names = []
+    green_names = []
+    colors = ["green", "red"]
+    for color in colors:
+        color_path = fixtures_root.joinpath(color)
+        if color_path.is_symlink():
+            violation("ui-fixtures", "is a symlink: " + color)
+        if not color_path.is_dir():
+            violation("ui-fixtures", "missing directory: " + color)
+        for entry in sorted(color_path.iterdir()):
+            entry_name = entry.name
+            if entry.is_symlink():
+                violation("ui-fixtures", "not a case directory: " + entry_name)
+            if not entry.is_dir():
+                violation("ui-fixtures", "not a case directory: " + entry_name)
+            if not valid_docid(entry_name):
+                violation("ui-fixtures", "invalid case name: " + entry_name)
+            run_ui_fixture_case(color, entry_name, entry)
+            if color == "red":
+                red_count = red_count + 1
+                red_names.append(entry_name)
+            else:
+                green_count = green_count + 1
+                green_names.append(entry_name)
+    for required_name in red_required:
+        present = required_name in red_names
+        if not present:
+            violation("ui-fixtures", "missing required case: red/" + required_name)
+    for required_name in green_required:
+        present = required_name in green_names
+        if not present:
+            violation("ui-fixtures", "missing required case: green/" + required_name)
+    print("goal: ui fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
     ledger_result = check_projection_ledger(guideline_path)
     ledger_pairs = ledger_result.pop(0)
@@ -2076,6 +2363,7 @@ def check_command():
         corpus_docids = record_copy.pop(0)
         corpus_lexicon_path = record_copy.pop(0)
         check_corpus(corpus_path, corpus_ace_paths, corpus_docids, corpus_lexicon_path)
+    check_ui()
     swipl_executable = resolve_swipl()
     scratch_path = make_scratch()
     stage_path = stage_ape(scratch_path, swipl_executable)

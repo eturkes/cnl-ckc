@@ -1,0 +1,1309 @@
+Use hashlib.
+Use html.
+Use os.
+Use pathlib.
+Use re.
+Use shutil.
+Use subprocess.
+Use sys.
+Use tempfile.
+Use urllib.parse.
+Use wsgiref.simple_server.
+
+Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>]".
+Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
+Set chip_states to <"approved", "rejected", "stale", "unreviewed">.
+Set serve_config to {}.
+
+Define [[out_line]] taking text:
+    Set line_text to text plus "\n".
+    Set data to [[line_text.encode]]("utf-8").
+    Do [[sys.stdout.buffer.write]](data).
+    Do [[sys.stdout.buffer.flush]]().
+
+Define [[err_line]] taking text:
+    Set line_text to text plus "\n".
+    Set data to [[line_text.encode]]("utf-8").
+    Do [[sys.stderr.buffer.write]](data).
+    Do [[sys.stderr.buffer.flush]]().
+
+Define [[usage_fail]] taking nothing:
+    Do [[err_line]](usage_text).
+    Exit with 2.
+
+Define [[esc_text]] taking value:
+    Give back [[html.escape]](value, quote=False).
+
+Define [[url_seg]] taking value:
+    Give back [[urllib.parse.quote]](value, safe="").
+
+Define [[sha256_hex]] taking data:
+    Set digest_value to [[hashlib.sha256]](data).
+    Give back [[digest_value.hexdigest]]().
+
+Define [[valid_ui_id]] taking value:
+    Set allowed to [[set]]("abcdefghijklmnopqrstuvwxyz0123456789-").
+    Set chars to [[set]](value).
+    Set subset to [[chars.issubset]](allowed).
+    If not value:
+        Give back False.
+    If [[value.startswith]]("-"):
+        Give back False.
+    Set value_bytes to [[value.encode]]("utf-8").
+    If [[len]](value_bytes) is greater than 250:
+        Give back False.
+    Give back subset.
+
+Define [[err]] taking detail:
+    Give back <"err", detail>.
+
+Define [[ok]] taking value:
+    Give back <"ok", value>.
+
+Define [[result_kind]] taking result:
+    Set copy_list to [[list]](result).
+    Give back [[copy_list.pop]](0).
+
+Define [[result_value]] taking result:
+    Set copy_list to [[list]](result).
+    Set kind to [[copy_list.pop]](0).
+    Give back [[copy_list.pop]](0).
+
+Define [[control_violation]] taking text, gid, relpath:
+    Set bad_point to None.
+    For each ch in text:
+        Set code_point to [[ord]](ch).
+        Set bad to False.
+        If code_point is less than 32:
+            If code_point does not equal 9:
+                If code_point does not equal 10:
+                    Set bad to True.
+        If code_point equals 127:
+            Set bad to True.
+        If code_point is greater than 8233:
+            If code_point is less than 8239:
+                Set bad to True.
+        If code_point is greater than 8293:
+            If code_point is less than 8298:
+                Set bad to True.
+        If bad:
+            If bad_point equals None:
+                Set bad_point to code_point.
+    If bad_point does not equal None:
+        Set hex_text to [[format]](bad_point, "04X").
+        Give back "ui: viewmodel: " plus gid plus " unsupported control U+" plus hex_text plus " in " plus relpath.
+    Give back "".
+
+Define [[load_text]] taking path, gid, relpath:
+    Try:
+        Set data to [[path.read_bytes]]().
+    Catch OSError:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " missing " plus relpath).
+    Set text to "".
+    Try:
+        Set text to [[data.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " file not UTF-8: " plus relpath).
+    Set control_detail to [[control_violation]](text, gid, relpath).
+    If control_detail:
+        Give back [[err]](control_detail).
+    Give back [[ok]](text).
+
+Define [[strip_list_label]] taking payload_line:
+    Set label_parts to [[payload_line.split]](". ", 1).
+    If [[len]](label_parts) does not equal 2:
+        Give back payload_line.
+    Set head_text to [[label_parts.pop]](0).
+    Set tail_text to [[label_parts.pop]](0).
+    If not head_text:
+        Give back payload_line.
+    Set digit_chars to [[set]]("0123456789").
+    Set head_chars to [[set]](head_text).
+    Set all_digits to [[head_chars.issubset]](digit_chars).
+    If not all_digits:
+        Give back payload_line.
+    Give back tail_text.
+
+Define [[parse_evidence]] taking text:
+    Set census_count to None.
+    Set census_hit to [[census_rx.search]](text).
+    If census_hit does not equal None:
+        Set census_text to [[census_hit.group]](1).
+        Set census_count to [[int]](census_text).
+    Set locator_ids to <>.
+    Set locator_lines to {}.
+    Set locator_counts to {}.
+    Set current_locator to "".
+    Set current_payloads to <>.
+    Set past_first_blank to False.
+    Set post_blank_lines to <>.
+    For each raw_line in [[text.split]]("\n"):
+        Set is_locator to False.
+        Set bracketed to [[raw_line.startswith]]("[").
+        If bracketed:
+            Set closed to [[raw_line.endswith]]("]").
+            Set delimited to " | " is in raw_line.
+            If closed:
+                If delimited:
+                    Set body_text to [[raw_line.removeprefix]]("[").
+                    Set parts to [[body_text.split]](" | ").
+                    Set region_id to [[parts.pop]](0).
+                    Set spaced to " " is in region_id.
+                    If region_id:
+                        If not spaced:
+                            Set is_locator to True.
+                            If current_locator:
+                                Set line_count to [[len]](current_payloads).
+                                Do [[locator_counts.update]]({current_locator: line_count}).
+                                If line_count equals 1:
+                                    Set payload_line to [[current_payloads.pop]](0).
+                                    Do [[locator_lines.update]]({current_locator: payload_line}).
+                            Do [[locator_ids.append]](region_id).
+                            Set current_locator to region_id.
+                            Set current_payloads to <>.
+        If not is_locator:
+            If raw_line equals "":
+                Set past_first_blank to True.
+            Otherwise:
+                If current_locator:
+                    Do [[current_payloads.append]](raw_line).
+                If past_first_blank:
+                    Do [[post_blank_lines.append]](raw_line).
+    If current_locator:
+        Set line_count to [[len]](current_payloads).
+        Do [[locator_counts.update]]({current_locator: line_count}).
+        If line_count equals 1:
+            Set payload_line to [[current_payloads.pop]](0).
+            Do [[locator_lines.update]]({current_locator: payload_line}).
+    Set ordered_payloads to <>.
+    If not locator_ids:
+        For each post_blank_line in post_blank_lines:
+            Do [[ordered_payloads.append]]([[strip_list_label]](post_blank_line)).
+    Give back <census_count, locator_ids, locator_lines, locator_counts, ordered_payloads>.
+
+Define [[parse_tsv_rows]] taking text, field_count, gid, label:
+    Set rows to <>.
+    Set line_list to [[text.split]]("\n").
+    For each line_text in line_list:
+        Set is_comment to [[line_text.startswith]]("#").
+        If not is_comment:
+            If line_text:
+                Set fields to [[line_text.split]]("\t").
+                If [[len]](fields) does not equal field_count:
+                    Give back [[err]]("ui: viewmodel: " plus gid plus " malformed " plus label plus " row: " plus line_text).
+                Do [[rows.append]](<fields, line_text>).
+    Give back [[ok]](rows).
+
+Define [[list_stems]] taking dir_path, suffix:
+    Set stems to <>.
+    If [[dir_path.is_dir]]():
+        For each entry in [[sorted]]([[dir_path.iterdir]]()):
+            Set symlink to [[entry.is_symlink]]().
+            If not symlink:
+                If [[entry.is_file]]():
+                    Set name_text to entry.name.
+                    If [[name_text.endswith]](suffix):
+                        Do [[stems.append]]([[name_text.removesuffix]](suffix)).
+    Give back [[sorted]](stems).
+
+Define [[readme_title]] taking guideline_path, gid:
+    Set readme_path to [[guideline_path.joinpath]]("README.md").
+    Try:
+        Set data to [[readme_path.read_bytes]]().
+    Catch OSError:
+        Give back [[ok]](gid).
+    Set text to "".
+    Try:
+        Set text to [[data.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " file not UTF-8: README.md").
+    Set control_detail to [[control_violation]](text, gid, "README.md").
+    If control_detail:
+        Give back [[err]](control_detail).
+    For each line_text in [[text.split]]("\n"):
+        If [[line_text.startswith]]("# "):
+            Set heading to [[line_text.removeprefix]]("# ").
+            Set heading to [[heading.strip]]().
+            If heading:
+                Give back [[ok]](heading).
+    Give back [[ok]](gid).
+
+Define [[first_output_line]] taking result:
+    Set stderr_text to [[result.stderr.decode]]("utf-8", errors="replace").
+    For each line_text in [[stderr_text.splitlines]]():
+        Set stripped to [[line_text.strip]]().
+        If stripped:
+            Give back stripped.
+    Set stdout_text to [[result.stdout.decode]]("utf-8", errors="replace").
+    For each line_text in [[stdout_text.splitlines]]():
+        Set stripped to [[line_text.strip]]().
+        If stripped:
+            Give back stripped.
+    Give back "validator produced no diagnostic".
+
+Define [[goal_py_path]] taking nothing:
+    Set argv_copy to [[list]](sys.argv).
+    Set script_text to [[argv_copy.pop]](0).
+    Set script_path to [[pathlib.Path]](script_text).
+    Set resolved to [[script_path.resolve]]().
+    Set tool_dir to resolved.parent.
+    Give back [[tool_dir.joinpath]]("goal.py").
+
+Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid, manifest_text:
+    Set ledger_path to [[guideline_path.joinpath]]("audit", "adjudication.tsv").
+    Set states to {}.
+    For each docid in docids:
+        Do [[states.update]]({docid: "unreviewed"}).
+    Set ledger_digests to {}.
+    If not [[ledger_path.is_file]]():
+        Give back [[ok]](<states, ledger_digests>).
+    Try:
+        Set ledger_bytes to [[ledger_path.read_bytes]]().
+    Catch OSError:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " missing audit/adjudication.tsv").
+    Set goal_py to [[goal_py_path]]().
+    Set scratch_text to [[tempfile.mkdtemp]]().
+    Set scratch_dir to [[pathlib.Path]](scratch_text).
+    Set ledger_copy to [[scratch_dir.joinpath]]("ledger.tsv").
+    Set manifest_copy to [[scratch_dir.joinpath]]("manifest.tsv").
+    Do [[ledger_copy.write_bytes]](ledger_bytes).
+    Set manifest_bytes to [[manifest_text.encode]]("utf-8").
+    Do [[manifest_copy.write_bytes]](manifest_bytes).
+    Set command to <sys.executable, "-P", [[str]](goal_py), "ledger-validate", [[str]](ledger_copy), [[str]](manifest_copy), "ui">.
+    Set tool_dir to goal_py.parent.
+    Set repo_root to tool_dir.parent.
+    Set result to [[subprocess.run]](command, capture_output=True, cwd=[[str]](repo_root)).
+    Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
+    If result.returncode does not equal 0:
+        Set relay to [[first_output_line]](result).
+        Give back [[err]]("ui: adjudication ledger invalid: " plus relay).
+    Set ledger_text to "".
+    Try:
+        Set ledger_text to [[ledger_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " file not UTF-8: audit/adjudication.tsv").
+    Set rows_result to [[parse_tsv_rows]](ledger_text, 6, gid, "adjudication").
+    If [[result_kind]](rows_result) equals "err":
+        Give back rows_result.
+    For each row_pair in [[result_value]](rows_result):
+        Set pair_copy to [[list]](row_pair).
+        Set fields to [[pair_copy.pop]](0).
+        Set docid to [[fields.pop]](0).
+        Set row_digest to [[fields.pop]](0).
+        Set verdict to [[fields.pop]](0).
+        Set current_digest to [[review_by_docid.get]](docid, "").
+        Do [[ledger_digests.update]]({docid: row_digest}).
+        If row_digest equals current_digest:
+            Do [[states.update]]({docid: verdict}).
+        Otherwise:
+            Do [[states.update]]({docid: "stale"}).
+    Give back [[ok]](<states, ledger_digests>).
+
+Define [[build_guideline_model]] taking root_path, gid:
+    Set guideline_path to [[root_path.joinpath]]("guidelines", gid).
+    If not [[valid_ui_id]](gid):
+        Give back [[err]]("ui: viewmodel: " plus gid plus " invalid guideline id").
+    Set coverage_path to [[guideline_path.joinpath]]("coverage.tsv").
+    If not [[coverage_path.is_file]]():
+        Give back [[err]]("ui: viewmodel: " plus gid plus " missing coverage.tsv").
+    Set coverage_result to [[load_text]](coverage_path, gid, "coverage.tsv").
+    If [[result_kind]](coverage_result) equals "err":
+        Give back coverage_result.
+    Set coverage_text to [[result_value]](coverage_result).
+    Set rows_result to [[parse_tsv_rows]](coverage_text, 5, gid, "coverage").
+    If [[result_kind]](rows_result) equals "err":
+        Give back rows_result.
+    Set coverage_rows to [[result_value]](rows_result).
+    Set docids to <>.
+    Set region_by_docid to {}.
+    Set section_by_docid to {}.
+    Set page_by_docid to {}.
+    Set file_by_docid to {}.
+    Set region_rows to <>.
+    Set file_row_regions to {}.
+    Set file_docid_ordinal to {}.
+    Set ace_counter to 0.
+    Set restates_counter to 0.
+    Set uncovered_counter to 0.
+    Set pending_counter to 0.
+    For each row_pair in coverage_rows:
+        Set pair_copy to [[list]](row_pair).
+        Set fields to [[pair_copy.pop]](0).
+        Set region_id to [[fields.pop]](0).
+        Set file_text to [[fields.pop]](0).
+        Set page_text to [[fields.pop]](0).
+        Set section_text to [[fields.pop]](0).
+        Set status_text to [[fields.pop]](0).
+        Set known_file to [[file_row_regions.get]](file_text, None).
+        If known_file equals None:
+            Set known_file to <>.
+            Do [[file_row_regions.update]]({file_text: known_file}).
+        Set ordinal to [[len]](known_file).
+        Do [[known_file.append]](region_id).
+        Set is_ace to [[status_text.startswith]]("ace(").
+        If is_ace:
+            Set closed_status to [[status_text.endswith]](")").
+            If not closed_status:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
+            Set docid to [[status_text.removeprefix]]("ace(").
+            Set docid to [[docid.removesuffix]](")").
+            If not [[valid_ui_id]](docid):
+                Give back [[err]]("ui: viewmodel: " plus gid plus " invalid docid " plus docid).
+            Set seen to [[region_by_docid.get]](docid, "").
+            If seen:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " duplicate docid " plus docid).
+            Do [[docids.append]](docid).
+            Do [[region_by_docid.update]]({docid: region_id}).
+            Do [[section_by_docid.update]]({docid: section_text}).
+            Do [[page_by_docid.update]]({docid: page_text}).
+            Do [[file_by_docid.update]]({docid: file_text}).
+            Do [[file_docid_ordinal.update]]({docid: ordinal}).
+            Set ace_counter to ace_counter plus 1.
+        Otherwise:
+            Do [[region_rows.append]](<region_id, status_text, section_text>).
+            If [[status_text.startswith]]("restates("):
+                Set restates_counter to restates_counter plus 1.
+            Otherwise:
+                If [[status_text.startswith]]("uncovered("):
+                    Set uncovered_counter to uncovered_counter plus 1.
+                Otherwise:
+                    Set pending_counter to pending_counter plus 1.
+    Set sorted_docids to [[sorted]](docids).
+    Set ace_stems to [[list_stems]]([[guideline_path.joinpath]]("ace"), ".ace").
+    For each docid in sorted_docids:
+        Set present to docid is in ace_stems.
+        If not present:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " missing ace file").
+    For each stem in ace_stems:
+        Set claimed to [[region_by_docid.get]](stem, "").
+        If not claimed:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " orphan ace file " plus stem plus ".ace").
+    Set manifest_path to [[guideline_path.joinpath]]("audit", "review-manifest.tsv").
+    If not [[manifest_path.is_file]]():
+        Give back [[err]]("ui: viewmodel: " plus gid plus " missing audit/review-manifest.tsv").
+    Set manifest_result to [[load_text]](manifest_path, gid, "audit/review-manifest.tsv").
+    If [[result_kind]](manifest_result) equals "err":
+        Give back manifest_result.
+    Set manifest_text to [[result_value]](manifest_result).
+    Set manifest_rows_result to [[parse_tsv_rows]](manifest_text, 7, gid, "review-manifest").
+    If [[result_kind]](manifest_rows_result) equals "err":
+        Give back manifest_rows_result.
+    Set ace_digest_by_docid to {}.
+    Set payload_digest_by_docid to {}.
+    Set review_by_docid to {}.
+    Set manifest_docids to <>.
+    For each row_pair in [[result_value]](manifest_rows_result):
+        Set pair_copy to [[list]](row_pair).
+        Set fields to [[pair_copy.pop]](0).
+        Set docid to [[fields.pop]](0).
+        Set ace_digest to [[fields.pop]](0).
+        Set coverage_digest to [[fields.pop]](0).
+        Set payload_digest to [[fields.pop]](0).
+        Do [[manifest_docids.append]](docid).
+        Do [[ace_digest_by_docid.update]]({docid: ace_digest}).
+        Do [[payload_digest_by_docid.update]]({docid: payload_digest}).
+        Set notes_digest to [[fields.pop]](0).
+        Set clause_digest to [[fields.pop]](0).
+        Set review_digest to [[fields.pop]](0).
+        Do [[review_by_docid.update]]({docid: review_digest}).
+    For each docid in sorted_docids:
+        Set present to [[review_by_docid.get]](docid, "").
+        If not present:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " missing review-manifest row").
+    For each docid in [[sorted]](manifest_docids):
+        Set claimed to [[region_by_docid.get]](docid, "").
+        If not claimed:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " orphan review-manifest doc " plus docid).
+    Set notes_path to [[guideline_path.joinpath]]("audit", "projection-notes.tsv").
+    If not [[notes_path.is_file]]():
+        Give back [[err]]("ui: viewmodel: " plus gid plus " missing audit/projection-notes.tsv").
+    Set notes_result to [[load_text]](notes_path, gid, "audit/projection-notes.tsv").
+    If [[result_kind]](notes_result) equals "err":
+        Give back notes_result.
+    Set notes_rows_result to [[parse_tsv_rows]]([[result_value]](notes_result), 4, gid, "projection-notes").
+    If [[result_kind]](notes_rows_result) equals "err":
+        Give back notes_rows_result.
+    Set kept_by_docid to {}.
+    Set dropped_by_docid to {}.
+    Set notes_region_by_docid to {}.
+    Set notes_docids to <>.
+    For each row_pair in [[result_value]](notes_rows_result):
+        Set pair_copy to [[list]](row_pair).
+        Set fields to [[pair_copy.pop]](0).
+        Set docid to [[fields.pop]](0).
+        Set region_id to [[fields.pop]](0).
+        Set kept_text to [[fields.pop]](0).
+        Set dropped_text to [[fields.pop]](0).
+        Do [[notes_docids.append]](docid).
+        Do [[notes_region_by_docid.update]]({docid: region_id}).
+        Do [[kept_by_docid.update]]({docid: kept_text}).
+        Do [[dropped_by_docid.update]]({docid: dropped_text}).
+    For each docid in sorted_docids:
+        Set present to [[notes_region_by_docid.get]](docid, "").
+        If not present:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " missing projection-notes row").
+    For each docid in [[sorted]](notes_docids):
+        Set claimed to [[region_by_docid.get]](docid, "").
+        If not claimed:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " orphan projection-notes doc " plus docid).
+    For each docid in sorted_docids:
+        Set notes_region to [[notes_region_by_docid.get]](docid, "").
+        Set coverage_region to [[region_by_docid.get]](docid, "").
+        If notes_region does not equal coverage_region:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " notes region " plus notes_region plus " differs from coverage " plus coverage_region).
+    Set pl_stems to [[list_stems]]([[guideline_path.joinpath]]("pl"), ".pl").
+    For each docid in sorted_docids:
+        Set present to docid is in pl_stems.
+        If not present:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " missing Prolog file").
+    For each stem in pl_stems:
+        Set claimed to [[region_by_docid.get]](stem, "").
+        If not claimed:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " orphan Prolog file " plus stem plus ".pl").
+    Set evidence_cache to {}.
+    Set payload_by_docid to {}.
+    For each docid in sorted_docids:
+        Set file_text to [[file_by_docid.get]](docid, "").
+        Set region_id to [[region_by_docid.get]](docid, "").
+        Set file_hostile to False.
+        If [[file_text.startswith]]("/"):
+            Set file_hostile to True.
+        Set has_backslash to "\\" is in file_text.
+        If has_backslash:
+            Set file_hostile to True.
+        Set file_segs to [[file_text.split]]("/").
+        Set has_dotdot to ".." is in file_segs.
+        If has_dotdot:
+            Set file_hostile to True.
+        If file_hostile:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " region " plus region_id plus " unresolved in " plus file_text).
+        Set parsed to [[evidence_cache.get]](file_text, None).
+        If parsed equals None:
+            Set evidence_path to [[guideline_path.joinpath]](file_text).
+            Set evidence_result to [[load_text]](evidence_path, gid, file_text).
+            If [[result_kind]](evidence_result) equals "err":
+                Give back evidence_result.
+            Set parsed to [[parse_evidence]]([[result_value]](evidence_result)).
+            Do [[evidence_cache.update]]({file_text: parsed}).
+        Set parsed_copy to [[list]](parsed).
+        Set census_count to [[parsed_copy.pop]](0).
+        Set locator_ids to [[parsed_copy.pop]](0).
+        Set locator_lines to [[parsed_copy.pop]](0).
+        Set locator_counts to [[parsed_copy.pop]](0).
+        Set ordered_payloads to [[parsed_copy.pop]](0).
+        Set payload_line to "".
+        If locator_ids:
+            Set seen_count to 0.
+            For each locator_id in locator_ids:
+                If locator_id equals region_id:
+                    Set seen_count to seen_count plus 1.
+            If seen_count equals 0:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " region " plus region_id plus " unresolved in " plus file_text).
+            If seen_count is greater than 1:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " duplicate region locator " plus region_id plus " in " plus file_text).
+            Set line_count to [[locator_counts.get]](region_id, 0).
+            If line_count equals 0:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " region " plus region_id plus " has empty payload").
+            If line_count does not equal 1:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " region " plus region_id plus " unresolved in " plus file_text).
+            Set payload_line to [[locator_lines.get]](region_id, "").
+        Otherwise:
+            Set file_regions to [[file_row_regions.get]](file_text, <>).
+            Set row_total to [[len]](file_regions).
+            Set payload_total to [[len]](ordered_payloads).
+            If census_count does not equal payload_total:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " region census mismatch " plus file_text plus " coverage=" plus [[str]](row_total) plus " payloads=" plus [[str]](payload_total)).
+            If row_total does not equal payload_total:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " region census mismatch " plus file_text plus " coverage=" plus [[str]](row_total) plus " payloads=" plus [[str]](payload_total)).
+            Set ordinal to [[file_docid_ordinal.get]](docid, 0).
+            Set scan_index to 0.
+            For each candidate in ordered_payloads:
+                If scan_index equals ordinal:
+                    Set payload_line to candidate.
+                Set scan_index to scan_index plus 1.
+            If not payload_line:
+                Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " region " plus region_id plus " has empty payload").
+        Do [[payload_by_docid.update]]({docid: payload_line}).
+    Set states_result to [[build_doc_states]](guideline_path, gid, sorted_docids, review_by_docid, manifest_text).
+    If [[result_kind]](states_result) equals "err":
+        Give back states_result.
+    Set states_pair to [[result_value]](states_result).
+    Set states_copy to [[list]](states_pair).
+    Set doc_states to [[states_copy.pop]](0).
+    Set ledger_digests to [[states_copy.pop]](0).
+    Set model to {}.
+    Do [[model.update]]({"gid": gid}).
+    Do [[model.update]]({"path": guideline_path}).
+    Set title_result to [[readme_title]](guideline_path, gid).
+    If [[result_kind]](title_result) equals "err":
+        Give back title_result.
+    Do [[model.update]]({"title": [[result_value]](title_result)}).
+    Do [[model.update]]({"docids": sorted_docids}).
+    Do [[model.update]]({"region_by_docid": region_by_docid}).
+    Do [[model.update]]({"section_by_docid": section_by_docid}).
+    Do [[model.update]]({"page_by_docid": page_by_docid}).
+    Do [[model.update]]({"file_by_docid": file_by_docid}).
+    Do [[model.update]]({"payload_by_docid": payload_by_docid}).
+    Do [[model.update]]({"kept_by_docid": kept_by_docid}).
+    Do [[model.update]]({"dropped_by_docid": dropped_by_docid}).
+    Do [[model.update]]({"ace_digest_by_docid": ace_digest_by_docid}).
+    Do [[model.update]]({"payload_digest_by_docid": payload_digest_by_docid}).
+    Do [[model.update]]({"review_by_docid": review_by_docid}).
+    Do [[model.update]]({"doc_states": doc_states}).
+    Do [[model.update]]({"ledger_digests": ledger_digests}).
+    Do [[model.update]]({"region_rows": region_rows}).
+    Set counts to {}.
+    Do [[counts.update]]({"regions": [[len]](coverage_rows)}).
+    Do [[counts.update]]({"ace": ace_counter}).
+    Do [[counts.update]]({"restates": restates_counter}).
+    Do [[counts.update]]({"uncovered": uncovered_counter}).
+    Do [[counts.update]]({"pending": pending_counter}).
+    Set approved_count to 0.
+    Set rejected_count to 0.
+    Set stale_count to 0.
+    Set unreviewed_count to 0.
+    For each docid in sorted_docids:
+        Set state to [[doc_states.get]](docid, "unreviewed").
+        If state equals "approved":
+            Set approved_count to approved_count plus 1.
+        Otherwise:
+            If state equals "rejected":
+                Set rejected_count to rejected_count plus 1.
+            Otherwise:
+                If state equals "stale":
+                    Set stale_count to stale_count plus 1.
+                Otherwise:
+                    Set unreviewed_count to unreviewed_count plus 1.
+    Do [[counts.update]]({"approved": approved_count}).
+    Do [[counts.update]]({"rejected": rejected_count}).
+    Do [[counts.update]]({"stale": stale_count}).
+    Do [[counts.update]]({"unreviewed": unreviewed_count}).
+    Do [[model.update]]({"counts": counts}).
+    Give back [[ok]](model).
+
+Define [[build_viewmodel]] taking root_path:
+    Set guidelines_root to [[root_path.joinpath]]("guidelines").
+    Set root_missing to False.
+    Set symlink to [[guidelines_root.is_symlink]]().
+    If symlink:
+        Set root_missing to True.
+    If not [[guidelines_root.is_dir]]():
+        Set root_missing to True.
+    If root_missing:
+        Give back [[err]]("ui: viewmodel: missing guidelines directory").
+    Set gids to <>.
+    For each entry in [[sorted]]([[guidelines_root.iterdir]]()):
+        Set symlink to [[entry.is_symlink]]().
+        If not symlink:
+            If [[entry.is_dir]]():
+                Do [[gids.append]](entry.name).
+    Set models to <>.
+    For each gid in gids:
+        Set model_result to [[build_guideline_model]](root_path, gid).
+        If [[result_kind]](model_result) equals "err":
+            Give back model_result.
+        Do [[models.append]]([[result_value]](model_result)).
+    Give back [[ok]](models).
+
+Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">}.
+
+Define [[pal_fg]] taking role:
+    Set pair to [[palette.get]](role, <>).
+    Set pair_copy to [[list]](pair).
+    Give back [[pair_copy.pop]](0).
+
+Define [[pal_bg]] taking role:
+    Set pair to [[palette.get]](role, <>).
+    Set pair_copy to [[list]](pair).
+    Do [[pair_copy.pop]](0).
+    Give back [[pair_copy.pop]](0).
+
+Define [[build_css]] taking nothing:
+    Set body_fg to [[pal_fg]]("body").
+    Set body_bg to [[pal_bg]]("body").
+    Set link_fg to [[pal_fg]]("link").
+    Set line_color to [[pal_bg]]("chip-unreviewed").
+    Set lines to <>.
+    Do [[lines.append]]("body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: " plus body_fg plus "; background: " plus body_bg plus "; }").
+    Do [[lines.append]]("a { color: " plus link_fg plus "; }").
+    Do [[lines.append]]("a:focus-visible, summary:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
+    Do [[lines.append]](".skip { position: absolute; left: -999px; top: 0; padding: 0.5rem 1rem; background: " plus body_bg plus "; color: " plus link_fg plus "; }").
+    Do [[lines.append]](".skip:focus { left: 0; z-index: 1; }").
+    Do [[lines.append]]("nav.crumbs { padding: 1rem 0; border-bottom: 1px solid " plus line_color plus "; }").
+    Do [[lines.append]]("h1 { font-size: 1.6rem; }").
+    Do [[lines.append]]("table { border-collapse: collapse; width: 100%; margin: 1rem 0; }").
+    Do [[lines.append]]("th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid " plus line_color plus "; vertical-align: top; }").
+    Do [[lines.append]]("th { border-bottom: 2px solid " plus body_fg plus "; }").
+    Do [[lines.append]](".chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }").
+    Do [[lines.append]](".chip-approved { color: " plus [[pal_fg]]("chip-approved") plus "; background: " plus [[pal_bg]]("chip-approved") plus "; }").
+    Do [[lines.append]](".chip-rejected { color: " plus [[pal_fg]]("chip-rejected") plus "; background: " plus [[pal_bg]]("chip-rejected") plus "; }").
+    Do [[lines.append]](".chip-stale { color: " plus [[pal_fg]]("chip-stale") plus "; background: " plus [[pal_bg]]("chip-stale") plus "; }").
+    Do [[lines.append]](".chip-unreviewed { color: " plus [[pal_fg]]("chip-unreviewed") plus "; background: " plus [[pal_bg]]("chip-unreviewed") plus "; }").
+    Do [[lines.append]]("pre { padding: 0.75rem 1rem; border: 1px solid " plus line_color plus "; overflow-x: auto; }").
+    Do [[lines.append]]("pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }").
+    Do [[lines.append]]("pre.src { font-family: Georgia, serif; font-size: 1.05rem; white-space: pre-wrap; overflow-wrap: anywhere; }").
+    Do [[lines.append]]("dt { font-weight: 600; margin-top: 0.6rem; }").
+    Do [[lines.append]]("dd { margin-left: 0; }").
+    Do [[lines.append]]("summary { cursor: pointer; }").
+    Do [[lines.append]]("section { margin: 1.5rem 0; }").
+    Do [[lines.append]]("nav.docnav { padding: 1rem 0; border-top: 1px solid " plus line_color plus "; }").
+    Set joiner to "\n".
+    Give back [[joiner.join]](lines).
+
+Set css_text to [[build_css]]().
+
+Define [[page_html]] taking title_text, crumb_html, body_html:
+    Set parts to <>.
+    Do [[parts.append]]("<!doctype html>").
+    Do [[parts.append]]("<html lang=\"en\">").
+    Do [[parts.append]]("<head>").
+    Do [[parts.append]]("<meta charset=\"utf-8\">").
+    Do [[parts.append]]("<title>" plus [[esc_text]](title_text) plus " — cnl-ckc reviewer</title>").
+    Do [[parts.append]]("<style>").
+    Do [[parts.append]](css_text).
+    Do [[parts.append]]("</style>").
+    Do [[parts.append]]("</head>").
+    Do [[parts.append]]("<body>").
+    Do [[parts.append]]("<a class=\"skip\" href=\"#main\">Skip to content</a>").
+    Do [[parts.append]]("<nav class=\"crumbs\">" plus crumb_html plus "</nav>").
+    Do [[parts.append]]("<main id=\"main\">").
+    Do [[parts.append]](body_html).
+    Do [[parts.append]]("</main>").
+    Do [[parts.append]]("</body>").
+    Do [[parts.append]]("</html>").
+    Set joiner to "\n".
+    Give back [[joiner.join]](parts) plus "\n".
+
+Define [[chip_html]] taking state:
+    Give back "<span class=\"chip chip-" plus state plus "\">" plus state plus "</span>".
+
+Define [[build_index_page]] taking models:
+    Set rows to <>.
+    For each model in models:
+        Set gid to [[model.get]]("gid", "").
+        Set counts to [[model.get]]("counts", {}).
+        Set docids to [[model.get]]("docids", <>).
+        Set cells to <>.
+        Do [[cells.append]]("<td><a href=\"g/" plus [[url_seg]](gid) plus "/index.html\">" plus [[esc_text]](gid) plus "</a></td>").
+        Do [[cells.append]]("<td>" plus [[esc_text]]([[model.get]]("title", gid)) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[str]]([[len]](docids)) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("regions", 0)) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("approved", 0)) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("rejected", 0)) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("stale", 0)) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("unreviewed", 0)) plus "</td>").
+        Set empty_text to "".
+        Do [[rows.append]]("<tr>" plus [[empty_text.join]](cells) plus "</tr>").
+    Set parts to <>.
+    Do [[parts.append]]("<h1>Guidelines</h1>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<table>").
+    Do [[parts.append]]("<thead><tr><th>guideline</th><th>title</th><th>docs</th><th>regions</th><th>approved</th><th>rejected</th><th>stale</th><th>unreviewed</th></tr></thead>").
+    Set joiner to "\n".
+    Do [[parts.append]]("<tbody>" plus [[joiner.join]](rows) plus "</tbody>").
+    Do [[parts.append]]("</table>").
+    Do [[parts.append]]("</section>").
+    Set body_html to [[joiner.join]](parts).
+    Give back [[page_html]]("guidelines", "cnl-ckc reviewer", body_html).
+
+Define [[build_guideline_page]] taking model:
+    Set gid to [[model.get]]("gid", "").
+    Set counts to [[model.get]]("counts", {}).
+    Set docids to [[model.get]]("docids", <>).
+    Set doc_states to [[model.get]]("doc_states", {}).
+    Set region_by_docid to [[model.get]]("region_by_docid", {}).
+    Set section_by_docid to [[model.get]]("section_by_docid", {}).
+    Set region_rows to [[model.get]]("region_rows", <>).
+    Set joiner to "\n".
+    Set empty_text to "".
+    Set parts to <>.
+    Do [[parts.append]]("<h1>" plus [[esc_text]]([[model.get]]("title", gid)) plus "</h1>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Meters</h2>").
+    Set meter_one to "regions=" plus [[str]]([[counts.get]]("regions", 0)) plus " ace=" plus [[str]]([[counts.get]]("ace", 0)) plus " restates=" plus [[str]]([[counts.get]]("restates", 0)) plus " uncovered=" plus [[str]]([[counts.get]]("uncovered", 0)) plus " pending=" plus [[str]]([[counts.get]]("pending", 0)).
+    Set meter_two to "approved=" plus [[str]]([[counts.get]]("approved", 0)) plus " rejected=" plus [[str]]([[counts.get]]("rejected", 0)) plus " stale=" plus [[str]]([[counts.get]]("stale", 0)) plus " unreviewed=" plus [[str]]([[counts.get]]("unreviewed", 0)).
+    Do [[parts.append]]("<p>" plus meter_one plus "</p>").
+    Do [[parts.append]]("<p>" plus meter_two plus "</p>").
+    Do [[parts.append]]("</section>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Documents</h2>").
+    Do [[parts.append]]("<table>").
+    Do [[parts.append]]("<thead><tr><th>document</th><th>status</th><th>region</th><th>section</th></tr></thead>").
+    Set doc_rows to <>.
+    For each docid in docids:
+        Set state to [[doc_states.get]](docid, "unreviewed").
+        Set cells to <>.
+        Do [[cells.append]]("<td><a href=\"doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]](docid) plus "</a></td>").
+        Do [[cells.append]]("<td>" plus [[chip_html]](state) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[esc_text]]([[section_by_docid.get]](docid, "")) plus "</td>").
+        Do [[doc_rows.append]]("<tr>" plus [[empty_text.join]](cells) plus "</tr>").
+    Do [[parts.append]]("<tbody>" plus [[joiner.join]](doc_rows) plus "</tbody>").
+    Do [[parts.append]]("</table>").
+    Do [[parts.append]]("</section>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Regions without ACE</h2>").
+    Do [[parts.append]]("<table>").
+    Do [[parts.append]]("<thead><tr><th>region</th><th>status</th><th>section</th></tr></thead>").
+    Set other_rows to <>.
+    For each region_row in region_rows:
+        Set row_copy to [[list]](region_row).
+        Set region_id to [[row_copy.pop]](0).
+        Set status_text to [[row_copy.pop]](0).
+        Set section_text to [[row_copy.pop]](0).
+        Set cells to <>.
+        Do [[cells.append]]("<td>" plus [[esc_text]](region_id) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[esc_text]](status_text) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[esc_text]](section_text) plus "</td>").
+        Do [[other_rows.append]]("<tr>" plus [[empty_text.join]](cells) plus "</tr>").
+    Do [[parts.append]]("<tbody>" plus [[joiner.join]](other_rows) plus "</tbody>").
+    Do [[parts.append]]("</table>").
+    Do [[parts.append]]("</section>").
+    Set body_html to [[joiner.join]](parts).
+    Set crumb_html to "<a href=\"../../index.html\">guidelines</a> / " plus [[esc_text]](gid).
+    Give back [[page_html]](gid, crumb_html, body_html).
+
+Define [[doc_render_data]] taking model, docid:
+    Set gid to [[model.get]]("gid", "").
+    Set guideline_path to [[model.get]]("path", None).
+    Set ace_digest_by_docid to [[model.get]]("ace_digest_by_docid", {}).
+    Set payload_digest_by_docid to [[model.get]]("payload_digest_by_docid", {}).
+    Set payload_by_docid to [[model.get]]("payload_by_docid", {}).
+    Set ace_path to [[guideline_path.joinpath]]("ace", docid plus ".ace").
+    Try:
+        Set ace_bytes to [[ace_path.read_bytes]]().
+    Catch OSError:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " missing ace file").
+    Set ace_text to "".
+    Try:
+        Set ace_text to [[ace_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " file not UTF-8: ace/" plus docid plus ".ace").
+    Set control_detail to [[control_violation]](ace_text, gid, "ace/" plus docid plus ".ace").
+    If control_detail:
+        Give back [[err]](control_detail).
+    Set ace_actual to [[sha256_hex]](ace_bytes).
+    If ace_actual does not equal [[ace_digest_by_docid.get]](docid, ""):
+        Give back [[err]]("ui: digest mismatch: " plus docid plus " ace").
+    Set payload_line to [[payload_by_docid.get]](docid, "").
+    Set payload_bytes to [[payload_line.encode]]("utf-8").
+    Set payload_actual to [[sha256_hex]](payload_bytes).
+    If payload_actual does not equal [[payload_digest_by_docid.get]](docid, ""):
+        Give back [[err]]("ui: digest mismatch: " plus docid plus " payload").
+    Set pl_path to [[guideline_path.joinpath]]("pl", docid plus ".pl").
+    Set pl_result to [[load_text]](pl_path, gid, "pl/" plus docid plus ".pl").
+    If [[result_kind]](pl_result) equals "err":
+        Give back pl_result.
+    Set pl_text to [[result_value]](pl_result).
+    Set data to {}.
+    Do [[data.update]]({"ace_text": ace_text}).
+    Do [[data.update]]({"pl_text": pl_text}).
+    Do [[data.update]]({"pl_lines": [[len]]([[pl_text.splitlines]]())}).
+    Give back [[ok]](data).
+
+Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
+    Set gid to [[model.get]]("gid", "").
+    Set doc_states to [[model.get]]("doc_states", {}).
+    Set state to [[doc_states.get]](docid, "unreviewed").
+    Set region_by_docid to [[model.get]]("region_by_docid", {}).
+    Set section_by_docid to [[model.get]]("section_by_docid", {}).
+    Set page_by_docid to [[model.get]]("page_by_docid", {}).
+    Set file_by_docid to [[model.get]]("file_by_docid", {}).
+    Set payload_by_docid to [[model.get]]("payload_by_docid", {}).
+    Set kept_by_docid to [[model.get]]("kept_by_docid", {}).
+    Set dropped_by_docid to [[model.get]]("dropped_by_docid", {}).
+    Set review_by_docid to [[model.get]]("review_by_docid", {}).
+    Set ledger_digests to [[model.get]]("ledger_digests", {}).
+    Set joiner to "\n".
+    Set parts to <>.
+    Do [[parts.append]]("<h1>" plus [[esc_text]](docid) plus " " plus [[chip_html]](state) plus "</h1>").
+    If state equals "stale":
+        Do [[parts.append]]("<section class=\"stale\">").
+        Do [[parts.append]]("<h2>Adjudication stale</h2>").
+        Do [[parts.append]]("<p>bundle differs</p>").
+        Do [[parts.append]]("<dl>").
+        Do [[parts.append]]("<dt>pinned review_sha256</dt><dd><code>" plus [[esc_text]]([[ledger_digests.get]](docid, "")) plus "</code></dd>").
+        Do [[parts.append]]("<dt>current review_sha256</dt><dd><code>" plus [[esc_text]]([[review_by_docid.get]](docid, "")) plus "</code></dd>").
+        Do [[parts.append]]("</dl>").
+        Do [[parts.append]]("</section>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Source region " plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus "</h2>").
+    Do [[parts.append]]("<p>" plus [[esc_text]]([[section_by_docid.get]](docid, "")) plus " · " plus [[esc_text]]([[file_by_docid.get]](docid, "")) plus " · " plus [[esc_text]]([[page_by_docid.get]](docid, "")) plus "</p>").
+    Do [[parts.append]]("<pre class=\"src\">" plus [[esc_text]]([[payload_by_docid.get]](docid, "")) plus "</pre>").
+    Do [[parts.append]]("</section>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>ACE</h2>").
+    Do [[parts.append]]("<pre>" plus [[esc_text]]([[doc_data.get]]("ace_text", "")) plus "</pre>").
+    Do [[parts.append]]("</section>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Projection notes</h2>").
+    Do [[parts.append]]("<dl>").
+    Do [[parts.append]]("<dt>kept</dt><dd>" plus [[esc_text]]([[kept_by_docid.get]](docid, "")) plus "</dd>").
+    Do [[parts.append]]("<dt>dropped</dt><dd>" plus [[esc_text]]([[dropped_by_docid.get]](docid, "")) plus "</dd>").
+    Do [[parts.append]]("</dl>").
+    Do [[parts.append]]("</section>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Compiled Prolog</h2>").
+    Do [[parts.append]]("<details>").
+    Do [[parts.append]]("<summary>compiled Prolog (" plus [[str]]([[doc_data.get]]("pl_lines", 0)) plus " lines)</summary>").
+    Do [[parts.append]]("<pre>" plus [[esc_text]]([[doc_data.get]]("pl_text", "")) plus "</pre>").
+    Do [[parts.append]]("</details>").
+    Do [[parts.append]]("</section>").
+    Set nav_parts to <>.
+    If prev_id:
+        Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](prev_id) plus ".html\">prev: " plus [[esc_text]](prev_id) plus "</a>").
+    Do [[nav_parts.append]]("<a href=\"../index.html\">up: " plus [[esc_text]](gid) plus "</a>").
+    If next_id:
+        Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](next_id) plus ".html\">next: " plus [[esc_text]](next_id) plus "</a>").
+    Set nav_joiner to " · ".
+    Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
+    Set body_html to [[joiner.join]](parts).
+    Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / " plus [[esc_text]](docid).
+    Give back [[page_html]](docid, crumb_html, body_html).
+
+Define [[build_error_page]] taking title_text, heading_text, body_html:
+    Set parts to <>.
+    Do [[parts.append]]("<h1>" plus [[esc_text]](heading_text) plus "</h1>").
+    Do [[parts.append]](body_html).
+    Set joiner to "\n".
+    Give back [[page_html]](title_text, "cnl-ckc reviewer", [[joiner.join]](parts)).
+
+Define [[extract_hrefs]] taking page_text:
+    Set found to <>.
+    Set parts to [[page_text.split]]("<a ").
+    Do [[parts.pop]](0).
+    For each part in parts:
+        Set tag_parts to [[part.split]](">", 1).
+        Set tag_text to [[tag_parts.pop]](0).
+        Set attr_parts to [[tag_text.split]]("href=\"", 1).
+        If [[len]](attr_parts) equals 2:
+            Do [[attr_parts.pop]](0).
+            Set attr_tail to [[attr_parts.pop]](0).
+            Set value_parts to [[attr_tail.split]]("\"", 1).
+            Set href_value to [[value_parts.pop]](0).
+            Do [[found.append]](href_value).
+    Give back found.
+
+Define [[resolve_href]] taking page_path, href_value:
+    If [[href_value.startswith]]("#"):
+        Give back "#".
+    Set base_segs to [[page_path.split]]("/").
+    Do [[base_segs.pop]]().
+    Set target_segs to [[href_value.split]]("/").
+    Set failed to False.
+    For each seg in target_segs:
+        If seg equals "..":
+            If base_segs:
+                Do [[base_segs.pop]]().
+            Otherwise:
+                Set failed to True.
+        Otherwise if seg does not equal ".":
+            Do [[base_segs.append]](seg).
+    If failed:
+        Give back "".
+    Set joiner to "/".
+    Give back [[joiner.join]](base_segs).
+
+Define [[render_pages]] taking models:
+    Set page_order to <>.
+    Set pages to {}.
+    Do [[page_order.append]]("index.html").
+    Do [[pages.update]]({"index.html": [[build_index_page]](models)}).
+    Set meter_lines to <>.
+    For each model in models:
+        Set gid to [[model.get]]("gid", "").
+        Set docids to [[model.get]]("docids", <>).
+        Set counts to [[model.get]]("counts", {}).
+        Set gid_page to "g/" plus [[url_seg]](gid) plus "/index.html".
+        Do [[page_order.append]](gid_page).
+        Do [[pages.update]]({gid_page: [[build_guideline_page]](model)}).
+        Set prev_map to {}.
+        Set next_map to {}.
+        Set prev_id to "".
+        For each docid in docids:
+            If prev_id:
+                Do [[prev_map.update]]({docid: prev_id}).
+                Do [[next_map.update]]({prev_id: docid}).
+            Set prev_id to docid.
+        For each docid in docids:
+            Set data_result to [[doc_render_data]](model, docid).
+            If [[result_kind]](data_result) equals "err":
+                Give back data_result.
+            Set doc_data to [[result_value]](data_result).
+            Set doc_page to "g/" plus [[url_seg]](gid) plus "/doc/" plus [[url_seg]](docid) plus ".html".
+            Do [[page_order.append]](doc_page).
+            Do [[pages.update]]({doc_page: [[build_doc_page]](model, docid, doc_data, [[prev_map.get]](docid, ""), [[next_map.get]](docid, ""))}).
+        Set page_count to 1 plus [[len]](docids).
+        Do [[meter_lines.append]]("ui: " plus gid plus " docs=" plus [[str]]([[len]](docids)) plus " regions=" plus [[str]]([[counts.get]]("regions", 0)) plus " pages=" plus [[str]](page_count)).
+    For each page_path in page_order:
+        Set page_text to [[pages.get]](page_path, "").
+        For each href_value in [[extract_hrefs]](page_text):
+            Set resolved to [[resolve_href]](page_path, href_value).
+            If resolved does not equal "#":
+                Set known to resolved is in pages.
+                If not known:
+                    Give back [[err]]("ui: viewmodel: dangling href " plus page_path plus " " plus href_value).
+    Set bundle to {}.
+    Do [[bundle.update]]({"page_order": page_order}).
+    Do [[bundle.update]]({"pages": pages}).
+    Do [[bundle.update]]({"meter_lines": meter_lines}).
+    Give back [[ok]](bundle).
+
+Define [[render_tree]] taking root_path, out_path:
+    Set model_result to [[build_viewmodel]](root_path).
+    If [[result_kind]](model_result) equals "err":
+        Give back model_result.
+    Set models to [[result_value]](model_result).
+    Set bundle_result to [[render_pages]](models).
+    If [[result_kind]](bundle_result) equals "err":
+        Give back bundle_result.
+    Set bundle to [[result_value]](bundle_result).
+    Set page_order to [[bundle.get]]("page_order", <>).
+    Set pages to [[bundle.get]]("pages", {}).
+    For each page_path in page_order:
+        Set full_path to [[out_path.joinpath]](page_path).
+        Set parent_dir to full_path.parent.
+        Do [[parent_dir.mkdir]](parents=True, exist_ok=True).
+        Set page_text to [[pages.get]](page_path, "").
+        Set page_bytes to [[page_text.encode]]("utf-8").
+        Do [[full_path.write_bytes]](page_bytes).
+    Set result to {}.
+    Do [[result.update]]({"guidelines": [[len]](models)}).
+    Do [[result.update]]({"pages_total": [[len]](page_order)}).
+    Do [[result.update]]({"meter_lines": [[bundle.get]]("meter_lines", <>)}).
+    Give back [[ok]](result).
+
+Define [[walk_files]] taking base_path:
+    Set found to <>.
+    Set pending to <base_path>.
+    While pending:
+        Set current to [[pending.pop]](0).
+        For each entry in [[sorted]]([[current.iterdir]]()):
+            If [[entry.is_dir]]():
+                Do [[pending.append]](entry).
+            Otherwise:
+                Set rel_path to [[entry.relative_to]](base_path).
+                Do [[found.append]]([[str]](rel_path)).
+    Give back [[sorted]](found).
+
+Define [[page_invariant_name]] taking page_text:
+    If [[page_text.count]]("<!doctype html>") does not equal 1:
+        Give back "doctype".
+    If [[page_text.count]]("<html lang=\"en\">") does not equal 1:
+        Give back "html-lang".
+    If [[page_text.count]]("<h1") does not equal 1:
+        Give back "h1".
+    If [[page_text.count]]("<main id=\"main\">") does not equal 1:
+        Give back "main".
+    If [[page_text.count]]("<nav") is less than 1:
+        Give back "nav".
+    If [[page_text.count]]("<a class=\"skip\" href=\"#main\">Skip to content</a>") does not equal 1:
+        Give back "skip".
+    If [[page_text.count]]("<style>") does not equal 1:
+        Give back "style".
+    If [[page_text.count]]("<script") does not equal 0:
+        Give back "script".
+    If [[page_text.count]]("tabindex") does not equal 0:
+        Give back "tabindex".
+    If [[page_text.count]]("style=") does not equal 0:
+        Give back "inline-style".
+    If [[page_text.count]]("href=\"http") does not equal 0:
+        Give back "external-href".
+    Give back "".
+
+Define [[selftest_violation]] taking nothing:
+    If [[url_seg]]("a b/%") does not equal "a%20b%2F%25":
+        Give back "ui: selftest failed: url_seg".
+    If [[url_seg]]("/") does not equal "%2F":
+        Give back "ui: selftest failed: url_seg".
+    If [[url_seg]]("漢") does not equal "%E6%BC%A2":
+        Give back "ui: selftest failed: url_seg".
+    If [[esc_text]]("<&>\"'") does not equal "&lt;&amp;&gt;\"'":
+        Give back "ui: selftest failed: esc_text".
+    If [[esc_text]]("plain") does not equal "plain":
+        Give back "ui: selftest failed: esc_text".
+    Set unique_values to <>.
+    For each role in [[sorted]](palette):
+        Set pair to [[palette.get]](role, <>).
+        Set pair_copy to [[list]](pair).
+        Set fg_value to [[pair_copy.pop]](0).
+        Set bg_value to [[pair_copy.pop]](0).
+        Set fg_known to fg_value is in unique_values.
+        If not fg_known:
+            Do [[unique_values.append]](fg_value).
+        Set bg_known to bg_value is in unique_values.
+        If not bg_known:
+            Do [[unique_values.append]](bg_value).
+    Set allowed_total to 0.
+    For each color_value in unique_values:
+        Set allowed_total to allowed_total plus [[css_text.count]](color_value).
+    If [[css_text.count]]("#") does not equal allowed_total:
+        Give back "ui: selftest failed: palette".
+    Give back "".
+
+Set h5_content_type to [[tuple]](<"Content-Type", "text/html; charset=utf-8">).
+Set h5_csp to [[tuple]](<"Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'">).
+Set h5_nosniff to [[tuple]](<"X-Content-Type-Options", "nosniff">).
+Set h5_referrer to [[tuple]](<"Referrer-Policy", "no-referrer">).
+Set h5_cache to [[tuple]](<"Cache-Control", "no-store">).
+
+Define [[base_headers]] taking nothing:
+    Give back <h5_content_type, h5_csp, h5_nosniff, h5_referrer, h5_cache>.
+
+Define [[not_found_response]] taking nothing:
+    Set body_html to "<p>The requested page does not exist.</p>".
+    Set page_text to [[build_error_page]]("not found", "Not found", body_html).
+    Set body_bytes to [[page_text.encode]]("utf-8").
+    Give back <"404 Not Found", [[base_headers]](), body_bytes>.
+
+Define [[method_response]] taking nothing:
+    Set body_html to "<p>Only GET is supported.</p>".
+    Set page_text to [[build_error_page]]("method not allowed", "Method not allowed", body_html).
+    Set body_bytes to [[page_text.encode]]("utf-8").
+    Set headers to [[base_headers]]().
+    Do [[headers.append]]([[tuple]](<"Allow", "GET">)).
+    Give back <"405 Method Not Allowed", headers, body_bytes>.
+
+Define [[error_response]] taking detail:
+    Set body_html to "<pre>" plus [[esc_text]](detail) plus "</pre>".
+    Set page_text to [[build_error_page]]("server error", "Server error", body_html).
+    Set body_bytes to [[page_text.encode]]("utf-8").
+    Give back <"500 Internal Server Error", [[base_headers]](), body_bytes>.
+
+Define [[page_response]] taking page_text:
+    Set body_bytes to [[page_text.encode]]("utf-8").
+    Give back <"200 OK", [[base_headers]](), body_bytes>.
+
+Define [[respond]] taking root_path, method_text, path_text:
+    If method_text does not equal "GET":
+        Give back [[method_response]]().
+    Set model_result to [[build_viewmodel]](root_path).
+    If [[result_kind]](model_result) equals "err":
+        Give back [[error_response]]([[result_value]](model_result)).
+    Set models to [[result_value]](model_result).
+    If path_text equals "/":
+        Give back [[page_response]]([[build_index_page]](models)).
+    If path_text equals "/index.html":
+        Give back [[page_response]]([[build_index_page]](models)).
+    If not [[path_text.startswith]]("/g/"):
+        Give back [[not_found_response]]().
+    Set model_by_gid to {}.
+    For each model in models:
+        Set gid to [[model.get]]("gid", "").
+        Do [[model_by_gid.update]]({gid: model}).
+    Set rest_text to [[path_text.removeprefix]]("/g/").
+    Set segs to [[rest_text.split]]("/").
+    Set seg_count to [[len]](segs).
+    If seg_count equals 2:
+        Set gid_seg to [[segs.pop]](0).
+        Set tail_seg to [[segs.pop]](0).
+        Set model to [[model_by_gid.get]](gid_seg, None).
+        If model equals None:
+            Give back [[not_found_response]]().
+        If tail_seg equals "":
+            Give back [[page_response]]([[build_guideline_page]](model)).
+        If tail_seg equals "index.html":
+            Give back [[page_response]]([[build_guideline_page]](model)).
+        Give back [[not_found_response]]().
+    If seg_count equals 3:
+        Set gid_seg to [[segs.pop]](0).
+        Set mid_seg to [[segs.pop]](0).
+        Set leaf_seg to [[segs.pop]](0).
+        If mid_seg does not equal "doc":
+            Give back [[not_found_response]]().
+        If not [[leaf_seg.endswith]](".html"):
+            Give back [[not_found_response]]().
+        Set model to [[model_by_gid.get]](gid_seg, None).
+        If model equals None:
+            Give back [[not_found_response]]().
+        Set docid to [[leaf_seg.removesuffix]](".html").
+        Set docids to [[model.get]]("docids", <>).
+        Set known to docid is in docids.
+        If not known:
+            Give back [[not_found_response]]().
+        Set data_result to [[doc_render_data]](model, docid).
+        If [[result_kind]](data_result) equals "err":
+            Give back [[error_response]]([[result_value]](data_result)).
+        Set doc_data to [[result_value]](data_result).
+        Set prev_id to "".
+        Set next_id to "".
+        Set seen to False.
+        Set walker to "".
+        For each candidate in docids:
+            If candidate equals docid:
+                Set prev_id to walker.
+                Set seen to True.
+            Otherwise if seen:
+                If next_id equals "":
+                    Set next_id to candidate.
+            Set walker to candidate.
+        Give back [[page_response]]([[build_doc_page]](model, docid, doc_data, prev_id, next_id)).
+    Give back [[not_found_response]]().
+
+Define [[wsgi_app]] taking environ, start_response:
+    Set root_text to [[serve_config.get]]("root", ".").
+    Set root_path to [[pathlib.Path]](root_text).
+    Set method_text to [[environ.get]]("REQUEST_METHOD", "").
+    Set path_text to [[environ.get]]("PATH_INFO", "").
+    Set triple to [[respond]](root_path, method_text, path_text).
+    Set triple_copy to [[list]](triple).
+    Set status_text to [[triple_copy.pop]](0).
+    Set headers to [[triple_copy.pop]](0).
+    Set body_bytes to [[triple_copy.pop]](0).
+    Do [[start_response]](status_text, headers).
+    Give back <body_bytes>.
+
+Define [[serve_command]] taking args:
+    Set port_num to 8377.
+    Set root_text to ".".
+    If [[len]](args) is greater than 2:
+        Do [[usage_fail]]().
+    If args:
+        Set port_text to [[args.pop]](0).
+        Try:
+            Set port_num to [[int]](port_text).
+        Catch ValueError:
+            Do [[usage_fail]]().
+        If port_num is less than 1024:
+            Do [[usage_fail]]().
+        If port_num is greater than 65535:
+            Do [[usage_fail]]().
+    If args:
+        Set root_text to [[args.pop]](0).
+    Do [[serve_config.update]]({"root": root_text}).
+    Set server to [[wsgiref.simple_server.make_server]]("127.0.0.1", port_num, wsgi_app).
+    Do [[out_line]]("ui: serving http://127.0.0.1:" plus [[str]](port_num) plus "/").
+    Do [[server.serve_forever]]().
+
+Define [[render_command]] taking args:
+    If not args:
+        Do [[usage_fail]]().
+    If [[len]](args) is greater than 2:
+        Do [[usage_fail]]().
+    Set outdir_text to [[args.pop]](0).
+    Set root_text to ".".
+    If args:
+        Set root_text to [[args.pop]](0).
+    Set out_path to [[pathlib.Path]](outdir_text).
+    Set blocked to False.
+    If [[out_path.is_symlink]]():
+        Set blocked to True.
+    Otherwise if [[out_path.is_dir]]():
+        Set entries to [[list]]([[out_path.iterdir]]()).
+        If entries:
+            Set blocked to True.
+    Otherwise if [[out_path.exists]]():
+        Set blocked to True.
+    If blocked:
+        Do [[err_line]]("ui: render: destination not empty: " plus outdir_text).
+        Exit with 2.
+    Set root_path to [[pathlib.Path]](root_text).
+    Set result to [[render_tree]](root_path, out_path).
+    If [[result_kind]](result) equals "err":
+        Do [[err_line]]([[result_value]](result)).
+        Exit with 1.
+    Set summary to [[result_value]](result).
+    For each meter_line in [[summary.get]]("meter_lines", <>):
+        Do [[out_line]](meter_line).
+    Do [[out_line]]("ui: ok " plus [[str]]([[summary.get]]("guidelines", 0)) plus " guidelines " plus [[str]]([[summary.get]]("pages_total", 0)) plus " pages").
+
+Define [[check_ui_command]] taking args:
+    If [[len]](args) is greater than 1:
+        Do [[usage_fail]]().
+    Set root_text to ".".
+    If args:
+        Set root_text to [[args.pop]](0).
+    Set selftest_detail to [[selftest_violation]]().
+    If selftest_detail:
+        Do [[err_line]](selftest_detail).
+        Exit with 1.
+    Set root_path to [[pathlib.Path]](root_text).
+    Set dir_one to [[tempfile.mkdtemp]]().
+    Set dir_two to [[tempfile.mkdtemp]]().
+    Set path_one to [[pathlib.Path]](dir_one).
+    Set path_two to [[pathlib.Path]](dir_two).
+    Set detail to "".
+    Set summary to {}.
+    Set result_one to [[render_tree]](root_path, path_one).
+    If [[result_kind]](result_one) equals "err":
+        Set detail to [[result_value]](result_one).
+    Otherwise:
+        Set summary to [[result_value]](result_one).
+        Set result_two to [[render_tree]](root_path, path_two).
+        If [[result_kind]](result_two) equals "err":
+            Set detail to [[result_value]](result_two).
+    If detail equals "":
+        Set rel_one to [[walk_files]](path_one).
+        Set rel_two to [[walk_files]](path_two).
+        If rel_one does not equal rel_two:
+            Set detail to "ui: render not byte-stable: tree".
+    If detail equals "":
+        For each rel_text in rel_one:
+            If detail equals "":
+                Set file_one to [[path_one.joinpath]](rel_text).
+                Set file_two to [[path_two.joinpath]](rel_text).
+                Set bytes_one to [[file_one.read_bytes]]().
+                Set bytes_two to [[file_two.read_bytes]]().
+                If bytes_one does not equal bytes_two:
+                    Set detail to "ui: render not byte-stable: " plus rel_text.
+                Otherwise:
+                    Set page_text to [[bytes_one.decode]]("utf-8").
+                    Set invariant_name to [[page_invariant_name]](page_text).
+                    If invariant_name:
+                        Set detail to "ui: page invariant failed: " plus rel_text plus " " plus invariant_name.
+    Do [[shutil.rmtree]](dir_one, ignore_errors=True).
+    Do [[shutil.rmtree]](dir_two, ignore_errors=True).
+    If detail:
+        Do [[err_line]](detail).
+        Exit with 1.
+    For each meter_line in [[summary.get]]("meter_lines", <>):
+        Do [[out_line]](meter_line).
+    Do [[out_line]]("ui: ok " plus [[str]]([[summary.get]]("guidelines", 0)) plus " guidelines " plus [[str]]([[summary.get]]("pages_total", 0)) plus " pages").
+    Do [[out_line]]("ui: check ok").
+
+Define [[request_command]] taking args:
+    If [[len]](args) is less than 2:
+        Do [[usage_fail]]().
+    If [[len]](args) is greater than 3:
+        Do [[usage_fail]]().
+    Set method_text to [[args.pop]](0).
+    Set path_raw to [[args.pop]](0).
+    Set root_text to ".".
+    If args:
+        Set root_text to [[args.pop]](0).
+    Set query_parts to [[path_raw.split]]("?", 1).
+    Set no_query to [[query_parts.pop]](0).
+    Set path_text to [[urllib.parse.unquote]](no_query).
+    Set root_path to [[pathlib.Path]](root_text).
+    Set triple to [[respond]](root_path, method_text, path_text).
+    Set triple_copy to [[list]](triple).
+    Set status_text to [[triple_copy.pop]](0).
+    Set headers to [[triple_copy.pop]](0).
+    Set body_bytes to [[triple_copy.pop]](0).
+    Set status_parts to [[status_text.split]](" ", 1).
+    Set status_code to [[status_parts.pop]](0).
+    Do [[out_line]]("HTTP " plus status_code).
+    For each header_pair in headers:
+        Set pair_copy to [[list]](header_pair).
+        Set header_name to [[pair_copy.pop]](0).
+        Set header_value to [[pair_copy.pop]](0).
+        Do [[out_line]](header_name plus ": " plus header_value).
+    Do [[out_line]]("").
+    Do [[sys.stdout.buffer.write]](body_bytes).
+    Do [[sys.stdout.buffer.flush]]().
+
+Set argv_list to [[list]](sys.argv).
+Do [[argv_list.pop]](0).
+If not argv_list:
+    Do [[usage_fail]]().
+Set command_name to [[argv_list.pop]](0).
+If command_name equals "serve":
+    Do [[serve_command]](argv_list).
+Otherwise if command_name equals "render":
+    Do [[render_command]](argv_list).
+Otherwise if command_name equals "check":
+    Do [[check_ui_command]](argv_list).
+Otherwise if command_name equals "request":
+    Do [[request_command]](argv_list).
+Otherwise:
+    Do [[usage_fail]]().

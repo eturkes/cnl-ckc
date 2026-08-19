@@ -297,9 +297,10 @@ Architecture rulings:
   one `.emm` per entry point, all under `tools/` (regen roots + dist
   exclusion hold). Stdlib trust surface, enumerated: wsgiref (HTTP),
   html + urllib.parse (escaping/decoding), pathlib/os (fs + atomic
-  replace), hashlib (digests), subprocess (shared validator), tarfile +
-  gzip (dist) — hand-written code owns project semantics only, never
-  HTTP parsing, URL grammar, archive encoding, or fs primitives.
+  replace), hashlib (digests), subprocess (shared validator), tempfile +
+  shutil (snapshot staging + scratch trees), re (census/anchor parsing),
+  tarfile + gzip (dist) — hand-written code owns project semantics only,
+  never HTTP parsing, URL grammar, archive encoding, or fs primitives.
 - Serve time reads committed artifacts + the adjudication ledger only —
   no swipl, no LLM, no socket beyond loopback. All derivation (query
   compile, answers/traces, graph) runs in the pipeline and is committed
@@ -410,7 +411,7 @@ lands; only the shared-file implementations serialize.
   reinterpreting append staleness exactly the changed docs; prune row at
   close). README Operating: rejected-documents-outrank-new-work rule +
   review-batch commit checkpoint.
-- M4.3 OPEN (kernel) — reviewer UI read core: `tools/ui.emm` serve —
+- M4.3 DONE (kernel) — reviewer UI read core: `tools/ui.emm` serve —
   repo-level guideline picker (generic `guidelines/<id>` discovery,
   namespaced routes, absent-artifact families handled) → guideline index
   w/ status chips + meter → doc view: ACE text, the doc's coverage
@@ -428,7 +429,18 @@ lands; only the shared-file implementations serialize.
   corpus-string fixtures + design system w/ keyboard/contrast/focus
   invariants + chromiumfish headless visual QA. `ui.py render <outdir>`
   static export, byte-stable, covering every ace() region — carries the
-  faithfulness-review polish row's acceptance verbatim (prune at close).
+  faithfulness-review polish row's acceptance verbatim (pruned at close).
+  CLOSE: contract `.scratch/contracts/m4u3.md` (v1 + RV1-15 + AM1-10 +
+  post-DONE amendments); committed gate = goal.emm `check_ui` (live meter
+  `goal: ui ok 1 guidelines 188 pages` + fixture meter `goal: ui fixtures
+  ok 63 red 11 green`; AM7 case format incl. tree-order/empty-dirs sidecar
+  materialization); mutation 45/53 committed-killed (M09/M11/M48 via
+  two-fault `missing-ace`) + 6 RV14-scratch (M24 M30 M31 M36 M47 M52) + 2
+  RV4-removed, determinism 23/23 (920 renders one digest); F06 fuzz find
+  (escaped-text href misread in extract_hrefs) fixed + `escaped-href-text`
+  green regression; full check green. main=87% 208K pre-compaction + 26%
+  62K post-compaction close,
+  mate=104% 249K (rev2-m4u3, died provider-flag; next test-m4u3 92% 221K).
 - M4.4 OPEN (kernel) — adjudication mutation path: the verdict form +
   POST pipeline implementing the mutation-safety ruling wholesale
   (hidden subject digest → 409 on drift; shared subprocess validator;
