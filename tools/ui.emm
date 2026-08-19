@@ -11,7 +11,7 @@ Use tempfile.
 Use urllib.parse.
 Use wsgiref.simple_server.
 
-Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>] [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]".
+Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]".
 Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
 Set chip_states to <"approved", "rejected", "stale", "unreviewed">.
 Set ledger_header_text to "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
@@ -953,23 +953,18 @@ Define [[build_review_page]] taking model, docid:
     Do [[parts.append]]("<h1>review " plus [[esc_text]](docid) plus " " plus [[chip_html]](state) plus "</h1>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Adjudication subject</h2>").
+    If state equals "stale":
+        Do [[parts.append]]("<p>bundle differs</p>").
     Do [[parts.append]]("<dl>").
     Do [[parts.append]]("<dt>current review_sha256</dt><dd><code>" plus [[esc_text]](current_digest) plus "</code></dd>").
-    Do [[parts.append]]("</dl>").
-    Do [[parts.append]]("</section>").
     If has_row:
-        Do [[parts.append]]("<section>").
-        Do [[parts.append]]("<h2>Recorded verdict</h2>").
-        If state equals "stale":
-            Do [[parts.append]]("<p>bundle differs</p>").
-        Do [[parts.append]]("<dl>").
         Do [[parts.append]]("<dt>verdict</dt><dd>" plus [[esc_text]](row_verdict) plus "</dd>").
         Do [[parts.append]]("<dt>reviewer</dt><dd>" plus [[esc_text]](row_reviewer) plus "</dd>").
         Do [[parts.append]]("<dt>date</dt><dd>" plus [[esc_text]](row_date) plus "</dd>").
         Do [[parts.append]]("<dt>comment</dt><dd>" plus [[esc_text]](row_comment) plus "</dd>").
         Do [[parts.append]]("<dt>pinned review_sha256</dt><dd><code>" plus [[esc_text]]([[ledger_digests.get]](docid, "")) plus "</code></dd>").
-        Do [[parts.append]]("</dl>").
-        Do [[parts.append]]("</section>").
+    Do [[parts.append]]("</dl>").
+    Do [[parts.append]]("</section>").
     Set approved_checked to "".
     Set rejected_checked to "".
     If row_verdict equals "approved":
@@ -1215,9 +1210,14 @@ Define [[review_shaped]] taking path_text:
     Set gid_seg to [[segs.pop]](0).
     Set mid_seg to [[segs.pop]](0).
     Set leaf_seg to [[segs.pop]](0).
+    If gid_seg equals "":
+        Give back False.
     If mid_seg does not equal "review":
         Give back False.
     If not [[leaf_seg.endswith]](".html"):
+        Give back False.
+    Set stem_text to [[leaf_seg.removesuffix]](".html").
+    If stem_text equals "":
         Give back False.
     Give back True.
 
@@ -1353,7 +1353,7 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     Set tool_dir to goal_py.parent.
     Set repo_root to tool_dir.parent.
     Set guideline_path to [[model.get]]("path", None).
-    Set derive_command to <sys.executable, "-P", [[str]](goal_py), "derive-review-manifest", [[str]](guideline_path)>.
+    Set derive_command to <sys.executable, "-P", [[str]](goal_py), "derive-review-manifest", [[str]]([[guideline_path.resolve]]())>.
     Set derive_ok to True.
     Set derive_result to None.
     Try:

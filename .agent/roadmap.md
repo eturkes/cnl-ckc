@@ -298,7 +298,8 @@ Architecture rulings:
   exclusion hold). Stdlib trust surface, enumerated: wsgiref (HTTP),
   html + urllib.parse (escaping/decoding), pathlib/os (fs + atomic
   replace), hashlib (digests), subprocess (shared validator), tempfile +
-  shutil (snapshot staging + scratch trees), re (census/anchor parsing),
+  shutil (snapshot staging + scratch trees), datetime (UTC verdict
+  stamps), re (census/anchor parsing),
   tarfile + gzip (dist) — hand-written code owns project semantics only,
   never HTTP parsing, URL grammar, archive encoding, or fs primitives.
 - Serve time reads committed artifacts + the adjudication ledger only —
@@ -441,14 +442,21 @@ lands; only the shared-file implementations serialize.
   green regression; full check green. main=87% 208K pre-compaction + 26%
   62K post-compaction close,
   mate=104% 249K (rev2-m4u3, died provider-flag; next test-m4u3 92% 221K).
-- M4.4 OPEN (kernel) — adjudication mutation path: the verdict form +
-  POST pipeline implementing the mutation-safety ruling wholesale
-  (hidden subject digest → 409 on drift; shared subprocess validator;
-  CAS + tmp/fsync/`os.replace`; CSRF token + Host/Origin checks;
-  reviewer-grammar + UTC date stamping); committed write-path battery:
-  GET→artifact-change→POST refusal, two-writers-from-same-bytes, foreign
-  origin/missing token no-mutation, invalid rows rejected byte-exactly,
-  crash-mid-write leaves prior ledger intact.
+- M4.4 DONE (kernel) — adjudication mutation path shipped wholesale:
+  review form (single current-state `<dl>`, CSRF + prefill) + POST
+  pipeline steps 3-20 (Host/Origin/CT/decode/field-closure → CSRF →
+  T7 subject-drift 409 → ledger CAS 409 → dest guard → mkstemp/write/
+  fsync/chmod → snapshot ledger-validate → fault seam → `os.replace` →
+  303) + request/serve CLI + `goal.py derive-review-manifest` +
+  manifest-parity gate + POST-materialization harness law (after/ +
+  absent-globs sidecars). Corpus: 17 verdict-* red cases / 117 rows
+  (test-m4u4 harvest + 2 rev2 rows: duplicate-traversal, U+001F).
+  Reviewer findings fixed + acceptance-passed: empty-segment 405
+  shape, relative-root derive `resolve()`, one-dl panel, usage `*`
+  (AM6 regen-clobber — both reviewer lenses caught impl-regenerated
+  green). Gate: check ok 80 red/11 green fixtures, 374 pages; battery
+  16/16. main=92% 221K peak (boundaries 89% 213K + 92% 221K) /
+  mate=102% 245K (test-m4u4 past-window, steered out).
 - M4.5 OPEN (kernel, oracle) — question projection: the closed v1 query
   grammar over `question(drs(...))` boxes (families + rejects per the
   architecture ruling; probe corpus banked) compiling to v1-vocabulary

@@ -1,0 +1,10 @@
+# argv<TAB>rc<TAB>stderr_fixture<TAB>stdout_fixture
+request PUT /g/alpha/review/a-10.html @TREE@	0	-	put-review.stdout.golden
+request HEAD /g/alpha/review/a-10.html @TREE@	0	-	head-review.stdout.golden
+request post /g/alpha/review/a-10.html @TREE@	0	-	lower-post-review.stdout.golden
+request POST /g/alpha/doc/a-10.html @TREE@ --body verdict=approved&reviewer=alice&comment=&review_sha256=734514ff44dbdd920e093ffb8ac8c22c8152183cb0e8d528b342d9ad4e1580a9&ledger_sha256=absent&csrf=tok --token tok --now 2026-08-19T12:34:56Z	0	-	post-doc.stdout.golden
+request PUT /g/alpha/doc/a-10.html @TREE@	0	-	put-doc.stdout.golden
+request POST /g/alpha/review/a-10 @TREE@ --body verdict=approved&reviewer=alice&comment=&review_sha256=734514ff44dbdd920e093ffb8ac8c22c8152183cb0e8d528b342d9ad4e1580a9&ledger_sha256=absent&csrf=tok --token tok --now 2026-08-19T12:34:56Z	0	-	post-near-shape.stdout.golden
+request GET /g/alpha/review/missing.html @TREE@	0	-	get-unknown-review.stdout.golden
+request POST /g/alpha/review/missing.html @TREE@ --header Origin:https://evil.test --body verdict=approved&reviewer=alice&comment=&review_sha256=734514ff44dbdd920e093ffb8ac8c22c8152183cb0e8d528b342d9ad4e1580a9&ledger_sha256=absent&csrf=tok --token tok --now 2026-08-19T12:34:56Z	0	-	post-unknown-doc.stdout.golden
+request POST /g/missing/review/a-10.html @TREE@ --header Host:evil --body verdict=approved&reviewer=alice&comment=&review_sha256=734514ff44dbdd920e093ffb8ac8c22c8152183cb0e8d528b342d9ad4e1580a9&ledger_sha256=absent&csrf=tok --token tok --now 2026-08-19T12:34:56Z	0	-	post-unknown-gid.stdout.golden

@@ -10,7 +10,7 @@ import sys
 import tempfile
 import urllib.parse
 import wsgiref.simple_server
-usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>] [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]"
+usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]"
 census_rx = re.compile("identify the ([0-9]+) payloads below")
 chip_states = ["approved", "rejected", "stale", "unreviewed"]
 ledger_header_text = "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
@@ -913,23 +913,18 @@ def build_review_page(model, docid):
     parts.append("<h1>review " + esc_text(docid) + " " + chip_html(state) + "</h1>")
     parts.append("<section>")
     parts.append("<h2>Adjudication subject</h2>")
+    if state == "stale":
+        parts.append("<p>bundle differs</p>")
     parts.append("<dl>")
     parts.append("<dt>current review_sha256</dt><dd><code>" + esc_text(current_digest) + "</code></dd>")
-    parts.append("</dl>")
-    parts.append("</section>")
     if has_row:
-        parts.append("<section>")
-        parts.append("<h2>Recorded verdict</h2>")
-        if state == "stale":
-            parts.append("<p>bundle differs</p>")
-        parts.append("<dl>")
         parts.append("<dt>verdict</dt><dd>" + esc_text(row_verdict) + "</dd>")
         parts.append("<dt>reviewer</dt><dd>" + esc_text(row_reviewer) + "</dd>")
         parts.append("<dt>date</dt><dd>" + esc_text(row_date) + "</dd>")
         parts.append("<dt>comment</dt><dd>" + esc_text(row_comment) + "</dd>")
         parts.append("<dt>pinned review_sha256</dt><dd><code>" + esc_text(ledger_digests.get(docid, "")) + "</code></dd>")
-        parts.append("</dl>")
-        parts.append("</section>")
+    parts.append("</dl>")
+    parts.append("</section>")
     approved_checked = ""
     rejected_checked = ""
     if row_verdict == "approved":
@@ -1163,9 +1158,14 @@ def review_shaped(path_text):
     gid_seg = segs.pop(0)
     mid_seg = segs.pop(0)
     leaf_seg = segs.pop(0)
+    if gid_seg == "":
+        return False
     if mid_seg != "review":
         return False
     if not leaf_seg.endswith(".html"):
+        return False
+    stem_text = leaf_seg.removesuffix(".html")
+    if stem_text == "":
         return False
     return True
 def method_response(shaped):
@@ -1293,7 +1293,7 @@ def handle_verdict_post(model, gid, docid, meta):
     tool_dir = goal_py.parent
     repo_root = tool_dir.parent
     guideline_path = model.get("path", None)
-    derive_command = [sys.executable, "-P", str(goal_py), "derive-review-manifest", str(guideline_path)]
+    derive_command = [sys.executable, "-P", str(goal_py), "derive-review-manifest", str(guideline_path.resolve())]
     derive_ok = True
     derive_result = None
     try:

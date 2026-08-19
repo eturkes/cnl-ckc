@@ -2352,7 +2352,7 @@ def check_ui():
         violation("ui-fixtures", "is a symlink: " + str(fixtures_root))
     if not fixtures_root.is_dir():
         violation("ui-fixtures", "missing: " + str(fixtures_root))
-    red_required = ["digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid"]
+    red_required = ["digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-create", "verdict-ok-replace", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
     green_required = ["basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
     red_count = 0
     green_count = 0
