@@ -1,3 +1,4 @@
+Use datetime.
 Use hashlib.
 Use html.
 Use os.
@@ -10,9 +11,11 @@ Use tempfile.
 Use urllib.parse.
 Use wsgiref.simple_server.
 
-Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>]".
+Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>] [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]".
 Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
 Set chip_states to <"approved", "rejected", "stale", "unreviewed">.
+Set ledger_header_text to "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
+Set verdict_field_names to <"verdict", "reviewer", "comment", "review_sha256", "ledger_sha256", "csrf">.
 Set serve_config to {}.
 
 Define [[out_line]] taking text:
@@ -34,6 +37,9 @@ Define [[usage_fail]] taking nothing:
 Define [[esc_text]] taking value:
     Give back [[html.escape]](value, quote=False).
 
+Define [[esc_attr]] taking value:
+    Give back [[html.escape]](value, quote=True).
+
 Define [[url_seg]] taking value:
     Give back [[urllib.parse.quote]](value, safe="").
 
@@ -53,6 +59,55 @@ Define [[valid_ui_id]] taking value:
     If [[len]](value_bytes) is greater than 250:
         Give back False.
     Give back subset.
+
+Define [[valid_post_date]] taking date_text:
+    If [[len]](date_text) does not equal 20:
+        Give back False.
+    Set digit_chars to [[set]]("0123456789").
+    Set position to 0.
+    For each char_text in date_text:
+        Set expected to "".
+        If position equals 4:
+            Set expected to "-".
+        If position equals 7:
+            Set expected to "-".
+        If position equals 10:
+            Set expected to "T".
+        If position equals 13:
+            Set expected to ":".
+        If position equals 16:
+            Set expected to ":".
+        If position equals 19:
+            Set expected to "Z".
+        If expected:
+            If char_text does not equal expected:
+                Give back False.
+        Otherwise:
+            Set is_digit to char_text is in digit_chars.
+            If not is_digit:
+                Give back False.
+        Set position to position plus 1.
+    Try:
+        Do [[datetime.datetime.strptime]](date_text, "%Y-%m-%dT%H:%M:%SZ").
+    Catch ValueError:
+        Give back False.
+    Give back True.
+
+Define [[valid_hex64]] taking value:
+    If [[len]](value) does not equal 64:
+        Give back False.
+    Set allowed to [[set]]("0123456789abcdef").
+    Set chars to [[set]](value).
+    Give back [[chars.issubset]](allowed).
+
+Define [[field_text_ok]] taking value:
+    For each char_text in value:
+        Set code_point to [[ord]](char_text).
+        If code_point is less than 32:
+            Give back False.
+        If code_point equals 127:
+            Give back False.
+    Give back True.
 
 Define [[err]] taking detail:
     Give back <"err", detail>.
@@ -255,12 +310,15 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
     For each docid in docids:
         Do [[states.update]]({docid: "unreviewed"}).
     Set ledger_digests to {}.
+    Set ledger_rows to {}.
+    Set ledger_file_digest to "absent".
     If not [[ledger_path.is_file]]():
-        Give back [[ok]](<states, ledger_digests>).
+        Give back [[ok]](<states, ledger_digests, ledger_rows, ledger_file_digest>).
     Try:
         Set ledger_bytes to [[ledger_path.read_bytes]]().
     Catch OSError:
         Give back [[err]]("ui: viewmodel: " plus gid plus " missing audit/adjudication.tsv").
+    Set ledger_file_digest to [[sha256_hex]](ledger_bytes).
     Set goal_py to [[goal_py_path]]().
     Set scratch_text to [[tempfile.mkdtemp]]().
     Set scratch_dir to [[pathlib.Path]](scratch_text).
@@ -291,13 +349,17 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
         Set docid to [[fields.pop]](0).
         Set row_digest to [[fields.pop]](0).
         Set verdict to [[fields.pop]](0).
+        Set reviewer_field to [[fields.pop]](0).
+        Set date_field to [[fields.pop]](0).
+        Set comment_field to [[fields.pop]](0).
         Set current_digest to [[review_by_docid.get]](docid, "").
         Do [[ledger_digests.update]]({docid: row_digest}).
+        Do [[ledger_rows.update]]({docid: <verdict, reviewer_field, date_field, comment_field>}).
         If row_digest equals current_digest:
             Do [[states.update]]({docid: verdict}).
         Otherwise:
             Do [[states.update]]({docid: "stale"}).
-    Give back [[ok]](<states, ledger_digests>).
+    Give back [[ok]](<states, ledger_digests, ledger_rows, ledger_file_digest>).
 
 Define [[build_guideline_model]] taking root_path, gid:
     Set guideline_path to [[root_path.joinpath]]("guidelines", gid).
@@ -531,6 +593,8 @@ Define [[build_guideline_model]] taking root_path, gid:
     Set states_copy to [[list]](states_pair).
     Set doc_states to [[states_copy.pop]](0).
     Set ledger_digests to [[states_copy.pop]](0).
+    Set ledger_rows to [[states_copy.pop]](0).
+    Set ledger_file_digest to [[states_copy.pop]](0).
     Set model to {}.
     Do [[model.update]]({"gid": gid}).
     Do [[model.update]]({"path": guideline_path}).
@@ -551,6 +615,8 @@ Define [[build_guideline_model]] taking root_path, gid:
     Do [[model.update]]({"review_by_docid": review_by_docid}).
     Do [[model.update]]({"doc_states": doc_states}).
     Do [[model.update]]({"ledger_digests": ledger_digests}).
+    Do [[model.update]]({"ledger_rows": ledger_rows}).
+    Do [[model.update]]({"ledger_file_digest": ledger_file_digest}).
     Do [[model.update]]({"region_rows": region_rows}).
     Set counts to {}.
     Do [[counts.update]]({"regions": [[len]](coverage_rows)}).
@@ -855,11 +921,86 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Do [[nav_parts.append]]("<a href=\"../index.html\">up: " plus [[esc_text]](gid) plus "</a>").
     If next_id:
         Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](next_id) plus ".html\">next: " plus [[esc_text]](next_id) plus "</a>").
+    Do [[nav_parts.append]]("<a href=\"../review/" plus [[url_seg]](docid) plus ".html\">review: " plus [[esc_text]](docid) plus "</a>").
     Set nav_joiner to " · ".
     Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
     Set body_html to [[joiner.join]](parts).
     Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / " plus [[esc_text]](docid).
     Give back [[page_html]](docid, crumb_html, body_html).
+
+Define [[build_review_page]] taking model, docid:
+    Set gid to [[model.get]]("gid", "").
+    Set doc_states to [[model.get]]("doc_states", {}).
+    Set state to [[doc_states.get]](docid, "unreviewed").
+    Set review_by_docid to [[model.get]]("review_by_docid", {}).
+    Set ledger_digests to [[model.get]]("ledger_digests", {}).
+    Set ledger_rows to [[model.get]]("ledger_rows", {}).
+    Set ledger_file_digest to [[model.get]]("ledger_file_digest", "absent").
+    Set current_digest to [[review_by_docid.get]](docid, "").
+    Set token_text to [[serve_config.get]]("token", "").
+    Set row_reviewer to "".
+    Set row_comment to "".
+    Set row_verdict to "".
+    Set has_row to docid is in ledger_rows.
+    If has_row:
+        Set row_fields to [[list]]([[ledger_rows.get]](docid)).
+        Set row_verdict to [[row_fields.pop]](0).
+        Set row_reviewer to [[row_fields.pop]](0).
+        Set row_date to [[row_fields.pop]](0).
+        Set row_comment to [[row_fields.pop]](0).
+    Set joiner to "\n".
+    Set parts to <>.
+    Do [[parts.append]]("<h1>review " plus [[esc_text]](docid) plus " " plus [[chip_html]](state) plus "</h1>").
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Adjudication subject</h2>").
+    Do [[parts.append]]("<dl>").
+    Do [[parts.append]]("<dt>current review_sha256</dt><dd><code>" plus [[esc_text]](current_digest) plus "</code></dd>").
+    Do [[parts.append]]("</dl>").
+    Do [[parts.append]]("</section>").
+    If has_row:
+        Do [[parts.append]]("<section>").
+        Do [[parts.append]]("<h2>Recorded verdict</h2>").
+        If state equals "stale":
+            Do [[parts.append]]("<p>bundle differs</p>").
+        Do [[parts.append]]("<dl>").
+        Do [[parts.append]]("<dt>verdict</dt><dd>" plus [[esc_text]](row_verdict) plus "</dd>").
+        Do [[parts.append]]("<dt>reviewer</dt><dd>" plus [[esc_text]](row_reviewer) plus "</dd>").
+        Do [[parts.append]]("<dt>date</dt><dd>" plus [[esc_text]](row_date) plus "</dd>").
+        Do [[parts.append]]("<dt>comment</dt><dd>" plus [[esc_text]](row_comment) plus "</dd>").
+        Do [[parts.append]]("<dt>pinned review_sha256</dt><dd><code>" plus [[esc_text]]([[ledger_digests.get]](docid, "")) plus "</code></dd>").
+        Do [[parts.append]]("</dl>").
+        Do [[parts.append]]("</section>").
+    Set approved_checked to "".
+    Set rejected_checked to "".
+    If row_verdict equals "approved":
+        Set approved_checked to " checked".
+    If row_verdict equals "rejected":
+        Set rejected_checked to " checked".
+    Do [[parts.append]]("<section>").
+    Do [[parts.append]]("<h2>Verdict</h2>").
+    Do [[parts.append]]("<form method=\"post\">").
+    Do [[parts.append]]("<fieldset>").
+    Do [[parts.append]]("<legend>verdict</legend>").
+    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" plus approved_checked plus "> approved</label>").
+    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" plus rejected_checked plus "> rejected</label>").
+    Do [[parts.append]]("</fieldset>").
+    Do [[parts.append]]("<label for=\"reviewer\">reviewer (self-asserted local identifier)</label>").
+    Do [[parts.append]]("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" required value=\"" plus [[esc_attr]](row_reviewer) plus "\">").
+    Do [[parts.append]]("<label for=\"comment\">comment</label>").
+    Do [[parts.append]]("<textarea id=\"comment\" name=\"comment\">" plus [[esc_text]](row_comment) plus "</textarea>").
+    Do [[parts.append]]("<input type=\"hidden\" name=\"review_sha256\" value=\"" plus [[esc_attr]](current_digest) plus "\">").
+    Do [[parts.append]]("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" plus [[esc_attr]](ledger_file_digest) plus "\">").
+    Do [[parts.append]]("<input type=\"hidden\" name=\"csrf\" value=\"" plus [[esc_attr]](token_text) plus "\">").
+    Do [[parts.append]]("<button>Record verdict</button>").
+    Do [[parts.append]]("</form>").
+    Do [[parts.append]]("</section>").
+    Set nav_parts to <>.
+    Do [[nav_parts.append]]("<a href=\"../doc/" plus [[url_seg]](docid) plus ".html\">doc: " plus [[esc_text]](docid) plus "</a>").
+    Set nav_joiner to " · ".
+    Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
+    Set body_html to [[joiner.join]](parts).
+    Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / <a href=\"../doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]](docid) plus "</a> / review".
+    Give back [[page_html]]("review " plus docid, crumb_html, body_html).
 
 Define [[build_error_page]] taking title_text, heading_text, body_html:
     Set parts to <>.
@@ -933,7 +1074,11 @@ Define [[render_pages]] taking models:
             Set doc_page to "g/" plus [[url_seg]](gid) plus "/doc/" plus [[url_seg]](docid) plus ".html".
             Do [[page_order.append]](doc_page).
             Do [[pages.update]]({doc_page: [[build_doc_page]](model, docid, doc_data, [[prev_map.get]](docid, ""), [[next_map.get]](docid, ""))}).
-        Set page_count to 1 plus [[len]](docids).
+        For each docid in docids:
+            Set review_page to "g/" plus [[url_seg]](gid) plus "/review/" plus [[url_seg]](docid) plus ".html".
+            Do [[page_order.append]](review_page).
+            Do [[pages.update]]({review_page: [[build_review_page]](model, docid)}).
+        Set page_count to 1 plus [[len]](docids) plus [[len]](docids).
         Do [[meter_lines.append]]("ui: " plus gid plus " docs=" plus [[str]]([[len]](docids)) plus " regions=" plus [[str]]([[counts.get]]("regions", 0)) plus " pages=" plus [[str]](page_count)).
     For each page_path in page_order:
         Set page_text to [[pages.get]](page_path, "").
@@ -1022,6 +1167,10 @@ Define [[selftest_violation]] taking nothing:
         Give back "ui: selftest failed: esc_text".
     If [[esc_text]]("plain") does not equal "plain":
         Give back "ui: selftest failed: esc_text".
+    If [[esc_attr]]("<&>\"'") does not equal "&lt;&amp;&gt;&quot;&#x27;":
+        Give back "ui: selftest failed: esc_attr".
+    If [[esc_attr]]("plain") does not equal "plain":
+        Give back "ui: selftest failed: esc_attr".
     Set unique_values to <>.
     For each role in [[sorted]](palette):
         Set pair to [[palette.get]](role, <>).
@@ -1056,13 +1205,49 @@ Define [[not_found_response]] taking nothing:
     Set body_bytes to [[page_text.encode]]("utf-8").
     Give back <"404 Not Found", [[base_headers]](), body_bytes>.
 
-Define [[method_response]] taking nothing:
-    Set body_html to "<p>Only GET is supported.</p>".
+Define [[review_shaped]] taking path_text:
+    If not [[path_text.startswith]]("/g/"):
+        Give back False.
+    Set rest_text to [[path_text.removeprefix]]("/g/").
+    Set segs to [[rest_text.split]]("/").
+    If [[len]](segs) does not equal 3:
+        Give back False.
+    Set gid_seg to [[segs.pop]](0).
+    Set mid_seg to [[segs.pop]](0).
+    Set leaf_seg to [[segs.pop]](0).
+    If mid_seg does not equal "review":
+        Give back False.
+    If not [[leaf_seg.endswith]](".html"):
+        Give back False.
+    Give back True.
+
+Define [[method_response]] taking shaped:
+    Set allow_value to "GET".
+    Set body_html to "<p>Only GET is supported on this page.</p>".
+    If shaped:
+        Set allow_value to "GET, POST".
+        Set body_html to "<p>Only GET and POST are supported on this page.</p>".
     Set page_text to [[build_error_page]]("method not allowed", "Method not allowed", body_html).
     Set body_bytes to [[page_text.encode]]("utf-8").
     Set headers to [[base_headers]]().
-    Do [[headers.append]]([[tuple]](<"Allow", "GET">)).
+    Do [[headers.append]]([[tuple]](<"Allow", allow_value>)).
     Give back <"405 Method Not Allowed", headers, body_bytes>.
+
+Define [[verdict_refusal]] taking status_text, heading_text, detail:
+    Set body_html to "<pre>" plus [[esc_text]](detail) plus "</pre>".
+    Set title_text to [[heading_text.lower]]().
+    Set page_text to [[build_error_page]](title_text, heading_text, body_html).
+    Set body_bytes to [[page_text.encode]]("utf-8").
+    Give back <status_text, [[base_headers]](), body_bytes>.
+
+Define [[redirect_response]] taking gid, docid:
+    Set location_value to "/g/" plus [[url_seg]](gid) plus "/review/" plus [[url_seg]](docid) plus ".html".
+    Set body_html to "<p>The verdict was recorded.</p>".
+    Set page_text to [[build_error_page]]("verdict recorded", "Verdict recorded", body_html).
+    Set body_bytes to [[page_text.encode]]("utf-8").
+    Set headers to [[base_headers]]().
+    Do [[headers.append]]([[tuple]](<"Location", location_value>)).
+    Give back <"303 See Other", headers, body_bytes>.
 
 Define [[error_response]] taking detail:
     Set body_html to "<pre>" plus [[esc_text]](detail) plus "</pre>".
@@ -1074,9 +1259,247 @@ Define [[page_response]] taking page_text:
     Set body_bytes to [[page_text.encode]]("utf-8").
     Give back <"200 OK", [[base_headers]](), body_bytes>.
 
-Define [[respond]] taking root_path, method_text, path_text:
+Define [[parse_form_fields]] taking body_bytes:
+    Set body_text to "".
+    Try:
+        Set body_text to [[body_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back [[err]]("ui: verdict: body not decodable").
+    Set parsed to {}.
+    Try:
+        Set parsed to [[urllib.parse.parse_qs]](body_text, keep_blank_values=True, strict_parsing=True, errors="strict", max_num_fields=32).
+    Catch ValueError:
+        Give back [[err]]("ui: verdict: body not parseable").
+    Catch UnicodeDecodeError:
+        Give back [[err]]("ui: verdict: body not parseable").
+    For each name in verdict_field_names:
+        Set present to name is in parsed.
+        If not present:
+            Give back [[err]]("ui: verdict: missing field " plus name).
+    For each name in verdict_field_names:
+        Set value_list to [[parsed.get]](name).
+        If [[len]](value_list) is greater than 1:
+            Give back [[err]]("ui: verdict: duplicate field " plus name).
+    For each key_name in parsed:
+        Set known to key_name is in verdict_field_names.
+        If not known:
+            Give back [[err]]("ui: verdict: unknown field " plus key_name).
+    Set fields to {}.
+    For each name in verdict_field_names:
+        Set value_list to [[list]]([[parsed.get]](name)).
+        Do [[fields.update]]({name: [[value_list.pop]](0)}).
+    Set verdict_value to [[fields.get]]("verdict").
+    Set verdict_ok to False.
+    If verdict_value equals "approved":
+        Set verdict_ok to True.
+    If verdict_value equals "rejected":
+        Set verdict_ok to True.
+    If not verdict_ok:
+        Give back [[err]]("ui: verdict: invalid verdict").
+    Set reviewer_value to [[fields.get]]("reviewer").
+    If not reviewer_value:
+        Give back [[err]]("ui: verdict: invalid reviewer").
+    If not [[field_text_ok]](reviewer_value):
+        Give back [[err]]("ui: verdict: invalid reviewer").
+    If not [[field_text_ok]]([[fields.get]]("comment")):
+        Give back [[err]]("ui: verdict: invalid comment").
+    If not [[valid_hex64]]([[fields.get]]("review_sha256")):
+        Give back [[err]]("ui: verdict: invalid review_sha256").
+    Set ledger_value to [[fields.get]]("ledger_sha256").
+    Set ledger_ok to [[valid_hex64]](ledger_value).
+    If ledger_value equals "absent":
+        Set ledger_ok to True.
+    If not ledger_ok:
+        Give back [[err]]("ui: verdict: invalid ledger_sha256").
+    Give back [[ok]](fields).
+
+Define [[discard_tmp]] taking tmp_text:
+    Try:
+        Do [[os.unlink]](tmp_text).
+    Catch OSError:
+        Set discard_failed to True.
+
+Define [[handle_verdict_post]] taking model, gid, docid, meta:
+    Set port_value to [[serve_config.get]]("port", 8377).
+    Set expected_host to "127.0.0.1:" plus [[str]](port_value).
+    If [[meta.get]]("host", "") does not equal expected_host:
+        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: host not allowed").
+    Set origin_value to [[meta.get]]("origin", None).
+    Set expected_origin to "http://" plus expected_host.
+    If origin_value does not equal None:
+        If origin_value does not equal expected_origin:
+            Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: origin not allowed").
+    If [[meta.get]]("content_type", "") does not equal "application/x-www-form-urlencoded":
+        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: unsupported content type").
+    Set body_bytes to [[meta.get]]("body", None).
+    If body_bytes equals None:
+        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: missing body").
+    Set fields_result to [[parse_form_fields]](body_bytes).
+    If [[result_kind]](fields_result) equals "err":
+        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", [[result_value]](fields_result)).
+    Set fields to [[result_value]](fields_result).
+    Set token_value to [[serve_config.get]]("token", "").
+    Set token_ok to True.
+    If token_value equals "":
+        Set token_ok to False.
+    If [[fields.get]]("csrf") does not equal token_value:
+        Set token_ok to False.
+    If not token_ok:
+        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: invalid csrf token").
+    Set data_result to [[doc_render_data]](model, docid).
+    If [[result_kind]](data_result) equals "err":
+        Give back [[error_response]]([[result_value]](data_result)).
+    Set goal_py to [[goal_py_path]]().
+    Set tool_dir to goal_py.parent.
+    Set repo_root to tool_dir.parent.
+    Set guideline_path to [[model.get]]("path", None).
+    Set derive_command to <sys.executable, "-P", [[str]](goal_py), "derive-review-manifest", [[str]](guideline_path)>.
+    Set derive_ok to True.
+    Set derive_result to None.
+    Try:
+        Set derive_result to [[subprocess.run]](derive_command, capture_output=True, cwd=[[str]](repo_root)).
+    Catch OSError:
+        Set derive_ok to False.
+    If not derive_ok:
+        Give back [[error_response]]("ui: verdict: manifest derivation failed: validator launch failed").
+    If derive_result.returncode does not equal 0:
+        Set relay to [[first_output_line]](derive_result).
+        Give back [[error_response]]("ui: verdict: manifest derivation failed: " plus relay).
+    Set manifest_bytes to derive_result.stdout.
+    Set manifest_text to "".
+    Try:
+        Set manifest_text to [[manifest_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back [[error_response]]("ui: verdict: manifest derivation failed: undecodable output").
+    Set fresh_digest to "".
+    For each line_text in [[manifest_text.split]]("\n"):
+        Set line_fields to [[line_text.split]]("\t").
+        If [[len]](line_fields) equals 7:
+            Set row_docid to [[line_fields.pop]](0).
+            If row_docid equals docid:
+                Set fresh_digest to [[line_fields.pop]]().
+    If fresh_digest equals "":
+        Give back [[error_response]]("ui: verdict: manifest derivation failed: docid row missing").
+    If [[fields.get]]("review_sha256") does not equal fresh_digest:
+        Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: subject changed").
+    If [[fields.get]]("ledger_sha256") does not equal [[model.get]]("ledger_file_digest", "absent"):
+        Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: ledger changed").
+    Set audit_dir to [[guideline_path.joinpath]]("audit").
+    Set ledger_path to [[audit_dir.joinpath]]("adjudication.tsv").
+    If [[ledger_path.is_symlink]]():
+        Give back [[error_response]]("ui: verdict: ledger not a regular file").
+    If [[ledger_path.exists]]():
+        If not [[ledger_path.is_file]]():
+            Give back [[error_response]]("ui: verdict: ledger not a regular file").
+    Set now_text to [[serve_config.get]]("now", "").
+    If now_text equals "":
+        Set now_value to [[datetime.datetime.now]](datetime.timezone.utc).
+        Set now_text to [[now_value.strftime]]("%Y-%m-%dT%H:%M:%SZ").
+    Set ledger_rows to [[model.get]]("ledger_rows", {}).
+    Set ledger_digests to [[model.get]]("ledger_digests", {}).
+    Set merged to {}.
+    For each row_docid in ledger_rows:
+        Set row_fields to [[list]]([[ledger_rows.get]](row_docid)).
+        Set row_verdict to [[row_fields.pop]](0).
+        Set row_reviewer to [[row_fields.pop]](0).
+        Set row_date to [[row_fields.pop]](0).
+        Set row_comment to [[row_fields.pop]](0).
+        Set row_digest to [[ledger_digests.get]](row_docid, "").
+        Do [[merged.update]]({row_docid: <row_digest, row_verdict, row_reviewer, row_date, row_comment>}).
+    Do [[merged.update]]({docid: <[[fields.get]]("review_sha256"), [[fields.get]]("verdict"), [[fields.get]]("reviewer"), now_text, [[fields.get]]("comment")>}).
+    Set out_lines to <>.
+    Do [[out_lines.append]](ledger_header_text).
+    Set tab_text to "\t".
+    For each row_docid in [[sorted]](merged):
+        Set row_fields to [[list]]([[merged.get]](row_docid)).
+        Set row_digest to [[row_fields.pop]](0).
+        Set row_verdict to [[row_fields.pop]](0).
+        Set row_reviewer to [[row_fields.pop]](0).
+        Set row_date to [[row_fields.pop]](0).
+        Set row_comment to [[row_fields.pop]](0).
+        Do [[out_lines.append]](row_docid plus tab_text plus row_digest plus tab_text plus row_verdict plus tab_text plus row_reviewer plus tab_text plus row_date plus tab_text plus row_comment).
+    Set joiner to "\n".
+    Set candidate_text to [[joiner.join]](out_lines) plus "\n".
+    Set candidate_bytes to [[candidate_text.encode]]("utf-8").
+    Set tmp_ok to True.
+    Set tmp_pair to None.
+    Try:
+        Set tmp_pair to [[tempfile.mkstemp]](dir=[[str]](audit_dir), prefix=".adjudication.tsv.").
+    Catch OSError:
+        Set tmp_ok to False.
+    If not tmp_ok:
+        Give back [[error_response]]("ui: verdict: ledger write failed").
+    Set pair_list to [[list]](tmp_pair).
+    Set tmp_fd to [[pair_list.pop]](0).
+    Set tmp_text to [[pair_list.pop]](0).
+    Set chmod_mode to 420.
+    Set write_ok to True.
+    Set written_count to 0.
+    Try:
+        Set written_count to [[os.write]](tmp_fd, candidate_bytes).
+        Do [[os.fsync]](tmp_fd).
+        Do [[os.close]](tmp_fd).
+        Do [[os.chmod]](tmp_text, chmod_mode).
+    Catch OSError:
+        Set write_ok to False.
+    If written_count does not equal [[len]](candidate_bytes):
+        Set write_ok to False.
+    If not write_ok:
+        Try:
+            Do [[os.close]](tmp_fd).
+        Catch OSError:
+            Set write_ok to False.
+        Do [[discard_tmp]](tmp_text).
+        Give back [[error_response]]("ui: verdict: ledger write failed").
+    Set snapshot_ok to True.
+    Set snap_text to "".
+    Set manifest_copy to None.
+    Try:
+        Set snap_text to [[tempfile.mkdtemp]]().
+        Set snap_dir to [[pathlib.Path]](snap_text).
+        Set manifest_copy to [[snap_dir.joinpath]]("manifest.tsv").
+        Do [[manifest_copy.write_bytes]](manifest_bytes).
+    Catch OSError:
+        Set snapshot_ok to False.
+    If not snapshot_ok:
+        If snap_text:
+            Do [[shutil.rmtree]](snap_text, ignore_errors=True).
+        Do [[discard_tmp]](tmp_text).
+        Give back [[error_response]]("ui: adjudication ledger invalid: validator launch failed").
+    Set validate_command to <sys.executable, "-P", [[str]](goal_py), "ledger-validate", tmp_text, [[str]](manifest_copy), "ui">.
+    Set validate_ok to True.
+    Set validate_result to None.
+    Try:
+        Set validate_result to [[subprocess.run]](validate_command, capture_output=True, cwd=[[str]](repo_root)).
+    Catch OSError:
+        Set validate_ok to False.
+    Do [[shutil.rmtree]](snap_text, ignore_errors=True).
+    If not validate_ok:
+        Do [[discard_tmp]](tmp_text).
+        Give back [[error_response]]("ui: adjudication ledger invalid: validator launch failed").
+    If validate_result.returncode does not equal 0:
+        Set relay to [[first_output_line]](validate_result).
+        Do [[discard_tmp]](tmp_text).
+        Give back [[error_response]]("ui: adjudication ledger invalid: " plus relay).
+    If [[serve_config.get]]("fault", "") equals "after-tmp-write":
+        Exit with 3.
+    Set replace_ok to True.
+    Try:
+        Do [[os.replace]](tmp_text, [[str]](ledger_path)).
+    Catch OSError:
+        Set replace_ok to False.
+    If not replace_ok:
+        Do [[discard_tmp]](tmp_text).
+        Give back [[error_response]]("ui: verdict: ledger write failed").
+    Give back [[redirect_response]](gid, docid).
+
+Define [[respond]] taking root_path, method_text, path_text, meta:
+    Set shaped to [[review_shaped]](path_text).
     If method_text does not equal "GET":
-        Give back [[method_response]]().
+        If method_text does not equal "POST":
+            Give back [[method_response]](shaped).
+        If not shaped:
+            Give back [[method_response]](shaped).
     Set model_result to [[build_viewmodel]](root_path).
     If [[result_kind]](model_result) equals "err":
         Give back [[error_response]]([[result_value]](model_result)).
@@ -1109,7 +1532,12 @@ Define [[respond]] taking root_path, method_text, path_text:
         Set gid_seg to [[segs.pop]](0).
         Set mid_seg to [[segs.pop]](0).
         Set leaf_seg to [[segs.pop]](0).
-        If mid_seg does not equal "doc":
+        Set mid_known to False.
+        If mid_seg equals "doc":
+            Set mid_known to True.
+        If mid_seg equals "review":
+            Set mid_known to True.
+        If not mid_known:
             Give back [[not_found_response]]().
         If not [[leaf_seg.endswith]](".html"):
             Give back [[not_found_response]]().
@@ -1121,6 +1549,13 @@ Define [[respond]] taking root_path, method_text, path_text:
         Set known to docid is in docids.
         If not known:
             Give back [[not_found_response]]().
+        If mid_seg equals "review":
+            If method_text equals "POST":
+                Give back [[handle_verdict_post]](model, gid_seg, docid, meta).
+            Set review_data_result to [[doc_render_data]](model, docid).
+            If [[result_kind]](review_data_result) equals "err":
+                Give back [[error_response]]([[result_value]](review_data_result)).
+            Give back [[page_response]]([[build_review_page]](model, docid)).
         Set data_result to [[doc_render_data]](model, docid).
         If [[result_kind]](data_result) equals "err":
             Give back [[error_response]]([[result_value]](data_result)).
@@ -1145,7 +1580,28 @@ Define [[wsgi_app]] taking environ, start_response:
     Set root_path to [[pathlib.Path]](root_text).
     Set method_text to [[environ.get]]("REQUEST_METHOD", "").
     Set path_text to [[environ.get]]("PATH_INFO", "").
-    Set triple to [[respond]](root_path, method_text, path_text).
+    Set meta to {}.
+    Do [[meta.update]]({"host": [[environ.get]]("HTTP_HOST", "")}).
+    Do [[meta.update]]({"origin": [[environ.get]]("HTTP_ORIGIN", None)}).
+    Do [[meta.update]]({"content_type": [[environ.get]]("CONTENT_TYPE", "")}).
+    Set body_value to None.
+    Set length_text to [[environ.get]]("CONTENT_LENGTH", "").
+    Set length_ok to True.
+    Set length_num to 0.
+    Try:
+        Set length_num to [[int]](length_text).
+    Catch ValueError:
+        Set length_ok to False.
+    If length_num is less than 0:
+        Set length_ok to False.
+    If length_ok:
+        Set stream to [[environ.get]]("wsgi.input", None).
+        If stream does not equal None:
+            Set read_bytes to [[stream.read]](length_num).
+            If [[len]](read_bytes) equals length_num:
+                Set body_value to read_bytes.
+    Do [[meta.update]]({"body": body_value}).
+    Set triple to [[respond]](root_path, method_text, path_text, meta).
     Set triple_copy to [[list]](triple).
     Set status_text to [[triple_copy.pop]](0).
     Set headers to [[triple_copy.pop]](0).
@@ -1171,6 +1627,11 @@ Define [[serve_command]] taking args:
     If args:
         Set root_text to [[args.pop]](0).
     Do [[serve_config.update]]({"root": root_text}).
+    Do [[serve_config.update]]({"port": port_num}).
+    Set token_bytes to [[os.urandom]](32).
+    Do [[serve_config.update]]({"token": [[token_bytes.hex]]()}).
+    Do [[serve_config.update]]({"now": ""}).
+    Do [[serve_config.update]]({"fault": ""}).
     Set server to [[wsgiref.simple_server.make_server]]("127.0.0.1", port_num, wsgi_app).
     Do [[out_line]]("ui: serving http://127.0.0.1:" plus [[str]](port_num) plus "/").
     Do [[server.serve_forever]]().
@@ -1264,18 +1725,103 @@ Define [[check_ui_command]] taking args:
 Define [[request_command]] taking args:
     If [[len]](args) is less than 2:
         Do [[usage_fail]]().
-    If [[len]](args) is greater than 3:
-        Do [[usage_fail]]().
     Set method_text to [[args.pop]](0).
     Set path_raw to [[args.pop]](0).
     Set root_text to ".".
-    If args:
-        Set root_text to [[args.pop]](0).
+    Set root_seen to False.
+    Set headers_map to {}.
+    Set body_value to None.
+    Set body_seen to False.
+    Set token_seen to False.
+    Set now_seen to False.
+    Set fault_seen to False.
+    Set token_text to "".
+    Set now_text to "".
+    Set fault_text to "".
+    Set flag_names to <"--header", "--body", "--body-hex", "--token", "--now", "--fault">.
+    Set pending to "".
+    Set flags_started to False.
+    For each arg_text in args:
+        If pending does not equal "":
+            If pending equals "--header":
+                Set colon_found to ":" is in arg_text.
+                If not colon_found:
+                    Do [[usage_fail]]().
+                Set header_parts to [[arg_text.split]](":", 1).
+                Set header_name to [[header_parts.pop]](0).
+                Set header_value to [[header_parts.pop]](0).
+                If header_name equals "":
+                    Do [[usage_fail]]().
+                Do [[headers_map.update]]({[[header_name.lower]](): header_value}).
+            Otherwise if pending equals "--body":
+                If body_seen:
+                    Do [[usage_fail]]().
+                Set body_value to [[arg_text.encode]]("utf-8").
+                Set body_seen to True.
+            Otherwise if pending equals "--body-hex":
+                If body_seen:
+                    Do [[usage_fail]]().
+                Try:
+                    Set body_value to [[bytes.fromhex]](arg_text).
+                Catch ValueError:
+                    Do [[usage_fail]]().
+                Set body_seen to True.
+            Otherwise if pending equals "--token":
+                If token_seen:
+                    Do [[usage_fail]]().
+                Set token_text to arg_text.
+                Set token_seen to True.
+            Otherwise if pending equals "--now":
+                If now_seen:
+                    Do [[usage_fail]]().
+                If not [[valid_post_date]](arg_text):
+                    Do [[usage_fail]]().
+                Set now_text to arg_text.
+                Set now_seen to True.
+            Otherwise:
+                If fault_seen:
+                    Do [[usage_fail]]().
+                If arg_text does not equal "after-tmp-write":
+                    Do [[usage_fail]]().
+                Set fault_text to arg_text.
+                Set fault_seen to True.
+            Set pending to "".
+        Otherwise:
+            Set is_flag to arg_text is in flag_names.
+            If is_flag:
+                Set pending to arg_text.
+                Set flags_started to True.
+            Otherwise if [[arg_text.startswith]]("--"):
+                Do [[usage_fail]]().
+            Otherwise:
+                If root_seen:
+                    Do [[usage_fail]]().
+                If flags_started:
+                    Do [[usage_fail]]().
+                Set root_text to arg_text.
+                Set root_seen to True.
+    If pending does not equal "":
+        Do [[usage_fail]]().
+    Set host_text to [[headers_map.get]]("host", "127.0.0.1:8377").
+    Set origin_value to [[headers_map.get]]("origin", None).
+    Set ct_fallback to "".
+    If body_seen:
+        Set ct_fallback to "application/x-www-form-urlencoded".
+    Set ct_text to [[headers_map.get]]("content-type", ct_fallback).
+    Do [[serve_config.update]]({"port": 8377}).
+    Do [[serve_config.update]]({"token": token_text}).
+    Do [[serve_config.update]]({"now": now_text}).
+    Do [[serve_config.update]]({"fault": fault_text}).
+    Set meta to {}.
+    Do [[meta.update]]({"host": host_text}).
+    Do [[meta.update]]({"origin": origin_value}).
+    Do [[meta.update]]({"content_type": ct_text}).
+    Do [[meta.update]]({"body": body_value}).
     Set query_parts to [[path_raw.split]]("?", 1).
     Set no_query to [[query_parts.pop]](0).
     Set path_text to [[urllib.parse.unquote]](no_query).
     Set root_path to [[pathlib.Path]](root_text).
-    Set triple to [[respond]](root_path, method_text, path_text).
+    Set triple to [[respond]](root_path, method_text, path_text, meta).
     Set triple_copy to [[list]](triple).
     Set status_text to [[triple_copy.pop]](0).
     Set headers to [[triple_copy.pop]](0).

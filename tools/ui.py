@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import html
 import os
@@ -9,9 +10,11 @@ import sys
 import tempfile
 import urllib.parse
 import wsgiref.simple_server
-usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>]"
+usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>] [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]"
 census_rx = re.compile("identify the ([0-9]+) payloads below")
 chip_states = ["approved", "rejected", "stale", "unreviewed"]
+ledger_header_text = "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
+verdict_field_names = ["verdict", "reviewer", "comment", "review_sha256", "ledger_sha256", "csrf"]
 serve_config = {}
 def out_line(text):
     line_text = text + "\n"
@@ -28,6 +31,8 @@ def usage_fail():
     raise SystemExit(2)
 def esc_text(value):
     return html.escape(value, quote=False)
+def esc_attr(value):
+    return html.escape(value, quote=True)
 def url_seg(value):
     return urllib.parse.quote(value, safe="")
 def sha256_hex(data):
@@ -45,6 +50,52 @@ def valid_ui_id(value):
     if len(value_bytes) > 250:
         return False
     return subset
+def valid_post_date(date_text):
+    if len(date_text) != 20:
+        return False
+    digit_chars = set("0123456789")
+    position = 0
+    for char_text in date_text:
+        expected = ""
+        if position == 4:
+            expected = "-"
+        if position == 7:
+            expected = "-"
+        if position == 10:
+            expected = "T"
+        if position == 13:
+            expected = ":"
+        if position == 16:
+            expected = ":"
+        if position == 19:
+            expected = "Z"
+        if expected:
+            if char_text != expected:
+                return False
+        else:
+            is_digit = char_text in digit_chars
+            if not is_digit:
+                return False
+        position = position + 1
+    try:
+        datetime.datetime.strptime(date_text, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return False
+    return True
+def valid_hex64(value):
+    if len(value) != 64:
+        return False
+    allowed = set("0123456789abcdef")
+    chars = set(value)
+    return chars.issubset(allowed)
+def field_text_ok(value):
+    for char_text in value:
+        code_point = ord(char_text)
+        if code_point < 32:
+            return False
+        if code_point == 127:
+            return False
+    return True
 def err(detail):
     return ["err", detail]
 def ok(value):
@@ -233,12 +284,15 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
     for docid in docids:
         states.update({docid: "unreviewed"})
     ledger_digests = {}
+    ledger_rows = {}
+    ledger_file_digest = "absent"
     if not ledger_path.is_file():
-        return ok([states, ledger_digests])
+        return ok([states, ledger_digests, ledger_rows, ledger_file_digest])
     try:
         ledger_bytes = ledger_path.read_bytes()
     except OSError:
         return err("ui: viewmodel: " + gid + " missing audit/adjudication.tsv")
+    ledger_file_digest = sha256_hex(ledger_bytes)
     goal_py = goal_py_path()
     scratch_text = tempfile.mkdtemp()
     scratch_dir = pathlib.Path(scratch_text)
@@ -269,13 +323,17 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
         docid = fields.pop(0)
         row_digest = fields.pop(0)
         verdict = fields.pop(0)
+        reviewer_field = fields.pop(0)
+        date_field = fields.pop(0)
+        comment_field = fields.pop(0)
         current_digest = review_by_docid.get(docid, "")
         ledger_digests.update({docid: row_digest})
+        ledger_rows.update({docid: [verdict, reviewer_field, date_field, comment_field]})
         if row_digest == current_digest:
             states.update({docid: verdict})
         else:
             states.update({docid: "stale"})
-    return ok([states, ledger_digests])
+    return ok([states, ledger_digests, ledger_rows, ledger_file_digest])
 def build_guideline_model(root_path, gid):
     guideline_path = root_path.joinpath("guidelines", gid)
     if not valid_ui_id(gid):
@@ -508,6 +566,8 @@ def build_guideline_model(root_path, gid):
     states_copy = list(states_pair)
     doc_states = states_copy.pop(0)
     ledger_digests = states_copy.pop(0)
+    ledger_rows = states_copy.pop(0)
+    ledger_file_digest = states_copy.pop(0)
     model = {}
     model.update({"gid": gid})
     model.update({"path": guideline_path})
@@ -528,6 +588,8 @@ def build_guideline_model(root_path, gid):
     model.update({"review_by_docid": review_by_docid})
     model.update({"doc_states": doc_states})
     model.update({"ledger_digests": ledger_digests})
+    model.update({"ledger_rows": ledger_rows})
+    model.update({"ledger_file_digest": ledger_file_digest})
     model.update({"region_rows": region_rows})
     counts = {}
     counts.update({"regions": len(coverage_rows)})
@@ -820,11 +882,85 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     nav_parts.append("<a href=\"../index.html\">up: " + esc_text(gid) + "</a>")
     if next_id:
         nav_parts.append("<a href=\"" + url_seg(next_id) + ".html\">next: " + esc_text(next_id) + "</a>")
+    nav_parts.append("<a href=\"../review/" + url_seg(docid) + ".html\">review: " + esc_text(docid) + "</a>")
     nav_joiner = " · "
     parts.append("<nav class=\"docnav\">" + nav_joiner.join(nav_parts) + "</nav>")
     body_html = joiner.join(parts)
     crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(gid) + "</a> / " + esc_text(docid)
     return page_html(docid, crumb_html, body_html)
+def build_review_page(model, docid):
+    gid = model.get("gid", "")
+    doc_states = model.get("doc_states", {})
+    state = doc_states.get(docid, "unreviewed")
+    review_by_docid = model.get("review_by_docid", {})
+    ledger_digests = model.get("ledger_digests", {})
+    ledger_rows = model.get("ledger_rows", {})
+    ledger_file_digest = model.get("ledger_file_digest", "absent")
+    current_digest = review_by_docid.get(docid, "")
+    token_text = serve_config.get("token", "")
+    row_reviewer = ""
+    row_comment = ""
+    row_verdict = ""
+    has_row = docid in ledger_rows
+    if has_row:
+        row_fields = list(ledger_rows.get(docid))
+        row_verdict = row_fields.pop(0)
+        row_reviewer = row_fields.pop(0)
+        row_date = row_fields.pop(0)
+        row_comment = row_fields.pop(0)
+    joiner = "\n"
+    parts = []
+    parts.append("<h1>review " + esc_text(docid) + " " + chip_html(state) + "</h1>")
+    parts.append("<section>")
+    parts.append("<h2>Adjudication subject</h2>")
+    parts.append("<dl>")
+    parts.append("<dt>current review_sha256</dt><dd><code>" + esc_text(current_digest) + "</code></dd>")
+    parts.append("</dl>")
+    parts.append("</section>")
+    if has_row:
+        parts.append("<section>")
+        parts.append("<h2>Recorded verdict</h2>")
+        if state == "stale":
+            parts.append("<p>bundle differs</p>")
+        parts.append("<dl>")
+        parts.append("<dt>verdict</dt><dd>" + esc_text(row_verdict) + "</dd>")
+        parts.append("<dt>reviewer</dt><dd>" + esc_text(row_reviewer) + "</dd>")
+        parts.append("<dt>date</dt><dd>" + esc_text(row_date) + "</dd>")
+        parts.append("<dt>comment</dt><dd>" + esc_text(row_comment) + "</dd>")
+        parts.append("<dt>pinned review_sha256</dt><dd><code>" + esc_text(ledger_digests.get(docid, "")) + "</code></dd>")
+        parts.append("</dl>")
+        parts.append("</section>")
+    approved_checked = ""
+    rejected_checked = ""
+    if row_verdict == "approved":
+        approved_checked = " checked"
+    if row_verdict == "rejected":
+        rejected_checked = " checked"
+    parts.append("<section>")
+    parts.append("<h2>Verdict</h2>")
+    parts.append("<form method=\"post\">")
+    parts.append("<fieldset>")
+    parts.append("<legend>verdict</legend>")
+    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" + approved_checked + "> approved</label>")
+    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" + rejected_checked + "> rejected</label>")
+    parts.append("</fieldset>")
+    parts.append("<label for=\"reviewer\">reviewer (self-asserted local identifier)</label>")
+    parts.append("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" required value=\"" + esc_attr(row_reviewer) + "\">")
+    parts.append("<label for=\"comment\">comment</label>")
+    parts.append("<textarea id=\"comment\" name=\"comment\">" + esc_text(row_comment) + "</textarea>")
+    parts.append("<input type=\"hidden\" name=\"review_sha256\" value=\"" + esc_attr(current_digest) + "\">")
+    parts.append("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" + esc_attr(ledger_file_digest) + "\">")
+    parts.append("<input type=\"hidden\" name=\"csrf\" value=\"" + esc_attr(token_text) + "\">")
+    parts.append("<button>Record verdict</button>")
+    parts.append("</form>")
+    parts.append("</section>")
+    nav_parts = []
+    nav_parts.append("<a href=\"../doc/" + url_seg(docid) + ".html\">doc: " + esc_text(docid) + "</a>")
+    nav_joiner = " · "
+    parts.append("<nav class=\"docnav\">" + nav_joiner.join(nav_parts) + "</nav>")
+    body_html = joiner.join(parts)
+    crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(gid) + "</a> / <a href=\"../doc/" + url_seg(docid) + ".html\">" + esc_text(docid) + "</a> / review"
+    return page_html("review " + docid, crumb_html, body_html)
 def build_error_page(title_text, heading_text, body_html):
     parts = []
     parts.append("<h1>" + esc_text(heading_text) + "</h1>")
@@ -894,7 +1030,11 @@ def render_pages(models):
             doc_page = "g/" + url_seg(gid) + "/doc/" + url_seg(docid) + ".html"
             page_order.append(doc_page)
             pages.update({doc_page: build_doc_page(model, docid, doc_data, prev_map.get(docid, ""), next_map.get(docid, ""))})
-        page_count = 1 + len(docids)
+        for docid in docids:
+            review_page = "g/" + url_seg(gid) + "/review/" + url_seg(docid) + ".html"
+            page_order.append(review_page)
+            pages.update({review_page: build_review_page(model, docid)})
+        page_count = 1 + len(docids) + len(docids)
         meter_lines.append("ui: " + gid + " docs=" + str(len(docids)) + " regions=" + str(counts.get("regions", 0)) + " pages=" + str(page_count))
     for page_path in page_order:
         page_text = pages.get(page_path, "")
@@ -979,6 +1119,10 @@ def selftest_violation():
         return "ui: selftest failed: esc_text"
     if esc_text("plain") != "plain":
         return "ui: selftest failed: esc_text"
+    if esc_attr("<&>\"'") != "&lt;&amp;&gt;&quot;&#x27;":
+        return "ui: selftest failed: esc_attr"
+    if esc_attr("plain") != "plain":
+        return "ui: selftest failed: esc_attr"
     unique_values = []
     for role in sorted(palette):
         pair = palette.get(role, [])
@@ -1009,13 +1153,46 @@ def not_found_response():
     page_text = build_error_page("not found", "Not found", body_html)
     body_bytes = page_text.encode("utf-8")
     return ["404 Not Found", base_headers(), body_bytes]
-def method_response():
-    body_html = "<p>Only GET is supported.</p>"
+def review_shaped(path_text):
+    if not path_text.startswith("/g/"):
+        return False
+    rest_text = path_text.removeprefix("/g/")
+    segs = rest_text.split("/")
+    if len(segs) != 3:
+        return False
+    gid_seg = segs.pop(0)
+    mid_seg = segs.pop(0)
+    leaf_seg = segs.pop(0)
+    if mid_seg != "review":
+        return False
+    if not leaf_seg.endswith(".html"):
+        return False
+    return True
+def method_response(shaped):
+    allow_value = "GET"
+    body_html = "<p>Only GET is supported on this page.</p>"
+    if shaped:
+        allow_value = "GET, POST"
+        body_html = "<p>Only GET and POST are supported on this page.</p>"
     page_text = build_error_page("method not allowed", "Method not allowed", body_html)
     body_bytes = page_text.encode("utf-8")
     headers = base_headers()
-    headers.append(tuple(["Allow", "GET"]))
+    headers.append(tuple(["Allow", allow_value]))
     return ["405 Method Not Allowed", headers, body_bytes]
+def verdict_refusal(status_text, heading_text, detail):
+    body_html = "<pre>" + esc_text(detail) + "</pre>"
+    title_text = heading_text.lower()
+    page_text = build_error_page(title_text, heading_text, body_html)
+    body_bytes = page_text.encode("utf-8")
+    return [status_text, base_headers(), body_bytes]
+def redirect_response(gid, docid):
+    location_value = "/g/" + url_seg(gid) + "/review/" + url_seg(docid) + ".html"
+    body_html = "<p>The verdict was recorded.</p>"
+    page_text = build_error_page("verdict recorded", "Verdict recorded", body_html)
+    body_bytes = page_text.encode("utf-8")
+    headers = base_headers()
+    headers.append(tuple(["Location", location_value]))
+    return ["303 See Other", headers, body_bytes]
 def error_response(detail):
     body_html = "<pre>" + esc_text(detail) + "</pre>"
     page_text = build_error_page("server error", "Server error", body_html)
@@ -1024,9 +1201,244 @@ def error_response(detail):
 def page_response(page_text):
     body_bytes = page_text.encode("utf-8")
     return ["200 OK", base_headers(), body_bytes]
-def respond(root_path, method_text, path_text):
+def parse_form_fields(body_bytes):
+    body_text = ""
+    try:
+        body_text = body_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return err("ui: verdict: body not decodable")
+    parsed = {}
+    try:
+        parsed = urllib.parse.parse_qs(body_text, keep_blank_values=True, strict_parsing=True, errors="strict", max_num_fields=32)
+    except ValueError:
+        return err("ui: verdict: body not parseable")
+    except UnicodeDecodeError:
+        return err("ui: verdict: body not parseable")
+    for name in verdict_field_names:
+        present = name in parsed
+        if not present:
+            return err("ui: verdict: missing field " + name)
+    for name in verdict_field_names:
+        value_list = parsed.get(name)
+        if len(value_list) > 1:
+            return err("ui: verdict: duplicate field " + name)
+    for key_name in parsed:
+        known = key_name in verdict_field_names
+        if not known:
+            return err("ui: verdict: unknown field " + key_name)
+    fields = {}
+    for name in verdict_field_names:
+        value_list = list(parsed.get(name))
+        fields.update({name: value_list.pop(0)})
+    verdict_value = fields.get("verdict")
+    verdict_ok = False
+    if verdict_value == "approved":
+        verdict_ok = True
+    if verdict_value == "rejected":
+        verdict_ok = True
+    if not verdict_ok:
+        return err("ui: verdict: invalid verdict")
+    reviewer_value = fields.get("reviewer")
+    if not reviewer_value:
+        return err("ui: verdict: invalid reviewer")
+    if not field_text_ok(reviewer_value):
+        return err("ui: verdict: invalid reviewer")
+    if not field_text_ok(fields.get("comment")):
+        return err("ui: verdict: invalid comment")
+    if not valid_hex64(fields.get("review_sha256")):
+        return err("ui: verdict: invalid review_sha256")
+    ledger_value = fields.get("ledger_sha256")
+    ledger_ok = valid_hex64(ledger_value)
+    if ledger_value == "absent":
+        ledger_ok = True
+    if not ledger_ok:
+        return err("ui: verdict: invalid ledger_sha256")
+    return ok(fields)
+def discard_tmp(tmp_text):
+    try:
+        os.unlink(tmp_text)
+    except OSError:
+        discard_failed = True
+def handle_verdict_post(model, gid, docid, meta):
+    port_value = serve_config.get("port", 8377)
+    expected_host = "127.0.0.1:" + str(port_value)
+    if meta.get("host", "") != expected_host:
+        return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: host not allowed")
+    origin_value = meta.get("origin", None)
+    expected_origin = "http://" + expected_host
+    if origin_value != None:
+        if origin_value != expected_origin:
+            return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: origin not allowed")
+    if meta.get("content_type", "") != "application/x-www-form-urlencoded":
+        return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: unsupported content type")
+    body_bytes = meta.get("body", None)
+    if body_bytes == None:
+        return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: missing body")
+    fields_result = parse_form_fields(body_bytes)
+    if result_kind(fields_result) == "err":
+        return verdict_refusal("400 Bad Request", "Bad request", result_value(fields_result))
+    fields = result_value(fields_result)
+    token_value = serve_config.get("token", "")
+    token_ok = True
+    if token_value == "":
+        token_ok = False
+    if fields.get("csrf") != token_value:
+        token_ok = False
+    if not token_ok:
+        return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: invalid csrf token")
+    data_result = doc_render_data(model, docid)
+    if result_kind(data_result) == "err":
+        return error_response(result_value(data_result))
+    goal_py = goal_py_path()
+    tool_dir = goal_py.parent
+    repo_root = tool_dir.parent
+    guideline_path = model.get("path", None)
+    derive_command = [sys.executable, "-P", str(goal_py), "derive-review-manifest", str(guideline_path)]
+    derive_ok = True
+    derive_result = None
+    try:
+        derive_result = subprocess.run(derive_command, capture_output=True, cwd=str(repo_root))
+    except OSError:
+        derive_ok = False
+    if not derive_ok:
+        return error_response("ui: verdict: manifest derivation failed: validator launch failed")
+    if derive_result.returncode != 0:
+        relay = first_output_line(derive_result)
+        return error_response("ui: verdict: manifest derivation failed: " + relay)
+    manifest_bytes = derive_result.stdout
+    manifest_text = ""
+    try:
+        manifest_text = manifest_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return error_response("ui: verdict: manifest derivation failed: undecodable output")
+    fresh_digest = ""
+    for line_text in manifest_text.split("\n"):
+        line_fields = line_text.split("\t")
+        if len(line_fields) == 7:
+            row_docid = line_fields.pop(0)
+            if row_docid == docid:
+                fresh_digest = line_fields.pop()
+    if fresh_digest == "":
+        return error_response("ui: verdict: manifest derivation failed: docid row missing")
+    if fields.get("review_sha256") != fresh_digest:
+        return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: subject changed")
+    if fields.get("ledger_sha256") != model.get("ledger_file_digest", "absent"):
+        return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: ledger changed")
+    audit_dir = guideline_path.joinpath("audit")
+    ledger_path = audit_dir.joinpath("adjudication.tsv")
+    if ledger_path.is_symlink():
+        return error_response("ui: verdict: ledger not a regular file")
+    if ledger_path.exists():
+        if not ledger_path.is_file():
+            return error_response("ui: verdict: ledger not a regular file")
+    now_text = serve_config.get("now", "")
+    if now_text == "":
+        now_value = datetime.datetime.now(datetime.timezone.utc)
+        now_text = now_value.strftime("%Y-%m-%dT%H:%M:%SZ")
+    ledger_rows = model.get("ledger_rows", {})
+    ledger_digests = model.get("ledger_digests", {})
+    merged = {}
+    for row_docid in ledger_rows:
+        row_fields = list(ledger_rows.get(row_docid))
+        row_verdict = row_fields.pop(0)
+        row_reviewer = row_fields.pop(0)
+        row_date = row_fields.pop(0)
+        row_comment = row_fields.pop(0)
+        row_digest = ledger_digests.get(row_docid, "")
+        merged.update({row_docid: [row_digest, row_verdict, row_reviewer, row_date, row_comment]})
+    merged.update({docid: [fields.get("review_sha256"), fields.get("verdict"), fields.get("reviewer"), now_text, fields.get("comment")]})
+    out_lines = []
+    out_lines.append(ledger_header_text)
+    tab_text = "\t"
+    for row_docid in sorted(merged):
+        row_fields = list(merged.get(row_docid))
+        row_digest = row_fields.pop(0)
+        row_verdict = row_fields.pop(0)
+        row_reviewer = row_fields.pop(0)
+        row_date = row_fields.pop(0)
+        row_comment = row_fields.pop(0)
+        out_lines.append(row_docid + tab_text + row_digest + tab_text + row_verdict + tab_text + row_reviewer + tab_text + row_date + tab_text + row_comment)
+    joiner = "\n"
+    candidate_text = joiner.join(out_lines) + "\n"
+    candidate_bytes = candidate_text.encode("utf-8")
+    tmp_ok = True
+    tmp_pair = None
+    try:
+        tmp_pair = tempfile.mkstemp(dir=str(audit_dir), prefix=".adjudication.tsv.")
+    except OSError:
+        tmp_ok = False
+    if not tmp_ok:
+        return error_response("ui: verdict: ledger write failed")
+    pair_list = list(tmp_pair)
+    tmp_fd = pair_list.pop(0)
+    tmp_text = pair_list.pop(0)
+    chmod_mode = 420
+    write_ok = True
+    written_count = 0
+    try:
+        written_count = os.write(tmp_fd, candidate_bytes)
+        os.fsync(tmp_fd)
+        os.close(tmp_fd)
+        os.chmod(tmp_text, chmod_mode)
+    except OSError:
+        write_ok = False
+    if written_count != len(candidate_bytes):
+        write_ok = False
+    if not write_ok:
+        try:
+            os.close(tmp_fd)
+        except OSError:
+            write_ok = False
+        discard_tmp(tmp_text)
+        return error_response("ui: verdict: ledger write failed")
+    snapshot_ok = True
+    snap_text = ""
+    manifest_copy = None
+    try:
+        snap_text = tempfile.mkdtemp()
+        snap_dir = pathlib.Path(snap_text)
+        manifest_copy = snap_dir.joinpath("manifest.tsv")
+        manifest_copy.write_bytes(manifest_bytes)
+    except OSError:
+        snapshot_ok = False
+    if not snapshot_ok:
+        if snap_text:
+            shutil.rmtree(snap_text, ignore_errors=True)
+        discard_tmp(tmp_text)
+        return error_response("ui: adjudication ledger invalid: validator launch failed")
+    validate_command = [sys.executable, "-P", str(goal_py), "ledger-validate", tmp_text, str(manifest_copy), "ui"]
+    validate_ok = True
+    validate_result = None
+    try:
+        validate_result = subprocess.run(validate_command, capture_output=True, cwd=str(repo_root))
+    except OSError:
+        validate_ok = False
+    shutil.rmtree(snap_text, ignore_errors=True)
+    if not validate_ok:
+        discard_tmp(tmp_text)
+        return error_response("ui: adjudication ledger invalid: validator launch failed")
+    if validate_result.returncode != 0:
+        relay = first_output_line(validate_result)
+        discard_tmp(tmp_text)
+        return error_response("ui: adjudication ledger invalid: " + relay)
+    if serve_config.get("fault", "") == "after-tmp-write":
+        raise SystemExit(3)
+    replace_ok = True
+    try:
+        os.replace(tmp_text, str(ledger_path))
+    except OSError:
+        replace_ok = False
+    if not replace_ok:
+        discard_tmp(tmp_text)
+        return error_response("ui: verdict: ledger write failed")
+    return redirect_response(gid, docid)
+def respond(root_path, method_text, path_text, meta):
+    shaped = review_shaped(path_text)
     if method_text != "GET":
-        return method_response()
+        if method_text != "POST":
+            return method_response(shaped)
+        if not shaped:
+            return method_response(shaped)
     model_result = build_viewmodel(root_path)
     if result_kind(model_result) == "err":
         return error_response(result_value(model_result))
@@ -1059,7 +1471,12 @@ def respond(root_path, method_text, path_text):
         gid_seg = segs.pop(0)
         mid_seg = segs.pop(0)
         leaf_seg = segs.pop(0)
-        if mid_seg != "doc":
+        mid_known = False
+        if mid_seg == "doc":
+            mid_known = True
+        if mid_seg == "review":
+            mid_known = True
+        if not mid_known:
             return not_found_response()
         if not leaf_seg.endswith(".html"):
             return not_found_response()
@@ -1071,6 +1488,13 @@ def respond(root_path, method_text, path_text):
         known = docid in docids
         if not known:
             return not_found_response()
+        if mid_seg == "review":
+            if method_text == "POST":
+                return handle_verdict_post(model, gid_seg, docid, meta)
+            review_data_result = doc_render_data(model, docid)
+            if result_kind(review_data_result) == "err":
+                return error_response(result_value(review_data_result))
+            return page_response(build_review_page(model, docid))
         data_result = doc_render_data(model, docid)
         if result_kind(data_result) == "err":
             return error_response(result_value(data_result))
@@ -1094,7 +1518,28 @@ def wsgi_app(environ, start_response):
     root_path = pathlib.Path(root_text)
     method_text = environ.get("REQUEST_METHOD", "")
     path_text = environ.get("PATH_INFO", "")
-    triple = respond(root_path, method_text, path_text)
+    meta = {}
+    meta.update({"host": environ.get("HTTP_HOST", "")})
+    meta.update({"origin": environ.get("HTTP_ORIGIN", None)})
+    meta.update({"content_type": environ.get("CONTENT_TYPE", "")})
+    body_value = None
+    length_text = environ.get("CONTENT_LENGTH", "")
+    length_ok = True
+    length_num = 0
+    try:
+        length_num = int(length_text)
+    except ValueError:
+        length_ok = False
+    if length_num < 0:
+        length_ok = False
+    if length_ok:
+        stream = environ.get("wsgi.input", None)
+        if stream != None:
+            read_bytes = stream.read(length_num)
+            if len(read_bytes) == length_num:
+                body_value = read_bytes
+    meta.update({"body": body_value})
+    triple = respond(root_path, method_text, path_text, meta)
     triple_copy = list(triple)
     status_text = triple_copy.pop(0)
     headers = triple_copy.pop(0)
@@ -1119,6 +1564,11 @@ def serve_command(args):
     if args:
         root_text = args.pop(0)
     serve_config.update({"root": root_text})
+    serve_config.update({"port": port_num})
+    token_bytes = os.urandom(32)
+    serve_config.update({"token": token_bytes.hex()})
+    serve_config.update({"now": ""})
+    serve_config.update({"fault": ""})
     server = wsgiref.simple_server.make_server("127.0.0.1", port_num, wsgi_app)
     out_line("ui: serving http://127.0.0.1:" + str(port_num) + "/")
     server.serve_forever()
@@ -1209,18 +1659,103 @@ def check_ui_command(args):
 def request_command(args):
     if len(args) < 2:
         usage_fail()
-    if len(args) > 3:
-        usage_fail()
     method_text = args.pop(0)
     path_raw = args.pop(0)
     root_text = "."
-    if args:
-        root_text = args.pop(0)
+    root_seen = False
+    headers_map = {}
+    body_value = None
+    body_seen = False
+    token_seen = False
+    now_seen = False
+    fault_seen = False
+    token_text = ""
+    now_text = ""
+    fault_text = ""
+    flag_names = ["--header", "--body", "--body-hex", "--token", "--now", "--fault"]
+    pending = ""
+    flags_started = False
+    for arg_text in args:
+        if pending != "":
+            if pending == "--header":
+                colon_found = ":" in arg_text
+                if not colon_found:
+                    usage_fail()
+                header_parts = arg_text.split(":", 1)
+                header_name = header_parts.pop(0)
+                header_value = header_parts.pop(0)
+                if header_name == "":
+                    usage_fail()
+                headers_map.update({header_name.lower(): header_value})
+            elif pending == "--body":
+                if body_seen:
+                    usage_fail()
+                body_value = arg_text.encode("utf-8")
+                body_seen = True
+            elif pending == "--body-hex":
+                if body_seen:
+                    usage_fail()
+                try:
+                    body_value = bytes.fromhex(arg_text)
+                except ValueError:
+                    usage_fail()
+                body_seen = True
+            elif pending == "--token":
+                if token_seen:
+                    usage_fail()
+                token_text = arg_text
+                token_seen = True
+            elif pending == "--now":
+                if now_seen:
+                    usage_fail()
+                if not valid_post_date(arg_text):
+                    usage_fail()
+                now_text = arg_text
+                now_seen = True
+            else:
+                if fault_seen:
+                    usage_fail()
+                if arg_text != "after-tmp-write":
+                    usage_fail()
+                fault_text = arg_text
+                fault_seen = True
+            pending = ""
+        else:
+            is_flag = arg_text in flag_names
+            if is_flag:
+                pending = arg_text
+                flags_started = True
+            elif arg_text.startswith("--"):
+                usage_fail()
+            else:
+                if root_seen:
+                    usage_fail()
+                if flags_started:
+                    usage_fail()
+                root_text = arg_text
+                root_seen = True
+    if pending != "":
+        usage_fail()
+    host_text = headers_map.get("host", "127.0.0.1:8377")
+    origin_value = headers_map.get("origin", None)
+    ct_fallback = ""
+    if body_seen:
+        ct_fallback = "application/x-www-form-urlencoded"
+    ct_text = headers_map.get("content-type", ct_fallback)
+    serve_config.update({"port": 8377})
+    serve_config.update({"token": token_text})
+    serve_config.update({"now": now_text})
+    serve_config.update({"fault": fault_text})
+    meta = {}
+    meta.update({"host": host_text})
+    meta.update({"origin": origin_value})
+    meta.update({"content_type": ct_text})
+    meta.update({"body": body_value})
     query_parts = path_raw.split("?", 1)
     no_query = query_parts.pop(0)
     path_text = urllib.parse.unquote(no_query)
     root_path = pathlib.Path(root_text)
-    triple = respond(root_path, method_text, path_text)
+    triple = respond(root_path, method_text, path_text, meta)
     triple_copy = list(triple)
     status_text = triple_copy.pop(0)
     headers = triple_copy.pop(0)

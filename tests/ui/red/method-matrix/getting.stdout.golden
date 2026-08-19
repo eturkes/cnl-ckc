@@ -42,7 +42,7 @@ nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
 <nav class="crumbs">cnl-ckc reviewer</nav>
 <main id="main">
 <h1>Method not allowed</h1>
-<p>Only GET is supported.</p>
+<p>Only GET is supported on this page.</p>
 </main>
 </body>
 </html>

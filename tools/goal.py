@@ -213,6 +213,37 @@ def compiled_pl_path(tracked):
         return False
     stem = file_part.removesuffix(".pl")
     return valid_docid(stem)
+def fixture_pl_path(tracked):
+    parts = tracked.split("/")
+    if len(parts) != 9:
+        return False
+    root_part = parts.pop(0)
+    suite_part = parts.pop(0)
+    color_part = parts.pop(0)
+    case_part = parts.pop(0)
+    tree_part = parts.pop(0)
+    guidelines_part = parts.pop(0)
+    id_part = parts.pop(0)
+    dir_part = parts.pop(0)
+    file_part = parts.pop(0)
+    if root_part != "tests":
+        return False
+    if suite_part != "ui":
+        return False
+    color_ok = False
+    if color_part == "red":
+        color_ok = True
+    if color_part == "green":
+        color_ok = True
+    if not color_ok:
+        return False
+    if tree_part != "tree":
+        return False
+    if guidelines_part != "guidelines":
+        return False
+    if dir_part != "pl":
+        return False
+    return file_part.endswith(".pl")
 def check_prolog_inventory():
     git_res = subprocess.run(["git", "ls-files", "--", "*.pl"], capture_output=True, check=True)
     tracked_text = git_res.stdout.decode("utf-8")
@@ -220,10 +251,12 @@ def check_prolog_inventory():
         vendored = tracked.startswith("vendor/ape/")
         clex_base = tracked == "vendor/clex/clex_lexicon.pl"
         compiled = compiled_pl_path(tracked)
+        fixture_pl = fixture_pl_path(tracked)
         if not vendored:
             if not clex_base:
                 if not compiled:
-                    violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
+                    if not fixture_pl:
+                        violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
 def provenance_field(prov_lines, key):
     prefix = key + ": "
     value = ""
@@ -1915,6 +1948,30 @@ def review_manifest_command(guideline_id):
             violation("adjudication", "manifest is not a regular file: " + str(manifest_path))
     manifest_path.write_bytes(manifest_text.encode("utf-8"))
     print("goal: review-manifest " + guideline_id + " " + str(len(docids)) + " documents")
+def derive_review_manifest_command(guideline_dir):
+    guideline_path = pathlib.Path(guideline_dir)
+    guideline_symlink = guideline_path.is_symlink()
+    if guideline_symlink:
+        fail("guideline", "is a symlink: " + str(guideline_path))
+    if not guideline_path.is_dir():
+        fail("guideline", "not a directory: " + str(guideline_path))
+    collected = collect_guideline(guideline_path)
+    ace_paths = collected.pop(0)
+    docids = collected.pop(0)
+    lexicon_path = collected.pop(0)
+    ledger_result = check_projection_ledger(guideline_path)
+    ledger_pairs = ledger_result.pop(0)
+    notes_row_by_docid = ledger_result.pop(0)
+    coverage_result = check_coverage(guideline_path, docids, False)
+    status_by_id = coverage_result.pop(0)
+    ace_row_line_by_docid = coverage_result.pop(0)
+    payload_text_by_docid = coverage_result.pop(0)
+    derived = derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
+    manifest_text = derived.pop(0)
+    bundle_by_docid = derived.pop(0)
+    manifest_bytes = manifest_text.encode("utf-8")
+    sys.stdout.buffer.write(manifest_bytes)
+    sys.stdout.buffer.flush()
 def ledger_validate_command(ledger_arg, manifest_arg, label):
     if not valid_docid(label):
         fail("usage", "label must match [a-z0-9-]+: " + label)
@@ -2180,6 +2237,8 @@ def run_ui_fixture_case(color, case_name, case_path):
                 out_text = scratch_text + "/out"
                 tokens = argv_text.split(" ")
                 first_token = ""
+                second_token = ""
+                token_index = 0
                 built_tokens = [sys.executable, "-P", "tools/ui.py"]
                 for token in tokens:
                     built = token
@@ -2187,11 +2246,18 @@ def run_ui_fixture_case(color, case_name, case_path):
                         built = tree_text
                     if token == "@OUT@":
                         built = out_text
-                    if first_token == "":
+                    if token_index == 0:
                         first_token = token
+                    if token_index == 1:
+                        second_token = token
+                    token_index = token_index + 1
                     built_tokens.append(built)
                 if first_token == "serve":
                     violation("ui-fixtures", "serve row for case: " + case_name)
+                if first_token == "request":
+                    if second_token == "POST":
+                        if mat_scratch == "":
+                            violation("ui-fixtures", "post row without materialized tree for case: " + case_name)
                 result = subprocess.run(built_tokens, capture_output=True)
                 if result.returncode != expected_rc:
                     violation("ui-fixtures", "status " + str(result.returncode) + " for case: " + case_name)
@@ -2208,6 +2274,28 @@ def run_ui_fixture_case(color, case_name, case_path):
                 row_count = row_count + 1
     if row_count == 0:
         violation("ui-fixtures", "no case rows for case: " + case_name)
+    tree_root = pathlib.Path(tree_text)
+    after_path = case_path.joinpath("after")
+    if after_path.is_dir():
+        if mat_scratch == "":
+            violation("ui-fixtures", "after sidecar without materialized tree for case: " + case_name)
+        for rel_text in ui_walk_files(after_path):
+            expect_file = after_path.joinpath(rel_text)
+            actual_file = tree_root.joinpath(rel_text)
+            if not actual_file.is_file():
+                violation("ui-fixtures", "after file missing for case: " + case_name + " " + rel_text)
+            expect_bytes = expect_file.read_bytes()
+            actual_bytes = actual_file.read_bytes()
+            if actual_bytes != expect_bytes:
+                violation("ui-fixtures", "after bytes differ for case: " + case_name + " " + rel_text)
+    globs_path = case_path.joinpath("absent-globs.txt")
+    if globs_path.is_file():
+        if mat_scratch == "":
+            violation("ui-fixtures", "absent-globs sidecar without materialized tree for case: " + case_name)
+        for glob_line in ui_read_sidecar_lines(globs_path, case_name):
+            matches = list(tree_root.glob(glob_line))
+            if matches:
+                violation("ui-fixtures", "absent glob matched for case: " + case_name + " " + glob_line)
     if color == "green":
         check_tokens = [sys.executable, "-P", "tools/ui.py", "check", tree_text]
         check_result = subprocess.run(check_tokens, capture_output=True)
@@ -2216,6 +2304,18 @@ def run_ui_fixture_case(color, case_name, case_path):
         if check_result.stderr:
             violation("ui-fixtures", "ui check stderr for case: " + case_name)
         ui_check_assertions(case_path, case_name)
+        committed_tree = case_path.joinpath("tree")
+        fixture_guidelines = committed_tree.joinpath("guidelines")
+        if fixture_guidelines.is_dir():
+            for gid_entry in sorted(fixture_guidelines.iterdir()):
+                manifest_file = gid_entry.joinpath("audit", "review-manifest.tsv")
+                if manifest_file.is_file():
+                    derive_tokens = [sys.executable, "-P", "tools/goal.py", "derive-review-manifest", str(gid_entry)]
+                    derive_result = subprocess.run(derive_tokens, capture_output=True)
+                    if derive_result.returncode == 0:
+                        committed_manifest_bytes = manifest_file.read_bytes()
+                        if derive_result.stdout != committed_manifest_bytes:
+                            violation("ui-fixtures", "manifest stale for case: " + case_name + " " + gid_entry.name)
     if mat_scratch:
         shutil.rmtree(mat_scratch, ignore_errors=True)
 def check_ui():
@@ -2392,7 +2492,7 @@ if not (compiler_source.is_file()):
 argv = list(sys.argv)
 argv.pop(0)
 if len(argv) == 0:
-    fail("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal ledger-validate <ledger-path> <manifest-path> <label>")
+    fail("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>")
 subcommand = argv.pop(0)
 if subcommand == "compile":
     if len(argv) != 1:
@@ -2411,7 +2511,12 @@ else:
             review_guideline_id = argv.pop(0)
             review_manifest_command(review_guideline_id)
         else:
-            if subcommand == "ledger-validate":
+            if subcommand == "derive-review-manifest":
+                if len(argv) != 1:
+                    fail("usage", "expected: goal derive-review-manifest <guideline-dir>")
+                derive_guideline_dir = argv.pop(0)
+                derive_review_manifest_command(derive_guideline_dir)
+            elif subcommand == "ledger-validate":
                 if len(argv) != 3:
                     fail("usage", "expected: goal ledger-validate <ledger-path> <manifest-path> <label>")
                 ledger_arg = argv.pop(0)

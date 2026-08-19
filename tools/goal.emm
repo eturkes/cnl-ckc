@@ -230,6 +230,38 @@ Define [[compiled_pl_path]] taking tracked:
     Set stem to [[file_part.removesuffix]](".pl").
     Give back [[valid_docid]](stem).
 
+Define [[fixture_pl_path]] taking tracked:
+    Set parts to [[tracked.split]]("/").
+    If [[len]](parts) does not equal 9:
+        Give back False.
+    Set root_part to [[parts.pop]](0).
+    Set suite_part to [[parts.pop]](0).
+    Set color_part to [[parts.pop]](0).
+    Set case_part to [[parts.pop]](0).
+    Set tree_part to [[parts.pop]](0).
+    Set guidelines_part to [[parts.pop]](0).
+    Set id_part to [[parts.pop]](0).
+    Set dir_part to [[parts.pop]](0).
+    Set file_part to [[parts.pop]](0).
+    If root_part does not equal "tests":
+        Give back False.
+    If suite_part does not equal "ui":
+        Give back False.
+    Set color_ok to False.
+    If color_part equals "red":
+        Set color_ok to True.
+    If color_part equals "green":
+        Set color_ok to True.
+    If not color_ok:
+        Give back False.
+    If tree_part does not equal "tree":
+        Give back False.
+    If guidelines_part does not equal "guidelines":
+        Give back False.
+    If dir_part does not equal "pl":
+        Give back False.
+    Give back [[file_part.endswith]](".pl").
+
 Define [[check_prolog_inventory]] taking nothing:
     Set git_res to [[subprocess.run]](<"git", "ls-files", "--", "*.pl">, capture_output=True, check=True).
     Set tracked_text to [[git_res.stdout.decode]]("utf-8").
@@ -237,10 +269,12 @@ Define [[check_prolog_inventory]] taking nothing:
         Set vendored to [[tracked.startswith]]("vendor/ape/").
         Set clex_base to tracked equals "vendor/clex/clex_lexicon.pl".
         Set compiled to [[compiled_pl_path]](tracked).
+        Set fixture_pl to [[fixture_pl_path]](tracked).
         If not vendored:
             If not clex_base:
                 If not compiled:
-                    Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
+                    If not fixture_pl:
+                        Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
 
 Define [[provenance_field]] taking prov_lines, key:
     Set prefix to key plus ": ".
@@ -1998,6 +2032,31 @@ Define [[review_manifest_command]] taking guideline_id:
     Do [[manifest_path.write_bytes]]([[manifest_text.encode]]("utf-8")).
     Do [[print]]("goal: review-manifest " plus guideline_id plus " " plus [[str]]([[len]](docids)) plus " documents").
 
+Define [[derive_review_manifest_command]] taking guideline_dir:
+    Set guideline_path to [[pathlib.Path]](guideline_dir).
+    Set guideline_symlink to [[guideline_path.is_symlink]]().
+    If guideline_symlink:
+        Do [[fail]]("guideline", "is a symlink: " plus [[str]](guideline_path)).
+    If not [[guideline_path.is_dir]]():
+        Do [[fail]]("guideline", "not a directory: " plus [[str]](guideline_path)).
+    Set collected to [[collect_guideline]](guideline_path).
+    Set ace_paths to [[collected.pop]](0).
+    Set docids to [[collected.pop]](0).
+    Set lexicon_path to [[collected.pop]](0).
+    Set ledger_result to [[check_projection_ledger]](guideline_path).
+    Set ledger_pairs to [[ledger_result.pop]](0).
+    Set notes_row_by_docid to [[ledger_result.pop]](0).
+    Set coverage_result to [[check_coverage]](guideline_path, docids, False).
+    Set status_by_id to [[coverage_result.pop]](0).
+    Set ace_row_line_by_docid to [[coverage_result.pop]](0).
+    Set payload_text_by_docid to [[coverage_result.pop]](0).
+    Set derived to [[derive_review_manifest]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
+    Set manifest_text to [[derived.pop]](0).
+    Set bundle_by_docid to [[derived.pop]](0).
+    Set manifest_bytes to [[manifest_text.encode]]("utf-8").
+    Do [[sys.stdout.buffer.write]](manifest_bytes).
+    Do [[sys.stdout.buffer.flush]]().
+
 Define [[ledger_validate_command]] taking ledger_arg, manifest_arg, label:
     If not [[valid_docid]](label):
         Do [[fail]]("usage", "label must match [a-z0-9-]+: " plus label).
@@ -2272,6 +2331,8 @@ Define [[run_ui_fixture_case]] taking color, case_name, case_path:
                 Set out_text to scratch_text plus "/out".
                 Set tokens to [[argv_text.split]](" ").
                 Set first_token to "".
+                Set second_token to "".
+                Set token_index to 0.
                 Set built_tokens to <sys.executable, "-P", "tools/ui.py">.
                 For each token in tokens:
                     Set built to token.
@@ -2279,11 +2340,18 @@ Define [[run_ui_fixture_case]] taking color, case_name, case_path:
                         Set built to tree_text.
                     If token equals "@OUT@":
                         Set built to out_text.
-                    If first_token equals "":
+                    If token_index equals 0:
                         Set first_token to token.
+                    If token_index equals 1:
+                        Set second_token to token.
+                    Set token_index to token_index plus 1.
                     Do [[built_tokens.append]](built).
                 If first_token equals "serve":
                     Do [[violation]]("ui-fixtures", "serve row for case: " plus case_name).
+                If first_token equals "request":
+                    If second_token equals "POST":
+                        If mat_scratch equals "":
+                            Do [[violation]]("ui-fixtures", "post row without materialized tree for case: " plus case_name).
                 Set result to [[subprocess.run]](built_tokens, capture_output=True).
                 If result.returncode does not equal expected_rc:
                     Do [[violation]]("ui-fixtures", "status " plus [[str]](result.returncode) plus " for case: " plus case_name).
@@ -2300,6 +2368,28 @@ Define [[run_ui_fixture_case]] taking color, case_name, case_path:
                 Set row_count to row_count plus 1.
     If row_count equals 0:
         Do [[violation]]("ui-fixtures", "no case rows for case: " plus case_name).
+    Set tree_root to [[pathlib.Path]](tree_text).
+    Set after_path to [[case_path.joinpath]]("after").
+    If [[after_path.is_dir]]():
+        If mat_scratch equals "":
+            Do [[violation]]("ui-fixtures", "after sidecar without materialized tree for case: " plus case_name).
+        For each rel_text in [[ui_walk_files]](after_path):
+            Set expect_file to [[after_path.joinpath]](rel_text).
+            Set actual_file to [[tree_root.joinpath]](rel_text).
+            If not [[actual_file.is_file]]():
+                Do [[violation]]("ui-fixtures", "after file missing for case: " plus case_name plus " " plus rel_text).
+            Set expect_bytes to [[expect_file.read_bytes]]().
+            Set actual_bytes to [[actual_file.read_bytes]]().
+            If actual_bytes does not equal expect_bytes:
+                Do [[violation]]("ui-fixtures", "after bytes differ for case: " plus case_name plus " " plus rel_text).
+    Set globs_path to [[case_path.joinpath]]("absent-globs.txt").
+    If [[globs_path.is_file]]():
+        If mat_scratch equals "":
+            Do [[violation]]("ui-fixtures", "absent-globs sidecar without materialized tree for case: " plus case_name).
+        For each glob_line in [[ui_read_sidecar_lines]](globs_path, case_name):
+            Set matches to [[list]]([[tree_root.glob]](glob_line)).
+            If matches:
+                Do [[violation]]("ui-fixtures", "absent glob matched for case: " plus case_name plus " " plus glob_line).
     If color equals "green":
         Set check_tokens to <sys.executable, "-P", "tools/ui.py", "check", tree_text>.
         Set check_result to [[subprocess.run]](check_tokens, capture_output=True).
@@ -2308,6 +2398,18 @@ Define [[run_ui_fixture_case]] taking color, case_name, case_path:
         If check_result.stderr:
             Do [[violation]]("ui-fixtures", "ui check stderr for case: " plus case_name).
         Do [[ui_check_assertions]](case_path, case_name).
+        Set committed_tree to [[case_path.joinpath]]("tree").
+        Set fixture_guidelines to [[committed_tree.joinpath]]("guidelines").
+        If [[fixture_guidelines.is_dir]]():
+            For each gid_entry in [[sorted]]([[fixture_guidelines.iterdir]]()):
+                Set manifest_file to [[gid_entry.joinpath]]("audit", "review-manifest.tsv").
+                If [[manifest_file.is_file]]():
+                    Set derive_tokens to <sys.executable, "-P", "tools/goal.py", "derive-review-manifest", [[str]](gid_entry)>.
+                    Set derive_result to [[subprocess.run]](derive_tokens, capture_output=True).
+                    If derive_result.returncode equals 0:
+                        Set committed_manifest_bytes to [[manifest_file.read_bytes]]().
+                        If derive_result.stdout does not equal committed_manifest_bytes:
+                            Do [[violation]]("ui-fixtures", "manifest stale for case: " plus case_name plus " " plus gid_entry.name).
     If mat_scratch:
         Do [[shutil.rmtree]](mat_scratch, ignore_errors=True).
 
@@ -2487,7 +2589,7 @@ Require that [[compiler_source.is_file]]().
 Set argv to [[list]](sys.argv).
 Do [[argv.pop]](0).
 If [[len]](argv) equals 0:
-    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal ledger-validate <ledger-path> <manifest-path> <label>").
+    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>").
 Set subcommand to [[argv.pop]](0).
 If subcommand equals "compile":
     If [[len]](argv) does not equal 1:
@@ -2506,7 +2608,12 @@ Otherwise:
             Set review_guideline_id to [[argv.pop]](0).
             Do [[review_manifest_command]](review_guideline_id).
         Otherwise:
-            If subcommand equals "ledger-validate":
+            If subcommand equals "derive-review-manifest":
+                If [[len]](argv) does not equal 1:
+                    Do [[fail]]("usage", "expected: goal derive-review-manifest <guideline-dir>").
+                Set derive_guideline_dir to [[argv.pop]](0).
+                Do [[derive_review_manifest_command]](derive_guideline_dir).
+            Otherwise if subcommand equals "ledger-validate":
                 If [[len]](argv) does not equal 3:
                     Do [[fail]]("usage", "expected: goal ledger-validate <ledger-path> <manifest-path> <label>").
                 Set ledger_arg to [[argv.pop]](0).
