@@ -2,7 +2,6 @@
 
 Deferred-perfection items. Any session appends at deferral time — acceptance check written while the evidence is fresh; `/session-polish` alone executes. Row: `- [ ] <artifact>: <upgrade> | why: <evidence pointer> | accept: <check> | size: S|M|L | pri: 1-3`. Done rows are pruned in the completing commit.
 
-- [ ] vendor/ape question diagnostics: identify question family in rejections without enabling authored questions | why: M3 plan, planrev-m3 lens 6 | accept: red probes name family; no authored question compiles | size: S | pri: 3 | M4: pulled into M4.5 — document-compile mode keeps per-family rejection while query mode compiles; prune only with both modes green + cross-mode isolation probes
 - [ ] ace_to_pl existential facts (`There is ...`): admit only on a named source sentence | why: M3 plan draft polish | accept: named source case + total translation + red boundary | size: M | pri: 3
 - [ ] ace_to_pl formula/arithmetic DRS beyond source-shaped cardinality | why: M3 plan draft polish | accept: named source case + engine-portable documented semantics | size: M | pri: 3
 - [ ] ace_to_pl ditransitive/passive/phrasal coverage beyond corpus need | why: M3 plan draft polish | accept: named corpus sentence + positive/red/oracle fixtures | size: M | pri: 3

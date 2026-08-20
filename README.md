@@ -112,7 +112,8 @@ Status: **frozen**. Every compiled document emits
 ABI: an extension requires a version bump. v1 is the compiler's
 sole schema. A future version takes a new explicit invocation argument;
 the compiler never infers a version from content. Authored questions
-reject as unsupported.
+reject in document compiles; the separate question mode below compiles
+one question into a query projection over the same vocabulary.
 
 Sentences project onto a closed reserved vocabulary. Source words —
 nouns, verbs, adjectives, prepositions — stay opaque data atoms and
@@ -226,8 +227,10 @@ silently shadow schema vocabulary. The compiler scans both the parsed
 sentence and every lexicon entry — used or not — for one.
 `guideline_part/3` is reserved for a later unit and stays unemitted in
 v1. Shapes still outside the schema (group coordination, disjunctive
-consequents, rules scoped inside an operator, questions) reject with a
-canonical `ace_to_pl_error(unsupported, …)` line.
+consequents, rules scoped inside an operator) reject with a canonical
+`ace_to_pl_error(unsupported, …)` line. A question inside a document
+rejects with `question_not_supported(Form, S)`, where `Form` is
+`wh(Tag)`, `universal`, or `yesno`.
 
 Compilation is checked, not asserted. Every v1 compile derives the
 document's proof obligations and discharges them before it emits
@@ -342,6 +345,49 @@ Authoring notes (v1):
   rejects the composition as `proof, left_recursive(…)`. Refer back to
   the antecedent referent (`the patient`), or give the consequent
   entity its own noun.
+
+### Question projection
+
+The compiler's `question` mode compiles one ACE question against the
+same v1 vocabulary:
+
+```sh
+swipl -q -f none -F none -s vendor/ape/prolog/ace_to_pl.pl -g main \
+  -t 'halt(9)' -- question <ape-tree-dir> <qid> [<ulex>]   # ACE on stdin
+```
+
+The input must be exactly one sentence line that parses to one root
+question box. `<qid>` follows the docid grammar. Success emits four
+lines. Line 1 is a generated-file comment. Line 2 is the ground
+`'$guideline_query'(v1, Qid, ace_sha256(H), ulex(none | sha256(H)))`
+record. Line 3 is a `% Q1:` comment with the verbatim sentence. Line 4
+is one `'$guideline_query_projection'(goal(Conj), answers(Manifest))`
+term. `Conj` is an explicit `','/2` conjunction of v1 goals rendered
+through the rule-antecedent pipeline. The root context is `actual`,
+and referents stay variables. A modal box contributes its
+`guideline_operator/3` edge before its payload goals, under a shared
+existential context variable. `Manifest` lists one `answer(Var, Desc)`
+row per wh-placeholder in source order. `Desc` is `noun(Noun, Class)`
+when exactly one same-box `object/6` types the placeholder; otherwise
+it is `wh(who)` or `wh(what)`. Goal and manifest share variables
+inside the one projection term.
+
+Supported forms: `wh(who | which | what)` and yes-no questions over
+conjunctive v1 content, with modal boxes at any nesting of themselves.
+Structural and blocker failures reject with class `unsupported` and
+exit 1. `query_expected(S)` means that no root question exists.
+`query_sentences(N)` means that the input is not exactly one sentence.
+`query_unsupported(Blocker, S)` names a blocking construct. Blockers
+are `universal`, `disjunction`, `classical_negation`, `naf`, and the
+unsupported tags `wh(howm | how | where | when)`. A foreign leaf
+rejects as `leaf(Name/Arity)`; a malformed placeholder rejects as
+`marker(_)`. Inherited
+parser, input, and load failures keep their own classes, details, and
+exit codes. The projection emits no document
+indicators, no declarations, and no proof obligations, and it never
+participates in `check`, `aggregate-check`, or `recursion-check`
+compositions. Query artifacts under `guidelines/` and the answering
+engine land with M4.6.
 
 ## Operating
 

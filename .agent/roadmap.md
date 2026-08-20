@@ -267,17 +267,25 @@ lands; only the shared-file implementations serialize.
   green). Gate: check ok 80 red/11 green fixtures, 374 pages; battery
   16/16. main=92% 221K peak (boundaries 89% 213K + 92% 221K) /
   mate=102% 245K (test-m4u4 past-window, steered out).
-- M4.5 OPEN (kernel, oracle) — question projection: the closed v1 query
-  grammar over `question(drs(...))` boxes (families + rejects per the
-  architecture ruling; probe corpus banked) compiling to v1-vocabulary
-  goal conjunctions + an answer-variable manifest (each `query/2`
-  referent's noun/class); TCB-closure spike (modes-in-file vs one
-  first-party module) decides here and updates PROVENANCE/README/
-  inventory + pulls the vendor-closure polish row if module route;
-  ordinary document compile keeps family-specific question rejection
-  (`question_not_supported` refined per family — carries the
-  question-diagnostics polish row; prune only with both modes green +
-  cross-mode isolation probes); `tests/red/` question reds committed.
+- M4.5 DONE (kernel, oracle) — question projection shipped as
+  modes-in-file (spike ruling; vendor-closure polish row stays
+  deferred): `question <tree> <qid> [ulex]` vector, pre-parse one-line
+  law + post-parse query-sentence clause ahead of the shared empty-DRS
+  guard, root/anchor/scan/markers/strip/goals pipeline over the reused
+  rule-antecedent flatten, `'$guideline_query'` record +
+  `'$guideline_query_projection'(goal(','/2), answers(manifest))`;
+  document mode refined to per-Form `question_not_supported(wh(Tag)|
+  universal|yesno, S)`; `query_box_check` shape law, condition-order
+  Stage A walker (box-carrier descent only), strip anchor-transparency.
+  tests/red: 6 pins regenerated + 8 new question families. Contract
+  `.scratch/contracts/m4u5.md` R11 = 18 rulings. Evidence green
+  (durable `.scratch/m4u5/`, replays in memory): suite 165/165;
+  helpers 17/17; oracle differential rows 1-15 (row 13 = ruled whose
+  notation); rev 8 findings + rev2 Stage-A decoy all accepted → MAIN
+  fixed, acceptance 8/8 + H31; rev2 campaign credited 126/126, 51/51
+  mutants killed, 97/97 reject closure, 800-cell determinism; doc
+  isolation 186 compile diff-clean. main=99% 237K (2nd window; 1st
+  ~200K) / mate=100% 240K (rev+rev2 ceiling; test 93% 224K).
 - M4.6 OPEN (kernel, oracle) — query artifacts + answers: qid grammar,
   `guidelines/<id>/queries/<qid>.ace` → committed `queries/pl/<qid>.pl`
   w/ binding header (question ACE bytes, ulex digest, compiler

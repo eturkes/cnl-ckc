@@ -12,6 +12,18 @@
 %   ... proof                         derive + emit the proof payload (one ground
 %                                     '$guideline_proof'/5 term per group) instead of
 %                                     the product; same derivation check either way
+%   question <ape-tree-dir> <qid> [<ulex>]
+%                                     compile one ACE question (exactly one
+%                                     sentence line parsing to one root question
+%                                     box) into a '$guideline_query'/4 record and
+%                                     one '$guideline_query_projection'/2 term:
+%                                     goal(<','/2 conjunction over the v1
+%                                     indicator vocabulary>) + answers([answer(
+%                                     Var,noun(Noun,Class)|wh(who|what)),...]).
+%                                     <qid> follows the docid grammar; rejects
+%                                     ride the same canonical classes (new
+%                                     unsupported details: query_expected/1,
+%                                     query_sentences/1, query_unsupported/2)
 %   check <file.pl>                   load compiled file into user (quarantined I/O; any load
 %                                     diagnostic rejects)
 %   aggregate-check <manifest>        load a composition (LF lines "<pl>\t<payload>",
@@ -43,9 +55,11 @@
 % and executable negation-as-failure for top-level antecedent NAF boxes.
 % Translation is total: a sentence yields an ordered bundle of one or
 % more clauses; any unrecognized shape rejects the whole document, and
-% authored questions reject (class unsupported, question_not_supported(S)
+% authored questions reject (class unsupported,
+% question_not_supported(Form,S) with Form = wh(Tag)|universal|yesno,
 % when the question is the first unsupported construct the processing
 % order reaches — an earlier unsupported construct keeps its own detail).
+% Questions compile only through the explicit question mode above.
 % Discourse: one invocation = one document = one APE discourse. A later
 % sentence may resolve a definite NP or personal pronoun against an
 % accessible earlier sentence's referent; APE resolves silently and the
@@ -100,6 +114,18 @@ dispatch(['aggregate-check', Manifest], Input, Output, ErrorStream) :-
 dispatch(['recursion-check', Manifest], Input, Output, ErrorStream) :-
     !,
     recursion_check_mode(Manifest, Input, Output, ErrorStream).
+dispatch([question, Tree, QId], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(QId, ErrorStream),
+    compile_mode(query, Tree, QId, none, Input, Output, ErrorStream).
+dispatch([question, Tree, QId, Ulex], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(QId, ErrorStream),
+    validated_ulex_arg(Ulex, ErrorStream),
+    compile_mode(query, Tree, QId, file(Ulex), Input, Output, ErrorStream).
+dispatch([question|Rest], _, _, ErrorStream) :-
+    !,
+    emit_error(ErrorStream, usage, argv([question|Rest]), 2).
 dispatch([Tree, DocId], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
@@ -605,12 +631,30 @@ compile_mode(Mode, Tree, DocId, Ulex, Input, Output, ErrorStream) :-
     load_ape(Tree, Input, Output, ErrorStream),
     maybe_load_ulex(Ulex, Input, Output, ErrorStream, UlexDigest),
     read_input(Input, ErrorStream, Bytes, Text),
+    mode_line_check(Mode, Text, ErrorStream),
     ( quarantined_call(Input, Output, ErrorStream,
           ace_to_drs:acetext_to_drs(Text, off, off, Sentences, _SyntaxTrees,
               Drs, Messages, _Time)) ->
         accept_or_reject(Mode, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
             Messages, Output, ErrorStream)
     ; throw(error(ape_call_failed, context(ace_to_pl:compile_mode/7, Text)))
+    ).
+
+/* Question mode pins its one-line law before parsing: premise
+   injection through extra sentence lines dies here, ahead of any APE
+   diagnostic; empty stdin reads query_sentences(0) here. Byte-non-
+   empty lines count (whitespace-only included). Post-parse, the
+   query sentence law (accept_or_reject) fires before the shared
+   empty-DRS check, so a lone whitespace-only line reads
+   query_sentences(0). Document mode keeps its post-parse
+   line/sentence law. */
+mode_line_check(v1(_), _, _).
+mode_line_check(query, Text, ErrorStream) :-
+    input_lines(Text, Lines),
+    length(Lines, LineCount),
+    ( LineCount =:= 1 ->
+        true
+    ; emit_error(ErrorStream, unsupported, query_sentences(LineCount), 1)
     ).
 
 read_input(Input, ErrorStream, Bytes, Text) :-
@@ -842,6 +886,11 @@ accept_or_reject(_, _, _, _, _, _, _, Messages, _, ErrorStream) :-
     Messages \== [],
     !,
     emit_error(ErrorStream, ape_messages, Messages, 1).
+accept_or_reject(query, _, _, _, _, Sentences, _, [], _, ErrorStream) :-
+    length(Sentences, SentenceCount),
+    SentenceCount =\= 1,
+    !,
+    emit_error(ErrorStream, unsupported, query_sentences(SentenceCount), 1).
 accept_or_reject(_, _, _, _, _, _, Drs, [], _, ErrorStream) :-
     Drs == drs([], []),
     !,
@@ -869,6 +918,10 @@ mode_translate(v1(Emit), DocId, Bytes, Text, UlexDigest, Sentences, Drs,
         OutCodes) :-
     v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences,
         Drs, OutCodes).
+mode_translate(query, QId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes) :-
+    v1_translate_query(QId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes).
 
 reject(Class, Detail) :-
     throw(ace_to_pl_reject(Class, Detail)).
@@ -1127,8 +1180,10 @@ v1_indicators([
 v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
         OutCodes) :-
     ( nonvar(Drs),
-      Drs = drs(Dom, Conds),
+      functor(Drs, drs, 2),
+      arg(1, Drs, Dom),
       is_list(Dom),
+      arg(2, Drs, Conds),
       is_list(Conds) ->
         true
     ; reject(unsupported, invalid_drs_shape)
@@ -1277,8 +1332,9 @@ v1_sentence(Group, S, DocId, Map0, Map, SGroups) :-
     ( Group = [rule(Ante, Cons)] ->
         Map = Map0,
         v1_rule(Ante, Cons, S, DocId, Map0, SGroups)
-    ; Group = [question(_)] ->
-        reject(unsupported, question_not_supported(S))
+    ; Group = [question(QDrs)] ->
+        query_form(QDrs, Form),
+        reject(unsupported, question_not_supported(Form, S))
     ; v1_root_group(Group) ->
         v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses),
         SGroups = [group(fact, 1, [], Clauses)]
@@ -1969,6 +2025,433 @@ v1_wrap_goals([naf(_, Sub)|Goals], [naf_conj(Sub)|Wrapped]) :-
     v1_wrap_goals(Goals, Wrapped).
 v1_wrap_goals([Goal|Goals], [pos(Goal)|Wrapped]) :-
     v1_wrap_goals(Goals, Wrapped).
+
+/* ---------- question mode (v1 query projection) ---------- */
+
+/* One invocation = one query: exactly one sentence line parsing to one
+   root question(drs(...)) box, projected onto a single
+   '$guideline_query_projection'(goal(Conj), answers(Manifest)) term.
+   Goal rendering = the rule-antecedent body pipeline verbatim (root
+   context `actual`, operator edges first over existential context
+   variables, no minted '$guideline_id'); referents stay projection
+   variables shared between goal and manifest, numbered by one
+   render_term_line pass. The projection adds no document indicator,
+   declarations block, guideline_document/3, proof obligation, or
+   aggregate participation. All query_* rejects ride class unsupported
+   (exit 1). */
+
+v1_translate_query(QId, Bytes, Text, UlexDigest, Sentences, Drs,
+        OutCodes) :-
+    ( nonvar(Drs),
+      functor(Drs, drs, 2),
+      arg(1, Drs, Dom),
+      is_list(Dom),
+      arg(2, Drs, Conds),
+      is_list(Conds) ->
+        true
+    ; reject(unsupported, invalid_drs_shape)
+    ),
+    length(Sentences, SentenceCount),
+    ( SentenceCount =:= 1 ->
+        true
+    ; reject(unsupported, query_sentences(SentenceCount))
+    ),
+    crypto_data_hash(Bytes, AceDigest, [algorithm(sha256), encoding(octet)]),
+    v1_ulex_reserved_check,
+    v1_collision_scan(Conds),
+    query_root(Dom, Conds, QDrs),
+    query_anchor(QDrs),
+    query_scan_box(QDrs),
+    query_markers(QDrs, Answers),
+    query_strip_box(QDrs, Clean),
+    query_goals(Clean, QId, Goals),
+    ( Goals == [] ->
+        reject(unsupported, query_unsupported(empty_goal, 1))
+    ; true
+    ),
+    v1_proof_conj(Goals, Conj),
+    term_variables(Conj, GoalVars),
+    query_liveness(Answers, GoalVars),
+    query_render(QId, AceDigest, UlexDigest, Text, Conj, Answers,
+        OutCodes).
+
+/* Root law: the sole root condition is one bare question/1 over a
+   well-formed box; no root domain referent and no sibling root
+   condition (premise-injection defense). */
+query_root(Dom, Conds, QDrs) :-
+    ( nonvar(Conds),
+      functor(Conds, '[|]', 2),
+      arg(2, Conds, Tail),
+      Tail == [],
+      arg(1, Conds, Single),
+      nonvar(Single),
+      functor(Single, question, 1) ->
+        ( Dom == [] ->
+            true
+        ; reject(unsupported, query_unsupported(root_siblings, 1))
+        ),
+        arg(1, Single, QDrs),
+        ( nonvar(QDrs),
+          functor(QDrs, drs, 2) ->
+            true
+        ; reject(unsupported, query_unsupported(leaf(question/1), 1))
+        ),
+        query_box_check(QDrs)
+    ; query_root_present(Conds) ->
+        reject(unsupported, query_unsupported(root_siblings, 1))
+    ; reject(unsupported, query_expected(1))
+    ).
+
+query_root_present(Conds) :-
+    member(Cond, Conds),
+    nonvar(Cond),
+    query_cond_inner(Cond, Inner),
+    nonvar(Inner),
+    functor(Inner, question, 1),
+    !.
+
+/* Every anchored condition inside the question box carries S=1. */
+query_anchor(QDrs) :-
+    inner_sentence(QDrs, S),
+    ( S =:= 1 ->
+        true
+    ; reject(unsupported, mixed_or_missing_sentence_anchors([S]))
+    ).
+
+/* Anchor wrappers strip to the inner condition; everything else is
+   its own inner term. */
+query_cond_inner(Cond, Inner) :-
+    ( nonvar(Cond),
+      functor(Cond, -, 2),
+      arg(2, Cond, Anchor),
+      nonvar(Anchor),
+      anchor_sentence(Anchor, _) ->
+        arg(1, Cond, Inner)
+    ; Inner = Cond
+    ).
+
+/* Stage B: pre-order first-match blocker scan (structural blockers
+   before marker validation; a supported modal box scans its payload
+   before later siblings). Supported leaves pass at functor/arity
+   level only — payload defects (named arguments, non-pos property
+   degree, bad object operators, oversize predicates) reject later
+   inside the shared v1 condition pipeline with its established
+   details. Unknown shapes reject leaf(Name/Arity): closure is total
+   by construction. */
+query_scan_box(QDrs) :-
+    query_box_check(QDrs),
+    arg(2, QDrs, Conds),
+    query_scan_conds(Conds).
+
+/* Inner-box shape law: every question or modal box must be a drs/2
+   with proper-list domain and conditions. Malformed shapes reject
+   before any traversal touches them, so no traversal can bind an
+   open list tail or read a non-list spine (non-instantiation law). */
+query_box_check(Box) :-
+    ( nonvar(Box),
+      functor(Box, drs, 2),
+      arg(1, Box, Dom),
+      is_list(Dom),
+      arg(2, Box, Conds),
+      is_list(Conds) ->
+        true
+    ; reject(unsupported, invalid_drs_shape)
+    ).
+
+query_scan_conds([]).
+query_scan_conds([Cond|Conds]) :-
+    query_cond_inner(Cond, Inner),
+    query_scan_leaf(Inner),
+    query_scan_conds(Conds).
+
+query_scan_leaf(Leaf) :-
+    var(Leaf),
+    !,
+    reject(unsupported, query_unsupported(leaf(var), 1)).
+query_scan_leaf(Leaf) :-
+    is_list(Leaf),
+    !,
+    reject(unsupported, query_unsupported(leaf(list), 1)).
+query_scan_leaf(Leaf) :-
+    query_blocker(Leaf, Blocker),
+    !,
+    reject(unsupported, query_unsupported(Blocker, 1)).
+query_scan_leaf(Leaf) :-
+    functor(Leaf, Op, 1),
+    memberchk(Op, [should, must, can, may]),
+    !,
+    arg(1, Leaf, Box),
+    query_scan_box(Box).
+query_scan_leaf(Leaf) :-
+    functor(Leaf, query, 2),
+    !,
+    arg(2, Leaf, Tag),
+    ( atom(Tag),
+      memberchk(Tag, [who, which, what]) ->
+        true
+    ; reject(unsupported, query_unsupported(wh(Tag), 1))
+    ).
+query_scan_leaf(Leaf) :-
+    functor(Leaf, Name, Arity),
+    query_supported_leaf(Name, Arity),
+    !.
+query_scan_leaf(Leaf) :-
+    functor(Leaf, Name, Arity),
+    reject(unsupported, query_unsupported(leaf(Name/Arity), 1)).
+
+query_blocker(Leaf, universal) :-
+    functor(Leaf, =>, 2).
+query_blocker(Leaf, disjunction) :-
+    functor(Leaf, v, 2).
+query_blocker(Leaf, classical_negation) :-
+    functor(Leaf, -, 1).
+query_blocker(Leaf, naf) :-
+    functor(Leaf, ~, 1).
+
+query_supported_leaf(object, 6).
+query_supported_leaf(predicate, 3).
+query_supported_leaf(predicate, 4).
+query_supported_leaf(predicate, 5).
+query_supported_leaf(modifier_pp, 3).
+query_supported_leaf(property, 3).
+
+/* Markers collect per box in pre-order together with that box's
+   object/6 sources (same-box law), then validate in marker order:
+   nonvar referent, duplicate referent, noun-source uniqueness.
+   Exactly one same-box source names the answer noun(Noun,Class); a
+   source-less who/what falls back to wh(Tag); a source-less which
+   rejects. Liveness (every answer variable inside the goal) runs
+   after goal rendering. */
+query_markers(QDrs, Answers) :-
+    query_box_markers(QDrs, [], Pairs),
+    query_validate_markers(Pairs, [], Answers).
+
+query_box_markers(Box, Acc0, Acc) :-
+    arg(2, Box, Conds),
+    query_box_objects(Conds, Objects),
+    query_conds_markers(Conds, Objects, Acc0, Acc).
+
+query_box_objects([], []).
+query_box_objects([Cond|Conds], Objects) :-
+    query_cond_inner(Cond, Inner),
+    ( nonvar(Inner),
+      functor(Inner, object, 6) ->
+        arg(1, Inner, Ref),
+        arg(2, Inner, Noun),
+        arg(3, Inner, Class),
+        Objects = [source(Ref, Noun, Class)|Rest]
+    ; Objects = Rest
+    ),
+    query_box_objects(Conds, Rest).
+
+query_conds_markers([], _, Acc, Acc).
+query_conds_markers([Cond|Conds], Objects, Acc0, Acc) :-
+    query_cond_inner(Cond, Inner),
+    ( nonvar(Inner),
+      functor(Inner, query, 2) ->
+        arg(1, Inner, Ref),
+        arg(2, Inner, Tag),
+        append(Acc0, [marker(Ref, Tag, Objects)], Acc1)
+    ; nonvar(Inner),
+      functor(Inner, Op, 1),
+      memberchk(Op, [should, must, can, may]),
+      arg(1, Inner, Box),
+      nonvar(Box),
+      functor(Box, drs, 2) ->
+        query_box_markers(Box, Acc0, Acc1)
+    ; Acc1 = Acc0
+    ),
+    query_conds_markers(Conds, Objects, Acc1, Acc).
+
+query_validate_markers([], _, []).
+query_validate_markers([marker(Ref, Tag, Objects)|Pairs], Seen,
+        [answer(Ref, Desc)|Answers]) :-
+    ( var(Ref) ->
+        true
+    ; reject(unsupported, query_unsupported(marker(nonvar), 1))
+    ),
+    ( strict_member(Ref, Seen) ->
+        reject(unsupported, query_unsupported(marker(duplicate), 1))
+    ; true
+    ),
+    query_marker_desc(Ref, Tag, Objects, Desc),
+    query_validate_markers(Pairs, [Ref|Seen], Answers).
+
+query_marker_desc(Ref, Tag, Objects, Desc) :-
+    query_ref_sources(Objects, Ref, Sources),
+    ( Sources = [source(_, Noun, Class)] ->
+        Desc = noun(Noun, Class)
+    ; Sources = [_, _|_] ->
+        reject(unsupported, query_unsupported(marker(conflict), 1))
+    ; Tag == who ->
+        Desc = wh(who)
+    ; Tag == what ->
+        Desc = wh(what)
+    ; reject(unsupported, query_unsupported(marker(source), 1))
+    ).
+
+query_ref_sources([], _, []).
+query_ref_sources([source(R, Noun, Class)|Objects], Ref, Sources) :-
+    ( R == Ref ->
+        Sources = [source(R, Noun, Class)|Rest]
+    ; Sources = Rest
+    ),
+    query_ref_sources(Objects, Ref, Rest).
+
+query_liveness([], _).
+query_liveness([answer(Ref, _)|Answers], GoalVars) :-
+    ( strict_member(Ref, GoalVars) ->
+        true
+    ; reject(unsupported, query_unsupported(marker(unbound), 1))
+    ),
+    query_liveness(Answers, GoalVars).
+
+/* Marker removal rebuilds list spines and modal wrappers only; kept
+   conditions stay the identical terms, so variable identity survives
+   into the shared projection term. Modal classification reads the
+   anchor-stripped inner term (same law as scan and markers); an
+   anchored modal rebuilds bare — its anchor is already validated by
+   query_anchor and carries no meaning past this point. */
+query_strip_box(Box, drs(Dom, Clean)) :-
+    arg(1, Box, Dom),
+    arg(2, Box, Conds),
+    query_strip_conds(Conds, Clean).
+
+query_strip_conds([], []).
+query_strip_conds([Cond|Conds], Clean) :-
+    ( query_strip_cond(Cond, Kept) ->
+        Clean = [Kept|Rest]
+    ; Clean = Rest
+    ),
+    query_strip_conds(Conds, Rest).
+
+query_strip_cond(Cond, _) :-
+    query_cond_inner(Cond, Inner),
+    nonvar(Inner),
+    functor(Inner, query, 2),
+    !,
+    fail.
+query_strip_cond(Cond, Kept) :-
+    query_cond_inner(Cond, Inner),
+    nonvar(Inner),
+    functor(Inner, Op, 1),
+    memberchk(Op, [should, must, can, may]),
+    arg(1, Inner, Box),
+    nonvar(Box),
+    functor(Box, drs, 2),
+    !,
+    query_strip_box(Box, CleanBox),
+    Kept =.. [Op, CleanBox].
+query_strip_cond(Cond, Cond).
+
+/* Goal rendering: rule-antecedent pipeline — no document map, no
+   Skolem map, so referents stay body variables and operator boxes
+   keep existential context variables (never minted contexts). */
+query_goals(Clean, QId, Goals) :-
+    arg(2, Clean, Conds),
+    v1_flatten_items(Conds, antecedent, 1, QId, [], actual, none, 1, _,
+        Items),
+    v1_expand_items(Items, [], [], Goals).
+
+query_header_term(QId, AceDigest, none,
+    '$guideline_query'(v1, QId, ace_sha256(AceDigest), ulex(none))).
+query_header_term(QId, AceDigest, sha256(Digest),
+    '$guideline_query'(v1, QId, ace_sha256(AceDigest),
+        ulex(sha256(Digest)))).
+
+/* Q1 comment = the sentence line bytes minus a trailing CR (comments
+   stay one line); the ACE digest keeps the raw bytes. */
+query_comment_codes(Text, Comment) :-
+    input_lines(Text, [Line]),
+    ( append(Body, [0'\r], Line) ->
+        Comment = Body
+    ; Comment = Line
+    ).
+
+query_render(QId, AceDigest, UlexDigest, Text, Conj, Answers, OutCodes) :-
+    query_header_term(QId, AceDigest, UlexDigest, Record),
+    query_comment_codes(Text, Comment),
+    with_output_to(string(Out),
+        ( format('% ~w compiled from ACE question by ace_to_pl question mode; do not edit.~n',
+              [QId]),
+          render_term_line(Record),
+          format('% Q1: ~s~n', [Comment]),
+          render_term_line('$guideline_query_projection'(goal(Conj),
+              answers(Answers)))
+        )),
+    string_codes(Out, OutCodes).
+
+/* Stage A: total question-form classifier for the document-mode
+   diagnostic — the first query/2 marker in pre-order names wh(Tag);
+   else a top-level implication reads universal; else yesno. */
+query_form(QDrs, Form) :-
+    ( query_first_marker(QDrs, Tag) ->
+        Form = wh(Tag)
+    ; query_top_implication(QDrs) ->
+        Form = universal
+    ; Form = yesno
+    ).
+
+/* Marker search = pre-order over condition lists, descending only
+   into the box arguments of box-carrying condition functors (modal,
+   implication, disjunction, negation, nested question). Payload
+   arguments of atomic leaves are never inspected, so a decoy query/2
+   — or a whole decoy drs/2 — inside an atomic condition cannot
+   outrank a real condition marker. Total: malformed shapes fail the
+   search without binding input. */
+query_first_marker(QDrs, Tag) :-
+    nonvar(QDrs),
+    functor(QDrs, drs, 2),
+    arg(2, QDrs, Conds),
+    query_conds_first_marker(Conds, Tag).
+
+query_conds_first_marker(Conds, Tag) :-
+    nonvar(Conds),
+    functor(Conds, '[|]', 2),
+    arg(1, Conds, Cond),
+    ( query_cond_first_marker(Cond, Tag0) ->
+        Tag = Tag0
+    ; arg(2, Conds, Rest),
+      query_conds_first_marker(Rest, Tag)
+    ).
+
+query_cond_first_marker(Cond, Tag) :-
+    query_cond_inner(Cond, Inner),
+    nonvar(Inner),
+    ( functor(Inner, query, 2) ->
+        arg(2, Inner, Tag)
+    ; query_box_carrier(Inner) ->
+        query_args_first_marker(Inner, 1, Tag)
+    ).
+
+query_box_carrier(Inner) :-
+    functor(Inner, Op, Arity),
+    ( Arity =:= 1 ->
+        memberchk(Op, [should, must, can, may, -, ~, question])
+    ; Arity =:= 2,
+      memberchk(Op, [=>, v])
+    ).
+
+query_args_first_marker(Term, N, Tag) :-
+    functor(Term, _, Arity),
+    N =< Arity,
+    ( arg(N, Term, A),
+      query_first_marker(A, Tag0) ->
+        Tag = Tag0
+    ; N1 is N + 1,
+      query_args_first_marker(Term, N1, Tag)
+    ).
+
+query_top_implication(QDrs) :-
+    nonvar(QDrs),
+    functor(QDrs, drs, 2),
+    arg(2, QDrs, Conds),
+    is_list(Conds),
+    member(Cond, Conds),
+    query_cond_inner(Cond, Inner),
+    nonvar(Inner),
+    functor(Inner, =>, 2),
+    !.
 
 /* ---------- v1 derived proof obligations (P4-P7) ---------- */
 
