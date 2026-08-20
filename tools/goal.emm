@@ -282,6 +282,8 @@ Define [[query_artifact_pl_path]] taking tracked:
         Set dir_ok to True.
     If dir_part equals "answers":
         Set dir_ok to True.
+    If dir_part equals "traces":
+        Set dir_ok to True.
     If not dir_ok:
         Give back False.
     If not [[file_part.endswith]](".pl"):
@@ -321,7 +323,12 @@ Define [[queries_fixture_pl_path]] taking tracked:
     If part_count equals 6:
         Set pin_part to [[parts.pop]](0).
         Set file_part to [[parts.pop]](0).
-        If pin_part does not equal "answers-golden":
+        Set pin_ok to False.
+        If pin_part equals "answers-golden":
+            Set pin_ok to True.
+        If pin_part equals "traces-golden":
+            Set pin_ok to True.
+        If not pin_ok:
             Give back False.
         If not [[file_part.endswith]](".pl"):
             Give back False.
@@ -354,6 +361,8 @@ Define [[queries_fixture_pl_path]] taking tracked:
     If dir_part equals "pl":
         Set dir_ok to True.
     If dir_part equals "answers":
+        Set dir_ok to True.
+    If dir_part equals "traces":
         Set dir_ok to True.
     If not dir_ok:
         Give back False.
@@ -621,6 +630,7 @@ Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, gu
     Do [[check_aggregate]](scratch_path, swipl_executable, stage_path, manifest_pairs).
     Set query_counts to [[validate_queries]](scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path).
     Do [[queries_meter]](guideline_path.name, query_counts).
+    Do [[traces_meter]](guideline_path.name, query_counts).
 
 Define [[manifest_document_ids]] taking manifest_pairs:
     Set docid_list to <>.
@@ -708,6 +718,8 @@ Define [[collect_query_aces]] taking scratch_path, guideline_path:
             Set subdir_name to True.
         If entry_name equals "answers":
             Set subdir_name to True.
+        If entry_name equals "traces":
+            Set subdir_name to True.
         If subdir_name:
             If [[entry.is_symlink]]():
                 Do [[queries_violation]](scratch_path, "queries", "unsupported entry: " plus [[str]](entry)).
@@ -793,6 +805,24 @@ Define [[run_answer]] taking scratch_path, swipl_executable, stage_path, qid, ma
         Do [[cleanup_and_fail]](scratch_path, "answer-stdout", "missing final newline for question: " plus qid).
     Give back result.stdout.
 
+Define [[run_trace]] taking scratch_path, swipl_executable, stage_path, qid, manifest_path, query_pl_path, answers_pl_path:
+    Set tail_args to <"trace", [[str]](manifest_path), [[str]](query_pl_path), [[str]](answers_pl_path)>.
+    Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
+    Try:
+        Set result to [[subprocess.run]](command, capture_output=True, timeout=30).
+    Catch subprocess.TimeoutExpired:
+        Do [[queries_violation]](scratch_path, "queries", "wall_clock for qid: " plus qid).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](scratch_path, result).
+    If result.stderr:
+        Do [[cleanup_and_fail]](scratch_path, "trace-stderr", "non-empty stderr for question: " plus qid).
+    If not result.stdout:
+        Do [[cleanup_and_fail]](scratch_path, "trace-stdout", "empty stdout for question: " plus qid).
+    Set newline_bytes to [[bytes]](<10>).
+    If not [[result.stdout.endswith]](newline_bytes):
+        Do [[cleanup_and_fail]](scratch_path, "trace-stdout", "missing final newline for question: " plus qid).
+    Give back result.stdout.
+
 Define [[answer_result_text]] taking answer_bytes:
     Set answer_text to [[answer_bytes.decode]]("utf-8", errors="replace").
     Set answer_lines to [[answer_text.splitlines]]().
@@ -809,17 +839,644 @@ Define [[answer_result_text]] taking answer_bytes:
         Give back "".
     Give back [[tail_text.removesuffix]](")).").
 
+Define [[trace_ascii_digit]] taking ch:
+    Set ascii_digits to "0123456789".
+    Set ok to ch is in ascii_digits.
+    Give back ok.
+
+Define [[trace_scan_number]] taking chars, num_text:
+    Set is_float to False.
+    If chars:
+        Set c2 to [[chars.pop]]().
+        If c2 equals ".":
+            If chars:
+                Set c3 to [[chars.pop]]().
+                If [[trace_ascii_digit]](c3):
+                    Set is_float to True.
+                    Set num_text to num_text plus "." plus c3.
+                    Set frac_done to False.
+                    While not frac_done:
+                        If not chars:
+                            Set frac_done to True.
+                        Otherwise:
+                            Set c4 to [[chars.pop]]().
+                            If [[trace_ascii_digit]](c4):
+                                Set num_text to num_text plus c4.
+                            Otherwise:
+                                Do [[chars.append]](c4).
+                                Set frac_done to True.
+                Otherwise:
+                    Do [[chars.append]](c3).
+                    Do [[chars.append]](c2).
+            Otherwise:
+                Do [[chars.append]](c2).
+        Otherwise:
+            Do [[chars.append]](c2).
+    If is_float:
+        If chars:
+            Set e1 to [[chars.pop]]().
+            Set is_e to False.
+            If e1 equals "e":
+                Set is_e to True.
+            If e1 equals "E":
+                Set is_e to True.
+            If not is_e:
+                Do [[chars.append]](e1).
+            Otherwise:
+                Set exp_text to "".
+                Set exp_sign to "".
+                Set exp_ok to False.
+                If chars:
+                    Set e2 to [[chars.pop]]().
+                    If [[trace_ascii_digit]](e2):
+                        Set exp_text to e2.
+                        Set exp_ok to True.
+                    Otherwise if e2 equals "-":
+                        Set exp_sign to e2.
+                    Otherwise if e2 equals "+":
+                        Set exp_sign to e2.
+                    Otherwise:
+                        Do [[chars.append]](e2).
+                If exp_sign:
+                    If chars:
+                        Set e3 to [[chars.pop]]().
+                        If [[trace_ascii_digit]](e3):
+                            Set exp_text to e3.
+                            Set exp_ok to True.
+                        Otherwise:
+                            Do [[chars.append]](e3).
+                If exp_ok:
+                    Set exp_done to False.
+                    While not exp_done:
+                        If not chars:
+                            Set exp_done to True.
+                        Otherwise:
+                            Set e4 to [[chars.pop]]().
+                            If [[trace_ascii_digit]](e4):
+                                Set exp_text to exp_text plus e4.
+                            Otherwise:
+                                Do [[chars.append]](e4).
+                                Set exp_done to True.
+                    Set num_text to num_text plus "e" plus exp_sign plus exp_text.
+                Otherwise:
+                    If exp_sign:
+                        Do [[chars.append]](exp_sign).
+                    Do [[chars.append]](e1).
+        Give back <"float", num_text>.
+    Give back <"int", [[int]](num_text)>.
+
+Define [[trace_scan_tokens]] taking term_text:
+    Set chars to [[list]](term_text).
+    Do [[chars.reverse]]().
+    Set tokens to <>.
+    Set punct_chars to "()[],.".
+    Set ascii_lower to "abcdefghijklmnopqrstuvwxyz".
+    Set ascii_alnum to ascii_lower plus "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".
+    While chars:
+        Set c to [[chars.pop]]().
+        If c equals "'":
+            Set inner to "".
+            Set closed to False.
+            While not closed:
+                If not chars:
+                    Give back None.
+                Set c2 to [[chars.pop]]().
+                If c2 equals "'":
+                    Set closed to True.
+                Otherwise if c2 equals "\\":
+                    If not chars:
+                        Give back None.
+                    Set c3 to [[chars.pop]]().
+                    Set numeric_escape to False.
+                    If c3 equals "x":
+                        Set numeric_escape to True.
+                    If [[trace_ascii_digit]](c3):
+                        Set numeric_escape to True.
+                    If numeric_escape:
+                        Set esc_closed to False.
+                        While not esc_closed:
+                            If not chars:
+                                Give back None.
+                            Set c4 to [[chars.pop]]().
+                            If c4 equals "\\":
+                                Set esc_closed to True.
+                            Otherwise:
+                                Set inner to inner plus "\\" plus c4.
+                    Otherwise:
+                        Set inner to inner plus "\\" plus c3.
+                Otherwise:
+                    Set inner to inner plus c2.
+            Do [[tokens.append]](<"atom", inner>).
+        Otherwise if [[trace_ascii_digit]](c):
+            Set num_text to c.
+            Set num_done to False.
+            While not num_done:
+                If not chars:
+                    Set num_done to True.
+                Otherwise:
+                    Set c2 to [[chars.pop]]().
+                    If [[trace_ascii_digit]](c2):
+                        Set num_text to num_text plus c2.
+                    Otherwise:
+                        Do [[chars.append]](c2).
+                        Set num_done to True.
+            Do [[tokens.append]]([[trace_scan_number]](chars, num_text)).
+        Otherwise if c equals "-":
+            If not chars:
+                Give back None.
+            Set c2 to [[chars.pop]]().
+            If not [[trace_ascii_digit]](c2):
+                Give back None.
+            Set num_text to c plus c2.
+            Set num_done to False.
+            While not num_done:
+                If not chars:
+                    Set num_done to True.
+                Otherwise:
+                    Set c3 to [[chars.pop]]().
+                    If [[trace_ascii_digit]](c3):
+                        Set num_text to num_text plus c3.
+                    Otherwise:
+                        Do [[chars.append]](c3).
+                        Set num_done to True.
+            Do [[tokens.append]]([[trace_scan_number]](chars, num_text)).
+        Otherwise if c is in punct_chars:
+            Do [[tokens.append]](<"punct", c>).
+        Otherwise if c is in ascii_lower:
+            Set atom_text to c.
+            Set atom_done to False.
+            While not atom_done:
+                If not chars:
+                    Set atom_done to True.
+                Otherwise:
+                    Set c2 to [[chars.pop]]().
+                    Set atom_char to c2 is in ascii_alnum.
+                    If c2 equals "_":
+                        Set atom_char to True.
+                    If atom_char:
+                        Set atom_text to atom_text plus c2.
+                    Otherwise:
+                        Do [[chars.append]](c2).
+                        Set atom_done to True.
+            Do [[tokens.append]](<"atom", atom_text>).
+        Otherwise:
+            Give back None.
+    Give back tokens.
+
+Define [[trace_parse_term]] taking tokens:
+    If not tokens:
+        Give back None.
+    Set tok to [[tokens.pop]]().
+    Set tok_copy to [[list]](tok).
+    Set kind to [[tok_copy.pop]](0).
+    Set value to [[tok_copy.pop]](0).
+    If kind equals "int":
+        Give back <"i", value>.
+    If kind equals "float":
+        Give back <"f", value>.
+    If kind equals "atom":
+        Set open_paren to False.
+        If tokens:
+            Set peek to [[tokens.pop]]().
+            If peek equals <"punct", "(">:
+                Set open_paren to True.
+            Otherwise:
+                Do [[tokens.append]](peek).
+        If not open_paren:
+            Give back <"a", value>.
+        Set args to <>.
+        Set arg_node to [[trace_parse_term]](tokens).
+        If arg_node equals None:
+            Give back None.
+        Do [[args.append]](arg_node).
+        Set args_done to False.
+        While not args_done:
+            If not tokens:
+                Give back None.
+            Set sep to [[tokens.pop]]().
+            If sep equals <"punct", ",">:
+                Set arg_node to [[trace_parse_term]](tokens).
+                If arg_node equals None:
+                    Give back None.
+                Do [[args.append]](arg_node).
+            Otherwise if sep equals <"punct", ")">:
+                Set args_done to True.
+            Otherwise:
+                Give back None.
+        Give back <"c", value, args>.
+    If kind equals "punct":
+        If value does not equal "[":
+            Give back None.
+        Set items to <>.
+        If tokens:
+            Set peek to [[tokens.pop]]().
+            If peek equals <"punct", "]">:
+                Give back <"l", items>.
+            Do [[tokens.append]](peek).
+        Set item_node to [[trace_parse_term]](tokens).
+        If item_node equals None:
+            Give back None.
+        Do [[items.append]](item_node).
+        Set items_done to False.
+        While not items_done:
+            If not tokens:
+                Give back None.
+            Set sep to [[tokens.pop]]().
+            If sep equals <"punct", ",">:
+                Set item_node to [[trace_parse_term]](tokens).
+                If item_node equals None:
+                    Give back None.
+                Do [[items.append]](item_node).
+            Otherwise if sep equals <"punct", "]">:
+                Set items_done to True.
+            Otherwise:
+                Give back None.
+        Give back <"l", items>.
+    Give back None.
+
+Define [[trace_parse_line]] taking line_text:
+    Set tokens to [[trace_scan_tokens]](line_text).
+    If tokens equals None:
+        Give back None.
+    Do [[tokens.reverse]]().
+    Set term to [[trace_parse_term]](tokens).
+    If term equals None:
+        Give back None.
+    If not tokens:
+        Give back None.
+    Set stop to [[tokens.pop]]().
+    If stop does not equal <"punct", ".">:
+        Give back None.
+    If tokens:
+        Give back None.
+    Give back term.
+
+Define [[trace_walk_node]] taking node, triples, node_marks:
+    Set node_copy to [[list]](node).
+    Set kind to [[node_copy.pop]](0).
+    If kind does not equal "c":
+        Give back False.
+    Set name to [[node_copy.pop]](0).
+    Set args to [[node_copy.pop]](0).
+    If name equals "naf":
+        If [[len]](args) does not equal 1:
+            Give back False.
+        Give back True.
+    If name does not equal "clause":
+        Give back False.
+    If [[len]](args) does not equal 3:
+        Give back False.
+    Set args_copy to [[list]](args).
+    Set sentence_node to [[args_copy.pop]](0).
+    Set digest_node to [[args_copy.pop]](0).
+    Set children_node to [[args_copy.pop]](0).
+    Set sentence_copy to [[list]](sentence_node).
+    Set sentence_kind to [[sentence_copy.pop]](0).
+    If sentence_kind does not equal "c":
+        Give back False.
+    Set sentence_name to [[sentence_copy.pop]](0).
+    If sentence_name does not equal "sentence":
+        Give back False.
+    Set sentence_args to [[sentence_copy.pop]](0).
+    If [[len]](sentence_args) does not equal 2:
+        Give back False.
+    Set sentence_args_copy to [[list]](sentence_args).
+    Set docid_node to [[sentence_args_copy.pop]](0).
+    Set s_node to [[sentence_args_copy.pop]](0).
+    Set docid_copy to [[list]](docid_node).
+    Set docid_kind to [[docid_copy.pop]](0).
+    If docid_kind does not equal "a":
+        Give back False.
+    Set docid_value to [[docid_copy.pop]](0).
+    If not [[valid_docid]](docid_value):
+        Give back False.
+    Set s_copy to [[list]](s_node).
+    Set s_kind to [[s_copy.pop]](0).
+    If s_kind does not equal "i":
+        Give back False.
+    Set s_value to [[s_copy.pop]](0).
+    If s_value is less than 1:
+        Give back False.
+    Set digest_copy to [[list]](digest_node).
+    Set digest_kind to [[digest_copy.pop]](0).
+    If digest_kind does not equal "c":
+        Give back False.
+    Set digest_name to [[digest_copy.pop]](0).
+    If digest_name does not equal "clause_sha256":
+        Give back False.
+    Set digest_args to [[digest_copy.pop]](0).
+    If [[len]](digest_args) does not equal 1:
+        Give back False.
+    Set digest_args_copy to [[list]](digest_args).
+    Set hex_node to [[digest_args_copy.pop]](0).
+    Set hex_copy to [[list]](hex_node).
+    Set hex_kind to [[hex_copy.pop]](0).
+    If hex_kind does not equal "a":
+        Give back False.
+    Set hex_value to [[hex_copy.pop]](0).
+    If not [[valid_digest]](hex_value):
+        Give back False.
+    Set children_copy to [[list]](children_node).
+    Set children_kind to [[children_copy.pop]](0).
+    If children_kind does not equal "l":
+        Give back False.
+    Set children_items to [[children_copy.pop]](0).
+    For each child in children_items:
+        Set child_ok to [[trace_walk_node]](child, triples, node_marks).
+        If not child_ok:
+            Give back False.
+    Do [[triples.append]](<docid_value, s_value, hex_value>).
+    Do [[node_marks.append]](1).
+    Give back True.
+
+Define [[trace_walk_proof]] taking proof_node, triples, node_marks:
+    Set proof_copy to [[list]](proof_node).
+    Set kind to [[proof_copy.pop]](0).
+    If kind does not equal "c":
+        Give back "invalid".
+    Set name to [[proof_copy.pop]](0).
+    Set args to [[proof_copy.pop]](0).
+    If name equals "proved":
+        If [[len]](args) does not equal 1:
+            Give back "invalid".
+        Set args_copy to [[list]](args).
+        Set nodes_node to [[args_copy.pop]](0).
+        Set nodes_copy to [[list]](nodes_node).
+        Set nodes_kind to [[nodes_copy.pop]](0).
+        If nodes_kind does not equal "l":
+            Give back "invalid".
+        Set node_items to [[nodes_copy.pop]](0).
+        If not node_items:
+            Give back "invalid".
+        For each item in node_items:
+            Set root_copy to [[list]](item).
+            Set root_kind to [[root_copy.pop]](0).
+            If root_kind does not equal "c":
+                Give back "invalid".
+            Set root_name to [[root_copy.pop]](0).
+            If root_name does not equal "clause":
+                Give back "invalid".
+            Set item_ok to [[trace_walk_node]](item, triples, node_marks).
+            If not item_ok:
+                Give back "invalid".
+        Give back "proved".
+    If name equals "unproved":
+        If [[len]](args) does not equal 1:
+            Give back "invalid".
+        Set args_copy to [[list]](args).
+        Set why_node to [[args_copy.pop]](0).
+        If why_node equals <"a", "finite_failure">:
+            Give back "unproved".
+        If why_node equals <"a", "limit">:
+            Give back "unproved".
+        Give back "invalid".
+    Give back "invalid".
+
+Define [[parse_trace_artifact]] taking trace_bytes, qid:
+    Set malformed to <"malformed", False, <>, 0>.
+    Set text to "".
+    Try:
+        Set text to [[trace_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back malformed.
+    If not [[text.endswith]]("\n"):
+        Give back malformed.
+    Set line_list to [[text.split]]("\n").
+    Do [[line_list.pop]]().
+    If [[len]](line_list) does not equal 2:
+        Give back malformed.
+    Set comment_line to [[line_list.pop]](0).
+    Set term_line to [[line_list.pop]](0).
+    Set expected_comment to "% " plus qid plus " traced against the loaded composition by ace_to_pl trace mode; do not edit.".
+    If comment_line does not equal expected_comment:
+        Give back malformed.
+    Set term to [[trace_parse_line]](term_line).
+    If term equals None:
+        Give back malformed.
+    Set term_copy to [[list]](term).
+    Set term_kind to [[term_copy.pop]](0).
+    If term_kind does not equal "c":
+        Give back malformed.
+    Set term_name to [[term_copy.pop]](0).
+    If term_name does not equal "$guideline_traces":
+        Give back malformed.
+    Set term_args to [[term_copy.pop]](0).
+    If [[len]](term_args) does not equal 5:
+        Give back malformed.
+    Set args_copy to [[list]](term_args).
+    Set version_node to [[args_copy.pop]](0).
+    Set qid_node to [[args_copy.pop]](0).
+    Set query_wrap to [[args_copy.pop]](0).
+    Set answers_wrap to [[args_copy.pop]](0).
+    Set result_wrap to [[args_copy.pop]](0).
+    If version_node does not equal <"a", "v1">:
+        Give back malformed.
+    If qid_node does not equal <"a", qid>:
+        Give back malformed.
+    Set query_copy to [[list]](query_wrap).
+    Set query_kind to [[query_copy.pop]](0).
+    If query_kind does not equal "c":
+        Give back malformed.
+    Set query_name to [[query_copy.pop]](0).
+    If query_name does not equal "query_sha256":
+        Give back malformed.
+    Set query_args to [[query_copy.pop]](0).
+    If [[len]](query_args) does not equal 1:
+        Give back malformed.
+    Set query_args_copy to [[list]](query_args).
+    Set query_hex_node to [[query_args_copy.pop]](0).
+    Set query_hex_copy to [[list]](query_hex_node).
+    Set query_hex_kind to [[query_hex_copy.pop]](0).
+    If query_hex_kind does not equal "a":
+        Give back malformed.
+    Set query_hex to [[query_hex_copy.pop]](0).
+    If not [[valid_digest]](query_hex):
+        Give back malformed.
+    Set answers_copy to [[list]](answers_wrap).
+    Set answers_kind to [[answers_copy.pop]](0).
+    If answers_kind does not equal "c":
+        Give back malformed.
+    Set answers_name to [[answers_copy.pop]](0).
+    If answers_name does not equal "answers_sha256":
+        Give back malformed.
+    Set answers_args to [[answers_copy.pop]](0).
+    If [[len]](answers_args) does not equal 1:
+        Give back malformed.
+    Set answers_args_copy to [[list]](answers_args).
+    Set answers_hex_node to [[answers_args_copy.pop]](0).
+    Set answers_hex_copy to [[list]](answers_hex_node).
+    Set answers_hex_kind to [[answers_hex_copy.pop]](0).
+    If answers_hex_kind does not equal "a":
+        Give back malformed.
+    Set answers_hex to [[answers_hex_copy.pop]](0).
+    If not [[valid_digest]](answers_hex):
+        Give back malformed.
+    Set result_copy to [[list]](result_wrap).
+    Set result_kind to [[result_copy.pop]](0).
+    If result_kind does not equal "c":
+        Give back malformed.
+    Set result_name to [[result_copy.pop]](0).
+    If result_name does not equal "result":
+        Give back malformed.
+    Set result_args to [[result_copy.pop]](0).
+    If [[len]](result_args) does not equal 1:
+        Give back malformed.
+    Set result_args_copy to [[list]](result_args).
+    Set result_node to [[result_args_copy.pop]](0).
+    Set triples to <>.
+    Set node_marks to <>.
+    Set demo_ok to False.
+    Set result_node_copy to [[list]](result_node).
+    Set result_node_kind to [[result_node_copy.pop]](0).
+    If result_node_kind does not equal "c":
+        Give back malformed.
+    Set result_node_name to [[result_node_copy.pop]](0).
+    Set result_node_args to [[result_node_copy.pop]](0).
+    If result_node_name equals "yes":
+        If [[len]](result_node_args) does not equal 1:
+            Give back malformed.
+        Set yes_args_copy to [[list]](result_node_args).
+        Set proof_node to [[yes_args_copy.pop]](0).
+        Set proof_status to [[trace_walk_proof]](proof_node, triples, node_marks).
+        If proof_status equals "invalid":
+            Give back malformed.
+        If proof_status equals "proved":
+            Set demo_ok to True.
+    Otherwise if result_node_name equals "no":
+        If result_node_args does not equal <<"a", "finite_failure">>:
+            Give back malformed.
+    Otherwise if result_node_name equals "indeterminate":
+        If result_node_args does not equal <<"a", "limit">>:
+            Give back malformed.
+    Otherwise if result_node_name equals "solutions":
+        If [[len]](result_node_args) does not equal 1:
+            Give back malformed.
+        Set sols_args_copy to [[list]](result_node_args).
+        Set rows_node to [[sols_args_copy.pop]](0).
+        Set rows_copy to [[list]](rows_node).
+        Set rows_kind to [[rows_copy.pop]](0).
+        If rows_kind does not equal "l":
+            Give back malformed.
+        Set row_items to [[rows_copy.pop]](0).
+        Set all_proved to True.
+        For each row in row_items:
+            Set row_copy to [[list]](row).
+            Set row_kind to [[row_copy.pop]](0).
+            If row_kind does not equal "c":
+                Give back malformed.
+            Set row_name to [[row_copy.pop]](0).
+            If row_name does not equal "sol":
+                Give back malformed.
+            Set row_args to [[row_copy.pop]](0).
+            If [[len]](row_args) does not equal 2:
+                Give back malformed.
+            Set row_args_copy to [[list]](row_args).
+            Set values_node to [[row_args_copy.pop]](0).
+            Set proof_node to [[row_args_copy.pop]](0).
+            Set values_copy to [[list]](values_node).
+            Set values_kind to [[values_copy.pop]](0).
+            If values_kind does not equal "l":
+                Give back malformed.
+            Set proof_status to [[trace_walk_proof]](proof_node, triples, node_marks).
+            If proof_status equals "invalid":
+                Give back malformed.
+            If proof_status does not equal "proved":
+                Set all_proved to False.
+        If row_items:
+            If all_proved:
+                Set demo_ok to True.
+    Otherwise:
+        Give back malformed.
+    Give back <"", demo_ok, triples, [[len]](node_marks)>.
+
+Define [[trace_block_table]] taking pl_path:
+    Set table to {}.
+    If [[pl_path.is_symlink]]():
+        Give back table.
+    If not [[pl_path.is_file]]():
+        Give back table.
+    Set raw to [[pl_path.read_bytes]]().
+    Set text to "".
+    Try:
+        Set text to [[raw.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Give back table.
+    Set current_block to 0.
+    For each line_text in [[text.split]]("\n"):
+        Set is_marker to False.
+        If [[line_text.startswith]]("% S"):
+            Set marker_rest to [[line_text.removeprefix]]("% S").
+            Set marker_parts to [[list]]([[marker_rest.partition]](": ")).
+            Set marker_head to [[marker_parts.pop]](0).
+            Set marker_sep to [[marker_parts.pop]](0).
+            If marker_sep equals ": ":
+                Set head_ok to False.
+                If marker_head:
+                    Set head_ok to True.
+                Set ascii_digits to "0123456789".
+                For each head_char in marker_head:
+                    Set char_ok to head_char is in ascii_digits.
+                    If not char_ok:
+                        Set head_ok to False.
+                If [[marker_head.startswith]]("0"):
+                    Set head_ok to False.
+                If head_ok:
+                    Set current_block to [[int]](marker_head).
+                    Set is_marker to True.
+        If not is_marker:
+            Set skip_line to False.
+            If [[line_text.startswith]]("%"):
+                Set skip_line to True.
+            If [[line_text.startswith]](":- "):
+                Set skip_line to True.
+            If [[line_text.startswith]]("guideline_schema_version("):
+                Set skip_line to True.
+            If [[line_text.startswith]]("guideline_document("):
+                Set skip_line to True.
+            If not [[line_text.endswith]]("."):
+                Set skip_line to True.
+            If not skip_line:
+                Set line_full to line_text plus "\n".
+                Set line_hash to [[sha256_hex]]([[line_full.encode]]("utf-8")).
+                Set table_key to [[str]](current_block) plus ":" plus line_hash.
+                Set prior to [[table.get]](table_key, 0).
+                Do [[table.update]]({table_key: prior plus 1}).
+    Give back table.
+
+Define [[trace_join_nodes]] taking scratch_path, guideline_path, qid, triples, doc_cache:
+    For each triple in triples:
+        Set triple_copy to [[list]](triple).
+        Set docid_value to [[triple_copy.pop]](0).
+        Set s_value to [[triple_copy.pop]](0).
+        Set hex_value to [[triple_copy.pop]](0).
+        Set cached to docid_value is in doc_cache.
+        If not cached:
+            Set pl_path to [[guideline_path.joinpath]]("pl", docid_value plus ".pl").
+            Do [[doc_cache.update]]({docid_value: [[trace_block_table]](pl_path)}).
+        Set table to [[doc_cache.get]](docid_value).
+        Set table_key to [[str]](s_value) plus ":" plus hex_value.
+        Set match_count to [[table.get]](table_key, 0).
+        If match_count equals 0:
+            Do [[queries_violation]](scratch_path, "traces", "trace node resolves to no committed clause line: " plus qid plus " " plus docid_value plus " S" plus [[str]](s_value)).
+        If match_count is greater than 1:
+            Do [[queries_violation]](scratch_path, "traces", "trace node resolves to multiple committed clause lines: " plus qid plus " " plus docid_value plus " S" plus [[str]](s_value)).
+
 Define [[validate_queries]] taking scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path:
     Set queries_dir to [[guideline_path.joinpath]]("queries").
     Set qids to [[collect_query_aces]](scratch_path, guideline_path).
     Set pl_stems to [[collect_query_dir]](scratch_path, queries_dir, "pl").
+    Set answers_stems to [[collect_query_dir]](scratch_path, queries_dir, "answers").
+    Set traces_stems to [[collect_query_dir]](scratch_path, queries_dir, "traces").
     If pl_stems does not equal qids:
         Do [[queries_violation]](scratch_path, "queries", "pl inventory differs from ace query set: " plus [[str]]([[queries_dir.joinpath]]("pl"))).
-    Set answers_stems to [[collect_query_dir]](scratch_path, queries_dir, "answers").
     If answers_stems does not equal qids:
         Do [[queries_violation]](scratch_path, "queries", "answers inventory differs from ace query set: " plus [[str]]([[queries_dir.joinpath]]("answers"))).
+    If traces_stems does not equal qids:
+        Do [[queries_violation]](scratch_path, "queries", "traces inventory differs from ace query set: " plus [[str]]([[queries_dir.joinpath]]("traces"))).
     Set wh_count to 0.
     Set yesno_count to 0.
+    Set trace_nodes to 0.
+    Set trace_doc_cache to {}.
     If qids:
         Set manifest_path to [[scratch_path.joinpath]]("queries-manifest-" plus guideline_path.name).
         Do [[build_query_manifest]](manifest_path, [[guideline_path.joinpath]]("pl")).
@@ -861,7 +1518,27 @@ Define [[validate_queries]] taking scratch_path, swipl_executable, stage_path, g
                 Set yesno_count to yesno_count plus 1.
             Otherwise:
                 Set wh_count to wh_count plus 1.
-    Give back <[[len]](qids), wh_count, yesno_count>.
+            Set first_trace to [[run_trace]](scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl, committed_answers).
+            Set second_trace to [[run_trace]](scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl, committed_answers).
+            If first_trace does not equal second_trace:
+                Do [[queries_violation]](scratch_path, "determinism", "two trace runs differ for question: " plus qid).
+            Set committed_trace to [[queries_dir.joinpath]]("traces", qid plus ".pl").
+            Set committed_trace_bytes to [[committed_trace.read_bytes]]().
+            If first_trace does not equal committed_trace_bytes:
+                Do [[queries_violation]](scratch_path, "stale", "committed query trace differs from fresh trace: " plus [[str]](committed_trace)).
+            Set parse_result to [[parse_trace_artifact]](committed_trace_bytes, qid).
+            Set parse_copy to [[list]](parse_result).
+            Set parse_detail to [[parse_copy.pop]](0).
+            Set demo_ok to [[parse_copy.pop]](0).
+            Set trace_triples to [[parse_copy.pop]](0).
+            Set qid_nodes to [[parse_copy.pop]](0).
+            If parse_detail does not equal "":
+                Do [[queries_violation]](scratch_path, "traces", "malformed trace artifact: " plus [[str]](committed_trace)).
+            Do [[trace_join_nodes]](scratch_path, guideline_path, qid, trace_triples, trace_doc_cache).
+            If not demo_ok:
+                Do [[queries_violation]](scratch_path, "traces", "non-demo proof for qid: " plus qid).
+            Set trace_nodes to trace_nodes plus qid_nodes.
+    Give back <[[len]](qids), wh_count, yesno_count, trace_nodes>.
 
 Define [[queries_meter]] taking guideline_name, query_counts:
     Set counts_copy to [[list]](query_counts).
@@ -869,6 +1546,14 @@ Define [[queries_meter]] taking guideline_name, query_counts:
     Set wh_count to [[counts_copy.pop]](0).
     Set yesno_count to [[counts_copy.pop]](0).
     Do [[print]]("goal: queries " plus guideline_name plus " " plus [[str]](query_count) plus " queries; wh=" plus [[str]](wh_count) plus " yesno=" plus [[str]](yesno_count)).
+
+Define [[traces_meter]] taking guideline_name, query_counts:
+    Set counts_copy to [[list]](query_counts).
+    Set query_count to [[counts_copy.pop]](0).
+    Set wh_count to [[counts_copy.pop]](0).
+    Set yesno_count to [[counts_copy.pop]](0).
+    Set node_count to [[counts_copy.pop]](0).
+    Do [[print]]("goal: traces " plus guideline_name plus " " plus [[str]](query_count) plus " traces; nodes=" plus [[str]](node_count)).
 
 Define [[queries_check_command]] taking guideline_dir, stage_arg:
     Set guideline_path to [[pathlib.Path]](guideline_dir).
@@ -905,7 +1590,7 @@ Define [[queries_command]] taking guideline_id:
     Set queries_dir to [[guideline_path.joinpath]]("queries").
     Set qids to [[collect_query_aces]](None, guideline_path).
     If not qids:
-        For each dir_name in <"pl", "answers">:
+        For each dir_name in <"pl", "answers", "traces">:
             Set sub_dir to [[queries_dir.joinpath]](dir_name).
             If [[sub_dir.is_dir]]():
                 Do [[shutil.rmtree]](sub_dir).
@@ -923,22 +1608,31 @@ Define [[queries_command]] taking guideline_id:
         Do [[build_query_manifest]](manifest_path, [[guideline_path.joinpath]]("pl")).
         Set pl_by_qid to {}.
         Set answers_by_qid to {}.
+        Set traces_by_qid to {}.
         For each qid in qids:
             Set ace_path to [[queries_dir.joinpath]](qid plus ".ace").
             Set pl_bytes to [[run_question_compile]](scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path).
             Set fresh_path to [[scratch_path.joinpath]]("query-" plus qid plus ".pl").
             Do [[fresh_path.write_bytes]](pl_bytes).
             Set answer_bytes to [[run_answer]](scratch_path, swipl_executable, stage_path, qid, manifest_path, fresh_path).
+            Set fresh_answers_path to [[scratch_path.joinpath]]("answers-" plus qid plus ".pl").
+            Do [[fresh_answers_path.write_bytes]](answer_bytes).
+            Set trace_bytes to [[run_trace]](scratch_path, swipl_executable, stage_path, qid, manifest_path, fresh_path, fresh_answers_path).
             Do [[pl_by_qid.update]]({qid: pl_bytes}).
             Do [[answers_by_qid.update]]({qid: answer_bytes}).
+            Do [[traces_by_qid.update]]({qid: trace_bytes}).
         Set pl_dir to [[queries_dir.joinpath]]("pl").
         Set answers_dir to [[queries_dir.joinpath]]("answers").
+        Set traces_dir to [[queries_dir.joinpath]]("traces").
         If [[pl_dir.is_dir]]():
             Do [[shutil.rmtree]](pl_dir).
         If [[answers_dir.is_dir]]():
             Do [[shutil.rmtree]](answers_dir).
+        If [[traces_dir.is_dir]]():
+            Do [[shutil.rmtree]](traces_dir).
         Do [[pl_dir.mkdir]]().
         Do [[answers_dir.mkdir]]().
+        Do [[traces_dir.mkdir]]().
         For each qid in [[sorted]](pl_by_qid):
             Set pl_target to [[pl_dir.joinpath]](qid plus ".pl").
             Do [[pl_target.write_bytes]]([[pl_by_qid.get]](qid)).
@@ -946,6 +1640,9 @@ Define [[queries_command]] taking guideline_id:
             Set answers_target to [[answers_dir.joinpath]](qid plus ".pl").
             Do [[answers_target.write_bytes]]([[answers_by_qid.get]](qid)).
             Do [[print]]("goal: wrote " plus [[str]](answers_target)).
+            Set trace_target to [[traces_dir.joinpath]](qid plus ".pl").
+            Do [[trace_target.write_bytes]]([[traces_by_qid.get]](qid)).
+            Do [[print]]("goal: wrote " plus [[str]](trace_target)).
         Do [[shutil.rmtree]](scratch_path).
         Do [[print]]("goal: queries ok " plus [[str]]([[len]](qids)) plus " queries").
 
@@ -2528,6 +3225,10 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
             Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus entry.name).
     Set red_count to 0.
     Set green_count to 0.
+    Set red_names to <>.
+    Set green_names to <>.
+    Set red_required to <"bad-qid", "empty-solutions", "limit-depth", "limit-inner-inference", "malformed-query-file", "missing-trace", "no-finite-failure", "orphan-answers", "orphan-pl", "orphan-trace", "stale-answers", "stale-pl", "stale-trace", "trace-digest-join", "trace-indeterminate-mirror", "trace-naf-depth-cut", "trace-naf-inference-cut", "trace-naf-proved", "trace-no-mirror", "trace-row-failure-after-cut", "trace-unproved-finite", "trace-unproved-limit", "uncompiled-ace", "yesno-limit-before-proof">.
+    Set green_required to <"absent-queries", "canonical-sort", "empty-queries", "positive", "trace-direct-rejects", "trace-multi-proof", "trace-naf", "trace-positive-rule", "trace-serializer">.
     For each color in color_names:
         Set color_path to [[fixtures_root.joinpath]](color).
         If [[color_path.is_symlink]]():
@@ -2542,10 +3243,16 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
                 Do [[cleanup_violation]](scratch_path, "queries-fixtures", "not a case directory: " plus case_name).
             If not [[valid_docid]](case_name):
                 Do [[cleanup_violation]](scratch_path, "queries-fixtures", "invalid case name: " plus case_name).
+            If color equals "red":
+                Do [[red_names.append]](case_name).
+            Otherwise:
+                Do [[green_names.append]](case_name).
             Set has_tree to False.
             Set has_expect to False.
             Set has_golden to False.
             Set has_answers_golden to False.
+            Set has_traces_golden to False.
+            Set has_trace_reject to False.
             For each member in [[sorted]]([[case_entry.iterdir]]()):
                 Set member_name to member.name.
                 If [[member.is_symlink]]():
@@ -2558,6 +3265,14 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
                     If not [[member.is_dir]]():
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
                     Set has_answers_golden to True.
+                Otherwise if member_name equals "traces-golden":
+                    If not [[member.is_dir]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+                    Set has_traces_golden to True.
+                Otherwise if member_name equals "trace-reject":
+                    If not [[member.is_dir]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+                    Set has_trace_reject to True.
                 Otherwise if member_name equals "expect":
                     If not [[member.is_file]]():
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
@@ -2617,10 +3332,18 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
                 If result.stdout does not equal golden_bytes:
                     Do [[cleanup_violation]](scratch_path, "queries-fixtures", "stdout differs from golden for case: " plus case_name).
                 Set green_count to green_count plus 1.
+            Set any_pin_lane to False.
+            If has_answers_golden:
+                Set any_pin_lane to True.
+            If has_traces_golden:
+                Set any_pin_lane to True.
+            If has_trace_reject:
+                Set any_pin_lane to True.
+            Set fixture_manifest to [[scratch_path.joinpath]]("queries-fixture-manifest-" plus color plus "-" plus case_name).
+            If any_pin_lane:
+                Do [[build_query_manifest]](fixture_manifest, [[gid_path.joinpath]]("pl")).
             If has_answers_golden:
                 Set pins_dir to [[case_entry.joinpath]]("answers-golden").
-                Set fixture_manifest to [[scratch_path.joinpath]]("queries-fixture-manifest-" plus color plus "-" plus case_name).
-                Do [[build_query_manifest]](fixture_manifest, [[gid_path.joinpath]]("pl")).
                 For each pin in [[sorted]]([[pins_dir.iterdir]]()):
                     Set pin_name to pin.name.
                     If [[pin.is_symlink]]():
@@ -2642,6 +3365,95 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
                     Set pin_bytes to [[pin.read_bytes]]().
                     If answer_bytes does not equal pin_bytes:
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "answer bytes differ from answers-golden: " plus case_name plus "/" plus pin_qid).
+            If has_traces_golden:
+                Set pins_dir to [[case_entry.joinpath]]("traces-golden").
+                For each pin in [[sorted]]([[pins_dir.iterdir]]()):
+                    Set pin_name to pin.name.
+                    If [[pin.is_symlink]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/traces-golden/" plus pin_name).
+                    If not [[pin.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/traces-golden/" plus pin_name).
+                    If not [[pin_name.endswith]](".pl"):
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/traces-golden/" plus pin_name).
+                    Set pin_qid to [[pin_name.removesuffix]](".pl").
+                    If not [[valid_docid]](pin_qid):
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/traces-golden/" plus pin_name).
+                    Set query_ace to [[gid_path.joinpath]]("queries", pin_qid plus ".ace").
+                    If not [[query_ace.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "traces-golden qid has no query: " plus case_name plus "/" plus pin_qid).
+                    Set query_pl to [[gid_path.joinpath]]("queries", "pl", pin_qid plus ".pl").
+                    If not [[query_pl.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "traces-golden qid has no query: " plus case_name plus "/" plus pin_qid).
+                    Set answers_pl to [[gid_path.joinpath]]("queries", "answers", pin_qid plus ".pl").
+                    If not [[answers_pl.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "traces-golden qid has no query: " plus case_name plus "/" plus pin_qid).
+                    Set trace_bytes to [[run_trace]](scratch_path, swipl_executable, stage_path, pin_qid, fixture_manifest, query_pl, answers_pl).
+                    Set pin_bytes to [[pin.read_bytes]]().
+                    If trace_bytes does not equal pin_bytes:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace bytes differ from traces-golden: " plus case_name plus "/" plus pin_qid).
+            If has_trace_reject:
+                Set reject_dir to [[case_entry.joinpath]]("trace-reject").
+                Set answers_qids to <>.
+                Set expect_qids to <>.
+                For each reject_member in [[sorted]]([[reject_dir.iterdir]]()):
+                    Set reject_name to reject_member.name.
+                    If [[reject_member.is_symlink]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/trace-reject/" plus reject_name).
+                    If not [[reject_member.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/trace-reject/" plus reject_name).
+                    Set is_answers to [[reject_name.endswith]](".answers").
+                    Set is_expect to [[reject_name.endswith]](".expect").
+                    If not is_answers:
+                        If not is_expect:
+                            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/trace-reject/" plus reject_name).
+                    If is_answers:
+                        Set reject_qid to [[reject_name.removesuffix]](".answers").
+                        If not [[valid_docid]](reject_qid):
+                            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/trace-reject/" plus reject_name).
+                        Do [[answers_qids.append]](reject_qid).
+                    Otherwise:
+                        Set reject_qid to [[reject_name.removesuffix]](".expect").
+                        If not [[valid_docid]](reject_qid):
+                            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/trace-reject/" plus reject_name).
+                        Do [[expect_qids.append]](reject_qid).
+                For each reject_qid in answers_qids:
+                    Set has_partner to reject_qid is in expect_qids.
+                    If not has_partner:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject member without partner: " plus case_name plus "/" plus reject_qid plus ".answers").
+                For each reject_qid in expect_qids:
+                    Set has_partner to reject_qid is in answers_qids.
+                    If not has_partner:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject member without partner: " plus case_name plus "/" plus reject_qid plus ".expect").
+                For each reject_qid in answers_qids:
+                    Set query_ace to [[gid_path.joinpath]]("queries", reject_qid plus ".ace").
+                    If not [[query_ace.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject qid has no query: " plus case_name plus "/" plus reject_qid).
+                    Set query_pl to [[gid_path.joinpath]]("queries", "pl", reject_qid plus ".pl").
+                    If not [[query_pl.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject qid has no query: " plus case_name plus "/" plus reject_qid).
+                    Set hostile_answers to [[reject_dir.joinpath]](reject_qid plus ".answers").
+                    Set reject_tail to <"trace", [[str]](fixture_manifest), [[str]](query_pl), [[str]](hostile_answers)>.
+                    Set reject_command to [[compiler_command]](swipl_executable, stage_path, reject_tail).
+                    Try:
+                        Set reject_result to [[subprocess.run]](reject_command, capture_output=True, timeout=30).
+                    Catch subprocess.TimeoutExpired:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "wall_clock for trace-reject: " plus case_name plus "/" plus reject_qid).
+                    If reject_result.returncode does not equal 2:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject status " plus [[str]](reject_result.returncode) plus " for case: " plus case_name plus "/" plus reject_qid).
+                    If reject_result.stdout:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject stdout not empty for case: " plus case_name plus "/" plus reject_qid).
+                    Set expect_path to [[reject_dir.joinpath]](reject_qid plus ".expect").
+                    Set expect_bytes to [[expect_path.read_bytes]]().
+                    If reject_result.stderr does not equal expect_bytes:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject stderr differs from expect: " plus case_name plus "/" plus reject_qid).
+    For each required_name in red_required:
+        Set present to required_name is in red_names.
+        If not present:
+            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "missing required case: red/" plus required_name).
+    For each required_name in green_required:
+        Set present to required_name is in green_names.
+        If not present:
+            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "missing required case: green/" plus required_name).
     If red_count equals 0:
         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "no red fixture cases found: " plus [[str]](fixtures_root)).
     If green_count equals 0:

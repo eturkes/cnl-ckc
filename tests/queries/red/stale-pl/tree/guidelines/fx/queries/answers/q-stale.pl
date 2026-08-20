@@ -1,2 +1,2 @@
 % q-stale answered against the loaded composition by ace_to_pl answer mode; do not edit.
-'$guideline_answers'(v1,'q-stale',query_sha256('6733449a9f01db961857dbe4dbe595b3957ff921caf76d6d7696311a107ef723'),result(solutions([sol([p1])]))).
+'$guideline_answers'(v1,'q-stale',query_sha256('848a4ef304eea89956f8ac8595cd29f125ad63900541ef9c6a1273c53e3e15ec'),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])])]))).

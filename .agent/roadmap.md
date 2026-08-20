@@ -310,14 +310,28 @@ lands; only the shared-file implementations serialize.
   fixtures 12 red + 4 green, pins 16/16 + answers-golden 8/8;
   compile+queries idempotent (diff-clean + byte-stable). main=2nd
   window ~100K (1st →240K compaction) / mate=102% 245K (test).
-- M4.7 OPEN (kernel, oracle) — proof traces: trace term schema (clause
-  applications carrying `sentence(DocId, S)`; NAF/limit leaves = explicit
-  non-proof status), meta-interpreter + independent teammate oracle;
-  every positive node names a byte-identical committed clause + unique
-  (docid, S); serializer adversarial probes (escapes/non-ASCII/operator
-  ambience — the renderer-probes polish row's classes for the new
-  writers); committed `queries/traces/<qid>.pl`, freshness + double-run
-  determinism.
+- M4.7 DONE (kernel, oracle) — proof traces: `trace` mode over the
+  aggregate manifest re-derives each committed answer and emits
+  `queries/traces/<qid>.pl` proof trees — clause nodes carry
+  `sentence(DocId, S)` + pristine-clause sha256 (digest join back to
+  committed `pl/` lines), NAF/limit leaves = explicit non-proof status
+  (success-time NAF payload copies), bounded solve mirrors answer mode
+  (row + whole-run sentinels); goal.py gains an ASCII-definitional
+  trace scanner/validator (token classes v1.3.7, markers v1.3.6),
+  four-way stem bijection, freshness + double-run determinism,
+  traces-golden custody; 33-tree fixture corpus (24 red + 9 green
+  floors pinned in goal.emm) via idempotent scratch generator.
+  Contract `.scratch/contracts/m4u7.md` v1..v1.3.9. Evidence green
+  (durable `.scratch/m4u7/`, replays in memory): suite 80 cases/332
+  checks; check ok (186 documents; 4 traces nodes=68); regen --check +
+  guidelines/ diff-clean; diff harness 36 ident + 3 ruled divergent
+  (v1.3.1/v1.3.2); rev 6 repros green post-fix (E01-E08 acceptance
+  ledger unrun — 2 content-filter deaths; compensated by suite + rev2
+  campaign + orc + diff); rev2 50 mutants 41 killed + MAIN spot-check
+  M02/M05, survivors ruled v1.3.9 (4 equivalent, 5 → polish
+  kill-recipes row), determinism 64/64 byte-stable; tags
+  archive/m4u7-{suite,diff,orc}. main=97% 232K (1st window →
+  compaction; close in 2nd) / mate=102% 243K (test hw, 3 compactions).
 - M4.8 OPEN (kernel, oracle) — semantic knowledge graph: the typed
   vocabulary-aggregated graph per the architecture ruling, differential-
   oracled on synthetic corpora (variable renaming, NAF, modal contexts,

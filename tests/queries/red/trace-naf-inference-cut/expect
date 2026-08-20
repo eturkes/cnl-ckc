@@ -1,0 +1,1 @@
+goal: stale: committed query answers differ from fresh answer: tests/queries/red/trace-naf-inference-cut/tree/guidelines/fx/queries/answers/q-naf-inference.pl

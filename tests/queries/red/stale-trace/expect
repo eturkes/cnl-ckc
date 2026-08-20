@@ -1,0 +1,1 @@
+goal: stale: committed query trace differs from fresh trace: tests/queries/red/stale-trace/tree/guidelines/fx/queries/traces/q-stale-trace.pl

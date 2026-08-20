@@ -49,6 +49,24 @@
 %                                     files reject check_load,query_file(<why>);
 %                                     nonground solution rejects
 %                                     proof,nonground_solution(QId)
+%   trace <manifest> <query-pl> <answers-pl>
+%                                     load the same composition and re-derive the
+%                                     committed answers artifact row by row: one
+%                                     directed first proof per positive row via a
+%                                     meta-interpreter over the loaded clauses;
+%                                     stdout = two-line ground
+%                                     '$guideline_traces'/5 artifact mirroring
+%                                     the answers result with a proof payload
+%                                     per row — proved(Nodes) with
+%                                     clause(sentence(DocId,S),
+%                                     clause_sha256(<line-digest>), Children)
+%                                     positive nodes + naf(Goal) leaves, or
+%                                     unproved(finite_failure)|unproved(limit);
+%                                     bounds: MI depth 1000, per-row inference
+%                                     100000, whole-run 1000000 (a whole-run
+%                                     trip emits indeterminate(limit));
+%                                     malformed answers files reject
+%                                     check_load,answers_file(<why>)
 %
 % Compile contract: stdin = strict RFC 3629 UTF-8; one ACE sentence per non-empty LF line.
 % <docid> = nonempty [a-z0-9-] with no leading dash.
@@ -146,6 +164,12 @@ dispatch([answer, Manifest, QueryPl], Input, Output, ErrorStream) :-
 dispatch([answer|Rest], _, _, ErrorStream) :-
     !,
     emit_error(ErrorStream, usage, argv([answer|Rest]), 2).
+dispatch([trace, Manifest, QueryPl, AnswersPl], Input, Output, ErrorStream) :-
+    !,
+    trace_mode(Manifest, QueryPl, AnswersPl, Input, Output, ErrorStream).
+dispatch([trace|Rest], _, _, ErrorStream) :-
+    !,
+    emit_error(ErrorStream, usage, argv([trace|Rest]), 2).
 dispatch([Tree, DocId], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
@@ -976,6 +1000,449 @@ answer_emit(Output, QId, Digest, Result) :-
         )),
     string_codes(Out, OutCodes),
     format(Output, '~s', [OutCodes]).
+
+/* ---------- trace mode: directed proof replay of a committed answers artifact ---------- */
+
+/* Pipeline order (fixed): argv -> manifest read -> query file read +
+   validation (answer mode's law verbatim) -> answers file read +
+   validation -> composition load + structure parity -> per-row
+   directed solve -> emit. The trace consumes the COMMITTED answers
+   artifact: one directed first proof per positive row, never a second
+   enumeration, so consistency with the answers holds by construction
+   and drift surfaces as an unproved payload the freshness gate
+   rejects. File parsing and final artifact rendering run outside the
+   whole-run budget; per-row clause rendering/digesting runs inside it
+   but outside the per-row search budget. */
+trace_mode(Manifest, QueryPl, AnswersPl, Input, Output, ErrorStream) :-
+    catch(
+        ( aggregate_read_manifest(Manifest, PlPaths, _PayloadPaths) ->
+            true
+        ; throw(error(aggregate_manifest(Manifest),
+              context(ace_to_pl:trace_mode/6, plain_failure)))
+        ),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)),
+    answer_read_query(QueryPl, ErrorStream, QId, QueryDigest, Conj, Answers),
+    trace_read_answers(AnswersPl, ErrorStream, QId, QueryDigest, Answers,
+        AnswersDigest, AnswersResult),
+    aggregate_declare_indicators,
+    ( PlPaths == [] ->
+        true
+    ; aggregate_load(PlPaths, Input, Output, ErrorStream),
+      aggregate_assertions(PlPaths, ErrorStream)
+    ),
+    trace_solve(Conj, Answers, AnswersResult, ErrorStream, Result),
+    trace_emit(Output, QId, QueryDigest, AnswersDigest, Result, ErrorStream),
+    halt(0).
+
+/* MI frame depth bound. A DIFFERENT measure from answer-mode object
+   depth (the meta-interpreter spends frames on conjunction walking and
+   clause resolution); 1000 = explicit headroom over live proofs, with
+   no cross-mode depth-equivalence claim. Per-row and whole-run
+   inference budgets reuse the answer-mode constants. */
+trace_depth_limit(1000).
+
+/* Answers file = data, never consulted: raw bytes read once (strict
+   UTF-8) feed answers_sha256 verbatim, then exactly one term is read
+   under the committed census law (physical EOF = zero-width read; a
+   literal end_of_file. term is data). Guard order: term_count ->
+   record_shape (spans the '$guideline_answers'/4 + query_sha256/1 +
+   result/1 wrappers) -> record_nonground -> record_version -> qid
+   equality -> digest grammar -> digest custody (against the SHA-256
+   this run computed over the supplied query-pl bytes, before any
+   composition work) -> result algebra -> mode fit -> per-row solution
+   checks in file order. Payloads come only from ground-guaranteed
+   positions. */
+trace_read_answers(File, ErrorStream, QId, QueryDigest, Answers, Digest,
+        Result) :-
+    catch(read_utf8_file(File, Bytes, Text),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)),
+    crypto_data_hash(Bytes, Digest, [algorithm(sha256), encoding(octet)]),
+    catch(answer_query_terms(File, Text, Terms),
+        Error2,
+        emit_error(ErrorStream, check_load, Error2, 2)),
+    ( Terms = [Record] ->
+        true
+    ; length(Terms, N),
+      trace_reject(ErrorStream, term_count(N))
+    ),
+    ( compound(Record),
+      Record = '$guideline_answers'(Version, RecordQId, Wrap, ResultWrap),
+      compound(Wrap), Wrap = query_sha256(_),
+      compound(ResultWrap), ResultWrap = result(_) ->
+        true
+    ; trace_reject(ErrorStream, record_shape)
+    ),
+    ( ground(Record) ->
+        true
+    ; trace_reject(ErrorStream, record_nonground)
+    ),
+    ( Version == v1 ->
+        true
+    ; trace_reject(ErrorStream, record_version(Version))
+    ),
+    ( RecordQId == QId ->
+        true
+    ; trace_reject(ErrorStream, qid_mismatch)
+    ),
+    Wrap = query_sha256(RecordDigest),
+    ( answer_hex64(RecordDigest) ->
+        true
+    ; trace_reject(ErrorStream, record_query_sha256)
+    ),
+    ( RecordDigest == QueryDigest ->
+        true
+    ; trace_reject(ErrorStream, query_sha256_mismatch)
+    ),
+    ResultWrap = result(Result0),
+    trace_validate_result(Result0, Answers, ErrorStream),
+    Result = Result0.
+
+trace_reject(ErrorStream, Why) :-
+    emit_error(ErrorStream, check_load, answers_file(Why), 2).
+
+/* Result algebra: closed shape first, then fit against the query's
+   mode (wh = nonempty answers manifest, yes-no = empty), then the
+   solutions payload row by row — sol/1 wrapper, proper-list values,
+   arity against the manifest — all before any composition work. */
+trace_validate_result(Result, Answers, ErrorStream) :-
+    ( trace_result_shape(Result) ->
+        true
+    ; trace_reject(ErrorStream, result_shape)
+    ),
+    ( Answers == [] ->
+        ( trace_yesno_result(Result) ->
+            true
+        ; trace_reject(ErrorStream, result_mode_mismatch)
+        )
+    ; ( trace_wh_result(Result) ->
+          true
+      ; trace_reject(ErrorStream, result_mode_mismatch)
+      ),
+      ( Result = solutions(Sols) ->
+          ( is_list(Sols) ->
+              true
+          ; trace_reject(ErrorStream, solutions_list)
+          ),
+          length(Answers, Expected),
+          trace_validate_solutions(Sols, 1, Expected, ErrorStream)
+      ; true
+      )
+    ).
+
+trace_result_shape(yes).
+trace_result_shape(no(finite_failure)).
+trace_result_shape(indeterminate(limit)).
+trace_result_shape(solutions(_)).
+
+trace_yesno_result(yes).
+trace_yesno_result(no(finite_failure)).
+trace_yesno_result(indeterminate(limit)).
+
+trace_wh_result(solutions(_)).
+trace_wh_result(indeterminate(limit)).
+
+trace_validate_solutions([], _, _, _).
+trace_validate_solutions([Sol|Sols], Index, Expected, ErrorStream) :-
+    ( compound(Sol),
+      Sol = sol(Values) ->
+        true
+    ; trace_reject(ErrorStream, solution_shape(Index))
+    ),
+    ( is_list(Values) ->
+        true
+    ; trace_reject(ErrorStream, solution_values(Index))
+    ),
+    length(Values, Actual),
+    ( Actual =:= Expected ->
+        true
+    ; trace_reject(ErrorStream, solution_arity(Index, Expected, Actual))
+    ),
+    Next is Index + 1,
+    trace_validate_solutions(Sols, Next, Expected, ErrorStream).
+
+/* Whole-run budget around every row derivation INCLUDING per-row
+   clause materialization; a trip replaces the mirror with
+   indeterminate(limit) — mode-level legal, committed-state law
+   rejects it at the gate. Bindings are lost on a trip, so the result
+   is taken from the sentinel branch alone. */
+trace_solve(Conj, Answers, AnswersResult, ErrorStream, Result) :-
+    answer_outer_inference_limit(Outer),
+    call_with_inference_limit(
+        trace_solve_rows(Conj, Answers, AnswersResult, ErrorStream, Result0),
+        Outer, OuterResult),
+    ( OuterResult == inference_limit_exceeded ->
+        Result = indeterminate(limit)
+    ; Result = Result0
+    ).
+
+/* Mirror law: yes gains a proof payload; no(finite_failure) and
+   indeterminate(limit) mirror verbatim with no entries; solutions
+   rows keep committed Values, order and count, each gaining a
+   payload. Every row proves against a fresh copy of the goal and its
+   manifest variables (no cross-row binding leakage). */
+trace_solve_rows(Conj, [], AnswersResult, ErrorStream, Result) :-
+    !,
+    ( AnswersResult == yes ->
+        copy_term(Conj, ConjCopy),
+        trace_prove_row(ConjCopy, ErrorStream, P),
+        Result = yes(P)
+    ; Result = AnswersResult
+    ).
+trace_solve_rows(Conj, Answers, AnswersResult, ErrorStream, Result) :-
+    ( AnswersResult = solutions(Sols) ->
+        answer_vars(Answers, Vars),
+        trace_prove_solutions(Sols, Conj, Vars, ErrorStream, Pairs),
+        Result = solutions(Pairs)
+    ; Result = AnswersResult
+    ).
+
+trace_prove_solutions([], _, _, _, []).
+trace_prove_solutions([sol(Values)|Sols], Conj, Vars, ErrorStream,
+        [sol(Values, P)|Pairs]) :-
+    copy_term(Conj-Vars, ConjCopy-VarsCopy),
+    VarsCopy = Values,
+    trace_prove_row(ConjCopy, ErrorStream, P),
+    trace_prove_solutions(Sols, Conj, Vars, ErrorStream, Pairs).
+
+/* One directed first proof under the frozen per-row wrapper; the
+   sentinels are status VALUES. Search runs inside the inference
+   budget; the skeleton materializes to nodes only after once/1
+   returns, so clause rendering and digesting never charge the search
+   budget. A sentinel inside a NAF site check surfaces as a thrown
+   marker: that row is unproved(limit), never a naf leaf. Clean
+   failure of the whole wrapper (no sentinel) = corpus-relative finite
+   failure; a depth cut on the failure path binds the depth sentinel
+   (probed on SWI 9.2.9), so failure-after-cut lands in
+   unproved(limit). */
+trace_prove_row(Goal, ErrorStream, P) :-
+    trace_depth_limit(Depth),
+    answer_inference_limit(Inferences),
+    catch(
+        ( call_with_inference_limit(
+              call_with_depth_limit(
+                  once(trace_mi(Goal, ErrorStream, Skels)),
+                  Depth, DepthResult),
+              Inferences, InferenceResult) ->
+            ( InferenceResult \== inference_limit_exceeded,
+              integer(DepthResult) ->
+                trace_materialize(Skels, ErrorStream, Nodes),
+                P = proved(Nodes)
+            ; P = unproved(limit)
+            )
+        ; P = unproved(finite_failure)
+        ),
+        ace_to_pl_trace_naf_limit,
+        P = unproved(limit)).
+
+/* The meta-interpreter: ','/2 walks, NAF runs the site protocol, the
+   seven semantic indicators resolve via clause/3 against user in
+   engine clause order (= canonical forward-manifest load order), and
+   every other reached goal form rejects fail-closed — in every
+   context, positive or inside a NAF check. The skeleton records
+   clause references and frozen NAF payloads only; rendering waits for
+   materialization. */
+trace_mi(Goal, ErrorStream, Skels) :-
+    ( var(Goal) ->
+        emit_error(ErrorStream, proof, trace_goal_variable, 1)
+    ; Goal = (A, B) ->
+        trace_mi(A, ErrorStream, SkelsA),
+        trace_mi(B, ErrorStream, SkelsB),
+        append(SkelsA, SkelsB, Skels)
+    ; Goal = (\+ Inner) ->
+        trace_mi_naf(Inner, ErrorStream, Skels)
+    ; functor(Goal, Name, Arity),
+      answer_goal_indicator(Name/Arity) ->
+        Skels = [node0(Ref, ChildSkels)],
+        clause(user:Goal, Body, Ref),
+        trace_mi_body(Body, ErrorStream, ChildSkels)
+    ; functor(Goal, Name, Arity),
+      emit_error(ErrorStream, proof, trace_goal_foreign(Name, Arity), 1)
+    ).
+
+trace_mi_body(Body, ErrorStream, Skels) :-
+    ( Body == true ->
+        Skels = []
+    ; trace_mi(Body, ErrorStream, Skels)
+    ).
+
+/* NAF site protocol: the engine never evaluates \+ directly (its
+   inner search swallows a success-path depth cut, so a direct leaf
+   could certify finite failure while the goal is derivable beyond the
+   bound). The site prevalidates the whole box against the goal
+   whitelist, then runs a positive MI-recursive derivability check of
+   the argument under fresh site-local depth+inference wrappers:
+   proved => the naf conjunct fails (cuts inside the successful check
+   are harmless — the derivation itself fit the bounds); failed
+   sentinel-free => sound naf leaf, payload frozen by copy_term at
+   success time so later sibling bindings never rewrite it; any
+   sentinel => the containing row is unproved(limit), signalled by a
+   private throw the row wrapper catches. */
+trace_mi_naf(Inner, ErrorStream, [naf0(Frozen)]) :-
+    trace_naf_validate(Inner, ErrorStream),
+    trace_depth_limit(Depth),
+    answer_inference_limit(Inferences),
+    ( call_with_inference_limit(
+          call_with_depth_limit(
+              once(trace_mi(Inner, ErrorStream, _)),
+              Depth, DepthResult),
+          Inferences, InferenceResult) ->
+        ( InferenceResult \== inference_limit_exceeded,
+          integer(DepthResult) ->
+            fail
+        ; throw(ace_to_pl_trace_naf_limit)
+        )
+    ; copy_term(Inner, Frozen)
+    ).
+
+trace_naf_validate(Goal, ErrorStream) :-
+    ( var(Goal) ->
+        emit_error(ErrorStream, proof, trace_goal_variable, 1)
+    ; Goal = (A, B) ->
+        trace_naf_validate(A, ErrorStream),
+        trace_naf_validate(B, ErrorStream)
+    ; Goal = (\+ Inner) ->
+        trace_naf_validate(Inner, ErrorStream)
+    ; functor(Goal, Name, Arity),
+      answer_goal_indicator(Name/Arity) ->
+        true
+    ; functor(Goal, Name, Arity),
+      emit_error(ErrorStream, proof, trace_goal_foreign(Name, Arity), 1)
+    ).
+
+/* Materialization (after once/1, inside the whole-run budget): each
+   reference retrieves its PRISTINE renamed clause — never the
+   instantiated resolution copy — re-renders it through the document
+   clause-line writer, digests the exact line bytes including the LF,
+   and extracts its unique sentence identity. NAF skeletons pass their
+   frozen payloads through. */
+trace_materialize([], _, []).
+trace_materialize([node0(Ref, ChildSkels)|Skels], ErrorStream,
+        [clause(sentence(DocId, S), clause_sha256(Hex), Children)|Nodes]) :-
+    trace_clause_node(Ref, ErrorStream, DocId, S, Hex),
+    trace_materialize(ChildSkels, ErrorStream, Children),
+    trace_materialize(Skels, ErrorStream, Nodes).
+trace_materialize([naf0(Frozen)|Skels], ErrorStream, [naf(Frozen)|Nodes]) :-
+    trace_materialize(Skels, ErrorStream, Nodes).
+
+trace_clause_node(Ref, ErrorStream, DocId, S, Hex) :-
+    ( clause(user:Head, Body, Ref) ->
+        true
+    ; throw(error(trace_clause_ref(Ref),
+          context(ace_to_pl:trace_clause_node/5, plain_failure)))
+    ),
+    ( acyclic_term((Head :- Body)),
+      term_attvars((Head :- Body), []),
+      canonical_tree((Head :- Body)) ->
+        true
+    ; emit_error(ErrorStream, proof, trace_unserializable, 1)
+    ),
+    trace_document_line(Head, Body, Line),
+    crypto_data_hash(Line, Hex, [algorithm(sha256), encoding(utf8)]),
+    trace_identity(Head, Body, ErrorStream, DocId, S).
+
+/* Digest input = the committed DOCUMENT clause line bytes exactly as
+   the document emitter wrote them (canonical head/goals, operator
+   glue ' :- ', ', ', '\+ ' / '\+ (...)'), reconstructed through the
+   emitter's own render_item/render_term_line discipline from the
+   decompiled clause. */
+trace_document_line(Head, Body, Line) :-
+    with_output_to(string(Line),
+        ( Body == true ->
+            render_term_line(Head)
+        ; trace_body_wrapped(Body, Wrapped),
+          render_item(rule(Head, Wrapped))
+        )).
+
+trace_body_wrapped(Body, Wrapped) :-
+    trace_body_list(Body, Wrapped, []).
+
+trace_body_list(Conj, List, Tail) :-
+    ( var(Conj) ->
+        List = [pos(Conj)|Tail]
+    ; Conj = (A, B) ->
+        trace_body_list(A, List, Mid),
+        trace_body_list(B, Mid, Tail)
+    ; Conj = (\+ Inner) ->
+        trace_naf_list(Inner, Goals),
+        List = [naf_conj(Goals)|Tail]
+    ; List = [pos(Conj)|Tail]
+    ).
+
+trace_naf_list(Conj, Goals) :-
+    ( nonvar(Conj),
+      Conj = (A, B) ->
+        trace_naf_list(A, GoalsA),
+        trace_naf_list(B, GoalsB),
+        append(GoalsA, GoalsB, Goals)
+    ; Goals = [Conj]
+    ).
+
+/* Identity law: count every '$guideline_id'(Role, DocId, S, _, _)
+   subterm whose Role is a frozen schema role, DocId an atom and S a
+   positive integer; repeated occurrences collapse. Anything other
+   than exactly one distinct pair rejects fail-closed. */
+trace_identity(Head, Body, ErrorStream, DocId, S) :-
+    findall(D-Sx,
+        ( aggregate_subterm((Head :- Body), Sub),
+          nonvar(Sub),
+          Sub = '$guideline_id'(Role, D, Sx, _, _),
+          atom(Role),
+          trace_identity_role(Role),
+          atom(D),
+          integer(Sx),
+          Sx > 0
+        ),
+        Raw),
+    sort(Raw, Pairs),
+    ( Pairs = [DocId0-S0] ->
+        DocId = DocId0,
+        S = S0
+    ; Pairs == [] ->
+        emit_error(ErrorStream, proof, clause_identity(none), 1)
+    ; length(Pairs, N),
+      emit_error(ErrorStream, proof, clause_identity(multiple(N)), 1)
+    ).
+
+trace_identity_role(context).
+trace_identity_role(product).
+trace_identity_role(witness).
+
+/* Artifact: comment line + one '$guideline_traces'/5 term, rendered
+   whole before any byte reaches stdout. The trace writer numbers the
+   whole term once left-to-right, then writes WITHOUT numbervars
+   translation: every variable lands as a literal ground '$VAR'(N)
+   subterm, so the committed artifact is ground under strict
+   read-back. Unserializable payloads (from hostile inputs) reject
+   before any output. */
+trace_emit(Output, QId, QueryDigest, AnswersDigest, Result, ErrorStream) :-
+    with_output_to(string(Out),
+        ( format('% ~w traced against the loaded composition by ace_to_pl trace mode; do not edit.~n',
+              [QId]),
+          trace_render_term_line('$guideline_traces'(v1, QId,
+              query_sha256(QueryDigest), answers_sha256(AnswersDigest),
+              result(Result)), ErrorStream)
+        )),
+    string_codes(Out, OutCodes),
+    format(Output, '~s', [OutCodes]).
+
+trace_render_term_line(Term, ErrorStream) :-
+    ( acyclic_term(Term),
+      term_attvars(Term, []),
+      canonical_tree(Term) ->
+        true
+    ; emit_error(ErrorStream, proof, trace_unserializable, 1)
+    ),
+    copy_term(Term, Copy),
+    numbervars(Copy, 0, _),
+    write_term(Copy,
+        [ quoted(true),
+          character_escapes(true),
+          ignore_ops(true)
+        ]),
+    write('.'),
+    nl.
 
 /* ---------- compile mode ---------- */
 

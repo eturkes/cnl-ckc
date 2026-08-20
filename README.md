@@ -31,7 +31,9 @@ compiler base:
   proof obligation and discharges it against the document's own
   clauses, alone and co-loaded with the rest of the batch. A shipped
   clause is therefore one that the compiler has proved follows from the
-  sentence it quotes.
+  sentence it quotes. A committed query answer ships with a proof
+  trace. Each clause application in that trace names one committed
+  clause line by SHA-256.
 - **E-- → Python.** All first-party Python (`tools/goal.py`,
   `tools/regen.py`) compiles from E-- (`tools/*.emm`), an English-like
   language. `tools/regen.py --check` proves that every committed `.py`
@@ -61,7 +63,9 @@ compiler base:
   carry no change notice.
 - **Tests are data.** `tests/red/` holds rejection probes named
   `<expected-error-class>--<name>.ace`. `tests/adjudication/` holds
-  ledger-validator fixtures pinned to exact output bytes. One
+  ledger-validator fixtures pinned to exact output bytes.
+  `tests/queries/` and `tests/ui/` hold red and green fixture cases
+  pinned the same way. One
   `tools/goal.py check` invocation beside `tools/regen.py --check` (the
   E-- → Python identity above) is the full acceptance gate. `check`:
 
@@ -90,7 +94,10 @@ compiler base:
      and as one co-loaded composition whose manifest is pinned to the
      guideline's whole document set;
   9. scans that composition for left recursion;
-  10. asserts that the compiler rejects each red probe with its named
+  10. re-derives each committed query artifact twice and
+      byte-compares it: compiled query, answer, and proof trace.
+      Every trace node must join exactly one committed clause line;
+  11. asserts that the compiler rejects each red probe with its named
       error class and exit status.
 
 ## Running
@@ -101,6 +108,7 @@ Debian Python is 3.11.
 
 ```sh
 python3 -P tools/goal.py compile <guideline-id>   # ACE → Prolog
+python3 -P tools/goal.py queries <guideline-id>   # query/answer/trace artifacts
 python3 -P tools/goal.py check                    # corpus acceptance gate
 python3 -P tools/regen.py --check                 # E-- → Python identity
 ```
@@ -426,16 +434,67 @@ file rejects with class `check_load` as `query_file(<why>)`. Manifest
 and composition load failures keep the aggregate classes and details.
 
 Committed query artifacts live under `guidelines/<id>/queries/`:
-`<qid>.ace` sources at the root, compiled queries under `pl/`, and
-answer artifacts under `answers/`. `python3 -P tools/goal.py queries
-<id>` derives every artifact in memory and writes only after every
-derivation succeeds. `check` re-derives both files per query twice
-and compares the bytes. A committed answer must be `yes` or nonempty
-`solutions(...)`; committed queries stay demonstrations. The
-`queries` and `check` commands bound every compile and answer
-subprocess at 30 seconds of wall-clock time, and a run that exceeds
-the bound fails the gate. The direct `swipl` invocation above has no
-process bound.
+`<qid>.ace` sources at the root, compiled queries under `pl/`, answer
+artifacts under `answers/`, and proof traces under `traces/`.
+`python3 -P tools/goal.py queries <id>` derives every artifact in
+memory and writes only after every derivation succeeds. `check`
+re-derives each file per query twice and compares the bytes. A
+committed answer must be `yes` or nonempty `solutions(...)`;
+committed queries stay demonstrations. The `queries` and `check`
+commands bound every compile, answer, and trace subprocess at 30
+seconds of wall-clock time. A run that exceeds the bound fails the
+gate. The direct `swipl` invocation above has no process bound.
+
+### Proof traces
+
+The compiler's `trace` mode re-proves the positive claims of one
+answer artifact against a loaded composition:
+
+```sh
+swipl -q -f none -F none -s vendor/ape/prolog/ace_to_pl.pl -g main \
+  -t 'halt(9)' -- trace <manifest> <query-pl> <answers-pl>
+```
+
+The manifest and query file follow the answer-mode rules.
+`<answers-pl>` must read as the answer artifact for the same query:
+one ground `'$guideline_answers'` term. The version, qid, and query
+hash must match. The result must fit the query's mode. A malformed
+or mismatched answers file rejects with class `check_load` as
+`answers_file(<why>)`.
+
+Success emits a two-line artifact on stdout: a generated-file
+comment, then one ground term `'$guideline_traces'(v1, Qid,
+query_sha256(H), answers_sha256(A), result(R))`. `A` is the SHA-256
+of the raw answers-file bytes. `R` mirrors the answer result with a
+proof in place of each positive claim. `yes` becomes `yes(P)`. Each
+`sol(Values)` row becomes `sol(Values, P)` in file order.
+`no(finite_failure)` and `indeterminate(limit)` carry no positive
+claim and stay verbatim.
+
+`P` is `proved(Nodes)`, `unproved(finite_failure)`, or
+`unproved(limit)`. Each proof node is `clause(sentence(DocId, S),
+clause_sha256(Hex), Children)`. It names the clause that resolved
+the goal by document and sentence number. `Hex` is the SHA-256 of
+that clause's rendered document line with its newline. A re-checked
+negation-as-failure goal freezes as a `naf(Goal)` leaf among a
+clause node's children. Root nodes are always clause nodes. The
+prover is a directed first-proof interpreter over the loaded
+clauses. Each row's search runs under depth 1000 and 100000
+inferences. The whole run is bounded at 1000000 inferences. The
+interpreter's depth measure is its own; it is not comparable with
+the answer mode's engine measure. A negation site re-checks under
+the same bounds. A bound that trips inside a negation makes the
+whole row `unproved(limit)`, never a false failure. When the
+whole-run bound trips, the result becomes `indeterminate(limit)` in
+place of the mirror. The direct `swipl` invocation has no process
+bound.
+
+`check` re-derives each committed trace twice, compares the bytes,
+and resolves every `clause_sha256` to exactly one clause line of the
+committed document under `pl/`. A committed trace must prove its
+answer: `yes(proved(...))`, or solution rows that are all proved.
+`check` prints one `goal: traces <id> <n> traces; nodes=<k>` meter
+per guideline beside the queries meter.
 
 ## Operating
 
@@ -467,7 +526,9 @@ that measures the exhaustion clause directly. Corpus validation
 region-status meter, lexicon liveness and minimality, v1-only product
 vocabulary) runs for every guideline on every check. The same pass
 re-derives each guideline's review manifest and validates its
-adjudication ledger. Bulk work (source
+adjudication ledger. It also re-derives every committed query,
+answer, and proof trace, and it joins each trace step to its
+committed clause line. Bulk work (source
 reading, extraction drafting, ACE drafting, adversarial review) fans
 out to subagent teammates per `.agent/rounds.md`. The session lead
 alone writes the repository and commits.

@@ -264,6 +264,8 @@ def query_artifact_pl_path(tracked):
         dir_ok = True
     if dir_part == "answers":
         dir_ok = True
+    if dir_part == "traces":
+        dir_ok = True
     if not dir_ok:
         return False
     if not file_part.endswith(".pl"):
@@ -302,7 +304,12 @@ def queries_fixture_pl_path(tracked):
     if part_count == 6:
         pin_part = parts.pop(0)
         file_part = parts.pop(0)
-        if pin_part != "answers-golden":
+        pin_ok = False
+        if pin_part == "answers-golden":
+            pin_ok = True
+        if pin_part == "traces-golden":
+            pin_ok = True
+        if not pin_ok:
             return False
         if not file_part.endswith(".pl"):
             return False
@@ -335,6 +342,8 @@ def queries_fixture_pl_path(tracked):
     if dir_part == "pl":
         dir_ok = True
     if dir_part == "answers":
+        dir_ok = True
+    if dir_part == "traces":
         dir_ok = True
     if not dir_ok:
         return False
@@ -590,6 +599,7 @@ def check_documents(scratch_path, swipl_executable, stage_path, guideline_path, 
     check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs)
     query_counts = validate_queries(scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path)
     queries_meter(guideline_path.name, query_counts)
+    traces_meter(guideline_path.name, query_counts)
 def manifest_document_ids(manifest_pairs):
     docid_list = []
     for manifest_pair in manifest_pairs:
@@ -669,6 +679,8 @@ def collect_query_aces(scratch_path, guideline_path):
         if entry_name == "pl":
             subdir_name = True
         if entry_name == "answers":
+            subdir_name = True
+        if entry_name == "traces":
             subdir_name = True
         if subdir_name:
             if entry.is_symlink():
@@ -750,6 +762,23 @@ def run_answer(scratch_path, swipl_executable, stage_path, qid, manifest_path, q
     if not result.stdout.endswith(newline_bytes):
         cleanup_and_fail(scratch_path, "answer-stdout", "missing final newline for question: " + qid)
     return result.stdout
+def run_trace(scratch_path, swipl_executable, stage_path, qid, manifest_path, query_pl_path, answers_pl_path):
+    tail_args = ["trace", str(manifest_path), str(query_pl_path), str(answers_pl_path)]
+    command = compiler_command(swipl_executable, stage_path, tail_args)
+    try:
+        result = subprocess.run(command, capture_output=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        queries_violation(scratch_path, "queries", "wall_clock for qid: " + qid)
+    if result.returncode != 0:
+        relay_failure(scratch_path, result)
+    if result.stderr:
+        cleanup_and_fail(scratch_path, "trace-stderr", "non-empty stderr for question: " + qid)
+    if not result.stdout:
+        cleanup_and_fail(scratch_path, "trace-stdout", "empty stdout for question: " + qid)
+    newline_bytes = bytes([10])
+    if not result.stdout.endswith(newline_bytes):
+        cleanup_and_fail(scratch_path, "trace-stdout", "missing final newline for question: " + qid)
+    return result.stdout
 def answer_result_text(answer_bytes):
     answer_text = answer_bytes.decode("utf-8", errors="replace")
     answer_lines = answer_text.splitlines()
@@ -765,17 +794,634 @@ def answer_result_text(answer_bytes):
     if not tail_text.endswith("))."):
         return ""
     return tail_text.removesuffix(")).")
+def trace_ascii_digit(ch):
+    ascii_digits = "0123456789"
+    ok = ch in ascii_digits
+    return ok
+def trace_scan_number(chars, num_text):
+    is_float = False
+    if chars:
+        c2 = chars.pop()
+        if c2 == ".":
+            if chars:
+                c3 = chars.pop()
+                if trace_ascii_digit(c3):
+                    is_float = True
+                    num_text = num_text + "." + c3
+                    frac_done = False
+                    while not frac_done:
+                        if not chars:
+                            frac_done = True
+                        else:
+                            c4 = chars.pop()
+                            if trace_ascii_digit(c4):
+                                num_text = num_text + c4
+                            else:
+                                chars.append(c4)
+                                frac_done = True
+                else:
+                    chars.append(c3)
+                    chars.append(c2)
+            else:
+                chars.append(c2)
+        else:
+            chars.append(c2)
+    if is_float:
+        if chars:
+            e1 = chars.pop()
+            is_e = False
+            if e1 == "e":
+                is_e = True
+            if e1 == "E":
+                is_e = True
+            if not is_e:
+                chars.append(e1)
+            else:
+                exp_text = ""
+                exp_sign = ""
+                exp_ok = False
+                if chars:
+                    e2 = chars.pop()
+                    if trace_ascii_digit(e2):
+                        exp_text = e2
+                        exp_ok = True
+                    elif e2 == "-":
+                        exp_sign = e2
+                    elif e2 == "+":
+                        exp_sign = e2
+                    else:
+                        chars.append(e2)
+                if exp_sign:
+                    if chars:
+                        e3 = chars.pop()
+                        if trace_ascii_digit(e3):
+                            exp_text = e3
+                            exp_ok = True
+                        else:
+                            chars.append(e3)
+                if exp_ok:
+                    exp_done = False
+                    while not exp_done:
+                        if not chars:
+                            exp_done = True
+                        else:
+                            e4 = chars.pop()
+                            if trace_ascii_digit(e4):
+                                exp_text = exp_text + e4
+                            else:
+                                chars.append(e4)
+                                exp_done = True
+                    num_text = num_text + "e" + exp_sign + exp_text
+                else:
+                    if exp_sign:
+                        chars.append(exp_sign)
+                    chars.append(e1)
+        return ["float", num_text]
+    return ["int", int(num_text)]
+def trace_scan_tokens(term_text):
+    chars = list(term_text)
+    chars.reverse()
+    tokens = []
+    punct_chars = "()[],."
+    ascii_lower = "abcdefghijklmnopqrstuvwxyz"
+    ascii_alnum = ascii_lower + "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    while chars:
+        c = chars.pop()
+        if c == "'":
+            inner = ""
+            closed = False
+            while not closed:
+                if not chars:
+                    return None
+                c2 = chars.pop()
+                if c2 == "'":
+                    closed = True
+                elif c2 == "\\":
+                    if not chars:
+                        return None
+                    c3 = chars.pop()
+                    numeric_escape = False
+                    if c3 == "x":
+                        numeric_escape = True
+                    if trace_ascii_digit(c3):
+                        numeric_escape = True
+                    if numeric_escape:
+                        esc_closed = False
+                        while not esc_closed:
+                            if not chars:
+                                return None
+                            c4 = chars.pop()
+                            if c4 == "\\":
+                                esc_closed = True
+                            else:
+                                inner = inner + "\\" + c4
+                    else:
+                        inner = inner + "\\" + c3
+                else:
+                    inner = inner + c2
+            tokens.append(["atom", inner])
+        elif trace_ascii_digit(c):
+            num_text = c
+            num_done = False
+            while not num_done:
+                if not chars:
+                    num_done = True
+                else:
+                    c2 = chars.pop()
+                    if trace_ascii_digit(c2):
+                        num_text = num_text + c2
+                    else:
+                        chars.append(c2)
+                        num_done = True
+            tokens.append(trace_scan_number(chars, num_text))
+        elif c == "-":
+            if not chars:
+                return None
+            c2 = chars.pop()
+            if not trace_ascii_digit(c2):
+                return None
+            num_text = c + c2
+            num_done = False
+            while not num_done:
+                if not chars:
+                    num_done = True
+                else:
+                    c3 = chars.pop()
+                    if trace_ascii_digit(c3):
+                        num_text = num_text + c3
+                    else:
+                        chars.append(c3)
+                        num_done = True
+            tokens.append(trace_scan_number(chars, num_text))
+        elif c in punct_chars:
+            tokens.append(["punct", c])
+        elif c in ascii_lower:
+            atom_text = c
+            atom_done = False
+            while not atom_done:
+                if not chars:
+                    atom_done = True
+                else:
+                    c2 = chars.pop()
+                    atom_char = c2 in ascii_alnum
+                    if c2 == "_":
+                        atom_char = True
+                    if atom_char:
+                        atom_text = atom_text + c2
+                    else:
+                        chars.append(c2)
+                        atom_done = True
+            tokens.append(["atom", atom_text])
+        else:
+            return None
+    return tokens
+def trace_parse_term(tokens):
+    if not tokens:
+        return None
+    tok = tokens.pop()
+    tok_copy = list(tok)
+    kind = tok_copy.pop(0)
+    value = tok_copy.pop(0)
+    if kind == "int":
+        return ["i", value]
+    if kind == "float":
+        return ["f", value]
+    if kind == "atom":
+        open_paren = False
+        if tokens:
+            peek = tokens.pop()
+            if peek == ["punct", "("]:
+                open_paren = True
+            else:
+                tokens.append(peek)
+        if not open_paren:
+            return ["a", value]
+        args = []
+        arg_node = trace_parse_term(tokens)
+        if arg_node == None:
+            return None
+        args.append(arg_node)
+        args_done = False
+        while not args_done:
+            if not tokens:
+                return None
+            sep = tokens.pop()
+            if sep == ["punct", ","]:
+                arg_node = trace_parse_term(tokens)
+                if arg_node == None:
+                    return None
+                args.append(arg_node)
+            elif sep == ["punct", ")"]:
+                args_done = True
+            else:
+                return None
+        return ["c", value, args]
+    if kind == "punct":
+        if value != "[":
+            return None
+        items = []
+        if tokens:
+            peek = tokens.pop()
+            if peek == ["punct", "]"]:
+                return ["l", items]
+            tokens.append(peek)
+        item_node = trace_parse_term(tokens)
+        if item_node == None:
+            return None
+        items.append(item_node)
+        items_done = False
+        while not items_done:
+            if not tokens:
+                return None
+            sep = tokens.pop()
+            if sep == ["punct", ","]:
+                item_node = trace_parse_term(tokens)
+                if item_node == None:
+                    return None
+                items.append(item_node)
+            elif sep == ["punct", "]"]:
+                items_done = True
+            else:
+                return None
+        return ["l", items]
+    return None
+def trace_parse_line(line_text):
+    tokens = trace_scan_tokens(line_text)
+    if tokens == None:
+        return None
+    tokens.reverse()
+    term = trace_parse_term(tokens)
+    if term == None:
+        return None
+    if not tokens:
+        return None
+    stop = tokens.pop()
+    if stop != ["punct", "."]:
+        return None
+    if tokens:
+        return None
+    return term
+def trace_walk_node(node, triples, node_marks):
+    node_copy = list(node)
+    kind = node_copy.pop(0)
+    if kind != "c":
+        return False
+    name = node_copy.pop(0)
+    args = node_copy.pop(0)
+    if name == "naf":
+        if len(args) != 1:
+            return False
+        return True
+    if name != "clause":
+        return False
+    if len(args) != 3:
+        return False
+    args_copy = list(args)
+    sentence_node = args_copy.pop(0)
+    digest_node = args_copy.pop(0)
+    children_node = args_copy.pop(0)
+    sentence_copy = list(sentence_node)
+    sentence_kind = sentence_copy.pop(0)
+    if sentence_kind != "c":
+        return False
+    sentence_name = sentence_copy.pop(0)
+    if sentence_name != "sentence":
+        return False
+    sentence_args = sentence_copy.pop(0)
+    if len(sentence_args) != 2:
+        return False
+    sentence_args_copy = list(sentence_args)
+    docid_node = sentence_args_copy.pop(0)
+    s_node = sentence_args_copy.pop(0)
+    docid_copy = list(docid_node)
+    docid_kind = docid_copy.pop(0)
+    if docid_kind != "a":
+        return False
+    docid_value = docid_copy.pop(0)
+    if not valid_docid(docid_value):
+        return False
+    s_copy = list(s_node)
+    s_kind = s_copy.pop(0)
+    if s_kind != "i":
+        return False
+    s_value = s_copy.pop(0)
+    if s_value < 1:
+        return False
+    digest_copy = list(digest_node)
+    digest_kind = digest_copy.pop(0)
+    if digest_kind != "c":
+        return False
+    digest_name = digest_copy.pop(0)
+    if digest_name != "clause_sha256":
+        return False
+    digest_args = digest_copy.pop(0)
+    if len(digest_args) != 1:
+        return False
+    digest_args_copy = list(digest_args)
+    hex_node = digest_args_copy.pop(0)
+    hex_copy = list(hex_node)
+    hex_kind = hex_copy.pop(0)
+    if hex_kind != "a":
+        return False
+    hex_value = hex_copy.pop(0)
+    if not valid_digest(hex_value):
+        return False
+    children_copy = list(children_node)
+    children_kind = children_copy.pop(0)
+    if children_kind != "l":
+        return False
+    children_items = children_copy.pop(0)
+    for child in children_items:
+        child_ok = trace_walk_node(child, triples, node_marks)
+        if not child_ok:
+            return False
+    triples.append([docid_value, s_value, hex_value])
+    node_marks.append(1)
+    return True
+def trace_walk_proof(proof_node, triples, node_marks):
+    proof_copy = list(proof_node)
+    kind = proof_copy.pop(0)
+    if kind != "c":
+        return "invalid"
+    name = proof_copy.pop(0)
+    args = proof_copy.pop(0)
+    if name == "proved":
+        if len(args) != 1:
+            return "invalid"
+        args_copy = list(args)
+        nodes_node = args_copy.pop(0)
+        nodes_copy = list(nodes_node)
+        nodes_kind = nodes_copy.pop(0)
+        if nodes_kind != "l":
+            return "invalid"
+        node_items = nodes_copy.pop(0)
+        if not node_items:
+            return "invalid"
+        for item in node_items:
+            root_copy = list(item)
+            root_kind = root_copy.pop(0)
+            if root_kind != "c":
+                return "invalid"
+            root_name = root_copy.pop(0)
+            if root_name != "clause":
+                return "invalid"
+            item_ok = trace_walk_node(item, triples, node_marks)
+            if not item_ok:
+                return "invalid"
+        return "proved"
+    if name == "unproved":
+        if len(args) != 1:
+            return "invalid"
+        args_copy = list(args)
+        why_node = args_copy.pop(0)
+        if why_node == ["a", "finite_failure"]:
+            return "unproved"
+        if why_node == ["a", "limit"]:
+            return "unproved"
+        return "invalid"
+    return "invalid"
+def parse_trace_artifact(trace_bytes, qid):
+    malformed = ["malformed", False, [], 0]
+    text = ""
+    try:
+        text = trace_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return malformed
+    if not text.endswith("\n"):
+        return malformed
+    line_list = text.split("\n")
+    line_list.pop()
+    if len(line_list) != 2:
+        return malformed
+    comment_line = line_list.pop(0)
+    term_line = line_list.pop(0)
+    expected_comment = "% " + qid + " traced against the loaded composition by ace_to_pl trace mode; do not edit."
+    if comment_line != expected_comment:
+        return malformed
+    term = trace_parse_line(term_line)
+    if term == None:
+        return malformed
+    term_copy = list(term)
+    term_kind = term_copy.pop(0)
+    if term_kind != "c":
+        return malformed
+    term_name = term_copy.pop(0)
+    if term_name != "$guideline_traces":
+        return malformed
+    term_args = term_copy.pop(0)
+    if len(term_args) != 5:
+        return malformed
+    args_copy = list(term_args)
+    version_node = args_copy.pop(0)
+    qid_node = args_copy.pop(0)
+    query_wrap = args_copy.pop(0)
+    answers_wrap = args_copy.pop(0)
+    result_wrap = args_copy.pop(0)
+    if version_node != ["a", "v1"]:
+        return malformed
+    if qid_node != ["a", qid]:
+        return malformed
+    query_copy = list(query_wrap)
+    query_kind = query_copy.pop(0)
+    if query_kind != "c":
+        return malformed
+    query_name = query_copy.pop(0)
+    if query_name != "query_sha256":
+        return malformed
+    query_args = query_copy.pop(0)
+    if len(query_args) != 1:
+        return malformed
+    query_args_copy = list(query_args)
+    query_hex_node = query_args_copy.pop(0)
+    query_hex_copy = list(query_hex_node)
+    query_hex_kind = query_hex_copy.pop(0)
+    if query_hex_kind != "a":
+        return malformed
+    query_hex = query_hex_copy.pop(0)
+    if not valid_digest(query_hex):
+        return malformed
+    answers_copy = list(answers_wrap)
+    answers_kind = answers_copy.pop(0)
+    if answers_kind != "c":
+        return malformed
+    answers_name = answers_copy.pop(0)
+    if answers_name != "answers_sha256":
+        return malformed
+    answers_args = answers_copy.pop(0)
+    if len(answers_args) != 1:
+        return malformed
+    answers_args_copy = list(answers_args)
+    answers_hex_node = answers_args_copy.pop(0)
+    answers_hex_copy = list(answers_hex_node)
+    answers_hex_kind = answers_hex_copy.pop(0)
+    if answers_hex_kind != "a":
+        return malformed
+    answers_hex = answers_hex_copy.pop(0)
+    if not valid_digest(answers_hex):
+        return malformed
+    result_copy = list(result_wrap)
+    result_kind = result_copy.pop(0)
+    if result_kind != "c":
+        return malformed
+    result_name = result_copy.pop(0)
+    if result_name != "result":
+        return malformed
+    result_args = result_copy.pop(0)
+    if len(result_args) != 1:
+        return malformed
+    result_args_copy = list(result_args)
+    result_node = result_args_copy.pop(0)
+    triples = []
+    node_marks = []
+    demo_ok = False
+    result_node_copy = list(result_node)
+    result_node_kind = result_node_copy.pop(0)
+    if result_node_kind != "c":
+        return malformed
+    result_node_name = result_node_copy.pop(0)
+    result_node_args = result_node_copy.pop(0)
+    if result_node_name == "yes":
+        if len(result_node_args) != 1:
+            return malformed
+        yes_args_copy = list(result_node_args)
+        proof_node = yes_args_copy.pop(0)
+        proof_status = trace_walk_proof(proof_node, triples, node_marks)
+        if proof_status == "invalid":
+            return malformed
+        if proof_status == "proved":
+            demo_ok = True
+    elif result_node_name == "no":
+        if result_node_args != [["a", "finite_failure"]]:
+            return malformed
+    elif result_node_name == "indeterminate":
+        if result_node_args != [["a", "limit"]]:
+            return malformed
+    elif result_node_name == "solutions":
+        if len(result_node_args) != 1:
+            return malformed
+        sols_args_copy = list(result_node_args)
+        rows_node = sols_args_copy.pop(0)
+        rows_copy = list(rows_node)
+        rows_kind = rows_copy.pop(0)
+        if rows_kind != "l":
+            return malformed
+        row_items = rows_copy.pop(0)
+        all_proved = True
+        for row in row_items:
+            row_copy = list(row)
+            row_kind = row_copy.pop(0)
+            if row_kind != "c":
+                return malformed
+            row_name = row_copy.pop(0)
+            if row_name != "sol":
+                return malformed
+            row_args = row_copy.pop(0)
+            if len(row_args) != 2:
+                return malformed
+            row_args_copy = list(row_args)
+            values_node = row_args_copy.pop(0)
+            proof_node = row_args_copy.pop(0)
+            values_copy = list(values_node)
+            values_kind = values_copy.pop(0)
+            if values_kind != "l":
+                return malformed
+            proof_status = trace_walk_proof(proof_node, triples, node_marks)
+            if proof_status == "invalid":
+                return malformed
+            if proof_status != "proved":
+                all_proved = False
+        if row_items:
+            if all_proved:
+                demo_ok = True
+    else:
+        return malformed
+    return ["", demo_ok, triples, len(node_marks)]
+def trace_block_table(pl_path):
+    table = {}
+    if pl_path.is_symlink():
+        return table
+    if not pl_path.is_file():
+        return table
+    raw = pl_path.read_bytes()
+    text = ""
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return table
+    current_block = 0
+    for line_text in text.split("\n"):
+        is_marker = False
+        if line_text.startswith("% S"):
+            marker_rest = line_text.removeprefix("% S")
+            marker_parts = list(marker_rest.partition(": "))
+            marker_head = marker_parts.pop(0)
+            marker_sep = marker_parts.pop(0)
+            if marker_sep == ": ":
+                head_ok = False
+                if marker_head:
+                    head_ok = True
+                ascii_digits = "0123456789"
+                for head_char in marker_head:
+                    char_ok = head_char in ascii_digits
+                    if not char_ok:
+                        head_ok = False
+                if marker_head.startswith("0"):
+                    head_ok = False
+                if head_ok:
+                    current_block = int(marker_head)
+                    is_marker = True
+        if not is_marker:
+            skip_line = False
+            if line_text.startswith("%"):
+                skip_line = True
+            if line_text.startswith(":- "):
+                skip_line = True
+            if line_text.startswith("guideline_schema_version("):
+                skip_line = True
+            if line_text.startswith("guideline_document("):
+                skip_line = True
+            if not line_text.endswith("."):
+                skip_line = True
+            if not skip_line:
+                line_full = line_text + "\n"
+                line_hash = sha256_hex(line_full.encode("utf-8"))
+                table_key = str(current_block) + ":" + line_hash
+                prior = table.get(table_key, 0)
+                table.update({table_key: prior + 1})
+    return table
+def trace_join_nodes(scratch_path, guideline_path, qid, triples, doc_cache):
+    for triple in triples:
+        triple_copy = list(triple)
+        docid_value = triple_copy.pop(0)
+        s_value = triple_copy.pop(0)
+        hex_value = triple_copy.pop(0)
+        cached = docid_value in doc_cache
+        if not cached:
+            pl_path = guideline_path.joinpath("pl", docid_value + ".pl")
+            doc_cache.update({docid_value: trace_block_table(pl_path)})
+        table = doc_cache.get(docid_value)
+        table_key = str(s_value) + ":" + hex_value
+        match_count = table.get(table_key, 0)
+        if match_count == 0:
+            queries_violation(scratch_path, "traces", "trace node resolves to no committed clause line: " + qid + " " + docid_value + " S" + str(s_value))
+        if match_count > 1:
+            queries_violation(scratch_path, "traces", "trace node resolves to multiple committed clause lines: " + qid + " " + docid_value + " S" + str(s_value))
 def validate_queries(scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path):
     queries_dir = guideline_path.joinpath("queries")
     qids = collect_query_aces(scratch_path, guideline_path)
     pl_stems = collect_query_dir(scratch_path, queries_dir, "pl")
+    answers_stems = collect_query_dir(scratch_path, queries_dir, "answers")
+    traces_stems = collect_query_dir(scratch_path, queries_dir, "traces")
     if pl_stems != qids:
         queries_violation(scratch_path, "queries", "pl inventory differs from ace query set: " + str(queries_dir.joinpath("pl")))
-    answers_stems = collect_query_dir(scratch_path, queries_dir, "answers")
     if answers_stems != qids:
         queries_violation(scratch_path, "queries", "answers inventory differs from ace query set: " + str(queries_dir.joinpath("answers")))
+    if traces_stems != qids:
+        queries_violation(scratch_path, "queries", "traces inventory differs from ace query set: " + str(queries_dir.joinpath("traces")))
     wh_count = 0
     yesno_count = 0
+    trace_nodes = 0
+    trace_doc_cache = {}
     if qids:
         manifest_path = scratch_path.joinpath("queries-manifest-" + guideline_path.name)
         build_query_manifest(manifest_path, guideline_path.joinpath("pl"))
@@ -817,13 +1463,40 @@ def validate_queries(scratch_path, swipl_executable, stage_path, guideline_path,
                 yesno_count = yesno_count + 1
             else:
                 wh_count = wh_count + 1
-    return [len(qids), wh_count, yesno_count]
+            first_trace = run_trace(scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl, committed_answers)
+            second_trace = run_trace(scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl, committed_answers)
+            if first_trace != second_trace:
+                queries_violation(scratch_path, "determinism", "two trace runs differ for question: " + qid)
+            committed_trace = queries_dir.joinpath("traces", qid + ".pl")
+            committed_trace_bytes = committed_trace.read_bytes()
+            if first_trace != committed_trace_bytes:
+                queries_violation(scratch_path, "stale", "committed query trace differs from fresh trace: " + str(committed_trace))
+            parse_result = parse_trace_artifact(committed_trace_bytes, qid)
+            parse_copy = list(parse_result)
+            parse_detail = parse_copy.pop(0)
+            demo_ok = parse_copy.pop(0)
+            trace_triples = parse_copy.pop(0)
+            qid_nodes = parse_copy.pop(0)
+            if parse_detail != "":
+                queries_violation(scratch_path, "traces", "malformed trace artifact: " + str(committed_trace))
+            trace_join_nodes(scratch_path, guideline_path, qid, trace_triples, trace_doc_cache)
+            if not demo_ok:
+                queries_violation(scratch_path, "traces", "non-demo proof for qid: " + qid)
+            trace_nodes = trace_nodes + qid_nodes
+    return [len(qids), wh_count, yesno_count, trace_nodes]
 def queries_meter(guideline_name, query_counts):
     counts_copy = list(query_counts)
     query_count = counts_copy.pop(0)
     wh_count = counts_copy.pop(0)
     yesno_count = counts_copy.pop(0)
     print("goal: queries " + guideline_name + " " + str(query_count) + " queries; wh=" + str(wh_count) + " yesno=" + str(yesno_count))
+def traces_meter(guideline_name, query_counts):
+    counts_copy = list(query_counts)
+    query_count = counts_copy.pop(0)
+    wh_count = counts_copy.pop(0)
+    yesno_count = counts_copy.pop(0)
+    node_count = counts_copy.pop(0)
+    print("goal: traces " + guideline_name + " " + str(query_count) + " traces; nodes=" + str(node_count))
 def queries_check_command(guideline_dir, stage_arg):
     guideline_path = pathlib.Path(guideline_dir)
     if guideline_path.is_symlink():
@@ -858,7 +1531,7 @@ def queries_command(guideline_id):
     queries_dir = guideline_path.joinpath("queries")
     qids = collect_query_aces(None, guideline_path)
     if not qids:
-        for dir_name in ["pl", "answers"]:
+        for dir_name in ["pl", "answers", "traces"]:
             sub_dir = queries_dir.joinpath(dir_name)
             if sub_dir.is_dir():
                 shutil.rmtree(sub_dir)
@@ -876,22 +1549,31 @@ def queries_command(guideline_id):
         build_query_manifest(manifest_path, guideline_path.joinpath("pl"))
         pl_by_qid = {}
         answers_by_qid = {}
+        traces_by_qid = {}
         for qid in qids:
             ace_path = queries_dir.joinpath(qid + ".ace")
             pl_bytes = run_question_compile(scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path)
             fresh_path = scratch_path.joinpath("query-" + qid + ".pl")
             fresh_path.write_bytes(pl_bytes)
             answer_bytes = run_answer(scratch_path, swipl_executable, stage_path, qid, manifest_path, fresh_path)
+            fresh_answers_path = scratch_path.joinpath("answers-" + qid + ".pl")
+            fresh_answers_path.write_bytes(answer_bytes)
+            trace_bytes = run_trace(scratch_path, swipl_executable, stage_path, qid, manifest_path, fresh_path, fresh_answers_path)
             pl_by_qid.update({qid: pl_bytes})
             answers_by_qid.update({qid: answer_bytes})
+            traces_by_qid.update({qid: trace_bytes})
         pl_dir = queries_dir.joinpath("pl")
         answers_dir = queries_dir.joinpath("answers")
+        traces_dir = queries_dir.joinpath("traces")
         if pl_dir.is_dir():
             shutil.rmtree(pl_dir)
         if answers_dir.is_dir():
             shutil.rmtree(answers_dir)
+        if traces_dir.is_dir():
+            shutil.rmtree(traces_dir)
         pl_dir.mkdir()
         answers_dir.mkdir()
+        traces_dir.mkdir()
         for qid in sorted(pl_by_qid):
             pl_target = pl_dir.joinpath(qid + ".pl")
             pl_target.write_bytes(pl_by_qid.get(qid))
@@ -899,6 +1581,9 @@ def queries_command(guideline_id):
             answers_target = answers_dir.joinpath(qid + ".pl")
             answers_target.write_bytes(answers_by_qid.get(qid))
             print("goal: wrote " + str(answers_target))
+            trace_target = traces_dir.joinpath(qid + ".pl")
+            trace_target.write_bytes(traces_by_qid.get(qid))
+            print("goal: wrote " + str(trace_target))
         shutil.rmtree(scratch_path)
         print("goal: queries ok " + str(len(qids)) + " queries")
 def compile_command(guideline_id):
@@ -2428,6 +3113,10 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
             cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + entry.name)
     red_count = 0
     green_count = 0
+    red_names = []
+    green_names = []
+    red_required = ["bad-qid", "empty-solutions", "limit-depth", "limit-inner-inference", "malformed-query-file", "missing-trace", "no-finite-failure", "orphan-answers", "orphan-pl", "orphan-trace", "stale-answers", "stale-pl", "stale-trace", "trace-digest-join", "trace-indeterminate-mirror", "trace-naf-depth-cut", "trace-naf-inference-cut", "trace-naf-proved", "trace-no-mirror", "trace-row-failure-after-cut", "trace-unproved-finite", "trace-unproved-limit", "uncompiled-ace", "yesno-limit-before-proof"]
+    green_required = ["absent-queries", "canonical-sort", "empty-queries", "positive", "trace-direct-rejects", "trace-multi-proof", "trace-naf", "trace-positive-rule", "trace-serializer"]
     for color in color_names:
         color_path = fixtures_root.joinpath(color)
         if color_path.is_symlink():
@@ -2442,10 +3131,16 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
                 cleanup_violation(scratch_path, "queries-fixtures", "not a case directory: " + case_name)
             if not valid_docid(case_name):
                 cleanup_violation(scratch_path, "queries-fixtures", "invalid case name: " + case_name)
+            if color == "red":
+                red_names.append(case_name)
+            else:
+                green_names.append(case_name)
             has_tree = False
             has_expect = False
             has_golden = False
             has_answers_golden = False
+            has_traces_golden = False
+            has_trace_reject = False
             for member in sorted(case_entry.iterdir()):
                 member_name = member.name
                 if member.is_symlink():
@@ -2458,6 +3153,14 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
                     if not member.is_dir():
                         cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
                     has_answers_golden = True
+                elif member_name == "traces-golden":
+                    if not member.is_dir():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+                    has_traces_golden = True
+                elif member_name == "trace-reject":
+                    if not member.is_dir():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+                    has_trace_reject = True
                 elif member_name == "expect":
                     if not member.is_file():
                         cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
@@ -2517,10 +3220,18 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
                 if result.stdout != golden_bytes:
                     cleanup_violation(scratch_path, "queries-fixtures", "stdout differs from golden for case: " + case_name)
                 green_count = green_count + 1
+            any_pin_lane = False
+            if has_answers_golden:
+                any_pin_lane = True
+            if has_traces_golden:
+                any_pin_lane = True
+            if has_trace_reject:
+                any_pin_lane = True
+            fixture_manifest = scratch_path.joinpath("queries-fixture-manifest-" + color + "-" + case_name)
+            if any_pin_lane:
+                build_query_manifest(fixture_manifest, gid_path.joinpath("pl"))
             if has_answers_golden:
                 pins_dir = case_entry.joinpath("answers-golden")
-                fixture_manifest = scratch_path.joinpath("queries-fixture-manifest-" + color + "-" + case_name)
-                build_query_manifest(fixture_manifest, gid_path.joinpath("pl"))
                 for pin in sorted(pins_dir.iterdir()):
                     pin_name = pin.name
                     if pin.is_symlink():
@@ -2542,6 +3253,95 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
                     pin_bytes = pin.read_bytes()
                     if answer_bytes != pin_bytes:
                         cleanup_violation(scratch_path, "queries-fixtures", "answer bytes differ from answers-golden: " + case_name + "/" + pin_qid)
+            if has_traces_golden:
+                pins_dir = case_entry.joinpath("traces-golden")
+                for pin in sorted(pins_dir.iterdir()):
+                    pin_name = pin.name
+                    if pin.is_symlink():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/traces-golden/" + pin_name)
+                    if not pin.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/traces-golden/" + pin_name)
+                    if not pin_name.endswith(".pl"):
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/traces-golden/" + pin_name)
+                    pin_qid = pin_name.removesuffix(".pl")
+                    if not valid_docid(pin_qid):
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/traces-golden/" + pin_name)
+                    query_ace = gid_path.joinpath("queries", pin_qid + ".ace")
+                    if not query_ace.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "traces-golden qid has no query: " + case_name + "/" + pin_qid)
+                    query_pl = gid_path.joinpath("queries", "pl", pin_qid + ".pl")
+                    if not query_pl.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "traces-golden qid has no query: " + case_name + "/" + pin_qid)
+                    answers_pl = gid_path.joinpath("queries", "answers", pin_qid + ".pl")
+                    if not answers_pl.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "traces-golden qid has no query: " + case_name + "/" + pin_qid)
+                    trace_bytes = run_trace(scratch_path, swipl_executable, stage_path, pin_qid, fixture_manifest, query_pl, answers_pl)
+                    pin_bytes = pin.read_bytes()
+                    if trace_bytes != pin_bytes:
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace bytes differ from traces-golden: " + case_name + "/" + pin_qid)
+            if has_trace_reject:
+                reject_dir = case_entry.joinpath("trace-reject")
+                answers_qids = []
+                expect_qids = []
+                for reject_member in sorted(reject_dir.iterdir()):
+                    reject_name = reject_member.name
+                    if reject_member.is_symlink():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/trace-reject/" + reject_name)
+                    if not reject_member.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/trace-reject/" + reject_name)
+                    is_answers = reject_name.endswith(".answers")
+                    is_expect = reject_name.endswith(".expect")
+                    if not is_answers:
+                        if not is_expect:
+                            cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/trace-reject/" + reject_name)
+                    if is_answers:
+                        reject_qid = reject_name.removesuffix(".answers")
+                        if not valid_docid(reject_qid):
+                            cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/trace-reject/" + reject_name)
+                        answers_qids.append(reject_qid)
+                    else:
+                        reject_qid = reject_name.removesuffix(".expect")
+                        if not valid_docid(reject_qid):
+                            cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/trace-reject/" + reject_name)
+                        expect_qids.append(reject_qid)
+                for reject_qid in answers_qids:
+                    has_partner = reject_qid in expect_qids
+                    if not has_partner:
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace-reject member without partner: " + case_name + "/" + reject_qid + ".answers")
+                for reject_qid in expect_qids:
+                    has_partner = reject_qid in answers_qids
+                    if not has_partner:
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace-reject member without partner: " + case_name + "/" + reject_qid + ".expect")
+                for reject_qid in answers_qids:
+                    query_ace = gid_path.joinpath("queries", reject_qid + ".ace")
+                    if not query_ace.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace-reject qid has no query: " + case_name + "/" + reject_qid)
+                    query_pl = gid_path.joinpath("queries", "pl", reject_qid + ".pl")
+                    if not query_pl.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace-reject qid has no query: " + case_name + "/" + reject_qid)
+                    hostile_answers = reject_dir.joinpath(reject_qid + ".answers")
+                    reject_tail = ["trace", str(fixture_manifest), str(query_pl), str(hostile_answers)]
+                    reject_command = compiler_command(swipl_executable, stage_path, reject_tail)
+                    try:
+                        reject_result = subprocess.run(reject_command, capture_output=True, timeout=30)
+                    except subprocess.TimeoutExpired:
+                        cleanup_violation(scratch_path, "queries-fixtures", "wall_clock for trace-reject: " + case_name + "/" + reject_qid)
+                    if reject_result.returncode != 2:
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace-reject status " + str(reject_result.returncode) + " for case: " + case_name + "/" + reject_qid)
+                    if reject_result.stdout:
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace-reject stdout not empty for case: " + case_name + "/" + reject_qid)
+                    expect_path = reject_dir.joinpath(reject_qid + ".expect")
+                    expect_bytes = expect_path.read_bytes()
+                    if reject_result.stderr != expect_bytes:
+                        cleanup_violation(scratch_path, "queries-fixtures", "trace-reject stderr differs from expect: " + case_name + "/" + reject_qid)
+    for required_name in red_required:
+        present = required_name in red_names
+        if not present:
+            cleanup_violation(scratch_path, "queries-fixtures", "missing required case: red/" + required_name)
+    for required_name in green_required:
+        present = required_name in green_names
+        if not present:
+            cleanup_violation(scratch_path, "queries-fixtures", "missing required case: green/" + required_name)
     if red_count == 0:
         cleanup_violation(scratch_path, "queries-fixtures", "no red fixture cases found: " + str(fixtures_root))
     if green_count == 0:
