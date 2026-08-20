@@ -35,6 +35,20 @@
 %                                     divergence shape; rejects
 %                                     proof,left_recursive(Site,Name,Arity), where
 %                                     Site = sentence(DocId,S) | unattributed
+%   answer <manifest> <query-pl>      load the same composition (payload column
+%                                     readable, never parsed) and solve one
+%                                     compiled query against it under fixed
+%                                     bounds (depth 100, inference 100000,
+%                                     outer 1000000): stdout = two-line ground
+%                                     '$guideline_answers'/4 artifact binding
+%                                     query_sha256 over the raw query-file
+%                                     bytes; result = solutions(<sorted sol/1
+%                                     list>)|indeterminate(limit) for wh,
+%                                     yes|no(finite_failure)|indeterminate(limit)
+%                                     for yes-no (answers([])); malformed query
+%                                     files reject check_load,query_file(<why>);
+%                                     nonground solution rejects
+%                                     proof,nonground_solution(QId)
 %
 % Compile contract: stdin = strict RFC 3629 UTF-8; one ACE sentence per non-empty LF line.
 % <docid> = nonempty [a-z0-9-] with no leading dash.
@@ -126,6 +140,12 @@ dispatch([question, Tree, QId, Ulex], Input, Output, ErrorStream) :-
 dispatch([question|Rest], _, _, ErrorStream) :-
     !,
     emit_error(ErrorStream, usage, argv([question|Rest]), 2).
+dispatch([answer, Manifest, QueryPl], Input, Output, ErrorStream) :-
+    !,
+    answer_mode(Manifest, QueryPl, Input, Output, ErrorStream).
+dispatch([answer|Rest], _, _, ErrorStream) :-
+    !,
+    emit_error(ErrorStream, usage, argv([answer|Rest]), 2).
 dispatch([Tree, DocId], Input, Output, ErrorStream) :-
     !,
     validated_docid(DocId, ErrorStream),
@@ -622,6 +642,340 @@ recursion_leftmost(user:A, Goal) :-
     !,
     recursion_leftmost(A, Goal).
 recursion_leftmost(Goal, Goal).
+
+/* ---------- answer mode: bounded query solve over a composition ---------- */
+
+/* Pipeline order (fixed): argv -> manifest read -> query file read +
+   validation -> composition load + structure parity -> solve -> emit.
+   Manifest + composition reuse the aggregate machinery verbatim
+   (grammar, readability, capture-hook load, document/schema parity),
+   so those reject bytes stay canonical; the payload column is checked
+   readable and never parsed. Query validation precedes the load so a
+   malformed query never executes composition clauses. The empty
+   composition still declares the v1 indicators and solves (finite
+   emptiness, not a limit). */
+answer_mode(Manifest, QueryPl, Input, Output, ErrorStream) :-
+    catch(
+        ( aggregate_read_manifest(Manifest, PlPaths, _PayloadPaths) ->
+            true
+        ; throw(error(aggregate_manifest(Manifest),
+              context(ace_to_pl:answer_mode/5, plain_failure)))
+        ),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)),
+    answer_read_query(QueryPl, ErrorStream, QId, Digest, Conj, Answers),
+    aggregate_declare_indicators,
+    ( PlPaths == [] ->
+        true
+    ; aggregate_load(PlPaths, Input, Output, ErrorStream),
+      aggregate_assertions(PlPaths, ErrorStream)
+    ),
+    answer_solve(Conj, Answers, QId, ErrorStream, Result),
+    answer_emit(Output, QId, Digest, Result),
+    halt(0).
+
+/* Solver bounds, fixed by definition: per-solution depth + inference
+   caps and one outer inference budget over the whole enumeration. No
+   in-process time limit — wall-clock containment belongs to the
+   caller; these constants keep the artifact deterministic. */
+answer_depth_limit(100).
+answer_inference_limit(100000).
+answer_outer_inference_limit(1000000).
+
+/* Query file = data, never consulted: raw bytes read once (strict
+   UTF-8) feed the artifact digest verbatim, then the terms are read
+   from the decoded text. Open/UTF-8/syntax failures surface verbatim
+   under check_load; structural violations reject
+   check_load,query_file(<why>). The term law is exactly two terms in
+   order — record then projection; comments and layout carry no
+   semantics (committed-byte canon belongs to the freshness gate). A
+   literal end_of_file term ends the census by reader convention;
+   bytes past it stay hashed, never executed. */
+answer_read_query(File, ErrorStream, QId, Digest, Conj, Answers) :-
+    catch(read_utf8_file(File, Bytes, Text),
+        Error,
+        emit_error(ErrorStream, check_load, Error, 2)),
+    crypto_data_hash(Bytes, Digest, [algorithm(sha256), encoding(octet)]),
+    catch(answer_query_terms(File, Text, Terms),
+        Error2,
+        emit_error(ErrorStream, check_load, Error2, 2)),
+    ( Terms = [Record, Projection] ->
+        true
+    ; length(Terms, N),
+      answer_reject(ErrorStream, term_count(N))
+    ),
+    answer_validate_record(Record, ErrorStream, QId),
+    answer_validate_projection(Projection, ErrorStream, Conj, Answers).
+
+answer_reject(ErrorStream, Why) :-
+    emit_error(ErrorStream, check_load, query_file(Why), 2).
+
+/* file_name pins the syntax-error context to file(Path,Line,Col,Char);
+   an anonymous string stream would embed a process-local pointer and
+   push the verbatim error into the unserializable fallback. */
+answer_query_terms(File, Text, Terms) :-
+    setup_call_cleanup(
+        ( open_string(Text, Stream),
+          set_stream(Stream, file_name(File))
+        ),
+        answer_stream_terms(Stream, Terms),
+        close(Stream)).
+
+/* Physical EOF is the zero-width read (term start = post-read
+   position); a literal end_of_file. term spans source bytes, so the
+   census counts it as data instead of stopping early. */
+answer_stream_terms(Stream, Terms) :-
+    read_term(Stream, Term, [term_position(Position)]),
+    stream_property(Stream, position(After)),
+    ( Term == end_of_file,
+      stream_position_data(byte_count, Position, Offset),
+      stream_position_data(byte_count, After, Offset) ->
+        Terms = []
+    ; Terms = [Term|Rest],
+      answer_stream_terms(Stream, Rest)
+    ).
+
+/* Record law: ground '$guideline_query'(v1, QId, ace_sha256(H64),
+   ulex(none|sha256(H64))); QId rides the docid grammar (it lands in
+   the artifact comment, so the grammar keeps it injection-free). Guard
+   order shape -> nonground -> version -> qid -> digests; every guard
+   inspects without instantiating, and why payloads come only from
+   ground-guaranteed positions. Shape spans the outer wrapper functors
+   ace_sha256/1 + ulex/1; wrapper-payload defects fall through to
+   record_ace_sha256/record_ulex once groundness holds. */
+answer_validate_record(Record, ErrorStream, QId) :-
+    ( compound(Record),
+      Record = '$guideline_query'(Version, QId0, Ace, Ulex),
+      compound(Ace), Ace = ace_sha256(_),
+      compound(Ulex), Ulex = ulex(_) ->
+        true
+    ; answer_reject(ErrorStream, record_shape)
+    ),
+    ( ground(Record) ->
+        true
+    ; answer_reject(ErrorStream, record_nonground)
+    ),
+    ( Version == v1 ->
+        true
+    ; answer_reject(ErrorStream, record_version(Version))
+    ),
+    ( answer_valid_qid(QId0) ->
+        true
+    ; answer_reject(ErrorStream, record_qid(QId0))
+    ),
+    ( Ace = ace_sha256(AceHex),
+      answer_hex64(AceHex) ->
+        true
+    ; answer_reject(ErrorStream, record_ace_sha256)
+    ),
+    ( ( Ulex == ulex(none)
+      ; Ulex = ulex(sha256(UlexHex)),
+        answer_hex64(UlexHex)
+      ) ->
+        true
+    ; answer_reject(ErrorStream, record_ulex)
+    ),
+    QId = QId0.
+
+answer_valid_qid(QId) :-
+    atom(QId),
+    atom_codes(QId, Codes),
+    Codes = [First|_],
+    First =\= 0'-,
+    docid_codes(Codes).
+
+answer_hex64(Hex) :-
+    atom(Hex),
+    atom_codes(Hex, Codes),
+    length(Codes, 64),
+    answer_hex_codes(Codes).
+
+answer_hex_codes([]).
+answer_hex_codes([Code|Codes]) :-
+    ( Code >= 0'0, Code =< 0'9 ->
+        true
+    ; Code >= 0'a, Code =< 0'f
+    ),
+    answer_hex_codes(Codes).
+
+/* Projection law: '$guideline_query_projection'(goal(Conj),
+   answers(Rows)). Goal = any proper ','/2 tree (canonical right
+   nesting is the freshness gate's law, not this mode's) whose every
+   leaf is one of the seven semantic v1 indicators — the walk is
+   depth-first left-to-right and the first offender wins, before any
+   call. Rows = proper list of answer(Var, Desc): Var a variable
+   occurring in Conj (identity, not unifiability), rows
+   pairwise-distinct, Desc ground noun(Atom,Atom) | wh(who) |
+   wh(what); per-row guard order shape -> nonvar -> absent ->
+   duplicate -> desc, first violating index wins. answer_desc stays
+   payload-free: a variable descriptor would render nondeterministic
+   bytes. */
+answer_validate_projection(Projection, ErrorStream, Conj, Answers) :-
+    ( compound(Projection),
+      Projection = '$guideline_query_projection'(Goal, AnswersWrap),
+      compound(Goal),
+      Goal = goal(Conj0),
+      compound(AnswersWrap),
+      AnswersWrap = answers(Answers0) ->
+        true
+    ; answer_reject(ErrorStream, projection_shape)
+    ),
+    answer_validate_goal(Conj0, ErrorStream),
+    ( is_list(Answers0) ->
+        true
+    ; answer_reject(ErrorStream, answers_list)
+    ),
+    term_variables(Conj0, GoalVars),
+    answer_validate_rows(Answers0, 1, GoalVars, [], ErrorStream),
+    Conj = Conj0,
+    Answers = Answers0.
+
+answer_validate_goal(Goal, ErrorStream) :-
+    ( var(Goal) ->
+        answer_reject(ErrorStream, goal_variable)
+    ; Goal = ','(Left, Right) ->
+        answer_validate_goal(Left, ErrorStream),
+        answer_validate_goal(Right, ErrorStream)
+    ; functor(Goal, Name, Arity),
+      answer_goal_indicator(Name/Arity) ->
+        true
+    ; functor(Goal, Name, Arity),
+      answer_reject(ErrorStream, goal_foreign(Name, Arity))
+    ).
+
+/* The seven semantic indicators: the v1 vocabulary minus the two
+   per-document header predicates (schema version, document record),
+   which describe provenance rather than content. */
+answer_goal_indicator(guideline_entity/4).
+answer_goal_indicator(guideline_cardinality/5).
+answer_goal_indicator(guideline_event/3).
+answer_goal_indicator(guideline_arg/4).
+answer_goal_indicator(guideline_pp/4).
+answer_goal_indicator(guideline_property/4).
+answer_goal_indicator(guideline_operator/3).
+
+answer_validate_rows([], _, _, _, _).
+answer_validate_rows([Row|Rows], Index, GoalVars, Seen, ErrorStream) :-
+    ( compound(Row),
+      Row = answer(Var, Desc) ->
+        true
+    ; answer_reject(ErrorStream, answer_shape(Index))
+    ),
+    ( var(Var) ->
+        true
+    ; answer_reject(ErrorStream, answer_var(Index, nonvar))
+    ),
+    ( answer_var_member(Var, GoalVars) ->
+        true
+    ; answer_reject(ErrorStream, answer_var(Index, absent))
+    ),
+    ( answer_var_member(Var, Seen) ->
+        answer_reject(ErrorStream, answer_var(Index, duplicate))
+    ; true
+    ),
+    ( answer_valid_desc(Desc) ->
+        true
+    ; answer_reject(ErrorStream, answer_desc(Index))
+    ),
+    NextIndex is Index + 1,
+    answer_validate_rows(Rows, NextIndex, GoalVars, [Var|Seen], ErrorStream).
+
+answer_var_member(Var, [Other|Others]) :-
+    ( Var == Other ->
+        true
+    ; answer_var_member(Var, Others)
+    ).
+
+answer_valid_desc(Desc) :-
+    ground(Desc),
+    ( Desc = noun(Noun, Class) ->
+        atom(Noun),
+        atom(Class)
+    ; Desc == wh(who) ->
+        true
+    ; Desc == wh(what)
+    ).
+
+/* Solve. Sentinels are status VALUES (depth_limit_exceeded /
+   inference_limit_exceeded); success statuses are true or !. Yes-no
+   (answers([])) is bounded-once: the first ordinary proof is
+   conclusive and later branches are never searched, while a sentinel
+   reached before any proof is indeterminate — never no. Wh collects
+   every per-solution status under the outer budget; the canonical
+   forward manifest order is the definition of the run, so no
+   order-independence is claimed. Any nonground success row is an
+   invariant breach that outranks the limit fold (a raised budget must
+   surface it, never mask it); sentinel rows carry unbound values and
+   stay outside the groundness check. Result algebra:
+   solutions(Sorted) via sort/2 (standard order dedup) | yes |
+   no(finite_failure) | indeterminate(limit). */
+answer_solve(Conj, [], _QId, _ErrorStream, Result) :-
+    !,
+    answer_depth_limit(Depth),
+    answer_inference_limit(Inferences),
+    answer_outer_inference_limit(Outer),
+    ( call_with_inference_limit(
+          once(call_with_inference_limit(
+              call_with_depth_limit(user:Conj, Depth, DepthResult),
+              Inferences, InferenceResult)),
+          Outer, OuterResult) ->
+        ( OuterResult \== inference_limit_exceeded,
+          InferenceResult \== inference_limit_exceeded,
+          integer(DepthResult) ->
+            Result = yes
+        ; Result = indeterminate(limit)
+        )
+    ; Result = no(finite_failure)
+    ).
+answer_solve(Conj, Answers, QId, ErrorStream, Result) :-
+    answer_vars(Answers, Vars),
+    answer_depth_limit(Depth),
+    answer_inference_limit(Inferences),
+    answer_outer_inference_limit(Outer),
+    call_with_inference_limit(
+        findall(row(Vars, InferenceResult, DepthResult),
+            call_with_inference_limit(
+                call_with_depth_limit(user:Conj, Depth, DepthResult),
+                Inferences, InferenceResult),
+            Rows),
+        Outer, OuterResult),
+    ( OuterResult == inference_limit_exceeded ->
+        Result = indeterminate(limit)
+    ; answer_classify_rows(Rows, QId, ErrorStream, Result)
+    ).
+
+answer_vars([], []).
+answer_vars([answer(Var, _)|Rows], [Var|Vars]) :-
+    answer_vars(Rows, Vars).
+
+answer_classify_rows(Rows, QId, ErrorStream, Result) :-
+    ( member(row(Values, InferenceResult, DepthResult), Rows),
+      InferenceResult \== inference_limit_exceeded,
+      integer(DepthResult),
+      \+ ground(Values) ->
+        emit_error(ErrorStream, proof, nonground_solution(QId), 1)
+    ; member(row(_, InferenceResult, DepthResult), Rows),
+      ( InferenceResult == inference_limit_exceeded
+      ; DepthResult == depth_limit_exceeded
+      ) ->
+        Result = indeterminate(limit)
+    ; findall(sol(Values), member(row(Values, _, _), Rows), Sols0),
+      sort(Sols0, Sols),
+      Result = solutions(Sols)
+    ).
+
+/* Artifact: comment line + one ground '$guideline_answers'/4 term,
+   rendered whole before any byte reaches stdout. The digest binds the
+   exact query-file bytes supplied to this run. */
+answer_emit(Output, QId, Digest, Result) :-
+    with_output_to(string(Out),
+        ( format('% ~w answered against the loaded composition by ace_to_pl answer mode; do not edit.~n',
+              [QId]),
+          render_term_line('$guideline_answers'(v1, QId,
+              query_sha256(Digest), result(Result)))
+        )),
+    string_codes(Out, OutCodes),
+    format(Output, '~s', [OutCodes]).
 
 /* ---------- compile mode ---------- */
 

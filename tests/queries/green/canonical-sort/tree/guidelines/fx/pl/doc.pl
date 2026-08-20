@@ -1,0 +1,15 @@
+guideline_schema_version(1).
+guideline_document('sort-doc',ace_sha256(x),ulex(none)).
+guideline_entity(actual,z,patient,countable).
+guideline_entity(actual,a,patient,countable).
+guideline_entity(actual,z,patient,countable).
+guideline_entity(actual,b,patient,countable).
+guideline_cardinality(actual,z,na,eq,1).
+guideline_cardinality(actual,a,na,eq,1).
+guideline_cardinality(actual,b,na,eq,1).
+guideline_event(actual,ez,wait).
+guideline_event(actual,ea,wait).
+guideline_event(actual,eb,wait).
+guideline_arg(actual,ez,1,z).
+guideline_arg(actual,ea,1,a).
+guideline_arg(actual,eb,1,b).

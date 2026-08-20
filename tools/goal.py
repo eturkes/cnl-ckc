@@ -244,6 +244,104 @@ def fixture_pl_path(tracked):
     if dir_part != "pl":
         return False
     return file_part.endswith(".pl")
+def query_artifact_pl_path(tracked):
+    parts = tracked.split("/")
+    if len(parts) != 5:
+        return False
+    root_part = parts.pop(0)
+    id_part = parts.pop(0)
+    queries_part = parts.pop(0)
+    dir_part = parts.pop(0)
+    file_part = parts.pop(0)
+    if root_part != "guidelines":
+        return False
+    if not valid_docid(id_part):
+        return False
+    if queries_part != "queries":
+        return False
+    dir_ok = False
+    if dir_part == "pl":
+        dir_ok = True
+    if dir_part == "answers":
+        dir_ok = True
+    if not dir_ok:
+        return False
+    if not file_part.endswith(".pl"):
+        return False
+    stem = file_part.removesuffix(".pl")
+    return valid_docid(stem)
+def queries_fixture_pl_path(tracked):
+    parts = tracked.split("/")
+    part_count = len(parts)
+    count_ok = False
+    if part_count == 6:
+        count_ok = True
+    if part_count == 9:
+        count_ok = True
+    if part_count == 10:
+        count_ok = True
+    if not count_ok:
+        return False
+    root_part = parts.pop(0)
+    suite_part = parts.pop(0)
+    color_part = parts.pop(0)
+    case_part = parts.pop(0)
+    if root_part != "tests":
+        return False
+    if suite_part != "queries":
+        return False
+    color_ok = False
+    if color_part == "red":
+        color_ok = True
+    if color_part == "green":
+        color_ok = True
+    if not color_ok:
+        return False
+    if not valid_docid(case_part):
+        return False
+    if part_count == 6:
+        pin_part = parts.pop(0)
+        file_part = parts.pop(0)
+        if pin_part != "answers-golden":
+            return False
+        if not file_part.endswith(".pl"):
+            return False
+        stem = file_part.removesuffix(".pl")
+        return valid_docid(stem)
+    tree_part = parts.pop(0)
+    guidelines_part = parts.pop(0)
+    id_part = parts.pop(0)
+    if tree_part != "tree":
+        return False
+    if guidelines_part != "guidelines":
+        return False
+    if not valid_docid(id_part):
+        return False
+    if part_count == 9:
+        dir_part = parts.pop(0)
+        file_part = parts.pop(0)
+        if dir_part != "pl":
+            return False
+        if not file_part.endswith(".pl"):
+            return False
+        stem = file_part.removesuffix(".pl")
+        return valid_docid(stem)
+    queries_part = parts.pop(0)
+    dir_part = parts.pop(0)
+    file_part = parts.pop(0)
+    if queries_part != "queries":
+        return False
+    dir_ok = False
+    if dir_part == "pl":
+        dir_ok = True
+    if dir_part == "answers":
+        dir_ok = True
+    if not dir_ok:
+        return False
+    if not file_part.endswith(".pl"):
+        return False
+    stem = file_part.removesuffix(".pl")
+    return valid_docid(stem)
 def check_prolog_inventory():
     git_res = subprocess.run(["git", "ls-files", "--", "*.pl"], capture_output=True, check=True)
     tracked_text = git_res.stdout.decode("utf-8")
@@ -252,11 +350,15 @@ def check_prolog_inventory():
         clex_base = tracked == "vendor/clex/clex_lexicon.pl"
         compiled = compiled_pl_path(tracked)
         fixture_pl = fixture_pl_path(tracked)
+        query_artifact = query_artifact_pl_path(tracked)
+        queries_fixture = queries_fixture_pl_path(tracked)
         if not vendored:
             if not clex_base:
                 if not compiled:
                     if not fixture_pl:
-                        violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
+                        if not query_artifact:
+                            if not queries_fixture:
+                                violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
 def provenance_field(prov_lines, key):
     prefix = key + ": "
     value = ""
@@ -486,6 +588,8 @@ def check_documents(scratch_path, swipl_executable, stage_path, guideline_path, 
     if manifest_ids != docids:
         cleanup_violation(scratch_path, "aggregate-totality", "manifest documents differ from corpus documents: " + str(guideline_path))
     check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs)
+    query_counts = validate_queries(scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path)
+    queries_meter(guideline_path.name, query_counts)
 def manifest_document_ids(manifest_pairs):
     docid_list = []
     for manifest_pair in manifest_pairs:
@@ -546,6 +650,257 @@ def check_aggregate(scratch_path, swipl_executable, stage_path, manifest_pairs):
         cleanup_violation(scratch_path, "aggregate-order", "forward and reverse manifests disagree")
     recursion_report = run_recursion(scratch_path, swipl_executable, stage_path, forward_path, doc_count)
     print("goal: " + recursion_report.strip())
+def queries_violation(scratch_path, category, detail):
+    if scratch_path == None:
+        violation(category, detail)
+    cleanup_violation(scratch_path, category, detail)
+def collect_query_aces(scratch_path, guideline_path):
+    queries_dir = guideline_path.joinpath("queries")
+    if queries_dir.is_symlink():
+        queries_violation(scratch_path, "queries", "is a symlink: " + str(queries_dir))
+    if not queries_dir.exists():
+        return []
+    if not queries_dir.is_dir():
+        queries_violation(scratch_path, "queries", "not a directory: " + str(queries_dir))
+    qids = []
+    for entry in sorted(queries_dir.iterdir()):
+        entry_name = entry.name
+        subdir_name = False
+        if entry_name == "pl":
+            subdir_name = True
+        if entry_name == "answers":
+            subdir_name = True
+        if subdir_name:
+            if entry.is_symlink():
+                queries_violation(scratch_path, "queries", "unsupported entry: " + str(entry))
+            if not entry.is_dir():
+                queries_violation(scratch_path, "queries", "unsupported entry: " + str(entry))
+        else:
+            if not entry_name.endswith(".ace"):
+                queries_violation(scratch_path, "queries", "unsupported entry: " + str(entry))
+            if entry.is_symlink():
+                queries_violation(scratch_path, "queries", "not a regular file: " + str(entry))
+            if not entry.is_file():
+                queries_violation(scratch_path, "queries", "not a regular file: " + str(entry))
+            stem = entry_name.removesuffix(".ace")
+            if not valid_docid(stem):
+                queries_violation(scratch_path, "queries", "invalid qid filename: " + entry_name)
+            qids.append(stem)
+    return qids
+def collect_query_dir(scratch_path, queries_dir, dir_name):
+    sub_dir = queries_dir.joinpath(dir_name)
+    if not sub_dir.is_dir():
+        return []
+    stems = []
+    for entry in sorted(sub_dir.iterdir()):
+        entry_name = entry.name
+        if not entry_name.endswith(".pl"):
+            queries_violation(scratch_path, "queries", "unsupported entry: " + str(entry))
+        if entry.is_symlink():
+            queries_violation(scratch_path, "queries", "not a regular file: " + str(entry))
+        if not entry.is_file():
+            queries_violation(scratch_path, "queries", "not a regular file: " + str(entry))
+        stem = entry_name.removesuffix(".pl")
+        if not valid_docid(stem):
+            queries_violation(scratch_path, "queries", "invalid qid filename: " + entry_name)
+        stems.append(stem)
+    return stems
+def build_query_manifest(manifest_path, pl_dir):
+    manifest_text = ""
+    if pl_dir.is_dir():
+        for entry in sorted(pl_dir.iterdir()):
+            entry_name = entry.name
+            if entry_name.endswith(".pl"):
+                manifest_text = manifest_text + str(entry) + "\t" + str(entry) + "\n"
+    manifest_path.write_text(manifest_text, encoding="utf-8")
+def run_question_compile(scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path):
+    ace_bytes = ace_path.read_bytes()
+    tail_args = ["question", str(stage_path), qid]
+    if lexicon_path != None:
+        tail_args.append(str(lexicon_path))
+    command = compiler_command(swipl_executable, stage_path, tail_args)
+    try:
+        result = subprocess.run(command, input=ace_bytes, capture_output=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        queries_violation(scratch_path, "queries", "wall_clock for qid: " + qid)
+    if result.returncode != 0:
+        relay_failure(scratch_path, result)
+    if result.stderr:
+        cleanup_and_fail(scratch_path, "compiler-stderr", "non-empty stderr for question: " + qid)
+    if not result.stdout:
+        cleanup_and_fail(scratch_path, "compiler-stdout", "empty stdout for question: " + qid)
+    newline_bytes = bytes([10])
+    if not result.stdout.endswith(newline_bytes):
+        cleanup_and_fail(scratch_path, "compiler-stdout", "missing final newline for question: " + qid)
+    return result.stdout
+def run_answer(scratch_path, swipl_executable, stage_path, qid, manifest_path, query_pl_path):
+    tail_args = ["answer", str(manifest_path), str(query_pl_path)]
+    command = compiler_command(swipl_executable, stage_path, tail_args)
+    try:
+        result = subprocess.run(command, capture_output=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        queries_violation(scratch_path, "queries", "wall_clock for qid: " + qid)
+    if result.returncode != 0:
+        relay_failure(scratch_path, result)
+    if result.stderr:
+        cleanup_and_fail(scratch_path, "answer-stderr", "non-empty stderr for question: " + qid)
+    if not result.stdout:
+        cleanup_and_fail(scratch_path, "answer-stdout", "empty stdout for question: " + qid)
+    newline_bytes = bytes([10])
+    if not result.stdout.endswith(newline_bytes):
+        cleanup_and_fail(scratch_path, "answer-stdout", "missing final newline for question: " + qid)
+    return result.stdout
+def answer_result_text(answer_bytes):
+    answer_text = answer_bytes.decode("utf-8", errors="replace")
+    answer_lines = answer_text.splitlines()
+    if len(answer_lines) != 2:
+        return ""
+    term_line = answer_lines.pop(1)
+    parts = list(term_line.partition("result("))
+    head_text = parts.pop(0)
+    sep_text = parts.pop(0)
+    tail_text = parts.pop(0)
+    if sep_text == "":
+        return ""
+    if not tail_text.endswith("))."):
+        return ""
+    return tail_text.removesuffix(")).")
+def validate_queries(scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path):
+    queries_dir = guideline_path.joinpath("queries")
+    qids = collect_query_aces(scratch_path, guideline_path)
+    pl_stems = collect_query_dir(scratch_path, queries_dir, "pl")
+    if pl_stems != qids:
+        queries_violation(scratch_path, "queries", "pl inventory differs from ace query set: " + str(queries_dir.joinpath("pl")))
+    answers_stems = collect_query_dir(scratch_path, queries_dir, "answers")
+    if answers_stems != qids:
+        queries_violation(scratch_path, "queries", "answers inventory differs from ace query set: " + str(queries_dir.joinpath("answers")))
+    wh_count = 0
+    yesno_count = 0
+    if qids:
+        manifest_path = scratch_path.joinpath("queries-manifest-" + guideline_path.name)
+        build_query_manifest(manifest_path, guideline_path.joinpath("pl"))
+        for qid in qids:
+            ace_path = queries_dir.joinpath(qid + ".ace")
+            first_bytes = run_question_compile(scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path)
+            second_bytes = run_question_compile(scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path)
+            if first_bytes != second_bytes:
+                queries_violation(scratch_path, "determinism", "two query compiles differ for question: " + qid)
+            committed_pl = queries_dir.joinpath("pl", qid + ".pl")
+            committed_bytes = committed_pl.read_bytes()
+            if first_bytes != committed_bytes:
+                queries_violation(scratch_path, "stale", "committed query pl differs from fresh compile: " + str(committed_pl))
+            first_answer = run_answer(scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl)
+            second_answer = run_answer(scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl)
+            if first_answer != second_answer:
+                queries_violation(scratch_path, "determinism", "two answer runs differ for question: " + qid)
+            committed_answers = queries_dir.joinpath("answers", qid + ".pl")
+            committed_answer_bytes = committed_answers.read_bytes()
+            if first_answer != committed_answer_bytes:
+                queries_violation(scratch_path, "stale", "committed query answers differ from fresh answer: " + str(committed_answers))
+            result_text = answer_result_text(first_answer)
+            if result_text == "":
+                queries_violation(scratch_path, "queries", "unparsable answer artifact for qid: " + qid)
+            demo_ok = False
+            if result_text == "yes":
+                demo_ok = True
+            if result_text.startswith("solutions("):
+                if result_text != "solutions([])":
+                    demo_ok = True
+            if not demo_ok:
+                queries_violation(scratch_path, "queries", "non-demo result for qid " + qid + ": " + result_text)
+            fresh_text = first_bytes.decode("utf-8", errors="replace")
+            fresh_lines = fresh_text.splitlines()
+            if len(fresh_lines) != 4:
+                queries_violation(scratch_path, "queries", "unexpected query pl shape for qid: " + qid)
+            projection_line = fresh_lines.pop(3)
+            if projection_line.endswith("answers([]))."):
+                yesno_count = yesno_count + 1
+            else:
+                wh_count = wh_count + 1
+    return [len(qids), wh_count, yesno_count]
+def queries_meter(guideline_name, query_counts):
+    counts_copy = list(query_counts)
+    query_count = counts_copy.pop(0)
+    wh_count = counts_copy.pop(0)
+    yesno_count = counts_copy.pop(0)
+    print("goal: queries " + guideline_name + " " + str(query_count) + " queries; wh=" + str(wh_count) + " yesno=" + str(yesno_count))
+def queries_check_command(guideline_dir, stage_arg):
+    guideline_path = pathlib.Path(guideline_dir)
+    if guideline_path.is_symlink():
+        fail("guideline", "is a symlink: " + str(guideline_path))
+    if not guideline_path.is_dir():
+        fail("guideline", "not a directory: " + str(guideline_path))
+    lexicon_path = guideline_path.joinpath("lexicon.ulex")
+    if lexicon_path.is_symlink():
+        fail("guideline", "lexicon is a symlink: " + str(lexicon_path))
+    if not lexicon_path.is_file():
+        lexicon_path = None
+    swipl_executable = resolve_swipl()
+    scratch_path = make_scratch()
+    if stage_arg == None:
+        stage_path = stage_ape(scratch_path, swipl_executable)
+    else:
+        stage_path = pathlib.Path(stage_arg)
+        if not stage_path.is_dir():
+            cleanup_and_fail(scratch_path, "ape-stage", "missing stage: " + stage_arg)
+    query_counts = validate_queries(scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path)
+    shutil.rmtree(scratch_path)
+    queries_meter(guideline_path.name, query_counts)
+def queries_command(guideline_id):
+    if not valid_docid(guideline_id):
+        fail("guideline", "invalid guideline id: " + guideline_id)
+    guidelines_root = pathlib.Path("guidelines")
+    guideline_path = guidelines_root.joinpath(guideline_id)
+    if guideline_path.is_symlink():
+        fail("guideline", "is a symlink: " + str(guideline_path))
+    if not guideline_path.is_dir():
+        fail("guideline", "not a directory: " + str(guideline_path))
+    queries_dir = guideline_path.joinpath("queries")
+    qids = collect_query_aces(None, guideline_path)
+    if not qids:
+        for dir_name in ["pl", "answers"]:
+            sub_dir = queries_dir.joinpath(dir_name)
+            if sub_dir.is_dir():
+                shutil.rmtree(sub_dir)
+        print("goal: queries ok 0 queries")
+    else:
+        lexicon_path = guideline_path.joinpath("lexicon.ulex")
+        if lexicon_path.is_symlink():
+            fail("guideline", "lexicon is a symlink: " + str(lexicon_path))
+        if not lexicon_path.is_file():
+            lexicon_path = None
+        swipl_executable = resolve_swipl()
+        scratch_path = make_scratch()
+        stage_path = stage_ape(scratch_path, swipl_executable)
+        manifest_path = scratch_path.joinpath("queries-manifest")
+        build_query_manifest(manifest_path, guideline_path.joinpath("pl"))
+        pl_by_qid = {}
+        answers_by_qid = {}
+        for qid in qids:
+            ace_path = queries_dir.joinpath(qid + ".ace")
+            pl_bytes = run_question_compile(scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path)
+            fresh_path = scratch_path.joinpath("query-" + qid + ".pl")
+            fresh_path.write_bytes(pl_bytes)
+            answer_bytes = run_answer(scratch_path, swipl_executable, stage_path, qid, manifest_path, fresh_path)
+            pl_by_qid.update({qid: pl_bytes})
+            answers_by_qid.update({qid: answer_bytes})
+        pl_dir = queries_dir.joinpath("pl")
+        answers_dir = queries_dir.joinpath("answers")
+        if pl_dir.is_dir():
+            shutil.rmtree(pl_dir)
+        if answers_dir.is_dir():
+            shutil.rmtree(answers_dir)
+        pl_dir.mkdir()
+        answers_dir.mkdir()
+        for qid in sorted(pl_by_qid):
+            pl_target = pl_dir.joinpath(qid + ".pl")
+            pl_target.write_bytes(pl_by_qid.get(qid))
+            print("goal: wrote " + str(pl_target))
+            answers_target = answers_dir.joinpath(qid + ".pl")
+            answers_target.write_bytes(answers_by_qid.get(qid))
+            print("goal: wrote " + str(answers_target))
+        shutil.rmtree(scratch_path)
+        print("goal: queries ok " + str(len(qids)) + " queries")
 def compile_command(guideline_id):
     if not valid_docid(guideline_id):
         fail("guideline", "invalid guideline id: " + guideline_id)
@@ -2060,6 +2415,138 @@ def check_adjudication_fixtures():
                 violation("adjudication-fixtures", "stdout differs from golden for case: " + case_name)
             green_count = green_count + 1
     print("goal: adjudication fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
+def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
+    fixtures_root = pathlib.Path("tests/queries")
+    if fixtures_root.is_symlink():
+        cleanup_violation(scratch_path, "queries-fixtures", "is a symlink: " + str(fixtures_root))
+    if not fixtures_root.is_dir():
+        cleanup_violation(scratch_path, "queries-fixtures", "missing: " + str(fixtures_root))
+    color_names = ["red", "green"]
+    for entry in sorted(fixtures_root.iterdir()):
+        entry_known = entry.name in color_names
+        if not entry_known:
+            cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + entry.name)
+    red_count = 0
+    green_count = 0
+    for color in color_names:
+        color_path = fixtures_root.joinpath(color)
+        if color_path.is_symlink():
+            cleanup_violation(scratch_path, "queries-fixtures", "is a symlink: " + str(color_path))
+        if not color_path.is_dir():
+            cleanup_violation(scratch_path, "queries-fixtures", "missing: " + str(color_path))
+        for case_entry in sorted(color_path.iterdir()):
+            case_name = case_entry.name
+            if case_entry.is_symlink():
+                cleanup_violation(scratch_path, "queries-fixtures", "not a case directory: " + case_name)
+            if not case_entry.is_dir():
+                cleanup_violation(scratch_path, "queries-fixtures", "not a case directory: " + case_name)
+            if not valid_docid(case_name):
+                cleanup_violation(scratch_path, "queries-fixtures", "invalid case name: " + case_name)
+            has_tree = False
+            has_expect = False
+            has_golden = False
+            has_answers_golden = False
+            for member in sorted(case_entry.iterdir()):
+                member_name = member.name
+                if member.is_symlink():
+                    cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+                if member_name == "tree":
+                    if not member.is_dir():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+                    has_tree = True
+                elif member_name == "answers-golden":
+                    if not member.is_dir():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+                    has_answers_golden = True
+                elif member_name == "expect":
+                    if not member.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+                    has_expect = True
+                elif member_name == "golden":
+                    if not member.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+                    has_golden = True
+                else:
+                    cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/" + member_name)
+            if not has_tree:
+                cleanup_violation(scratch_path, "queries-fixtures", "case without tree: " + case_name)
+            if has_expect:
+                if has_golden:
+                    cleanup_violation(scratch_path, "queries-fixtures", "case pins both expect and golden: " + case_name)
+            if not has_expect:
+                if not has_golden:
+                    cleanup_violation(scratch_path, "queries-fixtures", "case without expect or golden pin: " + case_name)
+            if color == "red":
+                if has_golden:
+                    cleanup_violation(scratch_path, "queries-fixtures", "red case pins golden: " + case_name)
+            if color == "green":
+                if has_expect:
+                    cleanup_violation(scratch_path, "queries-fixtures", "green case pins expect: " + case_name)
+            tree_guidelines = case_entry.joinpath("tree", "guidelines")
+            if not tree_guidelines.is_dir():
+                cleanup_violation(scratch_path, "queries-fixtures", "case tree without guidelines: " + case_name)
+            tree_ids = []
+            for tree_entry in sorted(tree_guidelines.iterdir()):
+                tree_ids.append(tree_entry)
+            if len(tree_ids) != 1:
+                cleanup_violation(scratch_path, "queries-fixtures", "case tree without one guideline: " + case_name)
+            gid_path = tree_ids.pop(0)
+            if not gid_path.is_dir():
+                cleanup_violation(scratch_path, "queries-fixtures", "case tree without one guideline: " + case_name)
+            if not valid_docid(gid_path.name):
+                cleanup_violation(scratch_path, "queries-fixtures", "case tree without one guideline: " + case_name)
+            command = [sys.executable, "-P", "tools/goal.py", "queries-check", str(gid_path), str(stage_path)]
+            result = subprocess.run(command, capture_output=True)
+            if has_expect:
+                if result.returncode != 1:
+                    cleanup_violation(scratch_path, "queries-fixtures", "status " + str(result.returncode) + " for case: " + case_name)
+                if result.stderr:
+                    cleanup_violation(scratch_path, "queries-fixtures", "non-empty stderr for case: " + case_name)
+                expect_path = case_entry.joinpath("expect")
+                expect_bytes = expect_path.read_bytes()
+                if result.stdout != expect_bytes:
+                    cleanup_violation(scratch_path, "queries-fixtures", "stdout differs from expect pin for case: " + case_name)
+                red_count = red_count + 1
+            else:
+                if result.returncode != 0:
+                    cleanup_violation(scratch_path, "queries-fixtures", "status " + str(result.returncode) + " for case: " + case_name)
+                if result.stderr:
+                    cleanup_violation(scratch_path, "queries-fixtures", "non-empty stderr for case: " + case_name)
+                golden_path = case_entry.joinpath("golden")
+                golden_bytes = golden_path.read_bytes()
+                if result.stdout != golden_bytes:
+                    cleanup_violation(scratch_path, "queries-fixtures", "stdout differs from golden for case: " + case_name)
+                green_count = green_count + 1
+            if has_answers_golden:
+                pins_dir = case_entry.joinpath("answers-golden")
+                fixture_manifest = scratch_path.joinpath("queries-fixture-manifest-" + color + "-" + case_name)
+                build_query_manifest(fixture_manifest, gid_path.joinpath("pl"))
+                for pin in sorted(pins_dir.iterdir()):
+                    pin_name = pin.name
+                    if pin.is_symlink():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/answers-golden/" + pin_name)
+                    if not pin.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/answers-golden/" + pin_name)
+                    if not pin_name.endswith(".pl"):
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/answers-golden/" + pin_name)
+                    pin_qid = pin_name.removesuffix(".pl")
+                    if not valid_docid(pin_qid):
+                        cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/answers-golden/" + pin_name)
+                    query_ace = gid_path.joinpath("queries", pin_qid + ".ace")
+                    if not query_ace.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "answers-golden qid has no query: " + case_name + "/" + pin_qid)
+                    query_pl = gid_path.joinpath("queries", "pl", pin_qid + ".pl")
+                    if not query_pl.is_file():
+                        cleanup_violation(scratch_path, "queries-fixtures", "answers-golden qid has no query: " + case_name + "/" + pin_qid)
+                    answer_bytes = run_answer(scratch_path, swipl_executable, stage_path, pin_qid, fixture_manifest, query_pl)
+                    pin_bytes = pin.read_bytes()
+                    if answer_bytes != pin_bytes:
+                        cleanup_violation(scratch_path, "queries-fixtures", "answer bytes differ from answers-golden: " + case_name + "/" + pin_qid)
+    if red_count == 0:
+        cleanup_violation(scratch_path, "queries-fixtures", "no red fixture cases found: " + str(fixtures_root))
+    if green_count == 0:
+        cleanup_violation(scratch_path, "queries-fixtures", "no green fixture cases found: " + str(fixtures_root))
+    print("goal: queries fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def ui_walk_files(base_path):
     found = []
     pending = [base_path]
@@ -2477,6 +2964,7 @@ def check_command():
         check_documents(scratch_path, swipl_executable, stage_path, guideline_path, ace_paths, docids, lexicon_path)
         guideline_count = guideline_count + 1
         document_count = document_count + len(docids)
+    check_queries_fixtures(scratch_path, swipl_executable, stage_path)
     probe_count = 0
     for probe_record in red_plan:
         probe_path = probe_record.pop(0)
@@ -2492,7 +2980,7 @@ if not (compiler_source.is_file()):
 argv = list(sys.argv)
 argv.pop(0)
 if len(argv) == 0:
-    fail("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>")
+    fail("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>")
 subcommand = argv.pop(0)
 if subcommand == "compile":
     if len(argv) != 1:
@@ -2505,7 +2993,26 @@ else:
             fail("usage", "expected: goal check")
         check_command()
     else:
-        if subcommand == "review-manifest":
+        if subcommand == "queries":
+            if len(argv) != 1:
+                fail("usage", "expected: goal queries <guideline-id>")
+            queries_guideline_id = argv.pop(0)
+            queries_command(queries_guideline_id)
+        elif subcommand == "queries-check":
+            queries_check_argc = len(argv)
+            queries_check_ok = False
+            if queries_check_argc == 1:
+                queries_check_ok = True
+            if queries_check_argc == 2:
+                queries_check_ok = True
+            if not queries_check_ok:
+                fail("usage", "expected: goal queries-check <guideline-dir> [<stage-dir>]")
+            queries_check_dir = argv.pop(0)
+            queries_check_stage = None
+            if queries_check_argc == 2:
+                queries_check_stage = argv.pop(0)
+            queries_check_command(queries_check_dir, queries_check_stage)
+        elif subcommand == "review-manifest":
             if len(argv) != 1:
                 fail("usage", "expected: goal review-manifest <guideline-id>")
             review_guideline_id = argv.pop(0)

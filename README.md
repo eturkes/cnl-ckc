@@ -386,8 +386,56 @@ parser, input, and load failures keep their own classes, details, and
 exit codes. The projection emits no document
 indicators, no declarations, and no proof obligations, and it never
 participates in `check`, `aggregate-check`, or `recursion-check`
-compositions. Query artifacts under `guidelines/` and the answering
-engine land with M4.6.
+compositions.
+
+### Query answers
+
+The compiler's `answer` mode solves one compiled query against a
+loaded composition:
+
+```sh
+swipl -q -f none -F none -s vendor/ape/prolog/ace_to_pl.pl -g main \
+  -t 'halt(9)' -- answer <manifest> <query-pl>
+```
+
+`<manifest>` uses the aggregate manifest grammar. The payload column
+must name readable files, and the mode never parses payload terms. A
+0-byte manifest is the empty composition: the mode still declares the
+v1 indicators and solves against no clauses. `<query-pl>` must read
+as exactly two terms in order: the ground `'$guideline_query'/4`
+record, then the `'$guideline_query_projection'/2` term. The mode
+reads the query file as data and never consults it. Comments and
+layout carry no meaning here; the `check` gate pins committed bytes
+separately.
+
+Success emits a two-line artifact on stdout: a generated-file
+comment, then one ground term
+`'$guideline_answers'(v1, Qid, query_sha256(H), result(R))`. `H` is
+the SHA-256 of the raw query-file bytes. The solver runs under fixed
+bounds: depth 100 and 100000 inferences per solution, and 1000000
+inferences for the whole run. For a wh query (`answers` rows
+present), `R` is `solutions(Sols)`, or `indeterminate(limit)` when a
+bound trips. Each distinct solution contributes one `sol(Values)`
+row; rows follow the standard order of terms, and values follow the
+answer-manifest order. For a yes-no query
+(`answers([])`), the first proof is conclusive: `R` is `yes`,
+`no(finite_failure)` on exhaustive failure, or `indeterminate(limit)`
+when a bound trips before any proof. A nonground solution rejects
+with class `proof` as `nonground_solution(Qid)`. A malformed query
+file rejects with class `check_load` as `query_file(<why>)`. Manifest
+and composition load failures keep the aggregate classes and details.
+
+Committed query artifacts live under `guidelines/<id>/queries/`:
+`<qid>.ace` sources at the root, compiled queries under `pl/`, and
+answer artifacts under `answers/`. `python3 -P tools/goal.py queries
+<id>` derives every artifact in memory and writes only after every
+derivation succeeds. `check` re-derives both files per query twice
+and compares the bytes. A committed answer must be `yes` or nonempty
+`solutions(...)`; committed queries stay demonstrations. The
+`queries` and `check` commands bound every compile and answer
+subprocess at 30 seconds of wall-clock time, and a run that exceeds
+the bound fails the gate. The direct `swipl` invocation above has no
+process bound.
 
 ## Operating
 

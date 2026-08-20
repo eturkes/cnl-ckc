@@ -262,6 +262,106 @@ Define [[fixture_pl_path]] taking tracked:
         Give back False.
     Give back [[file_part.endswith]](".pl").
 
+Define [[query_artifact_pl_path]] taking tracked:
+    Set parts to [[tracked.split]]("/").
+    If [[len]](parts) does not equal 5:
+        Give back False.
+    Set root_part to [[parts.pop]](0).
+    Set id_part to [[parts.pop]](0).
+    Set queries_part to [[parts.pop]](0).
+    Set dir_part to [[parts.pop]](0).
+    Set file_part to [[parts.pop]](0).
+    If root_part does not equal "guidelines":
+        Give back False.
+    If not [[valid_docid]](id_part):
+        Give back False.
+    If queries_part does not equal "queries":
+        Give back False.
+    Set dir_ok to False.
+    If dir_part equals "pl":
+        Set dir_ok to True.
+    If dir_part equals "answers":
+        Set dir_ok to True.
+    If not dir_ok:
+        Give back False.
+    If not [[file_part.endswith]](".pl"):
+        Give back False.
+    Set stem to [[file_part.removesuffix]](".pl").
+    Give back [[valid_docid]](stem).
+
+Define [[queries_fixture_pl_path]] taking tracked:
+    Set parts to [[tracked.split]]("/").
+    Set part_count to [[len]](parts).
+    Set count_ok to False.
+    If part_count equals 6:
+        Set count_ok to True.
+    If part_count equals 9:
+        Set count_ok to True.
+    If part_count equals 10:
+        Set count_ok to True.
+    If not count_ok:
+        Give back False.
+    Set root_part to [[parts.pop]](0).
+    Set suite_part to [[parts.pop]](0).
+    Set color_part to [[parts.pop]](0).
+    Set case_part to [[parts.pop]](0).
+    If root_part does not equal "tests":
+        Give back False.
+    If suite_part does not equal "queries":
+        Give back False.
+    Set color_ok to False.
+    If color_part equals "red":
+        Set color_ok to True.
+    If color_part equals "green":
+        Set color_ok to True.
+    If not color_ok:
+        Give back False.
+    If not [[valid_docid]](case_part):
+        Give back False.
+    If part_count equals 6:
+        Set pin_part to [[parts.pop]](0).
+        Set file_part to [[parts.pop]](0).
+        If pin_part does not equal "answers-golden":
+            Give back False.
+        If not [[file_part.endswith]](".pl"):
+            Give back False.
+        Set stem to [[file_part.removesuffix]](".pl").
+        Give back [[valid_docid]](stem).
+    Set tree_part to [[parts.pop]](0).
+    Set guidelines_part to [[parts.pop]](0).
+    Set id_part to [[parts.pop]](0).
+    If tree_part does not equal "tree":
+        Give back False.
+    If guidelines_part does not equal "guidelines":
+        Give back False.
+    If not [[valid_docid]](id_part):
+        Give back False.
+    If part_count equals 9:
+        Set dir_part to [[parts.pop]](0).
+        Set file_part to [[parts.pop]](0).
+        If dir_part does not equal "pl":
+            Give back False.
+        If not [[file_part.endswith]](".pl"):
+            Give back False.
+        Set stem to [[file_part.removesuffix]](".pl").
+        Give back [[valid_docid]](stem).
+    Set queries_part to [[parts.pop]](0).
+    Set dir_part to [[parts.pop]](0).
+    Set file_part to [[parts.pop]](0).
+    If queries_part does not equal "queries":
+        Give back False.
+    Set dir_ok to False.
+    If dir_part equals "pl":
+        Set dir_ok to True.
+    If dir_part equals "answers":
+        Set dir_ok to True.
+    If not dir_ok:
+        Give back False.
+    If not [[file_part.endswith]](".pl"):
+        Give back False.
+    Set stem to [[file_part.removesuffix]](".pl").
+    Give back [[valid_docid]](stem).
+
 Define [[check_prolog_inventory]] taking nothing:
     Set git_res to [[subprocess.run]](<"git", "ls-files", "--", "*.pl">, capture_output=True, check=True).
     Set tracked_text to [[git_res.stdout.decode]]("utf-8").
@@ -270,11 +370,15 @@ Define [[check_prolog_inventory]] taking nothing:
         Set clex_base to tracked equals "vendor/clex/clex_lexicon.pl".
         Set compiled to [[compiled_pl_path]](tracked).
         Set fixture_pl to [[fixture_pl_path]](tracked).
+        Set query_artifact to [[query_artifact_pl_path]](tracked).
+        Set queries_fixture to [[queries_fixture_pl_path]](tracked).
         If not vendored:
             If not clex_base:
                 If not compiled:
                     If not fixture_pl:
-                        Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
+                        If not query_artifact:
+                            If not queries_fixture:
+                                Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
 
 Define [[provenance_field]] taking prov_lines, key:
     Set prefix to key plus ": ".
@@ -515,6 +619,8 @@ Define [[check_documents]] taking scratch_path, swipl_executable, stage_path, gu
     If manifest_ids does not equal docids:
         Do [[cleanup_violation]](scratch_path, "aggregate-totality", "manifest documents differ from corpus documents: " plus [[str]](guideline_path)).
     Do [[check_aggregate]](scratch_path, swipl_executable, stage_path, manifest_pairs).
+    Set query_counts to [[validate_queries]](scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path).
+    Do [[queries_meter]](guideline_path.name, query_counts).
 
 Define [[manifest_document_ids]] taking manifest_pairs:
     Set docid_list to <>.
@@ -580,6 +686,268 @@ Define [[check_aggregate]] taking scratch_path, swipl_executable, stage_path, ma
         Do [[cleanup_violation]](scratch_path, "aggregate-order", "forward and reverse manifests disagree").
     Set recursion_report to [[run_recursion]](scratch_path, swipl_executable, stage_path, forward_path, doc_count).
     Do [[print]]("goal: " plus [[recursion_report.strip]]()).
+
+Define [[queries_violation]] taking scratch_path, category, detail:
+    If scratch_path equals None:
+        Do [[violation]](category, detail).
+    Do [[cleanup_violation]](scratch_path, category, detail).
+
+Define [[collect_query_aces]] taking scratch_path, guideline_path:
+    Set queries_dir to [[guideline_path.joinpath]]("queries").
+    If [[queries_dir.is_symlink]]():
+        Do [[queries_violation]](scratch_path, "queries", "is a symlink: " plus [[str]](queries_dir)).
+    If not [[queries_dir.exists]]():
+        Give back <>.
+    If not [[queries_dir.is_dir]]():
+        Do [[queries_violation]](scratch_path, "queries", "not a directory: " plus [[str]](queries_dir)).
+    Set qids to <>.
+    For each entry in [[sorted]]([[queries_dir.iterdir]]()):
+        Set entry_name to entry.name.
+        Set subdir_name to False.
+        If entry_name equals "pl":
+            Set subdir_name to True.
+        If entry_name equals "answers":
+            Set subdir_name to True.
+        If subdir_name:
+            If [[entry.is_symlink]]():
+                Do [[queries_violation]](scratch_path, "queries", "unsupported entry: " plus [[str]](entry)).
+            If not [[entry.is_dir]]():
+                Do [[queries_violation]](scratch_path, "queries", "unsupported entry: " plus [[str]](entry)).
+        Otherwise:
+            If not [[entry_name.endswith]](".ace"):
+                Do [[queries_violation]](scratch_path, "queries", "unsupported entry: " plus [[str]](entry)).
+            If [[entry.is_symlink]]():
+                Do [[queries_violation]](scratch_path, "queries", "not a regular file: " plus [[str]](entry)).
+            If not [[entry.is_file]]():
+                Do [[queries_violation]](scratch_path, "queries", "not a regular file: " plus [[str]](entry)).
+            Set stem to [[entry_name.removesuffix]](".ace").
+            If not [[valid_docid]](stem):
+                Do [[queries_violation]](scratch_path, "queries", "invalid qid filename: " plus entry_name).
+            Do [[qids.append]](stem).
+    Give back qids.
+
+Define [[collect_query_dir]] taking scratch_path, queries_dir, dir_name:
+    Set sub_dir to [[queries_dir.joinpath]](dir_name).
+    If not [[sub_dir.is_dir]]():
+        Give back <>.
+    Set stems to <>.
+    For each entry in [[sorted]]([[sub_dir.iterdir]]()):
+        Set entry_name to entry.name.
+        If not [[entry_name.endswith]](".pl"):
+            Do [[queries_violation]](scratch_path, "queries", "unsupported entry: " plus [[str]](entry)).
+        If [[entry.is_symlink]]():
+            Do [[queries_violation]](scratch_path, "queries", "not a regular file: " plus [[str]](entry)).
+        If not [[entry.is_file]]():
+            Do [[queries_violation]](scratch_path, "queries", "not a regular file: " plus [[str]](entry)).
+        Set stem to [[entry_name.removesuffix]](".pl").
+        If not [[valid_docid]](stem):
+            Do [[queries_violation]](scratch_path, "queries", "invalid qid filename: " plus entry_name).
+        Do [[stems.append]](stem).
+    Give back stems.
+
+Define [[build_query_manifest]] taking manifest_path, pl_dir:
+    Set manifest_text to "".
+    If [[pl_dir.is_dir]]():
+        For each entry in [[sorted]]([[pl_dir.iterdir]]()):
+            Set entry_name to entry.name.
+            If [[entry_name.endswith]](".pl"):
+                Set manifest_text to manifest_text plus [[str]](entry) plus "\t" plus [[str]](entry) plus "\n".
+    Do [[manifest_path.write_text]](manifest_text, encoding="utf-8").
+
+Define [[run_question_compile]] taking scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path:
+    Set ace_bytes to [[ace_path.read_bytes]]().
+    Set tail_args to <"question", [[str]](stage_path), qid>.
+    If lexicon_path does not equal None:
+        Do [[tail_args.append]]([[str]](lexicon_path)).
+    Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
+    Try:
+        Set result to [[subprocess.run]](command, input=ace_bytes, capture_output=True, timeout=30).
+    Catch subprocess.TimeoutExpired:
+        Do [[queries_violation]](scratch_path, "queries", "wall_clock for qid: " plus qid).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](scratch_path, result).
+    If result.stderr:
+        Do [[cleanup_and_fail]](scratch_path, "compiler-stderr", "non-empty stderr for question: " plus qid).
+    If not result.stdout:
+        Do [[cleanup_and_fail]](scratch_path, "compiler-stdout", "empty stdout for question: " plus qid).
+    Set newline_bytes to [[bytes]](<10>).
+    If not [[result.stdout.endswith]](newline_bytes):
+        Do [[cleanup_and_fail]](scratch_path, "compiler-stdout", "missing final newline for question: " plus qid).
+    Give back result.stdout.
+
+Define [[run_answer]] taking scratch_path, swipl_executable, stage_path, qid, manifest_path, query_pl_path:
+    Set tail_args to <"answer", [[str]](manifest_path), [[str]](query_pl_path)>.
+    Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
+    Try:
+        Set result to [[subprocess.run]](command, capture_output=True, timeout=30).
+    Catch subprocess.TimeoutExpired:
+        Do [[queries_violation]](scratch_path, "queries", "wall_clock for qid: " plus qid).
+    If result.returncode does not equal 0:
+        Do [[relay_failure]](scratch_path, result).
+    If result.stderr:
+        Do [[cleanup_and_fail]](scratch_path, "answer-stderr", "non-empty stderr for question: " plus qid).
+    If not result.stdout:
+        Do [[cleanup_and_fail]](scratch_path, "answer-stdout", "empty stdout for question: " plus qid).
+    Set newline_bytes to [[bytes]](<10>).
+    If not [[result.stdout.endswith]](newline_bytes):
+        Do [[cleanup_and_fail]](scratch_path, "answer-stdout", "missing final newline for question: " plus qid).
+    Give back result.stdout.
+
+Define [[answer_result_text]] taking answer_bytes:
+    Set answer_text to [[answer_bytes.decode]]("utf-8", errors="replace").
+    Set answer_lines to [[answer_text.splitlines]]().
+    If [[len]](answer_lines) does not equal 2:
+        Give back "".
+    Set term_line to [[answer_lines.pop]](1).
+    Set parts to [[list]]([[term_line.partition]]("result(")).
+    Set head_text to [[parts.pop]](0).
+    Set sep_text to [[parts.pop]](0).
+    Set tail_text to [[parts.pop]](0).
+    If sep_text equals "":
+        Give back "".
+    If not [[tail_text.endswith]]("))."):
+        Give back "".
+    Give back [[tail_text.removesuffix]](")).").
+
+Define [[validate_queries]] taking scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path:
+    Set queries_dir to [[guideline_path.joinpath]]("queries").
+    Set qids to [[collect_query_aces]](scratch_path, guideline_path).
+    Set pl_stems to [[collect_query_dir]](scratch_path, queries_dir, "pl").
+    If pl_stems does not equal qids:
+        Do [[queries_violation]](scratch_path, "queries", "pl inventory differs from ace query set: " plus [[str]]([[queries_dir.joinpath]]("pl"))).
+    Set answers_stems to [[collect_query_dir]](scratch_path, queries_dir, "answers").
+    If answers_stems does not equal qids:
+        Do [[queries_violation]](scratch_path, "queries", "answers inventory differs from ace query set: " plus [[str]]([[queries_dir.joinpath]]("answers"))).
+    Set wh_count to 0.
+    Set yesno_count to 0.
+    If qids:
+        Set manifest_path to [[scratch_path.joinpath]]("queries-manifest-" plus guideline_path.name).
+        Do [[build_query_manifest]](manifest_path, [[guideline_path.joinpath]]("pl")).
+        For each qid in qids:
+            Set ace_path to [[queries_dir.joinpath]](qid plus ".ace").
+            Set first_bytes to [[run_question_compile]](scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path).
+            Set second_bytes to [[run_question_compile]](scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path).
+            If first_bytes does not equal second_bytes:
+                Do [[queries_violation]](scratch_path, "determinism", "two query compiles differ for question: " plus qid).
+            Set committed_pl to [[queries_dir.joinpath]]("pl", qid plus ".pl").
+            Set committed_bytes to [[committed_pl.read_bytes]]().
+            If first_bytes does not equal committed_bytes:
+                Do [[queries_violation]](scratch_path, "stale", "committed query pl differs from fresh compile: " plus [[str]](committed_pl)).
+            Set first_answer to [[run_answer]](scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl).
+            Set second_answer to [[run_answer]](scratch_path, swipl_executable, stage_path, qid, manifest_path, committed_pl).
+            If first_answer does not equal second_answer:
+                Do [[queries_violation]](scratch_path, "determinism", "two answer runs differ for question: " plus qid).
+            Set committed_answers to [[queries_dir.joinpath]]("answers", qid plus ".pl").
+            Set committed_answer_bytes to [[committed_answers.read_bytes]]().
+            If first_answer does not equal committed_answer_bytes:
+                Do [[queries_violation]](scratch_path, "stale", "committed query answers differ from fresh answer: " plus [[str]](committed_answers)).
+            Set result_text to [[answer_result_text]](first_answer).
+            If result_text equals "":
+                Do [[queries_violation]](scratch_path, "queries", "unparsable answer artifact for qid: " plus qid).
+            Set demo_ok to False.
+            If result_text equals "yes":
+                Set demo_ok to True.
+            If [[result_text.startswith]]("solutions("):
+                If result_text does not equal "solutions([])":
+                    Set demo_ok to True.
+            If not demo_ok:
+                Do [[queries_violation]](scratch_path, "queries", "non-demo result for qid " plus qid plus ": " plus result_text).
+            Set fresh_text to [[first_bytes.decode]]("utf-8", errors="replace").
+            Set fresh_lines to [[fresh_text.splitlines]]().
+            If [[len]](fresh_lines) does not equal 4:
+                Do [[queries_violation]](scratch_path, "queries", "unexpected query pl shape for qid: " plus qid).
+            Set projection_line to [[fresh_lines.pop]](3).
+            If [[projection_line.endswith]]("answers([]))."):
+                Set yesno_count to yesno_count plus 1.
+            Otherwise:
+                Set wh_count to wh_count plus 1.
+    Give back <[[len]](qids), wh_count, yesno_count>.
+
+Define [[queries_meter]] taking guideline_name, query_counts:
+    Set counts_copy to [[list]](query_counts).
+    Set query_count to [[counts_copy.pop]](0).
+    Set wh_count to [[counts_copy.pop]](0).
+    Set yesno_count to [[counts_copy.pop]](0).
+    Do [[print]]("goal: queries " plus guideline_name plus " " plus [[str]](query_count) plus " queries; wh=" plus [[str]](wh_count) plus " yesno=" plus [[str]](yesno_count)).
+
+Define [[queries_check_command]] taking guideline_dir, stage_arg:
+    Set guideline_path to [[pathlib.Path]](guideline_dir).
+    If [[guideline_path.is_symlink]]():
+        Do [[fail]]("guideline", "is a symlink: " plus [[str]](guideline_path)).
+    If not [[guideline_path.is_dir]]():
+        Do [[fail]]("guideline", "not a directory: " plus [[str]](guideline_path)).
+    Set lexicon_path to [[guideline_path.joinpath]]("lexicon.ulex").
+    If [[lexicon_path.is_symlink]]():
+        Do [[fail]]("guideline", "lexicon is a symlink: " plus [[str]](lexicon_path)).
+    If not [[lexicon_path.is_file]]():
+        Set lexicon_path to None.
+    Set swipl_executable to [[resolve_swipl]]().
+    Set scratch_path to [[make_scratch]]().
+    If stage_arg equals None:
+        Set stage_path to [[stage_ape]](scratch_path, swipl_executable).
+    Otherwise:
+        Set stage_path to [[pathlib.Path]](stage_arg).
+        If not [[stage_path.is_dir]]():
+            Do [[cleanup_and_fail]](scratch_path, "ape-stage", "missing stage: " plus stage_arg).
+    Set query_counts to [[validate_queries]](scratch_path, swipl_executable, stage_path, guideline_path, lexicon_path).
+    Do [[shutil.rmtree]](scratch_path).
+    Do [[queries_meter]](guideline_path.name, query_counts).
+
+Define [[queries_command]] taking guideline_id:
+    If not [[valid_docid]](guideline_id):
+        Do [[fail]]("guideline", "invalid guideline id: " plus guideline_id).
+    Set guidelines_root to [[pathlib.Path]]("guidelines").
+    Set guideline_path to [[guidelines_root.joinpath]](guideline_id).
+    If [[guideline_path.is_symlink]]():
+        Do [[fail]]("guideline", "is a symlink: " plus [[str]](guideline_path)).
+    If not [[guideline_path.is_dir]]():
+        Do [[fail]]("guideline", "not a directory: " plus [[str]](guideline_path)).
+    Set queries_dir to [[guideline_path.joinpath]]("queries").
+    Set qids to [[collect_query_aces]](None, guideline_path).
+    If not qids:
+        For each dir_name in <"pl", "answers">:
+            Set sub_dir to [[queries_dir.joinpath]](dir_name).
+            If [[sub_dir.is_dir]]():
+                Do [[shutil.rmtree]](sub_dir).
+        Do [[print]]("goal: queries ok 0 queries").
+    Otherwise:
+        Set lexicon_path to [[guideline_path.joinpath]]("lexicon.ulex").
+        If [[lexicon_path.is_symlink]]():
+            Do [[fail]]("guideline", "lexicon is a symlink: " plus [[str]](lexicon_path)).
+        If not [[lexicon_path.is_file]]():
+            Set lexicon_path to None.
+        Set swipl_executable to [[resolve_swipl]]().
+        Set scratch_path to [[make_scratch]]().
+        Set stage_path to [[stage_ape]](scratch_path, swipl_executable).
+        Set manifest_path to [[scratch_path.joinpath]]("queries-manifest").
+        Do [[build_query_manifest]](manifest_path, [[guideline_path.joinpath]]("pl")).
+        Set pl_by_qid to {}.
+        Set answers_by_qid to {}.
+        For each qid in qids:
+            Set ace_path to [[queries_dir.joinpath]](qid plus ".ace").
+            Set pl_bytes to [[run_question_compile]](scratch_path, swipl_executable, stage_path, qid, ace_path, lexicon_path).
+            Set fresh_path to [[scratch_path.joinpath]]("query-" plus qid plus ".pl").
+            Do [[fresh_path.write_bytes]](pl_bytes).
+            Set answer_bytes to [[run_answer]](scratch_path, swipl_executable, stage_path, qid, manifest_path, fresh_path).
+            Do [[pl_by_qid.update]]({qid: pl_bytes}).
+            Do [[answers_by_qid.update]]({qid: answer_bytes}).
+        Set pl_dir to [[queries_dir.joinpath]]("pl").
+        Set answers_dir to [[queries_dir.joinpath]]("answers").
+        If [[pl_dir.is_dir]]():
+            Do [[shutil.rmtree]](pl_dir).
+        If [[answers_dir.is_dir]]():
+            Do [[shutil.rmtree]](answers_dir).
+        Do [[pl_dir.mkdir]]().
+        Do [[answers_dir.mkdir]]().
+        For each qid in [[sorted]](pl_by_qid):
+            Set pl_target to [[pl_dir.joinpath]](qid plus ".pl").
+            Do [[pl_target.write_bytes]]([[pl_by_qid.get]](qid)).
+            Do [[print]]("goal: wrote " plus [[str]](pl_target)).
+            Set answers_target to [[answers_dir.joinpath]](qid plus ".pl").
+            Do [[answers_target.write_bytes]]([[answers_by_qid.get]](qid)).
+            Do [[print]]("goal: wrote " plus [[str]](answers_target)).
+        Do [[shutil.rmtree]](scratch_path).
+        Do [[print]]("goal: queries ok " plus [[str]]([[len]](qids)) plus " queries").
 
 Define [[compile_command]] taking guideline_id:
     If not [[valid_docid]](guideline_id):
@@ -2147,6 +2515,139 @@ Define [[check_adjudication_fixtures]] taking nothing:
             Set green_count to green_count plus 1.
     Do [[print]]("goal: adjudication fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
 
+Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_path:
+    Set fixtures_root to [[pathlib.Path]]("tests/queries").
+    If [[fixtures_root.is_symlink]]():
+        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "is a symlink: " plus [[str]](fixtures_root)).
+    If not [[fixtures_root.is_dir]]():
+        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "missing: " plus [[str]](fixtures_root)).
+    Set color_names to <"red", "green">.
+    For each entry in [[sorted]]([[fixtures_root.iterdir]]()):
+        Set entry_known to entry.name is in color_names.
+        If not entry_known:
+            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus entry.name).
+    Set red_count to 0.
+    Set green_count to 0.
+    For each color in color_names:
+        Set color_path to [[fixtures_root.joinpath]](color).
+        If [[color_path.is_symlink]]():
+            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "is a symlink: " plus [[str]](color_path)).
+        If not [[color_path.is_dir]]():
+            Do [[cleanup_violation]](scratch_path, "queries-fixtures", "missing: " plus [[str]](color_path)).
+        For each case_entry in [[sorted]]([[color_path.iterdir]]()):
+            Set case_name to case_entry.name.
+            If [[case_entry.is_symlink]]():
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "not a case directory: " plus case_name).
+            If not [[case_entry.is_dir]]():
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "not a case directory: " plus case_name).
+            If not [[valid_docid]](case_name):
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "invalid case name: " plus case_name).
+            Set has_tree to False.
+            Set has_expect to False.
+            Set has_golden to False.
+            Set has_answers_golden to False.
+            For each member in [[sorted]]([[case_entry.iterdir]]()):
+                Set member_name to member.name.
+                If [[member.is_symlink]]():
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+                If member_name equals "tree":
+                    If not [[member.is_dir]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+                    Set has_tree to True.
+                Otherwise if member_name equals "answers-golden":
+                    If not [[member.is_dir]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+                    Set has_answers_golden to True.
+                Otherwise if member_name equals "expect":
+                    If not [[member.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+                    Set has_expect to True.
+                Otherwise if member_name equals "golden":
+                    If not [[member.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+                    Set has_golden to True.
+                Otherwise:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/" plus member_name).
+            If not has_tree:
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "case without tree: " plus case_name).
+            If has_expect:
+                If has_golden:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "case pins both expect and golden: " plus case_name).
+            If not has_expect:
+                If not has_golden:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "case without expect or golden pin: " plus case_name).
+            If color equals "red":
+                If has_golden:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "red case pins golden: " plus case_name).
+            If color equals "green":
+                If has_expect:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "green case pins expect: " plus case_name).
+            Set tree_guidelines to [[case_entry.joinpath]]("tree", "guidelines").
+            If not [[tree_guidelines.is_dir]]():
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "case tree without guidelines: " plus case_name).
+            Set tree_ids to <>.
+            For each tree_entry in [[sorted]]([[tree_guidelines.iterdir]]()):
+                Do [[tree_ids.append]](tree_entry).
+            If [[len]](tree_ids) does not equal 1:
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "case tree without one guideline: " plus case_name).
+            Set gid_path to [[tree_ids.pop]](0).
+            If not [[gid_path.is_dir]]():
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "case tree without one guideline: " plus case_name).
+            If not [[valid_docid]](gid_path.name):
+                Do [[cleanup_violation]](scratch_path, "queries-fixtures", "case tree without one guideline: " plus case_name).
+            Set command to <sys.executable, "-P", "tools/goal.py", "queries-check", [[str]](gid_path), [[str]](stage_path)>.
+            Set result to [[subprocess.run]](command, capture_output=True).
+            If has_expect:
+                If result.returncode does not equal 1:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "status " plus [[str]](result.returncode) plus " for case: " plus case_name).
+                If result.stderr:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "non-empty stderr for case: " plus case_name).
+                Set expect_path to [[case_entry.joinpath]]("expect").
+                Set expect_bytes to [[expect_path.read_bytes]]().
+                If result.stdout does not equal expect_bytes:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "stdout differs from expect pin for case: " plus case_name).
+                Set red_count to red_count plus 1.
+            Otherwise:
+                If result.returncode does not equal 0:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "status " plus [[str]](result.returncode) plus " for case: " plus case_name).
+                If result.stderr:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "non-empty stderr for case: " plus case_name).
+                Set golden_path to [[case_entry.joinpath]]("golden").
+                Set golden_bytes to [[golden_path.read_bytes]]().
+                If result.stdout does not equal golden_bytes:
+                    Do [[cleanup_violation]](scratch_path, "queries-fixtures", "stdout differs from golden for case: " plus case_name).
+                Set green_count to green_count plus 1.
+            If has_answers_golden:
+                Set pins_dir to [[case_entry.joinpath]]("answers-golden").
+                Set fixture_manifest to [[scratch_path.joinpath]]("queries-fixture-manifest-" plus color plus "-" plus case_name).
+                Do [[build_query_manifest]](fixture_manifest, [[gid_path.joinpath]]("pl")).
+                For each pin in [[sorted]]([[pins_dir.iterdir]]()):
+                    Set pin_name to pin.name.
+                    If [[pin.is_symlink]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/answers-golden/" plus pin_name).
+                    If not [[pin.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/answers-golden/" plus pin_name).
+                    If not [[pin_name.endswith]](".pl"):
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/answers-golden/" plus pin_name).
+                    Set pin_qid to [[pin_name.removesuffix]](".pl").
+                    If not [[valid_docid]](pin_qid):
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/answers-golden/" plus pin_name).
+                    Set query_ace to [[gid_path.joinpath]]("queries", pin_qid plus ".ace").
+                    If not [[query_ace.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "answers-golden qid has no query: " plus case_name plus "/" plus pin_qid).
+                    Set query_pl to [[gid_path.joinpath]]("queries", "pl", pin_qid plus ".pl").
+                    If not [[query_pl.is_file]]():
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "answers-golden qid has no query: " plus case_name plus "/" plus pin_qid).
+                    Set answer_bytes to [[run_answer]](scratch_path, swipl_executable, stage_path, pin_qid, fixture_manifest, query_pl).
+                    Set pin_bytes to [[pin.read_bytes]]().
+                    If answer_bytes does not equal pin_bytes:
+                        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "answer bytes differ from answers-golden: " plus case_name plus "/" plus pin_qid).
+    If red_count equals 0:
+        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "no red fixture cases found: " plus [[str]](fixtures_root)).
+    If green_count equals 0:
+        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "no green fixture cases found: " plus [[str]](fixtures_root)).
+    Do [[print]]("goal: queries fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
+
 Define [[ui_walk_files]] taking base_path:
     Set found to <>.
     Set pending to <base_path>.
@@ -2574,6 +3075,7 @@ Define [[check_command]] taking nothing:
         Do [[check_documents]](scratch_path, swipl_executable, stage_path, guideline_path, ace_paths, docids, lexicon_path).
         Set guideline_count to guideline_count plus 1.
         Set document_count to document_count plus [[len]](docids).
+    Do [[check_queries_fixtures]](scratch_path, swipl_executable, stage_path).
     Set probe_count to 0.
     For each probe_record in red_plan:
         Set probe_path to [[probe_record.pop]](0).
@@ -2589,7 +3091,7 @@ Require that [[compiler_source.is_file]]().
 Set argv to [[list]](sys.argv).
 Do [[argv.pop]](0).
 If [[len]](argv) equals 0:
-    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>").
+    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>").
 Set subcommand to [[argv.pop]](0).
 If subcommand equals "compile":
     If [[len]](argv) does not equal 1:
@@ -2602,7 +3104,26 @@ Otherwise:
             Do [[fail]]("usage", "expected: goal check").
         Do [[check_command]]().
     Otherwise:
-        If subcommand equals "review-manifest":
+        If subcommand equals "queries":
+            If [[len]](argv) does not equal 1:
+                Do [[fail]]("usage", "expected: goal queries <guideline-id>").
+            Set queries_guideline_id to [[argv.pop]](0).
+            Do [[queries_command]](queries_guideline_id).
+        Otherwise if subcommand equals "queries-check":
+            Set queries_check_argc to [[len]](argv).
+            Set queries_check_ok to False.
+            If queries_check_argc equals 1:
+                Set queries_check_ok to True.
+            If queries_check_argc equals 2:
+                Set queries_check_ok to True.
+            If not queries_check_ok:
+                Do [[fail]]("usage", "expected: goal queries-check <guideline-dir> [<stage-dir>]").
+            Set queries_check_dir to [[argv.pop]](0).
+            Set queries_check_stage to None.
+            If queries_check_argc equals 2:
+                Set queries_check_stage to [[argv.pop]](0).
+            Do [[queries_check_command]](queries_check_dir, queries_check_stage).
+        Otherwise if subcommand equals "review-manifest":
             If [[len]](argv) does not equal 1:
                 Do [[fail]]("usage", "expected: goal review-manifest <guideline-id>").
             Set review_guideline_id to [[argv.pop]](0).

@@ -126,11 +126,13 @@ Architecture rulings:
   (parses to an implication DRS), disjunction (`v/2`), classical
   negation and NAF inside questions all REJECT with named details — an
   entailment/countermodel semantics is out of scope. Result algebra:
-  wh → `solutions([...])`; yes-no → `yes(trace)` | `no(finite_failure)`
-  | `indeterminate(limit)`; a bound hit is never rendered as "no".
-  Answers render KB atoms + provenance coordinates only; cardinalities
-  display as verbatim schema payloads, never computed quantities; no
-  natural-language glue, no runtime LLM.
+  wh → `solutions([...])`; yes-no → `yes` | `no(finite_failure)`
+  | `indeterminate(limit)` (M4.7 adds the trace-bearing yes); a bound
+  hit is never rendered as "no". Answer artifacts carry raw KB atom
+  values (v1.3); provenance coordinates ride M4.7 traces and UI
+  dereference lands in M4.9; cardinalities display as verbatim schema
+  payloads, never computed quantities; no natural-language glue, no
+  runtime LLM.
 - Derived-artifact machinery (query compile, answer/trace, graph) lands
   in the named first-party Prolog closure of the APE fork: inside
   `ace_to_pl.pl` as modes, or — if the M4.5 spike measures lower total
@@ -286,19 +288,28 @@ lands; only the shared-file implementations serialize.
   mutants killed, 97/97 reject closure, 800-cell determinism; doc
   isolation 186 compile diff-clean. main=99% 237K (2nd window; 1st
   ~200K) / mate=100% 240K (rev+rev2 ceiling; test 93% 224K).
-- M4.6 OPEN (kernel, oracle) — query artifacts + answers: qid grammar,
+- M4.6 DONE (kernel, oracle) — query artifacts + answers: qid grammar,
   `guidelines/<id>/queries/<qid>.ace` → committed `queries/pl/<qid>.pl`
-  w/ binding header (question ACE bytes, ulex digest, compiler
-  identity), `answer` mode over the aggregate manifest — bounded solve
-  (per-solution + whole-query constants pinned in-contract; M3 bounds
-  the baseline), canonical solution identity/dedup/order keys, result
-  algebra incl. `indeterminate(limit)` ≠ `no`; committed
-  `queries/answers/<qid>.pl`; check re-derives byte-identically,
-  closes the `.ace`/`.pl`/answers inventory bijection, and requires
-  committed demo queries to be `yes`/nonempty-`solutions`; ≥3 authored
-  cdc sample queries; new swipl invocations ship wall-clock-bounded from
-  birth (existing-call retrofit stays the bounded-subprocess polish
-  row); red probes: positive, genuine-negative, limit-exceeded.
+  w/ binding record (question ACE digest, ulex digest; compiler
+  identity ruled out in v1.3), `answer` mode over the aggregate
+  manifest — bounded solve (per-solution + whole-query constants;
+  inner-inference exhaustion cumulative across backtracking),
+  canonical solution identity/dedup/order keys, result algebra incl.
+  `indeterminate(limit)` ≠ `no`; committed `queries/answers/<qid>.pl`;
+  check re-derives byte-identically, closes the `.ace`/`.pl`/answers
+  inventory bijection + answers-golden custody, and requires committed
+  demo queries to be `yes`/nonempty-`solutions`; 4 authored cdc
+  queries (wh=3 yesno=1); answer subprocesses wall-bounded from birth.
+  Contract `.scratch/contracts/m4u6.md` v1.2 + v1.3 Verdicts +
+  v1.3.1/2. Evidence green (durable `.scratch/m4u6/`, replays in
+  memory): suite 97/97; oracle differential 15/15 byte-identical; rev
+  F01-F09 closed (3 compiler fixes: file_name verbatim syntax errors,
+  record_shape wrapper functors, census EOF byte_count; F03
+  answers-golden custody hole + probe rc1); rev2 campaign 24/24 (19
+  committed + 3 fixture kills; G08/G09 compiler-seam kills → polish);
+  fixtures 12 red + 4 green, pins 16/16 + answers-golden 8/8;
+  compile+queries idempotent (diff-clean + byte-stable). main=2nd
+  window ~100K (1st →240K compaction) / mate=102% 245K (test).
 - M4.7 OPEN (kernel, oracle) — proof traces: trace term schema (clause
   applications carrying `sentence(DocId, S)`; NAF/limit leaves = explicit
   non-proof status), meta-interpreter + independent teammate oracle;
