@@ -81,7 +81,7 @@ approve/reject + comment verdicts in a gated audit ledger; a
 preloaded-query demonstrator whose answers derive from the compiled
 Prolog alone and trace answer → Prolog → ACE → source; a knowledge-graph
 view for semantic-entity exploration (node-focus + query-path
-highlighting); a deterministic KB distribution build shipping the
+views); a deterministic KB distribution build shipping the
 knowledge artifacts without UI/tools/vendor. Design-intent anchors =
 `.agent/mockups/`: `review.png` (adjudication UI, ballpark-approved),
 `network-revised.png` (graph = entity exploration), `network.png`
@@ -196,6 +196,22 @@ Architecture rulings:
   like "approach"/"patient group" surface only where derivable from
   graph structure — corpus data owns domain rules); search + saved
   views stay out of v1.
+- Clinician-facing design law (all UI surfaces; durable law = project
+  `CLAUDE.md` UI/UX rule, mechanical enforcement = M4.9's copy-register
+  lint + the design-system invariants): visible page copy carries zero
+  plumbing — digests, qids, lemma symbols, raw schema functors ride
+  URLs/hidden fields/ledgers only; staleness, verdict + limit panels
+  read as plain language (stale = the document or its source changed
+  after this verdict; `indeterminate(limit)` = not determinable within
+  the system's search bounds; empty `solutions` = none stated in the
+  loaded guidelines); closed cardinality operators render as symbols
+  (`eq`→`=`, `geq`→`≥`) beside verbatim payload atoms; every page
+  carries the scope line — reports what the loaded guideline documents
+  state, not clinical advice; capabilities stated plainly (prepared
+  questions only; no fake input affordances); chrome = navigation only
+  — no accounts/avatars/settings/notifications/feeds/vanity stat
+  chips; section/page citations stay (clinician-native); ACE presented
+  as the formal statement beside the source quote, never paraphrased.
 - Distribution = manifest-driven deterministic archive of
   `guidelines/**` + generated KB docs + release-manifest attestation;
   UI/tools/vendor/.agent excluded by construction. Per-guideline
@@ -354,28 +370,38 @@ lands; only the shared-file implementations serialize.
   vocabulary-aggregated graph per the architecture ruling, differential-
   oracled on synthetic corpora (variable renaming, NAF, modal contexts,
   self/cross-doc edges, non-unifiable controls) + size/performance-gated
-  on the live corpus; committed `guidelines/<id>/graph.pl`, freshness by
+  on the live corpus; committed `guidelines/<id>/graph.pl` (node rows
+  carry display labels — lexicon surface form where provided, verbatim
+  atom otherwise — so serve time never parses the lexicon), freshness by
   re-derivation byte-compare; node/edge counts printed by the meter.
 - M4.9 OPEN (kernel) — UI query section: picker (committed queries, ACE
-  text), per-solution answer tables (nouns/classes/verbatim cardinality
-  payloads; yes/no/indeterminate rendered distinctly), trace chain
-  answer → quoted pl clause → `% S<n>` ACE sentence → doc view → source
-  region; all-answer route closure gate against the committed join;
+  text), per-solution answer tables (verbatim KB atom values; closed
+  cardinality operators as symbols per the design law; yes/no/
+  indeterminate rendered distinctly in design-law wording); primary
+  trace chain = answer → `% S<n>` ACE sentence → doc view → source
+  region, formal derivation (quoted pl clauses) = per-step collapsible
+  disclosure; copy-register lint gate lands here (banned-token scan
+  over ui.py emitted strings — emoji, gradient/animation CSS, marketing
+  lexemes, relative-time patterns — covering every page, review UI
+  included); all-answer route closure gate against the committed join;
   hostile fixtures; serve time = committed artifacts only.
-- M4.10 OPEN (kernel) — UI graph section: integer-grid deterministic
-  layout (no floats/transcendentals in emitted coordinates; explicit
-  decimal formatting), SVG DOM node/edge/link bijection gates vs
-  `graph.pl`; primary interaction = node-focus exploration (every
-  rendered node = a link target; `?node=<id>` highlights the node +
-  its typed neighborhood, dims the complement, and renders a detail
-  panel enumerating the node's edges grouped by edge type w/ per-edge
-  sentence attributions linking doc views → source regions; serve time
-  = endpoint filtering of committed `graph.pl`, no new derivation),
-  exact highlighted-set + panel-set equality gates per focused node;
-  secondary = query highlighting (`?query=<qid>` dims the complement
-  of the trace-touched subgraph); bounds/non-overlap invariants, zoom
-  = scale-parameter links, pan = scroll, multi-scale headless visual
-  QA.
+- M4.10 OPEN (kernel) — UI graph section, small views by construction
+  (no global-hairball page, no zoom machinery): overview = typed entity
+  index (nodes grouped by kind w/ degree + document counts, every entry
+  a link); node view `?node=<id>` = the ego subgraph — focused node +
+  typed 1-hop neighborhood laid out in columnar layers by edge class/
+  direction (documents ← focus → participating events/entities → their
+  classes), detail panel enumerating the node's edges grouped by edge
+  type w/ per-edge sentence attributions linking doc views → source
+  regions; query view `?query=<qid>` = the trace-touched subgraph
+  alone; every rendered node = a link target; edge-type pagination when
+  a neighborhood overflows; labels = `graph.pl` display labels; only
+  sentence-attributed edges render — no inferred/transitive edges.
+  Integer-grid deterministic layout (no floats/transcendentals in
+  emitted coordinates; explicit decimal formatting), SVG DOM node/edge/
+  link bijection + exact per-view set-equality gates vs `graph.pl`,
+  bounds/non-overlap invariants, headless visual QA; serve time =
+  endpoint filtering of committed `graph.pl`, no new derivation.
 - M4.11 OPEN (kernel; archive/docs artifacts = prod behind the verifier)
   — portable KB dist: `tools/dist.emm` `build|--check` — include/exclude
   manifest schema, per-guideline distribution profiles (machine-validated
