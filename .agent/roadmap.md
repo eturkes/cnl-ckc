@@ -15,9 +15,10 @@ Closed/parked milestone detail = `.agent/archive/` (read on demand).
   engine-portable plain clauses, schema documented + versioned. No
   SERVING layer in this repo — APIs, CDS integrations, FHIR/CDS-Hooks
   adapters = downstream projects; in-repo query machinery = the check's
-  derived probes plus M4's committed sample queries/answers/graph and
-  the local loopback reviewer UI (review/demonstration-grade by design,
-  never an API; zero runtime LLM).
+  derived probes plus the committed sample queries/answers/traces
+  (knowledge graph = M6) and the local loopback reviewer UI
+  (review/demonstration-grade by design, never an API; zero runtime
+  LLM).
 - Multilingual (Japanese first): a port = a new source-language CNL
   frontend + jurisdiction-native corpus (Japanese guidelines, e.g. the
   Minds clearinghouse), never corpus translation — verification requires
@@ -31,6 +32,18 @@ Closed/parked milestone detail = `.agent/archive/` (read on demand).
   formalization, not clinical-only; domain rules (eligibility, actor
   classes, corpus protocol) stay in corpus data (compendium header,
   per-guideline files), never in code.
+- UI tab modularity: the production UI = the wired surface only (local
+  loopback, review/demonstration-grade). Each new tab (M5 query
+  demonstrator, M6 graph explorer, later ideas) = its own milestone,
+  developed without touching the working UI: tab units may land
+  committed routes/pages/gates, but no nav link from existing pages,
+  and existing-page goldens stay byte-identical across tab units
+  (`check_ui` golden compare = the non-interference gate); the tab's
+  final unit alone wires nav, regenerates goldens and runs full-UI QA.
+  The copy-register lint (M4.13) + design-system invariants gate every
+  later tab automatically (scan = the whole ui.py emitted-string
+  surface). Tab milestones promote on user demand; refresh the plan in
+  a fresh session at promotion (M2 precedent).
 
 ## M1 — American clinical guideline source compendium (easy tier) — REVIEWED
 
@@ -72,22 +85,20 @@ rulings in `.agent/archive/m3.md` (with assurance + evidence chain,
 unit gauges, review record, out-of-scope, sizing analogs); history =
 `git log --grep "(M3[. ]" -p -- .agent/roadmap.md`.
 
-## M4 — adjudication + demonstration UI, portable KB distribution — IN-PROGRESS
+## M4 — adjudication UI + query/trace compiler foundation — IN-PROGRESS
 
-Goal: a local reviewer UI (strict E--, zero JS) that lists every ACE
-document with review status, shows each beside its exact source
-region(s), projection notes and compiled Prolog, and records
-approve/reject + comment verdicts in a gated audit ledger; a
-preloaded-query demonstrator whose answers derive from the compiled
-Prolog alone and trace answer → Prolog → ACE → source; a knowledge-graph
-view for semantic-entity exploration (node-focus + query-path
-views); a deterministic KB distribution build shipping the
-knowledge artifacts without UI/tools/vendor. Design-intent anchors =
-`.agent/mockups/`: `review.png` (adjudication UI, ballpark-approved),
-`network-revised.png` (graph = entity exploration), `network.png`
-(rejected counterexample: artifact/review-process framing). Post-close,
-user-led style iteration against the approved mockups
-(functionality-stable) is planned on demand.
+Goal (rescoped: query-demonstrator tab → M5, graph-explorer tab → M6,
+portable KB dist → M7, per the Standing-direction tab law): a local
+reviewer UI (strict E--, zero JS) that lists every ACE document with
+review status, shows each beside its exact source region(s), projection
+notes and compiled Prolog, and records approve/reject + comment
+verdicts in a gated audit ledger (shipped M4.1–M4.4), plus the
+question→answer→trace compiler foundation the future tabs consume
+(shipped M4.5–M4.7); M4.13 closes the milestone by finishing the review
+surface per the clinician design law. Design-intent anchor =
+`.agent/mockups/review.png` (ballpark-approved); post-close user-led
+style iteration (functionality-stable) on demand. Network mockups
+anchor M6.
 
 Plan reviewed adversarially at planning time: `planrev-m4` report =
 `.scratch/agents/planrev-m4.md` (8 lenses; the unit split, tiers, graph
@@ -136,10 +147,10 @@ Architecture rulings:
   | `indeterminate(limit)` (M4.7 adds the trace-bearing yes); a bound
   hit is never rendered as "no". Answer artifacts carry raw KB atom
   values (v1.3); provenance coordinates ride M4.7 traces and UI
-  dereference lands in M4.9; cardinalities display as verbatim schema
+  dereference lands in M5 (query tab); cardinalities display as verbatim schema
   payloads, never computed quantities; no natural-language glue, no
   runtime LLM.
-- Derived-artifact machinery (query compile, answer/trace, graph) lands
+- Derived-artifact machinery (query compile, answer/trace, M6's graph) lands
   in the named first-party Prolog closure of the APE fork: inside
   `ace_to_pl.pl` as modes, or — if the M4.5 spike measures lower total
   trusted code — as one additional first-party module beside it, with
@@ -175,29 +186,8 @@ Architecture rulings:
   ONE shared implementation (a `goal.py` ledger-validate subcommand the
   UI invokes via subprocess before persist) so gate and UI grammars
   cannot drift.
-- Knowledge graph = the typed SEMANTIC graph, not all-pairs resolution
-  (probe: 2.75M unifiable pairs ⇒ rejected): nodes = entity nouns,
-  event/property lemmas, documents; edges typed from the v1 vocabulary —
-  argument participation (event↔entity w/ position), prepositional
-  attachment, operator wrapping (modality/negation), rule
-  antecedent→consequent flow, document membership — aggregated at
-  vocabulary level with per-edge sentence-coordinate attribution,
-  size-bounded on the live corpus. Query highlighting selects the
-  semantic subgraph a trace's clauses touch. Purpose = end-user
-  exploration of entity relationships — selecting a node (e.g. the
-  opioid-prescription event) reveals its typed neighborhood (the
-  approach events/properties it connects to via rule flow + argument
-  participation, the patient classes those attach to) with
-  sentence-level attribution into doc views; never a pipeline/
-  provenance/review-process visualization (adjudication state stays in
-  the reviewer section). Mockup boundary: no NL summary prose (no
-  runtime LLM — panels render ACE sentences + verbatim payloads); node
-  labels + classes stay vocabulary-level/structural (domain groupings
-  like "approach"/"patient group" surface only where derivable from
-  graph structure — corpus data owns domain rules); search + saved
-  views stay out of v1.
 - Clinician-facing design law (all UI surfaces; durable law = project
-  `CLAUDE.md` UI/UX rule, mechanical enforcement = M4.9's copy-register
+  `CLAUDE.md` UI/UX rule, mechanical enforcement = M4.13's copy-register
   lint + the design-system invariants): visible page copy carries zero
   plumbing — digests, qids, lemma symbols, raw schema functors ride
   URLs/hidden fields/ledgers only; staleness, verdict + limit panels
@@ -212,29 +202,12 @@ Architecture rulings:
   — no accounts/avatars/settings/notifications/feeds/vanity stat
   chips; section/page citations stay (clinician-native); ACE presented
   as the formal statement beside the source quote, never paraphrased.
-- Distribution = manifest-driven deterministic archive of
-  `guidelines/**` + generated KB docs + release-manifest attestation;
-  UI/tools/vendor/.agent excluded by construction. Per-guideline
-  distribution profile (`redistributable|reconstructable|restricted`)
-  machine-validated from structured rights rows; missing/ambiguous
-  rights fail closed. Build refuses while any live rejected verdict
-  exists; unreviewed/stale ship labeled with their adjudication class in
-  the release manifest. Dist NOTICE separates first-party licenses,
-  compiler-derived outputs, and per-source rights records — recorded
-  licenses/rights only, no legal conclusions. Verification from a bare
-  extracted copy = tool-independent member-digest manifest
-  (`sha256sum`-checkable); full regeneration = the attested monorepo
-  revision (integrity and replay are different claims, both documented).
 
-Units. Deps: 4.1→4.4; 4.2→4.3→4.4 (checkpoint 1: adjudication UI
-consumable); 4.5→4.6→4.7; 4.8 after 4.7 (shared compiler closure edits
-serialize 4.5→4.6→4.7→4.8, and graph aggregation reuses trace-unit
-canonicalization); 4.3+4.6+4.7→4.9; 4.3+4.7+4.8→4.10 (checkpoint 2:
-demonstrator consumable); 4.2..4.8→4.11 (checkpoint 3: portable KB;
-its include/canonicalization/rights contract may be banked by scout any
-time after 4.2); 4.12 last. Compiler-mode contracts + oracles (4.5/4.6/
-4.7/4.8) and the dist contract are parallel-prep-safe while the UI trunk
-lands; only the shared-file implementations serialize.
+Units. Shipped: 4.1→4.4 (adjudication UI consumable); 4.5→4.6→4.7
+(question/answer/trace artifacts). Remaining: 4.13 alone — last M4
+unit. Former 4.8/4.10 = M6 (graph artifact + views), 4.9 = M5, 4.11 =
+M7 (unit text banked in those milestones); 4.12's review-scoped docs
+fold into 4.13.
 
 - M4.1 DONE (kernel) — strict E-- exception verbs: minimal
   `Try:`/`Catch <name>:` block statements in the vendor/e-- fork
@@ -366,68 +339,27 @@ lands; only the shared-file implementations serialize.
   kill-recipes row), determinism 64/64 byte-stable; tags
   archive/m4u7-{suite,diff,orc}. main=97% 232K (1st window →
   compaction; close in 2nd) / mate=102% 243K (test hw, 3 compactions).
-- M4.8 OPEN (kernel, oracle) — semantic knowledge graph: the typed
-  vocabulary-aggregated graph per the architecture ruling, differential-
-  oracled on synthetic corpora (variable renaming, NAF, modal contexts,
-  self/cross-doc edges, non-unifiable controls) + size/performance-gated
-  on the live corpus; committed `guidelines/<id>/graph.pl` (node rows
-  carry display labels — lexicon surface form where provided, verbatim
-  atom otherwise — so serve time never parses the lexicon), freshness by
-  re-derivation byte-compare; node/edge counts printed by the meter.
-- M4.9 OPEN (kernel) — UI query section: picker (committed queries, ACE
-  text), per-solution answer tables (verbatim KB atom values; closed
-  cardinality operators as symbols per the design law; yes/no/
-  indeterminate rendered distinctly in design-law wording); primary
-  trace chain = answer → `% S<n>` ACE sentence → doc view → source
-  region, formal derivation (quoted pl clauses) = per-step collapsible
-  disclosure; copy-register lint gate lands here (banned-token scan
-  over ui.py emitted strings — emoji, gradient/animation CSS, marketing
-  lexemes, relative-time patterns — covering every page, review UI
-  included); all-answer route closure gate against the committed join;
-  hostile fixtures; serve time = committed artifacts only.
-- M4.10 OPEN (kernel) — UI graph section, small views by construction
-  (no global-hairball page, no zoom machinery): overview = typed entity
-  index (nodes grouped by kind w/ degree + document counts, every entry
-  a link); node view `?node=<id>` = the ego subgraph — focused node +
-  typed 1-hop neighborhood laid out in columnar layers by edge class/
-  direction (documents ← focus → participating events/entities → their
-  classes), detail panel enumerating the node's edges grouped by edge
-  type w/ per-edge sentence attributions linking doc views → source
-  regions; query view `?query=<qid>` = the trace-touched subgraph
-  alone; every rendered node = a link target; edge-type pagination when
-  a neighborhood overflows; labels = `graph.pl` display labels; only
-  sentence-attributed edges render — no inferred/transitive edges.
-  Integer-grid deterministic layout (no floats/transcendentals in
-  emitted coordinates; explicit decimal formatting), SVG DOM node/edge/
-  link bijection + exact per-view set-equality gates vs `graph.pl`,
-  bounds/non-overlap invariants, headless visual QA; serve time =
-  endpoint filtering of committed `graph.pl`, no new derivation.
-- M4.11 OPEN (kernel; archive/docs artifacts = prod behind the verifier)
-  — portable KB dist: `tools/dist.emm` `build|--check` — include/exclude
-  manifest schema, per-guideline distribution profiles (machine-validated
-  structured rights rows — carries the source-custody polish row's
-  machine-validation into dist eligibility), refuse-on-live-rejected +
-  adjudication classes labeled in the release manifest, generated KB
-  README (schema pointer, integrity-vs-replay commands, rights quotes) +
-  dist NOTICE per the licensing ruling, release-manifest attestation
-  (sources + ledgers + ACE + ulex + PL + queries + answers + traces +
-  graph + compiler-closure/SWI identity + replay commands) regenerated
-  byte-identically by `goal.py check` + verified from a bare extracted
-  copy by documented `sha256sum` command — the consumer-release-manifest
-  polish row's acceptance verbatim (prune at close); deterministic
-  tar.gz (canonical member order/path/mode/uid/gid/uname/mtime + gzip
-  mtime/name/OS pinned; symlinks/special files reject) into gitignored
-  `dist/`; `--check` = two builds into fresh destinations byte-compared
-  + archive digests vs the committed release manifest; cwd/umask/TZ/
-  delayed-run determinism fixtures; CI job.
-- M4.12 OPEN (docs) — consistency close: README rewrite (audit story: E--
-  UI + exception verbs, question support boundary, derived-artifact
-  families + TCB closure naming, Running: `ui.py`/`dist.py`, adjudication
-  + rejection workflow, query/answer/graph semantics, distribution +
-  integrity-vs-replay, loopback security posture, licensing prose);
-  guideline README + queue/rounds touch-ups; polish-register
-  reconciliation (pulled rows pruned with acceptance evidence, deferred
-  UI hardening rows appended with acceptance checks).
+- M4.13 OPEN (kernel) — review-UI design-law close, last M4 unit (no new
+  tabs/routes; production surface = the shipped review UI + these
+  deltas): apply the design law to shipped pages — build_doc_page stale
+  panel + build_review_page subject panel lose visible digests/hex +
+  `bundle differs` for plain language per the design-law wording,
+  reviewer label plain (`as entered; not verified`), scope line in the
+  shared page chrome; review-form CSS styling pass (site design system);
+  print-clean; copy-register lint gate = committed check over ui.py
+  emitted strings (emoji, gradient/animation CSS props, marketing
+  lexemes, relative-time patterns, exclamatory copy) + red fixtures —
+  consumes the two pulled polish rows (plumbing copy, form CSS; prune at
+  close). Wholesale golden regen under the AM6 hazard law (diff churn vs
+  contract before crediting green), fixture update, full check + battery
+  green, chromiumfish visual QA. Docs close (absorbs old 4.12,
+  review-scoped): README audit story (E-- UI + exception verbs,
+  adjudication + rejection workflow, shipped question/answer/trace
+  families + TCB closure naming, Running: `ui.py`, loopback security
+  posture, licensing prose), guideline README + queue/rounds touch-ups,
+  polish-register reconciliation. Milestone close per M1/M3 convention:
+  M4 detail → `.agent/archive/m4.md`, live-law pointers (README +
+  CLAUDE.md design law + Standing-direction tab law), roadmap slimmed.
 
 - Unit gauges: M4.1 main=88% 212K close, mate=100% 239K (rev; map 69%
   test 71% rev2 57%). M4.2 main=94% 226K pre-compaction mid-close (33%
@@ -442,17 +374,17 @@ statements (S); M4.2 vs the coverage gate + digest machinery (M); M4.3 +
 M4.4 = the split that replaced the one-window-refuted UI unit (M4.3
 largest E-- authoring, hard checkpoint at view-model contract; M4.4
 narrow but adversarial); M4.5 vs M3.1/M3.2 compiler analogs (202-224K ⇒
-narrowest possible grammar, oracle prep banked in parallel); M4.6-M4.8
-each single-concern compiler modes; M4.9/M4.10 UI increments on the
-M4.3 chassis; M4.11 vs M1.5-style port + new determinism fixtures;
-M4.12 docs. Kernel units take the full portfolio battery
+narrowest possible grammar, oracle prep banked in parallel); M4.6/M4.7
+single-concern compiler modes; M4.13 = copy/CSS/lint/docs increment on
+the M4.3 chassis w/ the AM6 regen machinery — smallest M4 unit, ≤1
+window. Kernel units take the full portfolio battery
 (test/orc/rev/rev2 where `oracle`); prod-tagged artifacts ride their
 named validator.
 
 Assurance: durable gates = `python3 -P tools/goal.py check` + `python3
 -P tools/regen.py --check`, extended in-place per unit (adjudication +
-review-manifest, query/answer/trace/graph freshness + inventory
-bijections, dist attestation regeneration); every contract-defining
+review-manifest, query/answer/trace freshness + inventory bijections,
+M4.13's copy-register lint); every contract-defining
 fixture set lands committed and check-reachable, scratch campaigns
 supplemental; the UI mutation path is the sole new write surface,
 guarded by the shared validator + safety battery.
@@ -465,3 +397,124 @@ beyond the loopback CSRF posture, TLS; JavaScript or any browser-side
 computation; WASM Prolog; append-only verdict event history (git +
 batch commits = the record); defeasibility; serving APIs (standing
 direction unchanged for downstream consumers).
+
+## M5 — query demonstrator tab — PARKED
+
+Precondition: user promotes after M4 closes; refresh the plan in a
+fresh session at promotion (M2 precedent). Consumes the shipped
+M4.5–M4.7 artifacts (committed queries/answers/traces); develops +
+wires per the Standing-direction tab law; governing law = CLAUDE.md
+design law + the archived M4 UI/result-algebra rulings; M4.13's
+copy-register lint covers the new pages by construction. Banked unit
+(old M4.9) — UI query section: picker (committed queries, ACE text),
+per-solution answer tables (verbatim KB atom values; closed cardinality
+operators as symbols per the design law; yes/no/indeterminate rendered
+distinctly in design-law wording); primary trace chain = answer →
+`% S<n>` ACE sentence → doc view → source region, formal derivation
+(quoted pl clauses) = per-step collapsible disclosure; all-answer route
+closure gate against the committed join; hostile fixtures; serve time =
+committed artifacts only. Final unit wires the tab (nav + goldens +
+full-UI QA).
+
+## M6 — semantic graph explorer tab — PARKED
+
+Precondition: user promotes; refresh the plan in a fresh session at
+promotion (M2 precedent). Units = banked old M4.8 (graph artifact) +
+old M4.10 (views) + final wire-in per the Standing-direction tab law.
+Design-intent anchors = `.agent/mockups/network-revised.png` (entity
+exploration, the target) + `network.png` (rejected counterexample:
+artifact/review-process framing).
+
+- Ruling (moved from M4): knowledge graph = the typed SEMANTIC graph,
+  not all-pairs resolution (probe: 2.75M unifiable pairs ⇒ rejected):
+  nodes = entity nouns, event/property lemmas, documents; edges typed
+  from the v1 vocabulary — argument participation (event↔entity w/
+  position), prepositional attachment, operator wrapping (modality/
+  negation), rule antecedent→consequent flow, document membership —
+  aggregated at vocabulary level with per-edge sentence-coordinate
+  attribution, size-bounded on the live corpus. Query highlighting
+  selects the semantic subgraph a trace's clauses touch. Purpose =
+  end-user exploration of entity relationships — selecting a node (e.g.
+  the opioid-prescription event) reveals its typed neighborhood (the
+  approach events/properties it connects to via rule flow + argument
+  participation, the patient classes those attach to) with
+  sentence-level attribution into doc views; never a pipeline/
+  provenance/review-process visualization (adjudication state stays in
+  the reviewer section). Mockup boundary: no NL summary prose (no
+  runtime LLM — panels render ACE sentences + verbatim payloads); node
+  labels + classes stay vocabulary-level/structural (domain groupings
+  like "approach"/"patient group" surface only where derivable from
+  graph structure — corpus data owns domain rules); search + saved
+  views stay out of v1. Derived-artifact machinery rides the M4
+  compiler-closure ruling (smallest auditable closure).
+- Graph artifact (old M4.8; kernel, oracle) — semantic knowledge graph:
+  the typed vocabulary-aggregated graph per the ruling above,
+  differential-oracled on synthetic corpora (variable renaming, NAF,
+  modal contexts, self/cross-doc edges, non-unifiable controls) +
+  size/performance-gated on the live corpus; committed
+  `guidelines/<id>/graph.pl` (node rows carry display labels — lexicon
+  surface form where provided, verbatim atom otherwise — so serve time
+  never parses the lexicon), freshness by re-derivation byte-compare;
+  node/edge counts printed by the meter.
+- Graph views (old M4.10; kernel) — UI graph section, small views by
+  construction (no global-hairball page, no zoom machinery): overview =
+  typed entity index (nodes grouped by kind w/ degree + document
+  counts, every entry a link); node view `?node=<id>` = the ego
+  subgraph — focused node + typed 1-hop neighborhood laid out in
+  columnar layers by edge class/direction (documents ← focus →
+  participating events/entities → their classes), detail panel
+  enumerating the node's edges grouped by edge type w/ per-edge
+  sentence attributions linking doc views → source regions; query view
+  `?query=<qid>` = the trace-touched subgraph alone; every rendered
+  node = a link target; edge-type pagination when a neighborhood
+  overflows; labels = `graph.pl` display labels; only
+  sentence-attributed edges render — no inferred/transitive edges.
+  Integer-grid deterministic layout (no floats/transcendentals in
+  emitted coordinates; explicit decimal formatting), SVG DOM node/edge/
+  link bijection + exact per-view set-equality gates vs `graph.pl`,
+  bounds/non-overlap invariants, headless visual QA; serve time =
+  endpoint filtering of committed `graph.pl`, no new derivation.
+
+## M7 — portable KB distribution — PARKED
+
+Precondition: user promotes (independent of M5/M6 — the attestation
+covers the artifact families existing at build; family-extensible
+release manifest, later tabs extend it); refresh the plan in a fresh
+session at promotion. The include/canonicalization/rights contract may
+be banked by scout any time.
+
+- Ruling (moved from M4): distribution = manifest-driven deterministic
+  archive of `guidelines/**` + generated KB docs + release-manifest
+  attestation; UI/tools/vendor/.agent excluded by construction.
+  Per-guideline distribution profile
+  (`redistributable|reconstructable|restricted`) machine-validated from
+  structured rights rows; missing/ambiguous rights fail closed. Build
+  refuses while any live rejected verdict exists; unreviewed/stale ship
+  labeled with their adjudication class in the release manifest. Dist
+  NOTICE separates first-party licenses, compiler-derived outputs, and
+  per-source rights records — recorded licenses/rights only, no legal
+  conclusions. Verification from a bare extracted copy =
+  tool-independent member-digest manifest (`sha256sum`-checkable); full
+  regeneration = the attested monorepo revision (integrity and replay
+  are different claims, both documented).
+- Dist unit (old M4.11; kernel; archive/docs artifacts = prod behind
+  the verifier) — portable KB dist: `tools/dist.emm` `build|--check` —
+  include/exclude manifest schema, per-guideline distribution profiles
+  (machine-validated structured rights rows — carries the
+  source-custody polish row's machine-validation into dist
+  eligibility), refuse-on-live-rejected + adjudication classes labeled
+  in the release manifest, generated KB README (schema pointer,
+  integrity-vs-replay commands, rights quotes) + dist NOTICE per the
+  licensing ruling, release-manifest attestation (sources + ledgers +
+  ACE + ulex + PL + queries + answers + traces (+ graph once M6 lands)
+  + compiler-closure/SWI identity + replay commands) regenerated
+  byte-identically by `goal.py check` + verified from a bare extracted
+  copy by documented `sha256sum` command — the
+  consumer-release-manifest polish row's acceptance verbatim (prune at
+  close); deterministic tar.gz (canonical member order/path/mode/uid/
+  gid/uname/mtime + gzip mtime/name/OS pinned; symlinks/special files
+  reject) into gitignored `dist/`; `--check` = two builds into fresh
+  destinations byte-compared + archive digests vs the committed release
+  manifest; cwd/umask/TZ/delayed-run determinism fixtures; CI job.
+  README dist/query/graph audit-story sections land with their
+  milestones' own close docs.
