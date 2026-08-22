@@ -80,8 +80,14 @@ region(s), projection notes and compiled Prolog, and records
 approve/reject + comment verdicts in a gated audit ledger; a
 preloaded-query demonstrator whose answers derive from the compiled
 Prolog alone and trace answer → Prolog → ACE → source; a knowledge-graph
-view with query-path highlighting; a deterministic KB distribution build
-shipping the knowledge artifacts without UI/tools/vendor.
+view for semantic-entity exploration (node-focus + query-path
+highlighting); a deterministic KB distribution build shipping the
+knowledge artifacts without UI/tools/vendor. Design-intent anchors =
+`.agent/mockups/`: `review.png` (adjudication UI, ballpark-approved),
+`network-revised.png` (graph = entity exploration), `network.png`
+(rejected counterexample: artifact/review-process framing). Post-close,
+user-led style iteration against the approved mockups
+(functionality-stable) is planned on demand.
 
 Plan reviewed adversarially at planning time: `planrev-m4` report =
 `.scratch/agents/planrev-m4.md` (8 lenses; the unit split, tiers, graph
@@ -177,7 +183,19 @@ Architecture rulings:
   antecedent→consequent flow, document membership — aggregated at
   vocabulary level with per-edge sentence-coordinate attribution,
   size-bounded on the live corpus. Query highlighting selects the
-  semantic subgraph a trace's clauses touch.
+  semantic subgraph a trace's clauses touch. Purpose = end-user
+  exploration of entity relationships — selecting a node (e.g. the
+  opioid-prescription event) reveals its typed neighborhood (the
+  approach events/properties it connects to via rule flow + argument
+  participation, the patient classes those attach to) with
+  sentence-level attribution into doc views; never a pipeline/
+  provenance/review-process visualization (adjudication state stays in
+  the reviewer section). Mockup boundary: no NL summary prose (no
+  runtime LLM — panels render ACE sentences + verbatim payloads); node
+  labels + classes stay vocabulary-level/structural (domain groupings
+  like "approach"/"patient group" surface only where derivable from
+  graph structure — corpus data owns domain rules); search + saved
+  views stay out of v1.
 - Distribution = manifest-driven deterministic archive of
   `guidelines/**` + generated KB docs + release-manifest attestation;
   UI/tools/vendor/.agent excluded by construction. Per-guideline
@@ -347,9 +365,17 @@ lands; only the shared-file implementations serialize.
 - M4.10 OPEN (kernel) — UI graph section: integer-grid deterministic
   layout (no floats/transcendentals in emitted coordinates; explicit
   decimal formatting), SVG DOM node/edge/link bijection gates vs
-  `graph.pl`, bounds/non-overlap invariants, exact highlighted-set
-  equality per query (`?query=<qid>` dims the complement), zoom =
-  scale-parameter links, pan = scroll, multi-scale headless visual QA.
+  `graph.pl`; primary interaction = node-focus exploration (every
+  rendered node = a link target; `?node=<id>` highlights the node +
+  its typed neighborhood, dims the complement, and renders a detail
+  panel enumerating the node's edges grouped by edge type w/ per-edge
+  sentence attributions linking doc views → source regions; serve time
+  = endpoint filtering of committed `graph.pl`, no new derivation),
+  exact highlighted-set + panel-set equality gates per focused node;
+  secondary = query highlighting (`?query=<qid>` dims the complement
+  of the trace-touched subgraph); bounds/non-overlap invariants, zoom
+  = scale-parameter links, pan = scroll, multi-scale headless visual
+  QA.
 - M4.11 OPEN (kernel; archive/docs artifacts = prod behind the verifier)
   — portable KB dist: `tools/dist.emm` `build|--check` — include/exclude
   manifest schema, per-guideline distribution profiles (machine-validated
