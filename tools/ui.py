@@ -238,6 +238,48 @@ def list_stems(dir_path, suffix):
                     if name_text.endswith(suffix):
                         stems.append(name_text.removesuffix(suffix))
     return sorted(stems)
+def valid_asset_name(name_text):
+    if not name_text:
+        return False
+    if name_text.startswith("."):
+        return False
+    for ch in name_text:
+        allowed = False
+        if ch.isascii():
+            if ch.isalnum():
+                allowed = True
+        if ch == ".":
+            allowed = True
+        if ch == "_":
+            allowed = True
+        if ch == "-":
+            allowed = True
+        if not allowed:
+            return False
+    return True
+def asset_media_type(name_text):
+    if name_text.endswith(".txt"):
+        return "text/plain; charset=utf-8"
+    if name_text.endswith(".pdf"):
+        return "application/pdf"
+    return ""
+def source_assets(guideline_path):
+    names = []
+    source_dir = guideline_path.joinpath("source")
+    if source_dir.is_symlink():
+        return names
+    if not source_dir.is_dir():
+        return names
+    for entry in sorted(source_dir.iterdir()):
+        usable = entry.is_file()
+        if entry.is_symlink():
+            usable = False
+        if usable:
+            name_text = entry.name
+            if valid_asset_name(name_text):
+                if asset_media_type(name_text):
+                    names.append(name_text)
+    return names
 def readme_title(guideline_path, gid):
     readme_path = guideline_path.joinpath("README.md")
     try:
@@ -290,14 +332,6 @@ def humanize_section(section_text):
         out_segs.append(seg)
     title_joiner = " · "
     return title_joiner.join(out_segs)
-def human_page(page_text):
-    trimmed = page_text.strip()
-    if not trimmed.startswith("p"):
-        return trimmed
-    number = trimmed.removeprefix("p")
-    if not number.isdigit():
-        return trimmed
-    return "page " + number
 def human_date(date_text):
     if not date_text.endswith("Z"):
         return date_text
@@ -665,6 +699,16 @@ def build_guideline_model(root_path, gid):
     model.update({"title_by_docid": title_by_docid})
     model.update({"page_by_docid": page_by_docid})
     model.update({"file_by_docid": file_by_docid})
+    source_names = source_assets(guideline_path)
+    pdf_names = []
+    for name_text in source_names:
+        if name_text.endswith(".pdf"):
+            pdf_names.append(name_text)
+    pdf_name = ""
+    if len(pdf_names) == 1:
+        pdf_name = pdf_names.pop(0)
+    model.update({"source_names": source_names})
+    model.update({"pdf_name": pdf_name})
     model.update({"payload_by_docid": payload_by_docid})
     model.update({"kept_by_docid": kept_by_docid})
     model.update({"dropped_by_docid": dropped_by_docid})
@@ -749,7 +793,10 @@ def build_css():
     lines.append(".skip { position: absolute; left: -999px; top: 0; padding: 0.5rem 1rem; background: " + body_bg + "; color: " + link_fg + "; }")
     lines.append(".skip:focus { left: 0; z-index: 1; }")
     lines.append("nav.crumbs { padding: 1rem 0; border-bottom: 1px solid " + line_color + "; }")
-    lines.append("h1 { font-size: 1.6rem; }")
+    lines.append("h1 { font-size: 1.5rem; }")
+    lines.append("h2 { font-size: 1.25rem; }")
+    lines.append("h3 { font-size: 1.05rem; }")
+    lines.append("h1 a.source { font-size: 1rem; font-weight: 400; margin-left: 0.5rem; }")
     lines.append("table { border-collapse: collapse; width: 100%; margin: 1rem 0; }")
     lines.append("th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid " + line_color + "; vertical-align: top; }")
     lines.append("th { border-bottom: 2px solid " + body_fg + "; }")
@@ -762,7 +809,7 @@ def build_css():
     lines.append(".chip-unreviewed { color: " + pal_fg("chip-unreviewed") + "; background: " + pal_bg("chip-unreviewed") + "; }")
     lines.append("pre { padding: 0.75rem 1rem; border: 1px solid " + line_color + "; white-space: pre-wrap; overflow-x: auto; }")
     lines.append("pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }")
-    lines.append("pre.src { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }")
+    lines.append("pre.prose { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }")
     lines.append("dt { font-weight: 600; margin-top: 0.6rem; }")
     lines.append("dd { margin-left: 0; }")
     lines.append("summary { cursor: pointer; }")
@@ -1000,38 +1047,49 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     doc_states = model.get("doc_states", {})
     state = doc_states.get(docid, "unreviewed")
     region_by_docid = model.get("region_by_docid", {})
-    section_by_docid = model.get("section_by_docid", {})
     title_by_docid = model.get("title_by_docid", {})
-    page_by_docid = model.get("page_by_docid", {})
     file_by_docid = model.get("file_by_docid", {})
     payload_by_docid = model.get("payload_by_docid", {})
     kept_by_docid = model.get("kept_by_docid", {})
     dropped_by_docid = model.get("dropped_by_docid", {})
+    source_names = model.get("source_names", [])
+    pdf_name = model.get("pdf_name", "")
+    guideline_title = model.get("title", gid)
     doc_title = title_by_docid.get(docid, docid)
     joiner = "\n"
     parts = []
-    parts.append("<h1>" + esc_text(doc_title) + " " + chip_html(state) + "</h1>")
+    head_html = esc_text(guideline_title)
+    if pdf_name:
+        head_html = head_html + " <a class=\"source\" href=\"../source/" + url_seg(pdf_name) + "\">PDF</a>"
+    parts.append("<h1>" + head_html + "</h1>")
+    parts.append("<h2>" + esc_text(doc_title) + " " + chip_html(state) + "</h2>")
+    file_name = file_by_docid.get(docid, "")
+    base_name = file_name.removeprefix("source/")
+    file_html = esc_text(base_name)
+    published = base_name in source_names
+    if published:
+        file_html = "<a href=\"../source/" + url_seg(base_name) + "\">" + esc_text(base_name) + "</a>"
+    parts.append("<p>" + esc_text(region_by_docid.get(docid, "")) + " · " + file_html + "</p>")
     if state == "stale":
         parts.append("<section class=\"stale\">")
         parts.append("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>")
         parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>Source passage " + esc_text(region_by_docid.get(docid, "")) + "</h2>")
-    parts.append("<p>" + esc_text(section_by_docid.get(docid, "")) + " · " + esc_text(human_page(page_by_docid.get(docid, ""))) + " · " + esc_text(file_by_docid.get(docid, "")) + "</p>")
-    parts.append("<pre class=\"src\">" + esc_text(payload_by_docid.get(docid, "")) + "</pre>")
+    parts.append("<h3>Original passage</h3>")
+    parts.append("<pre class=\"prose\">" + esc_text(payload_by_docid.get(docid, "")) + "</pre>")
     parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>Attempto Controlled English (ACE)</h2>")
-    parts.append("<pre>" + esc_text(doc_data.get("ace_text", "")) + "</pre>")
+    parts.append("<h3>Attempto Controlled English (ACE)</h3>")
+    parts.append("<pre class=\"prose\">" + esc_text(doc_data.get("ace_text", "")) + "</pre>")
     parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>Differences from the source</h2>")
+    parts.append("<details>")
+    parts.append("<summary>Differences from the source</summary>")
     parts.append("<dl>")
     parts.append("<dt>Kept from the source</dt><dd>" + esc_text(kept_by_docid.get(docid, "")) + "</dd>")
     parts.append("<dt>Left out or approximated</dt><dd>" + esc_text(dropped_by_docid.get(docid, "")) + "</dd>")
     parts.append("</dl>")
-    parts.append("</section>")
-    parts.append("<section>")
+    parts.append("</details>")
     parts.append("<details>")
     parts.append("<summary>Compiled Prolog (" + str(doc_data.get("pl_lines", 0)) + " lines)</summary>")
     parts.append("<pre>" + esc_text(doc_data.get("pl_text", "")) + "</pre>")
@@ -1171,6 +1229,7 @@ def resolve_href(page_path, href_value):
 def render_pages(models):
     page_order = []
     pages = {}
+    asset_paths = {}
     page_order.append("index.html")
     pages.update({"index.html": build_index_page(models)})
     meter_lines = []
@@ -1178,6 +1237,10 @@ def render_pages(models):
         gid = model.get("gid", "")
         docids = model.get("docids", [])
         counts = model.get("counts", {})
+        guideline_path = model.get("path", None)
+        for name_text in model.get("source_names", []):
+            asset_rel = "g/" + url_seg(gid) + "/source/" + url_seg(name_text)
+            asset_paths.update({asset_rel: guideline_path.joinpath("source", name_text)})
         gid_page = "g/" + url_seg(gid) + "/index.html"
         page_order.append(gid_page)
         pages.update({gid_page: build_guideline_page(model)})
@@ -1210,10 +1273,13 @@ def render_pages(models):
             if resolved != "#":
                 known = resolved in pages
                 if not known:
+                    known = resolved in asset_paths
+                if not known:
                     return err("ui: viewmodel: dangling href " + page_path + " " + href_value)
     bundle = {}
     bundle.update({"page_order": page_order})
     bundle.update({"pages": pages})
+    bundle.update({"asset_paths": asset_paths})
     bundle.update({"meter_lines": meter_lines})
     return ok(bundle)
 def render_tree(root_path, out_path):
@@ -1234,9 +1300,17 @@ def render_tree(root_path, out_path):
         page_text = pages.get(page_path, "")
         page_bytes = page_text.encode("utf-8")
         full_path.write_bytes(page_bytes)
+    asset_paths = bundle.get("asset_paths", {})
+    asset_rels = sorted(asset_paths)
+    for asset_rel in asset_rels:
+        full_path = out_path.joinpath(asset_rel)
+        parent_dir = full_path.parent
+        parent_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(asset_paths.get(asset_rel), full_path)
     result = {}
     result.update({"guidelines": len(models)})
     result.update({"pages_total": len(page_order)})
+    result.update({"asset_rels": asset_rels})
     result.update({"meter_lines": bundle.get("meter_lines", [])})
     return ok(result)
 def walk_files(base_path):
@@ -1403,6 +1477,9 @@ h5_referrer = tuple(["Referrer-Policy", "no-referrer"])
 h5_cache = tuple(["Cache-Control", "no-store"])
 def base_headers():
     return [h5_content_type, h5_csp, h5_nosniff, h5_referrer, h5_cache]
+def asset_headers(media_type):
+    content_type = tuple(["Content-Type", media_type])
+    return [content_type, h5_csp, h5_nosniff, h5_referrer, h5_cache]
 def not_found_response():
     body_html = "<p>The requested page does not exist.</p>"
     page_text = build_error_page("Not found", "Not found", body_html)
@@ -1730,6 +1807,22 @@ def respond(root_path, method_text, path_text, meta):
         gid_seg = segs.pop(0)
         mid_seg = segs.pop(0)
         leaf_seg = segs.pop(0)
+        if mid_seg == "source":
+            model = model_by_gid.get(gid_seg, None)
+            if model == None:
+                return not_found_response()
+            source_names = model.get("source_names", [])
+            published = leaf_seg in source_names
+            if not published:
+                return not_found_response()
+            asset_path = model.get("path", None)
+            asset_path = asset_path.joinpath("source", leaf_seg)
+            asset_bytes = bytes()
+            try:
+                asset_bytes = asset_path.read_bytes()
+            except OSError:
+                return not_found_response()
+            return ["200 OK", asset_headers(asset_media_type(leaf_seg)), asset_bytes]
         mid_known = False
         if mid_seg == "doc":
             mid_known = True
@@ -1879,11 +1972,13 @@ def check_ui_command(args):
     path_two = pathlib.Path(dir_two)
     detail = ""
     summary = {}
+    asset_rels = []
     result_one = render_tree(root_path, path_one)
     if result_kind(result_one) == "err":
         detail = result_value(result_one)
     else:
         summary = result_value(result_one)
+        asset_rels = summary.get("asset_rels", [])
         result_two = render_tree(root_path, path_two)
         if result_kind(result_two) == "err":
             detail = result_value(result_two)
@@ -1902,10 +1997,12 @@ def check_ui_command(args):
                 if bytes_one != bytes_two:
                     detail = "ui: render not byte-stable: " + rel_text
                 else:
-                    page_text = bytes_one.decode("utf-8")
-                    invariant_name = page_invariant_name(page_text)
-                    if invariant_name:
-                        detail = "ui: page invariant failed: " + rel_text + " " + invariant_name
+                    copied = rel_text in asset_rels
+                    if not copied:
+                        page_text = bytes_one.decode("utf-8")
+                        invariant_name = page_invariant_name(page_text)
+                        if invariant_name:
+                            detail = "ui: page invariant failed: " + rel_text + " " + invariant_name
     shutil.rmtree(dir_one, ignore_errors=True)
     shutil.rmtree(dir_two, ignore_errors=True)
     if detail:

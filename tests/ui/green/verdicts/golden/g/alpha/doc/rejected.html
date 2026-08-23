@@ -10,7 +10,10 @@ a:focus-visible, summary:focus-visible { outline: 3px solid #1d4ed8; outline-off
 .skip { position: absolute; left: -999px; top: 0; padding: 0.5rem 1rem; background: #ffffff; color: #1d4ed8; }
 .skip:focus { left: 0; z-index: 1; }
 nav.crumbs { padding: 1rem 0; border-bottom: 1px solid #e5e7eb; }
-h1 { font-size: 1.6rem; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+h1 a.source { font-size: 1rem; font-weight: 400; margin-left: 0.5rem; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
 th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
 th { border-bottom: 2px solid #111827; }
@@ -23,7 +26,7 @@ table.compact th, table.compact td { padding-right: 2rem; }
 .chip-unreviewed { color: #1f2937; background: #e5e7eb; }
 pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; white-space: pre-wrap; overflow-x: auto; }
 pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }
-pre.src { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }
+pre.prose { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }
 dt { font-weight: 600; margin-top: 0.6rem; }
 dd { margin-left: 0; }
 summary { cursor: pointer; }
@@ -54,25 +57,26 @@ a { color: inherit; text-decoration: none; }
 <a class="skip" href="#main">Skip to content</a>
 <nav class="crumbs"><a href="../../../index.html">guidelines</a> / <a href="../index.html">alpha</a> / rejected</nav>
 <main id="main">
-<h1>Fixture section (r2) <span class="chip chip-rejected">Rejected</span></h1>
+<h1>alpha <a class="source" href="../source/handbook.pdf">PDF</a></h1>
+<h2>Fixture section (r2) <span class="chip chip-rejected">Rejected</span></h2>
+<p>r2 · <a href="../source/evidence.txt">evidence.txt</a></p>
 <section>
-<h2>Source passage r2</h2>
-<p>Fixture section · page 1 · source/evidence.txt</p>
-<pre class="src">Rejected payload.</pre>
+<h3>Original passage</h3>
+<pre class="prose">Rejected payload.</pre>
 </section>
 <section>
-<h2>Attempto Controlled English (ACE)</h2>
-<pre>A reviewer should inspect rejected.
+<h3>Attempto Controlled English (ACE)</h3>
+<pre class="prose">A reviewer should inspect rejected.
 </pre>
 </section>
 <section>
-<h2>Differences from the source</h2>
+<details>
+<summary>Differences from the source</summary>
 <dl>
 <dt>Kept from the source</dt><dd>directive retained</dd>
 <dt>Left out or approximated</dt><dd>no material detail</dd>
 </dl>
-</section>
-<section>
+</details>
 <details>
 <summary>Compiled Prolog (3 lines)</summary>
 <pre>guideline_schema_version(1).

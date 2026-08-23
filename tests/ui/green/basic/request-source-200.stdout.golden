@@ -1,0 +1,18 @@
+HTTP 200
+Content-Type: text/plain; charset=utf-8
+Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+Cache-Control: no-store
+
+Fixture evidence
+Region authority: identify the 3 payloads below
+
+[r10 | p1 | Fixture section]
+Payload selected for z.
+
+[r2 | p1 | Fixture section]
+Payload selected for a-2.
+
+[r1 | p1 | Fixture section]
+Payload selected for a-10.
