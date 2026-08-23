@@ -1,3 +1,4 @@
+import ast
 import datetime
 import hashlib
 import os
@@ -2917,8 +2918,6 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
                 verdict_ok = True
             if not verdict_ok:
                 violation("adjudication", "ledger row " + str(row_number) + " verdict")
-            if not reviewer_field:
-                violation("adjudication", "ledger row " + str(row_number) + " reviewer")
             if not reviewer_text_ok(reviewer_field):
                 violation("adjudication", "ledger row " + str(row_number) + " reviewer")
             if not valid_review_date(date_field):
@@ -3605,7 +3604,240 @@ def run_ui_fixture_case(color, case_name, case_path):
                             violation("ui-fixtures", "manifest stale for case: " + case_name + " " + gid_entry.name)
     if mat_scratch:
         shutil.rmtree(mat_scratch, ignore_errors=True)
+copy_marketing_pattern = "(?i)\\b(simply|seamless|seamlessly|powerful|robust|robustly|leverage|leverages|leveraged|leveraging|effortless|effortlessly|intuitive|streamline|streamlined|unlock|empower|empowering|cutting-edge|state-of-the-art|world-class|blazing|stunning|delightful|revolutionize|game-changing|supercharge|best-in-class|next-generation)\\b"
+copy_relative_time_pattern = "(?i)\\bago\\b|\\bjust now\\b|\\byesterday\\b|\\btomorrow\\b|\\brecently\\b|\\blast (week|month|year)\\b"
+copy_css_tokens = ["linear-gradient", "radial-gradient", "conic-gradient", "@keyframes", "animation", "transition", "backdrop-filter", "box-shadow"]
+def copy_emoji_hit(text):
+    for ch in text:
+        code_point = ord(ch)
+        banned = False
+        if code_point > 126975:
+            if code_point < 129792:
+                banned = True
+        if code_point > 9727:
+            if code_point < 10176:
+                banned = True
+        if code_point > 11007:
+            if code_point < 11264:
+                banned = True
+        if code_point == 65039:
+            banned = True
+        if code_point == 8205:
+            banned = True
+        if banned:
+            return "emoji: U+" + format(code_point, "04X")
+    return ""
+def copy_register_hit(text):
+    emoji_hit = copy_emoji_hit(text)
+    if emoji_hit:
+        return emoji_hit
+    lower_text = text.lower()
+    for css_token in copy_css_tokens:
+        found = css_token in lower_text
+        if found:
+            return "css: " + css_token
+    marketing_match = re.search(copy_marketing_pattern, text)
+    if marketing_match:
+        return "marketing: " + marketing_match.group(0)
+    relative_match = re.search(copy_relative_time_pattern, text)
+    if relative_match:
+        return "relative-time: " + relative_match.group(0)
+    exclaim_match = re.search("[A-Za-z0-9]!", text)
+    if exclaim_match:
+        return "exclamatory: " + exclaim_match.group(0)
+    return ""
+def copy_scan_source(source_text):
+    hits = []
+    literal_count = 0
+    tree = ast.parse(source_text)
+    constant_type = getattr(ast, "Constant")
+    for node in ast.walk(tree):
+        is_const = isinstance(node, constant_type)
+        if is_const:
+            value_obj = getattr(node, "value", None)
+            is_str = isinstance(value_obj, str)
+            if is_str:
+                literal_count = literal_count + 1
+                hit_text = copy_register_hit(value_obj)
+                if hit_text:
+                    line_no = getattr(node, "lineno", 0)
+                    hits.append(str(line_no) + " " + hit_text)
+    return [hits, literal_count]
+def copy_fixture_case(color, case_name, case_path):
+    source_path = case_path.joinpath("source.txt")
+    if source_path.is_symlink():
+        violation("copy-fixtures", "source is a symlink: " + color + "/" + case_name)
+    if not source_path.is_file():
+        violation("copy-fixtures", "missing source.txt: " + color + "/" + case_name)
+    read_ok = True
+    source_text = ""
+    try:
+        source_text = source_path.read_text(encoding="utf-8")
+    except OSError:
+        read_ok = False
+    except UnicodeDecodeError:
+        read_ok = False
+    if not read_ok:
+        violation("copy-fixtures", "unreadable source.txt: " + color + "/" + case_name)
+    scan_ok = True
+    scan_pair = []
+    try:
+        scan_pair = copy_scan_source(source_text)
+    except SyntaxError:
+        scan_ok = False
+    except ValueError:
+        scan_ok = False
+    if not scan_ok:
+        violation("copy-fixtures", "unparseable source.txt: " + color + "/" + case_name)
+    hits = scan_pair.pop(0)
+    expect_path = case_path.joinpath("expect.txt")
+    if color == "red":
+        if not expect_path.is_file():
+            violation("copy-fixtures", "missing expect.txt: red/" + case_name)
+        expect_text = expect_path.read_text(encoding="utf-8")
+        if not hits:
+            violation("copy-fixtures", "red case produced no hits: " + case_name)
+        joiner = "\n"
+        actual_text = joiner.join(hits) + "\n"
+        if actual_text != expect_text:
+            violation("copy-fixtures", "hit mismatch: red/" + case_name)
+    else:
+        if expect_path.exists():
+            violation("copy-fixtures", "unexpected expect.txt: green/" + case_name)
+        if hits:
+            first_hit = hits.pop(0)
+            violation("copy-fixtures", "green case produced a hit: " + case_name + " " + first_hit)
+def check_copy_register():
+    ui_path = pathlib.Path("tools/ui.py")
+    read_ok = True
+    ui_source = ""
+    try:
+        ui_source = ui_path.read_text(encoding="utf-8")
+    except OSError:
+        read_ok = False
+    except UnicodeDecodeError:
+        read_ok = False
+    if not read_ok:
+        violation("copy", "cannot read tools/ui.py")
+    ui_marker = "def page_invariant_name("
+    marker_present = ui_marker in ui_source
+    if not marker_present:
+        violation("copy", "scan target is not the generated UI module")
+    scan_ok = True
+    scan_pair = []
+    try:
+        scan_pair = copy_scan_source(ui_source)
+    except SyntaxError:
+        scan_ok = False
+    except ValueError:
+        scan_ok = False
+    if not scan_ok:
+        violation("copy", "tools/ui.py does not parse")
+    ui_hits = scan_pair.pop(0)
+    literal_count = scan_pair.pop(0)
+    for hit_line in ui_hits:
+        violation("copy", "tools/ui.py:" + hit_line)
+    print("goal: copy ok " + str(literal_count) + " literals")
+    fixtures_root = pathlib.Path("tests/copy")
+    if fixtures_root.is_symlink():
+        violation("copy-fixtures", "is a symlink: " + str(fixtures_root))
+    if not fixtures_root.is_dir():
+        violation("copy-fixtures", "missing: " + str(fixtures_root))
+    red_required = ["copy-css-animation", "copy-css-backdrop", "copy-css-boxshadow", "copy-css-gradient", "copy-css-keyframes", "copy-css-transition", "copy-emoji", "copy-exclamatory", "copy-marketing", "copy-relative-time"]
+    green_required = ["copy-clean", "copy-lookalike"]
+    red_count = 0
+    green_count = 0
+    red_names = []
+    green_names = []
+    colors = ["green", "red"]
+    for color in colors:
+        color_path = fixtures_root.joinpath(color)
+        if color_path.is_symlink():
+            violation("copy-fixtures", "is a symlink: " + color)
+        if not color_path.is_dir():
+            violation("copy-fixtures", "missing directory: " + color)
+        for entry in sorted(color_path.iterdir()):
+            entry_name = entry.name
+            if entry.is_symlink():
+                violation("copy-fixtures", "not a case directory: " + entry_name)
+            if not entry.is_dir():
+                violation("copy-fixtures", "not a case directory: " + entry_name)
+            if not valid_docid(entry_name):
+                violation("copy-fixtures", "invalid case name: " + entry_name)
+            copy_fixture_case(color, entry_name, entry)
+            if color == "red":
+                red_count = red_count + 1
+                red_names.append(entry_name)
+            else:
+                green_count = green_count + 1
+                green_names.append(entry_name)
+    for required_name in red_required:
+        present = required_name in red_names
+        if not present:
+            violation("copy-fixtures", "missing required case: red/" + required_name)
+    for required_name in green_required:
+        present = required_name in green_names
+        if not present:
+            violation("copy-fixtures", "missing required case: green/" + required_name)
+    if red_count != 10:
+        violation("copy-fixtures", "red case count drift: expected 10 got " + str(red_count))
+    if green_count != 2:
+        violation("copy-fixtures", "green case count drift: expected 2 got " + str(green_count))
+    print("goal: copy fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
+def chain_call_name(chain_stmt):
+    is_expr = isinstance(chain_stmt, getattr(ast, "Expr"))
+    if not is_expr:
+        return ""
+    value_obj = getattr(chain_stmt, "value", None)
+    is_call = isinstance(value_obj, getattr(ast, "Call"))
+    if not is_call:
+        return ""
+    func_obj = getattr(value_obj, "func", None)
+    is_name = isinstance(func_obj, getattr(ast, "Name"))
+    if not is_name:
+        return ""
+    return getattr(func_obj, "id", "")
+def check_copy_chain_slot():
+    goal_path = pathlib.Path("tools/goal.py")
+    read_ok = True
+    goal_source = ""
+    try:
+        goal_source = goal_path.read_text(encoding="utf-8")
+    except OSError:
+        read_ok = False
+    except UnicodeDecodeError:
+        read_ok = False
+    if not read_ok:
+        violation("copy-chain", "cannot read tools/goal.py")
+    parse_ok = True
+    tree = None
+    try:
+        tree = ast.parse(goal_source)
+    except SyntaxError:
+        parse_ok = False
+    except ValueError:
+        parse_ok = False
+    if not parse_ok:
+        violation("copy-chain", "tools/goal.py does not parse")
+    def_type = getattr(ast, "FunctionDef")
+    slot_ok = False
+    expect_next = False
+    for node in ast.walk(tree):
+        is_def = isinstance(node, def_type)
+        if is_def:
+            if getattr(node, "name", "") == "check_command":
+                for chain_stmt in getattr(node, "body", []):
+                    call_name = chain_call_name(chain_stmt)
+                    if expect_next:
+                        if call_name == "check_copy_register":
+                            slot_ok = True
+                        expect_next = False
+                    if call_name == "check_ui":
+                        expect_next = True
+    if not slot_ok:
+        violation("copy-chain", "check_command must call check_copy_register directly after check_ui")
 def check_ui():
+    check_copy_chain_slot()
     command = [sys.executable, "-P", "tools/ui.py", "check"]
     result = subprocess.run(command, capture_output=True)
     if result.returncode != 0:
@@ -3639,7 +3871,7 @@ def check_ui():
         violation("ui-fixtures", "is a symlink: " + str(fixtures_root))
     if not fixtures_root.is_dir():
         violation("ui-fixtures", "missing: " + str(fixtures_root))
-    red_required = ["digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-create", "verdict-ok-replace", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
+    red_required = ["copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-create", "verdict-ok-replace", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
     green_required = ["basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
     red_count = 0
     green_count = 0
@@ -3751,6 +3983,7 @@ def check_command():
         corpus_lexicon_path = record_copy.pop(0)
         check_corpus(corpus_path, corpus_ace_paths, corpus_docids, corpus_lexicon_path)
     check_ui()
+    check_copy_register()
     swipl_executable = resolve_swipl()
     scratch_path = make_scratch()
     stage_path = stage_ape(scratch_path, swipl_executable)

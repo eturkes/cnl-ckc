@@ -259,6 +259,76 @@ def readme_title(guideline_path, gid):
             if heading:
                 return ok(heading)
     return ok(gid)
+def humanize_section(section_text):
+    segs = []
+    for raw_seg in section_text.split(">"):
+        seg = raw_seg.strip()
+        if seg:
+            segs.append(seg)
+    if len(segs) == 0:
+        return ""
+    head = segs.pop(0)
+    head_parts = head.split(" ")
+    head_word = ""
+    head_number = ""
+    if len(head_parts) == 2:
+        head_word = head_parts.pop(0)
+        head_number = head_parts.pop(0)
+        if not head_number.isdigit():
+            head_word = ""
+    out_segs = []
+    if head_word == "Rec":
+        out_segs.append("Recommendation " + head_number)
+    else:
+        drop_head = False
+        if head_word == "BOX":
+            if len(segs) > 0:
+                drop_head = True
+        if not drop_head:
+            out_segs.append(head)
+    for seg in segs:
+        out_segs.append(seg)
+    title_joiner = " · "
+    return title_joiner.join(out_segs)
+def human_page(page_text):
+    trimmed = page_text.strip()
+    if not trimmed.startswith("p"):
+        return trimmed
+    number = trimmed.removeprefix("p")
+    if not number.isdigit():
+        return trimmed
+    return "page " + number
+def human_date(date_text):
+    if not date_text.endswith("Z"):
+        return date_text
+    parts = date_text.removesuffix("Z")
+    parts = parts.split("T")
+    if len(parts) != 2:
+        return date_text
+    day_text = parts.pop(0)
+    time_text = parts.pop(0)
+    return day_text + " " + time_text + " UTC"
+def document_title(docid, section_text, page_text, region_id, shared):
+    base = humanize_section(section_text)
+    if not base:
+        return docid
+    if not shared:
+        return base
+    page_number = page_text.strip()
+    if page_number.startswith("p"):
+        page_number = page_number.removeprefix("p")
+    if not page_number.isdigit():
+        page_number = ""
+    last_part = ""
+    for part in region_id.split("-"):
+        last_part = part
+    passage_number = ""
+    if last_part.isdigit():
+        passage_number = str(int(last_part))
+    if page_number:
+        if passage_number:
+            return base + ", page " + page_number + ", passage " + passage_number
+    return base + " (" + region_id + ")"
 def first_output_line(result):
     stderr_text = result.stderr.decode("utf-8", errors="replace")
     for line_text in stderr_text.splitlines():
@@ -404,6 +474,20 @@ def build_guideline_model(root_path, gid):
                 else:
                     pending_counter = pending_counter + 1
     sorted_docids = sorted(docids)
+    section_doc_counts = {}
+    for docid in sorted_docids:
+        section_text = section_by_docid.get(docid, "")
+        seen_count = section_doc_counts.get(section_text, 0)
+        section_doc_counts.update({section_text: seen_count + 1})
+    title_by_docid = {}
+    for docid in sorted_docids:
+        section_text = section_by_docid.get(docid, "")
+        shared = False
+        if section_doc_counts.get(section_text, 0) > 1:
+            shared = True
+        page_text = page_by_docid.get(docid, "")
+        region_id = region_by_docid.get(docid, "")
+        title_by_docid.update({docid: document_title(docid, section_text, page_text, region_id, shared)})
     ace_stems = list_stems(guideline_path.joinpath("ace"), ".ace")
     for docid in sorted_docids:
         present = docid in ace_stems
@@ -578,6 +662,7 @@ def build_guideline_model(root_path, gid):
     model.update({"docids": sorted_docids})
     model.update({"region_by_docid": region_by_docid})
     model.update({"section_by_docid": section_by_docid})
+    model.update({"title_by_docid": title_by_docid})
     model.update({"page_by_docid": page_by_docid})
     model.update({"file_by_docid": file_by_docid})
     model.update({"payload_by_docid": payload_by_docid})
@@ -668,22 +753,68 @@ def build_css():
     lines.append("table { border-collapse: collapse; width: 100%; margin: 1rem 0; }")
     lines.append("th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid " + line_color + "; vertical-align: top; }")
     lines.append("th { border-bottom: 2px solid " + body_fg + "; }")
+    lines.append("table.compact { width: auto; }")
+    lines.append("table.compact th, table.compact td { padding-right: 2rem; }")
     lines.append(".chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }")
     lines.append(".chip-approved { color: " + pal_fg("chip-approved") + "; background: " + pal_bg("chip-approved") + "; }")
     lines.append(".chip-rejected { color: " + pal_fg("chip-rejected") + "; background: " + pal_bg("chip-rejected") + "; }")
     lines.append(".chip-stale { color: " + pal_fg("chip-stale") + "; background: " + pal_bg("chip-stale") + "; }")
     lines.append(".chip-unreviewed { color: " + pal_fg("chip-unreviewed") + "; background: " + pal_bg("chip-unreviewed") + "; }")
-    lines.append("pre { padding: 0.75rem 1rem; border: 1px solid " + line_color + "; overflow-x: auto; }")
+    lines.append("pre { padding: 0.75rem 1rem; border: 1px solid " + line_color + "; white-space: pre-wrap; overflow-x: auto; }")
     lines.append("pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }")
-    lines.append("pre.src { font-family: Georgia, serif; font-size: 1.05rem; white-space: pre-wrap; overflow-wrap: anywhere; }")
+    lines.append("pre.src { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }")
     lines.append("dt { font-weight: 600; margin-top: 0.6rem; }")
     lines.append("dd { margin-left: 0; }")
     lines.append("summary { cursor: pointer; }")
     lines.append("section { margin: 1.5rem 0; }")
     lines.append("nav.docnav { padding: 1rem 0; border-top: 1px solid " + line_color + "; }")
+    lines.append("footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid " + line_color + "; font-size: 0.9rem; }")
+    lines.append("form label { display: block; margin-top: 1rem; font-weight: 600; }")
+    lines.append("fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }")
+    lines.append("legend { font-weight: 600; padding: 0; }")
+    lines.append("fieldset label { margin-top: 0.5rem; font-weight: 400; }")
+    lines.append("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " + line_color + "; font-family: inherit; font-size: 1rem; color: " + body_fg + "; background: " + body_bg + "; }")
+    lines.append("textarea { min-height: 6rem; }")
+    lines.append("input[type=\"radio\"] { accent-color: " + body_fg + "; }")
+    lines.append("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " + link_fg + "; outline-offset: 2px; }")
+    lines.append("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " + body_fg + "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " + body_bg + "; background: " + body_fg + "; }")
+    lines.append("@media print {")
+    lines.append("body { max-width: none; padding: 0; }")
+    lines.append("nav.crumbs, nav.docnav, .skip, form, .verdict-entry { display: none; }")
+    lines.append("details::details-content { content-visibility: visible; }")
+    lines.append("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }")
+    lines.append("a { color: inherit; text-decoration: none; }")
+    lines.append(".chip { border: 1px solid " + body_fg + "; background: none; color: inherit; }")
+    lines.append("}")
     joiner = "\n"
     return joiner.join(lines)
 css_text = build_css()
+scope_line_text = "This page reports what the loaded guideline documents state. It does not give clinical advice."
+refusal_refused_text = "The request was refused. Open the review page again from this site and submit the decision again."
+refusal_invalid_form_text = "The submitted form was not valid. Go back to the review page, reload it, and submit the decision again."
+refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the review page again and check the current version."
+refusal_ledger_text = "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the review page again and check the current state."
+def comment_safe(detail):
+    safe_chars = []
+    for ch in detail:
+        keep = False
+        if ch.isascii():
+            if ch.isalnum():
+                keep = True
+        if ch == " ":
+            keep = True
+        if ch == ":":
+            keep = True
+        if ch == "_":
+            keep = True
+        if ch == ".":
+            keep = True
+        if keep:
+            safe_chars.append(ch)
+        else:
+            safe_chars.append("_")
+    empty_text = ""
+    return empty_text.join(safe_chars)
 def page_html(title_text, crumb_html, body_html):
     parts = []
     parts.append("<!doctype html>")
@@ -701,6 +832,7 @@ def page_html(title_text, crumb_html, body_html):
     parts.append("<main id=\"main\">")
     parts.append(body_html)
     parts.append("</main>")
+    parts.append("<footer class=\"scope\"><p>" + esc_text(scope_line_text) + "</p></footer>")
     parts.append("</body>")
     parts.append("</html>")
     joiner = "\n"
@@ -728,52 +860,58 @@ def build_index_page(models):
     parts.append("<h1>Guidelines</h1>")
     parts.append("<section>")
     parts.append("<table>")
-    parts.append("<thead><tr><th>guideline</th><th>title</th><th>docs</th><th>regions</th><th>approved</th><th>rejected</th><th>stale</th><th>unreviewed</th></tr></thead>")
+    parts.append("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Stale</th><th>Unreviewed</th></tr></thead>")
     joiner = "\n"
     parts.append("<tbody>" + joiner.join(rows) + "</tbody>")
     parts.append("</table>")
     parts.append("</section>")
     body_html = joiner.join(parts)
-    return page_html("guidelines", "cnl-ckc reviewer", body_html)
+    return page_html("Guidelines", "cnl-ckc reviewer", body_html)
 def build_guideline_page(model):
     gid = model.get("gid", "")
     counts = model.get("counts", {})
     docids = model.get("docids", [])
     doc_states = model.get("doc_states", {})
     region_by_docid = model.get("region_by_docid", {})
-    section_by_docid = model.get("section_by_docid", {})
+    title_by_docid = model.get("title_by_docid", {})
     region_rows = model.get("region_rows", [])
     joiner = "\n"
     empty_text = ""
     parts = []
     parts.append("<h1>" + esc_text(model.get("title", gid)) + "</h1>")
     parts.append("<section>")
-    parts.append("<h2>Meters</h2>")
-    meter_one = "regions=" + str(counts.get("regions", 0)) + " ace=" + str(counts.get("ace", 0)) + " restates=" + str(counts.get("restates", 0)) + " uncovered=" + str(counts.get("uncovered", 0)) + " pending=" + str(counts.get("pending", 0))
-    meter_two = "approved=" + str(counts.get("approved", 0)) + " rejected=" + str(counts.get("rejected", 0)) + " stale=" + str(counts.get("stale", 0)) + " unreviewed=" + str(counts.get("unreviewed", 0))
-    parts.append("<p>" + meter_one + "</p>")
-    parts.append("<p>" + meter_two + "</p>")
+    parts.append("<h2>Status</h2>")
+    parts.append("<table class=\"compact\">")
+    parts.append("<thead><tr><th>Measure</th><th>Count</th></tr></thead>")
+    status_rows = []
+    status_labels = [["Passages", "regions"], ["With ACE", "ace"], ["Restated", "restates"], ["Uncovered", "uncovered"], ["Pending", "pending"], ["Approved", "approved"], ["Rejected", "rejected"], ["Stale", "stale"], ["Unreviewed", "unreviewed"]]
+    for label_pair in status_labels:
+        pair_copy = list(label_pair)
+        label_text = pair_copy.pop(0)
+        count_key = pair_copy.pop(0)
+        status_rows.append("<tr><td>" + label_text + "</td><td>" + str(counts.get(count_key, 0)) + "</td></tr>")
+    parts.append("<tbody>" + joiner.join(status_rows) + "</tbody>")
+    parts.append("</table>")
     parts.append("</section>")
     parts.append("<section>")
     parts.append("<h2>Documents</h2>")
-    parts.append("<table>")
-    parts.append("<thead><tr><th>document</th><th>status</th><th>region</th><th>section</th></tr></thead>")
+    parts.append("<table class=\"compact\">")
+    parts.append("<thead><tr><th>Document</th><th>Status</th><th>Passage</th></tr></thead>")
     doc_rows = []
     for docid in docids:
         state = doc_states.get(docid, "unreviewed")
         cells = []
-        cells.append("<td><a href=\"doc/" + url_seg(docid) + ".html\">" + esc_text(docid) + "</a></td>")
+        cells.append("<td><a href=\"doc/" + url_seg(docid) + ".html\">" + esc_text(title_by_docid.get(docid, docid)) + "</a></td>")
         cells.append("<td>" + chip_html(state) + "</td>")
         cells.append("<td>" + esc_text(region_by_docid.get(docid, "")) + "</td>")
-        cells.append("<td>" + esc_text(section_by_docid.get(docid, "")) + "</td>")
         doc_rows.append("<tr>" + empty_text.join(cells) + "</tr>")
     parts.append("<tbody>" + joiner.join(doc_rows) + "</tbody>")
     parts.append("</table>")
     parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>Regions without ACE</h2>")
-    parts.append("<table>")
-    parts.append("<thead><tr><th>region</th><th>status</th><th>section</th></tr></thead>")
+    parts.append("<h2>Passages without ACE</h2>")
+    parts.append("<table class=\"compact\">")
+    parts.append("<thead><tr><th>Passage</th><th>Status</th><th>Section</th></tr></thead>")
     other_rows = []
     for region_row in region_rows:
         row_copy = list(region_row)
@@ -834,66 +972,59 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     state = doc_states.get(docid, "unreviewed")
     region_by_docid = model.get("region_by_docid", {})
     section_by_docid = model.get("section_by_docid", {})
+    title_by_docid = model.get("title_by_docid", {})
     page_by_docid = model.get("page_by_docid", {})
     file_by_docid = model.get("file_by_docid", {})
     payload_by_docid = model.get("payload_by_docid", {})
     kept_by_docid = model.get("kept_by_docid", {})
     dropped_by_docid = model.get("dropped_by_docid", {})
-    review_by_docid = model.get("review_by_docid", {})
-    ledger_digests = model.get("ledger_digests", {})
+    doc_title = title_by_docid.get(docid, docid)
     joiner = "\n"
     parts = []
-    parts.append("<h1>" + esc_text(docid) + " " + chip_html(state) + "</h1>")
+    parts.append("<h1>" + esc_text(doc_title) + " " + chip_html(state) + "</h1>")
     if state == "stale":
         parts.append("<section class=\"stale\">")
-        parts.append("<h2>Adjudication stale</h2>")
-        parts.append("<p>bundle differs</p>")
-        parts.append("<dl>")
-        parts.append("<dt>pinned review_sha256</dt><dd><code>" + esc_text(ledger_digests.get(docid, "")) + "</code></dd>")
-        parts.append("<dt>current review_sha256</dt><dd><code>" + esc_text(review_by_docid.get(docid, "")) + "</code></dd>")
-        parts.append("</dl>")
+        parts.append("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>")
         parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>Source region " + esc_text(region_by_docid.get(docid, "")) + "</h2>")
-    parts.append("<p>" + esc_text(section_by_docid.get(docid, "")) + " · " + esc_text(file_by_docid.get(docid, "")) + " · " + esc_text(page_by_docid.get(docid, "")) + "</p>")
+    parts.append("<h2>Source passage " + esc_text(region_by_docid.get(docid, "")) + "</h2>")
+    parts.append("<p>" + esc_text(section_by_docid.get(docid, "")) + " · " + esc_text(human_page(page_by_docid.get(docid, ""))) + " · " + esc_text(file_by_docid.get(docid, "")) + "</p>")
     parts.append("<pre class=\"src\">" + esc_text(payload_by_docid.get(docid, "")) + "</pre>")
     parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>ACE</h2>")
+    parts.append("<h2>Attempto Controlled English (ACE)</h2>")
     parts.append("<pre>" + esc_text(doc_data.get("ace_text", "")) + "</pre>")
     parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>Projection notes</h2>")
+    parts.append("<h2>Differences from the source</h2>")
     parts.append("<dl>")
-    parts.append("<dt>kept</dt><dd>" + esc_text(kept_by_docid.get(docid, "")) + "</dd>")
-    parts.append("<dt>dropped</dt><dd>" + esc_text(dropped_by_docid.get(docid, "")) + "</dd>")
+    parts.append("<dt>Kept from the source</dt><dd>" + esc_text(kept_by_docid.get(docid, "")) + "</dd>")
+    parts.append("<dt>Left out or approximated</dt><dd>" + esc_text(dropped_by_docid.get(docid, "")) + "</dd>")
     parts.append("</dl>")
     parts.append("</section>")
     parts.append("<section>")
-    parts.append("<h2>Compiled Prolog</h2>")
     parts.append("<details>")
-    parts.append("<summary>compiled Prolog (" + str(doc_data.get("pl_lines", 0)) + " lines)</summary>")
+    parts.append("<summary>Compiled Prolog (" + str(doc_data.get("pl_lines", 0)) + " lines)</summary>")
     parts.append("<pre>" + esc_text(doc_data.get("pl_text", "")) + "</pre>")
     parts.append("</details>")
     parts.append("</section>")
     nav_parts = []
     if prev_id:
-        nav_parts.append("<a href=\"" + url_seg(prev_id) + ".html\">prev: " + esc_text(prev_id) + "</a>")
-    nav_parts.append("<a href=\"../index.html\">up: " + esc_text(gid) + "</a>")
+        nav_parts.append("<a href=\"" + url_seg(prev_id) + ".html\">Previous document</a>")
+    nav_parts.append("<a href=\"../index.html\">Guideline index</a>")
     if next_id:
-        nav_parts.append("<a href=\"" + url_seg(next_id) + ".html\">next: " + esc_text(next_id) + "</a>")
-    nav_parts.append("<a href=\"../review/" + url_seg(docid) + ".html\">review: " + esc_text(docid) + "</a>")
+        nav_parts.append("<a href=\"" + url_seg(next_id) + ".html\">Next document</a>")
+    nav_parts.append("<a href=\"../review/" + url_seg(docid) + ".html\">Review this document</a>")
     nav_joiner = " · "
     parts.append("<nav class=\"docnav\">" + nav_joiner.join(nav_parts) + "</nav>")
     body_html = joiner.join(parts)
     crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(gid) + "</a> / " + esc_text(docid)
-    return page_html(docid, crumb_html, body_html)
+    return page_html(doc_title, crumb_html, body_html)
 def build_review_page(model, docid):
     gid = model.get("gid", "")
     doc_states = model.get("doc_states", {})
     state = doc_states.get(docid, "unreviewed")
     review_by_docid = model.get("review_by_docid", {})
-    ledger_digests = model.get("ledger_digests", {})
     ledger_rows = model.get("ledger_rows", {})
     ledger_file_digest = model.get("ledger_file_digest", "absent")
     current_digest = review_by_docid.get(docid, "")
@@ -908,22 +1039,31 @@ def build_review_page(model, docid):
         row_reviewer = row_fields.pop(0)
         row_date = row_fields.pop(0)
         row_comment = row_fields.pop(0)
+    title_by_docid = model.get("title_by_docid", {})
+    doc_title = title_by_docid.get(docid, docid)
     joiner = "\n"
     parts = []
-    parts.append("<h1>review " + esc_text(docid) + " " + chip_html(state) + "</h1>")
+    parts.append("<h1>Review: " + esc_text(doc_title) + "</h1>")
     parts.append("<section>")
-    parts.append("<h2>Adjudication subject</h2>")
+    parts.append("<h2>Decision on record</h2>")
     if state == "stale":
-        parts.append("<p>bundle differs</p>")
-    parts.append("<dl>")
-    parts.append("<dt>current review_sha256</dt><dd><code>" + esc_text(current_digest) + "</code></dd>")
+        parts.append("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>")
     if has_row:
-        parts.append("<dt>verdict</dt><dd>" + esc_text(row_verdict) + "</dd>")
-        parts.append("<dt>reviewer</dt><dd>" + esc_text(row_reviewer) + "</dd>")
-        parts.append("<dt>date</dt><dd>" + esc_text(row_date) + "</dd>")
-        parts.append("<dt>comment</dt><dd>" + esc_text(row_comment) + "</dd>")
-        parts.append("<dt>pinned review_sha256</dt><dd><code>" + esc_text(ledger_digests.get(docid, "")) + "</code></dd>")
-    parts.append("</dl>")
+        shown_reviewer = row_reviewer
+        if not shown_reviewer:
+            shown_reviewer = "Not given"
+        shown_comment = row_comment
+        if not shown_comment:
+            shown_comment = "Not given"
+        parts.append("<dl>")
+        parts.append("<dt>Decision</dt><dd>" + esc_text(row_verdict) + "</dd>")
+        parts.append("<dt>Reviewer</dt><dd>" + esc_text(shown_reviewer) + "</dd>")
+        parts.append("<dt>Date</dt><dd>" + esc_text(human_date(row_date)) + "</dd>")
+        parts.append("<dt>Comment</dt><dd>" + esc_text(shown_comment) + "</dd>")
+        parts.append("</dl>")
+        parts.append("<p>The reviewer name is recorded as entered and is not verified.</p>")
+    else:
+        parts.append("<p>No decision is recorded for this document.</p>")
     parts.append("</section>")
     approved_checked = ""
     rejected_checked = ""
@@ -931,31 +1071,32 @@ def build_review_page(model, docid):
         approved_checked = " checked"
     if row_verdict == "rejected":
         rejected_checked = " checked"
-    parts.append("<section>")
-    parts.append("<h2>Verdict</h2>")
+    parts.append("<section class=\"verdict-entry\">")
+    parts.append("<h2>Record a decision</h2>")
+    parts.append("<p>Your decision applies to this document exactly as shown on this page. If the document or its source changes before you submit, the server refuses the decision and records no change.</p>")
     parts.append("<form method=\"post\">")
     parts.append("<fieldset>")
-    parts.append("<legend>verdict</legend>")
-    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" + approved_checked + "> approved</label>")
-    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" + rejected_checked + "> rejected</label>")
+    parts.append("<legend>Decision</legend>")
+    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" + approved_checked + "> Approved</label>")
+    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" + rejected_checked + "> Rejected</label>")
     parts.append("</fieldset>")
-    parts.append("<label for=\"reviewer\">reviewer (self-asserted local identifier)</label>")
-    parts.append("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" required value=\"" + esc_attr(row_reviewer) + "\">")
-    parts.append("<label for=\"comment\">comment</label>")
+    parts.append("<label for=\"reviewer\">Reviewer name (optional)</label>")
+    parts.append("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" value=\"" + esc_attr(row_reviewer) + "\">")
+    parts.append("<label for=\"comment\">Comment (optional)</label>")
     parts.append("<textarea id=\"comment\" name=\"comment\">" + esc_text(row_comment) + "</textarea>")
     parts.append("<input type=\"hidden\" name=\"review_sha256\" value=\"" + esc_attr(current_digest) + "\">")
     parts.append("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" + esc_attr(ledger_file_digest) + "\">")
     parts.append("<input type=\"hidden\" name=\"csrf\" value=\"" + esc_attr(token_text) + "\">")
-    parts.append("<button>Record verdict</button>")
+    parts.append("<button>Record decision</button>")
     parts.append("</form>")
     parts.append("</section>")
     nav_parts = []
-    nav_parts.append("<a href=\"../doc/" + url_seg(docid) + ".html\">doc: " + esc_text(docid) + "</a>")
+    nav_parts.append("<a href=\"../doc/" + url_seg(docid) + ".html\">Back to the document</a>")
     nav_joiner = " · "
     parts.append("<nav class=\"docnav\">" + nav_joiner.join(nav_parts) + "</nav>")
     body_html = joiner.join(parts)
     crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(gid) + "</a> / <a href=\"../doc/" + url_seg(docid) + ".html\">" + esc_text(docid) + "</a> / review"
-    return page_html("review " + docid, crumb_html, body_html)
+    return page_html("Review: " + doc_title, crumb_html, body_html)
 def build_error_page(title_text, heading_text, body_html):
     parts = []
     parts.append("<h1>" + esc_text(heading_text) + "</h1>")
@@ -1079,6 +1220,41 @@ def walk_files(base_path):
                 rel_path = entry.relative_to(base_path)
                 found.append(str(rel_path))
     return sorted(found)
+def strip_between(source_text, open_mark, close_mark):
+    pieces = source_text.split(open_mark)
+    kept = []
+    first = True
+    for piece in pieces:
+        if first:
+            kept.append(piece)
+            first = False
+        else:
+            tail_parts = piece.split(close_mark)
+            if len(tail_parts) > 1:
+                tail_parts.pop(0)
+                close_joiner = close_mark
+                kept.append(close_joiner.join(tail_parts))
+    empty_text = ""
+    return empty_text.join(kept)
+def visible_text(page_text):
+    no_style = strip_between(page_text, "<style>", "</style>")
+    no_pre = strip_between(no_style, "<pre", "</pre>")
+    no_comments = strip_between(no_pre, "<!--", "-->")
+    fragments = no_comments.split("<")
+    texts = []
+    first = True
+    for fragment in fragments:
+        if first:
+            texts.append(fragment)
+            first = False
+        else:
+            tag_parts = fragment.split(">")
+            if len(tag_parts) > 1:
+                tag_parts.pop(0)
+                gt_joiner = ">"
+                texts.append(gt_joiner.join(tag_parts))
+    space_joiner = " "
+    return html.unescape(space_joiner.join(texts))
 def page_invariant_name(page_text):
     if page_text.count("<!doctype html>") != 1:
         return "doctype"
@@ -1102,6 +1278,19 @@ def page_invariant_name(page_text):
         return "inline-style"
     if page_text.count("href=\"http") != 0:
         return "external-href"
+    scope_html = "<footer class=\"scope\"><p>" + esc_text(scope_line_text) + "</p></footer>"
+    if page_text.count(scope_html) != 1:
+        return "scope-line"
+    page_visible = visible_text(page_text)
+    visible_lower = page_visible.lower()
+    if "sha256" in visible_lower:
+        return "copy-sha256"
+    if "bundle differs" in visible_lower:
+        return "copy-bundle-differs"
+    hex_runs = re.findall("[0-9a-fA-F]{16,}", page_visible)
+    for hex_run in hex_runs:
+        if re.search("[0-9]", hex_run):
+            return "copy-hex"
     return ""
 def selftest_violation():
     if url_seg("a b/%") != "a%20b%2F%25":
@@ -1135,6 +1324,46 @@ def selftest_violation():
         allowed_total = allowed_total + css_text.count(color_value)
     if css_text.count("#") != allowed_total:
         return "ui: selftest failed: palette"
+    case_head = "<h1>Selftest</h1>"
+    clean_page = page_html("Selftest", "selftest", case_head + "<p>Clean page.</p>")
+    if page_invariant_name(clean_page) != "":
+        return "ui: selftest failed: invariant clean"
+    scope_html = "<footer class=\"scope\"><p>" + esc_text(scope_line_text) + "</p></footer>"
+    scope_missing = clean_page.replace(scope_html, "")
+    if page_invariant_name(scope_missing) != "scope-line":
+        return "ui: selftest failed: invariant scope-missing"
+    scope_doubled = clean_page.replace(scope_html, scope_html + scope_html)
+    if page_invariant_name(scope_doubled) != "scope-line":
+        return "ui: selftest failed: invariant scope-duplicate"
+    invariant_cases = []
+    case_row = ["<p><code>SHA256</code></p>", "copy-sha256", "hex-label-case"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>sha&#50;56</p>", "copy-sha256", "character-reference"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>The bundle differs from the recorded one.</p>", "copy-bundle-differs", "bundle-phrase"]
+    invariant_cases.append(case_row)
+    case_row = ["<p><code>0123456789abcdef</code></p>", "copy-hex", "hex-run-16"]
+    invariant_cases.append(case_row)
+    case_row = ["<p><code>0123456789abcde</code></p>", "", "hex-run-15"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>abcdefabcdefabcdef</p>", "", "letters-only-run"]
+    invariant_cases.append(case_row)
+    case_row = ["<!-- ui: verdict: a > b sha256 bundle differs 0123456789abcdef --><p>Clean page.</p>", "", "comment-exempt"]
+    invariant_cases.append(case_row)
+    case_row = ["<input type=\"hidden\" name=\"review_sha256\" value=\"0123456789abcdef0123456789abcdef\">", "", "attribute-exempt"]
+    invariant_cases.append(case_row)
+    case_row = ["<pre>sha256 0123456789abcdef</pre>", "", "quoted-artifact-exempt"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>sha<span>256</span></p>", "", "split-across-tags"]
+    invariant_cases.append(case_row)
+    for invariant_case in invariant_cases:
+        case_copy = list(invariant_case)
+        case_body = case_copy.pop(0)
+        case_want = case_copy.pop(0)
+        case_label = case_copy.pop(0)
+        case_page = page_html("Selftest", "selftest", case_head + case_body)
+        if page_invariant_name(case_page) != case_want:
+            return "ui: selftest failed: invariant " + case_label
     return ""
 h5_content_type = tuple(["Content-Type", "text/html; charset=utf-8"])
 h5_csp = tuple(["Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'"])
@@ -1145,7 +1374,7 @@ def base_headers():
     return [h5_content_type, h5_csp, h5_nosniff, h5_referrer, h5_cache]
 def not_found_response():
     body_html = "<p>The requested page does not exist.</p>"
-    page_text = build_error_page("not found", "Not found", body_html)
+    page_text = build_error_page("Not found", "Not found", body_html)
     body_bytes = page_text.encode("utf-8")
     return ["404 Not Found", base_headers(), body_bytes]
 def review_shaped(path_text):
@@ -1174,28 +1403,27 @@ def method_response(shaped):
     if shaped:
         allow_value = "GET, POST"
         body_html = "<p>Only GET and POST are supported on this page.</p>"
-    page_text = build_error_page("method not allowed", "Method not allowed", body_html)
+    page_text = build_error_page("Method not allowed", "Method not allowed", body_html)
     body_bytes = page_text.encode("utf-8")
     headers = base_headers()
     headers.append(tuple(["Allow", allow_value]))
     return ["405 Method Not Allowed", headers, body_bytes]
-def verdict_refusal(status_text, heading_text, detail):
-    body_html = "<pre>" + esc_text(detail) + "</pre>"
-    title_text = heading_text.lower()
-    page_text = build_error_page(title_text, heading_text, body_html)
+def verdict_refusal(status_text, heading_text, detail, plain_text):
+    body_html = "<p>" + esc_text(plain_text) + "</p>\n<!-- " + comment_safe(detail) + " -->"
+    page_text = build_error_page(heading_text, heading_text, body_html)
     body_bytes = page_text.encode("utf-8")
     return [status_text, base_headers(), body_bytes]
 def redirect_response(gid, docid):
     location_value = "/g/" + url_seg(gid) + "/review/" + url_seg(docid) + ".html"
-    body_html = "<p>The verdict was recorded.</p>"
-    page_text = build_error_page("verdict recorded", "Verdict recorded", body_html)
+    body_html = "<p>The decision was recorded.</p>"
+    page_text = build_error_page("Decision recorded", "Decision recorded", body_html)
     body_bytes = page_text.encode("utf-8")
     headers = base_headers()
     headers.append(tuple(["Location", location_value]))
     return ["303 See Other", headers, body_bytes]
 def error_response(detail):
-    body_html = "<pre>" + esc_text(detail) + "</pre>"
-    page_text = build_error_page("server error", "Server error", body_html)
+    body_html = "<p>The server could not complete the request. Reload the page and try again.</p>\n<!-- " + comment_safe(detail) + " -->"
+    page_text = build_error_page("Server error", "Server error", body_html)
     body_bytes = page_text.encode("utf-8")
     return ["500 Internal Server Error", base_headers(), body_bytes]
 def page_response(page_text):
@@ -1239,8 +1467,6 @@ def parse_form_fields(body_bytes):
     if not verdict_ok:
         return err("ui: verdict: invalid verdict")
     reviewer_value = fields.get("reviewer")
-    if not reviewer_value:
-        return err("ui: verdict: invalid reviewer")
     if not field_text_ok(reviewer_value):
         return err("ui: verdict: invalid reviewer")
     if not field_text_ok(fields.get("comment")):
@@ -1263,20 +1489,20 @@ def handle_verdict_post(model, gid, docid, meta):
     port_value = serve_config.get("port", 8377)
     expected_host = "127.0.0.1:" + str(port_value)
     if meta.get("host", "") != expected_host:
-        return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: host not allowed")
+        return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: host not allowed", refusal_refused_text)
     origin_value = meta.get("origin", None)
     expected_origin = "http://" + expected_host
     if origin_value != None:
         if origin_value != expected_origin:
-            return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: origin not allowed")
+            return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: origin not allowed", refusal_refused_text)
     if meta.get("content_type", "") != "application/x-www-form-urlencoded":
-        return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: unsupported content type")
+        return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: unsupported content type", refusal_invalid_form_text)
     body_bytes = meta.get("body", None)
     if body_bytes == None:
-        return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: missing body")
+        return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: missing body", refusal_invalid_form_text)
     fields_result = parse_form_fields(body_bytes)
     if result_kind(fields_result) == "err":
-        return verdict_refusal("400 Bad Request", "Bad request", result_value(fields_result))
+        return verdict_refusal("400 Bad Request", "Bad request", result_value(fields_result), refusal_invalid_form_text)
     fields = result_value(fields_result)
     token_value = serve_config.get("token", "")
     token_ok = True
@@ -1285,7 +1511,7 @@ def handle_verdict_post(model, gid, docid, meta):
     if fields.get("csrf") != token_value:
         token_ok = False
     if not token_ok:
-        return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: invalid csrf token")
+        return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: invalid csrf token", refusal_refused_text)
     data_result = doc_render_data(model, docid)
     if result_kind(data_result) == "err":
         return error_response(result_value(data_result))
@@ -1321,9 +1547,9 @@ def handle_verdict_post(model, gid, docid, meta):
     if fresh_digest == "":
         return error_response("ui: verdict: manifest derivation failed: docid row missing")
     if fields.get("review_sha256") != fresh_digest:
-        return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: subject changed")
+        return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: subject changed", refusal_subject_text)
     if fields.get("ledger_sha256") != model.get("ledger_file_digest", "absent"):
-        return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: ledger changed")
+        return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: ledger changed", refusal_ledger_text)
     audit_dir = guideline_path.joinpath("audit")
     ledger_path = audit_dir.joinpath("adjudication.tsv")
     if ledger_path.is_symlink():

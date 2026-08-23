@@ -1,0 +1,1 @@
+X = "animation: spin 2s"

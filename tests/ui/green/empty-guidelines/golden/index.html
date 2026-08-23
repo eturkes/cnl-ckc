@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>guidelines — cnl-ckc reviewer</title>
+<title>Guidelines — cnl-ckc reviewer</title>
 <style>
 body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
 a { color: #1d4ed8; }
@@ -14,19 +14,39 @@ h1 { font-size: 1.6rem; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
 th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
 th { border-bottom: 2px solid #111827; }
+table.compact { width: auto; }
+table.compact th, table.compact td { padding-right: 2rem; }
 .chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
 .chip-approved { color: #14532d; background: #dcfce7; }
 .chip-rejected { color: #7f1d1d; background: #fee2e2; }
 .chip-stale { color: #78350f; background: #fef3c7; }
 .chip-unreviewed { color: #1f2937; background: #e5e7eb; }
-pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; overflow-x: auto; }
+pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; white-space: pre-wrap; overflow-x: auto; }
 pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }
-pre.src { font-family: Georgia, serif; font-size: 1.05rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.src { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }
 dt { font-weight: 600; margin-top: 0.6rem; }
 dd { margin-left: 0; }
 summary { cursor: pointer; }
 section { margin: 1.5rem 0; }
 nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
+footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid #e5e7eb; font-size: 0.9rem; }
+form label { display: block; margin-top: 1rem; font-weight: 600; }
+fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }
+legend { font-weight: 600; padding: 0; }
+fieldset label { margin-top: 0.5rem; font-weight: 400; }
+input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
+textarea { min-height: 6rem; }
+input[type="radio"] { accent-color: #111827; }
+input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
+@media print {
+body { max-width: none; padding: 0; }
+nav.crumbs, nav.docnav, .skip, form, .verdict-entry { display: none; }
+details::details-content { content-visibility: visible; }
+pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
+a { color: inherit; text-decoration: none; }
+.chip { border: 1px solid #111827; background: none; color: inherit; }
+}
 </style>
 </head>
 <body>
@@ -36,10 +56,11 @@ nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
 <h1>Guidelines</h1>
 <section>
 <table>
-<thead><tr><th>guideline</th><th>title</th><th>docs</th><th>regions</th><th>approved</th><th>rejected</th><th>stale</th><th>unreviewed</th></tr></thead>
+<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Stale</th><th>Unreviewed</th></tr></thead>
 <tbody></tbody>
 </table>
 </section>
 </main>
+<footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>
 </body>
 </html>

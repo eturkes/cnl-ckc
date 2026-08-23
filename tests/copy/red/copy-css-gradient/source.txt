@@ -1,0 +1,1 @@
+X = "background: linear-gradient(red, blue)"

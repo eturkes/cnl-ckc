@@ -1,0 +1,3 @@
+A = "The verdict was recorded."
+B = "Open the review page again and check the current version."
+C = "Guideline review"

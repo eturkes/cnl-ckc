@@ -1,0 +1,7 @@
+A = "<!doctype html>"
+B = "outline: 3px solid !important"
+C = "robustness testing in Chicago"
+D = "the agony of choice"
+E = "≥ 50 MME · §3"
+F = "\u00b7 separator"
+G = "navigation menu"

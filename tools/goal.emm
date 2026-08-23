@@ -1,3 +1,4 @@
+Use ast.
 Use datetime.
 Use hashlib.
 Use os.
@@ -3023,8 +3024,6 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
                 Set verdict_ok to True.
             If not verdict_ok:
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " verdict").
-            If not reviewer_field:
-                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " reviewer").
             If not [[reviewer_text_ok]](reviewer_field):
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " reviewer").
             If not [[valid_review_date]](date_field):
@@ -3726,7 +3725,248 @@ Define [[run_ui_fixture_case]] taking color, case_name, case_path:
     If mat_scratch:
         Do [[shutil.rmtree]](mat_scratch, ignore_errors=True).
 
+Set copy_marketing_pattern to "(?i)\\b(simply|seamless|seamlessly|powerful|robust|robustly|leverage|leverages|leveraged|leveraging|effortless|effortlessly|intuitive|streamline|streamlined|unlock|empower|empowering|cutting-edge|state-of-the-art|world-class|blazing|stunning|delightful|revolutionize|game-changing|supercharge|best-in-class|next-generation)\\b".
+Set copy_relative_time_pattern to "(?i)\\bago\\b|\\bjust now\\b|\\byesterday\\b|\\btomorrow\\b|\\brecently\\b|\\blast (week|month|year)\\b".
+Set copy_css_tokens to <"linear-gradient", "radial-gradient", "conic-gradient", "@keyframes", "animation", "transition", "backdrop-filter", "box-shadow">.
+
+Define [[copy_emoji_hit]] taking text:
+    For each ch in text:
+        Set code_point to [[ord]](ch).
+        Set banned to False.
+        If code_point is greater than 126975:
+            If code_point is less than 129792:
+                Set banned to True.
+        If code_point is greater than 9727:
+            If code_point is less than 10176:
+                Set banned to True.
+        If code_point is greater than 11007:
+            If code_point is less than 11264:
+                Set banned to True.
+        If code_point equals 65039:
+            Set banned to True.
+        If code_point equals 8205:
+            Set banned to True.
+        If banned:
+            Give back "emoji: U+" plus [[format]](code_point, "04X").
+    Give back "".
+
+Define [[copy_register_hit]] taking text:
+    Set emoji_hit to [[copy_emoji_hit]](text).
+    If emoji_hit:
+        Give back emoji_hit.
+    Set lower_text to [[text.lower]]().
+    For each css_token in copy_css_tokens:
+        Set found to css_token is in lower_text.
+        If found:
+            Give back "css: " plus css_token.
+    Set marketing_match to [[re.search]](copy_marketing_pattern, text).
+    If marketing_match:
+        Give back "marketing: " plus [[marketing_match.group]](0).
+    Set relative_match to [[re.search]](copy_relative_time_pattern, text).
+    If relative_match:
+        Give back "relative-time: " plus [[relative_match.group]](0).
+    Set exclaim_match to [[re.search]]("[A-Za-z0-9]!", text).
+    If exclaim_match:
+        Give back "exclamatory: " plus [[exclaim_match.group]](0).
+    Give back "".
+
+Define [[copy_scan_source]] taking source_text:
+    Set hits to <>.
+    Set literal_count to 0.
+    Set tree to [[ast.parse]](source_text).
+    Set constant_type to [[getattr]](ast, "Constant").
+    For each node in [[ast.walk]](tree):
+        Set is_const to [[isinstance]](node, constant_type).
+        If is_const:
+            Set value_obj to [[getattr]](node, "value", None).
+            Set is_str to [[isinstance]](value_obj, str).
+            If is_str:
+                Set literal_count to literal_count plus 1.
+                Set hit_text to [[copy_register_hit]](value_obj).
+                If hit_text:
+                    Set line_no to [[getattr]](node, "lineno", 0).
+                    Do [[hits.append]]([[str]](line_no) plus " " plus hit_text).
+    Give back <hits, literal_count>.
+
+Define [[copy_fixture_case]] taking color, case_name, case_path:
+    Set source_path to [[case_path.joinpath]]("source.txt").
+    If [[source_path.is_symlink]]():
+        Do [[violation]]("copy-fixtures", "source is a symlink: " plus color plus "/" plus case_name).
+    If not [[source_path.is_file]]():
+        Do [[violation]]("copy-fixtures", "missing source.txt: " plus color plus "/" plus case_name).
+    Set read_ok to True.
+    Set source_text to "".
+    Try:
+        Set source_text to [[source_path.read_text]](encoding="utf-8").
+    Catch OSError:
+        Set read_ok to False.
+    Catch UnicodeDecodeError:
+        Set read_ok to False.
+    If not read_ok:
+        Do [[violation]]("copy-fixtures", "unreadable source.txt: " plus color plus "/" plus case_name).
+    Set scan_ok to True.
+    Set scan_pair to <>.
+    Try:
+        Set scan_pair to [[copy_scan_source]](source_text).
+    Catch SyntaxError:
+        Set scan_ok to False.
+    Catch ValueError:
+        Set scan_ok to False.
+    If not scan_ok:
+        Do [[violation]]("copy-fixtures", "unparseable source.txt: " plus color plus "/" plus case_name).
+    Set hits to [[scan_pair.pop]](0).
+    Set expect_path to [[case_path.joinpath]]("expect.txt").
+    If color equals "red":
+        If not [[expect_path.is_file]]():
+            Do [[violation]]("copy-fixtures", "missing expect.txt: red/" plus case_name).
+        Set expect_text to [[expect_path.read_text]](encoding="utf-8").
+        If not hits:
+            Do [[violation]]("copy-fixtures", "red case produced no hits: " plus case_name).
+        Set joiner to "\n".
+        Set actual_text to [[joiner.join]](hits) plus "\n".
+        If actual_text does not equal expect_text:
+            Do [[violation]]("copy-fixtures", "hit mismatch: red/" plus case_name).
+    Otherwise:
+        If [[expect_path.exists]]():
+            Do [[violation]]("copy-fixtures", "unexpected expect.txt: green/" plus case_name).
+        If hits:
+            Set first_hit to [[hits.pop]](0).
+            Do [[violation]]("copy-fixtures", "green case produced a hit: " plus case_name plus " " plus first_hit).
+
+Define [[check_copy_register]] taking nothing:
+    Set ui_path to [[pathlib.Path]]("tools/ui.py").
+    Set read_ok to True.
+    Set ui_source to "".
+    Try:
+        Set ui_source to [[ui_path.read_text]](encoding="utf-8").
+    Catch OSError:
+        Set read_ok to False.
+    Catch UnicodeDecodeError:
+        Set read_ok to False.
+    If not read_ok:
+        Do [[violation]]("copy", "cannot read tools/ui.py").
+    Set ui_marker to "def page_invariant_name(".
+    Set marker_present to ui_marker is in ui_source.
+    If not marker_present:
+        Do [[violation]]("copy", "scan target is not the generated UI module").
+    Set scan_ok to True.
+    Set scan_pair to <>.
+    Try:
+        Set scan_pair to [[copy_scan_source]](ui_source).
+    Catch SyntaxError:
+        Set scan_ok to False.
+    Catch ValueError:
+        Set scan_ok to False.
+    If not scan_ok:
+        Do [[violation]]("copy", "tools/ui.py does not parse").
+    Set ui_hits to [[scan_pair.pop]](0).
+    Set literal_count to [[scan_pair.pop]](0).
+    For each hit_line in ui_hits:
+        Do [[violation]]("copy", "tools/ui.py:" plus hit_line).
+    Do [[print]]("goal: copy ok " plus [[str]](literal_count) plus " literals").
+    Set fixtures_root to [[pathlib.Path]]("tests/copy").
+    If [[fixtures_root.is_symlink]]():
+        Do [[violation]]("copy-fixtures", "is a symlink: " plus [[str]](fixtures_root)).
+    If not [[fixtures_root.is_dir]]():
+        Do [[violation]]("copy-fixtures", "missing: " plus [[str]](fixtures_root)).
+    Set red_required to <"copy-css-animation", "copy-css-backdrop", "copy-css-boxshadow", "copy-css-gradient", "copy-css-keyframes", "copy-css-transition", "copy-emoji", "copy-exclamatory", "copy-marketing", "copy-relative-time">.
+    Set green_required to <"copy-clean", "copy-lookalike">.
+    Set red_count to 0.
+    Set green_count to 0.
+    Set red_names to <>.
+    Set green_names to <>.
+    Set colors to <"green", "red">.
+    For each color in colors:
+        Set color_path to [[fixtures_root.joinpath]](color).
+        If [[color_path.is_symlink]]():
+            Do [[violation]]("copy-fixtures", "is a symlink: " plus color).
+        If not [[color_path.is_dir]]():
+            Do [[violation]]("copy-fixtures", "missing directory: " plus color).
+        For each entry in [[sorted]]([[color_path.iterdir]]()):
+            Set entry_name to entry.name.
+            If [[entry.is_symlink]]():
+                Do [[violation]]("copy-fixtures", "not a case directory: " plus entry_name).
+            If not [[entry.is_dir]]():
+                Do [[violation]]("copy-fixtures", "not a case directory: " plus entry_name).
+            If not [[valid_docid]](entry_name):
+                Do [[violation]]("copy-fixtures", "invalid case name: " plus entry_name).
+            Do [[copy_fixture_case]](color, entry_name, entry).
+            If color equals "red":
+                Set red_count to red_count plus 1.
+                Do [[red_names.append]](entry_name).
+            Otherwise:
+                Set green_count to green_count plus 1.
+                Do [[green_names.append]](entry_name).
+    For each required_name in red_required:
+        Set present to required_name is in red_names.
+        If not present:
+            Do [[violation]]("copy-fixtures", "missing required case: red/" plus required_name).
+    For each required_name in green_required:
+        Set present to required_name is in green_names.
+        If not present:
+            Do [[violation]]("copy-fixtures", "missing required case: green/" plus required_name).
+    If red_count does not equal 10:
+        Do [[violation]]("copy-fixtures", "red case count drift: expected 10 got " plus [[str]](red_count)).
+    If green_count does not equal 2:
+        Do [[violation]]("copy-fixtures", "green case count drift: expected 2 got " plus [[str]](green_count)).
+    Do [[print]]("goal: copy fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
+
+Define [[chain_call_name]] taking chain_stmt:
+    Set is_expr to [[isinstance]](chain_stmt, [[getattr]](ast, "Expr")).
+    If not is_expr:
+        Give back "".
+    Set value_obj to [[getattr]](chain_stmt, "value", None).
+    Set is_call to [[isinstance]](value_obj, [[getattr]](ast, "Call")).
+    If not is_call:
+        Give back "".
+    Set func_obj to [[getattr]](value_obj, "func", None).
+    Set is_name to [[isinstance]](func_obj, [[getattr]](ast, "Name")).
+    If not is_name:
+        Give back "".
+    Give back [[getattr]](func_obj, "id", "").
+
+Define [[check_copy_chain_slot]] taking nothing:
+    Set goal_path to [[pathlib.Path]]("tools/goal.py").
+    Set read_ok to True.
+    Set goal_source to "".
+    Try:
+        Set goal_source to [[goal_path.read_text]](encoding="utf-8").
+    Catch OSError:
+        Set read_ok to False.
+    Catch UnicodeDecodeError:
+        Set read_ok to False.
+    If not read_ok:
+        Do [[violation]]("copy-chain", "cannot read tools/goal.py").
+    Set parse_ok to True.
+    Set tree to None.
+    Try:
+        Set tree to [[ast.parse]](goal_source).
+    Catch SyntaxError:
+        Set parse_ok to False.
+    Catch ValueError:
+        Set parse_ok to False.
+    If not parse_ok:
+        Do [[violation]]("copy-chain", "tools/goal.py does not parse").
+    Set def_type to [[getattr]](ast, "FunctionDef").
+    Set slot_ok to False.
+    Set expect_next to False.
+    For each node in [[ast.walk]](tree):
+        Set is_def to [[isinstance]](node, def_type).
+        If is_def:
+            If [[getattr]](node, "name", "") equals "check_command":
+                For each chain_stmt in [[getattr]](node, "body", <>):
+                    Set call_name to [[chain_call_name]](chain_stmt).
+                    If expect_next:
+                        If call_name equals "check_copy_register":
+                            Set slot_ok to True.
+                        Set expect_next to False.
+                    If call_name equals "check_ui":
+                        Set expect_next to True.
+    If not slot_ok:
+        Do [[violation]]("copy-chain", "check_command must call check_copy_register directly after check_ui").
+
 Define [[check_ui]] taking nothing:
+    Do [[check_copy_chain_slot]]().
     Set command to <sys.executable, "-P", "tools/ui.py", "check">.
     Set result to [[subprocess.run]](command, capture_output=True).
     If result.returncode does not equal 0:
@@ -3760,7 +4000,7 @@ Define [[check_ui]] taking nothing:
         Do [[violation]]("ui-fixtures", "is a symlink: " plus [[str]](fixtures_root)).
     If not [[fixtures_root.is_dir]]():
         Do [[violation]]("ui-fixtures", "missing: " plus [[str]](fixtures_root)).
-    Set red_required to <"digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-create", "verdict-ok-replace", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
+    Set red_required to <"copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-create", "verdict-ok-replace", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
     Set green_required to <"basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts">.
     Set red_count to 0.
     Set green_count to 0.
@@ -3874,6 +4114,7 @@ Define [[check_command]] taking nothing:
         Set corpus_lexicon_path to [[record_copy.pop]](0).
         Do [[check_corpus]](corpus_path, corpus_ace_paths, corpus_docids, corpus_lexicon_path).
     Do [[check_ui]]().
+    Do [[check_copy_register]]().
     Set swipl_executable to [[resolve_swipl]]().
     Set scratch_path to [[make_scratch]]().
     Set stage_path to [[stage_ape]](scratch_path, swipl_executable).

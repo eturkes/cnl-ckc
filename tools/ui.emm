@@ -283,6 +283,80 @@ Define [[readme_title]] taking guideline_path, gid:
                 Give back [[ok]](heading).
     Give back [[ok]](gid).
 
+Define [[humanize_section]] taking section_text:
+    Set segs to <>.
+    For each raw_seg in [[section_text.split]](">"):
+        Set seg to [[raw_seg.strip]]().
+        If seg:
+            Do [[segs.append]](seg).
+    If [[len]](segs) equals 0:
+        Give back "".
+    Set head to [[segs.pop]](0).
+    Set head_parts to [[head.split]](" ").
+    Set head_word to "".
+    Set head_number to "".
+    If [[len]](head_parts) equals 2:
+        Set head_word to [[head_parts.pop]](0).
+        Set head_number to [[head_parts.pop]](0).
+        If not [[head_number.isdigit]]():
+            Set head_word to "".
+    Set out_segs to <>.
+    If head_word equals "Rec":
+        Do [[out_segs.append]]("Recommendation " plus head_number).
+    Otherwise:
+        Set drop_head to False.
+        If head_word equals "BOX":
+            If [[len]](segs) is greater than 0:
+                Set drop_head to True.
+        If not drop_head:
+            Do [[out_segs.append]](head).
+    For each seg in segs:
+        Do [[out_segs.append]](seg).
+    Set title_joiner to " · ".
+    Give back [[title_joiner.join]](out_segs).
+
+Define [[human_page]] taking page_text:
+    Set trimmed to [[page_text.strip]]().
+    If not [[trimmed.startswith]]("p"):
+        Give back trimmed.
+    Set number to [[trimmed.removeprefix]]("p").
+    If not [[number.isdigit]]():
+        Give back trimmed.
+    Give back "page " plus number.
+
+Define [[human_date]] taking date_text:
+    If not [[date_text.endswith]]("Z"):
+        Give back date_text.
+    Set parts to [[date_text.removesuffix]]("Z").
+    Set parts to [[parts.split]]("T").
+    If [[len]](parts) does not equal 2:
+        Give back date_text.
+    Set day_text to [[parts.pop]](0).
+    Set time_text to [[parts.pop]](0).
+    Give back day_text plus " " plus time_text plus " UTC".
+
+Define [[document_title]] taking docid, section_text, page_text, region_id, shared:
+    Set base to [[humanize_section]](section_text).
+    If not base:
+        Give back docid.
+    If not shared:
+        Give back base.
+    Set page_number to [[page_text.strip]]().
+    If [[page_number.startswith]]("p"):
+        Set page_number to [[page_number.removeprefix]]("p").
+    If not [[page_number.isdigit]]():
+        Set page_number to "".
+    Set last_part to "".
+    For each part in [[region_id.split]]("-"):
+        Set last_part to part.
+    Set passage_number to "".
+    If [[last_part.isdigit]]():
+        Set passage_number to [[str]]([[int]](last_part)).
+    If page_number:
+        If passage_number:
+            Give back base plus ", page " plus page_number plus ", passage " plus passage_number.
+    Give back base plus " (" plus region_id plus ")".
+
 Define [[first_output_line]] taking result:
     Set stderr_text to [[result.stderr.decode]]("utf-8", errors="replace").
     For each line_text in [[stderr_text.splitlines]]():
@@ -431,6 +505,20 @@ Define [[build_guideline_model]] taking root_path, gid:
                 Otherwise:
                     Set pending_counter to pending_counter plus 1.
     Set sorted_docids to [[sorted]](docids).
+    Set section_doc_counts to {}.
+    For each docid in sorted_docids:
+        Set section_text to [[section_by_docid.get]](docid, "").
+        Set seen_count to [[section_doc_counts.get]](section_text, 0).
+        Do [[section_doc_counts.update]]({section_text: seen_count plus 1}).
+    Set title_by_docid to {}.
+    For each docid in sorted_docids:
+        Set section_text to [[section_by_docid.get]](docid, "").
+        Set shared to False.
+        If [[section_doc_counts.get]](section_text, 0) is greater than 1:
+            Set shared to True.
+        Set page_text to [[page_by_docid.get]](docid, "").
+        Set region_id to [[region_by_docid.get]](docid, "").
+        Do [[title_by_docid.update]]({docid: [[document_title]](docid, section_text, page_text, region_id, shared)}).
     Set ace_stems to [[list_stems]]([[guideline_path.joinpath]]("ace"), ".ace").
     For each docid in sorted_docids:
         Set present to docid is in ace_stems.
@@ -605,6 +693,7 @@ Define [[build_guideline_model]] taking root_path, gid:
     Do [[model.update]]({"docids": sorted_docids}).
     Do [[model.update]]({"region_by_docid": region_by_docid}).
     Do [[model.update]]({"section_by_docid": section_by_docid}).
+    Do [[model.update]]({"title_by_docid": title_by_docid}).
     Do [[model.update]]({"page_by_docid": page_by_docid}).
     Do [[model.update]]({"file_by_docid": file_by_docid}).
     Do [[model.update]]({"payload_by_docid": payload_by_docid}).
@@ -700,23 +789,72 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("table { border-collapse: collapse; width: 100%; margin: 1rem 0; }").
     Do [[lines.append]]("th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid " plus line_color plus "; vertical-align: top; }").
     Do [[lines.append]]("th { border-bottom: 2px solid " plus body_fg plus "; }").
+    Do [[lines.append]]("table.compact { width: auto; }").
+    Do [[lines.append]]("table.compact th, table.compact td { padding-right: 2rem; }").
     Do [[lines.append]](".chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }").
     Do [[lines.append]](".chip-approved { color: " plus [[pal_fg]]("chip-approved") plus "; background: " plus [[pal_bg]]("chip-approved") plus "; }").
     Do [[lines.append]](".chip-rejected { color: " plus [[pal_fg]]("chip-rejected") plus "; background: " plus [[pal_bg]]("chip-rejected") plus "; }").
     Do [[lines.append]](".chip-stale { color: " plus [[pal_fg]]("chip-stale") plus "; background: " plus [[pal_bg]]("chip-stale") plus "; }").
     Do [[lines.append]](".chip-unreviewed { color: " plus [[pal_fg]]("chip-unreviewed") plus "; background: " plus [[pal_bg]]("chip-unreviewed") plus "; }").
-    Do [[lines.append]]("pre { padding: 0.75rem 1rem; border: 1px solid " plus line_color plus "; overflow-x: auto; }").
+    Do [[lines.append]]("pre { padding: 0.75rem 1rem; border: 1px solid " plus line_color plus "; white-space: pre-wrap; overflow-x: auto; }").
     Do [[lines.append]]("pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }").
-    Do [[lines.append]]("pre.src { font-family: Georgia, serif; font-size: 1.05rem; white-space: pre-wrap; overflow-wrap: anywhere; }").
+    Do [[lines.append]]("pre.src { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }").
     Do [[lines.append]]("dt { font-weight: 600; margin-top: 0.6rem; }").
     Do [[lines.append]]("dd { margin-left: 0; }").
     Do [[lines.append]]("summary { cursor: pointer; }").
     Do [[lines.append]]("section { margin: 1.5rem 0; }").
     Do [[lines.append]]("nav.docnav { padding: 1rem 0; border-top: 1px solid " plus line_color plus "; }").
+    Do [[lines.append]]("footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid " plus line_color plus "; font-size: 0.9rem; }").
+    Do [[lines.append]]("form label { display: block; margin-top: 1rem; font-weight: 600; }").
+    Do [[lines.append]]("fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }").
+    Do [[lines.append]]("legend { font-weight: 600; padding: 0; }").
+    Do [[lines.append]]("fieldset label { margin-top: 0.5rem; font-weight: 400; }").
+    Do [[lines.append]]("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " plus line_color plus "; font-family: inherit; font-size: 1rem; color: " plus body_fg plus "; background: " plus body_bg plus "; }").
+    Do [[lines.append]]("textarea { min-height: 6rem; }").
+    Do [[lines.append]]("input[type=\"radio\"] { accent-color: " plus body_fg plus "; }").
+    Do [[lines.append]]("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
+    Do [[lines.append]]("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " plus body_fg plus "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " plus body_bg plus "; background: " plus body_fg plus "; }").
+    Do [[lines.append]]("@media print {").
+    Do [[lines.append]]("body { max-width: none; padding: 0; }").
+    Do [[lines.append]]("nav.crumbs, nav.docnav, .skip, form, .verdict-entry { display: none; }").
+    Do [[lines.append]]("details::details-content { content-visibility: visible; }").
+    Do [[lines.append]]("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }").
+    Do [[lines.append]]("a { color: inherit; text-decoration: none; }").
+    Do [[lines.append]](".chip { border: 1px solid " plus body_fg plus "; background: none; color: inherit; }").
+    Do [[lines.append]]("}").
     Set joiner to "\n".
     Give back [[joiner.join]](lines).
 
 Set css_text to [[build_css]]().
+
+Set scope_line_text to "This page reports what the loaded guideline documents state. It does not give clinical advice.".
+
+Set refusal_refused_text to "The request was refused. Open the review page again from this site and submit the decision again.".
+Set refusal_invalid_form_text to "The submitted form was not valid. Go back to the review page, reload it, and submit the decision again.".
+Set refusal_subject_text to "The document or its source changed after this page was loaded. The decision was not recorded. Open the review page again and check the current version.".
+Set refusal_ledger_text to "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the review page again and check the current state.".
+
+Define [[comment_safe]] taking detail:
+    Set safe_chars to <>.
+    For each ch in detail:
+        Set keep to False.
+        If [[ch.isascii]]():
+            If [[ch.isalnum]]():
+                Set keep to True.
+        If ch equals " ":
+            Set keep to True.
+        If ch equals ":":
+            Set keep to True.
+        If ch equals "_":
+            Set keep to True.
+        If ch equals ".":
+            Set keep to True.
+        If keep:
+            Do [[safe_chars.append]](ch).
+        Otherwise:
+            Do [[safe_chars.append]]("_").
+    Set empty_text to "".
+    Give back [[empty_text.join]](safe_chars).
 
 Define [[page_html]] taking title_text, crumb_html, body_html:
     Set parts to <>.
@@ -735,6 +873,7 @@ Define [[page_html]] taking title_text, crumb_html, body_html:
     Do [[parts.append]]("<main id=\"main\">").
     Do [[parts.append]](body_html).
     Do [[parts.append]]("</main>").
+    Do [[parts.append]]("<footer class=\"scope\"><p>" plus [[esc_text]](scope_line_text) plus "</p></footer>").
     Do [[parts.append]]("</body>").
     Do [[parts.append]]("</html>").
     Set joiner to "\n".
@@ -764,13 +903,13 @@ Define [[build_index_page]] taking models:
     Do [[parts.append]]("<h1>Guidelines</h1>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<table>").
-    Do [[parts.append]]("<thead><tr><th>guideline</th><th>title</th><th>docs</th><th>regions</th><th>approved</th><th>rejected</th><th>stale</th><th>unreviewed</th></tr></thead>").
+    Do [[parts.append]]("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Stale</th><th>Unreviewed</th></tr></thead>").
     Set joiner to "\n".
     Do [[parts.append]]("<tbody>" plus [[joiner.join]](rows) plus "</tbody>").
     Do [[parts.append]]("</table>").
     Do [[parts.append]]("</section>").
     Set body_html to [[joiner.join]](parts).
-    Give back [[page_html]]("guidelines", "cnl-ckc reviewer", body_html).
+    Give back [[page_html]]("Guidelines", "cnl-ckc reviewer", body_html).
 
 Define [[build_guideline_page]] taking model:
     Set gid to [[model.get]]("gid", "").
@@ -778,39 +917,45 @@ Define [[build_guideline_page]] taking model:
     Set docids to [[model.get]]("docids", <>).
     Set doc_states to [[model.get]]("doc_states", {}).
     Set region_by_docid to [[model.get]]("region_by_docid", {}).
-    Set section_by_docid to [[model.get]]("section_by_docid", {}).
+    Set title_by_docid to [[model.get]]("title_by_docid", {}).
     Set region_rows to [[model.get]]("region_rows", <>).
     Set joiner to "\n".
     Set empty_text to "".
     Set parts to <>.
     Do [[parts.append]]("<h1>" plus [[esc_text]]([[model.get]]("title", gid)) plus "</h1>").
     Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Meters</h2>").
-    Set meter_one to "regions=" plus [[str]]([[counts.get]]("regions", 0)) plus " ace=" plus [[str]]([[counts.get]]("ace", 0)) plus " restates=" plus [[str]]([[counts.get]]("restates", 0)) plus " uncovered=" plus [[str]]([[counts.get]]("uncovered", 0)) plus " pending=" plus [[str]]([[counts.get]]("pending", 0)).
-    Set meter_two to "approved=" plus [[str]]([[counts.get]]("approved", 0)) plus " rejected=" plus [[str]]([[counts.get]]("rejected", 0)) plus " stale=" plus [[str]]([[counts.get]]("stale", 0)) plus " unreviewed=" plus [[str]]([[counts.get]]("unreviewed", 0)).
-    Do [[parts.append]]("<p>" plus meter_one plus "</p>").
-    Do [[parts.append]]("<p>" plus meter_two plus "</p>").
+    Do [[parts.append]]("<h2>Status</h2>").
+    Do [[parts.append]]("<table class=\"compact\">").
+    Do [[parts.append]]("<thead><tr><th>Measure</th><th>Count</th></tr></thead>").
+    Set status_rows to <>.
+    Set status_labels to <<"Passages", "regions">, <"With ACE", "ace">, <"Restated", "restates">, <"Uncovered", "uncovered">, <"Pending", "pending">, <"Approved", "approved">, <"Rejected", "rejected">, <"Stale", "stale">, <"Unreviewed", "unreviewed">>.
+    For each label_pair in status_labels:
+        Set pair_copy to [[list]](label_pair).
+        Set label_text to [[pair_copy.pop]](0).
+        Set count_key to [[pair_copy.pop]](0).
+        Do [[status_rows.append]]("<tr><td>" plus label_text plus "</td><td>" plus [[str]]([[counts.get]](count_key, 0)) plus "</td></tr>").
+    Do [[parts.append]]("<tbody>" plus [[joiner.join]](status_rows) plus "</tbody>").
+    Do [[parts.append]]("</table>").
     Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Documents</h2>").
-    Do [[parts.append]]("<table>").
-    Do [[parts.append]]("<thead><tr><th>document</th><th>status</th><th>region</th><th>section</th></tr></thead>").
+    Do [[parts.append]]("<table class=\"compact\">").
+    Do [[parts.append]]("<thead><tr><th>Document</th><th>Status</th><th>Passage</th></tr></thead>").
     Set doc_rows to <>.
     For each docid in docids:
         Set state to [[doc_states.get]](docid, "unreviewed").
         Set cells to <>.
-        Do [[cells.append]]("<td><a href=\"doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]](docid) plus "</a></td>").
+        Do [[cells.append]]("<td><a href=\"doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]]([[title_by_docid.get]](docid, docid)) plus "</a></td>").
         Do [[cells.append]]("<td>" plus [[chip_html]](state) plus "</td>").
         Do [[cells.append]]("<td>" plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus "</td>").
-        Do [[cells.append]]("<td>" plus [[esc_text]]([[section_by_docid.get]](docid, "")) plus "</td>").
         Do [[doc_rows.append]]("<tr>" plus [[empty_text.join]](cells) plus "</tr>").
     Do [[parts.append]]("<tbody>" plus [[joiner.join]](doc_rows) plus "</tbody>").
     Do [[parts.append]]("</table>").
     Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Regions without ACE</h2>").
-    Do [[parts.append]]("<table>").
-    Do [[parts.append]]("<thead><tr><th>region</th><th>status</th><th>section</th></tr></thead>").
+    Do [[parts.append]]("<h2>Passages without ACE</h2>").
+    Do [[parts.append]]("<table class=\"compact\">").
+    Do [[parts.append]]("<thead><tr><th>Passage</th><th>Status</th><th>Section</th></tr></thead>").
     Set other_rows to <>.
     For each region_row in region_rows:
         Set row_copy to [[list]](region_row).
@@ -873,67 +1018,60 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Set state to [[doc_states.get]](docid, "unreviewed").
     Set region_by_docid to [[model.get]]("region_by_docid", {}).
     Set section_by_docid to [[model.get]]("section_by_docid", {}).
+    Set title_by_docid to [[model.get]]("title_by_docid", {}).
     Set page_by_docid to [[model.get]]("page_by_docid", {}).
     Set file_by_docid to [[model.get]]("file_by_docid", {}).
     Set payload_by_docid to [[model.get]]("payload_by_docid", {}).
     Set kept_by_docid to [[model.get]]("kept_by_docid", {}).
     Set dropped_by_docid to [[model.get]]("dropped_by_docid", {}).
-    Set review_by_docid to [[model.get]]("review_by_docid", {}).
-    Set ledger_digests to [[model.get]]("ledger_digests", {}).
+    Set doc_title to [[title_by_docid.get]](docid, docid).
     Set joiner to "\n".
     Set parts to <>.
-    Do [[parts.append]]("<h1>" plus [[esc_text]](docid) plus " " plus [[chip_html]](state) plus "</h1>").
+    Do [[parts.append]]("<h1>" plus [[esc_text]](doc_title) plus " " plus [[chip_html]](state) plus "</h1>").
     If state equals "stale":
         Do [[parts.append]]("<section class=\"stale\">").
-        Do [[parts.append]]("<h2>Adjudication stale</h2>").
-        Do [[parts.append]]("<p>bundle differs</p>").
-        Do [[parts.append]]("<dl>").
-        Do [[parts.append]]("<dt>pinned review_sha256</dt><dd><code>" plus [[esc_text]]([[ledger_digests.get]](docid, "")) plus "</code></dd>").
-        Do [[parts.append]]("<dt>current review_sha256</dt><dd><code>" plus [[esc_text]]([[review_by_docid.get]](docid, "")) plus "</code></dd>").
-        Do [[parts.append]]("</dl>").
+        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>").
         Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Source region " plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus "</h2>").
-    Do [[parts.append]]("<p>" plus [[esc_text]]([[section_by_docid.get]](docid, "")) plus " · " plus [[esc_text]]([[file_by_docid.get]](docid, "")) plus " · " plus [[esc_text]]([[page_by_docid.get]](docid, "")) plus "</p>").
+    Do [[parts.append]]("<h2>Source passage " plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus "</h2>").
+    Do [[parts.append]]("<p>" plus [[esc_text]]([[section_by_docid.get]](docid, "")) plus " · " plus [[esc_text]]([[human_page]]([[page_by_docid.get]](docid, ""))) plus " · " plus [[esc_text]]([[file_by_docid.get]](docid, "")) plus "</p>").
     Do [[parts.append]]("<pre class=\"src\">" plus [[esc_text]]([[payload_by_docid.get]](docid, "")) plus "</pre>").
     Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>ACE</h2>").
+    Do [[parts.append]]("<h2>Attempto Controlled English (ACE)</h2>").
     Do [[parts.append]]("<pre>" plus [[esc_text]]([[doc_data.get]]("ace_text", "")) plus "</pre>").
     Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Projection notes</h2>").
+    Do [[parts.append]]("<h2>Differences from the source</h2>").
     Do [[parts.append]]("<dl>").
-    Do [[parts.append]]("<dt>kept</dt><dd>" plus [[esc_text]]([[kept_by_docid.get]](docid, "")) plus "</dd>").
-    Do [[parts.append]]("<dt>dropped</dt><dd>" plus [[esc_text]]([[dropped_by_docid.get]](docid, "")) plus "</dd>").
+    Do [[parts.append]]("<dt>Kept from the source</dt><dd>" plus [[esc_text]]([[kept_by_docid.get]](docid, "")) plus "</dd>").
+    Do [[parts.append]]("<dt>Left out or approximated</dt><dd>" plus [[esc_text]]([[dropped_by_docid.get]](docid, "")) plus "</dd>").
     Do [[parts.append]]("</dl>").
     Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Compiled Prolog</h2>").
     Do [[parts.append]]("<details>").
-    Do [[parts.append]]("<summary>compiled Prolog (" plus [[str]]([[doc_data.get]]("pl_lines", 0)) plus " lines)</summary>").
+    Do [[parts.append]]("<summary>Compiled Prolog (" plus [[str]]([[doc_data.get]]("pl_lines", 0)) plus " lines)</summary>").
     Do [[parts.append]]("<pre>" plus [[esc_text]]([[doc_data.get]]("pl_text", "")) plus "</pre>").
     Do [[parts.append]]("</details>").
     Do [[parts.append]]("</section>").
     Set nav_parts to <>.
     If prev_id:
-        Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](prev_id) plus ".html\">prev: " plus [[esc_text]](prev_id) plus "</a>").
-    Do [[nav_parts.append]]("<a href=\"../index.html\">up: " plus [[esc_text]](gid) plus "</a>").
+        Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](prev_id) plus ".html\">Previous document</a>").
+    Do [[nav_parts.append]]("<a href=\"../index.html\">Guideline index</a>").
     If next_id:
-        Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](next_id) plus ".html\">next: " plus [[esc_text]](next_id) plus "</a>").
-    Do [[nav_parts.append]]("<a href=\"../review/" plus [[url_seg]](docid) plus ".html\">review: " plus [[esc_text]](docid) plus "</a>").
+        Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](next_id) plus ".html\">Next document</a>").
+    Do [[nav_parts.append]]("<a href=\"../review/" plus [[url_seg]](docid) plus ".html\">Review this document</a>").
     Set nav_joiner to " · ".
     Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
     Set body_html to [[joiner.join]](parts).
     Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / " plus [[esc_text]](docid).
-    Give back [[page_html]](docid, crumb_html, body_html).
+    Give back [[page_html]](doc_title, crumb_html, body_html).
 
 Define [[build_review_page]] taking model, docid:
     Set gid to [[model.get]]("gid", "").
     Set doc_states to [[model.get]]("doc_states", {}).
     Set state to [[doc_states.get]](docid, "unreviewed").
     Set review_by_docid to [[model.get]]("review_by_docid", {}).
-    Set ledger_digests to [[model.get]]("ledger_digests", {}).
     Set ledger_rows to [[model.get]]("ledger_rows", {}).
     Set ledger_file_digest to [[model.get]]("ledger_file_digest", "absent").
     Set current_digest to [[review_by_docid.get]](docid, "").
@@ -948,22 +1086,31 @@ Define [[build_review_page]] taking model, docid:
         Set row_reviewer to [[row_fields.pop]](0).
         Set row_date to [[row_fields.pop]](0).
         Set row_comment to [[row_fields.pop]](0).
+    Set title_by_docid to [[model.get]]("title_by_docid", {}).
+    Set doc_title to [[title_by_docid.get]](docid, docid).
     Set joiner to "\n".
     Set parts to <>.
-    Do [[parts.append]]("<h1>review " plus [[esc_text]](docid) plus " " plus [[chip_html]](state) plus "</h1>").
+    Do [[parts.append]]("<h1>Review: " plus [[esc_text]](doc_title) plus "</h1>").
     Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Adjudication subject</h2>").
+    Do [[parts.append]]("<h2>Decision on record</h2>").
     If state equals "stale":
-        Do [[parts.append]]("<p>bundle differs</p>").
-    Do [[parts.append]]("<dl>").
-    Do [[parts.append]]("<dt>current review_sha256</dt><dd><code>" plus [[esc_text]](current_digest) plus "</code></dd>").
+        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>").
     If has_row:
-        Do [[parts.append]]("<dt>verdict</dt><dd>" plus [[esc_text]](row_verdict) plus "</dd>").
-        Do [[parts.append]]("<dt>reviewer</dt><dd>" plus [[esc_text]](row_reviewer) plus "</dd>").
-        Do [[parts.append]]("<dt>date</dt><dd>" plus [[esc_text]](row_date) plus "</dd>").
-        Do [[parts.append]]("<dt>comment</dt><dd>" plus [[esc_text]](row_comment) plus "</dd>").
-        Do [[parts.append]]("<dt>pinned review_sha256</dt><dd><code>" plus [[esc_text]]([[ledger_digests.get]](docid, "")) plus "</code></dd>").
-    Do [[parts.append]]("</dl>").
+        Set shown_reviewer to row_reviewer.
+        If not shown_reviewer:
+            Set shown_reviewer to "Not given".
+        Set shown_comment to row_comment.
+        If not shown_comment:
+            Set shown_comment to "Not given".
+        Do [[parts.append]]("<dl>").
+        Do [[parts.append]]("<dt>Decision</dt><dd>" plus [[esc_text]](row_verdict) plus "</dd>").
+        Do [[parts.append]]("<dt>Reviewer</dt><dd>" plus [[esc_text]](shown_reviewer) plus "</dd>").
+        Do [[parts.append]]("<dt>Date</dt><dd>" plus [[esc_text]]([[human_date]](row_date)) plus "</dd>").
+        Do [[parts.append]]("<dt>Comment</dt><dd>" plus [[esc_text]](shown_comment) plus "</dd>").
+        Do [[parts.append]]("</dl>").
+        Do [[parts.append]]("<p>The reviewer name is recorded as entered and is not verified.</p>").
+    Otherwise:
+        Do [[parts.append]]("<p>No decision is recorded for this document.</p>").
     Do [[parts.append]]("</section>").
     Set approved_checked to "".
     Set rejected_checked to "".
@@ -971,31 +1118,32 @@ Define [[build_review_page]] taking model, docid:
         Set approved_checked to " checked".
     If row_verdict equals "rejected":
         Set rejected_checked to " checked".
-    Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Verdict</h2>").
+    Do [[parts.append]]("<section class=\"verdict-entry\">").
+    Do [[parts.append]]("<h2>Record a decision</h2>").
+    Do [[parts.append]]("<p>Your decision applies to this document exactly as shown on this page. If the document or its source changes before you submit, the server refuses the decision and records no change.</p>").
     Do [[parts.append]]("<form method=\"post\">").
     Do [[parts.append]]("<fieldset>").
-    Do [[parts.append]]("<legend>verdict</legend>").
-    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" plus approved_checked plus "> approved</label>").
-    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" plus rejected_checked plus "> rejected</label>").
+    Do [[parts.append]]("<legend>Decision</legend>").
+    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" plus approved_checked plus "> Approved</label>").
+    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" plus rejected_checked plus "> Rejected</label>").
     Do [[parts.append]]("</fieldset>").
-    Do [[parts.append]]("<label for=\"reviewer\">reviewer (self-asserted local identifier)</label>").
-    Do [[parts.append]]("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" required value=\"" plus [[esc_attr]](row_reviewer) plus "\">").
-    Do [[parts.append]]("<label for=\"comment\">comment</label>").
+    Do [[parts.append]]("<label for=\"reviewer\">Reviewer name (optional)</label>").
+    Do [[parts.append]]("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" value=\"" plus [[esc_attr]](row_reviewer) plus "\">").
+    Do [[parts.append]]("<label for=\"comment\">Comment (optional)</label>").
     Do [[parts.append]]("<textarea id=\"comment\" name=\"comment\">" plus [[esc_text]](row_comment) plus "</textarea>").
     Do [[parts.append]]("<input type=\"hidden\" name=\"review_sha256\" value=\"" plus [[esc_attr]](current_digest) plus "\">").
     Do [[parts.append]]("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" plus [[esc_attr]](ledger_file_digest) plus "\">").
     Do [[parts.append]]("<input type=\"hidden\" name=\"csrf\" value=\"" plus [[esc_attr]](token_text) plus "\">").
-    Do [[parts.append]]("<button>Record verdict</button>").
+    Do [[parts.append]]("<button>Record decision</button>").
     Do [[parts.append]]("</form>").
     Do [[parts.append]]("</section>").
     Set nav_parts to <>.
-    Do [[nav_parts.append]]("<a href=\"../doc/" plus [[url_seg]](docid) plus ".html\">doc: " plus [[esc_text]](docid) plus "</a>").
+    Do [[nav_parts.append]]("<a href=\"../doc/" plus [[url_seg]](docid) plus ".html\">Back to the document</a>").
     Set nav_joiner to " · ".
     Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
     Set body_html to [[joiner.join]](parts).
     Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / <a href=\"../doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]](docid) plus "</a> / review".
-    Give back [[page_html]]("review " plus docid, crumb_html, body_html).
+    Give back [[page_html]]("Review: " plus doc_title, crumb_html, body_html).
 
 Define [[build_error_page]] taking title_text, heading_text, body_html:
     Set parts to <>.
@@ -1126,6 +1274,43 @@ Define [[walk_files]] taking base_path:
                 Do [[found.append]]([[str]](rel_path)).
     Give back [[sorted]](found).
 
+Define [[strip_between]] taking source_text, open_mark, close_mark:
+    Set pieces to [[source_text.split]](open_mark).
+    Set kept to <>.
+    Set first to True.
+    For each piece in pieces:
+        If first:
+            Do [[kept.append]](piece).
+            Set first to False.
+        Otherwise:
+            Set tail_parts to [[piece.split]](close_mark).
+            If [[len]](tail_parts) is greater than 1:
+                Do [[tail_parts.pop]](0).
+                Set close_joiner to close_mark.
+                Do [[kept.append]]([[close_joiner.join]](tail_parts)).
+    Set empty_text to "".
+    Give back [[empty_text.join]](kept).
+
+Define [[visible_text]] taking page_text:
+    Set no_style to [[strip_between]](page_text, "<style>", "</style>").
+    Set no_pre to [[strip_between]](no_style, "<pre", "</pre>").
+    Set no_comments to [[strip_between]](no_pre, "<!--", "-->").
+    Set fragments to [[no_comments.split]]("<").
+    Set texts to <>.
+    Set first to True.
+    For each fragment in fragments:
+        If first:
+            Do [[texts.append]](fragment).
+            Set first to False.
+        Otherwise:
+            Set tag_parts to [[fragment.split]](">").
+            If [[len]](tag_parts) is greater than 1:
+                Do [[tag_parts.pop]](0).
+                Set gt_joiner to ">".
+                Do [[texts.append]]([[gt_joiner.join]](tag_parts)).
+    Set space_joiner to " ".
+    Give back [[html.unescape]]([[space_joiner.join]](texts)).
+
 Define [[page_invariant_name]] taking page_text:
     If [[page_text.count]]("<!doctype html>") does not equal 1:
         Give back "doctype".
@@ -1149,6 +1334,19 @@ Define [[page_invariant_name]] taking page_text:
         Give back "inline-style".
     If [[page_text.count]]("href=\"http") does not equal 0:
         Give back "external-href".
+    Set scope_html to "<footer class=\"scope\"><p>" plus [[esc_text]](scope_line_text) plus "</p></footer>".
+    If [[page_text.count]](scope_html) does not equal 1:
+        Give back "scope-line".
+    Set page_visible to [[visible_text]](page_text).
+    Set visible_lower to [[page_visible.lower]]().
+    If "sha256" is in visible_lower:
+        Give back "copy-sha256".
+    If "bundle differs" is in visible_lower:
+        Give back "copy-bundle-differs".
+    Set hex_runs to [[re.findall]]("[0-9a-fA-F]{16,}", page_visible).
+    For each hex_run in hex_runs:
+        If [[re.search]]("[0-9]", hex_run):
+            Give back "copy-hex".
     Give back "".
 
 Define [[selftest_violation]] taking nothing:
@@ -1183,6 +1381,46 @@ Define [[selftest_violation]] taking nothing:
         Set allowed_total to allowed_total plus [[css_text.count]](color_value).
     If [[css_text.count]]("#") does not equal allowed_total:
         Give back "ui: selftest failed: palette".
+    Set case_head to "<h1>Selftest</h1>".
+    Set clean_page to [[page_html]]("Selftest", "selftest", case_head plus "<p>Clean page.</p>").
+    If [[page_invariant_name]](clean_page) does not equal "":
+        Give back "ui: selftest failed: invariant clean".
+    Set scope_html to "<footer class=\"scope\"><p>" plus [[esc_text]](scope_line_text) plus "</p></footer>".
+    Set scope_missing to [[clean_page.replace]](scope_html, "").
+    If [[page_invariant_name]](scope_missing) does not equal "scope-line":
+        Give back "ui: selftest failed: invariant scope-missing".
+    Set scope_doubled to [[clean_page.replace]](scope_html, scope_html plus scope_html).
+    If [[page_invariant_name]](scope_doubled) does not equal "scope-line":
+        Give back "ui: selftest failed: invariant scope-duplicate".
+    Set invariant_cases to <>.
+    Set case_row to <"<p><code>SHA256</code></p>", "copy-sha256", "hex-label-case">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>sha&#50;56</p>", "copy-sha256", "character-reference">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>The bundle differs from the recorded one.</p>", "copy-bundle-differs", "bundle-phrase">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p><code>0123456789abcdef</code></p>", "copy-hex", "hex-run-16">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p><code>0123456789abcde</code></p>", "", "hex-run-15">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>abcdefabcdefabcdef</p>", "", "letters-only-run">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<!-- ui: verdict: a > b sha256 bundle differs 0123456789abcdef --><p>Clean page.</p>", "", "comment-exempt">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<input type=\"hidden\" name=\"review_sha256\" value=\"0123456789abcdef0123456789abcdef\">", "", "attribute-exempt">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<pre>sha256 0123456789abcdef</pre>", "", "quoted-artifact-exempt">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>sha<span>256</span></p>", "", "split-across-tags">.
+    Do [[invariant_cases.append]](case_row).
+    For each invariant_case in invariant_cases:
+        Set case_copy to [[list]](invariant_case).
+        Set case_body to [[case_copy.pop]](0).
+        Set case_want to [[case_copy.pop]](0).
+        Set case_label to [[case_copy.pop]](0).
+        Set case_page to [[page_html]]("Selftest", "selftest", case_head plus case_body).
+        If [[page_invariant_name]](case_page) does not equal case_want:
+            Give back "ui: selftest failed: invariant " plus case_label.
     Give back "".
 
 Set h5_content_type to [[tuple]](<"Content-Type", "text/html; charset=utf-8">).
@@ -1196,7 +1434,7 @@ Define [[base_headers]] taking nothing:
 
 Define [[not_found_response]] taking nothing:
     Set body_html to "<p>The requested page does not exist.</p>".
-    Set page_text to [[build_error_page]]("not found", "Not found", body_html).
+    Set page_text to [[build_error_page]]("Not found", "Not found", body_html).
     Set body_bytes to [[page_text.encode]]("utf-8").
     Give back <"404 Not Found", [[base_headers]](), body_bytes>.
 
@@ -1227,31 +1465,30 @@ Define [[method_response]] taking shaped:
     If shaped:
         Set allow_value to "GET, POST".
         Set body_html to "<p>Only GET and POST are supported on this page.</p>".
-    Set page_text to [[build_error_page]]("method not allowed", "Method not allowed", body_html).
+    Set page_text to [[build_error_page]]("Method not allowed", "Method not allowed", body_html).
     Set body_bytes to [[page_text.encode]]("utf-8").
     Set headers to [[base_headers]]().
     Do [[headers.append]]([[tuple]](<"Allow", allow_value>)).
     Give back <"405 Method Not Allowed", headers, body_bytes>.
 
-Define [[verdict_refusal]] taking status_text, heading_text, detail:
-    Set body_html to "<pre>" plus [[esc_text]](detail) plus "</pre>".
-    Set title_text to [[heading_text.lower]]().
-    Set page_text to [[build_error_page]](title_text, heading_text, body_html).
+Define [[verdict_refusal]] taking status_text, heading_text, detail, plain_text:
+    Set body_html to "<p>" plus [[esc_text]](plain_text) plus "</p>\n<!-- " plus [[comment_safe]](detail) plus " -->".
+    Set page_text to [[build_error_page]](heading_text, heading_text, body_html).
     Set body_bytes to [[page_text.encode]]("utf-8").
     Give back <status_text, [[base_headers]](), body_bytes>.
 
 Define [[redirect_response]] taking gid, docid:
     Set location_value to "/g/" plus [[url_seg]](gid) plus "/review/" plus [[url_seg]](docid) plus ".html".
-    Set body_html to "<p>The verdict was recorded.</p>".
-    Set page_text to [[build_error_page]]("verdict recorded", "Verdict recorded", body_html).
+    Set body_html to "<p>The decision was recorded.</p>".
+    Set page_text to [[build_error_page]]("Decision recorded", "Decision recorded", body_html).
     Set body_bytes to [[page_text.encode]]("utf-8").
     Set headers to [[base_headers]]().
     Do [[headers.append]]([[tuple]](<"Location", location_value>)).
     Give back <"303 See Other", headers, body_bytes>.
 
 Define [[error_response]] taking detail:
-    Set body_html to "<pre>" plus [[esc_text]](detail) plus "</pre>".
-    Set page_text to [[build_error_page]]("server error", "Server error", body_html).
+    Set body_html to "<p>The server could not complete the request. Reload the page and try again.</p>\n<!-- " plus [[comment_safe]](detail) plus " -->".
+    Set page_text to [[build_error_page]]("Server error", "Server error", body_html).
     Set body_bytes to [[page_text.encode]]("utf-8").
     Give back <"500 Internal Server Error", [[base_headers]](), body_bytes>.
 
@@ -1297,8 +1534,6 @@ Define [[parse_form_fields]] taking body_bytes:
     If not verdict_ok:
         Give back [[err]]("ui: verdict: invalid verdict").
     Set reviewer_value to [[fields.get]]("reviewer").
-    If not reviewer_value:
-        Give back [[err]]("ui: verdict: invalid reviewer").
     If not [[field_text_ok]](reviewer_value):
         Give back [[err]]("ui: verdict: invalid reviewer").
     If not [[field_text_ok]]([[fields.get]]("comment")):
@@ -1323,20 +1558,20 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     Set port_value to [[serve_config.get]]("port", 8377).
     Set expected_host to "127.0.0.1:" plus [[str]](port_value).
     If [[meta.get]]("host", "") does not equal expected_host:
-        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: host not allowed").
+        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: host not allowed", refusal_refused_text).
     Set origin_value to [[meta.get]]("origin", None).
     Set expected_origin to "http://" plus expected_host.
     If origin_value does not equal None:
         If origin_value does not equal expected_origin:
-            Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: origin not allowed").
+            Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: origin not allowed", refusal_refused_text).
     If [[meta.get]]("content_type", "") does not equal "application/x-www-form-urlencoded":
-        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: unsupported content type").
+        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: unsupported content type", refusal_invalid_form_text).
     Set body_bytes to [[meta.get]]("body", None).
     If body_bytes equals None:
-        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: missing body").
+        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: missing body", refusal_invalid_form_text).
     Set fields_result to [[parse_form_fields]](body_bytes).
     If [[result_kind]](fields_result) equals "err":
-        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", [[result_value]](fields_result)).
+        Give back [[verdict_refusal]]("400 Bad Request", "Bad request", [[result_value]](fields_result), refusal_invalid_form_text).
     Set fields to [[result_value]](fields_result).
     Set token_value to [[serve_config.get]]("token", "").
     Set token_ok to True.
@@ -1345,7 +1580,7 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     If [[fields.get]]("csrf") does not equal token_value:
         Set token_ok to False.
     If not token_ok:
-        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: invalid csrf token").
+        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: invalid csrf token", refusal_refused_text).
     Set data_result to [[doc_render_data]](model, docid).
     If [[result_kind]](data_result) equals "err":
         Give back [[error_response]]([[result_value]](data_result)).
@@ -1381,9 +1616,9 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     If fresh_digest equals "":
         Give back [[error_response]]("ui: verdict: manifest derivation failed: docid row missing").
     If [[fields.get]]("review_sha256") does not equal fresh_digest:
-        Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: subject changed").
+        Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: subject changed", refusal_subject_text).
     If [[fields.get]]("ledger_sha256") does not equal [[model.get]]("ledger_file_digest", "absent"):
-        Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: ledger changed").
+        Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: ledger changed", refusal_ledger_text).
     Set audit_dir to [[guideline_path.joinpath]]("audit").
     Set ledger_path to [[audit_dir.joinpath]]("adjudication.tsv").
     If [[ledger_path.is_symlink]]():
