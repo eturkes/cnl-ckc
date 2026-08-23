@@ -1,4 +1,4 @@
-# CDC 2022 opioid guideline
+# CDC 2022 Opioid Guidelines
 
 Dowell D, Ragan KR, Jones CM, Baldwin GT, Chou R. CDC Clinical Practice
 Guideline for Prescribing Opioids for Pain — United States, 2022. MMWR Recomm

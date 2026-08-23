@@ -3024,6 +3024,8 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
                 Set verdict_ok to True.
             If not verdict_ok:
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " verdict").
+            If not reviewer_field:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " reviewer").
             If not [[reviewer_text_ok]](reviewer_field):
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " reviewer").
             If not [[valid_review_date]](date_field):

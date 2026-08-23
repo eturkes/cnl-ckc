@@ -2918,6 +2918,8 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
                 verdict_ok = True
             if not verdict_ok:
                 violation("adjudication", "ledger row " + str(row_number) + " verdict")
+            if not reviewer_field:
+                violation("adjudication", "ledger row " + str(row_number) + " reviewer")
             if not reviewer_text_ok(reviewer_field):
                 violation("adjudication", "ledger row " + str(row_number) + " reviewer")
             if not valid_review_date(date_field):

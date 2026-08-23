@@ -727,7 +727,7 @@ def build_viewmodel(root_path):
             return model_result
         models.append(result_value(model_result))
     return ok(models)
-palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"]}
+palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"]}
 def pal_fg(role):
     pair = palette.get(role, [])
     pair_copy = list(pair)
@@ -775,6 +775,7 @@ def build_css():
     lines.append("fieldset label { margin-top: 0.5rem; font-weight: 400; }")
     lines.append("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " + line_color + "; font-family: inherit; font-size: 1rem; color: " + body_fg + "; background: " + body_bg + "; }")
     lines.append("textarea { min-height: 6rem; }")
+    lines.append("input.suggested { color: " + pal_fg("muted") + "; }")
     lines.append("input[type=\"radio\"] { accent-color: " + body_fg + "; }")
     lines.append("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " + link_fg + "; outline-offset: 2px; }")
     lines.append("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " + body_fg + "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " + body_bg + "; background: " + body_fg + "; }")
@@ -837,8 +838,36 @@ def page_html(title_text, crumb_html, body_html):
     parts.append("</html>")
     joiner = "\n"
     return joiner.join(parts) + "\n"
+def state_label(state):
+    if state == "stale":
+        return "Outdated"
+    return state.capitalize()
 def chip_html(state):
-    return "<span class=\"chip chip-" + state + "\">" + state + "</span>"
+    return "<span class=\"chip chip-" + state + "\">" + state_label(state) + "</span>"
+def reviewer_roster(ledger_rows):
+    names = []
+    latest_date = ""
+    latest_name = ""
+    for row_docid in ledger_rows:
+        fields_copy = list(ledger_rows.get(row_docid))
+        fields_copy.pop(0)
+        name_text = fields_copy.pop(0)
+        date_text = fields_copy.pop(0)
+        if name_text:
+            known = name_text in names
+            if not known:
+                names.append(name_text)
+            older = date_text < latest_date
+            if not older:
+                latest_date = date_text
+                latest_name = name_text
+    return [sorted(names), latest_name]
+def datalist_html(names):
+    option_parts = []
+    for name_text in names:
+        option_parts.append("<option value=\"" + esc_attr(name_text) + "\"></option>")
+    option_joiner = ""
+    return "<datalist id=\"reviewer-names\">" + option_joiner.join(option_parts) + "</datalist>"
 def build_index_page(models):
     rows = []
     for model in models:
@@ -860,7 +889,7 @@ def build_index_page(models):
     parts.append("<h1>Guidelines</h1>")
     parts.append("<section>")
     parts.append("<table>")
-    parts.append("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Stale</th><th>Unreviewed</th></tr></thead>")
+    parts.append("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Outdated</th><th>Unreviewed</th></tr></thead>")
     joiner = "\n"
     parts.append("<tbody>" + joiner.join(rows) + "</tbody>")
     parts.append("</table>")
@@ -882,9 +911,9 @@ def build_guideline_page(model):
     parts.append("<section>")
     parts.append("<h2>Status</h2>")
     parts.append("<table class=\"compact\">")
-    parts.append("<thead><tr><th>Measure</th><th>Count</th></tr></thead>")
+    parts.append("<thead><tr><th>Status</th><th>Count</th></tr></thead>")
     status_rows = []
-    status_labels = [["Passages", "regions"], ["With ACE", "ace"], ["Restated", "restates"], ["Uncovered", "uncovered"], ["Pending", "pending"], ["Approved", "approved"], ["Rejected", "rejected"], ["Stale", "stale"], ["Unreviewed", "unreviewed"]]
+    status_labels = [["Passages", "regions"], ["With ACE", "ace"], ["Pending", "pending"], ["Approved", "approved"], ["Rejected", "rejected"], ["Outdated", "stale"], ["Unreviewed", "unreviewed"]]
     for label_pair in status_labels:
         pair_copy = list(label_pair)
         label_text = pair_copy.pop(0)
@@ -984,7 +1013,7 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     parts.append("<h1>" + esc_text(doc_title) + " " + chip_html(state) + "</h1>")
     if state == "stale":
         parts.append("<section class=\"stale\">")
-        parts.append("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>")
+        parts.append("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>")
         parts.append("</section>")
     parts.append("<section>")
     parts.append("<h2>Source passage " + esc_text(region_by_docid.get(docid, "")) + "</h2>")
@@ -1047,17 +1076,14 @@ def build_review_page(model, docid):
     parts.append("<section>")
     parts.append("<h2>Decision on record</h2>")
     if state == "stale":
-        parts.append("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>")
+        parts.append("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>")
     if has_row:
-        shown_reviewer = row_reviewer
-        if not shown_reviewer:
-            shown_reviewer = "Not given"
         shown_comment = row_comment
         if not shown_comment:
             shown_comment = "Not given"
         parts.append("<dl>")
-        parts.append("<dt>Decision</dt><dd>" + esc_text(row_verdict) + "</dd>")
-        parts.append("<dt>Reviewer</dt><dd>" + esc_text(shown_reviewer) + "</dd>")
+        parts.append("<dt>Decision</dt><dd>" + esc_text(state_label(row_verdict)) + "</dd>")
+        parts.append("<dt>Reviewer</dt><dd>" + esc_text(row_reviewer) + "</dd>")
         parts.append("<dt>Date</dt><dd>" + esc_text(human_date(row_date)) + "</dd>")
         parts.append("<dt>Comment</dt><dd>" + esc_text(shown_comment) + "</dd>")
         parts.append("</dl>")
@@ -1071,6 +1097,10 @@ def build_review_page(model, docid):
         approved_checked = " checked"
     if row_verdict == "rejected":
         rejected_checked = " checked"
+    roster = reviewer_roster(ledger_rows)
+    roster_copy = list(roster)
+    reviewer_names = roster_copy.pop(0)
+    default_reviewer = roster_copy.pop(0)
     parts.append("<section class=\"verdict-entry\">")
     parts.append("<h2>Record a decision</h2>")
     parts.append("<p>Your decision applies to this document exactly as shown on this page. If the document or its source changes before you submit, the server refuses the decision and records no change.</p>")
@@ -1080,8 +1110,9 @@ def build_review_page(model, docid):
     parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" + approved_checked + "> Approved</label>")
     parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" + rejected_checked + "> Rejected</label>")
     parts.append("</fieldset>")
-    parts.append("<label for=\"reviewer\">Reviewer name (optional)</label>")
-    parts.append("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" value=\"" + esc_attr(row_reviewer) + "\">")
+    parts.append("<label for=\"reviewer\">Reviewer name</label>")
+    parts.append("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" + esc_attr(default_reviewer) + "\" required>")
+    parts.append(datalist_html(reviewer_names))
     parts.append("<label for=\"comment\">Comment (optional)</label>")
     parts.append("<textarea id=\"comment\" name=\"comment\">" + esc_text(row_comment) + "</textarea>")
     parts.append("<input type=\"hidden\" name=\"review_sha256\" value=\"" + esc_attr(current_digest) + "\">")
@@ -1467,6 +1498,8 @@ def parse_form_fields(body_bytes):
     if not verdict_ok:
         return err("ui: verdict: invalid verdict")
     reviewer_value = fields.get("reviewer")
+    if not reviewer_value:
+        return err("ui: verdict: invalid reviewer")
     if not field_text_ok(reviewer_value):
         return err("ui: verdict: invalid reviewer")
     if not field_text_ok(fields.get("comment")):

@@ -36,6 +36,7 @@ legend { font-weight: 600; padding: 0; }
 fieldset label { margin-top: 0.5rem; font-weight: 400; }
 input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
 textarea { min-height: 6rem; }
+input.suggested { color: #4b5563; }
 input[type="radio"] { accent-color: #111827; }
 input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
@@ -57,7 +58,7 @@ a { color: inherit; text-decoration: none; }
 <section>
 <h2>Decision on record</h2>
 <dl>
-<dt>Decision</dt><dd>approved</dd>
+<dt>Decision</dt><dd>Approved</dd>
 <dt>Reviewer</dt><dd>reviewer</dd>
 <dt>Date</dt><dd>2026-01-01 00:00:00 UTC</dd>
 <dt>Comment</dt><dd>Not given</dd>
@@ -73,8 +74,9 @@ a { color: inherit; text-decoration: none; }
 <label><input type="radio" name="verdict" value="approved" required checked> Approved</label>
 <label><input type="radio" name="verdict" value="rejected" required> Rejected</label>
 </fieldset>
-<label for="reviewer">Reviewer name (optional)</label>
-<input type="text" id="reviewer" name="reviewer" value="reviewer">
+<label for="reviewer">Reviewer name</label>
+<input type="text" class="suggested" id="reviewer" name="reviewer" list="reviewer-names" value="reviewer" required>
+<datalist id="reviewer-names"><option value="reviewer"></option></datalist>
 <label for="comment">Comment (optional)</label>
 <textarea id="comment" name="comment"></textarea>
 <input type="hidden" name="review_sha256" value="3f45526e71648dbe5f7f5b83c546f3f912f7071e57e2368bac2bc4170bb0ef33">

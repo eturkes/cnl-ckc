@@ -760,7 +760,7 @@ Define [[build_viewmodel]] taking root_path:
         Do [[models.append]]([[result_value]](model_result)).
     Give back [[ok]](models).
 
-Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">}.
+Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">}.
 
 Define [[pal_fg]] taking role:
     Set pair to [[palette.get]](role, <>).
@@ -811,6 +811,7 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("fieldset label { margin-top: 0.5rem; font-weight: 400; }").
     Do [[lines.append]]("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " plus line_color plus "; font-family: inherit; font-size: 1rem; color: " plus body_fg plus "; background: " plus body_bg plus "; }").
     Do [[lines.append]]("textarea { min-height: 6rem; }").
+    Do [[lines.append]]("input.suggested { color: " plus [[pal_fg]]("muted") plus "; }").
     Do [[lines.append]]("input[type=\"radio\"] { accent-color: " plus body_fg plus "; }").
     Do [[lines.append]]("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
     Do [[lines.append]]("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " plus body_fg plus "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " plus body_bg plus "; background: " plus body_fg plus "; }").
@@ -879,8 +880,39 @@ Define [[page_html]] taking title_text, crumb_html, body_html:
     Set joiner to "\n".
     Give back [[joiner.join]](parts) plus "\n".
 
+Define [[state_label]] taking state:
+    If state equals "stale":
+        Give back "Outdated".
+    Give back [[state.capitalize]]().
+
 Define [[chip_html]] taking state:
-    Give back "<span class=\"chip chip-" plus state plus "\">" plus state plus "</span>".
+    Give back "<span class=\"chip chip-" plus state plus "\">" plus [[state_label]](state) plus "</span>".
+
+Define [[reviewer_roster]] taking ledger_rows:
+    Set names to <>.
+    Set latest_date to "".
+    Set latest_name to "".
+    For each row_docid in ledger_rows:
+        Set fields_copy to [[list]]([[ledger_rows.get]](row_docid)).
+        Do [[fields_copy.pop]](0).
+        Set name_text to [[fields_copy.pop]](0).
+        Set date_text to [[fields_copy.pop]](0).
+        If name_text:
+            Set known to name_text is in names.
+            If not known:
+                Do [[names.append]](name_text).
+            Set older to date_text is less than latest_date.
+            If not older:
+                Set latest_date to date_text.
+                Set latest_name to name_text.
+    Give back <[[sorted]](names), latest_name>.
+
+Define [[datalist_html]] taking names:
+    Set option_parts to <>.
+    For each name_text in names:
+        Do [[option_parts.append]]("<option value=\"" plus [[esc_attr]](name_text) plus "\"></option>").
+    Set option_joiner to "".
+    Give back "<datalist id=\"reviewer-names\">" plus [[option_joiner.join]](option_parts) plus "</datalist>".
 
 Define [[build_index_page]] taking models:
     Set rows to <>.
@@ -903,7 +935,7 @@ Define [[build_index_page]] taking models:
     Do [[parts.append]]("<h1>Guidelines</h1>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<table>").
-    Do [[parts.append]]("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Stale</th><th>Unreviewed</th></tr></thead>").
+    Do [[parts.append]]("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Outdated</th><th>Unreviewed</th></tr></thead>").
     Set joiner to "\n".
     Do [[parts.append]]("<tbody>" plus [[joiner.join]](rows) plus "</tbody>").
     Do [[parts.append]]("</table>").
@@ -926,9 +958,9 @@ Define [[build_guideline_page]] taking model:
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Status</h2>").
     Do [[parts.append]]("<table class=\"compact\">").
-    Do [[parts.append]]("<thead><tr><th>Measure</th><th>Count</th></tr></thead>").
+    Do [[parts.append]]("<thead><tr><th>Status</th><th>Count</th></tr></thead>").
     Set status_rows to <>.
-    Set status_labels to <<"Passages", "regions">, <"With ACE", "ace">, <"Restated", "restates">, <"Uncovered", "uncovered">, <"Pending", "pending">, <"Approved", "approved">, <"Rejected", "rejected">, <"Stale", "stale">, <"Unreviewed", "unreviewed">>.
+    Set status_labels to <<"Passages", "regions">, <"With ACE", "ace">, <"Pending", "pending">, <"Approved", "approved">, <"Rejected", "rejected">, <"Outdated", "stale">, <"Unreviewed", "unreviewed">>.
     For each label_pair in status_labels:
         Set pair_copy to [[list]](label_pair).
         Set label_text to [[pair_copy.pop]](0).
@@ -1030,7 +1062,7 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Do [[parts.append]]("<h1>" plus [[esc_text]](doc_title) plus " " plus [[chip_html]](state) plus "</h1>").
     If state equals "stale":
         Do [[parts.append]]("<section class=\"stale\">").
-        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>").
+        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>").
         Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Source passage " plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus "</h2>").
@@ -1094,17 +1126,14 @@ Define [[build_review_page]] taking model, docid:
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Decision on record</h2>").
     If state equals "stale":
-        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>").
+        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>").
     If has_row:
-        Set shown_reviewer to row_reviewer.
-        If not shown_reviewer:
-            Set shown_reviewer to "Not given".
         Set shown_comment to row_comment.
         If not shown_comment:
             Set shown_comment to "Not given".
         Do [[parts.append]]("<dl>").
-        Do [[parts.append]]("<dt>Decision</dt><dd>" plus [[esc_text]](row_verdict) plus "</dd>").
-        Do [[parts.append]]("<dt>Reviewer</dt><dd>" plus [[esc_text]](shown_reviewer) plus "</dd>").
+        Do [[parts.append]]("<dt>Decision</dt><dd>" plus [[esc_text]]([[state_label]](row_verdict)) plus "</dd>").
+        Do [[parts.append]]("<dt>Reviewer</dt><dd>" plus [[esc_text]](row_reviewer) plus "</dd>").
         Do [[parts.append]]("<dt>Date</dt><dd>" plus [[esc_text]]([[human_date]](row_date)) plus "</dd>").
         Do [[parts.append]]("<dt>Comment</dt><dd>" plus [[esc_text]](shown_comment) plus "</dd>").
         Do [[parts.append]]("</dl>").
@@ -1118,6 +1147,10 @@ Define [[build_review_page]] taking model, docid:
         Set approved_checked to " checked".
     If row_verdict equals "rejected":
         Set rejected_checked to " checked".
+    Set roster to [[reviewer_roster]](ledger_rows).
+    Set roster_copy to [[list]](roster).
+    Set reviewer_names to [[roster_copy.pop]](0).
+    Set default_reviewer to [[roster_copy.pop]](0).
     Do [[parts.append]]("<section class=\"verdict-entry\">").
     Do [[parts.append]]("<h2>Record a decision</h2>").
     Do [[parts.append]]("<p>Your decision applies to this document exactly as shown on this page. If the document or its source changes before you submit, the server refuses the decision and records no change.</p>").
@@ -1127,8 +1160,9 @@ Define [[build_review_page]] taking model, docid:
     Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" plus approved_checked plus "> Approved</label>").
     Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" plus rejected_checked plus "> Rejected</label>").
     Do [[parts.append]]("</fieldset>").
-    Do [[parts.append]]("<label for=\"reviewer\">Reviewer name (optional)</label>").
-    Do [[parts.append]]("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" value=\"" plus [[esc_attr]](row_reviewer) plus "\">").
+    Do [[parts.append]]("<label for=\"reviewer\">Reviewer name</label>").
+    Do [[parts.append]]("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" plus [[esc_attr]](default_reviewer) plus "\" required>").
+    Do [[parts.append]]([[datalist_html]](reviewer_names)).
     Do [[parts.append]]("<label for=\"comment\">Comment (optional)</label>").
     Do [[parts.append]]("<textarea id=\"comment\" name=\"comment\">" plus [[esc_text]](row_comment) plus "</textarea>").
     Do [[parts.append]]("<input type=\"hidden\" name=\"review_sha256\" value=\"" plus [[esc_attr]](current_digest) plus "\">").
@@ -1534,6 +1568,8 @@ Define [[parse_form_fields]] taking body_bytes:
     If not verdict_ok:
         Give back [[err]]("ui: verdict: invalid verdict").
     Set reviewer_value to [[fields.get]]("reviewer").
+    If not reviewer_value:
+        Give back [[err]]("ui: verdict: invalid reviewer").
     If not [[field_text_ok]](reviewer_value):
         Give back [[err]]("ui: verdict: invalid reviewer").
     If not [[field_text_ok]]([[fields.get]]("comment")):

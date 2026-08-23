@@ -43,6 +43,7 @@ legend { font-weight: 600; padding: 0; }
 fieldset label { margin-top: 0.5rem; font-weight: 400; }
 input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
 textarea { min-height: 6rem; }
+input.suggested { color: #4b5563; }
 input[type="radio"] { accent-color: #111827; }
 input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
@@ -63,9 +64,9 @@ a { color: inherit; text-decoration: none; }
 <h1>Review: Fixture section (r2)</h1>
 <section>
 <h2>Decision on record</h2>
-<p>The document or its source changed after this decision was recorded. The decision is stale until a reviewer records a new one.</p>
+<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>
 <dl>
-<dt>Decision</dt><dd>approved</dd>
+<dt>Decision</dt><dd>Approved</dd>
 <dt>Reviewer</dt><dd>stale-reviewer</dd>
 <dt>Date</dt><dd>2026-01-02 00:00:00 UTC</dd>
 <dt>Comment</dt><dd>old</dd>
@@ -81,8 +82,9 @@ a { color: inherit; text-decoration: none; }
 <label><input type="radio" name="verdict" value="approved" required checked> Approved</label>
 <label><input type="radio" name="verdict" value="rejected" required> Rejected</label>
 </fieldset>
-<label for="reviewer">Reviewer name (optional)</label>
-<input type="text" id="reviewer" name="reviewer" value="stale-reviewer">
+<label for="reviewer">Reviewer name</label>
+<input type="text" class="suggested" id="reviewer" name="reviewer" list="reviewer-names" value="stale-reviewer" required>
+<datalist id="reviewer-names"><option value="R&quot;&lt;script&gt;&amp;&#x27;漢"></option><option value="stale-reviewer"></option></datalist>
 <label for="comment">Comment (optional)</label>
 <textarea id="comment" name="comment">old</textarea>
 <input type="hidden" name="review_sha256" value="d3a0e891231f02d99c0024f6beac93d672c023e021c4892334d8cabdfed95ef8">
