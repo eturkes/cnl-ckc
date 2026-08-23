@@ -2675,7 +2675,7 @@ def check_product_vocabulary(guideline_path, docid):
                         violation("product-vocabulary", "unauthorized clause functor in " + docid + ": " + functor)
 adjudication_manifest_header_1 = "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256"
 adjudication_manifest_header_2 = "# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit."
-adjudication_ledger_header = "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
+adjudication_ledger_header = "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
 manifest_component_names = ["ace_sha256", "coverage_row_sha256", "region_payload_sha256", "notes_row_sha256", "semantic_clause_sha256"]
 def sha256_hex(data):
     digest_value = hashlib.sha256(data)
@@ -2685,6 +2685,14 @@ def valid_digest(digest_text):
         return False
     allowed = set("0123456789abcdef")
     chars = set(digest_text)
+    return chars.issubset(allowed)
+def valid_commit_field(commit_text):
+    if commit_text == "":
+        return True
+    if len(commit_text) != 40:
+        return False
+    allowed = set("0123456789abcdef")
+    chars = set(commit_text)
     return chars.issubset(allowed)
 def semantic_clause_digest(pl_path, docid):
     data = read_corpus_file(pl_path, "adjudication")
@@ -2890,10 +2898,11 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
                 violation("adjudication", "ledger header")
             fields = row_line.split("\t")
             field_count = len(fields)
-            if field_count != 6:
+            if field_count != 7:
                 violation("adjudication", "ledger row " + str(row_number) + " field-count " + str(field_count))
             docid = fields.pop(0)
             digest_field = fields.pop(0)
+            commit_field = fields.pop(0)
             verdict_field = fields.pop(0)
             reviewer_field = fields.pop(0)
             date_field = fields.pop(0)
@@ -2912,6 +2921,8 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
             seen_row_docids.update({docid: True})
             if not valid_digest(digest_field):
                 violation("adjudication", "ledger row " + str(row_number) + " hex")
+            if not valid_commit_field(commit_field):
+                violation("adjudication", "ledger row " + str(row_number) + " ace-commit")
             verdict_ok = False
             if verdict_field == "approved":
                 verdict_ok = True

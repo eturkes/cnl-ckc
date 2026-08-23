@@ -2772,7 +2772,7 @@ Define [[check_product_vocabulary]] taking guideline_path, docid:
 
 Set adjudication_manifest_header_1 to "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256".
 Set adjudication_manifest_header_2 to "# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.".
-Set adjudication_ledger_header to "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
+Set adjudication_ledger_header to "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
 Set manifest_component_names to <"ace_sha256", "coverage_row_sha256", "region_payload_sha256", "notes_row_sha256", "semantic_clause_sha256">.
 
 Define [[sha256_hex]] taking data:
@@ -2784,6 +2784,15 @@ Define [[valid_digest]] taking digest_text:
         Give back False.
     Set allowed to [[set]]("0123456789abcdef").
     Set chars to [[set]](digest_text).
+    Give back [[chars.issubset]](allowed).
+
+Define [[valid_commit_field]] taking commit_text:
+    If commit_text equals "":
+        Give back True.
+    If [[len]](commit_text) does not equal 40:
+        Give back False.
+    Set allowed to [[set]]("0123456789abcdef").
+    Set chars to [[set]](commit_text).
     Give back [[chars.issubset]](allowed).
 
 Define [[semantic_clause_digest]] taking pl_path, docid:
@@ -2996,10 +3005,11 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
                 Do [[violation]]("adjudication", "ledger header").
             Set fields to [[row_line.split]]("\t").
             Set field_count to [[len]](fields).
-            If field_count does not equal 6:
+            If field_count does not equal 7:
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " field-count " plus [[str]](field_count)).
             Set docid to [[fields.pop]](0).
             Set digest_field to [[fields.pop]](0).
+            Set commit_field to [[fields.pop]](0).
             Set verdict_field to [[fields.pop]](0).
             Set reviewer_field to [[fields.pop]](0).
             Set date_field to [[fields.pop]](0).
@@ -3018,6 +3028,8 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
             Do [[seen_row_docids.update]]({docid: True}).
             If not [[valid_digest]](digest_field):
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " hex").
+            If not [[valid_commit_field]](commit_field):
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " ace-commit").
             Set verdict_ok to False.
             If verdict_field equals "approved":
                 Set verdict_ok to True.

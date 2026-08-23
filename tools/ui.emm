@@ -11,9 +11,10 @@ Use tempfile.
 Use urllib.parse.
 Use wsgiref.simple_server.
 
-Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]".
+Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--commit <sha1-or-empty>] [--fault after-tmp-write]".
 Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
-Set ledger_header_text to "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
+Set ledger_header_text to "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
+Set commit_url_base to "https://github.com/eturkes/cnl-ckc/commit/".
 Set verdict_field_names to <"verdict", "reviewer", "comment", "review_sha256", "ledger_sha256", "csrf">.
 Set serve_config to {}.
 
@@ -98,6 +99,28 @@ Define [[valid_hex64]] taking value:
     Set allowed to [[set]]("0123456789abcdef").
     Set chars to [[set]](value).
     Give back [[chars.issubset]](allowed).
+
+Define [[valid_hex40]] taking value:
+    If [[len]](value) does not equal 40:
+        Give back False.
+    Set allowed to [[set]]("0123456789abcdef").
+    Set chars to [[set]](value).
+    Give back [[chars.issubset]](allowed).
+
+Define [[commit_field_ok]] taking value:
+    If value equals "":
+        Give back True.
+    Give back [[valid_hex40]](value).
+
+Define [[short_commit]] taking value:
+    Set chars to [[list]](value).
+    Set out_text to "".
+    Set taken to 0.
+    For each char_text in chars:
+        If taken is less than 7:
+            Set out_text to out_text plus char_text.
+            Set taken to taken plus 1.
+    Give back out_text.
 
 Define [[field_text_ok]] taking value:
     For each char_text in value:
@@ -413,6 +436,38 @@ Define [[goal_py_path]] taking nothing:
     Set tool_dir to resolved.parent.
     Give back [[tool_dir.joinpath]]("goal.py").
 
+Define [[ace_commit_hex]] taking guideline_path, docid:
+    Set ace_path to [[guideline_path.joinpath]]("ace", docid plus ".ace").
+    If not [[ace_path.is_file]]():
+        Give back "".
+    Set work_dir to [[str]]([[guideline_path.resolve]]()).
+    Set ace_text to [[str]]([[ace_path.resolve]]()).
+    Set status_command to <"git", "status", "--porcelain", "--", ace_text>.
+    Set status_result to None.
+    Try:
+        Set status_result to [[subprocess.run]](status_command, capture_output=True, cwd=work_dir).
+    Catch OSError:
+        Give back "".
+    If status_result.returncode does not equal 0:
+        Give back "".
+    Set status_text to [[status_result.stdout.decode]]("utf-8", errors="replace").
+    Set status_trimmed to [[status_text.strip]]().
+    If status_trimmed:
+        Give back "".
+    Set log_command to <"git", "log", "-1", "--format=%H", "--", ace_text>.
+    Set log_result to None.
+    Try:
+        Set log_result to [[subprocess.run]](log_command, capture_output=True, cwd=work_dir).
+    Catch OSError:
+        Give back "".
+    If log_result.returncode does not equal 0:
+        Give back "".
+    Set log_text to [[log_result.stdout.decode]]("utf-8", errors="replace").
+    Set commit_text to [[log_text.strip]]().
+    If not [[valid_hex40]](commit_text):
+        Give back "".
+    Give back commit_text.
+
 Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid, manifest_text:
     Set ledger_path to [[guideline_path.joinpath]]("audit", "adjudication.tsv").
     Set states to {}.
@@ -449,7 +504,7 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
         Set ledger_text to [[ledger_bytes.decode]]("utf-8").
     Catch UnicodeDecodeError:
         Give back [[err]]("ui: viewmodel: " plus gid plus " file not UTF-8: audit/adjudication.tsv").
-    Set rows_result to [[parse_tsv_rows]](ledger_text, 6, gid, "adjudication").
+    Set rows_result to [[parse_tsv_rows]](ledger_text, 7, gid, "adjudication").
     If [[result_kind]](rows_result) equals "err":
         Give back rows_result.
     Set current_approved to {}.
@@ -459,19 +514,20 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
         Set fields to [[pair_copy.pop]](0).
         Set docid to [[fields.pop]](0).
         Set row_digest to [[fields.pop]](0).
+        Set commit_field to [[fields.pop]](0).
         Set verdict to [[fields.pop]](0).
         Set reviewer_field to [[fields.pop]](0).
         Set date_field to [[fields.pop]](0).
         Set comment_field to [[fields.pop]](0).
         Set current_digest to [[review_by_docid.get]](docid, "").
         Set current to row_digest equals current_digest.
-        Set row to <row_digest, verdict, reviewer_field, date_field, comment_field, current>.
+        Set row to <row_digest, commit_field, verdict, reviewer_field, date_field, comment_field, current>.
         Set known to docid is in ledger_by_docid.
         If not known:
             Do [[ledger_by_docid.update]]({docid: <>}).
         Set doc_history to [[ledger_by_docid.get]](docid).
         Do [[doc_history.append]](row).
-        Do [[ledger_order.append]](<docid, row_digest, verdict, reviewer_field, date_field, comment_field, current>).
+        Do [[ledger_order.append]](<docid, row_digest, commit_field, verdict, reviewer_field, date_field, comment_field, current>).
         If current:
             If verdict equals "approved":
                 Do [[current_approved.update]]({docid: True}).
@@ -890,7 +946,6 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("fieldset label { margin-top: 0.5rem; font-weight: 400; }").
     Do [[lines.append]]("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " plus line_color plus "; font-family: inherit; font-size: 1rem; color: " plus body_fg plus "; background: " plus body_bg plus "; }").
     Do [[lines.append]]("textarea { min-height: 6rem; }").
-    Do [[lines.append]]("input.suggested { color: " plus [[pal_fg]]("muted") plus "; }").
     Do [[lines.append]]("input[type=\"radio\"] { accent-color: " plus body_fg plus "; }").
     Do [[lines.append]]("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
     Do [[lines.append]]("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " plus body_fg plus "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " plus body_bg plus "; background: " plus body_fg plus "; }").
@@ -976,6 +1031,7 @@ Define [[reviewer_roster]] taking ledger_order:
         Do [[fields_copy.pop]](0).
         Do [[fields_copy.pop]](0).
         Do [[fields_copy.pop]](0).
+        Do [[fields_copy.pop]](0).
         Set name_text to [[fields_copy.pop]](0).
         Set date_text to [[fields_copy.pop]](0).
         If name_text:
@@ -1001,6 +1057,7 @@ Define [[doc_tally]] taking ledger_by_docid, docid:
     Set earlier_count to 0.
     For each row in [[ledger_by_docid.get]](docid, <>):
         Set row_copy to [[list]](row).
+        Do [[row_copy.pop]](0).
         Do [[row_copy.pop]](0).
         Set verdict to [[row_copy.pop]](0).
         Do [[row_copy.pop]](0).
@@ -1271,7 +1328,7 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>").
     Do [[parts.append]]("</fieldset>").
     Do [[parts.append]]("<label for=\"reviewer\">Reviewer name</label>").
-    Do [[parts.append]]("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" plus [[esc_attr]](default_reviewer) plus "\" required>").
+    Do [[parts.append]]("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" plus [[esc_attr]](default_reviewer) plus "\" required>").
     Do [[parts.append]]([[datalist_html]](reviewer_names)).
     Do [[parts.append]]("<label for=\"comment\">Comment (optional)</label>").
     Do [[parts.append]]("<textarea id=\"comment\" name=\"comment\"></textarea>").
@@ -1314,6 +1371,7 @@ Define [[build_records_page]] taking model:
         Set summary_text to summary_text plus " The newest decision for each document is first.".
     Do [[parts.append]]("<p>" plus [[esc_text]](summary_text) plus "</p>").
     Set section_count to 0.
+    Set link_count to 0.
     For each docid in docids:
         Set history to [[ledger_by_docid.get]](docid, <>).
         If history:
@@ -1328,6 +1386,7 @@ Define [[build_records_page]] taking model:
             For each row in newest_first:
                 Set row_copy to [[list]](row).
                 Do [[row_copy.pop]](0).
+                Set commit_text to [[row_copy.pop]](0).
                 Set verdict to [[row_copy.pop]](0).
                 Set reviewer_text to [[row_copy.pop]](0).
                 Set date_text to [[row_copy.pop]](0).
@@ -1336,6 +1395,11 @@ Define [[build_records_page]] taking model:
                 Set version_text to "Earlier".
                 If current:
                     Set version_text to "Current".
+                If commit_text:
+                    Set link_count to link_count plus 1.
+                    If not current:
+                        Set version_text to [[short_commit]](commit_text).
+                    Set version_text to "<a href=\"" plus commit_url_base plus [[esc_attr]](commit_text) plus "\">" plus [[esc_text]](version_text) plus "</a>".
                 Set shown_comment to comment_text.
                 If not shown_comment:
                     Set shown_comment to "Not given".
@@ -1353,6 +1417,8 @@ Define [[build_records_page]] taking model:
         Do [[parts.append]]("<p>Open a document and record a decision to start this list.</p>").
     Otherwise:
         Do [[parts.append]]("<p>Each reviewer name is recorded as entered and is not verified.</p>").
+        If link_count is greater than 0:
+            Do [[parts.append]]("<p>Each version links the commit that wrote the ACE text the reviewer read.</p>").
     Do [[parts.append]]("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>").
     Set body_html to [[joiner.join]](parts).
     Set crumb_html to "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" plus [[esc_text]](gid) plus "</a> / records".
@@ -1383,6 +1449,8 @@ Define [[extract_hrefs]] taking page_text:
 
 Define [[resolve_href]] taking page_path, href_value:
     If [[href_value.startswith]]("#"):
+        Give back "#".
+    If [[href_value.startswith]]("https://"):
         Give back "#".
     Set fragment_parts to [[href_value.split]]("#", 1).
     Set href_value to [[fragment_parts.pop]](0).
@@ -1562,7 +1630,9 @@ Define [[page_invariant_name]] taking page_text:
         Give back "tabindex".
     If [[page_text.count]]("style=") does not equal 0:
         Give back "inline-style".
-    If [[page_text.count]]("href=\"http") does not equal 0:
+    Set external_total to [[page_text.count]]("href=\"http").
+    Set commit_links to [[page_text.count]]("href=\"" plus commit_url_base).
+    If external_total does not equal commit_links:
         Give back "external-href".
     Set scope_html to "<footer class=\"scope\"><p>" plus [[esc_text]](scope_line_text) plus "</p></footer>".
     If [[page_text.count]](scope_html) does not equal 1:
@@ -1866,8 +1936,11 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     If now_text equals "":
         Set now_value to [[datetime.datetime.now]](datetime.timezone.utc).
         Set now_text to [[now_value.strftime]]("%Y-%m-%dT%H:%M:%SZ").
+    Set commit_text to [[serve_config.get]]("commit_pin", None).
+    If commit_text equals None:
+        Set commit_text to [[ace_commit_hex]](guideline_path, docid).
     Set tab_text to "\t".
-    Set new_line to docid plus tab_text plus [[fields.get]]("review_sha256") plus tab_text plus [[fields.get]]("verdict") plus tab_text plus [[fields.get]]("reviewer") plus tab_text plus now_text plus tab_text plus [[fields.get]]("comment").
+    Set new_line to docid plus tab_text plus [[fields.get]]("review_sha256") plus tab_text plus commit_text plus tab_text plus [[fields.get]]("verdict") plus tab_text plus [[fields.get]]("reviewer") plus tab_text plus now_text plus tab_text plus [[fields.get]]("comment").
     Set new_key to docid plus tab_text plus now_text.
     Set kept_lines to <>.
     Set insert_at to 0.
@@ -1876,11 +1949,12 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
         Set row_copy to [[list]](row).
         Set row_docid to [[row_copy.pop]](0).
         Set row_digest to [[row_copy.pop]](0).
+        Set row_commit to [[row_copy.pop]](0).
         Set row_verdict to [[row_copy.pop]](0).
         Set row_reviewer to [[row_copy.pop]](0).
         Set row_date to [[row_copy.pop]](0).
         Set row_comment to [[row_copy.pop]](0).
-        Do [[kept_lines.append]](row_docid plus tab_text plus row_digest plus tab_text plus row_verdict plus tab_text plus row_reviewer plus tab_text plus row_date plus tab_text plus row_comment).
+        Do [[kept_lines.append]](row_docid plus tab_text plus row_digest plus tab_text plus row_commit plus tab_text plus row_verdict plus tab_text plus row_reviewer plus tab_text plus row_date plus tab_text plus row_comment).
         Set scan_index to scan_index plus 1.
         Set row_key to row_docid plus tab_text plus row_date.
         Set later to new_key is less than row_key.
@@ -2224,11 +2298,13 @@ Define [[request_command]] taking args:
     Set body_seen to False.
     Set token_seen to False.
     Set now_seen to False.
+    Set commit_seen to False.
     Set fault_seen to False.
     Set token_text to "".
     Set now_text to "".
+    Set commit_text to "".
     Set fault_text to "".
-    Set flag_names to <"--header", "--body", "--body-hex", "--token", "--now", "--fault">.
+    Set flag_names to <"--header", "--body", "--body-hex", "--token", "--now", "--commit", "--fault">.
     Set pending to "".
     Set flags_started to False.
     For each arg_text in args:
@@ -2268,6 +2344,13 @@ Define [[request_command]] taking args:
                     Do [[usage_fail]]().
                 Set now_text to arg_text.
                 Set now_seen to True.
+            Otherwise if pending equals "--commit":
+                If commit_seen:
+                    Do [[usage_fail]]().
+                If not [[commit_field_ok]](arg_text):
+                    Do [[usage_fail]]().
+                Set commit_text to arg_text.
+                Set commit_seen to True.
             Otherwise:
                 If fault_seen:
                     Do [[usage_fail]]().
@@ -2301,6 +2384,8 @@ Define [[request_command]] taking args:
     Do [[serve_config.update]]({"port": 8377}).
     Do [[serve_config.update]]({"token": token_text}).
     Do [[serve_config.update]]({"now": now_text}).
+    If commit_seen:
+        Do [[serve_config.update]]({"commit_pin": commit_text}).
     Do [[serve_config.update]]({"fault": fault_text}).
     Set meta to {}.
     Do [[meta.update]]({"host": host_text}).

@@ -46,7 +46,6 @@ legend { font-weight: 600; padding: 0; }
 fieldset label { margin-top: 0.5rem; font-weight: 400; }
 input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
 textarea { min-height: 6rem; }
-input.suggested { color: #4b5563; }
 input[type="radio"] { accent-color: #111827; }
 input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
@@ -70,16 +69,16 @@ a { color: inherit; text-decoration: none; }
 <h2><a href="doc/approved.html">Fixture section (r1)</a></h2>
 <table class="records">
 <thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>
-<tbody><tr><td>Approved</td><td>Rita Mensah</td><td>2026-02-01 00:00:00 UTC</td><td>Current</td><td>A second reviewer read the same version.</td></tr>
-<tr><td>Approved</td><td>reviewer</td><td>2026-01-01 00:00:00 UTC</td><td>Current</td><td>Not given</td></tr></tbody>
+<tbody><tr><td>Approved</td><td>Rita Mensah</td><td>2026-02-01 00:00:00 UTC</td><td><a href="https://github.com/eturkes/cnl-ckc/commit/4f1c9abd0e37b25a86c4fd190b7e5382ca6017df">Current</a></td><td>A second reviewer read the same version.</td></tr>
+<tr><td>Approved</td><td>reviewer</td><td>2026-01-01 00:00:00 UTC</td><td><a href="https://github.com/eturkes/cnl-ckc/commit/4f1c9abd0e37b25a86c4fd190b7e5382ca6017df">Current</a></td><td>Not given</td></tr></tbody>
 </table>
 </section>
 <section id="contested">
 <h2><a href="doc/contested.html">Fixture section (r5)</a></h2>
 <table class="records">
 <thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>
-<tbody><tr><td>Rejected</td><td>Daniel Okafor</td><td>2026-02-05 00:00:00 UTC</td><td>Current</td><td>The restatement drops a dose limit.</td></tr>
-<tr><td>Approved</td><td>Rita Mensah</td><td>2026-01-05 00:00:00 UTC</td><td>Current</td><td>Not given</td></tr></tbody>
+<tbody><tr><td>Rejected</td><td>Daniel Okafor</td><td>2026-02-05 00:00:00 UTC</td><td><a href="https://github.com/eturkes/cnl-ckc/commit/9d2e7b0c1a3f5e8d4b6a2c7f0e9d1b3a5c8f7e6d">Current</a></td><td>The restatement drops a dose limit.</td></tr>
+<tr><td>Approved</td><td>Rita Mensah</td><td>2026-01-05 00:00:00 UTC</td><td><a href="https://github.com/eturkes/cnl-ckc/commit/9d2e7b0c1a3f5e8d4b6a2c7f0e9d1b3a5c8f7e6d">Current</a></td><td>Not given</td></tr></tbody>
 </table>
 </section>
 <section id="rejected">
@@ -94,10 +93,11 @@ a { color: inherit; text-decoration: none; }
 <table class="records">
 <thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>
 <tbody><tr><td>Rejected</td><td>Rita Mensah</td><td>2026-01-02 00:00:00 UTC</td><td>Earlier</td><td>Recorded before the extraction was corrected.</td></tr>
-<tr><td>Approved</td><td>reviewer</td><td>2026-01-01 00:00:00 UTC</td><td>Earlier</td><td>Not given</td></tr></tbody>
+<tr><td>Approved</td><td>reviewer</td><td>2026-01-01 00:00:00 UTC</td><td><a href="https://github.com/eturkes/cnl-ckc/commit/c81a4f5e2b90d7136ae4f80c25b3d9617fa0e84b">c81a4f5</a></td><td>Not given</td></tr></tbody>
 </table>
 </section>
 <p>Each reviewer name is recorded as entered and is not verified.</p>
+<p>Each version links the commit that wrote the ACE text the reviewer read.</p>
 <nav class="docnav"><a href="index.html">Guideline index</a></nav>
 </main>
 <footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>

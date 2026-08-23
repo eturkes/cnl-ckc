@@ -1,8 +1,8 @@
-# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment
-approved	3f45526e71648dbe5f7f5b83c546f3f912f7071e57e2368bac2bc4170bb0ef33	approved	reviewer	2026-01-01T00:00:00Z	
-approved	3f45526e71648dbe5f7f5b83c546f3f912f7071e57e2368bac2bc4170bb0ef33	approved	Rita Mensah	2026-02-01T00:00:00Z	A second reviewer read the same version.
-contested	4cc10917b5f92cfd1bb5ea818af56f81a092a65ab6f1f4b1bab4b75ff10582f0	approved	Rita Mensah	2026-01-05T00:00:00Z	
-contested	4cc10917b5f92cfd1bb5ea818af56f81a092a65ab6f1f4b1bab4b75ff10582f0	rejected	Daniel Okafor	2026-02-05T00:00:00Z	The restatement drops a dose limit.
-rejected	ae288e5ed0279153768bfed5286d30fae537fdcf1a543ebd195ec630e25af88a	rejected	reviewer	2026-01-01T00:00:00Z	the restatement drops a limit
-stale	8164cf771b60541c2978de40d64c061cd7ec07d310ff0a9ff2c8d9105415cc16	approved	reviewer	2026-01-01T00:00:00Z	
-stale	5b2f4c8e7a1d3096be55c4f2a80d716339ecab04d7f81c6520943ae8bd17c2f5	rejected	Rita Mensah	2026-01-02T00:00:00Z	Recorded before the extraction was corrected.
+# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment
+approved	3f45526e71648dbe5f7f5b83c546f3f912f7071e57e2368bac2bc4170bb0ef33	4f1c9abd0e37b25a86c4fd190b7e5382ca6017df	approved	reviewer	2026-01-01T00:00:00Z	
+approved	3f45526e71648dbe5f7f5b83c546f3f912f7071e57e2368bac2bc4170bb0ef33	4f1c9abd0e37b25a86c4fd190b7e5382ca6017df	approved	Rita Mensah	2026-02-01T00:00:00Z	A second reviewer read the same version.
+contested	4cc10917b5f92cfd1bb5ea818af56f81a092a65ab6f1f4b1bab4b75ff10582f0	9d2e7b0c1a3f5e8d4b6a2c7f0e9d1b3a5c8f7e6d	approved	Rita Mensah	2026-01-05T00:00:00Z	
+contested	4cc10917b5f92cfd1bb5ea818af56f81a092a65ab6f1f4b1bab4b75ff10582f0	9d2e7b0c1a3f5e8d4b6a2c7f0e9d1b3a5c8f7e6d	rejected	Daniel Okafor	2026-02-05T00:00:00Z	The restatement drops a dose limit.
+rejected	ae288e5ed0279153768bfed5286d30fae537fdcf1a543ebd195ec630e25af88a		rejected	reviewer	2026-01-01T00:00:00Z	the restatement drops a limit
+stale	8164cf771b60541c2978de40d64c061cd7ec07d310ff0a9ff2c8d9105415cc16	c81a4f5e2b90d7136ae4f80c25b3d9617fa0e84b	approved	reviewer	2026-01-01T00:00:00Z	
+stale	5b2f4c8e7a1d3096be55c4f2a80d716339ecab04d7f81c6520943ae8bd17c2f5		rejected	Rita Mensah	2026-01-02T00:00:00Z	Recorded before the extraction was corrected.

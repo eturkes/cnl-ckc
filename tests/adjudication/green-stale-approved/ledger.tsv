@@ -1,2 +1,2 @@
-# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment
-a	794a1b25d325fea60daf8b5f821484752092b9c13083f32dc0f1c1f80faeaa25	approved	alice	2026-01-01T00:00:00Z	
+# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment
+a	794a1b25d325fea60daf8b5f821484752092b9c13083f32dc0f1c1f80faeaa25		approved	alice	2026-01-01T00:00:00Z	

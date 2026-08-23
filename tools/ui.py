@@ -10,9 +10,10 @@ import sys
 import tempfile
 import urllib.parse
 import wsgiref.simple_server
-usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]"
+usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--commit <sha1-or-empty>] [--fault after-tmp-write]"
 census_rx = re.compile("identify the ([0-9]+) payloads below")
-ledger_header_text = "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
+ledger_header_text = "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
+commit_url_base = "https://github.com/eturkes/cnl-ckc/commit/"
 verdict_field_names = ["verdict", "reviewer", "comment", "review_sha256", "ledger_sha256", "csrf"]
 serve_config = {}
 def out_line(text):
@@ -87,6 +88,25 @@ def valid_hex64(value):
     allowed = set("0123456789abcdef")
     chars = set(value)
     return chars.issubset(allowed)
+def valid_hex40(value):
+    if len(value) != 40:
+        return False
+    allowed = set("0123456789abcdef")
+    chars = set(value)
+    return chars.issubset(allowed)
+def commit_field_ok(value):
+    if value == "":
+        return True
+    return valid_hex40(value)
+def short_commit(value):
+    chars = list(value)
+    out_text = ""
+    taken = 0
+    for char_text in chars:
+        if taken < 7:
+            out_text = out_text + char_text
+            taken = taken + 1
+    return out_text
 def field_text_ok(value):
     for char_text in value:
         code_point = ord(char_text)
@@ -381,6 +401,37 @@ def goal_py_path():
     resolved = script_path.resolve()
     tool_dir = resolved.parent
     return tool_dir.joinpath("goal.py")
+def ace_commit_hex(guideline_path, docid):
+    ace_path = guideline_path.joinpath("ace", docid + ".ace")
+    if not ace_path.is_file():
+        return ""
+    work_dir = str(guideline_path.resolve())
+    ace_text = str(ace_path.resolve())
+    status_command = ["git", "status", "--porcelain", "--", ace_text]
+    status_result = None
+    try:
+        status_result = subprocess.run(status_command, capture_output=True, cwd=work_dir)
+    except OSError:
+        return ""
+    if status_result.returncode != 0:
+        return ""
+    status_text = status_result.stdout.decode("utf-8", errors="replace")
+    status_trimmed = status_text.strip()
+    if status_trimmed:
+        return ""
+    log_command = ["git", "log", "-1", "--format=%H", "--", ace_text]
+    log_result = None
+    try:
+        log_result = subprocess.run(log_command, capture_output=True, cwd=work_dir)
+    except OSError:
+        return ""
+    if log_result.returncode != 0:
+        return ""
+    log_text = log_result.stdout.decode("utf-8", errors="replace")
+    commit_text = log_text.strip()
+    if not valid_hex40(commit_text):
+        return ""
+    return commit_text
 def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text):
     ledger_path = guideline_path.joinpath("audit", "adjudication.tsv")
     states = {}
@@ -417,7 +468,7 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
         ledger_text = ledger_bytes.decode("utf-8")
     except UnicodeDecodeError:
         return err("ui: viewmodel: " + gid + " file not UTF-8: audit/adjudication.tsv")
-    rows_result = parse_tsv_rows(ledger_text, 6, gid, "adjudication")
+    rows_result = parse_tsv_rows(ledger_text, 7, gid, "adjudication")
     if result_kind(rows_result) == "err":
         return rows_result
     current_approved = {}
@@ -427,19 +478,20 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
         fields = pair_copy.pop(0)
         docid = fields.pop(0)
         row_digest = fields.pop(0)
+        commit_field = fields.pop(0)
         verdict = fields.pop(0)
         reviewer_field = fields.pop(0)
         date_field = fields.pop(0)
         comment_field = fields.pop(0)
         current_digest = review_by_docid.get(docid, "")
         current = row_digest == current_digest
-        row = [row_digest, verdict, reviewer_field, date_field, comment_field, current]
+        row = [row_digest, commit_field, verdict, reviewer_field, date_field, comment_field, current]
         known = docid in ledger_by_docid
         if not known:
             ledger_by_docid.update({docid: []})
         doc_history = ledger_by_docid.get(docid)
         doc_history.append(row)
-        ledger_order.append([docid, row_digest, verdict, reviewer_field, date_field, comment_field, current])
+        ledger_order.append([docid, row_digest, commit_field, verdict, reviewer_field, date_field, comment_field, current])
         if current:
             if verdict == "approved":
                 current_approved.update({docid: True})
@@ -852,7 +904,6 @@ def build_css():
     lines.append("fieldset label { margin-top: 0.5rem; font-weight: 400; }")
     lines.append("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " + line_color + "; font-family: inherit; font-size: 1rem; color: " + body_fg + "; background: " + body_bg + "; }")
     lines.append("textarea { min-height: 6rem; }")
-    lines.append("input.suggested { color: " + pal_fg("muted") + "; }")
     lines.append("input[type=\"radio\"] { accent-color: " + body_fg + "; }")
     lines.append("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " + link_fg + "; outline-offset: 2px; }")
     lines.append("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " + body_fg + "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " + body_bg + "; background: " + body_fg + "; }")
@@ -930,6 +981,7 @@ def reviewer_roster(ledger_order):
         fields_copy.pop(0)
         fields_copy.pop(0)
         fields_copy.pop(0)
+        fields_copy.pop(0)
         name_text = fields_copy.pop(0)
         date_text = fields_copy.pop(0)
         if name_text:
@@ -953,6 +1005,7 @@ def doc_tally(ledger_by_docid, docid):
     earlier_count = 0
     for row in ledger_by_docid.get(docid, []):
         row_copy = list(row)
+        row_copy.pop(0)
         row_copy.pop(0)
         verdict = row_copy.pop(0)
         row_copy.pop(0)
@@ -1216,7 +1269,7 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>")
     parts.append("</fieldset>")
     parts.append("<label for=\"reviewer\">Reviewer name</label>")
-    parts.append("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" + esc_attr(default_reviewer) + "\" required>")
+    parts.append("<input type=\"text\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" + esc_attr(default_reviewer) + "\" required>")
     parts.append(datalist_html(reviewer_names))
     parts.append("<label for=\"comment\">Comment (optional)</label>")
     parts.append("<textarea id=\"comment\" name=\"comment\"></textarea>")
@@ -1258,6 +1311,7 @@ def build_records_page(model):
         summary_text = summary_text + " The newest decision for each document is first."
     parts.append("<p>" + esc_text(summary_text) + "</p>")
     section_count = 0
+    link_count = 0
     for docid in docids:
         history = ledger_by_docid.get(docid, [])
         if history:
@@ -1272,6 +1326,7 @@ def build_records_page(model):
             for row in newest_first:
                 row_copy = list(row)
                 row_copy.pop(0)
+                commit_text = row_copy.pop(0)
                 verdict = row_copy.pop(0)
                 reviewer_text = row_copy.pop(0)
                 date_text = row_copy.pop(0)
@@ -1280,6 +1335,11 @@ def build_records_page(model):
                 version_text = "Earlier"
                 if current:
                     version_text = "Current"
+                if commit_text:
+                    link_count = link_count + 1
+                    if not current:
+                        version_text = short_commit(commit_text)
+                    version_text = "<a href=\"" + commit_url_base + esc_attr(commit_text) + "\">" + esc_text(version_text) + "</a>"
                 shown_comment = comment_text
                 if not shown_comment:
                     shown_comment = "Not given"
@@ -1297,6 +1357,8 @@ def build_records_page(model):
         parts.append("<p>Open a document and record a decision to start this list.</p>")
     else:
         parts.append("<p>Each reviewer name is recorded as entered and is not verified.</p>")
+        if link_count > 0:
+            parts.append("<p>Each version links the commit that wrote the ACE text the reviewer read.</p>")
     parts.append("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>")
     body_html = joiner.join(parts)
     crumb_html = "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" + esc_text(gid) + "</a> / records"
@@ -1324,6 +1386,8 @@ def extract_hrefs(page_text):
     return found
 def resolve_href(page_path, href_value):
     if href_value.startswith("#"):
+        return "#"
+    if href_value.startswith("https://"):
         return "#"
     fragment_parts = href_value.split("#", 1)
     href_value = fragment_parts.pop(0)
@@ -1497,7 +1561,9 @@ def page_invariant_name(page_text):
         return "tabindex"
     if page_text.count("style=") != 0:
         return "inline-style"
-    if page_text.count("href=\"http") != 0:
+    external_total = page_text.count("href=\"http")
+    commit_links = page_text.count("href=\"" + commit_url_base)
+    if external_total != commit_links:
         return "external-href"
     scope_html = "<footer class=\"scope\"><p>" + esc_text(scope_line_text) + "</p></footer>"
     if page_text.count(scope_html) != 1:
@@ -1787,8 +1853,11 @@ def handle_verdict_post(model, gid, docid, meta):
     if now_text == "":
         now_value = datetime.datetime.now(datetime.timezone.utc)
         now_text = now_value.strftime("%Y-%m-%dT%H:%M:%SZ")
+    commit_text = serve_config.get("commit_pin", None)
+    if commit_text == None:
+        commit_text = ace_commit_hex(guideline_path, docid)
     tab_text = "\t"
-    new_line = docid + tab_text + fields.get("review_sha256") + tab_text + fields.get("verdict") + tab_text + fields.get("reviewer") + tab_text + now_text + tab_text + fields.get("comment")
+    new_line = docid + tab_text + fields.get("review_sha256") + tab_text + commit_text + tab_text + fields.get("verdict") + tab_text + fields.get("reviewer") + tab_text + now_text + tab_text + fields.get("comment")
     new_key = docid + tab_text + now_text
     kept_lines = []
     insert_at = 0
@@ -1797,11 +1866,12 @@ def handle_verdict_post(model, gid, docid, meta):
         row_copy = list(row)
         row_docid = row_copy.pop(0)
         row_digest = row_copy.pop(0)
+        row_commit = row_copy.pop(0)
         row_verdict = row_copy.pop(0)
         row_reviewer = row_copy.pop(0)
         row_date = row_copy.pop(0)
         row_comment = row_copy.pop(0)
-        kept_lines.append(row_docid + tab_text + row_digest + tab_text + row_verdict + tab_text + row_reviewer + tab_text + row_date + tab_text + row_comment)
+        kept_lines.append(row_docid + tab_text + row_digest + tab_text + row_commit + tab_text + row_verdict + tab_text + row_reviewer + tab_text + row_date + tab_text + row_comment)
         scan_index = scan_index + 1
         row_key = row_docid + tab_text + row_date
         later = new_key < row_key
@@ -2139,11 +2209,13 @@ def request_command(args):
     body_seen = False
     token_seen = False
     now_seen = False
+    commit_seen = False
     fault_seen = False
     token_text = ""
     now_text = ""
+    commit_text = ""
     fault_text = ""
-    flag_names = ["--header", "--body", "--body-hex", "--token", "--now", "--fault"]
+    flag_names = ["--header", "--body", "--body-hex", "--token", "--now", "--commit", "--fault"]
     pending = ""
     flags_started = False
     for arg_text in args:
@@ -2183,6 +2255,13 @@ def request_command(args):
                     usage_fail()
                 now_text = arg_text
                 now_seen = True
+            elif pending == "--commit":
+                if commit_seen:
+                    usage_fail()
+                if not commit_field_ok(arg_text):
+                    usage_fail()
+                commit_text = arg_text
+                commit_seen = True
             else:
                 if fault_seen:
                     usage_fail()
@@ -2216,6 +2295,8 @@ def request_command(args):
     serve_config.update({"port": 8377})
     serve_config.update({"token": token_text})
     serve_config.update({"now": now_text})
+    if commit_seen:
+        serve_config.update({"commit_pin": commit_text})
     serve_config.update({"fault": fault_text})
     meta = {}
     meta.update({"host": host_text})
