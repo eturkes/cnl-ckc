@@ -1,1 +1,1 @@
-goal: adjudication fx approved=0 rejected=0 stale=0 unreviewed=2
+goal: adjudication fx approved=0 rejected=0 contested=0 stale=0 unreviewed=2 decisions=0

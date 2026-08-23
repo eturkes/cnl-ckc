@@ -13,7 +13,6 @@ Use wsgiref.simple_server.
 
 Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]".
 Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
-Set chip_states to <"approved", "rejected", "stale", "unreviewed">.
 Set ledger_header_text to "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
 Set verdict_field_names to <"verdict", "reviewer", "comment", "review_sha256", "ledger_sha256", "csrf">.
 Set serve_config to {}.
@@ -419,11 +418,11 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
     Set states to {}.
     For each docid in docids:
         Do [[states.update]]({docid: "unreviewed"}).
-    Set ledger_digests to {}.
-    Set ledger_rows to {}.
+    Set ledger_by_docid to {}.
+    Set ledger_order to <>.
     Set ledger_file_digest to "absent".
     If not [[ledger_path.is_file]]():
-        Give back [[ok]](<states, ledger_digests, ledger_rows, ledger_file_digest>).
+        Give back [[ok]](<states, ledger_by_docid, ledger_order, ledger_file_digest>).
     Try:
         Set ledger_bytes to [[ledger_path.read_bytes]]().
     Catch OSError:
@@ -453,6 +452,8 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
     Set rows_result to [[parse_tsv_rows]](ledger_text, 6, gid, "adjudication").
     If [[result_kind]](rows_result) equals "err":
         Give back rows_result.
+    Set current_approved to {}.
+    Set current_rejected to {}.
     For each row_pair in [[result_value]](rows_result):
         Set pair_copy to [[list]](row_pair).
         Set fields to [[pair_copy.pop]](0).
@@ -463,13 +464,31 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
         Set date_field to [[fields.pop]](0).
         Set comment_field to [[fields.pop]](0).
         Set current_digest to [[review_by_docid.get]](docid, "").
-        Do [[ledger_digests.update]]({docid: row_digest}).
-        Do [[ledger_rows.update]]({docid: <verdict, reviewer_field, date_field, comment_field>}).
-        If row_digest equals current_digest:
-            Do [[states.update]]({docid: verdict}).
-        Otherwise:
-            Do [[states.update]]({docid: "stale"}).
-    Give back [[ok]](<states, ledger_digests, ledger_rows, ledger_file_digest>).
+        Set current to row_digest equals current_digest.
+        Set row to <row_digest, verdict, reviewer_field, date_field, comment_field, current>.
+        Set known to docid is in ledger_by_docid.
+        If not known:
+            Do [[ledger_by_docid.update]]({docid: <>}).
+        Set doc_history to [[ledger_by_docid.get]](docid).
+        Do [[doc_history.append]](row).
+        Do [[ledger_order.append]](<docid, row_digest, verdict, reviewer_field, date_field, comment_field, current>).
+        If current:
+            If verdict equals "approved":
+                Do [[current_approved.update]]({docid: True}).
+            Otherwise:
+                Do [[current_rejected.update]]({docid: True}).
+    For each row_docid in ledger_by_docid:
+        Set has_approved to row_docid is in current_approved.
+        Set has_rejected to row_docid is in current_rejected.
+        Set row_state to "stale".
+        If has_approved:
+            Set row_state to "approved".
+            If has_rejected:
+                Set row_state to "contested".
+        Otherwise if has_rejected:
+            Set row_state to "rejected".
+        Do [[states.update]]({row_docid: row_state}).
+    Give back [[ok]](<states, ledger_by_docid, ledger_order, ledger_file_digest>).
 
 Define [[build_guideline_model]] taking root_path, gid:
     Set guideline_path to [[root_path.joinpath]]("guidelines", gid).
@@ -716,8 +735,8 @@ Define [[build_guideline_model]] taking root_path, gid:
     Set states_pair to [[result_value]](states_result).
     Set states_copy to [[list]](states_pair).
     Set doc_states to [[states_copy.pop]](0).
-    Set ledger_digests to [[states_copy.pop]](0).
-    Set ledger_rows to [[states_copy.pop]](0).
+    Set ledger_by_docid to [[states_copy.pop]](0).
+    Set ledger_order to [[states_copy.pop]](0).
     Set ledger_file_digest to [[states_copy.pop]](0).
     Set model to {}.
     Do [[model.update]]({"gid": gid}).
@@ -749,8 +768,8 @@ Define [[build_guideline_model]] taking root_path, gid:
     Do [[model.update]]({"payload_digest_by_docid": payload_digest_by_docid}).
     Do [[model.update]]({"review_by_docid": review_by_docid}).
     Do [[model.update]]({"doc_states": doc_states}).
-    Do [[model.update]]({"ledger_digests": ledger_digests}).
-    Do [[model.update]]({"ledger_rows": ledger_rows}).
+    Do [[model.update]]({"ledger_by_docid": ledger_by_docid}).
+    Do [[model.update]]({"ledger_order": ledger_order}).
     Do [[model.update]]({"ledger_file_digest": ledger_file_digest}).
     Do [[model.update]]({"region_rows": region_rows}).
     Set counts to {}.
@@ -761,24 +780,28 @@ Define [[build_guideline_model]] taking root_path, gid:
     Do [[counts.update]]({"pending": pending_counter}).
     Set approved_count to 0.
     Set rejected_count to 0.
+    Set contested_count to 0.
     Set stale_count to 0.
     Set unreviewed_count to 0.
     For each docid in sorted_docids:
         Set state to [[doc_states.get]](docid, "unreviewed").
         If state equals "approved":
             Set approved_count to approved_count plus 1.
+        Otherwise if state equals "rejected":
+            Set rejected_count to rejected_count plus 1.
+        Otherwise if state equals "contested":
+            Set contested_count to contested_count plus 1.
+        Otherwise if state equals "stale":
+            Set stale_count to stale_count plus 1.
         Otherwise:
-            If state equals "rejected":
-                Set rejected_count to rejected_count plus 1.
-            Otherwise:
-                If state equals "stale":
-                    Set stale_count to stale_count plus 1.
-                Otherwise:
-                    Set unreviewed_count to unreviewed_count plus 1.
+            Set unreviewed_count to unreviewed_count plus 1.
     Do [[counts.update]]({"approved": approved_count}).
     Do [[counts.update]]({"rejected": rejected_count}).
+    Do [[counts.update]]({"contested": contested_count}).
     Do [[counts.update]]({"stale": stale_count}).
     Do [[counts.update]]({"unreviewed": unreviewed_count}).
+    Do [[counts.update]]({"decisions": [[len]](ledger_order)}).
+    Do [[counts.update]]({"reviewed": [[len]](ledger_by_docid)}).
     Do [[model.update]]({"counts": counts}).
     Give back [[ok]](model).
 
@@ -806,7 +829,7 @@ Define [[build_viewmodel]] taking root_path:
         Do [[models.append]]([[result_value]](model_result)).
     Give back [[ok]](models).
 
-Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">}.
+Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">}.
 
 Define [[pal_fg]] taking role:
     Set pair to [[palette.get]](role, <>).
@@ -840,9 +863,16 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("th { border-bottom: 2px solid " plus body_fg plus "; }").
     Do [[lines.append]]("table.compact { width: auto; }").
     Do [[lines.append]]("table.compact th, table.compact td { padding-right: 2rem; }").
+    Do [[lines.append]]("table.records { table-layout: fixed; }").
+    Do [[lines.append]]("table.records th { box-sizing: border-box; }").
+    Do [[lines.append]]("table.records th:nth-child(1) { width: 12%; }").
+    Do [[lines.append]]("table.records th:nth-child(2) { width: 18%; }").
+    Do [[lines.append]]("table.records th:nth-child(3) { width: 22%; }").
+    Do [[lines.append]]("table.records th:nth-child(4) { width: 10%; }").
     Do [[lines.append]](".chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }").
     Do [[lines.append]](".chip-approved { color: " plus [[pal_fg]]("chip-approved") plus "; background: " plus [[pal_bg]]("chip-approved") plus "; }").
     Do [[lines.append]](".chip-rejected { color: " plus [[pal_fg]]("chip-rejected") plus "; background: " plus [[pal_bg]]("chip-rejected") plus "; }").
+    Do [[lines.append]](".chip-contested { color: " plus [[pal_fg]]("chip-contested") plus "; background: " plus [[pal_bg]]("chip-contested") plus "; }").
     Do [[lines.append]](".chip-stale { color: " plus [[pal_fg]]("chip-stale") plus "; background: " plus [[pal_bg]]("chip-stale") plus "; }").
     Do [[lines.append]](".chip-unreviewed { color: " plus [[pal_fg]]("chip-unreviewed") plus "; background: " plus [[pal_bg]]("chip-unreviewed") plus "; }").
     Do [[lines.append]]("pre { padding: 0.75rem 1rem; border: 1px solid " plus line_color plus "; white-space: pre-wrap; overflow-x: auto; }").
@@ -879,10 +909,10 @@ Set css_text to [[build_css]]().
 
 Set scope_line_text to "This page reports what the loaded guideline documents state. It does not give clinical advice.".
 
-Set refusal_refused_text to "The request was refused. Open the review page again from this site and submit the decision again.".
-Set refusal_invalid_form_text to "The submitted form was not valid. Go back to the review page, reload it, and submit the decision again.".
-Set refusal_subject_text to "The document or its source changed after this page was loaded. The decision was not recorded. Open the review page again and check the current version.".
-Set refusal_ledger_text to "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the review page again and check the current state.".
+Set refusal_refused_text to "The request was refused. Open the document page again from this site and submit the decision again.".
+Set refusal_invalid_form_text to "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again.".
+Set refusal_subject_text to "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version.".
+Set refusal_ledger_text to "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state.".
 
 Define [[comment_safe]] taking detail:
     Set safe_chars to <>.
@@ -937,12 +967,14 @@ Define [[state_label]] taking state:
 Define [[chip_html]] taking state:
     Give back "<span class=\"chip chip-" plus state plus "\">" plus [[state_label]](state) plus "</span>".
 
-Define [[reviewer_roster]] taking ledger_rows:
+Define [[reviewer_roster]] taking ledger_order:
     Set names to <>.
     Set latest_date to "".
     Set latest_name to "".
-    For each row_docid in ledger_rows:
-        Set fields_copy to [[list]]([[ledger_rows.get]](row_docid)).
+    For each row in ledger_order:
+        Set fields_copy to [[list]](row).
+        Do [[fields_copy.pop]](0).
+        Do [[fields_copy.pop]](0).
         Do [[fields_copy.pop]](0).
         Set name_text to [[fields_copy.pop]](0).
         Set date_text to [[fields_copy.pop]](0).
@@ -963,6 +995,74 @@ Define [[datalist_html]] taking names:
     Set option_joiner to "".
     Give back "<datalist id=\"reviewer-names\">" plus [[option_joiner.join]](option_parts) plus "</datalist>".
 
+Define [[doc_tally]] taking ledger_by_docid, docid:
+    Set approved_count to 0.
+    Set rejected_count to 0.
+    Set earlier_count to 0.
+    For each row in [[ledger_by_docid.get]](docid, <>):
+        Set row_copy to [[list]](row).
+        Do [[row_copy.pop]](0).
+        Set verdict to [[row_copy.pop]](0).
+        Do [[row_copy.pop]](0).
+        Do [[row_copy.pop]](0).
+        Do [[row_copy.pop]](0).
+        Set current to [[row_copy.pop]](0).
+        If current:
+            If verdict equals "approved":
+                Set approved_count to approved_count plus 1.
+            Otherwise:
+                Set rejected_count to rejected_count plus 1.
+        Otherwise:
+            Set earlier_count to earlier_count plus 1.
+    Give back <approved_count, rejected_count, earlier_count>.
+
+Define [[tally_text]] taking tally:
+    Set tally_copy to [[list]](tally).
+    Set approved_count to [[tally_copy.pop]](0).
+    Set rejected_count to [[tally_copy.pop]](0).
+    Set earlier_count to [[tally_copy.pop]](0).
+    Set current_parts to <>.
+    If approved_count is greater than 0:
+        Do [[current_parts.append]]([[str]](approved_count) plus " approved").
+    If rejected_count is greater than 0:
+        Do [[current_parts.append]]([[str]](rejected_count) plus " rejected").
+    Set sentences to <>.
+    If current_parts:
+        Set part_joiner to " and ".
+        Do [[sentences.append]]("Decisions on this version: " plus [[part_joiner.join]](current_parts) plus ".").
+    Otherwise if earlier_count is greater than 0:
+        Do [[sentences.append]]("No decision is recorded on this version.").
+    Otherwise:
+        Do [[sentences.append]]("No decision is recorded.").
+    If earlier_count is greater than 0:
+        Do [[sentences.append]]("Decisions on earlier versions: " plus [[str]](earlier_count) plus ".").
+    Set joiner to " ".
+    Give back [[joiner.join]](sentences).
+
+Define [[tally_cell]] taking tally:
+    Set tally_copy to [[list]](tally).
+    Set approved_count to [[tally_copy.pop]](0).
+    Set rejected_count to [[tally_copy.pop]](0).
+    Set earlier_count to [[tally_copy.pop]](0).
+    Set parts to <>.
+    If approved_count is greater than 0:
+        Do [[parts.append]]([[str]](approved_count) plus " approved").
+    If rejected_count is greater than 0:
+        Do [[parts.append]]([[str]](rejected_count) plus " rejected").
+    If earlier_count is greater than 0:
+        Do [[parts.append]]([[str]](earlier_count) plus " earlier").
+    If not parts:
+        Give back "None".
+    Set joiner to ", ".
+    Give back [[joiner.join]](parts).
+
+Define [[review_summary_text]] taking counts, doc_total:
+    Set decision_count to [[counts.get]]("decisions", 0).
+    If decision_count equals 0:
+        Give back "No decisions are recorded for the " plus [[str]](doc_total) plus " documents in this guideline.".
+    Set reviewed_count to [[counts.get]]("reviewed", 0).
+    Give back "Reviewers recorded " plus [[str]](decision_count) plus " decisions on " plus [[str]](reviewed_count) plus " of " plus [[str]](doc_total) plus " documents.".
+
 Define [[build_index_page]] taking models:
     Set rows to <>.
     For each model in models:
@@ -976,6 +1076,7 @@ Define [[build_index_page]] taking models:
         Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("regions", 0)) plus "</td>").
         Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("approved", 0)) plus "</td>").
         Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("rejected", 0)) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("contested", 0)) plus "</td>").
         Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("stale", 0)) plus "</td>").
         Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("unreviewed", 0)) plus "</td>").
         Set empty_text to "".
@@ -984,7 +1085,7 @@ Define [[build_index_page]] taking models:
     Do [[parts.append]]("<h1>Guidelines</h1>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<table>").
-    Do [[parts.append]]("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Outdated</th><th>Unreviewed</th></tr></thead>").
+    Do [[parts.append]]("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>").
     Set joiner to "\n".
     Do [[parts.append]]("<tbody>" plus [[joiner.join]](rows) plus "</tbody>").
     Do [[parts.append]]("</table>").
@@ -1003,13 +1104,15 @@ Define [[build_guideline_page]] taking model:
     Set joiner to "\n".
     Set empty_text to "".
     Set parts to <>.
+    Set ledger_by_docid to [[model.get]]("ledger_by_docid", {}).
     Do [[parts.append]]("<h1>" plus [[esc_text]]([[model.get]]("title", gid)) plus "</h1>").
+    Do [[parts.append]]("<p>" plus [[esc_text]]([[review_summary_text]](counts, [[len]](docids))) plus " <a href=\"records.html\">All decision records</a></p>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Status</h2>").
     Do [[parts.append]]("<table class=\"compact\">").
     Do [[parts.append]]("<thead><tr><th>Status</th><th>Count</th></tr></thead>").
     Set status_rows to <>.
-    Set status_labels to <<"Passages", "regions">, <"With ACE", "ace">, <"Pending", "pending">, <"Approved", "approved">, <"Rejected", "rejected">, <"Outdated", "stale">, <"Unreviewed", "unreviewed">>.
+    Set status_labels to <<"Passages", "regions">, <"With ACE", "ace">, <"Pending", "pending">, <"Approved", "approved">, <"Rejected", "rejected">, <"Contested", "contested">, <"Outdated", "stale">, <"Unreviewed", "unreviewed">>.
     For each label_pair in status_labels:
         Set pair_copy to [[list]](label_pair).
         Set label_text to [[pair_copy.pop]](0).
@@ -1021,13 +1124,14 @@ Define [[build_guideline_page]] taking model:
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Documents</h2>").
     Do [[parts.append]]("<table class=\"compact\">").
-    Do [[parts.append]]("<thead><tr><th>Document</th><th>Status</th><th>Passage</th></tr></thead>").
+    Do [[parts.append]]("<thead><tr><th>Document</th><th>Status</th><th>Decisions</th><th>Passage</th></tr></thead>").
     Set doc_rows to <>.
     For each docid in docids:
         Set state to [[doc_states.get]](docid, "unreviewed").
         Set cells to <>.
         Do [[cells.append]]("<td><a href=\"doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]]([[title_by_docid.get]](docid, docid)) plus "</a></td>").
         Do [[cells.append]]("<td>" plus [[chip_html]](state) plus "</td>").
+        Do [[cells.append]]("<td>" plus [[esc_text]]([[tally_cell]]([[doc_tally]](ledger_by_docid, docid))) plus "</td>").
         Do [[cells.append]]("<td>" plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus "</td>").
         Do [[doc_rows.append]]("<tr>" plus [[empty_text.join]](cells) plus "</tr>").
     Do [[parts.append]]("<tbody>" plus [[joiner.join]](doc_rows) plus "</tbody>").
@@ -1121,9 +1225,16 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     If published:
         Set file_html to "<a href=\"../source/" plus [[url_seg]](base_name) plus "\">" plus [[esc_text]](base_name) plus "</a>".
     Do [[parts.append]]("<p>" plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus " · " plus file_html plus "</p>").
+    Set ledger_by_docid to [[model.get]]("ledger_by_docid", {}).
+    Set records_href to "../records.html".
+    Set has_history to docid is in ledger_by_docid.
+    If has_history:
+        Set records_href to records_href plus "#" plus [[url_seg]](docid).
+    Set tally to [[doc_tally]](ledger_by_docid, docid).
+    Do [[parts.append]]("<p>" plus [[esc_text]]([[tally_text]](tally)) plus " <a href=\"" plus records_href plus "\">All decision records</a></p>").
     If state equals "stale":
         Do [[parts.append]]("<section class=\"stale\">").
-        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>").
+        Do [[parts.append]]("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>").
         Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h3>Original passage</h3>").
@@ -1141,6 +1252,36 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Do [[parts.append]]("<dt>Left out or approximated</dt><dd>" plus [[esc_text]]([[dropped_by_docid.get]](docid, "")) plus "</dd>").
     Do [[parts.append]]("</dl>").
     Do [[parts.append]]("</details>").
+    Do [[parts.append]]("</section>").
+    Set review_by_docid to [[model.get]]("review_by_docid", {}).
+    Set current_digest to [[review_by_docid.get]](docid, "").
+    Set ledger_file_digest to [[model.get]]("ledger_file_digest", "absent").
+    Set token_text to [[serve_config.get]]("token", "").
+    Set roster to [[reviewer_roster]]([[model.get]]("ledger_order", <>)).
+    Set roster_copy to [[list]](roster).
+    Set reviewer_names to [[roster_copy.pop]](0).
+    Set default_reviewer to [[roster_copy.pop]](0).
+    Do [[parts.append]]("<section class=\"verdict-entry\">").
+    Do [[parts.append]]("<h3>Record a decision</h3>").
+    Do [[parts.append]]("<p>Does the ACE representation appropriately reflect the original passage?</p>").
+    Do [[parts.append]]("<form method=\"post\">").
+    Do [[parts.append]]("<fieldset>").
+    Do [[parts.append]]("<legend>Decision</legend>").
+    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required> Approved</label>").
+    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>").
+    Do [[parts.append]]("</fieldset>").
+    Do [[parts.append]]("<label for=\"reviewer\">Reviewer name</label>").
+    Do [[parts.append]]("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" plus [[esc_attr]](default_reviewer) plus "\" required>").
+    Do [[parts.append]]([[datalist_html]](reviewer_names)).
+    Do [[parts.append]]("<label for=\"comment\">Comment (optional)</label>").
+    Do [[parts.append]]("<textarea id=\"comment\" name=\"comment\"></textarea>").
+    Do [[parts.append]]("<input type=\"hidden\" name=\"review_sha256\" value=\"" plus [[esc_attr]](current_digest) plus "\">").
+    Do [[parts.append]]("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" plus [[esc_attr]](ledger_file_digest) plus "\">").
+    Do [[parts.append]]("<input type=\"hidden\" name=\"csrf\" value=\"" plus [[esc_attr]](token_text) plus "\">").
+    Do [[parts.append]]("<button>Record decision</button>").
+    Do [[parts.append]]("</form>").
+    Do [[parts.append]]("</section>").
+    Do [[parts.append]]("<section>").
     Do [[parts.append]]("<details>").
     Do [[parts.append]]("<summary>Compiled Prolog (" plus [[str]]([[doc_data.get]]("pl_lines", 0)) plus " lines)</summary>").
     Do [[parts.append]]("<pre>" plus [[esc_text]]([[doc_data.get]]("pl_text", "")) plus "</pre>").
@@ -1152,92 +1293,70 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Do [[nav_parts.append]]("<a href=\"../index.html\">Guideline index</a>").
     If next_id:
         Do [[nav_parts.append]]("<a href=\"" plus [[url_seg]](next_id) plus ".html\">Next document</a>").
-    Do [[nav_parts.append]]("<a href=\"../review/" plus [[url_seg]](docid) plus ".html\">Review this document</a>").
     Set nav_joiner to " · ".
     Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
     Set body_html to [[joiner.join]](parts).
     Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / " plus [[esc_text]](docid).
     Give back [[page_html]](doc_title, crumb_html, body_html).
 
-Define [[build_review_page]] taking model, docid:
+Define [[build_records_page]] taking model:
     Set gid to [[model.get]]("gid", "").
-    Set doc_states to [[model.get]]("doc_states", {}).
-    Set state to [[doc_states.get]](docid, "unreviewed").
-    Set review_by_docid to [[model.get]]("review_by_docid", {}).
-    Set ledger_rows to [[model.get]]("ledger_rows", {}).
-    Set ledger_file_digest to [[model.get]]("ledger_file_digest", "absent").
-    Set current_digest to [[review_by_docid.get]](docid, "").
-    Set token_text to [[serve_config.get]]("token", "").
-    Set row_reviewer to "".
-    Set row_comment to "".
-    Set row_verdict to "".
-    Set has_row to docid is in ledger_rows.
-    If has_row:
-        Set row_fields to [[list]]([[ledger_rows.get]](docid)).
-        Set row_verdict to [[row_fields.pop]](0).
-        Set row_reviewer to [[row_fields.pop]](0).
-        Set row_date to [[row_fields.pop]](0).
-        Set row_comment to [[row_fields.pop]](0).
+    Set docids to [[model.get]]("docids", <>).
+    Set counts to [[model.get]]("counts", {}).
     Set title_by_docid to [[model.get]]("title_by_docid", {}).
-    Set doc_title to [[title_by_docid.get]](docid, docid).
+    Set ledger_by_docid to [[model.get]]("ledger_by_docid", {}).
     Set joiner to "\n".
+    Set empty_text to "".
     Set parts to <>.
-    Do [[parts.append]]("<h1>Review: " plus [[esc_text]](doc_title) plus "</h1>").
-    Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<h2>Decision on record</h2>").
-    If state equals "stale":
-        Do [[parts.append]]("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>").
-    If has_row:
-        Set shown_comment to row_comment.
-        If not shown_comment:
-            Set shown_comment to "Not given".
-        Do [[parts.append]]("<dl>").
-        Do [[parts.append]]("<dt>Decision</dt><dd>" plus [[esc_text]]([[state_label]](row_verdict)) plus "</dd>").
-        Do [[parts.append]]("<dt>Reviewer</dt><dd>" plus [[esc_text]](row_reviewer) plus "</dd>").
-        Do [[parts.append]]("<dt>Date</dt><dd>" plus [[esc_text]]([[human_date]](row_date)) plus "</dd>").
-        Do [[parts.append]]("<dt>Comment</dt><dd>" plus [[esc_text]](shown_comment) plus "</dd>").
-        Do [[parts.append]]("</dl>").
-        Do [[parts.append]]("<p>The reviewer name is recorded as entered and is not verified.</p>").
+    Do [[parts.append]]("<h1>Decision records</h1>").
+    Set summary_text to [[review_summary_text]](counts, [[len]](docids)).
+    If [[counts.get]]("decisions", 0) is greater than 0:
+        Set summary_text to summary_text plus " The newest decision for each document is first.".
+    Do [[parts.append]]("<p>" plus [[esc_text]](summary_text) plus "</p>").
+    Set section_count to 0.
+    For each docid in docids:
+        Set history to [[ledger_by_docid.get]](docid, <>).
+        If history:
+            Set section_count to section_count plus 1.
+            Set newest_first to [[list]](history).
+            Do [[newest_first.reverse]]().
+            Do [[parts.append]]("<section id=\"" plus [[esc_attr]](docid) plus "\">").
+            Do [[parts.append]]("<h2><a href=\"doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]]([[title_by_docid.get]](docid, docid)) plus "</a></h2>").
+            Do [[parts.append]]("<table class=\"records\">").
+            Do [[parts.append]]("<thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>").
+            Set row_parts to <>.
+            For each row in newest_first:
+                Set row_copy to [[list]](row).
+                Do [[row_copy.pop]](0).
+                Set verdict to [[row_copy.pop]](0).
+                Set reviewer_text to [[row_copy.pop]](0).
+                Set date_text to [[row_copy.pop]](0).
+                Set comment_text to [[row_copy.pop]](0).
+                Set current to [[row_copy.pop]](0).
+                Set version_text to "Earlier".
+                If current:
+                    Set version_text to "Current".
+                Set shown_comment to comment_text.
+                If not shown_comment:
+                    Set shown_comment to "Not given".
+                Set cells to <>.
+                Do [[cells.append]]("<td>" plus [[esc_text]]([[state_label]](verdict)) plus "</td>").
+                Do [[cells.append]]("<td>" plus [[esc_text]](reviewer_text) plus "</td>").
+                Do [[cells.append]]("<td>" plus [[esc_text]]([[human_date]](date_text)) plus "</td>").
+                Do [[cells.append]]("<td>" plus version_text plus "</td>").
+                Do [[cells.append]]("<td>" plus [[esc_text]](shown_comment) plus "</td>").
+                Do [[row_parts.append]]("<tr>" plus [[empty_text.join]](cells) plus "</tr>").
+            Do [[parts.append]]("<tbody>" plus [[joiner.join]](row_parts) plus "</tbody>").
+            Do [[parts.append]]("</table>").
+            Do [[parts.append]]("</section>").
+    If section_count equals 0:
+        Do [[parts.append]]("<p>Open a document and record a decision to start this list.</p>").
     Otherwise:
-        Do [[parts.append]]("<p>No decision is recorded for this document.</p>").
-    Do [[parts.append]]("</section>").
-    Set approved_checked to "".
-    Set rejected_checked to "".
-    If row_verdict equals "approved":
-        Set approved_checked to " checked".
-    If row_verdict equals "rejected":
-        Set rejected_checked to " checked".
-    Set roster to [[reviewer_roster]](ledger_rows).
-    Set roster_copy to [[list]](roster).
-    Set reviewer_names to [[roster_copy.pop]](0).
-    Set default_reviewer to [[roster_copy.pop]](0).
-    Do [[parts.append]]("<section class=\"verdict-entry\">").
-    Do [[parts.append]]("<h2>Record a decision</h2>").
-    Do [[parts.append]]("<p>Your decision applies to this document exactly as shown on this page. If the document or its source changes before you submit, the server refuses the decision and records no change.</p>").
-    Do [[parts.append]]("<form method=\"post\">").
-    Do [[parts.append]]("<fieldset>").
-    Do [[parts.append]]("<legend>Decision</legend>").
-    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" plus approved_checked plus "> Approved</label>").
-    Do [[parts.append]]("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" plus rejected_checked plus "> Rejected</label>").
-    Do [[parts.append]]("</fieldset>").
-    Do [[parts.append]]("<label for=\"reviewer\">Reviewer name</label>").
-    Do [[parts.append]]("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" plus [[esc_attr]](default_reviewer) plus "\" required>").
-    Do [[parts.append]]([[datalist_html]](reviewer_names)).
-    Do [[parts.append]]("<label for=\"comment\">Comment (optional)</label>").
-    Do [[parts.append]]("<textarea id=\"comment\" name=\"comment\">" plus [[esc_text]](row_comment) plus "</textarea>").
-    Do [[parts.append]]("<input type=\"hidden\" name=\"review_sha256\" value=\"" plus [[esc_attr]](current_digest) plus "\">").
-    Do [[parts.append]]("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" plus [[esc_attr]](ledger_file_digest) plus "\">").
-    Do [[parts.append]]("<input type=\"hidden\" name=\"csrf\" value=\"" plus [[esc_attr]](token_text) plus "\">").
-    Do [[parts.append]]("<button>Record decision</button>").
-    Do [[parts.append]]("</form>").
-    Do [[parts.append]]("</section>").
-    Set nav_parts to <>.
-    Do [[nav_parts.append]]("<a href=\"../doc/" plus [[url_seg]](docid) plus ".html\">Back to the document</a>").
-    Set nav_joiner to " · ".
-    Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
+        Do [[parts.append]]("<p>Each reviewer name is recorded as entered and is not verified.</p>").
+    Do [[parts.append]]("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>").
     Set body_html to [[joiner.join]](parts).
-    Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / <a href=\"../doc/" plus [[url_seg]](docid) plus ".html\">" plus [[esc_text]](docid) plus "</a> / review".
-    Give back [[page_html]]("Review: " plus doc_title, crumb_html, body_html).
+    Set crumb_html to "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" plus [[esc_text]](gid) plus "</a> / records".
+    Give back [[page_html]]("Decision records", crumb_html, body_html).
 
 Define [[build_error_page]] taking title_text, heading_text, body_html:
     Set parts to <>.
@@ -1265,6 +1384,8 @@ Define [[extract_hrefs]] taking page_text:
 Define [[resolve_href]] taking page_path, href_value:
     If [[href_value.startswith]]("#"):
         Give back "#".
+    Set fragment_parts to [[href_value.split]]("#", 1).
+    Set href_value to [[fragment_parts.pop]](0).
     Set base_segs to [[page_path.split]]("/").
     Do [[base_segs.pop]]().
     Set target_segs to [[href_value.split]]("/").
@@ -1316,11 +1437,10 @@ Define [[render_pages]] taking models:
             Set doc_page to "g/" plus [[url_seg]](gid) plus "/doc/" plus [[url_seg]](docid) plus ".html".
             Do [[page_order.append]](doc_page).
             Do [[pages.update]]({doc_page: [[build_doc_page]](model, docid, doc_data, [[prev_map.get]](docid, ""), [[next_map.get]](docid, ""))}).
-        For each docid in docids:
-            Set review_page to "g/" plus [[url_seg]](gid) plus "/review/" plus [[url_seg]](docid) plus ".html".
-            Do [[page_order.append]](review_page).
-            Do [[pages.update]]({review_page: [[build_review_page]](model, docid)}).
-        Set page_count to 1 plus [[len]](docids) plus [[len]](docids).
+        Set records_page to "g/" plus [[url_seg]](gid) plus "/records.html".
+        Do [[page_order.append]](records_page).
+        Do [[pages.update]]({records_page: [[build_records_page]](model)}).
+        Set page_count to 2 plus [[len]](docids).
         Do [[meter_lines.append]]("ui: " plus gid plus " docs=" plus [[str]]([[len]](docids)) plus " regions=" plus [[str]]([[counts.get]]("regions", 0)) plus " pages=" plus [[str]](page_count)).
     For each page_path in page_order:
         Set page_text to [[pages.get]](page_path, "").
@@ -1552,7 +1672,7 @@ Define [[not_found_response]] taking nothing:
     Set body_bytes to [[page_text.encode]]("utf-8").
     Give back <"404 Not Found", [[base_headers]](), body_bytes>.
 
-Define [[review_shaped]] taking path_text:
+Define [[doc_shaped]] taking path_text:
     If not [[path_text.startswith]]("/g/"):
         Give back False.
     Set rest_text to [[path_text.removeprefix]]("/g/").
@@ -1564,7 +1684,7 @@ Define [[review_shaped]] taking path_text:
     Set leaf_seg to [[segs.pop]](0).
     If gid_seg equals "":
         Give back False.
-    If mid_seg does not equal "review":
+    If mid_seg does not equal "doc":
         Give back False.
     If not [[leaf_seg.endswith]](".html"):
         Give back False.
@@ -1592,7 +1712,7 @@ Define [[verdict_refusal]] taking status_text, heading_text, detail, plain_text:
     Give back <status_text, [[base_headers]](), body_bytes>.
 
 Define [[redirect_response]] taking gid, docid:
-    Set location_value to "/g/" plus [[url_seg]](gid) plus "/review/" plus [[url_seg]](docid) plus ".html".
+    Set location_value to "/g/" plus [[url_seg]](gid) plus "/doc/" plus [[url_seg]](docid) plus ".html".
     Set body_html to "<p>The decision was recorded.</p>".
     Set page_text to [[build_error_page]]("Decision recorded", "Decision recorded", body_html).
     Set body_bytes to [[page_text.encode]]("utf-8").
@@ -1746,29 +1866,36 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     If now_text equals "":
         Set now_value to [[datetime.datetime.now]](datetime.timezone.utc).
         Set now_text to [[now_value.strftime]]("%Y-%m-%dT%H:%M:%SZ").
-    Set ledger_rows to [[model.get]]("ledger_rows", {}).
-    Set ledger_digests to [[model.get]]("ledger_digests", {}).
-    Set merged to {}.
-    For each row_docid in ledger_rows:
-        Set row_fields to [[list]]([[ledger_rows.get]](row_docid)).
-        Set row_verdict to [[row_fields.pop]](0).
-        Set row_reviewer to [[row_fields.pop]](0).
-        Set row_date to [[row_fields.pop]](0).
-        Set row_comment to [[row_fields.pop]](0).
-        Set row_digest to [[ledger_digests.get]](row_docid, "").
-        Do [[merged.update]]({row_docid: <row_digest, row_verdict, row_reviewer, row_date, row_comment>}).
-    Do [[merged.update]]({docid: <[[fields.get]]("review_sha256"), [[fields.get]]("verdict"), [[fields.get]]("reviewer"), now_text, [[fields.get]]("comment")>}).
+    Set tab_text to "\t".
+    Set new_line to docid plus tab_text plus [[fields.get]]("review_sha256") plus tab_text plus [[fields.get]]("verdict") plus tab_text plus [[fields.get]]("reviewer") plus tab_text plus now_text plus tab_text plus [[fields.get]]("comment").
+    Set new_key to docid plus tab_text plus now_text.
+    Set kept_lines to <>.
+    Set insert_at to 0.
+    Set scan_index to 0.
+    For each row in [[model.get]]("ledger_order", <>):
+        Set row_copy to [[list]](row).
+        Set row_docid to [[row_copy.pop]](0).
+        Set row_digest to [[row_copy.pop]](0).
+        Set row_verdict to [[row_copy.pop]](0).
+        Set row_reviewer to [[row_copy.pop]](0).
+        Set row_date to [[row_copy.pop]](0).
+        Set row_comment to [[row_copy.pop]](0).
+        Do [[kept_lines.append]](row_docid plus tab_text plus row_digest plus tab_text plus row_verdict plus tab_text plus row_reviewer plus tab_text plus row_date plus tab_text plus row_comment).
+        Set scan_index to scan_index plus 1.
+        Set row_key to row_docid plus tab_text plus row_date.
+        Set later to new_key is less than row_key.
+        If not later:
+            Set insert_at to scan_index.
     Set out_lines to <>.
     Do [[out_lines.append]](ledger_header_text).
-    Set tab_text to "\t".
-    For each row_docid in [[sorted]](merged):
-        Set row_fields to [[list]]([[merged.get]](row_docid)).
-        Set row_digest to [[row_fields.pop]](0).
-        Set row_verdict to [[row_fields.pop]](0).
-        Set row_reviewer to [[row_fields.pop]](0).
-        Set row_date to [[row_fields.pop]](0).
-        Set row_comment to [[row_fields.pop]](0).
-        Do [[out_lines.append]](row_docid plus tab_text plus row_digest plus tab_text plus row_verdict plus tab_text plus row_reviewer plus tab_text plus row_date plus tab_text plus row_comment).
+    Set emit_index to 0.
+    For each kept_line in kept_lines:
+        If emit_index equals insert_at:
+            Do [[out_lines.append]](new_line).
+        Do [[out_lines.append]](kept_line).
+        Set emit_index to emit_index plus 1.
+    If insert_at equals emit_index:
+        Do [[out_lines.append]](new_line).
     Set joiner to "\n".
     Set candidate_text to [[joiner.join]](out_lines) plus "\n".
     Set candidate_bytes to [[candidate_text.encode]]("utf-8").
@@ -1845,7 +1972,7 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     Give back [[redirect_response]](gid, docid).
 
 Define [[respond]] taking root_path, method_text, path_text, meta:
-    Set shaped to [[review_shaped]](path_text).
+    Set shaped to [[doc_shaped]](path_text).
     If method_text does not equal "GET":
         If method_text does not equal "POST":
             Give back [[method_response]](shaped).
@@ -1878,6 +2005,8 @@ Define [[respond]] taking root_path, method_text, path_text, meta:
             Give back [[page_response]]([[build_guideline_page]](model)).
         If tail_seg equals "index.html":
             Give back [[page_response]]([[build_guideline_page]](model)).
+        If tail_seg equals "records.html":
+            Give back [[page_response]]([[build_records_page]](model)).
         Give back [[not_found_response]]().
     If seg_count equals 3:
         Set gid_seg to [[segs.pop]](0).
@@ -1899,12 +2028,7 @@ Define [[respond]] taking root_path, method_text, path_text, meta:
             Catch OSError:
                 Give back [[not_found_response]]().
             Give back <"200 OK", [[asset_headers]]([[asset_media_type]](leaf_seg)), asset_bytes>.
-        Set mid_known to False.
-        If mid_seg equals "doc":
-            Set mid_known to True.
-        If mid_seg equals "review":
-            Set mid_known to True.
-        If not mid_known:
+        If mid_seg does not equal "doc":
             Give back [[not_found_response]]().
         If not [[leaf_seg.endswith]](".html"):
             Give back [[not_found_response]]().
@@ -1916,13 +2040,8 @@ Define [[respond]] taking root_path, method_text, path_text, meta:
         Set known to docid is in docids.
         If not known:
             Give back [[not_found_response]]().
-        If mid_seg equals "review":
-            If method_text equals "POST":
-                Give back [[handle_verdict_post]](model, gid_seg, docid, meta).
-            Set review_data_result to [[doc_render_data]](model, docid).
-            If [[result_kind]](review_data_result) equals "err":
-                Give back [[error_response]]([[result_value]](review_data_result)).
-            Give back [[page_response]]([[build_review_page]](model, docid)).
+        If method_text equals "POST":
+            Give back [[handle_verdict_post]](model, gid_seg, docid, meta).
         Set data_result to [[doc_render_data]](model, docid).
         If [[result_kind]](data_result) equals "err":
             Give back [[error_response]]([[result_value]](data_result)).

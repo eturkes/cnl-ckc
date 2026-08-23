@@ -26,9 +26,16 @@ th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e
 th { border-bottom: 2px solid #111827; }
 table.compact { width: auto; }
 table.compact th, table.compact td { padding-right: 2rem; }
+table.records { table-layout: fixed; }
+table.records th { box-sizing: border-box; }
+table.records th:nth-child(1) { width: 12%; }
+table.records th:nth-child(2) { width: 18%; }
+table.records th:nth-child(3) { width: 22%; }
+table.records th:nth-child(4) { width: 10%; }
 .chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
 .chip-approved { color: #14532d; background: #dcfce7; }
 .chip-rejected { color: #7f1d1d; background: #fee2e2; }
+.chip-contested { color: #4c1d95; background: #ede9fe; }
 .chip-stale { color: #78350f; background: #fef3c7; }
 .chip-unreviewed { color: #1f2937; background: #e5e7eb; }
 pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; white-space: pre-wrap; overflow-x: auto; }
@@ -65,7 +72,7 @@ a { color: inherit; text-decoration: none; }
 <nav class="crumbs">cnl-ckc reviewer</nav>
 <main id="main">
 <h1>Conflict</h1>
-<p>The document or its source changed after this page was loaded. The decision was not recorded. Open the review page again and check the current version.</p>
+<p>The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version.</p>
 <!-- ui: verdict: subject changed -->
 </main>
 <footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>

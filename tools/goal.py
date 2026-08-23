@@ -2854,10 +2854,10 @@ def valid_review_date(date_text):
     return True
 def validate_ledger(ledger_path, bundle_by_docid, label):
     manifest_total = len(bundle_by_docid)
-    approved_count = 0
-    rejected_count = 0
-    stale_count = 0
-    reviewed_count = 0
+    decision_count = 0
+    seen_row_docids = {}
+    current_approved = {}
+    current_rejected = {}
     if ledger_path.is_symlink():
         violation("adjudication", "ledger is a symlink: " + str(ledger_path))
     ledger_exists = ledger_path.exists()
@@ -2882,7 +2882,8 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
         row_lines.pop()
         row_number = 1
         prev_docid = ""
-        seen_row_docids = {}
+        prev_date = ""
+        prev_key = ""
         for row_line in row_lines:
             row_number = row_number + 1
             if row_line.startswith("#"):
@@ -2902,12 +2903,12 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
             known = docid in bundle_by_docid
             if not known:
                 violation("adjudication", "ledger row " + str(row_number) + " unknown-docid " + docid)
-            duplicate = docid in seen_row_docids
-            if duplicate:
-                violation("adjudication", "ledger row " + str(row_number) + " duplicate-docid " + docid)
-            if docid < prev_docid:
-                violation("adjudication", "ledger row " + str(row_number) + " sort-order " + docid + " after " + prev_docid)
+            order_key = docid + "\t" + date_field
+            if order_key < prev_key:
+                violation("adjudication", "ledger row " + str(row_number) + " sort-order " + docid + " " + date_field + " after " + prev_docid + " " + prev_date)
             prev_docid = docid
+            prev_date = date_field
+            prev_key = order_key
             seen_row_docids.update({docid: True})
             if not valid_digest(digest_field):
                 violation("adjudication", "ledger row " + str(row_number) + " hex")
@@ -2927,16 +2928,31 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
             if not reviewer_text_ok(comment_field):
                 violation("adjudication", "ledger row " + str(row_number) + " comment")
             current_digest = bundle_by_docid.get(docid)
-            reviewed_count = reviewed_count + 1
+            decision_count = decision_count + 1
             if digest_field == current_digest:
                 if verdict_field == "approved":
-                    approved_count = approved_count + 1
+                    current_approved.update({docid: True})
                 else:
-                    rejected_count = rejected_count + 1
+                    current_rejected.update({docid: True})
+    approved_count = 0
+    rejected_count = 0
+    contested_count = 0
+    stale_count = 0
+    for row_docid in seen_row_docids:
+        has_approved = row_docid in current_approved
+        has_rejected = row_docid in current_rejected
+        if has_approved:
+            if has_rejected:
+                contested_count = contested_count + 1
+            else:
+                approved_count = approved_count + 1
+        else:
+            if has_rejected:
+                rejected_count = rejected_count + 1
             else:
                 stale_count = stale_count + 1
-    unreviewed_count = manifest_total - reviewed_count
-    meter = "goal: adjudication " + label + " approved=" + str(approved_count) + " rejected=" + str(rejected_count) + " stale=" + str(stale_count) + " unreviewed=" + str(unreviewed_count)
+    unreviewed_count = manifest_total - len(seen_row_docids)
+    meter = "goal: adjudication " + label + " approved=" + str(approved_count) + " rejected=" + str(rejected_count) + " contested=" + str(contested_count) + " stale=" + str(stale_count) + " unreviewed=" + str(unreviewed_count) + " decisions=" + str(decision_count)
     print(meter)
 def check_adjudication(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid):
     derived = derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
@@ -3873,7 +3889,7 @@ def check_ui():
         violation("ui-fixtures", "is a symlink: " + str(fixtures_root))
     if not fixtures_root.is_dir():
         violation("ui-fixtures", "missing: " + str(fixtures_root))
-    red_required = ["copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-create", "verdict-ok-replace", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
+    red_required = ["copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
     green_required = ["basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
     red_count = 0
     green_count = 0

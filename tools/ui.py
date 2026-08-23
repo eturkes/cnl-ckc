@@ -12,7 +12,6 @@ import urllib.parse
 import wsgiref.simple_server
 usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--fault after-tmp-write]"
 census_rx = re.compile("identify the ([0-9]+) payloads below")
-chip_states = ["approved", "rejected", "stale", "unreviewed"]
 ledger_header_text = "# format: docid<TAB>review_sha256<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
 verdict_field_names = ["verdict", "reviewer", "comment", "review_sha256", "ledger_sha256", "csrf"]
 serve_config = {}
@@ -387,11 +386,11 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
     states = {}
     for docid in docids:
         states.update({docid: "unreviewed"})
-    ledger_digests = {}
-    ledger_rows = {}
+    ledger_by_docid = {}
+    ledger_order = []
     ledger_file_digest = "absent"
     if not ledger_path.is_file():
-        return ok([states, ledger_digests, ledger_rows, ledger_file_digest])
+        return ok([states, ledger_by_docid, ledger_order, ledger_file_digest])
     try:
         ledger_bytes = ledger_path.read_bytes()
     except OSError:
@@ -421,6 +420,8 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
     rows_result = parse_tsv_rows(ledger_text, 6, gid, "adjudication")
     if result_kind(rows_result) == "err":
         return rows_result
+    current_approved = {}
+    current_rejected = {}
     for row_pair in result_value(rows_result):
         pair_copy = list(row_pair)
         fields = pair_copy.pop(0)
@@ -431,13 +432,31 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
         date_field = fields.pop(0)
         comment_field = fields.pop(0)
         current_digest = review_by_docid.get(docid, "")
-        ledger_digests.update({docid: row_digest})
-        ledger_rows.update({docid: [verdict, reviewer_field, date_field, comment_field]})
-        if row_digest == current_digest:
-            states.update({docid: verdict})
-        else:
-            states.update({docid: "stale"})
-    return ok([states, ledger_digests, ledger_rows, ledger_file_digest])
+        current = row_digest == current_digest
+        row = [row_digest, verdict, reviewer_field, date_field, comment_field, current]
+        known = docid in ledger_by_docid
+        if not known:
+            ledger_by_docid.update({docid: []})
+        doc_history = ledger_by_docid.get(docid)
+        doc_history.append(row)
+        ledger_order.append([docid, row_digest, verdict, reviewer_field, date_field, comment_field, current])
+        if current:
+            if verdict == "approved":
+                current_approved.update({docid: True})
+            else:
+                current_rejected.update({docid: True})
+    for row_docid in ledger_by_docid:
+        has_approved = row_docid in current_approved
+        has_rejected = row_docid in current_rejected
+        row_state = "stale"
+        if has_approved:
+            row_state = "approved"
+            if has_rejected:
+                row_state = "contested"
+        elif has_rejected:
+            row_state = "rejected"
+        states.update({row_docid: row_state})
+    return ok([states, ledger_by_docid, ledger_order, ledger_file_digest])
 def build_guideline_model(root_path, gid):
     guideline_path = root_path.joinpath("guidelines", gid)
     if not valid_ui_id(gid):
@@ -683,8 +702,8 @@ def build_guideline_model(root_path, gid):
     states_pair = result_value(states_result)
     states_copy = list(states_pair)
     doc_states = states_copy.pop(0)
-    ledger_digests = states_copy.pop(0)
-    ledger_rows = states_copy.pop(0)
+    ledger_by_docid = states_copy.pop(0)
+    ledger_order = states_copy.pop(0)
     ledger_file_digest = states_copy.pop(0)
     model = {}
     model.update({"gid": gid})
@@ -716,8 +735,8 @@ def build_guideline_model(root_path, gid):
     model.update({"payload_digest_by_docid": payload_digest_by_docid})
     model.update({"review_by_docid": review_by_docid})
     model.update({"doc_states": doc_states})
-    model.update({"ledger_digests": ledger_digests})
-    model.update({"ledger_rows": ledger_rows})
+    model.update({"ledger_by_docid": ledger_by_docid})
+    model.update({"ledger_order": ledger_order})
     model.update({"ledger_file_digest": ledger_file_digest})
     model.update({"region_rows": region_rows})
     counts = {}
@@ -728,24 +747,28 @@ def build_guideline_model(root_path, gid):
     counts.update({"pending": pending_counter})
     approved_count = 0
     rejected_count = 0
+    contested_count = 0
     stale_count = 0
     unreviewed_count = 0
     for docid in sorted_docids:
         state = doc_states.get(docid, "unreviewed")
         if state == "approved":
             approved_count = approved_count + 1
+        elif state == "rejected":
+            rejected_count = rejected_count + 1
+        elif state == "contested":
+            contested_count = contested_count + 1
+        elif state == "stale":
+            stale_count = stale_count + 1
         else:
-            if state == "rejected":
-                rejected_count = rejected_count + 1
-            else:
-                if state == "stale":
-                    stale_count = stale_count + 1
-                else:
-                    unreviewed_count = unreviewed_count + 1
+            unreviewed_count = unreviewed_count + 1
     counts.update({"approved": approved_count})
     counts.update({"rejected": rejected_count})
+    counts.update({"contested": contested_count})
     counts.update({"stale": stale_count})
     counts.update({"unreviewed": unreviewed_count})
+    counts.update({"decisions": len(ledger_order)})
+    counts.update({"reviewed": len(ledger_by_docid)})
     model.update({"counts": counts})
     return ok(model)
 def build_viewmodel(root_path):
@@ -771,7 +794,7 @@ def build_viewmodel(root_path):
             return model_result
         models.append(result_value(model_result))
     return ok(models)
-palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"]}
+palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-contested": ["#4c1d95", "#ede9fe"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"]}
 def pal_fg(role):
     pair = palette.get(role, [])
     pair_copy = list(pair)
@@ -802,9 +825,16 @@ def build_css():
     lines.append("th { border-bottom: 2px solid " + body_fg + "; }")
     lines.append("table.compact { width: auto; }")
     lines.append("table.compact th, table.compact td { padding-right: 2rem; }")
+    lines.append("table.records { table-layout: fixed; }")
+    lines.append("table.records th { box-sizing: border-box; }")
+    lines.append("table.records th:nth-child(1) { width: 12%; }")
+    lines.append("table.records th:nth-child(2) { width: 18%; }")
+    lines.append("table.records th:nth-child(3) { width: 22%; }")
+    lines.append("table.records th:nth-child(4) { width: 10%; }")
     lines.append(".chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }")
     lines.append(".chip-approved { color: " + pal_fg("chip-approved") + "; background: " + pal_bg("chip-approved") + "; }")
     lines.append(".chip-rejected { color: " + pal_fg("chip-rejected") + "; background: " + pal_bg("chip-rejected") + "; }")
+    lines.append(".chip-contested { color: " + pal_fg("chip-contested") + "; background: " + pal_bg("chip-contested") + "; }")
     lines.append(".chip-stale { color: " + pal_fg("chip-stale") + "; background: " + pal_bg("chip-stale") + "; }")
     lines.append(".chip-unreviewed { color: " + pal_fg("chip-unreviewed") + "; background: " + pal_bg("chip-unreviewed") + "; }")
     lines.append("pre { padding: 0.75rem 1rem; border: 1px solid " + line_color + "; white-space: pre-wrap; overflow-x: auto; }")
@@ -838,10 +868,10 @@ def build_css():
     return joiner.join(lines)
 css_text = build_css()
 scope_line_text = "This page reports what the loaded guideline documents state. It does not give clinical advice."
-refusal_refused_text = "The request was refused. Open the review page again from this site and submit the decision again."
-refusal_invalid_form_text = "The submitted form was not valid. Go back to the review page, reload it, and submit the decision again."
-refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the review page again and check the current version."
-refusal_ledger_text = "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the review page again and check the current state."
+refusal_refused_text = "The request was refused. Open the document page again from this site and submit the decision again."
+refusal_invalid_form_text = "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."
+refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."
+refusal_ledger_text = "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state."
 def comment_safe(detail):
     safe_chars = []
     for ch in detail:
@@ -891,12 +921,14 @@ def state_label(state):
     return state.capitalize()
 def chip_html(state):
     return "<span class=\"chip chip-" + state + "\">" + state_label(state) + "</span>"
-def reviewer_roster(ledger_rows):
+def reviewer_roster(ledger_order):
     names = []
     latest_date = ""
     latest_name = ""
-    for row_docid in ledger_rows:
-        fields_copy = list(ledger_rows.get(row_docid))
+    for row in ledger_order:
+        fields_copy = list(row)
+        fields_copy.pop(0)
+        fields_copy.pop(0)
         fields_copy.pop(0)
         name_text = fields_copy.pop(0)
         date_text = fields_copy.pop(0)
@@ -915,6 +947,70 @@ def datalist_html(names):
         option_parts.append("<option value=\"" + esc_attr(name_text) + "\"></option>")
     option_joiner = ""
     return "<datalist id=\"reviewer-names\">" + option_joiner.join(option_parts) + "</datalist>"
+def doc_tally(ledger_by_docid, docid):
+    approved_count = 0
+    rejected_count = 0
+    earlier_count = 0
+    for row in ledger_by_docid.get(docid, []):
+        row_copy = list(row)
+        row_copy.pop(0)
+        verdict = row_copy.pop(0)
+        row_copy.pop(0)
+        row_copy.pop(0)
+        row_copy.pop(0)
+        current = row_copy.pop(0)
+        if current:
+            if verdict == "approved":
+                approved_count = approved_count + 1
+            else:
+                rejected_count = rejected_count + 1
+        else:
+            earlier_count = earlier_count + 1
+    return [approved_count, rejected_count, earlier_count]
+def tally_text(tally):
+    tally_copy = list(tally)
+    approved_count = tally_copy.pop(0)
+    rejected_count = tally_copy.pop(0)
+    earlier_count = tally_copy.pop(0)
+    current_parts = []
+    if approved_count > 0:
+        current_parts.append(str(approved_count) + " approved")
+    if rejected_count > 0:
+        current_parts.append(str(rejected_count) + " rejected")
+    sentences = []
+    if current_parts:
+        part_joiner = " and "
+        sentences.append("Decisions on this version: " + part_joiner.join(current_parts) + ".")
+    elif earlier_count > 0:
+        sentences.append("No decision is recorded on this version.")
+    else:
+        sentences.append("No decision is recorded.")
+    if earlier_count > 0:
+        sentences.append("Decisions on earlier versions: " + str(earlier_count) + ".")
+    joiner = " "
+    return joiner.join(sentences)
+def tally_cell(tally):
+    tally_copy = list(tally)
+    approved_count = tally_copy.pop(0)
+    rejected_count = tally_copy.pop(0)
+    earlier_count = tally_copy.pop(0)
+    parts = []
+    if approved_count > 0:
+        parts.append(str(approved_count) + " approved")
+    if rejected_count > 0:
+        parts.append(str(rejected_count) + " rejected")
+    if earlier_count > 0:
+        parts.append(str(earlier_count) + " earlier")
+    if not parts:
+        return "None"
+    joiner = ", "
+    return joiner.join(parts)
+def review_summary_text(counts, doc_total):
+    decision_count = counts.get("decisions", 0)
+    if decision_count == 0:
+        return "No decisions are recorded for the " + str(doc_total) + " documents in this guideline."
+    reviewed_count = counts.get("reviewed", 0)
+    return "Reviewers recorded " + str(decision_count) + " decisions on " + str(reviewed_count) + " of " + str(doc_total) + " documents."
 def build_index_page(models):
     rows = []
     for model in models:
@@ -928,6 +1024,7 @@ def build_index_page(models):
         cells.append("<td>" + str(counts.get("regions", 0)) + "</td>")
         cells.append("<td>" + str(counts.get("approved", 0)) + "</td>")
         cells.append("<td>" + str(counts.get("rejected", 0)) + "</td>")
+        cells.append("<td>" + str(counts.get("contested", 0)) + "</td>")
         cells.append("<td>" + str(counts.get("stale", 0)) + "</td>")
         cells.append("<td>" + str(counts.get("unreviewed", 0)) + "</td>")
         empty_text = ""
@@ -936,7 +1033,7 @@ def build_index_page(models):
     parts.append("<h1>Guidelines</h1>")
     parts.append("<section>")
     parts.append("<table>")
-    parts.append("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Outdated</th><th>Unreviewed</th></tr></thead>")
+    parts.append("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>")
     joiner = "\n"
     parts.append("<tbody>" + joiner.join(rows) + "</tbody>")
     parts.append("</table>")
@@ -954,13 +1051,15 @@ def build_guideline_page(model):
     joiner = "\n"
     empty_text = ""
     parts = []
+    ledger_by_docid = model.get("ledger_by_docid", {})
     parts.append("<h1>" + esc_text(model.get("title", gid)) + "</h1>")
+    parts.append("<p>" + esc_text(review_summary_text(counts, len(docids))) + " <a href=\"records.html\">All decision records</a></p>")
     parts.append("<section>")
     parts.append("<h2>Status</h2>")
     parts.append("<table class=\"compact\">")
     parts.append("<thead><tr><th>Status</th><th>Count</th></tr></thead>")
     status_rows = []
-    status_labels = [["Passages", "regions"], ["With ACE", "ace"], ["Pending", "pending"], ["Approved", "approved"], ["Rejected", "rejected"], ["Outdated", "stale"], ["Unreviewed", "unreviewed"]]
+    status_labels = [["Passages", "regions"], ["With ACE", "ace"], ["Pending", "pending"], ["Approved", "approved"], ["Rejected", "rejected"], ["Contested", "contested"], ["Outdated", "stale"], ["Unreviewed", "unreviewed"]]
     for label_pair in status_labels:
         pair_copy = list(label_pair)
         label_text = pair_copy.pop(0)
@@ -972,13 +1071,14 @@ def build_guideline_page(model):
     parts.append("<section>")
     parts.append("<h2>Documents</h2>")
     parts.append("<table class=\"compact\">")
-    parts.append("<thead><tr><th>Document</th><th>Status</th><th>Passage</th></tr></thead>")
+    parts.append("<thead><tr><th>Document</th><th>Status</th><th>Decisions</th><th>Passage</th></tr></thead>")
     doc_rows = []
     for docid in docids:
         state = doc_states.get(docid, "unreviewed")
         cells = []
         cells.append("<td><a href=\"doc/" + url_seg(docid) + ".html\">" + esc_text(title_by_docid.get(docid, docid)) + "</a></td>")
         cells.append("<td>" + chip_html(state) + "</td>")
+        cells.append("<td>" + esc_text(tally_cell(doc_tally(ledger_by_docid, docid))) + "</td>")
         cells.append("<td>" + esc_text(region_by_docid.get(docid, "")) + "</td>")
         doc_rows.append("<tr>" + empty_text.join(cells) + "</tr>")
     parts.append("<tbody>" + joiner.join(doc_rows) + "</tbody>")
@@ -1070,9 +1170,16 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     if published:
         file_html = "<a href=\"../source/" + url_seg(base_name) + "\">" + esc_text(base_name) + "</a>"
     parts.append("<p>" + esc_text(region_by_docid.get(docid, "")) + " · " + file_html + "</p>")
+    ledger_by_docid = model.get("ledger_by_docid", {})
+    records_href = "../records.html"
+    has_history = docid in ledger_by_docid
+    if has_history:
+        records_href = records_href + "#" + url_seg(docid)
+    tally = doc_tally(ledger_by_docid, docid)
+    parts.append("<p>" + esc_text(tally_text(tally)) + " <a href=\"" + records_href + "\">All decision records</a></p>")
     if state == "stale":
         parts.append("<section class=\"stale\">")
-        parts.append("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>")
+        parts.append("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>")
         parts.append("</section>")
     parts.append("<section>")
     parts.append("<h3>Original passage</h3>")
@@ -1090,6 +1197,36 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     parts.append("<dt>Left out or approximated</dt><dd>" + esc_text(dropped_by_docid.get(docid, "")) + "</dd>")
     parts.append("</dl>")
     parts.append("</details>")
+    parts.append("</section>")
+    review_by_docid = model.get("review_by_docid", {})
+    current_digest = review_by_docid.get(docid, "")
+    ledger_file_digest = model.get("ledger_file_digest", "absent")
+    token_text = serve_config.get("token", "")
+    roster = reviewer_roster(model.get("ledger_order", []))
+    roster_copy = list(roster)
+    reviewer_names = roster_copy.pop(0)
+    default_reviewer = roster_copy.pop(0)
+    parts.append("<section class=\"verdict-entry\">")
+    parts.append("<h3>Record a decision</h3>")
+    parts.append("<p>Does the ACE representation appropriately reflect the original passage?</p>")
+    parts.append("<form method=\"post\">")
+    parts.append("<fieldset>")
+    parts.append("<legend>Decision</legend>")
+    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required> Approved</label>")
+    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>")
+    parts.append("</fieldset>")
+    parts.append("<label for=\"reviewer\">Reviewer name</label>")
+    parts.append("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" + esc_attr(default_reviewer) + "\" required>")
+    parts.append(datalist_html(reviewer_names))
+    parts.append("<label for=\"comment\">Comment (optional)</label>")
+    parts.append("<textarea id=\"comment\" name=\"comment\"></textarea>")
+    parts.append("<input type=\"hidden\" name=\"review_sha256\" value=\"" + esc_attr(current_digest) + "\">")
+    parts.append("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" + esc_attr(ledger_file_digest) + "\">")
+    parts.append("<input type=\"hidden\" name=\"csrf\" value=\"" + esc_attr(token_text) + "\">")
+    parts.append("<button>Record decision</button>")
+    parts.append("</form>")
+    parts.append("</section>")
+    parts.append("<section>")
     parts.append("<details>")
     parts.append("<summary>Compiled Prolog (" + str(doc_data.get("pl_lines", 0)) + " lines)</summary>")
     parts.append("<pre>" + esc_text(doc_data.get("pl_text", "")) + "</pre>")
@@ -1101,91 +1238,69 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     nav_parts.append("<a href=\"../index.html\">Guideline index</a>")
     if next_id:
         nav_parts.append("<a href=\"" + url_seg(next_id) + ".html\">Next document</a>")
-    nav_parts.append("<a href=\"../review/" + url_seg(docid) + ".html\">Review this document</a>")
     nav_joiner = " · "
     parts.append("<nav class=\"docnav\">" + nav_joiner.join(nav_parts) + "</nav>")
     body_html = joiner.join(parts)
     crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(gid) + "</a> / " + esc_text(docid)
     return page_html(doc_title, crumb_html, body_html)
-def build_review_page(model, docid):
+def build_records_page(model):
     gid = model.get("gid", "")
-    doc_states = model.get("doc_states", {})
-    state = doc_states.get(docid, "unreviewed")
-    review_by_docid = model.get("review_by_docid", {})
-    ledger_rows = model.get("ledger_rows", {})
-    ledger_file_digest = model.get("ledger_file_digest", "absent")
-    current_digest = review_by_docid.get(docid, "")
-    token_text = serve_config.get("token", "")
-    row_reviewer = ""
-    row_comment = ""
-    row_verdict = ""
-    has_row = docid in ledger_rows
-    if has_row:
-        row_fields = list(ledger_rows.get(docid))
-        row_verdict = row_fields.pop(0)
-        row_reviewer = row_fields.pop(0)
-        row_date = row_fields.pop(0)
-        row_comment = row_fields.pop(0)
+    docids = model.get("docids", [])
+    counts = model.get("counts", {})
     title_by_docid = model.get("title_by_docid", {})
-    doc_title = title_by_docid.get(docid, docid)
+    ledger_by_docid = model.get("ledger_by_docid", {})
     joiner = "\n"
+    empty_text = ""
     parts = []
-    parts.append("<h1>Review: " + esc_text(doc_title) + "</h1>")
-    parts.append("<section>")
-    parts.append("<h2>Decision on record</h2>")
-    if state == "stale":
-        parts.append("<p>The document or its source changed after this decision was recorded. The decision is outdated until a reviewer records a new one.</p>")
-    if has_row:
-        shown_comment = row_comment
-        if not shown_comment:
-            shown_comment = "Not given"
-        parts.append("<dl>")
-        parts.append("<dt>Decision</dt><dd>" + esc_text(state_label(row_verdict)) + "</dd>")
-        parts.append("<dt>Reviewer</dt><dd>" + esc_text(row_reviewer) + "</dd>")
-        parts.append("<dt>Date</dt><dd>" + esc_text(human_date(row_date)) + "</dd>")
-        parts.append("<dt>Comment</dt><dd>" + esc_text(shown_comment) + "</dd>")
-        parts.append("</dl>")
-        parts.append("<p>The reviewer name is recorded as entered and is not verified.</p>")
+    parts.append("<h1>Decision records</h1>")
+    summary_text = review_summary_text(counts, len(docids))
+    if counts.get("decisions", 0) > 0:
+        summary_text = summary_text + " The newest decision for each document is first."
+    parts.append("<p>" + esc_text(summary_text) + "</p>")
+    section_count = 0
+    for docid in docids:
+        history = ledger_by_docid.get(docid, [])
+        if history:
+            section_count = section_count + 1
+            newest_first = list(history)
+            newest_first.reverse()
+            parts.append("<section id=\"" + esc_attr(docid) + "\">")
+            parts.append("<h2><a href=\"doc/" + url_seg(docid) + ".html\">" + esc_text(title_by_docid.get(docid, docid)) + "</a></h2>")
+            parts.append("<table class=\"records\">")
+            parts.append("<thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>")
+            row_parts = []
+            for row in newest_first:
+                row_copy = list(row)
+                row_copy.pop(0)
+                verdict = row_copy.pop(0)
+                reviewer_text = row_copy.pop(0)
+                date_text = row_copy.pop(0)
+                comment_text = row_copy.pop(0)
+                current = row_copy.pop(0)
+                version_text = "Earlier"
+                if current:
+                    version_text = "Current"
+                shown_comment = comment_text
+                if not shown_comment:
+                    shown_comment = "Not given"
+                cells = []
+                cells.append("<td>" + esc_text(state_label(verdict)) + "</td>")
+                cells.append("<td>" + esc_text(reviewer_text) + "</td>")
+                cells.append("<td>" + esc_text(human_date(date_text)) + "</td>")
+                cells.append("<td>" + version_text + "</td>")
+                cells.append("<td>" + esc_text(shown_comment) + "</td>")
+                row_parts.append("<tr>" + empty_text.join(cells) + "</tr>")
+            parts.append("<tbody>" + joiner.join(row_parts) + "</tbody>")
+            parts.append("</table>")
+            parts.append("</section>")
+    if section_count == 0:
+        parts.append("<p>Open a document and record a decision to start this list.</p>")
     else:
-        parts.append("<p>No decision is recorded for this document.</p>")
-    parts.append("</section>")
-    approved_checked = ""
-    rejected_checked = ""
-    if row_verdict == "approved":
-        approved_checked = " checked"
-    if row_verdict == "rejected":
-        rejected_checked = " checked"
-    roster = reviewer_roster(ledger_rows)
-    roster_copy = list(roster)
-    reviewer_names = roster_copy.pop(0)
-    default_reviewer = roster_copy.pop(0)
-    parts.append("<section class=\"verdict-entry\">")
-    parts.append("<h2>Record a decision</h2>")
-    parts.append("<p>Your decision applies to this document exactly as shown on this page. If the document or its source changes before you submit, the server refuses the decision and records no change.</p>")
-    parts.append("<form method=\"post\">")
-    parts.append("<fieldset>")
-    parts.append("<legend>Decision</legend>")
-    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required" + approved_checked + "> Approved</label>")
-    parts.append("<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required" + rejected_checked + "> Rejected</label>")
-    parts.append("</fieldset>")
-    parts.append("<label for=\"reviewer\">Reviewer name</label>")
-    parts.append("<input type=\"text\" class=\"suggested\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"" + esc_attr(default_reviewer) + "\" required>")
-    parts.append(datalist_html(reviewer_names))
-    parts.append("<label for=\"comment\">Comment (optional)</label>")
-    parts.append("<textarea id=\"comment\" name=\"comment\">" + esc_text(row_comment) + "</textarea>")
-    parts.append("<input type=\"hidden\" name=\"review_sha256\" value=\"" + esc_attr(current_digest) + "\">")
-    parts.append("<input type=\"hidden\" name=\"ledger_sha256\" value=\"" + esc_attr(ledger_file_digest) + "\">")
-    parts.append("<input type=\"hidden\" name=\"csrf\" value=\"" + esc_attr(token_text) + "\">")
-    parts.append("<button>Record decision</button>")
-    parts.append("</form>")
-    parts.append("</section>")
-    nav_parts = []
-    nav_parts.append("<a href=\"../doc/" + url_seg(docid) + ".html\">Back to the document</a>")
-    nav_joiner = " · "
-    parts.append("<nav class=\"docnav\">" + nav_joiner.join(nav_parts) + "</nav>")
+        parts.append("<p>Each reviewer name is recorded as entered and is not verified.</p>")
+    parts.append("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>")
     body_html = joiner.join(parts)
-    crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(gid) + "</a> / <a href=\"../doc/" + url_seg(docid) + ".html\">" + esc_text(docid) + "</a> / review"
-    return page_html("Review: " + doc_title, crumb_html, body_html)
+    crumb_html = "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" + esc_text(gid) + "</a> / records"
+    return page_html("Decision records", crumb_html, body_html)
 def build_error_page(title_text, heading_text, body_html):
     parts = []
     parts.append("<h1>" + esc_text(heading_text) + "</h1>")
@@ -1210,6 +1325,8 @@ def extract_hrefs(page_text):
 def resolve_href(page_path, href_value):
     if href_value.startswith("#"):
         return "#"
+    fragment_parts = href_value.split("#", 1)
+    href_value = fragment_parts.pop(0)
     base_segs = page_path.split("/")
     base_segs.pop()
     target_segs = href_value.split("/")
@@ -1260,11 +1377,10 @@ def render_pages(models):
             doc_page = "g/" + url_seg(gid) + "/doc/" + url_seg(docid) + ".html"
             page_order.append(doc_page)
             pages.update({doc_page: build_doc_page(model, docid, doc_data, prev_map.get(docid, ""), next_map.get(docid, ""))})
-        for docid in docids:
-            review_page = "g/" + url_seg(gid) + "/review/" + url_seg(docid) + ".html"
-            page_order.append(review_page)
-            pages.update({review_page: build_review_page(model, docid)})
-        page_count = 1 + len(docids) + len(docids)
+        records_page = "g/" + url_seg(gid) + "/records.html"
+        page_order.append(records_page)
+        pages.update({records_page: build_records_page(model)})
+        page_count = 2 + len(docids)
         meter_lines.append("ui: " + gid + " docs=" + str(len(docids)) + " regions=" + str(counts.get("regions", 0)) + " pages=" + str(page_count))
     for page_path in page_order:
         page_text = pages.get(page_path, "")
@@ -1485,7 +1601,7 @@ def not_found_response():
     page_text = build_error_page("Not found", "Not found", body_html)
     body_bytes = page_text.encode("utf-8")
     return ["404 Not Found", base_headers(), body_bytes]
-def review_shaped(path_text):
+def doc_shaped(path_text):
     if not path_text.startswith("/g/"):
         return False
     rest_text = path_text.removeprefix("/g/")
@@ -1497,7 +1613,7 @@ def review_shaped(path_text):
     leaf_seg = segs.pop(0)
     if gid_seg == "":
         return False
-    if mid_seg != "review":
+    if mid_seg != "doc":
         return False
     if not leaf_seg.endswith(".html"):
         return False
@@ -1522,7 +1638,7 @@ def verdict_refusal(status_text, heading_text, detail, plain_text):
     body_bytes = page_text.encode("utf-8")
     return [status_text, base_headers(), body_bytes]
 def redirect_response(gid, docid):
-    location_value = "/g/" + url_seg(gid) + "/review/" + url_seg(docid) + ".html"
+    location_value = "/g/" + url_seg(gid) + "/doc/" + url_seg(docid) + ".html"
     body_html = "<p>The decision was recorded.</p>"
     page_text = build_error_page("Decision recorded", "Decision recorded", body_html)
     body_bytes = page_text.encode("utf-8")
@@ -1671,29 +1787,36 @@ def handle_verdict_post(model, gid, docid, meta):
     if now_text == "":
         now_value = datetime.datetime.now(datetime.timezone.utc)
         now_text = now_value.strftime("%Y-%m-%dT%H:%M:%SZ")
-    ledger_rows = model.get("ledger_rows", {})
-    ledger_digests = model.get("ledger_digests", {})
-    merged = {}
-    for row_docid in ledger_rows:
-        row_fields = list(ledger_rows.get(row_docid))
-        row_verdict = row_fields.pop(0)
-        row_reviewer = row_fields.pop(0)
-        row_date = row_fields.pop(0)
-        row_comment = row_fields.pop(0)
-        row_digest = ledger_digests.get(row_docid, "")
-        merged.update({row_docid: [row_digest, row_verdict, row_reviewer, row_date, row_comment]})
-    merged.update({docid: [fields.get("review_sha256"), fields.get("verdict"), fields.get("reviewer"), now_text, fields.get("comment")]})
+    tab_text = "\t"
+    new_line = docid + tab_text + fields.get("review_sha256") + tab_text + fields.get("verdict") + tab_text + fields.get("reviewer") + tab_text + now_text + tab_text + fields.get("comment")
+    new_key = docid + tab_text + now_text
+    kept_lines = []
+    insert_at = 0
+    scan_index = 0
+    for row in model.get("ledger_order", []):
+        row_copy = list(row)
+        row_docid = row_copy.pop(0)
+        row_digest = row_copy.pop(0)
+        row_verdict = row_copy.pop(0)
+        row_reviewer = row_copy.pop(0)
+        row_date = row_copy.pop(0)
+        row_comment = row_copy.pop(0)
+        kept_lines.append(row_docid + tab_text + row_digest + tab_text + row_verdict + tab_text + row_reviewer + tab_text + row_date + tab_text + row_comment)
+        scan_index = scan_index + 1
+        row_key = row_docid + tab_text + row_date
+        later = new_key < row_key
+        if not later:
+            insert_at = scan_index
     out_lines = []
     out_lines.append(ledger_header_text)
-    tab_text = "\t"
-    for row_docid in sorted(merged):
-        row_fields = list(merged.get(row_docid))
-        row_digest = row_fields.pop(0)
-        row_verdict = row_fields.pop(0)
-        row_reviewer = row_fields.pop(0)
-        row_date = row_fields.pop(0)
-        row_comment = row_fields.pop(0)
-        out_lines.append(row_docid + tab_text + row_digest + tab_text + row_verdict + tab_text + row_reviewer + tab_text + row_date + tab_text + row_comment)
+    emit_index = 0
+    for kept_line in kept_lines:
+        if emit_index == insert_at:
+            out_lines.append(new_line)
+        out_lines.append(kept_line)
+        emit_index = emit_index + 1
+    if insert_at == emit_index:
+        out_lines.append(new_line)
     joiner = "\n"
     candidate_text = joiner.join(out_lines) + "\n"
     candidate_bytes = candidate_text.encode("utf-8")
@@ -1769,7 +1892,7 @@ def handle_verdict_post(model, gid, docid, meta):
         return error_response("ui: verdict: ledger write failed")
     return redirect_response(gid, docid)
 def respond(root_path, method_text, path_text, meta):
-    shaped = review_shaped(path_text)
+    shaped = doc_shaped(path_text)
     if method_text != "GET":
         if method_text != "POST":
             return method_response(shaped)
@@ -1802,6 +1925,8 @@ def respond(root_path, method_text, path_text, meta):
             return page_response(build_guideline_page(model))
         if tail_seg == "index.html":
             return page_response(build_guideline_page(model))
+        if tail_seg == "records.html":
+            return page_response(build_records_page(model))
         return not_found_response()
     if seg_count == 3:
         gid_seg = segs.pop(0)
@@ -1823,12 +1948,7 @@ def respond(root_path, method_text, path_text, meta):
             except OSError:
                 return not_found_response()
             return ["200 OK", asset_headers(asset_media_type(leaf_seg)), asset_bytes]
-        mid_known = False
-        if mid_seg == "doc":
-            mid_known = True
-        if mid_seg == "review":
-            mid_known = True
-        if not mid_known:
+        if mid_seg != "doc":
             return not_found_response()
         if not leaf_seg.endswith(".html"):
             return not_found_response()
@@ -1840,13 +1960,8 @@ def respond(root_path, method_text, path_text, meta):
         known = docid in docids
         if not known:
             return not_found_response()
-        if mid_seg == "review":
-            if method_text == "POST":
-                return handle_verdict_post(model, gid_seg, docid, meta)
-            review_data_result = doc_render_data(model, docid)
-            if result_kind(review_data_result) == "err":
-                return error_response(result_value(review_data_result))
-            return page_response(build_review_page(model, docid))
+        if method_text == "POST":
+            return handle_verdict_post(model, gid_seg, docid, meta)
         data_result = doc_render_data(model, docid)
         if result_kind(data_result) == "err":
             return error_response(result_value(data_result))

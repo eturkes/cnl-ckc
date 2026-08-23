@@ -1,5 +1,5 @@
 Fixture evidence
-Region authority: identify the 4 payloads below
+Region authority: identify the 5 payloads below
 
 [r1 | p1 | Fixture section]
 Approved payload.
@@ -12,3 +12,6 @@ Stale payload.
 
 [r4 | p1 | Fixture section]
 Unreviewed payload.
+
+[r5 | p1 | Fixture section]
+Contested payload.

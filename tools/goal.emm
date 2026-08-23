@@ -2960,10 +2960,10 @@ Define [[valid_review_date]] taking date_text:
 
 Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
     Set manifest_total to [[len]](bundle_by_docid).
-    Set approved_count to 0.
-    Set rejected_count to 0.
-    Set stale_count to 0.
-    Set reviewed_count to 0.
+    Set decision_count to 0.
+    Set seen_row_docids to {}.
+    Set current_approved to {}.
+    Set current_rejected to {}.
     If [[ledger_path.is_symlink]]():
         Do [[violation]]("adjudication", "ledger is a symlink: " plus [[str]](ledger_path)).
     Set ledger_exists to [[ledger_path.exists]]().
@@ -2988,7 +2988,8 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
         Do [[row_lines.pop]]().
         Set row_number to 1.
         Set prev_docid to "".
-        Set seen_row_docids to {}.
+        Set prev_date to "".
+        Set prev_key to "".
         For each row_line in row_lines:
             Set row_number to row_number plus 1.
             If [[row_line.startswith]]("#"):
@@ -3008,12 +3009,12 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
             Set known to docid is in bundle_by_docid.
             If not known:
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " unknown-docid " plus docid).
-            Set duplicate to docid is in seen_row_docids.
-            If duplicate:
-                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " duplicate-docid " plus docid).
-            If docid is less than prev_docid:
-                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " sort-order " plus docid plus " after " plus prev_docid).
+            Set order_key to docid plus "\t" plus date_field.
+            If order_key is less than prev_key:
+                Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " sort-order " plus docid plus " " plus date_field plus " after " plus prev_docid plus " " plus prev_date).
             Set prev_docid to docid.
+            Set prev_date to date_field.
+            Set prev_key to order_key.
             Do [[seen_row_docids.update]]({docid: True}).
             If not [[valid_digest]](digest_field):
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " hex").
@@ -3033,16 +3034,31 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
             If not [[reviewer_text_ok]](comment_field):
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " comment").
             Set current_digest to [[bundle_by_docid.get]](docid).
-            Set reviewed_count to reviewed_count plus 1.
+            Set decision_count to decision_count plus 1.
             If digest_field equals current_digest:
                 If verdict_field equals "approved":
-                    Set approved_count to approved_count plus 1.
+                    Do [[current_approved.update]]({docid: True}).
                 Otherwise:
-                    Set rejected_count to rejected_count plus 1.
+                    Do [[current_rejected.update]]({docid: True}).
+    Set approved_count to 0.
+    Set rejected_count to 0.
+    Set contested_count to 0.
+    Set stale_count to 0.
+    For each row_docid in seen_row_docids:
+        Set has_approved to row_docid is in current_approved.
+        Set has_rejected to row_docid is in current_rejected.
+        If has_approved:
+            If has_rejected:
+                Set contested_count to contested_count plus 1.
+            Otherwise:
+                Set approved_count to approved_count plus 1.
+        Otherwise:
+            If has_rejected:
+                Set rejected_count to rejected_count plus 1.
             Otherwise:
                 Set stale_count to stale_count plus 1.
-    Set unreviewed_count to manifest_total minus reviewed_count.
-    Set meter to "goal: adjudication " plus label plus " approved=" plus [[str]](approved_count) plus " rejected=" plus [[str]](rejected_count) plus " stale=" plus [[str]](stale_count) plus " unreviewed=" plus [[str]](unreviewed_count).
+    Set unreviewed_count to manifest_total minus [[len]](seen_row_docids).
+    Set meter to "goal: adjudication " plus label plus " approved=" plus [[str]](approved_count) plus " rejected=" plus [[str]](rejected_count) plus " contested=" plus [[str]](contested_count) plus " stale=" plus [[str]](stale_count) plus " unreviewed=" plus [[str]](unreviewed_count) plus " decisions=" plus [[str]](decision_count).
     Do [[print]](meter).
 
 Define [[check_adjudication]] taking guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid:
@@ -4002,7 +4018,7 @@ Define [[check_ui]] taking nothing:
         Do [[violation]]("ui-fixtures", "is a symlink: " plus [[str]](fixtures_root)).
     If not [[fixtures_root.is_dir]]():
         Do [[violation]]("ui-fixtures", "missing: " plus [[str]](fixtures_root)).
-    Set red_required to <"copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-create", "verdict-ok-replace", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
+    Set red_required to <"copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
     Set green_required to <"basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts">.
     Set red_count to 0.
     Set green_count to 0.

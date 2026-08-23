@@ -9,7 +9,7 @@ Cache-Control: no-store
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Review: Fixture section (r10) — cnl-ckc reviewer</title>
+<title>Fixture section (r10) — cnl-ckc reviewer</title>
 <style>
 body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
 a { color: #1d4ed8; }
@@ -26,9 +26,16 @@ th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e
 th { border-bottom: 2px solid #111827; }
 table.compact { width: auto; }
 table.compact th, table.compact td { padding-right: 2rem; }
+table.records { table-layout: fixed; }
+table.records th { box-sizing: border-box; }
+table.records th:nth-child(1) { width: 12%; }
+table.records th:nth-child(2) { width: 18%; }
+table.records th:nth-child(3) { width: 22%; }
+table.records th:nth-child(4) { width: 10%; }
 .chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
 .chip-approved { color: #14532d; background: #dcfce7; }
 .chip-rejected { color: #7f1d1d; background: #fee2e2; }
+.chip-contested { color: #4c1d95; background: #ede9fe; }
 .chip-stale { color: #78350f; background: #fef3c7; }
 .chip-unreviewed { color: #1f2937; background: #e5e7eb; }
 pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; white-space: pre-wrap; overflow-x: auto; }
@@ -62,16 +69,33 @@ a { color: inherit; text-decoration: none; }
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<nav class="crumbs"><a href="../../../index.html">guidelines</a> / <a href="../index.html">alpha</a> / <a href="../doc/z.html">z</a> / review</nav>
+<nav class="crumbs"><a href="../../../index.html">guidelines</a> / <a href="../index.html">alpha</a> / z</nav>
 <main id="main">
-<h1>Review: Fixture section (r10)</h1>
+<h1>alpha</h1>
+<h2>Fixture section (r10) <span class="chip chip-unreviewed">Unreviewed</span></h2>
+<p>r10 · <a href="../source/evidence.txt">evidence.txt</a></p>
+<p>No decision is recorded. <a href="../records.html">All decision records</a></p>
 <section>
-<h2>Decision on record</h2>
-<p>No decision is recorded for this document.</p>
+<h3>Original passage</h3>
+<pre class="prose">Payload selected for z.</pre>
+</section>
+<section>
+<h3>Attempto Controlled English (ACE)</h3>
+<pre class="prose">A reviewer should inspect z.
+</pre>
+</section>
+<section>
+<details>
+<summary>Differences from the source</summary>
+<dl>
+<dt>Kept from the source</dt><dd>directive retained</dd>
+<dt>Left out or approximated</dt><dd>no material detail</dd>
+</dl>
+</details>
 </section>
 <section class="verdict-entry">
-<h2>Record a decision</h2>
-<p>Your decision applies to this document exactly as shown on this page. If the document or its source changes before you submit, the server refuses the decision and records no change.</p>
+<h3>Record a decision</h3>
+<p>Does the ACE representation appropriately reflect the original passage?</p>
 <form method="post">
 <fieldset>
 <legend>Decision</legend>
@@ -89,7 +113,16 @@ a { color: inherit; text-decoration: none; }
 <button>Record decision</button>
 </form>
 </section>
-<nav class="docnav"><a href="../doc/z.html">Back to the document</a></nav>
+<section>
+<details>
+<summary>Compiled Prolog (3 lines)</summary>
+<pre>guideline_schema_version(1).
+guideline_document('z', ace_sha256(fixture), ulex(none)).
+fixture_fact('z').
+</pre>
+</details>
+</section>
+<nav class="docnav"><a href="a-2.html">Previous document</a> · <a href="../index.html">Guideline index</a></nav>
 </main>
 <footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>
 </body>

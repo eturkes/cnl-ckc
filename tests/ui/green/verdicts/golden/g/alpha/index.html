@@ -19,9 +19,16 @@ th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e
 th { border-bottom: 2px solid #111827; }
 table.compact { width: auto; }
 table.compact th, table.compact td { padding-right: 2rem; }
+table.records { table-layout: fixed; }
+table.records th { box-sizing: border-box; }
+table.records th:nth-child(1) { width: 12%; }
+table.records th:nth-child(2) { width: 18%; }
+table.records th:nth-child(3) { width: 22%; }
+table.records th:nth-child(4) { width: 10%; }
 .chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
 .chip-approved { color: #14532d; background: #dcfce7; }
 .chip-rejected { color: #7f1d1d; background: #fee2e2; }
+.chip-contested { color: #4c1d95; background: #ede9fe; }
 .chip-stale { color: #78350f; background: #fef3c7; }
 .chip-unreviewed { color: #1f2937; background: #e5e7eb; }
 pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; white-space: pre-wrap; overflow-x: auto; }
@@ -58,15 +65,17 @@ a { color: inherit; text-decoration: none; }
 <nav class="crumbs"><a href="../../index.html">guidelines</a> / alpha</nav>
 <main id="main">
 <h1>alpha</h1>
+<p>Reviewers recorded 7 decisions on 4 of 5 documents. <a href="records.html">All decision records</a></p>
 <section>
 <h2>Status</h2>
 <table class="compact">
 <thead><tr><th>Status</th><th>Count</th></tr></thead>
-<tbody><tr><td>Passages</td><td>4</td></tr>
-<tr><td>With ACE</td><td>4</td></tr>
+<tbody><tr><td>Passages</td><td>5</td></tr>
+<tr><td>With ACE</td><td>5</td></tr>
 <tr><td>Pending</td><td>0</td></tr>
 <tr><td>Approved</td><td>1</td></tr>
 <tr><td>Rejected</td><td>1</td></tr>
+<tr><td>Contested</td><td>1</td></tr>
 <tr><td>Outdated</td><td>1</td></tr>
 <tr><td>Unreviewed</td><td>1</td></tr></tbody>
 </table>
@@ -74,11 +83,12 @@ a { color: inherit; text-decoration: none; }
 <section>
 <h2>Documents</h2>
 <table class="compact">
-<thead><tr><th>Document</th><th>Status</th><th>Passage</th></tr></thead>
-<tbody><tr><td><a href="doc/approved.html">Fixture section (r1)</a></td><td><span class="chip chip-approved">Approved</span></td><td>r1</td></tr>
-<tr><td><a href="doc/rejected.html">Fixture section (r2)</a></td><td><span class="chip chip-rejected">Rejected</span></td><td>r2</td></tr>
-<tr><td><a href="doc/stale.html">Fixture section (r3)</a></td><td><span class="chip chip-stale">Outdated</span></td><td>r3</td></tr>
-<tr><td><a href="doc/unreviewed.html">Fixture section (r4)</a></td><td><span class="chip chip-unreviewed">Unreviewed</span></td><td>r4</td></tr></tbody>
+<thead><tr><th>Document</th><th>Status</th><th>Decisions</th><th>Passage</th></tr></thead>
+<tbody><tr><td><a href="doc/approved.html">Fixture section (r1)</a></td><td><span class="chip chip-approved">Approved</span></td><td>2 approved</td><td>r1</td></tr>
+<tr><td><a href="doc/contested.html">Fixture section (r5)</a></td><td><span class="chip chip-contested">Contested</span></td><td>1 approved, 1 rejected</td><td>r5</td></tr>
+<tr><td><a href="doc/rejected.html">Fixture section (r2)</a></td><td><span class="chip chip-rejected">Rejected</span></td><td>1 rejected</td><td>r2</td></tr>
+<tr><td><a href="doc/stale.html">Fixture section (r3)</a></td><td><span class="chip chip-stale">Outdated</span></td><td>2 earlier</td><td>r3</td></tr>
+<tr><td><a href="doc/unreviewed.html">Fixture section (r4)</a></td><td><span class="chip chip-unreviewed">Unreviewed</span></td><td>None</td><td>r4</td></tr></tbody>
 </table>
 </section>
 <section>
