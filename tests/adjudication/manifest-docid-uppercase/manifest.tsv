@@ -1,3 +1,3 @@
-# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256
-# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.
-A	e8e2cd9d0320b4e67bb07cc6f93e7149de9822b187db58d28dfd99401c794d23	4fc26ab2ddaa29f822c7bcef1ac268012f1287cd953352bf38180d8844d1e325	9df5bde957385e5279597451f9f711e9940841d25fef19626fe9cccb1a5cae52	3e5c78af75641eeb461f672e8ef87a212ea992eacfadfd836897d71cb31f4fa1	4e933c9b16fcdc05d220ca69a771228ef63cfb07d7e12bc60c53418754e966ca	60017d6c42498ee140d874510ce1cfe040ee31c80c41810744034927d8bacdcb
+# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256
+# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.
+A	e8e2cd9d0320b4e67bb07cc6f93e7149de9822b187db58d28dfd99401c794d23	4fc26ab2ddaa29f822c7bcef1ac268012f1287cd953352bf38180d8844d1e325	9df5bde957385e5279597451f9f711e9940841d25fef19626fe9cccb1a5cae52	4e933c9b16fcdc05d220ca69a771228ef63cfb07d7e12bc60c53418754e966ca	03a163b33cc8aadeec4069db44d13318ed2636b64a91af54ac37eb674f60a5cc

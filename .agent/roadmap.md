@@ -85,7 +85,7 @@ rulings in `.agent/archive/m3.md` (with assurance + evidence chain,
 unit gauges, review record, out-of-scope, sizing analogs); history =
 `git log --grep "(M3[. ]" -p -- .agent/roadmap.md`.
 
-## M4 — adjudication UI + query/trace compiler foundation — IN-PROGRESS
+## M4 — adjudication UI + query/trace compiler foundation — UNITS SHIPPED, REVIEW PENDING
 
 Goal (rescoped: query-demonstrator tab → M5, graph-explorer tab → M6,
 portable KB dist → M7, per the Standing-direction tab law): a local
@@ -168,13 +168,15 @@ Architecture rulings:
 - Adjudication review subject = what the reviewer actually saw: each
   ledger row pins `review_sha256`, a canonical bundle digest over the
   doc's ACE bytes + its coverage region row + region payload bytes + its
-  projection-notes row + its semantic-clause digest (compiled clauses
+  semantic-clause digest — `bundle v2`, the projection-notes component
+  having left with the disclosure panel it fed (M4.13 v5.6). Clauses are
   canonicalized minus the volatile document-record header, so a pure
-  vocabulary append staleness nothing while a reinterpreting ulex/Clex/
-  compiler change staleness exactly the semantically-changed docs — the
+  vocabulary append outdates nothing while a reinterpreting ulex/Clex/
+  compiler change outdates exactly the semantically-changed docs (the
   append-stability polish row folds in here). Component digests live in
-  a check-derived `audit/review-manifest.tsv` so the UI can explain WHY
-  a verdict went stale. Verdict rows are current-state; history = git
+  a check-derived `audit/review-manifest.tsv`; drift attribution stays
+  underivable from current state (M4.2 P20), so the UI reports that a
+  decision applies to an earlier version and never why. Verdict rows are current-state; history = git
   (README Operating gains a commit-after-each-review-batch checkpoint);
   `reviewer` = self-asserted local identifier (canonical grammar, no
   control/tab/newline), date = server-generated UTC ISO — the UI
@@ -209,10 +211,10 @@ Architecture rulings:
   as the formal statement beside the source quote, never paraphrased.
 
 Units. Shipped: 4.1→4.4 (adjudication UI consumable); 4.5→4.6→4.7
-(question/answer/trace artifacts). Remaining: 4.13 alone — last M4
-unit. Former 4.8/4.10 = M6 (graph artifact + views), 4.9 = M5, 4.11 =
-M7 (unit text banked in those milestones); 4.12's review-scoped docs
-fold into 4.13.
+(question/answer/trace artifacts); 4.13 (review-UI design-law close).
+Remaining: the milestone review alone. Former 4.8/4.10 = M6 (graph
+artifact + views), 4.9 = M5, 4.11 = M7 (unit text banked in those
+milestones); 4.12's review-scoped docs folded into 4.13.
 
 - M4.1 DONE (kernel) — strict E-- exception verbs: minimal
   `Try:`/`Catch <name>:` block statements in the vendor/e-- fork
@@ -344,28 +346,32 @@ fold into 4.13.
   kill-recipes row), determinism 64/64 byte-stable; tags
   archive/m4u7-{suite,diff,orc}. main=97% 232K (1st window →
   compaction; close in 2nd) / mate=102% 243K (test hw, 3 compactions).
-- M4.13 OPEN (kernel) — review-UI design-law close, last M4 unit (no new
-  tabs/routes; production surface = the shipped review UI + these
-  deltas): apply the design law to shipped pages — build_doc_page stale
-  panel + build_review_page subject panel lose visible digests/hex +
-  `bundle differs` for plain language per the design-law wording,
-  reviewer label plain (`as entered; not verified`), scope line in the
-  shared page chrome; review-form CSS styling pass (site design system);
-  print-clean; copy-register lint gate = committed check over ui.py
-  emitted strings (emoji, gradient/animation CSS props, marketing
-  lexemes, relative-time patterns, exclamatory copy) + red fixtures —
-  consumes the two pulled polish rows (plumbing copy, form CSS; prune at
-  close). Wholesale golden regen under the AM6 hazard law (diff churn vs
-  contract before crediting green), fixture update, full check + battery
-  green, chromiumfish visual QA. Docs close (absorbs old 4.12,
-  review-scoped): README audit story (E-- UI + exception verbs,
-  adjudication + rejection workflow, the committed-corpus read rule
-  (v5.5) + its `check`-reads-the-working-tree exception, shipped question/answer/trace
-  families + TCB closure naming, Running: `ui.py`, loopback security
-  posture, licensing prose), guideline README + queue/rounds touch-ups,
-  polish-register reconciliation. Milestone close per M1/M3 convention:
-  M4 detail → `.agent/archive/m4.md`, live-law pointers (README +
-  CLAUDE.md design law + Standing-direction tab law), roadmap slimmed.
+- M4.13 DONE (kernel) — review-UI design-law close, last M4 unit: the
+  design law applied to every shipped page (plumbing out of visible
+  copy, plain-language state, scope line in the shared chrome, form CSS,
+  print-clean) plus six user-directed revision commits — review-round
+  vocabulary + mandatory named reviewer, published source route +
+  guideline-first heading order, append-only ledger + records page,
+  `ace_commit` version links, the committed-corpus read surface, and the
+  removal of the differences panel + every UI trace of committed-versus-
+  uncommitted state (bundle v2). Copy law shipped as two gates
+  (`check_copy_register` over ui.py's emitted strings +
+  `page_invariant_name` inside `ui.py check`), pinned in place by
+  `check_copy_chain_slot`. Contract of record `.scratch/contracts/m4u13.md`
+  (v1..v4 + v5.1-v5.6 rulings). Close gates: `goal.py check` +
+  `regen.py --check` green; `check_ui` 75 red / 13 green fixtures + live
+  189 pages; `check_copy_register` 1353 literals; `regen-ui-fixtures.sh`
+  fail=0; clinician QA rebuilt (14 screens + 3 print sheets,
+  `.scratch/m4u13-qa/`). The committed-corpus law is invisible by user
+  ruling, so it rides two `worktree/` git-corpus fixtures rather than
+  copy — machinery + non-vacuity probe in `.agent/memory.md`.
+
+- MILESTONE-REVIEW M4 NEXT — all units shipped; the review is the last
+  M4 step. Scope = the standing milestone-review battery over the
+  shipped surface, then close per M1/M3 convention: M4 detail →
+  `.agent/archive/m4.md`, live-law pointers retained here (README +
+  CLAUDE.md design law + Standing-direction tab law), roadmap slimmed to
+  a REVIEWED stub.
 
 - Unit gauges: M4.1 main=88% 212K close, mate=100% 239K (rev; map 69%
   test 71% rev2 57%). M4.2 main=94% 226K pre-compaction mid-close (33%

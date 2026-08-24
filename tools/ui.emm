@@ -568,7 +568,6 @@ Define [[worktree_corpus]] taking root_path:
     Set corpus to {}.
     Do [[corpus.update]]({"root": root_path}).
     Do [[corpus.update]]({"real_root": root_path}).
-    Do [[corpus.update]]({"uncommitted": <>}).
     Do [[corpus.update]]({"scratch": ""}).
     Give back corpus.
 
@@ -590,7 +589,6 @@ Define [[resolve_corpus]] taking root_path:
         Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
         Give back [[err]]("ui: corpus: cannot read the committed guideline files").
     Do [[corpus.update]]({"root": dest_root}).
-    Do [[corpus.update]]({"uncommitted": gids}).
     Do [[corpus.update]]({"scratch": scratch_text}).
     Give back [[ok]](corpus).
 
@@ -717,8 +715,6 @@ Define [[build_guideline_model]] taking corpus, gid:
     Set committed_corpus to False.
     If scratch_text:
         Set committed_corpus to True.
-    Set uncommitted_gids to [[corpus.get]]("uncommitted", <>).
-    Set uncommitted_flag to gid is in uncommitted_gids.
     Set guideline_path to [[root_path.joinpath]]("guidelines", gid).
     Set real_guideline_path to [[real_root.joinpath]]("guidelines", gid).
     If not [[valid_ui_id]](gid):
@@ -819,7 +815,7 @@ Define [[build_guideline_model]] taking corpus, gid:
     If [[result_kind]](manifest_result) equals "err":
         Give back manifest_result.
     Set manifest_text to [[result_value]](manifest_result).
-    Set manifest_rows_result to [[parse_tsv_rows]](manifest_text, 7, gid, "review-manifest").
+    Set manifest_rows_result to [[parse_tsv_rows]](manifest_text, 6, gid, "review-manifest").
     If [[result_kind]](manifest_rows_result) equals "err":
         Give back manifest_rows_result.
     Set ace_digest_by_docid to {}.
@@ -836,7 +832,6 @@ Define [[build_guideline_model]] taking corpus, gid:
         Do [[manifest_docids.append]](docid).
         Do [[ace_digest_by_docid.update]]({docid: ace_digest}).
         Do [[payload_digest_by_docid.update]]({docid: payload_digest}).
-        Set notes_digest to [[fields.pop]](0).
         Set clause_digest to [[fields.pop]](0).
         Set review_digest to [[fields.pop]](0).
         Do [[review_by_docid.update]]({docid: review_digest}).
@@ -848,43 +843,6 @@ Define [[build_guideline_model]] taking corpus, gid:
         Set claimed to [[region_by_docid.get]](docid, "").
         If not claimed:
             Give back [[err]]("ui: viewmodel: " plus gid plus " orphan review-manifest doc " plus docid).
-    Set notes_path to [[guideline_path.joinpath]]("audit", "projection-notes.tsv").
-    If not [[notes_path.is_file]]():
-        Give back [[err]]("ui: viewmodel: " plus gid plus " missing audit/projection-notes.tsv").
-    Set notes_result to [[load_text]](notes_path, gid, "audit/projection-notes.tsv").
-    If [[result_kind]](notes_result) equals "err":
-        Give back notes_result.
-    Set notes_rows_result to [[parse_tsv_rows]]([[result_value]](notes_result), 4, gid, "projection-notes").
-    If [[result_kind]](notes_rows_result) equals "err":
-        Give back notes_rows_result.
-    Set kept_by_docid to {}.
-    Set dropped_by_docid to {}.
-    Set notes_region_by_docid to {}.
-    Set notes_docids to <>.
-    For each row_pair in [[result_value]](notes_rows_result):
-        Set pair_copy to [[list]](row_pair).
-        Set fields to [[pair_copy.pop]](0).
-        Set docid to [[fields.pop]](0).
-        Set region_id to [[fields.pop]](0).
-        Set kept_text to [[fields.pop]](0).
-        Set dropped_text to [[fields.pop]](0).
-        Do [[notes_docids.append]](docid).
-        Do [[notes_region_by_docid.update]]({docid: region_id}).
-        Do [[kept_by_docid.update]]({docid: kept_text}).
-        Do [[dropped_by_docid.update]]({docid: dropped_text}).
-    For each docid in sorted_docids:
-        Set present to [[notes_region_by_docid.get]](docid, "").
-        If not present:
-            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " missing projection-notes row").
-    For each docid in [[sorted]](notes_docids):
-        Set claimed to [[region_by_docid.get]](docid, "").
-        If not claimed:
-            Give back [[err]]("ui: viewmodel: " plus gid plus " orphan projection-notes doc " plus docid).
-    For each docid in sorted_docids:
-        Set notes_region to [[notes_region_by_docid.get]](docid, "").
-        Set coverage_region to [[region_by_docid.get]](docid, "").
-        If notes_region does not equal coverage_region:
-            Give back [[err]]("ui: viewmodel: " plus gid plus " doc " plus docid plus " notes region " plus notes_region plus " differs from coverage " plus coverage_region).
     Set pl_stems to [[list_stems]]([[guideline_path.joinpath]]("pl"), ".pl").
     For each docid in sorted_docids:
         Set present to docid is in pl_stems.
@@ -972,7 +930,6 @@ Define [[build_guideline_model]] taking corpus, gid:
     Do [[model.update]]({"path": guideline_path}).
     Do [[model.update]]({"real_path": real_guideline_path}).
     Do [[model.update]]({"committed_corpus": committed_corpus}).
-    Do [[model.update]]({"uncommitted": uncommitted_flag}).
     Set title_result to [[readme_title]](guideline_path, gid).
     If [[result_kind]](title_result) equals "err":
         Give back title_result.
@@ -994,8 +951,6 @@ Define [[build_guideline_model]] taking corpus, gid:
     Do [[model.update]]({"source_names": source_names}).
     Do [[model.update]]({"pdf_name": pdf_name}).
     Do [[model.update]]({"payload_by_docid": payload_by_docid}).
-    Do [[model.update]]({"kept_by_docid": kept_by_docid}).
-    Do [[model.update]]({"dropped_by_docid": dropped_by_docid}).
     Do [[model.update]]({"ace_digest_by_docid": ace_digest_by_docid}).
     Do [[model.update]]({"payload_digest_by_docid": payload_digest_by_docid}).
     Do [[model.update]]({"review_by_docid": review_by_docid}).
@@ -1146,8 +1101,6 @@ Set refusal_invalid_form_text to "The submitted form was not valid. Go back to t
 Set refusal_subject_text to "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version.".
 Set refusal_ledger_text to "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state.".
 
-Set uncommitted_notice_text to "This guideline has changes that are not committed. These pages show the last committed version.".
-
 Define [[comment_safe]] taking detail:
     Set safe_chars to <>.
     For each ch in detail:
@@ -1192,12 +1145,6 @@ Define [[page_html]] taking title_text, crumb_html, body_html:
     Do [[parts.append]]("</html>").
     Set joiner to "\n".
     Give back [[joiner.join]](parts) plus "\n".
-
-Define [[uncommitted_notice_html]] taking model:
-    Set flag to [[model.get]]("uncommitted", False).
-    If not flag:
-        Give back "".
-    Give back "<section class=\"notice\"><p>" plus [[esc_text]](uncommitted_notice_text) plus "</p></section>".
 
 Define [[state_label]] taking state:
     If state equals "stale":
@@ -1349,9 +1296,6 @@ Define [[build_guideline_page]] taking model:
     Set ledger_by_docid to [[model.get]]("ledger_by_docid", {}).
     Do [[parts.append]]("<h1>" plus [[esc_text]]([[model.get]]("title", gid)) plus "</h1>").
     Do [[parts.append]]("<p>" plus [[esc_text]]([[review_summary_text]](counts, [[len]](docids))) plus " <a href=\"records.html\">All decision records</a></p>").
-    Set notice_html to [[uncommitted_notice_html]](model).
-    If notice_html:
-        Do [[parts.append]](notice_html).
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Status</h2>").
     Do [[parts.append]]("<table class=\"compact\">").
@@ -1450,8 +1394,6 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Set title_by_docid to [[model.get]]("title_by_docid", {}).
     Set file_by_docid to [[model.get]]("file_by_docid", {}).
     Set payload_by_docid to [[model.get]]("payload_by_docid", {}).
-    Set kept_by_docid to [[model.get]]("kept_by_docid", {}).
-    Set dropped_by_docid to [[model.get]]("dropped_by_docid", {}).
     Set source_names to [[model.get]]("source_names", <>).
     Set pdf_name to [[model.get]]("pdf_name", "").
     Set guideline_title to [[model.get]]("title", gid).
@@ -1477,9 +1419,6 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
         Set records_href to records_href plus "#" plus [[url_seg]](docid).
     Set tally to [[doc_tally]](ledger_by_docid, docid).
     Do [[parts.append]]("<p>" plus [[esc_text]]([[tally_text]](tally)) plus " <a href=\"" plus records_href plus "\">All decision records</a></p>").
-    Set notice_html to [[uncommitted_notice_html]](model).
-    If notice_html:
-        Do [[parts.append]](notice_html).
     If state equals "stale":
         Do [[parts.append]]("<section class=\"stale\">").
         Do [[parts.append]]("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>").
@@ -1491,15 +1430,6 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h3>Attempto Controlled English (ACE)</h3>").
     Do [[parts.append]]("<pre class=\"prose\">" plus [[esc_text]]([[doc_data.get]]("ace_text", "")) plus "</pre>").
-    Do [[parts.append]]("</section>").
-    Do [[parts.append]]("<section>").
-    Do [[parts.append]]("<details>").
-    Do [[parts.append]]("<summary>Differences from the source</summary>").
-    Do [[parts.append]]("<dl>").
-    Do [[parts.append]]("<dt>Kept from the source</dt><dd>" plus [[esc_text]]([[kept_by_docid.get]](docid, "")) plus "</dd>").
-    Do [[parts.append]]("<dt>Left out or approximated</dt><dd>" plus [[esc_text]]([[dropped_by_docid.get]](docid, "")) plus "</dd>").
-    Do [[parts.append]]("</dl>").
-    Do [[parts.append]]("</details>").
     Do [[parts.append]]("</section>").
     Set review_by_docid to [[model.get]]("review_by_docid", {}).
     Set current_digest to [[review_by_docid.get]](docid, "").
@@ -2106,7 +2036,7 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     Set fresh_digest to "".
     For each line_text in [[manifest_text.split]]("\n"):
         Set line_fields to [[line_text.split]]("\t").
-        If [[len]](line_fields) equals 7:
+        If [[len]](line_fields) equals 6:
             Set row_docid to [[line_fields.pop]](0).
             If row_docid equals docid:
                 Set fresh_digest to [[line_fields.pop]]().

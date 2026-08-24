@@ -528,7 +528,6 @@ def worktree_corpus(root_path):
     corpus = {}
     corpus.update({"root": root_path})
     corpus.update({"real_root": root_path})
-    corpus.update({"uncommitted": []})
     corpus.update({"scratch": ""})
     return corpus
 def resolve_corpus(root_path):
@@ -549,7 +548,6 @@ def resolve_corpus(root_path):
         shutil.rmtree(scratch_text, ignore_errors=True)
         return err("ui: corpus: cannot read the committed guideline files")
     corpus.update({"root": dest_root})
-    corpus.update({"uncommitted": gids})
     corpus.update({"scratch": scratch_text})
     return ok(corpus)
 def release_corpus(corpus):
@@ -672,8 +670,6 @@ def build_guideline_model(corpus, gid):
     committed_corpus = False
     if scratch_text:
         committed_corpus = True
-    uncommitted_gids = corpus.get("uncommitted", [])
-    uncommitted_flag = gid in uncommitted_gids
     guideline_path = root_path.joinpath("guidelines", gid)
     real_guideline_path = real_root.joinpath("guidelines", gid)
     if not valid_ui_id(gid):
@@ -774,7 +770,7 @@ def build_guideline_model(corpus, gid):
     if result_kind(manifest_result) == "err":
         return manifest_result
     manifest_text = result_value(manifest_result)
-    manifest_rows_result = parse_tsv_rows(manifest_text, 7, gid, "review-manifest")
+    manifest_rows_result = parse_tsv_rows(manifest_text, 6, gid, "review-manifest")
     if result_kind(manifest_rows_result) == "err":
         return manifest_rows_result
     ace_digest_by_docid = {}
@@ -791,7 +787,6 @@ def build_guideline_model(corpus, gid):
         manifest_docids.append(docid)
         ace_digest_by_docid.update({docid: ace_digest})
         payload_digest_by_docid.update({docid: payload_digest})
-        notes_digest = fields.pop(0)
         clause_digest = fields.pop(0)
         review_digest = fields.pop(0)
         review_by_docid.update({docid: review_digest})
@@ -803,43 +798,6 @@ def build_guideline_model(corpus, gid):
         claimed = region_by_docid.get(docid, "")
         if not claimed:
             return err("ui: viewmodel: " + gid + " orphan review-manifest doc " + docid)
-    notes_path = guideline_path.joinpath("audit", "projection-notes.tsv")
-    if not notes_path.is_file():
-        return err("ui: viewmodel: " + gid + " missing audit/projection-notes.tsv")
-    notes_result = load_text(notes_path, gid, "audit/projection-notes.tsv")
-    if result_kind(notes_result) == "err":
-        return notes_result
-    notes_rows_result = parse_tsv_rows(result_value(notes_result), 4, gid, "projection-notes")
-    if result_kind(notes_rows_result) == "err":
-        return notes_rows_result
-    kept_by_docid = {}
-    dropped_by_docid = {}
-    notes_region_by_docid = {}
-    notes_docids = []
-    for row_pair in result_value(notes_rows_result):
-        pair_copy = list(row_pair)
-        fields = pair_copy.pop(0)
-        docid = fields.pop(0)
-        region_id = fields.pop(0)
-        kept_text = fields.pop(0)
-        dropped_text = fields.pop(0)
-        notes_docids.append(docid)
-        notes_region_by_docid.update({docid: region_id})
-        kept_by_docid.update({docid: kept_text})
-        dropped_by_docid.update({docid: dropped_text})
-    for docid in sorted_docids:
-        present = notes_region_by_docid.get(docid, "")
-        if not present:
-            return err("ui: viewmodel: " + gid + " doc " + docid + " missing projection-notes row")
-    for docid in sorted(notes_docids):
-        claimed = region_by_docid.get(docid, "")
-        if not claimed:
-            return err("ui: viewmodel: " + gid + " orphan projection-notes doc " + docid)
-    for docid in sorted_docids:
-        notes_region = notes_region_by_docid.get(docid, "")
-        coverage_region = region_by_docid.get(docid, "")
-        if notes_region != coverage_region:
-            return err("ui: viewmodel: " + gid + " doc " + docid + " notes region " + notes_region + " differs from coverage " + coverage_region)
     pl_stems = list_stems(guideline_path.joinpath("pl"), ".pl")
     for docid in sorted_docids:
         present = docid in pl_stems
@@ -927,7 +885,6 @@ def build_guideline_model(corpus, gid):
     model.update({"path": guideline_path})
     model.update({"real_path": real_guideline_path})
     model.update({"committed_corpus": committed_corpus})
-    model.update({"uncommitted": uncommitted_flag})
     title_result = readme_title(guideline_path, gid)
     if result_kind(title_result) == "err":
         return title_result
@@ -949,8 +906,6 @@ def build_guideline_model(corpus, gid):
     model.update({"source_names": source_names})
     model.update({"pdf_name": pdf_name})
     model.update({"payload_by_docid": payload_by_docid})
-    model.update({"kept_by_docid": kept_by_docid})
-    model.update({"dropped_by_docid": dropped_by_docid})
     model.update({"ace_digest_by_docid": ace_digest_by_docid})
     model.update({"payload_digest_by_docid": payload_digest_by_docid})
     model.update({"review_by_docid": review_by_docid})
@@ -1092,7 +1047,6 @@ refusal_refused_text = "The request was refused. Open the document page again fr
 refusal_invalid_form_text = "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."
 refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."
 refusal_ledger_text = "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state."
-uncommitted_notice_text = "This guideline has changes that are not committed. These pages show the last committed version."
 def comment_safe(detail):
     safe_chars = []
     for ch in detail:
@@ -1136,11 +1090,6 @@ def page_html(title_text, crumb_html, body_html):
     parts.append("</html>")
     joiner = "\n"
     return joiner.join(parts) + "\n"
-def uncommitted_notice_html(model):
-    flag = model.get("uncommitted", False)
-    if not flag:
-        return ""
-    return "<section class=\"notice\"><p>" + esc_text(uncommitted_notice_text) + "</p></section>"
 def state_label(state):
     if state == "stale":
         return "Outdated"
@@ -1282,9 +1231,6 @@ def build_guideline_page(model):
     ledger_by_docid = model.get("ledger_by_docid", {})
     parts.append("<h1>" + esc_text(model.get("title", gid)) + "</h1>")
     parts.append("<p>" + esc_text(review_summary_text(counts, len(docids))) + " <a href=\"records.html\">All decision records</a></p>")
-    notice_html = uncommitted_notice_html(model)
-    if notice_html:
-        parts.append(notice_html)
     parts.append("<section>")
     parts.append("<h2>Status</h2>")
     parts.append("<table class=\"compact\">")
@@ -1381,8 +1327,6 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     title_by_docid = model.get("title_by_docid", {})
     file_by_docid = model.get("file_by_docid", {})
     payload_by_docid = model.get("payload_by_docid", {})
-    kept_by_docid = model.get("kept_by_docid", {})
-    dropped_by_docid = model.get("dropped_by_docid", {})
     source_names = model.get("source_names", [])
     pdf_name = model.get("pdf_name", "")
     guideline_title = model.get("title", gid)
@@ -1408,9 +1352,6 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
         records_href = records_href + "#" + url_seg(docid)
     tally = doc_tally(ledger_by_docid, docid)
     parts.append("<p>" + esc_text(tally_text(tally)) + " <a href=\"" + records_href + "\">All decision records</a></p>")
-    notice_html = uncommitted_notice_html(model)
-    if notice_html:
-        parts.append(notice_html)
     if state == "stale":
         parts.append("<section class=\"stale\">")
         parts.append("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>")
@@ -1422,15 +1363,6 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     parts.append("<section>")
     parts.append("<h3>Attempto Controlled English (ACE)</h3>")
     parts.append("<pre class=\"prose\">" + esc_text(doc_data.get("ace_text", "")) + "</pre>")
-    parts.append("</section>")
-    parts.append("<section>")
-    parts.append("<details>")
-    parts.append("<summary>Differences from the source</summary>")
-    parts.append("<dl>")
-    parts.append("<dt>Kept from the source</dt><dd>" + esc_text(kept_by_docid.get(docid, "")) + "</dd>")
-    parts.append("<dt>Left out or approximated</dt><dd>" + esc_text(dropped_by_docid.get(docid, "")) + "</dd>")
-    parts.append("</dl>")
-    parts.append("</details>")
     parts.append("</section>")
     review_by_docid = model.get("review_by_docid", {})
     current_digest = review_by_docid.get(docid, "")
@@ -2013,7 +1945,7 @@ def handle_verdict_post(model, gid, docid, meta):
     fresh_digest = ""
     for line_text in manifest_text.split("\n"):
         line_fields = line_text.split("\t")
-        if len(line_fields) == 7:
+        if len(line_fields) == 6:
             row_docid = line_fields.pop(0)
             if row_docid == docid:
                 fresh_digest = line_fields.pop()

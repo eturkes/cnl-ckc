@@ -83,15 +83,6 @@ a { color: inherit; text-decoration: none; }
 <pre class="prose">A reviewer should inspect a-10.
 </pre>
 </section>
-<section>
-<details>
-<summary>Differences from the source</summary>
-<dl>
-<dt>Kept from the source</dt><dd>directive retained</dd>
-<dt>Left out or approximated</dt><dd>no material detail</dd>
-</dl>
-</details>
-</section>
 <section class="verdict-entry">
 <h3>Record a decision</h3>
 <p>Does the ACE representation appropriately reflect the original passage?</p>
@@ -106,8 +97,8 @@ a { color: inherit; text-decoration: none; }
 <datalist id="reviewer-names"><option value="R&quot;&lt;script&gt;&amp;&#x27;漢"></option><option value="stale-reviewer"></option></datalist>
 <label for="comment">Comment (optional)</label>
 <textarea id="comment" name="comment"></textarea>
-<input type="hidden" name="review_sha256" value="734514ff44dbdd920e093ffb8ac8c22c8152183cb0e8d528b342d9ad4e1580a9">
-<input type="hidden" name="ledger_sha256" value="4b4a93eb7a51c13a1768a7188348e3bc97def7110b0e941ad364189adfdcb5a3">
+<input type="hidden" name="review_sha256" value="788c59c39469ffa05dcea391455133cdd38d6257ba389c3045f07ab2194986e1">
+<input type="hidden" name="ledger_sha256" value="4b71012f460c0f14651d8cb2d6b00d4b5f0ae98eb930c3b7c36df4e208df334b">
 <input type="hidden" name="csrf" value="">
 <button>Record decision</button>
 </form>

@@ -35,17 +35,29 @@ compiler base:
   trace. Each clause application in that trace names one committed
   clause line by SHA-256.
 - **E-- → Python.** All first-party Python (`tools/goal.py`,
-  `tools/regen.py`) compiles from E-- (`tools/*.emm`), an English-like
-  language. `tools/regen.py --check` proves that every committed `.py`
-  is byte-identical to a fresh compile of its `.emm`. It also flags any
-  tracked Python outside `vendor/e--/src/` that has no `.emm` source.
+  `tools/regen.py`, `tools/ui.py`) compiles from E-- (`tools/*.emm`),
+  an English-like language. `tools/regen.py --check` proves that every
+  committed `.py` is byte-identical to a fresh compile of its `.emm`.
+  It also flags any tracked Python outside `vendor/e--/src/` that has
+  no `.emm` source. The reviewer interface is E-- like the rest. It
+  uses the `Try:`/`Catch <name>:` verbs that the E-- fork added for it,
+  so a failing standard-library call becomes a named HTTP outcome
+  instead of a generic server error.
+- **Review is recorded, not asserted.** A reviewer decision names the
+  exact bytes it judged. Each ledger row pins a bundle digest over the
+  document's ACE text, its coverage row, its source region payload, and
+  its compiled clauses. The reviewer interface reads committed files
+  only, so what a reviewer approves is what the repository holds.
+  "Reviewer interface" below states the workflow.
 - **The compiler base is closed and named.** Two vendored forks perform
   those compilations. They are the trusted computing base that a human
   must read directly. `vendor/ape/` holds the ACE parser plus the
   hand-authored `prolog/ace_to_pl.pl` compiler — the one first-party
   Prolog artifact not itself compiled from ACE. `vendor/e--/` holds the
-  hand-authored Python that compiles E--. Both trees are pruned to
-  their load closures. `vendor/*/PROVENANCE` records upstream, fork
+  hand-authored Python that compiles E--. Question projection, query
+  answering, and proof tracing are modes of that same `ace_to_pl.pl`,
+  so those artifact families added no new trusted code. Both trees are
+  pruned to their load closures. `vendor/*/PROVENANCE` records upstream, fork
   base, import commit, license, first-party inventory, and trust
   boundary. Git history is the change record, and `goal.py check` reads
   it. A vendored file counts as touched when a commit after the
@@ -61,11 +73,14 @@ compiler base:
   gate verifies content instead of history. Every tracked
   non-first-party file must match its `MANIFEST.sha256` digest and must
   carry no change notice.
-- **Tests are data.** `tests/red/` holds rejection probes named
-  `<expected-error-class>--<name>.ace`. `tests/adjudication/` holds
-  ledger-validator fixtures pinned to exact output bytes.
-  `tests/queries/` and `tests/ui/` hold red and green fixture cases
-  pinned the same way. One
+- **Tests are data.** Each corpus under `tests/` is a fixture set, not
+  a program. `tests/red/` holds compiler rejection probes named
+  `<expected-error-class>--<name>.ace`. `tests/strict/` holds E--
+  sources that the strict compiler must reject or must compile.
+  `tests/adjudication/` holds ledger-validator fixtures.
+  `tests/queries/` holds query, answer, and trace fixtures.
+  `tests/ui/` holds reviewer-interface fixtures. `tests/copy/` holds
+  copy-register fixtures. Every case pins exact output bytes. One
   `tools/goal.py check` invocation beside `tools/regen.py --check` (the
   E-- → Python identity above) is the full acceptance gate. `check`:
 
@@ -97,7 +112,11 @@ compiler base:
   10. re-derives each committed query artifact twice and
       byte-compares it: compiled query, answer, and proof trace.
       Every trace node must join exactly one committed clause line;
-  11. asserts that the compiler rejects each red probe with its named
+  11. renders every reviewer page twice and byte-compares the two
+      renders, replays the reviewer fixture corpus against pinned
+      pages and pinned refusals, and scans every string the interface
+      can emit against the clinician copy register;
+  12. asserts that the compiler rejects each red probe with its named
       error class and exit status.
 
 ## Running
@@ -111,7 +130,46 @@ python3 -P tools/goal.py compile <guideline-id>   # ACE → Prolog
 python3 -P tools/goal.py queries <guideline-id>   # query/answer/trace artifacts
 python3 -P tools/goal.py check                    # corpus acceptance gate
 python3 -P tools/regen.py --check                 # E-- → Python identity
+python3 -P tools/ui.py serve [<port>]             # reviewer interface
+python3 -P tools/ui.py render <outdir>            # static page export
 ```
+
+## Reviewer interface
+
+`tools/ui.py serve` starts the reviewer interface on `127.0.0.1`. It
+lists every guideline, then every document, and shows each document
+beside the exact source passage it was written from, its compiled
+Prolog, and its decision history. A reviewer answers one question per
+document: does the ACE representation appropriately reflect the
+original passage? The answer, the reviewer name, and an optional
+comment append to `guidelines/<id>/audit/adjudication.tsv`.
+
+The interface reads committed files. When the working tree holds
+uncommitted guideline changes, the pages render the last commit
+instead. Three consequences follow. An uncommitted edit is not
+reviewable, and it does not outdate an existing decision. A document
+that was never committed is not listed. Every recorded decision names
+the commit that wrote the ACE text the reviewer read. The decision
+ledger is the one file the interface writes, so its own writes are not
+uncommitted work. `tools/goal.py check` is the exception: it reads the
+working tree, because it is the gate you run before you commit.
+
+The write path is narrow and guarded. The interface binds the loopback
+address only. It has no accounts and no authentication. A decision is
+accepted only when the request carries the process token, the `Host`
+header names the loopback listener, any `Origin` header matches it, the
+subject digest still matches a fresh derivation from committed state,
+and the ledger digest still matches the ledger on disk. A failed check
+returns a refusal and writes nothing. The ledger write itself is a
+compare-and-swap through a same-directory temporary file, a flush, an
+`fsync`, and an atomic rename. The shared validator in `goal.py`
+approves the new ledger bytes before the rename, so the gate and the
+interface cannot drift apart. Pages carry no JavaScript.
+
+Reviewer names are self-asserted and are not verified. A decision is
+current when the document still matches the version it was recorded
+against, and outdated otherwise. A document whose current version
+carries both an approved and a rejected decision reads contested.
 
 ## Compiled Prolog schema (v1)
 
@@ -536,7 +594,9 @@ alone writes the repository and commits.
 Reviewer verdicts live in each guideline's `audit/adjudication.tsv`,
 pinned to content digests in `audit/review-manifest.tsv`. When compiled
 content changes, regenerate the manifest with
-`python3 -P tools/goal.py review-manifest <id>`. Commit the ledger and
+`python3 -P tools/goal.py review-manifest <id>`. Commit the round
+before you open the reviewer interface, because the interface reads
+committed files and shows nothing else. Commit the ledger and
 the manifest together after each review batch; git history is the
 verdict history. Rejected and stale counts in the adjudication meter
 are worklist entries, not check failures. Live rejected documents

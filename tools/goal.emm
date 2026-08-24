@@ -255,7 +255,12 @@ Define [[fixture_pl_path]] taking tracked:
         Set color_ok to True.
     If not color_ok:
         Give back False.
-    If tree_part does not equal "tree":
+    Set corpus_ok to False.
+    If tree_part equals "tree":
+        Set corpus_ok to True.
+    If tree_part equals "worktree":
+        Set corpus_ok to True.
+    If not corpus_ok:
         Give back False.
     If guidelines_part does not equal "guidelines":
         Give back False.
@@ -2258,7 +2263,6 @@ Define [[check_projection_ledger]] taking guideline_path:
         Do [[violation]]("projection-ledger", "ledger holds no rows").
     Set seen_docids to {}.
     Set row_pairs to <>.
-    Set notes_row_by_docid to {}.
     For each row_line in row_lines:
         Set fields to [[row_line.split]]("\t").
         If [[len]](fields) does not equal 4:
@@ -2280,8 +2284,7 @@ Define [[check_projection_ledger]] taking guideline_path:
             Do [[violation]]("projection-ledger", "duplicate row docid: " plus docid).
         Do [[seen_docids.update]]({docid: True}).
         Do [[row_pairs.append]](<docid, region>).
-        Do [[notes_row_by_docid.update]]({docid: row_line plus "\n"}).
-    Give back <row_pairs, notes_row_by_docid>.
+    Give back row_pairs.
 
 Define [[coverage_status_kind]] taking row_id, status_text:
     If status_text equals "pending":
@@ -2770,10 +2773,10 @@ Define [[check_product_vocabulary]] taking guideline_path, docid:
                     If not functor_known:
                         Do [[violation]]("product-vocabulary", "unauthorized clause functor in " plus docid plus ": " plus functor).
 
-Set adjudication_manifest_header_1 to "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256".
-Set adjudication_manifest_header_2 to "# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.".
+Set adjudication_manifest_header_1 to "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256".
+Set adjudication_manifest_header_2 to "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.".
 Set adjudication_ledger_header to "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
-Set manifest_component_names to <"ace_sha256", "coverage_row_sha256", "region_payload_sha256", "notes_row_sha256", "semantic_clause_sha256">.
+Set manifest_component_names to <"ace_sha256", "coverage_row_sha256", "region_payload_sha256", "semantic_clause_sha256">.
 
 Define [[sha256_hex]] taking data:
     Set digest_value to [[hashlib.sha256]](data).
@@ -2831,17 +2834,15 @@ Define [[bundle_digest]] taking docid, components:
     Set ace_digest to [[component_copy.pop]](0).
     Set coverage_digest to [[component_copy.pop]](0).
     Set payload_digest to [[component_copy.pop]](0).
-    Set notes_digest to [[component_copy.pop]](0).
     Set clause_digest to [[component_copy.pop]](0).
-    Set block_text to "bundle v1 " plus docid plus "\n".
+    Set block_text to "bundle v2 " plus docid plus "\n".
     Set block_text to block_text plus "ace " plus ace_digest plus "\n".
     Set block_text to block_text plus "coverage " plus coverage_digest plus "\n".
     Set block_text to block_text plus "payload " plus payload_digest plus "\n".
-    Set block_text to block_text plus "notes " plus notes_digest plus "\n".
     Set block_text to block_text plus "clauses " plus clause_digest plus "\n".
     Give back [[sha256_hex]]([[block_text.encode]]("utf-8")).
 
-Define [[derive_review_manifest]] taking guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid:
+Define [[derive_review_manifest]] taking guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid:
     Set sorted_docids to [[sorted]](docids).
     Set manifest_text to adjudication_manifest_header_1 plus "\n" plus adjudication_manifest_header_2 plus "\n".
     Set bundle_by_docid to {}.
@@ -2857,15 +2858,11 @@ Define [[derive_review_manifest]] taking guideline_path, docids, notes_row_by_do
         If payload_text equals None:
             Do [[violation]]("adjudication", "docid without region payload: " plus docid).
         Set payload_digest to [[sha256_hex]]([[payload_text.encode]]("utf-8")).
-        Set notes_row to [[notes_row_by_docid.get]](docid, None).
-        If notes_row equals None:
-            Do [[violation]]("adjudication", "docid without projection row bytes: " plus docid).
-        Set notes_digest to [[sha256_hex]]([[notes_row.encode]]("utf-8")).
         Set pl_path to [[guideline_path.joinpath]]("pl", docid plus ".pl").
         Set clause_digest to [[semantic_clause_digest]](pl_path, docid).
-        Set components to <ace_digest, coverage_digest, payload_digest, notes_digest, clause_digest>.
+        Set components to <ace_digest, coverage_digest, payload_digest, clause_digest>.
         Set review_digest to [[bundle_digest]](docid, components).
-        Set row_text to docid plus "\t" plus ace_digest plus "\t" plus coverage_digest plus "\t" plus payload_digest plus "\t" plus notes_digest plus "\t" plus clause_digest plus "\t" plus review_digest.
+        Set row_text to docid plus "\t" plus ace_digest plus "\t" plus coverage_digest plus "\t" plus payload_digest plus "\t" plus clause_digest plus "\t" plus review_digest.
         Set manifest_text to manifest_text plus row_text plus "\n".
         Do [[bundle_by_docid.update]]({docid: review_digest}).
     Give back <manifest_text, bundle_by_docid>.
@@ -2899,7 +2896,7 @@ Define [[parse_review_manifest]] taking data, manifest_path:
         Set row_number to row_number plus 1.
         Set fields to [[row_line.split]]("\t").
         Set field_count to [[len]](fields).
-        If field_count does not equal 7:
+        If field_count does not equal 6:
             Do [[violation]]("adjudication", "manifest row " plus [[str]](row_number) plus " field-count " plus [[str]](field_count)).
         Set docid to [[fields.pop]](0).
         If not [[valid_docid]](docid):
@@ -3073,8 +3070,8 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
     Set meter to "goal: adjudication " plus label plus " approved=" plus [[str]](approved_count) plus " rejected=" plus [[str]](rejected_count) plus " contested=" plus [[str]](contested_count) plus " stale=" plus [[str]](stale_count) plus " unreviewed=" plus [[str]](unreviewed_count) plus " decisions=" plus [[str]](decision_count).
     Do [[print]](meter).
 
-Define [[check_adjudication]] taking guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid:
-    Set derived to [[derive_review_manifest]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
+Define [[check_adjudication]] taking guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid:
+    Set derived to [[derive_review_manifest]](guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid).
     Set manifest_text to [[derived.pop]](0).
     Set bundle_by_docid to [[derived.pop]](0).
     Set manifest_path to [[guideline_path.joinpath]]("audit", "review-manifest.tsv").
@@ -3106,14 +3103,11 @@ Define [[review_manifest_command]] taking guideline_id:
     Set ace_paths to [[collected.pop]](0).
     Set docids to [[collected.pop]](0).
     Set lexicon_path to [[collected.pop]](0).
-    Set ledger_result to [[check_projection_ledger]](guideline_path).
-    Set ledger_pairs to [[ledger_result.pop]](0).
-    Set notes_row_by_docid to [[ledger_result.pop]](0).
     Set coverage_result to [[check_coverage]](guideline_path, docids, False).
     Set status_by_id to [[coverage_result.pop]](0).
     Set ace_row_line_by_docid to [[coverage_result.pop]](0).
     Set payload_text_by_docid to [[coverage_result.pop]](0).
-    Set derived to [[derive_review_manifest]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
+    Set derived to [[derive_review_manifest]](guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid).
     Set manifest_text to [[derived.pop]](0).
     Set bundle_by_docid to [[derived.pop]](0).
     Set manifest_path to [[guideline_path.joinpath]]("audit", "review-manifest.tsv").
@@ -3137,14 +3131,11 @@ Define [[derive_review_manifest_command]] taking guideline_dir:
     Set ace_paths to [[collected.pop]](0).
     Set docids to [[collected.pop]](0).
     Set lexicon_path to [[collected.pop]](0).
-    Set ledger_result to [[check_projection_ledger]](guideline_path).
-    Set ledger_pairs to [[ledger_result.pop]](0).
-    Set notes_row_by_docid to [[ledger_result.pop]](0).
     Set coverage_result to [[check_coverage]](guideline_path, docids, False).
     Set status_by_id to [[coverage_result.pop]](0).
     Set ace_row_line_by_docid to [[coverage_result.pop]](0).
     Set payload_text_by_docid to [[coverage_result.pop]](0).
-    Set derived to [[derive_review_manifest]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
+    Set derived to [[derive_review_manifest]](guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid).
     Set manifest_text to [[derived.pop]](0).
     Set bundle_by_docid to [[derived.pop]](0).
     Set manifest_bytes to [[manifest_text.encode]]("utf-8").
@@ -3605,14 +3596,59 @@ Define [[ui_read_sidecar_lines]] taking sidecar_path, case_name:
                 Do [[lines.append]](line_text).
     Give back lines.
 
+Define [[ui_git_env]] taking nothing:
+    Set env to [[os.environ.copy]]().
+    Do [[env.update]]({"GIT_CONFIG_GLOBAL": "/dev/null"}).
+    Do [[env.update]]({"GIT_CONFIG_SYSTEM": "/dev/null"}).
+    Do [[env.update]]({"GIT_AUTHOR_NAME": "fixture"}).
+    Do [[env.update]]({"GIT_AUTHOR_EMAIL": "fixture@localhost"}).
+    Do [[env.update]]({"GIT_AUTHOR_DATE": "2026-01-01T00:00:00+00:00"}).
+    Do [[env.update]]({"GIT_COMMITTER_NAME": "fixture"}).
+    Do [[env.update]]({"GIT_COMMITTER_EMAIL": "fixture@localhost"}).
+    Do [[env.update]]({"GIT_COMMITTER_DATE": "2026-01-01T00:00:00+00:00"}).
+    Give back env.
+
+Define [[ui_git_run]] taking work_dir, arg_list, label, case_name:
+    Set command to <"git">.
+    For each arg_text in arg_list:
+        Do [[command.append]](arg_text).
+    Set result to None.
+    Try:
+        Set result to [[subprocess.run]](command, capture_output=True, cwd=work_dir, env=[[ui_git_env]]()).
+    Catch OSError:
+        Do [[violation]]("ui-fixtures", "git " plus label plus " unavailable for case: " plus case_name).
+    If result.returncode does not equal 0:
+        Do [[violation]]("ui-fixtures", "git " plus label plus " failed for case: " plus case_name).
+
+Define [[ui_commit_worktree]] taking case_path, case_name, dest_root:
+    Set worktree_path to [[case_path.joinpath]]("worktree").
+    If not [[worktree_path.is_dir]]():
+        Give back False.
+    Set work_dir to [[str]](dest_root).
+    Do [[ui_git_run]](work_dir, <"init", "-q", "-b", "main">, "init", case_name).
+    Do [[ui_git_run]](work_dir, <"add", "-A">, "add", case_name).
+    Do [[ui_git_run]](work_dir, <"commit", "-q", "-m", "fixture corpus">, "commit", case_name).
+    For each rel_text in [[ui_walk_files]](worktree_path):
+        Do [[ui_safe_rel]](rel_text, case_name).
+        Set src_file to [[worktree_path.joinpath]](rel_text).
+        Set dest_file to [[dest_root.joinpath]](rel_text).
+        Set dest_parent to dest_file.parent.
+        Do [[dest_parent.mkdir]](parents=True, exist_ok=True).
+        Set payload to [[src_file.read_bytes]]().
+        Do [[dest_file.write_bytes]](payload).
+    Give back True.
+
 Define [[ui_materialize_tree]] taking case_path, case_name, tree_rel:
     Set order_path to [[case_path.joinpath]]("tree-order.txt").
     Set empties_path to [[case_path.joinpath]]("empty-dirs.txt").
+    Set worktree_path to [[case_path.joinpath]]("worktree").
     Set has_order to [[order_path.is_file]]().
     Set has_empties to [[empties_path.is_file]]().
+    Set has_worktree to [[worktree_path.is_dir]]().
     If not has_order:
         If not has_empties:
-            Give back <tree_rel, "">.
+            If not has_worktree:
+                Give back <tree_rel, "">.
     Set tree_path to [[case_path.joinpath]]("tree").
     Set walk_list to [[ui_walk_files]](tree_path).
     Set listed to walk_list.
@@ -3635,6 +3671,7 @@ Define [[ui_materialize_tree]] taking case_path, case_name, tree_rel:
         For each rel_text in empty_lines:
             Set empty_dir to [[dest_root.joinpath]](rel_text).
             Do [[empty_dir.mkdir]](parents=True, exist_ok=True).
+    Do [[ui_commit_worktree]](case_path, case_name, dest_root).
     Give back <[[str]](dest_root), scratch_text>.
 
 Define [[run_ui_fixture_case]] taking color, case_name, case_path:
@@ -4030,8 +4067,8 @@ Define [[check_ui]] taking nothing:
         Do [[violation]]("ui-fixtures", "is a symlink: " plus [[str]](fixtures_root)).
     If not [[fixtures_root.is_dir]]():
         Do [[violation]]("ui-fixtures", "missing: " plus [[str]](fixtures_root)).
-    Set red_required to <"copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
-    Set green_required to <"basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts">.
+    Set red_required to <"copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
+    Set green_required to <"basic", "git-uncommitted-edit", "git-untracked-document", "hostile", "multi-guideline-order", "payload-selection", "verdicts">.
     Set red_count to 0.
     Set green_count to 0.
     Set red_names to <>.
@@ -4069,9 +4106,7 @@ Define [[check_ui]] taking nothing:
     Do [[print]]("goal: ui fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
 
 Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
-    Set ledger_result to [[check_projection_ledger]](guideline_path).
-    Set ledger_pairs to [[ledger_result.pop]](0).
-    Set notes_row_by_docid to [[ledger_result.pop]](0).
+    Set ledger_pairs to [[check_projection_ledger]](guideline_path).
     Set ledger_docids to <>.
     For each ledger_pair in ledger_pairs:
         Set pair_copy to [[list]](ledger_pair).
@@ -4100,7 +4135,7 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
             Do [[violation]]("projection-coverage", "projection row names no coverage region: " plus ledger_docid plus " " plus ledger_region).
         If actual_status does not equal expected_status:
             Do [[violation]]("projection-coverage", "coverage region " plus ledger_region plus " does not carry ace(" plus ledger_docid plus "): " plus actual_status).
-    Do [[check_adjudication]](guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid).
+    Do [[check_adjudication]](guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid).
     If lexicon_path does not equal None:
         Do [[check_lexicon]](guideline_path, ace_paths, docids).
 

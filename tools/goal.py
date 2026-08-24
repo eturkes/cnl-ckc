@@ -238,7 +238,12 @@ def fixture_pl_path(tracked):
         color_ok = True
     if not color_ok:
         return False
-    if tree_part != "tree":
+    corpus_ok = False
+    if tree_part == "tree":
+        corpus_ok = True
+    if tree_part == "worktree":
+        corpus_ok = True
+    if not corpus_ok:
         return False
     if guidelines_part != "guidelines":
         return False
@@ -2175,7 +2180,6 @@ def check_projection_ledger(guideline_path):
         violation("projection-ledger", "ledger holds no rows")
     seen_docids = {}
     row_pairs = []
-    notes_row_by_docid = {}
     for row_line in row_lines:
         fields = row_line.split("\t")
         if len(fields) != 4:
@@ -2197,8 +2201,7 @@ def check_projection_ledger(guideline_path):
             violation("projection-ledger", "duplicate row docid: " + docid)
         seen_docids.update({docid: True})
         row_pairs.append([docid, region])
-        notes_row_by_docid.update({docid: row_line + "\n"})
-    return [row_pairs, notes_row_by_docid]
+    return row_pairs
 def coverage_status_kind(row_id, status_text):
     if status_text == "pending":
         return ["pending", ""]
@@ -2673,10 +2676,10 @@ def check_product_vocabulary(guideline_path, docid):
                     functor_known = functor in v1_functors
                     if not functor_known:
                         violation("product-vocabulary", "unauthorized clause functor in " + docid + ": " + functor)
-adjudication_manifest_header_1 = "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>notes_row_sha256<TAB>semantic_clause_sha256<TAB>review_sha256"
-adjudication_manifest_header_2 = "# bundle v1; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit."
+adjudication_manifest_header_1 = "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256"
+adjudication_manifest_header_2 = "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit."
 adjudication_ledger_header = "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
-manifest_component_names = ["ace_sha256", "coverage_row_sha256", "region_payload_sha256", "notes_row_sha256", "semantic_clause_sha256"]
+manifest_component_names = ["ace_sha256", "coverage_row_sha256", "region_payload_sha256", "semantic_clause_sha256"]
 def sha256_hex(data):
     digest_value = hashlib.sha256(data)
     return digest_value.hexdigest()
@@ -2729,16 +2732,14 @@ def bundle_digest(docid, components):
     ace_digest = component_copy.pop(0)
     coverage_digest = component_copy.pop(0)
     payload_digest = component_copy.pop(0)
-    notes_digest = component_copy.pop(0)
     clause_digest = component_copy.pop(0)
-    block_text = "bundle v1 " + docid + "\n"
+    block_text = "bundle v2 " + docid + "\n"
     block_text = block_text + "ace " + ace_digest + "\n"
     block_text = block_text + "coverage " + coverage_digest + "\n"
     block_text = block_text + "payload " + payload_digest + "\n"
-    block_text = block_text + "notes " + notes_digest + "\n"
     block_text = block_text + "clauses " + clause_digest + "\n"
     return sha256_hex(block_text.encode("utf-8"))
-def derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid):
+def derive_review_manifest(guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid):
     sorted_docids = sorted(docids)
     manifest_text = adjudication_manifest_header_1 + "\n" + adjudication_manifest_header_2 + "\n"
     bundle_by_docid = {}
@@ -2754,15 +2755,11 @@ def derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_l
         if payload_text == None:
             violation("adjudication", "docid without region payload: " + docid)
         payload_digest = sha256_hex(payload_text.encode("utf-8"))
-        notes_row = notes_row_by_docid.get(docid, None)
-        if notes_row == None:
-            violation("adjudication", "docid without projection row bytes: " + docid)
-        notes_digest = sha256_hex(notes_row.encode("utf-8"))
         pl_path = guideline_path.joinpath("pl", docid + ".pl")
         clause_digest = semantic_clause_digest(pl_path, docid)
-        components = [ace_digest, coverage_digest, payload_digest, notes_digest, clause_digest]
+        components = [ace_digest, coverage_digest, payload_digest, clause_digest]
         review_digest = bundle_digest(docid, components)
-        row_text = docid + "\t" + ace_digest + "\t" + coverage_digest + "\t" + payload_digest + "\t" + notes_digest + "\t" + clause_digest + "\t" + review_digest
+        row_text = docid + "\t" + ace_digest + "\t" + coverage_digest + "\t" + payload_digest + "\t" + clause_digest + "\t" + review_digest
         manifest_text = manifest_text + row_text + "\n"
         bundle_by_docid.update({docid: review_digest})
     return [manifest_text, bundle_by_docid]
@@ -2795,7 +2792,7 @@ def parse_review_manifest(data, manifest_path):
         row_number = row_number + 1
         fields = row_line.split("\t")
         field_count = len(fields)
-        if field_count != 7:
+        if field_count != 6:
             violation("adjudication", "manifest row " + str(row_number) + " field-count " + str(field_count))
         docid = fields.pop(0)
         if not valid_docid(docid):
@@ -2965,8 +2962,8 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
     unreviewed_count = manifest_total - len(seen_row_docids)
     meter = "goal: adjudication " + label + " approved=" + str(approved_count) + " rejected=" + str(rejected_count) + " contested=" + str(contested_count) + " stale=" + str(stale_count) + " unreviewed=" + str(unreviewed_count) + " decisions=" + str(decision_count)
     print(meter)
-def check_adjudication(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid):
-    derived = derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
+def check_adjudication(guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid):
+    derived = derive_review_manifest(guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid)
     manifest_text = derived.pop(0)
     bundle_by_docid = derived.pop(0)
     manifest_path = guideline_path.joinpath("audit", "review-manifest.tsv")
@@ -2997,14 +2994,11 @@ def review_manifest_command(guideline_id):
     ace_paths = collected.pop(0)
     docids = collected.pop(0)
     lexicon_path = collected.pop(0)
-    ledger_result = check_projection_ledger(guideline_path)
-    ledger_pairs = ledger_result.pop(0)
-    notes_row_by_docid = ledger_result.pop(0)
     coverage_result = check_coverage(guideline_path, docids, False)
     status_by_id = coverage_result.pop(0)
     ace_row_line_by_docid = coverage_result.pop(0)
     payload_text_by_docid = coverage_result.pop(0)
-    derived = derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
+    derived = derive_review_manifest(guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid)
     manifest_text = derived.pop(0)
     bundle_by_docid = derived.pop(0)
     manifest_path = guideline_path.joinpath("audit", "review-manifest.tsv")
@@ -3027,14 +3021,11 @@ def derive_review_manifest_command(guideline_dir):
     ace_paths = collected.pop(0)
     docids = collected.pop(0)
     lexicon_path = collected.pop(0)
-    ledger_result = check_projection_ledger(guideline_path)
-    ledger_pairs = ledger_result.pop(0)
-    notes_row_by_docid = ledger_result.pop(0)
     coverage_result = check_coverage(guideline_path, docids, False)
     status_by_id = coverage_result.pop(0)
     ace_row_line_by_docid = coverage_result.pop(0)
     payload_text_by_docid = coverage_result.pop(0)
-    derived = derive_review_manifest(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
+    derived = derive_review_manifest(guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid)
     manifest_text = derived.pop(0)
     bundle_by_docid = derived.pop(0)
     manifest_bytes = manifest_text.encode("utf-8")
@@ -3485,14 +3476,56 @@ def ui_read_sidecar_lines(sidecar_path, case_name):
                 ui_safe_rel(line_text, case_name)
                 lines.append(line_text)
     return lines
+def ui_git_env():
+    env = os.environ.copy()
+    env.update({"GIT_CONFIG_GLOBAL": "/dev/null"})
+    env.update({"GIT_CONFIG_SYSTEM": "/dev/null"})
+    env.update({"GIT_AUTHOR_NAME": "fixture"})
+    env.update({"GIT_AUTHOR_EMAIL": "fixture@localhost"})
+    env.update({"GIT_AUTHOR_DATE": "2026-01-01T00:00:00+00:00"})
+    env.update({"GIT_COMMITTER_NAME": "fixture"})
+    env.update({"GIT_COMMITTER_EMAIL": "fixture@localhost"})
+    env.update({"GIT_COMMITTER_DATE": "2026-01-01T00:00:00+00:00"})
+    return env
+def ui_git_run(work_dir, arg_list, label, case_name):
+    command = ["git"]
+    for arg_text in arg_list:
+        command.append(arg_text)
+    result = None
+    try:
+        result = subprocess.run(command, capture_output=True, cwd=work_dir, env=ui_git_env())
+    except OSError:
+        violation("ui-fixtures", "git " + label + " unavailable for case: " + case_name)
+    if result.returncode != 0:
+        violation("ui-fixtures", "git " + label + " failed for case: " + case_name)
+def ui_commit_worktree(case_path, case_name, dest_root):
+    worktree_path = case_path.joinpath("worktree")
+    if not worktree_path.is_dir():
+        return False
+    work_dir = str(dest_root)
+    ui_git_run(work_dir, ["init", "-q", "-b", "main"], "init", case_name)
+    ui_git_run(work_dir, ["add", "-A"], "add", case_name)
+    ui_git_run(work_dir, ["commit", "-q", "-m", "fixture corpus"], "commit", case_name)
+    for rel_text in ui_walk_files(worktree_path):
+        ui_safe_rel(rel_text, case_name)
+        src_file = worktree_path.joinpath(rel_text)
+        dest_file = dest_root.joinpath(rel_text)
+        dest_parent = dest_file.parent
+        dest_parent.mkdir(parents=True, exist_ok=True)
+        payload = src_file.read_bytes()
+        dest_file.write_bytes(payload)
+    return True
 def ui_materialize_tree(case_path, case_name, tree_rel):
     order_path = case_path.joinpath("tree-order.txt")
     empties_path = case_path.joinpath("empty-dirs.txt")
+    worktree_path = case_path.joinpath("worktree")
     has_order = order_path.is_file()
     has_empties = empties_path.is_file()
+    has_worktree = worktree_path.is_dir()
     if not has_order:
         if not has_empties:
-            return [tree_rel, ""]
+            if not has_worktree:
+                return [tree_rel, ""]
     tree_path = case_path.joinpath("tree")
     walk_list = ui_walk_files(tree_path)
     listed = walk_list
@@ -3515,6 +3548,7 @@ def ui_materialize_tree(case_path, case_name, tree_rel):
         for rel_text in empty_lines:
             empty_dir = dest_root.joinpath(rel_text)
             empty_dir.mkdir(parents=True, exist_ok=True)
+    ui_commit_worktree(case_path, case_name, dest_root)
     return [str(dest_root), scratch_text]
 def run_ui_fixture_case(color, case_name, case_path):
     case_file = case_path.joinpath("case.tsv")
@@ -3900,8 +3934,8 @@ def check_ui():
         violation("ui-fixtures", "is a symlink: " + str(fixtures_root))
     if not fixtures_root.is_dir():
         violation("ui-fixtures", "missing: " + str(fixtures_root))
-    red_required = ["copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "missing-notes-row", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
-    green_required = ["basic", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
+    red_required = ["copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
+    green_required = ["basic", "git-uncommitted-edit", "git-untracked-document", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
     red_count = 0
     green_count = 0
     red_names = []
@@ -3938,9 +3972,7 @@ def check_ui():
             violation("ui-fixtures", "missing required case: green/" + required_name)
     print("goal: ui fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
-    ledger_result = check_projection_ledger(guideline_path)
-    ledger_pairs = ledger_result.pop(0)
-    notes_row_by_docid = ledger_result.pop(0)
+    ledger_pairs = check_projection_ledger(guideline_path)
     ledger_docids = []
     for ledger_pair in ledger_pairs:
         pair_copy = list(ledger_pair)
@@ -3969,7 +4001,7 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
             violation("projection-coverage", "projection row names no coverage region: " + ledger_docid + " " + ledger_region)
         if actual_status != expected_status:
             violation("projection-coverage", "coverage region " + ledger_region + " does not carry ace(" + ledger_docid + "): " + actual_status)
-    check_adjudication(guideline_path, docids, notes_row_by_docid, ace_row_line_by_docid, payload_text_by_docid)
+    check_adjudication(guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid)
     if lexicon_path != None:
         check_lexicon(guideline_path, ace_paths, docids)
 def check_command():

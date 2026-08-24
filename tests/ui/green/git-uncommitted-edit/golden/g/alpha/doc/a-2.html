@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture section (r2) — cnl-ckc reviewer</title>
+<style>
+body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
+a { color: #1d4ed8; }
+a:focus-visible, summary:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 0; padding: 0.5rem 1rem; background: #ffffff; color: #1d4ed8; }
+.skip:focus { left: 0; z-index: 1; }
+nav.crumbs { padding: 1rem 0; border-bottom: 1px solid #e5e7eb; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+h1 a.source { font-size: 1rem; font-weight: 400; margin-left: 0.5rem; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+th { border-bottom: 2px solid #111827; }
+table.compact { width: auto; }
+table.compact th, table.compact td { padding-right: 2rem; }
+table.records { table-layout: fixed; }
+table.records th { box-sizing: border-box; }
+table.records th:nth-child(1) { width: 12%; }
+table.records th:nth-child(2) { width: 18%; }
+table.records th:nth-child(3) { width: 22%; }
+table.records th:nth-child(4) { width: 10%; }
+.chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+.chip-approved { color: #14532d; background: #dcfce7; }
+.chip-rejected { color: #7f1d1d; background: #fee2e2; }
+.chip-contested { color: #4c1d95; background: #ede9fe; }
+.chip-stale { color: #78350f; background: #fef3c7; }
+.chip-unreviewed { color: #1f2937; background: #e5e7eb; }
+pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; white-space: pre-wrap; overflow-x: auto; }
+pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }
+pre.prose { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }
+dt { font-weight: 600; margin-top: 0.6rem; }
+dd { margin-left: 0; }
+summary { cursor: pointer; }
+section { margin: 1.5rem 0; }
+nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
+footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid #e5e7eb; font-size: 0.9rem; }
+form label { display: block; margin-top: 1rem; font-weight: 600; }
+fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }
+legend { font-weight: 600; padding: 0; }
+fieldset label { margin-top: 0.5rem; font-weight: 400; }
+input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
+textarea { min-height: 6rem; }
+input[type="radio"] { accent-color: #111827; }
+input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
+@media print {
+body { max-width: none; padding: 0; }
+nav.crumbs, nav.docnav, .skip, form, .verdict-entry { display: none; }
+details::details-content { content-visibility: visible; }
+pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
+a { color: inherit; text-decoration: none; }
+.chip { border: 1px solid #111827; background: none; color: inherit; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="crumbs"><a href="../../../index.html">guidelines</a> / <a href="../index.html">alpha</a> / a-2</nav>
+<main id="main">
+<h1>alpha</h1>
+<h2>Fixture section (r2) <span class="chip chip-approved">Approved</span></h2>
+<p>r2 · <a href="../source/evidence.txt">evidence.txt</a></p>
+<p>Decisions on this version: 1 approved. <a href="../records.html#a-2">All decision records</a></p>
+<section>
+<h3>Original passage</h3>
+<pre class="prose">Payload selected for a-2.</pre>
+</section>
+<section>
+<h3>Attempto Controlled English (ACE)</h3>
+<pre class="prose">A reviewer should inspect a-2.
+</pre>
+</section>
+<section class="verdict-entry">
+<h3>Record a decision</h3>
+<p>Does the ACE representation appropriately reflect the original passage?</p>
+<form method="post">
+<fieldset>
+<legend>Decision</legend>
+<label><input type="radio" name="verdict" value="approved" required> Approved</label>
+<label><input type="radio" name="verdict" value="rejected" required> Rejected</label>
+</fieldset>
+<label for="reviewer">Reviewer name</label>
+<input type="text" id="reviewer" name="reviewer" list="reviewer-names" value="Rita Mensah" required>
+<datalist id="reviewer-names"><option value="Rita Mensah"></option></datalist>
+<label for="comment">Comment (optional)</label>
+<textarea id="comment" name="comment"></textarea>
+<input type="hidden" name="review_sha256" value="3d81ac31bba57190ab36caf57a4e1d6162cac3dda21071c0a3c7d37fc4b0a672">
+<input type="hidden" name="ledger_sha256" value="cb063360f5edb2febb3dac1b66a17093034172dc3a27039bc83dfe0233a0076a">
+<input type="hidden" name="csrf" value="">
+<button>Record decision</button>
+</form>
+</section>
+<section>
+<details>
+<summary>Compiled Prolog (3 lines)</summary>
+<pre>guideline_schema_version(1).
+guideline_document('a-2', ace_sha256(fixture), ulex(none)).
+fixture_fact('a-2').
+</pre>
+</details>
+</section>
+<nav class="docnav"><a href="a-10.html">Previous document</a> · <a href="../index.html">Guideline index</a> · <a href="z.html">Next document</a></nav>
+</main>
+<footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>
+</body>
+</html>
