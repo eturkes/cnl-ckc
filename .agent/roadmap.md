@@ -130,7 +130,12 @@ Architecture rulings:
   tarfile + gzip (dist) — hand-written code owns project semantics only,
   never HTTP parsing, URL grammar, archive encoding, or fs primitives.
 - Serve time reads committed artifacts + the adjudication ledger only —
-  no swipl, no LLM, no socket beyond loopback. All derivation (query
+  literally: `serve`/`render` read the guideline tree at HEAD (temp
+  snapshot when the working tree carries uncommitted guideline changes,
+  live ledger overlaid), so an uncommitted edit neither shows nor
+  outdates a decision and a never-committed document is not reviewable;
+  `check` alone reads the working tree, being the pre-commit gate. No
+  swipl, no LLM, no socket beyond loopback. All derivation (query
   compile, answers/traces, graph) runs in the pipeline and is committed
   + freshness-gated exactly like `pl/`. Every M4 gate backing a durable
   claim reruns from committed state (project rule); scratch batteries =
@@ -354,7 +359,8 @@ fold into 4.13.
   contract before crediting green), fixture update, full check + battery
   green, chromiumfish visual QA. Docs close (absorbs old 4.12,
   review-scoped): README audit story (E-- UI + exception verbs,
-  adjudication + rejection workflow, shipped question/answer/trace
+  adjudication + rejection workflow, the committed-corpus read rule
+  (v5.5) + its `check`-reads-the-working-tree exception, shipped question/answer/trace
   families + TCB closure naming, Running: `ui.py`, loopback security
   posture, licensing prose), guideline README + queue/rounds touch-ups,
   polish-register reconciliation. Milestone close per M1/M3 convention:

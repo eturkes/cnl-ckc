@@ -7,6 +7,7 @@ Use re.
 Use shutil.
 Use subprocess.
 Use sys.
+Use tarfile.
 Use tempfile.
 Use urllib.parse.
 Use wsgiref.simple_server.
@@ -436,25 +437,188 @@ Define [[goal_py_path]] taking nothing:
     Set tool_dir to resolved.parent.
     Give back [[tool_dir.joinpath]]("goal.py").
 
-Define [[ace_commit_hex]] taking guideline_path, docid:
+Define [[git_output]] taking work_dir, arg_list:
+    Set command to <"git">.
+    For each arg_text in arg_list:
+        Do [[command.append]](arg_text).
+    Set result to None.
+    Try:
+        Set result to [[subprocess.run]](command, capture_output=True, cwd=work_dir).
+    Catch OSError:
+        Give back None.
+    If result.returncode does not equal 0:
+        Give back None.
+    Give back [[result.stdout.decode]]("utf-8", errors="replace").
+
+Define [[uncommitted_guidelines]] taking root_path:
+    Set work_dir to [[str]]([[root_path.resolve]]()).
+    Set top_text to [[git_output]](work_dir, <"rev-parse", "--show-toplevel">).
+    If top_text equals None:
+        Give back None.
+    Set top_path to [[pathlib.Path]]([[top_text.strip]]()).
+    Set top_resolved to [[str]]([[top_path.resolve]]()).
+    If top_resolved does not equal work_dir:
+        Give back None.
+    Set changed to [[git_output]](work_dir, <"diff", "--name-only", "-z", "HEAD", "--", "guidelines">).
+    If changed equals None:
+        Give back None.
+    Set untracked to [[git_output]](work_dir, <"ls-files", "--others", "--exclude-standard", "-z", "--", "guidelines">).
+    If untracked equals None:
+        Give back None.
+    Set gids to <>.
+    Set listed to changed plus untracked.
+    For each chunk in [[listed.split]]("\0"):
+        If chunk:
+            Set is_ledger to [[chunk.endswith]]("/audit/adjudication.tsv").
+            If not is_ledger:
+                Set segs to [[chunk.split]]("/").
+                If [[len]](segs) is greater than 2:
+                    Set seg_copy to [[list]](segs).
+                    Set head_seg to [[seg_copy.pop]](0).
+                    Set gid to [[seg_copy.pop]](0).
+                    If head_seg equals "guidelines":
+                        Set known to gid is in gids.
+                        If not known:
+                            Do [[gids.append]](gid).
+    Give back [[sorted]](gids).
+
+Define [[extract_committed]] taking archive_path, dest_root:
+    Set extract_ok to True.
+    Try:
+        Set archive to [[tarfile.open]]([[str]](archive_path)).
+        For each member in [[archive.getmembers]]():
+            Set name_text to member.name.
+            Set safe to True.
+            If [[name_text.startswith]]("/"):
+                Set safe to False.
+            Set segs to [[name_text.split]]("/").
+            Set has_dotdot to ".." is in segs.
+            If has_dotdot:
+                Set safe to False.
+            If not safe:
+                Set extract_ok to False.
+            Otherwise:
+                Set target to [[dest_root.joinpath]](name_text).
+                Set is_dir to [[member.isdir]]().
+                Set is_file to [[member.isfile]]().
+                If is_dir:
+                    Do [[target.mkdir]](parents=True, exist_ok=True).
+                Otherwise if is_file:
+                    Set parent_dir to target.parent.
+                    Do [[parent_dir.mkdir]](parents=True, exist_ok=True).
+                    Set stream to [[archive.extractfile]](member).
+                    Set payload to [[stream.read]]().
+                    Do [[target.write_bytes]](payload).
+                Otherwise:
+                    Set extract_ok to False.
+        Do [[archive.close]]().
+    Catch tarfile.TarError:
+        Set extract_ok to False.
+    Catch OSError:
+        Set extract_ok to False.
+    Give back extract_ok.
+
+Define [[materialize_committed]] taking root_path:
+    Set work_dir to [[str]]([[root_path.resolve]]()).
+    Set scratch_text to [[tempfile.mkdtemp]]().
+    Set scratch_dir to [[pathlib.Path]](scratch_text).
+    Set archive_path to [[scratch_dir.joinpath]]("committed.tar").
+    Set command to <"git", "archive", "--format=tar", "-o", [[str]](archive_path), "HEAD", "guidelines">.
+    Set result to None.
+    Set launched to True.
+    Try:
+        Set result to [[subprocess.run]](command, capture_output=True, cwd=work_dir).
+    Catch OSError:
+        Set launched to False.
+    Set built to launched.
+    If launched:
+        If result.returncode does not equal 0:
+            Set built to False.
+    Set dest_root to [[scratch_dir.joinpath]]("corpus").
+    If built:
+        Do [[dest_root.mkdir]](parents=True, exist_ok=True).
+        Set built to [[extract_committed]](archive_path, dest_root).
+    If not built:
+        Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
+        Give back <"", None>.
+    Give back <scratch_text, dest_root>.
+
+Define [[overlay_ledgers]] taking real_root, corpus_root:
+    Set real_guidelines to [[real_root.joinpath]]("guidelines").
+    Set corpus_guidelines to [[corpus_root.joinpath]]("guidelines").
+    If not [[corpus_guidelines.is_dir]]():
+        Give back True.
+    For each entry in [[sorted]]([[corpus_guidelines.iterdir]]()):
+        If [[entry.is_dir]]():
+            Set committed_ledger to [[entry.joinpath]]("audit", "adjudication.tsv").
+            Set live_ledger to [[real_guidelines.joinpath]](entry.name, "audit", "adjudication.tsv").
+            Try:
+                If [[live_ledger.is_file]]():
+                    Set audit_dir to committed_ledger.parent.
+                    Do [[audit_dir.mkdir]](parents=True, exist_ok=True).
+                    Set payload to [[live_ledger.read_bytes]]().
+                    Do [[committed_ledger.write_bytes]](payload).
+                Otherwise if [[committed_ledger.is_file]]():
+                    Do [[committed_ledger.unlink]]().
+            Catch OSError:
+                Give back False.
+    Give back True.
+
+Define [[worktree_corpus]] taking root_path:
+    Set corpus to {}.
+    Do [[corpus.update]]({"root": root_path}).
+    Do [[corpus.update]]({"real_root": root_path}).
+    Do [[corpus.update]]({"uncommitted": <>}).
+    Do [[corpus.update]]({"scratch": ""}).
+    Give back corpus.
+
+Define [[resolve_corpus]] taking root_path:
+    Set corpus to [[worktree_corpus]](root_path).
+    Set gids to [[uncommitted_guidelines]](root_path).
+    If gids equals None:
+        Give back [[ok]](corpus).
+    If not gids:
+        Give back [[ok]](corpus).
+    Set pair to [[materialize_committed]](root_path).
+    Set pair_copy to [[list]](pair).
+    Set scratch_text to [[pair_copy.pop]](0).
+    Set dest_root to [[pair_copy.pop]](0).
+    If scratch_text equals "":
+        Give back [[ok]](corpus).
+    Set overlay_ok to [[overlay_ledgers]](root_path, dest_root).
+    If not overlay_ok:
+        Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
+        Give back [[err]]("ui: corpus: cannot read the committed guideline files").
+    Do [[corpus.update]]({"root": dest_root}).
+    Do [[corpus.update]]({"uncommitted": gids}).
+    Do [[corpus.update]]({"scratch": scratch_text}).
+    Give back [[ok]](corpus).
+
+Define [[release_corpus]] taking corpus:
+    Set scratch_text to [[corpus.get]]("scratch", "").
+    If scratch_text:
+        Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
+
+Define [[ace_commit_hex]] taking guideline_path, docid, committed:
     Set ace_path to [[guideline_path.joinpath]]("ace", docid plus ".ace").
-    If not [[ace_path.is_file]]():
-        Give back "".
     Set work_dir to [[str]]([[guideline_path.resolve]]()).
     Set ace_text to [[str]]([[ace_path.resolve]]()).
-    Set status_command to <"git", "status", "--porcelain", "--", ace_text>.
-    Set status_result to None.
-    Try:
-        Set status_result to [[subprocess.run]](status_command, capture_output=True, cwd=work_dir).
-    Catch OSError:
-        Give back "".
-    If status_result.returncode does not equal 0:
-        Give back "".
-    Set status_text to [[status_result.stdout.decode]]("utf-8", errors="replace").
-    Set status_trimmed to [[status_text.strip]]().
-    If status_trimmed:
-        Give back "".
-    Set log_command to <"git", "log", "-1", "--format=%H", "--", ace_text>.
+    If not committed:
+        If not [[ace_path.is_file]]():
+            Give back "".
+        Set status_command to <"git", "status", "--porcelain", "--", ace_text>.
+        Set status_result to None.
+        Try:
+            Set status_result to [[subprocess.run]](status_command, capture_output=True, cwd=work_dir).
+        Catch OSError:
+            Give back "".
+        If status_result.returncode does not equal 0:
+            Give back "".
+        Set status_text to [[status_result.stdout.decode]]("utf-8", errors="replace").
+        Set status_trimmed to [[status_text.strip]]().
+        If status_trimmed:
+            Give back "".
+    Set log_command to <"git", "log", "-1", "--format=%H", "HEAD", "--", ace_text>.
     Set log_result to None.
     Try:
         Set log_result to [[subprocess.run]](log_command, capture_output=True, cwd=work_dir).
@@ -546,8 +710,17 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
         Do [[states.update]]({row_docid: row_state}).
     Give back [[ok]](<states, ledger_by_docid, ledger_order, ledger_file_digest>).
 
-Define [[build_guideline_model]] taking root_path, gid:
+Define [[build_guideline_model]] taking corpus, gid:
+    Set root_path to [[corpus.get]]("root", None).
+    Set real_root to [[corpus.get]]("real_root", None).
+    Set scratch_text to [[corpus.get]]("scratch", "").
+    Set committed_corpus to False.
+    If scratch_text:
+        Set committed_corpus to True.
+    Set uncommitted_gids to [[corpus.get]]("uncommitted", <>).
+    Set uncommitted_flag to gid is in uncommitted_gids.
     Set guideline_path to [[root_path.joinpath]]("guidelines", gid).
+    Set real_guideline_path to [[real_root.joinpath]]("guidelines", gid).
     If not [[valid_ui_id]](gid):
         Give back [[err]]("ui: viewmodel: " plus gid plus " invalid guideline id").
     Set coverage_path to [[guideline_path.joinpath]]("coverage.tsv").
@@ -797,6 +970,9 @@ Define [[build_guideline_model]] taking root_path, gid:
     Set model to {}.
     Do [[model.update]]({"gid": gid}).
     Do [[model.update]]({"path": guideline_path}).
+    Do [[model.update]]({"real_path": real_guideline_path}).
+    Do [[model.update]]({"committed_corpus": committed_corpus}).
+    Do [[model.update]]({"uncommitted": uncommitted_flag}).
     Set title_result to [[readme_title]](guideline_path, gid).
     If [[result_kind]](title_result) equals "err":
         Give back title_result.
@@ -861,7 +1037,8 @@ Define [[build_guideline_model]] taking root_path, gid:
     Do [[model.update]]({"counts": counts}).
     Give back [[ok]](model).
 
-Define [[build_viewmodel]] taking root_path:
+Define [[build_viewmodel]] taking corpus:
+    Set root_path to [[corpus.get]]("root", None).
     Set guidelines_root to [[root_path.joinpath]]("guidelines").
     Set root_missing to False.
     Set symlink to [[guidelines_root.is_symlink]]().
@@ -879,7 +1056,7 @@ Define [[build_viewmodel]] taking root_path:
                 Do [[gids.append]](entry.name).
     Set models to <>.
     For each gid in gids:
-        Set model_result to [[build_guideline_model]](root_path, gid).
+        Set model_result to [[build_guideline_model]](corpus, gid).
         If [[result_kind]](model_result) equals "err":
             Give back model_result.
         Do [[models.append]]([[result_value]](model_result)).
@@ -969,6 +1146,8 @@ Set refusal_invalid_form_text to "The submitted form was not valid. Go back to t
 Set refusal_subject_text to "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version.".
 Set refusal_ledger_text to "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state.".
 
+Set uncommitted_notice_text to "This guideline has changes that are not committed. These pages show the last committed version.".
+
 Define [[comment_safe]] taking detail:
     Set safe_chars to <>.
     For each ch in detail:
@@ -1013,6 +1192,12 @@ Define [[page_html]] taking title_text, crumb_html, body_html:
     Do [[parts.append]]("</html>").
     Set joiner to "\n".
     Give back [[joiner.join]](parts) plus "\n".
+
+Define [[uncommitted_notice_html]] taking model:
+    Set flag to [[model.get]]("uncommitted", False).
+    If not flag:
+        Give back "".
+    Give back "<section class=\"notice\"><p>" plus [[esc_text]](uncommitted_notice_text) plus "</p></section>".
 
 Define [[state_label]] taking state:
     If state equals "stale":
@@ -1164,6 +1349,9 @@ Define [[build_guideline_page]] taking model:
     Set ledger_by_docid to [[model.get]]("ledger_by_docid", {}).
     Do [[parts.append]]("<h1>" plus [[esc_text]]([[model.get]]("title", gid)) plus "</h1>").
     Do [[parts.append]]("<p>" plus [[esc_text]]([[review_summary_text]](counts, [[len]](docids))) plus " <a href=\"records.html\">All decision records</a></p>").
+    Set notice_html to [[uncommitted_notice_html]](model).
+    If notice_html:
+        Do [[parts.append]](notice_html).
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h2>Status</h2>").
     Do [[parts.append]]("<table class=\"compact\">").
@@ -1289,6 +1477,9 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
         Set records_href to records_href plus "#" plus [[url_seg]](docid).
     Set tally to [[doc_tally]](ledger_by_docid, docid).
     Do [[parts.append]]("<p>" plus [[esc_text]]([[tally_text]](tally)) plus " <a href=\"" plus records_href plus "\">All decision records</a></p>").
+    Set notice_html to [[uncommitted_notice_html]](model).
+    If notice_html:
+        Do [[parts.append]](notice_html).
     If state equals "stale":
         Do [[parts.append]]("<section class=\"stale\">").
         Do [[parts.append]]("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>").
@@ -1527,8 +1718,8 @@ Define [[render_pages]] taking models:
     Do [[bundle.update]]({"meter_lines": meter_lines}).
     Give back [[ok]](bundle).
 
-Define [[render_tree]] taking root_path, out_path:
-    Set model_result to [[build_viewmodel]](root_path).
+Define [[render_tree]] taking corpus, out_path:
+    Set model_result to [[build_viewmodel]](corpus).
     If [[result_kind]](model_result) equals "err":
         Give back model_result.
     Set models to [[result_value]](model_result).
@@ -1925,7 +2116,8 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
         Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: subject changed", refusal_subject_text).
     If [[fields.get]]("ledger_sha256") does not equal [[model.get]]("ledger_file_digest", "absent"):
         Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: ledger changed", refusal_ledger_text).
-    Set audit_dir to [[guideline_path.joinpath]]("audit").
+    Set real_guideline_path to [[model.get]]("real_path", None).
+    Set audit_dir to [[real_guideline_path.joinpath]]("audit").
     Set ledger_path to [[audit_dir.joinpath]]("adjudication.tsv").
     If [[ledger_path.is_symlink]]():
         Give back [[error_response]]("ui: verdict: ledger not a regular file").
@@ -1938,7 +2130,7 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
         Set now_text to [[now_value.strftime]]("%Y-%m-%dT%H:%M:%SZ").
     Set commit_text to [[serve_config.get]]("commit_pin", None).
     If commit_text equals None:
-        Set commit_text to [[ace_commit_hex]](guideline_path, docid).
+        Set commit_text to [[ace_commit_hex]](real_guideline_path, docid, [[model.get]]("committed_corpus", False)).
     Set tab_text to "\t".
     Set new_line to docid plus tab_text plus [[fields.get]]("review_sha256") plus tab_text plus commit_text plus tab_text plus [[fields.get]]("verdict") plus tab_text plus [[fields.get]]("reviewer") plus tab_text plus now_text plus tab_text plus [[fields.get]]("comment").
     Set new_key to docid plus tab_text plus now_text.
@@ -2045,14 +2237,14 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
         Give back [[error_response]]("ui: verdict: ledger write failed").
     Give back [[redirect_response]](gid, docid).
 
-Define [[respond]] taking root_path, method_text, path_text, meta:
+Define [[respond]] taking corpus, method_text, path_text, meta:
     Set shaped to [[doc_shaped]](path_text).
     If method_text does not equal "GET":
         If method_text does not equal "POST":
             Give back [[method_response]](shaped).
         If not shaped:
             Give back [[method_response]](shaped).
-    Set model_result to [[build_viewmodel]](root_path).
+    Set model_result to [[build_viewmodel]](corpus).
     If [[result_kind]](model_result) equals "err":
         Give back [[error_response]]([[result_value]](model_result)).
     Set models to [[result_value]](model_result).
@@ -2161,7 +2353,14 @@ Define [[wsgi_app]] taking environ, start_response:
             If [[len]](read_bytes) equals length_num:
                 Set body_value to read_bytes.
     Do [[meta.update]]({"body": body_value}).
-    Set triple to [[respond]](root_path, method_text, path_text, meta).
+    Set corpus_result to [[resolve_corpus]](root_path).
+    Set triple to None.
+    If [[result_kind]](corpus_result) equals "err":
+        Set triple to [[error_response]]([[result_value]](corpus_result)).
+    Otherwise:
+        Set corpus to [[result_value]](corpus_result).
+        Set triple to [[respond]](corpus, method_text, path_text, meta).
+        Do [[release_corpus]](corpus).
     Set triple_copy to [[list]](triple).
     Set status_text to [[triple_copy.pop]](0).
     Set headers to [[triple_copy.pop]](0).
@@ -2219,7 +2418,13 @@ Define [[render_command]] taking args:
         Do [[err_line]]("ui: render: destination not empty: " plus outdir_text).
         Exit with 2.
     Set root_path to [[pathlib.Path]](root_text).
-    Set result to [[render_tree]](root_path, out_path).
+    Set corpus_result to [[resolve_corpus]](root_path).
+    If [[result_kind]](corpus_result) equals "err":
+        Do [[err_line]]([[result_value]](corpus_result)).
+        Exit with 1.
+    Set corpus to [[result_value]](corpus_result).
+    Set result to [[render_tree]](corpus, out_path).
+    Do [[release_corpus]](corpus).
     If [[result_kind]](result) equals "err":
         Do [[err_line]]([[result_value]](result)).
         Exit with 1.
@@ -2246,13 +2451,14 @@ Define [[check_ui_command]] taking args:
     Set detail to "".
     Set summary to {}.
     Set asset_rels to <>.
-    Set result_one to [[render_tree]](root_path, path_one).
+    Set corpus to [[worktree_corpus]](root_path).
+    Set result_one to [[render_tree]](corpus, path_one).
     If [[result_kind]](result_one) equals "err":
         Set detail to [[result_value]](result_one).
     Otherwise:
         Set summary to [[result_value]](result_one).
         Set asset_rels to [[summary.get]]("asset_rels", <>).
-        Set result_two to [[render_tree]](root_path, path_two).
+        Set result_two to [[render_tree]](corpus, path_two).
         If [[result_kind]](result_two) equals "err":
             Set detail to [[result_value]](result_two).
     If detail equals "":
@@ -2396,7 +2602,14 @@ Define [[request_command]] taking args:
     Set no_query to [[query_parts.pop]](0).
     Set path_text to [[urllib.parse.unquote]](no_query).
     Set root_path to [[pathlib.Path]](root_text).
-    Set triple to [[respond]](root_path, method_text, path_text, meta).
+    Set corpus_result to [[resolve_corpus]](root_path).
+    Set triple to None.
+    If [[result_kind]](corpus_result) equals "err":
+        Set triple to [[error_response]]([[result_value]](corpus_result)).
+    Otherwise:
+        Set corpus to [[result_value]](corpus_result).
+        Set triple to [[respond]](corpus, method_text, path_text, meta).
+        Do [[release_corpus]](corpus).
     Set triple_copy to [[list]](triple).
     Set status_text to [[triple_copy.pop]](0).
     Set headers to [[triple_copy.pop]](0).

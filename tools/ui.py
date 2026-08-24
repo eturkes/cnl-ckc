@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import urllib.parse
 import wsgiref.simple_server
@@ -401,25 +402,180 @@ def goal_py_path():
     resolved = script_path.resolve()
     tool_dir = resolved.parent
     return tool_dir.joinpath("goal.py")
-def ace_commit_hex(guideline_path, docid):
+def git_output(work_dir, arg_list):
+    command = ["git"]
+    for arg_text in arg_list:
+        command.append(arg_text)
+    result = None
+    try:
+        result = subprocess.run(command, capture_output=True, cwd=work_dir)
+    except OSError:
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.decode("utf-8", errors="replace")
+def uncommitted_guidelines(root_path):
+    work_dir = str(root_path.resolve())
+    top_text = git_output(work_dir, ["rev-parse", "--show-toplevel"])
+    if top_text == None:
+        return None
+    top_path = pathlib.Path(top_text.strip())
+    top_resolved = str(top_path.resolve())
+    if top_resolved != work_dir:
+        return None
+    changed = git_output(work_dir, ["diff", "--name-only", "-z", "HEAD", "--", "guidelines"])
+    if changed == None:
+        return None
+    untracked = git_output(work_dir, ["ls-files", "--others", "--exclude-standard", "-z", "--", "guidelines"])
+    if untracked == None:
+        return None
+    gids = []
+    listed = changed + untracked
+    for chunk in listed.split("\0"):
+        if chunk:
+            is_ledger = chunk.endswith("/audit/adjudication.tsv")
+            if not is_ledger:
+                segs = chunk.split("/")
+                if len(segs) > 2:
+                    seg_copy = list(segs)
+                    head_seg = seg_copy.pop(0)
+                    gid = seg_copy.pop(0)
+                    if head_seg == "guidelines":
+                        known = gid in gids
+                        if not known:
+                            gids.append(gid)
+    return sorted(gids)
+def extract_committed(archive_path, dest_root):
+    extract_ok = True
+    try:
+        archive = tarfile.open(str(archive_path))
+        for member in archive.getmembers():
+            name_text = member.name
+            safe = True
+            if name_text.startswith("/"):
+                safe = False
+            segs = name_text.split("/")
+            has_dotdot = ".." in segs
+            if has_dotdot:
+                safe = False
+            if not safe:
+                extract_ok = False
+            else:
+                target = dest_root.joinpath(name_text)
+                is_dir = member.isdir()
+                is_file = member.isfile()
+                if is_dir:
+                    target.mkdir(parents=True, exist_ok=True)
+                elif is_file:
+                    parent_dir = target.parent
+                    parent_dir.mkdir(parents=True, exist_ok=True)
+                    stream = archive.extractfile(member)
+                    payload = stream.read()
+                    target.write_bytes(payload)
+                else:
+                    extract_ok = False
+        archive.close()
+    except tarfile.TarError:
+        extract_ok = False
+    except OSError:
+        extract_ok = False
+    return extract_ok
+def materialize_committed(root_path):
+    work_dir = str(root_path.resolve())
+    scratch_text = tempfile.mkdtemp()
+    scratch_dir = pathlib.Path(scratch_text)
+    archive_path = scratch_dir.joinpath("committed.tar")
+    command = ["git", "archive", "--format=tar", "-o", str(archive_path), "HEAD", "guidelines"]
+    result = None
+    launched = True
+    try:
+        result = subprocess.run(command, capture_output=True, cwd=work_dir)
+    except OSError:
+        launched = False
+    built = launched
+    if launched:
+        if result.returncode != 0:
+            built = False
+    dest_root = scratch_dir.joinpath("corpus")
+    if built:
+        dest_root.mkdir(parents=True, exist_ok=True)
+        built = extract_committed(archive_path, dest_root)
+    if not built:
+        shutil.rmtree(scratch_text, ignore_errors=True)
+        return ["", None]
+    return [scratch_text, dest_root]
+def overlay_ledgers(real_root, corpus_root):
+    real_guidelines = real_root.joinpath("guidelines")
+    corpus_guidelines = corpus_root.joinpath("guidelines")
+    if not corpus_guidelines.is_dir():
+        return True
+    for entry in sorted(corpus_guidelines.iterdir()):
+        if entry.is_dir():
+            committed_ledger = entry.joinpath("audit", "adjudication.tsv")
+            live_ledger = real_guidelines.joinpath(entry.name, "audit", "adjudication.tsv")
+            try:
+                if live_ledger.is_file():
+                    audit_dir = committed_ledger.parent
+                    audit_dir.mkdir(parents=True, exist_ok=True)
+                    payload = live_ledger.read_bytes()
+                    committed_ledger.write_bytes(payload)
+                elif committed_ledger.is_file():
+                    committed_ledger.unlink()
+            except OSError:
+                return False
+    return True
+def worktree_corpus(root_path):
+    corpus = {}
+    corpus.update({"root": root_path})
+    corpus.update({"real_root": root_path})
+    corpus.update({"uncommitted": []})
+    corpus.update({"scratch": ""})
+    return corpus
+def resolve_corpus(root_path):
+    corpus = worktree_corpus(root_path)
+    gids = uncommitted_guidelines(root_path)
+    if gids == None:
+        return ok(corpus)
+    if not gids:
+        return ok(corpus)
+    pair = materialize_committed(root_path)
+    pair_copy = list(pair)
+    scratch_text = pair_copy.pop(0)
+    dest_root = pair_copy.pop(0)
+    if scratch_text == "":
+        return ok(corpus)
+    overlay_ok = overlay_ledgers(root_path, dest_root)
+    if not overlay_ok:
+        shutil.rmtree(scratch_text, ignore_errors=True)
+        return err("ui: corpus: cannot read the committed guideline files")
+    corpus.update({"root": dest_root})
+    corpus.update({"uncommitted": gids})
+    corpus.update({"scratch": scratch_text})
+    return ok(corpus)
+def release_corpus(corpus):
+    scratch_text = corpus.get("scratch", "")
+    if scratch_text:
+        shutil.rmtree(scratch_text, ignore_errors=True)
+def ace_commit_hex(guideline_path, docid, committed):
     ace_path = guideline_path.joinpath("ace", docid + ".ace")
-    if not ace_path.is_file():
-        return ""
     work_dir = str(guideline_path.resolve())
     ace_text = str(ace_path.resolve())
-    status_command = ["git", "status", "--porcelain", "--", ace_text]
-    status_result = None
-    try:
-        status_result = subprocess.run(status_command, capture_output=True, cwd=work_dir)
-    except OSError:
-        return ""
-    if status_result.returncode != 0:
-        return ""
-    status_text = status_result.stdout.decode("utf-8", errors="replace")
-    status_trimmed = status_text.strip()
-    if status_trimmed:
-        return ""
-    log_command = ["git", "log", "-1", "--format=%H", "--", ace_text]
+    if not committed:
+        if not ace_path.is_file():
+            return ""
+        status_command = ["git", "status", "--porcelain", "--", ace_text]
+        status_result = None
+        try:
+            status_result = subprocess.run(status_command, capture_output=True, cwd=work_dir)
+        except OSError:
+            return ""
+        if status_result.returncode != 0:
+            return ""
+        status_text = status_result.stdout.decode("utf-8", errors="replace")
+        status_trimmed = status_text.strip()
+        if status_trimmed:
+            return ""
+    log_command = ["git", "log", "-1", "--format=%H", "HEAD", "--", ace_text]
     log_result = None
     try:
         log_result = subprocess.run(log_command, capture_output=True, cwd=work_dir)
@@ -509,8 +665,17 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
             row_state = "rejected"
         states.update({row_docid: row_state})
     return ok([states, ledger_by_docid, ledger_order, ledger_file_digest])
-def build_guideline_model(root_path, gid):
+def build_guideline_model(corpus, gid):
+    root_path = corpus.get("root", None)
+    real_root = corpus.get("real_root", None)
+    scratch_text = corpus.get("scratch", "")
+    committed_corpus = False
+    if scratch_text:
+        committed_corpus = True
+    uncommitted_gids = corpus.get("uncommitted", [])
+    uncommitted_flag = gid in uncommitted_gids
     guideline_path = root_path.joinpath("guidelines", gid)
+    real_guideline_path = real_root.joinpath("guidelines", gid)
     if not valid_ui_id(gid):
         return err("ui: viewmodel: " + gid + " invalid guideline id")
     coverage_path = guideline_path.joinpath("coverage.tsv")
@@ -760,6 +925,9 @@ def build_guideline_model(root_path, gid):
     model = {}
     model.update({"gid": gid})
     model.update({"path": guideline_path})
+    model.update({"real_path": real_guideline_path})
+    model.update({"committed_corpus": committed_corpus})
+    model.update({"uncommitted": uncommitted_flag})
     title_result = readme_title(guideline_path, gid)
     if result_kind(title_result) == "err":
         return title_result
@@ -823,7 +991,8 @@ def build_guideline_model(root_path, gid):
     counts.update({"reviewed": len(ledger_by_docid)})
     model.update({"counts": counts})
     return ok(model)
-def build_viewmodel(root_path):
+def build_viewmodel(corpus):
+    root_path = corpus.get("root", None)
     guidelines_root = root_path.joinpath("guidelines")
     root_missing = False
     symlink = guidelines_root.is_symlink()
@@ -841,7 +1010,7 @@ def build_viewmodel(root_path):
                 gids.append(entry.name)
     models = []
     for gid in gids:
-        model_result = build_guideline_model(root_path, gid)
+        model_result = build_guideline_model(corpus, gid)
         if result_kind(model_result) == "err":
             return model_result
         models.append(result_value(model_result))
@@ -923,6 +1092,7 @@ refusal_refused_text = "The request was refused. Open the document page again fr
 refusal_invalid_form_text = "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."
 refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."
 refusal_ledger_text = "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state."
+uncommitted_notice_text = "This guideline has changes that are not committed. These pages show the last committed version."
 def comment_safe(detail):
     safe_chars = []
     for ch in detail:
@@ -966,6 +1136,11 @@ def page_html(title_text, crumb_html, body_html):
     parts.append("</html>")
     joiner = "\n"
     return joiner.join(parts) + "\n"
+def uncommitted_notice_html(model):
+    flag = model.get("uncommitted", False)
+    if not flag:
+        return ""
+    return "<section class=\"notice\"><p>" + esc_text(uncommitted_notice_text) + "</p></section>"
 def state_label(state):
     if state == "stale":
         return "Outdated"
@@ -1107,6 +1282,9 @@ def build_guideline_page(model):
     ledger_by_docid = model.get("ledger_by_docid", {})
     parts.append("<h1>" + esc_text(model.get("title", gid)) + "</h1>")
     parts.append("<p>" + esc_text(review_summary_text(counts, len(docids))) + " <a href=\"records.html\">All decision records</a></p>")
+    notice_html = uncommitted_notice_html(model)
+    if notice_html:
+        parts.append(notice_html)
     parts.append("<section>")
     parts.append("<h2>Status</h2>")
     parts.append("<table class=\"compact\">")
@@ -1230,6 +1408,9 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
         records_href = records_href + "#" + url_seg(docid)
     tally = doc_tally(ledger_by_docid, docid)
     parts.append("<p>" + esc_text(tally_text(tally)) + " <a href=\"" + records_href + "\">All decision records</a></p>")
+    notice_html = uncommitted_notice_html(model)
+    if notice_html:
+        parts.append(notice_html)
     if state == "stale":
         parts.append("<section class=\"stale\">")
         parts.append("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>")
@@ -1462,8 +1643,8 @@ def render_pages(models):
     bundle.update({"asset_paths": asset_paths})
     bundle.update({"meter_lines": meter_lines})
     return ok(bundle)
-def render_tree(root_path, out_path):
-    model_result = build_viewmodel(root_path)
+def render_tree(corpus, out_path):
+    model_result = build_viewmodel(corpus)
     if result_kind(model_result) == "err":
         return model_result
     models = result_value(model_result)
@@ -1842,7 +2023,8 @@ def handle_verdict_post(model, gid, docid, meta):
         return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: subject changed", refusal_subject_text)
     if fields.get("ledger_sha256") != model.get("ledger_file_digest", "absent"):
         return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: ledger changed", refusal_ledger_text)
-    audit_dir = guideline_path.joinpath("audit")
+    real_guideline_path = model.get("real_path", None)
+    audit_dir = real_guideline_path.joinpath("audit")
     ledger_path = audit_dir.joinpath("adjudication.tsv")
     if ledger_path.is_symlink():
         return error_response("ui: verdict: ledger not a regular file")
@@ -1855,7 +2037,7 @@ def handle_verdict_post(model, gid, docid, meta):
         now_text = now_value.strftime("%Y-%m-%dT%H:%M:%SZ")
     commit_text = serve_config.get("commit_pin", None)
     if commit_text == None:
-        commit_text = ace_commit_hex(guideline_path, docid)
+        commit_text = ace_commit_hex(real_guideline_path, docid, model.get("committed_corpus", False))
     tab_text = "\t"
     new_line = docid + tab_text + fields.get("review_sha256") + tab_text + commit_text + tab_text + fields.get("verdict") + tab_text + fields.get("reviewer") + tab_text + now_text + tab_text + fields.get("comment")
     new_key = docid + tab_text + now_text
@@ -1961,14 +2143,14 @@ def handle_verdict_post(model, gid, docid, meta):
         discard_tmp(tmp_text)
         return error_response("ui: verdict: ledger write failed")
     return redirect_response(gid, docid)
-def respond(root_path, method_text, path_text, meta):
+def respond(corpus, method_text, path_text, meta):
     shaped = doc_shaped(path_text)
     if method_text != "GET":
         if method_text != "POST":
             return method_response(shaped)
         if not shaped:
             return method_response(shaped)
-    model_result = build_viewmodel(root_path)
+    model_result = build_viewmodel(corpus)
     if result_kind(model_result) == "err":
         return error_response(result_value(model_result))
     models = result_value(model_result)
@@ -2076,7 +2258,14 @@ def wsgi_app(environ, start_response):
             if len(read_bytes) == length_num:
                 body_value = read_bytes
     meta.update({"body": body_value})
-    triple = respond(root_path, method_text, path_text, meta)
+    corpus_result = resolve_corpus(root_path)
+    triple = None
+    if result_kind(corpus_result) == "err":
+        triple = error_response(result_value(corpus_result))
+    else:
+        corpus = result_value(corpus_result)
+        triple = respond(corpus, method_text, path_text, meta)
+        release_corpus(corpus)
     triple_copy = list(triple)
     status_text = triple_copy.pop(0)
     headers = triple_copy.pop(0)
@@ -2132,7 +2321,13 @@ def render_command(args):
         err_line("ui: render: destination not empty: " + outdir_text)
         raise SystemExit(2)
     root_path = pathlib.Path(root_text)
-    result = render_tree(root_path, out_path)
+    corpus_result = resolve_corpus(root_path)
+    if result_kind(corpus_result) == "err":
+        err_line(result_value(corpus_result))
+        raise SystemExit(1)
+    corpus = result_value(corpus_result)
+    result = render_tree(corpus, out_path)
+    release_corpus(corpus)
     if result_kind(result) == "err":
         err_line(result_value(result))
         raise SystemExit(1)
@@ -2158,13 +2353,14 @@ def check_ui_command(args):
     detail = ""
     summary = {}
     asset_rels = []
-    result_one = render_tree(root_path, path_one)
+    corpus = worktree_corpus(root_path)
+    result_one = render_tree(corpus, path_one)
     if result_kind(result_one) == "err":
         detail = result_value(result_one)
     else:
         summary = result_value(result_one)
         asset_rels = summary.get("asset_rels", [])
-        result_two = render_tree(root_path, path_two)
+        result_two = render_tree(corpus, path_two)
         if result_kind(result_two) == "err":
             detail = result_value(result_two)
     if detail == "":
@@ -2307,7 +2503,14 @@ def request_command(args):
     no_query = query_parts.pop(0)
     path_text = urllib.parse.unquote(no_query)
     root_path = pathlib.Path(root_text)
-    triple = respond(root_path, method_text, path_text, meta)
+    corpus_result = resolve_corpus(root_path)
+    triple = None
+    if result_kind(corpus_result) == "err":
+        triple = error_response(result_value(corpus_result))
+    else:
+        corpus = result_value(corpus_result)
+        triple = respond(corpus, method_text, path_text, meta)
+        release_corpus(corpus)
     triple_copy = list(triple)
     status_text = triple_copy.pop(0)
     headers = triple_copy.pop(0)
