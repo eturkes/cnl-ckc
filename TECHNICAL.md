@@ -1,7 +1,7 @@
 # cnl-ckc technical reference
 
 This file is the technical reference for developers and for the agents
-that maintain the corpus. `README.md` is the clinician-facing overview.
+that maintain the corpus. `README.md` is the simplified overview.
 
 cnl-ckc is a minimal, fully auditable pipeline. It turns clinical
 guidelines into executable Prolog through controlled natural language:

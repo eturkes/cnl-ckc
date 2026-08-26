@@ -1,54 +1,65 @@
 # cnl-ckc
 
-This project turns published clinical guidelines into a knowledge base
-that software can search. It rewrites each guideline passage as short
-sentences in Attempto Controlled English (ACE). ACE is a form of
-English that a computer can also read. A compiler turns those
-sentences into a formal record of what the guideline states.
-Clinicians review each rewritten document against the exact passage
-that it came from.
+cnl-ckc (Controlled Natural Language - Clinical Knowledge Compiler)
+turns published clinical guidelines into a computable knowledge base
+with a complete audit trail. Every guideline statement
+is written in Attempto Controlled English (ACE): sentences that read
+as plain English and also parse as formal logic. A compiler turns them
+into plain Prolog that any standard engine can load and query.
+Clinicians review each statement beside the exact guideline passage
+that it came from, and every decision stays on record.
+
+## Design
+
+- **One readable source of truth.** Each guideline passage becomes a
+  short ACE document. The sentences that a clinician reviews are the
+  same source that the compiler consumes — there is no second,
+  hidden encoding to trust.
+- **Plain Prolog as the product.** The compiled knowledge base is
+  ordinary Prolog clauses over a small, fixed vocabulary. Modality
+  ("should", "must") and negation are recorded as data, not buried in
+  code, and any conforming engine can load the result.
+- **Proof-checked compilation.** The compiler derives a proof
+  obligation for every sentence and discharges it before it emits
+  anything: a shipped clause is one that the compiler has proved
+  follows from the sentence it quotes. Committed questions ship with
+  answers and proof traces that name the exact clause lines used.
+- **Review against exact versions.** The reviewer site shows each ACE
+  document beside its original passage and its compiled Prolog. A
+  decision binds to the precise version judged; a later change marks
+  it outdated, and no decision is ever deleted.
+- **A small trusted base.** Everything a human must read is controlled
+  English, a direct compilation of it, or part of two small named
+  compiler forks. Even the project's own tools are compiled from an
+  English-like language.
 
 ## What the repository holds
 
-- The original guideline files, stored unchanged, with a record of
-  where each file came from and when.
-- The rewritten documents. Each document covers one passage of the
-  guideline.
-- The compiled knowledge base that software loads and queries.
-- The decision records: every review decision, kept with the exact
-  version of the document that it judged.
-
-The first guideline in the collection is the CDC Clinical Practice
-Guideline for Prescribing Opioids for Pain (2022).
+The original guideline files, stored unchanged with their retrieval
+records; the ACE documents, one per guideline passage; the compiled
+Prolog; and every review decision. The first guideline in the
+collection is the CDC Clinical Practice Guideline for Prescribing
+Opioids for Pain (2022).
 
 ## Scope and limits
 
 - The knowledge base reports what the loaded guidelines state. It is
   not clinical advice, and it does not interpret a guideline for a
   patient.
-- Each rewritten document is a simplified version of its passage, not
-  a complete copy. The review pages show the original text beside the
-  rewritten text, so that you can judge the difference.
+- Each ACE document is a deliberately simplified projection of its
+  passage, not a complete copy. The review pages put the original text
+  beside it so that the simplification is always visible.
 - The stored questions and answers are prepared demonstrations, not a
   clinical search service.
 
-## How review works
+## Reviewing
 
-The review site runs only on the local computer. It is not on the
-internet, and it has no accounts.
-
-1. Start the site with `python3 -P tools/ui.py serve`. If you do not
-   run commands yourself, ask a technical colleague to start it.
-2. Open the address that the command prints.
-3. Choose a guideline, then choose a document.
-4. Read the rewritten sentences beside the original passage.
-5. Answer one question: does the ACE representation appropriately
-   reflect the original passage? Record your decision as approved or
-   rejected, with your name and an optional comment.
-
-Every decision stays on record. When a document changes later, the
-site marks the old decision as outdated; no decision is deleted.
-The site records the name that you type. It does not verify names.
+Start the site with `python3 -P tools/ui.py serve` and open the
+address that it prints. The site runs only on the local computer, with
+no accounts and no JavaScript. Each document page asks one question:
+does the ACE representation appropriately reflect the original
+passage? Record approve or reject, with your name and an optional
+comment. The site records the name as typed and does not verify it.
 
 ## Technical reference
 

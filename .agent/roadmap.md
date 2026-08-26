@@ -89,7 +89,7 @@ dist red suite; findings, residuals + rulings = the review record in
 
 Live law = TECHNICAL.md (schema, Operating, Export, query/trace sections)
 + project `CLAUDE.md` clinician design law; root `README.md` = the
-clinician-facing overview. Architecture rulings, unit
+simplified overview. Architecture rulings, unit
 records, gauges, sizing, assurance + out-of-scope =
 `.agent/archive/ui.md`; history = `git log --grep "(M4[. ]" -p --
 .agent/roadmap.md .agent/archive/` + `git log --grep "(M4 review)"`.
