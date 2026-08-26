@@ -1,7 +1,8 @@
 # cnl-ckc technical reference
 
 This file is the technical reference for developers and for the agents
-that maintain the corpus. `README.md` is the simplified overview.
+that maintain the corpus. The root `README.md` is the simplified
+overview.
 
 cnl-ckc is a minimal, fully auditable pipeline. It turns clinical
 guidelines into executable Prolog through controlled natural language:
@@ -570,7 +571,7 @@ the repository root, driven by the built-in `/goal` stop-condition
 command:
 
 ```
-/goal Process American clinical guidelines through the pipeline as described in TECHNICAL.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when either (a) the user has asked to stop, pause, or wind down — the request alone meets this goal at any point, even mid-round with the worklist unfinished; start nothing new, state where work stands, and stop — or (b) every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
+/goal Process American clinical guidelines through the pipeline as described in docs/REFERENCE.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when either (a) the user has asked to stop, pause, or wind down — the request alone meets this goal at any point, even mid-round with the worklist unfinished; start nothing new, state where work stands, and stop — or (b) every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
 ```
 
 The goal re-arms each time Claude tries to stop, and it survives
@@ -650,7 +651,7 @@ While a document is in progress, a round advances it one increment:
 4. **Close** — `python3 -P tools/goal.py check` must be green; when E--
    sources changed, `python3 -P tools/regen.py --check` must be green
    too. Make a scoped commit. When the commit touches `guidelines/`,
-   the vendored compiler or lexicon, `NOTICE`, or the `TECHNICAL.md`
+   the vendored compiler or lexicon, `NOTICE`, or the `docs/REFERENCE.md`
    schema section, `release-manifest.tsv` goes stale: regenerate it with
    `python3 -P tools/goal.py release-manifest` and commit it as a
    follow-up. Update `.agent/queue.md` and the guideline README's

@@ -290,16 +290,16 @@ def ledger_classes(gid, staged, digest_map):
                     doc_class = "rejected"
         class_map.update({docid: doc_class})
     return class_map
-def schema_section(technical_text):
+def schema_section(reference_text):
     anchor = "## Compiled Prolog schema"
-    head_parts = list(technical_text.partition("\n" + anchor))
+    head_parts = list(reference_text.partition("\n" + anchor))
     head_parts.pop(0)
     anchor_sep = head_parts.pop(0)
     after_text = head_parts.pop(0)
     if anchor_sep == "":
-        if not technical_text.startswith(anchor):
+        if not reference_text.startswith(anchor):
             return [False, ""]
-        after_text = technical_text.removeprefix(anchor)
+        after_text = reference_text.removeprefix(anchor)
     tail_parts = list(after_text.partition("\n## "))
     section_body = tail_parts.pop(0)
     tail_sep = tail_parts.pop(0)
@@ -446,9 +446,9 @@ def derive_release(repo_dir):
     lexicon_bytes = pair.pop(0)
     if input_detail != "":
         return [input_detail, empty_plan]
-    pair = head_input_bytes(repo_dir, "HEAD:TECHNICAL.md", "no-input TECHNICAL.md", empty_plan)
+    pair = head_input_bytes(repo_dir, "HEAD:docs/REFERENCE.md", "no-input docs/REFERENCE.md", empty_plan)
     input_detail = pair.pop(0)
-    technical_bytes = pair.pop(0)
+    reference_bytes = pair.pop(0)
     if input_detail != "":
         return [input_detail, empty_plan]
     pair = head_input_bytes(repo_dir, "HEAD:NOTICE", "no-input NOTICE", empty_plan)
@@ -456,21 +456,21 @@ def derive_release(repo_dir):
     notice_bytes = pair.pop(0)
     if input_detail != "":
         return [input_detail, empty_plan]
-    technical_text = ""
+    reference_text = ""
     notice_text = ""
     decode_ok = True
     try:
-        technical_text = technical_bytes.decode("utf-8")
+        reference_text = reference_bytes.decode("utf-8")
         notice_text = notice_bytes.decode("utf-8")
     except UnicodeDecodeError:
         decode_ok = False
     if not decode_ok:
-        return ["no-input TECHNICAL.md", empty_plan]
-    pair = schema_section(technical_text)
+        return ["no-input docs/REFERENCE.md", empty_plan]
+    pair = schema_section(reference_text)
     schema_ok = pair.pop(0)
     schema_text = pair.pop(0)
     if not schema_ok:
-        return ["no-input TECHNICAL.md schema section", empty_plan]
+        return ["no-input docs/REFERENCE.md schema section", empty_plan]
     gid_list = sorted(gid_map)
     profile_map = {}
     url_map = {}

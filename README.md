@@ -63,7 +63,7 @@ comment. The site records the name as typed and does not verify it.
 
 ## Technical reference
 
-`TECHNICAL.md` states the pipeline, the checks, the compiled schema,
-the operating procedure, and the export format. Each guideline folder
+`docs/REFERENCE.md` states the pipeline, the checks, the compiled
+schema, the operating procedure, and the export format. Each guideline folder
 records its source, retrieval date, and rights in its own `README.md`.
 `LICENSE` and `NOTICE` state the license terms.
