@@ -1,0 +1,2 @@
+If a patient has an other-clinician-concurrent-controlled-medication-prescription then every clinician should check a state-PDMP-record for the patient.
+If a patient has an opioid-central-nervous-system-depressant-coprescription then every clinician should consider a pharmacist-management-team-involvement for the patient.

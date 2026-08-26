@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec01-imp01',ace_sha256(f03a66470307db0b5004dcda583ae54d8f91ba03d9c9c0033c67a92f7cc88568),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-rec01-imp01',ace_sha256(f03a66470307db0b5004dcda583ae54d8f91ba03d9c9c0033c67a92f7cc88568),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: Every clinician should maximize a nonopioid-pharmacologic-therapy for a specific-condition and should maximize a nonpharmacologic-therapy for a specific-condition.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec01-imp01',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec01-imp01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec01-imp01',1,ref(2),[A]),'nonopioid-pharmacologic-therapy',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

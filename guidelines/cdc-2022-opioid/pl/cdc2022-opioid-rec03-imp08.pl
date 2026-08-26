@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec03-imp08',ace_sha256('4a215a24449cbb181983d54ac5dc9e7a487c6d88e0df719f7e0a0dccb2a1ce9e'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-rec03-imp08',ace_sha256('4a215a24449cbb181983d54ac5dc9e7a487c6d88e0df719f7e0a0dccb2a1ce9e'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: If a clinician does not understand a transdermal-fentanyl-dosing then the clinician should not consider a transdermal-fentanyl-prescription.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec03-imp08',1,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'transdermal-fentanyl-dosing',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,understand), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec03-imp08',1,box(2),[A]),'$guideline_id'(context,'cdc2022-opioid-rec03-imp08',1,box(3),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'transdermal-fentanyl-dosing',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,understand), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).

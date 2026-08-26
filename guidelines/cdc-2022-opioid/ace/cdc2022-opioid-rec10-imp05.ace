@@ -1,0 +1,2 @@
+If a patient has a toxicology-screening-result then every clinician should consider the toxicology-screening-result with an other-clinical-information for the patient.
+If a clinician addresses a potential-toxicology-screening-limitation then the clinician should consider a toxicology-screening.

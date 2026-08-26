@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s26-07',ace_sha256('342d9b7ecfac7876e4d34792c351df111e22eac4f52de209eb4c76fb7cac390e'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-s26-07',ace_sha256('342d9b7ecfac7876e4d34792c351df111e22eac4f52de209eb4c76fb7cac390e'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: Every primary-care-clinician may encourage an active-care-plan-role for a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s26-07',1,box(1),[A]),may) :- guideline_entity(actual,A,'primary-care-clinician',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s26-07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s26-07',1,ref(2),[A]),'active-care-plan-role',countable) :- guideline_entity(actual,A,'primary-care-clinician',countable), guideline_cardinality(actual,A,na,eq,1).

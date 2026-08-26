@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp08',ace_sha256('8d54372e2215933e970277407db550ba505dfa50b4b014db0d73a8380ec653df'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-rec05-imp08',ace_sha256('8d54372e2215933e970277407db550ba505dfa50b4b014db0d73a8380ec653df'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: If a patient engages in an opioid-taper then every clinician should conduct an at-least-monthly-follow-up with the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp08',1,ref(5),[A,B,C,D]),'at-least-monthly-follow-up',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,engage), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

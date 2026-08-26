@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s33-06',ace_sha256(cb891c058b9b75437b7e96072496879920b4263ee6608d45aa404607a942f854),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-s33-06',ace_sha256(cb891c058b9b75437b7e96072496879920b4263ee6608d45aa404607a942f854),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: Every clinician should not use a conversion-factor for an opioid-use-disorder-dosage-decision.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s33-06',1,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-s33-06',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-s33-06',1,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

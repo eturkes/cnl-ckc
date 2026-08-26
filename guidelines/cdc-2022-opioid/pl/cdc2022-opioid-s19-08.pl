@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s19-08',ace_sha256(be2769e197e693317777c257b3efd7d9ea59272a44ec61df6bd159632a757ba9),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-s19-08',ace_sha256(be2769e197e693317777c257b3efd7d9ea59272a44ec61df6bd159632a757ba9),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: If a patient has a pain then the patient should receive a greatest-benefit-relative-to-risk-treatment.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s19-08',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,pain,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s19-08',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s19-08',1,ref(4),[A,B,C]),'greatest-benefit-relative-to-risk-treatment',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,pain,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

@@ -1,0 +1,7 @@
+If a toxicology-test-result informs a clinical-decision and the clinical-decision has a major-implication for a patient then every clinician should use a confirmatory-testing for the toxicology-test-result.
+If a toxicology-test-result informs a nonclinical-decision and the nonclinical-decision has a major-implication for a patient then every clinician should use a confirmatory-testing for the toxicology-test-result.
+If a clinician needs a specific-opioid-detection then the clinician should use a confirmatory-testing.
+If a clinician needs a prescribed-opioid-detection then the clinician should use a confirmatory-testing.
+If a clinician needs a within-class-drug-detection then the clinician should use a confirmatory-testing.
+If a clinician considers a drug and a standard-immunoassay does not identify the drug then the clinician should use a confirmatory-testing for the drug.
+If a patient has an unexpected-screening-toxicology-test-result then every clinician should use a confirmatory-testing for the unexpected-screening-toxicology-test-result.

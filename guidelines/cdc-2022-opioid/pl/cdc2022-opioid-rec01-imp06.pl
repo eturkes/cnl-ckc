@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec01-imp06',ace_sha256(fe179b2c63e598fc107cea0f518fc6326b4a75cd516c4c623104ad5b745d3351),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-rec01-imp06',ace_sha256(fe179b2c63e598fc107cea0f518fc6326b4a75cd516c4c623104ad5b745d3351),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: An opioid-therapy has an important-role for an acute-pain that relates to a severe-traumatic-injury.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp06',1,ref(1),[]),'opioid-therapy',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp06',1,ref(1),[]),na,eq,1).

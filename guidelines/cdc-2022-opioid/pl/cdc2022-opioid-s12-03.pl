@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s12-03',ace_sha256('2d70ab2b1563bc96d260a9e99691b1927f3a6ff789e97bf00a1ae54fb90fdaae'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-s12-03',ace_sha256('2d70ab2b1563bc96d260a9e99691b1927f3a6ff789e97bf00a1ae54fb90fdaae'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: For every category-B-recommendation every clinician must help a patient with a category-B-decision.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s12-03',1,box(1),[A,B]),must) :- guideline_entity(actual,A,'category-B-recommendation',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s12-03',1,box(1),[A,B]),'$guideline_id'(product,'cdc2022-opioid-s12-03',1,ref(3),[A,B]),patient,countable) :- guideline_entity(actual,A,'category-B-recommendation',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).

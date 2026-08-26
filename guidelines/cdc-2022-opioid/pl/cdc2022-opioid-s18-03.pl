@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s18-03',ace_sha256('28450821f8cf512e44942428570983dd00a8c15278af32d1800f1be91d25b587'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-s18-03',ace_sha256('28450821f8cf512e44942428570983dd00a8c15278af32d1800f1be91d25b587'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: If a patient has an acute-pain then every clinician should assess the acute-pain and should treat the acute-pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s18-03',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'acute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s18-03',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s18-03',1,ref(5),[A,B,C,D]),assess) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'acute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

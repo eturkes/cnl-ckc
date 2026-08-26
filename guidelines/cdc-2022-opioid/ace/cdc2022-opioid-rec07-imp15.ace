@@ -1,0 +1,10 @@
+If a patient has a continued-opioid-risk and the patient has a continued-opioid-benefit and the continued-opioid-risk outweighs the continued-opioid-benefit then the patient has an opioid-taper-indication.
+If a patient does not have a meaningful-sustained-pain-improvement and the patient does not have a meaningful-sustained-function-improvement then the patient has an opioid-taper-indication.
+If a patient has a combined-opioid-dosage and the combined-opioid-dosage includes at least 50 MME-units-per-day and the patient does not have an evidence-of-opioid-benefit then the patient has an opioid-taper-indication.
+If a patient takes an opioid with a benzodiazepine and the patient does not have an evidence-of-opioid-benefit then the patient has an opioid-taper-indication.
+If a patient has an unfavorable-continued-opioid-benefit-risk-assessment then the patient has an opioid-taper-indication.
+If a patient requests a dosage-reduction then the patient has an opioid-taper-indication.
+If a patient requests an opioid-discontinuation then the patient has an opioid-taper-indication.
+If a patient experiences an overdose then the patient has an opioid-taper-indication.
+If a patient experiences a serious-opioid-adverse-event then the patient has an opioid-taper-indication.
+If a patient has an opioid-taper-indication then every clinician should collaborate with the patient during an opioid-taper and may reduce an opioid-dosage for the patient and may discontinue an opioid for the patient.

@@ -88,6 +88,19 @@ that it was published with.
 
   Guideline scope and misapplication regions take the guideline or
   recommendation itself as rule subject.
+- `ace/` recommendation 6–12 documents — one ACE document per formalized
+  recommendation 6–12 body or implementation-consideration region,
+  special-populations region, and conclusion region (151 documents;
+  docid rules unchanged: reserved-ordinal `recNN-impKK` for
+  implementation lists, the region id lowercased otherwise). These
+  documents follow the same knowledge-only projection contract and
+  `audit/projection-notes.tsv` discipline. Additional actor classes
+  ruled in:
+  - `care-coordinating-clinician`, `other-clinician`, and
+    `substance-use-disorder-treatment-provider` (human);
+  - `prolonged-severe-acute-pain-care-mechanism` (neutral);
+  - `clinical-practice-organization` and `health-system` carry the
+    organization-level naloxone-access and care-coordination duties.
 - `lexicon.ulex` — the guideline's APE user lexicon (domain compounds
   shared by all documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog that
@@ -126,21 +139,24 @@ guideline conclusions.
   parenthetical and simplified action rules. It adds one document per
   formalized recommendation 1–5 implementation-consideration region
   (67 documents). It adds one document per formalized front-matter and
-  recommendation 1–5 rationale region (107 documents). The rules encode
+  recommendation 1–5 rationale region (107 documents). It adds one
+  document per formalized recommendation 6–12 body,
+  implementation-consideration, special-populations, and conclusion
+  region (151 documents). The rules encode
   deontic modality ("should"), conditions, and negation where the source
   region states them. `audit/projection-notes.tsv` (kept/dropped columns)
   and `coverage.tsv` record each document's remaining simplifications per
   region.
 - `coverage.tsv` records one status row per payload region (all 718), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (186);
+  - `ace(<docid>)` — formalized (337);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
     region (262);
   - `uncovered(<class>: <reason>)` — deliberately not formalized (119;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet
-    authored (151 — the authoring worklist, all in
-    `source/rec06-12-body-extraction.txt`).
+    authored (0 — the recommendation 6–12 worklist closed with the
+    ace-wave2 documents).
 
   Restatement links target the canonical full statement: the Box 3 text
   for recommendation restatements, the main-text list for the guiding

@@ -1,0 +1,8 @@
+Every nonpharmacologic-treatment-modality is a treatment-modality.
+Every pharmacologic-treatment-modality is a treatment-modality.
+Every medication-nonpharmacologic-therapy-combination is a treatment-modality.
+If a patient has a pain then every clinician should select a treatment-modality for the patient.
+If a patient has a pain then every clinician may select a nonpharmacologic-treatment-modality for the patient.
+If a patient has a pain then every clinician may select a pharmacologic-treatment-modality for the patient.
+If a patient has a pain then every clinician may select a medication-nonpharmacologic-therapy-combination for the patient.
+If a clinician selects a treatment-modality for a patient then the clinician should maximize a patient-safety with the treatment-modality and should optimize a pain-outcome for the patient with the treatment-modality and should optimize a function-outcome for the patient with the treatment-modality and should optimize a quality-of-life-outcome for the patient with the treatment-modality.

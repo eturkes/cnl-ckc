@@ -1,0 +1,7 @@
+If a patient has a depression then the patient has a higher-opioid-harm-risk.
+If a patient has a mental-health-condition then the patient has a higher-opioid-harm-risk.
+If a patient has a substance-use-disorder-history then the patient has a higher-opioid-harm-risk.
+If a patient has an overdose-history then the patient has a higher-opioid-harm-risk.
+If a patient has a combined-opioid-dosage and the combined-opioid-dosage includes at least 50 MME-units-per-day then the patient has a higher-opioid-harm-risk.
+If a patient takes a central-nervous-system-depressant with an opioid then the patient has a higher-opioid-harm-risk.
+If a patient has a higher-opioid-harm-risk and a higher-risk-opioid-reevaluation-schedule has a reevaluation-interval and the reevaluation-interval includes less than 3 months then every clinician should use the higher-risk-opioid-reevaluation-schedule for the patient.

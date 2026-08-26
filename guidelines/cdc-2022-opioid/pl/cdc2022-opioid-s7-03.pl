@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s7-03',ace_sha256('12b963584277e9e447444935fbe9f645a1267a9a400ecba95cab4ad012baca16'),ulex(sha256(ef57ba7180864095bab88b95f11ddb1a2c858593eba715dbfbe874db09506c5b))).
+guideline_document('cdc2022-opioid-s7-03',ace_sha256('12b963584277e9e447444935fbe9f645a1267a9a400ecba95cab4ad012baca16'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
 % S1: Every recommendation applies during a pain-management-prescription at a facility-discharge.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s7-03',1,ref(2),[A]),'pain-management-prescription',countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s7-03',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).
