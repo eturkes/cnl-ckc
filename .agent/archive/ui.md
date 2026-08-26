@@ -1,17 +1,15 @@
 # Adjudication UI + query/trace compiler foundation (M4)
 
-UNITS SHIPPED, REVIEW PENDING milestone record; stub = `.agent/roadmap.md`.
-Live law = README (schema, Operating, query/trace sections) + project
-`CLAUDE.md` clinician design law + the architecture rulings below. This
-file is the milestone review's claim surface beside
-`.scratch/contracts/m4u*.md`; the review sets this header REVIEWED and
-appends its record.
+REVIEWED milestone record; stub = `.agent/roadmap.md`. Live law =
+README (schema, Operating, Export, query/trace sections) + project
+`CLAUDE.md` clinician design law + the architecture rulings below.
+Review record = the final section of this file.
 
 Goal (rescoped: the query-demonstrator tab, graph-explorer tab +
 portable-KB-dist units left M4 and are out of project scope —
 feature-complete ruling): a local reviewer UI (strict E--,
 zero JS) that lists every ACE document with review status, shows each
-beside its exact source region(s), projection notes and compiled Prolog,
+beside its exact source region and compiled Prolog,
 and records approve/reject + comment verdicts in a gated audit ledger
 (M4.1–M4.4), plus the question→answer→trace compiler (M4.5–M4.7); M4.13
 closes the review surface under the clinician design law; post-close
@@ -23,8 +21,8 @@ Terminal state (at M4.13 close d119e25): `python3 -P tools/goal.py check` +
 committed queries with answers + traces; fixture corpora `ui fixtures ok 75
 red 13 green`, `adjudication fixtures ok 42 red 9 green`, `copy fixtures ok
 10 red 2 green`; `goal: copy ok 1353 literals`;
-`.scratch/regen-ui-fixtures.sh` fail=0; clinician QA 14 screens + 3 print
-sheets (`.scratch/m4u13-qa/`).
+`.scratch/regen-ui-fixtures.sh` fail=0; clinician QA 16 screens (2
+partial-top captures) + 3 print sheets (`.scratch/m4u13-qa/`).
 
 Plan reviewed adversarially at planning time: `planrev-m4` report =
 `.scratch/agents/planrev-m4.md` (8 lenses; the unit split, tiers,
@@ -38,7 +36,7 @@ Architecture rulings:
 
 - UI = one local WSGI server compiled from strict E-- (`tools/ui.emm` →
   `tools/ui.py`; wsgiref, 127.0.0.1, single-threaded), every page
-  server-rendered HTML/SVG from committed state; zero JavaScript, zero
+  server-rendered HTML from committed state; zero JavaScript, zero
   committed HTML/CSS files (markup + a small cohesive design system
   emitted by E-- code; typed render helpers per context — text, quoted
   attribute, URL/query component, id — no raw corpus/user string reaches
@@ -49,7 +47,8 @@ Architecture rulings:
   html + urllib.parse (escaping/decoding), pathlib/os (fs + atomic
   replace), hashlib (digests), subprocess (shared validator), tempfile +
   shutil (snapshot staging + scratch trees), datetime (UTC verdict
-  stamps), re (census/anchor parsing), tarfile + gzip (KB export) —
+  stamps), re (census/anchor parsing), tarfile (committed snapshot
+  extraction) —
   hand-written code owns project semantics only, never HTTP parsing, URL
   grammar, archive encoding, or fs primitives.
 - Serve time reads committed artifacts + the adjudication ledger only —
@@ -285,8 +284,9 @@ Former 4.8–4.11 rescoped out of M4, later dropped from project scope
   (v1..v4 + v5.1-v5.6 rulings). Close gates: `goal.py check` +
   `regen.py --check` green; `check_ui` 75 red / 13 green fixtures + live
   189 pages; `check_copy_register` 1353 literals; `regen-ui-fixtures.sh`
-  fail=0; clinician QA rebuilt (14 screens + 3 print sheets,
-  `.scratch/m4u13-qa/`). The committed-corpus law is invisible by user
+  fail=0; clinician QA rebuilt (16 screens, 2 of them partial-top
+  captures, + 3 print sheets, `.scratch/m4u13-qa/`). The
+  committed-corpus law is invisible by user
   ruling, so it rides two `worktree/` git-corpus fixtures rather than
   copy — machinery + non-vacuity probe in `.agent/memory.md`.
 
@@ -323,3 +323,91 @@ stay `/goal` rounds); remote or multi-user serving, auth beyond the
 loopback CSRF posture, TLS; JavaScript or any browser-side computation;
 WASM Prolog; defeasibility; serving APIs (standing direction unchanged for
 downstream consumers).
+
+## Final project review record (M4 review + project close)
+
+Review commits (`git log --grep "(M4 review)"`, base 574a192): 5d206b5
+polish rows 6+7 → 9071405 README claim batch → 7a00152 F1/F3/F10/F5 +
+grammar totality → 3c7a9a5 F13 clinician leaks + fixture adoptions →
+941ff09 u3 P1/P2 (manifest dup shadow, dup-detail order, ASCII digit
+guards) → ec98622 B1 polish rows 1-5 (walled swipl runner, cwd-free
+require, census-map gate, ledger-commit verify; register closed) →
+f738a16 B2 (golden-lane pin map, fixture census counts,
+bigint/backtracking cases) → 8dc4e45 C (clause census, row-birth
+invariant, canonical_error_tree, float_class law + trace probe,
+carrier-table anchors) → a2da7d4 + 511a6d2 KB export. Portfolio:
+rev-m4u1..u7 + rev-m4u13 per-unit, xrev-m4 cross-cutting, audit-m4
+24-row claim replay, res-dist format survey (BagIt 1.0 ruling),
+test-dist 62-case diff-blind red suite. gpt-5.6-sol's content filter
+killed rev-m4u4 ×4 + xrev-m4 on security vocabulary; reports harvested,
+gaps recorded below. Worktree evidence tips preserved as
+`archive/m4rev-<name>` tags; worktrees + `wt/` branches deleted.
+
+Fixed findings (acceptance-passed under MAIN rerun): F1 ledger CAS
+TOCTOU → flock sibling + pre-replace digest re-verify (council ×2:
+xrev e45ce94, u13 e155cce). F2 adjudication fixture floor 42/9. F3
+resolve_corpus races → hex resolved once per operation, `git archive
+<hex>`, always-snapshot when git usable. F4 trace-reject lane + exact
+stem pins. F5 `request --commit` 40-hex law. F6 strict usage/io rc2
+in-gate self-probes through exit_two. F7 M4U1_ROOT battery replay
+(absolute fixture paths). F8 memory Catch/SystemExit precision. F9
+census int totality (locator-less rows = canonical-string compare;
+goal-side eager int pinned red) + valid_ui_id encode guard. F10 POST
+body read only after route/model/Host/Origin/CT guards; GET never
+reads the body. F12 query_anchor payload preemption → carrier-table
+walk. F13 clinician id leaks → title links, citation crumbs,
+Current/Earlier labels, copy-functor + copy-short-hex invariants. F14
+non-finite floats → float_class ∉ {infinite,nan} + goal
+check_trace_nonfinite_probe. F15 golden-regen sha1 pin (ui_git_env).
+
+Audit-m4: 24 rows verified except era-bound scratch evidence — m4u6
+suite/differential, m4u4 battery, m4u13 diff-blind suite (dispositions
++ current numbers = memory ERA-BOUND annotations; replay from
+claim-era commits) — and the QA count (16 screens, archive corrected);
+7 archival families skipped on cost (incl. m4u7 determinism 64/64).
+
+Accepted residuals + rulings (no further code change):
+- u3 page-invariant lexical over-match: pre-text over-match stays;
+  esc_text renders it harmless, unreachable via compiler corpus.
+- resolve_corpus filesystem mode remains for git-unusable trees
+  (fixture surface); live path = snapshot-only (F3).
+- No POST body-size cap: forged Host+Origin = local caller = outside
+  the loopback threat model; availability residual (u4 R16).
+- rev-m4u4 row 5: no independent reviewer verdict-corpus pass
+  (reviewer filter-dead ×4); compensated by the committed verdict-*
+  corpus + MAIN acceptance-checklist reruns.
+- u1 row 6: mixed-invalid duplicate precedence across strict fixture
+  classes = contract spec gap; current behavior stands.
+- ui Try-guarded int() accepts Unicode-Nd in Content-Length/port;
+  guarded + value-identical → retained.
+- F11 derive-review-manifest tmpdir leaks on the violation exit path;
+  process-exit scope → retained.
+- Cross-class dup-vs-malformed coverage precedence = malformed-first.
+- F14 embodiment deviation: trace-reject-pair rc2 design superseded by
+  check_trace_nonfinite_probe (TR lane pins rc2-only; observed class =
+  rc1 proof).
+- test-dist a04 expectation corrected g-fetch → g-red (scenario
+  mutates g-red; suite defect).
+- README-dist intro head dropped: an embedded input-head drifted
+  README-dist.md on every corpus commit, and it key-sorts before
+  data/**, breaking the pinned manifest_source_drift path.
+
+KB export shipped (KB production bar): `tools/dist.emm`→`dist.py`
+committed-state derivation + BagIt 1.0 build, goal `check_dist` (6
+self-probes, live build ×2 byte-compare, layout closure, `sha256sum
+-c`), `release-manifest.tsv` writer, `tests/dist/red.sh` 62/62,
+`guidelines/cdc-2022-opioid/rights.tsv` (redistributable, MMWR
+public-domain quote). Live meter `goal: dist ok 1 guidelines 408
+members 1203980 bytes` (input-head a2da7d4). UI production bar
+recorded: README Export — loopback-local, web hosting out of scope.
+Operating mechanics = memory "KB export" bullet.
+
+Close gates (post-dist, HEAD 511a6d2): full `goal.py check` rc=0 —
+`check ok 1 guidelines 186 documents 29 red probes`; meters strict
+36/14, adjudication 42/9, ui fixtures 81/14, ui 189 pages, copy 1414
+literals, queries fixtures 24/11, dist ok above; `tests/dist/red.sh`
+62/62; `regen.py --check` ok; fresh compile + `git diff --quiet --
+guidelines/` at the close commits. Session shape: MILESTONE-REVIEW
+across 6 compaction checkpoints, MAIN ~13.5M tokens; teammate
+high-water 249K (rev2-m4u3 era analog); review teammates ≤67%
+pre-harvest.

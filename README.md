@@ -40,9 +40,9 @@ compiler base:
   committed `.py` is byte-identical to a fresh compile of its `.emm`.
   It also flags any tracked Python outside `vendor/e--/src/` that has
   no `.emm` source. The reviewer interface is E-- like the rest. It
-  uses the `Try:`/`Catch <name>:` verbs that the E-- fork added for it.
-  A failing standard-library call then becomes a named HTTP outcome,
-  not a generic server error.
+  uses the `Try:`/`Catch <name>:` verbs that the E-- fork added for it
+  (`vendor/e--/docs/spec.md` § 5.4). A failing standard-library call
+  then becomes a named HTTP outcome, not a generic server error.
 - **Review is recorded, not asserted.** A reviewer decision names the
   exact bytes it judged. Each ledger row pins a bundle digest over the
   document's ACE text, its coverage row, its source region payload, and
@@ -115,7 +115,8 @@ compiler base:
   11. renders every reviewer page twice and byte-compares the two
       renders, replays the reviewer fixture corpus against pinned
       pages and pinned refusals, and scans every string the interface
-      can emit against the clinician copy register;
+      can emit — a standard-library `ast` walk over `tools/ui.py` —
+      against the clinician copy register;
   12. asserts that the compiler rejects each red probe with its named
       error class and exit status.
 
@@ -132,11 +133,13 @@ python3 -P tools/goal.py check                    # corpus acceptance gate
 python3 -P tools/regen.py --check                 # E-- → Python identity
 python3 -P tools/ui.py serve [<port>]             # reviewer interface
 python3 -P tools/ui.py render <outdir>            # static page export
+python3 -P tools/ui.py check                      # interface self-check (also part of goal check)
 ```
 
 ## Reviewer interface
 
-`tools/ui.py serve` starts the reviewer interface on `127.0.0.1`. It
+`tools/ui.py serve` starts the reviewer interface on `127.0.0.1`. The
+server is the Python standard library's `wsgiref`. The interface
 lists every guideline, then every document. Each document appears
 beside the exact source passage it was written from, its compiled
 Prolog, and its decision history. A reviewer answers one question per
@@ -643,10 +646,11 @@ While a document is in progress, a round advances it one increment:
    probes for the new rejection boundary.
 4. **Close** — `python3 -P tools/goal.py check` must be green; when E--
    sources changed, `python3 -P tools/regen.py --check` must be green
-   too. Make a scoped commit. When the commit touches `guidelines/` or
-   the vendored compiler, `release-manifest.tsv` goes stale: regenerate
-   it with `python3 -P tools/goal.py release-manifest` and commit it as
-   a follow-up. Update `.agent/queue.md` and the guideline README's
+   too. Make a scoped commit. When the commit touches `guidelines/`,
+   the vendored compiler or lexicon, `NOTICE`, or the README schema
+   section, `release-manifest.tsv` goes stale: regenerate it with
+   `python3 -P tools/goal.py release-manifest` and commit it as a
+   follow-up. Update `.agent/queue.md` and the guideline README's
    coverage statement.
 
 When no document is in progress, the round fetches the next source: the
