@@ -5,9 +5,11 @@ Use os.
 Use pathlib.
 Use re.
 Use shutil.
+Use signal.
 Use subprocess.
 Use sys.
 Use tempfile.
+Use time.
 
 Define [[fail]] taking category, detail:
     Set safe_detail to [[detail.replace]]("\n", "\\n").
@@ -43,6 +45,8 @@ Define [[valid_docid]] taking docid:
         Give back False.
     If leading_dash:
         Give back False.
+    If [[len]](docid) is greater than 250:
+        Give back False.
     Give back subset.
 
 Define [[resolve_swipl]] taking nothing:
@@ -75,7 +79,44 @@ Define [[make_scratch]] taking nothing:
     Do [[scratch_path.mkdir]]().
     Give back scratch_path.
 
+Set swipl_wall_seconds to 300.
+
+Define [[swipl_run_walled]] taking command, input_bytes, wall_seconds:
+    Set proc to [[subprocess.Popen]](command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True).
+    Set timed_out to False.
+    Set out_bytes to [[bytes]](<>).
+    Set err_bytes to [[bytes]](<>).
+    Try:
+        Set comm to [[proc.communicate]](input=input_bytes, timeout=wall_seconds).
+        Set comm_copy to [[list]](comm).
+        Set out_bytes to [[comm_copy.pop]](0).
+        Set err_bytes to [[comm_copy.pop]](0).
+    Catch subprocess.TimeoutExpired:
+        Set timed_out to True.
+        Try:
+            Do [[os.killpg]]([[os.getpgid]](proc.pid), signal.SIGKILL).
+        Catch ProcessLookupError:
+            Set timed_out to True.
+        Set comm to [[proc.communicate]]().
+        Set comm_copy to [[list]](comm).
+        Set out_bytes to [[comm_copy.pop]](0).
+        Set err_bytes to [[comm_copy.pop]](0).
+    Set result to [[subprocess.CompletedProcess]](command, proc.returncode, out_bytes, err_bytes).
+    Give back <timed_out, result>.
+
+Define [[bounded_swipl_run]] taking scratch_path, label, command, input_bytes:
+    Set pair to [[swipl_run_walled]](command, input_bytes, swipl_wall_seconds).
+    Set pair_copy to [[list]](pair).
+    Set timed_out to [[pair_copy.pop]](0).
+    Set result to [[pair_copy.pop]](0).
+    If timed_out:
+        Do [[cleanup_and_fail]](scratch_path, "swipl-timeout", label plus " exceeded " plus [[str]](swipl_wall_seconds) plus "s wall clock").
+    Give back result.
+
 Define [[stage_ape]] taking scratch_path, swipl_executable:
+    Set compiler_source to [[pathlib.Path]]("vendor/ape/prolog/ace_to_pl.pl").
+    If not [[compiler_source.is_file]]():
+        Do [[cleanup_and_fail]](scratch_path, "compiler-source", "missing: " plus [[str]](compiler_source)).
     Set stage_path to [[scratch_path.joinpath]]("ape-stage").
     Do [[shutil.copytree]]("vendor/ape", stage_path).
     Set stage_clex to [[stage_path.joinpath]]("prolog", "lexicon", "clex_lexicon.pl").
@@ -83,7 +124,7 @@ Define [[stage_ape]] taking scratch_path, swipl_executable:
     Set parser_dir to [[stage_path.joinpath]]("prolog", "parser").
     Set build_goal to "working_directory(_, '" plus [[parser_dir.as_posix]]() plus "'), [fit_to_plp], halt.".
     Set command to <swipl_executable, "-O", "-f", "none", "-F", "none", "-g", build_goal, "-t", "halt">.
-    Set result to [[subprocess.run]](command, capture_output=True).
+    Set result to [[bounded_swipl_run]](scratch_path, "ape-stage build", command, None).
     If result.returncode does not equal 0:
         Do [[relay_failure]](scratch_path, result).
     Set grammar_path to [[parser_dir.joinpath]]("grammar.plp").
@@ -106,7 +147,7 @@ Define [[compile_doc]] taking scratch_path, swipl_executable, stage_path, docid,
     For each extra_arg in extra_args:
         Do [[tail_args.append]](extra_arg).
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
-    Set result to [[subprocess.run]](command, input=ace_bytes, capture_output=True).
+    Set result to [[bounded_swipl_run]](scratch_path, "compile " plus docid, command, ace_bytes).
     If result.returncode does not equal 0:
         Do [[relay_failure]](scratch_path, result).
     If result.stderr:
@@ -122,7 +163,7 @@ Define [[compile_doc]] taking scratch_path, swipl_executable, stage_path, docid,
 Define [[check_doc_load]] taking scratch_path, swipl_executable, stage_path, pl_path:
     Set tail_args to <"check", [[str]](pl_path)>.
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
-    Set result to [[subprocess.run]](command, capture_output=True).
+    Set result to [[bounded_swipl_run]](scratch_path, "check-load " plus [[str]](pl_path), command, None).
     If result.returncode does not equal 0:
         Do [[relay_failure]](scratch_path, result).
     If result.stdout:
@@ -659,7 +700,7 @@ Define [[write_manifest]] taking manifest_path, manifest_pairs:
 Define [[run_aggregate]] taking scratch_path, swipl_executable, stage_path, manifest_path, doc_count:
     Set tail_args to <"aggregate-check", [[str]](manifest_path)>.
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
-    Set result to [[subprocess.run]](command, capture_output=True).
+    Set result to [[bounded_swipl_run]](scratch_path, "aggregate-check", command, None).
     If result.returncode does not equal 0:
         Do [[relay_failure]](scratch_path, result).
     If result.stderr:
@@ -675,7 +716,7 @@ Define [[run_aggregate]] taking scratch_path, swipl_executable, stage_path, mani
 Define [[run_recursion]] taking scratch_path, swipl_executable, stage_path, manifest_path, doc_count:
     Set tail_args to <"recursion-check", [[str]](manifest_path)>.
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
-    Set result to [[subprocess.run]](command, capture_output=True).
+    Set result to [[bounded_swipl_run]](scratch_path, "recursion-check", command, None).
     If result.returncode does not equal 0:
         Do [[relay_failure]](scratch_path, result).
     If result.stderr:
@@ -929,7 +970,7 @@ Define [[trace_scan_number]] taking chars, num_text:
                         Do [[chars.append]](exp_sign).
                     Do [[chars.append]](e1).
         Give back <"float", num_text>.
-    Give back <"int", [[int]](num_text)>.
+    Give back <"int", num_text>.
 
 Define [[trace_scan_tokens]] taking term_text:
     Set chars to [[list]](term_text).
@@ -1160,9 +1201,14 @@ Define [[trace_walk_node]] taking node, triples, node_marks:
     Set s_kind to [[s_copy.pop]](0).
     If s_kind does not equal "i":
         Give back False.
-    Set s_value to [[s_copy.pop]](0).
-    If s_value is less than 1:
+    Set s_text to [[s_copy.pop]](0).
+    If not [[s_text.isdigit]]():
         Give back False.
+    If [[s_text.startswith]]("0"):
+        Give back False.
+    If [[len]](s_text) is greater than 9:
+        Give back False.
+    Set s_value to [[int]](s_text).
     Set digest_copy to [[list]](digest_node).
     Set digest_kind to [[digest_copy.pop]](0).
     If digest_kind does not equal "c":
@@ -1425,6 +1471,8 @@ Define [[trace_block_table]] taking pl_path:
                     If not char_ok:
                         Set head_ok to False.
                 If [[marker_head.startswith]]("0"):
+                    Set head_ok to False.
+                If [[len]](marker_head) is greater than 9:
                     Set head_ok to False.
                 If head_ok:
                     Set current_block to [[int]](marker_head).
@@ -1817,6 +1865,24 @@ Define [[check_strict_detector]] taking env:
     If result.returncode does not equal 0:
         Do [[violation]]("strict-detector", "canonical detector disagrees on Try/Catch headers").
 
+Define [[check_strict_cli_probes]] taking env:
+    Set usage_command to <sys.executable, "-P", "-m", "e_minus_minus.strict">.
+    Set usage_result to [[subprocess.run]](usage_command, capture_output=True, env=env).
+    If usage_result.returncode does not equal [[strict_expected_exit]]("usage"):
+        Do [[violation]]("strict-usage-probe", "bad-argv probe status " plus [[str]](usage_result.returncode)).
+    Set usage_text to [[usage_result.stderr.decode]]("utf-8", errors="replace").
+    If not [[usage_text.startswith]]("strict:usage:"):
+        Do [[violation]]("strict-usage-probe", "bad-argv probe stderr class mismatch").
+    Set io_scratch to [[tempfile.mkdtemp]]().
+    Set io_command to <sys.executable, "-P", "-m", "e_minus_minus.strict", io_scratch plus "/absent.emm">.
+    Set io_result to [[subprocess.run]](io_command, capture_output=True, env=env).
+    Do [[shutil.rmtree]](io_scratch, ignore_errors=True).
+    If io_result.returncode does not equal [[strict_expected_exit]]("io"):
+        Do [[violation]]("strict-io-probe", "unreadable-input probe status " plus [[str]](io_result.returncode)).
+    Set io_text to [[io_result.stderr.decode]]("utf-8", errors="replace").
+    If not [[io_text.startswith]]("strict:io:"):
+        Do [[violation]]("strict-io-probe", "unreadable-input probe stderr class mismatch").
+
 Define [[check_strict_fixtures]] taking nothing:
     Set strict_root to [[pathlib.Path]]("tests/strict").
     Set root_symlink to [[strict_root.is_symlink]]().
@@ -1835,6 +1901,7 @@ Define [[check_strict_fixtures]] taking nothing:
     Set green_records to [[collect_strict_dir]]([[strict_root.joinpath]]("green"), ".golden", False).
     Set env to [[strict_compiler_env]]().
     Do [[check_strict_detector]](env).
+    Do [[check_strict_cli_probes]](env).
     Set red_count to 0.
     For each red_record in red_records:
         Set record_copy to [[list]](red_record).
@@ -1934,7 +2001,7 @@ Define [[run_red_probe]] taking scratch_path, swipl_executable, stage_path, prob
     If lexicon_present:
         Do [[tail_args.append]]([[str]](lexicon_path)).
     Set command to [[compiler_command]](swipl_executable, stage_path, tail_args).
-    Set result to [[subprocess.run]](command, input=probe_bytes, capture_output=True).
+    Set result to [[bounded_swipl_run]](scratch_path, "red-probe " plus probe_name, command, probe_bytes).
     If result.returncode does not equal expected_exit:
         Do [[cleanup_violation]](scratch_path, "red-exit", "status " plus [[str]](result.returncode) plus " for probe: " plus probe_name).
     If result.stdout:
@@ -2228,6 +2295,7 @@ Define [[check_compendium]] taking nothing:
     Do [[print]](summary).
 
 Set projection_header_text to "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes, row shape and per-document row\n# coverage are validated by goal.py check; kept/dropped prose stays document-owned.".
+Set census_row_rx to [[re.compile]]("p[0-9]{3}[.]C[0-9]{2}").
 Set coverage_header_text to "# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice".
 Set uncovered_class_names to <"heading", "process", "external", "aim", "descriptive", "notice">.
 Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
@@ -2285,6 +2353,48 @@ Define [[check_projection_ledger]] taking guideline_path:
         Do [[seen_docids.update]]({docid: True}).
         Do [[row_pairs.append]](<docid, region>).
     Give back row_pairs.
+
+Define [[check_census_map]] taking guideline_path, status_by_id:
+    Set map_path to [[guideline_path.joinpath]]("audit", "census-map.tsv").
+    Set data to [[read_corpus_file]](map_path, "census-map").
+    Set text to "".
+    Try:
+        Set text to [[data.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Do [[violation]]("census-map", "not UTF-8: " plus [[str]](map_path)).
+    If "\r" is in text:
+        Do [[violation]]("census-map", "carriage return byte in map").
+    If not [[text.endswith]]("\n"):
+        Do [[violation]]("census-map", "map lacks final newline").
+    If not [[text.startswith]]("# format: census<TAB>region<TAB>disposition\n"):
+        Do [[violation]]("census-map", "header bytes drift").
+    Set row_count to 0.
+    Set seen_census to {}.
+    Set line_list to [[text.split]]("\n").
+    Do [[line_list.pop]]().
+    For each line_text in line_list:
+        If not [[line_text.startswith]]("#"):
+            Set fields to [[line_text.split]]("\t").
+            If [[len]](fields) does not equal 3:
+                Do [[violation]]("census-map", "row without 3 columns: " plus line_text).
+            Set census_key to [[fields.pop]](0).
+            Set region_field to [[fields.pop]](0).
+            Set disposition to [[fields.pop]](0).
+            If [[census_row_rx.fullmatch]](census_key) equals None:
+                Do [[violation]]("census-map", "census key grammar: " plus census_key).
+            Set duplicate to census_key is in seen_census.
+            If duplicate:
+                Do [[violation]]("census-map", "duplicate census key: " plus census_key).
+            Do [[seen_census.update]]({census_key: True}).
+            If region_field does not equal "-":
+                Set status to [[status_by_id.get]](region_field, "").
+                If status equals "":
+                    Do [[violation]]("census-map", "row names no coverage region: " plus census_key plus " " plus region_field).
+            If not disposition:
+                Do [[violation]]("census-map", "empty disposition: " plus census_key).
+            Set row_count to row_count plus 1.
+    If row_count equals 0:
+        Do [[violation]]("census-map", "map holds no rows").
 
 Define [[coverage_status_kind]] taking row_id, status_text:
     If status_text equals "pending":
@@ -2964,10 +3074,53 @@ Define [[valid_review_date]] taking date_text:
         Give back False.
     Give back True.
 
-Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
+Define [[derive_bundles_at_commit]] taking gid, commit_field:
+    Set scratch_text to [[tempfile.mkdtemp]]().
+    Set archive_result to [[subprocess.run]](<"git", "archive", commit_field, "--", "guidelines/" plus gid>, capture_output=True).
+    If archive_result.returncode does not equal 0:
+        Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
+        Do [[violation]]("adjudication", "ledger commit lacks guideline tree: " plus gid plus " " plus commit_field).
+    Set tar_result to [[subprocess.run]](<"tar", "-x", "-C", scratch_text>, input=archive_result.stdout, capture_output=True).
+    If tar_result.returncode does not equal 0:
+        Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
+        Do [[violation]]("adjudication", "ledger commit tree extraction failed: " plus gid plus " " plus commit_field).
+    Set scratch_root to [[pathlib.Path]](scratch_text).
+    Set commit_guideline_path to [[scratch_root.joinpath]]("guidelines", gid).
+    Set collected to [[collect_guideline]](commit_guideline_path).
+    Set ace_paths to [[collected.pop]](0).
+    Set docids to [[collected.pop]](0).
+    Set lexicon_path to [[collected.pop]](0).
+    Set coverage_result to [[check_coverage]](commit_guideline_path, docids, False).
+    Set status_by_id to [[coverage_result.pop]](0).
+    Set ace_row_line_by_docid to [[coverage_result.pop]](0).
+    Set payload_text_by_docid to [[coverage_result.pop]](0).
+    Set derived to [[derive_review_manifest]](commit_guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid).
+    Set manifest_text to [[derived.pop]](0).
+    Set bundle_by_docid to [[derived.pop]](0).
+    Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
+    Give back bundle_by_docid.
+
+Define [[check_ledger_commit_row]] taking gid, row_number, docid, commit_field, digest_field, current_digest, commit_bundle_cache:
+    Set exists_result to [[subprocess.run]](<"git", "cat-file", "-e", commit_field plus "^{commit}">, capture_output=True).
+    If exists_result.returncode does not equal 0:
+        Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " commit absent from repository: " plus commit_field).
+    If digest_field equals current_digest:
+        Give back 0.
+    Set bundle_at_commit to [[commit_bundle_cache.get]](commit_field, None).
+    If bundle_at_commit equals None:
+        Set bundle_at_commit to [[derive_bundles_at_commit]](gid, commit_field).
+        Do [[commit_bundle_cache.update]]({commit_field: bundle_at_commit}).
+    Set historical to [[bundle_at_commit.get]](docid, "").
+    If not historical:
+        Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " docid absent at recorded commit: " plus docid plus " " plus commit_field).
+    If historical does not equal digest_field:
+        Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " digest mismatch at recorded commit: " plus docid plus " " plus commit_field).
+
+Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label, odb_check:
     Set manifest_total to [[len]](bundle_by_docid).
     Set decision_count to 0.
     Set seen_row_docids to {}.
+    Set commit_bundle_cache to {}.
     Set current_approved to {}.
     Set current_rejected to {}.
     If [[ledger_path.is_symlink]]():
@@ -3043,6 +3196,9 @@ Define [[validate_ledger]] taking ledger_path, bundle_by_docid, label:
             If not [[reviewer_text_ok]](comment_field):
                 Do [[violation]]("adjudication", "ledger row " plus [[str]](row_number) plus " comment").
             Set current_digest to [[bundle_by_docid.get]](docid).
+            If odb_check:
+                If commit_field:
+                    Do [[check_ledger_commit_row]](label, row_number, docid, commit_field, digest_field, current_digest, commit_bundle_cache).
             Set decision_count to decision_count plus 1.
             If digest_field equals current_digest:
                 If verdict_field equals "approved":
@@ -3087,7 +3243,7 @@ Define [[check_adjudication]] taking guideline_path, docids, ace_row_line_by_doc
     If committed_bytes does not equal derived_bytes:
         Do [[violation]]("adjudication", "manifest stale: " plus [[str]](manifest_path) plus regen_hint).
     Set ledger_path to [[guideline_path.joinpath]]("audit", "adjudication.tsv").
-    Do [[validate_ledger]](ledger_path, bundle_by_docid, guideline_path.name).
+    Do [[validate_ledger]](ledger_path, bundle_by_docid, guideline_path.name, True).
 
 Define [[review_manifest_command]] taking guideline_id:
     If not [[valid_docid]](guideline_id):
@@ -3155,7 +3311,7 @@ Define [[ledger_validate_command]] taking ledger_arg, manifest_arg, label:
     Set data to [[manifest_path.read_bytes]]().
     Set bundle_by_docid to [[parse_review_manifest]](data, manifest_path).
     Set ledger_path to [[pathlib.Path]](ledger_arg).
-    Do [[validate_ledger]](ledger_path, bundle_by_docid, label).
+    Do [[validate_ledger]](ledger_path, bundle_by_docid, label, False).
 
 Define [[check_adjudication_fixtures]] taking nothing:
     Set fixtures_root to [[pathlib.Path]]("tests/adjudication").
@@ -3598,6 +3754,7 @@ Define [[ui_read_sidecar_lines]] taking sidecar_path, case_name:
 
 Define [[ui_git_env]] taking nothing:
     Set env to [[os.environ.copy]]().
+    Do [[env.update]]({"GIT_DEFAULT_HASH": "sha1"}).
     Do [[env.update]]({"GIT_CONFIG_GLOBAL": "/dev/null"}).
     Do [[env.update]]({"GIT_CONFIG_SYSTEM": "/dev/null"}).
     Do [[env.update]]({"GIT_AUTHOR_NAME": "fixture"}).
@@ -4135,12 +4292,79 @@ Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
             Do [[violation]]("projection-coverage", "projection row names no coverage region: " plus ledger_docid plus " " plus ledger_region).
         If actual_status does not equal expected_status:
             Do [[violation]]("projection-coverage", "coverage region " plus ledger_region plus " does not carry ace(" plus ledger_docid plus "): " plus actual_status).
+    Do [[check_census_map]](guideline_path, status_by_id).
     Do [[check_adjudication]](guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid).
     If lexicon_path does not equal None:
         Do [[check_lexicon]](guideline_path, ace_paths, docids).
 
+Define [[check_docid_grammar_probe]] taking nothing:
+    Set long_ok to "".
+    Set pad_done to False.
+    While not pad_done:
+        Set long_ok to long_ok plus "aaaaaaaaaa".
+        If [[len]](long_ok) equals 250:
+            Set pad_done to True.
+    If not [[valid_docid]](long_ok):
+        Do [[violation]]("docid-grammar", "250-byte docid rejected").
+    If [[valid_docid]](long_ok plus "a"):
+        Do [[violation]]("docid-grammar", "251-byte docid accepted").
+
+Define [[check_trace_numeric_probe]] taking nothing:
+    Set big_text to "".
+    Set pad_done to False.
+    While not pad_done:
+        Set big_text to big_text plus "9999999999".
+        If [[len]](big_text) equals 5000:
+            Set pad_done to True.
+    Set hex_pad to "".
+    Set hex_done to False.
+    While not hex_done:
+        Set hex_pad to hex_pad plus "aaaaaaaa".
+        If [[len]](hex_pad) equals 64:
+            Set hex_done to True.
+    Set comment_line to "% probe traced against the loaded composition by ace_to_pl trace mode; do not edit.".
+    Set term_head to "'$guideline_traces'(v1,probe,query_sha256('" plus hex_pad plus "'),answers_sha256('" plus hex_pad plus "'),result(solutions([sol([".
+    Set term_tail to "],proved([clause(sentence(doc,1),clause_sha256('" plus hex_pad plus "'),[])]))]))).".
+    Set artifact to comment_line plus "\n" plus term_head plus big_text plus term_tail plus "\n".
+    Set parse_result to [[parse_trace_artifact]]([[artifact.encode]]("utf-8"), "probe").
+    Set parse_copy to [[list]](parse_result).
+    Set parse_err to [[parse_copy.pop]](0).
+    If parse_err does not equal "":
+        Do [[violation]]("trace-numeric", "5000-digit integer payload rejected by trace parser").
+    Set wide_artifact to comment_line plus "\n" plus term_head plus "1],proved([clause(sentence(doc,9999999999),clause_sha256('" plus hex_pad plus "'),[])]))]))." plus "\n".
+    Set wide_result to [[parse_trace_artifact]]([[wide_artifact.encode]]("utf-8"), "probe").
+    Set wide_copy to [[list]](wide_result).
+    Set wide_err to [[wide_copy.pop]](0).
+    If wide_err does not equal "malformed":
+        Do [[violation]]("trace-numeric", "10-digit sentence ordinal accepted by trace parser").
+    Set zero_artifact to comment_line plus "\n" plus term_head plus "1],proved([clause(sentence(doc,01),clause_sha256('" plus hex_pad plus "'),[])]))]))." plus "\n".
+    Set zero_result to [[parse_trace_artifact]]([[zero_artifact.encode]]("utf-8"), "probe").
+    Set zero_copy to [[list]](zero_result).
+    Set zero_err to [[zero_copy.pop]](0).
+    If zero_err does not equal "malformed":
+        Do [[violation]]("trace-numeric", "zero-padded sentence ordinal accepted by trace parser").
+
+Define [[check_swipl_wall_probe]] taking nothing:
+    Set start_stamp to [[time.monotonic]]().
+    Set sleeper_pair to [[swipl_run_walled]](<"/bin/sh", "-c", "sleep 600">, None, 1).
+    Set sleeper_copy to [[list]](sleeper_pair).
+    Set sleeper_timed_out to [[sleeper_copy.pop]](0).
+    If not sleeper_timed_out:
+        Do [[violation]]("swipl-timeout-probe", "sleeper exited under the wall clock").
+    Set pipe_pair to [[swipl_run_walled]](<"/bin/sh", "-c", "sleep 600 & exec sleep 600">, None, 1).
+    Set pipe_copy to [[list]](pipe_pair).
+    Set pipe_timed_out to [[pipe_copy.pop]](0).
+    If not pipe_timed_out:
+        Do [[violation]]("swipl-timeout-probe", "descendant-held-pipe sleeper exited under the wall clock").
+    Set elapsed to [[time.monotonic]]() minus start_stamp.
+    If elapsed is greater than 30:
+        Do [[violation]]("swipl-timeout-probe", "wall-clock probes overran 30s: descendant pipes survive the kill").
+
 Define [[check_command]] taking nothing:
     Do [[check_fork_notices]]().
+    Do [[check_docid_grammar_probe]]().
+    Do [[check_trace_numeric_probe]]().
+    Do [[check_swipl_wall_probe]]().
     Do [[check_strict_fixtures]]().
     Do [[check_adjudication_fixtures]]().
     Do [[check_compendium]]().
@@ -4204,8 +4428,6 @@ Define [[check_command]] taking nothing:
     Do [[shutil.rmtree]](scratch_path).
     Do [[print]]("goal: check ok " plus [[str]](guideline_count) plus " guidelines " plus [[str]](document_count) plus " documents " plus [[str]](probe_count) plus " red probes").
 
-Set compiler_source to [[pathlib.Path]]("vendor/ape/prolog/ace_to_pl.pl").
-Require that [[compiler_source.is_file]]().
 Set argv to [[list]](sys.argv).
 Do [[argv.pop]](0).
 If [[len]](argv) equals 0:

@@ -5,9 +5,11 @@ import os
 import pathlib
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 def fail(category, detail):
     safe_detail = detail.replace("\n", "\\n")
     safe_detail = safe_detail.replace("\r", "\\r")
@@ -36,6 +38,8 @@ def valid_docid(docid):
     if not docid:
         return False
     if leading_dash:
+        return False
+    if len(docid) > 250:
         return False
     return subset
 def resolve_swipl():
@@ -66,7 +70,41 @@ def make_scratch():
         fail("scratch", "already exists: " + str(scratch_path))
     scratch_path.mkdir()
     return scratch_path
+swipl_wall_seconds = 300
+def swipl_run_walled(command, input_bytes, wall_seconds):
+    proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+    timed_out = False
+    out_bytes = bytes([])
+    err_bytes = bytes([])
+    try:
+        comm = proc.communicate(input=input_bytes, timeout=wall_seconds)
+        comm_copy = list(comm)
+        out_bytes = comm_copy.pop(0)
+        err_bytes = comm_copy.pop(0)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except ProcessLookupError:
+            timed_out = True
+        comm = proc.communicate()
+        comm_copy = list(comm)
+        out_bytes = comm_copy.pop(0)
+        err_bytes = comm_copy.pop(0)
+    result = subprocess.CompletedProcess(command, proc.returncode, out_bytes, err_bytes)
+    return [timed_out, result]
+def bounded_swipl_run(scratch_path, label, command, input_bytes):
+    pair = swipl_run_walled(command, input_bytes, swipl_wall_seconds)
+    pair_copy = list(pair)
+    timed_out = pair_copy.pop(0)
+    result = pair_copy.pop(0)
+    if timed_out:
+        cleanup_and_fail(scratch_path, "swipl-timeout", label + " exceeded " + str(swipl_wall_seconds) + "s wall clock")
+    return result
 def stage_ape(scratch_path, swipl_executable):
+    compiler_source = pathlib.Path("vendor/ape/prolog/ace_to_pl.pl")
+    if not compiler_source.is_file():
+        cleanup_and_fail(scratch_path, "compiler-source", "missing: " + str(compiler_source))
     stage_path = scratch_path.joinpath("ape-stage")
     shutil.copytree("vendor/ape", stage_path)
     stage_clex = stage_path.joinpath("prolog", "lexicon", "clex_lexicon.pl")
@@ -74,7 +112,7 @@ def stage_ape(scratch_path, swipl_executable):
     parser_dir = stage_path.joinpath("prolog", "parser")
     build_goal = "working_directory(_, '" + parser_dir.as_posix() + "'), [fit_to_plp], halt."
     command = [swipl_executable, "-O", "-f", "none", "-F", "none", "-g", build_goal, "-t", "halt"]
-    result = subprocess.run(command, capture_output=True)
+    result = bounded_swipl_run(scratch_path, "ape-stage build", command, None)
     if result.returncode != 0:
         relay_failure(scratch_path, result)
     grammar_path = parser_dir.joinpath("grammar.plp")
@@ -95,7 +133,7 @@ def compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lex
     for extra_arg in extra_args:
         tail_args.append(extra_arg)
     command = compiler_command(swipl_executable, stage_path, tail_args)
-    result = subprocess.run(command, input=ace_bytes, capture_output=True)
+    result = bounded_swipl_run(scratch_path, "compile " + docid, command, ace_bytes)
     if result.returncode != 0:
         relay_failure(scratch_path, result)
     if result.stderr:
@@ -110,7 +148,7 @@ def compile_doc(scratch_path, swipl_executable, stage_path, docid, ace_path, lex
 def check_doc_load(scratch_path, swipl_executable, stage_path, pl_path):
     tail_args = ["check", str(pl_path)]
     command = compiler_command(swipl_executable, stage_path, tail_args)
-    result = subprocess.run(command, capture_output=True)
+    result = bounded_swipl_run(scratch_path, "check-load " + str(pl_path), command, None)
     if result.returncode != 0:
         relay_failure(scratch_path, result)
     if result.stdout:
@@ -625,7 +663,7 @@ def write_manifest(manifest_path, manifest_pairs):
 def run_aggregate(scratch_path, swipl_executable, stage_path, manifest_path, doc_count):
     tail_args = ["aggregate-check", str(manifest_path)]
     command = compiler_command(swipl_executable, stage_path, tail_args)
-    result = subprocess.run(command, capture_output=True)
+    result = bounded_swipl_run(scratch_path, "aggregate-check", command, None)
     if result.returncode != 0:
         relay_failure(scratch_path, result)
     if result.stderr:
@@ -640,7 +678,7 @@ def run_aggregate(scratch_path, swipl_executable, stage_path, manifest_path, doc
 def run_recursion(scratch_path, swipl_executable, stage_path, manifest_path, doc_count):
     tail_args = ["recursion-check", str(manifest_path)]
     command = compiler_command(swipl_executable, stage_path, tail_args)
-    result = subprocess.run(command, capture_output=True)
+    result = bounded_swipl_run(scratch_path, "recursion-check", command, None)
     if result.returncode != 0:
         relay_failure(scratch_path, result)
     if result.stderr:
@@ -883,7 +921,7 @@ def trace_scan_number(chars, num_text):
                         chars.append(exp_sign)
                     chars.append(e1)
         return ["float", num_text]
-    return ["int", int(num_text)]
+    return ["int", num_text]
 def trace_scan_tokens(term_text):
     chars = list(term_text)
     chars.reverse()
@@ -1110,9 +1148,14 @@ def trace_walk_node(node, triples, node_marks):
     s_kind = s_copy.pop(0)
     if s_kind != "i":
         return False
-    s_value = s_copy.pop(0)
-    if s_value < 1:
+    s_text = s_copy.pop(0)
+    if not s_text.isdigit():
         return False
+    if s_text.startswith("0"):
+        return False
+    if len(s_text) > 9:
+        return False
+    s_value = int(s_text)
     digest_copy = list(digest_node)
     digest_kind = digest_copy.pop(0)
     if digest_kind != "c":
@@ -1372,6 +1415,8 @@ def trace_block_table(pl_path):
                     if not char_ok:
                         head_ok = False
                 if marker_head.startswith("0"):
+                    head_ok = False
+                if len(marker_head) > 9:
                     head_ok = False
                 if head_ok:
                     current_block = int(marker_head)
@@ -1749,6 +1794,23 @@ def check_strict_detector(env):
     result = subprocess.run(command, capture_output=True, env=env)
     if result.returncode != 0:
         violation("strict-detector", "canonical detector disagrees on Try/Catch headers")
+def check_strict_cli_probes(env):
+    usage_command = [sys.executable, "-P", "-m", "e_minus_minus.strict"]
+    usage_result = subprocess.run(usage_command, capture_output=True, env=env)
+    if usage_result.returncode != strict_expected_exit("usage"):
+        violation("strict-usage-probe", "bad-argv probe status " + str(usage_result.returncode))
+    usage_text = usage_result.stderr.decode("utf-8", errors="replace")
+    if not usage_text.startswith("strict:usage:"):
+        violation("strict-usage-probe", "bad-argv probe stderr class mismatch")
+    io_scratch = tempfile.mkdtemp()
+    io_command = [sys.executable, "-P", "-m", "e_minus_minus.strict", io_scratch + "/absent.emm"]
+    io_result = subprocess.run(io_command, capture_output=True, env=env)
+    shutil.rmtree(io_scratch, ignore_errors=True)
+    if io_result.returncode != strict_expected_exit("io"):
+        violation("strict-io-probe", "unreadable-input probe status " + str(io_result.returncode))
+    io_text = io_result.stderr.decode("utf-8", errors="replace")
+    if not io_text.startswith("strict:io:"):
+        violation("strict-io-probe", "unreadable-input probe stderr class mismatch")
 def check_strict_fixtures():
     strict_root = pathlib.Path("tests/strict")
     root_symlink = strict_root.is_symlink()
@@ -1767,6 +1829,7 @@ def check_strict_fixtures():
     green_records = collect_strict_dir(strict_root.joinpath("green"), ".golden", False)
     env = strict_compiler_env()
     check_strict_detector(env)
+    check_strict_cli_probes(env)
     red_count = 0
     for red_record in red_records:
         record_copy = list(red_record)
@@ -1862,7 +1925,7 @@ def run_red_probe(scratch_path, swipl_executable, stage_path, probe_path, class_
     if lexicon_present:
         tail_args.append(str(lexicon_path))
     command = compiler_command(swipl_executable, stage_path, tail_args)
-    result = subprocess.run(command, input=probe_bytes, capture_output=True)
+    result = bounded_swipl_run(scratch_path, "red-probe " + probe_name, command, probe_bytes)
     if result.returncode != expected_exit:
         cleanup_violation(scratch_path, "red-exit", "status " + str(result.returncode) + " for probe: " + probe_name)
     if result.stdout:
@@ -2147,6 +2210,7 @@ def check_compendium():
     summary = "goal: compendium ok " + str(org_count) + " organizations " + str(row_count) + " rows; terminal remaining: orgs=" + str(orgs_remaining) + " rows=" + str(rows_remaining) + " provisional=" + str(provisional_count)
     print(summary)
 projection_header_text = "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes, row shape and per-document row\n# coverage are validated by goal.py check; kept/dropped prose stays document-owned."
+census_row_rx = re.compile("p[0-9]{3}[.]C[0-9]{2}")
 coverage_header_text = "# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice"
 uncovered_class_names = ["heading", "process", "external", "aim", "descriptive", "notice"]
 census_rx = re.compile("identify the ([0-9]+) payloads below")
@@ -2202,6 +2266,47 @@ def check_projection_ledger(guideline_path):
         seen_docids.update({docid: True})
         row_pairs.append([docid, region])
     return row_pairs
+def check_census_map(guideline_path, status_by_id):
+    map_path = guideline_path.joinpath("audit", "census-map.tsv")
+    data = read_corpus_file(map_path, "census-map")
+    text = ""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        violation("census-map", "not UTF-8: " + str(map_path))
+    if "\r" in text:
+        violation("census-map", "carriage return byte in map")
+    if not text.endswith("\n"):
+        violation("census-map", "map lacks final newline")
+    if not text.startswith("# format: census<TAB>region<TAB>disposition\n"):
+        violation("census-map", "header bytes drift")
+    row_count = 0
+    seen_census = {}
+    line_list = text.split("\n")
+    line_list.pop()
+    for line_text in line_list:
+        if not line_text.startswith("#"):
+            fields = line_text.split("\t")
+            if len(fields) != 3:
+                violation("census-map", "row without 3 columns: " + line_text)
+            census_key = fields.pop(0)
+            region_field = fields.pop(0)
+            disposition = fields.pop(0)
+            if census_row_rx.fullmatch(census_key) == None:
+                violation("census-map", "census key grammar: " + census_key)
+            duplicate = census_key in seen_census
+            if duplicate:
+                violation("census-map", "duplicate census key: " + census_key)
+            seen_census.update({census_key: True})
+            if region_field != "-":
+                status = status_by_id.get(region_field, "")
+                if status == "":
+                    violation("census-map", "row names no coverage region: " + census_key + " " + region_field)
+            if not disposition:
+                violation("census-map", "empty disposition: " + census_key)
+            row_count = row_count + 1
+    if row_count == 0:
+        violation("census-map", "map holds no rows")
 def coverage_status_kind(row_id, status_text):
     if status_text == "pending":
         return ["pending", ""]
@@ -2857,10 +2962,51 @@ def valid_review_date(date_text):
     except ValueError:
         return False
     return True
-def validate_ledger(ledger_path, bundle_by_docid, label):
+def derive_bundles_at_commit(gid, commit_field):
+    scratch_text = tempfile.mkdtemp()
+    archive_result = subprocess.run(["git", "archive", commit_field, "--", "guidelines/" + gid], capture_output=True)
+    if archive_result.returncode != 0:
+        shutil.rmtree(scratch_text, ignore_errors=True)
+        violation("adjudication", "ledger commit lacks guideline tree: " + gid + " " + commit_field)
+    tar_result = subprocess.run(["tar", "-x", "-C", scratch_text], input=archive_result.stdout, capture_output=True)
+    if tar_result.returncode != 0:
+        shutil.rmtree(scratch_text, ignore_errors=True)
+        violation("adjudication", "ledger commit tree extraction failed: " + gid + " " + commit_field)
+    scratch_root = pathlib.Path(scratch_text)
+    commit_guideline_path = scratch_root.joinpath("guidelines", gid)
+    collected = collect_guideline(commit_guideline_path)
+    ace_paths = collected.pop(0)
+    docids = collected.pop(0)
+    lexicon_path = collected.pop(0)
+    coverage_result = check_coverage(commit_guideline_path, docids, False)
+    status_by_id = coverage_result.pop(0)
+    ace_row_line_by_docid = coverage_result.pop(0)
+    payload_text_by_docid = coverage_result.pop(0)
+    derived = derive_review_manifest(commit_guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid)
+    manifest_text = derived.pop(0)
+    bundle_by_docid = derived.pop(0)
+    shutil.rmtree(scratch_text, ignore_errors=True)
+    return bundle_by_docid
+def check_ledger_commit_row(gid, row_number, docid, commit_field, digest_field, current_digest, commit_bundle_cache):
+    exists_result = subprocess.run(["git", "cat-file", "-e", commit_field + "^{commit}"], capture_output=True)
+    if exists_result.returncode != 0:
+        violation("adjudication", "ledger row " + str(row_number) + " commit absent from repository: " + commit_field)
+    if digest_field == current_digest:
+        return 0
+    bundle_at_commit = commit_bundle_cache.get(commit_field, None)
+    if bundle_at_commit == None:
+        bundle_at_commit = derive_bundles_at_commit(gid, commit_field)
+        commit_bundle_cache.update({commit_field: bundle_at_commit})
+    historical = bundle_at_commit.get(docid, "")
+    if not historical:
+        violation("adjudication", "ledger row " + str(row_number) + " docid absent at recorded commit: " + docid + " " + commit_field)
+    if historical != digest_field:
+        violation("adjudication", "ledger row " + str(row_number) + " digest mismatch at recorded commit: " + docid + " " + commit_field)
+def validate_ledger(ledger_path, bundle_by_docid, label, odb_check):
     manifest_total = len(bundle_by_docid)
     decision_count = 0
     seen_row_docids = {}
+    commit_bundle_cache = {}
     current_approved = {}
     current_rejected = {}
     if ledger_path.is_symlink():
@@ -2936,6 +3082,9 @@ def validate_ledger(ledger_path, bundle_by_docid, label):
             if not reviewer_text_ok(comment_field):
                 violation("adjudication", "ledger row " + str(row_number) + " comment")
             current_digest = bundle_by_docid.get(docid)
+            if odb_check:
+                if commit_field:
+                    check_ledger_commit_row(label, row_number, docid, commit_field, digest_field, current_digest, commit_bundle_cache)
             decision_count = decision_count + 1
             if digest_field == current_digest:
                 if verdict_field == "approved":
@@ -2979,7 +3128,7 @@ def check_adjudication(guideline_path, docids, ace_row_line_by_docid, payload_te
     if committed_bytes != derived_bytes:
         violation("adjudication", "manifest stale: " + str(manifest_path) + regen_hint)
     ledger_path = guideline_path.joinpath("audit", "adjudication.tsv")
-    validate_ledger(ledger_path, bundle_by_docid, guideline_path.name)
+    validate_ledger(ledger_path, bundle_by_docid, guideline_path.name, True)
 def review_manifest_command(guideline_id):
     if not valid_docid(guideline_id):
         fail("guideline", "invalid guideline id: " + guideline_id)
@@ -3044,7 +3193,7 @@ def ledger_validate_command(ledger_arg, manifest_arg, label):
     data = manifest_path.read_bytes()
     bundle_by_docid = parse_review_manifest(data, manifest_path)
     ledger_path = pathlib.Path(ledger_arg)
-    validate_ledger(ledger_path, bundle_by_docid, label)
+    validate_ledger(ledger_path, bundle_by_docid, label, False)
 def check_adjudication_fixtures():
     fixtures_root = pathlib.Path("tests/adjudication")
     if fixtures_root.is_symlink():
@@ -3478,6 +3627,7 @@ def ui_read_sidecar_lines(sidecar_path, case_name):
     return lines
 def ui_git_env():
     env = os.environ.copy()
+    env.update({"GIT_DEFAULT_HASH": "sha1"})
     env.update({"GIT_CONFIG_GLOBAL": "/dev/null"})
     env.update({"GIT_CONFIG_SYSTEM": "/dev/null"})
     env.update({"GIT_AUTHOR_NAME": "fixture"})
@@ -4001,11 +4151,75 @@ def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
             violation("projection-coverage", "projection row names no coverage region: " + ledger_docid + " " + ledger_region)
         if actual_status != expected_status:
             violation("projection-coverage", "coverage region " + ledger_region + " does not carry ace(" + ledger_docid + "): " + actual_status)
+    check_census_map(guideline_path, status_by_id)
     check_adjudication(guideline_path, docids, ace_row_line_by_docid, payload_text_by_docid)
     if lexicon_path != None:
         check_lexicon(guideline_path, ace_paths, docids)
+def check_docid_grammar_probe():
+    long_ok = ""
+    pad_done = False
+    while not pad_done:
+        long_ok = long_ok + "aaaaaaaaaa"
+        if len(long_ok) == 250:
+            pad_done = True
+    if not valid_docid(long_ok):
+        violation("docid-grammar", "250-byte docid rejected")
+    if valid_docid(long_ok + "a"):
+        violation("docid-grammar", "251-byte docid accepted")
+def check_trace_numeric_probe():
+    big_text = ""
+    pad_done = False
+    while not pad_done:
+        big_text = big_text + "9999999999"
+        if len(big_text) == 5000:
+            pad_done = True
+    hex_pad = ""
+    hex_done = False
+    while not hex_done:
+        hex_pad = hex_pad + "aaaaaaaa"
+        if len(hex_pad) == 64:
+            hex_done = True
+    comment_line = "% probe traced against the loaded composition by ace_to_pl trace mode; do not edit."
+    term_head = "'$guideline_traces'(v1,probe,query_sha256('" + hex_pad + "'),answers_sha256('" + hex_pad + "'),result(solutions([sol(["
+    term_tail = "],proved([clause(sentence(doc,1),clause_sha256('" + hex_pad + "'),[])]))])))."
+    artifact = comment_line + "\n" + term_head + big_text + term_tail + "\n"
+    parse_result = parse_trace_artifact(artifact.encode("utf-8"), "probe")
+    parse_copy = list(parse_result)
+    parse_err = parse_copy.pop(0)
+    if parse_err != "":
+        violation("trace-numeric", "5000-digit integer payload rejected by trace parser")
+    wide_artifact = comment_line + "\n" + term_head + "1],proved([clause(sentence(doc,9999999999),clause_sha256('" + hex_pad + "'),[])]))]))." + "\n"
+    wide_result = parse_trace_artifact(wide_artifact.encode("utf-8"), "probe")
+    wide_copy = list(wide_result)
+    wide_err = wide_copy.pop(0)
+    if wide_err != "malformed":
+        violation("trace-numeric", "10-digit sentence ordinal accepted by trace parser")
+    zero_artifact = comment_line + "\n" + term_head + "1],proved([clause(sentence(doc,01),clause_sha256('" + hex_pad + "'),[])]))]))." + "\n"
+    zero_result = parse_trace_artifact(zero_artifact.encode("utf-8"), "probe")
+    zero_copy = list(zero_result)
+    zero_err = zero_copy.pop(0)
+    if zero_err != "malformed":
+        violation("trace-numeric", "zero-padded sentence ordinal accepted by trace parser")
+def check_swipl_wall_probe():
+    start_stamp = time.monotonic()
+    sleeper_pair = swipl_run_walled(["/bin/sh", "-c", "sleep 600"], None, 1)
+    sleeper_copy = list(sleeper_pair)
+    sleeper_timed_out = sleeper_copy.pop(0)
+    if not sleeper_timed_out:
+        violation("swipl-timeout-probe", "sleeper exited under the wall clock")
+    pipe_pair = swipl_run_walled(["/bin/sh", "-c", "sleep 600 & exec sleep 600"], None, 1)
+    pipe_copy = list(pipe_pair)
+    pipe_timed_out = pipe_copy.pop(0)
+    if not pipe_timed_out:
+        violation("swipl-timeout-probe", "descendant-held-pipe sleeper exited under the wall clock")
+    elapsed = time.monotonic() - start_stamp
+    if elapsed > 30:
+        violation("swipl-timeout-probe", "wall-clock probes overran 30s: descendant pipes survive the kill")
 def check_command():
     check_fork_notices()
+    check_docid_grammar_probe()
+    check_trace_numeric_probe()
+    check_swipl_wall_probe()
     check_strict_fixtures()
     check_adjudication_fixtures()
     check_compendium()
@@ -4068,9 +4282,6 @@ def check_command():
         probe_count = probe_count + 1
     shutil.rmtree(scratch_path)
     print("goal: check ok " + str(guideline_count) + " guidelines " + str(document_count) + " documents " + str(probe_count) + " red probes")
-compiler_source = pathlib.Path("vendor/ape/prolog/ace_to_pl.pl")
-if not (compiler_source.is_file()):
-    raise AssertionError("requirement failed")
 argv = list(sys.argv)
 argv.pop(0)
 if len(argv) == 0:
