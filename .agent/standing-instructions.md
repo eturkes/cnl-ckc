@@ -6,14 +6,13 @@ User scope directive; every session holds the project to these rules.
   clinical guidelines, normalizing them into ACE, and compiling them into
   Prolog, all driven by the single built-in `/goal` command in Claude Code.
 - In-repo consumers stay reviewer-facing: a local UI adjudicates each ACE
-  document against its source and demonstrates the compiled base through
-  preloaded traced queries and a knowledge graph — no runtime LLM, no
-  remote serving. The knowledge base ships portable through a
-  deterministic distribution build that excludes the UI and tooling.
-  Committed answers, traces, and graphs are derived deterministically by
-  the named compiler closure from ACE-compiled products and carry no
-  hand-authored knowledge; hand-authored Prolog stays confined to that
-  named closure.
+  document against its source, and preloaded traced queries demonstrate
+  the compiled base as committed artifacts — no runtime LLM, no remote
+  serving. The knowledge base ships portable through a deterministic
+  distribution build that excludes the UI and tooling. Committed answers
+  and traces are derived deterministically by the named compiler closure
+  from ACE-compiled products and carry no hand-authored knowledge;
+  hand-authored Prolog stays confined to that named closure.
 - Extend/fork APE, Clex, and others where necessary; build upon the
   existing work of other people as much as possible.
 - Keep the compiler/lexicon the smallest that supports the currently
