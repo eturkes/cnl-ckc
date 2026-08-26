@@ -45,16 +45,3 @@ completing commit.
   to check while `/goal` rounds keep writing it | accept: tampered
   census-map row fails check with pinned detail; clean corpus green |
   size: S | pri: 3
-- [ ] lexicon accretion memory: reject-ledger for refused vocabulary
-  candidates | why: candidate decisions carry no durable memory across
-  `/goal` rounds (append-stability half landed in M4.2 —
-  semantic_clause_sha256 excludes comments/directives/document-record,
-  so a pure ulex append stales nothing) | accept: ledger consumed by
-  `/goal` rounds | size: S | pri: 3
-- [ ] `.agent/queue.md` row diet: id | url | lifecycle | next-item only;
-  docid conventions, wave history + dispatch-kit state move to their
-  owners (guideline README, worklist, rounds roster) | why: the
-  in-progress row inlines modeling rules + kit inventory into every
-  session | accept: in-progress row ≤ 3 lines; every relocated rule
-  findable at its named owner; next `/goal` round consumes the queue
-  unchanged | size: S | pri: 3

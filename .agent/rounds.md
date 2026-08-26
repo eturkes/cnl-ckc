@@ -23,7 +23,8 @@ gauges, harvest/TaskStop, Close order) + `/session-roadmap` execution map
   `compile` + `check` — the durable corpus validator: projection-ledger
   totality, lexicon liveness, v1-only product vocabulary, derived
   obligations discharged per document alone and aggregated; proposed
-  lexicon additions ship as a reported delta only. Faithfulness = MAIN
+  lexicon additions ship as a reported delta only, screened against the
+  guideline's `audit/lexicon-rejects.tsv` (MAIN appends each refusal). Faithfulness = MAIN
   review, statement by statement.
 - `rev-<id>-<k>` — adversarial: ACE↔extraction fidelity, coverage-claim
   soundness, guideline README claims, knowledge-only/fixture-free status,
@@ -48,6 +49,18 @@ reused); MAIN batch-rules the statement inventory (project / uncovered with
 reason); `ace` teammates draft against ruled batches while MAIN reviews the
 previous batch; MAIN authors the lexicon delta, compiles, runs check; `rev`
 attacks the assembled round pre-commit; MAIN fixes, reruns gates, commits.
+
+## Wave kit (cdc-2022-opioid ACE wave 2)
+
+Kit `.scratch/goalrounds/ace-wave2/`: brief-common.md (projection rulings +
+pl-as-compile-output allowlist fix), 6 batch tables w/ precomputed docids,
+roster.md (dispatch/harvest/close + name-burn note). Worklist
+`.scratch/goalrounds/ace-worklist.tsv` = per-region evidence + flags.
+Docids: impl regions = `cdc2022-opioid-recNN-impKK` (KK = worklist rec/ord
+evidence; reserved-ordinal convention = guideline README § Formal
+derivatives); other regions = `cdc2022-opioid-<region-id lowercased>`
+(self-locating). Author under the frozen schema-v1 knowledge-only contract;
+obligations discharge per document + aggregate.
 
 Round close (standing loop and one-round invocations alike) = global
 `CLAUDE.md` Close order, bound to this project: harvest = report read

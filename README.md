@@ -626,7 +626,10 @@ While a document is in progress, a round advances it one increment:
    constructs: the header of `vendor/ape/prolog/ace_to_pl.pl`). Each
    ACE document is a minimal faithful projection of its region; the
    projection-notes ledger and the guideline README's coverage
-   statement use that same unit.
+   statement use that same unit. Consult the guideline's
+   `audit/lexicon-rejects.tsv` before you propose a lexicon entry.
+   Record each refused candidate there as one
+   `candidate<TAB>category<TAB>reason` row.
 3. **Compile** — run `python3 -P tools/goal.py compile <id>`. When the
    compiler rejects a document, adjust the ACE or the lexicon first.
    Only a genuinely new construct extends the `ace_to_pl.pl`
