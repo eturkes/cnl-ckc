@@ -3,8 +3,8 @@
 Charter: `.agent/standing-instructions.md`. Shipped: fetch→ACE→Prolog
 guideline pipeline (`tools/goal.py compile <id> | check`, `tools/regen.py
 --check`); guideline coverage runs as built-in `/goal` rounds — procedure:
-root `README.md` § Operating; queue: `.agent/queue.md`; deterministic KB
-export (`tools/dist.py build`, README § Export). Feature scope is
+root `TECHNICAL.md` § Operating; queue: `.agent/queue.md`; deterministic KB
+export (`tools/dist.py build`, TECHNICAL.md § Export). Feature scope is
 final (user ruling) and the project review is CLOSED: the project is
 feature complete. The repo's remaining work = `/goal` rounds to
 compendium exhaustion + human adjudication through the reviewer UI +
@@ -62,7 +62,7 @@ nine-indicator schema v1, 257 obligations discharged per document +
 aggregate under bounded search, lexicon 487 live entries, custody
 ledgers total + set-equal to the ACE inventory, queue gate lifted —
 corpus growth since = `/goal` rounds under the frozen v1 knowledge-only
-contract. Live law = README schema section + the governing authoring
+contract. Live law = TECHNICAL.md schema section + the governing authoring
 rulings in `.agent/archive/projection.md` (with assurance + evidence chain,
 unit gauges, review record, out-of-scope, sizing analogs); history =
 `git log --grep "(M3[. ]" -p -- .agent/roadmap.md`.
@@ -81,14 +81,15 @@ Terminal state (review close): `goal.py check` + `regen.py --check`
 green — 1 guideline, 186 documents, 29 red probes, 189 live UI pages, 4
 committed queries with answers + traces, `goal: dist ok 1 guidelines
 408 members`; `tests/dist/red.sh` 62/62; committed
-`release-manifest.tsv` (staleness triggers + regen recipe = README
+`release-manifest.tsv` (staleness triggers + regen recipe = TECHNICAL.md
 Operating § Close + memory "KB export" bullet). Review battery =
 per-unit + cross-cutting reviewers, 24-row claim replay, diff-blind
 dist red suite; findings, residuals + rulings = the review record in
 `.agent/archive/ui.md`.
 
-Live law = README (schema, Operating, Export, query/trace sections) +
-project `CLAUDE.md` clinician design law. Architecture rulings, unit
+Live law = TECHNICAL.md (schema, Operating, Export, query/trace sections)
++ project `CLAUDE.md` clinician design law; root `README.md` = the
+clinician-facing overview. Architecture rulings, unit
 records, gauges, sizing, assurance + out-of-scope =
 `.agent/archive/ui.md`; history = `git log --grep "(M4[. ]" -p --
 .agent/roadmap.md .agent/archive/` + `git log --grep "(M4 review)"`.
@@ -97,7 +98,7 @@ records, gauges, sizing, assurance + out-of-scope =
 
 Precondition: compendium exhaustion — the standing `/goal`'s terminal
 condition (easy-tier residue consumed; terminal clause = the
-compendium header, adopted by README § Operating). Promote in a fresh
+compendium header, adopted by TECHNICAL.md § Operating). Promote in a fresh
 session then: plan the harvest from the deferral register
 (`.agent/archive/hard-tier-register.md` — deferral classes, sizing
 measurements, banked leads) + technique =

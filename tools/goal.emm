@@ -4482,7 +4482,7 @@ Define [[dist_probe_repo]] taking scratch_path, name_text:
     Set init_result to [[dist_git_run]](repo_path, <"init", "-q", "-b", "main">).
     If init_result.returncode does not equal 0:
         Do [[cleanup_violation]](scratch_path, "dist", "probe git init failed").
-    Do [[dist_probe_write]](repo_path, "README.md", "# Probe KB\n\n## Compiled Prolog schema (v1)\n\nProbe schema bytes.\n\n## Operating\n\nRun the checks.\n").
+    Do [[dist_probe_write]](repo_path, "TECHNICAL.md", "# Probe KB\n\n## Compiled Prolog schema (v1)\n\nProbe schema bytes.\n\n## Operating\n\nRun the checks.\n").
     Do [[dist_probe_write]](repo_path, "NOTICE", "Probe notice.\n").
     Do [[dist_probe_write]](repo_path, "vendor/ape/prolog/ace_to_pl.pl", "% probe compiler\n").
     Do [[dist_probe_write]](repo_path, "vendor/clex/clex_lexicon.pl", "% probe lexicon\n").

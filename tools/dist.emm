@@ -307,16 +307,16 @@ Define [[ledger_classes]] taking gid, staged, digest_map:
         Do [[class_map.update]]({docid: doc_class}).
     Give back class_map.
 
-Define [[schema_section]] taking readme_text:
+Define [[schema_section]] taking technical_text:
     Set anchor to "## Compiled Prolog schema".
-    Set head_parts to [[list]]([[readme_text.partition]]("\n" plus anchor)).
+    Set head_parts to [[list]]([[technical_text.partition]]("\n" plus anchor)).
     Do [[head_parts.pop]](0).
     Set anchor_sep to [[head_parts.pop]](0).
     Set after_text to [[head_parts.pop]](0).
     If anchor_sep equals "":
-        If not [[readme_text.startswith]](anchor):
+        If not [[technical_text.startswith]](anchor):
             Give back <False, "">.
-        Set after_text to [[readme_text.removeprefix]](anchor).
+        Set after_text to [[technical_text.removeprefix]](anchor).
     Set tail_parts to [[list]]([[after_text.partition]]("\n## ")).
     Set section_body to [[tail_parts.pop]](0).
     Set tail_sep to [[tail_parts.pop]](0).
@@ -469,9 +469,9 @@ Define [[derive_release]] taking repo_dir:
     Set lexicon_bytes to [[pair.pop]](0).
     If input_detail does not equal "":
         Give back <input_detail, empty_plan>.
-    Set pair to [[head_input_bytes]](repo_dir, "HEAD:README.md", "no-input README.md", empty_plan).
+    Set pair to [[head_input_bytes]](repo_dir, "HEAD:TECHNICAL.md", "no-input TECHNICAL.md", empty_plan).
     Set input_detail to [[pair.pop]](0).
-    Set readme_bytes to [[pair.pop]](0).
+    Set technical_bytes to [[pair.pop]](0).
     If input_detail does not equal "":
         Give back <input_detail, empty_plan>.
     Set pair to [[head_input_bytes]](repo_dir, "HEAD:NOTICE", "no-input NOTICE", empty_plan).
@@ -479,21 +479,21 @@ Define [[derive_release]] taking repo_dir:
     Set notice_bytes to [[pair.pop]](0).
     If input_detail does not equal "":
         Give back <input_detail, empty_plan>.
-    Set readme_text to "".
+    Set technical_text to "".
     Set notice_text to "".
     Set decode_ok to True.
     Try:
-        Set readme_text to [[readme_bytes.decode]]("utf-8").
+        Set technical_text to [[technical_bytes.decode]]("utf-8").
         Set notice_text to [[notice_bytes.decode]]("utf-8").
     Catch UnicodeDecodeError:
         Set decode_ok to False.
     If not decode_ok:
-        Give back <"no-input README.md", empty_plan>.
-    Set pair to [[schema_section]](readme_text).
+        Give back <"no-input TECHNICAL.md", empty_plan>.
+    Set pair to [[schema_section]](technical_text).
     Set schema_ok to [[pair.pop]](0).
     Set schema_text to [[pair.pop]](0).
     If not schema_ok:
-        Give back <"no-input README.md schema section", empty_plan>.
+        Give back <"no-input TECHNICAL.md schema section", empty_plan>.
     Set gid_list to [[sorted]](gid_map).
     Set profile_map to {}.
     Set url_map to {}.

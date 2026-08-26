@@ -4,7 +4,7 @@ Master list of eligible American clinical guidelines available online:
 the issuing-organization universe plus, per swept organization, one row
 per guideline. Discovery ledger only — a guideline is fetched exactly
 when its row is promoted into `.agent/queue.md` (procedure: root
-`README.md` § Operating).
+`TECHNICAL.md` § Operating).
 
 Construction is staged: the organization universe and one
 seed guideline per confirmed issuer land first, per-org index sweeps fill
@@ -34,7 +34,7 @@ stop check, reached when both hold:
   `<date> <method>` or `blocked(<why>)`;
 - every guideline row is `done`, `blocked(<why>)`, or `excluded(<why>)`.
 
-Root `README.md` § Operating adopts this as the goal's terminal clause.
+Root `TECHNICAL.md` § Operating adopts this as the goal's terminal clause.
 
 ## Eligibility
 
@@ -224,7 +224,7 @@ Guidelines — `| org | title (year) | URL | access | status | notes |`
 - `status` = `unqueued | provisional(<why>) | queued | in-progress |
   done | blocked(<why>) | excluded(<why>)`. `provisional(<why>)` = row
   whose URL, year, or access is unresolved; it never promotes. `done` =
-  worked to completion per root `README.md` § Operating. Ruled-out rows
+  worked to completion per root `TECHNICAL.md` § Operating. Ruled-out rows
   stay as `excluded(<why>)` — the audit trail of eligibility rulings.
 
   An org's sweep emits an `excluded(<why>)` row for every entry in that
@@ -233,7 +233,7 @@ Guidelines — `| org | title (year) | URL | access | status | notes |`
   table, which is what makes a sweep auditable rather than merely
   asserted. An excluded row records a ruling and never promotes, so its
   `access` may stay `unverified` without a `provisional(...)` status.
-- `notes` carries `id=<id>` once fetched (id rules: root `README.md`
+- `notes` carries `id=<id>` once fetched (id rules: root `TECHNICAL.md`
   § Operating), foreign co-issuers, version qualifiers,
   `indexed-by=<org>[ + <org>...]` naming the indexes that surfaced the row
   when they are not its issuers, and `off-index(<why>)` when none did. The
@@ -282,7 +282,7 @@ dataset and stable identifier in the cell itself.
 Exactly one guideline row sits in `queued|in-progress` at a time. When no
 row holds either status, the first `unqueued` row in file order is
 promoted: row status → `queued`, one queue entry appended per root
-`README.md` § Operating; on fetch the row gains `id=<id>` and follows the
+`TECHNICAL.md` § Operating; on fetch the row gains `id=<id>` and follows the
 queue lifecycle (`in-progress` → `done`, or `blocked(<why>)` mirrored
 from the queue). A row already `queued` after a halt is resumed rather
 than joined by a second promotion.

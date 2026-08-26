@@ -35,7 +35,7 @@ REVIEW_HEADER_1 = "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>re
 REVIEW_HEADER_2 = "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n"
 LEDGER_HEADER = "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment\n"
 SCHEMA_SECTION = "## Compiled Prolog schema (v1)\n\nFixture schema bytes stay verbatim.\n\n### Load\n\nRun `swipl -q -s data/guidelines/g-red/pl/doc-a.pl`.\n\n"
-ROOT_README = "# Fixture KB\n\nFixture repository.\n\n" + SCHEMA_SECTION + "## Operating\n\nRun the checks.\n\n## Licensing\n\nFixture licensing.\n"
+ROOT_TECHNICAL = "# Fixture KB\n\nFixture repository.\n\n" + SCHEMA_SECTION + "## Operating\n\nRun the checks.\n\n## Licensing\n\nFixture licensing.\n"
 ROOT_NOTICE = "Fixture KB notice.\nFirst-party fixture text.\n"
 GIT_ENV = {
     "GIT_CONFIG_GLOBAL": "/dev/null",
@@ -221,7 +221,7 @@ def write_guideline(repo, gid="g-red", profile="redistributable", docs=None, rig
 
 def base_repo(path, profile="redistributable", docs=None, rights_rows=None, rights_only=False):
     repo = Repo(path)
-    repo.write("README.md", ROOT_README)
+    repo.write("TECHNICAL.md", ROOT_TECHNICAL)
     repo.write("NOTICE", ROOT_NOTICE)
     repo.write("vendor/ape/prolog/ace_to_pl.pl", "% fixture compiler\n")
     repo.write("vendor/clex/clex_lexicon.pl", "% fixture base lexicon\n")
@@ -509,14 +509,14 @@ def scenario_rights_only(case_dir):
 def scenario_committed_state(case_dir):
     repo = base_repo(case_dir / "repo")
     committed_source = repo.show("guidelines/g-red/source/original.txt")
-    committed_readme = repo.show("README.md")
+    committed_technical = repo.show("TECHNICAL.md")
     committed_notice = repo.show("NOTICE")
     committed_compiler = repo.show("vendor/ape/prolog/ace_to_pl.pl")
     input_head = repo.input_head()
     committed_manifest = prepare_manifest(repo)
     repo.write("guidelines/g-red/source/original.txt", "dirty source\n")
     repo.write("guidelines/g-red/rights.tsv", b"bad\xff")
-    repo.write("README.md", "dirty readme\n")
+    repo.write("TECHNICAL.md", "dirty technical\n")
     repo.write("NOTICE", "dirty notice\n")
     repo.write("vendor/ape/prolog/ace_to_pl.pl", "% dirty compiler\n")
     repo.write("release-manifest.tsv", "dirty manifest\n")
@@ -525,14 +525,14 @@ def scenario_committed_state(case_dir):
     if bag:
         add_issue(result, bag.rel.get("data/guidelines/g-red/source/original.txt") == committed_source, "working source leaked")
         add_issue(result, SCHEMA_SECTION.encode() in bag.rel.get("README-dist.md", b""), "committed schema section absent")
-        add_issue(result, b"dirty readme" not in bag.rel.get("README-dist.md", b""), "working README leaked")
+        add_issue(result, b"dirty technical" not in bag.rel.get("README-dist.md", b""), "working TECHNICAL.md leaked")
         add_issue(result, committed_notice in bag.rel.get("NOTICE", b""), "committed NOTICE absent")
         add_issue(result, b"dirty notice" not in bag.rel.get("NOTICE", b""), "working NOTICE leaked")
         add_issue(result, bag.rel.get("release-manifest.tsv") == committed_manifest, "working release manifest leaked")
         rows = bag.release_rows()
         add_issue(result, meta_value(rows, "compiler") == digest(committed_compiler), "working compiler leaked")
         add_issue(result, meta_value(rows, "head") == input_head, "working input changed head")
-        add_issue(result, committed_readme.startswith(b"# Fixture"), "fixture precondition")
+        add_issue(result, committed_technical.startswith(b"# Fixture"), "fixture precondition")
     return result
 
 

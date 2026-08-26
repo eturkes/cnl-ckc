@@ -1,6 +1,6 @@
 # queue
 
-Guideline source queue and status; procedure = root `README.md` § Operating.
+Guideline source queue and status; procedure = root `TECHNICAL.md` § Operating.
 Entries promote from `.agent/compendium.tsv` per `.agent/compendium.md`
 § Queue promotion; the compendium row mirrors this queue's lifecycle
 (`in-progress` → `done` | `blocked(<why>)`).
