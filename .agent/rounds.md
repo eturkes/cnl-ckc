@@ -50,17 +50,16 @@ reason); `ace` teammates draft against ruled batches while MAIN reviews the
 previous batch; MAIN authors the lexicon delta, compiles, runs check; `rev`
 attacks the assembled round pre-commit; MAIN fixes, reruns gates, commits.
 
-## Wave kit (cdc-2022-opioid ACE wave 2)
+## Wave kit (cdc-2022-opioid ACE wave 2) — HARVESTED
 
-Kit `.scratch/goalrounds/ace-wave2/`: brief-common.md (projection rulings +
-pl-as-compile-output allowlist fix), 6 batch tables w/ precomputed docids,
-roster.md (dispatch/harvest/close + name-burn note). Worklist
-`.scratch/goalrounds/ace-worklist.tsv` = per-region evidence + flags.
-Docids: impl regions = `cdc2022-opioid-recNN-impKK` (KK = worklist rec/ord
-evidence; reserved-ordinal convention = guideline README § Formal
-derivatives); other regions = `cdc2022-opioid-<region-id lowercased>`
-(self-locating). Author under the frozen schema-v1 knowledge-only contract;
-obligations discharge per document + aggregate.
+Wave 2 landed at ea8edaad (151 docs, coverage ace=337 pending=0, check ok
+337 documents) + release-manifest 67f462af. Kit + roster + harvest log +
+teammate reports = `.scratch/goalrounds/ace-wave2/` (merge_wave.py = the
+replayable harvest merge). Next round = wave-2 adversarial `rev` per
+`.agent/queue.md`; wave-2 flags already ruled are in roster.md § Harvest
+log. Lesson banked: N concurrent in-worktree `goal.py check` runs thrash
+the machine (10-min subprocess caps trip) → teammates author + compile
+only; MAIN runs the one decisive gate at harvest.
 
 Round close (standing loop and one-round invocations alike) = global
 `CLAUDE.md` Close order, bound to this project: harvest = report read
