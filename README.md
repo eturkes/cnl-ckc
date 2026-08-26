@@ -480,8 +480,9 @@ Success emits a two-line artifact on stdout: a generated-file
 comment, then one ground term
 `'$guideline_answers'(v1, Qid, query_sha256(H), result(R))`. `H` is
 the SHA-256 of the raw query-file bytes. The solver runs under fixed
-bounds: depth 100 and 100000 inferences per solution, and 1000000
-inferences for the whole run. For a wh query (`answers` rows
+bounds: depth 100 for each derivation, one 100000-inference budget
+that is cumulative across backtracking for the whole query, and
+1000000 inferences for the whole run. For a wh query (`answers` rows
 present), `R` is `solutions(Sols)`, or `indeterminate(limit)` when a
 bound trips. Each distinct solution contributes one `sol(Values)`
 row; rows follow the standard order of terms, and values follow the

@@ -377,21 +377,42 @@ aggregate_load(PlPaths, Input, Output, ErrorStream) :-
         Error,
         emit_error(ErrorStream, check_load, Error, 2)).
 
-/* Structural invariants (P9): distinct document records = manifest
-   rows; loaded schema-version set = [1]. */
+/* Structural invariants (P9): document records = manifest rows as a
+   bijection, and loaded schema-version set = [1]. A sorted-distinct
+   count alone let one row carry two same-id records, or two unique
+   records while a sibling row carried none. Clause-level census:
+   total clause count = rows, distinct docids = rows, then per row
+   exactly one attributed full ground fact (clause_property source;
+   an unattributed runtime assert lands in the count or starves a
+   row). */
 aggregate_assertions(PlPaths, ErrorStream) :-
     length(PlPaths, Expected),
     ( current_predicate(user:guideline_document/3) ->
-        findall(D, user:guideline_document(D, _, _), Ds)
-    ; Ds = []
+        findall(entry(Source, Body, guideline_document(D, A, U)),
+            ( clause(user:guideline_document(D, A, U), Body, Ref),
+              ( clause_property(Ref, source(Source)) ->
+                  true
+              ; Source = none
+              ) ),
+            Entries)
+    ; Entries = []
     ),
-    sort(Ds, DistinctIds),
+    length(Entries, Found),
+    ( Found =:= Expected ->
+        true
+    ; emit_error(ErrorStream, proof,
+          document_records(Expected, Found), 1)
+    ),
+    findall(D1, member(entry(_, _, guideline_document(D1, _, _)), Entries),
+        Ids),
+    sort(Ids, DistinctIds),
     length(DistinctIds, DistinctFound),
     ( DistinctFound =:= Expected ->
         true
     ; emit_error(ErrorStream, proof,
           document_records(Expected, DistinctFound), 1)
     ),
+    aggregate_document_rows(PlPaths, Entries, ErrorStream),
     ( current_predicate(user:guideline_schema_version/1) ->
         findall(V, user:guideline_schema_version(V), Vs)
     ; Vs = []
@@ -401,6 +422,23 @@ aggregate_assertions(PlPaths, ErrorStream) :-
         true
     ; emit_error(ErrorStream, proof, schema_versions(VersionSet), 1)
     ).
+
+/* Row bijection walk: rules and nonground facts are not records. */
+aggregate_document_rows([], _, _).
+aggregate_document_rows([Path|Paths], Entries, ErrorStream) :-
+    absolute_file_name(Path, Abs),
+    findall(Body-Record, member(entry(Abs, Body, Record), Entries), Row),
+    ( Row = [true-Record1] ->
+        ( ground(Record1) ->
+            true
+        ; emit_error(ErrorStream, proof, document_row(Path, nonground), 1)
+        )
+    ; Row = [_-_] ->
+        emit_error(ErrorStream, proof, document_row(Path, rule), 1)
+    ; length(Row, N),
+      emit_error(ErrorStream, proof, document_row(Path, N), 1)
+    ),
+    aggregate_document_rows(Paths, Entries, ErrorStream).
 
 /* Payload obligations are evidence, never authority: a payload that
    omits, truncates, forges or repeats groups must fail rather than
@@ -698,10 +736,12 @@ answer_mode(Manifest, QueryPl, Input, Output, ErrorStream) :-
     answer_emit(Output, QId, Digest, Result),
     halt(0).
 
-/* Solver bounds, fixed by definition: per-solution depth + inference
-   caps and one outer inference budget over the whole enumeration. No
-   in-process time limit — wall-clock containment belongs to the
-   caller; these constants keep the artifact deterministic. */
+/* Solver bounds, fixed by definition: a depth cap per derivation, one
+   inner inference budget cumulative across backtracking for the whole
+   query (frozen T21 behavior — not per solution), and one outer
+   inference budget over the whole enumeration. No in-process time
+   limit — wall-clock containment belongs to the caller; these
+   constants keep the artifact deterministic. */
 answer_depth_limit(100).
 answer_inference_limit(100000).
 answer_outer_inference_limit(1000000).
@@ -712,9 +752,10 @@ answer_outer_inference_limit(1000000).
    under check_load; structural violations reject
    check_load,query_file(<why>). The term law is exactly two terms in
    order — record then projection; comments and layout carry no
-   semantics (committed-byte canon belongs to the freshness gate). A
-   literal end_of_file term ends the census by reader convention;
-   bytes past it stay hashed, never executed. */
+   semantics (committed-byte canon belongs to the freshness gate).
+   Census ends only at physical EOF (the zero-width read); a literal
+   end_of_file. term spans source bytes, so it counts as a data term
+   — see answer_stream_terms and the term_count(3) probe. */
 answer_read_query(File, ErrorStream, QId, Digest, Conj, Answers) :-
     catch(read_utf8_file(File, Bytes, Text),
         Error,
@@ -958,14 +999,30 @@ answer_solve(Conj, Answers, QId, ErrorStream, Result) :-
     answer_outer_inference_limit(Outer),
     call_with_inference_limit(
         findall(row(Vars, InferenceResult, DepthResult),
-            call_with_inference_limit(
-                call_with_depth_limit(user:Conj, Depth, DepthResult),
-                Inferences, InferenceResult),
+            ( call_with_inference_limit(
+                  call_with_depth_limit(user:Conj, Depth, DepthResult),
+                  Inferences, InferenceResult),
+              answer_row_invariant(Vars, InferenceResult, DepthResult,
+                  QId, ErrorStream) ),
             Rows),
         Outer, OuterResult),
     ( OuterResult == inference_limit_exceeded ->
         Result = indeterminate(limit)
     ; answer_classify_rows(Rows, QId, ErrorStream, Result)
+    ).
+
+/* Ordinary success rows are ground-checked at row birth, BEFORE they
+   enter the outer-bounded bag: an outer sentinel erases findall's
+   partial bag, so a classify-time member check alone masks an earlier
+   nonground success as indeterminate(limit) rc0. Sentinel rows carry
+   unbound values and stay exempt; the classify-time check remains as
+   the law over completed bags. */
+answer_row_invariant(Vars, InferenceResult, DepthResult, QId, ErrorStream) :-
+    ( InferenceResult \== inference_limit_exceeded,
+      integer(DepthResult),
+      \+ ground(Vars) ->
+        emit_error(ErrorStream, proof, nonground_solution(QId), 1)
+    ; true
     ).
 
 answer_vars([], []).
@@ -1799,13 +1856,44 @@ split_lf(Codes, [Line|Lines]) :-
     split_lf(Rest, Lines).
 split_lf(Codes, [Codes]).
 
+/* Anchors live at condition positions only: the walk descends through
+   box carriers (drs, modal/question wrappers, connectives, condition
+   lists) and the anchored wrapper's own inner condition, never into
+   leaf payload arguments — a payload pair shaped -(X, /(S,C)) inside
+   formula/predicate/named arguments stays opaque data instead of
+   minting a phantom sentence. Nonvar guards keep the walk from
+   instantiating open tails (non-instantiation law). */
 sub_anchor(Term, S) :-
-    sub_term(Sub, Term),
-    nonvar(Sub),
-    functor(Sub, -, 2),
-    arg(2, Sub, Anchor),
-    nonvar(Anchor),
-    anchor_sentence(Anchor, S).
+    nonvar(Term),
+    ( functor(Term, -, 2),
+      arg(2, Term, Anchor),
+      nonvar(Anchor),
+      anchor_sentence(Anchor, S0) ->
+        ( S = S0
+        ; arg(1, Term, Inner),
+          sub_anchor(Inner, S)
+        )
+    ; anchor_carrier_arg(Term, Arg),
+      sub_anchor(Arg, S)
+    ).
+
+anchor_carrier_arg(Term, Arg) :-
+    functor(Term, Name, Arity),
+    anchor_carrier(Name, Arity),
+    between(1, Arity, Index),
+    arg(Index, Term, Arg).
+
+anchor_carrier(drs, 2).
+anchor_carrier(question, 1).
+anchor_carrier(should, 1).
+anchor_carrier(must, 1).
+anchor_carrier(can, 1).
+anchor_carrier(may, 1).
+anchor_carrier(=>, 2).
+anchor_carrier(v, 2).
+anchor_carrier(-, 1).
+anchor_carrier(~, 1).
+anchor_carrier('[|]', 2).
 
 take_sentence([], _, [], []).
 take_sentence([Sx-Cond|Tagged], S, [Cond|Group], Rest) :-
@@ -1936,7 +2024,10 @@ render_term_line(Term) :-
     nl.
 
 /* Emittable terms: acyclic, no attvars, atom/integer/float atomics,
-   no pre-existing '$VAR'/1. */
+   no pre-existing '$VAR'/1. Numeric law: arbitrary-precision integers
+   and FINITE floats, values opaque; inf/nan floats sit outside the
+   frozen artifact vocabulary, so the producer refuses to mint them
+   (hostile artifacts carrying them reject as unserializable). */
 
 canonical_tree(Term) :-
     var(Term),
@@ -1951,7 +2042,10 @@ canonical_tree(Term) :-
     !.
 canonical_tree(Term) :-
     float(Term),
-    !.
+    !,
+    float_class(Term, Class),
+    Class \== infinite,
+    Class \== nan.
 canonical_tree(Term) :-
     compound(Term),
     functor(Term, Name, Arity),
@@ -3447,10 +3541,37 @@ emit_error(ErrorStream, Class, Detail, Status) :-
     format(ErrorStream, '~s', [Line]),
     halt(Status).
 
+/* Error details additionally admit SWI strings: query-file guards
+   surface caller-typed payloads ("v1", "foreign") verbatim, so the
+   frozen collision-free query_file(<why>) vocabulary must not
+   collapse to the unserializable fallback. Artifact rendering
+   (validate_emittable) stays string-free under the frozen ABI. */
+canonical_error_tree(Term) :-
+    string(Term),
+    !.
+canonical_error_tree(Term) :-
+    compound(Term),
+    !,
+    functor(Term, Name, Arity),
+    \+ ( Name == '$VAR', Arity =:= 1 ),
+    canonical_error_args(1, Arity, Term).
+canonical_error_tree(Term) :-
+    canonical_tree(Term).
+
+canonical_error_args(Index, Arity, _) :-
+    Index > Arity,
+    !.
+canonical_error_args(Index, Arity, Term) :-
+    Index =< Arity,
+    arg(Index, Term, Arg),
+    canonical_error_tree(Arg),
+    Next is Index + 1,
+    canonical_error_args(Next, Arity, Term).
+
 canonical_error_line(Term, Line) :-
     acyclic_term(Term),
     term_attvars(Term, []),
-    canonical_tree(Term),
+    canonical_error_tree(Term),
     numbervars(Term, 0, _),
     with_output_to(string(Line),
         ( write_term(Term,

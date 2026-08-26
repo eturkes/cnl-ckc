@@ -3653,7 +3653,35 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "red case count drift: expected 24 got " plus [[str]](red_count)).
     If green_count does not equal 11:
         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "green case count drift: expected 11 got " plus [[str]](green_count)).
+    Do [[check_trace_nonfinite_probe]](scratch_path, swipl_executable, stage_path).
     Do [[print]]("goal: queries fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
+
+Define [[check_trace_nonfinite_probe]] taking scratch_path, swipl_executable, stage_path:
+    Set case_gid to [[pathlib.Path]]("tests/queries/green/trace-direct-rejects/tree/guidelines/fx").
+    Set manifest_path to [[scratch_path.joinpath]]("nonfinite-manifest").
+    Do [[build_query_manifest]](manifest_path, [[case_gid.joinpath]]("pl")).
+    Set template_path to [[pathlib.Path]]("tests/queries/green/trace-direct-rejects/trace-reject/result-shape.answers").
+    Set template_text to [[template_path.read_text]](encoding="utf-8").
+    Set hostile_text to [[template_text.replace]]("result(bogus)", "result(solutions([sol([1.0Inf])]))").
+    If hostile_text equals template_text:
+        Do [[cleanup_violation]](scratch_path, "trace-nonfinite", "probe template lost its result(bogus) anchor").
+    Set hostile_path to [[scratch_path.joinpath]]("nonfinite-answers.pl").
+    Do [[hostile_path.write_text]](hostile_text, encoding="utf-8").
+    Set query_pl to [[case_gid.joinpath]]("queries", "pl", "result-shape.pl").
+    Set probe_tail to <"trace", [[str]](manifest_path), [[str]](query_pl), [[str]](hostile_path)>.
+    Set probe_command to [[compiler_command]](swipl_executable, stage_path, probe_tail).
+    Try:
+        Set probe_result to [[subprocess.run]](probe_command, capture_output=True, timeout=30).
+    Catch subprocess.TimeoutExpired:
+        Do [[cleanup_violation]](scratch_path, "trace-nonfinite", "wall_clock for non-finite float probe").
+    If probe_result.returncode does not equal 1:
+        Do [[cleanup_violation]](scratch_path, "trace-nonfinite", "status " plus [[str]](probe_result.returncode) plus " for non-finite float probe").
+    If probe_result.stdout:
+        Do [[cleanup_violation]](scratch_path, "trace-nonfinite", "non-empty stdout for non-finite float probe").
+    Set expect_text to "ace_to_pl_error(proof,trace_unserializable).\n".
+    Set expect_bytes to [[expect_text.encode]]("utf-8").
+    If probe_result.stderr does not equal expect_bytes:
+        Do [[cleanup_violation]](scratch_path, "trace-nonfinite", "stderr differs from pinned trace_unserializable line").
 
 Define [[ui_walk_files]] taking base_path:
     Set found to <>.

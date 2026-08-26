@@ -3533,7 +3533,34 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
         cleanup_violation(scratch_path, "queries-fixtures", "red case count drift: expected 24 got " + str(red_count))
     if green_count != 11:
         cleanup_violation(scratch_path, "queries-fixtures", "green case count drift: expected 11 got " + str(green_count))
+    check_trace_nonfinite_probe(scratch_path, swipl_executable, stage_path)
     print("goal: queries fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
+def check_trace_nonfinite_probe(scratch_path, swipl_executable, stage_path):
+    case_gid = pathlib.Path("tests/queries/green/trace-direct-rejects/tree/guidelines/fx")
+    manifest_path = scratch_path.joinpath("nonfinite-manifest")
+    build_query_manifest(manifest_path, case_gid.joinpath("pl"))
+    template_path = pathlib.Path("tests/queries/green/trace-direct-rejects/trace-reject/result-shape.answers")
+    template_text = template_path.read_text(encoding="utf-8")
+    hostile_text = template_text.replace("result(bogus)", "result(solutions([sol([1.0Inf])]))")
+    if hostile_text == template_text:
+        cleanup_violation(scratch_path, "trace-nonfinite", "probe template lost its result(bogus) anchor")
+    hostile_path = scratch_path.joinpath("nonfinite-answers.pl")
+    hostile_path.write_text(hostile_text, encoding="utf-8")
+    query_pl = case_gid.joinpath("queries", "pl", "result-shape.pl")
+    probe_tail = ["trace", str(manifest_path), str(query_pl), str(hostile_path)]
+    probe_command = compiler_command(swipl_executable, stage_path, probe_tail)
+    try:
+        probe_result = subprocess.run(probe_command, capture_output=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        cleanup_violation(scratch_path, "trace-nonfinite", "wall_clock for non-finite float probe")
+    if probe_result.returncode != 1:
+        cleanup_violation(scratch_path, "trace-nonfinite", "status " + str(probe_result.returncode) + " for non-finite float probe")
+    if probe_result.stdout:
+        cleanup_violation(scratch_path, "trace-nonfinite", "non-empty stdout for non-finite float probe")
+    expect_text = "ace_to_pl_error(proof,trace_unserializable).\n"
+    expect_bytes = expect_text.encode("utf-8")
+    if probe_result.stderr != expect_bytes:
+        cleanup_violation(scratch_path, "trace-nonfinite", "stderr differs from pinned trace_unserializable line")
 def ui_walk_files(base_path):
     found = []
     pending = [base_path]
