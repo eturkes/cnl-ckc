@@ -329,6 +329,8 @@ def humanize_section(section_text):
     if len(head_parts) == 2:
         head_word = head_parts.pop(0)
         head_number = head_parts.pop(0)
+        if not head_number.isascii():
+            head_word = ""
         if not head_number.isdigit():
             head_word = ""
     out_segs = []
@@ -364,14 +366,17 @@ def document_title(docid, section_text, page_text, region_id, shared):
     page_number = page_text.strip()
     if page_number.startswith("p"):
         page_number = page_number.removeprefix("p")
+    if not page_number.isascii():
+        page_number = ""
     if not page_number.isdigit():
         page_number = ""
     last_part = ""
     for part in region_id.split("-"):
         last_part = part
     passage_number = ""
-    if last_part.isdigit():
-        passage_number = str(int(last_part))
+    if last_part.isascii():
+        if last_part.isdigit():
+            passage_number = str(int(last_part))
     if page_number:
         if passage_number:
             return base + ", page " + page_number + ", passage " + passage_number
@@ -663,6 +668,7 @@ def build_guideline_model(corpus, gid):
     region_rows = []
     file_row_regions = {}
     file_docid_ordinal = {}
+    duplicate_docids = []
     ace_counter = 0
     restates_counter = 0
     uncovered_counter = 0
@@ -692,13 +698,14 @@ def build_guideline_model(corpus, gid):
                 return err("ui: viewmodel: " + gid + " invalid docid " + docid)
             seen = region_by_docid.get(docid, "")
             if seen:
-                return err("ui: viewmodel: " + gid + " duplicate docid " + docid)
-            docids.append(docid)
-            region_by_docid.update({docid: region_id})
-            section_by_docid.update({docid: section_text})
-            page_by_docid.update({docid: page_text})
-            file_by_docid.update({docid: file_text})
-            file_docid_ordinal.update({docid: ordinal})
+                duplicate_docids.append(docid)
+            else:
+                docids.append(docid)
+                region_by_docid.update({docid: region_id})
+                section_by_docid.update({docid: section_text})
+                page_by_docid.update({docid: page_text})
+                file_by_docid.update({docid: file_text})
+                file_docid_ordinal.update({docid: ordinal})
             ace_counter = ace_counter + 1
         else:
             display_text = ""
@@ -730,6 +737,8 @@ def build_guideline_model(corpus, gid):
             else:
                 return err("ui: viewmodel: " + gid + " malformed coverage row: " + region_id)
             region_rows.append([region_id, display_text, section_text])
+    if duplicate_docids:
+        return err("ui: viewmodel: " + gid + " duplicate docid " + min(duplicate_docids))
     sorted_docids = sorted(docids)
     section_doc_counts = {}
     for docid in sorted_docids:
@@ -775,6 +784,9 @@ def build_guideline_model(corpus, gid):
         ace_digest = fields.pop(0)
         coverage_digest = fields.pop(0)
         payload_digest = fields.pop(0)
+        dup_row = docid in manifest_docids
+        if dup_row:
+            return err("ui: viewmodel: " + gid + " duplicate review-manifest doc " + docid)
         manifest_docids.append(docid)
         ace_digest_by_docid.update({docid: ace_digest})
         payload_digest_by_docid.update({docid: payload_digest})

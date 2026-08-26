@@ -359,6 +359,8 @@ Define [[humanize_section]] taking section_text:
     If [[len]](head_parts) equals 2:
         Set head_word to [[head_parts.pop]](0).
         Set head_number to [[head_parts.pop]](0).
+        If not [[head_number.isascii]]():
+            Set head_word to "".
         If not [[head_number.isdigit]]():
             Set head_word to "".
     Set out_segs to <>.
@@ -396,14 +398,17 @@ Define [[document_title]] taking docid, section_text, page_text, region_id, shar
     Set page_number to [[page_text.strip]]().
     If [[page_number.startswith]]("p"):
         Set page_number to [[page_number.removeprefix]]("p").
+    If not [[page_number.isascii]]():
+        Set page_number to "".
     If not [[page_number.isdigit]]():
         Set page_number to "".
     Set last_part to "".
     For each part in [[region_id.split]]("-"):
         Set last_part to part.
     Set passage_number to "".
-    If [[last_part.isdigit]]():
-        Set passage_number to [[str]]([[int]](last_part)).
+    If [[last_part.isascii]]():
+        If [[last_part.isdigit]]():
+            Set passage_number to [[str]]([[int]](last_part)).
     If page_number:
         If passage_number:
             Give back base plus ", page " plus page_number plus ", passage " plus passage_number.
@@ -708,6 +713,7 @@ Define [[build_guideline_model]] taking corpus, gid:
     Set region_rows to <>.
     Set file_row_regions to {}.
     Set file_docid_ordinal to {}.
+    Set duplicate_docids to <>.
     Set ace_counter to 0.
     Set restates_counter to 0.
     Set uncovered_counter to 0.
@@ -737,13 +743,14 @@ Define [[build_guideline_model]] taking corpus, gid:
                 Give back [[err]]("ui: viewmodel: " plus gid plus " invalid docid " plus docid).
             Set seen to [[region_by_docid.get]](docid, "").
             If seen:
-                Give back [[err]]("ui: viewmodel: " plus gid plus " duplicate docid " plus docid).
-            Do [[docids.append]](docid).
-            Do [[region_by_docid.update]]({docid: region_id}).
-            Do [[section_by_docid.update]]({docid: section_text}).
-            Do [[page_by_docid.update]]({docid: page_text}).
-            Do [[file_by_docid.update]]({docid: file_text}).
-            Do [[file_docid_ordinal.update]]({docid: ordinal}).
+                Do [[duplicate_docids.append]](docid).
+            Otherwise:
+                Do [[docids.append]](docid).
+                Do [[region_by_docid.update]]({docid: region_id}).
+                Do [[section_by_docid.update]]({docid: section_text}).
+                Do [[page_by_docid.update]]({docid: page_text}).
+                Do [[file_by_docid.update]]({docid: file_text}).
+                Do [[file_docid_ordinal.update]]({docid: ordinal}).
             Set ace_counter to ace_counter plus 1.
         Otherwise:
             Set display_text to "".
@@ -775,6 +782,8 @@ Define [[build_guideline_model]] taking corpus, gid:
             Otherwise:
                 Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
             Do [[region_rows.append]](<region_id, display_text, section_text>).
+    If duplicate_docids:
+        Give back [[err]]("ui: viewmodel: " plus gid plus " duplicate docid " plus [[min]](duplicate_docids)).
     Set sorted_docids to [[sorted]](docids).
     Set section_doc_counts to {}.
     For each docid in sorted_docids:
@@ -820,6 +829,9 @@ Define [[build_guideline_model]] taking corpus, gid:
         Set ace_digest to [[fields.pop]](0).
         Set coverage_digest to [[fields.pop]](0).
         Set payload_digest to [[fields.pop]](0).
+        Set dup_row to docid is in manifest_docids.
+        If dup_row:
+            Give back [[err]]("ui: viewmodel: " plus gid plus " duplicate review-manifest doc " plus docid).
         Do [[manifest_docids.append]](docid).
         Do [[ace_digest_by_docid.update]]({docid: ace_digest}).
         Do [[payload_digest_by_docid.update]]({docid: payload_digest}).
