@@ -40,9 +40,9 @@ compiler base:
   committed `.py` is byte-identical to a fresh compile of its `.emm`.
   It also flags any tracked Python outside `vendor/e--/src/` that has
   no `.emm` source. The reviewer interface is E-- like the rest. It
-  uses the `Try:`/`Catch <name>:` verbs that the E-- fork added for it,
-  so a failing standard-library call becomes a named HTTP outcome
-  instead of a generic server error.
+  uses the `Try:`/`Catch <name>:` verbs that the E-- fork added for it.
+  A failing standard-library call then becomes a named HTTP outcome,
+  not a generic server error.
 - **Review is recorded, not asserted.** A reviewer decision names the
   exact bytes it judged. Each ledger row pins a bundle digest over the
   document's ACE text, its coverage row, its source region payload, and
@@ -137,7 +137,7 @@ python3 -P tools/ui.py render <outdir>            # static page export
 ## Reviewer interface
 
 `tools/ui.py serve` starts the reviewer interface on `127.0.0.1`. It
-lists every guideline, then every document, and shows each document
+lists every guideline, then every document. Each document appears
 beside the exact source passage it was written from, its compiled
 Prolog, and its decision history. A reviewer answers one question per
 document: does the ACE representation appropriately reflect the
@@ -155,11 +155,12 @@ uncommitted work. `tools/goal.py check` is the exception: it reads the
 working tree, because it is the gate you run before you commit.
 
 The write path is narrow and guarded. The interface binds the loopback
-address only. It has no accounts and no authentication. A decision is
-accepted only when the request carries the process token, the `Host`
-header names the loopback listener, any `Origin` header matches it, the
-subject digest still matches a fresh derivation from committed state,
-and the ledger digest still matches the ledger on disk. A failed check
+address only. It has no accounts and no authentication. The interface
+accepts a decision only when every guard passes. The request must
+carry the process token and a loopback `Host` header, and any
+`Origin` header must match it. The subject digest must still match a
+fresh derivation from committed state, and the ledger digest must
+still match the ledger on disk. A failed check
 returns a refusal and writes nothing. The ledger write itself is a
 compare-and-swap through a same-directory temporary file, a flush, an
 `fsync`, and an atomic rename. The shared validator in `goal.py`
@@ -450,9 +451,10 @@ rejects as `leaf(Name/Arity)`; a malformed placeholder rejects as
 `marker(_)`. Inherited
 parser, input, and load failures keep their own classes, details, and
 exit codes. The projection emits no document
-indicators, no declarations, and no proof obligations, and it never
-participates in `check`, `aggregate-check`, or `recursion-check`
-compositions.
+indicators, no declarations, and no proof obligations. It never
+enters a document, aggregate-check, or recursion-check composition.
+`goal.py check` re-derives every committed query separately and
+compares the bytes.
 
 ### Query answers
 
@@ -484,7 +486,7 @@ present), `R` is `solutions(Sols)`, or `indeterminate(limit)` when a
 bound trips. Each distinct solution contributes one `sol(Values)`
 row; rows follow the standard order of terms, and values follow the
 answer-manifest order. For a yes-no query
-(`answers([])`), the first proof is conclusive: `R` is `yes`,
+(`answers([])`), the first proof is conclusive. `R` is `yes`,
 `no(finite_failure)` on exhaustive failure, or `indeterminate(limit)`
 when a bound trips before any proof. A nonground solution rejects
 with class `proof` as `nonground_solution(Qid)`. A malformed query
@@ -574,10 +576,11 @@ user request to stop is condition (a) of the goal itself. "Let's stop
 here" satisfies the stop check at once, mid-round included, rather than
 re-arm against the unmet exhaustion clause. The wind-down is to start
 nothing new, state where work stands, and stop. `/goal clear` remains
-the unconditional disarm. The check's first stage validates the
-compendium — the `.agent/compendium.md` organizations table plus
-`.agent/compendium.tsv`: row format and vocabulary, canonical ordering,
-the single-active-row promotion invariant. It prints a terminal meter —
+the unconditional disarm. The check validates the fork
+notices and the strict and adjudication fixtures first. It then
+validates the compendium — the `.agent/compendium.md` organizations
+table plus `.agent/compendium.tsv`: row format and vocabulary,
+canonical ordering, the single-active-row promotion invariant. It prints a terminal meter —
 remaining non-terminal organizations and unfinished guideline rows —
 that measures the exhaustion clause directly. Corpus validation
 (projection-ledger totality, coverage-ledger closure with its
