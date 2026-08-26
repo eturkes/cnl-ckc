@@ -102,15 +102,6 @@ def valid_hex40(value):
     return chars.issubset(allowed)
 def commit_field_ok(value):
     return valid_hex40(value)
-def short_commit(value):
-    chars = list(value)
-    out_text = ""
-    taken = 0
-    for char_text in chars:
-        if taken < 7:
-            out_text = out_text + char_text
-            taken = taken + 1
-    return out_text
 def field_text_ok(value):
     for char_text in value:
         code_point = ord(char_text)
@@ -710,14 +701,35 @@ def build_guideline_model(corpus, gid):
             file_docid_ordinal.update({docid: ordinal})
             ace_counter = ace_counter + 1
         else:
-            region_rows.append([region_id, status_text, section_text])
+            display_text = ""
             if status_text.startswith("restates("):
+                inner = status_text.removeprefix("restates(")
+                if not inner.endswith(")"):
+                    return err("ui: viewmodel: " + gid + " malformed coverage row: " + region_id)
+                inner = inner.removesuffix(")")
+                if not inner:
+                    return err("ui: viewmodel: " + gid + " malformed coverage row: " + region_id)
+                display_text = "Restates " + inner
                 restates_counter = restates_counter + 1
+            elif status_text.startswith("uncovered("):
+                inner = status_text.removeprefix("uncovered(")
+                if not inner.endswith(")"):
+                    return err("ui: viewmodel: " + gid + " malformed coverage row: " + region_id)
+                inner = inner.removesuffix(")")
+                reason_parts = inner.split(": ", 1)
+                reason_text = reason_parts.pop()
+                if len(reason_parts) == 0:
+                    return err("ui: viewmodel: " + gid + " malformed coverage row: " + region_id)
+                if not reason_text:
+                    return err("ui: viewmodel: " + gid + " malformed coverage row: " + region_id)
+                display_text = "Not covered — " + reason_text
+                uncovered_counter = uncovered_counter + 1
+            elif status_text == "pending":
+                display_text = "Pending"
+                pending_counter = pending_counter + 1
             else:
-                if status_text.startswith("uncovered("):
-                    uncovered_counter = uncovered_counter + 1
-                else:
-                    pending_counter = pending_counter + 1
+                return err("ui: viewmodel: " + gid + " malformed coverage row: " + region_id)
+            region_rows.append([region_id, display_text, section_text])
     sorted_docids = sorted(docids)
     section_doc_counts = {}
     for docid in sorted_docids:
@@ -1174,8 +1186,7 @@ def build_index_page(models):
         counts = model.get("counts", {})
         docids = model.get("docids", [])
         cells = []
-        cells.append("<td><a href=\"g/" + url_seg(gid) + "/index.html\">" + esc_text(gid) + "</a></td>")
-        cells.append("<td>" + esc_text(model.get("title", gid)) + "</td>")
+        cells.append("<td><a href=\"g/" + url_seg(gid) + "/index.html\">" + esc_text(model.get("title", gid)) + "</a></td>")
         cells.append("<td>" + str(len(docids)) + "</td>")
         cells.append("<td>" + str(counts.get("regions", 0)) + "</td>")
         cells.append("<td>" + str(counts.get("approved", 0)) + "</td>")
@@ -1189,7 +1200,7 @@ def build_index_page(models):
     parts.append("<h1>Guidelines</h1>")
     parts.append("<section>")
     parts.append("<table>")
-    parts.append("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>")
+    parts.append("<thead><tr><th>Guideline</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>")
     joiner = "\n"
     parts.append("<tbody>" + joiner.join(rows) + "</tbody>")
     parts.append("</table>")
@@ -1259,8 +1270,9 @@ def build_guideline_page(model):
     parts.append("</table>")
     parts.append("</section>")
     body_html = joiner.join(parts)
-    crumb_html = "<a href=\"../../index.html\">guidelines</a> / " + esc_text(gid)
-    return page_html(gid, crumb_html, body_html)
+    title_text = model.get("title", gid)
+    crumb_html = "<a href=\"../../index.html\">guidelines</a> / " + esc_text(title_text)
+    return page_html(title_text, crumb_html, body_html)
 def doc_render_data(model, docid):
     gid = model.get("gid", "")
     guideline_path = model.get("path", None)
@@ -1319,11 +1331,16 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     parts.append("<h2>" + esc_text(doc_title) + " " + chip_html(state) + "</h2>")
     file_name = file_by_docid.get(docid, "")
     base_name = file_name.removeprefix("source/")
-    file_html = esc_text(base_name)
     published = base_name in source_names
+    region_text = region_by_docid.get(docid, "")
+    prov_parts = []
+    if region_text:
+        prov_parts.append(esc_text(region_text))
     if published:
-        file_html = "<a href=\"../source/" + url_seg(base_name) + "\">" + esc_text(base_name) + "</a>"
-    parts.append("<p>" + esc_text(region_by_docid.get(docid, "")) + " · " + file_html + "</p>")
+        prov_parts.append("<a href=\"../source/" + url_seg(base_name) + "\">Source text</a>")
+    if prov_parts:
+        prov_joiner = " · "
+        parts.append("<p>" + prov_joiner.join(prov_parts) + "</p>")
     ledger_by_docid = model.get("ledger_by_docid", {})
     records_href = "../records.html"
     has_history = docid in ledger_by_docid
@@ -1386,7 +1403,7 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
     nav_joiner = " · "
     parts.append("<nav class=\"docnav\">" + nav_joiner.join(nav_parts) + "</nav>")
     body_html = joiner.join(parts)
-    crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(gid) + "</a> / " + esc_text(docid)
+    crumb_html = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" + esc_text(guideline_title) + "</a> / " + esc_text(region_by_docid.get(docid, docid))
     return page_html(doc_title, crumb_html, body_html)
 def build_records_page(model):
     gid = model.get("gid", "")
@@ -1429,8 +1446,6 @@ def build_records_page(model):
                     version_text = "Current"
                 if commit_text:
                     link_count = link_count + 1
-                    if not current:
-                        version_text = short_commit(commit_text)
                     version_text = "<a href=\"" + commit_url_base + esc_attr(commit_text) + "\">" + esc_text(version_text) + "</a>"
                 shown_comment = comment_text
                 if not shown_comment:
@@ -1450,10 +1465,10 @@ def build_records_page(model):
     else:
         parts.append("<p>Each reviewer name is recorded as entered and is not verified.</p>")
         if link_count > 0:
-            parts.append("<p>Each version links the commit that wrote the ACE text the reviewer read.</p>")
+            parts.append("<p>Each version links to the stored version of the text that the reviewer read.</p>")
     parts.append("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>")
     body_html = joiner.join(parts)
-    crumb_html = "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" + esc_text(gid) + "</a> / records"
+    crumb_html = "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" + esc_text(model.get("title", gid)) + "</a> / records"
     return page_html("Decision records", crumb_html, body_html)
 def build_error_page(title_text, heading_text, body_html):
     parts = []
@@ -1670,6 +1685,13 @@ def page_invariant_name(page_text):
     for hex_run in hex_runs:
         if re.search("[0-9]", hex_run):
             return "copy-hex"
+    if re.search("\\b(ace|restates|uncovered)\\(", page_visible):
+        return "copy-functor"
+    short_runs = re.findall("\\b[0-9a-f]{7,15}\\b", page_visible)
+    for short_run in short_runs:
+        if re.search("[0-9]", short_run):
+            if re.search("[a-f]", short_run):
+                return "copy-short-hex"
     return ""
 def selftest_violation():
     if url_seg("a b/%") != "a%20b%2F%25":
@@ -1723,7 +1745,7 @@ def selftest_violation():
     invariant_cases.append(case_row)
     case_row = ["<p><code>0123456789abcdef</code></p>", "copy-hex", "hex-run-16"]
     invariant_cases.append(case_row)
-    case_row = ["<p><code>0123456789abcde</code></p>", "", "hex-run-15"]
+    case_row = ["<p><code>0123456789abcde</code></p>", "copy-short-hex", "hex-run-15"]
     invariant_cases.append(case_row)
     case_row = ["<p>abcdefabcdefabcdef</p>", "", "letters-only-run"]
     invariant_cases.append(case_row)
@@ -1734,6 +1756,22 @@ def selftest_violation():
     case_row = ["<pre>sha256 0123456789abcdef</pre>", "", "quoted-artifact-exempt"]
     invariant_cases.append(case_row)
     case_row = ["<p>sha<span>256</span></p>", "", "split-across-tags"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>ace(a-2)</p>", "copy-functor", "functor-ace"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>restates(b3-01)</p>", "copy-functor", "functor-restates"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>uncovered(heading: x)</p>", "copy-functor", "functor-uncovered"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>space(1) Restates b3-01</p>", "", "functor-embedded-word-exempt"]
+    invariant_cases.append(case_row)
+    case_row = ["<pre>restates(b3-01) 0123456789ab</pre>", "", "functor-pre-exempt"]
+    invariant_cases.append(case_row)
+    case_row = ["<p><code>0abcdef</code></p>", "copy-short-hex", "short-hex-7"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>202211041022</p>", "", "short-hex-digits-only"]
+    invariant_cases.append(case_row)
+    case_row = ["<p>abcdefabcdef</p>", "", "short-hex-letters-only"]
     invariant_cases.append(case_row)
     for invariant_case in invariant_cases:
         case_copy = list(invariant_case)

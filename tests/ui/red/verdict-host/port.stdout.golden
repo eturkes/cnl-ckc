@@ -72,7 +72,7 @@ a { color: inherit; text-decoration: none; }
 <main id="main">
 <h1>Forbidden</h1>
 <p>The request was refused. Open the document page again from this site and submit the decision again.</p>
-<!-- ui: verdict: host not allowed -->
+<!-- ui: request: host not allowed -->
 </main>
 <footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>
 </body>

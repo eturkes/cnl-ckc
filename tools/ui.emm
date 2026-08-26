@@ -116,15 +116,6 @@ Define [[valid_hex40]] taking value:
 Define [[commit_field_ok]] taking value:
     Give back [[valid_hex40]](value).
 
-Define [[short_commit]] taking value:
-    Set chars to [[list]](value).
-    Set out_text to "".
-    Set taken to 0.
-    For each char_text in chars:
-        If taken is less than 7:
-            Set out_text to out_text plus char_text.
-            Set taken to taken plus 1.
-    Give back out_text.
 
 Define [[field_text_ok]] taking value:
     For each char_text in value:
@@ -755,14 +746,35 @@ Define [[build_guideline_model]] taking corpus, gid:
             Do [[file_docid_ordinal.update]]({docid: ordinal}).
             Set ace_counter to ace_counter plus 1.
         Otherwise:
-            Do [[region_rows.append]](<region_id, status_text, section_text>).
+            Set display_text to "".
             If [[status_text.startswith]]("restates("):
+                Set inner to [[status_text.removeprefix]]("restates(").
+                If not [[inner.endswith]](")"):
+                    Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
+                Set inner to [[inner.removesuffix]](")").
+                If not inner:
+                    Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
+                Set display_text to "Restates " plus inner.
                 Set restates_counter to restates_counter plus 1.
+            Otherwise if [[status_text.startswith]]("uncovered("):
+                Set inner to [[status_text.removeprefix]]("uncovered(").
+                If not [[inner.endswith]](")"):
+                    Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
+                Set inner to [[inner.removesuffix]](")").
+                Set reason_parts to [[inner.split]](": ", 1).
+                Set reason_text to [[reason_parts.pop]]().
+                If [[len]](reason_parts) equals 0:
+                    Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
+                If not reason_text:
+                    Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
+                Set display_text to "Not covered — " plus reason_text.
+                Set uncovered_counter to uncovered_counter plus 1.
+            Otherwise if status_text equals "pending":
+                Set display_text to "Pending".
+                Set pending_counter to pending_counter plus 1.
             Otherwise:
-                If [[status_text.startswith]]("uncovered("):
-                    Set uncovered_counter to uncovered_counter plus 1.
-                Otherwise:
-                    Set pending_counter to pending_counter plus 1.
+                Give back [[err]]("ui: viewmodel: " plus gid plus " malformed coverage row: " plus region_id).
+            Do [[region_rows.append]](<region_id, display_text, section_text>).
     Set sorted_docids to [[sorted]](docids).
     Set section_doc_counts to {}.
     For each docid in sorted_docids:
@@ -1238,8 +1250,7 @@ Define [[build_index_page]] taking models:
         Set counts to [[model.get]]("counts", {}).
         Set docids to [[model.get]]("docids", <>).
         Set cells to <>.
-        Do [[cells.append]]("<td><a href=\"g/" plus [[url_seg]](gid) plus "/index.html\">" plus [[esc_text]](gid) plus "</a></td>").
-        Do [[cells.append]]("<td>" plus [[esc_text]]([[model.get]]("title", gid)) plus "</td>").
+        Do [[cells.append]]("<td><a href=\"g/" plus [[url_seg]](gid) plus "/index.html\">" plus [[esc_text]]([[model.get]]("title", gid)) plus "</a></td>").
         Do [[cells.append]]("<td>" plus [[str]]([[len]](docids)) plus "</td>").
         Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("regions", 0)) plus "</td>").
         Do [[cells.append]]("<td>" plus [[str]]([[counts.get]]("approved", 0)) plus "</td>").
@@ -1253,7 +1264,7 @@ Define [[build_index_page]] taking models:
     Do [[parts.append]]("<h1>Guidelines</h1>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<table>").
-    Do [[parts.append]]("<thead><tr><th>Guideline</th><th>Title</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>").
+    Do [[parts.append]]("<thead><tr><th>Guideline</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>").
     Set joiner to "\n".
     Do [[parts.append]]("<tbody>" plus [[joiner.join]](rows) plus "</tbody>").
     Do [[parts.append]]("</table>").
@@ -1324,8 +1335,9 @@ Define [[build_guideline_page]] taking model:
     Do [[parts.append]]("</table>").
     Do [[parts.append]]("</section>").
     Set body_html to [[joiner.join]](parts).
-    Set crumb_html to "<a href=\"../../index.html\">guidelines</a> / " plus [[esc_text]](gid).
-    Give back [[page_html]](gid, crumb_html, body_html).
+    Set title_text to [[model.get]]("title", gid).
+    Set crumb_html to "<a href=\"../../index.html\">guidelines</a> / " plus [[esc_text]](title_text).
+    Give back [[page_html]](title_text, crumb_html, body_html).
 
 Define [[doc_render_data]] taking model, docid:
     Set gid to [[model.get]]("gid", "").
@@ -1386,11 +1398,16 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Do [[parts.append]]("<h2>" plus [[esc_text]](doc_title) plus " " plus [[chip_html]](state) plus "</h2>").
     Set file_name to [[file_by_docid.get]](docid, "").
     Set base_name to [[file_name.removeprefix]]("source/").
-    Set file_html to [[esc_text]](base_name).
     Set published to base_name is in source_names.
+    Set region_text to [[region_by_docid.get]](docid, "").
+    Set prov_parts to <>.
+    If region_text:
+        Do [[prov_parts.append]]([[esc_text]](region_text)).
     If published:
-        Set file_html to "<a href=\"../source/" plus [[url_seg]](base_name) plus "\">" plus [[esc_text]](base_name) plus "</a>".
-    Do [[parts.append]]("<p>" plus [[esc_text]]([[region_by_docid.get]](docid, "")) plus " · " plus file_html plus "</p>").
+        Do [[prov_parts.append]]("<a href=\"../source/" plus [[url_seg]](base_name) plus "\">Source text</a>").
+    If prov_parts:
+        Set prov_joiner to " · ".
+        Do [[parts.append]]("<p>" plus [[prov_joiner.join]](prov_parts) plus "</p>").
     Set ledger_by_docid to [[model.get]]("ledger_by_docid", {}).
     Set records_href to "../records.html".
     Set has_history to docid is in ledger_by_docid.
@@ -1453,7 +1470,7 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
     Set nav_joiner to " · ".
     Do [[parts.append]]("<nav class=\"docnav\">" plus [[nav_joiner.join]](nav_parts) plus "</nav>").
     Set body_html to [[joiner.join]](parts).
-    Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](gid) plus "</a> / " plus [[esc_text]](docid).
+    Set crumb_html to "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">" plus [[esc_text]](guideline_title) plus "</a> / " plus [[esc_text]]([[region_by_docid.get]](docid, docid)).
     Give back [[page_html]](doc_title, crumb_html, body_html).
 
 Define [[build_records_page]] taking model:
@@ -1497,8 +1514,6 @@ Define [[build_records_page]] taking model:
                     Set version_text to "Current".
                 If commit_text:
                     Set link_count to link_count plus 1.
-                    If not current:
-                        Set version_text to [[short_commit]](commit_text).
                     Set version_text to "<a href=\"" plus commit_url_base plus [[esc_attr]](commit_text) plus "\">" plus [[esc_text]](version_text) plus "</a>".
                 Set shown_comment to comment_text.
                 If not shown_comment:
@@ -1518,10 +1533,10 @@ Define [[build_records_page]] taking model:
     Otherwise:
         Do [[parts.append]]("<p>Each reviewer name is recorded as entered and is not verified.</p>").
         If link_count is greater than 0:
-            Do [[parts.append]]("<p>Each version links the commit that wrote the ACE text the reviewer read.</p>").
+            Do [[parts.append]]("<p>Each version links to the stored version of the text that the reviewer read.</p>").
     Do [[parts.append]]("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>").
     Set body_html to [[joiner.join]](parts).
-    Set crumb_html to "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" plus [[esc_text]](gid) plus "</a> / records".
+    Set crumb_html to "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">" plus [[esc_text]]([[model.get]]("title", gid)) plus "</a> / records".
     Give back [[page_html]]("Decision records", crumb_html, body_html).
 
 Define [[build_error_page]] taking title_text, heading_text, body_html:
@@ -1747,6 +1762,13 @@ Define [[page_invariant_name]] taking page_text:
     For each hex_run in hex_runs:
         If [[re.search]]("[0-9]", hex_run):
             Give back "copy-hex".
+    If [[re.search]]("\\b(ace|restates|uncovered)\\(", page_visible):
+        Give back "copy-functor".
+    Set short_runs to [[re.findall]]("\\b[0-9a-f]{7,15}\\b", page_visible).
+    For each short_run in short_runs:
+        If [[re.search]]("[0-9]", short_run):
+            If [[re.search]]("[a-f]", short_run):
+                Give back "copy-short-hex".
     Give back "".
 
 Define [[selftest_violation]] taking nothing:
@@ -1801,7 +1823,7 @@ Define [[selftest_violation]] taking nothing:
     Do [[invariant_cases.append]](case_row).
     Set case_row to <"<p><code>0123456789abcdef</code></p>", "copy-hex", "hex-run-16">.
     Do [[invariant_cases.append]](case_row).
-    Set case_row to <"<p><code>0123456789abcde</code></p>", "", "hex-run-15">.
+    Set case_row to <"<p><code>0123456789abcde</code></p>", "copy-short-hex", "hex-run-15">.
     Do [[invariant_cases.append]](case_row).
     Set case_row to <"<p>abcdefabcdefabcdef</p>", "", "letters-only-run">.
     Do [[invariant_cases.append]](case_row).
@@ -1812,6 +1834,22 @@ Define [[selftest_violation]] taking nothing:
     Set case_row to <"<pre>sha256 0123456789abcdef</pre>", "", "quoted-artifact-exempt">.
     Do [[invariant_cases.append]](case_row).
     Set case_row to <"<p>sha<span>256</span></p>", "", "split-across-tags">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>ace(a-2)</p>", "copy-functor", "functor-ace">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>restates(b3-01)</p>", "copy-functor", "functor-restates">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>uncovered(heading: x)</p>", "copy-functor", "functor-uncovered">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>space(1) Restates b3-01</p>", "", "functor-embedded-word-exempt">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<pre>restates(b3-01) 0123456789ab</pre>", "", "functor-pre-exempt">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p><code>0abcdef</code></p>", "copy-short-hex", "short-hex-7">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>202211041022</p>", "", "short-hex-digits-only">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<p>abcdefabcdef</p>", "", "short-hex-letters-only">.
     Do [[invariant_cases.append]](case_row).
     For each invariant_case in invariant_cases:
         Set case_copy to [[list]](invariant_case).
