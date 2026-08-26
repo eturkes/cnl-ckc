@@ -1,4 +1,4 @@
-# M4 — adjudication UI + query/trace compiler foundation
+# Adjudication UI + query/trace compiler foundation (M4)
 
 UNITS SHIPPED, REVIEW PENDING milestone record; stub = `.agent/roadmap.md`.
 Live law = README (schema, Operating, query/trace sections) + project
@@ -14,9 +14,8 @@ zero JS) that lists every ACE document with review status, shows each
 beside its exact source region(s), projection notes and compiled Prolog,
 and records approve/reject + comment verdicts in a gated audit ledger
 (M4.1–M4.4), plus the question→answer→trace compiler (M4.5–M4.7); M4.13
-closes the review surface under the clinician design law. Design-intent anchor = `.agent/mockups/review.png`
-(ballpark-approved); post-close user-led style iteration
-(functionality-stable) on demand.
+closes the review surface under the clinician design law; post-close
+user-led style iteration (functionality-stable) on demand.
 
 Terminal state (at M4.13 close d119e25): `python3 -P tools/goal.py check` +
 `python3 -P tools/regen.py --check` green — `goal: check ok 1 guidelines
@@ -138,7 +137,7 @@ Units — 8 shipped: 4.1→4.4 (adjudication UI consumable); 4.5→4.6→4.7
 (question/answer/trace artifacts); 4.13 (review-UI design-law close).
 Former 4.8–4.11 rescoped out of M4, later dropped from project scope
 (feature-complete ruling); 4.12's review-scoped docs folded into 4.13. Narratives + SHAs = `git log --grep "(M4[. ]" -p --
-.agent/roadmap.md .agent/archive/m4.md`.
+.agent/roadmap.md .agent/archive/`.
 
 - M4.1 DONE (kernel) — strict E-- exception verbs: minimal
   `Try:`/`Catch <name>:` block statements in the vendor/e-- fork

@@ -1,4 +1,4 @@
-# M1 — American clinical guideline source compendium (easy tier)
+# Guideline source compendium, easy tier (M1)
 
 REVIEWED milestone record; stub = `.agent/roadmap.md`; technique =
 `harvest-technique.md` beside this file.

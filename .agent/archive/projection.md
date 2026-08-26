@@ -1,4 +1,4 @@
-# M3 — projection redesign (clinician-verifiable ACE)
+# Projection redesign — clinician-verifiable ACE (M3)
 
 REVIEWED milestone record; stub = `.agent/roadmap.md`. Live law = README
 schema section + the governing authoring rulings below.

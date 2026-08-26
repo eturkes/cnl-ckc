@@ -8,8 +8,11 @@ root `README.md` § Operating; queue: `.agent/queue.md`. Scope is final
 After it closes, the repo's remaining work = `/goal` rounds to compendium
 exhaustion + human adjudication through the reviewer UI; a bare
 `/session-roadmap` then closes read-only, and new development exists only
-by explicit user direction. Milestone records = `.agent/archive/` (read on
-demand); this file keeps a stub per closed milestone + the one live unit.
+by explicit user direction. Milestone records = `.agent/archive/` —
+topical filenames, read on demand; this file keeps a stub per closed
+milestone + the one live unit. `M<n>` = commit-message keys (grep
+pointers per stub); the key sequence keeps gaps where milestones were
+removed at the feature-complete ruling.
 
 ## Standing direction
 
@@ -32,7 +35,7 @@ demand); this file keeps a stub per closed milestone + the one live unit.
   classes, corpus protocol) stay in corpus data (compendium header,
   per-guideline files), never in code.
 
-## M1 — American clinical guideline source compendium (easy tier) — REVIEWED
+## Guideline source compendium (M1) — REVIEWED
 
 Goal: `.agent/compendium.md` (rules + org table) + `.agent/compendium.tsv`
 (guideline rows) = the master list of eligible American clinical
@@ -42,11 +45,11 @@ Closed at ORG-UNIVERSE completeness: 475 organizations, 1,118 guideline
 rows, every org row terminal; close meter `terminal remaining: orgs=0
 rows=847 provisional=54` — row-status residue = the intended `/goal`
 worklist, not a defect. Durable rulings = compendium header; scope
-rulings, harvest shape + unit narratives = `.agent/archive/m1.md`;
+rulings, harvest shape + unit narratives = `.agent/archive/harvest.md`;
 technique = `.agent/archive/harvest-technique.md`; unit history =
 `git log --grep "(M1[. ]" -p -- .agent/roadmap.md`.
 
-## M3 — projection redesign (clinician-verifiable ACE) — REVIEWED
+## Projection redesign (M3) — REVIEWED
 
 Goal: fixture-free, source-anchored, knowledge-only ACE; frozen
 engine-portable public Prolog ABI (schema v1); proof obligations
@@ -58,11 +61,11 @@ aggregate under bounded search, lexicon 487 live entries, custody
 ledgers total + set-equal to the ACE inventory, queue gate lifted —
 corpus growth since = `/goal` rounds under the frozen v1 knowledge-only
 contract. Live law = README schema section + the governing authoring
-rulings in `.agent/archive/m3.md` (with assurance + evidence chain,
+rulings in `.agent/archive/projection.md` (with assurance + evidence chain,
 unit gauges, review record, out-of-scope, sizing analogs); history =
 `git log --grep "(M3[. ]" -p -- .agent/roadmap.md`.
 
-## M4 — adjudication UI + query/trace compiler — UNITS SHIPPED, REVIEW PENDING
+## Adjudication UI + query/trace compiler (M4) — UNITS SHIPPED, REVIEW PENDING
 
 Goal (rescoped: the query-demonstrator tab, graph-explorer tab +
 portable-KB-dist units left M4 and are out of project scope —
@@ -86,10 +89,10 @@ Live law = README (schema, Operating, query/trace sections) + project
 construction + stdlib trust surface, committed-read serve surface, query
 grammar + result algebra, compiler closure, review-subject bundle v2,
 mutation safety, design-law specifics), unit records, gauges, sizing,
-assurance + out-of-scope = `.agent/archive/m4.md`; history = `git log
---grep "(M4[. ]" -p -- .agent/roadmap.md .agent/archive/m4.md`.
+assurance + out-of-scope = `.agent/archive/ui.md`; history = `git log
+--grep "(M4[. ]" -p -- .agent/roadmap.md .agent/archive/`.
 
-## Project review — M4 + project close — NEXT (the final roadmap/polish work)
+## Project review + close (M4) — NEXT (the final roadmap/polish work)
 
 One MILESTONE-REVIEW session (context policy: runs past compaction
 across coherent checkpoints) closes all four tracks below; at its close
@@ -97,7 +100,7 @@ commits the project is feature complete.
 
 1. M4 review — the standing review battery over the shipped surface:
    per-unit reviewers (4.1–4.7, 4.13), one cross-cutting lens, one
-   `audit-m4` claim replayer whose claim surface = `.agent/archive/m4.md`
+   `audit-m4` claim replayer whose claim surface = `.agent/archive/ui.md`
    + `.scratch/contracts/m4u*.md` + the M4 terminal-state line above
    (the roadmap holds no other M4 claim).
 2. Polish discharge — `.agent/polish.md` (pre-pruned to operational
@@ -130,7 +133,7 @@ commits the project is feature complete.
    UI/tools/vendor/`.agent` excluded by construction.
 4. UI production bar + close — README records: the reviewer UI is
    production at local run (`ui.py serve`, loopback; web hosting out of
-   scope) + the export/verification story. Close: `.agent/archive/m4.md`
+   scope) + the export/verification story. Close: `.agent/archive/ui.md`
    header REVIEWED + review record appended (project-close record
    included); `.agent/polish.md` = closed empty register; memory pruned
    to the operating set; this file rewritten to the terminal operating
