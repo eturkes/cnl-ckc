@@ -6,15 +6,15 @@ per guideline. Discovery ledger only — a guideline is fetched exactly
 when its row is promoted into `.agent/queue.md` (procedure: root
 `README.md` § Operating).
 
-Construction is staged (roadmap M1): the organization universe and one
+Construction is staged: the organization universe and one
 seed guideline per confirmed issuer land first, per-org index sweeps fill
 the guideline rows, and an aggregator cross-check closes the gap list.
 Until every organization row reaches a terminal sweep state, the
 guideline list is a seed roster, not the complete list.
 
-Coverage is also tiered. M1 harvests organizations whose index enumerates
-in ≤2 anonymous fetches and whose artifacts classify without an
-authenticated session; the rest carry `swept = blocked(<why>)` as
+Coverage is also tiered. The easy tier covers organizations whose index
+enumerates in ≤2 anonymous fetches and whose artifacts classify without
+an authenticated session; the rest carry `swept = blocked(<why>)` as
 named, enumerated gaps — hard-tier harvest sits outside the project's
 scope and reopens only by explicit user direction. A bounded fan-out is easy
 tier as well: an index whose entries are topic subindexes qualifies when
@@ -775,6 +775,6 @@ within a band, then version year descending and title within an org.
 Guideline rows live in `.agent/compendium.tsv` — tab-separated, one row per
 guideline, columns `org`, `title (year)`, `URL`, `access`, `status`, `notes`
 exactly as `## Row formats` defines them, in the file order `## Queue promotion`
-fixes. They moved out of this file at roadmap M1.2b: the table passes a thousand
+fixes. They moved out of this file at M1.2b: the table passes a thousand
 rows there, and every agent reading these rules would otherwise read the whole
 corpus with them.

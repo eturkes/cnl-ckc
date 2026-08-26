@@ -11,9 +11,9 @@ exhaustion + human adjudication through the reviewer UI; a bare
 `/session-roadmap` closes read-only, and new development exists only
 by explicit user direction. Milestone records = `.agent/archive/` —
 topical filenames, read on demand; this file keeps a stub per closed
-milestone. `M<n>` = commit-message keys (grep pointers per stub); the
-key sequence keeps gaps where milestones were removed at the
-feature-complete ruling.
+milestone. `M<n>` = commit-message trace keys (grep pointers
+per stub); the compendium replan restarted the numbering, so key
+greps also hit the earlier pipeline era — topic sorts the hits.
 
 ## Standing direction
 
@@ -36,7 +36,7 @@ feature-complete ruling.
   classes, corpus protocol) stay in corpus data (compendium header,
   per-guideline files), never in code.
 
-## Guideline source compendium (M1) — REVIEWED
+## Guideline source compendium — REVIEWED
 
 Goal: `.agent/compendium.md` (rules + org table) + `.agent/compendium.tsv`
 (guideline rows) = the master list of eligible American clinical
@@ -50,7 +50,7 @@ rulings, harvest shape + unit narratives = `.agent/archive/harvest.md`;
 technique = `.agent/archive/harvest-technique.md`; unit history =
 `git log --grep "(M1[. ]" -p -- .agent/roadmap.md`.
 
-## Projection redesign (M3) — REVIEWED
+## Projection redesign — REVIEWED
 
 Goal: fixture-free, source-anchored, knowledge-only ACE; frozen
 engine-portable public Prolog ABI (schema v1); proof obligations
@@ -66,7 +66,7 @@ rulings in `.agent/archive/projection.md` (with assurance + evidence chain,
 unit gauges, review record, out-of-scope, sizing analogs); history =
 `git log --grep "(M3[. ]" -p -- .agent/roadmap.md`.
 
-## Adjudication UI + query/trace compiler + KB export (M4) — REVIEWED
+## Adjudication UI + query/trace compiler + KB export — REVIEWED
 
 Goal (rescoped at the feature-complete ruling; the final project review
 landed the lean KB export): a local reviewer UI (strict E--, zero JS)
