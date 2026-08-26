@@ -1,4 +1,5 @@
 Use datetime.
+Use fcntl.
 Use hashlib.
 Use html.
 Use os.
@@ -12,7 +13,7 @@ Use tempfile.
 Use urllib.parse.
 Use wsgiref.simple_server.
 
-Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--commit <sha1-or-empty>] [--fault after-tmp-write]".
+Set usage_text to "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--commit <40hex>] [--fault after-tmp-write]".
 Set census_rx to [[re.compile]]("identify the ([0-9]+) payloads below").
 Set ledger_header_text to "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment".
 Set commit_url_base to "https://github.com/eturkes/cnl-ckc/commit/".
@@ -56,7 +57,11 @@ Define [[valid_ui_id]] taking value:
         Give back False.
     If [[value.startswith]]("-"):
         Give back False.
-    Set value_bytes to [[value.encode]]("utf-8").
+    Set value_bytes to [[bytes]]().
+    Try:
+        Set value_bytes to [[value.encode]]("utf-8").
+    Catch UnicodeEncodeError:
+        Give back False.
     If [[len]](value_bytes) is greater than 250:
         Give back False.
     Give back subset.
@@ -109,8 +114,6 @@ Define [[valid_hex40]] taking value:
     Give back [[chars.issubset]](allowed).
 
 Define [[commit_field_ok]] taking value:
-    If value equals "":
-        Give back True.
     Give back [[valid_hex40]](value).
 
 Define [[short_commit]] taking value:
@@ -206,8 +209,7 @@ Define [[parse_evidence]] taking text:
     Set census_count to None.
     Set census_hit to [[census_rx.search]](text).
     If census_hit does not equal None:
-        Set census_text to [[census_hit.group]](1).
-        Set census_count to [[int]](census_text).
+        Set census_count to [[census_hit.group]](1).
     Set locator_ids to <>.
     Set locator_lines to {}.
     Set locator_counts to {}.
@@ -450,37 +452,28 @@ Define [[git_output]] taking work_dir, arg_list:
         Give back None.
     Give back [[result.stdout.decode]]("utf-8", errors="replace").
 
-Define [[uncommitted_guidelines]] taking root_path:
+Define [[corpus_head_hex]] taking root_path:
     Set work_dir to [[str]]([[root_path.resolve]]()).
-    Set top_text to [[git_output]](work_dir, <"rev-parse", "--show-toplevel">).
-    If top_text equals None:
-        Give back None.
+    Set top_command to <"git", "rev-parse", "--show-toplevel">.
+    Set top_result to None.
+    Try:
+        Set top_result to [[subprocess.run]](top_command, capture_output=True, cwd=work_dir).
+    Catch OSError:
+        Give back "unavailable".
+    If top_result.returncode does not equal 0:
+        Give back "".
+    Set top_text to [[top_result.stdout.decode]]("utf-8", errors="replace").
     Set top_path to [[pathlib.Path]]([[top_text.strip]]()).
     Set top_resolved to [[str]]([[top_path.resolve]]()).
     If top_resolved does not equal work_dir:
-        Give back None.
-    Set changed to [[git_output]](work_dir, <"diff", "--name-only", "-z", "HEAD", "--", "guidelines">).
-    If changed equals None:
-        Give back None.
-    Set untracked to [[git_output]](work_dir, <"ls-files", "--others", "--exclude-standard", "-z", "--", "guidelines">).
-    If untracked equals None:
-        Give back None.
-    Set gids to <>.
-    Set listed to changed plus untracked.
-    For each chunk in [[listed.split]]("\0"):
-        If chunk:
-            Set is_ledger to [[chunk.endswith]]("/audit/adjudication.tsv").
-            If not is_ledger:
-                Set segs to [[chunk.split]]("/").
-                If [[len]](segs) is greater than 2:
-                    Set seg_copy to [[list]](segs).
-                    Set head_seg to [[seg_copy.pop]](0).
-                    Set gid to [[seg_copy.pop]](0).
-                    If head_seg equals "guidelines":
-                        Set known to gid is in gids.
-                        If not known:
-                            Do [[gids.append]](gid).
-    Give back [[sorted]](gids).
+        Give back "".
+    Set head_text to [[git_output]](work_dir, <"rev-parse", "HEAD">).
+    If head_text equals None:
+        Give back "".
+    Set head_hex to [[head_text.strip]]().
+    If not [[valid_hex40]](head_hex):
+        Give back "".
+    Give back head_hex.
 
 Define [[extract_committed]] taking archive_path, dest_root:
     Set extract_ok to True.
@@ -518,12 +511,12 @@ Define [[extract_committed]] taking archive_path, dest_root:
         Set extract_ok to False.
     Give back extract_ok.
 
-Define [[materialize_committed]] taking root_path:
+Define [[materialize_committed]] taking root_path, commit_hex:
     Set work_dir to [[str]]([[root_path.resolve]]()).
     Set scratch_text to [[tempfile.mkdtemp]]().
     Set scratch_dir to [[pathlib.Path]](scratch_text).
     Set archive_path to [[scratch_dir.joinpath]]("committed.tar").
-    Set command to <"git", "archive", "--format=tar", "-o", [[str]](archive_path), "HEAD", "guidelines">.
+    Set command to <"git", "archive", "--format=tar", "-o", [[str]](archive_path), commit_hex, "guidelines">.
     Set result to None.
     Set launched to True.
     Try:
@@ -569,27 +562,29 @@ Define [[worktree_corpus]] taking root_path:
     Do [[corpus.update]]({"root": root_path}).
     Do [[corpus.update]]({"real_root": root_path}).
     Do [[corpus.update]]({"scratch": ""}).
+    Do [[corpus.update]]({"commit": ""}).
     Give back corpus.
 
 Define [[resolve_corpus]] taking root_path:
     Set corpus to [[worktree_corpus]](root_path).
-    Set gids to [[uncommitted_guidelines]](root_path).
-    If gids equals None:
+    Set head_hex to [[corpus_head_hex]](root_path).
+    If head_hex equals "unavailable":
+        Give back [[err]]("ui: corpus: cannot read the committed guideline files").
+    If head_hex equals "":
         Give back [[ok]](corpus).
-    If not gids:
-        Give back [[ok]](corpus).
-    Set pair to [[materialize_committed]](root_path).
+    Set pair to [[materialize_committed]](root_path, head_hex).
     Set pair_copy to [[list]](pair).
     Set scratch_text to [[pair_copy.pop]](0).
     Set dest_root to [[pair_copy.pop]](0).
     If scratch_text equals "":
-        Give back [[ok]](corpus).
+        Give back [[err]]("ui: corpus: cannot read the committed guideline files").
     Set overlay_ok to [[overlay_ledgers]](root_path, dest_root).
     If not overlay_ok:
         Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
         Give back [[err]]("ui: corpus: cannot read the committed guideline files").
     Do [[corpus.update]]({"root": dest_root}).
     Do [[corpus.update]]({"scratch": scratch_text}).
+    Do [[corpus.update]]({"commit": head_hex}).
     Give back [[ok]](corpus).
 
 Define [[release_corpus]] taking corpus:
@@ -597,26 +592,13 @@ Define [[release_corpus]] taking corpus:
     If scratch_text:
         Do [[shutil.rmtree]](scratch_text, ignore_errors=True).
 
-Define [[ace_commit_hex]] taking guideline_path, docid, committed:
+Define [[ace_commit_hex]] taking guideline_path, docid, corpus_commit:
+    If not [[valid_hex40]](corpus_commit):
+        Give back "".
     Set ace_path to [[guideline_path.joinpath]]("ace", docid plus ".ace").
     Set work_dir to [[str]]([[guideline_path.resolve]]()).
     Set ace_text to [[str]]([[ace_path.resolve]]()).
-    If not committed:
-        If not [[ace_path.is_file]]():
-            Give back "".
-        Set status_command to <"git", "status", "--porcelain", "--", ace_text>.
-        Set status_result to None.
-        Try:
-            Set status_result to [[subprocess.run]](status_command, capture_output=True, cwd=work_dir).
-        Catch OSError:
-            Give back "".
-        If status_result.returncode does not equal 0:
-            Give back "".
-        Set status_text to [[status_result.stdout.decode]]("utf-8", errors="replace").
-        Set status_trimmed to [[status_text.strip]]().
-        If status_trimmed:
-            Give back "".
-    Set log_command to <"git", "log", "-1", "--format=%H", "HEAD", "--", ace_text>.
+    Set log_command to <"git", "log", "-1", "--format=%H", corpus_commit, "--", ace_text>.
     Set log_result to None.
     Try:
         Set log_result to [[subprocess.run]](log_command, capture_output=True, cwd=work_dir).
@@ -711,10 +693,7 @@ Define [[build_doc_states]] taking guideline_path, gid, docids, review_by_docid,
 Define [[build_guideline_model]] taking corpus, gid:
     Set root_path to [[corpus.get]]("root", None).
     Set real_root to [[corpus.get]]("real_root", None).
-    Set scratch_text to [[corpus.get]]("scratch", "").
-    Set committed_corpus to False.
-    If scratch_text:
-        Set committed_corpus to True.
+    Set corpus_commit to [[corpus.get]]("commit", "").
     Set guideline_path to [[root_path.joinpath]]("guidelines", gid).
     Set real_guideline_path to [[real_root.joinpath]]("guidelines", gid).
     If not [[valid_ui_id]](gid):
@@ -903,7 +882,7 @@ Define [[build_guideline_model]] taking corpus, gid:
             Set file_regions to [[file_row_regions.get]](file_text, <>).
             Set row_total to [[len]](file_regions).
             Set payload_total to [[len]](ordered_payloads).
-            If census_count does not equal payload_total:
+            If census_count does not equal [[str]](payload_total):
                 Give back [[err]]("ui: viewmodel: " plus gid plus " region census mismatch " plus file_text plus " coverage=" plus [[str]](row_total) plus " payloads=" plus [[str]](payload_total)).
             If row_total does not equal payload_total:
                 Give back [[err]]("ui: viewmodel: " plus gid plus " region census mismatch " plus file_text plus " coverage=" plus [[str]](row_total) plus " payloads=" plus [[str]](payload_total)).
@@ -929,7 +908,7 @@ Define [[build_guideline_model]] taking corpus, gid:
     Do [[model.update]]({"gid": gid}).
     Do [[model.update]]({"path": guideline_path}).
     Do [[model.update]]({"real_path": real_guideline_path}).
-    Do [[model.update]]({"committed_corpus": committed_corpus}).
+    Do [[model.update]]({"corpus_commit": corpus_commit}).
     Set title_result to [[readme_title]](guideline_path, gid).
     If [[result_kind]](title_result) equals "err":
         Give back title_result.
@@ -1981,11 +1960,19 @@ Define [[discard_tmp]] taking tmp_text:
     Catch OSError:
         Set discard_failed to True.
 
+Define [[release_ledger_lock]] taking lock_fd, audit_dir:
+    Try:
+        Do [[os.unlink]]([[str]]([[audit_dir.joinpath]](".adjudication.lock"))).
+    Catch OSError:
+        Set unlink_failed to True.
+    Try:
+        Do [[os.close]](lock_fd).
+    Catch OSError:
+        Set close_failed to True.
+
 Define [[handle_verdict_post]] taking model, gid, docid, meta:
     Set port_value to [[serve_config.get]]("port", 8377).
     Set expected_host to "127.0.0.1:" plus [[str]](port_value).
-    If [[meta.get]]("host", "") does not equal expected_host:
-        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: verdict: host not allowed", refusal_refused_text).
     Set origin_value to [[meta.get]]("origin", None).
     Set expected_origin to "http://" plus expected_host.
     If origin_value does not equal None:
@@ -1994,6 +1981,28 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
     If [[meta.get]]("content_type", "") does not equal "application/x-www-form-urlencoded":
         Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: unsupported content type", refusal_invalid_form_text).
     Set body_bytes to [[meta.get]]("body", None).
+    If body_bytes equals None:
+        Set stream to [[meta.get]]("stream", None).
+        Set length_text to [[meta.get]]("length_text", "").
+        Set length_ok to True.
+        Set length_num to 0.
+        Try:
+            Set length_num to [[int]](length_text).
+        Catch ValueError:
+            Set length_ok to False.
+        If length_num is less than 0:
+            Set length_ok to False.
+        If length_ok:
+            If stream does not equal None:
+                Set read_ok to True.
+                Set read_bytes to [[bytes]]().
+                Try:
+                    Set read_bytes to [[stream.read]](length_num).
+                Catch OSError:
+                    Set read_ok to False.
+                If read_ok:
+                    If [[len]](read_bytes) equals length_num:
+                        Set body_bytes to read_bytes.
     If body_bytes equals None:
         Give back [[verdict_refusal]]("400 Bad Request", "Bad request", "ui: verdict: missing body", refusal_invalid_form_text).
     Set fields_result to [[parse_form_fields]](body_bytes).
@@ -2060,7 +2069,7 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
         Set now_text to [[now_value.strftime]]("%Y-%m-%dT%H:%M:%SZ").
     Set commit_text to [[serve_config.get]]("commit_pin", None).
     If commit_text equals None:
-        Set commit_text to [[ace_commit_hex]](real_guideline_path, docid, [[model.get]]("committed_corpus", False)).
+        Set commit_text to [[ace_commit_hex]](real_guideline_path, docid, [[model.get]]("corpus_commit", "")).
     Set tab_text to "\t".
     Set new_line to docid plus tab_text plus [[fields.get]]("review_sha256") plus tab_text plus commit_text plus tab_text plus [[fields.get]]("verdict") plus tab_text plus [[fields.get]]("reviewer") plus tab_text plus now_text plus tab_text plus [[fields.get]]("comment").
     Set new_key to docid plus tab_text plus now_text.
@@ -2157,17 +2166,55 @@ Define [[handle_verdict_post]] taking model, gid, docid, meta:
         Give back [[error_response]]("ui: adjudication ledger invalid: " plus relay).
     If [[serve_config.get]]("fault", "") equals "after-tmp-write":
         Exit with 3.
+    Set lock_fd to -1.
+    Try:
+        Set lock_fd to [[os.open]]([[str]]([[audit_dir.joinpath]](".adjudication.lock")), 66, 384).
+        Do [[fcntl.flock]](lock_fd, fcntl.LOCK_EX).
+    Catch OSError:
+        If lock_fd is greater than -1:
+            Try:
+                Do [[os.close]](lock_fd).
+            Catch OSError:
+                Set close_failed to True.
+        Set lock_fd to -1.
+    If lock_fd equals -1:
+        Do [[discard_tmp]](tmp_text).
+        Give back [[error_response]]("ui: verdict: ledger write failed").
+    Set current_digest to "absent".
+    Set dest_ok to True.
+    If [[ledger_path.exists]]():
+        Set dest_bytes to [[bytes]]().
+        Try:
+            Set dest_bytes to [[ledger_path.read_bytes]]().
+        Catch OSError:
+            Set dest_ok to False.
+        If dest_ok:
+            Set current_digest to [[sha256_hex]](dest_bytes).
+    Set race_hit to False.
+    If not dest_ok:
+        Set race_hit to True.
+    If current_digest does not equal [[model.get]]("ledger_file_digest", "absent"):
+        Set race_hit to True.
+    If race_hit:
+        Do [[release_ledger_lock]](lock_fd, audit_dir).
+        Do [[discard_tmp]](tmp_text).
+        Give back [[verdict_refusal]]("409 Conflict", "Conflict", "ui: verdict: ledger changed", refusal_ledger_text).
     Set replace_ok to True.
     Try:
         Do [[os.replace]](tmp_text, [[str]](ledger_path)).
     Catch OSError:
         Set replace_ok to False.
+    Do [[release_ledger_lock]](lock_fd, audit_dir).
     If not replace_ok:
         Do [[discard_tmp]](tmp_text).
         Give back [[error_response]]("ui: verdict: ledger write failed").
     Give back [[redirect_response]](gid, docid).
 
 Define [[respond]] taking corpus, method_text, path_text, meta:
+    Set port_value to [[serve_config.get]]("port", 8377).
+    Set expected_host to "127.0.0.1:" plus [[str]](port_value).
+    If [[meta.get]]("host", "") does not equal expected_host:
+        Give back [[verdict_refusal]]("403 Forbidden", "Forbidden", "ui: request: host not allowed", refusal_refused_text).
     Set shaped to [[doc_shaped]](path_text).
     If method_text does not equal "GET":
         If method_text does not equal "POST":
@@ -2266,23 +2313,8 @@ Define [[wsgi_app]] taking environ, start_response:
     Do [[meta.update]]({"host": [[environ.get]]("HTTP_HOST", "")}).
     Do [[meta.update]]({"origin": [[environ.get]]("HTTP_ORIGIN", None)}).
     Do [[meta.update]]({"content_type": [[environ.get]]("CONTENT_TYPE", "")}).
-    Set body_value to None.
-    Set length_text to [[environ.get]]("CONTENT_LENGTH", "").
-    Set length_ok to True.
-    Set length_num to 0.
-    Try:
-        Set length_num to [[int]](length_text).
-    Catch ValueError:
-        Set length_ok to False.
-    If length_num is less than 0:
-        Set length_ok to False.
-    If length_ok:
-        Set stream to [[environ.get]]("wsgi.input", None).
-        If stream does not equal None:
-            Set read_bytes to [[stream.read]](length_num).
-            If [[len]](read_bytes) equals length_num:
-                Set body_value to read_bytes.
-    Do [[meta.update]]({"body": body_value}).
+    Do [[meta.update]]({"length_text": [[environ.get]]("CONTENT_LENGTH", "")}).
+    Do [[meta.update]]({"stream": [[environ.get]]("wsgi.input", None)}).
     Set corpus_result to [[resolve_corpus]](root_path).
     Set triple to None.
     If [[result_kind]](corpus_result) equals "err":

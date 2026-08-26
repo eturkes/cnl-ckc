@@ -1,4 +1,5 @@
 import datetime
+import fcntl
 import hashlib
 import html
 import os
@@ -11,7 +12,7 @@ import tarfile
 import tempfile
 import urllib.parse
 import wsgiref.simple_server
-usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--commit <sha1-or-empty>] [--fault after-tmp-write]"
+usage_text = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--commit <40hex>] [--fault after-tmp-write]"
 census_rx = re.compile("identify the ([0-9]+) payloads below")
 ledger_header_text = "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment"
 commit_url_base = "https://github.com/eturkes/cnl-ckc/commit/"
@@ -47,7 +48,11 @@ def valid_ui_id(value):
         return False
     if value.startswith("-"):
         return False
-    value_bytes = value.encode("utf-8")
+    value_bytes = bytes()
+    try:
+        value_bytes = value.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
     if len(value_bytes) > 250:
         return False
     return subset
@@ -96,8 +101,6 @@ def valid_hex40(value):
     chars = set(value)
     return chars.issubset(allowed)
 def commit_field_ok(value):
-    if value == "":
-        return True
     return valid_hex40(value)
 def short_commit(value):
     chars = list(value)
@@ -183,8 +186,7 @@ def parse_evidence(text):
     census_count = None
     census_hit = census_rx.search(text)
     if census_hit != None:
-        census_text = census_hit.group(1)
-        census_count = int(census_text)
+        census_count = census_hit.group(1)
     locator_ids = []
     locator_lines = {}
     locator_counts = {}
@@ -414,37 +416,28 @@ def git_output(work_dir, arg_list):
     if result.returncode != 0:
         return None
     return result.stdout.decode("utf-8", errors="replace")
-def uncommitted_guidelines(root_path):
+def corpus_head_hex(root_path):
     work_dir = str(root_path.resolve())
-    top_text = git_output(work_dir, ["rev-parse", "--show-toplevel"])
-    if top_text == None:
-        return None
+    top_command = ["git", "rev-parse", "--show-toplevel"]
+    top_result = None
+    try:
+        top_result = subprocess.run(top_command, capture_output=True, cwd=work_dir)
+    except OSError:
+        return "unavailable"
+    if top_result.returncode != 0:
+        return ""
+    top_text = top_result.stdout.decode("utf-8", errors="replace")
     top_path = pathlib.Path(top_text.strip())
     top_resolved = str(top_path.resolve())
     if top_resolved != work_dir:
-        return None
-    changed = git_output(work_dir, ["diff", "--name-only", "-z", "HEAD", "--", "guidelines"])
-    if changed == None:
-        return None
-    untracked = git_output(work_dir, ["ls-files", "--others", "--exclude-standard", "-z", "--", "guidelines"])
-    if untracked == None:
-        return None
-    gids = []
-    listed = changed + untracked
-    for chunk in listed.split("\0"):
-        if chunk:
-            is_ledger = chunk.endswith("/audit/adjudication.tsv")
-            if not is_ledger:
-                segs = chunk.split("/")
-                if len(segs) > 2:
-                    seg_copy = list(segs)
-                    head_seg = seg_copy.pop(0)
-                    gid = seg_copy.pop(0)
-                    if head_seg == "guidelines":
-                        known = gid in gids
-                        if not known:
-                            gids.append(gid)
-    return sorted(gids)
+        return ""
+    head_text = git_output(work_dir, ["rev-parse", "HEAD"])
+    if head_text == None:
+        return ""
+    head_hex = head_text.strip()
+    if not valid_hex40(head_hex):
+        return ""
+    return head_hex
 def extract_committed(archive_path, dest_root):
     extract_ok = True
     try:
@@ -480,12 +473,12 @@ def extract_committed(archive_path, dest_root):
     except OSError:
         extract_ok = False
     return extract_ok
-def materialize_committed(root_path):
+def materialize_committed(root_path, commit_hex):
     work_dir = str(root_path.resolve())
     scratch_text = tempfile.mkdtemp()
     scratch_dir = pathlib.Path(scratch_text)
     archive_path = scratch_dir.joinpath("committed.tar")
-    command = ["git", "archive", "--format=tar", "-o", str(archive_path), "HEAD", "guidelines"]
+    command = ["git", "archive", "--format=tar", "-o", str(archive_path), commit_hex, "guidelines"]
     result = None
     launched = True
     try:
@@ -529,51 +522,40 @@ def worktree_corpus(root_path):
     corpus.update({"root": root_path})
     corpus.update({"real_root": root_path})
     corpus.update({"scratch": ""})
+    corpus.update({"commit": ""})
     return corpus
 def resolve_corpus(root_path):
     corpus = worktree_corpus(root_path)
-    gids = uncommitted_guidelines(root_path)
-    if gids == None:
+    head_hex = corpus_head_hex(root_path)
+    if head_hex == "unavailable":
+        return err("ui: corpus: cannot read the committed guideline files")
+    if head_hex == "":
         return ok(corpus)
-    if not gids:
-        return ok(corpus)
-    pair = materialize_committed(root_path)
+    pair = materialize_committed(root_path, head_hex)
     pair_copy = list(pair)
     scratch_text = pair_copy.pop(0)
     dest_root = pair_copy.pop(0)
     if scratch_text == "":
-        return ok(corpus)
+        return err("ui: corpus: cannot read the committed guideline files")
     overlay_ok = overlay_ledgers(root_path, dest_root)
     if not overlay_ok:
         shutil.rmtree(scratch_text, ignore_errors=True)
         return err("ui: corpus: cannot read the committed guideline files")
     corpus.update({"root": dest_root})
     corpus.update({"scratch": scratch_text})
+    corpus.update({"commit": head_hex})
     return ok(corpus)
 def release_corpus(corpus):
     scratch_text = corpus.get("scratch", "")
     if scratch_text:
         shutil.rmtree(scratch_text, ignore_errors=True)
-def ace_commit_hex(guideline_path, docid, committed):
+def ace_commit_hex(guideline_path, docid, corpus_commit):
+    if not valid_hex40(corpus_commit):
+        return ""
     ace_path = guideline_path.joinpath("ace", docid + ".ace")
     work_dir = str(guideline_path.resolve())
     ace_text = str(ace_path.resolve())
-    if not committed:
-        if not ace_path.is_file():
-            return ""
-        status_command = ["git", "status", "--porcelain", "--", ace_text]
-        status_result = None
-        try:
-            status_result = subprocess.run(status_command, capture_output=True, cwd=work_dir)
-        except OSError:
-            return ""
-        if status_result.returncode != 0:
-            return ""
-        status_text = status_result.stdout.decode("utf-8", errors="replace")
-        status_trimmed = status_text.strip()
-        if status_trimmed:
-            return ""
-    log_command = ["git", "log", "-1", "--format=%H", "HEAD", "--", ace_text]
+    log_command = ["git", "log", "-1", "--format=%H", corpus_commit, "--", ace_text]
     log_result = None
     try:
         log_result = subprocess.run(log_command, capture_output=True, cwd=work_dir)
@@ -666,10 +648,7 @@ def build_doc_states(guideline_path, gid, docids, review_by_docid, manifest_text
 def build_guideline_model(corpus, gid):
     root_path = corpus.get("root", None)
     real_root = corpus.get("real_root", None)
-    scratch_text = corpus.get("scratch", "")
-    committed_corpus = False
-    if scratch_text:
-        committed_corpus = True
+    corpus_commit = corpus.get("commit", "")
     guideline_path = root_path.joinpath("guidelines", gid)
     real_guideline_path = real_root.joinpath("guidelines", gid)
     if not valid_ui_id(gid):
@@ -858,7 +837,7 @@ def build_guideline_model(corpus, gid):
             file_regions = file_row_regions.get(file_text, [])
             row_total = len(file_regions)
             payload_total = len(ordered_payloads)
-            if census_count != payload_total:
+            if census_count != str(payload_total):
                 return err("ui: viewmodel: " + gid + " region census mismatch " + file_text + " coverage=" + str(row_total) + " payloads=" + str(payload_total))
             if row_total != payload_total:
                 return err("ui: viewmodel: " + gid + " region census mismatch " + file_text + " coverage=" + str(row_total) + " payloads=" + str(payload_total))
@@ -884,7 +863,7 @@ def build_guideline_model(corpus, gid):
     model.update({"gid": gid})
     model.update({"path": guideline_path})
     model.update({"real_path": real_guideline_path})
-    model.update({"committed_corpus": committed_corpus})
+    model.update({"corpus_commit": corpus_commit})
     title_result = readme_title(guideline_path, gid)
     if result_kind(title_result) == "err":
         return title_result
@@ -1890,11 +1869,18 @@ def discard_tmp(tmp_text):
         os.unlink(tmp_text)
     except OSError:
         discard_failed = True
+def release_ledger_lock(lock_fd, audit_dir):
+    try:
+        os.unlink(str(audit_dir.joinpath(".adjudication.lock")))
+    except OSError:
+        unlink_failed = True
+    try:
+        os.close(lock_fd)
+    except OSError:
+        close_failed = True
 def handle_verdict_post(model, gid, docid, meta):
     port_value = serve_config.get("port", 8377)
     expected_host = "127.0.0.1:" + str(port_value)
-    if meta.get("host", "") != expected_host:
-        return verdict_refusal("403 Forbidden", "Forbidden", "ui: verdict: host not allowed", refusal_refused_text)
     origin_value = meta.get("origin", None)
     expected_origin = "http://" + expected_host
     if origin_value != None:
@@ -1903,6 +1889,28 @@ def handle_verdict_post(model, gid, docid, meta):
     if meta.get("content_type", "") != "application/x-www-form-urlencoded":
         return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: unsupported content type", refusal_invalid_form_text)
     body_bytes = meta.get("body", None)
+    if body_bytes == None:
+        stream = meta.get("stream", None)
+        length_text = meta.get("length_text", "")
+        length_ok = True
+        length_num = 0
+        try:
+            length_num = int(length_text)
+        except ValueError:
+            length_ok = False
+        if length_num < 0:
+            length_ok = False
+        if length_ok:
+            if stream != None:
+                read_ok = True
+                read_bytes = bytes()
+                try:
+                    read_bytes = stream.read(length_num)
+                except OSError:
+                    read_ok = False
+                if read_ok:
+                    if len(read_bytes) == length_num:
+                        body_bytes = read_bytes
     if body_bytes == None:
         return verdict_refusal("400 Bad Request", "Bad request", "ui: verdict: missing body", refusal_invalid_form_text)
     fields_result = parse_form_fields(body_bytes)
@@ -1969,7 +1977,7 @@ def handle_verdict_post(model, gid, docid, meta):
         now_text = now_value.strftime("%Y-%m-%dT%H:%M:%SZ")
     commit_text = serve_config.get("commit_pin", None)
     if commit_text == None:
-        commit_text = ace_commit_hex(real_guideline_path, docid, model.get("committed_corpus", False))
+        commit_text = ace_commit_hex(real_guideline_path, docid, model.get("corpus_commit", ""))
     tab_text = "\t"
     new_line = docid + tab_text + fields.get("review_sha256") + tab_text + commit_text + tab_text + fields.get("verdict") + tab_text + fields.get("reviewer") + tab_text + now_text + tab_text + fields.get("comment")
     new_key = docid + tab_text + now_text
@@ -2066,16 +2074,54 @@ def handle_verdict_post(model, gid, docid, meta):
         return error_response("ui: adjudication ledger invalid: " + relay)
     if serve_config.get("fault", "") == "after-tmp-write":
         raise SystemExit(3)
+    lock_fd = -1
+    try:
+        lock_fd = os.open(str(audit_dir.joinpath(".adjudication.lock")), 66, 384)
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+    except OSError:
+        if lock_fd > -1:
+            try:
+                os.close(lock_fd)
+            except OSError:
+                close_failed = True
+        lock_fd = -1
+    if lock_fd == -1:
+        discard_tmp(tmp_text)
+        return error_response("ui: verdict: ledger write failed")
+    current_digest = "absent"
+    dest_ok = True
+    if ledger_path.exists():
+        dest_bytes = bytes()
+        try:
+            dest_bytes = ledger_path.read_bytes()
+        except OSError:
+            dest_ok = False
+        if dest_ok:
+            current_digest = sha256_hex(dest_bytes)
+    race_hit = False
+    if not dest_ok:
+        race_hit = True
+    if current_digest != model.get("ledger_file_digest", "absent"):
+        race_hit = True
+    if race_hit:
+        release_ledger_lock(lock_fd, audit_dir)
+        discard_tmp(tmp_text)
+        return verdict_refusal("409 Conflict", "Conflict", "ui: verdict: ledger changed", refusal_ledger_text)
     replace_ok = True
     try:
         os.replace(tmp_text, str(ledger_path))
     except OSError:
         replace_ok = False
+    release_ledger_lock(lock_fd, audit_dir)
     if not replace_ok:
         discard_tmp(tmp_text)
         return error_response("ui: verdict: ledger write failed")
     return redirect_response(gid, docid)
 def respond(corpus, method_text, path_text, meta):
+    port_value = serve_config.get("port", 8377)
+    expected_host = "127.0.0.1:" + str(port_value)
+    if meta.get("host", "") != expected_host:
+        return verdict_refusal("403 Forbidden", "Forbidden", "ui: request: host not allowed", refusal_refused_text)
     shaped = doc_shaped(path_text)
     if method_text != "GET":
         if method_text != "POST":
@@ -2173,23 +2219,8 @@ def wsgi_app(environ, start_response):
     meta.update({"host": environ.get("HTTP_HOST", "")})
     meta.update({"origin": environ.get("HTTP_ORIGIN", None)})
     meta.update({"content_type": environ.get("CONTENT_TYPE", "")})
-    body_value = None
-    length_text = environ.get("CONTENT_LENGTH", "")
-    length_ok = True
-    length_num = 0
-    try:
-        length_num = int(length_text)
-    except ValueError:
-        length_ok = False
-    if length_num < 0:
-        length_ok = False
-    if length_ok:
-        stream = environ.get("wsgi.input", None)
-        if stream != None:
-            read_bytes = stream.read(length_num)
-            if len(read_bytes) == length_num:
-                body_value = read_bytes
-    meta.update({"body": body_value})
+    meta.update({"length_text": environ.get("CONTENT_LENGTH", "")})
+    meta.update({"stream": environ.get("wsgi.input", None)})
     corpus_result = resolve_corpus(root_path)
     triple = None
     if result_kind(corpus_result) == "err":
