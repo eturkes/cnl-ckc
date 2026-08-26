@@ -15,8 +15,9 @@ guideline list is a seed roster, not the complete list.
 Coverage is also tiered. The easy tier covers organizations whose index
 enumerates in ≤2 anonymous fetches and whose artifacts classify without
 an authenticated session; the rest carry `swept = blocked(<why>)` as
-named, enumerated gaps — hard-tier harvest sits outside the project's
-scope and reopens only by explicit user direction. A bounded fan-out is easy
+named, enumerated gaps — hard-tier harvest is parked as its own later
+phase, opening at the terminal condition below (roadmap stub; register
+= `.agent/archive/hard-tier-register.md`). A bounded fan-out is easy
 tier as well: an index whose entries are topic subindexes qualifies when
 the fan-out is enumerable from the index in one fetch, bounded (≤30
 subindexes), and every subindex is anonymous and static — enumeration then

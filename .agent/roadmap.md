@@ -4,14 +4,15 @@ Charter: `.agent/standing-instructions.md`. Shipped: fetch→ACE→Prolog
 guideline pipeline (`tools/goal.py compile <id> | check`, `tools/regen.py
 --check`); guideline coverage runs as built-in `/goal` rounds — procedure:
 root `README.md` § Operating; queue: `.agent/queue.md`; deterministic KB
-export (`tools/dist.py build`, README § Export). Scope is final (user
-ruling) and the project review is CLOSED: the project is feature
-complete. The repo's remaining work = `/goal` rounds to compendium
-exhaustion + human adjudication through the reviewer UI; a bare
-`/session-roadmap` closes read-only, and new development exists only
-by explicit user direction. Milestone records = `.agent/archive/` —
-topical filenames, read on demand; this file keeps a stub per closed
-milestone. `M<n>` = commit-message trace keys (grep pointers
+export (`tools/dist.py build`, README § Export). Feature scope is
+final (user ruling) and the project review is CLOSED: the project is
+feature complete. The repo's remaining work = `/goal` rounds to
+compendium exhaustion + human adjudication through the reviewer UI +
+the parked hard-tier harvest below; a bare `/session-roadmap` closes
+read-only while no parked precondition is met, and new features exist
+only by explicit user direction. Milestone records = `.agent/archive/`
+— topical filenames, read on demand; this file keeps a stub per closed
+or parked milestone. `M<n>` = commit-message trace keys (grep pointers
 per stub); the compendium replan restarted the numbering, so key
 greps also hit the earlier pipeline era — topic sorts the hits.
 
@@ -91,3 +92,15 @@ project `CLAUDE.md` clinician design law. Architecture rulings, unit
 records, gauges, sizing, assurance + out-of-scope =
 `.agent/archive/ui.md`; history = `git log --grep "(M4[. ]" -p --
 .agent/roadmap.md .agent/archive/` + `git log --grep "(M4 review)"`.
+
+## Hard-tier harvest — PARKED
+
+Precondition: compendium exhaustion — the standing `/goal`'s terminal
+condition (easy-tier residue consumed; terminal clause = the
+compendium header, adopted by README § Operating). Promote in a fresh
+session then: plan the harvest from the deferral register
+(`.agent/archive/hard-tier-register.md` — deferral classes, sizing
+measurements, banked leads) + technique =
+`.agent/archive/harvest-technique.md`; authoritative gap list =
+compendium `blocked(<why>)` org cells + blocked/provisional guideline
+rows (the register aligns to them, not the reverse).
