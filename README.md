@@ -643,8 +643,11 @@ While a document is in progress, a round advances it one increment:
    probes for the new rejection boundary.
 4. **Close** — `python3 -P tools/goal.py check` must be green; when E--
    sources changed, `python3 -P tools/regen.py --check` must be green
-   too. Make a scoped commit. Update `.agent/queue.md` and the
-   guideline README's coverage statement.
+   too. Make a scoped commit. When the commit touches `guidelines/` or
+   the vendored compiler, `release-manifest.tsv` goes stale: regenerate
+   it with `python3 -P tools/goal.py release-manifest` and commit it as
+   a follow-up. Update `.agent/queue.md` and the guideline README's
+   coverage statement.
 
 When no document is in progress, the round fetches the next source: the
 queue's next entry. When the queue runs dry, it refills from
@@ -658,6 +661,39 @@ follow `[a-z0-9-]+`; choose an id once per source. An already-fetched
 URL keeps its recorded id. Changed remote content becomes a new
 versioned id, while every recorded source stays immutable. A paywall or
 rights gate becomes a recorded queue blocker, and the round moves on.
+
+## Export
+
+`tools/dist.py` packages the committed corpus as one reproducible
+archive:
+
+```
+python3 -P tools/goal.py release-manifest   # refresh release-manifest.tsv, then commit it
+python3 -P tools/dist.py build [<dest>]     # default destination: dist/
+```
+
+The archive is a BagIt 1.0 bag named `cnl-ckc-kb-g<head12>.tar.gz`,
+where `<head12>` is the source commit prefix. A `.sha256` sidecar
+accompanies it. To verify a bag, extract it and run
+`sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from the bag
+root. Each line must report OK.
+
+The payload is the committed `guidelines/` corpus plus `README-dist.md`,
+`NOTICE`, and `release-manifest.tsv`. The profile in each guideline's
+`rights.tsv` controls what ships. A `redistributable` guideline ships
+whole. A `reconstructable` guideline ships without its `source/` files;
+the manifest lists them as `source` rows with fetch URLs. A `restricted`
+guideline is held back and appears as a document count alone. The
+manifest carries a review label for every shipped document. A rejected
+or contested verdict blocks the build.
+
+The build is deterministic: one commit yields byte-identical archives on
+any machine. `python3 -P tools/goal.py check` rebuilds the archive
+twice, compares the bytes, and re-verifies the checksums on every run. A
+stale `release-manifest.tsv` fails the check.
+
+The reviewer interface runs locally on loopback. Web hosting is out of
+scope.
 
 ## Licensing
 

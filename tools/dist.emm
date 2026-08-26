@@ -1,0 +1,811 @@
+Use datetime.
+Use gzip.
+Use hashlib.
+Use io.
+Use os.
+Use pathlib.
+Use subprocess.
+Use sys.
+Use tarfile.
+
+Define [[refuse]] taking detail:
+    Set safe_detail to [[detail.replace]]("\n", "\\n").
+    Set safe_detail to [[safe_detail.replace]]("\r", "\\r").
+    Do [[print]]("dist: " plus safe_detail, file=sys.stderr).
+    Exit with 1.
+
+Define [[usage_exit]] taking nothing:
+    Do [[print]]("dist: usage: python3 -P tools/dist.py build [<dest>]", file=sys.stderr).
+    Exit with 2.
+
+Define [[sha_hex]] taking data:
+    Set digest_object to [[hashlib.sha256]](data).
+    Give back [[digest_object.hexdigest]]().
+
+Define [[prefix_chars]] taking text, count:
+    Set kept to "".
+    Set taken to 0.
+    For each char_text in text:
+        If taken is less than count:
+            Set kept to kept plus char_text.
+            Set taken to taken plus 1.
+    Give back kept.
+
+Define [[prefix_byte_list]] taking data, count:
+    Set kept to <>.
+    For each byte_value in data:
+        If [[len]](kept) is less than count:
+            Do [[kept.append]](byte_value).
+    Give back [[bytes]](kept).
+
+Define [[render_path]] taking path_bytes:
+    Set rendered to "".
+    For each byte_value in path_bytes:
+        If byte_value equals 92:
+            Set rendered to rendered plus "\\\\".
+        Otherwise if byte_value equals 10:
+            Set rendered to rendered plus "\\n".
+        Otherwise if byte_value equals 13:
+            Set rendered to rendered plus "\\r".
+        Otherwise if byte_value equals 9:
+            Set rendered to rendered plus "\\t".
+        Otherwise if (byte_value is at least 32) and (byte_value is at most 126):
+            Set rendered to rendered plus [[chr]](byte_value).
+        Otherwise:
+            Set rendered to rendered plus "\\x" plus [[format]](byte_value, "02x").
+    Give back rendered.
+
+Define [[valid_rights_date]] taking text:
+    If [[len]](text) does not equal 10:
+        Give back False.
+    Set digit_chars to [[set]]("0123456789").
+    Set position to 0.
+    For each char_text in text:
+        If (position equals 4) or (position equals 7):
+            If char_text does not equal "-":
+                Give back False.
+        Otherwise:
+            If char_text is not in digit_chars:
+                Give back False.
+        Set position to position plus 1.
+    Try:
+        Do [[datetime.date.fromisoformat]](text).
+    Catch ValueError:
+        Give back False.
+    Give back True.
+
+Define [[cell_control_clean]] taking text:
+    For each char_text in text:
+        Set code_point to [[ord]](char_text).
+        If code_point is less than 32:
+            Give back False.
+        If code_point equals 127:
+            Give back False.
+    Give back True.
+
+Define [[git_run]] taking repo_dir, arg_list:
+    Set command_list to <"git">.
+    For each arg_text in arg_list:
+        Do [[command_list.append]](arg_text).
+    Give back [[subprocess.run]](command_list, capture_output=True, cwd=repo_dir).
+
+Define [[git_bytes]] taking repo_dir, arg_list:
+    Set result to [[git_run]](repo_dir, arg_list).
+    If result.returncode does not equal 0:
+        Set empty_bytes to [[bytes]](<>).
+        Give back <False, empty_bytes>.
+    Give back <True, result.stdout>.
+
+Define [[path_grammar_detail]] taking path_bytes:
+    Set path_text to "".
+    Set decode_ok to True.
+    Try:
+        Set path_text to [[path_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Set decode_ok to False.
+    If not decode_ok:
+        Give back "member-path " plus [[render_path]](path_bytes).
+    Set clean to True.
+    For each char_text in path_text:
+        Set code_point to [[ord]](char_text).
+        If code_point is less than 32:
+            Set clean to False.
+        If code_point equals 127:
+            Set clean to False.
+        If char_text equals "\\":
+            Set clean to False.
+    If [[path_text.startswith]]("/"):
+        Set clean to False.
+    Set segments to [[path_text.split]]("/").
+    If ".." is in segments:
+        Set clean to False.
+    If "." is in segments:
+        Set clean to False.
+    If "" is in segments:
+        Set clean to False.
+    If not clean:
+        Give back "member-path " plus [[render_path]](path_bytes).
+    Give back "".
+
+Define [[corpus_entries]] taking repo_dir:
+    Set empty_list to <>.
+    Set pair to [[git_bytes]](repo_dir, <"ls-tree", "-r", "-z", "HEAD", "--", "guidelines">).
+    Set ok_flag to [[pair.pop]](0).
+    Set out_bytes to [[pair.pop]](0).
+    If not ok_flag:
+        Give back <"no-guidelines", empty_list>.
+    Set entries to <>.
+    Set raw_entries to [[out_bytes.split]]([[bytes]](<0>)).
+    For each raw_entry in raw_entries:
+        If raw_entry:
+            Set meta_parts to [[list]]([[raw_entry.partition]]([[bytes]](<9>))).
+            Set meta_bytes to [[meta_parts.pop]](0).
+            Set tab_bytes to [[meta_parts.pop]](0).
+            Set path_bytes to [[meta_parts.pop]](0).
+            Set head_fields to [[meta_bytes.split]]([[bytes]](<32>)).
+            Set mode_bytes to [[head_fields.pop]](0).
+            Set type_bytes to [[head_fields.pop]](0).
+            Set mode_text to [[mode_bytes.decode]]("ascii").
+            Set type_text to [[type_bytes.decode]]("ascii").
+            Do [[entries.append]](<mode_text, type_text, path_bytes>).
+    Give back <"", entries>.
+
+Define [[stage_corpus]] taking repo_dir:
+    Set empty_map to {}.
+    Set pair to [[git_bytes]](repo_dir, <"archive", "--format=tar", "HEAD", "guidelines">).
+    Set ok_flag to [[pair.pop]](0).
+    Set out_bytes to [[pair.pop]](0).
+    If not ok_flag:
+        Give back <False, empty_map>.
+    Set buffer to [[io.BytesIO]](out_bytes).
+    Set opened to [[tarfile.open]](fileobj=buffer, mode="r:").
+    Set staged to {}.
+    For each member in [[opened.getmembers]]():
+        If [[member.isfile]]():
+            Set stream to [[opened.extractfile]](member).
+            Set data to [[stream.read]]().
+            Do [[staged.update]]({member.name: data}).
+    Do [[opened.close]]().
+    Give back <True, staged>.
+
+Define [[validate_rights]] taking gid, staged:
+    Set empty_rows to <>.
+    Set data to [[staged.get]]("guidelines/" plus gid plus "/rights.tsv", None).
+    If data equals None:
+        Give back <"rights " plus gid plus " missing", "", "", empty_rows>.
+    Set text to "".
+    Set decode_ok to True.
+    Try:
+        Set text to [[data.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Set decode_ok to False.
+    If not decode_ok:
+        Give back <"rights " plus gid plus " utf8", "", "", empty_rows>.
+    Set header_parts to [[list]]([[text.partition]]("\n")).
+    Set header_line to [[header_parts.pop]](0).
+    Set header_sep to [[header_parts.pop]](0).
+    Set body to [[header_parts.pop]](0).
+    If header_line does not equal "profile\tstatement\turl\tretrieved\tnote":
+        Give back <"rights " plus gid plus " header", "", "", empty_rows>.
+    If header_sep does not equal "\n":
+        Give back <"rights " plus gid plus " rows", "", "", empty_rows>.
+    If body does not equal "":
+        If not [[body.endswith]]("\n"):
+            Give back <"rights " plus gid plus " rows", "", "", empty_rows>.
+    Set row_lines to [[body.split]]("\n").
+    Do [[row_lines.pop]]().
+    Set row_list to <>.
+    Set row_number to 0.
+    Set profile_names to {"redistributable": True, "reconstructable": True, "restricted": True}.
+    For each row_line in row_lines:
+        Set row_number to row_number plus 1.
+        Set row_label to [[str]](row_number).
+        Set fields to [[row_line.split]]("\t").
+        If [[len]](fields) does not equal 5:
+            Give back <"rights " plus gid plus " fields:" plus row_label, "", "", empty_rows>.
+        Set profile_field to [[fields.pop]](0).
+        Set statement_field to [[fields.pop]](0).
+        Set url_field to [[fields.pop]](0).
+        Set retrieved_field to [[fields.pop]](0).
+        Set note_field to [[fields.pop]](0).
+        If profile_field is not in profile_names:
+            Give back <"rights " plus gid plus " profile:" plus row_label, "", "", empty_rows>.
+        If statement_field equals "":
+            Give back <"rights " plus gid plus " statement:" plus row_label, "", "", empty_rows>.
+        If url_field equals "":
+            Give back <"rights " plus gid plus " url:" plus row_label, "", "", empty_rows>.
+        If not [[valid_rights_date]](retrieved_field):
+            Give back <"rights " plus gid plus " retrieved:" plus row_label, "", "", empty_rows>.
+        Set cells_clean to True.
+        If not [[cell_control_clean]](profile_field):
+            Set cells_clean to False.
+        If not [[cell_control_clean]](statement_field):
+            Set cells_clean to False.
+        If not [[cell_control_clean]](url_field):
+            Set cells_clean to False.
+        If not [[cell_control_clean]](retrieved_field):
+            Set cells_clean to False.
+        If not [[cell_control_clean]](note_field):
+            Set cells_clean to False.
+        If not cells_clean:
+            Give back <"rights " plus gid plus " control:" plus row_label, "", "", empty_rows>.
+        Do [[row_list.append]](<profile_field, statement_field, url_field, retrieved_field, note_field>).
+    If [[len]](row_list) equals 0:
+        Give back <"rights " plus gid plus " rows", "", "", empty_rows>.
+    Set rows_copy to [[list]](row_list).
+    Set first_row to [[rows_copy.pop]](0).
+    Set first_fields to [[list]](first_row).
+    Set operative_profile to [[first_fields.pop]](0).
+    Do [[first_fields.pop]](0).
+    Set operative_url to [[first_fields.pop]](0).
+    Give back <"", operative_profile, operative_url, row_list>.
+
+Define [[review_docs]] taking gid, staged:
+    Set digest_map to {}.
+    Set data to [[staged.get]]("guidelines/" plus gid plus "/audit/review-manifest.tsv", None).
+    If data equals None:
+        Give back digest_map.
+    Set text to "".
+    Set decode_ok to True.
+    Try:
+        Set text to [[data.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Set decode_ok to False.
+    If not decode_ok:
+        Give back digest_map.
+    For each line_text in [[text.split]]("\n"):
+        If line_text:
+            If not [[line_text.startswith]]("#"):
+                Set fields to [[line_text.split]]("\t").
+                If [[len]](fields) is at least 2:
+                    Set docid to [[fields.pop]](0).
+                    Set review_digest to [[fields.pop]]().
+                    Do [[digest_map.update]]({docid: review_digest}).
+    Give back digest_map.
+
+Define [[ledger_classes]] taking gid, staged, digest_map:
+    Set seen_map to {}.
+    Set approved_map to {}.
+    Set rejected_map to {}.
+    Set data to [[staged.get]]("guidelines/" plus gid plus "/audit/adjudication.tsv", None).
+    Set text to "".
+    If data does not equal None:
+        Try:
+            Set text to [[data.decode]]("utf-8").
+        Catch UnicodeDecodeError:
+            Set text to "".
+    For each line_text in [[text.split]]("\n"):
+        If line_text:
+            If not [[line_text.startswith]]("#"):
+                Set fields to [[line_text.split]]("\t").
+                If [[len]](fields) equals 7:
+                    Set docid to [[fields.pop]](0).
+                    Set digest_field to [[fields.pop]](0).
+                    Set commit_field to [[fields.pop]](0).
+                    Set verdict_field to [[fields.pop]](0).
+                    If docid is in digest_map:
+                        Do [[seen_map.update]]({docid: True}).
+                        If digest_field equals [[digest_map.get]](docid, ""):
+                            If verdict_field equals "approved":
+                                Do [[approved_map.update]]({docid: True}).
+                            If verdict_field equals "rejected":
+                                Do [[rejected_map.update]]({docid: True}).
+    Set class_map to {}.
+    For each docid in [[sorted]](digest_map):
+        Set doc_class to "unreviewed".
+        If docid is in seen_map:
+            Set doc_class to "stale".
+            Set has_approved to docid is in approved_map.
+            Set has_rejected to docid is in rejected_map.
+            If has_approved:
+                Set doc_class to "approved".
+                If has_rejected:
+                    Set doc_class to "contested".
+            Otherwise:
+                If has_rejected:
+                    Set doc_class to "rejected".
+        Do [[class_map.update]]({docid: doc_class}).
+    Give back class_map.
+
+Define [[schema_section]] taking readme_text:
+    Set anchor to "## Compiled Prolog schema".
+    Set head_parts to [[list]]([[readme_text.partition]]("\n" plus anchor)).
+    Do [[head_parts.pop]](0).
+    Set anchor_sep to [[head_parts.pop]](0).
+    Set after_text to [[head_parts.pop]](0).
+    If anchor_sep equals "":
+        If not [[readme_text.startswith]](anchor):
+            Give back <False, "">.
+        Set after_text to [[readme_text.removeprefix]](anchor).
+    Set tail_parts to [[list]]([[after_text.partition]]("\n## ")).
+    Set section_body to [[tail_parts.pop]](0).
+    Set tail_sep to [[tail_parts.pop]](0).
+    If tail_sep equals "":
+        Give back <True, anchor plus section_body>.
+    Give back <True, anchor plus section_body plus "\n">.
+
+Define [[rights_row_line]] taking gid, row, open_mark, close_mark:
+    Set fields to [[list]](row).
+    Set profile_field to [[fields.pop]](0).
+    Set statement_field to [[fields.pop]](0).
+    Set url_field to [[fields.pop]](0).
+    Set retrieved_field to [[fields.pop]](0).
+    Set note_field to [[fields.pop]](0).
+    Set line_text to "- " plus gid plus " (" plus profile_field plus "): \"" plus statement_field plus "\" ".
+    Set line_text to line_text plus open_mark plus url_field plus ", retrieved " plus retrieved_field plus close_mark.
+    If note_field does not equal "":
+        Set line_text to line_text plus " " plus note_field.
+    Give back line_text plus "\n".
+
+Define [[class_count_line]] taking class_counts, class_name:
+    Set count_value to [[class_counts.get]](class_name, 0).
+    Give back "- " plus class_name plus ": " plus [[str]](count_value) plus " documents.\n".
+
+Define [[build_readme_dist]] taking gid_list, profile_map, rights_map, doc_count_map, class_counts, schema_text:
+    Set text to "# cnl-ckc knowledge base export\n\n".
+    Set text to text plus "This archive is a BagIt 1.0 bag. It holds the compiled clinical-guideline knowledge base from the cnl-ckc repository. The archive name and the `meta head` row in `release-manifest.tsv` give the source commit.\n\n".
+    Set text to text plus "## Verification\n\nRun `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from this directory. Each line must report OK.\n\n".
+    Set text to text plus "## Contents\n\n".
+    For each gid in gid_list:
+        Set profile_text to [[profile_map.get]](gid, "").
+        Set doc_count to [[doc_count_map.get]](gid, 0).
+        Set count_text to [[str]](doc_count).
+        If profile_text equals "restricted":
+            Set text to text plus "- " plus gid plus ": " plus count_text plus " documents held back (restricted rights).\n".
+        Otherwise if profile_text equals "reconstructable":
+            Set text to text plus "- " plus gid plus " (reconstructable): " plus count_text plus " documents. Source files are not included. Fetch each source URL in release-manifest.tsv and verify its digest.\n".
+        Otherwise:
+            Set text to text plus "- " plus gid plus " (redistributable): " plus count_text plus " documents.\n".
+    Set text to text plus "\n## Review status\n\nEach shipped document has a label row in release-manifest.tsv.\n\n".
+    Set text to text plus [[class_count_line]](class_counts, "approved").
+    Set text to text plus [[class_count_line]](class_counts, "rejected").
+    Set text to text plus [[class_count_line]](class_counts, "contested").
+    Set text to text plus [[class_count_line]](class_counts, "stale").
+    Set text to text plus [[class_count_line]](class_counts, "unreviewed").
+    Set text to text plus "\n## Rights\n\n".
+    For each gid in gid_list:
+        Set row_list to [[rights_map.get]](gid).
+        For each row in row_list:
+            Set text to text plus [[rights_row_line]](gid, row, "Source: ", ".").
+    Set text to text plus "\n## Replay\n\nThese commands run in the source repository at the commit that this archive names.\n\n".
+    Set text to text plus "- compile: python3 -P tools/goal.py compile <guideline-id>\n".
+    Set text to text plus "- check: python3 -P tools/goal.py check\n".
+    Set text to text plus "- load: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n".
+    Give back text plus schema_text.
+
+Define [[build_notice]] taking notice_text, gid_list, profile_map, rights_map:
+    Set text to notice_text.
+    If not [[text.endswith]]("\n"):
+        Set text to text plus "\n".
+    Set text to text plus "\nRights records for distributed sources:\n".
+    For each gid in gid_list:
+        Set row_list to [[rights_map.get]](gid).
+        For each row in row_list:
+            Set text to text plus [[rights_row_line]](gid, row, "(", ")").
+    Set text to text plus "\nThe pl/ Prolog files in the payload are outputs that the vendored ACE compiler derived from the ace/ source documents.\n".
+    Give back text.
+
+Define [[head_input_bytes]] taking repo_dir, spec, missing_detail, plan_out:
+    Set pair to [[git_bytes]](repo_dir, <"show", spec>).
+    Set ok_flag to [[pair.pop]](0).
+    Set out_bytes to [[pair.pop]](0).
+    If not ok_flag:
+        Give back <missing_detail, out_bytes>.
+    Give back <"", out_bytes>.
+
+Define [[derive_release]] taking repo_dir:
+    Set empty_plan to {}.
+    Set head_args to <"log", "-1", "--format=%H", "HEAD", "--", "guidelines", "vendor/ape/prolog/ace_to_pl.pl", "vendor/clex/clex_lexicon.pl">.
+    Set pair to [[git_bytes]](repo_dir, head_args).
+    Set ok_flag to [[pair.pop]](0).
+    Set out_bytes to [[pair.pop]](0).
+    If not ok_flag:
+        Give back <"no-input head", empty_plan>.
+    Set head_raw to [[out_bytes.decode]]("ascii", errors="replace").
+    Set head_text to [[head_raw.strip]]().
+    If head_text equals "":
+        Give back <"no-guidelines", empty_plan>.
+    Set pair to [[git_bytes]](repo_dir, <"show", "-s", "--format=%ct", head_text>).
+    Set ok_flag to [[pair.pop]](0).
+    Set out_bytes to [[pair.pop]](0).
+    If not ok_flag:
+        Give back <"no-input head", empty_plan>.
+    Set epoch_raw to [[out_bytes.decode]]("ascii", errors="replace").
+    Set epoch_value to [[int]]([[epoch_raw.strip]]()).
+    Set pair to [[corpus_entries]](repo_dir).
+    Set entries_detail to [[pair.pop]](0).
+    Set entries to [[pair.pop]](0).
+    If entries_detail does not equal "":
+        Give back <entries_detail, empty_plan>.
+    If [[len]](entries) equals 0:
+        Give back <"no-guidelines", empty_plan>.
+    For each entry in entries:
+        Set entry_copy to [[list]](entry).
+        Do [[entry_copy.pop]](0).
+        Do [[entry_copy.pop]](0).
+        Set path_bytes to [[entry_copy.pop]](0).
+        Set grammar_detail to [[path_grammar_detail]](path_bytes).
+        If grammar_detail does not equal "":
+            Give back <grammar_detail, empty_plan>.
+    For each entry in entries:
+        Set entry_copy to [[list]](entry).
+        Set mode_text to [[entry_copy.pop]](0).
+        Set type_text to [[entry_copy.pop]](0).
+        Set path_bytes to [[entry_copy.pop]](0).
+        Set path_text to [[path_bytes.decode]]("utf-8").
+        Set regular to False.
+        If type_text equals "blob":
+            If (mode_text equals "100644") or (mode_text equals "100755"):
+                Set regular to True.
+        If not regular:
+            Give back <"member-not-regular " plus path_text, empty_plan>.
+    Set gid_map to {}.
+    For each entry in entries:
+        Set entry_copy to [[list]](entry).
+        Do [[entry_copy.pop]](0).
+        Do [[entry_copy.pop]](0).
+        Set path_bytes to [[entry_copy.pop]](0).
+        Set path_text to [[path_bytes.decode]]("utf-8").
+        Set segments to [[path_text.split]]("/").
+        Do [[segments.pop]](0).
+        If [[len]](segments) equals 1:
+            Give back <"stray-root-member " plus path_text, empty_plan>.
+        Set gid to [[segments.pop]](0).
+        Do [[gid_map.update]]({gid: True}).
+    If [[len]](gid_map) equals 0:
+        Give back <"no-guidelines", empty_plan>.
+    Set pair to [[stage_corpus]](repo_dir).
+    Set ok_flag to [[pair.pop]](0).
+    Set staged to [[pair.pop]](0).
+    If not ok_flag:
+        Give back <"no-input archive", empty_plan>.
+    Set pair to [[head_input_bytes]](repo_dir, "HEAD:vendor/ape/prolog/ace_to_pl.pl", "no-input vendor/ape/prolog/ace_to_pl.pl", empty_plan).
+    Set input_detail to [[pair.pop]](0).
+    Set compiler_bytes to [[pair.pop]](0).
+    If input_detail does not equal "":
+        Give back <input_detail, empty_plan>.
+    Set pair to [[head_input_bytes]](repo_dir, "HEAD:vendor/clex/clex_lexicon.pl", "no-input vendor/clex/clex_lexicon.pl", empty_plan).
+    Set input_detail to [[pair.pop]](0).
+    Set lexicon_bytes to [[pair.pop]](0).
+    If input_detail does not equal "":
+        Give back <input_detail, empty_plan>.
+    Set pair to [[head_input_bytes]](repo_dir, "HEAD:README.md", "no-input README.md", empty_plan).
+    Set input_detail to [[pair.pop]](0).
+    Set readme_bytes to [[pair.pop]](0).
+    If input_detail does not equal "":
+        Give back <input_detail, empty_plan>.
+    Set pair to [[head_input_bytes]](repo_dir, "HEAD:NOTICE", "no-input NOTICE", empty_plan).
+    Set input_detail to [[pair.pop]](0).
+    Set notice_bytes to [[pair.pop]](0).
+    If input_detail does not equal "":
+        Give back <input_detail, empty_plan>.
+    Set readme_text to "".
+    Set notice_text to "".
+    Set decode_ok to True.
+    Try:
+        Set readme_text to [[readme_bytes.decode]]("utf-8").
+        Set notice_text to [[notice_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Set decode_ok to False.
+    If not decode_ok:
+        Give back <"no-input README.md", empty_plan>.
+    Set pair to [[schema_section]](readme_text).
+    Set schema_ok to [[pair.pop]](0).
+    Set schema_text to [[pair.pop]](0).
+    If not schema_ok:
+        Give back <"no-input README.md schema section", empty_plan>.
+    Set gid_list to [[sorted]](gid_map).
+    Set profile_map to {}.
+    Set url_map to {}.
+    Set rights_map to {}.
+    For each gid in gid_list:
+        Set rights_result to [[validate_rights]](gid, staged).
+        Set rights_detail to [[rights_result.pop]](0).
+        Set operative_profile to [[rights_result.pop]](0).
+        Set operative_url to [[rights_result.pop]](0).
+        Set row_list to [[rights_result.pop]](0).
+        If rights_detail does not equal "":
+            Give back <rights_detail, empty_plan>.
+        Do [[profile_map.update]]({gid: operative_profile}).
+        Do [[url_map.update]]({gid: operative_url}).
+        Do [[rights_map.update]]({gid: row_list}).
+    Set doc_count_map to {}.
+    Set label_map to {}.
+    Set shipped_count to 0.
+    For each gid in gid_list:
+        Set digest_map to [[review_docs]](gid, staged).
+        Do [[doc_count_map.update]]({gid: [[len]](digest_map)}).
+        Set profile_text to [[profile_map.get]](gid).
+        If profile_text does not equal "restricted":
+            Set shipped_count to shipped_count plus 1.
+            Set class_map to [[ledger_classes]](gid, staged, digest_map).
+            For each docid in [[sorted]](class_map):
+                Do [[label_map.update]]({docid: [[class_map.get]](docid)}).
+    Set rejected_list to <>.
+    Set contested_list to <>.
+    Set class_counts to {}.
+    For each docid in [[sorted]](label_map):
+        Set doc_class to [[label_map.get]](docid).
+        Set class_count to [[class_counts.get]](doc_class, 0).
+        Do [[class_counts.update]]({doc_class: class_count plus 1}).
+        If doc_class equals "rejected":
+            Do [[rejected_list.append]](docid).
+        If doc_class equals "contested":
+            Do [[contested_list.append]](docid).
+    Set payload_map to {}.
+    Set source_rows to <>.
+    For each path_text in [[sorted]](staged):
+        Set segments to [[path_text.split]]("/").
+        Do [[segments.pop]](0).
+        Set gid to [[segments.pop]](0).
+        Set profile_text to [[profile_map.get]](gid, "").
+        If profile_text does not equal "restricted":
+            Set data to [[staged.get]](path_text).
+            Set source_prefix to "guidelines/" plus gid plus "/source/".
+            Set is_source to [[path_text.startswith]](source_prefix).
+            If (profile_text equals "reconstructable") and is_source:
+                Set url_text to [[url_map.get]](gid).
+                Do [[source_rows.append]](<"data/" plus path_text, [[sha_hex]](data), [[str]]([[len]](data)), url_text>).
+            Otherwise:
+                Do [[payload_map.update]]({"data/" plus path_text: data}).
+    Set readme_dist_text to [[build_readme_dist]](gid_list, profile_map, rights_map, doc_count_map, class_counts, schema_text).
+    Set notice_dist_text to [[build_notice]](notice_text, gid_list, profile_map, rights_map).
+    Set bagit_text to "BagIt-Version: 1.0\nTag-File-Character-Encoding: UTF-8\n".
+    Set tags_map to {}.
+    Do [[tags_map.update]]({"bagit.txt": [[bagit_text.encode]]("utf-8")}).
+    Do [[tags_map.update]]({"README-dist.md": [[readme_dist_text.encode]]("utf-8")}).
+    Do [[tags_map.update]]({"NOTICE": [[notice_dist_text.encode]]("utf-8")}).
+    Set member_map to {}.
+    For each path_text in payload_map:
+        Do [[member_map.update]]({path_text: [[payload_map.get]](path_text)}).
+    For each path_text in tags_map:
+        Do [[member_map.update]]({path_text: [[tags_map.get]](path_text)}).
+    Set manifest_text to "meta\tschema\tv1\n".
+    Set manifest_text to manifest_text plus "meta\thead\t" plus head_text plus "\n".
+    Set manifest_text to manifest_text plus "meta\tcompiler\t" plus [[sha_hex]](compiler_bytes) plus "\n".
+    Set manifest_text to manifest_text plus "meta\tbase-lexicon\t" plus [[sha_hex]](lexicon_bytes) plus "\n".
+    Set manifest_text to manifest_text plus "meta\tpython\t3.11\n".
+    Set manifest_text to manifest_text plus "meta\tswipl\t9.2.9\n".
+    Set manifest_text to manifest_text plus "meta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\n".
+    Set manifest_text to manifest_text plus "meta\treplay\tcompile: python3 -P tools/goal.py compile <guideline-id>\n".
+    Set manifest_text to manifest_text plus "meta\treplay\tcheck: python3 -P tools/goal.py check\n".
+    Set manifest_text to manifest_text plus "meta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\n".
+    Set manifest_text to manifest_text plus "meta\tgenerated\trelease-manifest.tsv\n".
+    Set manifest_text to manifest_text plus "meta\tgenerated\tmanifest-sha256.txt\n".
+    Set manifest_text to manifest_text plus "meta\tgenerated\ttagmanifest-sha256.txt\n".
+    For each path_text in [[sorted]](member_map):
+        Set data to [[member_map.get]](path_text).
+        Set size_text to [[str]]([[len]](data)).
+        Set manifest_text to manifest_text plus "member\t" plus path_text plus "\t" plus [[sha_hex]](data) plus "\t" plus size_text plus "\n".
+    For each source_row in source_rows:
+        Set row_copy to [[list]](source_row).
+        Set source_path to [[row_copy.pop]](0).
+        Set source_sha to [[row_copy.pop]](0).
+        Set source_size to [[row_copy.pop]](0).
+        Set source_url to [[row_copy.pop]](0).
+        Set manifest_text to manifest_text plus "source\t" plus source_path plus "\t" plus source_sha plus "\t" plus source_size plus "\t" plus source_url plus "\n".
+    For each docid in [[sorted]](label_map):
+        Set manifest_text to manifest_text plus "label\t" plus docid plus "\t" plus [[label_map.get]](docid) plus "\n".
+    Set plan to {}.
+    Do [[plan.update]]({"manifest": manifest_text}).
+    Do [[plan.update]]({"head": head_text}).
+    Do [[plan.update]]({"epoch": epoch_value}).
+    Do [[plan.update]]({"payload": payload_map}).
+    Do [[plan.update]]({"tags": tags_map}).
+    Do [[plan.update]]({"rejected": rejected_list}).
+    Do [[plan.update]]({"contested": contested_list}).
+    Do [[plan.update]]({"shipped": shipped_count}).
+    Give back <"", plan>.
+
+Define [[manifest_row_map]] taking manifest_text, kind_text:
+    Set row_map to {}.
+    For each line_text in [[manifest_text.split]]("\n"):
+        If line_text:
+            Set fields to [[line_text.split]]("\t").
+            Set kind_field to [[fields.pop]](0).
+            If kind_field equals kind_text:
+                If [[len]](fields) is at least 1:
+                    Set key_field to [[fields.pop]](0).
+                    Do [[row_map.update]]({key_field: line_text}).
+    Give back row_map.
+
+Define [[drift_path]] taking committed_text, derived_text:
+    For each kind_text in <"member", "source", "label", "meta">:
+        Set committed_map to [[manifest_row_map]](committed_text, kind_text).
+        Set derived_map to [[manifest_row_map]](derived_text, kind_text).
+        Set union_map to {}.
+        For each key_text in committed_map:
+            Do [[union_map.update]]({key_text: True}).
+        For each key_text in derived_map:
+            Do [[union_map.update]]({key_text: True}).
+        For each key_text in [[sorted]](union_map):
+            If [[committed_map.get]](key_text, "") does not equal [[derived_map.get]](key_text, ""):
+                Give back key_text.
+    Give back "release-manifest.tsv".
+
+Define [[octal_field]] taking value, width:
+    Set digits to [[format]](value, "o").
+    Set digit_width to width minus 1.
+    Set padded to [[digits.rjust]](digit_width, "0").
+    Give back padded plus "\0".
+
+Define [[tar_header]] taking name_bytes, size_value, mtime_value, type_text:
+    Set name_pad to 100 minus [[len]](name_bytes).
+    Set zero_byte to [[bytes]](<0>).
+    Set name_field to name_bytes plus (zero_byte times name_pad).
+    Set front_text to [[octal_field]](420, 8).
+    Set front_text to front_text plus [[octal_field]](0, 8).
+    Set front_text to front_text plus [[octal_field]](0, 8).
+    Set front_text to front_text plus [[octal_field]](size_value, 12).
+    Set front_text to front_text plus [[octal_field]](mtime_value, 12).
+    Set part_a to name_field plus [[front_text.encode]]("ascii").
+    Set back_text to type_text.
+    Set back_text to back_text plus ("\0" times 100).
+    Set back_text to back_text plus "ustar\0" plus "00".
+    Set back_text to back_text plus ("\0" times 64).
+    Set back_text to back_text plus [[octal_field]](0, 8).
+    Set back_text to back_text plus [[octal_field]](0, 8).
+    Set back_text to back_text plus ("\0" times 167).
+    Set part_b to [[back_text.encode]]("ascii").
+    Set space_text to "        ".
+    Set space_field to [[space_text.encode]]("ascii").
+    Set checksum_value to [[sum]](part_a plus space_field plus part_b).
+    Set checksum_text to [[format]](checksum_value, "06o") plus "\0" plus " ".
+    Give back part_a plus [[checksum_text.encode]]("ascii") plus part_b.
+
+Define [[block_pad]] taking chunk_len:
+    Set rem to chunk_len modulo 512.
+    If rem equals 0:
+        Give back [[bytes]](<>).
+    Set pad_count to 512 minus rem.
+    Give back [[bytes]](<0>) times pad_count.
+
+Define [[tar_member_bytes]] taking name_text, data, mtime_value:
+    Set name_bytes to [[name_text.encode]]("utf-8").
+    Set chunks to <>.
+    If [[len]](name_bytes) is greater than 100:
+        Set longlink_text to "././@LongLink".
+        Set longlink_bytes to [[longlink_text.encode]]("ascii").
+        Set link_data to name_bytes plus [[bytes]](<0>).
+        Do [[chunks.append]]([[tar_header]](longlink_bytes, [[len]](link_data), 0, "L")).
+        Do [[chunks.append]](link_data).
+        Do [[chunks.append]]([[block_pad]]([[len]](link_data))).
+        Set header_name to [[prefix_byte_list]](name_bytes, 100).
+    Otherwise:
+        Set header_name to name_bytes.
+    Do [[chunks.append]]([[tar_header]](header_name, [[len]](data), mtime_value, "0")).
+    Do [[chunks.append]](data).
+    Do [[chunks.append]]([[block_pad]]([[len]](data))).
+    Set empty_bytes to [[bytes]](<>).
+    Give back [[empty_bytes.join]](chunks).
+
+Define [[build_archive]] taking files_map, mtime_value:
+    Set chunks to <>.
+    For each name_text in [[sorted]](files_map):
+        Do [[chunks.append]]([[tar_member_bytes]](name_text, [[files_map.get]](name_text), mtime_value)).
+    Do [[chunks.append]]([[bytes]](<0>) times 1024).
+    Set empty_bytes to [[bytes]](<>).
+    Set tar_bytes to [[empty_bytes.join]](chunks).
+    Set rem to [[len]](tar_bytes) modulo 10240.
+    If rem does not equal 0:
+        Set pad_count to 10240 minus rem.
+        Set tar_bytes to tar_bytes plus ([[bytes]](<0>) times pad_count).
+    Set buffer to [[io.BytesIO]]().
+    Set gz_file to [[gzip.GzipFile]](fileobj=buffer, mode="wb", compresslevel=9, mtime=0).
+    Do [[gz_file.write]](tar_bytes).
+    Do [[gz_file.close]]().
+    Give back [[buffer.getvalue]]().
+
+Define [[digest_lines]] taking path_list, data_map:
+    Set text to "".
+    For each path_text in [[sorted]](path_list):
+        Set data to [[data_map.get]](path_text).
+        Set text to text plus [[sha_hex]](data) plus "  " plus path_text plus "\n".
+    Give back text.
+
+Define [[publish_archive]] taking dest_arg, archive_name, raw:
+    Set dest_path to [[pathlib.Path]](dest_arg).
+    If [[dest_path.is_symlink]]():
+        Give back "dest destination is a symlink: " plus dest_arg.
+    If [[dest_path.exists]]():
+        If not [[dest_path.is_dir]]():
+            Give back "dest destination is not a directory: " plus dest_arg.
+    Otherwise:
+        Do [[dest_path.mkdir]](parents=True).
+    Set archive_path to [[dest_path.joinpath]](archive_name).
+    Set sidecar_name to archive_name plus ".sha256".
+    Set sidecar_path to [[dest_path.joinpath]](sidecar_name).
+    If [[archive_path.is_symlink]]():
+        Give back "dest archive path is a symlink: " plus archive_name.
+    If [[archive_path.exists]]():
+        If not [[archive_path.is_file]]():
+            Give back "dest archive path is not a regular file: " plus archive_name.
+        Set existing_bytes to [[archive_path.read_bytes]]().
+        If existing_bytes does not equal raw:
+            Give back "output-collision " plus archive_name.
+    If [[sidecar_path.is_symlink]]():
+        Give back "dest sidecar path is a symlink: " plus sidecar_name.
+    If [[sidecar_path.exists]]():
+        If not [[sidecar_path.is_file]]():
+            Give back "dest sidecar path is not a regular file: " plus sidecar_name.
+    Set pid_text to [[str]]([[os.getpid]]()).
+    Set sidecar_text to [[sha_hex]](raw) plus "  " plus archive_name plus "\n".
+    Set archive_temp to [[dest_path.joinpath]](archive_name plus ".tmp." plus pid_text).
+    Do [[archive_temp.write_bytes]](raw).
+    Do [[os.replace]](archive_temp, archive_path).
+    Set sidecar_temp to [[dest_path.joinpath]](sidecar_name plus ".tmp." plus pid_text).
+    Do [[sidecar_temp.write_bytes]]([[sidecar_text.encode]]("utf-8")).
+    Do [[os.replace]](sidecar_temp, sidecar_path).
+    Give back "".
+
+Define [[build_command]] taking dest_arg:
+    Set pair to [[derive_release]](".").
+    Set detail to [[pair.pop]](0).
+    Set plan to [[pair.pop]](0).
+    If detail does not equal "":
+        Do [[refuse]](detail).
+    Set pair to [[git_bytes]](".", <"show", "HEAD:release-manifest.tsv">).
+    Set ok_flag to [[pair.pop]](0).
+    Set committed_bytes to [[pair.pop]](0).
+    If not ok_flag:
+        Do [[refuse]]("manifest-drift release-manifest.tsv").
+    Set committed_text to "".
+    Set decode_ok to True.
+    Try:
+        Set committed_text to [[committed_bytes.decode]]("utf-8").
+    Catch UnicodeDecodeError:
+        Set decode_ok to False.
+    If not decode_ok:
+        Do [[refuse]]("manifest-drift release-manifest.tsv").
+    Set derived_manifest to [[plan.get]]("manifest").
+    If committed_text does not equal derived_manifest:
+        Do [[refuse]]("manifest-drift " plus [[drift_path]](committed_text, derived_manifest)).
+    Set rejected_list to [[list]]([[plan.get]]("rejected")).
+    If rejected_list:
+        Do [[refuse]]("rejected-verdict " plus [[rejected_list.pop]](0)).
+    Set contested_list to [[list]]([[plan.get]]("contested")).
+    If contested_list:
+        Do [[refuse]]("contested-verdict " plus [[contested_list.pop]](0)).
+    Set head_text to [[plan.get]]("head").
+    Set bag_root to "cnl-ckc-kb-g" plus [[prefix_chars]](head_text, 12).
+    Set archive_name to bag_root plus ".tar.gz".
+    Set rel_map to {}.
+    Set payload_map to [[plan.get]]("payload").
+    For each path_text in payload_map:
+        Do [[rel_map.update]]({path_text: [[payload_map.get]](path_text)}).
+    Set tags_map to [[plan.get]]("tags").
+    For each path_text in tags_map:
+        Do [[rel_map.update]]({path_text: [[tags_map.get]](path_text)}).
+    Do [[rel_map.update]]({"release-manifest.tsv": [[derived_manifest.encode]]("utf-8")}).
+    Set payload_paths to [[sorted]](payload_map).
+    Set payload_manifest to [[digest_lines]](payload_paths, rel_map).
+    Do [[rel_map.update]]({"manifest-sha256.txt": [[payload_manifest.encode]]("utf-8")}).
+    Set tag_paths to <"NOTICE", "README-dist.md", "bagit.txt", "manifest-sha256.txt", "release-manifest.tsv">.
+    Set tag_manifest to [[digest_lines]](tag_paths, rel_map).
+    Do [[rel_map.update]]({"tagmanifest-sha256.txt": [[tag_manifest.encode]]("utf-8")}).
+    Set files_map to {}.
+    For each path_text in rel_map:
+        Do [[files_map.update]]({bag_root plus "/" plus path_text: [[rel_map.get]](path_text)}).
+    Set raw to [[build_archive]](files_map, [[plan.get]]("epoch")).
+    Set publish_detail to [[publish_archive]](dest_arg, archive_name, raw).
+    If publish_detail does not equal "":
+        Do [[refuse]](publish_detail).
+    Set shipped_text to [[str]]([[plan.get]]("shipped")).
+    Set member_text to [[str]]([[len]](files_map)).
+    Set byte_text to [[str]]([[len]](raw)).
+    Do [[print]]("dist: ok " plus shipped_text plus " guidelines " plus member_text plus " members " plus byte_text plus " bytes").
+    Do [[print]]("dist: sha256=" plus [[sha_hex]](raw) plus " " plus archive_name).
+
+Set argv to [[list]](sys.argv).
+Do [[argv.pop]](0).
+If [[len]](argv) equals 0:
+    Do [[usage_exit]]().
+Set mode_text to [[argv.pop]](0).
+If mode_text does not equal "build":
+    Do [[usage_exit]]().
+If [[len]](argv) is greater than 1:
+    Do [[usage_exit]]().
+Set dest_arg to "dist".
+If [[len]](argv) equals 1:
+    Set dest_arg to [[argv.pop]](0).
+Do [[build_command]](dest_arg).

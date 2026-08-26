@@ -1,0 +1,63 @@
+id	family	scenario	expected_rc	expected_stderr_prefix
+a01-input-head	manifest	input_head	0	-
+a03-reconstructable-source	manifest	reconstructable_source	0	-
+a04-reconstructable-url	rights	reconstructable_empty_url	1	dist: rights g-red url:1
+a05-rights-missing	rights	rights_missing	1	dist: rights g-red missing
+a05-rights-header	rights	rights_header	1	dist: rights g-red header
+a05-rights-rows	rights	rights_rows	1	dist: rights g-red rows
+a05-rights-fields	rights	rights_fields	1	dist: rights g-red fields:1
+a05-rights-profile	rights	rights_profile	1	dist: rights g-red profile:1
+a05-rights-statement	rights	rights_statement	1	dist: rights g-red statement:1
+a05-rights-url	rights	rights_url	1	dist: rights g-red url:1
+a05-rights-retrieved	rights	rights_retrieved	1	dist: rights g-red retrieved:1
+a05-rights-control	rights	rights_control	1	dist: rights g-red control:1
+a05-rights-utf8	rights	rights_utf8	1	dist: rights g-red utf8
+a06-all-rows-validated	rights	rights_second_row_invalid	1	dist: rights g-red profile:2
+a06-operative-row	rights	rights_first_row_operative	0	-
+a07-stray-root	rights	stray_root	1	dist: stray-root-member guidelines/stray.txt
+a07-no-guidelines	rights	no_guidelines	1	dist: no-guidelines
+a07-rights-only	rights	rights_only	0	-
+a12-committed-state	manifest	committed_state	0	-
+a15-manifest-order	manifest	manifest_order	0	-
+a16-runtime-meta	manifest	runtime_meta	0	-
+manifest-source-drift	manifest	manifest_source_drift	1	dist: manifest-drift data/guidelines/g-red/source/original.txt
+manifest-tamper	manifest	manifest_tamper	1	dist: manifest-drift data/guidelines/g-red/source/original.txt
+manifest-writer-idempotent	manifest	writer_idempotent	0	-
+a08-restricted-labels	labels	restricted_labels	0	-
+a09-rejected-order	labels	rejected_order	1	dist: rejected-verdict a-rejected
+a19-contested	labels	contested	1	dist: contested-verdict doc-contested
+label-class-set	labels	label_classes	0	-
+a10-exec-mode	determinism	exec_mode	0	-
+a11-output-collision	determinism	output_collision	1	dist: output-collision cnl-ckc-kb-g
+a13-gzip-header	determinism	gzip_header	0	-
+a14-sidecar	determinism	sidecar	0	-
+a17-symlink	determinism	symlink_member	1	dist: member-not-regular guidelines/g-red/ace/link.ace
+a17-gitlink	determinism	gitlink_member	1	dist: member-not-regular guidelines/g-red/submodule
+a18-member-precedence	determinism	member_precedence	1	dist: member-not-regular guidelines/g-red/ace/link.ace
+a18-success-meter	determinism	success_meter	0	-
+d05-byte-determinism	determinism	byte_determinism	0	-
+d05-tar-fields	determinism	tar_fields	0	-
+d05-longname	determinism	longname	0	-
+a02-bagit-closure	members	bagit_closure	0	-
+profile-member-set	members	profile_member_set	0	-
+bag-layout	members	bag_layout	0	-
+d06-exclusion	members	exclusion	0	-
+d08-consumer-copy	members	consumer_copy	0	-
+a20-newline-path	members	newline_path	1	dist: member-path
+a20-invalid-utf8-path	members	invalid_utf8_path	1	dist: member-path
+a20-backslash-path	members	backslash_path	1	dist: member-path
+a20-space-path	members	space_path	0	-
+d09-sha256-command	verification	sha256_command	0	-
+d09-tamper-detected	verification	checksum_tamper	0	-
+d09-tag-self-exclusion	verification	tag_self_exclusion	0	-
+release-member-digests	verification	release_member_digests	0	-
+d01-usage-missing	runner	usage_missing	2	dist: usage
+d01-usage-mode	runner	usage_mode	2	dist: usage
+d01-default-dest	runner	default_dest	0	-
+a21-symlink-dest	runner	symlink_dest	1	dist: dest
+a21-archive-symlink	runner	archive_symlink	1	dist: dest
+a21-sidecar-directory	runner	sidecar_directory	1	dist: dest
+a21-stage-clean-success	runner	stage_clean_success	0	-
+a21-stage-clean-refusal	runner	stage_clean_refusal	1	dist: rights g-red missing
+d07-goal-check-live	runner	goal_check_live	2	goal: swipl-exec: not executable: __dist_red_missing_swipl__
+d07-goal-check-blocked	runner	goal_check_blocked	2	goal: swipl-exec: not executable: __dist_red_missing_swipl__

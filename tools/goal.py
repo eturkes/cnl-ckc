@@ -1,6 +1,8 @@
 import ast
 import datetime
+import gzip
 import hashlib
+import io
 import os
 import pathlib
 import re
@@ -8,6 +10,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 def fail(category, detail):
@@ -4265,6 +4268,293 @@ def check_swipl_wall_probe():
     elapsed = time.monotonic() - start_stamp
     if elapsed > 30:
         violation("swipl-timeout-probe", "wall-clock probes overran 30s: descendant pipes survive the kill")
+def load_dist_module():
+    argv_copy = list(sys.argv)
+    script_arg = argv_copy.pop(0)
+    script_path = pathlib.Path(script_arg)
+    resolved_path = script_path.resolve()
+    dist_path = resolved_path.with_name("dist.py")
+    if not dist_path.is_file():
+        fail("dist", "missing dist runner beside goal.py: " + str(dist_path))
+    source_text = dist_path.read_text(encoding="utf-8")
+    marker = "\nargv = list(sys.argv)"
+    parts = list(source_text.partition(marker))
+    prefix_text = parts.pop(0)
+    marker_sep = parts.pop(0)
+    if marker_sep == "":
+        fail("dist", "dist runner lacks argv marker: " + str(dist_path))
+    namespace = {}
+    exec(prefix_text, namespace)
+    return [namespace, dist_path]
+def dist_git_run(work_dir, arg_list):
+    command_list = ["git"]
+    for arg_text in arg_list:
+        command_list.append(arg_text)
+    env_map = ui_git_env()
+    return subprocess.run(command_list, capture_output=True, cwd=str(work_dir), env=env_map)
+def dist_probe_write(repo_path, rel_text, text):
+    target_path = repo_path.joinpath(rel_text)
+    parent_path = target_path.parent
+    parent_path.mkdir(parents=True, exist_ok=True)
+    target_path.write_text(text, encoding="utf-8")
+def dist_probe_commit(scratch_path, repo_path, message_text):
+    add_result = dist_git_run(repo_path, ["add", "-A"])
+    if add_result.returncode != 0:
+        cleanup_violation(scratch_path, "dist", "probe git add failed")
+    commit_result = dist_git_run(repo_path, ["commit", "-q", "-m", message_text])
+    if commit_result.returncode != 0:
+        cleanup_violation(scratch_path, "dist", "probe git commit failed")
+def dist_probe_hex(text):
+    text_bytes = text.encode("utf-8")
+    digest_object = hashlib.sha256(text_bytes)
+    return digest_object.hexdigest()
+def dist_probe_review_text(docid_list, digest_map_out):
+    text = "# probe review manifest\n"
+    for docid in docid_list:
+        review_digest = dist_probe_hex("review:" + docid)
+        filler_digest = dist_probe_hex("component:" + docid)
+        row_text = docid
+        column = 0
+        while column < 4:
+            row_text = row_text + "\t" + filler_digest
+            column = column + 1
+        text = text + row_text + "\t" + review_digest + "\n"
+        digest_map_out.update({docid: review_digest})
+    return text
+def dist_probe_ledger_row(docid, digest_value, verdict_text):
+    return docid + "\t" + digest_value + "\t\t" + verdict_text + "\tprobe\t2026-01-01T00:00:00Z\tprobe decision\n"
+def dist_probe_repo(scratch_path, name_text):
+    repo_path = scratch_path.joinpath(name_text)
+    repo_path.mkdir()
+    init_result = dist_git_run(repo_path, ["init", "-q", "-b", "main"])
+    if init_result.returncode != 0:
+        cleanup_violation(scratch_path, "dist", "probe git init failed")
+    dist_probe_write(repo_path, "README.md", "# Probe KB\n\n## Compiled Prolog schema (v1)\n\nProbe schema bytes.\n\n## Operating\n\nRun the checks.\n")
+    dist_probe_write(repo_path, "NOTICE", "Probe notice.\n")
+    dist_probe_write(repo_path, "vendor/ape/prolog/ace_to_pl.pl", "% probe compiler\n")
+    dist_probe_write(repo_path, "vendor/clex/clex_lexicon.pl", "% probe lexicon\n")
+    dist_probe_write(repo_path, "guidelines/g-probe/rights.tsv", "profile\tstatement\turl\tretrieved\tnote\nredistributable\tProbe rights statement.\thttps://example.invalid/g-probe\t2026-01-01\tProbe note.\n")
+    dist_probe_write(repo_path, "guidelines/g-probe/source/original.txt", "probe source bytes\n")
+    dist_probe_write(repo_path, "guidelines/g-probe/ace/doc-a.ace", "Every probe is a record.\n")
+    dist_probe_write(repo_path, "guidelines/g-probe/pl/doc-a.pl", "guideline_document('g-probe','doc-a',[],x).\n")
+    return repo_path
+def dist_probe_manifest(scratch_path, namespace, repo_path):
+    derive_function = namespace.get("derive_release")
+    pair = derive_function(str(repo_path))
+    detail = pair.pop(0)
+    plan = pair.pop(0)
+    if detail != "":
+        cleanup_violation(scratch_path, "dist", "probe manifest derive failed: " + detail)
+    manifest_text = plan.get("manifest")
+    manifest_path = repo_path.joinpath("release-manifest.tsv")
+    manifest_path.write_text(manifest_text, encoding="utf-8")
+    dist_probe_commit(scratch_path, repo_path, "probe release manifest")
+def dist_probe_build(dist_path, repo_path):
+    command_list = [sys.executable, "-P", str(dist_path), "build", "out"]
+    return subprocess.run(command_list, capture_output=True, cwd=str(repo_path))
+def dist_probe_expect_refusal(scratch_path, result, probe_name, expected_line):
+    stderr_text = result.stderr.decode("utf-8", errors="replace")
+    stdout_text = result.stdout.decode("utf-8", errors="replace")
+    ok_flag = True
+    if result.returncode != 1:
+        ok_flag = False
+    if stdout_text != "":
+        ok_flag = False
+    if stderr_text != expected_line:
+        ok_flag = False
+    if not ok_flag:
+        cleanup_violation(scratch_path, "dist", "probe " + probe_name + " expected " + expected_line.strip() + "; got rc " + str(result.returncode) + " stderr " + stderr_text.strip())
+def check_dist_probes(scratch_path, namespace, dist_path):
+    repo_path = dist_probe_repo(scratch_path, "probe-tamper")
+    digest_map = {}
+    review_text = dist_probe_review_text(["doc-a"], digest_map)
+    dist_probe_write(repo_path, "guidelines/g-probe/audit/review-manifest.tsv", review_text)
+    dist_probe_commit(scratch_path, repo_path, "probe corpus")
+    dist_probe_manifest(scratch_path, namespace, repo_path)
+    dist_probe_write(repo_path, "guidelines/g-probe/source/original.txt", "tampered probe source\n")
+    dist_probe_commit(scratch_path, repo_path, "probe tamper")
+    result = dist_probe_build(dist_path, repo_path)
+    dist_probe_expect_refusal(scratch_path, result, "tamper", "dist: manifest-drift data/guidelines/g-probe/source/original.txt\n")
+    repo_path = dist_probe_repo(scratch_path, "probe-rejected")
+    digest_map = {}
+    review_text = dist_probe_review_text(["doc-a"], digest_map)
+    dist_probe_write(repo_path, "guidelines/g-probe/audit/review-manifest.tsv", review_text)
+    ledger_text = "# probe ledger\n" + dist_probe_ledger_row("doc-a", digest_map.get("doc-a"), "rejected")
+    dist_probe_write(repo_path, "guidelines/g-probe/audit/adjudication.tsv", ledger_text)
+    dist_probe_commit(scratch_path, repo_path, "probe corpus")
+    dist_probe_manifest(scratch_path, namespace, repo_path)
+    result = dist_probe_build(dist_path, repo_path)
+    dist_probe_expect_refusal(scratch_path, result, "rejected", "dist: rejected-verdict doc-a\n")
+    repo_path = dist_probe_repo(scratch_path, "probe-rights-missing")
+    dist_probe_commit(scratch_path, repo_path, "probe corpus")
+    dist_probe_manifest(scratch_path, namespace, repo_path)
+    rights_path = repo_path.joinpath("guidelines/g-probe/rights.tsv")
+    rights_path.unlink()
+    dist_probe_commit(scratch_path, repo_path, "probe rights removed")
+    result = dist_probe_build(dist_path, repo_path)
+    dist_probe_expect_refusal(scratch_path, result, "rights-missing", "dist: rights g-probe missing\n")
+    repo_path = dist_probe_repo(scratch_path, "probe-rights-profile")
+    dist_probe_commit(scratch_path, repo_path, "probe corpus")
+    dist_probe_manifest(scratch_path, namespace, repo_path)
+    dist_probe_write(repo_path, "guidelines/g-probe/rights.tsv", "profile\tstatement\turl\tretrieved\tnote\nother\tProbe rights statement.\thttps://example.invalid/g-probe\t2026-01-01\tProbe note.\n")
+    dist_probe_commit(scratch_path, repo_path, "probe rights profile")
+    result = dist_probe_build(dist_path, repo_path)
+    dist_probe_expect_refusal(scratch_path, result, "rights-profile", "dist: rights g-probe profile:1\n")
+    repo_path = dist_probe_repo(scratch_path, "probe-rights-statement")
+    dist_probe_commit(scratch_path, repo_path, "probe corpus")
+    dist_probe_manifest(scratch_path, namespace, repo_path)
+    dist_probe_write(repo_path, "guidelines/g-probe/rights.tsv", "profile\tstatement\turl\tretrieved\tnote\nredistributable\t\thttps://example.invalid/g-probe\t2026-01-01\tProbe note.\n")
+    dist_probe_commit(scratch_path, repo_path, "probe rights statement")
+    result = dist_probe_build(dist_path, repo_path)
+    dist_probe_expect_refusal(scratch_path, result, "rights-statement", "dist: rights g-probe statement:1\n")
+    repo_path = dist_probe_repo(scratch_path, "probe-label")
+    digest_map = {}
+    review_text = dist_probe_review_text(["doc-a", "doc-b"], digest_map)
+    dist_probe_write(repo_path, "guidelines/g-probe/audit/review-manifest.tsv", review_text)
+    dist_probe_write(repo_path, "guidelines/g-probe/pl/doc-b.pl", "guideline_document('g-probe','doc-b',[],x).\n")
+    stale_digest = dist_probe_hex("stale:doc-b")
+    ledger_text = "# probe ledger\n" + dist_probe_ledger_row("doc-b", stale_digest, "approved")
+    dist_probe_write(repo_path, "guidelines/g-probe/audit/adjudication.tsv", ledger_text)
+    dist_probe_commit(scratch_path, repo_path, "probe corpus")
+    dist_probe_manifest(scratch_path, namespace, repo_path)
+    manifest_path = repo_path.joinpath("release-manifest.tsv")
+    manifest_text = manifest_path.read_text(encoding="utf-8")
+    if "label\tdoc-a\tunreviewed\n" not in manifest_text:
+        cleanup_violation(scratch_path, "dist", "probe label missing unreviewed row for doc-a")
+    if "label\tdoc-b\tstale\n" not in manifest_text:
+        cleanup_violation(scratch_path, "dist", "probe label missing stale row for doc-b")
+    result = dist_probe_build(dist_path, repo_path)
+    stdout_text = result.stdout.decode("utf-8", errors="replace")
+    label_ok = True
+    if result.returncode != 0:
+        label_ok = False
+    if not stdout_text.startswith("dist: ok "):
+        label_ok = False
+    if not label_ok:
+        cleanup_violation(scratch_path, "dist", "probe label expected green build; got rc " + str(result.returncode))
+def check_dist():
+    load_pair = load_dist_module()
+    namespace = load_pair.pop(0)
+    dist_path = load_pair.pop(0)
+    derive_function = namespace.get("derive_release")
+    pair = derive_function(".")
+    detail = pair.pop(0)
+    plan = pair.pop(0)
+    if detail != "":
+        violation("dist", detail)
+    regen_hint = "; regenerate: python3 -P tools/goal.py release-manifest"
+    manifest_path = pathlib.Path("release-manifest.tsv")
+    if manifest_path.is_symlink():
+        violation("dist", "release manifest is a symlink: release-manifest.tsv")
+    if not manifest_path.exists():
+        violation("dist", "release manifest missing: release-manifest.tsv" + regen_hint)
+    if not manifest_path.is_file():
+        violation("dist", "release manifest is not a regular file: release-manifest.tsv")
+    committed_bytes = manifest_path.read_bytes()
+    derived_manifest = plan.get("manifest")
+    derived_bytes = derived_manifest.encode("utf-8")
+    if committed_bytes != derived_bytes:
+        violation("dist", "release manifest stale: release-manifest.tsv" + regen_hint)
+    scratch_path = pathlib.Path(tempfile.mkdtemp(prefix="goal-dist-"))
+    check_dist_probes(scratch_path, namespace, dist_path)
+    rejected_list = plan.get("rejected")
+    contested_list = plan.get("contested")
+    rejected_count = len(rejected_list)
+    contested_count = len(contested_list)
+    if (rejected_count > 0) or (contested_count > 0):
+        shutil.rmtree(scratch_path)
+        print("goal: dist blocked rejected=" + str(rejected_count) + " contested=" + str(contested_count))
+        return None
+    dest_one = scratch_path.joinpath("live-one")
+    dest_two = scratch_path.joinpath("live-two")
+    command_one = [sys.executable, "-P", str(dist_path), "build", str(dest_one)]
+    result_one = subprocess.run(command_one, capture_output=True)
+    if result_one.returncode != 0:
+        stderr_one = result_one.stderr.decode("utf-8", errors="replace")
+        cleanup_violation(scratch_path, "dist", "live build failed: " + stderr_one.strip())
+    stdout_one = result_one.stdout.decode("utf-8", errors="replace")
+    if not stdout_one.startswith("dist: ok "):
+        cleanup_violation(scratch_path, "dist", "live build meter grammar: " + stdout_one.strip())
+    command_two = [sys.executable, "-P", str(dist_path), "build", str(dest_two)]
+    result_two = subprocess.run(command_two, capture_output=True)
+    if result_two.returncode != 0:
+        cleanup_violation(scratch_path, "dist", "second live build failed")
+    archives_one = sorted(dest_one.glob("*.tar.gz"))
+    archives_two = sorted(dest_two.glob("*.tar.gz"))
+    if len(archives_one) != 1:
+        cleanup_violation(scratch_path, "dist", "live build archive count " + str(len(archives_one)))
+    if len(archives_two) != 1:
+        cleanup_violation(scratch_path, "dist", "second live build archive count " + str(len(archives_two)))
+    archive_one = archives_one.pop(0)
+    archive_two = archives_two.pop(0)
+    raw_one = archive_one.read_bytes()
+    raw_two = archive_two.read_bytes()
+    if raw_one != raw_two:
+        cleanup_violation(scratch_path, "dist", "live builds are not byte-identical")
+    prefix_function = namespace.get("prefix_chars")
+    head_text = plan.get("head")
+    bag_root = "cnl-ckc-kb-g" + prefix_function(head_text, 12)
+    tag_map = {"bagit.txt": True, "manifest-sha256.txt": True, "tagmanifest-sha256.txt": True, "README-dist.md": True, "NOTICE": True, "release-manifest.tsv": True}
+    raw_tar = gzip.decompress(raw_one)
+    tar_buffer = io.BytesIO(raw_tar)
+    opened = tarfile.open(fileobj=tar_buffer, mode="r:")
+    extract_root = scratch_path.joinpath("extract")
+    member_count = 0
+    root_prefix = bag_root + "/"
+    for member in opened.getmembers():
+        if not member.isfile():
+            cleanup_violation(scratch_path, "dist", "archive member is not a regular file: " + member.name)
+        member_name = member.name
+        if not member_name.startswith(root_prefix):
+            cleanup_violation(scratch_path, "dist", "archive member outside bag root: " + member_name)
+        rel_name = member_name.removeprefix(root_prefix)
+        rel_ok = False
+        if rel_name in tag_map:
+            rel_ok = True
+        if rel_name.startswith("data/guidelines/"):
+            rel_ok = True
+        if not rel_ok:
+            cleanup_violation(scratch_path, "dist", "archive member outside layout: " + rel_name)
+        stream = opened.extractfile(member)
+        member_data = stream.read()
+        target_path = extract_root.joinpath(member_name)
+        parent_path = target_path.parent
+        parent_path.mkdir(parents=True, exist_ok=True)
+        target_path.write_bytes(member_data)
+        member_count = member_count + 1
+    opened.close()
+    bag_root_path = extract_root.joinpath(bag_root)
+    verify_command = ["sha256sum", "-c", "manifest-sha256.txt", "tagmanifest-sha256.txt"]
+    verify_result = subprocess.run(verify_command, capture_output=True, cwd=str(bag_root_path))
+    if verify_result.returncode != 0:
+        cleanup_violation(scratch_path, "dist", "sha256sum verification failed rc " + str(verify_result.returncode))
+    if len(verify_result.stderr) != 0:
+        cleanup_violation(scratch_path, "dist", "sha256sum verification stderr not empty")
+    shipped_text = str(plan.get("shipped"))
+    byte_count = len(raw_one)
+    shutil.rmtree(scratch_path)
+    print("goal: dist ok " + shipped_text + " guidelines " + str(member_count) + " members " + str(byte_count) + " bytes")
+def release_manifest_command():
+    load_pair = load_dist_module()
+    namespace = load_pair.pop(0)
+    load_pair.pop(0)
+    derive_function = namespace.get("derive_release")
+    pair = derive_function(".")
+    detail = pair.pop(0)
+    plan = pair.pop(0)
+    if detail != "":
+        violation("dist", detail)
+    manifest_path = pathlib.Path("release-manifest.tsv")
+    if manifest_path.is_symlink():
+        violation("dist", "release manifest is a symlink: release-manifest.tsv")
+    manifest_text = plan.get("manifest")
+    manifest_bytes = manifest_text.encode("utf-8")
+    manifest_path.write_bytes(manifest_bytes)
+    payload_map = plan.get("payload")
+    tags_map = plan.get("tags")
+    member_count = len(payload_map) + len(tags_map)
+    shipped_text = str(plan.get("shipped"))
+    print("goal: release-manifest " + shipped_text + " guidelines " + str(member_count) + " members")
 def check_command():
     check_fork_notices()
     check_docid_grammar_probe()
@@ -4309,6 +4599,7 @@ def check_command():
         check_corpus(corpus_path, corpus_ace_paths, corpus_docids, corpus_lexicon_path)
     check_ui()
     check_copy_register()
+    check_dist()
     swipl_executable = resolve_swipl()
     scratch_path = make_scratch()
     stage_path = stage_ape(scratch_path, swipl_executable)
@@ -4335,7 +4626,7 @@ def check_command():
 argv = list(sys.argv)
 argv.pop(0)
 if len(argv) == 0:
-    fail("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>")
+    fail("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label> | goal release-manifest")
 subcommand = argv.pop(0)
 if subcommand == "compile":
     if len(argv) != 1:
@@ -4372,6 +4663,10 @@ else:
                 fail("usage", "expected: goal review-manifest <guideline-id>")
             review_guideline_id = argv.pop(0)
             review_manifest_command(review_guideline_id)
+        elif subcommand == "release-manifest":
+            if len(argv) != 0:
+                fail("usage", "expected: goal release-manifest")
+            release_manifest_command()
         else:
             if subcommand == "derive-review-manifest":
                 if len(argv) != 1:

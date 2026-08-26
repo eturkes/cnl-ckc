@@ -1,6 +1,8 @@
 Use ast.
 Use datetime.
+Use gzip.
 Use hashlib.
+Use io.
 Use os.
 Use pathlib.
 Use re.
@@ -8,6 +10,7 @@ Use shutil.
 Use signal.
 Use subprocess.
 Use sys.
+Use tarfile.
 Use tempfile.
 Use time.
 
@@ -4411,6 +4414,307 @@ Define [[check_swipl_wall_probe]] taking nothing:
     If elapsed is greater than 30:
         Do [[violation]]("swipl-timeout-probe", "wall-clock probes overran 30s: descendant pipes survive the kill").
 
+Define [[load_dist_module]] taking nothing:
+    Set argv_copy to [[list]](sys.argv).
+    Set script_arg to [[argv_copy.pop]](0).
+    Set script_path to [[pathlib.Path]](script_arg).
+    Set resolved_path to [[script_path.resolve]]().
+    Set dist_path to [[resolved_path.with_name]]("dist.py").
+    If not [[dist_path.is_file]]():
+        Do [[fail]]("dist", "missing dist runner beside goal.py: " plus [[str]](dist_path)).
+    Set source_text to [[dist_path.read_text]](encoding="utf-8").
+    Set marker to "\nargv = list(sys.argv)".
+    Set parts to [[list]]([[source_text.partition]](marker)).
+    Set prefix_text to [[parts.pop]](0).
+    Set marker_sep to [[parts.pop]](0).
+    If marker_sep equals "":
+        Do [[fail]]("dist", "dist runner lacks argv marker: " plus [[str]](dist_path)).
+    Set namespace to {}.
+    Do [[exec]](prefix_text, namespace).
+    Give back <namespace, dist_path>.
+
+Define [[dist_git_run]] taking work_dir, arg_list:
+    Set command_list to <"git">.
+    For each arg_text in arg_list:
+        Do [[command_list.append]](arg_text).
+    Set env_map to [[ui_git_env]]().
+    Give back [[subprocess.run]](command_list, capture_output=True, cwd=[[str]](work_dir), env=env_map).
+
+Define [[dist_probe_write]] taking repo_path, rel_text, text:
+    Set target_path to [[repo_path.joinpath]](rel_text).
+    Set parent_path to target_path.parent.
+    Do [[parent_path.mkdir]](parents=True, exist_ok=True).
+    Do [[target_path.write_text]](text, encoding="utf-8").
+
+Define [[dist_probe_commit]] taking scratch_path, repo_path, message_text:
+    Set add_result to [[dist_git_run]](repo_path, <"add", "-A">).
+    If add_result.returncode does not equal 0:
+        Do [[cleanup_violation]](scratch_path, "dist", "probe git add failed").
+    Set commit_result to [[dist_git_run]](repo_path, <"commit", "-q", "-m", message_text>).
+    If commit_result.returncode does not equal 0:
+        Do [[cleanup_violation]](scratch_path, "dist", "probe git commit failed").
+
+Define [[dist_probe_hex]] taking text:
+    Set text_bytes to [[text.encode]]("utf-8").
+    Set digest_object to [[hashlib.sha256]](text_bytes).
+    Give back [[digest_object.hexdigest]]().
+
+Define [[dist_probe_review_text]] taking docid_list, digest_map_out:
+    Set text to "# probe review manifest\n".
+    For each docid in docid_list:
+        Set review_digest to [[dist_probe_hex]]("review:" plus docid).
+        Set filler_digest to [[dist_probe_hex]]("component:" plus docid).
+        Set row_text to docid.
+        Set column to 0.
+        While column is less than 4:
+            Set row_text to row_text plus "\t" plus filler_digest.
+            Set column to column plus 1.
+        Set text to text plus row_text plus "\t" plus review_digest plus "\n".
+        Do [[digest_map_out.update]]({docid: review_digest}).
+    Give back text.
+
+Define [[dist_probe_ledger_row]] taking docid, digest_value, verdict_text:
+    Give back docid plus "\t" plus digest_value plus "\t\t" plus verdict_text plus "\tprobe\t2026-01-01T00:00:00Z\tprobe decision\n".
+
+Define [[dist_probe_repo]] taking scratch_path, name_text:
+    Set repo_path to [[scratch_path.joinpath]](name_text).
+    Do [[repo_path.mkdir]]().
+    Set init_result to [[dist_git_run]](repo_path, <"init", "-q", "-b", "main">).
+    If init_result.returncode does not equal 0:
+        Do [[cleanup_violation]](scratch_path, "dist", "probe git init failed").
+    Do [[dist_probe_write]](repo_path, "README.md", "# Probe KB\n\n## Compiled Prolog schema (v1)\n\nProbe schema bytes.\n\n## Operating\n\nRun the checks.\n").
+    Do [[dist_probe_write]](repo_path, "NOTICE", "Probe notice.\n").
+    Do [[dist_probe_write]](repo_path, "vendor/ape/prolog/ace_to_pl.pl", "% probe compiler\n").
+    Do [[dist_probe_write]](repo_path, "vendor/clex/clex_lexicon.pl", "% probe lexicon\n").
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/rights.tsv", "profile\tstatement\turl\tretrieved\tnote\nredistributable\tProbe rights statement.\thttps://example.invalid/g-probe\t2026-01-01\tProbe note.\n").
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/source/original.txt", "probe source bytes\n").
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/ace/doc-a.ace", "Every probe is a record.\n").
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/pl/doc-a.pl", "guideline_document('g-probe','doc-a',[],x).\n").
+    Give back repo_path.
+
+Define [[dist_probe_manifest]] taking scratch_path, namespace, repo_path:
+    Set derive_function to [[namespace.get]]("derive_release").
+    Set pair to [[derive_function]]([[str]](repo_path)).
+    Set detail to [[pair.pop]](0).
+    Set plan to [[pair.pop]](0).
+    If detail does not equal "":
+        Do [[cleanup_violation]](scratch_path, "dist", "probe manifest derive failed: " plus detail).
+    Set manifest_text to [[plan.get]]("manifest").
+    Set manifest_path to [[repo_path.joinpath]]("release-manifest.tsv").
+    Do [[manifest_path.write_text]](manifest_text, encoding="utf-8").
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe release manifest").
+
+Define [[dist_probe_build]] taking dist_path, repo_path:
+    Set command_list to <sys.executable, "-P", [[str]](dist_path), "build", "out">.
+    Give back [[subprocess.run]](command_list, capture_output=True, cwd=[[str]](repo_path)).
+
+Define [[dist_probe_expect_refusal]] taking scratch_path, result, probe_name, expected_line:
+    Set stderr_text to [[result.stderr.decode]]("utf-8", errors="replace").
+    Set stdout_text to [[result.stdout.decode]]("utf-8", errors="replace").
+    Set ok_flag to True.
+    If result.returncode does not equal 1:
+        Set ok_flag to False.
+    If stdout_text does not equal "":
+        Set ok_flag to False.
+    If stderr_text does not equal expected_line:
+        Set ok_flag to False.
+    If not ok_flag:
+        Do [[cleanup_violation]](scratch_path, "dist", "probe " plus probe_name plus " expected " plus [[expected_line.strip]]() plus "; got rc " plus [[str]](result.returncode) plus " stderr " plus [[stderr_text.strip]]()).
+
+Define [[check_dist_probes]] taking scratch_path, namespace, dist_path:
+    Set repo_path to [[dist_probe_repo]](scratch_path, "probe-tamper").
+    Set digest_map to {}.
+    Set review_text to [[dist_probe_review_text]](<"doc-a">, digest_map).
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/audit/review-manifest.tsv", review_text).
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe corpus").
+    Do [[dist_probe_manifest]](scratch_path, namespace, repo_path).
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/source/original.txt", "tampered probe source\n").
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe tamper").
+    Set result to [[dist_probe_build]](dist_path, repo_path).
+    Do [[dist_probe_expect_refusal]](scratch_path, result, "tamper", "dist: manifest-drift data/guidelines/g-probe/source/original.txt\n").
+    Set repo_path to [[dist_probe_repo]](scratch_path, "probe-rejected").
+    Set digest_map to {}.
+    Set review_text to [[dist_probe_review_text]](<"doc-a">, digest_map).
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/audit/review-manifest.tsv", review_text).
+    Set ledger_text to "# probe ledger\n" plus [[dist_probe_ledger_row]]("doc-a", [[digest_map.get]]("doc-a"), "rejected").
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/audit/adjudication.tsv", ledger_text).
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe corpus").
+    Do [[dist_probe_manifest]](scratch_path, namespace, repo_path).
+    Set result to [[dist_probe_build]](dist_path, repo_path).
+    Do [[dist_probe_expect_refusal]](scratch_path, result, "rejected", "dist: rejected-verdict doc-a\n").
+    Set repo_path to [[dist_probe_repo]](scratch_path, "probe-rights-missing").
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe corpus").
+    Do [[dist_probe_manifest]](scratch_path, namespace, repo_path).
+    Set rights_path to [[repo_path.joinpath]]("guidelines/g-probe/rights.tsv").
+    Do [[rights_path.unlink]]().
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe rights removed").
+    Set result to [[dist_probe_build]](dist_path, repo_path).
+    Do [[dist_probe_expect_refusal]](scratch_path, result, "rights-missing", "dist: rights g-probe missing\n").
+    Set repo_path to [[dist_probe_repo]](scratch_path, "probe-rights-profile").
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe corpus").
+    Do [[dist_probe_manifest]](scratch_path, namespace, repo_path).
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/rights.tsv", "profile\tstatement\turl\tretrieved\tnote\nother\tProbe rights statement.\thttps://example.invalid/g-probe\t2026-01-01\tProbe note.\n").
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe rights profile").
+    Set result to [[dist_probe_build]](dist_path, repo_path).
+    Do [[dist_probe_expect_refusal]](scratch_path, result, "rights-profile", "dist: rights g-probe profile:1\n").
+    Set repo_path to [[dist_probe_repo]](scratch_path, "probe-rights-statement").
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe corpus").
+    Do [[dist_probe_manifest]](scratch_path, namespace, repo_path).
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/rights.tsv", "profile\tstatement\turl\tretrieved\tnote\nredistributable\t\thttps://example.invalid/g-probe\t2026-01-01\tProbe note.\n").
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe rights statement").
+    Set result to [[dist_probe_build]](dist_path, repo_path).
+    Do [[dist_probe_expect_refusal]](scratch_path, result, "rights-statement", "dist: rights g-probe statement:1\n").
+    Set repo_path to [[dist_probe_repo]](scratch_path, "probe-label").
+    Set digest_map to {}.
+    Set review_text to [[dist_probe_review_text]](<"doc-a", "doc-b">, digest_map).
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/audit/review-manifest.tsv", review_text).
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/pl/doc-b.pl", "guideline_document('g-probe','doc-b',[],x).\n").
+    Set stale_digest to [[dist_probe_hex]]("stale:doc-b").
+    Set ledger_text to "# probe ledger\n" plus [[dist_probe_ledger_row]]("doc-b", stale_digest, "approved").
+    Do [[dist_probe_write]](repo_path, "guidelines/g-probe/audit/adjudication.tsv", ledger_text).
+    Do [[dist_probe_commit]](scratch_path, repo_path, "probe corpus").
+    Do [[dist_probe_manifest]](scratch_path, namespace, repo_path).
+    Set manifest_path to [[repo_path.joinpath]]("release-manifest.tsv").
+    Set manifest_text to [[manifest_path.read_text]](encoding="utf-8").
+    If "label\tdoc-a\tunreviewed\n" is not in manifest_text:
+        Do [[cleanup_violation]](scratch_path, "dist", "probe label missing unreviewed row for doc-a").
+    If "label\tdoc-b\tstale\n" is not in manifest_text:
+        Do [[cleanup_violation]](scratch_path, "dist", "probe label missing stale row for doc-b").
+    Set result to [[dist_probe_build]](dist_path, repo_path).
+    Set stdout_text to [[result.stdout.decode]]("utf-8", errors="replace").
+    Set label_ok to True.
+    If result.returncode does not equal 0:
+        Set label_ok to False.
+    If not [[stdout_text.startswith]]("dist: ok "):
+        Set label_ok to False.
+    If not label_ok:
+        Do [[cleanup_violation]](scratch_path, "dist", "probe label expected green build; got rc " plus [[str]](result.returncode)).
+
+Define [[check_dist]] taking nothing:
+    Set load_pair to [[load_dist_module]]().
+    Set namespace to [[load_pair.pop]](0).
+    Set dist_path to [[load_pair.pop]](0).
+    Set derive_function to [[namespace.get]]("derive_release").
+    Set pair to [[derive_function]](".").
+    Set detail to [[pair.pop]](0).
+    Set plan to [[pair.pop]](0).
+    If detail does not equal "":
+        Do [[violation]]("dist", detail).
+    Set regen_hint to "; regenerate: python3 -P tools/goal.py release-manifest".
+    Set manifest_path to [[pathlib.Path]]("release-manifest.tsv").
+    If [[manifest_path.is_symlink]]():
+        Do [[violation]]("dist", "release manifest is a symlink: release-manifest.tsv").
+    If not [[manifest_path.exists]]():
+        Do [[violation]]("dist", "release manifest missing: release-manifest.tsv" plus regen_hint).
+    If not [[manifest_path.is_file]]():
+        Do [[violation]]("dist", "release manifest is not a regular file: release-manifest.tsv").
+    Set committed_bytes to [[manifest_path.read_bytes]]().
+    Set derived_manifest to [[plan.get]]("manifest").
+    Set derived_bytes to [[derived_manifest.encode]]("utf-8").
+    If committed_bytes does not equal derived_bytes:
+        Do [[violation]]("dist", "release manifest stale: release-manifest.tsv" plus regen_hint).
+    Set scratch_path to [[pathlib.Path]]([[tempfile.mkdtemp]](prefix="goal-dist-")).
+    Do [[check_dist_probes]](scratch_path, namespace, dist_path).
+    Set rejected_list to [[plan.get]]("rejected").
+    Set contested_list to [[plan.get]]("contested").
+    Set rejected_count to [[len]](rejected_list).
+    Set contested_count to [[len]](contested_list).
+    If (rejected_count is greater than 0) or (contested_count is greater than 0):
+        Do [[shutil.rmtree]](scratch_path).
+        Do [[print]]("goal: dist blocked rejected=" plus [[str]](rejected_count) plus " contested=" plus [[str]](contested_count)).
+        Give back None.
+    Set dest_one to [[scratch_path.joinpath]]("live-one").
+    Set dest_two to [[scratch_path.joinpath]]("live-two").
+    Set command_one to <sys.executable, "-P", [[str]](dist_path), "build", [[str]](dest_one)>.
+    Set result_one to [[subprocess.run]](command_one, capture_output=True).
+    If result_one.returncode does not equal 0:
+        Set stderr_one to [[result_one.stderr.decode]]("utf-8", errors="replace").
+        Do [[cleanup_violation]](scratch_path, "dist", "live build failed: " plus [[stderr_one.strip]]()).
+    Set stdout_one to [[result_one.stdout.decode]]("utf-8", errors="replace").
+    If not [[stdout_one.startswith]]("dist: ok "):
+        Do [[cleanup_violation]](scratch_path, "dist", "live build meter grammar: " plus [[stdout_one.strip]]()).
+    Set command_two to <sys.executable, "-P", [[str]](dist_path), "build", [[str]](dest_two)>.
+    Set result_two to [[subprocess.run]](command_two, capture_output=True).
+    If result_two.returncode does not equal 0:
+        Do [[cleanup_violation]](scratch_path, "dist", "second live build failed").
+    Set archives_one to [[sorted]]([[dest_one.glob]]("*.tar.gz")).
+    Set archives_two to [[sorted]]([[dest_two.glob]]("*.tar.gz")).
+    If [[len]](archives_one) does not equal 1:
+        Do [[cleanup_violation]](scratch_path, "dist", "live build archive count " plus [[str]]([[len]](archives_one))).
+    If [[len]](archives_two) does not equal 1:
+        Do [[cleanup_violation]](scratch_path, "dist", "second live build archive count " plus [[str]]([[len]](archives_two))).
+    Set archive_one to [[archives_one.pop]](0).
+    Set archive_two to [[archives_two.pop]](0).
+    Set raw_one to [[archive_one.read_bytes]]().
+    Set raw_two to [[archive_two.read_bytes]]().
+    If raw_one does not equal raw_two:
+        Do [[cleanup_violation]](scratch_path, "dist", "live builds are not byte-identical").
+    Set prefix_function to [[namespace.get]]("prefix_chars").
+    Set head_text to [[plan.get]]("head").
+    Set bag_root to "cnl-ckc-kb-g" plus [[prefix_function]](head_text, 12).
+    Set tag_map to {"bagit.txt": True, "manifest-sha256.txt": True, "tagmanifest-sha256.txt": True, "README-dist.md": True, "NOTICE": True, "release-manifest.tsv": True}.
+    Set raw_tar to [[gzip.decompress]](raw_one).
+    Set tar_buffer to [[io.BytesIO]](raw_tar).
+    Set opened to [[tarfile.open]](fileobj=tar_buffer, mode="r:").
+    Set extract_root to [[scratch_path.joinpath]]("extract").
+    Set member_count to 0.
+    Set root_prefix to bag_root plus "/".
+    For each member in [[opened.getmembers]]():
+        If not [[member.isfile]]():
+            Do [[cleanup_violation]](scratch_path, "dist", "archive member is not a regular file: " plus member.name).
+        Set member_name to member.name.
+        If not [[member_name.startswith]](root_prefix):
+            Do [[cleanup_violation]](scratch_path, "dist", "archive member outside bag root: " plus member_name).
+        Set rel_name to [[member_name.removeprefix]](root_prefix).
+        Set rel_ok to False.
+        If rel_name is in tag_map:
+            Set rel_ok to True.
+        If [[rel_name.startswith]]("data/guidelines/"):
+            Set rel_ok to True.
+        If not rel_ok:
+            Do [[cleanup_violation]](scratch_path, "dist", "archive member outside layout: " plus rel_name).
+        Set stream to [[opened.extractfile]](member).
+        Set member_data to [[stream.read]]().
+        Set target_path to [[extract_root.joinpath]](member_name).
+        Set parent_path to target_path.parent.
+        Do [[parent_path.mkdir]](parents=True, exist_ok=True).
+        Do [[target_path.write_bytes]](member_data).
+        Set member_count to member_count plus 1.
+    Do [[opened.close]]().
+    Set bag_root_path to [[extract_root.joinpath]](bag_root).
+    Set verify_command to <"sha256sum", "-c", "manifest-sha256.txt", "tagmanifest-sha256.txt">.
+    Set verify_result to [[subprocess.run]](verify_command, capture_output=True, cwd=[[str]](bag_root_path)).
+    If verify_result.returncode does not equal 0:
+        Do [[cleanup_violation]](scratch_path, "dist", "sha256sum verification failed rc " plus [[str]](verify_result.returncode)).
+    If [[len]](verify_result.stderr) does not equal 0:
+        Do [[cleanup_violation]](scratch_path, "dist", "sha256sum verification stderr not empty").
+    Set shipped_text to [[str]]([[plan.get]]("shipped")).
+    Set byte_count to [[len]](raw_one).
+    Do [[shutil.rmtree]](scratch_path).
+    Do [[print]]("goal: dist ok " plus shipped_text plus " guidelines " plus [[str]](member_count) plus " members " plus [[str]](byte_count) plus " bytes").
+
+Define [[release_manifest_command]] taking nothing:
+    Set load_pair to [[load_dist_module]]().
+    Set namespace to [[load_pair.pop]](0).
+    Do [[load_pair.pop]](0).
+    Set derive_function to [[namespace.get]]("derive_release").
+    Set pair to [[derive_function]](".").
+    Set detail to [[pair.pop]](0).
+    Set plan to [[pair.pop]](0).
+    If detail does not equal "":
+        Do [[violation]]("dist", detail).
+    Set manifest_path to [[pathlib.Path]]("release-manifest.tsv").
+    If [[manifest_path.is_symlink]]():
+        Do [[violation]]("dist", "release manifest is a symlink: release-manifest.tsv").
+    Set manifest_text to [[plan.get]]("manifest").
+    Set manifest_bytes to [[manifest_text.encode]]("utf-8").
+    Do [[manifest_path.write_bytes]](manifest_bytes).
+    Set payload_map to [[plan.get]]("payload").
+    Set tags_map to [[plan.get]]("tags").
+    Set member_count to [[len]](payload_map) plus [[len]](tags_map).
+    Set shipped_text to [[str]]([[plan.get]]("shipped")).
+    Do [[print]]("goal: release-manifest " plus shipped_text plus " guidelines " plus [[str]](member_count) plus " members").
+
 Define [[check_command]] taking nothing:
     Do [[check_fork_notices]]().
     Do [[check_docid_grammar_probe]]().
@@ -4455,6 +4759,7 @@ Define [[check_command]] taking nothing:
         Do [[check_corpus]](corpus_path, corpus_ace_paths, corpus_docids, corpus_lexicon_path).
     Do [[check_ui]]().
     Do [[check_copy_register]]().
+    Do [[check_dist]]().
     Set swipl_executable to [[resolve_swipl]]().
     Set scratch_path to [[make_scratch]]().
     Set stage_path to [[stage_ape]](scratch_path, swipl_executable).
@@ -4482,7 +4787,7 @@ Define [[check_command]] taking nothing:
 Set argv to [[list]](sys.argv).
 Do [[argv.pop]](0).
 If [[len]](argv) equals 0:
-    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label>").
+    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label> | goal release-manifest").
 Set subcommand to [[argv.pop]](0).
 If subcommand equals "compile":
     If [[len]](argv) does not equal 1:
@@ -4519,6 +4824,10 @@ Otherwise:
                 Do [[fail]]("usage", "expected: goal review-manifest <guideline-id>").
             Set review_guideline_id to [[argv.pop]](0).
             Do [[review_manifest_command]](review_guideline_id).
+        Otherwise if subcommand equals "release-manifest":
+            If [[len]](argv) does not equal 0:
+                Do [[fail]]("usage", "expected: goal release-manifest").
+            Do [[release_manifest_command]]().
         Otherwise:
             If subcommand equals "derive-review-manifest":
                 If [[len]](argv) does not equal 1:
