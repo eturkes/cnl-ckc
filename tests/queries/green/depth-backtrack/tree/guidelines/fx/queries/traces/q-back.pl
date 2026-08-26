@@ -1,0 +1,2 @@
+% q-back traced against the loaded composition by ace_to_pl trace mode; do not edit.
+'$guideline_traces'(v1,'q-back',query_sha256(e1790946c5987d12d5c3712f77116be9fb4cbb3198648a4ddebb05f85433be2d),answers_sha256('8eb3437c54802bc1fbab4403471ac397ecdf2b1501865f66b33ca72bddeca0f5'),result(yes(proved([clause(sentence(doc,1),clause_sha256(d9863e4e52d01ee80198b8553766296bf0ec791c13c596c02506a5b261b92f9a),[]),clause(sentence(doc,1),clause_sha256('6fa4566e472d290b0fb649c5e92183d782dd7bf84014e1cc180ad8541b4f2414'),[])])))).

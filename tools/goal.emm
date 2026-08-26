@@ -1918,6 +1918,10 @@ Define [[check_strict_fixtures]] taking nothing:
         Set green_exit to [[green_copy.pop]](0).
         Do [[run_strict_green]](env, fixture_path).
         Set green_count to green_count plus 1.
+    If red_count does not equal 36:
+        Do [[violation]]("strict-fixtures", "red case count drift: expected 36 got " plus [[str]](red_count)).
+    If green_count does not equal 14:
+        Do [[violation]]("strict-fixtures", "green case count drift: expected 14 got " plus [[str]](green_count)).
     Do [[print]]("goal: strict fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
 
 Define [[red_probe_class]] taking probe_name:
@@ -3386,6 +3390,10 @@ Define [[check_adjudication_fixtures]] taking nothing:
             If result.stdout does not equal golden_bytes:
                 Do [[violation]]("adjudication-fixtures", "stdout differs from golden for case: " plus case_name).
             Set green_count to green_count plus 1.
+    If red_count does not equal 42:
+        Do [[violation]]("adjudication-fixtures", "red case count drift: expected 42 got " plus [[str]](red_count)).
+    If green_count does not equal 9:
+        Do [[violation]]("adjudication-fixtures", "green case count drift: expected 9 got " plus [[str]](green_count)).
     Do [[print]]("goal: adjudication fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
 
 Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_path:
@@ -3403,8 +3411,9 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
     Set green_count to 0.
     Set red_names to <>.
     Set green_names to <>.
+    Set pin_inventory to <>.
     Set red_required to <"bad-qid", "empty-solutions", "limit-depth", "limit-inner-inference", "malformed-query-file", "missing-trace", "no-finite-failure", "orphan-answers", "orphan-pl", "orphan-trace", "stale-answers", "stale-pl", "stale-trace", "trace-digest-join", "trace-indeterminate-mirror", "trace-naf-depth-cut", "trace-naf-inference-cut", "trace-naf-proved", "trace-no-mirror", "trace-row-failure-after-cut", "trace-unproved-finite", "trace-unproved-limit", "uncompiled-ace", "yesno-limit-before-proof">.
-    Set green_required to <"absent-queries", "canonical-sort", "empty-queries", "positive", "trace-direct-rejects", "trace-multi-proof", "trace-naf", "trace-positive-rule", "trace-serializer">.
+    Set green_required to <"absent-queries", "canonical-sort", "depth-backtrack", "empty-queries", "numeric-bigint", "positive", "trace-direct-rejects", "trace-multi-proof", "trace-naf", "trace-positive-rule", "trace-serializer">.
     For each color in color_names:
         Set color_path to [[fixtures_root.joinpath]](color).
         If [[color_path.is_symlink]]():
@@ -3531,6 +3540,7 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
                     Set pin_qid to [[pin_name.removesuffix]](".pl").
                     If not [[valid_docid]](pin_qid):
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/answers-golden/" plus pin_name).
+                    Do [[pin_inventory.append]](color plus "/" plus case_name plus "/answers-golden/" plus pin_qid).
                     Set query_ace to [[gid_path.joinpath]]("queries", pin_qid plus ".ace").
                     If not [[query_ace.is_file]]():
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "answers-golden qid has no query: " plus case_name plus "/" plus pin_qid).
@@ -3554,6 +3564,7 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
                     Set pin_qid to [[pin_name.removesuffix]](".pl").
                     If not [[valid_docid]](pin_qid):
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "unsupported entry: " plus case_name plus "/traces-golden/" plus pin_name).
+                    Do [[pin_inventory.append]](color plus "/" plus case_name plus "/traces-golden/" plus pin_qid).
                     Set query_ace to [[gid_path.joinpath]]("queries", pin_qid plus ".ace").
                     If not [[query_ace.is_file]]():
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "traces-golden qid has no query: " plus case_name plus "/" plus pin_qid).
@@ -3601,6 +3612,7 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
                     If not has_partner:
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject member without partner: " plus case_name plus "/" plus reject_qid plus ".expect").
                 For each reject_qid in answers_qids:
+                    Do [[pin_inventory.append]](color plus "/" plus case_name plus "/trace-reject/" plus reject_qid).
                     Set query_ace to [[gid_path.joinpath]]("queries", reject_qid plus ".ace").
                     If not [[query_ace.is_file]]():
                         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "trace-reject qid has no query: " plus case_name plus "/" plus reject_qid).
@@ -3634,6 +3646,13 @@ Define [[check_queries_fixtures]] taking scratch_path, swipl_executable, stage_p
         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "no red fixture cases found: " plus [[str]](fixtures_root)).
     If green_count equals 0:
         Do [[cleanup_violation]](scratch_path, "queries-fixtures", "no green fixture cases found: " plus [[str]](fixtures_root)).
+    Set pin_expected to <"green/canonical-sort/answers-golden/q-sort", "green/depth-backtrack/answers-golden/q-back", "green/numeric-bigint/answers-golden/q-big", "green/numeric-bigint/traces-golden/q-big", "green/positive/answers-golden/q-wh", "green/positive/answers-golden/q-yes", "green/trace-direct-rejects/trace-reject/qid-mismatch", "green/trace-direct-rejects/trace-reject/query-sha256-mismatch", "green/trace-direct-rejects/trace-reject/result-mode-mismatch", "green/trace-direct-rejects/trace-reject/result-shape", "green/trace-direct-rejects/traces-golden/qid-mismatch", "green/trace-direct-rejects/traces-golden/query-sha256-mismatch", "green/trace-direct-rejects/traces-golden/result-mode-mismatch", "green/trace-direct-rejects/traces-golden/result-shape", "green/trace-multi-proof/traces-golden/q-multi", "green/trace-naf/traces-golden/q-naf", "green/trace-positive-rule/traces-golden/q-rule", "green/trace-serializer/traces-golden/q-serializer", "red/empty-solutions/answers-golden/q-empty", "red/empty-solutions/traces-golden/q-empty", "red/limit-depth/answers-golden/q-depth", "red/limit-depth/traces-golden/q-depth", "red/limit-inner-inference/answers-golden/q-inner", "red/limit-inner-inference/traces-golden/q-inner", "red/missing-trace/traces-golden/q-missing-trace", "red/no-finite-failure/answers-golden/q-no", "red/no-finite-failure/traces-golden/q-no", "red/orphan-trace/traces-golden/q-orphan", "red/stale-trace/traces-golden/q-stale-trace", "red/trace-digest-join/traces-golden/q-digest", "red/trace-indeterminate-mirror/traces-golden/q-indeterminate", "red/trace-naf-depth-cut/traces-golden/q-naf-depth", "red/trace-naf-inference-cut/traces-golden/q-naf-inference", "red/trace-naf-proved/traces-golden/q-naf-proved", "red/trace-no-mirror/traces-golden/q-no-trace", "red/trace-row-failure-after-cut/traces-golden/q-row-cut", "red/trace-unproved-finite/traces-golden/q-unproved-finite", "red/trace-unproved-limit/traces-golden/q-unproved-limit", "red/yesno-limit-before-proof/answers-golden/q-yn-limit", "red/yesno-limit-before-proof/traces-golden/q-yn-limit">.
+    If [[sorted]](pin_inventory) does not equal pin_expected:
+        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "golden-pin inventory drifted from pinned 40-entry map: " plus [[str]]([[len]](pin_inventory)) plus " pins on disk").
+    If red_count does not equal 24:
+        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "red case count drift: expected 24 got " plus [[str]](red_count)).
+    If green_count does not equal 11:
+        Do [[cleanup_violation]](scratch_path, "queries-fixtures", "green case count drift: expected 11 got " plus [[str]](green_count)).
     Do [[print]]("goal: queries fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
 
 Define [[ui_walk_files]] taking base_path:
@@ -4260,6 +4279,10 @@ Define [[check_ui]] taking nothing:
         Set present to required_name is in green_names.
         If not present:
             Do [[violation]]("ui-fixtures", "missing required case: green/" plus required_name).
+    If red_count does not equal 81:
+        Do [[violation]]("ui-fixtures", "red case count drift: expected 81 got " plus [[str]](red_count)).
+    If green_count does not equal 14:
+        Do [[violation]]("ui-fixtures", "green case count drift: expected 14 got " plus [[str]](green_count)).
     Do [[print]]("goal: ui fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
 
 Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:

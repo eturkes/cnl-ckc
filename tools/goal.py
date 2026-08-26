@@ -1846,6 +1846,10 @@ def check_strict_fixtures():
         green_exit = green_copy.pop(0)
         run_strict_green(env, fixture_path)
         green_count = green_count + 1
+    if red_count != 36:
+        violation("strict-fixtures", "red case count drift: expected 36 got " + str(red_count))
+    if green_count != 14:
+        violation("strict-fixtures", "green case count drift: expected 14 got " + str(green_count))
     print("goal: strict fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def red_probe_class(probe_name):
     stem = probe_name.removesuffix(".ace")
@@ -3267,6 +3271,10 @@ def check_adjudication_fixtures():
             if result.stdout != golden_bytes:
                 violation("adjudication-fixtures", "stdout differs from golden for case: " + case_name)
             green_count = green_count + 1
+    if red_count != 42:
+        violation("adjudication-fixtures", "red case count drift: expected 42 got " + str(red_count))
+    if green_count != 9:
+        violation("adjudication-fixtures", "green case count drift: expected 9 got " + str(green_count))
     print("goal: adjudication fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
     fixtures_root = pathlib.Path("tests/queries")
@@ -3283,8 +3291,9 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
     green_count = 0
     red_names = []
     green_names = []
+    pin_inventory = []
     red_required = ["bad-qid", "empty-solutions", "limit-depth", "limit-inner-inference", "malformed-query-file", "missing-trace", "no-finite-failure", "orphan-answers", "orphan-pl", "orphan-trace", "stale-answers", "stale-pl", "stale-trace", "trace-digest-join", "trace-indeterminate-mirror", "trace-naf-depth-cut", "trace-naf-inference-cut", "trace-naf-proved", "trace-no-mirror", "trace-row-failure-after-cut", "trace-unproved-finite", "trace-unproved-limit", "uncompiled-ace", "yesno-limit-before-proof"]
-    green_required = ["absent-queries", "canonical-sort", "empty-queries", "positive", "trace-direct-rejects", "trace-multi-proof", "trace-naf", "trace-positive-rule", "trace-serializer"]
+    green_required = ["absent-queries", "canonical-sort", "depth-backtrack", "empty-queries", "numeric-bigint", "positive", "trace-direct-rejects", "trace-multi-proof", "trace-naf", "trace-positive-rule", "trace-serializer"]
     for color in color_names:
         color_path = fixtures_root.joinpath(color)
         if color_path.is_symlink():
@@ -3411,6 +3420,7 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
                     pin_qid = pin_name.removesuffix(".pl")
                     if not valid_docid(pin_qid):
                         cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/answers-golden/" + pin_name)
+                    pin_inventory.append(color + "/" + case_name + "/answers-golden/" + pin_qid)
                     query_ace = gid_path.joinpath("queries", pin_qid + ".ace")
                     if not query_ace.is_file():
                         cleanup_violation(scratch_path, "queries-fixtures", "answers-golden qid has no query: " + case_name + "/" + pin_qid)
@@ -3434,6 +3444,7 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
                     pin_qid = pin_name.removesuffix(".pl")
                     if not valid_docid(pin_qid):
                         cleanup_violation(scratch_path, "queries-fixtures", "unsupported entry: " + case_name + "/traces-golden/" + pin_name)
+                    pin_inventory.append(color + "/" + case_name + "/traces-golden/" + pin_qid)
                     query_ace = gid_path.joinpath("queries", pin_qid + ".ace")
                     if not query_ace.is_file():
                         cleanup_violation(scratch_path, "queries-fixtures", "traces-golden qid has no query: " + case_name + "/" + pin_qid)
@@ -3481,6 +3492,7 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
                     if not has_partner:
                         cleanup_violation(scratch_path, "queries-fixtures", "trace-reject member without partner: " + case_name + "/" + reject_qid + ".expect")
                 for reject_qid in answers_qids:
+                    pin_inventory.append(color + "/" + case_name + "/trace-reject/" + reject_qid)
                     query_ace = gid_path.joinpath("queries", reject_qid + ".ace")
                     if not query_ace.is_file():
                         cleanup_violation(scratch_path, "queries-fixtures", "trace-reject qid has no query: " + case_name + "/" + reject_qid)
@@ -3514,6 +3526,13 @@ def check_queries_fixtures(scratch_path, swipl_executable, stage_path):
         cleanup_violation(scratch_path, "queries-fixtures", "no red fixture cases found: " + str(fixtures_root))
     if green_count == 0:
         cleanup_violation(scratch_path, "queries-fixtures", "no green fixture cases found: " + str(fixtures_root))
+    pin_expected = ["green/canonical-sort/answers-golden/q-sort", "green/depth-backtrack/answers-golden/q-back", "green/numeric-bigint/answers-golden/q-big", "green/numeric-bigint/traces-golden/q-big", "green/positive/answers-golden/q-wh", "green/positive/answers-golden/q-yes", "green/trace-direct-rejects/trace-reject/qid-mismatch", "green/trace-direct-rejects/trace-reject/query-sha256-mismatch", "green/trace-direct-rejects/trace-reject/result-mode-mismatch", "green/trace-direct-rejects/trace-reject/result-shape", "green/trace-direct-rejects/traces-golden/qid-mismatch", "green/trace-direct-rejects/traces-golden/query-sha256-mismatch", "green/trace-direct-rejects/traces-golden/result-mode-mismatch", "green/trace-direct-rejects/traces-golden/result-shape", "green/trace-multi-proof/traces-golden/q-multi", "green/trace-naf/traces-golden/q-naf", "green/trace-positive-rule/traces-golden/q-rule", "green/trace-serializer/traces-golden/q-serializer", "red/empty-solutions/answers-golden/q-empty", "red/empty-solutions/traces-golden/q-empty", "red/limit-depth/answers-golden/q-depth", "red/limit-depth/traces-golden/q-depth", "red/limit-inner-inference/answers-golden/q-inner", "red/limit-inner-inference/traces-golden/q-inner", "red/missing-trace/traces-golden/q-missing-trace", "red/no-finite-failure/answers-golden/q-no", "red/no-finite-failure/traces-golden/q-no", "red/orphan-trace/traces-golden/q-orphan", "red/stale-trace/traces-golden/q-stale-trace", "red/trace-digest-join/traces-golden/q-digest", "red/trace-indeterminate-mirror/traces-golden/q-indeterminate", "red/trace-naf-depth-cut/traces-golden/q-naf-depth", "red/trace-naf-inference-cut/traces-golden/q-naf-inference", "red/trace-naf-proved/traces-golden/q-naf-proved", "red/trace-no-mirror/traces-golden/q-no-trace", "red/trace-row-failure-after-cut/traces-golden/q-row-cut", "red/trace-unproved-finite/traces-golden/q-unproved-finite", "red/trace-unproved-limit/traces-golden/q-unproved-limit", "red/yesno-limit-before-proof/answers-golden/q-yn-limit", "red/yesno-limit-before-proof/traces-golden/q-yn-limit"]
+    if sorted(pin_inventory) != pin_expected:
+        cleanup_violation(scratch_path, "queries-fixtures", "golden-pin inventory drifted from pinned 40-entry map: " + str(len(pin_inventory)) + " pins on disk")
+    if red_count != 24:
+        cleanup_violation(scratch_path, "queries-fixtures", "red case count drift: expected 24 got " + str(red_count))
+    if green_count != 11:
+        cleanup_violation(scratch_path, "queries-fixtures", "green case count drift: expected 11 got " + str(green_count))
     print("goal: queries fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def ui_walk_files(base_path):
     found = []
@@ -4120,6 +4139,10 @@ def check_ui():
         present = required_name in green_names
         if not present:
             violation("ui-fixtures", "missing required case: green/" + required_name)
+    if red_count != 81:
+        violation("ui-fixtures", "red case count drift: expected 81 got " + str(red_count))
+    if green_count != 14:
+        violation("ui-fixtures", "green case count drift: expected 14 got " + str(green_count))
     print("goal: ui fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
     ledger_pairs = check_projection_ledger(guideline_path)
