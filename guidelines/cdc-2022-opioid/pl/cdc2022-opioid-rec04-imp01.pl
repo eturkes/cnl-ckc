@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec04-imp01',ace_sha256('88cff65692bd021f33a1e81725736bb63df0e9ae0d438fc5d5ee4af0cfcd50e7'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec04-imp01',ace_sha256('88cff65692bd021f33a1e81725736bb63df0e9ae0d438fc5d5ee4af0cfcd50e7'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: An opioid-dosage-recommendation is not an inflexible-standard.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(1),[]),'opioid-dosage-recommendation',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(1),[]),na,eq,1).

@@ -2,8 +2,9 @@ Every opioid-dosage-reduction-decision is an opioid-dosage-management-decision.
 Every opioid-dosage-continuation-decision is an opioid-dosage-management-decision.
 Every evidence-based-medication-treatment-offer is an opioid-use-disorder-medication-treatment-action.
 Every patient-referral-for-medication-treatment is an opioid-use-disorder-medication-treatment-action.
-If a patient has an unexpected-toxicology-result then every clinician should optimize a pain-management-strategy for the patient.
-If a patient has an unexpected-toxicology-result then every clinician should weigh a benefit against a risk during an opioid-dosage-management-decision for the patient.
-If a patient has an unexpected-toxicology-result then every clinician should increase a follow-up-frequency for the patient.
-If a patient has an unexpected-toxicology-result then every clinician should offer a naloxone-dose to the patient.
-If a patient has an unexpected-toxicology-result then every clinician should conduct an opioid-use-disorder-medication-treatment-action for the patient.
+If a patient has an unexpected-toxicology-result then every clinician should use the unexpected-toxicology-result for a patient-safety-improvement.
+If a patient has an unexpected-toxicology-result then every clinician may optimize a pain-management-strategy for the patient.
+If a patient has an unexpected-toxicology-result then every clinician may weigh a benefit against a risk during an opioid-dosage-management-decision for the patient.
+If a patient has an unexpected-toxicology-result then every clinician may increase a follow-up-frequency for the patient.
+If a patient has an unexpected-toxicology-result then every clinician may offer a naloxone-dose to the patient.
+If a patient has an unexpected-toxicology-result then every clinician may conduct an opioid-use-disorder-medication-treatment-action for the patient.

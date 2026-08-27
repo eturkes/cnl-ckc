@@ -1,1 +1,2 @@
-If a clinician identifies an additional-prescription in a state-PDMP-record for a patient then the clinician should discuss the state-PDMP-record with the patient and should confirm an additional-prescription-awareness with the patient.
+If a clinician reviews a state-PDMP-record for a patient then the clinician should discuss the state-PDMP-record with the patient.
+If a clinician identifies an additional-prescription in a state-PDMP-record for a patient then the clinician should confirm an additional-prescription-awareness with the patient.

@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp11',ace_sha256(a4f2cd50d805146a154fe3235894292224f1b6668d0289e19d49f248514907a6),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec10-imp11',ace_sha256(a4f2cd50d805146a154fe3235894292224f1b6668d0289e19d49f248514907a6),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: Every clinician may discuss an unexpected-toxicology-result with a local-laboratory.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp11',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp11',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp11',1,ref(2),[A]),'unexpected-toxicology-result',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

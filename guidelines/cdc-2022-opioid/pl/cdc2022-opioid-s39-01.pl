@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s39-01',ace_sha256(ce1ddd8f2639ff9b8e28e504805b4ff7a2c43c7c694cab851ff5c606fb44a68a),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-s39-01',ace_sha256(ce1ddd8f2639ff9b8e28e504805b4ff7a2c43c7c694cab851ff5c606fb44a68a),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a patient has a shorter-duration-opioid-use then every clinician may use a ten-percent-of-original-dose-per-week-or-slower-first-taper-stage for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s39-01',1,box(1),[A,B,C,D]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'shorter-duration-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s39-01',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s39-01',1,ref(5),[A,B,C,D]),'ten-percent-of-original-dose-per-week-or-slower-first-taper-stage',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'shorter-duration-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

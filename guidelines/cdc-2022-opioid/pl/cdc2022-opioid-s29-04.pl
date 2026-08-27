@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s29-04',ace_sha256(aacea098fb804e5d7dd9820959121571844f23c70a0ef6ffd23cf3ac8ebdb35b),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-s29-04',ace_sha256(aacea098fb804e5d7dd9820959121571844f23c70a0ef6ffd23cf3ac8ebdb35b),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: Every clinician should emphasize a function-improvement-primary-goal with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-04',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-04',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s29-04',1,ref(2),[A]),'function-improvement-primary-goal',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

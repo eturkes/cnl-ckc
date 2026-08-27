@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s22-11',ace_sha256(bed13f5c554d41f56a31f7ba540798ce461dce3797d43ce6c223554086524bb7),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-s22-11',ace_sha256(bed13f5c554d41f56a31f7ba540798ce461dce3797d43ce6c223554086524bb7),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: A patient-education is critical before an outpatient-opioid-therapy.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(1),[]),'patient-education',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(1),[]),na,eq,1).

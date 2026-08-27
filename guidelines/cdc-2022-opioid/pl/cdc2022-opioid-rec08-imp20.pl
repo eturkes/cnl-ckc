@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec08-imp20',ace_sha256('547d5f74c21877b41fdb722e8fa632d4f78f2f4711bec54a7fd2e9f87dbfe98e'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec08-imp20',ace_sha256('547d5f74c21877b41fdb722e8fa632d4f78f2f4711bec54a7fd2e9f87dbfe98e'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a patient has an opioid-dosage-reduction-indication then every clinician should collaborate with the patient during a dosage-reduction.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec08-imp20',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-dosage-reduction-indication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec08-imp20',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec08-imp20',1,ref(5),[A,B,C,D]),'dosage-reduction',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-dosage-reduction-indication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

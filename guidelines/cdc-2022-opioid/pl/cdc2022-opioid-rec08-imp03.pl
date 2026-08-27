@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec08-imp03',ace_sha256(ab93e04b88798415ff1ad381fefc70c96f18276d56d9616515c523db96b91301),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec08-imp03',ace_sha256(ab93e04b88798415ff1ad381fefc70c96f18276d56d9616515c523db96b91301),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a clinician prescribes an opioid to a patient then the clinician should offer a naloxone-dose to the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec08-imp03',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,patient,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,to,C).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec08-imp03',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec08-imp03',1,ref(5),[A,B,C,D]),'naloxone-dose',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,patient,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,to,C).

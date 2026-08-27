@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec09-imp08',ace_sha256('3aa96d7fb274a878e1e65b020f3573c9e0b873e82c19d0133735d260b80beb1c'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec09-imp08',ace_sha256('3aa96d7fb274a878e1e65b020f3573c9e0b873e82c19d0133735d260b80beb1c'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a clinician reviews a state-PDMP-record for a patient then the clinician should not dismiss the patient from a practice.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec09-imp08',1,box(1),[A,B,C,D]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'state-PDMP-record',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,patient,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,review), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,for,C).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec09-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(context,'cdc2022-opioid-rec09-imp08',1,box(2),[A,B,C,D]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'state-PDMP-record',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,patient,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,review), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,for,C).

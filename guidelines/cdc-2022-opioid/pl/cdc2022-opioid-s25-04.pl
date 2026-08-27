@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s25-04',ace_sha256(eb2e61429d9133f19963dc1dfda23ce7725b85525e3f0c46d0882f2253e7587c),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-s25-04',ace_sha256(eb2e61429d9133f19963dc1dfda23ce7725b85525e3f0c46d0882f2253e7587c),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: Every clinician should conduct a focused-history during a pain-evaluation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s25-04',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s25-04',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s25-04',1,ref(2),[A]),'focused-history',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

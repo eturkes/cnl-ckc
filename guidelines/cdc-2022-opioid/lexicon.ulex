@@ -91,7 +91,6 @@ noun_sg('ER-LA-opioid','ER-LA-opioid',neutr).
 noun_sg('expected-health-outcome','expected-health-outcome',neutr).
 noun_sg('facility-discharge','facility-discharge',neutr).
 noun_sg('FDA-approved-labeling','FDA-approved-labeling',neutr).
-noun_sg('follow-up-visit-challenge','follow-up-visit-challenge',neutr).
 noun_sg('MME-dosage-determination','MME-dosage-determination',neutr).
 noun_sg('FDA-approved-labeling-substitute','FDA-approved-labeling-substitute',neutr).
 noun_sg('flexible-guideline','flexible-guideline',neutr).
@@ -604,7 +603,7 @@ noun_sg('opioid-conversion','opioid-conversion',neutr).
 noun_sg('opioid-conversion-dosage','opioid-conversion-dosage',neutr).
 noun_sg('opioid-discontinuation-goal','opioid-discontinuation-goal',neutr).
 noun_sg('opioid-discontinuation-indication','opioid-discontinuation-indication',neutr).
-noun_sg('opioid-diversion','opioid-diversion',neutr).
+noun_sg('opioid-diversion-risk','opioid-diversion-risk',neutr).
 noun_sg('opioid-dosage','opioid-dosage',neutr).
 noun_sg('opioid-dosage-continuation-decision','opioid-dosage-continuation-decision',neutr).
 noun_sg('opioid-dosage-increase','opioid-dosage-increase',neutr).
@@ -704,7 +703,6 @@ noun_sg('pain-management','pain-management',neutr).
 noun_sg('pain-management-adjustment','pain-management-adjustment',neutr).
 noun_sg('pain-management-principle','pain-management-principle',neutr).
 noun_sg('pain-management-strategy','pain-management-strategy',neutr).
-noun_sg('pain-management-therapy','pain-management-therapy',neutr).
 noun_sg('pain-opioid-initiation-decision','pain-opioid-initiation-decision',neutr).
 noun_sg('pain-resolution','pain-resolution',neutr).
 noun_sg('pain-score','pain-score',neutr).
@@ -820,7 +818,6 @@ noun_sg('proper-interventional-procedure-training','proper-interventional-proced
 noun_sg('proton-pump-inhibitor','proton-pump-inhibitor',neutr).
 noun_sg('psychological-comorbidity','psychological-comorbidity',neutr).
 noun_sg('psychological-comorbidity-treatment','psychological-comorbidity-treatment',neutr).
-noun_sg('psychological-distress','psychological-distress',neutr).
 noun_sg('psychological-therapy','psychological-therapy',neutr).
 noun_sg('qualified-opioid-use-disorder-treatment-specialist','qualified-opioid-use-disorder-treatment-specialist',human).
 noun_sg('rapid-clinical-collaboration','rapid-clinical-collaboration',neutr).
@@ -1038,6 +1035,11 @@ noun_sg(methadone,methadone,neutr).
 noun_sg(yoga,yoga,neutr).
 noun_sg('young-child-or-pet-unintentional-opioid-ingestion-risk','young-child-or-pet-unintentional-opioid-ingestion-risk',neutr).
 noun_sg(oversedation,oversedation,neutr).
+noun_sg('shorter-follow-up-interval','shorter-follow-up-interval',neutr).
+noun_sg('drug-detection','drug-detection',neutr).
+noun_sg('patient-safety-improvement','patient-safety-improvement',neutr).
+noun_sg('pain-management-therapy-optimization','pain-management-therapy-optimization',neutr).
+adj_itr(addressable,addressable).
 prep(per,per).
 tv_infpl(calibrate,calibrate).
 tv_infpl(optimize,optimize).

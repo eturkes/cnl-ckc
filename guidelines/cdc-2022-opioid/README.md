@@ -189,6 +189,15 @@ guideline conclusions.
   Cross-sentence referential identity is not modeled: fresh existentials
   per rule are the corpus idiom. Each identity or linkage loss lands in
   the notes dropped column.
+- Projection rulings (wave-2 review). Material normative-semantics changes
+  — altered conditions, population scope, modality force, invented bounds
+  or triggers — require an ACE fix regardless of notes disclosure.
+  Structural approximations — identity splits, fresh witnesses,
+  nominalizations, admitted hedge or example drops — are cured by a notes
+  admission (S51-09 line). A source threshold stated as a bare percentage
+  may render as an at-least bound when the notes row admits the reading
+  (S44-17). Batch-flag sentence counts are advisory; the source text
+  governs rule count (S40-01).
 - Reconciliation against an independent 702-sentence census of the same
   pages is closed and recorded row-by-row in `audit/census-map.tsv`. 694
   census sentences map to evidence regions. The census exposed 27

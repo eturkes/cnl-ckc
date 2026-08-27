@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s59-14',ace_sha256(c2b6794fbe76320aaadefaa083b1f314061101b869f6573813707afa1fcc5536),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-s59-14',ace_sha256(c2b6794fbe76320aaadefaa083b1f314061101b869f6573813707afa1fcc5536),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a patient does not have a very-limited-oral-naltrexone-circumstance then every clinician should not use an oral-naltrexone-treatment for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s59-14',1,box(2),[A,B]),-) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,C,-), guideline_entity(C,D,'very-limited-oral-naltrexone-circumstance',countable), guideline_cardinality(C,D,na,eq,1), guideline_event(C,E,have), guideline_arg(C,E,1,A), guideline_arg(C,E,2,D), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-s59-14',1,box(2),[A,B]),'$guideline_id'(context,'cdc2022-opioid-s59-14',1,box(3),[A,B]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,C,-), guideline_entity(C,D,'very-limited-oral-naltrexone-circumstance',countable), guideline_cardinality(C,D,na,eq,1), guideline_event(C,E,have), guideline_arg(C,E,1,A), guideline_arg(C,E,2,D), guideline_entity(actual,B,clinician,countable), guideline_cardinality(actual,B,na,eq,1).

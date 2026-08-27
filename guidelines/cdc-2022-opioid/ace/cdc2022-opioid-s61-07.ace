@@ -1,2 +1,2 @@
 Every clinician should monitor a longitudinal-patient-progress.
-If a longitudinal-patient-progress changes then every clinician should adjust a treatment-protocol.
+If a clinician monitors a longitudinal-patient-progress then the clinician should adjust a treatment-protocol to the longitudinal-patient-progress.

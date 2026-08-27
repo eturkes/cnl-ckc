@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec12-imp07',ace_sha256('519dfc988d90e8759f416d6ed7d2afbb20811abccdc5775265a83d2b67b31ce2'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec12-imp07',ace_sha256('519dfc988d90e8759f416d6ed7d2afbb20811abccdc5775265a83d2b67b31ce2'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: Every substance-use-disorder-treatment-specialist is an opioid-use-disorder-care-provider.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec12-imp07',1,ref(2),[A]),'opioid-use-disorder-care-provider',countable) :- guideline_entity(actual,A,'substance-use-disorder-treatment-specialist',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec12-imp07',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'substance-use-disorder-treatment-specialist',countable), guideline_cardinality(actual,A,na,eq,1).

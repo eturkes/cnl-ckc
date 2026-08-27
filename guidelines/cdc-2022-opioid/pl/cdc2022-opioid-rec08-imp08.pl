@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec08-imp08',ace_sha256('088ab872e7e3b2699a816a46c95df1a9552e13d267ec4ce2be8d737583853dc8'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec08-imp08',ace_sha256('088ab872e7e3b2699a816a46c95df1a9552e13d267ec4ce2be8d737583853dc8'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a patient has a moderate-sleep-disordered-breathing then every clinician should not prescribe an opioid to the patient and should minimize a respiratory-depression-risk for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec08-imp08',1,box(1),[A,B,C,D]),-) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'moderate-sleep-disordered-breathing',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec08-imp08',1,box(1),[A,B,C,D]),'$guideline_id'(context,'cdc2022-opioid-rec08-imp08',1,box(2),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'moderate-sleep-disordered-breathing',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

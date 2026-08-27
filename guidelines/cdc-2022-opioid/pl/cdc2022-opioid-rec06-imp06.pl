@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec06-imp06',ace_sha256('976d52093b3de8aaccd8f0b349eafcfd9a8a8f22993402097f8a6157b0ab5e82'),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec06-imp06',ace_sha256('976d52093b3de8aaccd8f0b349eafcfd9a8a8f22993402097f8a6157b0ab5e82'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a patient needs an additional-evaluation then every clinician may ensure an affordable-additional-evaluation-access for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec06-imp06',1,box(1),[A,B,C,D]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'additional-evaluation',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,need), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec06-imp06',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-rec06-imp06',1,ref(5),[A,B,C,D]),'affordable-additional-evaluation-access',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'additional-evaluation',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,need), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s47-01',ace_sha256(a748ea4658e1c2a44abc1a648bf5f99a8acc417206423361678ef56d59fd457c),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-s47-01',ace_sha256(a748ea4658e1c2a44abc1a648bf5f99a8acc417206423361678ef56d59fd457c),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: If a pregnant-person has a pain then the pregnant-person should receive a compassionate-evidence-based-care for the pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s47-01',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,'pregnant-person',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,pain,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s47-01',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s47-01',1,ref(4),[A,B,C]),'compassionate-evidence-based-care',countable) :- guideline_entity(actual,A,'pregnant-person',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,pain,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

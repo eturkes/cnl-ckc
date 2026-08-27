@@ -18,7 +18,7 @@
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp01',ace_sha256(a95b1ab359718ca2d67d9b2c4d66c504871f76fbf566f6bfd0360ce122a8b533),ulex(sha256('4c55bed7525c11e80d870254a4f876c23b6aa3c2a077242833ec32997784b01c'))).
+guideline_document('cdc2022-opioid-rec10-imp01',ace_sha256(a95b1ab359718ca2d67d9b2c4d66c504871f76fbf566f6bfd0360ce122a8b533),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
 % S1: Every clinician should not use a toxicology-testing for a punitive-purpose.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp01',1,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec10-imp01',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec10-imp01',1,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
