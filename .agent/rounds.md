@@ -55,9 +55,11 @@ attacks the assembled round pre-commit; MAIN fixes, reruns gates, commits.
 Wave 2 landed at ea8edaad (151 docs, coverage ace=337 pending=0, check ok
 337 documents) + release-manifest 67f462af. Kit + roster + harvest log +
 teammate reports = `.scratch/goalrounds/ace-wave2/` (merge_wave.py = the
-replayable harvest merge). Next round = wave-2 adversarial `rev` per
-`.agent/queue.md`; wave-2 flags already ruled are in roster.md § Harvest
-log. Lesson banked: N concurrent in-worktree `goal.py check` runs thrash
+replayable harvest merge). Wave-2 adversarial `rev` round closed at
+7c65d200 (census 151/151: 116 pass, 35 findings → 21 ACE fixes; rulings +
+harvest log = `.scratch/goalrounds/rev-wave2/roster.md`; durable ruling
+line = guideline README § Projection rulings wave-2) + release-manifest
+58cc6f13; guideline complete. Lesson banked: N concurrent in-worktree `goal.py check` runs thrash
 the machine (10-min subprocess caps trip) → teammates author + compile
 only; MAIN runs the one decisive gate at harvest.
 
