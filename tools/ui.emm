@@ -1026,6 +1026,7 @@ Set hl_diacritic_classes to {"a": "[aàáâãäå]", "e": "[eèéêë]", "i": "[
 Set hl_token_rx to [[re.compile]]("([0-9A-Za-z]+(?:-[0-9A-Za-z]+)*)").
 Set hl_word_sep to "[^\\w.!?,;:]+".
 Set hl_hover_classes to 32.
+Set hl_hue_count to 6.
 
 Define [[hl_bases]] taking word:
     Set out to <word>.
@@ -1082,6 +1083,36 @@ Define [[hl_lemma_pattern]] taking lemma:
             Do [[word_patterns.append]]([[hl_word_pattern]](word)).
     Set sep to hl_word_sep.
     Give back "\\b" plus [[sep.join]](word_patterns) plus "\\b".
+
+Define [[hl_windows]] taking lemma:
+    Set words to <>.
+    For each word in [[lemma.split]]("-"):
+        If word:
+            Do [[words.append]](word).
+    Set phrases to <lemma>.
+    Set total to [[len]](words).
+    Set start to 0.
+    For each outer_ignored in words:
+        Set width to 2.
+        For each inner_ignored in words:
+            If width is less than total:
+                Set skip_remaining to start.
+                Set window_words to <>.
+                For each word in words:
+                    If skip_remaining is greater than 0:
+                        Set skip_remaining to skip_remaining minus 1.
+                    Otherwise:
+                        If [[len]](window_words) is less than width:
+                            Do [[window_words.append]](word).
+                If [[len]](window_words) equals width:
+                    Set dash to "-".
+                    Set phrase to [[dash.join]](window_words).
+                    Set known to phrase is in phrases.
+                    If not known:
+                        Do [[phrases.append]](phrase).
+            Set width to width plus 1.
+        Set start to start plus 1.
+    Give back phrases.
 
 Define [[hl_content_lemmas]] taking ace_text:
     Set lemmas to <>.
@@ -1146,13 +1177,25 @@ Define [[hl_link_data]] taking ace_text, payload_line:
         Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, {})}).
         Give back data.
     Set ordered to [[hl_alternation_order]](lemmas).
-    Set alternation_parts to <>.
+    Set all_phrases to <>.
     Set single_rx_by_lemma to {}.
+    Set window_rx_by_lemma to {}.
+    Set bar to "|".
     For each lemma in ordered:
         Set lemma_pattern to [[hl_lemma_pattern]](lemma).
-        Do [[alternation_parts.append]]("(?:" plus lemma_pattern plus ")").
         Do [[single_rx_by_lemma.update]]({lemma: [[re.compile]](lemma_pattern plus "$", re.IGNORECASE)}).
-    Set bar to "|".
+        Set phrases to [[hl_windows]](lemma).
+        Set phrase_patterns to <>.
+        For each phrase in phrases:
+            Do [[phrase_patterns.append]]("(?:" plus [[hl_lemma_pattern]](phrase) plus ")").
+            Set known to phrase is in all_phrases.
+            If not known:
+                Do [[all_phrases.append]](phrase).
+        If [[len]](phrases) is greater than 1:
+            Do [[window_rx_by_lemma.update]]({lemma: [[re.compile]]("(?:" plus [[bar.join]](phrase_patterns) plus ")$", re.IGNORECASE)}).
+    Set alternation_parts to <>.
+    For each phrase in [[hl_alternation_order]](all_phrases):
+        Do [[alternation_parts.append]]("(?:" plus [[hl_lemma_pattern]](phrase) plus ")").
     Set combined_rx to [[re.compile]]("(" plus [[bar.join]](alternation_parts) plus ")", re.IGNORECASE).
     Set pieces to [[combined_rx.split]](payload_line).
     Set hit_lemmas to <>.
@@ -1167,6 +1210,14 @@ Define [[hl_link_data]] taking ace_text, payload_line:
                     Set hit to [[single_rx.match]](piece).
                     If hit:
                         Set piece_lemma to lemma.
+            If not piece_lemma:
+                For each lemma in ordered:
+                    If not piece_lemma:
+                        Set window_rx to [[window_rx_by_lemma.get]](lemma, None).
+                        If window_rx does not equal None:
+                            Set hit to [[window_rx.match]](piece).
+                            If hit:
+                                Set piece_lemma to lemma.
             Do [[hit_lemmas.append]](piece_lemma).
             If piece_lemma:
                 Set known to piece_lemma is in matched_lemmas.
@@ -1197,7 +1248,7 @@ Define [[hl_link_data]] taking ace_text, payload_line:
     Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, index_by_lemma)}).
     Give back data.
 
-Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">, "mark": <"#111827", "#dbeafe">, "mark-active": <"#111827", "#bfdbfe">}.
+Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">, "mark-0": <"#111827", "#dbeafe">, "mark-active-0": <"#111827", "#bfdbfe">, "mark-1": <"#111827", "#fef9c3">, "mark-active-1": <"#111827", "#fef08a">, "mark-2": <"#111827", "#f3e8ff">, "mark-active-2": <"#111827", "#e9d5ff">, "mark-3": <"#111827", "#ffedd5">, "mark-active-3": <"#111827", "#fed7aa">, "mark-4": <"#111827", "#ccfbf1">, "mark-active-4": <"#111827", "#99f6e4">, "mark-5": <"#111827", "#ffe4e6">, "mark-active-5": <"#111827", "#fecdd3">}.
 
 Define [[pal_fg]] taking role:
     Set pair to [[palette.get]](role, <>).
@@ -1262,18 +1313,33 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
     Do [[lines.append]]("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " plus body_fg plus "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " plus body_bg plus "; background: " plus body_fg plus "; }").
     Set muted_fg to [[pal_fg]]("muted").
-    Set mark_bg to [[pal_bg]]("mark").
-    Set mark_active_bg to [[pal_bg]]("mark-active").
+    Set mark_bg to [[pal_bg]]("mark-0").
     Do [[lines.append]]("mark { background: " plus mark_bg plus "; color: inherit; text-decoration: underline dotted " plus muted_fg plus "; text-underline-offset: 0.15em; }").
     Do [[lines.append]](".kw { color: " plus muted_fg plus "; }").
     Do [[lines.append]](".hl-note { color: " plus muted_fg plus "; font-size: 0.9rem; }").
+    Set hue to 0.
+    For each hue_ignored in [[range]](hl_hue_count):
+        If hue is greater than 0:
+            Set selector_parts to <>.
+            Set class_index to hue.
+            For each step_ignored in [[range]](hl_hover_classes):
+                If class_index is less than hl_hover_classes:
+                    Do [[selector_parts.append]]("mark.t" plus [[str]](class_index)).
+                Set class_index to class_index plus hl_hue_count.
+            Set comma to ", ".
+            Do [[lines.append]]([[comma.join]](selector_parts) plus " { background: " plus [[pal_bg]]("mark-" plus [[str]](hue)) plus "; }").
+        Set hue to hue plus 1.
+    Set hue to 0.
     For each hover_index in [[range]](hl_hover_classes):
         Set class_name to "t" plus [[str]](hover_index).
-        Do [[lines.append]]("main:has(mark." plus class_name plus ":hover) mark." plus class_name plus " { background: " plus mark_active_bg plus "; text-decoration-style: solid; }").
+        Do [[lines.append]]("main:has(mark." plus class_name plus ":hover) mark." plus class_name plus " { background: " plus [[pal_bg]]("mark-active-" plus [[str]](hue)) plus "; text-decoration-style: solid; }").
+        Set hue to hue plus 1.
+        If hue equals hl_hue_count:
+            Set hue to 0.
     Do [[lines.append]]("@media print {").
     Do [[lines.append]]("body { max-width: none; padding: 0; }").
     Do [[lines.append]]("nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }").
-    Do [[lines.append]]("mark { background: none; }").
+    Do [[lines.append]]("mark, mark[class] { background: none; }").
     Do [[lines.append]]("details::details-content { content-visibility: visible; }").
     Do [[lines.append]]("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }").
     Do [[lines.append]]("a { color: inherit; text-decoration: none; }").
@@ -1286,7 +1352,7 @@ Set css_text to [[build_css]]().
 
 Set scope_line_text to "This page reports what the loaded guideline documents state. It does not give clinical advice.".
 
-Set hl_note_text to "Phrases that appear in both texts are highlighted. Point at a highlighted phrase to emphasize it and its matches.".
+Set hl_note_text to "Phrases that appear in both texts are highlighted. A phrase and its matches share one color. Point at a highlighted phrase to emphasize it and its matches.".
 
 Set refusal_refused_text to "The request was refused. Open the document page again from this site and submit the decision again.".
 Set refusal_invalid_form_text to "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again.".
@@ -2020,6 +2086,35 @@ Define [[selftest_violation]] taking nothing:
     Set hl_case to [[hl_link_data]]("Every clinician should review an opioid-therapy and a therapy.\n", "An opioid therapy and a therapy.").
     If [[hl_case.get]]("payload_html", "") does not equal "An <mark class=\"t0\">opioid therapy</mark> and a <mark class=\"t1\">therapy</mark>.":
         Give back "ui: selftest failed: hl longest first".
+    Set hl_case to [[hl_link_data]]("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Discuss nonopioid pharmacologic options.").
+    If [[hl_case.get]]("matched", 0) does not equal 1:
+        Give back "ui: selftest failed: hl window prefix count".
+    If [[hl_case.get]]("payload_html", "") does not equal "Discuss <mark class=\"t0\">nonopioid pharmacologic</mark> options.":
+        Give back "ui: selftest failed: hl window prefix".
+    If "<mark class=\"t0\">nonopioid-pharmacologic-therapy</mark>" is not in [[hl_case.get]]("ace_html", ""):
+        Give back "ui: selftest failed: hl window ace".
+    Set hl_case to [[hl_link_data]]("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Try pharmacologic therapy.").
+    If [[hl_case.get]]("payload_html", "") does not equal "Try <mark class=\"t0\">pharmacologic therapy</mark>.":
+        Give back "ui: selftest failed: hl window suffix".
+    Set hl_case to [[hl_link_data]]("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "The therapy failed.").
+    If [[hl_case.get]]("matched", 0) does not equal 0:
+        Give back "ui: selftest failed: hl window single word".
+    Set hl_case to [[hl_link_data]]("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Use nonopioid pharmacologic therapies today.").
+    If [[hl_case.get]]("payload_html", "") does not equal "Use <mark class=\"t0\">nonopioid pharmacologic therapies</mark> today.":
+        Give back "ui: selftest failed: hl window full span".
+    Set hl_case to [[hl_link_data]]("A clinician should compare an opioid-use-disorder and a use-disorder.\n", "A use disorder emerged.").
+    If [[hl_case.get]]("payload_html", "") does not equal "A <mark class=\"t0\">use disorder</mark> emerged.":
+        Give back "ui: selftest failed: hl window precedence".
+    If [[hl_case.get]]("ace_html", "") does not equal "<span class=\"kw\">A</span> clinician <span class=\"kw\">should</span> compare <span class=\"kw\">an</span> opioid-use-disorder <span class=\"kw\">and</span> <span class=\"kw\">a</span> <mark class=\"t0\">use-disorder</mark>.\n":
+        Give back "ui: selftest failed: hl window precedence ace".
+    If "mark.t1, mark.t7, mark.t13, mark.t19, mark.t25, mark.t31 { background: #fef9c3; }" is not in css_text:
+        Give back "ui: selftest failed: hue group css".
+    If "main:has(mark.t7:hover) mark.t7 { background: #fef08a; text-decoration-style: solid; }" is not in css_text:
+        Give back "ui: selftest failed: hue hover cycle css".
+    If "main:has(mark.t0:hover) mark.t0 { background: #bfdbfe; text-decoration-style: solid; }" is not in css_text:
+        Give back "ui: selftest failed: hue hover base css".
+    If "mark, mark[class] { background: none; }" is not in css_text:
+        Give back "ui: selftest failed: print mark strip".
     Set unique_values to <>.
     For each role in [[sorted]](palette):
         Set pair to [[palette.get]](role, <>).

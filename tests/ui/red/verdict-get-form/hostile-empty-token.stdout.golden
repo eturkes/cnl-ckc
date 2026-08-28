@@ -59,42 +59,47 @@ button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827;
 mark { background: #dbeafe; color: inherit; text-decoration: underline dotted #4b5563; text-underline-offset: 0.15em; }
 .kw { color: #4b5563; }
 .hl-note { color: #4b5563; font-size: 0.9rem; }
+mark.t1, mark.t7, mark.t13, mark.t19, mark.t25, mark.t31 { background: #fef9c3; }
+mark.t2, mark.t8, mark.t14, mark.t20, mark.t26 { background: #f3e8ff; }
+mark.t3, mark.t9, mark.t15, mark.t21, mark.t27 { background: #ffedd5; }
+mark.t4, mark.t10, mark.t16, mark.t22, mark.t28 { background: #ccfbf1; }
+mark.t5, mark.t11, mark.t17, mark.t23, mark.t29 { background: #ffe4e6; }
 main:has(mark.t0:hover) mark.t0 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t1:hover) mark.t1 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t2:hover) mark.t2 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t3:hover) mark.t3 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t4:hover) mark.t4 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t5:hover) mark.t5 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t1:hover) mark.t1 { background: #fef08a; text-decoration-style: solid; }
+main:has(mark.t2:hover) mark.t2 { background: #e9d5ff; text-decoration-style: solid; }
+main:has(mark.t3:hover) mark.t3 { background: #fed7aa; text-decoration-style: solid; }
+main:has(mark.t4:hover) mark.t4 { background: #99f6e4; text-decoration-style: solid; }
+main:has(mark.t5:hover) mark.t5 { background: #fecdd3; text-decoration-style: solid; }
 main:has(mark.t6:hover) mark.t6 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t7:hover) mark.t7 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t8:hover) mark.t8 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t9:hover) mark.t9 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t10:hover) mark.t10 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t11:hover) mark.t11 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t7:hover) mark.t7 { background: #fef08a; text-decoration-style: solid; }
+main:has(mark.t8:hover) mark.t8 { background: #e9d5ff; text-decoration-style: solid; }
+main:has(mark.t9:hover) mark.t9 { background: #fed7aa; text-decoration-style: solid; }
+main:has(mark.t10:hover) mark.t10 { background: #99f6e4; text-decoration-style: solid; }
+main:has(mark.t11:hover) mark.t11 { background: #fecdd3; text-decoration-style: solid; }
 main:has(mark.t12:hover) mark.t12 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t13:hover) mark.t13 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t14:hover) mark.t14 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t15:hover) mark.t15 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t16:hover) mark.t16 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t17:hover) mark.t17 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t13:hover) mark.t13 { background: #fef08a; text-decoration-style: solid; }
+main:has(mark.t14:hover) mark.t14 { background: #e9d5ff; text-decoration-style: solid; }
+main:has(mark.t15:hover) mark.t15 { background: #fed7aa; text-decoration-style: solid; }
+main:has(mark.t16:hover) mark.t16 { background: #99f6e4; text-decoration-style: solid; }
+main:has(mark.t17:hover) mark.t17 { background: #fecdd3; text-decoration-style: solid; }
 main:has(mark.t18:hover) mark.t18 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t19:hover) mark.t19 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t20:hover) mark.t20 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t21:hover) mark.t21 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t22:hover) mark.t22 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t23:hover) mark.t23 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t19:hover) mark.t19 { background: #fef08a; text-decoration-style: solid; }
+main:has(mark.t20:hover) mark.t20 { background: #e9d5ff; text-decoration-style: solid; }
+main:has(mark.t21:hover) mark.t21 { background: #fed7aa; text-decoration-style: solid; }
+main:has(mark.t22:hover) mark.t22 { background: #99f6e4; text-decoration-style: solid; }
+main:has(mark.t23:hover) mark.t23 { background: #fecdd3; text-decoration-style: solid; }
 main:has(mark.t24:hover) mark.t24 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t25:hover) mark.t25 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t26:hover) mark.t26 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t27:hover) mark.t27 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t28:hover) mark.t28 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t29:hover) mark.t29 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t25:hover) mark.t25 { background: #fef08a; text-decoration-style: solid; }
+main:has(mark.t26:hover) mark.t26 { background: #e9d5ff; text-decoration-style: solid; }
+main:has(mark.t27:hover) mark.t27 { background: #fed7aa; text-decoration-style: solid; }
+main:has(mark.t28:hover) mark.t28 { background: #99f6e4; text-decoration-style: solid; }
+main:has(mark.t29:hover) mark.t29 { background: #fecdd3; text-decoration-style: solid; }
 main:has(mark.t30:hover) mark.t30 { background: #bfdbfe; text-decoration-style: solid; }
-main:has(mark.t31:hover) mark.t31 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t31:hover) mark.t31 { background: #fef08a; text-decoration-style: solid; }
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
-mark { background: none; }
+mark, mark[class] { background: none; }
 details::details-content { content-visibility: visible; }
 pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
 a { color: inherit; text-decoration: none; }
@@ -110,7 +115,7 @@ a { color: inherit; text-decoration: none; }
 <h2>Fixture section (r1) <span class="chip chip-rejected">Rejected</span></h2>
 <p>r1 · <a href="../source/evidence.txt">Source text</a></p>
 <p>Decisions on this version: 1 rejected. <a href="../records.html#a-10">All decision records</a></p>
-<p class="hl-note">Phrases that appear in both texts are highlighted. Point at a highlighted phrase to emphasize it and its matches.</p>
+<p class="hl-note">Phrases that appear in both texts are highlighted. A phrase and its matches share one color. Point at a highlighted phrase to emphasize it and its matches.</p>
 <section>
 <h3>Original passage</h3>
 <pre class="prose">Payload selected for <mark class="t0">a-10</mark>.</pre>
