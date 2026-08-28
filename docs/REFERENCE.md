@@ -151,21 +151,28 @@ document: does the ACE representation appropriately reflect the
 original passage? The answer, the reviewer name, and an optional
 comment append to `guidelines/<id>/audit/adjudication.tsv`.
 
-The document page links the two texts. A word that appears in both
-the source passage and the ACE text is highlighted in both places.
-The match is lexical and word by word: a hyphenated ACE term is
-split into its words, and each word is marked on its own. The
-comparison tolerates plurals, verb endings, accented letters, and
-common derived forms such as "assess" and "assessment". Different
-forms of one word share one color everywhere on the page, including
-inside longer ACE terms. A word of three letters matches only in its
-capital form, such as "MME". Shorter words, numbers, and function
-words are not marked. The palette holds twelve muted tints, so
-colors repeat on pages with many distinct words. A pointer over a
-highlighted word emphasizes that word and its matches exactly. ACE
-function words render in a muted color, so the domain terms stand
-out. A passage that the ACE text restates in other words is not
-highlighted. On paper the highlights print as dotted underlines.
+The document page links the two texts through an authored alignment.
+The author of the ACE text records which part of the passage each
+ACE term came from, in `guidelines/<id>/align/<docid>.tsv`. The page
+highlights each linked pair in one shared color, so "category-B"
+in the ACE text and "category: B" in the passage read as one unit.
+One link can join several places in each text, and a link can cover
+part of a hyphenated ACE term. Text without a recorded link stays
+plain. The palette holds twelve muted tints, so colors repeat on
+pages with many links. A pointer over a highlight emphasizes that
+link exactly. ACE function words render in a muted color, so the
+domain terms stand out. A document without an alignment file renders
+without highlights. On paper the highlights print as dotted
+underlines.
+
+The alignment file is data, not a claim the gate can judge: the gate
+verifies structure only. Each row is `group`, `side` (`src` or
+`ace`), `start` (a character offset), and `span` (the verbatim
+text). Every span must match its text at the offset, spans on one
+side must not overlap, and every group needs at least one span on
+each side. A file that breaks these rules stops the render. Whether
+an alignment is helpful is a judgment for the reviewer, who sees it
+on the page beside the texts it describes.
 
 The interface reads committed files. When the working tree holds
 uncommitted guideline changes, the pages render the last commit
@@ -636,10 +643,10 @@ conditions hold:
 
 - Every normative statement in it is extracted verbatim into `source/`
   evidence.
-- Every extracted statement is either authored as knowledge-only ACE
-  and compiled, or recorded in the guideline README as uncovered with a
-  reason. Compiled means that the obligations discharge alone and in
-  aggregate.
+- Every extracted statement is either authored as knowledge-only ACE,
+  compiled, and aligned to its passage, or recorded in the guideline
+  README as uncovered with a reason. Compiled means that the
+  obligations discharge alone and in aggregate.
 - `python3 -P tools/goal.py check` is green, with the guideline's
   coverage meter reading `pending=0`.
 
@@ -664,7 +671,29 @@ While a document is in progress, a round advances it one increment:
    sentence compiles to a determinate clause bundle whose obligations
    discharge, and unrecognized shapes reject. It also adds `tests/red/`
    probes for the new rejection boundary.
-4. **Close** — `python3 -P tools/goal.py check` must be green; when E--
+4. **Align** — after the document compiles, record where each ACE term
+   came from:
+
+   ```
+   python3 -P tools/goal.py align <id> <docid> < rows.tsv
+   ```
+
+   Each input row is `group<TAB>side<TAB>occurrence<TAB>span`. The
+   `group` is an integer that names one linked unit across both texts.
+   The `side` is `src` for the passage or `ace` for the ACE text. The
+   `occurrence` counts the 1-based position of `span` in that side's
+   text, as a plain substring. The command resolves each row to a
+   character offset and writes `align/<docid>.tsv`. Link each ACE
+   domain term to the passage text that it came from. Prefer the
+   smallest span a reviewer would point to: "category-B" links to
+   "category: B", not to the whole sentence. Link a part of a
+   hyphenated term when only that part has direct source text. A
+   word-form difference is fine: "assess" can link to "assessment".
+   Leave text without a direct counterpart plain — the alignment must
+   be helpful, not exhaustive. When a later edit changes the ACE text
+   or the passage, author the alignment again; the render stops on
+   stale offsets.
+5. **Close** — `python3 -P tools/goal.py check` must be green; when E--
    sources changed, `python3 -P tools/regen.py --check` must be green
    too. Make a scoped commit. When the commit touches `guidelines/`,
    the vendored compiler or lexicon, `NOTICE`, or the `docs/REFERENCE.md`

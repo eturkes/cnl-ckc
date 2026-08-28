@@ -1,0 +1,45 @@
+2	ace	2	recommendation
+0	ace	22	category-B
+1	ace	58	evidence-type-3
+3	ace	96	clinician
+4	ace	113	maximize
+5	ace	124	nonopioid-therapy
+6	ace	149	acute-pain
+9	ace	167	opioid-benefit
+10	ace	191	outweigh
+11	ace	203	opioid-risk
+3	ace	226	clinician
+14	ace	247	consider
+7	ace	259	opioid-therapy
+6	ace	281	acute-pain
+3	ace	299	clinician
+15	ace	316	discuss
+12	ace	326	realistic-benefit
+16	ace	351	patient
+8	ace	369	opioid-prescription
+15	ace	400	discuss
+13	ace	410	known-risk
+16	ace	428	patient
+8	ace	446	opioid-prescription
+5	src	0	Nonopioid therapies
+6	src	82	acute pain
+3	src	94	Clinicians
+4	src	112	maximize
+5	src	149	nonopioid pharmacologic therapies
+14	src	246	consider
+7	src	255	opioid therapy
+6	src	274	acute pain
+9	src	288	benefits
+10	src	316	outweigh
+11	src	325	risks
+8	src	354	prescribing opioid therapy
+6	src	385	acute pain
+3	src	397	clinicians
+15	src	415	discuss
+16	src	428	patients
+12	src	441	realistic benefits
+13	src	464	known risks
+7	src	479	opioid therapy
+2	src	495	recommendation
+0	src	510	category: B
+1	src	523	evidence type: 3

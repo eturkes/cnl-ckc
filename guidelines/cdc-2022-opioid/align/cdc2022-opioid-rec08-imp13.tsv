@@ -1,0 +1,31 @@
+10	ace	5	patient
+2	ace	19	older-adult
+3	ace	59	opioid-therapy
+0	ace	85	clinician
+1	ace	102	implement
+5	ace	114	constipation-prevention
+4	ace	138	intervention
+6	ace	178	assess
+7	ace	187	fall-risk
+8	ace	224	monitor
+9	ace	234	cognitive-impairment
+0	ace	278	clinician
+11	ace	305	exercise-regimen
+5	ace	331	constipation-prevention
+0	ace	362	clinician
+12	ace	382	bowel-regimen
+5	ace	405	constipation-prevention
+0	src	0	Clinicians
+1	src	18	implement
+4	src	28	interventions
+3	src	70	opioid therapy
+2	src	91	older adults
+11	src	113	exercise
+12	src	125	bowel regimens
+5	src	143	prevent constipation
+7	src	165	risk
+6	src	170	assessment
+7	src	185	falls
+10	src	196	patient
+8	src	204	monitoring
+9	src	219	cognitive impairment

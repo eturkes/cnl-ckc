@@ -974,350 +974,166 @@ def build_viewmodel(corpus):
         models.append(result_value(model_result))
     return ok(models)
 hl_stop_words = set(["a", "an", "the", "every", "each", "no", "all", "some", "any", "this", "that", "these", "those", "such", "is", "are", "was", "were", "be", "been", "being", "has", "have", "had", "does", "do", "did", "should", "must", "may", "can", "cannot", "might", "will", "would", "shall", "could", "if", "then", "and", "or", "nor", "but", "not", "it", "its", "itself", "they", "them", "their", "he", "she", "who", "whom", "whose", "which", "what", "where", "when", "there", "something", "somebody", "someone", "everything", "everybody", "everyone", "nothing", "nobody", "of", "for", "with", "without", "during", "to", "at", "in", "on", "by", "from", "as", "against", "about", "after", "before", "through", "under", "over", "above", "below", "into", "onto", "per", "within", "between", "among", "around", "near", "than", "least", "most", "more", "less", "fewer", "greater"])
-hl_diacritic_classes = {"a": "[aàáâãäå]", "e": "[eèéêë]", "i": "[iìíîï]", "o": "[oòóôõö]", "u": "[uùúûü]", "n": "[nñ]", "c": "[cç]", "y": "[yýÿ]"}
 hl_token_rx = re.compile("([0-9A-Za-z]+(?:-[0-9A-Za-z]+)*)")
 hl_hover_classes = 48
 hl_hue_count = 12
-def hl_strip_forms(base):
-    stems = []
-    if base.endswith("ment"):
-        stem = base.removesuffix("ment")
-        if len(stem) > 3:
-            stems.append(stem)
-    if base.endswith("ion"):
-        stem = base.removesuffix("ion")
-        if len(stem) > 3:
-            stems.append(stem)
-            stems.append(stem + "e")
-    if base.endswith("ation"):
-        stem = base.removesuffix("ation")
-        if len(stem) > 3:
-            stems.append(stem)
-            stems.append(stem + "e")
-    if base.endswith("ication"):
-        stem = base.removesuffix("ication")
-        if len(stem) > 3:
-            stems.append(stem + "y")
-    if base.endswith("al"):
-        stem = base.removesuffix("al")
-        if len(stem) > 3:
-            stems.append(stem)
-    if base.endswith("ance"):
-        stem = base.removesuffix("ance")
-        if len(stem) > 3:
-            stems.append(stem)
-            stems.append(stem + "e")
-    if base.endswith("er"):
-        stem = base.removesuffix("er")
-        if len(stem) > 3:
-            stems.append(stem)
-            stems.append(stem + "e")
-    return stems
-def hl_group_add(tails_by_prefix, prefix_order, prefix, tail):
-    tails = tails_by_prefix.get(prefix, None)
-    if tails == None:
-        tails = []
-        tails_by_prefix.update({prefix: tails})
-        prefix_order.append(prefix)
-    known = tail in tails
-    if not known:
-        tails.append(tail)
-hl_group_cache = {}
-def hl_variant_groups(word):
-    cached = hl_group_cache.get(word, None)
-    if cached != None:
-        return cached
-    bases = []
-    deriv_bases = []
-    for plural_base in hl_bases(word):
-        known = plural_base in bases
-        if not known:
-            bases.append(plural_base)
-        if len(plural_base) > 3:
-            deriv_bases.append(plural_base)
-        for stem in hl_strip_forms(plural_base):
-            known = stem in bases
-            if not known:
-                bases.append(stem)
-    tails_by_prefix = {}
-    prefix_order = []
-    for base in bases:
-        for tail in ["", "s", "es", "ed", "ing"]:
-            hl_group_add(tails_by_prefix, prefix_order, base, tail)
-        if base.endswith("y"):
-            if len(base) > 2:
-                hl_group_add(tails_by_prefix, prefix_order, base.removesuffix("y"), "ies")
-        if base.endswith("e"):
-            hl_group_add(tails_by_prefix, prefix_order, base, "d")
-            hl_group_add(tails_by_prefix, prefix_order, base.removesuffix("e"), "ing")
-    for base in deriv_bases:
-        if base.endswith("e"):
-            stem = base.removesuffix("e")
-            for tail in ["ion", "ions", "ation", "ations"]:
-                hl_group_add(tails_by_prefix, prefix_order, stem, tail)
-            for tail in ["r", "rs"]:
-                hl_group_add(tails_by_prefix, prefix_order, base, tail)
+def hl_slice(text, span_start, span_end):
+    return text.__getitem__(slice(span_start, span_end))
+def hl_int_field(field_text):
+    bad = 0 - 1
+    value = bad
+    try:
+        value = int(field_text)
+    except ValueError:
+        return bad
+    if value < 0:
+        return bad
+    if str(value) != field_text:
+        return bad
+    return value
+def hl_spans_out(side_rows, index_by_group):
+    spans = []
+    for span_row in sorted(side_rows):
+        row_copy = list(span_row)
+        span_start = row_copy.pop(0)
+        span_end = row_copy.pop(0)
+        group_id = row_copy.pop(0)
+        spans.append(tuple([span_start, span_end, index_by_group.get(group_id, 0)]))
+    return spans
+def hl_parse_align(align_text, src_text, ace_text):
+    if not align_text.endswith("\n"):
+        return err("missing trailing newline")
+    body = align_text.removesuffix("\n")
+    if not body:
+        return err("empty file")
+    src_rows = []
+    ace_rows = []
+    src_groups = set([])
+    ace_groups = set([])
+    line_no = 0
+    for row in body.split("\n"):
+        line_no = line_no + 1
+        where = "row " + str(line_no) + ": "
+        fields = row.split("\t")
+        if len(fields) != 4:
+            return err(where + "expected 4 tab-separated fields")
+        group_text = fields.pop(0)
+        side = fields.pop(0)
+        start_text = fields.pop(0)
+        span = fields.pop(0)
+        group_id = hl_int_field(group_text)
+        if group_id < 0:
+            return err(where + "group must be a canonical decimal")
+        span_start = hl_int_field(start_text)
+        if span_start < 0:
+            return err(where + "start must be a canonical decimal")
+        if not span:
+            return err(where + "empty span")
+        side_text = ""
+        if side == "src":
+            side_text = src_text
         else:
-            for tail in ["ion", "ions", "ation", "ations", "er", "ers"]:
-                hl_group_add(tails_by_prefix, prefix_order, base, tail)
-        for tail in ["ment", "ments", "al", "ance"]:
-            hl_group_add(tails_by_prefix, prefix_order, base, tail)
-        if base.endswith("y"):
-            stem = base.removesuffix("y")
-            for tail in ["ication", "ications"]:
-                hl_group_add(tails_by_prefix, prefix_order, stem, tail)
-    groups = []
-    for prefix in prefix_order:
-        groups.append(tuple([prefix, tails_by_prefix.get(prefix, [])]))
-    hl_group_cache.update({word: groups})
-    return groups
-def hl_bases(word):
-    out = [word]
-    if word.endswith("ies"):
-        if len(word) > 4:
-            out.append(word.removesuffix("ies") + "y")
-    if word.endswith("es"):
-        if len(word) > 3:
-            out.append(word.removesuffix("es"))
-    if word.endswith("s"):
-        if not word.endswith("ss"):
-            if len(word) > 3:
-                out.append(word.removesuffix("s"))
-    return out
-hl_variant_cache = {}
-def hl_variants(word):
-    cached = hl_variant_cache.get(word, None)
-    if cached != None:
-        return cached
-    found = []
-    for row in hl_variant_groups(word):
-        row_copy = list(row)
-        prefix = row_copy.pop(0)
-        tails = row_copy.pop(0)
-        for tail in tails:
-            cand = prefix + tail
-            known = cand in found
-            if not known:
-                found.append(cand)
-    hl_variant_cache.update({word: found})
-    return found
-def hl_char_pattern(variant):
-    parts = []
-    for ch in variant:
-        parts.append(hl_diacritic_classes.get(ch, ch))
-    empty_text = ""
-    return empty_text.join(parts)
-hl_word_pattern_cache = {}
-def hl_word_pattern(word):
-    cached = hl_word_pattern_cache.get(word, None)
-    if cached != None:
-        return cached
-    alts = []
-    bar = "|"
-    for row in hl_variant_groups(word):
-        row_copy = list(row)
-        prefix = row_copy.pop(0)
-        tails = row_copy.pop(0)
-        bare = "" in tails
-        tail_rows = []
-        for tail in tails:
-            if tail:
-                tail_rows.append(tuple([0 - len(tail), tail]))
-        tail_alts = []
-        for tail_row in sorted(tail_rows):
-            tail_row_copy = list(tail_row)
-            tail_row_copy.pop(0)
-            tail_alts.append(tail_row_copy.pop(0))
-        piece = hl_char_pattern(prefix)
-        if tail_alts:
-            piece = piece + "(?:" + bar.join(tail_alts) + ")"
-            if bare:
-                piece = piece + "?"
-        alts.append(piece)
-    pattern = "(?:" + bar.join(alts) + ")"
-    hl_word_pattern_cache.update({word: pattern})
-    return pattern
-hl_rx_cache = {}
-def hl_rx(pattern):
-    cached = hl_rx_cache.get(pattern, None)
-    if cached != None:
-        return cached
-    compiled = re.compile(pattern, re.IGNORECASE)
-    hl_rx_cache.update({pattern: compiled})
-    return compiled
-def hl_word_regex(word):
-    if len(word) == 3:
-        return "\\b(?-i:" + word.upper() + ")s?\\b"
-    return "\\b" + hl_word_pattern(word) + "\\b"
-def hl_content_words(ace_text):
-    words = []
-    is_token = False
-    for piece in hl_token_rx.split(ace_text):
-        if is_token:
-            folded = piece.casefold()
-            for seg in folded.split("-"):
-                if len(seg) > 2:
-                    stopped = seg in hl_stop_words
-                    if not stopped:
-                        letter_hit = re.search("[a-z]", seg)
-                        if letter_hit:
-                            known = seg in words
-                            if not known:
-                                words.append(seg)
-        is_token = not is_token
-    return words
-def hl_group_root(parent, word):
-    current = word
-    for hop_ignored in list(parent):
-        ahead = parent.get(current, current)
-        if ahead != current:
-            current = ahead
-    return current
-def hl_word_groups(words):
-    parent = {}
-    owner = {}
-    for word in words:
-        parent.update({word: word})
-    for word in words:
-        cands = []
-        if len(word) > 3:
-            cands = hl_variants(word)
-        else:
-            upper_word = word.upper()
-            cands = [upper_word]
-        for cand in cands:
-            prior = owner.get(cand, "")
-            if prior == "":
-                owner.update({cand: word})
+            if side == "ace":
+                side_text = ace_text
             else:
-                root_a = hl_group_root(parent, word)
-                root_b = hl_group_root(parent, prior)
-                if root_a != root_b:
-                    parent.update({root_a: root_b})
-    absent = 0 - 1
-    group_of = {}
-    gi_by_root = {}
-    group_total = 0
-    for word in words:
-        root = hl_group_root(parent, word)
-        gi = gi_by_root.get(root, absent)
-        if gi == absent:
-            gi = group_total
-            gi_by_root.update({root: gi})
-            group_total = group_total + 1
-        group_of.update({word: gi})
-    return group_of
-def hl_alternation_order(lemmas):
-    rows = []
-    for lemma in lemmas:
-        word_count = len(lemma.split("-"))
-        rows.append(tuple([0 - word_count, 0 - len(lemma), lemma]))
-    ordered = []
-    for row in sorted(rows):
-        row_copy = list(row)
+                return err(where + "side must be src or ace")
+        span_end = span_start + len(span)
+        if span_end > len(side_text):
+            return err(where + "span out of range")
+        if hl_slice(side_text, span_start, span_end) != span:
+            return err(where + "span does not match the text at start")
+        if side == "src":
+            src_rows.append(tuple([span_start, span_end, group_id]))
+            src_groups.add(group_id)
+        else:
+            ace_rows.append(tuple([span_start, span_end, group_id]))
+            ace_groups.add(group_id)
+    if src_groups != ace_groups:
+        return err("every group needs both a src span and an ace span")
+    side_packs = []
+    side_packs.append(tuple(["src", src_rows]))
+    side_packs.append(tuple(["ace", ace_rows]))
+    for side_pack in side_packs:
+        pack_copy = list(side_pack)
+        side_name = pack_copy.pop(0)
+        rows_for_side = pack_copy.pop(0)
+        prev_end = 0
+        for span_row in sorted(rows_for_side):
+            row_copy = list(span_row)
+            span_start = row_copy.pop(0)
+            span_end = row_copy.pop(0)
+            if span_start < prev_end:
+                return err("overlapping " + side_name + " spans")
+            prev_end = span_end
+    index_by_group = {}
+    for span_row in sorted(ace_rows):
+        row_copy = list(span_row)
         row_copy.pop(0)
         row_copy.pop(0)
-        ordered.append(row_copy.pop(0))
-    return ordered
+        group_id = row_copy.pop(0)
+        seen = group_id in index_by_group
+        if not seen:
+            index_by_group.update({group_id: len(index_by_group)})
+    data = {}
+    data.update({"src": hl_spans_out(src_rows, index_by_group)})
+    data.update({"ace": hl_spans_out(ace_rows, index_by_group)})
+    data.update({"count": len(index_by_group)})
+    return ok(data)
 def hl_mark_html(text, index):
     class_attr = ""
     if index < hl_hover_classes:
         class_attr = " class=\"t" + str(index) + "\""
     return "<mark" + class_attr + ">" + esc_text(text) + "</mark>"
-def hl_ace_html(ace_text, index_by_word):
-    absent = 0 - 1
+def hl_kw_html(text):
     html_parts = []
     is_token = False
-    for piece in hl_token_rx.split(ace_text):
+    for piece in hl_token_rx.split(text):
+        muted = False
         if is_token:
             folded = piece.casefold()
             if folded in hl_stop_words:
-                html_parts.append("<span class=\"kw\">" + esc_text(piece) + "</span>")
-            else:
-                seg_parts = []
-                for seg in piece.split("-"):
-                    seg_folded = seg.casefold()
-                    index = index_by_word.get(seg_folded, absent)
-                    if index == absent:
-                        seg_parts.append(esc_text(seg))
-                    else:
-                        seg_parts.append(hl_mark_html(seg, index))
-                dash = "-"
-                html_parts.append(dash.join(seg_parts))
+                muted = True
+        if muted:
+            html_parts.append("<span class=\"kw\">" + esc_text(piece) + "</span>")
         else:
             html_parts.append(esc_text(piece))
         is_token = not is_token
     empty_text = ""
     return empty_text.join(html_parts)
-def hl_link_data(ace_text, payload_line):
+def hl_marked_html(text, spans, kw_gaps):
+    html_parts = []
+    cursor = 0
+    for span_row in spans:
+        row_copy = list(span_row)
+        span_start = row_copy.pop(0)
+        span_end = row_copy.pop(0)
+        tindex = row_copy.pop(0)
+        gap = hl_slice(text, cursor, span_start)
+        if gap:
+            if kw_gaps:
+                html_parts.append(hl_kw_html(gap))
+            else:
+                html_parts.append(esc_text(gap))
+        html_parts.append(hl_mark_html(hl_slice(text, span_start, span_end), tindex))
+        cursor = span_end
+    tail = hl_slice(text, cursor, len(text))
+    if tail:
+        if kw_gaps:
+            html_parts.append(hl_kw_html(tail))
+        else:
+            html_parts.append(esc_text(tail))
+    empty_text = ""
+    return empty_text.join(html_parts)
+def hl_link_data(ace_text, payload_line, align_data):
     data = {}
-    words = hl_content_words(ace_text)
-    if not words:
+    if align_data == None:
         data.update({"matched": 0})
         data.update({"payload_html": esc_text(payload_line)})
-        data.update({"ace_html": hl_ace_html(ace_text, {})})
+        data.update({"ace_html": hl_kw_html(ace_text)})
         return data
-    absent = 0 - 1
-    group_of = hl_word_groups(words)
-    ordered = hl_alternation_order(words)
-    rx_by_word = {}
-    alternation_parts = []
-    bar = "|"
-    for word in ordered:
-        word_regex = hl_word_regex(word)
-        rx_by_word.update({word: hl_rx(word_regex + "$")})
-        alternation_parts.append("(?:" + word_regex + ")")
-    combined_rx = hl_rx("(" + bar.join(alternation_parts) + ")")
-    pieces = combined_rx.split(payload_line)
-    hit_groups = []
-    matched_groups = []
-    is_hit = False
-    for piece in pieces:
-        if is_hit:
-            piece_group = absent
-            for word in ordered:
-                if piece_group == absent:
-                    word_rx = rx_by_word.get(word, None)
-                    hit = word_rx.match(piece)
-                    if hit:
-                        piece_group = group_of.get(word, absent)
-            hit_groups.append(piece_group)
-            if piece_group != absent:
-                known = piece_group in matched_groups
-                if not known:
-                    matched_groups.append(piece_group)
-        is_hit = not is_hit
-    index_by_group = {}
-    for word in words:
-        gi = group_of.get(word, absent)
-        gi_matched = gi in matched_groups
-        if gi_matched:
-            has_index = gi in index_by_group
-            if not has_index:
-                index_by_group.update({gi: len(index_by_group)})
-    index_by_word = {}
-    for word in words:
-        gi = group_of.get(word, absent)
-        dense = index_by_group.get(gi, absent)
-        if dense != absent:
-            index_by_word.update({word: dense})
-    html_parts = []
-    hit_queue = list(hit_groups)
-    is_hit = False
-    for piece in pieces:
-        if is_hit:
-            piece_group = hit_queue.pop(0)
-            if piece_group == absent:
-                html_parts.append(esc_text(piece))
-            else:
-                html_parts.append(hl_mark_html(piece, index_by_group.get(piece_group, 0)))
-        else:
-            html_parts.append(esc_text(piece))
-        is_hit = not is_hit
-    empty_text = ""
-    data.update({"matched": len(matched_groups)})
-    data.update({"payload_html": empty_text.join(html_parts)})
-    data.update({"ace_html": hl_ace_html(ace_text, index_by_word)})
+    data.update({"matched": align_data.get("count", 0)})
+    data.update({"payload_html": hl_marked_html(payload_line, align_data.get("src", []), False)})
+    data.update({"ace_html": hl_marked_html(ace_text, align_data.get("ace", []), True)})
     return data
 palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-contested": ["#4c1d95", "#ede9fe"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"], "mark-0": ["#111827", "#dbeafe"], "mark-active-0": ["#111827", "#bfdbfe"], "mark-1": ["#111827", "#fef9c3"], "mark-active-1": ["#111827", "#fef08a"], "mark-2": ["#111827", "#f3e8ff"], "mark-active-2": ["#111827", "#e9d5ff"], "mark-3": ["#111827", "#ffedd5"], "mark-active-3": ["#111827", "#fed7aa"], "mark-4": ["#111827", "#ccfbf1"], "mark-active-4": ["#111827", "#99f6e4"], "mark-5": ["#111827", "#ffe4e6"], "mark-active-5": ["#111827", "#fecdd3"], "mark-6": ["#111827", "#dcfce7"], "mark-active-6": ["#111827", "#bbf7d0"], "mark-7": ["#111827", "#fae8ff"], "mark-active-7": ["#111827", "#f5d0fe"], "mark-8": ["#111827", "#cffafe"], "mark-active-8": ["#111827", "#a5f3fc"], "mark-9": ["#111827", "#ecfccb"], "mark-active-9": ["#111827", "#d9f99d"], "mark-10": ["#111827", "#e0e7ff"], "mark-active-10": ["#111827", "#c7d2fe"], "mark-11": ["#111827", "#e7e5e4"], "mark-active-11": ["#111827", "#d6d3d1"], "mark-line-0": ["#2563eb", "#ffffff"], "mark-line-1": ["#a16207", "#ffffff"], "mark-line-2": ["#7c3aed", "#ffffff"], "mark-line-3": ["#c2410c", "#ffffff"], "mark-line-4": ["#0f766e", "#ffffff"], "mark-line-5": ["#be123c", "#ffffff"], "mark-line-6": ["#15803d", "#ffffff"], "mark-line-7": ["#a21caf", "#ffffff"], "mark-line-8": ["#0e7490", "#ffffff"], "mark-line-9": ["#4d7c0f", "#ffffff"], "mark-line-10": ["#4f46e5", "#ffffff"], "mark-line-11": ["#57534e", "#ffffff"]}
 def pal_fg(role):
@@ -1428,7 +1244,7 @@ def build_css():
     return joiner.join(lines)
 css_text = build_css()
 scope_line_text = "This page reports what the loaded guideline documents state. It does not give clinical advice."
-hl_note_text = "Words that appear in both texts are highlighted. A word and its matches share one color, in any word form. Colors repeat when a page has many words. Point at a highlighted word to emphasize it and its matches."
+hl_note_text = "Highlights link matching parts of the passage and the ACE text. Linked parts share one color. Colors repeat when a page has many links. Point at a highlight to emphasize its linked parts."
 refusal_refused_text = "The request was refused. Open the document page again from this site and submit the decision again."
 refusal_invalid_form_text = "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."
 refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."
@@ -1700,10 +1516,21 @@ def doc_render_data(model, docid):
     if result_kind(pl_result) == "err":
         return pl_result
     pl_text = result_value(pl_result)
+    align_path = guideline_path.joinpath("align", docid + ".tsv")
+    align_data = None
+    if align_path.is_file():
+        align_result = load_text(align_path, gid, "align/" + docid + ".tsv")
+        if result_kind(align_result) == "err":
+            return align_result
+        parse_result = hl_parse_align(result_value(align_result), payload_line, ace_text)
+        if result_kind(parse_result) == "err":
+            return err("ui: viewmodel: " + gid + " doc " + docid + " align: " + result_value(parse_result))
+        align_data = result_value(parse_result)
     data = {}
     data.update({"ace_text": ace_text})
     data.update({"pl_text": pl_text})
     data.update({"pl_lines": len(pl_text.splitlines())})
+    data.update({"align": align_data})
     return ok(data)
 def build_doc_page(model, docid, doc_data, prev_id, next_id):
     gid = model.get("gid", "")
@@ -1747,7 +1574,7 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
         parts.append("<section class=\"stale\">")
         parts.append("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>")
         parts.append("</section>")
-    link_data = hl_link_data(doc_data.get("ace_text", ""), payload_by_docid.get(docid, ""))
+    link_data = hl_link_data(doc_data.get("ace_text", ""), payload_by_docid.get(docid, ""), doc_data.get("align", None))
     if link_data.get("matched", 0) > 0:
         parts.append("<p class=\"hl-note\">" + esc_text(hl_note_text) + "</p>")
     parts.append("<section>")
@@ -2106,101 +1933,70 @@ def selftest_violation():
         return "ui: selftest failed: esc_attr"
     if esc_attr("plain") != "plain":
         return "ui: selftest failed: esc_attr"
-    if "therapies" not in hl_variants("therapy"):
-        return "ui: selftest failed: hl variants plural"
-    if "prescribing" not in hl_variants("prescribes"):
-        return "ui: selftest failed: hl variants gerund"
-    if "applying" not in hl_variants("applies"):
-        return "ui: selftest failed: hl variants y-stem"
-    if "assessment" not in hl_variants("assess"):
-        return "ui: selftest failed: hl variants derivation"
-    if "treat" not in hl_variants("treatment"):
-        return "ui: selftest failed: hl variants derivation strip"
-    if "application" not in hl_variants("apply"):
-        return "ui: selftest failed: hl variants y-ication"
-    if "provider" not in hl_variants("provide"):
-        return "ui: selftest failed: hl variants agent noun"
-    hl_case = hl_link_data("Every clinician should offer-naloxone.\n", "Clinicians should consider offering naloxone.")
+    if hl_slice("abcdef", 2, 4) != "cd":
+        return "ui: selftest failed: hl slice"
+    if hl_int_field("7") != 7:
+        return "ui: selftest failed: hl int field"
+    bad_field = 0 - 1
+    if hl_int_field("07") != bad_field:
+        return "ui: selftest failed: hl int canonical"
+    if hl_int_field("-1") != bad_field:
+        return "ui: selftest failed: hl int negative"
+    if hl_int_field("1x") != bad_field:
+        return "ui: selftest failed: hl int junk"
+    align_case = hl_parse_align("0\tace\t6\tclinician\n1\tace\t23\toffer\n2\tace\t29\tnaloxone\n0\tsrc\t0\tClinicians\n1\tsrc\t27\toffering\n2\tsrc\t36\tnaloxone\n", "Clinicians should consider offering naloxone.", "Every clinician should offer-naloxone.\n")
+    if result_kind(align_case) != "ok":
+        return "ui: selftest failed: hl parse ok"
+    hl_case = hl_link_data("Every clinician should offer-naloxone.\n", "Clinicians should consider offering naloxone.", result_value(align_case))
     if hl_case.get("matched", 0) != 3:
         return "ui: selftest failed: hl match count"
     if hl_case.get("payload_html", "") != "<mark class=\"t0\">Clinicians</mark> should consider <mark class=\"t1\">offering</mark> <mark class=\"t2\">naloxone</mark>.":
         return "ui: selftest failed: hl payload html"
     if hl_case.get("ace_html", "") != "<span class=\"kw\">Every</span> <mark class=\"t0\">clinician</mark> <span class=\"kw\">should</span> <mark class=\"t1\">offer</mark>-<mark class=\"t2\">naloxone</mark>.\n":
         return "ui: selftest failed: hl ace html"
-    hl_case = hl_link_data("A clinician should check a risk.\n", "risk < benefit")
-    if hl_case.get("payload_html", "") != "<mark class=\"t0\">risk</mark> &lt; benefit":
-        return "ui: selftest failed: hl escape"
-    hl_case = hl_link_data("A clinician should assess a risk.\n", "Brisk walking is risky.")
-    if hl_case.get("matched", 0) != 0:
-        return "ui: selftest failed: hl boundary"
-    if hl_case.get("payload_html", "") != "Brisk walking is risky.":
-        return "ui: selftest failed: hl boundary bytes"
-    hl_case = hl_link_data("Every clinician should assess an opioid-naive-patient.\n", "Care for opioid-naïve patients.")
-    if hl_case.get("payload_html", "") != "Care for <mark class=\"t0\">opioid</mark>-<mark class=\"t1\">naïve</mark> <mark class=\"t2\">patients</mark>.":
-        return "ui: selftest failed: hl diacritic"
-    hl_case = hl_link_data("A clinician should treat an acute-pain.\n", "It was acute. Pain remained.")
-    if hl_case.get("payload_html", "") != "It was <mark class=\"t0\">acute</mark>. <mark class=\"t1\">Pain</mark> remained.":
-        return "ui: selftest failed: hl word split"
-    hl_case = hl_link_data("Every clinician should review an opioid-therapy and a therapy.\n", "An opioid therapy and a therapy.")
-    if hl_case.get("payload_html", "") != "An <mark class=\"t0\">opioid</mark> <mark class=\"t1\">therapy</mark> and a <mark class=\"t1\">therapy</mark>.":
-        return "ui: selftest failed: hl shared word"
-    if "<mark class=\"t0\">opioid</mark>-<mark class=\"t1\">therapy</mark> <span class=\"kw\">and</span> <span class=\"kw\">a</span> <mark class=\"t1\">therapy</mark>" not in hl_case.get("ace_html", ""):
-        return "ui: selftest failed: hl shared word ace"
-    hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Discuss nonopioid pharmacologic options.")
+    align_case = hl_parse_align("2\tace\t31\trecommendation\n5\tace\t20\tcategory-B\n2\tsrc\t8\trecommendation\n5\tsrc\t24\tcategory: B\n", "It is a recommendation (category: B).", "Every patient has a category-B-recommendation.\n")
+    hl_case = hl_link_data("Every patient has a category-B-recommendation.\n", "It is a recommendation (category: B).", result_value(align_case))
     if hl_case.get("matched", 0) != 2:
         return "ui: selftest failed: hl compound count"
-    if hl_case.get("payload_html", "") != "Discuss <mark class=\"t0\">nonopioid</mark> <mark class=\"t1\">pharmacologic</mark> options.":
+    if hl_case.get("payload_html", "") != "It is a <mark class=\"t1\">recommendation</mark> (<mark class=\"t0\">category: B</mark>).":
         return "ui: selftest failed: hl compound payload"
-    if "<mark class=\"t0\">nonopioid</mark>-<mark class=\"t1\">pharmacologic</mark>-therapy" not in hl_case.get("ace_html", ""):
+    if hl_case.get("ace_html", "") != "<span class=\"kw\">Every</span> patient <span class=\"kw\">has</span> <span class=\"kw\">a</span> <mark class=\"t0\">category-B</mark>-<mark class=\"t1\">recommendation</mark>.\n":
         return "ui: selftest failed: hl compound ace"
-    hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Try pharmacologic therapy.")
-    if hl_case.get("payload_html", "") != "Try <mark class=\"t0\">pharmacologic</mark> <mark class=\"t1\">therapy</mark>.":
-        return "ui: selftest failed: hl compound subset"
-    hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "The therapy failed.")
+    align_case = hl_parse_align("0\tace\t18\ttherapy\n0\tsrc\t16\ttherapy\n", "A therapy and a therapy < now.", "A patient needs a therapy.\n")
+    hl_case = hl_link_data("A patient needs a therapy.\n", "A therapy and a therapy < now.", result_value(align_case))
     if hl_case.get("matched", 0) != 1:
-        return "ui: selftest failed: hl single word count"
-    if hl_case.get("payload_html", "") != "The <mark class=\"t0\">therapy</mark> failed.":
-        return "ui: selftest failed: hl single word payload"
-    if "nonopioid-pharmacologic-<mark class=\"t0\">therapy</mark>" not in hl_case.get("ace_html", ""):
-        return "ui: selftest failed: hl single word ace"
-    hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Use nonopioid pharmacologic therapies today.")
-    if hl_case.get("payload_html", "") != "Use <mark class=\"t0\">nonopioid</mark> <mark class=\"t1\">pharmacologic</mark> <mark class=\"t2\">therapies</mark> today.":
-        return "ui: selftest failed: hl compound full"
-    hl_case = hl_link_data("A clinician should compare an opioid-use-disorder and a use-disorder.\n", "A use disorder emerged.")
-    if hl_case.get("payload_html", "") != "A use <mark class=\"t0\">disorder</mark> emerged.":
-        return "ui: selftest failed: hl short word floor"
-    if hl_case.get("ace_html", "") != "<span class=\"kw\">A</span> clinician <span class=\"kw\">should</span> compare <span class=\"kw\">an</span> opioid-use-<mark class=\"t0\">disorder</mark> <span class=\"kw\">and</span> <span class=\"kw\">a</span> use-<mark class=\"t0\">disorder</mark>.\n":
-        return "ui: selftest failed: hl short word floor ace"
-    hl_case = hl_link_data("A clinician should assess a patient.\n", "Assessment of patients continues.")
-    if hl_case.get("payload_html", "") != "<mark class=\"t0\">Assessment</mark> of <mark class=\"t1\">patients</mark> continues.":
-        return "ui: selftest failed: hl derivation match"
-    hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Discuss nonopioid pharmacologic options. The therapy failed.")
-    if hl_case.get("matched", 0) != 3:
-        return "ui: selftest failed: hl mix count"
-    if hl_case.get("payload_html", "") != "Discuss <mark class=\"t0\">nonopioid</mark> <mark class=\"t1\">pharmacologic</mark> options. The <mark class=\"t2\">therapy</mark> failed.":
-        return "ui: selftest failed: hl mix payload"
-    if "<mark class=\"t0\">nonopioid</mark>-<mark class=\"t1\">pharmacologic</mark>-<mark class=\"t2\">therapy</mark>" not in hl_case.get("ace_html", ""):
-        return "ui: selftest failed: hl mix ace"
-    hl_case = hl_link_data("Every clinician should review an opioid-therapy and an opioid-risk.\n", "An opioid remained.")
-    if hl_case.get("matched", 0) != 1:
-        return "ui: selftest failed: hl shared across terms"
-    if hl_case.get("payload_html", "") != "An <mark class=\"t0\">opioid</mark> remained.":
-        return "ui: selftest failed: hl shared across terms payload"
-    hl_case = hl_link_data("An opioid-use.\n", "Use it.")
+        return "ui: selftest failed: hl occurrence count"
+    if hl_case.get("payload_html", "") != "A therapy and a <mark class=\"t0\">therapy</mark> &lt; now.":
+        return "ui: selftest failed: hl occurrence payload"
+    hl_case = hl_link_data("No opioids today.\n", "Avoid opioids.", None)
     if hl_case.get("matched", 0) != 0:
-        return "ui: selftest failed: hl lowercase acronym floor"
-    hl_case = hl_link_data("An mme-units-per-day.\n", "Check MME today.")
-    if hl_case.get("payload_html", "") != "Check <mark class=\"t0\">MME</mark> today.":
-        return "ui: selftest failed: hl acronym"
-    if "<mark class=\"t0\">mme</mark>-units-per-day" not in hl_case.get("ace_html", ""):
-        return "ui: selftest failed: hl acronym ace"
-    hl_case = hl_link_data("A prescriber should prescribe.\n", "The prescriber prescribed.")
-    if hl_case.get("matched", 0) != 1:
-        return "ui: selftest failed: hl group merge count"
-    if hl_case.get("payload_html", "") != "The <mark class=\"t0\">prescriber</mark> <mark class=\"t0\">prescribed</mark>.":
-        return "ui: selftest failed: hl group merge"
-    if hl_case.get("ace_html", "") != "<span class=\"kw\">A</span> <mark class=\"t0\">prescriber</mark> <span class=\"kw\">should</span> <mark class=\"t0\">prescribe</mark>.\n":
-        return "ui: selftest failed: hl group merge ace"
+        return "ui: selftest failed: hl missing align"
+    if hl_case.get("payload_html", "") != "Avoid opioids.":
+        return "ui: selftest failed: hl missing align payload"
+    if hl_case.get("ace_html", "") != "<span class=\"kw\">No</span> opioids today.\n":
+        return "ui: selftest failed: hl missing align ace"
+    if result_value(hl_parse_align("0\tsrc\t0\tA", "A x", "B y\n")) != "missing trailing newline":
+        return "ui: selftest failed: hl align newline"
+    if result_value(hl_parse_align("\n", "A x", "B y\n")) != "empty file":
+        return "ui: selftest failed: hl align empty"
+    if result_value(hl_parse_align("0\tsrc\t0\n", "A x", "B y\n")) != "row 1: expected 4 tab-separated fields":
+        return "ui: selftest failed: hl align fields"
+    if result_value(hl_parse_align("01\tsrc\t0\tA\n", "A x", "B y\n")) != "row 1: group must be a canonical decimal":
+        return "ui: selftest failed: hl align group"
+    if result_value(hl_parse_align("0\tsrc\t00\tA\n", "A x", "B y\n")) != "row 1: start must be a canonical decimal":
+        return "ui: selftest failed: hl align start"
+    if result_value(hl_parse_align("0\tmid\t0\tA\n", "A x", "B y\n")) != "row 1: side must be src or ace":
+        return "ui: selftest failed: hl align side"
+    if result_value(hl_parse_align("0\tsrc\t0\t\n", "A x", "B y\n")) != "row 1: empty span":
+        return "ui: selftest failed: hl align empty span"
+    if result_value(hl_parse_align("0\tsrc\t9\tA\n", "A x", "B y\n")) != "row 1: span out of range":
+        return "ui: selftest failed: hl align range"
+    if result_value(hl_parse_align("0\tsrc\t0\tB\n", "A x", "B y\n")) != "row 1: span does not match the text at start":
+        return "ui: selftest failed: hl align mismatch"
+    if result_value(hl_parse_align("0\tsrc\t0\tA\n0\tsrc\t0\tA\n0\tace\t0\tB\n", "A x", "B y\n")) != "overlapping src spans":
+        return "ui: selftest failed: hl align overlap"
+    if result_value(hl_parse_align("0\tsrc\t0\tA\n", "A x", "B y\n")) != "every group needs both a src span and an ace span":
+        return "ui: selftest failed: hl align one-sided"
     if "mark.t1, mark.t13, mark.t25, mark.t37 { background: #fef9c3; }" not in css_text:
         return "ui: selftest failed: hue group css"
     if "mark.t6, mark.t18, mark.t30, mark.t42 { background: #dcfce7; }" not in css_text:

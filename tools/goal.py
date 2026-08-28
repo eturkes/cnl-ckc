@@ -4133,7 +4133,7 @@ def check_ui():
         violation("ui-fixtures", "is a symlink: " + str(fixtures_root))
     if not fixtures_root.is_dir():
         violation("ui-fixtures", "missing: " + str(fixtures_root))
-    red_required = ["copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
+    red_required = ["align-one-sided", "align-overlap", "align-span-mismatch", "copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
     green_required = ["basic", "git-uncommitted-edit", "git-untracked-document", "highlight", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
     red_count = 0
     green_count = 0
@@ -4169,8 +4169,8 @@ def check_ui():
         present = required_name in green_names
         if not present:
             violation("ui-fixtures", "missing required case: green/" + required_name)
-    if red_count != 81:
-        violation("ui-fixtures", "red case count drift: expected 81 got " + str(red_count))
+    if red_count != 84:
+        violation("ui-fixtures", "red case count drift: expected 84 got " + str(red_count))
     if green_count != 15:
         violation("ui-fixtures", "green case count drift: expected 15 got " + str(green_count))
     print("goal: ui fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
@@ -4623,10 +4623,140 @@ def check_command():
         probe_count = probe_count + 1
     shutil.rmtree(scratch_path)
     print("goal: check ok " + str(guideline_count) + " guidelines " + str(document_count) + " documents " + str(probe_count) + " red probes")
+def align_nth_start(text, span, occurrence):
+    pieces = text.split(span)
+    found = len(pieces) - 1
+    if occurrence > found:
+        return 0 - 1
+    span_start = 0
+    walked = 0
+    for piece in pieces:
+        if walked < occurrence:
+            span_start = span_start + len(piece)
+            if walked > 0:
+                span_start = span_start + len(span)
+            walked = walked + 1
+    return span_start
+def align_int_field(field_text, floor_value, where, label):
+    value = 0
+    try:
+        value = int(field_text)
+    except ValueError:
+        fail("align", where + label + " must be a canonical decimal")
+    if str(value) != field_text:
+        fail("align", where + label + " must be a canonical decimal")
+    if value < floor_value:
+        fail("align", where + label + " below " + str(floor_value))
+    return value
+def align_command(guideline_id, docid):
+    if not valid_docid(guideline_id):
+        fail("align", "invalid guideline id: " + guideline_id)
+    guidelines_root = pathlib.Path("guidelines")
+    guideline_path = guidelines_root.joinpath(guideline_id)
+    if guideline_path.is_symlink():
+        fail("align", "guideline is a symlink: " + str(guideline_path))
+    if not guideline_path.is_dir():
+        fail("align", "guideline not a directory: " + str(guideline_path))
+    collected = collect_guideline(guideline_path)
+    ace_paths = collected.pop(0)
+    docids = collected.pop(0)
+    known_docid = docid in docids
+    if not known_docid:
+        fail("align", "unknown docid: " + docid)
+    coverage_result = check_coverage(guideline_path, docids, False)
+    status_by_id = coverage_result.pop(0)
+    ace_row_line_by_docid = coverage_result.pop(0)
+    payload_text_by_docid = coverage_result.pop(0)
+    src_text = payload_text_by_docid.get(docid, None)
+    if src_text == None:
+        fail("align", "no payload for docid: " + docid)
+    ace_path = guideline_path.joinpath("ace", docid + ".ace")
+    ace_bytes = ""
+    try:
+        ace_bytes = ace_path.read_bytes()
+    except OSError:
+        fail("align", "missing ace file: " + str(ace_path))
+    ace_text = ace_bytes.decode("utf-8")
+    friendly_text = sys.stdin.read()
+    if not friendly_text.endswith("\n"):
+        fail("align", "input lacks final newline")
+    body = friendly_text.removesuffix("\n")
+    if not body:
+        fail("align", "empty input")
+    src_rows = []
+    ace_rows = []
+    src_groups = set([])
+    ace_groups = set([])
+    line_no = 0
+    for row in body.split("\n"):
+        line_no = line_no + 1
+        where = "row " + str(line_no) + ": "
+        fields = row.split("\t")
+        if len(fields) != 4:
+            fail("align", where + "expected group, side, occurrence, span")
+        group_text = fields.pop(0)
+        side = fields.pop(0)
+        occ_text = fields.pop(0)
+        span = fields.pop(0)
+        group_id = align_int_field(group_text, 0, where, "group")
+        occurrence = align_int_field(occ_text, 1, where, "occurrence")
+        if not span:
+            fail("align", where + "empty span")
+        side_text = ""
+        if side == "src":
+            side_text = src_text
+        else:
+            if side == "ace":
+                side_text = ace_text
+            else:
+                fail("align", where + "side must be src or ace")
+        if "\n" in span:
+            fail("align", where + "span crosses a line break")
+        span_start = align_nth_start(side_text, span, occurrence)
+        if span_start < 0:
+            fail("align", where + "occurrence " + occ_text + " of span not found in " + side)
+        span_end = span_start + len(span)
+        if side == "src":
+            src_rows.append(tuple([span_start, span_end, group_id, span]))
+            src_groups.add(group_id)
+        else:
+            ace_rows.append(tuple([span_start, span_end, group_id, span]))
+            ace_groups.add(group_id)
+    if src_groups != ace_groups:
+        fail("align", "every group needs both a src span and an ace span")
+    side_packs = []
+    side_packs.append(tuple(["ace", ace_rows]))
+    side_packs.append(tuple(["src", src_rows]))
+    out_text = ""
+    span_count = 0
+    for side_pack in side_packs:
+        pack_copy = list(side_pack)
+        side_name = pack_copy.pop(0)
+        rows_for_side = pack_copy.pop(0)
+        prev_end = 0
+        for span_row in sorted(rows_for_side):
+            row_copy = list(span_row)
+            span_start = row_copy.pop(0)
+            span_end = row_copy.pop(0)
+            group_id = row_copy.pop(0)
+            span = row_copy.pop(0)
+            if span_start < prev_end:
+                fail("align", "overlapping " + side_name + " spans at offset " + str(span_start))
+            prev_end = span_end
+            out_text = out_text + str(group_id) + "\t" + side_name + "\t" + str(span_start) + "\t" + span + "\n"
+            span_count = span_count + 1
+    align_dir = guideline_path.joinpath("align")
+    if align_dir.is_symlink():
+        fail("align", "align directory is a symlink: " + str(align_dir))
+    if not align_dir.is_dir():
+        align_dir.mkdir()
+    out_path = align_dir.joinpath(docid + ".tsv")
+    out_path.write_bytes(out_text.encode("utf-8"))
+    print("goal: align " + docid + " groups " + str(len(ace_groups)) + " spans " + str(span_count))
 argv = list(sys.argv)
 argv.pop(0)
 if len(argv) == 0:
-    fail("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label> | goal release-manifest")
+    fail("usage", "expected: goal compile <guideline-id> | goal align <guideline-id> <docid> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label> | goal release-manifest")
 subcommand = argv.pop(0)
 if subcommand == "compile":
     if len(argv) != 1:
@@ -4644,6 +4774,12 @@ else:
                 fail("usage", "expected: goal queries <guideline-id>")
             queries_guideline_id = argv.pop(0)
             queries_command(queries_guideline_id)
+        elif subcommand == "align":
+            if len(argv) != 2:
+                fail("usage", "expected: goal align <guideline-id> <docid>")
+            align_guideline_id = argv.pop(0)
+            align_docid = argv.pop(0)
+            align_command(align_guideline_id, align_docid)
         elif subcommand == "queries-check":
             queries_check_argc = len(argv)
             queries_check_ok = False

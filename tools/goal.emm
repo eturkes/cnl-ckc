@@ -4274,7 +4274,7 @@ Define [[check_ui]] taking nothing:
         Do [[violation]]("ui-fixtures", "is a symlink: " plus [[str]](fixtures_root)).
     If not [[fixtures_root.is_dir]]():
         Do [[violation]]("ui-fixtures", "missing: " plus [[str]](fixtures_root)).
-    Set red_required to <"copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
+    Set red_required to <"align-one-sided", "align-overlap", "align-span-mismatch", "copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
     Set green_required to <"basic", "git-uncommitted-edit", "git-untracked-document", "highlight", "hostile", "multi-guideline-order", "payload-selection", "verdicts">.
     Set red_count to 0.
     Set green_count to 0.
@@ -4310,8 +4310,8 @@ Define [[check_ui]] taking nothing:
         Set present to required_name is in green_names.
         If not present:
             Do [[violation]]("ui-fixtures", "missing required case: green/" plus required_name).
-    If red_count does not equal 81:
-        Do [[violation]]("ui-fixtures", "red case count drift: expected 81 got " plus [[str]](red_count)).
+    If red_count does not equal 84:
+        Do [[violation]]("ui-fixtures", "red case count drift: expected 84 got " plus [[str]](red_count)).
     If green_count does not equal 15:
         Do [[violation]]("ui-fixtures", "green case count drift: expected 15 got " plus [[str]](green_count)).
     Do [[print]]("goal: ui fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
@@ -4784,10 +4784,143 @@ Define [[check_command]] taking nothing:
     Do [[shutil.rmtree]](scratch_path).
     Do [[print]]("goal: check ok " plus [[str]](guideline_count) plus " guidelines " plus [[str]](document_count) plus " documents " plus [[str]](probe_count) plus " red probes").
 
+Define [[align_nth_start]] taking text, span, occurrence:
+    Set pieces to [[text.split]](span).
+    Set found to [[len]](pieces) minus 1.
+    If occurrence is greater than found:
+        Give back 0 minus 1.
+    Set span_start to 0.
+    Set walked to 0.
+    For each piece in pieces:
+        If walked is less than occurrence:
+            Set span_start to span_start plus [[len]](piece).
+            If walked is greater than 0:
+                Set span_start to span_start plus [[len]](span).
+            Set walked to walked plus 1.
+    Give back span_start.
+
+Define [[align_int_field]] taking field_text, floor_value, where, label:
+    Set value to 0.
+    Try:
+        Set value to [[int]](field_text).
+    Catch ValueError:
+        Do [[fail]]("align", where plus label plus " must be a canonical decimal").
+    If [[str]](value) does not equal field_text:
+        Do [[fail]]("align", where plus label plus " must be a canonical decimal").
+    If value is less than floor_value:
+        Do [[fail]]("align", where plus label plus " below " plus [[str]](floor_value)).
+    Give back value.
+
+Define [[align_command]] taking guideline_id, docid:
+    If not [[valid_docid]](guideline_id):
+        Do [[fail]]("align", "invalid guideline id: " plus guideline_id).
+    Set guidelines_root to [[pathlib.Path]]("guidelines").
+    Set guideline_path to [[guidelines_root.joinpath]](guideline_id).
+    If [[guideline_path.is_symlink]]():
+        Do [[fail]]("align", "guideline is a symlink: " plus [[str]](guideline_path)).
+    If not [[guideline_path.is_dir]]():
+        Do [[fail]]("align", "guideline not a directory: " plus [[str]](guideline_path)).
+    Set collected to [[collect_guideline]](guideline_path).
+    Set ace_paths to [[collected.pop]](0).
+    Set docids to [[collected.pop]](0).
+    Set known_docid to docid is in docids.
+    If not known_docid:
+        Do [[fail]]("align", "unknown docid: " plus docid).
+    Set coverage_result to [[check_coverage]](guideline_path, docids, False).
+    Set status_by_id to [[coverage_result.pop]](0).
+    Set ace_row_line_by_docid to [[coverage_result.pop]](0).
+    Set payload_text_by_docid to [[coverage_result.pop]](0).
+    Set src_text to [[payload_text_by_docid.get]](docid, None).
+    If src_text equals None:
+        Do [[fail]]("align", "no payload for docid: " plus docid).
+    Set ace_path to [[guideline_path.joinpath]]("ace", docid plus ".ace").
+    Set ace_bytes to "".
+    Try:
+        Set ace_bytes to [[ace_path.read_bytes]]().
+    Catch OSError:
+        Do [[fail]]("align", "missing ace file: " plus [[str]](ace_path)).
+    Set ace_text to [[ace_bytes.decode]]("utf-8").
+    Set friendly_text to [[sys.stdin.read]]().
+    If not [[friendly_text.endswith]]("\n"):
+        Do [[fail]]("align", "input lacks final newline").
+    Set body to [[friendly_text.removesuffix]]("\n").
+    If not body:
+        Do [[fail]]("align", "empty input").
+    Set src_rows to <>.
+    Set ace_rows to <>.
+    Set src_groups to [[set]](<>).
+    Set ace_groups to [[set]](<>).
+    Set line_no to 0.
+    For each row in [[body.split]]("\n"):
+        Set line_no to line_no plus 1.
+        Set where to "row " plus [[str]](line_no) plus ": ".
+        Set fields to [[row.split]]("\t").
+        If [[len]](fields) does not equal 4:
+            Do [[fail]]("align", where plus "expected group, side, occurrence, span").
+        Set group_text to [[fields.pop]](0).
+        Set side to [[fields.pop]](0).
+        Set occ_text to [[fields.pop]](0).
+        Set span to [[fields.pop]](0).
+        Set group_id to [[align_int_field]](group_text, 0, where, "group").
+        Set occurrence to [[align_int_field]](occ_text, 1, where, "occurrence").
+        If not span:
+            Do [[fail]]("align", where plus "empty span").
+        Set side_text to "".
+        If side equals "src":
+            Set side_text to src_text.
+        Otherwise:
+            If side equals "ace":
+                Set side_text to ace_text.
+            Otherwise:
+                Do [[fail]]("align", where plus "side must be src or ace").
+        If "\n" is in span:
+            Do [[fail]]("align", where plus "span crosses a line break").
+        Set span_start to [[align_nth_start]](side_text, span, occurrence).
+        If span_start is less than 0:
+            Do [[fail]]("align", where plus "occurrence " plus occ_text plus " of span not found in " plus side).
+        Set span_end to span_start plus [[len]](span).
+        If side equals "src":
+            Do [[src_rows.append]]([[tuple]](<span_start, span_end, group_id, span>)).
+            Do [[src_groups.add]](group_id).
+        Otherwise:
+            Do [[ace_rows.append]]([[tuple]](<span_start, span_end, group_id, span>)).
+            Do [[ace_groups.add]](group_id).
+    If src_groups does not equal ace_groups:
+        Do [[fail]]("align", "every group needs both a src span and an ace span").
+    Set side_packs to <>.
+    Do [[side_packs.append]]([[tuple]](<"ace", ace_rows>)).
+    Do [[side_packs.append]]([[tuple]](<"src", src_rows>)).
+    Set out_text to "".
+    Set span_count to 0.
+    For each side_pack in side_packs:
+        Set pack_copy to [[list]](side_pack).
+        Set side_name to [[pack_copy.pop]](0).
+        Set rows_for_side to [[pack_copy.pop]](0).
+        Set prev_end to 0.
+        For each span_row in [[sorted]](rows_for_side):
+            Set row_copy to [[list]](span_row).
+            Set span_start to [[row_copy.pop]](0).
+            Set span_end to [[row_copy.pop]](0).
+            Set group_id to [[row_copy.pop]](0).
+            Set span to [[row_copy.pop]](0).
+            If span_start is less than prev_end:
+                Do [[fail]]("align", "overlapping " plus side_name plus " spans at offset " plus [[str]](span_start)).
+            Set prev_end to span_end.
+            Set out_text to out_text plus [[str]](group_id) plus "\t" plus side_name plus "\t" plus [[str]](span_start) plus "\t" plus span plus "\n".
+            Set span_count to span_count plus 1.
+    Set align_dir to [[guideline_path.joinpath]]("align").
+    If [[align_dir.is_symlink]]():
+        Do [[fail]]("align", "align directory is a symlink: " plus [[str]](align_dir)).
+    If not [[align_dir.is_dir]]():
+        Do [[align_dir.mkdir]]().
+    Set out_path to [[align_dir.joinpath]](docid plus ".tsv").
+    Do [[out_path.write_bytes]]([[out_text.encode]]("utf-8")).
+    Do [[print]]("goal: align " plus docid plus " groups " plus [[str]]([[len]](ace_groups)) plus " spans " plus [[str]](span_count)).
+
 Set argv to [[list]](sys.argv).
 Do [[argv.pop]](0).
 If [[len]](argv) equals 0:
-    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label> | goal release-manifest").
+    Do [[fail]]("usage", "expected: goal compile <guideline-id> | goal align <guideline-id> <docid> | goal check | goal queries <guideline-id> | goal queries-check <guideline-dir> [<stage-dir>] | goal review-manifest <guideline-id> | goal derive-review-manifest <guideline-dir> | goal ledger-validate <ledger-path> <manifest-path> <label> | goal release-manifest").
 Set subcommand to [[argv.pop]](0).
 If subcommand equals "compile":
     If [[len]](argv) does not equal 1:
@@ -4805,6 +4938,12 @@ Otherwise:
                 Do [[fail]]("usage", "expected: goal queries <guideline-id>").
             Set queries_guideline_id to [[argv.pop]](0).
             Do [[queries_command]](queries_guideline_id).
+        Otherwise if subcommand equals "align":
+            If [[len]](argv) does not equal 2:
+                Do [[fail]]("usage", "expected: goal align <guideline-id> <docid>").
+            Set align_guideline_id to [[argv.pop]](0).
+            Set align_docid to [[argv.pop]](0).
+            Do [[align_command]](align_guideline_id, align_docid).
         Otherwise if subcommand equals "queries-check":
             Set queries_check_argc to [[len]](argv).
             Set queries_check_ok to False.
