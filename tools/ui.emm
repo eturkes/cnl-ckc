@@ -1020,7 +1020,184 @@ Define [[build_viewmodel]] taking corpus:
         Do [[models.append]]([[result_value]](model_result)).
     Give back [[ok]](models).
 
-Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">}.
+Set hl_stop_words to [[set]](<"a", "an", "the", "every", "each", "no", "all", "some", "any", "this", "that", "these", "those", "such", "is", "are", "was", "were", "be", "been", "being", "has", "have", "had", "does", "do", "did", "should", "must", "may", "can", "cannot", "might", "will", "would", "shall", "could", "if", "then", "and", "or", "nor", "but", "not", "it", "its", "itself", "they", "them", "their", "he", "she", "who", "whom", "whose", "which", "what", "where", "when", "there", "something", "somebody", "someone", "everything", "everybody", "everyone", "nothing", "nobody", "of", "for", "with", "without", "during", "to", "at", "in", "on", "by", "from", "as", "against", "about", "after", "before", "through", "under", "over", "above", "below", "into", "onto", "per", "within", "between", "among", "around", "near", "than", "least", "most", "more", "less", "fewer", "greater">).
+
+Set hl_diacritic_classes to {"a": "[aàáâãäå]", "e": "[eèéêë]", "i": "[iìíîï]", "o": "[oòóôõö]", "u": "[uùúûü]", "n": "[nñ]", "c": "[cç]", "y": "[yýÿ]"}.
+Set hl_token_rx to [[re.compile]]("([0-9A-Za-z]+(?:-[0-9A-Za-z]+)*)").
+Set hl_word_sep to "[^\\w.!?,;:]+".
+Set hl_hover_classes to 32.
+
+Define [[hl_bases]] taking word:
+    Set out to <word>.
+    If [[word.endswith]]("ies"):
+        If [[len]](word) is greater than 4:
+            Do [[out.append]]([[word.removesuffix]]("ies") plus "y").
+    If [[word.endswith]]("es"):
+        If [[len]](word) is greater than 3:
+            Do [[out.append]]([[word.removesuffix]]("es")).
+    If [[word.endswith]]("s"):
+        If not [[word.endswith]]("ss"):
+            If [[len]](word) is greater than 3:
+                Do [[out.append]]([[word.removesuffix]]("s")).
+    Give back out.
+
+Define [[hl_variants]] taking word:
+    Set found to <>.
+    For each base in [[hl_bases]](word):
+        For each cand in <base, base plus "s", base plus "es", base plus "ed", base plus "ing">:
+            Set known to cand is in found.
+            If not known:
+                Do [[found.append]](cand).
+        If [[base.endswith]]("y"):
+            If [[len]](base) is greater than 2:
+                Set cand to [[base.removesuffix]]("y") plus "ies".
+                Set known to cand is in found.
+                If not known:
+                    Do [[found.append]](cand).
+        If [[base.endswith]]("e"):
+            For each cand in <base plus "d", [[base.removesuffix]]("e") plus "ing">:
+                Set known to cand is in found.
+                If not known:
+                    Do [[found.append]](cand).
+    Give back found.
+
+Define [[hl_char_pattern]] taking variant:
+    Set parts to <>.
+    For each ch in variant:
+        Do [[parts.append]]([[hl_diacritic_classes.get]](ch, ch)).
+    Set empty_text to "".
+    Give back [[empty_text.join]](parts).
+
+Define [[hl_word_pattern]] taking word:
+    Set alts to <>.
+    For each variant in [[hl_variants]](word):
+        Do [[alts.append]]([[hl_char_pattern]](variant)).
+    Set bar to "|".
+    Give back "(?:" plus [[bar.join]](alts) plus ")".
+
+Define [[hl_lemma_pattern]] taking lemma:
+    Set word_patterns to <>.
+    For each word in [[lemma.split]]("-"):
+        If word:
+            Do [[word_patterns.append]]([[hl_word_pattern]](word)).
+    Set sep to hl_word_sep.
+    Give back "\\b" plus [[sep.join]](word_patterns) plus "\\b".
+
+Define [[hl_content_lemmas]] taking ace_text:
+    Set lemmas to <>.
+    Set is_token to False.
+    For each piece in [[hl_token_rx.split]](ace_text):
+        If is_token:
+            Set folded to [[piece.casefold]]().
+            Set stopped to folded is in hl_stop_words.
+            If not stopped:
+                Set letter_hit to [[re.search]]("[a-z]", folded).
+                If letter_hit:
+                    Set known to folded is in lemmas.
+                    If not known:
+                        Do [[lemmas.append]](folded).
+        Set is_token to not is_token.
+    Give back lemmas.
+
+Define [[hl_alternation_order]] taking lemmas:
+    Set rows to <>.
+    For each lemma in lemmas:
+        Set word_count to [[len]]([[lemma.split]]("-")).
+        Do [[rows.append]]([[tuple]](<0 minus word_count, 0 minus [[len]](lemma), lemma>)).
+    Set ordered to <>.
+    For each row in [[sorted]](rows):
+        Set row_copy to [[list]](row).
+        Do [[row_copy.pop]](0).
+        Do [[row_copy.pop]](0).
+        Do [[ordered.append]]([[row_copy.pop]](0)).
+    Give back ordered.
+
+Define [[hl_mark_html]] taking text, index:
+    Set class_attr to "".
+    If index is less than hl_hover_classes:
+        Set class_attr to " class=\"t" plus [[str]](index) plus "\"".
+    Give back "<mark" plus class_attr plus ">" plus [[esc_text]](text) plus "</mark>".
+
+Define [[hl_ace_html]] taking ace_text, index_by_lemma:
+    Set html_parts to <>.
+    Set is_token to False.
+    For each piece in [[hl_token_rx.split]](ace_text):
+        If is_token:
+            Set folded to [[piece.casefold]]().
+            Set index to [[index_by_lemma.get]](folded, None).
+            If index does not equal None:
+                Do [[html_parts.append]]([[hl_mark_html]](piece, index)).
+            Otherwise if folded is in hl_stop_words:
+                Do [[html_parts.append]]("<span class=\"kw\">" plus [[esc_text]](piece) plus "</span>").
+            Otherwise:
+                Do [[html_parts.append]]([[esc_text]](piece)).
+        Otherwise:
+            Do [[html_parts.append]]([[esc_text]](piece)).
+        Set is_token to not is_token.
+    Set empty_text to "".
+    Give back [[empty_text.join]](html_parts).
+
+Define [[hl_link_data]] taking ace_text, payload_line:
+    Set data to {}.
+    Set lemmas to [[hl_content_lemmas]](ace_text).
+    If not lemmas:
+        Do [[data.update]]({"matched": 0}).
+        Do [[data.update]]({"payload_html": [[esc_text]](payload_line)}).
+        Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, {})}).
+        Give back data.
+    Set ordered to [[hl_alternation_order]](lemmas).
+    Set alternation_parts to <>.
+    Set single_rx_by_lemma to {}.
+    For each lemma in ordered:
+        Set lemma_pattern to [[hl_lemma_pattern]](lemma).
+        Do [[alternation_parts.append]]("(?:" plus lemma_pattern plus ")").
+        Do [[single_rx_by_lemma.update]]({lemma: [[re.compile]](lemma_pattern plus "$", re.IGNORECASE)}).
+    Set bar to "|".
+    Set combined_rx to [[re.compile]]("(" plus [[bar.join]](alternation_parts) plus ")", re.IGNORECASE).
+    Set pieces to [[combined_rx.split]](payload_line).
+    Set hit_lemmas to <>.
+    Set matched_lemmas to <>.
+    Set is_hit to False.
+    For each piece in pieces:
+        If is_hit:
+            Set piece_lemma to "".
+            For each lemma in ordered:
+                If not piece_lemma:
+                    Set single_rx to [[single_rx_by_lemma.get]](lemma, None).
+                    Set hit to [[single_rx.match]](piece).
+                    If hit:
+                        Set piece_lemma to lemma.
+            Do [[hit_lemmas.append]](piece_lemma).
+            If piece_lemma:
+                Set known to piece_lemma is in matched_lemmas.
+                If not known:
+                    Do [[matched_lemmas.append]](piece_lemma).
+        Set is_hit to not is_hit.
+    Set index_by_lemma to {}.
+    For each lemma in lemmas:
+        Set present to lemma is in matched_lemmas.
+        If present:
+            Do [[index_by_lemma.update]]({lemma: [[len]](index_by_lemma)}).
+    Set html_parts to <>.
+    Set hit_queue to [[list]](hit_lemmas).
+    Set is_hit to False.
+    For each piece in pieces:
+        If is_hit:
+            Set piece_lemma to [[hit_queue.pop]](0).
+            If piece_lemma:
+                Do [[html_parts.append]]([[hl_mark_html]](piece, [[index_by_lemma.get]](piece_lemma, 0))).
+            Otherwise:
+                Do [[html_parts.append]]([[esc_text]](piece)).
+        Otherwise:
+            Do [[html_parts.append]]([[esc_text]](piece)).
+        Set is_hit to not is_hit.
+    Set empty_text to "".
+    Do [[data.update]]({"matched": [[len]](matched_lemmas)}).
+    Do [[data.update]]({"payload_html": [[empty_text.join]](html_parts)}).
+    Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, index_by_lemma)}).
+    Give back data.
+
+Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">, "mark": <"#111827", "#dbeafe">, "mark-active": <"#111827", "#bfdbfe">}.
 
 Define [[pal_fg]] taking role:
     Set pair to [[palette.get]](role, <>).
@@ -1084,9 +1261,19 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("input[type=\"radio\"] { accent-color: " plus body_fg plus "; }").
     Do [[lines.append]]("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
     Do [[lines.append]]("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " plus body_fg plus "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " plus body_bg plus "; background: " plus body_fg plus "; }").
+    Set muted_fg to [[pal_fg]]("muted").
+    Set mark_bg to [[pal_bg]]("mark").
+    Set mark_active_bg to [[pal_bg]]("mark-active").
+    Do [[lines.append]]("mark { background: " plus mark_bg plus "; color: inherit; text-decoration: underline dotted " plus muted_fg plus "; text-underline-offset: 0.15em; }").
+    Do [[lines.append]](".kw { color: " plus muted_fg plus "; }").
+    Do [[lines.append]](".hl-note { color: " plus muted_fg plus "; font-size: 0.9rem; }").
+    For each hover_index in [[range]](hl_hover_classes):
+        Set class_name to "t" plus [[str]](hover_index).
+        Do [[lines.append]]("main:has(mark." plus class_name plus ":hover) mark." plus class_name plus " { background: " plus mark_active_bg plus "; text-decoration-style: solid; }").
     Do [[lines.append]]("@media print {").
     Do [[lines.append]]("body { max-width: none; padding: 0; }").
-    Do [[lines.append]]("nav.crumbs, nav.docnav, .skip, form, .verdict-entry { display: none; }").
+    Do [[lines.append]]("nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }").
+    Do [[lines.append]]("mark { background: none; }").
     Do [[lines.append]]("details::details-content { content-visibility: visible; }").
     Do [[lines.append]]("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }").
     Do [[lines.append]]("a { color: inherit; text-decoration: none; }").
@@ -1098,6 +1285,8 @@ Define [[build_css]] taking nothing:
 Set css_text to [[build_css]]().
 
 Set scope_line_text to "This page reports what the loaded guideline documents state. It does not give clinical advice.".
+
+Set hl_note_text to "Phrases that appear in both texts are highlighted. Point at a highlighted phrase to emphasize it and its matches.".
 
 Set refusal_refused_text to "The request was refused. Open the document page again from this site and submit the decision again.".
 Set refusal_invalid_form_text to "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again.".
@@ -1431,13 +1620,16 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
         Do [[parts.append]]("<section class=\"stale\">").
         Do [[parts.append]]("<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>").
         Do [[parts.append]]("</section>").
+    Set link_data to [[hl_link_data]]([[doc_data.get]]("ace_text", ""), [[payload_by_docid.get]](docid, "")).
+    If [[link_data.get]]("matched", 0) is greater than 0:
+        Do [[parts.append]]("<p class=\"hl-note\">" plus [[esc_text]](hl_note_text) plus "</p>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h3>Original passage</h3>").
-    Do [[parts.append]]("<pre class=\"prose\">" plus [[esc_text]]([[payload_by_docid.get]](docid, "")) plus "</pre>").
+    Do [[parts.append]]("<pre class=\"prose\">" plus [[link_data.get]]("payload_html", "") plus "</pre>").
     Do [[parts.append]]("</section>").
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h3>Attempto Controlled English (ACE)</h3>").
-    Do [[parts.append]]("<pre class=\"prose\">" plus [[esc_text]]([[doc_data.get]]("ace_text", "")) plus "</pre>").
+    Do [[parts.append]]("<pre class=\"prose\">" plus [[link_data.get]]("ace_html", "") plus "</pre>").
     Do [[parts.append]]("</section>").
     Set review_by_docid to [[model.get]]("review_by_docid", {}).
     Set current_digest to [[review_by_docid.get]](docid, "").
@@ -1798,6 +1990,36 @@ Define [[selftest_violation]] taking nothing:
         Give back "ui: selftest failed: esc_attr".
     If [[esc_attr]]("plain") does not equal "plain":
         Give back "ui: selftest failed: esc_attr".
+    If "therapies" is not in [[hl_variants]]("therapy"):
+        Give back "ui: selftest failed: hl variants plural".
+    If "prescribing" is not in [[hl_variants]]("prescribes"):
+        Give back "ui: selftest failed: hl variants gerund".
+    If "applying" is not in [[hl_variants]]("applies"):
+        Give back "ui: selftest failed: hl variants y-stem".
+    Set hl_case to [[hl_link_data]]("Every clinician should offer-naloxone.\n", "Clinicians should consider offering naloxone.").
+    If [[hl_case.get]]("matched", 0) does not equal 2:
+        Give back "ui: selftest failed: hl match count".
+    If [[hl_case.get]]("payload_html", "") does not equal "<mark class=\"t0\">Clinicians</mark> should consider <mark class=\"t1\">offering naloxone</mark>.":
+        Give back "ui: selftest failed: hl payload html".
+    If [[hl_case.get]]("ace_html", "") does not equal "<span class=\"kw\">Every</span> <mark class=\"t0\">clinician</mark> <span class=\"kw\">should</span> <mark class=\"t1\">offer-naloxone</mark>.\n":
+        Give back "ui: selftest failed: hl ace html".
+    Set hl_case to [[hl_link_data]]("A clinician should check a risk.\n", "risk < benefit").
+    If [[hl_case.get]]("payload_html", "") does not equal "<mark class=\"t0\">risk</mark> &lt; benefit":
+        Give back "ui: selftest failed: hl escape".
+    Set hl_case to [[hl_link_data]]("A clinician should assess a risk.\n", "Brisk walking is risky.").
+    If [[hl_case.get]]("matched", 0) does not equal 0:
+        Give back "ui: selftest failed: hl boundary".
+    If [[hl_case.get]]("payload_html", "") does not equal "Brisk walking is risky.":
+        Give back "ui: selftest failed: hl boundary bytes".
+    Set hl_case to [[hl_link_data]]("Every clinician should assess an opioid-naive-patient.\n", "Care for opioid-naïve patients.").
+    If [[hl_case.get]]("payload_html", "") does not equal "Care for <mark class=\"t0\">opioid-naïve patients</mark>.":
+        Give back "ui: selftest failed: hl diacritic".
+    Set hl_case to [[hl_link_data]]("A clinician should treat an acute-pain.\n", "It was acute. Pain remained.").
+    If [[hl_case.get]]("matched", 0) does not equal 0:
+        Give back "ui: selftest failed: hl sentence guard".
+    Set hl_case to [[hl_link_data]]("Every clinician should review an opioid-therapy and a therapy.\n", "An opioid therapy and a therapy.").
+    If [[hl_case.get]]("payload_html", "") does not equal "An <mark class=\"t0\">opioid therapy</mark> and a <mark class=\"t1\">therapy</mark>.":
+        Give back "ui: selftest failed: hl longest first".
     Set unique_values to <>.
     For each role in [[sorted]](palette):
         Set pair to [[palette.get]](role, <>).

@@ -56,9 +56,45 @@ textarea { min-height: 6rem; }
 input[type="radio"] { accent-color: #111827; }
 input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
+mark { background: #dbeafe; color: inherit; text-decoration: underline dotted #4b5563; text-underline-offset: 0.15em; }
+.kw { color: #4b5563; }
+.hl-note { color: #4b5563; font-size: 0.9rem; }
+main:has(mark.t0:hover) mark.t0 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t1:hover) mark.t1 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t2:hover) mark.t2 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t3:hover) mark.t3 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t4:hover) mark.t4 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t5:hover) mark.t5 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t6:hover) mark.t6 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t7:hover) mark.t7 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t8:hover) mark.t8 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t9:hover) mark.t9 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t10:hover) mark.t10 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t11:hover) mark.t11 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t12:hover) mark.t12 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t13:hover) mark.t13 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t14:hover) mark.t14 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t15:hover) mark.t15 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t16:hover) mark.t16 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t17:hover) mark.t17 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t18:hover) mark.t18 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t19:hover) mark.t19 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t20:hover) mark.t20 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t21:hover) mark.t21 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t22:hover) mark.t22 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t23:hover) mark.t23 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t24:hover) mark.t24 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t25:hover) mark.t25 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t26:hover) mark.t26 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t27:hover) mark.t27 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t28:hover) mark.t28 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t29:hover) mark.t29 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t30:hover) mark.t30 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t31:hover) mark.t31 { background: #bfdbfe; text-decoration-style: solid; }
 @media print {
 body { max-width: none; padding: 0; }
-nav.crumbs, nav.docnav, .skip, form, .verdict-entry { display: none; }
+nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
+mark { background: none; }
 details::details-content { content-visibility: visible; }
 pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
 a { color: inherit; text-decoration: none; }
@@ -74,13 +110,14 @@ a { color: inherit; text-decoration: none; }
 <h2>Fixture section (r10) <span class="chip chip-unreviewed">Unreviewed</span></h2>
 <p>r10 · <a href="../source/evidence.txt">Source text</a></p>
 <p>No decision is recorded. <a href="../records.html">All decision records</a></p>
+<p class="hl-note">Phrases that appear in both texts are highlighted. Point at a highlighted phrase to emphasize it and its matches.</p>
 <section>
 <h3>Original passage</h3>
-<pre class="prose">Payload selected for z.</pre>
+<pre class="prose">Payload selected for <mark class="t0">z</mark>.</pre>
 </section>
 <section>
 <h3>Attempto Controlled English (ACE)</h3>
-<pre class="prose">A reviewer should inspect z.
+<pre class="prose"><span class="kw">A</span> reviewer <span class="kw">should</span> inspect <mark class="t0">z</mark>.
 </pre>
 </section>
 <section class="verdict-entry">

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decision records — cnl-ckc reviewer</title>
+<style>
+body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
+a { color: #1d4ed8; }
+a:focus-visible, summary:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 0; padding: 0.5rem 1rem; background: #ffffff; color: #1d4ed8; }
+.skip:focus { left: 0; z-index: 1; }
+nav.crumbs { padding: 1rem 0; border-bottom: 1px solid #e5e7eb; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+h1 a.source { font-size: 1rem; font-weight: 400; margin-left: 0.5rem; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+th { border-bottom: 2px solid #111827; }
+table.compact { width: auto; }
+table.compact th, table.compact td { padding-right: 2rem; }
+table.records { table-layout: fixed; }
+table.records th { box-sizing: border-box; }
+table.records th:nth-child(1) { width: 12%; }
+table.records th:nth-child(2) { width: 18%; }
+table.records th:nth-child(3) { width: 22%; }
+table.records th:nth-child(4) { width: 10%; }
+.chip { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+.chip-approved { color: #14532d; background: #dcfce7; }
+.chip-rejected { color: #7f1d1d; background: #fee2e2; }
+.chip-contested { color: #4c1d95; background: #ede9fe; }
+.chip-stale { color: #78350f; background: #fef3c7; }
+.chip-unreviewed { color: #1f2937; background: #e5e7eb; }
+pre { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; white-space: pre-wrap; overflow-x: auto; }
+pre, code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }
+pre.prose { font-family: Georgia, serif; font-size: 1.05rem; overflow-wrap: anywhere; }
+dt { font-weight: 600; margin-top: 0.6rem; }
+dd { margin-left: 0; }
+summary { cursor: pointer; }
+section { margin: 1.5rem 0; }
+nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
+footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid #e5e7eb; font-size: 0.9rem; }
+form label { display: block; margin-top: 1rem; font-weight: 600; }
+fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }
+legend { font-weight: 600; padding: 0; }
+fieldset label { margin-top: 0.5rem; font-weight: 400; }
+input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
+textarea { min-height: 6rem; }
+input[type="radio"] { accent-color: #111827; }
+input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
+mark { background: #dbeafe; color: inherit; text-decoration: underline dotted #4b5563; text-underline-offset: 0.15em; }
+.kw { color: #4b5563; }
+.hl-note { color: #4b5563; font-size: 0.9rem; }
+main:has(mark.t0:hover) mark.t0 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t1:hover) mark.t1 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t2:hover) mark.t2 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t3:hover) mark.t3 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t4:hover) mark.t4 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t5:hover) mark.t5 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t6:hover) mark.t6 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t7:hover) mark.t7 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t8:hover) mark.t8 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t9:hover) mark.t9 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t10:hover) mark.t10 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t11:hover) mark.t11 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t12:hover) mark.t12 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t13:hover) mark.t13 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t14:hover) mark.t14 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t15:hover) mark.t15 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t16:hover) mark.t16 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t17:hover) mark.t17 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t18:hover) mark.t18 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t19:hover) mark.t19 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t20:hover) mark.t20 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t21:hover) mark.t21 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t22:hover) mark.t22 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t23:hover) mark.t23 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t24:hover) mark.t24 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t25:hover) mark.t25 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t26:hover) mark.t26 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t27:hover) mark.t27 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t28:hover) mark.t28 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t29:hover) mark.t29 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t30:hover) mark.t30 { background: #bfdbfe; text-decoration-style: solid; }
+main:has(mark.t31:hover) mark.t31 { background: #bfdbfe; text-decoration-style: solid; }
+@media print {
+body { max-width: none; padding: 0; }
+nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
+mark { background: none; }
+details::details-content { content-visibility: visible; }
+pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
+a { color: inherit; text-decoration: none; }
+.chip { border: 1px solid #111827; background: none; color: inherit; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="crumbs"><a href="../../index.html">guidelines</a> / <a href="index.html">Highlight fixture</a> / records</nav>
+<main id="main">
+<h1>Decision records</h1>
+<p>No decisions are recorded for the 3 documents in this guideline.</p>
+<p>Open a document and record a decision to start this list.</p>
+<nav class="docnav"><a href="index.html">Guideline index</a></nav>
+</main>
+<footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>
+</body>
+</html>

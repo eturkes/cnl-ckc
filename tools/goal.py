@@ -4134,7 +4134,7 @@ def check_ui():
     if not fixtures_root.is_dir():
         violation("ui-fixtures", "missing: " + str(fixtures_root))
     red_required = ["copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift"]
-    green_required = ["basic", "git-uncommitted-edit", "git-untracked-document", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
+    green_required = ["basic", "git-uncommitted-edit", "git-untracked-document", "highlight", "hostile", "multi-guideline-order", "payload-selection", "verdicts"]
     red_count = 0
     green_count = 0
     red_names = []
@@ -4171,8 +4171,8 @@ def check_ui():
             violation("ui-fixtures", "missing required case: green/" + required_name)
     if red_count != 81:
         violation("ui-fixtures", "red case count drift: expected 81 got " + str(red_count))
-    if green_count != 14:
-        violation("ui-fixtures", "green case count drift: expected 14 got " + str(green_count))
+    if green_count != 15:
+        violation("ui-fixtures", "green case count drift: expected 15 got " + str(green_count))
     print("goal: ui fixtures ok " + str(red_count) + " red " + str(green_count) + " green")
 def check_corpus(guideline_path, ace_paths, docids, lexicon_path):
     ledger_pairs = check_projection_ledger(guideline_path)

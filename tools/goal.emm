@@ -4275,7 +4275,7 @@ Define [[check_ui]] taking nothing:
     If not [[fixtures_root.is_dir]]():
         Do [[violation]]("ui-fixtures", "missing: " plus [[str]](fixtures_root)).
     Set red_required to <"copy-visible-hex", "digest-mismatch-ace", "digest-mismatch-payload", "doc-missing-manifest", "duplicate-docid", "http-404", "http-405", "ledger-invalid", "manifest-missing-doc", "missing-coverage", "orphan-pl", "region-resolve-failure", "unknown-ledger-docid", "verdict-405", "verdict-artifact-drift", "verdict-artifact-drift-payload", "verdict-cas-conflict", "verdict-crash", "verdict-csrf", "verdict-field-grammar", "verdict-get-form", "verdict-host", "verdict-ledger-invalid", "verdict-manifest-derivation", "verdict-ok-append", "verdict-ok-create", "verdict-origin", "verdict-path-decode", "verdict-request-cli", "verdict-subject-drift">.
-    Set green_required to <"basic", "git-uncommitted-edit", "git-untracked-document", "hostile", "multi-guideline-order", "payload-selection", "verdicts">.
+    Set green_required to <"basic", "git-uncommitted-edit", "git-untracked-document", "highlight", "hostile", "multi-guideline-order", "payload-selection", "verdicts">.
     Set red_count to 0.
     Set green_count to 0.
     Set red_names to <>.
@@ -4312,8 +4312,8 @@ Define [[check_ui]] taking nothing:
             Do [[violation]]("ui-fixtures", "missing required case: green/" plus required_name).
     If red_count does not equal 81:
         Do [[violation]]("ui-fixtures", "red case count drift: expected 81 got " plus [[str]](red_count)).
-    If green_count does not equal 14:
-        Do [[violation]]("ui-fixtures", "green case count drift: expected 14 got " plus [[str]](green_count)).
+    If green_count does not equal 15:
+        Do [[violation]]("ui-fixtures", "green case count drift: expected 15 got " plus [[str]](green_count)).
     Do [[print]]("goal: ui fixtures ok " plus [[str]](red_count) plus " red " plus [[str]](green_count) plus " green").
 
 Define [[check_corpus]] taking guideline_path, ace_paths, docids, lexicon_path:
