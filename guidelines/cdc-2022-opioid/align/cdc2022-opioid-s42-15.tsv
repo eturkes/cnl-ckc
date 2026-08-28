@@ -1,0 +1,24 @@
+0	ace	19	continuous-opioid-use
+0	ace	49	continuous-opioid-use
+1	ace	112	more than 3 days
+2	ace	155	less than 7 days
+3	ace	183	clinician
+4	ace	197	reduce
+5	ace	206	daily
+5	ace	219	dosage
+6	ace	229	50 percent
+7	ace	247	2 days
+8	ace	268	withdrawal-symptom
+9	ace	287	amelioration
+10	ace	310	opioid-discontinuation
+0	src	16	opioids are used continuously
+1	src	50	>3 days
+2	src	66	<1 week
+3	src	75	clinicians
+4	src	99	reducing
+5	src	112	daily dosage
+6	src	128	50%
+7	src	136	2 days
+9	src	146	ameliorate
+8	src	157	withdrawal symptoms
+10	src	182	discontinuing opioids

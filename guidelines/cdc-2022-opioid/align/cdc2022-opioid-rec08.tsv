@@ -1,0 +1,37 @@
+0	ace	2	recommendation
+1	ace	22	category-A-recommendation
+2	ace	58	evidence-type-4-recommendation
+3	ace	96	clinician
+8	ace	113	evaluate
+7	ace	136	opioid-related-harm
+5	ace	166	opioid-initiation
+3	ace	191	clinician
+8	ace	208	evaluate
+7	ace	231	opioid-related-harm
+6	ace	260	periodic-continuation-review
+3	ace	296	clinician
+9	ace	313	discuss
+7	ace	335	opioid-related-harm
+4	ace	362	patient
+3	ace	377	clinician
+12	ace	394	incorporate
+10	ace	408	risk-mitigation-strategy
+11	ace	438	management-plan
+4	ace	461	patient
+13	ace	488	naloxone-dose
+5	src	7	starting
+6	src	20	periodically during continuation
+3	src	72	clinicians
+8	src	90	evaluate
+7	src	108	opioid-related harms
+9	src	133	discuss
+4	src	151	patients
+3	src	161	Clinicians
+4	src	189	patients
+12	src	201	incorporate
+11	src	222	management plan
+10	src	238	strategies to mitigate risk
+13	src	286	naloxone
+0	src	296	recommendation
+1	src	311	category: A
+2	src	324	evidence type: 4

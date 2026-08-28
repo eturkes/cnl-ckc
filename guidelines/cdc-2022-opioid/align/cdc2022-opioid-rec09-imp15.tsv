@@ -1,0 +1,18 @@
+5	ace	5	patient
+0	ace	33	concurrent-opioid-prescriptions
+1	ace	75	combined
+2	ace	84	opioid-dosage
+3	ace	126	consider
+1	ace	139	combined
+2	ace	148	opioid-dosage
+2	ace	172	MME-dosage-determination
+4	ace	208	assess
+6	ace	218	overdose-risk
+5	ace	240	patient
+3	src	0	Consider
+1	src	13	total
+2	src	19	MME/day
+0	src	31	concurrent opioid prescriptions
+4	src	71	assess
+5	src	82	patient
+6	src	92	overdose risk

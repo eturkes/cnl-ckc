@@ -1,0 +1,36 @@
+1	ace	24	patient
+0	ace	37	supervised-setting
+1	ace	64	patient
+4	ace	83	regular-buprenorphine-dosage
+2	ace	135	add
+3	ace	141	short-acting-full-agonist-opioid
+4	ace	181	regular-buprenorphine-dosage
+1	ace	218	patient
+5	ace	234	continue
+4	ace	247	regular-buprenorphine-dosage
+1	ace	284	patient
+6	ace	316	buprenorphine-discontinuation-decision
+1	ace	361	patient
+7	ace	405	close
+1	ace	411	patient
+7	ace	419	monitoring
+1	ace	438	patient
+7	ace	457	monitor
+1	ace	469	patient
+8	ace	484	oversedation
+7	ace	508	monitor
+1	ace	520	patient
+9	ace	534	respiratory-depression
+0	src	3	supervised settings
+2	src	24	adding
+3	src	33	short-acting full agonist opioid
+1	src	73	patient
+4	src	83	regular dosage of buprenorphine
+5	src	133	without discontinuing
+1	src	159	patient
+4	src	169	regular buprenorphine dosage
+6	src	213	decision is made to discontinue buprenorphine
+1	src	309	patient
+7	src	328	monitored closely
+8	src	432	oversedation
+9	src	449	respiratory depression

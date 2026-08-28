@@ -1,0 +1,26 @@
+0	ace	5	patient
+1	ace	13	receives a methadone-treatment
+2	ace	51	opioid-use-disorder
+3	ace	75	requires an additional-opioid
+4	ace	111	severe-acute-pain
+5	ace	163	careful-monitoring
+0	ace	190	patient
+0	ace	204	patient
+1	ace	212	receives a methadone-treatment
+2	ace	250	opioid-use-disorder
+3	ace	274	requires an additional-opioid
+4	ace	310	severe-acute-pain
+7	ace	334	pain-care-clinician-treatment
+6	ace	367	feasible
+0	ace	385	patient
+7	ace	412	pain-care-clinician-treatment
+8	ace	450	opioid-treatment-program-consultation
+0	src	0	Patients
+1	src	9	receiving methadone
+2	src	33	opioid use disorder
+3	src	57	require additional opioids
+4	src	101	severe acute pain
+5	src	140	monitored carefully
+6	src	170	feasible
+7	src	200	treated by a clinician experienced in the treatment of pain
+8	src	263	consultation with their opioid treatment program

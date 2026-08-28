@@ -1,0 +1,15 @@
+0	ace	5	patient
+1	ace	13	receives a buprenorphine-treatment
+2	ace	55	opioid-use-disorder
+3	ace	86	acute-pain
+4	ace	108	clinician
+5	ace	122	consider
+6	ace	133	temporary-buprenorphine-dosing-frequency-increase
+0	ace	191	patient
+0	src	4	patients
+1	src	21	treated with buprenorphine
+2	src	52	opioid use disorder
+3	src	87	acute pain
+4	src	99	clinicians
+5	src	114	consider
+6	src	123	temporarily increasing the buprenorphine dosing frequency

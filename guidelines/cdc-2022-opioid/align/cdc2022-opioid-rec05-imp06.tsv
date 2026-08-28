@@ -1,0 +1,31 @@
+0	ace	5	patient
+2	ace	13	agrees to a lower-opioid-dosage-taper
+1	ace	62	clinician
+4	ace	79	establish
+5	ace	91	continued-opioid-goal
+0	ace	122	patient
+6	ace	141	maximize
+7	ace	152	nonpharmacologic-treatment
+6	ace	190	maximize
+8	ace	201	nonopioid-pharmacologic-treatment
+0	ace	241	patient
+3	ace	249	continues a high-dosage-opioid
+1	ace	291	clinician
+4	ace	308	establish
+5	ace	320	continued-opioid-goal
+0	ace	351	patient
+6	ace	370	maximize
+7	ace	381	nonpharmacologic-treatment
+6	ace	419	maximize
+8	ace	430	nonopioid-pharmacologic-treatment
+0	src	4	patient
+2	src	13	agreeing to taper to lower opioid dosages
+3	src	69	remaining on higher opioid dosages
+1	src	105	clinicians
+4	src	123	establish
+5	src	133	goals
+0	src	148	patient
+5	src	160	continued opioid therapy
+6	src	219	maximize
+7	src	248	nonpharmacologic
+8	src	269	nonopioid pharmacologic treatments

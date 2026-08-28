@@ -1,0 +1,10 @@
+0	ace	5	patient
+1	ace	19	clinical-circumstance
+2	ace	69	individualize
+3	ace	86	opioid-prescription-duration
+0	ace	123	patient
+1	ace	140	clinical-circumstance
+3	src	9	durations
+2	src	29	individualized
+0	src	51	patient
+1	src	61	clinical circumstances

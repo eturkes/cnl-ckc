@@ -1,0 +1,38 @@
+1	ace	5	patient
+2	ace	19	renal-insufficiency
+0	ace	50	clinician
+9	ace	67	heed
+4	ace	75	additional-opioid-caution
+5	ace	128	increase
+5	ace	139	patient-monitoring
+6	ace	185	minimize
+7	ace	197	opioid-risk
+3	ace	245	hepatic-insufficiency
+0	ace	278	clinician
+9	ace	295	heed
+4	ace	303	additional-opioid-caution
+5	ace	356	increase
+5	ace	367	patient-monitoring
+6	ace	413	minimize
+7	ace	425	opioid-risk
+8	ace	474	age
+8	ace	486	age
+8	ace	499	at least
+8	ace	508	65 years
+0	ace	528	clinician
+9	ace	545	heed
+4	ace	553	additional-opioid-caution
+5	ace	606	increase
+5	ace	617	patient-monitoring
+6	ace	663	minimize
+7	ace	675	opioid-risk
+0	src	0	Clinicians
+9	src	18	use
+4	src	22	additional caution
+5	src	45	increased monitoring
+6	src	92	minimize
+7	src	101	risks of opioids
+1	src	133	patients
+2	src	147	renal
+3	src	156	hepatic insufficiency
+8	src	195	aged ≥65 years

@@ -1,0 +1,23 @@
+0	ace	6	opioid-pain-clinical-practice-guideline
+1	ace	51	voluntary-guideline
+0	ace	78	opioid-pain-clinical-practice-guideline
+2	ace	123	recommendation-only-guideline
+0	ace	160	opioid-pain-clinical-practice-guideline
+3	ace	207	support
+5	ace	217	clinical-judgment
+0	ace	242	opioid-pain-clinical-practice-guideline
+4	ace	282	should not supplant
+5	ace	304	clinical-judgment
+0	ace	329	opioid-pain-clinical-practice-guideline
+3	ace	376	support
+6	ace	387	individualized-person-centered-decision
+0	ace	434	opioid-pain-clinical-practice-guideline
+4	ace	474	should not supplant
+6	ace	497	individualized-person-centered-decision
+1	src	5	voluntary
+0	src	15	clinical practice guideline
+2	src	52	recommendations only
+3	src	92	support
+4	src	101	not supplant
+5	src	115	clinical judgment
+6	src	137	individualized, person-centered decision-making

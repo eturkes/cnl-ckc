@@ -1,0 +1,36 @@
+1	ace	5	patient
+11	ace	13	receives
+4	ace	24	prescribed-opioid
+6	ace	50	additional-prescriber
+0	ace	83	clinician
+3	ace	100	review
+2	ace	109	state-PDMP-record
+10	ace	154	assess
+7	ace	163	combined-opioid-dosage
+9	ace	193	overdose-risk
+10	ace	218	assess
+8	ace	227	medication-combination
+9	ace	257	overdose-risk
+11	ace	285	receives
+5	ace	297	other-controlled-medication
+6	ace	333	additional-prescriber
+0	ace	366	clinician
+3	ace	383	review
+2	ace	392	state-PDMP-record
+10	ace	437	assess
+8	ace	446	medication-combination
+9	ace	476	overdose-risk
+0	src	0	Clinicians
+3	src	18	review
+2	src	25	PDMP data
+4	src	52	prescription opioids
+5	src	77	other controlled medications
+1	src	106	patients
+11	src	120	received
+6	src	134	additional prescribers
+10	src	160	determine
+11	src	191	receiving
+7	src	201	total opioid dosages
+8	src	225	combinations
+8	src	245	opioids combined with benzodiazepines
+9	src	308	risk for overdose

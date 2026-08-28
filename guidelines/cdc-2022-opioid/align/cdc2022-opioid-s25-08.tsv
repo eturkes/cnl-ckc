@@ -1,0 +1,14 @@
+0	ace	27	medication
+1	ace	89	patient-specific-medication-assessment
+3	ace	174	use
+0	ace	182	medication
+0	ace	237	medication
+2	ace	297	expected-benefit-over-risk-determination
+0	ace	346	medication
+3	ace	387	use
+0	ace	395	medication
+0	src	15	medications
+3	src	37	used
+1	src	53	assessment
+2	src	68	determination that expected benefits outweigh risks
+1	src	133	patient-specific factors

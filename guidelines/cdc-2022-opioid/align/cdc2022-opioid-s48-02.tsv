@@ -1,0 +1,23 @@
+0	ace	5	patient
+1	ace	19	older-adult
+2	ace	59	conduct
+2	ace	69	functional-assessment
+0	ace	99	patient
+3	ace	118	assess
+4	ace	127	pain
+5	ace	132	effect
+6	ace	142	function
+0	ace	159	patient
+3	ace	178	assess
+4	ace	187	pain
+5	ace	192	effect
+7	ace	202	independence
+0	ace	223	patient
+2	src	0	Functional assessment
+0	src	49	patients
+1	src	58	aged ≥65 years
+3	src	83	assess
+5	src	90	effects
+4	src	101	pain
+6	src	109	function
+7	src	122	independence

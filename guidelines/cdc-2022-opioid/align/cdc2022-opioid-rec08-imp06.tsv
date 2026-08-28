@@ -1,0 +1,20 @@
+1	ace	23	offer
+2	ace	31	naloxone-dose
+0	ace	50	patient
+0	ace	64	patient
+3	ace	78	naloxone-cost-barrier
+1	ace	128	offer
+2	ace	136	naloxone-dose
+0	ace	157	patient
+0	ace	171	patient
+4	ace	185	naloxone-access-barrier
+1	ace	237	offer
+2	ace	245	naloxone-dose
+0	ace	266	patient
+3	src	34	cost of naloxone
+4	src	55	access for some patients
+0	src	196	patient
+3	src	205	without a way to afford naloxone
+2	src	274	naloxone
+1	src	293	offered
+0	src	304	patient

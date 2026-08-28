@@ -1,0 +1,20 @@
+0	ace	5	clinician
+1	ace	15	sees
+2	ace	22	new-patient
+3	ace	38	receives
+4	ace	50	opioid
+0	ace	66	clinician
+5	ace	83	establish
+6	ace	95	treatment-goal
+5	ace	121	establish
+7	ace	133	functional-goal
+8	ace	155	continued-opioid-therapy
+0	src	0	Clinicians
+1	src	11	seeing
+2	src	18	new patients
+3	src	39	receiving
+4	src	49	opioids
+5	src	64	establish
+6	src	74	treatment goals
+7	src	101	functional goals
+8	src	123	continued opioid therapy

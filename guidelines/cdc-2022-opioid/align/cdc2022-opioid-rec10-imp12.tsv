@@ -1,0 +1,21 @@
+0	ace	6	clinician
+4	ace	33	nonjudgmental
+3	ace	47	unexpected-result
+2	ace	65	discussion
+1	ace	83	patient
+0	ace	98	clinician
+5	ace	115	avoid
+6	ace	123	potentially-stigmatizing-language
+4	ace	166	nonjudgmental
+3	ace	180	unexpected-result
+2	ace	198	discussion
+0	src	0	Clinicians
+2	src	18	discuss
+3	src	26	unexpected results
+1	src	50	patients
+4	src	64	nonjudgmental manner
+5	src	86	avoiding
+6	src	102	potentially stigmatizing language
+5	src	143	avoid
+6	src	183	clean
+6	src	194	dirty

@@ -1,0 +1,25 @@
+0	ace	5	clinician
+1	ace	15	considers
+2	ace	28	opioid-taper
+3	ace	50	pregnancy
+0	ace	69	clinician
+4	ace	96	appropriate-expertise
+5	ace	124	patient
+6	ace	138	withdrawal
+3	ace	158	pregnancy
+6	ace	177	withdrawal
+7	ace	192	harm
+5	ace	201	patient
+7	ace	217	harm
+8	ace	224	fetus
+0	src	0	Clinicians
+4	src	25	appropriate expertise
+1	src	50	considering
+2	src	62	tapering opioids
+3	src	86	pregnancy
+7	src	116	risks
+3	src	129	pregnant
+5	src	138	patient
+8	src	154	fetus
+5	src	167	patient
+6	src	185	withdrawal

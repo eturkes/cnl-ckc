@@ -1,0 +1,29 @@
+0	ace	6	primary-care-clinician
+2	ace	33	encourage
+3	ace	46	active-care-plan-role
+1	ace	74	patient
+0	ace	89	primary-care-clinician
+4	ace	116	support
+5	ace	126	beneficial-activity-engagement
+1	ace	163	patient
+0	ace	178	primary-care-clinician
+6	ace	205	provide
+8	ace	215	relaxation-technique
+7	ace	236	education
+1	ace	251	patient
+0	ace	266	primary-care-clinician
+6	ace	293	provide
+9	ace	303	coping-strategy
+7	ace	319	education
+1	ace	334	patient
+0	src	13	primary care clinicians
+2	src	206	encouraging
+1	src	218	patients
+3	src	238	active role in the care plan
+4	src	268	supporting
+1	src	279	patients
+5	src	291	engaging in activities such as exercise that are typically beneficial
+6	src	441	providing
+7	src	451	education
+8	src	464	relaxation techniques
+9	src	490	coping strategies

@@ -1,0 +1,22 @@
+0	ace	6	clinician
+2	ace	23	minimize
+3	ace	35	inequitable-toxicology-testing-cost-burden
+4	ace	84	patient
+5	ace	103	limit
+6	ace	111	specific-toxicology-testing
+7	ace	145	necessary-situation
+1	ace	172	health-system
+2	ace	193	minimize
+3	ace	205	inequitable-toxicology-testing-cost-burden
+4	ace	254	patient
+5	ace	273	limit
+6	ace	281	specific-toxicology-testing
+7	ace	315	necessary-situation
+0	src	0	Clinicians
+1	src	15	health systems
+2	src	42	minimize
+3	src	51	inequitable cost burdens
+4	src	80	patients
+5	src	93	limit
+6	src	99	specific testing
+7	src	119	situations when it is necessary

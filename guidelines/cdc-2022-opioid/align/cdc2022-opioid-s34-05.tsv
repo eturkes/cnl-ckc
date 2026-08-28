@@ -1,0 +1,16 @@
+0	ace	6	clinician
+1	ace	23	consider
+2	ace	34	cumulative-nonopioid-medication-dosage
+3	ace	83	opioid-therapy
+4	ace	118	decreased-medication-clearance
+0	ace	160	clinician
+1	ace	177	consider
+5	ace	188	toxic-drug-accumulation
+3	ace	222	opioid-therapy
+3	src	15	opioids
+0	src	24	clinicians
+1	src	42	consider
+2	src	51	cumulative dosages of other medications
+3	src	138	opioids
+4	src	181	decreased clearance of medications
+5	src	232	accumulation of medications to toxic levels

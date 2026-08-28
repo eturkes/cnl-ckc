@@ -1,0 +1,28 @@
+0	ace	3	opioid-continuation
+1	ace	27	initiate
+2	ace	38	long-term-opioid-therapy
+3	ace	83	clinician
+5	ace	110	intentional-benefit-risk-decision
+4	ace	151	patient
+3	ace	168	clinician
+1	ace	189	initiate
+2	ace	200	long-term-opioid-therapy
+3	ace	231	clinician
+6	ace	261	informed-discussion
+4	ace	288	patient
+3	ace	305	clinician
+1	ace	326	initiate
+2	ace	337	long-term-opioid-therapy
+3	ace	368	clinician
+7	ace	393	comprehensive-pain-management
+3	ace	432	clinician
+1	ace	453	initiate
+2	ace	464	long-term-opioid-therapy
+0	src	0	Continuation of opioid therapy
+1	src	61	initiation
+2	src	75	long-term opioid therapy
+5	src	131	intentional decision that benefits are likely to outweigh risks
+6	src	201	informed discussion
+3	src	233	clinician
+4	src	247	patient
+7	src	272	comprehensive pain management

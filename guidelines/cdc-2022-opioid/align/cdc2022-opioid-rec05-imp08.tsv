@@ -1,0 +1,11 @@
+0	ace	5	patient
+2	ace	13	engages in an opioid-taper
+1	ace	51	clinician
+3	ace	79	at-least-monthly-follow-up
+0	ace	115	patient
+1	src	0	Clinicians
+3	src	18	follow up
+3	src	28	frequently
+3	src	40	at least monthly
+0	src	63	patients
+2	src	72	engaging in opioid tapering

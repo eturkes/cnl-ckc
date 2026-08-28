@@ -1,0 +1,36 @@
+4	ace	5	patient
+5	ace	20	opioid-use-disorder
+0	ace	51	clinician
+1	ace	68	offer
+2	ace	76	naloxone-dose
+4	ace	97	patient
+3	ace	126	naloxone-overdose-reversal-training
+4	ace	169	patient
+4	ace	183	patient
+5	ace	198	opioid-use-disorder
+0	ace	229	clinician
+1	ace	246	offer
+2	ace	254	naloxone-dose
+4	ace	273	patient
+6	ace	281	household-member
+3	ace	319	naloxone-overdose-reversal-training
+4	ace	360	patient
+6	ace	368	household-member
+4	ace	391	patient
+5	ace	406	opioid-use-disorder
+0	ace	437	clinician
+1	ace	454	offer
+2	ace	462	naloxone-dose
+4	ace	481	patient
+7	ace	489	significant-other
+3	ace	528	naloxone-overdose-reversal-training
+4	ace	569	patient
+7	ace	577	significant-other
+0	src	0	Clinicians
+1	src	23	offer
+2	src	29	naloxone
+3	src	42	training on proper use for overdose reversal
+4	src	90	patients
+5	src	104	opioid use disorder
+6	src	137	household members
+7	src	159	significant others

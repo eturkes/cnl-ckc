@@ -1,0 +1,22 @@
+0	ace	6	clinician
+4	ace	20	facilitate
+5	ace	33	naloxone-access
+3	ace	55	patient
+1	ace	70	health-system
+4	ace	88	facilitate
+5	ace	101	naloxone-access
+3	ace	123	patient
+2	ace	138	payer
+4	ace	148	facilitate
+5	ace	161	naloxone-access
+3	ace	183	patient
+6	ace	198	naloxone-dose
+7	ace	217	potentially-lifesaving-treatment
+0	src	13	clinicians
+1	src	25	health systems
+2	src	45	payers
+4	src	56	work to ensure
+3	src	71	patients
+5	src	84	obtain
+6	src	91	naloxone
+7	src	103	potentially lifesaving treatment

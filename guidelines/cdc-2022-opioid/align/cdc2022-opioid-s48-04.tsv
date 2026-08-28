@@ -1,0 +1,18 @@
+0	ace	5	clinician
+5	ace	27	new-drug-prescription
+0	ace	58	clinician
+1	ace	75	review
+2	ace	84	current-medication
+5	ace	114	new-drug-prescription
+1	ace	147	review
+3	ace	157	over-the-counter-drug
+5	ace	190	new-drug-prescription
+1	ace	223	review
+4	ace	232	natural-remedy
+5	ace	258	new-drug-prescription
+0	src	0	Clinicians
+1	src	18	review
+2	src	29	current medications
+3	src	50	over-the-counter drugs
+4	src	78	natural remedies
+5	src	102	prescribing any new drugs

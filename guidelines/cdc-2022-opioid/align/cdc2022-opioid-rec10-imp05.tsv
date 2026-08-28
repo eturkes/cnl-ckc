@@ -1,0 +1,21 @@
+4	ace	5	patient
+2	ace	19	toxicology-screening-result
+0	ace	58	clinician
+1	ace	75	consider
+2	ace	88	toxicology-screening-result
+3	ace	124	other-clinical-information
+4	ace	159	patient
+6	ace	173	potential-toxicology-screening-limitation
+7	ace	218	addressable
+0	ace	241	clinician
+1	ace	258	consider
+5	ace	269	toxicology-screening
+0	src	0	Clinicians
+1	src	18	consider
+2	src	27	toxicology screening results
+3	src	102	other clinical information
+4	src	138	patients
+1	src	151	consider
+5	src	160	toxicology screening
+6	src	194	potential limitations
+7	src	223	addressed

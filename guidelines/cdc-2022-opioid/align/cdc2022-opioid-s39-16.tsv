@@ -1,0 +1,10 @@
+1	ace	32	mild-to-moderate
+3	ace	49	full-agonist-opioid
+2	ace	69	withdrawal
+0	ace	86	patient
+4	ace	103	first-buprenorphine-dose
+0	src	0	Patients
+1	src	22	mild to moderate
+2	src	39	withdrawal
+3	src	55	full agonist opioids
+4	src	87	first buprenorphine dose

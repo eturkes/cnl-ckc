@@ -1,0 +1,33 @@
+0	ace	2	recommendation
+1	ace	22	category-B
+0	ace	33	recommendation
+2	ace	58	evidence-type-3
+0	ace	74	recommendation
+3	ace	95	clinician
+5	ace	105	prescribes
+6	ace	119	opioid-pain-medication
+7	ace	149	benzodiazepine
+3	ace	173	clinician
+4	ace	197	particular-caution
+3	ace	222	clinician
+5	ace	232	prescribes
+11	ace	246	opioid
+12	ace	260	central-nervous-system-depressant
+3	ace	303	clinician
+8	ace	320	weigh
+9	ace	328	benefit
+10	ace	346	risk
+3	src	0	Clinicians
+4	src	22	particular caution
+5	src	46	prescribing
+6	src	58	opioid pain medication
+7	src	85	benzodiazepines
+9	src	135	benefits
+8	src	144	outweigh
+10	src	153	risks
+5	src	173	prescribing
+11	src	188	opioids
+12	src	206	central nervous system depressants
+0	src	242	recommendation
+1	src	257	category: B
+2	src	270	evidence type: 3

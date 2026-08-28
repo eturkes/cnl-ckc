@@ -1,0 +1,21 @@
+0	ace	6	clinician
+3	ace	23	provide
+2	ace	34	opioid-other-drug-overdose-risk-counseling
+1	ace	82	patient
+0	ace	97	clinician
+3	ace	114	provide
+2	ace	125	opioid-alcohol-overdose-risk-counseling
+1	ace	170	patient
+1	ace	184	patient
+4	ace	198	substance-use-disorder-treatment-need
+0	ace	247	clinician
+5	ace	264	ensure
+6	ace	274	effective-substance-use-disorder-treatment
+1	ace	325	patient
+0	src	0	Clinicians
+3	src	18	provide
+2	src	26	specific counseling on increased risks for overdose when opioids are combined with other drugs or alcohol
+5	src	159	ensure
+1	src	171	patients
+6	src	204	effective treatment for substance use disorders
+4	src	252	when needed

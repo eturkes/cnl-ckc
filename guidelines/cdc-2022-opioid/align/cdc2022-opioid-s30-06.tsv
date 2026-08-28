@@ -1,0 +1,26 @@
+2	ace	5	patient
+3	ace	19	single-modality-therapy-nonresponse
+1	ace	83	consider
+0	ace	94	multimodal-therapy
+2	ace	121	patient
+4	ace	153	individualize
+0	ace	169	multimodal-therapy
+5	ace	195	patient-need
+4	ace	232	individualize
+0	ace	248	multimodal-therapy
+6	ace	274	treatment-cost
+4	ace	313	individualize
+0	ace	329	multimodal-therapy
+7	ace	355	treatment-convenience
+4	ace	401	individualize
+0	ace	417	multimodal-therapy
+8	ace	444	individual-factor
+0	src	0	Multimodal therapies
+1	src	31	considered
+2	src	46	patients
+3	src	55	not responding to single-modality therapy
+4	src	125	tailored
+5	src	147	patient needs
+6	src	162	cost
+7	src	168	convenience
+8	src	191	individual factors

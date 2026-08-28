@@ -1,0 +1,36 @@
+0	ace	5	patient
+2	ace	19	potentially-hazardous-job
+3	ace	61	receives an opioid
+1	ace	91	clinician
+8	ace	108	assess
+9	ace	117	safe-hazardous-task-performance-ability
+2	ace	193	potentially-hazardous-job
+4	ace	246	sleep-impairing-medication
+1	ace	284	clinician
+8	ace	301	assess
+9	ace	310	safe-hazardous-task-performance-ability
+2	ace	386	potentially-hazardous-job
+5	ace	439	cognition-impairing-medication
+1	ace	481	clinician
+8	ace	498	assess
+9	ace	507	safe-hazardous-task-performance-ability
+2	ace	583	potentially-hazardous-job
+6	ace	636	balance-impairing-medication
+1	ace	676	clinician
+8	ace	693	assess
+9	ace	702	safe-hazardous-task-performance-ability
+2	ace	778	potentially-hazardous-job
+7	ace	831	coordination-impairing-medication
+1	ace	876	clinician
+8	ace	893	assess
+9	ace	902	safe-hazardous-task-performance-ability
+0	src	4	patients
+2	src	18	jobs that involve potentially hazardous tasks
+3	src	76	receiving opioids
+4	src	103	medications that can negatively affect sleep
+5	src	149	cognition
+6	src	160	balance
+7	src	172	coordination
+1	src	186	clinicians
+8	src	204	assess
+9	src	221	abilities to safely perform the potentially hazardous tasks

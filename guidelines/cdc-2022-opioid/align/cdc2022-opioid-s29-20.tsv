@@ -1,0 +1,13 @@
+0	ace	23	discuss
+1	ace	33	longitudinal-medication-use-reassessment
+2	ace	81	patient
+3	ace	95	caregiver
+4	ace	120	appropriate
+0	ace	160	discuss
+1	ace	170	longitudinal-medication-use-reassessment
+3	ace	218	caregiver
+0	src	0	Discuss
+1	src	26	reassessing medication use over time
+2	src	77	patient
+3	src	89	caregiver
+4	src	103	appropriate

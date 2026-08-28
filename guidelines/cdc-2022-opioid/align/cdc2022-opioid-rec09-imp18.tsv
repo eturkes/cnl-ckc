@@ -1,0 +1,14 @@
+3	ace	25	patient
+0	ace	40	other-clinician
+1	ace	56	prescribes
+2	ace	69	controlled-substance
+3	ace	98	patient
+4	ace	132	discuss
+5	ace	142	safety-concern
+0	ace	166	other-clinician
+4	src	0	Discuss
+5	src	8	safety concerns
+0	src	29	other clinicians
+1	src	54	prescribing
+2	src	66	controlled substances
+3	src	96	patient

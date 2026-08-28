@@ -1,0 +1,25 @@
+0	ace	5	patient
+2	ace	20	overdose-risk
+1	ace	41	total-daily-dosage
+3	ace	88	discuss
+2	ace	100	overdose-risk
+0	ace	123	patient
+4	ace	149	taper-benefit-over-risk-determination
+0	ace	196	patient
+5	ace	215	offer
+6	ace	223	naloxone-dose
+0	ace	244	patient
+0	src	5	patient
+1	src	38	total daily dosages
+2	src	86	risk for overdose
+3	src	105	discuss
+2	src	113	safety concerns
+0	src	138	patient
+4	src	147	consider
+4	src	159	collaboration
+0	src	182	patient
+4	src	205	benefits of tapering
+4	src	226	outweigh
+4	src	235	risks of tapering
+5	src	281	offer
+6	src	287	naloxone

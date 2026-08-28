@@ -1,0 +1,50 @@
+0	ace	2	recommendation
+1	ace	22	category-A
+2	ace	58	evidence-type-4
+3	ace	95	clinician
+4	ace	105	starts
+5	ace	115	opioid-therapy
+6	ace	137	acute-pain
+3	ace	157	clinician
+9	ace	174	prescribe
+10	ace	187	immediate-release-opioid
+11	ace	223	avoid
+12	ace	232	extended-release-opioid
+11	ace	267	avoid
+13	ace	275	long-acting-opioid
+3	ace	300	clinician
+4	ace	310	starts
+5	ace	320	opioid-therapy
+7	ace	341	subacute-pain
+3	ace	364	clinician
+9	ace	381	prescribe
+10	ace	394	immediate-release-opioid
+11	ace	430	avoid
+12	ace	439	extended-release-opioid
+11	ace	474	avoid
+13	ace	482	long-acting-opioid
+3	ace	507	clinician
+4	ace	517	starts
+5	ace	527	opioid-therapy
+8	ace	548	chronic-pain
+3	ace	570	clinician
+9	ace	587	prescribe
+10	ace	600	immediate-release-opioid
+11	ace	636	avoid
+12	ace	645	extended-release-opioid
+11	ace	680	avoid
+13	ace	688	long-acting-opioid
+4	src	5	starting
+5	src	14	opioid therapy
+6	src	33	acute
+7	src	40	subacute
+8	src	53	chronic pain
+3	src	67	clinicians
+9	src	85	prescribe
+10	src	95	immediate-release opioids
+11	src	121	instead of
+12	src	132	extended-release
+13	src	153	long-acting
+0	src	182	recommendation
+1	src	197	category: A
+2	src	210	evidence type: 4

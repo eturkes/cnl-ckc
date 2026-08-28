@@ -1,0 +1,20 @@
+0	ace	6	clinician
+1	ace	23	establish
+2	ace	35	function-improvement
+3	ace	60	pain-reduction
+1	ace	75	commitment
+4	ace	93	patient
+5	ace	111	opioid-taper
+0	ace	131	clinician
+1	ace	148	establish
+2	ace	160	function-improvement
+3	ace	185	pain-reduction
+1	ace	200	commitment
+4	ace	218	patient
+5	ace	235	continued-opioid-therapy
+0	src	0	Clinicians
+1	src	18	commit
+4	src	41	patients
+2	src	53	improve function
+3	src	74	decrease pain
+5	src	89	whether or not opioids are tapered

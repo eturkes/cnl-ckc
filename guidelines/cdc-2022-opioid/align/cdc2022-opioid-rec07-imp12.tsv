@@ -1,0 +1,36 @@
+0	ace	5	clinician
+2	ace	26	follow-up
+1	ace	43	patient
+0	ace	60	clinician
+3	ace	77	review
+4	ace	86	patient-perspective
+3	ace	134	review
+5	ace	143	patient-goal
+8	ace	184	determine
+6	ace	196	continued-opioid-goal-attainment
+8	ace	256	assess
+7	ace	265	sustained-pain-improvement
+8	ace	319	assess
+7	ace	328	sustained-function-improvement
+8	ace	386	assess
+9	ace	395	common-opioid-adverse-event
+8	ace	450	assess
+10	ace	459	serious-opioid-adverse-event
+8	ace	515	assess
+11	ace	524	serious-opioid-adverse-event-warning-sign
+8	ace	593	assess
+12	ace	603	opioid-use-disorder-sign
+2	src	3	follow-up
+0	src	14	clinicians
+3	src	32	review
+4	src	39	patient perspectives
+5	src	64	goals
+8	src	71	determine
+6	src	89	opioids continue to meet treatment goals
+7	src	141	sustained improvement in pain and function
+8	src	189	determine
+1	src	211	patient
+9	src	235	common
+10	src	245	serious adverse events
+11	src	271	early warning signs of serious adverse events
+12	src	324	signs of opioid use disorder

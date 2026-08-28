@@ -1,0 +1,48 @@
+0	ace	6	opioid-pain-clinical-practice-guideline
+1	ace	51	clinical-tool
+0	ace	72	opioid-pain-clinical-practice-guideline
+2	ace	129	clinician-patient-communication
+0	ace	168	opioid-pain-clinical-practice-guideline
+3	ace	215	support
+4	ace	226	informed-person-centered-pain-care-decision
+0	ace	277	opioid-pain-clinical-practice-guideline
+5	ace	330	primary-care-clinician
+0	ace	360	opioid-pain-clinical-practice-guideline
+6	ace	413	pain-care-clinician
+0	ace	440	opioid-pain-clinical-practice-guideline
+7	ace	498	adult-outpatient
+8	ace	515	acute-pain-under-one-month
+0	ace	549	opioid-pain-clinical-practice-guideline
+7	ace	607	adult-outpatient
+9	ace	624	subacute-pain-one-to-three-months
+0	ace	665	opioid-pain-clinical-practice-guideline
+7	ace	723	adult-outpatient
+10	ace	740	chronic-pain-over-three-months
+0	ace	778	opioid-pain-clinical-practice-guideline
+11	ace	823	flexible-guideline
+0	ace	849	opioid-pain-clinical-practice-guideline
+12	ace	896	support
+13	ace	906	person-centered-decision
+14	ace	955	consider
+15	ace	967	expected-health-outcome
+13	ace	1000	person-centered-decision
+14	ace	1049	consider
+16	ace	1060	well-being
+13	ace	1080	person-centered-decision
+0	src	5	clinical practice guideline
+1	src	38	clinical tool
+2	src	63	communication between clinicians and patients
+3	src	113	empower them to make
+4	src	134	informed, person-centered decisions related to pain care
+5	src	214	primary care clinicians
+6	src	242	other clinicians providing pain care
+7	src	283	outpatients aged ≥18 years
+8	src	315	acute pain (duration of <1 month)
+9	src	350	subacute pain (duration of 1–3 months)
+10	src	393	chronic pain (duration of >3 months)
+11	src	450	flexible
+12	src	462	enable
+13	src	469	person-centered decision-making
+14	src	502	taking into account
+15	src	534	expected health outcomes
+16	src	563	well-being

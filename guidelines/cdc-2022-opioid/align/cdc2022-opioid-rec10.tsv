@@ -1,0 +1,47 @@
+0	ace	2	recommendation
+1	ace	22	category-B
+0	ace	33	recommendation
+2	ace	58	evidence-type-4
+0	ace	74	recommendation
+7	ace	95	clinician
+3	ace	105	prescribes
+4	ace	119	opioid
+5	ace	132	subacute-pain
+7	ace	155	clinician
+8	ace	172	consider
+9	ace	183	testing-benefit
+8	ace	210	consider
+10	ace	221	testing-risk
+7	ace	240	clinician
+3	ace	250	prescribes
+4	ace	264	opioid
+6	ace	277	chronic-pain
+7	ace	299	clinician
+8	ace	316	consider
+9	ace	327	testing-benefit
+8	ace	354	consider
+10	ace	365	testing-risk
+11	ace	381	toxicology-testing
+12	ace	404	assess
+13	ace	413	prescribed-medication
+12	ace	443	assess
+14	ace	452	prescribed-controlled-substance
+12	ace	492	assess
+14	ace	501	nonprescribed-controlled-substance
+3	src	5	prescribing
+4	src	17	opioids
+5	src	29	subacute
+6	src	41	chronic pain
+7	src	55	clinicians
+8	src	73	consider
+9	src	86	benefits
+10	src	99	risks
+11	src	108	toxicology testing
+12	src	130	assess
+13	src	141	prescribed medications
+14	src	175	other prescribed
+14	src	196	nonprescribed
+14	src	210	controlled substances
+0	src	233	recommendation
+1	src	248	category: B
+2	src	261	evidence type: 4

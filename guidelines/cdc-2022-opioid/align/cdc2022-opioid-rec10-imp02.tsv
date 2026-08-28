@@ -1,0 +1,10 @@
+1	ace	5	patient
+3	ace	19	toxicology-test-result
+0	ace	53	clinician
+2	ace	78	patient-dismissal-from-care
+1	ace	114	patient
+0	src	0	Clinicians
+2	src	22	dismiss
+1	src	30	patients
+2	src	44	care
+3	src	67	toxicology test result

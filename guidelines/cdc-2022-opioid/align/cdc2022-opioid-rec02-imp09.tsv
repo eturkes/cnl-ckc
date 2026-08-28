@@ -1,0 +1,22 @@
+0	ace	5	patient
+1	ace	19	chronic-low-back-pain
+2	ace	47	nonpharmacologic-approach
+3	ace	73	does not improve
+1	ace	94	chronic-low-back-pain
+0	ace	124	patient
+4	ace	148	contraindication
+5	ace	176	clinician
+6	ace	190	consider
+7	ace	202	NSAID
+6	ace	216	consider
+8	ace	227	duloxetine
+0	src	5	patients
+1	src	19	chronic low back pain
+3	src	53	insufficient response
+2	src	78	nonpharmacologic approaches
+5	src	124	clinicians
+6	src	139	consider
+7	src	148	NSAIDs
+8	src	158	duloxetine
+0	src	173	patients
+4	src	190	contraindications

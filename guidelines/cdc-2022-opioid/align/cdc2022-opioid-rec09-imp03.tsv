@@ -1,0 +1,19 @@
+0	ace	24	long-term-opioid-therapy
+4	ace	79	initial-opioid-prescription
+2	ace	149	review
+1	ace	158	state-PDMP-record
+3	ace	176	before
+4	ace	187	initial-opioid-prescription
+0	ace	274	long-term-opioid-therapy
+1	ace	321	state-PDMP-record
+2	ace	366	review
+1	ace	377	state-PDMP-record
+5	ace	402	3 months
+2	ace	437	review
+1	ace	448	state-PDMP-record
+0	src	21	long-term opioid therapy
+1	src	47	PDMP data
+2	src	67	reviewed
+3	src	76	before
+4	src	86	initial opioid prescription
+5	src	129	3 months

@@ -1,0 +1,15 @@
+2	ace	23	monitor
+1	ace	33	longitudinal
+0	ace	54	progress
+2	ace	79	monitor
+1	ace	90	longitudinal
+0	ace	111	progress
+4	ace	146	adjust
+3	ace	155	treatment-protocol
+1	ace	181	longitudinal
+0	ace	202	progress
+0	src	0	Progress
+2	src	19	monitored
+1	src	29	over time
+3	src	43	treatment protocols
+4	src	63	adjusted

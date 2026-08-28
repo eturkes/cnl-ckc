@@ -1,0 +1,26 @@
+0	ace	6	clinician
+2	ace	23	ask
+1	ace	29	patient
+3	ace	45	continued-opioid-preference
+1	ace	79	patient
+4	ace	94	opioid-pain-effect
+1	ace	121	patient
+5	ace	136	opioid-function-effect
+1	ace	167	patient
+6	ace	182	opioid-adverse-effect
+0	ace	215	clinician
+7	ace	232	compare
+4	ace	244	opioid-pain-effect
+6	ace	272	opioid-adverse-effect
+7	ace	305	compare
+5	ace	317	opioid-function-effect
+6	ace	349	opioid-adverse-effect
+0	src	0	Clinicians
+2	src	18	ask
+1	src	22	patients
+3	src	43	preferences for continuing opioids
+7	src	79	considering
+4	src	97	effects on pain
+5	src	117	function
+7	src	126	relative to
+6	src	142	adverse effects

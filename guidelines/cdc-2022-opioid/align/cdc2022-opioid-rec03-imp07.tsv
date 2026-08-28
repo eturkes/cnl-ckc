@@ -1,0 +1,46 @@
+0	ace	5	clinician
+1	ace	24	understand
+2	ace	37	methadone-risk-profile
+0	ace	69	clinician
+9	ace	90	consider
+10	ace	101	methadone-treatment
+11	ace	127	pain
+0	ace	138	clinician
+3	ace	157	prepare
+4	ace	167	patient-education
+0	ace	194	clinician
+9	ace	215	consider
+10	ace	226	methadone-treatment
+11	ace	252	pain
+0	ace	263	clinician
+3	ace	282	prepare
+5	ace	292	patient-monitoring
+0	ace	320	clinician
+9	ace	341	consider
+10	ace	352	methadone-treatment
+11	ace	378	pain
+0	ace	389	clinician
+6	ace	408	assess
+7	ace	417	QT-prolongation-risk
+0	ace	447	clinician
+9	ace	468	consider
+10	ace	479	methadone-treatment
+11	ace	505	pain
+0	ace	516	clinician
+8	ace	547	electrocardiographic-monitoring
+0	ace	588	clinician
+9	ace	609	consider
+10	ace	620	methadone-treatment
+11	ace	646	pain
+0	src	5	clinicians
+1	src	24	familiar
+2	src	38	methadone’s unique risk profile
+3	src	82	prepared
+4	src	94	educate
+5	src	106	closely monitor their patients
+6	src	148	assessing
+7	src	158	risk for QT prolongation
+8	src	199	electrocardiographic monitoring
+9	src	239	consider
+10	src	248	prescribing methadone
+11	src	274	pain

@@ -1,0 +1,33 @@
+0	ace	6	clinician
+1	ace	23	ask
+2	ace	29	patient
+3	ace	45	common-opioid-adverse-effect
+0	ace	81	clinician
+1	ace	98	ask
+2	ace	104	patient
+6	ace	121	overdose
+5	ace	130	warning-sign
+0	ace	150	clinician
+4	ace	167	assess
+6	ace	177	overdose
+5	ace	186	warning-sign
+2	ace	205	patient
+0	ace	220	clinician
+1	ace	237	ask
+2	ace	243	patient
+7	ace	260	opioid-use-disorder
+5	ace	280	warning-sign
+0	ace	300	clinician
+4	ace	317	assess
+7	ace	327	opioid-use-disorder
+5	ace	347	warning-sign
+2	ace	366	patient
+0	src	0	Clinicians
+1	src	23	ask
+2	src	27	patients
+3	src	42	common adverse effects
+1	src	135	ask
+4	src	149	assess
+5	src	182	early warning signs
+6	src	236	overdose
+7	src	283	opioid use disorder

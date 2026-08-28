@@ -1,0 +1,22 @@
+0	ace	5	clinician
+3	ace	24	consider
+4	ace	36	exit-strategy
+1	ace	57	patient
+0	ace	74	clinician
+5	ace	95	initiate
+2	ace	107	opioid-therapy
+2	ace	129	opioid-therapy
+6	ace	147	unsuccessful
+0	ace	171	clinician
+7	ace	188	use
+4	ace	195	exit-strategy
+1	ace	216	patient
+2	src	0	Opioid therapy
+5	src	29	initiated
+3	src	47	consideration
+0	src	68	clinician
+1	src	82	patient
+4	src	96	exit strategy
+7	src	116	used
+2	src	124	opioid therapy
+6	src	142	unsuccessful

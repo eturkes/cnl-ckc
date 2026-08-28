@@ -1,0 +1,17 @@
+1	ace	19	depression
+0	ace	41	clinician
+4	ace	58	optimize
+1	ace	69	depression-treatment
+2	ace	127	anxiety
+0	ace	146	clinician
+4	ace	163	optimize
+2	ace	175	anxiety-treatment
+3	ace	229	psychological-comorbidity
+0	ace	266	clinician
+4	ace	283	optimize
+3	ace	294	psychological-comorbidity-treatment
+0	src	0	Clinicians
+1	src	44	depression
+2	src	56	anxiety
+3	src	74	psychological comorbidities
+4	src	105	optimized

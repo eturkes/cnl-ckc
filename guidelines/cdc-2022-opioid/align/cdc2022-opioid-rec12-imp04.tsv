@@ -1,0 +1,21 @@
+1	ace	5	patient
+3	ace	20	opioid-use-disorder
+0	ace	51	clinician
+2	ace	82	patient-dismissal-from-care
+1	ace	118	patient
+1	ace	132	patient
+3	ace	147	opioid-use-disorder
+0	ace	173	clinician
+2	ace	194	patient-dismissal-from-care
+1	ace	230	patient
+2	ace	247	patient-dismissal-from-care
+4	ace	279	harm
+5	ace	286	patient-safety
+0	src	0	Clinicians
+2	src	22	dismiss
+1	src	30	patient
+2	src	50	practice
+3	src	70	opioid use disorder
+4	src	107	adversely affect
+1	src	124	patient
+5	src	132	safety

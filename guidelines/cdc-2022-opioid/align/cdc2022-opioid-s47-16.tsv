@@ -1,0 +1,37 @@
+0	ace	6	infant
+1	ace	19	long-term-opioid-exposure
+2	ace	73	observe
+0	ace	85	infant
+3	ace	96	at least 72 hours
+4	ace	125	monitor
+0	ace	137	infant
+5	ace	150	withdrawal-development
+0	ace	180	infant
+1	ace	193	long-term-opioid-exposure
+7	ace	229	buprenorphine-exposure
+2	ace	280	observe
+0	ace	292	infant
+6	ace	303	at least 4 days
+0	ace	326	infant
+1	ace	339	long-term-opioid-exposure
+8	ace	376	ER-LA-opioid-exposure
+2	ace	426	observe
+0	ace	438	infant
+6	ace	449	at least 4 days
+0	ace	472	infant
+1	ace	485	long-term-opioid-exposure
+9	ace	521	methadone-exposure
+2	ace	568	observe
+0	ace	580	infant
+10	ace	591	at least 5 days
+0	src	17	infants
+1	src	30	long-term opioid exposure
+2	src	66	observed
+3	src	79	at least 72 hours
+6	src	98	4–7 days
+7	src	110	exposed to buprenorphine
+8	src	138	ER/LA opioids
+10	src	156	5–7 days
+9	src	168	exposed to methadone
+4	src	193	monitor
+5	src	209	development of withdrawal

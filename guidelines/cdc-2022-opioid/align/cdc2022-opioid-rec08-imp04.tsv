@@ -1,0 +1,24 @@
+0	ace	6	clinical-practice-organization
+2	ace	44	provide
+4	ace	55	overdose-prevention-education
+1	ace	90	patient
+0	ace	105	clinical-practice-organization
+2	ace	143	provide
+5	ace	153	naloxone-use-education
+1	ace	181	patient
+0	ace	196	clinical-practice-organization
+3	ace	234	offer
+4	ace	243	overdose-prevention-education
+6	ace	278	patient-household-member
+0	ace	310	clinical-practice-organization
+3	ace	348	offer
+5	ace	356	naloxone-use-education
+6	ace	384	patient-household-member
+0	src	0	Practices
+2	src	17	educate
+1	src	25	patients
+4	src	37	overdose prevention
+5	src	61	naloxone use
+3	src	78	offer
+2	src	87	provide education
+6	src	108	members of their households

@@ -1,0 +1,24 @@
+0	ace	5	clinician
+5	ace	26	practice-context
+5	ace	51	practice-context
+6	ace	68	uses
+4	ace	75	toxicology-screening-panel
+4	ace	110	toxicology-screening-panel
+3	ace	137	includes
+2	ace	148	drug
+0	ace	162	clinician
+1	ace	179	know
+2	ace	188	drug
+7	ace	204	understand
+8	ace	217	toxicology-result-interpretation
+2	ace	258	drug
+0	src	0	Clinicians
+1	src	21	familiar
+2	src	39	drugs
+3	src	45	included
+4	src	57	toxicology screening panels
+6	src	85	used
+5	src	99	practice
+7	src	119	understand
+8	src	137	interpret results
+2	src	165	drugs

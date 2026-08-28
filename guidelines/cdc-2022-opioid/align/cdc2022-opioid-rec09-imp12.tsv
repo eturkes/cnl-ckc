@@ -1,0 +1,45 @@
+0	ace	5	patient
+2	ace	13	receives
+3	ace	33	overlapping-prescribed-opioids
+4	ace	69	at least 2
+1	ace	80	clinician
+1	ace	99	clinician
+5	ace	110	do not coordinate a care
+0	ace	143	patient
+1	ace	162	clinician
+6	ace	179	discuss
+7	ace	190	increased-respiratory-depression-risk
+0	ace	237	patient
+6	ace	256	discuss
+8	ace	267	increased-overdose-risk
+0	ace	300	patient
+9	ace	319	offer
+10	ace	327	naloxone-dose
+0	ace	348	patient
+0	ace	362	patient
+2	ace	370	receives
+11	ace	382	opioid-combination-risk-increasing-medication
+1	ace	439	clinician
+6	ace	456	discuss
+7	ace	467	increased-respiratory-depression-risk
+0	ace	514	patient
+6	ace	533	discuss
+8	ace	544	increased-overdose-risk
+0	ace	577	patient
+9	ace	596	offer
+10	ace	604	naloxone-dose
+0	ace	625	patient
+6	src	0	Discuss
+7	src	35	increased risk for respiratory depression
+8	src	81	overdose
+0	src	96	patients
+2	src	117	receiving
+3	src	127	overlapping prescription opioids
+4	src	165	multiple
+1	src	174	clinicians
+5	src	193	not coordinating the patient’s care
+0	src	232	patients
+2	src	249	receiving
+11	src	259	medications that increase risk when combined with opioids
+9	src	370	offer
+10	src	376	naloxone

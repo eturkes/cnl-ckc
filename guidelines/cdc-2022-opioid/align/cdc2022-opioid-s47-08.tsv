@@ -1,0 +1,23 @@
+0	ace	15	provides
+1	ace	26	supportive-contraceptive-counseling
+2	ace	67	patient
+3	ace	101	apply
+4	ace	109	patient-centered-reproductive-justice-framework
+5	ace	168	use
+6	ace	174	shared-decision-making
+2	ace	206	patient
+0	ace	230	provides
+1	ace	241	supportive-contraceptive-care
+2	ace	276	patient
+3	ace	310	apply
+4	ace	318	patient-centered-reproductive-justice-framework
+5	ace	377	use
+6	ace	383	shared-decision-making
+2	ace	415	patient
+3	src	12	application
+4	src	29	patient-centered reproductive justice framework
+5	src	81	use
+6	src	90	shared decision-making model
+0	src	151	providing
+1	src	161	supportive contraceptive counseling and care
+2	src	214	patients

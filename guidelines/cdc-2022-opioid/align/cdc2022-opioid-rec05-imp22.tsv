@@ -1,0 +1,37 @@
+0	ace	5	patient
+2	ace	13	cannot taper an opioid
+3	ace	40	continues
+4	ace	52	high-dosage-opioid
+1	ace	82	clinician
+6	ace	99	monitor
+0	ace	111	patient
+7	ace	130	mitigate
+8	ace	142	overdose-risk
+9	ace	164	overdose-education
+10	ace	194	offer
+11	ace	202	naloxone-dose
+0	ace	222	patient
+2	ace	230	cannot taper an opioid
+3	ace	257	continues
+5	ace	269	high-risk-opioid-regimen
+1	ace	305	clinician
+6	ace	322	monitor
+0	ace	334	patient
+7	ace	353	mitigate
+8	ace	365	overdose-risk
+9	ace	387	overdose-education
+10	ace	417	offer
+11	ace	425	naloxone-dose
+1	src	0	Clinicians
+6	src	26	monitor
+0	src	34	patient
+2	src	51	unable to taper
+3	src	75	continue
+4	src	87	high-dose
+5	src	110	high-risk opioid regimens
+0	src	218	patient
+7	src	230	mitigate
+8	src	239	overdose risk
+10	src	263	providing
+9	src	273	overdose education
+11	src	296	naloxone

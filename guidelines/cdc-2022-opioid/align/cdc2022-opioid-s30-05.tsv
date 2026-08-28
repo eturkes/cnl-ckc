@@ -1,0 +1,16 @@
+1	ace	5	multimodal-therapy
+0	ace	27	needed
+1	ace	62	combine
+1	ace	72	medication
+1	ace	90	nonpharmacologic-therapy
+1	ace	118	medication-nonpharmacologic-therapy-combination
+2	ace	170	improve
+3	ace	180	pain
+2	ace	193	improve
+4	ace	203	patient-function
+0	src	5	needed
+1	src	13	medications should ideally be combined with nonpharmacologic therapy
+4	src	113	patients
+2	src	125	improving
+3	src	135	pain
+4	src	144	function

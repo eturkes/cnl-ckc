@@ -1,0 +1,13 @@
+0	ace	19	complex-pain-syndrome
+1	ace	66	consult
+2	ace	76	pain-specialist
+3	ace	98	diagnosis
+0	ace	128	complex-pain-syndrome
+1	ace	175	consult
+2	ace	185	pain-specialist
+4	ace	207	pain-management
+0	src	4	complex pain syndromes
+1	src	28	consultation
+2	src	48	pain specialist
+3	src	97	diagnosis
+4	src	111	management

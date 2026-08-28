@@ -1,0 +1,20 @@
+0	ace	6	pain-duration-definition
+2	ace	37	approximate-guide
+0	ace	62	pain-duration-definition
+1	ace	90	not an absolute-boundary
+0	ace	122	pain-duration-definition
+3	ace	151	facilitate
+6	ace	164	recommendation
+4	ace	179	consideration
+0	ace	200	pain-duration-definition
+3	ace	229	facilitate
+5	ace	242	practical
+6	ace	252	recommendation
+5	ace	267	use
+0	src	6	time-bound definitions
+1	src	33	not meant to be absolute
+2	src	75	approximate guides
+3	src	97	facilitate
+4	src	112	consideration
+5	src	130	practical use
+6	src	151	recommendations

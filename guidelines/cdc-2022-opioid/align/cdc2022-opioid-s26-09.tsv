@@ -1,0 +1,25 @@
+0	ace	5	patient
+1	ace	19	high-pain-related-anxiety
+4	ace	70	refer
+0	ace	80	patient
+5	ace	93	mental-health-specialist
+6	ace	124	treatment
+0	ace	140	patient
+2	ace	154	high-pain-related-fear
+4	ace	202	refer
+0	ace	212	patient
+5	ace	225	mental-health-specialist
+6	ace	256	treatment
+0	ace	272	patient
+3	ace	286	clinically-significant-psychological-distress
+4	ace	357	refer
+0	ace	367	patient
+5	ace	380	mental-health-specialist
+6	ace	411	treatment
+0	src	0	Patients
+1	src	31	anxiety
+2	src	42	fear
+3	src	72	clinically significant psychological distress
+4	src	125	referred
+6	src	138	treatment
+5	src	155	mental health specialist

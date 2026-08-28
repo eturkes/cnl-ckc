@@ -1,0 +1,11 @@
+0	ace	5	patient
+1	ace	19	current
+2	ace	34	dosage
+3	ace	41	overdose-history
+4	ace	94	rapid-taper
+0	ace	114	patient
+4	src	5	rapid tapers
+0	src	92	patients
+3	src	110	experienced overdose
+1	src	140	current
+2	src	148	dosage

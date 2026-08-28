@@ -1,0 +1,13 @@
+0	ace	6	clinician
+2	ace	23	review
+1	ace	32	patient
+3	ace	40	severe-or-uncontrolled-pain-reporting-mechanism
+2	ace	99	review
+4	ace	108	timely-pain-reassessment-and-management-protocol
+2	src	0	Review
+3	src	7	communication mechanisms
+4	src	36	protocols
+1	src	46	patients
+0	src	71	clinicians
+3	src	85	severe or uncontrolled pain
+4	src	132	timely reassessment and management

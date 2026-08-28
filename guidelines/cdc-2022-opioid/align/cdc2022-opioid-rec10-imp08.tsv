@@ -1,0 +1,17 @@
+2	ace	20	use
+1	ace	26	relatively-inexpensive-presumptive-immunoassay-panel
+0	ace	88	limited-toxicology-screening
+1	ace	120	relatively-inexpensive-presumptive-immunoassay-panel
+3	ace	177	assess
+4	ace	187	opiate-class
+3	ace	208	assess
+5	ace	217	benzodiazepine
+3	ace	240	assess
+6	ace	249	nonprescribed-substance
+0	src	0	Limited toxicology screening
+2	src	36	performed
+1	src	53	relatively inexpensive presumptive immunoassay panel
+3	src	111	tests
+4	src	121	opiates as a class
+5	src	141	benzodiazepines as a class
+6	src	181	nonprescribed substances

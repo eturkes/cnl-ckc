@@ -1,0 +1,32 @@
+0	ace	5	clinician
+1	ace	15	considers
+3	ace	28	opioid
+0	ace	44	clinician
+4	ace	61	heed
+4	ace	68	caution
+0	ace	82	clinician
+2	ace	92	prescribes
+3	ace	106	opioid
+0	ace	122	clinician
+4	ace	139	heed
+4	ace	146	caution
+6	ace	161	opioid-risk-stratification-tool
+5	ace	196	available
+7	ace	216	risk-ruling-out
+8	ace	232	ability
+9	ace	246	long-term-opioid-therapy
+0	ace	282	clinician
+10	ace	303	overestimate
+7	ace	320	risk-ruling-out
+8	ace	336	ability
+0	src	0	Clinicians
+4	src	29	caution
+1	src	42	considering
+2	src	57	prescribing
+3	src	69	opioids
+10	src	92	overestimate
+8	src	109	ability
+5	src	120	available
+6	src	130	risk stratification tools
+7	src	159	rule out risks
+9	src	177	long-term opioid therapy

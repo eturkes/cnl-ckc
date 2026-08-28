@@ -1,0 +1,21 @@
+0	ace	6	clinician
+1	ace	23	explain
+3	ace	33	toxicology-testing
+4	ace	52	nondismissal-assurance
+2	ace	80	patient
+0	ace	95	clinician
+1	ace	112	explain
+3	ace	122	toxicology-testing
+5	ace	141	patient-safety-purpose
+2	ace	169	patient
+0	src	0	Clinicians
+1	src	18	explain
+2	src	29	patients
+3	src	43	toxicology testing
+4	src	67	not be used
+4	src	82	dismiss
+2	src	90	patients
+4	src	104	care
+5	src	116	intended
+5	src	128	improve
+5	src	142	safety

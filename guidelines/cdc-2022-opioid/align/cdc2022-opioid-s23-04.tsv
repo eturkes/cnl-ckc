@@ -1,0 +1,25 @@
+0	ace	5	patient
+1	ace	20	opioid-use
+2	ace	59	advise
+4	ace	69	increased-hydration
+0	ace	98	patient
+3	ace	115	constipation-prevention
+0	ace	145	patient
+1	ace	160	opioid-use
+2	ace	199	advise
+5	ace	209	increased-fiber-intake
+0	ace	241	patient
+3	ace	258	constipation-prevention
+0	ace	288	patient
+1	ace	303	opioid-use
+2	ace	342	advise
+6	ace	351	maintained-or-increased-physical-activity
+0	ace	402	patient
+3	ace	419	constipation-prevention
+3	src	3	prevent constipation
+1	src	40	opioid use
+2	src	52	advise
+0	src	59	patients
+4	src	71	increase hydration
+5	src	94	fiber intake
+6	src	114	maintain or increase physical activity

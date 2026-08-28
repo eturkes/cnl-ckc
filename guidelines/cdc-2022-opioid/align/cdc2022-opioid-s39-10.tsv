@@ -1,0 +1,16 @@
+0	ace	27	withdrawal-symptom
+2	ace	74	consider
+1	ace	85	first-line
+5	ace	96	taper
+3	ace	102	slowing
+0	ace	161	withdrawal-symptom
+2	ace	208	consider
+1	ace	219	first-line
+5	ace	230	taper
+4	ace	236	pause
+1	src	4	first approach
+0	src	22	withdrawal symptoms
+2	src	72	consideration
+3	src	89	slowing
+4	src	100	pausing
+5	src	112	taper

@@ -1,0 +1,11 @@
+0	ace	5	clinician
+1	ace	15	decides
+2	ace	25	dosage-increase
+0	ace	50	clinician
+3	ace	74	caution
+4	ace	99	smallest-practical-increase
+1	src	5	decision
+2	src	25	increase dosage
+0	src	42	clinicians
+3	src	64	caution
+4	src	99	smallest practical amount

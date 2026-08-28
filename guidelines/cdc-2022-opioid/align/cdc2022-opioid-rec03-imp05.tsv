@@ -1,0 +1,39 @@
+0	ace	5	patient
+1	ace	19	renal-dysfunction
+3	ace	43	clinician
+4	ace	53	prescribes
+5	ace	67	ER-LA-opioid
+0	ace	87	patient
+3	ace	104	clinician
+6	ace	129	additional-ER-LA-caution
+7	ace	165	consider
+8	ace	176	longer-dosing-interval
+0	ace	205	patient
+2	ace	219	hepatic-dysfunction
+3	ace	245	clinician
+4	ace	255	prescribes
+5	ace	269	ER-LA-opioid
+0	ace	289	patient
+3	ace	306	clinician
+6	ace	331	additional-ER-LA-caution
+7	ace	367	consider
+8	ace	378	longer-dosing-interval
+9	ace	404	decreased-medication-clearance
+10	ace	439	cause
+11	ace	447	toxic-drug-accumulation
+10	ace	479	cause
+12	ace	487	prolonged-drug-persistence
+3	src	0	Clinicians
+6	src	22	additional caution
+5	src	46	ER/LA opioids
+7	src	64	consider
+8	src	75	longer dosing interval
+4	src	103	prescribing
+0	src	118	patients
+1	src	132	renal
+2	src	141	hepatic dysfunction
+9	src	169	decreased clearance of medications
+0	src	216	patients
+10	src	225	can lead to
+11	src	237	accumulation of drugs to toxic levels
+12	src	279	persistence in the body for longer durations

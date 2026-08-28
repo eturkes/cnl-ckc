@@ -1,0 +1,11 @@
+0	ace	5	patient
+1	ace	20	opioid-acetaminophen-combination-prescription
+2	ace	94	advise
+3	ace	104	additional-over-the-counter-acetaminophen-product
+4	ace	154	risk
+0	ace	168	patient
+1	src	3	formulations are prescribed that combine opioids with acetaminophen
+2	src	72	advise
+0	src	79	patients
+4	src	95	risks
+3	src	111	additional over-the-counter products containing acetaminophen

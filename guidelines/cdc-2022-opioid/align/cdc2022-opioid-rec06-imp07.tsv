@@ -1,0 +1,17 @@
+0	ace	5	patient
+1	ace	13	receives an opioid
+3	ace	39	acute-pain
+2	ace	54	continues
+4	ace	82	acute-opioid-evaluation-schedule
+5	ace	122	evaluation-interval
+5	ace	150	evaluation-interval
+5	ace	179	at most 2 weeks
+4	ace	223	use
+4	ace	231	acute-opioid-evaluation-schedule
+0	ace	272	patient
+0	src	0	Patients
+4	src	19	evaluated
+5	src	29	at least every 2 weeks
+2	src	60	continue
+1	src	72	receive opioids
+3	src	92	acute pain

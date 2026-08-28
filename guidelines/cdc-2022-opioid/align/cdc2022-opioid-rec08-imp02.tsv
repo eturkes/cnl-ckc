@@ -1,0 +1,22 @@
+0	ace	5	clinician
+1	ace	15	considers
+2	ace	27	long-term-opioid-therapy-initiation
+0	ace	86	clinician
+3	ace	103	optimize
+4	ace	114	depression-treatment
+3	ace	162	optimize
+5	ace	173	mental-health-condition-treatment
+0	ace	229	clinician
+1	ace	239	considers
+2	ace	251	long-term-opioid-therapy-initiation
+0	ace	310	clinician
+6	ace	324	consult
+7	ace	334	behavioral-health-specialist
+1	src	5	considering
+2	src	17	initiating long-term opioid therapy
+0	src	54	clinicians
+4	src	84	treatment for depression
+5	src	113	other mental health conditions
+3	src	147	optimized
+6	src	158	consulting
+7	src	174	behavioral health specialists

@@ -1,0 +1,10 @@
+1	ace	15	prescribes
+0	ace	29	ER-LA-opioid
+2	ace	68	use
+3	ace	74	predictable-pharmacokinetic-and-pharmacodynamic-ER-LA-opioid
+4	ace	145	unintentional-overdose-risk-minimization
+0	src	8	ER/LA opioid
+1	src	24	prescribed
+2	src	36	using
+3	src	51	predictable pharmacokinetics and pharmacodynamics
+4	src	117	minimize unintentional overdose risk

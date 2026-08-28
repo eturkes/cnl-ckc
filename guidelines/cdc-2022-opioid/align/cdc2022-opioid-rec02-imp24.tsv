@@ -1,0 +1,20 @@
+0	ace	2	patient-education
+2	ace	23	critical
+3	ace	42	opioid-initiation
+1	ace	63	patient-discussion
+2	ace	85	critical
+3	ace	104	opioid-initiation
+4	ace	125	patient-preference
+6	ace	148	inform
+7	ace	157	clinical-decision
+5	ace	178	patient-value
+6	ace	196	inform
+7	ace	205	clinical-decision
+0	src	0	Patient education
+1	src	22	discussion
+3	src	40	starting opioid therapy
+2	src	68	critical
+4	src	85	patient preferences
+5	src	109	values
+6	src	146	inform
+7	src	153	clinical decisions

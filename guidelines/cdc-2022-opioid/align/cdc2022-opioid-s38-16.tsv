@@ -1,0 +1,26 @@
+0	ace	6	clinician
+2	ace	20	acknowledge
+1	ace	34	patient
+3	ace	42	taper-fear
+0	ace	60	clinician
+4	ace	74	ask
+1	ace	80	patient
+5	ace	88	support-question
+0	ace	112	clinician
+6	ace	126	ensure
+7	ace	136	appropriate
+8	ace	152	accessible
+9	ace	163	psychosocial-support
+1	ace	190	patient
+0	src	0	Clinicians
+2	src	15	acknowledge
+1	src	27	patient
+3	src	35	fears about tapering
+4	src	63	ask
+5	src	67	how they can support
+1	src	92	patient
+6	src	111	make sure
+1	src	121	patient
+7	src	138	appropriate
+8	src	154	accessible
+9	src	165	psychosocial support

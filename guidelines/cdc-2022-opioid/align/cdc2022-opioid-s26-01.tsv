@@ -1,0 +1,13 @@
+0	ace	6	active-nonpharmacologic-approach
+1	ace	45	patient-engagement
+2	ace	71	possible
+3	ace	108	use
+0	ace	116	active-nonpharmacologic-approach
+4	ace	170	passive-nonpharmacologic-approach
+5	ace	210	supplementary-role
+0	src	0	Active approaches
+1	src	23	engage the patient
+3	src	52	used
+2	src	62	possible
+5	src	79	supplementary role
+4	src	107	passive approaches

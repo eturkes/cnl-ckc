@@ -1,0 +1,26 @@
+0	ace	6	clinician
+6	ace	23	obtain
+7	ace	32	buprenorphine-prescribing-waiver
+8	ace	72	opioid-use-disorder-treatment
+0	ace	108	clinician
+1	ace	118	prescribes
+2	ace	132	opioid
+3	ace	144	community
+3	ace	162	community
+4	ace	172	does not have
+5	ace	188	sufficient-opioid-use-disorder-treatment-capacity
+0	ace	247	clinician
+6	ace	264	obtain
+7	ace	273	buprenorphine-prescribing-waiver
+8	ace	313	opioid-use-disorder-treatment
+0	src	4	clinicians
+0	src	33	clinicians
+1	src	44	prescribing
+2	src	56	opioids
+3	src	67	communities
+4	src	79	without
+5	src	87	sufficient treatment capacity for opioid use disorder
+6	src	149	obtain
+7	src	158	waiver
+7	src	168	prescribe buprenorphine
+8	src	196	opioid use disorder

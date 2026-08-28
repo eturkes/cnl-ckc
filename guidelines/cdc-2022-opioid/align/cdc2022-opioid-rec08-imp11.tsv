@@ -1,0 +1,24 @@
+0	ace	5	patient
+1	ace	20	opioid-use-disorder
+2	ace	49	pregnancy
+6	ace	87	offer
+3	ace	96	opioid-use-disorder-medication
+7	ace	148	earliest-possible-pregnancy-time
+8	ace	190	patient-and-fetus-harm-prevention
+1	ace	245	opioid-use-disorder
+2	ace	274	pregnancy
+6	ace	309	offer
+4	ace	317	buprenorphine
+1	ace	367	opioid-use-disorder
+2	ace	396	pregnancy
+6	ace	431	offer
+5	ace	439	methadone
+2	src	4	pregnant
+0	src	13	persons
+1	src	26	opioid use disorder
+3	src	47	medication for opioid use disorder
+4	src	83	buprenorphine
+5	src	100	methadone
+6	src	152	offered
+7	src	160	as early as possible in pregnancy
+8	src	197	prevent harms to both the patient and the fetus

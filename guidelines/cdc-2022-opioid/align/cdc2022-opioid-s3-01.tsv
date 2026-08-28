@@ -1,0 +1,17 @@
+0	ace	5	patient
+1	ace	19	pain
+0	ace	33	patient
+2	ace	48	receive
+3	ace	59	appropriate-pain-treatment
+4	ace	110	weigh
+5	ace	118	treatment-benefit
+6	ace	146	treatment-risk
+7	ace	166	patient-circumstance
+0	src	20	persons
+1	src	33	pain
+2	src	38	receive
+3	src	46	appropriate pain treatment
+4	src	79	careful consideration
+5	src	108	benefits
+6	src	121	risks
+7	src	174	patient’s circumstances

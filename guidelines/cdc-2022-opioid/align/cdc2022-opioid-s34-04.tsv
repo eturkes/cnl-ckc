@@ -1,0 +1,26 @@
+1	ace	5	patient
+2	ace	19	older-adult
+0	ace	42	clinician
+4	ace	59	heed
+5	ace	67	additional-opioid-initiation-caution
+1	ace	112	patient
+1	ace	126	patient
+3	ace	140	renal-insufficiency
+0	ace	171	clinician
+4	ace	188	heed
+5	ace	196	additional-opioid-initiation-caution
+1	ace	241	patient
+1	ace	255	patient
+3	ace	269	hepatic-insufficiency
+0	ace	302	clinician
+4	ace	319	heed
+5	ace	327	additional-opioid-initiation-caution
+1	ace	372	patient
+0	src	0	Clinicians
+4	src	18	use
+5	src	22	additional caution when initiating opioids
+1	src	69	patients
+2	src	78	aged ≥65 years
+1	src	97	patients
+3	src	111	renal or hepatic insufficiency
+4	src	146	use

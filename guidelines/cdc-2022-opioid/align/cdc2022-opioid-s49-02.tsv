@@ -1,0 +1,34 @@
+1	ace	15	uses
+0	ace	46	tool
+2	ace	77	supplement
+0	ace	115	tool
+4	ace	127	patient
+3	ace	135	discussion
+2	ace	157	supplement
+0	ace	195	tool
+5	ace	207	family-member
+3	ace	221	discussion
+2	ace	243	supplement
+0	ace	281	tool
+6	ace	293	caregiver
+3	ace	303	discussion
+2	ace	325	supplement
+0	ace	363	tool
+7	ace	375	clinical-record
+2	ace	402	supplement
+0	ace	440	tool
+8	ace	458	PDMP-record
+2	ace	481	supplement
+0	ace	519	tool
+9	ace	531	toxicology-screening-data
+0	src	3	these tools
+1	src	19	used
+0	src	25	they
+2	src	40	supplemented
+3	src	85	discussions
+4	src	102	patients
+5	src	112	family
+6	src	124	caregivers
+7	src	136	clinical records
+8	src	154	PDMP data
+9	src	192	toxicology screening data

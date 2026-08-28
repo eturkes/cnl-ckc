@@ -1,0 +1,26 @@
+0	ace	2	multimodal-and-multidisciplinary-pain-management-approach
+1	ace	63	critical
+0	ace	102	multimodal-and-multidisciplinary-pain-management-approach
+2	ace	184	consider
+3	ace	195	physical-health
+0	ace	220	multimodal-and-multidisciplinary-pain-management-approach
+2	ace	302	consider
+4	ace	313	behavioral-health
+0	ace	340	multimodal-and-multidisciplinary-pain-management-approach
+2	ace	422	consider
+5	ace	433	long-term-services-and-supports
+0	ace	474	multimodal-and-multidisciplinary-pain-management-approach
+2	ace	556	consider
+6	ace	568	expected-health-outcome
+0	ace	601	multimodal-and-multidisciplinary-pain-management-approach
+2	ace	683	consider
+7	ace	694	well-being
+0	ace	714	multimodal-and-multidisciplinary-pain-management-approach
+0	src	2	multimodal and multidisciplinary approach to pain management
+2	src	63	attending to
+3	src	80	physical health
+4	src	97	behavioral health
+5	src	116	long-term services and supports
+6	src	153	expected health outcomes
+7	src	182	well-being
+1	src	211	critical

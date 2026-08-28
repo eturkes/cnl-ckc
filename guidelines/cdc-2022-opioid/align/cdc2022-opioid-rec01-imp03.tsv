@@ -1,0 +1,32 @@
+0	ace	6	clinician
+1	ace	23	prescribe
+3	ace	36	as-needed-opioid
+4	ace	59	moderate-to-severe-pain
+2	ace	94	advise
+3	ace	104	as-needed-opioid
+4	ace	127	moderate-to-severe-pain
+5	ace	170	scheduled-opioid
+6	ace	225	5 hydrocodone-milligrams
+7	ace	263	325 acetaminophen-milligrams
+8	ace	301	1 tablet per 4 hours
+9	ace	382	around-the-clock-opioid-use
+10	ace	416	few-day-period
+0	ace	442	clinician
+11	ace	459	encourage
+13	ace	472	opioid-taper
+12	ace	496	recommend
+13	ace	509	opioid-taper
+0	src	0	Clinicians
+1	src	18	prescribe
+2	src	32	advise
+3	src	39	opioid use only as needed
+6	src	72	hydrocodone 5 mg
+7	src	89	acetaminophen 325 mg
+8	src	111	one tablet not more frequently than every 4 hours
+4	src	175	moderate to severe pain
+5	src	217	scheduled basis
+11	src	270	encourage
+12	src	284	recommend
+13	src	297	opioid taper
+9	src	313	opioids are taken around the clock
+10	src	352	more than a few days

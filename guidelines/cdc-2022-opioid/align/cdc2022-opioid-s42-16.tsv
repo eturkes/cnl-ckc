@@ -1,0 +1,28 @@
+0	ace	5	patient
+1	ace	19	continuous-opioid-use
+1	ace	49	continuous-opioid-use
+2	ace	112	at least 1 week
+3	ace	154	less than 1 month
+5	ace	178	taper-schedule
+6	ace	199	taper-interval
+6	ace	222	taper-interval
+6	ace	246	2 days
+5	ace	261	taper-schedule
+7	ace	282	daily-opioid-dosage-reduction
+7	ace	320	daily-opioid-dosage-reduction
+8	ace	359	20 percent
+5	ace	378	taper-schedule
+9	ace	398	gradual-taper
+4	ace	423	clinician
+5	ace	445	taper-schedule
+0	ace	468	patient
+0	src	5	patients
+1	src	19	taken opioids continuously
+2	src	50	≥1 week
+3	src	62	<1 month
+4	src	72	clinicians
+9	src	100	slower taper
+7	src	120	reducing the daily dosage
+8	src	149	approximately 20%
+6	src	167	every 2 days
+5	src	205	tapering rates

@@ -1,0 +1,22 @@
+0	ace	6	clinician
+1	ace	20	use
+2	ace	26	periodic-and-strategic-motivational-question
+1	ace	79	use
+3	ace	85	periodic-and-strategic-motivational-statement
+2	ace	134	periodic-and-strategic-motivational-question
+4	ace	183	encourage
+5	ace	196	appropriate-therapeutic-change
+4	ace	235	encourage
+6	ace	247	functional-goal
+3	ace	266	periodic-and-strategic-motivational-statement
+4	ace	316	encourage
+5	ace	329	appropriate-therapeutic-change
+4	ace	368	encourage
+6	ace	380	functional-goal
+0	src	0	Clinicians
+1	src	15	use
+2	src	19	periodic and strategic motivational questions
+3	src	69	statements
+4	src	83	encourage
+5	src	109	appropriate therapeutic changes
+6	src	145	functional goals

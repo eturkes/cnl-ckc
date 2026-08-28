@@ -1,0 +1,15 @@
+0	ace	33	toxicology-testing
+1	ace	58	punitive-purpose
+0	ace	105	toxicology-testing
+3	ace	133	clinical-decision
+2	ace	187	other-clinical-information
+3	ace	223	clinical-decision
+0	ace	271	toxicology-testing
+4	ace	299	patient-care-improvement
+2	ace	360	other-clinical-information
+4	ace	396	patient-care-improvement
+0	src	0	Toxicology testing
+1	src	43	punitive manner
+2	src	96	other clinical information
+3	src	126	inform
+4	src	137	improve patient care

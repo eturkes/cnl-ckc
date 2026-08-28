@@ -1,0 +1,22 @@
+0	ace	23	review
+1	ace	32	care-access-consideration
+4	ace	68	opioid
+2	ace	75	initiation
+0	ace	110	review
+1	ace	119	care-access-consideration
+4	ace	155	opioid
+3	ace	162	continuation
+0	ace	199	review
+1	ace	208	care-access-consideration
+5	ace	243	pain-treatment
+2	ace	258	initiation
+0	ace	293	review
+1	ace	302	care-access-consideration
+5	ace	337	pain-treatment
+3	ace	352	continuation
+0	src	0	Review
+1	src	7	considerations related to access to care
+2	src	92	initiate
+3	src	105	continue
+4	src	114	opioid therapy
+5	src	133	other treatments for pain

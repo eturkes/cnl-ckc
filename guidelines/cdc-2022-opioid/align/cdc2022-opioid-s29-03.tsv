@@ -1,0 +1,13 @@
+0	ace	23	discuss
+1	ace	33	realistic-expected-opioid-benefit
+2	ace	106	explain
+3	ace	116	limited-long-term-opioid-pain-evidence
+2	ace	194	explain
+3	ace	204	limited-long-term-opioid-function-evidence
+2	ace	286	explain
+4	ace	297	unlikely-complete-pain-elimination
+0	src	0	Be explicit
+1	src	16	realistic about expected benefits of opioids
+2	src	62	explaining
+3	src	87	not robust evidence that opioids improve pain or function with long-term use
+4	src	173	complete elimination of pain is unlikely

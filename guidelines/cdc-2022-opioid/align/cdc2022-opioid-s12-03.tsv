@@ -1,0 +1,30 @@
+0	ace	10	category-B-recommendation
+1	ace	42	clinician
+2	ace	57	help
+3	ace	64	patient
+4	ace	79	category-B-decision
+1	ace	106	clinician
+5	ace	121	consider
+6	ace	132	patient-value
+4	ace	155	category-B-decision
+1	ace	182	clinician
+5	ace	197	consider
+7	ace	208	patient-preference
+4	ace	236	category-B-decision
+1	ace	263	clinician
+5	ace	278	consider
+8	ace	289	specific-clinical-situation
+4	ace	326	category-B-decision
+1	ace	353	clinician
+9	ace	374	shared-decision-making
+4	ace	406	category-B-decision
+0	src	4	category B recommendations
+1	src	32	clinicians
+2	src	48	help
+3	src	53	patients
+4	src	72	a decision
+5	src	83	consistent with
+6	src	99	patient values
+7	src	118	preferences
+8	src	134	specific clinical situations
+9	src	164	shared decision-making

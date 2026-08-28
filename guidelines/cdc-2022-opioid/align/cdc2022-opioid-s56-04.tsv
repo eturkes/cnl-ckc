@@ -1,0 +1,29 @@
+0	ace	6	opioid-first-taper-decision
+3	ace	39	medication-taper-sequencing-decision
+1	ace	83	benzodiazepine-first-taper-decision
+3	ace	124	medication-taper-sequencing-decision
+2	ace	168	full-agonist-opioid-buprenorphine-transition-decision
+3	ace	227	medication-taper-sequencing-decision
+4	ace	278	receives an opioid
+5	ace	302	current-opioid-dosage
+4	ace	328	receives a benzodiazepine
+5	ace	359	current-benzodiazepine-dosage
+6	ace	395	risk
+7	ace	400	outweighs
+8	ace	412	benefit
+4	ace	429	continued-opioid-and-benzodiazepine-therapy
+9	ace	501	individualize
+3	ace	517	medication-taper-sequencing-decision
+10	ace	581	reevaluate
+3	ace	594	medication-taper-sequencing-decision
+6	src	3	risks
+7	src	27	outweigh
+8	src	36	benefits
+4	src	48	continuing opioids for pain and benzodiazepine therapy
+5	src	106	current dosages
+3	src	123	decisions about tapering medications
+0	src	178	taper opioids first
+1	src	199	taper benzodiazepines first
+2	src	250	transitioning from full agonist opioids to buprenorphine
+9	src	350	individualized
+10	src	369	reevaluated

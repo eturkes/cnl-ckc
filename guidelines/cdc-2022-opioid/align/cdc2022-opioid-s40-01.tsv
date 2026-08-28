@@ -1,0 +1,89 @@
+1	ace	5	patient
+5	ace	21	short-acting-full-agonist-opioid
+5	ace	62	short-acting-full-agonist-opioid
+4	ace	101	last-dose
+0	ace	117	clinician
+11	ace	135	first-buprenorphine-dose
+1	ace	168	patient
+2	ace	196	transition-wait
+3	ace	253	at least 8 hours
+0	ace	279	clinician
+2	ace	318	transition-wait
+4	ace	344	last-dose
+11	ace	365	first-buprenorphine-dose
+1	ace	398	patient
+2	ace	435	transition-wait
+4	ace	461	last-dose
+11	ace	482	first-buprenorphine-dose
+1	ace	513	patient
+7	ace	529	long-acting-full-agonist-opioid
+7	ace	569	long-acting-full-agonist-opioid
+4	ace	607	last-dose
+0	ace	623	clinician
+11	ace	641	first-buprenorphine-dose
+1	ace	674	patient
+6	ace	688	longer
+2	ace	709	transition-wait
+0	ace	749	clinician
+6	ace	774	longer
+2	ace	795	transition-wait
+4	ace	821	last-dose
+11	ace	842	first-buprenorphine-dose
+1	ace	875	patient
+6	ace	898	longer
+2	ace	919	transition-wait
+4	ace	945	last-dose
+11	ace	966	first-buprenorphine-dose
+1	ace	997	patient
+9	ace	1014	ER-LA-full-agonist-opioid
+9	ace	1048	ER-LA-full-agonist-opioid
+4	ace	1080	last-dose
+0	ace	1096	clinician
+11	ace	1114	first-buprenorphine-dose
+1	ace	1147	patient
+2	ace	1175	transition-wait
+8	ace	1232	at least 12 hours
+0	ace	1259	clinician
+2	ace	1298	transition-wait
+4	ace	1324	last-dose
+11	ace	1345	first-buprenorphine-dose
+1	ace	1378	patient
+2	ace	1415	transition-wait
+4	ace	1441	last-dose
+11	ace	1462	first-buprenorphine-dose
+1	ace	1493	patient
+10	ace	1512	methadone
+10	ace	1540	methadone
+4	ace	1566	last-dose
+0	ace	1582	clinician
+11	ace	1600	first-buprenorphine-dose
+1	ace	1633	patient
+6	ace	1647	longer
+2	ace	1668	transition-wait
+0	ace	1708	clinician
+6	ace	1733	longer
+2	ace	1754	transition-wait
+4	ace	1780	last-dose
+11	ace	1801	first-buprenorphine-dose
+1	ace	1834	patient
+6	ace	1857	longer
+2	ace	1878	transition-wait
+4	ace	1904	last-dose
+11	ace	1925	first-buprenorphine-dose
+0	src	38	clinicians
+1	src	53	patients
+2	src	69	wait
+3	src	74	at least 8
+3	src	88	hours
+4	src	104	last dose
+5	src	117	short-acting full agonist opioids
+6	src	155	longer
+4	src	172	last dose
+7	src	185	long-acting full agonist opioids
+8	src	225	at least 12
+8	src	240	hours
+4	src	256	last dose
+9	src	272	ER/LA full agonist opioid
+6	src	303	longer
+10	src	314	methadone
+11	src	336	first dose of buprenorphine

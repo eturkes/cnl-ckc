@@ -1,0 +1,20 @@
+0	ace	2	patient-education
+2	ace	23	critical
+3	ace	42	outpatient-opioid-therapy
+1	ace	71	patient-discussion
+2	ace	93	critical
+3	ace	112	outpatient-opioid-therapy
+4	ace	141	patient-preference
+6	ace	164	inform
+7	ace	173	clinical-decision
+5	ace	194	patient-value
+6	ace	212	inform
+7	ace	221	clinical-decision
+0	src	0	Patient education
+1	src	22	discussion
+3	src	49	outpatient opioid therapy
+2	src	79	critical
+4	src	96	patient preferences
+5	src	120	values
+6	src	157	inform
+7	src	164	clinical decisions

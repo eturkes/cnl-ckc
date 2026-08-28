@@ -1,0 +1,53 @@
+0	ace	6	clinician
+1	ace	52	clinical-practice-organization
+2	ace	119	health-system
+3	ace	169	payer
+4	ace	242	monitor
+5	ace	252	health-inequity
+6	ace	274	patient
+7	ace	335	provide
+8	ace	345	culturally
+10	ace	356	appropriate-communication
+6	ace	390	patient
+6	ace	404	patient
+7	ace	465	provide
+9	ace	475	linguistically
+10	ace	490	appropriate-communication
+6	ace	524	patient
+6	ace	538	patient
+7	ace	605	provide
+11	ace	615	disability-accessible-communication
+6	ace	659	patient
+6	ace	673	patient
+12	ace	734	ensure
+13	ace	744	appropriate-affordable-diversified-coordinated-effective
+14	ace	801	nonpharmacologic
+16	ace	818	pain-management-access
+6	ace	849	patient
+6	ace	863	patient
+12	ace	924	ensure
+13	ace	934	appropriate-affordable-diversified-coordinated-effective
+15	ace	991	pharmacologic
+16	ace	1005	pain-management-access
+6	ace	1036	patient
+0	src	0	Clinicians
+1	src	12	practices
+2	src	23	health systems
+3	src	43	payers
+4	src	57	vigilantly attend to
+5	src	78	health inequities
+7	src	97	provide
+8	src	105	culturally
+9	src	120	linguistically
+10	src	135	appropriate communication
+11	src	178	communication
+11	src	200	accessible
+6	src	214	persons
+11	src	227	disabilities
+12	src	245	ensure
+16	src	252	access
+13	src	265	appropriate, affordable, diversified, coordinated, and effective
+14	src	330	nonpharmacologic
+15	src	351	pharmacologic
+16	src	365	pain management regimen
+6	src	397	persons

@@ -1,0 +1,134 @@
+0	ace	6	clinician
+1	ace	23	recommend
+2	ace	36	exercise-therapy
+3	ace	59	back-pain
+0	ace	76	clinician
+1	ace	93	recommend
+2	ace	106	exercise-therapy
+4	ace	129	fibromyalgia
+0	ace	149	clinician
+1	ace	166	recommend
+2	ace	179	exercise-therapy
+5	ace	202	hip-osteoarthritis
+0	ace	228	clinician
+1	ace	245	recommend
+2	ace	258	exercise-therapy
+6	ace	281	knee-osteoarthritis
+0	ace	308	clinician
+1	ace	325	recommend
+7	ace	337	weight-loss
+6	ace	355	knee-osteoarthritis
+0	ace	382	clinician
+1	ace	399	recommend
+8	ace	411	manual-therapy
+5	ace	432	hip-osteoarthritis
+0	ace	458	clinician
+1	ace	475	recommend
+9	ace	487	psychological-therapy
+10	ace	515	low-back-pain
+0	ace	536	clinician
+1	ace	553	recommend
+11	ace	565	spinal-manipulation
+10	ace	591	low-back-pain
+0	ace	612	clinician
+1	ace	629	recommend
+12	ace	641	low-level-laser-therapy
+10	ace	671	low-back-pain
+0	ace	692	clinician
+1	ace	709	recommend
+13	ace	721	massage
+10	ace	735	low-back-pain
+0	ace	756	clinician
+1	ace	773	recommend
+14	ace	785	mindfulness-based-stress-reduction
+10	ace	826	low-back-pain
+0	ace	847	clinician
+1	ace	864	recommend
+15	ace	876	yoga
+10	ace	887	low-back-pain
+0	ace	908	clinician
+1	ace	925	recommend
+16	ace	938	acupuncture
+10	ace	956	low-back-pain
+0	ace	977	clinician
+1	ace	994	recommend
+17	ace	1006	multidisciplinary-rehabilitation
+10	ace	1045	low-back-pain
+0	ace	1066	clinician
+1	ace	1083	recommend
+18	ace	1095	mind-body-practice
+19	ace	1120	neck-pain
+0	ace	1137	clinician
+1	ace	1154	recommend
+13	ace	1166	massage
+19	ace	1180	neck-pain
+0	ace	1197	clinician
+1	ace	1214	recommend
+16	ace	1227	acupuncture
+19	ace	1245	neck-pain
+0	ace	1262	clinician
+1	ace	1279	recommend
+20	ace	1291	cognitive-behavioral-therapy
+4	ace	1326	fibromyalgia
+0	ace	1346	clinician
+1	ace	1363	recommend
+21	ace	1375	myofascial-release-massage
+4	ace	1408	fibromyalgia
+0	ace	1428	clinician
+1	ace	1445	recommend
+22	ace	1457	mindfulness-practice
+4	ace	1484	fibromyalgia
+0	ace	1504	clinician
+1	ace	1521	recommend
+23	ace	1533	tai-chi
+4	ace	1547	fibromyalgia
+0	ace	1567	clinician
+1	ace	1584	recommend
+24	ace	1596	qigong
+4	ace	1609	fibromyalgia
+0	ace	1629	clinician
+1	ace	1646	recommend
+16	ace	1659	acupuncture
+4	ace	1677	fibromyalgia
+0	ace	1697	clinician
+1	ace	1714	recommend
+17	ace	1726	multidisciplinary-rehabilitation
+4	ace	1765	fibromyalgia
+0	ace	1785	clinician
+1	ace	1802	recommend
+11	ace	1814	spinal-manipulation
+25	ace	1840	tension-headache
+0	src	0	Clinicians
+1	src	18	recommend
+2	src	179	exercise therapy
+3	src	243	back pain
+4	src	254	fibromyalgia
+5	src	272	hip
+6	src	279	knee osteoarthritis
+7	src	300	weight loss
+6	src	316	knee osteoarthritis
+8	src	337	manual therapies
+5	src	358	hip osteoarthritis
+9	src	378	psychological therapy
+11	src	401	spinal manipulation
+12	src	422	low-level laser therapy
+13	src	447	massage
+14	src	456	mindfulness-based stress reduction
+15	src	492	yoga
+16	src	498	acupuncture
+17	src	515	multidisciplinary rehabilitation
+10	src	552	low back pain
+18	src	567	mind-body practices
+13	src	621	massage
+16	src	634	acupuncture
+19	src	650	neck pain
+20	src	661	cognitive behavioral therapy
+21	src	691	myofascial release massage
+22	src	719	mindfulness practices
+23	src	742	tai chi
+24	src	751	qigong
+16	src	759	acupuncture
+17	src	776	multidisciplinary rehabilitation
+4	src	813	fibromyalgia
+11	src	831	spinal manipulation
+25	src	855	tension headache

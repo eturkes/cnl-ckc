@@ -1,0 +1,30 @@
+0	ace	6	clinician
+1	ace	23	review
+2	ace	33	available low-cost-pain-management-option
+3	ace	81	patient
+3	ace	95	patient
+4	ace	109	low-income
+0	ace	131	clinician
+1	ace	148	review
+2	ace	158	available low-cost-pain-management-option
+3	ace	208	patient
+3	ace	222	patient
+5	ace	246	health-insurance
+0	ace	274	clinician
+1	ace	291	review
+2	ace	301	available low-cost-pain-management-option
+3	ace	351	patient
+3	ace	365	patient
+6	ace	380	inadequate-insurance
+0	ace	412	clinician
+1	ace	429	review
+2	ace	439	available low-cost-pain-management-option
+3	ace	489	patient
+0	src	0	Clinicians
+1	src	18	review
+2	src	25	available low-cost options for pain management
+3	src	80	patients
+3	src	110	patients
+4	src	128	low incomes
+5	src	153	health insurance
+6	src	179	inadequate insurance

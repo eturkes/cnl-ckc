@@ -1,0 +1,16 @@
+0	ace	5	clinician
+1	ace	15	prescribes
+2	ace	29	immediate-release-opioid
+2	ace	62	ER-LA-opioid
+0	ace	84	clinician
+3	ace	101	consider
+4	ace	113	increased-combination-overdose-risk
+5	ace	160	heed
+5	ace	167	combination-opioid-caution
+0	src	31	clinicians
+0	src	461	clinicians
+3	src	479	consider
+4	src	492	potential for increased overdose risk
+5	src	534	use caution
+1	src	551	prescribing
+2	src	563	immediate-release opioids in combination with ER/LA opioids

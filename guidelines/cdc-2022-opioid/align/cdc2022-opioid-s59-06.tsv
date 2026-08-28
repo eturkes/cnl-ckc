@@ -1,0 +1,16 @@
+1	ace	20	objective-opioid-withdrawal-sign
+0	ace	91	standard-buprenorphine-initiation
+5	ace	162	uncontrolled-opioid-withdrawal-symptom
+0	ace	210	standard-buprenorphine-initiation
+2	ace	272	increase a buprenorphine-dose
+3	ace	318	under a clinical-supervision
+4	ace	355	standard-buprenorphine-titration-interval
+4	ace	404	standard-buprenorphine-titration-interval
+4	ace	453	approximate 2 hours
+0	src	4	standard (not low-dose) buprenorphine initiation
+1	src	60	objective signs of withdrawal
+0	src	104	buprenorphine should be initiated
+2	src	147	titrated upward
+3	src	163	under supervision
+4	src	184	approximately 2-hour intervals
+5	src	215	as needed to control withdrawal symptoms

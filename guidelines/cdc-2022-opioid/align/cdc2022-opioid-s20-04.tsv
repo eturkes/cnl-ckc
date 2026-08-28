@@ -1,0 +1,12 @@
+1	ace	6	clinician
+2	ace	23	evaluate
+3	ace	34	patient
+4	ace	53	determine
+5	ace	65	diagnosis
+0	ace	84	patient-specific-therapy-selection
+0	src	9	patient-specific selection of therapy
+1	src	48	clinicians
+2	src	66	evaluate
+3	src	75	patients
+4	src	88	establish or confirm
+5	src	113	diagnosis

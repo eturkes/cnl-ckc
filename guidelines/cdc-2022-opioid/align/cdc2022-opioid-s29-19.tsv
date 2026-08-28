@@ -1,0 +1,11 @@
+0	ace	23	consider
+1	ace	34	cognitive-status-interference
+2	ace	74	opioid-therapy-management
+1	ace	120	cognitive-status-interference
+3	ace	178	determine
+4	ace	190	responsible-caregiver-medication-comanagement
+0	src	0	Consider
+1	src	17	cognitive status might interfere
+2	src	55	management of opioid therapy
+3	src	96	determine
+4	src	116	caregiver can responsibly comanage medication therapy

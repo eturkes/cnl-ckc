@@ -1,0 +1,24 @@
+0	ace	5	clinician
+6	ace	15	plans
+7	ace	23	care-coordination
+1	ace	49	other-clinician
+2	ace	71	patient
+0	ace	88	clinician
+3	ace	105	discuss
+4	ace	115	safety-concern
+2	ace	139	patient
+7	ace	158	care-coordination
+5	ace	187	explain
+7	ace	199	care-coordination
+2	ace	226	patient
+7	ace	245	care-coordination
+0	src	9	clinicians
+3	src	33	discuss
+4	src	41	concerns
+2	src	59	patient
+5	src	71	inform
+6	src	93	plan
+7	src	101	coordinate care
+1	src	128	other clinicians
+2	src	160	patient
+4	src	170	safety

@@ -1,0 +1,20 @@
+0	ace	6	clinician
+1	ace	20	discuss
+2	ace	31	unexpected-toxicology-result
+3	ace	67	local-laboratory
+0	ace	91	clinician
+1	ace	105	discuss
+2	ace	116	unexpected-toxicology-result
+4	ace	152	toxicologist
+0	ace	172	clinician
+1	ace	189	discuss
+2	ace	200	unexpected-toxicology-result
+5	ace	236	patient
+0	src	0	Clinicians
+1	src	25	discuss
+2	src	33	unexpected results
+3	src	61	local laboratory
+4	src	81	toxicologist
+1	src	105	discuss
+2	src	113	unexpected results
+5	src	141	patient

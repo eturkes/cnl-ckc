@@ -1,0 +1,22 @@
+0	ace	5	patient
+1	ace	13	takes an opioid during at least 1 year
+2	ace	57	a taper can continue during some months
+2	ace	101	can continue during some years
+0	ace	138	patient
+1	ace	146	takes an opioid during at least 1 year
+2	ace	192	taper-duration
+3	ace	207	depends
+4	ace	221	opioid-dosage
+5	ace	259	individualize
+6	ace	288	patient-goal
+5	ace	312	individualize
+7	ace	341	patient-concern
+0	src	4	patients
+1	src	22	taken opioids long-term
+1	src	57	≥1 year
+2	src	67	tapers can be completed over several months to years
+3	src	120	depending
+4	src	137	opioid dosage
+5	src	165	individualized
+6	src	189	patient goals
+7	src	207	concerns

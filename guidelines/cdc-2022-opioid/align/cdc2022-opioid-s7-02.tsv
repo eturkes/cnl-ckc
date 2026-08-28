@@ -1,0 +1,16 @@
+0	ace	6	recommendation
+1	ace	21	does not apply
+2	ace	45	hospital-care
+0	ace	66	recommendation
+1	ace	81	does not apply
+3	ace	106	emergency-department-care
+0	ace	139	recommendation
+1	ace	154	does not apply
+4	ace	179	observational-setting-care
+5	ace	213	possible-inpatient-admission
+0	src	4	recommendations
+1	src	20	do not apply
+2	src	71	hospitalized
+3	src	93	emergency department
+4	src	123	observational setting
+5	src	161	might be admitted to inpatient care

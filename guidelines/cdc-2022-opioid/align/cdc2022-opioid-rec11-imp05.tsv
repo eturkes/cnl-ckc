@@ -1,0 +1,29 @@
+0	ace	5	patient
+1	ace	19	long-term-opioid-and-benzodiazepine-therapy
+2	ace	69	clinician
+6	ace	91	concurrent-therapy-continuation-decision
+0	ace	140	patient
+2	ace	157	clinician
+3	ace	174	weigh
+4	ace	182	benefit
+5	ace	200	risk
+6	ace	216	concurrent-therapy-continuation-decision
+7	ace	268	discuss
+6	ace	280	concurrent-therapy-continuation-decision
+0	ace	330	patient
+7	ace	349	discuss
+6	ace	361	concurrent-therapy-continuation-decision
+8	ace	409	patient-care-team-member
+0	src	3	patient
+1	src	12	receiving
+1	src	22	opioids
+1	src	34	benzodiazepines
+1	src	50	long term
+2	src	61	clinicians
+3	src	89	weigh
+4	src	99	benefits
+5	src	112	risks
+6	src	121	continuing therapy with opioids and benzodiazepines
+7	src	177	discuss
+0	src	190	patient
+8	src	203	other members of the patient’s care team

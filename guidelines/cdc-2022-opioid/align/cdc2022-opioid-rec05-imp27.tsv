@@ -1,0 +1,14 @@
+0	ace	5	patient
+1	ace	13	takes an opioid during at least 1 year
+2	ace	59	ten-percent-per-month-or-slower-taper
+3	ace	101	outperform
+4	ace	114	rapid-taper
+5	ace	135	tolerability-assessment
+0	src	5	patients
+1	src	24	taking opioids for longer durations
+1	src	71	≥1 year
+2	src	81	tapers of 10% per month or slower
+3	src	132	better
+5	src	139	tolerated
+3	src	149	than
+4	src	154	more rapid tapers

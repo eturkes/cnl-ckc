@@ -1,0 +1,32 @@
+0	ace	5	clinician
+2	ace	15	continues an opioid-therapy
+1	ace	49	patient
+3	ace	80	overdose-history
+0	ace	106	clinician
+4	ace	123	discuss
+5	ace	134	increased-overdose-risk
+6	ace	186	weigh an opioid-benefit against a substantial-opioid-risk
+7	ace	271	incorporate
+8	ace	285	risk-mitigation-strategy
+9	ace	315	management-plan
+0	ace	354	clinician
+2	ace	364	continues an opioid-therapy
+3	ace	429	overdose-history
+0	ace	455	clinician
+10	ace	469	offer
+11	ace	477	naloxone-dose
+12	ace	510	may increase
+12	ace	525	patient-monitoring
+0	src	3	clinicians
+2	src	14	continue opioid therapy
+1	src	41	patients
+3	src	55	previous opioid overdose
+4	src	93	discuss
+5	src	101	increased risks for overdose
+6	src	172	benefits of opioids outweigh substantial risks
+7	src	224	incorporate
+8	src	236	strategies to mitigate risk
+9	src	273	management plan
+10	src	296	offering
+11	src	305	naloxone
+12	src	318	increasing frequency of monitoring

@@ -1,0 +1,28 @@
+0	ace	6	clinician
+1	ace	23	screen
+2	ace	33	anxiety
+1	ace	52	screen
+3	ace	61	depression
+6	ace	82	opioid-taper
+0	ace	102	clinician
+1	ace	119	screen
+4	ace	129	opioid-misuse
+1	ace	154	screen
+5	ace	164	opioid-use-disorder
+6	ace	194	opioid-taper
+0	ace	214	clinician
+7	ace	231	manage
+8	ace	240	taper-emergent-comorbidity
+9	ace	278	provide
+10	ace	288	treatment
+0	src	0	Clinicians
+1	src	47	screen
+2	src	58	anxiety
+3	src	67	depression
+4	src	83	opioid misuse
+5	src	100	opioid use disorder
+6	src	180	opioid taper
+9	src	197	provide
+10	src	205	treatment
+7	src	230	management
+8	src	250	comorbidities

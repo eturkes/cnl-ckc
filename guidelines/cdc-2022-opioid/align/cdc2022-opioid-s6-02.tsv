@@ -1,0 +1,47 @@
+1	ace	6	clinician
+6	ace	23	consider
+0	ace	34	recommendation
+1	ace	58	clinician
+2	ace	68	patient
+3	ace	76	relationship
+1	ace	96	clinician
+2	ace	106	patient
+3	ace	114	relationship
+4	ace	141	shared-understanding
+1	ace	169	clinician
+6	ace	186	consider
+0	ace	197	recommendation
+5	ace	221	whole-person-approach
+5	ace	250	whole-person-approach
+6	ace	279	consider
+7	ace	290	physical-functioning
+6	ace	322	consider
+7	ace	333	psychological-functioning
+5	ace	366	whole-person-approach
+6	ace	395	consider
+8	ace	406	support-need
+6	ace	430	consider
+9	ace	442	expected-health-outcome
+6	ace	477	consider
+10	ace	488	well-being
+5	ace	506	whole-person-approach
+6	ace	535	consider
+11	ace	546	home-environment
+6	ace	574	consider
+12	ace	585	home-responsibility
+6	ace	616	consider
+12	ace	627	work-responsibility
+0	src	4	recommendations
+6	src	161	considered
+1	src	194	clinician
+2	src	204	patient
+3	src	212	relationship
+4	src	234	shared understanding
+5	src	261	whole-person approach
+6	src	288	considers
+7	src	328	physical and psychological functioning
+8	src	368	support needs
+9	src	383	expected health outcomes
+10	src	412	well-being
+11	src	424	home environment
+12	src	446	home and work responsibilities

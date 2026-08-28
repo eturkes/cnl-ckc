@@ -1,0 +1,24 @@
+1	ace	23	use
+0	ace	30	NSAID
+2	ace	41	lowest-effective-dose
+3	ace	72	shortest-needed-duration
+4	ace	103	patient
+5	ace	117	older-adult
+6	ace	165	NSAID-caution
+4	ace	185	patient
+7	ace	199	cardiovascular-comorbidity
+8	ace	235	chronic-renal-failure
+6	ace	293	NSAID-caution
+4	ace	313	patient
+9	ace	327	previous-gastrointestinal-bleeding
+6	ace	398	NSAID-caution
+0	src	0	NSAIDs
+1	src	17	used
+2	src	29	lowest effective dose
+3	src	55	shortest duration needed
+6	src	104	caution
+5	src	129	older adults
+4	src	149	patients
+7	src	163	cardiovascular comorbidities
+8	src	193	chronic renal failure
+9	src	219	previous gastrointestinal bleeding

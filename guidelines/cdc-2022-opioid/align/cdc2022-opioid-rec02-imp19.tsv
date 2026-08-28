@@ -1,0 +1,33 @@
+0	ace	6	clinician
+1	ace	23	determine
+2	ace	35	functional-benefit-evaluation
+3	ace	72	patient
+4	ace	86	subacute-pain
+5	ace	110	opioid-initiation
+0	ace	135	clinician
+1	ace	152	determine
+2	ace	164	functional-benefit-evaluation
+3	ace	201	patient
+6	ace	215	chronic-pain
+5	ace	238	opioid-initiation
+0	ace	263	clinician
+7	ace	280	establish
+8	ace	292	specific-measurable-treatment-goal
+3	ace	334	patient
+4	ace	348	subacute-pain
+5	ace	372	opioid-initiation
+0	ace	397	clinician
+7	ace	414	establish
+8	ace	426	specific-measurable-treatment-goal
+3	ace	468	patient
+6	ace	482	chronic-pain
+5	ace	505	opioid-initiation
+5	src	7	opioid therapy is initiated
+4	src	39	subacute
+6	src	51	chronic pain
+0	src	65	clinicians
+1	src	83	determine
+3	src	106	patients
+2	src	119	functional benefit will be evaluated
+7	src	160	establish
+8	src	170	specific, measurable treatment goals

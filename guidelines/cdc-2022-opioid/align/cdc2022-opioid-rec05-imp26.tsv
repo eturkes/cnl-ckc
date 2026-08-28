@@ -1,0 +1,18 @@
+0	ace	2	communication-principle
+4	ace	29	relevant
+5	ace	47	shorter-duration-opioid-discontinuation
+1	ace	90	pain-management-principle
+4	ace	119	relevant
+5	ace	137	shorter-duration-opioid-discontinuation
+2	ace	180	behavioral-support-principle
+4	ace	212	relevant
+5	ace	230	shorter-duration-opioid-discontinuation
+3	ace	273	slower-taper-principle
+4	ace	299	relevant
+5	ace	317	shorter-duration-opioid-discontinuation
+0	src	217	communication with patients
+1	src	246	pain management
+2	src	263	behavioral support
+3	src	287	slower taper rates
+4	src	316	relevant
+5	src	330	discontinuing opioids in patients who have received them for shorter durations

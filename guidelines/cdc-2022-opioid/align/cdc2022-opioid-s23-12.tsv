@@ -1,0 +1,22 @@
+0	ace	23	discuss
+1	ace	33	higher-opioid-dosage
+3	ace	54	opioid-use-disorder
+2	ace	74	risk
+0	ace	118	discuss
+1	ace	128	higher-opioid-dosage
+4	ace	149	respiratory-depression
+2	ace	172	risk
+0	ace	216	discuss
+1	ace	226	higher-opioid-dosage
+5	ace	247	death
+2	ace	253	risk
+0	ace	297	discuss
+6	ace	307	prescribed-opioid-amount-and-frequency-adherence
+0	src	0	Discuss
+2	src	8	increased risks
+3	src	28	opioid use disorder
+4	src	49	respiratory depression
+5	src	77	death
+1	src	86	higher dosages
+6	src	131	taking only the amount of opioids prescribed
+6	src	183	not taking more opioids than prescribed or taking them more often

@@ -1,0 +1,32 @@
+1	ace	5	patient
+2	ace	20	opioid-dosage-reduction-indication
+0	ace	66	clinician
+3	ace	83	collaborate with
+4	ace	121	dosage-reduction
+2	ace	159	opioid-discontinuation-indication
+0	ace	204	clinician
+3	ace	221	collaborate with
+5	ace	260	opioid-discontinuation
+6	ace	304	opioid-prescription
+0	ace	335	clinician
+7	ace	352	ensure
+8	ace	361	continued-close-patient-monitoring
+7	ace	423	ensure
+9	ace	432	continued-patient-support
+6	ace	494	no-opioid-prescription
+0	ace	528	clinician
+7	ace	545	ensure
+8	ace	554	continued-close-patient-monitoring
+7	ace	616	ensure
+9	ace	625	continued-patient-support
+0	src	0	Clinicians
+3	src	18	work with
+1	src	28	patients
+4	src	40	reduce opioid dosage
+5	src	68	discontinue opioids
+2	src	93	indicated
+7	src	137	ensure
+8	src	144	continued close monitoring
+9	src	175	support
+1	src	187	patients
+6	src	196	prescribed or not prescribed opioids

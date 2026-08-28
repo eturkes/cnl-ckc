@@ -1,0 +1,16 @@
+0	ace	6	clinician
+1	ace	23	understand
+2	ace	36	community-nonpharmacologic-option
+0	ace	76	clinician
+1	ace	86	understand
+2	ace	100	community-nonpharmacologic-option
+0	ace	143	clinician
+3	ace	157	refer
+4	ace	165	patient
+5	ace	178	low-cost-service
+0	src	0	Clinicians
+1	src	18	become familiar
+2	src	44	options within their communities
+3	src	89	refer
+4	src	95	patients
+5	src	107	low-cost services

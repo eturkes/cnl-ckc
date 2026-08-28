@@ -1,0 +1,25 @@
+1	ace	5	patient
+2	ace	19	moderate-sleep-disordered-breathing
+0	ace	66	clinician
+3	ace	83	not
+4	ace	87	prescribe an opioid
+1	ace	114	patient
+5	ace	133	minimize
+6	ace	144	respiratory-depression-risk
+1	ace	180	patient
+1	ace	194	patient
+2	ace	208	severe-sleep-disordered-breathing
+0	ace	253	clinician
+3	ace	270	not
+4	ace	274	prescribe an opioid
+1	ace	301	patient
+5	ace	320	minimize
+6	ace	331	respiratory-depression-risk
+1	ace	367	patient
+0	src	0	Clinicians
+3	src	18	avoid
+4	src	24	prescribing opioids
+1	src	47	patients
+2	src	61	moderate or severe sleep-disordered breathing
+5	src	124	minimize
+6	src	133	risk for respiratory depression

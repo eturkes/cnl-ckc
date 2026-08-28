@@ -1,0 +1,14 @@
+0	ace	19	older-adult
+1	ace	59	assess
+2	ace	68	tricyclic-antidepressant
+3	ace	102	case-by-case-decision
+4	ace	143	confusion-risk
+5	ace	195	fall-risk
+0	src	3	older adults
+3	src	17	decisions
+2	src	34	tricyclic antidepressants
+1	src	75	judiciously
+3	src	92	case-by-case basis
+4	src	122	risks
+4	src	132	confusion
+5	src	146	falls

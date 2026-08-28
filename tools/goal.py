@@ -237,6 +237,28 @@ def check_pl_inventory(guideline_path, docids):
         actual_names.append(entry_name)
     if sorted(expected_names) != actual_names:
         violation("pl-inventory", "committed pl/ does not match ace/ document set")
+def check_alignment(guideline_path, docids):
+    align_dir = guideline_path.joinpath("align")
+    align_symlink = align_dir.is_symlink()
+    if align_symlink:
+        violation("align-dir", "is a symlink: " + str(align_dir))
+    if not align_dir.is_dir():
+        violation("missing-align", str(align_dir))
+    expected_names = []
+    for docid in docids:
+        expected_names.append(docid + ".tsv")
+    actual_names = []
+    for entry in sorted(align_dir.iterdir()):
+        entry_name = entry.name
+        regular = entry.is_file()
+        symlink = entry.is_symlink()
+        if not regular:
+            violation("align-entry", "not a regular file: " + entry_name)
+        if symlink:
+            violation("align-entry", "not a regular file: " + entry_name)
+        actual_names.append(entry_name)
+    if sorted(expected_names) != actual_names:
+        violation("align-inventory", "committed align/ does not match ace/ document set")
 def compiled_pl_path(tracked):
     parts = tracked.split("/")
     if len(parts) != 4:
@@ -4584,6 +4606,7 @@ def check_command():
         docids = collected.pop(0)
         lexicon_path = collected.pop(0)
         check_pl_inventory(entry, docids)
+        check_alignment(entry, docids)
         plan_record = [entry, ace_paths, docids, lexicon_path]
         plans.append(plan_record)
     if not plans:

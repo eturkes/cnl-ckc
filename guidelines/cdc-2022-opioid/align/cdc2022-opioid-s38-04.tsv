@@ -1,0 +1,20 @@
+0	ace	6	clinician
+1	ace	23	advise
+2	ace	32	patient
+3	ace	48	typical
+4	ace	56	post-voluntary-long-term-opioid-reduction
+5	ace	98	stable-or-improved-function-anxiety-and-mood
+0	ace	158	clinician
+1	ace	175	advise
+2	ace	184	patient
+3	ace	200	typical
+4	ace	208	post-voluntary-long-term-opioid-reduction
+6	ace	250	nonworsened-or-decreased-pain
+0	src	0	Clinicians
+1	src	18	advise
+2	src	25	patients
+3	src	39	overall
+4	src	48	after voluntary reduction of long-term opioid dosages
+2	src	108	patients
+5	src	124	stable or improved function, anxiety, and mood
+6	src	171	without worsening pain or with decreased pain levels

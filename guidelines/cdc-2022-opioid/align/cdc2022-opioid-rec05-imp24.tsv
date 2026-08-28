@@ -1,0 +1,14 @@
+0	ace	6	clinician
+1	ace	16	must ensure
+2	ace	30	coordinated-pain-management
+0	ace	65	clinician
+1	ace	75	must ensure
+3	ace	89	coordinated-opioid-problem-management
+0	ace	134	clinician
+1	ace	144	must ensure
+4	ace	159	opioid-use-disorder-management
+0	src	0	Clinicians
+1	src	18	responsibility to provide or arrange
+2	src	59	coordinated management of patients’ pain
+3	src	104	opioid-related problems
+4	src	139	opioid use disorder

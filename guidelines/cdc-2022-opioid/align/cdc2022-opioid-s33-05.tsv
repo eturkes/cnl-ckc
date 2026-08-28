@@ -1,0 +1,13 @@
+0	ace	23	heed
+0	ace	30	particular-caution
+1	ace	58	transdermal-fentanyl-prescription
+2	ace	116	consider
+2	ace	127	transdermal-fentanyl-dosing
+1	ace	164	transdermal-fentanyl-prescription
+3	ace	222	consider
+3	ace	233	transdermal-fentanyl-absorption
+1	ace	274	transdermal-fentanyl-prescription
+0	src	0	Use particular caution
+1	src	28	transdermal fentanyl
+2	src	63	dosed in mcg/hr instead of mg/day
+3	src	106	absorption is affected by heat and other factors

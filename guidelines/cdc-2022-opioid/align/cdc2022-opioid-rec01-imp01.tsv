@@ -1,0 +1,15 @@
+0	ace	6	clinician
+1	ace	23	maximize
+2	ace	34	nonopioid-pharmacologic
+4	ace	58	therapy
+5	ace	72	specific-condition
+1	ace	102	maximize
+3	ace	113	nonpharmacologic
+4	ace	130	therapy
+5	ace	144	specific-condition
+0	src	0	Clinicians
+1	src	18	maximize
+2	src	34	nonopioid pharmacologic
+3	src	108	nonpharmacologic
+4	src	189	therapies
+5	src	222	specific condition

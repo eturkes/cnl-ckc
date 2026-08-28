@@ -1,0 +1,27 @@
+0	ace	5	patient
+1	ace	19	taper-plan
+0	ace	38	patient
+2	ace	52	hospital-discharge
+3	ace	77	care-coordinating
+4	ace	95	clinician
+3	ace	105	coordinates
+5	ace	120	outpatient-care
+0	ace	144	patient
+4	ace	163	clinician
+6	ace	180	discuss
+1	ace	192	taper-plan
+0	ace	212	patient
+2	ace	231	hospital-discharge
+6	ace	261	discuss
+1	ace	273	taper-plan
+3	ace	293	care-coordinating
+4	ace	311	clinician
+2	ace	332	hospital-discharge
+1	src	0	Tapering plans
+6	src	25	discussed
+0	src	44	patient
+2	src	59	hospital discharge
+4	src	87	clinicians
+3	src	98	coordinating
+0	src	115	patient
+5	src	125	care as an outpatient

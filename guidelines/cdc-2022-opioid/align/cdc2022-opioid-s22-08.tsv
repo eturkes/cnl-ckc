@@ -1,0 +1,25 @@
+0	ace	5	patient
+1	ace	19	opioid-naive
+0	ace	32	patient
+3	ace	51	acute-pain
+4	ace	69	opioid-use-minimizing-strategy
+5	ace	103	possible
+6	ace	140	implement
+4	ace	154	opioid-use-minimizing-strategy
+0	ace	193	patient
+0	ace	207	patient
+2	ace	221	opioid-tolerant
+0	ace	237	patient
+3	ace	256	acute-pain
+4	ace	274	opioid-use-minimizing-strategy
+5	ace	308	possible
+6	ace	345	implement
+4	ace	359	opioid-use-minimizing-strategy
+0	ace	398	patient
+4	src	11	strategies that minimize opioid use
+6	src	57	implemented
+1	src	78	opioid-naïve
+2	src	95	opioid-tolerant
+0	src	111	patients
+3	src	125	acute pain
+5	src	141	possible

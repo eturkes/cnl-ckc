@@ -1,0 +1,52 @@
+3	ace	6	clinician
+5	ace	23	evaluate
+6	ace	34	risk for an opioid-related-harm
+0	ace	76	opioid-initiation
+3	ace	101	clinician
+5	ace	118	evaluate
+6	ace	129	risk for an opioid-related-harm
+1	ace	170	periodic-continuation-review
+3	ace	205	clinician
+2	ace	223	opioid-therapy
+4	ace	244	patient
+3	ace	261	clinician
+7	ace	278	discuss
+6	ace	288	risk for an opioid-related-harm
+4	ace	329	patient
+3	ace	343	clinician
+2	ace	361	opioid-therapy
+4	ace	382	patient
+3	ace	399	clinician
+8	ace	416	incorporate
+9	ace	430	risk-mitigation-strategy
+4	ace	485	patient
+10	ace	504	offer a naloxone-dose
+4	ace	533	patient
+3	ace	547	clinician
+2	ace	565	opioid-therapy
+4	ace	586	patient
+3	ace	603	clinician
+11	ace	620	review
+12	ace	629	potential-prescribed-medication-interaction
+4	ace	682	patient
+3	ace	696	clinician
+2	ace	714	opioid-therapy
+4	ace	735	patient
+3	ace	752	clinician
+11	ace	769	review
+13	ace	778	potential-used-substance-interaction
+4	ace	824	patient
+0	src	7	starting
+1	src	20	periodically during continuation
+2	src	56	opioid therapy
+3	src	72	clinicians
+5	src	90	evaluate
+6	src	99	risk for opioid-related harms
+7	src	140	work with
+4	src	150	patients
+8	src	162	incorporate
+9	src	183	strategies to mitigate risk
+10	src	222	offering naloxone
+11	src	244	reviewing
+12	src	254	potential interactions with any other prescribed medications
+13	src	318	substances used

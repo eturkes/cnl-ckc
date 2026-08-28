@@ -1,0 +1,35 @@
+0	ace	5	patient
+1	ace	19	taper-progress-failure-despite-opioid-related-harm
+2	ace	98	conduct
+3	ace	108	DSM-5
+4	ace	114	opioid-use-disorder
+2	ace	134	assessment
+0	ace	153	patient
+0	ace	167	patient
+3	ace	181	DSM-5
+4	ace	187	opioid-use-disorder
+5	ace	207	criteria
+6	ace	216	match
+7	ace	250	offer
+8	ace	259	evidence-based-medication-treatment
+0	ace	302	patient
+0	ace	316	patient
+3	ace	330	DSM-5
+4	ace	336	opioid-use-disorder
+5	ace	356	criteria
+6	ace	365	match
+7	ace	399	offer
+9	ace	407	naloxone
+0	ace	428	patient
+0	src	11	patients
+1	src	33	such challenges
+2	src	59	assessed
+4	src	72	opioid use disorder
+3	src	168	DSM-5
+5	src	175	criteria
+5	src	192	criteria
+4	src	205	opioid use disorder
+6	src	229	met
+7	src	234	offered
+8	src	242	evidence-based medication treatment
+9	src	306	naloxone

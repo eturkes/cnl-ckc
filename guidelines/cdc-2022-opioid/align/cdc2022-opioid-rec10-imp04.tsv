@@ -1,0 +1,30 @@
+0	ace	6	clinician
+3	ace	23	pursue
+4	ace	32	toxicology-testing-bias-minimization
+1	ace	76	clinical-practice-organization
+3	ace	114	pursue
+4	ace	123	toxicology-testing-bias-minimization
+2	ace	167	health-system
+3	ace	188	pursue
+4	ace	197	toxicology-testing-bias-minimization
+0	ace	241	clinician
+5	ace	258	avoid
+6	ace	267	assumption-based-differential-toxicology-testing-application
+7	ace	334	patient
+1	ace	349	clinical-practice-organization
+5	ace	387	avoid
+6	ace	396	assumption-based-differential-toxicology-testing-application
+7	ace	463	patient
+2	ace	478	health-system
+5	ace	499	avoid
+6	ace	508	assumption-based-differential-toxicology-testing-application
+7	ace	575	patient
+0	src	0	Clinicians
+1	src	12	practices
+2	src	27	health systems
+3	src	49	aim
+4	src	56	minimize bias in testing
+5	src	92	not apply
+6	src	102	this recommendation differentially
+6	src	153	assumptions
+7	src	171	patients

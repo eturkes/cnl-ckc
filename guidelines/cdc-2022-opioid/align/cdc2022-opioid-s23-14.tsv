@@ -1,0 +1,20 @@
+0	ace	23	discuss
+3	ace	34	intentional-or-unintentional-opioid-sharing
+2	ace	78	risk
+4	ace	87	household-or-other-person
+1	ace	120	patient
+0	ace	152	discuss
+5	ace	162	shared-opioid-overdose-at-same-or-lower-dosage
+2	ace	209	risk
+1	ace	221	patient
+0	ace	253	discuss
+6	ace	263	young-child-or-pet-unintentional-opioid-ingestion
+2	ace	313	risk
+1	ace	325	patient
+0	src	0	Discuss
+2	src	8	risks
+4	src	17	household members and other persons
+3	src	56	opioids are intentionally or unintentionally shared
+5	src	185	others might experience overdose at the same or lower dosage
+1	src	270	patient
+6	src	287	young children and pets are susceptible to unintentional ingestion

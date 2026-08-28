@@ -1,0 +1,19 @@
+0	ace	6	prolonged-severe-acute-pain-care-mechanism
+1	ace	56	enable
+2	ace	65	timely-diagnostic-reevaluation
+2	ace	103	timely-diagnostic-reevaluation
+3	ace	138	confirm
+4	ace	149	initial-diagnosis
+2	ace	174	timely-diagnostic-reevaluation
+5	ace	209	revise
+4	ace	219	initial-diagnosis
+0	ace	244	prolonged-severe-acute-pain-care-mechanism
+1	ace	294	enable
+6	ace	303	pain-management-adjustment
+0	src	6	mechanisms
+1	src	24	allow
+2	src	34	timely reevaluation
+3	src	57	confirm
+5	src	68	revise
+4	src	79	initial diagnosis
+6	src	101	adjust pain management

@@ -1,0 +1,47 @@
+0	ace	6	clinician
+2	ace	23	explain
+4	ace	34	expected
+5	ace	43	prescribed-medication-presence
+1	ace	79	patient
+0	ace	94	clinician
+2	ace	111	explain
+4	ace	122	expected
+6	ace	131	unreported-drug-absence
+1	ace	160	patient
+0	ace	175	clinician
+2	ace	192	explain
+4	ace	203	expected
+7	ace	212	unreported-nonprescribed-controlled-substance-absence
+1	ace	271	patient
+0	ace	286	clinician
+3	ace	303	ask
+8	ace	309	nonjudgmental
+9	ace	323	prescribed-drug-use-question
+1	ace	361	patient
+0	ace	387	clinician
+3	ace	404	ask
+8	ace	410	nonjudgmental
+10	ace	424	other-drug-use-question
+1	ace	457	patient
+0	ace	483	clinician
+3	ace	500	ask
+8	ace	506	nonjudgmental
+11	ace	520	possible-unexpected-result-question
+1	ace	565	patient
+0	src	0	Clinicians
+2	src	18	explain
+4	src	26	expected
+5	src	50	presence
+5	src	62	prescribed medication
+6	src	88	absence
+6	src	99	drugs
+7	src	116	nonprescribed controlled substances
+7	src	152	not reported
+1	src	172	patient
+3	src	185	ask
+1	src	189	patient
+8	src	203	nonjudgmental manner
+9	src	230	use of prescribed
+10	src	252	other drugs
+11	src	282	might
+11	src	291	unexpected results

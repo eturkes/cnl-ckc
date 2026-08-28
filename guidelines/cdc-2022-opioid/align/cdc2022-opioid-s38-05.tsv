@@ -1,0 +1,13 @@
+1	ace	20	advise
+0	ace	29	patient
+2	ace	45	frequent
+3	ace	58	time-diminishing
+4	ace	75	opioid-withdrawal
+5	ace	93	pain-worsening
+0	src	0	Patients
+1	src	16	counseled
+5	src	31	worsening of pain
+2	src	54	frequent
+4	src	74	opioid withdrawal
+3	src	106	diminish
+3	src	115	over time

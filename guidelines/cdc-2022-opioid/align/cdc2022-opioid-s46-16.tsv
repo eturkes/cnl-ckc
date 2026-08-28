@@ -1,0 +1,18 @@
+0	ace	15	prescribes
+1	ace	29	opioid
+2	ace	41	patient
+2	ace	57	patient
+3	ace	71	mild-sleep-disordered-breathing
+4	ace	129	use
+5	ace	135	careful-monitoring
+2	ace	162	patient
+4	ace	181	use
+6	ace	187	cautious-dose-titration
+2	ace	219	patient
+5	src	0	Careful monitoring
+6	src	23	cautious dose titration
+4	src	57	used
+1	src	65	opioids
+0	src	77	prescribed
+2	src	92	patients
+3	src	106	mild sleep-disordered breathing

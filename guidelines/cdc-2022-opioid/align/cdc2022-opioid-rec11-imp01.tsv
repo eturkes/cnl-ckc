@@ -1,0 +1,32 @@
+0	ace	5	patient
+3	ace	19	severe-acute-pain
+4	ace	41	receives
+5	ace	52	benzodiazepine
+6	ace	76	long-term-therapy
+5	ace	102	benzodiazepine
+7	ace	123	stable-low-dosage
+1	ace	149	opioid-prescription
+2	ace	179	appropriate-therapy
+0	ace	207	patient
+8	ace	221	clinician
+9	ace	231	prescribes
+10	ace	245	opioid-pain-medication
+5	ace	275	benzodiazepine
+8	ace	299	clinician
+11	ace	323	particular-caution
+2	src	43	appropriate
+1	src	58	prescribe opioids
+0	src	81	patient
+5	src	112	benzodiazepine
+3	src	135	severe acute pain
+0	src	158	patient
+4	src	166	taking
+6	src	173	long-term
+7	src	184	stable low-dose
+5	src	200	benzodiazepine
+6	src	215	therapy
+8	src	225	clinicians
+11	src	247	particular caution
+9	src	271	prescribing
+10	src	283	opioid pain medication
+5	src	310	benzodiazepine

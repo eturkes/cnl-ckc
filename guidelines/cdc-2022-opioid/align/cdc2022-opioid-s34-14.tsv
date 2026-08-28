@@ -1,0 +1,12 @@
+0	ace	6	clinician
+1	ace	23	review
+3	ace	32	state
+2	ace	38	MME-threshold-policy
+1	ace	70	review
+3	ace	79	state
+3	ace	85	clinical-protocol
+0	src	0	Clinicians
+1	src	18	be aware
+2	src	30	policies related to MME thresholds
+3	src	80	clinical protocols
+3	src	120	states

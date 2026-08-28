@@ -1,0 +1,46 @@
+3	ace	6	clinician
+4	ace	23	consider
+5	ace	34	testing-benefit
+0	ace	60	opioid-initiation
+4	ace	89	consider
+6	ace	100	testing-risk
+0	ace	123	opioid-initiation
+2	ace	167	opioid-therapy
+1	ace	191	year
+3	ace	207	clinician
+4	ace	224	consider
+5	ace	235	testing-benefit
+1	ace	262	year
+4	ace	278	consider
+6	ace	289	testing-risk
+1	ace	313	year
+7	ace	321	toxicology-testing
+8	ace	344	assess
+9	ace	353	prescribed-opioid
+8	ace	379	assess
+10	ace	388	prescribed-controlled-substance
+8	ace	428	assess
+10	ace	437	nonprescribed-controlled-substance
+8	ace	480	assess
+11	ace	489	nonprescribed-opioid
+8	ace	518	assess
+11	ace	528	illicit-opioid
+8	ace	551	assess
+12	ace	560	benzodiazepine
+0	src	7	starting opioids
+1	src	28	periodically
+1	src	51	annually
+2	src	68	opioid therapy
+3	src	84	clinicians
+4	src	102	consider
+5	src	115	benefits
+6	src	128	risks
+7	src	137	toxicology testing
+8	src	159	assess
+9	src	170	prescribed opioids
+10	src	193	other prescription
+10	src	216	nonprescription
+10	src	232	controlled substances
+11	src	324	nonprescribed
+11	src	342	illicit opioids
+12	src	362	benzodiazepines

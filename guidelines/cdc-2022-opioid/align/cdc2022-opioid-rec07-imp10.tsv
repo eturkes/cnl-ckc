@@ -1,0 +1,25 @@
+3	ace	5	person
+3	ace	17	patient
+0	ace	36	clinician
+4	ace	50	ensure
+5	ace	60	affordable-follow-up-evaluation-access
+3	ace	107	person
+3	ace	120	person
+3	ace	132	patient
+1	ace	151	clinical-practice-organization
+4	ace	186	ensure
+5	ace	196	affordable-follow-up-evaluation-access
+3	ace	243	person
+3	ace	256	person
+3	ace	268	patient
+2	ace	287	health-system
+4	ace	305	ensure
+5	ace	315	affordable-follow-up-evaluation-access
+3	ace	362	person
+0	src	0	Clinicians
+1	src	12	practices
+2	src	27	health systems
+3	src	82	patients
+4	src	94	ensuring
+3	src	107	patients
+5	src	120	access and afford follow-up evaluation

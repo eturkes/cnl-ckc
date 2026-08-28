@@ -1,0 +1,22 @@
+1	ace	15	prescribes
+2	ace	29	opioid-pain-medication
+3	ace	59	benzodiazepine
+0	ace	107	particular-caution
+5	ace	146	patient-circumstance
+5	ace	175	patient-circumstance
+6	ace	196	warrants
+4	ace	207	concurrent
+3	ace	225	benzodiazepine
+1	ace	240	prescribing
+1	ace	277	prescribe
+2	ace	290	opioid-pain-medication
+3	ace	320	benzodiazepine
+0	src	4	particular caution
+1	src	28	prescribing
+2	src	40	opioid pain medication
+3	src	67	benzodiazepines
+4	src	83	concurrently
+5	src	121	patient circumstances
+6	src	143	warrant
+1	src	151	prescribing
+4	src	184	concomitantly

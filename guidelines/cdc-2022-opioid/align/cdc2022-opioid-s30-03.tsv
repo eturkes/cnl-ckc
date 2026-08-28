@@ -1,0 +1,9 @@
+0	ace	6	clinician
+1	ace	20	consult
+2	ace	30	qualified-pain-management-specialist
+3	ace	76	patient-specific-interventional-procedure-appropriateness-assessment
+0	src	0	Clinicians
+1	src	15	consult
+2	src	30	qualified pain management specialist
+3	src	149	determine potential appropriateness of specific interventional procedures
+3	src	233	patients’ indications and clinical circumstances

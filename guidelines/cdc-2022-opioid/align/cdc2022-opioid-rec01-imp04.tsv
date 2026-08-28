@@ -1,0 +1,36 @@
+0	ace	5	patient
+1	ace	19	long-term-opioid-use
+2	ace	53	additional-medication
+3	ace	82	acute-pain
+4	ace	99	nonopioid-medication
+5	ace	123	possible
+4	ace	168	nonopioid-medication
+0	ace	195	patient
+1	ace	209	long-term-opioid-use
+6	ace	243	additional-opioid
+3	ace	268	acute-pain
+6	ace	317	additional-opioid
+7	ace	342	expected-severe-pain-duration
+8	ace	383	restore
+9	ace	393	baseline-opioid-dosage
+0	ace	422	patient
+1	ace	436	long-term-opioid-use
+10	ace	467	prolonged-around-the-clock-additional-opioid-use
+11	ace	522	few-day-period
+12	ace	571	baseline-dosage-taper
+0	src	3	patient
+1	src	20	receiving opioids long term
+2	src	56	additional medication
+3	src	82	acute pain
+4	src	94	nonopioid medication
+5	src	136	possible
+6	src	153	additional opioid
+3	src	216	acute pain
+7	src	267	duration of pain severe enough
+6	src	309	additional opioid
+8	src	329	returning
+0	src	346	patient
+9	src	356	baseline opioid dosage
+12	src	412	taper to baseline dosage
+10	src	440	additional opioids were used around the clock
+11	src	490	more than a few days

@@ -1,0 +1,42 @@
+1	ace	5	patient
+2	ace	19	continued-opioid-risk
+2	ace	63	continued-opioid-benefit
+2	ace	96	continued-opioid-risk
+2	ace	118	outweighs
+2	ace	132	continued-opioid-benefit
+3	ace	235	meaningful-sustained-pain-improvement
+3	ace	305	meaningful-sustained-function-improvement
+4	ace	415	combined-opioid-dosage
+4	ace	446	combined-opioid-dosage
+4	ace	478	at least
+4	ace	487	50 MME-units-per-day
+5	ace	541	evidence-of-opioid-benefit
+6	ace	630	takes an opioid with a benzodiazepine
+5	ace	701	evidence-of-opioid-benefit
+7	ace	797	unfavorable-continued-opioid-benefit-risk-assessment
+8	ace	923	dosage-reduction
+9	ace	1014	opioid-discontinuation
+10	ace	1114	overdose
+11	ace	1199	serious-opioid-adverse-event
+0	ace	1332	clinician
+12	ace	1349	collaborate with
+13	ace	1388	opioid-taper
+14	ace	1409	reduce an opioid-dosage
+15	ace	1457	discontinue an opioid
+2	src	3	risks outweigh benefits of continued opioid therapy
+1	src	65	patients
+3	src	92	meaningful, sustained improvements in pain and function
+4	src	250	dosages of ≥50 MME/day
+6	src	276	opioids combined with benzodiazepines
+5	src	323	evidence of benefit
+7	src	364	benefits no longer outweigh risks
+8	src	419	dosage reduction
+9	src	439	discontinuation
+10	src	482	overdose
+11	src	500	serious adverse events
+0	src	525	clinicians
+12	src	543	work with
+13	src	565	taper
+14	src	575	reduce opioid dosage
+13	src	599	taper
+15	src	609	discontinue opioids

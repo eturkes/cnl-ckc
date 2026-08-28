@@ -1,0 +1,25 @@
+3	ace	29	opioid-prescription
+4	ace	56	acute-pain
+1	ace	93	review
+0	ace	102	state-PDMP-record
+2	ace	120	before
+3	ace	131	opioid-prescription
+3	ace	181	opioid-prescription
+5	ace	207	subacute-pain
+1	ace	247	review
+0	ace	256	state-PDMP-record
+2	ace	274	before
+3	ace	285	opioid-prescription
+3	ace	335	opioid-prescription
+6	ace	361	chronic-pain
+1	ace	400	review
+0	ace	409	state-PDMP-record
+2	ace	427	before
+3	ace	438	opioid-prescription
+0	src	9	PDMP data
+1	src	29	reviewed
+2	src	38	before
+3	src	45	every opioid prescription
+4	src	75	acute
+5	src	82	subacute
+6	src	95	chronic pain

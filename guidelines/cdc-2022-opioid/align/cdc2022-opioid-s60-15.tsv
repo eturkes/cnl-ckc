@@ -1,0 +1,15 @@
+1	ace	5	patient
+2	ace	13	receives a buprenorphine-treatment
+3	ace	55	opioid-use-disorder
+0	ace	85	severe-acute-pain
+4	ace	114	clinician
+5	ace	128	consider
+6	ace	140	additional-as-needed-buprenorphine-dose
+1	ace	188	patient
+0	src	4	severe acute pain
+1	src	72	patients
+2	src	81	receiving buprenorphine
+3	src	109	opioid use disorder
+4	src	130	clinicians
+5	src	145	consider
+6	src	154	additional as-needed doses of buprenorphine

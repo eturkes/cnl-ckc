@@ -1,0 +1,49 @@
+0	ace	6	clinician
+2	ace	20	discuss
+4	ace	30	continued-opioid
+5	ace	47	benefit
+3	ace	55	perception
+1	ace	73	patient
+0	ace	88	clinician
+2	ace	102	discuss
+4	ace	112	continued-opioid
+6	ace	129	risk
+3	ace	134	perception
+1	ace	152	patient
+0	ace	167	clinician
+2	ace	181	discuss
+4	ace	191	continued-opioid
+7	ace	208	adverse-effect
+3	ace	223	perception
+1	ace	241	patient
+0	ace	256	clinician
+8	ace	270	include
+9	ace	280	patient-concern
+10	ace	301	taper-plan
+0	ace	319	clinician
+8	ace	333	include
+1	ace	343	patient
+12	ace	356	medication-first-decrease
+11	ace	382	decision
+0	ace	398	clinician
+8	ace	412	include
+1	ace	422	patient
+13	ace	435	taper-speed
+11	ace	447	decision
+0	src	0	Clinicians
+2	src	15	discuss
+1	src	28	patient
+3	src	41	patient’s perceptions
+5	src	66	benefits
+6	src	76	risks
+7	src	87	adverse effects
+4	src	106	continued opioid therapy
+8	src	132	include
+9	src	140	patient concerns
+10	src	160	taper planning
+8	src	180	include
+1	src	188	patient
+11	src	200	making decisions
+12	src	225	which medication will be decreased first
+1	src	276	patient
+13	src	322	how quickly tapering will occur

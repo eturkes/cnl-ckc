@@ -1,0 +1,19 @@
+0	ace	5	patient
+2	ace	19	pain
+0	ace	32	patient
+1	ace	46	substance-use-disorder
+0	ace	78	patient
+4	ace	86	must receive
+3	ace	102	ongoing-pain-management
+5	ace	131	maximizes
+6	ace	143	benefit
+7	ace	158	risk
+1	src	9	substance use disorder
+0	src	103	patients
+2	src	117	co-occurring pain
+1	src	139	substance use disorder
+4	src	162	require
+3	src	170	ongoing pain management
+5	src	199	maximizes
+6	src	209	benefits
+7	src	230	risks

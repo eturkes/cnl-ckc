@@ -1,0 +1,15 @@
+4	ace	25	patient
+2	ace	59	screen
+0	ace	68	substance-use
+4	ace	90	patient
+3	ace	109	discuss
+0	ace	119	substance-use
+1	ace	133	concern
+4	ace	150	patient
+5	ace	163	nonjudgmental-manner
+2	src	0	Screen
+0	src	11	substance use
+3	src	29	discuss
+1	src	37	concerns
+4	src	55	patient
+5	src	68	nonjudgmental manner

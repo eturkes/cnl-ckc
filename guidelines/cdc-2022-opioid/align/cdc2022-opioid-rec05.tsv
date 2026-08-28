@@ -1,0 +1,73 @@
+0	ace	2	recommendation
+1	ace	22	category-B
+2	ace	58	evidence-type-4
+3	ace	95	clinician
+6	ace	105	changes an opioid-dosage
+4	ace	136	patient
+5	ace	149	receives an opioid-therapy
+3	ace	185	clinician
+7	ace	202	weigh
+8	ace	210	benefit
+9	ace	228	risk
+11	ace	244	heed a caution
+8	ace	265	benefit
+10	ace	273	outweigh
+9	ace	285	risk
+3	ace	301	clinician
+12	ace	318	work
+4	ace	330	patient
+13	ace	349	optimize
+14	ace	360	nonopioid-therapy
+15	ace	389	continue an opioid-therapy
+8	ace	422	benefit
+10	ace	439	outweigh
+9	ace	450	risk
+3	ace	466	clinician
+13	ace	483	optimize
+16	ace	494	different-therapy
+12	ace	523	work
+4	ace	535	patient
+17	ace	560	gradual-taper
+18	ace	585	discontinue an opioid
+3	ace	614	clinician
+19	ace	656	life-threatening-warning
+20	ace	697	abrupt-discontinuation
+21	ace	739	rapid-dosage-reduction
+22	ace	769	higher-dosage
+4	src	4	patient
+5	src	13	already receiving opioid therapy
+3	src	47	clinicians
+7	src	75	weigh
+8	src	81	benefits
+9	src	94	risks
+11	src	104	exercise care
+6	src	123	changing opioid dosage
+8	src	150	benefits
+10	src	159	outweigh
+9	src	168	risks
+3	src	203	clinicians
+12	src	221	work
+4	src	239	patient
+13	src	251	optimize
+14	src	260	nonopioid therapies
+15	src	286	continuing opioid therapy
+8	src	316	benefits
+10	src	332	outweigh
+9	src	341	risks
+3	src	376	clinicians
+13	src	394	optimize
+16	src	403	other therapies
+12	src	423	work
+4	src	441	patient
+17	src	453	gradually taper
+4	src	548	patient
+18	src	581	discontinue opioids
+19	src	636	life-threatening issue
+19	src	667	warning signs of impending overdose
+20	src	780	discontinued abruptly
+3	src	807	clinicians
+21	src	829	rapidly reduce opioid dosages
+22	src	864	higher dosages
+0	src	880	recommendation
+1	src	895	category: B
+2	src	908	evidence type: 4

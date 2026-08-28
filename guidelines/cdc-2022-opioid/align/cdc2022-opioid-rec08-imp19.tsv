@@ -1,0 +1,24 @@
+0	ace	5	patient
+2	ace	13	experiences
+3	ace	27	nonfatal-opioid-overdose
+1	ace	63	clinician
+4	ace	80	evaluate
+5	ace	92	opioid-use-disorder
+0	ace	120	patient
+0	ace	134	patient
+2	ace	142	experiences
+3	ace	156	nonfatal-opioid-overdose
+0	ace	189	patient
+6	ace	204	opioid-use-disorder-treatment-need
+1	ace	250	clinician
+7	ace	267	ensure
+7	ace	277	opioid-use-disorder-treatment
+0	ace	315	patient
+0	src	3	patients
+2	src	12	experience
+3	src	23	nonfatal opioid overdose
+1	src	49	clinicians
+4	src	67	evaluate
+5	src	80	opioid use disorder
+7	src	104	treat or arrange treatment
+6	src	131	if needed

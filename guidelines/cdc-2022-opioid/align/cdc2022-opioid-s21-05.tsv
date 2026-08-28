@@ -1,0 +1,12 @@
+0	ace	6	clinician
+1	ace	23	review
+2	ace	33	FDA-approved-labeling
+4	ace	64	pharmacologic-therapy
+1	ace	97	review
+3	ace	106	boxed-warning
+4	ace	129	pharmacologic-therapy
+0	src	0	Clinicians
+1	src	18	review
+2	src	25	FDA-approved labeling
+3	src	58	boxed warnings
+4	src	111	pharmacologic therapy

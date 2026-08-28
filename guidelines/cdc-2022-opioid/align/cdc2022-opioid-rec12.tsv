@@ -1,0 +1,43 @@
+0	ace	2	recommendation
+1	ace	22	category-A
+0	ace	33	recommendation
+2	ace	58	evidence-type-1
+0	ace	74	recommendation
+3	ace	96	clinician
+4	ace	113	offer
+5	ace	122	evidence-based-medication-treatment
+6	ace	164	patient
+7	ace	183	opioid-use-disorder
+9	ace	206	medication-free
+8	ace	222	detoxification
+10	ace	246	recommended-treatment
+7	ace	275	opioid-use-disorder
+9	ace	302	medication-free
+8	ace	318	detoxification
+11	ace	333	increases
+12	ace	345	risk
+13	ace	356	drug-use-resumption
+11	ace	380	increases
+12	ace	392	risk
+14	ace	404	overdose
+11	ace	417	increases
+12	ace	429	risk
+15	ace	441	overdose-death
+3	src	0	Clinicians
+4	src	18	offer
+5	src	35	treatment with evidence-based medications
+6	src	86	patients
+7	src	100	opioid use disorder
+8	src	121	Detoxification
+9	src	148	without medications
+7	src	172	opioid use disorder
+10	src	196	not recommended
+7	src	216	opioid use disorder
+11	src	247	increased
+12	src	257	risks
+13	src	267	resuming drug use
+14	src	286	overdose
+15	src	300	overdose death
+0	src	316	recommendation
+1	src	331	category: A
+2	src	344	evidence type: 1

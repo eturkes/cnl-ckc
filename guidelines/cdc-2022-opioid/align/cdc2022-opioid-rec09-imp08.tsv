@@ -1,0 +1,14 @@
+0	ace	5	clinician
+2	ace	25	state-PDMP-record
+1	ace	49	patient
+0	ace	66	clinician
+5	ace	83	not
+3	ace	87	dismiss
+1	ace	99	patient
+4	ace	114	practice
+0	src	0	Clinicians
+5	src	18	not
+3	src	22	dismiss
+1	src	30	patients
+4	src	50	practice
+2	src	75	PDMP information

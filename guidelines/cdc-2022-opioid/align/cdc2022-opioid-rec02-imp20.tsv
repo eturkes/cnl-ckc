@@ -1,0 +1,28 @@
+0	ace	5	patient
+1	ace	19	subacute-pain
+2	ace	37	starts
+3	ace	47	opioid-therapy
+4	ace	69	acute-pain
+5	ace	84	receives
+3	ace	97	opioid-therapy
+6	ace	119	at least 30 days
+7	ace	147	clinician
+8	ace	164	address
+9	ace	174	potentially-reversible-chronic-pain-cause
+10	ace	227	reassess
+3	ace	240	opioid-therapy
+11	ace	277	unintentional-long-term-opioid-therapy
+0	src	4	patients
+1	src	18	subacute pain
+2	src	36	started
+3	src	44	opioid therapy
+4	src	63	acute pain
+5	src	88	treated
+3	src	101	opioid therapy
+6	src	120	≥30 days
+7	src	130	clinicians
+9	src	160	potentially reversible causes of chronic pain
+8	src	210	addressed
+4	src	252	acute pain
+11	src	272	unintentionally become long-term opioid therapy
+10	src	369	reassessment

@@ -1,0 +1,24 @@
+0	ace	5	clinician
+2	ace	15	does not reach
+3	ace	32	benefit-risk-consensus
+1	ace	62	patient
+0	ace	79	clinician
+4	ace	96	acknowledge
+5	ace	110	discordance
+6	ace	144	empathetic-response
+7	ace	175	implement
+8	ace	187	patient-centered-treatment-change
+9	ace	232	avoid
+10	ace	240	patient-abandonment
+1	src	5	patients
+0	src	18	clinicians
+2	src	33	unable to arrive
+3	src	55	consensus on the assessment of benefits and risks
+0	src	106	clinicians
+4	src	124	acknowledge
+5	src	141	discordance
+6	src	162	empathy
+7	src	183	implement
+8	src	193	treatment changes in a patient-centered manner
+9	src	246	avoiding
+10	src	255	patient abandonment

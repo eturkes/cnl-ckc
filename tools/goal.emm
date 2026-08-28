@@ -256,6 +256,29 @@ Define [[check_pl_inventory]] taking guideline_path, docids:
     If [[sorted]](expected_names) does not equal actual_names:
         Do [[violation]]("pl-inventory", "committed pl/ does not match ace/ document set").
 
+Define [[check_alignment]] taking guideline_path, docids:
+    Set align_dir to [[guideline_path.joinpath]]("align").
+    Set align_symlink to [[align_dir.is_symlink]]().
+    If align_symlink:
+        Do [[violation]]("align-dir", "is a symlink: " plus [[str]](align_dir)).
+    If not [[align_dir.is_dir]]():
+        Do [[violation]]("missing-align", [[str]](align_dir)).
+    Set expected_names to <>.
+    For each docid in docids:
+        Do [[expected_names.append]](docid plus ".tsv").
+    Set actual_names to <>.
+    For each entry in [[sorted]]([[align_dir.iterdir]]()):
+        Set entry_name to entry.name.
+        Set regular to [[entry.is_file]]().
+        Set symlink to [[entry.is_symlink]]().
+        If not regular:
+            Do [[violation]]("align-entry", "not a regular file: " plus entry_name).
+        If symlink:
+            Do [[violation]]("align-entry", "not a regular file: " plus entry_name).
+        Do [[actual_names.append]](entry_name).
+    If [[sorted]](expected_names) does not equal actual_names:
+        Do [[violation]]("align-inventory", "committed align/ does not match ace/ document set").
+
 Define [[compiled_pl_path]] taking tracked:
     Set parts to [[tracked.split]]("/").
     If [[len]](parts) does not equal 4:
@@ -4744,6 +4767,7 @@ Define [[check_command]] taking nothing:
         Set docids to [[collected.pop]](0).
         Set lexicon_path to [[collected.pop]](0).
         Do [[check_pl_inventory]](entry, docids).
+        Do [[check_alignment]](entry, docids).
         Set plan_record to <entry, ace_paths, docids, lexicon_path>.
         Do [[plans.append]](plan_record).
     If not plans:

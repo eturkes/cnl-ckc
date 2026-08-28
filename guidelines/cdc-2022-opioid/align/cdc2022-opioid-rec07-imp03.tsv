@@ -1,0 +1,23 @@
+3	ace	15	starts
+4	ace	25	immediate-release-opioid
+4	ace	72	immediate-release-opioid
+5	ace	104	opioid-dosage
+5	ace	126	opioid-dosage
+6	ace	149	less than
+7	ace	159	50 MME-units-per-day
+0	ace	186	initial-follow-up-interval
+0	ace	219	duration
+0	ace	236	duration
+1	ace	245	approximates
+2	ace	258	4 weeks
+8	ace	289	consider
+0	ace	302	initial-follow-up-interval
+0	src	3	initial follow-up interval
+1	src	30	closer to
+2	src	40	4 weeks
+8	src	55	considered
+3	src	71	starting
+4	src	80	immediate-release opioids
+5	src	111	dosage
+6	src	121	<
+7	src	122	50 MME/day

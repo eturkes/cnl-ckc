@@ -1,0 +1,12 @@
+3	ace	15	increases
+3	ace	28	opioid-dosage
+1	ace	52	acute-pain-treatment
+0	ace	80	opioid-naive-patient
+2	ace	110	few-day-period
+4	ace	151	conduct
+4	ace	161	close-patient-monitoring
+0	src	4	opioid-naïve outpatients
+1	src	34	acute pain treated with an opioid
+2	src	72	a few days or less
+3	src	92	dosage increases
+4	src	169	close monitoring

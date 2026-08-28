@@ -1,0 +1,25 @@
+0	ace	6	clinician
+2	ace	34	opioid-use-disorder-specialist-search-assistance
+1	ace	88	patient
+0	ace	103	clinician
+4	ace	120	arrange
+5	ace	130	specialist-follow-up
+1	ace	157	patient
+3	ace	172	qualified-opioid-use-disorder-treatment-specialist
+0	ace	230	clinician
+6	ace	247	coordinate
+7	ace	260	continuing-care
+1	ace	282	patient
+3	ace	297	qualified-opioid-use-disorder-treatment-specialist
+0	src	0	Clinicians
+2	src	18	assist
+1	src	25	patients
+2	src	37	finding
+3	src	45	qualified treatment specialists
+4	src	85	arrange
+1	src	97	patients
+5	src	109	follow up
+3	src	124	these specialists
+6	src	154	coordinate
+7	src	165	continuing care
+3	src	186	these specialists

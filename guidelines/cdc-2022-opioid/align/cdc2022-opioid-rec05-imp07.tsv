@@ -1,0 +1,19 @@
+0	ace	6	clinician
+2	ace	23	collaborate
+1	ace	42	patient
+3	ace	56	opioid-taper-plan
+0	ace	81	clinician
+4	ace	98	include
+1	ace	108	patient
+5	ace	121	taper-speed-decision
+4	ace	153	include
+1	ace	163	patient
+6	ace	176	taper-pause-decision
+0	src	0	Clinicians
+2	src	18	collaborate
+1	src	39	patient
+3	src	54	tapering plan
+4	src	69	including
+1	src	79	patient
+5	src	109	how quickly tapering will occur
+6	src	145	when pauses in the taper might be warranted

@@ -1,0 +1,26 @@
+0	ace	5	clinician
+4	ace	15	starts
+3	ace	25	ER-LA-opioid
+0	ace	61	clinician
+1	ace	78	consider
+2	ace	89	lower-end-follow-up-interval
+0	ace	140	clinician
+5	ace	150	increases
+3	ace	163	ER-LA-opioid
+0	ace	206	clinician
+1	ace	223	consider
+2	ace	234	lower-end-follow-up-interval
+6	ace	299	combined-opioid-dosage
+6	ace	330	combined-opioid-dosage
+7	ace	362	at least 50 MME-units-per-day
+0	ace	403	clinician
+1	ace	420	consider
+2	ace	431	lower-end-follow-up-interval
+0	src	0	Clinicians
+1	src	18	consider
+2	src	27	follow-up intervals within the lower end of this range
+3	src	87	ER/LA opioids
+4	src	105	started
+5	src	116	increased
+6	src	217	total daily opioid dosage
+7	src	246	≥50 MME/day

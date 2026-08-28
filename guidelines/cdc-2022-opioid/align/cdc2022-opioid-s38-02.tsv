@@ -1,0 +1,25 @@
+0	ace	6	clinician
+2	ace	23	discuss
+3	ace	34	opioid-discontinuation-goal
+1	ace	69	patient
+0	ace	84	clinician
+2	ace	101	discuss
+4	ace	111	benefit-risk-favorable-opioid-reduction-goal
+1	ace	163	patient
+0	ace	178	clinician
+7	ace	195	individualize
+5	ace	211	taper-goal
+1	ace	228	patient
+7	ace	244	individualized-benefit-risk-assessment
+0	ace	290	clinician
+6	ace	307	consider
+6	ace	318	patient-circumstance
+7	ace	349	individualized-benefit-risk-assessment
+2	src	0	Open discussion
+0	src	28	clinician
+1	src	42	patient
+3	src	81	goal of the taper is stopping opioids
+4	src	122	reducing opioids to a point where benefits outweigh risks
+5	src	185	goal
+6	src	209	patient’s circumstances
+7	src	240	individualized assessment of benefits and risks

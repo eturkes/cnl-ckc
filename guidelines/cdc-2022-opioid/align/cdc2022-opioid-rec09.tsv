@@ -1,0 +1,55 @@
+0	ace	2	recommendation
+1	ace	22	category-B-recommendation
+2	ace	58	evidence-type-4-recommendation
+3	ace	95	clinician
+4	ace	119	initial-opioid-therapy
+5	ace	149	acute-pain
+3	ace	169	clinician
+9	ace	186	review
+10	ace	195	controlled-substance-prescription-history
+11	ace	244	state-PDMP-record
+3	ace	268	clinician
+4	ace	292	initial-opioid-therapy
+6	ace	321	subacute-pain
+3	ace	344	clinician
+9	ace	361	review
+10	ace	370	controlled-substance-prescription-history
+11	ace	419	state-PDMP-record
+3	ace	443	clinician
+4	ace	467	initial-opioid-therapy
+7	ace	496	chronic-pain
+3	ace	518	clinician
+9	ace	535	review
+10	ace	544	controlled-substance-prescription-history
+11	ace	593	state-PDMP-record
+3	ace	618	clinician
+9	ace	635	review
+10	ace	644	controlled-substance-prescription-history
+11	ace	693	state-PDMP-record
+8	ace	720	chronic-opioid-therapy
+3	ace	750	clinician
+12	ace	767	assess
+13	ace	777	opioid-dosage
+15	ace	797	high-overdose-risk
+12	ace	827	assess
+14	ace	836	medication-combination
+15	ace	865	high-overdose-risk
+4	src	17	initial
+4	src	25	opioid therapy
+5	src	44	acute
+6	src	51	subacute
+7	src	64	chronic pain
+8	src	82	periodically
+8	src	102	opioid therapy
+8	src	121	chronic pain
+3	src	135	clinicians
+9	src	153	review
+10	src	164	patient’s history of controlled substance prescriptions
+11	src	226	state prescription drug monitoring program (PDMP) data
+12	src	284	determine
+13	src	327	opioid dosages
+14	src	345	combinations
+15	src	382	high risk for overdose
+0	src	406	recommendation
+1	src	421	category: B
+2	src	434	evidence type: 4

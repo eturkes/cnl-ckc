@@ -1,0 +1,32 @@
+1	ace	5	patient
+2	ace	19	subacute-pain
+0	ace	44	clinician
+3	ace	61	reevaluate
+1	ace	76	patient
+1	ace	90	patient
+2	ace	104	subacute-pain
+0	ace	129	clinician
+3	ace	146	reevaluate
+4	ace	159	treatment-course
+1	ace	184	patient
+1	ace	198	patient
+2	ace	212	subacute-pain
+0	ace	237	clinician
+6	ace	254	address
+5	ace	264	potentially-reversible-ongoing-pain-cause
+1	ace	314	patient
+1	ace	328	patient
+2	ace	342	subacute-pain
+0	ace	367	clinician
+7	ace	384	optimize
+8	ace	395	pain-management
+1	ace	419	patient
+0	src	0	Clinicians
+3	src	18	reevaluate
+1	src	29	patients
+2	src	43	subacute pain
+4	src	67	treatment course
+5	src	97	potentially reversible causes of ongoing pain
+6	src	147	addressed
+7	src	162	optimize
+8	src	171	pain management

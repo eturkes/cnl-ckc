@@ -1,0 +1,38 @@
+0	ace	6	taper-team-member
+1	ace	28	support
+2	ace	38	clinician
+4	ace	58	opioid-taper
+5	ace	81	telephone-contact
+0	ace	106	taper-team-member
+1	ace	128	support
+3	ace	138	patient
+4	ace	156	opioid-taper
+5	ace	179	telephone-contact
+0	ace	204	taper-team-member
+1	ace	226	support
+2	ace	236	clinician
+4	ace	256	opioid-taper
+6	ace	279	telehealth-visit
+0	ace	303	taper-team-member
+1	ace	325	support
+3	ace	335	patient
+4	ace	353	opioid-taper
+6	ace	376	telehealth-visit
+0	ace	400	taper-team-member
+1	ace	422	support
+2	ace	432	clinician
+4	ace	452	opioid-taper
+7	ace	475	face-to-face-visit
+0	ace	501	taper-team-member
+1	ace	523	support
+3	ace	533	patient
+4	ace	551	opioid-taper
+7	ace	574	face-to-face-visit
+0	src	0	Team members
+1	src	82	support
+2	src	94	clinician
+3	src	108	patient
+4	src	127	ongoing taper process
+5	src	157	telephone contact
+6	src	176	telehealth visits
+7	src	198	face-to-face visits

@@ -1,0 +1,12 @@
+0	ace	20	initial-opioid-prescription
+0	ace	56	initial-opioid-prescription
+3	ace	90	duration
+1	ace	115	needs a taper
+4	ace	154	calibrate
+2	ace	166	taper-duration
+3	ace	190	duration
+1	src	5	taper is needed
+2	src	22	taper durations
+4	src	55	adjusted
+3	src	81	duration
+0	src	97	initial opioid prescription

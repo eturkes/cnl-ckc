@@ -1,0 +1,10 @@
+0	ace	23	avoid
+1	ace	31	stool-softener
+3	ace	46	without-another-laxative
+0	ace	95	avoid
+2	ace	103	fiber-laxative
+3	ace	118	without-another-laxative
+1	src	0	Stool softeners
+2	src	19	fiber laxatives
+3	src	35	without another laxative
+0	src	70	avoided

@@ -1,0 +1,15 @@
+0	ace	19	prolonged-around-the-clock-opioid-use
+2	ace	64	acute-pain
+1	ace	84	few-day-period
+3	ace	110	clinician
+4	ace	127	prescribe
+5	ace	139	brief-withdrawal-minimizing-taper
+6	ace	199	opioid-discontinuation
+0	src	3	opioids are used continuously (around the clock)
+1	src	56	more than a few days
+2	src	81	acute pain
+3	src	93	clinicians
+4	src	111	prescribe
+5	src	123	brief taper
+5	src	138	minimize withdrawal symptoms
+6	src	170	discontinuation of opioids

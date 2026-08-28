@@ -1,0 +1,15 @@
+3	ace	6	DAST
+2	ace	16	validated-screening-tool
+4	ace	48	TAPS
+2	ace	58	validated-screening-tool
+5	ace	90	AUDIT-C
+2	ace	103	validated-screening-tool
+0	ace	135	clinician
+1	ace	149	use
+2	ace	155	validated-screening-tool
+0	src	0	Clinicians
+1	src	15	use
+2	src	19	validated screening tools
+3	src	84	DAST
+4	src	174	TAPS
+5	src	268	AUDIT-C

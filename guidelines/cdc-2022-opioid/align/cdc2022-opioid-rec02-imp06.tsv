@@ -1,0 +1,30 @@
+0	ace	5	patient
+1	ace	19	pain
+0	ace	32	patient
+2	ace	46	single-joint-osteoarthritis
+3	ace	80	nonpharmacologic-intervention
+4	ace	110	does not improve
+1	ace	131	pain
+5	ace	143	topical-NSAID
+6	ace	161	treat
+1	ace	171	pain
+0	ace	182	patient
+1	ace	196	pain
+0	ace	209	patient
+2	ace	223	few-joint-osteoarthritis
+3	ace	254	nonpharmacologic-intervention
+4	ace	284	does not improve
+1	ace	305	pain
+5	ace	317	topical-NSAID
+6	ace	335	treat
+1	ace	345	pain
+0	src	5	patients
+2	src	26	osteoarthritis
+4	src	49	insufficient response
+3	src	74	nonpharmacologic interventions
+1	src	136	pain
+5	src	142	topical NSAIDs
+6	src	164	used
+0	src	172	patients
+1	src	186	pain
+2	src	196	single or few joints

@@ -1,0 +1,29 @@
+1	ace	20	other-clinician
+2	ace	36	concurrent
+3	ace	47	controlled-medication
+4	ace	69	prescription
+0	ace	93	clinician
+5	ace	110	check
+6	ace	118	state-PDMP-record
+11	ace	173	opioid
+13	ace	180	central-nervous-system-depressant
+12	ace	214	coprescription
+0	ace	240	clinician
+7	ace	257	consider
+9	ace	268	pharmacist
+10	ace	279	management-team
+8	ace	295	involvement
+0	src	0	Clinicians
+5	src	18	check
+6	src	28	PDMP
+2	src	37	concurrent
+3	src	48	controlled medications
+4	src	71	prescribed
+1	src	85	other clinicians
+7	src	136	consider
+8	src	145	involving
+9	src	155	pharmacists
+10	src	182	management team
+11	src	203	opioids
+12	src	215	coprescribed
+13	src	239	central nervous system depressants

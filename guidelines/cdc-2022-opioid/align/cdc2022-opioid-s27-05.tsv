@@ -1,0 +1,25 @@
+0	ace	5	patient
+1	ace	19	gastrointestinal-comorbidity
+2	ace	68	current-gastrointestinal-bleeding
+2	ace	122	previous-gastrointestinal-bleeding
+3	ace	182	use
+4	ace	188	cyclooxygenase-2-inhibitor
+0	ace	223	patient
+7	ace	240	gastrointestinal-risk-minimization
+0	ace	281	patient
+1	ace	295	gastrointestinal-comorbidity
+2	ace	344	current-gastrointestinal-bleeding
+2	ace	398	previous-gastrointestinal-bleeding
+3	ace	458	use
+5	ace	465	NSAID
+6	ace	478	proton-pump-inhibitor
+0	ace	508	patient
+7	ace	525	gastrointestinal-risk-minimization
+0	src	3	patients
+1	src	17	gastrointestinal comorbidities
+2	src	60	current or previous gastrointestinal bleeding
+4	src	107	cyclooxygenase-2 inhibitors
+5	src	138	NSAIDs
+6	src	150	proton pump inhibitors
+3	src	180	used
+7	src	188	minimize risk

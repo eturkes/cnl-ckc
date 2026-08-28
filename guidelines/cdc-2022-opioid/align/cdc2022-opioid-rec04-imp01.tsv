@@ -1,0 +1,18 @@
+0	ace	3	opioid-dosage-recommendation
+2	ace	42	inflexible
+1	ace	53	standard
+0	ace	66	opioid-dosage-recommendation
+3	ace	104	rigid
+1	ace	110	standard
+0	ace	123	opioid-dosage-recommendation
+4	ace	157	decision-guidepost
+4	ace	179	decision-guidepost
+5	ace	202	inform
+6	ace	211	clinician-patient-decision
+0	src	4	recommendations related to opioid dosages
+2	src	80	inflexible
+3	src	92	rigid
+1	src	98	standard of care
+4	src	148	guideposts
+5	src	167	inform
+6	src	174	clinician-patient decision-making

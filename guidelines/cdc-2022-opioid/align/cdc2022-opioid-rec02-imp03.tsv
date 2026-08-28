@@ -1,0 +1,19 @@
+0	ace	5	patient
+1	ace	19	limited-exercise-access
+2	ace	50	physical-therapy
+3	ace	71	help
+0	ace	80	patient
+0	ace	94	patient
+4	ace	108	pain
+5	ace	127	improve
+6	ace	142	low-intensity-exercise
+2	ace	172	physical-therapy
+3	ace	193	help
+0	ace	202	patient
+2	src	0	Physical therapy
+3	src	24	helpful
+0	src	50	patients
+1	src	68	limited access to safe public spaces or public recreation facilities for exercise
+4	src	159	pain
+5	src	172	improved
+6	src	186	low-intensity physical exercise

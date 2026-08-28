@@ -1,0 +1,32 @@
+0	ace	6	opioid-policy-setter
+1	ace	38	impose
+2	ace	47	rigid-dose-standard
+1	ace	82	impose
+3	ace	91	rigid-duration-standard
+1	ace	130	impose
+4	ace	139	performance-incentive
+0	ace	168	opioid-policy-setter
+5	ace	196	ensure
+6	ace	205	taper-protective-threshold-policy
+0	ace	246	opioid-policy-setter
+7	ace	274	not penalize
+8	ace	289	clinician
+9	ace	308	high-dosage-patient-acceptance
+0	ace	346	opioid-policy-setter
+7	ace	374	not penalize
+8	ace	389	clinician
+10	ace	408	long-term-opioid-taper-restraint
+0	src	0	Payers
+0	src	8	health systems
+0	src	28	state medical boards
+1	src	100	set
+2	src	104	rigid standards
+4	src	123	performance incentives
+2	src	157	dose
+3	src	165	duration
+5	src	200	ensure
+6	src	212	policies based on cautionary dosage thresholds do not result in rapid tapers or abrupt discontinuation of opioids
+7	src	359	do not penalize
+8	src	375	clinicians
+9	src	390	accepting new patients who are using prescribed opioids for chronic pain, including those receiving high dosages of opioids
+10	src	522	refraining from rapidly tapering patients prescribed long-term opioid medications

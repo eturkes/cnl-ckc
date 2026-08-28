@@ -1,0 +1,38 @@
+0	ace	5	clinician
+3	ace	25	controlled-substance-prescription-history
+2	ace	74	state-PDMP-record
+1	ace	98	patient
+0	ace	115	clinician
+4	ace	132	interpret
+3	ace	146	controlled-substance-prescription-history
+5	ace	195	patient-history
+0	ace	217	clinician
+3	ace	237	controlled-substance-prescription-history
+2	ace	286	state-PDMP-record
+0	ace	327	clinician
+4	ace	344	interpret
+3	ace	358	controlled-substance-prescription-history
+6	ace	407	physical-finding
+0	ace	430	clinician
+3	ace	450	controlled-substance-prescription-history
+2	ace	499	state-PDMP-record
+0	ace	540	clinician
+4	ace	557	interpret
+3	ace	571	controlled-substance-prescription-history
+7	ace	620	relevant-testing
+0	ace	643	clinician
+3	ace	663	controlled-substance-prescription-history
+2	ace	712	state-PDMP-record
+0	ace	753	clinician
+8	ace	770	communicate
+9	ace	810	protect
+0	src	0	Clinicians
+2	src	31	PDMP information
+3	src	54	medications prescribed
+4	src	94	in the context of other clinical information
+5	src	156	patient’s history
+6	src	175	physical findings
+7	src	204	relevant testing
+8	src	235	communicate
+9	src	256	protect
+1	src	270	patient

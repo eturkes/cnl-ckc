@@ -1,0 +1,53 @@
+9	ace	6	evidence-based-psychotherapy
+13	ace	40	nonbenzodiazepine-anxiety-treatment
+11	ace	83	specific-antidepressant
+13	ace	112	nonbenzodiazepine-anxiety-treatment
+12	ace	155	anxiety-approved-nonbenzodiazepine-medication
+13	ace	206	nonbenzodiazepine-anxiety-treatment
+10	ace	249	cognitive-behavioral-therapy
+9	ace	284	evidence-based-psychotherapy
+0	ace	319	patient
+14	ace	334	anxiety
+2	ace	346	receives
+1	ace	357	benzodiazepine
+14	ace	380	anxiety
+3	ace	404	tapers
+1	ace	415	benzodiazepine
+0	ace	438	patient
+8	ace	472	offer
+13	ace	480	nonbenzodiazepine-anxiety-treatment
+0	ace	523	patient
+0	ace	537	patient
+14	ace	552	anxiety
+2	ace	564	receives
+1	ace	575	benzodiazepine
+14	ace	598	anxiety
+4	ace	622	discontinues
+1	ace	639	benzodiazepine
+0	ace	662	patient
+8	ace	696	offer
+13	ace	704	nonbenzodiazepine-anxiety-treatment
+0	ace	747	patient
+0	ace	761	patient
+5	ace	769	receives
+6	ace	781	opioid
+7	ace	792	requires
+14	ace	804	anxiety
+8	ace	850	offer
+13	ace	858	nonbenzodiazepine-anxiety-treatment
+0	ace	901	patient
+1	src	3	benzodiazepines
+2	src	19	prescribed
+14	src	34	anxiety
+3	src	46	tapered
+4	src	57	discontinued
+0	src	77	patients
+5	src	86	receiving
+6	src	96	opioids
+7	src	104	require
+13	src	112	treatment for anxiety
+9	src	135	evidence-based psychotherapies
+10	src	173	cognitive behavioral therapy
+11	src	204	specific antidepressants
+12	src	232	other nonbenzodiazepine medications approved for anxiety
+8	src	309	offered

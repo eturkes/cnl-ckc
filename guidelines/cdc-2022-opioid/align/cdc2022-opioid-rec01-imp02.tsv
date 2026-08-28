@@ -1,0 +1,23 @@
+0	ace	6	acute-pain
+1	ace	17	diagnosis
+3	ace	27	warrants
+4	ace	39	opioid-use
+0	ace	57	acute-pain
+2	ace	68	severity
+3	ace	77	warrants
+4	ace	89	opioid-use
+5	ace	111	clinician
+6	ace	128	prescribe
+7	ace	141	immediate-release-opioid
+8	ace	171	lowest-effective-dose
+9	ace	200	expected-severe-pain-duration
+1	src	5	diagnosis
+2	src	19	severity
+0	src	31	acute pain
+3	src	42	warrant
+4	src	54	use of opioids
+5	src	70	clinicians
+6	src	88	prescribe
+7	src	98	immediate-release opioids
+8	src	154	lowest effective dose
+9	src	226	expected duration of pain severe enough

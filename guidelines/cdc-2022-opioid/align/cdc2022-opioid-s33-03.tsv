@@ -1,0 +1,12 @@
+0	ace	27	use
+1	ace	33	calculated-MME-dosage
+2	ace	62	opioid-conversion-dosage
+3	ace	111	use
+4	ace	117	substantially-lower-opioid-dosage
+5	ace	161	opioid-conversion
+0	src	7	use
+1	src	15	calculated dose in MMEs
+2	src	42	determine the doses to use when converting one opioid to another
+5	src	113	converting opioids
+3	src	161	dosed
+4	src	172	substantially lower dose

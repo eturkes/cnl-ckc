@@ -1,0 +1,23 @@
+0	ace	5	patient
+1	ace	19	chronic-pain
+2	ace	43	clinician
+3	ace	57	assess
+5	ace	67	anxiety
+0	ace	83	patient
+4	ace	98	validated-assessment-instrument
+3	ace	138	assess
+6	ace	147	posttraumatic-stress-disorder
+0	ace	185	patient
+4	ace	200	validated-assessment-instrument
+3	ace	240	assess
+7	ace	249	depression
+0	ace	268	patient
+4	ace	283	validated-assessment-instrument
+0	src	86	patients
+1	src	100	chronic pain
+4	src	131	validated instruments
+3	src	267	assessment
+5	src	282	anxiety
+6	src	291	posttraumatic stress disorder
+7	src	333	depression
+2	src	361	clinicians

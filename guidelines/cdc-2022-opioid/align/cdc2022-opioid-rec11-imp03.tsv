@@ -1,0 +1,30 @@
+0	ace	6	buprenorphine-treatment
+2	ace	36	opioid-use-disorder-medication-treatment
+1	ace	84	methadone-treatment
+2	ace	110	opioid-use-disorder-medication-treatment
+4	ace	157	patient
+5	ace	165	takes
+6	ace	173	benzodiazepine
+3	ace	220	withhold
+0	ace	231	buprenorphine-treatment
+4	ace	264	patient
+3	ace	287	withhold
+1	ace	298	methadone-treatment
+4	ace	327	patient
+4	ace	341	patient
+5	ace	349	takes
+7	ace	357	central-nervous-system-depressant
+3	ace	423	withhold
+0	ace	434	buprenorphine-treatment
+3	ace	490	withhold
+1	ace	501	methadone-treatment
+0	src	0	Buprenorphine
+1	src	17	methadone
+2	src	31	opioid use disorder
+3	src	65	withheld
+4	src	79	patients
+5	src	88	taking
+6	src	95	benzodiazepines
+7	src	114	other medications
+7	src	137	depress
+7	src	149	central nervous system

@@ -1,0 +1,56 @@
+0	ace	6	clinician
+2	ace	23	explain
+3	ace	34	expected-opioid-benefit
+1	ace	65	patient
+7	ace	83	opioid-initiation
+0	ace	108	clinician
+2	ace	125	explain
+3	ace	136	expected-opioid-benefit
+1	ace	167	patient
+8	ace	185	opioid-continuation
+0	ace	212	clinician
+2	ace	229	explain
+4	ace	239	common-opioid-risk
+1	ace	265	patient
+7	ace	283	opioid-initiation
+0	ace	308	clinician
+2	ace	325	explain
+4	ace	335	common-opioid-risk
+1	ace	361	patient
+8	ace	379	opioid-continuation
+0	ace	406	clinician
+2	ace	423	explain
+5	ace	433	serious-opioid-risk
+1	ace	460	patient
+7	ace	478	opioid-initiation
+0	ace	503	clinician
+2	ace	520	explain
+5	ace	530	serious-opioid-risk
+1	ace	557	patient
+8	ace	575	opioid-continuation
+0	ace	602	clinician
+2	ace	619	explain
+6	ace	630	opioid-alternative
+1	ace	656	patient
+7	ace	674	opioid-initiation
+0	ace	699	clinician
+2	ace	716	explain
+6	ace	727	opioid-alternative
+1	ace	753	patient
+8	ace	771	opioid-continuation
+0	ace	798	clinician
+9	ace	815	involve
+1	ace	825	patient
+10	ace	839	opioid-start-decision
+0	src	0	Clinicians
+1	src	30	patients
+2	src	43	aware
+3	src	52	expected benefits
+4	src	74	common risks
+5	src	91	serious risks
+6	src	113	alternatives to opioids
+7	src	144	starting
+8	src	156	continuing
+9	src	193	involve
+1	src	201	patients
+10	src	213	decisions about whether to start opioid therapy

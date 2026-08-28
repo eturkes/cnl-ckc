@@ -1,0 +1,12 @@
+0	ace	5	patient
+1	ace	19	depression
+2	ace	55	heed
+2	ace	63	additional-caution
+0	ace	90	patient
+3	ace	106	conduct
+3	ace	117	increased-monitoring
+0	ace	146	patient
+2	src	0	Additional caution
+3	src	23	increased monitoring
+0	src	118	patients
+1	src	132	depression

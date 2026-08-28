@@ -1,0 +1,37 @@
+0	ace	5	patient
+1	ace	19	severe-acute-pain
+1	ace	45	severe-acute-pain
+2	ace	63	continues
+3	ace	82	expected-pain-duration
+4	ace	116	clinician
+7	ace	133	maintain
+8	ace	144	prolonged-severe-acute-pain-care-mechanism
+0	ace	195	patient
+0	ace	209	patient
+1	ace	223	severe-acute-pain
+1	ace	249	severe-acute-pain
+2	ace	267	continues
+3	ace	286	expected-pain-duration
+5	ace	320	clinical-practice-organization
+7	ace	358	maintain
+8	ace	369	prolonged-severe-acute-pain-care-mechanism
+0	ace	420	patient
+0	ace	434	patient
+1	ace	448	severe-acute-pain
+1	ace	474	severe-acute-pain
+2	ace	492	continues
+3	ace	511	expected-pain-duration
+6	ace	545	health-system
+7	ace	566	maintain
+8	ace	577	prolonged-severe-acute-pain-care-mechanism
+0	ace	628	patient
+0	src	34	patient
+4	src	44	clinicians
+5	src	56	practices
+6	src	71	health systems
+7	src	93	have
+8	src	98	mechanisms in place
+0	src	136	patient
+1	src	160	severe acute pain
+2	src	183	continues
+3	src	209	expected duration

@@ -1,0 +1,21 @@
+0	ace	23	advise
+2	ace	32	potentially-fatal-respiratory-depression
+1	ace	85	patient
+0	ace	117	advise
+3	ace	126	serious
+4	ace	134	opioid-use-disorder
+1	ace	166	patient
+0	ace	198	advise
+4	ace	208	opioid-use-disorder
+5	ace	228	distress
+1	ace	249	patient
+0	ace	281	advise
+6	ace	290	work-school-or-home-obligation-impairment
+1	ace	344	patient
+0	src	0	Advise
+1	src	7	patients
+2	src	68	potentially fatal respiratory depression
+3	src	130	potentially serious
+4	src	150	opioid use disorder
+5	src	209	distress
+6	src	222	inability to fulfill major role obligations at work, school, or home

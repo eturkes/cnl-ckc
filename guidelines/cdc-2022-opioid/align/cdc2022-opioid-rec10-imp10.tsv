@@ -1,0 +1,60 @@
+2	ace	5	toxicology-test-result
+3	ace	28	informs
+4	ace	38	clinical-decision
+4	ace	64	clinical-decision
+5	ace	88	major-implication
+6	ace	112	patient
+1	ace	148	use
+0	ace	154	confirmatory-testing
+2	ace	183	toxicology-test-result
+2	ace	212	toxicology-test-result
+3	ace	235	informs
+4	ace	245	nonclinical-decision
+4	ace	274	nonclinical-decision
+5	ace	301	major-implication
+6	ace	325	patient
+1	ace	361	use
+0	ace	367	confirmatory-testing
+2	ace	396	toxicology-test-result
+13	ace	435	needs
+7	ace	443	specific-opioid-detection
+1	ace	495	use
+0	ace	501	confirmatory-testing
+13	ace	538	needs
+8	ace	546	prescribed-opioid-detection
+1	ace	600	use
+0	ace	606	confirmatory-testing
+13	ace	643	needs
+9	ace	651	within-class-drug-detection
+1	ace	705	use
+0	ace	711	confirmatory-testing
+13	ace	748	needs
+10	ace	756	drug-detection
+11	ace	788	standard-immunoassay
+10	ace	809	does not identify
+1	ace	862	use
+0	ace	868	confirmatory-testing
+6	ace	908	patient
+12	ace	923	unexpected-screening-toxicology-test-result
+1	ace	995	use
+0	ace	1001	confirmatory-testing
+12	ace	1030	unexpected-screening-toxicology-test-result
+0	src	0	Confirmatory testing
+1	src	31	used
+2	src	41	toxicology results
+3	src	65	inform
+4	src	72	decisions
+5	src	87	major
+4	src	93	clinical
+4	src	105	nonclinical
+5	src	117	implications
+6	src	138	patient
+13	src	149	need
+7	src	164	detect specific opioids
+9	src	191	other drugs within a class
+8	src	242	being prescribed
+10	src	274	cannot be identified
+11	src	298	standard immunoassays
+13	src	326	need
+0	src	341	confirm
+12	src	349	unexpected screening toxicology test results

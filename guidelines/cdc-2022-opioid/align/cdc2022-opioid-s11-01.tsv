@@ -1,0 +1,13 @@
+0	ace	6	opioid-pain-clinical-practice-guideline
+1	ace	46	contains
+2	ace	58	opioid-use-disorder-pain-management-content
+0	ace	109	opioid-pain-clinical-practice-guideline
+1	ace	149	contains
+3	ace	161	opioid-use-disorder-complication-management-content
+0	ace	220	opioid-pain-clinical-practice-guideline
+4	ace	270	opioid-use-disorder-medication-guideline
+1	src	21	includes
+2	src	30	content on pain management for patients with opioid use disorder
+3	src	121	management of opioid use disorder as a complication of opioid use
+4	src	188	recommendations on opioids used specifically as medications for opioid use disorder
+0	src	298	clinical practice guideline

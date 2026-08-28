@@ -1,0 +1,51 @@
+0	ace	6	clinician
+1	ace	23	assess
+4	ace	32	patient-function
+2	ace	66	benefit
+1	ace	74	assessment
+0	ace	92	clinician
+1	ace	109	assess
+5	ace	118	pain-control
+2	ace	148	benefit
+1	ace	156	assessment
+0	ace	174	clinician
+1	ace	191	assess
+6	ace	200	quality-of-life
+2	ace	233	benefit
+1	ace	241	assessment
+0	ace	259	clinician
+7	ace	273	ask
+3	ace	279	patient
+8	ace	295	meaningful
+9	ace	306	functional-goal
+2	ace	339	benefit
+1	ace	347	assessment
+0	ace	365	clinician
+10	ace	385	PEG-assessment-scale
+2	ace	423	benefit
+1	ace	431	assessment
+11	ace	448	pain-score
+14	ace	459	improves
+13	ace	471	at least 30 percent
+12	ace	497	function-score
+14	ace	512	improves
+13	ace	524	at least 30 percent
+11	ace	553	pain-score
+14	ace	570	clinically-meaningful-improvement
+12	ace	612	function-score
+14	ace	633	clinically-meaningful-improvement
+0	src	0	Clinicians
+1	src	18	assess
+2	src	25	benefits
+4	src	37	function
+5	src	47	pain control
+6	src	65	quality of life
+7	src	84	asking
+3	src	91	patients
+9	src	138	functional goals
+8	src	165	meaning
+10	src	246	PEG assessment scale
+14	src	274	clinically meaningful improvement
+13	src	330	30%
+11	src	365	pain
+12	src	374	function

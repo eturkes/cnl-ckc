@@ -1,0 +1,35 @@
+0	ace	6	clinician
+1	ace	23	maximize
+2	ace	34	nonopioid-pharmacologic
+4	ace	58	therapy
+5	ace	72	specific-condition
+1	ace	102	maximize
+3	ace	113	nonpharmacologic
+4	ace	130	therapy
+5	ace	144	specific-condition
+6	ace	184	opioid-discontinuation
+2	ace	213	nonopioid-pharmacologic
+4	ace	237	therapy
+7	ace	248	needed
+0	ace	266	clinician
+8	ace	283	continue
+2	ace	296	nonopioid-pharmacologic
+4	ace	320	therapy
+6	ace	349	opioid-discontinuation
+3	ace	378	nonpharmacologic
+4	ace	395	therapy
+7	ace	406	needed
+0	ace	424	clinician
+8	ace	441	continue
+3	ace	454	nonpharmacologic
+4	ace	471	therapy
+0	src	0	Clinicians
+1	src	18	maximize
+2	src	34	nonopioid pharmacologic
+3	src	101	nonpharmacologic
+4	src	182	therapies
+5	src	215	specific condition
+8	src	238	continue
+4	src	253	therapies
+7	src	266	needed
+6	src	279	opioids are discontinued

@@ -1,0 +1,8 @@
+0	ace	23	multiply
+1	ace	35	opioid-dosage
+2	ace	54	conversion-factor
+3	ace	79	MME-dosage-determination
+0	src	0	Multiply
+1	src	13	dose for each opioid
+2	src	41	conversion factor
+3	src	62	determine the dose in MMEs

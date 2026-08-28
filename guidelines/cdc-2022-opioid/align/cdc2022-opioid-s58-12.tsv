@@ -1,0 +1,29 @@
+0	ace	5	patient
+1	ace	20	opioid-use-disorder
+1	ace	74	opioid-use-disorder
+2	ace	94	counseling
+0	ace	112	patient
+1	ace	146	opioid-use-disorder
+2	ace	166	counseling
+0	ace	182	patient
+4	ace	209	should not replace
+5	ace	231	evidence-based-medication-treatment
+0	ace	275	patient
+1	ace	291	opioid-use-disorder
+2	ace	311	counseling
+0	ace	328	patient
+1	ace	343	opioid-use-disorder
+3	ace	396	mutual-help-group-referral
+0	ace	430	patient
+3	ace	463	mutual-help-group-referral
+0	ace	495	patient
+4	ace	522	should not replace
+5	ace	544	evidence-based-medication-treatment
+0	ace	588	patient
+3	ace	603	mutual-help-group-referral
+0	src	0	Patients
+1	src	14	opioid use disorder
+2	src	53	counseling
+3	src	68	referrals to mutual help groups
+4	src	149	should not take the place of
+5	src	178	treatment with medication

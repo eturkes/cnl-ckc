@@ -1,0 +1,16 @@
+0	ace	5	patient
+1	ace	13	struggles
+2	ace	31	opioid-taper
+3	ace	55	clinician
+4	ace	72	maximize
+5	ace	83	nonopioid-pain-treatment
+6	ace	119	address
+7	ace	129	behavioral-distress
+0	src	4	patients
+1	src	13	struggling
+2	src	38	taper
+3	src	45	clinicians
+4	src	63	maximize
+5	src	72	nonopioid treatments for pain
+6	src	113	address
+7	src	121	behavioral distress

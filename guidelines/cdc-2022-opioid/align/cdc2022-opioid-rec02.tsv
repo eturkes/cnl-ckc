@@ -1,0 +1,72 @@
+0	ace	2	recommendation
+1	ace	22	category-A
+2	ace	58	evidence-type-2
+3	ace	96	clinician
+4	ace	113	maximize
+5	ace	124	nonopioid-therapy
+6	ace	148	subacute-pain
+4	ace	173	maximize
+5	ace	184	nonopioid-therapy
+7	ace	208	chronic-pain
+8	ace	228	opioid-benefit
+9	ace	252	outweigh
+10	ace	264	opioid-risk
+3	ace	287	clinician
+11	ace	308	consider
+12	ace	320	opioid-therapy
+3	ace	342	clinician
+13	ace	359	discuss
+14	ace	369	realistic-benefit
+16	ace	394	patient
+17	ace	412	initiation
+3	ace	430	clinician
+13	ace	447	discuss
+15	ace	457	known-risk
+16	ace	475	patient
+17	ace	493	initiation
+3	ace	511	clinician
+18	ace	528	establish
+19	ace	540	pain-goal
+16	ace	557	patient
+3	ace	572	clinician
+18	ace	589	establish
+19	ace	601	function-goal
+16	ace	622	patient
+8	ace	637	opioid-benefit
+9	ace	661	outweigh
+10	ace	673	opioid-risk
+3	ace	696	clinician
+11	ace	713	consider
+20	ace	724	discontinuation
+5	src	0	Nonopioid therapies
+6	src	38	subacute
+7	src	51	chronic pain
+3	src	65	Clinicians
+4	src	83	maximize
+5	src	120	nonopioid pharmacologic therapies
+16	src	200	patient
+11	src	217	consider
+12	src	226	initiating opioid therapy
+8	src	255	expected benefits
+9	src	314	outweigh
+10	src	323	risks
+16	src	336	patient
+17	src	352	starting
+6	src	380	subacute
+7	src	392	chronic pain
+3	src	406	clinicians
+13	src	424	discuss
+16	src	437	patient
+14	src	450	realistic benefits
+15	src	473	known risks
+16	src	521	patient
+18	src	533	establish
+19	src	543	treatment goals for pain and function
+11	src	593	consider
+20	src	629	discontinued
+8	src	645	benefits
+9	src	661	outweigh
+10	src	670	risks
+0	src	677	recommendation
+1	src	692	category: A
+2	src	705	evidence type: 2

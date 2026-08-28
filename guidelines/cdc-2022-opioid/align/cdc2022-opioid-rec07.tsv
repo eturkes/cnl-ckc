@@ -1,0 +1,67 @@
+0	ace	2	recommendation
+1	ace	22	category-A
+2	ace	58	evidence-type-4
+3	ace	96	clinician
+5	ace	113	evaluate
+7	ace	125	opioid-benefit
+4	ace	147	patient
+9	ace	155	after 1 week before 4 weeks
+10	ace	191	therapy-start
+11	ace	211	subacute-pain
+5	ace	236	evaluate
+8	ace	248	opioid-risk
+4	ace	267	patient
+9	ace	275	after 1 week before 4 weeks
+10	ace	311	therapy-start
+11	ace	331	subacute-pain
+3	ace	352	clinician
+5	ace	369	evaluate
+7	ace	381	opioid-benefit
+4	ace	403	patient
+9	ace	411	after 1 week before 4 weeks
+10	ace	447	therapy-start
+11	ace	467	chronic-pain
+5	ace	491	evaluate
+8	ace	503	opioid-risk
+4	ace	522	patient
+9	ace	530	after 1 week before 4 weeks
+10	ace	566	therapy-start
+11	ace	586	chronic-pain
+3	ace	606	clinician
+5	ace	623	evaluate
+7	ace	635	opioid-benefit
+4	ace	657	patient
+9	ace	665	after 1 week before 4 weeks
+12	ace	701	dosage-escalation
+5	ace	730	evaluate
+8	ace	742	opioid-risk
+4	ace	761	patient
+9	ace	769	after 1 week before 4 weeks
+12	ace	805	dosage-escalation
+3	ace	830	clinician
+6	ace	847	reevaluate
+7	ace	861	opioid-benefit
+4	ace	883	patient
+13	ace	900	regular-follow-up
+6	ace	929	reevaluate
+8	ace	943	opioid-risk
+4	ace	962	patient
+13	ace	979	regular-follow-up
+3	src	0	Clinicians
+5	src	18	evaluate
+7	src	27	benefits
+8	src	40	risks
+4	src	51	patients
+9	src	60	within 1–4 weeks
+10	src	80	starting opioid therapy
+11	src	108	subacute or chronic pain
+12	src	139	dosage escalation
+3	src	158	Clinicians
+13	src	176	regularly
+6	src	186	reevaluate
+7	src	197	benefits
+8	src	210	risks
+4	src	249	patients
+0	src	259	recommendation
+1	src	274	category: A
+2	src	287	evidence type: 4

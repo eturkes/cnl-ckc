@@ -1,0 +1,15 @@
+1	ace	6	clinician
+0	ace	23	discuss
+2	ace	33	planned-opioid-risk-precaution-use
+1	ace	90	clinician
+0	ace	107	discuss
+3	ace	117	naloxone-overdose-reversal-precaution
+1	ace	177	clinician
+0	ace	194	discuss
+1	ace	204	clinician
+4	ace	214	PDMP-information-use-precaution
+0	src	0	Discuss
+2	src	8	planned use of precautions to reduce risks
+3	src	62	naloxone for overdose reversal
+1	src	120	clinician
+4	src	130	use of PDMP information

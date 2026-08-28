@@ -1,0 +1,22 @@
+0	ace	5	patient
+1	ace	19	different-immediate-release-opioid-history
+2	ace	68	clinician
+3	ace	78	initiates
+4	ace	91	ER-LA-opioid
+0	ace	112	patient
+2	ace	129	clinician
+5	ace	146	consult
+6	ace	156	product-labeling
+7	ace	184	reduce
+8	ace	193	total-daily-dosage
+9	ace	219	incomplete-cross-tolerance
+3	src	5	changing to
+4	src	20	ER/LA opioid
+0	src	39	patient
+1	src	47	previously receiving a different immediate-release opioid
+2	src	106	clinicians
+5	src	124	consult
+6	src	132	product labeling
+7	src	153	reduce
+8	src	160	total daily dosage
+9	src	194	incomplete opioid cross-tolerance

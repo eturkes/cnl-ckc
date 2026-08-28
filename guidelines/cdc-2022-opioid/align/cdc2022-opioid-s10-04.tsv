@@ -1,0 +1,12 @@
+0	ace	6	recommendation
+1	ace	30	address
+4	ace	41	under-18
+3	ace	50	opioid-pain-medication
+2	ace	73	use
+0	src	4	recommendations
+1	src	27	address
+2	src	39	use
+3	src	46	opioid pain medication
+4	src	72	children
+4	src	84	adolescents
+4	src	101	<18 years

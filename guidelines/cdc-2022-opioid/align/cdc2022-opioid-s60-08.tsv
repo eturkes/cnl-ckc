@@ -1,0 +1,33 @@
+0	ace	5	patient
+1	ace	20	opioid-misuse
+5	ace	44	pain
+2	ace	53	does not have an opioid-use-disorder
+3	ace	101	clinician
+4	ace	118	reassess
+5	ace	131	pain
+6	ace	147	ensure
+7	ace	156	pain-management-therapy-optimization
+0	ace	201	patient
+8	ace	220	discuss
+9	ace	230	current-dosage-opioid-continuation
+0	ace	274	patient
+10	ace	293	weigh
+11	ace	301	benefit
+12	ace	319	risk
+9	ace	330	current-dosage-opioid-continuation
+0	src	4	patient
+1	src	18	opioid misuse
+2	src	37	does not meet criteria for opioid use disorder
+2	src	138	without meeting other criteria for opioid use disorder
+3	src	195	clinicians
+4	src	213	reassess
+0	src	226	patient
+5	src	236	pain
+6	src	242	ensure
+7	src	254	therapies for pain management have been optimized
+8	src	328	discuss
+0	src	341	patient
+10	src	365	weigh
+11	src	371	benefits
+12	src	384	risks
+9	src	393	continuing opioids at the current dosage

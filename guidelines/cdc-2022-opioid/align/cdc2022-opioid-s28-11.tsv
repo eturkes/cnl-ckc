@@ -1,0 +1,21 @@
+0	ace	6	clinician
+1	ace	20	elicit
+2	ace	29	meaningful-functional-goal
+3	ace	63	patient
+0	ace	78	clinician
+4	ace	92	use
+2	ace	98	meaningful-functional-goal
+5	ace	135	opioid-benefit-assessment
+0	ace	168	clinician
+4	ace	182	use
+2	ace	188	meaningful-functional-goal
+6	ace	224	continued-opioid-benefit-risk-weighing
+0	src	0	Clinicians
+1	src	15	ask
+3	src	19	patients
+2	src	34	functional goals
+2	src	61	meaning
+4	src	225	use
+5	src	244	assessing benefits of opioid therapy
+6	src	285	weighing benefits against risks of continued opioid therapy
+3	src	360	patients

@@ -1,0 +1,43 @@
+0	ace	6	clinician
+2	ace	23	collaborate
+1	ace	42	patient
+3	ace	59	treatment-decision
+0	ace	85	clinician
+2	ace	102	collaborate
+1	ace	121	patient
+4	ace	138	treatment-plan-design
+0	ace	167	clinician
+2	ace	184	collaborate
+1	ace	203	patient
+5	ace	220	pain-management-strategy-initiation
+0	ace	263	clinician
+2	ace	280	collaborate
+1	ace	299	patient
+6	ace	316	pain-management-strategy-change
+0	ace	355	clinician
+2	ace	372	collaborate
+1	ace	391	patient
+7	ace	409	opioid-initiation
+0	ace	434	clinician
+2	ace	451	collaborate
+1	ace	470	patient
+8	ace	488	opioid-dosage-increase
+0	ace	518	clinician
+2	ace	535	collaborate
+1	ace	554	patient
+9	ace	572	opioid-taper
+0	ace	592	clinician
+2	ace	609	collaborate
+1	ace	628	patient
+10	ace	646	opioid-discontinuation
+0	src	0	Clinicians
+2	src	18	collaborate
+1	src	35	patients
+3	src	56	treatment decisions
+4	src	80	designing a treatment plan
+5	src	123	initiating
+6	src	137	changing pain management strategies
+7	src	207	initiating
+8	src	219	increasing
+9	src	231	tapering
+10	src	244	discontinuing opioids

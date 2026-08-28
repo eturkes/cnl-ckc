@@ -1,0 +1,113 @@
+0	ace	2	recommendation
+1	ace	22	category-A
+2	ace	58	evidence-type-3
+3	ace	95	clinician
+4	ace	105	starts
+5	ace	115	opioid-therapy
+6	ace	137	opioid-naive-patient
+7	ace	170	acute-pain
+3	ace	190	clinician
+10	ace	207	prescribe
+11	ace	219	lowest-effective-dosage
+3	ace	249	clinician
+4	ace	259	starts
+5	ace	269	opioid-therapy
+6	ace	291	opioid-naive-patient
+8	ace	323	subacute-pain
+3	ace	346	clinician
+10	ace	363	prescribe
+11	ace	375	lowest-effective-dosage
+3	ace	405	clinician
+4	ace	415	starts
+5	ace	425	opioid-therapy
+6	ace	447	opioid-naive-patient
+9	ace	479	chronic-pain
+3	ace	501	clinician
+10	ace	518	prescribe
+11	ace	530	lowest-effective-dosage
+3	ace	560	clinician
+12	ace	570	continues
+5	ace	583	opioid-therapy
+8	ace	604	subacute-pain
+3	ace	626	clinician
+10	ace	636	prescribe
+13	ace	647	an opioid at a dosage
+3	ace	678	clinician
+14	ace	702	caution
+3	ace	716	clinician
+12	ace	726	continues
+5	ace	739	opioid-therapy
+9	ace	760	chronic-pain
+3	ace	781	clinician
+10	ace	791	prescribe
+13	ace	802	an opioid at a dosage
+3	ace	833	clinician
+14	ace	857	caution
+3	ace	871	clinician
+12	ace	881	continues
+5	ace	894	opioid-therapy
+8	ace	915	subacute-pain
+3	ace	937	clinician
+15	ace	947	considers
+16	ace	959	dosage-increase
+3	ace	984	clinician
+17	ace	1001	evaluate
+18	ace	1013	individual-benefit
+17	ace	1043	evaluate
+19	ace	1055	individual-risk
+3	ace	1077	clinician
+12	ace	1087	continues
+5	ace	1100	opioid-therapy
+9	ace	1121	chronic-pain
+3	ace	1142	clinician
+15	ace	1152	considers
+16	ace	1164	dosage-increase
+3	ace	1189	clinician
+17	ace	1206	evaluate
+18	ace	1218	individual-benefit
+17	ace	1248	evaluate
+19	ace	1260	individual-risk
+3	ace	1282	clinician
+12	ace	1292	continues
+5	ace	1305	opioid-therapy
+8	ace	1326	subacute-pain
+3	ace	1349	clinician
+20	ace	1366	avoid
+21	ace	1375	increase above
+22	ace	1392	diminishing-return-level
+3	ace	1423	clinician
+12	ace	1433	continues
+5	ace	1446	opioid-therapy
+9	ace	1467	chronic-pain
+3	ace	1489	clinician
+20	ace	1506	avoid
+21	ace	1515	increase above
+22	ace	1532	diminishing-return-level
+5	src	5	opioids
+4	src	17	initiated
+6	src	31	opioid-naïve patients
+7	src	58	acute
+8	src	65	subacute
+9	src	78	chronic pain
+3	src	92	clinicians
+10	src	110	prescribe
+11	src	124	lowest effective dosage
+5	src	152	opioids
+12	src	164	continued
+8	src	178	subacute
+9	src	190	chronic pain
+3	src	204	clinicians
+14	src	226	caution
+10	src	239	prescribing
+13	src	251	opioids at any dosage
+17	src	291	evaluate
+18	src	300	individual benefits
+19	src	324	risks
+15	src	335	considering
+16	src	347	increasing dosage
+20	src	377	avoid
+21	src	383	increasing dosage above
+22	src	407	levels likely to yield diminishing returns
+0	src	493	recommendation
+1	src	508	category: A
+2	src	521	evidence type: 3

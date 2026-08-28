@@ -1,0 +1,9 @@
+0	ace	5	patient
+1	ace	19	pain
+0	ace	33	patient
+2	ace	48	receive
+3	ace	58	greatest-benefit-relative-to-risk-treatment
+0	src	4	patients
+1	src	18	pain
+2	src	30	receive
+3	src	38	treatment that provides the greatest benefits relative to risks

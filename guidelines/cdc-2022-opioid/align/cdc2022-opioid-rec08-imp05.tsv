@@ -1,0 +1,21 @@
+0	ace	5	clinical-practice-organization
+1	ace	42	naloxone-training-resource
+0	ace	78	clinical-practice-organization
+2	ace	113	facilitate
+3	ace	126	naloxone-coprescribing
+4	ace	156	pharmacist-collaborative-practice-model
+2	ace	200	facilitate
+3	ace	213	naloxone-coprescribing
+5	ace	243	statewide-naloxone-protocol
+2	ace	275	facilitate
+3	ace	288	naloxone-coprescribing
+6	ace	318	pharmacy-naloxone-standing-order
+2	ace	355	facilitate
+3	ace	368	naloxone-coprescribing
+3	src	0	Naloxone coprescribing
+2	src	30	facilitated
+0	src	45	clinics or practices
+1	src	71	resources to provide naloxone training
+4	src	114	collaborative practice models with pharmacists
+5	src	173	statewide protocols
+6	src	196	standing orders for naloxone at pharmacies

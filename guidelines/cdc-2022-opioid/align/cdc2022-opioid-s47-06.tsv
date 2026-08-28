@@ -1,0 +1,20 @@
+0	ace	5	patient
+1	ace	19	reproductive-potential
+2	ace	70	discuss
+3	ace	80	future-pregnancy-intention
+0	ace	116	patient
+0	ace	130	patient
+1	ace	144	reproductive-potential
+4	ace	176	contraception
+5	ace	193	appropriate
+0	ace	213	patient
+6	ace	255	shared-decision-making
+0	ace	287	patient
+4	ace	303	contraception
+0	src	8	persons
+1	src	21	reproductive potential
+2	src	45	discussing
+3	src	56	future pregnancy intentions
+6	src	100	shared decision-making
+4	src	133	contraception
+5	src	151	appropriate

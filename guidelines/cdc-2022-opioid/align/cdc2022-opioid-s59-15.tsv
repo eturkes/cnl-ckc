@@ -1,0 +1,16 @@
+0	ace	22	methadone-treatment
+2	ace	49	opioid-use-disorder
+4	ace	88	should not apply
+3	ace	107	pain-treatment-opioid-dosage-caution-threshold
+0	ace	161	methadone-treatment
+1	ace	204	buprenorphine-treatment
+2	ace	235	opioid-use-disorder
+4	ace	274	should not apply
+3	ace	293	pain-treatment-opioid-dosage-caution-threshold
+1	ace	347	buprenorphine-treatment
+3	src	13	opioid dosage thresholds for caution in the treatment of pain
+4	src	79	not applicable
+2	src	125	opioid use disorder
+0	src	182	methadone
+1	src	196	buprenorphine
+2	src	214	opioid use disorder

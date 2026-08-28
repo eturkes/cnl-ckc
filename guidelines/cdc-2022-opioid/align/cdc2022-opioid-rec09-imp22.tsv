@@ -1,0 +1,28 @@
+3	ace	5	patient
+0	ace	19	negative-toxicology-test
+1	ace	50	prescribed-opioid
+0	ace	77	negative-toxicology-test
+2	ace	106	indicate
+1	ace	117	prescribed-opioid
+4	ace	135	nonuse
+3	ace	150	patient
+3	ace	164	patient
+0	ace	178	negative-toxicology-test
+1	ace	209	prescribed-opioid
+5	ace	233	clinician
+0	ace	255	negative-toxicology-test
+5	ace	289	clinician
+6	ace	306	consider
+7	ace	317	false-negative-test-result
+6	ace	355	consider
+8	ace	366	test-result-misinterpretation
+0	src	2	negative toxicology test
+1	src	31	prescribed opioids
+2	src	56	indicate
+3	src	69	patient
+4	src	80	not taking
+1	src	91	prescribed opioids
+5	src	120	clinicians
+6	src	138	consider
+7	src	198	false-negative results
+8	src	224	misinterpretation of results

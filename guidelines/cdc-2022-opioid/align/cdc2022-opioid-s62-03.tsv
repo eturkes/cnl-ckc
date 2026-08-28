@@ -1,0 +1,21 @@
+0	ace	6	robust-evidence-based-treatment-coverage
+3	ace	51	facilitate
+5	ace	65	evidence-based-default-pain-treatment
+4	ace	111	encourage
+5	ace	124	evidence-based-default-pain-treatment
+1	ace	169	robust-evidence-based-treatment-access
+3	ace	212	facilitate
+5	ace	226	evidence-based-default-pain-treatment
+4	ace	272	encourage
+5	ace	285	evidence-based-default-pain-treatment
+2	ace	330	pain-treatment-decision-support
+3	ace	366	facilitate
+5	ace	380	evidence-based-default-pain-treatment
+4	ace	426	encourage
+5	ace	439	evidence-based-default-pain-treatment
+0	src	0	Robust coverage
+1	src	20	access
+2	src	117	decision support
+3	src	196	facilitate
+4	src	211	encourage
+5	src	221	evidence-based treatments as default treatments for pain

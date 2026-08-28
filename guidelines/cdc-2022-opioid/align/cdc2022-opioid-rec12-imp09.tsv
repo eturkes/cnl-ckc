@@ -1,0 +1,53 @@
+0	ace	5	clinician
+1	ace	15	prescribes an opioid
+0	ace	45	clinician
+2	ace	62	identify
+3	ace	74	opioid-use-disorder-treatment-resource
+4	ace	118	community
+0	ace	134	clinician
+1	ace	144	prescribes an opioid
+0	ace	174	clinician
+5	ace	191	establish
+6	ace	204	opioid-use-disorder-referral-network
+4	ace	246	community
+6	ace	263	opioid-use-disorder-referral-network
+7	ace	307	span
+8	ace	314	patient-needed
+9	ace	329	level-of-care
+6	ace	350	opioid-use-disorder-referral-network
+10	ace	391	enable
+11	ace	400	rapid
+12	ace	406	clinical-collaboration
+6	ace	436	opioid-use-disorder-referral-network
+10	ace	477	enable
+11	ace	486	rapid
+13	ace	492	patient-referral
+0	ace	515	clinician
+1	ace	525	prescribes an opioid
+0	ace	555	clinician
+14	ace	572	participate
+0	ace	609	clinician
+14	ace	619	collaboration
+0	ace	659	clinician
+14	ace	669	collaboration
+15	ace	690	ensure
+16	ace	699	sufficient-opioid-use-disorder-treatment-capacity
+17	ace	754	clinical-practice-organization
+0	src	0	Clinicians
+1	src	11	prescribing opioids
+2	src	38	identify
+3	src	47	treatment resources for opioid use disorder
+4	src	98	community
+5	src	109	establish
+6	src	121	network of referral options
+7	src	154	span
+9	src	163	levels of care
+8	src	183	patients might need
+10	src	206	enable
+11	src	213	rapid
+12	src	219	collaboration
+13	src	237	referral
+14	src	264	work together
+15	src	281	ensure
+16	src	288	sufficient treatment capacity for opioid use disorder
+17	src	349	practice level

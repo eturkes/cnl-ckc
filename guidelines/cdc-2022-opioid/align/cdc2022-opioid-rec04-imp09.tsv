@@ -1,0 +1,41 @@
+0	ace	6	clinician
+1	ace	23	evaluate
+2	ace	34	further-dosage-increase
+3	ace	66	individualized-benefit-risk-assessment
+0	ace	112	clinician
+4	ace	129	consider
+5	ace	140	diagnosis
+4	ace	161	consider
+6	ace	173	incremental-pain-benefit
+4	ace	209	consider
+6	ace	221	incremental-function-benefit
+3	ace	260	individualized-benefit-risk-assessment
+0	ace	306	clinician
+7	ace	323	compare
+8	ace	333	previous-increase
+6	ace	351	benefit
+8	ace	369	previous-increase
+9	ace	387	risk
+1	ace	403	evaluate
+10	ace	415	alternative-treatment
+1	ace	448	evaluate
+11	ace	459	treatment-effectiveness
+0	ace	490	clinician
+4	ace	507	consider
+12	ace	518	patient-value
+4	ace	543	consider
+13	ace	554	patient-preference
+0	src	0	Clinicians
+1	src	28	evaluate
+2	src	51	further increase dosage
+3	src	91	individualized assessment of benefits and risks
+4	src	143	weighing
+5	src	168	diagnosis
+6	src	179	incremental benefits for pain and function
+7	src	222	relative to
+9	src	234	risks
+8	src	245	previous dosage increases
+10	src	272	other treatments
+11	src	293	effectiveness
+12	src	312	patient values
+13	src	331	preferences

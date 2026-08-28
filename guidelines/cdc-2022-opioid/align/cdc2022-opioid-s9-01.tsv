@@ -1,0 +1,47 @@
+0	ace	6	opioid-pain-clinical-practice-guideline
+1	ace	55	clinical-judgment-replacement
+0	ace	92	opioid-pain-clinical-practice-guideline
+2	ace	142	individualized-person-centered-care-replacement
+0	ace	197	opioid-pain-clinical-practice-guideline
+3	ace	247	inflexible-standard
+0	ace	274	opioid-pain-clinical-practice-guideline
+4	ace	333	rapid-opioid-taper
+0	ace	359	opioid-pain-clinical-practice-guideline
+5	ace	419	abrupt-opioid-discontinuation
+0	ace	456	opioid-pain-clinical-practice-guideline
+9	ace	505	clinical-practice
+6	ace	523	law
+0	ace	534	opioid-pain-clinical-practice-guideline
+9	ace	583	clinical-practice
+7	ace	601	regulation
+0	ace	619	opioid-pain-clinical-practice-guideline
+9	ace	668	clinical-practice
+8	ace	686	policy
+0	ace	700	opioid-pain-clinical-practice-guideline
+10	ace	750	FDA-approved-labeling-substitute
+0	ace	790	opioid-pain-clinical-practice-guideline
+11	ace	854	sickle-cell-disease-pain
+0	ace	886	opioid-pain-clinical-practice-guideline
+12	ace	950	cancer-related-pain
+0	ace	977	opioid-pain-clinical-practice-guideline
+13	ace	1041	palliative-care
+0	ace	1064	opioid-pain-clinical-practice-guideline
+14	ace	1129	end-of-life-care
+0	ace	1153	opioid-pain-clinical-practice-guideline
+15	ace	1203	opioid-use-disorder-medication-guideline
+0	src	5	clinical practice guideline
+1	src	42	replacement for clinical judgment
+2	src	79	individualized, person-centered care
+3	src	143	inflexible standards of care
+4	src	337	rapid tapering
+5	src	355	abrupt discontinuation of opioids
+6	src	405	law
+7	src	410	regulation
+8	src	425	policy
+9	src	437	dictates clinical practice
+10	src	472	substitute for Food and Drug Administration–approved labeling
+11	src	549	management of pain related to sickle cell disease
+12	src	600	management of cancer-related pain
+13	src	638	palliative care
+14	src	657	end-of-life care
+15	src	689	opioids prescribed for opioid use disorder

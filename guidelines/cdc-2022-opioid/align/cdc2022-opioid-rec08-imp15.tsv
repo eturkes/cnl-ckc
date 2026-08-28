@@ -1,0 +1,29 @@
+0	ace	6	clinician
+2	ace	23	assess
+2	ace	32	concurrent-substance-use
+0	ace	64	clinician
+5	ace	74	should use
+3	ace	87	state-PDMP-record
+2	ace	114	concurrent-substance-use-assessment
+0	ace	157	clinician
+5	ace	167	should use
+4	ace	180	toxicology-testing
+2	ace	208	concurrent-substance-use-assessment
+1	ace	250	patient
+2	ace	264	concurrent-substance-use
+2	ace	298	concurrent-substance-use
+6	ace	327	increase
+7	ace	339	opioid-use-disorder-risk
+1	ace	372	patient
+6	ace	388	increase
+8	ace	400	overdose-risk
+1	ace	422	patient
+0	src	0	Clinicians
+5	src	18	use
+3	src	22	PDMP data
+4	src	59	toxicology screening
+2	src	122	assess for concurrent substance use
+1	src	175	patients
+6	src	187	higher risk
+7	src	203	opioid use disorder
+8	src	227	overdose

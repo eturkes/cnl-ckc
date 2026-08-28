@@ -1,0 +1,27 @@
+0	ace	5	jurisdiction
+1	ace	24	PDMP-availability
+2	ace	52	PDMP-access-policy
+3	ace	81	practicable-clinical-practice-setting
+4	ace	125	clinician
+0	ace	194	jurisdiction
+4	ace	216	clinician
+0	ace	297	jurisdiction
+1	ace	316	PDMP-availability
+2	ace	344	PDMP-access-policy
+3	ace	373	practicable-clinical-practice-setting
+4	ace	417	clinician
+0	ace	488	jurisdiction
+4	ace	510	clinician
+0	ace	591	jurisdiction
+1	ace	610	PDMP-availability
+2	ace	638	PDMP-access-policy
+3	ace	667	practicable-clinical-practice-setting
+4	ace	711	clinician
+0	ace	781	jurisdiction
+4	ace	803	clinician
+0	src	36	jurisdictions
+1	src	56	PDMP availability
+2	src	78	access policies
+3	src	106	clinical practice settings
+3	src	142	practicable
+4	src	161	clinician

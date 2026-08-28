@@ -1,0 +1,34 @@
+0	ace	23	review
+3	ace	33	opioid
+4	ace	40	benzodiazepine
+2	ace	55	respiratory-depression
+1	ace	78	risk
+0	ace	122	review
+3	ace	132	opioid
+5	ace	139	other-sedative
+2	ace	154	respiratory-depression
+1	ace	177	risk
+0	ace	221	review
+3	ace	231	opioid
+6	ace	238	alcohol
+2	ace	246	respiratory-depression
+1	ace	269	risk
+0	ace	313	review
+3	ace	323	opioid
+7	ace	330	nonprescribed-or-illicit-drug
+2	ace	360	respiratory-depression
+1	ace	383	risk
+0	ace	427	review
+3	ace	437	opioid
+8	ace	444	other-opioid
+2	ace	457	respiratory-depression
+1	ace	480	risk
+0	src	0	Review
+1	src	7	increased risks
+2	src	27	respiratory depression
+3	src	55	opioids are taken
+4	src	78	benzodiazepines
+5	src	95	other sedatives
+6	src	112	alcohol
+7	src	121	nonprescribed or illicit drugs
+8	src	171	other opioids

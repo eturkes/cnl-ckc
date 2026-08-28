@@ -1,0 +1,11 @@
+0	ace	19	prolonged
+1	ace	29	opioid-use
+2	ace	46	few-day-period
+3	ace	86	consider
+4	ace	97	prophylactic-pharmacologic-bowel-therapy
+4	src	0	Prophylactic pharmacologic therapy
+3	src	112	might be needed
+4	src	138	regular bowel movements
+1	src	165	opioids are used
+0	src	186	more than
+2	src	196	a few days

@@ -1,0 +1,57 @@
+0	ace	5	clinician
+4	ace	15	prescribes an opioid
+1	ace	41	patient
+0	ace	58	clinician
+2	ace	75	offer
+3	ace	83	naloxone-dose
+0	ace	118	clinician
+4	ace	128	prescribes an opioid
+5	ace	185	overdose-history
+0	ace	211	clinician
+2	ace	228	offer
+3	ace	236	naloxone-dose
+0	ace	271	clinician
+4	ace	281	prescribes an opioid
+6	ace	337	substance-use-disorder-history
+0	ace	377	clinician
+2	ace	394	offer
+3	ace	402	naloxone-dose
+0	ace	437	clinician
+4	ace	447	prescribes an opioid
+7	ace	503	sleep-disordered-breathing
+0	ace	539	clinician
+2	ace	556	offer
+3	ace	564	naloxone-dose
+0	ace	599	clinician
+4	ace	609	prescribes an opioid
+8	ace	666	opioid-dosage
+8	ace	688	opioid-dosage
+8	ace	711	at least
+8	ace	720	50 MME-units-per-day
+0	ace	750	clinician
+2	ace	767	offer
+3	ace	775	naloxone-dose
+0	ace	810	clinician
+4	ace	820	prescribes an opioid
+9	ace	870	takes a benzodiazepine
+0	ace	902	clinician
+2	ace	919	offer
+3	ace	927	naloxone-dose
+0	ace	962	clinician
+4	ace	972	prescribes an opioid
+10	ace	1028	lost-tolerance-high-dose-return-risk
+0	ace	1074	clinician
+2	ace	1091	offer
+3	ace	1099	naloxone-dose
+0	src	0	Clinicians
+2	src	18	offer
+3	src	24	naloxone
+4	src	38	prescribing opioids
+1	src	75	patients
+5	src	142	history of overdose
+6	src	179	history of substance use disorder
+7	src	228	sleep-disordered breathing
+8	src	272	higher dosages of opioids
+8	src	305	≥50 MME/day
+9	src	335	benzodiazepines with opioids
+10	src	405	risk for returning to a high dose to which they have lost tolerance

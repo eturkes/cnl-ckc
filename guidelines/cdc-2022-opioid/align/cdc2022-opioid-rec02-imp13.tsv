@@ -1,0 +1,11 @@
+0	ace	5	patient
+1	ace	19	pain
+2	ace	34	depression
+3	ace	53	antidepressant
+4	ace	72	benefit
+0	ace	84	patient
+0	src	0	Patients
+1	src	27	pain
+2	src	36	depression
+4	src	77	benefit
+3	src	90	antidepressant medication

@@ -1,0 +1,25 @@
+0	ace	5	patient
+1	ace	19	serious-illness
+2	ace	45	poor-functional-prognosis
+6	ace	79	opioid
+7	ace	96	appropriate-therapy
+8	ace	125	previous-therapy-history
+0	ace	156	patient
+3	ace	171	alternative-therapy-contraindication
+6	ace	216	opioid
+7	ace	233	appropriate-therapy
+8	ace	262	previous-therapy-history
+4	ace	293	clinician
+5	ace	309	patient-comfort-agreement
+6	ace	343	opioid
+7	ace	360	appropriate-therapy
+8	ace	389	previous-therapy-history
+1	src	33	serious illness
+0	src	54	patient
+2	src	67	poor prognosis for return to previous level of function
+3	src	124	contraindications to other therapies
+4	src	166	clinician
+5	src	180	patient agreement that the overriding goal is patient comfort
+6	src	244	opioids
+7	src	261	appropriate
+8	src	287	previous therapies used

@@ -1,0 +1,30 @@
+0	ace	6	clinician
+2	ace	20	explain
+4	ace	30	slow
+5	ace	35	withdrawal-minimizing
+3	ace	63	expectation
+1	ace	80	patient
+0	ace	95	clinician
+2	ace	109	explain
+6	ace	120	initial
+7	ace	128	pain-worsening
+8	ace	147	usual-improvement
+3	ace	165	expectation
+1	ace	182	patient
+0	ace	197	clinician
+9	ace	211	provide
+10	ace	227	process
+9	ace	235	support
+1	ace	248	patient
+1	src	5	patients
+0	src	72	clinicians
+1	src	92	patients
+2	src	104	telling
+3	src	125	expect
+4	src	161	slow
+5	src	169	minimize withdrawal symptoms
+7	src	202	pain might worsen
+6	src	220	at first
+8	src	233	usually improves
+9	src	283	supporting
+10	src	311	process

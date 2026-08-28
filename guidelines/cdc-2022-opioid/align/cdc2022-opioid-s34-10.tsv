@@ -1,0 +1,28 @@
+0	ace	5	patient
+2	ace	19	combined-opioid-dosage
+2	ace	50	combined-opioid-dosage
+3	ace	82	at least 50 MME-units-per-day
+1	ace	123	clinician
+4	ace	140	increase
+4	ace	151	follow-up-frequency
+5	ace	182	offer
+5	ace	190	naloxone-dose
+0	ace	211	patient
+6	ace	230	provide
+6	ace	241	opioid-overdose-education
+0	ace	274	patient
+5	ace	293	offer
+5	ace	301	naloxone-dose
+7	ace	320	patient-household-member
+6	ace	356	provide
+6	ace	367	opioid-overdose-education
+7	ace	398	patient-household-member
+0	src	5	patient
+2	src	15	opioid dosage for all sources of opioids combined
+3	src	65	reaches or exceeds 50 MME/day
+1	src	96	clinicians
+4	src	158	increased frequency of follow-up
+5	src	219	offer naloxone
+6	src	238	overdose prevention education
+0	src	280	patient
+7	src	296	patient’s household members

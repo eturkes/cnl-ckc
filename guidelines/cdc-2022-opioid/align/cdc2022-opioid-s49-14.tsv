@@ -1,0 +1,52 @@
+0	ace	5	patient
+2	ace	19	previous-opioid-overdose
+1	ace	50	clinician
+3	ace	60	continues
+4	ace	73	opioid-therapy
+0	ace	96	patient
+1	ace	113	clinician
+5	ace	130	discuss
+6	ace	141	increased-overdose-risk
+0	ace	174	patient
+7	ace	193	weigh
+8	ace	202	opioid-benefit
+9	ace	227	substantial-opioid-risk
+0	ace	259	patient
+10	ace	278	incorporate
+11	ace	292	risk-mitigation-strategy
+12	ace	324	management-plan
+0	ace	348	patient
+13	ace	367	offer
+14	ace	375	naloxone
+0	ace	396	patient
+15	ace	415	involve
+16	ace	425	patient-identified-trusted-family-member
+12	ace	471	management-plan
+0	ace	495	patient
+17	ace	514	increase
+18	ace	525	monitoring-frequency
+0	ace	554	patient
+19	ace	579	shorter-prescription-duration
+0	ace	617	patient
+1	src	3	clinicians
+3	src	14	continue
+4	src	23	opioid therapy
+0	src	41	patients
+2	src	55	previous opioid overdose
+5	src	93	discuss
+6	src	101	increased risks for overdose
+0	src	135	patients
+8	src	172	benefits of opioids
+7	src	192	outweigh
+9	src	201	substantial risks
+10	src	224	incorporate
+11	src	236	strategies to mitigate risk
+12	src	273	management plan
+13	src	298	offering
+14	src	307	naloxone
+0	src	342	Patients
+15	src	353	involving
+16	src	363	patient-identified trusted family members
+17	src	410	increasing
+18	src	421	frequency of monitoring
+19	src	459	shorter prescription durations

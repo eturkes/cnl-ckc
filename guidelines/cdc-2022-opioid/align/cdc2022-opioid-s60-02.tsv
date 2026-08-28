@@ -1,0 +1,24 @@
+1	ace	5	patient
+2	ace	13	discontinues a naltrexone-treatment
+0	ace	60	clinician
+3	ace	77	warn
+1	ace	86	patient
+4	ace	103	overdose-risk
+5	ace	125	opioid-use-resumption
+1	ace	153	patient
+2	ace	161	discontinues a naltrexone-treatment
+1	ace	206	patient
+6	ace	214	loses an opioid-dosage-tolerance
+1	ace	253	patient
+6	ace	261	loses an opioid-dosage-tolerance
+1	ace	302	patient
+5	ace	310	resumes an opioid-use
+4	ace	365	overdose-death
+1	ace	388	patient
+0	src	0	Clinicians
+3	src	18	warn
+1	src	23	patients
+2	src	36	discontinue naltrexone
+4	src	66	risk for potentially fatal opioid overdose
+5	src	112	opioid use is resumed
+6	src	155	loss of tolerance to the previous opioid dosage

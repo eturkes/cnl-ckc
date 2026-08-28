@@ -1,0 +1,25 @@
+0	ace	5	patient
+2	ace	19	pregnancy-capability
+1	ace	46	clinician
+3	ace	69	opioid-initiation
+0	ace	95	patient
+1	ace	112	clinician
+4	ace	129	discuss
+5	ace	139	family-planning
+0	ace	164	patient
+3	ace	183	opioid-initiation
+4	ace	212	discuss
+6	ace	222	future-pregnancy-effect
+7	ace	253	long-term-opioid-use
+0	ace	283	patient
+3	ace	302	opioid-initiation
+3	src	20	initiating opioid therapy
+0	src	50	persons
+2	src	62	can become pregnant
+1	src	83	clinicians
+0	src	98	patients
+4	src	114	discuss
+5	src	122	family planning
+6	src	142	potential effects
+7	src	163	long-term opioid use
+6	src	191	future pregnancy

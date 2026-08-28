@@ -1,0 +1,21 @@
+0	ace	23	advise
+2	ace	33	unintended-long-term-opioid-use
+1	ace	77	patient
+0	ace	109	advise
+3	ace	118	planned-opioid-discontinuation
+1	ace	156	patient
+1	ace	170	patient
+4	ace	184	prolonged
+5	ace	194	around-the-clock-opioid-use
+6	ace	228	few-day-period
+7	ace	278	opioid-taper-plan
+8	ace	305	pain-resolution
+0	src	0	Advise
+1	src	7	patients
+2	src	55	unintended long-term opioid use
+3	src	127	planned discontinuation of opioid use
+7	src	196	a plan to appropriately taper opioids
+8	src	237	pain resolves
+5	src	254	opioids have been used around the clock
+4	src	298	more than
+6	src	308	a few days

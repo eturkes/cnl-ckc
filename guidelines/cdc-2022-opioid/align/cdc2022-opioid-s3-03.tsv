@@ -1,0 +1,18 @@
+0	ace	6	recommendation
+1	ace	30	apply
+2	ace	45	sickle-cell-disease-pain
+0	ace	77	recommendation
+1	ace	101	apply
+3	ace	116	cancer-related-pain
+0	ace	143	recommendation
+1	ace	167	apply
+4	ace	182	palliative-care
+0	ace	205	recommendation
+1	ace	229	apply
+5	ace	245	end-of-life-care
+0	src	4	recommendations
+1	src	27	apply
+2	src	36	pain related to sickle cell disease
+3	src	75	cancer
+4	src	107	palliative
+5	src	121	end-of-life care

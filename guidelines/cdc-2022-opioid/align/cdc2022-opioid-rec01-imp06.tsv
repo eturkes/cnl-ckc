@@ -1,0 +1,46 @@
+0	ace	3	opioid-therapy
+1	ace	25	important-role
+2	ace	47	acute-pain
+3	ace	63	relates
+4	ace	76	severe-traumatic-injury
+0	ace	104	opioid-therapy
+1	ace	126	important-role
+2	ace	148	acute-pain
+3	ace	164	relates
+5	ace	177	crush-injury
+0	ace	194	opioid-therapy
+1	ace	216	important-role
+2	ace	238	acute-pain
+3	ace	254	relates
+6	ace	267	burn
+0	ace	276	opioid-therapy
+1	ace	298	important-role
+7	ace	319	moderate-to-severe-postoperative-pain
+3	ace	362	relates
+8	ace	376	invasive-surgery
+9	ace	400	NSAID
+10	ace	409	contraindicated
+11	ace	432	other-therapy
+10	ace	449	contraindicated
+9	ace	471	NSAID
+12	ace	480	ineffective
+11	ace	499	other-therapy
+12	ace	516	ineffective
+0	ace	536	opioid-therapy
+1	ace	558	important-role
+13	ace	580	other-severe-acute-pain
+0	src	0	Opioid therapy
+1	src	22	important role
+2	src	41	acute pain
+3	src	52	related
+4	src	63	severe traumatic injuries
+5	src	100	crush injuries
+6	src	119	burns
+8	src	127	invasive surgeries
+3	src	156	associated
+7	src	172	moderate to severe postoperative pain
+13	src	215	other severe acute pain
+9	src	244	NSAID
+11	src	255	other therapies
+10	src	275	contraindicated
+12	src	307	ineffective

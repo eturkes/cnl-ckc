@@ -1,0 +1,71 @@
+6	ace	6	substance-use-disorder-treatment-specialist
+2	ace	56	opioid-use-disorder
+5	ace	76	care-provider
+8	ace	97	SAMHSA-certified-opioid-treatment-program
+2	ace	145	opioid-use-disorder
+5	ace	165	care-provider
+7	ace	186	office-based-buprenorphine-treatment-provider
+6	ace	237	substance-use-disorder-treatment-specialist
+7	ace	288	office-based-naltrexone-treatment-provider
+6	ace	336	substance-use-disorder-treatment-specialist
+8	ace	387	SAMHSA-certified-opioid-treatment-program
+9	ace	429	may provide
+10	ace	443	methadone-treatment
+8	ace	470	SAMHSA-certified-opioid-treatment-program
+9	ace	512	may provide
+11	ace	526	buprenorphine-treatment
+1	ace	556	patient
+2	ace	571	opioid-use-disorder
+0	ace	597	clinician
+3	ace	607	cannot provide
+2	ace	625	opioid-use-disorder
+1	ace	663	patient
+0	ace	680	clinician
+4	ace	697	arrange
+2	ace	708	opioid-use-disorder
+5	ace	728	care
+1	ace	741	patient
+2	ace	757	opioid-use-disorder
+5	ace	777	care-provider
+1	ace	797	patient
+2	ace	812	opioid-use-disorder
+0	ace	838	clinician
+3	ace	848	cannot provide
+2	ace	866	opioid-use-disorder
+1	ace	904	patient
+0	ace	921	clinician
+4	ace	935	arrange
+2	ace	946	opioid-use-disorder
+5	ace	966	care
+1	ace	979	patient
+6	ace	994	substance-use-disorder-treatment-specialist
+1	ace	1044	patient
+2	ace	1059	opioid-use-disorder
+0	ace	1085	clinician
+3	ace	1095	cannot provide
+2	ace	1113	opioid-use-disorder
+1	ace	1151	patient
+0	ace	1168	clinician
+4	ace	1182	arrange
+2	ace	1193	opioid-use-disorder
+5	ace	1213	care
+1	ace	1226	patient
+8	ace	1241	SAMHSA-certified-opioid-treatment-program
+0	src	0	Clinicians
+3	src	11	unable to provide
+4	src	57	arrange
+1	src	69	patients
+2	src	83	opioid use disorder
+5	src	106	receive care
+6	src	126	substance use disorder treatment specialist
+7	src	180	office-based
+7	src	193	buprenorphine
+7	src	210	naltrexone
+7	src	221	treatment provider
+8	src	253	opioid treatment program
+8	src	278	certified by SAMHSA
+9	src	301	provide
+10	src	309	methadone
+11	src	322	buprenorphine
+1	src	340	patients
+2	src	354	opioid use disorder

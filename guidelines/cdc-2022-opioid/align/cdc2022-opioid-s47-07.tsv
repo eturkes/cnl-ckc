@@ -1,0 +1,17 @@
+0	ace	23	review
+1	ace	32	prescribed-medication
+3	ace	63	prepregnancy
+0	ace	92	review
+2	ace	101	nonprescribed-medication
+3	ace	135	prepregnancy
+0	ace	164	review
+1	ace	173	prescribed-medication
+4	ace	205	interpregnancy-care
+0	ace	236	review
+2	ace	245	nonprescribed-medication
+4	ace	280	interpregnancy-care
+0	src	2	review
+1	src	16	prescription
+2	src	33	nonprescription medications
+3	src	83	prepregnancy
+4	src	100	interpregnancy care

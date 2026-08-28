@@ -1,0 +1,19 @@
+0	ace	5	patient
+1	ace	19	pain
+2	ace	35	active-opioid-use-disorder
+3	ace	66	does not receive an opioid-use-disorder-treatment
+4	ace	127	clinician
+5	ace	144	consider
+6	ace	155	buprenorphine-treatment
+0	ace	187	patient
+5	ace	206	consider
+6	ace	217	methadone-treatment
+0	ace	245	patient
+0	src	4	patients
+1	src	18	pain
+2	src	35	active opioid use disorder
+3	src	70	not in treatment
+4	src	88	clinicians
+5	src	106	consider
+6	src	115	buprenorphine or methadone treatment
+1	src	227	pain

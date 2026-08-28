@@ -1,0 +1,16 @@
+2	ace	27	MME-dosage-determination
+1	ace	82	include
+0	ace	92	buprenorphine
+2	ace	113	MME-dosage-determination
+0	ace	145	buprenorphine
+3	ace	165	partial-opioid-receptor-agonist-property
+0	ace	213	buprenorphine
+4	ace	233	respiratory-depression-ceiling-effect
+0	src	0	Buprenorphine
+1	src	28	counted
+2	src	43	total MME/day
+2	src	60	calculations
+3	src	88	partial agonist properties
+3	src	118	opioid receptors
+4	src	149	ceiling effect
+4	src	167	respiratory depression

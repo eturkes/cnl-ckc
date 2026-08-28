@@ -1,0 +1,43 @@
+0	ace	23	discuss
+2	ace	33	periodic-opioid-reassessment
+1	ace	69	patient
+3	ace	101	assess
+4	ace	111	opioid-goal-attainment
+2	ace	143	periodic-opioid-reassessment
+1	ace	178	patient
+5	ace	193	ineffective-opioid-therapy
+7	ace	248	consider
+8	ace	260	opioid-taper
+7	ace	284	consider
+9	ace	295	dosage-reduction
+7	ace	323	consider
+10	ace	334	discontinuation
+7	ace	361	consider
+11	ace	373	additional-nonpharmacologic-treatment
+7	ace	422	consider
+11	ace	434	additional-nonopioid-pharmacologic-treatment
+1	ace	485	patient
+6	ace	499	harmful-opioid-therapy
+7	ace	550	consider
+8	ace	562	opioid-taper
+7	ace	586	consider
+9	ace	597	dosage-reduction
+7	ace	625	consider
+10	ace	636	discontinuation
+7	ace	663	consider
+11	ace	675	additional-nonpharmacologic-treatment
+7	ace	724	consider
+11	ace	736	additional-nonopioid-pharmacologic-treatment
+0	src	0	Discuss
+2	src	26	periodic reassessment
+3	src	51	ensure
+4	src	63	opioids are helping to meet
+1	src	91	patient
+4	src	99	goals
+5	src	113	opioids are not effective
+6	src	142	are harmful
+7	src	182	consideration
+8	src	199	opioid tapering
+9	src	219	dosage reduction
+10	src	239	discontinuation
+11	src	262	additional nonpharmacologic or nonopioid pharmacologic treatment options

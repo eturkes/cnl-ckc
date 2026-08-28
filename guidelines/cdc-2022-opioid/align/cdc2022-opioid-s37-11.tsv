@@ -1,0 +1,10 @@
+2	ace	23	coordinate
+0	ace	36	taper-decision
+3	ace	58	respiratory-depressant-medication-prescriber
+2	ace	127	coordinate
+1	ace	140	taper-plan
+3	ace	158	respiratory-depressant-medication-prescriber
+0	src	0	Tapering decisions
+1	src	23	plans
+2	src	39	coordinated
+3	src	56	prescribers of all respiratory depressant medications

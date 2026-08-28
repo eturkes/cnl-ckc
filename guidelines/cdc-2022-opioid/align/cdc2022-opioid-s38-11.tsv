@@ -1,0 +1,33 @@
+0	ace	6	primary-care-clinician
+1	ace	36	collaborate
+2	ace	55	mental-health-specialist
+4	ace	87	optimized
+5	ace	97	nonopioid-pain-management
+0	ace	130	primary-care-clinician
+1	ace	160	collaborate
+3	ace	179	specialty-clinician
+4	ace	206	optimized
+5	ace	216	nonopioid-pain-management
+6	ace	248	patient
+7	ace	262	taper-related-anxiety
+0	ace	295	primary-care-clinician
+1	ace	325	collaborate
+2	ace	344	mental-health-specialist
+6	ace	375	patient
+8	ace	383	psychosocial-support
+6	ace	410	patient
+7	ace	424	taper-related-anxiety
+0	ace	457	primary-care-clinician
+1	ace	487	collaborate
+3	ace	506	specialty-clinician
+6	ace	532	patient
+8	ace	540	psychosocial-support
+0	src	0	Primary care clinicians
+1	src	31	collaborate
+2	src	48	mental health specialists
+3	src	89	specialty clinicians
+4	src	123	optimize
+5	src	132	nonopioid pain management
+8	src	193	psychosocial support
+6	src	218	patients
+7	src	236	anxiety related to the taper

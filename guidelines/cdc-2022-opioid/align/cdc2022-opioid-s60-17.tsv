@@ -1,0 +1,13 @@
+0	ace	5	patient
+1	ace	13	receives a naltrexone-treatment
+2	ace	52	opioid-use-disorder
+3	ace	82	severe-acute-pain
+4	ace	125	consider
+5	ace	136	short-term-higher-potency-nonopioid-analgesic
+0	ace	190	patient
+0	src	4	patients
+1	src	13	receiving naltrexone
+2	src	38	opioid use disorder
+5	src	59	short-term use of higher-potency nonopioid analgesics
+4	src	135	considered
+3	src	156	severe acute pain
