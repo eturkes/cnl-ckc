@@ -1028,6 +1028,103 @@ Set hl_word_sep to "[^\\w.!?,;:]+".
 Set hl_hover_classes to 32.
 Set hl_hue_count to 6.
 
+Define [[hl_strip_forms]] taking base:
+    Set stems to <>.
+    If [[base.endswith]]("ment"):
+        Set stem to [[base.removesuffix]]("ment").
+        If [[len]](stem) is greater than 3:
+            Do [[stems.append]](stem).
+    If [[base.endswith]]("ion"):
+        Set stem to [[base.removesuffix]]("ion").
+        If [[len]](stem) is greater than 3:
+            Do [[stems.append]](stem).
+            Do [[stems.append]](stem plus "e").
+    If [[base.endswith]]("ation"):
+        Set stem to [[base.removesuffix]]("ation").
+        If [[len]](stem) is greater than 3:
+            Do [[stems.append]](stem).
+            Do [[stems.append]](stem plus "e").
+    If [[base.endswith]]("ication"):
+        Set stem to [[base.removesuffix]]("ication").
+        If [[len]](stem) is greater than 3:
+            Do [[stems.append]](stem plus "y").
+    If [[base.endswith]]("al"):
+        Set stem to [[base.removesuffix]]("al").
+        If [[len]](stem) is greater than 3:
+            Do [[stems.append]](stem).
+    If [[base.endswith]]("ance"):
+        Set stem to [[base.removesuffix]]("ance").
+        If [[len]](stem) is greater than 3:
+            Do [[stems.append]](stem).
+            Do [[stems.append]](stem plus "e").
+    If [[base.endswith]]("er"):
+        Set stem to [[base.removesuffix]]("er").
+        If [[len]](stem) is greater than 3:
+            Do [[stems.append]](stem).
+            Do [[stems.append]](stem plus "e").
+    Give back stems.
+
+Define [[hl_group_add]] taking tails_by_prefix, prefix_order, prefix, tail:
+    Set tails to [[tails_by_prefix.get]](prefix, None).
+    If tails equals None:
+        Set tails to <>.
+        Do [[tails_by_prefix.update]]({prefix: tails}).
+        Do [[prefix_order.append]](prefix).
+    Set known to tail is in tails.
+    If not known:
+        Do [[tails.append]](tail).
+
+Set hl_group_cache to {}.
+
+Define [[hl_variant_groups]] taking word:
+    Set cached to [[hl_group_cache.get]](word, None).
+    If cached does not equal None:
+        Give back cached.
+    Set bases to <>.
+    Set deriv_bases to <>.
+    For each plural_base in [[hl_bases]](word):
+        Set known to plural_base is in bases.
+        If not known:
+            Do [[bases.append]](plural_base).
+        If [[len]](plural_base) is greater than 3:
+            Do [[deriv_bases.append]](plural_base).
+        For each stem in [[hl_strip_forms]](plural_base):
+            Set known to stem is in bases.
+            If not known:
+                Do [[bases.append]](stem).
+    Set tails_by_prefix to {}.
+    Set prefix_order to <>.
+    For each base in bases:
+        For each tail in <"", "s", "es", "ed", "ing">:
+            Do [[hl_group_add]](tails_by_prefix, prefix_order, base, tail).
+        If [[base.endswith]]("y"):
+            If [[len]](base) is greater than 2:
+                Do [[hl_group_add]](tails_by_prefix, prefix_order, [[base.removesuffix]]("y"), "ies").
+        If [[base.endswith]]("e"):
+            Do [[hl_group_add]](tails_by_prefix, prefix_order, base, "d").
+            Do [[hl_group_add]](tails_by_prefix, prefix_order, [[base.removesuffix]]("e"), "ing").
+    For each base in deriv_bases:
+        If [[base.endswith]]("e"):
+            Set stem to [[base.removesuffix]]("e").
+            For each tail in <"ion", "ions", "ation", "ations">:
+                Do [[hl_group_add]](tails_by_prefix, prefix_order, stem, tail).
+            For each tail in <"r", "rs">:
+                Do [[hl_group_add]](tails_by_prefix, prefix_order, base, tail).
+        Otherwise:
+            For each tail in <"ion", "ions", "ation", "ations", "er", "ers">:
+                Do [[hl_group_add]](tails_by_prefix, prefix_order, base, tail).
+        For each tail in <"ment", "ments", "al", "ance">:
+            Do [[hl_group_add]](tails_by_prefix, prefix_order, base, tail).
+        If [[base.endswith]]("y"):
+            Set stem to [[base.removesuffix]]("y").
+            For each tail in <"ication", "ications">:
+                Do [[hl_group_add]](tails_by_prefix, prefix_order, stem, tail).
+    Set groups to <>.
+    For each prefix in prefix_order:
+        Do [[groups.append]]([[tuple]](<prefix, [[tails_by_prefix.get]](prefix, <>)>)).
+    Do [[hl_group_cache.update]]({word: groups}).
+    Give back groups.
+
 Define [[hl_bases]] taking word:
     Set out to <word>.
     If [[word.endswith]]("ies"):
@@ -1042,24 +1139,23 @@ Define [[hl_bases]] taking word:
                 Do [[out.append]]([[word.removesuffix]]("s")).
     Give back out.
 
+Set hl_variant_cache to {}.
+
 Define [[hl_variants]] taking word:
+    Set cached to [[hl_variant_cache.get]](word, None).
+    If cached does not equal None:
+        Give back cached.
     Set found to <>.
-    For each base in [[hl_bases]](word):
-        For each cand in <base, base plus "s", base plus "es", base plus "ed", base plus "ing">:
+    For each row in [[hl_variant_groups]](word):
+        Set row_copy to [[list]](row).
+        Set prefix to [[row_copy.pop]](0).
+        Set tails to [[row_copy.pop]](0).
+        For each tail in tails:
+            Set cand to prefix plus tail.
             Set known to cand is in found.
             If not known:
                 Do [[found.append]](cand).
-        If [[base.endswith]]("y"):
-            If [[len]](base) is greater than 2:
-                Set cand to [[base.removesuffix]]("y") plus "ies".
-                Set known to cand is in found.
-                If not known:
-                    Do [[found.append]](cand).
-        If [[base.endswith]]("e"):
-            For each cand in <base plus "d", [[base.removesuffix]]("e") plus "ing">:
-                Set known to cand is in found.
-                If not known:
-                    Do [[found.append]](cand).
+    Do [[hl_variant_cache.update]]({word: found}).
     Give back found.
 
 Define [[hl_char_pattern]] taking variant:
@@ -1069,12 +1165,47 @@ Define [[hl_char_pattern]] taking variant:
     Set empty_text to "".
     Give back [[empty_text.join]](parts).
 
+Set hl_word_pattern_cache to {}.
+
 Define [[hl_word_pattern]] taking word:
+    Set cached to [[hl_word_pattern_cache.get]](word, None).
+    If cached does not equal None:
+        Give back cached.
     Set alts to <>.
-    For each variant in [[hl_variants]](word):
-        Do [[alts.append]]([[hl_char_pattern]](variant)).
     Set bar to "|".
-    Give back "(?:" plus [[bar.join]](alts) plus ")".
+    For each row in [[hl_variant_groups]](word):
+        Set row_copy to [[list]](row).
+        Set prefix to [[row_copy.pop]](0).
+        Set tails to [[row_copy.pop]](0).
+        Set bare to "" is in tails.
+        Set tail_rows to <>.
+        For each tail in tails:
+            If tail:
+                Do [[tail_rows.append]]([[tuple]](<0 minus [[len]](tail), tail>)).
+        Set tail_alts to <>.
+        For each tail_row in [[sorted]](tail_rows):
+            Set tail_row_copy to [[list]](tail_row).
+            Do [[tail_row_copy.pop]](0).
+            Do [[tail_alts.append]]([[tail_row_copy.pop]](0)).
+        Set piece to [[hl_char_pattern]](prefix).
+        If tail_alts:
+            Set piece to piece plus "(?:" plus [[bar.join]](tail_alts) plus ")".
+            If bare:
+                Set piece to piece plus "?".
+        Do [[alts.append]](piece).
+    Set pattern to "(?:" plus [[bar.join]](alts) plus ")".
+    Do [[hl_word_pattern_cache.update]]({word: pattern}).
+    Give back pattern.
+
+Set hl_rx_cache to {}.
+
+Define [[hl_rx]] taking pattern:
+    Set cached to [[hl_rx_cache.get]](pattern, None).
+    If cached does not equal None:
+        Give back cached.
+    Set compiled to [[re.compile]](pattern, re.IGNORECASE).
+    Do [[hl_rx_cache.update]]({pattern: compiled}).
+    Give back compiled.
 
 Define [[hl_lemma_pattern]] taking lemma:
     Set word_patterns to <>.
@@ -1143,13 +1274,19 @@ Define [[hl_alternation_order]] taking lemmas:
         Do [[ordered.append]]([[row_copy.pop]](0)).
     Give back ordered.
 
-Define [[hl_mark_html]] taking text, index:
-    Set class_attr to "".
+Define [[hl_mark_html]] taking text, index, partial:
+    Set names to <>.
     If index is less than hl_hover_classes:
-        Set class_attr to " class=\"t" plus [[str]](index) plus "\"".
+        Do [[names.append]]("t" plus [[str]](index)).
+    If partial:
+        Do [[names.append]]("p").
+    Set class_attr to "".
+    If names:
+        Set space to " ".
+        Set class_attr to " class=\"" plus [[space.join]](names) plus "\"".
     Give back "<mark" plus class_attr plus ">" plus [[esc_text]](text) plus "</mark>".
 
-Define [[hl_ace_html]] taking ace_text, index_by_lemma:
+Define [[hl_ace_html]] taking ace_text, index_by_lemma, partial_lemmas:
     Set html_parts to <>.
     Set is_token to False.
     For each piece in [[hl_token_rx.split]](ace_text):
@@ -1157,7 +1294,8 @@ Define [[hl_ace_html]] taking ace_text, index_by_lemma:
             Set folded to [[piece.casefold]]().
             Set index to [[index_by_lemma.get]](folded, None).
             If index does not equal None:
-                Do [[html_parts.append]]([[hl_mark_html]](piece, index)).
+                Set part to folded is in partial_lemmas.
+                Do [[html_parts.append]]([[hl_mark_html]](piece, index, part)).
             Otherwise if folded is in hl_stop_words:
                 Do [[html_parts.append]]("<span class=\"kw\">" plus [[esc_text]](piece) plus "</span>").
             Otherwise:
@@ -1174,7 +1312,7 @@ Define [[hl_link_data]] taking ace_text, payload_line:
     If not lemmas:
         Do [[data.update]]({"matched": 0}).
         Do [[data.update]]({"payload_html": [[esc_text]](payload_line)}).
-        Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, {})}).
+        Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, {}, <>)}).
         Give back data.
     Set ordered to [[hl_alternation_order]](lemmas).
     Set all_phrases to <>.
@@ -1183,7 +1321,7 @@ Define [[hl_link_data]] taking ace_text, payload_line:
     Set bar to "|".
     For each lemma in ordered:
         Set lemma_pattern to [[hl_lemma_pattern]](lemma).
-        Do [[single_rx_by_lemma.update]]({lemma: [[re.compile]](lemma_pattern plus "$", re.IGNORECASE)}).
+        Do [[single_rx_by_lemma.update]]({lemma: [[hl_rx]](lemma_pattern plus "$")}).
         Set phrases to [[hl_windows]](lemma).
         Set phrase_patterns to <>.
         For each phrase in phrases:
@@ -1192,18 +1330,73 @@ Define [[hl_link_data]] taking ace_text, payload_line:
             If not known:
                 Do [[all_phrases.append]](phrase).
         If [[len]](phrases) is greater than 1:
-            Do [[window_rx_by_lemma.update]]({lemma: [[re.compile]]("(?:" plus [[bar.join]](phrase_patterns) plus ")$", re.IGNORECASE)}).
+            Do [[window_rx_by_lemma.update]]({lemma: [[hl_rx]]("(?:" plus [[bar.join]](phrase_patterns) plus ")$")}).
+    Set variant_owner to {}.
+    Set words_by_lemma to {}.
+    For each lemma in ordered:
+        Set lemma_words to <>.
+        For each word in [[lemma.split]]("-"):
+            If word:
+                Set known to word is in lemma_words.
+                If not known:
+                    Do [[lemma_words.append]](word).
+        Do [[words_by_lemma.update]]({lemma: lemma_words}).
+        For each word in lemma_words:
+            For each cand in [[hl_variants]](word):
+                Set prior to [[variant_owner.get]](cand, "").
+                If prior equals "":
+                    Do [[variant_owner.update]]({cand: lemma}).
+                Otherwise if prior does not equal lemma:
+                    Do [[variant_owner.update]]({cand: "!"}).
+    Set partial_rx_by_lemma to {}.
+    Set partial_words to <>.
+    Set acronym_patterns to <>.
+    For each lemma in ordered:
+        Set multi to "-" is in lemma.
+        If multi:
+            Set cand_patterns to <>.
+            For each word in [[words_by_lemma.get]](lemma, <>):
+                Set stopped to word is in hl_stop_words.
+                If not stopped:
+                    If [[len]](word) is greater than 2:
+                        Set clean to True.
+                        For each cand in [[hl_variants]](word):
+                            If [[variant_owner.get]](cand, "") equals "!":
+                                Set clean to False.
+                        If clean:
+                            If [[len]](word) is greater than 3:
+                                Do [[cand_patterns.append]]("(?:" plus [[hl_lemma_pattern]](word) plus ")").
+                                Set known to word is in partial_words.
+                                If not known:
+                                    Do [[partial_words.append]](word).
+                            Otherwise:
+                                Set acro_pattern to "\\b(?-i:" plus [[word.upper]]() plus ")s?\\b".
+                                Do [[cand_patterns.append]]("(?:" plus acro_pattern plus ")").
+                                Set known to acro_pattern is in acronym_patterns.
+                                If not known:
+                                    Do [[acronym_patterns.append]](acro_pattern).
+            If cand_patterns:
+                Do [[partial_rx_by_lemma.update]]({lemma: [[hl_rx]]("(?:" plus [[bar.join]](cand_patterns) plus ")$")}).
+    For each word in partial_words:
+        Set known to word is in all_phrases.
+        If not known:
+            Do [[all_phrases.append]](word).
     Set alternation_parts to <>.
     For each phrase in [[hl_alternation_order]](all_phrases):
         Do [[alternation_parts.append]]("(?:" plus [[hl_lemma_pattern]](phrase) plus ")").
-    Set combined_rx to [[re.compile]]("(" plus [[bar.join]](alternation_parts) plus ")", re.IGNORECASE).
+    For each acro_pattern in acronym_patterns:
+        Do [[alternation_parts.append]]("(?:" plus acro_pattern plus ")").
+    Set combined_rx to [[hl_rx]]("(" plus [[bar.join]](alternation_parts) plus ")").
     Set pieces to [[combined_rx.split]](payload_line).
     Set hit_lemmas to <>.
+    Set hit_partials to <>.
     Set matched_lemmas to <>.
+    Set full_lemmas to <>.
     Set is_hit to False.
     For each piece in pieces:
         If is_hit:
             Set piece_lemma to "".
+            Set piece_partial to False.
             For each lemma in ordered:
                 If not piece_lemma:
                     Set single_rx to [[single_rx_by_lemma.get]](lemma, None).
@@ -1218,25 +1411,46 @@ Define [[hl_link_data]] taking ace_text, payload_line:
                             Set hit to [[window_rx.match]](piece).
                             If hit:
                                 Set piece_lemma to lemma.
+            If not piece_lemma:
+                For each lemma in ordered:
+                    If not piece_lemma:
+                        Set partial_rx to [[partial_rx_by_lemma.get]](lemma, None).
+                        If partial_rx does not equal None:
+                            Set hit to [[partial_rx.match]](piece).
+                            If hit:
+                                Set piece_lemma to lemma.
+                                Set piece_partial to True.
             Do [[hit_lemmas.append]](piece_lemma).
+            Do [[hit_partials.append]](piece_partial).
             If piece_lemma:
                 Set known to piece_lemma is in matched_lemmas.
                 If not known:
                     Do [[matched_lemmas.append]](piece_lemma).
+                If not piece_partial:
+                    Set known_full to piece_lemma is in full_lemmas.
+                    If not known_full:
+                        Do [[full_lemmas.append]](piece_lemma).
         Set is_hit to not is_hit.
     Set index_by_lemma to {}.
     For each lemma in lemmas:
         Set present to lemma is in matched_lemmas.
         If present:
             Do [[index_by_lemma.update]]({lemma: [[len]](index_by_lemma)}).
+    Set partial_only to <>.
+    For each lemma in matched_lemmas:
+        Set full to lemma is in full_lemmas.
+        If not full:
+            Do [[partial_only.append]](lemma).
     Set html_parts to <>.
     Set hit_queue to [[list]](hit_lemmas).
+    Set part_queue to [[list]](hit_partials).
     Set is_hit to False.
     For each piece in pieces:
         If is_hit:
             Set piece_lemma to [[hit_queue.pop]](0).
+            Set piece_partial to [[part_queue.pop]](0).
             If piece_lemma:
-                Do [[html_parts.append]]([[hl_mark_html]](piece, [[index_by_lemma.get]](piece_lemma, 0))).
+                Do [[html_parts.append]]([[hl_mark_html]](piece, [[index_by_lemma.get]](piece_lemma, 0), piece_partial)).
             Otherwise:
                 Do [[html_parts.append]]([[esc_text]](piece)).
         Otherwise:
@@ -1245,10 +1459,10 @@ Define [[hl_link_data]] taking ace_text, payload_line:
     Set empty_text to "".
     Do [[data.update]]({"matched": [[len]](matched_lemmas)}).
     Do [[data.update]]({"payload_html": [[empty_text.join]](html_parts)}).
-    Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, index_by_lemma)}).
+    Do [[data.update]]({"ace_html": [[hl_ace_html]](ace_text, index_by_lemma, partial_only)}).
     Give back data.
 
-Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">, "mark-0": <"#111827", "#dbeafe">, "mark-active-0": <"#111827", "#bfdbfe">, "mark-1": <"#111827", "#fef9c3">, "mark-active-1": <"#111827", "#fef08a">, "mark-2": <"#111827", "#f3e8ff">, "mark-active-2": <"#111827", "#e9d5ff">, "mark-3": <"#111827", "#ffedd5">, "mark-active-3": <"#111827", "#fed7aa">, "mark-4": <"#111827", "#ccfbf1">, "mark-active-4": <"#111827", "#99f6e4">, "mark-5": <"#111827", "#ffe4e6">, "mark-active-5": <"#111827", "#fecdd3">}.
+Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">, "mark-0": <"#111827", "#dbeafe">, "mark-active-0": <"#111827", "#bfdbfe">, "mark-1": <"#111827", "#fef9c3">, "mark-active-1": <"#111827", "#fef08a">, "mark-2": <"#111827", "#f3e8ff">, "mark-active-2": <"#111827", "#e9d5ff">, "mark-3": <"#111827", "#ffedd5">, "mark-active-3": <"#111827", "#fed7aa">, "mark-4": <"#111827", "#ccfbf1">, "mark-active-4": <"#111827", "#99f6e4">, "mark-5": <"#111827", "#ffe4e6">, "mark-active-5": <"#111827", "#fecdd3">, "mark-line-0": <"#2563eb", "#ffffff">, "mark-line-1": <"#a16207", "#ffffff">, "mark-line-2": <"#7c3aed", "#ffffff">, "mark-line-3": <"#c2410c", "#ffffff">, "mark-line-4": <"#0f766e", "#ffffff">, "mark-line-5": <"#be123c", "#ffffff">}.
 
 Define [[pal_fg]] taking role:
     Set pair to [[palette.get]](role, <>).
@@ -1330,6 +1544,18 @@ Define [[build_css]] taking nothing:
             Do [[lines.append]]([[comma.join]](selector_parts) plus " { background: " plus [[pal_bg]]("mark-" plus [[str]](hue)) plus "; }").
         Set hue to hue plus 1.
     Set hue to 0.
+    For each hue_ignored in [[range]](hl_hue_count):
+        Set selector_parts to <>.
+        Set class_index to hue.
+        For each step_ignored in [[range]](hl_hover_classes):
+            If class_index is less than hl_hover_classes:
+                Do [[selector_parts.append]]("mark.t" plus [[str]](class_index)).
+            Set class_index to class_index plus hl_hue_count.
+        Set comma to ", ".
+        Do [[lines.append]]([[comma.join]](selector_parts) plus " { text-decoration-color: " plus [[pal_fg]]("mark-line-" plus [[str]](hue)) plus "; }").
+        Set hue to hue plus 1.
+    Do [[lines.append]]("mark.p { background: none; }").
+    Set hue to 0.
     For each hover_index in [[range]](hl_hover_classes):
         Set class_name to "t" plus [[str]](hover_index).
         Do [[lines.append]]("main:has(mark." plus class_name plus ":hover) mark." plus class_name plus " { background: " plus [[pal_bg]]("mark-active-" plus [[str]](hue)) plus "; text-decoration-style: solid; }").
@@ -1339,7 +1565,7 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("@media print {").
     Do [[lines.append]]("body { max-width: none; padding: 0; }").
     Do [[lines.append]]("nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }").
-    Do [[lines.append]]("mark, mark[class] { background: none; }").
+    Do [[lines.append]]("mark, mark[class] { background: none; text-decoration-color: " plus muted_fg plus "; }").
     Do [[lines.append]]("details::details-content { content-visibility: visible; }").
     Do [[lines.append]]("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }").
     Do [[lines.append]]("a { color: inherit; text-decoration: none; }").
@@ -1352,7 +1578,7 @@ Set css_text to [[build_css]]().
 
 Set scope_line_text to "This page reports what the loaded guideline documents state. It does not give clinical advice.".
 
-Set hl_note_text to "Phrases that appear in both texts are highlighted. A phrase and its matches share one color. Point at a highlighted phrase to emphasize it and its matches.".
+Set hl_note_text to "Phrases that appear in both texts are highlighted. A phrase and its matches share one color. An underline without a filled background marks one word from a longer phrase. Point at a highlighted phrase to emphasize it and its matches.".
 
 Set refusal_refused_text to "The request was refused. Open the document page again from this site and submit the decision again.".
 Set refusal_invalid_form_text to "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again.".
@@ -2062,6 +2288,14 @@ Define [[selftest_violation]] taking nothing:
         Give back "ui: selftest failed: hl variants gerund".
     If "applying" is not in [[hl_variants]]("applies"):
         Give back "ui: selftest failed: hl variants y-stem".
+    If "assessment" is not in [[hl_variants]]("assess"):
+        Give back "ui: selftest failed: hl variants derivation".
+    If "treat" is not in [[hl_variants]]("treatment"):
+        Give back "ui: selftest failed: hl variants derivation strip".
+    If "application" is not in [[hl_variants]]("apply"):
+        Give back "ui: selftest failed: hl variants y-ication".
+    If "provider" is not in [[hl_variants]]("provide"):
+        Give back "ui: selftest failed: hl variants agent noun".
     Set hl_case to [[hl_link_data]]("Every clinician should offer-naloxone.\n", "Clinicians should consider offering naloxone.").
     If [[hl_case.get]]("matched", 0) does not equal 2:
         Give back "ui: selftest failed: hl match count".
@@ -2081,7 +2315,7 @@ Define [[selftest_violation]] taking nothing:
     If [[hl_case.get]]("payload_html", "") does not equal "Care for <mark class=\"t0\">opioid-naïve patients</mark>.":
         Give back "ui: selftest failed: hl diacritic".
     Set hl_case to [[hl_link_data]]("A clinician should treat an acute-pain.\n", "It was acute. Pain remained.").
-    If [[hl_case.get]]("matched", 0) does not equal 0:
+    If [[hl_case.get]]("payload_html", "") does not equal "It was <mark class=\"t0 p\">acute</mark>. <mark class=\"t0 p\">Pain</mark> remained.":
         Give back "ui: selftest failed: hl sentence guard".
     Set hl_case to [[hl_link_data]]("Every clinician should review an opioid-therapy and a therapy.\n", "An opioid therapy and a therapy.").
     If [[hl_case.get]]("payload_html", "") does not equal "An <mark class=\"t0\">opioid therapy</mark> and a <mark class=\"t1\">therapy</mark>.":
@@ -2097,8 +2331,12 @@ Define [[selftest_violation]] taking nothing:
     If [[hl_case.get]]("payload_html", "") does not equal "Try <mark class=\"t0\">pharmacologic therapy</mark>.":
         Give back "ui: selftest failed: hl window suffix".
     Set hl_case to [[hl_link_data]]("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "The therapy failed.").
-    If [[hl_case.get]]("matched", 0) does not equal 0:
+    If [[hl_case.get]]("matched", 0) does not equal 1:
         Give back "ui: selftest failed: hl window single word".
+    If [[hl_case.get]]("payload_html", "") does not equal "The <mark class=\"t0 p\">therapy</mark> failed.":
+        Give back "ui: selftest failed: hl partial payload".
+    If "<mark class=\"t0 p\">nonopioid-pharmacologic-therapy</mark>" is not in [[hl_case.get]]("ace_html", ""):
+        Give back "ui: selftest failed: hl partial ace".
     Set hl_case to [[hl_link_data]]("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Use nonopioid pharmacologic therapies today.").
     If [[hl_case.get]]("payload_html", "") does not equal "Use <mark class=\"t0\">nonopioid pharmacologic therapies</mark> today.":
         Give back "ui: selftest failed: hl window full span".
@@ -2107,13 +2345,36 @@ Define [[selftest_violation]] taking nothing:
         Give back "ui: selftest failed: hl window precedence".
     If [[hl_case.get]]("ace_html", "") does not equal "<span class=\"kw\">A</span> clinician <span class=\"kw\">should</span> compare <span class=\"kw\">an</span> opioid-use-disorder <span class=\"kw\">and</span> <span class=\"kw\">a</span> <mark class=\"t0\">use-disorder</mark>.\n":
         Give back "ui: selftest failed: hl window precedence ace".
+    Set hl_case to [[hl_link_data]]("A clinician should assess a patient.\n", "Assessment of patients continues.").
+    If [[hl_case.get]]("payload_html", "") does not equal "<mark class=\"t0\">Assessment</mark> of <mark class=\"t1\">patients</mark> continues.":
+        Give back "ui: selftest failed: hl derivation full tier".
+    Set hl_case to [[hl_link_data]]("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Discuss nonopioid pharmacologic options. The therapy failed.").
+    If [[hl_case.get]]("matched", 0) does not equal 1:
+        Give back "ui: selftest failed: hl partial mix count".
+    If [[hl_case.get]]("payload_html", "") does not equal "Discuss <mark class=\"t0\">nonopioid pharmacologic</mark> options. The <mark class=\"t0 p\">therapy</mark> failed.":
+        Give back "ui: selftest failed: hl partial mix".
+    If "<mark class=\"t0\">nonopioid-pharmacologic-therapy</mark>" is not in [[hl_case.get]]("ace_html", ""):
+        Give back "ui: selftest failed: hl partial mix ace".
+    Set hl_case to [[hl_link_data]]("Every clinician should review an opioid-therapy and an opioid-risk.\n", "An opioid remained.").
+    If [[hl_case.get]]("matched", 0) does not equal 0:
+        Give back "ui: selftest failed: hl partial conflict".
+    Set hl_case to [[hl_link_data]]("An opioid-use.\n", "Use it.").
+    If [[hl_case.get]]("matched", 0) does not equal 0:
+        Give back "ui: selftest failed: hl partial floor".
+    Set hl_case to [[hl_link_data]]("An mme-units-per-day.\n", "Check MME today.").
+    If [[hl_case.get]]("payload_html", "") does not equal "Check <mark class=\"t0 p\">MME</mark> today.":
+        Give back "ui: selftest failed: hl partial acronym".
     If "mark.t1, mark.t7, mark.t13, mark.t19, mark.t25, mark.t31 { background: #fef9c3; }" is not in css_text:
         Give back "ui: selftest failed: hue group css".
     If "main:has(mark.t7:hover) mark.t7 { background: #fef08a; text-decoration-style: solid; }" is not in css_text:
         Give back "ui: selftest failed: hue hover cycle css".
     If "main:has(mark.t0:hover) mark.t0 { background: #bfdbfe; text-decoration-style: solid; }" is not in css_text:
         Give back "ui: selftest failed: hue hover base css".
-    If "mark, mark[class] { background: none; }" is not in css_text:
+    If "mark.t0, mark.t6, mark.t12, mark.t18, mark.t24, mark.t30 { text-decoration-color: #2563eb; }" is not in css_text:
+        Give back "ui: selftest failed: hue underline css".
+    If "mark.p { background: none; }" is not in css_text:
+        Give back "ui: selftest failed: partial mark css".
+    If "mark, mark[class] { background: none; text-decoration-color: #4b5563; }" is not in css_text:
         Give back "ui: selftest failed: print mark strip".
     Set unique_values to <>.
     For each role in [[sorted]](palette):

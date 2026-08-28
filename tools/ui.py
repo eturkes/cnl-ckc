@@ -979,6 +979,99 @@ hl_token_rx = re.compile("([0-9A-Za-z]+(?:-[0-9A-Za-z]+)*)")
 hl_word_sep = "[^\\w.!?,;:]+"
 hl_hover_classes = 32
 hl_hue_count = 6
+def hl_strip_forms(base):
+    stems = []
+    if base.endswith("ment"):
+        stem = base.removesuffix("ment")
+        if len(stem) > 3:
+            stems.append(stem)
+    if base.endswith("ion"):
+        stem = base.removesuffix("ion")
+        if len(stem) > 3:
+            stems.append(stem)
+            stems.append(stem + "e")
+    if base.endswith("ation"):
+        stem = base.removesuffix("ation")
+        if len(stem) > 3:
+            stems.append(stem)
+            stems.append(stem + "e")
+    if base.endswith("ication"):
+        stem = base.removesuffix("ication")
+        if len(stem) > 3:
+            stems.append(stem + "y")
+    if base.endswith("al"):
+        stem = base.removesuffix("al")
+        if len(stem) > 3:
+            stems.append(stem)
+    if base.endswith("ance"):
+        stem = base.removesuffix("ance")
+        if len(stem) > 3:
+            stems.append(stem)
+            stems.append(stem + "e")
+    if base.endswith("er"):
+        stem = base.removesuffix("er")
+        if len(stem) > 3:
+            stems.append(stem)
+            stems.append(stem + "e")
+    return stems
+def hl_group_add(tails_by_prefix, prefix_order, prefix, tail):
+    tails = tails_by_prefix.get(prefix, None)
+    if tails == None:
+        tails = []
+        tails_by_prefix.update({prefix: tails})
+        prefix_order.append(prefix)
+    known = tail in tails
+    if not known:
+        tails.append(tail)
+hl_group_cache = {}
+def hl_variant_groups(word):
+    cached = hl_group_cache.get(word, None)
+    if cached != None:
+        return cached
+    bases = []
+    deriv_bases = []
+    for plural_base in hl_bases(word):
+        known = plural_base in bases
+        if not known:
+            bases.append(plural_base)
+        if len(plural_base) > 3:
+            deriv_bases.append(plural_base)
+        for stem in hl_strip_forms(plural_base):
+            known = stem in bases
+            if not known:
+                bases.append(stem)
+    tails_by_prefix = {}
+    prefix_order = []
+    for base in bases:
+        for tail in ["", "s", "es", "ed", "ing"]:
+            hl_group_add(tails_by_prefix, prefix_order, base, tail)
+        if base.endswith("y"):
+            if len(base) > 2:
+                hl_group_add(tails_by_prefix, prefix_order, base.removesuffix("y"), "ies")
+        if base.endswith("e"):
+            hl_group_add(tails_by_prefix, prefix_order, base, "d")
+            hl_group_add(tails_by_prefix, prefix_order, base.removesuffix("e"), "ing")
+    for base in deriv_bases:
+        if base.endswith("e"):
+            stem = base.removesuffix("e")
+            for tail in ["ion", "ions", "ation", "ations"]:
+                hl_group_add(tails_by_prefix, prefix_order, stem, tail)
+            for tail in ["r", "rs"]:
+                hl_group_add(tails_by_prefix, prefix_order, base, tail)
+        else:
+            for tail in ["ion", "ions", "ation", "ations", "er", "ers"]:
+                hl_group_add(tails_by_prefix, prefix_order, base, tail)
+        for tail in ["ment", "ments", "al", "ance"]:
+            hl_group_add(tails_by_prefix, prefix_order, base, tail)
+        if base.endswith("y"):
+            stem = base.removesuffix("y")
+            for tail in ["ication", "ications"]:
+                hl_group_add(tails_by_prefix, prefix_order, stem, tail)
+    groups = []
+    for prefix in prefix_order:
+        groups.append(tuple([prefix, tails_by_prefix.get(prefix, [])]))
+    hl_group_cache.update({word: groups})
+    return groups
 def hl_bases(word):
     out = [word]
     if word.endswith("ies"):
@@ -992,24 +1085,22 @@ def hl_bases(word):
             if len(word) > 3:
                 out.append(word.removesuffix("s"))
     return out
+hl_variant_cache = {}
 def hl_variants(word):
+    cached = hl_variant_cache.get(word, None)
+    if cached != None:
+        return cached
     found = []
-    for base in hl_bases(word):
-        for cand in [base, base + "s", base + "es", base + "ed", base + "ing"]:
+    for row in hl_variant_groups(word):
+        row_copy = list(row)
+        prefix = row_copy.pop(0)
+        tails = row_copy.pop(0)
+        for tail in tails:
+            cand = prefix + tail
             known = cand in found
             if not known:
                 found.append(cand)
-        if base.endswith("y"):
-            if len(base) > 2:
-                cand = base.removesuffix("y") + "ies"
-                known = cand in found
-                if not known:
-                    found.append(cand)
-        if base.endswith("e"):
-            for cand in [base + "d", base.removesuffix("e") + "ing"]:
-                known = cand in found
-                if not known:
-                    found.append(cand)
+    hl_variant_cache.update({word: found})
     return found
 def hl_char_pattern(variant):
     parts = []
@@ -1017,12 +1108,44 @@ def hl_char_pattern(variant):
         parts.append(hl_diacritic_classes.get(ch, ch))
     empty_text = ""
     return empty_text.join(parts)
+hl_word_pattern_cache = {}
 def hl_word_pattern(word):
+    cached = hl_word_pattern_cache.get(word, None)
+    if cached != None:
+        return cached
     alts = []
-    for variant in hl_variants(word):
-        alts.append(hl_char_pattern(variant))
     bar = "|"
-    return "(?:" + bar.join(alts) + ")"
+    for row in hl_variant_groups(word):
+        row_copy = list(row)
+        prefix = row_copy.pop(0)
+        tails = row_copy.pop(0)
+        bare = "" in tails
+        tail_rows = []
+        for tail in tails:
+            if tail:
+                tail_rows.append(tuple([0 - len(tail), tail]))
+        tail_alts = []
+        for tail_row in sorted(tail_rows):
+            tail_row_copy = list(tail_row)
+            tail_row_copy.pop(0)
+            tail_alts.append(tail_row_copy.pop(0))
+        piece = hl_char_pattern(prefix)
+        if tail_alts:
+            piece = piece + "(?:" + bar.join(tail_alts) + ")"
+            if bare:
+                piece = piece + "?"
+        alts.append(piece)
+    pattern = "(?:" + bar.join(alts) + ")"
+    hl_word_pattern_cache.update({word: pattern})
+    return pattern
+hl_rx_cache = {}
+def hl_rx(pattern):
+    cached = hl_rx_cache.get(pattern, None)
+    if cached != None:
+        return cached
+    compiled = re.compile(pattern, re.IGNORECASE)
+    hl_rx_cache.update({pattern: compiled})
+    return compiled
 def hl_lemma_pattern(lemma):
     word_patterns = []
     for word in lemma.split("-"):
@@ -1086,12 +1209,18 @@ def hl_alternation_order(lemmas):
         row_copy.pop(0)
         ordered.append(row_copy.pop(0))
     return ordered
-def hl_mark_html(text, index):
-    class_attr = ""
+def hl_mark_html(text, index, partial):
+    names = []
     if index < hl_hover_classes:
-        class_attr = " class=\"t" + str(index) + "\""
+        names.append("t" + str(index))
+    if partial:
+        names.append("p")
+    class_attr = ""
+    if names:
+        space = " "
+        class_attr = " class=\"" + space.join(names) + "\""
     return "<mark" + class_attr + ">" + esc_text(text) + "</mark>"
-def hl_ace_html(ace_text, index_by_lemma):
+def hl_ace_html(ace_text, index_by_lemma, partial_lemmas):
     html_parts = []
     is_token = False
     for piece in hl_token_rx.split(ace_text):
@@ -1099,7 +1228,8 @@ def hl_ace_html(ace_text, index_by_lemma):
             folded = piece.casefold()
             index = index_by_lemma.get(folded, None)
             if index != None:
-                html_parts.append(hl_mark_html(piece, index))
+                part = folded in partial_lemmas
+                html_parts.append(hl_mark_html(piece, index, part))
             elif folded in hl_stop_words:
                 html_parts.append("<span class=\"kw\">" + esc_text(piece) + "</span>")
             else:
@@ -1115,7 +1245,7 @@ def hl_link_data(ace_text, payload_line):
     if not lemmas:
         data.update({"matched": 0})
         data.update({"payload_html": esc_text(payload_line)})
-        data.update({"ace_html": hl_ace_html(ace_text, {})})
+        data.update({"ace_html": hl_ace_html(ace_text, {}, [])})
         return data
     ordered = hl_alternation_order(lemmas)
     all_phrases = []
@@ -1124,7 +1254,7 @@ def hl_link_data(ace_text, payload_line):
     bar = "|"
     for lemma in ordered:
         lemma_pattern = hl_lemma_pattern(lemma)
-        single_rx_by_lemma.update({lemma: re.compile(lemma_pattern + "$", re.IGNORECASE)})
+        single_rx_by_lemma.update({lemma: hl_rx(lemma_pattern + "$")})
         phrases = hl_windows(lemma)
         phrase_patterns = []
         for phrase in phrases:
@@ -1133,18 +1263,73 @@ def hl_link_data(ace_text, payload_line):
             if not known:
                 all_phrases.append(phrase)
         if len(phrases) > 1:
-            window_rx_by_lemma.update({lemma: re.compile("(?:" + bar.join(phrase_patterns) + ")$", re.IGNORECASE)})
+            window_rx_by_lemma.update({lemma: hl_rx("(?:" + bar.join(phrase_patterns) + ")$")})
+    variant_owner = {}
+    words_by_lemma = {}
+    for lemma in ordered:
+        lemma_words = []
+        for word in lemma.split("-"):
+            if word:
+                known = word in lemma_words
+                if not known:
+                    lemma_words.append(word)
+        words_by_lemma.update({lemma: lemma_words})
+        for word in lemma_words:
+            for cand in hl_variants(word):
+                prior = variant_owner.get(cand, "")
+                if prior == "":
+                    variant_owner.update({cand: lemma})
+                elif prior != lemma:
+                    variant_owner.update({cand: "!"})
+    partial_rx_by_lemma = {}
+    partial_words = []
+    acronym_patterns = []
+    for lemma in ordered:
+        multi = "-" in lemma
+        if multi:
+            cand_patterns = []
+            for word in words_by_lemma.get(lemma, []):
+                stopped = word in hl_stop_words
+                if not stopped:
+                    if len(word) > 2:
+                        clean = True
+                        for cand in hl_variants(word):
+                            if variant_owner.get(cand, "") == "!":
+                                clean = False
+                        if clean:
+                            if len(word) > 3:
+                                cand_patterns.append("(?:" + hl_lemma_pattern(word) + ")")
+                                known = word in partial_words
+                                if not known:
+                                    partial_words.append(word)
+                            else:
+                                acro_pattern = "\\b(?-i:" + word.upper() + ")s?\\b"
+                                cand_patterns.append("(?:" + acro_pattern + ")")
+                                known = acro_pattern in acronym_patterns
+                                if not known:
+                                    acronym_patterns.append(acro_pattern)
+            if cand_patterns:
+                partial_rx_by_lemma.update({lemma: hl_rx("(?:" + bar.join(cand_patterns) + ")$")})
+    for word in partial_words:
+        known = word in all_phrases
+        if not known:
+            all_phrases.append(word)
     alternation_parts = []
     for phrase in hl_alternation_order(all_phrases):
         alternation_parts.append("(?:" + hl_lemma_pattern(phrase) + ")")
-    combined_rx = re.compile("(" + bar.join(alternation_parts) + ")", re.IGNORECASE)
+    for acro_pattern in acronym_patterns:
+        alternation_parts.append("(?:" + acro_pattern + ")")
+    combined_rx = hl_rx("(" + bar.join(alternation_parts) + ")")
     pieces = combined_rx.split(payload_line)
     hit_lemmas = []
+    hit_partials = []
     matched_lemmas = []
+    full_lemmas = []
     is_hit = False
     for piece in pieces:
         if is_hit:
             piece_lemma = ""
+            piece_partial = False
             for lemma in ordered:
                 if not piece_lemma:
                     single_rx = single_rx_by_lemma.get(lemma, None)
@@ -1159,25 +1344,46 @@ def hl_link_data(ace_text, payload_line):
                             hit = window_rx.match(piece)
                             if hit:
                                 piece_lemma = lemma
+            if not piece_lemma:
+                for lemma in ordered:
+                    if not piece_lemma:
+                        partial_rx = partial_rx_by_lemma.get(lemma, None)
+                        if partial_rx != None:
+                            hit = partial_rx.match(piece)
+                            if hit:
+                                piece_lemma = lemma
+                                piece_partial = True
             hit_lemmas.append(piece_lemma)
+            hit_partials.append(piece_partial)
             if piece_lemma:
                 known = piece_lemma in matched_lemmas
                 if not known:
                     matched_lemmas.append(piece_lemma)
+                if not piece_partial:
+                    known_full = piece_lemma in full_lemmas
+                    if not known_full:
+                        full_lemmas.append(piece_lemma)
         is_hit = not is_hit
     index_by_lemma = {}
     for lemma in lemmas:
         present = lemma in matched_lemmas
         if present:
             index_by_lemma.update({lemma: len(index_by_lemma)})
+    partial_only = []
+    for lemma in matched_lemmas:
+        full = lemma in full_lemmas
+        if not full:
+            partial_only.append(lemma)
     html_parts = []
     hit_queue = list(hit_lemmas)
+    part_queue = list(hit_partials)
     is_hit = False
     for piece in pieces:
         if is_hit:
             piece_lemma = hit_queue.pop(0)
+            piece_partial = part_queue.pop(0)
             if piece_lemma:
-                html_parts.append(hl_mark_html(piece, index_by_lemma.get(piece_lemma, 0)))
+                html_parts.append(hl_mark_html(piece, index_by_lemma.get(piece_lemma, 0), piece_partial))
             else:
                 html_parts.append(esc_text(piece))
         else:
@@ -1186,9 +1392,9 @@ def hl_link_data(ace_text, payload_line):
     empty_text = ""
     data.update({"matched": len(matched_lemmas)})
     data.update({"payload_html": empty_text.join(html_parts)})
-    data.update({"ace_html": hl_ace_html(ace_text, index_by_lemma)})
+    data.update({"ace_html": hl_ace_html(ace_text, index_by_lemma, partial_only)})
     return data
-palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-contested": ["#4c1d95", "#ede9fe"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"], "mark-0": ["#111827", "#dbeafe"], "mark-active-0": ["#111827", "#bfdbfe"], "mark-1": ["#111827", "#fef9c3"], "mark-active-1": ["#111827", "#fef08a"], "mark-2": ["#111827", "#f3e8ff"], "mark-active-2": ["#111827", "#e9d5ff"], "mark-3": ["#111827", "#ffedd5"], "mark-active-3": ["#111827", "#fed7aa"], "mark-4": ["#111827", "#ccfbf1"], "mark-active-4": ["#111827", "#99f6e4"], "mark-5": ["#111827", "#ffe4e6"], "mark-active-5": ["#111827", "#fecdd3"]}
+palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-contested": ["#4c1d95", "#ede9fe"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"], "mark-0": ["#111827", "#dbeafe"], "mark-active-0": ["#111827", "#bfdbfe"], "mark-1": ["#111827", "#fef9c3"], "mark-active-1": ["#111827", "#fef08a"], "mark-2": ["#111827", "#f3e8ff"], "mark-active-2": ["#111827", "#e9d5ff"], "mark-3": ["#111827", "#ffedd5"], "mark-active-3": ["#111827", "#fed7aa"], "mark-4": ["#111827", "#ccfbf1"], "mark-active-4": ["#111827", "#99f6e4"], "mark-5": ["#111827", "#ffe4e6"], "mark-active-5": ["#111827", "#fecdd3"], "mark-line-0": ["#2563eb", "#ffffff"], "mark-line-1": ["#a16207", "#ffffff"], "mark-line-2": ["#7c3aed", "#ffffff"], "mark-line-3": ["#c2410c", "#ffffff"], "mark-line-4": ["#0f766e", "#ffffff"], "mark-line-5": ["#be123c", "#ffffff"]}
 def pal_fg(role):
     pair = palette.get(role, [])
     pair_copy = list(pair)
@@ -1267,6 +1473,18 @@ def build_css():
             lines.append(comma.join(selector_parts) + " { background: " + pal_bg("mark-" + str(hue)) + "; }")
         hue = hue + 1
     hue = 0
+    for hue_ignored in range(hl_hue_count):
+        selector_parts = []
+        class_index = hue
+        for step_ignored in range(hl_hover_classes):
+            if class_index < hl_hover_classes:
+                selector_parts.append("mark.t" + str(class_index))
+            class_index = class_index + hl_hue_count
+        comma = ", "
+        lines.append(comma.join(selector_parts) + " { text-decoration-color: " + pal_fg("mark-line-" + str(hue)) + "; }")
+        hue = hue + 1
+    lines.append("mark.p { background: none; }")
+    hue = 0
     for hover_index in range(hl_hover_classes):
         class_name = "t" + str(hover_index)
         lines.append("main:has(mark." + class_name + ":hover) mark." + class_name + " { background: " + pal_bg("mark-active-" + str(hue)) + "; text-decoration-style: solid; }")
@@ -1276,7 +1494,7 @@ def build_css():
     lines.append("@media print {")
     lines.append("body { max-width: none; padding: 0; }")
     lines.append("nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }")
-    lines.append("mark, mark[class] { background: none; }")
+    lines.append("mark, mark[class] { background: none; text-decoration-color: " + muted_fg + "; }")
     lines.append("details::details-content { content-visibility: visible; }")
     lines.append("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }")
     lines.append("a { color: inherit; text-decoration: none; }")
@@ -1286,7 +1504,7 @@ def build_css():
     return joiner.join(lines)
 css_text = build_css()
 scope_line_text = "This page reports what the loaded guideline documents state. It does not give clinical advice."
-hl_note_text = "Phrases that appear in both texts are highlighted. A phrase and its matches share one color. Point at a highlighted phrase to emphasize it and its matches."
+hl_note_text = "Phrases that appear in both texts are highlighted. A phrase and its matches share one color. An underline without a filled background marks one word from a longer phrase. Point at a highlighted phrase to emphasize it and its matches."
 refusal_refused_text = "The request was refused. Open the document page again from this site and submit the decision again."
 refusal_invalid_form_text = "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."
 refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."
@@ -1970,6 +2188,14 @@ def selftest_violation():
         return "ui: selftest failed: hl variants gerund"
     if "applying" not in hl_variants("applies"):
         return "ui: selftest failed: hl variants y-stem"
+    if "assessment" not in hl_variants("assess"):
+        return "ui: selftest failed: hl variants derivation"
+    if "treat" not in hl_variants("treatment"):
+        return "ui: selftest failed: hl variants derivation strip"
+    if "application" not in hl_variants("apply"):
+        return "ui: selftest failed: hl variants y-ication"
+    if "provider" not in hl_variants("provide"):
+        return "ui: selftest failed: hl variants agent noun"
     hl_case = hl_link_data("Every clinician should offer-naloxone.\n", "Clinicians should consider offering naloxone.")
     if hl_case.get("matched", 0) != 2:
         return "ui: selftest failed: hl match count"
@@ -1989,7 +2215,7 @@ def selftest_violation():
     if hl_case.get("payload_html", "") != "Care for <mark class=\"t0\">opioid-naïve patients</mark>.":
         return "ui: selftest failed: hl diacritic"
     hl_case = hl_link_data("A clinician should treat an acute-pain.\n", "It was acute. Pain remained.")
-    if hl_case.get("matched", 0) != 0:
+    if hl_case.get("payload_html", "") != "It was <mark class=\"t0 p\">acute</mark>. <mark class=\"t0 p\">Pain</mark> remained.":
         return "ui: selftest failed: hl sentence guard"
     hl_case = hl_link_data("Every clinician should review an opioid-therapy and a therapy.\n", "An opioid therapy and a therapy.")
     if hl_case.get("payload_html", "") != "An <mark class=\"t0\">opioid therapy</mark> and a <mark class=\"t1\">therapy</mark>.":
@@ -2005,8 +2231,12 @@ def selftest_violation():
     if hl_case.get("payload_html", "") != "Try <mark class=\"t0\">pharmacologic therapy</mark>.":
         return "ui: selftest failed: hl window suffix"
     hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "The therapy failed.")
-    if hl_case.get("matched", 0) != 0:
+    if hl_case.get("matched", 0) != 1:
         return "ui: selftest failed: hl window single word"
+    if hl_case.get("payload_html", "") != "The <mark class=\"t0 p\">therapy</mark> failed.":
+        return "ui: selftest failed: hl partial payload"
+    if "<mark class=\"t0 p\">nonopioid-pharmacologic-therapy</mark>" not in hl_case.get("ace_html", ""):
+        return "ui: selftest failed: hl partial ace"
     hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Use nonopioid pharmacologic therapies today.")
     if hl_case.get("payload_html", "") != "Use <mark class=\"t0\">nonopioid pharmacologic therapies</mark> today.":
         return "ui: selftest failed: hl window full span"
@@ -2015,13 +2245,36 @@ def selftest_violation():
         return "ui: selftest failed: hl window precedence"
     if hl_case.get("ace_html", "") != "<span class=\"kw\">A</span> clinician <span class=\"kw\">should</span> compare <span class=\"kw\">an</span> opioid-use-disorder <span class=\"kw\">and</span> <span class=\"kw\">a</span> <mark class=\"t0\">use-disorder</mark>.\n":
         return "ui: selftest failed: hl window precedence ace"
+    hl_case = hl_link_data("A clinician should assess a patient.\n", "Assessment of patients continues.")
+    if hl_case.get("payload_html", "") != "<mark class=\"t0\">Assessment</mark> of <mark class=\"t1\">patients</mark> continues.":
+        return "ui: selftest failed: hl derivation full tier"
+    hl_case = hl_link_data("Every clinician should maximize a nonopioid-pharmacologic-therapy.\n", "Discuss nonopioid pharmacologic options. The therapy failed.")
+    if hl_case.get("matched", 0) != 1:
+        return "ui: selftest failed: hl partial mix count"
+    if hl_case.get("payload_html", "") != "Discuss <mark class=\"t0\">nonopioid pharmacologic</mark> options. The <mark class=\"t0 p\">therapy</mark> failed.":
+        return "ui: selftest failed: hl partial mix"
+    if "<mark class=\"t0\">nonopioid-pharmacologic-therapy</mark>" not in hl_case.get("ace_html", ""):
+        return "ui: selftest failed: hl partial mix ace"
+    hl_case = hl_link_data("Every clinician should review an opioid-therapy and an opioid-risk.\n", "An opioid remained.")
+    if hl_case.get("matched", 0) != 0:
+        return "ui: selftest failed: hl partial conflict"
+    hl_case = hl_link_data("An opioid-use.\n", "Use it.")
+    if hl_case.get("matched", 0) != 0:
+        return "ui: selftest failed: hl partial floor"
+    hl_case = hl_link_data("An mme-units-per-day.\n", "Check MME today.")
+    if hl_case.get("payload_html", "") != "Check <mark class=\"t0 p\">MME</mark> today.":
+        return "ui: selftest failed: hl partial acronym"
     if "mark.t1, mark.t7, mark.t13, mark.t19, mark.t25, mark.t31 { background: #fef9c3; }" not in css_text:
         return "ui: selftest failed: hue group css"
     if "main:has(mark.t7:hover) mark.t7 { background: #fef08a; text-decoration-style: solid; }" not in css_text:
         return "ui: selftest failed: hue hover cycle css"
     if "main:has(mark.t0:hover) mark.t0 { background: #bfdbfe; text-decoration-style: solid; }" not in css_text:
         return "ui: selftest failed: hue hover base css"
-    if "mark, mark[class] { background: none; }" not in css_text:
+    if "mark.t0, mark.t6, mark.t12, mark.t18, mark.t24, mark.t30 { text-decoration-color: #2563eb; }" not in css_text:
+        return "ui: selftest failed: hue underline css"
+    if "mark.p { background: none; }" not in css_text:
+        return "ui: selftest failed: partial mark css"
+    if "mark, mark[class] { background: none; text-decoration-color: #4b5563; }" not in css_text:
         return "ui: selftest failed: print mark strip"
     unique_values = []
     for role in sorted(palette):

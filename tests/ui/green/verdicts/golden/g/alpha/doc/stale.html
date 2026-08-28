@@ -57,6 +57,13 @@ mark.t2, mark.t8, mark.t14, mark.t20, mark.t26 { background: #f3e8ff; }
 mark.t3, mark.t9, mark.t15, mark.t21, mark.t27 { background: #ffedd5; }
 mark.t4, mark.t10, mark.t16, mark.t22, mark.t28 { background: #ccfbf1; }
 mark.t5, mark.t11, mark.t17, mark.t23, mark.t29 { background: #ffe4e6; }
+mark.t0, mark.t6, mark.t12, mark.t18, mark.t24, mark.t30 { text-decoration-color: #2563eb; }
+mark.t1, mark.t7, mark.t13, mark.t19, mark.t25, mark.t31 { text-decoration-color: #a16207; }
+mark.t2, mark.t8, mark.t14, mark.t20, mark.t26 { text-decoration-color: #7c3aed; }
+mark.t3, mark.t9, mark.t15, mark.t21, mark.t27 { text-decoration-color: #c2410c; }
+mark.t4, mark.t10, mark.t16, mark.t22, mark.t28 { text-decoration-color: #0f766e; }
+mark.t5, mark.t11, mark.t17, mark.t23, mark.t29 { text-decoration-color: #be123c; }
+mark.p { background: none; }
 main:has(mark.t0:hover) mark.t0 { background: #bfdbfe; text-decoration-style: solid; }
 main:has(mark.t1:hover) mark.t1 { background: #fef08a; text-decoration-style: solid; }
 main:has(mark.t2:hover) mark.t2 { background: #e9d5ff; text-decoration-style: solid; }
@@ -92,7 +99,7 @@ main:has(mark.t31:hover) mark.t31 { background: #fef08a; text-decoration-style: 
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
-mark, mark[class] { background: none; }
+mark, mark[class] { background: none; text-decoration-color: #4b5563; }
 details::details-content { content-visibility: visible; }
 pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
 a { color: inherit; text-decoration: none; }
@@ -111,7 +118,7 @@ a { color: inherit; text-decoration: none; }
 <section class="stale">
 <p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>
 </section>
-<p class="hl-note">Phrases that appear in both texts are highlighted. A phrase and its matches share one color. Point at a highlighted phrase to emphasize it and its matches.</p>
+<p class="hl-note">Phrases that appear in both texts are highlighted. A phrase and its matches share one color. An underline without a filled background marks one word from a longer phrase. Point at a highlighted phrase to emphasize it and its matches.</p>
 <section>
 <h3>Original passage</h3>
 <pre class="prose"><mark class="t0">Stale</mark> payload.</pre>

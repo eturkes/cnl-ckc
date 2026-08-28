@@ -154,13 +154,18 @@ comment append to `guidelines/<id>/audit/adjudication.tsv`.
 The document page links the two texts. A phrase that appears in both
 the source passage and the ACE text is highlighted in both places.
 The match is lexical: each hyphenated ACE term is compared word by
-word against the passage, with tolerance for plurals, verb endings,
-and accented letters. When the passage carries only part of a longer
-ACE term, a run of two or more of its words in order is enough for a
-match. A single shared word is not enough. Each ACE term and its
-matches share one color, and different terms cycle through six muted
-tints. A pointer over a highlighted phrase emphasizes that phrase and
-its counterparts. ACE function words render in a muted color, so the
+word against the passage. The comparison tolerates plurals, verb
+endings, accented letters, and common derived forms such as "assess"
+and "assessment". When the passage carries only part of a longer ACE
+term, a run of two or more of its words in order gets a full
+highlight. A single word from a longer term gets a lighter mark: a
+colored underline without a filled background. A word that belongs
+to more than one ACE term is not marked alone. A word of three
+letters matches alone only in its capital form, such as "MME".
+Shorter words do not match alone. Each ACE term and its matches
+share one color, and different terms cycle through six muted tints.
+A pointer over a highlighted phrase emphasizes that phrase and its
+counterparts. ACE function words render in a muted color, so the
 domain terms stand out. A phrase that the ACE text restates in other
 words is not highlighted. On paper the highlights print as dotted
 underlines.

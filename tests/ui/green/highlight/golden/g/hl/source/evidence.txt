@@ -1,5 +1,5 @@
 Highlight fixture evidence
-Region authority: identify the 4 payloads below
+Region authority: identify the 5 payloads below
 
 [h1 | p1 | Fixture section]
 Clinicians maximized nonopioid therapies for acute pain. The onset was acute. Pain persisted.
@@ -12,3 +12,6 @@ Take care with alerts.
 
 [h4 | p2 | Fixture section]
 Discuss nonopioid pharmacologic options. Pharmacologic therapy may help. The therapy failed.
+
+[h5 | p2 | Fixture section]
+Prescribe naloxone today.
