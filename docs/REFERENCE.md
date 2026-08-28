@@ -151,24 +151,21 @@ document: does the ACE representation appropriately reflect the
 original passage? The answer, the reviewer name, and an optional
 comment append to `guidelines/<id>/audit/adjudication.tsv`.
 
-The document page links the two texts. A phrase that appears in both
+The document page links the two texts. A word that appears in both
 the source passage and the ACE text is highlighted in both places.
-The match is lexical: each hyphenated ACE term is compared word by
-word against the passage. The comparison tolerates plurals, verb
-endings, accented letters, and common derived forms such as "assess"
-and "assessment". When the passage carries only part of a longer ACE
-term, a run of two or more of its words in order gets a full
-highlight. A single word from a longer term gets a lighter mark: a
-colored underline without a filled background. A word that belongs
-to more than one ACE term is not marked alone. A word of three
-letters matches alone only in its capital form, such as "MME".
-Shorter words do not match alone. Each ACE term and its matches
-share one color, and different terms cycle through six muted tints.
-A pointer over a highlighted phrase emphasizes that phrase and its
-counterparts. ACE function words render in a muted color, so the
-domain terms stand out. A phrase that the ACE text restates in other
-words is not highlighted. On paper the highlights print as dotted
-underlines.
+The match is lexical and word by word: a hyphenated ACE term is
+split into its words, and each word is marked on its own. The
+comparison tolerates plurals, verb endings, accented letters, and
+common derived forms such as "assess" and "assessment". Different
+forms of one word share one color everywhere on the page, including
+inside longer ACE terms. A word of three letters matches only in its
+capital form, such as "MME". Shorter words, numbers, and function
+words are not marked. The palette holds twelve muted tints, so
+colors repeat on pages with many distinct words. A pointer over a
+highlighted word emphasizes that word and its matches exactly. ACE
+function words render in a muted color, so the domain terms stand
+out. A passage that the ACE text restates in other words is not
+highlighted. On paper the highlights print as dotted underlines.
 
 The interface reads committed files. When the working tree holds
 uncommitted guideline changes, the pages render the last commit

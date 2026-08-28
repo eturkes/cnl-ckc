@@ -90,7 +90,7 @@ dist red suite; findings, residuals + rulings = the review record in
 Live law = docs/REFERENCE.md (schema, Operating, Export, query/trace sections)
 + project `CLAUDE.md` clinician design law; root `README.md` = the
 simplified overview. User-directed post-review addition: doc-page
-source↔ACE lexical phrase highlighting (law = memory "Doc-page
+source↔ACE lexical word highlighting (law = memory "Doc-page
 source↔ACE highlight" bullet + REFERENCE § Reviewer interface). Architecture rulings, unit
 records, gauges, sizing, assurance + out-of-scope =
 `.agent/archive/ui.md`; history = `git log --grep "(M4[. ]" -p --
