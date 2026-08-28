@@ -1,5 +1,5 @@
 meta	schema	v1
-meta	head	7c65d2007400586205d12b0a921f9d05d618aa67
+meta	head	18c33c9d033b201d6f0be9020009bef57559f7f3
 meta	compiler	e184ce4900a6913881067b10590f82fb685452f5b55fdedd230efb8e46173b45
 meta	base-lexicon	2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec
 meta	python	3.11
@@ -352,6 +352,8 @@ member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s8-12.ace	b379c053fb53
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s9-01.ace	e482292604b6adffc384512a134e78a1d47ecbf7eacafefd2c9d05e6945b7996	1245
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s9-04.ace	d2694e97cea76ead5a23b518a6efabc20d5a5d698b8f82e05e7b95700c2891de	272
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s9-05.ace	d6c5c2777ee4172c29bbc13269ca5d67a1c6da6e271e22d1fbd8b77328e9f485	1106
+member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01.tsv	397166c70095bd876db7b0636960e6faf07bac3df8aaf1f68f4e58b50f7335a3	1039
+member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec08-imp13.tsv	d09f39b44414e6bdd3ce27c429b7c88b0b3e2bb761ea7c94201a08bf20b4dcb3	712
 member	data/guidelines/cdc-2022-opioid/audit/census-map.tsv	49f0f096a3a166733bb673733a03b047c3c52b755e6421e4bc07b50862c3e91c	18815
 member	data/guidelines/cdc-2022-opioid/audit/lexicon-rejects.tsv	f4d37d1f4baa1bff8dfddf45b007eef7509a1db2d1dc06afad87170e90bc9761	26
 member	data/guidelines/cdc-2022-opioid/audit/lexicon-shadow.tsv	e5d99a9a163290e6c7c68d088712d1633eed9fd410ab7e2f240cff4a431e1577	3562
