@@ -1,3 +1,4 @@
+Use base64.
 Use datetime.
 Use fcntl.
 Use hashlib.
@@ -1192,7 +1193,7 @@ Define [[hl_link_data]] taking ace_text, payload_line, align_data:
     Do [[data.update]]({"ace_html": [[hl_marked_html]](ace_text, [[align_data.get]]("ace", <>), True)}).
     Give back data.
 
-Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">, "mark-0": <"#111827", "#dbeafe">, "mark-active-0": <"#111827", "#bfdbfe">, "mark-1": <"#111827", "#fef9c3">, "mark-active-1": <"#111827", "#fef08a">, "mark-2": <"#111827", "#f3e8ff">, "mark-active-2": <"#111827", "#e9d5ff">, "mark-3": <"#111827", "#ffedd5">, "mark-active-3": <"#111827", "#fed7aa">, "mark-4": <"#111827", "#ccfbf1">, "mark-active-4": <"#111827", "#99f6e4">, "mark-5": <"#111827", "#ffe4e6">, "mark-active-5": <"#111827", "#fecdd3">, "mark-6": <"#111827", "#dcfce7">, "mark-active-6": <"#111827", "#bbf7d0">, "mark-7": <"#111827", "#fae8ff">, "mark-active-7": <"#111827", "#f5d0fe">, "mark-8": <"#111827", "#cffafe">, "mark-active-8": <"#111827", "#a5f3fc">, "mark-9": <"#111827", "#ecfccb">, "mark-active-9": <"#111827", "#d9f99d">, "mark-10": <"#111827", "#e0e7ff">, "mark-active-10": <"#111827", "#c7d2fe">, "mark-11": <"#111827", "#e7e5e4">, "mark-active-11": <"#111827", "#d6d3d1">, "mark-line-0": <"#2563eb", "#ffffff">, "mark-line-1": <"#a16207", "#ffffff">, "mark-line-2": <"#7c3aed", "#ffffff">, "mark-line-3": <"#c2410c", "#ffffff">, "mark-line-4": <"#0f766e", "#ffffff">, "mark-line-5": <"#be123c", "#ffffff">, "mark-line-6": <"#15803d", "#ffffff">, "mark-line-7": <"#a21caf", "#ffffff">, "mark-line-8": <"#0e7490", "#ffffff">, "mark-line-9": <"#4d7c0f", "#ffffff">, "mark-line-10": <"#4f46e5", "#ffffff">, "mark-line-11": <"#57534e", "#ffffff">}.
+Set palette to {"body": <"#111827", "#ffffff">, "link": <"#1d4ed8", "#ffffff">, "muted": <"#4b5563", "#ffffff">, "faded": <"#9ca3af", "#ffffff">, "chip-approved": <"#14532d", "#dcfce7">, "chip-rejected": <"#7f1d1d", "#fee2e2">, "chip-contested": <"#4c1d95", "#ede9fe">, "chip-stale": <"#78350f", "#fef3c7">, "chip-unreviewed": <"#1f2937", "#e5e7eb">, "mark-0": <"#111827", "#dbeafe">, "mark-active-0": <"#111827", "#bfdbfe">, "mark-1": <"#111827", "#fef9c3">, "mark-active-1": <"#111827", "#fef08a">, "mark-2": <"#111827", "#f3e8ff">, "mark-active-2": <"#111827", "#e9d5ff">, "mark-3": <"#111827", "#ffedd5">, "mark-active-3": <"#111827", "#fed7aa">, "mark-4": <"#111827", "#ccfbf1">, "mark-active-4": <"#111827", "#99f6e4">, "mark-5": <"#111827", "#ffe4e6">, "mark-active-5": <"#111827", "#fecdd3">, "mark-6": <"#111827", "#dcfce7">, "mark-active-6": <"#111827", "#bbf7d0">, "mark-7": <"#111827", "#fae8ff">, "mark-active-7": <"#111827", "#f5d0fe">, "mark-8": <"#111827", "#cffafe">, "mark-active-8": <"#111827", "#a5f3fc">, "mark-9": <"#111827", "#ecfccb">, "mark-active-9": <"#111827", "#d9f99d">, "mark-10": <"#111827", "#e0e7ff">, "mark-active-10": <"#111827", "#c7d2fe">, "mark-11": <"#111827", "#e7e5e4">, "mark-active-11": <"#111827", "#d6d3d1">, "mark-line-0": <"#2563eb", "#ffffff">, "mark-line-1": <"#a16207", "#ffffff">, "mark-line-2": <"#7c3aed", "#ffffff">, "mark-line-3": <"#c2410c", "#ffffff">, "mark-line-4": <"#0f766e", "#ffffff">, "mark-line-5": <"#be123c", "#ffffff">, "mark-line-6": <"#15803d", "#ffffff">, "mark-line-7": <"#a21caf", "#ffffff">, "mark-line-8": <"#0e7490", "#ffffff">, "mark-line-9": <"#4d7c0f", "#ffffff">, "mark-line-10": <"#4f46e5", "#ffffff">, "mark-line-11": <"#57534e", "#ffffff">}.
 
 Define [[pal_fg]] taking role:
     Set pair to [[palette.get]](role, <>).
@@ -1253,8 +1254,8 @@ Define [[build_css]] taking nothing:
     Do [[lines.append]]("fieldset label { margin-top: 0.5rem; font-weight: 400; }").
     Do [[lines.append]]("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " plus line_color plus "; font-family: inherit; font-size: 1rem; color: " plus body_fg plus "; background: " plus body_bg plus "; }").
     Do [[lines.append]]("textarea { min-height: 6rem; }").
-    Do [[lines.append]]("input[type=\"radio\"] { accent-color: " plus body_fg plus "; }").
-    Do [[lines.append]]("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
+    Do [[lines.append]]("input[type=\"radio\"], input[type=\"checkbox\"] { accent-color: " plus body_fg plus "; }").
+    Do [[lines.append]]("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, input[type=\"checkbox\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " plus link_fg plus "; outline-offset: 2px; }").
     Do [[lines.append]]("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " plus body_fg plus "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " plus body_bg plus "; background: " plus body_fg plus "; }").
     Set muted_fg to [[pal_fg]]("muted").
     Set mark_bg to [[pal_bg]]("mark-0").
@@ -1291,10 +1292,21 @@ Define [[build_css]] taking nothing:
         Set hue to hue plus 1.
         If hue equals hl_hue_count:
             Set hue to 0.
+    Set faded_fg to [[pal_fg]]("faded").
+    Do [[lines.append]](".hl-note label { margin-right: 0.75rem; }").
+    Do [[lines.append]]("main.hl-click pre.prose { color: " plus faded_fg plus "; }").
+    Do [[lines.append]]("main.hl-click pre.prose .kw { color: " plus faded_fg plus "; }").
+    Do [[lines.append]]("main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: " plus faded_fg plus "; }").
+    Do [[lines.append]]("main.hl-click pre.prose mark.hl-pick { color: " plus body_fg plus "; }").
+    Do [[lines.append]]("body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }").
+    Do [[lines.append]]("body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }").
     Do [[lines.append]]("@media print {").
     Do [[lines.append]]("body { max-width: none; padding: 0; }").
     Do [[lines.append]]("nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }").
     Do [[lines.append]]("mark, mark[class] { background: none; text-decoration-color: " plus muted_fg plus "; }").
+    Do [[lines.append]]("main.hl-click pre.prose, main.hl-click pre.prose mark.hl-pick { color: inherit; }").
+    Do [[lines.append]]("main.hl-click pre.prose .kw { color: " plus muted_fg plus "; }").
+    Do [[lines.append]]("main.hl-click pre.prose mark:not(.hl-pick) { text-decoration-color: " plus muted_fg plus "; }").
     Do [[lines.append]]("details::details-content { content-visibility: visible; }").
     Do [[lines.append]]("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }").
     Do [[lines.append]]("a { color: inherit; text-decoration: none; }").
@@ -1307,7 +1319,65 @@ Set css_text to [[build_css]]().
 
 Set scope_line_text to "This page reports what the loaded guideline documents state. It does not give clinical advice.".
 
-Set hl_note_text to "Highlights link matching parts of the passage and the ACE text. Linked parts share one color. Colors repeat when a page has many links. Point at a highlight to emphasize its linked parts.".
+Set hl_note_text to "Try hovering and clicking on highlights for different levels of emphasis.".
+Set hl_toggle_label to "Highlights".
+
+Define [[build_hl_script]] taking nothing:
+    Set lines to <>.
+    Do [[lines.append]]("(function () {").
+    Do [[lines.append]]("\"use strict\";").
+    Do [[lines.append]]("var picked = \"\";").
+    Do [[lines.append]]("function groupOf(node) {").
+    Do [[lines.append]]("if (node === null) { return \"\"; }").
+    Do [[lines.append]]("var m = node.closest(\"mark\");").
+    Do [[lines.append]]("if (m === null) { return \"\"; }").
+    Do [[lines.append]]("var name = m.classList.item(0);").
+    Do [[lines.append]]("if (name === null) { return \"\"; }").
+    Do [[lines.append]]("return name;").
+    Do [[lines.append]]("}").
+    Do [[lines.append]]("function clearPick() {").
+    Do [[lines.append]]("if (picked === \"\") { return; }").
+    Do [[lines.append]]("document.getElementById(\"main\").classList.remove(\"hl-click\");").
+    Do [[lines.append]]("var marks = document.querySelectorAll(\"mark.hl-pick\");").
+    Do [[lines.append]]("var i = 0;").
+    Do [[lines.append]]("while (i < marks.length) { marks[i].classList.remove(\"hl-pick\"); i += 1; }").
+    Do [[lines.append]]("picked = \"\";").
+    Do [[lines.append]]("}").
+    Do [[lines.append]]("function toggleBox() { return document.querySelector(\"input.hl-toggle\"); }").
+    Do [[lines.append]]("document.addEventListener(\"click\", function (ev) {").
+    Do [[lines.append]]("var name = groupOf(ev.target);").
+    Do [[lines.append]]("if (name === \"\") { return; }").
+    Do [[lines.append]]("var box = toggleBox();").
+    Do [[lines.append]]("if (box === null) { return; }").
+    Do [[lines.append]]("if (box.checked === false) { return; }").
+    Do [[lines.append]]("if (picked === name) { clearPick(); return; }").
+    Do [[lines.append]]("clearPick();").
+    Do [[lines.append]]("var marks = document.querySelectorAll(\"mark.\" + name);").
+    Do [[lines.append]]("var i = 0;").
+    Do [[lines.append]]("while (i < marks.length) { marks[i].classList.add(\"hl-pick\"); i += 1; }").
+    Do [[lines.append]]("document.getElementById(\"main\").classList.add(\"hl-click\");").
+    Do [[lines.append]]("picked = name;").
+    Do [[lines.append]]("});").
+    Do [[lines.append]]("document.addEventListener(\"mouseout\", function (ev) {").
+    Do [[lines.append]]("if (picked === \"\") { return; }").
+    Do [[lines.append]]("if (groupOf(ev.target) !== picked) { return; }").
+    Do [[lines.append]]("if (groupOf(ev.relatedTarget) === picked) { return; }").
+    Do [[lines.append]]("clearPick();").
+    Do [[lines.append]]("});").
+    Do [[lines.append]]("document.addEventListener(\"change\", function (ev) {").
+    Do [[lines.append]]("var box = toggleBox();").
+    Do [[lines.append]]("if (box === null) { return; }").
+    Do [[lines.append]]("if (ev.target === box) { if (box.checked === false) { clearPick(); } }").
+    Do [[lines.append]]("});").
+    Do [[lines.append]]("})();").
+    Set joiner to "\n".
+    Give back [[joiner.join]](lines).
+
+Set hl_script_body to "\n" plus [[build_hl_script]]() plus "\n".
+Set hl_script_html to "<script>" plus hl_script_body plus "</script>".
+Set hl_script_digest to [[hashlib.sha256]]([[hl_script_body.encode]]("utf-8")).
+Set hl_script_hash_bytes to [[base64.b64encode]]([[hl_script_digest.digest]]()).
+Set hl_script_hash to [[hl_script_hash_bytes.decode]]("ascii").
 
 Set refusal_refused_text to "The request was refused. Open the document page again from this site and submit the decision again.".
 Set refusal_invalid_form_text to "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again.".
@@ -1654,7 +1724,8 @@ Define [[build_doc_page]] taking model, docid, doc_data, prev_id, next_id:
         Do [[parts.append]]("</section>").
     Set link_data to [[hl_link_data]]([[doc_data.get]]("ace_text", ""), [[payload_by_docid.get]](docid, ""), [[doc_data.get]]("align", None)).
     If [[link_data.get]]("matched", 0) is greater than 0:
-        Do [[parts.append]]("<p class=\"hl-note\">" plus [[esc_text]](hl_note_text) plus "</p>").
+        Do [[parts.append]]("<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> " plus [[esc_text]](hl_toggle_label) plus "</label> " plus [[esc_text]](hl_note_text) plus "</p>").
+        Do [[parts.append]](hl_script_html).
     Do [[parts.append]]("<section>").
     Do [[parts.append]]("<h3>Original passage</h3>").
     Do [[parts.append]]("<pre class=\"prose\">" plus [[link_data.get]]("payload_html", "") plus "</pre>").
@@ -1942,7 +2013,8 @@ Define [[strip_between]] taking source_text, open_mark, close_mark:
 
 Define [[visible_text]] taking page_text:
     Set no_style to [[strip_between]](page_text, "<style>", "</style>").
-    Set no_pre to [[strip_between]](no_style, "<pre", "</pre>").
+    Set no_script to [[strip_between]](no_style, "<script>", "</script>").
+    Set no_pre to [[strip_between]](no_script, "<pre", "</pre>").
     Set no_comments to [[strip_between]](no_pre, "<!--", "-->").
     Set fragments to [[no_comments.split]]("<").
     Set texts to <>.
@@ -1975,7 +2047,11 @@ Define [[page_invariant_name]] taking page_text:
         Give back "skip".
     If [[page_text.count]]("<style>") does not equal 1:
         Give back "style".
-    If [[page_text.count]]("<script") does not equal 0:
+    Set script_total to [[page_text.count]]("<script").
+    Set canonical_scripts to [[page_text.count]](hl_script_html).
+    If script_total does not equal canonical_scripts:
+        Give back "script".
+    If canonical_scripts is greater than 1:
         Give back "script".
     If [[page_text.count]]("tabindex") does not equal 0:
         Give back "tabindex".
@@ -2100,6 +2176,27 @@ Define [[selftest_violation]] taking nothing:
         Give back "ui: selftest failed: partial class retired".
     If "mark, mark[class] { background: none; text-decoration-color: #4b5563; }" is not in css_text:
         Give back "ui: selftest failed: print mark strip".
+    If "main.hl-click pre.prose { color: #9ca3af; }" is not in css_text:
+        Give back "ui: selftest failed: click fade css".
+    If "main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #9ca3af; }" is not in css_text:
+        Give back "ui: selftest failed: click fade mark css".
+    If "main.hl-click pre.prose mark.hl-pick { color: #111827; }" is not in css_text:
+        Give back "ui: selftest failed: click pick css".
+    If "body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }" is not in css_text:
+        Give back "ui: selftest failed: toggle off css".
+    If "main.hl-click pre.prose, main.hl-click pre.prose mark.hl-pick { color: inherit; }" is not in css_text:
+        Give back "ui: selftest failed: print click reset".
+    Set close_tag_probe to "</scr" plus "ipt".
+    If close_tag_probe is in hl_script_body:
+        Give back "ui: selftest failed: script body close tag".
+    If [[len]](hl_script_hash) does not equal 44:
+        Give back "ui: selftest failed: script hash length".
+    Set csp_copy to [[list]](h5_csp).
+    Do [[csp_copy.pop]](0).
+    Set csp_value to [[csp_copy.pop]](0).
+    Set csp_probe to "script-src 'sha256-" plus hl_script_hash plus "'".
+    If csp_probe is not in csp_value:
+        Give back "ui: selftest failed: csp script hash".
     Set unique_values to <>.
     For each role in [[sorted]](palette):
         Set pair to [[palette.get]](role, <>).
@@ -2165,6 +2262,12 @@ Define [[selftest_violation]] taking nothing:
     Do [[invariant_cases.append]](case_row).
     Set case_row to <"<p>abcdefabcdef</p>", "", "short-hex-letters-only">.
     Do [[invariant_cases.append]](case_row).
+    Set case_row to <hl_script_html, "", "script-canonical">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <"<script>void(0);</script>", "script", "script-foreign">.
+    Do [[invariant_cases.append]](case_row).
+    Set case_row to <hl_script_html plus hl_script_html, "script", "script-doubled">.
+    Do [[invariant_cases.append]](case_row).
     For each invariant_case in invariant_cases:
         Set case_copy to [[list]](invariant_case).
         Set case_body to [[case_copy.pop]](0).
@@ -2176,7 +2279,7 @@ Define [[selftest_violation]] taking nothing:
     Give back "".
 
 Set h5_content_type to [[tuple]](<"Content-Type", "text/html; charset=utf-8">).
-Set h5_csp to [[tuple]](<"Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'">).
+Set h5_csp to [[tuple]](<"Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-" plus hl_script_hash plus "'">).
 Set h5_nosniff to [[tuple]](<"X-Content-Type-Options", "nosniff">).
 Set h5_referrer to [[tuple]](<"Referrer-Policy", "no-referrer">).
 Set h5_cache to [[tuple]](<"Cache-Control", "no-store">).

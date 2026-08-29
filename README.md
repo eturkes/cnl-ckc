@@ -56,7 +56,7 @@ Opioids for Pain (2022).
 
 Start the site with `python3 -P tools/ui.py serve` and open the
 address that it prints. The site runs only on the local computer, with
-no accounts and no JavaScript. Each document page asks one question:
+no accounts. Each document page asks one question:
 does the ACE representation appropriately reflect the original
 passage? Record approve or reject, with your name and an optional
 comment. The site records the name as typed and does not verify it.

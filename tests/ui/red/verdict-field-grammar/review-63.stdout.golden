@@ -1,6 +1,6 @@
 HTTP 400
 Content-Type: text/html; charset=utf-8
-Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'
+Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-ceqWjP6N4e7DIvYMclbfnBzryu3YAwfoDBRiNcC8+hw='
 X-Content-Type-Options: nosniff
 Referrer-Policy: no-referrer
 Cache-Control: no-store
@@ -53,8 +53,8 @@ legend { font-weight: 600; padding: 0; }
 fieldset label { margin-top: 0.5rem; font-weight: 400; }
 input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
 textarea { min-height: 6rem; }
-input[type="radio"] { accent-color: #111827; }
-input[type="text"]:focus-visible, input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+input[type="radio"], input[type="checkbox"] { accent-color: #111827; }
+input[type="text"]:focus-visible, input[type="radio"]:focus-visible, input[type="checkbox"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid #111827; font-family: inherit; font-size: 1rem; font-weight: 600; color: #ffffff; background: #111827; }
 mark { background: #dbeafe; color: inherit; text-decoration: underline dotted #4b5563; text-underline-offset: 0.15em; }
 .kw { color: #4b5563; }
@@ -130,10 +130,20 @@ main:has(mark.t44:hover) mark.t44 { background: #a5f3fc; text-decoration-style: 
 main:has(mark.t45:hover) mark.t45 { background: #d9f99d; text-decoration-style: solid; }
 main:has(mark.t46:hover) mark.t46 { background: #c7d2fe; text-decoration-style: solid; }
 main:has(mark.t47:hover) mark.t47 { background: #d6d3d1; text-decoration-style: solid; }
+.hl-note label { margin-right: 0.75rem; }
+main.hl-click pre.prose { color: #9ca3af; }
+main.hl-click pre.prose .kw { color: #9ca3af; }
+main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #9ca3af; }
+main.hl-click pre.prose mark.hl-pick { color: #111827; }
+body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
+body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
 mark, mark[class] { background: none; text-decoration-color: #4b5563; }
+main.hl-click pre.prose, main.hl-click pre.prose mark.hl-pick { color: inherit; }
+main.hl-click pre.prose .kw { color: #4b5563; }
+main.hl-click pre.prose mark:not(.hl-pick) { text-decoration-color: #4b5563; }
 details::details-content { content-visibility: visible; }
 pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
 a { color: inherit; text-decoration: none; }

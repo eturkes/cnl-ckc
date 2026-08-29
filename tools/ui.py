@@ -1,3 +1,4 @@
+import base64
 import datetime
 import fcntl
 import hashlib
@@ -1135,7 +1136,7 @@ def hl_link_data(ace_text, payload_line, align_data):
     data.update({"payload_html": hl_marked_html(payload_line, align_data.get("src", []), False)})
     data.update({"ace_html": hl_marked_html(ace_text, align_data.get("ace", []), True)})
     return data
-palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-contested": ["#4c1d95", "#ede9fe"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"], "mark-0": ["#111827", "#dbeafe"], "mark-active-0": ["#111827", "#bfdbfe"], "mark-1": ["#111827", "#fef9c3"], "mark-active-1": ["#111827", "#fef08a"], "mark-2": ["#111827", "#f3e8ff"], "mark-active-2": ["#111827", "#e9d5ff"], "mark-3": ["#111827", "#ffedd5"], "mark-active-3": ["#111827", "#fed7aa"], "mark-4": ["#111827", "#ccfbf1"], "mark-active-4": ["#111827", "#99f6e4"], "mark-5": ["#111827", "#ffe4e6"], "mark-active-5": ["#111827", "#fecdd3"], "mark-6": ["#111827", "#dcfce7"], "mark-active-6": ["#111827", "#bbf7d0"], "mark-7": ["#111827", "#fae8ff"], "mark-active-7": ["#111827", "#f5d0fe"], "mark-8": ["#111827", "#cffafe"], "mark-active-8": ["#111827", "#a5f3fc"], "mark-9": ["#111827", "#ecfccb"], "mark-active-9": ["#111827", "#d9f99d"], "mark-10": ["#111827", "#e0e7ff"], "mark-active-10": ["#111827", "#c7d2fe"], "mark-11": ["#111827", "#e7e5e4"], "mark-active-11": ["#111827", "#d6d3d1"], "mark-line-0": ["#2563eb", "#ffffff"], "mark-line-1": ["#a16207", "#ffffff"], "mark-line-2": ["#7c3aed", "#ffffff"], "mark-line-3": ["#c2410c", "#ffffff"], "mark-line-4": ["#0f766e", "#ffffff"], "mark-line-5": ["#be123c", "#ffffff"], "mark-line-6": ["#15803d", "#ffffff"], "mark-line-7": ["#a21caf", "#ffffff"], "mark-line-8": ["#0e7490", "#ffffff"], "mark-line-9": ["#4d7c0f", "#ffffff"], "mark-line-10": ["#4f46e5", "#ffffff"], "mark-line-11": ["#57534e", "#ffffff"]}
+palette = {"body": ["#111827", "#ffffff"], "link": ["#1d4ed8", "#ffffff"], "muted": ["#4b5563", "#ffffff"], "faded": ["#9ca3af", "#ffffff"], "chip-approved": ["#14532d", "#dcfce7"], "chip-rejected": ["#7f1d1d", "#fee2e2"], "chip-contested": ["#4c1d95", "#ede9fe"], "chip-stale": ["#78350f", "#fef3c7"], "chip-unreviewed": ["#1f2937", "#e5e7eb"], "mark-0": ["#111827", "#dbeafe"], "mark-active-0": ["#111827", "#bfdbfe"], "mark-1": ["#111827", "#fef9c3"], "mark-active-1": ["#111827", "#fef08a"], "mark-2": ["#111827", "#f3e8ff"], "mark-active-2": ["#111827", "#e9d5ff"], "mark-3": ["#111827", "#ffedd5"], "mark-active-3": ["#111827", "#fed7aa"], "mark-4": ["#111827", "#ccfbf1"], "mark-active-4": ["#111827", "#99f6e4"], "mark-5": ["#111827", "#ffe4e6"], "mark-active-5": ["#111827", "#fecdd3"], "mark-6": ["#111827", "#dcfce7"], "mark-active-6": ["#111827", "#bbf7d0"], "mark-7": ["#111827", "#fae8ff"], "mark-active-7": ["#111827", "#f5d0fe"], "mark-8": ["#111827", "#cffafe"], "mark-active-8": ["#111827", "#a5f3fc"], "mark-9": ["#111827", "#ecfccb"], "mark-active-9": ["#111827", "#d9f99d"], "mark-10": ["#111827", "#e0e7ff"], "mark-active-10": ["#111827", "#c7d2fe"], "mark-11": ["#111827", "#e7e5e4"], "mark-active-11": ["#111827", "#d6d3d1"], "mark-line-0": ["#2563eb", "#ffffff"], "mark-line-1": ["#a16207", "#ffffff"], "mark-line-2": ["#7c3aed", "#ffffff"], "mark-line-3": ["#c2410c", "#ffffff"], "mark-line-4": ["#0f766e", "#ffffff"], "mark-line-5": ["#be123c", "#ffffff"], "mark-line-6": ["#15803d", "#ffffff"], "mark-line-7": ["#a21caf", "#ffffff"], "mark-line-8": ["#0e7490", "#ffffff"], "mark-line-9": ["#4d7c0f", "#ffffff"], "mark-line-10": ["#4f46e5", "#ffffff"], "mark-line-11": ["#57534e", "#ffffff"]}
 def pal_fg(role):
     pair = palette.get(role, [])
     pair_copy = list(pair)
@@ -1193,8 +1194,8 @@ def build_css():
     lines.append("fieldset label { margin-top: 0.5rem; font-weight: 400; }")
     lines.append("input[type=\"text\"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid " + line_color + "; font-family: inherit; font-size: 1rem; color: " + body_fg + "; background: " + body_bg + "; }")
     lines.append("textarea { min-height: 6rem; }")
-    lines.append("input[type=\"radio\"] { accent-color: " + body_fg + "; }")
-    lines.append("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " + link_fg + "; outline-offset: 2px; }")
+    lines.append("input[type=\"radio\"], input[type=\"checkbox\"] { accent-color: " + body_fg + "; }")
+    lines.append("input[type=\"text\"]:focus-visible, input[type=\"radio\"]:focus-visible, input[type=\"checkbox\"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid " + link_fg + "; outline-offset: 2px; }")
     lines.append("button { margin-top: 1.25rem; padding: 0.5rem 1.2rem; border: 1px solid " + body_fg + "; font-family: inherit; font-size: 1rem; font-weight: 600; color: " + body_bg + "; background: " + body_fg + "; }")
     muted_fg = pal_fg("muted")
     mark_bg = pal_bg("mark-0")
@@ -1231,10 +1232,21 @@ def build_css():
         hue = hue + 1
         if hue == hl_hue_count:
             hue = 0
+    faded_fg = pal_fg("faded")
+    lines.append(".hl-note label { margin-right: 0.75rem; }")
+    lines.append("main.hl-click pre.prose { color: " + faded_fg + "; }")
+    lines.append("main.hl-click pre.prose .kw { color: " + faded_fg + "; }")
+    lines.append("main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: " + faded_fg + "; }")
+    lines.append("main.hl-click pre.prose mark.hl-pick { color: " + body_fg + "; }")
+    lines.append("body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }")
+    lines.append("body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }")
     lines.append("@media print {")
     lines.append("body { max-width: none; padding: 0; }")
     lines.append("nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }")
     lines.append("mark, mark[class] { background: none; text-decoration-color: " + muted_fg + "; }")
+    lines.append("main.hl-click pre.prose, main.hl-click pre.prose mark.hl-pick { color: inherit; }")
+    lines.append("main.hl-click pre.prose .kw { color: " + muted_fg + "; }")
+    lines.append("main.hl-click pre.prose mark:not(.hl-pick) { text-decoration-color: " + muted_fg + "; }")
     lines.append("details::details-content { content-visibility: visible; }")
     lines.append("pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }")
     lines.append("a { color: inherit; text-decoration: none; }")
@@ -1244,7 +1256,63 @@ def build_css():
     return joiner.join(lines)
 css_text = build_css()
 scope_line_text = "This page reports what the loaded guideline documents state. It does not give clinical advice."
-hl_note_text = "Highlights link matching parts of the passage and the ACE text. Linked parts share one color. Colors repeat when a page has many links. Point at a highlight to emphasize its linked parts."
+hl_note_text = "Try hovering and clicking on highlights for different levels of emphasis."
+hl_toggle_label = "Highlights"
+def build_hl_script():
+    lines = []
+    lines.append("(function () {")
+    lines.append("\"use strict\";")
+    lines.append("var picked = \"\";")
+    lines.append("function groupOf(node) {")
+    lines.append("if (node === null) { return \"\"; }")
+    lines.append("var m = node.closest(\"mark\");")
+    lines.append("if (m === null) { return \"\"; }")
+    lines.append("var name = m.classList.item(0);")
+    lines.append("if (name === null) { return \"\"; }")
+    lines.append("return name;")
+    lines.append("}")
+    lines.append("function clearPick() {")
+    lines.append("if (picked === \"\") { return; }")
+    lines.append("document.getElementById(\"main\").classList.remove(\"hl-click\");")
+    lines.append("var marks = document.querySelectorAll(\"mark.hl-pick\");")
+    lines.append("var i = 0;")
+    lines.append("while (i < marks.length) { marks[i].classList.remove(\"hl-pick\"); i += 1; }")
+    lines.append("picked = \"\";")
+    lines.append("}")
+    lines.append("function toggleBox() { return document.querySelector(\"input.hl-toggle\"); }")
+    lines.append("document.addEventListener(\"click\", function (ev) {")
+    lines.append("var name = groupOf(ev.target);")
+    lines.append("if (name === \"\") { return; }")
+    lines.append("var box = toggleBox();")
+    lines.append("if (box === null) { return; }")
+    lines.append("if (box.checked === false) { return; }")
+    lines.append("if (picked === name) { clearPick(); return; }")
+    lines.append("clearPick();")
+    lines.append("var marks = document.querySelectorAll(\"mark.\" + name);")
+    lines.append("var i = 0;")
+    lines.append("while (i < marks.length) { marks[i].classList.add(\"hl-pick\"); i += 1; }")
+    lines.append("document.getElementById(\"main\").classList.add(\"hl-click\");")
+    lines.append("picked = name;")
+    lines.append("});")
+    lines.append("document.addEventListener(\"mouseout\", function (ev) {")
+    lines.append("if (picked === \"\") { return; }")
+    lines.append("if (groupOf(ev.target) !== picked) { return; }")
+    lines.append("if (groupOf(ev.relatedTarget) === picked) { return; }")
+    lines.append("clearPick();")
+    lines.append("});")
+    lines.append("document.addEventListener(\"change\", function (ev) {")
+    lines.append("var box = toggleBox();")
+    lines.append("if (box === null) { return; }")
+    lines.append("if (ev.target === box) { if (box.checked === false) { clearPick(); } }")
+    lines.append("});")
+    lines.append("})();")
+    joiner = "\n"
+    return joiner.join(lines)
+hl_script_body = "\n" + build_hl_script() + "\n"
+hl_script_html = "<script>" + hl_script_body + "</script>"
+hl_script_digest = hashlib.sha256(hl_script_body.encode("utf-8"))
+hl_script_hash_bytes = base64.b64encode(hl_script_digest.digest())
+hl_script_hash = hl_script_hash_bytes.decode("ascii")
 refusal_refused_text = "The request was refused. Open the document page again from this site and submit the decision again."
 refusal_invalid_form_text = "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."
 refusal_subject_text = "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."
@@ -1576,7 +1644,8 @@ def build_doc_page(model, docid, doc_data, prev_id, next_id):
         parts.append("</section>")
     link_data = hl_link_data(doc_data.get("ace_text", ""), payload_by_docid.get(docid, ""), doc_data.get("align", None))
     if link_data.get("matched", 0) > 0:
-        parts.append("<p class=\"hl-note\">" + esc_text(hl_note_text) + "</p>")
+        parts.append("<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> " + esc_text(hl_toggle_label) + "</label> " + esc_text(hl_note_text) + "</p>")
+        parts.append(hl_script_html)
     parts.append("<section>")
     parts.append("<h3>Original passage</h3>")
     parts.append("<pre class=\"prose\">" + link_data.get("payload_html", "") + "</pre>")
@@ -1855,7 +1924,8 @@ def strip_between(source_text, open_mark, close_mark):
     return empty_text.join(kept)
 def visible_text(page_text):
     no_style = strip_between(page_text, "<style>", "</style>")
-    no_pre = strip_between(no_style, "<pre", "</pre>")
+    no_script = strip_between(no_style, "<script>", "</script>")
+    no_pre = strip_between(no_script, "<pre", "</pre>")
     no_comments = strip_between(no_pre, "<!--", "-->")
     fragments = no_comments.split("<")
     texts = []
@@ -1887,7 +1957,11 @@ def page_invariant_name(page_text):
         return "skip"
     if page_text.count("<style>") != 1:
         return "style"
-    if page_text.count("<script") != 0:
+    script_total = page_text.count("<script")
+    canonical_scripts = page_text.count(hl_script_html)
+    if script_total != canonical_scripts:
+        return "script"
+    if canonical_scripts > 1:
         return "script"
     if page_text.count("tabindex") != 0:
         return "tabindex"
@@ -2011,6 +2085,27 @@ def selftest_violation():
         return "ui: selftest failed: partial class retired"
     if "mark, mark[class] { background: none; text-decoration-color: #4b5563; }" not in css_text:
         return "ui: selftest failed: print mark strip"
+    if "main.hl-click pre.prose { color: #9ca3af; }" not in css_text:
+        return "ui: selftest failed: click fade css"
+    if "main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #9ca3af; }" not in css_text:
+        return "ui: selftest failed: click fade mark css"
+    if "main.hl-click pre.prose mark.hl-pick { color: #111827; }" not in css_text:
+        return "ui: selftest failed: click pick css"
+    if "body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }" not in css_text:
+        return "ui: selftest failed: toggle off css"
+    if "main.hl-click pre.prose, main.hl-click pre.prose mark.hl-pick { color: inherit; }" not in css_text:
+        return "ui: selftest failed: print click reset"
+    close_tag_probe = "</scr" + "ipt"
+    if close_tag_probe in hl_script_body:
+        return "ui: selftest failed: script body close tag"
+    if len(hl_script_hash) != 44:
+        return "ui: selftest failed: script hash length"
+    csp_copy = list(h5_csp)
+    csp_copy.pop(0)
+    csp_value = csp_copy.pop(0)
+    csp_probe = "script-src 'sha256-" + hl_script_hash + "'"
+    if csp_probe not in csp_value:
+        return "ui: selftest failed: csp script hash"
     unique_values = []
     for role in sorted(palette):
         pair = palette.get(role, [])
@@ -2076,6 +2171,12 @@ def selftest_violation():
     invariant_cases.append(case_row)
     case_row = ["<p>abcdefabcdef</p>", "", "short-hex-letters-only"]
     invariant_cases.append(case_row)
+    case_row = [hl_script_html, "", "script-canonical"]
+    invariant_cases.append(case_row)
+    case_row = ["<script>void(0);</script>", "script", "script-foreign"]
+    invariant_cases.append(case_row)
+    case_row = [hl_script_html + hl_script_html, "script", "script-doubled"]
+    invariant_cases.append(case_row)
     for invariant_case in invariant_cases:
         case_copy = list(invariant_case)
         case_body = case_copy.pop(0)
@@ -2086,7 +2187,7 @@ def selftest_violation():
             return "ui: selftest failed: invariant " + case_label
     return ""
 h5_content_type = tuple(["Content-Type", "text/html; charset=utf-8"])
-h5_csp = tuple(["Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'"])
+h5_csp = tuple(["Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-" + hl_script_hash + "'"])
 h5_nosniff = tuple(["X-Content-Type-Options", "nosniff"])
 h5_referrer = tuple(["Referrer-Policy", "no-referrer"])
 h5_cache = tuple(["Cache-Control", "no-store"])

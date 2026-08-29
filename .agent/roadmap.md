@@ -70,7 +70,8 @@ unit gauges, review record, out-of-scope, sizing analogs); history =
 ## Adjudication UI + query/trace compiler + KB export — REVIEWED
 
 Goal (rescoped at the feature-complete ruling; the final project review
-landed the lean KB export): a local reviewer UI (strict E--, zero JS)
+landed the lean KB export): a local reviewer UI (strict E--; sole JS =
+the pinned highlight-emphasis script)
 that lists every ACE document with review status, shows each beside its
 exact source region and compiled Prolog, and records approve/reject +
 comment verdicts in a gated append-only audit ledger (M4.1–M4.4 +

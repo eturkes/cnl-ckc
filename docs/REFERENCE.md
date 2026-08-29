@@ -160,10 +160,13 @@ One link can join several places in each text, and a link can cover
 part of a hyphenated ACE term. Text without a recorded link stays
 plain. The palette holds twelve muted tints, so colors repeat on
 pages with many links. A pointer over a highlight emphasizes that
-link exactly. ACE function words render in a muted color, so the
-domain terms stand out. A document without an alignment file renders
-without highlights. On paper the highlights print as dotted
-underlines.
+link exactly. A click on a highlight dims the rest of both texts, so
+one link reads alone. A second click, or the pointer leaving the
+highlight, restores the pointer behavior. A checkbox above the texts
+turns the highlighting off; it starts on. ACE function words render
+in a muted color, so the domain terms stand out. A document without
+an alignment file renders without highlights. On paper the highlights
+print as dotted underlines, and the click emphasis does not apply.
 
 The alignment file is data, not a claim the gate can judge: the gate
 verifies structure only. Each row is `group`, `side` (`src` or
@@ -195,7 +198,10 @@ returns a refusal and writes nothing. The ledger write itself is a
 compare-and-swap through a same-directory temporary file, a flush, an
 `fsync`, and an atomic rename. The shared validator in `goal.py`
 approves the new ledger bytes before the rename, so the gate and the
-interface cannot drift apart. Pages carry no JavaScript.
+interface cannot drift apart. Pages carry one fixed script, which
+drives the click emphasis on highlights. The `Content-Security-Policy`
+header names that script by hash, so the browser runs no other
+script, and the page check rejects any other script element.
 
 Reviewer names are self-asserted and are not verified. A decision is
 current when the document still matches the version it was recorded
