@@ -1256,8 +1256,8 @@ def build_css():
     return joiner.join(lines)
 css_text = build_css()
 scope_line_text = "This page reports what the loaded guideline documents state. It does not give clinical advice."
-hl_note_text = "Try hovering and clicking on highlights for different levels of emphasis."
-hl_toggle_label = "Highlights"
+hl_note_text = "Try hovering and clicking on highlighted terms for different levels of emphasis."
+hl_toggle_label = "Highlighting"
 def build_hl_script():
     lines = []
     lines.append("(function () {")

@@ -1319,8 +1319,8 @@ Set css_text to [[build_css]]().
 
 Set scope_line_text to "This page reports what the loaded guideline documents state. It does not give clinical advice.".
 
-Set hl_note_text to "Try hovering and clicking on highlights for different levels of emphasis.".
-Set hl_toggle_label to "Highlights".
+Set hl_note_text to "Try hovering and clicking on highlighted terms for different levels of emphasis.".
+Set hl_toggle_label to "Highlighting".
 
 Define [[build_hl_script]] taking nothing:
     Set lines to <>.
