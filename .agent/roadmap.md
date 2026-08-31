@@ -8,9 +8,11 @@ export (`tools/dist.py build`, docs/REFERENCE.md § Export). Feature scope is
 final (user ruling) and the project review is CLOSED: the project is
 feature complete. The repo's remaining work = `/goal` rounds to
 compendium exhaustion + human adjudication through the reviewer UI +
-the parked hard-tier harvest below; a bare `/session-roadmap` closes
-read-only while no parked precondition is met, and new features exist
-only by explicit user direction. Milestone records = `.agent/archive/`
+the parked hard-tier harvest below + the user-directed M5 Rust rewrite
+(OPEN below); a bare `/session-roadmap` dispatches the next M5 unit
+while M5 stays open, then reverts to read-only close while no parked
+precondition is met. New features exist only by explicit user
+direction; M5 is one such direction. Milestone records = `.agent/archive/`
 — topical filenames, read on demand; this file keeps a stub per closed
 or parked milestone. `M<n>` = commit-message trace keys (grep pointers
 per stub); the compendium replan restarted the numbering, so key
@@ -31,7 +33,7 @@ greps also hit the earlier pipeline era — topic sorts the hits.
   production-ready = exportable in a format standard for this kind of
   work — the charter's deterministic distribution build.
 - Neutrality (durable law): nothing source-language-specific enters
-  `tools/`, `vendor/e--`, schemas or ledger formats — machinery treats
+  first-party tooling (`tools/`, `rust/`), schemas or ledger formats — machinery treats
   lemma symbols as opaque atoms; `vendor/ape` grammar + ulex morphology =
   the English-specific components. Domain rules (eligibility, actor
   classes, corpus protocol) stay in corpus data (compendium header,
@@ -96,6 +98,35 @@ source↔ACE highlight" bullet + REFERENCE § Reviewer interface). Architecture 
 records, gauges, sizing, assurance + out-of-scope =
 `.agent/archive/ui.md`; history = `git log --grep "(M4[. ]" -p --
 .agent/roadmap.md .agent/archive/` + `git log --grep "(M4 review)"`.
+
+## Rust rewrite + E-- retirement — OPEN (M5)
+
+User-directed. Goal: every first-party non-Prolog artifact = Rust,
+certified in the verified-kernel pattern — small human-read formal spec
+(trusted) + uninspected AI-written impl/proofs + pinned checker
+(`cargo verus verify`) + escape-hatch trust-audit gate, zero trust in
+the code author; E-- + generated Python + tests/strict permanently
+retired (git history = sole record); hand-authored Prolog confined to
+the APE fork's ACE emission closure, with KB consumption (load checks,
+obligation replay, recursion scan, answers, traces) moving to the
+verified Rust engine. Split law = `.agent/standing-instructions.md`
+(amended). Plan of record = `.agent/archive/rust-rewrite-plan.md`:
+seam classification, Verus election + fallback triggers, kernel
+partition, unit contracts + acceptance, fixture-consequence classes,
+certification story — read at every unit start. Open-milestone
+invariants: main green at every commit (legacy `regen.py --check` +
+`goal.py check` stay CI-authoritative until the M5.7 cutover); every
+unit proves parity by dual-run differential before any legacy
+deletion; corpus + committed query artifacts byte-stable except
+plan-ruled re-pins (dist archive re-baselines once at M5.6). Units,
+strictly ordered: M5.1 toolchain+verified spike+trust gate; M5.2 v1
+kernel (reader/writer, bounded engine, replay, answers, traces); M5.3
+check validators; M5.4 pipeline commands; M5.5 UI; M5.6 dist; M5.7
+cutover+retirement+reference scrub; M5.8 fork shrink to emission-only;
+M5.9 milestone review. `/goal` rounds + the parked harvest continue on
+legacy tooling until cutover; M5 acceptance derives corpus/fixture
+counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
+(earlier-era M5 hits sort out by topic).
 
 ## Hard-tier harvest — PARKED
 
