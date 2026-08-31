@@ -1,0 +1,8 @@
+[package]
+name = "ckc"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ckc-kernel = { path = "../ckc-kernel" }
+sha2 = { version = "=0.11.0", default-features = false }

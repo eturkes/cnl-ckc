@@ -1,0 +1,11 @@
+[package]
+name = "ckc-kernel"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vstd = { workspace = true }
+ckc-spec = { path = "../ckc-spec" }
+
+[package.metadata.verus]
+verify = true

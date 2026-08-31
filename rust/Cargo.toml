@@ -1,0 +1,11 @@
+# cnl-ckc Rust workspace (M5): ckc-spec = trusted spec surface; ckc-kernel =
+# verified impl+proofs (uninspected; `cargo verus verify` = its whole review);
+# ckc = thin unverified shell. Gate: cargo verus verify --workspace --locked
+# --offline + `ckc trust-audit` (escape/dep/manifest audit). Toolchain pin =
+# verus.lock + rust-toolchain.toml.
+[workspace]
+resolver = "2"
+members = ["ckc-spec", "ckc-kernel", "ckc"]
+
+[workspace.dependencies]
+vstd = "=0.0.0-2026-08-30-0159"

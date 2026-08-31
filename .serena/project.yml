@@ -165,6 +165,7 @@ ignored_memory_patterns: []
 # Note that when using the JetBrains backend, language servers are not used and this list is correspondingly ignored.
 language_servers:
 - python
+- rust
 - bash
 - markdown
 - yaml
