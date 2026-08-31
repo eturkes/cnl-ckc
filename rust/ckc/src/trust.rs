@@ -15,7 +15,13 @@ const MEMBERS: [&str; 3] = ["ckc-spec", "ckc-kernel", "ckc"];
 const KERNEL_CRATES: [&str; 2] = ["ckc-spec", "ckc-kernel"];
 // Word-boundary tokens: an occurrence counts when the neighbouring chars are
 // not [A-Za-z0-9_] (so `assume` never fires inside `assume_specification`).
-const WORD_TOKENS: [&str; 8] = [
+// Idents are atomic in Rust, so single-ident tokens cannot be whitespace-split
+// and per-line scanning is complete for them. Inventory = the verifier's own
+// cheat families: axioms (--no-cheating also rejects those at the verifier),
+// exclusion-marking (NOT covered by --no-cheating; scan is the only gate;
+// the bare ident closes comment-split attribute forms, because comments can
+// never appear inside one identifier), termination/well-foundedness opt-outs.
+const WORD_TOKENS: [&str; 15] = [
     "unsafe",
     "assume",
     "admit",
@@ -24,18 +30,50 @@ const WORD_TOKENS: [&str; 8] = [
     "external_fn_specification",
     "verifier::external",
     "exec_spec_unverified",
+    "assume_termination",
+    "external_type_specification",
+    "external_trait_specification",
+    "external_trait_blanket",
+    "exec_allows_no_decreases_clause",
+    "accept_recursive_types",
+    "external",
 ];
-// Raw substring tokens (inclusion vectors; leading char is non-word).
-const RAW_TOKENS: [&str; 4] = ["#[path", "include!", "include_str!", "include_bytes!"];
+// Raw substring tokens (inclusion vectors + legacy paren attribute form;
+// leading char is non-word).
+const RAW_TOKENS: [&str; 5] =
+    ["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
+// Multi-token sequences joined by punctuation take interior whitespace in
+// Rust (spaces, newlines or comments between the punctuation and identifier
+// tokens). For these, count on the whole file with whitespace stripped and
+// compare against the per-line plain total; a surplus = obfuscated
+// occurrence, never allowlistable.
+const SPLIT_TOKENS: [(&str, bool); 6] = [
+    ("verifier::external", true),
+    ("verifier(external", false),
+    ("#[path", false),
+    ("include!", false),
+    ("include_str!", false),
+    ("include_bytes!", false),
+];
 // Trusted-surface coverage beyond ckc-spec/src: kernel binding files + the
 // allowlists + toolchain pins. The manifest must list exactly these + every
 // file under ckc-spec/src.
 const TRUSTED_KERNEL_FILES: [&str; 1] = ["ckc-kernel/src/contract.rs"];
-const TRUSTED_EXTRA: [&str; 4] = [
+// Cargo manifests + lock + cargo config are byte-pinned: a `[lib] path`
+// redirect, added member, `[patch]`/`[source]` swap, or same-name/version
+// source replacement compiles unscanned code while src/ stays clean, so the
+// (name,version) deps diff alone is insufficient.
+const TRUSTED_EXTRA: [&str; 10] = [
     "trust/escape-allowlist.tsv",
     "trust/deps-allowlist.tsv",
     "verus.lock",
     "rust-toolchain.toml",
+    "Cargo.toml",
+    "Cargo.lock",
+    "ckc-spec/Cargo.toml",
+    "ckc-kernel/Cargo.toml",
+    "ckc/Cargo.toml",
+    ".cargo/config.toml",
 ];
 
 pub fn run(root: &str) -> ExitCode {
@@ -140,6 +178,17 @@ fn scan_escapes(root: &Path, v: &mut Vec<String>) -> usize {
                             .entry((rel.clone(), t.to_string(), line.trim().to_string()))
                             .or_insert(0) += n;
                     }
+                }
+            }
+            let collapsed: String = text.chars().filter(|c| !c.is_whitespace()).collect();
+            for (t, wb) in SPLIT_TOKENS {
+                let plain: usize = text.lines().map(|l| count_token(l, t, wb)).sum();
+                let col = count_token(&collapsed, t, wb);
+                if col > plain {
+                    v.push(format!(
+                        "whitespace-obfuscated token `{}` in {}: {} collapsed vs {} plain",
+                        t, rel, col, plain
+                    ));
                 }
             }
         }

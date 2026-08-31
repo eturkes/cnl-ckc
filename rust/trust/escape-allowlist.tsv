@@ -1,15 +1,33 @@
 path	token	count	trimmed_line
-ckc/src/trust.rs	#[path	1	const RAW_TOKENS: [&str; 4] = ["#[path", "include!", "include_str!", "include_bytes!"];
+ckc/src/trust.rs	#[path	1	("#[path", false),
+ckc/src/trust.rs	#[path	1	["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
+ckc/src/trust.rs	accept_recursive_types	1	"accept_recursive_types",
 ckc/src/trust.rs	admit	1	"admit",
 ckc/src/trust.rs	assume	1	"assume",
 ckc/src/trust.rs	assume	1	// not [A-Za-z0-9_] (so `assume` never fires inside `assume_specification`).
 ckc/src/trust.rs	assume_specification	1	"assume_specification",
 ckc/src/trust.rs	assume_specification	1	// not [A-Za-z0-9_] (so `assume` never fires inside `assume_specification`).
+ckc/src/trust.rs	assume_termination	1	"assume_termination",
+ckc/src/trust.rs	exec_allows_no_decreases_clause	1	"exec_allows_no_decreases_clause",
 ckc/src/trust.rs	exec_spec_unverified	1	"exec_spec_unverified",
+ckc/src/trust.rs	external	1	"external",
+ckc/src/trust.rs	external	1	"verifier::external",
+ckc/src/trust.rs	external	1	("verifier(external", false),
+ckc/src/trust.rs	external	1	("verifier::external", true),
+ckc/src/trust.rs	external	1	["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
 ckc/src/trust.rs	external_body	1	"external_body",
 ckc/src/trust.rs	external_fn_specification	1	"external_fn_specification",
-ckc/src/trust.rs	include!	1	const RAW_TOKENS: [&str; 4] = ["#[path", "include!", "include_str!", "include_bytes!"];
-ckc/src/trust.rs	include_bytes!	1	const RAW_TOKENS: [&str; 4] = ["#[path", "include!", "include_str!", "include_bytes!"];
-ckc/src/trust.rs	include_str!	1	const RAW_TOKENS: [&str; 4] = ["#[path", "include!", "include_str!", "include_bytes!"];
+ckc/src/trust.rs	external_trait_blanket	1	"external_trait_blanket",
+ckc/src/trust.rs	external_trait_specification	1	"external_trait_specification",
+ckc/src/trust.rs	external_type_specification	1	"external_type_specification",
+ckc/src/trust.rs	include!	1	("include!", false),
+ckc/src/trust.rs	include!	1	["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
+ckc/src/trust.rs	include_bytes!	1	("include_bytes!", false),
+ckc/src/trust.rs	include_bytes!	1	["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
+ckc/src/trust.rs	include_str!	1	("include_str!", false),
+ckc/src/trust.rs	include_str!	1	["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
 ckc/src/trust.rs	unsafe	1	"unsafe",
+ckc/src/trust.rs	verifier(external	1	("verifier(external", false),
+ckc/src/trust.rs	verifier(external	1	["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
 ckc/src/trust.rs	verifier::external	1	"verifier::external",
+ckc/src/trust.rs	verifier::external	1	("verifier::external", true),
