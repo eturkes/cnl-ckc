@@ -136,16 +136,22 @@ adjudicated + rev2 59/59 mutants (56/56 G1 kills, 3/3 weak-binding
 demos caught at G2) + determinism D1-D3 pass; trust-audit v0 committed
 (`ckc trust-audit`) + CI `rust` job (pinned-asset digest install).
 M5.2 IN-FLIGHT
-(session 1 = wave-1 maps + contract draft; session 2 = contract v1.0
-FINAL — R9-R21 ruled; session 3 = ckc-spec K1 seed COMMITTED — printer-
-first v1 grammar term/v1text/digest, 35/0 spec + 95/0 workspace under
---no-cheating, trust spec=1333 green, contract v1.1 adds R22 non-ASCII
-spelling + R3 sha-at-shell amendment, SWI writer corners live-probe
-pinned. Resume surface = `.scratch/contracts/m5u2.md` v1.1 +
-`.scratch/agents/roster.md` session-3 close block, which orders session
-4: wt/prod-m5u2 stub seed → prod-k1/test-m5u2-2/res-kani-2 wave → MAIN
-lanes A/H → C1 checkpoint → C2 spec. Wave-1 reports = anchor lookups
-only; the contract embeds every ruling).
+(sessions 1-3 = wave-1 maps → contract v1.0/v1.1 → ckc-spec K1 seed
+committed. Session 4 = C1 wave ran: wt/prod-m5u2 seeded 4f6bfba7
+(binding + red stub + `ckc v1 check|render` CLI, graded 96/1);
+prod-m5u2-k1 checkpointed 171 verified/1 error @0120e5e9 (red =
+binding postcondition alone; handoff section in its report);
+test-m5u2-2 DONE — phase-2 suite 249 cases/69 legacy pins self-check
+green under MAIN rerun, 62-row comparator matrix, 11/11 R22 pins, C10
+rows; res-kani-2 DONE — Kani 0.67.0 pinned, interop proven, separate
+nested harness crate ruled, bootstrap idempotent; contract v1.2 = R16
+RULED CLOSED + R23 argv-seam scope; redstage refreshed byte-equal to
+vendor; diff lanes A/H authored + smoked. Resume surface =
+`.scratch/contracts/m5u2.md` v1.2 + `.scratch/agents/roster.md`
+session-4 close block, which orders session 5: spawn prod-m5u2-k1-2
+from the handoff → 0 errors → harvest + trust regen + lanes A/H +
+suite k1 target → C1 main commit → C2 spec (engine/replay/answers).
+Wave reports = anchor lookups only; the contract embeds every ruling.)
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
