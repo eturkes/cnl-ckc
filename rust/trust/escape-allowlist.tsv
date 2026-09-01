@@ -1,4 +1,6 @@
 path	token	count	trimmed_line
+ckc-spec/src/digest.rs	assume	1	// it — `--no-cheating` rejects uninterp/assume surfaces. The unverified
+ckc-spec/src/v1text.rs	admit	1	// Traces admit '$VAR'/1 as an ordinary compound: their writer runs
 ckc/src/trust.rs	#[path	1	("#[path", false),
 ckc/src/trust.rs	#[path	1	["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
 ckc/src/trust.rs	accept_recursive_types	1	"accept_recursive_types",

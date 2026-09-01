@@ -2,3 +2,6 @@
 // kernel binding files) + run `cargo verus verify --workspace --locked
 // --offline` + `ckc trust-audit`. Nothing else is human-read.
 pub mod align;
+pub mod digest;
+pub mod term;
+pub mod v1text;
