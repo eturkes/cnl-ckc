@@ -166,6 +166,7 @@ ignored_memory_patterns: []
 language_servers:
 - python
 - rust
+- toml
 - bash
 - markdown
 - yaml

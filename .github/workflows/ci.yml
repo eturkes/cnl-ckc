@@ -59,3 +59,44 @@ jobs:
           set -eu
           git diff --exit-code
           test -z "$(git status --porcelain)"
+
+  rust:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install pinned Verus release
+        run: |
+          set -eu
+          url=$(awk -F'\t' '$1=="verus_asset_url"{print $2}' rust/verus.lock)
+          asset=$(awk -F'\t' '$1=="verus_asset"{print $2}' rust/verus.lock)
+          sha=$(awk -F'\t' '$1=="verus_asset_sha256"{print $2}' rust/verus.lock)
+          curl -sSL -o "$RUNNER_TEMP/$asset" "$url"
+          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/$asset" | sha256sum -c
+          unzip -q "$RUNNER_TEMP/$asset" -d "$RUNNER_TEMP/verus"
+
+      - name: Install pinned rust toolchain
+        run: |
+          set -eu
+          tc=$(awk -F'\t' '$1=="rustc_toolchain"{print $2}' rust/verus.lock)
+          rustup toolchain install "$tc" --profile minimal
+
+      - name: Verify workspace
+        run: |
+          set -eu
+          export PATH="$RUNNER_TEMP/verus/verus-x86-linux:$PATH"
+          cd rust
+          cargo verus verify --workspace --locked --offline -- --no-cheating
+
+      - name: Build ckc
+        run: |
+          set -eu
+          cd rust
+          cargo build --release --locked --offline
+
+      - name: Trust audit
+        run: |
+          set -eu
+          cd rust
+          ./target/release/ckc trust-audit

@@ -123,7 +123,19 @@ strictly ordered: M5.1 toolchain+verified spike+trust gate; M5.2 v1
 kernel (reader/writer, bounded engine, replay, answers, traces); M5.3
 check validators; M5.4 pipeline commands; M5.5 UI; M5.6 dist; M5.7
 cutover+retirement+reference scrub; M5.8 fork shrink to emission-only;
-M5.9 milestone review. `/goal` rounds + the parked harvest continue on
+M5.9 milestone review. M5.1 CLOSED: Verus
+release/0.2026.08.30.b432e82 + rustc 1.97.1 pinned (`rust/verus.lock`
++ gitignored `.toolchain/`); first verified kernel = align render-side
+validator (trusted spec `ckc-spec/src/align.rs` + binding
+`ckc-kernel/src/contract.rs`, kernel 95 verified/0 errors under
+`--no-cheating`, align_impl.rs uninspected by design); differential 0
+divergences (pins 11/11, corpus 337/337 at HEAD), adversarial suite
+94/94, trust battery 16/16; probes rt 2.81× / naf 1.77× proof:impl —
+NO fallback trigger → M5.2 entry clear; reviews: rev 70-row fixed set
+adjudicated + rev2 59/59 mutants (56/56 G1 kills, 3/3 weak-binding
+demos caught at G2) + determinism D1-D3 pass; trust-audit v0 committed
+(`ckc trust-audit`) + CI `rust` job (pinned-asset digest install).
+`/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
 (earlier-era M5 hits sort out by topic).
