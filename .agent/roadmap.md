@@ -135,6 +135,10 @@ NO fallback trigger → M5.2 entry clear; reviews: rev 70-row fixed set
 adjudicated + rev2 59/59 mutants (56/56 G1 kills, 3/3 weak-binding
 demos caught at G2) + determinism D1-D3 pass; trust-audit v0 committed
 (`ckc trust-audit`) + CI `rust` job (pinned-asset digest install).
+M5.2 IN-FLIGHT
+(session 1 = wave-1 maps + acceptance-contract draft; resume surface =
+`.scratch/contracts/m5u2.md` + `.scratch/agents/roster.md` session-close
+block + reports `map-m5u2`, `map-m5u2-2`, `res-m5u2-vest`, `test-m5u2`).
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
