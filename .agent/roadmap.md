@@ -137,13 +137,15 @@ demos caught at G2) + determinism D1-D3 pass; trust-audit v0 committed
 (`ckc trust-audit`) + CI `rust` job (pinned-asset digest install).
 M5.2 IN-FLIGHT
 (session 1 = wave-1 maps + contract draft; session 2 = contract v1.0
-FINAL — TBDs closed, R9-R21 rulings incl. float exclusion + trace-check
-seam, phase-1 verdict table ruled. Resume surface =
-`.scratch/contracts/m5u2.md` v1.0 + `.scratch/agents/roster.md`
-session-2 close block, which orders session 3: MAIN-authored ckc-spec K1
-→ spec-seed commit → prod-k1/test-m5u2-2/res-kani-2 wave → lanes A/H →
-C1 checkpoint. Wave-1 reports = anchor lookups only; the contract embeds
-every ruling).
+FINAL — R9-R21 ruled; session 3 = ckc-spec K1 seed COMMITTED — printer-
+first v1 grammar term/v1text/digest, 35/0 spec + 95/0 workspace under
+--no-cheating, trust spec=1333 green, contract v1.1 adds R22 non-ASCII
+spelling + R3 sha-at-shell amendment, SWI writer corners live-probe
+pinned. Resume surface = `.scratch/contracts/m5u2.md` v1.1 +
+`.scratch/agents/roster.md` session-3 close block, which orders session
+4: wt/prod-m5u2 stub seed → prod-k1/test-m5u2-2/res-kani-2 wave → MAIN
+lanes A/H → C1 checkpoint → C2 spec. Wave-1 reports = anchor lookups
+only; the contract embeds every ruling).
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
