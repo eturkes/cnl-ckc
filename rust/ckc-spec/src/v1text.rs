@@ -648,12 +648,14 @@ pub open spec fn accepts(bytes: Seq<u8>) -> bool {
     exists|f: V1File| #[trigger] wf_v1(f) && print_v1(f) == bytes
 }
 
-// --- exec-facing verdict (R9: the position payload is a deterministic
-// diagnostic pinned by fixtures, outside the theorems) ---
+// --- exec-facing verdict (R9: `at` = byte offset of the first divergence
+// = length of the longest prefix of the input that is also a prefix of some
+// canonical file; a deterministic diagnostic pinned by fixtures, outside the
+// theorems) ---
 
 pub enum EV1Verdict {
     Ok,
-    Reject { line: u64, col: u64 },
+    Reject { at: usize },
 }
 
 impl EV1Verdict {

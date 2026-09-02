@@ -24,6 +24,7 @@ proof fn parsed_accepts(bytes: Seq<u8>, parsed: &EParsedV1)
 pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
     ensures
         r.is_accept() <==> ckc_spec::v1text::accepts(bytes@),
+        r matches ckc_spec::v1text::EV1Verdict::Reject { at } ==> at <= bytes@.len(),
 {
     let ghost witness = if ckc_spec::v1text::accepts(bytes@) {
         Some(choose|f: ckc_spec::v1text::V1File|
@@ -111,7 +112,7 @@ pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
             }
         }
     }
-    ckc_spec::v1text::EV1Verdict::Reject { line: 1, col: 1 }
+    ckc_spec::v1text::EV1Verdict::Reject { at: 0 }
 }
 
 } // verus!

@@ -10,9 +10,9 @@ fn reject(line: u64, col: u64) -> ExitCode {
     ExitCode::from(2)
 }
 
-// 1-based line + byte-column of the byte at offset `at` (diagnostic law:
-// column counts bytes since the last LF; R9 keeps positions outside the
-// theorems, pinned by fixtures).
+// 1-based line + byte column of offset `at` = min(first invalid UTF-8
+// byte, kernel first-divergence offset); R9 keeps the position outside the
+// theorems, pinned by fixtures.
 fn line_col(bytes: &[u8], at: usize) -> (u64, u64) {
     let line = 1 + bytes[..at].iter().filter(|&&b| b == 0x0A).count() as u64;
     let col = 1 + bytes[..at].iter().rev().take_while(|&&b| b != 0x0A).count() as u64;
@@ -28,18 +28,22 @@ fn run_file(mode: &str, path: &str) -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    if let Err(e) = std::str::from_utf8(&bytes) {
-        let (l, c) = line_col(&bytes, e.valid_up_to());
-        return reject(l, c);
-    }
-    match ckc_kernel::contract::v1_check(&bytes) {
-        ckc_kernel::EV1Verdict::Ok => {
+    let utf8_at = std::str::from_utf8(&bytes).err().map(|e| e.valid_up_to());
+    let kernel_at = match ckc_kernel::contract::v1_check(&bytes) {
+        ckc_kernel::EV1Verdict::Ok => None,
+        ckc_kernel::EV1Verdict::Reject { at } => Some(at),
+    };
+    match utf8_at.into_iter().chain(kernel_at).min() {
+        Some(at) => {
+            let (l, c) = line_col(&bytes, at);
+            reject(l, c)
+        }
+        None => {
             if mode == "render" {
                 std::io::stdout().write_all(&bytes).ok();
             }
             ExitCode::SUCCESS
         }
-        ckc_kernel::EV1Verdict::Reject { line, col } => reject(line, col),
     }
 }
 

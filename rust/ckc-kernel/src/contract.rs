@@ -13,11 +13,12 @@ pub fn align_check(align: &[char], src: &[char], ace: &[char]) -> (r: ckc_spec::
 }
 
 // M5.2 K1: v1 clause-file acceptance (contract m5u2 R9/R10). The Reject
-// line/col payload = deterministic diagnostic, pinned by fixtures, outside
-// the theorem.
+// offset = deterministic diagnostic (first divergence), pinned by fixtures,
+// outside the theorem beyond its bound.
 pub fn v1_check(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
     ensures
         r.is_accept() <==> ckc_spec::v1text::accepts(bytes@),
+        r matches ckc_spec::v1text::EV1Verdict::Reject { at } ==> at <= bytes@.len(),
 {
     crate::v1_impl::v1_check_impl(bytes)
 }
