@@ -156,11 +156,24 @@ designed: `.scratch/m5u2/c2-design.md`
 = the engine/replay/answers ruling record (fueled machine, R16
 comparator, manifest/payload vocab pins, result algebra, binding
 sketch) — session 6 writes the spec from it without re-reading the law
-sources. Resume surface = contract v1.2 + roster session-5 close
-+ extension-close blocks, which order session 6: spawn prod-m5u2-k1-3
-(named bg teammate; inherits worktree + report) → 0 errors → harvest +
-trust regen + lanes A/H + suite k1 target → C1 main commit → C2 spec
-from design record → seed wt + dispatch prod-k2.
+sources. Session 6 (cut at the user's 5h limit) = prod-m5u2-k1-3 drove
+batch 32 (wt d36a7520, 425 verified/1 error; kept wip e1e2835d,
+repinned 5 nonlinear lemmas, ordinal comparator verified) then hit the
+context ceiling mid-read of Document-assembly mirrors — stopped clean
+(no uncommitted edits); legacy baseline regen+check green
+(`.scratch/m5u2/logs/{regen,check}-s6.log`); MAIN re-read the C2 law
+anchors + probed → `## Session-6 resolutions` appended to
+c2-design.md (manifest `error(..,context(..))` wrapper pinned, term
+count formula, Nil goal_foreign leaf, inference/census numbers, anchor
+table); no spec file written. Resume surface = contract v1.2 + roster
+session-6 close block, which orders session 7: spawn prod-m5u2-k1-4
+(named bg teammate; world wt @ d36a7520 + report) → Document assembly
+→ bind accepts → 0 errors → CLI smoke; MAIN meanwhile writes
+ckc-spec/{engine,replay,answers}.rs from the design record → C1
+harvest + trust regen + lanes A/H + suite k1 target → C1 main commit →
+C2 seed + contract v1.3 → dispatch prod-k2. Session-6 gauges:
+main=45% 107K/240K (post-compaction window; the first window ran to
+ceiling on law reads), mate=95% 229K/240K.
 Wave reports = anchor lookups only; the contract embeds every ruling.)
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
