@@ -143,19 +143,35 @@ offset ≤ len) + uninspected `ckc-kernel/src/v1_{impl,term_impl}.rs`
 + CLI `ckc v1 check|render`; P1 439 verified/0 errors, P2 green,
 lanes A/H 349/349, suite 63 K1 cases (26 exact R9 stderr pins via
 `.scratch/m5u2/suite/pin_r9.py`; 22 red until the impl threads the
-offset — wt/prod-m5u2 successor in flight, report
-`.scratch/agents/prod-m5u2-k1.md`). C2 spec seeding: `engine.rs`
-(fueled DFS machine, R13 occurs-check, R16 comparator + sorts,
-witness/replay probes) verified; `replay.rs` + `answers.rs` next
-from `.scratch/m5u2/c2-design.md` (§Session-7 spec decisions = the
-shell/kernel protocol + the OPEN fuel-model risk with its decision
-rule), then contract v1.3 C2 amendments + prod-k2 dispatch + K2
-suite lane. Evidence: phase-2 suite 249 cases/69 legacy pins, 62-row
-comparator matrix, 11/11 R22 pins; Kani 0.67.0 pinned (separate
-nested harness crate ruled; wt/res-kani-2 kept until C3). Gauge
-actuals: K1 parser stack = five prod windows at 149-245K high-water;
-main ~215K at the C2 engine seed. Wave reports = anchor lookups
-only; the contract embeds every ruling.
+offset). R9 impl ruling: one `&mut usize` viable-boundary parameter
+through the EXISTING parsers, no separate scanner (a scanner build on
+wt/k1-6-scanner passes the 26 pins yet misreports declaration-block
+mutations as file end → rejected; `.scratch/m5u2/suite/probe_decl.py`
+= the added acceptance sweep); prod-m5u2-k1-7 threads it on
+wt/prod-m5u2 from dc8b58f1 (brief
+`.scratch/m5u2/spec-probes/extract/k1-7-brief.txt`, report
+`.scratch/agents/prod-m5u2-k1.md`). C2 spec SEEDED + verified:
+`engine.rs` (fueled DFS machine, R13 occurs-check, R16 comparator +
+sorts, witness/replay probes) + `replay.rs` (manifest total parse,
+staged aggregate pipeline, recursion scan, `ESrc/ERow/EOut` mirrors)
++ `answers.rs` (query custody, bounded-once yes-no / wh classify,
+`print_answers`); spec 79/0, P1 439/0, trust spec=2442 (P7 aim
+exceeded → review adjudicates). Next: contract v1.3 C2 amendments
+(shell/kernel protocol, comparator placement, payload_term/R2b
+unification, per-dispatch cost model, unique-path reload law,
+empty-heads order skew, manifest error/context wrapper,
+comparator-matrix path, query-unreadable class map) → wt K2 bindings
++ red stubs (`v1_manifest`, `v1_aggregate_check`,
+`v1_recursion_check`, `v1_answer` over `ESrc`) + CLI `ckc v1
+aggregate-check|recursion-check|answer` → prod-k2 dispatch + K2
+suite lane (4 active seam cases s4-k2-001..004, 106 staged k2 cases
+to activate). Evidence: phase-2 suite 249 cases/69 legacy pins,
+62-row comparator matrix, 11/11 R22 pins; Kani 0.67.0 pinned
+(separate nested harness crate ruled; wt/res-kani-2 kept until C3).
+Gauge actuals: K1 parser stack = five prod windows at 149-245K
+high-water; main ~215K at the C2 engine seed, ~203K at the
+replay/answers seed. Wave reports = anchor lookups only; the
+contract embeds every ruling.
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
