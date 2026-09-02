@@ -3,5 +3,6 @@
 // --offline` + `ckc trust-audit`. Nothing else is human-read.
 pub mod align;
 pub mod digest;
+pub mod engine;
 pub mod term;
 pub mod v1text;
