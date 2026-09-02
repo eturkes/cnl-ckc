@@ -135,46 +135,34 @@ NO fallback trigger → M5.2 entry clear; reviews: rev 70-row fixed set
 adjudicated + rev2 59/59 mutants (56/56 G1 kills, 3/3 weak-binding
 demos caught at G2) + determinism D1-D3 pass; trust-audit v0 committed
 (`ckc trust-audit`) + CI `rust` job (pinned-asset digest install).
-M5.2 IN-FLIGHT
-(sessions 1-3 = wave-1 maps → contract v1.0/v1.1 → ckc-spec K1 seed
-committed. Session 4 = C1 wave ran: wt/prod-m5u2 seeded 4f6bfba7
-(binding + red stub + `ckc v1 check|render` CLI, graded 96/1);
-prod-m5u2-k1 checkpointed 171 verified/1 error @0120e5e9 (red =
-binding postcondition alone; handoff section in its report);
-test-m5u2-2 DONE — phase-2 suite 249 cases/69 legacy pins self-check
-green under MAIN rerun, 62-row comparator matrix, 11/11 R22 pins, C10
-rows; res-kani-2 DONE — Kani 0.67.0 pinned, interop proven, separate
-nested harness crate ruled, bootstrap idempotent; contract v1.2 = R16
-RULED CLOSED + R23 argv-seam scope; redstage refreshed byte-equal to
-vendor; diff lanes A/H authored + smoked. Session 5 = prod-m5u2-k1-2 drove K1
-batches 12-31 (term parser complete incl. variable tracking + all
-four file-envelope parser stacks, 404 verified/1 error at wt
-b3f97ec3; wip tip e1e2835d; retired at context ceiling after one 503
-death; remaining per report Blockers: Document top-level assembly →
-bind v1_check_impl → fresh verify → CLI smoke) + C2 spec fully
-designed: `.scratch/m5u2/c2-design.md`
-= the engine/replay/answers ruling record (fueled machine, R16
-comparator, manifest/payload vocab pins, result algebra, binding
-sketch) — session 6 writes the spec from it without re-reading the law
-sources. Session 6 (cut at the user's 5h limit) = prod-m5u2-k1-3 drove
-batch 32 (wt d36a7520, 425 verified/1 error; kept wip e1e2835d,
-repinned 5 nonlinear lemmas, ordinal comparator verified) then hit the
-context ceiling mid-read of Document-assembly mirrors — stopped clean
-(no uncommitted edits); legacy baseline regen+check green
-(`.scratch/m5u2/logs/{regen,check}-s6.log`); MAIN re-read the C2 law
-anchors + probed → `## Session-6 resolutions` appended to
-c2-design.md (manifest `error(..,context(..))` wrapper pinned, term
-count formula, Nil goal_foreign leaf, inference/census numbers, anchor
-table); no spec file written. Resume surface = contract v1.2 + roster
-session-6 close block, which orders session 7: spawn prod-m5u2-k1-4
-(named bg teammate; world wt @ d36a7520 + report) → Document assembly
-→ bind accepts → 0 errors → CLI smoke; MAIN meanwhile writes
-ckc-spec/{engine,replay,answers}.rs from the design record → C1
-harvest + trust regen + lanes A/H + suite k1 target → C1 main commit →
-C2 seed + contract v1.3 → dispatch prod-k2. Session-6 gauges:
-main=45% 107K/240K (post-compaction window; the first window ran to
-ceiling on law reads), mate=95% 229K/240K.
-Wave reports = anchor lookups only; the contract embeds every ruling.)
+M5.2 IN-FLIGHT. Contract of record = `.scratch/contracts/m5u2.md`
+(v1.2: R16 comparator RULED CLOSED, R23 argv-seam scope). K1 spec
+seed committed (`ckc-spec/src/{term,v1text,digest}.rs`,
+printer-first acceptance law). K1 impl+proofs = wt/prod-m5u2
+(`.scratch/worktrees/prod-m5u2`, report
+`.scratch/agents/prod-m5u2-k1.md`) at 425 verified/1 error — the 1
+= the seeded `v1_check_impl` acceptance postcondition, red until
+the parser binds `accepts`; term parser, all four file-envelope
+stacks and the bundle/clause parsers verified; remaining = Document
+top-level assembly → bind `accepts` (R10 line-1 discrimination) →
+fresh P1 0 errors → CLI smoke → C1 harvest (squash-merge; trust
+regen `python3 -P .scratch/m5u1/gen_trust.py`; P1/P2; lanes A/H
+`.scratch/m5u2/diff/run_diff.py`; suite
+`.scratch/m5u2/suite/runner.py target`; P6) → `rust (M5.2): …`
+commit. C2 (engine/replay/answers) design of record =
+`.scratch/m5u2/c2-design.md` (fueled machine, R16 comparator,
+manifest/payload vocab, result algebra, bindings sketch, law
+resolutions); MAIN writes `ckc-spec/{engine,replay,answers}.rs`
+from it, then contract v1.3 (comparator placement, payload_term
+R2b unification, cost-model sentence, reload-dedup law,
+empty-heads order skew, manifest error/context wrapper,
+comparator-matrix path) + prod-k2 dispatch. Evidence: phase-2
+suite 249 cases/69 legacy pins green, 62-row comparator matrix,
+11/11 R22 pins; Kani 0.67.0 pinned (separate nested harness crate
+ruled; wt/res-kani-2 kept until C3). Gauge actuals: K1 parser
+stack = three prod windows at 229-245K high-water; main ~205K at
+the C2 design close. Wave reports = anchor lookups only; the
+contract embeds every ruling.
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
