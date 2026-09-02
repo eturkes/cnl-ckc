@@ -348,20 +348,28 @@ pub open spec fn unreadable(mpath: Seq<u8>, p: Seq<u8>) -> Out {
     manifest_reject(mpath, Term::Comp(ascii("unreadable"@), seq![Term::Atom(p)]))
 }
 
-// Stage 1: the manifest itself, its grammar, then readability of every cell (row order, pl column first).
-pub open spec fn manifest_stage(mpath: Seq<u8>, manifest: Src, pls: Seq<Src>, pys: Seq<Src>) -> Result<Seq<MRow>, Out> {
+// Stage 1a: the manifest file itself.
+pub open spec fn manifest_rows(mpath: Seq<u8>, manifest: Src) -> Result<Seq<MRow>, Out> {
     match manifest {
         Src::Missing => Result::Err(check_load(atom("unreadable"@))),
         Src::Bad(off) => Result::Err(utf8_reject(off)),
         Src::Bytes(b) => match parse_manifest(b) {
             MOut::MissingLf => Result::Err(manifest_reject(mpath, atom("missing_final_newline"@))),
             MOut::BadLine(l) => Result::Err(manifest_reject(mpath, Term::Comp(ascii("line"@), seq![Term::Atom(l)]))),
-            MOut::Rows(rows) => match first_missing(rows.map_values(|r: MRow| r.pl), pls, 0) {
+            MOut::Rows(rows) => Result::Ok(rows),
+        },
+    }
+}
+
+// Stage 1b: readability of every cell, row order, pl column first.
+pub open spec fn manifest_stage(mpath: Seq<u8>, manifest: Src, pls: Seq<Src>, pys: Seq<Src>) -> Result<Seq<MRow>, Out> {
+    match manifest_rows(mpath, manifest) {
+        Result::Err(o) => Result::Err(o),
+        Result::Ok(rows) => match first_missing(rows.map_values(|r: MRow| r.pl), pls, 0) {
+            Option::Some(p) => Result::Err(unreadable(mpath, p)),
+            Option::None => match first_missing(rows.map_values(|r: MRow| r.payload), pys, 0) {
                 Option::Some(p) => Result::Err(unreadable(mpath, p)),
-                Option::None => match first_missing(rows.map_values(|r: MRow| r.payload), pys, 0) {
-                    Option::Some(p) => Result::Err(unreadable(mpath, p)),
-                    Option::None => Result::Ok(rows),
-                },
+                Option::None => Result::Ok(rows),
             },
         },
     }
@@ -499,6 +507,10 @@ impl View for EOut {
 }
 
 pub open spec fn srcs(v: Seq<ESrc>) -> Seq<Src> { v.map_values(|s: ESrc| s@) }
+
+pub open spec fn rows_view(r: Result<Vec<ERow>, EOut>) -> Result<Seq<MRow>, Out> {
+    match r { Result::Ok(rows) => Result::Ok(rows@.map_values(|e: ERow| e@)), Result::Err(o) => Result::Err(o@) }
+}
 
 // The shell reads one cell per manifest row and column before calling a mode.
 pub open spec fn cells_ok(manifest: Src, pls: Seq<Src>, pys: Seq<Src>) -> bool {
