@@ -147,10 +147,13 @@ offset). R9 impl ruling: one `&mut usize` viable-boundary parameter
 through the EXISTING parsers, no separate scanner (a scanner build on
 wt/k1-6-scanner passes the 26 pins yet misreports declaration-block
 mutations as file end → rejected; `.scratch/m5u2/suite/probe_decl.py`
-= the added acceptance sweep); prod-m5u2-k1-7 threads it on
-wt/prod-m5u2 from dc8b58f1 (brief
-`.scratch/m5u2/spec-probes/extract/k1-7-brief.txt`, report
-`.scratch/agents/prod-m5u2-k1.md`). C2 spec SEEDED + verified:
+= the added acceptance sweep); prod-m5u2-k1-7 threaded it on wt/prod-m5u2 @51ec7906 (26 pins,
+probe_decl 670/0, smoke green on a release build) but P1 aborts: Z3
+dies on the `parse_doc` while-loop query (`expected rlimit-count in
+smt statistics`, v1_term_impl.rs:19406; logs
+`.scratch/m5u2/logs/p1-r9-*.log`); prod-m5u2-k1-8 repairs that loop
+proof (brief `.scratch/m5u2/spec-probes/extract/k1-8-brief.txt`,
+report `.scratch/agents/prod-m5u2-k1.md`). C2 spec SEEDED + verified:
 `engine.rs` (fueled DFS machine, R13 occurs-check, R16 comparator +
 sorts, witness/replay probes) + `replay.rs` (manifest total parse,
 staged aggregate pipeline, recursion scan, `ESrc/ERow/EOut` mirrors)
@@ -164,21 +167,22 @@ comparator-matrix path, query-unreadable class map) = contract R24
 (a-f). K2 IN FLIGHT: seed wt/prod-m5u2-k2 @b218c69a = bindings
 `v1_manifest`/`v1_aggregate_check`/`v1_recursion_check`/`v1_answer`
 over `ESrc` + 4 red stubs `ckc-kernel/src/k2_impl.rs` + CLI `ckc v1
-aggregate-check|recursion-check|answer`; prod-m5u2-k2-1 fills U1
-manifest → U2 term arena/printer/comparator → U3 engine → U4 mode
-assembly over a parse→arena bridge interface (bridge itself waits on
-the K1 offset work; brief
-`.scratch/m5u2/spec-probes/extract/k2-1-brief.txt`, report
-`.scratch/agents/prod-m5u2-k2.md`). Harvest order: k1-7 (squash
+aggregate-check|recursion-check|answer`; prod-m5u2-k2-1 landed U1
+manifest (wt @6e6d1c9a, 492/3 = the mode stubs, `k2_manifest.rs`);
+prod-m5u2-k2-2 continues U2 term arena/printer/comparator → U3
+engine → U4 mode assembly over a parse→arena bridge interface (bridge
+itself waits on the K1 offset work; brief
+`.scratch/m5u2/spec-probes/extract/k2-2-brief.txt`, report
+`.scratch/agents/prod-m5u2-k2.md`). Harvest order: k1-8 (squash
 wt/prod-m5u2 → P1, build, gen_trust, P2, lanes A/H, suite
-passed=63, probe_decl 0 bad, P6 reuse) then k2-1 (squash
-wt/prod-m5u2-k2; bridge successor k2-2 once both landed); K2 suite
+passed=63, probe_decl 0 bad, P6 reuse) then k2-2 (squash
+wt/prod-m5u2-k2; bridge successor k2-3 once both landed); K2 suite
 lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 suite 249 cases/69 legacy pins,
 62-row comparator matrix, 11/11 R22 pins; Kani 0.67.0 pinned
 (separate nested harness crate ruled; wt/res-kani-2 kept until C3).
 Gauge actuals: K1 parser stack = five prod windows at 149-245K
 high-water; main ~215K at the C2 engine seed, ~203K at the
-replay/answers seed, ~215K at the K2 dispatch. Wave reports = anchor lookups only; the
+replay/answers seed, ~215K at the K2 dispatch, ~243K at the k1-8/k2-2 dispatch. Wave reports = anchor lookups only; the
 contract embeds every ruling.
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
