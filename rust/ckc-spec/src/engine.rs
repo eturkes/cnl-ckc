@@ -6,12 +6,13 @@ verus! {
 
 // Trusted spec: the bounded v1 engine (contract m5u2 R8/R13/R14/R15/R16).
 // One deterministic machine = SWI's depth-first, leftmost, clause-order
-// search with negation as failure, occurs-check unification (R13) and two
-// bounds: a depth budget per goal (call_with_depth_limit) and one fuel of
-// machine transitions (call_with_inference_limit; SWI's outer run limit
-// counts the same inferences at 10x, so the per-call limit alone binds).
-// Every transition costs one fuel; the exact fuel accounting is this
-// machine's own law — committed queries sit far below every bound (R15).
+// search with negation as failure and occurs-check unification (R13),
+// under two bounds: a depth budget per goal (call_with_depth_limit) and
+// one fuel of machine transitions (call_with_inference_limit). A
+// transition = one goal dispatch (call or redo, including its whole
+// clause scan + head unification), one cut, one pruned goal or one
+// recorded solution — the rust cost model of R15; SWI's outer run limit
+// counts the same events at 10x, so the per-call limit alone binds.
 
 // --- R8 constants ---
 
@@ -116,37 +117,11 @@ pub open spec fn list_term(ts: Seq<Term>) -> Term
     if ts.len() == 0 { Term::Nil } else { Term::Comp(cons_name(), seq![ts[0], list_term(ts.drop_first())]) }
 }
 
-// --- the machine ---
+// --- goals ---
 
 pub ghost enum Goal {
     Lit(Term, nat),   // goal term + remaining depth
-    NafCut(nat),      // inner NAF proof succeeded: discard alternatives above the level
-}
-
-pub ghost struct Alt {   // choicepoint = the state to resume, ci = next clause index to try
-    pub stack: Seq<Goal>,
-    pub sol: Seq<Term>,
-    pub fresh: nat,
-    pub ci: nat,
-}
-
-pub ghost struct Cfg {
-    pub stack: Seq<Goal>,
-    pub sol: Seq<Term>,                   // solution template (answer variables), bindings applied
-    pub alts: Seq<Alt>,
-    pub fresh: nat,                       // every live variable index is below fresh
-    pub ci: nat,                          // clause index the front goal resumes from
-    pub uni: Option<Seq<(Term, Term)>>,   // pending unification pairs (Some = unifying)
-    pub pruned: bool,                     // some branch hit depth 0
-    pub rows: Seq<Seq<Term>>,             // collected solutions
-    pub collect: bool,                    // true = findall, false = stop at the first solution
-}
-
-pub ghost enum Step { Next(Cfg), Sol, Done(Cfg) }
-
-pub ghost enum ROut {
-    Sol,
-    End { complete: bool, rows: Seq<Seq<Term>> },   // complete = exhausted without prune or fuel-out
+    NafCut(nat),      // the NAF goal's inner proof succeeded: drop choicepoints from this level up
 }
 
 pub open spec fn subst_goal(g: Goal, x: nat, v: Term) -> Goal {
@@ -175,12 +150,91 @@ pub open spec fn items_nvars(items: Seq<BodyItem>) -> nat
 
 pub open spec fn clause_nvars(c: DocClause) -> nat { max_nat(nvars(c.head), items_nvars(c.body)) }
 
+// --- unification (occurs-check, R13) ---
+
+// A unification carries the goal stack and the solution template along so
+// every binding lands in them at once; choicepoints keep their own copies.
+pub ghost struct UState {
+    pub pairs: Seq<(Term, Term)>,
+    pub stack: Seq<Goal>,
+    pub sol: Seq<Term>,
+}
+
+pub ghost enum UOut { Ok(Seq<Goal>, Seq<Term>), Fail, Out }
+
+pub open spec fn u_bind(u: UState, rest: Seq<(Term, Term)>, x: nat, v: Term) -> UState {
+    UState {
+        pairs: rest.map_values(|p: (Term, Term)| (subst(p.0, x, v), subst(p.1, x, v))),
+        stack: u.stack.map_values(|g: Goal| subst_goal(g, x, v)),
+        sol: subst_all(u.sol, x, v),
+    }
+}
+
+pub open spec fn unify_n(u: UState, fuel: nat) -> UOut
+    decreases fuel,
+{
+    if fuel == 0 { UOut::Out }
+    else if u.pairs.len() == 0 { UOut::Ok(u.stack, u.sol) }
+    else {
+        let a = u.pairs[0].0;
+        let b = u.pairs[0].1;
+        let rest = u.pairs.drop_first();
+        let f = (fuel - 1) as nat;
+        match (a, b) {
+            (Term::Var(x), _) =>
+                if a == b { unify_n(UState { pairs: rest, ..u }, f) }
+                else if occurs(x, b) { UOut::Fail }
+                else { unify_n(u_bind(u, rest, x, b), f) },
+            (_, Term::Var(y)) => if occurs(y, a) { UOut::Fail } else { unify_n(u_bind(u, rest, y, a), f) },
+            (Term::Comp(n, xs), Term::Comp(m, ys)) =>
+                if n == m && xs.len() == ys.len() { unify_n(UState { pairs: zip(xs, ys) + rest, ..u }, f) }
+                else { UOut::Fail },
+            _ => if a == b { unify_n(UState { pairs: rest, ..u }, f) } else { UOut::Fail },
+        }
+    }
+}
+
+// Occurs-check unification always completes in finitely many steps, and a
+// completed outcome is the same under every larger fuel; `Out` is the
+// formal residue of that fact, never reached.
+pub open spec fn unify(u: UState) -> UOut {
+    if exists|f: nat| !(unify_n(u, f) is Out) { unify_n(u, choose|f: nat| !(unify_n(u, f) is Out)) }
+    else { UOut::Out }
+}
+
+// --- the machine ---
+
+pub ghost struct Alt {   // choicepoint: the configuration to resume; ci = next clause index to try
+    pub stack: Seq<Goal>,
+    pub sol: Seq<Term>,
+    pub fresh: nat,
+    pub ci: nat,
+}
+
+pub ghost struct Cfg {
+    pub stack: Seq<Goal>,
+    pub sol: Seq<Term>,        // solution template (answer variables) with bindings applied
+    pub alts: Seq<Alt>,
+    pub fresh: nat,            // every live variable index is below fresh
+    pub ci: nat,               // clause index the front goal resumes from
+    pub pruned: bool,          // some branch hit depth 0
+    pub rows: Seq<Seq<Term>>,  // collected solutions
+    pub collect: bool,         // true = findall, false = stop at the first solution
+}
+
+pub ghost enum Step { Next(Cfg), Sol, Done(Cfg), Stuck }
+
+pub ghost enum ROut {
+    Sol,
+    End { complete: bool, rows: Seq<Seq<Term>> },   // complete = exhausted without prune or fuel-out
+}
+
 pub open spec fn lit_fa(t: Term) -> Option<(Seq<u8>, nat)> {
     match t { Term::Comp(name, args) => Option::Some((name, args.len())), _ => Option::None }
 }
 
-// Least clause index >= from whose head has the goal's name/arity.
-pub open spec fn next_match(db: Seq<DocClause>, name: Seq<u8>, arity: nat, from: nat) -> Option<nat>
+// Least clause index >= from whose head carries the goal's name/arity.
+pub open spec fn next_match(db: Seq<DocClause>, name: Seq<u8>, arity: nat, from: nat) -> (r: Option<nat>)
     decreases db.len() - from,
 {
     if from >= db.len() { Option::None }
@@ -188,91 +242,83 @@ pub open spec fn next_match(db: Seq<DocClause>, name: Seq<u8>, arity: nat, from:
     else { next_match(db, name, arity, from + 1) }
 }
 
+pub proof fn next_match_bound(db: Seq<DocClause>, name: Seq<u8>, arity: nat, from: nat)
+    ensures next_match(db, name, arity, from) matches Option::Some(m) ==> from <= m < db.len(),
+    decreases db.len() - from,
+{
+    if from < db.len() && lit_fa(db[from as int].head) != Option::Some((name, arity)) {
+        next_match_bound(db, name, arity, from + 1);
+    }
+}
+
 // Backtrack: resume the newest choicepoint, or end the search.
 pub open spec fn fail(c: Cfg) -> Step {
     if c.alts.len() == 0 { Step::Done(c) } else {
         let a = c.alts.last();
-        Step::Next(Cfg { stack: a.stack, sol: a.sol, fresh: a.fresh, ci: a.ci, alts: c.alts.drop_last(), uni: Option::None, ..c })
+        Step::Next(Cfg { stack: a.stack, sol: a.sol, fresh: a.fresh, ci: a.ci, alts: c.alts.drop_last(), ..c })
     }
 }
 
-pub open spec fn continue_with(c: Cfg, pairs: Seq<(Term, Term)>) -> Step {
-    Step::Next(Cfg { uni: Option::Some(pairs), ..c })
-}
-
-// Bind x := v everywhere live (pairs, stack, template); choicepoints keep
-// their own snapshots. Occurs-check failure = unification failure (R13).
-pub open spec fn bind(c: Cfg, pairs: Seq<(Term, Term)>, x: nat, v: Term) -> Step {
-    if occurs(x, v) { fail(c) } else {
-        Step::Next(Cfg {
-            uni: Option::Some(pairs.map_values(|p: (Term, Term)| (subst(p.0, x, v), subst(p.1, x, v)))),
-            stack: c.stack.map_values(|g: Goal| subst_goal(g, x, v)),
-            sol: subst_all(c.sol, x, v),
-            ..c
-        })
+// Call/redo of a predicate goal: enter the first clause from index ci whose
+// renamed-apart head unifies with the goal, leaving a choicepoint at the
+// next index; no clause left = failure.
+pub open spec fn call(db: Seq<DocClause>, c: Cfg, name: Seq<u8>, args: Seq<Term>, d: nat, rest: Seq<Goal>, ci: nat) -> Step
+    decreases db.len() - ci,
+{
+    match next_match(db, name, args.len(), ci) {
+        Option::None => fail(c),
+        Option::Some(m) => {
+            let cl = db[m as int];
+            proof { next_match_bound(db, name, args.len(), ci); }
+            let u = UState {
+                pairs: zip(args, args_of(shift(cl.head, c.fresh))),
+                stack: body_goals(cl.body, c.fresh, (d - 1) as nat) + rest,
+                sol: c.sol,
+            };
+            match unify(u) {
+                UOut::Ok(stack, sol) => Step::Next(Cfg {
+                    alts: c.alts.push(Alt { stack: c.stack, sol: c.sol, fresh: c.fresh, ci: m + 1 }),
+                    stack,
+                    sol,
+                    fresh: c.fresh + clause_nvars(cl),
+                    ci: 0,
+                    ..c
+                }),
+                UOut::Fail => call(db, c, name, args, d, rest, m + 1),
+                UOut::Out => Step::Stuck,
+            }
+        },
     }
-}
-
-pub open spec fn unify_step(c: Cfg, pairs: Seq<(Term, Term)>) -> Step {
-    if pairs.len() == 0 { Step::Next(Cfg { uni: Option::None, ci: 0, ..c }) } else {
-        let a = pairs[0].0;
-        let b = pairs[0].1;
-        let rest = pairs.drop_first();
-        match (a, b) {
-            (Term::Var(x), _) => if a == b { continue_with(c, rest) } else { bind(c, rest, x, b) },
-            (_, Term::Var(y)) => bind(c, rest, y, a),
-            (Term::Comp(n, xs), Term::Comp(m, ys)) =>
-                if n == m && xs.len() == ys.len() { continue_with(c, zip(xs, ys) + rest) } else { fail(c) },
-            _ => if a == b { continue_with(c, rest) } else { fail(c) },
-        }
-    }
-}
-
-// Resolve the front goal against clause m: push the retry choicepoint,
-// rename the clause apart at `fresh`, unify the arguments, then run the body.
-pub open spec fn resolve(db: Seq<DocClause>, m: nat, c: Cfg, args: Seq<Term>, d: nat, rest: Seq<Goal>) -> Step {
-    let cl = db[m as int];
-    Step::Next(Cfg {
-        alts: c.alts.push(Alt { stack: c.stack, sol: c.sol, fresh: c.fresh, ci: m + 1 }),
-        stack: body_goals(cl.body, c.fresh, (d - 1) as nat) + rest,
-        uni: Option::Some(zip(args, args_of(shift(cl.head, c.fresh)))),
-        fresh: c.fresh + clause_nvars(cl),
-        ..c
-    })
 }
 
 pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
-    match c.uni {
-        Option::Some(pairs) => unify_step(c, pairs),
-        Option::None => if c.stack.len() == 0 {
-            if c.collect { fail(Cfg { rows: c.rows.push(c.sol), ..c }) } else { Step::Sol }
-        } else {
-            let rest = c.stack.drop_first();
-            match c.stack[0] {
-                Goal::NafCut(lvl) => fail(Cfg { alts: c.alts.take(lvl as int), ..c }),
-                Goal::Lit(g, d) => if d == 0 { fail(Cfg { pruned: true, ..c }) } else {
-                    match g {
-                        Term::Comp(name, args) =>
-                            if name == comma_name() && args.len() == 2 {
-                                Step::Next(Cfg { stack: seq![Goal::Lit(args[0], d), Goal::Lit(args[1], d)] + rest, ..c })
-                            } else if name == naf_name() && args.len() == 1 {
-                                let lvl = c.alts.len();
-                                Step::Next(Cfg {
-                                    alts: c.alts.push(Alt { stack: rest, sol: c.sol, fresh: c.fresh, ci: 0 }),
-                                    stack: seq![Goal::Lit(args[0], (d - 1) as nat), Goal::NafCut(lvl)] + rest,
-                                    ..c
-                                })
-                            } else {
-                                match next_match(db, name, args.len(), c.ci) {
-                                    Option::None => fail(c),
-                                    Option::Some(m) => resolve(db, m, c, args, d, rest),
-                                }
-                            },
-                        _ => fail(c),
-                    }
-                },
-            }
-        },
+    if c.stack.len() == 0 {
+        if c.collect { fail(Cfg { rows: c.rows.push(c.sol), ..c }) } else { Step::Sol }
+    } else {
+        let rest = c.stack.drop_first();
+        match c.stack[0] {
+            Goal::NafCut(lvl) => fail(Cfg { alts: c.alts.take(lvl as int), ..c }),
+            Goal::Lit(g, d) => if d == 0 { fail(Cfg { pruned: true, ..c }) } else {
+                match g {
+                    Term::Comp(name, args) =>
+                        if name == comma_name() && args.len() == 2 {
+                            Step::Next(Cfg { stack: seq![Goal::Lit(args[0], d), Goal::Lit(args[1], d)] + rest, ..c })
+                        } else if name == naf_name() && args.len() == 1 {
+                            // \+ G: prove G once at the next depth; its success cuts back to
+                            // the choicepoint pushed here and fails, its finite failure
+                            // resumes that choicepoint = the continuation.
+                            Step::Next(Cfg {
+                                alts: c.alts.push(Alt { stack: rest, sol: c.sol, fresh: c.fresh, ci: 0 }),
+                                stack: seq![Goal::Lit(args[0], (d - 1) as nat), Goal::NafCut(c.alts.len())] + rest,
+                                ..c
+                            })
+                        } else {
+                            call(db, c, name, args, d, rest, c.ci)
+                        },
+                    _ => fail(c),
+                }
+            },
+        }
     }
 }
 
@@ -284,6 +330,7 @@ pub open spec fn run(db: Seq<DocClause>, c: Cfg, fuel: nat) -> ROut
             Step::Next(c2) => run(db, c2, (fuel - 1) as nat),
             Step::Sol => ROut::Sol,
             Step::Done(c2) => ROut::End { complete: !c2.pruned, rows: c2.rows },
+            Step::Stuck => ROut::End { complete: false, rows: c.rows },
         }
     }
 }
@@ -295,7 +342,6 @@ pub open spec fn solve(db: Seq<DocClause>, goal: Term, depth: nat, sol: Seq<Term
         alts: Seq::empty(),
         fresh: max_nat(nvars(goal), nvars_all(sol)),
         ci: 0,
-        uni: Option::None,
         pruned: false,
         rows: Seq::empty(),
         collect,
@@ -319,10 +365,9 @@ pub open spec fn heads_proved(db: Seq<DocClause>, heads: Seq<Term>) -> bool {
     forall|i: int| 0 <= i < heads.len() ==> head_proved(db, #[trigger] heads[i])
 }
 
-// Occurs-check unifiability of a goal with a renamed-apart head = the
-// machine on a one-fact database reaching a solution under some fuel.
+// The goal unifies with a renamed-apart copy of the head (recursion scan).
 pub open spec fn unifiable_apart(goal: Term, head: Term) -> bool {
-    exists|fuel: nat| solve(seq![fact_clause(head)], goal, 1, Seq::empty(), false, fuel) is Sol
+    unify(UState { pairs: seq![(goal, shift(head, nvars(goal)))], stack: Seq::empty(), sol: Seq::empty() }) is Ok
 }
 
 // --- R16 standard order (comparator matrix pins) ---
