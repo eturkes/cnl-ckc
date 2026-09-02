@@ -160,17 +160,25 @@ exceeded → review adjudicates). Next: contract v1.3 C2 amendments
 (shell/kernel protocol, comparator placement, payload_term/R2b
 unification, per-dispatch cost model, unique-path reload law,
 empty-heads order skew, manifest error/context wrapper,
-comparator-matrix path, query-unreadable class map) → wt K2 bindings
-+ red stubs (`v1_manifest`, `v1_aggregate_check`,
-`v1_recursion_check`, `v1_answer` over `ESrc`) + CLI `ckc v1
-aggregate-check|recursion-check|answer` → prod-k2 dispatch + K2
-suite lane (4 active seam cases s4-k2-001..004, 106 staged k2 cases
-to activate). Evidence: phase-2 suite 249 cases/69 legacy pins,
+comparator-matrix path, query-unreadable class map) = contract R24
+(a-f). K2 IN FLIGHT: seed wt/prod-m5u2-k2 @b218c69a = bindings
+`v1_manifest`/`v1_aggregate_check`/`v1_recursion_check`/`v1_answer`
+over `ESrc` + 4 red stubs `ckc-kernel/src/k2_impl.rs` + CLI `ckc v1
+aggregate-check|recursion-check|answer`; prod-m5u2-k2-1 fills U1
+manifest → U2 term arena/printer/comparator → U3 engine → U4 mode
+assembly over a parse→arena bridge interface (bridge itself waits on
+the K1 offset work; brief
+`.scratch/m5u2/spec-probes/extract/k2-1-brief.txt`, report
+`.scratch/agents/prod-m5u2-k2.md`). Harvest order: k1-7 (squash
+wt/prod-m5u2 → P1, build, gen_trust, P2, lanes A/H, suite
+passed=63, probe_decl 0 bad, P6 reuse) then k2-1 (squash
+wt/prod-m5u2-k2; bridge successor k2-2 once both landed); K2 suite
+lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 suite 249 cases/69 legacy pins,
 62-row comparator matrix, 11/11 R22 pins; Kani 0.67.0 pinned
 (separate nested harness crate ruled; wt/res-kani-2 kept until C3).
 Gauge actuals: K1 parser stack = five prod windows at 149-245K
 high-water; main ~215K at the C2 engine seed, ~203K at the
-replay/answers seed. Wave reports = anchor lookups only; the
+replay/answers seed, ~215K at the K2 dispatch. Wave reports = anchor lookups only; the
 contract embeds every ruling.
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
