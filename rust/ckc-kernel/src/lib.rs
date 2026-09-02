@@ -3,5 +3,8 @@
 // `cargo verus verify`.
 pub mod contract;
 mod align_impl;
+mod v1_impl;
+mod v1_term_impl;
 
 pub use ckc_spec::align::{ECheck, EModel, ESpan};
+pub use ckc_spec::v1text::EV1Verdict;
