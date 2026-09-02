@@ -4,5 +4,7 @@
 pub mod align;
 pub mod digest;
 pub mod engine;
+pub mod replay;
+pub mod answers;
 pub mod term;
 pub mod v1text;
