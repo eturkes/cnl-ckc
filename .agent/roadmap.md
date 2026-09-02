@@ -159,7 +159,9 @@ sorts, witness/replay probes) + `replay.rs` (manifest total parse,
 staged aggregate pipeline, recursion scan, `ESrc/ERow/EOut` mirrors)
 + `answers.rs` (query custody, bounded-once yes-no / wh classify,
 `print_answers`); spec 79/0, P1 439/0, trust spec=2442 (P7 aim
-exceeded → review adjudicates). Next: contract v1.3 C2 amendments
+exceeded → review adjudicates; rev lens for C1/C2 + K1-K3 adds
+proof minimality: a redundant proof layer, duplicate representation
+or lemma provable from a neighbour = a finding). Next: contract v1.3 C2 amendments
 (shell/kernel protocol, comparator placement, payload_term/R2b
 unification, per-dispatch cost model, unique-path reload law,
 empty-heads order skew, manifest error/context wrapper,
