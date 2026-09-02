@@ -146,15 +146,19 @@ green under MAIN rerun, 62-row comparator matrix, 11/11 R22 pins, C10
 rows; res-kani-2 DONE — Kani 0.67.0 pinned, interop proven, separate
 nested harness crate ruled, bootstrap idempotent; contract v1.2 = R16
 RULED CLOSED + R23 argv-seam scope; redstage refreshed byte-equal to
-vendor; diff lanes A/H authored + smoked. Session 5 = prod-m5u2-k1-2 resumed
-the K1 proof debt (batches through wt 7ff4ca5b, iterative parse_term
-in flight; worktree survives session death — successor spawns from the
-report handoff) + C2 spec fully designed: `.scratch/m5u2/c2-design.md`
+vendor; diff lanes A/H authored + smoked. Session 5 = prod-m5u2-k1-2 drove K1
+batches 12-31 (term parser complete incl. variable tracking + all
+four file-envelope parser stacks, 404 verified/1 error at wt
+b3f97ec3; wip tip e1e2835d; retired at context ceiling after one 503
+death; remaining per report Blockers: Document top-level assembly →
+bind v1_check_impl → fresh verify → CLI smoke) + C2 spec fully
+designed: `.scratch/m5u2/c2-design.md`
 = the engine/replay/answers ruling record (fueled machine, R16
 comparator, manifest/payload vocab pins, result algebra, binding
 sketch) — session 6 writes the spec from it without re-reading the law
 sources. Resume surface = contract v1.2 + roster session-5 close
-block, which orders session 6: resume prod → 0 errors → harvest +
++ extension-close blocks, which order session 6: spawn prod-m5u2-k1-3
+(named bg teammate; inherits worktree + report) → 0 errors → harvest +
 trust regen + lanes A/H + suite k1 target → C1 main commit → C2 spec
 from design record → seed wt + dispatch prod-k2.
 Wave reports = anchor lookups only; the contract embeds every ruling.)
