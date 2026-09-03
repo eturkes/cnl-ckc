@@ -179,9 +179,10 @@ on wt/prod-m5u2-k2 @05dca767 (588/3 = the mode stubs; release build
 green). U3 engine IN PROGRESS on
 wt/prod-m5u2-k2 @73cfc608 (`k2_engine.rs`: keys/substitution/occurs
 proved 611/3; wip 617/4 with `subst_goals` red; comparator matrix
-62/62 through `term_lt`); next = prod-m5u2-k2-6 (brief
+62/62 through `term_lt`); prod-m5u2-k2-6 RUNNING there at close (brief
 `.scratch/m5u2/spec-probes/extract/k2-6-brief.txt`, report
-`.scratch/agents/prod-m5u2-k2.md`, dispatch at session start).
+`.scratch/agents/prod-m5u2-k2.md`, watcher
+`.scratch/m5u2/logs/watch-k2-6.out`).
 Bridge (K1 parsers build the arena) IN PROGRESS on wt/prod-m5u2-k1b
 (worktree `.scratch/worktrees/prod-m5u2-k1b`, cut from 05dca767;
 @db514609 wip = `parse_term` arena threading, 12 compile errors);
