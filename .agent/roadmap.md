@@ -177,20 +177,20 @@ discharged by the guided `expected` — no K2 re-parser, no
 injectivity lemma. Layout switch + builder API LANDED
 on wt/prod-m5u2-k2 @05dca767 (588/3 = the mode stubs; release build
 green). U3 engine IN PROGRESS on
-wt/prod-m5u2-k2 @73cfc608 (`k2_engine.rs`: keys/substitution/occurs
-proved 611/3; wip 617/4 with `subst_goals` red; comparator matrix
-62/62 through `term_lt`); prod-m5u2-k2-6 RUNNING there at close (brief
-`.scratch/m5u2/spec-probes/extract/k2-6-brief.txt`, report
-`.scratch/agents/prod-m5u2-k2.md`, watcher
-`.scratch/m5u2/logs/watch-k2-6.out`).
-Bridge (K1 parsers build the arena) IN PROGRESS on wt/prod-m5u2-k1b
+wt/prod-m5u2-k2 @d9b032c0 (clean; `k2_engine.rs` batches 8-13:
+keys/substitution/occurs, goal substitution under arena growth,
+`unify_n` fuel-stability, rigid equality; 654 verified / 3 = the
+mode stubs; comparator matrix 62/62 through `term_lt`); next =
+prod-m5u2-k2-7 from the report's Blockers (unifier loop → machine
+run/solve → head_proved; brief = `k2-6-brief.txt` + report). Bridge
+(K1 parsers build the arena) IN PROGRESS on wt/prod-m5u2-k1b
 (worktree `.scratch/worktrees/prod-m5u2-k1b`, cut from 05dca767;
-@db514609 wip = `parse_term` arena threading, 12 compile errors);
-prod-m5u2-k1-10 RUNNING there at close (brief `k1-10-brief.txt`,
-report `.scratch/agents/prod-m5u2-k1.md`, watcher
-`.scratch/m5u2/logs/watch-k1-10.out`; next session harvests or
-revives it first). Then U4 mode assembly after both land (merge
-k1b into k2, then squash). Harvest: squash
+@2c9c2606 = `parse_term` arena threading, compiles, 5 bridge
+obligations red at v1_term_impl.rs 3792/4320/11022/14880/14954);
+next = prod-m5u2-k1-11 from the report's Blockers (brief =
+`k1-10-brief.txt` + report). No teammate running at close; all
+worktrees clean. Then U4 mode assembly after both land (merge k1b
+into k2, then squash). Harvest: squash
 wt/prod-m5u2-k2 → P1 (stub errors allowed only while U4 is open),
 P2, suite; K2 suite
 lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 suite 249 cases/69 legacy pins,
@@ -198,7 +198,7 @@ lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 sui
 (separate nested harness crate ruled; wt/res-kani-2 kept until C3).
 Gauge actuals: K1 parser stack = five prod windows at 149-245K
 high-water; main ~215K at the C2 engine seed, ~203K at the
-replay/answers seed, ~215K at the K2 dispatch, ~243K at the k1-8/k2-2 dispatch, ~181K at the k2-5/k1-9 dispatch; session close main=88% 212K/240K, mate high-water 183K (k2-4). Wave reports = anchor lookups only; the
+replay/answers seed, ~215K at the K2 dispatch, ~243K at the k1-8/k2-2 dispatch, ~181K at the k2-5/k1-9 dispatch; session close main=93% 224K/240K, mate high-water 185K (k1-10). Wave reports = anchor lookups only; the
 contract embeds every ruling.
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
