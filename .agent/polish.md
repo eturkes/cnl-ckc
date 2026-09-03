@@ -10,4 +10,5 @@ the feature-complete ruling.
   fixture coverage; render-side twins exist (`tests/ui/red/align-*` +
   selftest pins). Acceptance: a probe script drives `goal.py align` over one
   input per branch and asserts rc 2 + the stderr detail; wire it like the
-  other red batteries or as selftest-style rows in goal.emm.
+  other red batteries or as selftest-style rows in goal.emm. pri: low —
+  targets the legacy `goal.py` surface, which the M5.7 cutover retires.

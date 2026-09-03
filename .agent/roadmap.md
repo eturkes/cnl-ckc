@@ -91,7 +91,7 @@ dist red suite; findings, residuals + rulings = the review record in
 `.agent/archive/ui.md`.
 
 Live law = docs/REFERENCE.md (schema, Operating, Export, query/trace sections)
-+ project `CLAUDE.md` clinician design law; root `README.md` = the
++ the clinician design law `.claude/rules/clinician-design.md`; root `README.md` = the
 simplified overview. User-directed post-review addition: doc-page
 source↔ACE authored-alignment highlighting (law = memory "Doc-page
 source↔ACE highlight" bullet + REFERENCE § Reviewer interface). Architecture rulings, unit
@@ -123,7 +123,12 @@ strictly ordered: M5.1 toolchain+verified spike+trust gate; M5.2 v1
 kernel (reader/writer, bounded engine, replay, answers, traces); M5.3
 check validators; M5.4 pipeline commands; M5.5 UI; M5.6 dist; M5.7
 cutover+retirement+reference scrub; M5.8 fork shrink to emission-only;
-M5.9 milestone review. M5.1 CLOSED: Verus
+M5.9 milestone review = MILESTONE-REVIEW over ledger
+`.agent/review-m5.md`; M5.1 rows (rev 70 + rev2 59 =
+`.agent/contracts/m5u1-rev*.md`) enter it adjudicated;
+projection ≤ 7 open units × ~70 rows (M5.1 analog; tier per unit
+contract), session count calibrates on the first review session.
+M5.1 CLOSED: Verus
 release/0.2026.08.30.b432e82 + rustc 1.97.1 pinned (`rust/verus.lock`
 + gitignored `.toolchain/`); first verified kernel = align render-side
 validator (trusted spec `ckc-spec/src/align.rs` + binding
@@ -135,7 +140,7 @@ NO fallback trigger → M5.2 entry clear; reviews: rev 70-row fixed set
 adjudicated + rev2 59/59 mutants (56/56 G1 kills, 3/3 weak-binding
 demos caught at G2) + determinism D1-D3 pass; trust-audit v0 committed
 (`ckc trust-audit`) + CI `rust` job (pinned-asset digest install).
-M5.2 IN-FLIGHT. Contract of record = `.scratch/contracts/m5u2.md`
+M5.2 IN-FLIGHT. Contract of record = `.agent/contracts/m5u2.md`
 (v1.3: R9 first-divergence offset law; R16 comparator CLOSED; R23
 argv-seam scope). K1 SHIPPED on main: spec `ckc-spec/src/{term,
 v1text,digest}.rs` + binding `v1_check` (accept ⟺ `accepts`, Reject

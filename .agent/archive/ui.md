@@ -1,8 +1,9 @@
 # Adjudication UI + query/trace compiler foundation (M4)
 
 REVIEWED milestone record; stub = `.agent/roadmap.md`. Live law =
-README (schema, Operating, Export, query/trace sections) + project
-`CLAUDE.md` clinician design law + the architecture rulings below.
+README (schema, Operating, Export, query/trace sections) + the
+clinician design law `.claude/rules/clinician-design.md` + the
+architecture rulings below.
 Review record = the final section of this file.
 
 Goal (rescoped: the query-demonstrator tab, graph-explorer tab +
@@ -114,8 +115,8 @@ Architecture rulings:
   shared implementation (a `goal.py` ledger-validate subcommand the UI
   invokes via subprocess before persist) so gate and UI grammars cannot
   drift.
-- Clinician-facing design law (all UI surfaces; durable law = project
-  `CLAUDE.md` UI/UX rule, mechanical enforcement = M4.13's copy-register
+- Clinician-facing design law (all UI surfaces; durable law =
+  `.claude/rules/clinician-design.md`, mechanical enforcement = M4.13's copy-register
   lint + the design-system invariants): visible page copy carries zero
   plumbing — digests, qids, lemma symbols, raw schema functors ride
   URLs/hidden fields/ledgers only; staleness, verdict + limit panels read
