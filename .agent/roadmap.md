@@ -167,16 +167,20 @@ comparator-matrix path, query-unreadable class map) = contract R24
 (a-f). K2 IN FLIGHT: seed wt/prod-m5u2-k2 @b218c69a = bindings
 `v1_manifest`/`v1_aggregate_check`/`v1_recursion_check`/`v1_answer`
 over `ESrc` + 4 red stubs `ckc-kernel/src/k2_impl.rs` + CLI `ckc v1
-aggregate-check|recursion-check|answer`; prod-m5u2-k2-1/-2 landed U1
-manifest (wt @6e6d1c9a, `k2_manifest.rs`) + U2 arena printer
-(d9f27027) + ordering lemmas (707a37c1); prod-m5u2-k2-3 continues
-U2 comparator/msort/sort_unique → U3 engine → U4 mode assembly over
-a parse→arena bridge interface (brief
-`.scratch/m5u2/spec-probes/extract/k2-3-brief.txt`, report
-`.scratch/agents/prod-m5u2-k2.md`). Harvest: squash wt/prod-m5u2-k2
-→ P1 (stub errors allowed only while the bridge is open), P2, suite;
-bridge successor k2-4 fills the bridge against the shipped R9
-parsers; K2 suite
+aggregate-check|recursion-check|answer`; prod-m5u2-k2-1..3 landed U1
+manifest + U2 (arena `k2_term.rs`, sorts `k2_sort.rs`, rejects via
+the one printer `k2_reject.rs`; wt @e93c39fd 567/3 = the mode stubs).
+Contract R25 (arena ruling): backward child links (`child_roots`,
+child < parent), K1's `parse_term` builds the arena through a
+threaded `&mut ETermArena`, `the_v1`/`the_payload` (choose)
+discharged by the guided `expected` — no K2 re-parser, no
+injectivity lemma. prod-m5u2-k2-4 = layout switch + builder API →
+U3 engine (brief `.scratch/m5u2/spec-probes/extract/k2-4-brief.txt`);
+prod-m5u2-k1-9 = bridge threading on a branch cut from the layout
+commit (brief `k1-9-brief.txt`, dispatch once k2-4 commits U2');
+k2-5 = U4 mode assembly after both land. Harvest: squash
+wt/prod-m5u2-k2 → P1 (stub errors allowed only while U4 is open),
+P2, suite; K2 suite
 lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 suite 249 cases/69 legacy pins,
 62-row comparator matrix, 11/11 R22 pins; Kani 0.67.0 pinned
 (separate nested harness crate ruled; wt/res-kani-2 kept until C3).
