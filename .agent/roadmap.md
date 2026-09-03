@@ -174,11 +174,14 @@ Contract R25 (arena ruling): backward child links (`child_roots`,
 child < parent), K1's `parse_term` builds the arena through a
 threaded `&mut ETermArena`, `the_v1`/`the_payload` (choose)
 discharged by the guided `expected` — no K2 re-parser, no
-injectivity lemma. prod-m5u2-k2-4 = layout switch + builder API →
-U3 engine (brief `.scratch/m5u2/spec-probes/extract/k2-4-brief.txt`);
-prod-m5u2-k1-9 = bridge threading on a branch cut from the layout
-commit (brief `k1-9-brief.txt`, dispatch once k2-4 commits U2');
-k2-5 = U4 mode assembly after both land. Harvest: squash
+injectivity lemma. Layout switch + builder API LANDED
+on wt/prod-m5u2-k2 @05dca767 (588/3 = the mode stubs; release build
+green). IN FLIGHT: prod-m5u2-k2-5 = matrix probe + U3 engine on
+wt/prod-m5u2-k2 (brief `.scratch/m5u2/spec-probes/extract/k2-5-brief.txt`);
+prod-m5u2-k1-9 = bridge threading on wt/prod-m5u2-k1b (worktree
+`.scratch/worktrees/prod-m5u2-k1b`, cut from 05dca767; brief
+`k1-9-brief.txt`, report `.scratch/agents/prod-m5u2-k1.md`); next =
+U4 mode assembly after both land (merge k1b into k2, then squash). Harvest: squash
 wt/prod-m5u2-k2 → P1 (stub errors allowed only while U4 is open),
 P2, suite; K2 suite
 lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 suite 249 cases/69 legacy pins,
@@ -186,7 +189,7 @@ lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 sui
 (separate nested harness crate ruled; wt/res-kani-2 kept until C3).
 Gauge actuals: K1 parser stack = five prod windows at 149-245K
 high-water; main ~215K at the C2 engine seed, ~203K at the
-replay/answers seed, ~215K at the K2 dispatch, ~243K at the k1-8/k2-2 dispatch. Wave reports = anchor lookups only; the
+replay/answers seed, ~215K at the K2 dispatch, ~243K at the k1-8/k2-2 dispatch, ~181K at the k2-5/k1-9 dispatch. Wave reports = anchor lookups only; the
 contract embeds every ruling.
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
