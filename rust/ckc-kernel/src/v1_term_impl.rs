@@ -98,40 +98,64 @@ fn is_digit_b(b: u8) -> (r: bool)
     0x30 <= b && b <= 0x39
 }
 
-fn match_slice_at(bytes: &[u8], start: usize, lit: &[u8]) -> (r: bool)
-    requires start <= bytes@.len(),
-    ensures r == {
-        &&& start as int + lit@.len() <= bytes@.len()
-        &&& bytes@.subrange(start as int, start as int + lit@.len()) == lit@
-    },
+fn raise_at(at: &mut usize, boundary: usize, limit: usize)
+    requires
+        *old(at) <= limit,
+        boundary <= limit,
+    ensures
+        *old(at) <= *final(at) <= limit,
+        boundary <= *final(at),
 {
-    if lit.len() > bytes.len() - start {
-        return false;
+    if *at < boundary {
+        *at = boundary;
     }
+}
+
+fn match_slice_at(bytes: &[u8], start: usize, lit: &[u8], at: &mut usize) -> (r: bool)
+    requires
+        start <= bytes@.len(),
+        *old(at) <= bytes@.len(),
+    ensures
+        r == {
+            &&& start as int + lit@.len() <= bytes@.len()
+            &&& bytes@.subrange(start as int, start as int + lit@.len()) == lit@
+        },
+        *old(at) <= *final(at) <= bytes@.len(),
+        r ==> *final(at) == *old(at),
+{
     let mut i = 0usize;
     while i < lit.len()
         invariant
             start <= bytes@.len(),
-            lit@.len() <= bytes@.len() - start,
             i <= lit@.len(),
+            i <= bytes@.len() - start,
+            *old(at) <= *at <= bytes@.len(),
+            *at == *old(at),
             forall|j: int| 0 <= j < i ==> bytes@[start as int + j] == lit@[j],
         decreases lit.len() - i,
     {
+        if i == bytes.len() - start {
+            raise_at(at, bytes.len(), bytes.len());
+            return false;
+        }
         let suffix_len = bytes.len() - start;
         let pos = bytes.len() - (suffix_len - i);
         proof {
             assert(pos as int == start as int + i as int);
         }
         if bytes[pos] != lit[i] {
+            raise_at(at, pos, bytes.len());
             proof {
-                assert(bytes@.subrange(
-                    start as int,
-                    start as int + lit@.len(),
-                )[i as int] == bytes@[start as int + i as int]);
-                assert(bytes@.subrange(
-                    start as int,
-                    start as int + lit@.len(),
-                ) != lit@);
+                if start as int + lit@.len() <= bytes@.len() {
+                    assert(bytes@.subrange(
+                        start as int,
+                        start as int + lit@.len(),
+                    )[i as int] == bytes@[start as int + i as int]);
+                    assert(bytes@.subrange(
+                        start as int,
+                        start as int + lit@.len(),
+                    ) != lit@);
+                }
             }
             return false;
         }
@@ -150,11 +174,15 @@ fn consume_literal(
     start: usize,
     lit: &[u8],
     expected: Ghost<Seq<u8>>,
+at: &mut usize,
 ) -> (r: Option<usize>)
     requires
         start <= bytes@.len(),
         lit@ == expected@,
+        *old(at) <= bytes@.len(),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
+        r matches Some(_) ==> *final(at) == *old(at),
         r matches Some(end) ==> {
             &&& start <= end <= bytes@.len()
             &&& end as int == start as int + expected@.len()
@@ -167,7 +195,7 @@ fn consume_literal(
             ) == expected@
             ==> r == Some((start as int + expected@.len()) as usize),
 {
-    if match_slice_at(bytes, start, lit) {
+    if match_slice_at(bytes, start, lit, at) {
         let remaining = bytes.len() - start;
         let slack = remaining - lit.len();
         let end = bytes.len() - slack;
@@ -248,9 +276,13 @@ fn vec_slice_equal(left: &Vec<u8>, right: &[u8]) -> (r: bool)
     true
 }
 
-fn consume_byte(bytes: &[u8], start: usize, byte: u8) -> (r: Option<usize>)
-    requires start <= bytes@.len(),
+fn consume_byte(bytes: &[u8], start: usize, byte: u8, at: &mut usize) -> (r: Option<usize>)
+    requires
+        start <= bytes@.len(),
+        *old(at) <= bytes@.len(),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
+        r matches Some(_) ==> *final(at) == *old(at),
         r matches Some(end) ==> {
             &&& start < end <= bytes@.len()
             &&& end == start + 1
@@ -260,6 +292,7 @@ fn consume_byte(bytes: &[u8], start: usize, byte: u8) -> (r: Option<usize>)
             ==> r == Some((start as int + 1) as usize),
 {
     if start == bytes.len() || bytes[start] != byte {
+        raise_at(at, start, bytes.len());
         return None;
     }
     proof {
@@ -297,11 +330,15 @@ fn cursor_literal(
     cursor: &mut EByteCursor,
     lit: &[u8],
     expected: Ghost<Seq<u8>>,
+at: &mut usize,
 ) -> (r: bool)
     requires
         cursor_ok(bytes@, old(cursor)),
         lit@ == expected@,
+        *old(at) <= bytes@.len(),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
+        r ==> *final(at) == *old(at),
         r ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == old(cursor).pos + expected@.len()
@@ -320,7 +357,7 @@ fn cursor_literal(
 {
     let old_pos = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
-    let end = match consume_literal(bytes, old_pos, lit, expected) {
+    let end = match consume_literal(bytes, old_pos, lit, expected, at) {
         Some(end) => end,
         None => return false,
     };
@@ -341,9 +378,14 @@ fn cursor_byte(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     byte: u8,
+at: &mut usize,
 ) -> (r: bool)
-    requires cursor_ok(bytes@, old(cursor)),
+    requires
+        cursor_ok(bytes@, old(cursor)),
+        *old(at) <= bytes@.len(),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
+        r ==> *final(at) == *old(at),
         r ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& old(cursor).pos < bytes@.len()
@@ -361,7 +403,7 @@ fn cursor_byte(
 {
     let old_pos = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
-    let end = match consume_byte(bytes, old_pos, byte) {
+    let end = match consume_byte(bytes, old_pos, byte, at) {
         Some(end) => end,
         None => return false,
     };
@@ -385,8 +427,10 @@ fn cursor_atom(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GAtomExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         cursor_ok(bytes@, old(cursor)),
         expected@ matches Some(e) ==> {
             &&& old(cursor).pos < e.end <= bytes@.len()
@@ -395,6 +439,7 @@ fn cursor_atom(
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(atom) ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == atom.end
@@ -408,6 +453,7 @@ fn cursor_atom(
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
     if start == bytes.len() {
+        raise_at(at, start, bytes.len());
         proof {
             if let Some(e) = expected@ {
                 assert(start < e.end <= bytes@.len());
@@ -416,7 +462,7 @@ fn cursor_atom(
         }
         return None;
     }
-    let atom = match parse_atom(bytes, start, expected) {
+    let atom = match parse_atom(bytes, start, expected, at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -441,12 +487,15 @@ fn cursor_term(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GTermExpected>>,
+at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        *old(at) <= bytes@.len(),
         cursor_ok(bytes@, old(cursor)),
         expected@ matches Some(e) ==>
             term_at(bytes@, old(cursor).pos as int, e.end as int, e.term),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == term.end
@@ -461,6 +510,7 @@ fn cursor_term(
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
     if start == bytes.len() {
+        raise_at(at, start, bytes.len());
         proof {
             if let Some(e) = expected@ {
                 reveal(term_at);
@@ -485,6 +535,7 @@ fn cursor_term(
         Ghost(initial_stream),
         false,
         &mut tracker,
+    at,
     ) {
         Some(term) => term,
         None => return None,
@@ -510,8 +561,10 @@ fn cursor_name(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GNameExpected>>,
+at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
+        *old(at) <= bytes@.len(),
         cursor_ok(bytes@, old(cursor)),
         expected@ matches Some(e) ==> {
             &&& old(cursor).pos < e.end < bytes@.len()
@@ -522,6 +575,7 @@ fn cursor_name(
                 || bytes@[e.end as int] == 0x2d)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == field.end
@@ -537,6 +591,7 @@ fn cursor_name(
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
     if start == bytes.len() {
+        raise_at(at, start, bytes.len());
         proof {
             if let Some(e) = expected@ {
                 assert(start < e.end < bytes@.len());
@@ -545,7 +600,7 @@ fn cursor_name(
         }
         return None;
     }
-    let field = match parse_raw_name(bytes, start, expected) {
+    let field = match parse_raw_name(bytes, start, expected, at) {
         Some(field) => field,
         None => return None,
     };
@@ -671,8 +726,10 @@ fn parse_raw_name(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GNameExpected>>,
+at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end < bytes@.len()
@@ -683,6 +740,7 @@ fn parse_raw_name(
                 || bytes@[e.end as int] == 0x2d)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& start < field.end <= bytes@.len()
             &&& field.value@ == bytes@.subrange(start as int, field.end as int)
@@ -694,6 +752,7 @@ fn parse_raw_name(
     let mut pos = start;
     while pos < bytes.len() && is_name_b(bytes[pos])
         invariant
+            *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
             forall|i: int| start <= i < pos ==> {
                 ckc_spec::v1text::is_lower_b(bytes@[i])
@@ -733,6 +792,7 @@ fn parse_raw_name(
         }
     }
     if pos == start {
+        raise_at(at, start, bytes.len());
         proof {
             if let Some(e) = expected@ {
                 assert(false);
@@ -742,6 +802,7 @@ fn parse_raw_name(
     }
     let value = copy_range(bytes, start, pos);
     if !name_ok_exec(&value) {
+        raise_at(at, start, bytes.len());
         proof {
             if let Some(e) = expected@ {
                 assert(value@ == e.value);
@@ -814,8 +875,10 @@ fn parse_alpha_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -825,6 +888,7 @@ fn parse_alpha_atom(
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
         expected@ matches Some(e) ==> r matches Some(a)
             && a.name@ == e.name && a.end == e.end,
@@ -841,12 +905,14 @@ fn parse_alpha_atom(
         }
     }
     if !is_lower_b(bytes[start]) {
+        raise_at(at, start, bytes.len());
         return None;
     }
     let mut name = Vec::new();
     let mut pos = start;
     while pos < bytes.len() && is_alnum_b(bytes[pos])
         invariant
+            *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
             name@ == bytes@.subrange(start as int, pos as int),
             name@.len() == pos - start,
@@ -913,8 +979,10 @@ fn parse_graphic_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -924,6 +992,7 @@ fn parse_graphic_atom(
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
         expected@ matches Some(e) ==> r matches Some(a)
             && a.name@ == e.name && a.end == e.end,
@@ -957,6 +1026,11 @@ fn parse_graphic_atom(
     if !is_graphic_b(bytes[start])
         || (bytes[start] == 0x2e && start + 1 < bytes.len() && bytes[start + 1] == 0x0a)
     {
+        if bytes[start] == 0x2e {
+            raise_at(at, start + 1, bytes.len());
+        } else {
+            raise_at(at, start, bytes.len());
+        }
         return None;
     }
     let mut name = Vec::new();
@@ -964,6 +1038,7 @@ fn parse_graphic_atom(
     while pos < bytes.len() && is_graphic_b(bytes[pos])
         && !(bytes[pos] == 0x2e && pos + 1 < bytes.len() && bytes[pos + 1] == 0x0a)
         invariant
+            *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
             name@ == bytes@.subrange(start as int, pos as int),
             name@.len() == pos - start,
@@ -1057,9 +1132,11 @@ fn parse_graphic_atom(
         }
     }
     if name.len() == 1 && name[0] == 0x2e {
+        raise_at(at, pos, bytes.len());
         return None;
     }
     if name.len() >= 2 && name[0] == 0x2f && name[1] == 0x2a {
+        raise_at(at, start + 1, bytes.len());
         return None;
     }
     proof {
@@ -1075,8 +1152,10 @@ fn parse_solo_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -1086,6 +1165,7 @@ fn parse_solo_atom(
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
         expected@ matches Some(e) ==> r matches Some(a)
             && a.name@ == e.name && a.end == e.end,
@@ -1150,6 +1230,11 @@ fn parse_solo_atom(
             seq_eq_two(e.name, 0x7b, 0x7d);
             assert(false);
         }
+    }
+    if bytes[start] == 0x7b {
+        raise_at(at, start + 1, bytes.len());
+    } else {
+        raise_at(at, start, bytes.len());
     }
     None
 }
@@ -1653,8 +1738,10 @@ fn parse_escaped_byte(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GEscapeExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedByte>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -1662,6 +1749,7 @@ fn parse_escaped_byte(
                 == bytes@.subrange(start as int, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(e) ==> parsed_escape_ok(bytes@, start, &e),
         expected@ matches Some(e) ==> r matches Some(out)
             && out.value == e.value && out.end == e.end,
@@ -1696,6 +1784,7 @@ fn parse_escaped_byte(
     }
     if b != 0x5c {
         if b < 0x20 || b == 0x27 || b == 0x7f {
+            raise_at(at, start, bytes.len());
             return None;
         }
         let out = EParsedByte { value: b, end: start + 1 };
@@ -1710,6 +1799,7 @@ fn parse_escaped_byte(
         return Some(out);
     }
     if bytes.len() - start < 2 {
+        raise_at(at, bytes.len(), bytes.len());
         return None;
     }
     let code = bytes[start + 1];
@@ -1749,8 +1839,28 @@ fn parse_escaped_byte(
             assert(bytes@[start as int + 3] == 0x30);
         }
     }
-    if code != 0x75 || bytes.len() - start < 6
-        || bytes[start + 2] != 0x30 || bytes[start + 3] != 0x30 {
+    if code != 0x75 {
+        raise_at(at, start + 1, bytes.len());
+        return None;
+    }
+    if bytes.len() - start < 3 {
+        raise_at(at, bytes.len(), bytes.len());
+        return None;
+    }
+    if bytes[start + 2] != 0x30 {
+        raise_at(at, start + 2, bytes.len());
+        return None;
+    }
+    if bytes.len() - start < 4 {
+        raise_at(at, bytes.len(), bytes.len());
+        return None;
+    }
+    if bytes[start + 3] != 0x30 {
+        raise_at(at, start + 3, bytes.len());
+        return None;
+    }
+    if bytes.len() - start < 6 {
+        raise_at(at, bytes.len(), bytes.len());
         return None;
     }
     let ghost expected_d2 = match expected_unicode {
@@ -1780,11 +1890,21 @@ fn parse_escaped_byte(
     }
     let d2 = match upper_hex_value(bytes[start + 4], Ghost(expected_d2)) {
         Some(d) => d,
-        None => return None,
+        None => {
+            raise_at(at, start + 4, bytes.len());
+            return None;
+        },
     };
+    if d2 != 0 && d2 != 1 && d2 != 7 {
+        raise_at(at, start + 4, bytes.len());
+        return None;
+    }
     let d3 = match upper_hex_value(bytes[start + 5], Ghost(expected_d3)) {
         Some(d) => d,
-        None => return None,
+        None => {
+            raise_at(at, start + 5, bytes.len());
+            return None;
+        },
     };
     let value = d2 * 16 + d3;
     proof {
@@ -1806,6 +1926,7 @@ fn parse_escaped_byte(
         }
     }
     if !((value < 0x20 && !(0x07 <= value && value <= 0x0d)) || value == 0x7f) {
+        raise_at(at, start + 5, bytes.len());
         return None;
     }
     proof {
@@ -1984,8 +2105,10 @@ fn parse_quoted_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -1995,6 +2118,7 @@ fn parse_quoted_atom(
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
         expected@ matches Some(e) ==> r matches Some(a)
             && a.name@ == e.name && a.end == e.end,
@@ -2016,6 +2140,7 @@ fn parse_quoted_atom(
         }
     }
     if bytes[start] != 0x27 {
+        raise_at(at, start, bytes.len());
         return None;
     }
     let mut name = Vec::new();
@@ -2030,6 +2155,7 @@ fn parse_quoted_atom(
     }
     while pos < bytes.len() && bytes[pos] != 0x27
         invariant
+            *old(at) <= *at <= bytes@.len(),
             start < pos <= bytes@.len(),
             ckc_spec::v1text::esc_all(name@)
                 == bytes@.subrange(start as int + 1, pos as int),
@@ -2117,7 +2243,7 @@ fn parse_quoted_atom(
                     == bytes@.subrange(pos as int, end_int));
             }
         }
-        let parsed = match parse_escaped_byte(bytes, pos, Ghost(expected_escape)) {
+        let parsed = match parse_escaped_byte(bytes, pos, Ghost(expected_escape), at) {
             Some(e) => e,
             None => return None,
         };
@@ -2185,9 +2311,11 @@ fn parse_quoted_atom(
         }
     }
     if pos == bytes.len() {
+        raise_at(at, pos, bytes.len());
         return None;
     }
     if atom_bare_exec(name.as_slice()) {
+        raise_at(at, pos, bytes.len());
         return None;
     }
     let end = pos + 1;
@@ -2389,8 +2517,10 @@ fn parse_decimal(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GDecimalExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedDecimal>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -2399,6 +2529,7 @@ fn parse_decimal(
             &&& decimal_end(bytes@, e.end)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(d) ==> parsed_decimal_ok(bytes@, start, &d),
         expected@ matches Some(e) ==> r matches Some(d)
             && d.value@ == e.value && d.end == e.end,
@@ -2414,12 +2545,14 @@ fn parse_decimal(
         }
     }
     if !is_digit_b(bytes[start]) {
+        raise_at(at, start, bytes.len());
         return None;
     }
     let mut digits = Vec::new();
     let mut pos = start;
     while pos < bytes.len() && is_digit_b(bytes[pos])
         invariant
+            *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
             digits@ == bytes@.subrange(start as int, pos as int),
             forall|i: int| 0 <= i < digits@.len()
@@ -2472,6 +2605,7 @@ fn parse_decimal(
         }
     }
     if digits.len() > 1 && digits[0] == 0x30 {
+        raise_at(at, start + 1, bytes.len());
         return None;
     }
     let ghost value = match expected@ {
@@ -2513,8 +2647,10 @@ fn parse_integer(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GIntExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedInt>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -2523,6 +2659,7 @@ fn parse_integer(
             &&& term_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(n) ==> parsed_int_ok(bytes@, start, &n),
         expected@ matches Some(e) ==> r matches Some(n)
             && n.value@ == e.value && n.end == e.end,
@@ -2573,6 +2710,7 @@ fn parse_integer(
             }
         }
         if bytes.len() - start < 2 {
+            raise_at(at, bytes.len(), bytes.len());
             return None;
         }
         let ghost expected_decimal = match expected@ {
@@ -2592,7 +2730,7 @@ fn parse_integer(
                     == bytes@.subrange(start as int + 1, e.end as int));
             }
         }
-        let d = match parse_decimal(bytes, start + 1, Ghost(expected_decimal)) {
+        let d = match parse_decimal(bytes, start + 1, Ghost(expected_decimal), at) {
             Some(d) => d,
             None => return None,
         };
@@ -2609,6 +2747,7 @@ fn parse_integer(
             }
         }
         if bytes[start + 1] == 0x30 {
+            raise_at(at, start + 1, bytes.len());
             return None;
         }
         let ghost value = -(d.value@ as int);
@@ -2640,7 +2779,7 @@ fn parse_integer(
         Some(e) => Some(GDecimalExpected { value: e.value as nat, end: e.end }),
         None => None,
     };
-    let d = match parse_decimal(bytes, start, Ghost(expected_decimal)) {
+    let d = match parse_decimal(bytes, start, Ghost(expected_decimal), at) {
         Some(d) => d,
         None => return None,
     };
@@ -2675,8 +2814,10 @@ fn parse_variable(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GVarExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedVar>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -2685,6 +2826,7 @@ fn parse_variable(
             &&& term_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(v) ==> parsed_var_ok(bytes@, start, &v),
         expected@ matches Some(e) ==> r matches Some(v)
             && v.value@ == e.value && v.end == e.end,
@@ -2740,6 +2882,7 @@ fn parse_variable(
     }
     let letter = bytes[start];
     if letter < 0x41 || letter > 0x5a {
+        raise_at(at, start, bytes.len());
         return None;
     }
     let index = letter - 0x41;
@@ -2791,6 +2934,10 @@ fn parse_variable(
             assert(e.value / 26 > 0);
         }
     }
+    if bytes[start + 1] == 0x30 {
+        raise_at(at, start + 1, bytes.len());
+        return None;
+    }
     let ghost expected_decimal = match expected@ {
         Some(e) => Some(GDecimalExpected { value: e.value / 26, end: e.end }),
         None => None,
@@ -2803,7 +2950,7 @@ fn parse_variable(
                 == bytes@.subrange(start as int + 1, e.end as int));
         }
     }
-    let d = match parse_decimal(bytes, start + 1, Ghost(expected_decimal)) {
+    let d = match parse_decimal(bytes, start + 1, Ghost(expected_decimal), at) {
         Some(d) => d,
         None => return None,
     };
@@ -2818,9 +2965,6 @@ fn parse_variable(
                 == ckc_spec::v1text::udec_bytes(q)[0]);
             assert(bytes@[start as int + 1] != 0x30);
         }
-    }
-    if bytes[start + 1] == 0x30 {
-        return None;
     }
     let ghost q = d.value@;
     let ghost value = match expected@ {
@@ -2913,8 +3057,10 @@ fn parse_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
@@ -2923,6 +3069,7 @@ fn parse_atom(
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
         expected@ matches Some(e) ==> r matches Some(a)
             && a.name@ == e.name && a.end == e.end,
@@ -2933,13 +3080,13 @@ fn parse_atom(
         }
     }
     if is_lower_b(bytes[start]) {
-        parse_alpha_atom(bytes, start, expected)
+        parse_alpha_atom(bytes, start, expected, at)
     } else if is_graphic_b(bytes[start]) {
-        parse_graphic_atom(bytes, start, expected)
+        parse_graphic_atom(bytes, start, expected, at)
     } else if bytes[start] == 0x27 {
-        parse_quoted_atom(bytes, start, expected)
+        parse_quoted_atom(bytes, start, expected, at)
     } else {
-        parse_solo_atom(bytes, start, expected)
+        parse_solo_atom(bytes, start, expected, at)
     }
 }
 
@@ -3252,14 +3399,17 @@ fn parse_atomic(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomicExpected>>,
+at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& term_at(bytes@, start as int, e.end as int, e.term)
             &&& atomic_term(e.term)
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(t) ==> spanned_term_ok(bytes@, &t),
         r matches Some(t) ==> t.start == start,
         expected@ matches Some(e) ==> r matches Some(t)
@@ -3318,7 +3468,7 @@ fn parse_atomic(
             },
             None => None,
         };
-        return match parse_variable(bytes, start, Ghost(expected_var)) {
+        return match parse_variable(bytes, start, Ghost(expected_var), at) {
             Some(v) => {
                 let out = span_variable(bytes, start, v);
                 proof {
@@ -3368,7 +3518,7 @@ fn parse_atomic(
             },
             None => None,
         };
-        if let Some(n) = parse_integer(bytes, start, Ghost(expected_int)) {
+        if let Some(n) = parse_integer(bytes, start, Ghost(expected_int), at) {
             let out = span_integer(bytes, start, n);
             proof {
                 if let Some(e) = expected@ {
@@ -3404,7 +3554,7 @@ fn parse_atomic(
         },
         None => None,
     };
-    match parse_atom(bytes, start, Ghost(expected_atom)) {
+    match parse_atom(bytes, start, Ghost(expected_atom), at) {
         Some(a) => {
             let out = span_atom(bytes, start, a);
             proof {
@@ -7061,8 +7211,10 @@ pub fn parse_term(
     initial_stream: Ghost<Seq<nat>>,
     track_vars: bool,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==>
             term_at(bytes@, start as int, e.end as int, e.term),
@@ -7072,6 +7224,7 @@ pub fn parse_term(
             tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(t) ==> spanned_term_ok(bytes@, &t),
         r matches Some(t) ==> t.start == start,
         expected@ matches Some(e) ==> r matches Some(t)
@@ -7114,6 +7267,7 @@ pub fn parse_term(
     }
     while pos <= bytes.len()
         invariant
+            *old(at) <= *at <= bytes@.len(),
             parse_state_ok(bytes@, start, pos, frames@, &current),
             expected@ matches Some(e) ==> {
                 &&& root == e.term
@@ -7301,6 +7455,20 @@ pub fn parse_term(
                 },
                 EFrameStep::Done(done) => {
                     let next_pos = done.end;
+                    let dollar_unary = match &done.parsed.top {
+                        ETermTop::Comp(name, arity) => {
+                            is_dollar_name(name.as_slice()) && *arity == 1
+                        },
+                        _ => false,
+                    };
+                    if dollar_unary {
+                        proof {
+                            reveal(frame_step_ok);
+                            reveal(spanned_term_ok);
+                            assert(done.end > 0);
+                        }
+                        raise_at(at, done.end - 1, bytes.len());
+                    }
                     proof {
                         reveal(frame_step_ok);
                         parse_state_close_last(
@@ -7376,6 +7544,7 @@ pub fn parse_term(
                     pos = next_pos;
                 },
                 EFrameStep::Reject => {
+                    raise_at(at, pos, bytes.len());
                     proof {
                         if let Some(_) = expected@ {
                             let guide = old_guides.last();
@@ -7405,6 +7574,7 @@ pub fn parse_term(
                 }
             }
             if pos == bytes.len() {
+                raise_at(at, pos, bytes.len());
                 proof {
                     if let Some(_) = expected@ {
                         reveal(term_at);
@@ -7581,7 +7751,7 @@ pub fn parse_term(
                         reveal(atomic_term);
                     }
                 }
-                let term = match parse_atomic(bytes, pos, Ghost(expected_atomic)) {
+                let term = match parse_atomic(bytes, pos, Ghost(expected_atomic), at) {
                     Some(t) => t,
                     None => return None,
                 };
@@ -7615,6 +7785,7 @@ pub fn parse_term(
                         &term,
                         Ghost(atomic_initial),
                         tracker,
+                    at,
                     );
                     proof {
                         tracked_state_atomic(
@@ -7718,7 +7889,10 @@ pub fn parse_term(
                         }
                     }
                 }
-                let atom = match parse_atom(bytes, pos, Ghost(expected_atom)) {
+                if bytes[pos] == 0x5b && bytes.len() - pos < 2 {
+                    raise_at(at, bytes.len(), bytes.len());
+                }
+                let atom = match parse_atom(bytes, pos, Ghost(expected_atom), at) {
                     Some(a) => a,
                     None => return None,
                 };
@@ -8330,19 +8504,78 @@ proof fn tracker_append_new(next: usize, stream: Seq<nat>)
     canonical_seen_insert(next as nat);
 }
 
+
+fn raise_variable_reject(
+    bytes: &[u8],
+    start: usize,
+    end: usize,
+    next: usize,
+    at: &mut usize,
+)
+    requires
+        start < end <= bytes@.len(),
+        *old(at) <= bytes@.len(),
+    ensures *old(at) <= *final(at) <= bytes@.len(),
+{
+    let letter = bytes[start];
+    if letter < 0x41 || letter > 0x5a {
+        raise_at(at, start, bytes.len());
+        return;
+    }
+    let rem = (letter - 0x41) as usize;
+    if rem > next {
+        raise_at(at, start, bytes.len());
+        return;
+    }
+    if end == start + 1 {
+        raise_at(at, end, bytes.len());
+        return;
+    }
+    let max_q = (next - rem) / 26;
+    let mut q = 0usize;
+    let mut pos = start + 1;
+    while pos < end
+        invariant
+            start < pos <= end <= bytes@.len(),
+            q <= max_q,
+            *old(at) <= *at <= bytes@.len(),
+        decreases end - pos,
+    {
+        if !is_digit_b(bytes[pos]) {
+            raise_at(at, pos, bytes.len());
+            return;
+        }
+        let d = (bytes[pos] - 0x30) as usize;
+        if pos == start + 1 && d == 0 {
+            raise_at(at, pos, bytes.len());
+            return;
+        }
+        if d > max_q || q > (max_q - d) / 10 {
+            raise_at(at, pos, bytes.len());
+            return;
+        }
+        q = q * 10 + d;
+        pos += 1;
+    }
+    raise_at(at, end, bytes.len());
+}
+
 fn observe_variable(
     bytes: &[u8],
     start: usize,
     end: usize,
     value: Ghost<nat>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: bool)
     requires
+        *old(at) <= bytes@.len(),
         start < end <= bytes@.len(),
         ckc_spec::v1text::var_bytes(value@)
             == bytes@.subrange(start as int, end as int),
         tracker_state_ok(old(tracker).next, old(tracker).stream@),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r == (value@ < old(tracker).next
             || value@ == old(tracker).next && old(tracker).next < usize::MAX),
         r ==> {
@@ -8363,6 +8596,7 @@ fn observe_variable(
     let mut i = 0usize;
     while i < old_next
         invariant
+            *old(at) <= *at <= bytes@.len(),
             start < end <= bytes@.len(),
             ckc_spec::v1text::var_bytes(value@)
                 == bytes@.subrange(start as int, end as int),
@@ -8413,6 +8647,7 @@ fn observe_variable(
         }
     }
     if old_next == usize::MAX {
+        raise_variable_reject(bytes, start, end, old_next, at);
         return false;
     }
     if match_var_index(bytes, start, end, old_next) {
@@ -8434,6 +8669,7 @@ fn observe_variable(
             assert(false);
         }
     }
+    raise_variable_reject(bytes, start, end, old_next, at);
     false
 }
 
@@ -9128,8 +9364,10 @@ fn record_variable(
     end: usize,
     value: Ghost<nat>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: bool)
     requires
+        *old(at) <= bytes@.len(),
         start < end <= bytes@.len(),
         ckc_spec::v1text::var_bytes(value@)
             == bytes@.subrange(start as int, end as int),
@@ -9137,6 +9375,7 @@ fn record_variable(
             tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         final(tracker).stream@ == old(tracker).stream@.push(value@),
         final(tracker).valid ==>
             tracker_state_ok(final(tracker).next, final(tracker).stream@),
@@ -9146,7 +9385,7 @@ fn record_variable(
     let ghost old_stream = tracker.stream@;
     if tracker.valid {
         let old_next = tracker.next;
-        let accepted = observe_variable(bytes, start, end, value, tracker);
+        let accepted = observe_variable(bytes, start, end, value, tracker, at);
         if accepted {
             proof {
                 assert(tracker.valid);
@@ -9644,8 +9883,10 @@ fn guided_literal(
     guided: &mut EGuidedCursor,
     lit: &[u8],
     chunk: Ghost<Seq<u8>>,
+at: &mut usize,
 ) -> (r: bool)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         lit@ == chunk@,
         old(guided).guide@ matches Some(g) ==> {
@@ -9653,6 +9894,7 @@ fn guided_literal(
             &&& g.parts[g.index] == chunk@
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r ==> guided_cursor_ok(bytes@, final(guided)),
         r ==> {
             &&& final(guided).cursor.pos
@@ -9681,6 +9923,7 @@ fn guided_literal(
         &mut guided.cursor,
         lit,
         chunk,
+    at,
     );
     if !accepted {
         proof {
@@ -9718,14 +9961,17 @@ fn guided_byte(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     byte: u8,
+at: &mut usize,
 ) -> (r: bool)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         old(guided).guide@ matches Some(g) ==> {
             &&& 0 <= g.index < g.parts.len()
             &&& g.parts[g.index] == seq![byte]
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r ==> guided_cursor_ok(bytes@, final(guided)),
         r ==> {
             &&& old(guided).cursor.pos < bytes@.len()
@@ -9753,7 +9999,7 @@ fn guided_byte(
             assert(bytes@[old_pos as int] == byte);
         }
     }
-    let accepted = cursor_byte(bytes, &mut guided.cursor, byte);
+    let accepted = cursor_byte(bytes, &mut guided.cursor, byte, at);
     if !accepted {
         proof {
             if old_guide is Some {
@@ -9789,8 +10035,10 @@ fn guided_atom(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Seq<u8>, u8)>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         old(guided).guide@ matches Some(g) ==> expected@ matches Some(e)
             && {
@@ -9803,6 +10051,7 @@ fn guided_atom(
                 &&& (e.1 == 0x28 || e.1 == 0x2c || e.1 == 0x29)
             },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(atom) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& parsed_atom_ok(bytes@, old(guided).cursor.pos, &atom)
@@ -9849,6 +10098,7 @@ fn guided_atom(
         bytes,
         &mut guided.cursor,
         Ghost(atom_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => {
@@ -9888,8 +10138,10 @@ fn guided_name(
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<Seq<u8>>>,
+at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         old(guided).guide@ matches Some(g) ==> expected@ matches Some(name)
             && {
@@ -9904,6 +10156,7 @@ fn guided_name(
                     || next@ == 0x2d)
             },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(field.value@)
@@ -9948,6 +10201,7 @@ fn guided_name(
         bytes,
         &mut guided.cursor,
         Ghost(name_expected),
+    at,
     ) {
         Some(field) => field,
         None => {
@@ -9986,8 +10240,10 @@ fn guided_term(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Term, u8)>>,
+at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         old(guided).guide@ matches Some(g) ==> expected@ matches Some(e)
             && {
@@ -10004,6 +10260,7 @@ fn guided_term(
                         && g.parts[g.index + 1][1] == 0x0a)
             },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &term)
@@ -10051,6 +10308,7 @@ fn guided_term(
         bytes,
         &mut guided.cursor,
         Ghost(term_expected),
+    at,
     ) {
         Some(term) => term,
         None => {
@@ -10327,12 +10585,15 @@ proof fn answers_term_expected(
 pub fn parse_answers(
     bytes: &[u8],
     expected: Ghost<Option<ckc_spec::v1text::AnswersFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        *old(at) <= bytes@.len(),
         expected@ matches Some(a) ==>
             ckc_spec::v1text::wf_answers(a)
                 && ckc_spec::v1text::print_answers(a) == bytes@,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         expected@ matches Some(a) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Answers(a),
@@ -10377,6 +10638,7 @@ pub fn parse_answers(
         &mut cursor,
         percent_space,
         Ghost(ckc_spec::v1text::ascii("% "@)),
+    at,
     ) {
         return None;
     }
@@ -10418,6 +10680,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(line_qid_expected),
+    at,
     ) {
         Some(field) => field,
         None => return None,
@@ -10466,6 +10729,7 @@ pub fn parse_answers(
         Ghost(ckc_spec::v1text::ascii(
             " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
         )),
+    at,
     ) {
         return None;
     }
@@ -10500,6 +10764,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -10536,7 +10801,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 4, &cursor, 0x28);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x28) {
+    if !cursor_byte(bytes, &mut cursor, 0x28, at) {
         return None;
     }
     proof {
@@ -10570,6 +10835,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(version_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -10605,7 +10871,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 6, &cursor, 0x2c);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x2c) {
+    if !cursor_byte(bytes, &mut cursor, 0x2c, at) {
         return None;
     }
     proof {
@@ -10639,6 +10905,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(record_qid_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -10667,7 +10934,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 8, &cursor, 0x2c);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x2c) {
+    if !cursor_byte(bytes, &mut cursor, 0x2c, at) {
         return None;
     }
     proof {
@@ -10701,6 +10968,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(query_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -10737,7 +11005,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 10, &cursor, 0x28);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x28) {
+    if !cursor_byte(bytes, &mut cursor, 0x28, at) {
         return None;
     }
     proof {
@@ -10771,6 +11039,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(qsha_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -10808,7 +11077,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 12, &cursor, 0x29);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x29) {
+    if !cursor_byte(bytes, &mut cursor, 0x29, at) {
         return None;
     }
     proof {
@@ -10833,7 +11102,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 13, &cursor, 0x2c);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x2c) {
+    if !cursor_byte(bytes, &mut cursor, 0x2c, at) {
         return None;
     }
     proof {
@@ -10867,6 +11136,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(result_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -10903,7 +11173,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 15, &cursor, 0x28);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x28) {
+    if !cursor_byte(bytes, &mut cursor, 0x28, at) {
         return None;
     }
     proof {
@@ -10934,6 +11204,7 @@ pub fn parse_answers(
         bytes,
         &mut cursor,
         Ghost(result_expected),
+    at,
     ) {
         Some(term) => term,
         None => return None,
@@ -10974,7 +11245,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 17, &cursor, 0x29);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x29) {
+    if !cursor_byte(bytes, &mut cursor, 0x29, at) {
         return None;
     }
     proof {
@@ -10999,7 +11270,7 @@ pub fn parse_answers(
             answers_byte_ready(bytes@, a, 18, &cursor, 0x29);
         }
     }
-    if !cursor_byte(bytes, &mut cursor, 0x29) {
+    if !cursor_byte(bytes, &mut cursor, 0x29, at) {
         return None;
     }
     proof {
@@ -11036,6 +11307,7 @@ pub fn parse_answers(
         &mut cursor,
         line_end,
         Ghost(ckc_spec::v1text::ascii(".\n"@)),
+    at,
     ) {
         return None;
     }
@@ -11351,14 +11623,17 @@ fn parse_traces_line(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
+at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(t) ==> old(guided).guide@ matches Some(g)
             && g.parts == traces_parts(t) && g.index == 0
             && ckc_spec::v1text::wf_traces(t),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(qid) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(qid.value@)
@@ -11397,6 +11672,7 @@ fn parse_traces_line(
         guided,
         percent_space,
         Ghost(ckc_spec::v1text::ascii("% "@)),
+    at,
     ) {
         return None;
     }
@@ -11405,7 +11681,7 @@ fn parse_traces_line(
         Some(t) => Some(t.qid),
         None => None,
     };
-    let qid = match guided_name(bytes, guided, Ghost(0x20u8), Ghost(qid_expected)) {
+    let qid = match guided_name(bytes, guided, Ghost(0x20u8), Ghost(qid_expected), at) {
         Some(field) => field,
         None => return None,
     };
@@ -11430,6 +11706,7 @@ fn parse_traces_line(
         Ghost(ckc_spec::v1text::ascii(
             " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
         )),
+    at,
     ) {
         return None;
     }
@@ -11449,8 +11726,10 @@ fn parse_traces_qsha(
     guided: &mut EGuidedCursor,
     line_qid: &ENameField,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         ckc_spec::v1text::name_ok(line_qid.value@),
         expected@ matches Some(t) ==> {
@@ -11461,6 +11740,7 @@ fn parse_traces_qsha(
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(qsha) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(qsha.name@)
@@ -11491,7 +11771,7 @@ fn parse_traces_qsha(
         )),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected)) {
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -11506,7 +11786,7 @@ fn parse_traces_qsha(
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -11514,7 +11794,7 @@ fn parse_traces_qsha(
         Some(_) => Some((ckc_spec::v1text::ascii("v1"@), 0x2cu8)),
         None => None,
     };
-    let version = match guided_atom(bytes, guided, Ghost(version_expected)) {
+    let version = match guided_atom(bytes, guided, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -11528,7 +11808,7 @@ fn parse_traces_qsha(
     if !vec_slice_equal(&version.name, version_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -11540,6 +11820,7 @@ fn parse_traces_qsha(
         bytes,
         guided,
         Ghost(record_qid_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -11547,7 +11828,7 @@ fn parse_traces_qsha(
     if !vec_equal(&line_qid.value, &record_qid.name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -11562,6 +11843,7 @@ fn parse_traces_qsha(
         bytes,
         guided,
         Ghost(query_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -11577,7 +11859,7 @@ fn parse_traces_qsha(
     if !vec_slice_equal(&query_wrapper.name, query_wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -11585,7 +11867,7 @@ fn parse_traces_qsha(
         Some(t) => Some((t.qsha, 0x29u8)),
         None => None,
     };
-    let qsha = match guided_atom(bytes, guided, Ghost(qsha_expected)) {
+    let qsha = match guided_atom(bytes, guided, Ghost(qsha_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -11598,10 +11880,10 @@ fn parse_traces_qsha(
     if !hex64_exec(&qsha.name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -11621,14 +11903,17 @@ fn parse_traces_asha(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(t) ==> old(guided).guide@ matches Some(g)
             && g.parts == traces_parts(t) && g.index == 14
             && ckc_spec::v1text::wf_traces(t),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(asha) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(asha.name@)
@@ -11658,7 +11943,7 @@ fn parse_traces_asha(
         )),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected)) {
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -11673,7 +11958,7 @@ fn parse_traces_asha(
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -11681,7 +11966,7 @@ fn parse_traces_asha(
         Some(t) => Some((t.asha, 0x29u8)),
         None => None,
     };
-    let asha = match guided_atom(bytes, guided, Ghost(asha_expected)) {
+    let asha = match guided_atom(bytes, guided, Ghost(asha_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -11694,10 +11979,10 @@ fn parse_traces_asha(
     if !hex64_exec(&asha.name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -11716,14 +12001,17 @@ fn parse_traces_result(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
+at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(t) ==> old(guided).guide@ matches Some(g)
             && g.parts == traces_parts(t) && g.index == 19
             && ckc_spec::v1text::wf_traces(t),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(result) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &result)
@@ -11751,7 +12039,7 @@ fn parse_traces_result(
         Some(_) => Some((ckc_spec::v1text::ascii("result"@), 0x28u8)),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected)) {
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -11766,7 +12054,7 @@ fn parse_traces_result(
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -11774,7 +12062,7 @@ fn parse_traces_result(
         Some(t) => Some((t.result, 0x29u8)),
         None => None,
     };
-    let result = match guided_term(bytes, guided, Ghost(result_expected)) {
+    let result = match guided_term(bytes, guided, Ghost(result_expected), at) {
         Some(term) => term,
         None => return None,
     };
@@ -11789,10 +12077,10 @@ fn parse_traces_result(
     if !result.parsed.ground {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
 
@@ -11808,6 +12096,7 @@ fn parse_traces_result(
         guided,
         line_end,
         Ghost(ckc_spec::v1text::ascii(".\n"@)),
+    at,
     ) {
         return None;
     }
@@ -11826,12 +12115,15 @@ fn parse_traces_result(
 pub fn parse_traces(
     bytes: &[u8],
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        *old(at) <= bytes@.len(),
         expected@ matches Some(t) ==>
             ckc_spec::v1text::wf_traces(t)
                 && ckc_spec::v1text::print_traces(t) == bytes@,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         expected@ matches Some(t) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Traces(t),
@@ -11849,7 +12141,7 @@ pub fn parse_traces(
     }
     let mut guided = new_guided_cursor(bytes, Ghost(expected_parts));
 
-    let line_qid = match parse_traces_line(bytes, &mut guided, expected) {
+    let line_qid = match parse_traces_line(bytes, &mut guided, expected, at) {
         Some(qid) => qid,
         None => return None,
     };
@@ -11858,15 +12150,16 @@ pub fn parse_traces(
         &mut guided,
         &line_qid,
         expected,
+    at,
     ) {
         Some(hash) => hash,
         None => return None,
     };
-    let asha = match parse_traces_asha(bytes, &mut guided, expected) {
+    let asha = match parse_traces_asha(bytes, &mut guided, expected, at) {
         Some(hash) => hash,
         None => return None,
     };
-    let result = match parse_traces_result(bytes, &mut guided, expected) {
+    let result = match parse_traces_result(bytes, &mut guided, expected, at) {
         Some(term) => term,
         None => return None,
     };
@@ -11939,8 +12232,10 @@ fn parse_raw_text(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GTextExpected>>,
+at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
+        *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end < bytes@.len()
@@ -11949,6 +12244,7 @@ fn parse_raw_text(
             &&& bytes@[e.end as int] == 0x0a
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& start < field.end < bytes@.len()
             &&& field.value@
@@ -11962,6 +12258,7 @@ fn parse_raw_text(
     let mut pos = start;
     while pos < bytes.len() && bytes[pos] != 0x0a
         invariant
+            *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
             forall|i: int| start <= i < pos ==> bytes@[i] != 0x0a,
             expected@ matches Some(e) ==> {
@@ -11998,6 +12295,11 @@ fn parse_raw_text(
         }
     }
     if pos == start || pos == bytes.len() {
+        if pos == bytes.len() {
+            raise_at(at, pos, bytes.len());
+        } else {
+            raise_at(at, start, bytes.len());
+        }
         proof {
             if expected@ is Some {
                 assert(false);
@@ -12022,8 +12324,10 @@ fn cursor_text(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GTextExpected>>,
+at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
+        *old(at) <= bytes@.len(),
         cursor_ok(bytes@, old(cursor)),
         expected@ matches Some(e) ==> {
             &&& old(cursor).pos < e.end < bytes@.len()
@@ -12035,6 +12339,7 @@ fn cursor_text(
             &&& bytes@[e.end as int] == 0x0a
         },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == field.end
@@ -12054,6 +12359,7 @@ fn cursor_text(
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
     if start == bytes.len() {
+        raise_at(at, start, bytes.len());
         proof {
             if expected@ is Some {
                 assert(false);
@@ -12061,7 +12367,7 @@ fn cursor_text(
         }
         return None;
     }
-    let field = match parse_raw_text(bytes, start, expected) {
+    let field = match parse_raw_text(bytes, start, expected, at) {
         Some(field) => field,
         None => return None,
     };
@@ -12127,8 +12433,10 @@ fn guided_text(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<Seq<u8>>>,
+at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         old(guided).guide@ matches Some(g) ==> expected@ matches Some(text)
             && {
@@ -12140,6 +12448,7 @@ fn guided_text(
                 &&& g.parts[g.index + 1][0] == 0x0a
             },
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::text_ok(field.value@)
@@ -12183,6 +12492,7 @@ fn guided_text(
         bytes,
         &mut guided.cursor,
         Ghost(text_expected),
+    at,
     ) {
         Some(field) => field,
         None => {
@@ -12799,14 +13109,17 @@ fn parse_query_line(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
+at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
             && g.parts == query_parts(q) && g.index == 0
             && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(qid) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(qid.value@)
@@ -12846,6 +13159,7 @@ fn parse_query_line(
         guided,
         percent_space,
         Ghost(ckc_spec::v1text::ascii("% "@)),
+    at,
     ) {
         return None;
     }
@@ -12854,7 +13168,7 @@ fn parse_query_line(
         Some(q) => Some(q.qid),
         None => None,
     };
-    let qid = match guided_name(bytes, guided, Ghost(0x20u8), Ghost(qid_expected)) {
+    let qid = match guided_name(bytes, guided, Ghost(0x20u8), Ghost(qid_expected), at) {
         Some(field) => field,
         None => return None,
     };
@@ -12879,6 +13193,7 @@ fn parse_query_line(
         Ghost(ckc_spec::v1text::ascii(
             " compiled from ACE question by ace_to_pl question mode; do not edit.\n"@,
         )),
+    at,
     ) {
         return None;
     }
@@ -12897,8 +13212,10 @@ fn parse_query_record_prefix(
     guided: &mut EGuidedCursor,
     line_qid: &ENameField,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         ckc_spec::v1text::name_ok(line_qid.value@),
         expected@ matches Some(q) ==> {
@@ -12909,6 +13226,7 @@ fn parse_query_record_prefix(
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ace) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(ace.name@)
@@ -12945,7 +13263,7 @@ fn parse_query_record_prefix(
         )),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected)) {
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -12960,7 +13278,7 @@ fn parse_query_record_prefix(
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -12968,7 +13286,7 @@ fn parse_query_record_prefix(
         Some(_) => Some((ckc_spec::v1text::ascii("v1"@), 0x2cu8)),
         None => None,
     };
-    let version = match guided_atom(bytes, guided, Ghost(version_expected)) {
+    let version = match guided_atom(bytes, guided, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -12982,7 +13300,7 @@ fn parse_query_record_prefix(
     if !vec_slice_equal(&version.name, version_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -12994,6 +13312,7 @@ fn parse_query_record_prefix(
         bytes,
         guided,
         Ghost(record_qid_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -13001,7 +13320,7 @@ fn parse_query_record_prefix(
     if !vec_equal(&line_qid.value, &record_qid.name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -13016,6 +13335,7 @@ fn parse_query_record_prefix(
         bytes,
         guided,
         Ghost(ace_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -13031,7 +13351,7 @@ fn parse_query_record_prefix(
     if !vec_slice_equal(&ace_wrapper.name, ace_wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -13039,7 +13359,7 @@ fn parse_query_record_prefix(
         Some(q) => Some((q.ace, 0x29u8)),
         None => None,
     };
-    let ace = match guided_atom(bytes, guided, Ghost(ace_expected)) {
+    let ace = match guided_atom(bytes, guided, Ghost(ace_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -13052,10 +13372,10 @@ fn parse_query_record_prefix(
     if !hex64_exec(&ace.name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -13067,6 +13387,7 @@ fn parse_query_record_prefix(
         bytes,
         guided,
         Ghost(ulex_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -13082,7 +13403,7 @@ fn parse_query_record_prefix(
     if !vec_slice_equal(&ulex_wrapper.name, ulex_wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -13106,8 +13427,10 @@ fn parse_record_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Option<Seq<u8>>, Seq<Seq<u8>>)>>,
+at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -13116,6 +13439,7 @@ fn parse_record_ulex(
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
@@ -13204,6 +13528,7 @@ fn parse_record_ulex(
         guided,
         Ghost(tag_next),
         Ghost(tag_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -13259,6 +13584,7 @@ fn parse_record_ulex(
             close,
             Ghost(close_chunk),
             Ghost(after_first_close),
+        at,
         ) {
             return None;
         }
@@ -13278,6 +13604,7 @@ fn parse_record_ulex(
             close,
             Ghost(close_chunk),
             Ghost(after_second_close),
+        at,
         ) {
             return None;
         }
@@ -13305,6 +13632,7 @@ fn parse_record_ulex(
             line_end,
             Ghost(ckc_spec::v1text::ascii(".\n"@)),
             Ghost(after_line),
+        at,
         ) {
             return None;
         }
@@ -13379,6 +13707,7 @@ fn parse_record_ulex(
         open,
         Ghost(open_chunk),
         Ghost(after_open),
+    at,
     ) {
         return None;
     }
@@ -13410,6 +13739,7 @@ fn parse_record_ulex(
         guided,
         Ghost(0x29u8),
         Ghost(hash_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -13451,6 +13781,7 @@ fn parse_record_ulex(
         close,
         Ghost(close_chunk),
         Ghost(after_hash_close),
+    at,
     ) {
         return None;
     }
@@ -13472,6 +13803,7 @@ fn parse_record_ulex(
         close,
         Ghost(close_chunk),
         Ghost(after_ulex_close),
+    at,
     ) {
         return None;
     }
@@ -13491,6 +13823,7 @@ fn parse_record_ulex(
         close,
         Ghost(close_chunk),
         Ghost(after_record_close),
+    at,
     ) {
         return None;
     }
@@ -13518,6 +13851,7 @@ fn parse_record_ulex(
         line_end,
         Ghost(ckc_spec::v1text::ascii(".\n"@)),
         Ghost(after_line),
+    at,
     ) {
         return None;
     }
@@ -13542,14 +13876,17 @@ fn parse_query_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
+at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
             && g.parts == query_parts(q) && g.index == 16
             && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
@@ -13596,6 +13933,7 @@ fn parse_query_ulex(
         bytes,
         guided,
         Ghost(generic_expected),
+    at,
     ) {
         Some(ulex) => ulex,
         None => return None,
@@ -13618,8 +13956,10 @@ fn parse_query_text(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
+at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
             && g.parts == query_parts(q)
@@ -13627,6 +13967,7 @@ fn parse_query_text(
             && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(text) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::text_ok(text.value@)
@@ -13671,6 +14012,7 @@ fn parse_query_text(
         guided,
         marker,
         Ghost(ckc_spec::v1text::ascii("% Q1: "@)),
+    at,
     ) {
         return None;
     }
@@ -13679,11 +14021,11 @@ fn parse_query_text(
         Some(q) => Some(q.qtext),
         None => None,
     };
-    let text = match guided_text(bytes, guided, Ghost(text_expected)) {
+    let text = match guided_text(bytes, guided, Ghost(text_expected), at) {
         Some(field) => field,
         None => return None,
     };
-    if !guided_byte(bytes, guided, 0x0a) {
+    if !guided_byte(bytes, guided, 0x0a, at) {
         return None;
     }
     proof {
@@ -13714,8 +14056,10 @@ fn track_parsed_term(
     bytes: &[u8],
     term: &ESpannedTerm,
     tracker: &mut EVarTracker,
+at: &mut usize,
 )
     requires
+        *old(at) <= bytes@.len(),
         spanned_term_ok(bytes@, term),
         term_at(
             bytes@,
@@ -13727,6 +14071,7 @@ fn track_parsed_term(
             tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         final(tracker).stream@
             == old(tracker).stream@ + ckc_spec::term::var_stream(term@),
         final(tracker).valid ==>
@@ -13745,6 +14090,7 @@ fn track_parsed_term(
         Ghost(initial),
         true,
         tracker,
+    at,
     );
     proof {
         assert(replay matches Some(parsed)
@@ -13763,8 +14109,10 @@ fn parse_query_projection(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
+at: &mut usize,
 ) -> (r: Option<EQueryProjection>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
             && g.parts == query_parts(q)
@@ -13772,6 +14120,7 @@ fn parse_query_projection(
             && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(projection) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &projection.goal)
@@ -13825,7 +14174,7 @@ fn parse_query_projection(
         )),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected)) {
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -13840,7 +14189,7 @@ fn parse_query_projection(
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -13852,6 +14201,7 @@ fn parse_query_projection(
         bytes,
         guided,
         Ghost(goal_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -13866,7 +14216,7 @@ fn parse_query_projection(
     if !vec_slice_equal(&goal_wrapper.name, goal_wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -13874,7 +14224,7 @@ fn parse_query_projection(
         Some(q) => Some((q.goal, 0x29u8)),
         None => None,
     };
-    let goal = match guided_term(bytes, guided, Ghost(goal_expected)) {
+    let goal = match guided_term(bytes, guided, Ghost(goal_expected), at) {
         Some(term) => term,
         None => return None,
     };
@@ -13893,7 +14243,7 @@ fn parse_query_projection(
     proof {
         assert(goal_end == goal.end);
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
     proof {
@@ -13901,12 +14251,12 @@ fn parse_query_projection(
         spanned_term_at_close(bytes@, &goal);
     }
     let mut tracker = new_var_tracker();
-    track_parsed_term(bytes, &goal, &mut tracker);
+    track_parsed_term(bytes, &goal, &mut tracker, at);
     proof {
         assert(tracker.stream@ == ckc_spec::term::var_stream(goal@));
         assert(tracker.stream@.len() <= goal.end);
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -13918,6 +14268,7 @@ fn parse_query_projection(
         bytes,
         guided,
         Ghost(answers_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -13933,7 +14284,7 @@ fn parse_query_projection(
     if !vec_slice_equal(&answers_wrapper.name, answers_wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
     proof {
@@ -13946,7 +14297,7 @@ fn parse_query_projection(
         Some(q) => Some((q.answers, 0x29u8)),
         None => None,
     };
-    let answers = match guided_term(bytes, guided, Ghost(answers_expected)) {
+    let answers = match guided_term(bytes, guided, Ghost(answers_expected), at) {
         Some(term) => term,
         None => return None,
     };
@@ -13968,14 +14319,14 @@ fn parse_query_projection(
     proof {
         assert(answers_end == answers.end);
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
     proof {
         assert(answers_end == answers.end);
         spanned_term_at_close(bytes@, &answers);
     }
-    track_parsed_term(bytes, &answers, &mut tracker);
+    track_parsed_term(bytes, &answers, &mut tracker, at);
     proof {
         assert(tracker.stream@
             == ckc_spec::term::var_stream(goal@)
@@ -13999,7 +14350,7 @@ fn parse_query_projection(
         tracker_state_canonical(tracker.next, tracker.stream@);
     }
 
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
     let line_end: &[u8] = b".\n";
@@ -14014,6 +14365,7 @@ fn parse_query_projection(
         guided,
         line_end,
         Ghost(ckc_spec::v1text::ascii(".\n"@)),
+    at,
     ) {
         return None;
     }
@@ -14036,12 +14388,15 @@ fn parse_query_projection(
 pub fn parse_query(
     bytes: &[u8],
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        *old(at) <= bytes@.len(),
         expected@ matches Some(q) ==>
             ckc_spec::v1text::wf_query(q)
                 && ckc_spec::v1text::print_query(q) == bytes@,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         expected@ matches Some(q) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Query(q),
@@ -14059,7 +14414,7 @@ pub fn parse_query(
     }
     let mut guided = new_guided_cursor(bytes, Ghost(expected_parts));
 
-    let line_qid = match parse_query_line(bytes, &mut guided, expected) {
+    let line_qid = match parse_query_line(bytes, &mut guided, expected, at) {
         Some(qid) => qid,
         None => return None,
     };
@@ -14068,15 +14423,16 @@ pub fn parse_query(
         &mut guided,
         &line_qid,
         expected,
+    at,
     ) {
         Some(hash) => hash,
         None => return None,
     };
-    let ulex = match parse_query_ulex(bytes, &mut guided, expected) {
+    let ulex = match parse_query_ulex(bytes, &mut guided, expected, at) {
         Some(field) => field,
         None => return None,
     };
-    let text = match parse_query_text(bytes, &mut guided, expected) {
+    let text = match parse_query_text(bytes, &mut guided, expected, at) {
         Some(field) => field,
         None => return None,
     };
@@ -14084,6 +14440,7 @@ pub fn parse_query(
         bytes,
         &mut guided,
         expected,
+    at,
     ) {
         Some(projection) => projection,
         None => return None,
@@ -14168,8 +14525,10 @@ fn record_atomic_term(
     term: &ESpannedTerm,
     initial_stream: Ghost<Seq<nat>>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 )
     requires
+        *old(at) <= bytes@.len(),
         term.start == start,
         spanned_term_ok(bytes@, term),
         term_at(bytes@, start as int, term.end as int, term@),
@@ -14179,6 +14538,7 @@ fn record_atomic_term(
             tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         final(tracker).stream@
             == initial_stream@ + ckc_spec::term::var_stream(term@),
         final(tracker).valid ==>
@@ -14218,6 +14578,7 @@ fn record_atomic_term(
             term.end,
             Ghost(value),
             tracker,
+        at,
         );
         proof {
             reveal(ckc_spec::term::var_stream);
@@ -14956,14 +15317,17 @@ fn parse_doc_line(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
+at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(d) ==> old(guided).guide@ matches Some(g)
             && g.parts == doc_parts(d) && g.index == 0
             && ckc_spec::v1text::wf_doc(d),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(docid) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(docid.value@)
@@ -15002,6 +15366,7 @@ fn parse_doc_line(
         guided,
         percent_space,
         Ghost(ckc_spec::v1text::ascii("% "@)),
+    at,
     ) {
         return None;
     }
@@ -15014,6 +15379,7 @@ fn parse_doc_line(
         guided,
         Ghost(0x2eu8),
         Ghost(docid_expected),
+    at,
     ) {
         Some(field) => field,
         None => return None,
@@ -15038,6 +15404,7 @@ fn parse_doc_line(
         Ghost(ckc_spec::v1text::ascii(
             ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
         )),
+    at,
     ) {
         return None;
     }
@@ -15056,14 +15423,17 @@ fn parse_doc_declarations(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
+at: &mut usize,
 ) -> (r: bool)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(d) ==> old(guided).guide@ matches Some(g)
             && g.parts == doc_parts(d) && g.index == 3
             && ckc_spec::v1text::wf_doc(d),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& final(guided).cursor.prefix@
@@ -15116,6 +15486,7 @@ fn parse_doc_declarations(
         guided,
         declarations,
         Ghost(ckc_spec::v1text::decls_from(0)),
+    at,
     ) {
         return false;
     }
@@ -15151,6 +15522,7 @@ fn parse_doc_declarations(
         Ghost(ckc_spec::v1text::term_line(
             ckc_spec::v1text::schema_version_term(),
         )),
+    at,
     ) {
         return false;
     }
@@ -15172,8 +15544,10 @@ fn parse_doc_record_prefix(
     guided: &mut EGuidedCursor,
     line_docid: &ENameField,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         ckc_spec::v1text::name_ok(line_docid.value@),
         expected@ matches Some(d) ==> {
@@ -15184,6 +15558,7 @@ fn parse_doc_record_prefix(
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ace) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(ace.name@)
@@ -15222,7 +15597,7 @@ fn parse_doc_record_prefix(
         )),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected)) {
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -15237,7 +15612,7 @@ fn parse_doc_record_prefix(
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -15249,6 +15624,7 @@ fn parse_doc_record_prefix(
         bytes,
         guided,
         Ghost(record_docid_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -15256,7 +15632,7 @@ fn parse_doc_record_prefix(
     if !vec_equal(&line_docid.value, &record_docid.name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -15271,6 +15647,7 @@ fn parse_doc_record_prefix(
         bytes,
         guided,
         Ghost(ace_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -15286,7 +15663,7 @@ fn parse_doc_record_prefix(
     if !vec_slice_equal(&ace_wrapper.name, ace_wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
 
@@ -15294,7 +15671,7 @@ fn parse_doc_record_prefix(
         Some(d) => Some((d.ace, 0x29u8)),
         None => None,
     };
-    let ace = match guided_atom(bytes, guided, Ghost(ace_expected)) {
+    let ace = match guided_atom(bytes, guided, Ghost(ace_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -15307,10 +15684,10 @@ fn parse_doc_record_prefix(
     if !hex64_exec(&ace.name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x29) {
+    if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x2c) {
+    if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
 
@@ -15322,6 +15699,7 @@ fn parse_doc_record_prefix(
         bytes,
         guided,
         Ghost(ulex_wrapper_expected),
+    at,
     ) {
         Some(atom) => atom,
         None => return None,
@@ -15336,7 +15714,7 @@ fn parse_doc_record_prefix(
     if !vec_slice_equal(&ulex_wrapper.name, ulex_wrapper_name) {
         return None;
     }
-    if !guided_byte(bytes, guided, 0x28) {
+    if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
     proof {
@@ -15358,14 +15736,17 @@ fn parse_doc_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
+at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(d) ==> old(guided).guide@ matches Some(g)
             && g.parts == doc_parts(d) && g.index == 16
             && ckc_spec::v1text::wf_doc(d),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
@@ -15413,6 +15794,7 @@ fn parse_doc_ulex(
         bytes,
         guided,
         Ghost(generic_expected),
+    at,
     ) {
         Some(ulex) => ulex,
         None => return None,
@@ -15531,14 +15913,17 @@ fn doc_guided_literal(
     lit: &[u8],
     chunk: Ghost<Seq<u8>>,
     expected_rest: Ghost<Option<Seq<Seq<u8>>>>,
+at: &mut usize,
 ) -> (r: bool)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         lit@ == chunk@,
         expected_rest@ matches Some(rest) ==> old(guided).guide@ matches Some(g)
             && guide_rest(g) == seq![chunk@] + rest,
         expected_rest@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r ==> guided_cursor_ok(bytes@, final(guided)),
         r ==> final(guided).cursor.pos
             == old(guided).cursor.pos + chunk@.len(),
@@ -15562,7 +15947,7 @@ fn doc_guided_literal(
             guide_rest_head(g, chunk@, rest);
         }
     }
-    let accepted = guided_literal(bytes, guided, lit, chunk);
+    let accepted = guided_literal(bytes, guided, lit, chunk, at);
     if !accepted {
         return false;
     }
@@ -15584,8 +15969,10 @@ fn parts_guided_atom(
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Seq<u8>, Seq<Seq<u8>>)>>,
+at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -15598,6 +15985,7 @@ fn parts_guided_atom(
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(atom) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& parsed_atom_ok(bytes@, old(guided).cursor.pos, &atom)
@@ -15629,7 +16017,7 @@ fn parts_guided_atom(
         Some(e) => Some((e.0, next@)),
         None => None,
     };
-    let atom = match guided_atom(bytes, guided, Ghost(atom_expected)) {
+    let atom = match guided_atom(bytes, guided, Ghost(atom_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -15652,8 +16040,10 @@ fn doc_guided_term(
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
+at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> old(guided).guide@ matches Some(g)
             && guide_rest(g)
@@ -15668,6 +16058,7 @@ fn doc_guided_term(
                     && e.1[0][1] == 0x0a),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &term)
@@ -15706,7 +16097,7 @@ fn doc_guided_term(
         Some(e) => Some((e.0, next@)),
         None => None,
     };
-    let term = match guided_term(bytes, guided, Ghost(term_expected)) {
+    let term = match guided_term(bytes, guided, Ghost(term_expected), at) {
         Some(term) => term,
         None => return None,
     };
@@ -15924,8 +16315,10 @@ fn parse_doc_literal(
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> old(guided).guide@ matches Some(g)
             && guide_rest(g)
@@ -15943,6 +16336,7 @@ fn parse_doc_literal(
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &term)
@@ -15974,11 +16368,12 @@ fn parse_doc_literal(
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
-    let term = match doc_guided_term(bytes, guided, next, expected) {
+    let term = match doc_guided_term(bytes, guided, next, expected, at) {
         Some(term) => term,
         None => return None,
     };
     if term.end >= bytes.len() {
+        raise_at(at, term.end, bytes.len());
         proof {
             if expected@ is Some {
                 assert(false);
@@ -15987,7 +16382,19 @@ fn parse_doc_literal(
         return None;
     }
     if bytes[term.end] == 0x2e {
-        if term.end + 1 >= bytes.len() || bytes[term.end + 1] != 0x0a {
+        if term.end + 1 >= bytes.len() {
+            raise_at(at, bytes.len(), bytes.len());
+            proof {
+                if let Some(e) = expected@ {
+                    assert(e.1[0][0] == next@);
+                    assert(next@ == 0x2e);
+                    assert(false);
+                }
+            }
+            return None;
+        }
+        if bytes[term.end + 1] != 0x0a {
+            raise_at(at, term.end + 1, bytes.len());
             proof {
                 if let Some(e) = expected@ {
                     assert(e.1[0][0] == next@);
@@ -16001,6 +16408,7 @@ fn parse_doc_literal(
         && bytes[term.end] != 0x29
         && bytes[term.end] != 0x20
     {
+        raise_at(at, term.end, bytes.len());
         proof {
             if expected@ is Some {
                 assert(false);
@@ -16009,6 +16417,9 @@ fn parse_doc_literal(
         return None;
     }
     if !semantic_literal_exec(&term.parsed) {
+        if term.parsed.no_dollar {
+            raise_at(at, term.start, bytes.len());
+        }
         proof {
             if let Some(e) = expected@ {
                 assert(term@ == e.0);
@@ -16020,7 +16431,7 @@ fn parse_doc_literal(
     proof {
         spanned_term_at_doc_delimiter(bytes@, &term);
     }
-    track_parsed_term(bytes, &term, tracker);
+    track_parsed_term(bytes, &term, tracker, at);
     Some(term)
 }
 
@@ -16144,8 +16555,10 @@ fn parse_doc_pos_item(
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -16167,6 +16580,7 @@ fn parse_doc_pos_item(
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
@@ -16191,7 +16605,7 @@ fn parse_doc_pos_item(
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost entry_stream = tracker.stream@;
-    let term = match parse_doc_literal(bytes, guided, next, expected, tracker) {
+    let term = match parse_doc_literal(bytes, guided, next, expected, tracker, at) {
         Some(term) => term,
         None => return None,
     };
@@ -16214,8 +16628,10 @@ fn parse_doc_naf_singleton(
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -16240,6 +16656,7 @@ fn parse_doc_naf_singleton(
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
@@ -16288,10 +16705,11 @@ fn parse_doc_naf_singleton(
         prefix,
         Ghost(ckc_spec::v1text::ascii("\\+ "@)),
         Ghost(after_prefix),
+    at,
     ) {
         return None;
     }
-    let term = match parse_doc_literal(bytes, guided, next, expected, tracker) {
+    let term = match parse_doc_literal(bytes, guided, next, expected, tracker, at) {
         Some(term) => term,
         None => return None,
     };
@@ -16331,8 +16749,10 @@ fn parse_doc_naf_conjunction(
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Seq<Term>, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -16350,6 +16770,7 @@ fn parse_doc_naf_conjunction(
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
@@ -16403,6 +16824,7 @@ fn parse_doc_naf_conjunction(
         prefix,
         Ghost(ckc_spec::v1text::ascii("\\+ "@)),
         Ghost(after_prefix),
+    at,
     ) {
         return None;
     }
@@ -16434,6 +16856,7 @@ fn parse_doc_naf_conjunction(
         open,
         Ghost(open_chunk),
         Ghost(after_open),
+    at,
     ) {
         return None;
     }
@@ -16474,6 +16897,7 @@ fn parse_doc_naf_conjunction(
     }
     while more
         invariant
+            *old(at) <= *at <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             entry_pos < guided.cursor.pos,
             lit_count == lits.len(),
@@ -16586,6 +17010,7 @@ fn parse_doc_naf_conjunction(
             Ghost(term_next),
             Ghost(term_expected),
             tracker,
+        at,
         ) {
             Some(term) => term,
             None => return None,
@@ -16702,6 +17127,7 @@ fn parse_doc_naf_conjunction(
                 comma,
                 Ghost(ckc_spec::v1text::ascii(", "@)),
                 Ghost(after_comma),
+            at,
             ) {
                 return None;
             }
@@ -16762,6 +17188,7 @@ fn parse_doc_naf_conjunction(
         close,
         Ghost(close_chunk),
         Ghost(after_close),
+    at,
     ) {
         return None;
     }
@@ -16807,8 +17234,10 @@ fn parse_doc_body_item(
     next: Ghost<u8>,
     expected: Ghost<Option<(ckc_spec::v1text::BodyItem, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
+at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -16829,6 +17258,7 @@ fn parse_doc_body_item(
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
@@ -16958,7 +17388,7 @@ fn parse_doc_body_item(
             },
             _ => None,
         };
-        return parse_doc_pos_item(bytes, guided, next, Ghost(pos_expected), tracker);
+        return parse_doc_pos_item(bytes, guided, next, Ghost(pos_expected), tracker, at);
     }
     proof {
         if let Some(e) = expected@ {
@@ -17037,6 +17467,7 @@ fn parse_doc_body_item(
             guided,
             Ghost(conj_expected),
             tracker,
+        at,
         );
         proof {
             if let Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) = expected@ {
@@ -17069,6 +17500,7 @@ fn parse_doc_body_item(
             next,
             Ghost(singleton_expected),
             tracker,
+        at,
         );
         proof {
             if let Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) = expected@ {
@@ -17192,8 +17624,10 @@ fn parse_doc_clause(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::DocClause, Seq<Seq<u8>>)>>,
+at: &mut usize,
 ) -> (r: Option<EDocClause>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -17202,6 +17636,7 @@ fn parse_doc_clause(
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(clause) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_clause(clause@)
@@ -17269,6 +17704,7 @@ fn parse_doc_clause(
         Ghost(head_next),
         Ghost(head_expected),
         &mut tracker,
+    at,
     ) {
         Some(head) => head,
         None => return None,
@@ -17319,6 +17755,7 @@ fn parse_doc_clause(
             line_end,
             Ghost(ckc_spec::v1text::ascii(".\n"@)),
             Ghost(after_line),
+        at,
         ) {
             return None;
         }
@@ -17394,6 +17831,7 @@ fn parse_doc_clause(
         rule_open,
         Ghost(ckc_spec::v1text::ascii(" :- "@)),
         Ghost(after_open),
+    at,
     ) {
         return None;
     }
@@ -17431,6 +17869,7 @@ fn parse_doc_clause(
     }
     while more
         invariant
+            *old(at) <= *at <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             entry_pos < guided.cursor.pos,
             ckc_spec::v1text::wf_literal(head@),
@@ -17543,6 +17982,7 @@ fn parse_doc_clause(
             Ghost(item_next),
             Ghost(item_expected),
             &mut tracker,
+        at,
         ) {
             Some(item) => item,
             None => return None,
@@ -17675,6 +18115,7 @@ fn parse_doc_clause(
                 comma,
                 Ghost(ckc_spec::v1text::ascii(", "@)),
                 Ghost(after_comma),
+            at,
             ) {
                 return None;
             }
@@ -17731,6 +18172,7 @@ fn parse_doc_clause(
         line_end,
         Ghost(ckc_spec::v1text::ascii(".\n"@)),
         Ghost(after_line),
+    at,
     ) {
         return None;
     }
@@ -17779,8 +18221,10 @@ fn parse_doc_bundle(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::Bundle, Seq<Seq<u8>>)>>,
+at: &mut usize,
 ) -> (r: Option<EDocBundle>)
     requires
+        *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
@@ -17791,6 +18235,7 @@ fn parse_doc_bundle(
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(bundle) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_bundle(bundle@)
@@ -17851,6 +18296,7 @@ fn parse_doc_bundle(
         marker,
         Ghost(ckc_spec::v1text::ascii("% S"@)),
         Ghost(after_marker),
+    at,
     ) {
         return None;
     }
@@ -17937,6 +18383,7 @@ fn parse_doc_bundle(
         bytes,
         ordinal_start,
         Ghost(decimal_expected),
+    at,
     ) {
         Some(decimal) => decimal,
         None => return None,
@@ -17974,6 +18421,7 @@ fn parse_doc_bundle(
         &ordinal,
         Ghost(ordinal@),
         Ghost(after_ordinal),
+    at,
     ) {
         return None;
     }
@@ -18025,6 +18473,7 @@ fn parse_doc_bundle(
         colon,
         Ghost(ckc_spec::v1text::ascii(": "@)),
         Ghost(after_colon),
+    at,
     ) {
         return None;
     }
@@ -18096,7 +18545,7 @@ fn parse_doc_bundle(
             assert(bytes@[text_expected.unwrap().end as int] == 0x0a);
         }
     }
-    let text = match parse_raw_text(bytes, text_start, Ghost(text_expected)) {
+    let text = match parse_raw_text(bytes, text_start, Ghost(text_expected), at) {
         Some(text) => text,
         None => return None,
     };
@@ -18121,6 +18570,7 @@ fn parse_doc_bundle(
         &text.value,
         Ghost(text.value@),
         Ghost(after_text),
+    at,
     ) {
         return None;
     }
@@ -18145,6 +18595,7 @@ fn parse_doc_bundle(
         newline,
         Ghost(newline_chunk),
         Ghost(after_newline),
+    at,
     ) {
         return None;
     }
@@ -18179,6 +18630,7 @@ fn parse_doc_bundle(
     }
     while more
         invariant
+            *old(at) <= *at <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             entry_pos < guided.cursor.pos,
             canonical_decimal(ordinal@),
@@ -18253,6 +18705,7 @@ fn parse_doc_bundle(
             bytes,
             guided,
             Ghost(clause_expected),
+        at,
         ) {
             Some(clause) => clause,
             None => return None,
@@ -18865,21 +19318,120 @@ proof fn bundles_bytes_push(
     }
 }
 
-#[verifier::rlimit(5000)]
+proof fn bundles_push_wf(
+    bundles: Seq<ckc_spec::v1text::Bundle>,
+    bundle: ckc_spec::v1text::Bundle,
+)
+    requires
+        forall|i: int| 0 <= i < bundles.len()
+            ==> #[trigger] ckc_spec::v1text::wf_bundle(bundles[i]),
+        ckc_spec::v1text::wf_bundle(bundle),
+    ensures
+        forall|i: int| 0 <= i < bundles.push(bundle).len()
+            ==> #[trigger] ckc_spec::v1text::wf_bundle(
+                bundles.push(bundle)[i],
+            ),
+{
+    assert forall|i: int| 0 <= i < bundles.push(bundle).len()
+        implies ckc_spec::v1text::wf_bundle(bundles.push(bundle)[i]) by {
+        if i < bundles.len() {
+            assert(bundles.push(bundle)[i] == bundles[i]);
+        } else {
+            assert(i == bundles.len());
+            assert(bundles.push(bundle)[i] == bundle);
+        }
+    }
+}
+
+proof fn bundles_push_ordered(
+    bundles: Seq<ckc_spec::v1text::Bundle>,
+    bundle: ckc_spec::v1text::Bundle,
+)
+    requires
+        forall|i: int| 0 <= i < bundles.len() - 1
+            ==> #[trigger] bundles[i].s < bundles[i + 1].s,
+        bundles.len() > 0 ==> bundles.last().s < bundle.s,
+    ensures
+        forall|i: int| 0 <= i < bundles.push(bundle).len() - 1
+            ==> #[trigger] bundles.push(bundle)[i].s
+                < bundles.push(bundle)[i + 1].s,
+{
+    assert forall|i: int| 0 <= i < bundles.push(bundle).len() - 1
+        implies #[trigger] bundles.push(bundle)[i].s
+            < bundles.push(bundle)[i + 1].s by {
+        if i < bundles.len() - 1 {
+            assert(bundles.push(bundle)[i] == bundles[i]);
+            assert(bundles.push(bundle)[i + 1] == bundles[i + 1]);
+        } else {
+            assert(i == bundles.len() - 1);
+            assert(bundles.len() > 0);
+            assert(bundles.push(bundle)[i] == bundles.last());
+            assert(bundles.push(bundle)[i + 1] == bundle);
+        }
+    }
+}
+
+proof fn wf_doc_bundle_at(d: ckc_spec::v1text::DocFile, i: int)
+    requires
+        ckc_spec::v1text::wf_doc(d),
+        0 <= i < d.bundles.len(),
+    ensures
+        ckc_spec::v1text::wf_bundle(d.bundles[i]),
+{
+    reveal(ckc_spec::v1text::wf_doc);
+}
+
+proof fn wf_doc_ordered_at(d: ckc_spec::v1text::DocFile, i: int)
+    requires
+        ckc_spec::v1text::wf_doc(d),
+        0 <= i < d.bundles.len() - 1,
+    ensures
+        d.bundles[i].s < d.bundles[i + 1].s,
+{
+    reveal(ckc_spec::v1text::wf_doc);
+}
+
+proof fn wf_doc_nonempty(d: ckc_spec::v1text::DocFile)
+    requires ckc_spec::v1text::wf_doc(d),
+    ensures d.bundles.len() >= 1,
+{
+    reveal(ckc_spec::v1text::wf_doc);
+}
+
+proof fn wf_doc_intro(d: ckc_spec::v1text::DocFile)
+    requires
+        ckc_spec::v1text::name_ok(d.docid),
+        ckc_spec::v1text::hex64(d.ace),
+        ckc_spec::v1text::ulex_ok(d.ulex),
+        d.bundles.len() >= 1,
+        forall|i: int| 0 <= i < d.bundles.len()
+            ==> #[trigger] ckc_spec::v1text::wf_bundle(d.bundles[i]),
+        forall|i: int| 0 <= i < d.bundles.len() - 1
+            ==> #[trigger] d.bundles[i].s < d.bundles[i + 1].s,
+    ensures ckc_spec::v1text::wf_doc(d),
+{
+    reveal(ckc_spec::v1text::wf_doc);
+}
+
+#[verifier::rlimit(100)]
 #[verifier::spinoff_prover]
 pub fn parse_doc(
     bytes: &[u8],
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
+at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        *old(at) <= bytes@.len(),
         expected@ matches Some(d) ==>
             ckc_spec::v1text::wf_doc(d)
                 && ckc_spec::v1text::print_doc(d) == bytes@,
     ensures
+        *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         expected@ matches Some(d) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Doc(d),
 {
+    hide(ckc_spec::v1text::wf_doc);
     let ghost expected_parts = match expected@ {
         Some(d) => Some(doc_parts(d)),
         None => None,
@@ -18892,11 +19444,11 @@ pub fn parse_doc(
         }
     }
     let mut guided = new_guided_cursor(bytes, Ghost(expected_parts));
-    let docid = match parse_doc_line(bytes, &mut guided, expected) {
+    let docid = match parse_doc_line(bytes, &mut guided, expected, at) {
         Some(docid) => docid,
         None => return None,
     };
-    if !parse_doc_declarations(bytes, &mut guided, expected) {
+    if !parse_doc_declarations(bytes, &mut guided, expected, at) {
         return None;
     }
     let ace = match parse_doc_record_prefix(
@@ -18904,11 +19456,12 @@ pub fn parse_doc(
         &mut guided,
         &docid,
         expected,
+    at,
     ) {
         Some(ace) => ace,
         None => return None,
     };
-    let ulex = match parse_doc_ulex(bytes, &mut guided, expected) {
+    let ulex = match parse_doc_ulex(bytes, &mut guided, expected, at) {
         Some(ulex) => ulex,
         None => return None,
     };
@@ -18939,15 +19492,16 @@ pub fn parse_doc(
             assert(false);
         }
         if let Some(d) = expected@ {
-            reveal(ckc_spec::v1text::wf_doc);
             assert_seqs_equal!(d.bundles.take(0)
                 == Seq::<ckc_spec::v1text::Bundle>::empty());
             assert_seqs_equal!(d.bundles.skip(0) == d.bundles);
             assert(bundles == d.bundles.take(bundles.len() as int));
         }
     }
+    let bundle_at_floor = *at;
     while guided.cursor.pos < bytes.len()
         invariant
+            *old(at) <= bundle_at_floor <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             ckc_spec::v1text::name_ok(docid.value@),
             ckc_spec::v1text::hex64(ace.name@),
@@ -19018,7 +19572,7 @@ pub fn parse_doc(
                 assert(bundles.len() < d.bundles.len());
                 assert(remaining.len() > 0);
                 assert(remaining[0] == d.bundles[bundles.len() as int]);
-                reveal(ckc_spec::v1text::wf_doc);
+                wf_doc_bundle_at(d, bundles.len() as int);
                 assert(ckc_spec::v1text::wf_bundle(remaining[0]));
                 reveal(doc_bundles_parts);
                 assert(guide_rest(guided.guide@.unwrap())
@@ -19035,13 +19589,18 @@ pub fn parse_doc(
         }
         let ghost old_bundles = bundles;
         let old_count = bundle_count;
+        let mut bundle_at = bundle_at_floor;
         let bundle = match parse_doc_bundle(
             bytes,
             &mut guided,
             Ghost(bundle_expected),
+            &mut bundle_at,
         ) {
             Some(bundle) => bundle,
-            None => return None,
+            None => {
+                *at = bundle_at;
+                return None;
+            },
         };
         let ghost bundle_model = bundle@;
         let ordered = if old_count == 0 {
@@ -19066,41 +19625,23 @@ pub fn parse_doc(
                         == d.bundles[(old_bundles.len() - 1) as int]);
                     assert(bundle_model
                         == d.bundles[old_bundles.len() as int]);
-                    reveal(ckc_spec::v1text::wf_doc);
+                    wf_doc_ordered_at(d, (old_bundles.len() - 1) as int);
                     assert(old_bundles.last().s < bundle_model.s);
                     assert(ordered);
                 }
             }
         }
         if !ordered {
+            *at = bundle_at;
             return None;
         }
         proof {
+            bundles_push_wf(old_bundles, bundle_model);
+            assert(old_bundles.len() > 0
+                ==> old_bundles.last().s < bundle_model.s);
+            bundles_push_ordered(old_bundles, bundle_model);
             bundles = old_bundles.push(bundle_model);
             assert(bundles.len() == old_bundles.len() + 1);
-            assert forall|i: int| 0 <= i < bundles.len()
-                implies ckc_spec::v1text::wf_bundle(bundles[i]) by {
-                if i < old_bundles.len() {
-                    assert(bundles[i] == old_bundles[i]);
-                } else {
-                    assert(i == old_bundles.len());
-                    assert(bundles[i] == bundle_model);
-                }
-            }
-            assert forall|i: int| 0 <= i < bundles.len() - 1
-                implies #[trigger] bundles[i].s < bundles[i + 1].s by {
-                if i < old_bundles.len() - 1 {
-                    assert(bundles[i] == old_bundles[i]);
-                    assert(bundles[i + 1] == old_bundles[i + 1]);
-                } else {
-                    assert(i == old_bundles.len() - 1);
-                    assert(old_bundles.len() > 0);
-                    assert(bundles[i] == old_bundles.last());
-                    assert(bundles[i + 1] == bundle_model);
-                    assert(ordered
-                        == (old_bundles.last().s < bundle_model.s));
-                }
-            }
             doc_bundle_parts_flat(bundle_model);
             bundles_bytes_push(old_bundles, bundle_model);
             assert_seqs_equal!(guided.cursor.prefix@
@@ -19135,6 +19676,7 @@ pub fn parse_doc(
             assert(canonical_decimal(previous_ordinal@));
         }
     }
+    *at = bundle_at_floor;
 
     proof {
         assert(guided.cursor.pos == bytes.len());
@@ -19172,7 +19714,7 @@ pub fn parse_doc(
     if bundle_count == 0 {
         proof {
             if let Some(d) = expected@ {
-                reveal(ckc_spec::v1text::wf_doc);
+                wf_doc_nonempty(d);
                 assert(d.bundles.len() >= 1);
                 assert(bundles == d.bundles);
                 assert(false);
@@ -19206,16 +19748,8 @@ pub fn parse_doc(
         assert(doc_prefix_stage(base) == doc_prefix_stage(model));
         assert(guided.cursor.prefix@ == doc_flat(model));
         doc_flat_is_print(model);
-        reveal(ckc_spec::v1text::wf_doc);
         assert(model.bundles.len() >= 1);
-        assert forall|i: int| 0 <= i < model.bundles.len()
-            implies ckc_spec::v1text::wf_bundle(model.bundles[i]) by {
-            assert(ckc_spec::v1text::wf_bundle(bundles[i]));
-        }
-        assert forall|i: int| 0 <= i < model.bundles.len() - 1
-            implies #[trigger] model.bundles[i].s < model.bundles[i + 1].s by {
-            assert(bundles[i].s < bundles[i + 1].s);
-        }
+        wf_doc_intro(model);
         assert(ckc_spec::v1text::wf_doc(model));
         if let Some(d) = expected@ {
             assert(docid.value@ == d.docid);

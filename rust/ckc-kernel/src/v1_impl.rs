@@ -58,25 +58,26 @@ pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
         _ => None,
     };
 
-    let doc_result = parse_doc(bytes, Ghost(doc_expected));
+    let mut at = 0usize;
+    let doc_result = parse_doc(bytes, Ghost(doc_expected), &mut at);
     if doc_result.is_some() {
         let parsed = doc_result.unwrap();
         proof { parsed_accepts(bytes@, &parsed); }
         return ckc_spec::v1text::EV1Verdict::Ok;
     }
-    let query_result = parse_query(bytes, Ghost(query_expected));
+    let query_result = parse_query(bytes, Ghost(query_expected), &mut at);
     if query_result.is_some() {
         let parsed = query_result.unwrap();
         proof { parsed_accepts(bytes@, &parsed); }
         return ckc_spec::v1text::EV1Verdict::Ok;
     }
-    let answers_result = parse_answers(bytes, Ghost(answers_expected));
+    let answers_result = parse_answers(bytes, Ghost(answers_expected), &mut at);
     if answers_result.is_some() {
         let parsed = answers_result.unwrap();
         proof { parsed_accepts(bytes@, &parsed); }
         return ckc_spec::v1text::EV1Verdict::Ok;
     }
-    let traces_result = parse_traces(bytes, Ghost(traces_expected));
+    let traces_result = parse_traces(bytes, Ghost(traces_expected), &mut at);
     if traces_result.is_some() {
         let parsed = traces_result.unwrap();
         proof { parsed_accepts(bytes@, &parsed); }
@@ -112,7 +113,7 @@ pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
             }
         }
     }
-    ckc_spec::v1text::EV1Verdict::Reject { at: 0 }
+    ckc_spec::v1text::EV1Verdict::Reject { at }
 }
 
 } // verus!
