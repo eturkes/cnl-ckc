@@ -181,24 +181,35 @@ threaded `&mut ETermArena`, `the_v1`/`the_payload` (choose)
 discharged by the guided `expected` — no K2 re-parser, no
 injectivity lemma. Layout switch + builder API LANDED
 on wt/prod-m5u2-k2 @05dca767 (588/3 = the mode stubs; release build
-green). U3 engine IN PROGRESS on
-wt/prod-m5u2-k2 @d9b032c0 (clean; `k2_engine.rs` batches 8-13:
-keys/substitution/occurs, goal substitution under arena growth,
-`unify_n` fuel-stability, rigid equality; 654 verified / 3 = the
-mode stubs; comparator matrix 62/62 through `term_lt`); next =
-prod-m5u2-k2-7 from the report's Blockers (unifier loop → machine
-run/solve → head_proved; brief = `k2-6-brief.txt` + report). Bridge
-(K1 parsers build the arena) IN PROGRESS on wt/prod-m5u2-k1b
-(worktree `.scratch/worktrees/prod-m5u2-k1b`, cut from 05dca767;
-@2c9c2606 = `parse_term` arena threading, compiles, 5 bridge
-obligations red at v1_term_impl.rs 3792/4320/11022/14880/14954);
-next = prod-m5u2-k1-11 from the report's Blockers (brief =
-`k1-10-brief.txt` + report). No teammate running at close; all
-worktrees clean. Then U4 mode assembly after both land (merge k1b
-into k2, then squash). Harvest: squash
-wt/prod-m5u2-k2 → P1 (stub errors allowed only while U4 is open),
-P2, suite; K2 suite
-lane = activate the 106 staged k2 cases against the modes. Evidence: phase-2 suite 249 cases/69 legacy pins,
+green). U3 engine DONE on wt/prod-m5u2-k2 @82725d69 (k2-7/k2-8
+batches 14-30: unify loop w/ termination measure, machine states +
+exact backtracking, non-call dispatch, clause selection + shifted
+instantiation w/ NAF wrappers, call/redo, fueled run/solve,
+head_proved/heads_proved/unifiable_apart; 728/3 = mode stubs;
+runtime harness 10/10; comparator 62/62 + R22 rust+legacy 11/11
+refreshed; U4 handoff interface EClause/EBodyItem + db views = k2
+report Blockers). Bridge DONE on wt/prod-m5u2-k1b @31e1c731
+(k1-11/12/13: inherited obligations + parse_answers solver crash
+cleared; R9 absorbed via lead-ruled `git merge fb702af0` — the
+branch predated the R9 squash; k1-12's adversarial probe exposed +
+k1-13 repaired an R9 variable-key-overflow offset defect at 3
+sites, reject now noncanonical(4,65)@431; exec roots
+EDocClause/EQueryProjection/EParsedV1 + bundle/file clause vectors;
+`v1_parse` @ v1_impl.rs:252 w/ guided-witness ensures; P1 655/3
+stubs, suite 63, probe_decl 670/0). R26 ruling committed 6b66e3f2:
+k2-8's SPEC-NAF-PRUNE = spec-conformant, Sol-ignores-pruned mirrors
+legacy (SWI probe in contract). Lead merged k1b→k2 @bde9515a,
+verify 795/3 = exactly the U4 stubs. IN FLIGHT: prod-m5u2-k2-9 =
+U4 mode assembly (stubs → green, P1 target 0 errors; brief
+`k2-9-brief.txt`) ∥ prod-m5u2-suite-1 = 107 staged k2 cases →
+active w/ legacy+target pins in `.scratch/m5u2/suite-v2/` copy
+(canonical suite/ stays k2-9's read-only gate; runner loader
+hard-fails on coverage drift → live edits banned; brief
+`suite-1-brief.txt`). Harvest after both: swap suite-v2
+cases/coverage into suite/, rerun self-check + target; squash
+wt/prod-m5u2-k2 → P1 0 errors, P2, suite, diff lanes; MAIN authors
+the contract.rs v1_parse binding + trust regen (gen_trust.py) at
+squash. Evidence: phase-2 suite 249 cases/69 legacy pins,
 62-row comparator matrix, 11/11 R22 pins; Kani 0.67.0 pinned
 (separate nested harness crate ruled; wt/res-kani-2 kept until C3).
 Gauge actuals: K1 parser stack = five prod windows at 149-245K
