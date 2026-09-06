@@ -179,43 +179,43 @@ Contract R25 (arena ruling): backward child links (`child_roots`,
 child < parent), K1's `parse_term` builds the arena through a
 threaded `&mut ETermArena`, `the_v1`/`the_payload` (choose)
 discharged by the guided `expected` — no K2 re-parser, no
-injectivity lemma. Layout switch + builder API LANDED
-on wt/prod-m5u2-k2 @05dca767 (588/3 = the mode stubs; release build
-green). U3 engine DONE on wt/prod-m5u2-k2 @82725d69 (k2-7/k2-8
-batches 14-30: unify loop w/ termination measure, machine states +
-exact backtracking, non-call dispatch, clause selection + shifted
-instantiation w/ NAF wrappers, call/redo, fueled run/solve,
-head_proved/heads_proved/unifiable_apart; 728/3 = mode stubs;
-runtime harness 10/10; comparator 62/62 + R22 rust+legacy 11/11
-refreshed; U4 handoff interface EClause/EBodyItem + db views = k2
-report Blockers). Bridge DONE on wt/prod-m5u2-k1b @31e1c731
-(k1-11/12/13: inherited obligations + parse_answers solver crash
-cleared; R9 absorbed via lead-ruled `git merge fb702af0` — the
-branch predated the R9 squash; k1-12's adversarial probe exposed +
-k1-13 repaired an R9 variable-key-overflow offset defect at 3
-sites, reject now noncanonical(4,65)@431; exec roots
-EDocClause/EQueryProjection/EParsedV1 + bundle/file clause vectors;
-`v1_parse` @ v1_impl.rs:252 w/ guided-witness ensures; P1 655/3
-stubs, suite 63, probe_decl 670/0). R26 ruling committed 6b66e3f2:
-k2-8's SPEC-NAF-PRUNE = spec-conformant, Sol-ignores-pruned mirrors
-legacy (SWI probe in contract). Lead merged k1b→k2 @bde9515a,
-verify 795/3 = exactly the U4 stubs. IN FLIGHT: prod-m5u2-k2-9 =
-U4 mode assembly (stubs → green, P1 target 0 errors; brief
-`k2-9-brief.txt`) ∥ prod-m5u2-suite-1 = 107 staged k2 cases →
-active w/ legacy+target pins in `.scratch/m5u2/suite-v2/` copy
-(canonical suite/ stays k2-9's read-only gate; runner loader
-hard-fails on coverage drift → live edits banned; brief
-`suite-1-brief.txt`). Harvest after both: swap suite-v2
-cases/coverage into suite/, rerun self-check + target; squash
-wt/prod-m5u2-k2 → P1 0 errors, P2, suite, diff lanes; MAIN authors
-the contract.rs v1_parse binding + trust regen (gen_trust.py) at
-squash. Evidence: phase-2 suite 249 cases/69 legacy pins,
-62-row comparator matrix, 11/11 R22 pins; Kani 0.67.0 pinned
-(separate nested harness crate ruled; wt/res-kani-2 kept until C3).
-Gauge actuals: K1 parser stack = five prod windows at 149-245K
-high-water; main ~215K at the C2 engine seed, ~203K at the
-replay/answers seed, ~215K at the K2 dispatch, ~243K at the k1-8/k2-2 dispatch, ~181K at the k2-5/k1-9 dispatch; session close main=93% 224K/240K, mate high-water 185K (k1-10). Wave reports = anchor lookups only; the
-contract embeds every ruling.
+injectivity lemma. K2 KERNEL LANDED ON MAIN a5103d4e (session 9,
+squash of wt/prod-m5u2-k2; tags archive/m5u2-k2-wave @8e3cdddf +
+archive/m5u2-k1b @31e1c731 keep the batch history; worktrees +
+wt/ branches removed): 13 k2_* modules = U1 manifest, U2 term
+arena/printer/comparator/sorts, U3 engine (unify w/ termination
+measure, machine call/redo + exact backtracking, fueled run/solve,
+head_proved/heads_proved/unifiable_apart), U4 modes
+(aggregate-check staged pipeline, recursion census, answer
+custody/solve/print) + K1 arena bridge w/ exec roots + metadata
+(R27 eliminators) + R9 absorbed incl. the k1-12-found
+overflow-offset repair. Gates at a5103d4e: P1 983/0 (main),
+trust spec=2528 ok, release rc0, suite self-check 170 legacy pins
++ target passed=139 / 0 failures, K1 lanes A/H 349/349. Rulings
+R26-R30 = contract (NAF-prune spec-conformant; R27 bridge surface;
+R28 suite dispositions; R29 pin fix; R30 activation triage). K2
+suite lane COMPLETE: 107 staged k2 cases dispositioned (93 active
+green, 10 R30d perf-parked, 4 R28c/d/e pending-ruling); canonical
+suite embeds repo-root-relative paths → relocations re-derive path
+pins (R30a). OPEN GAP = R30d exec-cost defects (spec + proofs
+unaffected): load pipeline quadratic (recursion-check 5 docs
+0.07s/54MB → 60 docs 5.6s/4.1GB; corpus OOM) + search arena growth
+(corpus answer OOM 55.7GB/7m40s); NEXT UNIT = engine/load perf
+revision (fresh worktree off main; design sketch in R30d:
+truncate-to-`fresh` on backtrack + persistent solution region +
+load-pipeline accumulation fix; acceptance = 10 parked cases
+active+green under the 30s cap + `k2_corpus_diff.py` all 3 lanes
+green). Corpus differential = `.scratch/m5u2/diff/k2_corpus_diff.py`
+(lead-authored; lanes answer/recursion/aggregate; derives proof
+payloads via the legacy stage). Evidence: suite 249 cases/170
+legacy pins, comparator 62/62, R22 11/11; Kani 0.67.0 pinned
+(wt/res-kani-2 kept until C3). Gauge actuals: K1 parser stack =
+five prod windows at 149-245K; U3+bridge+U4 = ten prod windows at
+121-183K high-water; suite lane = three windows 66-162K; session-9
+lead close ~50% 500K/1M (1M window session). Wave reports = anchor
+lookups; the contract embeds every ruling; teammate lesson: SEED
+report files before dispatch (three suite teammates refused to
+create absent .md reports).
 `/goal` rounds + the parked harvest continue on
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
