@@ -13,14 +13,10 @@ the feature-complete ruling.
   other red batteries or as selftest-style rows in goal.emm. pri: low —
   targets the legacy `goal.py` surface, which the M5.7 cutover retires.
 
-- M5.2 rust engine: limit-exhausting bounded searches are quadratic —
-  append-only arena keeps growing across backtracking (sys-dominated
-  allocation; T-C605 answer >180s where legacy <30s; contract R30d).
-  Real-corpus surfaces unaffected (shallow witness proofs). Fix = arena
-  mark-release at choicepoints (restore arena length on backtrack;
-  terms above the mark are unreachable from the restored Cfg) or an
-  equivalent cost cut, re-proved under the existing prefix discipline
-  scoped to live segments. Acceptance: the 10 R30-parked suite cases
-  (S4-R16-001, T-C602/603/605/606/607/611/613/625/919) flip active and
-  pass under the runner's 30s cap. pri: high — M5.7 cutover replays
-  obligations at production bounds and inherits this cost envelope.
+- M5.2 rust engine perf: ESCALATED TO SPINE (contract R30d escalation —
+  corpus answer lane OOM-killed, 55.7 GB peak RSS at 7m40s). The
+  roadmap carries the engine-revision unit; this register entry only
+  tracks the follow-through check: after the fix, the 10 R30-parked
+  suite cases flip active and pass under the runner's 30s cap, and the
+  k2 corpus differential (.scratch/m5u2/diff/k2_corpus_diff.py) runs
+  all three lanes green. pri: closed into spine.
