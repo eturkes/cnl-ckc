@@ -4,7 +4,12 @@ use vstd::arithmetic::div_mod::{lemma_fundamental_div_mod, lemma_fundamental_div
 use vstd::prelude::*;
 use vstd::{assert_seqs_equal, assert_sets_equal};
 
+#[cfg(verus_keep_ghost)]
+use crate::k2_term::{arena_ok, arena_prefix_stable, child_terms};
+
 verus! {
+
+use crate::k2_term::{push_atom, push_comp, push_int, push_nil, push_var, ENode, ENodeKind, ETermArena};
 
 pub enum ETermTop {
     Var,
@@ -42,8 +47,53 @@ pub open spec fn top_matches(top: &ETermTop, t: Term) -> bool {
     }
 }
 
+pub open spec fn term_keys_fit(t: Term) -> bool
+    decreases t, 0int,
+{
+    match t {
+        Term::Var(key) => key <= usize::MAX as nat,
+        Term::Comp(_, args) => terms_keys_fit(args),
+        _ => true,
+    }
+}
+
+pub open spec fn terms_keys_fit(terms: Seq<Term>) -> bool
+    decreases terms, 1int,
+{
+    terms.len() == 0 || {
+        &&& term_keys_fit(terms[0])
+        &&& terms_keys_fit(terms.drop_first())
+    }
+}
+
+proof fn ground_term_keys_fit(t: Term)
+    requires ckc_spec::term::ground(t),
+    ensures term_keys_fit(t),
+    decreases t, 0int,
+{
+    reveal(ckc_spec::term::ground);
+    reveal(term_keys_fit);
+    if let Term::Comp(_, args) = t {
+        ground_terms_keys_fit(args);
+    }
+}
+
+proof fn ground_terms_keys_fit(terms: Seq<Term>)
+    requires ckc_spec::term::ground_all(terms),
+    ensures terms_keys_fit(terms),
+    decreases terms, 1int,
+{
+    reveal(ckc_spec::term::ground_all);
+    reveal(terms_keys_fit);
+    if terms.len() > 0 {
+        ground_term_keys_fit(terms[0]);
+        ground_terms_keys_fit(terms.drop_first());
+    }
+}
+
 pub open spec fn parsed_term_ok(t: &EParsedTerm) -> bool {
     &&& ckc_spec::term::wf_term(t@)
+    &&& term_keys_fit(t@)
     &&& t.ground == ckc_spec::term::ground(t@)
     &&& t.no_dollar == ckc_spec::term::no_dollar_var(t@)
     &&& top_matches(&t.top, t@)
@@ -223,6 +273,28 @@ fn copy_range(bytes: &[u8], start: usize, end: usize) -> (out: Vec<u8>)
         }
         i += 1;
     }
+    out
+}
+
+fn copy_bytes(bytes: &Vec<u8>) -> (out: Vec<u8>)
+    ensures out@ == bytes@,
+{
+    let mut out = Vec::new();
+    let mut i = 0usize;
+    while i < bytes.len()
+        invariant
+            i <= bytes@.len(),
+            out@ == bytes@.take(i as int),
+        decreases bytes.len() - i,
+    {
+        out.push(bytes[i]);
+        proof {
+            assert_seqs_equal!(bytes@.take(i as int + 1)
+                == bytes@.take(i as int).push(bytes@[i as int]));
+        }
+        i += 1;
+    }
+    proof { assert_seqs_equal!(bytes@.take(bytes@.len() as int) == bytes@); }
     out
 }
 
@@ -485,16 +557,24 @@ at: &mut usize,
 
 fn cursor_term(
     bytes: &[u8],
+    arena: &mut ETermArena,
+    first_var: Option<usize>,
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GTermExpected>>,
 at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         cursor_ok(bytes@, old(cursor)),
-        expected@ matches Some(e) ==>
-            term_at(bytes@, old(cursor).pos as int, e.end as int, e.term),
+        expected@ matches Some(e) ==> {
+            &&& term_at(bytes@, old(cursor).pos as int, e.end as int, e.term)
+            &&& term_keys_fit(e.term)
+        },
     ensures
+        r matches Some(term) ==> spanned_root_ok(final(arena), &term),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& cursor_ok(bytes@, final(cursor))
@@ -527,9 +607,13 @@ at: &mut usize,
         Some(e) => e,
         None => GTermExpected { term: Term::Nil, end: start },
     };
-    let term = match parse_term(
+    let ghost arena_entry = arena.nodes@;
+    let term = match parse_term_inner(
         bytes,
         start,
+        arena,
+        first_var,
+        Ghost(arena_entry),
         expected,
         Ghost(tracking_expected),
         Ghost(initial_stream),
@@ -2363,6 +2447,122 @@ proof fn decimal_digit_bounds(b: u8)
     reveal(ckc_spec::v1text::digit_byte);
 }
 
+proof fn decimal_prefix_le(s: Seq<u8>, n: int)
+    requires
+        0 <= n <= s.len(),
+        ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
+    ensures decimal_value(s.take(n)) <= decimal_value(s),
+    decreases s.len(),
+{
+    if n == s.len() {
+        assert_seqs_equal!(s.take(n) == s);
+    } else {
+        assert(n < s.len());
+        assert(s.len() > 0);
+        let prefix = s.drop_last();
+        decimal_all_drop_last(s);
+        decimal_prefix_le(prefix, n);
+        assert_seqs_equal!(s.take(n) == prefix.take(n));
+        assert(s == prefix.push(s.last()));
+        decimal_digit_bounds(s.last());
+        reveal_with_fuel(decimal_value, 2);
+        assert(decimal_value(s)
+            == decimal_value(prefix) * 10 + decimal_digit(s.last()));
+        assert(decimal_value(prefix) <= decimal_value(s));
+    }
+}
+
+#[verifier::rlimit(5000)]
+fn decimal_usize(
+    digits: &Vec<u8>,
+    expected: Ghost<Option<nat>>,
+) -> (r: Option<usize>)
+    requires
+        ckc_spec::v1text::all_in(
+            digits@,
+            |b: u8| ckc_spec::v1text::is_digit_b(b),
+        ),
+        expected@ matches Some(n) ==> {
+            &&& decimal_value(digits@) == n
+            &&& n <= usize::MAX as nat
+        },
+    ensures
+        r matches Some(value) ==> value as nat == decimal_value(digits@),
+        expected@ matches Some(n) ==> r matches Some(value)
+            && value as nat == n,
+{
+    let mut pos = 0usize;
+    let mut value = 0usize;
+    proof { reveal(decimal_value); }
+    while pos < digits.len()
+        invariant
+            pos <= digits@.len(),
+            value as nat == decimal_value(digits@.take(pos as int)),
+            ckc_spec::v1text::all_in(
+                digits@,
+                |b: u8| ckc_spec::v1text::is_digit_b(b),
+            ),
+            expected@ matches Some(n) ==> {
+                &&& decimal_value(digits@) == n
+                &&& n <= usize::MAX as nat
+            },
+        decreases digits.len() - pos,
+    {
+        let byte = digits[pos];
+        let digit = (byte - 0x30) as usize;
+        let ghost old_prefix = digits@.take(pos as int);
+        let ghost next_prefix = digits@.take(pos as int + 1);
+        proof {
+            reveal(ckc_spec::v1text::all_in);
+            assert(ckc_spec::v1text::is_digit_b(byte));
+            decimal_digit_bounds(byte);
+            assert(digit as nat == decimal_digit(byte));
+            assert_seqs_equal!(next_prefix == old_prefix.push(byte));
+            assert(next_prefix.len() > 0);
+            assert(next_prefix.drop_last() == old_prefix);
+            assert(next_prefix.last() == byte);
+            reveal_with_fuel(decimal_value, 2);
+            assert(decimal_value(next_prefix)
+                == decimal_value(old_prefix) * 10 + decimal_digit(byte));
+        }
+        if value > usize::MAX / 10 {
+            proof {
+                lemma_fundamental_div_mod(usize::MAX as int, 10);
+                assert(value as nat * 10 > usize::MAX as nat);
+                assert(decimal_value(next_prefix) > usize::MAX as nat);
+                if let Some(n) = expected@ {
+                    decimal_prefix_le(digits@, pos as int + 1);
+                    assert(decimal_value(next_prefix) <= n);
+                    assert(false);
+                }
+            }
+            return None;
+        }
+        let times = value * 10;
+        if digit > usize::MAX - times {
+            proof {
+                assert(decimal_value(next_prefix) > usize::MAX as nat);
+                if let Some(n) = expected@ {
+                    decimal_prefix_le(digits@, pos as int + 1);
+                    assert(decimal_value(next_prefix) <= n);
+                    assert(false);
+                }
+            }
+            return None;
+        }
+        value = times + digit;
+        pos += 1;
+        proof {
+            assert(value as nat == decimal_value(next_prefix));
+            assert(next_prefix == digits@.take(pos as int));
+        }
+    }
+    proof {
+        assert_seqs_equal!(digits@.take(digits@.len() as int) == digits@);
+    }
+    Some(value)
+}
+
 proof fn decimal_all_drop_last(s: Seq<u8>)
     requires
         s.len() > 0,
@@ -2800,12 +3000,14 @@ pub ghost struct GVarExpected {
 }
 
 pub struct EParsedVar {
+    pub key: usize,
     pub value: Ghost<nat>,
     pub end: usize,
 }
 
 pub open spec fn parsed_var_ok(bytes: Seq<u8>, start: usize, v: &EParsedVar) -> bool {
     &&& start < v.end <= bytes.len()
+    &&& v.key as nat == v.value@
     &&& ckc_spec::v1text::var_bytes(v.value@)
         == bytes.subrange(start as int, v.end as int)
 }
@@ -2813,6 +3015,7 @@ pub open spec fn parsed_var_ok(bytes: Seq<u8>, start: usize, v: &EParsedVar) -> 
 fn parse_variable(
     bytes: &[u8],
     start: usize,
+    next_var: usize,
     expected: Ghost<Option<GVarExpected>>,
 at: &mut usize,
 ) -> (r: Option<EParsedVar>)
@@ -2824,6 +3027,7 @@ at: &mut usize,
             &&& ckc_spec::v1text::var_bytes(e.value)
                 == bytes@.subrange(start as int, e.end as int)
             &&& term_boundary(bytes@, e.end as int)
+            &&& e.value <= usize::MAX as nat
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
@@ -2925,9 +3129,14 @@ at: &mut usize,
                         == seq![letter]);
                 },
             }
+            assert(index as nat == value);
             reveal(parsed_var_ok);
         }
-        return Some(EParsedVar { value: Ghost(value), end: start + 1 });
+        return Some(EParsedVar {
+            key: index as usize,
+            value: Ghost(value),
+            end: start + 1,
+        });
     }
     proof {
         if let Some(e) = expected@ {
@@ -2966,6 +3175,58 @@ at: &mut usize,
             assert(bytes@[start as int + 1] != 0x30);
         }
     }
+    let digits = copy_range(bytes, start + 1, d.end);
+    let ghost expected_q = match expected@ {
+        Some(e) => Some(e.value / 26),
+        None => None,
+    };
+    proof {
+        reveal(parsed_decimal_ok);
+        assert(digits@ == ckc_spec::v1text::udec_bytes(d.value@));
+        udec_canonical(d.value@);
+        reveal(canonical_decimal);
+        udec_decimal_value(d.value@);
+        if let Some(e) = expected@ {
+            assert(d.value@ == e.value / 26);
+            assert(e.value / 26 <= usize::MAX as nat);
+        }
+    }
+    let q_key = match decimal_usize(&digits, Ghost(expected_q)) {
+        Some(value) => value,
+        None => {
+            raise_variable_reject(bytes, start, d.end, next_var, at);
+            return None;
+        },
+    };
+    let index_key = index as usize;
+    if q_key > usize::MAX / 26 {
+        proof {
+            lemma_fundamental_div_mod(usize::MAX as int, 26);
+            if let Some(e) = expected@ {
+                assert(q_key as nat == e.value / 26);
+                assert(q_key as nat * 26 > usize::MAX as nat);
+                assert(e.value >= (e.value / 26) * 26);
+                assert(false);
+            }
+        }
+        raise_variable_reject(bytes, start, d.end, next_var, at);
+        return None;
+    }
+    let base = q_key * 26;
+    if index_key > usize::MAX - base {
+        proof {
+            if let Some(e) = expected@ {
+                assert(q_key as nat == e.value / 26);
+                assert(index_key as nat == e.value % 26);
+                lemma_fundamental_div_mod(e.value as int, 26);
+                assert(e.value == q_key as nat * 26 + index_key as nat);
+                assert(false);
+            }
+        }
+        raise_variable_reject(bytes, start, d.end, next_var, at);
+        return None;
+    }
+    let key = base + index_key;
     let ghost q = d.value@;
     let ghost value = match expected@ {
         Some(e) => e.value,
@@ -2993,9 +3254,13 @@ at: &mut usize,
                     == seq![letter] + bytes@.subrange(start as int + 1, d.end as int));
             },
         }
+        assert(q_key as nat == q);
+        assert(index_key as nat == index as nat);
+        assert(key as nat == q * 26 + index as nat);
+        assert(key as nat == value);
         reveal(parsed_var_ok);
     }
-    Some(EParsedVar { value: Ghost(value), end: d.end })
+    Some(EParsedVar { key, value: Ghost(value), end: d.end })
 }
 
 proof fn expected_atom_dispatch(
@@ -3094,6 +3359,7 @@ pub struct ESpannedTerm {
     pub parsed: EParsedTerm,
     pub start: usize,
     pub end: usize,
+    pub root: usize,
 }
 
 impl View for ESpannedTerm {
@@ -3111,11 +3377,33 @@ pub open spec fn spanned_term_ok(bytes: Seq<u8>, t: &ESpannedTerm) -> bool {
         == bytes.subrange(t.start as int, t.end as int)
 }
 
-fn span_atom(bytes: &[u8], start: usize, a: EParsedAtom) -> (out: ESpannedTerm)
+pub open spec fn spanned_root_ok(arena: &ETermArena, t: &ESpannedTerm) -> bool {
+    &&& t.root < arena.nodes@.len()
+    &&& arena@[t.root as int] == t@
+}
+
+proof fn spanned_root_prefix(before: Seq<ENode>, after: &ETermArena, term: &ESpannedTerm)
+    requires
+        before.is_prefix_of(after.nodes@),
+        term.root < before.len(),
+        before[term.root as int].term@ == term@,
+    ensures spanned_root_ok(after, term),
+{
+    arena_prefix_stable(before, after);
+    reveal(spanned_root_ok);
+}
+
+fn span_atom(
+    bytes: &[u8],
+    start: usize,
+    a: EParsedAtom,
+    root: usize,
+) -> (out: ESpannedTerm)
     requires parsed_atom_ok(bytes@, start, &a),
     ensures
         spanned_term_ok(bytes@, &out),
         out.start == start,
+        out.root == root,
         out@ == Term::Atom(a.name@),
 {
     let end = a.end;
@@ -3138,14 +3426,21 @@ fn span_atom(bytes: &[u8], start: usize, a: EParsedAtom) -> (out: ESpannedTerm)
         },
         start,
         end,
+        root,
     }
 }
 
-fn span_integer(bytes: &[u8], start: usize, n: EParsedInt) -> (out: ESpannedTerm)
+fn span_integer(
+    bytes: &[u8],
+    start: usize,
+    n: EParsedInt,
+    root: usize,
+) -> (out: ESpannedTerm)
     requires parsed_int_ok(bytes@, start, &n),
     ensures
         spanned_term_ok(bytes@, &out),
         out.start == start,
+        out.root == root,
         out@ == Term::Int(n.value@),
 {
     let end = n.end;
@@ -3168,14 +3463,21 @@ fn span_integer(bytes: &[u8], start: usize, n: EParsedInt) -> (out: ESpannedTerm
         },
         start,
         end,
+        root,
     }
 }
 
-fn span_variable(bytes: &[u8], start: usize, v: EParsedVar) -> (out: ESpannedTerm)
+fn span_variable(
+    bytes: &[u8],
+    start: usize,
+    v: EParsedVar,
+    root: usize,
+) -> (out: ESpannedTerm)
     requires parsed_var_ok(bytes@, start, &v),
     ensures
         spanned_term_ok(bytes@, &out),
         out.start == start,
+        out.root == root,
         out@ == Term::Var(v.value@),
 {
     let end = v.end;
@@ -3198,10 +3500,11 @@ fn span_variable(bytes: &[u8], start: usize, v: EParsedVar) -> (out: ESpannedTer
         },
         start,
         end,
+        root,
     }
 }
 
-fn span_nil(bytes: &[u8], start: usize) -> (out: ESpannedTerm)
+fn span_nil(bytes: &[u8], start: usize, root: usize) -> (out: ESpannedTerm)
     requires
         start <= usize::MAX - 2,
         start as int + 1 < bytes@.len(),
@@ -3210,6 +3513,7 @@ fn span_nil(bytes: &[u8], start: usize) -> (out: ESpannedTerm)
     ensures
         spanned_term_ok(bytes@, &out),
         out.start == start,
+        out.root == root,
         out@ == Term::Nil,
 {
     let parsed = nil_term();
@@ -3224,7 +3528,7 @@ fn span_nil(bytes: &[u8], start: usize) -> (out: ESpannedTerm)
         assert_seqs_equal!(bytes@.subrange(start as int, end as int)
             == seq![0x5bu8, 0x5du8]);
     }
-    ESpannedTerm { parsed, start, end }
+    ESpannedTerm { parsed, start, end, root }
 }
 
 pub open spec fn atomic_term(term: Term) -> bool {
@@ -3398,15 +3702,22 @@ proof fn expected_atomic_shape(
 fn parse_atomic(
     bytes: &[u8],
     start: usize,
+    next_var: usize,
+    arena: &mut ETermArena,
     expected: Ghost<Option<GAtomicExpected>>,
 at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         *old(at) <= bytes@.len(),
         start < bytes@.len(),
+        arena_ok(old(arena)),
         expected@ matches Some(e) ==> {
             &&& term_at(bytes@, start as int, e.end as int, e.term)
             &&& atomic_term(e.term)
+            &&& match e.term {
+                Term::Var(key) => key <= usize::MAX as nat,
+                _ => true,
+            }
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
@@ -3414,6 +3725,9 @@ at: &mut usize,
         r matches Some(t) ==> t.start == start,
         expected@ matches Some(e) ==> r matches Some(t)
             && t@ == e.term && t.end == e.end,
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        r matches Some(t) ==> spanned_root_ok(final(arena), &t),
 {
     proof {
         if let Some(e) = expected@ {
@@ -3435,8 +3749,10 @@ at: &mut usize,
                 }
             }
         }
-        let out = span_nil(bytes, start);
+        let root = push_nil(arena);
+        let out = span_nil(bytes, start, root);
         proof {
+            reveal(spanned_root_ok);
             if let Some(e) = expected@ {
                 assert(e.term == Term::Nil);
                 reveal(term_at);
@@ -3468,10 +3784,17 @@ at: &mut usize,
             },
             None => None,
         };
-        return match parse_variable(bytes, start, Ghost(expected_var), at) {
+        return match parse_variable(bytes, start, next_var, Ghost(expected_var), at) {
             Some(v) => {
-                let out = span_variable(bytes, start, v);
+                let spelling = copy_range(bytes, start, v.end);
                 proof {
+                    reveal(parsed_var_ok);
+                    assert(spelling@ == ckc_spec::v1text::var_bytes(v.key as nat));
+                }
+                let root = push_var(arena, v.key, spelling);
+                let out = span_variable(bytes, start, v, root);
+                proof {
+                    reveal(spanned_root_ok);
                     if let Some(e) = expected@ {
                         match e.term {
                             Term::Var(value) => {
@@ -3519,8 +3842,58 @@ at: &mut usize,
             None => None,
         };
         if let Some(n) = parse_integer(bytes, start, Ghost(expected_int), at) {
-            let out = span_integer(bytes, start, n);
+            let spelling = copy_range(bytes, start, n.end);
+            let negative = bytes[start] == 0x2d;
+            let magnitude_start = if negative { start + 1 } else { start };
+            let magnitude = copy_range(bytes, magnitude_start, n.end);
+            let ghost value = n.value@;
             proof {
+                reveal(parsed_int_ok);
+                reveal(ckc_spec::v1text::dec_bytes);
+                assert(spelling@ == ckc_spec::v1text::dec_bytes(value));
+                assert(bytes@.subrange(start as int, n.end as int)[0]
+                    == bytes@[start as int]);
+                assert(spelling@[0] == bytes@[start as int]);
+                if value < 0 {
+                    udec_bytes_nonempty((-value) as nat);
+                    assert(ckc_spec::v1text::dec_bytes(value)[0] == 0x2d);
+                    assert(bytes@[start as int] == 0x2d);
+                    assert(negative);
+                    assert(magnitude_start == start + 1);
+                    suffix_after_prefix(
+                        bytes@,
+                        start as int,
+                        n.end as int,
+                        seq![0x2du8],
+                        ckc_spec::v1text::udec_bytes((-value) as nat),
+                    );
+                } else {
+                    udec_canonical(value as nat);
+                    reveal(canonical_decimal);
+                    reveal(ckc_spec::v1text::all_in);
+                    assert(ckc_spec::v1text::is_digit_b(
+                        ckc_spec::v1text::dec_bytes(value)[0],
+                    ));
+                    assert(bytes@[start as int] != 0x2d);
+                    assert(!negative);
+                    assert(magnitude_start == start);
+                }
+                assert(negative == (value < 0));
+                assert(magnitude@
+                    == ckc_spec::v1text::udec_bytes(
+                        if value < 0 { (-value) as nat } else { value as nat },
+                    ));
+            }
+            let root = push_int(
+                arena,
+                spelling,
+                magnitude,
+                negative,
+                Ghost(value),
+            );
+            let out = span_integer(bytes, start, n, root);
+            proof {
+                reveal(spanned_root_ok);
                 if let Some(e) = expected@ {
                     match e.term {
                         Term::Int(value) => {
@@ -3556,8 +3929,11 @@ at: &mut usize,
     };
     match parse_atom(bytes, start, Ghost(expected_atom), at) {
         Some(a) => {
-            let out = span_atom(bytes, start, a);
+            let name = copy_bytes(&a.name);
+            let root = push_atom(arena, name);
+            let out = span_atom(bytes, start, a, root);
             proof {
+                reveal(spanned_root_ok);
                 if let Some(e) = expected@ {
                     match e.term {
                         Term::Atom(name) => {
@@ -3595,6 +3971,69 @@ pub open spec fn list_term(elems: Seq<Term>, tail: Term) -> Term
             seq![elems[0], list_term(elems.drop_first(), tail)],
         )
     }
+}
+
+proof fn terms_keys_fit_concat(left: Seq<Term>, right: Seq<Term>)
+    ensures terms_keys_fit(left + right)
+        == (terms_keys_fit(left) && terms_keys_fit(right)),
+    decreases left.len(),
+{
+    if left.len() == 0 {
+        assert_seqs_equal!(left + right == right);
+        reveal_with_fuel(terms_keys_fit, 2);
+    } else {
+        terms_keys_fit_concat(left.drop_first(), right);
+        assert_seqs_equal!((left + right).drop_first()
+            == left.drop_first() + right);
+        reveal_with_fuel(terms_keys_fit, 2);
+    }
+}
+
+proof fn list_term_keys_fit(elems: Seq<Term>, tail: Term)
+    ensures term_keys_fit(list_term(elems, tail))
+        == (terms_keys_fit(elems) && term_keys_fit(tail)),
+    decreases elems.len(),
+{
+    if elems.len() == 0 {
+        reveal_with_fuel(list_term, 2);
+        reveal_with_fuel(terms_keys_fit, 2);
+    } else {
+        list_term_keys_fit(elems.drop_first(), tail);
+        let rest = list_term(elems.drop_first(), tail);
+        assert(term_keys_fit(rest)
+            == (terms_keys_fit(elems.drop_first()) && term_keys_fit(tail)));
+        assert(terms_keys_fit(elems)
+            == (term_keys_fit(elems[0]) && terms_keys_fit(elems.drop_first()))) by {
+            reveal_with_fuel(terms_keys_fit, 2);
+        }
+        assert(terms_keys_fit(seq![elems[0], rest])
+            == (term_keys_fit(elems[0]) && term_keys_fit(rest))) by {
+            reveal_with_fuel(terms_keys_fit, 3);
+        }
+        reveal_with_fuel(list_term, 2);
+        reveal_with_fuel(term_keys_fit, 2);
+    }
+}
+
+proof fn terms_keys_fit_at(terms: Seq<Term>, index: int)
+    requires terms_keys_fit(terms), 0 <= index < terms.len(),
+    ensures term_keys_fit(terms[index]),
+    decreases index,
+{
+    reveal(terms_keys_fit);
+    if index > 0 {
+        assert(terms.drop_first()[index - 1] == terms[index]);
+        terms_keys_fit_at(terms.drop_first(), index - 1);
+    }
+}
+
+proof fn terms_keys_fit_push(terms: Seq<Term>, term: Term)
+    requires terms_keys_fit(terms), term_keys_fit(term),
+    ensures terms_keys_fit(terms.push(term)),
+{
+    assert_seqs_equal!(terms.push(term) == terms + seq![term]);
+    terms_keys_fit_concat(terms, seq![term]);
+    reveal_with_fuel(terms_keys_fit, 2);
 }
 
 proof fn wf_terms_push(ts: Seq<Term>, t: Term)
@@ -3947,6 +4386,7 @@ pub enum ETermFrame {
         child_start: usize,
         name: Vec<u8>,
         args: Ghost<Seq<Term>>,
+        roots: Vec<usize>,
         count: usize,
         ground: bool,
         no_dollar: bool,
@@ -3955,6 +4395,7 @@ pub enum ETermFrame {
         start: usize,
         child_start: usize,
         elems: Ghost<Seq<Term>>,
+        roots: Vec<usize>,
         count: usize,
         ground: bool,
         no_dollar: bool,
@@ -3995,12 +4436,13 @@ fn frame_child_start_exec(f: &ETermFrame) -> (r: usize)
 pub open spec fn frame_ok(bytes: Seq<u8>, f: &ETermFrame) -> bool {
     match f {
         ETermFrame::Comp {
-            start, child_start, name, args, count, ground, no_dollar,
+            start, child_start, name, args, count, ground, no_dollar, ..
         } => {
             &&& *start < *child_start <= bytes.len()
             &&& *count == args@.len()
             &&& *count < *child_start - *start
             &&& ckc_spec::term::wf_terms(args@)
+            &&& terms_keys_fit(args@)
             &&& *ground == ckc_spec::term::ground_all(args@)
             &&& *no_dollar == ckc_spec::term::no_dollar_var_all(args@)
             &&& bytes.subrange(*start as int, *child_start as int)
@@ -4008,12 +4450,13 @@ pub open spec fn frame_ok(bytes: Seq<u8>, f: &ETermFrame) -> bool {
                     + args_prefix(args@)
         },
         ETermFrame::List {
-            start, child_start, elems, count, ground, no_dollar, tail,
+            start, child_start, elems, count, ground, no_dollar, tail, ..
         } => {
             &&& *start < *child_start <= bytes.len()
             &&& *count == elems@.len()
             &&& *count < *child_start - *start
             &&& ckc_spec::term::wf_terms(elems@)
+            &&& terms_keys_fit(elems@)
             &&& *ground == ckc_spec::term::ground_all(elems@)
             &&& *no_dollar == ckc_spec::term::no_dollar_var_all(elems@)
             &&& (*tail ==> elems@.len() > 0)
@@ -4029,6 +4472,188 @@ pub open spec fn frame_ok(bytes: Seq<u8>, f: &ETermFrame) -> bool {
             &&& *child_start == *start + 1
             &&& bytes[*start as int] == 0x7b
         },
+    }
+}
+
+pub open spec fn roots_ok_nodes(
+    nodes: Seq<ENode>,
+    roots: Seq<usize>,
+    terms: Seq<Term>,
+) -> bool {
+    &&& roots.len() == terms.len()
+    &&& forall|i: int| 0 <= i < roots.len() ==> {
+        &&& roots[i] < nodes.len()
+        &&& nodes[roots[i] as int].term@ == terms[i]
+    }
+}
+
+pub open spec fn frame_roots_ok_nodes(
+    nodes: Seq<ENode>,
+    frame: &ETermFrame,
+) -> bool {
+    match frame {
+        ETermFrame::Comp { args, roots, .. } => {
+            roots_ok_nodes(nodes, roots@, args@)
+        },
+        ETermFrame::List { elems, roots, .. } => {
+            roots_ok_nodes(nodes, roots@, elems@)
+        },
+        ETermFrame::Curly { .. } => true,
+    }
+}
+
+pub open spec fn frame_roots_ok(arena: &ETermArena, frame: &ETermFrame) -> bool {
+    frame_roots_ok_nodes(arena.nodes@, frame)
+}
+
+pub open spec fn frames_roots_ok_nodes(
+    nodes: Seq<ENode>,
+    frames: Seq<ETermFrame>,
+) -> bool {
+    forall|i: int| 0 <= i < frames.len()
+        ==> frame_roots_ok_nodes(nodes, &frames[i])
+}
+
+pub open spec fn frames_roots_ok(
+    arena: &ETermArena,
+    frames: Seq<ETermFrame>,
+) -> bool {
+    frames_roots_ok_nodes(arena.nodes@, frames)
+}
+
+proof fn nodes_prefix_reflexive(nodes: Seq<ENode>)
+    ensures nodes.is_prefix_of(nodes),
+{
+    reveal(Seq::<_>::is_prefix_of);
+    assert_seqs_equal!(nodes.subrange(0, nodes.len() as int) == nodes);
+}
+
+pub proof fn nodes_prefix_transitive(
+    first: Seq<ENode>,
+    middle: Seq<ENode>,
+    last: Seq<ENode>,
+)
+    requires
+        first.is_prefix_of(middle),
+        middle.is_prefix_of(last),
+    ensures first.is_prefix_of(last),
+{
+    assert(first.len() <= middle.len());
+    assert(middle.len() <= last.len());
+    assert forall|i: int| 0 <= i < first.len()
+        implies first[i] == last.subrange(0, first.len() as int)[i] by {
+        assert(first[i] == middle[i]);
+        assert(middle[i] == last[i]);
+    }
+    assert_seqs_equal!(first == last.subrange(0, first.len() as int));
+}
+
+proof fn roots_indices_valid(
+    nodes: Seq<ENode>,
+    roots: Seq<usize>,
+    terms: Seq<Term>,
+)
+    requires roots_ok_nodes(nodes, roots, terms),
+    ensures forall|i: int| 0 <= i < roots.len() ==> roots[i] < nodes.len(),
+{
+    reveal(roots_ok_nodes);
+    assert forall|i: int| 0 <= i < roots.len()
+        implies roots[i] < nodes.len() by {
+        assert(nodes[roots[i] as int].term@ == terms[i]);
+    }
+}
+
+proof fn roots_ok_child_terms(
+    nodes: Seq<ENode>,
+    roots: Seq<usize>,
+    terms: Seq<Term>,
+)
+    requires roots_ok_nodes(nodes, roots, terms),
+    ensures child_terms(nodes, roots) == terms,
+{
+    reveal(roots_ok_nodes);
+    reveal(child_terms);
+    assert_seqs_equal!(child_terms(nodes, roots) == terms);
+}
+
+proof fn roots_ok_push(
+    nodes: Seq<ENode>,
+    roots: Seq<usize>,
+    terms: Seq<Term>,
+    root: usize,
+    term: Term,
+)
+    requires
+        roots_ok_nodes(nodes, roots, terms),
+        root < nodes.len(),
+        nodes[root as int].term@ == term,
+    ensures roots_ok_nodes(nodes, roots.push(root), terms.push(term)),
+{
+    reveal(roots_ok_nodes);
+    assert forall|i: int| 0 <= i < roots.push(root).len()
+        implies {
+            &&& roots.push(root)[i] < nodes.len()
+            &&& nodes[roots.push(root)[i] as int].term@ == terms.push(term)[i]
+        } by {
+        if i < roots.len() {
+            assert(roots.push(root)[i] == roots[i]);
+            assert(terms.push(term)[i] == terms[i]);
+        } else {
+            assert(i == roots.len());
+            assert(roots.push(root)[i] == root);
+            assert(terms.push(term)[i] == term);
+        }
+    }
+}
+
+proof fn roots_ok_prefix(
+    before: Seq<ENode>,
+    after: &ETermArena,
+    roots: Seq<usize>,
+    terms: Seq<Term>,
+)
+    requires
+        before.is_prefix_of(after.nodes@),
+        roots_ok_nodes(before, roots, terms),
+    ensures roots_ok_nodes(after.nodes@, roots, terms),
+{
+    reveal(roots_ok_nodes);
+    arena_prefix_stable(before, after);
+    assert forall|i: int| 0 <= i < roots.len()
+        implies {
+            &&& roots[i] < after.nodes@.len()
+            &&& after.nodes@[roots[i] as int].term@ == terms[i]
+        } by {
+        assert(roots[i] < before.len());
+        assert(before[roots[i] as int].term@ == terms[i]);
+        assert(before[roots[i] as int].term@ == after@[roots[i] as int]);
+    }
+}
+
+proof fn frames_roots_prefix(
+    before: Seq<ENode>,
+    after: &ETermArena,
+    frames: Seq<ETermFrame>,
+)
+    requires
+        before.is_prefix_of(after.nodes@),
+        frames_roots_ok_nodes(before, frames),
+    ensures frames_roots_ok(after, frames),
+{
+    reveal(frames_roots_ok);
+    reveal(frames_roots_ok_nodes);
+    assert forall|i: int| 0 <= i < frames.len()
+        implies frame_roots_ok_nodes(after.nodes@, &frames[i]) by {
+        reveal(frame_roots_ok_nodes);
+        match &frames[i] {
+            ETermFrame::Comp { args, roots, .. } => {
+                roots_ok_prefix(before, after, roots@, args@);
+            },
+            ETermFrame::List { elems, roots, .. } => {
+                roots_ok_prefix(before, after, roots@, elems@);
+            },
+            ETermFrame::Curly { .. } => {},
+        }
     }
 }
 
@@ -4120,6 +4745,7 @@ fn open_comp_frame(bytes: &[u8], start: usize, atom: EParsedAtom) -> (out: ETerm
                 child_start,
                 name,
                 args,
+                roots,
                 count,
                 ground,
                 no_dollar,
@@ -4128,6 +4754,7 @@ fn open_comp_frame(bytes: &[u8], start: usize, atom: EParsedAtom) -> (out: ETerm
                 &&& *child_start == atom.end + 1
                 &&& name@ == atom.name@
                 &&& args@ == Seq::<Term>::empty()
+                &&& roots@ == Seq::<usize>::empty()
                 &&& *count == 0
                 &&& *ground
                 &&& *no_dollar
@@ -4152,6 +4779,7 @@ fn open_comp_frame(bytes: &[u8], start: usize, atom: EParsedAtom) -> (out: ETerm
         child_start,
         name: atom.name,
         args: Ghost(Seq::empty()),
+        roots: Vec::new(),
         count: 0,
         ground: true,
         no_dollar: true,
@@ -4172,6 +4800,7 @@ fn open_list_frame(bytes: &[u8], start: usize) -> (out: ETermFrame)
                 start: s,
                 child_start,
                 elems,
+                roots,
                 count,
                 ground,
                 no_dollar,
@@ -4180,6 +4809,7 @@ fn open_list_frame(bytes: &[u8], start: usize) -> (out: ETermFrame)
                 &&& *s == start
                 &&& *child_start == start + 1
                 &&& elems@ == Seq::<Term>::empty()
+                &&& roots@ == Seq::<usize>::empty()
                 &&& *count == 0
                 &&& *ground
                 &&& *no_dollar
@@ -4203,6 +4833,7 @@ fn open_list_frame(bytes: &[u8], start: usize) -> (out: ETermFrame)
         start,
         child_start,
         elems: Ghost(Seq::empty()),
+        roots: Vec::new(),
         count: 0,
         ground: true,
         no_dollar: true,
@@ -4263,6 +4894,17 @@ pub open spec fn frame_step_ok(
     }
 }
 
+pub open spec fn frame_step_roots_ok(
+    arena: &ETermArena,
+    step: &EFrameStep,
+) -> bool {
+    match step {
+        EFrameStep::Next(frame) => frame_roots_ok(arena, frame),
+        EFrameStep::Done(term) => spanned_root_ok(arena, term),
+        EFrameStep::Reject => true,
+    }
+}
+
 pub open spec fn comp_frame_ok(
     bytes: Seq<u8>,
     start: usize,
@@ -4277,27 +4919,34 @@ pub open spec fn comp_frame_ok(
     &&& count == args.len()
     &&& count < child_start - start
     &&& ckc_spec::term::wf_terms(args)
+    &&& terms_keys_fit(args)
     &&& ground == ckc_spec::term::ground_all(args)
     &&& no_dollar == ckc_spec::term::no_dollar_var_all(args)
     &&& bytes.subrange(start as int, child_start as int)
         == ckc_spec::v1text::atom_bytes(name) + seq![0x28u8] + args_prefix(args)
 }
 
+#[verifier::spinoff_prover]
 fn feed_comp_frame(
     bytes: &[u8],
     start: usize,
     child_start: usize,
     name: Vec<u8>,
     args: Ghost<Seq<Term>>,
+    roots: Vec<usize>,
     count: usize,
     ground: bool,
     no_dollar: bool,
     child: ESpannedTerm,
+    arena: &mut ETermArena,
     guide: Ghost<Option<GTermFrame>>,
 ) -> (out: EFrameStep)
     requires
         comp_frame_ok(bytes@, start, child_start, name@, args@, count, ground, no_dollar),
+        arena_ok(old(arena)),
+        roots_ok_nodes(old(arena).nodes@, roots@, args@),
         spanned_term_ok(bytes@, &child),
+        spanned_root_ok(old(arena), &child),
         child.start == child_start,
         guide@ matches Some(g) ==> guided_step_pre(
             bytes@,
@@ -4306,6 +4955,7 @@ fn feed_comp_frame(
                 child_start,
                 name,
                 args,
+                roots,
                 count,
                 ground,
                 no_dollar,
@@ -4315,6 +4965,9 @@ fn feed_comp_frame(
         ),
     ensures
         frame_step_ok(bytes@, start, child.end, &out),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        frame_step_roots_ok(final(arena), &out),
         guide@ matches Some(g) ==> guided_step_ok(
             bytes@,
             &ETermFrame::Comp {
@@ -4322,6 +4975,7 @@ fn feed_comp_frame(
                 child_start,
                 name,
                 args,
+                roots,
                 count,
                 ground,
                 no_dollar,
@@ -4340,6 +4994,7 @@ fn feed_comp_frame(
                     child_start,
                     name,
                     args,
+                    roots,
                     count,
                     ground,
                     no_dollar,
@@ -4356,11 +5011,25 @@ fn feed_comp_frame(
         return EFrameStep::Reject;
     }
     let delimiter = bytes[child.end];
+    let ghost arena_nodes = arena.nodes@;
+    let ghost previous_roots = roots@;
     let ghost next_args = args@.push(child@);
+    let mut next_roots = roots;
+    next_roots.push(child.root);
     let next_count = count + 1;
     proof {
+        reveal(spanned_root_ok);
+        roots_ok_push(
+            arena_nodes,
+            previous_roots,
+            args@,
+            child.root,
+            child@,
+        );
+        assert(roots_ok_nodes(arena_nodes, next_roots@, next_args));
         assert(count < usize::MAX);
         wf_terms_push(args@, child@);
+        terms_keys_fit_push(args@, child@);
         ground_all_push(args@, child@);
         no_dollar_all_push(args@, child@);
         args_bytes_push(args@, child@);
@@ -4372,6 +5041,7 @@ fn feed_comp_frame(
             child_start: next_child_start,
             name,
             args: Ghost(next_args),
+            roots: next_roots,
             count: next_count,
             ground: ground && child.parsed.ground,
             no_dollar: no_dollar && child.parsed.no_dollar,
@@ -4399,6 +5069,10 @@ fn feed_comp_frame(
             assert(frame_ok(bytes@, &next));
             assert(frame_start(&next) == start);
             assert(frame_child_start(&next) == child.end + 1);
+            reveal(frame_step_roots_ok);
+            reveal(frame_roots_ok);
+            reveal(frame_roots_ok_nodes);
+            assert(frame_roots_ok(arena, &next));
             if let Some(g) = guide@ {
                 reveal(guided_step_ok);
                 reveal(guided_step_pre);
@@ -4470,6 +5144,12 @@ fn feed_comp_frame(
     let out_no_dollar = no_dollar && child.parsed.no_dollar && !dollar;
     let end = child.end + 1;
     let ghost term = Term::Comp(name@, next_args);
+    let arena_name = copy_bytes(&name);
+    proof {
+        roots_ok_child_terms(arena.nodes@, next_roots@, next_args);
+        roots_indices_valid(arena.nodes@, next_roots@, next_args);
+    }
+    let root = push_comp(arena, arena_name, next_roots);
     proof {
         assert_seqs_equal!(bytes@.subrange(start as int, end as int)
             == bytes@.subrange(start as int, child_start as int)
@@ -4497,8 +5177,10 @@ fn feed_comp_frame(
         ground: out_ground,
         no_dollar: out_no_dollar,
     };
-    let done = ESpannedTerm { parsed, start, end };
+    let done = ESpannedTerm { parsed, start, end, root };
     proof {
+        reveal(spanned_root_ok);
+        reveal(frame_step_roots_ok);
         assert(parsed_term_ok(&done.parsed));
         assert(ckc_spec::v1text::term_bytes(done@)
             == bytes@.subrange(done.start as int, done.end as int));
@@ -4554,6 +5236,7 @@ pub open spec fn list_frame_ok(
     &&& count == elems.len()
     &&& count < child_start - start
     &&& ckc_spec::term::wf_terms(elems)
+    &&& terms_keys_fit(elems)
     &&& ground == ckc_spec::term::ground_all(elems)
     &&& no_dollar == ckc_spec::term::no_dollar_var_all(elems)
     &&& (tail ==> elems.len() > 0)
@@ -4582,6 +5265,96 @@ fn is_plain_tail(term: &EParsedTerm) -> (r: bool)
     out
 }
 
+proof fn list_term_skip_step(elems: Seq<Term>, i: int, tail: Term)
+    requires 0 <= i < elems.len(),
+    ensures list_term(elems.skip(i), tail) == Term::Comp(
+        ckc_spec::v1text::cons_name(),
+        seq![elems[i], list_term(elems.skip(i + 1), tail)],
+    ),
+{
+    assert(elems.skip(i).len() > 0);
+    assert(elems.skip(i)[0] == elems[i]);
+    assert_seqs_equal!(elems.skip(i).drop_first() == elems.skip(i + 1));
+    reveal_with_fuel(list_term, 2);
+}
+
+#[verifier::rlimit(5000)]
+fn push_list_nodes(
+    arena: &mut ETermArena,
+    elem_roots: &Vec<usize>,
+    elems: Ghost<Seq<Term>>,
+    tail_root: usize,
+    tail: Ghost<Term>,
+) -> (root: usize)
+    requires
+        arena_ok(old(arena)),
+        elems@.len() > 0,
+        roots_ok_nodes(old(arena).nodes@, elem_roots@, elems@),
+        tail_root < old(arena).nodes@.len(),
+        old(arena)@[tail_root as int] == tail@,
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        root < final(arena).nodes@.len(),
+        final(arena)@[root as int] == list_term(elems@, tail@),
+{
+    let ghost entry_nodes = arena.nodes@;
+    let mut i = elem_roots.len();
+    let mut root = tail_root;
+    proof {
+        assert_seqs_equal!(elems@.skip(elems@.len() as int) == Seq::<Term>::empty());
+        reveal_with_fuel(list_term, 2);
+        assert(arena@[root as int] == list_term(elems@.skip(i as int), tail@));
+    }
+    while i > 0
+        invariant
+            arena_ok(arena),
+            entry_nodes.is_prefix_of(arena.nodes@),
+            i <= elem_roots@.len(),
+            elem_roots@.len() == elems@.len(),
+            roots_ok_nodes(arena.nodes@, elem_roots@, elems@),
+            root < arena.nodes@.len(),
+            arena@[root as int] == list_term(elems@.skip(i as int), tail@),
+        decreases i,
+    {
+        let next_i = i - 1;
+        let elem_root = elem_roots[next_i];
+        let ghost before = arena.nodes@;
+        let ghost rest = list_term(elems@.skip(i as int), tail@);
+        let mut child_roots = Vec::new();
+        child_roots.push(elem_root);
+        child_roots.push(root);
+        proof {
+            reveal(roots_ok_nodes);
+            assert(elem_root < before.len());
+            assert(before[elem_root as int].term@ == elems@[next_i as int]);
+            assert(root < before.len());
+            assert(before[root as int].term@ == rest);
+            reveal(child_terms);
+            assert_seqs_equal!(child_terms(before, child_roots@)
+                == seq![elems@[next_i as int], rest]);
+            list_term_skip_step(elems@, next_i as int, tail@);
+            assert(list_term(elems@.skip(next_i as int), tail@)
+                == Term::Comp(
+                    ckc_spec::v1text::cons_name(),
+                    child_terms(before, child_roots@),
+                ));
+        }
+        let name = cons_name_vec();
+        root = push_comp(arena, name, child_roots);
+        i = next_i;
+        proof {
+            roots_ok_prefix(before, arena, elem_roots@, elems@);
+            assert(entry_nodes.is_prefix_of(arena.nodes@));
+            assert(arena@[root as int] == list_term(elems@.skip(i as int), tail@));
+        }
+    }
+    proof {
+        assert_seqs_equal!(elems@.skip(0) == elems@);
+    }
+    root
+}
+
 fn finish_list_term(
     bytes: &[u8],
     start: usize,
@@ -4590,12 +5363,15 @@ fn finish_list_term(
     tail: Ghost<Term>,
     ground: bool,
     no_dollar: bool,
+    root: usize,
 ) -> (out: ESpannedTerm)
     requires
         start < end <= bytes@.len(),
         elems@.len() > 0,
         ckc_spec::term::wf_terms(elems@),
         ckc_spec::term::wf_term(tail@),
+        terms_keys_fit(elems@),
+        term_keys_fit(tail@),
         ground == (ckc_spec::term::ground_all(elems@) && ckc_spec::term::ground(tail@)),
         no_dollar == (ckc_spec::term::no_dollar_var_all(elems@)
             && ckc_spec::term::no_dollar_var(tail@)),
@@ -4606,11 +5382,13 @@ fn finish_list_term(
         out@ == list_term(elems@, tail@),
         out.start == start,
         out.end == end,
+        out.root == root,
 {
     let name = cons_name_vec();
     let ghost term = list_term(elems@, tail@);
     proof {
         wf_list_term(elems@, tail@);
+        list_term_keys_fit(elems@, tail@);
         ground_list_term(elems@, tail@);
         no_dollar_list_term(elems@, tail@);
         reveal_with_fuel(list_term, 2);
@@ -4627,25 +5405,31 @@ fn finish_list_term(
         },
         start,
         end,
+        root,
     }
 }
 
-#[verifier::rlimit(100)]
+#[verifier::rlimit(5000)]
 fn feed_list_frame(
     bytes: &[u8],
     start: usize,
     child_start: usize,
     elems: Ghost<Seq<Term>>,
+    roots: Vec<usize>,
     count: usize,
     ground: bool,
     no_dollar: bool,
     tail_mode: bool,
     child: ESpannedTerm,
+    arena: &mut ETermArena,
     guide: Ghost<Option<GTermFrame>>,
 ) -> (out: EFrameStep)
     requires
         list_frame_ok(bytes@, start, child_start, elems@, count, ground, no_dollar, tail_mode),
+        arena_ok(old(arena)),
+        roots_ok_nodes(old(arena).nodes@, roots@, elems@),
         spanned_term_ok(bytes@, &child),
+        spanned_root_ok(old(arena), &child),
         child.start == child_start,
         guide@ matches Some(g) ==> guided_step_pre(
             bytes@,
@@ -4653,6 +5437,7 @@ fn feed_list_frame(
                 start,
                 child_start,
                 elems,
+                roots,
                 count,
                 ground,
                 no_dollar,
@@ -4663,12 +5448,16 @@ fn feed_list_frame(
         ),
     ensures
         frame_step_ok(bytes@, start, child.end, &out),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        frame_step_roots_ok(final(arena), &out),
         guide@ matches Some(g) ==> guided_step_ok(
             bytes@,
             &ETermFrame::List {
                 start,
                 child_start,
                 elems,
+                roots,
                 count,
                 ground,
                 no_dollar,
@@ -4687,6 +5476,7 @@ fn feed_list_frame(
                     start,
                     child_start,
                     elems,
+                    roots,
                     count,
                     ground,
                     no_dollar,
@@ -4726,6 +5516,13 @@ fn feed_list_frame(
             assert(ckc_spec::v1text::term_bytes(list_term(elems@, child@))
                 == bytes@.subrange(start as int, end as int));
         }
+        let root = push_list_nodes(
+            arena,
+            &roots,
+            elems,
+            child.root,
+            Ghost(child@),
+        );
         let done = finish_list_term(
             bytes,
             start,
@@ -4734,9 +5531,12 @@ fn feed_list_frame(
             Ghost(child@),
             out_ground,
             out_no_dollar,
+            root,
         );
         proof {
             reveal(frame_step_ok);
+            reveal(frame_step_roots_ok);
+            reveal(spanned_root_ok);
             assert(spanned_term_ok(bytes@, &done));
             assert(done.start == start);
             assert(done.end == child.end + 1);
@@ -4773,13 +5573,27 @@ fn feed_list_frame(
         }
         return EFrameStep::Done(done);
     }
+    let ghost arena_nodes = arena.nodes@;
+    let ghost previous_roots = roots@;
     let ghost next_elems = elems@.push(child@);
+    let mut next_roots = roots;
+    next_roots.push(child.root);
     let next_count = count + 1;
     let next_ground = ground && child.parsed.ground;
     let next_no_dollar = no_dollar && child.parsed.no_dollar;
     proof {
+        reveal(spanned_root_ok);
+        roots_ok_push(
+            arena_nodes,
+            previous_roots,
+            elems@,
+            child.root,
+            child@,
+        );
+        assert(roots_ok_nodes(arena_nodes, next_roots@, next_elems));
         assert(count < usize::MAX);
         wf_terms_push(elems@, child@);
+        terms_keys_fit_push(elems@, child@);
         ground_all_push(elems@, child@);
         no_dollar_all_push(elems@, child@);
         args_bytes_push(elems@, child@);
@@ -4791,6 +5605,7 @@ fn feed_list_frame(
             start,
             child_start: next_child_start,
             elems: Ghost(next_elems),
+            roots: next_roots,
             count: next_count,
             ground: next_ground,
             no_dollar: next_no_dollar,
@@ -4830,6 +5645,10 @@ fn feed_list_frame(
             reveal(frame_child_start);
             reveal(frame_step_ok);
             assert(frame_ok(bytes@, &next));
+            reveal(frame_step_roots_ok);
+            reveal(frame_roots_ok);
+            reveal(frame_roots_ok_nodes);
+            assert(frame_roots_ok(arena, &next));
             if let Some(g) = guide@ {
                 reveal(guided_step_ok);
                 reveal(guided_step_pre);
@@ -4955,6 +5774,18 @@ fn feed_list_frame(
             == (ckc_spec::term::no_dollar_var_all(next_elems)
                 && ckc_spec::term::no_dollar_var(Term::Nil)));
     }
+    let ghost before_nil = arena.nodes@;
+    let tail_root = push_nil(arena);
+    proof {
+        roots_ok_prefix(before_nil, arena, next_roots@, next_elems);
+    }
+    let root = push_list_nodes(
+        arena,
+        &next_roots,
+        Ghost(next_elems),
+        tail_root,
+        Ghost(Term::Nil),
+    );
     let done = finish_list_term(
         bytes,
         start,
@@ -4963,9 +5794,12 @@ fn feed_list_frame(
         Ghost(Term::Nil),
         next_ground,
         next_no_dollar,
+        root,
     );
     proof {
         reveal(frame_step_ok);
+        reveal(frame_step_roots_ok);
+        reveal(spanned_root_ok);
         assert(spanned_term_ok(bytes@, &done));
         assert(done.start == start);
         assert(done.end == child.end + 1);
@@ -5022,11 +5856,14 @@ fn feed_curly_frame(
     start: usize,
     child_start: usize,
     child: ESpannedTerm,
+    arena: &mut ETermArena,
     guide: Ghost<Option<GTermFrame>>,
 ) -> (out: EFrameStep)
     requires
         curly_frame_ok(bytes@, start, child_start),
+        arena_ok(old(arena)),
         spanned_term_ok(bytes@, &child),
+        spanned_root_ok(old(arena), &child),
         child.start == child_start,
         guide@ matches Some(g) ==> guided_step_pre(
             bytes@,
@@ -5036,6 +5873,9 @@ fn feed_curly_frame(
         ),
     ensures
         frame_step_ok(bytes@, start, child.end, &out),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        frame_step_roots_ok(final(arena), &out),
         guide@ matches Some(g) ==> guided_step_ok(
             bytes@,
             &ETermFrame::Curly { start, child_start },
@@ -5075,6 +5915,8 @@ fn feed_curly_frame(
         assert(ckc_spec::v1text::curly_name() != ckc_spec::term::dollar_var_name());
         reveal_with_fuel(ckc_spec::term::wf_term, 2);
         reveal_with_fuel(ckc_spec::term::wf_terms, 2);
+        reveal_with_fuel(term_keys_fit, 2);
+        reveal_with_fuel(terms_keys_fit, 2);
         reveal_with_fuel(ckc_spec::term::ground, 2);
         reveal_with_fuel(ckc_spec::term::ground_all, 2);
         reveal_with_fuel(ckc_spec::term::no_dollar_var, 2);
@@ -5084,15 +5926,26 @@ fn feed_curly_frame(
         reveal(parsed_term_ok);
         reveal(frame_step_ok);
     }
+    let arena_name = curly_name_vec();
+    let mut child_roots = Vec::new();
+    child_roots.push(child.root);
+    proof {
+        reveal(spanned_root_ok);
+        reveal(child_terms);
+        assert_seqs_equal!(child_terms(arena.nodes@, child_roots@) == seq![child@]);
+    }
+    let root = push_comp(arena, arena_name, child_roots);
     let parsed = EParsedTerm {
         term: Ghost(term),
         top: ETermTop::Comp(name, 1),
         ground: child.parsed.ground,
         no_dollar: child.parsed.no_dollar,
     };
-    let done = ESpannedTerm { parsed, start, end };
+    let done = ESpannedTerm { parsed, start, end, root };
     proof {
         reveal(spanned_term_ok);
+        reveal(spanned_root_ok);
+        reveal(frame_step_roots_ok);
         assert(spanned_term_ok(bytes@, &done));
         assert(frame_step_ok(bytes@, start, child.end, &EFrameStep::Done(done)));
     }
@@ -5103,20 +5956,31 @@ fn feed_frame(
     bytes: &[u8],
     frame: ETermFrame,
     child: ESpannedTerm,
+    arena: &mut ETermArena,
     guide: Ghost<Option<GTermFrame>>,
 ) -> (out: EFrameStep)
     requires
         frame_ok(bytes@, &frame),
+        arena_ok(old(arena)),
+        frame_roots_ok(old(arena), &frame),
         spanned_term_ok(bytes@, &child),
+        spanned_root_ok(old(arena), &child),
         child.start == frame_child_start(&frame),
         guide@ matches Some(g) ==> guided_step_pre(bytes@, &frame, &child, g),
     ensures
         frame_step_ok(bytes@, frame_start(&frame), child.end, &out),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        frame_step_roots_ok(final(arena), &out),
         guide@ matches Some(g) ==> guided_step_ok(bytes@, &frame, &child, g, &out),
 {
+    proof {
+        reveal(frame_roots_ok);
+        reveal(frame_roots_ok_nodes);
+    }
     match frame {
         ETermFrame::Comp {
-            start, child_start, name, args, count, ground, no_dollar,
+            start, child_start, name, args, roots, count, ground, no_dollar,
         } => {
             proof {
                 reveal(frame_ok);
@@ -5130,15 +5994,17 @@ fn feed_frame(
                 child_start,
                 name,
                 args,
+                roots,
                 count,
                 ground,
                 no_dollar,
                 child,
+                arena,
                 guide,
             )
         },
         ETermFrame::List {
-            start, child_start, elems, count, ground, no_dollar, tail,
+            start, child_start, elems, roots, count, ground, no_dollar, tail,
         } => {
             proof {
                 reveal(frame_ok);
@@ -5151,11 +6017,13 @@ fn feed_frame(
                 start,
                 child_start,
                 elems,
+                roots,
                 count,
                 ground,
                 no_dollar,
                 tail,
                 child,
+                arena,
                 guide,
             )
         },
@@ -5166,7 +6034,7 @@ fn feed_frame(
                 reveal(frame_start);
                 reveal(frame_child_start);
             }
-            feed_curly_frame(bytes, start, child_start, child, guide)
+            feed_curly_frame(bytes, start, child_start, child, arena, guide)
         },
     }
 }
@@ -5297,6 +6165,37 @@ pub open spec fn guide_next(g: GTermFrame) -> Term
     }
 }
 
+proof fn guide_next_keys_fit(
+    bytes: Seq<u8>,
+    frame: &ETermFrame,
+    guide: GTermFrame,
+)
+    requires
+        guide_frame_ok(bytes, frame, guide),
+        term_keys_fit(guide_target(guide)),
+    ensures term_keys_fit(guide_next(guide)),
+{
+    reveal(guide_frame_ok);
+    reveal(guide_target);
+    reveal(guide_next);
+    match guide {
+        GTermFrame::Comp { built, remaining, .. } => {
+            terms_keys_fit_concat(built, remaining);
+            reveal_with_fuel(term_keys_fit, 2);
+            reveal_with_fuel(terms_keys_fit, 2);
+        },
+        GTermFrame::List { built, remaining, tail, tail_mode, .. } => {
+            list_term_keys_fit(built + remaining, tail);
+            terms_keys_fit_concat(built, remaining);
+            reveal_with_fuel(terms_keys_fit, 2);
+        },
+        GTermFrame::Curly { child, .. } => {
+            reveal_with_fuel(term_keys_fit, 2);
+            reveal_with_fuel(terms_keys_fit, 3);
+        },
+    }
+}
+
 pub open spec fn guide_next_end(frame: &ETermFrame, g: GTermFrame) -> int {
     frame_child_start(frame) as int + ckc_spec::v1text::term_bytes(guide_next(g)).len()
 }
@@ -5338,6 +6237,7 @@ pub open spec fn guide_frame_ok(
                 start,
                 child_start,
                 elems,
+                roots,
                 count,
                 tail: frame_tail,
                 ..
@@ -6583,6 +7483,48 @@ proof fn guide_stack_drop_last(
     }
 }
 
+proof fn guided_focus_keys_fit(
+    bytes: Seq<u8>,
+    frames: Seq<ETermFrame>,
+    guides: Seq<GTermFrame>,
+    root: Term,
+    root_end: int,
+)
+    requires
+        guide_stack_ok(bytes, frames, guides, root, root_end),
+        term_keys_fit(root),
+    ensures term_keys_fit(guided_focus(guides, root)),
+    decreases guides.len(),
+{
+    reveal(guide_stack_ok);
+    if guides.len() == 0 {
+        reveal(guided_focus);
+    } else if guides.len() == 1 {
+        assert(guide_target(guides[0]) == root);
+        assert(guide_frame_ok(bytes, &frames[0], guides[0]));
+        guide_next_keys_fit(bytes, &frames[0], guides[0]);
+        reveal(guided_focus);
+    } else {
+        let prefix_frames = frames.drop_last();
+        let prefix_guides = guides.drop_last();
+        guide_stack_drop_last(bytes, frames, guides, root, root_end);
+        guided_focus_keys_fit(
+            bytes,
+            prefix_frames,
+            prefix_guides,
+            root,
+            root_end,
+        );
+        assert(prefix_guides.len() > 0);
+        assert(prefix_guides.last() == guides[guides.len() - 2]);
+        assert(guide_next(prefix_guides.last()) == guide_target(guides.last()));
+        reveal(guided_focus);
+        assert(term_keys_fit(guide_target(guides.last())));
+        assert(guide_frame_ok(bytes, &frames.last(), guides.last()));
+        guide_next_keys_fit(bytes, &frames.last(), guides.last());
+    }
+}
+
 proof fn guided_state_initial(
     bytes: Seq<u8>,
     start: usize,
@@ -7013,6 +7955,7 @@ proof fn make_comp_guide(
                 child_start,
                 name: frame_name,
                 args: built,
+                roots: _,
                 count,
                 ground,
                 no_dollar,
@@ -7078,6 +8021,7 @@ proof fn make_list_guide(
                 start: s,
                 child_start,
                 elems,
+                roots,
                 count,
                 ground,
                 no_dollar,
@@ -7203,9 +8147,12 @@ proof fn make_curly_guide(
 }
 
 #[verifier::rlimit(5000)]
-pub fn parse_term(
+fn parse_term_inner(
     bytes: &[u8],
     start: usize,
+    arena: &mut ETermArena,
+    first_var: Option<usize>,
+    arena_entry: Ghost<Seq<ENode>>,
     expected: Ghost<Option<GTermExpected>>,
     tracking_expected: Ghost<GTermExpected>,
     initial_stream: Ghost<Seq<nat>>,
@@ -7216,8 +8163,12 @@ at: &mut usize,
     requires
         *old(at) <= bytes@.len(),
         start < bytes@.len(),
-        expected@ matches Some(e) ==>
-            term_at(bytes@, start as int, e.end as int, e.term),
+        arena_ok(old(arena)),
+        arena_entry@ == old(arena).nodes@,
+        expected@ matches Some(e) ==> {
+            &&& term_at(bytes@, start as int, e.end as int, e.term)
+            &&& term_keys_fit(e.term)
+        },
         track_vars ==> expected@ == Some(tracking_expected@),
         initial_stream@ == old(tracker).stream@,
         old(tracker).valid ==>
@@ -7241,6 +8192,9 @@ at: &mut usize,
             },
             None => true,
         },
+        arena_ok(final(arena)),
+        arena_entry@.is_prefix_of(final(arena).nodes@),
+        r matches Some(t) ==> spanned_root_ok(final(arena), &t),
 {
     let ghost entry_stream = initial_stream@;
     let ghost root = match expected@ {
@@ -7255,6 +8209,9 @@ at: &mut usize,
     let mut frames: Vec<ETermFrame> = Vec::new();
     let mut current: Option<ESpannedTerm> = None;
     let mut pos = start;
+    let mut next_var = match first_var { Some(next) => next, None => 0 };
+    let mut variable_failed = first_var.is_none();
+    let mut variable_at = *at;
     proof {
         parse_state_initial(bytes@, start);
         tracked_state_initial(entry_stream);
@@ -7269,9 +8226,15 @@ at: &mut usize,
         invariant
             *old(at) <= *at <= bytes@.len(),
             parse_state_ok(bytes@, start, pos, frames@, &current),
+            variable_at <= bytes@.len(),
+            arena_ok(arena),
+            arena_entry@.is_prefix_of(arena.nodes@),
+            frames_roots_ok(arena, frames@),
+            current matches Some(term) ==> spanned_root_ok(arena, &term),
             expected@ matches Some(e) ==> {
                 &&& root == e.term
                 &&& root_end == e.end as int
+                &&& term_keys_fit(root)
                 &&& guided_state_ok(
                     bytes@,
                     start,
@@ -7334,6 +8297,7 @@ at: &mut usize,
                 return Some(out);
             }
             let ghost old_frames = frames@;
+            let ghost old_arena_nodes = arena.nodes@;
             let ghost old_guides = guides;
             let child = current.unwrap();
             proof {
@@ -7354,6 +8318,12 @@ at: &mut usize,
                 reveal(parse_state_ok);
                 assert(frame == old_frames.last());
                 assert(frame_ok(bytes@, &frame));
+                reveal(frames_roots_ok);
+                reveal(frames_roots_ok_nodes);
+                assert(frame_roots_ok_nodes(old_arena_nodes, &frame));
+                reveal(frame_roots_ok);
+                assert(frame_roots_ok(arena, &frame));
+                assert(spanned_root_ok(arena, &child));
                 assert(child.start == frame_child_start(&frame));
                 if let Some(_) = expected@ {
                     reveal(guided_state_ok);
@@ -7379,12 +8349,21 @@ at: &mut usize,
                     assert(guide_frame_ok(bytes@, &frame, guide));
                 }
             }
-            let step = feed_frame(bytes, frame, child, Ghost(active_guide));
+            let step = feed_frame(bytes, frame, child, arena, Ghost(active_guide));
+            proof {
+                assert(frames@ == old_frames.drop_last());
+                reveal(frames_roots_ok);
+                assert(frames_roots_ok_nodes(old_arena_nodes, frames@));
+                frames_roots_prefix(old_arena_nodes, arena, frames@);
+                assert(arena_entry@.is_prefix_of(arena.nodes@));
+            }
             match step {
                 EFrameStep::Next(next) => {
                     let next_pos = frame_child_start_exec(&next);
                     proof {
                         reveal(frame_step_ok);
+                        reveal(frame_step_roots_ok);
+                        assert(frame_roots_ok(arena, &next));
                         parse_state_replace_last(
                             bytes@,
                             start,
@@ -7440,6 +8419,18 @@ at: &mut usize,
                     }
                     frames.push(next);
                     proof {
+                        reveal(frames_roots_ok);
+                        reveal(frames_roots_ok_nodes);
+                        assert forall|i: int| 0 <= i < frames@.len()
+                            implies frame_roots_ok_nodes(arena.nodes@, &frames@[i]) by {
+                            if i < frames@.len() - 1 {
+                                assert(frames@[i] == old_frames.drop_last()[i]);
+                            } else {
+                                assert(i == frames@.len() - 1);
+                                assert(frames@[i] == next);
+                                reveal(frame_roots_ok);
+                            }
+                        }
                         if track_vars {
                             reveal(current_term);
                             assert(current_term(&current) == None);
@@ -7471,6 +8462,8 @@ at: &mut usize,
                     }
                     proof {
                         reveal(frame_step_ok);
+                        reveal(frame_step_roots_ok);
+                        assert(spanned_root_ok(arena, &done));
                         parse_state_close_last(
                             bytes@,
                             start,
@@ -7576,6 +8569,7 @@ at: &mut usize,
             if pos == bytes.len() {
                 raise_at(at, pos, bytes.len());
                 proof {
+                    assert(arena_entry@.is_prefix_of(arena.nodes@));
                     if let Some(_) = expected@ {
                         reveal(term_at);
                         assert(false);
@@ -7749,12 +8743,48 @@ at: &mut usize,
                         reveal(scalar_nonatom_term);
                         assert(scalar_nonatom_term(focus));
                         reveal(atomic_term);
+                        reveal(guided_state_ok);
+                        guided_focus_keys_fit(
+                            bytes@,
+                            frames@,
+                            guides,
+                            root,
+                            root_end,
+                        );
+                        assert(term_keys_fit(focus));
+                        reveal(term_keys_fit);
                     }
                 }
-                let term = match parse_atomic(bytes, pos, Ghost(expected_atomic), at) {
+                let ghost before_atomic = arena.nodes@;
+                let mut atomic_at = *at;
+                let term = match parse_atomic(
+                    bytes, pos, next_var, arena, Ghost(expected_atomic), &mut atomic_at,
+                ) {
                     Some(t) => t,
-                    None => return None,
+                    None => {
+                        let boundary = if variable_failed { variable_at } else { atomic_at };
+                        raise_at(at, boundary, bytes.len());
+                        proof {
+                            nodes_prefix_transitive(
+                                arena_entry@,
+                                before_atomic,
+                                arena.nodes@,
+                            );
+                        }
+                        return None;
+                    },
                 };
+                raise_at(at, atomic_at, bytes.len());
+                if !variable_failed {
+                    if let ENodeKind::Var { key, .. } = &arena.nodes[term.root].kind {
+                        if *key > next_var || *key == next_var && next_var == usize::MAX {
+                            raise_variable_reject(bytes, pos, term.end, next_var, &mut variable_at);
+                            variable_failed = true;
+                        } else if *key == next_var {
+                            next_var += 1;
+                        }
+                    }
+                }
                 if track_vars {
                     let ghost atomic_initial = tracker.stream@;
                     proof {
@@ -7894,7 +8924,12 @@ at: &mut usize,
                 }
                 let atom = match parse_atom(bytes, pos, Ghost(expected_atom), at) {
                     Some(a) => a,
-                    None => return None,
+                    None => {
+                        proof {
+                                    assert(arena_entry@.is_prefix_of(arena.nodes@));
+                        }
+                        return None;
+                    },
                 };
                 if atom.end < bytes.len() && bytes[atom.end] == 0x28 {
                     proof {
@@ -8002,8 +9037,11 @@ at: &mut usize,
                             }
                         }
                     }
-                    let term = span_atom(bytes, pos, atom);
+                    let name = copy_bytes(&atom.name);
+                    let arena_root = push_atom(arena, name);
+                    let term = span_atom(bytes, pos, atom, arena_root);
                     let next_pos = term.end;
+                    proof { reveal(spanned_root_ok); }
                     proof {
                         parse_state_current(bytes@, start, pos, frames@, term);
                         if track_vars {
@@ -8063,6 +9101,70 @@ at: &mut usize,
         }
     }
     None
+}
+
+#[verifier::rlimit(5000)]
+pub fn parse_term(
+    bytes: &[u8],
+    start: usize,
+    arena: &mut ETermArena,
+    expected: Ghost<Option<GTermExpected>>,
+    tracking_expected: Ghost<GTermExpected>,
+    initial_stream: Ghost<Seq<nat>>,
+    track_vars: bool,
+    tracker: &mut EVarTracker,
+    at: &mut usize,
+) -> (r: Option<ESpannedTerm>)
+    requires
+        *old(at) <= bytes@.len(),
+        start < bytes@.len(),
+        arena_ok(old(arena)),
+        expected@ matches Some(e) ==> {
+            &&& term_at(bytes@, start as int, e.end as int, e.term)
+            &&& term_keys_fit(e.term)
+        },
+        track_vars ==> expected@ == Some(tracking_expected@),
+        initial_stream@ == old(tracker).stream@,
+        old(tracker).valid ==>
+            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        tracker_complete(old(tracker).valid, old(tracker).stream@),
+    ensures
+        *old(at) <= *final(at) <= bytes@.len(),
+        r matches Some(t) ==> spanned_term_ok(bytes@, &t),
+        r matches Some(t) ==> t.start == start,
+        expected@ matches Some(e) ==> r matches Some(t)
+            && t@ == e.term && t.end == e.end,
+        final(tracker).valid ==>
+            tracker_state_ok(final(tracker).next, final(tracker).stream@),
+        tracker_complete(final(tracker).valid, final(tracker).stream@),
+        track_vars ==> match r {
+            Some(t) => {
+                &&& final(tracker).stream@
+                    == initial_stream@ + ckc_spec::term::var_stream(t@)
+                &&& initial_stream@.len() <= start
+                    ==> final(tracker).stream@.len() <= t.end
+            },
+            None => true,
+        },
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        r matches Some(t) ==> spanned_root_ok(final(arena), &t),
+{
+    let ghost arena_entry = arena.nodes@;
+    let first_var = if tracker.valid { Some(tracker.next) } else { None };
+    parse_term_inner(
+        bytes,
+        start,
+        arena,
+        first_var,
+        Ghost(arena_entry),
+        expected,
+        tracking_expected,
+        initial_stream,
+        track_vars,
+        tracker,
+        at,
+    )
 }
 
 proof fn udec_decimal_value(n: nat)
@@ -9333,6 +10435,183 @@ proof fn tracker_state_canonical(next: usize, stream: Seq<nat>)
     reveal(nat_prefix);
 }
 
+proof fn firsts_contains_at(values: Seq<nat>, seen: Set<nat>, index: int)
+    requires 0 <= index < values.len(),
+    ensures seen.contains(values[index])
+        || ckc_spec::term::firsts(values, seen).contains(values[index]),
+    decreases values.len(),
+{
+    let value = values[index];
+    let head = values[0];
+    let rest = values.drop_first();
+    reveal(ckc_spec::term::firsts);
+    if !seen.contains(value) {
+        if value == head {
+            assert(ckc_spec::term::firsts(values, seen)[0] == value);
+        } else {
+            assert(index > 0);
+            assert(rest[index - 1] == value);
+            firsts_contains_at(rest, seen.insert(head), index - 1);
+            let next_seen = if seen.contains(head) { seen } else { seen.insert(head) };
+            if seen.contains(head) {
+                assert_sets_equal!(seen.insert(head) == seen);
+            }
+            let next = ckc_spec::term::firsts(rest, next_seen);
+            assert(next.contains(value));
+            let j = choose|j: int| 0 <= j < next.len() && next[j] == value;
+            if seen.contains(head) {
+                assert(ckc_spec::term::firsts(values, seen)[j] == value);
+            } else {
+                assert(ckc_spec::term::firsts(values, seen)[j + 1] == value);
+            }
+        }
+    }
+}
+
+proof fn canonical_stream_keys_fit(stream: Seq<nat>)
+    requires
+        ckc_spec::term::var_canonical(stream),
+        stream.len() <= usize::MAX as nat,
+    ensures stream_keys_fit(stream),
+{
+    let firsts = ckc_spec::term::firsts(stream, Set::empty());
+    firsts_len_le(stream, Set::empty());
+    reveal(ckc_spec::term::var_canonical);
+    assert forall|i: int| 0 <= i < stream.len()
+        implies #[trigger] stream[i] <= usize::MAX as nat by {
+        firsts_contains_at(stream, Set::empty(), i);
+        assert(firsts.contains(stream[i]));
+        let j = choose|j: int| 0 <= j < firsts.len() && firsts[j] == stream[i];
+        assert(firsts[j] == j as nat);
+    }
+}
+
+#[verifier::spinoff_prover]
+proof fn term_var_lengths(term: Term)
+    ensures
+        ckc_spec::term::var_stream(term).len()
+            <= ckc_spec::v1text::term_bytes(term).len(),
+        ckc_spec::term::var_stream(term).len()
+            <= ckc_spec::v1text::tail_bytes(term).len(),
+    decreases term, 0int,
+{
+    reveal(ckc_spec::term::var_stream);
+    reveal(ckc_spec::v1text::term_bytes);
+    reveal(ckc_spec::v1text::tail_bytes);
+    match term {
+        Term::Var(key) => {
+            term_bytes_nonempty(term);
+            assert(ckc_spec::term::var_stream(term) == seq![key]);
+            assert(ckc_spec::term::var_stream(term).len() == 1);
+            assert(ckc_spec::v1text::term_bytes(term).len() >= 1);
+            assert(ckc_spec::term::var_stream(term).len()
+                <= ckc_spec::v1text::term_bytes(term).len());
+        },
+        Term::Comp(name, args) => {
+            if name == ckc_spec::v1text::cons_name() && args.len() == 2 {
+                term_var_lengths(args[0]);
+                term_var_lengths(args[1]);
+                assert_seqs_equal!(args == seq![args[0], args[1]]);
+                assert(ckc_spec::term::var_stream_all(args)
+                    == ckc_spec::term::var_stream(args[0])
+                        + ckc_spec::term::var_stream(args[1])) by {
+                    reveal_with_fuel(ckc_spec::term::var_stream_all, 3);
+                }
+                assert(ckc_spec::term::var_stream(term).len()
+                    <= ckc_spec::v1text::term_bytes(term).len());
+            } else if name == ckc_spec::v1text::curly_name() && args.len() == 1 {
+                term_var_lengths(args[0]);
+                assert_seqs_equal!(args == seq![args[0]]);
+                assert(ckc_spec::term::var_stream_all(args)
+                    == ckc_spec::term::var_stream(args[0])) by {
+                    reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
+                }
+                assert(ckc_spec::term::var_stream(term).len()
+                    <= ckc_spec::v1text::term_bytes(term).len());
+            } else {
+                terms_var_lengths(args);
+                assert(ckc_spec::term::var_stream(term).len()
+                    <= ckc_spec::v1text::term_bytes(term).len());
+            }
+            assert(ckc_spec::term::var_stream(term).len()
+                <= ckc_spec::v1text::term_bytes(term).len());
+            assert(ckc_spec::term::var_stream(term).len()
+                <= ckc_spec::v1text::tail_bytes(term).len());
+        },
+        _ => {
+            assert(ckc_spec::term::var_stream(term).len() == 0);
+        },
+    }
+}
+
+proof fn terms_var_lengths(terms: Seq<Term>)
+    ensures
+        ckc_spec::term::var_stream_all(terms).len()
+            <= ckc_spec::v1text::args_bytes(terms).len(),
+        ckc_spec::term::var_stream_all(terms).len()
+            <= ckc_spec::v1text::lit_list_bytes(terms).len(),
+    decreases terms, 1int,
+{
+    reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
+    reveal(ckc_spec::v1text::args_bytes);
+    reveal(ckc_spec::v1text::lit_list_bytes);
+    if terms.len() > 0 {
+        term_var_lengths(terms[0]);
+        terms_var_lengths(terms.drop_first());
+    }
+}
+
+pub open spec fn stream_keys_fit(stream: Seq<nat>) -> bool {
+    forall|i: int| 0 <= i < stream.len() ==> #[trigger] stream[i] <= usize::MAX as nat
+}
+
+proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
+    requires stream_keys_fit(left + right),
+    ensures stream_keys_fit(left), stream_keys_fit(right),
+{
+    assert forall|i: int| 0 <= i < left.len()
+        implies #[trigger] left[i] <= usize::MAX as nat by {
+        assert((left + right)[i] == left[i]);
+    }
+    assert forall|i: int| 0 <= i < right.len()
+        implies #[trigger] right[i] <= usize::MAX as nat by {
+        assert((left + right)[left.len() + i] == right[i]);
+    }
+}
+
+proof fn term_keys_from_stream(term: Term)
+    requires stream_keys_fit(ckc_spec::term::var_stream(term)),
+    ensures term_keys_fit(term),
+    decreases term, 0int,
+{
+    reveal(ckc_spec::term::var_stream);
+    reveal(term_keys_fit);
+    match term {
+        Term::Var(key) => {
+            assert(ckc_spec::term::var_stream(term)[0] == key);
+        },
+        Term::Comp(_, args) => { terms_keys_from_stream(args); },
+        _ => {},
+    }
+}
+
+proof fn terms_keys_from_stream(terms: Seq<Term>)
+    requires stream_keys_fit(ckc_spec::term::var_stream_all(terms)),
+    ensures terms_keys_fit(terms),
+    decreases terms, 1int,
+{
+    reveal(ckc_spec::term::var_stream_all);
+    reveal(terms_keys_fit);
+    if terms.len() > 0 {
+        stream_keys_fit_split(
+            ckc_spec::term::var_stream(terms[0]),
+            ckc_spec::term::var_stream_all(terms.drop_first()),
+        );
+        term_keys_from_stream(terms[0]);
+        terms_keys_from_stream(terms.drop_first());
+    }
+}
+
 proof fn atomic_var_stream_len(
     term: Term,
     start: usize,
@@ -10238,11 +11517,14 @@ at: &mut usize,
 
 fn guided_term(
     bytes: &[u8],
+    arena: &mut ETermArena,
+    first_var: Option<usize>,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Term, u8)>>,
 at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         old(guided).guide@ matches Some(g) ==> expected@ matches Some(e)
@@ -10252,6 +11534,7 @@ at: &mut usize,
                 &&& g.parts[g.index]
                     == ckc_spec::v1text::term_bytes(e.0)
                 &&& ckc_spec::term::wf_term(e.0)
+                &&& term_keys_fit(e.0)
                 &&& g.parts[g.index + 1].len() > 0
                 &&& g.parts[g.index + 1][0] == e.1
                 &&& (e.1 == 0x2c || e.1 == 0x29 || e.1 == 0x5d
@@ -10260,6 +11543,9 @@ at: &mut usize,
                         && g.parts[g.index + 1][1] == 0x0a)
             },
     ensures
+        r matches Some(term) ==> spanned_root_ok(final(arena), &term),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -10306,6 +11592,8 @@ at: &mut usize,
     }
     let term = match cursor_term(
         bytes,
+        arena,
+        first_var,
         &mut guided.cursor,
         Ghost(term_expected),
     at,
@@ -10378,8 +11666,136 @@ proof fn answers_flat_is_print(a: ckc_spec::v1text::AnswersFile)
     reveal(ckc_spec::v1text::answers_record_term);
 }
 
+pub enum EV1Class {
+    Doc,
+    Query,
+    Answers,
+    Traces,
+}
+
 pub struct EParsedV1 {
+    pub class: EV1Class,
+    pub docid: Vec<u8>,
+    pub doc_ace: Vec<u8>,
+    pub doc_ulex: Vec<u8>,
+    pub qid: Vec<u8>,
+    pub clauses: Vec<EDocClause>,
+    pub goal_root: usize,
+    pub answers_root: usize,
     pub file: Ghost<ckc_spec::v1text::V1File>,
+}
+
+pub open spec fn ulex_digest_bytes(ulex: Option<Seq<u8>>) -> Seq<u8> {
+    match ulex {
+        None => Seq::empty(),
+        Some(digest) => digest,
+    }
+}
+
+pub open spec fn parsed_metadata_ok(parsed: &EParsedV1) -> bool {
+    &&& match parsed@ {
+        ckc_spec::v1text::V1File::Doc(_) => parsed.class is Doc,
+        ckc_spec::v1text::V1File::Query(_) => parsed.class is Query,
+        ckc_spec::v1text::V1File::Answers(_) => parsed.class is Answers,
+        ckc_spec::v1text::V1File::Traces(_) => parsed.class is Traces,
+    }
+    &&& match parsed@ {
+        ckc_spec::v1text::V1File::Doc(d) => {
+            &&& parsed.docid@ == d.docid
+            &&& parsed.doc_ace@ == d.ace
+            &&& parsed.doc_ulex@ == ulex_digest_bytes(d.ulex)
+        },
+        _ => {
+            &&& parsed.docid@ == Seq::<u8>::empty()
+            &&& parsed.doc_ace@ == Seq::<u8>::empty()
+            &&& parsed.doc_ulex@ == Seq::<u8>::empty()
+        },
+    }
+    &&& parsed.qid@ == match parsed@ {
+        ckc_spec::v1text::V1File::Query(q) => q.qid,
+        _ => Seq::empty(),
+    }
+}
+
+pub closed spec fn doc_clause_models(
+    bundles: Seq<ckc_spec::v1text::Bundle>,
+) -> Seq<ckc_spec::v1text::DocClause> {
+    bundles.map_values(|b: ckc_spec::v1text::Bundle| b.clauses).flatten()
+}
+
+pub proof fn doc_clause_models_flatten(bundles: Seq<ckc_spec::v1text::Bundle>)
+    ensures doc_clause_models(bundles)
+        == bundles.map_values(|b: ckc_spec::v1text::Bundle| b.clauses).flatten(),
+{
+    reveal(doc_clause_models);
+}
+
+proof fn doc_clause_models_empty()
+    ensures doc_clause_models(Seq::empty()) == Seq::<ckc_spec::v1text::DocClause>::empty(),
+{
+    reveal(doc_clause_models);
+    reveal_with_fuel(Seq::<_>::flatten, 1);
+}
+
+proof fn doc_clause_models_push(
+    bundles: Seq<ckc_spec::v1text::Bundle>,
+    bundle: ckc_spec::v1text::Bundle,
+)
+    ensures doc_clause_models(bundles.push(bundle)) == doc_clause_models(bundles) + bundle.clauses,
+{
+    reveal(doc_clause_models);
+    let parts = bundles.map_values(|b: ckc_spec::v1text::Bundle| b.clauses);
+    assert_seqs_equal!(bundles.push(bundle).map_values(|b: ckc_spec::v1text::Bundle| b.clauses)
+        == parts.push(bundle.clauses));
+    parts.lemma_flatten_push(bundle.clauses);
+}
+
+pub closed spec fn parsed_doc_roots_ok(nodes: Seq<ENode>, parsed: &EParsedV1) -> bool {
+    match parsed@ {
+        ckc_spec::v1text::V1File::Doc(d) => {
+            doc_clauses_roots_ok(nodes, parsed.clauses@, doc_clause_models(d.bundles))
+        },
+        _ => parsed.clauses@.len() == 0,
+    }
+}
+
+pub proof fn parsed_doc_roots_elim(nodes: Seq<ENode>, parsed: &EParsedV1)
+    requires parsed_doc_roots_ok(nodes, parsed),
+    ensures match parsed@ {
+        ckc_spec::v1text::V1File::Doc(d) => {
+            doc_clauses_roots_ok(nodes, parsed.clauses@, doc_clause_models(d.bundles))
+        },
+        _ => parsed.clauses@.len() == 0,
+    },
+{
+    reveal(parsed_doc_roots_ok);
+}
+
+pub closed spec fn parsed_query_roots_ok(nodes: Seq<ENode>, parsed: &EParsedV1) -> bool {
+    match parsed@ {
+        ckc_spec::v1text::V1File::Query(q) => {
+            &&& parsed.goal_root < nodes.len()
+            &&& parsed.answers_root < nodes.len()
+            &&& nodes[parsed.goal_root as int].term@ == q.goal
+            &&& nodes[parsed.answers_root as int].term@ == q.answers
+        },
+        _ => true,
+    }
+}
+
+pub proof fn parsed_query_roots_elim(nodes: Seq<ENode>, parsed: &EParsedV1)
+    requires parsed_query_roots_ok(nodes, parsed),
+    ensures match parsed@ {
+        ckc_spec::v1text::V1File::Query(q) => {
+            &&& parsed.goal_root < nodes.len()
+            &&& parsed.answers_root < nodes.len()
+            &&& nodes[parsed.goal_root as int].term@ == q.goal
+            &&& nodes[parsed.answers_root as int].term@ == q.answers
+        },
+        _ => true,
+    },
+{
+    reveal(parsed_query_roots_ok);
 }
 
 impl View for EParsedV1 {
@@ -10563,10 +11979,12 @@ proof fn answers_term_expected(
         bytes.len() == bound,
     ensures term_at(bytes, cursor.pos as int, g.end as int, g.term),
         g.term == a.result,
+        term_keys_fit(g.term),
 {
     reveal(answers_progress);
     reveal(cursor_ok);
     reveal(ckc_spec::v1text::wf_answers);
+    ground_term_keys_fit(a.result);
     assert(cursor_ok(bytes, cursor));
     reveal(answers_parts);
     term_part_expected(
@@ -10584,20 +12002,31 @@ proof fn answers_term_expected(
 #[verifier::spinoff_prover]
 pub fn parse_answers(
     bytes: &[u8],
+    arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::AnswersFile>>,
 at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         expected@ matches Some(a) ==>
             ckc_spec::v1text::wf_answers(a)
                 && ckc_spec::v1text::print_answers(a) == bytes@,
     ensures
+        r matches Some(parsed) ==> parsed@ is Answers,
+        r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
+        r matches Some(parsed) ==> parsed_query_roots_ok(final(arena).nodes@, &parsed),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
+        r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
         expected@ matches Some(a) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Answers(a),
 {
+    hide(parsed_metadata_ok);
+    hide(term_keys_fit);
+    hide(terms_keys_fit);
     let mut cursor = new_cursor(bytes);
     proof {
         if let Some(a) = expected@ {
@@ -11202,6 +12631,8 @@ at: &mut usize,
     };
     let result = match cursor_term(
         bytes,
+        arena,
+        Some(0),
         &mut cursor,
         Ghost(result_expected),
     at,
@@ -11365,7 +12796,20 @@ at: &mut usize,
         reveal(ckc_spec::v1text::print_v1);
         reveal(parsed_v1_ok);
     }
+    proof {
+        reveal(parsed_doc_roots_ok);
+        reveal(parsed_query_roots_ok);
+        reveal(parsed_metadata_ok);
+    }
     Some(EParsedV1 {
+        class: EV1Class::Answers,
+        docid: Vec::new(),
+        doc_ace: Vec::new(),
+        doc_ulex: Vec::new(),
+        qid: Vec::new(),
+        clauses: Vec::new(),
+        goal_root: 0,
+        answers_root: 0,
         file: Ghost(ckc_spec::v1text::V1File::Answers(model)),
     })
 }
@@ -11443,6 +12887,7 @@ pub open spec fn traces_parts(
 }
 
 #[verifier::rlimit(100)]
+#[verifier::spinoff_prover]
 proof fn traces_parts_flat(t: ckc_spec::v1text::TracesFile)
     ensures traces_parts(t).flatten() == traces_flat(t),
 {
@@ -11999,11 +13444,13 @@ at: &mut usize,
 #[verifier::rlimit(200)]
 fn parse_traces_result(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
 at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(t) ==> old(guided).guide@ matches Some(g)
@@ -12011,6 +13458,9 @@ at: &mut usize,
             && ckc_spec::v1text::wf_traces(t),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        r matches Some(term) ==> spanned_root_ok(final(arena), &term),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(result) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -12058,11 +13508,16 @@ at: &mut usize,
         return None;
     }
 
+    proof {
+        if let Some(t) = expected@ {
+            ground_term_keys_fit(t.result);
+        }
+    }
     let ghost result_expected = match expected@ {
         Some(t) => Some((t.result, 0x29u8)),
         None => None,
     };
-    let result = match guided_term(bytes, guided, Ghost(result_expected), at) {
+    let result = match guided_term(bytes, arena, Some(0), guided, Ghost(result_expected), at) {
         Some(term) => term,
         None => return None,
     };
@@ -12114,17 +13569,25 @@ at: &mut usize,
 #[verifier::rlimit(300)]
 pub fn parse_traces(
     bytes: &[u8],
+    arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
 at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         expected@ matches Some(t) ==>
             ckc_spec::v1text::wf_traces(t)
                 && ckc_spec::v1text::print_traces(t) == bytes@,
     ensures
+        r matches Some(parsed) ==> parsed@ is Traces,
+        r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
+        r matches Some(parsed) ==> parsed_query_roots_ok(final(arena).nodes@, &parsed),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
+        r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
         expected@ matches Some(t) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Traces(t),
 {
@@ -12159,7 +13622,7 @@ at: &mut usize,
         Some(hash) => hash,
         None => return None,
     };
-    let result = match parse_traces_result(bytes, &mut guided, expected, at) {
+    let result = match parse_traces_result(bytes, arena, &mut guided, expected, at) {
         Some(term) => term,
         None => return None,
     };
@@ -12213,7 +13676,16 @@ at: &mut usize,
         reveal(ckc_spec::v1text::print_v1);
         reveal(parsed_v1_ok);
     }
+    proof { reveal(parsed_doc_roots_ok); reveal(parsed_query_roots_ok); }
     Some(EParsedV1 {
+        class: EV1Class::Traces,
+        docid: Vec::new(),
+        doc_ace: Vec::new(),
+        doc_ulex: Vec::new(),
+        qid: Vec::new(),
+        clauses: Vec::new(),
+        goal_root: 0,
+        answers_root: 0,
         file: Ghost(ckc_spec::v1text::V1File::Traces(model)),
     })
 }
@@ -13102,6 +14574,7 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
 
 pub struct EUlexField {
     pub value: Ghost<Option<Seq<u8>>>,
+    pub digest: Vec<u8>,
 }
 
 #[verifier::rlimit(200)]
@@ -13443,6 +14916,7 @@ at: &mut usize,
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
+            &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
             &&& final(guided).cursor.prefix@
                 == old(guided).cursor.prefix@
                     + query_ulex_stage(ulex.value@)
@@ -13649,7 +15123,7 @@ at: &mut usize,
                     + query_record_suffix_stage());
             reveal(ckc_spec::v1text::ulex_ok);
         }
-        return Some(EUlexField { value: Ghost(None) });
+        return Some(EUlexField { value: Ghost(None), digest: Vec::new() });
     }
 
     if !vec_slice_equal(&tag.name, sha_name) {
@@ -13868,7 +15342,7 @@ at: &mut usize,
                 + query_record_suffix_stage());
         reveal(ckc_spec::v1text::ulex_ok);
     }
-    Some(EUlexField { value: Ghost(Some(hash.name@)) })
+    Some(EUlexField { value: Ghost(Some(hash.name@)), digest: hash.name })
 }
 
 #[verifier::rlimit(500)]
@@ -13890,6 +15364,7 @@ at: &mut usize,
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
+            &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
             &&& final(guided).cursor.prefix@
                 == old(guided).cursor.prefix@
                     + query_ulex_stage(ulex.value@)
@@ -14067,6 +15542,7 @@ at: &mut usize,
             term.end as int,
             term@,
         ),
+        term_keys_fit(term@),
         old(tracker).valid ==>
             tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
@@ -14080,11 +15556,14 @@ at: &mut usize,
         old(tracker).stream@.len() <= term.start ==>
             final(tracker).stream@.len() <= term.end,
 {
+    let mut local_arena = ETermArena { nodes: Vec::new() };
+    proof { reveal(arena_ok); }
     let ghost initial = tracker.stream@;
     let ghost guide = GTermExpected { term: term@, end: term.end };
     let replay = parse_term(
         bytes,
         term.start,
+        &mut local_arena,
         Ghost(Some(guide)),
         Ghost(guide),
         Ghost(initial),
@@ -14098,7 +15577,30 @@ at: &mut usize,
     }
 }
 
+proof fn query_keys_fit(q: ckc_spec::v1text::QueryFile, bound: nat)
+    requires
+        ckc_spec::v1text::wf_query(q),
+        query_parts(q).flatten().len() <= bound <= usize::MAX as nat,
+    ensures term_keys_fit(q.goal), term_keys_fit(q.answers),
+{
+    query_parts_flat(q);
+    reveal(query_flat);
+    reveal(query_projection_stage);
+    term_var_lengths(q.goal);
+    term_var_lengths(q.answers);
+    reveal(ckc_spec::v1text::wf_query);
+    let goal = ckc_spec::term::var_stream(q.goal);
+    let answers = ckc_spec::term::var_stream(q.answers);
+    assert((goal + answers).len() <= query_parts(q).flatten().len());
+    canonical_stream_keys_fit(goal + answers);
+    stream_keys_fit_split(goal, answers);
+    term_keys_from_stream(q.goal);
+    term_keys_from_stream(q.answers);
+}
+
 pub struct EQueryProjection {
+    pub goal_root: usize,
+    pub answers_root: usize,
     pub goal: ESpannedTerm,
     pub answers: ESpannedTerm,
 }
@@ -14107,11 +15609,13 @@ pub struct EQueryProjection {
 #[verifier::spinoff_prover]
 fn parse_query_projection(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
 at: &mut usize,
 ) -> (r: Option<EQueryProjection>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
@@ -14120,6 +15624,12 @@ at: &mut usize,
             && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        r matches Some(p) ==> p.goal_root == p.goal.root
+            && p.answers_root == p.answers.root,
+        r matches Some(p) ==> spanned_root_ok(final(arena), &p.goal)
+            && spanned_root_ok(final(arena), &p.answers),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(projection) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -14148,6 +15658,8 @@ at: &mut usize,
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
+    let ghost entry_nodes = arena.nodes@;
+    let input_len = bytes.len();
     let ghost old_prefix = guided.cursor.prefix@;
     proof {
         if let Some(q) = expected@ {
@@ -14160,6 +15672,10 @@ at: &mut usize,
             reveal(query_text_end);
             reveal(query_parts_end);
             reveal(ckc_spec::v1text::wf_query);
+            reveal(guided_cursor_ok);
+            reveal(parts_progress);
+            assert(query_parts(q).flatten() == bytes@);
+            query_keys_fit(q, input_len as nat);
             match q.ulex {
                 None => {},
                 Some(_) => {},
@@ -14224,7 +15740,7 @@ at: &mut usize,
         Some(q) => Some((q.goal, 0x29u8)),
         None => None,
     };
-    let goal = match guided_term(bytes, guided, Ghost(goal_expected), at) {
+    let goal = match guided_term(bytes, arena, Some(0), guided, Ghost(goal_expected), at) {
         Some(term) => term,
         None => return None,
     };
@@ -14297,7 +15813,18 @@ at: &mut usize,
         Some(q) => Some((q.answers, 0x29u8)),
         None => None,
     };
-    let answers = match guided_term(bytes, guided, Ghost(answers_expected), at) {
+    let ghost goal_nodes = arena.nodes@;
+    let first_var = if tracker.valid { Some(tracker.next) } else { None };
+    let answers_result = guided_term(bytes, arena, first_var, guided, Ghost(answers_expected), at);
+    proof {
+        nodes_prefix_transitive(entry_nodes, goal_nodes, arena.nodes@);
+        arena_prefix_stable(goal_nodes, arena);
+        reveal(spanned_root_ok);
+        assert(goal.root < goal_nodes.len());
+        assert(goal_nodes[goal.root as int].term@ == goal@);
+        assert(spanned_root_ok(arena, &goal));
+    }
+    let answers = match answers_result {
         Some(term) => term,
         None => return None,
     };
@@ -14380,24 +15907,32 @@ at: &mut usize,
                 == old_prefix + query_projection_stage(goal@, answers@)
         );
     }
-    Some(EQueryProjection { goal, answers })
+    Some(EQueryProjection { goal_root: goal.root, answers_root: answers.root, goal, answers })
 }
 
 #[verifier::rlimit(2000)]
 #[verifier::spinoff_prover]
 pub fn parse_query(
     bytes: &[u8],
+    arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
 at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         expected@ matches Some(q) ==>
             ckc_spec::v1text::wf_query(q)
                 && ckc_spec::v1text::print_query(q) == bytes@,
     ensures
+        r matches Some(parsed) ==> parsed@ is Query,
+        r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
+        r matches Some(parsed) ==> parsed_query_roots_ok(final(arena).nodes@, &parsed),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
+        r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
         expected@ matches Some(q) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Query(q),
 {
@@ -14438,6 +15973,7 @@ at: &mut usize,
     };
     let projection = match parse_query_projection(
         bytes,
+        arena,
         &mut guided,
         expected,
     at,
@@ -14513,7 +16049,16 @@ at: &mut usize,
         reveal(ckc_spec::v1text::print_v1);
         reveal(parsed_v1_ok);
     }
+    proof { reveal(parsed_doc_roots_ok); reveal(parsed_query_roots_ok); }
     Some(EParsedV1 {
+        class: EV1Class::Query,
+        docid: Vec::new(),
+        doc_ace: Vec::new(),
+        doc_ulex: Vec::new(),
+        qid: line_qid.value,
+        clauses: Vec::new(),
+        goal_root: projection.goal_root,
+        answers_root: projection.answers_root,
         file: Ghost(ckc_spec::v1text::V1File::Query(model)),
     })
 }
@@ -15750,6 +17295,7 @@ at: &mut usize,
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
+            &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
             &&& final(guided).cursor.prefix@
                 == old(guided).cursor.prefix@
                     + query_ulex_stage(ulex.value@)
@@ -15816,6 +17362,26 @@ at: &mut usize,
 
 pub open spec fn guide_rest(g: GPartsGuide) -> Seq<Seq<u8>> {
     g.parts.subrange(g.index, g.parts.len() as int)
+}
+
+proof fn guide_prefix_length(
+    bytes: Seq<u8>,
+    guided: &EGuidedCursor,
+    prefix: Seq<Seq<u8>>,
+    suffix: Seq<Seq<u8>>,
+)
+    requires
+        guided_cursor_ok(bytes, guided),
+        guided.guide@ matches Some(g) && guide_rest(g) == prefix + suffix,
+    ensures prefix.flatten().len() <= bytes.len(),
+{
+    let g = guided.guide@.unwrap();
+    reveal(guided_cursor_ok);
+    reveal(parts_progress);
+    reveal(guide_rest);
+    assert_seqs_equal!(g.parts == g.parts.take(g.index) + guide_rest(g));
+    vstd::seq_lib::lemma_flatten_concat(g.parts.take(g.index), guide_rest(g));
+    vstd::seq_lib::lemma_flatten_concat(prefix, suffix);
 }
 
 proof fn guide_rest_advance(before: GPartsGuide, after: GPartsGuide)
@@ -16037,18 +17603,22 @@ at: &mut usize,
 
 fn doc_guided_term(
     bytes: &[u8],
+    arena: &mut ETermArena,
+    first_var: Option<usize>,
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
 at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> old(guided).guide@ matches Some(g)
             && guide_rest(g)
                 == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1
             && ckc_spec::term::wf_term(e.0)
+            && term_keys_fit(e.0)
             && e.1.len() > 0
             && e.1[0].len() > 0
             && e.1[0][0] == next@
@@ -16058,6 +17628,9 @@ at: &mut usize,
                     && e.1[0][1] == 0x0a),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        r matches Some(term) ==> spanned_root_ok(final(arena), &term),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -16097,7 +17670,7 @@ at: &mut usize,
         Some(e) => Some((e.0, next@)),
         None => None,
     };
-    let term = match guided_term(bytes, guided, Ghost(term_expected), at) {
+    let term = match guided_term(bytes, arena, first_var, guided, Ghost(term_expected), at) {
         Some(term) => term,
         None => return None,
     };
@@ -16311,6 +17884,7 @@ proof fn spanned_term_at_doc_delimiter(
 
 fn parse_doc_literal(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
@@ -16318,12 +17892,14 @@ fn parse_doc_literal(
 at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> old(guided).guide@ matches Some(g)
             && guide_rest(g)
                 == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1
             && ckc_spec::v1text::wf_literal(e.0)
+            && term_keys_fit(e.0)
             && e.1.len() > 0
             && e.1[0].len() > 0
             && e.1[0][0] == next@
@@ -16336,6 +17912,9 @@ at: &mut usize,
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        r matches Some(term) ==> spanned_root_ok(final(arena), &term),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(term) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -16368,7 +17947,8 @@ at: &mut usize,
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
-    let term = match doc_guided_term(bytes, guided, next, expected, at) {
+    let first_var = if tracker.valid { Some(tracker.next) } else { None };
+    let term = match doc_guided_term(bytes, arena, first_var, guided, next, expected, at) {
         Some(term) => term,
         None => return None,
     };
@@ -16502,7 +18082,142 @@ proof fn wf_literal_term_prefix_safe(term: Term)
     }
 }
 
+pub open spec fn item_keys_fit(item: ckc_spec::v1text::BodyItem) -> bool {
+    match item {
+        ckc_spec::v1text::BodyItem::Pos(term) => term_keys_fit(term),
+        ckc_spec::v1text::BodyItem::Naf(terms) => terms_keys_fit(terms),
+    }
+}
+
+pub open spec fn body_keys_fit(items: Seq<ckc_spec::v1text::BodyItem>) -> bool {
+    forall|i: int| 0 <= i < items.len() ==> item_keys_fit(#[trigger] items[i])
+}
+
+proof fn body_keys_from_stream(items: Seq<ckc_spec::v1text::BodyItem>)
+    requires stream_keys_fit(ckc_spec::v1text::body_var_stream(items)),
+    ensures body_keys_fit(items),
+    decreases items.len(),
+{
+    reveal(ckc_spec::v1text::body_var_stream);
+    if items.len() > 0 {
+        stream_keys_fit_split(
+            ckc_spec::v1text::item_var_stream(items[0]),
+            ckc_spec::v1text::body_var_stream(items.drop_first()),
+        );
+        reveal(ckc_spec::v1text::item_var_stream);
+        match items[0] {
+            ckc_spec::v1text::BodyItem::Pos(term) => { term_keys_from_stream(term); },
+            ckc_spec::v1text::BodyItem::Naf(terms) => { terms_keys_from_stream(terms); },
+        }
+        body_keys_from_stream(items.drop_first());
+        assert forall|i: int| 0 <= i < items.len()
+            implies item_keys_fit(#[trigger] items[i]) by {
+            if i > 0 {
+                assert(items.drop_first()[i - 1] == items[i]);
+            }
+        }
+    }
+}
+
+proof fn item_var_length(item: ckc_spec::v1text::BodyItem)
+    ensures ckc_spec::v1text::item_var_stream(item).len()
+        <= ckc_spec::v1text::body_item_bytes(item).len(),
+{
+    reveal(ckc_spec::v1text::item_var_stream);
+    reveal(ckc_spec::v1text::body_item_bytes);
+    match item {
+        ckc_spec::v1text::BodyItem::Pos(term) => { term_var_lengths(term); },
+        ckc_spec::v1text::BodyItem::Naf(terms) => {
+            terms_var_lengths(terms);
+            if terms.len() == 1 {
+                term_var_lengths(terms[0]);
+                assert(ckc_spec::term::var_stream_all(terms)
+                    == ckc_spec::term::var_stream(terms[0])) by {
+                    reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
+                }
+            }
+        },
+    }
+}
+
+proof fn body_var_length(items: Seq<ckc_spec::v1text::BodyItem>)
+    ensures ckc_spec::v1text::body_var_stream(items).len()
+        <= ckc_spec::v1text::body_bytes(items).len(),
+    decreases items.len(),
+{
+    reveal_with_fuel(ckc_spec::v1text::body_var_stream, 2);
+    reveal(ckc_spec::v1text::body_bytes);
+    if items.len() > 0 {
+        item_var_length(items[0]);
+        body_var_length(items.drop_first());
+    }
+}
+
+proof fn clause_keys_fit(clause: ckc_spec::v1text::DocClause, bound: nat)
+    requires
+        ckc_spec::v1text::wf_clause(clause),
+        ckc_spec::v1text::clause_line(clause).len() <= bound <= usize::MAX as nat,
+    ensures term_keys_fit(clause.head), body_keys_fit(clause.body),
+{
+    term_var_lengths(clause.head);
+    body_var_length(clause.body);
+    reveal(ckc_spec::v1text::clause_line);
+    reveal(ckc_spec::v1text::term_line);
+    reveal(ckc_spec::v1text::body_var_stream);
+    reveal(ckc_spec::v1text::wf_clause);
+    let head = ckc_spec::term::var_stream(clause.head);
+    let body = ckc_spec::v1text::body_var_stream(clause.body);
+    assert((head + body).len() <= ckc_spec::v1text::clause_line(clause).len());
+    canonical_stream_keys_fit(head + body);
+    stream_keys_fit_split(head, body);
+    term_keys_from_stream(clause.head);
+    body_keys_from_stream(clause.body);
+}
+
+pub enum EBodyRoot {
+    Pos(usize),
+    Naf(Vec<usize>),
+}
+
+pub closed spec fn body_root_ok(
+    nodes: Seq<ENode>,
+    root: &EBodyRoot,
+    item: ckc_spec::v1text::BodyItem,
+) -> bool {
+    match (root, item) {
+        (EBodyRoot::Pos(index), ckc_spec::v1text::BodyItem::Pos(term)) => {
+            &&& *index < nodes.len()
+            &&& nodes[*index as int].term@ == term
+        },
+        (EBodyRoot::Naf(roots), ckc_spec::v1text::BodyItem::Naf(terms)) => {
+            roots_ok_nodes(nodes, roots@, terms)
+        },
+        _ => false,
+    }
+}
+
+pub proof fn body_root_elim(
+    nodes: Seq<ENode>,
+    root: &EBodyRoot,
+    item: ckc_spec::v1text::BodyItem,
+)
+    requires body_root_ok(nodes, root, item),
+    ensures match (root, item) {
+        (EBodyRoot::Pos(index), ckc_spec::v1text::BodyItem::Pos(term)) => {
+            &&& *index < nodes.len()
+            &&& nodes[*index as int].term@ == term
+        },
+        (EBodyRoot::Naf(roots), ckc_spec::v1text::BodyItem::Naf(terms)) => {
+            roots_ok_nodes(nodes, roots@, terms)
+        },
+        _ => false,
+    },
+{
+    reveal(body_root_ok);
+}
+
 pub struct EDocBodyItem {
+    pub root: EBodyRoot,
     pub item: Ghost<ckc_spec::v1text::BodyItem>,
 }
 
@@ -16551,6 +18266,7 @@ proof fn guide_second_bytes(
 #[verifier::spinoff_prover]
 fn parse_doc_pos_item(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
@@ -16558,6 +18274,7 @@ fn parse_doc_pos_item(
 at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
@@ -16565,6 +18282,7 @@ at: &mut usize,
                 && guide_rest(g)
                     == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1
             &&& ckc_spec::v1text::wf_literal(e.0)
+            &&& term_keys_fit(e.0)
             &&& e.1.len() > 0
             &&& e.1[0].len() > 0
             &&& e.1[0][0] == next@
@@ -16580,6 +18298,9 @@ at: &mut usize,
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        r matches Some(item) ==> body_root_ok(final(arena).nodes@, &item.root, item@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -16605,7 +18326,7 @@ at: &mut usize,
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost entry_stream = tracker.stream@;
-    let term = match parse_doc_literal(bytes, guided, next, expected, tracker, at) {
+    let term = match parse_doc_literal(bytes, arena, guided, next, expected, tracker, at) {
         Some(term) => term,
         None => return None,
     };
@@ -16617,13 +18338,15 @@ at: &mut usize,
         reveal_with_fuel(Seq::<_>::flatten, 3);
         assert(entry_stream == old(tracker).stream@);
     }
-    Some(EDocBodyItem { item: Ghost(item) })
+    proof { reveal(body_root_ok); }
+    Some(EDocBodyItem { root: EBodyRoot::Pos(term.root), item: Ghost(item) })
 }
 
 #[verifier::rlimit(2000)]
 #[verifier::spinoff_prover]
 fn parse_doc_naf_singleton(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
@@ -16631,6 +18354,7 @@ fn parse_doc_naf_singleton(
 at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
@@ -16641,6 +18365,7 @@ at: &mut usize,
                         ckc_spec::v1text::term_bytes(e.0),
                     ] + e.1
             &&& ckc_spec::v1text::wf_literal(e.0)
+            &&& term_keys_fit(e.0)
             &&& e.1.len() > 0
             &&& e.1[0].len() > 0
             &&& e.1[0][0] == next@
@@ -16656,6 +18381,9 @@ at: &mut usize,
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        r matches Some(item) ==> body_root_ok(final(arena).nodes@, &item.root, item@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -16709,7 +18437,7 @@ at: &mut usize,
     ) {
         return None;
     }
-    let term = match parse_doc_literal(bytes, guided, next, expected, tracker, at) {
+    let term = match parse_doc_literal(bytes, arena, guided, next, expected, tracker, at) {
         Some(term) => term,
         None => return None,
     };
@@ -16739,19 +18467,29 @@ at: &mut usize,
             assert(term@ == e.0);
         }
     }
-    Some(EDocBodyItem { item: Ghost(item) })
+    let mut roots = Vec::new();
+    roots.push(term.root);
+    proof {
+        reveal(body_root_ok);
+        reveal(roots_ok_nodes);
+        reveal(spanned_root_ok);
+        assert(roots_ok_nodes(arena.nodes@, roots@, seq![term@]));
+    }
+    Some(EDocBodyItem { root: EBodyRoot::Naf(roots), item: Ghost(item) })
 }
 
 #[verifier::rlimit(5000)]
 #[verifier::spinoff_prover]
 fn parse_doc_naf_conjunction(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Seq<Term>, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
 at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
@@ -16761,6 +18499,7 @@ at: &mut usize,
                         ckc_spec::v1text::BodyItem::Naf(e.0),
                     ) + e.1
             &&& e.0.len() >= 2
+            &&& terms_keys_fit(e.0)
             &&& forall|i: int| 0 <= i < e.0.len()
                 ==> ckc_spec::v1text::wf_literal(e.0[i])
         },
@@ -16770,6 +18509,9 @@ at: &mut usize,
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        r matches Some(item) ==> body_root_ok(final(arena).nodes@, &item.root, item@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -16794,6 +18536,79 @@ at: &mut usize,
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
+    let mut input_arena = ETermArena { nodes: Vec::new() };
+    std::mem::swap(arena, &mut input_arena);
+    let (result, output_arena) = parse_doc_naf_conjunction_inner(bytes, input_arena, guided, expected, tracker, at);
+    *arena = output_arena;
+    result
+}
+
+#[verifier::rlimit(5000)]
+#[verifier::spinoff_prover]
+fn parse_doc_naf_conjunction_inner(
+    bytes: &[u8],
+    input_arena: ETermArena,
+    guided: &mut EGuidedCursor,
+    expected: Ghost<Option<(Seq<Term>, Seq<Seq<u8>>)>>,
+    tracker: &mut EVarTracker,
+at: &mut usize,
+) -> (r: (Option<EDocBodyItem>, ETermArena))
+    requires
+        arena_ok(&input_arena),
+        *old(at) <= bytes@.len(),
+        guided_cursor_ok(bytes@, old(guided)),
+        expected@ matches Some(e) ==> {
+            &&& old(guided).guide@ matches Some(g)
+                && guide_rest(g)
+                    == doc_body_item_parts(
+                        ckc_spec::v1text::BodyItem::Naf(e.0),
+                    ) + e.1
+            &&& e.0.len() >= 2
+            &&& terms_keys_fit(e.0)
+            &&& forall|i: int| 0 <= i < e.0.len()
+                ==> ckc_spec::v1text::wf_literal(e.0[i])
+        },
+        expected@ is None ==> old(guided).guide@ is None,
+        old(tracker).valid ==>
+            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        tracker_complete(old(tracker).valid, old(tracker).stream@),
+        old(tracker).stream@.len() <= old(guided).cursor.pos,
+    ensures
+        r.0 matches Some(item) ==> body_root_ok(r.1.nodes@, &item.root, item@),
+        arena_ok(&r.1),
+        input_arena.nodes@.is_prefix_of(r.1.nodes@),
+        *old(at) <= *final(at) <= bytes@.len(),
+        r.0 matches Some(item) ==> {
+            &&& guided_cursor_ok(bytes@, final(guided))
+            &&& ckc_spec::v1text::wf_body_item(item@)
+            &&& final(tracker).stream@
+                == old(tracker).stream@
+                    + ckc_spec::v1text::item_var_stream(item@)
+            &&& final(tracker).valid ==>
+                tracker_state_ok(final(tracker).next, final(tracker).stream@)
+            &&& tracker_complete(final(tracker).valid, final(tracker).stream@)
+            &&& final(tracker).stream@.len() <= final(guided).cursor.pos
+            &&& old(guided).cursor.pos < final(guided).cursor.pos
+            &&& final(guided).cursor.prefix@
+                == old(guided).cursor.prefix@
+                    + doc_body_item_parts(item@).flatten()
+        },
+        expected@ matches Some(e) ==> {
+            &&& r.0 matches Some(item)
+                && item@ == ckc_spec::v1text::BodyItem::Naf(e.0)
+            &&& final(guided).guide@ matches Some(g)
+                && guide_rest(g) == e.1
+        },
+        expected@ is None ==> final(guided).guide@ is None,
+{
+    hide(roots_ok_nodes);
+    hide(term_keys_fit);
+    hide(terms_keys_fit);
+    hide(arena_ok);
+    hide(Seq::<_>::is_prefix_of);
+    let mut working_arena = input_arena;
+    let ghost entry_nodes = working_arena.nodes@;
+    proof { nodes_prefix_reflexive(entry_nodes); }
     let ghost entry_stream = tracker.stream@;
     let ghost entry_prefix = guided.cursor.prefix@;
     let entry_pos = guided.cursor.pos;
@@ -16826,7 +18641,7 @@ at: &mut usize,
         Ghost(after_prefix),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
     proof {
         reveal_strlit("\\+ ");
@@ -16858,10 +18673,11 @@ at: &mut usize,
         Ghost(after_open),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
 
     let ghost mut lits: Seq<Term> = Seq::empty();
+    let mut roots: Vec<usize> = Vec::new();
     let mut lit_count = 0usize;
     let mut more = true;
     proof {
@@ -16895,8 +18711,17 @@ at: &mut usize,
                     + seq![seq![0x29u8]] + e.1);
         }
     }
+    proof {
+        assert(roots_ok_nodes(working_arena.nodes@, roots@, lits)) by {
+            reveal(roots_ok_nodes);
+        }
+    }
     while more
         invariant
+            roots_ok_nodes(working_arena.nodes@, roots@, lits),
+            entry_nodes == input_arena.nodes@,
+            arena_ok(&working_arena),
+            entry_nodes.is_prefix_of(working_arena.nodes@),
             *old(at) <= *at <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             entry_pos < guided.cursor.pos,
@@ -16922,6 +18747,7 @@ at: &mut usize,
             !more ==> lits.len() >= 1,
             expected@ matches Some(e) ==> {
                 &&& e.0.len() >= 2
+                &&& terms_keys_fit(e.0)
                 &&& forall|i: int| 0 <= i < e.0.len()
                     ==> ckc_spec::v1text::wf_literal(e.0[i])
                 &&& lits == e.0.take(lits.len() as int)
@@ -16975,6 +18801,7 @@ at: &mut usize,
                     e.0[lits.len() as int],
                 ));
                 assert(remaining[0] == e.0[lits.len() as int]);
+                terms_keys_fit_at(e.0, lits.len() as int);
                 reveal(doc_lit_parts);
                 assert(guide_rest(guided.guide@.unwrap())
                     == seq![ckc_spec::v1text::term_bytes(remaining[0])]
@@ -17004,20 +18831,31 @@ at: &mut usize,
         }
         let ghost before_stream = tracker.stream@;
         let ghost old_lits = lits;
-        let term = match parse_doc_literal(
+        let ghost before_nodes = working_arena.nodes@;
+        let arena_result = parse_doc_literal(
             bytes,
+            &mut working_arena,
             guided,
             Ghost(term_next),
             Ghost(term_expected),
             tracker,
         at,
-        ) {
+        );
+        proof {
+            nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
+            roots_ok_prefix(before_nodes, &working_arena, roots@, old_lits);
+        }
+        let term = match arena_result {
             Some(term) => term,
-            None => return None,
+            None => return (None, working_arena),
         };
         proof {
             assert(lit_count < usize::MAX);
         }
+        proof {
+            roots_ok_push(working_arena.nodes@, roots@, old_lits, term.root, term@);
+        }
+        roots.push(term.root);
         lit_count += 1;
         proof {
             assert(before_stream
@@ -17129,7 +18967,7 @@ at: &mut usize,
                 Ghost(after_comma),
             at,
             ) {
-                return None;
+                return (None, working_arena);
             }
             proof {
                 assert_seqs_equal!(
@@ -17156,7 +18994,7 @@ at: &mut usize,
                     assert(false);
                 }
             }
-            return None;
+            return (None, working_arena);
         }
     }
 
@@ -17169,7 +19007,7 @@ at: &mut usize,
                 assert(false);
             }
         }
-        return None;
+        return (None, working_arena);
     }
 
     let close: &[u8] = b")";
@@ -17190,7 +19028,7 @@ at: &mut usize,
         Ghost(after_close),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
     let ghost item = ckc_spec::v1text::BodyItem::Naf(lits);
     proof {
@@ -17223,13 +19061,15 @@ at: &mut usize,
             assert(lits == e.0);
         }
     }
-    Some(EDocBodyItem { item: Ghost(item) })
+    proof { reveal(body_root_ok); }
+    (Some(EDocBodyItem { root: EBodyRoot::Naf(roots), item: Ghost(item) }), working_arena)
 }
 
 #[verifier::rlimit(2000)]
 #[verifier::spinoff_prover]
 fn parse_doc_body_item(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(ckc_spec::v1text::BodyItem, Seq<Seq<u8>>)>>,
@@ -17237,12 +19077,14 @@ fn parse_doc_body_item(
 at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
             &&& old(guided).guide@ matches Some(g)
                 && guide_rest(g) == doc_body_item_parts(e.0) + e.1
             &&& ckc_spec::v1text::wf_body_item(e.0)
+            &&& item_keys_fit(e.0)
             &&& e.1.len() > 0
             &&& e.1[0].len() > 0
             &&& e.1[0][0] == next@
@@ -17258,6 +19100,9 @@ at: &mut usize,
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
+        r matches Some(item) ==> body_root_ok(final(arena).nodes@, &item.root, item@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -17388,7 +19233,7 @@ at: &mut usize,
             },
             _ => None,
         };
-        return parse_doc_pos_item(bytes, guided, next, Ghost(pos_expected), tracker, at);
+        return parse_doc_pos_item(bytes, arena, guided, next, Ghost(pos_expected), tracker, at);
     }
     proof {
         if let Some(e) = expected@ {
@@ -17464,6 +19309,7 @@ at: &mut usize,
         };
         let result = parse_doc_naf_conjunction(
             bytes,
+            arena,
             guided,
             Ghost(conj_expected),
             tracker,
@@ -17496,6 +19342,7 @@ at: &mut usize,
         };
         let result = parse_doc_naf_singleton(
             bytes,
+            arena,
             guided,
             next,
             Ghost(singleton_expected),
@@ -17606,8 +19453,112 @@ proof fn clauses_bytes_push(
     }
 }
 
+pub closed spec fn body_roots_ok(
+    nodes: Seq<ENode>,
+    roots: Seq<EBodyRoot>,
+    items: Seq<ckc_spec::v1text::BodyItem>,
+) -> bool {
+    &&& roots.len() == items.len()
+    &&& forall|i: int| 0 <= i < roots.len()
+        ==> #[trigger] body_root_ok(nodes, &roots[i], items[i])
+}
+
+pub proof fn body_roots_elim(
+    nodes: Seq<ENode>,
+    roots: Seq<EBodyRoot>,
+    items: Seq<ckc_spec::v1text::BodyItem>,
+)
+    requires body_roots_ok(nodes, roots, items),
+    ensures
+        roots.len() == items.len(),
+        forall|i: int| 0 <= i < roots.len()
+            ==> #[trigger] body_root_ok(nodes, &roots[i], items[i]),
+{
+    reveal(body_roots_ok);
+}
+
+proof fn body_root_prefix(
+    before: Seq<ENode>,
+    after: &ETermArena,
+    root: &EBodyRoot,
+    item: ckc_spec::v1text::BodyItem,
+)
+    requires before.is_prefix_of(after.nodes@), body_root_ok(before, root, item),
+    ensures body_root_ok(after.nodes@, root, item),
+{
+    reveal(body_root_ok);
+    match (root, item) {
+        (EBodyRoot::Pos(index), ckc_spec::v1text::BodyItem::Pos(term)) => {
+            arena_prefix_stable(before, after);
+            assert(before[*index as int].term@ == after@[*index as int]);
+        },
+        (EBodyRoot::Naf(roots), ckc_spec::v1text::BodyItem::Naf(terms)) => {
+            roots_ok_prefix(before, after, roots@, terms);
+        },
+        _ => {},
+    }
+}
+
+proof fn body_roots_prefix(
+    before: Seq<ENode>,
+    after: &ETermArena,
+    roots: Seq<EBodyRoot>,
+    items: Seq<ckc_spec::v1text::BodyItem>,
+)
+    requires before.is_prefix_of(after.nodes@), body_roots_ok(before, roots, items),
+    ensures body_roots_ok(after.nodes@, roots, items),
+{
+    reveal(body_roots_ok);
+    assert forall|i: int| 0 <= i < roots.len()
+        implies #[trigger] body_root_ok(after.nodes@, &roots[i], items[i]) by {
+        body_root_prefix(before, after, &roots[i], items[i]);
+    }
+}
+
+proof fn body_roots_push(
+    nodes: Seq<ENode>,
+    roots: Seq<EBodyRoot>,
+    items: Seq<ckc_spec::v1text::BodyItem>,
+    root: EBodyRoot,
+    item: ckc_spec::v1text::BodyItem,
+)
+    requires body_roots_ok(nodes, roots, items), body_root_ok(nodes, &root, item),
+    ensures body_roots_ok(nodes, roots.push(root), items.push(item)),
+{
+    reveal(body_roots_ok);
+    assert forall|i: int| 0 <= i < roots.push(root).len()
+        implies #[trigger] body_root_ok(nodes, &roots.push(root)[i], items.push(item)[i]) by {
+        if i < roots.len() {
+            assert(roots.push(root)[i] == roots[i]);
+            assert(items.push(item)[i] == items[i]);
+        } else {
+            assert(i == roots.len());
+            assert(roots.push(root)[i] == root);
+            assert(items.push(item)[i] == item);
+        }
+    }
+}
+
 pub struct EDocClause {
+    pub head_root: usize,
+    pub body: Vec<EBodyRoot>,
     pub clause: Ghost<ckc_spec::v1text::DocClause>,
+}
+
+pub closed spec fn doc_clause_roots_ok(nodes: Seq<ENode>, clause: &EDocClause) -> bool {
+    &&& clause.head_root < nodes.len()
+    &&& nodes[clause.head_root as int].term@ == clause@.head
+    &&& body_roots_ok(nodes, clause.body@, clause@.body)
+}
+
+pub proof fn doc_clause_roots_elim(nodes: Seq<ENode>, clause: &EDocClause)
+    requires doc_clause_roots_ok(nodes, clause),
+    ensures
+        clause.head_root < nodes.len(),
+        nodes[clause.head_root as int].term@ == clause@.head,
+        body_roots_ok(nodes, clause.body@, clause@.body),
+{
+    reveal(doc_clause_roots_ok);
 }
 
 impl View for EDocClause {
@@ -17622,11 +19573,13 @@ impl View for EDocClause {
 #[verifier::spinoff_prover]
 fn parse_doc_clause(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::DocClause, Seq<Seq<u8>>)>>,
 at: &mut usize,
 ) -> (r: Option<EDocClause>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
@@ -17636,6 +19589,9 @@ at: &mut usize,
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        r matches Some(clause) ==> doc_clause_roots_ok(final(arena).nodes@, &clause),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(clause) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -17652,6 +19608,57 @@ at: &mut usize,
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
+    let mut input_arena = ETermArena { nodes: Vec::new() };
+    std::mem::swap(arena, &mut input_arena);
+    let (result, output_arena) = parse_doc_clause_inner(bytes, input_arena, guided, expected, at);
+    *arena = output_arena;
+    result
+}
+
+#[verifier::rlimit(5000)]
+#[verifier::spinoff_prover]
+fn parse_doc_clause_inner(
+    bytes: &[u8],
+    input_arena: ETermArena,
+    guided: &mut EGuidedCursor,
+    expected: Ghost<Option<(ckc_spec::v1text::DocClause, Seq<Seq<u8>>)>>,
+at: &mut usize,
+) -> (r: (Option<EDocClause>, ETermArena))
+    requires
+        arena_ok(&input_arena),
+        *old(at) <= bytes@.len(),
+        guided_cursor_ok(bytes@, old(guided)),
+        expected@ matches Some(e) ==> {
+            &&& old(guided).guide@ matches Some(g)
+                && guide_rest(g) == doc_clause_parts(e.0) + e.1
+            &&& ckc_spec::v1text::wf_clause(e.0)
+        },
+        expected@ is None ==> old(guided).guide@ is None,
+    ensures
+        r.0 matches Some(clause) ==> doc_clause_roots_ok(r.1.nodes@, &clause),
+        arena_ok(&r.1),
+        input_arena.nodes@.is_prefix_of(r.1.nodes@),
+        *old(at) <= *final(at) <= bytes@.len(),
+        r.0 matches Some(clause) ==> {
+            &&& guided_cursor_ok(bytes@, final(guided))
+            &&& ckc_spec::v1text::wf_clause(clause@)
+            &&& old(guided).cursor.pos < final(guided).cursor.pos
+            &&& final(guided).cursor.prefix@
+                == old(guided).cursor.prefix@
+                    + doc_clause_parts(clause@).flatten()
+        },
+        expected@ matches Some(e) ==> {
+            &&& r.0 matches Some(clause) && clause@ == e.0
+            &&& final(guided).guide@ matches Some(g)
+                && guide_rest(g) == e.1
+        },
+        expected@ is None ==> final(guided).guide@ is None,
+{
+    hide(arena_ok);
+    hide(Seq::<_>::is_prefix_of);
+    let mut working_arena = input_arena;
+    let ghost entry_nodes = working_arena.nodes@;
+    proof { nodes_prefix_reflexive(entry_nodes); }
     let entry_pos = guided.cursor.pos;
     let ghost entry_prefix = guided.cursor.prefix@;
     let ghost head_expected = match expected@ {
@@ -17673,6 +19680,9 @@ at: &mut usize,
     };
     proof {
         if let Some(e) = expected@ {
+            guide_prefix_length(bytes@, guided, doc_clause_parts(e.0), e.1);
+            doc_clause_parts_flat(e.0);
+            clause_keys_fit(e.0, bytes@.len());
             reveal(ckc_spec::v1text::wf_clause);
             reveal(doc_clause_parts);
             assert(ckc_spec::v1text::wf_literal(e.0.head));
@@ -17698,17 +19708,29 @@ at: &mut usize,
         }
     }
     let mut tracker = new_var_tracker();
-    let head = match parse_doc_literal(
+    let ghost before_nodes = working_arena.nodes@;
+    let arena_result = parse_doc_literal(
         bytes,
+        &mut working_arena,
         guided,
         Ghost(head_next),
         Ghost(head_expected),
         &mut tracker,
     at,
-    ) {
+    );
+    proof {
+        nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
+    }
+    let head = match arena_result {
         Some(head) => head,
-        None => return None,
+        None => return (None, working_arena),
     };
+    let mut body: Vec<EBodyRoot> = Vec::new();
+    proof {
+        assert(body_roots_ok(working_arena.nodes@, body@, Seq::empty())) by {
+            reveal(body_roots_ok);
+        }
+    }
     proof {
         assert(tracker.stream@
             == ckc_spec::term::var_stream(head@)) by {
@@ -17733,7 +19755,7 @@ at: &mut usize,
             }
         }
         if !tracker.valid {
-            return None;
+            return (None, working_arena);
         }
         proof {
             tracker_state_canonical(tracker.next, tracker.stream@);
@@ -17757,7 +19779,7 @@ at: &mut usize,
             Ghost(after_line),
         at,
         ) {
-            return None;
+            return (None, working_arena);
         }
         let ghost model = ckc_spec::v1text::DocClause {
             head: head@,
@@ -17793,7 +19815,8 @@ at: &mut usize,
                 assert(model == e.0);
             }
         }
-        return Some(EDocClause { clause: Ghost(model) });
+        proof { reveal(doc_clause_roots_ok); }
+        return (Some(EDocClause { head_root: head.root, body, clause: Ghost(model) }), working_arena);
     }
     proof {
         if let Some(e) = expected@ {
@@ -17803,7 +19826,7 @@ at: &mut usize,
         }
     }
     if bytes[guided.cursor.pos] != 0x20 {
-        return None;
+        return (None, working_arena);
     }
     let rule_open: &[u8] = b" :- ";
     proof {
@@ -17833,7 +19856,7 @@ at: &mut usize,
         Ghost(after_open),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
 
     let ghost mut items: Seq<ckc_spec::v1text::BodyItem> = Seq::empty();
@@ -17869,6 +19892,11 @@ at: &mut usize,
     }
     while more
         invariant
+            spanned_root_ok(&working_arena, &head),
+            body_roots_ok(working_arena.nodes@, body@, items),
+            entry_nodes == input_arena.nodes@,
+            arena_ok(&working_arena),
+            entry_nodes.is_prefix_of(working_arena.nodes@),
             *old(at) <= *at <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             entry_pos < guided.cursor.pos,
@@ -17896,6 +19924,7 @@ at: &mut usize,
             expected@ matches Some(e) ==> {
                 &&& e.0.body.len() > 0
                 &&& ckc_spec::v1text::wf_clause(e.0)
+                &&& body_keys_fit(e.0.body)
                 &&& items == e.0.body.take(items.len() as int)
                 &&& items.len() <= e.0.body.len()
                 &&& more ==> items.len() < e.0.body.len()
@@ -17948,6 +19977,7 @@ at: &mut usize,
                     e.0.body[items.len() as int],
                 ));
                 assert(remaining[0] == e.0.body[items.len() as int]);
+                assert(item_keys_fit(e.0.body[items.len() as int]));
                 reveal(doc_body_parts);
                 assert(guide_rest(guided.guide@.unwrap())
                     == doc_body_item_parts(remaining[0])
@@ -17976,16 +20006,24 @@ at: &mut usize,
         let ghost before_stream = tracker.stream@;
         let ghost before_item_prefix = guided.cursor.prefix@;
         let ghost old_items = items;
-        let item = match parse_doc_body_item(
+        let ghost before_nodes = working_arena.nodes@;
+        let arena_result = parse_doc_body_item(
             bytes,
+            &mut working_arena,
             guided,
             Ghost(item_next),
             Ghost(item_expected),
             &mut tracker,
         at,
-        ) {
+        );
+        proof {
+            nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
+            spanned_root_prefix(before_nodes, &working_arena, &head);
+            body_roots_prefix(before_nodes, &working_arena, body@, old_items);
+        }
+        let item = match arena_result {
             Some(item) => item,
-            None => return None,
+            None => return (None, working_arena),
         };
         proof {
             if expected@ is Some {
@@ -18013,7 +20051,7 @@ at: &mut usize,
                     assert(false);
                 }
             }
-            return None;
+            return (None, working_arena);
         }
         proof {
             assert(before_stream
@@ -18084,6 +20122,10 @@ at: &mut usize,
                 }
             }
         }
+        proof {
+            body_roots_push(working_arena.nodes@, body@, old_items, item.root, item@);
+        }
+        body.push(item.root);
         if bytes[guided.cursor.pos] == 0x2c {
             proof {
                 if let Some(e) = expected@ {
@@ -18117,7 +20159,7 @@ at: &mut usize,
                 Ghost(after_comma),
             at,
             ) {
-                return None;
+                return (None, working_arena);
             }
         } else if bytes[guided.cursor.pos] == 0x2e {
             proof {
@@ -18134,7 +20176,7 @@ at: &mut usize,
                     assert(false);
                 }
             }
-            return None;
+            return (None, working_arena);
         }
     }
 
@@ -18150,7 +20192,7 @@ at: &mut usize,
         }
     }
     if !tracker.valid {
-        return None;
+        return (None, working_arena);
     }
     proof {
         tracker_state_canonical(tracker.next, tracker.stream@);
@@ -18174,7 +20216,7 @@ at: &mut usize,
         Ghost(after_line),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
     let ghost model = ckc_spec::v1text::DocClause {
         head: head@,
@@ -18199,12 +20241,142 @@ at: &mut usize,
             assert(model == e.0);
         }
     }
-    Some(EDocClause { clause: Ghost(model) })
+    proof { reveal(doc_clause_roots_ok); }
+    (Some(EDocClause { head_root: head.root, body, clause: Ghost(model) }), working_arena)
+}
+
+pub closed spec fn doc_clauses_roots_ok(
+    nodes: Seq<ENode>,
+    clauses: Seq<EDocClause>,
+    models: Seq<ckc_spec::v1text::DocClause>,
+) -> bool {
+    &&& clauses.len() == models.len()
+    &&& forall|i: int| 0 <= i < clauses.len()
+        ==> (#[trigger] clauses[i])@ == models[i]
+    &&& forall|i: int| 0 <= i < clauses.len()
+        ==> #[trigger] doc_clause_roots_ok(nodes, &clauses[i])
+}
+
+pub proof fn doc_clauses_roots_elim(
+    nodes: Seq<ENode>,
+    clauses: Seq<EDocClause>,
+    models: Seq<ckc_spec::v1text::DocClause>,
+)
+    requires doc_clauses_roots_ok(nodes, clauses, models),
+    ensures
+        clauses.len() == models.len(),
+        forall|i: int| 0 <= i < clauses.len()
+            ==> (#[trigger] clauses[i])@ == models[i],
+        forall|i: int| 0 <= i < clauses.len()
+            ==> #[trigger] doc_clause_roots_ok(nodes, &clauses[i]),
+{
+    reveal(doc_clauses_roots_ok);
+}
+
+proof fn doc_clauses_roots_empty(nodes: Seq<ENode>)
+    ensures doc_clauses_roots_ok(nodes, Seq::empty(), Seq::empty()),
+{
+    reveal(doc_clauses_roots_ok);
+}
+
+proof fn doc_clause_prefix(before: Seq<ENode>, after: &ETermArena, clause: &EDocClause)
+    requires before.is_prefix_of(after.nodes@), doc_clause_roots_ok(before, clause),
+    ensures doc_clause_roots_ok(after.nodes@, clause),
+{
+    reveal(doc_clause_roots_ok);
+    arena_prefix_stable(before, after);
+    body_roots_prefix(before, after, clause.body@, clause@.body);
+}
+
+proof fn doc_clauses_prefix(
+    before: Seq<ENode>,
+    after: &ETermArena,
+    clauses: Seq<EDocClause>,
+    models: Seq<ckc_spec::v1text::DocClause>,
+)
+    requires before.is_prefix_of(after.nodes@), doc_clauses_roots_ok(before, clauses, models),
+    ensures doc_clauses_roots_ok(after.nodes@, clauses, models),
+{
+    reveal(doc_clauses_roots_ok);
+    assert forall|i: int| 0 <= i < clauses.len()
+        implies #[trigger] doc_clause_roots_ok(after.nodes@, &clauses[i]) by {
+        doc_clause_prefix(before, after, &clauses[i]);
+    }
+}
+
+proof fn doc_clauses_push(
+    nodes: Seq<ENode>,
+    clauses: Seq<EDocClause>,
+    models: Seq<ckc_spec::v1text::DocClause>,
+    clause: EDocClause,
+)
+    requires doc_clauses_roots_ok(nodes, clauses, models), doc_clause_roots_ok(nodes, &clause),
+    ensures doc_clauses_roots_ok(nodes, clauses.push(clause), models.push(clause@)),
+{
+    reveal(doc_clauses_roots_ok);
+    assert forall|i: int| 0 <= i < clauses.push(clause).len()
+        implies (#[trigger] clauses.push(clause)[i])@ == models.push(clause@)[i] by {
+        if i < clauses.len() {
+            assert(clauses.push(clause)[i] == clauses[i]);
+            assert(models.push(clause@)[i] == models[i]);
+        } else {
+            assert(i == clauses.len());
+            assert(clauses.push(clause)[i] == clause);
+            assert(models.push(clause@)[i] == clause@);
+        }
+    }
+    assert forall|i: int| 0 <= i < clauses.push(clause).len()
+        implies #[trigger] doc_clause_roots_ok(nodes, &clauses.push(clause)[i]) by {
+        if i < clauses.len() {
+            assert(clauses.push(clause)[i] == clauses[i]);
+            assert(models.push(clause@)[i] == models[i]);
+        } else {
+            assert(i == clauses.len());
+            assert(clauses.push(clause)[i] == clause);
+            assert(models.push(clause@)[i] == clause@);
+        }
+    }
+}
+
+proof fn doc_clauses_concat(
+    nodes: Seq<ENode>,
+    left: Seq<EDocClause>,
+    left_models: Seq<ckc_spec::v1text::DocClause>,
+    right: Seq<EDocClause>,
+    right_models: Seq<ckc_spec::v1text::DocClause>,
+)
+    requires
+        doc_clauses_roots_ok(nodes, left, left_models),
+        doc_clauses_roots_ok(nodes, right, right_models),
+    ensures doc_clauses_roots_ok(nodes, left + right, left_models + right_models),
+{
+    reveal(doc_clauses_roots_ok);
+    assert forall|i: int| 0 <= i < (left + right).len()
+        implies (#[trigger] (left + right)[i])@ == (left_models + right_models)[i] by {
+        if i < left.len() {
+            assert((left + right)[i] == left[i]);
+            assert((left_models + right_models)[i] == left_models[i]);
+        } else {
+            assert((left + right)[i] == right[i - left.len()]);
+            assert((left_models + right_models)[i] == right_models[i - left.len()]);
+        }
+    }
+    assert forall|i: int| 0 <= i < (left + right).len()
+        implies #[trigger] doc_clause_roots_ok(nodes, &(left + right)[i]) by {
+        if i < left.len() {
+            assert((left + right)[i] == left[i]);
+            assert((left_models + right_models)[i] == left_models[i]);
+        } else {
+            assert((left + right)[i] == right[i - left.len()]);
+            assert((left_models + right_models)[i] == right_models[i - left.len()]);
+        }
+    }
 }
 
 pub struct EDocBundle {
     pub bundle: Ghost<ckc_spec::v1text::Bundle>,
     pub ordinal: Vec<u8>,
+    pub clauses: Vec<EDocClause>,
 }
 
 impl View for EDocBundle {
@@ -18219,11 +20391,13 @@ impl View for EDocBundle {
 #[verifier::spinoff_prover]
 fn parse_doc_bundle(
     bytes: &[u8],
+    arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::Bundle, Seq<Seq<u8>>)>>,
 at: &mut usize,
 ) -> (r: Option<EDocBundle>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
@@ -18235,6 +20409,11 @@ at: &mut usize,
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
+        r matches Some(bundle) ==> doc_clauses_roots_ok(
+            final(arena).nodes@, bundle.clauses@, bundle@.clauses,
+        ),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(bundle) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
@@ -18257,6 +20436,67 @@ at: &mut usize,
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
+    let mut input_arena = ETermArena { nodes: Vec::new() };
+    std::mem::swap(arena, &mut input_arena);
+    let (result, output_arena) = parse_doc_bundle_inner(bytes, input_arena, guided, expected, at);
+    *arena = output_arena;
+    result
+}
+
+#[verifier::rlimit(5000)]
+#[verifier::spinoff_prover]
+fn parse_doc_bundle_inner(
+    bytes: &[u8],
+    input_arena: ETermArena,
+    guided: &mut EGuidedCursor,
+    expected: Ghost<Option<(ckc_spec::v1text::Bundle, Seq<Seq<u8>>)>>,
+at: &mut usize,
+) -> (r: (Option<EDocBundle>, ETermArena))
+    requires
+        arena_ok(&input_arena),
+        *old(at) <= bytes@.len(),
+        guided_cursor_ok(bytes@, old(guided)),
+        expected@ matches Some(e) ==> {
+            &&& old(guided).guide@ matches Some(g)
+                && guide_rest(g) == doc_bundle_parts(e.0) + e.1
+            &&& ckc_spec::v1text::wf_bundle(e.0)
+            &&& (e.1.len() == 0
+                || e.1[0] == ckc_spec::v1text::ascii("% S"@))
+        },
+        expected@ is None ==> old(guided).guide@ is None,
+    ensures
+        r.0 matches Some(bundle) ==> doc_clauses_roots_ok(
+            r.1.nodes@, bundle.clauses@, bundle@.clauses,
+        ),
+        arena_ok(&r.1),
+        input_arena.nodes@.is_prefix_of(r.1.nodes@),
+        *old(at) <= *final(at) <= bytes@.len(),
+        r.0 matches Some(bundle) ==> {
+            &&& guided_cursor_ok(bytes@, final(guided))
+            &&& ckc_spec::v1text::wf_bundle(bundle@)
+            &&& canonical_decimal(bundle.ordinal@)
+            &&& bundle.ordinal@
+                == ckc_spec::v1text::udec_bytes(bundle@.s)
+            &&& old(guided).cursor.pos < final(guided).cursor.pos
+            &&& final(guided).cursor.prefix@
+                == old(guided).cursor.prefix@
+                    + doc_bundle_parts(bundle@).flatten()
+            &&& final(guided).cursor.pos == bytes@.len()
+                || final(guided).cursor.pos < bytes@.len()
+                    && bytes@[final(guided).cursor.pos as int] == 0x25
+        },
+        expected@ matches Some(e) ==> {
+            &&& r.0 matches Some(bundle) && bundle@ == e.0
+            &&& final(guided).guide@ matches Some(g)
+                && guide_rest(g) == e.1
+        },
+        expected@ is None ==> final(guided).guide@ is None,
+{
+    hide(arena_ok);
+    hide(Seq::<_>::is_prefix_of);
+    let mut working_arena = input_arena;
+    let ghost entry_nodes = working_arena.nodes@;
+    proof { nodes_prefix_reflexive(entry_nodes); }
     let entry_pos = guided.cursor.pos;
     let ghost entry_prefix = guided.cursor.prefix@;
     let marker: &[u8] = b"% S";
@@ -18298,7 +20538,7 @@ at: &mut usize,
         Ghost(after_marker),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
     proof {
         if let Some(e) = expected@ {
@@ -18322,7 +20562,7 @@ at: &mut usize,
                 assert(false);
             }
         }
-        return None;
+        return (None, working_arena);
     }
     let ordinal_start = guided.cursor.pos;
     let ghost decimal_expected = match expected@ {
@@ -18386,7 +20626,7 @@ at: &mut usize,
     at,
     ) {
         Some(decimal) => decimal,
-        None => return None,
+        None => return (None, working_arena),
     };
     let ordinal = copy_range(bytes, ordinal_start, decimal.end);
     proof {
@@ -18423,7 +20663,7 @@ at: &mut usize,
         Ghost(after_ordinal),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
     if ordinal.len() == 1 && ordinal[0] == 0x30 {
         proof {
@@ -18433,7 +20673,7 @@ at: &mut usize,
                 assert(false);
             }
         }
-        return None;
+        return (None, working_arena);
     }
     proof {
         udec_canonical(decimal.value@);
@@ -18475,7 +20715,7 @@ at: &mut usize,
         Ghost(after_colon),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
     proof {
         if let Some(e) = expected@ {
@@ -18496,7 +20736,7 @@ at: &mut usize,
                 assert(false);
             }
         }
-        return None;
+        return (None, working_arena);
     }
     let text_start = guided.cursor.pos;
     let ghost text_expected = match expected@ {
@@ -18547,7 +20787,7 @@ at: &mut usize,
     }
     let text = match parse_raw_text(bytes, text_start, Ghost(text_expected), at) {
         Some(text) => text,
-        None => return None,
+        None => return (None, working_arena),
     };
     proof {
         if let Some(e) = expected@ {
@@ -18572,7 +20812,7 @@ at: &mut usize,
         Ghost(after_text),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
     let newline: &[u8] = b"\n";
     let ghost newline_chunk = seq![0x0au8];
@@ -18597,10 +20837,12 @@ at: &mut usize,
         Ghost(after_newline),
     at,
     ) {
-        return None;
+        return (None, working_arena);
     }
 
     let ghost mut clauses: Seq<ckc_spec::v1text::DocClause> = Seq::empty();
+    let mut clause_roots: Vec<EDocClause> = Vec::new();
+    proof { doc_clauses_roots_empty(working_arena.nodes@); }
     let mut more = true;
     proof {
         reveal(ckc_spec::v1text::marker_line);
@@ -18630,6 +20872,10 @@ at: &mut usize,
     }
     while more
         invariant
+            doc_clauses_roots_ok(working_arena.nodes@, clause_roots@, clauses),
+            entry_nodes == input_arena.nodes@,
+            arena_ok(&working_arena),
+            entry_nodes.is_prefix_of(working_arena.nodes@),
             *old(at) <= *at <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             entry_pos < guided.cursor.pos,
@@ -18701,16 +20947,24 @@ at: &mut usize,
         }
         let ghost old_clauses = clauses;
         let ghost before_clause_prefix = guided.cursor.prefix@;
-        let clause = match parse_doc_clause(
+        let ghost before_nodes = working_arena.nodes@;
+        let arena_result = parse_doc_clause(
             bytes,
+            &mut working_arena,
             guided,
             Ghost(clause_expected),
         at,
-        ) {
+        );
+        proof {
+            nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
+            doc_clauses_prefix(before_nodes, &working_arena, clause_roots@, old_clauses);
+        }
+        let clause = match arena_result {
             Some(clause) => clause,
-            None => return None,
+            None => return (None, working_arena),
         };
         proof {
+            doc_clauses_push(working_arena.nodes@, clause_roots@, old_clauses, clause);
             clauses = old_clauses.push(clause@);
             assert(clauses.len() == old_clauses.len() + 1);
             assert(clauses.len() >= 1);
@@ -18750,6 +21004,7 @@ at: &mut usize,
                     ) + e.1);
             }
         }
+        clause_roots.push(clause);
         if guided.cursor.pos == bytes.len() {
             proof {
                 if let Some(e) = expected@ {
@@ -18907,10 +21162,11 @@ at: &mut usize,
             assert(model == e.0);
         }
     }
-    Some(EDocBundle {
+    (Some(EDocBundle {
         bundle: Ghost(model),
         ordinal,
-    })
+        clauses: clause_roots,
+    }), working_arena)
 }
 
 pub open spec fn pow10(n: nat) -> nat
@@ -19318,20 +21574,26 @@ proof fn bundles_bytes_push(
     }
 }
 
+pub closed spec fn doc_bundles_wf(bundles: Seq<ckc_spec::v1text::Bundle>) -> bool {
+    forall|i: int| 0 <= i < bundles.len()
+        ==> #[trigger] ckc_spec::v1text::wf_bundle(bundles[i])
+}
+
+pub closed spec fn doc_bundles_ordered(bundles: Seq<ckc_spec::v1text::Bundle>) -> bool {
+    forall|i: int| 0 <= i < bundles.len() - 1
+        ==> #[trigger] bundles[i].s < bundles[i + 1].s
+}
+
 proof fn bundles_push_wf(
     bundles: Seq<ckc_spec::v1text::Bundle>,
     bundle: ckc_spec::v1text::Bundle,
 )
     requires
-        forall|i: int| 0 <= i < bundles.len()
-            ==> #[trigger] ckc_spec::v1text::wf_bundle(bundles[i]),
+        doc_bundles_wf(bundles),
         ckc_spec::v1text::wf_bundle(bundle),
-    ensures
-        forall|i: int| 0 <= i < bundles.push(bundle).len()
-            ==> #[trigger] ckc_spec::v1text::wf_bundle(
-                bundles.push(bundle)[i],
-            ),
+    ensures doc_bundles_wf(bundles.push(bundle)),
 {
+    reveal(doc_bundles_wf);
     assert forall|i: int| 0 <= i < bundles.push(bundle).len()
         implies ckc_spec::v1text::wf_bundle(bundles.push(bundle)[i]) by {
         if i < bundles.len() {
@@ -19348,14 +21610,11 @@ proof fn bundles_push_ordered(
     bundle: ckc_spec::v1text::Bundle,
 )
     requires
-        forall|i: int| 0 <= i < bundles.len() - 1
-            ==> #[trigger] bundles[i].s < bundles[i + 1].s,
+        doc_bundles_ordered(bundles),
         bundles.len() > 0 ==> bundles.last().s < bundle.s,
-    ensures
-        forall|i: int| 0 <= i < bundles.push(bundle).len() - 1
-            ==> #[trigger] bundles.push(bundle)[i].s
-                < bundles.push(bundle)[i + 1].s,
+    ensures doc_bundles_ordered(bundles.push(bundle)),
 {
+    reveal(doc_bundles_ordered);
     assert forall|i: int| 0 <= i < bundles.push(bundle).len() - 1
         implies #[trigger] bundles.push(bundle)[i].s
             < bundles.push(bundle)[i + 1].s by {
@@ -19404,12 +21663,12 @@ proof fn wf_doc_intro(d: ckc_spec::v1text::DocFile)
         ckc_spec::v1text::hex64(d.ace),
         ckc_spec::v1text::ulex_ok(d.ulex),
         d.bundles.len() >= 1,
-        forall|i: int| 0 <= i < d.bundles.len()
-            ==> #[trigger] ckc_spec::v1text::wf_bundle(d.bundles[i]),
-        forall|i: int| 0 <= i < d.bundles.len() - 1
-            ==> #[trigger] d.bundles[i].s < d.bundles[i + 1].s,
+        doc_bundles_wf(d.bundles),
+        doc_bundles_ordered(d.bundles),
     ensures ckc_spec::v1text::wf_doc(d),
 {
+    reveal(doc_bundles_wf);
+    reveal(doc_bundles_ordered);
     reveal(ckc_spec::v1text::wf_doc);
 }
 
@@ -19417,21 +21676,67 @@ proof fn wf_doc_intro(d: ckc_spec::v1text::DocFile)
 #[verifier::spinoff_prover]
 pub fn parse_doc(
     bytes: &[u8],
+    arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
 at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
+        arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         expected@ matches Some(d) ==>
             ckc_spec::v1text::wf_doc(d)
                 && ckc_spec::v1text::print_doc(d) == bytes@,
     ensures
+        r matches Some(parsed) ==> parsed@ is Doc,
+        r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
+        r matches Some(parsed) ==> parsed_query_roots_ok(final(arena).nodes@, &parsed),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
+        r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
         expected@ matches Some(d) ==> r matches Some(parsed)
             && parsed@ == ckc_spec::v1text::V1File::Doc(d),
 {
+    let mut input_arena = ETermArena { nodes: Vec::new() };
+    std::mem::swap(arena, &mut input_arena);
+    let (result, output_arena) = parse_doc_inner(bytes, input_arena, expected, at);
+    *arena = output_arena;
+    result
+}
+
+#[verifier::rlimit(100)]
+#[verifier::spinoff_prover]
+fn parse_doc_inner(
+    bytes: &[u8],
+    input_arena: ETermArena,
+    expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
+at: &mut usize,
+) -> (r: (Option<EParsedV1>, ETermArena))
+    requires
+        arena_ok(&input_arena),
+        *old(at) <= bytes@.len(),
+        expected@ matches Some(d) ==>
+            ckc_spec::v1text::wf_doc(d)
+                && ckc_spec::v1text::print_doc(d) == bytes@,
+    ensures
+        r.0 matches Some(parsed) ==> parsed@ is Doc,
+        r.0 matches Some(parsed) ==> parsed_doc_roots_ok(r.1.nodes@, &parsed),
+        r.0 matches Some(parsed) ==> parsed_query_roots_ok(r.1.nodes@, &parsed),
+        arena_ok(&r.1),
+        input_arena.nodes@.is_prefix_of(r.1.nodes@),
+        *old(at) <= *final(at) <= bytes@.len(),
+        r.0 matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
+        r.0 matches Some(parsed) ==> parsed_metadata_ok(&parsed),
+        expected@ matches Some(d) ==> r.0 matches Some(parsed)
+            && parsed@ == ckc_spec::v1text::V1File::Doc(d),
+{
     hide(ckc_spec::v1text::wf_doc);
+    hide(arena_ok);
+    hide(Seq::<_>::is_prefix_of);
+    let mut working_arena = input_arena;
+    let ghost entry_nodes = working_arena.nodes@;
+    proof { nodes_prefix_reflexive(entry_nodes); }
     let ghost expected_parts = match expected@ {
         Some(d) => Some(doc_parts(d)),
         None => None,
@@ -19446,10 +21751,10 @@ at: &mut usize,
     let mut guided = new_guided_cursor(bytes, Ghost(expected_parts));
     let docid = match parse_doc_line(bytes, &mut guided, expected, at) {
         Some(docid) => docid,
-        None => return None,
+        None => return (None, working_arena),
     };
     if !parse_doc_declarations(bytes, &mut guided, expected, at) {
-        return None;
+        return (None, working_arena);
     }
     let ace = match parse_doc_record_prefix(
         bytes,
@@ -19459,11 +21764,11 @@ at: &mut usize,
     at,
     ) {
         Some(ace) => ace,
-        None => return None,
+        None => return (None, working_arena),
     };
     let ulex = match parse_doc_ulex(bytes, &mut guided, expected, at) {
         Some(ulex) => ulex,
-        None => return None,
+        None => return (None, working_arena),
     };
 
     let ghost base = ckc_spec::v1text::DocFile {
@@ -19473,6 +21778,11 @@ at: &mut usize,
         bundles: Seq::empty(),
     };
     let ghost mut bundles: Seq<ckc_spec::v1text::Bundle> = Seq::empty();
+    let mut clauses: Vec<EDocClause> = Vec::new();
+    proof {
+        doc_clause_models_empty();
+        doc_clauses_roots_empty(working_arena.nodes@);
+    }
     let mut bundle_count = 0usize;
     let mut previous_ordinal = Vec::<u8>::new();
     proof {
@@ -19483,13 +21793,11 @@ at: &mut usize,
         assert_seqs_equal!(guided.cursor.prefix@
             == doc_prefix_stage(base)
                 + ckc_spec::v1text::bundles_bytes(bundles));
-        assert forall|i: int| 0 <= i < bundles.len()
-            implies ckc_spec::v1text::wf_bundle(bundles[i]) by {
-            assert(false);
+        assert(doc_bundles_wf(bundles)) by {
+            reveal(doc_bundles_wf);
         }
-        assert forall|i: int| 0 <= i < bundles.len() - 1
-            implies #[trigger] bundles[i].s < bundles[i + 1].s by {
-            assert(false);
+        assert(doc_bundles_ordered(bundles)) by {
+            reveal(doc_bundles_ordered);
         }
         if let Some(d) = expected@ {
             assert_seqs_equal!(d.bundles.take(0)
@@ -19501,20 +21809,23 @@ at: &mut usize,
     let bundle_at_floor = *at;
     while guided.cursor.pos < bytes.len()
         invariant
+            doc_clauses_roots_ok(working_arena.nodes@, clauses@, doc_clause_models(bundles)),
+            entry_nodes == input_arena.nodes@,
+            arena_ok(&working_arena),
+            entry_nodes.is_prefix_of(working_arena.nodes@),
             *old(at) <= bundle_at_floor <= bytes@.len(),
             guided_cursor_ok(bytes@, &guided),
             ckc_spec::v1text::name_ok(docid.value@),
             ckc_spec::v1text::hex64(ace.name@),
             ckc_spec::v1text::ulex_ok(ulex.value@),
+            ulex.digest@ == ulex_digest_bytes(ulex.value@),
             bundle_count == bundles.len(),
             bundle_count <= guided.cursor.pos,
             guided.cursor.prefix@
                 == doc_prefix_stage(base)
                     + ckc_spec::v1text::bundles_bytes(bundles),
-            forall|i: int| 0 <= i < bundles.len()
-                ==> ckc_spec::v1text::wf_bundle(bundles[i]),
-            forall|i: int| 0 <= i < bundles.len() - 1
-                ==> #[trigger] bundles[i].s < bundles[i + 1].s,
+            doc_bundles_wf(bundles),
+            doc_bundles_ordered(bundles),
             bundle_count == 0 ==> previous_ordinal@ == Seq::<u8>::empty(),
             bundle_count > 0 ==> {
                 &&& canonical_decimal(previous_ordinal@)
@@ -19590,16 +21901,23 @@ at: &mut usize,
         let ghost old_bundles = bundles;
         let old_count = bundle_count;
         let mut bundle_at = bundle_at_floor;
-        let bundle = match parse_doc_bundle(
+        let ghost before_nodes = working_arena.nodes@;
+        let arena_result = parse_doc_bundle(
             bytes,
+            &mut working_arena,
             &mut guided,
             Ghost(bundle_expected),
             &mut bundle_at,
-        ) {
+        );
+        proof {
+            nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
+            doc_clauses_prefix(before_nodes, &working_arena, clauses@, doc_clause_models(old_bundles));
+        }
+        let mut bundle = match arena_result {
             Some(bundle) => bundle,
             None => {
                 *at = bundle_at;
-                return None;
+                return (None, working_arena);
             },
         };
         let ghost bundle_model = bundle@;
@@ -19633,13 +21951,18 @@ at: &mut usize,
         }
         if !ordered {
             *at = bundle_at;
-            return None;
+            return (None, working_arena);
         }
         proof {
             bundles_push_wf(old_bundles, bundle_model);
             assert(old_bundles.len() > 0
                 ==> old_bundles.last().s < bundle_model.s);
             bundles_push_ordered(old_bundles, bundle_model);
+            doc_clauses_concat(
+                working_arena.nodes@, clauses@, doc_clause_models(old_bundles),
+                bundle.clauses@, bundle_model.clauses,
+            );
+            doc_clause_models_push(old_bundles, bundle_model);
             bundles = old_bundles.push(bundle_model);
             assert(bundles.len() == old_bundles.len() + 1);
             doc_bundle_parts_flat(bundle_model);
@@ -19666,6 +21989,7 @@ at: &mut usize,
                     ));
             }
         }
+        clauses.append(&mut bundle.clauses);
         previous_ordinal = bundle.ordinal;
         bundle_count += 1;
         proof {
@@ -19720,7 +22044,7 @@ at: &mut usize,
                 assert(false);
             }
         }
-        return None;
+        return (None, working_arena);
     }
 
     let ghost model = ckc_spec::v1text::DocFile {
@@ -19762,9 +22086,18 @@ at: &mut usize,
         reveal(ckc_spec::v1text::print_v1);
         reveal(parsed_v1_ok);
     }
-    Some(EParsedV1 {
+    proof { reveal(parsed_doc_roots_ok); reveal(parsed_query_roots_ok); }
+    (Some(EParsedV1 {
+        class: EV1Class::Doc,
+        docid: docid.value,
+        doc_ace: ace.name,
+        doc_ulex: ulex.digest,
+        qid: Vec::new(),
+        clauses,
+        goal_root: 0,
+        answers_root: 0,
         file: Ghost(ckc_spec::v1text::V1File::Doc(model)),
-    })
+    }), working_arena)
 }
 
 } // verus!

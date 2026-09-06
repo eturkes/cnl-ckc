@@ -331,7 +331,7 @@ fn check_deps(root: &Path, v: &mut Vec<String>) {
     }
 }
 
-fn sha256_hex(bytes: &[u8]) -> String {
+pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
     let mut h = Sha256::new();
     h.update(bytes);
     h.finalize().iter().map(|b| format!("{:02x}", b)).collect()
