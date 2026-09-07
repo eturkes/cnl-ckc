@@ -707,7 +707,7 @@ fn is_name_b(b: u8) -> (r: bool)
     is_lower_b(b) || is_digit_b(b) || b == 0x2d
 }
 
-fn name_ok_exec(name: &Vec<u8>) -> (r: bool)
+pub fn name_ok_exec(name: &Vec<u8>) -> (r: bool)
     ensures
         r == ckc_spec::v1text::name_ok(name@),
 {
@@ -759,7 +759,7 @@ fn is_hex_lower_b(b: u8) -> (r: bool)
     is_digit_b(b) || (0x61 <= b && b <= 0x66)
 }
 
-fn hex64_exec(hash: &Vec<u8>) -> (r: bool)
+pub fn hex64_exec(hash: &Vec<u8>) -> (r: bool)
     ensures
         r == ckc_spec::v1text::hex64(hash@),
 {
@@ -8810,7 +8810,7 @@ proof fn udec_decimal_value(n: nat)
     }
 }
 
-proof fn udec_bytes_injective(a: nat, b: nat)
+pub proof fn udec_bytes_injective(a: nat, b: nat)
     requires
         ckc_spec::v1text::udec_bytes(a) == ckc_spec::v1text::udec_bytes(b),
     ensures
@@ -11133,8 +11133,56 @@ pub enum EV1Class {
     Traces,
 }
 
+pub struct EParsedBundle {
+    pub ordinal: Vec<u8>,
+    pub count: usize,
+    pub model: Ghost<ckc_spec::v1text::Bundle>,
+}
+
+pub open spec fn bundle_metadata_ok(
+    meta: Seq<EParsedBundle>,
+    bundles: Seq<ckc_spec::v1text::Bundle>,
+) -> bool {
+    meta.len() == bundles.len() && forall|i: int|
+        0 <= i < meta.len() ==> {
+            &&& meta[i].model@ == bundles[i]
+            &&& meta[i].ordinal@ == ckc_spec::v1text::udec_bytes(bundles[i].s)
+            &&& meta[i].count == bundles[i].clauses.len()
+        }
+}
+
+fn bundle_metadata_push(
+    meta: &mut Vec<EParsedBundle>,
+    ordinal: Vec<u8>,
+    count: usize,
+    Ghost(bundle): Ghost<ckc_spec::v1text::Bundle>,
+    Ghost(bundles): Ghost<Seq<ckc_spec::v1text::Bundle>>,
+)
+    requires
+        bundle_metadata_ok(old(meta)@, bundles),
+        ordinal@ == ckc_spec::v1text::udec_bytes(bundle.s),
+        count == bundle.clauses.len(),
+    ensures
+        bundle_metadata_ok(final(meta)@, bundles.push(bundle)),
+{
+    let ghost before = meta@;
+    meta.push(EParsedBundle { ordinal, count, model: Ghost(bundle) });
+    proof {
+        assert forall|i: int| 0 <= i < meta.len() implies {
+            &&& meta@[i].model@ == bundles.push(bundle)[i]
+            &&& meta@[i].ordinal@ == ckc_spec::v1text::udec_bytes(bundles.push(bundle)[i].s)
+            &&& meta@[i].count == bundles.push(bundle)[i].clauses.len()
+        } by {
+            if i < before.len() {
+                assert(meta@[i] == before[i]);
+            }
+        }
+    }
+}
+
 pub struct EParsedV1 {
     pub class: EV1Class,
+    pub bundle_meta: Vec<EParsedBundle>,
     pub docid: Vec<u8>,
     pub doc_ace: Vec<u8>,
     pub doc_ulex: Vec<u8>,
@@ -11167,11 +11215,13 @@ pub open spec fn parsed_metadata_ok(parsed: &EParsedV1) -> bool {
             &&& parsed.docid@ == d.docid
             &&& parsed.doc_ace@ == d.ace
             &&& parsed.doc_ulex@ == ulex_digest_bytes(d.ulex)
+            &&& bundle_metadata_ok(parsed.bundle_meta@, d.bundles)
         },
         _ => {
             &&& parsed.docid@ == Seq::<u8>::empty()
             &&& parsed.doc_ace@ == Seq::<u8>::empty()
             &&& parsed.doc_ulex@ == Seq::<u8>::empty()
+            &&& parsed.bundle_meta.len() == 0
         },
     }
     &&& parsed.qid@ == match parsed@ {
@@ -12054,6 +12104,7 @@ pub fn parse_answers(
     Some(
         EParsedV1 {
             class: EV1Class::Answers,
+            bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
@@ -12833,6 +12884,7 @@ pub fn parse_traces(
     Some(
         EParsedV1 {
             class: EV1Class::Traces,
+            bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
@@ -14905,6 +14957,7 @@ pub fn parse_query(
     Some(
         EParsedV1 {
             class: EV1Class::Query,
+            bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
@@ -20175,6 +20228,7 @@ fn parse_doc_inner(
             == ckc_spec::v1text::V1File::Doc(d),
 {
     hide(parsed_metadata_ok);
+    hide(bundle_metadata_ok);
     hide(ckc_spec::v1text::wf_doc);
     hide(arena_ok);
     hide(Seq::<_>::is_prefix_of);
@@ -20219,6 +20273,12 @@ fn parse_doc_inner(
     };
     let ghost mut bundles: Seq<ckc_spec::v1text::Bundle> = Seq::empty();
     let mut clauses: Vec<EDocClause> = Vec::new();
+    let mut bundle_meta: Vec<EParsedBundle> = Vec::new();
+    proof {
+        assert(bundle_metadata_ok(bundle_meta@, bundles)) by {
+            reveal(bundle_metadata_ok);
+        }
+    }
     proof {
         doc_clause_models_empty();
         doc_clauses_roots_empty(working_arena.nodes@);
@@ -20250,6 +20310,7 @@ fn parse_doc_inner(
     while guided.cursor.pos < bytes.len()
         invariant
             doc_clauses_roots_ok(working_arena.nodes@, clauses@, doc_clause_models(bundles)),
+            bundle_metadata_ok(bundle_meta@, bundles),
             entry_nodes == input_arena.nodes@,
             arena_ok(&working_arena),
             entry_nodes.is_prefix_of(working_arena.nodes@),
@@ -20421,6 +20482,13 @@ fn parse_doc_inner(
                 ));
             }
         }
+        bundle_metadata_push(
+            &mut bundle_meta,
+            bundle.ordinal.clone(),
+            bundle.clauses.len(),
+            Ghost(bundle_model),
+            Ghost(old_bundles),
+        );
         clauses.append(&mut bundle.clauses);
         previous_ordinal = bundle.ordinal;
         bundle_count += 1;
@@ -20524,6 +20592,7 @@ fn parse_doc_inner(
         Some(
             EParsedV1 {
                 class: EV1Class::Doc,
+                bundle_meta,
                 docid: docid.value,
                 doc_ace: ace.name,
                 doc_ulex: ulex.digest,
