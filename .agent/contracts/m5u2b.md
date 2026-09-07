@@ -76,10 +76,14 @@ uninspected `ckc-kernel/src/k3_impl.rs` (+ modules) + shell seam
   `v1_trace_check`, `k3_sound` discharged; no new escape sites).
 - P2 `just trust` green after regen (spec manifest gains `trace.rs`).
 - P3 Kani: `rust/ckc-kani-harness/` (separate workspace, res-kani-2 Q6)
-  with ≥1 reader + ≥1 engine + ≥1 trace harness, explicit domains + unwind
-  bounds; `just kani` recipe (bootstrap per `.scratch/kani/` lock → committed
-  `rust/kani.lock` + `rust/kani/bootstrap.sh`) green; secondary gate, not in
-  `just rust` (cost), run at unit close + weekly CI.
+  with the align + 2 reader harnesses green under `just kani` (bootstrap
+  from committed `rust/kani.lock` + `rust/kani/bootstrap.sh`); secondary
+  gate, not in `just rust` (cost), weekly CI. PARTIAL (ruled): an engine
+  harness over `v1_answer` exhausts CBMC at the minimum domain (5 bounded
+  runs rc124 at 1200 s / ~12 GiB: 3 shapes CaDiCaL, Z3, dereference cache)
+  because the whole-file K1 loader replays symbolically before the engine
+  → follow-up: a typed below-parser kernel seam (`Deferred` row); a trace
+  harness follows K3.
 - P4 lane D/E: `ckc v1 trace` byte-identical to legacy AND to the 4
   committed `guidelines/*/queries/traces/*.pl`; `k2_corpus_diff.py` gains
   lane `trace`.
