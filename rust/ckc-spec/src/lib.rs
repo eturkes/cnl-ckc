@@ -9,4 +9,5 @@ pub mod digest;
 pub mod engine;
 pub mod replay;
 pub mod term;
+pub mod trace;
 pub mod v1text;
