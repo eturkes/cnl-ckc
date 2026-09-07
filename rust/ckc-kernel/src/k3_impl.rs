@@ -13,6 +13,8 @@ pub fn v1_trace_lines_impl(
     qsha: &[u8],
     answers: &ESrc,
 ) -> (r: Result<Vec<Vec<u8>>, EOut>)
+    requires
+        ckc_spec::replay::cells_ok(m@, ckc_spec::replay::srcs(pls@), ckc_spec::replay::srcs(pys@)),
     ensures
         ckc_spec::trace::lines_view(r) == ckc_spec::trace::trace_lines(
             mpath@,
@@ -24,8 +26,21 @@ pub fn v1_trace_lines_impl(
             answers@,
         ),
 {
-    assert(false);  // SEED: unimplemented
-    Result::Ok(Vec::new())
+    let mut arena = crate::k2_reject::empty_arena();
+    let front = match crate::k3_front::front_exec(
+        &mut arena,
+        mpath,
+        m,
+        pls,
+        pys,
+        query,
+        qsha,
+        answers,
+    ) {
+        Err(o) => return Err(o),
+        Ok(front) => front,
+    };
+    Ok(crate::k3_print::db_lines(&arena, &front.loaded.db))
 }
 
 pub fn v1_trace_impl(
@@ -39,6 +54,8 @@ pub fn v1_trace_impl(
     asha: &[u8],
     digests: &Vec<Vec<u8>>,
 ) -> (r: EOut)
+    requires
+        ckc_spec::replay::cells_ok(m@, ckc_spec::replay::srcs(pls@), ckc_spec::replay::srcs(pys@)),
     ensures
         r@ == ckc_spec::trace::trace_output(
             mpath@,
@@ -68,6 +85,8 @@ pub fn v1_trace_check_impl(
     trace: &ESrc,
     digests: &Vec<Vec<u8>>,
 ) -> (r: EOut)
+    requires
+        ckc_spec::replay::cells_ok(m@, ckc_spec::replay::srcs(pls@), ckc_spec::replay::srcs(pys@)),
     ensures
         r@ == ckc_spec::trace::trace_check_output(
             mpath@,

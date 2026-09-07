@@ -534,7 +534,7 @@ proof fn bundles_census(bundles: Seq<ckc_spec::v1text::Bundle>)
     }
 }
 
-fn parsed_term_count(
+pub fn parsed_term_count(
     arena: &ETermArena,
     bytes: &[u8],
     parsed: &crate::v1_term_impl::EParsedV1,

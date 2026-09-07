@@ -51,7 +51,9 @@ mod k2_reject;
 mod k2_sort;
 mod k2_term;
 mod k2_walk;
+mod k3_front;
 mod k3_impl;
+mod k3_print;
 mod v1_impl;
 mod v1_term_impl;
 

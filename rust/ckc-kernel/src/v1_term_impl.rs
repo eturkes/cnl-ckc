@@ -11139,6 +11139,9 @@ pub struct EParsedV1 {
     pub doc_ace: Vec<u8>,
     pub doc_ulex: Vec<u8>,
     pub qid: Vec<u8>,
+    pub qsha: Vec<u8>,
+    pub asha: Vec<u8>,
+    pub result_root: usize,
     pub clauses: Vec<EDocClause>,
     pub goal_root: usize,
     pub answers_root: usize,
@@ -11173,6 +11176,17 @@ pub open spec fn parsed_metadata_ok(parsed: &EParsedV1) -> bool {
     }
     &&& parsed.qid@ == match parsed@ {
         ckc_spec::v1text::V1File::Query(q) => q.qid,
+        ckc_spec::v1text::V1File::Answers(a) => a.qid,
+        ckc_spec::v1text::V1File::Traces(t) => t.qid,
+        _ => Seq::empty(),
+    }
+    &&& parsed.qsha@ == match parsed@ {
+        ckc_spec::v1text::V1File::Answers(a) => a.qsha,
+        ckc_spec::v1text::V1File::Traces(t) => t.qsha,
+        _ => Seq::empty(),
+    }
+    &&& parsed.asha@ == match parsed@ {
+        ckc_spec::v1text::V1File::Traces(t) => t.asha,
         _ => Seq::empty(),
     }
 }
@@ -11245,6 +11259,12 @@ pub closed spec fn parsed_query_roots_ok(nodes: Seq<ENode>, parsed: &EParsedV1) 
             &&& nodes[parsed.goal_root as int].term@ == q.goal
             &&& nodes[parsed.answers_root as int].term@ == q.answers
         },
+        ckc_spec::v1text::V1File::Answers(a) => {
+            parsed.result_root < nodes.len() && nodes[parsed.result_root as int].term@ == a.result
+        },
+        ckc_spec::v1text::V1File::Traces(t) => {
+            parsed.result_root < nodes.len() && nodes[parsed.result_root as int].term@ == t.result
+        },
         _ => true,
     }
 }
@@ -11259,6 +11279,14 @@ pub proof fn parsed_query_roots_elim(nodes: Seq<ENode>, parsed: &EParsedV1)
                 &&& parsed.answers_root < nodes.len()
                 &&& nodes[parsed.goal_root as int].term@ == q.goal
                 &&& nodes[parsed.answers_root as int].term@ == q.answers
+            },
+            ckc_spec::v1text::V1File::Answers(a) => {
+                parsed.result_root < nodes.len() && nodes[parsed.result_root as int].term@
+                    == a.result
+            },
+            ckc_spec::v1text::V1File::Traces(t) => {
+                parsed.result_root < nodes.len() && nodes[parsed.result_root as int].term@
+                    == t.result
             },
             _ => true,
         },
@@ -12029,7 +12057,10 @@ pub fn parse_answers(
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
-            qid: Vec::new(),
+            qid: line_qid.value,
+            qsha: qsha.name,
+            asha: Vec::new(),
+            result_root: result.root,
             clauses: Vec::new(),
             goal_root: 0,
             answers_root: 0,
@@ -12805,7 +12836,10 @@ pub fn parse_traces(
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
-            qid: Vec::new(),
+            qid: line_qid.value,
+            qsha: qsha.name,
+            asha: asha.name,
+            result_root: result.root,
             clauses: Vec::new(),
             goal_root: 0,
             answers_root: 0,
@@ -14875,6 +14909,9 @@ pub fn parse_query(
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
             qid: line_qid.value,
+            qsha: Vec::new(),
+            asha: Vec::new(),
+            result_root: 0,
             clauses: Vec::new(),
             goal_root: projection.goal_root,
             answers_root: projection.answers_root,
@@ -20137,6 +20174,7 @@ fn parse_doc_inner(
         expected@ matches Some(d) ==> r.0 matches Some(parsed) && parsed@
             == ckc_spec::v1text::V1File::Doc(d),
 {
+    hide(parsed_metadata_ok);
     hide(ckc_spec::v1text::wf_doc);
     hide(arena_ok);
     hide(Seq::<_>::is_prefix_of);
@@ -20480,6 +20518,7 @@ fn parse_doc_inner(
     proof {
         reveal(parsed_doc_roots_ok);
         reveal(parsed_query_roots_ok);
+        reveal(parsed_metadata_ok);
     }
     (
         Some(
@@ -20489,6 +20528,9 @@ fn parse_doc_inner(
                 doc_ace: ace.name,
                 doc_ulex: ulex.digest,
                 qid: Vec::new(),
+                qsha: Vec::new(),
+                asha: Vec::new(),
+                result_root: 0,
                 clauses,
                 goal_root: 0,
                 answers_root: 0,
