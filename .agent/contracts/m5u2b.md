@@ -112,6 +112,14 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
 - R35 answers custody folds: `record_nonground`, `record_version(V)`,
   `record_query_sha256` = unreachable through the canonical grammar → the
   `noncanonical` class (R2b enumerated; legacy pins stay oracle evidence).
+- R37 K3 scope boundary: per-qid inventory + freshness verdicts (`goal.py check`
+  queries section: stale pl/answers/trace, missing/orphan artifacts, demo order)
+  = validator tier → M5.3 K4 (`ckc check`); the K3 seam sees compiled files
+  only. Suite rows T-C821/T-C822 carry the K3-observable custody portion.
+- R38 `k3_sound` hypothesis `bodies_wf(db)`: canonical bodies never carry a
+  bare conjunction (`wf_body_item`); a `Pos(','(..))` body would split into two
+  goals at one proof path (prod-m5u2b counterexample). The composition stage
+  yields `wf_v1` documents, so every shell-facing binding meets it.
 - R36 trace-check `join` law = the public REFERENCE law (exactly one
   committed clause line of the named sentence block), NOT legacy
   `trace_block_table`'s widening to any dot-terminated line (map S6 #19).
