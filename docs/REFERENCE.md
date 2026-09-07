@@ -720,6 +720,11 @@ follow `[a-z0-9-]+`; choose an id once per source. An already-fetched
 URL keeps its recorded id. Changed remote content becomes a new
 versioned id, while every recorded source stays immutable. A paywall or
 rights gate becomes a recorded queue blocker, and the round moves on.
+A normative statement that the controlled language cannot express
+becomes an `inexpressible` queue blocker in the same way. The region
+keeps its `pending` status, the guideline row is blocked, and the
+round moves on. These blockers record the expressiveness gap of the
+language for later review.
 
 ## Export
 

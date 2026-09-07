@@ -1,4 +1,4 @@
-% synthetic attributed product; regeneration recipe: .agent/memory.md (M4.7 queries suite).
+% synthetic attributed product; regeneration recipe: .claude/rules/queries.md (M4.7 queries suite).
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
 :- multifile(guideline_document/3).

@@ -9,10 +9,11 @@ final (user ruling) and the project review is CLOSED: the project is
 feature complete. The repo's remaining work = `/goal` rounds to
 compendium exhaustion + human adjudication through the reviewer UI +
 the parked hard-tier harvest below + the user-directed M5 Rust rewrite
-(OPEN below); a bare `/session-roadmap` dispatches the next M5 unit
-while M5 stays open, then reverts to read-only close while no parked
-precondition is met. New features exist only by explicit user
-direction; M5 is one such direction. Milestone records = `.agent/archive/`
+(OPEN below) + the parked user-directed M6/M7; a bare
+`/session-roadmap` dispatches the next M5 unit while M5 stays open,
+then reverts to read-only close while no parked precondition is met.
+New features exist only by explicit user direction; M5, M6 + M7 are
+such directions. Milestone records = `.agent/archive/`
 — topical filenames, read on demand; this file keeps a stub per closed
 or parked milestone. `M<n>` = commit-message trace keys (grep pointers
 per stub); the compendium replan restarted the numbering, so key
@@ -38,6 +39,21 @@ greps also hit the earlier pipeline era — topic sorts the hits.
   the English-specific components. Domain rules (eligibility, actor
   classes, corpus protocol) stay in corpus data (compendium header,
   per-guideline files), never in code.
+- Verification line (user ruling, M5 reassessment): the SaMD soundness
+  chain owns the verified surface — KB semantics (v1 read/write,
+  bounded engine, obligation replay, answers, traces) + the custody
+  chain binding source ↔ ACE ↔ clauses ↔ review verdicts ↔ export
+  manifest. Trusted-software fallback everywhere else: git, filesystem,
+  subprocess, clock + pinned mature deps = enumerated unverified shell
+  under fixture gates; process/legal validators (fork-notice,
+  compendium format, rights profiles) + HTTP plumbing take shell tier.
+  The human-audited layer stays minimal: every `ckc-spec` line traces
+  to a soundness/custody claim (M5.9 spec audit adjudicates against
+  this rule). NL→ACE fidelity = clinician review through the UI,
+  permanently outside formal verification. The compiler is not fixed:
+  schema version = the swap seam; alternative targets (ProbLog for
+  uncertainty-bearing content) = M7 evaluation. Grading detail =
+  `.agent/archive/rust-rewrite-plan.md` § Verification line.
 
 ## Guideline source compendium — REVIEWED
 
@@ -85,7 +101,8 @@ green — 1 guideline, 186 documents, 29 red probes, 189 live UI pages, 4
 committed queries with answers + traces, `goal: dist ok 1 guidelines
 408 members`; `tests/dist/red.sh` 62/62; committed
 `release-manifest.tsv` (staleness triggers + regen recipe = docs/REFERENCE.md
-Operating § Close + memory "KB export" bullet). Review battery =
+Operating § Close + `.claude/rules/legacy-tools.md` KB-export
+law). Review battery =
 per-unit + cross-cutting reviewers, 24-row claim replay, diff-blind
 dist red suite; findings, residuals + rulings = the review record in
 `.agent/archive/ui.md`.
@@ -93,8 +110,8 @@ dist red suite; findings, residuals + rulings = the review record in
 Live law = docs/REFERENCE.md (schema, Operating, Export, query/trace sections)
 + the clinician design law `.claude/rules/clinician-design.md`; root `README.md` = the
 simplified overview. User-directed post-review addition: doc-page
-source↔ACE authored-alignment highlighting (law = memory "Doc-page
-source↔ACE highlight" bullet + REFERENCE § Reviewer interface). Architecture rulings, unit
+source↔ACE authored-alignment highlighting (law = `.claude/rules/ui.md`
++ `.claude/rules/corpus.md` + REFERENCE § Reviewer interface). Architecture rulings, unit
 records, gauges, sizing, assurance + out-of-scope =
 `.agent/archive/ui.md`; history = `git log --grep "(M4[. ]" -p --
 .agent/roadmap.md .agent/archive/` + `git log --grep "(M4 review)"`.
@@ -220,6 +237,45 @@ create absent .md reports).
 legacy tooling until cutover; M5 acceptance derives corpus/fixture
 counts from HEAD at run time. History key: `git log --grep "(M5[. ]"`
 (earlier-era M5 hits sort out by topic).
+
+## Emission certification — PARKED (M6)
+
+User-directed (M5 reassessment). Precondition: M5 REVIEWED. Goal: the
+Prolog stack's retained role — ACE→v1 emission in the APE fork — gains
+formal verification amenable to human review by translation
+validation, not by porting: a verified checker in the kernel pattern
+(small human-read DRS→v1 correspondence spec; uninspected impl +
+proofs under the pinned verifier + trust-audit) certifies each
+committed compile — APE's DRS in, emitted v1 clauses in,
+correspondence proved per run; the finite committed corpus makes
+per-run certification complete coverage. `ace_to_pl.pl` then leaves
+the trusted surface (its output is certified; its code becomes
+uninspected-tolerable), while APE parse→DRS stays upstream TCB behind
+clinician ACE review + the red-probe rejection boundary. PLANNING
+opens on the M5.8-shrunk emission closure + the landed K1 term
+machinery; the charter's human-audit sentence re-derives then (audit
+surface = ACE + spec; the named Prolog closure drops out of the
+human-read trust story).
+
+## Semantic-gap coverage — PARKED (M7)
+
+User-directed (M5 reassessment): ACE/v1 has semantic gaps; plan their
+coverage. Precondition: M5 REVIEWED (promotable beside M6; order ruled
+at promotion). Live interim protocol (REFERENCE § Operating +
+`.claude/rules/corpus.md`): a normative statement the controlled
+language cannot express ⇒ region stays `pending`, `inexpressible`
+queue blocker, guideline row blocked, round moves on — blocked rows
+stay terminal for the exhaustion clause, and the blockers bank the gap
+census with zero gate churn while M5 holds the legacy surface frozen.
+M7 units: (1) census instrument — `inexpressible` uncovered class in
+the coverage grammar (pinned-header + fixture churn lands on the Rust
+validators, not the retiring E-- gate); (2) gap taxonomy from banked
+blockers + compendium sampling — expected classes: dosing arithmetic,
+probability/uncertainty, temporal logic, preference strength;
+(3) disposition per class: ACE construct extension | schema v2 |
+alternative/companion compilation target (ProbLog for probabilistic
+content) — evaluated, not presumed; compiler + target stay swappable
+per the standing verification line.
 
 ## Hard-tier harvest — PARKED
 

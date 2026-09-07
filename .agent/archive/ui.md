@@ -218,7 +218,7 @@ Former 4.8–4.11 rescoped out of M4, later dropped from project scope
   Stage A walker (box-carrier descent only), strip anchor-transparency.
   tests/red: 6 pins regenerated + 8 new question families. Contract
   `.scratch/contracts/m4u5.md` R11 = 18 rulings. Evidence green
-  (durable `.scratch/m4u5/`, replays in memory): suite 165/165;
+  (durable `.scratch/m4u5/`, replays in the registry below): suite 165/165;
   helpers 17/17; oracle differential rows 1-15 (row 13 = ruled whose
   notation); rev 8 findings + rev2 Stage-A decoy all accepted → MAIN
   fixed, acceptance 8/8 + H31; rev2 campaign credited 126/126, 51/51
@@ -238,8 +238,8 @@ Former 4.8–4.11 rescoped out of M4, later dropped from project scope
   demo queries to be `yes`/nonempty-`solutions`; 4 authored cdc
   queries (wh=3 yesno=1); answer subprocesses wall-bounded from birth.
   Contract `.scratch/contracts/m4u6.md` v1.2 + v1.3 Verdicts +
-  v1.3.1/2. Evidence green (durable `.scratch/m4u6/`, replays in
-  memory): suite 97/97; oracle differential 15/15 byte-identical; rev
+  v1.3.1/2. Evidence green (durable `.scratch/m4u6/`, replays in the
+  registry below): suite 97/97; oracle differential 15/15 byte-identical; rev
   F01-F09 closed (3 compiler fixes: file_name verbatim syntax errors,
   record_shape wrapper functors, census EOF byte_count; F03
   answers-golden custody hole + probe rc1); rev2 campaign 24/24 (19
@@ -260,7 +260,7 @@ Former 4.8–4.11 rescoped out of M4, later dropped from project scope
   traces-golden custody; 33-tree fixture corpus (24 red + 9 green
   floors pinned in goal.emm) via idempotent scratch generator.
   Contract `.scratch/contracts/m4u7.md` v1..v1.3.9. Evidence green
-  (durable `.scratch/m4u7/`, replays in memory): suite 80 cases/332
+  (durable `.scratch/m4u7/`, replays in the registry below): suite 80 cases/332
   checks; check ok (186 documents; 4 traces nodes=68); regen --check +
   guidelines/ diff-clean; diff harness 36 ident + 3 ruled divergent
   (v1.3.1/v1.3.2); rev 6 repros green post-fix (E01-E08 acceptance
@@ -289,7 +289,8 @@ Former 4.8–4.11 rescoped out of M4, later dropped from project scope
   captures, + 3 print sheets, `.scratch/m4u13-qa/`). The
   committed-corpus law is invisible by user
   ruling, so it rides two `worktree/` git-corpus fixtures rather than
-  copy — machinery + non-vacuity probe in `.agent/memory.md`.
+  copy — machinery + non-vacuity probe = `.claude/rules/ui.md`
+  committed-corpus law.
 
 Unit gauges: M4.1 main=88% 212K close, mate=100% 239K (rev; map 69% test
 71% rev2 57%). M4.2 main=94% 226K pre-compaction mid-close (33% 80K
@@ -351,7 +352,8 @@ resolve_corpus races → hex resolved once per operation, `git archive
 <hex>`, always-snapshot when git usable. F4 trace-reject lane + exact
 stem pins. F5 `request --commit` 40-hex law. F6 strict usage/io rc2
 in-gate self-probes through exit_two. F7 M4U1_ROOT battery replay
-(absolute fixture paths). F8 memory Catch/SystemExit precision. F9
+(absolute fixture paths). F8 E-- Catch/SystemExit rule precision (now
+`.claude/rules/legacy-tools.md`). F9
 census int totality (locator-less rows = canonical-string compare;
 goal-side eager int pinned red) + valid_ui_id encode guard. F10 POST
 body read only after route/model/Host/Origin/CT guards; GET never
@@ -363,7 +365,7 @@ check_trace_nonfinite_probe. F15 golden-regen sha1 pin (ui_git_env).
 
 Audit-m4: 24 rows verified except era-bound scratch evidence — m4u6
 suite/differential, m4u4 battery, m4u13 diff-blind suite (dispositions
-+ current numbers = memory ERA-BOUND annotations; replay from
++ current numbers = the M4 scratch evidence registry below; replay from
 claim-era commits) — and the QA count (16 screens, archive corrected);
 7 archival families skipped on cost (incl. m4u7 determinism 64/64).
 
@@ -401,7 +403,7 @@ self-probes, live build ×2 byte-compare, layout closure, `sha256sum
 public-domain quote). Live meter `goal: dist ok 1 guidelines 408
 members 1203980 bytes` (input-head a2da7d4). UI production bar
 recorded: README Export — loopback-local, web hosting out of scope.
-Operating mechanics = memory "KB export" bullet.
+Operating mechanics = `.claude/rules/legacy-tools.md` KB-export law.
 
 Close gates (post-dist, HEAD 511a6d2): full `goal.py check` rc=0 —
 `check ok 1 guidelines 186 documents 29 red probes`; meters strict
@@ -412,3 +414,104 @@ guidelines/` at the close commits. Session shape: MILESTONE-REVIEW
 across 6 compaction checkpoints, MAIN ~13.5M tokens; teammate
 high-water 249K (rev2-m4u3 era analog); review teammates ≤67%
 pre-harvest.
+
+## M4 scratch evidence registry
+
+Unit evidence stays scratch with regeneration contracts (M1.5
+precedent; ports dropped at the feature-complete ruling). Repo-root
+cwd + toolchain PATH throughout; ERA-BOUND entries replay from their
+own era's commits. Live maintenance law (fixture regen, gate
+invocations) = `.claude/rules/{ui,queries,legacy-tools}.md`.
+
+- M4.1: batteries `.scratch/m4u1/battery/` (env `M4U1_ROOT`, default
+  cwd) — behavior 4/4; gatecheck 21 synthetic-worktree cases + 23
+  detector rows (needs clean HEAD); `build_test_fixtures.py` then
+  `diff -rq` vs `tests/strict` (writes behavior fixtures
+  script-relative); red-first replay = detached worktree at 9ee3065 +
+  suite copy → `redfirst_runner.py` (expect `47/54 target mismatches; 7
+  pre-existing controls`). Ruled matrix `.scratch/agents/test-m4u1.md`;
+  fixture-prediction provenance e36d52d (test branch).
+- M4.2: `.scratch/m4u2/rev/` = review_oracle.py (independent D1-D3
+  oracle, 186/186) + component_sensitivity.py + derivation/boundary/
+  gatecheck batteries + red_f01-f04 (f03/f04 anchor README beside
+  `__file__` → run a copy sed-swapped to docs/REFERENCE.md, their
+  pre-split target); `.scratch/m4u2/rev2/` = mutation_campaign.py
+  30/30 killed + determinism_sweep.py 10/10 + append_stability
+  (disposable worktree: `M4U2_ROOT=<wt>`, state under
+  `<wt>/.scratch/rev2-m4u2/`); `.scratch/m4u2-fixture-harness.py`
+  (write|check; repo root = parents[1] of its own path → copy under
+  `<root>/.scratch/` to retarget). Rulings =
+  `.scratch/contracts/m4u2-rulings.md`.
+- M4.3: independent fixture generator
+  `.scratch/m4u3/gen/ui_fixture_gen.py` (write|check|inspect;
+  diff-blind authored; owns 704 files, preserves golden/ + gen/) +
+  runner `run_ui_fixtures.py` (env `UI_PY=<abs ui.py>`; fails on zero
+  cases); `.scratch/m4u3/` probe_min.py 5/5, contrast.py 7/7,
+  serve-battery, shots/. Mutation kill table + determinism matrix =
+  `.scratch/agents/rev2-m4u3.md` (mutant scoring = `UI_PY=<mutant
+  copy> run_ui_fixtures.py`; M24/M36 = RV14 scratch-kill residuals).
+- M4.4: battery `.scratch/m4u4-battery.py` 16 probes = ERA-BOUND
+  (pre-bundle-v2: adapted replay passes 4/16); B7 shots + rev
+  acceptance copy `rev-m4u4-red.py` in `.scratch/m4u4-evidence/`.
+- M4.5 (durable copies `.scratch/m4u5/`; worktrees deleted at close):
+  suite `python3 -P .scratch/m4u5/suite/runner.py target --compiler
+  <abs ace_to_pl.pl> --tree <abs .scratch/polish-redstage/ape-stage>
+  --helper-map <abs>/.scratch/m4u5/suite/helper_map.json` ⇒ `target ok
+  cases=165 passed=165` (helper goals = MAIN-authored templates over
+  `ace_to_pl:` internals; runner substitutes `{input}`/`{expected}`,
+  byte-compares stdout); direct helpers `swipl -q -f none -F none -s
+  .scratch/m4u5/direct_helpers.pl -g dh_main -t 'halt(9)'` 17/17
+  (parser-unreachable defenses, no argv seam); reviewer batteries
+  (cwd-anchored) `M4U5_ROOT=$PWD python3 -P .scratch/m4u5/red_phase2`
+  6/6 + `red_readme_phase2` 2/2; oracle differential `sh
+  .scratch/m4u5/diffprobes.sh N` rows 1-15 (row 13 = ruled whose
+  divergence vs recorded oracle hash); rev2 campaign (126-case corpus
+  + 51-mutant matrix + 800-cell determinism)
+  `PYTHONDONTWRITEBYTECODE=1 python3 -P
+  .scratch/m4u5/rev2/phase2_replay.py --compiler <abs> --stage <abs
+  redstage> --root <abs repo root> --state /tmp/<fresh> [--case <id>]`
+  ⇒ `replay 126/126 passed`; Stage-A defense probes
+  `.scratch/m4u5/f5probe.pl`, anchored-modal equivalence
+  `.scratch/m4u5/f3probe.pl` (both `-g probe_main -t 'halt(9)'`).
+- M4.6: suite + differential = ERA-BOUND (M4.7's writer extension reds
+  suite case G001; differential 11/15 — 4 edge manifests name the
+  deleted `wt/orc-m4u6` worktree and the harness exits 0 despite
+  fails; runner.py:96 + depth.tsv share the disposition). Suite
+  `python3 -P .scratch/m4u6/suite/runner.py target --compiler <abs>
+  --stage <abs .scratch/m4u6/sigstage/ape-stage> --root <abs>` (97
+  cases at era; sigstage = redstage recipe); independent oracle
+  `.scratch/m4u6/orc/answer_ref.pl` (entrypoint `-g ref_main`,
+  selftest `selftest_v13.py`), differential `sh
+  .scratch/m4u6/differential.sh`; rev2 G08/G09 seam kills =
+  scratch-only (mechanics = report F23/F24). Outer-W composition
+  rejection owns no committed case — suite T17 + differential row
+  cover it.
+- M4.7: suite `python3 .scratch/m4u7/suite/runner.py target` (plain
+  python3, NOT -P — sibling imports; modes
+  list|self-check|baseline|target, --case/--root/--compiler/--stage)
+  ⇒ `target ok cases=80 checks=332`; byte archives = tags
+  archive/m4u7-suite (test HEAD e8d9139), archive/m4u7-diff (39-case
+  MAIN↔orc harness, c756a17), archive/m4u7-orc (independent oracle,
+  cb9f811); rev2 = 50 mutants, 41 killed, survivors ruled contract
+  v1.3.9 (M03/M06/M07/M36 equivalent-accepted; M41/M42/M48-50 = real
+  scratch-suite gaps, kill recipes in the report); determinism 64/64
+  byte-stable across cwd/locale/manifest/ambient-op + writer ×
+  PYTHONHASHSEED extremes.
+- M4.13: diff-blind suite `python3 -P
+  .scratch/m4u13-evidence/suite/runner.py target --root <repo>` =
+  ERA-BOUND (48/48 at claim time; now 53 cases → 50/53: case 33
+  renders the removed differences panel, 49+52 index the retired
+  col7); adopted-survivor kills `python3 -P
+  .scratch/m4u13-survivor-kills.py` 12/12 (ui mutants through the
+  in-namespace selftest; goal mutants through a temp root that needs a
+  `vendor/ape/prolog/ace_to_pl.pl` stub for goal.py's import-time
+  require); per-case golden regen `.scratch/regen-ui-goldens.py`
+  (harness-mirror argv/env incl. `ui_git_env` sha1 pins); teammate
+  batteries `.scratch/m4u13-evidence/{rev,rev2}/` (rev print/entity
+  probes need `webcap` + `pdftotext`); committed-corpus residue
+  carrier `.scratch/m4u13-committed-corpus.py` 9/9 (case e =
+  white-box: the dirt exclusion of `*/audit/adjudication.tsv` has no
+  external observable).
+- M4 plan spikes: strict-E-- WSGI `ui_spike.emm`/`.py` (compile +
+  serve + POST + write green); APE question probes
+  `question_probes.sh` → `.out` (9 replayable DRS families).

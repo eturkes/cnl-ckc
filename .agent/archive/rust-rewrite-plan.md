@@ -261,8 +261,9 @@ Migration gate = dual-run differentials against the legacy tools on HEAD
   E-- mention (26-file inventory via `git grep -iE 'e--|\.emm'`):
   README.md, docs/REFERENCE.md (audit story: E-- section → Rust
   verified-kernel section; Running/Operating/Close invocations),
-  roadmap stubs, memory (refs + obsolete E-- machinery bullets pruned;
-  era-bound scratch bullets condensed to replay-from-era-commit stubs),
+  roadmap stubs, `.claude/rules/` (obsolete E-- law pruned —
+  legacy-tools.md retires whole; era-bound scratch entries condensed
+  to replay-from-era-commit stubs in the archive registries),
   rounds.md, archive files (ui.md, harvest.md), polish row retarget,
   `grammar_functionwords.fit` hit audited (expected false positive);
   serena `language_servers` −python; settings sync. Acceptance: `git
@@ -308,8 +309,9 @@ files, queries 297, adjudication 152, red 69, copy 22.
    code artifact; certification = read it, run `cargo verus verify` +
    `ckc trust-audit`.
 3. APE fork emission closure (`ace_to_pl.pl` post-shrink) + vendored
-   APE/Clex — human-read Prolog TCB (unchanged audit story; Prolog-side
-   formal verification out of scope).
+   APE/Clex — human-read Prolog TCB (audit story unchanged through M5;
+   emission certification by translation validation = roadmap M6, after
+   which the fork's code leaves the human-read trust story).
 4. Pinned toolchains: SWI 9.2.9 (digest-pinned container), Verus release
    asset (sha256-pinned) + its rustup toolchain + bundled Z3 + vstd —
    one hash-pinned upstream TCB — plus Kani (secondary gate), git.
@@ -318,8 +320,45 @@ Claim wording (honest): "machine-verified against the committed spec
 under a pinned verifier TCB" — never "foundationally proved".
 Impl + proofs: uninspected, by design, forever.
 
+## Verification line (reassessment ruling)
+
+Consumption-to-Rust affirmed. The consumption modes are the program's
+clinical logic; executed in Prolog they trusted the whole unverified
+SWI C runtime with no verification route (no mature Prolog verifier
+exists), while the Rust move gives that ROLE a small human-read
+operational-semantics spec + a machine-checked implementation — formal
+verification amenable to human review, reached by role migration. The
+emission role stays Prolog and gains its verification later by
+translation validation (roadmap M6: a verified DRS→v1 correspondence
+checker certifies each committed compile), not by porting.
+
+Grading (SaMD soundness draws the kernel line; trusted software over
+forced proofs — binds K4/K5 + M5.3-M5.6 design, acceptance stays
+parity + fixture replay):
+
+- Kernel theorems: v1 read/write + engine + replay + answers/traces
+  (K1-K3); custody digests, adjudication/review-manifest binding,
+  coverage closure, align validation, lexicon gates, release-manifest
+  derivation (K4 core); UI render fidelity — what the clinician sees =
+  what was hashed — escaping, copy registry, POST guard chain + ledger
+  CAS (K5 core).
+- Shell tier (enumerated, fixture-gated, spec-level assumptions, no
+  theorems): git, filesystem, subprocess, clock, sockets — assumed
+  correct; fork-notice policy, compendium format, rights profiles
+  (process/legal validators, not device logic); HTTP request-line/
+  header plumbing; archive assembly via a pinned mature dep — the
+  verified release-manifest derivation + member digests already catch
+  assembly faults at the consumer's `sha256sum -c`, so M5.6's verified
+  tar writer is optional, not required.
+- Spec minimality: every `ckc-spec` line traces to a soundness/custody
+  claim; a redundant proof layer, duplicate representation or lemma
+  provable from a neighbour = a review finding; the M5.9 spec audit
+  adjudicates size against this rule.
+
 ## Out of scope
 
-New features; schema v2; verifying the APE fork or SWI; web hosting;
-scratch/evidence tooling language policy (gitignored scratch stays
-free-form); rewriting history (E-- lives in git history).
+New features; schema v2 (M7 evaluates); verifying the APE fork or SWI
+as code (M6 certifies the fork's emitted output by translation
+validation instead); web hosting; scratch/evidence tooling language
+policy (gitignored scratch stays free-form); rewriting history (E--
+lives in git history).

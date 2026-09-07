@@ -1,7 +1,7 @@
 # Compendium + harvest technique (M1)
 
 Read before compendium edits, queue promotion, or fetch/access work;
-pointer = `.agent/memory.md`.
+pointer = `.claude/rules/corpus.md`.
 
 - Guideline-source discovery = `.agent/compendium.md` (org universe + guideline rows; header owns eligibility, independence, promotion + terminal rules). Enumeration independence = distinct source OWNER/dataset, issuer- and developer-controlled listings excluded; all NLM properties (PubMed/PMC/Bookshelf) = one owner → pair an NLM id with Crossref/GovInfo/a membership frame. Bibliographic cells cite stable ids (`PubMed PMID`, `PMC`, `DOI`, `NBK`, `GovInfo`) so claims stay checkable from the file alone.
 - Access classing: decide from artifact bytes/body, never transport. Cloudflare `Just a moment` + Akamai `Access Denied` = anti-bot → row access `unverified` + `provisional(<why>)`, not an access gate. Transport-earned `open` re-decides against the entitlement prompt (`Get full text access`, a lock-marked `Check Access`, a fulltext→abstract bounce serving a page-image preview). Unpaywall NOMINATES only (`.scratch/audit_open_oa.py`): society journals post guidelines free-to-read without an OA licence, and its records predate platform moves — a substantive live artifact read decides.

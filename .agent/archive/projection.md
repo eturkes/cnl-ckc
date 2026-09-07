@@ -50,7 +50,7 @@ Assurance + evidence:
   `git diff --quiet -- guidelines/`.
 - Question boundary = `.scratch/m3u7/suite/runner.py` 96 cells; contracts of
   record = `.scratch/contracts/m3u1.md`...`m3u7.md`; regeneration + port
-  ownership = `.agent/memory.md` M3 evidence bullet + `.agent/polish.md`.
+  ownership = the M3 scratch evidence registry below + `.agent/polish.md`.
 - Unit gauges: M3.1 main=84% 202K, mate=80% 192K - M3.2 main=93% 224K,
   mate=100% 239K - M3.3 main=102% 245K pre-compaction / 59% 143K close,
   mate=100% 240K - M3.4 main=94% 225K pre-compaction / 49% 117K close,
@@ -72,6 +72,32 @@ Out of scope remains: serving/query API; probabilities, thresholds, arithmetic
 or unit conversion absent from source; defeasibility/s(CASP) before a named
 consumer question; rec6-12 authoring and pending-region/coverage closure,
 which return to `/goal` rounds after review.
+
+M3 scratch evidence registry (unit gates/suites/oracles stay scratch
+unit evidence with regeneration contracts — M1.5 precedent):
+
+- Contracts of record `.scratch/contracts/m3u1.md`...`m3u7.md`. Shared
+  APE stage `.scratch/m3scout/ape-stage`: restage = copy `vendor/ape`
+  there, then `swipl -O -f none -F none -g "working_directory(_,
+  '<stage>/prolog/parser'), [fit_to_plp], halt." -t halt`; it keeps the
+  DEMO lexicon as M3 gate evidence — never overlay Clex onto it.
+- Unit gates `.scratch/m3u{1,2,3}/gate_m3u*.py`, differentials
+  `diff_m3u{1,2,3,7}.py`, suites `.scratch/m3u{2,3,7}/suite/runner.py`.
+  Gates + differentials = era-bound, NOT standing gates: they pin the
+  legacy `schema=v1` argv contract dropped at dd5bc53 → red under every
+  current compiler; replay only from their own M3-era commits.
+- Migration replay: `consolidate_lexicon.py` + `splice_notes.py` run on
+  main; `.scratch/m3u4/validate_doc.py` is commit-bound (greps
+  `mega_lemmas_text` out of `tools/goal.py`, removed at M3.7) → replay
+  M3.4-M3.6 from that unit's own commit.
+- Review probes: `.scratch/m3rev/payload_battery.py` (9
+  aggregate-payload cases); `.scratch/m3rev/leftrec/` (load-order
+  divergence probe + `probe_recursion_mode.py` = 5 synthetic controls
+  for the committed `recursion-check` mode — a COMMITTED fixture is
+  impossible, `check_prolog_inventory` bounds tracked `.pl` paths);
+  `.scratch/m3rev/redtests/` (preserved teammate red tests).
+- Committed authority = `goal.py check` + `tests/red/`; expect regen
+  law = `.claude/rules/compiler.md`.
 
 Sizing (analogs: M1.5 main=166K narrow kernel; M1.3a main=196K; M1.2b
 main=203K oversized harvest; M1.3b main=179K): kernel units project
