@@ -1,0 +1,10 @@
+# gitleaks 8.30.1 config: default rules + one path allowlist. Gate = `just secrets`
+# (full history + working tree); CI = same over the checkout.
+title = "cnl-ckc"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "cargo vendor checksum manifests: sha256 digests read as high-entropy generic keys"
+paths = ['''^rust/vendor/[^/]+/\.cargo-checksum\.json$''']

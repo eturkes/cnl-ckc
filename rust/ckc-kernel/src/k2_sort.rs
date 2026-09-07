@@ -1,4 +1,4 @@
-use crate::k2_term::{term_lt, ETermArena};
+use crate::k2_term::{ETermArena, term_lt};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::{arena_ok, root_ok, term_lt_irreflexive};
 #[cfg(verus_keep_ghost)]
@@ -14,20 +14,19 @@ pub open spec fn root_terms(arena: &ETermArena, roots: Seq<usize>) -> Seq<Term> 
 }
 
 pub open spec fn roots_ok(arena: &ETermArena, roots: Seq<usize>) -> bool {
-    arena_ok(arena)
-        && forall|i: int| 0 <= i < roots.len() ==> roots[i] < arena.nodes@.len()
+    arena_ok(arena) && forall|i: int| 0 <= i < roots.len() ==> roots[i] < arena.nodes@.len()
 }
 
 pub open spec fn roots_ground(arena: &ETermArena, roots: Seq<usize>) -> bool {
-    forall|i: int| 0 <= i < roots.len()
-        ==> ckc_spec::term::ground(arena@[roots[i] as int])
+    forall|i: int| 0 <= i < roots.len() ==> ckc_spec::term::ground(arena@[roots[i] as int])
 }
 
 proof fn roots_ok_index(arena: &ETermArena, roots: Seq<usize>, i: int)
     requires
         roots_ok(arena, roots),
         0 <= i < roots.len(),
-    ensures root_ok(arena, roots[i]),
+    ensures
+        root_ok(arena, roots[i]),
 {
     reveal(roots_ok);
     reveal(root_ok);
@@ -37,28 +36,29 @@ proof fn roots_ground_index(arena: &ETermArena, roots: Seq<usize>, i: int)
     requires
         roots_ground(arena, roots),
         0 <= i < roots.len(),
-    ensures ckc_spec::term::ground(arena@[roots[i] as int]),
+    ensures
+        ckc_spec::term::ground(arena@[roots[i] as int]),
 {
     reveal(roots_ground);
 }
 
 proof fn root_terms_index(arena: &ETermArena, roots: Seq<usize>, i: int)
-    requires 0 <= i < roots.len(),
-    ensures root_terms(arena, roots)[i] == arena@[roots[i] as int],
+    requires
+        0 <= i < roots.len(),
+    ensures
+        root_terms(arena, roots)[i] == arena@[roots[i] as int],
 {
     reveal(root_terms);
 }
 
-proof fn root_terms_subrange(
-    arena: &ETermArena,
-    roots: Seq<usize>,
-    start: int,
-    end: int,
-)
-    requires 0 <= start <= end <= roots.len(),
+proof fn root_terms_subrange(arena: &ETermArena, roots: Seq<usize>, start: int, end: int)
+    requires
+        0 <= start <= end <= roots.len(),
     ensures
-        root_terms(arena, roots.subrange(start, end))
-            == root_terms(arena, roots).subrange(start, end),
+        root_terms(arena, roots.subrange(start, end)) == root_terms(arena, roots).subrange(
+            start,
+            end,
+        ),
 {
     reveal(root_terms);
     assert_seqs_equal!(
@@ -67,16 +67,14 @@ proof fn root_terms_subrange(
     );
 }
 
-proof fn root_terms_insert(
-    arena: &ETermArena,
-    roots: Seq<usize>,
-    i: int,
-    root: usize,
-)
-    requires 0 <= i <= roots.len(),
+proof fn root_terms_insert(arena: &ETermArena, roots: Seq<usize>, i: int, root: usize)
+    requires
+        0 <= i <= roots.len(),
     ensures
-        root_terms(arena, roots.insert(i, root))
-            == root_terms(arena, roots).insert(i, arena@[root as int]),
+        root_terms(arena, roots.insert(i, root)) == root_terms(arena, roots).insert(
+            i,
+            arena@[root as int],
+        ),
 {
     reveal(root_terms);
     assert_seqs_equal!(
@@ -85,22 +83,18 @@ proof fn root_terms_insert(
     );
 }
 
-proof fn roots_ok_insert(
-    arena: &ETermArena,
-    roots: Seq<usize>,
-    i: int,
-    root: usize,
-)
+proof fn roots_ok_insert(arena: &ETermArena, roots: Seq<usize>, i: int, root: usize)
     requires
         roots_ok(arena, roots),
         root_ok(arena, root),
         0 <= i <= roots.len(),
-    ensures roots_ok(arena, roots.insert(i, root)),
+    ensures
+        roots_ok(arena, roots.insert(i, root)),
 {
     reveal(roots_ok);
     reveal(root_ok);
-    assert forall|j: int| 0 <= j < roots.insert(i, root).len()
-        implies roots.insert(i, root)[j] < arena.nodes@.len() by {
+    assert forall|j: int| 0 <= j < roots.insert(i, root).len() implies roots.insert(i, root)[j]
+        < arena.nodes@.len() by {
         if j < i {
             assert(roots.insert(i, root)[j] == roots[j]);
         } else if j == i {
@@ -111,21 +105,18 @@ proof fn roots_ok_insert(
     }
 }
 
-proof fn roots_ground_insert(
-    arena: &ETermArena,
-    roots: Seq<usize>,
-    i: int,
-    root: usize,
-)
+proof fn roots_ground_insert(arena: &ETermArena, roots: Seq<usize>, i: int, root: usize)
     requires
         roots_ground(arena, roots),
         ckc_spec::term::ground(arena@[root as int]),
         0 <= i <= roots.len(),
-    ensures roots_ground(arena, roots.insert(i, root)),
+    ensures
+        roots_ground(arena, roots.insert(i, root)),
 {
     reveal(roots_ground);
-    assert forall|j: int| 0 <= j < roots.insert(i, root).len()
-        implies ckc_spec::term::ground(arena@[roots.insert(i, root)[j] as int]) by {
+    assert forall|j: int| 0 <= j < roots.insert(i, root).len() implies ckc_spec::term::ground(
+        arena@[roots.insert(i, root)[j] as int],
+    ) by {
         if j < i {
             assert(roots.insert(i, root)[j] == roots[j]);
         } else if j == i {
@@ -138,9 +129,7 @@ proof fn roots_ground_insert(
 
 proof fn bytes_order_total(a: Seq<u8>, b: Seq<u8>)
     ensures
-        a == b
-            || ckc_spec::engine::bytes_lt(a, b)
-            || ckc_spec::engine::bytes_lt(b, a),
+        a == b || ckc_spec::engine::bytes_lt(a, b) || ckc_spec::engine::bytes_lt(b, a),
     decreases a.len() + b.len(),
 {
     reveal_with_fuel(ckc_spec::engine::bytes_lt, 2);
@@ -161,9 +150,7 @@ proof fn bytes_order_total(a: Seq<u8>, b: Seq<u8>)
 
 proof fn term_order_total(a: Term, b: Term)
     ensures
-        a == b
-            || ckc_spec::engine::term_lt(a, b)
-            || ckc_spec::engine::term_lt(b, a),
+        a == b || ckc_spec::engine::term_lt(a, b) || ckc_spec::engine::term_lt(b, a),
     decreases a,
 {
     reveal(ckc_spec::engine::rank);
@@ -187,11 +174,10 @@ proof fn term_order_total(a: Term, b: Term)
 }
 
 proof fn args_order_total(xs: Seq<Term>, ys: Seq<Term>)
-    requires xs.len() == ys.len(),
+    requires
+        xs.len() == ys.len(),
     ensures
-        xs == ys
-            || ckc_spec::engine::args_lt(xs, ys)
-            || ckc_spec::engine::args_lt(ys, xs),
+        xs == ys || ckc_spec::engine::args_lt(xs, ys) || ckc_spec::engine::args_lt(ys, xs),
     decreases xs,
 {
     reveal_with_fuel(ckc_spec::engine::args_lt, 2);
@@ -215,7 +201,8 @@ pub fn term_equal(arena: &ETermArena, left: usize, right: usize) -> (equal: bool
         root_ok(arena, right),
         ckc_spec::term::ground(arena@[left as int]),
         ckc_spec::term::ground(arena@[right as int]),
-    ensures equal == (arena@[left as int] == arena@[right as int]),
+    ensures
+        equal == (arena@[left as int] == arena@[right as int]),
 {
     let less = term_lt(arena, left, right);
     if less {
@@ -258,8 +245,10 @@ proof fn insert_sorted_at(x: Term, s: Seq<Term>, i: nat)
     } else {
         assert(s.len() > 0);
         assert(ckc_spec::engine::term_lt(s[0], x));
-        assert forall|j: int| 0 <= j < i - 1
-            implies ckc_spec::engine::term_lt(s.drop_first()[j], x) by {
+        assert forall|j: int| 0 <= j < i - 1 implies ckc_spec::engine::term_lt(
+            s.drop_first()[j],
+            x,
+        ) by {
             assert(s.drop_first()[j] == s[j + 1]);
         }
         if i < s.len() {
@@ -283,11 +272,10 @@ fn insert_root(arena: &ETermArena, root: usize, sorted: &mut Vec<usize>)
     ensures
         roots_ok(arena, final(sorted)@),
         roots_ground(arena, final(sorted)@),
-        root_terms(arena, final(sorted)@)
-            == ckc_spec::engine::insert_sorted(
-                arena@[root as int],
-                root_terms(arena, old(sorted)@),
-            ),
+        root_terms(arena, final(sorted)@) == ckc_spec::engine::insert_sorted(
+            arena@[root as int],
+            root_terms(arena, old(sorted)@),
+        ),
 {
     let ghost before = sorted@;
     let mut i = 0usize;
@@ -300,17 +288,22 @@ fn insert_root(arena: &ETermArena, root: usize, sorted: &mut Vec<usize>)
             root_ok(arena, root),
             ckc_spec::term::ground(arena@[root as int]),
             i <= sorted@.len(),
-            stopped ==> i < sorted@.len()
-                && !ckc_spec::engine::term_lt(
-                    root_terms(arena, sorted@)[i as int],
-                    arena@[root as int],
-                ),
-            forall|j: int| 0 <= j < i
-                ==> ckc_spec::engine::term_lt(
+            stopped ==> i < sorted@.len() && !ckc_spec::engine::term_lt(
+                root_terms(arena, sorted@)[i as int],
+                arena@[root as int],
+            ),
+            forall|j: int|
+                0 <= j < i ==> ckc_spec::engine::term_lt(
                     root_terms(arena, sorted@)[j],
                     arena@[root as int],
                 ),
-        decreases sorted.len() - i, if stopped { 0int } else { 1int },
+        decreases
+                sorted.len() - i,
+                if stopped {
+                    0int
+                } else {
+                    1int
+                },
     {
         proof {
             roots_ok_index(arena, sorted@, i as int);
@@ -327,11 +320,7 @@ fn insert_root(arena: &ETermArena, root: usize, sorted: &mut Vec<usize>)
         if i < sorted@.len() {
             root_terms_index(arena, sorted@, i as int);
         }
-        insert_sorted_at(
-            arena@[root as int],
-            root_terms(arena, before),
-            i as nat,
-        );
+        insert_sorted_at(arena@[root as int], root_terms(arena, before), i as nat);
         root_terms_insert(arena, before, i as int, root);
         roots_ok_insert(arena, before, i as int, root);
         roots_ground_insert(arena, before, i as int, root);
@@ -347,8 +336,7 @@ pub fn msort(arena: &ETermArena, roots: &Vec<usize>) -> (out: Vec<usize>)
     ensures
         roots_ok(arena, out@),
         roots_ground(arena, out@),
-        root_terms(arena, out@)
-            == ckc_spec::engine::msort(root_terms(arena, roots@)),
+        root_terms(arena, out@) == ckc_spec::engine::msort(root_terms(arena, roots@)),
 {
     let mut out = Vec::new();
     let mut i = roots.len();
@@ -365,10 +353,9 @@ pub fn msort(arena: &ETermArena, roots: &Vec<usize>) -> (out: Vec<usize>)
             roots_ok(arena, out@),
             roots_ground(arena, out@),
             i <= roots@.len(),
-            root_terms(arena, out@)
-                == ckc_spec::engine::msort(
-                    root_terms(arena, roots@).subrange(i as int, roots@.len() as int),
-                ),
+            root_terms(arena, out@) == ckc_spec::engine::msort(
+                root_terms(arena, roots@).subrange(i as int, roots@.len() as int),
+            ),
         decreases i,
     {
         i -= 1;
@@ -381,10 +368,8 @@ pub fn msort(arena: &ETermArena, roots: &Vec<usize>) -> (out: Vec<usize>)
         proof {
             root_terms_subrange(arena, roots@, i as int, roots@.len() as int);
             root_terms_subrange(arena, roots@, i as int + 1, roots@.len() as int);
-            assert(
-                root_terms(arena, roots@).subrange(i as int, roots@.len() as int)[0]
-                    == root_terms(arena, roots@)[i as int]
-            );
+            assert(root_terms(arena, roots@).subrange(i as int, roots@.len() as int)[0]
+                == root_terms(arena, roots@)[i as int]);
             assert_seqs_equal!(
                 root_terms(arena, roots@).subrange(i as int, roots@.len() as int).drop_first()
                     == root_terms(arena, roots@).subrange(
@@ -406,14 +391,13 @@ pub fn msort(arena: &ETermArena, roots: &Vec<usize>) -> (out: Vec<usize>)
 
 proof fn dedup_step(x: Term, tail: Seq<Term>)
     ensures
-        ckc_spec::engine::dedup(seq![x] + tail)
-            == if tail.len() == 0 {
-                seq![x]
-            } else if x == tail[0] {
-                ckc_spec::engine::dedup(tail)
-            } else {
-                seq![x] + ckc_spec::engine::dedup(tail)
-            },
+        ckc_spec::engine::dedup(seq![x] + tail) == if tail.len() == 0 {
+            seq![x]
+        } else if x == tail[0] {
+            ckc_spec::engine::dedup(tail)
+        } else {
+            seq![x] + ckc_spec::engine::dedup(tail)
+        },
 {
     reveal_with_fuel(ckc_spec::engine::dedup, 2);
     if tail.len() > 0 {
@@ -429,8 +413,7 @@ fn dedup_roots(arena: &ETermArena, sorted: &Vec<usize>) -> (out: Vec<usize>)
     ensures
         roots_ok(arena, out@),
         roots_ground(arena, out@),
-        root_terms(arena, out@)
-            == ckc_spec::engine::dedup(root_terms(arena, sorted@)),
+        root_terms(arena, out@) == ckc_spec::engine::dedup(root_terms(arena, sorted@)),
 {
     let mut out = Vec::new();
     let mut i = sorted.len();
@@ -447,10 +430,9 @@ fn dedup_roots(arena: &ETermArena, sorted: &Vec<usize>) -> (out: Vec<usize>)
             roots_ok(arena, out@),
             roots_ground(arena, out@),
             i <= sorted@.len(),
-            root_terms(arena, out@)
-                == ckc_spec::engine::dedup(
-                    root_terms(arena, sorted@).subrange(i as int, sorted@.len() as int),
-                ),
+            root_terms(arena, out@) == ckc_spec::engine::dedup(
+                root_terms(arena, sorted@).subrange(i as int, sorted@.len() as int),
+            ),
         decreases i,
     {
         i -= 1;
@@ -480,14 +462,9 @@ fn dedup_roots(arena: &ETermArena, sorted: &Vec<usize>) -> (out: Vec<usize>)
             out.insert(0, sorted[i]);
         }
         proof {
-            let suffix = root_terms(arena, sorted@).subrange(
-                i as int + 1,
-                sorted@.len() as int,
-            );
-            assert(
-                root_terms(arena, sorted@).subrange(i as int, sorted@.len() as int)[0]
-                    == root_terms(arena, sorted@)[i as int]
-            );
+            let suffix = root_terms(arena, sorted@).subrange(i as int + 1, sorted@.len() as int);
+            assert(root_terms(arena, sorted@).subrange(i as int, sorted@.len() as int)[0]
+                == root_terms(arena, sorted@)[i as int]);
             assert_seqs_equal!(
                 root_terms(arena, sorted@).subrange(i as int, sorted@.len() as int)
                     == seq![root_terms(arena, sorted@)[i as int]] + suffix
@@ -515,42 +492,59 @@ pub fn sort_unique(arena: &ETermArena, roots: &Vec<usize>) -> (out: Vec<usize>)
     ensures
         roots_ok(arena, out@),
         roots_ground(arena, out@),
-        root_terms(arena, out@)
-            == ckc_spec::engine::sort_unique(root_terms(arena, roots@)),
+        root_terms(arena, out@) == ckc_spec::engine::sort_unique(root_terms(arena, roots@)),
 {
     let sorted = msort(arena, roots);
     let out = dedup_roots(arena, &sorted);
-    proof { reveal(ckc_spec::engine::sort_unique); }
+    proof {
+        reveal(ckc_spec::engine::sort_unique);
+    }
     out
 }
 
 proof fn insert_property(x: Term, terms: Seq<Term>, p: spec_fn(Term) -> bool)
-    requires p(x), forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
-    ensures forall|i: int| 0 <= i < ckc_spec::engine::insert_sorted(x, terms).len()
-        ==> p(#[trigger] ckc_spec::engine::insert_sorted(x, terms)[i]),
+    requires
+        p(x),
+        forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
+    ensures
+        forall|i: int|
+            0 <= i < ckc_spec::engine::insert_sorted(x, terms).len() ==> p(
+                #[trigger] ckc_spec::engine::insert_sorted(x, terms)[i],
+            ),
     decreases terms.len(),
 {
     reveal_with_fuel(ckc_spec::engine::insert_sorted, 1);
     if terms.len() > 0 && ckc_spec::engine::term_lt(terms[0], x) {
         insert_property(x, terms.drop_first(), p);
     }
-    assert forall|i: int| 0 <= i < ckc_spec::engine::insert_sorted(x, terms).len()
-        implies p(#[trigger] ckc_spec::engine::insert_sorted(x, terms)[i]) by {
+    assert forall|i: int| 0 <= i < ckc_spec::engine::insert_sorted(x, terms).len() implies p(
+        #[trigger] ckc_spec::engine::insert_sorted(x, terms)[i],
+    ) by {
         if terms.len() > 0 && ckc_spec::engine::term_lt(terms[0], x) {
-            if i == 0 { assert(ckc_spec::engine::insert_sorted(x, terms)[i] == terms[0]); }
-            else { assert(ckc_spec::engine::insert_sorted(x, terms)[i]
-                == ckc_spec::engine::insert_sorted(x, terms.drop_first())[i - 1]); }
+            if i == 0 {
+                assert(ckc_spec::engine::insert_sorted(x, terms)[i] == terms[0]);
+            } else {
+                assert(ckc_spec::engine::insert_sorted(x, terms)[i]
+                    == ckc_spec::engine::insert_sorted(x, terms.drop_first())[i - 1]);
+            }
         } else {
-            if i == 0 { assert(ckc_spec::engine::insert_sorted(x, terms)[i] == x); }
-            else { assert(ckc_spec::engine::insert_sorted(x, terms)[i] == terms[i - 1]); }
+            if i == 0 {
+                assert(ckc_spec::engine::insert_sorted(x, terms)[i] == x);
+            } else {
+                assert(ckc_spec::engine::insert_sorted(x, terms)[i] == terms[i - 1]);
+            }
         }
     }
 }
 
 proof fn msort_property(terms: Seq<Term>, p: spec_fn(Term) -> bool)
-    requires forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
-    ensures forall|i: int| 0 <= i < ckc_spec::engine::msort(terms).len()
-        ==> p(#[trigger] ckc_spec::engine::msort(terms)[i]),
+    requires
+        forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
+    ensures
+        forall|i: int|
+            0 <= i < ckc_spec::engine::msort(terms).len() ==> p(
+                #[trigger] ckc_spec::engine::msort(terms)[i],
+            ),
     decreases terms.len(),
 {
     reveal_with_fuel(ckc_spec::engine::msort, 1);
@@ -561,27 +555,46 @@ proof fn msort_property(terms: Seq<Term>, p: spec_fn(Term) -> bool)
 }
 
 proof fn dedup_property(terms: Seq<Term>, p: spec_fn(Term) -> bool)
-    requires forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
-    ensures forall|i: int| 0 <= i < ckc_spec::engine::dedup(terms).len()
-        ==> p(#[trigger] ckc_spec::engine::dedup(terms)[i]),
+    requires
+        forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
+    ensures
+        forall|i: int|
+            0 <= i < ckc_spec::engine::dedup(terms).len() ==> p(
+                #[trigger] ckc_spec::engine::dedup(terms)[i],
+            ),
     decreases terms.len(),
 {
     reveal_with_fuel(ckc_spec::engine::dedup, 1);
-    if terms.len() >= 2 { dedup_property(terms.drop_first(), p); }
-    assert forall|i: int| 0 <= i < ckc_spec::engine::dedup(terms).len()
-        implies p(#[trigger] ckc_spec::engine::dedup(terms)[i]) by {
-        if terms.len() < 2 { assert(ckc_spec::engine::dedup(terms)[i] == terms[i]); }
-        else if terms[0] == terms[1] {
-            assert(ckc_spec::engine::dedup(terms)[i] == ckc_spec::engine::dedup(terms.drop_first())[i]);
-        } else if i == 0 { assert(ckc_spec::engine::dedup(terms)[i] == terms[0]); }
-        else { assert(ckc_spec::engine::dedup(terms)[i] == ckc_spec::engine::dedup(terms.drop_first())[i - 1]); }
+    if terms.len() >= 2 {
+        dedup_property(terms.drop_first(), p);
+    }
+    assert forall|i: int| 0 <= i < ckc_spec::engine::dedup(terms).len() implies p(
+        #[trigger] ckc_spec::engine::dedup(terms)[i],
+    ) by {
+        if terms.len() < 2 {
+            assert(ckc_spec::engine::dedup(terms)[i] == terms[i]);
+        } else if terms[0] == terms[1] {
+            assert(ckc_spec::engine::dedup(terms)[i] == ckc_spec::engine::dedup(
+                terms.drop_first(),
+            )[i]);
+        } else if i == 0 {
+            assert(ckc_spec::engine::dedup(terms)[i] == terms[0]);
+        } else {
+            assert(ckc_spec::engine::dedup(terms)[i] == ckc_spec::engine::dedup(
+                terms.drop_first(),
+            )[i - 1]);
+        }
     }
 }
 
 pub proof fn sort_unique_property(terms: Seq<Term>, p: spec_fn(Term) -> bool)
-    requires forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
-    ensures forall|i: int| 0 <= i < ckc_spec::engine::sort_unique(terms).len()
-        ==> p(#[trigger] ckc_spec::engine::sort_unique(terms)[i]),
+    requires
+        forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
+    ensures
+        forall|i: int|
+            0 <= i < ckc_spec::engine::sort_unique(terms).len() ==> p(
+                #[trigger] ckc_spec::engine::sort_unique(terms)[i],
+            ),
 {
     msort_property(terms, p);
     dedup_property(ckc_spec::engine::msort(terms), p);

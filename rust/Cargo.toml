@@ -9,3 +9,8 @@ members = ["ckc-spec", "ckc-kernel", "ckc"]
 
 [workspace.dependencies]
 vstd = "=0.0.0-2026-08-30-0159"
+
+# vstd's macros expand to cfg(verus_keep_ghost)-family gates; declared so
+# unexpected_cfgs stays quiet for them and live for anything else.
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(verus_keep_ghost)", "cfg(verus_keep_ghost_body)", "cfg(verus_verify_core)"] }

@@ -14,7 +14,6 @@ verus! {
 // (one canonical clause re-render including its LF — the K3 join law) and
 // `semantic_lines` (the per-document retained-line stream), plus the
 // lowercase-hex spelling of digest bytes.
-
 pub open spec fn lhex_digit(d: int) -> u8 {
     if d < 10 {
         (0x30 + d) as u8

@@ -10,7 +10,6 @@ verus! {
 // index k, printed A..Z,A1..Z1,A2..; the legacy writers number every
 // emitted line with numbervars(Copy,0,_), so a canonical line's distinct
 // variables appear in first-occurrence order 0,1,2,.. (var_canonical).
-
 pub ghost enum Term {
     Var(nat),
     Int(int),
@@ -20,7 +19,6 @@ pub ghost enum Term {
 }
 
 // --- structural laws ---
-
 // Compounds carry at least one argument (arity 0 is an atom).
 pub open spec fn wf_term(t: Term) -> bool
     decreases t,
@@ -68,6 +66,7 @@ pub open spec fn ground_all(ts: Seq<Term>) -> bool
 // class admits them.
 pub open spec fn dollar_var_name() -> Seq<u8> {
     seq![0x24u8, 0x56u8, 0x41u8, 0x52u8]  // "$VAR"
+
 }
 
 pub open spec fn no_dollar_var(t: Term) -> bool
@@ -91,7 +90,6 @@ pub open spec fn no_dollar_var_all(ts: Seq<Term>) -> bool
 }
 
 // --- numbervar canonicality ---
-
 // Depth-first left-to-right stream of variable indices, duplicates kept —
 // exactly the order numbervars/3 visits fresh variables.
 pub open spec fn var_stream(t: Term) -> Seq<nat>
@@ -129,10 +127,7 @@ pub open spec fn firsts(s: Seq<nat>, seen: Set<nat>) -> Seq<nat>
 // A line's variables are canonically numbered when the first occurrences
 // read 0,1,2,.. in stream order.
 pub open spec fn var_canonical(stream: Seq<nat>) -> bool {
-    firsts(stream, Set::empty()) == Seq::new(
-        firsts(stream, Set::empty()).len(),
-        |i: int| i as nat,
-    )
+    firsts(stream, Set::empty()) == Seq::new(firsts(stream, Set::empty()).len(), |i: int| i as nat)
 }
 
 } // verus!

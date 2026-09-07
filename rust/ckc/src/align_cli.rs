@@ -64,7 +64,12 @@ pub fn run(align_path: &str, src_path: &str, ace_path: &str) -> ExitCode {
                     .collect::<Vec<_>>()
                     .join(",")
             };
-            println!("ok count={} src={} ace={}", m.count, fmt(&m.src), fmt(&m.ace));
+            println!(
+                "ok count={} src={} ace={}",
+                m.count,
+                fmt(&m.src),
+                fmt(&m.ace)
+            );
             ExitCode::SUCCESS
         }
         ckc_kernel::ECheck::Err(detail) => {

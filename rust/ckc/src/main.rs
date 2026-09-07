@@ -14,7 +14,9 @@ fn main() -> ExitCode {
         Some("align-check") if args.len() == 5 => align_cli::run(&args[2], &args[3], &args[4]),
         Some("v1") => v1_cli::run(&args[2..]),
         _ => {
-            eprintln!("usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render> <pl>");
+            eprintln!(
+                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render> <pl>"
+            );
             ExitCode::from(2)
         }
     }

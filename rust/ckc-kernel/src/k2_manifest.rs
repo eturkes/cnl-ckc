@@ -1,20 +1,24 @@
-use vstd::prelude::*;
-use vstd::assert_seqs_equal;
 use ckc_spec::replay::*;
 use ckc_spec::term::Term;
+use vstd::assert_seqs_equal;
+use vstd::prelude::*;
 
 verus! {
 
 proof fn subrange_push<A>(s: Seq<A>, start: int, end: int)
-    requires 0 <= start <= end < s.len(),
-    ensures s.subrange(start, end + 1) == s.subrange(start, end).push(s[end]),
+    requires
+        0 <= start <= end < s.len(),
+    ensures
+        s.subrange(start, end + 1) == s.subrange(start, end).push(s[end]),
 {
     assert_seqs_equal!(s.subrange(start, end + 1) == s.subrange(start, end).push(s[end]));
 }
 
 fn copy_range(bytes: &[u8], start: usize, end: usize) -> (out: Vec<u8>)
-    requires start <= end <= bytes@.len(),
-    ensures out@ == bytes@.subrange(start as int, end as int),
+    requires
+        start <= end <= bytes@.len(),
+    ensures
+        out@ == bytes@.subrange(start as int, end as int),
 {
     let mut out = Vec::new();
     let mut i = start;
@@ -25,14 +29,17 @@ fn copy_range(bytes: &[u8], start: usize, end: usize) -> (out: Vec<u8>)
         decreases end - i,
     {
         out.push(bytes[i]);
-        proof { subrange_push(bytes@, start as int, i as int); }
+        proof {
+            subrange_push(bytes@, start as int, i as int);
+        }
         i += 1;
     }
     out
 }
 
 pub(crate) fn udec_vec(n: usize) -> (out: Vec<u8>)
-    ensures out@ == ckc_spec::v1text::udec_bytes(n as nat),
+    ensures
+        out@ == ckc_spec::v1text::udec_bytes(n as nat),
     decreases n,
 {
     if n < 10 {
@@ -63,7 +70,8 @@ proof fn first_byte_exact(bytes: Seq<u8>, b: u8, start: nat, end: nat)
         start <= end <= bytes.len(),
         forall|i: int| start <= i < end ==> bytes[i] != b,
         end == bytes.len() || bytes[end as int] == b,
-    ensures first_byte(bytes, b, start) == end,
+    ensures
+        first_byte(bytes, b, start) == end,
     decreases end - start,
 {
     reveal_with_fuel(first_byte, 2);
@@ -74,7 +82,8 @@ proof fn first_byte_exact(bytes: Seq<u8>, b: u8, start: nat, end: nat)
 }
 
 fn first_byte_exec(bytes: &[u8], b: u8, start: usize) -> (end: usize)
-    requires start <= bytes@.len(),
+    requires
+        start <= bytes@.len(),
     ensures
         start <= end <= bytes@.len(),
         end as nat == first_byte(bytes@, b, start as nat),
@@ -89,40 +98,57 @@ fn first_byte_exec(bytes: &[u8], b: u8, start: usize) -> (end: usize)
         decreases bytes.len() - end,
     {
         if bytes[end] == b {
-            proof { first_byte_exact(bytes@, b, start as nat, end as nat); }
+            proof {
+                first_byte_exact(bytes@, b, start as nat, end as nat);
+            }
             return end;
         }
         end += 1;
     }
-    proof { first_byte_exact(bytes@, b, start as nat, end as nat); }
+    proof {
+        first_byte_exact(bytes@, b, start as nat, end as nat);
+    }
     end
 }
 
 pub open spec fn option_row_view(r: Option<ERow>) -> Option<MRow> {
-    match r { Option::Some(e) => Option::Some(e@), Option::None => Option::None }
+    match r {
+        Option::Some(e) => Option::Some(e@),
+        Option::None => Option::None,
+    }
 }
 
 fn entry_exec(line: &[u8]) -> (out: Option<ERow>)
-    ensures option_row_view(out) == entry(line@),
+    ensures
+        option_row_view(out) == entry(line@),
 {
     let tab = first_byte_exec(line, 0x09, 0);
     if tab == 0 || tab >= line.len() {
-        proof { reveal(entry); }
+        proof {
+            reveal(entry);
+        }
         return None;
     }
     if tab + 1 >= line.len() {
-        proof { reveal(entry); }
+        proof {
+            reveal(entry);
+        }
         return None;
     }
     let second = first_byte_exec(line, 0x09, tab + 1);
     if second < line.len() {
-        proof { reveal(entry); }
+        proof {
+            reveal(entry);
+        }
         return None;
     }
     let pl = copy_range(line, 0, tab);
     let payload = copy_range(line, tab + 1, line.len());
     let row = ERow { pl, payload };
-    proof { reveal(entry); reveal(option_row_view); }
+    proof {
+        reveal(entry);
+        reveal(option_row_view);
+    }
     Some(row)
 }
 
@@ -131,7 +157,8 @@ pub open spec fn row_views(rows: Seq<ERow>) -> Seq<MRow> {
 }
 
 proof fn row_views_push(rows: Seq<ERow>, row: ERow)
-    ensures row_views(rows.push(row)) == row_views(rows).push(row@),
+    ensures
+        row_views(rows.push(row)) == row_views(rows).push(row@),
 {
     reveal(row_views);
     assert_seqs_equal!(rows.map_values(|r: ERow| r@).push(row@)
@@ -147,20 +174,24 @@ pub open spec fn prefix_out(prefix: Seq<MRow>, tail: MOut) -> MOut {
 }
 
 proof fn prefix_assoc(a: Seq<MRow>, b: Seq<MRow>, tail: MOut)
-    ensures prefix_out(a, prefix_out(b, tail)) == prefix_out(a + b, tail),
+    ensures
+        prefix_out(a, prefix_out(b, tail)) == prefix_out(a + b, tail),
 {
     reveal(prefix_out);
     match tail {
-        MOut::Rows(rows) => { assert_seqs_equal!(a + (b + rows) == (a + b) + rows); },
+        MOut::Rows(rows) => {
+            assert_seqs_equal!(a + (b + rows) == (a + b) + rows);
+        },
         _ => {},
     }
 }
 
 proof fn rows_cons(line: Seq<u8>, rest: Seq<Seq<u8>>)
-    ensures rows_of(seq![line] + rest) == match entry(line) {
-        Option::None => MOut::BadLine(line),
-        Option::Some(row) => prefix_out(seq![row], rows_of(rest)),
-    },
+    ensures
+        rows_of(seq![line] + rest) == match entry(line) {
+            Option::None => MOut::BadLine(line),
+            Option::Some(row) => prefix_out(seq![row], rows_of(rest)),
+        },
 {
     let lines = seq![line] + rest;
     assert(lines.len() > 0);
@@ -171,7 +202,9 @@ proof fn rows_cons(line: Seq<u8>, rest: Seq<Seq<u8>>)
     match entry(line) {
         Option::None => {},
         Option::Some(row) => match rows_of(rest) {
-            MOut::Rows(rows) => { assert_seqs_equal!(seq![row] + rows == seq![row] + rows); },
+            MOut::Rows(rows) => {
+                assert_seqs_equal!(seq![row] + rows == seq![row] + rows);
+            },
             _ => {},
         },
     }
@@ -182,14 +215,16 @@ proof fn suffix_line(bytes: Seq<u8>, start: nat, end: nat)
         start <= end < bytes.len(),
         bytes[end as int] == 0x0a,
         forall|i: int| start <= i < end ==> bytes[i] != 0x0a,
-    ensures lines_of(bytes.skip(start as int))
-        == seq![bytes.subrange(start as int, end as int)]
+    ensures
+        lines_of(bytes.skip(start as int)) == seq![bytes.subrange(start as int, end as int)]
             + lines_of(bytes.skip((end + 1) as int)),
 {
     let suffix = bytes.skip(start as int);
     let n: nat = (end - start) as nat;
     assert forall|i: int| 0 <= i < n implies suffix[i] != 0x0a by {
-        if 0 <= i < n { assert(suffix[i] == bytes[start as int + i]); }
+        if 0 <= i < n {
+            assert(suffix[i] == bytes[start as int + i]);
+        }
     }
     assert(suffix[n as int] == bytes[end as int]);
     first_byte_exact(suffix, 0x0a, 0, n);
@@ -215,7 +250,8 @@ fn parse_rows_exec(bytes: &[u8]) -> (out: EManifestBody)
     requires
         bytes@.len() > 0,
         bytes@[bytes@.len() - 1] == 0x0a,
-    ensures body_view(&out) == rows_of(lines_of(bytes@)),
+    ensures
+        body_view(&out) == rows_of(lines_of(bytes@)),
 {
     let mut rows: Vec<ERow> = Vec::new();
     let mut start = 0usize;
@@ -229,8 +265,10 @@ fn parse_rows_exec(bytes: &[u8]) -> (out: EManifestBody)
             start <= bytes@.len(),
             bytes@.len() > 0,
             bytes@[bytes@.len() - 1] == 0x0a,
-            rows_of(lines_of(bytes@))
-                == prefix_out(row_views(rows@), rows_of(lines_of(bytes@.skip(start as int)))),
+            rows_of(lines_of(bytes@)) == prefix_out(
+                row_views(rows@),
+                rows_of(lines_of(bytes@.skip(start as int))),
+            ),
         decreases bytes.len() - start,
     {
         let end = first_byte_exec(bytes, 0x0a, start);
@@ -266,9 +304,15 @@ fn parse_rows_exec(bytes: &[u8]) -> (out: EManifestBody)
                 let ghost row_view = row@;
                 proof {
                     assert(entry(line@) == Option::Some(row_view));
-                    assert(rows_of(lines_of(bytes@.skip(start as int)))
-                        == prefix_out(seq![row_view], rows_of(lines_of(bytes@.skip(next as int)))));
-                    prefix_assoc(row_views(old_rows), seq![row_view], rows_of(lines_of(bytes@.skip(next as int))));
+                    assert(rows_of(lines_of(bytes@.skip(start as int))) == prefix_out(
+                        seq![row_view],
+                        rows_of(lines_of(bytes@.skip(next as int))),
+                    ));
+                    prefix_assoc(
+                        row_views(old_rows),
+                        seq![row_view],
+                        rows_of(lines_of(bytes@.skip(next as int))),
+                    );
                     row_views_push(old_rows, row);
                 }
                 rows.push(row);
@@ -292,40 +336,52 @@ fn parse_rows_exec(bytes: &[u8]) -> (out: EManifestBody)
 }
 
 fn utf8_out(off: usize) -> (out: EOut)
-    ensures out@ == utf8_reject(off as nat),
+    ensures
+        out@ == utf8_reject(off as nat),
 {
     crate::k2_reject::utf8_out(off)
 }
 
 fn manifest_error_out(mpath: &[u8], detail_bytes: &[u8], bad_line: bool) -> (out: EOut)
-    ensures out@ == if bad_line {
-        manifest_reject(mpath@, Term::Comp(ckc_spec::v1text::ascii("line"@), seq![Term::Atom(detail_bytes@)]))
-    } else {
-        manifest_reject(mpath@, atom("missing_final_newline"@))
-    },
+    ensures
+        out@ == if bad_line {
+            manifest_reject(
+                mpath@,
+                Term::Comp(ckc_spec::v1text::ascii("line"@), seq![Term::Atom(detail_bytes@)]),
+            )
+        } else {
+            manifest_reject(mpath@, atom("missing_final_newline"@))
+        },
 {
     crate::k2_reject::manifest_error_out(mpath, detail_bytes, bad_line)
 }
 
 fn unreadable_out() -> (out: EOut)
-    ensures out@ == check_load(atom("unreadable"@)),
+    ensures
+        out@ == check_load(atom("unreadable"@)),
 {
     crate::k2_reject::unreadable_out()
 }
 
-
 pub fn v1_manifest_impl(mpath: &[u8], m: &ESrc) -> (r: Result<Vec<ERow>, EOut>)
-    ensures rows_view(r) == manifest_rows(mpath@, m@),
+    ensures
+        rows_view(r) == manifest_rows(mpath@, m@),
 {
     match m {
         ESrc::Missing => {
             let out = unreadable_out();
-            proof { reveal(rows_view); reveal(manifest_rows); }
+            proof {
+                reveal(rows_view);
+                reveal(manifest_rows);
+            }
             Result::Err(out)
         },
         ESrc::Bad(off) => {
             let out = utf8_out(*off);
-            proof { reveal(rows_view); reveal(manifest_rows); }
+            proof {
+                reveal(rows_view);
+                reveal(manifest_rows);
+            }
             Result::Err(out)
         },
         ESrc::Bytes(bytes) => {

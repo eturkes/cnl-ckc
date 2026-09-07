@@ -1,23 +1,22 @@
-use vstd::prelude::*;
 #[cfg(verus_keep_ghost)]
 use ckc_spec::v1text as text;
+use vstd::prelude::*;
 
 verus! {
 
 use crate::k2_term::ETermArena;
-use crate::v1_term_impl::{
-    parse_answers, parse_doc, parse_query, parse_traces, EParsedV1,
-};
+use crate::v1_term_impl::{parse_answers, parse_doc, parse_query, parse_traces, EParsedV1};
 
 proof fn parsed_accepts(bytes: Seq<u8>, parsed: &EParsedV1)
-    requires crate::v1_term_impl::parsed_v1_ok(bytes, parsed),
-    ensures ckc_spec::v1text::accepts(bytes),
+    requires
+        crate::v1_term_impl::parsed_v1_ok(bytes, parsed),
+    ensures
+        ckc_spec::v1text::accepts(bytes),
 {
     reveal(crate::v1_term_impl::parsed_v1_ok);
     reveal(ckc_spec::v1text::accepts);
-    assert(exists|f: ckc_spec::v1text::V1File|
-        #[trigger] ckc_spec::v1text::wf_v1(f)
-            && ckc_spec::v1text::print_v1(f) == bytes) by {
+    assert(exists|f: ckc_spec::v1text::V1File| #[trigger]
+        ckc_spec::v1text::wf_v1(f) && ckc_spec::v1text::print_v1(f) == bytes) by {
         let f = parsed@;
         assert(ckc_spec::v1text::wf_v1(f));
         assert(ckc_spec::v1text::print_v1(f) == bytes);
@@ -43,14 +42,19 @@ pub open spec fn v1_header_mark(f: text::V1File) -> u8 {
 }
 
 proof fn v1_header_shape(f: text::V1File)
-    requires text::wf_v1(f),
+    requires
+        text::wf_v1(f),
     ensures
         text::name_ok(v1_header_name(f)),
         text::print_v1(f).len() >= v1_header_name(f).len() + 4,
-        forall|i: int| 0 <= i < v1_header_name(f).len()
-            ==> #[trigger] text::print_v1(f)[2 + i] == v1_header_name(f)[i],
-        text::print_v1(f)[2 + v1_header_name(f).len() as int]
-            == if f is Doc { 0x2eu8 } else { 0x20u8 },
+        forall|i: int|
+            0 <= i < v1_header_name(f).len() ==> #[trigger] text::print_v1(f)[2 + i]
+                == v1_header_name(f)[i],
+        text::print_v1(f)[2 + v1_header_name(f).len() as int] == if f is Doc {
+            0x2eu8
+        } else {
+            0x20u8
+        },
         text::print_v1(f)[3 + v1_header_name(f).len() as int] == v1_header_mark(f),
 {
     reveal(text::wf_v1);
@@ -60,7 +64,9 @@ proof fn v1_header_shape(f: text::V1File)
             reveal(text::wf_doc);
             reveal(text::print_doc);
             reveal(text::doc_line1);
-            reveal_strlit(".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n");
+            reveal_strlit(
+                ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
+            );
         },
         text::V1File::Query(_) => {
             reveal(text::wf_query);
@@ -72,29 +78,37 @@ proof fn v1_header_shape(f: text::V1File)
             reveal(text::wf_answers);
             reveal(text::print_answers);
             reveal(text::answers_line1);
-            reveal_strlit(" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n");
+            reveal_strlit(
+                " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
+            );
         },
         text::V1File::Traces(_) => {
             reveal(text::wf_traces);
             reveal(text::print_traces);
             reveal(text::traces_line1);
-            reveal_strlit(" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n");
+            reveal_strlit(
+                " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
+            );
         },
     }
     reveal_strlit("% ");
     reveal(text::ascii);
-    assert forall|i: int| 0 <= i < v1_header_name(f).len()
-        implies #[trigger] text::print_v1(f)[2 + i] == v1_header_name(f)[i] by {}
+    assert forall|i: int| 0 <= i < v1_header_name(f).len() implies #[trigger] text::print_v1(f)[2
+        + i] == v1_header_name(f)[i] by {}
 }
 
 proof fn v1_header_class(left: text::V1File, right: text::V1File)
-    requires text::wf_v1(left), text::wf_v1(right), text::print_v1(left) == text::print_v1(right),
-    ensures match left {
-        text::V1File::Doc(_) => right is Doc,
-        text::V1File::Query(_) => right is Query,
-        text::V1File::Answers(_) => right is Answers,
-        text::V1File::Traces(_) => right is Traces,
-    },
+    requires
+        text::wf_v1(left),
+        text::wf_v1(right),
+        text::print_v1(left) == text::print_v1(right),
+    ensures
+        match left {
+            text::V1File::Doc(_) => right is Doc,
+            text::V1File::Query(_) => right is Query,
+            text::V1File::Answers(_) => right is Answers,
+            text::V1File::Traces(_) => right is Traces,
+        },
 {
     v1_header_shape(left);
     v1_header_shape(right);
@@ -106,26 +120,24 @@ proof fn v1_header_class(left: text::V1File, right: text::V1File)
     reveal(text::is_digit_b);
     if l.len() < r.len() {
         assert(text::print_v1(right)[2 + l.len() as int] == r[l.len() as int]);
-        assert(text::is_lower_b(r[l.len() as int])
-            || text::is_digit_b(r[l.len() as int]) || r[l.len() as int] == 0x2d);
+        assert(text::is_lower_b(r[l.len() as int]) || text::is_digit_b(r[l.len() as int])
+            || r[l.len() as int] == 0x2d);
         assert(false);
     }
     if r.len() < l.len() {
         assert(text::print_v1(left)[2 + r.len() as int] == l[r.len() as int]);
-        assert(text::is_lower_b(l[r.len() as int])
-            || text::is_digit_b(l[r.len() as int]) || l[r.len() as int] == 0x2d);
+        assert(text::is_lower_b(l[r.len() as int]) || text::is_digit_b(l[r.len() as int])
+            || l[r.len() as int] == 0x2d);
         assert(false);
     }
     assert(l.len() == r.len());
     assert(v1_header_mark(left) == v1_header_mark(right));
 }
 
-fn v1_parse_at(
-    bytes: &[u8],
-    arena: &mut ETermArena,
-    at: &mut usize,
-) -> (r: Option<EParsedV1>)
-    requires crate::k2_term::arena_ok(old(arena)), *old(at) <= bytes@.len(),
+fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Option<EParsedV1>)
+    requires
+        crate::k2_term::arena_ok(old(arena)),
+        *old(at) <= bytes@.len(),
     ensures
         crate::k2_term::arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -183,7 +195,9 @@ fn v1_parse_at(
     }
     let ghost before_query = arena.nodes@;
     let query_result = parse_query(bytes, arena, Ghost(query_expected), at);
-    proof { crate::v1_term_impl::nodes_prefix_transitive(entry_nodes, before_query, arena.nodes@); }
+    proof {
+        crate::v1_term_impl::nodes_prefix_transitive(entry_nodes, before_query, arena.nodes@);
+    }
     if query_result.is_some() {
         let parsed = query_result.unwrap();
         proof {
@@ -195,7 +209,9 @@ fn v1_parse_at(
     }
     let ghost before_answers = arena.nodes@;
     let answers_result = parse_answers(bytes, arena, Ghost(answers_expected), at);
-    proof { crate::v1_term_impl::nodes_prefix_transitive(entry_nodes, before_answers, arena.nodes@); }
+    proof {
+        crate::v1_term_impl::nodes_prefix_transitive(entry_nodes, before_answers, arena.nodes@);
+    }
     if answers_result.is_some() {
         let parsed = answers_result.unwrap();
         proof {
@@ -207,7 +223,9 @@ fn v1_parse_at(
     }
     let ghost before_traces = arena.nodes@;
     let traces_result = parse_traces(bytes, arena, Ghost(traces_expected), at);
-    proof { crate::v1_term_impl::nodes_prefix_transitive(entry_nodes, before_traces, arena.nodes@); }
+    proof {
+        crate::v1_term_impl::nodes_prefix_transitive(entry_nodes, before_traces, arena.nodes@);
+    }
     if traces_result.is_some() {
         let parsed = traces_result.unwrap();
         proof {
@@ -217,7 +235,6 @@ fn v1_parse_at(
         }
         return Some(parsed);
     }
-
     proof {
         if text::accepts(bytes@) {
             let f = witness.unwrap();
@@ -251,7 +268,8 @@ fn v1_parse_at(
 }
 
 pub fn v1_parse(bytes: &[u8], arena: &mut ETermArena) -> (r: Option<EParsedV1>)
-    requires crate::k2_term::arena_ok(old(arena)),
+    requires
+        crate::k2_term::arena_ok(old(arena)),
     ensures
         crate::k2_term::arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -275,7 +293,9 @@ pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
 {
     let mut at = 0usize;
     let mut arena = ETermArena { nodes: Vec::new() };
-    proof { reveal(crate::k2_term::arena_ok); }
+    proof {
+        reveal(crate::k2_term::arena_ok);
+    }
     match v1_parse_at(bytes, &mut arena, &mut at) {
         Some(_) => ckc_spec::v1text::EV1Verdict::Ok,
         None => ckc_spec::v1text::EV1Verdict::Reject { at },

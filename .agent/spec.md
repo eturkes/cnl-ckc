@@ -16,7 +16,7 @@ Approved; env = `.claude/rules/ops.md`.
 - Reviewer UI — `python3 -P tools/ui.py serve [<port>]` (loopback, reads HEAD); `render <out>`, `check`.
 - ACE representations + compiled KB — `guidelines/<id>/`; `python3 -P tools/goal.py compile <id>` → `queries <id>` → `check`; export `goal.py release-manifest` + `tools/dist.py build`.
 - Corpus-extension workflow — `/goal` loop, body + procedure = `docs/REFERENCE.md` § Operating; worklist `.agent/queue.md` ← `.agent/compendium.{md,tsv}`; roles = `.claude/rules/corpus.md`.
-In build: verified kernel `rust/` — `cargo verus verify --workspace --locked --offline -- --no-cheating`; `rust/target/release/ckc {v1 check|render|aggregate-check|recursion-check|answer, align, trust-audit}`.
+In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`); `rust/target/release/ckc {v1 check|render|aggregate-check|recursion-check|answer, align-check, trust-audit}`. Tooling `just tools`; full gate `just gate`.
 
 ## Decisions
 
@@ -31,7 +31,7 @@ In build: verified kernel `rust/` — `cargo verus verify --workspace --locked -
 
 ## Deferred
 
-- M5.2a engine/load perf (NEXT): arena truncated to the resumed choicepoint's `fresh` on backtrack + persistent solution region + load accumulation fix; spec unchanged. Accept: 10 R30d-parked cases green ≤30 s; `k2_corpus_diff.py` 3 lanes green; P1/P2 green.
+- M5.2a engine/load perf (IN PROGRESS, `.agent/contracts/m5u2a.md`): arena reclamation on backtrack + load/scan accumulation fix; spec unchanged. Accept: 10 R30d-parked cases green ≤30 s; `k2_corpus_diff.py` 3 lanes green ≤30 s / ≤2 GB; P1/P2 green.
 - M5.2b trace + K3 (`ckc v1 trace|trace-check`) + Kani (P3; draft `wt/res-kani-2` `rust/ckc-kani-harness/`, untracked). Accept: lanes D/E byte-identical per committed query; tests/queries replay per R15; 4 R28 pending rows ruled; P1–P7 green.
 - M6 emission certification: verified DRS→v1 correspondence checker per committed compile. Accept: every committed document + query certifies in CI; `ace_to_pl.pl` leaves the human-read trust story (REFERENCE, `vendor/ape/PROVENANCE`).
 - M5.3 validators (K4). Accept: `ckc check` section parity with `goal.py check`; red/adjudication/copy replay green; FC2 re-pins ruled.

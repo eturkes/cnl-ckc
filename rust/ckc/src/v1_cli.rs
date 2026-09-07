@@ -92,7 +92,9 @@ fn run_mode(mode: &str, mpath: &str, query: Option<&str>) -> ExitCode {
             };
             ckc_kernel::contract::v1_answer(mp, &m, &pls, &pys, &qs, qsha.as_bytes())
         }
-        None if mode == "aggregate-check" => ckc_kernel::contract::v1_aggregate_check(mp, &m, &pls, &pys),
+        None if mode == "aggregate-check" => {
+            ckc_kernel::contract::v1_aggregate_check(mp, &m, &pls, &pys)
+        }
         None => ckc_kernel::contract::v1_recursion_check(mp, &m, &pls, &pys),
     })
 }
@@ -100,10 +102,14 @@ fn run_mode(mode: &str, mpath: &str, query: Option<&str>) -> ExitCode {
 pub fn run(args: &[String]) -> ExitCode {
     match args {
         [mode, path] if mode == "check" || mode == "render" => run_file(mode, path),
-        [mode, m] if mode == "aggregate-check" || mode == "recursion-check" => run_mode(mode, m, None),
+        [mode, m] if mode == "aggregate-check" || mode == "recursion-check" => {
+            run_mode(mode, m, None)
+        }
         [mode, m, q] if mode == "answer" => run_mode(mode, m, Some(q)),
         _ => {
-            eprintln!("usage: ckc v1 <check|render> <pl> | ckc v1 <aggregate-check|recursion-check> <manifest> | ckc v1 answer <manifest> <query.pl>");
+            eprintln!(
+                "usage: ckc v1 <check|render> <pl> | ckc v1 <aggregate-check|recursion-check> <manifest> | ckc v1 answer <manifest> <query.pl>"
+            );
             ExitCode::from(2)
         }
     }

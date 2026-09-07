@@ -2,9 +2,14 @@
 name = "ckc-spec"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0 WITH LLVM-exception"
+publish = false
 
 [dependencies]
 vstd = { workspace = true }
 
 [package.metadata.verus]
 verify = true
+
+[lints]
+workspace = true

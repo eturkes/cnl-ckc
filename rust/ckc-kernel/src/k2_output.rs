@@ -1,6 +1,6 @@
 use crate::k2_manifest::udec_vec;
 use crate::k2_reject::{empty_arena, push_usize_int};
-use crate::k2_term::{push_atom, push_comp, term_line, ETermArena};
+use crate::k2_term::{ETermArena, push_atom, push_comp, term_line};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::{arena_ok, arena_prefix_stable, child_terms, child_terms_match, root_ok};
 use ckc_spec::replay::*;
@@ -11,7 +11,8 @@ use vstd::slice::slice_to_vec;
 verus! {
 
 pub fn atom_root(arena: &mut ETermArena, bytes: &[u8]) -> (root: usize)
-    requires arena_ok(old(arena)),
+    requires
+        arena_ok(old(arena)),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -23,7 +24,8 @@ pub fn atom_root(arena: &mut ETermArena, bytes: &[u8]) -> (root: usize)
 }
 
 pub fn int_root(arena: &mut ETermArena, n: usize) -> (root: usize)
-    requires arena_ok(old(arena)),
+    requires
+        arena_ok(old(arena)),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -48,7 +50,8 @@ pub fn comp_root(arena: &mut ETermArena, name: &[u8], roots: Vec<usize>) -> (roo
 }
 
 pub fn comp1(arena: &mut ETermArena, name: &[u8], a: usize) -> (root: usize)
-    requires root_ok(old(arena), a),
+    requires
+        root_ok(old(arena), a),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -57,55 +60,84 @@ pub fn comp1(arena: &mut ETermArena, name: &[u8], a: usize) -> (root: usize)
 {
     let mut roots = Vec::new();
     roots.push(a);
-    proof { child_terms_match(arena.nodes@, roots@, seq![arena@[a as int]]); }
+    proof {
+        child_terms_match(arena.nodes@, roots@, seq![arena@[a as int]]);
+    }
     comp_root(arena, name, roots)
 }
 
 pub fn comp2(arena: &mut ETermArena, name: &[u8], a: usize, b: usize) -> (root: usize)
-    requires root_ok(old(arena), a), root_ok(old(arena), b),
+    requires
+        root_ok(old(arena), a),
+        root_ok(old(arena), b),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         root_ok(final(arena), root),
-        final(arena)@[root as int] == Term::Comp(name@, seq![old(arena)@[a as int], old(arena)@[b as int]]),
+        final(arena)@[root as int] == Term::Comp(
+            name@,
+            seq![old(arena)@[a as int], old(arena)@[b as int]],
+        ),
 {
     let mut roots = Vec::new();
     roots.push(a);
     roots.push(b);
-    proof { child_terms_match(arena.nodes@, roots@, seq![arena@[a as int], arena@[b as int]]); }
+    proof {
+        child_terms_match(arena.nodes@, roots@, seq![arena@[a as int], arena@[b as int]]);
+    }
     comp_root(arena, name, roots)
 }
 
 pub fn comp3(arena: &mut ETermArena, name: &[u8], a: usize, b: usize, c: usize) -> (root: usize)
-    requires root_ok(old(arena), a), root_ok(old(arena), b), root_ok(old(arena), c),
+    requires
+        root_ok(old(arena), a),
+        root_ok(old(arena), b),
+        root_ok(old(arena), c),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         root_ok(final(arena), root),
-        final(arena)@[root as int] == Term::Comp(name@,
-            seq![old(arena)@[a as int], old(arena)@[b as int], old(arena)@[c as int]]),
+        final(arena)@[root as int] == Term::Comp(
+            name@,
+            seq![old(arena)@[a as int], old(arena)@[b as int], old(arena)@[c as int]],
+        ),
 {
     let mut roots = Vec::new();
     roots.push(a);
     roots.push(b);
     roots.push(c);
-    proof { child_terms_match(arena.nodes@, roots@,
-        seq![arena@[a as int], arena@[b as int], arena@[c as int]]); }
+    proof {
+        child_terms_match(
+            arena.nodes@,
+            roots@,
+            seq![arena@[a as int], arena@[b as int], arena@[c as int]],
+        );
+    }
     comp_root(arena, name, roots)
 }
 
 pub fn error_out(arena: &mut ETermArena, detail: usize, proof_failure: bool) -> (out: EOut)
-    requires root_ok(old(arena), detail),
+    requires
+        root_ok(old(arena), detail),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
-        out@ == if proof_failure { proof_fail(old(arena)@[detail as int]) }
-            else { check_load(old(arena)@[detail as int]) },
+        out@ == if proof_failure {
+            proof_fail(old(arena)@[detail as int])
+        } else {
+            check_load(old(arena)@[detail as int])
+        },
 {
     let ghost before = arena.nodes@;
-    let class_bytes: &[u8] = if proof_failure { b"proof" } else { b"check_load" };
+    let class_bytes: &[u8] = if proof_failure {
+        b"proof"
+    } else {
+        b"check_load"
+    };
     let class = atom_root(arena, class_bytes);
-    proof { arena_prefix_stable(before, arena); }
+    proof {
+        arena_prefix_stable(before, arena);
+    }
     let outer_bytes: &[u8] = b"ace_to_pl_error";
     let root = comp2(arena, outer_bytes, class, detail);
     let err = term_line(arena, root);
@@ -117,20 +149,51 @@ pub fn error_out(arena: &mut ETermArena, detail: usize, proof_failure: bool) -> 
         reveal_byteslit(b"ace_to_pl_error");
         reveal_strlit("ace_to_pl_error");
         reveal(ckc_spec::v1text::ascii);
-        assert(class_bytes@ == ckc_spec::v1text::ascii(if proof_failure { "proof"@ } else { "check_load"@ }));
+        assert(class_bytes@ == ckc_spec::v1text::ascii(
+            if proof_failure {
+                "proof"@
+            } else {
+                "check_load"@
+            },
+        ));
         assert(outer_bytes@ == ckc_spec::v1text::ascii("ace_to_pl_error"@));
-        assert(arena@[root as int] == Term::Comp(ckc_spec::v1text::ascii("ace_to_pl_error"@),
-            seq![atom(if proof_failure { "proof"@ } else { "check_load"@ }), before[detail as int].term@]));
+        assert(arena@[root as int] == Term::Comp(
+            ckc_spec::v1text::ascii("ace_to_pl_error"@),
+            seq![
+                atom(
+                    if proof_failure {
+                        "proof"@
+                    } else {
+                        "check_load"@
+                    },
+                ),
+                before[detail as int].term@,
+            ],
+        ));
     }
-    EOut { rc: if proof_failure { 1 } else { 2 }, out: Vec::new(), err }
+    EOut {
+        rc: if proof_failure {
+            1
+        } else {
+            2
+        },
+        out: Vec::new(),
+        err,
+    }
 }
 
 pub open spec fn option_out_view(out: Option<EOut>) -> Option<Out> {
-    match out { Some(out) => Some(out@), None => None }
+    match out {
+        Some(out) => Some(out@),
+        None => None,
+    }
 }
 
 pub fn counts_error(name: &[u8], expected: usize, actual: usize) -> (out: EOut)
-    ensures out@ == proof_fail(Term::Comp(name@, seq![Term::Int(expected as int), Term::Int(actual as int)])),
+    ensures
+        out@ == proof_fail(
+            Term::Comp(name@, seq![Term::Int(expected as int), Term::Int(actual as int)]),
+        ),
 {
     let mut arena = empty_arena();
     let expected_root = int_root(&mut arena, expected);
@@ -140,9 +203,12 @@ pub fn counts_error(name: &[u8], expected: usize, actual: usize) -> (out: EOut)
 }
 
 pub fn named_atom_error(name: &[u8], value: &[u8], proof_failure: bool) -> (out: EOut)
-    ensures out@ == if proof_failure {
-        proof_fail(Term::Comp(name@, seq![Term::Atom(value@)]))
-    } else { check_load(Term::Comp(name@, seq![Term::Atom(value@)])) },
+    ensures
+        out@ == if proof_failure {
+            proof_fail(Term::Comp(name@, seq![Term::Atom(value@)]))
+        } else {
+            check_load(Term::Comp(name@, seq![Term::Atom(value@)]))
+        },
 {
     let mut arena = empty_arena();
     let value_root = atom_root(&mut arena, value);
@@ -151,7 +217,8 @@ pub fn named_atom_error(name: &[u8], value: &[u8], proof_failure: bool) -> (out:
 }
 
 pub fn manifest_unreadable_out(mpath: &[u8], path: &[u8]) -> (out: EOut)
-    ensures out@ == unreadable(mpath@, path@),
+    ensures
+        out@ == unreadable(mpath@, path@),
 {
     let unreadable_bytes: &[u8] = b"unreadable";
     let manifest_bytes: &[u8] = b"aggregate_manifest";
@@ -204,11 +271,23 @@ pub fn manifest_unreadable_out(mpath: &[u8], path: &[u8]) -> (out: EOut)
 }
 
 pub fn meter_out(rows: usize, count: usize, recursion: bool) -> (out: EOut)
-    ensures out@ == if recursion { ok(rec_meter(rows as nat, count as nat)) }
-        else { ok(agg_meter(rows as nat, count as nat)) },
+    ensures
+        out@ == if recursion {
+            ok(rec_meter(rows as nat, count as nat))
+        } else {
+            ok(agg_meter(rows as nat, count as nat))
+        },
 {
-    let prefix: &[u8] = if recursion { b"ace_to_pl recursion ok " } else { b"ace_to_pl aggregate ok " };
-    let suffix: &[u8] = if recursion { b" rule clauses\n" } else { b" obligations\n" };
+    let prefix: &[u8] = if recursion {
+        b"ace_to_pl recursion ok "
+    } else {
+        b"ace_to_pl aggregate ok "
+    };
+    let suffix: &[u8] = if recursion {
+        b" rule clauses\n"
+    } else {
+        b" obligations\n"
+    };
     let mut out = slice_to_vec(prefix);
     let mut row_bytes = udec_vec(rows);
     out.append(&mut row_bytes);
@@ -230,10 +309,23 @@ pub fn meter_out(rows: usize, count: usize, recursion: bool) -> (out: EOut)
         reveal_byteslit(b" obligations\n");
         reveal_strlit(" obligations\n");
         reveal(ckc_spec::v1text::ascii);
-        assert(prefix@ == ckc_spec::v1text::ascii(if recursion { "ace_to_pl recursion ok "@ } else { "ace_to_pl aggregate ok "@ }));
-        assert(suffix@ == ckc_spec::v1text::ascii(if recursion { " rule clauses\n"@ } else { " obligations\n"@ }));
+        assert(prefix@ == ckc_spec::v1text::ascii(
+            if recursion {
+                "ace_to_pl recursion ok "@
+            } else {
+                "ace_to_pl aggregate ok "@
+            },
+        ));
+        assert(suffix@ == ckc_spec::v1text::ascii(
+            if recursion {
+                " rule clauses\n"@
+            } else {
+                " obligations\n"@
+            },
+        ));
         assert(out@ == prefix@ + ckc_spec::v1text::udec_bytes(rows as nat)
-            + ckc_spec::v1text::ascii(" documents "@) + ckc_spec::v1text::udec_bytes(count as nat) + suffix@);
+            + ckc_spec::v1text::ascii(" documents "@) + ckc_spec::v1text::udec_bytes(count as nat)
+            + suffix@);
     }
     EOut { rc: 0, out, err: Vec::new() }
 }

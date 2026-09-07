@@ -9,7 +9,16 @@ use crate::k2_term::{arena_ok, arena_prefix_stable, child_terms};
 
 verus! {
 
-use crate::k2_term::{push_atom, push_comp, push_int, push_nil, push_var, ENode, ENodeKind, ETermArena};
+use crate::k2_term::{
+    push_atom,
+    push_comp,
+    push_int,
+    push_nil,
+    push_var,
+    ENode,
+    ENodeKind,
+    ETermArena,
+};
 
 pub enum ETermTop {
     Var,
@@ -67,8 +76,10 @@ pub open spec fn terms_keys_fit(terms: Seq<Term>) -> bool
 }
 
 proof fn ground_term_keys_fit(t: Term)
-    requires ckc_spec::term::ground(t),
-    ensures term_keys_fit(t),
+    requires
+        ckc_spec::term::ground(t),
+    ensures
+        term_keys_fit(t),
     decreases t, 0int,
 {
     reveal(ckc_spec::term::ground);
@@ -79,8 +90,10 @@ proof fn ground_term_keys_fit(t: Term)
 }
 
 proof fn ground_terms_keys_fit(terms: Seq<Term>)
-    requires ckc_spec::term::ground_all(terms),
-    ensures terms_keys_fit(terms),
+    requires
+        ckc_spec::term::ground_all(terms),
+    ensures
+        terms_keys_fit(terms),
     decreases terms, 1int,
 {
     reveal(ckc_spec::term::ground_all);
@@ -104,12 +117,7 @@ pub fn nil_term() -> (out: EParsedTerm)
         out@ == Term::Nil,
         parsed_term_ok(&out),
 {
-    EParsedTerm {
-        term: Ghost(Term::Nil),
-        top: ETermTop::Nil,
-        ground: true,
-        no_dollar: true,
-    }
+    EParsedTerm { term: Ghost(Term::Nil), top: ETermTop::Nil, ground: true, no_dollar: true }
 }
 
 pub struct EParsedAtom {
@@ -124,12 +132,12 @@ pub ghost struct GAtomExpected {
 
 pub open spec fn parsed_atom_ok(bytes: Seq<u8>, start: usize, a: &EParsedAtom) -> bool {
     &&& start < a.end <= bytes.len()
-    &&& ckc_spec::v1text::atom_bytes(a.name@)
-        == bytes.subrange(start as int, a.end as int)
+    &&& ckc_spec::v1text::atom_bytes(a.name@) == bytes.subrange(start as int, a.end as int)
 }
 
 proof fn subrange_push<A>(s: Seq<A>, start: int, end: int)
-    requires 0 <= start <= end < s.len(),
+    requires
+        0 <= start <= end < s.len(),
     ensures
         s.subrange(start, end + 1) == s.subrange(start, end).push(s[end]),
 {
@@ -137,13 +145,15 @@ proof fn subrange_push<A>(s: Seq<A>, start: int, end: int)
 }
 
 fn is_lower_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_lower_b(b),
+    ensures
+        r == ckc_spec::v1text::is_lower_b(b),
 {
     0x61 <= b && b <= 0x7a
 }
 
 fn is_digit_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_digit_b(b),
+    ensures
+        r == ckc_spec::v1text::is_digit_b(b),
 {
     0x30 <= b && b <= 0x39
 }
@@ -197,14 +207,9 @@ fn match_slice_at(bytes: &[u8], start: usize, lit: &[u8], at: &mut usize) -> (r:
             raise_at(at, pos, bytes.len());
             proof {
                 if start as int + lit@.len() <= bytes@.len() {
-                    assert(bytes@.subrange(
-                        start as int,
-                        start as int + lit@.len(),
-                    )[i as int] == bytes@[start as int + i as int]);
-                    assert(bytes@.subrange(
-                        start as int,
-                        start as int + lit@.len(),
-                    ) != lit@);
+                    assert(bytes@.subrange(start as int, start as int + lit@.len())[i as int]
+                        == bytes@[start as int + i as int]);
+                    assert(bytes@.subrange(start as int, start as int + lit@.len()) != lit@);
                 }
             }
             return false;
@@ -224,7 +229,7 @@ fn consume_literal(
     start: usize,
     lit: &[u8],
     expected: Ghost<Seq<u8>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<usize>)
     requires
         start <= bytes@.len(),
@@ -238,12 +243,10 @@ at: &mut usize,
             &&& end as int == start as int + expected@.len()
             &&& bytes@.subrange(start as int, end as int) == expected@
         },
-        start as int + expected@.len() <= bytes@.len()
-            && bytes@.subrange(
-                start as int,
-                start as int + expected@.len(),
-            ) == expected@
-            ==> r == Some((start as int + expected@.len()) as usize),
+        start as int + expected@.len() <= bytes@.len() && bytes@.subrange(
+            start as int,
+            start as int + expected@.len(),
+        ) == expected@ ==> r == Some((start as int + expected@.len()) as usize),
 {
     if match_slice_at(bytes, start, lit, at) {
         let remaining = bytes.len() - start;
@@ -256,8 +259,10 @@ at: &mut usize,
 }
 
 fn copy_range(bytes: &[u8], start: usize, end: usize) -> (out: Vec<u8>)
-    requires start <= end <= bytes@.len(),
-    ensures out@ == bytes@.subrange(start as int, end as int),
+    requires
+        start <= end <= bytes@.len(),
+    ensures
+        out@ == bytes@.subrange(start as int, end as int),
 {
     let mut out = Vec::new();
     let mut i = start;
@@ -277,7 +282,8 @@ fn copy_range(bytes: &[u8], start: usize, end: usize) -> (out: Vec<u8>)
 }
 
 fn copy_bytes(bytes: &Vec<u8>) -> (out: Vec<u8>)
-    ensures out@ == bytes@,
+    ensures
+        out@ == bytes@,
 {
     let mut out = Vec::new();
     let mut i = 0usize;
@@ -294,12 +300,15 @@ fn copy_bytes(bytes: &Vec<u8>) -> (out: Vec<u8>)
         }
         i += 1;
     }
-    proof { assert_seqs_equal!(bytes@.take(bytes@.len() as int) == bytes@); }
+    proof {
+        assert_seqs_equal!(bytes@.take(bytes@.len() as int) == bytes@);
+    }
     out
 }
 
 fn vec_equal(left: &Vec<u8>, right: &Vec<u8>) -> (r: bool)
-    ensures r == (left@ == right@),
+    ensures
+        r == (left@ == right@),
 {
     if left.len() != right.len() {
         return false;
@@ -324,7 +333,8 @@ fn vec_equal(left: &Vec<u8>, right: &Vec<u8>) -> (r: bool)
 }
 
 fn vec_slice_equal(left: &Vec<u8>, right: &[u8]) -> (r: bool)
-    ensures r == (left@ == right@),
+    ensures
+        r == (left@ == right@),
 {
     if left.len() != right.len() {
         return false;
@@ -360,8 +370,9 @@ fn consume_byte(bytes: &[u8], start: usize, byte: u8, at: &mut usize) -> (r: Opt
             &&& end == start + 1
             &&& bytes@.subrange(start as int, end as int) == seq![byte]
         },
-        start < bytes@.len() && bytes@[start as int] == byte
-            ==> r == Some((start as int + 1) as usize),
+        start < bytes@.len() && bytes@[start as int] == byte ==> r == Some(
+            (start as int + 1) as usize,
+        ),
 {
     if start == bytes.len() || bytes[start] != byte {
         raise_at(at, start, bytes.len());
@@ -402,7 +413,7 @@ fn cursor_literal(
     cursor: &mut EByteCursor,
     lit: &[u8],
     expected: Ghost<Seq<u8>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: bool)
     requires
         cursor_ok(bytes@, old(cursor)),
@@ -420,12 +431,10 @@ at: &mut usize,
             &&& final(cursor).pos == old(cursor).pos
             &&& final(cursor).prefix@ == old(cursor).prefix@
         },
-        old(cursor).pos as int + expected@.len() <= bytes@.len()
-            && bytes@.subrange(
-                old(cursor).pos as int,
-                old(cursor).pos as int + expected@.len(),
-            ) == expected@
-            ==> r,
+        old(cursor).pos as int + expected@.len() <= bytes@.len() && bytes@.subrange(
+            old(cursor).pos as int,
+            old(cursor).pos as int + expected@.len(),
+        ) == expected@ ==> r,
 {
     let old_pos = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
@@ -446,12 +455,7 @@ at: &mut usize,
     true
 }
 
-fn cursor_byte(
-    bytes: &[u8],
-    cursor: &mut EByteCursor,
-    byte: u8,
-at: &mut usize,
-) -> (r: bool)
+fn cursor_byte(bytes: &[u8], cursor: &mut EByteCursor, byte: u8, at: &mut usize) -> (r: bool)
     requires
         cursor_ok(bytes@, old(cursor)),
         *old(at) <= bytes@.len(),
@@ -469,9 +473,7 @@ at: &mut usize,
             &&& final(cursor).pos == old(cursor).pos
             &&& final(cursor).prefix@ == old(cursor).prefix@
         },
-        old(cursor).pos < bytes@.len()
-            && bytes@[old(cursor).pos as int] == byte
-            ==> r,
+        old(cursor).pos < bytes@.len() && bytes@[old(cursor).pos as int] == byte ==> r,
 {
     let old_pos = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
@@ -481,8 +483,7 @@ at: &mut usize,
     };
     proof {
         reveal(cursor_ok);
-        assert(bytes@.subrange(old_pos as int, end as int)[0]
-            == bytes@[old_pos as int]);
+        assert(bytes@.subrange(old_pos as int, end as int)[0] == bytes@[old_pos as int]);
         assert(bytes@[old_pos as int] == byte);
         range_concat(bytes@, 0, old_pos as int, end as int);
         assert(bytes@.subrange(0, end as int) == old_prefix + seq![byte]);
@@ -499,15 +500,17 @@ fn cursor_atom(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GAtomExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
         cursor_ok(bytes@, old(cursor)),
         expected@ matches Some(e) ==> {
             &&& old(cursor).pos < e.end <= bytes@.len()
-            &&& ckc_spec::v1text::atom_bytes(e.name)
-                == bytes@.subrange(old(cursor).pos as int, e.end as int)
+            &&& ckc_spec::v1text::atom_bytes(e.name) == bytes@.subrange(
+                old(cursor).pos as int,
+                e.end as int,
+            )
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
@@ -515,12 +518,13 @@ at: &mut usize,
         r matches Some(atom) ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == atom.end
-            &&& final(cursor).prefix@ == old(cursor).prefix@
-                + ckc_spec::v1text::atom_bytes(atom.name@)
+            &&& final(cursor).prefix@ == old(cursor).prefix@ + ckc_spec::v1text::atom_bytes(
+                atom.name@,
+            )
             &&& parsed_atom_ok(bytes@, old(cursor).pos, &atom)
         },
-        expected@ matches Some(e) ==> r matches Some(atom)
-            && atom.name@ == e.name && atom.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(atom) && atom.name@ == e.name && atom.end
+            == e.end,
 {
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
@@ -542,13 +546,12 @@ at: &mut usize,
         reveal(parsed_atom_ok);
         reveal(cursor_ok);
         range_concat(bytes@, 0, start as int, atom.end as int);
-        assert(bytes@.subrange(0, atom.end as int)
-            == old_prefix + ckc_spec::v1text::atom_bytes(atom.name@));
+        assert(bytes@.subrange(0, atom.end as int) == old_prefix + ckc_spec::v1text::atom_bytes(
+            atom.name@,
+        ));
     }
     cursor.pos = atom.end;
-    cursor.prefix = Ghost(
-        old_prefix + ckc_spec::v1text::atom_bytes(atom.name@),
-    );
+    cursor.prefix = Ghost(old_prefix + ckc_spec::v1text::atom_bytes(atom.name@));
     proof {
         reveal(cursor_ok);
     }
@@ -561,7 +564,7 @@ fn cursor_term(
     first_var: Option<usize>,
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GTermExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         arena_ok(old(arena)),
@@ -579,13 +582,11 @@ at: &mut usize,
         r matches Some(term) ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == term.end
-            &&& final(cursor).prefix@ == old(cursor).prefix@
-                + ckc_spec::v1text::term_bytes(term@)
+            &&& final(cursor).prefix@ == old(cursor).prefix@ + ckc_spec::v1text::term_bytes(term@)
             &&& spanned_term_ok(bytes@, &term)
             &&& term.start == old(cursor).pos
         },
-        expected@ matches Some(e) ==> r matches Some(term)
-            && term@ == e.term && term.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(term) && term@ == e.term && term.end == e.end,
 {
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
@@ -619,7 +620,7 @@ at: &mut usize,
         Ghost(initial_stream),
         false,
         &mut tracker,
-    at,
+        at,
     ) {
         Some(term) => term,
         None => return None,
@@ -628,13 +629,12 @@ at: &mut usize,
         reveal(spanned_term_ok);
         reveal(cursor_ok);
         range_concat(bytes@, 0, start as int, term.end as int);
-        assert(bytes@.subrange(0, term.end as int)
-            == old_prefix + ckc_spec::v1text::term_bytes(term@));
+        assert(bytes@.subrange(0, term.end as int) == old_prefix + ckc_spec::v1text::term_bytes(
+            term@,
+        ));
     }
     cursor.pos = term.end;
-    cursor.prefix = Ghost(
-        old_prefix + ckc_spec::v1text::term_bytes(term@),
-    );
+    cursor.prefix = Ghost(old_prefix + ckc_spec::v1text::term_bytes(term@));
     proof {
         reveal(cursor_ok);
     }
@@ -645,7 +645,7 @@ fn cursor_name(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GNameExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
         *old(at) <= bytes@.len(),
@@ -655,8 +655,8 @@ at: &mut usize,
             &&& ckc_spec::v1text::name_ok(e.value)
             &&& e.value == bytes@.subrange(old(cursor).pos as int, e.end as int)
             &&& !(ckc_spec::v1text::is_lower_b(bytes@[e.end as int])
-                || ckc_spec::v1text::is_digit_b(bytes@[e.end as int])
-                || bytes@[e.end as int] == 0x2d)
+                || ckc_spec::v1text::is_digit_b(bytes@[e.end as int]) || bytes@[e.end as int]
+                == 0x2d)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
@@ -665,12 +665,11 @@ at: &mut usize,
             &&& final(cursor).pos == field.end
             &&& final(cursor).prefix@ == old(cursor).prefix@ + field.value@
             &&& old(cursor).pos < field.end <= bytes@.len()
-            &&& field.value@
-                == bytes@.subrange(old(cursor).pos as int, field.end as int)
+            &&& field.value@ == bytes@.subrange(old(cursor).pos as int, field.end as int)
             &&& ckc_spec::v1text::name_ok(field.value@)
         },
-        expected@ matches Some(e) ==> r matches Some(field)
-            && field.value@ == e.value && field.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(field) && field.value@ == e.value && field.end
+            == e.end,
 {
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
@@ -691,8 +690,7 @@ at: &mut usize,
     proof {
         reveal(cursor_ok);
         range_concat(bytes@, 0, start as int, field.end as int);
-        assert(bytes@.subrange(0, field.end as int)
-            == old_prefix + field.value@);
+        assert(bytes@.subrange(0, field.end as int) == old_prefix + field.value@);
     }
     cursor.pos = field.end;
     cursor.prefix = Ghost(old_prefix + field.value@);
@@ -703,17 +701,15 @@ at: &mut usize,
 }
 
 fn is_name_b(b: u8) -> (r: bool)
-    ensures r == {
-        ckc_spec::v1text::is_lower_b(b)
-            || ckc_spec::v1text::is_digit_b(b)
-            || b == 0x2d
-    },
+    ensures
+        r == { ckc_spec::v1text::is_lower_b(b) || ckc_spec::v1text::is_digit_b(b) || b == 0x2d },
 {
     is_lower_b(b) || is_digit_b(b) || b == 0x2d
 }
 
 fn name_ok_exec(name: &Vec<u8>) -> (r: bool)
-    ensures r == ckc_spec::v1text::name_ok(name@),
+    ensures
+        r == ckc_spec::v1text::name_ok(name@),
 {
     if name.len() == 0 {
         proof {
@@ -733,11 +729,11 @@ fn name_ok_exec(name: &Vec<u8>) -> (r: bool)
             0 < name@.len(),
             name@[0] != 0x2d,
             i <= name@.len(),
-            forall|j: int| 0 <= j < i ==> {
-                ckc_spec::v1text::is_lower_b(name@[j])
-                    || ckc_spec::v1text::is_digit_b(name@[j])
-                    || name@[j] == 0x2d
-            },
+            forall|j: int|
+                0 <= j < i ==> {
+                    ckc_spec::v1text::is_lower_b(name@[j]) || ckc_spec::v1text::is_digit_b(name@[j])
+                        || name@[j] == 0x2d
+                },
         decreases name.len() - i,
     {
         if !is_name_b(name[i]) {
@@ -757,13 +753,15 @@ fn name_ok_exec(name: &Vec<u8>) -> (r: bool)
 }
 
 fn is_hex_lower_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_hex_lower_b(b),
+    ensures
+        r == ckc_spec::v1text::is_hex_lower_b(b),
 {
     is_digit_b(b) || (0x61 <= b && b <= 0x66)
 }
 
 fn hex64_exec(hash: &Vec<u8>) -> (r: bool)
-    ensures r == ckc_spec::v1text::hex64(hash@),
+    ensures
+        r == ckc_spec::v1text::hex64(hash@),
 {
     if hash.len() != 64 {
         proof {
@@ -776,8 +774,7 @@ fn hex64_exec(hash: &Vec<u8>) -> (r: bool)
         invariant
             hash@.len() == 64,
             i <= hash@.len(),
-            forall|j: int| 0 <= j < i ==>
-                ckc_spec::v1text::is_hex_lower_b(hash@[j]),
+            forall|j: int| 0 <= j < i ==> ckc_spec::v1text::is_hex_lower_b(hash@[j]),
         decreases hash.len() - i,
     {
         if !is_hex_lower_b(hash[i]) {
@@ -810,7 +807,7 @@ fn parse_raw_name(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GNameExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
         *old(at) <= bytes@.len(),
@@ -820,8 +817,8 @@ at: &mut usize,
             &&& ckc_spec::v1text::name_ok(e.value)
             &&& e.value == bytes@.subrange(start as int, e.end as int)
             &&& !(ckc_spec::v1text::is_lower_b(bytes@[e.end as int])
-                || ckc_spec::v1text::is_digit_b(bytes@[e.end as int])
-                || bytes@[e.end as int] == 0x2d)
+                || ckc_spec::v1text::is_digit_b(bytes@[e.end as int]) || bytes@[e.end as int]
+                == 0x2d)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
@@ -830,26 +827,27 @@ at: &mut usize,
             &&& field.value@ == bytes@.subrange(start as int, field.end as int)
             &&& ckc_spec::v1text::name_ok(field.value@)
         },
-        expected@ matches Some(e) ==> r matches Some(field)
-            && field.value@ == e.value && field.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(field) && field.value@ == e.value && field.end
+            == e.end,
 {
     let mut pos = start;
     while pos < bytes.len() && is_name_b(bytes[pos])
         invariant
             *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
-            forall|i: int| start <= i < pos ==> {
-                ckc_spec::v1text::is_lower_b(bytes@[i])
-                    || ckc_spec::v1text::is_digit_b(bytes@[i])
-                    || bytes@[i] == 0x2d
-            },
+            forall|i: int|
+                start <= i < pos ==> {
+                    ckc_spec::v1text::is_lower_b(bytes@[i]) || ckc_spec::v1text::is_digit_b(
+                        bytes@[i],
+                    ) || bytes@[i] == 0x2d
+                },
             expected@ matches Some(e) ==> {
                 &&& start < e.end < bytes@.len()
                 &&& ckc_spec::v1text::name_ok(e.value)
                 &&& e.value == bytes@.subrange(start as int, e.end as int)
                 &&& !(ckc_spec::v1text::is_lower_b(bytes@[e.end as int])
-                    || ckc_spec::v1text::is_digit_b(bytes@[e.end as int])
-                    || bytes@[e.end as int] == 0x2d)
+                    || ckc_spec::v1text::is_digit_b(bytes@[e.end as int]) || bytes@[e.end as int]
+                    == 0x2d)
                 &&& pos <= e.end
             },
         decreases bytes.len() - pos,
@@ -868,8 +866,7 @@ at: &mut usize,
             if pos < e.end {
                 reveal(ckc_spec::v1text::name_ok);
                 reveal(ckc_spec::v1text::all_in);
-                assert(bytes@[pos as int]
-                    == e.value[pos as int - start as int]);
+                assert(bytes@[pos as int] == e.value[pos as int - start as int]);
                 assert(false);
             }
             assert(pos == e.end);
@@ -904,30 +901,31 @@ at: &mut usize,
 }
 
 fn is_alnum_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_alnum_b(b),
+    ensures
+        r == ckc_spec::v1text::is_alnum_b(b),
 {
     is_lower_b(b) || (0x41 <= b && b <= 0x5a) || is_digit_b(b) || b == 0x5f
 }
 
 fn is_graphic_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_graphic_b(b),
+    ensures
+        r == ckc_spec::v1text::is_graphic_b(b),
 {
-    b == 0x23 || b == 0x24 || b == 0x26 || b == 0x2a || b == 0x2b || b == 0x2d
-        || b == 0x2e || b == 0x2f || b == 0x3a || b == 0x3c || b == 0x3d
-        || b == 0x3e || b == 0x3f || b == 0x40 || b == 0x5c || b == 0x5e
-        || b == 0x7e
+    b == 0x23 || b == 0x24 || b == 0x26 || b == 0x2a || b == 0x2b || b == 0x2d || b == 0x2e || b
+        == 0x2f || b == 0x3a || b == 0x3c || b == 0x3d || b == 0x3e || b == 0x3f || b == 0x40 || b
+        == 0x5c || b == 0x5e || b == 0x7e
 }
 
 pub open spec fn atom_boundary(bytes: Seq<u8>, end: int) -> bool {
-    term_boundary(bytes, end)
-        || 0 < end < bytes.len() && bytes[end] == 0x28
+    term_boundary(bytes, end) || 0 < end < bytes.len() && bytes[end] == 0x28
 }
 
 proof fn atom_boundary_stops_alnum(bytes: Seq<u8>, end: int)
     requires
         atom_boundary(bytes, end),
         end < bytes.len(),
-    ensures !ckc_spec::v1text::is_alnum_b(bytes[end]),
+    ensures
+        !ckc_spec::v1text::is_alnum_b(bytes[end]),
 {
     reveal(atom_boundary);
     if term_boundary(bytes, end) {
@@ -944,8 +942,8 @@ proof fn atom_boundary_stops_graphic_scan(bytes: Seq<u8>, end: int)
         atom_boundary(bytes, end),
         end < bytes.len(),
     ensures
-        !ckc_spec::v1text::is_graphic_b(bytes[end])
-            || bytes[end] == 0x2e && end + 1 < bytes.len() && bytes[end + 1] == 0x0a,
+        !ckc_spec::v1text::is_graphic_b(bytes[end]) || bytes[end] == 0x2e && end + 1 < bytes.len()
+            && bytes[end + 1] == 0x0a,
 {
     reveal(atom_boundary);
     if term_boundary(bytes, end) {
@@ -959,7 +957,7 @@ fn parse_alpha_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
@@ -967,15 +965,13 @@ at: &mut usize,
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
             &&& ckc_spec::v1text::alpha_bare(e.name)
-            &&& ckc_spec::v1text::atom_bytes(e.name)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::atom_bytes(e.name) == bytes@.subrange(start as int, e.end as int)
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
-        expected@ matches Some(e) ==> r matches Some(a)
-            && a.name@ == e.name && a.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(a) && a.name@ == e.name && a.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
@@ -1000,8 +996,7 @@ at: &mut usize,
             start <= pos <= bytes@.len(),
             name@ == bytes@.subrange(start as int, pos as int),
             name@.len() == pos - start,
-            forall|i: int| 0 <= i < name@.len()
-                ==> ckc_spec::v1text::is_alnum_b(name@[i]),
+            forall|i: int| 0 <= i < name@.len() ==> ckc_spec::v1text::is_alnum_b(name@[i]),
             ckc_spec::v1text::is_lower_b(bytes@[start as int]),
             expected@ matches Some(e) ==> {
                 &&& start < e.end <= bytes@.len()
@@ -1063,7 +1058,7 @@ fn parse_graphic_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
@@ -1071,15 +1066,13 @@ at: &mut usize,
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
             &&& ckc_spec::v1text::graphic_bare(e.name)
-            &&& ckc_spec::v1text::atom_bytes(e.name)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::atom_bytes(e.name) == bytes@.subrange(start as int, e.end as int)
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
-        expected@ matches Some(e) ==> r matches Some(a)
-            && a.name@ == e.name && a.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(a) && a.name@ == e.name && a.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
@@ -1090,9 +1083,8 @@ at: &mut usize,
             assert(e.name.len() > 0);
             assert(bytes@[start as int] == e.name[0]);
             assert(ckc_spec::v1text::is_graphic_b(bytes@[start as int]));
-            if bytes@[start as int] == 0x2e
-                && start + 1 < bytes@.len() && bytes@[start as int + 1] == 0x0a
-            {
+            if bytes@[start as int] == 0x2e && start + 1 < bytes@.len() && bytes@[start as int + 1]
+                == 0x0a {
                 reveal(ckc_spec::v1text::all_in);
                 if e.name.len() == 1 {
                     assert(e.name == seq![0x2eu8]);
@@ -1107,9 +1099,8 @@ at: &mut usize,
             }
         }
     }
-    if !is_graphic_b(bytes[start])
-        || (bytes[start] == 0x2e && start + 1 < bytes.len() && bytes[start + 1] == 0x0a)
-    {
+    if !is_graphic_b(bytes[start]) || (bytes[start] == 0x2e && start + 1 < bytes.len()
+        && bytes[start + 1] == 0x0a) {
         if bytes[start] == 0x2e {
             raise_at(at, start + 1, bytes.len());
         } else {
@@ -1119,15 +1110,14 @@ at: &mut usize,
     }
     let mut name = Vec::new();
     let mut pos = start;
-    while pos < bytes.len() && is_graphic_b(bytes[pos])
-        && !(bytes[pos] == 0x2e && pos + 1 < bytes.len() && bytes[pos + 1] == 0x0a)
+    while pos < bytes.len() && is_graphic_b(bytes[pos]) && !(bytes[pos] == 0x2e && pos + 1
+        < bytes.len() && bytes[pos + 1] == 0x0a)
         invariant
             *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
             name@ == bytes@.subrange(start as int, pos as int),
             name@.len() == pos - start,
-            forall|i: int| 0 <= i < name@.len()
-                ==> ckc_spec::v1text::is_graphic_b(name@[i]),
+            forall|i: int| 0 <= i < name@.len() ==> ckc_spec::v1text::is_graphic_b(name@[i]),
             expected@ matches Some(e) ==> {
                 &&& start < e.end <= bytes@.len()
                 &&& pos <= e.end
@@ -1145,9 +1135,8 @@ at: &mut usize,
                     assert(false);
                 }
                 assert(pos < e.end);
-                if bytes@[pos as int] == 0x2e
-                    && pos + 1 < bytes@.len() && bytes@[pos as int + 1] == 0x0a
-                {
+                if bytes@[pos as int] == 0x2e && pos + 1 < bytes@.len() && bytes@[pos as int + 1]
+                    == 0x0a {
                     reveal(ckc_spec::v1text::graphic_bare);
                     reveal(ckc_spec::v1text::all_in);
                     if pos + 1 < e.end {
@@ -1188,9 +1177,8 @@ at: &mut usize,
                 reveal(ckc_spec::v1text::all_in);
                 assert(ckc_spec::v1text::is_graphic_b(e.name[(pos - start) as int]));
                 assert(bytes@[pos as int] == e.name[(pos - start) as int]);
-                if bytes@[pos as int] == 0x2e
-                    && pos + 1 < bytes@.len() && bytes@[pos as int + 1] == 0x0a
-                {
+                if bytes@[pos as int] == 0x2e && pos + 1 < bytes@.len() && bytes@[pos as int + 1]
+                    == 0x0a {
                     if pos + 1 < e.end {
                         let k = (pos + 1 - start) as int;
                         assert(0 <= k < e.name.len());
@@ -1236,7 +1224,7 @@ fn parse_solo_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
@@ -1244,15 +1232,13 @@ at: &mut usize,
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
             &&& ckc_spec::v1text::solo_bare(e.name)
-            &&& ckc_spec::v1text::atom_bytes(e.name)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::atom_bytes(e.name) == bytes@.subrange(start as int, e.end as int)
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
-        expected@ matches Some(e) ==> r matches Some(a)
-            && a.name@ == e.name && a.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(a) && a.name@ == e.name && a.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
@@ -1325,8 +1311,8 @@ at: &mut usize,
 
 proof fn esc_all_push(s: Seq<u8>, b: u8)
     ensures
-        ckc_spec::v1text::esc_all(s.push(b))
-            == ckc_spec::v1text::esc_all(s) + ckc_spec::v1text::esc_byte(b),
+        ckc_spec::v1text::esc_all(s.push(b)) == ckc_spec::v1text::esc_all(s)
+            + ckc_spec::v1text::esc_byte(b),
     decreases s.len(),
 {
     if s.len() == 0 {
@@ -1348,7 +1334,8 @@ proof fn esc_all_push(s: Seq<u8>, b: u8)
 }
 
 fn all_alnum_b(s: &[u8]) -> (r: bool)
-    ensures r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_alnum_b(b)),
+    ensures
+        r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_alnum_b(b)),
 {
     let mut i = 0usize;
     while i < s.len()
@@ -1362,12 +1349,15 @@ fn all_alnum_b(s: &[u8]) -> (r: bool)
         }
         i += 1;
     }
-    proof { reveal(ckc_spec::v1text::all_in); }
+    proof {
+        reveal(ckc_spec::v1text::all_in);
+    }
     true
 }
 
 fn all_graphic_b(s: &[u8]) -> (r: bool)
-    ensures r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_graphic_b(b)),
+    ensures
+        r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_graphic_b(b)),
 {
     let mut i = 0usize;
     while i < s.len()
@@ -1381,12 +1371,15 @@ fn all_graphic_b(s: &[u8]) -> (r: bool)
         }
         i += 1;
     }
-    proof { reveal(ckc_spec::v1text::all_in); }
+    proof {
+        reveal(ckc_spec::v1text::all_in);
+    }
     true
 }
 
 proof fn seq_eq_one(s: Seq<u8>, x: u8)
-    ensures s == seq![x] <==> s.len() == 1 && s[0] == x,
+    ensures
+        s == seq![x] <==> s.len() == 1 && s[0] == x,
 {
     if s.len() == 1 && s[0] == x {
         assert_seqs_equal!(s == seq![x]);
@@ -1394,7 +1387,8 @@ proof fn seq_eq_one(s: Seq<u8>, x: u8)
 }
 
 proof fn seq_eq_two(s: Seq<u8>, x: u8, y: u8)
-    ensures s == seq![x, y] <==> s.len() == 2 && s[0] == x && s[1] == y,
+    ensures
+        s == seq![x, y] <==> s.len() == 2 && s[0] == x && s[1] == y,
 {
     if s.len() == 2 && s[0] == x && s[1] == y {
         assert_seqs_equal!(s == seq![x, y]);
@@ -1402,14 +1396,14 @@ proof fn seq_eq_two(s: Seq<u8>, x: u8, y: u8)
 }
 
 fn atom_bare_exec(name: &[u8]) -> (r: bool)
-    ensures r == ckc_spec::v1text::atom_bare(name@),
+    ensures
+        r == ckc_spec::v1text::atom_bare(name@),
 {
     let alpha = name.len() > 0 && is_lower_b(name[0]) && all_alnum_b(name);
-    let graphic = name.len() > 0 && all_graphic_b(name)
-        && !(name.len() == 1 && name[0] == 0x2e)
+    let graphic = name.len() > 0 && all_graphic_b(name) && !(name.len() == 1 && name[0] == 0x2e)
         && !(name.len() >= 2 && name[0] == 0x2f && name[1] == 0x2a);
-    let solo = (name.len() == 1 && (name[0] == 0x3b || name[0] == 0x21))
-        || (name.len() == 2 && name[0] == 0x7b && name[1] == 0x7d);
+    let solo = (name.len() == 1 && (name[0] == 0x3b || name[0] == 0x21)) || (name.len() == 2
+        && name[0] == 0x7b && name[1] == 0x7d);
     proof {
         seq_eq_one(name@, 0x2e);
         seq_eq_one(name@, 0x3b);
@@ -1427,8 +1421,8 @@ fn atom_bare_exec(name: &[u8]) -> (r: bool)
 }
 
 fn upper_hex_value(b: u8, expected: Ghost<Option<u8>>) -> (r: Option<u8>)
-    requires expected@ matches Some(d) ==> d < 16
-        && ckc_spec::v1text::uhex_digit(d as int) == b,
+    requires
+        expected@ matches Some(d) ==> d < 16 && ckc_spec::v1text::uhex_digit(d as int) == b,
     ensures
         r matches Some(d) ==> d < 16 && ckc_spec::v1text::uhex_digit(d as int) == b,
         expected@ matches Some(d) ==> r == Some(d),
@@ -1440,29 +1434,42 @@ fn upper_hex_value(b: u8, expected: Ghost<Option<u8>>) -> (r: Option<u8>)
     } else {
         None
     };
-    proof { reveal(ckc_spec::v1text::uhex_digit); }
+    proof {
+        reveal(ckc_spec::v1text::uhex_digit);
+    }
     out
 }
 
 fn named_escape(b: u8, expected: Ghost<Option<u8>>) -> (r: Option<u8>)
-    requires expected@ matches Some(v) ==> named_escape_value(v)
-        && named_escape_code(v) == b,
+    requires
+        expected@ matches Some(v) ==> named_escape_value(v) && named_escape_code(v) == b,
     ensures
         r matches Some(v) ==> ckc_spec::v1text::esc_byte(v) == seq![0x5cu8, b],
         expected@ matches Some(v) ==> r == Some(v),
 {
-    let out = if b == 0x5c { Some(0x5c) }
-        else if b == 0x27 { Some(0x27) }
-        else if b == 0x61 { Some(0x07) }
-        else if b == 0x62 { Some(0x08) }
-        else if b == 0x74 { Some(0x09) }
-        else if b == 0x6e { Some(0x0a) }
-        else if b == 0x76 { Some(0x0b) }
-        else if b == 0x66 { Some(0x0c) }
-        else if b == 0x72 { Some(0x0d) }
-        else { None };
+    let out = if b == 0x5c {
+        Some(0x5c)
+    } else if b == 0x27 {
+        Some(0x27)
+    } else if b == 0x61 {
+        Some(0x07)
+    } else if b == 0x62 {
+        Some(0x08)
+    } else if b == 0x74 {
+        Some(0x09)
+    } else if b == 0x6e {
+        Some(0x0a)
+    } else if b == 0x76 {
+        Some(0x0b)
+    } else if b == 0x66 {
+        Some(0x0c)
+    } else if b == 0x72 {
+        Some(0x0d)
+    } else {
+        None
+    };
     proof {
-        reveal_strlit("\\\\");
+        reveal_strlit("\u{5C}\u{5C}");
         reveal_strlit("\\'");
         reveal_strlit("\\a");
         reveal_strlit("\\b");
@@ -1488,15 +1495,25 @@ pub open spec fn unicode_escape_value(b: u8) -> bool {
 }
 
 pub open spec fn named_escape_code(b: u8) -> u8 {
-    if b == 0x5c { 0x5c }
-    else if b == 0x27 { 0x27 }
-    else if b == 0x07 { 0x61 }
-    else if b == 0x08 { 0x62 }
-    else if b == 0x09 { 0x74 }
-    else if b == 0x0a { 0x6e }
-    else if b == 0x0b { 0x76 }
-    else if b == 0x0c { 0x66 }
-    else { 0x72 }
+    if b == 0x5c {
+        0x5c
+    } else if b == 0x27 {
+        0x27
+    } else if b == 0x07 {
+        0x61
+    } else if b == 0x08 {
+        0x62
+    } else if b == 0x09 {
+        0x74
+    } else if b == 0x0a {
+        0x6e
+    } else if b == 0x0b {
+        0x76
+    } else if b == 0x0c {
+        0x66
+    } else {
+        0x72
+    }
 }
 
 proof fn named_escape_code_injective(a: u8, b: u8)
@@ -1504,7 +1521,8 @@ proof fn named_escape_code_injective(a: u8, b: u8)
         named_escape_value(a),
         named_escape_value(b),
         named_escape_code(a) == named_escape_code(b),
-    ensures a == b,
+    ensures
+        a == b,
 {
     reveal(named_escape_value);
     reveal(named_escape_code);
@@ -1515,15 +1533,18 @@ proof fn uhex_digit_injective(a: int, b: int)
         0 <= a < 16,
         0 <= b < 16,
         ckc_spec::v1text::uhex_digit(a) == ckc_spec::v1text::uhex_digit(b),
-    ensures a == b,
+    ensures
+        a == b,
 {
     reveal(ckc_spec::v1text::uhex_digit);
     reveal(ckc_spec::v1text::digit_byte);
 }
 
 proof fn uhex4_u8_injective(a: u8, b: u8)
-    requires ckc_spec::v1text::uhex4(a as int) == ckc_spec::v1text::uhex4(b as int),
-    ensures a == b,
+    requires
+        ckc_spec::v1text::uhex4(a as int) == ckc_spec::v1text::uhex4(b as int),
+    ensures
+        a == b,
 {
     reveal(ckc_spec::v1text::uhex4);
     assert(0 <= a as int / 16 % 16 < 16);
@@ -1536,18 +1557,8 @@ proof fn uhex4_u8_injective(a: u8, b: u8)
     assert(b as int / 16 < 16);
     assert(a as int / 16 % 16 == a as int / 16);
     assert(b as int / 16 % 16 == b as int / 16);
-    lemma_fundamental_div_mod_converse(
-        a as int,
-        16,
-        a as int / 16,
-        a as int % 16,
-    );
-    lemma_fundamental_div_mod_converse(
-        b as int,
-        16,
-        b as int / 16,
-        b as int % 16,
-    );
+    lemma_fundamental_div_mod_converse(a as int, 16, a as int / 16, a as int % 16);
+    lemma_fundamental_div_mod_converse(b as int, 16, b as int / 16, b as int % 16);
 }
 
 proof fn esc_byte_shape(b: u8)
@@ -1560,7 +1571,7 @@ proof fn esc_byte_shape(b: u8)
             seq![b]
         },
 {
-    reveal_strlit("\\\\");
+    reveal_strlit("\u{5C}\u{5C}");
     reveal_strlit("\\'");
     reveal_strlit("\\a");
     reveal_strlit("\\b");
@@ -1578,47 +1589,42 @@ proof fn esc_byte_shape(b: u8)
 }
 
 proof fn esc_byte_len(b: u8)
-    ensures ckc_spec::v1text::esc_byte(b).len() == if named_escape_value(b) {
-        2nat
-    } else if unicode_escape_value(b) {
-        6nat
-    } else {
-        1nat
-    },
+    ensures
+        ckc_spec::v1text::esc_byte(b).len() == if named_escape_value(b) {
+            2nat
+        } else if unicode_escape_value(b) {
+            6nat
+        } else {
+            1nat
+        },
 {
     esc_byte_shape(b);
     reveal(ckc_spec::v1text::uhex4);
 }
 
 proof fn named_escape_code_not_u(b: u8)
-    requires named_escape_value(b),
-    ensures named_escape_code(b) != 0x75,
+    requires
+        named_escape_value(b),
+    ensures
+        named_escape_code(b) != 0x75,
 {
     reveal(named_escape_value);
     reveal(named_escape_code);
 }
 
-proof fn unicode_escape_at(
-    bytes: Seq<u8>,
-    start: usize,
-    end: usize,
-    value: u8,
-)
+proof fn unicode_escape_at(bytes: Seq<u8>, start: usize, end: usize, value: u8)
     requires
         start < end <= bytes.len(),
         unicode_escape_value(value),
-        ckc_spec::v1text::esc_byte(value)
-            == bytes.subrange(start as int, end as int),
+        ckc_spec::v1text::esc_byte(value) == bytes.subrange(start as int, end as int),
     ensures
         end == start + 6,
         bytes[start as int] == 0x5c,
         bytes[start as int + 1] == 0x75,
         bytes[start as int + 2] == 0x30,
         bytes[start as int + 3] == 0x30,
-        bytes[start as int + 4]
-            == ckc_spec::v1text::uhex_digit((value / 16) as int),
-        bytes[start as int + 5]
-            == ckc_spec::v1text::uhex_digit((value % 16) as int),
+        bytes[start as int + 4] == ckc_spec::v1text::uhex_digit((value / 16) as int),
+        bytes[start as int + 5] == ckc_spec::v1text::uhex_digit((value % 16) as int),
 {
     esc_byte_shape(value);
     esc_byte_len(value);
@@ -1652,8 +1658,10 @@ proof fn esc_byte_first_not_quote(b: u8)
 }
 
 proof fn esc_byte_injective(a: u8, b: u8)
-    requires ckc_spec::v1text::esc_byte(a) == ckc_spec::v1text::esc_byte(b),
-    ensures a == b,
+    requires
+        ckc_spec::v1text::esc_byte(a) == ckc_spec::v1text::esc_byte(b),
+    ensures
+        a == b,
 {
     esc_byte_shape(a);
     esc_byte_shape(b);
@@ -1703,10 +1711,8 @@ proof fn escapes_at_same_start(
     requires
         start < a_end <= bytes.len(),
         start < b_end <= bytes.len(),
-        ckc_spec::v1text::esc_byte(a)
-            == bytes.subrange(start as int, a_end as int),
-        ckc_spec::v1text::esc_byte(b)
-            == bytes.subrange(start as int, b_end as int),
+        ckc_spec::v1text::esc_byte(a) == bytes.subrange(start as int, a_end as int),
+        ckc_spec::v1text::esc_byte(b) == bytes.subrange(start as int, b_end as int),
     ensures
         a == b,
         a_end == b_end,
@@ -1770,8 +1776,7 @@ proof fn escapes_at_same_start(
         }
     }
     assert(a == b);
-    assert(ckc_spec::v1text::esc_byte(a).len()
-        == ckc_spec::v1text::esc_byte(b).len());
+    assert(ckc_spec::v1text::esc_byte(a).len() == ckc_spec::v1text::esc_byte(b).len());
     assert(a_end - start == b_end - start);
 }
 
@@ -1787,8 +1792,7 @@ pub ghost struct GEscapeExpected {
 
 pub open spec fn parsed_escape_ok(bytes: Seq<u8>, start: usize, e: &EParsedByte) -> bool {
     &&& start < e.end <= bytes.len()
-    &&& ckc_spec::v1text::esc_byte(e.value)
-        == bytes.subrange(start as int, e.end as int)
+    &&& ckc_spec::v1text::esc_byte(e.value) == bytes.subrange(start as int, e.end as int)
 }
 
 proof fn parsed_escape_matches_expected(
@@ -1800,21 +1804,16 @@ proof fn parsed_escape_matches_expected(
     requires
         parsed_escape_ok(bytes, start, out),
         start < expected.end <= bytes.len(),
-        ckc_spec::v1text::esc_byte(expected.value)
-            == bytes.subrange(start as int, expected.end as int),
+        ckc_spec::v1text::esc_byte(expected.value) == bytes.subrange(
+            start as int,
+            expected.end as int,
+        ),
     ensures
         out.value == expected.value,
         out.end == expected.end,
 {
     reveal(parsed_escape_ok);
-    escapes_at_same_start(
-        bytes,
-        start,
-        out.value,
-        out.end,
-        expected.value,
-        expected.end,
-    );
+    escapes_at_same_start(bytes, start, out.value, out.end, expected.value, expected.end);
 }
 
 #[verifier::rlimit(300)]
@@ -1822,29 +1821,36 @@ fn parse_escaped_byte(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GEscapeExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedByte>)
     requires
         *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
-            &&& ckc_spec::v1text::esc_byte(e.value)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::esc_byte(e.value) == bytes@.subrange(start as int, e.end as int)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(e) ==> parsed_escape_ok(bytes@, start, &e),
-        expected@ matches Some(e) ==> r matches Some(out)
-            && out.value == e.value && out.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(out) && out.value == e.value && out.end
+            == e.end,
 {
     let b = bytes[start];
     let ghost expected_named = match expected@ {
-        Some(e) => if named_escape_value(e.value) { Some(e.value) } else { None },
+        Some(e) => if named_escape_value(e.value) {
+            Some(e.value)
+        } else {
+            None
+        },
         None => None,
     };
     let ghost expected_unicode = match expected@ {
-        Some(e) => if unicode_escape_value(e.value) { Some(e.value) } else { None },
+        Some(e) => if unicode_escape_value(e.value) {
+            Some(e.value)
+        } else {
+            None
+        },
         None => None,
     };
     proof {
@@ -1965,11 +1971,9 @@ at: &mut usize,
                 None => assert(false),
             }
             assert(v / 16 < 16);
-            assert(ckc_spec::v1text::uhex_digit((v / 16) as int)
-                == bytes@[start as int + 4]);
+            assert(ckc_spec::v1text::uhex_digit((v / 16) as int) == bytes@[start as int + 4]);
             assert(v % 16 < 16);
-            assert(ckc_spec::v1text::uhex_digit((v % 16) as int)
-                == bytes@[start as int + 5]);
+            assert(ckc_spec::v1text::uhex_digit((v % 16) as int) == bytes@[start as int + 5]);
         }
     }
     let d2 = match upper_hex_value(bytes[start + 4], Ghost(expected_d2)) {
@@ -2005,8 +2009,7 @@ at: &mut usize,
             assert(value == e.value);
             reveal(unicode_escape_value);
             reveal(named_escape_value);
-            assert((value < 0x20 && !(0x07 <= value && value <= 0x0d))
-                || value == 0x7f);
+            assert((value < 0x20 && !(0x07 <= value && value <= 0x0d)) || value == 0x7f);
         }
     }
     if !((value < 0x20 && !(0x07 <= value && value <= 0x0d)) || value == 0x7f) {
@@ -2025,11 +2028,20 @@ at: &mut usize,
         assert(value as int / 16 % 16 == d2 as int);
         assert(value as int % 16 == d3 as int);
         assert(ckc_spec::v1text::ascii("\\u"@) == seq![0x5cu8, 0x75u8]);
-        assert(ckc_spec::v1text::uhex4(value as int)
-            == seq![0x30u8, 0x30u8, bytes@[start as int + 4], bytes@[start as int + 5]]);
-        assert(ckc_spec::v1text::esc_byte(value)
-            == seq![0x5cu8, 0x75u8, 0x30u8, 0x30u8,
-                bytes@[start as int + 4], bytes@[start as int + 5]]);
+        assert(ckc_spec::v1text::uhex4(value as int) == seq![
+            0x30u8,
+            0x30u8,
+            bytes@[start as int + 4],
+            bytes@[start as int + 5],
+        ]);
+        assert(ckc_spec::v1text::esc_byte(value) == seq![
+            0x5cu8,
+            0x75u8,
+            0x30u8,
+            0x30u8,
+            bytes@[start as int + 4],
+            bytes@[start as int + 5],
+        ]);
         assert_seqs_equal!(bytes@.subrange(start as int, (start + 6) as int)
             == seq![0x5cu8, 0x75u8, 0x30u8, 0x30u8, bytes@[start as int + 4], bytes@[start as int + 5]]);
     }
@@ -2043,13 +2055,7 @@ at: &mut usize,
     Some(out)
 }
 
-proof fn suffix_after_prefix(
-    bytes: Seq<u8>,
-    start: int,
-    end: int,
-    prefix: Seq<u8>,
-    suffix: Seq<u8>,
-)
+proof fn suffix_after_prefix(bytes: Seq<u8>, start: int, end: int, prefix: Seq<u8>, suffix: Seq<u8>)
     requires
         0 <= start <= end <= bytes.len(),
         bytes.subrange(start, end) == prefix + suffix,
@@ -2117,31 +2123,18 @@ proof fn segment_of_three(
         bytes.subrange(start, end) == before + part + after,
     ensures
         start + before.len() + part.len() <= end,
-        bytes.subrange(
-            start + before.len(),
-            start + before.len() + part.len(),
-        ) == part,
+        bytes.subrange(start + before.len(), start + before.len() + part.len()) == part,
 {
     assert_seqs_equal!(before + part + after == before + (part + after));
     suffix_after_prefix(bytes, start, end, before, part + after);
-    prefix_before_suffix(
-        bytes,
-        start + before.len(),
-        end,
-        part,
-        after,
-    );
+    prefix_before_suffix(bytes, start + before.len(), end, part, after);
 }
 
-proof fn range_concat(
-    bytes: Seq<u8>,
-    start: int,
-    mid: int,
-    end: int,
-)
-    requires 0 <= start <= mid <= end <= bytes.len(),
-    ensures bytes.subrange(start, end)
-        == bytes.subrange(start, mid) + bytes.subrange(mid, end),
+proof fn range_concat(bytes: Seq<u8>, start: int, mid: int, end: int)
+    requires
+        0 <= start <= mid <= end <= bytes.len(),
+    ensures
+        bytes.subrange(start, end) == bytes.subrange(start, mid) + bytes.subrange(mid, end),
 {
     assert_seqs_equal!(bytes.subrange(start, end)
         == bytes.subrange(start, mid) + bytes.subrange(mid, end));
@@ -2189,7 +2182,7 @@ fn parse_quoted_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
@@ -2197,21 +2190,19 @@ at: &mut usize,
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
             &&& !ckc_spec::v1text::atom_bare(e.name)
-            &&& ckc_spec::v1text::atom_bytes(e.name)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::atom_bytes(e.name) == bytes@.subrange(start as int, e.end as int)
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
-        expected@ matches Some(e) ==> r matches Some(a)
-            && a.name@ == e.name && a.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(a) && a.name@ == e.name && a.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
             reveal(ckc_spec::v1text::atom_bytes);
-            assert(bytes@.subrange(start as int, e.end as int)
-                == seq![0x27u8] + ckc_spec::v1text::esc_all(e.name) + seq![0x27u8]);
+            assert(bytes@.subrange(start as int, e.end as int) == seq![0x27u8]
+                + ckc_spec::v1text::esc_all(e.name) + seq![0x27u8]);
             range_between_bytes(
                 bytes@,
                 start as int,
@@ -2241,18 +2232,16 @@ at: &mut usize,
         invariant
             *old(at) <= *at <= bytes@.len(),
             start < pos <= bytes@.len(),
-            ckc_spec::v1text::esc_all(name@)
-                == bytes@.subrange(start as int + 1, pos as int),
+            ckc_spec::v1text::esc_all(name@) == bytes@.subrange(start as int + 1, pos as int),
             expected@ matches Some(e) ==> {
                 &&& start < e.end <= bytes@.len()
                 &&& bytes@[e.end as int - 1] == 0x27
                 &&& name@.len() <= e.name.len()
                 &&& name@ == e.name.subrange(0, name@.len() as int)
                 &&& pos as int <= e.end as int - 1
-                &&& bytes@.subrange(pos as int, e.end as int - 1)
-                    == ckc_spec::v1text::esc_all(
-                        e.name.subrange(name@.len() as int, e.name.len() as int),
-                    )
+                &&& bytes@.subrange(pos as int, e.end as int - 1) == ckc_spec::v1text::esc_all(
+                    e.name.subrange(name@.len() as int, e.name.len() as int),
+                )
             },
         decreases bytes.len() - pos,
     {
@@ -2263,8 +2252,8 @@ at: &mut usize,
                     assert_seqs_equal!(e.name.subrange(k as int, e.name.len() as int)
                         == Seq::<u8>::empty());
                     reveal_with_fuel(ckc_spec::v1text::esc_all, 1);
-                    assert(bytes@.subrange(pos as int, e.end as int - 1).len()
-                        == e.end as int - 1 - pos as int);
+                    assert(bytes@.subrange(pos as int, e.end as int - 1).len() == e.end as int - 1
+                        - pos as int);
                     assert(bytes@.subrange(pos as int, e.end as int - 1).len() == 0);
                     assert(pos as int == e.end as int - 1);
                     assert(pos == e.end - 1);
@@ -2280,9 +2269,8 @@ at: &mut usize,
                 assert(remaining[0] == value);
                 assert_seqs_equal!(remaining.drop_first() == rest);
                 reveal_with_fuel(ckc_spec::v1text::esc_all, 2);
-                assert(ckc_spec::v1text::esc_all(remaining)
-                    == ckc_spec::v1text::esc_byte(value)
-                        + ckc_spec::v1text::esc_all(rest));
+                assert(ckc_spec::v1text::esc_all(remaining) == ckc_spec::v1text::esc_byte(value)
+                    + ckc_spec::v1text::esc_all(rest));
                 esc_byte_first_not_quote(value);
                 assert(0 <= pos as int <= e.end as int - 1 <= bytes@.len());
                 prefix_before_suffix(
@@ -2299,17 +2287,18 @@ at: &mut usize,
                     ckc_spec::v1text::esc_byte(value),
                     ckc_spec::v1text::esc_all(rest),
                 );
-                assert(pos as int + ckc_spec::v1text::esc_byte(value).len()
-                    <= e.end as int - 1);
+                assert(pos as int + ckc_spec::v1text::esc_byte(value).len() <= e.end as int - 1);
             }
         }
         let ghost expected_escape = match expected@ {
             Some(e) => {
                 let value = e.name[name@.len() as int];
-                Some(GEscapeExpected {
-                    value,
-                    end: (pos as int + ckc_spec::v1text::esc_byte(value).len()) as usize,
-                })
+                Some(
+                    GEscapeExpected {
+                        value,
+                        end: (pos as int + ckc_spec::v1text::esc_byte(value).len()) as usize,
+                    },
+                )
             },
             None => None,
         };
@@ -2319,12 +2308,11 @@ at: &mut usize,
                 let end_int = pos as int + ckc_spec::v1text::esc_byte(value).len();
                 assert(0 <= end_int <= e.end as int - 1 < bytes@.len());
                 assert((end_int as usize) as int == end_int);
-                assert(expected_escape matches Some(x)
-                    && x.value == value && x.end as int == end_int);
+                assert(expected_escape matches Some(x) && x.value == value && x.end as int
+                    == end_int);
                 esc_byte_first_not_quote(value);
                 assert(pos < end_int as usize <= bytes.len());
-                assert(ckc_spec::v1text::esc_byte(value)
-                    == bytes@.subrange(pos as int, end_int));
+                assert(ckc_spec::v1text::esc_byte(value) == bytes@.subrange(pos as int, end_int));
             }
         }
         let parsed = match parse_escaped_byte(bytes, pos, Ghost(expected_escape), at) {
@@ -2344,13 +2332,10 @@ at: &mut usize,
                 let k = old_name.len();
                 let value = e.name[k as int];
                 let rest = e.name.subrange(k as int + 1, e.name.len() as int);
-                assert(expected_escape matches Some(x)
-                    && x.value == value
-                    && x.end as int
-                        == old_pos as int + ckc_spec::v1text::esc_byte(value).len());
-                assert(parsed.value == value);
-                assert(pos as int
+                assert(expected_escape matches Some(x) && x.value == value && x.end as int
                     == old_pos as int + ckc_spec::v1text::esc_byte(value).len());
+                assert(parsed.value == value);
+                assert(pos as int == old_pos as int + ckc_spec::v1text::esc_byte(value).len());
                 assert_seqs_equal!(name@ == old_name.push(value));
                 assert_seqs_equal!(e.name.subrange(0, k as int + 1)
                     == old_name.push(value));
@@ -2379,10 +2364,10 @@ at: &mut usize,
                 esc_byte_first_not_quote(value);
                 assert(ckc_spec::v1text::esc_all(remaining).len() > 0);
                 assert(pos < e.end - 1);
-                assert(bytes@.subrange(pos as int, e.end as int - 1)[0]
-                    == bytes@[pos as int]);
-                assert(ckc_spec::v1text::esc_all(remaining)[0]
-                    == ckc_spec::v1text::esc_byte(value)[0]);
+                assert(bytes@.subrange(pos as int, e.end as int - 1)[0] == bytes@[pos as int]);
+                assert(ckc_spec::v1text::esc_all(remaining)[0] == ckc_spec::v1text::esc_byte(
+                    value,
+                )[0]);
                 assert(false);
             }
             assert(name@.len() == e.name.len());
@@ -2437,7 +2422,8 @@ pub open spec fn canonical_decimal(s: Seq<u8>) -> bool {
 }
 
 proof fn decimal_digit_bounds(b: u8)
-    requires ckc_spec::v1text::is_digit_b(b),
+    requires
+        ckc_spec::v1text::is_digit_b(b),
     ensures
         decimal_digit(b) < 10,
         ckc_spec::v1text::digit_byte(decimal_digit(b) as int) == b,
@@ -2451,7 +2437,8 @@ proof fn decimal_prefix_le(s: Seq<u8>, n: int)
     requires
         0 <= n <= s.len(),
         ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
-    ensures decimal_value(s.take(n)) <= decimal_value(s),
+    ensures
+        decimal_value(s.take(n)) <= decimal_value(s),
     decreases s.len(),
 {
     if n == s.len() {
@@ -2466,42 +2453,33 @@ proof fn decimal_prefix_le(s: Seq<u8>, n: int)
         assert(s == prefix.push(s.last()));
         decimal_digit_bounds(s.last());
         reveal_with_fuel(decimal_value, 2);
-        assert(decimal_value(s)
-            == decimal_value(prefix) * 10 + decimal_digit(s.last()));
+        assert(decimal_value(s) == decimal_value(prefix) * 10 + decimal_digit(s.last()));
         assert(decimal_value(prefix) <= decimal_value(s));
     }
 }
 
 #[verifier::rlimit(5000)]
-fn decimal_usize(
-    digits: &Vec<u8>,
-    expected: Ghost<Option<nat>>,
-) -> (r: Option<usize>)
+fn decimal_usize(digits: &Vec<u8>, expected: Ghost<Option<nat>>) -> (r: Option<usize>)
     requires
-        ckc_spec::v1text::all_in(
-            digits@,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(digits@, |b: u8| ckc_spec::v1text::is_digit_b(b)),
         expected@ matches Some(n) ==> {
             &&& decimal_value(digits@) == n
             &&& n <= usize::MAX as nat
         },
     ensures
         r matches Some(value) ==> value as nat == decimal_value(digits@),
-        expected@ matches Some(n) ==> r matches Some(value)
-            && value as nat == n,
+        expected@ matches Some(n) ==> r matches Some(value) && value as nat == n,
 {
     let mut pos = 0usize;
     let mut value = 0usize;
-    proof { reveal(decimal_value); }
+    proof {
+        reveal(decimal_value);
+    }
     while pos < digits.len()
         invariant
             pos <= digits@.len(),
             value as nat == decimal_value(digits@.take(pos as int)),
-            ckc_spec::v1text::all_in(
-                digits@,
-                |b: u8| ckc_spec::v1text::is_digit_b(b),
-            ),
+            ckc_spec::v1text::all_in(digits@, |b: u8| ckc_spec::v1text::is_digit_b(b)),
             expected@ matches Some(n) ==> {
                 &&& decimal_value(digits@) == n
                 &&& n <= usize::MAX as nat
@@ -2522,8 +2500,9 @@ fn decimal_usize(
             assert(next_prefix.drop_last() == old_prefix);
             assert(next_prefix.last() == byte);
             reveal_with_fuel(decimal_value, 2);
-            assert(decimal_value(next_prefix)
-                == decimal_value(old_prefix) * 10 + decimal_digit(byte));
+            assert(decimal_value(next_prefix) == decimal_value(old_prefix) * 10 + decimal_digit(
+                byte,
+            ));
         }
         if value > usize::MAX / 10 {
             proof {
@@ -2571,8 +2550,9 @@ proof fn decimal_all_drop_last(s: Seq<u8>)
         ckc_spec::v1text::all_in(s.drop_last(), |b: u8| ckc_spec::v1text::is_digit_b(b)),
 {
     reveal(ckc_spec::v1text::all_in);
-    assert forall|i: int| #![auto] 0 <= i < s.drop_last().len()
-        ==> ckc_spec::v1text::is_digit_b(s.drop_last()[i]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < s.drop_last().len() ==> ckc_spec::v1text::is_digit_b(s.drop_last()[i]) by {
         if 0 <= i < s.drop_last().len() {
             assert(i < s.len());
             assert(s.drop_last()[i] == s[i]);
@@ -2584,7 +2564,8 @@ proof fn canonical_decimal_drop_last(s: Seq<u8>)
     requires
         s.len() > 1,
         canonical_decimal(s),
-    ensures canonical_decimal(s.drop_last()),
+    ensures
+        canonical_decimal(s.drop_last()),
 {
     decimal_all_drop_last(s);
     reveal(canonical_decimal);
@@ -2597,7 +2578,8 @@ proof fn decimal_positive(s: Seq<u8>)
     requires
         canonical_decimal(s),
         s[0] != 0x30,
-    ensures decimal_value(s) > 0,
+    ensures
+        decimal_value(s) > 0,
     decreases s.len(),
 {
     reveal_with_fuel(decimal_value, 2);
@@ -2614,8 +2596,10 @@ proof fn decimal_positive(s: Seq<u8>)
 }
 
 proof fn canonical_decimal_roundtrip(s: Seq<u8>)
-    requires canonical_decimal(s),
-    ensures ckc_spec::v1text::udec_bytes(decimal_value(s)) == s,
+    requires
+        canonical_decimal(s),
+    ensures
+        ckc_spec::v1text::udec_bytes(decimal_value(s)) == s,
     decreases s.len(),
 {
     let p = s.drop_last();
@@ -2659,9 +2643,7 @@ proof fn udec_canonical(n: nat)
     reveal(canonical_decimal);
     if n < 10 {
         assert(ckc_spec::v1text::udec_bytes(n).len() == 1);
-        assert(ckc_spec::v1text::is_digit_b(
-            ckc_spec::v1text::digit_byte(n as int),
-        ));
+        assert(ckc_spec::v1text::is_digit_b(ckc_spec::v1text::digit_byte(n as int)));
         if n > 0 {
             assert(ckc_spec::v1text::digit_byte(n as int) != 0x30);
         }
@@ -2675,8 +2657,11 @@ proof fn udec_canonical(n: nat)
         let prefix = ckc_spec::v1text::udec_bytes(q);
         let digit = ckc_spec::v1text::digit_byte(d as int);
         assert(ckc_spec::v1text::is_digit_b(digit));
-        assert forall|i: int| #![auto] 0 <= i < (prefix + seq![digit]).len()
-            ==> ckc_spec::v1text::is_digit_b((prefix + seq![digit])[i]) by {
+        assert forall|i: int|
+            #![auto]
+            0 <= i < (prefix + seq![digit]).len() ==> ckc_spec::v1text::is_digit_b(
+                (prefix + seq![digit])[i],
+            ) by {
             if 0 <= i < (prefix + seq![digit]).len() {
                 if i < prefix.len() {
                     assert((prefix + seq![digit])[i] == prefix[i]);
@@ -2692,9 +2677,9 @@ proof fn udec_canonical(n: nat)
 }
 
 pub open spec fn decimal_end(bytes: Seq<u8>, end: usize) -> bool {
-    term_boundary(bytes, end as int)
-        || end < bytes.len()
-            && !ckc_spec::v1text::is_digit_b(bytes[end as int])
+    term_boundary(bytes, end as int) || end < bytes.len() && !ckc_spec::v1text::is_digit_b(
+        bytes[end as int],
+    )
 }
 
 pub ghost struct GDecimalExpected {
@@ -2709,30 +2694,27 @@ pub struct EParsedDecimal {
 
 pub open spec fn parsed_decimal_ok(bytes: Seq<u8>, start: usize, d: &EParsedDecimal) -> bool {
     &&& start < d.end <= bytes.len()
-    &&& ckc_spec::v1text::udec_bytes(d.value@)
-        == bytes.subrange(start as int, d.end as int)
+    &&& ckc_spec::v1text::udec_bytes(d.value@) == bytes.subrange(start as int, d.end as int)
 }
 
 fn parse_decimal(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GDecimalExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedDecimal>)
     requires
         *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
-            &&& ckc_spec::v1text::udec_bytes(e.value)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::udec_bytes(e.value) == bytes@.subrange(start as int, e.end as int)
             &&& decimal_end(bytes@, e.end)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(d) ==> parsed_decimal_ok(bytes@, start, &d),
-        expected@ matches Some(e) ==> r matches Some(d)
-            && d.value@ == e.value && d.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(d) && d.value@ == e.value && d.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
@@ -2755,12 +2737,13 @@ at: &mut usize,
             *old(at) <= *at <= bytes@.len(),
             start <= pos <= bytes@.len(),
             digits@ == bytes@.subrange(start as int, pos as int),
-            forall|i: int| 0 <= i < digits@.len()
-                ==> ckc_spec::v1text::is_digit_b(digits@[i]),
+            forall|i: int| 0 <= i < digits@.len() ==> ckc_spec::v1text::is_digit_b(digits@[i]),
             expected@ matches Some(e) ==> {
                 &&& start < e.end <= bytes@.len()
-                &&& ckc_spec::v1text::udec_bytes(e.value)
-                    == bytes@.subrange(start as int, e.end as int)
+                &&& ckc_spec::v1text::udec_bytes(e.value) == bytes@.subrange(
+                    start as int,
+                    e.end as int,
+                )
                 &&& canonical_decimal(ckc_spec::v1text::udec_bytes(e.value))
                 &&& decimal_end(bytes@, e.end)
                 &&& pos <= e.end
@@ -2785,7 +2768,9 @@ at: &mut usize,
         }
         let ghost old_pos = pos;
         digits.push(bytes[pos]);
-        proof { subrange_push(bytes@, start as int, old_pos as int); }
+        proof {
+            subrange_push(bytes@, start as int, old_pos as int);
+        }
         pos += 1;
     }
     proof {
@@ -2793,8 +2778,7 @@ at: &mut usize,
             if pos < e.end {
                 let i = pos as int - start as int;
                 assert(0 <= i < ckc_spec::v1text::udec_bytes(e.value).len());
-                assert(bytes@.subrange(start as int, e.end as int)[i]
-                    == bytes@[pos as int]);
+                assert(bytes@.subrange(start as int, e.end as int)[i] == bytes@[pos as int]);
                 reveal(canonical_decimal);
                 reveal(ckc_spec::v1text::all_in);
                 assert(ckc_spec::v1text::is_digit_b(bytes@[pos as int]));
@@ -2839,30 +2823,27 @@ pub struct EParsedInt {
 
 pub open spec fn parsed_int_ok(bytes: Seq<u8>, start: usize, n: &EParsedInt) -> bool {
     &&& start < n.end <= bytes.len()
-    &&& ckc_spec::v1text::dec_bytes(n.value@)
-        == bytes.subrange(start as int, n.end as int)
+    &&& ckc_spec::v1text::dec_bytes(n.value@) == bytes.subrange(start as int, n.end as int)
 }
 
 fn parse_integer(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GIntExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedInt>)
     requires
         *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
-            &&& ckc_spec::v1text::dec_bytes(e.value)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::dec_bytes(e.value) == bytes@.subrange(start as int, e.end as int)
             &&& term_boundary(bytes@, e.end as int)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(n) ==> parsed_int_ok(bytes@, start, &n),
-        expected@ matches Some(e) ==> r matches Some(n)
-            && n.value@ == e.value && n.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(n) && n.value@ == e.value && n.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
@@ -2871,8 +2852,8 @@ at: &mut usize,
                 let magnitude = (-e.value) as nat;
                 udec_canonical(magnitude);
                 assert(magnitude > 0);
-                assert(bytes@.subrange(start as int, e.end as int)
-                    == seq![0x2du8] + ckc_spec::v1text::udec_bytes(magnitude));
+                assert(bytes@.subrange(start as int, e.end as int) == seq![0x2du8]
+                    + ckc_spec::v1text::udec_bytes(magnitude));
                 prefix_before_suffix(
                     bytes@,
                     start as int,
@@ -2887,8 +2868,7 @@ at: &mut usize,
                     seq![0x2du8],
                     ckc_spec::v1text::udec_bytes(magnitude),
                 );
-                assert(bytes@.subrange(start as int, start as int + 1)[0]
-                    == bytes@[start as int]);
+                assert(bytes@.subrange(start as int, start as int + 1)[0] == bytes@[start as int]);
                 assert(bytes@.subrange(start as int, start as int + 1)[0] == 0x2d);
                 assert(bytes@[start as int] == 0x2d);
                 assert(start + 1 < e.end);
@@ -2896,8 +2876,7 @@ at: &mut usize,
                 udec_canonical(e.value as nat);
                 reveal(canonical_decimal);
                 reveal(ckc_spec::v1text::all_in);
-                assert(bytes@[start as int]
-                    == ckc_spec::v1text::udec_bytes(e.value as nat)[0]);
+                assert(bytes@[start as int] == ckc_spec::v1text::udec_bytes(e.value as nat)[0]);
                 assert(ckc_spec::v1text::is_digit_b(bytes@[start as int]));
                 assert(bytes@[start as int] != 0x2d);
             }
@@ -2914,20 +2893,18 @@ at: &mut usize,
             return None;
         }
         let ghost expected_decimal = match expected@ {
-            Some(e) => Some(GDecimalExpected {
-                value: (-e.value) as nat,
-                end: e.end,
-            }),
+            Some(e) => Some(GDecimalExpected { value: (-e.value) as nat, end: e.end }),
             None => None,
         };
         proof {
             if let Some(e) = expected@ {
                 let magnitude = (-e.value) as nat;
                 reveal(ckc_spec::v1text::dec_bytes);
-                assert(expected_decimal matches Some(d)
-                    && d.value == magnitude && d.end == e.end);
-                assert(ckc_spec::v1text::udec_bytes(magnitude)
-                    == bytes@.subrange(start as int + 1, e.end as int));
+                assert(expected_decimal matches Some(d) && d.value == magnitude && d.end == e.end);
+                assert(ckc_spec::v1text::udec_bytes(magnitude) == bytes@.subrange(
+                    start as int + 1,
+                    e.end as int,
+                ));
             }
         }
         let d = match parse_decimal(bytes, start + 1, Ghost(expected_decimal), at) {
@@ -2941,8 +2918,7 @@ at: &mut usize,
                 assert(magnitude > 0);
                 assert(d.value@ == magnitude);
                 assert(d.end == e.end);
-                assert(bytes@[start as int + 1]
-                    == ckc_spec::v1text::udec_bytes(magnitude)[0]);
+                assert(bytes@[start as int + 1] == ckc_spec::v1text::udec_bytes(magnitude)[0]);
                 assert(bytes@[start as int + 1] != 0x30);
             }
         }
@@ -3008,8 +2984,7 @@ pub struct EParsedVar {
 pub open spec fn parsed_var_ok(bytes: Seq<u8>, start: usize, v: &EParsedVar) -> bool {
     &&& start < v.end <= bytes.len()
     &&& v.key as nat == v.value@
-    &&& ckc_spec::v1text::var_bytes(v.value@)
-        == bytes.subrange(start as int, v.end as int)
+    &&& ckc_spec::v1text::var_bytes(v.value@) == bytes.subrange(start as int, v.end as int)
 }
 
 fn parse_variable(
@@ -3017,23 +2992,21 @@ fn parse_variable(
     start: usize,
     next_var: usize,
     expected: Ghost<Option<GVarExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedVar>)
     requires
         *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
-            &&& ckc_spec::v1text::var_bytes(e.value)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::var_bytes(e.value) == bytes@.subrange(start as int, e.end as int)
             &&& term_boundary(bytes@, e.end as int)
             &&& e.value <= usize::MAX as nat
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(v) ==> parsed_var_ok(bytes@, start, &v),
-        expected@ matches Some(e) ==> r matches Some(v)
-            && v.value@ == e.value && v.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(v) && v.value@ == e.value && v.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
@@ -3045,8 +3018,7 @@ at: &mut usize,
             if q == 0 {
                 assert(bytes@.subrange(start as int, e.end as int) == seq![letter]);
                 assert(e.end == start + 1);
-                assert(bytes@.subrange(start as int, e.end as int)[0]
-                    == bytes@[start as int]);
+                assert(bytes@.subrange(start as int, e.end as int)[0] == bytes@[start as int]);
                 assert(bytes@.subrange(start as int, e.end as int)[0] == letter);
                 assert(bytes@[start as int] == letter);
                 if e.end < bytes@.len() {
@@ -3054,8 +3026,8 @@ at: &mut usize,
                 }
             } else {
                 udec_canonical(q);
-                assert(bytes@.subrange(start as int, e.end as int)
-                    == seq![letter] + ckc_spec::v1text::udec_bytes(q));
+                assert(bytes@.subrange(start as int, e.end as int) == seq![letter]
+                    + ckc_spec::v1text::udec_bytes(q));
                 prefix_before_suffix(
                     bytes@,
                     start as int,
@@ -3070,15 +3042,13 @@ at: &mut usize,
                     seq![letter],
                     ckc_spec::v1text::udec_bytes(q),
                 );
-                assert(bytes@.subrange(start as int, start as int + 1)[0]
-                    == bytes@[start as int]);
+                assert(bytes@.subrange(start as int, start as int + 1)[0] == bytes@[start as int]);
                 assert(bytes@.subrange(start as int, start as int + 1)[0] == letter);
                 assert(bytes@[start as int] == letter);
                 assert(start + 1 < e.end);
                 reveal(canonical_decimal);
                 reveal(ckc_spec::v1text::all_in);
-                assert(bytes@[start as int + 1]
-                    == ckc_spec::v1text::udec_bytes(q)[0]);
+                assert(bytes@[start as int + 1] == ckc_spec::v1text::udec_bytes(q)[0]);
                 assert(ckc_spec::v1text::is_digit_b(bytes@[start as int + 1]));
             }
             assert(0x41 <= bytes@[start as int] <= 0x5a);
@@ -3100,8 +3070,7 @@ at: &mut usize,
                     reveal(canonical_decimal);
                     reveal(ckc_spec::v1text::all_in);
                     assert(start + 1 < e.end <= bytes@.len());
-                    assert(bytes@[start as int + 1]
-                        == ckc_spec::v1text::udec_bytes(q)[0]);
+                    assert(bytes@[start as int + 1] == ckc_spec::v1text::udec_bytes(q)[0]);
                     assert(ckc_spec::v1text::is_digit_b(bytes@[start as int + 1]));
                     assert(false);
                 }
@@ -3132,11 +3101,7 @@ at: &mut usize,
             assert(index as nat == value);
             reveal(parsed_var_ok);
         }
-        return Some(EParsedVar {
-            key: index as usize,
-            value: Ghost(value),
-            end: start + 1,
-        });
+        return Some(EParsedVar { key: index as usize, value: Ghost(value), end: start + 1 });
     }
     proof {
         if let Some(e) = expected@ {
@@ -3155,8 +3120,10 @@ at: &mut usize,
         if let Some(e) = expected@ {
             let q = e.value / 26;
             reveal(ckc_spec::v1text::var_bytes);
-            assert(ckc_spec::v1text::udec_bytes(q)
-                == bytes@.subrange(start as int + 1, e.end as int));
+            assert(ckc_spec::v1text::udec_bytes(q) == bytes@.subrange(
+                start as int + 1,
+                e.end as int,
+            ));
         }
     }
     let d = match parse_decimal(bytes, start + 1, Ghost(expected_decimal), at) {
@@ -3170,8 +3137,7 @@ at: &mut usize,
             assert(q > 0);
             assert(d.value@ == q);
             assert(d.end == e.end);
-            assert(bytes@[start as int + 1]
-                == ckc_spec::v1text::udec_bytes(q)[0]);
+            assert(bytes@[start as int + 1] == ckc_spec::v1text::udec_bytes(q)[0]);
             assert(bytes@[start as int + 1] != 0x30);
         }
     }
@@ -3263,26 +3229,19 @@ at: &mut usize,
     Some(EParsedVar { key, value: Ghost(value), end: d.end })
 }
 
-proof fn expected_atom_dispatch(
-    bytes: Seq<u8>,
-    start: usize,
-    name: Seq<u8>,
-    end: usize,
-)
+proof fn expected_atom_dispatch(bytes: Seq<u8>, start: usize, name: Seq<u8>, end: usize)
     requires
         start < end <= bytes.len(),
-        ckc_spec::v1text::atom_bytes(name)
-            == bytes.subrange(start as int, end as int),
+        ckc_spec::v1text::atom_bytes(name) == bytes.subrange(start as int, end as int),
     ensures
-        ckc_spec::v1text::is_lower_b(bytes[start as int])
-            ==> ckc_spec::v1text::alpha_bare(name),
-        ckc_spec::v1text::is_graphic_b(bytes[start as int])
-            ==> ckc_spec::v1text::graphic_bare(name),
+        ckc_spec::v1text::is_lower_b(bytes[start as int]) ==> ckc_spec::v1text::alpha_bare(name),
+        ckc_spec::v1text::is_graphic_b(bytes[start as int]) ==> ckc_spec::v1text::graphic_bare(
+            name,
+        ),
         bytes[start as int] == 0x27 ==> !ckc_spec::v1text::atom_bare(name),
-        !ckc_spec::v1text::is_lower_b(bytes[start as int])
-            && !ckc_spec::v1text::is_graphic_b(bytes[start as int])
-            && bytes[start as int] != 0x27
-            ==> ckc_spec::v1text::solo_bare(name),
+        !ckc_spec::v1text::is_lower_b(bytes[start as int]) && !ckc_spec::v1text::is_graphic_b(
+            bytes[start as int],
+        ) && bytes[start as int] != 0x27 ==> ckc_spec::v1text::solo_bare(name),
 {
     reveal(ckc_spec::v1text::atom_bytes);
     if ckc_spec::v1text::atom_bare(name) {
@@ -3303,8 +3262,9 @@ proof fn expected_atom_dispatch(
         seq_eq_one(name, 0x21);
         seq_eq_two(name, 0x7b, 0x7d);
     } else {
-        assert(bytes.subrange(start as int, end as int)
-            == seq![0x27u8] + ckc_spec::v1text::esc_all(name) + seq![0x27u8]);
+        assert(bytes.subrange(start as int, end as int) == seq![0x27u8] + ckc_spec::v1text::esc_all(
+            name,
+        ) + seq![0x27u8]);
         range_between_bytes(
             bytes,
             start as int,
@@ -3322,22 +3282,20 @@ fn parse_atom(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GAtomExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
         start < bytes@.len(),
         expected@ matches Some(e) ==> {
             &&& start < e.end <= bytes@.len()
-            &&& ckc_spec::v1text::atom_bytes(e.name)
-                == bytes@.subrange(start as int, e.end as int)
+            &&& ckc_spec::v1text::atom_bytes(e.name) == bytes@.subrange(start as int, e.end as int)
             &&& atom_boundary(bytes@, e.end as int)
         },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(a) ==> parsed_atom_ok(bytes@, start, &a),
-        expected@ matches Some(e) ==> r matches Some(a)
-            && a.name@ == e.name && a.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(a) && a.name@ == e.name && a.end == e.end,
 {
     proof {
         if let Some(e) = expected@ {
@@ -3373,8 +3331,7 @@ impl View for ESpannedTerm {
 pub open spec fn spanned_term_ok(bytes: Seq<u8>, t: &ESpannedTerm) -> bool {
     &&& t.start < t.end <= bytes.len()
     &&& parsed_term_ok(&t.parsed)
-    &&& ckc_spec::v1text::term_bytes(t@)
-        == bytes.subrange(t.start as int, t.end as int)
+    &&& ckc_spec::v1text::term_bytes(t@) == bytes.subrange(t.start as int, t.end as int)
 }
 
 pub open spec fn spanned_root_ok(arena: &ETermArena, t: &ESpannedTerm) -> bool {
@@ -3387,19 +3344,16 @@ proof fn spanned_root_prefix(before: Seq<ENode>, after: &ETermArena, term: &ESpa
         before.is_prefix_of(after.nodes@),
         term.root < before.len(),
         before[term.root as int].term@ == term@,
-    ensures spanned_root_ok(after, term),
+    ensures
+        spanned_root_ok(after, term),
 {
     arena_prefix_stable(before, after);
     reveal(spanned_root_ok);
 }
 
-fn span_atom(
-    bytes: &[u8],
-    start: usize,
-    a: EParsedAtom,
-    root: usize,
-) -> (out: ESpannedTerm)
-    requires parsed_atom_ok(bytes@, start, &a),
+fn span_atom(bytes: &[u8], start: usize, a: EParsedAtom, root: usize) -> (out: ESpannedTerm)
+    requires
+        parsed_atom_ok(bytes@, start, &a),
     ensures
         spanned_term_ok(bytes@, &out),
         out.start == start,
@@ -3430,13 +3384,9 @@ fn span_atom(
     }
 }
 
-fn span_integer(
-    bytes: &[u8],
-    start: usize,
-    n: EParsedInt,
-    root: usize,
-) -> (out: ESpannedTerm)
-    requires parsed_int_ok(bytes@, start, &n),
+fn span_integer(bytes: &[u8], start: usize, n: EParsedInt, root: usize) -> (out: ESpannedTerm)
+    requires
+        parsed_int_ok(bytes@, start, &n),
     ensures
         spanned_term_ok(bytes@, &out),
         out.start == start,
@@ -3467,13 +3417,9 @@ fn span_integer(
     }
 }
 
-fn span_variable(
-    bytes: &[u8],
-    start: usize,
-    v: EParsedVar,
-    root: usize,
-) -> (out: ESpannedTerm)
-    requires parsed_var_ok(bytes@, start, &v),
+fn span_variable(bytes: &[u8], start: usize, v: EParsedVar, root: usize) -> (out: ESpannedTerm)
+    requires
+        parsed_var_ok(bytes@, start, &v),
     ensures
         spanned_term_ok(bytes@, &out),
         out.start == start,
@@ -3540,31 +3486,24 @@ pub ghost struct GAtomicExpected {
     pub end: usize,
 }
 
-proof fn expected_atomic_shape(
-    bytes: Seq<u8>,
-    start: usize,
-    end: usize,
-    term: Term,
-)
+proof fn expected_atomic_shape(bytes: Seq<u8>, start: usize, end: usize, term: Term)
     requires
         term_at(bytes, start as int, end as int, term),
         atomic_term(term),
     ensures
         match term {
             Term::Var(_) => 0x41 <= bytes[start as int] <= 0x5a,
-            Term::Int(_) => ckc_spec::v1text::is_digit_b(bytes[start as int])
-                || bytes[start as int] == 0x2d
-                    && start + 1 < bytes.len()
-                    && ckc_spec::v1text::is_digit_b(bytes[start as int + 1]),
-            Term::Nil => start + 1 < bytes.len()
-                && bytes[start as int] == 0x5b
+            Term::Int(_) => ckc_spec::v1text::is_digit_b(bytes[start as int]) || bytes[start as int]
+                == 0x2d && start + 1 < bytes.len() && ckc_spec::v1text::is_digit_b(
+                bytes[start as int + 1],
+            ),
+            Term::Nil => start + 1 < bytes.len() && bytes[start as int] == 0x5b
                 && bytes[start as int + 1] == 0x5d,
             Term::Atom(_) => {
                 &&& !(0x41 <= bytes[start as int] <= 0x5a)
                 &&& !ckc_spec::v1text::is_digit_b(bytes[start as int])
                 &&& bytes[start as int] != 0x5b
-                &&& !(bytes[start as int] == 0x2d
-                    && start + 1 < bytes.len()
+                &&& !(bytes[start as int] == 0x2d && start + 1 < bytes.len()
                     && ckc_spec::v1text::is_digit_b(bytes[start as int + 1]))
             },
             Term::Comp(_, _) => false,
@@ -3590,8 +3529,7 @@ proof fn expected_atomic_shape(
                     seq![letter],
                     ckc_spec::v1text::udec_bytes(k / 26),
                 );
-                assert(bytes.subrange(start as int, start as int + 1)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, start as int + 1)[0] == bytes[start as int]);
                 assert(bytes.subrange(start as int, start as int + 1)[0] == letter);
             }
             assert(0x41 <= letter <= 0x5a);
@@ -3617,12 +3555,10 @@ proof fn expected_atomic_shape(
                     ckc_spec::v1text::udec_bytes(magnitude),
                 );
                 assert(start + 1 < end <= bytes.len());
-                assert(bytes.subrange(start as int, start as int + 1)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, start as int + 1)[0] == bytes[start as int]);
                 assert(bytes.subrange(start as int, start as int + 1)[0] == 0x2d);
                 assert(bytes[start as int] == 0x2d);
-                assert(bytes.subrange(start as int + 1, end as int)[0]
-                    == bytes[start as int + 1]);
+                assert(bytes.subrange(start as int + 1, end as int)[0] == bytes[start as int + 1]);
                 assert(bytes.subrange(start as int + 1, end as int)[0]
                     == ckc_spec::v1text::udec_bytes(magnitude)[0]);
                 reveal(canonical_decimal);
@@ -3630,10 +3566,10 @@ proof fn expected_atomic_shape(
                 assert(ckc_spec::v1text::is_digit_b(bytes[start as int + 1]));
             } else {
                 udec_canonical(n as nat);
-                assert(bytes.subrange(start as int, end as int)
-                    == ckc_spec::v1text::udec_bytes(n as nat));
-                assert(bytes.subrange(start as int, end as int)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, end as int) == ckc_spec::v1text::udec_bytes(
+                    n as nat,
+                ));
+                assert(bytes.subrange(start as int, end as int)[0] == bytes[start as int]);
                 reveal(canonical_decimal);
                 reveal(ckc_spec::v1text::all_in);
                 assert(ckc_spec::v1text::is_digit_b(bytes[start as int]));
@@ -3670,10 +3606,8 @@ proof fn expected_atomic_shape(
                 reveal(ckc_spec::v1text::solo_bare);
                 assert(false);
             }
-            if bytes[start as int] == 0x2d
-                && start + 1 < bytes.len()
-                && ckc_spec::v1text::is_digit_b(bytes[start as int + 1])
-            {
+            if bytes[start as int] == 0x2d && start + 1 < bytes.len()
+                && ckc_spec::v1text::is_digit_b(bytes[start as int + 1]) {
                 assert(ckc_spec::v1text::is_graphic_b(bytes[start as int])) by {
                     reveal(ckc_spec::v1text::is_graphic_b);
                 }
@@ -3705,7 +3639,7 @@ fn parse_atomic(
     next_var: usize,
     arena: &mut ETermArena,
     expected: Ghost<Option<GAtomicExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         *old(at) <= bytes@.len(),
@@ -3723,8 +3657,7 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(t) ==> spanned_term_ok(bytes@, &t),
         r matches Some(t) ==> t.start == start,
-        expected@ matches Some(e) ==> r matches Some(t)
-            && t@ == e.term && t.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(t) && t@ == e.term && t.end == e.end,
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         r matches Some(t) ==> spanned_root_ok(final(arena), &t),
@@ -3812,11 +3745,9 @@ at: &mut usize,
             None => None,
         };
     }
-    if is_digit_b(bytes[start])
-        || bytes[start] == 0x2d
-            && start + 1 < bytes.len()
-            && is_digit_b(bytes[start + 1])
-    {
+    if is_digit_b(bytes[start]) || bytes[start] == 0x2d && start + 1 < bytes.len() && is_digit_b(
+        bytes[start + 1],
+    ) {
         proof {
             if let Some(e) = expected@ {
                 match e.term {
@@ -3844,15 +3775,18 @@ at: &mut usize,
         if let Some(n) = parse_integer(bytes, start, Ghost(expected_int), at) {
             let spelling = copy_range(bytes, start, n.end);
             let negative = bytes[start] == 0x2d;
-            let magnitude_start = if negative { start + 1 } else { start };
+            let magnitude_start = if negative {
+                start + 1
+            } else {
+                start
+            };
             let magnitude = copy_range(bytes, magnitude_start, n.end);
             let ghost value = n.value@;
             proof {
                 reveal(parsed_int_ok);
                 reveal(ckc_spec::v1text::dec_bytes);
                 assert(spelling@ == ckc_spec::v1text::dec_bytes(value));
-                assert(bytes@.subrange(start as int, n.end as int)[0]
-                    == bytes@[start as int]);
+                assert(bytes@.subrange(start as int, n.end as int)[0] == bytes@[start as int]);
                 assert(spelling@[0] == bytes@[start as int]);
                 if value < 0 {
                     udec_bytes_nonempty((-value) as nat);
@@ -3871,26 +3805,21 @@ at: &mut usize,
                     udec_canonical(value as nat);
                     reveal(canonical_decimal);
                     reveal(ckc_spec::v1text::all_in);
-                    assert(ckc_spec::v1text::is_digit_b(
-                        ckc_spec::v1text::dec_bytes(value)[0],
-                    ));
+                    assert(ckc_spec::v1text::is_digit_b(ckc_spec::v1text::dec_bytes(value)[0]));
                     assert(bytes@[start as int] != 0x2d);
                     assert(!negative);
                     assert(magnitude_start == start);
                 }
                 assert(negative == (value < 0));
-                assert(magnitude@
-                    == ckc_spec::v1text::udec_bytes(
-                        if value < 0 { (-value) as nat } else { value as nat },
-                    ));
+                assert(magnitude@ == ckc_spec::v1text::udec_bytes(
+                    if value < 0 {
+                        (-value) as nat
+                    } else {
+                        value as nat
+                    },
+                ));
             }
-            let root = push_int(
-                arena,
-                spelling,
-                magnitude,
-                negative,
-                Ghost(value),
-            );
+            let root = push_int(arena, spelling, magnitude, negative, Ghost(value));
             let out = span_integer(bytes, start, n, root);
             proof {
                 reveal(spanned_root_ok);
@@ -3974,8 +3903,8 @@ pub open spec fn list_term(elems: Seq<Term>, tail: Term) -> Term
 }
 
 proof fn terms_keys_fit_concat(left: Seq<Term>, right: Seq<Term>)
-    ensures terms_keys_fit(left + right)
-        == (terms_keys_fit(left) && terms_keys_fit(right)),
+    ensures
+        terms_keys_fit(left + right) == (terms_keys_fit(left) && terms_keys_fit(right)),
     decreases left.len(),
 {
     if left.len() == 0 {
@@ -3990,8 +3919,8 @@ proof fn terms_keys_fit_concat(left: Seq<Term>, right: Seq<Term>)
 }
 
 proof fn list_term_keys_fit(elems: Seq<Term>, tail: Term)
-    ensures term_keys_fit(list_term(elems, tail))
-        == (terms_keys_fit(elems) && term_keys_fit(tail)),
+    ensures
+        term_keys_fit(list_term(elems, tail)) == (terms_keys_fit(elems) && term_keys_fit(tail)),
     decreases elems.len(),
 {
     if elems.len() == 0 {
@@ -4000,14 +3929,15 @@ proof fn list_term_keys_fit(elems: Seq<Term>, tail: Term)
     } else {
         list_term_keys_fit(elems.drop_first(), tail);
         let rest = list_term(elems.drop_first(), tail);
-        assert(term_keys_fit(rest)
-            == (terms_keys_fit(elems.drop_first()) && term_keys_fit(tail)));
-        assert(terms_keys_fit(elems)
-            == (term_keys_fit(elems[0]) && terms_keys_fit(elems.drop_first()))) by {
+        assert(term_keys_fit(rest) == (terms_keys_fit(elems.drop_first()) && term_keys_fit(tail)));
+        assert(terms_keys_fit(elems) == (term_keys_fit(elems[0]) && terms_keys_fit(
+            elems.drop_first(),
+        ))) by {
             reveal_with_fuel(terms_keys_fit, 2);
         }
-        assert(terms_keys_fit(seq![elems[0], rest])
-            == (term_keys_fit(elems[0]) && term_keys_fit(rest))) by {
+        assert(terms_keys_fit(seq![elems[0], rest]) == (term_keys_fit(elems[0]) && term_keys_fit(
+            rest,
+        ))) by {
             reveal_with_fuel(terms_keys_fit, 3);
         }
         reveal_with_fuel(list_term, 2);
@@ -4016,8 +3946,11 @@ proof fn list_term_keys_fit(elems: Seq<Term>, tail: Term)
 }
 
 proof fn terms_keys_fit_at(terms: Seq<Term>, index: int)
-    requires terms_keys_fit(terms), 0 <= index < terms.len(),
-    ensures term_keys_fit(terms[index]),
+    requires
+        terms_keys_fit(terms),
+        0 <= index < terms.len(),
+    ensures
+        term_keys_fit(terms[index]),
     decreases index,
 {
     reveal(terms_keys_fit);
@@ -4028,8 +3961,11 @@ proof fn terms_keys_fit_at(terms: Seq<Term>, index: int)
 }
 
 proof fn terms_keys_fit_push(terms: Seq<Term>, term: Term)
-    requires terms_keys_fit(terms), term_keys_fit(term),
-    ensures terms_keys_fit(terms.push(term)),
+    requires
+        terms_keys_fit(terms),
+        term_keys_fit(term),
+    ensures
+        terms_keys_fit(terms.push(term)),
 {
     assert_seqs_equal!(terms.push(term) == terms + seq![term]);
     terms_keys_fit_concat(terms, seq![term]);
@@ -4040,7 +3976,8 @@ proof fn wf_terms_push(ts: Seq<Term>, t: Term)
     requires
         ckc_spec::term::wf_terms(ts),
         ckc_spec::term::wf_term(t),
-    ensures ckc_spec::term::wf_terms(ts.push(t)),
+    ensures
+        ckc_spec::term::wf_terms(ts.push(t)),
     decreases ts.len(),
 {
     if ts.len() == 0 {
@@ -4054,8 +3991,8 @@ proof fn wf_terms_push(ts: Seq<Term>, t: Term)
 
 proof fn ground_all_push(ts: Seq<Term>, t: Term)
     ensures
-        ckc_spec::term::ground_all(ts.push(t))
-            == (ckc_spec::term::ground_all(ts) && ckc_spec::term::ground(t)),
+        ckc_spec::term::ground_all(ts.push(t)) == (ckc_spec::term::ground_all(ts)
+            && ckc_spec::term::ground(t)),
     decreases ts.len(),
 {
     if ts.len() == 0 {
@@ -4069,8 +4006,8 @@ proof fn ground_all_push(ts: Seq<Term>, t: Term)
 
 proof fn no_dollar_all_push(ts: Seq<Term>, t: Term)
     ensures
-        ckc_spec::term::no_dollar_var_all(ts.push(t))
-            == (ckc_spec::term::no_dollar_var_all(ts) && ckc_spec::term::no_dollar_var(t)),
+        ckc_spec::term::no_dollar_var_all(ts.push(t)) == (ckc_spec::term::no_dollar_var_all(ts)
+            && ckc_spec::term::no_dollar_var(t)),
     decreases ts.len(),
 {
     if ts.len() == 0 {
@@ -4087,8 +4024,7 @@ proof fn args_bytes_push(ts: Seq<Term>, t: Term)
         ckc_spec::v1text::args_bytes(ts.push(t)) == if ts.len() == 0 {
             ckc_spec::v1text::term_bytes(t)
         } else {
-            ckc_spec::v1text::args_bytes(ts) + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(t)
+            ckc_spec::v1text::args_bytes(ts) + seq![0x2cu8] + ckc_spec::v1text::term_bytes(t)
         },
     decreases ts.len(),
 {
@@ -4108,7 +4044,8 @@ proof fn wf_list_term(elems: Seq<Term>, tail: Term)
     requires
         ckc_spec::term::wf_terms(elems),
         ckc_spec::term::wf_term(tail),
-    ensures ckc_spec::term::wf_term(list_term(elems, tail)),
+    ensures
+        ckc_spec::term::wf_term(list_term(elems, tail)),
     decreases elems.len(),
 {
     if elems.len() == 0 {
@@ -4131,8 +4068,8 @@ proof fn wf_list_term(elems: Seq<Term>, tail: Term)
 
 proof fn ground_list_term(elems: Seq<Term>, tail: Term)
     ensures
-        ckc_spec::term::ground(list_term(elems, tail))
-            == (ckc_spec::term::ground_all(elems) && ckc_spec::term::ground(tail)),
+        ckc_spec::term::ground(list_term(elems, tail)) == (ckc_spec::term::ground_all(elems)
+            && ckc_spec::term::ground(tail)),
     decreases elems.len(),
 {
     if elems.len() == 0 {
@@ -4142,16 +4079,14 @@ proof fn ground_list_term(elems: Seq<Term>, tail: Term)
     } else {
         ground_list_term(elems.drop_first(), tail);
         let rest = list_term(elems.drop_first(), tail);
-        assert(ckc_spec::term::ground(rest)
-            == (ckc_spec::term::ground_all(elems.drop_first())
-                && ckc_spec::term::ground(tail)));
-        assert(ckc_spec::term::ground_all(elems)
-            == (ckc_spec::term::ground(elems[0])
-                && ckc_spec::term::ground_all(elems.drop_first()))) by {
+        assert(ckc_spec::term::ground(rest) == (ckc_spec::term::ground_all(elems.drop_first())
+            && ckc_spec::term::ground(tail)));
+        assert(ckc_spec::term::ground_all(elems) == (ckc_spec::term::ground(elems[0])
+            && ckc_spec::term::ground_all(elems.drop_first()))) by {
             reveal_with_fuel(ckc_spec::term::ground_all, 2);
         }
-        assert(ckc_spec::term::ground_all(seq![elems[0], rest])
-            == (ckc_spec::term::ground(elems[0]) && ckc_spec::term::ground(rest))) by {
+        assert(ckc_spec::term::ground_all(seq![elems[0], rest]) == (ckc_spec::term::ground(elems[0])
+            && ckc_spec::term::ground(rest))) by {
             reveal_with_fuel(ckc_spec::term::ground_all, 3);
         }
         reveal_with_fuel(list_term, 2);
@@ -4161,9 +4096,9 @@ proof fn ground_list_term(elems: Seq<Term>, tail: Term)
 
 proof fn no_dollar_list_term(elems: Seq<Term>, tail: Term)
     ensures
-        ckc_spec::term::no_dollar_var(list_term(elems, tail))
-            == (ckc_spec::term::no_dollar_var_all(elems)
-                && ckc_spec::term::no_dollar_var(tail)),
+        ckc_spec::term::no_dollar_var(list_term(elems, tail)) == (ckc_spec::term::no_dollar_var_all(
+            elems,
+        ) && ckc_spec::term::no_dollar_var(tail)),
     decreases elems.len(),
 {
     if elems.len() == 0 {
@@ -4173,17 +4108,15 @@ proof fn no_dollar_list_term(elems: Seq<Term>, tail: Term)
     } else {
         no_dollar_list_term(elems.drop_first(), tail);
         let rest = list_term(elems.drop_first(), tail);
-        assert(ckc_spec::term::no_dollar_var(rest)
-            == (ckc_spec::term::no_dollar_var_all(elems.drop_first())
-                && ckc_spec::term::no_dollar_var(tail)));
-        assert(ckc_spec::term::no_dollar_var_all(elems)
-            == (ckc_spec::term::no_dollar_var(elems[0])
-                && ckc_spec::term::no_dollar_var_all(elems.drop_first()))) by {
+        assert(ckc_spec::term::no_dollar_var(rest) == (ckc_spec::term::no_dollar_var_all(
+            elems.drop_first(),
+        ) && ckc_spec::term::no_dollar_var(tail)));
+        assert(ckc_spec::term::no_dollar_var_all(elems) == (ckc_spec::term::no_dollar_var(elems[0])
+            && ckc_spec::term::no_dollar_var_all(elems.drop_first()))) by {
             reveal_with_fuel(ckc_spec::term::no_dollar_var_all, 2);
         }
-        assert(ckc_spec::term::no_dollar_var_all(seq![elems[0], rest])
-            == (ckc_spec::term::no_dollar_var(elems[0])
-                && ckc_spec::term::no_dollar_var(rest))) by {
+        assert(ckc_spec::term::no_dollar_var_all(seq![elems[0], rest]) == (
+        ckc_spec::term::no_dollar_var(elems[0]) && ckc_spec::term::no_dollar_var(rest))) by {
             reveal_with_fuel(ckc_spec::term::no_dollar_var_all, 3);
         }
         reveal(ckc_spec::v1text::cons_name);
@@ -4219,10 +4152,11 @@ proof fn list_nil_tail_bytes(elems: Seq<Term>)
 }
 
 proof fn list_nil_bytes(elems: Seq<Term>)
-    requires elems.len() > 0,
+    requires
+        elems.len() > 0,
     ensures
-        ckc_spec::v1text::term_bytes(list_term(elems, Term::Nil))
-            == seq![0x5bu8] + ckc_spec::v1text::args_bytes(elems) + seq![0x5du8],
+        ckc_spec::v1text::term_bytes(list_term(elems, Term::Nil)) == seq![0x5bu8]
+            + ckc_spec::v1text::args_bytes(elems) + seq![0x5du8],
 {
     list_nil_tail_bytes(elems.drop_first());
     reveal(ckc_spec::v1text::cons_name);
@@ -4272,7 +4206,8 @@ proof fn wf_terms_prepend(term: Term, terms: Seq<Term>)
     requires
         ckc_spec::term::wf_term(term),
         ckc_spec::term::wf_terms(terms),
-    ensures ckc_spec::term::wf_terms(seq![term] + terms),
+    ensures
+        ckc_spec::term::wf_terms(seq![term] + terms),
 {
     assert((seq![term] + terms)[0] == term);
     assert_seqs_equal!((seq![term] + terms).drop_first() == terms);
@@ -4325,20 +4260,22 @@ proof fn list_decompose(term: Term)
             reveal_with_fuel(list_elems, 2);
             reveal_with_fuel(list_final_tail, 2);
             reveal_with_fuel(list_term, 2);
-            assert(list_term(elems, tail)
-                == Term::Comp(
-                    ckc_spec::v1text::cons_name(),
-                    seq![args[0], list_term(list_elems(args[1]), tail)],
-                ));
-            assert(list_term(elems, tail)
-                == Term::Comp(ckc_spec::v1text::cons_name(), seq![args[0], args[1]]));
+            assert(list_term(elems, tail) == Term::Comp(
+                ckc_spec::v1text::cons_name(),
+                seq![args[0], list_term(list_elems(args[1]), tail)],
+            ));
+            assert(list_term(elems, tail) == Term::Comp(
+                ckc_spec::v1text::cons_name(),
+                seq![args[0], args[1]],
+            ));
         },
         _ => assert(false),
     }
 }
 
 proof fn list_plain_tail_bytes(elems: Seq<Term>, tail: Term)
-    requires plain_list_tail(tail),
+    requires
+        plain_list_tail(tail),
     ensures
         ckc_spec::v1text::tail_bytes(list_term(elems, tail)) == if elems.len() == 0 {
             seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail)
@@ -4369,9 +4306,10 @@ proof fn list_plain_bytes(elems: Seq<Term>, tail: Term)
         elems.len() > 0,
         plain_list_tail(tail),
     ensures
-        ckc_spec::v1text::term_bytes(list_term(elems, tail))
-            == seq![0x5bu8] + ckc_spec::v1text::args_bytes(elems) + seq![0x7cu8]
-                + ckc_spec::v1text::term_bytes(tail) + seq![0x5du8],
+        ckc_spec::v1text::term_bytes(list_term(elems, tail)) == seq![0x5bu8]
+            + ckc_spec::v1text::args_bytes(elems) + seq![0x7cu8] + ckc_spec::v1text::term_bytes(
+            tail,
+        ) + seq![0x5du8],
 {
     list_plain_tail_bytes(elems.drop_first(), tail);
     reveal(ckc_spec::v1text::cons_name);
@@ -4401,10 +4339,7 @@ pub enum ETermFrame {
         no_dollar: bool,
         tail: bool,
     },
-    Curly {
-        start: usize,
-        child_start: usize,
-    },
+    Curly { start: usize, child_start: usize },
 }
 
 pub open spec fn frame_start(f: &ETermFrame) -> usize {
@@ -4424,7 +4359,8 @@ pub open spec fn frame_child_start(f: &ETermFrame) -> usize {
 }
 
 fn frame_child_start_exec(f: &ETermFrame) -> (r: usize)
-    ensures r == frame_child_start(f),
+    ensures
+        r == frame_child_start(f),
 {
     match f {
         ETermFrame::Comp { child_start, .. } => *child_start,
@@ -4435,9 +4371,7 @@ fn frame_child_start_exec(f: &ETermFrame) -> (r: usize)
 
 pub open spec fn frame_ok(bytes: Seq<u8>, f: &ETermFrame) -> bool {
     match f {
-        ETermFrame::Comp {
-            start, child_start, name, args, count, ground, no_dollar, ..
-        } => {
+        ETermFrame::Comp { start, child_start, name, args, count, ground, no_dollar, .. } => {
             &&& *start < *child_start <= bytes.len()
             &&& *count == args@.len()
             &&& *count < *child_start - *start
@@ -4445,13 +4379,11 @@ pub open spec fn frame_ok(bytes: Seq<u8>, f: &ETermFrame) -> bool {
             &&& terms_keys_fit(args@)
             &&& *ground == ckc_spec::term::ground_all(args@)
             &&& *no_dollar == ckc_spec::term::no_dollar_var_all(args@)
-            &&& bytes.subrange(*start as int, *child_start as int)
-                == ckc_spec::v1text::atom_bytes(name@) + seq![0x28u8]
-                    + args_prefix(args@)
+            &&& bytes.subrange(*start as int, *child_start as int) == ckc_spec::v1text::atom_bytes(
+                name@,
+            ) + seq![0x28u8] + args_prefix(args@)
         },
-        ETermFrame::List {
-            start, child_start, elems, count, ground, no_dollar, tail, ..
-        } => {
+        ETermFrame::List { start, child_start, elems, count, ground, no_dollar, tail, .. } => {
             &&& *start < *child_start <= bytes.len()
             &&& *count == elems@.len()
             &&& *count < *child_start - *start
@@ -4460,12 +4392,11 @@ pub open spec fn frame_ok(bytes: Seq<u8>, f: &ETermFrame) -> bool {
             &&& *ground == ckc_spec::term::ground_all(elems@)
             &&& *no_dollar == ckc_spec::term::no_dollar_var_all(elems@)
             &&& (*tail ==> elems@.len() > 0)
-            &&& bytes.subrange(*start as int, *child_start as int)
-                == seq![0x5bu8] + if *tail {
-                    ckc_spec::v1text::args_bytes(elems@) + seq![0x7cu8]
-                } else {
-                    args_prefix(elems@)
-                }
+            &&& bytes.subrange(*start as int, *child_start as int) == seq![0x5bu8] + if *tail {
+                ckc_spec::v1text::args_bytes(elems@) + seq![0x7cu8]
+            } else {
+                args_prefix(elems@)
+            }
         },
         ETermFrame::Curly { start, child_start } => {
             &&& *start < *child_start <= bytes.len()
@@ -4475,29 +4406,19 @@ pub open spec fn frame_ok(bytes: Seq<u8>, f: &ETermFrame) -> bool {
     }
 }
 
-pub open spec fn roots_ok_nodes(
-    nodes: Seq<ENode>,
-    roots: Seq<usize>,
-    terms: Seq<Term>,
-) -> bool {
+pub open spec fn roots_ok_nodes(nodes: Seq<ENode>, roots: Seq<usize>, terms: Seq<Term>) -> bool {
     &&& roots.len() == terms.len()
-    &&& forall|i: int| 0 <= i < roots.len() ==> {
-        &&& roots[i] < nodes.len()
-        &&& nodes[roots[i] as int].term@ == terms[i]
-    }
+    &&& forall|i: int|
+        0 <= i < roots.len() ==> {
+            &&& roots[i] < nodes.len()
+            &&& nodes[roots[i] as int].term@ == terms[i]
+        }
 }
 
-pub open spec fn frame_roots_ok_nodes(
-    nodes: Seq<ENode>,
-    frame: &ETermFrame,
-) -> bool {
+pub open spec fn frame_roots_ok_nodes(nodes: Seq<ENode>, frame: &ETermFrame) -> bool {
     match frame {
-        ETermFrame::Comp { args, roots, .. } => {
-            roots_ok_nodes(nodes, roots@, args@)
-        },
-        ETermFrame::List { elems, roots, .. } => {
-            roots_ok_nodes(nodes, roots@, elems@)
-        },
+        ETermFrame::Comp { args, roots, .. } => { roots_ok_nodes(nodes, roots@, args@) },
+        ETermFrame::List { elems, roots, .. } => { roots_ok_nodes(nodes, roots@, elems@) },
         ETermFrame::Curly { .. } => true,
     }
 }
@@ -4506,70 +4427,58 @@ pub open spec fn frame_roots_ok(arena: &ETermArena, frame: &ETermFrame) -> bool 
     frame_roots_ok_nodes(arena.nodes@, frame)
 }
 
-pub open spec fn frames_roots_ok_nodes(
-    nodes: Seq<ENode>,
-    frames: Seq<ETermFrame>,
-) -> bool {
-    forall|i: int| 0 <= i < frames.len()
-        ==> frame_roots_ok_nodes(nodes, &frames[i])
+pub open spec fn frames_roots_ok_nodes(nodes: Seq<ENode>, frames: Seq<ETermFrame>) -> bool {
+    forall|i: int| 0 <= i < frames.len() ==> frame_roots_ok_nodes(nodes, &frames[i])
 }
 
-pub open spec fn frames_roots_ok(
-    arena: &ETermArena,
-    frames: Seq<ETermFrame>,
-) -> bool {
+pub open spec fn frames_roots_ok(arena: &ETermArena, frames: Seq<ETermFrame>) -> bool {
     frames_roots_ok_nodes(arena.nodes@, frames)
 }
 
 proof fn nodes_prefix_reflexive(nodes: Seq<ENode>)
-    ensures nodes.is_prefix_of(nodes),
+    ensures
+        nodes.is_prefix_of(nodes),
 {
     reveal(Seq::<_>::is_prefix_of);
     assert_seqs_equal!(nodes.subrange(0, nodes.len() as int) == nodes);
 }
 
-pub proof fn nodes_prefix_transitive(
-    first: Seq<ENode>,
-    middle: Seq<ENode>,
-    last: Seq<ENode>,
-)
+pub proof fn nodes_prefix_transitive(first: Seq<ENode>, middle: Seq<ENode>, last: Seq<ENode>)
     requires
         first.is_prefix_of(middle),
         middle.is_prefix_of(last),
-    ensures first.is_prefix_of(last),
+    ensures
+        first.is_prefix_of(last),
 {
     assert(first.len() <= middle.len());
     assert(middle.len() <= last.len());
-    assert forall|i: int| 0 <= i < first.len()
-        implies first[i] == last.subrange(0, first.len() as int)[i] by {
+    assert forall|i: int| 0 <= i < first.len() implies first[i] == last.subrange(
+        0,
+        first.len() as int,
+    )[i] by {
         assert(first[i] == middle[i]);
         assert(middle[i] == last[i]);
     }
     assert_seqs_equal!(first == last.subrange(0, first.len() as int));
 }
 
-proof fn roots_indices_valid(
-    nodes: Seq<ENode>,
-    roots: Seq<usize>,
-    terms: Seq<Term>,
-)
-    requires roots_ok_nodes(nodes, roots, terms),
-    ensures forall|i: int| 0 <= i < roots.len() ==> roots[i] < nodes.len(),
+proof fn roots_indices_valid(nodes: Seq<ENode>, roots: Seq<usize>, terms: Seq<Term>)
+    requires
+        roots_ok_nodes(nodes, roots, terms),
+    ensures
+        forall|i: int| 0 <= i < roots.len() ==> roots[i] < nodes.len(),
 {
     reveal(roots_ok_nodes);
-    assert forall|i: int| 0 <= i < roots.len()
-        implies roots[i] < nodes.len() by {
+    assert forall|i: int| 0 <= i < roots.len() implies roots[i] < nodes.len() by {
         assert(nodes[roots[i] as int].term@ == terms[i]);
     }
 }
 
-proof fn roots_ok_child_terms(
-    nodes: Seq<ENode>,
-    roots: Seq<usize>,
-    terms: Seq<Term>,
-)
-    requires roots_ok_nodes(nodes, roots, terms),
-    ensures child_terms(nodes, roots) == terms,
+proof fn roots_ok_child_terms(nodes: Seq<ENode>, roots: Seq<usize>, terms: Seq<Term>)
+    requires
+        roots_ok_nodes(nodes, roots, terms),
+    ensures
+        child_terms(nodes, roots) == terms,
 {
     reveal(roots_ok_nodes);
     reveal(child_terms);
@@ -4587,14 +4496,14 @@ proof fn roots_ok_push(
         roots_ok_nodes(nodes, roots, terms),
         root < nodes.len(),
         nodes[root as int].term@ == term,
-    ensures roots_ok_nodes(nodes, roots.push(root), terms.push(term)),
+    ensures
+        roots_ok_nodes(nodes, roots.push(root), terms.push(term)),
 {
     reveal(roots_ok_nodes);
-    assert forall|i: int| 0 <= i < roots.push(root).len()
-        implies {
-            &&& roots.push(root)[i] < nodes.len()
-            &&& nodes[roots.push(root)[i] as int].term@ == terms.push(term)[i]
-        } by {
+    assert forall|i: int| 0 <= i < roots.push(root).len() implies {
+        &&& roots.push(root)[i] < nodes.len()
+        &&& nodes[roots.push(root)[i] as int].term@ == terms.push(term)[i]
+    } by {
         if i < roots.len() {
             assert(roots.push(root)[i] == roots[i]);
             assert(terms.push(term)[i] == terms[i]);
@@ -4615,35 +4524,34 @@ proof fn roots_ok_prefix(
     requires
         before.is_prefix_of(after.nodes@),
         roots_ok_nodes(before, roots, terms),
-    ensures roots_ok_nodes(after.nodes@, roots, terms),
+    ensures
+        roots_ok_nodes(after.nodes@, roots, terms),
 {
     reveal(roots_ok_nodes);
     arena_prefix_stable(before, after);
-    assert forall|i: int| 0 <= i < roots.len()
-        implies {
-            &&& roots[i] < after.nodes@.len()
-            &&& after.nodes@[roots[i] as int].term@ == terms[i]
-        } by {
+    assert forall|i: int| 0 <= i < roots.len() implies {
+        &&& roots[i] < after.nodes@.len()
+        &&& after.nodes@[roots[i] as int].term@ == terms[i]
+    } by {
         assert(roots[i] < before.len());
         assert(before[roots[i] as int].term@ == terms[i]);
         assert(before[roots[i] as int].term@ == after@[roots[i] as int]);
     }
 }
 
-proof fn frames_roots_prefix(
-    before: Seq<ENode>,
-    after: &ETermArena,
-    frames: Seq<ETermFrame>,
-)
+proof fn frames_roots_prefix(before: Seq<ENode>, after: &ETermArena, frames: Seq<ETermFrame>)
     requires
         before.is_prefix_of(after.nodes@),
         frames_roots_ok_nodes(before, frames),
-    ensures frames_roots_ok(after, frames),
+    ensures
+        frames_roots_ok(after, frames),
 {
     reveal(frames_roots_ok);
     reveal(frames_roots_ok_nodes);
-    assert forall|i: int| 0 <= i < frames.len()
-        implies frame_roots_ok_nodes(after.nodes@, &frames[i]) by {
+    assert forall|i: int| 0 <= i < frames.len() implies frame_roots_ok_nodes(
+        after.nodes@,
+        &frames[i],
+    ) by {
         reveal(frame_roots_ok_nodes);
         match &frames[i] {
             ETermFrame::Comp { args, roots, .. } => {
@@ -4658,7 +4566,8 @@ proof fn frames_roots_prefix(
 }
 
 proof fn seq_eq_three(s: Seq<u8>, x: u8, y: u8, z: u8)
-    ensures s == seq![x, y, z] <==> s.len() == 3 && s[0] == x && s[1] == y && s[2] == z,
+    ensures
+        s == seq![x, y, z] <==> s.len() == 3 && s[0] == x && s[1] == y && s[2] == z,
 {
     if s.len() == 3 && s[0] == x && s[1] == y && s[2] == z {
         assert_seqs_equal!(s == seq![x, y, z]);
@@ -4666,8 +4575,8 @@ proof fn seq_eq_three(s: Seq<u8>, x: u8, y: u8, z: u8)
 }
 
 proof fn seq_eq_four(s: Seq<u8>, a: u8, b: u8, c: u8, d: u8)
-    ensures s == seq![a, b, c, d]
-        <==> s.len() == 4 && s[0] == a && s[1] == b && s[2] == c && s[3] == d,
+    ensures
+        s == seq![a, b, c, d] <==> s.len() == 4 && s[0] == a && s[1] == b && s[2] == c && s[3] == d,
 {
     if s.len() == 4 && s[0] == a && s[1] == b && s[2] == c && s[3] == d {
         assert_seqs_equal!(s == seq![a, b, c, d]);
@@ -4675,10 +4584,11 @@ proof fn seq_eq_four(s: Seq<u8>, a: u8, b: u8, c: u8, d: u8)
 }
 
 fn is_dollar_name(name: &[u8]) -> (r: bool)
-    ensures r == (name@ == ckc_spec::term::dollar_var_name()),
+    ensures
+        r == (name@ == ckc_spec::term::dollar_var_name()),
 {
-    let r = name.len() == 4 && name[0] == 0x24 && name[1] == 0x56
-        && name[2] == 0x41 && name[3] == 0x52;
+    let r = name.len() == 4 && name[0] == 0x24 && name[1] == 0x56 && name[2] == 0x41 && name[3]
+        == 0x52;
     proof {
         seq_eq_four(name@, 0x24, 0x56, 0x41, 0x52);
         reveal(ckc_spec::term::dollar_var_name);
@@ -4687,7 +4597,8 @@ fn is_dollar_name(name: &[u8]) -> (r: bool)
 }
 
 fn is_cons_name(name: &[u8]) -> (r: bool)
-    ensures r == (name@ == ckc_spec::v1text::cons_name()),
+    ensures
+        r == (name@ == ckc_spec::v1text::cons_name()),
 {
     let r = name.len() == 3 && name[0] == 0x5b && name[1] == 0x7c && name[2] == 0x5d;
     proof {
@@ -4698,7 +4609,8 @@ fn is_cons_name(name: &[u8]) -> (r: bool)
 }
 
 fn is_curly_name(name: &[u8]) -> (r: bool)
-    ensures r == (name@ == ckc_spec::v1text::curly_name()),
+    ensures
+        r == (name@ == ckc_spec::v1text::curly_name()),
 {
     let r = name.len() == 2 && name[0] == 0x7b && name[1] == 0x7d;
     proof {
@@ -4709,23 +4621,29 @@ fn is_curly_name(name: &[u8]) -> (r: bool)
 }
 
 fn cons_name_vec() -> (out: Vec<u8>)
-    ensures out@ == ckc_spec::v1text::cons_name(),
+    ensures
+        out@ == ckc_spec::v1text::cons_name(),
 {
     let mut out = Vec::new();
     out.push(0x5b);
     out.push(0x7c);
     out.push(0x5d);
-    proof { reveal(ckc_spec::v1text::cons_name); }
+    proof {
+        reveal(ckc_spec::v1text::cons_name);
+    }
     out
 }
 
 fn curly_name_vec() -> (out: Vec<u8>)
-    ensures out@ == ckc_spec::v1text::curly_name(),
+    ensures
+        out@ == ckc_spec::v1text::curly_name(),
 {
     let mut out = Vec::new();
     out.push(0x7b);
     out.push(0x7d);
-    proof { reveal(ckc_spec::v1text::curly_name); }
+    proof {
+        reveal(ckc_spec::v1text::curly_name);
+    }
     out
 }
 
@@ -4894,10 +4812,7 @@ pub open spec fn frame_step_ok(
     }
 }
 
-pub open spec fn frame_step_roots_ok(
-    arena: &ETermArena,
-    step: &EFrameStep,
-) -> bool {
+pub open spec fn frame_step_roots_ok(arena: &ETermArena, step: &EFrameStep) -> bool {
     match step {
         EFrameStep::Next(frame) => frame_roots_ok(arena, frame),
         EFrameStep::Done(term) => spanned_root_ok(arena, term),
@@ -4922,8 +4837,8 @@ pub open spec fn comp_frame_ok(
     &&& terms_keys_fit(args)
     &&& ground == ckc_spec::term::ground_all(args)
     &&& no_dollar == ckc_spec::term::no_dollar_var_all(args)
-    &&& bytes.subrange(start as int, child_start as int)
-        == ckc_spec::v1text::atom_bytes(name) + seq![0x28u8] + args_prefix(args)
+    &&& bytes.subrange(start as int, child_start as int) == ckc_spec::v1text::atom_bytes(name)
+        + seq![0x28u8] + args_prefix(args)
 }
 
 #[verifier::spinoff_prover]
@@ -4950,16 +4865,7 @@ fn feed_comp_frame(
         child.start == child_start,
         guide@ matches Some(g) ==> guided_step_pre(
             bytes@,
-            &ETermFrame::Comp {
-                start,
-                child_start,
-                name,
-                args,
-                roots,
-                count,
-                ground,
-                no_dollar,
-            },
+            &ETermFrame::Comp { start, child_start, name, args, roots, count, ground, no_dollar },
             &child,
             g,
         ),
@@ -4970,16 +4876,7 @@ fn feed_comp_frame(
         frame_step_roots_ok(final(arena), &out),
         guide@ matches Some(g) ==> guided_step_ok(
             bytes@,
-            &ETermFrame::Comp {
-                start,
-                child_start,
-                name,
-                args,
-                roots,
-                count,
-                ground,
-                no_dollar,
-            },
+            &ETermFrame::Comp { start, child_start, name, args, roots, count, ground, no_dollar },
             &child,
             g,
             &out,
@@ -5019,13 +4916,7 @@ fn feed_comp_frame(
     let next_count = count + 1;
     proof {
         reveal(spanned_root_ok);
-        roots_ok_push(
-            arena_nodes,
-            previous_roots,
-            args@,
-            child.root,
-            child@,
-        );
+        roots_ok_push(arena_nodes, previous_roots, args@, child.root, child@);
         assert(roots_ok_nodes(arena_nodes, next_roots@, next_args));
         assert(count < usize::MAX);
         wf_terms_push(args@, child@);
@@ -5057,11 +4948,11 @@ fn feed_comp_frame(
             assert(next_count < next_child_start - start);
             assert(ckc_spec::term::wf_terms(next_args));
             assert((ground && child.parsed.ground) == ckc_spec::term::ground_all(next_args));
-            assert((no_dollar && child.parsed.no_dollar)
-                == ckc_spec::term::no_dollar_var_all(next_args));
+            assert((no_dollar && child.parsed.no_dollar) == ckc_spec::term::no_dollar_var_all(
+                next_args,
+            ));
             assert(bytes@.subrange(start as int, next_child_start as int)
-                == ckc_spec::v1text::atom_bytes(name@) + seq![0x28u8]
-                    + args_prefix(next_args));
+                == ckc_spec::v1text::atom_bytes(name@) + seq![0x28u8] + args_prefix(next_args));
             reveal(frame_ok);
             reveal(frame_start);
             reveal(frame_child_start);
@@ -5079,12 +4970,7 @@ fn feed_comp_frame(
                 reveal(guide_frame_ok);
                 reveal(guide_delimiter);
                 match g {
-                    GTermFrame::Comp {
-                        name: gname,
-                        built,
-                        remaining,
-                        end: guide_end,
-                    } => {
+                    GTermFrame::Comp { name: gname, built, remaining, end: guide_end } => {
                         assert(remaining.len() > 1);
                         assert(child@ == remaining[0]);
                         assert(args@ == built);
@@ -5104,15 +4990,13 @@ fn feed_comp_frame(
                             guide_end,
                             child@,
                             0x2c,
-                            ckc_spec::v1text::args_bytes(remaining.drop_first())
-                                + seq![0x29u8],
+                            ckc_spec::v1text::args_bytes(remaining.drop_first()) + seq![0x29u8],
                         );
                         spanned_term_length(bytes@, &child);
                         assert(next_child_start as int == child_start as int
                             + ckc_spec::v1text::term_bytes(child@).len() + 1);
                         assert(bytes@.subrange(next_child_start as int, guide_end)
-                            == ckc_spec::v1text::args_bytes(remaining.drop_first())
-                                + seq![0x29u8]);
+                            == ckc_spec::v1text::args_bytes(remaining.drop_first()) + seq![0x29u8]);
                         assert((next_child_start as int) < guide_end);
                         assert(guide_frame_ok(
                             bytes@,
@@ -5134,8 +5018,8 @@ fn feed_comp_frame(
     if delimiter != 0x29 {
         return EFrameStep::Reject;
     }
-    let special = (next_count == 2 && is_cons_name(name.as_slice()))
-        || (next_count == 1 && is_curly_name(name.as_slice()));
+    let special = (next_count == 2 && is_cons_name(name.as_slice())) || (next_count == 1
+        && is_curly_name(name.as_slice()));
     if special {
         return EFrameStep::Reject;
     }
@@ -5167,8 +5051,7 @@ fn feed_comp_frame(
         assert(ckc_spec::term::wf_term(term));
         assert(out_ground == ckc_spec::term::ground(term));
         assert(out_no_dollar == ckc_spec::term::no_dollar_var(term));
-        assert(ckc_spec::v1text::term_bytes(term)
-            == bytes@.subrange(start as int, end as int));
+        assert(ckc_spec::v1text::term_bytes(term) == bytes@.subrange(start as int, end as int));
         reveal(frame_step_ok);
     }
     let parsed = EParsedTerm {
@@ -5182,8 +5065,10 @@ fn feed_comp_frame(
         reveal(spanned_root_ok);
         reveal(frame_step_roots_ok);
         assert(parsed_term_ok(&done.parsed));
-        assert(ckc_spec::v1text::term_bytes(done@)
-            == bytes@.subrange(done.start as int, done.end as int));
+        assert(ckc_spec::v1text::term_bytes(done@) == bytes@.subrange(
+            done.start as int,
+            done.end as int,
+        ));
         assert(spanned_term_ok(bytes@, &done));
         assert(frame_step_ok(bytes@, start, child.end, &EFrameStep::Done(done)));
         if let Some(g) = guide@ {
@@ -5194,12 +5079,7 @@ fn feed_comp_frame(
             reveal(guide_end);
             reveal(guide_delimiter);
             match g {
-                GTermFrame::Comp {
-                    name: gname,
-                    built,
-                    remaining,
-                    end: guide_end,
-                } => {
+                GTermFrame::Comp { name: gname, built, remaining, end: guide_end } => {
                     assert(remaining.len() == 1);
                     assert(child@ == remaining[0]);
                     assert(args@ == built);
@@ -5208,8 +5088,8 @@ fn feed_comp_frame(
                     assert_seqs_equal!(built + remaining == built.push(remaining[0]));
                     assert(next_args == built.push(remaining[0]));
                     assert(term == guide_target(g));
-                    assert(bytes@.subrange(child_start as int, guide_end).len()
-                        == guide_end - child_start);
+                    assert(bytes@.subrange(child_start as int, guide_end).len() == guide_end
+                        - child_start);
                     spanned_term_length(bytes@, &child);
                     assert(guide_end == child.end as int + 1);
                     assert(done@ == guide_target(g));
@@ -5240,17 +5120,18 @@ pub open spec fn list_frame_ok(
     &&& ground == ckc_spec::term::ground_all(elems)
     &&& no_dollar == ckc_spec::term::no_dollar_var_all(elems)
     &&& (tail ==> elems.len() > 0)
-    &&& bytes.subrange(start as int, child_start as int)
-        == seq![0x5bu8] + if tail {
-            ckc_spec::v1text::args_bytes(elems) + seq![0x7cu8]
-        } else {
-            args_prefix(elems)
-        }
+    &&& bytes.subrange(start as int, child_start as int) == seq![0x5bu8] + if tail {
+        ckc_spec::v1text::args_bytes(elems) + seq![0x7cu8]
+    } else {
+        args_prefix(elems)
+    }
 }
 
 fn is_plain_tail(term: &EParsedTerm) -> (r: bool)
-    requires parsed_term_ok(term),
-    ensures r == plain_list_tail(term@),
+    requires
+        parsed_term_ok(term),
+    ensures
+        r == plain_list_tail(term@),
 {
     let out = match &term.top {
         ETermTop::Nil => false,
@@ -5266,11 +5147,13 @@ fn is_plain_tail(term: &EParsedTerm) -> (r: bool)
 }
 
 proof fn list_term_skip_step(elems: Seq<Term>, i: int, tail: Term)
-    requires 0 <= i < elems.len(),
-    ensures list_term(elems.skip(i), tail) == Term::Comp(
-        ckc_spec::v1text::cons_name(),
-        seq![elems[i], list_term(elems.skip(i + 1), tail)],
-    ),
+    requires
+        0 <= i < elems.len(),
+    ensures
+        list_term(elems.skip(i), tail) == Term::Comp(
+            ckc_spec::v1text::cons_name(),
+            seq![elems[i], list_term(elems.skip(i + 1), tail)],
+        ),
 {
     assert(elems.skip(i).len() > 0);
     assert(elems.skip(i)[0] == elems[i]);
@@ -5334,11 +5217,10 @@ fn push_list_nodes(
             assert_seqs_equal!(child_terms(before, child_roots@)
                 == seq![elems@[next_i as int], rest]);
             list_term_skip_step(elems@, next_i as int, tail@);
-            assert(list_term(elems@.skip(next_i as int), tail@)
-                == Term::Comp(
-                    ckc_spec::v1text::cons_name(),
-                    child_terms(before, child_roots@),
-                ));
+            assert(list_term(elems@.skip(next_i as int), tail@) == Term::Comp(
+                ckc_spec::v1text::cons_name(),
+                child_terms(before, child_roots@),
+            ));
         }
         let name = cons_name_vec();
         root = push_comp(arena, name, child_roots);
@@ -5373,10 +5255,13 @@ fn finish_list_term(
         terms_keys_fit(elems@),
         term_keys_fit(tail@),
         ground == (ckc_spec::term::ground_all(elems@) && ckc_spec::term::ground(tail@)),
-        no_dollar == (ckc_spec::term::no_dollar_var_all(elems@)
-            && ckc_spec::term::no_dollar_var(tail@)),
-        ckc_spec::v1text::term_bytes(list_term(elems@, tail@))
-            == bytes@.subrange(start as int, end as int),
+        no_dollar == (ckc_spec::term::no_dollar_var_all(elems@) && ckc_spec::term::no_dollar_var(
+            tail@,
+        )),
+        ckc_spec::v1text::term_bytes(list_term(elems@, tail@)) == bytes@.subrange(
+            start as int,
+            end as int,
+        ),
     ensures
         spanned_term_ok(bytes@, &out),
         out@ == list_term(elems@, tail@),
@@ -5397,12 +5282,7 @@ fn finish_list_term(
         reveal(spanned_term_ok);
     }
     ESpannedTerm {
-        parsed: EParsedTerm {
-            term: Ghost(term),
-            top: ETermTop::Comp(name, 2),
-            ground,
-            no_dollar,
-        },
+        parsed: EParsedTerm { term: Ghost(term), top: ETermTop::Comp(name, 2), ground, no_dollar },
         start,
         end,
         root,
@@ -5509,20 +5389,18 @@ fn feed_list_frame(
                     + seq![0x5du8]);
             reveal(list_frame_ok);
             reveal(spanned_term_ok);
-            assert(bytes@.subrange(start as int, child_start as int)
-                == seq![0x5bu8] + ckc_spec::v1text::args_bytes(elems@) + seq![0x7cu8]);
-            assert(ckc_spec::v1text::term_bytes(child@)
-                == bytes@.subrange(child_start as int, child.end as int));
-            assert(ckc_spec::v1text::term_bytes(list_term(elems@, child@))
-                == bytes@.subrange(start as int, end as int));
+            assert(bytes@.subrange(start as int, child_start as int) == seq![0x5bu8]
+                + ckc_spec::v1text::args_bytes(elems@) + seq![0x7cu8]);
+            assert(ckc_spec::v1text::term_bytes(child@) == bytes@.subrange(
+                child_start as int,
+                child.end as int,
+            ));
+            assert(ckc_spec::v1text::term_bytes(list_term(elems@, child@)) == bytes@.subrange(
+                start as int,
+                end as int,
+            ));
         }
-        let root = push_list_nodes(
-            arena,
-            &roots,
-            elems,
-            child.root,
-            Ghost(child@),
-        );
+        let root = push_list_nodes(arena, &roots, elems, child.root, Ghost(child@));
         let done = finish_list_term(
             bytes,
             start,
@@ -5561,8 +5439,8 @@ fn feed_list_frame(
                         assert(child@ == tail);
                         assert(done@ == list_term(built, tail));
                         spanned_term_length(bytes@, &child);
-                        assert(bytes@.subrange(child_start as int, guide_end).len()
-                            == guide_end - child_start);
+                        assert(bytes@.subrange(child_start as int, guide_end).len() == guide_end
+                            - child_start);
                         assert(guide_end == child.end as int + 1);
                         assert(done@ == guide_target(g));
                         assert(done.end as int == guide_end);
@@ -5583,13 +5461,7 @@ fn feed_list_frame(
     let next_no_dollar = no_dollar && child.parsed.no_dollar;
     proof {
         reveal(spanned_root_ok);
-        roots_ok_push(
-            arena_nodes,
-            previous_roots,
-            elems@,
-            child.root,
-            child@,
-        );
+        roots_ok_push(arena_nodes, previous_roots, elems@, child.root, child@);
         assert(roots_ok_nodes(arena_nodes, next_roots@, next_elems));
         assert(count < usize::MAX);
         wf_terms_push(elems@, child@);
@@ -5624,12 +5496,12 @@ fn feed_list_frame(
             assert(ckc_spec::term::wf_terms(next_elems));
             assert(next_ground == ckc_spec::term::ground_all(next_elems));
             assert(next_no_dollar == ckc_spec::term::no_dollar_var_all(next_elems));
-            assert(bytes@.subrange(start as int, next_child_start as int)
-                == seq![0x5bu8] + if next_tail {
-                    ckc_spec::v1text::args_bytes(next_elems) + seq![0x7cu8]
-                } else {
-                    args_prefix(next_elems)
-                });
+            assert(bytes@.subrange(start as int, next_child_start as int) == seq![0x5bu8]
+                + if next_tail {
+                ckc_spec::v1text::args_bytes(next_elems) + seq![0x7cu8]
+            } else {
+                args_prefix(next_elems)
+            });
             assert(list_frame_ok(
                 bytes@,
                 start,
@@ -5706,11 +5578,10 @@ fn feed_list_frame(
                             wf_terms_drop_first(remaining);
                             let rest = ckc_spec::v1text::args_bytes(remaining.drop_first())
                                 + if tail == Term::Nil {
-                                    seq![0x5du8]
-                                } else {
-                                    seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail)
-                                        + seq![0x5du8]
-                                };
+                                seq![0x5du8]
+                            } else {
+                                seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail) + seq![0x5du8]
+                            };
                             reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
                             assert_seqs_equal!(bytes@.subrange(child_start as int, guide_end)
                                 == ckc_spec::v1text::term_bytes(child@) + seq![0x2cu8]
@@ -5762,30 +5633,29 @@ fn feed_list_frame(
         reveal_with_fuel(ckc_spec::term::ground, 2);
         reveal_with_fuel(ckc_spec::term::no_dollar_var, 2);
         reveal(spanned_term_ok);
-        assert(bytes@.subrange(start as int, child_start as int)
-            == seq![0x5bu8] + args_prefix(elems@));
-        assert(ckc_spec::v1text::term_bytes(child@)
-            == bytes@.subrange(child_start as int, child.end as int));
-        assert(ckc_spec::v1text::term_bytes(list_term(next_elems, Term::Nil))
-            == bytes@.subrange(start as int, end as int));
-        assert(next_ground
-            == (ckc_spec::term::ground_all(next_elems) && ckc_spec::term::ground(Term::Nil)));
-        assert(next_no_dollar
-            == (ckc_spec::term::no_dollar_var_all(next_elems)
-                && ckc_spec::term::no_dollar_var(Term::Nil)));
+        assert(bytes@.subrange(start as int, child_start as int) == seq![0x5bu8] + args_prefix(
+            elems@,
+        ));
+        assert(ckc_spec::v1text::term_bytes(child@) == bytes@.subrange(
+            child_start as int,
+            child.end as int,
+        ));
+        assert(ckc_spec::v1text::term_bytes(list_term(next_elems, Term::Nil)) == bytes@.subrange(
+            start as int,
+            end as int,
+        ));
+        assert(next_ground == (ckc_spec::term::ground_all(next_elems) && ckc_spec::term::ground(
+            Term::Nil,
+        )));
+        assert(next_no_dollar == (ckc_spec::term::no_dollar_var_all(next_elems)
+            && ckc_spec::term::no_dollar_var(Term::Nil)));
     }
     let ghost before_nil = arena.nodes@;
     let tail_root = push_nil(arena);
     proof {
         roots_ok_prefix(before_nil, arena, next_roots@, next_elems);
     }
-    let root = push_list_nodes(
-        arena,
-        &next_roots,
-        Ghost(next_elems),
-        tail_root,
-        Ghost(Term::Nil),
-    );
+    let root = push_list_nodes(arena, &next_roots, Ghost(next_elems), tail_root, Ghost(Term::Nil));
     let done = finish_list_term(
         bytes,
         start,
@@ -5828,8 +5698,8 @@ fn feed_list_frame(
                     assert(next_elems == built.push(remaining[0]));
                     assert(done@ == list_term(built + remaining, tail));
                     spanned_term_length(bytes@, &child);
-                    assert(bytes@.subrange(child_start as int, guide_end).len()
-                        == guide_end - child_start);
+                    assert(bytes@.subrange(child_start as int, guide_end).len() == guide_end
+                        - child_start);
                     assert(guide_end == child.end as int + 1);
                     assert(done@ == guide_target(g));
                     assert(done.end as int == guide_end);
@@ -5841,11 +5711,7 @@ fn feed_list_frame(
     EFrameStep::Done(done)
 }
 
-pub open spec fn curly_frame_ok(
-    bytes: Seq<u8>,
-    start: usize,
-    child_start: usize,
-) -> bool {
+pub open spec fn curly_frame_ok(bytes: Seq<u8>, start: usize, child_start: usize) -> bool {
     &&& start < child_start <= bytes.len()
     &&& child_start == start + 1
     &&& bytes[start as int] == 0x7b
@@ -5886,12 +5752,7 @@ fn feed_curly_frame(
 {
     proof {
         if let Some(g) = guide@ {
-            guided_delimiter_at(
-                bytes@,
-                &ETermFrame::Curly { start, child_start },
-                &child,
-                g,
-            );
+            guided_delimiter_at(bytes@, &ETermFrame::Curly { start, child_start }, &child, g);
             reveal(guided_step_pre);
             reveal(guide_frame_ok);
             reveal(guide_delimiter);
@@ -5979,9 +5840,7 @@ fn feed_frame(
         reveal(frame_roots_ok_nodes);
     }
     match frame {
-        ETermFrame::Comp {
-            start, child_start, name, args, roots, count, ground, no_dollar,
-        } => {
+        ETermFrame::Comp { start, child_start, name, args, roots, count, ground, no_dollar } => {
             proof {
                 reveal(frame_ok);
                 reveal(comp_frame_ok);
@@ -6003,9 +5862,7 @@ fn feed_frame(
                 guide,
             )
         },
-        ETermFrame::List {
-            start, child_start, elems, roots, count, ground, no_dollar, tail,
-        } => {
+        ETermFrame::List { start, child_start, elems, roots, count, ground, no_dollar, tail } => {
             proof {
                 reveal(frame_ok);
                 reveal(list_frame_ok);
@@ -6057,7 +5914,8 @@ proof fn boundary_stops_alnum(bytes: Seq<u8>, end: int)
     requires
         term_boundary(bytes, end),
         end < bytes.len(),
-    ensures !ckc_spec::v1text::is_alnum_b(bytes[end]),
+    ensures
+        !ckc_spec::v1text::is_alnum_b(bytes[end]),
 {
     reveal(term_boundary);
     reveal(ckc_spec::v1text::is_alnum_b);
@@ -6069,7 +5927,8 @@ proof fn boundary_stops_digit(bytes: Seq<u8>, end: int)
     requires
         term_boundary(bytes, end),
         end < bytes.len(),
-    ensures !ckc_spec::v1text::is_digit_b(bytes[end]),
+    ensures
+        !ckc_spec::v1text::is_digit_b(bytes[end]),
 {
     reveal(term_boundary);
     reveal(ckc_spec::v1text::is_digit_b);
@@ -6080,19 +5939,14 @@ proof fn boundary_stops_graphic_scan(bytes: Seq<u8>, end: int)
         term_boundary(bytes, end),
         end < bytes.len(),
     ensures
-        !ckc_spec::v1text::is_graphic_b(bytes[end])
-            || bytes[end] == 0x2e && end + 1 < bytes.len() && bytes[end + 1] == 0x0a,
+        !ckc_spec::v1text::is_graphic_b(bytes[end]) || bytes[end] == 0x2e && end + 1 < bytes.len()
+            && bytes[end + 1] == 0x0a,
 {
     reveal(term_boundary);
     reveal(ckc_spec::v1text::is_graphic_b);
 }
 
-pub open spec fn term_at(
-    bytes: Seq<u8>,
-    start: int,
-    end: int,
-    term: Term,
-) -> bool {
+pub open spec fn term_at(bytes: Seq<u8>, start: int, end: int, term: Term) -> bool {
     &&& 0 <= start < end <= bytes.len()
     &&& ckc_spec::term::wf_term(term)
     &&& end == start + ckc_spec::v1text::term_bytes(term).len()
@@ -6106,35 +5960,16 @@ pub ghost struct GTermExpected {
 }
 
 pub ghost enum GTermFrame {
-    Comp {
-        name: Seq<u8>,
-        built: Seq<Term>,
-        remaining: Seq<Term>,
-        end: int,
-    },
-    List {
-        built: Seq<Term>,
-        remaining: Seq<Term>,
-        tail: Term,
-        tail_mode: bool,
-        end: int,
-    },
-    Curly {
-        child: Term,
-        end: int,
-    },
+    Comp { name: Seq<u8>, built: Seq<Term>, remaining: Seq<Term>, end: int },
+    List { built: Seq<Term>, remaining: Seq<Term>, tail: Term, tail_mode: bool, end: int },
+    Curly { child: Term, end: int },
 }
 
 pub open spec fn guide_target(g: GTermFrame) -> Term {
     match g {
-        GTermFrame::Comp { name, built, remaining, .. } => {
-            Term::Comp(name, built + remaining)
-        },
-        GTermFrame::List { built, remaining, tail, .. } => {
-            list_term(built + remaining, tail)
-        },
-        GTermFrame::Curly { child, .. } => {
-            Term::Comp(ckc_spec::v1text::curly_name(), seq![child])
+        GTermFrame::Comp { name, built, remaining, .. } => { Term::Comp(name, built + remaining) },
+        GTermFrame::List { built, remaining, tail, .. } => { list_term(built + remaining, tail) },
+        GTermFrame::Curly { child, .. } => { Term::Comp(ckc_spec::v1text::curly_name(), seq![child])
         },
     }
 }
@@ -6148,32 +5983,38 @@ pub open spec fn guide_end(g: GTermFrame) -> int {
 }
 
 pub open spec fn guide_next(g: GTermFrame) -> Term
-    recommends match g {
-        GTermFrame::Comp { remaining, .. } => remaining.len() > 0,
-        GTermFrame::List { remaining, tail, tail_mode, .. } => {
-            if tail_mode { true } else { remaining.len() > 0 }
+    recommends
+        match g {
+            GTermFrame::Comp { remaining, .. } => remaining.len() > 0,
+            GTermFrame::List { remaining, tail, tail_mode, .. } => {
+                if tail_mode {
+                    true
+                } else {
+                    remaining.len() > 0
+                }
+            },
+            GTermFrame::Curly { .. } => true,
         },
-        GTermFrame::Curly { .. } => true,
-    },
 {
     match g {
         GTermFrame::Comp { remaining, .. } => remaining[0],
         GTermFrame::List { remaining, tail, tail_mode, .. } => {
-            if tail_mode { tail } else { remaining[0] }
+            if tail_mode {
+                tail
+            } else {
+                remaining[0]
+            }
         },
         GTermFrame::Curly { child, .. } => child,
     }
 }
 
-proof fn guide_next_keys_fit(
-    bytes: Seq<u8>,
-    frame: &ETermFrame,
-    guide: GTermFrame,
-)
+proof fn guide_next_keys_fit(bytes: Seq<u8>, frame: &ETermFrame, guide: GTermFrame)
     requires
         guide_frame_ok(bytes, frame, guide),
         term_keys_fit(guide_target(guide)),
-    ensures term_keys_fit(guide_next(guide)),
+    ensures
+        term_keys_fit(guide_next(guide)),
 {
     reveal(guide_frame_ok);
     reveal(guide_target);
@@ -6200,21 +6041,12 @@ pub open spec fn guide_next_end(frame: &ETermFrame, g: GTermFrame) -> int {
     frame_child_start(frame) as int + ckc_spec::v1text::term_bytes(guide_next(g)).len()
 }
 
-pub open spec fn guide_frame_ok(
-    bytes: Seq<u8>,
-    frame: &ETermFrame,
-    guide: GTermFrame,
-) -> bool {
+pub open spec fn guide_frame_ok(bytes: Seq<u8>, frame: &ETermFrame, guide: GTermFrame) -> bool {
     &&& frame_ok(bytes, frame)
     &&& match (frame, guide) {
         (
             ETermFrame::Comp { start, child_start, name, args, count, .. },
-            GTermFrame::Comp {
-                name: gname,
-                built,
-                remaining,
-                end,
-            },
+            GTermFrame::Comp { name: gname, built, remaining, end },
         ) => {
             let target = Term::Comp(gname, built + remaining);
             &&& name@ == gname
@@ -6223,32 +6055,16 @@ pub open spec fn guide_frame_ok(
             &&& remaining.len() > 0
             &&& ckc_spec::term::wf_terms(built + remaining)
             &&& ckc_spec::term::wf_terms(remaining)
-            &&& !(gname == ckc_spec::v1text::cons_name()
-                && (built + remaining).len() == 2)
-            &&& !(gname == ckc_spec::v1text::curly_name()
-                && (built + remaining).len() == 1)
+            &&& !(gname == ckc_spec::v1text::cons_name() && (built + remaining).len() == 2)
+            &&& !(gname == ckc_spec::v1text::curly_name() && (built + remaining).len() == 1)
             &&& (*child_start as int) < end
             &&& term_at(bytes, *start as int, end, target)
-            &&& bytes.subrange(*child_start as int, end)
-                == ckc_spec::v1text::args_bytes(remaining) + seq![0x29u8]
+            &&& bytes.subrange(*child_start as int, end) == ckc_spec::v1text::args_bytes(remaining)
+                + seq![0x29u8]
         },
         (
-            ETermFrame::List {
-                start,
-                child_start,
-                elems,
-                roots,
-                count,
-                tail: frame_tail,
-                ..
-            },
-            GTermFrame::List {
-                built,
-                remaining,
-                tail,
-                tail_mode,
-                end,
-            },
+            ETermFrame::List { start, child_start, elems, roots, count, tail: frame_tail, .. },
+            GTermFrame::List { built, remaining, tail, tail_mode, end },
         ) => {
             let target = list_term(built + remaining, tail);
             &&& elems@ == built
@@ -6264,31 +6080,27 @@ pub open spec fn guide_frame_ok(
                 &&& built.len() > 0
                 &&& plain_list_tail(tail)
                 &&& term_at(bytes, *start as int, end, target)
-                &&& bytes.subrange(*child_start as int, end)
-                    == ckc_spec::v1text::term_bytes(tail) + seq![0x5du8]
+                &&& bytes.subrange(*child_start as int, end) == ckc_spec::v1text::term_bytes(tail)
+                    + seq![0x5du8]
             } else {
                 &&& remaining.len() > 0
                 &&& term_at(bytes, *start as int, end, target)
-                &&& bytes.subrange(*child_start as int, end)
-                    == ckc_spec::v1text::args_bytes(remaining)
-                        + if tail == Term::Nil {
-                            seq![0x5du8]
-                        } else {
-                            seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail)
-                                + seq![0x5du8]
-                        }
+                &&& bytes.subrange(*child_start as int, end) == ckc_spec::v1text::args_bytes(
+                    remaining,
+                ) + if tail == Term::Nil {
+                    seq![0x5du8]
+                } else {
+                    seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail) + seq![0x5du8]
+                }
             }
         },
-        (
-            ETermFrame::Curly { start, child_start },
-            GTermFrame::Curly { child, end },
-        ) => {
+        (ETermFrame::Curly { start, child_start }, GTermFrame::Curly { child, end }) => {
             let target = Term::Comp(ckc_spec::v1text::curly_name(), seq![child]);
             &&& ckc_spec::term::wf_term(child)
             &&& (*child_start as int) < end
             &&& term_at(bytes, *start as int, end, target)
-            &&& bytes.subrange(*child_start as int, end)
-                == ckc_spec::v1text::term_bytes(child) + seq![0x7du8]
+            &&& bytes.subrange(*child_start as int, end) == ckc_spec::v1text::term_bytes(child)
+                + seq![0x7du8]
         },
         _ => false,
     }
@@ -6302,17 +6114,22 @@ pub open spec fn guide_stack_ok(
     root_end: int,
 ) -> bool {
     &&& frames.len() == guides.len()
-    &&& forall|i: int| #![auto] 0 <= i < frames.len()
-        ==> guide_frame_ok(bytes, &frames[i], guides[i])
-    &&& (guides.len() > 0 ==> guide_target(guides[0]) == root
-        && guide_end(guides[0]) == root_end)
-    &&& forall|i: int| #![auto] 0 <= i < guides.len() - 1
-        ==> guide_next(guides[i]) == guide_target(guides[i + 1])
+    &&& forall|i: int|
+        #![auto]
+        0 <= i < frames.len() ==> guide_frame_ok(bytes, &frames[i], guides[i])
+    &&& (guides.len() > 0 ==> guide_target(guides[0]) == root && guide_end(guides[0]) == root_end)
+    &&& forall|i: int|
+        #![auto]
+        0 <= i < guides.len() - 1 ==> guide_next(guides[i]) == guide_target(guides[i + 1])
             && guide_next_end(&frames[i], guides[i]) == guide_end(guides[i + 1])
 }
 
 pub open spec fn guided_focus(guides: Seq<GTermFrame>, root: Term) -> Term {
-    if guides.len() == 0 { root } else { guide_next(guides.last()) }
+    if guides.len() == 0 {
+        root
+    } else {
+        guide_next(guides.last())
+    }
 }
 
 pub open spec fn guided_focus_end(
@@ -6357,7 +6174,8 @@ pub open spec fn simple_term_delimiter(b: u8) -> bool {
 }
 
 proof fn udec_bytes_nonempty(n: nat)
-    ensures ckc_spec::v1text::udec_bytes(n).len() > 0,
+    ensures
+        ckc_spec::v1text::udec_bytes(n).len() > 0,
     decreases n,
 {
     reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
@@ -6368,7 +6186,8 @@ proof fn udec_bytes_nonempty(n: nat)
 }
 
 proof fn term_bytes_nonempty(term: Term)
-    ensures ckc_spec::v1text::term_bytes(term).len() > 0,
+    ensures
+        ckc_spec::v1text::term_bytes(term).len() > 0,
     decreases term,
 {
     match term {
@@ -6380,7 +6199,13 @@ proof fn term_bytes_nonempty(term: Term)
         },
         Term::Int(n) => {
             reveal(ckc_spec::v1text::dec_bytes);
-            udec_bytes_nonempty(if n < 0 { (-n) as nat } else { n as nat });
+            udec_bytes_nonempty(
+                if n < 0 {
+                    (-n) as nat
+                } else {
+                    n as nat
+                },
+            );
         },
         Term::Nil => {
             reveal_strlit("[]");
@@ -6403,8 +6228,10 @@ proof fn term_bytes_nonempty(term: Term)
 }
 
 proof fn args_bytes_nonempty(terms: Seq<Term>)
-    requires terms.len() > 0,
-    ensures ckc_spec::v1text::args_bytes(terms).len() > 0,
+    requires
+        terms.len() > 0,
+    ensures
+        ckc_spec::v1text::args_bytes(terms).len() > 0,
 {
     term_bytes_nonempty(terms[0]);
     reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
@@ -6418,9 +6245,8 @@ proof fn atom_bytes_first_safe(name: Seq<u8>)
         ckc_spec::v1text::atom_bytes(name)[0] != 0x7d,
         !(0x41 <= ckc_spec::v1text::atom_bytes(name)[0] <= 0x5a),
         !ckc_spec::v1text::is_digit_b(ckc_spec::v1text::atom_bytes(name)[0]),
-        ckc_spec::v1text::atom_bytes(name)[0] == 0x2d
-            && ckc_spec::v1text::atom_bytes(name).len() > 1
-            ==> !ckc_spec::v1text::is_digit_b(ckc_spec::v1text::atom_bytes(name)[1]),
+        ckc_spec::v1text::atom_bytes(name)[0] == 0x2d && ckc_spec::v1text::atom_bytes(name).len()
+            > 1 ==> !ckc_spec::v1text::is_digit_b(ckc_spec::v1text::atom_bytes(name)[1]),
         ckc_spec::v1text::atom_bytes(name)[0] == 0x7b ==> {
             &&& ckc_spec::v1text::atom_bytes(name).len() >= 2
             &&& ckc_spec::v1text::atom_bytes(name)[1] == 0x7d
@@ -6477,9 +6303,7 @@ proof fn term_bytes_first_safe(term: Term)
                 udec_canonical(n as nat);
                 reveal(canonical_decimal);
                 reveal(ckc_spec::v1text::all_in);
-                assert(ckc_spec::v1text::is_digit_b(
-                    ckc_spec::v1text::term_bytes(term)[0],
-                ));
+                assert(ckc_spec::v1text::is_digit_b(ckc_spec::v1text::term_bytes(term)[0]));
                 reveal(ckc_spec::v1text::is_digit_b);
             }
             assert(ckc_spec::v1text::term_bytes(term)[0] != 0x5d);
@@ -6513,7 +6337,8 @@ proof fn wf_terms_drop_first(terms: Seq<Term>)
     requires
         terms.len() > 0,
         ckc_spec::term::wf_terms(terms),
-    ensures ckc_spec::term::wf_terms(terms.drop_first()),
+    ensures
+        ckc_spec::term::wf_terms(terms.drop_first()),
 {
     reveal_with_fuel(ckc_spec::term::wf_terms, 2);
 }
@@ -6522,7 +6347,8 @@ proof fn wf_terms_first(terms: Seq<Term>)
     requires
         terms.len() > 0,
         ckc_spec::term::wf_terms(terms),
-    ensures ckc_spec::term::wf_term(terms[0]),
+    ensures
+        ckc_spec::term::wf_term(terms[0]),
 {
     reveal_with_fuel(ckc_spec::term::wf_terms, 2);
 }
@@ -6539,21 +6365,15 @@ proof fn term_before_simple_delimiter(
         0 <= start < end <= bytes.len(),
         ckc_spec::term::wf_term(term),
         simple_term_delimiter(delimiter),
-        bytes.subrange(start, end)
-            == ckc_spec::v1text::term_bytes(term) + seq![delimiter] + rest,
-    ensures term_at(
-        bytes,
-        start,
-        start + ckc_spec::v1text::term_bytes(term).len(),
-        term,
-    ),
+        bytes.subrange(start, end) == ckc_spec::v1text::term_bytes(term) + seq![delimiter] + rest,
+    ensures
+        term_at(bytes, start, start + ckc_spec::v1text::term_bytes(term).len(), term),
 {
     let term_bytes = ckc_spec::v1text::term_bytes(term);
     let next = start + term_bytes.len();
     term_bytes_nonempty(term);
     assert(bytes.subrange(start, end).len() == end - start);
-    assert((term_bytes + seq![delimiter] + rest).len()
-        == term_bytes.len() + 1 + rest.len());
+    assert((term_bytes + seq![delimiter] + rest).len() == term_bytes.len() + 1 + rest.len());
     assert(end - start == term_bytes.len() + 1 + rest.len());
     assert(next < end);
     assert(bytes.subrange(start, end)[term_bytes.len() as int] == delimiter);
@@ -6575,8 +6395,7 @@ proof fn byte_after_term(
 )
     requires
         0 <= start < end <= bytes.len(),
-        bytes.subrange(start, end)
-            == ckc_spec::v1text::term_bytes(term) + seq![delimiter] + rest,
+        bytes.subrange(start, end) == ckc_spec::v1text::term_bytes(term) + seq![delimiter] + rest,
     ensures
         start + ckc_spec::v1text::term_bytes(term).len() < end,
         bytes[start + ckc_spec::v1text::term_bytes(term).len()] == delimiter,
@@ -6584,8 +6403,7 @@ proof fn byte_after_term(
     let term_bytes = ckc_spec::v1text::term_bytes(term);
     let next = start + term_bytes.len();
     assert(bytes.subrange(start, end).len() == end - start);
-    assert((term_bytes + seq![delimiter] + rest).len()
-        == term_bytes.len() + 1 + rest.len());
+    assert((term_bytes + seq![delimiter] + rest).len() == term_bytes.len() + 1 + rest.len());
     assert(end - start == term_bytes.len() + 1 + rest.len());
     assert(next < end);
     assert(bytes.subrange(start, end)[term_bytes.len() as int] == delimiter);
@@ -6602,20 +6420,15 @@ proof fn suffix_after_term_delimiter(
 )
     requires
         0 <= start < end <= bytes.len(),
-        bytes.subrange(start, end)
-            == ckc_spec::v1text::term_bytes(term) + seq![delimiter] + rest,
+        bytes.subrange(start, end) == ckc_spec::v1text::term_bytes(term) + seq![delimiter] + rest,
     ensures
         start + ckc_spec::v1text::term_bytes(term).len() + 1 <= end,
-        bytes.subrange(
-            start + ckc_spec::v1text::term_bytes(term).len() + 1,
-            end,
-        ) == rest,
+        bytes.subrange(start + ckc_spec::v1text::term_bytes(term).len() + 1, end) == rest,
 {
     let term_bytes = ckc_spec::v1text::term_bytes(term);
     let mid = start + term_bytes.len() + 1;
     assert(bytes.subrange(start, end).len() == end - start);
-    assert((term_bytes + seq![delimiter] + rest).len()
-        == term_bytes.len() + 1 + rest.len());
+    assert((term_bytes + seq![delimiter] + rest).len() == term_bytes.len() + 1 + rest.len());
     assert(end - start == term_bytes.len() + 1 + rest.len());
     assert(mid <= end);
     let suffix = bytes.subrange(mid, end);
@@ -6623,32 +6436,29 @@ proof fn suffix_after_term_delimiter(
     assert forall|i: int| #![auto] 0 <= i < rest.len() ==> suffix[i] == rest[i] by {
         if 0 <= i < rest.len() {
             assert(suffix[i] == bytes[mid + i]);
-            assert(bytes.subrange(start, end)[term_bytes.len() + 1 + i]
-                == bytes[mid + i]);
-            assert((term_bytes + seq![delimiter] + rest)[term_bytes.len() + 1 + i]
-                == rest[i]);
+            assert(bytes.subrange(start, end)[term_bytes.len() + 1 + i] == bytes[mid + i]);
+            assert((term_bytes + seq![delimiter] + rest)[term_bytes.len() + 1 + i] == rest[i]);
         }
     }
     assert_seqs_equal!(suffix == rest);
 }
 
 proof fn guide_next_at(bytes: Seq<u8>, frame: &ETermFrame, guide: GTermFrame)
-    requires guide_frame_ok(bytes, frame, guide),
-    ensures term_at(
-        bytes,
-        frame_child_start(frame) as int,
-        guide_next_end(frame, guide),
-        guide_next(guide),
-    ),
+    requires
+        guide_frame_ok(bytes, frame, guide),
+    ensures
+        term_at(
+            bytes,
+            frame_child_start(frame) as int,
+            guide_next_end(frame, guide),
+            guide_next(guide),
+        ),
 {
     reveal(guide_frame_ok);
     reveal(guide_next);
     reveal(guide_next_end);
     match (frame, guide) {
-        (
-            ETermFrame::Comp { child_start, .. },
-            GTermFrame::Comp { remaining, end, .. },
-        ) => {
+        (ETermFrame::Comp { child_start, .. }, GTermFrame::Comp { remaining, end, .. }) => {
             wf_terms_first(remaining);
             reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
             if remaining.len() == 1 {
@@ -6692,13 +6502,12 @@ proof fn guide_next_at(bytes: Seq<u8>, frame: &ETermFrame, guide: GTermFrame)
                 wf_terms_first(remaining);
                 reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
                 if remaining.len() > 1 {
-                    let rest = ckc_spec::v1text::args_bytes(remaining.drop_first())
-                        + if tail == Term::Nil {
-                            seq![0x5du8]
-                        } else {
-                            seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail)
-                                + seq![0x5du8]
-                        };
+                    let rest = ckc_spec::v1text::args_bytes(remaining.drop_first()) + if tail
+                        == Term::Nil {
+                        seq![0x5du8]
+                    } else {
+                        seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail) + seq![0x5du8]
+                    };
                     assert_seqs_equal!(bytes.subrange(*child_start as int, end)
                         == ckc_spec::v1text::term_bytes(remaining[0]) + seq![0x2cu8]
                             + rest);
@@ -6734,10 +6543,7 @@ proof fn guide_next_at(bytes: Seq<u8>, frame: &ETermFrame, guide: GTermFrame)
                 }
             }
         },
-        (
-            ETermFrame::Curly { child_start, .. },
-            GTermFrame::Curly { child, end },
-        ) => {
+        (ETermFrame::Curly { child_start, .. }, GTermFrame::Curly { child, end }) => {
             term_before_simple_delimiter(
                 bytes,
                 *child_start as int,
@@ -6752,19 +6558,23 @@ proof fn guide_next_at(bytes: Seq<u8>, frame: &ETermFrame, guide: GTermFrame)
 }
 
 proof fn spanned_term_length(bytes: Seq<u8>, term: &ESpannedTerm)
-    requires spanned_term_ok(bytes, term),
-    ensures term.end as int
-        == term.start as int + ckc_spec::v1text::term_bytes(term@).len(),
+    requires
+        spanned_term_ok(bytes, term),
+    ensures
+        term.end as int == term.start as int + ckc_spec::v1text::term_bytes(term@).len(),
 {
     reveal(spanned_term_ok);
-    assert(bytes.subrange(term.start as int, term.end as int).len()
-        == term.end - term.start);
+    assert(bytes.subrange(term.start as int, term.end as int).len() == term.end - term.start);
 }
 
 pub open spec fn guide_delimiter(guide: GTermFrame) -> u8 {
     match guide {
         GTermFrame::Comp { remaining, .. } => {
-            if remaining.len() > 1 { 0x2c } else { 0x29 }
+            if remaining.len() > 1 {
+                0x2c
+            } else {
+                0x29
+            }
         },
         GTermFrame::List { remaining, tail, tail_mode, .. } => {
             if tail_mode || remaining.len() == 1 && tail == Term::Nil {
@@ -6800,21 +6610,11 @@ proof fn guided_delimiter_at(
     reveal(guide_delimiter);
     spanned_term_length(bytes, child);
     match (frame, guide) {
-        (
-            ETermFrame::Comp { child_start, .. },
-            GTermFrame::Comp { remaining, end, .. },
-        ) => {
+        (ETermFrame::Comp { child_start, .. }, GTermFrame::Comp { remaining, end, .. }) => {
             reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
             if remaining.len() == 1 {
                 assert_seqs_equal!(remaining == seq![remaining[0]]);
-                byte_after_term(
-                    bytes,
-                    *child_start as int,
-                    end,
-                    child@,
-                    0x29,
-                    Seq::empty(),
-                );
+                byte_after_term(bytes, *child_start as int, end, child@, 0x29, Seq::empty());
             } else {
                 assert_seqs_equal!(bytes.subrange(*child_start as int, end)
                     == ckc_spec::v1text::term_bytes(child@) + seq![0x2cu8]
@@ -6835,43 +6635,21 @@ proof fn guided_delimiter_at(
             GTermFrame::List { remaining, tail, tail_mode, end, .. },
         ) => {
             if tail_mode {
-                byte_after_term(
-                    bytes,
-                    *child_start as int,
-                    end,
-                    child@,
-                    0x5d,
-                    Seq::empty(),
-                );
+                byte_after_term(bytes, *child_start as int, end, child@, 0x5d, Seq::empty());
             } else {
                 reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
                 if remaining.len() > 1 {
-                    let rest = ckc_spec::v1text::args_bytes(remaining.drop_first())
-                        + if tail == Term::Nil {
-                            seq![0x5du8]
-                        } else {
-                            seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail)
-                                + seq![0x5du8]
-                        };
+                    let rest = ckc_spec::v1text::args_bytes(remaining.drop_first()) + if tail
+                        == Term::Nil {
+                        seq![0x5du8]
+                    } else {
+                        seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail) + seq![0x5du8]
+                    };
                     assert_seqs_equal!(bytes.subrange(*child_start as int, end)
                         == ckc_spec::v1text::term_bytes(child@) + seq![0x2cu8] + rest);
-                    byte_after_term(
-                        bytes,
-                        *child_start as int,
-                        end,
-                        child@,
-                        0x2c,
-                        rest,
-                    );
+                    byte_after_term(bytes, *child_start as int, end, child@, 0x2c, rest);
                 } else if tail == Term::Nil {
-                    byte_after_term(
-                        bytes,
-                        *child_start as int,
-                        end,
-                        child@,
-                        0x5d,
-                        Seq::empty(),
-                    );
+                    byte_after_term(bytes, *child_start as int, end, child@, 0x5d, Seq::empty());
                 } else {
                     assert_seqs_equal!(bytes.subrange(*child_start as int, end)
                         == ckc_spec::v1text::term_bytes(child@) + seq![0x7cu8]
@@ -6887,23 +6665,14 @@ proof fn guided_delimiter_at(
                 }
             }
         },
-        (
-            ETermFrame::Curly { child_start, .. },
-            GTermFrame::Curly { child: expected, end },
-        ) => {
-            byte_after_term(
-                bytes,
-                *child_start as int,
-                end,
-                expected,
-                0x7d,
-                Seq::empty(),
-            );
+        (ETermFrame::Curly { child_start, .. }, GTermFrame::Curly { child: expected, end }) => {
+            byte_after_term(bytes, *child_start as int, end, expected, 0x7d, Seq::empty());
         },
         _ => assert(false),
     }
-    assert(child.end as int
-        == frame_child_start(frame) as int + ckc_spec::v1text::term_bytes(child@).len());
+    assert(child.end as int == frame_child_start(frame) as int + ckc_spec::v1text::term_bytes(
+        child@,
+    ).len());
 }
 
 pub open spec fn guided_step_pre(
@@ -7064,13 +6833,8 @@ proof fn guided_next_facts(
     guide: GTermFrame,
     next: &ETermFrame,
 )
-    requires guided_step_ok(
-        bytes,
-        frame,
-        child,
-        guide,
-        &EFrameStep::Next(*next),
-    ),
+    requires
+        guided_step_ok(bytes, frame, child, guide, &EFrameStep::Next(*next)),
     ensures
         guide_has_next(guide),
         guide_frame_ok(bytes, next, advance_guide(guide)),
@@ -7123,8 +6887,9 @@ pub open spec fn parse_state_ok(
     &&& start <= pos <= bytes.len()
     &&& forall|i: int| #![auto] 0 <= i < frames.len() ==> frame_ok(bytes, &frames[i])
     &&& (frames.len() > 0 ==> frame_start(&frames[0]) == start)
-    &&& forall|i: int| #![auto] 0 <= i < frames.len() - 1
-        ==> frame_child_start(&frames[i]) == frame_start(&frames[i + 1])
+    &&& forall|i: int|
+        #![auto]
+        0 <= i < frames.len() - 1 ==> frame_child_start(&frames[i]) == frame_start(&frames[i + 1])
     &&& match current {
         Option::None => if frames.len() == 0 {
             pos == start
@@ -7144,8 +6909,10 @@ pub open spec fn parse_state_ok(
 }
 
 proof fn parse_state_initial(bytes: Seq<u8>, start: usize)
-    requires start <= bytes.len(),
-    ensures parse_state_ok(bytes, start, start, Seq::empty(), &Option::None),
+    requires
+        start <= bytes.len(),
+    ensures
+        parse_state_ok(bytes, start, start, Seq::empty(), &Option::None),
 {
     reveal(parse_state_ok);
 }
@@ -7162,17 +6929,12 @@ proof fn parse_state_push(
         frame_ok(bytes, &frame),
         frame_start(&frame) == pos,
     ensures
-        parse_state_ok(
-            bytes,
-            start,
-            frame_child_start(&frame),
-            frames.push(frame),
-            &Option::None,
-        ),
+        parse_state_ok(bytes, start, frame_child_start(&frame), frames.push(frame), &Option::None),
 {
     reveal(parse_state_ok);
-    assert forall|i: int| #![auto] 0 <= i < frames.push(frame).len()
-        ==> frame_ok(bytes, &frames.push(frame)[i]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < frames.push(frame).len() ==> frame_ok(bytes, &frames.push(frame)[i]) by {
         if 0 <= i < frames.push(frame).len() {
             if i < frames.len() {
                 assert(frames.push(frame)[i] == frames[i]);
@@ -7182,8 +6944,9 @@ proof fn parse_state_push(
             }
         }
     }
-    assert forall|i: int| #![auto] 0 <= i < frames.push(frame).len() - 1
-        ==> frame_child_start(&frames.push(frame)[i])
+    assert forall|i: int|
+        #![auto]
+        0 <= i < frames.push(frame).len() - 1 ==> frame_child_start(&frames.push(frame)[i])
             == frame_start(&frames.push(frame)[i + 1]) by {
         if 0 <= i < frames.push(frame).len() - 1 {
             if i + 1 < frames.len() {
@@ -7252,8 +7015,9 @@ proof fn parse_state_replace_last(
             }
         }
     }
-    assert forall|i: int| #![auto] 0 <= i < out.len() - 1
-        ==> frame_child_start(&out[i]) == frame_start(&out[i + 1]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < out.len() - 1 ==> frame_child_start(&out[i]) == frame_start(&out[i + 1]) by {
         if 0 <= i < out.len() - 1 {
             if i + 1 < frames.len() - 1 {
                 assert(out[i] == frames[i]);
@@ -7284,13 +7048,7 @@ proof fn parse_state_close_last(
         done.start == frame_start(&frames.last()),
         done.end == child.end + 1,
     ensures
-        parse_state_ok(
-            bytes,
-            start,
-            done.end,
-            frames.drop_last(),
-            &Option::Some(done),
-        ),
+        parse_state_ok(bytes, start, done.end, frames.drop_last(), &Option::Some(done)),
 {
     let out = frames.drop_last();
     reveal(parse_state_ok);
@@ -7300,8 +7058,9 @@ proof fn parse_state_close_last(
             assert(out[i] == frames[i]);
         }
     }
-    assert forall|i: int| #![auto] 0 <= i < out.len() - 1
-        ==> frame_child_start(&out[i]) == frame_start(&out[i + 1]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < out.len() - 1 ==> frame_child_start(&out[i]) == frame_start(&out[i + 1]) by {
         if 0 <= i < out.len() - 1 {
             assert(out[i] == frames[i]);
             assert(out[i + 1] == frames[i + 1]);
@@ -7327,19 +7086,19 @@ proof fn guide_stack_push(
         guide_frame_ok(bytes, &frame, guide),
         guide_target(guide) == guided_focus(guides, root),
         guide_end(guide) == guided_focus_end(frames, guides, root_end),
-    ensures guide_stack_ok(
-        bytes,
-        frames.push(frame),
-        guides.push(guide),
-        root,
-        root_end,
-    ),
+    ensures
+        guide_stack_ok(bytes, frames.push(frame), guides.push(guide), root, root_end),
 {
     reveal(guide_stack_ok);
     reveal(guided_focus);
     reveal(guided_focus_end);
-    assert forall|i: int| #![auto] 0 <= i < frames.push(frame).len()
-        ==> guide_frame_ok(bytes, &frames.push(frame)[i], guides.push(guide)[i]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < frames.push(frame).len() ==> guide_frame_ok(
+            bytes,
+            &frames.push(frame)[i],
+            guides.push(guide)[i],
+        ) by {
         if 0 <= i < frames.push(frame).len() {
             if i < frames.len() {
                 assert(frames.push(frame)[i] == frames[i]);
@@ -7351,11 +7110,13 @@ proof fn guide_stack_push(
             }
         }
     }
-    assert forall|i: int| #![auto] 0 <= i < guides.push(guide).len() - 1
-        ==> guide_next(guides.push(guide)[i])
-                == guide_target(guides.push(guide)[i + 1])
-            && guide_next_end(&frames.push(frame)[i], guides.push(guide)[i])
-                == guide_end(guides.push(guide)[i + 1]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < guides.push(guide).len() - 1 ==> guide_next(guides.push(guide)[i]) == guide_target(
+            guides.push(guide)[i + 1],
+        ) && guide_next_end(&frames.push(frame)[i], guides.push(guide)[i]) == guide_end(
+            guides.push(guide)[i + 1],
+        ) by {
         if 0 <= i < guides.push(guide).len() - 1 {
             if i + 1 < guides.len() {
                 assert(guides.push(guide)[i] == guides[i]);
@@ -7387,21 +7148,23 @@ proof fn guide_stack_replace_last(
         guide_frame_ok(bytes, &next, advanced),
         guide_target(advanced) == guide_target(guides.last()),
         guide_end(advanced) == guide_end(guides.last()),
-    ensures guide_stack_ok(
-        bytes,
-        frames.drop_last().push(next),
-        guides.drop_last().push(advanced),
-        root,
-        root_end,
-    ),
+    ensures
+        guide_stack_ok(
+            bytes,
+            frames.drop_last().push(next),
+            guides.drop_last().push(advanced),
+            root,
+            root_end,
+        ),
 {
     let out_frames = frames.drop_last().push(next);
     let out_guides = guides.drop_last().push(advanced);
     reveal(guide_stack_ok);
     assert(frames.len() == guides.len());
     assert(guides.len() > 0);
-    assert forall|i: int| #![auto] 0 <= i < out_frames.len()
-        ==> guide_frame_ok(bytes, &out_frames[i], out_guides[i]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < out_frames.len() ==> guide_frame_ok(bytes, &out_frames[i], out_guides[i]) by {
         if 0 <= i < out_frames.len() {
             if i < frames.len() - 1 {
                 assert(out_frames[i] == frames[i]);
@@ -7419,10 +7182,11 @@ proof fn guide_stack_replace_last(
     } else {
         assert(out_guides[0] == guides[0]);
     }
-    assert forall|i: int| #![auto] 0 <= i < out_guides.len() - 1
-        ==> guide_next(out_guides[i]) == guide_target(out_guides[i + 1])
-            && guide_next_end(&out_frames[i], out_guides[i])
-                == guide_end(out_guides[i + 1]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < out_guides.len() - 1 ==> guide_next(out_guides[i]) == guide_target(
+            out_guides[i + 1],
+        ) && guide_next_end(&out_frames[i], out_guides[i]) == guide_end(out_guides[i + 1]) by {
         if 0 <= i < out_guides.len() - 1 {
             if i + 1 < guides.len() - 1 {
                 assert(out_guides[i] == guides[i]);
@@ -7450,19 +7214,15 @@ proof fn guide_stack_drop_last(
     requires
         frames.len() > 0,
         guide_stack_ok(bytes, frames, guides, root, root_end),
-    ensures guide_stack_ok(
-        bytes,
-        frames.drop_last(),
-        guides.drop_last(),
-        root,
-        root_end,
-    ),
+    ensures
+        guide_stack_ok(bytes, frames.drop_last(), guides.drop_last(), root, root_end),
 {
     let out_frames = frames.drop_last();
     let out_guides = guides.drop_last();
     reveal(guide_stack_ok);
-    assert forall|i: int| #![auto] 0 <= i < out_frames.len()
-        ==> guide_frame_ok(bytes, &out_frames[i], out_guides[i]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < out_frames.len() ==> guide_frame_ok(bytes, &out_frames[i], out_guides[i]) by {
         if 0 <= i < out_frames.len() {
             assert(out_frames[i] == frames[i]);
             assert(out_guides[i] == guides[i]);
@@ -7471,10 +7231,11 @@ proof fn guide_stack_drop_last(
     if out_guides.len() > 0 {
         assert(out_guides[0] == guides[0]);
     }
-    assert forall|i: int| #![auto] 0 <= i < out_guides.len() - 1
-        ==> guide_next(out_guides[i]) == guide_target(out_guides[i + 1])
-            && guide_next_end(&out_frames[i], out_guides[i])
-                == guide_end(out_guides[i + 1]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < out_guides.len() - 1 ==> guide_next(out_guides[i]) == guide_target(
+            out_guides[i + 1],
+        ) && guide_next_end(&out_frames[i], out_guides[i]) == guide_end(out_guides[i + 1]) by {
         if 0 <= i < out_guides.len() - 1 {
             assert(out_guides[i] == guides[i]);
             assert(out_guides[i + 1] == guides[i + 1]);
@@ -7493,7 +7254,8 @@ proof fn guided_focus_keys_fit(
     requires
         guide_stack_ok(bytes, frames, guides, root, root_end),
         term_keys_fit(root),
-    ensures term_keys_fit(guided_focus(guides, root)),
+    ensures
+        term_keys_fit(guided_focus(guides, root)),
     decreases guides.len(),
 {
     reveal(guide_stack_ok);
@@ -7508,13 +7270,7 @@ proof fn guided_focus_keys_fit(
         let prefix_frames = frames.drop_last();
         let prefix_guides = guides.drop_last();
         guide_stack_drop_last(bytes, frames, guides, root, root_end);
-        guided_focus_keys_fit(
-            bytes,
-            prefix_frames,
-            prefix_guides,
-            root,
-            root_end,
-        );
+        guided_focus_keys_fit(bytes, prefix_frames, prefix_guides, root, root_end);
         assert(prefix_guides.len() > 0);
         assert(prefix_guides.last() == guides[guides.len() - 2]);
         assert(guide_next(prefix_guides.last()) == guide_target(guides.last()));
@@ -7525,23 +7281,20 @@ proof fn guided_focus_keys_fit(
     }
 }
 
-proof fn guided_state_initial(
-    bytes: Seq<u8>,
-    start: usize,
-    root: Term,
-    root_end: int,
-)
-    requires term_at(bytes, start as int, root_end, root),
-    ensures guided_state_ok(
-        bytes,
-        start,
-        start,
-        Seq::empty(),
-        &Option::None,
-        Seq::empty(),
-        root,
-        root_end,
-    ),
+proof fn guided_state_initial(bytes: Seq<u8>, start: usize, root: Term, root_end: int)
+    requires
+        term_at(bytes, start as int, root_end, root),
+    ensures
+        guided_state_ok(
+            bytes,
+            start,
+            start,
+            Seq::empty(),
+            &Option::None,
+            Seq::empty(),
+            root,
+            root_end,
+        ),
 {
     reveal(guided_state_ok);
     reveal(guide_stack_ok);
@@ -7561,22 +7314,21 @@ proof fn guided_state_push(
     root_end: int,
 )
     requires
-        guided_state_ok(
-            bytes, start, pos, frames, &Option::None, guides, root, root_end,
-        ),
+        guided_state_ok(bytes, start, pos, frames, &Option::None, guides, root, root_end),
         guide_frame_ok(bytes, &frame, guide),
         guide_target(guide) == guided_focus(guides, root),
         guide_end(guide) == guided_focus_end(frames, guides, root_end),
-    ensures guided_state_ok(
-        bytes,
-        start,
-        frame_child_start(&frame),
-        frames.push(frame),
-        &Option::None,
-        guides.push(guide),
-        root,
-        root_end,
-    ),
+    ensures
+        guided_state_ok(
+            bytes,
+            start,
+            frame_child_start(&frame),
+            frames.push(frame),
+            &Option::None,
+            guides.push(guide),
+            root,
+            root_end,
+        ),
 {
     reveal(guided_state_ok);
     guide_stack_push(bytes, frames, guides, frame, guide, root, root_end);
@@ -7596,21 +7348,20 @@ proof fn guided_state_current(
     root_end: int,
 )
     requires
-        guided_state_ok(
-            bytes, start, pos, frames, &Option::None, guides, root, root_end,
-        ),
+        guided_state_ok(bytes, start, pos, frames, &Option::None, guides, root, root_end),
         term@ == guided_focus(guides, root),
         term.end as int == guided_focus_end(frames, guides, root_end),
-    ensures guided_state_ok(
-        bytes,
-        start,
-        term.end,
-        frames,
-        &Option::Some(term),
-        guides,
-        root,
-        root_end,
-    ),
+    ensures
+        guided_state_ok(
+            bytes,
+            start,
+            term.end,
+            frames,
+            &Option::Some(term),
+            guides,
+            root,
+            root_end,
+        ),
 {
     reveal(guided_state_ok);
 }
@@ -7631,20 +7382,19 @@ proof fn guided_state_next(
         guide_frame_ok(bytes, &next, advanced),
         guide_target(advanced) == guide_target(guides.last()),
         guide_end(advanced) == guide_end(guides.last()),
-    ensures guided_state_ok(
-        bytes,
-        start,
-        frame_child_start(&next),
-        frames.drop_last().push(next),
-        &Option::None,
-        guides.drop_last().push(advanced),
-        root,
-        root_end,
-    ),
+    ensures
+        guided_state_ok(
+            bytes,
+            start,
+            frame_child_start(&next),
+            frames.drop_last().push(next),
+            &Option::None,
+            guides.drop_last().push(advanced),
+            root,
+            root_end,
+        ),
 {
-    guide_stack_replace_last(
-        bytes, frames, guides, next, advanced, root, root_end,
-    );
+    guide_stack_replace_last(bytes, frames, guides, next, advanced, root, root_end);
     guide_next_at(bytes, &next, advanced);
     reveal(guided_state_ok);
     reveal(guided_focus);
@@ -7665,16 +7415,17 @@ proof fn guided_state_done(
         guide_stack_ok(bytes, frames, guides, root, root_end),
         done@ == guide_target(guides.last()),
         done.end as int == guide_end(guides.last()),
-    ensures guided_state_ok(
-        bytes,
-        start,
-        done.end,
-        frames.drop_last(),
-        &Option::Some(done),
-        guides.drop_last(),
-        root,
-        root_end,
-    ),
+    ensures
+        guided_state_ok(
+            bytes,
+            start,
+            done.end,
+            frames.drop_last(),
+            &Option::Some(done),
+            guides.drop_last(),
+            root,
+            root_end,
+        ),
 {
     guide_stack_drop_last(bytes, frames, guides, root, root_end);
     reveal(guide_stack_ok);
@@ -7689,39 +7440,28 @@ proof fn guided_state_done(
         assert(guides.drop_last().last() == parent);
         assert(frames.drop_last().last() == frames[frames.len() - 2]);
         assert(guide_next(parent) == guide_target(guides.last()));
-        assert(guide_next_end(&frames[frames.len() - 2], parent)
-            == guide_end(guides.last()));
+        assert(guide_next_end(&frames[frames.len() - 2], parent) == guide_end(guides.last()));
     }
 }
 
 pub open spec fn curly_comp(term: Term) -> bool {
     match term {
-        Term::Comp(name, args) => {
-            name == ckc_spec::v1text::curly_name() && args.len() == 1
-        },
+        Term::Comp(name, args) => { name == ckc_spec::v1text::curly_name() && args.len() == 1 },
         _ => false,
     }
 }
 
 pub open spec fn list_open_at(bytes: Seq<u8>, start: usize) -> bool {
-    start + 1 < bytes.len()
-        && bytes[start as int] == 0x5b
-        && bytes[start as int + 1] != 0x5d
+    start + 1 < bytes.len() && bytes[start as int] == 0x5b && bytes[start as int + 1] != 0x5d
 }
 
 pub open spec fn curly_open_at(bytes: Seq<u8>, start: usize) -> bool {
-    start + 1 < bytes.len()
-        && bytes[start as int] == 0x7b
-        && bytes[start as int + 1] != 0x7d
+    start + 1 < bytes.len() && bytes[start as int] == 0x7b && bytes[start as int + 1] != 0x7d
 }
 
-proof fn expected_term_openers(
-    bytes: Seq<u8>,
-    start: usize,
-    end: usize,
-    term: Term,
-)
-    requires term_at(bytes, start as int, end as int, term),
+proof fn expected_term_openers(bytes: Seq<u8>, start: usize, end: usize, term: Term)
+    requires
+        term_at(bytes, start as int, end as int, term),
     ensures
         list_open_at(bytes, start) == list_cons(term),
         curly_open_at(bytes, start) == curly_comp(term),
@@ -7740,15 +7480,13 @@ proof fn expected_term_openers(
         Term::Atom(name) => {
             reveal(ckc_spec::v1text::term_bytes);
             atom_bytes_first_safe(name);
-            assert(bytes.subrange(start as int, end as int)
-                == ckc_spec::v1text::atom_bytes(name));
+            assert(bytes.subrange(start as int, end as int) == ckc_spec::v1text::atom_bytes(name));
             assert(bytes.subrange(start as int, end as int)[0] == bytes[start as int]);
             assert(bytes[start as int] != 0x5b);
             if bytes[start as int] == 0x7b {
                 assert(ckc_spec::v1text::atom_bytes(name).len() >= 2);
                 assert(start + 1 < end <= bytes.len());
-                assert(bytes.subrange(start as int, end as int)[1]
-                    == bytes[start as int + 1]);
+                assert(bytes.subrange(start as int, end as int)[1] == bytes[start as int + 1]);
                 assert(bytes[start as int + 1] == 0x7d);
             }
         },
@@ -7757,45 +7495,38 @@ proof fn expected_term_openers(
             if name == ckc_spec::v1text::cons_name() && args.len() == 2 {
                 let head = ckc_spec::v1text::term_bytes(args[0]);
                 term_bytes_first_safe(args[0]);
-                assert(bytes.subrange(start as int, end as int)
-                    == seq![0x5bu8] + head
-                        + ckc_spec::v1text::tail_bytes(args[1]) + seq![0x5du8]);
+                assert(bytes.subrange(start as int, end as int) == seq![0x5bu8] + head
+                    + ckc_spec::v1text::tail_bytes(args[1]) + seq![0x5du8]);
                 assert(end >= start + 2);
-                assert(bytes.subrange(start as int, end as int)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, end as int)[0] == bytes[start as int]);
                 assert(bytes[start as int] == 0x5b);
-                assert(bytes.subrange(start as int, end as int)[1]
-                    == bytes[start as int + 1]);
+                assert(bytes.subrange(start as int, end as int)[1] == bytes[start as int + 1]);
                 assert(bytes.subrange(start as int, end as int)[1] == head[0]);
                 assert(bytes[start as int + 1] != 0x5d);
             } else if name == ckc_spec::v1text::curly_name() && args.len() == 1 {
                 let child = ckc_spec::v1text::term_bytes(args[0]);
                 term_bytes_first_safe(args[0]);
-                assert(bytes.subrange(start as int, end as int)
-                    == seq![0x7bu8] + child + seq![0x7du8]);
+                assert(bytes.subrange(start as int, end as int) == seq![0x7bu8] + child + seq![
+                    0x7du8,
+                ]);
                 assert(end >= start + 2);
-                assert(bytes.subrange(start as int, end as int)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, end as int)[0] == bytes[start as int]);
                 assert(bytes[start as int] == 0x7b);
-                assert(bytes.subrange(start as int, end as int)[1]
-                    == bytes[start as int + 1]);
+                assert(bytes.subrange(start as int, end as int)[1] == bytes[start as int + 1]);
                 assert(bytes.subrange(start as int, end as int)[1] == child[0]);
                 assert(bytes[start as int + 1] != 0x7d);
             } else {
                 let atom = ckc_spec::v1text::atom_bytes(name);
                 atom_bytes_first_safe(name);
-                assert(bytes.subrange(start as int, end as int)
-                    == atom + seq![0x28u8]
-                        + ckc_spec::v1text::args_bytes(args) + seq![0x29u8]);
-                assert(bytes.subrange(start as int, end as int)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, end as int) == atom + seq![0x28u8]
+                    + ckc_spec::v1text::args_bytes(args) + seq![0x29u8]);
+                assert(bytes.subrange(start as int, end as int)[0] == bytes[start as int]);
                 assert(bytes[start as int] == atom[0]);
                 assert(bytes[start as int] != 0x5b);
                 if bytes[start as int] == 0x7b {
                     assert(atom.len() >= 2);
                     assert(start + 1 < end <= bytes.len());
-                    assert(bytes.subrange(start as int, end as int)[1]
-                        == bytes[start as int + 1]);
+                    assert(bytes.subrange(start as int, end as int)[1] == bytes[start as int + 1]);
                     assert(bytes.subrange(start as int, end as int)[1] == atom[1]);
                     assert(bytes[start as int + 1] == 0x7d);
                 }
@@ -7807,26 +7538,21 @@ proof fn expected_term_openers(
 pub open spec fn scalar_nonatom_at(bytes: Seq<u8>, start: usize) -> bool {
     ||| 0x41 <= bytes[start as int] <= 0x5a
     ||| ckc_spec::v1text::is_digit_b(bytes[start as int])
-    ||| bytes[start as int] == 0x2d
-        && start + 1 < bytes.len()
-        && ckc_spec::v1text::is_digit_b(bytes[start as int + 1])
-    ||| bytes[start as int] == 0x5b
-        && start + 1 < bytes.len()
-        && bytes[start as int + 1] == 0x5d
+    ||| bytes[start as int] == 0x2d && start + 1 < bytes.len() && ckc_spec::v1text::is_digit_b(
+        bytes[start as int + 1],
+    )
+    ||| bytes[start as int] == 0x5b && start + 1 < bytes.len() && bytes[start as int + 1] == 0x5d
 }
 
 pub open spec fn scalar_nonatom_term(term: Term) -> bool {
     matches!(term, Term::Var(_) | Term::Int(_) | Term::Nil)
 }
 
-proof fn expected_term_scalar_class(
-    bytes: Seq<u8>,
-    start: usize,
-    end: usize,
-    term: Term,
-)
-    requires term_at(bytes, start as int, end as int, term),
-    ensures scalar_nonatom_at(bytes, start) == scalar_nonatom_term(term),
+proof fn expected_term_scalar_class(bytes: Seq<u8>, start: usize, end: usize, term: Term)
+    requires
+        term_at(bytes, start as int, end as int, term),
+    ensures
+        scalar_nonatom_at(bytes, start) == scalar_nonatom_term(term),
 {
     reveal(term_at);
     reveal(scalar_nonatom_at);
@@ -7841,37 +7567,31 @@ proof fn expected_term_scalar_class(
             if name == ckc_spec::v1text::cons_name() && args.len() == 2 {
                 let head = ckc_spec::v1text::term_bytes(args[0]);
                 term_bytes_first_safe(args[0]);
-                assert(bytes.subrange(start as int, end as int)
-                    == seq![0x5bu8] + head
-                        + ckc_spec::v1text::tail_bytes(args[1]) + seq![0x5du8]);
+                assert(bytes.subrange(start as int, end as int) == seq![0x5bu8] + head
+                    + ckc_spec::v1text::tail_bytes(args[1]) + seq![0x5du8]);
                 assert(start + 1 < end <= bytes.len());
-                assert(bytes.subrange(start as int, end as int)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, end as int)[0] == bytes[start as int]);
                 assert(bytes.subrange(start as int, end as int)[0] == 0x5b);
-                assert(bytes.subrange(start as int, end as int)[1]
-                    == bytes[start as int + 1]);
+                assert(bytes.subrange(start as int, end as int)[1] == bytes[start as int + 1]);
                 assert(bytes.subrange(start as int, end as int)[1] == head[0]);
                 assert(bytes[start as int] == 0x5b);
                 assert(bytes[start as int + 1] == head[0]);
                 assert(bytes[start as int + 1] != 0x5d);
             } else if name == ckc_spec::v1text::curly_name() && args.len() == 1 {
-                assert(bytes.subrange(start as int, end as int)[0]
-                    == bytes[start as int]);
+                assert(bytes.subrange(start as int, end as int)[0] == bytes[start as int]);
                 assert(bytes.subrange(start as int, end as int)[0] == 0x7b);
                 assert(bytes[start as int] == 0x7b);
                 reveal(ckc_spec::v1text::is_digit_b);
             } else {
                 let atom = ckc_spec::v1text::atom_bytes(name);
                 atom_bytes_first_safe(name);
-                let rest = seq![0x28u8]
-                    + ckc_spec::v1text::args_bytes(args) + seq![0x29u8];
+                let rest = seq![0x28u8] + ckc_spec::v1text::args_bytes(args) + seq![0x29u8];
                 assert(bytes.subrange(start as int, end as int) == atom + rest);
                 prefix_before_suffix(bytes, start as int, end as int, atom, rest);
                 suffix_after_prefix(bytes, start as int, end as int, atom, rest);
                 assert(bytes.subrange(start as int, start as int + atom.len())[0]
                     == bytes[start as int]);
-                assert(bytes.subrange(start as int, start as int + atom.len())[0]
-                    == atom[0]);
+                assert(bytes.subrange(start as int, start as int + atom.len())[0] == atom[0]);
                 assert(bytes[start as int] == atom[0]);
                 if bytes[start as int] == 0x2d && start + 1 < bytes.len() {
                     if atom.len() > 1 {
@@ -7883,8 +7603,7 @@ proof fn expected_term_scalar_class(
                     } else {
                         assert(bytes.subrange(start as int + atom.len(), end as int)[0]
                             == bytes[start as int + 1]);
-                        assert(bytes.subrange(start as int + atom.len(), end as int)[0]
-                            == 0x28);
+                        assert(bytes.subrange(start as int + atom.len(), end as int)[0] == 0x28);
                         assert(bytes[start as int + 1] == 0x28);
                         reveal(ckc_spec::v1text::is_digit_b);
                     }
@@ -7913,10 +7632,7 @@ proof fn ordinary_comp_functor_ready(
             start as int + ckc_spec::v1text::atom_bytes(name).len(),
         ),
         bytes[start as int + ckc_spec::v1text::atom_bytes(name).len()] == 0x28,
-        atom_boundary(
-            bytes,
-            start as int + ckc_spec::v1text::atom_bytes(name).len(),
-        ),
+        atom_boundary(bytes, start as int + ckc_spec::v1text::atom_bytes(name).len()),
 {
     reveal(term_at);
     reveal_with_fuel(ckc_spec::v1text::term_bytes, 2);
@@ -7927,8 +7643,8 @@ proof fn ordinary_comp_functor_ready(
     assert(bytes.subrange(start as int, end as int) == atom + rest);
     prefix_before_suffix(bytes, start as int, end as int, atom, rest);
     suffix_after_prefix(bytes, start as int, end as int, atom, rest);
-    assert(bytes.subrange(start as int + atom.len(), end as int)[0]
-        == bytes[start as int + atom.len()]);
+    assert(bytes.subrange(start as int + atom.len(), end as int)[0] == bytes[start as int
+        + atom.len()]);
     assert(bytes.subrange(start as int + atom.len(), end as int)[0] == 0x28);
     reveal(atom_boundary);
 }
@@ -7976,25 +7692,13 @@ proof fn make_comp_guide(
         guide_target(guide) == Term::Comp(name, args),
         guide_end(guide) == end as int,
 {
-    let guide = GTermFrame::Comp {
-        name,
-        built: Seq::empty(),
-        remaining: args,
-        end: end as int,
-    };
+    let guide = GTermFrame::Comp { name, built: Seq::empty(), remaining: args, end: end as int };
     reveal(term_at);
     reveal_with_fuel(ckc_spec::v1text::term_bytes, 2);
     let atom_bytes = ckc_spec::v1text::atom_bytes(name);
     let suffix = ckc_spec::v1text::args_bytes(args) + seq![0x29u8];
-    assert(bytes.subrange(start as int, end as int)
-        == (atom_bytes + seq![0x28u8]) + suffix);
-    suffix_after_prefix(
-        bytes,
-        start as int,
-        end as int,
-        atom_bytes + seq![0x28u8],
-        suffix,
-    );
+    assert(bytes.subrange(start as int, end as int) == (atom_bytes + seq![0x28u8]) + suffix);
+    suffix_after_prefix(bytes, start as int, end as int, atom_bytes + seq![0x28u8], suffix);
     args_bytes_nonempty(args);
     reveal(guide_frame_ok);
     reveal(guide_target);
@@ -8056,8 +7760,8 @@ proof fn make_list_guide(
     };
     if tail == Term::Nil {
         list_nil_bytes(elems);
-        assert(bytes.subrange(start as int, end as int)
-            == seq![0x5bu8] + ckc_spec::v1text::args_bytes(elems) + seq![0x5du8]);
+        assert(bytes.subrange(start as int, end as int) == seq![0x5bu8]
+            + ckc_spec::v1text::args_bytes(elems) + seq![0x5du8]);
         assert_seqs_equal!(bytes.subrange(start as int, end as int)
             == seq![0x5bu8]
                 + (ckc_spec::v1text::args_bytes(elems) + seq![0x5du8]));
@@ -8071,8 +7775,8 @@ proof fn make_list_guide(
     } else {
         assert(plain_list_tail(tail));
         list_plain_bytes(elems, tail);
-        let suffix = ckc_spec::v1text::args_bytes(elems)
-            + seq![0x7cu8] + ckc_spec::v1text::term_bytes(tail) + seq![0x5du8];
+        let suffix = ckc_spec::v1text::args_bytes(elems) + seq![0x7cu8]
+            + ckc_spec::v1text::term_bytes(tail) + seq![0x5du8];
         assert(bytes.subrange(start as int, end as int) == seq![0x5bu8] + suffix);
         suffix_after_prefix(bytes, start as int, end as int, seq![0x5bu8], suffix);
         assert_seqs_equal!(bytes.subrange(start as int + 1, end as int)
@@ -8114,8 +7818,7 @@ proof fn make_curly_guide(
         frame_ok(bytes, frame),
     ensures
         guide_frame_ok(bytes, frame, guide),
-        guide_target(guide)
-            == Term::Comp(ckc_spec::v1text::curly_name(), seq![child]),
+        guide_target(guide) == Term::Comp(ckc_spec::v1text::curly_name(), seq![child]),
         guide_end(guide) == end as int,
 {
     let guide = GTermFrame::Curly { child, end: end as int };
@@ -8123,8 +7826,9 @@ proof fn make_curly_guide(
     reveal_with_fuel(ckc_spec::term::wf_term, 2);
     reveal_with_fuel(ckc_spec::term::wf_terms, 2);
     reveal_with_fuel(ckc_spec::v1text::term_bytes, 2);
-    assert(bytes.subrange(start as int, end as int)
-        == seq![0x7bu8] + ckc_spec::v1text::term_bytes(child) + seq![0x7du8]);
+    assert(bytes.subrange(start as int, end as int) == seq![0x7bu8] + ckc_spec::v1text::term_bytes(
+        child,
+    ) + seq![0x7du8]);
     assert_seqs_equal!(bytes.subrange(start as int, end as int)
         == seq![0x7bu8]
             + (ckc_spec::v1text::term_bytes(child) + seq![0x7du8]));
@@ -8158,7 +7862,7 @@ fn parse_term_inner(
     initial_stream: Ghost<Seq<nat>>,
     track_vars: bool,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         *old(at) <= bytes@.len(),
@@ -8171,24 +7875,19 @@ at: &mut usize,
         },
         track_vars ==> expected@ == Some(tracking_expected@),
         initial_stream@ == old(tracker).stream@,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(t) ==> spanned_term_ok(bytes@, &t),
         r matches Some(t) ==> t.start == start,
-        expected@ matches Some(e) ==> r matches Some(t)
-            && t@ == e.term && t.end == e.end,
-        final(tracker).valid ==>
-            tracker_state_ok(final(tracker).next, final(tracker).stream@),
+        expected@ matches Some(e) ==> r matches Some(t) && t@ == e.term && t.end == e.end,
+        final(tracker).valid ==> tracker_state_ok(final(tracker).next, final(tracker).stream@),
         tracker_complete(final(tracker).valid, final(tracker).stream@),
         track_vars ==> match r {
             Some(t) => {
-                &&& final(tracker).stream@
-                    == initial_stream@ + ckc_spec::term::var_stream(t@)
-                &&& initial_stream@.len() <= start
-                    ==> final(tracker).stream@.len() <= t.end
+                &&& final(tracker).stream@ == initial_stream@ + ckc_spec::term::var_stream(t@)
+                &&& initial_stream@.len() <= start ==> final(tracker).stream@.len() <= t.end
             },
             None => true,
         },
@@ -8209,7 +7908,10 @@ at: &mut usize,
     let mut frames: Vec<ETermFrame> = Vec::new();
     let mut current: Option<ESpannedTerm> = None;
     let mut pos = start;
-    let mut next_var = match first_var { Some(next) => next, None => 0 };
+    let mut next_var = match first_var {
+        Some(next) => next,
+        None => 0,
+    };
     let mut variable_failed = first_var.is_none();
     let mut variable_at = *at;
     proof {
@@ -8235,22 +7937,12 @@ at: &mut usize,
                 &&& root == e.term
                 &&& root_end == e.end as int
                 &&& term_keys_fit(root)
-                &&& guided_state_ok(
-                    bytes@,
-                    start,
-                    pos,
-                    frames@,
-                    &current,
-                    guides,
-                    root,
-                    root_end,
-                )
+                &&& guided_state_ok(bytes@, start, pos, frames@, &current, guides, root, root_end)
             },
             entry_stream == initial_stream@,
             tracker.valid ==> tracker_state_ok(tracker.next, tracker.stream@),
             tracker_complete(tracker.valid, tracker.stream@),
-            track_vars ==> tracker.stream@.len()
-                <= entry_stream.len() + (pos - start),
+            track_vars ==> tracker.stream@.len() <= entry_stream.len() + (pos - start),
             track_vars ==> expected@ == Some(tracking_expected@),
             track_vars ==> tracked_parse_state(
                 entry_stream,
@@ -8288,8 +7980,7 @@ at: &mut usize,
                         tracked_state_root(entry_stream, tracker.stream@, out@);
                         assert(pos == out.end);
                         if initial_stream@.len() <= start {
-                            assert(tracker.stream@.len()
-                                <= entry_stream.len() + (out.end - start));
+                            assert(tracker.stream@.len() <= entry_stream.len() + (out.end - start));
                             assert(tracker.stream@.len() <= out.end);
                         }
                     }
@@ -8364,14 +8055,7 @@ at: &mut usize,
                         reveal(frame_step_ok);
                         reveal(frame_step_roots_ok);
                         assert(frame_roots_ok(arena, &next));
-                        parse_state_replace_last(
-                            bytes@,
-                            start,
-                            pos,
-                            old_frames,
-                            child,
-                            next,
-                        );
+                        parse_state_replace_last(bytes@, start, pos, old_frames, child, next);
                         if let Some(_) = expected@ {
                             let guide = old_guides.last();
                             assert(guided_step_ok(
@@ -8386,13 +8070,7 @@ at: &mut usize,
                             let new_guides = old_guides.drop_last().push(advanced);
                             if track_vars {
                                 assert(child@ == guide_next(guide));
-                                tracked_next_transition(
-                                    bytes@,
-                                    &frame,
-                                    old_guides,
-                                    guide,
-                                    child@,
-                                );
+                                tracked_next_transition(bytes@, &frame, old_guides, guide, child@);
                                 tracked_state_next(
                                     entry_stream,
                                     tracker.stream@,
@@ -8421,8 +8099,10 @@ at: &mut usize,
                     proof {
                         reveal(frames_roots_ok);
                         reveal(frames_roots_ok_nodes);
-                        assert forall|i: int| 0 <= i < frames@.len()
-                            implies frame_roots_ok_nodes(arena.nodes@, &frames@[i]) by {
+                        assert forall|i: int| 0 <= i < frames@.len() implies frame_roots_ok_nodes(
+                            arena.nodes@,
+                            &frames@[i],
+                        ) by {
                             if i < frames@.len() - 1 {
                                 assert(frames@[i] == old_frames.drop_last()[i]);
                             } else {
@@ -8464,14 +8144,7 @@ at: &mut usize,
                         reveal(frame_step_ok);
                         reveal(frame_step_roots_ok);
                         assert(spanned_root_ok(arena, &done));
-                        parse_state_close_last(
-                            bytes@,
-                            start,
-                            pos,
-                            old_frames,
-                            child,
-                            done,
-                        );
+                        parse_state_close_last(bytes@, start, pos, old_frames, child, done);
                         if let Some(_) = expected@ {
                             let guide = old_guides.last();
                             assert(guided_step_ok(
@@ -8577,10 +8250,7 @@ at: &mut usize,
                 }
                 return None;
             }
-            if bytes[pos] == 0x5b
-                && bytes.len() - pos >= 2
-                && bytes[pos + 1] != 0x5d
-            {
+            if bytes[pos] == 0x5b && bytes.len() - pos >= 2 && bytes[pos + 1] != 0x5d {
                 let frame = open_list_frame(bytes, pos);
                 let next_pos = frame_child_start_exec(&frame);
                 proof {
@@ -8588,13 +8258,7 @@ at: &mut usize,
                     if let Some(_) = expected@ {
                         reveal(list_open_at);
                         assert(list_cons(focus));
-                        let guide = make_list_guide(
-                            bytes@,
-                            pos,
-                            focus_end as usize,
-                            focus,
-                            &frame,
-                        );
+                        let guide = make_list_guide(bytes@, pos, focus_end as usize, focus, &frame);
                         let new_guides = guides.push(guide);
                         if track_vars {
                             reveal(current_term);
@@ -8607,12 +8271,7 @@ at: &mut usize,
                             ));
                             reveal(guide_var_prefix);
                             assert(guide_var_prefix(guide) == Seq::<nat>::empty());
-                            tracked_state_push(
-                                entry_stream,
-                                tracker.stream@,
-                                guides,
-                                guide,
-                            );
+                            tracked_state_push(entry_stream, tracker.stream@, guides, guide);
                         }
                         guided_state_push(
                             bytes@,
@@ -8633,19 +8292,11 @@ at: &mut usize,
                     if track_vars {
                         reveal(current_term);
                         assert(current_term(&current) == None);
-                        assert(tracked_parse_state(
-                            entry_stream,
-                            tracker.stream@,
-                            guides,
-                            None,
-                        ));
+                        assert(tracked_parse_state(entry_stream, tracker.stream@, guides, None));
                     }
                 }
                 pos = next_pos;
-            } else if bytes[pos] == 0x7b
-                && bytes.len() - pos >= 2
-                && bytes[pos + 1] != 0x7d
-            {
+            } else if bytes[pos] == 0x7b && bytes.len() - pos >= 2 && bytes[pos + 1] != 0x7d {
                 let frame = open_curly_frame(bytes, pos);
                 let next_pos = frame_child_start_exec(&frame);
                 proof {
@@ -8681,8 +8332,7 @@ at: &mut usize,
                                         None,
                                     ));
                                     reveal(guide_var_prefix);
-                                    assert(guide_var_prefix(guide)
-                                        == Seq::<nat>::empty());
+                                    assert(guide_var_prefix(guide) == Seq::<nat>::empty());
                                     tracked_state_push(
                                         entry_stream,
                                         tracker.stream@,
@@ -8712,29 +8362,15 @@ at: &mut usize,
                     if track_vars {
                         reveal(current_term);
                         assert(current_term(&current) == None);
-                        assert(tracked_parse_state(
-                            entry_stream,
-                            tracker.stream@,
-                            guides,
-                            None,
-                        ));
+                        assert(tracked_parse_state(entry_stream, tracker.stream@, guides, None));
                     }
                 }
                 pos = next_pos;
-            } else if (0x41 <= bytes[pos] && bytes[pos] <= 0x5a)
-                || is_digit_b(bytes[pos])
-                || bytes[pos] == 0x2d
-                    && pos + 1 < bytes.len()
-                    && is_digit_b(bytes[pos + 1])
-                || bytes[pos] == 0x5b
-                    && pos + 1 < bytes.len()
-                    && bytes[pos + 1] == 0x5d
-            {
+            } else if (0x41 <= bytes[pos] && bytes[pos] <= 0x5a) || is_digit_b(bytes[pos])
+                || bytes[pos] == 0x2d && pos + 1 < bytes.len() && is_digit_b(bytes[pos + 1])
+                || bytes[pos] == 0x5b && pos + 1 < bytes.len() && bytes[pos + 1] == 0x5d {
                 let ghost expected_atomic = match expected@ {
-                    Some(_) => Some(GAtomicExpected {
-                        term: focus,
-                        end: focus_end as usize,
-                    }),
+                    Some(_) => Some(GAtomicExpected { term: focus, end: focus_end as usize }),
                     None => None,
                 };
                 proof {
@@ -8744,13 +8380,7 @@ at: &mut usize,
                         assert(scalar_nonatom_term(focus));
                         reveal(atomic_term);
                         reveal(guided_state_ok);
-                        guided_focus_keys_fit(
-                            bytes@,
-                            frames@,
-                            guides,
-                            root,
-                            root_end,
-                        );
+                        guided_focus_keys_fit(bytes@, frames@, guides, root, root_end);
                         assert(term_keys_fit(focus));
                         reveal(term_keys_fit);
                     }
@@ -8758,18 +8388,23 @@ at: &mut usize,
                 let ghost before_atomic = arena.nodes@;
                 let mut atomic_at = *at;
                 let term = match parse_atomic(
-                    bytes, pos, next_var, arena, Ghost(expected_atomic), &mut atomic_at,
+                    bytes,
+                    pos,
+                    next_var,
+                    arena,
+                    Ghost(expected_atomic),
+                    &mut atomic_at,
                 ) {
                     Some(t) => t,
                     None => {
-                        let boundary = if variable_failed { variable_at } else { atomic_at };
+                        let boundary = if variable_failed {
+                            variable_at
+                        } else {
+                            atomic_at
+                        };
                         raise_at(at, boundary, bytes.len());
                         proof {
-                            nodes_prefix_transitive(
-                                arena_entry@,
-                                before_atomic,
-                                arena.nodes@,
-                            );
+                            nodes_prefix_transitive(arena_entry@, before_atomic, arena.nodes@);
                         }
                         return None;
                     },
@@ -8790,17 +8425,11 @@ at: &mut usize,
                     proof {
                         reveal(current_term);
                         assert(current_term(&current) == None);
-                        assert(tracked_parse_state(
-                            entry_stream,
-                            atomic_initial,
-                            guides,
-                            None,
-                        ));
+                        assert(tracked_parse_state(entry_stream, atomic_initial, guides, None));
                         assert(expected@ == Some(tracking_expected@));
-                        assert(expected_atomic == Some(GAtomicExpected {
-                            term: focus,
-                            end: focus_end as usize,
-                        }));
+                        assert(expected_atomic == Some(
+                            GAtomicExpected { term: focus, end: focus_end as usize },
+                        ));
                         assert(spanned_term_ok(bytes@, &term));
                         assert(term.start == pos);
                         assert(term@ == focus);
@@ -8809,14 +8438,7 @@ at: &mut usize,
                         reveal(atomic_term);
                         assert(atomic_term(term@));
                     }
-                    record_atomic_term(
-                        bytes,
-                        pos,
-                        &term,
-                        Ghost(atomic_initial),
-                        tracker,
-                    at,
-                    );
+                    record_atomic_term(bytes, pos, &term, Ghost(atomic_initial), tracker, at);
                     proof {
                         tracked_state_atomic(
                             entry_stream,
@@ -8826,11 +8448,9 @@ at: &mut usize,
                             term@,
                         );
                         atomic_var_stream_len(term@, pos, term.end);
-                        assert(tracker.stream@.len()
-                            == atomic_initial.len()
-                                + ckc_spec::term::var_stream(term@).len());
-                        assert(tracker.stream@.len()
-                            <= entry_stream.len() + (term.end - start));
+                        assert(tracker.stream@.len() == atomic_initial.len()
+                            + ckc_spec::term::var_stream(term@).len());
+                        assert(tracker.stream@.len() <= entry_stream.len() + (term.end - start));
                     }
                 }
                 let next_pos = term.end;
@@ -8879,15 +8499,15 @@ at: &mut usize,
                 }
                 let ghost expected_atom = match expected@ {
                     Some(_) => match focus {
-                        Term::Atom(name) => Some(GAtomExpected {
-                            name,
-                            end: focus_end as usize,
-                        }),
-                        Term::Comp(name, args) => Some(GAtomExpected {
-                            name,
-                            end: (pos as int
-                                + ckc_spec::v1text::atom_bytes(name).len()) as usize,
-                        }),
+                        Term::Atom(name) => Some(GAtomExpected { name, end: focus_end as usize }),
+                        Term::Comp(name, args) => Some(
+                            GAtomExpected {
+                                name,
+                                end: (pos as int + ckc_spec::v1text::atom_bytes(
+                                    name,
+                                ).len()) as usize,
+                            },
+                        ),
                         _ => None,
                     },
                     None => None,
@@ -8903,10 +8523,9 @@ at: &mut usize,
                             Term::Comp(name, args) => {
                                 reveal_with_fuel(ckc_spec::term::wf_term, 2);
                                 assert(args.len() > 0);
-                                assert(!(name == ckc_spec::v1text::cons_name()
-                                    && args.len() == 2));
-                                assert(!(name == ckc_spec::v1text::curly_name()
-                                    && args.len() == 1));
+                                assert(!(name == ckc_spec::v1text::cons_name() && args.len() == 2));
+                                assert(!(name == ckc_spec::v1text::curly_name() && args.len()
+                                    == 1));
                                 ordinary_comp_functor_ready(
                                     bytes@,
                                     pos,
@@ -8926,7 +8545,7 @@ at: &mut usize,
                     Some(a) => a,
                     None => {
                         proof {
-                                    assert(arena_entry@.is_prefix_of(arena.nodes@));
+                            assert(arena_entry@.is_prefix_of(arena.nodes@));
                         }
                         return None;
                     },
@@ -8973,8 +8592,7 @@ at: &mut usize,
                                             None,
                                         ));
                                         reveal(guide_var_prefix);
-                                        assert(guide_var_prefix(guide)
-                                            == Seq::<nat>::empty());
+                                        assert(guide_var_prefix(guide) == Seq::<nat>::empty());
                                         tracked_state_push(
                                             entry_stream,
                                             tracker.stream@,
@@ -9026,9 +8644,8 @@ at: &mut usize,
                                         name,
                                         args,
                                     );
-                                    assert(atom.end as int
-                                        == pos as int
-                                            + ckc_spec::v1text::atom_bytes(name).len());
+                                    assert(atom.end as int == pos as int
+                                        + ckc_spec::v1text::atom_bytes(name).len());
                                     assert(atom.end < bytes.len());
                                     assert(bytes@[atom.end as int] == 0x28);
                                     assert(false);
@@ -9041,7 +8658,9 @@ at: &mut usize,
                     let arena_root = push_atom(arena, name);
                     let term = span_atom(bytes, pos, atom, arena_root);
                     let next_pos = term.end;
-                    proof { reveal(spanned_root_ok); }
+                    proof {
+                        reveal(spanned_root_ok);
+                    }
                     proof {
                         parse_state_current(bytes@, start, pos, frames@, term);
                         if track_vars {
@@ -9125,24 +8744,19 @@ pub fn parse_term(
         },
         track_vars ==> expected@ == Some(tracking_expected@),
         initial_stream@ == old(tracker).stream@,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(t) ==> spanned_term_ok(bytes@, &t),
         r matches Some(t) ==> t.start == start,
-        expected@ matches Some(e) ==> r matches Some(t)
-            && t@ == e.term && t.end == e.end,
-        final(tracker).valid ==>
-            tracker_state_ok(final(tracker).next, final(tracker).stream@),
+        expected@ matches Some(e) ==> r matches Some(t) && t@ == e.term && t.end == e.end,
+        final(tracker).valid ==> tracker_state_ok(final(tracker).next, final(tracker).stream@),
         tracker_complete(final(tracker).valid, final(tracker).stream@),
         track_vars ==> match r {
             Some(t) => {
-                &&& final(tracker).stream@
-                    == initial_stream@ + ckc_spec::term::var_stream(t@)
-                &&& initial_stream@.len() <= start
-                    ==> final(tracker).stream@.len() <= t.end
+                &&& final(tracker).stream@ == initial_stream@ + ckc_spec::term::var_stream(t@)
+                &&& initial_stream@.len() <= start ==> final(tracker).stream@.len() <= t.end
             },
             None => true,
         },
@@ -9151,7 +8765,11 @@ pub fn parse_term(
         r matches Some(t) ==> spanned_root_ok(final(arena), &t),
 {
     let ghost arena_entry = arena.nodes@;
-    let first_var = if tracker.valid { Some(tracker.next) } else { None };
+    let first_var = if tracker.valid {
+        Some(tracker.next)
+    } else {
+        None
+    };
     parse_term_inner(
         bytes,
         start,
@@ -9168,7 +8786,8 @@ pub fn parse_term(
 }
 
 proof fn udec_decimal_value(n: nat)
-    ensures decimal_value(ckc_spec::v1text::udec_bytes(n)) == n,
+    ensures
+        decimal_value(ckc_spec::v1text::udec_bytes(n)) == n,
     decreases n,
 {
     reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
@@ -9176,8 +8795,7 @@ proof fn udec_decimal_value(n: nat)
     reveal(decimal_digit);
     reveal(ckc_spec::v1text::digit_byte);
     if n < 10 {
-        assert(ckc_spec::v1text::udec_bytes(n)
-            == seq![ckc_spec::v1text::digit_byte(n as int)]);
+        assert(ckc_spec::v1text::udec_bytes(n) == seq![ckc_spec::v1text::digit_byte(n as int)]);
     } else {
         let q = n / 10;
         let d = n % 10;
@@ -9193,16 +8811,20 @@ proof fn udec_decimal_value(n: nat)
 }
 
 proof fn udec_bytes_injective(a: nat, b: nat)
-    requires ckc_spec::v1text::udec_bytes(a) == ckc_spec::v1text::udec_bytes(b),
-    ensures a == b,
+    requires
+        ckc_spec::v1text::udec_bytes(a) == ckc_spec::v1text::udec_bytes(b),
+    ensures
+        a == b,
 {
     udec_decimal_value(a);
     udec_decimal_value(b);
 }
 
 proof fn var_bytes_injective(a: nat, b: nat)
-    requires ckc_spec::v1text::var_bytes(a) == ckc_spec::v1text::var_bytes(b),
-    ensures a == b,
+    requires
+        ckc_spec::v1text::var_bytes(a) == ckc_spec::v1text::var_bytes(b),
+    ensures
+        a == b,
 {
     let qa = a / 26;
     let qb = b / 26;
@@ -9221,15 +8843,17 @@ proof fn var_bytes_injective(a: nat, b: nat)
         if qb > 0 {
             udec_bytes_nonempty(qb);
             assert(ckc_spec::v1text::var_bytes(a).len() == 1);
-            assert(ckc_spec::v1text::var_bytes(b).len()
-                == 1 + ckc_spec::v1text::udec_bytes(qb).len());
+            assert(ckc_spec::v1text::var_bytes(b).len() == 1 + ckc_spec::v1text::udec_bytes(
+                qb,
+            ).len());
             assert(false);
         }
     } else {
         if qb == 0 {
             udec_bytes_nonempty(qa);
-            assert(ckc_spec::v1text::var_bytes(a).len()
-                == 1 + ckc_spec::v1text::udec_bytes(qa).len());
+            assert(ckc_spec::v1text::var_bytes(a).len() == 1 + ckc_spec::v1text::udec_bytes(
+                qa,
+            ).len());
             assert(ckc_spec::v1text::var_bytes(b).len() == 1);
             assert(false);
         }
@@ -9240,28 +8864,13 @@ proof fn var_bytes_injective(a: nat, b: nat)
         assert(vb == seq![lb] + ckc_spec::v1text::udec_bytes(qb));
         assert_seqs_equal!(va.subrange(0, va.len() as int) == va);
         assert_seqs_equal!(vb.subrange(0, vb.len() as int) == vb);
-        assert(va.subrange(0, va.len() as int)
-            == seq![la] + ckc_spec::v1text::udec_bytes(qa));
-        assert(vb.subrange(0, vb.len() as int)
-            == seq![lb] + ckc_spec::v1text::udec_bytes(qb));
-        suffix_after_prefix(
-            va,
-            0,
-            va.len() as int,
-            seq![la],
-            ckc_spec::v1text::udec_bytes(qa),
-        );
-        suffix_after_prefix(
-            vb,
-            0,
-            vb.len() as int,
-            seq![lb],
-            ckc_spec::v1text::udec_bytes(qb),
-        );
+        assert(va.subrange(0, va.len() as int) == seq![la] + ckc_spec::v1text::udec_bytes(qa));
+        assert(vb.subrange(0, vb.len() as int) == seq![lb] + ckc_spec::v1text::udec_bytes(qb));
+        suffix_after_prefix(va, 0, va.len() as int, seq![la], ckc_spec::v1text::udec_bytes(qa));
+        suffix_after_prefix(vb, 0, vb.len() as int, seq![lb], ckc_spec::v1text::udec_bytes(qb));
         assert(va == vb);
         assert(va.len() == vb.len());
-        assert(va.subrange(1, va.len() as int)
-            == vb.subrange(1, vb.len() as int));
+        assert(va.subrange(1, va.len() as int) == vb.subrange(1, vb.len() as int));
         assert_seqs_equal!(ckc_spec::v1text::udec_bytes(qa)
             == ckc_spec::v1text::udec_bytes(qb));
         udec_bytes_injective(qa, qb);
@@ -9273,15 +8882,11 @@ proof fn var_bytes_injective(a: nat, b: nat)
     assert(b == 26 * qb + rb);
 }
 
-fn match_udec_usize(
-    bytes: &[u8],
-    start: usize,
-    end: usize,
-    n: usize,
-) -> (r: bool)
-    requires start <= end <= bytes@.len(),
-    ensures r == (ckc_spec::v1text::udec_bytes(n as nat)
-        == bytes@.subrange(start as int, end as int)),
+fn match_udec_usize(bytes: &[u8], start: usize, end: usize, n: usize) -> (r: bool)
+    requires
+        start <= end <= bytes@.len(),
+    ensures
+        r == (ckc_spec::v1text::udec_bytes(n as nat) == bytes@.subrange(start as int, end as int)),
     decreases n,
 {
     if n < 10 {
@@ -9304,16 +8909,18 @@ fn match_udec_usize(
                 == seq![bytes@[start as int]]);
             if same {
                 assert(bytes@[start as int] == digit);
-                assert(ckc_spec::v1text::udec_bytes(n as nat)
-                    == bytes@.subrange(start as int, end as int));
+                assert(ckc_spec::v1text::udec_bytes(n as nat) == bytes@.subrange(
+                    start as int,
+                    end as int,
+                ));
             } else {
                 assert(bytes@[start as int] != digit);
-                if ckc_spec::v1text::udec_bytes(n as nat)
-                    == bytes@.subrange(start as int, end as int)
-                {
+                if ckc_spec::v1text::udec_bytes(n as nat) == bytes@.subrange(
+                    start as int,
+                    end as int,
+                ) {
                     assert(ckc_spec::v1text::udec_bytes(n as nat)[0] == digit);
-                    assert(bytes@.subrange(start as int, end as int)[0]
-                        == bytes@[start as int]);
+                    assert(bytes@.subrange(start as int, end as int)[0] == bytes@[start as int]);
                     assert(false);
                 }
             }
@@ -9321,7 +8928,9 @@ fn match_udec_usize(
         return same;
     }
     if end == start {
-        proof { udec_bytes_nonempty(n as nat); }
+        proof {
+            udec_bytes_nonempty(n as nat);
+        }
         return false;
     }
     let q = n / 10;
@@ -9332,8 +8941,7 @@ fn match_udec_usize(
             reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
             reveal(ckc_spec::v1text::digit_byte);
             assert(ckc_spec::v1text::udec_bytes(n as nat).last() == digit);
-            assert(bytes@.subrange(start as int, end as int).last()
-                == bytes@[end as int - 1]);
+            assert(bytes@.subrange(start as int, end as int).last() == bytes@[end as int - 1]);
         }
         return false;
     }
@@ -9343,16 +8951,22 @@ fn match_udec_usize(
         reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
         reveal(ckc_spec::v1text::digit_byte);
         subrange_push(bytes@, start as int, end as int - 1);
-        assert(bytes@.subrange(start as int, end as int)
-            == bytes@.subrange(start as int, end as int - 1).push(digit));
-        assert(ckc_spec::v1text::udec_bytes(n as nat)
-            == ckc_spec::v1text::udec_bytes(q as nat).push(digit));
+        assert(bytes@.subrange(start as int, end as int) == bytes@.subrange(
+            start as int,
+            end as int - 1,
+        ).push(digit));
+        assert(ckc_spec::v1text::udec_bytes(n as nat) == ckc_spec::v1text::udec_bytes(
+            q as nat,
+        ).push(digit));
         if prefix_ok {
-            assert(ckc_spec::v1text::udec_bytes(q as nat)
-                == bytes@.subrange(start as int, end as int - 1));
-        } else if ckc_spec::v1text::udec_bytes(n as nat)
-            == bytes@.subrange(start as int, end as int)
-        {
+            assert(ckc_spec::v1text::udec_bytes(q as nat) == bytes@.subrange(
+                start as int,
+                end as int - 1,
+            ));
+        } else if ckc_spec::v1text::udec_bytes(n as nat) == bytes@.subrange(
+            start as int,
+            end as int,
+        ) {
             assert_seqs_equal!(ckc_spec::v1text::udec_bytes(q as nat)
                 == bytes@.subrange(start as int, end as int - 1));
             assert(false);
@@ -9361,15 +8975,14 @@ fn match_udec_usize(
     prefix_ok
 }
 
-fn match_var_index(
-    bytes: &[u8],
-    start: usize,
-    end: usize,
-    index: usize,
-) -> (r: bool)
-    requires start < end <= bytes@.len(),
-    ensures r == (ckc_spec::v1text::var_bytes(index as nat)
-        == bytes@.subrange(start as int, end as int)),
+fn match_var_index(bytes: &[u8], start: usize, end: usize, index: usize) -> (r: bool)
+    requires
+        start < end <= bytes@.len(),
+    ensures
+        r == (ckc_spec::v1text::var_bytes(index as nat) == bytes@.subrange(
+            start as int,
+            end as int,
+        )),
 {
     let rem = index % 26;
     let q = index / 26;
@@ -9401,8 +9014,8 @@ fn match_var_index(
         proof {
             reveal(ckc_spec::v1text::var_bytes);
             udec_bytes_nonempty(q as nat);
-            assert(ckc_spec::v1text::var_bytes(index as nat).len()
-                == 1 + ckc_spec::v1text::udec_bytes(q as nat).len());
+            assert(ckc_spec::v1text::var_bytes(index as nat).len() == 1
+                + ckc_spec::v1text::udec_bytes(q as nat).len());
             assert(ckc_spec::v1text::var_bytes(index as nat).len() > 1);
             assert(bytes@.subrange(start as int, end as int).len() == 1);
         }
@@ -9411,20 +9024,25 @@ fn match_var_index(
     let suffix_ok = match_udec_usize(bytes, start + 1, end, q);
     proof {
         reveal(ckc_spec::v1text::var_bytes);
-        assert(ckc_spec::v1text::var_bytes(index as nat)
-            == seq![letter] + ckc_spec::v1text::udec_bytes(q as nat));
+        assert(ckc_spec::v1text::var_bytes(index as nat) == seq![letter]
+            + ckc_spec::v1text::udec_bytes(q as nat));
         assert_seqs_equal!(bytes@.subrange(start as int, end as int)
             == seq![letter] + bytes@.subrange(start as int + 1, end as int));
         if suffix_ok {
-            assert(ckc_spec::v1text::udec_bytes(q as nat)
-                == bytes@.subrange(start as int + 1, end as int));
-            assert(ckc_spec::v1text::var_bytes(index as nat)
-                == bytes@.subrange(start as int, end as int));
-        } else if ckc_spec::v1text::var_bytes(index as nat)
-            == bytes@.subrange(start as int, end as int)
-        {
-            assert(bytes@.subrange(start as int, end as int)
-                == seq![letter] + ckc_spec::v1text::udec_bytes(q as nat));
+            assert(ckc_spec::v1text::udec_bytes(q as nat) == bytes@.subrange(
+                start as int + 1,
+                end as int,
+            ));
+            assert(ckc_spec::v1text::var_bytes(index as nat) == bytes@.subrange(
+                start as int,
+                end as int,
+            ));
+        } else if ckc_spec::v1text::var_bytes(index as nat) == bytes@.subrange(
+            start as int,
+            end as int,
+        ) {
+            assert(bytes@.subrange(start as int, end as int) == seq![letter]
+                + ckc_spec::v1text::udec_bytes(q as nat));
             suffix_after_prefix(
                 bytes@,
                 start as int,
@@ -9432,8 +9050,10 @@ fn match_var_index(
                 seq![letter],
                 ckc_spec::v1text::udec_bytes(q as nat),
             );
-            assert(ckc_spec::v1text::udec_bytes(q as nat)
-                == bytes@.subrange(start as int + 1, end as int));
+            assert(ckc_spec::v1text::udec_bytes(q as nat) == bytes@.subrange(
+                start as int + 1,
+                end as int,
+            ));
             assert(false);
         }
     }
@@ -9451,8 +9071,8 @@ pub open spec fn seen_after(values: Seq<nat>, seen: Set<nat>) -> Set<nat>
 }
 
 proof fn seen_after_push(values: Seq<nat>, seen: Set<nat>, value: nat)
-    ensures seen_after(values.push(value), seen)
-        == seen_after(values, seen).insert(value),
+    ensures
+        seen_after(values.push(value), seen) == seen_after(values, seen).insert(value),
     decreases values.len(),
 {
     if values.len() == 0 {
@@ -9468,8 +9088,10 @@ proof fn seen_after_push(values: Seq<nat>, seen: Set<nat>, value: nat)
 }
 
 proof fn firsts_push(values: Seq<nat>, seen: Set<nat>, value: nat)
-    ensures ckc_spec::term::firsts(values.push(value), seen) ==
-        if seen_after(values, seen).contains(value) {
+    ensures
+        ckc_spec::term::firsts(values.push(value), seen) == if seen_after(values, seen).contains(
+            value,
+        ) {
             ckc_spec::term::firsts(values, seen)
         } else {
             ckc_spec::term::firsts(values, seen).push(value)
@@ -9508,7 +9130,8 @@ pub open spec fn nat_prefix(n: nat) -> Seq<nat> {
 }
 
 proof fn nat_prefix_push(n: nat)
-    ensures nat_prefix(n + 1) == nat_prefix(n).push(n),
+    ensures
+        nat_prefix(n + 1) == nat_prefix(n).push(n),
 {
     reveal(nat_prefix);
     assert_seqs_equal!(nat_prefix(n + 1) == nat_prefix(n).push(n));
@@ -9525,7 +9148,8 @@ pub open spec fn canonical_seen(next: nat) -> Set<nat>
 }
 
 proof fn canonical_seen_contains(next: nat, value: nat)
-    ensures canonical_seen(next).contains(value) == (value < next),
+    ensures
+        canonical_seen(next).contains(value) == (value < next),
     decreases next,
 {
     reveal_with_fuel(canonical_seen, 2);
@@ -9535,7 +9159,8 @@ proof fn canonical_seen_contains(next: nat, value: nat)
 }
 
 proof fn canonical_seen_insert(next: nat)
-    ensures canonical_seen(next).insert(next) == canonical_seen(next + 1),
+    ensures
+        canonical_seen(next).insert(next) == canonical_seen(next + 1),
 {
     reveal_with_fuel(canonical_seen, 2);
 }
@@ -9552,7 +9177,8 @@ pub struct EVarTracker {
 }
 
 fn new_var_tracker() -> (tracker: EVarTracker)
-    ensures tracker.next == 0,
+    ensures
+        tracker.next == 0,
         tracker.stream@ == Seq::<nat>::empty(),
         tracker.valid,
         tracker_state_ok(tracker.next, tracker.stream@),
@@ -9564,8 +9190,7 @@ fn new_var_tracker() -> (tracker: EVarTracker)
         reveal_with_fuel(seen_after, 2);
         reveal(nat_prefix);
         reveal_with_fuel(canonical_seen, 2);
-        assert(ckc_spec::term::firsts(Seq::<nat>::empty(), Set::empty())
-            == Seq::<nat>::empty());
+        assert(ckc_spec::term::firsts(Seq::<nat>::empty(), Set::empty()) == Seq::<nat>::empty());
         assert(seen_after(Seq::<nat>::empty(), Set::empty()) == Set::empty());
         assert(nat_prefix(0) == Seq::<nat>::empty());
         assert(canonical_seen(0) == Set::empty());
@@ -9578,7 +9203,8 @@ proof fn tracker_append_existing(next: usize, stream: Seq<nat>, value: nat)
     requires
         tracker_state_ok(next, stream),
         value < next,
-    ensures tracker_state_ok(next, stream.push(value)),
+    ensures
+        tracker_state_ok(next, stream.push(value)),
 {
     reveal(tracker_state_ok);
     canonical_seen_contains(next as nat, value);
@@ -9594,7 +9220,8 @@ proof fn tracker_append_new(next: usize, stream: Seq<nat>)
     requires
         tracker_state_ok(next, stream),
         next < usize::MAX,
-    ensures tracker_state_ok((next as int + 1) as usize, stream.push(next as nat)),
+    ensures
+        tracker_state_ok((next as int + 1) as usize, stream.push(next as nat)),
 {
     reveal(tracker_state_ok);
     canonical_seen_contains(next as nat, next as nat);
@@ -9606,18 +9233,12 @@ proof fn tracker_append_new(next: usize, stream: Seq<nat>)
     canonical_seen_insert(next as nat);
 }
 
-
-fn raise_variable_reject(
-    bytes: &[u8],
-    start: usize,
-    end: usize,
-    next: usize,
-    at: &mut usize,
-)
+fn raise_variable_reject(bytes: &[u8], start: usize, end: usize, next: usize, at: &mut usize)
     requires
         start < end <= bytes@.len(),
         *old(at) <= bytes@.len(),
-    ensures *old(at) <= *final(at) <= bytes@.len(),
+    ensures
+        *old(at) <= *final(at) <= bytes@.len(),
 {
     let letter = bytes[start];
     if letter < 0x41 || letter > 0x5a {
@@ -9668,18 +9289,17 @@ fn observe_variable(
     end: usize,
     value: Ghost<nat>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: bool)
     requires
         *old(at) <= bytes@.len(),
         start < end <= bytes@.len(),
-        ckc_spec::v1text::var_bytes(value@)
-            == bytes@.subrange(start as int, end as int),
+        ckc_spec::v1text::var_bytes(value@) == bytes@.subrange(start as int, end as int),
         tracker_state_ok(old(tracker).next, old(tracker).stream@),
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
-        r == (value@ < old(tracker).next
-            || value@ == old(tracker).next && old(tracker).next < usize::MAX),
+        r == (value@ < old(tracker).next || value@ == old(tracker).next && old(tracker).next
+            < usize::MAX),
         r ==> {
             &&& tracker_state_ok(final(tracker).next, final(tracker).stream@)
             &&& final(tracker).stream@ == old(tracker).stream@.push(value@)
@@ -9689,8 +9309,9 @@ at: &mut usize,
                 (old(tracker).next as int + 1) as usize
             }
         },
-        !r ==> final(tracker).next == old(tracker).next
-            && final(tracker).stream@ == old(tracker).stream@,
+        !r ==> final(tracker).next == old(tracker).next && final(tracker).stream@ == old(
+            tracker,
+        ).stream@,
         final(tracker).valid == old(tracker).valid,
 {
     let ghost old_stream = tracker.stream@;
@@ -9700,8 +9321,7 @@ at: &mut usize,
         invariant
             *old(at) <= *at <= bytes@.len(),
             start < end <= bytes@.len(),
-            ckc_spec::v1text::var_bytes(value@)
-                == bytes@.subrange(start as int, end as int),
+            ckc_spec::v1text::var_bytes(value@) == bytes@.subrange(start as int, end as int),
             i <= old_next,
             old_next == old(tracker).next,
             old_stream == old(tracker).stream@,
@@ -9714,8 +9334,10 @@ at: &mut usize,
     {
         if match_var_index(bytes, start, end, i) {
             proof {
-                assert(ckc_spec::v1text::var_bytes(i as nat)
-                    == bytes@.subrange(start as int, end as int));
+                assert(ckc_spec::v1text::var_bytes(i as nat) == bytes@.subrange(
+                    start as int,
+                    end as int,
+                ));
                 var_bytes_injective(value@, i as nat);
                 assert(value@ == i as nat);
                 tracker_append_existing(old_next, old_stream, value@);
@@ -9733,8 +9355,10 @@ at: &mut usize,
         }
         proof {
             if value@ == i as nat {
-                assert(ckc_spec::v1text::var_bytes(i as nat)
-                    == bytes@.subrange(start as int, end as int));
+                assert(ckc_spec::v1text::var_bytes(i as nat) == bytes@.subrange(
+                    start as int,
+                    end as int,
+                ));
                 assert(false);
             }
             assert(value@ != i as nat);
@@ -9754,8 +9378,10 @@ at: &mut usize,
     }
     if match_var_index(bytes, start, end, old_next) {
         proof {
-            assert(ckc_spec::v1text::var_bytes(old_next as nat)
-                == bytes@.subrange(start as int, end as int));
+            assert(ckc_spec::v1text::var_bytes(old_next as nat) == bytes@.subrange(
+                start as int,
+                end as int,
+            ));
             var_bytes_injective(value@, old_next as nat);
             assert(value@ == old_next as nat);
             tracker_append_new(old_next, old_stream);
@@ -9766,8 +9392,10 @@ at: &mut usize,
     }
     proof {
         if value@ == old_next as nat {
-            assert(ckc_spec::v1text::var_bytes(old_next as nat)
-                == bytes@.subrange(start as int, end as int));
+            assert(ckc_spec::v1text::var_bytes(old_next as nat) == bytes@.subrange(
+                start as int,
+                end as int,
+            ));
             assert(false);
         }
     }
@@ -9776,8 +9404,8 @@ at: &mut usize,
 }
 
 proof fn var_stream_all_concat(left: Seq<Term>, right: Seq<Term>)
-    ensures ckc_spec::term::var_stream_all(left + right)
-        == ckc_spec::term::var_stream_all(left)
+    ensures
+        ckc_spec::term::var_stream_all(left + right) == ckc_spec::term::var_stream_all(left)
             + ckc_spec::term::var_stream_all(right),
     decreases left.len(),
 {
@@ -9800,8 +9428,8 @@ proof fn var_stream_all_concat(left: Seq<Term>, right: Seq<Term>)
 }
 
 proof fn var_stream_all_push(terms: Seq<Term>, term: Term)
-    ensures ckc_spec::term::var_stream_all(terms.push(term))
-        == ckc_spec::term::var_stream_all(terms)
+    ensures
+        ckc_spec::term::var_stream_all(terms.push(term)) == ckc_spec::term::var_stream_all(terms)
             + ckc_spec::term::var_stream(term),
 {
     assert_seqs_equal!(terms.push(term) == terms + seq![term]);
@@ -9810,8 +9438,8 @@ proof fn var_stream_all_push(terms: Seq<Term>, term: Term)
 }
 
 proof fn var_stream_list_term(elems: Seq<Term>, tail: Term)
-    ensures ckc_spec::term::var_stream(list_term(elems, tail))
-        == ckc_spec::term::var_stream_all(elems)
+    ensures
+        ckc_spec::term::var_stream(list_term(elems, tail)) == ckc_spec::term::var_stream_all(elems)
             + ckc_spec::term::var_stream(tail),
     decreases elems.len(),
 {
@@ -9826,15 +9454,15 @@ proof fn var_stream_list_term(elems: Seq<Term>, tail: Term)
         )) by {
             reveal(list_term);
         }
-        assert(ckc_spec::term::var_stream(list_term(elems, tail))
-            == ckc_spec::term::var_stream_all(
-                seq![elems[0], list_term(elems.drop_first(), tail)])) by {
+        assert(ckc_spec::term::var_stream(list_term(elems, tail)) == ckc_spec::term::var_stream_all(
+            seq![elems[0], list_term(elems.drop_first(), tail)],
+        )) by {
             reveal(ckc_spec::term::var_stream);
         }
-        assert(ckc_spec::term::var_stream_all(
-                seq![elems[0], list_term(elems.drop_first(), tail)])
-            == ckc_spec::term::var_stream(elems[0])
-                + ckc_spec::term::var_stream(list_term(elems.drop_first(), tail))) by {
+        assert(ckc_spec::term::var_stream_all(seq![elems[0], list_term(elems.drop_first(), tail)])
+            == ckc_spec::term::var_stream(elems[0]) + ckc_spec::term::var_stream(
+            list_term(elems.drop_first(), tail),
+        )) by {
             reveal_with_fuel(ckc_spec::term::var_stream_all, 3);
         }
         reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
@@ -9873,7 +9501,8 @@ pub closed spec fn tracked_parse_state(
 }
 
 proof fn tracked_state_initial(entry: Seq<nat>)
-    ensures tracked_parse_state(entry, entry, Seq::empty(), None),
+    ensures
+        tracked_parse_state(entry, entry, Seq::empty(), None),
 {
     reveal(tracked_parse_state);
     reveal(stack_var_prefix);
@@ -9889,9 +9518,11 @@ proof fn tracked_state_next(
 )
     requires
         tracked_parse_state(entry, stream, guides, Some(child)),
-        stack_var_prefix(guides) + ckc_spec::term::var_stream(child)
-            == stack_var_prefix(new_guides),
-    ensures tracked_parse_state(entry, stream, new_guides, None),
+        stack_var_prefix(guides) + ckc_spec::term::var_stream(child) == stack_var_prefix(
+            new_guides,
+        ),
+    ensures
+        tracked_parse_state(entry, stream, new_guides, None),
 {
     reveal(tracked_parse_state);
     reveal(option_var_stream);
@@ -9912,9 +9543,10 @@ proof fn tracked_state_done(
 )
     requires
         tracked_parse_state(entry, stream, guides, Some(child)),
-        stack_var_prefix(guides) + ckc_spec::term::var_stream(child)
-            == stack_var_prefix(new_guides) + ckc_spec::term::var_stream(done),
-    ensures tracked_parse_state(entry, stream, new_guides, Some(done)),
+        stack_var_prefix(guides) + ckc_spec::term::var_stream(child) == stack_var_prefix(new_guides)
+            + ckc_spec::term::var_stream(done),
+    ensures
+        tracked_parse_state(entry, stream, new_guides, Some(done)),
 {
     reveal(tracked_parse_state);
     reveal(option_var_stream);
@@ -9940,7 +9572,8 @@ proof fn tracked_state_push(
     requires
         tracked_parse_state(entry, stream, guides, None),
         guide_var_prefix(guide) == Seq::<nat>::empty(),
-    ensures tracked_parse_state(entry, stream, guides.push(guide), None),
+    ensures
+        tracked_parse_state(entry, stream, guides.push(guide), None),
 {
     stack_var_prefix_push_empty(guides, guide);
     reveal(tracked_parse_state);
@@ -9957,19 +9590,18 @@ proof fn tracked_state_atomic(
     requires
         tracked_parse_state(entry, before, guides, None),
         after == before + ckc_spec::term::var_stream(term),
-    ensures tracked_parse_state(entry, after, guides, Some(term)),
+    ensures
+        tracked_parse_state(entry, after, guides, Some(term)),
 {
     reveal(tracked_parse_state);
     reveal(option_var_stream);
 }
 
-proof fn tracked_state_root(
-    entry: Seq<nat>,
-    stream: Seq<nat>,
-    term: Term,
-)
-    requires tracked_parse_state(entry, stream, Seq::empty(), Some(term)),
-    ensures stream == entry + ckc_spec::term::var_stream(term),
+proof fn tracked_state_root(entry: Seq<nat>, stream: Seq<nat>, term: Term)
+    requires
+        tracked_parse_state(entry, stream, Seq::empty(), Some(term)),
+    ensures
+        stream == entry + ckc_spec::term::var_stream(term),
 {
     reveal(tracked_parse_state);
     reveal(stack_var_prefix);
@@ -9995,44 +9627,44 @@ pub open spec fn stack_var_prefix(guides: Seq<GTermFrame>) -> Seq<nat>
 }
 
 proof fn stack_var_prefix_push(guides: Seq<GTermFrame>, guide: GTermFrame)
-    ensures stack_var_prefix(guides.push(guide))
-        == stack_var_prefix(guides) + guide_var_prefix(guide),
+    ensures
+        stack_var_prefix(guides.push(guide)) == stack_var_prefix(guides) + guide_var_prefix(guide),
 {
     assert_seqs_equal!(guides.push(guide).drop_last() == guides);
     assert(guides.push(guide).last() == guide);
     reveal_with_fuel(stack_var_prefix, 2);
 }
 
-proof fn stack_var_prefix_push_empty(
-    guides: Seq<GTermFrame>,
-    guide: GTermFrame,
-)
-    requires guide_var_prefix(guide) == Seq::<nat>::empty(),
-    ensures stack_var_prefix(guides.push(guide)) == stack_var_prefix(guides),
+proof fn stack_var_prefix_push_empty(guides: Seq<GTermFrame>, guide: GTermFrame)
+    requires
+        guide_var_prefix(guide) == Seq::<nat>::empty(),
+    ensures
+        stack_var_prefix(guides.push(guide)) == stack_var_prefix(guides),
 {
     stack_var_prefix_push(guides, guide);
 }
 
 proof fn stack_var_prefix_last(guides: Seq<GTermFrame>)
-    requires guides.len() > 0,
-    ensures stack_var_prefix(guides)
-        == stack_var_prefix(guides.drop_last()) + guide_var_prefix(guides.last()),
+    requires
+        guides.len() > 0,
+    ensures
+        stack_var_prefix(guides) == stack_var_prefix(guides.drop_last()) + guide_var_prefix(
+            guides.last(),
+        ),
 {
     reveal(stack_var_prefix);
 }
 
-proof fn stack_var_prefix_advance(
-    guides: Seq<GTermFrame>,
-    advanced: GTermFrame,
-    child: Term,
-)
+proof fn stack_var_prefix_advance(guides: Seq<GTermFrame>, advanced: GTermFrame, child: Term)
     requires
         guides.len() > 0,
-        guide_var_prefix(advanced)
-            == guide_var_prefix(guides.last())
-                + ckc_spec::term::var_stream(child),
-    ensures stack_var_prefix(guides) + ckc_spec::term::var_stream(child)
-        == stack_var_prefix(guides.drop_last().push(advanced)),
+        guide_var_prefix(advanced) == guide_var_prefix(guides.last()) + ckc_spec::term::var_stream(
+            child,
+        ),
+    ensures
+        stack_var_prefix(guides) + ckc_spec::term::var_stream(child) == stack_var_prefix(
+            guides.drop_last().push(advanced),
+        ),
 {
     stack_var_prefix_last(guides);
     stack_var_prefix_push(guides.drop_last(), advanced);
@@ -10045,18 +9677,15 @@ proof fn stack_var_prefix_advance(
     );
 }
 
-proof fn stack_var_prefix_done(
-    guides: Seq<GTermFrame>,
-    child: Term,
-    done: Term,
-)
+proof fn stack_var_prefix_done(guides: Seq<GTermFrame>, child: Term, done: Term)
     requires
         guides.len() > 0,
         guide_var_prefix(guides.last()) + ckc_spec::term::var_stream(child)
             == ckc_spec::term::var_stream(done),
-    ensures stack_var_prefix(guides) + ckc_spec::term::var_stream(child)
-        == stack_var_prefix(guides.drop_last())
-            + ckc_spec::term::var_stream(done),
+    ensures
+        stack_var_prefix(guides) + ckc_spec::term::var_stream(child) == stack_var_prefix(
+            guides.drop_last(),
+        ) + ckc_spec::term::var_stream(done),
 {
     stack_var_prefix_last(guides);
     assert_seqs_equal!(
@@ -10068,16 +9697,13 @@ proof fn stack_var_prefix_done(
     );
 }
 
-proof fn guide_advance_vars(
-    bytes: Seq<u8>,
-    frame: &ETermFrame,
-    guide: GTermFrame,
-)
+proof fn guide_advance_vars(bytes: Seq<u8>, frame: &ETermFrame, guide: GTermFrame)
     requires
         guide_frame_ok(bytes, frame, guide),
         guide_has_next(guide),
-    ensures guide_var_prefix(advance_guide(guide))
-        == guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide)),
+    ensures
+        guide_var_prefix(advance_guide(guide)) == guide_var_prefix(guide)
+            + ckc_spec::term::var_stream(guide_next(guide)),
 {
     reveal(guide_frame_ok);
     reveal(guide_has_next);
@@ -10098,24 +9724,21 @@ proof fn guide_advance_vars(
     }
 }
 
-proof fn comp_guide_done_vars(
-    name: Seq<u8>,
-    built: Seq<Term>,
-    remaining: Seq<Term>,
-    end: int,
-)
-    requires remaining.len() == 1,
-    ensures {
-        let guide = GTermFrame::Comp { name, built, remaining, end };
-        guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
-            == ckc_spec::term::var_stream(guide_target(guide))
-    },
+proof fn comp_guide_done_vars(name: Seq<u8>, built: Seq<Term>, remaining: Seq<Term>, end: int)
+    requires
+        remaining.len() == 1,
+    ensures
+        ({
+            let guide = GTermFrame::Comp { name, built, remaining, end };
+            guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
+                == ckc_spec::term::var_stream(guide_target(guide))
+        }),
 {
     let guide = GTermFrame::Comp { name, built, remaining, end };
     assert_seqs_equal!(remaining == seq![remaining[0]]);
     var_stream_all_concat(built, remaining);
-    assert(ckc_spec::term::var_stream_all(remaining)
-        == ckc_spec::term::var_stream(remaining[0])) by {
+    assert(ckc_spec::term::var_stream_all(remaining) == ckc_spec::term::var_stream(remaining[0]))
+        by {
         reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
     }
     reveal(guide_var_prefix);
@@ -10124,22 +9747,19 @@ proof fn comp_guide_done_vars(
     reveal(ckc_spec::term::var_stream);
 }
 
-proof fn list_tail_guide_done_vars(
-    built: Seq<Term>,
-    tail: Term,
-    end: int,
-)
-    ensures {
-        let guide = GTermFrame::List {
-            built,
-            remaining: Seq::empty(),
-            tail,
-            tail_mode: true,
-            end,
-        };
-        guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
-            == ckc_spec::term::var_stream(guide_target(guide))
-    },
+proof fn list_tail_guide_done_vars(built: Seq<Term>, tail: Term, end: int)
+    ensures
+        ({
+            let guide = GTermFrame::List {
+                built,
+                remaining: Seq::empty(),
+                tail,
+                tail_mode: true,
+                end,
+            };
+            guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
+                == ckc_spec::term::var_stream(guide_target(guide))
+        }),
 {
     let remaining = Seq::<Term>::empty();
     var_stream_list_term(built, tail);
@@ -10149,23 +9769,21 @@ proof fn list_tail_guide_done_vars(
     reveal(guide_target);
 }
 
-proof fn list_elem_guide_done_vars(
-    built: Seq<Term>,
-    remaining: Seq<Term>,
-    end: int,
-)
-    requires remaining.len() == 1,
-    ensures {
-        let guide = GTermFrame::List {
-            built,
-            remaining,
-            tail: Term::Nil,
-            tail_mode: false,
-            end,
-        };
-        guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
-            == ckc_spec::term::var_stream(guide_target(guide))
-    },
+proof fn list_elem_guide_done_vars(built: Seq<Term>, remaining: Seq<Term>, end: int)
+    requires
+        remaining.len() == 1,
+    ensures
+        ({
+            let guide = GTermFrame::List {
+                built,
+                remaining,
+                tail: Term::Nil,
+                tail_mode: false,
+                end,
+            };
+            guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
+                == ckc_spec::term::var_stream(guide_target(guide))
+        }),
 {
     assert_seqs_equal!(remaining == seq![remaining[0]]);
     assert_seqs_equal!(built + remaining == built.push(remaining[0]));
@@ -10180,11 +9798,12 @@ proof fn list_elem_guide_done_vars(
 }
 
 proof fn curly_guide_done_vars(child: Term, end: int)
-    ensures {
-        let guide = GTermFrame::Curly { child, end };
-        guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
-            == ckc_spec::term::var_stream(guide_target(guide))
-    },
+    ensures
+        ({
+            let guide = GTermFrame::Curly { child, end };
+            guide_var_prefix(guide) + ckc_spec::term::var_stream(guide_next(guide))
+                == ckc_spec::term::var_stream(guide_target(guide))
+        }),
 {
     reveal(guide_var_prefix);
     reveal(guide_next);
@@ -10207,13 +9826,14 @@ proof fn tracked_next_transition(
         guide_frame_ok(bytes, frame, guide),
         guide_has_next(guide),
         child == guide_next(guide),
-    ensures stack_var_prefix(guides) + ckc_spec::term::var_stream(child)
-        == stack_var_prefix(guides.drop_last().push(advance_guide(guide))),
+    ensures
+        stack_var_prefix(guides) + ckc_spec::term::var_stream(child) == stack_var_prefix(
+            guides.drop_last().push(advance_guide(guide)),
+        ),
 {
     guide_advance_vars(bytes, frame, guide);
-    assert(guide_var_prefix(advance_guide(guide))
-        == guide_var_prefix(guides.last())
-            + ckc_spec::term::var_stream(child));
+    assert(guide_var_prefix(advance_guide(guide)) == guide_var_prefix(guides.last())
+        + ckc_spec::term::var_stream(child));
     stack_var_prefix_advance(guides, advance_guide(guide), child);
 }
 
@@ -10232,9 +9852,10 @@ proof fn tracked_done_transition(
         !guide_has_next(guide),
         child == guide_next(guide),
         done == guide_target(guide),
-    ensures stack_var_prefix(guides) + ckc_spec::term::var_stream(child)
-        == stack_var_prefix(guides.drop_last())
-            + ckc_spec::term::var_stream(done),
+    ensures
+        stack_var_prefix(guides) + ckc_spec::term::var_stream(child) == stack_var_prefix(
+            guides.drop_last(),
+        ) + ckc_spec::term::var_stream(done),
 {
     reveal(guide_frame_ok);
     reveal(guide_has_next);
@@ -10244,8 +9865,7 @@ proof fn tracked_done_transition(
             let rebuilt = GTermFrame::Comp { name, built, remaining, end };
             assert(guide == rebuilt);
             comp_guide_done_vars(name, built, remaining, end);
-            assert(guide_var_prefix(guide)
-                    + ckc_spec::term::var_stream(child)
+            assert(guide_var_prefix(guide) + ckc_spec::term::var_stream(child)
                 == ckc_spec::term::var_stream(done));
             stack_var_prefix_done(guides, child, done);
         },
@@ -10275,8 +9895,7 @@ proof fn tracked_done_transition(
                 assert(guide == rebuilt);
                 list_elem_guide_done_vars(built, remaining, end);
             }
-            assert(guide_var_prefix(guide)
-                    + ckc_spec::term::var_stream(child)
+            assert(guide_var_prefix(guide) + ckc_spec::term::var_stream(child)
                 == ckc_spec::term::var_stream(done));
             stack_var_prefix_done(guides, child, done);
         },
@@ -10284,8 +9903,7 @@ proof fn tracked_done_transition(
             let rebuilt = GTermFrame::Curly { child: target, end };
             assert(guide == rebuilt);
             curly_guide_done_vars(target, end);
-            assert(guide_var_prefix(guide)
-                    + ckc_spec::term::var_stream(child)
+            assert(guide_var_prefix(guide) + ckc_spec::term::var_stream(child)
                 == ckc_spec::term::var_stream(done));
             stack_var_prefix_done(guides, child, done);
         },
@@ -10293,16 +9911,12 @@ proof fn tracked_done_transition(
 }
 
 pub open spec fn tracker_complete(valid: bool, stream: Seq<nat>) -> bool {
-    valid
-        || !ckc_spec::term::var_canonical(stream)
-        || stream.len() > usize::MAX as nat
+    valid || !ckc_spec::term::var_canonical(stream) || stream.len() > usize::MAX as nat
 }
 
-proof fn firsts_len_le(
-    values: Seq<nat>,
-    seen: Set<nat>,
-)
-    ensures ckc_spec::term::firsts(values, seen).len() <= values.len(),
+proof fn firsts_len_le(values: Seq<nat>, seen: Set<nat>)
+    ensures
+        ckc_spec::term::firsts(values, seen).len() <= values.len(),
     decreases values.len(),
 {
     if values.len() == 0 {
@@ -10314,22 +9928,22 @@ proof fn firsts_len_le(
         assert(values.len() == rest.len() + 1);
         if seen.contains(values[0]) {
             assert_sets_equal!(seen.insert(values[0]) == seen);
-            assert(ckc_spec::term::firsts(values, seen)
-                == ckc_spec::term::firsts(rest, seen));
+            assert(ckc_spec::term::firsts(values, seen) == ckc_spec::term::firsts(rest, seen));
             firsts_len_le(rest, seen);
         } else {
-            assert(ckc_spec::term::firsts(values, seen).len()
-                == 1 + ckc_spec::term::firsts(
-                    rest,
-                    seen.insert(values[0]),
-                ).len());
+            assert(ckc_spec::term::firsts(values, seen).len() == 1 + ckc_spec::term::firsts(
+                rest,
+                seen.insert(values[0]),
+            ).len());
         }
     }
 }
 
 proof fn nat_prefix_push_tail(n: nat, value: nat)
-    requires nat_prefix(n).push(value) == nat_prefix(n + 1),
-    ensures value == n,
+    requires
+        nat_prefix(n).push(value) == nat_prefix(n + 1),
+    ensures
+        value == n,
 {
     nat_prefix_push(n);
     assert(nat_prefix(n).push(value).last() == value);
@@ -10338,14 +9952,13 @@ proof fn nat_prefix_push_tail(n: nat, value: nat)
 
 #[verifier::rlimit(100)]
 proof fn noncanonical_push(stream: Seq<nat>, value: nat)
-    requires !ckc_spec::term::var_canonical(stream),
-    ensures !ckc_spec::term::var_canonical(stream.push(value)),
+    requires
+        !ckc_spec::term::var_canonical(stream),
+    ensures
+        !ckc_spec::term::var_canonical(stream.push(value)),
 {
     let old_firsts = ckc_spec::term::firsts(stream, Set::empty());
-    let new_firsts = ckc_spec::term::firsts(
-        stream.push(value),
-        Set::empty(),
-    );
+    let new_firsts = ckc_spec::term::firsts(stream.push(value), Set::empty());
     firsts_push(stream, Set::empty(), value);
     reveal(ckc_spec::term::var_canonical);
     reveal(nat_prefix);
@@ -10353,17 +9966,15 @@ proof fn noncanonical_push(stream: Seq<nat>, value: nat)
         assert(new_firsts == old_firsts);
     } else {
         assert(new_firsts == old_firsts.push(value));
-        if new_firsts
-            == Seq::new(new_firsts.len(), |i: int| i as nat)
-        {
+        if new_firsts == Seq::new(new_firsts.len(), |i: int| i as nat) {
             assert(new_firsts.len() == old_firsts.len() + 1);
             assert(new_firsts == nat_prefix(old_firsts.len() + 1));
             nat_prefix_push(old_firsts.len());
-            assert(old_firsts.push(value)
-                == nat_prefix(old_firsts.len()).push(old_firsts.len()));
+            assert(old_firsts.push(value) == nat_prefix(old_firsts.len()).push(old_firsts.len()));
             assert(old_firsts.push(value).drop_last() == old_firsts);
-            assert(nat_prefix(old_firsts.len()).push(old_firsts.len()).drop_last()
-                == nat_prefix(old_firsts.len()));
+            assert(nat_prefix(old_firsts.len()).push(old_firsts.len()).drop_last() == nat_prefix(
+                old_firsts.len(),
+            ));
             assert(old_firsts == nat_prefix(old_firsts.len()));
             assert(false);
         }
@@ -10371,24 +9982,16 @@ proof fn noncanonical_push(stream: Seq<nat>, value: nat)
 }
 
 #[verifier::rlimit(200)]
-proof fn rejected_push_complete(
-    next: usize,
-    stream: Seq<nat>,
-    value: nat,
-)
+proof fn rejected_push_complete(next: usize, stream: Seq<nat>, value: nat)
     requires
         tracker_state_ok(next, stream),
-        !(value < next
-            || value == next && next < usize::MAX),
+        !(value < next || value == next && next < usize::MAX),
     ensures
-        !ckc_spec::term::var_canonical(stream.push(value))
-            || stream.push(value).len() > usize::MAX as nat,
+        !ckc_spec::term::var_canonical(stream.push(value)) || stream.push(value).len()
+            > usize::MAX as nat,
 {
     let old_firsts = ckc_spec::term::firsts(stream, Set::empty());
-    let new_firsts = ckc_spec::term::firsts(
-        stream.push(value),
-        Set::empty(),
-    );
+    let new_firsts = ckc_spec::term::firsts(stream.push(value), Set::empty());
     reveal(tracker_state_ok);
     canonical_seen_contains(next as nat, value);
     firsts_push(stream, Set::empty(), value);
@@ -10415,8 +10018,10 @@ proof fn rejected_push_complete(
 }
 
 proof fn tracker_complete_push_invalid(stream: Seq<nat>, value: nat)
-    requires tracker_complete(false, stream),
-    ensures tracker_complete(false, stream.push(value)),
+    requires
+        tracker_complete(false, stream),
+    ensures
+        tracker_complete(false, stream.push(value)),
 {
     reveal(tracker_complete);
     if !ckc_spec::term::var_canonical(stream) {
@@ -10427,8 +10032,10 @@ proof fn tracker_complete_push_invalid(stream: Seq<nat>, value: nat)
 }
 
 proof fn tracker_state_canonical(next: usize, stream: Seq<nat>)
-    requires tracker_state_ok(next, stream),
-    ensures ckc_spec::term::var_canonical(stream),
+    requires
+        tracker_state_ok(next, stream),
+    ensures
+        ckc_spec::term::var_canonical(stream),
 {
     reveal(tracker_state_ok);
     reveal(ckc_spec::term::var_canonical);
@@ -10436,9 +10043,12 @@ proof fn tracker_state_canonical(next: usize, stream: Seq<nat>)
 }
 
 proof fn firsts_contains_at(values: Seq<nat>, seen: Set<nat>, index: int)
-    requires 0 <= index < values.len(),
-    ensures seen.contains(values[index])
-        || ckc_spec::term::firsts(values, seen).contains(values[index]),
+    requires
+        0 <= index < values.len(),
+    ensures
+        seen.contains(values[index]) || ckc_spec::term::firsts(values, seen).contains(
+            values[index],
+        ),
     decreases values.len(),
 {
     let value = values[index];
@@ -10452,7 +10062,11 @@ proof fn firsts_contains_at(values: Seq<nat>, seen: Set<nat>, index: int)
             assert(index > 0);
             assert(rest[index - 1] == value);
             firsts_contains_at(rest, seen.insert(head), index - 1);
-            let next_seen = if seen.contains(head) { seen } else { seen.insert(head) };
+            let next_seen = if seen.contains(head) {
+                seen
+            } else {
+                seen.insert(head)
+            };
             if seen.contains(head) {
                 assert_sets_equal!(seen.insert(head) == seen);
             }
@@ -10472,13 +10086,14 @@ proof fn canonical_stream_keys_fit(stream: Seq<nat>)
     requires
         ckc_spec::term::var_canonical(stream),
         stream.len() <= usize::MAX as nat,
-    ensures stream_keys_fit(stream),
+    ensures
+        stream_keys_fit(stream),
 {
     let firsts = ckc_spec::term::firsts(stream, Set::empty());
     firsts_len_le(stream, Set::empty());
     reveal(ckc_spec::term::var_canonical);
-    assert forall|i: int| 0 <= i < stream.len()
-        implies #[trigger] stream[i] <= usize::MAX as nat by {
+    assert forall|i: int| 0 <= i < stream.len() implies #[trigger] stream[i]
+        <= usize::MAX as nat by {
         firsts_contains_at(stream, Set::empty(), i);
         assert(firsts.contains(stream[i]));
         let j = choose|j: int| 0 <= j < firsts.len() && firsts[j] == stream[i];
@@ -10489,10 +10104,8 @@ proof fn canonical_stream_keys_fit(stream: Seq<nat>)
 #[verifier::spinoff_prover]
 proof fn term_var_lengths(term: Term)
     ensures
-        ckc_spec::term::var_stream(term).len()
-            <= ckc_spec::v1text::term_bytes(term).len(),
-        ckc_spec::term::var_stream(term).len()
-            <= ckc_spec::v1text::tail_bytes(term).len(),
+        ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(term).len(),
+        ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::tail_bytes(term).len(),
     decreases term, 0int,
 {
     reveal(ckc_spec::term::var_stream);
@@ -10504,39 +10117,44 @@ proof fn term_var_lengths(term: Term)
             assert(ckc_spec::term::var_stream(term) == seq![key]);
             assert(ckc_spec::term::var_stream(term).len() == 1);
             assert(ckc_spec::v1text::term_bytes(term).len() >= 1);
-            assert(ckc_spec::term::var_stream(term).len()
-                <= ckc_spec::v1text::term_bytes(term).len());
+            assert(ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(
+                term,
+            ).len());
         },
         Term::Comp(name, args) => {
             if name == ckc_spec::v1text::cons_name() && args.len() == 2 {
                 term_var_lengths(args[0]);
                 term_var_lengths(args[1]);
                 assert_seqs_equal!(args == seq![args[0], args[1]]);
-                assert(ckc_spec::term::var_stream_all(args)
-                    == ckc_spec::term::var_stream(args[0])
-                        + ckc_spec::term::var_stream(args[1])) by {
+                assert(ckc_spec::term::var_stream_all(args) == ckc_spec::term::var_stream(args[0])
+                    + ckc_spec::term::var_stream(args[1])) by {
                     reveal_with_fuel(ckc_spec::term::var_stream_all, 3);
                 }
-                assert(ckc_spec::term::var_stream(term).len()
-                    <= ckc_spec::v1text::term_bytes(term).len());
+                assert(ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(
+                    term,
+                ).len());
             } else if name == ckc_spec::v1text::curly_name() && args.len() == 1 {
                 term_var_lengths(args[0]);
                 assert_seqs_equal!(args == seq![args[0]]);
-                assert(ckc_spec::term::var_stream_all(args)
-                    == ckc_spec::term::var_stream(args[0])) by {
+                assert(ckc_spec::term::var_stream_all(args) == ckc_spec::term::var_stream(args[0]))
+                    by {
                     reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
                 }
-                assert(ckc_spec::term::var_stream(term).len()
-                    <= ckc_spec::v1text::term_bytes(term).len());
+                assert(ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(
+                    term,
+                ).len());
             } else {
                 terms_var_lengths(args);
-                assert(ckc_spec::term::var_stream(term).len()
-                    <= ckc_spec::v1text::term_bytes(term).len());
+                assert(ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(
+                    term,
+                ).len());
             }
-            assert(ckc_spec::term::var_stream(term).len()
-                <= ckc_spec::v1text::term_bytes(term).len());
-            assert(ckc_spec::term::var_stream(term).len()
-                <= ckc_spec::v1text::tail_bytes(term).len());
+            assert(ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(
+                term,
+            ).len());
+            assert(ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::tail_bytes(
+                term,
+            ).len());
         },
         _ => {
             assert(ckc_spec::term::var_stream(term).len() == 0);
@@ -10546,10 +10164,10 @@ proof fn term_var_lengths(term: Term)
 
 proof fn terms_var_lengths(terms: Seq<Term>)
     ensures
-        ckc_spec::term::var_stream_all(terms).len()
-            <= ckc_spec::v1text::args_bytes(terms).len(),
-        ckc_spec::term::var_stream_all(terms).len()
-            <= ckc_spec::v1text::lit_list_bytes(terms).len(),
+        ckc_spec::term::var_stream_all(terms).len() <= ckc_spec::v1text::args_bytes(terms).len(),
+        ckc_spec::term::var_stream_all(terms).len() <= ckc_spec::v1text::lit_list_bytes(
+            terms,
+        ).len(),
     decreases terms, 1int,
 {
     reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
@@ -10566,22 +10184,25 @@ pub open spec fn stream_keys_fit(stream: Seq<nat>) -> bool {
 }
 
 proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
-    requires stream_keys_fit(left + right),
-    ensures stream_keys_fit(left), stream_keys_fit(right),
+    requires
+        stream_keys_fit(left + right),
+    ensures
+        stream_keys_fit(left),
+        stream_keys_fit(right),
 {
-    assert forall|i: int| 0 <= i < left.len()
-        implies #[trigger] left[i] <= usize::MAX as nat by {
+    assert forall|i: int| 0 <= i < left.len() implies #[trigger] left[i] <= usize::MAX as nat by {
         assert((left + right)[i] == left[i]);
     }
-    assert forall|i: int| 0 <= i < right.len()
-        implies #[trigger] right[i] <= usize::MAX as nat by {
+    assert forall|i: int| 0 <= i < right.len() implies #[trigger] right[i] <= usize::MAX as nat by {
         assert((left + right)[left.len() + i] == right[i]);
     }
 }
 
 proof fn term_keys_from_stream(term: Term)
-    requires stream_keys_fit(ckc_spec::term::var_stream(term)),
-    ensures term_keys_fit(term),
+    requires
+        stream_keys_fit(ckc_spec::term::var_stream(term)),
+    ensures
+        term_keys_fit(term),
     decreases term, 0int,
 {
     reveal(ckc_spec::term::var_stream);
@@ -10590,14 +10211,18 @@ proof fn term_keys_from_stream(term: Term)
         Term::Var(key) => {
             assert(ckc_spec::term::var_stream(term)[0] == key);
         },
-        Term::Comp(_, args) => { terms_keys_from_stream(args); },
+        Term::Comp(_, args) => {
+            terms_keys_from_stream(args);
+        },
         _ => {},
     }
 }
 
 proof fn terms_keys_from_stream(terms: Seq<Term>)
-    requires stream_keys_fit(ckc_spec::term::var_stream_all(terms)),
-    ensures terms_keys_fit(terms),
+    requires
+        stream_keys_fit(ckc_spec::term::var_stream_all(terms)),
+    ensures
+        terms_keys_fit(terms),
     decreases terms, 1int,
 {
     reveal(ckc_spec::term::var_stream_all);
@@ -10612,15 +10237,12 @@ proof fn terms_keys_from_stream(terms: Seq<Term>)
     }
 }
 
-proof fn atomic_var_stream_len(
-    term: Term,
-    start: usize,
-    end: usize,
-)
+proof fn atomic_var_stream_len(term: Term, start: usize, end: usize)
     requires
         atomic_term(term),
         start < end,
-    ensures ckc_spec::term::var_stream(term).len() <= end - start,
+    ensures
+        ckc_spec::term::var_stream(term).len() <= end - start,
 {
     match term {
         Term::Var(_) => {
@@ -10643,21 +10265,18 @@ fn record_variable(
     end: usize,
     value: Ghost<nat>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: bool)
     requires
         *old(at) <= bytes@.len(),
         start < end <= bytes@.len(),
-        ckc_spec::v1text::var_bytes(value@)
-            == bytes@.subrange(start as int, end as int),
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        ckc_spec::v1text::var_bytes(value@) == bytes@.subrange(start as int, end as int),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         final(tracker).stream@ == old(tracker).stream@.push(value@),
-        final(tracker).valid ==>
-            tracker_state_ok(final(tracker).next, final(tracker).stream@),
+        final(tracker).valid ==> tracker_state_ok(final(tracker).next, final(tracker).stream@),
         tracker_complete(final(tracker).valid, final(tracker).stream@),
         r == final(tracker).valid,
 {
@@ -10696,39 +10315,23 @@ at: &mut usize,
     false
 }
 
-pub open spec fn answers_flat(
-    a: ckc_spec::v1text::AnswersFile,
-) -> Seq<u8> {
-    ckc_spec::v1text::ascii("% "@)
-        + a.qid
-        + ckc_spec::v1text::ascii(
-            " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
-        )
-        + ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("$guideline_answers"@),
-        )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@))
-        + seq![0x2cu8]
-        + ckc_spec::v1text::atom_bytes(a.qid)
-        + seq![0x2cu8]
-        + ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("query_sha256"@),
-        )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(a.qsha)
-        + seq![0x29u8, 0x2cu8]
-        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("result"@))
-        + seq![0x28u8]
-        + ckc_spec::v1text::term_bytes(a.result)
-        + seq![0x29u8, 0x29u8]
-        + ckc_spec::v1text::ascii(".\n"@)
+pub open spec fn answers_flat(a: ckc_spec::v1text::AnswersFile) -> Seq<u8> {
+    ckc_spec::v1text::ascii("% "@) + a.qid + ckc_spec::v1text::ascii(
+        " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+    ) + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_answers"@)) + seq![0x28u8]
+        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)) + seq![0x2cu8]
+        + ckc_spec::v1text::atom_bytes(a.qid) + seq![0x2cu8] + ckc_spec::v1text::atom_bytes(
+        ckc_spec::v1text::ascii("query_sha256"@),
+    ) + seq![0x28u8] + ckc_spec::v1text::atom_bytes(a.qsha) + seq![0x29u8, 0x2cu8]
+        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("result"@)) + seq![0x28u8]
+        + ckc_spec::v1text::term_bytes(a.result) + seq![0x29u8, 0x29u8] + ckc_spec::v1text::ascii(
+        ".\n"@,
+    )
 }
 
 proof fn atom_term_bytes(name: Seq<u8>)
     ensures
-        ckc_spec::v1text::term_bytes(Term::Atom(name))
-            == ckc_spec::v1text::atom_bytes(name),
+        ckc_spec::v1text::term_bytes(Term::Atom(name)) == ckc_spec::v1text::atom_bytes(name),
 {
     reveal_with_fuel(ckc_spec::v1text::term_bytes, 1);
 }
@@ -10738,57 +10341,44 @@ proof fn regular_comp_bytes(name: Seq<u8>, args: Seq<Term>)
         !(name == ckc_spec::v1text::cons_name() && args.len() == 2),
         !(name == ckc_spec::v1text::curly_name() && args.len() == 1),
     ensures
-        ckc_spec::v1text::term_bytes(Term::Comp(name, args))
-            == ckc_spec::v1text::atom_bytes(name)
-                + seq![0x28u8]
-                + ckc_spec::v1text::args_bytes(args)
-                + seq![0x29u8],
+        ckc_spec::v1text::term_bytes(Term::Comp(name, args)) == ckc_spec::v1text::atom_bytes(name)
+            + seq![0x28u8] + ckc_spec::v1text::args_bytes(args) + seq![0x29u8],
 {
     reveal_with_fuel(ckc_spec::v1text::term_bytes, 1);
 }
 
 proof fn args_one_bytes(a: Term)
     ensures
-        ckc_spec::v1text::args_bytes(seq![a])
-            == ckc_spec::v1text::term_bytes(a),
+        ckc_spec::v1text::args_bytes(seq![a]) == ckc_spec::v1text::term_bytes(a),
 {
     reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
 }
 
 proof fn args_four_bytes(a: Term, b: Term, c: Term, d: Term)
     ensures
-        ckc_spec::v1text::args_bytes(seq![a, b, c, d])
-            == ckc_spec::v1text::term_bytes(a)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(b)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(c)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(d),
+        ckc_spec::v1text::args_bytes(seq![a, b, c, d]) == ckc_spec::v1text::term_bytes(a) + seq![
+            0x2cu8,
+        ] + ckc_spec::v1text::term_bytes(b) + seq![0x2cu8] + ckc_spec::v1text::term_bytes(c) + seq![
+            0x2cu8,
+        ] + ckc_spec::v1text::term_bytes(d),
 {
     reveal_with_fuel(ckc_spec::v1text::args_bytes, 5);
 }
 
-pub open spec fn answers_parts(
-    a: ckc_spec::v1text::AnswersFile,
-) -> Seq<Seq<u8>> {
+pub open spec fn answers_parts(a: ckc_spec::v1text::AnswersFile) -> Seq<Seq<u8>> {
     seq![
         ckc_spec::v1text::ascii("% "@),
         a.qid,
         ckc_spec::v1text::ascii(
             " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
         ),
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("$guideline_answers"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_answers"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
         seq![0x2cu8],
         ckc_spec::v1text::atom_bytes(a.qid),
         seq![0x2cu8],
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("query_sha256"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("query_sha256"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(a.qsha),
         seq![0x29u8],
@@ -10805,7 +10395,8 @@ pub open spec fn answers_parts(
 #[verifier::rlimit(5000)]
 #[verifier::spinoff_prover]
 proof fn answers_parts_flat(a: ckc_spec::v1text::AnswersFile)
-    ensures answers_parts(a).flatten() == answers_flat(a),
+    ensures
+        answers_parts(a).flatten() == answers_flat(a),
 {
     reveal(answers_parts);
     reveal(answers_flat);
@@ -10813,10 +10404,10 @@ proof fn answers_parts_flat(a: ckc_spec::v1text::AnswersFile)
 }
 
 proof fn flatten_take_step<A>(parts: Seq<Seq<A>>, i: int)
-    requires 0 <= i < parts.len(),
+    requires
+        0 <= i < parts.len(),
     ensures
-        parts.take(i + 1).flatten()
-            == parts.take(i).flatten() + parts[i],
+        parts.take(i + 1).flatten() == parts.take(i).flatten() + parts[i],
 {
     parts.lemma_take_succ_push(i);
     parts.take(i).lemma_flatten_push(parts[i]);
@@ -10844,22 +10435,10 @@ proof fn flattened_part(bytes: Seq<u8>, parts: Seq<Seq<u8>>, i: int)
     vstd::seq_lib::lemma_flatten_concat(through_parts, after_parts);
     assert(bytes == before + part + after);
     assert_seqs_equal!(bytes.subrange(0, bytes.len() as int) == bytes);
-    segment_of_three(
-        bytes,
-        0,
-        bytes.len() as int,
-        before,
-        part,
-        after,
-    );
+    segment_of_three(bytes, 0, bytes.len() as int, before, part, after);
 }
 
-proof fn cursor_part_ready(
-    bytes: Seq<u8>,
-    cursor: &EByteCursor,
-    parts: Seq<Seq<u8>>,
-    i: int,
-)
+proof fn cursor_part_ready(bytes: Seq<u8>, cursor: &EByteCursor, parts: Seq<Seq<u8>>, i: int)
     requires
         cursor_ok(bytes, cursor),
         cursor.prefix@ == parts.take(i).flatten(),
@@ -10868,27 +10447,20 @@ proof fn cursor_part_ready(
     ensures
         cursor.pos as int == parts.take(i).flatten().len(),
         cursor.pos as int + parts[i].len() <= bytes.len(),
-        bytes.subrange(
-            cursor.pos as int,
-            cursor.pos as int + parts[i].len(),
-        ) == parts[i],
+        bytes.subrange(cursor.pos as int, cursor.pos as int + parts[i].len()) == parts[i],
 {
     reveal(cursor_ok);
     assert(cursor.prefix@.len() == cursor.pos);
     flattened_part(bytes, parts, i);
 }
 
-proof fn part_prefix_advanced(
-    parts: Seq<Seq<u8>>,
-    i: int,
-    before: Seq<u8>,
-    after: Seq<u8>,
-)
+proof fn part_prefix_advanced(parts: Seq<Seq<u8>>, i: int, before: Seq<u8>, after: Seq<u8>)
     requires
         0 <= i < parts.len(),
         before == parts.take(i).flatten(),
         after == before + parts[i],
-    ensures after == parts.take(i + 1).flatten(),
+    ensures
+        after == parts.take(i + 1).flatten(),
 {
     flatten_take_step(parts, i);
 }
@@ -10915,8 +10487,7 @@ proof fn atom_part_expected(
         next == 0x28 || next == 0x2c || next == 0x29,
     ensures
         cursor.pos < g.end <= bytes.len(),
-        ckc_spec::v1text::atom_bytes(g.name)
-            == bytes.subrange(cursor.pos as int, g.end as int),
+        ckc_spec::v1text::atom_bytes(g.name) == bytes.subrange(cursor.pos as int, g.end as int),
         atom_boundary(bytes, g.end as int),
         g.name == name,
 {
@@ -10927,10 +10498,7 @@ proof fn atom_part_expected(
     let end = cursor.pos as int + parts[i].len();
     assert(parts.take(i + 1).flatten().len() == end);
     assert(bytes[end] == parts[i + 1][0]) by {
-        assert(bytes.subrange(
-            end,
-            end + parts[i + 1].len(),
-        )[0] == bytes[end]);
+        assert(bytes.subrange(end, end + parts[i + 1].len())[0] == bytes[end]);
     }
     reveal(atom_boundary);
     reveal(term_boundary);
@@ -10960,16 +10528,14 @@ proof fn name_part_expected(
         ckc_spec::v1text::name_ok(name),
         parts[i + 1].len() > 0,
         parts[i + 1][0] == next,
-        !(ckc_spec::v1text::is_lower_b(next)
-            || ckc_spec::v1text::is_digit_b(next)
-            || next == 0x2d),
+        !(ckc_spec::v1text::is_lower_b(next) || ckc_spec::v1text::is_digit_b(next) || next == 0x2d),
     ensures
         cursor.pos < g.end < bytes.len(),
         ckc_spec::v1text::name_ok(g.value),
         g.value == bytes.subrange(cursor.pos as int, g.end as int),
-        !(ckc_spec::v1text::is_lower_b(bytes[g.end as int])
-            || ckc_spec::v1text::is_digit_b(bytes[g.end as int])
-            || bytes[g.end as int] == 0x2d),
+        !(ckc_spec::v1text::is_lower_b(bytes[g.end as int]) || ckc_spec::v1text::is_digit_b(
+            bytes[g.end as int],
+        ) || bytes[g.end as int] == 0x2d),
         g.value == name,
 {
     cursor_part_ready(bytes, cursor, parts, i);
@@ -10978,10 +10544,7 @@ proof fn name_part_expected(
     let end = cursor.pos as int + parts[i].len();
     assert(parts.take(i + 1).flatten().len() == end);
     assert(bytes[end] == next) by {
-        assert(bytes.subrange(
-            end,
-            end + parts[i + 1].len(),
-        )[0] == bytes[end]);
+        assert(bytes.subrange(end, end + parts[i + 1].len())[0] == bytes[end]);
     }
     reveal(ckc_spec::v1text::is_lower_b);
     reveal(ckc_spec::v1text::is_digit_b);
@@ -11011,11 +10574,10 @@ proof fn term_part_expected(
         ckc_spec::term::wf_term(term),
         parts[i + 1].len() > 0,
         parts[i + 1][0] == next,
-        next == 0x2c || next == 0x29 || next == 0x5d
-            || next == 0x7c || next == 0x7d || next == 0x20
-            || next == 0x2e && parts[i + 1].len() > 1
-                && parts[i + 1][1] == 0x0a,
-    ensures term_at(bytes, cursor.pos as int, g.end as int, g.term),
+        next == 0x2c || next == 0x29 || next == 0x5d || next == 0x7c || next == 0x7d || next == 0x20
+            || next == 0x2e && parts[i + 1].len() > 1 && parts[i + 1][1] == 0x0a,
+    ensures
+        term_at(bytes, cursor.pos as int, g.end as int, g.term),
         g.term == term,
 {
     cursor_part_ready(bytes, cursor, parts, i);
@@ -11025,18 +10587,12 @@ proof fn term_part_expected(
     let end = cursor.pos as int + parts[i].len();
     assert(parts.take(i + 1).flatten().len() == end);
     assert(bytes[end] == next) by {
-        assert(bytes.subrange(
-            end,
-            end + parts[i + 1].len(),
-        )[0] == bytes[end]);
+        assert(bytes.subrange(end, end + parts[i + 1].len())[0] == bytes[end]);
     }
     if next == 0x2e {
         assert(end + 1 < bytes.len());
         assert(bytes[end + 1] == 0x0a) by {
-            assert(bytes.subrange(
-                end,
-                end + parts[i + 1].len(),
-            )[1] == bytes[end + 1]);
+            assert(bytes.subrange(end, end + parts[i + 1].len())[1] == bytes[end + 1]);
         }
     }
     reveal(term_at);
@@ -11061,22 +10617,14 @@ pub closed spec fn parts_progress(
     &&& prefix == parts.take(i).flatten()
 }
 
-proof fn parts_part_ready(
-    bytes: Seq<u8>,
-    parts: Seq<Seq<u8>>,
-    i: int,
-    cursor: &EByteCursor,
-)
+proof fn parts_part_ready(bytes: Seq<u8>, parts: Seq<Seq<u8>>, i: int, cursor: &EByteCursor)
     requires
         parts_progress(bytes, parts, i, cursor.pos, cursor.prefix@),
         0 <= i < parts.len(),
     ensures
         cursor_ok(bytes, cursor),
         cursor.pos as int + parts[i].len() <= bytes.len(),
-        bytes.subrange(
-            cursor.pos as int,
-            cursor.pos as int + parts[i].len(),
-        ) == parts[i],
+        bytes.subrange(cursor.pos as int, cursor.pos as int + parts[i].len()) == parts[i],
 {
     reveal(parts_progress);
     reveal(cursor_ok);
@@ -11115,32 +10663,25 @@ pub struct EGuidedCursor {
     pub guide: Ghost<Option<GPartsGuide>>,
 }
 
-pub closed spec fn guided_cursor_ok(
-    bytes: Seq<u8>,
-    guided: &EGuidedCursor,
-) -> bool {
+pub closed spec fn guided_cursor_ok(bytes: Seq<u8>, guided: &EGuidedCursor) -> bool {
     &&& cursor_ok(bytes, &guided.cursor)
-    &&& guided.guide@ matches Some(g) ==>
-        parts_progress(
-            bytes,
-            g.parts,
-            g.index,
-            guided.cursor.pos,
-            guided.cursor.prefix@,
-        )
+    &&& guided.guide@ matches Some(g) ==> parts_progress(
+        bytes,
+        g.parts,
+        g.index,
+        guided.cursor.pos,
+        guided.cursor.prefix@,
+    )
 }
 
-fn new_guided_cursor(
-    bytes: &[u8],
-    parts: Ghost<Option<Seq<Seq<u8>>>>,
-) -> (guided: EGuidedCursor)
-    requires parts@ matches Some(ps) ==> bytes@ == ps.flatten(),
+fn new_guided_cursor(bytes: &[u8], parts: Ghost<Option<Seq<Seq<u8>>>>) -> (guided: EGuidedCursor)
+    requires
+        parts@ matches Some(ps) ==> bytes@ == ps.flatten(),
     ensures
         guided_cursor_ok(bytes@, &guided),
         guided.cursor.pos == 0,
         guided.cursor.prefix@ == Seq::<u8>::empty(),
-        parts@ matches Some(ps) ==> guided.guide@ matches Some(g)
-            && g.parts == ps && g.index == 0,
+        parts@ matches Some(ps) ==> guided.guide@ matches Some(g) && g.parts == ps && g.index == 0,
         parts@ is None ==> guided.guide@ is None,
 {
     let cursor = new_cursor(bytes);
@@ -11162,7 +10703,7 @@ fn guided_literal(
     guided: &mut EGuidedCursor,
     lit: &[u8],
     chunk: Ghost<Seq<u8>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: bool)
     requires
         *old(at) <= bytes@.len(),
@@ -11176,15 +10717,13 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r ==> guided_cursor_ok(bytes@, final(guided)),
         r ==> {
-            &&& final(guided).cursor.pos
-                == old(guided).cursor.pos + chunk@.len()
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + chunk@
+            &&& final(guided).cursor.pos == old(guided).cursor.pos + chunk@.len()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + chunk@
         },
         old(guided).guide@ matches Some(g) ==> {
             &&& r
-            &&& final(guided).guide@ matches Some(next)
-                && next.parts == g.parts && next.index == g.index + 1
+            &&& final(guided).guide@ matches Some(next) && next.parts == g.parts && next.index
+                == g.index + 1
         },
         old(guided).guide@ is None ==> final(guided).guide@ is None,
 {
@@ -11197,13 +10736,7 @@ at: &mut usize,
             parts_part_ready(bytes@, g.parts, g.index, &guided.cursor);
         }
     }
-    let accepted = cursor_literal(
-        bytes,
-        &mut guided.cursor,
-        lit,
-        chunk,
-    at,
-    );
+    let accepted = cursor_literal(bytes, &mut guided.cursor, lit, chunk, at);
     if !accepted {
         proof {
             if let Some(g) = old_guide {
@@ -11219,14 +10752,7 @@ at: &mut usize,
     };
     proof {
         if let Some(g) = old_guide {
-            advance_parts_progress(
-                bytes@,
-                g.parts,
-                g.index,
-                old_pos,
-                old_prefix,
-                &guided.cursor,
-            );
+            advance_parts_progress(bytes@, g.parts, g.index, old_pos, old_prefix, &guided.cursor);
         }
     }
     guided.guide = Ghost(next_guide);
@@ -11236,12 +10762,7 @@ at: &mut usize,
     true
 }
 
-fn guided_byte(
-    bytes: &[u8],
-    guided: &mut EGuidedCursor,
-    byte: u8,
-at: &mut usize,
-) -> (r: bool)
+fn guided_byte(bytes: &[u8], guided: &mut EGuidedCursor, byte: u8, at: &mut usize) -> (r: bool)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
@@ -11256,13 +10777,12 @@ at: &mut usize,
             &&& old(guided).cursor.pos < bytes@.len()
             &&& bytes@[old(guided).cursor.pos as int] == byte
             &&& final(guided).cursor.pos == old(guided).cursor.pos + 1
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + seq![byte]
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + seq![byte]
         },
         old(guided).guide@ matches Some(g) ==> {
             &&& r
-            &&& final(guided).guide@ matches Some(next)
-                && next.parts == g.parts && next.index == g.index + 1
+            &&& final(guided).guide@ matches Some(next) && next.parts == g.parts && next.index
+                == g.index + 1
         },
         old(guided).guide@ is None ==> final(guided).guide@ is None,
 {
@@ -11293,14 +10813,7 @@ at: &mut usize,
     };
     proof {
         if let Some(g) = old_guide {
-            advance_parts_progress(
-                bytes@,
-                g.parts,
-                g.index,
-                old_pos,
-                old_prefix,
-                &guided.cursor,
-            );
+            advance_parts_progress(bytes@, g.parts, g.index, old_pos, old_prefix, &guided.cursor);
         }
     }
     guided.guide = Ghost(next_guide);
@@ -11314,36 +10827,32 @@ fn guided_atom(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Seq<u8>, u8)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        old(guided).guide@ matches Some(g) ==> expected@ matches Some(e)
-            && {
-                &&& 0 <= g.index
-                &&& g.index + 1 < g.parts.len()
-                &&& g.parts[g.index]
-                    == ckc_spec::v1text::atom_bytes(e.0)
-                &&& g.parts[g.index + 1].len() > 0
-                &&& g.parts[g.index + 1][0] == e.1
-                &&& (e.1 == 0x28 || e.1 == 0x2c || e.1 == 0x29)
-            },
+        old(guided).guide@ matches Some(g) ==> expected@ matches Some(e) && {
+            &&& 0 <= g.index
+            &&& g.index + 1 < g.parts.len()
+            &&& g.parts[g.index] == ckc_spec::v1text::atom_bytes(e.0)
+            &&& g.parts[g.index + 1].len() > 0
+            &&& g.parts[g.index + 1][0] == e.1
+            &&& (e.1 == 0x28 || e.1 == 0x2c || e.1 == 0x29)
+        },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(atom) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& parsed_atom_ok(bytes@, old(guided).cursor.pos, &atom)
             &&& final(guided).cursor.pos == atom.end
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + ckc_spec::v1text::atom_bytes(atom.name@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
+                + ckc_spec::v1text::atom_bytes(atom.name@)
         },
         old(guided).guide@ matches Some(g) ==> {
-            &&& r matches Some(atom)
-            && expected@ matches Some(e) && atom.name@ == e.0
-            &&& final(guided).guide@ matches Some(next)
-                && next.parts == g.parts && next.index == g.index + 1
+            &&& r matches Some(atom) && expected@ matches Some(e) && atom.name@ == e.0
+            &&& final(guided).guide@ matches Some(next) && next.parts == g.parts && next.index
+                == g.index + 1
         },
         old(guided).guide@ is None ==> final(guided).guide@ is None,
 {
@@ -11358,27 +10867,16 @@ at: &mut usize,
     }
     let ghost atom_expected = match (old_guide, expected@) {
         (Some(g), Some(e)) => {
-            Some(atom_part_expected(
-                bytes@,
-                &guided.cursor,
-                g.parts,
-                g.index,
-                e.0,
-                e.1,
-                bytes.len(),
-            ))
+            Some(
+                atom_part_expected(bytes@, &guided.cursor, g.parts, g.index, e.0, e.1, bytes.len()),
+            )
         },
         _ => None,
     };
     proof {
         reveal(guided_cursor_ok);
     }
-    let atom = match cursor_atom(
-        bytes,
-        &mut guided.cursor,
-        Ghost(atom_expected),
-    at,
-    ) {
+    let atom = match cursor_atom(bytes, &mut guided.cursor, Ghost(atom_expected), at) {
         Some(atom) => atom,
         None => {
             proof {
@@ -11395,14 +10893,7 @@ at: &mut usize,
     };
     proof {
         if let Some(g) = old_guide {
-            advance_parts_progress(
-                bytes@,
-                g.parts,
-                g.index,
-                old_pos,
-                old_prefix,
-                &guided.cursor,
-            );
+            advance_parts_progress(bytes@, g.parts, g.index, old_pos, old_prefix, &guided.cursor);
         }
     }
     guided.guide = Ghost(next_guide);
@@ -11417,36 +10908,32 @@ fn guided_name(
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<Seq<u8>>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        old(guided).guide@ matches Some(g) ==> expected@ matches Some(name)
-            && {
-                &&& 0 <= g.index
-                &&& g.index + 1 < g.parts.len()
-                &&& g.parts[g.index] == name
-                &&& ckc_spec::v1text::name_ok(name)
-                &&& g.parts[g.index + 1].len() > 0
-                &&& g.parts[g.index + 1][0] == next@
-                &&& !(ckc_spec::v1text::is_lower_b(next@)
-                    || ckc_spec::v1text::is_digit_b(next@)
-                    || next@ == 0x2d)
-            },
+        old(guided).guide@ matches Some(g) ==> expected@ matches Some(name) && {
+            &&& 0 <= g.index
+            &&& g.index + 1 < g.parts.len()
+            &&& g.parts[g.index] == name
+            &&& ckc_spec::v1text::name_ok(name)
+            &&& g.parts[g.index + 1].len() > 0
+            &&& g.parts[g.index + 1][0] == next@
+            &&& !(ckc_spec::v1text::is_lower_b(next@) || ckc_spec::v1text::is_digit_b(next@)
+                || next@ == 0x2d)
+        },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(field.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + field.value@
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + field.value@
         },
         old(guided).guide@ matches Some(g) ==> {
-            &&& r matches Some(field)
-            && expected@ matches Some(name) && field.value@ == name
-            &&& final(guided).guide@ matches Some(next)
-                && next.parts == g.parts && next.index == g.index + 1
+            &&& r matches Some(field) && expected@ matches Some(name) && field.value@ == name
+            &&& final(guided).guide@ matches Some(next) && next.parts == g.parts && next.index
+                == g.index + 1
         },
         old(guided).guide@ is None ==> final(guided).guide@ is None,
 {
@@ -11461,27 +10948,24 @@ at: &mut usize,
     }
     let ghost name_expected = match (old_guide, expected@) {
         (Some(g), Some(name)) => {
-            Some(name_part_expected(
-                bytes@,
-                &guided.cursor,
-                g.parts,
-                g.index,
-                name,
-                next@,
-                bytes.len(),
-            ))
+            Some(
+                name_part_expected(
+                    bytes@,
+                    &guided.cursor,
+                    g.parts,
+                    g.index,
+                    name,
+                    next@,
+                    bytes.len(),
+                ),
+            )
         },
         _ => None,
     };
     proof {
         reveal(guided_cursor_ok);
     }
-    let field = match cursor_name(
-        bytes,
-        &mut guided.cursor,
-        Ghost(name_expected),
-    at,
-    ) {
+    let field = match cursor_name(bytes, &mut guided.cursor, Ghost(name_expected), at) {
         Some(field) => field,
         None => {
             proof {
@@ -11498,14 +10982,7 @@ at: &mut usize,
     };
     proof {
         if let Some(g) = old_guide {
-            advance_parts_progress(
-                bytes@,
-                g.parts,
-                g.index,
-                old_pos,
-                old_prefix,
-                &guided.cursor,
-            );
+            advance_parts_progress(bytes@, g.parts, g.index, old_pos, old_prefix, &guided.cursor);
         }
     }
     guided.guide = Ghost(next_guide);
@@ -11521,27 +10998,24 @@ fn guided_term(
     first_var: Option<usize>,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Term, u8)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        old(guided).guide@ matches Some(g) ==> expected@ matches Some(e)
-            && {
-                &&& 0 <= g.index
-                &&& g.index + 1 < g.parts.len()
-                &&& g.parts[g.index]
-                    == ckc_spec::v1text::term_bytes(e.0)
-                &&& ckc_spec::term::wf_term(e.0)
-                &&& term_keys_fit(e.0)
-                &&& g.parts[g.index + 1].len() > 0
-                &&& g.parts[g.index + 1][0] == e.1
-                &&& (e.1 == 0x2c || e.1 == 0x29 || e.1 == 0x5d
-                    || e.1 == 0x7c || e.1 == 0x7d || e.1 == 0x20
-                    || e.1 == 0x2e && g.parts[g.index + 1].len() > 1
-                        && g.parts[g.index + 1][1] == 0x0a)
-            },
+        old(guided).guide@ matches Some(g) ==> expected@ matches Some(e) && {
+            &&& 0 <= g.index
+            &&& g.index + 1 < g.parts.len()
+            &&& g.parts[g.index] == ckc_spec::v1text::term_bytes(e.0)
+            &&& ckc_spec::term::wf_term(e.0)
+            &&& term_keys_fit(e.0)
+            &&& g.parts[g.index + 1].len() > 0
+            &&& g.parts[g.index + 1][0] == e.1
+            &&& (e.1 == 0x2c || e.1 == 0x29 || e.1 == 0x5d || e.1 == 0x7c || e.1 == 0x7d || e.1
+                == 0x20 || e.1 == 0x2e && g.parts[g.index + 1].len() > 1 && g.parts[g.index + 1][1]
+                == 0x0a)
+        },
     ensures
         r matches Some(term) ==> spanned_root_ok(final(arena), &term),
         arena_ok(final(arena)),
@@ -11552,15 +11026,13 @@ at: &mut usize,
             &&& spanned_term_ok(bytes@, &term)
             &&& term.start == old(guided).cursor.pos
             &&& final(guided).cursor.pos == term.end
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + ckc_spec::v1text::term_bytes(term@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
+                + ckc_spec::v1text::term_bytes(term@)
         },
         old(guided).guide@ matches Some(g) ==> {
-            &&& r matches Some(term)
-            && expected@ matches Some(e) && term@ == e.0
-            &&& final(guided).guide@ matches Some(next)
-                && next.parts == g.parts && next.index == g.index + 1
+            &&& r matches Some(term) && expected@ matches Some(e) && term@ == e.0
+            &&& final(guided).guide@ matches Some(next) && next.parts == g.parts && next.index
+                == g.index + 1
         },
         old(guided).guide@ is None ==> final(guided).guide@ is None,
 {
@@ -11575,15 +11047,9 @@ at: &mut usize,
     }
     let ghost term_expected = match (old_guide, expected@) {
         (Some(g), Some(e)) => {
-            Some(term_part_expected(
-                bytes@,
-                &guided.cursor,
-                g.parts,
-                g.index,
-                e.0,
-                e.1,
-                bytes.len(),
-            ))
+            Some(
+                term_part_expected(bytes@, &guided.cursor, g.parts, g.index, e.0, e.1, bytes.len()),
+            )
         },
         _ => None,
     };
@@ -11596,7 +11062,7 @@ at: &mut usize,
         first_var,
         &mut guided.cursor,
         Ghost(term_expected),
-    at,
+        at,
     ) {
         Some(term) => term,
         None => {
@@ -11614,14 +11080,7 @@ at: &mut usize,
     };
     proof {
         if let Some(g) = old_guide {
-            advance_parts_progress(
-                bytes@,
-                g.parts,
-                g.index,
-                old_pos,
-                old_prefix,
-                &guided.cursor,
-            );
+            advance_parts_progress(bytes@, g.parts, g.index, old_pos, old_prefix, &guided.cursor);
         }
     }
     guided.guide = Ghost(next_guide);
@@ -11633,7 +11092,8 @@ at: &mut usize,
 
 #[verifier::rlimit(100)]
 proof fn answers_flat_is_print(a: ckc_spec::v1text::AnswersFile)
-    ensures answers_flat(a) == ckc_spec::v1text::print_answers(a),
+    ensures
+        answers_flat(a) == ckc_spec::v1text::print_answers(a),
 {
     let v1_name = ckc_spec::v1text::ascii("v1"@);
     let query_name = ckc_spec::v1text::ascii("query_sha256"@);
@@ -11717,21 +11177,24 @@ pub open spec fn parsed_metadata_ok(parsed: &EParsedV1) -> bool {
     }
 }
 
-pub closed spec fn doc_clause_models(
-    bundles: Seq<ckc_spec::v1text::Bundle>,
-) -> Seq<ckc_spec::v1text::DocClause> {
+pub closed spec fn doc_clause_models(bundles: Seq<ckc_spec::v1text::Bundle>) -> Seq<
+    ckc_spec::v1text::DocClause,
+> {
     bundles.map_values(|b: ckc_spec::v1text::Bundle| b.clauses).flatten()
 }
 
 pub proof fn doc_clause_models_flatten(bundles: Seq<ckc_spec::v1text::Bundle>)
-    ensures doc_clause_models(bundles)
-        == bundles.map_values(|b: ckc_spec::v1text::Bundle| b.clauses).flatten(),
+    ensures
+        doc_clause_models(bundles) == bundles.map_values(
+            |b: ckc_spec::v1text::Bundle| b.clauses,
+        ).flatten(),
 {
     reveal(doc_clause_models);
 }
 
 proof fn doc_clause_models_empty()
-    ensures doc_clause_models(Seq::empty()) == Seq::<ckc_spec::v1text::DocClause>::empty(),
+    ensures
+        doc_clause_models(Seq::empty()) == Seq::<ckc_spec::v1text::DocClause>::empty(),
 {
     reveal(doc_clause_models);
     reveal_with_fuel(Seq::<_>::flatten, 1);
@@ -11741,7 +11204,8 @@ proof fn doc_clause_models_push(
     bundles: Seq<ckc_spec::v1text::Bundle>,
     bundle: ckc_spec::v1text::Bundle,
 )
-    ensures doc_clause_models(bundles.push(bundle)) == doc_clause_models(bundles) + bundle.clauses,
+    ensures
+        doc_clause_models(bundles.push(bundle)) == doc_clause_models(bundles) + bundle.clauses,
 {
     reveal(doc_clause_models);
     let parts = bundles.map_values(|b: ckc_spec::v1text::Bundle| b.clauses);
@@ -11760,13 +11224,15 @@ pub closed spec fn parsed_doc_roots_ok(nodes: Seq<ENode>, parsed: &EParsedV1) ->
 }
 
 pub proof fn parsed_doc_roots_elim(nodes: Seq<ENode>, parsed: &EParsedV1)
-    requires parsed_doc_roots_ok(nodes, parsed),
-    ensures match parsed@ {
-        ckc_spec::v1text::V1File::Doc(d) => {
-            doc_clauses_roots_ok(nodes, parsed.clauses@, doc_clause_models(d.bundles))
+    requires
+        parsed_doc_roots_ok(nodes, parsed),
+    ensures
+        match parsed@ {
+            ckc_spec::v1text::V1File::Doc(d) => {
+                doc_clauses_roots_ok(nodes, parsed.clauses@, doc_clause_models(d.bundles))
+            },
+            _ => parsed.clauses@.len() == 0,
         },
-        _ => parsed.clauses@.len() == 0,
-    },
 {
     reveal(parsed_doc_roots_ok);
 }
@@ -11784,16 +11250,18 @@ pub closed spec fn parsed_query_roots_ok(nodes: Seq<ENode>, parsed: &EParsedV1) 
 }
 
 pub proof fn parsed_query_roots_elim(nodes: Seq<ENode>, parsed: &EParsedV1)
-    requires parsed_query_roots_ok(nodes, parsed),
-    ensures match parsed@ {
-        ckc_spec::v1text::V1File::Query(q) => {
-            &&& parsed.goal_root < nodes.len()
-            &&& parsed.answers_root < nodes.len()
-            &&& nodes[parsed.goal_root as int].term@ == q.goal
-            &&& nodes[parsed.answers_root as int].term@ == q.answers
+    requires
+        parsed_query_roots_ok(nodes, parsed),
+    ensures
+        match parsed@ {
+            ckc_spec::v1text::V1File::Query(q) => {
+                &&& parsed.goal_root < nodes.len()
+                &&& parsed.answers_root < nodes.len()
+                &&& nodes[parsed.goal_root as int].term@ == q.goal
+                &&& nodes[parsed.answers_root as int].term@ == q.answers
+            },
+            _ => true,
         },
-        _ => true,
-    },
 {
     reveal(parsed_query_roots_ok);
 }
@@ -11807,8 +11275,7 @@ impl View for EParsedV1 {
 }
 
 pub open spec fn parsed_v1_ok(bytes: Seq<u8>, parsed: &EParsedV1) -> bool {
-    ckc_spec::v1text::wf_v1(parsed@)
-        && ckc_spec::v1text::print_v1(parsed@) == bytes
+    ckc_spec::v1text::wf_v1(parsed@) && ckc_spec::v1text::print_v1(parsed@) == bytes
 }
 
 pub closed spec fn answers_progress(
@@ -11838,10 +11305,8 @@ proof fn answers_part_ready(
         0 <= i < answers_parts(a).len(),
     ensures
         cursor.pos as int + answers_parts(a)[i].len() <= bytes.len(),
-        bytes.subrange(
-            cursor.pos as int,
-            cursor.pos as int + answers_parts(a)[i].len(),
-        ) == answers_parts(a)[i],
+        bytes.subrange(cursor.pos as int, cursor.pos as int + answers_parts(a)[i].len())
+            == answers_parts(a)[i],
 {
     reveal(answers_progress);
     reveal(cursor_ok);
@@ -11865,10 +11330,7 @@ proof fn answers_byte_ready(
         bytes[cursor.pos as int] == byte,
 {
     answers_part_ready(bytes, a, i, cursor);
-    assert(bytes.subrange(
-        cursor.pos as int,
-        cursor.pos as int + 1,
-    )[0] == bytes[cursor.pos as int]);
+    assert(bytes.subrange(cursor.pos as int, cursor.pos as int + 1)[0] == bytes[cursor.pos as int]);
 }
 
 proof fn advance_answers_progress(
@@ -11912,23 +11374,14 @@ proof fn answers_atom_expected(
         bytes.len() == bound,
     ensures
         cursor.pos < g.end <= bytes.len(),
-        ckc_spec::v1text::atom_bytes(g.name)
-            == bytes.subrange(cursor.pos as int, g.end as int),
+        ckc_spec::v1text::atom_bytes(g.name) == bytes.subrange(cursor.pos as int, g.end as int),
         atom_boundary(bytes, g.end as int),
         g.name == name,
 {
     reveal(answers_progress);
     reveal(cursor_ok);
     assert(cursor_ok(bytes, cursor));
-    atom_part_expected(
-        bytes,
-        cursor,
-        answers_parts(a),
-        i,
-        name,
-        next,
-        bound,
-    )
+    atom_part_expected(bytes, cursor, answers_parts(a), i, name, next, bound)
 }
 
 proof fn answers_name_expected(
@@ -11946,24 +11399,16 @@ proof fn answers_name_expected(
         cursor.pos < g.end < bytes.len(),
         ckc_spec::v1text::name_ok(g.value),
         g.value == bytes.subrange(cursor.pos as int, g.end as int),
-        !(ckc_spec::v1text::is_lower_b(bytes[g.end as int])
-            || ckc_spec::v1text::is_digit_b(bytes[g.end as int])
-            || bytes[g.end as int] == 0x2d),
+        !(ckc_spec::v1text::is_lower_b(bytes[g.end as int]) || ckc_spec::v1text::is_digit_b(
+            bytes[g.end as int],
+        ) || bytes[g.end as int] == 0x2d),
         g.value == a.qid,
 {
     reveal(answers_progress);
     reveal(cursor_ok);
     assert(cursor_ok(bytes, cursor));
     reveal(answers_parts);
-    name_part_expected(
-        bytes,
-        cursor,
-        answers_parts(a),
-        1,
-        a.qid,
-        0x20u8,
-        bound,
-    )
+    name_part_expected(bytes, cursor, answers_parts(a), 1, a.qid, 0x20u8, bound)
 }
 
 proof fn answers_term_expected(
@@ -11977,7 +11422,8 @@ proof fn answers_term_expected(
         answers_parts(a)[17].len() > 0,
         answers_parts(a)[17][0] == 0x29,
         bytes.len() == bound,
-    ensures term_at(bytes, cursor.pos as int, g.end as int, g.term),
+    ensures
+        term_at(bytes, cursor.pos as int, g.end as int, g.term),
         g.term == a.result,
         term_keys_fit(g.term),
 {
@@ -11987,15 +11433,7 @@ proof fn answers_term_expected(
     ground_term_keys_fit(a.result);
     assert(cursor_ok(bytes, cursor));
     reveal(answers_parts);
-    term_part_expected(
-        bytes,
-        cursor,
-        answers_parts(a),
-        16,
-        a.result,
-        0x29,
-        bound,
-    )
+    term_part_expected(bytes, cursor, answers_parts(a), 16, a.result, 0x29, bound)
 }
 
 #[verifier::rlimit(2000)]
@@ -12004,14 +11442,13 @@ pub fn parse_answers(
     bytes: &[u8],
     arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::AnswersFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
-        expected@ matches Some(a) ==>
-            ckc_spec::v1text::wf_answers(a)
-                && ckc_spec::v1text::print_answers(a) == bytes@,
+        expected@ matches Some(a) ==> ckc_spec::v1text::wf_answers(a)
+            && ckc_spec::v1text::print_answers(a) == bytes@,
     ensures
         r matches Some(parsed) ==> parsed@ is Answers,
         r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
@@ -12021,8 +11458,8 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
-        expected@ matches Some(a) ==> r matches Some(parsed)
-            && parsed@ == ckc_spec::v1text::V1File::Answers(a),
+        expected@ matches Some(a) ==> r matches Some(parsed) && parsed@
+            == ckc_spec::v1text::V1File::Answers(a),
 {
     hide(parsed_metadata_ok);
     hide(term_keys_fit);
@@ -12030,13 +11467,7 @@ at: &mut usize,
     let mut cursor = new_cursor(bytes);
     proof {
         if let Some(a) = expected@ {
-            assert(answers_progress(
-                bytes@,
-                a,
-                0,
-                cursor.pos,
-                cursor.prefix@,
-            )) by {
+            assert(answers_progress(bytes@, a, 0, cursor.pos, cursor.prefix@)) by {
                 answers_flat_is_print(a);
                 answers_parts_flat(a);
                 reveal(answers_progress);
@@ -12067,20 +11498,13 @@ at: &mut usize,
         &mut cursor,
         percent_space,
         Ghost(ckc_spec::v1text::ascii("% "@)),
-    at,
+        at,
     ) {
         return None;
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                0,
-                before_pos_0,
-                before_0,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 0, before_pos_0, before_0, &cursor);
         }
     }
 
@@ -12097,37 +11521,21 @@ at: &mut usize,
         }
     }
     let ghost line_qid_expected = match expected@ {
-        Some(a) => Some(answers_name_expected(
-            bytes@,
-            a,
-            &cursor,
-            bytes.len(),
-        )),
+        Some(a) => Some(answers_name_expected(bytes@, a, &cursor, bytes.len())),
         None => None,
     };
-    let line_qid = match cursor_name(
-        bytes,
-        &mut cursor,
-        Ghost(line_qid_expected),
-    at,
-    ) {
+    let line_qid = match cursor_name(bytes, &mut cursor, Ghost(line_qid_expected), at) {
         Some(field) => field,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                1,
-                before_pos_1,
-                before_1,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 1, before_pos_1, before_1, &cursor);
         }
     }
 
-    let line_suffix: &[u8] = b" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n";
+    let line_suffix: &[u8] =
+        b" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n";
     proof {
         reveal_strlit(
             " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
@@ -12155,59 +11563,44 @@ at: &mut usize,
         bytes,
         &mut cursor,
         line_suffix,
-        Ghost(ckc_spec::v1text::ascii(
-            " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
-        )),
-    at,
+        Ghost(
+            ckc_spec::v1text::ascii(
+                " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+            ),
+        ),
+        at,
     ) {
         return None;
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                2,
-                before_pos_2,
-                before_2,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 2, before_pos_2, before_2, &cursor);
         }
     }
 
     let before_pos_3 = cursor.pos;
     let ghost before_3 = cursor.prefix@;
     let ghost wrapper_expected = match expected@ {
-        Some(a) => Some(answers_atom_expected(
-            bytes@,
-            a,
-            3,
-            &cursor,
-            ckc_spec::v1text::ascii("$guideline_answers"@),
-            0x28,
-            bytes.len(),
-        )),
+        Some(a) => Some(
+            answers_atom_expected(
+                bytes@,
+                a,
+                3,
+                &cursor,
+                ckc_spec::v1text::ascii("$guideline_answers"@),
+                0x28,
+                bytes.len(),
+            ),
+        ),
         None => None,
     };
-    let wrapper = match cursor_atom(
-        bytes,
-        &mut cursor,
-        Ghost(wrapper_expected),
-    at,
-    ) {
+    let wrapper = match cursor_atom(bytes, &mut cursor, Ghost(wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                3,
-                before_pos_3,
-                before_3,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 3, before_pos_3, before_3, &cursor);
         }
     }
     let wrapper_name: &[u8] = b"$guideline_answers";
@@ -12215,8 +11608,7 @@ at: &mut usize,
         reveal_strlit("$guideline_answers");
         reveal_byteslit(b"$guideline_answers");
         reveal(ckc_spec::v1text::ascii);
-        assert(wrapper_name@
-            == ckc_spec::v1text::ascii("$guideline_answers"@));
+        assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_answers"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
@@ -12235,50 +11627,33 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                4,
-                before_pos_4,
-                before_4,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 4, before_pos_4, before_4, &cursor);
         }
     }
 
     let before_pos_5 = cursor.pos;
     let ghost before_5 = cursor.prefix@;
     let ghost version_expected = match expected@ {
-        Some(a) => Some(answers_atom_expected(
-            bytes@,
-            a,
-            5,
-            &cursor,
-            ckc_spec::v1text::ascii("v1"@),
-            0x2c,
-            bytes.len(),
-        )),
+        Some(a) => Some(
+            answers_atom_expected(
+                bytes@,
+                a,
+                5,
+                &cursor,
+                ckc_spec::v1text::ascii("v1"@),
+                0x2c,
+                bytes.len(),
+            ),
+        ),
         None => None,
     };
-    let version = match cursor_atom(
-        bytes,
-        &mut cursor,
-        Ghost(version_expected),
-    at,
-    ) {
+    let version = match cursor_atom(bytes, &mut cursor, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                5,
-                before_pos_5,
-                before_5,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 5, before_pos_5, before_5, &cursor);
         }
     }
     let version_name: &[u8] = b"v1";
@@ -12305,50 +11680,23 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                6,
-                before_pos_6,
-                before_6,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 6, before_pos_6, before_6, &cursor);
         }
     }
 
     let before_pos_7 = cursor.pos;
     let ghost before_7 = cursor.prefix@;
     let ghost record_qid_expected = match expected@ {
-        Some(a) => Some(answers_atom_expected(
-            bytes@,
-            a,
-            7,
-            &cursor,
-            a.qid,
-            0x2c,
-            bytes.len(),
-        )),
+        Some(a) => Some(answers_atom_expected(bytes@, a, 7, &cursor, a.qid, 0x2c, bytes.len())),
         None => None,
     };
-    let record_qid = match cursor_atom(
-        bytes,
-        &mut cursor,
-        Ghost(record_qid_expected),
-    at,
-    ) {
+    let record_qid = match cursor_atom(bytes, &mut cursor, Ghost(record_qid_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                7,
-                before_pos_7,
-                before_7,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 7, before_pos_7, before_7, &cursor);
         }
     }
     if !vec_equal(&line_qid.value, &record_qid.name) {
@@ -12368,50 +11716,33 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                8,
-                before_pos_8,
-                before_8,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 8, before_pos_8, before_8, &cursor);
         }
     }
 
     let before_pos_9 = cursor.pos;
     let ghost before_9 = cursor.prefix@;
     let ghost query_wrapper_expected = match expected@ {
-        Some(a) => Some(answers_atom_expected(
-            bytes@,
-            a,
-            9,
-            &cursor,
-            ckc_spec::v1text::ascii("query_sha256"@),
-            0x28,
-            bytes.len(),
-        )),
+        Some(a) => Some(
+            answers_atom_expected(
+                bytes@,
+                a,
+                9,
+                &cursor,
+                ckc_spec::v1text::ascii("query_sha256"@),
+                0x28,
+                bytes.len(),
+            ),
+        ),
         None => None,
     };
-    let query_wrapper = match cursor_atom(
-        bytes,
-        &mut cursor,
-        Ghost(query_wrapper_expected),
-    at,
-    ) {
+    let query_wrapper = match cursor_atom(bytes, &mut cursor, Ghost(query_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                9,
-                before_pos_9,
-                before_9,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 9, before_pos_9, before_9, &cursor);
         }
     }
     let query_wrapper_name: &[u8] = b"query_sha256";
@@ -12419,8 +11750,7 @@ at: &mut usize,
         reveal_strlit("query_sha256");
         reveal_byteslit(b"query_sha256");
         reveal(ckc_spec::v1text::ascii);
-        assert(query_wrapper_name@
-            == ckc_spec::v1text::ascii("query_sha256"@));
+        assert(query_wrapper_name@ == ckc_spec::v1text::ascii("query_sha256"@));
     }
     if !vec_slice_equal(&query_wrapper.name, query_wrapper_name) {
         return None;
@@ -12439,50 +11769,23 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                10,
-                before_pos_10,
-                before_10,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 10, before_pos_10, before_10, &cursor);
         }
     }
 
     let before_pos_11 = cursor.pos;
     let ghost before_11 = cursor.prefix@;
     let ghost qsha_expected = match expected@ {
-        Some(a) => Some(answers_atom_expected(
-            bytes@,
-            a,
-            11,
-            &cursor,
-            a.qsha,
-            0x29,
-            bytes.len(),
-        )),
+        Some(a) => Some(answers_atom_expected(bytes@, a, 11, &cursor, a.qsha, 0x29, bytes.len())),
         None => None,
     };
-    let qsha = match cursor_atom(
-        bytes,
-        &mut cursor,
-        Ghost(qsha_expected),
-    at,
-    ) {
+    let qsha = match cursor_atom(bytes, &mut cursor, Ghost(qsha_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                11,
-                before_pos_11,
-                before_11,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 11, before_pos_11, before_11, &cursor);
         }
     }
     proof {
@@ -12496,7 +11799,6 @@ at: &mut usize,
     if !hex64_exec(&qsha.name) {
         return None;
     }
-
     let before_pos_12 = cursor.pos;
     let ghost before_12 = cursor.prefix@;
     proof {
@@ -12511,14 +11813,7 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                12,
-                before_pos_12,
-                before_12,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 12, before_pos_12, before_12, &cursor);
         }
     }
 
@@ -12536,50 +11831,33 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                13,
-                before_pos_13,
-                before_13,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 13, before_pos_13, before_13, &cursor);
         }
     }
 
     let before_pos_14 = cursor.pos;
     let ghost before_14 = cursor.prefix@;
     let ghost result_wrapper_expected = match expected@ {
-        Some(a) => Some(answers_atom_expected(
-            bytes@,
-            a,
-            14,
-            &cursor,
-            ckc_spec::v1text::ascii("result"@),
-            0x28,
-            bytes.len(),
-        )),
+        Some(a) => Some(
+            answers_atom_expected(
+                bytes@,
+                a,
+                14,
+                &cursor,
+                ckc_spec::v1text::ascii("result"@),
+                0x28,
+                bytes.len(),
+            ),
+        ),
         None => None,
     };
-    let result_wrapper = match cursor_atom(
-        bytes,
-        &mut cursor,
-        Ghost(result_wrapper_expected),
-    at,
-    ) {
+    let result_wrapper = match cursor_atom(bytes, &mut cursor, Ghost(result_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                14,
-                before_pos_14,
-                before_14,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 14, before_pos_14, before_14, &cursor);
         }
     }
     let result_wrapper_name: &[u8] = b"result";
@@ -12587,8 +11865,7 @@ at: &mut usize,
         reveal_strlit("result");
         reveal_byteslit(b"result");
         reveal(ckc_spec::v1text::ascii);
-        assert(result_wrapper_name@
-            == ckc_spec::v1text::ascii("result"@));
+        assert(result_wrapper_name@ == ckc_spec::v1text::ascii("result"@));
     }
     if !vec_slice_equal(&result_wrapper.name, result_wrapper_name) {
         return None;
@@ -12607,49 +11884,23 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                15,
-                before_pos_15,
-                before_15,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 15, before_pos_15, before_15, &cursor);
         }
     }
 
     let before_pos_16 = cursor.pos;
     let ghost before_16 = cursor.prefix@;
     let ghost result_expected = match expected@ {
-        Some(a) => Some(answers_term_expected(
-            bytes@,
-            a,
-            &cursor,
-            bytes.len(),
-        )),
+        Some(a) => Some(answers_term_expected(bytes@, a, &cursor, bytes.len())),
         None => None,
     };
-    let result = match cursor_term(
-        bytes,
-        arena,
-        Some(0),
-        &mut cursor,
-        Ghost(result_expected),
-    at,
-    ) {
+    let result = match cursor_term(bytes, arena, Some(0), &mut cursor, Ghost(result_expected), at) {
         Some(term) => term,
         None => return None,
     };
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                16,
-                before_pos_16,
-                before_16,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 16, before_pos_16, before_16, &cursor);
         }
     }
     proof {
@@ -12666,7 +11917,6 @@ at: &mut usize,
     if !result.parsed.ground || !result.parsed.no_dollar {
         return None;
     }
-
     let before_pos_17 = cursor.pos;
     let ghost before_17 = cursor.prefix@;
     proof {
@@ -12681,14 +11931,7 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                17,
-                before_pos_17,
-                before_17,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 17, before_pos_17, before_17, &cursor);
         }
     }
 
@@ -12706,14 +11949,7 @@ at: &mut usize,
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                18,
-                before_pos_18,
-                before_18,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 18, before_pos_18, before_18, &cursor);
         }
     }
 
@@ -12733,25 +11969,12 @@ at: &mut usize,
             assert(parts[19] == ckc_spec::v1text::ascii(".\n"@));
         }
     }
-    if !cursor_literal(
-        bytes,
-        &mut cursor,
-        line_end,
-        Ghost(ckc_spec::v1text::ascii(".\n"@)),
-    at,
-    ) {
+    if !cursor_literal(bytes, &mut cursor, line_end, Ghost(ckc_spec::v1text::ascii(".\n"@)), at) {
         return None;
     }
     proof {
         if let Some(a) = expected@ {
-            advance_answers_progress(
-                bytes@,
-                a,
-                19,
-                before_pos_19,
-                before_19,
-                &cursor,
-            );
+            advance_answers_progress(bytes@, a, 19, before_pos_19, before_19, &cursor);
             answers_parts(a).lemma_take_len();
         }
     }
@@ -12767,7 +11990,6 @@ at: &mut usize,
     if cursor.pos != bytes.len() {
         return None;
     }
-
     let ghost model = ckc_spec::v1text::AnswersFile {
         qid: line_qid.value@,
         qsha: qsha.name@,
@@ -12801,78 +12023,57 @@ at: &mut usize,
         reveal(parsed_query_roots_ok);
         reveal(parsed_metadata_ok);
     }
-    Some(EParsedV1 {
-        class: EV1Class::Answers,
-        docid: Vec::new(),
-        doc_ace: Vec::new(),
-        doc_ulex: Vec::new(),
-        qid: Vec::new(),
-        clauses: Vec::new(),
-        goal_root: 0,
-        answers_root: 0,
-        file: Ghost(ckc_spec::v1text::V1File::Answers(model)),
-    })
+    Some(
+        EParsedV1 {
+            class: EV1Class::Answers,
+            docid: Vec::new(),
+            doc_ace: Vec::new(),
+            doc_ulex: Vec::new(),
+            qid: Vec::new(),
+            clauses: Vec::new(),
+            goal_root: 0,
+            answers_root: 0,
+            file: Ghost(ckc_spec::v1text::V1File::Answers(model)),
+        },
+    )
 }
 
 #[verifier::rlimit(200)]
-proof fn args_five_bytes(
-    a: Term,
-    b: Term,
-    c: Term,
-    d: Term,
-    e: Term,
-)
+proof fn args_five_bytes(a: Term, b: Term, c: Term, d: Term, e: Term)
     ensures
-        ckc_spec::v1text::args_bytes(seq![a, b, c, d, e])
-            == ckc_spec::v1text::term_bytes(a)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(b)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(c)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(d)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(e),
+        ckc_spec::v1text::args_bytes(seq![a, b, c, d, e]) == ckc_spec::v1text::term_bytes(a) + seq![
+            0x2cu8,
+        ] + ckc_spec::v1text::term_bytes(b) + seq![0x2cu8] + ckc_spec::v1text::term_bytes(c) + seq![
+            0x2cu8,
+        ] + ckc_spec::v1text::term_bytes(d) + seq![0x2cu8] + ckc_spec::v1text::term_bytes(e),
 {
     reveal_with_fuel(ckc_spec::v1text::args_bytes, 6);
 }
 
-pub open spec fn traces_flat(
-    t: ckc_spec::v1text::TracesFile,
-) -> Seq<u8> {
-    traces_line_stage(t.qid)
-        + traces_qsha_stage(t.qid, t.qsha)
-        + traces_asha_stage(t.asha)
+pub open spec fn traces_flat(t: ckc_spec::v1text::TracesFile) -> Seq<u8> {
+    traces_line_stage(t.qid) + traces_qsha_stage(t.qid, t.qsha) + traces_asha_stage(t.asha)
         + traces_result_stage(t.result)
 }
 
-pub open spec fn traces_parts(
-    t: ckc_spec::v1text::TracesFile,
-) -> Seq<Seq<u8>> {
+pub open spec fn traces_parts(t: ckc_spec::v1text::TracesFile) -> Seq<Seq<u8>> {
     seq![
         ckc_spec::v1text::ascii("% "@),
         t.qid,
         ckc_spec::v1text::ascii(
             " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
         ),
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("$guideline_traces"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_traces"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
         seq![0x2cu8],
         ckc_spec::v1text::atom_bytes(t.qid),
         seq![0x2cu8],
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("query_sha256"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("query_sha256"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(t.qsha),
         seq![0x29u8],
         seq![0x2cu8],
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("answers_sha256"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("answers_sha256"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(t.asha),
         seq![0x29u8],
@@ -12889,7 +12090,8 @@ pub open spec fn traces_parts(
 #[verifier::rlimit(100)]
 #[verifier::spinoff_prover]
 proof fn traces_parts_flat(t: ckc_spec::v1text::TracesFile)
-    ensures traces_parts(t).flatten() == traces_flat(t),
+    ensures
+        traces_parts(t).flatten() == traces_flat(t),
 {
     let line = seq![
         ckc_spec::v1text::ascii("% "@),
@@ -12899,26 +12101,20 @@ proof fn traces_parts_flat(t: ckc_spec::v1text::TracesFile)
         ),
     ];
     let qsha = seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("$guideline_traces"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_traces"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
         seq![0x2cu8],
         ckc_spec::v1text::atom_bytes(t.qid),
         seq![0x2cu8],
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("query_sha256"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("query_sha256"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(t.qsha),
         seq![0x29u8],
         seq![0x2cu8],
     ];
     let asha = seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("answers_sha256"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("answers_sha256"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(t.asha),
         seq![0x29u8],
@@ -12959,7 +12155,8 @@ proof fn traces_parts_flat(t: ckc_spec::v1text::TracesFile)
 
 #[verifier::rlimit(300)]
 proof fn traces_flat_is_print(t: ckc_spec::v1text::TracesFile)
-    ensures traces_flat(t) == ckc_spec::v1text::print_traces(t),
+    ensures
+        traces_flat(t) == ckc_spec::v1text::print_traces(t),
 {
     let v1_name = ckc_spec::v1text::ascii("v1"@);
     let query_name = ckc_spec::v1text::ascii("query_sha256"@);
@@ -12992,10 +12189,7 @@ proof fn traces_flat_is_print(t: ckc_spec::v1text::TracesFile)
     args_one_bytes(t.result);
     regular_comp_bytes(result_name, seq![t.result]);
     args_five_bytes(v1, qid, query, answers, result);
-    regular_comp_bytes(
-        wrapper_name,
-        seq![v1, qid, query, answers, result],
-    );
+    regular_comp_bytes(wrapper_name, seq![v1, qid, query, answers, result]);
     reveal(traces_flat);
     reveal(traces_line_stage);
     reveal(traces_qsha_stage);
@@ -13008,57 +12202,35 @@ proof fn traces_flat_is_print(t: ckc_spec::v1text::TracesFile)
 }
 
 pub open spec fn traces_line_stage(qid: Seq<u8>) -> Seq<u8> {
-    ckc_spec::v1text::ascii("% "@)
-        + qid
-        + ckc_spec::v1text::ascii(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
-        )
+    ckc_spec::v1text::ascii("% "@) + qid + ckc_spec::v1text::ascii(
+        " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+    )
 }
 
-pub open spec fn traces_qsha_stage(
-    qid: Seq<u8>,
-    qsha: Seq<u8>,
-) -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(
-        ckc_spec::v1text::ascii("$guideline_traces"@),
-    )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@))
-        + seq![0x2cu8]
-        + ckc_spec::v1text::atom_bytes(qid)
-        + seq![0x2cu8]
-        + ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("query_sha256"@),
-        )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(qsha)
-        + seq![0x29u8, 0x2cu8]
+pub open spec fn traces_qsha_stage(qid: Seq<u8>, qsha: Seq<u8>) -> Seq<u8> {
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_traces"@)) + seq![0x28u8]
+        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)) + seq![0x2cu8]
+        + ckc_spec::v1text::atom_bytes(qid) + seq![0x2cu8] + ckc_spec::v1text::atom_bytes(
+        ckc_spec::v1text::ascii("query_sha256"@),
+    ) + seq![0x28u8] + ckc_spec::v1text::atom_bytes(qsha) + seq![0x29u8, 0x2cu8]
 }
 
 pub open spec fn traces_asha_stage(asha: Seq<u8>) -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(
-        ckc_spec::v1text::ascii("answers_sha256"@),
-    )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(asha)
-        + seq![0x29u8, 0x2cu8]
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("answers_sha256"@)) + seq![0x28u8]
+        + ckc_spec::v1text::atom_bytes(asha) + seq![0x29u8, 0x2cu8]
 }
 
 pub open spec fn traces_result_stage(result: Term) -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("result"@))
-        + seq![0x28u8]
-        + ckc_spec::v1text::term_bytes(result)
-        + seq![0x29u8, 0x29u8]
-        + ckc_spec::v1text::ascii(".\n"@)
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("result"@)) + seq![0x28u8]
+        + ckc_spec::v1text::term_bytes(result) + seq![0x29u8, 0x29u8] + ckc_spec::v1text::ascii(
+        ".\n"@,
+    )
 }
 
 proof fn traces_stages_flat(t: ckc_spec::v1text::TracesFile)
     ensures
-        traces_flat(t)
-            == traces_line_stage(t.qid)
-                + traces_qsha_stage(t.qid, t.qsha)
-                + traces_asha_stage(t.asha)
-                + traces_result_stage(t.result),
+        traces_flat(t) == traces_line_stage(t.qid) + traces_qsha_stage(t.qid, t.qsha)
+            + traces_asha_stage(t.asha) + traces_result_stage(t.result),
 {
     reveal(traces_flat);
 }
@@ -13068,28 +12240,28 @@ fn parse_traces_line(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(t) ==> old(guided).guide@ matches Some(g)
-            && g.parts == traces_parts(t) && g.index == 0
-            && ckc_spec::v1text::wf_traces(t),
+        expected@ matches Some(t) ==> old(guided).guide@ matches Some(g) && g.parts == traces_parts(
+            t,
+        ) && g.index == 0 && ckc_spec::v1text::wf_traces(t),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(qid) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(qid.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + traces_line_stage(qid.value@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + traces_line_stage(
+                qid.value@,
+            )
         },
         expected@ matches Some(t) ==> {
             &&& r matches Some(qid)
             &&& qid.value@ == t.qid
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == traces_parts(t) && g.index == 3
+            &&& final(guided).guide@ matches Some(g) && g.parts == traces_parts(t) && g.index == 3
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -13112,16 +12284,9 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(percent_space@ == ckc_spec::v1text::ascii("% "@));
     }
-    if !guided_literal(
-        bytes,
-        guided,
-        percent_space,
-        Ghost(ckc_spec::v1text::ascii("% "@)),
-    at,
-    ) {
+    if !guided_literal(bytes, guided, percent_space, Ghost(ckc_spec::v1text::ascii("% "@)), at) {
         return None;
     }
-
     let ghost qid_expected = match expected@ {
         Some(t) => Some(t.qid),
         None => None,
@@ -13131,7 +12296,8 @@ at: &mut usize,
         None => return None,
     };
 
-    let line_suffix: &[u8] = b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n";
+    let line_suffix: &[u8] =
+        b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n";
     proof {
         reveal_strlit(
             " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
@@ -13148,10 +12314,12 @@ at: &mut usize,
         bytes,
         guided,
         line_suffix,
-        Ghost(ckc_spec::v1text::ascii(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
-        )),
-    at,
+        Ghost(
+            ckc_spec::v1text::ascii(
+                " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+            ),
+        ),
+        at,
     ) {
         return None;
     }
@@ -13171,7 +12339,7 @@ fn parse_traces_qsha(
     guided: &mut EGuidedCursor,
     line_qid: &ENameField,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
@@ -13179,8 +12347,7 @@ at: &mut usize,
         ckc_spec::v1text::name_ok(line_qid.value@),
         expected@ matches Some(t) ==> {
             &&& line_qid.value@ == t.qid
-            &&& old(guided).guide@ matches Some(g)
-                && g.parts == traces_parts(t) && g.index == 3
+            &&& old(guided).guide@ matches Some(g) && g.parts == traces_parts(t) && g.index == 3
             &&& ckc_spec::v1text::wf_traces(t)
         },
         expected@ is None ==> old(guided).guide@ is None,
@@ -13189,15 +12356,15 @@ at: &mut usize,
         r matches Some(qsha) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(qsha.name@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + traces_qsha_stage(line_qid.value@, qsha.name@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + traces_qsha_stage(
+                line_qid.value@,
+                qsha.name@,
+            )
         },
         expected@ matches Some(t) ==> {
             &&& r matches Some(qsha)
             &&& qsha.name@ == t.qsha
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == traces_parts(t) && g.index == 14
+            &&& final(guided).guide@ matches Some(g) && g.parts == traces_parts(t) && g.index == 14
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -13210,10 +12377,7 @@ at: &mut usize,
     }
 
     let ghost wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("$guideline_traces"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("$guideline_traces"@), 0x28u8)),
         None => None,
     };
     let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
@@ -13225,8 +12389,7 @@ at: &mut usize,
         reveal_strlit("$guideline_traces");
         reveal_byteslit(b"$guideline_traces");
         reveal(ckc_spec::v1text::ascii);
-        assert(wrapper_name@
-            == ckc_spec::v1text::ascii("$guideline_traces"@));
+        assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_traces"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
@@ -13234,7 +12397,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost version_expected = match expected@ {
         Some(_) => Some((ckc_spec::v1text::ascii("v1"@), 0x2cu8)),
         None => None,
@@ -13256,17 +12418,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost record_qid_expected = match expected@ {
         Some(t) => Some((t.qid, 0x2cu8)),
         None => None,
     };
-    let record_qid = match guided_atom(
-        bytes,
-        guided,
-        Ghost(record_qid_expected),
-    at,
-    ) {
+    let record_qid = match guided_atom(bytes, guided, Ghost(record_qid_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -13276,20 +12432,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost query_wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("query_sha256"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("query_sha256"@), 0x28u8)),
         None => None,
     };
-    let query_wrapper = match guided_atom(
-        bytes,
-        guided,
-        Ghost(query_wrapper_expected),
-    at,
-    ) {
+    let query_wrapper = match guided_atom(bytes, guided, Ghost(query_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -13298,8 +12445,7 @@ at: &mut usize,
         reveal_strlit("query_sha256");
         reveal_byteslit(b"query_sha256");
         reveal(ckc_spec::v1text::ascii);
-        assert(query_wrapper_name@
-            == ckc_spec::v1text::ascii("query_sha256"@));
+        assert(query_wrapper_name@ == ckc_spec::v1text::ascii("query_sha256"@));
     }
     if !vec_slice_equal(&query_wrapper.name, query_wrapper_name) {
         return None;
@@ -13307,7 +12453,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost qsha_expected = match expected@ {
         Some(t) => Some((t.qsha, 0x29u8)),
         None => None,
@@ -13331,7 +12476,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     proof {
         reveal(traces_qsha_stage);
         assert_seqs_equal!(
@@ -13348,28 +12492,28 @@ fn parse_traces_asha(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(t) ==> old(guided).guide@ matches Some(g)
-            && g.parts == traces_parts(t) && g.index == 14
-            && ckc_spec::v1text::wf_traces(t),
+        expected@ matches Some(t) ==> old(guided).guide@ matches Some(g) && g.parts == traces_parts(
+            t,
+        ) && g.index == 14 && ckc_spec::v1text::wf_traces(t),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(asha) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(asha.name@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + traces_asha_stage(asha.name@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + traces_asha_stage(
+                asha.name@,
+            )
         },
         expected@ matches Some(t) ==> {
             &&& r matches Some(asha)
             &&& asha.name@ == t.asha
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == traces_parts(t) && g.index == 19
+            &&& final(guided).guide@ matches Some(g) && g.parts == traces_parts(t) && g.index == 19
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -13382,10 +12526,7 @@ at: &mut usize,
     }
 
     let ghost wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("answers_sha256"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("answers_sha256"@), 0x28u8)),
         None => None,
     };
     let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
@@ -13397,8 +12538,7 @@ at: &mut usize,
         reveal_strlit("answers_sha256");
         reveal_byteslit(b"answers_sha256");
         reveal(ckc_spec::v1text::ascii);
-        assert(wrapper_name@
-            == ckc_spec::v1text::ascii("answers_sha256"@));
+        assert(wrapper_name@ == ckc_spec::v1text::ascii("answers_sha256"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
@@ -13406,7 +12546,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost asha_expected = match expected@ {
         Some(t) => Some((t.asha, 0x29u8)),
         None => None,
@@ -13430,7 +12569,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     proof {
         reveal(traces_asha_stage);
         assert_seqs_equal!(
@@ -13447,15 +12585,15 @@ fn parse_traces_result(
     arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(t) ==> old(guided).guide@ matches Some(g)
-            && g.parts == traces_parts(t) && g.index == 19
-            && ckc_spec::v1text::wf_traces(t),
+        expected@ matches Some(t) ==> old(guided).guide@ matches Some(g) && g.parts == traces_parts(
+            t,
+        ) && g.index == 19 && ckc_spec::v1text::wf_traces(t),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         r matches Some(term) ==> spanned_root_ok(final(arena), &term),
@@ -13466,14 +12604,14 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &result)
             &&& result.parsed.ground
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + traces_result_stage(result@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + traces_result_stage(
+                result@,
+            )
         },
         expected@ matches Some(t) ==> {
             &&& r matches Some(result)
             &&& result@ == t.result
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == traces_parts(t) && g.index == 25
+            &&& final(guided).guide@ matches Some(g) && g.parts == traces_parts(t) && g.index == 25
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -13498,8 +12636,7 @@ at: &mut usize,
         reveal_strlit("result");
         reveal_byteslit(b"result");
         reveal(ckc_spec::v1text::ascii);
-        assert(wrapper_name@
-            == ckc_spec::v1text::ascii("result"@));
+        assert(wrapper_name@ == ckc_spec::v1text::ascii("result"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
@@ -13507,7 +12644,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     proof {
         if let Some(t) = expected@ {
             ground_term_keys_fit(t.result);
@@ -13538,7 +12674,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x29, at) {
         return None;
     }
-
     let line_end: &[u8] = b".\n";
     proof {
         reveal_strlit(".\n");
@@ -13546,16 +12681,9 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(line_end@ == ckc_spec::v1text::ascii(".\n"@));
     }
-    if !guided_literal(
-        bytes,
-        guided,
-        line_end,
-        Ghost(ckc_spec::v1text::ascii(".\n"@)),
-    at,
-    ) {
+    if !guided_literal(bytes, guided, line_end, Ghost(ckc_spec::v1text::ascii(".\n"@)), at) {
         return None;
     }
-
     proof {
         reveal(traces_result_stage);
         assert_seqs_equal!(
@@ -13571,14 +12699,13 @@ pub fn parse_traces(
     bytes: &[u8],
     arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::TracesFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
-        expected@ matches Some(t) ==>
-            ckc_spec::v1text::wf_traces(t)
-                && ckc_spec::v1text::print_traces(t) == bytes@,
+        expected@ matches Some(t) ==> ckc_spec::v1text::wf_traces(t)
+            && ckc_spec::v1text::print_traces(t) == bytes@,
     ensures
         r matches Some(parsed) ==> parsed@ is Traces,
         r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
@@ -13588,8 +12715,8 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
-        expected@ matches Some(t) ==> r matches Some(parsed)
-            && parsed@ == ckc_spec::v1text::V1File::Traces(t),
+        expected@ matches Some(t) ==> r matches Some(parsed) && parsed@
+            == ckc_spec::v1text::V1File::Traces(t),
 {
     let ghost expected_parts = match expected@ {
         Some(t) => Some(traces_parts(t)),
@@ -13608,13 +12735,7 @@ at: &mut usize,
         Some(qid) => qid,
         None => return None,
     };
-    let qsha = match parse_traces_qsha(
-        bytes,
-        &mut guided,
-        &line_qid,
-        expected,
-    at,
-    ) {
+    let qsha = match parse_traces_qsha(bytes, &mut guided, &line_qid, expected, at) {
         Some(hash) => hash,
         None => return None,
     };
@@ -13640,7 +12761,6 @@ at: &mut usize,
     if guided.cursor.pos != bytes.len() {
         return None;
     }
-
     let ghost model = ckc_spec::v1text::TracesFile {
         qid: line_qid.value@,
         qsha: qsha.name@,
@@ -13653,8 +12773,7 @@ at: &mut usize,
         assert(cursor_ok(bytes@, &guided.cursor));
         reveal(cursor_ok);
         assert(guided.cursor.pos == bytes@.len());
-        assert(guided.cursor.prefix@
-            == bytes@.subrange(0, bytes@.len() as int));
+        assert(guided.cursor.prefix@ == bytes@.subrange(0, bytes@.len() as int));
         assert_seqs_equal!(
             bytes@.subrange(0, bytes@.len() as int) == bytes@
         );
@@ -13676,18 +12795,23 @@ at: &mut usize,
         reveal(ckc_spec::v1text::print_v1);
         reveal(parsed_v1_ok);
     }
-    proof { reveal(parsed_doc_roots_ok); reveal(parsed_query_roots_ok); }
-    Some(EParsedV1 {
-        class: EV1Class::Traces,
-        docid: Vec::new(),
-        doc_ace: Vec::new(),
-        doc_ulex: Vec::new(),
-        qid: Vec::new(),
-        clauses: Vec::new(),
-        goal_root: 0,
-        answers_root: 0,
-        file: Ghost(ckc_spec::v1text::V1File::Traces(model)),
-    })
+    proof {
+        reveal(parsed_doc_roots_ok);
+        reveal(parsed_query_roots_ok);
+    }
+    Some(
+        EParsedV1 {
+            class: EV1Class::Traces,
+            docid: Vec::new(),
+            doc_ace: Vec::new(),
+            doc_ulex: Vec::new(),
+            qid: Vec::new(),
+            clauses: Vec::new(),
+            goal_root: 0,
+            answers_root: 0,
+            file: Ghost(ckc_spec::v1text::V1File::Traces(model)),
+        },
+    )
 }
 
 pub ghost struct GTextExpected {
@@ -13704,7 +12828,7 @@ fn parse_raw_text(
     bytes: &[u8],
     start: usize,
     expected: Ghost<Option<GTextExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
         *old(at) <= bytes@.len(),
@@ -13719,13 +12843,12 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& start < field.end < bytes@.len()
-            &&& field.value@
-                == bytes@.subrange(start as int, field.end as int)
+            &&& field.value@ == bytes@.subrange(start as int, field.end as int)
             &&& ckc_spec::v1text::text_ok(field.value@)
             &&& bytes@[field.end as int] == 0x0a
         },
-        expected@ matches Some(e) ==> r matches Some(field)
-            && field.value@ == e.value && field.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(field) && field.value@ == e.value && field.end
+            == e.end,
 {
     let mut pos = start;
     while pos < bytes.len() && bytes[pos] != 0x0a
@@ -13736,8 +12859,7 @@ at: &mut usize,
             expected@ matches Some(e) ==> {
                 &&& start < e.end < bytes@.len()
                 &&& ckc_spec::v1text::text_ok(e.value)
-                &&& e.value
-                    == bytes@.subrange(start as int, e.end as int)
+                &&& e.value == bytes@.subrange(start as int, e.end as int)
                 &&& bytes@[e.end as int] == 0x0a
                 &&& pos <= e.end
             },
@@ -13758,8 +12880,7 @@ at: &mut usize,
             if pos < e.end {
                 reveal(ckc_spec::v1text::text_ok);
                 reveal(ckc_spec::v1text::all_in);
-                assert(bytes@[pos as int]
-                    == e.value[pos as int - start as int]);
+                assert(bytes@[pos as int] == e.value[pos as int - start as int]);
                 assert(e.value[pos as int - start as int] != 0x0a);
                 assert(false);
             }
@@ -13784,8 +12905,7 @@ at: &mut usize,
         reveal(ckc_spec::v1text::text_ok);
         reveal(ckc_spec::v1text::all_in);
         assert(value@.len() > 0);
-        assert forall|i: int| 0 <= i < value@.len()
-            implies value@[i] != 0x0a by {
+        assert forall|i: int| 0 <= i < value@.len() implies value@[i] != 0x0a by {
             assert(value@[i] == bytes@[start as int + i]);
         }
     }
@@ -13796,7 +12916,7 @@ fn cursor_text(
     bytes: &[u8],
     cursor: &mut EByteCursor,
     expected: Ghost<Option<GTextExpected>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
         *old(at) <= bytes@.len(),
@@ -13804,10 +12924,7 @@ at: &mut usize,
         expected@ matches Some(e) ==> {
             &&& old(cursor).pos < e.end < bytes@.len()
             &&& ckc_spec::v1text::text_ok(e.value)
-            &&& e.value == bytes@.subrange(
-                old(cursor).pos as int,
-                e.end as int,
-            )
+            &&& e.value == bytes@.subrange(old(cursor).pos as int, e.end as int)
             &&& bytes@[e.end as int] == 0x0a
         },
     ensures
@@ -13815,18 +12932,14 @@ at: &mut usize,
         r matches Some(field) ==> {
             &&& cursor_ok(bytes@, final(cursor))
             &&& final(cursor).pos == field.end
-            &&& final(cursor).prefix@
-                == old(cursor).prefix@ + field.value@
+            &&& final(cursor).prefix@ == old(cursor).prefix@ + field.value@
             &&& old(cursor).pos < field.end < bytes@.len()
-            &&& field.value@ == bytes@.subrange(
-                old(cursor).pos as int,
-                field.end as int,
-            )
+            &&& field.value@ == bytes@.subrange(old(cursor).pos as int, field.end as int)
             &&& ckc_spec::v1text::text_ok(field.value@)
             &&& bytes@[field.end as int] == 0x0a
         },
-        expected@ matches Some(e) ==> r matches Some(field)
-            && field.value@ == e.value && field.end == e.end,
+        expected@ matches Some(e) ==> r matches Some(field) && field.value@ == e.value && field.end
+            == e.end,
 {
     let start = cursor.pos;
     let ghost old_prefix = cursor.prefix@;
@@ -13846,8 +12959,7 @@ at: &mut usize,
     proof {
         reveal(cursor_ok);
         range_concat(bytes@, 0, start as int, field.end as int);
-        assert(bytes@.subrange(0, field.end as int)
-            == old_prefix + field.value@);
+        assert(bytes@.subrange(0, field.end as int) == old_prefix + field.value@);
     }
     cursor.pos = field.end;
     cursor.prefix = Ghost(old_prefix + field.value@);
@@ -13889,10 +13001,7 @@ proof fn text_part_expected(
     let end = cursor.pos as int + parts[i].len();
     assert(parts.take(i + 1).flatten().len() == end);
     assert(bytes[end] == 0x0a) by {
-        assert(bytes.subrange(
-            end,
-            end + parts[i + 1].len(),
-        )[0] == bytes[end]);
+        assert(bytes.subrange(end, end + parts[i + 1].len())[0] == bytes[end]);
     }
     reveal(ckc_spec::v1text::text_ok);
     assert(parts[i].len() > 0);
@@ -13905,33 +13014,30 @@ fn guided_text(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<Seq<u8>>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        old(guided).guide@ matches Some(g) ==> expected@ matches Some(text)
-            && {
-                &&& 0 <= g.index
-                &&& g.index + 1 < g.parts.len()
-                &&& g.parts[g.index] == text
-                &&& ckc_spec::v1text::text_ok(text)
-                &&& g.parts[g.index + 1].len() > 0
-                &&& g.parts[g.index + 1][0] == 0x0a
-            },
+        old(guided).guide@ matches Some(g) ==> expected@ matches Some(text) && {
+            &&& 0 <= g.index
+            &&& g.index + 1 < g.parts.len()
+            &&& g.parts[g.index] == text
+            &&& ckc_spec::v1text::text_ok(text)
+            &&& g.parts[g.index + 1].len() > 0
+            &&& g.parts[g.index + 1][0] == 0x0a
+        },
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(field) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::text_ok(field.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + field.value@
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + field.value@
         },
         old(guided).guide@ matches Some(g) ==> {
-            &&& r matches Some(field)
-            && expected@ matches Some(text) && field.value@ == text
-            &&& final(guided).guide@ matches Some(next)
-                && next.parts == g.parts && next.index == g.index + 1
+            &&& r matches Some(field) && expected@ matches Some(text) && field.value@ == text
+            &&& final(guided).guide@ matches Some(next) && next.parts == g.parts && next.index
+                == g.index + 1
         },
         old(guided).guide@ is None ==> final(guided).guide@ is None,
 {
@@ -13946,26 +13052,14 @@ at: &mut usize,
     }
     let ghost text_expected = match (old_guide, expected@) {
         (Some(g), Some(text)) => {
-            Some(text_part_expected(
-                bytes@,
-                &guided.cursor,
-                g.parts,
-                g.index,
-                text,
-                bytes.len(),
-            ))
+            Some(text_part_expected(bytes@, &guided.cursor, g.parts, g.index, text, bytes.len()))
         },
         _ => None,
     };
     proof {
         reveal(guided_cursor_ok);
     }
-    let field = match cursor_text(
-        bytes,
-        &mut guided.cursor,
-        Ghost(text_expected),
-    at,
-    ) {
+    let field = match cursor_text(bytes, &mut guided.cursor, Ghost(text_expected), at) {
         Some(field) => field,
         None => {
             proof {
@@ -13977,22 +13071,12 @@ at: &mut usize,
         },
     };
     let ghost next_guide = match old_guide {
-        Some(g) => Some(GPartsGuide {
-            parts: g.parts,
-            index: g.index + 1,
-        }),
+        Some(g) => Some(GPartsGuide { parts: g.parts, index: g.index + 1 }),
         None => None,
     };
     proof {
         if let Some(g) = old_guide {
-            advance_parts_progress(
-                bytes@,
-                g.parts,
-                g.index,
-                old_pos,
-                old_prefix,
-                &guided.cursor,
-            );
+            advance_parts_progress(bytes@, g.parts, g.index, old_pos, old_prefix, &guided.cursor);
         }
     }
     guided.guide = Ghost(next_guide);
@@ -14003,57 +13087,36 @@ at: &mut usize,
 }
 
 pub open spec fn query_line_stage(qid: Seq<u8>) -> Seq<u8> {
-    ckc_spec::v1text::ascii("% "@)
-        + qid
-        + ckc_spec::v1text::ascii(
-            " compiled from ACE question by ace_to_pl question mode; do not edit.\n"@,
-        )
+    ckc_spec::v1text::ascii("% "@) + qid + ckc_spec::v1text::ascii(
+        " compiled from ACE question by ace_to_pl question mode; do not edit.\n"@,
+    )
 }
 
 pub open spec fn query_record_head_stage(qid: Seq<u8>) -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(
-        ckc_spec::v1text::ascii("$guideline_query"@),
-    )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@))
-        + seq![0x2cu8]
-        + ckc_spec::v1text::atom_bytes(qid)
-        + seq![0x2cu8]
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)) + seq![0x28u8]
+        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)) + seq![0x2cu8]
+        + ckc_spec::v1text::atom_bytes(qid) + seq![0x2cu8]
 }
 
 pub open spec fn query_record_ace_stage(ace: Seq<u8>) -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(
-        ckc_spec::v1text::ascii("ace_sha256"@),
-    )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(ace)
-        + seq![0x29u8, 0x2cu8]
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ace_sha256"@)) + seq![0x28u8]
+        + ckc_spec::v1text::atom_bytes(ace) + seq![0x29u8, 0x2cu8]
 }
 
 pub open spec fn query_record_ulex_open_stage() -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@))
-        + seq![0x28u8]
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@)) + seq![0x28u8]
 }
 
-pub open spec fn query_record_prefix_stage(
-    qid: Seq<u8>,
-    ace: Seq<u8>,
-) -> Seq<u8> {
-    query_record_head_stage(qid)
-        + query_record_ace_stage(ace)
-        + query_record_ulex_open_stage()
+pub open spec fn query_record_prefix_stage(qid: Seq<u8>, ace: Seq<u8>) -> Seq<u8> {
+    query_record_head_stage(qid) + query_record_ace_stage(ace) + query_record_ulex_open_stage()
 }
 
 pub open spec fn query_ulex_stage(ulex: Option<Seq<u8>>) -> Seq<u8> {
     match ulex {
-        None => ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("none"@),
-        ),
-        Some(hash) => ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("sha256"@),
-        ) + seq![0x28u8]
-            + ckc_spec::v1text::atom_bytes(hash)
-            + seq![0x29u8],
+        None => ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("none"@)),
+        Some(hash) => ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("sha256"@)) + seq![
+            0x28u8,
+        ] + ckc_spec::v1text::atom_bytes(hash) + seq![0x29u8],
     }
 }
 
@@ -14061,9 +13124,7 @@ pub open spec fn query_record_suffix_stage() -> Seq<u8> {
     seq![0x29u8, 0x29u8] + ckc_spec::v1text::ascii(".\n"@)
 }
 
-pub open spec fn record_ulex_parts(
-    ulex: Option<Seq<u8>>,
-) -> Seq<Seq<u8>> {
+pub open spec fn record_ulex_parts(ulex: Option<Seq<u8>>) -> Seq<Seq<u8>> {
     match ulex {
         None => seq![
             ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("none"@)),
@@ -14072,9 +13133,7 @@ pub open spec fn record_ulex_parts(
             ckc_spec::v1text::ascii(".\n"@),
         ],
         Some(hash) => seq![
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(hash),
             seq![0x29u8],
@@ -14087,8 +13146,7 @@ pub open spec fn record_ulex_parts(
 
 proof fn record_ulex_parts_flat(ulex: Option<Seq<u8>>)
     ensures
-        record_ulex_parts(ulex).flatten()
-            == query_ulex_stage(ulex) + query_record_suffix_stage(),
+        record_ulex_parts(ulex).flatten() == query_ulex_stage(ulex) + query_record_suffix_stage(),
 {
     reveal(record_ulex_parts);
     reveal(query_ulex_stage);
@@ -14099,14 +13157,8 @@ proof fn record_ulex_parts_flat(ulex: Option<Seq<u8>>)
     }
 }
 
-pub open spec fn query_record_stage(
-    qid: Seq<u8>,
-    ace: Seq<u8>,
-    ulex: Option<Seq<u8>>,
-) -> Seq<u8> {
-    query_record_prefix_stage(qid, ace)
-        + query_ulex_stage(ulex)
-        + query_record_suffix_stage()
+pub open spec fn query_record_stage(qid: Seq<u8>, ace: Seq<u8>, ulex: Option<Seq<u8>>) -> Seq<u8> {
+    query_record_prefix_stage(qid, ace) + query_ulex_stage(ulex) + query_record_suffix_stage()
 }
 
 pub open spec fn query_text_stage(text: Seq<u8>) -> Seq<u8> {
@@ -14114,39 +13166,29 @@ pub open spec fn query_text_stage(text: Seq<u8>) -> Seq<u8> {
 }
 
 pub open spec fn query_projection_prefix_stage() -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(
-        ckc_spec::v1text::ascii("$guideline_query_projection"@),
-    )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("goal"@))
-        + seq![0x28u8]
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query_projection"@)) + seq![
+        0x28u8,
+    ] + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("goal"@)) + seq![0x28u8]
 }
 
 pub open spec fn query_projection_middle_stage() -> Seq<u8> {
-    seq![0x29u8, 0x2cu8]
-        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("answers"@))
-        + seq![0x28u8]
+    seq![0x29u8, 0x2cu8] + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("answers"@)) + seq![
+        0x28u8,
+    ]
 }
 
 pub open spec fn query_projection_suffix_stage() -> Seq<u8> {
     seq![0x29u8, 0x29u8] + ckc_spec::v1text::ascii(".\n"@)
 }
 
-pub open spec fn query_projection_stage(
-    goal: Term,
-    answers: Term,
-) -> Seq<u8> {
-    query_projection_prefix_stage()
-        + ckc_spec::v1text::term_bytes(goal)
-        + query_projection_middle_stage()
-        + ckc_spec::v1text::term_bytes(answers)
+pub open spec fn query_projection_stage(goal: Term, answers: Term) -> Seq<u8> {
+    query_projection_prefix_stage() + ckc_spec::v1text::term_bytes(goal)
+        + query_projection_middle_stage() + ckc_spec::v1text::term_bytes(answers)
         + query_projection_suffix_stage()
 }
 
 pub open spec fn query_flat(q: ckc_spec::v1text::QueryFile) -> Seq<u8> {
-    query_line_stage(q.qid)
-        + query_record_stage(q.qid, q.ace, q.ulex)
-        + query_text_stage(q.qtext)
+    query_line_stage(q.qid) + query_record_stage(q.qid, q.ace, q.ulex) + query_text_stage(q.qtext)
         + query_projection_stage(q.goal, q.answers)
 }
 
@@ -14160,31 +13202,23 @@ pub open spec fn query_line_parts(qid: Seq<u8>) -> Seq<Seq<u8>> {
     ]
 }
 
-pub open spec fn query_record_parts(
-    qid: Seq<u8>,
-    ace: Seq<u8>,
-    ulex: Option<Seq<u8>>,
-) -> Seq<Seq<u8>> {
+pub open spec fn query_record_parts(qid: Seq<u8>, ace: Seq<u8>, ulex: Option<Seq<u8>>) -> Seq<
+    Seq<u8>,
+> {
     match ulex {
         None => seq![
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("$guideline_query"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
             seq![0x2cu8],
             ckc_spec::v1text::atom_bytes(qid),
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ace_sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ace_sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ace),
             seq![0x29u8],
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ulex"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("none"@)),
             seq![0x29u8],
@@ -14192,28 +13226,20 @@ pub open spec fn query_record_parts(
             ckc_spec::v1text::ascii(".\n"@),
         ],
         Some(hash) => seq![
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("$guideline_query"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
             seq![0x2cu8],
             ckc_spec::v1text::atom_bytes(qid),
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ace_sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ace_sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ace),
             seq![0x29u8],
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ulex"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@)),
             seq![0x28u8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(hash),
             seq![0x29u8],
@@ -14225,30 +13251,19 @@ pub open spec fn query_record_parts(
 }
 
 pub open spec fn query_text_parts(text: Seq<u8>) -> Seq<Seq<u8>> {
-    seq![
-        ckc_spec::v1text::ascii("% Q1: "@),
-        text,
-        seq![0x0au8],
-    ]
+    seq![ckc_spec::v1text::ascii("% Q1: "@), text, seq![0x0au8]]
 }
 
-pub open spec fn query_projection_parts(
-    goal: Term,
-    answers: Term,
-) -> Seq<Seq<u8>> {
+pub open spec fn query_projection_parts(goal: Term, answers: Term) -> Seq<Seq<u8>> {
     seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("$guideline_query_projection"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query_projection"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("goal"@)),
         seq![0x28u8],
         ckc_spec::v1text::term_bytes(goal),
         seq![0x29u8],
         seq![0x2cu8],
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("answers"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("answers"@)),
         seq![0x28u8],
         ckc_spec::v1text::term_bytes(answers),
         seq![0x29u8],
@@ -14257,12 +13272,8 @@ pub open spec fn query_projection_parts(
     ]
 }
 
-pub open spec fn query_parts(
-    q: ckc_spec::v1text::QueryFile,
-) -> Seq<Seq<u8>> {
-    query_line_parts(q.qid)
-        + query_record_parts(q.qid, q.ace, q.ulex)
-        + query_text_parts(q.qtext)
+pub open spec fn query_parts(q: ckc_spec::v1text::QueryFile) -> Seq<Seq<u8>> {
+    query_line_parts(q.qid) + query_record_parts(q.qid, q.ace, q.ulex) + query_text_parts(q.qtext)
         + query_projection_parts(q.goal, q.answers)
 }
 
@@ -14282,7 +13293,8 @@ pub open spec fn query_parts_end(ulex: Option<Seq<u8>>) -> int {
 }
 
 proof fn query_line_parts_flat(qid: Seq<u8>)
-    ensures query_line_parts(qid).flatten() == query_line_stage(qid),
+    ensures
+        query_line_parts(qid).flatten() == query_line_stage(qid),
 {
     reveal(query_line_parts);
     reveal(query_line_stage);
@@ -14290,18 +13302,12 @@ proof fn query_line_parts_flat(qid: Seq<u8>)
 }
 
 #[verifier::rlimit(500)]
-proof fn query_record_parts_flat(
-    qid: Seq<u8>,
-    ace: Seq<u8>,
-    ulex: Option<Seq<u8>>,
-)
-    ensures query_record_parts(qid, ace, ulex).flatten()
-        == query_record_stage(qid, ace, ulex),
+proof fn query_record_parts_flat(qid: Seq<u8>, ace: Seq<u8>, ulex: Option<Seq<u8>>)
+    ensures
+        query_record_parts(qid, ace, ulex).flatten() == query_record_stage(qid, ace, ulex),
 {
     let head = seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("$guideline_query"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
         seq![0x2cu8],
@@ -14309,9 +13315,7 @@ proof fn query_record_parts_flat(
         seq![0x2cu8],
     ];
     let ace_parts = seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("ace_sha256"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ace_sha256"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ace),
         seq![0x29u8],
@@ -14322,25 +13326,17 @@ proof fn query_record_parts_flat(
         seq![0x28u8],
     ];
     let ulex_parts = match ulex {
-        None => seq![ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("none"@),
-        )],
+        None => seq![ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("none"@))],
         Some(hash) => seq![
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(hash),
             seq![0x29u8],
         ],
     };
-    let suffix = seq![
-        seq![0x29u8],
-        seq![0x29u8],
-        ckc_spec::v1text::ascii(".\n"@),
-    ];
-    assert(query_record_parts(qid, ace, ulex)
-        == ((head + ace_parts) + (ulex_open + ulex_parts)) + suffix) by {
+    let suffix = seq![seq![0x29u8], seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)];
+    assert(query_record_parts(qid, ace, ulex) == ((head + ace_parts) + (ulex_open + ulex_parts))
+        + suffix) by {
         reveal(query_record_parts);
     }
     assert(head.flatten() == query_record_head_stage(qid)) by {
@@ -14368,20 +13364,15 @@ proof fn query_record_parts_flat(
     }
     vstd::seq_lib::lemma_flatten_concat(head, ace_parts);
     vstd::seq_lib::lemma_flatten_concat(ulex_open, ulex_parts);
-    vstd::seq_lib::lemma_flatten_concat(
-        head + ace_parts,
-        ulex_open + ulex_parts,
-    );
-    vstd::seq_lib::lemma_flatten_concat(
-        (head + ace_parts) + (ulex_open + ulex_parts),
-        suffix,
-    );
+    vstd::seq_lib::lemma_flatten_concat(head + ace_parts, ulex_open + ulex_parts);
+    vstd::seq_lib::lemma_flatten_concat((head + ace_parts) + (ulex_open + ulex_parts), suffix);
     reveal(query_record_prefix_stage);
     reveal(query_record_stage);
 }
 
 proof fn query_text_parts_flat(text: Seq<u8>)
-    ensures query_text_parts(text).flatten() == query_text_stage(text),
+    ensures
+        query_text_parts(text).flatten() == query_text_stage(text),
 {
     reveal(query_text_parts);
     reveal(query_text_stage);
@@ -14389,13 +13380,11 @@ proof fn query_text_parts_flat(text: Seq<u8>)
 }
 
 proof fn query_projection_parts_flat(goal: Term, answers: Term)
-    ensures query_projection_parts(goal, answers).flatten()
-        == query_projection_stage(goal, answers),
+    ensures
+        query_projection_parts(goal, answers).flatten() == query_projection_stage(goal, answers),
 {
     let prefix = seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("$guideline_query_projection"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query_projection"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("goal"@)),
         seq![0x28u8],
@@ -14404,19 +13393,13 @@ proof fn query_projection_parts_flat(goal: Term, answers: Term)
     let middle = seq![
         seq![0x29u8],
         seq![0x2cu8],
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("answers"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("answers"@)),
         seq![0x28u8],
     ];
     let answers_part = seq![ckc_spec::v1text::term_bytes(answers)];
-    let suffix = seq![
-        seq![0x29u8],
-        seq![0x29u8],
-        ckc_spec::v1text::ascii(".\n"@),
-    ];
-    assert(query_projection_parts(goal, answers)
-        == ((prefix + goal_part) + (middle + answers_part)) + suffix) by {
+    let suffix = seq![seq![0x29u8], seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)];
+    assert(query_projection_parts(goal, answers) == ((prefix + goal_part) + (middle + answers_part))
+        + suffix) by {
         reveal(query_projection_parts);
     }
     assert(prefix.flatten() == query_projection_prefix_stage()) by {
@@ -14430,8 +13413,7 @@ proof fn query_projection_parts_flat(goal: Term, answers: Term)
         reveal(query_projection_middle_stage);
         reveal_with_fuel(Seq::<_>::flatten, 6);
     }
-    assert(answers_part.flatten()
-        == ckc_spec::v1text::term_bytes(answers)) by {
+    assert(answers_part.flatten() == ckc_spec::v1text::term_bytes(answers)) by {
         reveal_with_fuel(Seq::<_>::flatten, 3);
     }
     assert(suffix.flatten() == query_projection_suffix_stage()) by {
@@ -14440,19 +13422,14 @@ proof fn query_projection_parts_flat(goal: Term, answers: Term)
     }
     vstd::seq_lib::lemma_flatten_concat(prefix, goal_part);
     vstd::seq_lib::lemma_flatten_concat(middle, answers_part);
-    vstd::seq_lib::lemma_flatten_concat(
-        prefix + goal_part,
-        middle + answers_part,
-    );
-    vstd::seq_lib::lemma_flatten_concat(
-        (prefix + goal_part) + (middle + answers_part),
-        suffix,
-    );
+    vstd::seq_lib::lemma_flatten_concat(prefix + goal_part, middle + answers_part);
+    vstd::seq_lib::lemma_flatten_concat((prefix + goal_part) + (middle + answers_part), suffix);
     reveal(query_projection_stage);
 }
 
 proof fn query_parts_flat(q: ckc_spec::v1text::QueryFile)
-    ensures query_parts(q).flatten() == query_flat(q),
+    ensures
+        query_parts(q).flatten() == query_flat(q),
 {
     let line = query_line_parts(q.qid);
     let record = query_record_parts(q.qid, q.ace, q.ulex);
@@ -14473,10 +13450,8 @@ proof fn query_parts_flat(q: ckc_spec::v1text::QueryFile)
 
 proof fn args_two_bytes(a: Term, b: Term)
     ensures
-        ckc_spec::v1text::args_bytes(seq![a, b])
-            == ckc_spec::v1text::term_bytes(a)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(b),
+        ckc_spec::v1text::args_bytes(seq![a, b]) == ckc_spec::v1text::term_bytes(a) + seq![0x2cu8]
+            + ckc_spec::v1text::term_bytes(b),
 {
     reveal_with_fuel(ckc_spec::v1text::args_bytes, 3);
 }
@@ -14484,7 +13459,8 @@ proof fn args_two_bytes(a: Term, b: Term)
 #[verifier::rlimit(5000)]
 #[verifier::spinoff_prover]
 proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
-    ensures query_flat(q) == ckc_spec::v1text::print_query(q),
+    ensures
+        query_flat(q) == ckc_spec::v1text::print_query(q),
 {
     let v1_name = ckc_spec::v1text::ascii("v1"@);
     let ace_name = ckc_spec::v1text::ascii("ace_sha256"@);
@@ -14493,9 +13469,7 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     let goal_name = ckc_spec::v1text::ascii("goal"@);
     let answers_name = ckc_spec::v1text::ascii("answers"@);
     let query_name = ckc_spec::v1text::ascii("$guideline_query"@);
-    let projection_name = ckc_spec::v1text::ascii(
-        "$guideline_query_projection"@,
-    );
+    let projection_name = ckc_spec::v1text::ascii("$guideline_query_projection"@);
     let v1 = Term::Atom(v1_name);
     let qid = Term::Atom(q.qid);
     let ace_hash = Term::Atom(q.ace);
@@ -14582,28 +13556,28 @@ fn parse_query_line(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
-            && g.parts == query_parts(q) && g.index == 0
-            && ckc_spec::v1text::wf_query(q),
+        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g) && g.parts == query_parts(
+            q,
+        ) && g.index == 0 && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(qid) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(qid.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + query_line_stage(qid.value@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_line_stage(
+                qid.value@,
+            )
         },
         expected@ matches Some(q) ==> {
             &&& r matches Some(qid)
             &&& qid.value@ == q.qid
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == query_parts(q) && g.index == 3
+            &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index == 3
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -14613,9 +13587,7 @@ at: &mut usize,
             reveal(query_parts);
             reveal(query_line_parts);
             reveal(ckc_spec::v1text::wf_query);
-            reveal_strlit(
-                " compiled from ACE question by ace_to_pl question mode; do not edit.\n",
-            );
+            reveal_strlit(" compiled from ACE question by ace_to_pl question mode; do not edit.\n");
             reveal(ckc_spec::v1text::ascii);
         }
     }
@@ -14627,16 +13599,9 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(percent_space@ == ckc_spec::v1text::ascii("% "@));
     }
-    if !guided_literal(
-        bytes,
-        guided,
-        percent_space,
-        Ghost(ckc_spec::v1text::ascii("% "@)),
-    at,
-    ) {
+    if !guided_literal(bytes, guided, percent_space, Ghost(ckc_spec::v1text::ascii("% "@)), at) {
         return None;
     }
-
     let ghost qid_expected = match expected@ {
         Some(q) => Some(q.qid),
         None => None,
@@ -14646,14 +13611,11 @@ at: &mut usize,
         None => return None,
     };
 
-    let line_suffix: &[u8] = b" compiled from ACE question by ace_to_pl question mode; do not edit.\n";
+    let line_suffix: &[u8] =
+        b" compiled from ACE question by ace_to_pl question mode; do not edit.\n";
     proof {
-        reveal_strlit(
-            " compiled from ACE question by ace_to_pl question mode; do not edit.\n",
-        );
-        reveal_byteslit(
-            b" compiled from ACE question by ace_to_pl question mode; do not edit.\n",
-        );
+        reveal_strlit(" compiled from ACE question by ace_to_pl question mode; do not edit.\n");
+        reveal_byteslit(b" compiled from ACE question by ace_to_pl question mode; do not edit.\n");
         reveal(ckc_spec::v1text::ascii);
         assert(line_suffix@ == ckc_spec::v1text::ascii(
             " compiled from ACE question by ace_to_pl question mode; do not edit.\n"@,
@@ -14663,10 +13625,12 @@ at: &mut usize,
         bytes,
         guided,
         line_suffix,
-        Ghost(ckc_spec::v1text::ascii(
-            " compiled from ACE question by ace_to_pl question mode; do not edit.\n"@,
-        )),
-    at,
+        Ghost(
+            ckc_spec::v1text::ascii(
+                " compiled from ACE question by ace_to_pl question mode; do not edit.\n"@,
+            ),
+        ),
+        at,
     ) {
         return None;
     }
@@ -14685,7 +13649,7 @@ fn parse_query_record_prefix(
     guided: &mut EGuidedCursor,
     line_qid: &ENameField,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
@@ -14693,8 +13657,7 @@ at: &mut usize,
         ckc_spec::v1text::name_ok(line_qid.value@),
         expected@ matches Some(q) ==> {
             &&& line_qid.value@ == q.qid
-            &&& old(guided).guide@ matches Some(g)
-                && g.parts == query_parts(q) && g.index == 3
+            &&& old(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index == 3
             &&& ckc_spec::v1text::wf_query(q)
         },
         expected@ is None ==> old(guided).guide@ is None,
@@ -14703,15 +13666,13 @@ at: &mut usize,
         r matches Some(ace) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(ace.name@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + query_record_prefix_stage(line_qid.value@, ace.name@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
+                + query_record_prefix_stage(line_qid.value@, ace.name@)
         },
         expected@ matches Some(q) ==> {
             &&& r matches Some(ace)
             &&& ace.name@ == q.ace
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == query_parts(q) && g.index == 16
+            &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index == 16
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -14730,10 +13691,7 @@ at: &mut usize,
     }
 
     let ghost wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("$guideline_query"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("$guideline_query"@), 0x28u8)),
         None => None,
     };
     let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
@@ -14745,8 +13703,7 @@ at: &mut usize,
         reveal_strlit("$guideline_query");
         reveal_byteslit(b"$guideline_query");
         reveal(ckc_spec::v1text::ascii);
-        assert(wrapper_name@
-            == ckc_spec::v1text::ascii("$guideline_query"@));
+        assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_query"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
@@ -14754,7 +13711,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost version_expected = match expected@ {
         Some(_) => Some((ckc_spec::v1text::ascii("v1"@), 0x2cu8)),
         None => None,
@@ -14776,17 +13732,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost record_qid_expected = match expected@ {
         Some(q) => Some((q.qid, 0x2cu8)),
         None => None,
     };
-    let record_qid = match guided_atom(
-        bytes,
-        guided,
-        Ghost(record_qid_expected),
-    at,
-    ) {
+    let record_qid = match guided_atom(bytes, guided, Ghost(record_qid_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -14796,20 +13746,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost ace_wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("ace_sha256"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("ace_sha256"@), 0x28u8)),
         None => None,
     };
-    let ace_wrapper = match guided_atom(
-        bytes,
-        guided,
-        Ghost(ace_wrapper_expected),
-    at,
-    ) {
+    let ace_wrapper = match guided_atom(bytes, guided, Ghost(ace_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -14818,8 +13759,7 @@ at: &mut usize,
         reveal_strlit("ace_sha256");
         reveal_byteslit(b"ace_sha256");
         reveal(ckc_spec::v1text::ascii);
-        assert(ace_wrapper_name@
-            == ckc_spec::v1text::ascii("ace_sha256"@));
+        assert(ace_wrapper_name@ == ckc_spec::v1text::ascii("ace_sha256"@));
     }
     if !vec_slice_equal(&ace_wrapper.name, ace_wrapper_name) {
         return None;
@@ -14827,7 +13767,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost ace_expected = match expected@ {
         Some(q) => Some((q.ace, 0x29u8)),
         None => None,
@@ -14851,17 +13790,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost ulex_wrapper_expected = match expected@ {
         Some(_) => Some((ckc_spec::v1text::ascii("ulex"@), 0x28u8)),
         None => None,
     };
-    let ulex_wrapper = match guided_atom(
-        bytes,
-        guided,
-        Ghost(ulex_wrapper_expected),
-    at,
-    ) {
+    let ulex_wrapper = match guided_atom(bytes, guided, Ghost(ulex_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -14870,8 +13803,7 @@ at: &mut usize,
         reveal_strlit("ulex");
         reveal_byteslit(b"ulex");
         reveal(ckc_spec::v1text::ascii);
-        assert(ulex_wrapper_name@
-            == ckc_spec::v1text::ascii("ulex"@));
+        assert(ulex_wrapper_name@ == ckc_spec::v1text::ascii("ulex"@));
     }
     if !vec_slice_equal(&ulex_wrapper.name, ulex_wrapper_name) {
         return None;
@@ -14879,7 +13811,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     proof {
         reveal(query_record_prefix_stage);
         reveal(query_record_head_stage);
@@ -14900,14 +13831,13 @@ fn parse_record_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Option<Seq<u8>>, Seq<Seq<u8>>)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g) == record_ulex_parts(e.0) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == record_ulex_parts(e.0) + e.1
             &&& ckc_spec::v1text::ulex_ok(e.0)
         },
         expected@ is None ==> old(guided).guide@ is None,
@@ -14917,19 +13847,16 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
             &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + query_ulex_stage(ulex.value@)
-                    + query_record_suffix_stage()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_ulex_stage(
+                ulex.value@,
+            ) + query_record_suffix_stage()
         },
         expected@ matches Some(e) ==> {
             &&& r matches Some(ulex) && ulex.value@ == e.0
             &&& old(guided).guide@ matches Some(before)
-            &&& final(guided).guide@ matches Some(after)
-                && after.parts == before.parts
-                && after.index
-                    == before.index + record_ulex_parts(e.0).len()
-                && guide_rest(after) == e.1
+            &&& final(guided).guide@ matches Some(after) && after.parts == before.parts
+                && after.index == before.index + record_ulex_parts(e.0).len() && guide_rest(after)
+                == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -14948,43 +13875,45 @@ at: &mut usize,
 
     let ghost tag_expected = match expected@ {
         Some(e) => match e.0 {
-            None => Some((
-                ckc_spec::v1text::ascii("none"@),
-                seq![
-                    seq![0x29u8],
-                    seq![0x29u8],
-                    ckc_spec::v1text::ascii(".\n"@),
-                ] + e.1,
-            )),
-            Some(hash) => Some((
-                ckc_spec::v1text::ascii("sha256"@),
-                seq![
-                    seq![0x28u8],
-                    ckc_spec::v1text::atom_bytes(hash),
-                    seq![0x29u8],
-                    seq![0x29u8],
-                    seq![0x29u8],
-                    ckc_spec::v1text::ascii(".\n"@),
-                ] + e.1,
-            )),
+            None => Some(
+                (
+                    ckc_spec::v1text::ascii("none"@),
+                    seq![seq![0x29u8], seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1,
+                ),
+            ),
+            Some(hash) => Some(
+                (
+                    ckc_spec::v1text::ascii("sha256"@),
+                    seq![
+                        seq![0x28u8],
+                        ckc_spec::v1text::atom_bytes(hash),
+                        seq![0x29u8],
+                        seq![0x29u8],
+                        seq![0x29u8],
+                        ckc_spec::v1text::ascii(".\n"@),
+                    ] + e.1,
+                ),
+            ),
         },
         None => None,
     };
     let ghost tag_next = match expected@ {
-        Some(e) => if e.0 is None { 0x29u8 } else { 0x28u8 },
+        Some(e) => if e.0 is None {
+            0x29u8
+        } else {
+            0x28u8
+        },
         None => 0x29u8,
     };
     proof {
         if let Some(e) = expected@ {
             match e.0 {
                 None => {
-                    assert(tag_expected.unwrap().0
-                        == ckc_spec::v1text::ascii("none"@));
+                    assert(tag_expected.unwrap().0 == ckc_spec::v1text::ascii("none"@));
                     assert(tag_next == 0x29);
                 },
                 Some(_) => {
-                    assert(tag_expected.unwrap().0
-                        == ckc_spec::v1text::ascii("sha256"@));
+                    assert(tag_expected.unwrap().0 == ckc_spec::v1text::ascii("sha256"@));
                     assert(tag_next == 0x28);
                 },
             }
@@ -14997,13 +13926,7 @@ at: &mut usize,
             assert(tag_expected.unwrap().1[0][0] == tag_next);
         }
     }
-    let tag = match parts_guided_atom(
-        bytes,
-        guided,
-        Ghost(tag_next),
-        Ghost(tag_expected),
-    at,
-    ) {
+    let tag = match parts_guided_atom(bytes, guided, Ghost(tag_next), Ghost(tag_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -15026,12 +13949,11 @@ at: &mut usize,
                     None => {},
                     Some(_) => assert(false),
                 }
-                assert(guide_rest(guided.guide@.unwrap())
-                    == seq![
-                        seq![0x29u8],
-                        seq![0x29u8],
-                        ckc_spec::v1text::ascii(".\n"@),
-                    ] + e.1);
+                assert(guide_rest(guided.guide@.unwrap()) == seq![
+                    seq![0x29u8],
+                    seq![0x29u8],
+                    ckc_spec::v1text::ascii(".\n"@),
+                ] + e.1);
             }
         }
         let close: &[u8] = b")";
@@ -15041,9 +13963,7 @@ at: &mut usize,
             assert(close@ == close_chunk);
         }
         let ghost after_first_close = match expected@ {
-            Some(e) => Some(
-                seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1,
-            ),
+            Some(e) => Some(seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1),
             None => None,
         };
         proof {
@@ -15058,7 +13978,7 @@ at: &mut usize,
             close,
             Ghost(close_chunk),
             Ghost(after_first_close),
-        at,
+            at,
         ) {
             return None;
         }
@@ -15078,7 +13998,7 @@ at: &mut usize,
             close,
             Ghost(close_chunk),
             Ghost(after_second_close),
-        at,
+            at,
         ) {
             return None;
         }
@@ -15106,7 +14026,7 @@ at: &mut usize,
             line_end,
             Ghost(ckc_spec::v1text::ascii(".\n"@)),
             Ghost(after_line),
-        at,
+            at,
         ) {
             return None;
         }
@@ -15125,7 +14045,6 @@ at: &mut usize,
         }
         return Some(EUlexField { value: Ghost(None), digest: Vec::new() });
     }
-
     if !vec_slice_equal(&tag.name, sha_name) {
         proof {
             if expected@ is Some {
@@ -15140,15 +14059,14 @@ at: &mut usize,
                 Some(_) => {},
                 None => assert(false),
             }
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![
-                    seq![0x28u8],
-                    ckc_spec::v1text::atom_bytes(e.0.unwrap()),
-                    seq![0x29u8],
-                    seq![0x29u8],
-                    seq![0x29u8],
-                    ckc_spec::v1text::ascii(".\n"@),
-                ] + e.1);
+            assert(guide_rest(guided.guide@.unwrap()) == seq![
+                seq![0x28u8],
+                ckc_spec::v1text::atom_bytes(e.0.unwrap()),
+                seq![0x29u8],
+                seq![0x29u8],
+                seq![0x29u8],
+                ckc_spec::v1text::ascii(".\n"@),
+            ] + e.1);
         }
     }
     let open: &[u8] = b"(";
@@ -15175,26 +14093,17 @@ at: &mut usize,
                 == seq![open_chunk] + after_open.unwrap());
         }
     }
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        open,
-        Ghost(open_chunk),
-        Ghost(after_open),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, open, Ghost(open_chunk), Ghost(after_open), at) {
         return None;
     }
     let ghost hash_expected = match expected@ {
-        Some(e) => Some((
-            e.0.unwrap(),
-            seq![
-                seq![0x29u8],
-                seq![0x29u8],
-                seq![0x29u8],
-                ckc_spec::v1text::ascii(".\n"@),
-            ] + e.1,
-        )),
+        Some(e) => Some(
+            (
+                e.0.unwrap(),
+                seq![seq![0x29u8], seq![0x29u8], seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
+                    + e.1,
+            ),
+        ),
         None => None,
     };
     proof {
@@ -15208,13 +14117,7 @@ at: &mut usize,
             assert(hash_expected.unwrap().1[0][0] == 0x29);
         }
     }
-    let hash = match parts_guided_atom(
-        bytes,
-        guided,
-        Ghost(0x29u8),
-        Ghost(hash_expected),
-    at,
-    ) {
+    let hash = match parts_guided_atom(bytes, guided, Ghost(0x29u8), Ghost(hash_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -15234,13 +14137,7 @@ at: &mut usize,
         assert(close@ == close_chunk);
     }
     let ghost after_hash_close = match expected@ {
-        Some(e) => Some(
-            seq![
-                seq![0x29u8],
-                seq![0x29u8],
-                ckc_spec::v1text::ascii(".\n"@),
-            ] + e.1,
-        ),
+        Some(e) => Some(seq![seq![0x29u8], seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1),
         None => None,
     };
     proof {
@@ -15249,20 +14146,11 @@ at: &mut usize,
                 == seq![close_chunk] + after_hash_close.unwrap());
         }
     }
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        close,
-        Ghost(close_chunk),
-        Ghost(after_hash_close),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, close, Ghost(close_chunk), Ghost(after_hash_close), at) {
         return None;
     }
     let ghost after_ulex_close = match expected@ {
-        Some(e) => Some(
-            seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1,
-        ),
+        Some(e) => Some(seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1),
         None => None,
     };
     proof {
@@ -15271,14 +14159,7 @@ at: &mut usize,
                 == seq![close_chunk] + after_ulex_close.unwrap());
         }
     }
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        close,
-        Ghost(close_chunk),
-        Ghost(after_ulex_close),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, close, Ghost(close_chunk), Ghost(after_ulex_close), at) {
         return None;
     }
     let ghost after_record_close = match expected@ {
@@ -15297,7 +14178,7 @@ at: &mut usize,
         close,
         Ghost(close_chunk),
         Ghost(after_record_close),
-    at,
+        at,
     ) {
         return None;
     }
@@ -15325,7 +14206,7 @@ at: &mut usize,
         line_end,
         Ghost(ckc_spec::v1text::ascii(".\n"@)),
         Ghost(after_line),
-    at,
+        at,
     ) {
         return None;
     }
@@ -15350,14 +14231,14 @@ fn parse_query_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
-            && g.parts == query_parts(q) && g.index == 16
-            && ckc_spec::v1text::wf_query(q),
+        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g) && g.parts == query_parts(
+            q,
+        ) && g.index == 16 && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
@@ -15365,23 +14246,20 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
             &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + query_ulex_stage(ulex.value@)
-                    + query_record_suffix_stage()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_ulex_stage(
+                ulex.value@,
+            ) + query_record_suffix_stage()
         },
         expected@ matches Some(q) ==> {
             &&& r matches Some(ulex)
             &&& ulex.value@ == q.ulex
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == query_parts(q)
-                && g.index == query_record_end(q.ulex)
+            &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index
+                == query_record_end(q.ulex)
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost tail = match expected@ {
-        Some(q) => query_text_parts(q.qtext)
-            + query_projection_parts(q.goal, q.answers),
+        Some(q) => query_text_parts(q.qtext) + query_projection_parts(q.goal, q.answers),
         None => Seq::<Seq<u8>>::empty(),
     };
     let ghost generic_expected = match expected@ {
@@ -15400,16 +14278,10 @@ at: &mut usize,
                 Some(_) => {},
             }
             reveal(guide_rest);
-            assert(guide_rest(guided.guide@.unwrap())
-                == record_ulex_parts(q.ulex) + tail);
+            assert(guide_rest(guided.guide@.unwrap()) == record_ulex_parts(q.ulex) + tail);
         }
     }
-    let ulex = match parse_record_ulex(
-        bytes,
-        guided,
-        Ghost(generic_expected),
-    at,
-    ) {
+    let ulex = match parse_record_ulex(bytes, guided, Ghost(generic_expected), at) {
         Some(ulex) => ulex,
         None => return None,
     };
@@ -15431,30 +14303,29 @@ fn parse_query_text(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ETextField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
-            && g.parts == query_parts(q)
-            && g.index == query_record_end(q.ulex)
-            && ckc_spec::v1text::wf_query(q),
+        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g) && g.parts == query_parts(
+            q,
+        ) && g.index == query_record_end(q.ulex) && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(text) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::text_ok(text.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + query_text_stage(text.value@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_text_stage(
+                text.value@,
+            )
         },
         expected@ matches Some(q) ==> {
             &&& r matches Some(text)
             &&& text.value@ == q.qtext
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == query_parts(q)
-                && g.index == query_text_end(q.ulex)
+            &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index
+                == query_text_end(q.ulex)
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -15482,16 +14353,9 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(marker@ == ckc_spec::v1text::ascii("% Q1: "@));
     }
-    if !guided_literal(
-        bytes,
-        guided,
-        marker,
-        Ghost(ckc_spec::v1text::ascii("% Q1: "@)),
-    at,
-    ) {
+    if !guided_literal(bytes, guided, marker, Ghost(ckc_spec::v1text::ascii("% Q1: "@)), at) {
         return None;
     }
-
     let ghost text_expected = match expected@ {
         Some(q) => Some(q.qtext),
         None => None,
@@ -15527,37 +14391,25 @@ proof fn spanned_term_at_close(bytes: Seq<u8>, term: &ESpannedTerm)
     reveal(term_boundary);
 }
 
-fn track_parsed_term(
-    bytes: &[u8],
-    term: &ESpannedTerm,
-    tracker: &mut EVarTracker,
-at: &mut usize,
-)
+fn track_parsed_term(bytes: &[u8], term: &ESpannedTerm, tracker: &mut EVarTracker, at: &mut usize)
     requires
         *old(at) <= bytes@.len(),
         spanned_term_ok(bytes@, term),
-        term_at(
-            bytes@,
-            term.start as int,
-            term.end as int,
-            term@,
-        ),
+        term_at(bytes@, term.start as int, term.end as int, term@),
         term_keys_fit(term@),
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
-        final(tracker).stream@
-            == old(tracker).stream@ + ckc_spec::term::var_stream(term@),
-        final(tracker).valid ==>
-            tracker_state_ok(final(tracker).next, final(tracker).stream@),
+        final(tracker).stream@ == old(tracker).stream@ + ckc_spec::term::var_stream(term@),
+        final(tracker).valid ==> tracker_state_ok(final(tracker).next, final(tracker).stream@),
         tracker_complete(final(tracker).valid, final(tracker).stream@),
-        old(tracker).stream@.len() <= term.start ==>
-            final(tracker).stream@.len() <= term.end,
+        old(tracker).stream@.len() <= term.start ==> final(tracker).stream@.len() <= term.end,
 {
     let mut local_arena = ETermArena { nodes: Vec::new() };
-    proof { reveal(arena_ok); }
+    proof {
+        reveal(arena_ok);
+    }
     let ghost initial = tracker.stream@;
     let ghost guide = GTermExpected { term: term@, end: term.end };
     let replay = parse_term(
@@ -15569,11 +14421,10 @@ at: &mut usize,
         Ghost(initial),
         true,
         tracker,
-    at,
+        at,
     );
     proof {
-        assert(replay matches Some(parsed)
-            && parsed@ == term@ && parsed.end == term.end);
+        assert(replay matches Some(parsed) && parsed@ == term@ && parsed.end == term.end);
     }
 }
 
@@ -15581,7 +14432,9 @@ proof fn query_keys_fit(q: ckc_spec::v1text::QueryFile, bound: nat)
     requires
         ckc_spec::v1text::wf_query(q),
         query_parts(q).flatten().len() <= bound <= usize::MAX as nat,
-    ensures term_keys_fit(q.goal), term_keys_fit(q.answers),
+    ensures
+        term_keys_fit(q.goal),
+        term_keys_fit(q.answers),
 {
     query_parts_flat(q);
     reveal(query_flat);
@@ -15612,22 +14465,22 @@ fn parse_query_projection(
     arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EQueryProjection>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g)
-            && g.parts == query_parts(q)
-            && g.index == query_text_end(q.ulex)
-            && ckc_spec::v1text::wf_query(q),
+        expected@ matches Some(q) ==> old(guided).guide@ matches Some(g) && g.parts == query_parts(
+            q,
+        ) && g.index == query_text_end(q.ulex) && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
-        r matches Some(p) ==> p.goal_root == p.goal.root
-            && p.answers_root == p.answers.root,
-        r matches Some(p) ==> spanned_root_ok(final(arena), &p.goal)
-            && spanned_root_ok(final(arena), &p.answers),
+        r matches Some(p) ==> p.goal_root == p.goal.root && p.answers_root == p.answers.root,
+        r matches Some(p) ==> spanned_root_ok(final(arena), &p.goal) && spanned_root_ok(
+            final(arena),
+            &p.answers,
+        ),
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
@@ -15638,23 +14491,21 @@ at: &mut usize,
             &&& projection.goal.parsed.no_dollar
             &&& projection.answers.parsed.no_dollar
             &&& ckc_spec::term::var_canonical(
-                ckc_spec::term::var_stream(projection.goal@)
-                    + ckc_spec::term::var_stream(projection.answers@),
+                ckc_spec::term::var_stream(projection.goal@) + ckc_spec::term::var_stream(
+                    projection.answers@,
+                ),
             )
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + query_projection_stage(
-                        projection.goal@,
-                        projection.answers@,
-                    )
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_projection_stage(
+                projection.goal@,
+                projection.answers@,
+            )
         },
         expected@ matches Some(q) ==> {
             &&& r matches Some(projection)
             &&& projection.goal@ == q.goal
             &&& projection.answers@ == q.answers
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == query_parts(q)
-                && g.index == query_parts_end(q.ulex)
+            &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index
+                == query_parts_end(q.ulex)
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -15684,10 +14535,7 @@ at: &mut usize,
     }
 
     let ghost wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("$guideline_query_projection"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("$guideline_query_projection"@), 0x28u8)),
         None => None,
     };
     let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
@@ -15699,8 +14547,7 @@ at: &mut usize,
         reveal_strlit("$guideline_query_projection");
         reveal_byteslit(b"$guideline_query_projection");
         reveal(ckc_spec::v1text::ascii);
-        assert(wrapper_name@
-            == ckc_spec::v1text::ascii("$guideline_query_projection"@));
+        assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_query_projection"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
@@ -15708,17 +14555,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost goal_wrapper_expected = match expected@ {
         Some(_) => Some((ckc_spec::v1text::ascii("goal"@), 0x28u8)),
         None => None,
     };
-    let goal_wrapper = match guided_atom(
-        bytes,
-        guided,
-        Ghost(goal_wrapper_expected),
-    at,
-    ) {
+    let goal_wrapper = match guided_atom(bytes, guided, Ghost(goal_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -15735,7 +14576,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost goal_expected = match expected@ {
         Some(q) => Some((q.goal, 0x29u8)),
         None => None,
@@ -15775,17 +14615,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost answers_wrapper_expected = match expected@ {
         Some(_) => Some((ckc_spec::v1text::ascii("answers"@), 0x28u8)),
         None => None,
     };
-    let answers_wrapper = match guided_atom(
-        bytes,
-        guided,
-        Ghost(answers_wrapper_expected),
-    at,
-    ) {
+    let answers_wrapper = match guided_atom(bytes, guided, Ghost(answers_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -15794,8 +14628,7 @@ at: &mut usize,
         reveal_strlit("answers");
         reveal_byteslit(b"answers");
         reveal(ckc_spec::v1text::ascii);
-        assert(answers_wrapper_name@
-            == ckc_spec::v1text::ascii("answers"@));
+        assert(answers_wrapper_name@ == ckc_spec::v1text::ascii("answers"@));
     }
     if !vec_slice_equal(&answers_wrapper.name, answers_wrapper_name) {
         return None;
@@ -15814,7 +14647,11 @@ at: &mut usize,
         None => None,
     };
     let ghost goal_nodes = arena.nodes@;
-    let first_var = if tracker.valid { Some(tracker.next) } else { None };
+    let first_var = if tracker.valid {
+        Some(tracker.next)
+    } else {
+        None
+    };
     let answers_result = guided_term(bytes, arena, first_var, guided, Ghost(answers_expected), at);
     proof {
         nodes_prefix_transitive(entry_nodes, goal_nodes, arena.nodes@);
@@ -15855,9 +14692,9 @@ at: &mut usize,
     }
     track_parsed_term(bytes, &answers, &mut tracker, at);
     proof {
-        assert(tracker.stream@
-            == ckc_spec::term::var_stream(goal@)
-                + ckc_spec::term::var_stream(answers@));
+        assert(tracker.stream@ == ckc_spec::term::var_stream(goal@) + ckc_spec::term::var_stream(
+            answers@,
+        ));
         assert(tracker.stream@.len() <= answers.end);
         assert(answers.end <= bytes.len());
         assert(tracker.stream@.len() <= usize::MAX as nat);
@@ -15887,16 +14724,9 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(line_end@ == ckc_spec::v1text::ascii(".\n"@));
     }
-    if !guided_literal(
-        bytes,
-        guided,
-        line_end,
-        Ghost(ckc_spec::v1text::ascii(".\n"@)),
-    at,
-    ) {
+    if !guided_literal(bytes, guided, line_end, Ghost(ckc_spec::v1text::ascii(".\n"@)), at) {
         return None;
     }
-
     proof {
         reveal(query_projection_stage);
         reveal(query_projection_prefix_stage);
@@ -15916,14 +14746,13 @@ pub fn parse_query(
     bytes: &[u8],
     arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
-        expected@ matches Some(q) ==>
-            ckc_spec::v1text::wf_query(q)
-                && ckc_spec::v1text::print_query(q) == bytes@,
+        expected@ matches Some(q) ==> ckc_spec::v1text::wf_query(q)
+            && ckc_spec::v1text::print_query(q) == bytes@,
     ensures
         r matches Some(parsed) ==> parsed@ is Query,
         r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
@@ -15933,8 +14762,8 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
-        expected@ matches Some(q) ==> r matches Some(parsed)
-            && parsed@ == ckc_spec::v1text::V1File::Query(q),
+        expected@ matches Some(q) ==> r matches Some(parsed) && parsed@
+            == ckc_spec::v1text::V1File::Query(q),
 {
     let ghost expected_parts = match expected@ {
         Some(q) => Some(query_parts(q)),
@@ -15953,13 +14782,7 @@ at: &mut usize,
         Some(qid) => qid,
         None => return None,
     };
-    let ace = match parse_query_record_prefix(
-        bytes,
-        &mut guided,
-        &line_qid,
-        expected,
-    at,
-    ) {
+    let ace = match parse_query_record_prefix(bytes, &mut guided, &line_qid, expected, at) {
         Some(hash) => hash,
         None => return None,
     };
@@ -15971,13 +14794,7 @@ at: &mut usize,
         Some(field) => field,
         None => return None,
     };
-    let projection = match parse_query_projection(
-        bytes,
-        arena,
-        &mut guided,
-        expected,
-    at,
-    ) {
+    let projection = match parse_query_projection(bytes, arena, &mut guided, expected, at) {
         Some(projection) => projection,
         None => return None,
     };
@@ -16008,7 +14825,6 @@ at: &mut usize,
     if guided.cursor.pos != bytes.len() {
         return None;
     }
-
     let ghost model = ckc_spec::v1text::QueryFile {
         qid: line_qid.value@,
         ace: ace.name@,
@@ -16023,8 +14839,7 @@ at: &mut usize,
         assert(cursor_ok(bytes@, &guided.cursor));
         reveal(cursor_ok);
         assert(guided.cursor.pos == bytes@.len());
-        assert(guided.cursor.prefix@
-            == bytes@.subrange(0, bytes@.len() as int));
+        assert(guided.cursor.prefix@ == bytes@.subrange(0, bytes@.len() as int));
         assert_seqs_equal!(
             bytes@.subrange(0, bytes@.len() as int) == bytes@
         );
@@ -16049,18 +14864,23 @@ at: &mut usize,
         reveal(ckc_spec::v1text::print_v1);
         reveal(parsed_v1_ok);
     }
-    proof { reveal(parsed_doc_roots_ok); reveal(parsed_query_roots_ok); }
-    Some(EParsedV1 {
-        class: EV1Class::Query,
-        docid: Vec::new(),
-        doc_ace: Vec::new(),
-        doc_ulex: Vec::new(),
-        qid: line_qid.value,
-        clauses: Vec::new(),
-        goal_root: projection.goal_root,
-        answers_root: projection.answers_root,
-        file: Ghost(ckc_spec::v1text::V1File::Query(model)),
-    })
+    proof {
+        reveal(parsed_doc_roots_ok);
+        reveal(parsed_query_roots_ok);
+    }
+    Some(
+        EParsedV1 {
+            class: EV1Class::Query,
+            docid: Vec::new(),
+            doc_ace: Vec::new(),
+            doc_ulex: Vec::new(),
+            qid: line_qid.value,
+            clauses: Vec::new(),
+            goal_root: projection.goal_root,
+            answers_root: projection.answers_root,
+            file: Ghost(ckc_spec::v1text::V1File::Query(model)),
+        },
+    )
 }
 
 #[verifier::rlimit(500)]
@@ -16070,7 +14890,7 @@ fn record_atomic_term(
     term: &ESpannedTerm,
     initial_stream: Ghost<Seq<nat>>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 )
     requires
         *old(at) <= bytes@.len(),
@@ -16079,15 +14899,12 @@ at: &mut usize,
         term_at(bytes@, start as int, term.end as int, term@),
         atomic_term(term@),
         initial_stream@ == old(tracker).stream@,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
-        final(tracker).stream@
-            == initial_stream@ + ckc_spec::term::var_stream(term@),
-        final(tracker).valid ==>
-            tracker_state_ok(final(tracker).next, final(tracker).stream@),
+        final(tracker).stream@ == initial_stream@ + ckc_spec::term::var_stream(term@),
+        final(tracker).valid ==> tracker_state_ok(final(tracker).next, final(tracker).stream@),
         tracker_complete(final(tracker).valid, final(tracker).stream@),
 {
     proof {
@@ -16114,17 +14931,12 @@ at: &mut usize,
             }
             reveal(term_at);
             reveal_with_fuel(ckc_spec::v1text::term_bytes, 2);
-            assert(ckc_spec::v1text::var_bytes(value)
-                == bytes@.subrange(start as int, term.end as int));
+            assert(ckc_spec::v1text::var_bytes(value) == bytes@.subrange(
+                start as int,
+                term.end as int,
+            ));
         }
-        let _valid = record_variable(
-            bytes,
-            start,
-            term.end,
-            Ghost(value),
-            tracker,
-        at,
-        );
+        let _valid = record_variable(bytes, start, term.end, Ghost(value), tracker, at);
         proof {
             reveal(ckc_spec::term::var_stream);
             assert_seqs_equal!(
@@ -16155,39 +14967,23 @@ pub open spec fn doc_line_stage(docid: Seq<u8>) -> Seq<u8> {
 }
 
 pub open spec fn doc_record_head_stage(docid: Seq<u8>) -> Seq<u8> {
-    ckc_spec::v1text::atom_bytes(
-        ckc_spec::v1text::ascii("guideline_document"@),
-    )
-        + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(docid)
-        + seq![0x2cu8]
+    ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("guideline_document"@)) + seq![0x28u8]
+        + ckc_spec::v1text::atom_bytes(docid) + seq![0x2cu8]
 }
 
 pub open spec fn doc_record_suffix_stage() -> Seq<u8> {
     seq![0x29u8, 0x29u8] + ckc_spec::v1text::ascii(".\n"@)
 }
 
-pub open spec fn doc_record_stage(
-    docid: Seq<u8>,
-    ace: Seq<u8>,
-    ulex: Option<Seq<u8>>,
-) -> Seq<u8> {
-    doc_record_head_stage(docid)
-        + query_record_ace_stage(ace)
-        + query_record_ulex_open_stage()
-        + query_ulex_stage(ulex)
-        + doc_record_suffix_stage()
+pub open spec fn doc_record_stage(docid: Seq<u8>, ace: Seq<u8>, ulex: Option<Seq<u8>>) -> Seq<u8> {
+    doc_record_head_stage(docid) + query_record_ace_stage(ace) + query_record_ulex_open_stage()
+        + query_ulex_stage(ulex) + doc_record_suffix_stage()
 }
 
-pub open spec fn doc_prefix_stage(
-    d: ckc_spec::v1text::DocFile,
-) -> Seq<u8> {
-    doc_line_stage(d.docid)
-        + ckc_spec::v1text::decls_from(0)
-        + ckc_spec::v1text::term_line(
-            ckc_spec::v1text::schema_version_term(),
-        )
-        + doc_record_stage(d.docid, d.ace, d.ulex)
+pub open spec fn doc_prefix_stage(d: ckc_spec::v1text::DocFile) -> Seq<u8> {
+    doc_line_stage(d.docid) + ckc_spec::v1text::decls_from(0) + ckc_spec::v1text::term_line(
+        ckc_spec::v1text::schema_version_term(),
+    ) + doc_record_stage(d.docid, d.ace, d.ulex)
 }
 
 pub open spec fn doc_flat(d: ckc_spec::v1text::DocFile) -> Seq<u8> {
@@ -16208,29 +15004,21 @@ pub open spec fn doc_decl_parts() -> Seq<Seq<u8>> {
     seq![ckc_spec::v1text::decls_from(0)]
 }
 
-pub open spec fn doc_record_parts(
-    docid: Seq<u8>,
-    ace: Seq<u8>,
-    ulex: Option<Seq<u8>>,
-) -> Seq<Seq<u8>> {
+pub open spec fn doc_record_parts(docid: Seq<u8>, ace: Seq<u8>, ulex: Option<Seq<u8>>) -> Seq<
+    Seq<u8>,
+> {
     match ulex {
         None => seq![
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("guideline_document"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("guideline_document"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(docid),
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ace_sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ace_sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ace),
             seq![0x29u8],
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ulex"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("none"@)),
             seq![0x29u8],
@@ -16238,26 +15026,18 @@ pub open spec fn doc_record_parts(
             ckc_spec::v1text::ascii(".\n"@),
         ],
         Some(hash) => seq![
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("guideline_document"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("guideline_document"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(docid),
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ace_sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ace_sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ace),
             seq![0x29u8],
             seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("ulex"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@)),
             seq![0x28u8],
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(hash),
             seq![0x29u8],
@@ -16276,38 +15056,26 @@ pub open spec fn doc_lit_parts(gs: Seq<Term>) -> Seq<Seq<u8>>
     } else if gs.len() == 1 {
         seq![ckc_spec::v1text::term_bytes(gs[0])]
     } else {
-        seq![
-            ckc_spec::v1text::term_bytes(gs[0]),
-            ckc_spec::v1text::ascii(", "@),
-        ] + doc_lit_parts(gs.drop_first())
+        seq![ckc_spec::v1text::term_bytes(gs[0]), ckc_spec::v1text::ascii(", "@)] + doc_lit_parts(
+            gs.drop_first(),
+        )
     }
 }
 
-pub open spec fn doc_body_item_parts(
-    it: ckc_spec::v1text::BodyItem,
-) -> Seq<Seq<u8>> {
+pub open spec fn doc_body_item_parts(it: ckc_spec::v1text::BodyItem) -> Seq<Seq<u8>> {
     match it {
-        ckc_spec::v1text::BodyItem::Pos(l) => {
-            seq![ckc_spec::v1text::term_bytes(l)]
-        },
+        ckc_spec::v1text::BodyItem::Pos(l) => { seq![ckc_spec::v1text::term_bytes(l)] },
         ckc_spec::v1text::BodyItem::Naf(gs) => if gs.len() == 1 {
-            seq![
-                ckc_spec::v1text::ascii("\\+ "@),
-                ckc_spec::v1text::term_bytes(gs[0]),
-            ]
+            seq![ckc_spec::v1text::ascii("\\+ "@), ckc_spec::v1text::term_bytes(gs[0])]
         } else {
-            seq![
-                ckc_spec::v1text::ascii("\\+ "@),
-                seq![0x28u8],
-            ] + doc_lit_parts(gs)
-                + seq![seq![0x29u8]]
+            seq![ckc_spec::v1text::ascii("\\+ "@), seq![0x28u8]] + doc_lit_parts(gs) + seq![
+                seq![0x29u8],
+            ]
         },
     }
 }
 
-pub open spec fn doc_body_parts(
-    items: Seq<ckc_spec::v1text::BodyItem>,
-) -> Seq<Seq<u8>>
+pub open spec fn doc_body_parts(items: Seq<ckc_spec::v1text::BodyItem>) -> Seq<Seq<u8>>
     decreases items,
 {
     if items.len() == 0 {
@@ -16315,32 +15083,22 @@ pub open spec fn doc_body_parts(
     } else if items.len() == 1 {
         doc_body_item_parts(items[0])
     } else {
-        doc_body_item_parts(items[0])
-            + seq![ckc_spec::v1text::ascii(", "@)]
-            + doc_body_parts(items.drop_first())
+        doc_body_item_parts(items[0]) + seq![ckc_spec::v1text::ascii(", "@)] + doc_body_parts(
+            items.drop_first(),
+        )
     }
 }
 
-pub open spec fn doc_clause_parts(
-    c: ckc_spec::v1text::DocClause,
-) -> Seq<Seq<u8>> {
+pub open spec fn doc_clause_parts(c: ckc_spec::v1text::DocClause) -> Seq<Seq<u8>> {
     if c.body.len() == 0 {
-        seq![
-            ckc_spec::v1text::term_bytes(c.head),
-            ckc_spec::v1text::ascii(".\n"@),
-        ]
+        seq![ckc_spec::v1text::term_bytes(c.head), ckc_spec::v1text::ascii(".\n"@)]
     } else {
-        seq![
-            ckc_spec::v1text::term_bytes(c.head),
-            ckc_spec::v1text::ascii(" :- "@),
-        ] + doc_body_parts(c.body)
-            + seq![ckc_spec::v1text::ascii(".\n"@)]
+        seq![ckc_spec::v1text::term_bytes(c.head), ckc_spec::v1text::ascii(" :- "@)]
+            + doc_body_parts(c.body) + seq![ckc_spec::v1text::ascii(".\n"@)]
     }
 }
 
-pub open spec fn doc_clauses_parts(
-    cs: Seq<ckc_spec::v1text::DocClause>,
-) -> Seq<Seq<u8>>
+pub open spec fn doc_clauses_parts(cs: Seq<ckc_spec::v1text::DocClause>) -> Seq<Seq<u8>>
     decreases cs,
 {
     if cs.len() == 0 {
@@ -16350,9 +15108,7 @@ pub open spec fn doc_clauses_parts(
     }
 }
 
-pub open spec fn doc_marker_parts(
-    b: ckc_spec::v1text::Bundle,
-) -> Seq<Seq<u8>> {
+pub open spec fn doc_marker_parts(b: ckc_spec::v1text::Bundle) -> Seq<Seq<u8>> {
     seq![
         ckc_spec::v1text::ascii("% S"@),
         ckc_spec::v1text::udec_bytes(b.s),
@@ -16362,15 +15118,11 @@ pub open spec fn doc_marker_parts(
     ]
 }
 
-pub open spec fn doc_bundle_parts(
-    b: ckc_spec::v1text::Bundle,
-) -> Seq<Seq<u8>> {
+pub open spec fn doc_bundle_parts(b: ckc_spec::v1text::Bundle) -> Seq<Seq<u8>> {
     doc_marker_parts(b) + doc_clauses_parts(b.clauses)
 }
 
-pub open spec fn doc_bundles_parts(
-    bs: Seq<ckc_spec::v1text::Bundle>,
-) -> Seq<Seq<u8>>
+pub open spec fn doc_bundles_parts(bs: Seq<ckc_spec::v1text::Bundle>) -> Seq<Seq<u8>>
     decreases bs,
 {
     if bs.len() == 0 {
@@ -16380,25 +15132,19 @@ pub open spec fn doc_bundles_parts(
     }
 }
 
-pub open spec fn doc_prefix_parts(
-    d: ckc_spec::v1text::DocFile,
-) -> Seq<Seq<u8>> {
-    doc_line_parts(d.docid)
-        + doc_decl_parts()
-        + seq![ckc_spec::v1text::term_line(
-            ckc_spec::v1text::schema_version_term(),
-        )]
-        + doc_record_parts(d.docid, d.ace, d.ulex)
+pub open spec fn doc_prefix_parts(d: ckc_spec::v1text::DocFile) -> Seq<Seq<u8>> {
+    doc_line_parts(d.docid) + doc_decl_parts() + seq![
+        ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term()),
+    ] + doc_record_parts(d.docid, d.ace, d.ulex)
 }
 
-pub open spec fn doc_parts(
-    d: ckc_spec::v1text::DocFile,
-) -> Seq<Seq<u8>> {
+pub open spec fn doc_parts(d: ckc_spec::v1text::DocFile) -> Seq<Seq<u8>> {
     doc_prefix_parts(d) + doc_bundles_parts(d.bundles)
 }
 
 proof fn doc_line_parts_flat(docid: Seq<u8>)
-    ensures doc_line_parts(docid).flatten() == doc_line_stage(docid),
+    ensures
+        doc_line_parts(docid).flatten() == doc_line_stage(docid),
 {
     reveal(doc_line_parts);
     reveal(doc_line_stage);
@@ -16407,7 +15153,8 @@ proof fn doc_line_parts_flat(docid: Seq<u8>)
 }
 
 proof fn doc_decl_parts_flat()
-    ensures doc_decl_parts().flatten() == ckc_spec::v1text::decls_from(0),
+    ensures
+        doc_decl_parts().flatten() == ckc_spec::v1text::decls_from(0),
 {
     reveal(doc_decl_parts);
     reveal_with_fuel(Seq::<_>::flatten, 11);
@@ -16415,26 +15162,18 @@ proof fn doc_decl_parts_flat()
 }
 
 #[verifier::rlimit(500)]
-proof fn doc_record_parts_flat(
-    docid: Seq<u8>,
-    ace: Seq<u8>,
-    ulex: Option<Seq<u8>>,
-)
-    ensures doc_record_parts(docid, ace, ulex).flatten()
-        == doc_record_stage(docid, ace, ulex),
+proof fn doc_record_parts_flat(docid: Seq<u8>, ace: Seq<u8>, ulex: Option<Seq<u8>>)
+    ensures
+        doc_record_parts(docid, ace, ulex).flatten() == doc_record_stage(docid, ace, ulex),
 {
     let head = seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("guideline_document"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("guideline_document"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(docid),
         seq![0x2cu8],
     ];
     let ace_parts = seq![
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("ace_sha256"@),
-        ),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ace_sha256"@)),
         seq![0x28u8],
         ckc_spec::v1text::atom_bytes(ace),
         seq![0x29u8],
@@ -16445,25 +15184,17 @@ proof fn doc_record_parts_flat(
         seq![0x28u8],
     ];
     let ulex_parts = match ulex {
-        None => seq![ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("none"@),
-        )],
+        None => seq![ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("none"@))],
         Some(hash) => seq![
-            ckc_spec::v1text::atom_bytes(
-                ckc_spec::v1text::ascii("sha256"@),
-            ),
+            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(hash),
             seq![0x29u8],
         ],
     };
-    let suffix = seq![
-        seq![0x29u8],
-        seq![0x29u8],
-        ckc_spec::v1text::ascii(".\n"@),
-    ];
-    assert(doc_record_parts(docid, ace, ulex)
-        == ((head + ace_parts) + (ulex_open + ulex_parts)) + suffix) by {
+    let suffix = seq![seq![0x29u8], seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)];
+    assert(doc_record_parts(docid, ace, ulex) == ((head + ace_parts) + (ulex_open + ulex_parts))
+        + suffix) by {
         reveal(doc_record_parts);
     }
     assert(head.flatten() == doc_record_head_stage(docid)) by {
@@ -16491,20 +15222,14 @@ proof fn doc_record_parts_flat(
     }
     vstd::seq_lib::lemma_flatten_concat(head, ace_parts);
     vstd::seq_lib::lemma_flatten_concat(ulex_open, ulex_parts);
-    vstd::seq_lib::lemma_flatten_concat(
-        head + ace_parts,
-        ulex_open + ulex_parts,
-    );
-    vstd::seq_lib::lemma_flatten_concat(
-        (head + ace_parts) + (ulex_open + ulex_parts),
-        suffix,
-    );
+    vstd::seq_lib::lemma_flatten_concat(head + ace_parts, ulex_open + ulex_parts);
+    vstd::seq_lib::lemma_flatten_concat((head + ace_parts) + (ulex_open + ulex_parts), suffix);
     reveal(doc_record_stage);
 }
 
 proof fn doc_lit_parts_flat(gs: Seq<Term>)
-    ensures doc_lit_parts(gs).flatten()
-        == ckc_spec::v1text::lit_list_bytes(gs),
+    ensures
+        doc_lit_parts(gs).flatten() == ckc_spec::v1text::lit_list_bytes(gs),
     decreases gs,
 {
     reveal(doc_lit_parts);
@@ -16515,25 +15240,18 @@ proof fn doc_lit_parts_flat(gs: Seq<Term>)
         reveal_with_fuel(Seq::<_>::flatten, 3);
     } else {
         doc_lit_parts_flat(gs.drop_first());
-        let first = seq![
-            ckc_spec::v1text::term_bytes(gs[0]),
-            ckc_spec::v1text::ascii(", "@),
-        ];
-        vstd::seq_lib::lemma_flatten_concat(
-            first,
-            doc_lit_parts(gs.drop_first()),
-        );
+        let first = seq![ckc_spec::v1text::term_bytes(gs[0]), ckc_spec::v1text::ascii(", "@)];
+        vstd::seq_lib::lemma_flatten_concat(first, doc_lit_parts(gs.drop_first()));
         reveal_with_fuel(Seq::<_>::flatten, 4);
     }
 }
 
 proof fn lit_list_bytes_push(gs: Seq<Term>, g: Term)
-    requires gs.len() > 0,
+    requires
+        gs.len() > 0,
     ensures
-        ckc_spec::v1text::lit_list_bytes(gs.push(g))
-            == ckc_spec::v1text::lit_list_bytes(gs)
-                + ckc_spec::v1text::ascii(", "@)
-                + ckc_spec::v1text::term_bytes(g),
+        ckc_spec::v1text::lit_list_bytes(gs.push(g)) == ckc_spec::v1text::lit_list_bytes(gs)
+            + ckc_spec::v1text::ascii(", "@) + ckc_spec::v1text::term_bytes(g),
     decreases gs.len(),
 {
     if gs.len() == 1 {
@@ -16548,8 +15266,8 @@ proof fn lit_list_bytes_push(gs: Seq<Term>, g: Term)
 }
 
 proof fn doc_body_item_parts_flat(it: ckc_spec::v1text::BodyItem)
-    ensures doc_body_item_parts(it).flatten()
-        == ckc_spec::v1text::body_item_bytes(it),
+    ensures
+        doc_body_item_parts(it).flatten() == ckc_spec::v1text::body_item_bytes(it),
 {
     reveal(doc_body_item_parts);
     reveal(ckc_spec::v1text::body_item_bytes);
@@ -16561,31 +15279,24 @@ proof fn doc_body_item_parts_flat(it: ckc_spec::v1text::BodyItem)
             reveal_with_fuel(Seq::<_>::flatten, 4);
         } else {
             doc_lit_parts_flat(gs);
-            let prefix = seq![
-                ckc_spec::v1text::ascii("\\+ "@),
-                seq![0x28u8],
-            ];
+            let prefix = seq![ckc_spec::v1text::ascii("\\+ "@), seq![0x28u8]];
             let suffix = seq![seq![0x29u8]];
-            assert(prefix.flatten()
-                == ckc_spec::v1text::ascii("\\+ ("@)) by {
+            assert(prefix.flatten() == ckc_spec::v1text::ascii("\\+ ("@)) by {
                 reveal_strlit("\\+ ");
                 reveal_strlit("\\+ (");
                 reveal(ckc_spec::v1text::ascii);
                 reveal_with_fuel(Seq::<_>::flatten, 4);
             }
             vstd::seq_lib::lemma_flatten_concat(prefix, doc_lit_parts(gs));
-            vstd::seq_lib::lemma_flatten_concat(
-                prefix + doc_lit_parts(gs),
-                suffix,
-            );
+            vstd::seq_lib::lemma_flatten_concat(prefix + doc_lit_parts(gs), suffix);
             reveal_with_fuel(Seq::<_>::flatten, 3);
         },
     }
 }
 
 proof fn doc_body_parts_flat(items: Seq<ckc_spec::v1text::BodyItem>)
-    ensures doc_body_parts(items).flatten()
-        == ckc_spec::v1text::body_bytes(items),
+    ensures
+        doc_body_parts(items).flatten() == ckc_spec::v1text::body_bytes(items),
     decreases items,
 {
     reveal(doc_body_parts);
@@ -16598,10 +15309,7 @@ proof fn doc_body_parts_flat(items: Seq<ckc_spec::v1text::BodyItem>)
         doc_body_item_parts_flat(items[0]);
         doc_body_parts_flat(items.drop_first());
         let comma = seq![ckc_spec::v1text::ascii(", "@)];
-        vstd::seq_lib::lemma_flatten_concat(
-            doc_body_item_parts(items[0]),
-            comma,
-        );
+        vstd::seq_lib::lemma_flatten_concat(doc_body_item_parts(items[0]), comma);
         vstd::seq_lib::lemma_flatten_concat(
             doc_body_item_parts(items[0]) + comma,
             doc_body_parts(items.drop_first()),
@@ -16611,8 +15319,8 @@ proof fn doc_body_parts_flat(items: Seq<ckc_spec::v1text::BodyItem>)
 }
 
 proof fn doc_clause_parts_flat(c: ckc_spec::v1text::DocClause)
-    ensures doc_clause_parts(c).flatten()
-        == ckc_spec::v1text::clause_line(c),
+    ensures
+        doc_clause_parts(c).flatten() == ckc_spec::v1text::clause_line(c),
 {
     reveal(doc_clause_parts);
     reveal(ckc_spec::v1text::clause_line);
@@ -16621,23 +15329,17 @@ proof fn doc_clause_parts_flat(c: ckc_spec::v1text::DocClause)
         reveal_with_fuel(Seq::<_>::flatten, 4);
     } else {
         doc_body_parts_flat(c.body);
-        let prefix = seq![
-            ckc_spec::v1text::term_bytes(c.head),
-            ckc_spec::v1text::ascii(" :- "@),
-        ];
+        let prefix = seq![ckc_spec::v1text::term_bytes(c.head), ckc_spec::v1text::ascii(" :- "@)];
         let suffix = seq![ckc_spec::v1text::ascii(".\n"@)];
         vstd::seq_lib::lemma_flatten_concat(prefix, doc_body_parts(c.body));
-        vstd::seq_lib::lemma_flatten_concat(
-            prefix + doc_body_parts(c.body),
-            suffix,
-        );
+        vstd::seq_lib::lemma_flatten_concat(prefix + doc_body_parts(c.body), suffix);
         reveal_with_fuel(Seq::<_>::flatten, 4);
     }
 }
 
 proof fn doc_clauses_parts_flat(cs: Seq<ckc_spec::v1text::DocClause>)
-    ensures doc_clauses_parts(cs).flatten()
-        == ckc_spec::v1text::clauses_bytes(cs),
+    ensures
+        doc_clauses_parts(cs).flatten() == ckc_spec::v1text::clauses_bytes(cs),
     decreases cs,
 {
     reveal(doc_clauses_parts);
@@ -16655,8 +15357,8 @@ proof fn doc_clauses_parts_flat(cs: Seq<ckc_spec::v1text::DocClause>)
 }
 
 proof fn doc_marker_parts_flat(b: ckc_spec::v1text::Bundle)
-    ensures doc_marker_parts(b).flatten()
-        == ckc_spec::v1text::marker_line(b.s, b.text),
+    ensures
+        doc_marker_parts(b).flatten() == ckc_spec::v1text::marker_line(b.s, b.text),
 {
     reveal(doc_marker_parts);
     reveal(ckc_spec::v1text::marker_line);
@@ -16664,22 +15366,19 @@ proof fn doc_marker_parts_flat(b: ckc_spec::v1text::Bundle)
 }
 
 proof fn doc_bundle_parts_flat(b: ckc_spec::v1text::Bundle)
-    ensures doc_bundle_parts(b).flatten()
-        == ckc_spec::v1text::marker_line(b.s, b.text)
+    ensures
+        doc_bundle_parts(b).flatten() == ckc_spec::v1text::marker_line(b.s, b.text)
             + ckc_spec::v1text::clauses_bytes(b.clauses),
 {
     doc_marker_parts_flat(b);
     doc_clauses_parts_flat(b.clauses);
-    vstd::seq_lib::lemma_flatten_concat(
-        doc_marker_parts(b),
-        doc_clauses_parts(b.clauses),
-    );
+    vstd::seq_lib::lemma_flatten_concat(doc_marker_parts(b), doc_clauses_parts(b.clauses));
     reveal(doc_bundle_parts);
 }
 
 proof fn doc_bundles_parts_flat(bs: Seq<ckc_spec::v1text::Bundle>)
-    ensures doc_bundles_parts(bs).flatten()
-        == ckc_spec::v1text::bundles_bytes(bs),
+    ensures
+        doc_bundles_parts(bs).flatten() == ckc_spec::v1text::bundles_bytes(bs),
     decreases bs,
 {
     reveal(doc_bundles_parts);
@@ -16698,12 +15397,9 @@ proof fn doc_bundles_parts_flat(bs: Seq<ckc_spec::v1text::Bundle>)
 
 proof fn args_three_bytes(a: Term, b: Term, c: Term)
     ensures
-        ckc_spec::v1text::args_bytes(seq![a, b, c])
-            == ckc_spec::v1text::term_bytes(a)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(b)
-                + seq![0x2cu8]
-                + ckc_spec::v1text::term_bytes(c),
+        ckc_spec::v1text::args_bytes(seq![a, b, c]) == ckc_spec::v1text::term_bytes(a) + seq![
+            0x2cu8,
+        ] + ckc_spec::v1text::term_bytes(b) + seq![0x2cu8] + ckc_spec::v1text::term_bytes(c),
 {
     reveal_with_fuel(ckc_spec::v1text::args_bytes, 4);
 }
@@ -16711,8 +15407,8 @@ proof fn args_three_bytes(a: Term, b: Term, c: Term)
 #[verifier::rlimit(5000)]
 #[verifier::spinoff_prover]
 proof fn doc_record_stage_is_print(d: ckc_spec::v1text::DocFile)
-    ensures doc_record_stage(d.docid, d.ace, d.ulex)
-        == ckc_spec::v1text::term_line(
+    ensures
+        doc_record_stage(d.docid, d.ace, d.ulex) == ckc_spec::v1text::term_line(
             ckc_spec::v1text::doc_record_term(d),
         ),
 {
@@ -16768,13 +15464,12 @@ proof fn doc_record_stage_is_print(d: ckc_spec::v1text::DocFile)
 }
 
 proof fn doc_prefix_parts_flat(d: ckc_spec::v1text::DocFile)
-    ensures doc_prefix_parts(d).flatten() == doc_prefix_stage(d),
+    ensures
+        doc_prefix_parts(d).flatten() == doc_prefix_stage(d),
 {
     let line = doc_line_parts(d.docid);
     let decls = doc_decl_parts();
-    let schema = seq![ckc_spec::v1text::term_line(
-        ckc_spec::v1text::schema_version_term(),
-    )];
+    let schema = seq![ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term())];
     let record = doc_record_parts(d.docid, d.ace, d.ulex);
     assert(doc_prefix_parts(d) == ((line + decls) + schema) + record) by {
         reveal(doc_prefix_parts);
@@ -16782,9 +15477,8 @@ proof fn doc_prefix_parts_flat(d: ckc_spec::v1text::DocFile)
     doc_line_parts_flat(d.docid);
     doc_decl_parts_flat();
     doc_record_parts_flat(d.docid, d.ace, d.ulex);
-    assert(schema.flatten() == ckc_spec::v1text::term_line(
-        ckc_spec::v1text::schema_version_term(),
-    )) by {
+    assert(schema.flatten() == ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term()))
+        by {
         reveal_with_fuel(Seq::<_>::flatten, 3);
     }
     vstd::seq_lib::lemma_flatten_concat(line, decls);
@@ -16794,14 +15488,12 @@ proof fn doc_prefix_parts_flat(d: ckc_spec::v1text::DocFile)
 }
 
 proof fn doc_parts_flat(d: ckc_spec::v1text::DocFile)
-    ensures doc_parts(d).flatten() == doc_flat(d),
+    ensures
+        doc_parts(d).flatten() == doc_flat(d),
 {
     doc_prefix_parts_flat(d);
     doc_bundles_parts_flat(d.bundles);
-    vstd::seq_lib::lemma_flatten_concat(
-        doc_prefix_parts(d),
-        doc_bundles_parts(d.bundles),
-    );
+    vstd::seq_lib::lemma_flatten_concat(doc_prefix_parts(d), doc_bundles_parts(d.bundles));
     reveal(doc_parts);
     reveal(doc_flat);
 }
@@ -16809,7 +15501,8 @@ proof fn doc_parts_flat(d: ckc_spec::v1text::DocFile)
 #[verifier::rlimit(5000)]
 #[verifier::spinoff_prover]
 proof fn doc_flat_is_print(d: ckc_spec::v1text::DocFile)
-    ensures doc_flat(d) == ckc_spec::v1text::print_doc(d),
+    ensures
+        doc_flat(d) == ckc_spec::v1text::print_doc(d),
 {
     doc_record_stage_is_print(d);
     reveal(doc_flat);
@@ -16820,9 +15513,8 @@ proof fn doc_flat_is_print(d: ckc_spec::v1text::DocFile)
 
 proof fn schema_version_name_bare()
     ensures
-        ckc_spec::v1text::atom_bytes(
-            ckc_spec::v1text::ascii("guideline_schema_version"@),
-        ) == ckc_spec::v1text::ascii("guideline_schema_version"@),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("guideline_schema_version"@))
+            == ckc_spec::v1text::ascii("guideline_schema_version"@),
 {
     let name = ckc_spec::v1text::ascii("guideline_schema_version"@);
     reveal_strlit("guideline_schema_version");
@@ -16833,19 +15525,13 @@ proof fn schema_version_name_bare()
         0x68u8, 0x65u8, 0x6du8, 0x61u8, 0x5fu8, 0x76u8,
         0x65u8, 0x72u8, 0x73u8, 0x69u8, 0x6fu8, 0x6eu8,
     ]);
-    assert(ckc_spec::v1text::all_in(
-        name,
-        |b: u8| ckc_spec::v1text::is_alnum_b(b),
-    )) by {
+    assert(ckc_spec::v1text::all_in(name, |b: u8| ckc_spec::v1text::is_alnum_b(b))) by {
         reveal(ckc_spec::v1text::all_in);
-        assert forall|i: int| 0 <= i < name.len()
-            implies ckc_spec::v1text::is_alnum_b(name[i]) by {
-            assert(i == 0 || i == 1 || i == 2 || i == 3 || i == 4
-                || i == 5 || i == 6 || i == 7 || i == 8 || i == 9
-                || i == 10 || i == 11 || i == 12 || i == 13
-                || i == 14 || i == 15 || i == 16 || i == 17
-                || i == 18 || i == 19 || i == 20 || i == 21
-                || i == 22 || i == 23);
+        assert forall|i: int| 0 <= i < name.len() implies ckc_spec::v1text::is_alnum_b(name[i]) by {
+            assert(i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6 || i == 7 || i
+                == 8 || i == 9 || i == 10 || i == 11 || i == 12 || i == 13 || i == 14 || i == 15
+                || i == 16 || i == 17 || i == 18 || i == 19 || i == 20 || i == 21 || i == 22 || i
+                == 23);
             reveal(ckc_spec::v1text::is_alnum_b);
             reveal(ckc_spec::v1text::is_lower_b);
             reveal(ckc_spec::v1text::is_digit_b);
@@ -16862,27 +15548,26 @@ fn parse_doc_line(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ENameField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(d) ==> old(guided).guide@ matches Some(g)
-            && g.parts == doc_parts(d) && g.index == 0
-            && ckc_spec::v1text::wf_doc(d),
+        expected@ matches Some(d) ==> old(guided).guide@ matches Some(g) && g.parts == doc_parts(d)
+            && g.index == 0 && ckc_spec::v1text::wf_doc(d),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(docid) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::name_ok(docid.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@ + doc_line_stage(docid.value@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_line_stage(
+                docid.value@,
+            )
         },
         expected@ matches Some(d) ==> {
             &&& r matches Some(docid) && docid.value@ == d.docid
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == doc_parts(d) && g.index == 3
+            &&& final(guided).guide@ matches Some(g) && g.parts == doc_parts(d) && g.index == 3
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -16906,30 +15591,19 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(percent_space@ == ckc_spec::v1text::ascii("% "@));
     }
-    if !guided_literal(
-        bytes,
-        guided,
-        percent_space,
-        Ghost(ckc_spec::v1text::ascii("% "@)),
-    at,
-    ) {
+    if !guided_literal(bytes, guided, percent_space, Ghost(ckc_spec::v1text::ascii("% "@)), at) {
         return None;
     }
     let ghost docid_expected = match expected@ {
         Some(d) => Some(d.docid),
         None => None,
     };
-    let docid = match guided_name(
-        bytes,
-        guided,
-        Ghost(0x2eu8),
-        Ghost(docid_expected),
-    at,
-    ) {
+    let docid = match guided_name(bytes, guided, Ghost(0x2eu8), Ghost(docid_expected), at) {
         Some(field) => field,
         None => return None,
     };
-    let suffix: &[u8] = b".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n";
+    let suffix: &[u8] =
+        b".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n";
     proof {
         reveal_strlit(
             ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
@@ -16946,10 +15620,12 @@ at: &mut usize,
         bytes,
         guided,
         suffix,
-        Ghost(ckc_spec::v1text::ascii(
-            ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
-        )),
-    at,
+        Ghost(
+            ckc_spec::v1text::ascii(
+                ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
+            ),
+        ),
+        at,
     ) {
         return None;
     }
@@ -16968,37 +15644,36 @@ fn parse_doc_declarations(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: bool)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(d) ==> old(guided).guide@ matches Some(g)
-            && g.parts == doc_parts(d) && g.index == 3
-            && ckc_spec::v1text::wf_doc(d),
+        expected@ matches Some(d) ==> old(guided).guide@ matches Some(g) && g.parts == doc_parts(d)
+            && g.index == 3 && ckc_spec::v1text::wf_doc(d),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + ckc_spec::v1text::decls_from(0)
-                    + ckc_spec::v1text::term_line(
-                        ckc_spec::v1text::schema_version_term(),
-                    )
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
+                + ckc_spec::v1text::decls_from(0) + ckc_spec::v1text::term_line(
+                ckc_spec::v1text::schema_version_term(),
+            )
         },
         expected@ matches Some(d) ==> {
             &&& r
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == doc_parts(d) && g.index == 5
+            &&& final(guided).guide@ matches Some(g) && g.parts == doc_parts(d) && g.index == 5
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost old_prefix = guided.cursor.prefix@;
-    let declarations: &[u8] = b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/3).\n:- discontiguous(guideline_document/3).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n";
+    let declarations: &[u8] =
+        b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/3).\n:- discontiguous(guideline_document/3).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n";
     proof {
-        reveal_byteslit(b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/3).\n:- discontiguous(guideline_document/3).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n");
+        reveal_byteslit(
+            b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/3).\n:- discontiguous(guideline_document/3).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n",
+        );
         reveal_strlit(":- multifile(");
         reveal_strlit(").\n");
         reveal_strlit(":- discontiguous(");
@@ -17026,16 +15701,9 @@ at: &mut usize,
             reveal(ckc_spec::v1text::wf_doc);
         }
     }
-    if !guided_literal(
-        bytes,
-        guided,
-        declarations,
-        Ghost(ckc_spec::v1text::decls_from(0)),
-    at,
-    ) {
+    if !guided_literal(bytes, guided, declarations, Ghost(ckc_spec::v1text::decls_from(0)), at) {
         return false;
     }
-
     let schema: &[u8] = b"guideline_schema_version(1).\n";
     proof {
         let name = ckc_spec::v1text::ascii("guideline_schema_version"@);
@@ -17056,18 +15724,14 @@ at: &mut usize,
         reveal(ckc_spec::v1text::dec_bytes);
         reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
         reveal(ckc_spec::v1text::digit_byte);
-        assert(schema@ == ckc_spec::v1text::term_line(
-            ckc_spec::v1text::schema_version_term(),
-        ));
+        assert(schema@ == ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term()));
     }
     if !guided_literal(
         bytes,
         guided,
         schema,
-        Ghost(ckc_spec::v1text::term_line(
-            ckc_spec::v1text::schema_version_term(),
-        )),
-    at,
+        Ghost(ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term())),
+        at,
     ) {
         return false;
     }
@@ -17089,7 +15753,7 @@ fn parse_doc_record_prefix(
     guided: &mut EGuidedCursor,
     line_docid: &ENameField,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
@@ -17097,8 +15761,7 @@ at: &mut usize,
         ckc_spec::v1text::name_ok(line_docid.value@),
         expected@ matches Some(d) ==> {
             &&& line_docid.value@ == d.docid
-            &&& old(guided).guide@ matches Some(g)
-                && g.parts == doc_parts(d) && g.index == 5
+            &&& old(guided).guide@ matches Some(g) && g.parts == doc_parts(d) && g.index == 5
             &&& ckc_spec::v1text::wf_doc(d)
         },
         expected@ is None ==> old(guided).guide@ is None,
@@ -17107,16 +15770,13 @@ at: &mut usize,
         r matches Some(ace) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(ace.name@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_record_head_stage(line_docid.value@)
-                    + query_record_ace_stage(ace.name@)
-                    + query_record_ulex_open_stage()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_record_head_stage(
+                line_docid.value@,
+            ) + query_record_ace_stage(ace.name@) + query_record_ulex_open_stage()
         },
         expected@ matches Some(d) ==> {
             &&& r matches Some(ace) && ace.name@ == d.ace
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == doc_parts(d) && g.index == 16
+            &&& final(guided).guide@ matches Some(g) && g.parts == doc_parts(d) && g.index == 16
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -17136,10 +15796,7 @@ at: &mut usize,
         }
     }
     let ghost wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("guideline_document"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("guideline_document"@), 0x28u8)),
         None => None,
     };
     let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
@@ -17151,8 +15808,7 @@ at: &mut usize,
         reveal_strlit("guideline_document");
         reveal_byteslit(b"guideline_document");
         reveal(ckc_spec::v1text::ascii);
-        assert(wrapper_name@
-            == ckc_spec::v1text::ascii("guideline_document"@));
+        assert(wrapper_name@ == ckc_spec::v1text::ascii("guideline_document"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
         return None;
@@ -17160,17 +15816,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost record_docid_expected = match expected@ {
         Some(d) => Some((d.docid, 0x2cu8)),
         None => None,
     };
-    let record_docid = match guided_atom(
-        bytes,
-        guided,
-        Ghost(record_docid_expected),
-    at,
-    ) {
+    let record_docid = match guided_atom(bytes, guided, Ghost(record_docid_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -17180,20 +15830,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost ace_wrapper_expected = match expected@ {
-        Some(_) => Some((
-            ckc_spec::v1text::ascii("ace_sha256"@),
-            0x28u8,
-        )),
+        Some(_) => Some((ckc_spec::v1text::ascii("ace_sha256"@), 0x28u8)),
         None => None,
     };
-    let ace_wrapper = match guided_atom(
-        bytes,
-        guided,
-        Ghost(ace_wrapper_expected),
-    at,
-    ) {
+    let ace_wrapper = match guided_atom(bytes, guided, Ghost(ace_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -17202,8 +15843,7 @@ at: &mut usize,
         reveal_strlit("ace_sha256");
         reveal_byteslit(b"ace_sha256");
         reveal(ckc_spec::v1text::ascii);
-        assert(ace_wrapper_name@
-            == ckc_spec::v1text::ascii("ace_sha256"@));
+        assert(ace_wrapper_name@ == ckc_spec::v1text::ascii("ace_sha256"@));
     }
     if !vec_slice_equal(&ace_wrapper.name, ace_wrapper_name) {
         return None;
@@ -17211,7 +15851,6 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x28, at) {
         return None;
     }
-
     let ghost ace_expected = match expected@ {
         Some(d) => Some((d.ace, 0x29u8)),
         None => None,
@@ -17235,17 +15874,11 @@ at: &mut usize,
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
     }
-
     let ghost ulex_wrapper_expected = match expected@ {
         Some(_) => Some((ckc_spec::v1text::ascii("ulex"@), 0x28u8)),
         None => None,
     };
-    let ulex_wrapper = match guided_atom(
-        bytes,
-        guided,
-        Ghost(ulex_wrapper_expected),
-    at,
-    ) {
+    let ulex_wrapper = match guided_atom(bytes, guided, Ghost(ulex_wrapper_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
@@ -17281,14 +15914,13 @@ fn parse_doc_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(d) ==> old(guided).guide@ matches Some(g)
-            && g.parts == doc_parts(d) && g.index == 16
-            && ckc_spec::v1text::wf_doc(d),
+        expected@ matches Some(d) ==> old(guided).guide@ matches Some(g) && g.parts == doc_parts(d)
+            && g.index == 16 && ckc_spec::v1text::wf_doc(d),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
@@ -17296,17 +15928,14 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::ulex_ok(ulex.value@)
             &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + query_ulex_stage(ulex.value@)
-                    + doc_record_suffix_stage()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_ulex_stage(
+                ulex.value@,
+            ) + doc_record_suffix_stage()
         },
         expected@ matches Some(d) ==> {
             &&& r matches Some(ulex) && ulex.value@ == d.ulex
-            &&& final(guided).guide@ matches Some(g)
-                && g.parts == doc_parts(d)
-                && g.index == query_record_end(d.ulex)
-                && guide_rest(g) == doc_bundles_parts(d.bundles)
+            &&& final(guided).guide@ matches Some(g) && g.parts == doc_parts(d) && g.index
+                == query_record_end(d.ulex) && guide_rest(g) == doc_bundles_parts(d.bundles)
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -17332,16 +15961,10 @@ at: &mut usize,
                 Some(_) => {},
             }
             reveal(guide_rest);
-            assert(guide_rest(guided.guide@.unwrap())
-                == record_ulex_parts(d.ulex) + tail);
+            assert(guide_rest(guided.guide@.unwrap()) == record_ulex_parts(d.ulex) + tail);
         }
     }
-    let ulex = match parse_record_ulex(
-        bytes,
-        guided,
-        Ghost(generic_expected),
-    at,
-    ) {
+    let ulex = match parse_record_ulex(bytes, guided, Ghost(generic_expected), at) {
         Some(ulex) => ulex,
         None => return None,
     };
@@ -17373,7 +15996,8 @@ proof fn guide_prefix_length(
     requires
         guided_cursor_ok(bytes, guided),
         guided.guide@ matches Some(g) && guide_rest(g) == prefix + suffix,
-    ensures prefix.flatten().len() <= bytes.len(),
+    ensures
+        prefix.flatten().len() <= bytes.len(),
 {
     let g = guided.guide@.unwrap();
     reveal(guided_cursor_ok);
@@ -17389,7 +16013,8 @@ proof fn guide_rest_advance(before: GPartsGuide, after: GPartsGuide)
         0 <= before.index < before.parts.len(),
         after.parts == before.parts,
         after.index == before.index + 1,
-    ensures guide_rest(after) == guide_rest(before).drop_first(),
+    ensures
+        guide_rest(after) == guide_rest(before).drop_first(),
 {
     reveal(guide_rest);
     assert_seqs_equal!(
@@ -17398,11 +16023,7 @@ proof fn guide_rest_advance(before: GPartsGuide, after: GPartsGuide)
     );
 }
 
-proof fn guide_rest_head(
-    g: GPartsGuide,
-    part: Seq<u8>,
-    tail: Seq<Seq<u8>>,
-)
+proof fn guide_rest_head(g: GPartsGuide, part: Seq<u8>, tail: Seq<Seq<u8>>)
     requires
         0 <= g.index <= g.parts.len(),
         guide_rest(g) == seq![part] + tail,
@@ -17411,20 +16032,14 @@ proof fn guide_rest_head(
         g.parts[g.index] == part,
 {
     reveal(guide_rest);
-    assert(g.parts.subrange(g.index, g.parts.len() as int).len()
-        == g.parts.len() as int - g.index);
+    assert(g.parts.subrange(g.index, g.parts.len() as int).len() == g.parts.len() as int - g.index);
     assert(guide_rest(g).len() == 1 + tail.len());
     assert(g.index < g.parts.len());
-    assert(g.parts.subrange(g.index, g.parts.len() as int)[0]
-        == g.parts[g.index]);
+    assert(g.parts.subrange(g.index, g.parts.len() as int)[0] == g.parts[g.index]);
     assert((seq![part] + tail)[0] == part);
 }
 
-proof fn guide_rest_two(
-    g: GPartsGuide,
-    first: Seq<u8>,
-    rest: Seq<Seq<u8>>,
-)
+proof fn guide_rest_two(g: GPartsGuide, first: Seq<u8>, rest: Seq<Seq<u8>>)
     requires
         0 <= g.index <= g.parts.len(),
         guide_rest(g) == seq![first] + rest,
@@ -17435,15 +16050,12 @@ proof fn guide_rest_two(
         g.parts[g.index + 1] == rest[0],
 {
     reveal(guide_rest);
-    assert(g.parts.subrange(g.index, g.parts.len() as int).len()
-        == g.parts.len() as int - g.index);
+    assert(g.parts.subrange(g.index, g.parts.len() as int).len() == g.parts.len() as int - g.index);
     assert(guide_rest(g).len() == 1 + rest.len());
     assert(guide_rest(g).len() >= 2);
     assert(g.index + 1 < g.parts.len());
-    assert(g.parts.subrange(g.index, g.parts.len() as int)[0]
-        == g.parts[g.index]);
-    assert(g.parts.subrange(g.index, g.parts.len() as int)[1]
-        == g.parts[g.index + 1]);
+    assert(g.parts.subrange(g.index, g.parts.len() as int)[0] == g.parts[g.index]);
+    assert(g.parts.subrange(g.index, g.parts.len() as int)[1] == g.parts[g.index + 1]);
     assert((seq![first] + rest)[0] == first);
     assert((seq![first] + rest)[1] == rest[0]);
 }
@@ -17456,14 +16068,10 @@ proof fn guide_front_bytes(
 )
     requires
         guided_cursor_ok(bytes, guided),
-        guided.guide@ matches Some(g)
-            && guide_rest(g) == seq![front] + tail,
+        guided.guide@ matches Some(g) && guide_rest(g) == seq![front] + tail,
     ensures
         guided.cursor.pos as int + front.len() <= bytes.len(),
-        bytes.subrange(
-            guided.cursor.pos as int,
-            guided.cursor.pos as int + front.len(),
-        ) == front,
+        bytes.subrange(guided.cursor.pos as int, guided.cursor.pos as int + front.len()) == front,
 {
     reveal(guided_cursor_ok);
     reveal(parts_progress);
@@ -17479,29 +16087,25 @@ fn doc_guided_literal(
     lit: &[u8],
     chunk: Ghost<Seq<u8>>,
     expected_rest: Ghost<Option<Seq<Seq<u8>>>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: bool)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         lit@ == chunk@,
-        expected_rest@ matches Some(rest) ==> old(guided).guide@ matches Some(g)
-            && guide_rest(g) == seq![chunk@] + rest,
+        expected_rest@ matches Some(rest) ==> old(guided).guide@ matches Some(g) && guide_rest(g)
+            == seq![chunk@] + rest,
         expected_rest@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r ==> guided_cursor_ok(bytes@, final(guided)),
-        r ==> final(guided).cursor.pos
-            == old(guided).cursor.pos + chunk@.len(),
-        r ==> final(guided).cursor.prefix@
-            == old(guided).cursor.prefix@ + chunk@,
+        r ==> final(guided).cursor.pos == old(guided).cursor.pos + chunk@.len(),
+        r ==> final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + chunk@,
         expected_rest@ matches Some(rest) ==> {
             &&& r
             &&& old(guided).guide@ matches Some(before)
-            &&& final(guided).guide@ matches Some(after)
-                && after.parts == before.parts
-                && after.index == before.index + 1
-                && guide_rest(after) == rest
+            &&& final(guided).guide@ matches Some(after) && after.parts == before.parts
+                && after.index == before.index + 1 && guide_rest(after) == rest
         },
         expected_rest@ is None ==> final(guided).guide@ is None,
 {
@@ -17518,9 +16122,11 @@ at: &mut usize,
         return false;
     }
     proof {
-        if let (Some(rest), Some(before), Some(after)) =
-            (expected_rest@, old_guide, guided.guide@)
-        {
+        if let (Some(rest), Some(before), Some(after)) = (
+            expected_rest@,
+            old_guide,
+            guided.guide@,
+        ) {
             guide_rest_advance(before, after);
             assert(guide_rest(before).drop_first() == rest) by {
                 assert(guide_rest(before) == seq![chunk@] + rest);
@@ -17535,15 +16141,15 @@ fn parts_guided_atom(
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Seq<u8>, Seq<Seq<u8>>)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g)
-                    == seq![ckc_spec::v1text::atom_bytes(e.0)] + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == seq![
+                ckc_spec::v1text::atom_bytes(e.0),
+            ] + e.1
             &&& e.1.len() > 0
             &&& e.1[0].len() > 0
             &&& e.1[0][0] == next@
@@ -17555,28 +16161,21 @@ at: &mut usize,
         r matches Some(atom) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& parsed_atom_ok(bytes@, old(guided).cursor.pos, &atom)
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + ckc_spec::v1text::atom_bytes(atom.name@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
+                + ckc_spec::v1text::atom_bytes(atom.name@)
         },
         expected@ matches Some(e) ==> {
             &&& r matches Some(atom) && atom.name@ == e.0
             &&& old(guided).guide@ matches Some(before)
-            &&& final(guided).guide@ matches Some(after)
-                && after.parts == before.parts
-                && after.index == before.index + 1
-                && guide_rest(after) == e.1
+            &&& final(guided).guide@ matches Some(after) && after.parts == before.parts
+                && after.index == before.index + 1 && guide_rest(after) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost old_guide = guided.guide@;
     proof {
         if let (Some(e), Some(g)) = (expected@, old_guide) {
-            guide_rest_two(
-                g,
-                ckc_spec::v1text::atom_bytes(e.0),
-                e.1,
-            );
+            guide_rest_two(g, ckc_spec::v1text::atom_bytes(e.0), e.1);
         }
     }
     let ghost atom_expected = match expected@ {
@@ -17588,13 +16187,10 @@ at: &mut usize,
         None => return None,
     };
     proof {
-        if let (Some(e), Some(before), Some(after)) =
-            (expected@, old_guide, guided.guide@)
-        {
+        if let (Some(e), Some(before), Some(after)) = (expected@, old_guide, guided.guide@) {
             guide_rest_advance(before, after);
             assert(guide_rest(before).drop_first() == e.1) by {
-                assert(guide_rest(before)
-                    == seq![ckc_spec::v1text::atom_bytes(e.0)] + e.1);
+                assert(guide_rest(before) == seq![ckc_spec::v1text::atom_bytes(e.0)] + e.1);
             }
         }
     }
@@ -17608,24 +16204,18 @@ fn doc_guided_term(
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(e) ==> old(guided).guide@ matches Some(g)
-            && guide_rest(g)
-                == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1
-            && ckc_spec::term::wf_term(e.0)
-            && term_keys_fit(e.0)
-            && e.1.len() > 0
-            && e.1[0].len() > 0
-            && e.1[0][0] == next@
-            && (next@ == 0x2c || next@ == 0x29 || next@ == 0x5d
-                || next@ == 0x7c || next@ == 0x7d || next@ == 0x20
-                || next@ == 0x2e && e.1[0].len() > 1
-                    && e.1[0][1] == 0x0a),
+        expected@ matches Some(e) ==> old(guided).guide@ matches Some(g) && guide_rest(g) == seq![
+            ckc_spec::v1text::term_bytes(e.0),
+        ] + e.1 && ckc_spec::term::wf_term(e.0) && term_keys_fit(e.0) && e.1.len() > 0
+            && e.1[0].len() > 0 && e.1[0][0] == next@ && (next@ == 0x2c || next@ == 0x29 || next@
+            == 0x5d || next@ == 0x7c || next@ == 0x7d || next@ == 0x20 || next@ == 0x2e
+            && e.1[0].len() > 1 && e.1[0][1] == 0x0a),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         r matches Some(term) ==> spanned_root_ok(final(arena), &term),
@@ -17637,14 +16227,12 @@ at: &mut usize,
             &&& spanned_term_ok(bytes@, &term)
             &&& term.start == old(guided).cursor.pos
             &&& final(guided).cursor.pos == term.end
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + ckc_spec::v1text::term_bytes(term@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
+                + ckc_spec::v1text::term_bytes(term@)
         },
         expected@ matches Some(e) ==> {
             &&& r matches Some(term) && term@ == e.0
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
             &&& final(guided).cursor.pos < bytes@.len()
             &&& bytes@[final(guided).cursor.pos as int] == next@
             &&& next@ == 0x2e ==> {
@@ -17659,11 +16247,7 @@ at: &mut usize,
         if let (Some(e), Some(g)) = (expected@, old_guide) {
             reveal(guided_cursor_ok);
             reveal(parts_progress);
-            guide_rest_two(
-                g,
-                ckc_spec::v1text::term_bytes(e.0),
-                e.1,
-            );
+            guide_rest_two(g, ckc_spec::v1text::term_bytes(e.0), e.1);
         }
     }
     let ghost term_expected = match expected@ {
@@ -17675,13 +16259,10 @@ at: &mut usize,
         None => return None,
     };
     proof {
-        if let (Some(e), Some(before), Some(after)) =
-            (expected@, old_guide, guided.guide@)
-        {
+        if let (Some(e), Some(before), Some(after)) = (expected@, old_guide, guided.guide@) {
             guide_rest_advance(before, after);
             assert(guide_rest(before).drop_first() == e.1) by {
-                assert(guide_rest(before)
-                    == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1);
+                assert(guide_rest(before) == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1);
             }
             assert_seqs_equal!(e.1 == seq![e.1[0]] + e.1.drop_first());
             guide_front_bytes(bytes@, &guided, e.1[0], e.1.drop_first());
@@ -17703,7 +16284,8 @@ at: &mut usize,
 }
 
 fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
+    ensures
+        r == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
 {
     let entity_name: &[u8] = b"guideline_entity";
     let cardinality_name: &[u8] = b"guideline_cardinality";
@@ -17728,18 +16310,13 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
         reveal_byteslit(b"guideline_property");
         reveal_byteslit(b"guideline_operator");
         reveal(ckc_spec::v1text::ascii);
-        assert(entity_name@
-            == ckc_spec::v1text::ascii("guideline_entity"@));
-        assert(cardinality_name@
-            == ckc_spec::v1text::ascii("guideline_cardinality"@));
-        assert(event_name@
-            == ckc_spec::v1text::ascii("guideline_event"@));
+        assert(entity_name@ == ckc_spec::v1text::ascii("guideline_entity"@));
+        assert(cardinality_name@ == ckc_spec::v1text::ascii("guideline_cardinality"@));
+        assert(event_name@ == ckc_spec::v1text::ascii("guideline_event"@));
         assert(arg_name@ == ckc_spec::v1text::ascii("guideline_arg"@));
         assert(pp_name@ == ckc_spec::v1text::ascii("guideline_pp"@));
-        assert(property_name@
-            == ckc_spec::v1text::ascii("guideline_property"@));
-        assert(operator_name@
-            == ckc_spec::v1text::ascii("guideline_operator"@));
+        assert(property_name@ == ckc_spec::v1text::ascii("guideline_property"@));
+        assert(operator_name@ == ckc_spec::v1text::ascii("guideline_operator"@));
     }
     let entity = vec_slice_equal(name, entity_name);
     let cardinality = vec_slice_equal(name, cardinality_name);
@@ -17748,72 +16325,54 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     let pp = vec_slice_equal(name, pp_name);
     let property = vec_slice_equal(name, property_name);
     let operator = vec_slice_equal(name, operator_name);
-    let accepted = entity && arity == 4
-        || cardinality && arity == 5
-        || event && arity == 3
-        || arg && arity == 4
-        || pp && arity == 4
-        || property && arity == 4
-        || operator && arity == 3;
+    let accepted = entity && arity == 4 || cardinality && arity == 5 || event && arity == 3 || arg
+        && arity == 4 || pp && arity == 4 || property && arity == 4 || operator && arity == 3;
     proof {
         reveal(ckc_spec::v1text::is_semantic_pred);
         reveal(ckc_spec::v1text::indicator);
         if accepted {
             if entity && arity == 4 {
-                assert(exists|i: int| 2 <= i < 9
-                    && ckc_spec::v1text::indicator(i)
-                        == (name@, arity as nat)) by {
-                    assert(ckc_spec::v1text::indicator(2)
-                        == (name@, arity as nat));
+                assert(exists|i: int|
+                    2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat)) by {
+                    assert(ckc_spec::v1text::indicator(2) == (name@, arity as nat));
                 }
             } else if cardinality && arity == 5 {
-                assert(exists|i: int| 2 <= i < 9
-                    && ckc_spec::v1text::indicator(i)
-                        == (name@, arity as nat)) by {
-                    assert(ckc_spec::v1text::indicator(3)
-                        == (name@, arity as nat));
+                assert(exists|i: int|
+                    2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat)) by {
+                    assert(ckc_spec::v1text::indicator(3) == (name@, arity as nat));
                 }
             } else if event && arity == 3 {
-                assert(exists|i: int| 2 <= i < 9
-                    && ckc_spec::v1text::indicator(i)
-                        == (name@, arity as nat)) by {
-                    assert(ckc_spec::v1text::indicator(4)
-                        == (name@, arity as nat));
+                assert(exists|i: int|
+                    2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat)) by {
+                    assert(ckc_spec::v1text::indicator(4) == (name@, arity as nat));
                 }
             } else if arg && arity == 4 {
-                assert(exists|i: int| 2 <= i < 9
-                    && ckc_spec::v1text::indicator(i)
-                        == (name@, arity as nat)) by {
-                    assert(ckc_spec::v1text::indicator(5)
-                        == (name@, arity as nat));
+                assert(exists|i: int|
+                    2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat)) by {
+                    assert(ckc_spec::v1text::indicator(5) == (name@, arity as nat));
                 }
             } else if pp && arity == 4 {
-                assert(exists|i: int| 2 <= i < 9
-                    && ckc_spec::v1text::indicator(i)
-                        == (name@, arity as nat)) by {
-                    assert(ckc_spec::v1text::indicator(6)
-                        == (name@, arity as nat));
+                assert(exists|i: int|
+                    2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat)) by {
+                    assert(ckc_spec::v1text::indicator(6) == (name@, arity as nat));
                 }
             } else if property && arity == 4 {
-                assert(exists|i: int| 2 <= i < 9
-                    && ckc_spec::v1text::indicator(i)
-                        == (name@, arity as nat)) by {
-                    assert(ckc_spec::v1text::indicator(7)
-                        == (name@, arity as nat));
+                assert(exists|i: int|
+                    2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat)) by {
+                    assert(ckc_spec::v1text::indicator(7) == (name@, arity as nat));
                 }
             } else {
                 assert(operator && arity == 3);
-                assert(exists|i: int| 2 <= i < 9
-                    && ckc_spec::v1text::indicator(i)
-                        == (name@, arity as nat)) by {
-                    assert(ckc_spec::v1text::indicator(8)
-                        == (name@, arity as nat));
+                assert(exists|i: int|
+                    2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat)) by {
+                    assert(ckc_spec::v1text::indicator(8) == (name@, arity as nat));
                 }
             }
         } else {
-            assert forall|i: int| 2 <= i < 9 implies
-                ckc_spec::v1text::indicator(i)
-                    != (name@, arity as nat) by {
+            assert forall|i: int| 2 <= i < 9 implies ckc_spec::v1text::indicator(i) != (
+                name@,
+                arity as nat,
+            ) by {
                 if 2 <= i < 9 {
                     if i == 2 {
                         assert(!entity || arity != 4);
@@ -17839,8 +16398,10 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
 }
 
 fn semantic_literal_exec(term: &EParsedTerm) -> (r: bool)
-    requires parsed_term_ok(term),
-    ensures r == ckc_spec::v1text::wf_literal(term@),
+    requires
+        parsed_term_ok(term),
+    ensures
+        r == ckc_spec::v1text::wf_literal(term@),
 {
     let semantic = match &term.top {
         ETermTop::Comp(name, arity) => semantic_pred_exec(name, *arity),
@@ -17861,20 +16422,15 @@ fn semantic_literal_exec(term: &EParsedTerm) -> (r: bool)
     accepted
 }
 
-proof fn spanned_term_at_doc_delimiter(
-    bytes: Seq<u8>,
-    term: &ESpannedTerm,
-)
+proof fn spanned_term_at_doc_delimiter(bytes: Seq<u8>, term: &ESpannedTerm)
     requires
         spanned_term_ok(bytes, term),
         term.end < bytes.len(),
-        bytes[term.end as int] == 0x2c
-            || bytes[term.end as int] == 0x29
-            || bytes[term.end as int] == 0x20
-            || bytes[term.end as int] == 0x2e
-                && term.end + 1 < bytes.len()
-                && bytes[term.end as int + 1] == 0x0a,
-    ensures term_at(bytes, term.start as int, term.end as int, term@),
+        bytes[term.end as int] == 0x2c || bytes[term.end as int] == 0x29 || bytes[term.end as int]
+            == 0x20 || bytes[term.end as int] == 0x2e && term.end + 1 < bytes.len()
+            && bytes[term.end as int + 1] == 0x0a,
+    ensures
+        term_at(bytes, term.start as int, term.end as int, term@),
 {
     reveal(spanned_term_ok);
     reveal(parsed_term_ok);
@@ -17889,26 +16445,19 @@ fn parse_doc_literal(
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<ESpannedTerm>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(e) ==> old(guided).guide@ matches Some(g)
-            && guide_rest(g)
-                == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1
-            && ckc_spec::v1text::wf_literal(e.0)
-            && term_keys_fit(e.0)
-            && e.1.len() > 0
-            && e.1[0].len() > 0
-            && e.1[0][0] == next@
-            && (next@ == 0x2c || next@ == 0x29 || next@ == 0x20
-                || next@ == 0x2e && e.1[0].len() > 1
-                    && e.1[0][1] == 0x0a),
+        expected@ matches Some(e) ==> old(guided).guide@ matches Some(g) && guide_rest(g) == seq![
+            ckc_spec::v1text::term_bytes(e.0),
+        ] + e.1 && ckc_spec::v1text::wf_literal(e.0) && term_keys_fit(e.0) && e.1.len() > 0
+            && e.1[0].len() > 0 && e.1[0][0] == next@ && (next@ == 0x2c || next@ == 0x29 || next@
+            == 0x20 || next@ == 0x2e && e.1[0].len() > 1 && e.1[0][1] == 0x0a),
         expected@ is None ==> old(guided).guide@ is None,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
@@ -17920,24 +16469,23 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &term)
             &&& ckc_spec::v1text::wf_literal(term@)
-            &&& final(tracker).stream@
-                == old(tracker).stream@ + ckc_spec::term::var_stream(term@)
-            &&& final(tracker).valid ==>
-                tracker_state_ok(final(tracker).next, final(tracker).stream@)
+            &&& final(tracker).stream@ == old(tracker).stream@ + ckc_spec::term::var_stream(term@)
+            &&& final(tracker).valid ==> tracker_state_ok(
+                final(tracker).next,
+                final(tracker).stream@,
+            )
             &&& tracker_complete(final(tracker).valid, final(tracker).stream@)
             &&& final(tracker).stream@.len() <= term.end
             &&& term.start == old(guided).cursor.pos
             &&& final(guided).cursor.pos == term.end
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + ckc_spec::v1text::term_bytes(term@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
+                + ckc_spec::v1text::term_bytes(term@)
             &&& final(guided).cursor.pos < bytes@.len()
             &&& old(guided).cursor.pos < final(guided).cursor.pos
         },
         expected@ matches Some(e) ==> {
             &&& r matches Some(term) && term@ == e.0
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
             &&& final(guided).cursor.pos < bytes@.len()
             &&& bytes@[final(guided).cursor.pos as int] == next@
             &&& next@ == 0x2e ==> {
@@ -17947,7 +16495,11 @@ at: &mut usize,
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
-    let first_var = if tracker.valid { Some(tracker.next) } else { None };
+    let first_var = if tracker.valid {
+        Some(tracker.next)
+    } else {
+        None
+    };
     let term = match doc_guided_term(bytes, arena, first_var, guided, next, expected, at) {
         Some(term) => term,
         None => return None,
@@ -17984,10 +16536,7 @@ at: &mut usize,
             }
             return None;
         }
-    } else if bytes[term.end] != 0x2c
-        && bytes[term.end] != 0x29
-        && bytes[term.end] != 0x20
-    {
+    } else if bytes[term.end] != 0x2c && bytes[term.end] != 0x29 && bytes[term.end] != 0x20 {
         raise_at(at, term.end, bytes.len());
         proof {
             if expected@ is Some {
@@ -18016,12 +16565,14 @@ at: &mut usize,
 }
 
 proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
-    requires ckc_spec::v1text::is_semantic_pred(name, arity),
-    ensures name.len() > 0, name[0] == 0x67,
+    requires
+        ckc_spec::v1text::is_semantic_pred(name, arity),
+    ensures
+        name.len() > 0,
+        name[0] == 0x67,
 {
     reveal(ckc_spec::v1text::is_semantic_pred);
-    let i = choose|i: int| 2 <= i < 9
-        && ckc_spec::v1text::indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name, arity);
     reveal(ckc_spec::v1text::indicator);
     if i == 2 {
         reveal_strlit("guideline_entity");
@@ -18049,7 +16600,8 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
 }
 
 proof fn semantic_pred_atom_prefix_safe(name: Seq<u8>, arity: nat)
-    requires ckc_spec::v1text::is_semantic_pred(name, arity),
+    requires
+        ckc_spec::v1text::is_semantic_pred(name, arity),
     ensures
         ckc_spec::v1text::atom_bytes(name).len() > 0,
         ckc_spec::v1text::atom_bytes(name)[0] != 0x25,
@@ -18063,7 +16615,8 @@ proof fn semantic_pred_atom_prefix_safe(name: Seq<u8>, arity: nat)
 }
 
 proof fn wf_literal_term_prefix_safe(term: Term)
-    requires ckc_spec::v1text::wf_literal(term),
+    requires
+        ckc_spec::v1text::wf_literal(term),
     ensures
         ckc_spec::v1text::term_bytes(term).len() > 0,
         ckc_spec::v1text::term_bytes(term)[0] != 0x25,
@@ -18094,8 +16647,10 @@ pub open spec fn body_keys_fit(items: Seq<ckc_spec::v1text::BodyItem>) -> bool {
 }
 
 proof fn body_keys_from_stream(items: Seq<ckc_spec::v1text::BodyItem>)
-    requires stream_keys_fit(ckc_spec::v1text::body_var_stream(items)),
-    ensures body_keys_fit(items),
+    requires
+        stream_keys_fit(ckc_spec::v1text::body_var_stream(items)),
+    ensures
+        body_keys_fit(items),
     decreases items.len(),
 {
     reveal(ckc_spec::v1text::body_var_stream);
@@ -18106,12 +16661,15 @@ proof fn body_keys_from_stream(items: Seq<ckc_spec::v1text::BodyItem>)
         );
         reveal(ckc_spec::v1text::item_var_stream);
         match items[0] {
-            ckc_spec::v1text::BodyItem::Pos(term) => { term_keys_from_stream(term); },
-            ckc_spec::v1text::BodyItem::Naf(terms) => { terms_keys_from_stream(terms); },
+            ckc_spec::v1text::BodyItem::Pos(term) => {
+                term_keys_from_stream(term);
+            },
+            ckc_spec::v1text::BodyItem::Naf(terms) => {
+                terms_keys_from_stream(terms);
+            },
         }
         body_keys_from_stream(items.drop_first());
-        assert forall|i: int| 0 <= i < items.len()
-            implies item_keys_fit(#[trigger] items[i]) by {
+        assert forall|i: int| 0 <= i < items.len() implies item_keys_fit(#[trigger] items[i]) by {
             if i > 0 {
                 assert(items.drop_first()[i - 1] == items[i]);
             }
@@ -18120,19 +16678,24 @@ proof fn body_keys_from_stream(items: Seq<ckc_spec::v1text::BodyItem>)
 }
 
 proof fn item_var_length(item: ckc_spec::v1text::BodyItem)
-    ensures ckc_spec::v1text::item_var_stream(item).len()
-        <= ckc_spec::v1text::body_item_bytes(item).len(),
+    ensures
+        ckc_spec::v1text::item_var_stream(item).len() <= ckc_spec::v1text::body_item_bytes(
+            item,
+        ).len(),
 {
     reveal(ckc_spec::v1text::item_var_stream);
     reveal(ckc_spec::v1text::body_item_bytes);
     match item {
-        ckc_spec::v1text::BodyItem::Pos(term) => { term_var_lengths(term); },
+        ckc_spec::v1text::BodyItem::Pos(term) => {
+            term_var_lengths(term);
+        },
         ckc_spec::v1text::BodyItem::Naf(terms) => {
             terms_var_lengths(terms);
             if terms.len() == 1 {
                 term_var_lengths(terms[0]);
-                assert(ckc_spec::term::var_stream_all(terms)
-                    == ckc_spec::term::var_stream(terms[0])) by {
+                assert(ckc_spec::term::var_stream_all(terms) == ckc_spec::term::var_stream(
+                    terms[0],
+                )) by {
                     reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
                 }
             }
@@ -18141,8 +16704,8 @@ proof fn item_var_length(item: ckc_spec::v1text::BodyItem)
 }
 
 proof fn body_var_length(items: Seq<ckc_spec::v1text::BodyItem>)
-    ensures ckc_spec::v1text::body_var_stream(items).len()
-        <= ckc_spec::v1text::body_bytes(items).len(),
+    ensures
+        ckc_spec::v1text::body_var_stream(items).len() <= ckc_spec::v1text::body_bytes(items).len(),
     decreases items.len(),
 {
     reveal_with_fuel(ckc_spec::v1text::body_var_stream, 2);
@@ -18157,7 +16720,9 @@ proof fn clause_keys_fit(clause: ckc_spec::v1text::DocClause, bound: nat)
     requires
         ckc_spec::v1text::wf_clause(clause),
         ckc_spec::v1text::clause_line(clause).len() <= bound <= usize::MAX as nat,
-    ensures term_keys_fit(clause.head), body_keys_fit(clause.body),
+    ensures
+        term_keys_fit(clause.head),
+        body_keys_fit(clause.body),
 {
     term_var_lengths(clause.head);
     body_var_length(clause.body);
@@ -18196,22 +16761,20 @@ pub closed spec fn body_root_ok(
     }
 }
 
-pub proof fn body_root_elim(
-    nodes: Seq<ENode>,
-    root: &EBodyRoot,
-    item: ckc_spec::v1text::BodyItem,
-)
-    requires body_root_ok(nodes, root, item),
-    ensures match (root, item) {
-        (EBodyRoot::Pos(index), ckc_spec::v1text::BodyItem::Pos(term)) => {
-            &&& *index < nodes.len()
-            &&& nodes[*index as int].term@ == term
+pub proof fn body_root_elim(nodes: Seq<ENode>, root: &EBodyRoot, item: ckc_spec::v1text::BodyItem)
+    requires
+        body_root_ok(nodes, root, item),
+    ensures
+        match (root, item) {
+            (EBodyRoot::Pos(index), ckc_spec::v1text::BodyItem::Pos(term)) => {
+                &&& *index < nodes.len()
+                &&& nodes[*index as int].term@ == term
+            },
+            (EBodyRoot::Naf(roots), ckc_spec::v1text::BodyItem::Naf(terms)) => {
+                roots_ok_nodes(nodes, roots@, terms)
+            },
+            _ => false,
         },
-        (EBodyRoot::Naf(roots), ckc_spec::v1text::BodyItem::Naf(terms)) => {
-            roots_ok_nodes(nodes, roots@, terms)
-        },
-        _ => false,
-    },
 {
     reveal(body_root_ok);
 }
@@ -18239,8 +16802,7 @@ proof fn guide_second_bytes(
 )
     requires
         guided_cursor_ok(bytes, guided),
-        guided.guide@ matches Some(g)
-            && guide_rest(g) == seq![first, second] + tail,
+        guided.guide@ matches Some(g) && guide_rest(g) == seq![first, second] + tail,
     ensures
         guided.cursor.pos as int + first.len() + second.len() <= bytes.len(),
         bytes.subrange(
@@ -18255,10 +16817,8 @@ proof fn guide_second_bytes(
         guide_rest_two(g, first, seq![second] + tail);
         flatten_take_step(g.parts, g.index);
         flattened_part(bytes, g.parts, g.index + 1);
-        assert(g.parts.take(g.index).flatten().len()
-            == guided.cursor.pos);
-        assert(g.parts.take(g.index + 1).flatten().len()
-            == guided.cursor.pos + first.len());
+        assert(g.parts.take(g.index).flatten().len() == guided.cursor.pos);
+        assert(g.parts.take(g.index + 1).flatten().len() == guided.cursor.pos + first.len());
     }
 }
 
@@ -18271,16 +16831,16 @@ fn parse_doc_pos_item(
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g)
-                    == seq![ckc_spec::v1text::term_bytes(e.0)] + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == seq![
+                ckc_spec::v1text::term_bytes(e.0),
+            ] + e.1
             &&& ckc_spec::v1text::wf_literal(e.0)
             &&& term_keys_fit(e.0)
             &&& e.1.len() > 0
@@ -18293,8 +16853,7 @@ at: &mut usize,
             }
         },
         expected@ is None ==> old(guided).guide@ is None,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
@@ -18305,23 +16864,23 @@ at: &mut usize,
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
-            &&& final(tracker).stream@
-                == old(tracker).stream@
-                    + ckc_spec::v1text::item_var_stream(item@)
-            &&& final(tracker).valid ==>
-                tracker_state_ok(final(tracker).next, final(tracker).stream@)
+            &&& final(tracker).stream@ == old(tracker).stream@ + ckc_spec::v1text::item_var_stream(
+                item@,
+            )
+            &&& final(tracker).valid ==> tracker_state_ok(
+                final(tracker).next,
+                final(tracker).stream@,
+            )
             &&& tracker_complete(final(tracker).valid, final(tracker).stream@)
             &&& final(tracker).stream@.len() <= final(guided).cursor.pos
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_body_item_parts(item@).flatten()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_body_item_parts(
+                item@,
+            ).flatten()
         },
         expected@ matches Some(e) ==> {
-            &&& r matches Some(item)
-                && item@ == ckc_spec::v1text::BodyItem::Pos(e.0)
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& r matches Some(item) && item@ == ckc_spec::v1text::BodyItem::Pos(e.0)
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -18338,7 +16897,9 @@ at: &mut usize,
         reveal_with_fuel(Seq::<_>::flatten, 3);
         assert(entry_stream == old(tracker).stream@);
     }
-    proof { reveal(body_root_ok); }
+    proof {
+        reveal(body_root_ok);
+    }
     Some(EDocBodyItem { root: EBodyRoot::Pos(term.root), item: Ghost(item) })
 }
 
@@ -18351,19 +16912,17 @@ fn parse_doc_naf_singleton(
     next: Ghost<u8>,
     expected: Ghost<Option<(Term, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g)
-                    == seq![
-                        ckc_spec::v1text::ascii("\\+ "@),
-                        ckc_spec::v1text::term_bytes(e.0),
-                    ] + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == seq![
+                ckc_spec::v1text::ascii("\\+ "@),
+                ckc_spec::v1text::term_bytes(e.0),
+            ] + e.1
             &&& ckc_spec::v1text::wf_literal(e.0)
             &&& term_keys_fit(e.0)
             &&& e.1.len() > 0
@@ -18376,8 +16935,7 @@ at: &mut usize,
             }
         },
         expected@ is None ==> old(guided).guide@ is None,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
@@ -18388,24 +16946,23 @@ at: &mut usize,
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
-            &&& final(tracker).stream@
-                == old(tracker).stream@
-                    + ckc_spec::v1text::item_var_stream(item@)
-            &&& final(tracker).valid ==>
-                tracker_state_ok(final(tracker).next, final(tracker).stream@)
+            &&& final(tracker).stream@ == old(tracker).stream@ + ckc_spec::v1text::item_var_stream(
+                item@,
+            )
+            &&& final(tracker).valid ==> tracker_state_ok(
+                final(tracker).next,
+                final(tracker).stream@,
+            )
             &&& tracker_complete(final(tracker).valid, final(tracker).stream@)
             &&& final(tracker).stream@.len() <= final(guided).cursor.pos
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_body_item_parts(item@).flatten()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_body_item_parts(
+                item@,
+            ).flatten()
         },
         expected@ matches Some(e) ==> {
-            &&& r matches Some(item)
-                && item@
-                    == ckc_spec::v1text::BodyItem::Naf(seq![e.0])
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& r matches Some(item) && item@ == ckc_spec::v1text::BodyItem::Naf(seq![e.0])
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -18418,9 +16975,8 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(prefix@ == ckc_spec::v1text::ascii("\\+ "@));
         if let Some(e) = expected@ {
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ckc_spec::v1text::ascii("\\+ "@)]
-                    + (seq![ckc_spec::v1text::term_bytes(e.0)] + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![ckc_spec::v1text::ascii("\\+ "@)] + (
+            seq![ckc_spec::v1text::term_bytes(e.0)] + e.1));
         }
     }
     let ghost after_prefix = match expected@ {
@@ -18433,7 +16989,7 @@ at: &mut usize,
         prefix,
         Ghost(ckc_spec::v1text::ascii("\\+ "@)),
         Ghost(after_prefix),
-    at,
+        at,
     ) {
         return None;
     }
@@ -18447,10 +17003,8 @@ at: &mut usize,
         reveal(ckc_spec::v1text::item_var_stream);
         reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
         assert(seq![term@].drop_first() == Seq::<Term>::empty());
-        assert(ckc_spec::term::var_stream_all(seq![term@])
-            == ckc_spec::term::var_stream(term@));
-        assert forall|i: int| 0 <= i < 1
-            implies ckc_spec::v1text::wf_literal(seq![term@][i]) by {
+        assert(ckc_spec::term::var_stream_all(seq![term@]) == ckc_spec::term::var_stream(term@));
+        assert forall|i: int| 0 <= i < 1 implies ckc_spec::v1text::wf_literal(seq![term@][i]) by {
             assert(i == 0);
         }
         assert(entry_stream == old(tracker).stream@);
@@ -18486,26 +17040,22 @@ fn parse_doc_naf_conjunction(
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Seq<Term>, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g)
-                    == doc_body_item_parts(
-                        ckc_spec::v1text::BodyItem::Naf(e.0),
-                    ) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == doc_body_item_parts(
+                ckc_spec::v1text::BodyItem::Naf(e.0),
+            ) + e.1
             &&& e.0.len() >= 2
             &&& terms_keys_fit(e.0)
-            &&& forall|i: int| 0 <= i < e.0.len()
-                ==> ckc_spec::v1text::wf_literal(e.0[i])
+            &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_literal(e.0[i])
         },
         expected@ is None ==> old(guided).guide@ is None,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
@@ -18516,29 +17066,36 @@ at: &mut usize,
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
-            &&& final(tracker).stream@
-                == old(tracker).stream@
-                    + ckc_spec::v1text::item_var_stream(item@)
-            &&& final(tracker).valid ==>
-                tracker_state_ok(final(tracker).next, final(tracker).stream@)
+            &&& final(tracker).stream@ == old(tracker).stream@ + ckc_spec::v1text::item_var_stream(
+                item@,
+            )
+            &&& final(tracker).valid ==> tracker_state_ok(
+                final(tracker).next,
+                final(tracker).stream@,
+            )
             &&& tracker_complete(final(tracker).valid, final(tracker).stream@)
             &&& final(tracker).stream@.len() <= final(guided).cursor.pos
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_body_item_parts(item@).flatten()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_body_item_parts(
+                item@,
+            ).flatten()
         },
         expected@ matches Some(e) ==> {
-            &&& r matches Some(item)
-                && item@ == ckc_spec::v1text::BodyItem::Naf(e.0)
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& r matches Some(item) && item@ == ckc_spec::v1text::BodyItem::Naf(e.0)
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
     let mut input_arena = ETermArena { nodes: Vec::new() };
     std::mem::swap(arena, &mut input_arena);
-    let (result, output_arena) = parse_doc_naf_conjunction_inner(bytes, input_arena, guided, expected, tracker, at);
+    let (result, output_arena) = parse_doc_naf_conjunction_inner(
+        bytes,
+        input_arena,
+        guided,
+        expected,
+        tracker,
+        at,
+    );
     *arena = output_arena;
     result
 }
@@ -18551,26 +17108,22 @@ fn parse_doc_naf_conjunction_inner(
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Seq<Term>, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: (Option<EDocBodyItem>, ETermArena))
     requires
         arena_ok(&input_arena),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g)
-                    == doc_body_item_parts(
-                        ckc_spec::v1text::BodyItem::Naf(e.0),
-                    ) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == doc_body_item_parts(
+                ckc_spec::v1text::BodyItem::Naf(e.0),
+            ) + e.1
             &&& e.0.len() >= 2
             &&& terms_keys_fit(e.0)
-            &&& forall|i: int| 0 <= i < e.0.len()
-                ==> ckc_spec::v1text::wf_literal(e.0[i])
+            &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_literal(e.0[i])
         },
         expected@ is None ==> old(guided).guide@ is None,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
@@ -18581,23 +17134,23 @@ at: &mut usize,
         r.0 matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
-            &&& final(tracker).stream@
-                == old(tracker).stream@
-                    + ckc_spec::v1text::item_var_stream(item@)
-            &&& final(tracker).valid ==>
-                tracker_state_ok(final(tracker).next, final(tracker).stream@)
+            &&& final(tracker).stream@ == old(tracker).stream@ + ckc_spec::v1text::item_var_stream(
+                item@,
+            )
+            &&& final(tracker).valid ==> tracker_state_ok(
+                final(tracker).next,
+                final(tracker).stream@,
+            )
             &&& tracker_complete(final(tracker).valid, final(tracker).stream@)
             &&& final(tracker).stream@.len() <= final(guided).cursor.pos
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_body_item_parts(item@).flatten()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_body_item_parts(
+                item@,
+            ).flatten()
         },
         expected@ matches Some(e) ==> {
-            &&& r.0 matches Some(item)
-                && item@ == ckc_spec::v1text::BodyItem::Naf(e.0)
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& r.0 matches Some(item) && item@ == ckc_spec::v1text::BodyItem::Naf(e.0)
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -18608,7 +17161,9 @@ at: &mut usize,
     hide(Seq::<_>::is_prefix_of);
     let mut working_arena = input_arena;
     let ghost entry_nodes = working_arena.nodes@;
-    proof { nodes_prefix_reflexive(entry_nodes); }
+    proof {
+        nodes_prefix_reflexive(entry_nodes);
+    }
     let ghost entry_stream = tracker.stream@;
     let ghost entry_prefix = guided.cursor.prefix@;
     let entry_pos = guided.cursor.pos;
@@ -18620,17 +17175,12 @@ at: &mut usize,
         assert(prefix@ == ckc_spec::v1text::ascii("\\+ "@));
         if let Some(e) = expected@ {
             reveal(doc_body_item_parts);
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ckc_spec::v1text::ascii("\\+ "@)]
-                    + (seq![seq![0x28u8]] + doc_lit_parts(e.0)
-                        + seq![seq![0x29u8]] + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![ckc_spec::v1text::ascii("\\+ "@)] + (
+            seq![seq![0x28u8]] + doc_lit_parts(e.0) + seq![seq![0x29u8]] + e.1));
         }
     }
     let ghost after_prefix = match expected@ {
-        Some(e) => Some(
-            seq![seq![0x28u8]] + doc_lit_parts(e.0)
-                + seq![seq![0x29u8]] + e.1,
-        ),
+        Some(e) => Some(seq![seq![0x28u8]] + doc_lit_parts(e.0) + seq![seq![0x29u8]] + e.1),
         None => None,
     };
     if !doc_guided_literal(
@@ -18639,7 +17189,7 @@ at: &mut usize,
         prefix,
         Ghost(ckc_spec::v1text::ascii("\\+ "@)),
         Ghost(after_prefix),
-    at,
+        at,
     ) {
         return (None, working_arena);
     }
@@ -18656,26 +17206,17 @@ at: &mut usize,
         reveal_byteslit(b"(");
         assert(open@ == open_chunk);
         if let Some(e) = expected@ {
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![open_chunk]
-                    + (doc_lit_parts(e.0) + seq![seq![0x29u8]] + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![open_chunk] + (doc_lit_parts(e.0)
+                + seq![seq![0x29u8]] + e.1));
         }
     }
     let ghost after_open = match expected@ {
         Some(e) => Some(doc_lit_parts(e.0) + seq![seq![0x29u8]] + e.1),
         None => None,
     };
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        open,
-        Ghost(open_chunk),
-        Ghost(after_open),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, open, Ghost(open_chunk), Ghost(after_open), at) {
         return (None, working_arena);
     }
-
     let ghost mut lits: Seq<Term> = Seq::empty();
     let mut roots: Vec<usize> = Vec::new();
     let mut lit_count = 0usize;
@@ -18696,19 +17237,16 @@ at: &mut usize,
         reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
         assert(ckc_spec::term::var_stream_all(lits) == Seq::<nat>::empty());
         assert_seqs_equal!(entry_stream + Seq::<nat>::empty() == entry_stream);
-        assert(tracker.stream@
-            == entry_stream + ckc_spec::term::var_stream_all(lits));
-        assert forall|i: int| 0 <= i < lits.len()
-            implies ckc_spec::v1text::wf_literal(lits[i]) by {
+        assert(tracker.stream@ == entry_stream + ckc_spec::term::var_stream_all(lits));
+        assert forall|i: int| 0 <= i < lits.len() implies ckc_spec::v1text::wf_literal(lits[i]) by {
             assert(false);
         }
         if let Some(e) = expected@ {
             assert_seqs_equal!(e.0.take(0) == Seq::<Term>::empty());
             assert_seqs_equal!(e.0.skip(0) == e.0);
             assert(lits == e.0.take(lits.len() as int));
-            assert(guide_rest(guided.guide@.unwrap())
-                == doc_lit_parts(e.0.skip(lits.len() as int))
-                    + seq![seq![0x29u8]] + e.1);
+            assert(guide_rest(guided.guide@.unwrap()) == doc_lit_parts(e.0.skip(lits.len() as int))
+                + seq![seq![0x29u8]] + e.1);
         }
     }
     proof {
@@ -18730,44 +17268,41 @@ at: &mut usize,
             guided.cursor.prefix@ == if lits.len() == 0 {
                 entry_prefix + ckc_spec::v1text::ascii("\\+ ("@)
             } else if more {
-                entry_prefix + ckc_spec::v1text::ascii("\\+ ("@)
-                    + ckc_spec::v1text::lit_list_bytes(lits)
-                    + ckc_spec::v1text::ascii(", "@)
+                entry_prefix + ckc_spec::v1text::ascii("\\+ ("@) + ckc_spec::v1text::lit_list_bytes(
+                    lits,
+                ) + ckc_spec::v1text::ascii(", "@)
             } else {
-                entry_prefix + ckc_spec::v1text::ascii("\\+ ("@)
-                    + ckc_spec::v1text::lit_list_bytes(lits)
+                entry_prefix + ckc_spec::v1text::ascii("\\+ ("@) + ckc_spec::v1text::lit_list_bytes(
+                    lits,
+                )
             },
             tracker.valid ==> tracker_state_ok(tracker.next, tracker.stream@),
             tracker_complete(tracker.valid, tracker.stream@),
-            tracker.stream@ == entry_stream
-                + ckc_spec::term::var_stream_all(lits),
+            tracker.stream@ == entry_stream + ckc_spec::term::var_stream_all(lits),
             tracker.stream@.len() <= guided.cursor.pos,
-            forall|i: int| 0 <= i < lits.len()
-                ==> ckc_spec::v1text::wf_literal(lits[i]),
+            forall|i: int| 0 <= i < lits.len() ==> ckc_spec::v1text::wf_literal(lits[i]),
             !more ==> lits.len() >= 1,
             expected@ matches Some(e) ==> {
                 &&& e.0.len() >= 2
                 &&& terms_keys_fit(e.0)
-                &&& forall|i: int| 0 <= i < e.0.len()
-                    ==> ckc_spec::v1text::wf_literal(e.0[i])
+                &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_literal(e.0[i])
                 &&& lits == e.0.take(lits.len() as int)
                 &&& lits.len() <= e.0.len()
                 &&& more ==> lits.len() < e.0.len()
                 &&& !more ==> lits.len() == e.0.len()
-                &&& guided.guide@ matches Some(g)
-                    && guide_rest(g) == if more {
-                        doc_lit_parts(e.0.skip(lits.len() as int))
-                            + seq![seq![0x29u8]] + e.1
-                    } else {
-                        seq![seq![0x29u8]] + e.1
-                    }
+                &&& guided.guide@ matches Some(g) && guide_rest(g) == if more {
+                    doc_lit_parts(e.0.skip(lits.len() as int)) + seq![seq![0x29u8]] + e.1
+                } else {
+                    seq![seq![0x29u8]] + e.1
+                }
             },
             expected@ is None ==> guided.guide@ is None,
-        decreases if more {
-            bytes.len() - guided.cursor.pos + 1
-        } else {
-            0
-        },
+        decreases
+                if more {
+                    bytes.len() - guided.cursor.pos + 1
+                } else {
+                    0
+                },
     {
         let ghost term_expected = match expected@ {
             Some(e) => {
@@ -18776,8 +17311,8 @@ at: &mut usize,
                 let after = if remaining.len() == 1 {
                     close_tail
                 } else {
-                    seq![ckc_spec::v1text::ascii(", "@)]
-                        + doc_lit_parts(remaining.drop_first()) + close_tail
+                    seq![ckc_spec::v1text::ascii(", "@)] + doc_lit_parts(remaining.drop_first())
+                        + close_tail
                 };
                 Some((remaining[0], after))
             },
@@ -18797,15 +17332,13 @@ at: &mut usize,
                 assert(0 <= lits.len() < e.0.len());
                 assert(remaining.len() == e.0.len() - lits.len());
                 assert(remaining.len() > 0);
-                assert(ckc_spec::v1text::wf_literal(
-                    e.0[lits.len() as int],
-                ));
+                assert(ckc_spec::v1text::wf_literal(e.0[lits.len() as int]));
                 assert(remaining[0] == e.0[lits.len() as int]);
                 terms_keys_fit_at(e.0, lits.len() as int);
                 reveal(doc_lit_parts);
-                assert(guide_rest(guided.guide@.unwrap())
-                    == seq![ckc_spec::v1text::term_bytes(remaining[0])]
-                        + term_expected.unwrap().1);
+                assert(guide_rest(guided.guide@.unwrap()) == seq![
+                    ckc_spec::v1text::term_bytes(remaining[0]),
+                ] + term_expected.unwrap().1);
                 if remaining.len() == 1 {
                     assert(e.0.len() == lits.len() + 1);
                     assert(term_next == 0x29);
@@ -18821,8 +17354,7 @@ at: &mut usize,
                     reveal(ckc_spec::v1text::ascii);
                     assert(ckc_spec::v1text::ascii(", "@).len() > 0);
                     assert(ckc_spec::v1text::ascii(", "@)[0] == 0x2c);
-                    assert(term_expected.unwrap().1[0]
-                        == ckc_spec::v1text::ascii(", "@));
+                    assert(term_expected.unwrap().1[0] == ckc_spec::v1text::ascii(", "@));
                     assert(term_expected.unwrap().1.len() > 0);
                     assert(term_expected.unwrap().1[0].len() > 0);
                     assert(term_expected.unwrap().1[0][0] == term_next);
@@ -18839,7 +17371,7 @@ at: &mut usize,
             Ghost(term_next),
             Ghost(term_expected),
             tracker,
-        at,
+            at,
         );
         proof {
             nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
@@ -18858,10 +17390,8 @@ at: &mut usize,
         roots.push(term.root);
         lit_count += 1;
         proof {
-            assert(before_stream
-                == entry_stream + ckc_spec::term::var_stream_all(old_lits));
-            assert(tracker.stream@
-                == before_stream + ckc_spec::term::var_stream(term@));
+            assert(before_stream == entry_stream + ckc_spec::term::var_stream_all(old_lits));
+            assert(tracker.stream@ == before_stream + ckc_spec::term::var_stream(term@));
             var_stream_all_push(old_lits, term@);
             lits = old_lits.push(term@);
             assert(lits.len() == old_lits.len() + 1);
@@ -18886,9 +17416,8 @@ at: &mut usize,
                         + ckc_spec::v1text::lit_list_bytes(lits)
                 );
             }
-            assert(guided.cursor.prefix@
-                == entry_prefix + ckc_spec::v1text::ascii("\\+ ("@)
-                    + ckc_spec::v1text::lit_list_bytes(lits));
+            assert(guided.cursor.prefix@ == entry_prefix + ckc_spec::v1text::ascii("\\+ ("@)
+                + ckc_spec::v1text::lit_list_bytes(lits));
             assert_seqs_equal!(
                 (entry_stream + ckc_spec::term::var_stream_all(old_lits))
                     + ckc_spec::term::var_stream(term@)
@@ -18896,10 +17425,10 @@ at: &mut usize,
                     + (ckc_spec::term::var_stream_all(old_lits)
                         + ckc_spec::term::var_stream(term@))
             );
-            assert(tracker.stream@
-                == entry_stream + ckc_spec::term::var_stream_all(lits));
-            assert forall|i: int| 0 <= i < lits.len()
-                implies ckc_spec::v1text::wf_literal(lits[i]) by {
+            assert(tracker.stream@ == entry_stream + ckc_spec::term::var_stream_all(lits));
+            assert forall|i: int| 0 <= i < lits.len() implies ckc_spec::v1text::wf_literal(
+                lits[i],
+            ) by {
                 if i < old_lits.len() {
                     assert(lits[i] == old_lits[i]);
                 } else {
@@ -18921,15 +17450,12 @@ at: &mut usize,
                 if lits.len() < e.0.len() {
                     assert(e.0.len() != old_lits.len() + 1);
                     assert(e.0.skip(old_lits.len() as int).len() != 1);
-                    assert(term_expected.unwrap().1
-                        == seq![ckc_spec::v1text::ascii(", "@)]
-                            + doc_lit_parts(e.0.skip(lits.len() as int))
-                            + seq![seq![0x29u8]] + e.1);
+                    assert(term_expected.unwrap().1 == seq![ckc_spec::v1text::ascii(", "@)]
+                        + doc_lit_parts(e.0.skip(lits.len() as int)) + seq![seq![0x29u8]] + e.1);
                 } else {
                     assert(e.0.len() == old_lits.len() + 1);
                     assert(e.0.skip(old_lits.len() as int).len() == 1);
-                    assert(term_expected.unwrap().1
-                        == seq![seq![0x29u8]] + e.1);
+                    assert(term_expected.unwrap().1 == seq![seq![0x29u8]] + e.1);
                 }
             }
         }
@@ -18939,10 +17465,9 @@ at: &mut usize,
                     assert(term_next == 0x2c);
                     assert(lits.len() < e.0.len());
                     reveal(doc_lit_parts);
-                    assert(guide_rest(guided.guide@.unwrap())
-                        == seq![ckc_spec::v1text::ascii(", "@)]
-                            + (doc_lit_parts(e.0.skip(lits.len() as int))
-                                + seq![seq![0x29u8]] + e.1));
+                    assert(guide_rest(guided.guide@.unwrap()) == seq![
+                        ckc_spec::v1text::ascii(", "@),
+                    ] + (doc_lit_parts(e.0.skip(lits.len() as int)) + seq![seq![0x29u8]] + e.1));
                 }
             }
             let comma: &[u8] = b", ";
@@ -18954,8 +17479,7 @@ at: &mut usize,
             }
             let ghost after_comma = match expected@ {
                 Some(e) => Some(
-                    doc_lit_parts(e.0.skip(lits.len() as int))
-                        + seq![seq![0x29u8]] + e.1,
+                    doc_lit_parts(e.0.skip(lits.len() as int)) + seq![seq![0x29u8]] + e.1,
                 ),
                 None => None,
             };
@@ -18965,7 +17489,7 @@ at: &mut usize,
                 comma,
                 Ghost(ckc_spec::v1text::ascii(", "@)),
                 Ghost(after_comma),
-            at,
+                at,
             ) {
                 return (None, working_arena);
             }
@@ -19009,7 +17533,6 @@ at: &mut usize,
         }
         return (None, working_arena);
     }
-
     let close: &[u8] = b")";
     let ghost close_chunk = seq![0x29u8];
     proof {
@@ -19020,14 +17543,7 @@ at: &mut usize,
         Some(e) => Some(e.1),
         None => None,
     };
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        close,
-        Ghost(close_chunk),
-        Ghost(after_close),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, close, Ghost(close_chunk), Ghost(after_close), at) {
         return (None, working_arena);
     }
     let ghost item = ckc_spec::v1text::BodyItem::Naf(lits);
@@ -19037,14 +17553,10 @@ at: &mut usize,
         assert(lits.len() >= 1);
         assert(ckc_spec::v1text::wf_body_item(item));
         assert(entry_stream == old(tracker).stream@);
-        assert(tracker.stream@
-            == entry_stream + ckc_spec::term::var_stream_all(lits));
-        assert(tracker.stream@
-            == old(tracker).stream@
-                + ckc_spec::v1text::item_var_stream(item));
+        assert(tracker.stream@ == entry_stream + ckc_spec::term::var_stream_all(lits));
+        assert(tracker.stream@ == old(tracker).stream@ + ckc_spec::v1text::item_var_stream(item));
         assert(guided_cursor_ok(bytes@, &guided));
-        assert(tracker.valid ==>
-            tracker_state_ok(tracker.next, tracker.stream@));
+        assert(tracker.valid ==> tracker_state_ok(tracker.next, tracker.stream@));
         assert(tracker_complete(tracker.valid, tracker.stream@));
         assert(tracker.stream@.len() <= guided.cursor.pos);
         assert(entry_pos == old(guided).cursor.pos);
@@ -19061,7 +17573,9 @@ at: &mut usize,
             assert(lits == e.0);
         }
     }
-    proof { reveal(body_root_ok); }
+    proof {
+        reveal(body_root_ok);
+    }
     (Some(EDocBodyItem { root: EBodyRoot::Naf(roots), item: Ghost(item) }), working_arena)
 }
 
@@ -19074,15 +17588,15 @@ fn parse_doc_body_item(
     next: Ghost<u8>,
     expected: Ghost<Option<(ckc_spec::v1text::BodyItem, Seq<Seq<u8>>)>>,
     tracker: &mut EVarTracker,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EDocBodyItem>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g) == doc_body_item_parts(e.0) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == doc_body_item_parts(e.0)
+                + e.1
             &&& ckc_spec::v1text::wf_body_item(e.0)
             &&& item_keys_fit(e.0)
             &&& e.1.len() > 0
@@ -19095,8 +17609,7 @@ at: &mut usize,
             }
         },
         expected@ is None ==> old(guided).guide@ is None,
-        old(tracker).valid ==>
-            tracker_state_ok(old(tracker).next, old(tracker).stream@),
+        old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
         old(tracker).stream@.len() <= old(guided).cursor.pos,
     ensures
@@ -19107,22 +17620,23 @@ at: &mut usize,
         r matches Some(item) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_body_item(item@)
-            &&& final(tracker).stream@
-                == old(tracker).stream@
-                    + ckc_spec::v1text::item_var_stream(item@)
-            &&& final(tracker).valid ==>
-                tracker_state_ok(final(tracker).next, final(tracker).stream@)
+            &&& final(tracker).stream@ == old(tracker).stream@ + ckc_spec::v1text::item_var_stream(
+                item@,
+            )
+            &&& final(tracker).valid ==> tracker_state_ok(
+                final(tracker).next,
+                final(tracker).stream@,
+            )
             &&& tracker_complete(final(tracker).valid, final(tracker).stream@)
             &&& final(tracker).stream@.len() <= final(guided).cursor.pos
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_body_item_parts(item@).flatten()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_body_item_parts(
+                item@,
+            ).flatten()
         },
         expected@ matches Some(e) ==> {
             &&& r matches Some(item) && item@ == e.0
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -19133,33 +17647,25 @@ at: &mut usize,
             match e.0 {
                 ckc_spec::v1text::BodyItem::Pos(lit) => {
                     wf_literal_term_prefix_safe(lit);
-                    assert(guide_rest(guided.guide@.unwrap())
-                        == seq![ckc_spec::v1text::term_bytes(lit)] + e.1);
-                    guide_front_bytes(
-                        bytes@,
-                        &guided,
+                    assert(guide_rest(guided.guide@.unwrap()) == seq![
                         ckc_spec::v1text::term_bytes(lit),
-                        e.1,
-                    );
-                    assert(bytes@[guided.cursor.pos as int]
-                        == ckc_spec::v1text::term_bytes(lit)[0]);
+                    ] + e.1);
+                    guide_front_bytes(bytes@, &guided, ckc_spec::v1text::term_bytes(lit), e.1);
+                    assert(bytes@[guided.cursor.pos as int] == ckc_spec::v1text::term_bytes(
+                        lit,
+                    )[0]);
                 },
                 ckc_spec::v1text::BodyItem::Naf(gs) => {
                     assert(gs.len() >= 1);
                     let after = if gs.len() == 1 {
                         seq![ckc_spec::v1text::term_bytes(gs[0])] + e.1
                     } else {
-                        seq![seq![0x28u8]] + doc_lit_parts(gs)
-                            + seq![seq![0x29u8]] + e.1
+                        seq![seq![0x28u8]] + doc_lit_parts(gs) + seq![seq![0x29u8]] + e.1
                     };
-                    assert(guide_rest(guided.guide@.unwrap())
-                        == seq![ckc_spec::v1text::ascii("\\+ "@)] + after);
-                    guide_front_bytes(
-                        bytes@,
-                        &guided,
+                    assert(guide_rest(guided.guide@.unwrap()) == seq![
                         ckc_spec::v1text::ascii("\\+ "@),
-                        after,
-                    );
+                    ] + after);
+                    guide_front_bytes(bytes@, &guided, ckc_spec::v1text::ascii("\\+ "@), after);
                     reveal_strlit("\\+ ");
                     reveal(ckc_spec::v1text::ascii);
                     assert(ckc_spec::v1text::ascii("\\+ "@).len() == 3);
@@ -19167,11 +17673,10 @@ at: &mut usize,
                     assert(bytes@[guided.cursor.pos as int] == 0x5c);
                     if gs.len() == 1 {
                         wf_literal_term_prefix_safe(gs[0]);
-                        assert(guide_rest(guided.guide@.unwrap())
-                            == seq![
-                                ckc_spec::v1text::ascii("\\+ "@),
-                                ckc_spec::v1text::term_bytes(gs[0]),
-                            ] + e.1);
+                        assert(guide_rest(guided.guide@.unwrap()) == seq![
+                            ckc_spec::v1text::ascii("\\+ "@),
+                            ckc_spec::v1text::term_bytes(gs[0]),
+                        ] + e.1);
                         guide_second_bytes(
                             bytes@,
                             &guided,
@@ -19180,16 +17685,15 @@ at: &mut usize,
                             e.1,
                         );
                         assert(guided.cursor.pos as int + 4 <= bytes@.len());
-                        assert(bytes@[guided.cursor.pos as int + 3]
-                            == ckc_spec::v1text::term_bytes(gs[0])[0]);
+                        assert(bytes@[guided.cursor.pos as int + 3] == ckc_spec::v1text::term_bytes(
+                            gs[0],
+                        )[0]);
                     } else {
-                        let after_open = doc_lit_parts(gs)
-                            + seq![seq![0x29u8]] + e.1;
-                        assert(guide_rest(guided.guide@.unwrap())
-                            == seq![
-                                ckc_spec::v1text::ascii("\\+ "@),
-                                seq![0x28u8],
-                            ] + after_open);
+                        let after_open = doc_lit_parts(gs) + seq![seq![0x29u8]] + e.1;
+                        assert(guide_rest(guided.guide@.unwrap()) == seq![
+                            ckc_spec::v1text::ascii("\\+ "@),
+                            seq![0x28u8],
+                        ] + after_open);
                         guide_second_bytes(
                             bytes@,
                             &guided,
@@ -19202,8 +17706,7 @@ at: &mut usize,
                             guided.cursor.pos as int + 3,
                             guided.cursor.pos as int + 4,
                         ) == seq![0x28u8]);
-                        assert(bytes@[guided.cursor.pos as int + 3]
-                            == seq![0x28u8][0]);
+                        assert(bytes@[guided.cursor.pos as int + 3] == seq![0x28u8][0]);
                         assert(bytes@[guided.cursor.pos as int + 3] == 0x28);
                     }
                 },
@@ -19228,9 +17731,7 @@ at: &mut usize,
             }
         }
         let ghost pos_expected = match expected@ {
-            Some((ckc_spec::v1text::BodyItem::Pos(lit), tail)) => {
-                Some((lit, tail))
-            },
+            Some((ckc_spec::v1text::BodyItem::Pos(lit), tail)) => { Some((lit, tail)) },
             _ => None,
         };
         return parse_doc_pos_item(bytes, arena, guided, next, Ghost(pos_expected), tracker, at);
@@ -19240,8 +17741,9 @@ at: &mut usize,
             match e.0 {
                 ckc_spec::v1text::BodyItem::Pos(lit) => {
                     wf_literal_term_prefix_safe(lit);
-                    assert(bytes@[guided.cursor.pos as int]
-                        == ckc_spec::v1text::term_bytes(lit)[0]);
+                    assert(bytes@[guided.cursor.pos as int] == ckc_spec::v1text::term_bytes(
+                        lit,
+                    )[0]);
                     assert(false);
                 },
                 ckc_spec::v1text::BodyItem::Naf(_) => {},
@@ -19261,11 +17763,10 @@ at: &mut usize,
         if let Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) = expected@ {
             if gs.len() == 1 {
                 wf_literal_term_prefix_safe(gs[0]);
-                assert(guide_rest(guided.guide@.unwrap())
-                    == seq![
-                        ckc_spec::v1text::ascii("\\+ "@),
-                        ckc_spec::v1text::term_bytes(gs[0]),
-                    ] + tail);
+                assert(guide_rest(guided.guide@.unwrap()) == seq![
+                    ckc_spec::v1text::ascii("\\+ "@),
+                    ckc_spec::v1text::term_bytes(gs[0]),
+                ] + tail);
                 guide_second_bytes(
                     bytes@,
                     &guided,
@@ -19273,13 +17774,15 @@ at: &mut usize,
                     ckc_spec::v1text::term_bytes(gs[0]),
                     tail,
                 );
-                assert(bytes@[guided.cursor.pos as int + 3]
-                    == ckc_spec::v1text::term_bytes(gs[0])[0]);
+                assert(bytes@[guided.cursor.pos as int + 3] == ckc_spec::v1text::term_bytes(
+                    gs[0],
+                )[0]);
             } else {
                 let after_open = doc_lit_parts(gs) + seq![seq![0x29u8]] + tail;
-                assert(guide_rest(guided.guide@.unwrap())
-                    == seq![ckc_spec::v1text::ascii("\\+ "@), seq![0x28u8]]
-                        + after_open);
+                assert(guide_rest(guided.guide@.unwrap()) == seq![
+                    ckc_spec::v1text::ascii("\\+ "@),
+                    seq![0x28u8],
+                ] + after_open);
                 guide_second_bytes(
                     bytes@,
                     &guided,
@@ -19302,9 +17805,7 @@ at: &mut usize,
             }
         }
         let ghost conj_expected = match expected@ {
-            Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) => {
-                Some((gs, tail))
-            },
+            Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) => { Some((gs, tail)) },
             _ => None,
         };
         let result = parse_doc_naf_conjunction(
@@ -19313,15 +17814,13 @@ at: &mut usize,
             guided,
             Ghost(conj_expected),
             tracker,
-        at,
+            at,
         );
         proof {
             if let Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) = expected@ {
                 assert(conj_expected == Some((gs, tail)));
-                assert(result matches Some(item)
-                    && item@ == ckc_spec::v1text::BodyItem::Naf(gs));
-                assert(guided.guide@ matches Some(g)
-                    && guide_rest(g) == tail);
+                assert(result matches Some(item) && item@ == ckc_spec::v1text::BodyItem::Naf(gs));
+                assert(guided.guide@ matches Some(g) && guide_rest(g) == tail);
             }
         }
         result
@@ -19335,9 +17834,7 @@ at: &mut usize,
             }
         }
         let ghost singleton_expected = match expected@ {
-            Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) => {
-                Some((gs[0], tail))
-            },
+            Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) => { Some((gs[0], tail)) },
             _ => None,
         };
         let result = parse_doc_naf_singleton(
@@ -19347,33 +17844,30 @@ at: &mut usize,
             next,
             Ghost(singleton_expected),
             tracker,
-        at,
+            at,
         );
         proof {
             if let Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) = expected@ {
                 assert(gs.len() == 1);
                 assert(singleton_expected == Some((gs[0], tail)));
-                assert(result matches Some(item)
-                    && item@
-                        == ckc_spec::v1text::BodyItem::Naf(seq![gs[0]]));
+                assert(result matches Some(item) && item@ == ckc_spec::v1text::BodyItem::Naf(
+                    seq![gs[0]],
+                ));
                 assert_seqs_equal!(gs == seq![gs[0]]);
-                assert(guided.guide@ matches Some(g)
-                    && guide_rest(g) == tail);
+                assert(guided.guide@ matches Some(g) && guide_rest(g) == tail);
             }
         }
         result
     }
 }
 
-
 proof fn body_var_stream_concat(
     left: Seq<ckc_spec::v1text::BodyItem>,
     right: Seq<ckc_spec::v1text::BodyItem>,
 )
     ensures
-        ckc_spec::v1text::body_var_stream(left + right)
-            == ckc_spec::v1text::body_var_stream(left)
-                + ckc_spec::v1text::body_var_stream(right),
+        ckc_spec::v1text::body_var_stream(left + right) == ckc_spec::v1text::body_var_stream(left)
+            + ckc_spec::v1text::body_var_stream(right),
     decreases left.len(),
 {
     if left.len() == 0 {
@@ -19399,25 +17893,21 @@ proof fn body_var_stream_push(
     item: ckc_spec::v1text::BodyItem,
 )
     ensures
-        ckc_spec::v1text::body_var_stream(items.push(item))
-            == ckc_spec::v1text::body_var_stream(items)
-                + ckc_spec::v1text::item_var_stream(item),
+        ckc_spec::v1text::body_var_stream(items.push(item)) == ckc_spec::v1text::body_var_stream(
+            items,
+        ) + ckc_spec::v1text::item_var_stream(item),
 {
     assert_seqs_equal!(items.push(item) == items + seq![item]);
     body_var_stream_concat(items, seq![item]);
     reveal_with_fuel(ckc_spec::v1text::body_var_stream, 2);
 }
 
-proof fn body_bytes_push(
-    items: Seq<ckc_spec::v1text::BodyItem>,
-    item: ckc_spec::v1text::BodyItem,
-)
-    requires items.len() > 0,
+proof fn body_bytes_push(items: Seq<ckc_spec::v1text::BodyItem>, item: ckc_spec::v1text::BodyItem)
+    requires
+        items.len() > 0,
     ensures
-        ckc_spec::v1text::body_bytes(items.push(item))
-            == ckc_spec::v1text::body_bytes(items)
-                + ckc_spec::v1text::ascii(", "@)
-                + ckc_spec::v1text::body_item_bytes(item),
+        ckc_spec::v1text::body_bytes(items.push(item)) == ckc_spec::v1text::body_bytes(items)
+            + ckc_spec::v1text::ascii(", "@) + ckc_spec::v1text::body_item_bytes(item),
     decreases items.len(),
 {
     if items.len() == 1 {
@@ -19437,9 +17927,9 @@ proof fn clauses_bytes_push(
     clause: ckc_spec::v1text::DocClause,
 )
     ensures
-        ckc_spec::v1text::clauses_bytes(clauses.push(clause))
-            == ckc_spec::v1text::clauses_bytes(clauses)
-                + ckc_spec::v1text::clause_line(clause),
+        ckc_spec::v1text::clauses_bytes(clauses.push(clause)) == ckc_spec::v1text::clauses_bytes(
+            clauses,
+        ) + ckc_spec::v1text::clause_line(clause),
     decreases clauses.len(),
 {
     if clauses.len() == 0 {
@@ -19459,8 +17949,7 @@ pub closed spec fn body_roots_ok(
     items: Seq<ckc_spec::v1text::BodyItem>,
 ) -> bool {
     &&& roots.len() == items.len()
-    &&& forall|i: int| 0 <= i < roots.len()
-        ==> #[trigger] body_root_ok(nodes, &roots[i], items[i])
+    &&& forall|i: int| 0 <= i < roots.len() ==> #[trigger] body_root_ok(nodes, &roots[i], items[i])
 }
 
 pub proof fn body_roots_elim(
@@ -19468,11 +17957,11 @@ pub proof fn body_roots_elim(
     roots: Seq<EBodyRoot>,
     items: Seq<ckc_spec::v1text::BodyItem>,
 )
-    requires body_roots_ok(nodes, roots, items),
+    requires
+        body_roots_ok(nodes, roots, items),
     ensures
         roots.len() == items.len(),
-        forall|i: int| 0 <= i < roots.len()
-            ==> #[trigger] body_root_ok(nodes, &roots[i], items[i]),
+        forall|i: int| 0 <= i < roots.len() ==> #[trigger] body_root_ok(nodes, &roots[i], items[i]),
 {
     reveal(body_roots_ok);
 }
@@ -19483,8 +17972,11 @@ proof fn body_root_prefix(
     root: &EBodyRoot,
     item: ckc_spec::v1text::BodyItem,
 )
-    requires before.is_prefix_of(after.nodes@), body_root_ok(before, root, item),
-    ensures body_root_ok(after.nodes@, root, item),
+    requires
+        before.is_prefix_of(after.nodes@),
+        body_root_ok(before, root, item),
+    ensures
+        body_root_ok(after.nodes@, root, item),
 {
     reveal(body_root_ok);
     match (root, item) {
@@ -19505,12 +17997,18 @@ proof fn body_roots_prefix(
     roots: Seq<EBodyRoot>,
     items: Seq<ckc_spec::v1text::BodyItem>,
 )
-    requires before.is_prefix_of(after.nodes@), body_roots_ok(before, roots, items),
-    ensures body_roots_ok(after.nodes@, roots, items),
+    requires
+        before.is_prefix_of(after.nodes@),
+        body_roots_ok(before, roots, items),
+    ensures
+        body_roots_ok(after.nodes@, roots, items),
 {
     reveal(body_roots_ok);
-    assert forall|i: int| 0 <= i < roots.len()
-        implies #[trigger] body_root_ok(after.nodes@, &roots[i], items[i]) by {
+    assert forall|i: int| 0 <= i < roots.len() implies #[trigger] body_root_ok(
+        after.nodes@,
+        &roots[i],
+        items[i],
+    ) by {
         body_root_prefix(before, after, &roots[i], items[i]);
     }
 }
@@ -19522,12 +18020,18 @@ proof fn body_roots_push(
     root: EBodyRoot,
     item: ckc_spec::v1text::BodyItem,
 )
-    requires body_roots_ok(nodes, roots, items), body_root_ok(nodes, &root, item),
-    ensures body_roots_ok(nodes, roots.push(root), items.push(item)),
+    requires
+        body_roots_ok(nodes, roots, items),
+        body_root_ok(nodes, &root, item),
+    ensures
+        body_roots_ok(nodes, roots.push(root), items.push(item)),
 {
     reveal(body_roots_ok);
-    assert forall|i: int| 0 <= i < roots.push(root).len()
-        implies #[trigger] body_root_ok(nodes, &roots.push(root)[i], items.push(item)[i]) by {
+    assert forall|i: int| 0 <= i < roots.push(root).len() implies #[trigger] body_root_ok(
+        nodes,
+        &roots.push(root)[i],
+        items.push(item)[i],
+    ) by {
         if i < roots.len() {
             assert(roots.push(root)[i] == roots[i]);
             assert(items.push(item)[i] == items[i]);
@@ -19552,7 +18056,8 @@ pub closed spec fn doc_clause_roots_ok(nodes: Seq<ENode>, clause: &EDocClause) -
 }
 
 pub proof fn doc_clause_roots_elim(nodes: Seq<ENode>, clause: &EDocClause)
-    requires doc_clause_roots_ok(nodes, clause),
+    requires
+        doc_clause_roots_ok(nodes, clause),
     ensures
         clause.head_root < nodes.len(),
         nodes[clause.head_root as int].term@ == clause@.head,
@@ -19576,15 +18081,14 @@ fn parse_doc_clause(
     arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::DocClause, Seq<Seq<u8>>)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EDocClause>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g) == doc_clause_parts(e.0) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == doc_clause_parts(e.0) + e.1
             &&& ckc_spec::v1text::wf_clause(e.0)
         },
         expected@ is None ==> old(guided).guide@ is None,
@@ -19597,14 +18101,13 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_clause(clause@)
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_clause_parts(clause@).flatten()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_clause_parts(
+                clause@,
+            ).flatten()
         },
         expected@ matches Some(e) ==> {
             &&& r matches Some(clause) && clause@ == e.0
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -19622,15 +18125,14 @@ fn parse_doc_clause_inner(
     input_arena: ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::DocClause, Seq<Seq<u8>>)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: (Option<EDocClause>, ETermArena))
     requires
         arena_ok(&input_arena),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g) == doc_clause_parts(e.0) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == doc_clause_parts(e.0) + e.1
             &&& ckc_spec::v1text::wf_clause(e.0)
         },
         expected@ is None ==> old(guided).guide@ is None,
@@ -19643,14 +18145,13 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_clause(clause@)
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_clause_parts(clause@).flatten()
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_clause_parts(
+                clause@,
+            ).flatten()
         },
         expected@ matches Some(e) ==> {
             &&& r.0 matches Some(clause) && clause@ == e.0
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -19658,7 +18159,9 @@ at: &mut usize,
     hide(Seq::<_>::is_prefix_of);
     let mut working_arena = input_arena;
     let ghost entry_nodes = working_arena.nodes@;
-    proof { nodes_prefix_reflexive(entry_nodes); }
+    proof {
+        nodes_prefix_reflexive(entry_nodes);
+    }
     let entry_pos = guided.cursor.pos;
     let ghost entry_prefix = guided.cursor.prefix@;
     let ghost head_expected = match expected@ {
@@ -19666,16 +18169,20 @@ at: &mut usize,
             let tail = if e.0.body.len() == 0 {
                 seq![ckc_spec::v1text::ascii(".\n"@)] + e.1
             } else {
-                seq![ckc_spec::v1text::ascii(" :- "@)]
-                    + doc_body_parts(e.0.body)
-                    + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1
+                seq![ckc_spec::v1text::ascii(" :- "@)] + doc_body_parts(e.0.body) + seq![
+                    ckc_spec::v1text::ascii(".\n"@),
+                ] + e.1
             };
             Some((e.0.head, tail))
         },
         None => None,
     };
     let ghost head_next = match expected@ {
-        Some(e) => if e.0.body.len() == 0 { 0x2eu8 } else { 0x20u8 },
+        Some(e) => if e.0.body.len() == 0 {
+            0x2eu8
+        } else {
+            0x20u8
+        },
         None => 0x20u8,
     };
     proof {
@@ -19686,9 +18193,9 @@ at: &mut usize,
             reveal(ckc_spec::v1text::wf_clause);
             reveal(doc_clause_parts);
             assert(ckc_spec::v1text::wf_literal(e.0.head));
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ckc_spec::v1text::term_bytes(e.0.head)]
-                    + head_expected.unwrap().1);
+            assert(guide_rest(guided.guide@.unwrap()) == seq![
+                ckc_spec::v1text::term_bytes(e.0.head),
+            ] + head_expected.unwrap().1);
             if e.0.body.len() == 0 {
                 reveal_strlit(".\n");
                 reveal(ckc_spec::v1text::ascii);
@@ -19716,7 +18223,7 @@ at: &mut usize,
         Ghost(head_next),
         Ghost(head_expected),
         &mut tracker,
-    at,
+        at,
     );
     proof {
         nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
@@ -19732,8 +18239,7 @@ at: &mut usize,
         }
     }
     proof {
-        assert(tracker.stream@
-            == ckc_spec::term::var_stream(head@)) by {
+        assert(tracker.stream@ == ckc_spec::term::var_stream(head@)) by {
             assert_seqs_equal!(Seq::<nat>::empty()
                 + ckc_spec::term::var_stream(head@)
                 == ckc_spec::term::var_stream(head@));
@@ -19746,8 +18252,8 @@ at: &mut usize,
                 assert(head_next == 0x2e);
                 assert(e.0.body.len() == 0);
                 assert(head@ == e.0.head);
-                assert(guide_rest(guided.guide@.unwrap())
-                    == seq![ckc_spec::v1text::ascii(".\n"@)] + e.1);
+                assert(guide_rest(guided.guide@.unwrap()) == seq![ckc_spec::v1text::ascii(".\n"@)]
+                    + e.1);
                 assert(ckc_spec::term::var_canonical(tracker.stream@));
                 reveal(tracker_complete);
                 assert(tracker.stream@.len() <= guided.cursor.pos);
@@ -19777,24 +18283,22 @@ at: &mut usize,
             line_end,
             Ghost(ckc_spec::v1text::ascii(".\n"@)),
             Ghost(after_line),
-        at,
+            at,
         ) {
             return (None, working_arena);
         }
-        let ghost model = ckc_spec::v1text::DocClause {
-            head: head@,
-            body: Seq::empty(),
-        };
+        let ghost model = ckc_spec::v1text::DocClause { head: head@, body: Seq::empty() };
         proof {
             reveal(ckc_spec::v1text::wf_clause);
             reveal_with_fuel(ckc_spec::v1text::body_var_stream, 2);
-            assert forall|i: int| 0 <= i < model.body.len()
-                implies ckc_spec::v1text::wf_body_item(model.body[i]) by {
+            assert forall|i: int| 0 <= i < model.body.len() implies ckc_spec::v1text::wf_body_item(
+                model.body[i],
+            ) by {
                 assert(false);
             }
-            assert(ckc_spec::term::var_stream(model.head)
-                + ckc_spec::v1text::body_var_stream(model.body)
-                == tracker.stream@) by {
+            assert(ckc_spec::term::var_stream(model.head) + ckc_spec::v1text::body_var_stream(
+                model.body,
+            ) == tracker.stream@) by {
                 assert_seqs_equal!(ckc_spec::term::var_stream(model.head)
                     + Seq::<nat>::empty()
                     == ckc_spec::term::var_stream(model.head));
@@ -19815,8 +18319,13 @@ at: &mut usize,
                 assert(model == e.0);
             }
         }
-        proof { reveal(doc_clause_roots_ok); }
-        return (Some(EDocClause { head_root: head.root, body, clause: Ghost(model) }), working_arena);
+        proof {
+            reveal(doc_clause_roots_ok);
+        }
+        return (
+            Some(EDocClause { head_root: head.root, body, clause: Ghost(model) }),
+            working_arena,
+        );
     }
     proof {
         if let Some(e) = expected@ {
@@ -19835,17 +18344,12 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(rule_open@ == ckc_spec::v1text::ascii(" :- "@));
         if let Some(e) = expected@ {
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ckc_spec::v1text::ascii(" :- "@)]
-                    + (doc_body_parts(e.0.body)
-                        + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![ckc_spec::v1text::ascii(" :- "@)] + (
+            doc_body_parts(e.0.body) + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1));
         }
     }
     let ghost after_open = match expected@ {
-        Some(e) => Some(
-            doc_body_parts(e.0.body)
-                + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1,
-        ),
+        Some(e) => Some(doc_body_parts(e.0.body) + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1),
         None => None,
     };
     if !doc_guided_literal(
@@ -19854,25 +18358,23 @@ at: &mut usize,
         rule_open,
         Ghost(ckc_spec::v1text::ascii(" :- "@)),
         Ghost(after_open),
-    at,
+        at,
     ) {
         return (None, working_arena);
     }
-
     let ghost mut items: Seq<ckc_spec::v1text::BodyItem> = Seq::empty();
     let mut more = true;
     proof {
         reveal_with_fuel(ckc_spec::v1text::body_var_stream, 2);
-        assert(ckc_spec::v1text::body_var_stream(items)
-            == Seq::<nat>::empty());
+        assert(ckc_spec::v1text::body_var_stream(items) == Seq::<nat>::empty());
         assert_seqs_equal!(ckc_spec::term::var_stream(head@)
             + Seq::<nat>::empty()
             == ckc_spec::term::var_stream(head@));
-        assert(tracker.stream@
-            == ckc_spec::term::var_stream(head@)
-                + ckc_spec::v1text::body_var_stream(items));
-        assert forall|i: int| 0 <= i < items.len()
-            implies ckc_spec::v1text::wf_body_item(items[i]) by {
+        assert(tracker.stream@ == ckc_spec::term::var_stream(head@)
+            + ckc_spec::v1text::body_var_stream(items));
+        assert forall|i: int| 0 <= i < items.len() implies ckc_spec::v1text::wf_body_item(
+            items[i],
+        ) by {
             assert(false);
         }
         assert_seqs_equal!(guided.cursor.prefix@
@@ -19885,9 +18387,9 @@ at: &mut usize,
                 == Seq::<ckc_spec::v1text::BodyItem>::empty());
             assert_seqs_equal!(e.0.body.skip(0) == e.0.body);
             assert(items == e.0.body.take(items.len() as int));
-            assert(guide_rest(guided.guide@.unwrap())
-                == doc_body_parts(e.0.body.skip(items.len() as int))
-                    + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1);
+            assert(guide_rest(guided.guide@.unwrap()) == doc_body_parts(
+                e.0.body.skip(items.len() as int),
+            ) + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1);
         }
     }
     while more
@@ -19901,25 +18403,19 @@ at: &mut usize,
             guided_cursor_ok(bytes@, &guided),
             entry_pos < guided.cursor.pos,
             ckc_spec::v1text::wf_literal(head@),
-            tracker.valid ==>
-                tracker_state_ok(tracker.next, tracker.stream@),
+            tracker.valid ==> tracker_state_ok(tracker.next, tracker.stream@),
             tracker_complete(tracker.valid, tracker.stream@),
-            tracker.stream@
-                == ckc_spec::term::var_stream(head@)
-                    + ckc_spec::v1text::body_var_stream(items),
+            tracker.stream@ == ckc_spec::term::var_stream(head@)
+                + ckc_spec::v1text::body_var_stream(items),
             tracker.stream@.len() <= guided.cursor.pos,
-            guided.cursor.prefix@
-                == entry_prefix
-                    + ckc_spec::v1text::term_bytes(head@)
-                    + ckc_spec::v1text::ascii(" :- "@)
-                    + ckc_spec::v1text::body_bytes(items)
-                    + if more && items.len() > 0 {
-                        ckc_spec::v1text::ascii(", "@)
-                    } else {
-                        Seq::<u8>::empty()
-                    },
-            forall|i: int| 0 <= i < items.len()
-                ==> ckc_spec::v1text::wf_body_item(items[i]),
+            guided.cursor.prefix@ == entry_prefix + ckc_spec::v1text::term_bytes(head@)
+                + ckc_spec::v1text::ascii(" :- "@) + ckc_spec::v1text::body_bytes(items) + if more
+                && items.len() > 0 {
+                ckc_spec::v1text::ascii(", "@)
+            } else {
+                Seq::<u8>::empty()
+            },
+            forall|i: int| 0 <= i < items.len() ==> ckc_spec::v1text::wf_body_item(items[i]),
             !more ==> items.len() >= 1,
             expected@ matches Some(e) ==> {
                 &&& e.0.body.len() > 0
@@ -19929,20 +18425,21 @@ at: &mut usize,
                 &&& items.len() <= e.0.body.len()
                 &&& more ==> items.len() < e.0.body.len()
                 &&& !more ==> items.len() == e.0.body.len()
-                &&& guided.guide@ matches Some(g)
-                    && guide_rest(g) == if more {
-                        doc_body_parts(e.0.body.skip(items.len() as int))
-                            + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1
-                    } else {
-                        seq![ckc_spec::v1text::ascii(".\n"@)] + e.1
-                    }
+                &&& guided.guide@ matches Some(g) && guide_rest(g) == if more {
+                    doc_body_parts(e.0.body.skip(items.len() as int)) + seq![
+                        ckc_spec::v1text::ascii(".\n"@),
+                    ] + e.1
+                } else {
+                    seq![ckc_spec::v1text::ascii(".\n"@)] + e.1
+                }
             },
             expected@ is None ==> guided.guide@ is None,
-        decreases if more {
-            bytes.len() - guided.cursor.pos + 1
-        } else {
-            0
-        },
+        decreases
+                if more {
+                    bytes.len() - guided.cursor.pos + 1
+                } else {
+                    0
+                },
     {
         let ghost item_expected = match expected@ {
             Some(e) => {
@@ -19951,8 +18448,8 @@ at: &mut usize,
                 let after = if remaining.len() == 1 {
                     line_tail
                 } else {
-                    seq![ckc_spec::v1text::ascii(", "@)]
-                        + doc_body_parts(remaining.drop_first()) + line_tail
+                    seq![ckc_spec::v1text::ascii(", "@)] + doc_body_parts(remaining.drop_first())
+                        + line_tail
                 };
                 Some((remaining[0], after))
             },
@@ -19973,15 +18470,12 @@ at: &mut usize,
                 assert(0 <= items.len() < e.0.body.len());
                 assert(remaining.len() == e.0.body.len() - items.len());
                 assert(remaining.len() > 0);
-                assert(ckc_spec::v1text::wf_body_item(
-                    e.0.body[items.len() as int],
-                ));
+                assert(ckc_spec::v1text::wf_body_item(e.0.body[items.len() as int]));
                 assert(remaining[0] == e.0.body[items.len() as int]);
                 assert(item_keys_fit(e.0.body[items.len() as int]));
                 reveal(doc_body_parts);
-                assert(guide_rest(guided.guide@.unwrap())
-                    == doc_body_item_parts(remaining[0])
-                        + item_expected.unwrap().1);
+                assert(guide_rest(guided.guide@.unwrap()) == doc_body_item_parts(remaining[0])
+                    + item_expected.unwrap().1);
                 if remaining.len() == 1 {
                     reveal_strlit(".\n");
                     reveal(ckc_spec::v1text::ascii);
@@ -20014,7 +18508,7 @@ at: &mut usize,
             Ghost(item_next),
             Ghost(item_expected),
             &mut tracker,
-        at,
+            at,
         );
         proof {
             nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
@@ -20028,18 +18522,12 @@ at: &mut usize,
         proof {
             if expected@ is Some {
                 let after = item_expected.unwrap().1;
-                assert(guided.guide@ matches Some(g)
-                    && guide_rest(g) == after);
+                assert(guided.guide@ matches Some(g) && guide_rest(g) == after);
                 assert(after.len() > 0);
                 assert(after[0].len() > 0);
                 assert(after[0][0] == item_next);
                 assert_seqs_equal!(after == seq![after[0]] + after.drop_first());
-                guide_front_bytes(
-                    bytes@,
-                    &guided,
-                    after[0],
-                    after.drop_first(),
-                );
+                guide_front_bytes(bytes@, &guided, after[0], after.drop_first());
                 assert(guided.cursor.pos < bytes.len());
                 assert(bytes@[guided.cursor.pos as int] == after[0][0]);
                 assert(bytes@[guided.cursor.pos as int] == item_next);
@@ -20054,12 +18542,9 @@ at: &mut usize,
             return (None, working_arena);
         }
         proof {
-            assert(before_stream
-                == ckc_spec::term::var_stream(head@)
-                    + ckc_spec::v1text::body_var_stream(old_items));
-            assert(tracker.stream@
-                == before_stream
-                    + ckc_spec::v1text::item_var_stream(item@));
+            assert(before_stream == ckc_spec::term::var_stream(head@)
+                + ckc_spec::v1text::body_var_stream(old_items));
+            assert(tracker.stream@ == before_stream + ckc_spec::v1text::item_var_stream(item@));
             body_var_stream_push(old_items, item@);
             items = old_items.push(item@);
             assert(items.len() == old_items.len() + 1);
@@ -20072,9 +18557,8 @@ at: &mut usize,
                     + (ckc_spec::v1text::body_var_stream(old_items)
                         + ckc_spec::v1text::item_var_stream(item@))
             );
-            assert(tracker.stream@
-                == ckc_spec::term::var_stream(head@)
-                    + ckc_spec::v1text::body_var_stream(items));
+            assert(tracker.stream@ == ckc_spec::term::var_stream(head@)
+                + ckc_spec::v1text::body_var_stream(items));
             doc_body_item_parts_flat(item@);
             if old_items.len() == 0 {
                 assert_seqs_equal!(old_items
@@ -20089,8 +18573,9 @@ at: &mut usize,
                     + ckc_spec::v1text::term_bytes(head@)
                     + ckc_spec::v1text::ascii(" :- "@)
                     + ckc_spec::v1text::body_bytes(items));
-            assert forall|i: int| 0 <= i < items.len()
-                implies ckc_spec::v1text::wf_body_item(items[i]) by {
+            assert forall|i: int| 0 <= i < items.len() implies ckc_spec::v1text::wf_body_item(
+                items[i],
+            ) by {
                 if i < old_items.len() {
                     assert(items[i] == old_items[i]);
                 } else {
@@ -20111,14 +18596,13 @@ at: &mut usize,
                 assert(items == e.0.body.take(items.len() as int));
                 if items.len() < e.0.body.len() {
                     assert(e.0.body.len() != old_items.len() + 1);
-                    assert(item_expected.unwrap().1
-                        == seq![ckc_spec::v1text::ascii(", "@)]
-                            + doc_body_parts(e.0.body.skip(items.len() as int))
-                            + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1);
+                    assert(item_expected.unwrap().1 == seq![ckc_spec::v1text::ascii(", "@)]
+                        + doc_body_parts(e.0.body.skip(items.len() as int)) + seq![
+                        ckc_spec::v1text::ascii(".\n"@),
+                    ] + e.1);
                 } else {
                     assert(e.0.body.len() == old_items.len() + 1);
-                    assert(item_expected.unwrap().1
-                        == seq![ckc_spec::v1text::ascii(".\n"@)] + e.1);
+                    assert(item_expected.unwrap().1 == seq![ckc_spec::v1text::ascii(".\n"@)] + e.1);
                 }
             }
         }
@@ -20131,10 +18615,11 @@ at: &mut usize,
                 if let Some(e) = expected@ {
                     assert(item_next == 0x2c);
                     assert(items.len() < e.0.body.len());
-                    assert(guide_rest(guided.guide@.unwrap())
-                        == seq![ckc_spec::v1text::ascii(", "@)]
-                            + (doc_body_parts(e.0.body.skip(items.len() as int))
-                                + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1));
+                    assert(guide_rest(guided.guide@.unwrap()) == seq![
+                        ckc_spec::v1text::ascii(", "@),
+                    ] + (doc_body_parts(e.0.body.skip(items.len() as int)) + seq![
+                        ckc_spec::v1text::ascii(".\n"@),
+                    ] + e.1));
                 }
             }
             let comma: &[u8] = b", ";
@@ -20146,8 +18631,9 @@ at: &mut usize,
             }
             let ghost after_comma = match expected@ {
                 Some(e) => Some(
-                    doc_body_parts(e.0.body.skip(items.len() as int))
-                        + seq![ckc_spec::v1text::ascii(".\n"@)] + e.1,
+                    doc_body_parts(e.0.body.skip(items.len() as int)) + seq![
+                        ckc_spec::v1text::ascii(".\n"@),
+                    ] + e.1,
                 ),
                 None => None,
             };
@@ -20157,7 +18643,7 @@ at: &mut usize,
                 comma,
                 Ghost(ckc_spec::v1text::ascii(", "@)),
                 Ghost(after_comma),
-            at,
+                at,
             ) {
                 return (None, working_arena);
             }
@@ -20183,8 +18669,8 @@ at: &mut usize,
     proof {
         if let Some(e) = expected@ {
             assert(items == e.0.body);
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ckc_spec::v1text::ascii(".\n"@)] + e.1);
+            assert(guide_rest(guided.guide@.unwrap()) == seq![ckc_spec::v1text::ascii(".\n"@)]
+                + e.1);
             assert(ckc_spec::term::var_canonical(tracker.stream@));
             reveal(tracker_complete);
             assert(tracker.stream@.len() <= guided.cursor.pos);
@@ -20214,23 +18700,21 @@ at: &mut usize,
         line_end,
         Ghost(ckc_spec::v1text::ascii(".\n"@)),
         Ghost(after_line),
-    at,
+        at,
     ) {
         return (None, working_arena);
     }
-    let ghost model = ckc_spec::v1text::DocClause {
-        head: head@,
-        body: items,
-    };
+    let ghost model = ckc_spec::v1text::DocClause { head: head@, body: items };
     proof {
         reveal(ckc_spec::v1text::wf_clause);
-        assert forall|i: int| 0 <= i < model.body.len()
-            implies ckc_spec::v1text::wf_body_item(model.body[i]) by {
+        assert forall|i: int| 0 <= i < model.body.len() implies ckc_spec::v1text::wf_body_item(
+            model.body[i],
+        ) by {
             assert(ckc_spec::v1text::wf_body_item(items[i]));
         }
-        assert(ckc_spec::term::var_stream(model.head)
-            + ckc_spec::v1text::body_var_stream(model.body)
-            == tracker.stream@);
+        assert(ckc_spec::term::var_stream(model.head) + ckc_spec::v1text::body_var_stream(
+            model.body,
+        ) == tracker.stream@);
         assert(ckc_spec::v1text::wf_clause(model));
         assert(entry_pos == old(guided).cursor.pos);
         assert(entry_pos < guided.cursor.pos);
@@ -20241,7 +18725,9 @@ at: &mut usize,
             assert(model == e.0);
         }
     }
-    proof { reveal(doc_clause_roots_ok); }
+    proof {
+        reveal(doc_clause_roots_ok);
+    }
     (Some(EDocClause { head_root: head.root, body, clause: Ghost(model) }), working_arena)
 }
 
@@ -20251,10 +18737,8 @@ pub closed spec fn doc_clauses_roots_ok(
     models: Seq<ckc_spec::v1text::DocClause>,
 ) -> bool {
     &&& clauses.len() == models.len()
-    &&& forall|i: int| 0 <= i < clauses.len()
-        ==> (#[trigger] clauses[i])@ == models[i]
-    &&& forall|i: int| 0 <= i < clauses.len()
-        ==> #[trigger] doc_clause_roots_ok(nodes, &clauses[i])
+    &&& forall|i: int| 0 <= i < clauses.len() ==> (#[trigger] clauses[i])@ == models[i]
+    &&& forall|i: int| 0 <= i < clauses.len() ==> #[trigger] doc_clause_roots_ok(nodes, &clauses[i])
 }
 
 pub proof fn doc_clauses_roots_elim(
@@ -20262,26 +18746,30 @@ pub proof fn doc_clauses_roots_elim(
     clauses: Seq<EDocClause>,
     models: Seq<ckc_spec::v1text::DocClause>,
 )
-    requires doc_clauses_roots_ok(nodes, clauses, models),
+    requires
+        doc_clauses_roots_ok(nodes, clauses, models),
     ensures
         clauses.len() == models.len(),
-        forall|i: int| 0 <= i < clauses.len()
-            ==> (#[trigger] clauses[i])@ == models[i],
-        forall|i: int| 0 <= i < clauses.len()
-            ==> #[trigger] doc_clause_roots_ok(nodes, &clauses[i]),
+        forall|i: int| 0 <= i < clauses.len() ==> (#[trigger] clauses[i])@ == models[i],
+        forall|i: int|
+            0 <= i < clauses.len() ==> #[trigger] doc_clause_roots_ok(nodes, &clauses[i]),
 {
     reveal(doc_clauses_roots_ok);
 }
 
 proof fn doc_clauses_roots_empty(nodes: Seq<ENode>)
-    ensures doc_clauses_roots_ok(nodes, Seq::empty(), Seq::empty()),
+    ensures
+        doc_clauses_roots_ok(nodes, Seq::empty(), Seq::empty()),
 {
     reveal(doc_clauses_roots_ok);
 }
 
 proof fn doc_clause_prefix(before: Seq<ENode>, after: &ETermArena, clause: &EDocClause)
-    requires before.is_prefix_of(after.nodes@), doc_clause_roots_ok(before, clause),
-    ensures doc_clause_roots_ok(after.nodes@, clause),
+    requires
+        before.is_prefix_of(after.nodes@),
+        doc_clause_roots_ok(before, clause),
+    ensures
+        doc_clause_roots_ok(after.nodes@, clause),
 {
     reveal(doc_clause_roots_ok);
     arena_prefix_stable(before, after);
@@ -20294,12 +18782,17 @@ proof fn doc_clauses_prefix(
     clauses: Seq<EDocClause>,
     models: Seq<ckc_spec::v1text::DocClause>,
 )
-    requires before.is_prefix_of(after.nodes@), doc_clauses_roots_ok(before, clauses, models),
-    ensures doc_clauses_roots_ok(after.nodes@, clauses, models),
+    requires
+        before.is_prefix_of(after.nodes@),
+        doc_clauses_roots_ok(before, clauses, models),
+    ensures
+        doc_clauses_roots_ok(after.nodes@, clauses, models),
 {
     reveal(doc_clauses_roots_ok);
-    assert forall|i: int| 0 <= i < clauses.len()
-        implies #[trigger] doc_clause_roots_ok(after.nodes@, &clauses[i]) by {
+    assert forall|i: int| 0 <= i < clauses.len() implies #[trigger] doc_clause_roots_ok(
+        after.nodes@,
+        &clauses[i],
+    ) by {
         doc_clause_prefix(before, after, &clauses[i]);
     }
 }
@@ -20310,12 +18803,16 @@ proof fn doc_clauses_push(
     models: Seq<ckc_spec::v1text::DocClause>,
     clause: EDocClause,
 )
-    requires doc_clauses_roots_ok(nodes, clauses, models), doc_clause_roots_ok(nodes, &clause),
-    ensures doc_clauses_roots_ok(nodes, clauses.push(clause), models.push(clause@)),
+    requires
+        doc_clauses_roots_ok(nodes, clauses, models),
+        doc_clause_roots_ok(nodes, &clause),
+    ensures
+        doc_clauses_roots_ok(nodes, clauses.push(clause), models.push(clause@)),
 {
     reveal(doc_clauses_roots_ok);
-    assert forall|i: int| 0 <= i < clauses.push(clause).len()
-        implies (#[trigger] clauses.push(clause)[i])@ == models.push(clause@)[i] by {
+    assert forall|i: int| 0 <= i < clauses.push(clause).len() implies (#[trigger] clauses.push(
+        clause,
+    )[i])@ == models.push(clause@)[i] by {
         if i < clauses.len() {
             assert(clauses.push(clause)[i] == clauses[i]);
             assert(models.push(clause@)[i] == models[i]);
@@ -20325,8 +18822,11 @@ proof fn doc_clauses_push(
             assert(models.push(clause@)[i] == clause@);
         }
     }
-    assert forall|i: int| 0 <= i < clauses.push(clause).len()
-        implies #[trigger] doc_clause_roots_ok(nodes, &clauses.push(clause)[i]) by {
+    assert forall|i: int|
+        0 <= i < clauses.push(clause).len() implies #[trigger] doc_clause_roots_ok(
+        nodes,
+        &clauses.push(clause)[i],
+    ) by {
         if i < clauses.len() {
             assert(clauses.push(clause)[i] == clauses[i]);
             assert(models.push(clause@)[i] == models[i]);
@@ -20348,11 +18848,12 @@ proof fn doc_clauses_concat(
     requires
         doc_clauses_roots_ok(nodes, left, left_models),
         doc_clauses_roots_ok(nodes, right, right_models),
-    ensures doc_clauses_roots_ok(nodes, left + right, left_models + right_models),
+    ensures
+        doc_clauses_roots_ok(nodes, left + right, left_models + right_models),
 {
     reveal(doc_clauses_roots_ok);
-    assert forall|i: int| 0 <= i < (left + right).len()
-        implies (#[trigger] (left + right)[i])@ == (left_models + right_models)[i] by {
+    assert forall|i: int| 0 <= i < (left + right).len() implies (#[trigger] (left + right)[i])@ == (
+    left_models + right_models)[i] by {
         if i < left.len() {
             assert((left + right)[i] == left[i]);
             assert((left_models + right_models)[i] == left_models[i]);
@@ -20361,8 +18862,10 @@ proof fn doc_clauses_concat(
             assert((left_models + right_models)[i] == right_models[i - left.len()]);
         }
     }
-    assert forall|i: int| 0 <= i < (left + right).len()
-        implies #[trigger] doc_clause_roots_ok(nodes, &(left + right)[i]) by {
+    assert forall|i: int| 0 <= i < (left + right).len() implies #[trigger] doc_clause_roots_ok(
+        nodes,
+        &(left + right)[i],
+    ) by {
         if i < left.len() {
             assert((left + right)[i] == left[i]);
             assert((left_models + right_models)[i] == left_models[i]);
@@ -20394,23 +18897,23 @@ fn parse_doc_bundle(
     arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::Bundle, Seq<Seq<u8>>)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EDocBundle>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g) == doc_bundle_parts(e.0) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == doc_bundle_parts(e.0) + e.1
             &&& ckc_spec::v1text::wf_bundle(e.0)
-            &&& (e.1.len() == 0
-                || e.1[0] == ckc_spec::v1text::ascii("% S"@))
+            &&& (e.1.len() == 0 || e.1[0] == ckc_spec::v1text::ascii("% S"@))
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         r matches Some(bundle) ==> doc_clauses_roots_ok(
-            final(arena).nodes@, bundle.clauses@, bundle@.clauses,
+            final(arena).nodes@,
+            bundle.clauses@,
+            bundle@.clauses,
         ),
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -20419,20 +18922,17 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_bundle(bundle@)
             &&& canonical_decimal(bundle.ordinal@)
-            &&& bundle.ordinal@
-                == ckc_spec::v1text::udec_bytes(bundle@.s)
+            &&& bundle.ordinal@ == ckc_spec::v1text::udec_bytes(bundle@.s)
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_bundle_parts(bundle@).flatten()
-            &&& final(guided).cursor.pos == bytes@.len()
-                || final(guided).cursor.pos < bytes@.len()
-                    && bytes@[final(guided).cursor.pos as int] == 0x25
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_bundle_parts(
+                bundle@,
+            ).flatten()
+            &&& final(guided).cursor.pos == bytes@.len() || final(guided).cursor.pos < bytes@.len()
+                && bytes@[final(guided).cursor.pos as int] == 0x25
         },
         expected@ matches Some(e) ==> {
             &&& r matches Some(bundle) && bundle@ == e.0
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -20450,23 +18950,23 @@ fn parse_doc_bundle_inner(
     input_arena: ETermArena,
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(ckc_spec::v1text::Bundle, Seq<Seq<u8>>)>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: (Option<EDocBundle>, ETermArena))
     requires
         arena_ok(&input_arena),
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g)
-                && guide_rest(g) == doc_bundle_parts(e.0) + e.1
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == doc_bundle_parts(e.0) + e.1
             &&& ckc_spec::v1text::wf_bundle(e.0)
-            &&& (e.1.len() == 0
-                || e.1[0] == ckc_spec::v1text::ascii("% S"@))
+            &&& (e.1.len() == 0 || e.1[0] == ckc_spec::v1text::ascii("% S"@))
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         r.0 matches Some(bundle) ==> doc_clauses_roots_ok(
-            r.1.nodes@, bundle.clauses@, bundle@.clauses,
+            r.1.nodes@,
+            bundle.clauses@,
+            bundle@.clauses,
         ),
         arena_ok(&r.1),
         input_arena.nodes@.is_prefix_of(r.1.nodes@),
@@ -20475,20 +18975,17 @@ at: &mut usize,
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::wf_bundle(bundle@)
             &&& canonical_decimal(bundle.ordinal@)
-            &&& bundle.ordinal@
-                == ckc_spec::v1text::udec_bytes(bundle@.s)
+            &&& bundle.ordinal@ == ckc_spec::v1text::udec_bytes(bundle@.s)
             &&& old(guided).cursor.pos < final(guided).cursor.pos
-            &&& final(guided).cursor.prefix@
-                == old(guided).cursor.prefix@
-                    + doc_bundle_parts(bundle@).flatten()
-            &&& final(guided).cursor.pos == bytes@.len()
-                || final(guided).cursor.pos < bytes@.len()
-                    && bytes@[final(guided).cursor.pos as int] == 0x25
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_bundle_parts(
+                bundle@,
+            ).flatten()
+            &&& final(guided).cursor.pos == bytes@.len() || final(guided).cursor.pos < bytes@.len()
+                && bytes@[final(guided).cursor.pos as int] == 0x25
         },
         expected@ matches Some(e) ==> {
             &&& r.0 matches Some(bundle) && bundle@ == e.0
-            &&& final(guided).guide@ matches Some(g)
-                && guide_rest(g) == e.1
+            &&& final(guided).guide@ matches Some(g) && guide_rest(g) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -20496,7 +18993,9 @@ at: &mut usize,
     hide(Seq::<_>::is_prefix_of);
     let mut working_arena = input_arena;
     let ghost entry_nodes = working_arena.nodes@;
-    proof { nodes_prefix_reflexive(entry_nodes); }
+    proof {
+        nodes_prefix_reflexive(entry_nodes);
+    }
     let entry_pos = guided.cursor.pos;
     let ghost entry_prefix = guided.cursor.prefix@;
     let marker: &[u8] = b"% S";
@@ -20509,14 +19008,13 @@ at: &mut usize,
             reveal(ckc_spec::v1text::wf_bundle);
             reveal(doc_bundle_parts);
             reveal(doc_marker_parts);
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ckc_spec::v1text::ascii("% S"@)]
-                    + (seq![
-                        ckc_spec::v1text::udec_bytes(e.0.s),
-                        ckc_spec::v1text::ascii(": "@),
-                        e.0.text,
-                        seq![0x0au8],
-                    ] + doc_clauses_parts(e.0.clauses) + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![ckc_spec::v1text::ascii("% S"@)] + (
+            seq![
+                ckc_spec::v1text::udec_bytes(e.0.s),
+                ckc_spec::v1text::ascii(": "@),
+                e.0.text,
+                seq![0x0au8],
+            ] + doc_clauses_parts(e.0.clauses) + e.1));
         }
     }
     let ghost after_marker = match expected@ {
@@ -20536,20 +19034,16 @@ at: &mut usize,
         marker,
         Ghost(ckc_spec::v1text::ascii("% S"@)),
         Ghost(after_marker),
-    at,
+        at,
     ) {
         return (None, working_arena);
     }
     proof {
         if let Some(e) = expected@ {
             let digits = ckc_spec::v1text::udec_bytes(e.0.s);
-            let rest = seq![
-                ckc_spec::v1text::ascii(": "@),
-                e.0.text,
-                seq![0x0au8],
-            ] + doc_clauses_parts(e.0.clauses) + e.1;
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![digits] + rest);
+            let rest = seq![ckc_spec::v1text::ascii(": "@), e.0.text, seq![0x0au8]]
+                + doc_clauses_parts(e.0.clauses) + e.1;
+            assert(guide_rest(guided.guide@.unwrap()) == seq![digits] + rest);
             guide_front_bytes(bytes@, &guided, digits, rest);
             udec_bytes_nonempty(e.0.s);
             assert(guided.cursor.pos < bytes.len());
@@ -20566,44 +19060,37 @@ at: &mut usize,
     }
     let ordinal_start = guided.cursor.pos;
     let ghost decimal_expected = match expected@ {
-        Some(e) => Some(GDecimalExpected {
-            value: e.0.s,
-            end: (ordinal_start as int
-                + ckc_spec::v1text::udec_bytes(e.0.s).len()) as usize,
-        }),
+        Some(e) => Some(
+            GDecimalExpected {
+                value: e.0.s,
+                end: (ordinal_start as int + ckc_spec::v1text::udec_bytes(e.0.s).len()) as usize,
+            },
+        ),
         None => None,
     };
     proof {
         if let Some(e) = expected@ {
             let digits = ckc_spec::v1text::udec_bytes(e.0.s);
-            let rest = seq![
-                ckc_spec::v1text::ascii(": "@),
-                e.0.text,
-                seq![0x0au8],
-            ] + doc_clauses_parts(e.0.clauses) + e.1;
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![digits] + rest);
+            let rest = seq![ckc_spec::v1text::ascii(": "@), e.0.text, seq![0x0au8]]
+                + doc_clauses_parts(e.0.clauses) + e.1;
+            assert(guide_rest(guided.guide@.unwrap()) == seq![digits] + rest);
             guide_front_bytes(bytes@, &guided, digits, rest);
             udec_bytes_nonempty(e.0.s);
             assert(ordinal_start as int + digits.len() <= bytes@.len());
             assert(ordinal_start as int + digits.len() <= usize::MAX);
-            assert(decimal_expected.unwrap().end as int
-                == ordinal_start as int + digits.len());
-            assert(bytes@.subrange(
-                ordinal_start as int,
-                decimal_expected.unwrap().end as int,
-            ) == digits);
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![digits, ckc_spec::v1text::ascii(": "@)]
-                    + (seq![e.0.text, seq![0x0au8]]
-                        + doc_clauses_parts(e.0.clauses) + e.1));
+            assert(decimal_expected.unwrap().end as int == ordinal_start as int + digits.len());
+            assert(bytes@.subrange(ordinal_start as int, decimal_expected.unwrap().end as int)
+                == digits);
+            assert(guide_rest(guided.guide@.unwrap()) == seq![
+                digits,
+                ckc_spec::v1text::ascii(": "@),
+            ] + (seq![e.0.text, seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1));
             guide_second_bytes(
                 bytes@,
                 &guided,
                 digits,
                 ckc_spec::v1text::ascii(": "@),
-                seq![e.0.text, seq![0x0au8]]
-                    + doc_clauses_parts(e.0.clauses) + e.1,
+                seq![e.0.text, seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1,
             );
             reveal_strlit(": ");
             reveal(ckc_spec::v1text::ascii);
@@ -20611,58 +19098,42 @@ at: &mut usize,
                 decimal_expected.unwrap().end as int,
                 decimal_expected.unwrap().end as int + 2,
             ) == ckc_spec::v1text::ascii(": "@));
-            assert(bytes@[decimal_expected.unwrap().end as int]
-                == ckc_spec::v1text::ascii(": "@)[0]);
+            assert(bytes@[decimal_expected.unwrap().end as int] == ckc_spec::v1text::ascii(
+                ": "@,
+            )[0]);
             assert(bytes@[decimal_expected.unwrap().end as int] == 0x3a);
             reveal(ckc_spec::v1text::is_digit_b);
             reveal(decimal_end);
             assert(decimal_end(bytes@, decimal_expected.unwrap().end));
         }
     }
-    let decimal = match parse_decimal(
-        bytes,
-        ordinal_start,
-        Ghost(decimal_expected),
-    at,
-    ) {
+    let decimal = match parse_decimal(bytes, ordinal_start, Ghost(decimal_expected), at) {
         Some(decimal) => decimal,
         None => return (None, working_arena),
     };
     let ordinal = copy_range(bytes, ordinal_start, decimal.end);
     proof {
         reveal(parsed_decimal_ok);
-        assert(ordinal@
-            == ckc_spec::v1text::udec_bytes(decimal.value@));
+        assert(ordinal@ == ckc_spec::v1text::udec_bytes(decimal.value@));
         if let Some(e) = expected@ {
             assert(decimal.value@ == e.0.s);
             assert(ordinal@ == ckc_spec::v1text::udec_bytes(e.0.s));
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ordinal@]
-                    + (seq![
-                        ckc_spec::v1text::ascii(": "@),
-                        e.0.text,
-                        seq![0x0au8],
-                    ] + doc_clauses_parts(e.0.clauses) + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![ordinal@] + (seq![
+                ckc_spec::v1text::ascii(": "@),
+                e.0.text,
+                seq![0x0au8],
+            ] + doc_clauses_parts(e.0.clauses) + e.1));
         }
     }
     let ghost after_ordinal = match expected@ {
         Some(e) => Some(
-            seq![
-                ckc_spec::v1text::ascii(": "@),
-                e.0.text,
-                seq![0x0au8],
-            ] + doc_clauses_parts(e.0.clauses) + e.1,
+            seq![ckc_spec::v1text::ascii(": "@), e.0.text, seq![0x0au8]] + doc_clauses_parts(
+                e.0.clauses,
+            ) + e.1,
         ),
         None => None,
     };
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        &ordinal,
-        Ghost(ordinal@),
-        Ghost(after_ordinal),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, &ordinal, Ghost(ordinal@), Ghost(after_ordinal), at) {
         return (None, working_arena);
     }
     if ordinal.len() == 1 && ordinal[0] == 0x30 {
@@ -20694,17 +19165,12 @@ at: &mut usize,
         reveal(ckc_spec::v1text::ascii);
         assert(colon@ == ckc_spec::v1text::ascii(": "@));
         if let Some(e) = expected@ {
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![ckc_spec::v1text::ascii(": "@)]
-                    + (seq![e.0.text, seq![0x0au8]]
-                        + doc_clauses_parts(e.0.clauses) + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![ckc_spec::v1text::ascii(": "@)] + (
+            seq![e.0.text, seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1));
         }
     }
     let ghost after_colon = match expected@ {
-        Some(e) => Some(
-            seq![e.0.text, seq![0x0au8]]
-                + doc_clauses_parts(e.0.clauses) + e.1,
-        ),
+        Some(e) => Some(seq![e.0.text, seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1),
         None => None,
     };
     if !doc_guided_literal(
@@ -20713,16 +19179,14 @@ at: &mut usize,
         colon,
         Ghost(ckc_spec::v1text::ascii(": "@)),
         Ghost(after_colon),
-    at,
+        at,
     ) {
         return (None, working_arena);
     }
     proof {
         if let Some(e) = expected@ {
-            let rest = seq![seq![0x0au8]]
-                + doc_clauses_parts(e.0.clauses) + e.1;
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![e.0.text] + rest);
+            let rest = seq![seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1;
+            assert(guide_rest(guided.guide@.unwrap()) == seq![e.0.text] + rest);
             guide_front_bytes(bytes@, &guided, e.0.text, rest);
             reveal(ckc_spec::v1text::wf_bundle);
             assert(e.0.text.len() > 0);
@@ -20740,32 +19204,25 @@ at: &mut usize,
     }
     let text_start = guided.cursor.pos;
     let ghost text_expected = match expected@ {
-        Some(e) => Some(GTextExpected {
-            value: e.0.text,
-            end: (text_start as int + e.0.text.len()) as usize,
-        }),
+        Some(e) => Some(
+            GTextExpected { value: e.0.text, end: (text_start as int + e.0.text.len()) as usize },
+        ),
         None => None,
     };
     proof {
         if let Some(e) = expected@ {
             reveal(ckc_spec::v1text::wf_bundle);
-            let rest = seq![seq![0x0au8]]
-                + doc_clauses_parts(e.0.clauses) + e.1;
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![e.0.text] + rest);
+            let rest = seq![seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1;
+            assert(guide_rest(guided.guide@.unwrap()) == seq![e.0.text] + rest);
             guide_front_bytes(bytes@, &guided, e.0.text, rest);
             assert(e.0.text.len() > 0);
             assert(text_start as int + e.0.text.len() <= bytes@.len());
             assert(text_start as int + e.0.text.len() <= usize::MAX);
-            assert(text_expected.unwrap().end as int
-                == text_start as int + e.0.text.len());
-            assert(bytes@.subrange(
-                text_start as int,
-                text_expected.unwrap().end as int,
-            ) == e.0.text);
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![e.0.text, seq![0x0au8]]
-                    + (doc_clauses_parts(e.0.clauses) + e.1));
+            assert(text_expected.unwrap().end as int == text_start as int + e.0.text.len());
+            assert(bytes@.subrange(text_start as int, text_expected.unwrap().end as int)
+                == e.0.text);
+            assert(guide_rest(guided.guide@.unwrap()) == seq![e.0.text, seq![0x0au8]] + (
+            doc_clauses_parts(e.0.clauses) + e.1));
             guide_second_bytes(
                 bytes@,
                 &guided,
@@ -20773,15 +19230,13 @@ at: &mut usize,
                 seq![0x0au8],
                 doc_clauses_parts(e.0.clauses) + e.1,
             );
-            assert(text_start as int + e.0.text.len() + 1
-                <= bytes@.len());
+            assert(text_start as int + e.0.text.len() + 1 <= bytes@.len());
             assert(text_expected.unwrap().end < bytes.len());
             assert(bytes@.subrange(
                 text_expected.unwrap().end as int,
                 text_expected.unwrap().end as int + 1,
             ) == seq![0x0au8]);
-            assert(bytes@[text_expected.unwrap().end as int]
-                == seq![0x0au8][0]);
+            assert(bytes@[text_expected.unwrap().end as int] == seq![0x0au8][0]);
             assert(bytes@[text_expected.unwrap().end as int] == 0x0a);
         }
     }
@@ -20792,26 +19247,15 @@ at: &mut usize,
     proof {
         if let Some(e) = expected@ {
             assert(text.value@ == e.0.text);
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![text.value@]
-                    + (seq![seq![0x0au8]]
-                        + doc_clauses_parts(e.0.clauses) + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![text.value@] + (seq![seq![0x0au8]]
+                + doc_clauses_parts(e.0.clauses) + e.1));
         }
     }
     let ghost after_text = match expected@ {
-        Some(e) => Some(
-            seq![seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1,
-        ),
+        Some(e) => Some(seq![seq![0x0au8]] + doc_clauses_parts(e.0.clauses) + e.1),
         None => None,
     };
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        &text.value,
-        Ghost(text.value@),
-        Ghost(after_text),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, &text.value, Ghost(text.value@), Ghost(after_text), at) {
         return (None, working_arena);
     }
     let newline: &[u8] = b"\n";
@@ -20820,29 +19264,23 @@ at: &mut usize,
         reveal_byteslit(b"\n");
         assert(newline@ == newline_chunk);
         if let Some(e) = expected@ {
-            assert(guide_rest(guided.guide@.unwrap())
-                == seq![newline_chunk]
-                    + (doc_clauses_parts(e.0.clauses) + e.1));
+            assert(guide_rest(guided.guide@.unwrap()) == seq![newline_chunk] + (doc_clauses_parts(
+                e.0.clauses,
+            ) + e.1));
         }
     }
     let ghost after_newline = match expected@ {
         Some(e) => Some(doc_clauses_parts(e.0.clauses) + e.1),
         None => None,
     };
-    if !doc_guided_literal(
-        bytes,
-        guided,
-        newline,
-        Ghost(newline_chunk),
-        Ghost(after_newline),
-    at,
-    ) {
+    if !doc_guided_literal(bytes, guided, newline, Ghost(newline_chunk), Ghost(after_newline), at) {
         return (None, working_arena);
     }
-
     let ghost mut clauses: Seq<ckc_spec::v1text::DocClause> = Seq::empty();
     let mut clause_roots: Vec<EDocClause> = Vec::new();
-    proof { doc_clauses_roots_empty(working_arena.nodes@); }
+    proof {
+        doc_clauses_roots_empty(working_arena.nodes@);
+    }
     let mut more = true;
     proof {
         reveal(ckc_spec::v1text::marker_line);
@@ -20854,8 +19292,9 @@ at: &mut usize,
                     text.value@,
                 )
                 + ckc_spec::v1text::clauses_bytes(clauses));
-        assert forall|i: int| 0 <= i < clauses.len()
-            implies ckc_spec::v1text::wf_clause(clauses[i]) by {
+        assert forall|i: int| 0 <= i < clauses.len() implies ckc_spec::v1text::wf_clause(
+            clauses[i],
+        ) by {
             assert(false);
         }
         if let Some(e) = expected@ {
@@ -20865,9 +19304,9 @@ at: &mut usize,
                 == Seq::<ckc_spec::v1text::DocClause>::empty());
             assert_seqs_equal!(e.0.clauses.skip(0) == e.0.clauses);
             assert(clauses == e.0.clauses.take(clauses.len() as int));
-            assert(guide_rest(guided.guide@.unwrap())
-                == doc_clauses_parts(e.0.clauses.skip(clauses.len() as int))
-                    + e.1);
+            assert(guide_rest(guided.guide@.unwrap()) == doc_clauses_parts(
+                e.0.clauses.skip(clauses.len() as int),
+            ) + e.1);
         }
     }
     while more
@@ -20883,50 +19322,39 @@ at: &mut usize,
             ordinal@ == ckc_spec::v1text::udec_bytes(decimal.value@),
             decimal.value@ >= 1,
             ckc_spec::v1text::text_ok(text.value@),
-            guided.cursor.prefix@
-                == entry_prefix
-                    + ckc_spec::v1text::marker_line(
-                        decimal.value@,
-                        text.value@,
-                    )
-                    + ckc_spec::v1text::clauses_bytes(clauses),
-            forall|i: int| 0 <= i < clauses.len()
-                ==> ckc_spec::v1text::wf_clause(clauses[i]),
+            guided.cursor.prefix@ == entry_prefix + ckc_spec::v1text::marker_line(
+                decimal.value@,
+                text.value@,
+            ) + ckc_spec::v1text::clauses_bytes(clauses),
+            forall|i: int| 0 <= i < clauses.len() ==> ckc_spec::v1text::wf_clause(clauses[i]),
             !more ==> clauses.len() >= 1,
             expected@ matches Some(e) ==> {
                 &&& ckc_spec::v1text::wf_bundle(e.0)
-                &&& (e.1.len() == 0
-                    || e.1[0] == ckc_spec::v1text::ascii("% S"@))
+                &&& (e.1.len() == 0 || e.1[0] == ckc_spec::v1text::ascii("% S"@))
                 &&& clauses == e.0.clauses.take(clauses.len() as int)
                 &&& clauses.len() <= e.0.clauses.len()
                 &&& more ==> clauses.len() < e.0.clauses.len()
                 &&& !more ==> clauses.len() == e.0.clauses.len()
-                &&& guided.guide@ matches Some(g)
-                    && guide_rest(g) == if more {
-                        doc_clauses_parts(
-                            e.0.clauses.skip(clauses.len() as int),
-                        ) + e.1
-                    } else {
-                        e.1
-                    }
+                &&& guided.guide@ matches Some(g) && guide_rest(g) == if more {
+                    doc_clauses_parts(e.0.clauses.skip(clauses.len() as int)) + e.1
+                } else {
+                    e.1
+                }
             },
             expected@ is None ==> guided.guide@ is None,
-            !more ==> guided.cursor.pos == bytes@.len()
-                || guided.cursor.pos < bytes@.len()
-                    && bytes@[guided.cursor.pos as int] == 0x25,
-        decreases if more {
-            bytes.len() - guided.cursor.pos + 1
-        } else {
-            0
-        },
+            !more ==> guided.cursor.pos == bytes@.len() || guided.cursor.pos < bytes@.len()
+                && bytes@[guided.cursor.pos as int] == 0x25,
+        decreases
+                if more {
+                    bytes.len() - guided.cursor.pos + 1
+                } else {
+                    0
+                },
     {
         let ghost clause_expected = match expected@ {
             Some(e) => {
                 let remaining = e.0.clauses.skip(clauses.len() as int);
-                Some((
-                    remaining[0],
-                    doc_clauses_parts(remaining.drop_first()) + e.1,
-                ))
+                Some((remaining[0], doc_clauses_parts(remaining.drop_first()) + e.1))
             },
             None => None,
         };
@@ -20936,13 +19364,11 @@ at: &mut usize,
                 let remaining = e.0.clauses.skip(clauses.len() as int);
                 assert(0 <= clauses.len() < e.0.clauses.len());
                 assert(remaining.len() > 0);
-                assert(remaining[0]
-                    == e.0.clauses[clauses.len() as int]);
+                assert(remaining[0] == e.0.clauses[clauses.len() as int]);
                 assert(ckc_spec::v1text::wf_clause(remaining[0]));
                 reveal(doc_clauses_parts);
-                assert(guide_rest(guided.guide@.unwrap())
-                    == doc_clause_parts(remaining[0])
-                        + clause_expected.unwrap().1);
+                assert(guide_rest(guided.guide@.unwrap()) == doc_clause_parts(remaining[0])
+                    + clause_expected.unwrap().1);
             }
         }
         let ghost old_clauses = clauses;
@@ -20953,7 +19379,7 @@ at: &mut usize,
             &mut working_arena,
             guided,
             Ghost(clause_expected),
-        at,
+            at,
         );
         proof {
             nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
@@ -20977,8 +19403,9 @@ at: &mut usize,
                         text.value@,
                     )
                     + ckc_spec::v1text::clauses_bytes(clauses));
-            assert forall|i: int| 0 <= i < clauses.len()
-                implies ckc_spec::v1text::wf_clause(clauses[i]) by {
+            assert forall|i: int| 0 <= i < clauses.len() implies ckc_spec::v1text::wf_clause(
+                clauses[i],
+            ) by {
                 if i < old_clauses.len() {
                     assert(clauses[i] == old_clauses[i]);
                 } else {
@@ -20992,16 +19419,14 @@ at: &mut usize,
                     e.0.clauses.take(old_clauses.len() as int).push(clause@)
                         == e.0.clauses.take(clauses.len() as int)
                 );
-                assert(clauses
-                    == e.0.clauses.take(clauses.len() as int));
+                assert(clauses == e.0.clauses.take(clauses.len() as int));
                 assert_seqs_equal!(
                     e.0.clauses.skip(old_clauses.len() as int).drop_first()
                         == e.0.clauses.skip(clauses.len() as int)
                 );
-                assert(guide_rest(guided.guide@.unwrap())
-                    == doc_clauses_parts(
-                        e.0.clauses.skip(clauses.len() as int),
-                    ) + e.1);
+                assert(guide_rest(guided.guide@.unwrap()) == doc_clauses_parts(
+                    e.0.clauses.skip(clauses.len() as int),
+                ) + e.1);
             }
         }
         clause_roots.push(clause);
@@ -21013,9 +19438,8 @@ at: &mut usize,
                         let next = remaining[0];
                         reveal(doc_clauses_parts);
                         wf_literal_term_prefix_safe(next.head);
-                        assert(guide_rest(guided.guide@.unwrap())
-                            == doc_clause_parts(next)
-                                + doc_clauses_parts(remaining.drop_first()) + e.1);
+                        assert(guide_rest(guided.guide@.unwrap()) == doc_clause_parts(next)
+                            + doc_clauses_parts(remaining.drop_first()) + e.1);
                         assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
                             == seq![ckc_spec::v1text::term_bytes(next.head)]
                                 + (doc_clause_parts(next).drop_first()
@@ -21024,8 +19448,9 @@ at: &mut usize,
                             bytes@,
                             &guided,
                             ckc_spec::v1text::term_bytes(next.head),
-                            doc_clause_parts(next).drop_first()
-                                + doc_clauses_parts(remaining.drop_first()) + e.1,
+                            doc_clause_parts(next).drop_first() + doc_clauses_parts(
+                                remaining.drop_first(),
+                            ) + e.1,
                         );
                         assert(guided.cursor.pos < bytes.len());
                         assert(false);
@@ -21037,12 +19462,7 @@ at: &mut usize,
                         assert(e.1[0] == ckc_spec::v1text::ascii("% S"@));
                         assert_seqs_equal!(e.1
                             == seq![e.1[0]] + e.1.drop_first());
-                        guide_front_bytes(
-                            bytes@,
-                            &guided,
-                            e.1[0],
-                            e.1.drop_first(),
-                        );
+                        guide_front_bytes(bytes@, &guided, e.1[0], e.1.drop_first());
                         reveal_strlit("% S");
                         reveal(ckc_spec::v1text::ascii);
                         assert(e.1[0].len() > 0);
@@ -21061,12 +19481,12 @@ at: &mut usize,
                         let next = remaining[0];
                         reveal(doc_clauses_parts);
                         wf_literal_term_prefix_safe(next.head);
-                        assert(guide_rest(guided.guide@.unwrap())
-                            == doc_clause_parts(next)
-                                + doc_clauses_parts(remaining.drop_first()) + e.1);
+                        assert(guide_rest(guided.guide@.unwrap()) == doc_clause_parts(next)
+                            + doc_clauses_parts(remaining.drop_first()) + e.1);
                         assert(doc_clause_parts(next).len() > 0);
-                        assert(doc_clause_parts(next)[0]
-                            == ckc_spec::v1text::term_bytes(next.head));
+                        assert(doc_clause_parts(next)[0] == ckc_spec::v1text::term_bytes(
+                            next.head,
+                        ));
                         assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
                             == seq![ckc_spec::v1text::term_bytes(next.head)]
                                 + (doc_clause_parts(next).drop_first()
@@ -21075,11 +19495,13 @@ at: &mut usize,
                             bytes@,
                             &guided,
                             ckc_spec::v1text::term_bytes(next.head),
-                            doc_clause_parts(next).drop_first()
-                                + doc_clauses_parts(remaining.drop_first()) + e.1,
+                            doc_clause_parts(next).drop_first() + doc_clauses_parts(
+                                remaining.drop_first(),
+                            ) + e.1,
                         );
-                        assert(bytes@[guided.cursor.pos as int]
-                            == ckc_spec::v1text::term_bytes(next.head)[0]);
+                        assert(bytes@[guided.cursor.pos as int] == ckc_spec::v1text::term_bytes(
+                            next.head,
+                        )[0]);
                         assert(false);
                     }
                     assert(clauses.len() == e.0.clauses.len());
@@ -21096,10 +19518,8 @@ at: &mut usize,
                             let g = guided.guide@.unwrap();
                             assert(guide_rest(g) == Seq::<Seq<u8>>::empty());
                             reveal(guide_rest);
-                            assert(g.parts.subrange(
-                                g.index,
-                                g.parts.len() as int,
-                            ).len() == g.parts.len() - g.index);
+                            assert(g.parts.subrange(g.index, g.parts.len() as int).len()
+                                == g.parts.len() - g.index);
                             assert(g.index == g.parts.len());
                             reveal(guided_cursor_ok);
                             reveal(parts_progress);
@@ -21112,12 +19532,7 @@ at: &mut usize,
                         }
                         assert(e.1[0] == ckc_spec::v1text::ascii("% S"@));
                         assert_seqs_equal!(e.1 == seq![e.1[0]] + e.1.drop_first());
-                        guide_front_bytes(
-                            bytes@,
-                            &guided,
-                            e.1[0],
-                            e.1.drop_first(),
-                        );
+                        guide_front_bytes(bytes@, &guided, e.1[0], e.1.drop_first());
                         reveal_strlit("% S");
                         reveal(ckc_spec::v1text::ascii);
                         assert(e.1[0].len() > 0);
@@ -21136,17 +19551,14 @@ at: &mut usize,
         }
     }
 
-    let ghost model = ckc_spec::v1text::Bundle {
-        s: decimal.value@,
-        text: text.value@,
-        clauses,
-    };
+    let ghost model = ckc_spec::v1text::Bundle { s: decimal.value@, text: text.value@, clauses };
     proof {
         reveal(ckc_spec::v1text::wf_bundle);
         assert(model.s >= 1);
         assert(model.clauses.len() >= 1);
-        assert forall|i: int| 0 <= i < model.clauses.len()
-            implies ckc_spec::v1text::wf_clause(model.clauses[i]) by {
+        assert forall|i: int| 0 <= i < model.clauses.len() implies ckc_spec::v1text::wf_clause(
+            model.clauses[i],
+        ) by {
             assert(ckc_spec::v1text::wf_clause(clauses[i]));
         }
         assert(ckc_spec::v1text::wf_bundle(model));
@@ -21162,21 +19574,22 @@ at: &mut usize,
             assert(model == e.0);
         }
     }
-    (Some(EDocBundle {
-        bundle: Ghost(model),
-        ordinal,
-        clauses: clause_roots,
-    }), working_arena)
+    (Some(EDocBundle { bundle: Ghost(model), ordinal, clauses: clause_roots }), working_arena)
 }
 
 pub open spec fn pow10(n: nat) -> nat
     decreases n,
 {
-    if n == 0 { 1 } else { 10 * pow10((n - 1) as nat) }
+    if n == 0 {
+        1
+    } else {
+        10 * pow10((n - 1) as nat)
+    }
 }
 
 proof fn pow10_positive(n: nat)
-    ensures pow10(n) >= 1,
+    ensures
+        pow10(n) >= 1,
     decreases n,
 {
     reveal_with_fuel(pow10, 2);
@@ -21186,8 +19599,10 @@ proof fn pow10_positive(n: nat)
 }
 
 proof fn pow10_monotonic(a: nat, b: nat)
-    requires a <= b,
-    ensures pow10(a) <= pow10(b),
+    requires
+        a <= b,
+    ensures
+        pow10(a) <= pow10(b),
     decreases b - a,
 {
     if a < b {
@@ -21201,30 +19616,23 @@ proof fn pow10_monotonic(a: nat, b: nat)
 proof fn decimal_all_drop_first(s: Seq<u8>)
     requires
         s.len() > 0,
-        ckc_spec::v1text::all_in(
-            s,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
     ensures
-        ckc_spec::v1text::all_in(
-            s.drop_first(),
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(s.drop_first(), |b: u8| ckc_spec::v1text::is_digit_b(b)),
 {
     reveal(ckc_spec::v1text::all_in);
-    assert forall|i: int| 0 <= i < s.drop_first().len()
-        implies ckc_spec::v1text::is_digit_b(s.drop_first()[i]) by {
+    assert forall|i: int| 0 <= i < s.drop_first().len() implies ckc_spec::v1text::is_digit_b(
+        s.drop_first()[i],
+    ) by {
         assert(s.drop_first()[i] == s[i + 1]);
     }
 }
 
 proof fn decimal_value_bound(s: Seq<u8>)
     requires
-        ckc_spec::v1text::all_in(
-            s,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
-    ensures decimal_value(s) < pow10(s.len()),
+        ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
+    ensures
+        decimal_value(s) < pow10(s.len()),
     decreases s.len(),
 {
     if s.len() == 0 {
@@ -21251,14 +19659,10 @@ proof fn decimal_value_bound(s: Seq<u8>)
 proof fn decimal_value_prepend(first: u8, rest: Seq<u8>)
     requires
         ckc_spec::v1text::is_digit_b(first),
-        ckc_spec::v1text::all_in(
-            rest,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(rest, |b: u8| ckc_spec::v1text::is_digit_b(b)),
     ensures
-        decimal_value(seq![first] + rest)
-            == decimal_digit(first) * pow10(rest.len())
-                + decimal_value(rest),
+        decimal_value(seq![first] + rest) == decimal_digit(first) * pow10(rest.len())
+            + decimal_value(rest),
     decreases rest.len(),
 {
     decimal_digit_bounds(first);
@@ -21273,7 +19677,9 @@ proof fn decimal_value_prepend(first: u8, rest: Seq<u8>)
         assert(decimal_value(rest) == 0);
         assert(decimal_digit(first) * pow10(rest.len()) == decimal_digit(first))
             by (nonlinear_arith)
-            requires pow10(rest.len()) == 1;
+            requires
+                pow10(rest.len()) == 1,
+        ;
     } else {
         decimal_all_drop_last(rest);
         decimal_value_prepend(first, rest.drop_last());
@@ -21294,26 +19700,24 @@ proof fn decimal_value_prepend(first: u8, rest: Seq<u8>)
         assert(decimal_value(whole) == decimal_value(shorter) * 10 + dl);
         assert(pow10(rest.len()) == 10 * q);
         assert(decimal_value(rest) == w * 10 + dl);
-        assert((df * q + w) * 10 + dl == df * (10 * q) + (w * 10 + dl))
-            by (nonlinear_arith);
+        assert((df * q + w) * 10 + dl == df * (10 * q) + (w * 10 + dl)) by (nonlinear_arith);
         assert(decimal_value(whole) == df * pow10(rest.len()) + decimal_value(rest))
             by (nonlinear_arith)
             requires
                 decimal_value(whole) == (df * q + w) * 10 + dl,
                 pow10(rest.len()) == 10 * q,
-                decimal_value(rest) == w * 10 + dl;
+                decimal_value(rest) == w * 10 + dl,
+        ;
     }
 }
 
 proof fn decimal_nonzero_leading_min(s: Seq<u8>)
     requires
         s.len() > 0,
-        ckc_spec::v1text::all_in(
-            s,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
         s[0] != 0x30,
-    ensures pow10((s.len() - 1) as nat) <= decimal_value(s),
+    ensures
+        pow10((s.len() - 1) as nat) <= decimal_value(s),
 {
     let rest = s.drop_first();
     decimal_all_drop_first(s);
@@ -21330,7 +19734,10 @@ proof fn decimal_nonzero_leading_min(s: Seq<u8>)
     assert(rest.len() == s.len() - 1);
     pow10_positive(rest.len());
     assert(p <= d * p) by (nonlinear_arith)
-        requires d >= 1, p >= 0;
+        requires
+            d >= 1,
+            p >= 0,
+    ;
     assert(decimal_value(s) == d * p + decimal_value(rest));
 }
 
@@ -21339,7 +19746,8 @@ proof fn decimal_shorter_less(a: Seq<u8>, b: Seq<u8>)
         canonical_decimal(a),
         canonical_decimal(b),
         a.len() < b.len(),
-    ensures decimal_value(a) < decimal_value(b),
+    ensures
+        decimal_value(a) < decimal_value(b),
 {
     reveal(canonical_decimal);
     decimal_value_bound(a);
@@ -21367,17 +19775,10 @@ pub open spec fn decimal_lex_lt(a: Seq<u8>, b: Seq<u8>) -> bool
 proof fn decimal_lex_value(a: Seq<u8>, b: Seq<u8>)
     requires
         a.len() == b.len(),
-        ckc_spec::v1text::all_in(
-            a,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
-        ckc_spec::v1text::all_in(
-            b,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
+        ckc_spec::v1text::all_in(a, |x: u8| ckc_spec::v1text::is_digit_b(x)),
+        ckc_spec::v1text::all_in(b, |x: u8| ckc_spec::v1text::is_digit_b(x)),
     ensures
-        decimal_lex_lt(a, b) <==>
-            decimal_value(a) < decimal_value(b),
+        decimal_lex_lt(a, b) <==> decimal_value(a) < decimal_value(b),
     decreases a.len(),
 {
     reveal_with_fuel(decimal_lex_lt, 2);
@@ -21413,11 +19814,21 @@ proof fn decimal_lex_value(a: Seq<u8>, b: Seq<u8>)
         assert(vb < p);
         if da < db {
             assert(da * p + va < db * p + vb) by (nonlinear_arith)
-                requires da + 1 <= db, va < p, vb >= 0, p >= 0;
+                requires
+                    da + 1 <= db,
+                    va < p,
+                    vb >= 0,
+                    p >= 0,
+            ;
             assert(decimal_lex_lt(a, b));
         } else if da > db {
             assert(db * p + vb < da * p + va) by (nonlinear_arith)
-                requires db + 1 <= da, vb < p, va >= 0, p >= 0;
+                requires
+                    db + 1 <= da,
+                    vb < p,
+                    va >= 0,
+                    p >= 0,
+            ;
             assert(!decimal_lex_lt(a, b));
         } else {
             assert(da == db);
@@ -21429,20 +19840,13 @@ proof fn decimal_lex_value(a: Seq<u8>, b: Seq<u8>)
 proof fn decimal_lex_difference(a: Seq<u8>, b: Seq<u8>, i: nat)
     requires
         a.len() == b.len(),
-        ckc_spec::v1text::all_in(
-            a,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
-        ckc_spec::v1text::all_in(
-            b,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
+        ckc_spec::v1text::all_in(a, |x: u8| ckc_spec::v1text::is_digit_b(x)),
+        ckc_spec::v1text::all_in(b, |x: u8| ckc_spec::v1text::is_digit_b(x)),
         i < a.len(),
         forall|j: int| 0 <= j < i ==> a[j] == b[j],
         a[i as int] != b[i as int],
     ensures
-        decimal_lex_lt(a, b) ==
-            (decimal_digit(a[i as int]) < decimal_digit(b[i as int])),
+        decimal_lex_lt(a, b) == (decimal_digit(a[i as int]) < decimal_digit(b[i as int])),
     decreases i,
 {
     reveal_with_fuel(decimal_lex_lt, 2);
@@ -21460,21 +19864,20 @@ proof fn decimal_lex_difference(a: Seq<u8>, b: Seq<u8>, i: nat)
         decimal_all_drop_first(b);
         assert(a.drop_first().len() == b.drop_first().len());
         assert(i - 1 < a.drop_first().len());
-        assert forall|j: int| 0 <= j < i - 1
-            implies a.drop_first()[j] == b.drop_first()[j] by {
+        assert forall|j: int| 0 <= j < i - 1 implies a.drop_first()[j] == b.drop_first()[j] by {
             assert(a.drop_first()[j] == a[j + 1]);
             assert(b.drop_first()[j] == b[j + 1]);
         }
         assert(a.drop_first()[(i - 1) as int] == a[i as int]);
         assert(b.drop_first()[(i - 1) as int] == b[i as int]);
         decimal_lex_difference(a.drop_first(), b.drop_first(), (i - 1) as nat);
-        assert(decimal_lex_lt(a, b)
-            == decimal_lex_lt(a.drop_first(), b.drop_first()));
+        assert(decimal_lex_lt(a, b) == decimal_lex_lt(a.drop_first(), b.drop_first()));
     }
 }
 
 proof fn decimal_lex_irreflexive(a: Seq<u8>)
-    ensures !decimal_lex_lt(a, a),
+    ensures
+        !decimal_lex_lt(a, a),
     decreases a.len(),
 {
     reveal(decimal_lex_lt);
@@ -21487,10 +19890,13 @@ fn decimal_bytes_less(a: &Vec<u8>, b: &Vec<u8>) -> (r: bool)
     requires
         canonical_decimal(a@),
         canonical_decimal(b@),
-    ensures r == (decimal_value(a@) < decimal_value(b@)),
+    ensures
+        r == (decimal_value(a@) < decimal_value(b@)),
 {
     if a.len() < b.len() {
-        proof { decimal_shorter_less(a@, b@); }
+        proof {
+            decimal_shorter_less(a@, b@);
+        }
         return true;
     }
     if a.len() > b.len() {
@@ -21530,9 +19936,9 @@ fn decimal_bytes_less(a: &Vec<u8>, b: &Vec<u8>) -> (r: bool)
             reveal(ckc_spec::v1text::is_digit_b);
             assert(ckc_spec::v1text::is_digit_b(a@[i as int]));
             assert(ckc_spec::v1text::is_digit_b(b@[i as int]));
-            assert((a@[i as int] < b@[i as int])
-                == (decimal_digit(a@[i as int])
-                    < decimal_digit(b@[i as int])));
+            assert((a@[i as int] < b@[i as int]) == (decimal_digit(a@[i as int]) < decimal_digit(
+                b@[i as int],
+            )));
         }
         a[i] < b[i]
     }
@@ -21543,10 +19949,11 @@ proof fn bundles_bytes_push(
     bundle: ckc_spec::v1text::Bundle,
 )
     ensures
-        ckc_spec::v1text::bundles_bytes(bundles.push(bundle))
-            == ckc_spec::v1text::bundles_bytes(bundles)
-                + ckc_spec::v1text::marker_line(bundle.s, bundle.text)
-                + ckc_spec::v1text::clauses_bytes(bundle.clauses),
+        ckc_spec::v1text::bundles_bytes(bundles.push(bundle)) == ckc_spec::v1text::bundles_bytes(
+            bundles,
+        ) + ckc_spec::v1text::marker_line(bundle.s, bundle.text) + ckc_spec::v1text::clauses_bytes(
+            bundle.clauses,
+        ),
     decreases bundles.len(),
 {
     if bundles.len() == 0 {
@@ -21575,27 +19982,24 @@ proof fn bundles_bytes_push(
 }
 
 pub closed spec fn doc_bundles_wf(bundles: Seq<ckc_spec::v1text::Bundle>) -> bool {
-    forall|i: int| 0 <= i < bundles.len()
-        ==> #[trigger] ckc_spec::v1text::wf_bundle(bundles[i])
+    forall|i: int| 0 <= i < bundles.len() ==> #[trigger] ckc_spec::v1text::wf_bundle(bundles[i])
 }
 
 pub closed spec fn doc_bundles_ordered(bundles: Seq<ckc_spec::v1text::Bundle>) -> bool {
-    forall|i: int| 0 <= i < bundles.len() - 1
-        ==> #[trigger] bundles[i].s < bundles[i + 1].s
+    forall|i: int| 0 <= i < bundles.len() - 1 ==> #[trigger] bundles[i].s < bundles[i + 1].s
 }
 
-proof fn bundles_push_wf(
-    bundles: Seq<ckc_spec::v1text::Bundle>,
-    bundle: ckc_spec::v1text::Bundle,
-)
+proof fn bundles_push_wf(bundles: Seq<ckc_spec::v1text::Bundle>, bundle: ckc_spec::v1text::Bundle)
     requires
         doc_bundles_wf(bundles),
         ckc_spec::v1text::wf_bundle(bundle),
-    ensures doc_bundles_wf(bundles.push(bundle)),
+    ensures
+        doc_bundles_wf(bundles.push(bundle)),
 {
     reveal(doc_bundles_wf);
-    assert forall|i: int| 0 <= i < bundles.push(bundle).len()
-        implies ckc_spec::v1text::wf_bundle(bundles.push(bundle)[i]) by {
+    assert forall|i: int| 0 <= i < bundles.push(bundle).len() implies ckc_spec::v1text::wf_bundle(
+        bundles.push(bundle)[i],
+    ) by {
         if i < bundles.len() {
             assert(bundles.push(bundle)[i] == bundles[i]);
         } else {
@@ -21612,12 +20016,13 @@ proof fn bundles_push_ordered(
     requires
         doc_bundles_ordered(bundles),
         bundles.len() > 0 ==> bundles.last().s < bundle.s,
-    ensures doc_bundles_ordered(bundles.push(bundle)),
+    ensures
+        doc_bundles_ordered(bundles.push(bundle)),
 {
     reveal(doc_bundles_ordered);
-    assert forall|i: int| 0 <= i < bundles.push(bundle).len() - 1
-        implies #[trigger] bundles.push(bundle)[i].s
-            < bundles.push(bundle)[i + 1].s by {
+    assert forall|i: int| 0 <= i < bundles.push(bundle).len() - 1 implies #[trigger] bundles.push(
+        bundle,
+    )[i].s < bundles.push(bundle)[i + 1].s by {
         if i < bundles.len() - 1 {
             assert(bundles.push(bundle)[i] == bundles[i]);
             assert(bundles.push(bundle)[i + 1] == bundles[i + 1]);
@@ -21651,8 +20056,10 @@ proof fn wf_doc_ordered_at(d: ckc_spec::v1text::DocFile, i: int)
 }
 
 proof fn wf_doc_nonempty(d: ckc_spec::v1text::DocFile)
-    requires ckc_spec::v1text::wf_doc(d),
-    ensures d.bundles.len() >= 1,
+    requires
+        ckc_spec::v1text::wf_doc(d),
+    ensures
+        d.bundles.len() >= 1,
 {
     reveal(ckc_spec::v1text::wf_doc);
 }
@@ -21665,7 +20072,8 @@ proof fn wf_doc_intro(d: ckc_spec::v1text::DocFile)
         d.bundles.len() >= 1,
         doc_bundles_wf(d.bundles),
         doc_bundles_ordered(d.bundles),
-    ensures ckc_spec::v1text::wf_doc(d),
+    ensures
+        ckc_spec::v1text::wf_doc(d),
 {
     reveal(doc_bundles_wf);
     reveal(doc_bundles_ordered);
@@ -21678,14 +20086,13 @@ pub fn parse_doc(
     bytes: &[u8],
     arena: &mut ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: Option<EParsedV1>)
     requires
         arena_ok(old(arena)),
         *old(at) <= bytes@.len(),
-        expected@ matches Some(d) ==>
-            ckc_spec::v1text::wf_doc(d)
-                && ckc_spec::v1text::print_doc(d) == bytes@,
+        expected@ matches Some(d) ==> ckc_spec::v1text::wf_doc(d) && ckc_spec::v1text::print_doc(d)
+            == bytes@,
     ensures
         r matches Some(parsed) ==> parsed@ is Doc,
         r matches Some(parsed) ==> parsed_doc_roots_ok(final(arena).nodes@, &parsed),
@@ -21695,8 +20102,8 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
-        expected@ matches Some(d) ==> r matches Some(parsed)
-            && parsed@ == ckc_spec::v1text::V1File::Doc(d),
+        expected@ matches Some(d) ==> r matches Some(parsed) && parsed@
+            == ckc_spec::v1text::V1File::Doc(d),
 {
     let mut input_arena = ETermArena { nodes: Vec::new() };
     std::mem::swap(arena, &mut input_arena);
@@ -21711,14 +20118,13 @@ fn parse_doc_inner(
     bytes: &[u8],
     input_arena: ETermArena,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
-at: &mut usize,
+    at: &mut usize,
 ) -> (r: (Option<EParsedV1>, ETermArena))
     requires
         arena_ok(&input_arena),
         *old(at) <= bytes@.len(),
-        expected@ matches Some(d) ==>
-            ckc_spec::v1text::wf_doc(d)
-                && ckc_spec::v1text::print_doc(d) == bytes@,
+        expected@ matches Some(d) ==> ckc_spec::v1text::wf_doc(d) && ckc_spec::v1text::print_doc(d)
+            == bytes@,
     ensures
         r.0 matches Some(parsed) ==> parsed@ is Doc,
         r.0 matches Some(parsed) ==> parsed_doc_roots_ok(r.1.nodes@, &parsed),
@@ -21728,15 +20134,17 @@ at: &mut usize,
         *old(at) <= *final(at) <= bytes@.len(),
         r.0 matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r.0 matches Some(parsed) ==> parsed_metadata_ok(&parsed),
-        expected@ matches Some(d) ==> r.0 matches Some(parsed)
-            && parsed@ == ckc_spec::v1text::V1File::Doc(d),
+        expected@ matches Some(d) ==> r.0 matches Some(parsed) && parsed@
+            == ckc_spec::v1text::V1File::Doc(d),
 {
     hide(ckc_spec::v1text::wf_doc);
     hide(arena_ok);
     hide(Seq::<_>::is_prefix_of);
     let mut working_arena = input_arena;
     let ghost entry_nodes = working_arena.nodes@;
-    proof { nodes_prefix_reflexive(entry_nodes); }
+    proof {
+        nodes_prefix_reflexive(entry_nodes);
+    }
     let ghost expected_parts = match expected@ {
         Some(d) => Some(doc_parts(d)),
         None => None,
@@ -21756,13 +20164,7 @@ at: &mut usize,
     if !parse_doc_declarations(bytes, &mut guided, expected, at) {
         return (None, working_arena);
     }
-    let ace = match parse_doc_record_prefix(
-        bytes,
-        &mut guided,
-        &docid,
-        expected,
-    at,
-    ) {
+    let ace = match parse_doc_record_prefix(bytes, &mut guided, &docid, expected, at) {
         Some(ace) => ace,
         None => return (None, working_arena),
     };
@@ -21821,16 +20223,15 @@ at: &mut usize,
             ulex.digest@ == ulex_digest_bytes(ulex.value@),
             bundle_count == bundles.len(),
             bundle_count <= guided.cursor.pos,
-            guided.cursor.prefix@
-                == doc_prefix_stage(base)
-                    + ckc_spec::v1text::bundles_bytes(bundles),
+            guided.cursor.prefix@ == doc_prefix_stage(base) + ckc_spec::v1text::bundles_bytes(
+                bundles,
+            ),
             doc_bundles_wf(bundles),
             doc_bundles_ordered(bundles),
             bundle_count == 0 ==> previous_ordinal@ == Seq::<u8>::empty(),
             bundle_count > 0 ==> {
                 &&& canonical_decimal(previous_ordinal@)
-                &&& previous_ordinal@
-                    == ckc_spec::v1text::udec_bytes(bundles.last().s)
+                &&& previous_ordinal@ == ckc_spec::v1text::udec_bytes(bundles.last().s)
             },
             expected@ matches Some(d) ==> {
                 &&& ckc_spec::v1text::wf_doc(d)
@@ -21839,11 +20240,9 @@ at: &mut usize,
                 &&& base.ulex == d.ulex
                 &&& bundles == d.bundles.take(bundles.len() as int)
                 &&& bundles.len() <= d.bundles.len()
-                &&& guided.guide@ matches Some(g)
-                    && guide_rest(g)
-                        == doc_bundles_parts(
-                            d.bundles.skip(bundles.len() as int),
-                        )
+                &&& guided.guide@ matches Some(g) && guide_rest(g) == doc_bundles_parts(
+                    d.bundles.skip(bundles.len() as int),
+                )
             },
             expected@ is None ==> guided.guide@ is None,
         decreases bytes.len() - guided.cursor.pos,
@@ -21851,10 +20250,7 @@ at: &mut usize,
         let ghost bundle_expected = match expected@ {
             Some(d) => {
                 let remaining = d.bundles.skip(bundles.len() as int);
-                Some((
-                    remaining[0],
-                    doc_bundles_parts(remaining.drop_first()),
-                ))
+                Some((remaining[0], doc_bundles_parts(remaining.drop_first())))
             },
             None => None,
         };
@@ -21864,12 +20260,11 @@ at: &mut usize,
                 if bundles.len() == d.bundles.len() {
                     assert(remaining.len() == 0);
                     reveal(doc_bundles_parts);
-                    assert(guide_rest(guided.guide@.unwrap())
-                        == Seq::<Seq<u8>>::empty());
+                    assert(guide_rest(guided.guide@.unwrap()) == Seq::<Seq<u8>>::empty());
                     let g = guided.guide@.unwrap();
                     reveal(guide_rest);
-                    assert(g.parts.subrange(g.index, g.parts.len() as int).len()
-                        == g.parts.len() - g.index);
+                    assert(g.parts.subrange(g.index, g.parts.len() as int).len() == g.parts.len()
+                        - g.index);
                     assert(g.index == g.parts.len());
                     reveal(guided_cursor_ok);
                     reveal(parts_progress);
@@ -21886,15 +20281,15 @@ at: &mut usize,
                 wf_doc_bundle_at(d, bundles.len() as int);
                 assert(ckc_spec::v1text::wf_bundle(remaining[0]));
                 reveal(doc_bundles_parts);
-                assert(guide_rest(guided.guide@.unwrap())
-                    == doc_bundle_parts(remaining[0])
-                        + doc_bundles_parts(remaining.drop_first()));
+                assert(guide_rest(guided.guide@.unwrap()) == doc_bundle_parts(remaining[0])
+                    + doc_bundles_parts(remaining.drop_first()));
                 if remaining.drop_first().len() > 0 {
                     reveal(doc_bundles_parts);
                     reveal(doc_bundle_parts);
                     reveal(doc_marker_parts);
-                    assert(doc_bundles_parts(remaining.drop_first())[0]
-                        == ckc_spec::v1text::ascii("% S"@));
+                    assert(doc_bundles_parts(remaining.drop_first())[0] == ckc_spec::v1text::ascii(
+                        "% S"@,
+                    ));
                 }
             }
         }
@@ -21911,7 +20306,12 @@ at: &mut usize,
         );
         proof {
             nodes_prefix_transitive(entry_nodes, before_nodes, working_arena.nodes@);
-            doc_clauses_prefix(before_nodes, &working_arena, clauses@, doc_clause_models(old_bundles));
+            doc_clauses_prefix(
+                before_nodes,
+                &working_arena,
+                clauses@,
+                doc_clause_models(old_bundles),
+            );
         }
         let mut bundle = match arena_result {
             Some(bundle) => bundle,
@@ -21931,18 +20331,13 @@ at: &mut usize,
             assert(decimal_value(bundle.ordinal@) == bundle_model.s);
             if old_count > 0 {
                 udec_decimal_value(old_bundles.last().s);
-                assert(decimal_value(previous_ordinal@)
-                    == old_bundles.last().s);
-                assert(ordered
-                    == (old_bundles.last().s < bundle_model.s));
+                assert(decimal_value(previous_ordinal@) == old_bundles.last().s);
+                assert(ordered == (old_bundles.last().s < bundle_model.s));
                 if let Some(d) = expected@ {
                     assert(old_bundles.len() > 0);
-                    assert(old_bundles
-                        == d.bundles.take(old_bundles.len() as int));
-                    assert(old_bundles.last()
-                        == d.bundles[(old_bundles.len() - 1) as int]);
-                    assert(bundle_model
-                        == d.bundles[old_bundles.len() as int]);
+                    assert(old_bundles == d.bundles.take(old_bundles.len() as int));
+                    assert(old_bundles.last() == d.bundles[(old_bundles.len() - 1) as int]);
+                    assert(bundle_model == d.bundles[old_bundles.len() as int]);
                     wf_doc_ordered_at(d, (old_bundles.len() - 1) as int);
                     assert(old_bundles.last().s < bundle_model.s);
                     assert(ordered);
@@ -21955,12 +20350,14 @@ at: &mut usize,
         }
         proof {
             bundles_push_wf(old_bundles, bundle_model);
-            assert(old_bundles.len() > 0
-                ==> old_bundles.last().s < bundle_model.s);
+            assert(old_bundles.len() > 0 ==> old_bundles.last().s < bundle_model.s);
             bundles_push_ordered(old_bundles, bundle_model);
             doc_clauses_concat(
-                working_arena.nodes@, clauses@, doc_clause_models(old_bundles),
-                bundle.clauses@, bundle_model.clauses,
+                working_arena.nodes@,
+                clauses@,
+                doc_clause_models(old_bundles),
+                bundle.clauses@,
+                bundle_model.clauses,
             );
             doc_clause_models_push(old_bundles, bundle_model);
             bundles = old_bundles.push(bundle_model);
@@ -21971,22 +20368,19 @@ at: &mut usize,
                 == doc_prefix_stage(base)
                     + ckc_spec::v1text::bundles_bytes(bundles));
             if let Some(d) = expected@ {
-                assert(bundle_model
-                    == d.bundles[old_bundles.len() as int]);
+                assert(bundle_model == d.bundles[old_bundles.len() as int]);
                 assert_seqs_equal!(
                     d.bundles.take(old_bundles.len() as int).push(bundle_model)
                         == d.bundles.take(bundles.len() as int)
                 );
-                assert(bundles
-                    == d.bundles.take(bundles.len() as int));
+                assert(bundles == d.bundles.take(bundles.len() as int));
                 assert_seqs_equal!(
                     d.bundles.skip(old_bundles.len() as int).drop_first()
                         == d.bundles.skip(bundles.len() as int)
                 );
-                assert(guide_rest(guided.guide@.unwrap())
-                    == doc_bundles_parts(
-                        d.bundles.skip(bundles.len() as int),
-                    ));
+                assert(guide_rest(guided.guide@.unwrap()) == doc_bundles_parts(
+                    d.bundles.skip(bundles.len() as int),
+                ));
             }
         }
         clauses.append(&mut bundle.clauses);
@@ -21995,8 +20389,7 @@ at: &mut usize,
         proof {
             assert(bundle_count == bundles.len());
             assert(bundle_count <= guided.cursor.pos);
-            assert(previous_ordinal@
-                == ckc_spec::v1text::udec_bytes(bundles.last().s));
+            assert(previous_ordinal@ == ckc_spec::v1text::udec_bytes(bundles.last().s));
             assert(canonical_decimal(previous_ordinal@));
         }
     }
@@ -22012,18 +20405,18 @@ at: &mut usize,
                 reveal(doc_bundle_parts);
                 reveal(doc_marker_parts);
                 let marker = ckc_spec::v1text::ascii("% S"@);
-                assert(guide_rest(guided.guide@.unwrap())
-                    == seq![marker]
-                        + (doc_marker_parts(remaining[0]).drop_first()
-                            + doc_clauses_parts(remaining[0].clauses)
-                            + doc_bundles_parts(remaining.drop_first())));
+                assert(guide_rest(guided.guide@.unwrap()) == seq![marker] + (doc_marker_parts(
+                    remaining[0],
+                ).drop_first() + doc_clauses_parts(remaining[0].clauses) + doc_bundles_parts(
+                    remaining.drop_first(),
+                )));
                 guide_front_bytes(
                     bytes@,
                     &guided,
                     marker,
-                    doc_marker_parts(remaining[0]).drop_first()
-                        + doc_clauses_parts(remaining[0].clauses)
-                        + doc_bundles_parts(remaining.drop_first()),
+                    doc_marker_parts(remaining[0]).drop_first() + doc_clauses_parts(
+                        remaining[0].clauses,
+                    ) + doc_bundles_parts(remaining.drop_first()),
                 );
                 reveal_strlit("% S");
                 reveal(ckc_spec::v1text::ascii);
@@ -22046,7 +20439,6 @@ at: &mut usize,
         }
         return (None, working_arena);
     }
-
     let ghost model = ckc_spec::v1text::DocFile {
         docid: docid.value@,
         ace: ace.name@,
@@ -22059,8 +20451,7 @@ at: &mut usize,
         assert(cursor_ok(bytes@, &guided.cursor));
         reveal(cursor_ok);
         assert(guided.cursor.pos == bytes@.len());
-        assert(guided.cursor.prefix@
-            == bytes@.subrange(0, bytes@.len() as int));
+        assert(guided.cursor.prefix@ == bytes@.subrange(0, bytes@.len() as int));
         assert_seqs_equal!(
             bytes@.subrange(0, bytes@.len() as int) == bytes@
         );
@@ -22086,18 +20477,26 @@ at: &mut usize,
         reveal(ckc_spec::v1text::print_v1);
         reveal(parsed_v1_ok);
     }
-    proof { reveal(parsed_doc_roots_ok); reveal(parsed_query_roots_ok); }
-    (Some(EParsedV1 {
-        class: EV1Class::Doc,
-        docid: docid.value,
-        doc_ace: ace.name,
-        doc_ulex: ulex.digest,
-        qid: Vec::new(),
-        clauses,
-        goal_root: 0,
-        answers_root: 0,
-        file: Ghost(ckc_spec::v1text::V1File::Doc(model)),
-    }), working_arena)
+    proof {
+        reveal(parsed_doc_roots_ok);
+        reveal(parsed_query_roots_ok);
+    }
+    (
+        Some(
+            EParsedV1 {
+                class: EV1Class::Doc,
+                docid: docid.value,
+                doc_ace: ace.name,
+                doc_ulex: ulex.digest,
+                qid: Vec::new(),
+                clauses,
+                goal_root: 0,
+                answers_root: 0,
+                file: Ghost(ckc_spec::v1text::V1File::Doc(model)),
+            },
+        ),
+        working_arena,
+    )
 }
 
 } // verus!

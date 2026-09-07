@@ -1,8 +1,8 @@
 use ckc_spec::term::Term;
 #[cfg(verus_keep_ghost)]
 use vstd::arithmetic::div_mod::lemma_fundamental_div_mod;
-use vstd::prelude::*;
 use vstd::assert_seqs_equal;
+use vstd::prelude::*;
 
 verus! {
 
@@ -14,19 +14,10 @@ pub enum ECompForm {
 
 pub enum ENodeKind {
     Var { key: usize, spelling: Vec<u8>, value: Ghost<nat> },
-    Int {
-        spelling: Vec<u8>,
-        magnitude: Vec<u8>,
-        negative: bool,
-        value: Ghost<int>,
-    },
+    Int { spelling: Vec<u8>, magnitude: Vec<u8>, negative: bool, value: Ghost<int> },
     Nil,
     Atom { name: Vec<u8> },
-    Comp {
-        name: Vec<u8>,
-        child_roots: Vec<usize>,
-        form: ECompForm,
-    },
+    Comp { name: Vec<u8>, child_roots: Vec<usize>, form: ECompForm },
 }
 
 pub struct ENode {
@@ -63,8 +54,8 @@ pub open spec fn comp_form_ok(form: &ECompForm, name: Seq<u8>, arity: nat) -> bo
         ECompForm::Cons => name == ckc_spec::v1text::cons_name() && arity == 2,
         ECompForm::Curly => name == ckc_spec::v1text::curly_name() && arity == 1,
         ECompForm::Regular => {
-            !(name == ckc_spec::v1text::cons_name() && arity == 2)
-                && !(name == ckc_spec::v1text::curly_name() && arity == 1)
+            !(name == ckc_spec::v1text::cons_name() && arity == 2) && !(name
+                == ckc_spec::v1text::curly_name() && arity == 1)
         },
     }
 }
@@ -83,7 +74,11 @@ pub open spec fn node_ok(nodes: Seq<ENode>, i: int) -> bool {
             &&& *negative == (n < 0)
             &&& spelling@ == ckc_spec::v1text::dec_bytes(n)
             &&& magnitude@ == ckc_spec::v1text::udec_bytes(
-                if n < 0 { (-n) as nat } else { n as nat },
+                if n < 0 {
+                    (-n) as nat
+                } else {
+                    n as nat
+                },
             )
         },
         (ENodeKind::Nil, Term::Nil) => true,
@@ -226,8 +221,10 @@ proof fn child_terms_step(nodes: Seq<ENode>, roots: Seq<usize>)
         roots.len() > 0,
         roots[0] < nodes.len(),
     ensures
-        child_terms(nodes, roots)
-            == seq![nodes[roots[0] as int].term@] + child_terms(nodes, roots.drop_first()),
+        child_terms(nodes, roots) == seq![nodes[roots[0] as int].term@] + child_terms(
+            nodes,
+            roots.drop_first(),
+        ),
 {
     reveal(child_terms);
     assert_seqs_equal!(
@@ -241,9 +238,8 @@ proof fn child_terms_skip_step(nodes: Seq<ENode>, roots: Seq<usize>, next: usize
         next < roots.len(),
         roots[next as int] < nodes.len(),
     ensures
-        child_terms(nodes, roots.skip(next as int))
-            == seq![nodes[roots[next as int] as int].term@]
-                + child_terms(nodes, roots.skip(next as int + 1)),
+        child_terms(nodes, roots.skip(next as int)) == seq![nodes[roots[next as int] as int].term@]
+            + child_terms(nodes, roots.skip(next as int + 1)),
 {
     child_terms_step(nodes, roots.skip(next as int));
     assert(roots.skip(next as int)[0] == roots[next as int]);
@@ -255,7 +251,8 @@ proof fn tasks_ok_push(nodes: Seq<ENode>, tasks: Seq<EPrintTask>, task: EPrintTa
     requires
         tasks_ok(nodes, tasks),
         task_ok(nodes, &task),
-    ensures tasks_ok(nodes, tasks.push(task)),
+    ensures
+        tasks_ok(nodes, tasks.push(task)),
 {
     assert(tasks.push(task).last() == task);
     assert(tasks.push(task).drop_last() == tasks);
@@ -280,32 +277,27 @@ proof fn tasks_work_push(tasks: Seq<EPrintTask>, task: EPrintTask)
     reveal_with_fuel(tasks_work, 2);
 }
 
-pub proof fn child_terms_match(
-    nodes: Seq<ENode>,
-    roots: Seq<usize>,
-    terms: Seq<Term>,
-)
+pub proof fn child_terms_match(nodes: Seq<ENode>, roots: Seq<usize>, terms: Seq<Term>)
     requires
         roots.len() == terms.len(),
-        forall|i: int| 0 <= i < roots.len() ==> {
-            &&& roots[i] < nodes.len()
-            &&& nodes[roots[i] as int].term@ == terms[i]
-        },
-    ensures child_terms(nodes, roots) == terms,
+        forall|i: int|
+            0 <= i < roots.len() ==> {
+                &&& roots[i] < nodes.len()
+                &&& nodes[roots[i] as int].term@ == terms[i]
+            },
+    ensures
+        child_terms(nodes, roots) == terms,
 {
     reveal(child_terms);
     assert_seqs_equal!(child_terms(nodes, roots) == terms);
 }
 
-proof fn child_terms_prefix_stable(
-    before: Seq<ENode>,
-    after: Seq<ENode>,
-    roots: Seq<usize>,
-)
+proof fn child_terms_prefix_stable(before: Seq<ENode>, after: Seq<ENode>, roots: Seq<usize>)
     requires
         before.is_prefix_of(after),
         forall|j: int| 0 <= j < roots.len() ==> #[trigger] roots[j] < before.len(),
-    ensures child_terms(before, roots) == child_terms(after, roots),
+    ensures
+        child_terms(before, roots) == child_terms(after, roots),
 {
     reveal(child_terms);
     assert_seqs_equal!(child_terms(before, roots) == child_terms(after, roots));
@@ -316,14 +308,15 @@ proof fn node_ok_prefix_stable(before: Seq<ENode>, after: Seq<ENode>, i: int)
         before.is_prefix_of(after),
         0 <= i < before.len(),
         node_ok(before, i),
-    ensures node_ok(after, i),
+    ensures
+        node_ok(after, i),
 {
     assert(before[i] == after[i]);
     reveal(node_ok);
     match &before[i].kind {
         ENodeKind::Comp { child_roots, .. } => {
-            assert forall|j: int| 0 <= j < child_roots@.len()
-                implies #[trigger] child_roots@[j] < before.len() by {
+            assert forall|j: int| 0 <= j < child_roots@.len() implies #[trigger] child_roots@[j]
+                < before.len() by {
                 assert((child_roots@[j] as int) < i);
             }
             child_terms_prefix_stable(before, after, child_roots@);
@@ -336,12 +329,11 @@ proof fn arena_ok_push(nodes: Seq<ENode>, node: ENode)
     requires
         forall|i: int| 0 <= i < nodes.len() ==> node_ok(nodes, i),
         node_ok(nodes.push(node), nodes.len() as int),
-    ensures forall|i: int| 0 <= i < nodes.push(node).len()
-        ==> node_ok(nodes.push(node), i),
+    ensures
+        forall|i: int| 0 <= i < nodes.push(node).len() ==> node_ok(nodes.push(node), i),
 {
     assert(nodes.is_prefix_of(nodes.push(node)));
-    assert forall|i: int| 0 <= i < nodes.push(node).len()
-        implies node_ok(nodes.push(node), i) by {
+    assert forall|i: int| 0 <= i < nodes.push(node).len() implies node_ok(nodes.push(node), i) by {
         if i < nodes.len() {
             node_ok_prefix_stable(nodes, nodes.push(node), i);
         } else {
@@ -351,14 +343,16 @@ proof fn arena_ok_push(nodes: Seq<ENode>, node: ENode)
 }
 
 proof fn wf_terms_from_all(terms: Seq<Term>)
-    requires forall|i: int| 0 <= i < terms.len()
-        ==> ckc_spec::term::wf_term(#[trigger] terms[i]),
-    ensures ckc_spec::term::wf_terms(terms),
+    requires
+        forall|i: int| 0 <= i < terms.len() ==> ckc_spec::term::wf_term(#[trigger] terms[i]),
+    ensures
+        ckc_spec::term::wf_terms(terms),
     decreases terms.len(),
 {
     if terms.len() > 0 {
-        assert forall|i: int| 0 <= i < terms.drop_first().len()
-            implies ckc_spec::term::wf_term(#[trigger] terms.drop_first()[i]) by {
+        assert forall|i: int| 0 <= i < terms.drop_first().len() implies ckc_spec::term::wf_term(
+            #[trigger] terms.drop_first()[i],
+        ) by {
             assert(terms.drop_first()[i] == terms[i + 1]);
         }
         wf_terms_from_all(terms.drop_first());
@@ -370,14 +364,17 @@ proof fn wf_terms_from_all(terms: Seq<Term>)
 
 proof fn child_terms_wf(nodes: Seq<ENode>, roots: Seq<usize>)
     requires
-        forall|j: int| 0 <= j < roots.len() ==> {
-            &&& roots[j] < nodes.len()
-            &&& node_ok(nodes, roots[j] as int)
-        },
-    ensures ckc_spec::term::wf_terms(child_terms(nodes, roots)),
+        forall|j: int|
+            0 <= j < roots.len() ==> {
+                &&& roots[j] < nodes.len()
+                &&& node_ok(nodes, roots[j] as int)
+            },
+    ensures
+        ckc_spec::term::wf_terms(child_terms(nodes, roots)),
 {
-    assert forall|i: int| 0 <= i < child_terms(nodes, roots).len()
-        implies ckc_spec::term::wf_term(#[trigger] child_terms(nodes, roots)[i]) by {
+    assert forall|i: int| 0 <= i < child_terms(nodes, roots).len() implies ckc_spec::term::wf_term(
+        #[trigger] child_terms(nodes, roots)[i],
+    ) by {
         reveal(child_terms);
         assert(node_ok(nodes, roots[i] as int));
         reveal(node_ok);
@@ -386,12 +383,12 @@ proof fn child_terms_wf(nodes: Seq<ENode>, roots: Seq<usize>)
 }
 
 pub proof fn arena_prefix_stable(before: Seq<ENode>, after: &ETermArena)
-    requires before.is_prefix_of(after.nodes@),
-    ensures forall|i: int| 0 <= i < before.len()
-        ==> before[i].term@ == after@[i],
+    requires
+        before.is_prefix_of(after.nodes@),
+    ensures
+        forall|i: int| 0 <= i < before.len() ==> before[i].term@ == after@[i],
 {
-    assert forall|i: int| 0 <= i < before.len()
-        implies before[i].term@ == after@[i] by {
+    assert forall|i: int| 0 <= i < before.len() implies before[i].term@ == after@[i] by {
         assert(before[i] == after.nodes@[i]);
     }
 }
@@ -415,11 +412,7 @@ fn push_node(arena: &mut ETermArena, node: ENode) -> (root: usize)
     root
 }
 
-pub fn push_var(
-    arena: &mut ETermArena,
-    key: usize,
-    spelling: Vec<u8>,
-) -> (root: usize)
+pub fn push_var(arena: &mut ETermArena, key: usize, spelling: Vec<u8>) -> (root: usize)
     requires
         arena_ok(old(arena)),
         spelling@ == ckc_spec::v1text::var_bytes(key as nat),
@@ -430,11 +423,7 @@ pub fn push_var(
         final(arena)@[root as int] == Term::Var(key as nat),
 {
     let node = ENode {
-        kind: ENodeKind::Var {
-            key,
-            spelling,
-            value: Ghost(key as nat),
-        },
+        kind: ENodeKind::Var { key, spelling, value: Ghost(key as nat) },
         term: Ghost(Term::Var(key as nat)),
     };
     proof {
@@ -456,7 +445,11 @@ pub fn push_int(
         negative == (value@ < 0),
         spelling@ == ckc_spec::v1text::dec_bytes(value@),
         magnitude@ == ckc_spec::v1text::udec_bytes(
-            if value@ < 0 { (-value@) as nat } else { value@ as nat },
+            if value@ < 0 {
+                (-value@) as nat
+            } else {
+                value@ as nat
+            },
         ),
     ensures
         arena_ok(final(arena)),
@@ -476,7 +469,8 @@ pub fn push_int(
 }
 
 pub fn push_nil(arena: &mut ETermArena) -> (root: usize)
-    requires arena_ok(old(arena)),
+    requires
+        arena_ok(old(arena)),
     ensures
         arena_ok(final(arena)),
         root == old(arena).nodes@.len(),
@@ -492,17 +486,15 @@ pub fn push_nil(arena: &mut ETermArena) -> (root: usize)
 }
 
 pub fn push_atom(arena: &mut ETermArena, name: Vec<u8>) -> (root: usize)
-    requires arena_ok(old(arena)),
+    requires
+        arena_ok(old(arena)),
     ensures
         arena_ok(final(arena)),
         root == old(arena).nodes@.len(),
         final(arena).nodes@ == old(arena).nodes@.push(final(arena).nodes@[root as int]),
         final(arena)@[root as int] == Term::Atom(name@),
 {
-    let node = ENode {
-        kind: ENodeKind::Atom { name },
-        term: Ghost(Term::Atom(name@)),
-    };
+    let node = ENode { kind: ENodeKind::Atom { name }, term: Ghost(Term::Atom(name@)) };
     proof {
         reveal(node_ok);
         reveal(ckc_spec::term::wf_term);
@@ -511,7 +503,8 @@ pub fn push_atom(arena: &mut ETermArena, name: Vec<u8>) -> (root: usize)
 }
 
 fn vec_slice_equal(left: &Vec<u8>, right: &[u8]) -> (equal: bool)
-    ensures equal == (left@ == right@),
+    ensures
+        equal == (left@ == right@),
 {
     if left.len() != right.len() {
         return false;
@@ -529,21 +522,19 @@ fn vec_slice_equal(left: &Vec<u8>, right: &[u8]) -> (equal: bool)
         }
         i += 1;
     }
-    proof { assert_seqs_equal!(left@ == right@); }
+    proof {
+        assert_seqs_equal!(left@ == right@);
+    }
     true
 }
 
 #[verifier::rlimit(5000)]
-pub fn push_comp(
-    arena: &mut ETermArena,
-    name: Vec<u8>,
-    child_roots: Vec<usize>,
-) -> (root: usize)
+pub fn push_comp(arena: &mut ETermArena, name: Vec<u8>, child_roots: Vec<usize>) -> (root: usize)
     requires
         arena_ok(old(arena)),
         child_roots@.len() > 0,
-        forall|j: int| 0 <= j < child_roots@.len()
-            ==> #[trigger] child_roots@[j] < old(arena).nodes@.len(),
+        forall|j: int|
+            0 <= j < child_roots@.len() ==> #[trigger] child_roots@[j] < old(arena).nodes@.len(),
     ensures
         arena_ok(final(arena)),
         root == old(arena).nodes@.len(),
@@ -583,17 +574,13 @@ pub fn push_comp(
         reveal(comp_form_ok);
         assert(comp_form_ok(&form, spec_name, roots.len()));
     }
-    let node = ENode {
-        kind: ENodeKind::Comp { name, child_roots, form },
-        term: Ghost(model),
-    };
+    let node = ENode { kind: ENodeKind::Comp { name, child_roots, form }, term: Ghost(model) };
     proof {
         reveal(arena_ok);
-        assert forall|j: int| 0 <= j < roots.len()
-            implies {
-                &&& roots[j] < old_nodes.len()
-                &&& node_ok(old_nodes, roots[j] as int)
-            } by {
+        assert forall|j: int| 0 <= j < roots.len() implies {
+            &&& roots[j] < old_nodes.len()
+            &&& node_ok(old_nodes, roots[j] as int)
+        } by {
             assert(node_ok(old_nodes, roots[j] as int));
         }
         child_terms_wf(old_nodes, roots);
@@ -606,13 +593,12 @@ pub fn push_comp(
         assert(child_terms(appended, roots) == args);
         assert(child_roots_before(roots, old_nodes.len() as int)) by {
             reveal(child_roots_before);
-            assert forall|j: int| 0 <= j < roots.len()
-                implies ((roots[j] as int) < old_nodes.len() as int) by {}
+            assert forall|j: int| 0 <= j < roots.len() implies ((roots[j] as int)
+                < old_nodes.len() as int) by {}
         }
         assert(child_roots_valid(appended, roots)) by {
             reveal(child_roots_valid);
-            assert forall|j: int| 0 <= j < roots.len()
-                implies roots[j] < appended.len() by {}
+            assert forall|j: int| 0 <= j < roots.len() implies roots[j] < appended.len() by {}
         }
         assert(appended[old_nodes.len() as int] == node);
         reveal(node_ok);
@@ -622,7 +608,8 @@ pub fn push_comp(
 }
 
 fn append_bytes(out: &mut Vec<u8>, bytes: &[u8])
-    ensures final(out)@ == old(out)@ + bytes@,
+    ensures
+        final(out)@ == old(out)@ + bytes@,
 {
     let ghost base = out@;
     let mut i = 0usize;
@@ -639,38 +626,44 @@ fn append_bytes(out: &mut Vec<u8>, bytes: &[u8])
         }
         i += 1;
     }
-    proof { assert_seqs_equal!(bytes@.take(bytes@.len() as int) == bytes@); }
+    proof {
+        assert_seqs_equal!(bytes@.take(bytes@.len() as int) == bytes@);
+    }
 }
 
 fn is_lower_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_lower_b(b),
+    ensures
+        r == ckc_spec::v1text::is_lower_b(b),
 {
     0x61 <= b && b <= 0x7a
 }
 
 fn is_digit_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_digit_b(b),
+    ensures
+        r == ckc_spec::v1text::is_digit_b(b),
 {
     0x30 <= b && b <= 0x39
 }
 
 fn is_alnum_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_alnum_b(b),
+    ensures
+        r == ckc_spec::v1text::is_alnum_b(b),
 {
     is_lower_b(b) || (0x41 <= b && b <= 0x5a) || is_digit_b(b) || b == 0x5f
 }
 
 fn is_graphic_b(b: u8) -> (r: bool)
-    ensures r == ckc_spec::v1text::is_graphic_b(b),
+    ensures
+        r == ckc_spec::v1text::is_graphic_b(b),
 {
-    b == 0x23 || b == 0x24 || b == 0x26 || b == 0x2a || b == 0x2b || b == 0x2d
-        || b == 0x2e || b == 0x2f || b == 0x3a || b == 0x3c || b == 0x3d
-        || b == 0x3e || b == 0x3f || b == 0x40 || b == 0x5c || b == 0x5e
-        || b == 0x7e
+    b == 0x23 || b == 0x24 || b == 0x26 || b == 0x2a || b == 0x2b || b == 0x2d || b == 0x2e || b
+        == 0x2f || b == 0x3a || b == 0x3c || b == 0x3d || b == 0x3e || b == 0x3f || b == 0x40 || b
+        == 0x5c || b == 0x5e || b == 0x7e
 }
 
 fn all_alnum_b(s: &[u8]) -> (r: bool)
-    ensures r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_alnum_b(b)),
+    ensures
+        r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_alnum_b(b)),
 {
     let mut i = 0usize;
     while i < s.len()
@@ -679,15 +672,20 @@ fn all_alnum_b(s: &[u8]) -> (r: bool)
             forall|j: int| 0 <= j < i ==> ckc_spec::v1text::is_alnum_b(s@[j]),
         decreases s.len() - i,
     {
-        if !is_alnum_b(s[i]) { return false; }
+        if !is_alnum_b(s[i]) {
+            return false;
+        }
         i += 1;
     }
-    proof { reveal(ckc_spec::v1text::all_in); }
+    proof {
+        reveal(ckc_spec::v1text::all_in);
+    }
     true
 }
 
 fn all_graphic_b(s: &[u8]) -> (r: bool)
-    ensures r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_graphic_b(b)),
+    ensures
+        r == ckc_spec::v1text::all_in(s@, |b: u8| ckc_spec::v1text::is_graphic_b(b)),
 {
     let mut i = 0usize;
     while i < s.len()
@@ -696,34 +694,44 @@ fn all_graphic_b(s: &[u8]) -> (r: bool)
             forall|j: int| 0 <= j < i ==> ckc_spec::v1text::is_graphic_b(s@[j]),
         decreases s.len() - i,
     {
-        if !is_graphic_b(s[i]) { return false; }
+        if !is_graphic_b(s[i]) {
+            return false;
+        }
         i += 1;
     }
-    proof { reveal(ckc_spec::v1text::all_in); }
+    proof {
+        reveal(ckc_spec::v1text::all_in);
+    }
     true
 }
 
 proof fn seq_eq_one(s: Seq<u8>, x: u8)
-    ensures s == seq![x] <==> s.len() == 1 && s[0] == x,
+    ensures
+        s == seq![x] <==> s.len() == 1 && s[0] == x,
 {
-    if s.len() == 1 && s[0] == x { assert_seqs_equal!(s == seq![x]); }
+    if s.len() == 1 && s[0] == x {
+        assert_seqs_equal!(s == seq![x]);
+    }
 }
 
 proof fn seq_eq_two(s: Seq<u8>, x: u8, y: u8)
-    ensures s == seq![x, y] <==> s.len() == 2 && s[0] == x && s[1] == y,
+    ensures
+        s == seq![x, y] <==> s.len() == 2 && s[0] == x && s[1] == y,
 {
-    if s.len() == 2 && s[0] == x && s[1] == y { assert_seqs_equal!(s == seq![x, y]); }
+    if s.len() == 2 && s[0] == x && s[1] == y {
+        assert_seqs_equal!(s == seq![x, y]);
+    }
 }
 
 fn atom_bare_exec(name: &[u8]) -> (r: bool)
-    ensures r == ckc_spec::v1text::atom_bare(name@),
+    ensures
+        r == ckc_spec::v1text::atom_bare(name@),
 {
     let alpha = name.len() > 0 && is_lower_b(name[0]) && all_alnum_b(name);
-    let graphic = name.len() > 0 && all_graphic_b(name)
-        && !(name.len() == 1 && name[0] == 0x2e)
+    let graphic = name.len() > 0 && all_graphic_b(name) && !(name.len() == 1 && name[0] == 0x2e)
         && !(name.len() >= 2 && name[0] == 0x2f && name[1] == 0x2a);
-    let solo = (name.len() == 1 && (name[0] == 0x3b || name[0] == 0x21))
-        || (name.len() == 2 && name[0] == 0x7b && name[1] == 0x7d);
+    let solo = (name.len() == 1 && (name[0] == 0x3b || name[0] == 0x21)) || (name.len() == 2
+        && name[0] == 0x7b && name[1] == 0x7d);
     proof {
         seq_eq_one(name@, 0x2e);
         seq_eq_one(name@, 0x3b);
@@ -738,33 +746,59 @@ fn atom_bare_exec(name: &[u8]) -> (r: bool)
 }
 
 fn uhex_digit_exec(d: u8) -> (r: u8)
-    requires d < 16,
-    ensures r == ckc_spec::v1text::uhex_digit(d as int),
+    requires
+        d < 16,
+    ensures
+        r == ckc_spec::v1text::uhex_digit(d as int),
 {
-    let r = if d < 10 { 0x30 + d } else { 0x41 + (d - 10) };
-    proof { reveal(ckc_spec::v1text::uhex_digit); reveal(ckc_spec::v1text::digit_byte); }
+    let r = if d < 10 {
+        0x30 + d
+    } else {
+        0x41 + (d - 10)
+    };
+    proof {
+        reveal(ckc_spec::v1text::uhex_digit);
+        reveal(ckc_spec::v1text::digit_byte);
+    }
     r
 }
 
 fn append_esc(out: &mut Vec<u8>, b: u8)
-    ensures final(out)@ == old(out)@ + ckc_spec::v1text::esc_byte(b),
+    ensures
+        final(out)@ == old(out)@ + ckc_spec::v1text::esc_byte(b),
 {
     if b == 0x5c || b == 0x27 || (0x07 <= b && b <= 0x0d) {
-        let code = if b == 0x5c { 0x5c }
-            else if b == 0x27 { 0x27 }
-            else if b == 0x07 { 0x61 }
-            else if b == 0x08 { 0x62 }
-            else if b == 0x09 { 0x74 }
-            else if b == 0x0a { 0x6e }
-            else if b == 0x0b { 0x76 }
-            else if b == 0x0c { 0x66 }
-            else { 0x72 };
+        let code = if b == 0x5c {
+            0x5c
+        } else if b == 0x27 {
+            0x27
+        } else if b == 0x07 {
+            0x61
+        } else if b == 0x08 {
+            0x62
+        } else if b == 0x09 {
+            0x74
+        } else if b == 0x0a {
+            0x6e
+        } else if b == 0x0b {
+            0x76
+        } else if b == 0x0c {
+            0x66
+        } else {
+            0x72
+        };
         out.push(0x5c);
         out.push(code);
         proof {
-            reveal_strlit("\\\\"); reveal_strlit("\\'"); reveal_strlit("\\a");
-            reveal_strlit("\\b"); reveal_strlit("\\t"); reveal_strlit("\\n");
-            reveal_strlit("\\v"); reveal_strlit("\\f"); reveal_strlit("\\r");
+            reveal_strlit("\u{5C}\u{5C}");
+            reveal_strlit("\\'");
+            reveal_strlit("\\a");
+            reveal_strlit("\\b");
+            reveal_strlit("\\t");
+            reveal_strlit("\\n");
+            reveal_strlit("\\v");
+            reveal_strlit("\\f");
+            reveal_strlit("\\r");
             reveal(ckc_spec::v1text::ascii);
             reveal(ckc_spec::v1text::esc_byte);
         }
@@ -791,16 +825,21 @@ fn append_esc(out: &mut Vec<u8>, b: u8)
         }
     } else {
         out.push(b);
-        proof { reveal(ckc_spec::v1text::esc_byte); }
+        proof {
+            reveal(ckc_spec::v1text::esc_byte);
+        }
     }
 }
 
 fn append_atom(out: &mut Vec<u8>, name: &[u8])
-    ensures final(out)@ == old(out)@ + ckc_spec::v1text::atom_bytes(name@),
+    ensures
+        final(out)@ == old(out)@ + ckc_spec::v1text::atom_bytes(name@),
 {
     if atom_bare_exec(name) {
         append_bytes(out, name);
-        proof { reveal(ckc_spec::v1text::atom_bytes); }
+        proof {
+            reveal(ckc_spec::v1text::atom_bytes);
+        }
     } else {
         let ghost base = out@;
         out.push(0x27);
@@ -812,8 +851,8 @@ fn append_atom(out: &mut Vec<u8>, name: &[u8])
         while i < name.len()
             invariant
                 i <= name@.len(),
-                out@ + ckc_spec::v1text::esc_all(name@.skip(i as int))
-                    == base + seq![0x27u8] + ckc_spec::v1text::esc_all(name@),
+                out@ + ckc_spec::v1text::esc_all(name@.skip(i as int)) == base + seq![0x27u8]
+                    + ckc_spec::v1text::esc_all(name@),
             decreases name.len() - i,
         {
             append_esc(out, name[i]);
@@ -830,7 +869,9 @@ fn append_atom(out: &mut Vec<u8>, name: &[u8])
             assert_seqs_equal!(name@.skip(name@.len() as int) == Seq::<u8>::empty());
         }
         out.push(0x27);
-        proof { reveal(ckc_spec::v1text::atom_bytes); }
+        proof {
+            reveal(ckc_spec::v1text::atom_bytes);
+        }
     }
 }
 
@@ -847,10 +888,10 @@ fn process_task(
         tasks_ok(arena.nodes@, old(tasks)@),
     ensures
         tasks_ok(arena.nodes@, final(tasks)@),
-        final(out)@ + tasks_bytes(final(tasks)@)
-            == old(out)@ + task_bytes(&task) + tasks_bytes(old(tasks)@),
-        tasks_work(final(tasks)@)
-            < task_work(&task) + tasks_work(old(tasks)@),
+        final(out)@ + tasks_bytes(final(tasks)@) == old(out)@ + task_bytes(&task) + tasks_bytes(
+            old(tasks)@,
+        ),
+        tasks_work(final(tasks)@) < task_work(&task) + tasks_work(old(tasks)@),
 {
     let ghost old_stack = tasks@;
     let ghost old_out = out@;
@@ -939,7 +980,9 @@ fn process_task(
                     }
                 },
                 _ => {
-                    proof { assert(false); }
+                    proof {
+                        assert(false);
+                    }
                 },
             }
         },
@@ -1108,14 +1151,8 @@ fn process_task(
                         Term::Comp(_, args) => args,
                         _ => Seq::empty(),
                     };
-                    let tail = EPrintTask::Tail {
-                        index: child_roots[1],
-                        model: Ghost(args[1]),
-                    };
-                    let head = EPrintTask::Term {
-                        index: child_roots[0],
-                        model: Ghost(args[0]),
-                    };
+                    let tail = EPrintTask::Tail { index: child_roots[1], model: Ghost(args[1]) };
+                    let head = EPrintTask::Term { index: child_roots[0], model: Ghost(args[0]) };
                     let comma = EPrintTask::Byte(0x2c);
                     proof {
                         reveal_with_fuel(ckc_spec::v1text::tail_bytes, 2);
@@ -1175,8 +1212,10 @@ fn process_task(
 
 #[verifier::rlimit(5000)]
 pub fn term_line(arena: &ETermArena, root: usize) -> (out: Vec<u8>)
-    requires root_ok(arena, root),
-    ensures out@ == ckc_spec::v1text::term_line(arena@[root as int]),
+    requires
+        root_ok(arena, root),
+    ensures
+        out@ == ckc_spec::v1text::term_line(arena@[root as int]),
 {
     let ghost model = arena@[root as int];
     let mut out = Vec::new();
@@ -1245,7 +1284,8 @@ pub open spec fn canonical_decimal(s: Seq<u8>) -> bool {
 }
 
 proof fn decimal_digit_bounds(b: u8)
-    requires ckc_spec::v1text::is_digit_b(b),
+    requires
+        ckc_spec::v1text::is_digit_b(b),
     ensures
         decimal_digit(b) < 10,
         ckc_spec::v1text::digit_byte(decimal_digit(b) as int) == b,
@@ -1263,8 +1303,9 @@ proof fn decimal_all_drop_last(s: Seq<u8>)
         ckc_spec::v1text::all_in(s.drop_last(), |b: u8| ckc_spec::v1text::is_digit_b(b)),
 {
     reveal(ckc_spec::v1text::all_in);
-    assert forall|i: int| #![auto] 0 <= i < s.drop_last().len()
-        ==> ckc_spec::v1text::is_digit_b(s.drop_last()[i]) by {
+    assert forall|i: int|
+        #![auto]
+        0 <= i < s.drop_last().len() ==> ckc_spec::v1text::is_digit_b(s.drop_last()[i]) by {
         if 0 <= i < s.drop_last().len() {
             assert(i < s.len());
             assert(s.drop_last()[i] == s[i]);
@@ -1276,7 +1317,8 @@ proof fn canonical_decimal_drop_last(s: Seq<u8>)
     requires
         s.len() > 1,
         canonical_decimal(s),
-    ensures canonical_decimal(s.drop_last()),
+    ensures
+        canonical_decimal(s.drop_last()),
 {
     decimal_all_drop_last(s);
     reveal(canonical_decimal);
@@ -1289,7 +1331,8 @@ proof fn decimal_positive(s: Seq<u8>)
     requires
         canonical_decimal(s),
         s[0] != 0x30,
-    ensures decimal_value(s) > 0,
+    ensures
+        decimal_value(s) > 0,
     decreases s.len(),
 {
     reveal_with_fuel(decimal_value, 2);
@@ -1318,9 +1361,7 @@ proof fn udec_canonical(n: nat)
     reveal(canonical_decimal);
     if n < 10 {
         assert(ckc_spec::v1text::udec_bytes(n).len() == 1);
-        assert(ckc_spec::v1text::is_digit_b(
-            ckc_spec::v1text::digit_byte(n as int),
-        ));
+        assert(ckc_spec::v1text::is_digit_b(ckc_spec::v1text::digit_byte(n as int)));
         if n > 0 {
             assert(ckc_spec::v1text::digit_byte(n as int) != 0x30);
         }
@@ -1334,8 +1375,11 @@ proof fn udec_canonical(n: nat)
         let prefix = ckc_spec::v1text::udec_bytes(q);
         let digit = ckc_spec::v1text::digit_byte(d as int);
         assert(ckc_spec::v1text::is_digit_b(digit));
-        assert forall|i: int| #![auto] 0 <= i < (prefix + seq![digit]).len()
-            ==> ckc_spec::v1text::is_digit_b((prefix + seq![digit])[i]) by {
+        assert forall|i: int|
+            #![auto]
+            0 <= i < (prefix + seq![digit]).len() ==> ckc_spec::v1text::is_digit_b(
+                (prefix + seq![digit])[i],
+            ) by {
             if 0 <= i < (prefix + seq![digit]).len() {
                 if i < prefix.len() {
                     assert((prefix + seq![digit])[i] == prefix[i]);
@@ -1351,7 +1395,8 @@ proof fn udec_canonical(n: nat)
 }
 
 proof fn udec_decimal_value(n: nat)
-    ensures decimal_value(ckc_spec::v1text::udec_bytes(n)) == n,
+    ensures
+        decimal_value(ckc_spec::v1text::udec_bytes(n)) == n,
     decreases n,
 {
     reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
@@ -1359,8 +1404,7 @@ proof fn udec_decimal_value(n: nat)
     reveal(decimal_digit);
     reveal(ckc_spec::v1text::digit_byte);
     if n < 10 {
-        assert(ckc_spec::v1text::udec_bytes(n)
-            == seq![ckc_spec::v1text::digit_byte(n as int)]);
+        assert(ckc_spec::v1text::udec_bytes(n) == seq![ckc_spec::v1text::digit_byte(n as int)]);
     } else {
         let q = n / 10;
         let d = n % 10;
@@ -1378,11 +1422,16 @@ proof fn udec_decimal_value(n: nat)
 pub open spec fn pow10(n: nat) -> nat
     decreases n,
 {
-    if n == 0 { 1 } else { 10 * pow10((n - 1) as nat) }
+    if n == 0 {
+        1
+    } else {
+        10 * pow10((n - 1) as nat)
+    }
 }
 
 proof fn pow10_positive(n: nat)
-    ensures pow10(n) >= 1,
+    ensures
+        pow10(n) >= 1,
     decreases n,
 {
     reveal_with_fuel(pow10, 2);
@@ -1392,8 +1441,10 @@ proof fn pow10_positive(n: nat)
 }
 
 proof fn pow10_monotonic(a: nat, b: nat)
-    requires a <= b,
-    ensures pow10(a) <= pow10(b),
+    requires
+        a <= b,
+    ensures
+        pow10(a) <= pow10(b),
     decreases b - a,
 {
     if a < b {
@@ -1407,30 +1458,23 @@ proof fn pow10_monotonic(a: nat, b: nat)
 proof fn decimal_all_drop_first(s: Seq<u8>)
     requires
         s.len() > 0,
-        ckc_spec::v1text::all_in(
-            s,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
     ensures
-        ckc_spec::v1text::all_in(
-            s.drop_first(),
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(s.drop_first(), |b: u8| ckc_spec::v1text::is_digit_b(b)),
 {
     reveal(ckc_spec::v1text::all_in);
-    assert forall|i: int| 0 <= i < s.drop_first().len()
-        implies ckc_spec::v1text::is_digit_b(s.drop_first()[i]) by {
+    assert forall|i: int| 0 <= i < s.drop_first().len() implies ckc_spec::v1text::is_digit_b(
+        s.drop_first()[i],
+    ) by {
         assert(s.drop_first()[i] == s[i + 1]);
     }
 }
 
 proof fn decimal_value_bound(s: Seq<u8>)
     requires
-        ckc_spec::v1text::all_in(
-            s,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
-    ensures decimal_value(s) < pow10(s.len()),
+        ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
+    ensures
+        decimal_value(s) < pow10(s.len()),
     decreases s.len(),
 {
     if s.len() == 0 {
@@ -1457,14 +1501,10 @@ proof fn decimal_value_bound(s: Seq<u8>)
 proof fn decimal_value_prepend(first: u8, rest: Seq<u8>)
     requires
         ckc_spec::v1text::is_digit_b(first),
-        ckc_spec::v1text::all_in(
-            rest,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(rest, |b: u8| ckc_spec::v1text::is_digit_b(b)),
     ensures
-        decimal_value(seq![first] + rest)
-            == decimal_digit(first) * pow10(rest.len())
-                + decimal_value(rest),
+        decimal_value(seq![first] + rest) == decimal_digit(first) * pow10(rest.len())
+            + decimal_value(rest),
     decreases rest.len(),
 {
     decimal_digit_bounds(first);
@@ -1479,7 +1519,9 @@ proof fn decimal_value_prepend(first: u8, rest: Seq<u8>)
         assert(decimal_value(rest) == 0);
         assert(decimal_digit(first) * pow10(rest.len()) == decimal_digit(first))
             by (nonlinear_arith)
-            requires pow10(rest.len()) == 1;
+            requires
+                pow10(rest.len()) == 1,
+        ;
     } else {
         decimal_all_drop_last(rest);
         decimal_value_prepend(first, rest.drop_last());
@@ -1500,26 +1542,24 @@ proof fn decimal_value_prepend(first: u8, rest: Seq<u8>)
         assert(decimal_value(whole) == decimal_value(shorter) * 10 + dl);
         assert(pow10(rest.len()) == 10 * q);
         assert(decimal_value(rest) == w * 10 + dl);
-        assert((df * q + w) * 10 + dl == df * (10 * q) + (w * 10 + dl))
-            by (nonlinear_arith);
+        assert((df * q + w) * 10 + dl == df * (10 * q) + (w * 10 + dl)) by (nonlinear_arith);
         assert(decimal_value(whole) == df * pow10(rest.len()) + decimal_value(rest))
             by (nonlinear_arith)
             requires
                 decimal_value(whole) == (df * q + w) * 10 + dl,
                 pow10(rest.len()) == 10 * q,
-                decimal_value(rest) == w * 10 + dl;
+                decimal_value(rest) == w * 10 + dl,
+        ;
     }
 }
 
 proof fn decimal_nonzero_leading_min(s: Seq<u8>)
     requires
         s.len() > 0,
-        ckc_spec::v1text::all_in(
-            s,
-            |b: u8| ckc_spec::v1text::is_digit_b(b),
-        ),
+        ckc_spec::v1text::all_in(s, |b: u8| ckc_spec::v1text::is_digit_b(b)),
         s[0] != 0x30,
-    ensures pow10((s.len() - 1) as nat) <= decimal_value(s),
+    ensures
+        pow10((s.len() - 1) as nat) <= decimal_value(s),
 {
     let rest = s.drop_first();
     decimal_all_drop_first(s);
@@ -1536,7 +1576,10 @@ proof fn decimal_nonzero_leading_min(s: Seq<u8>)
     assert(rest.len() == s.len() - 1);
     pow10_positive(rest.len());
     assert(p <= d * p) by (nonlinear_arith)
-        requires d >= 1, p >= 0;
+        requires
+            d >= 1,
+            p >= 0,
+    ;
     assert(decimal_value(s) == d * p + decimal_value(rest));
 }
 
@@ -1545,7 +1588,8 @@ proof fn decimal_shorter_less(a: Seq<u8>, b: Seq<u8>)
         canonical_decimal(a),
         canonical_decimal(b),
         a.len() < b.len(),
-    ensures decimal_value(a) < decimal_value(b),
+    ensures
+        decimal_value(a) < decimal_value(b),
 {
     reveal(canonical_decimal);
     decimal_value_bound(a);
@@ -1573,17 +1617,10 @@ pub open spec fn decimal_lex_lt(a: Seq<u8>, b: Seq<u8>) -> bool
 proof fn decimal_lex_value(a: Seq<u8>, b: Seq<u8>)
     requires
         a.len() == b.len(),
-        ckc_spec::v1text::all_in(
-            a,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
-        ckc_spec::v1text::all_in(
-            b,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
+        ckc_spec::v1text::all_in(a, |x: u8| ckc_spec::v1text::is_digit_b(x)),
+        ckc_spec::v1text::all_in(b, |x: u8| ckc_spec::v1text::is_digit_b(x)),
     ensures
-        decimal_lex_lt(a, b) <==>
-            decimal_value(a) < decimal_value(b),
+        decimal_lex_lt(a, b) <==> decimal_value(a) < decimal_value(b),
     decreases a.len(),
 {
     reveal_with_fuel(decimal_lex_lt, 2);
@@ -1619,11 +1656,21 @@ proof fn decimal_lex_value(a: Seq<u8>, b: Seq<u8>)
         assert(vb < p);
         if da < db {
             assert(da * p + va < db * p + vb) by (nonlinear_arith)
-                requires da + 1 <= db, va < p, vb >= 0, p >= 0;
+                requires
+                    da + 1 <= db,
+                    va < p,
+                    vb >= 0,
+                    p >= 0,
+            ;
             assert(decimal_lex_lt(a, b));
         } else if da > db {
             assert(db * p + vb < da * p + va) by (nonlinear_arith)
-                requires db + 1 <= da, vb < p, va >= 0, p >= 0;
+                requires
+                    db + 1 <= da,
+                    vb < p,
+                    va >= 0,
+                    p >= 0,
+            ;
             assert(!decimal_lex_lt(a, b));
         } else {
             assert(da == db);
@@ -1635,20 +1682,13 @@ proof fn decimal_lex_value(a: Seq<u8>, b: Seq<u8>)
 proof fn decimal_lex_difference(a: Seq<u8>, b: Seq<u8>, i: nat)
     requires
         a.len() == b.len(),
-        ckc_spec::v1text::all_in(
-            a,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
-        ckc_spec::v1text::all_in(
-            b,
-            |x: u8| ckc_spec::v1text::is_digit_b(x),
-        ),
+        ckc_spec::v1text::all_in(a, |x: u8| ckc_spec::v1text::is_digit_b(x)),
+        ckc_spec::v1text::all_in(b, |x: u8| ckc_spec::v1text::is_digit_b(x)),
         i < a.len(),
         forall|j: int| 0 <= j < i ==> a[j] == b[j],
         a[i as int] != b[i as int],
     ensures
-        decimal_lex_lt(a, b) ==
-            (decimal_digit(a[i as int]) < decimal_digit(b[i as int])),
+        decimal_lex_lt(a, b) == (decimal_digit(a[i as int]) < decimal_digit(b[i as int])),
     decreases i,
 {
     reveal_with_fuel(decimal_lex_lt, 2);
@@ -1666,21 +1706,20 @@ proof fn decimal_lex_difference(a: Seq<u8>, b: Seq<u8>, i: nat)
         decimal_all_drop_first(b);
         assert(a.drop_first().len() == b.drop_first().len());
         assert(i - 1 < a.drop_first().len());
-        assert forall|j: int| 0 <= j < i - 1
-            implies a.drop_first()[j] == b.drop_first()[j] by {
+        assert forall|j: int| 0 <= j < i - 1 implies a.drop_first()[j] == b.drop_first()[j] by {
             assert(a.drop_first()[j] == a[j + 1]);
             assert(b.drop_first()[j] == b[j + 1]);
         }
         assert(a.drop_first()[(i - 1) as int] == a[i as int]);
         assert(b.drop_first()[(i - 1) as int] == b[i as int]);
         decimal_lex_difference(a.drop_first(), b.drop_first(), (i - 1) as nat);
-        assert(decimal_lex_lt(a, b)
-            == decimal_lex_lt(a.drop_first(), b.drop_first()));
+        assert(decimal_lex_lt(a, b) == decimal_lex_lt(a.drop_first(), b.drop_first()));
     }
 }
 
 proof fn decimal_lex_irreflexive(a: Seq<u8>)
-    ensures !decimal_lex_lt(a, a),
+    ensures
+        !decimal_lex_lt(a, a),
     decreases a.len(),
 {
     reveal(decimal_lex_lt);
@@ -1693,10 +1732,13 @@ fn decimal_bytes_less(a: &Vec<u8>, b: &Vec<u8>) -> (r: bool)
     requires
         canonical_decimal(a@),
         canonical_decimal(b@),
-    ensures r == (decimal_value(a@) < decimal_value(b@)),
+    ensures
+        r == (decimal_value(a@) < decimal_value(b@)),
 {
     if a.len() < b.len() {
-        proof { decimal_shorter_less(a@, b@); }
+        proof {
+            decimal_shorter_less(a@, b@);
+        }
         return true;
     }
     if a.len() > b.len() {
@@ -1736,9 +1778,9 @@ fn decimal_bytes_less(a: &Vec<u8>, b: &Vec<u8>) -> (r: bool)
             reveal(ckc_spec::v1text::is_digit_b);
             assert(ckc_spec::v1text::is_digit_b(a@[i as int]));
             assert(ckc_spec::v1text::is_digit_b(b@[i as int]));
-            assert((a@[i as int] < b@[i as int])
-                == (decimal_digit(a@[i as int])
-                    < decimal_digit(b@[i as int])));
+            assert((a@[i as int] < b@[i as int]) == (decimal_digit(a@[i as int]) < decimal_digit(
+                b@[i as int],
+            )));
         }
         a[i] < b[i]
     }
@@ -1775,7 +1817,8 @@ proof fn bytes_lt_skip_step(a: Seq<u8>, b: Seq<u8>, i: nat)
 }
 
 fn bytes_order(a: &Vec<u8>, b: &Vec<u8>) -> (order: EOrder)
-    ensures bytes_order_ok(&order, a@, b@),
+    ensures
+        bytes_order_ok(&order, a@, b@),
 {
     let mut i = 0usize;
     proof {
@@ -1793,7 +1836,9 @@ fn bytes_order(a: &Vec<u8>, b: &Vec<u8>) -> (order: EOrder)
                 == ckc_spec::engine::bytes_lt(a@, b@),
         decreases a.len() - i,
     {
-        proof { bytes_lt_skip_step(a@, b@, i as nat); }
+        proof {
+            bytes_lt_skip_step(a@, b@, i as nat);
+        }
         i += 1;
     }
     if i == a.len() {
@@ -1857,20 +1902,23 @@ fn magnitude_order(a: &Vec<u8>, b: &Vec<u8>) -> (order: EOrder)
     requires
         canonical_decimal(a@),
         canonical_decimal(b@),
-    ensures int_order_ok(
-        &order,
-        decimal_value(a@) as int,
-        decimal_value(b@) as int,
-    ),
+    ensures
+        int_order_ok(&order, decimal_value(a@) as int, decimal_value(b@) as int),
 {
     if decimal_bytes_less(a, b) {
-        proof { reveal(int_order_ok); }
+        proof {
+            reveal(int_order_ok);
+        }
         EOrder::Less
     } else if decimal_bytes_less(b, a) {
-        proof { reveal(int_order_ok); }
+        proof {
+            reveal(int_order_ok);
+        }
         EOrder::Greater
     } else {
-        proof { reveal(int_order_ok); }
+        proof {
+            reveal(int_order_ok);
+        }
         EOrder::Equal
     }
 }
@@ -1887,15 +1935,32 @@ pub fn int_order(
         a_negative == (a@ < 0),
         b_negative == (b@ < 0),
         a_magnitude@ == ckc_spec::v1text::udec_bytes(
-            if a@ < 0 { (-a@) as nat } else { a@ as nat },
+            if a@ < 0 {
+                (-a@) as nat
+            } else {
+                a@ as nat
+            },
         ),
         b_magnitude@ == ckc_spec::v1text::udec_bytes(
-            if b@ < 0 { (-b@) as nat } else { b@ as nat },
+            if b@ < 0 {
+                (-b@) as nat
+            } else {
+                b@ as nat
+            },
         ),
-    ensures int_order_ok(&order, a@, b@),
+    ensures
+        int_order_ok(&order, a@, b@),
 {
-    let ghost av = if a@ < 0 { (-a@) as nat } else { a@ as nat };
-    let ghost bv = if b@ < 0 { (-b@) as nat } else { b@ as nat };
+    let ghost av = if a@ < 0 {
+        (-a@) as nat
+    } else {
+        a@ as nat
+    };
+    let ghost bv = if b@ < 0 {
+        (-b@) as nat
+    } else {
+        b@ as nat
+    };
     proof {
         udec_canonical(av);
         udec_canonical(bv);
@@ -1903,10 +1968,14 @@ pub fn int_order(
         udec_decimal_value(bv);
     }
     if a_negative && !b_negative {
-        proof { reveal(int_order_ok); }
+        proof {
+            reveal(int_order_ok);
+        }
         EOrder::Less
     } else if !a_negative && b_negative {
-        proof { reveal(int_order_ok); }
+        proof {
+            reveal(int_order_ok);
+        }
         EOrder::Greater
     } else if !a_negative {
         let order = magnitude_order(a_magnitude, b_magnitude);
@@ -1939,7 +2008,8 @@ pub fn int_order(
 }
 
 proof fn bytes_lt_irreflexive(bytes: Seq<u8>)
-    ensures !ckc_spec::engine::bytes_lt(bytes, bytes),
+    ensures
+        !ckc_spec::engine::bytes_lt(bytes, bytes),
     decreases bytes.len(),
 {
     reveal_with_fuel(ckc_spec::engine::bytes_lt, 2);
@@ -1949,7 +2019,8 @@ proof fn bytes_lt_irreflexive(bytes: Seq<u8>)
 }
 
 pub proof fn term_lt_irreflexive(term: Term)
-    ensures !ckc_spec::engine::term_lt(term, term),
+    ensures
+        !ckc_spec::engine::term_lt(term, term),
     decreases term,
 {
     reveal_with_fuel(ckc_spec::engine::term_lt, 2);
@@ -1962,7 +2033,8 @@ pub proof fn term_lt_irreflexive(term: Term)
 }
 
 proof fn args_lt_irreflexive(args: Seq<Term>)
-    ensures !ckc_spec::engine::args_lt(args, args),
+    ensures
+        !ckc_spec::engine::args_lt(args, args),
     decreases args,
 {
     reveal_with_fuel(ckc_spec::engine::args_lt, 2);
@@ -1973,12 +2045,7 @@ proof fn args_lt_irreflexive(args: Seq<Term>)
 }
 
 pub enum ECmpTask {
-    Terms {
-        left: usize,
-        right: usize,
-        left_model: Ghost<Term>,
-        right_model: Ghost<Term>,
-    },
+    Terms { left: usize, right: usize, left_model: Ghost<Term>, right_model: Ghost<Term> },
     Args {
         left_parent: usize,
         right_parent: usize,
@@ -1998,19 +2065,10 @@ pub open spec fn cmp_task_ok(nodes: Seq<ENode>, task: &ECmpTask) -> bool {
             &&& ckc_spec::term::ground(left_model@)
             &&& ckc_spec::term::ground(right_model@)
         },
-        ECmpTask::Args {
-            left_parent,
-            right_parent,
-            next,
-            left_args,
-            right_args,
-        } => {
+        ECmpTask::Args { left_parent, right_parent, next, left_args, right_args } => {
             &&& *left_parent < nodes.len()
             &&& *right_parent < nodes.len()
-            &&& match (
-                &nodes[*left_parent as int].kind,
-                &nodes[*right_parent as int].kind,
-            ) {
+            &&& match (&nodes[*left_parent as int].kind, &nodes[*right_parent as int].kind) {
                 (
                     ENodeKind::Comp { child_roots: left_roots, .. },
                     ENodeKind::Comp { child_roots: right_roots, .. },
@@ -2033,8 +2091,10 @@ pub open spec fn cmp_task_ok(nodes: Seq<ENode>, task: &ECmpTask) -> bool {
 pub open spec fn cmp_tasks_ok(nodes: Seq<ENode>, tasks: Seq<ECmpTask>) -> bool
     decreases tasks.len(),
 {
-    tasks.len() == 0
-        || (cmp_task_ok(nodes, &tasks.last()) && cmp_tasks_ok(nodes, tasks.drop_last()))
+    tasks.len() == 0 || (cmp_task_ok(nodes, &tasks.last()) && cmp_tasks_ok(
+        nodes,
+        tasks.drop_last(),
+    ))
 }
 
 pub open spec fn cmp_task_equal(task: &ECmpTask) -> bool {
@@ -2094,12 +2154,8 @@ pub open spec fn arg_pair_work(a: Seq<Term>, b: Seq<Term>) -> nat
 
 pub open spec fn cmp_task_work(task: &ECmpTask) -> nat {
     match task {
-        ECmpTask::Terms { left_model, right_model, .. } => {
-            pair_work(left_model@, right_model@)
-        },
-        ECmpTask::Args { left_args, right_args, .. } => {
-            arg_pair_work(left_args@, right_args@)
-        },
+        ECmpTask::Terms { left_model, right_model, .. } => { pair_work(left_model@, right_model@) },
+        ECmpTask::Args { left_args, right_args, .. } => { arg_pair_work(left_args@, right_args@) },
     }
 }
 
@@ -2117,7 +2173,8 @@ proof fn cmp_tasks_ok_push(nodes: Seq<ENode>, tasks: Seq<ECmpTask>, task: ECmpTa
     requires
         cmp_tasks_ok(nodes, tasks),
         cmp_task_ok(nodes, &task),
-    ensures cmp_tasks_ok(nodes, tasks.push(task)),
+    ensures
+        cmp_tasks_ok(nodes, tasks.push(task)),
 {
     assert(tasks.push(task).last() == task);
     assert(tasks.push(task).drop_last() == tasks);
@@ -2139,8 +2196,7 @@ proof fn cmp_pending_push(tasks: Seq<ECmpTask>, task: ECmpTask)
 
 proof fn cmp_tasks_work_push(tasks: Seq<ECmpTask>, task: ECmpTask)
     ensures
-        cmp_tasks_work(tasks.push(task))
-            == cmp_task_work(&task) + cmp_tasks_work(tasks),
+        cmp_tasks_work(tasks.push(task)) == cmp_task_work(&task) + cmp_tasks_work(tasks),
 {
     assert(tasks.push(task).last() == task);
     assert(tasks.push(task).drop_last() == tasks);
@@ -2151,7 +2207,8 @@ fn node_rank(arena: &ETermArena, index: usize) -> (rank: u8)
     requires
         arena_ok(arena),
         index < arena.nodes@.len(),
-    ensures rank as int == ckc_spec::engine::rank(arena@[index as int]),
+    ensures
+        rank as int == ckc_spec::engine::rank(arena@[index as int]),
 {
     proof {
         reveal(arena_ok);
@@ -2165,7 +2222,9 @@ fn node_rank(arena: &ETermArena, index: usize) -> (rank: u8)
         ENodeKind::Atom { .. } => 3,
         ENodeKind::Comp { .. } => 4,
     };
-    proof { reveal(ckc_spec::engine::rank); }
+    proof {
+        reveal(ckc_spec::engine::rank);
+    }
     rank
 }
 
@@ -2184,7 +2243,8 @@ fn term_lt_inner(
         right_expected@ == arena@[right_root_index as int],
         ckc_spec::term::ground(left_expected@),
         ckc_spec::term::ground(right_expected@),
-    ensures less == ckc_spec::engine::term_lt(left_expected@, right_expected@),
+    ensures
+        less == ckc_spec::engine::term_lt(left_expected@, right_expected@),
 {
     let node_count = arena.nodes.len();
     proof {
@@ -2232,23 +2292,15 @@ fn term_lt_inner(
             cmp_pending_push(tasks@, task);
             cmp_tasks_work_push(tasks@, task);
             if !current_equal {
-                assert(current_less
-                    == ckc_spec::engine::term_lt(left_expected@, right_expected@));
+                assert(current_less == ckc_spec::engine::term_lt(left_expected@, right_expected@));
             }
         }
         match task {
-            ECmpTask::Args {
-                left_parent,
-                right_parent,
-                next,
-                left_args,
-                right_args,
-            } => {
-                proof { reveal(cmp_task_ok); }
-                match (
-                    &arena.nodes[left_parent].kind,
-                    &arena.nodes[right_parent].kind,
-                ) {
+            ECmpTask::Args { left_parent, right_parent, next, left_args, right_args } => {
+                proof {
+                    reveal(cmp_task_ok);
+                }
+                match (&arena.nodes[left_parent].kind, &arena.nodes[right_parent].kind) {
                     (
                         ENodeKind::Comp { child_roots: left_roots, .. },
                         ENodeKind::Comp { child_roots: right_roots, .. },
@@ -2313,7 +2365,11 @@ fn term_lt_inner(
                             }
                             tasks.push(rest);
                             proof {
-                                cmp_tasks_ok_push(arena.nodes@, before.drop_last().push(rest), pair);
+                                cmp_tasks_ok_push(
+                                    arena.nodes@,
+                                    before.drop_last().push(rest),
+                                    pair,
+                                );
                                 cmp_pending_push(before.drop_last().push(rest), pair);
                                 cmp_tasks_work_push(before.drop_last().push(rest), pair);
                                 reveal_with_fuel(ckc_spec::engine::args_lt, 2);
@@ -2323,7 +2379,9 @@ fn term_lt_inner(
                         }
                     },
                     _ => {
-                        proof { assert(false); }
+                        proof {
+                            assert(false);
+                        }
                     },
                 }
             },
@@ -2336,8 +2394,7 @@ fn term_lt_inner(
                     assert(node_ok(arena.nodes@, left as int));
                     assert(node_ok(arena.nodes@, right as int));
                     assert(current_equal == (left_model@ == right_model@));
-                    assert(current_less
-                        == ckc_spec::engine::term_lt(left_model@, right_model@));
+                    assert(current_less == ckc_spec::engine::term_lt(left_model@, right_model@));
                 }
                 let left_rank = node_rank(arena, left);
                 let right_rank = node_rank(arena, right);
@@ -2386,7 +2443,9 @@ fn term_lt_inner(
                             ..
                         },
                     ) => {
-                        proof { reveal(node_ok); }
+                        proof {
+                            reveal(node_ok);
+                        }
                         let order = int_order(
                             left_magnitude,
                             *left_negative,
@@ -2443,7 +2502,9 @@ fn term_lt_inner(
                         }
                     },
                     (ENodeKind::Atom { name: left_name }, ENodeKind::Atom { name: right_name }) => {
-                        proof { reveal(node_ok); }
+                        proof {
+                            reveal(node_ok);
+                        }
                         let order = bytes_order(left_name, right_name);
                         match order {
                             EOrder::Less => {
@@ -2487,28 +2548,19 @@ fn term_lt_inner(
                         }
                     },
                     (
-                        ENodeKind::Comp {
-                            name: left_name,
-                            child_roots: left_roots,
-                            ..
-                        },
-                        ENodeKind::Comp {
-                            name: right_name,
-                            child_roots: right_roots,
-                            ..
-                        },
+                        ENodeKind::Comp { name: left_name, child_roots: left_roots, .. },
+                        ENodeKind::Comp { name: right_name, child_roots: right_roots, .. },
                     ) => {
-                        proof { reveal(node_ok); }
+                        proof {
+                            reveal(node_ok);
+                        }
                         if left_roots.len() < right_roots.len() {
                             proof {
                                 reveal(ckc_spec::engine::term_lt);
                                 reveal(cmp_pending);
                                 assert(left_model@ != right_model@);
                                 assert(current_less);
-                                assert(ckc_spec::engine::term_lt(
-                                    left_expected@,
-                                    right_expected@,
-                                ));
+                                assert(ckc_spec::engine::term_lt(left_expected@, right_expected@));
                             }
                             return true;
                         }
@@ -2518,10 +2570,7 @@ fn term_lt_inner(
                                 reveal(cmp_pending);
                                 assert(left_model@ != right_model@);
                                 assert(!current_less);
-                                assert(!ckc_spec::engine::term_lt(
-                                    left_expected@,
-                                    right_expected@,
-                                ));
+                                assert(!ckc_spec::engine::term_lt(left_expected@, right_expected@));
                             }
                             return false;
                         }
@@ -2610,25 +2659,16 @@ fn term_lt_inner(
     false
 }
 
-pub fn term_lt(
-    arena: &ETermArena,
-    left: usize,
-    right: usize,
-) -> (less: bool)
+pub fn term_lt(arena: &ETermArena, left: usize, right: usize) -> (less: bool)
     requires
         root_ok(arena, left),
         root_ok(arena, right),
         ckc_spec::term::ground(arena@[left as int]),
         ckc_spec::term::ground(arena@[right as int]),
-    ensures less == ckc_spec::engine::term_lt(arena@[left as int], arena@[right as int]),
+    ensures
+        less == ckc_spec::engine::term_lt(arena@[left as int], arena@[right as int]),
 {
-    term_lt_inner(
-        arena,
-        left,
-        right,
-        Ghost(arena@[left as int]),
-        Ghost(arena@[right as int]),
-    )
+    term_lt_inner(arena, left, right, Ghost(arena@[left as int]), Ghost(arena@[right as int]))
 }
 
 } // verus!

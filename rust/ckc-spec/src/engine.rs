@@ -1,6 +1,6 @@
-use vstd::prelude::*;
 use crate::term::*;
 use crate::v1text::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -13,25 +13,53 @@ verus! {
 // clause scan + head unification), one cut, one pruned goal or one
 // recorded solution — the rust cost model of R15; SWI's outer run limit
 // counts the same events at 10x, so the per-call limit alone binds.
-
 // --- R8 constants ---
+pub open spec fn replay_depth() -> nat {
+    4000
+}
 
-pub open spec fn replay_depth() -> nat { 4000 }
-pub open spec fn replay_inf() -> nat { 1000000 }
-pub open spec fn answer_depth() -> nat { 100 }
-pub open spec fn answer_inf() -> nat { 100000 }
-pub open spec fn trace_depth() -> nat { 1000 }
-pub open spec fn trace_inf() -> nat { 100000 }
+pub open spec fn replay_inf() -> nat {
+    1000000
+}
 
-pub open spec fn comma_name() -> Seq<u8> { ascii(","@) }
-pub open spec fn naf_name() -> Seq<u8> { ascii("\\+"@) }
+pub open spec fn answer_depth() -> nat {
+    100
+}
+
+pub open spec fn answer_inf() -> nat {
+    100000
+}
+
+pub open spec fn trace_depth() -> nat {
+    1000
+}
+
+pub open spec fn trace_inf() -> nat {
+    100000
+}
+
+pub open spec fn comma_name() -> Seq<u8> {
+    ascii(","@)
+}
+
+pub open spec fn naf_name() -> Seq<u8> {
+    ascii("\\+"@)
+}
 
 // --- term helpers ---
-
-pub open spec fn max_nat(a: nat, b: nat) -> nat { if a >= b { a } else { b } }
+pub open spec fn max_nat(a: nat, b: nat) -> nat {
+    if a >= b {
+        a
+    } else {
+        b
+    }
+}
 
 pub open spec fn args_of(t: Term) -> Seq<Term> {
-    match t { Term::Comp(_, args) => args, _ => Seq::empty() }
+    match t {
+        Term::Comp(_, args) => args,
+        _ => Seq::empty(),
+    }
 }
 
 // Rename apart: every variable index moves up by `off`.
@@ -48,7 +76,11 @@ pub open spec fn shift(t: Term, off: nat) -> Term
 pub open spec fn shift_all(ts: Seq<Term>, off: nat) -> Seq<Term>
     decreases ts,
 {
-    if ts.len() == 0 { Seq::empty() } else { seq![shift(ts[0], off)] + shift_all(ts.drop_first(), off) }
+    if ts.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![shift(ts[0], off)] + shift_all(ts.drop_first(), off)
+    }
 }
 
 // 1 + the largest variable index (0 when ground).
@@ -65,7 +97,11 @@ pub open spec fn nvars(t: Term) -> nat
 pub open spec fn nvars_all(ts: Seq<Term>) -> nat
     decreases ts,
 {
-    if ts.len() == 0 { 0 } else { max_nat(nvars(ts[0]), nvars_all(ts.drop_first())) }
+    if ts.len() == 0 {
+        0
+    } else {
+        max_nat(nvars(ts[0]), nvars_all(ts.drop_first()))
+    }
 }
 
 pub open spec fn occurs(x: nat, t: Term) -> bool
@@ -88,7 +124,11 @@ pub open spec fn subst(t: Term, x: nat, v: Term) -> Term
     decreases t,
 {
     match t {
-        Term::Var(k) => if k == x { v } else { t },
+        Term::Var(k) => if k == x {
+            v
+        } else {
+            t
+        },
         Term::Comp(name, args) => Term::Comp(name, subst_all(args, x, v)),
         _ => t,
     }
@@ -97,7 +137,11 @@ pub open spec fn subst(t: Term, x: nat, v: Term) -> Term
 pub open spec fn subst_all(ts: Seq<Term>, x: nat, v: Term) -> Seq<Term>
     decreases ts,
 {
-    if ts.len() == 0 { Seq::empty() } else { seq![subst(ts[0], x, v)] + subst_all(ts.drop_first(), x, v) }
+    if ts.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![subst(ts[0], x, v)] + subst_all(ts.drop_first(), x, v)
+    }
 }
 
 pub open spec fn zip(xs: Seq<Term>, ys: Seq<Term>) -> Seq<(Term, Term)> {
@@ -108,24 +152,36 @@ pub open spec fn zip(xs: Seq<Term>, ys: Seq<Term>) -> Seq<(Term, Term)> {
 pub open spec fn conj_term(gs: Seq<Term>) -> Term
     decreases gs.len(),
 {
-    if gs.len() <= 1 { gs[0] } else { Term::Comp(comma_name(), seq![gs[0], conj_term(gs.drop_first())]) }
+    if gs.len() <= 1 {
+        gs[0]
+    } else {
+        Term::Comp(comma_name(), seq![gs[0], conj_term(gs.drop_first())])
+    }
 }
 
 pub open spec fn list_term(ts: Seq<Term>) -> Term
     decreases ts.len(),
 {
-    if ts.len() == 0 { Term::Nil } else { Term::Comp(cons_name(), seq![ts[0], list_term(ts.drop_first())]) }
+    if ts.len() == 0 {
+        Term::Nil
+    } else {
+        Term::Comp(cons_name(), seq![ts[0], list_term(ts.drop_first())])
+    }
 }
 
 // --- goals ---
-
 pub ghost enum Goal {
-    Lit(Term, nat),   // goal term + remaining depth
-    NafCut(nat),      // the NAF goal's inner proof succeeded: drop choicepoints from this level up
+    Lit(Term, nat),  // goal term + remaining depth
+    NafCut(
+        nat,
+    ),  // the NAF goal's inner proof succeeded: drop choicepoints from this level up
 }
 
 pub open spec fn subst_goal(g: Goal, x: nat, v: Term) -> Goal {
-    match g { Goal::Lit(t, d) => Goal::Lit(subst(t, x, v), d), Goal::NafCut(l) => Goal::NafCut(l) }
+    match g {
+        Goal::Lit(t, d) => Goal::Lit(subst(t, x, v), d),
+        Goal::NafCut(l) => Goal::NafCut(l),
+    }
 }
 
 pub open spec fn item_term(it: BodyItem, off: nat) -> Term {
@@ -142,16 +198,22 @@ pub open spec fn body_goals(items: Seq<BodyItem>, off: nat, d: nat) -> Seq<Goal>
 pub open spec fn items_nvars(items: Seq<BodyItem>) -> nat
     decreases items,
 {
-    if items.len() == 0 { 0 } else {
-        let n = match items[0] { BodyItem::Pos(l) => nvars(l), BodyItem::Naf(gs) => nvars_all(gs) };
+    if items.len() == 0 {
+        0
+    } else {
+        let n = match items[0] {
+            BodyItem::Pos(l) => nvars(l),
+            BodyItem::Naf(gs) => nvars_all(gs),
+        };
         max_nat(n, items_nvars(items.drop_first()))
     }
 }
 
-pub open spec fn clause_nvars(c: DocClause) -> nat { max_nat(nvars(c.head), items_nvars(c.body)) }
+pub open spec fn clause_nvars(c: DocClause) -> nat {
+    max_nat(nvars(c.head), items_nvars(c.body))
+}
 
 // --- unification (occurs-check, R13) ---
-
 // A unification carries the goal stack and the solution template along so
 // every binding lands in them at once; choicepoints keep their own copies.
 pub ghost struct UState {
@@ -160,7 +222,11 @@ pub ghost struct UState {
     pub sol: Seq<Term>,
 }
 
-pub ghost enum UOut { Ok(Seq<Goal>, Seq<Term>), Fail, Out }
+pub ghost enum UOut {
+    Ok(Seq<Goal>, Seq<Term>),
+    Fail,
+    Out,
+}
 
 pub open spec fn u_bind(u: UState, rest: Seq<(Term, Term)>, x: nat, v: Term) -> UState {
     UState {
@@ -173,23 +239,38 @@ pub open spec fn u_bind(u: UState, rest: Seq<(Term, Term)>, x: nat, v: Term) -> 
 pub open spec fn unify_n(u: UState, fuel: nat) -> UOut
     decreases fuel,
 {
-    if fuel == 0 { UOut::Out }
-    else if u.pairs.len() == 0 { UOut::Ok(u.stack, u.sol) }
-    else {
+    if fuel == 0 {
+        UOut::Out
+    } else if u.pairs.len() == 0 {
+        UOut::Ok(u.stack, u.sol)
+    } else {
         let a = u.pairs[0].0;
         let b = u.pairs[0].1;
         let rest = u.pairs.drop_first();
         let f = (fuel - 1) as nat;
         match (a, b) {
-            (Term::Var(x), _) =>
-                if a == b { unify_n(UState { pairs: rest, ..u }, f) }
-                else if occurs(x, b) { UOut::Fail }
-                else { unify_n(u_bind(u, rest, x, b), f) },
-            (_, Term::Var(y)) => if occurs(y, a) { UOut::Fail } else { unify_n(u_bind(u, rest, y, a), f) },
-            (Term::Comp(n, xs), Term::Comp(m, ys)) =>
-                if n == m && xs.len() == ys.len() { unify_n(UState { pairs: zip(xs, ys) + rest, ..u }, f) }
-                else { UOut::Fail },
-            _ => if a == b { unify_n(UState { pairs: rest, ..u }, f) } else { UOut::Fail },
+            (Term::Var(x), _) => if a == b {
+                unify_n(UState { pairs: rest, ..u }, f)
+            } else if occurs(x, b) {
+                UOut::Fail
+            } else {
+                unify_n(u_bind(u, rest, x, b), f)
+            },
+            (_, Term::Var(y)) => if occurs(y, a) {
+                UOut::Fail
+            } else {
+                unify_n(u_bind(u, rest, y, a), f)
+            },
+            (Term::Comp(n, xs), Term::Comp(m, ys)) => if n == m && xs.len() == ys.len() {
+                unify_n(UState { pairs: zip(xs, ys) + rest, ..u }, f)
+            } else {
+                UOut::Fail
+            },
+            _ => if a == b {
+                unify_n(UState { pairs: rest, ..u }, f)
+            } else {
+                UOut::Fail
+            },
         }
     }
 }
@@ -198,13 +279,15 @@ pub open spec fn unify_n(u: UState, fuel: nat) -> UOut
 // completed outcome is the same under every larger fuel; `Out` is the
 // formal residue of that fact, never reached.
 pub open spec fn unify(u: UState) -> UOut {
-    if exists|f: nat| !(unify_n(u, f) is Out) { unify_n(u, choose|f: nat| !(unify_n(u, f) is Out)) }
-    else { UOut::Out }
+    if exists|f: nat| !(unify_n(u, f) is Out) {
+        unify_n(u, choose|f: nat| !(unify_n(u, f) is Out))
+    } else {
+        UOut::Out
+    }
 }
 
 // --- the machine ---
-
-pub ghost struct Alt {   // choicepoint: the configuration to resume; ci = next clause index to try
+pub ghost struct Alt {  // choicepoint: the configuration to resume; ci = next clause index to try
     pub stack: Seq<Goal>,
     pub sol: Seq<Term>,
     pub fresh: nat,
@@ -213,37 +296,55 @@ pub ghost struct Alt {   // choicepoint: the configuration to resume; ci = next 
 
 pub ghost struct Cfg {
     pub stack: Seq<Goal>,
-    pub sol: Seq<Term>,        // solution template (answer variables) with bindings applied
+    pub sol: Seq<Term>,  // solution template (answer variables) with bindings applied
     pub alts: Seq<Alt>,
-    pub fresh: nat,            // every live variable index is below fresh
-    pub ci: nat,               // clause index the front goal resumes from
-    pub pruned: bool,          // some branch hit depth 0
+    pub fresh: nat,  // every live variable index is below fresh
+    pub ci: nat,  // clause index the front goal resumes from
+    pub pruned: bool,  // some branch hit depth 0
     pub rows: Seq<Seq<Term>>,  // collected solutions
-    pub collect: bool,         // true = findall, false = stop at the first solution
+    pub collect: bool,  // true = findall, false = stop at the first solution
 }
 
-pub ghost enum Step { Next(Cfg), Sol, Done(Cfg), Stuck }
+pub ghost enum Step {
+    Next(Cfg),
+    Sol,
+    Done(Cfg),
+    Stuck,
+}
 
 pub ghost enum ROut {
     Sol,
-    End { complete: bool, rows: Seq<Seq<Term>> },   // complete = exhausted without prune or fuel-out
+    End {
+        complete: bool,
+        rows: Seq<Seq<Term>>,
+    },  // complete = exhausted without prune or fuel-out
 }
 
 pub open spec fn lit_fa(t: Term) -> Option<(Seq<u8>, nat)> {
-    match t { Term::Comp(name, args) => Option::Some((name, args.len())), _ => Option::None }
+    match t {
+        Term::Comp(name, args) => Option::Some((name, args.len())),
+        _ => Option::None,
+    }
 }
 
 // Least clause index >= from whose head carries the goal's name/arity.
-pub open spec fn next_match(db: Seq<DocClause>, name: Seq<u8>, arity: nat, from: nat) -> (r: Option<nat>)
+pub open spec fn next_match(db: Seq<DocClause>, name: Seq<u8>, arity: nat, from: nat) -> (r: Option<
+    nat,
+>)
     decreases db.len() - from,
 {
-    if from >= db.len() { Option::None }
-    else if lit_fa(db[from as int].head) == Option::Some((name, arity)) { Option::Some(from) }
-    else { next_match(db, name, arity, from + 1) }
+    if from >= db.len() {
+        Option::None
+    } else if lit_fa(db[from as int].head) == Option::Some((name, arity)) {
+        Option::Some(from)
+    } else {
+        next_match(db, name, arity, from + 1)
+    }
 }
 
 pub proof fn next_match_bound(db: Seq<DocClause>, name: Seq<u8>, arity: nat, from: nat)
-    ensures next_match(db, name, arity, from) matches Option::Some(m) ==> from <= m < db.len(),
+    ensures
+        next_match(db, name, arity, from) matches Option::Some(m) ==> from <= m < db.len(),
     decreases db.len() - from,
 {
     if from < db.len() && lit_fa(db[from as int].head) != Option::Some((name, arity)) {
@@ -253,37 +354,62 @@ pub proof fn next_match_bound(db: Seq<DocClause>, name: Seq<u8>, arity: nat, fro
 
 // Backtrack: resume the newest choicepoint, or end the search.
 pub open spec fn fail(c: Cfg) -> Step {
-    if c.alts.len() == 0 { Step::Done(c) } else {
+    if c.alts.len() == 0 {
+        Step::Done(c)
+    } else {
         let a = c.alts.last();
-        Step::Next(Cfg { stack: a.stack, sol: a.sol, fresh: a.fresh, ci: a.ci, alts: c.alts.drop_last(), ..c })
+        Step::Next(
+            Cfg {
+                stack: a.stack,
+                sol: a.sol,
+                fresh: a.fresh,
+                ci: a.ci,
+                alts: c.alts.drop_last(),
+                ..c
+            },
+        )
     }
 }
 
 // Call/redo of a predicate goal: enter the first clause from index ci whose
 // renamed-apart head unifies with the goal, leaving a choicepoint at the
 // next index; no clause left = failure.
-pub open spec fn call(db: Seq<DocClause>, c: Cfg, name: Seq<u8>, args: Seq<Term>, d: nat, rest: Seq<Goal>, ci: nat) -> Step
+pub open spec fn call(
+    db: Seq<DocClause>,
+    c: Cfg,
+    name: Seq<u8>,
+    args: Seq<Term>,
+    d: nat,
+    rest: Seq<Goal>,
+    ci: nat,
+) -> Step
     decreases db.len() - ci,
 {
     match next_match(db, name, args.len(), ci) {
         Option::None => fail(c),
         Option::Some(m) => {
             let cl = db[m as int];
-            proof { next_match_bound(db, name, args.len(), ci); }
+            proof {
+                next_match_bound(db, name, args.len(), ci);
+            }
             let u = UState {
                 pairs: zip(args, args_of(shift(cl.head, c.fresh))),
                 stack: body_goals(cl.body, c.fresh, (d - 1) as nat) + rest,
                 sol: c.sol,
             };
             match unify(u) {
-                UOut::Ok(stack, sol) => Step::Next(Cfg {
-                    alts: c.alts.push(Alt { stack: c.stack, sol: c.sol, fresh: c.fresh, ci: m + 1 }),
-                    stack,
-                    sol,
-                    fresh: c.fresh + clause_nvars(cl),
-                    ci: 0,
-                    ..c
-                }),
+                UOut::Ok(stack, sol) => Step::Next(
+                    Cfg {
+                        alts: c.alts.push(
+                            Alt { stack: c.stack, sol: c.sol, fresh: c.fresh, ci: m + 1 },
+                        ),
+                        stack,
+                        sol,
+                        fresh: c.fresh + clause_nvars(cl),
+                        ci: 0,
+                        ..c
+                    },
+                ),
                 UOut::Fail => call(db, c, name, args, d, rest, m + 1),
                 UOut::Out => Step::Stuck,
             }
@@ -293,28 +419,45 @@ pub open spec fn call(db: Seq<DocClause>, c: Cfg, name: Seq<u8>, args: Seq<Term>
 
 pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
     if c.stack.len() == 0 {
-        if c.collect { fail(Cfg { rows: c.rows.push(c.sol), ..c }) } else { Step::Sol }
+        if c.collect {
+            fail(Cfg { rows: c.rows.push(c.sol), ..c })
+        } else {
+            Step::Sol
+        }
     } else {
         let rest = c.stack.drop_first();
         match c.stack[0] {
             Goal::NafCut(lvl) => fail(Cfg { alts: c.alts.take(lvl as int), ..c }),
-            Goal::Lit(g, d) => if d == 0 { fail(Cfg { pruned: true, ..c }) } else {
+            Goal::Lit(g, d) => if d == 0 {
+                fail(Cfg { pruned: true, ..c })
+            } else {
                 match g {
-                    Term::Comp(name, args) =>
-                        if name == comma_name() && args.len() == 2 {
-                            Step::Next(Cfg { stack: seq![Goal::Lit(args[0], d), Goal::Lit(args[1], d)] + rest, ..c })
-                        } else if name == naf_name() && args.len() == 1 {
-                            // \+ G: prove G once at the next depth; its success cuts back to
-                            // the choicepoint pushed here and fails, its finite failure
-                            // resumes that choicepoint = the continuation.
-                            Step::Next(Cfg {
-                                alts: c.alts.push(Alt { stack: rest, sol: c.sol, fresh: c.fresh, ci: 0 }),
-                                stack: seq![Goal::Lit(args[0], (d - 1) as nat), Goal::NafCut(c.alts.len())] + rest,
+                    Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
+                        Step::Next(
+                            Cfg {
+                                stack: seq![Goal::Lit(args[0], d), Goal::Lit(args[1], d)] + rest,
                                 ..c
-                            })
-                        } else {
-                            call(db, c, name, args, d, rest, c.ci)
-                        },
+                            },
+                        )
+                    } else if name == naf_name() && args.len() == 1 {
+                        // \+ G: prove G once at the next depth; its success cuts back to
+                        // the choicepoint pushed here and fails, its finite failure
+                        // resumes that choicepoint = the continuation.
+                        Step::Next(
+                            Cfg {
+                                alts: c.alts.push(
+                                    Alt { stack: rest, sol: c.sol, fresh: c.fresh, ci: 0 },
+                                ),
+                                stack: seq![
+                                    Goal::Lit(args[0], (d - 1) as nat),
+                                    Goal::NafCut(c.alts.len()),
+                                ] + rest,
+                                ..c
+                            },
+                        )
+                    } else {
+                        call(db, c, name, args, d, rest, c.ci)
+                    },
                     _ => fail(c),
                 }
             },
@@ -325,7 +468,9 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
 pub open spec fn run(db: Seq<DocClause>, c: Cfg, fuel: nat) -> ROut
     decreases fuel,
 {
-    if fuel == 0 { ROut::End { complete: false, rows: c.rows } } else {
+    if fuel == 0 {
+        ROut::End { complete: false, rows: c.rows }
+    } else {
         match step(db, c) {
             Step::Next(c2) => run(db, c2, (fuel - 1) as nat),
             Step::Sol => ROut::Sol,
@@ -335,22 +480,34 @@ pub open spec fn run(db: Seq<DocClause>, c: Cfg, fuel: nat) -> ROut
     }
 }
 
-pub open spec fn solve(db: Seq<DocClause>, goal: Term, depth: nat, sol: Seq<Term>, collect: bool, fuel: nat) -> ROut {
-    run(db, Cfg {
-        stack: seq![Goal::Lit(goal, depth)],
-        sol,
-        alts: Seq::empty(),
-        fresh: max_nat(nvars(goal), nvars_all(sol)),
-        ci: 0,
-        pruned: false,
-        rows: Seq::empty(),
-        collect,
-    }, fuel)
+pub open spec fn solve(
+    db: Seq<DocClause>,
+    goal: Term,
+    depth: nat,
+    sol: Seq<Term>,
+    collect: bool,
+    fuel: nat,
+) -> ROut {
+    run(
+        db,
+        Cfg {
+            stack: seq![Goal::Lit(goal, depth)],
+            sol,
+            alts: Seq::empty(),
+            fresh: max_nat(nvars(goal), nvars_all(sol)),
+            ci: 0,
+            pruned: false,
+            rows: Seq::empty(),
+            collect,
+        },
+        fuel,
+    )
 }
 
 // --- replay + recursion probes ---
-
-pub open spec fn fact_clause(t: Term) -> DocClause { DocClause { head: t, body: Seq::empty() } }
+pub open spec fn fact_clause(t: Term) -> DocClause {
+    DocClause { head: t, body: Seq::empty() }
+}
 
 // asserta order: the last witness fact ends up frontmost.
 pub open spec fn witness_db(facts: Seq<Term>, db: Seq<DocClause>) -> Seq<DocClause> {
@@ -367,36 +524,57 @@ pub open spec fn heads_proved(db: Seq<DocClause>, heads: Seq<Term>) -> bool {
 
 // The goal unifies with a renamed-apart copy of the head (recursion scan).
 pub open spec fn unifiable_apart(goal: Term, head: Term) -> bool {
-    unify(UState { pairs: seq![(goal, shift(head, nvars(goal)))], stack: Seq::empty(), sol: Seq::empty() }) is Ok
+    unify(
+        UState {
+            pairs: seq![(goal, shift(head, nvars(goal)))],
+            stack: Seq::empty(),
+            sol: Seq::empty(),
+        },
+    ) is Ok
 }
 
 // --- R16 standard order (comparator matrix pins) ---
-
 pub open spec fn rank(t: Term) -> int {
-    match t { Term::Var(_) => 0, Term::Int(_) => 1, Term::Nil => 2, Term::Atom(_) => 3, Term::Comp(_, _) => 4 }
+    match t {
+        Term::Var(_) => 0,
+        Term::Int(_) => 1,
+        Term::Nil => 2,
+        Term::Atom(_) => 3,
+        Term::Comp(_, _) => 4,
+    }
 }
 
 pub open spec fn bytes_lt(a: Seq<u8>, b: Seq<u8>) -> bool
     decreases a.len(),
 {
-    if b.len() == 0 { false }
-    else if a.len() == 0 { true }
-    else if a[0] != b[0] { a[0] < b[0] }
-    else { bytes_lt(a.drop_first(), b.drop_first()) }
+    if b.len() == 0 {
+        false
+    } else if a.len() == 0 {
+        true
+    } else if a[0] != b[0] {
+        a[0] < b[0]
+    } else {
+        bytes_lt(a.drop_first(), b.drop_first())
+    }
 }
 
 pub open spec fn term_lt(a: Term, b: Term) -> bool
     decreases a,
 {
-    if rank(a) != rank(b) { rank(a) < rank(b) } else {
+    if rank(a) != rank(b) {
+        rank(a) < rank(b)
+    } else {
         match (a, b) {
             (Term::Var(x), Term::Var(y)) => x < y,
             (Term::Int(x), Term::Int(y)) => x < y,
             (Term::Atom(x), Term::Atom(y)) => bytes_lt(x, y),
-            (Term::Comp(n, xs), Term::Comp(m, ys)) =>
-                if xs.len() != ys.len() { xs.len() < ys.len() }
-                else if n != m { bytes_lt(n, m) }
-                else { args_lt(xs, ys) },
+            (Term::Comp(n, xs), Term::Comp(m, ys)) => if xs.len() != ys.len() {
+                xs.len() < ys.len()
+            } else if n != m {
+                bytes_lt(n, m)
+            } else {
+                args_lt(xs, ys)
+            },
             _ => false,
         }
     }
@@ -405,31 +583,51 @@ pub open spec fn term_lt(a: Term, b: Term) -> bool
 pub open spec fn args_lt(xs: Seq<Term>, ys: Seq<Term>) -> bool
     decreases xs,
 {
-    if xs.len() == 0 { false }
-    else if xs[0] != ys[0] { term_lt(xs[0], ys[0]) }
-    else { args_lt(xs.drop_first(), ys.drop_first()) }
+    if xs.len() == 0 {
+        false
+    } else if xs[0] != ys[0] {
+        term_lt(xs[0], ys[0])
+    } else {
+        args_lt(xs.drop_first(), ys.drop_first())
+    }
 }
 
 pub open spec fn insert_sorted(x: Term, s: Seq<Term>) -> Seq<Term>
     decreases s.len(),
 {
-    if s.len() > 0 && term_lt(s[0], x) { seq![s[0]] + insert_sorted(x, s.drop_first()) } else { seq![x] + s }
+    if s.len() > 0 && term_lt(s[0], x) {
+        seq![s[0]] + insert_sorted(x, s.drop_first())
+    } else {
+        seq![x] + s
+    }
 }
 
 // msort/2: stable, duplicates kept.
 pub open spec fn msort(s: Seq<Term>) -> Seq<Term>
     decreases s.len(),
 {
-    if s.len() == 0 { Seq::empty() } else { insert_sorted(s[0], msort(s.drop_first())) }
+    if s.len() == 0 {
+        Seq::empty()
+    } else {
+        insert_sorted(s[0], msort(s.drop_first()))
+    }
 }
 
 pub open spec fn dedup(s: Seq<Term>) -> Seq<Term>
     decreases s.len(),
 {
-    if s.len() < 2 { s } else if s[0] == s[1] { dedup(s.drop_first()) } else { seq![s[0]] + dedup(s.drop_first()) }
+    if s.len() < 2 {
+        s
+    } else if s[0] == s[1] {
+        dedup(s.drop_first())
+    } else {
+        seq![s[0]] + dedup(s.drop_first())
+    }
 }
 
 // sort/2: standard order, duplicates removed.
-pub open spec fn sort_unique(s: Seq<Term>) -> Seq<Term> { dedup(msort(s)) }
+pub open spec fn sort_unique(s: Seq<Term>) -> Seq<Term> {
+    dedup(msort(s))
+}
 
 } // verus!

@@ -1,5 +1,5 @@
-use vstd::prelude::*;
 use crate::term::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -17,9 +17,7 @@ verus! {
 // (4 uppercase hex) for other ASCII control bytes + 0x7F, backslash and
 // quote escaped, every other byte raw. UTF-8 validity of the whole file
 // is checked at the shell boundary, before the kernel sees bytes.
-
 // --- byte classes (ASCII-exact) ---
-
 pub open spec fn is_lower_b(b: u8) -> bool {
     0x61 <= b && b <= 0x7A
 }
@@ -35,10 +33,9 @@ pub open spec fn is_alnum_b(b: u8) -> bool {
 
 // SWI symbol chars: # $ & * + - . / : < = > ? @ \ ^ ~
 pub open spec fn is_graphic_b(b: u8) -> bool {
-    b == 0x23 || b == 0x24 || b == 0x26 || b == 0x2A || b == 0x2B || b == 0x2D
-        || b == 0x2E || b == 0x2F || b == 0x3A || b == 0x3C || b == 0x3D
-        || b == 0x3E || b == 0x3F || b == 0x40 || b == 0x5C || b == 0x5E
-        || b == 0x7E
+    b == 0x23 || b == 0x24 || b == 0x26 || b == 0x2A || b == 0x2B || b == 0x2D || b == 0x2E || b
+        == 0x2F || b == 0x3A || b == 0x3C || b == 0x3D || b == 0x3E || b == 0x3F || b == 0x40 || b
+        == 0x5C || b == 0x5E || b == 0x7E
 }
 
 pub open spec fn is_hex_lower_b(b: u8) -> bool {
@@ -55,7 +52,6 @@ pub open spec fn ascii(s: Seq<char>) -> Seq<u8> {
 }
 
 // --- canonical decimals ---
-
 pub open spec fn digit_byte(d: int) -> u8 {
     (0x30 + d) as u8
 }
@@ -79,7 +75,6 @@ pub open spec fn dec_bytes(n: int) -> Seq<u8> {
 }
 
 // --- atom spelling ---
-
 pub open spec fn alpha_bare(name: Seq<u8>) -> bool {
     name.len() > 0 && is_lower_b(name[0]) && all_in(name, |b: u8| is_alnum_b(b))
 }
@@ -121,9 +116,11 @@ pub open spec fn uhex4(v: int) -> Seq<u8> {
 }
 
 // Quoted-content escape law (probe-pinned).
+// `\u{5C}` spells the backslash: verusfmt 0.7.2's lexer reads a literal that
+// ends in an escaped backslash as unterminated (verus.pest `string`).
 pub open spec fn esc_byte(b: u8) -> Seq<u8> {
     if b == 0x5C {
-        ascii("\\\\"@)
+        ascii("\u{5C}\u{5C}"@)
     } else if b == 0x27 {
         ascii("\\'"@)
     } else if b == 0x07 {
@@ -166,7 +163,6 @@ pub open spec fn atom_bytes(name: Seq<u8>) -> Seq<u8> {
 }
 
 // --- numbervar rendering: 0..25 -> A..Z, then A1..Z1, A2.. ---
-
 pub open spec fn var_bytes(k: nat) -> Seq<u8> {
     let letter = (0x41 + (k % 26)) as u8;
     if k / 26 == 0 {
@@ -177,13 +173,14 @@ pub open spec fn var_bytes(k: nat) -> Seq<u8> {
 }
 
 // --- term rendering ---
-
 pub open spec fn cons_name() -> Seq<u8> {
     seq![0x5Bu8, 0x7Cu8, 0x5Du8]  // "[|]"
+
 }
 
 pub open spec fn curly_name() -> Seq<u8> {
     seq![0x7Bu8, 0x7Du8]  // "{}"
+
 }
 
 pub open spec fn term_bytes(t: Term) -> Seq<u8>
@@ -231,7 +228,6 @@ pub open spec fn tail_bytes(t: Term) -> Seq<u8>
 }
 
 // --- v1 ABI indicators (frozen order = the emitted declaration block) ---
-
 pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
     if i == 0 {
         (ascii("guideline_schema_version"@), 1)
@@ -262,7 +258,6 @@ pub open spec fn is_semantic_pred(name: Seq<u8>, arity: nat) -> bool {
 }
 
 // --- clause lines ---
-
 pub ghost enum BodyItem {
     Pos(Term),
     Naf(Seq<Term>),
@@ -322,11 +317,10 @@ pub open spec fn clause_line(c: DocClause) -> Seq<u8> {
 }
 
 // --- clause wellformedness ---
-
 pub open spec fn wf_literal(t: Term) -> bool {
     match t {
-        Term::Comp(name, args) => is_semantic_pred(name, args.len())
-            && wf_terms(args) && no_dollar_var_all(args),
+        Term::Comp(name, args) => is_semantic_pred(name, args.len()) && wf_terms(args)
+            && no_dollar_var_all(args),
         _ => false,
     }
 }
@@ -334,8 +328,9 @@ pub open spec fn wf_literal(t: Term) -> bool {
 pub open spec fn wf_body_item(it: BodyItem) -> bool {
     match it {
         BodyItem::Pos(l) => wf_literal(l),
-        BodyItem::Naf(gs) => gs.len() >= 1
-            && forall|i: int| #![auto] 0 <= i < gs.len() ==> wf_literal(gs[i]),
+        BodyItem::Naf(gs) => gs.len() >= 1 && forall|i: int|
+            #![auto]
+            0 <= i < gs.len() ==> wf_literal(gs[i]),
     }
 }
 
@@ -364,17 +359,16 @@ pub open spec fn wf_clause(c: DocClause) -> bool {
 }
 
 // --- file models ---
-
 pub ghost struct Bundle {
-    pub s: nat,           // sentence ordinal, marker "% S<s>: "
-    pub text: Seq<u8>,    // sentence bytes, opaque payload (R11)
+    pub s: nat,  // sentence ordinal, marker "% S<s>: "
+    pub text: Seq<u8>,  // sentence bytes, opaque payload (R11)
     pub clauses: Seq<DocClause>,
 }
 
 pub ghost struct DocFile {
     pub docid: Seq<u8>,
-    pub ace: Seq<u8>,              // 64 lowercase hex
-    pub ulex: Option<Seq<u8>>,     // None = ulex(none)
+    pub ace: Seq<u8>,  // 64 lowercase hex
+    pub ulex: Option<Seq<u8>>,  // None = ulex(none)
     pub bundles: Seq<Bundle>,
 }
 
@@ -382,7 +376,7 @@ pub ghost struct QueryFile {
     pub qid: Seq<u8>,
     pub ace: Seq<u8>,
     pub ulex: Option<Seq<u8>>,
-    pub qtext: Seq<u8>,   // "% Q1: " payload
+    pub qtext: Seq<u8>,  // "% Q1: " payload
     pub goal: Term,
     pub answers: Term,
 }
@@ -408,31 +402,35 @@ pub ghost enum V1File {
 }
 
 // --- envelope rendering ---
-
 pub open spec fn doc_line1(docid: Seq<u8>) -> Seq<u8> {
-    ascii("% "@) + docid
-        + ascii(".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@)
+    ascii("% "@) + docid + ascii(
+        ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
+    )
 }
 
 pub open spec fn query_line1(qid: Seq<u8>) -> Seq<u8> {
-    ascii("% "@) + qid
-        + ascii(" compiled from ACE question by ace_to_pl question mode; do not edit.\n"@)
+    ascii("% "@) + qid + ascii(
+        " compiled from ACE question by ace_to_pl question mode; do not edit.\n"@,
+    )
 }
 
 pub open spec fn answers_line1(qid: Seq<u8>) -> Seq<u8> {
-    ascii("% "@) + qid
-        + ascii(" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@)
+    ascii("% "@) + qid + ascii(
+        " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+    )
 }
 
 pub open spec fn traces_line1(qid: Seq<u8>) -> Seq<u8> {
-    ascii("% "@) + qid
-        + ascii(" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@)
+    ascii("% "@) + qid + ascii(
+        " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+    )
 }
 
 pub open spec fn decl_pair(i: int) -> Seq<u8> {
-    ascii(":- multifile("@) + indicator(i).0 + seq![0x2Fu8] + udec_bytes(indicator(i).1)
-        + ascii(").\n"@) + ascii(":- discontiguous("@) + indicator(i).0 + seq![0x2Fu8]
-        + udec_bytes(indicator(i).1) + ascii(").\n"@)
+    ascii(":- multifile("@) + indicator(i).0 + seq![0x2Fu8] + udec_bytes(indicator(i).1) + ascii(
+        ").\n"@,
+    ) + ascii(":- discontiguous("@) + indicator(i).0 + seq![0x2Fu8] + udec_bytes(indicator(i).1)
+        + ascii(").\n"@)
 }
 
 pub open spec fn decls_from(i: int) -> Seq<u8>
@@ -534,19 +532,21 @@ pub open spec fn bundles_bytes(bs: Seq<Bundle>) -> Seq<u8>
     if bs.len() == 0 {
         Seq::empty()
     } else {
-        marker_line(bs[0].s, bs[0].text) + clauses_bytes(bs[0].clauses)
-            + bundles_bytes(bs.drop_first())
+        marker_line(bs[0].s, bs[0].text) + clauses_bytes(bs[0].clauses) + bundles_bytes(
+            bs.drop_first(),
+        )
     }
 }
 
 pub open spec fn print_doc(d: DocFile) -> Seq<u8> {
-    doc_line1(d.docid) + decls_from(0) + term_line(schema_version_term())
-        + term_line(doc_record_term(d)) + bundles_bytes(d.bundles)
+    doc_line1(d.docid) + decls_from(0) + term_line(schema_version_term()) + term_line(
+        doc_record_term(d),
+    ) + bundles_bytes(d.bundles)
 }
 
 pub open spec fn print_query(q: QueryFile) -> Seq<u8> {
-    query_line1(q.qid) + term_line(query_record_term(q)) + ascii("% Q1: "@) + q.qtext
-        + seq![0x0Au8] + term_line(projection_term(q))
+    query_line1(q.qid) + term_line(query_record_term(q)) + ascii("% Q1: "@) + q.qtext + seq![0x0Au8]
+        + term_line(projection_term(q))
 }
 
 pub open spec fn print_answers(a: AnswersFile) -> Seq<u8> {
@@ -567,7 +567,6 @@ pub open spec fn print_v1(f: V1File) -> Seq<u8> {
 }
 
 // --- wellformedness ---
-
 // docid/qid law: nonempty [a-z0-9-], no leading dash.
 pub open spec fn name_ok(id: Seq<u8>) -> bool {
     &&& id.len() > 0
@@ -643,7 +642,6 @@ pub open spec fn wf_v1(f: V1File) -> bool {
 }
 
 // --- the acceptance law ---
-
 pub open spec fn accepts(bytes: Seq<u8>) -> bool {
     exists|f: V1File| #[trigger] wf_v1(f) && print_v1(f) == bytes
 }
@@ -652,7 +650,6 @@ pub open spec fn accepts(bytes: Seq<u8>) -> bool {
 // = length of the longest prefix of the input that is also a prefix of some
 // canonical file; a deterministic diagnostic pinned by fixtures, outside the
 // theorems) ---
-
 pub enum EV1Verdict {
     Ok,
     Reject { at: usize },

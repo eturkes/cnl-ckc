@@ -1,5 +1,5 @@
 use crate::k2_manifest::udec_vec;
-use crate::k2_term::{push_atom, push_comp, push_int, term_line, ETermArena};
+use crate::k2_term::{ETermArena, push_atom, push_comp, push_int, term_line};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::{arena_ok, child_terms, child_terms_match, root_ok};
 use ckc_spec::replay::*;
@@ -15,18 +15,17 @@ struct ERootedArena {
 }
 
 pub(crate) fn empty_arena() -> (arena: ETermArena)
-    ensures arena_ok(&arena),
+    ensures
+        arena_ok(&arena),
 {
     let arena = ETermArena { nodes: Vec::new() };
-    proof { reveal(arena_ok); }
+    proof {
+        reveal(arena_ok);
+    }
     arena
 }
 
-fn push_named_atom(
-    arena: &mut ETermArena,
-    bytes: &[u8],
-    name: Ghost<Seq<u8>>,
-) -> (root: usize)
+fn push_named_atom(arena: &mut ETermArena, bytes: &[u8], name: Ghost<Seq<u8>>) -> (root: usize)
     requires
         arena_ok(old(arena)),
         bytes@ == name@,
@@ -51,8 +50,8 @@ fn push_named_comp(
         arena_ok(old(arena)),
         bytes@ == name@,
         child_roots@.len() > 0,
-        forall|i: int| 0 <= i < child_roots@.len()
-            ==> #[trigger] child_roots@[i] < old(arena).nodes@.len(),
+        forall|i: int|
+            0 <= i < child_roots@.len() ==> #[trigger] child_roots@[i] < old(arena).nodes@.len(),
         child_terms(old(arena).nodes@, child_roots@) == args@,
     ensures
         arena_ok(final(arena)),
@@ -65,7 +64,8 @@ fn push_named_comp(
 }
 
 pub(crate) fn push_usize_int(arena: &mut ETermArena, n: usize) -> (root: usize)
-    requires arena_ok(old(arena)),
+    requires
+        arena_ok(old(arena)),
     ensures
         arena_ok(final(arena)),
         root == old(arena).nodes@.len(),
@@ -74,22 +74,19 @@ pub(crate) fn push_usize_int(arena: &mut ETermArena, n: usize) -> (root: usize)
 {
     let spelling = udec_vec(n);
     let magnitude = udec_vec(n);
-    proof { reveal(ckc_spec::v1text::dec_bytes); }
+    proof {
+        reveal(ckc_spec::v1text::dec_bytes);
+    }
     push_int(arena, spelling, magnitude, false, Ghost(n as int))
 }
 
-fn one_child(
-    arena: &ETermArena,
-    child: usize,
-    model: Ghost<Term>,
-) -> (roots: Vec<usize>)
+fn one_child(arena: &ETermArena, child: usize, model: Ghost<Term>) -> (roots: Vec<usize>)
     requires
         root_ok(arena, child),
         arena@[child as int] == model@,
     ensures
         roots@ == seq![child],
-        forall|i: int| 0 <= i < roots@.len()
-            ==> #[trigger] roots@[i] < arena.nodes@.len(),
+        forall|i: int| 0 <= i < roots@.len() ==> #[trigger] roots@[i] < arena.nodes@.len(),
         child_terms(arena.nodes@, roots@) == seq![model@],
 {
     let mut roots = Vec::new();
@@ -115,8 +112,7 @@ fn two_children(
         arena@[right as int] == right_model@,
     ensures
         roots@ == seq![left, right],
-        forall|i: int| 0 <= i < roots@.len()
-            ==> #[trigger] roots@[i] < arena.nodes@.len(),
+        forall|i: int| 0 <= i < roots@.len() ==> #[trigger] roots@[i] < arena.nodes@.len(),
         child_terms(arena.nodes@, roots@) == seq![left_model@, right_model@],
 {
     let mut roots = Vec::new();
@@ -144,9 +140,12 @@ fn unreadable_arena() -> (out: ERootedArena)
     let class_bytes: &[u8] = b"check_load";
     let detail_bytes: &[u8] = b"unreadable";
     proof {
-        reveal_strlit("ace_to_pl_error"); reveal_byteslit(b"ace_to_pl_error");
-        reveal_strlit("check_load"); reveal_byteslit(b"check_load");
-        reveal_strlit("unreadable"); reveal_byteslit(b"unreadable");
+        reveal_strlit("ace_to_pl_error");
+        reveal_byteslit(b"ace_to_pl_error");
+        reveal_strlit("check_load");
+        reveal_byteslit(b"check_load");
+        reveal_strlit("unreadable");
+        reveal_byteslit(b"unreadable");
         reveal(ckc_spec::v1text::ascii);
     }
     let ghost outer_name = ckc_spec::v1text::ascii("ace_to_pl_error"@);
@@ -177,7 +176,9 @@ fn unreadable_arena() -> (out: ERootedArena)
         children,
         Ghost(outer_args),
     );
-    proof { reveal(root_ok); }
+    proof {
+        reveal(root_ok);
+    }
     ERootedArena { arena, root }
 }
 
@@ -189,20 +190,23 @@ fn utf8_arena(off: usize) -> (out: ERootedArena)
             ckc_spec::v1text::ascii("ace_to_pl_error"@),
             seq![
                 Term::Atom(ckc_spec::v1text::ascii("check_load"@)),
-                Term::Comp(ckc_spec::v1text::ascii("error"@), seq![
-                    Term::Comp(
-                        ckc_spec::v1text::ascii("syntax_error"@),
-                        seq![Term::Atom(ckc_spec::v1text::ascii("invalid_utf8"@))],
-                    ),
-                    ctx(
-                        "read_utf8_input"@,
-                        3,
+                Term::Comp(
+                    ckc_spec::v1text::ascii("error"@),
+                    seq![
                         Term::Comp(
-                            ckc_spec::v1text::ascii("byte_offset"@),
-                            seq![Term::Int(off as int)],
+                            ckc_spec::v1text::ascii("syntax_error"@),
+                            seq![Term::Atom(ckc_spec::v1text::ascii("invalid_utf8"@))],
                         ),
-                    ),
-                ]),
+                        ctx(
+                            "read_utf8_input"@,
+                            3,
+                            Term::Comp(
+                                ckc_spec::v1text::ascii("byte_offset"@),
+                                seq![Term::Int(off as int)],
+                            ),
+                        ),
+                    ],
+                ),
             ],
         ),
 {
@@ -218,17 +222,28 @@ fn utf8_arena(off: usize) -> (out: ERootedArena)
     let offset_bytes: &[u8] = b"byte_offset";
     let reader_bytes: &[u8] = b"read_utf8_input";
     proof {
-        reveal_strlit("ace_to_pl_error"); reveal_byteslit(b"ace_to_pl_error");
-        reveal_strlit("check_load"); reveal_byteslit(b"check_load");
-        reveal_strlit("error"); reveal_byteslit(b"error");
-        reveal_strlit("syntax_error"); reveal_byteslit(b"syntax_error");
-        reveal_strlit("invalid_utf8"); reveal_byteslit(b"invalid_utf8");
-        reveal_strlit("context"); reveal_byteslit(b"context");
-        reveal_strlit(":"); reveal_byteslit(b":");
-        reveal_strlit("ace_to_pl"); reveal_byteslit(b"ace_to_pl");
-        reveal_strlit("/"); reveal_byteslit(b"/");
-        reveal_strlit("byte_offset"); reveal_byteslit(b"byte_offset");
-        reveal_strlit("read_utf8_input"); reveal_byteslit(b"read_utf8_input");
+        reveal_strlit("ace_to_pl_error");
+        reveal_byteslit(b"ace_to_pl_error");
+        reveal_strlit("check_load");
+        reveal_byteslit(b"check_load");
+        reveal_strlit("error");
+        reveal_byteslit(b"error");
+        reveal_strlit("syntax_error");
+        reveal_byteslit(b"syntax_error");
+        reveal_strlit("invalid_utf8");
+        reveal_byteslit(b"invalid_utf8");
+        reveal_strlit("context");
+        reveal_byteslit(b"context");
+        reveal_strlit(":");
+        reveal_byteslit(b":");
+        reveal_strlit("ace_to_pl");
+        reveal_byteslit(b"ace_to_pl");
+        reveal_strlit("/");
+        reveal_byteslit(b"/");
+        reveal_strlit("byte_offset");
+        reveal_byteslit(b"byte_offset");
+        reveal_strlit("read_utf8_input");
+        reveal_byteslit(b"read_utf8_input");
         reveal(ckc_spec::v1text::ascii);
     }
     let ghost outer_name = ckc_spec::v1text::ascii("ace_to_pl_error"@);
@@ -279,53 +294,96 @@ fn utf8_arena(off: usize) -> (out: ERootedArena)
     let invalid_root = push_named_atom(&mut arena, invalid_bytes, Ghost(invalid_name));
     let syntax_children = one_child(&arena, invalid_root, Ghost(invalid_term));
     let syntax_root = push_named_comp(
-        &mut arena, syntax_bytes, Ghost(syntax_name), syntax_children, Ghost(syntax_args),
+        &mut arena,
+        syntax_bytes,
+        Ghost(syntax_name),
+        syntax_children,
+        Ghost(syntax_args),
     );
 
     let reader_root = push_named_atom(&mut arena, reader_bytes, Ghost(reader_name));
     let three_root = push_usize_int(&mut arena, 3);
     let slash_children = two_children(
-        &arena, reader_root, three_root, Ghost(reader_term), Ghost(three_term),
+        &arena,
+        reader_root,
+        three_root,
+        Ghost(reader_term),
+        Ghost(three_term),
     );
     let slash_root = push_named_comp(
-        &mut arena, slash_bytes, Ghost(slash_name), slash_children,
+        &mut arena,
+        slash_bytes,
+        Ghost(slash_name),
+        slash_children,
         Ghost(slash_args),
     );
     let ace_root = push_named_atom(&mut arena, ace_bytes, Ghost(ace_name));
     let colon_children = two_children(
-        &arena, ace_root, slash_root, Ghost(ace_term), Ghost(slash_term),
+        &arena,
+        ace_root,
+        slash_root,
+        Ghost(ace_term),
+        Ghost(slash_term),
     );
     let colon_root = push_named_comp(
-        &mut arena, colon_bytes, Ghost(colon_name), colon_children,
+        &mut arena,
+        colon_bytes,
+        Ghost(colon_name),
+        colon_children,
         Ghost(colon_args),
     );
 
     let off_root = push_usize_int(&mut arena, off);
     let offset_children = one_child(&arena, off_root, Ghost(off_term));
     let offset_root = push_named_comp(
-        &mut arena, offset_bytes, Ghost(offset_name), offset_children, Ghost(offset_args),
+        &mut arena,
+        offset_bytes,
+        Ghost(offset_name),
+        offset_children,
+        Ghost(offset_args),
     );
     let context_children = two_children(
-        &arena, colon_root, offset_root, Ghost(colon_term), Ghost(offset_term),
+        &arena,
+        colon_root,
+        offset_root,
+        Ghost(colon_term),
+        Ghost(offset_term),
     );
     let context_root = push_named_comp(
-        &mut arena, context_bytes, Ghost(context_name), context_children,
+        &mut arena,
+        context_bytes,
+        Ghost(context_name),
+        context_children,
         Ghost(context_args),
     );
 
     let error_children = two_children(
-        &arena, syntax_root, context_root, Ghost(syntax_term), Ghost(context_term),
+        &arena,
+        syntax_root,
+        context_root,
+        Ghost(syntax_term),
+        Ghost(context_term),
     );
     let detail_root = push_named_comp(
-        &mut arena, error_bytes, Ghost(error_name), error_children,
+        &mut arena,
+        error_bytes,
+        Ghost(error_name),
+        error_children,
         Ghost(error_args),
     );
     let class_root = push_named_atom(&mut arena, class_bytes, Ghost(class_name));
     let outer_children = two_children(
-        &arena, class_root, detail_root, Ghost(class_term), Ghost(detail_term),
+        &arena,
+        class_root,
+        detail_root,
+        Ghost(class_term),
+        Ghost(detail_term),
     );
     let root = push_named_comp(
-        &mut arena, outer_bytes, Ghost(outer_name), outer_children,
+        &mut arena,
+        outer_bytes,
+        Ghost(outer_name),
+        outer_children,
         Ghost(outer_args),
     );
     proof {
@@ -336,7 +394,8 @@ fn utf8_arena(off: usize) -> (out: ERootedArena)
 }
 
 pub(crate) fn utf8_out(off: usize) -> (out: EOut)
-    ensures out@ == utf8_reject(off as nat),
+    ensures
+        out@ == utf8_reject(off as nat),
 {
     let rooted = utf8_arena(off);
     let err = term_line(&rooted.arena, rooted.root);
@@ -351,31 +410,32 @@ pub(crate) fn utf8_out(off: usize) -> (out: EOut)
 }
 
 #[verifier::rlimit(5000)]
-fn manifest_arena(
-    mpath: &[u8],
-    detail_bytes: &[u8],
-    bad_line: bool,
-) -> (out: ERootedArena)
+fn manifest_arena(mpath: &[u8], detail_bytes: &[u8], bad_line: bool) -> (out: ERootedArena)
     ensures
         root_ok(&out.arena, out.root),
         out.arena@[out.root as int] == Term::Comp(
             ckc_spec::v1text::ascii("ace_to_pl_error"@),
             seq![
                 Term::Atom(ckc_spec::v1text::ascii("check_load"@)),
-                Term::Comp(ckc_spec::v1text::ascii("error"@), seq![
-                    Term::Comp(
-                        ckc_spec::v1text::ascii("aggregate_manifest"@),
-                        seq![if bad_line {
-                            Term::Comp(
-                                ckc_spec::v1text::ascii("line"@),
-                                seq![Term::Atom(detail_bytes@)],
-                            )
-                        } else {
-                            Term::Atom(ckc_spec::v1text::ascii("missing_final_newline"@))
-                        }],
-                    ),
-                    ctx("aggregate_read_manifest"@, 3, Term::Atom(mpath@)),
-                ]),
+                Term::Comp(
+                    ckc_spec::v1text::ascii("error"@),
+                    seq![
+                        Term::Comp(
+                            ckc_spec::v1text::ascii("aggregate_manifest"@),
+                            seq![
+                                if bad_line {
+                                    Term::Comp(
+                                        ckc_spec::v1text::ascii("line"@),
+                                        seq![Term::Atom(detail_bytes@)],
+                                    )
+                                } else {
+                                    Term::Atom(ckc_spec::v1text::ascii("missing_final_newline"@))
+                                },
+                            ],
+                        ),
+                        ctx("aggregate_read_manifest"@, 3, Term::Atom(mpath@)),
+                    ],
+                ),
             ],
         ),
 {
@@ -391,17 +451,28 @@ fn manifest_arena(
     let slash_bytes: &[u8] = b"/";
     let reader_bytes: &[u8] = b"aggregate_read_manifest";
     proof {
-        reveal_strlit("ace_to_pl_error"); reveal_byteslit(b"ace_to_pl_error");
-        reveal_strlit("check_load"); reveal_byteslit(b"check_load");
-        reveal_strlit("error"); reveal_byteslit(b"error");
-        reveal_strlit("aggregate_manifest"); reveal_byteslit(b"aggregate_manifest");
-        reveal_strlit("line"); reveal_byteslit(b"line");
-        reveal_strlit("missing_final_newline"); reveal_byteslit(b"missing_final_newline");
-        reveal_strlit("context"); reveal_byteslit(b"context");
-        reveal_strlit(":"); reveal_byteslit(b":");
-        reveal_strlit("ace_to_pl"); reveal_byteslit(b"ace_to_pl");
-        reveal_strlit("/"); reveal_byteslit(b"/");
-        reveal_strlit("aggregate_read_manifest"); reveal_byteslit(b"aggregate_read_manifest");
+        reveal_strlit("ace_to_pl_error");
+        reveal_byteslit(b"ace_to_pl_error");
+        reveal_strlit("check_load");
+        reveal_byteslit(b"check_load");
+        reveal_strlit("error");
+        reveal_byteslit(b"error");
+        reveal_strlit("aggregate_manifest");
+        reveal_byteslit(b"aggregate_manifest");
+        reveal_strlit("line");
+        reveal_byteslit(b"line");
+        reveal_strlit("missing_final_newline");
+        reveal_byteslit(b"missing_final_newline");
+        reveal_strlit("context");
+        reveal_byteslit(b"context");
+        reveal_strlit(":");
+        reveal_byteslit(b":");
+        reveal_strlit("ace_to_pl");
+        reveal_byteslit(b"ace_to_pl");
+        reveal_strlit("/");
+        reveal_byteslit(b"/");
+        reveal_strlit("aggregate_read_manifest");
+        reveal_byteslit(b"aggregate_read_manifest");
         reveal(ckc_spec::v1text::ascii);
     }
     let ghost outer_name = ckc_spec::v1text::ascii("ace_to_pl_error"@);
@@ -456,56 +527,93 @@ fn manifest_arena(
     let d_root = if bad_line {
         let detail_root = push_named_atom(&mut arena, detail_bytes, Ghost(detail_bytes@));
         let line_children = one_child(&arena, detail_root, Ghost(detail_atom));
-        push_named_comp(
-            &mut arena, line_bytes, Ghost(line_name), line_children, Ghost(line_args),
-        )
+        push_named_comp(&mut arena, line_bytes, Ghost(line_name), line_children, Ghost(line_args))
     } else {
         push_named_atom(&mut arena, missing_bytes, Ghost(missing_name))
     };
     let aggregate_children = one_child(&arena, d_root, Ghost(d));
     let aggregate_root = push_named_comp(
-        &mut arena, aggregate_bytes, Ghost(aggregate_name), aggregate_children, Ghost(aggregate_args),
+        &mut arena,
+        aggregate_bytes,
+        Ghost(aggregate_name),
+        aggregate_children,
+        Ghost(aggregate_args),
     );
 
     let reader_root = push_named_atom(&mut arena, reader_bytes, Ghost(reader_name));
     let three_root = push_usize_int(&mut arena, 3);
     let slash_children = two_children(
-        &arena, reader_root, three_root, Ghost(reader_term), Ghost(three_term),
+        &arena,
+        reader_root,
+        three_root,
+        Ghost(reader_term),
+        Ghost(three_term),
     );
     let slash_root = push_named_comp(
-        &mut arena, slash_bytes, Ghost(slash_name), slash_children,
+        &mut arena,
+        slash_bytes,
+        Ghost(slash_name),
+        slash_children,
         Ghost(slash_args),
     );
     let ace_root = push_named_atom(&mut arena, ace_bytes, Ghost(ace_name));
     let colon_children = two_children(
-        &arena, ace_root, slash_root, Ghost(ace_term), Ghost(slash_term),
+        &arena,
+        ace_root,
+        slash_root,
+        Ghost(ace_term),
+        Ghost(slash_term),
     );
     let colon_root = push_named_comp(
-        &mut arena, colon_bytes, Ghost(colon_name), colon_children,
+        &mut arena,
+        colon_bytes,
+        Ghost(colon_name),
+        colon_children,
         Ghost(colon_args),
     );
     let mpath_root = push_named_atom(&mut arena, mpath, Ghost(mpath@));
     let context_children = two_children(
-        &arena, colon_root, mpath_root, Ghost(colon_term), Ghost(mpath_term),
+        &arena,
+        colon_root,
+        mpath_root,
+        Ghost(colon_term),
+        Ghost(mpath_term),
     );
     let context_root = push_named_comp(
-        &mut arena, context_bytes, Ghost(context_name), context_children,
+        &mut arena,
+        context_bytes,
+        Ghost(context_name),
+        context_children,
         Ghost(context_args),
     );
 
     let error_children = two_children(
-        &arena, aggregate_root, context_root, Ghost(aggregate_term), Ghost(context_term),
+        &arena,
+        aggregate_root,
+        context_root,
+        Ghost(aggregate_term),
+        Ghost(context_term),
     );
     let detail_root = push_named_comp(
-        &mut arena, error_bytes, Ghost(error_name), error_children,
+        &mut arena,
+        error_bytes,
+        Ghost(error_name),
+        error_children,
         Ghost(error_args),
     );
     let class_root = push_named_atom(&mut arena, class_bytes, Ghost(class_name));
     let outer_children = two_children(
-        &arena, class_root, detail_root, Ghost(class_term), Ghost(detail_term),
+        &arena,
+        class_root,
+        detail_root,
+        Ghost(class_term),
+        Ghost(detail_term),
     );
     let root = push_named_comp(
-        &mut arena, outer_bytes, Ghost(outer_name), outer_children,
+        &mut arena,
+        outer_bytes,
+        Ghost(outer_name),
+        outer_children,
         Ghost(outer_args),
     );
     proof {
@@ -515,22 +623,16 @@ fn manifest_arena(
     ERootedArena { arena, root }
 }
 
-pub(crate) fn manifest_error_out(
-    mpath: &[u8],
-    detail_bytes: &[u8],
-    bad_line: bool,
-) -> (out: EOut)
-    ensures out@ == if bad_line {
-        manifest_reject(
-            mpath@,
-            Term::Comp(
-                ckc_spec::v1text::ascii("line"@),
-                seq![Term::Atom(detail_bytes@)],
-            ),
-        )
-    } else {
-        manifest_reject(mpath@, atom("missing_final_newline"@))
-    },
+pub(crate) fn manifest_error_out(mpath: &[u8], detail_bytes: &[u8], bad_line: bool) -> (out: EOut)
+    ensures
+        out@ == if bad_line {
+            manifest_reject(
+                mpath@,
+                Term::Comp(ckc_spec::v1text::ascii("line"@), seq![Term::Atom(detail_bytes@)]),
+            )
+        } else {
+            manifest_reject(mpath@, atom("missing_final_newline"@))
+        },
 {
     let rooted = manifest_arena(mpath, detail_bytes, bad_line);
     let err = term_line(&rooted.arena, rooted.root);
@@ -545,7 +647,8 @@ pub(crate) fn manifest_error_out(
 }
 
 pub(crate) fn unreadable_out() -> (out: EOut)
-    ensures out@ == check_load(atom("unreadable"@)),
+    ensures
+        out@ == check_load(atom("unreadable"@)),
 {
     let rooted = unreadable_arena();
     let err = term_line(&rooted.arena, rooted.root);

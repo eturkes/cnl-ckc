@@ -5,12 +5,16 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "17 6 * * 1" # weekly advisories against the committed lock
 
 permissions:
   contents: read
 
 jobs:
+  # Legacy chain (E-- → Python identity + corpus check); CI-authoritative until M5.7.
   check:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     container:
       image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
@@ -21,7 +25,7 @@ jobs:
           apt-get install -y --no-install-recommends git ca-certificates python3
 
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -60,43 +64,72 @@ jobs:
           git diff --exit-code
           test -z "$(git status --porcelain)"
 
+  # Rust chain = `just rust`: verusfmt, clippy -D warnings, Verus --no-cheating,
+  # build, trust-audit, tests, cargo-deny, gitleaks. Tools + toolchain come from
+  # the sha256-pinned locks (rust/verus.lock, rust/tools.lock) via `just tools`.
   rust:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # gitleaks scans the whole history
 
-      - name: Install pinned Verus release
+      - name: Bootstrap just (rust/tools.lock)
         run: |
           set -eu
-          url=$(awk -F'\t' '$1=="verus_asset_url"{print $2}' rust/verus.lock)
-          asset=$(awk -F'\t' '$1=="verus_asset"{print $2}' rust/verus.lock)
-          sha=$(awk -F'\t' '$1=="verus_asset_sha256"{print $2}' rust/verus.lock)
-          curl -sSL -o "$RUNNER_TEMP/$asset" "$url"
-          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/$asset" | sha256sum -c
-          unzip -q "$RUNNER_TEMP/$asset" -d "$RUNNER_TEMP/verus"
+          url=$(awk -F'\t' '$1=="just"{print $5}' rust/tools.lock)
+          sha=$(awk -F'\t' '$1=="just"{print $4}' rust/tools.lock)
+          curl -sSL -o "$RUNNER_TEMP/just.tar.gz" "$url"
+          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/just.tar.gz" | sha256sum -c
+          mkdir -p "$RUNNER_TEMP/just"
+          tar -xzf "$RUNNER_TEMP/just.tar.gz" -C "$RUNNER_TEMP/just" just
+          echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"
 
-      - name: Install pinned rust toolchain
+      - name: Cache toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .toolchain
+            !.toolchain/dl
+          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
+
+      - name: Install pinned tools
+        run: just tools
+
+      - name: Rust gate
+        run: just rust
+
+  # Weekly: RustSec advisories + license/source policy over the committed Cargo.lock.
+  advisories:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Bootstrap just (rust/tools.lock)
         run: |
           set -eu
-          tc=$(awk -F'\t' '$1=="rustc_toolchain"{print $2}' rust/verus.lock)
-          rustup toolchain install "$tc" --profile minimal
+          url=$(awk -F'\t' '$1=="just"{print $5}' rust/tools.lock)
+          sha=$(awk -F'\t' '$1=="just"{print $4}' rust/tools.lock)
+          curl -sSL -o "$RUNNER_TEMP/just.tar.gz" "$url"
+          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/just.tar.gz" | sha256sum -c
+          mkdir -p "$RUNNER_TEMP/just"
+          tar -xzf "$RUNNER_TEMP/just.tar.gz" -C "$RUNNER_TEMP/just" just
+          echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"
 
-      - name: Verify workspace
-        run: |
-          set -eu
-          export PATH="$RUNNER_TEMP/verus/verus-x86-linux:$PATH"
-          cd rust
-          cargo verus verify --workspace --locked --offline -- --no-cheating
+      - name: Cache toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .toolchain
+            !.toolchain/dl
+          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
 
-      - name: Build ckc
-        run: |
-          set -eu
-          cd rust
-          cargo build --release --locked --offline
+      - name: Install pinned tools
+        run: just tools
 
-      - name: Trust audit
-        run: |
-          set -eu
-          cd rust
-          ./target/release/ckc trust-audit
+      - name: Dependency audit
+        run: just deny

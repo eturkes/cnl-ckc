@@ -1,0 +1,16 @@
+# Update automation. cargo PRs = notices: the vendored --locked --offline
+# closure changes only through the recorded procedure (`.claude/rules/rust.md`
+# dependency bump), so a Dependabot cargo PR fails CI until that lands.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: cargo
+    directory: /rust
+    schedule:
+      interval: weekly
+    exclude-paths:
+      - vendor/**
+    open-pull-requests-limit: 3

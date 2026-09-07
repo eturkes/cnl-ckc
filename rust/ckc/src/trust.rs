@@ -40,8 +40,13 @@ const WORD_TOKENS: [&str; 15] = [
 ];
 // Raw substring tokens (inclusion vectors + legacy paren attribute form;
 // leading char is non-word).
-const RAW_TOKENS: [&str; 5] =
-    ["#[path", "include!", "include_str!", "include_bytes!", "verifier(external"];
+const RAW_TOKENS: [&str; 5] = [
+    "#[path",
+    "include!",
+    "include_str!",
+    "include_bytes!",
+    "verifier(external",
+];
 // Multi-token sequences joined by punctuation take interior whitespace in
 // Rust (spaces, newlines or comments between the punctuation and identifier
 // tokens). For these, count on the whole file with whitespace stripped and
@@ -157,7 +162,11 @@ fn scan_escapes(root: &Path, v: &mut Vec<String>) -> usize {
         let mut files = Vec::new();
         walk_rs(&root.join(m).join("src"), &mut files);
         for f in files {
-            let rel = f.strip_prefix(root).unwrap_or(&f).to_string_lossy().to_string();
+            let rel = f
+                .strip_prefix(root)
+                .unwrap_or(&f)
+                .to_string_lossy()
+                .to_string();
             let Ok(text) = fs::read_to_string(&f) else {
                 v.push(format!("unreadable source file: {}", rel));
                 continue;
@@ -206,7 +215,11 @@ fn scan_escapes(root: &Path, v: &mut Vec<String>) -> usize {
                 let count = parts.get(2).and_then(|c| c.parse::<usize>().ok());
                 match (parts.len(), count) {
                     (4, Some(c)) if c > 0 => {
-                        let key = (parts[0].to_string(), parts[1].to_string(), parts[3].to_string());
+                        let key = (
+                            parts[0].to_string(),
+                            parts[1].to_string(),
+                            parts[3].to_string(),
+                        );
                         if allowed.insert(key, c).is_some() {
                             v.push(format!("escape-allowlist duplicate row {}", i + 1));
                         }
@@ -257,10 +270,16 @@ fn check_structure(root: &Path, v: &mut Vec<String>) {
             continue;
         };
         let stripped: Vec<&str> = text.lines().map(|l| l.trim()).collect();
-        if stripped.iter().any(|l| l.starts_with("build =") || l.starts_with("build=")) {
+        if stripped
+            .iter()
+            .any(|l| l.starts_with("build =") || l.starts_with("build="))
+        {
             v.push(format!("{}/Cargo.toml declares build script", m));
         }
-        if stripped.iter().any(|l| l.starts_with("proc-macro") && l.contains("true")) {
+        if stripped
+            .iter()
+            .any(|l| l.starts_with("proc-macro") && l.contains("true"))
+        {
             v.push(format!("{}/Cargo.toml declares proc-macro", m));
         }
         if KERNEL_CRATES.contains(&m) {
@@ -269,10 +288,14 @@ fn check_structure(root: &Path, v: &mut Vec<String>) {
                 .nth(1)
                 .map(|rest| rest.split('[').next().unwrap_or(""))
                 .is_some_and(|body| {
-                    body.lines().any(|l| l.trim().replace(' ', "") == "verify=true")
+                    body.lines()
+                        .any(|l| l.trim().replace(' ', "") == "verify=true")
                 });
             if !has {
-                v.push(format!("{}/Cargo.toml missing [package.metadata.verus] verify = true", m));
+                v.push(format!(
+                    "{}/Cargo.toml missing [package.metadata.verus] verify = true",
+                    m
+                ));
             }
         }
     }
@@ -289,10 +312,10 @@ fn check_deps(root: &Path, v: &mut Vec<String>) {
                 let line = line.trim();
                 if let Some(n) = line.strip_prefix("name = \"") {
                     name = n.strip_suffix('"').map(|s| s.to_string());
-                } else if let Some(ver) = line.strip_prefix("version = \"") {
-                    if let (Some(n), Some(w)) = (name.take(), ver.strip_suffix('"')) {
-                        *locked.entry((n, w.to_string())).or_insert(0) += 1;
-                    }
+                } else if let Some(ver) = line.strip_prefix("version = \"")
+                    && let (Some(n), Some(w)) = (name.take(), ver.strip_suffix('"'))
+                {
+                    *locked.entry((n, w.to_string())).or_insert(0) += 1;
                 }
             }
         }
@@ -319,12 +342,12 @@ fn check_deps(root: &Path, v: &mut Vec<String>) {
         Err(_) => v.push("missing trust/deps-allowlist.tsv".to_string()),
     }
 
-    for (k, _) in &locked {
+    for k in locked.keys() {
         if !allowed.contains_key(k) {
             v.push(format!("dep not allowlisted: {} {}", k.0, k.1));
         }
     }
-    for (k, _) in &allowed {
+    for k in allowed.keys() {
         if !locked.contains_key(k) {
             v.push(format!("stale deps-allowlist row: {} {}", k.0, k.1));
         }
@@ -345,7 +368,12 @@ fn check_manifest(root: &Path, v: &mut Vec<String>) -> usize {
     let mut spec_files = Vec::new();
     walk_rs(&root.join("ckc-spec").join("src"), &mut spec_files);
     for f in &spec_files {
-        required.push(f.strip_prefix(root).unwrap_or(f).to_string_lossy().to_string());
+        required.push(
+            f.strip_prefix(root)
+                .unwrap_or(f)
+                .to_string_lossy()
+                .to_string(),
+        );
     }
     for f in TRUSTED_KERNEL_FILES {
         required.push(f.to_string());
@@ -364,7 +392,10 @@ fn check_manifest(root: &Path, v: &mut Vec<String>) -> usize {
                 }
                 let parts: Vec<&str> = line.split('\t').collect();
                 if parts.len() == 2 && parts[0].len() == 64 {
-                    if listed.insert(parts[1].to_string(), parts[0].to_string()).is_some() {
+                    if listed
+                        .insert(parts[1].to_string(), parts[0].to_string())
+                        .is_some()
+                    {
                         v.push(format!("spec-manifest duplicate path row {}", i + 1));
                     }
                 } else {
@@ -381,7 +412,10 @@ fn check_manifest(root: &Path, v: &mut Vec<String>) -> usize {
                 Ok(bytes) => {
                     let got = sha256_hex(&bytes);
                     if &got != want {
-                        v.push(format!("trusted-surface drift: {} sha256 {} != manifest {}", path, got, want));
+                        v.push(format!(
+                            "trusted-surface drift: {} sha256 {} != manifest {}",
+                            path, got, want
+                        ));
                     }
                 }
                 Err(_) => v.push(format!("trusted file unreadable: {}", path)),

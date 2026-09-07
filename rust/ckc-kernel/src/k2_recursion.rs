@@ -1,9 +1,9 @@
 use crate::k2_engine::{EBodyItem, EClause, literal_matches, unifiable_apart};
-use crate::k2_term::{ENode, ETermArena};
 #[cfg(verus_keep_ghost)]
 use crate::k2_engine::{clause_view, db_valid, db_view};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
+use crate::k2_term::{ENode, ETermArena};
 #[cfg(verus_keep_ghost)]
 use ckc_spec::engine::lit_fa;
 #[cfg(verus_keep_ghost)]
@@ -18,8 +18,10 @@ use vstd::slice::slice_to_vec;
 verus! {
 
 pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
-    requires i < 9,
-    ensures (out.0@, out.1 as nat) == indicator(i as int),
+    requires
+        i < 9,
+    ensures
+        (out.0@, out.1 as nat) == indicator(i as int),
 {
     let name: &[u8] = match i {
         0 => b"guideline_schema_version",
@@ -32,17 +34,31 @@ pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
         7 => b"guideline_property",
         _ => b"guideline_operator",
     };
-    let arity: usize = match i { 0 => 1, 1 | 4 | 8 => 3, 3 => 5, _ => 4 };
+    let arity: usize = match i {
+        0 => 1,
+        1 | 4 | 8 => 3,
+        3 => 5,
+        _ => 4,
+    };
     proof {
-        reveal_byteslit(b"guideline_schema_version"); reveal_strlit("guideline_schema_version");
-        reveal_byteslit(b"guideline_document"); reveal_strlit("guideline_document");
-        reveal_byteslit(b"guideline_entity"); reveal_strlit("guideline_entity");
-        reveal_byteslit(b"guideline_cardinality"); reveal_strlit("guideline_cardinality");
-        reveal_byteslit(b"guideline_event"); reveal_strlit("guideline_event");
-        reveal_byteslit(b"guideline_arg"); reveal_strlit("guideline_arg");
-        reveal_byteslit(b"guideline_pp"); reveal_strlit("guideline_pp");
-        reveal_byteslit(b"guideline_property"); reveal_strlit("guideline_property");
-        reveal_byteslit(b"guideline_operator"); reveal_strlit("guideline_operator");
+        reveal_byteslit(b"guideline_schema_version");
+        reveal_strlit("guideline_schema_version");
+        reveal_byteslit(b"guideline_document");
+        reveal_strlit("guideline_document");
+        reveal_byteslit(b"guideline_entity");
+        reveal_strlit("guideline_entity");
+        reveal_byteslit(b"guideline_cardinality");
+        reveal_strlit("guideline_cardinality");
+        reveal_byteslit(b"guideline_event");
+        reveal_strlit("guideline_event");
+        reveal_byteslit(b"guideline_arg");
+        reveal_strlit("guideline_arg");
+        reveal_byteslit(b"guideline_pp");
+        reveal_strlit("guideline_pp");
+        reveal_byteslit(b"guideline_property");
+        reveal_strlit("guideline_property");
+        reveal_byteslit(b"guideline_operator");
+        reveal_strlit("guideline_operator");
         reveal(ckc_spec::v1text::ascii);
         assert(name@ == indicator(i as int).0);
     }
@@ -50,26 +66,32 @@ pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
 }
 
 pub open spec fn rule_indices_ok(db: Seq<EClause>, indices: Seq<usize>) -> bool {
-    forall|i: int| 0 <= i < indices.len()
-        ==> indices[i] < db.len() && db[indices[i] as int].body@.len() > 0
+    forall|i: int|
+        0 <= i < indices.len() ==> indices[i] < db.len() && db[indices[i] as int].body@.len() > 0
 }
 
-pub open spec fn indexed_clauses(nodes: Seq<ENode>, db: Seq<EClause>, indices: Seq<usize>)
-    -> Seq<DocClause>
-{
+pub open spec fn indexed_clauses(nodes: Seq<ENode>, db: Seq<EClause>, indices: Seq<usize>) -> Seq<
+    DocClause,
+> {
     Seq::new(indices.len(), |i: int| clause_view(nodes, &db[indices[i] as int]))
 }
 
 fn indicator_indices(arena: &ETermArena, db: &Vec<EClause>, which: usize) -> (out: Vec<usize>)
-    requires arena_ok(arena), db_valid(arena.nodes@, db@), which < 9,
+    requires
+        arena_ok(arena),
+        db_valid(arena.nodes@, db@),
+        which < 9,
     ensures
         rule_indices_ok(db@, out@),
-        indexed_clauses(arena.nodes@, db@, out@)
-            == indicator_rules(db_view(arena.nodes@, db@), which as int),
+        indexed_clauses(arena.nodes@, db@, out@) == indicator_rules(
+            db_view(arena.nodes@, db@),
+            which as int,
+        ),
 {
     let (name, arity) = indicator_exec(which);
     let ghost cs = db_view(arena.nodes@, db@);
-    let ghost pred = |c: DocClause| lit_fa(c.head) == Some(indicator(which as int)) && c.body.len() > 0;
+    let ghost pred = |c: DocClause|
+        lit_fa(c.head) == Some(indicator(which as int)) && c.body.len() > 0;
     let mut out = Vec::new();
     let mut i = 0usize;
     proof {
@@ -78,10 +100,14 @@ fn indicator_indices(arena: &ETermArena, db: &Vec<EClause>, which: usize) -> (ou
     }
     while i < db.len()
         invariant
-            arena_ok(arena), db_valid(arena.nodes@, db@), which < 9,
-            i <= db.len(), (name@, arity as nat) == indicator(which as int),
+            arena_ok(arena),
+            db_valid(arena.nodes@, db@),
+            which < 9,
+            i <= db.len(),
+            (name@, arity as nat) == indicator(which as int),
             cs == db_view(arena.nodes@, db@),
-            pred == |c: DocClause| lit_fa(c.head) == Some(indicator(which as int)) && c.body.len() > 0,
+            pred == |c: DocClause|
+                lit_fa(c.head) == Some(indicator(which as int)) && c.body.len() > 0,
             rule_indices_ok(db@, out@),
             indexed_clauses(arena.nodes@, db@, out@) == cs.take(i as int).filter(pred),
         decreases db.len() - i,
@@ -102,9 +128,11 @@ fn indicator_indices(arena: &ETermArena, db: &Vec<EClause>, which: usize) -> (ou
         if matched {
             out.push(i);
             proof {
-                assert forall|j: int| 0 <= j < out@.len()
-                    implies out@[j] < db@.len() && db@[out@[j] as int].body@.len() > 0 by {
-                    if j < before.len() { assert(out@[j] == before[j]); }
+                assert forall|j: int| 0 <= j < out@.len() implies out@[j] < db@.len()
+                    && db@[out@[j] as int].body@.len() > 0 by {
+                    if j < before.len() {
+                        assert(out@[j] == before[j]);
+                    }
                 }
                 assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@)
                     == indexed_clauses(arena.nodes@, db@, before).push(cs[i as int]), j => {
@@ -114,12 +142,16 @@ fn indicator_indices(arena: &ETermArena, db: &Vec<EClause>, which: usize) -> (ou
         }
         i += 1;
     }
-    proof { assert_seqs_equal!(cs.take(i as int) == cs); }
+    proof {
+        assert_seqs_equal!(cs.take(i as int) == cs);
+    }
     out
 }
 
 pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
-    requires arena_ok(arena), db_valid(arena.nodes@, db@),
+    requires
+        arena_ok(arena),
+        db_valid(arena.nodes@, db@),
     ensures
         rule_indices_ok(db@, out@),
         indexed_clauses(arena.nodes@, db@, out@) == rules(db_view(arena.nodes@, db@)),
@@ -134,7 +166,9 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
     }
     while i < 9
         invariant
-            arena_ok(arena), db_valid(arena.nodes@, db@), i <= 9,
+            arena_ok(arena),
+            db_valid(arena.nodes@, db@),
+            i <= 9,
             cs == db_view(arena.nodes@, db@),
             parts == Seq::new(9, |j: int| indicator_rules(cs, j)),
             rule_indices_ok(db@, out@),
@@ -146,10 +180,13 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
         let ghost right = next@;
         out.append(&mut next);
         proof {
-            assert forall|j: int| 0 <= j < out@.len()
-                implies out@[j] < db@.len() && db@[out@[j] as int].body@.len() > 0 by {
-                if j < left.len() { assert(out@[j] == left[j]); }
-                else { assert(out@[j] == right[j - left.len()]); }
+            assert forall|j: int| 0 <= j < out@.len() implies out@[j] < db@.len()
+                && db@[out@[j] as int].body@.len() > 0 by {
+                if j < left.len() {
+                    assert(out@[j] == left[j]);
+                } else {
+                    assert(out@[j] == right[j - left.len()]);
+                }
             }
             assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@)
                 == indexed_clauses(arena.nodes@, db@, left)
@@ -162,20 +199,27 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
         }
         i += 1;
     }
-    proof { assert_seqs_equal!(parts.take(i as int) == parts); }
+    proof {
+        assert_seqs_equal!(parts.take(i as int) == parts);
+    }
     out
 }
 
 fn leftmost_root(arena: &ETermArena, clause: &EClause) -> (out: usize)
-    requires arena_ok(arena), crate::k2_engine::clause_valid(arena.nodes@, clause), clause.body.len() > 0,
+    requires
+        arena_ok(arena),
+        crate::k2_engine::clause_valid(arena.nodes@, clause),
+        clause.body.len() > 0,
     ensures
         crate::k2_term::root_ok(arena, out),
         arena@[out as int] == ckc_spec::replay::leftmost(clause_view(arena.nodes@, clause)),
 {
     proof {
         assert(crate::k2_engine::body_item_valid(arena.nodes@, &clause.body@[0]));
-        assert(clause_view(arena.nodes@, clause).body[0]
-            == crate::k2_engine::body_item_view(arena.nodes@, &clause.body@[0]));
+        assert(clause_view(arena.nodes@, clause).body[0] == crate::k2_engine::body_item_view(
+            arena.nodes@,
+            &clause.body@[0],
+        ));
     }
     match &clause.body[0] {
         EBodyItem::Pos { root } => *root,
@@ -183,10 +227,19 @@ fn leftmost_root(arena: &ETermArena, clause: &EClause) -> (out: usize)
     }
 }
 
-proof fn indexed_prefix(before: Seq<ENode>, after: Seq<ENode>, db: Seq<EClause>, indices: Seq<usize>)
-    requires before.is_prefix_of(after), db_valid(before, db), rule_indices_ok(db, indices),
+proof fn indexed_prefix(
+    before: Seq<ENode>,
+    after: Seq<ENode>,
+    db: Seq<EClause>,
+    indices: Seq<usize>,
+)
+    requires
+        before.is_prefix_of(after),
+        db_valid(before, db),
+        rule_indices_ok(db, indices),
     ensures
-        db_valid(after, db), db_view(before, db) == db_view(after, db),
+        db_valid(after, db),
+        db_view(before, db) == db_view(after, db),
         indexed_clauses(before, db, indices) == indexed_clauses(after, db, indices),
 {
     crate::k2_engine::db_models_prefix(before, after, db);
@@ -195,21 +248,32 @@ proof fn indexed_prefix(before: Seq<ENode>, after: Seq<ENode>, db: Seq<EClause>,
     });
 }
 
-pub open spec fn recursive_clause_view(nodes: Seq<ENode>, db: Seq<EClause>, index: Option<usize>)
-    -> Option<DocClause>
-{
-    match index { Some(i) => Some(clause_view(nodes, &db[i as int])), None => None }
+pub open spec fn recursive_clause_view(
+    nodes: Seq<ENode>,
+    db: Seq<EClause>,
+    index: Option<usize>,
+) -> Option<DocClause> {
+    match index {
+        Some(i) => Some(clause_view(nodes, &db[i as int])),
+        None => None,
+    }
 }
 
-fn first_recursive_inner(input_arena: ETermArena, db: &Vec<EClause>, indices: &Vec<usize>)
-    -> (out: (Option<usize>, ETermArena))
-    requires arena_ok(&input_arena), db_valid(input_arena.nodes@, db@), rule_indices_ok(db@, indices@),
+fn first_recursive_inner(input_arena: ETermArena, db: &Vec<EClause>, indices: &Vec<usize>) -> (out:
+    (Option<usize>, ETermArena))
+    requires
+        arena_ok(&input_arena),
+        db_valid(input_arena.nodes@, db@),
+        rule_indices_ok(db@, indices@),
     ensures
-        arena_ok(&out.1), input_arena.nodes@.is_prefix_of(out.1.nodes@),
-        db_valid(out.1.nodes@, db@), db_view(out.1.nodes@, db@) == db_view(input_arena.nodes@, db@),
+        arena_ok(&out.1),
+        input_arena.nodes@.is_prefix_of(out.1.nodes@),
+        db_valid(out.1.nodes@, db@),
+        db_view(out.1.nodes@, db@) == db_view(input_arena.nodes@, db@),
         out.0 matches Some(i) ==> i < db.len() && db@[i as int].body@.len() > 0,
-        recursive_clause_view(out.1.nodes@, db@, out.0)
-            == ckc_spec::replay::first_left_recursive(indexed_clauses(input_arena.nodes@, db@, indices@)),
+        recursive_clause_view(out.1.nodes@, db@, out.0) == ckc_spec::replay::first_left_recursive(
+            indexed_clauses(input_arena.nodes@, db@, indices@),
+        ),
 {
     hide(ckc_spec::replay::first_left_recursive);
     let ghost origin = input_arena.nodes@;
@@ -217,17 +281,24 @@ fn first_recursive_inner(input_arena: ETermArena, db: &Vec<EClause>, indices: &V
     let ghost original_db = db_view(origin, db@);
     let mut arena = input_arena;
     let mut i = 0usize;
-    proof { assert_seqs_equal!(cs.skip(0) == cs); }
+    proof {
+        assert_seqs_equal!(cs.skip(0) == cs);
+    }
     while i < indices.len()
         invariant
-            arena_ok(&arena), origin == input_arena.nodes@, origin.is_prefix_of(arena.nodes@),
-            db_valid(arena.nodes@, db@), db_view(arena.nodes@, db@) == original_db,
+            arena_ok(&arena),
+            origin == input_arena.nodes@,
+            origin.is_prefix_of(arena.nodes@),
+            db_valid(arena.nodes@, db@),
+            db_view(arena.nodes@, db@) == original_db,
             original_db == db_view(origin, db@),
             cs == indexed_clauses(origin, db@, indices@),
             cs == indexed_clauses(arena.nodes@, db@, indices@),
-            rule_indices_ok(db@, indices@), i <= indices.len(),
-            ckc_spec::replay::first_left_recursive(cs)
-                == ckc_spec::replay::first_left_recursive(cs.skip(i as int)),
+            rule_indices_ok(db@, indices@),
+            i <= indices.len(),
+            ckc_spec::replay::first_left_recursive(cs) == ckc_spec::replay::first_left_recursive(
+                cs.skip(i as int),
+            ),
         decreases indices.len() - i,
     {
         let index = indices[i];
@@ -242,12 +313,17 @@ fn first_recursive_inner(input_arena: ETermArena, db: &Vec<EClause>, indices: &V
         proof {
             indexed_prefix(before, arena.nodes@, db@, indices@);
             crate::k2_load::prefix_chain(origin, before, arena.nodes@);
-            assert(found == ckc_spec::engine::unifiable_apart(ckc_spec::replay::leftmost(cs[i as int]), cs[i as int].head));
+            assert(found == ckc_spec::engine::unifiable_apart(
+                ckc_spec::replay::leftmost(cs[i as int]),
+                cs[i as int].head,
+            ));
             assert_seqs_equal!(cs.skip(i as int).drop_first() == cs.skip(i as int + 1));
             reveal_with_fuel(ckc_spec::replay::first_left_recursive, 1);
         }
         if found {
-            proof { assert(clause_view(arena.nodes@, &db@[index as int]) == cs[i as int]); }
+            proof {
+                assert(clause_view(arena.nodes@, &db@[index as int]) == cs[i as int]);
+            }
             return (Some(index), arena);
         }
         i += 1;
@@ -259,15 +335,22 @@ fn first_recursive_inner(input_arena: ETermArena, db: &Vec<EClause>, indices: &V
     (None, arena)
 }
 
-pub fn first_recursive(arena: &mut ETermArena, db: &Vec<EClause>, indices: &Vec<usize>)
-    -> (out: Option<usize>)
-    requires arena_ok(old(arena)), db_valid(old(arena).nodes@, db@), rule_indices_ok(db@, indices@),
+pub fn first_recursive(arena: &mut ETermArena, db: &Vec<EClause>, indices: &Vec<usize>) -> (out:
+    Option<usize>)
+    requires
+        arena_ok(old(arena)),
+        db_valid(old(arena).nodes@, db@),
+        rule_indices_ok(db@, indices@),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
-        db_valid(final(arena).nodes@, db@), db_view(final(arena).nodes@, db@) == db_view(old(arena).nodes@, db@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        db_valid(final(arena).nodes@, db@),
+        db_view(final(arena).nodes@, db@) == db_view(old(arena).nodes@, db@),
         out matches Some(i) ==> i < db.len() && db@[i as int].body@.len() > 0,
         recursive_clause_view(final(arena).nodes@, db@, out)
-            == ckc_spec::replay::first_left_recursive(indexed_clauses(old(arena).nodes@, db@, indices@)),
+            == ckc_spec::replay::first_left_recursive(
+            indexed_clauses(old(arena).nodes@, db@, indices@),
+        ),
 {
     let mut owned = crate::k2_reject::empty_arena();
     std::mem::swap(arena, &mut owned);
@@ -277,9 +360,12 @@ pub fn first_recursive(arena: &mut ETermArena, db: &Vec<EClause>, indices: &Vec<
 }
 
 fn site_root(arena: &mut ETermArena, clause: &EClause) -> (out: usize)
-    requires arena_ok(old(arena)), crate::k2_engine::clause_valid(old(arena).nodes@, clause),
+    requires
+        arena_ok(old(arena)),
+        crate::k2_engine::clause_valid(old(arena).nodes@, clause),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         crate::k2_term::root_ok(final(arena), out),
         final(arena)@[out as int] == ckc_spec::replay::site(clause_view(old(arena).nodes@, clause)),
 {
@@ -287,13 +373,15 @@ fn site_root(arena: &mut ETermArena, clause: &EClause) -> (out: usize)
     let roots = crate::k2_walk::clause_walk_roots(arena, clause);
     let pairs = crate::k2_walk::gid_pairs_all_exec(arena, &roots);
     proof {
-        assert(crate::k2_engine::root_terms(arena.nodes@, pairs@)
-            == ckc_spec::replay::clause_gids(clause_view(origin, clause)));
+        assert(crate::k2_engine::root_terms(arena.nodes@, pairs@) == ckc_spec::replay::clause_gids(
+            clause_view(origin, clause),
+        ));
     }
     if pairs.len() == 0 {
         let name: &[u8] = b"unattributed";
         proof {
-            reveal_byteslit(b"unattributed"); reveal_strlit("unattributed");
+            reveal_byteslit(b"unattributed");
+            reveal_strlit("unattributed");
             reveal(ckc_spec::v1text::ascii);
             assert(name@ == ckc_spec::v1text::ascii("unattributed"@));
         }
@@ -307,7 +395,8 @@ fn site_root(arena: &mut ETermArena, clause: &EClause) -> (out: usize)
         let args = crate::k2_engine::args_roots(arena, root);
         let name: &[u8] = b"sentence";
         proof {
-            reveal_byteslit(b"sentence"); reveal_strlit("sentence");
+            reveal_byteslit(b"sentence");
+            reveal_strlit("sentence");
             reveal(ckc_spec::v1text::ascii);
             assert(name@ == ckc_spec::v1text::ascii("sentence"@));
             assert_seqs_equal!(crate::k2_engine::root_terms(arena.nodes@, args@)
@@ -317,15 +406,31 @@ fn site_root(arena: &mut ETermArena, clause: &EClause) -> (out: usize)
     }
 }
 
-pub fn left_recursive_error(arena: &mut ETermArena, clause: &EClause) -> (out: Option<ckc_spec::replay::EOut>)
-    requires arena_ok(old(arena)), crate::k2_engine::clause_valid(old(arena).nodes@, clause),
+pub fn left_recursive_error(arena: &mut ETermArena, clause: &EClause) -> (out: Option<
+    ckc_spec::replay::EOut,
+>)
+    requires
+        arena_ok(old(arena)),
+        crate::k2_engine::clause_valid(old(arena).nodes@, clause),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
-        crate::k2_output::option_out_view(out) == match clause_view(old(arena).nodes@, clause).head {
-            ckc_spec::term::Term::Comp(name, args) => Some(ckc_spec::replay::proof_fail(
-                ckc_spec::term::Term::Comp(ckc_spec::v1text::ascii("left_recursive"@), seq![
-                    ckc_spec::replay::site(clause_view(old(arena).nodes@, clause)),
-                    ckc_spec::term::Term::Atom(name), ckc_spec::term::Term::Int(args.len() as int)]))),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        crate::k2_output::option_out_view(out) == match clause_view(
+            old(arena).nodes@,
+            clause,
+        ).head {
+            ckc_spec::term::Term::Comp(name, args) => Some(
+                ckc_spec::replay::proof_fail(
+                    ckc_spec::term::Term::Comp(
+                        ckc_spec::v1text::ascii("left_recursive"@),
+                        seq![
+                            ckc_spec::replay::site(clause_view(old(arena).nodes@, clause)),
+                            ckc_spec::term::Term::Atom(name),
+                            ckc_spec::term::Term::Int(args.len() as int),
+                        ],
+                    ),
+                ),
+            ),
             _ => None,
         },
 {
@@ -337,7 +442,10 @@ pub fn left_recursive_error(arena: &mut ETermArena, clause: &EClause) -> (out: O
         reveal(crate::k2_term::node_ok);
     }
     let (name, arity) = match &arena.nodes[head].kind {
-        crate::k2_term::ENodeKind::Comp { name, child_roots, .. } => (name.clone(), child_roots.len()),
+        crate::k2_term::ENodeKind::Comp { name, child_roots, .. } => (
+            name.clone(),
+            child_roots.len(),
+        ),
         _ => return None,
     };
     let site = site_root(arena, clause);
@@ -346,7 +454,8 @@ pub fn left_recursive_error(arena: &mut ETermArena, clause: &EClause) -> (out: O
     let label: &[u8] = b"left_recursive";
     let detail = crate::k2_output::comp3(arena, label, site, functor, count);
     proof {
-        reveal_byteslit(b"left_recursive"); reveal_strlit("left_recursive");
+        reveal_byteslit(b"left_recursive");
+        reveal_strlit("left_recursive");
         reveal(ckc_spec::v1text::ascii);
         assert(label@ == ckc_spec::v1text::ascii("left_recursive"@));
     }

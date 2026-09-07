@@ -8,9 +8,7 @@ verus! {
 // Artifact rows: group<TAB>side<TAB>start<TAB>span; offsets/lengths count
 // code points. `align_outcome` is the one function the kernel binding
 // quotes; everything else defines it.
-
 // --- primitive text helpers ---
-
 pub open spec fn is_ascii_digit(c: char) -> bool {
     '0' <= c && c <= '9'
 }
@@ -42,15 +40,33 @@ pub open spec fn dec_value(s: Seq<char>) -> int
 }
 
 pub open spec fn digit_char(d: int) -> char {
-    if d == 0 { '0' } else if d == 1 { '1' } else if d == 2 { '2' }
-    else if d == 3 { '3' } else if d == 4 { '4' } else if d == 5 { '5' }
-    else if d == 6 { '6' } else if d == 7 { '7' } else if d == 8 { '8' }
-    else { '9' }
+    if d == 0 {
+        '0'
+    } else if d == 1 {
+        '1'
+    } else if d == 2 {
+        '2'
+    } else if d == 3 {
+        '3'
+    } else if d == 4 {
+        '4'
+    } else if d == 5 {
+        '5'
+    } else if d == 6 {
+        '6'
+    } else if d == 7 {
+        '7'
+    } else if d == 8 {
+        '8'
+    } else {
+        '9'
+    }
 }
 
 // Canonical decimal rendering for row ordinals (n >= 1 in every use).
 pub open spec fn dec_str(n: int) -> Seq<char>
-    recommends n >= 0,
+    recommends
+        n >= 0,
     decreases n,
 {
     if n < 10 {
@@ -76,7 +92,6 @@ pub open spec fn split_at_seps(s: Seq<char>, sep: char) -> Seq<Seq<char>>
 }
 
 // --- parsed rows ---
-
 pub ghost struct RawSpan {
     pub start: int,
     pub end: int,
@@ -122,12 +137,11 @@ pub open spec fn groups_of(spans: Seq<RawSpan>) -> Set<int>
 pub open spec fn has_overlap(spans: Seq<RawSpan>) -> bool {
     exists|i: int, j: int|
         #![auto]
-        0 <= i < spans.len() && 0 <= j < spans.len() && i != j
-            && spans[i].start < spans[j].end && spans[j].start < spans[i].end
+        0 <= i < spans.len() && 0 <= j < spans.len() && i != j && spans[i].start < spans[j].end
+            && spans[j].start < spans[i].end
 }
 
 // --- violations, legacy-ordered ---
-
 pub ghost enum Violation {
     MissingTrailingNewline,
     EmptyFile,
@@ -234,7 +248,6 @@ pub open spec fn wellformed(align: Seq<char>, src: Seq<char>, ace: Seq<char>) ->
 }
 
 // --- error rendering (byte-exact legacy details) ---
-
 pub open spec fn row_prefix(n: int) -> Seq<char> {
     "row "@ + dec_str(n) + ": "@
 }
@@ -244,10 +257,8 @@ pub open spec fn render(v: Violation) -> Seq<char> {
         Violation::MissingTrailingNewline => "missing trailing newline"@,
         Violation::EmptyFile => "empty file"@,
         Violation::FieldCount { row } => row_prefix(row) + "expected 4 tab-separated fields"@,
-        Violation::GroupCanonical { row } => row_prefix(row)
-            + "group must be a canonical decimal"@,
-        Violation::StartCanonical { row } => row_prefix(row)
-            + "start must be a canonical decimal"@,
+        Violation::GroupCanonical { row } => row_prefix(row) + "group must be a canonical decimal"@,
+        Violation::StartCanonical { row } => row_prefix(row) + "start must be a canonical decimal"@,
         Violation::EmptySpan { row } => row_prefix(row) + "empty span"@,
         Violation::SideVocab { row } => row_prefix(row) + "side must be src or ace"@,
         Violation::OutOfRange { row } => row_prefix(row) + "span out of range"@,
@@ -261,7 +272,6 @@ pub open spec fn render(v: Violation) -> Seq<char> {
 
 // --- success model (legacy: dense display indexes by first ACE span in
 // sorted (start,end,group) order; each side start-sorted) ---
-
 pub ghost struct OutSpan {
     pub start: int,
     pub end: int,
@@ -385,7 +395,6 @@ pub open spec fn model_of(align: Seq<char>, src: Seq<char>, ace: Seq<char>) -> A
 }
 
 // --- the one bound outcome ---
-
 pub ghost enum AlignOutcome {
     Ok(AlignModel),
     Err(Seq<char>),
@@ -399,7 +408,6 @@ pub open spec fn align_outcome(align: Seq<char>, src: Seq<char>, ace: Seq<char>)
 }
 
 // --- exec-facing result types (views bind exec results to the spec) ---
-
 pub struct ESpan {
     pub start: u64,
     pub end: u64,

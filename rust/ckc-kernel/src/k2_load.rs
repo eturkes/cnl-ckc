@@ -1,55 +1,80 @@
+use crate::k2_engine::EClause;
+#[cfg(verus_keep_ghost)]
+use crate::k2_engine::{
+    db_models_prefix, db_valid, db_view, root_terms, roots_models_prefix, roots_valid,
+};
 use crate::k2_manifest::v1_manifest_impl;
 use crate::k2_output::{atom_root, manifest_unreadable_out};
-use crate::k2_engine::EClause;
-use crate::k2_term::{ENode, ETermArena};
-use crate::v1_term_impl::EParsedV1;
-use ckc_spec::v1text::DocFile;
-#[cfg(verus_keep_ghost)]
-use crate::k2_engine::{db_valid, db_view, db_models_prefix, root_terms, roots_valid, roots_models_prefix};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
+use crate::k2_term::{ENode, ETermArena};
+use crate::v1_term_impl::EParsedV1;
 use ckc_spec::replay::*;
-use vstd::prelude::*;
+use ckc_spec::v1text::DocFile;
 #[cfg(verus_keep_ghost)]
 use vstd::assert_seqs_equal;
+use vstd::prelude::*;
 
 verus! {
 
 pub open spec fn row_paths(rows: Seq<ERow>, payload: bool) -> Seq<Seq<u8>> {
-    rows.map_values(|r: ERow| if payload { r.payload@ } else { r.pl@ })
+    rows.map_values(
+        |r: ERow|
+            if payload {
+                r.payload@
+            } else {
+                r.pl@
+            },
+    )
 }
 
-pub open spec fn missing_view(rows: Seq<ERow>, payload: bool, index: Option<usize>) -> Option<Seq<u8>> {
-    match index { Some(i) => Some(row_paths(rows, payload)[i as int]), None => None }
+pub open spec fn missing_view(rows: Seq<ERow>, payload: bool, index: Option<usize>) -> Option<
+    Seq<u8>,
+> {
+    match index {
+        Some(i) => Some(row_paths(rows, payload)[i as int]),
+        None => None,
+    }
 }
 
 fn missing_index(rows: &Vec<ERow>, cells: &Vec<ESrc>, payload: bool) -> (out: Option<usize>)
-    requires rows@.len() == cells@.len(),
+    requires
+        rows@.len() == cells@.len(),
     ensures
         out matches Some(i) ==> i < rows@.len(),
-        missing_view(rows@, payload, out) == first_missing(row_paths(rows@, payload), srcs(cells@), 0),
+        missing_view(rows@, payload, out) == first_missing(
+            row_paths(rows@, payload),
+            srcs(cells@),
+            0,
+        ),
 {
     let mut i = 0usize;
     while i < rows.len()
         invariant
             i <= rows@.len(),
             rows@.len() == cells@.len(),
-            first_missing(row_paths(rows@, payload), srcs(cells@), 0)
-                == first_missing(row_paths(rows@, payload), srcs(cells@), i as nat),
+            first_missing(row_paths(rows@, payload), srcs(cells@), 0) == first_missing(
+                row_paths(rows@, payload),
+                srcs(cells@),
+                i as nat,
+            ),
         decreases rows.len() - i,
     {
         if let ESrc::Missing = &cells[i] {
             return Some(i);
         }
-        proof { reveal_with_fuel(first_missing, 1); }
+        proof {
+            reveal_with_fuel(first_missing, 1);
+        }
         i += 1;
     }
     None
 }
 
-pub fn manifest_stage_exec(mpath: &[u8], m: &ESrc, pls: &Vec<ESrc>, pys: &Vec<ESrc>)
-    -> (out: Result<Vec<ERow>, EOut>)
-    requires cells_ok(m@, srcs(pls@), srcs(pys@)),
+pub fn manifest_stage_exec(mpath: &[u8], m: &ESrc, pls: &Vec<ESrc>, pys: &Vec<ESrc>) -> (out:
+    Result<Vec<ERow>, EOut>)
+    requires
+        cells_ok(m@, srcs(pls@), srcs(pys@)),
     ensures
         rows_view(out) == manifest_stage(mpath@, m@, srcs(pls@), srcs(pys@)),
         out matches Ok(rows) ==> rows.len() == pls.len() && rows.len() == pys.len(),
@@ -78,7 +103,8 @@ pub open spec fn path_views(paths: Seq<Vec<u8>>) -> Seq<Seq<u8>> {
 }
 
 fn path_contains(paths: &Vec<Vec<u8>>, path: &Vec<u8>) -> (out: bool)
-    ensures out == path_views(paths@).contains(path@),
+    ensures
+        out == path_views(paths@).contains(path@),
 {
     let mut i = 0usize;
     while i < paths.len()
@@ -88,7 +114,9 @@ fn path_contains(paths: &Vec<Vec<u8>>, path: &Vec<u8>) -> (out: bool)
         decreases paths.len() - i,
     {
         if crate::k2_engine::vec_equal(&paths[i], path) {
-            proof { assert(path_views(paths@)[i as int] == path@); }
+            proof {
+                assert(path_views(paths@)[i as int] == path@);
+            }
             return true;
         }
         i += 1;
@@ -100,20 +128,27 @@ fn unique_paths_exec(rows: &Vec<ERow>) -> (out: Vec<Vec<u8>>)
     ensures
         path_views(out@) == unique_paths(rows@.map_values(|r: ERow| r@)),
         out@.len() <= rows@.len(),
-        forall|j: int| 0 <= j < out@.len()
-            ==> row_paths(rows@, false).contains(#[trigger] path_views(out@)[j]),
+        forall|j: int|
+            0 <= j < out@.len() ==> row_paths(rows@, false).contains(
+                #[trigger] path_views(out@)[j],
+            ),
 {
     let ghost models = rows@.map_values(|r: ERow| r@);
     let mut out = Vec::new();
-    proof { assert_seqs_equal!(path_views(out@) == Seq::empty()); }
+    proof {
+        assert_seqs_equal!(path_views(out@) == Seq::empty());
+    }
     let mut i = 0usize;
     while i < rows.len()
         invariant
-            i <= rows.len(), out@.len() <= i,
+            i <= rows.len(),
+            out@.len() <= i,
             models == rows@.map_values(|r: ERow| r@),
             unique_paths(models) == unique_from(models, i as nat, path_views(out@)),
-            forall|j: int| 0 <= j < out@.len()
-                ==> row_paths(rows@, false).contains(#[trigger] path_views(out@)[j]),
+            forall|j: int|
+                0 <= j < out@.len() ==> row_paths(rows@, false).contains(
+                    #[trigger] path_views(out@)[j],
+                ),
         decreases rows.len() - i,
     {
         let ghost before = out@;
@@ -123,13 +158,18 @@ fn unique_paths_exec(rows: &Vec<ERow>) -> (out: Vec<Vec<u8>>)
             proof {
                 assert_seqs_equal!(path_views(out@) == path_views(before).push(rows@[i as int].pl@));
                 assert(row_paths(rows@, false)[i as int] == rows@[i as int].pl@);
-                assert forall|j: int| 0 <= j < out@.len()
-                    implies row_paths(rows@, false).contains(#[trigger] path_views(out@)[j]) by {
-                    if j < before.len() { assert(path_views(out@)[j] == path_views(before)[j]); }
+                assert forall|j: int| 0 <= j < out@.len() implies row_paths(rows@, false).contains(
+                    #[trigger] path_views(out@)[j],
+                ) by {
+                    if j < before.len() {
+                        assert(path_views(out@)[j] == path_views(before)[j]);
+                    }
                 }
             }
         }
-        proof { reveal_with_fuel(unique_from, 1); }
+        proof {
+            reveal_with_fuel(unique_from, 1);
+        }
         i += 1;
     }
     out
@@ -146,13 +186,20 @@ fn row_index_exec(rows: &Vec<ERow>, path: &Vec<u8>) -> (out: usize)
     while i < rows.len()
         invariant
             i <= rows.len(),
-            row_index(rows@.map_values(|r: ERow| r@), path@, 0)
-                == row_index(rows@.map_values(|r: ERow| r@), path@, i as nat),
+            row_index(rows@.map_values(|r: ERow| r@), path@, 0) == row_index(
+                rows@.map_values(|r: ERow| r@),
+                path@,
+                i as nat,
+            ),
             forall|j: int| 0 <= j < i ==> row_paths(rows@, false)[j] != path@,
         decreases rows.len() - i,
     {
-        if crate::k2_engine::vec_equal(&rows[i].pl, path) { return i; }
-        proof { reveal_with_fuel(row_index, 1); }
+        if crate::k2_engine::vec_equal(&rows[i].pl, path) {
+            return i;
+        }
+        proof {
+            reveal_with_fuel(row_index, 1);
+        }
         i += 1;
     }
     i
@@ -169,24 +216,33 @@ pub open spec fn loaded_ok(nodes: Seq<ENode>, loaded: &ELoaded) -> bool {
     &&& db_view(nodes, loaded.db@) == db_of(loaded.docs@)
     &&& roots_valid(nodes, loaded.docids@)
     &&& loaded.docids@.len() == loaded.docs@.len()
-    &&& root_terms(nodes, loaded.docids@)
-        == loaded.docs@.map_values(|d: DocFile| ckc_spec::term::Term::Atom(d.docid))
+    &&& root_terms(nodes, loaded.docids@) == loaded.docs@.map_values(
+        |d: DocFile| ckc_spec::term::Term::Atom(d.docid),
+    )
 }
 
 pub open spec fn loaded_view(out: Result<ELoaded, EOut>) -> Result<Seq<DocFile>, Out> {
-    match out { Ok(loaded) => Ok(loaded.docs@), Err(out) => Err(out@) }
+    match out {
+        Ok(loaded) => Ok(loaded.docs@),
+        Err(out) => Err(out@),
+    }
 }
 
 pub proof fn loaded_prefix(before: Seq<ENode>, after: Seq<ENode>, loaded: &ELoaded)
-    requires before.is_prefix_of(after), loaded_ok(before, loaded),
-    ensures loaded_ok(after, loaded),
+    requires
+        before.is_prefix_of(after),
+        loaded_ok(before, loaded),
+    ensures
+        loaded_ok(after, loaded),
 {
     db_models_prefix(before, after, loaded.db@);
     roots_models_prefix(before, after, loaded.docids@);
 }
 
 fn empty_loaded(arena: &ETermArena) -> (out: ELoaded)
-    ensures loaded_ok(arena.nodes@, &out), out.docs@ == Seq::<DocFile>::empty(),
+    ensures
+        loaded_ok(arena.nodes@, &out),
+        out.docs@ == Seq::<DocFile>::empty(),
 {
     let out = ELoaded { db: Vec::new(), docids: Vec::new(), docs: Ghost(Seq::empty()) };
     proof {
@@ -199,7 +255,8 @@ fn empty_loaded(arena: &ETermArena) -> (out: ELoaded)
 }
 
 proof fn db_of_push(docs: Seq<DocFile>, doc: DocFile)
-    ensures db_of(docs.push(doc)) == db_of(docs) + doc_db(doc),
+    ensures
+        db_of(docs.push(doc)) == db_of(docs) + doc_db(doc),
 {
     let parts = docs.map_values(|d: DocFile| doc_db(d));
     assert_seqs_equal!(docs.push(doc).map_values(|d: DocFile| doc_db(d)) == parts.push(doc_db(doc)));
@@ -207,8 +264,11 @@ proof fn db_of_push(docs: Seq<DocFile>, doc: DocFile)
 }
 
 proof fn docs_of_push(members: Seq<ckc_spec::v1text::V1File>, member: ckc_spec::v1text::V1File)
-    ensures docs_of(members.push(member)) == docs_of(members)
-        + match member { ckc_spec::v1text::V1File::Doc(d) => seq![d], _ => Seq::empty() },
+    ensures
+        docs_of(members.push(member)) == docs_of(members) + match member {
+            ckc_spec::v1text::V1File::Doc(d) => seq![d],
+            _ => Seq::empty(),
+        },
     decreases members.len(),
 {
     if members.len() > 0 {
@@ -221,17 +281,21 @@ proof fn docs_of_push(members: Seq<ckc_spec::v1text::V1File>, member: ckc_spec::
 }
 
 fn append_document(
-    arena: &mut ETermArena, loaded: &mut ELoaded, parsed: &EParsedV1,
+    arena: &mut ETermArena,
+    loaded: &mut ELoaded,
+    parsed: &EParsedV1,
     Ghost(doc): Ghost<DocFile>,
 )
     requires
-        arena_ok(old(arena)), loaded_ok(old(arena).nodes@, old(loaded)),
+        arena_ok(old(arena)),
+        loaded_ok(old(arena).nodes@, old(loaded)),
         crate::v1_term_impl::parsed_doc_roots_ok(old(arena).nodes@, parsed),
         crate::v1_term_impl::parsed_metadata_ok(parsed),
         parsed@ == ckc_spec::v1text::V1File::Doc(doc),
         ckc_spec::v1text::wf_doc(doc),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         loaded_ok(final(arena).nodes@, final(loaded)),
         final(loaded).docs@ == old(loaded).docs@.push(doc),
 {
@@ -249,16 +313,19 @@ fn append_document(
     let ghost prior_ids = loaded.docids@;
     proof {
         assert(prior_ids.len() == docs.len());
-        assert(root_terms(arena.nodes@, prior_ids)
-            == docs.map_values(|d: DocFile| ckc_spec::term::Term::Atom(d.docid)));
+        assert(root_terms(arena.nodes@, prior_ids) == docs.map_values(
+            |d: DocFile| ckc_spec::term::Term::Atom(d.docid),
+        ));
         assert(arena.nodes@[docid as int].term@ == ckc_spec::term::Term::Atom(doc.docid));
     }
     loaded.docids.push(docid);
     loaded.docs = Ghost(docs.push(doc));
     proof {
-        assert forall|i: int| 0 <= i < loaded.docids@.len()
-            implies loaded.docids@[i] < arena.nodes@.len() by {
-            if i < prior_ids.len() { assert(loaded.docids@[i] == prior_ids[i]); }
+        assert forall|i: int| 0 <= i < loaded.docids@.len() implies loaded.docids@[i]
+            < arena.nodes@.len() by {
+            if i < prior_ids.len() {
+                assert(loaded.docids@[i] == prior_ids[i]);
+            }
         }
         assert_seqs_equal!(root_terms(arena.nodes@, loaded.docids@)
             == loaded.docs@.map_values(|d: DocFile| ckc_spec::term::Term::Atom(d.docid)), i => {
@@ -276,8 +343,11 @@ fn append_document(
 }
 
 pub proof fn prefix_chain(before: Seq<ENode>, middle: Seq<ENode>, after: Seq<ENode>)
-    requires before.is_prefix_of(middle), middle.is_prefix_of(after),
-    ensures before.is_prefix_of(after),
+    requires
+        before.is_prefix_of(middle),
+        middle.is_prefix_of(after),
+    ensures
+        before.is_prefix_of(after),
 {
     assert_seqs_equal!(before == after.take(before.len() as int), i => {
         assert(before[i] == middle[i]);
@@ -285,11 +355,16 @@ pub proof fn prefix_chain(before: Seq<ENode>, middle: Seq<ENode>, after: Seq<ENo
     });
 }
 
-fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
-    -> (out: (Result<ELoaded, EOut>, ETermArena))
-    requires arena_ok(&input_arena), rows.len() == pls.len(),
+fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>) -> (out: (
+    Result<ELoaded, EOut>,
+    ETermArena,
+))
+    requires
+        arena_ok(&input_arena),
+        rows.len() == pls.len(),
     ensures
-        arena_ok(&out.1), input_arena.nodes@.is_prefix_of(out.1.nodes@),
+        arena_ok(&out.1),
+        input_arena.nodes@.is_prefix_of(out.1.nodes@),
         out.0 matches Ok(loaded) ==> loaded_ok(out.1.nodes@, &loaded),
         loaded_view(out.0) == load_stage(rows@.map_values(|r: ERow| r@), srcs(pls@)),
 {
@@ -300,7 +375,8 @@ fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
     hide(crate::v1_term_impl::parsed_metadata_ok);
     let name: &[u8] = b"noncanonical";
     proof {
-        reveal_byteslit(b"noncanonical"); reveal_strlit("noncanonical");
+        reveal_byteslit(b"noncanonical");
+        reveal_strlit("noncanonical");
         reveal(ckc_spec::v1text::ascii);
         assert(name@ == ckc_spec::v1text::ascii("noncanonical"@));
     }
@@ -318,17 +394,27 @@ fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
     }
     while i < paths.len()
         invariant
-            arena_ok(&arena), origin == input_arena.nodes@, origin.is_prefix_of(arena.nodes@),
-            rows.len() == pls.len(), i <= paths.len(),
+            arena_ok(&arena),
+            origin == input_arena.nodes@,
+            origin.is_prefix_of(arena.nodes@),
+            rows.len() == pls.len(),
+            i <= paths.len(),
             models == rows@.map_values(|r: ERow| r@),
             path_views(paths@) == unique_paths(models),
-            ms == members(models, srcs(pls@)), ms.len() == paths@.len(),
-            forall|j: int| 0 <= j < paths@.len()
-                ==> row_paths(rows@, false).contains(#[trigger] path_views(paths@)[j]),
+            ms == members(models, srcs(pls@)),
+            ms.len() == paths@.len(),
+            forall|j: int|
+                0 <= j < paths@.len() ==> row_paths(rows@, false).contains(
+                    #[trigger] path_views(paths@)[j],
+                ),
             loaded_ok(arena.nodes@, &loaded),
             loaded.docs@ == docs_of(ms.take(i as int)),
-            first_bad_member(models, srcs(pls@), path_views(paths@), 0)
-                == first_bad_member(models, srcs(pls@), path_views(paths@), i as nat),
+            first_bad_member(models, srcs(pls@), path_views(paths@), 0) == first_bad_member(
+                models,
+                srcs(pls@),
+                path_views(paths@),
+                i as nat,
+            ),
             name@ == ckc_spec::v1text::ascii("noncanonical"@),
         decreases paths.len() - i,
     {
@@ -371,7 +457,9 @@ fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
         match parsed.class {
             crate::v1_term_impl::EV1Class::Doc => {
                 let ghost doc = choose|d: DocFile| parsed@ == ckc_spec::v1text::V1File::Doc(d);
-                proof { assert(parsed@ is Doc); }
+                proof {
+                    assert(parsed@ is Doc);
+                }
                 append_document(&mut arena, &mut loaded, &parsed, Ghost(doc));
                 proof {
                     prefix_chain(origin, before_doc, arena.nodes@);
@@ -387,7 +475,9 @@ fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
                 }
             },
         }
-        proof { reveal_with_fuel(first_bad_member, 1); }
+        proof {
+            reveal_with_fuel(first_bad_member, 1);
+        }
         i += 1;
     }
     proof {
@@ -397,11 +487,16 @@ fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
     (Ok(loaded), arena)
 }
 
-pub fn load_stage_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
-    -> (out: Result<ELoaded, EOut>)
-    requires arena_ok(old(arena)), rows.len() == pls.len(),
+pub fn load_stage_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>) -> (out: Result<
+    ELoaded,
+    EOut,
+>)
+    requires
+        arena_ok(old(arena)),
+        rows.len() == pls.len(),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         out matches Ok(loaded) ==> loaded_ok(final(arena).nodes@, &loaded),
         loaded_view(out) == load_stage(rows@.map_values(|r: ERow| r@), srcs(pls@)),
 {
@@ -412,15 +507,22 @@ pub fn load_stage_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>
     out
 }
 
-pub fn assertions_exec(arena: &ETermArena, rows: &Vec<ERow>, loaded: &ELoaded)
-    -> (out: Option<EOut>)
-    requires arena_ok(arena), loaded_ok(arena.nodes@, loaded),
-    ensures crate::k2_output::option_out_view(out)
-        == assertions(rows@.map_values(|r: ERow| r@), loaded.docs@),
+pub fn assertions_exec(arena: &ETermArena, rows: &Vec<ERow>, loaded: &ELoaded) -> (out: Option<
+    EOut,
+>)
+    requires
+        arena_ok(arena),
+        loaded_ok(arena.nodes@, loaded),
+    ensures
+        crate::k2_output::option_out_view(out) == assertions(
+            rows@.map_values(|r: ERow| r@),
+            loaded.docs@,
+        ),
 {
     let name: &[u8] = b"document_records";
     proof {
-        reveal_byteslit(b"document_records"); reveal_strlit("document_records");
+        reveal_byteslit(b"document_records");
+        reveal_strlit("document_records");
         reveal(ckc_spec::v1text::ascii);
         assert(name@ == ckc_spec::v1text::ascii("document_records"@));
     }
@@ -430,32 +532,48 @@ pub fn assertions_exec(arena: &ETermArena, rows: &Vec<ERow>, loaded: &ELoaded)
     proof {
         assert_seqs_equal!(crate::k2_sort::root_terms(arena, loaded.docids@)
             == loaded.docs@.map_values(|d: DocFile| ckc_spec::term::Term::Atom(d.docid)));
-        assert forall|i: int| 0 <= i < loaded.docids@.len()
-            implies ckc_spec::term::ground(arena@[loaded.docids@[i] as int]) by {
-            assert(root_terms(arena.nodes@, loaded.docids@)[i]
-                == ckc_spec::term::Term::Atom(loaded.docs@[i].docid));
+        assert forall|i: int| 0 <= i < loaded.docids@.len() implies ckc_spec::term::ground(
+            arena@[loaded.docids@[i] as int],
+        ) by {
+            assert(root_terms(arena.nodes@, loaded.docids@)[i] == ckc_spec::term::Term::Atom(
+                loaded.docs@[i].docid,
+            ));
         }
     }
     let distinct = crate::k2_sort::sort_unique(arena, &loaded.docids);
     if rows.len() != distinct.len() {
         Some(crate::k2_output::counts_error(name, rows.len(), distinct.len()))
-    } else { None }
+    } else {
+        None
+    }
 }
 
-pub fn composition_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>)
-    -> (out: Result<ELoaded, EOut>)
-    requires arena_ok(old(arena)), rows.len() == pls.len(),
+pub fn composition_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>) -> (out: Result<
+    ELoaded,
+    EOut,
+>)
+    requires
+        arena_ok(old(arena)),
+        rows.len() == pls.len(),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         out matches Ok(loaded) ==> loaded_ok(final(arena).nodes@, &loaded),
-        loaded_view(out) == ckc_spec::answers::composition(rows@.map_values(|r: ERow| r@), srcs(pls@)),
+        loaded_view(out) == ckc_spec::answers::composition(
+            rows@.map_values(|r: ERow| r@),
+            srcs(pls@),
+        ),
 {
-    if rows.len() == 0 { return Ok(empty_loaded(arena)); }
+    if rows.len() == 0 {
+        return Ok(empty_loaded(arena));
+    }
     let loaded = match load_stage_exec(arena, rows, pls) {
         Err(out) => return Err(out),
         Ok(loaded) => loaded,
     };
-    if let Some(out) = assertions_exec(arena, rows, &loaded) { return Err(out); }
+    if let Some(out) = assertions_exec(arena, rows, &loaded) {
+        return Err(out);
+    }
     Ok(loaded)
 }
 

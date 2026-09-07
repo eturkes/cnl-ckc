@@ -3,29 +3,34 @@ use crate::k2_engine::{EBodyItem, EClause, max_var_root};
 use crate::k2_engine::{max_var_count, root_terms, roots_models_prefix, roots_valid};
 use crate::k2_output::comp2;
 use crate::k2_reject::empty_arena;
-use crate::k2_term::{push_nil, ECompForm, ENode, ENodeKind, ETermArena};
+use crate::k2_term::{ECompForm, ENode, ENodeKind, ETermArena, push_nil};
 #[cfg(verus_keep_ghost)]
-use crate::k2_term::{arena_ok, arena_prefix_stable, child_roots_before, child_terms,
-    comp_form_ok, node_ok, root_ok};
+use crate::k2_term::{
+    arena_ok, arena_prefix_stable, child_roots_before, child_terms, comp_form_ok, node_ok, root_ok,
+};
 #[cfg(verus_keep_ghost)]
-use ckc_spec::term::{ground, ground_all, Term};
-use vstd::prelude::*;
+use ckc_spec::term::{Term, ground, ground_all};
 #[cfg(verus_keep_ghost)]
 use vstd::assert_seqs_equal;
+use vstd::prelude::*;
 
 verus! {
 
 proof fn ground_nvars(term: Term)
-    ensures ground(term) == (ckc_spec::engine::nvars(term) == 0),
+    ensures
+        ground(term) == (ckc_spec::engine::nvars(term) == 0),
     decreases term, 0int,
 {
     reveal(ground);
     reveal(ckc_spec::engine::nvars);
-    if let Term::Comp(_, args) = term { grounds_nvars(args); }
+    if let Term::Comp(_, args) = term {
+        grounds_nvars(args);
+    }
 }
 
 proof fn grounds_nvars(terms: Seq<Term>)
-    ensures ground_all(terms) == (ckc_spec::engine::nvars_all(terms) == 0),
+    ensures
+        ground_all(terms) == (ckc_spec::engine::nvars_all(terms) == 0),
     decreases terms, 0int,
 {
     reveal_with_fuel(ground_all, 2);
@@ -37,8 +42,11 @@ proof fn grounds_nvars(terms: Seq<Term>)
 }
 
 proof fn ground_all_at(terms: Seq<Term>, i: int)
-    requires ground_all(terms), 0 <= i < terms.len(),
-    ensures ground(terms[i]),
+    requires
+        ground_all(terms),
+        0 <= i < terms.len(),
+    ensures
+        ground(terms[i]),
     decreases terms.len(),
 {
     reveal_with_fuel(ground_all, 1);
@@ -49,31 +57,45 @@ proof fn ground_all_at(terms: Seq<Term>, i: int)
 }
 
 pub proof fn ground_arg(term: Term, i: int)
-    requires ground(term), 0 <= i < ckc_spec::engine::args_of(term).len(),
-    ensures ground(ckc_spec::engine::args_of(term)[i]),
+    requires
+        ground(term),
+        0 <= i < ckc_spec::engine::args_of(term).len(),
+    ensures
+        ground(ckc_spec::engine::args_of(term)[i]),
 {
     reveal(ground);
     ground_all_at(ckc_spec::engine::args_of(term), i);
 }
 
 pub fn ground_root(arena: &ETermArena, root: usize) -> (out: bool)
-    requires root_ok(arena, root),
-    ensures out == ground(arena@[root as int]),
+    requires
+        root_ok(arena, root),
+    ensures
+        out == ground(arena@[root as int]),
 {
-    proof { ground_nvars(arena@[root as int]); }
+    proof {
+        ground_nvars(arena@[root as int]);
+    }
     max_var_root(arena, root).is_none()
 }
 
 pub open spec fn list_view(nodes: Seq<ENode>, items: Option<Vec<usize>>) -> Option<Seq<Term>> {
-    match items { Some(roots) => Some(root_terms(nodes, roots@)), None => None }
+    match items {
+        Some(roots) => Some(root_terms(nodes, roots@)),
+        None => None,
+    }
 }
 
 pub open spec fn list_prefix(prefix: Seq<Term>, rest: Option<Seq<Term>>) -> Option<Seq<Term>> {
-    match rest { Some(terms) => Some(prefix + terms), None => None }
+    match rest {
+        Some(terms) => Some(prefix + terms),
+        None => None,
+    }
 }
 
 pub fn list_items_exec(arena: &ETermArena, root: usize) -> (out: Option<Vec<usize>>)
-    requires root_ok(arena, root),
+    requires
+        root_ok(arena, root),
     ensures
         out matches Some(roots) ==> roots_valid(arena.nodes@, roots@),
         list_view(arena.nodes@, out) == ckc_spec::answers::list_items(arena@[root as int]),
@@ -87,8 +109,10 @@ pub fn list_items_exec(arena: &ETermArena, root: usize) -> (out: Option<Vec<usiz
             root_ok(arena, root),
             model == arena@[root as int],
             roots_valid(arena.nodes@, out@),
-            ckc_spec::answers::list_items(model) == list_prefix(root_terms(arena.nodes@, out@),
-                ckc_spec::answers::list_items(arena@[current as int])),
+            ckc_spec::answers::list_items(model) == list_prefix(
+                root_terms(arena.nodes@, out@),
+                ckc_spec::answers::list_items(arena@[current as int]),
+            ),
         decreases current,
     {
         proof {
@@ -100,7 +124,9 @@ pub fn list_items_exec(arena: &ETermArena, root: usize) -> (out: Option<Vec<usiz
         match &arena.nodes[current].kind {
             ENodeKind::Nil => return Some(out),
             ENodeKind::Comp { name, child_roots, form } => {
-                proof { reveal(comp_form_ok); }
+                proof {
+                    reveal(comp_form_ok);
+                }
                 if let ECompForm::Cons = form {
                     let head = child_roots[0];
                     let tail = child_roots[1];
@@ -111,8 +137,10 @@ pub fn list_items_exec(arena: &ETermArena, root: usize) -> (out: Option<Vec<usiz
                         reveal_with_fuel(ckc_spec::answers::list_items, 1);
                         assert_seqs_equal!(child_terms(arena.nodes@, child_roots@)
                             == seq![arena@[head as int], arena@[tail as int]]);
-                        assert(arena@[current as int] == Term::Comp(ckc_spec::v1text::cons_name(),
-                            seq![arena@[head as int], arena@[tail as int]]));
+                        assert(arena@[current as int] == Term::Comp(
+                            ckc_spec::v1text::cons_name(),
+                            seq![arena@[head as int], arena@[tail as int]],
+                        ));
                     }
                     out.push(head);
                     proof {
@@ -130,7 +158,9 @@ pub fn list_items_exec(arena: &ETermArena, root: usize) -> (out: Option<Vec<usiz
 }
 
 fn list_root_inner(mut arena: ETermArena, roots: &Vec<usize>) -> (out: (usize, ETermArena))
-    requires arena_ok(&arena), roots_valid(arena.nodes@, roots@),
+    requires
+        arena_ok(&arena),
+        roots_valid(arena.nodes@, roots@),
     ensures
         arena_ok(&out.1),
         arena.nodes@.is_prefix_of(out.1.nodes@),
@@ -171,17 +201,23 @@ fn list_root_inner(mut arena: ETermArena, roots: &Vec<usize>) -> (out: (usize, E
             reveal_with_fuel(ckc_spec::engine::list_term, 1);
         }
     }
-    proof { assert(models.skip(0) == models); }
+    proof {
+        assert(models.skip(0) == models);
+    }
     (current, arena)
 }
 
 pub fn list_root(arena: &mut ETermArena, roots: &Vec<usize>) -> (root: usize)
-    requires arena_ok(old(arena)), roots_valid(old(arena).nodes@, roots@),
+    requires
+        arena_ok(old(arena)),
+        roots_valid(old(arena).nodes@, roots@),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         root_ok(final(arena), root),
-        final(arena)@[root as int] == ckc_spec::engine::list_term(root_terms(old(arena).nodes@, roots@)),
+        final(arena)@[root as int] == ckc_spec::engine::list_term(
+            root_terms(old(arena).nodes@, roots@),
+        ),
 {
     let mut working = empty_arena();
     core::mem::swap(arena, &mut working);
@@ -191,8 +227,9 @@ pub fn list_root(arena: &mut ETermArena, roots: &Vec<usize>) -> (root: usize)
 }
 
 pub proof fn gid_pairs_concat(left: Seq<Term>, right: Seq<Term>)
-    ensures ckc_spec::replay::gid_pairs_all(left + right)
-        == ckc_spec::replay::gid_pairs_all(left) + ckc_spec::replay::gid_pairs_all(right),
+    ensures
+        ckc_spec::replay::gid_pairs_all(left + right) == ckc_spec::replay::gid_pairs_all(left)
+            + ckc_spec::replay::gid_pairs_all(right),
     decreases left.len(),
 {
     if left.len() > 0 {
@@ -206,7 +243,9 @@ pub proof fn gid_pairs_concat(left: Seq<Term>, right: Seq<Term>)
 }
 
 fn body_walk_roots(arena: &ETermArena, item: &EBodyItem) -> (out: Vec<usize>)
-    requires arena_ok(arena), crate::k2_engine::body_item_valid(arena.nodes@, item),
+    requires
+        arena_ok(arena),
+        crate::k2_engine::body_item_valid(arena.nodes@, item),
     ensures
         roots_valid(arena.nodes@, out@),
         ckc_spec::replay::gid_pairs_all(root_terms(arena.nodes@, out@))
@@ -227,14 +266,18 @@ fn body_walk_roots(arena: &ETermArena, item: &EBodyItem) -> (out: Vec<usize>)
 }
 
 pub fn clause_walk_roots(arena: &ETermArena, clause: &EClause) -> (out: Vec<usize>)
-    requires arena_ok(arena), crate::k2_engine::clause_valid(arena.nodes@, clause),
+    requires
+        arena_ok(arena),
+        crate::k2_engine::clause_valid(arena.nodes@, clause),
     ensures
         roots_valid(arena.nodes@, out@),
         ckc_spec::replay::gid_pairs_all(root_terms(arena.nodes@, out@))
             == ckc_spec::replay::clause_gids(crate::k2_engine::clause_view(arena.nodes@, clause)),
 {
     let ghost model = crate::k2_engine::clause_view(arena.nodes@, clause);
-    let ghost parts = model.body.map_values(|item: ckc_spec::v1text::BodyItem| ckc_spec::replay::item_gids(item));
+    let ghost parts = model.body.map_values(
+        |item: ckc_spec::v1text::BodyItem| ckc_spec::replay::item_gids(item),
+    );
     let mut out = Vec::new();
     out.push(clause.head);
     let mut i = 0usize;
@@ -245,10 +288,14 @@ pub fn clause_walk_roots(arena: &ETermArena, clause: &EClause) -> (out: Vec<usiz
     }
     while i < clause.body.len()
         invariant
-            arena_ok(arena), crate::k2_engine::clause_valid(arena.nodes@, clause),
+            arena_ok(arena),
+            crate::k2_engine::clause_valid(arena.nodes@, clause),
             model == crate::k2_engine::clause_view(arena.nodes@, clause),
-            parts == model.body.map_values(|item: ckc_spec::v1text::BodyItem| ckc_spec::replay::item_gids(item)),
-            i <= clause.body.len(), parts.len() == clause.body.len(),
+            parts == model.body.map_values(
+                |item: ckc_spec::v1text::BodyItem| ckc_spec::replay::item_gids(item),
+            ),
+            i <= clause.body.len(),
+            parts.len() == clause.body.len(),
             roots_valid(arena.nodes@, out@),
             ckc_spec::replay::gid_pairs_all(root_terms(arena.nodes@, out@))
                 == ckc_spec::replay::gid_pairs(model.head) + parts.take(i as int).flatten(),
@@ -256,7 +303,10 @@ pub fn clause_walk_roots(arena: &ETermArena, clause: &EClause) -> (out: Vec<usiz
     {
         proof {
             assert(crate::k2_engine::body_item_valid(arena.nodes@, &clause.body@[i as int]));
-            assert(model.body[i as int] == crate::k2_engine::body_item_view(arena.nodes@, &clause.body@[i as int]));
+            assert(model.body[i as int] == crate::k2_engine::body_item_view(
+                arena.nodes@,
+                &clause.body@[i as int],
+            ));
         }
         let mut next = body_walk_roots(arena, &clause.body[i]);
         let ghost left = out@;
@@ -264,8 +314,11 @@ pub fn clause_walk_roots(arena: &ETermArena, clause: &EClause) -> (out: Vec<usiz
         out.append(&mut next);
         proof {
             assert forall|j: int| 0 <= j < out@.len() implies out@[j] < arena.nodes@.len() by {
-                if j < left.len() { assert(out@[j] == left[j]); }
-                else { assert(out@[j] == right[j - left.len()]); }
+                if j < left.len() {
+                    assert(out@[j] == left[j]);
+                } else {
+                    assert(out@[j] == right[j - left.len()]);
+                }
             }
             assert_seqs_equal!(root_terms(arena.nodes@, out@)
                 == root_terms(arena.nodes@, left) + root_terms(arena.nodes@, right), j => {
@@ -278,12 +331,15 @@ pub fn clause_walk_roots(arena: &ETermArena, clause: &EClause) -> (out: Vec<usiz
         }
         i += 1;
     }
-    proof { assert_seqs_equal!(parts.take(i as int) == parts); }
+    proof {
+        assert_seqs_equal!(parts.take(i as int) == parts);
+    }
     out
 }
 
 pub proof fn list_items_of_list(terms: Seq<Term>)
-    ensures ckc_spec::answers::list_items(ckc_spec::engine::list_term(terms)) == Some(terms),
+    ensures
+        ckc_spec::answers::list_items(ckc_spec::engine::list_term(terms)) == Some(terms),
     decreases terms.len(),
 {
     reveal_with_fuel(ckc_spec::engine::list_term, 1);
@@ -295,8 +351,10 @@ pub proof fn list_items_of_list(terms: Seq<Term>)
 }
 
 pub proof fn list_items_reconstruct(term: Term)
-    ensures ckc_spec::answers::list_items(term) matches Some(terms)
-        ==> ckc_spec::engine::list_term(terms) == term,
+    ensures
+        ckc_spec::answers::list_items(term) matches Some(terms) ==> ckc_spec::engine::list_term(
+            terms,
+        ) == term,
     decreases term,
 {
     reveal_with_fuel(ckc_spec::answers::list_items, 1);
@@ -314,9 +372,10 @@ pub proof fn list_items_reconstruct(term: Term)
 }
 
 proof fn gid_pairs_step(terms: Seq<Term>)
-    requires terms.len() > 0,
-    ensures ckc_spec::replay::gid_pairs_all(terms)
-        == ckc_spec::replay::gid_pairs(terms[0])
+    requires
+        terms.len() > 0,
+    ensures
+        ckc_spec::replay::gid_pairs_all(terms) == ckc_spec::replay::gid_pairs(terms[0])
             + ckc_spec::replay::gid_pairs_all(terms.drop_first()),
 {
     reveal_with_fuel(ckc_spec::replay::gid_pairs_all, 1);
@@ -331,36 +390,43 @@ pub open spec fn selected_gid(nodes: Seq<ENode>, selected: Option<(usize, usize)
 
 pub open spec fn gid_pair_shape(t: Term) -> bool {
     match t {
-        Term::Comp(name, args) => name == ckc_spec::v1text::ascii("-"@)
-            && args.len() == 2 && args[0] is Atom && args[1] is Int,
+        Term::Comp(name, args) => name == ckc_spec::v1text::ascii("-"@) && args.len() == 2
+            && args[0] is Atom && args[1] is Int,
         _ => false,
     }
 }
 
-fn gid_children(arena: &ETermArena, root: usize, gid: &Vec<u8>)
-    -> (out: (Vec<usize>, Option<(usize, usize)>))
-    requires root_ok(arena, root), gid@ == ckc_spec::replay::gid_name(),
+fn gid_children(arena: &ETermArena, root: usize, gid: &Vec<u8>) -> (out: (
+    Vec<usize>,
+    Option<(usize, usize)>,
+))
+    requires
+        root_ok(arena, root),
+        gid@ == ckc_spec::replay::gid_name(),
     ensures
         roots_valid(arena.nodes@, out.0@),
         forall|i: int| 0 <= i < out.0@.len() ==> out.0@[i] < root,
         root_terms(arena.nodes@, out.0@) == ckc_spec::engine::args_of(arena@[root as int]),
-        out.1 matches Some((d, s)) ==> d < root && s < root
-            && arena@[d as int] is Atom && arena@[s as int] is Int,
-        ckc_spec::replay::gid_pairs(arena@[root as int])
-            == selected_gid(arena.nodes@, out.1)
-                + ckc_spec::replay::gid_pairs_all(root_terms(arena.nodes@, out.0@)),
+        out.1 matches Some((d, s)) ==> d < root && s < root && arena@[d as int] is Atom
+            && arena@[s as int] is Int,
+        ckc_spec::replay::gid_pairs(arena@[root as int]) == selected_gid(arena.nodes@, out.1)
+            + ckc_spec::replay::gid_pairs_all(root_terms(arena.nodes@, out.0@)),
 {
     proof {
-        reveal(root_ok); reveal(arena_ok);
+        reveal(root_ok);
+        reveal(arena_ok);
         assert(node_ok(arena.nodes@, root as int));
-        reveal(node_ok); reveal(child_roots_before);
+        reveal(node_ok);
+        reveal(child_roots_before);
         reveal(ckc_spec::replay::gid_pairs);
     }
     match &arena.nodes[root].kind {
         ENodeKind::Comp { name, child_roots, .. } => {
             let children = child_roots.clone();
-            proof { assert_seqs_equal!(root_terms(arena.nodes@, children@)
-                == child_terms(arena.nodes@, child_roots@)); }
+            proof {
+                assert_seqs_equal!(root_terms(arena.nodes@, children@)
+                == child_terms(arena.nodes@, child_roots@));
+            }
             if crate::k2_engine::vec_equal(name, gid) && child_roots.len() == 5 {
                 let d = child_roots[1];
                 let s = child_roots[2];
@@ -378,20 +444,26 @@ fn gid_children(arena: &ETermArena, root: usize, gid: &Vec<u8>)
         },
         _ => {
             let children = Vec::new();
-            proof { assert_seqs_equal!(root_terms(arena.nodes@, children@) == Seq::empty()); }
+            proof {
+                assert_seqs_equal!(root_terms(arena.nodes@, children@) == Seq::empty());
+            }
             (children, None)
         },
     }
 }
 
 fn gid_pairs_inner(input_arena: ETermArena, roots: &Vec<usize>) -> (out: (Vec<usize>, ETermArena))
-    requires arena_ok(&input_arena), roots_valid(input_arena.nodes@, roots@),
+    requires
+        arena_ok(&input_arena),
+        roots_valid(input_arena.nodes@, roots@),
     ensures
-        arena_ok(&out.1), input_arena.nodes@.is_prefix_of(out.1.nodes@),
+        arena_ok(&out.1),
+        input_arena.nodes@.is_prefix_of(out.1.nodes@),
         roots_valid(out.1.nodes@, out.0@),
         forall|i: int| 0 <= i < out.0@.len() ==> gid_pair_shape(out.1@[out.0@[i] as int]),
-        root_terms(out.1.nodes@, out.0@)
-            == ckc_spec::replay::gid_pairs_all(root_terms(input_arena.nodes@, roots@)),
+        root_terms(out.1.nodes@, out.0@) == ckc_spec::replay::gid_pairs_all(
+            root_terms(input_arena.nodes@, roots@),
+        ),
 {
     hide(ckc_spec::replay::gid_pairs_all);
     hide(ckc_spec::replay::gid_pairs);
@@ -403,8 +475,10 @@ fn gid_pairs_inner(input_arena: ETermArena, roots: &Vec<usize>) -> (out: (Vec<us
     let gid = vstd::slice::slice_to_vec(b"$guideline_id");
     let pair_name: &[u8] = b"-";
     proof {
-        reveal_byteslit(b"$guideline_id"); reveal_strlit("$guideline_id");
-        reveal_byteslit(b"-"); reveal_strlit("-");
+        reveal_byteslit(b"$guideline_id");
+        reveal_strlit("$guideline_id");
+        reveal_byteslit(b"-");
+        reveal_strlit("-");
         reveal(ckc_spec::v1text::ascii);
         assert(gid@ == ckc_spec::replay::gid_name());
         assert(pair_name@ == ckc_spec::v1text::ascii("-"@));
@@ -412,13 +486,17 @@ fn gid_pairs_inner(input_arena: ETermArena, roots: &Vec<usize>) -> (out: (Vec<us
     }
     while tasks.len() > 0
         invariant
-            arena_ok(&arena), origin == input_arena.nodes@, origin.is_prefix_of(arena.nodes@),
-            roots_valid(origin, roots@), roots_valid(origin, tasks@),
+            arena_ok(&arena),
+            origin == input_arena.nodes@,
+            origin.is_prefix_of(arena.nodes@),
+            roots_valid(origin, roots@),
+            roots_valid(origin, tasks@),
             roots_valid(arena.nodes@, out@),
             forall|i: int| 0 <= i < out@.len() ==> gid_pair_shape(arena@[out@[i] as int]),
             target == ckc_spec::replay::gid_pairs_all(root_terms(origin, roots@)),
-            target == root_terms(arena.nodes@, out@)
-                + ckc_spec::replay::gid_pairs_all(root_terms(origin, tasks@)),
+            target == root_terms(arena.nodes@, out@) + ckc_spec::replay::gid_pairs_all(
+                root_terms(origin, tasks@),
+            ),
             gid@ == ckc_spec::replay::gid_name(),
             pair_name@ == ckc_spec::v1text::ascii("-"@),
         decreases crate::k2_engine::roots_work(origin, tasks@),
@@ -438,7 +516,7 @@ fn gid_pairs_inner(input_arena: ETermArena, roots: &Vec<usize>) -> (out: (Vec<us
             gid_pairs_step(root_terms(origin, before_tasks));
             assert(ckc_spec::replay::gid_pairs_all(root_terms(origin, before_tasks))
                 == ckc_spec::replay::gid_pairs(origin[current as int].term@)
-                    + ckc_spec::replay::gid_pairs_all(root_terms(origin, tasks@)));
+                + ckc_spec::replay::gid_pairs_all(root_terms(origin, tasks@)));
             assert_seqs_equal!(target == root_terms(before_nodes, before_out)
                 + ckc_spec::replay::gid_pairs(origin[current as int].term@)
                 + ckc_spec::replay::gid_pairs_all(root_terms(origin, tasks@)));
@@ -464,15 +542,19 @@ fn gid_pairs_inner(input_arena: ETermArena, roots: &Vec<usize>) -> (out: (Vec<us
         proof {
             assert_seqs_equal!(root_terms(arena.nodes@, out@)
                 == root_terms(before_nodes, before_out) + selected_gid(before_nodes, selected));
-            assert forall|i: int| 0 <= i < out@.len()
-                implies gid_pair_shape(arena@[out@[i] as int]) by {
-                if i < before_out.len() { assert(out@[i] == before_out[i]); }
+            assert forall|i: int| 0 <= i < out@.len() implies gid_pair_shape(
+                arena@[out@[i] as int],
+            ) by {
+                if i < before_out.len() {
+                    assert(out@[i] == before_out[i]);
+                }
             }
             gid_pairs_concat(root_terms(origin, children@), root_terms(origin, tasks@));
             assert_seqs_equal!(root_terms(origin, children@ + tasks@)
                 == root_terms(origin, children@) + root_terms(origin, tasks@));
-            assert(target == root_terms(arena.nodes@, out@)
-                + ckc_spec::replay::gid_pairs_all(root_terms(origin, children@ + tasks@)));
+            assert(target == root_terms(arena.nodes@, out@) + ckc_spec::replay::gid_pairs_all(
+                root_terms(origin, children@ + tasks@),
+            ));
         }
         children.append(&mut tasks);
         tasks = children;
@@ -485,13 +567,17 @@ fn gid_pairs_inner(input_arena: ETermArena, roots: &Vec<usize>) -> (out: (Vec<us
 }
 
 pub fn gid_pairs_all_exec(arena: &mut ETermArena, roots: &Vec<usize>) -> (out: Vec<usize>)
-    requires arena_ok(old(arena)), roots_valid(old(arena).nodes@, roots@),
+    requires
+        arena_ok(old(arena)),
+        roots_valid(old(arena).nodes@, roots@),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         roots_valid(final(arena).nodes@, out@),
         forall|i: int| 0 <= i < out@.len() ==> gid_pair_shape(final(arena)@[out@[i] as int]),
-        root_terms(final(arena).nodes@, out@)
-            == ckc_spec::replay::gid_pairs_all(root_terms(old(arena).nodes@, roots@)),
+        root_terms(final(arena).nodes@, out@) == ckc_spec::replay::gid_pairs_all(
+            root_terms(old(arena).nodes@, roots@),
+        ),
 {
     let mut owned = empty_arena();
     core::mem::swap(arena, &mut owned);
@@ -501,9 +587,11 @@ pub fn gid_pairs_all_exec(arena: &mut ETermArena, roots: &Vec<usize>) -> (out: V
 }
 
 pub fn arg_root(arena: &mut ETermArena, root: usize, i: usize) -> (out: usize)
-    requires root_ok(old(arena), root),
+    requires
+        root_ok(old(arena), root),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         root_ok(final(arena), out),
         final(arena)@[out as int] == ckc_spec::replay::arg(old(arena)@[root as int], i as int),
         ground(old(arena)@[root as int]) ==> ground(final(arena)@[out as int]),
@@ -512,7 +600,9 @@ pub fn arg_root(arena: &mut ETermArena, root: usize, i: usize) -> (out: usize)
     if i < args.len() {
         proof {
             assert(root_terms(arena.nodes@, args@)[i as int] == arena@[args@[i as int] as int]);
-            if ground(arena@[root as int]) { ground_arg(arena@[root as int], i as int); }
+            if ground(arena@[root as int]) {
+                ground_arg(arena@[root as int], i as int);
+            }
         }
         args[i]
     } else {
