@@ -1,3 +1,5 @@
+> Retired: the binding charter = `.agent/spec.md` Intent + Decisions (language boundary as ruled there).
+
 # standing instructions
 
 User scope directive; every session holds the project to these rules.

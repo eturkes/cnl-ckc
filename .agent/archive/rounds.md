@@ -1,3 +1,5 @@
+> Retired: live round roles = `.claude/rules/corpus.md` § Round roles.
+
 # rounds — /goal execution map
 
 Token economics (user-set): GPT teammate capacity abundant; Claude (MAIN)

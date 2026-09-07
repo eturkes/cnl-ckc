@@ -286,8 +286,10 @@ Migration gate = dual-run differentials against the legacy tools on HEAD
   REFERENCE/README certification claims. Close → archive record +
   roadmap stub flip.
 
-Ordering: strictly M5.1 → M5.2 → M5.3 → M5.4 → (M5.5 | M5.6) → M5.7 →
-M5.8 → M5.9. Every commit on main keeps legacy gates green until M5.7.
+Ordering (superseded by `.agent/spec.md` Decisions, soundness-first:
+M5.2 close → M6 emission certification → M5.3–M5.7 re-tiered to the
+verification line, M5.8 folded into M5.4 → M5 review → M7); original:
+strictly M5.1 → M5.2 → M5.3 → M5.4 → (M5.5 | M5.6) → M5.7 → M5.8 → M5.9. Every commit on main keeps legacy gates green until M5.7.
 `/goal` rounds + the parked hard-tier harvest run concurrently under
 legacy tooling; unit differentials derive doc/fixture counts from HEAD
 at run time (no frozen counts in acceptance).

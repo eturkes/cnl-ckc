@@ -1,3 +1,5 @@
+> Retired at the phase-flow migration: live state = `.agent/spec.md`; the M5 stub below = the last roadmap snapshot (K2 landed; next unit = engine/load perf).
+
 # roadmap
 
 Charter: `.agent/standing-instructions.md`. Shipped: fetch→ACE→Prolog

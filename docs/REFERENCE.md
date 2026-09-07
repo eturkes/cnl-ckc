@@ -600,7 +600,7 @@ the repository root, driven by the built-in `/goal` stop-condition
 command:
 
 ```
-/goal Process American clinical guidelines through the pipeline as described in docs/REFERENCE.md "Operating", fanning bulk work out to teammates per .agent/rounds.md: work the in-progress source document to full coverage before fetching the next; done only when either (a) the user has asked to stop, pause, or wind down — the request alone meets this goal at any point, even mid-round with the worklist unfinished; start nothing new, state where work stands, and stop — or (b) every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
+/goal Process American clinical guidelines through the pipeline as described in docs/REFERENCE.md "Operating", fanning bulk work out to teammates per the round roles in .claude/rules/corpus.md: work the in-progress source document to full coverage before fetching the next; done only when either (a) the user has asked to stop, pause, or wind down — the request alone meets this goal at any point, even mid-round with the worklist unfinished; start nothing new, state where work stands, and stop — or (b) every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
 ```
 
 The goal re-arms each time Claude tries to stop, and it survives
@@ -628,7 +628,8 @@ adjudication ledger. It also re-derives every committed query,
 answer, and proof trace, and it joins each trace step to its
 committed clause line. Bulk work (source
 reading, extraction drafting, ACE drafting, adversarial review) fans
-out to subagent teammates per `.agent/rounds.md`. The session lead
+out to subagent teammates per the round roles in
+`.claude/rules/corpus.md`. The session lead
 alone writes the repository and commits.
 
 Reviewer verdicts live in each guideline's `audit/adjudication.tsv`,

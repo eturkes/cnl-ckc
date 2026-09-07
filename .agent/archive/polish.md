@@ -1,3 +1,5 @@
+> Retired: live rows moved to `.agent/spec.md` Deferred.
+
 # polish register
 
 Register drained at the final project review: every row landed in-session
