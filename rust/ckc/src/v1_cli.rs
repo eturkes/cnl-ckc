@@ -72,6 +72,74 @@ fn emit(o: EOut) -> ExitCode {
     ExitCode::from(o.rc)
 }
 
+fn sha_of(s: &ESrc) -> String {
+    match s {
+        ESrc::Bytes(b) => crate::trust::sha256_hex(b),
+        _ => String::new(),
+    }
+}
+
+// Trace modes (K3): the kernel names the clause lines to hash, the shell
+// hashes them (R3) and hands the digests back with the query/answers digests.
+fn run_trace(mpath: &str, query: &str, answers: &str, trace: Option<&str>) -> ExitCode {
+    let mp = mpath.as_bytes();
+    let m = read_src(mp);
+    let rows = match ckc_kernel::contract::v1_manifest(mp, &m) {
+        Ok(rows) => rows,
+        Err(o) => return emit(o),
+    };
+    let pls: Vec<ESrc> = rows.iter().map(|r| read_src(&r.pl)).collect();
+    let pys: Vec<ESrc> = rows.iter().map(|r| read_src(&r.payload)).collect();
+    let qs = read_src(query.as_bytes());
+    let qsha = sha_of(&qs);
+    let ans = read_src(answers.as_bytes());
+    let asha = sha_of(&ans);
+    let lines = match ckc_kernel::contract::v1_trace_lines(
+        mp,
+        &m,
+        &pls,
+        &pys,
+        &qs,
+        qsha.as_bytes(),
+        &ans,
+    ) {
+        Ok(lines) => lines,
+        Err(o) => return emit(o),
+    };
+    let digests: Vec<Vec<u8>> = lines
+        .iter()
+        .map(|l| crate::trust::sha256_hex(l).into_bytes())
+        .collect();
+    emit(match trace {
+        None => ckc_kernel::contract::v1_trace(
+            mp,
+            &m,
+            &pls,
+            &pys,
+            &qs,
+            qsha.as_bytes(),
+            &ans,
+            asha.as_bytes(),
+            &digests,
+        ),
+        Some(t) => {
+            let ts = read_src(t.as_bytes());
+            ckc_kernel::contract::v1_trace_check(
+                mp,
+                &m,
+                &pls,
+                &pys,
+                &qs,
+                qsha.as_bytes(),
+                &ans,
+                asha.as_bytes(),
+                &ts,
+                &digests,
+            )
+        }
+    })
+}
+
 // Composition modes: the kernel owns every verdict byte; the shell reads
 // the manifest, one ESrc per manifest cell, and the query (R24).
 fn run_mode(mode: &str, mpath: &str, query: Option<&str>) -> ExitCode {
@@ -86,10 +154,7 @@ fn run_mode(mode: &str, mpath: &str, query: Option<&str>) -> ExitCode {
     emit(match query {
         Some(q) => {
             let qs = read_src(q.as_bytes());
-            let qsha = match &qs {
-                ESrc::Bytes(b) => crate::trust::sha256_hex(b),
-                _ => String::new(),
-            };
+            let qsha = sha_of(&qs);
             ckc_kernel::contract::v1_answer(mp, &m, &pls, &pys, &qs, qsha.as_bytes())
         }
         None if mode == "aggregate-check" => {
@@ -106,9 +171,11 @@ pub fn run(args: &[String]) -> ExitCode {
             run_mode(mode, m, None)
         }
         [mode, m, q] if mode == "answer" => run_mode(mode, m, Some(q)),
+        [mode, m, q, a] if mode == "trace" => run_trace(m, q, a, None),
+        [mode, m, q, a, t] if mode == "trace-check" => run_trace(m, q, a, Some(t)),
         _ => {
             eprintln!(
-                "usage: ckc v1 <check|render> <pl> | ckc v1 <aggregate-check|recursion-check> <manifest> | ckc v1 answer <manifest> <query.pl>"
+                "usage: ckc v1 <check|render> <pl> | ckc v1 <aggregate-check|recursion-check> <manifest> | ckc v1 answer <manifest> <query.pl> | ckc v1 trace <manifest> <query.pl> <answers.pl> | ckc v1 trace-check <manifest> <query.pl> <answers.pl> <traces.pl>"
             );
             ExitCode::from(2)
         }
