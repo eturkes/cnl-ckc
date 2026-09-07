@@ -6,6 +6,7 @@
 pub mod align;
 pub mod answers;
 pub mod digest;
+pub mod emit;
 pub mod engine;
 pub mod replay;
 pub mod term;

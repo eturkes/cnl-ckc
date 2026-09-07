@@ -31,9 +31,9 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 
 ## Deferred
 
-- M5.2a engine/load perf (IN PROGRESS, `.agent/contracts/m5u2a.md`): arena reclamation + load/scan fix, spec unchanged. Accept: 10 R30d-parked cases green ≤30 s; k2 corpus 3 lanes ≤30 s / ≤2 GB; P1/P2.
+- M5.2a engine perf (CLOSING, `.agent/contracts/m5u2a.md`; P4 met on `wt/prod-m5u2a`). Accept: 10 R30d cases green ≤30 s; k2 corpus 3 lanes ≤30 s / ≤2 GB; P1/P2.
 - M5.2b K3 trace + trace-check + Kani (IN PROGRESS, `.agent/contracts/m5u2b.md`; spec `ckc-spec/src/trace.rs` landed). Accept: lanes D/E byte-identical; tests/queries replay; R32–R34 ruled; `k3_sound` discharged; P1–P7.
-- M6 emission certification (ruled 2026-09: relation = DRS→v1 projection + proof-payload correspondence + source custody, acceptance-only; DRS from a thin trusted upstream-APE driver at check time). Accept: `ckc certify` green over every committed document + query in CI; `ace_to_pl.pl` leaves the human-read trust story.
+- M6 emission certification (IN PROGRESS, `.agent/contracts/m6.md`: relation = DRS→v1 projection + payload + custody, acceptance-only; spec `ckc-spec/src/emit.rs` + trusted driver `ckc/prolog/drs_dump.pl` landed). Accept: `ckc certify` green over every committed document + query in CI; `ace_to_pl.pl` leaves the human-read trust story.
 - M5.3 validators (K4). Accept: `ckc check` section parity with `goal.py check`; red/adjudication/copy replay green; FC2 re-pins ruled.
 - M5.4 pipeline (`ckc compile|queries|align|review-manifest|release-manifest|ledger-validate`) + fork shrink (in-compile replay → kernel; proof-class probes re-pinned). Accept: corpus + manifest byte-identical.
 - M5.5 UI (K5). Accept: pages byte-identical vs `ui.py render`; tests/ui 84 red + 15 green; POST/CAS/committed-corpus law verbatim; fidelity theorems.
@@ -41,7 +41,7 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 - M5.7 cutover: CI swap; delete `vendor/e--`, `tools/`, `tests/strict`, `red.sh`; NOTICE/REFERENCE/README/rules scrub. Accept: `git grep -iE 'e--|\.emm'` empty; new chain green.
 - M5 review (`.agent/review.md`): spec audit, trust-audit hostile probes, mutation campaign scored by verus-acceptance, shell fault probes, differential replay, claim-soundness sweep. Accept: rows all adjudicated.
 - M7 gap coverage: `inexpressible` census class in the coverage grammar; taxonomy from banked blockers + compendium sampling; disposition per class (ACE extension | schema v2 | companion target). Accept: user-ruled plan; first class dispositioned.
-- Scratch validators (`.scratch/m5u*/`) = temporary encodings. Accept: committed Rust harness ≤ M5.7.
+- Scratch validators (`.scratch/m5u*/`, `.scratch/m6/`) = temporary. Accept: committed Rust harness ≤ M5.7.
 - Corpus rounds to exhaustion (legacy tooling). Accept: meter `terminal remaining: orgs=0 rows=0 provisional=0`; then hard-tier harvest (`archive/hard-tier-register.md`).
 - `goal align` fail-path probes (low). Accept: one probe per `fail("align",…)` branch → rc 2 + detail.
 
