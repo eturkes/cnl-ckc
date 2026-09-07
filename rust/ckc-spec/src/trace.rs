@@ -699,6 +699,16 @@ pub open spec fn forest_valid(db: Seq<DocClause>, goal: Term, forest: Seq<PNode>
     kids_valid(db, conj_leaves(goal), forest)
 }
 
+// Every body item is a wellformed literal or NAF box — the shape the canonical
+// grammar guarantees (`wf_clause`): a body goal is never a bare conjunction,
+// so each body item owns exactly one proof position under its clause node.
+// The soundness theorem takes this as its hypothesis (`contract::k3_sound`);
+// a `Pos(','(..))` body would split into two goals at one path.
+pub open spec fn bodies_wf(db: Seq<DocClause>) -> bool {
+    forall|i: int, j: int|
+        0 <= i < db.len() && 0 <= j < db[i].body.len() ==> wf_body_item(#[trigger] db[i].body[j])
+}
+
 // --- rows ---
 pub open spec fn conj_leaves(t: Term) -> Seq<Term>
     decreases t,
