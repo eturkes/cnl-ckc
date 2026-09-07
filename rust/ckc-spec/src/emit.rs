@@ -1896,6 +1896,14 @@ pub open spec fn certify_query(
     }
 }
 
+// --- exec-facing mirror ---
+pub open spec fn opt_view(u: Option<&Vec<u8>>) -> Option<Seq<u8>> {
+    match u {
+        Option::Some(v) => Option::Some(v@),
+        Option::None => Option::None,
+    }
+}
+
 // --- outputs (the `ckc certify` envelope) ---
 pub open spec fn certify_reject(id: Seq<u8>, why: Term) -> Out {
     Out {
