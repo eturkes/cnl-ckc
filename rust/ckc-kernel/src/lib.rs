@@ -28,6 +28,7 @@
     clippy::unnecessary_unwrap,
     clippy::if_same_then_else,
     clippy::collapsible_if,
+    clippy::collapsible_match,
     clippy::needless_return,
     clippy::let_and_return,
     non_shorthand_field_patterns
@@ -51,8 +52,10 @@ mod k2_reject;
 mod k2_sort;
 mod k2_term;
 mod k2_walk;
+mod m6_drs;
 mod m6_dump;
 mod m6_impl;
+mod m6_model;
 mod m6_symbols;
 mod m6_term;
 mod v1_impl;
