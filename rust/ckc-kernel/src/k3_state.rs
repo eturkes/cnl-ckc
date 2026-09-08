@@ -185,6 +185,12 @@ pub open spec fn cfg_view(nodes: Seq<ENode>, c: &ECfg) -> TCfg {
     }
 }
 
+pub open spec fn backtrack_valid(nodes: Seq<ENode>, db_len: nat, c: &ECfg) -> bool {
+    goals_valid(nodes, c.stack@) && alts_valid(nodes, c.log.len() as nat, c.alts@) && marks_sorted(
+        c.alts@,
+    ) && log_valid(nodes, db_len, c.log@) && c.fresh <= nodes.len()
+}
+
 pub open spec fn cfg_valid(nodes: Seq<ENode>, db_len: nat, c: &ECfg) -> bool {
     goals_valid(nodes, c.stack@) && goals_levels(c.stack@, c.alts.len() as nat) && alts_valid(
         nodes,
@@ -480,7 +486,7 @@ pub fn in_naf_exec(arena: &ETermArena, goals: &Vec<EGoal>) -> (out: bool)
 
 pub fn fail(arena: &ETermArena, initial: ECfg, Ghost(db_len): Ghost<nat>) -> (out: EStep)
     requires
-        cfg_valid(arena.nodes@, db_len, &initial),
+        backtrack_valid(arena.nodes@, db_len, &initial),
     ensures
         step_valid(arena.nodes@, db_len, &out),
         step_view(arena.nodes@, &out) == tfail(cfg_view(arena.nodes@, &initial)),

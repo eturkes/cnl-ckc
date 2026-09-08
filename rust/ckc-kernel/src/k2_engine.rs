@@ -1822,7 +1822,7 @@ proof fn comp_pair_work_decrease(
     ));
 }
 
-proof fn pairs_models_prefix(before: Seq<ENode>, after: Seq<ENode>, pairs: Seq<EPair>)
+pub proof fn pairs_models_prefix(before: Seq<ENode>, after: Seq<ENode>, pairs: Seq<EPair>)
     requires
         before.is_prefix_of(after),
         pair_roots_valid(before, pairs),
@@ -4064,7 +4064,7 @@ fn shift_item(arena: &mut ETermArena, item: &EBodyItem, off: usize) -> (out: usi
     }
 }
 
-fn roots_max_var(arena: &ETermArena, roots: &Vec<usize>) -> (out: Option<usize>)
+pub fn roots_max_var(arena: &ETermArena, roots: &Vec<usize>) -> (out: Option<usize>)
     requires
         arena_ok(arena),
         roots_valid(arena.nodes@, roots@),
@@ -4279,7 +4279,7 @@ pub fn args_roots(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
 }
 
 #[verifier::rlimit(5000)]
-fn prepare_clause(
+pub fn prepare_clause(
     arena: &mut ETermArena,
     clause: &EClause,
     args: &Vec<usize>,
