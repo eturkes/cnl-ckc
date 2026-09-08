@@ -54,6 +54,7 @@ mod k2_term;
 mod k2_walk;
 mod k3_coords;
 mod k3_front;
+mod k3_identity;
 mod k3_impl;
 mod k3_join;
 mod k3_print;
