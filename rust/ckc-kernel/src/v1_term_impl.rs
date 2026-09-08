@@ -6185,7 +6185,7 @@ proof fn udec_bytes_nonempty(n: nat)
     }
 }
 
-proof fn term_bytes_nonempty(term: Term)
+pub proof fn term_bytes_nonempty(term: Term)
     ensures
         ckc_spec::v1text::term_bytes(term).len() > 0,
     decreases term,
@@ -9176,7 +9176,7 @@ pub struct EVarTracker {
     pub valid: bool,
 }
 
-fn new_var_tracker() -> (tracker: EVarTracker)
+pub fn new_var_tracker() -> (tracker: EVarTracker)
     ensures
         tracker.next == 0,
         tracker.stream@ == Seq::<nat>::empty(),
@@ -10031,7 +10031,7 @@ proof fn tracker_complete_push_invalid(stream: Seq<nat>, value: nat)
     }
 }
 
-proof fn tracker_state_canonical(next: usize, stream: Seq<nat>)
+pub proof fn tracker_state_canonical(next: usize, stream: Seq<nat>)
     requires
         tracker_state_ok(next, stream),
     ensures
@@ -10082,7 +10082,7 @@ proof fn firsts_contains_at(values: Seq<nat>, seen: Set<nat>, index: int)
     }
 }
 
-proof fn canonical_stream_keys_fit(stream: Seq<nat>)
+pub proof fn canonical_stream_keys_fit(stream: Seq<nat>)
     requires
         ckc_spec::term::var_canonical(stream),
         stream.len() <= usize::MAX as nat,
@@ -10102,7 +10102,7 @@ proof fn canonical_stream_keys_fit(stream: Seq<nat>)
 }
 
 #[verifier::spinoff_prover]
-proof fn term_var_lengths(term: Term)
+pub proof fn term_var_lengths(term: Term)
     ensures
         ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(term).len(),
         ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::tail_bytes(term).len(),
@@ -10183,7 +10183,7 @@ pub open spec fn stream_keys_fit(stream: Seq<nat>) -> bool {
     forall|i: int| 0 <= i < stream.len() ==> #[trigger] stream[i] <= usize::MAX as nat
 }
 
-proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
+pub proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
     requires
         stream_keys_fit(left + right),
     ensures
@@ -10198,7 +10198,7 @@ proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
     }
 }
 
-proof fn term_keys_from_stream(term: Term)
+pub proof fn term_keys_from_stream(term: Term)
     requires
         stream_keys_fit(ckc_spec::term::var_stream(term)),
     ensures
@@ -14391,7 +14391,12 @@ proof fn spanned_term_at_close(bytes: Seq<u8>, term: &ESpannedTerm)
     reveal(term_boundary);
 }
 
-fn track_parsed_term(bytes: &[u8], term: &ESpannedTerm, tracker: &mut EVarTracker, at: &mut usize)
+pub fn track_parsed_term(
+    bytes: &[u8],
+    term: &ESpannedTerm,
+    tracker: &mut EVarTracker,
+    at: &mut usize,
+)
     requires
         *old(at) <= bytes@.len(),
         spanned_term_ok(bytes@, term),
