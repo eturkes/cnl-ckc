@@ -53,6 +53,8 @@ mod k2_term;
 mod k2_walk;
 mod m6_dump;
 mod m6_impl;
+mod m6_symbols;
+mod m6_term;
 mod v1_impl;
 mod v1_term_impl;
 
