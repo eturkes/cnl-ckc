@@ -133,3 +133,37 @@ jobs:
 
       - name: Dependency audit
         run: just deny
+
+  # Weekly: Kani bounded model checking over the kernel's public exec surface.
+  kani:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Bootstrap just (rust/tools.lock)
+        run: |
+          set -eu
+          url=$(awk -F'\t' '$1=="just"{print $5}' rust/tools.lock)
+          sha=$(awk -F'\t' '$1=="just"{print $4}' rust/tools.lock)
+          curl -sSL -o "$RUNNER_TEMP/just.tar.gz" "$url"
+          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/just.tar.gz" | sha256sum -c
+          mkdir -p "$RUNNER_TEMP/just"
+          tar -xzf "$RUNNER_TEMP/just.tar.gz" -C "$RUNNER_TEMP/just" just
+          echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"
+
+      - name: Cache toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .toolchain
+            !.toolchain/dl
+          key: kani-${{ runner.os }}-${{ hashFiles('rust/kani.lock', 'rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
+
+      - name: Install pinned tools
+        run: just tools
+
+      - name: Kani gate
+        run: just kani

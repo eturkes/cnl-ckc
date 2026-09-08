@@ -32,7 +32,8 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 ## Deferred
 
 - M5.2a engine perf (CLOSING, `.agent/contracts/m5u2a.md`; P4 met on `wt/prod-m5u2a`). Accept: 10 R30d cases green ≤30 s; k2 corpus 3 lanes ≤30 s / ≤2 GB; P1/P2.
-- M5.2b K3 trace + trace-check + Kani (IN PROGRESS, `.agent/contracts/m5u2b.md`; spec `ckc-spec/src/trace.rs` landed). Accept: lanes D/E byte-identical; tests/queries replay; R32–R34 ruled; `k3_sound` discharged; P1–P7.
+- M5.2b K3 trace + trace-check (IN PROGRESS, `.agent/contracts/m5u2b.md`; spec landed; `just kani` landed, P3 partial). Accept: lanes D/E byte-identical; tests/queries replay; `k3_sound` discharged; P1–P7.
+- Kani engine harness: `v1_answer` replays the K1 loader symbolically → CBMC exhausts. Accept: typed below-parser seam + one engine harness green in `just kani`.
 - M6 emission certification (IN PROGRESS, `.agent/contracts/m6.md`: relation = DRS→v1 projection + payload + custody, acceptance-only; spec `ckc-spec/src/emit.rs` + trusted driver `ckc/prolog/drs_dump.pl` landed). Accept: `ckc certify` green over every committed document + query in CI; `ace_to_pl.pl` leaves the human-read trust story.
 - M5.3 validators (K4; contract `.agent/contracts/m5u3.md`, R44–R49). Accept: `ckc check` section parity with `goal.py check`; red/adjudication replay green; FC2 re-pins ruled.
 - M5.4 pipeline (`ckc compile|queries|align|review-manifest|release-manifest|ledger-validate`) + fork shrink (in-compile replay → kernel; proof-class probes re-pinned). Accept: corpus + manifest byte-identical.
@@ -43,7 +44,6 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 - M7 gap coverage: `inexpressible` census class in the coverage grammar; taxonomy from banked blockers + compendium sampling; disposition per class (ACE extension | schema v2 | companion target). Accept: user-ruled plan; first class dispositioned.
 - Scratch validators (`.scratch/m5u*/`, `.scratch/m6/`) = temporary. Accept: committed Rust harness ≤ M5.7.
 - Corpus rounds to exhaustion (legacy tooling). Accept: meter `terminal remaining: orgs=0 rows=0 provisional=0`; then hard-tier harvest (`archive/hard-tier-register.md`).
-- `goal align` fail-path probes (low). Accept: one probe per `fail("align",…)` branch → rc 2 + detail.
 
 ## Phase
 
