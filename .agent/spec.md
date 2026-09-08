@@ -31,7 +31,6 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 
 ## Deferred
 
-- M5.2a engine perf (CLOSING, `.agent/contracts/m5u2a.md`; P4 met on `wt/prod-m5u2a`). Accept: 10 R30d cases green ≤30 s; k2 corpus 3 lanes ≤30 s / ≤2 GB; P1/P2.
 - M5.2b K3 trace + trace-check (IN PROGRESS, `.agent/contracts/m5u2b.md`; spec landed; `just kani` landed, P3 partial). Accept: lanes D/E byte-identical; tests/queries replay; `k3_sound` discharged; P1–P7.
 - Kani engine harness: `v1_answer` replays the K1 loader symbolically → CBMC exhausts. Accept: typed below-parser seam + one engine harness green in `just kani`.
 - M6 emission certification (IN PROGRESS, `.agent/contracts/m6.md`: relation = DRS→v1 projection + payload + custody, acceptance-only; spec `ckc-spec/src/emit.rs` + trusted driver `ckc/prolog/drs_dump.pl` landed). Accept: `ckc certify` green over every committed document + query in CI; `ace_to_pl.pl` leaves the human-read trust story.

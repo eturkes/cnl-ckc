@@ -78,3 +78,15 @@ rust/target/release/ckc --lanes A,H` (all with `.toolchain/bin` first on PATH).
   `/usr/bin/time -v` on the dev workstation (8 cores, 62 GB); a factor ≤ 10×
   legacy wall counts as parity for a verified interpreter; RSS bound = 2 GB
   absolute (product composition ≤ 350 documents by construction).
+
+## Close (lead)
+
+Landed on main from `wt/prod-m5u2a` (commits 3d06c1b2 991/0 → a35d4776
+1005/0 → ce1ac379 1022/0 → 446495db 1030/0; teammate report
+`.scratch/agents/prod-m5u2a.md`). Defects: (D1) whole-prefix rewrites
+(subst/rename walked 0..root) → descendant-only memoized rewrite
+(`k2_rewrite.rs`); arena reclamation on backtrack + persistent solution
+store (`k2_store.rs`); (D2) repeated term walks → cached variable census,
+one-pass rule buckets, rigid-head/nested rigid-clash rejection before
+renaming. Spec unchanged; `assumes=34`; trusted manifest unchanged.
+Acceptance on main's binary = `.scratch/gate/m5u2a-main-accept.log`.

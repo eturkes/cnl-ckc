@@ -11462,6 +11462,8 @@ pub fn parse_answers(
             == ckc_spec::v1text::V1File::Answers(a),
 {
     hide(parsed_metadata_ok);
+    hide(arena_ok);
+    hide(crate::k2_term::node_ok);
     hide(term_keys_fit);
     hide(terms_keys_fit);
     let mut cursor = new_cursor(bytes);
