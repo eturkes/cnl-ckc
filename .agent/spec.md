@@ -34,7 +34,7 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 - M5.2b K3 trace + trace-check (IN PROGRESS, `.agent/contracts/m5u2b.md`; spec landed; `just kani` landed, P3 partial). Accept: lanes D/E byte-identical; tests/queries replay; `k3_sound` discharged; P1–P7.
 - Kani engine harness: `v1_answer` replays the K1 loader symbolically → CBMC exhausts. Accept: typed below-parser seam + one engine harness green in `just kani`.
 - M6 emission certification (IN PROGRESS, `.agent/contracts/m6.md`: relation = DRS→v1 projection + payload + custody, acceptance-only; spec `ckc-spec/src/emit.rs` + trusted driver `ckc/prolog/drs_dump.pl` landed). Accept: `ckc certify` green over every committed document + query in CI; `ace_to_pl.pl` leaves the human-read trust story.
-- M5.3 validators (K4; contract `.agent/contracts/m5u3.md`, R44–R49). Accept: `ckc check` section parity with `goal.py check`; red/adjudication replay green; FC2 re-pins ruled.
+- M5.3 validators (K4; contract `.agent/contracts/m5u3.md`, R44–R49; spec `check.rs` landed). Accept: `ckc check` section parity with `goal.py check`; red/adjudication replay green; FC2 re-pins ruled.
 - M5.4 pipeline (`ckc compile|queries|align|review-manifest|release-manifest|ledger-validate`) + fork shrink (in-compile replay → kernel; proof-class probes re-pinned). Accept: corpus + manifest byte-identical.
 - M5.5 UI (K5). Accept: pages byte-identical vs `ui.py render`; tests/ui 84 red + 15 green; POST/CAS/committed-corpus law verbatim; fidelity theorems.
 - M5.6 dist (shell tier, pinned dep). Accept: 62 red cases re-expressed; `sha256sum -c` + double-build determinism; FC4 re-baseline.
