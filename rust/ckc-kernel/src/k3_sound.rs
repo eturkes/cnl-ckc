@@ -16,6 +16,9 @@ pub mod graph;
 #[path = "k3_sound_goals.rs"]
 pub mod goals;
 
+#[path = "k3_sound_log.rs"]
+pub mod log;
+
 #[path = "k3_sound_shape.rs"]
 pub mod shapes;
 
