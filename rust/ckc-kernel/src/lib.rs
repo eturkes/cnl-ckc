@@ -65,6 +65,7 @@ mod k3_materialize;
 mod k3_number;
 mod k3_print;
 mod k3_rows;
+pub mod k3_sound;
 mod k3_state;
 mod v1_impl;
 mod v1_term_impl;
