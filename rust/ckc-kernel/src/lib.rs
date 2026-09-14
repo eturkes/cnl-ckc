@@ -58,6 +58,7 @@ mod k4_bytes;
 mod k4_classify;
 mod k4_impl;
 mod k4_ledger;
+mod k4_manifest;
 mod k4_payload;
 mod k4_render;
 mod k4_scalar;

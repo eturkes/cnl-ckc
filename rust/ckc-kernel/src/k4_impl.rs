@@ -79,8 +79,7 @@ pub fn check_parse_manifest_impl(src: &ckc_spec::replay::ESrc, path: &[u8]) -> (
         (ckc_spec::check::bundles(r.0@), ckc_spec::check::optional_bytes(r.1))
             == ckc_spec::check::parse_manifest(src@, path@),
 {
-    assert(false);
-    (Vec::new(), None)
+    crate::k4_manifest::parse(src, path)
 }
 
 pub fn check_ledger_impl(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: (
