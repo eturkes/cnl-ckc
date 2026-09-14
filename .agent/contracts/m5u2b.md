@@ -188,4 +188,10 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
   fuel-indexed (`rec%resolves(…, fuel)`) and a witness proved at another fuel
   never matches it (prod-k3sound-1 SMT diagnosis + before/after probe);
   no semantic change.
+- R82 Kani trace harness (P3 follow-up): `reader_trace_check_small` (8
+  symbolic trace bytes, unwind 949) exhausts CBMC like the engine harness —
+  no verdict at 60 min wall / 12.6 GiB (the whole-file K1 preflight replays
+  symbolically before the trace checker); it stays in `rust/ckc-kani-harness`
+  OUTSIDE the `just kani` recipe, joining the existing `.agent/deferred.md`
+  Kani row (typed below-parser kernel seam). P3 stays PARTIAL as ruled.
 
