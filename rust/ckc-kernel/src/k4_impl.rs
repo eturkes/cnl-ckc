@@ -6,8 +6,7 @@ pub fn check_render_impl(v: &ckc_spec::check::EVerdict) -> (r: ckc_spec::check::
     ensures
         r@ == ckc_spec::check::render(v@),
 {
-    assert(false);
-    ckc_spec::check::ERendered { rc: 0, out: Vec::new() }
+    crate::k4_render::verdict(v)
 }
 
 pub fn check_coverage_impl(
@@ -56,8 +55,7 @@ pub fn check_semantic_input_impl(pl: &[u8], docid: &[u8]) -> (r: Result<Vec<u8>,
     ensures
         ckc_spec::check::bytes_result(r) == ckc_spec::check::semantic_input(pl@, docid@),
 {
-    assert(false);
-    Ok(Vec::new())
+    crate::k4_semantic::semantic(pl, docid)
 }
 
 pub fn check_bundle_block_impl(b: &ckc_spec::check::EBundle) -> (r: Vec<u8>)
