@@ -24,16 +24,14 @@ pub fn check_coverage_impl(
             root@,
         ),
 {
-    assert(false);
-    Err(ckc_spec::check::EVerdict::Ok(Vec::new()))
+    crate::k4_coverage::check(bytes, docids, files, root)
 }
 
 pub fn check_coverage_meter_impl(gid: &[u8], c: &ckc_spec::check::ECoverage) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::check::coverage_meter(gid@, c@.rows),
 {
-    assert(false);
-    Vec::new()
+    crate::k4_coverage_rows::meter(gid, c)
 }
 
 pub fn check_payload_impl(c: &ckc_spec::check::ECoverage, docid: &[u8]) -> (r: (

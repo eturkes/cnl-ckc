@@ -56,16 +56,26 @@ mod k2_walk;
 mod k4_bundle;
 mod k4_bytes;
 mod k4_classify;
+mod k4_coverage;
+mod k4_coverage_rows;
+mod k4_evidence;
+mod k4_file_checks;
 mod k4_impl;
 mod k4_ledger;
 mod k4_manifest;
+mod k4_numbers;
 mod k4_payload;
 mod k4_render;
+mod k4_rows;
 mod k4_scalar;
+mod k4_search;
 mod k4_semantic;
 mod v1_impl;
 mod v1_term_impl;
 
 pub use ckc_spec::align::{ECheck, EModel, ESpan};
+pub use ckc_spec::check::{
+    EBundle, ECoverage, ECoverageRow, EDecision, EFileSrc, ERendered, EStatus, EVerdict,
+};
 pub use ckc_spec::replay::{EOut, ERow, ESrc};
 pub use ckc_spec::v1text::EV1Verdict;
