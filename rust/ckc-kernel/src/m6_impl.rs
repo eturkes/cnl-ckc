@@ -1,4 +1,4 @@
-// M6 seed: red stubs behind the certify bindings (prod fills).
+// M6 document + query certification.
 use ckc_spec::replay::EOut;
 use vstd::prelude::*;
 
@@ -43,8 +43,7 @@ pub fn certify_query_impl(
             pl@,
         ),
 {
-    assert(false);  // SEED: unimplemented
-    EOut { rc: 1, out: Vec::new(), err: Vec::new() }
+    crate::m6_query::certify_query_impl(ace, asha, usha, qid, dump, pl)
 }
 
 } // verus!
