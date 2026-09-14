@@ -2589,8 +2589,12 @@ fn clash_roots(arena: &ETermArena, left: usize, right: usize) -> (out: bool)
 }
 
 // A rigid argument mismatch rejects a trial before renaming or binding its continuation.
-pub fn head_clash(arena: &ETermArena, args: &Vec<usize>, head: usize, Ghost(off): Ghost<nat>) -> (out:
-    bool)
+pub fn head_clash(
+    arena: &ETermArena,
+    args: &Vec<usize>,
+    head: usize,
+    Ghost(off): Ghost<nat>,
+) -> (out: bool)
     requires
         root_ok(arena, head),
         roots_valid(arena.nodes@, args@),

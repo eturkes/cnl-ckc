@@ -7899,8 +7899,17 @@ fn parse_term_inner(
     let mut owned_tracker = new_var_tracker();
     core::mem::swap(tracker, &mut owned_tracker);
     let (result, final_arena, final_tracker, final_at) = parse_term_inner_owned(
-        bytes, start, owned_arena, first_var, arena_entry, expected, tracking_expected,
-        initial_stream, track_vars, owned_tracker, *at,
+        bytes,
+        start,
+        owned_arena,
+        first_var,
+        arena_entry,
+        expected,
+        tracking_expected,
+        initial_stream,
+        track_vars,
+        owned_tracker,
+        *at,
     );
     *arena = final_arena;
     *tracker = final_tracker;
@@ -8507,7 +8516,14 @@ fn parse_term_inner_owned(
                         reveal(atomic_term);
                         assert(atomic_term(term@));
                     }
-                    record_atomic_term(bytes, pos, &term, Ghost(atomic_initial), &mut tracker, &mut at);
+                    record_atomic_term(
+                        bytes,
+                        pos,
+                        &term,
+                        Ghost(atomic_initial),
+                        &mut tracker,
+                        &mut at,
+                    );
                     proof {
                         tracked_state_atomic(
                             entry_stream,
@@ -8727,7 +8743,9 @@ fn parse_term_inner_owned(
                     let ghost before_atom = arena.nodes@;
                     let arena_root = push_atom(&mut arena, name);
                     proof {
-                        assert(before_atom.is_prefix_of(arena.nodes@)) by { reveal(Seq::<_>::is_prefix_of); }
+                        assert(before_atom.is_prefix_of(arena.nodes@)) by {
+                            reveal(Seq::<_>::is_prefix_of);
+                        }
                         nodes_prefix_transitive(arena_entry@, before_atom, arena.nodes@);
                         frames_roots_prefix(before_atom, &arena, frames@);
                     }
@@ -20557,7 +20575,8 @@ fn parse_doc_inner(
                 ));
             }
         }
-        bundle_meta = bundle_metadata_push(
+        bundle_meta =
+        bundle_metadata_push(
             bundle_meta,
             bundle.ordinal.clone(),
             bundle.clauses.len(),

@@ -242,11 +242,28 @@ pub fn db_lines(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<Vec<u8>>)
     out
 }
 
-pub fn traces_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], asha: &[u8], result: usize) -> (out: ckc_spec::replay::EOut)
-    requires root_ok(old(arena), result),
+pub fn traces_exec(
+    arena: &mut ETermArena,
+    qid: &[u8],
+    qsha: &[u8],
+    asha: &[u8],
+    result: usize,
+) -> (out: ckc_spec::replay::EOut)
+    requires
+        root_ok(old(arena), result),
     ensures
-        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
-        out@ == ckc_spec::replay::ok(print_traces(TracesFile { qid: qid@, qsha: qsha@, asha: asha@, result: old(arena)@[result as int] })),
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        out@ == ckc_spec::replay::ok(
+            print_traces(
+                TracesFile {
+                    qid: qid@,
+                    qsha: qsha@,
+                    asha: asha@,
+                    result: old(arena)@[result as int],
+                },
+            ),
+        ),
 {
     let ghost before = arena.nodes@;
     let version: &[u8] = b"v1";
@@ -255,16 +272,27 @@ pub fn traces_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], asha: &[u8],
     let result_name: &[u8] = b"result";
     let record_name: &[u8] = b"$guideline_traces";
     let prefix: &[u8] = b"% ";
-    let suffix: &[u8] = b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n";
+    let suffix: &[u8] =
+        b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n";
     proof {
-        reveal_byteslit(b"v1"); reveal_strlit("v1");
-        reveal_byteslit(b"query_sha256"); reveal_strlit("query_sha256");
-        reveal_byteslit(b"answers_sha256"); reveal_strlit("answers_sha256");
-        reveal_byteslit(b"result"); reveal_strlit("result");
-        reveal_byteslit(b"$guideline_traces"); reveal_strlit("$guideline_traces");
-        reveal_byteslit(b"% "); reveal_strlit("% ");
-        reveal_byteslit(b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n");
-        reveal_strlit(" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n");
+        reveal_byteslit(b"v1");
+        reveal_strlit("v1");
+        reveal_byteslit(b"query_sha256");
+        reveal_strlit("query_sha256");
+        reveal_byteslit(b"answers_sha256");
+        reveal_strlit("answers_sha256");
+        reveal_byteslit(b"result");
+        reveal_strlit("result");
+        reveal_byteslit(b"$guideline_traces");
+        reveal_strlit("$guideline_traces");
+        reveal_byteslit(b"% ");
+        reveal_strlit("% ");
+        reveal_byteslit(
+            b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
+        );
+        reveal_strlit(
+            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
+        );
         reveal(ascii);
         assert(version@ == ascii("v1"@));
         assert(query_name@ == ascii("query_sha256"@));
@@ -272,7 +300,9 @@ pub fn traces_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], asha: &[u8],
         assert(result_name@ == ascii("result"@));
         assert(record_name@ == ascii("$guideline_traces"@));
         assert(prefix@ == ascii("% "@));
-        assert(suffix@ == ascii(" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@));
+        assert(suffix@ == ascii(
+            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+        ));
     }
     let v1 = crate::k2_output::atom_root(arena, version);
     let id = crate::k2_output::atom_root(arena, qid);
@@ -282,21 +312,33 @@ pub fn traces_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], asha: &[u8],
     let answer = crate::k2_output::comp1(arena, answers_name, answer_digest);
     let payload = crate::k2_output::comp1(arena, result_name, result);
     let mut fields = Vec::new();
-    fields.push(v1); fields.push(id); fields.push(query); fields.push(answer); fields.push(payload);
+    fields.push(v1);
+    fields.push(id);
+    fields.push(query);
+    fields.push(answer);
+    fields.push(payload);
     proof {
         crate::k2_term::arena_prefix_stable(before, arena);
-        crate::k2_term::child_terms_match(arena.nodes@, fields@, seq![
-            ckc_spec::term::Term::Atom(version@), ckc_spec::term::Term::Atom(qid@),
-            ckc_spec::term::Term::Comp(query_name@, seq![ckc_spec::term::Term::Atom(qsha@)]),
-            ckc_spec::term::Term::Comp(answers_name@, seq![ckc_spec::term::Term::Atom(asha@)]),
-            ckc_spec::term::Term::Comp(result_name@, seq![before[result as int].term@]),
-        ]);
+        crate::k2_term::child_terms_match(
+            arena.nodes@,
+            fields@,
+            seq![
+                ckc_spec::term::Term::Atom(version@),
+                ckc_spec::term::Term::Atom(qid@),
+                ckc_spec::term::Term::Comp(query_name@, seq![ckc_spec::term::Term::Atom(qsha@)]),
+                ckc_spec::term::Term::Comp(answers_name@, seq![ckc_spec::term::Term::Atom(asha@)]),
+                ckc_spec::term::Term::Comp(result_name@, seq![before[result as int].term@]),
+            ],
+        );
     }
     let record = crate::k2_output::comp_root(arena, record_name, fields);
     let mut bytes = slice_to_vec(prefix);
-    let mut id_bytes = slice_to_vec(qid); bytes.append(&mut id_bytes);
-    let mut suffix_bytes = slice_to_vec(suffix); bytes.append(&mut suffix_bytes);
-    let mut record_bytes = crate::k2_term::term_line(arena, record); bytes.append(&mut record_bytes);
+    let mut id_bytes = slice_to_vec(qid);
+    bytes.append(&mut id_bytes);
+    let mut suffix_bytes = slice_to_vec(suffix);
+    bytes.append(&mut suffix_bytes);
+    let mut record_bytes = crate::k2_term::term_line(arena, record);
+    bytes.append(&mut record_bytes);
     ckc_spec::replay::EOut { rc: 0, out: bytes, err: Vec::new() }
 }
 
