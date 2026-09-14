@@ -664,7 +664,11 @@ pub open spec fn node_valid(db: Seq<DocClause>, th: Seq<(nat, Term)>, g: Term, n
                 apply(t, s) == apply(args[0], th)) && naf_fails(db, t),
             _ => false,
         },
-        PNode::Clause(m, kids) => m < db.len() && exists|k: nat| #[trigger]
+        // Trigger on the nonrecursive renamed head: the recursive `resolves`
+        // term is fuel-indexed and never matches a witness proved at another
+        // fuel (R75).
+        PNode::Clause(m, kids) => m < db.len() && exists|k: nat|
+            #![trigger shift(db[m as int].head, k)]
             resolves(db, th, g, m, k, kids),
     }
 }

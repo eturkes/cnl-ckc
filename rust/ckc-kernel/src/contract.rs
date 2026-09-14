@@ -177,10 +177,10 @@ pub fn check_parse_manifest(src: &ckc_spec::replay::ESrc, path: &[u8]) -> (r: (
     crate::k4_impl::check_parse_manifest_impl(src, path)
 }
 
-pub fn check_ledger(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: Result<
+pub fn check_ledger(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: (
     Vec<ckc_spec::check::EDecision>,
-    ckc_spec::check::EVerdict,
->)
+    Option<ckc_spec::check::EVerdict>,
+))
     ensures
         ckc_spec::check::ledger_result(r) == ckc_spec::check::ledger(
             src@,

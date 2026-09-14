@@ -21,14 +21,11 @@ pub open spec fn decision_result(r: Result<EDecision, Vec<u8>>) -> Result<Decisi
     }
 }
 
-pub open spec fn decision_list_result(r: Result<Vec<EDecision>, Vec<u8>>) -> Result<
+pub open spec fn decision_list_result(r: (Vec<EDecision>, Option<Vec<u8>>)) -> (
     Seq<Decision>,
-    Seq<u8>,
-> {
-    match r {
-        Ok(d) => Ok(decisions(d@)),
-        Err(e) => Err(e@),
-    }
+    Option<Seq<u8>>,
+) {
+    (decisions(r.0@), optional_bytes(r.1))
 }
 
 pub fn detail(index: usize, what: &[u8]) -> (r: Vec<u8>)
@@ -244,7 +241,7 @@ pub proof fn decisions_push(ds: Seq<EDecision>, d: EDecision)
     assert_seqs_equal!(decisions(ds.push(d)) == decisions(ds).push(d@));
 }
 
-pub fn parse(lines: &Vec<Vec<u8>>, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDecision>, Vec<u8>>)
+pub fn parse(lines: &Vec<Vec<u8>>, known: &Vec<Vec<u8>>) -> (r: (Vec<EDecision>, Option<Vec<u8>>))
     ensures
         decision_list_result(r) == parse_decisions(
             byte_rows(lines@),
@@ -278,7 +275,7 @@ pub fn parse(lines: &Vec<Vec<u8>>, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDeci
             reveal_with_fuel(parse_decisions, 2);
         }
         match row {
-            Err(e) => return Err(e),
+            Err(e) => return (out, Some(e)),
             Ok(d) => {
                 let next_prev = Some((copy(&d.docid), copy(&d.date)));
                 proof {
@@ -293,7 +290,7 @@ pub fn parse(lines: &Vec<Vec<u8>>, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDeci
     proof {
         reveal_with_fuel(parse_decisions, 2);
     }
-    Ok(out)
+    (out, None)
 }
 
 pub fn header() -> (r: Vec<u8>)
@@ -340,19 +337,20 @@ pub fn failure(detail: Vec<u8>) -> (r: EVerdict)
     r
 }
 
-pub fn ledger_error(e: EVerdict) -> (r: Result<Vec<EDecision>, EVerdict>)
+pub fn ledger_error(rows: Vec<EDecision>, e: EVerdict) -> (r: (Vec<EDecision>, Option<EVerdict>))
     ensures
-        ledger_result(r) == Result::Err(e@),
+        ledger_result(r) == (decisions(rows@), Some(e@)),
 {
+    let ghost prefix = decisions(rows@);
     let ghost verdict = e@;
-    let r: Result<Vec<EDecision>, EVerdict> = Err(e);
+    let r = (rows, Some(e));
     proof {
-        assert(ledger_result(r) == Result::Err(verdict));
+        assert(ledger_result(r) == (prefix, Some(verdict)));
     }
     r
 }
 
-pub fn validate(src: &ESrc, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDecision>, EVerdict>)
+pub fn validate(src: &ESrc, known: &Vec<Vec<u8>>) -> (r: (Vec<EDecision>, Option<EVerdict>))
     ensures
         ledger_result(r) == ledger(src@, byte_rows(known@)),
 {
@@ -382,9 +380,9 @@ pub fn validate(src: &ESrc, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDecision>, 
                 assert(decisions(out@) == Seq::<Decision>::empty());
                 assert(src@ == ckc_spec::replay::Src::Missing);
             }
-            Ok(out)
+            (out, None)
         },
-        ESrc::Bad(_) => ledger_error(failure(copy(b"ledger encoding"))),
+        ESrc::Bad(_) => ledger_error(Vec::new(), failure(copy(b"ledger encoding"))),
         ESrc::Bytes(b) => {
             proof {
                 assert(src@ == ckc_spec::replay::Src::Bytes(b@));
@@ -396,9 +394,9 @@ pub fn validate(src: &ESrc, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDecision>, 
                         "adjudication"@,
                         ckc_spec::v1text::ascii("ledger carriage-return"@),
                     ));
-                    assert(ledger(src@, byte_rows(known@)) == Result::Err(e@));
+                    assert(ledger(src@, byte_rows(known@)) == (Seq::empty(), Some(e@)));
                 }
-                return ledger_error(e);
+                return ledger_error(Vec::new(), e);
             }
             if b.len() == 0 || b[b.len() - 1] != 0x0a {
                 let e = failure(copy(b"ledger final-newline"));
@@ -407,13 +405,13 @@ pub fn validate(src: &ESrc, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDecision>, 
                         "adjudication"@,
                         ckc_spec::v1text::ascii("ledger final-newline"@),
                     ));
-                    assert(ledger(src@, byte_rows(known@)) == Result::Err(e@));
+                    assert(ledger(src@, byte_rows(known@)) == (Seq::empty(), Some(e@)));
                 }
-                return ledger_error(e);
+                return ledger_error(Vec::new(), e);
             }
             let h = header();
             if !starts_with(b, &h) {
-                return ledger_error(failure(copy(b"ledger header")));
+                return ledger_error(Vec::new(), failure(copy(b"ledger header")));
             }
             let body = range(b, h.len(), b.len());
             let mut lines = split(&body, 0x0a);
@@ -435,9 +433,10 @@ pub fn validate(src: &ESrc, known: &Vec<Vec<u8>>) -> (r: Result<Vec<EDecision>, 
                 ));
                 reveal(ledger);
             }
-            match parsed {
-                Ok(ds) => Ok(ds),
-                Err(e) => ledger_error(failure(e)),
+            let (ds, error) = parsed;
+            match error {
+                Some(e) => ledger_error(ds, failure(e)),
+                None => (ds, None),
             }
         },
     }

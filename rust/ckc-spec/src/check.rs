@@ -708,9 +708,28 @@ pub ghost enum FileSrc {
     Bytes(Seq<u8>),
 }
 
-// Legacy prints evidence paths joined under the guideline path (R62).
+// Legacy prints evidence paths joined under the guideline path through
+// `pathlib` (R62/R74): empty and `.` components collapse (`source//x`,
+// `source/./x`, a trailing `/` → `source/x`); row-field diagnostics keep the
+// raw field.
+pub open spec fn join_slash(segs: Seq<Seq<u8>>) -> Seq<u8>
+    decreases segs.len(),
+{
+    if segs.len() == 0 {
+        Seq::empty()
+    } else if segs.len() == 1 {
+        segs[0]
+    } else {
+        segs[0] + seq![0x2Fu8] + join_slash(segs.drop_first())
+    }
+}
+
+pub open spec fn norm_path(f: Seq<u8>) -> Seq<u8> {
+    join_slash(split_on(f, 0x2F).filter(|s: Seq<u8>| s.len() > 0 && s != ascii("."@)))
+}
+
 pub open spec fn full_path(root: Seq<u8>, f: Seq<u8>) -> Seq<u8> {
-    root + seq![0x2Fu8] + f
+    root + seq![0x2Fu8] + norm_path(f)
 }
 
 // Per cited file in first-reference order: census vs claimed rows, then
@@ -1308,20 +1327,25 @@ pub open spec fn parse_decision(
     }
 }
 
+// The well-formed row prefix + the first grammar violation (R68): legacy
+// checks each row's recorded commit (a git read, shell tier) inside the same
+// per-row loop, so the shell walks the returned prefix in order — commit
+// absent / historical digest mismatch on row j fires before a grammar
+// violation on a later row.
 pub open spec fn parse_decisions(
     lines: Seq<Seq<u8>>,
     i: nat,
     known: Seq<Seq<u8>>,
     prev: Option<(Seq<u8>, Seq<u8>)>,
     acc: Seq<Decision>,
-) -> Result<Seq<Decision>, Seq<u8>>
+) -> (Seq<Decision>, Option<Seq<u8>>)
     decreases lines.len() - i,
 {
     if i >= lines.len() {
-        Result::Ok(acc)
+        (acc, Option::None)
     } else {
         match parse_decision(lines[i as int], i + 2, known, prev) {
-            Result::Err(e) => Result::Err(e),
+            Result::Err(e) => (acc, Option::Some(e)),
             Result::Ok(d) => parse_decisions(
                 lines,
                 i + 1,
@@ -1333,27 +1357,32 @@ pub open spec fn parse_decisions(
     }
 }
 
-// Ledger bytes → decisions; absent ledger = no decisions.
-pub open spec fn ledger(src: Src, known: Seq<Seq<u8>>) -> Result<Seq<Decision>, Verdict> {
+// Ledger bytes → (decision prefix, first violation); absent ledger = no
+// decisions. Prefix row j (0-based) = ledger row j + 2.
+pub open spec fn ledger(src: Src, known: Seq<Seq<u8>>) -> (Seq<Decision>, Option<Verdict>) {
     match src {
-        Src::Missing => Result::Ok(Seq::empty()),
-        Src::Bad(_) => Result::Err(fail("adjudication"@, ascii("ledger encoding"@))),
+        Src::Missing => (Seq::empty(), Option::None),
+        Src::Bad(_) => (
+            Seq::empty(),
+            Option::Some(fail("adjudication"@, ascii("ledger encoding"@))),
+        ),
         Src::Bytes(b) => if has_byte(b, 0x0D) {
-            Result::Err(fail("adjudication"@, ascii("ledger carriage-return"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger carriage-return"@))))
         } else if !(b.len() > 0 && b.last() == 0x0A) {
-            Result::Err(fail("adjudication"@, ascii("ledger final-newline"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger final-newline"@))))
         } else if !starts(b, ledger_header()) {
-            Result::Err(fail("adjudication"@, ascii("ledger header"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger header"@))))
         } else {
-            match parse_decisions(
+            let (ds, v) = parse_decisions(
                 body_lines(b.skip(ledger_header().len() as int)),
                 0,
                 known,
                 Option::None,
                 Seq::empty(),
-            ) {
-                Result::Err(e) => Result::Err(fail("adjudication"@, e)),
-                Result::Ok(ds) => Result::Ok(ds),
+            );
+            match v {
+                Option::Some(e) => (ds, Option::Some(fail("adjudication"@, e))),
+                Option::None => (ds, Option::None),
             }
         },
     }
@@ -1953,14 +1982,17 @@ pub open spec fn coverage_result(r: Result<ECoverage, EVerdict>) -> Result<Cover
     }
 }
 
-pub open spec fn ledger_result(r: Result<Vec<EDecision>, EVerdict>) -> Result<
+pub open spec fn ledger_result(r: (Vec<EDecision>, Option<EVerdict>)) -> (
     Seq<Decision>,
-    Verdict,
-> {
-    match r {
-        Result::Ok(ds) => Result::Ok(decisions(ds@)),
-        Result::Err(e) => Result::Err(e@),
-    }
+    Option<Verdict>,
+) {
+    (
+        decisions(r.0@),
+        match r.1 {
+            Some(v) => Some(v@),
+            None => None,
+        },
+    )
 }
 
 pub open spec fn bytes_result(r: Result<Vec<u8>, Vec<u8>>) -> Result<Seq<u8>, Seq<u8>> {

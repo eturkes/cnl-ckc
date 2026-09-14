@@ -83,10 +83,10 @@ pub fn check_parse_manifest_impl(src: &ckc_spec::replay::ESrc, path: &[u8]) -> (
     (Vec::new(), None)
 }
 
-pub fn check_ledger_impl(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: Result<
+pub fn check_ledger_impl(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: (
     Vec<ckc_spec::check::EDecision>,
-    ckc_spec::check::EVerdict,
->)
+    Option<ckc_spec::check::EVerdict>,
+))
     ensures
         ckc_spec::check::ledger_result(r) == ckc_spec::check::ledger(
             src@,
