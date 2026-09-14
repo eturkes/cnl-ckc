@@ -63,6 +63,7 @@ mod m6_model;
 mod m6_refs;
 mod m6_symbols;
 mod m6_term;
+mod m6_vars;
 mod v1_impl;
 mod v1_term_impl;
 
