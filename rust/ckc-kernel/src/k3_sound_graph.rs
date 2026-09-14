@@ -283,7 +283,7 @@ pub proof fn clause_node_valid(
     ensures
         node_valid(db, th, g, PNode::Clause(m, kids)),
 {
-    assert(false);
+    assert(exists|j: nat| #[trigger] resolves(db, th, g, m, j, kids));
 }
 
 pub proof fn naf_build_valid(
