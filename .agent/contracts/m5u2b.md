@@ -162,4 +162,30 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
   probe (canonical copy with the proof replaced by `unproved(finite_failure)`,
   custody digests preserved) that must classify `stale` = P5's stale law.
   Tracked fixture re-pin = the queries battery port (R39, FC2 row).
+- R67 `k3_sound` hypothesis `answers::goal_walk(goal) is None` beside
+  `bodies_wf(db)` (the EXISTING query-preflight custody law: every conjunct
+  is a v1 semantic-predicate compound — no variable, foreign or negation
+  root; prod-k3sound-1 / prod-m5u2b-2 counterexample: db `p(\\+ q(a)).`,
+  goal `(p(A), A)` executes the bound variable as a NAF site while
+  `forest_valid` sees the raw `Var` root). The trace pipeline enforces it
+  on every committed query (answers.rs Query preflight), so every
+  shell-facing row meets it; a separate `roots_wf` would duplicate it
+  (R-01). Binding: `requires bodies_wf(db), goal_walk(goal) is None,
+  derived_forest(db, goal) is Some`.
+- R60 T-C622/T-C626 cost probes (R32 model) = CLI-observable BOUNDARY rows
+  (no cost-visible seam: the kernel exposes no fuel counters and a
+  counters-only binding would be trusted surface for testing alone): active
+  k3 rows, `legacy: null` (near-boundary legacy parity = non-goal), hand-
+  derived expectations recorded in each manifest (`.scratch/m5u2/diff/
+  k3state/r32-proposed-pins.tsv`): T-C622 = N top-level fact roots with row
+  search ≤ 100000 while row-charged materialization would exceed it
+  (`proved` under the model) + the 1000/1001 positive chain (`proved` vs
+  `unproved(limit)`); T-C626 = the NAF fresh-depth reset probe + the
+  1000/1001 chain under a NAF site; target pins derived at harvest must
+  equal the hand-derived expectation.
+- R75 trigger-only: `node_valid`'s Clause existential triggers on the
+  nonrecursive `shift(db[m].head, k)` — the recursive `resolves` term is
+  fuel-indexed (`rec%resolves(…, fuel)`) and a witness proved at another fuel
+  never matches it (prod-k3sound-1 SMT diagnosis + before/after probe);
+  no semantic change.
 

@@ -9,6 +9,7 @@ pub mod check;
 pub mod digest;
 pub mod emit;
 pub mod engine;
+pub mod release;
 pub mod replay;
 pub mod term;
 pub mod trace;
