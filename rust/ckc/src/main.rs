@@ -14,7 +14,9 @@ fn main() -> ExitCode {
         Some("trust-audit") => trust::run(args.get(2).map(|s| s.as_str()).unwrap_or(".")),
         Some("align-check") if args.len() == 5 => align_cli::run(&args[2], &args[3], &args[4]),
         Some("v1") => v1_cli::run(&args[2..]),
-        Some("check") => check::run(args.get(2).map(|s| s.as_str()).unwrap_or(".")),
+        Some("check") if args.len() <= 3 => {
+            check::run(args.get(2).map(|s| s.as_str()).unwrap_or("."))
+        }
         _ => {
             eprintln!(
                 "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render> <pl>"

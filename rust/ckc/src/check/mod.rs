@@ -8,26 +8,49 @@ mod projection;
 mod text;
 mod vocabulary;
 
+mod adjudication;
+mod adjudication_fixtures;
+mod corpus;
+mod coverage;
+mod documents;
+mod lexicon;
+mod probes;
+mod process;
+mod queries;
+mod query_fixtures;
+mod red;
 fn check() -> common::Result {
     fork::check()?;
+    probes::docid()?;
+    probes::trace_numeric()?;
+    probes::wall()?;
+    adjudication_fixtures::check()?;
     compendium::check()?;
     let plans = inventories::guidelines()?;
     let red = inventories::red()?;
     inventories::prolog()?;
     for g in &plans {
-        projection::check(&g.path)?;
-        let status: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
-        let _ = census::check;
-        let _ = status;
-        for id in &g.docids {
-            vocabulary::check(&g.path, id)?;
-            let _ = (g.ace(id), g.pl(id), &g.lexicon);
-        }
+        corpus::check(g)?;
     }
+    let swipl = process::swipl()?;
+    let scratch = process::Scratch::new()?;
+    let stage = process::stage(&scratch, &swipl)?;
+    let mut documents = 0;
+    for g in &plans {
+        documents::check(&scratch, &swipl, &stage, g)?;
+        documents += g.docids.len();
+    }
+    query_fixtures::check(&scratch, &swipl, &stage)?;
     for probe in &red {
-        let _ = (&probe.path, &probe.class, probe.rc);
+        red::run(&swipl, &stage, probe)?;
     }
-    Err(common::fail("check", "shell implementation pending"))
+    drop(scratch);
+    println!(
+        "goal: check ok {} guidelines {documents} documents {} red probes",
+        plans.len(),
+        red.len()
+    );
+    Ok(())
 }
 pub fn run(root: &str) -> ExitCode {
     if std::env::set_current_dir(root).is_err() {
