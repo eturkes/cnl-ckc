@@ -709,6 +709,35 @@ pub open spec fn forest_valid(db: Seq<DocClause>, goal: Term, forest: Seq<PNode>
     exists|th: Seq<(nat, Term)>| #[trigger] kids_valid(db, th, conj_leaves(goal), forest)
 }
 
+// Query roots are the literals the canonical query grammar emits (R67): a
+// positive goal = a compound that is neither a conjunction nor a negation; a
+// negation site wraps a nonempty conjunction of such goals — never a bare
+// variable, so `call/1` of a runtime-bound term never reaches a root. The
+// soundness theorem takes this beside `bodies_wf` (prod-k3sound-1
+// counterexample: db `p(\\+ q(0)).`, goal `(p(X), X)`).
+pub open spec fn wf_lit(t: Term) -> bool {
+    match t {
+        Term::Comp(name, args) => name != comma_name() && name != naf_name(),
+        _ => false,
+    }
+}
+
+pub open spec fn wf_root(t: Term) -> bool {
+    match t {
+        Term::Comp(name, args) => if name == naf_name() {
+            args.len() == 1 && conj_leaves(args[0]).len() > 0 && (forall|i: int|
+                0 <= i < conj_leaves(args[0]).len() ==> wf_lit(#[trigger] conj_leaves(args[0])[i]))
+        } else {
+            wf_lit(t)
+        },
+        _ => false,
+    }
+}
+
+pub open spec fn roots_wf(goal: Term) -> bool {
+    forall|i: int| 0 <= i < conj_leaves(goal).len() ==> wf_root(#[trigger] conj_leaves(goal)[i])
+}
+
 // Every body item is a wellformed literal or NAF box — the shape the canonical
 // grammar guarantees (`wf_clause`): a body goal is never a bare conjunction,
 // so each body item owns exactly one proof position under its clause node.
