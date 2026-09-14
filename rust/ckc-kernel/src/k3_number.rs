@@ -153,6 +153,72 @@ proof fn work_terms(nodes: Seq<ENode>, roots: Seq<usize>)
     reveal(roots_work); reveal(crate::k2_engine::terms_size);
 }
 
+enum EVisit { Variable(usize), Children(Vec<usize>), Scalar }
+
+fn visit(arena: &ETermArena, root: usize) -> (out: EVisit)
+    requires root_ok(arena, root),
+    ensures match out {
+        EVisit::Variable(key) => var_stream(arena@[root as int]) == seq![key as nat]
+            && crate::k2_engine::term_size(arena@[root as int]) == 1,
+        EVisit::Children(rs) => roots_valid(arena.nodes@, rs@)
+            && var_stream(arena@[root as int]) == var_stream_all(root_terms(arena.nodes@, rs@))
+            && crate::k2_engine::term_size(arena@[root as int]) == 1 + roots_work(arena.nodes@, rs@),
+        EVisit::Scalar => var_stream(arena@[root as int]) == Seq::<nat>::empty()
+            && crate::k2_engine::term_size(arena@[root as int]) == 1,
+    },
+{
+    proof { assert(node_ok(arena.nodes@, root as int)); }
+    match &arena.nodes[root].kind {
+        ENodeKind::Var { key, .. } => {
+            proof { reveal(var_stream); reveal(crate::k2_engine::term_size); }
+            EVisit::Variable(*key)
+        },
+        ENodeKind::Comp { name, child_roots, .. } => {
+            proof {
+                crate::k2_engine::node_comp_model(arena.nodes@, root as int, name@, child_roots@);
+                assert_seqs_equal!(root_terms(arena.nodes@, child_roots@) == crate::k2_term::child_terms(arena.nodes@, child_roots@));
+                work_terms(arena.nodes@, child_roots@);
+                reveal(var_stream); reveal(crate::k2_engine::term_size);
+            }
+            EVisit::Children(child_roots.clone())
+        },
+        _ => {
+            proof { reveal(var_stream); reveal(crate::k2_engine::term_size); }
+            EVisit::Scalar
+        },
+    }
+}
+
+fn append_key(input: Vec<usize>, key: usize, Ghost(tail): Ghost<Seq<nat>>) -> (out: Vec<usize>)
+    ensures keys_view(input@) + firsts(seq![key as nat] + tail, keys_view(input@).to_set())
+        == keys_view(out@) + firsts(tail, keys_view(out@).to_set()),
+{
+    hide(firsts);
+    let ghost previous = input@;
+    let mut keys = input;
+    let found = position(&keys, key);
+    proof { firsts_cons(key as nat, tail, keys_view(keys@).to_set()); }
+    if found == keys.len() {
+        proof {
+            assert forall|j: int| 0 <= j < keys.len() implies keys_view(keys@)[j] != key as nat by { assert(keys@[j] != key); }
+            assert(!keys_view(keys@).contains(key as nat));
+        }
+        keys.push(key);
+        proof {
+            assert_seqs_equal!(keys_view(keys@) == keys_view(previous).push(key as nat));
+            assert_sets_equal!(keys_view(keys@).to_set() == keys_view(previous).to_set().insert(key as nat));
+            assert_seqs_equal!(keys_view(previous).push(key as nat) == keys_view(previous) + seq![key as nat]);
+        }
+    } else {
+        proof {
+            assert(keys@[found as int] == key);
+            assert(keys_view(keys@)[found as int] == key as nat);
+            assert(keys_view(keys@).to_set().contains(key as nat));
+        }
+    }
+    keys
+}
+
 fn collect_step(arena: &ETermArena, input_tasks: Vec<usize>, input_keys: Vec<usize>) -> (out: (Vec<usize>, Vec<usize>))
     requires arena_ok(arena), roots_valid(arena.nodes@, input_tasks@), input_tasks.len() > 0,
     ensures
@@ -167,7 +233,6 @@ fn collect_step(arena: &ETermArena, input_tasks: Vec<usize>, input_keys: Vec<usi
     let ghost old_tasks = tasks@;
     let current = tasks.remove(0);
     proof {
-        assert(node_ok(arena.nodes@, current as int));
         assert(old_tasks[0] == current);
         assert(root_terms(arena.nodes@, old_tasks)[0] == arena@[current as int]);
         assert_seqs_equal!(root_terms(arena.nodes@, old_tasks).drop_first() == root_terms(arena.nodes@, tasks@));
@@ -175,59 +240,25 @@ fn collect_step(arena: &ETermArena, input_tasks: Vec<usize>, input_keys: Vec<usi
         assert_seqs_equal!(root_terms(arena.nodes@, old_tasks) == seq![arena@[current as int]] + root_terms(arena.nodes@, tasks@));
         stream_cons(arena@[current as int], root_terms(arena.nodes@, tasks@));
     }
-    match &arena.nodes[current].kind {
-        ENodeKind::Var { key, .. } => {
-            let found = position(&keys, *key);
-            let ghost previous = keys@;
-            proof {
-                assert(arena@[current as int] == Term::Var(*key as nat));
-                assert(var_stream(arena@[current as int]) == seq![*key as nat]) by { reveal(var_stream); }
-                assert(var_stream_all(root_terms(arena.nodes@, old_tasks)) == seq![*key as nat] + var_stream_all(root_terms(arena.nodes@, tasks@)));
-                firsts_cons(*key as nat, var_stream_all(root_terms(arena.nodes@, tasks@)), keys_view(keys@).to_set());
-            }
-            if found == keys.len() {
-                proof {
-                    assert forall|j: int| 0 <= j < keys.len() implies keys_view(keys@)[j] != *key as nat by {
-                        assert(keys@[j] != *key);
-                    }
-                    assert(!keys_view(keys@).contains(*key as nat));
-                }
-                keys.push(*key);
-                proof {
-                    assert_seqs_equal!(keys_view(keys@) == keys_view(previous).push(*key as nat));
-                    assert_sets_equal!(keys_view(keys@).to_set() == keys_view(previous).to_set().insert(*key as nat));
-                }
-            } else {
-                proof {
-                    assert(keys@[found as int] == *key);
-                    assert(keys_view(keys@)[found as int] == *key as nat);
-                    assert(keys_view(keys@).to_set().contains(*key as nat));
-                }
-            }
+    match visit(arena, current) {
+        EVisit::Variable(key) => {
+            keys = append_key(keys, key, Ghost(var_stream_all(root_terms(arena.nodes@, tasks@))));
         },
-        ENodeKind::Comp { name, child_roots, .. } => {
-            let mut children = child_roots.clone();
-            proof {
-                crate::k2_engine::node_comp_model(arena.nodes@, current as int, name@, child_roots@);
-                assert_seqs_equal!(root_terms(arena.nodes@, children@) == crate::k2_term::child_terms(arena.nodes@, child_roots@));
-                streams_concat(root_terms(arena.nodes@, children@), root_terms(arena.nodes@, tasks@));
-                assert(var_stream(arena@[current as int]) == var_stream_all(root_terms(arena.nodes@, children@))) by { reveal(var_stream); }
-                crate::k2_engine::roots_work_concat(arena.nodes@, children@, tasks@);
-        work_terms(arena.nodes@, children@);
-                reveal(var_stream);
-                reveal(crate::k2_engine::term_size);
-            }
+        EVisit::Children(mut children) => {
             let ghost front = children@;
             let ghost rest = tasks@;
-            children.append(&mut tasks);
-            tasks = children;
+            proof {
+                streams_concat(root_terms(arena.nodes@, children@), root_terms(arena.nodes@, tasks@));
+                crate::k2_engine::roots_work_concat(arena.nodes@, children@, tasks@);
+            }
+            children.append(&mut tasks); tasks = children;
             proof {
                 assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == root_terms(arena.nodes@, front) + root_terms(arena.nodes@, rest));
                 assert(roots_valid(arena.nodes@, tasks@));
                 assert(var_stream_all(root_terms(arena.nodes@, tasks@)) == var_stream_all(root_terms(arena.nodes@, old_tasks)));
             }
         },
-        _ => { proof { reveal(var_stream); } },
+        EVisit::Scalar => {},
     }
     (tasks, keys)
 }

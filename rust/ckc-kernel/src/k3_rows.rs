@@ -237,6 +237,14 @@ pub open spec fn rows_view(nodes: Seq<ENode>, out: &ERows) -> Rows {
     match out { ERows::Ok(rs) => Rows::Ok(root_terms(nodes, rs@)), ERows::Trip => Rows::Trip, ERows::Err(o) => Rows::Err(o@) }
 }
 
+proof fn bad_values_row(
+    db: Seq<ckc_spec::v1text::DocClause>, digests: Seq<Seq<u8>>, goal: Term,
+    vars: Seq<Term>, sols: Seq<Term>, i: nat, left: nat, base: nat, acc: Seq<Term>,
+)
+    requires i < sols.len(), ckc_spec::answers::list_items(ckc_spec::replay::arg(sols[i as int], 0)) is None,
+    ensures trace_rows(db, digests, goal, vars, sols, i, left, base, acc) == Rows::Ok(acc),
+{ reveal(trace_rows); }
+
 fn rows(input: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: usize, vars: &Vec<usize>, sols: &Vec<usize>) -> (out: (ETermArena, ERows))
     requires root_ok(&input, goal), db_valid(input.nodes@, db@), roots_valid(input.nodes@, vars@), roots_valid(input.nodes@, sols@),
     ensures
@@ -273,13 +281,22 @@ fn rows(input: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: usiz
     {
         let ghost before = arena.nodes@;
         let ghost old_acc = root_terms(before, acc@);
+        proof { assert(before[sols@[i as int] as int].term@ == ss[i as int]); }
         let values = crate::k2_walk::arg_root(&mut arena, sols[i], 0);
         proof {
             assert(origin.is_prefix_of(arena.nodes@));
             reveal(trace_rows);
         }
         let value_roots = match crate::k2_walk::list_items_exec(&arena, values) {
-            None => return (arena, ERows::Ok(acc)),
+            None => {
+                proof {
+                    assert(arena@[values as int] == ckc_spec::replay::arg(ss[i as int], 0));
+                    crate::k2_engine::roots_models_prefix(before, arena.nodes@, acc@);
+                    bad_values_row(program, digests_view(digests@), model, v, ss, i as nat, left as nat, base as nat, old_acc);
+                    assert(target == Rows::Ok(root_terms(arena.nodes@, acc@)));
+                }
+                return (arena, ERows::Ok(acc));
+            },
             Some(rs) => rs,
         };
         proof { crate::k2_engine::roots_models_prefix(before, arena.nodes@, vars@); }
