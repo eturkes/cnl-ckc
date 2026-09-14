@@ -65,16 +65,14 @@ pub fn check_bundle_block_impl(b: &ckc_spec::check::EBundle) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::check::bundle_block(b@.docid, b@.ace, b@.cov, b@.pay, b@.cl),
 {
-    assert(false);
-    Vec::new()
+    crate::k4_bundle::bundle(b)
 }
 
 pub fn check_print_manifest_impl(bs: &Vec<ckc_spec::check::EBundle>) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::check::print_manifest(ckc_spec::check::bundles(bs@)),
 {
-    assert(false);
-    Vec::new()
+    crate::k4_bundle::manifest(bs)
 }
 
 pub fn check_manifest_accepts_impl(bytes: &[u8], hashes: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: bool)
