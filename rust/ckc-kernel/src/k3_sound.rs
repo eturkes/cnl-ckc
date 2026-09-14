@@ -31,6 +31,9 @@ pub mod log;
 #[path = "k3_sound_machine.rs"]
 pub mod machine;
 
+#[path = "k3_sound_naf.rs"]
+pub mod naf;
+
 #[path = "k3_sound_record.rs"]
 pub mod record;
 
@@ -85,7 +88,16 @@ pub proof fn naf_log_sound(db: Seq<DocClause>, goal: Term, log: Seq<(Seq<nat>, T
     ensures
         graph::naf_log_ok(db, log),
 {
-    assert(false);
+    assert forall|i: int| 0 <= i < log.len() implies #[trigger] graph::naf_event_ok(
+        db,
+        log[i].1,
+    ) by {
+        if let TEv::Naf(t) = log[i].1 {
+            assert(log.contains(log[i]));
+            assert(log[i] == (log[i].0, TEv::Naf(t)));
+            naf::recorded_naf_fails(db, goal, log, log[i].0, t);
+        }
+    }
 }
 
 pub proof fn k3_sound_proof(db: Seq<DocClause>, goal: Term)
