@@ -1437,4 +1437,232 @@ pub open spec fn lexicon(
     }
 }
 
+// --- exec mirrors: byte custody crosses the shell boundary through these values ---
+pub enum EVerdict {
+    Ok(Vec<u8>),
+    Fail(Vec<u8>, Vec<u8>),
+}
+
+impl View for EVerdict {
+    type V = Verdict;
+
+    open spec fn view(&self) -> Verdict {
+        match self {
+            EVerdict::Ok(m) => Verdict::Ok(m@),
+            EVerdict::Fail(c, d) => Verdict::Fail(c@, d@),
+        }
+    }
+}
+
+pub struct ERendered {
+    pub rc: u8,
+    pub out: Vec<u8>,
+}
+
+impl View for ERendered {
+    type V = (int, Seq<u8>);
+
+    open spec fn view(&self) -> Self::V {
+        (self.rc as int, self.out@)
+    }
+}
+
+pub enum EStatus {
+    Pending,
+    Ace(Vec<u8>),
+    Restates(Vec<u8>),
+    Uncovered,
+}
+
+impl View for EStatus {
+    type V = Status;
+
+    open spec fn view(&self) -> Status {
+        match self {
+            EStatus::Pending => Status::Pending,
+            EStatus::Ace(d) => Status::Ace(d@),
+            EStatus::Restates(d) => Status::Restates(d@),
+            EStatus::Uncovered => Status::Uncovered,
+        }
+    }
+}
+
+pub struct ECoverageRow {
+    pub id: Vec<u8>,
+    pub file: Vec<u8>,
+    pub status: EStatus,
+    pub line: Vec<u8>,
+}
+
+impl View for ECoverageRow {
+    type V = Row;
+
+    open spec fn view(&self) -> Row {
+        Row { id: self.id@, file: self.file@, status: self.status@, line: self.line@ }
+    }
+}
+
+pub struct EEvidence {
+    // Decimal bytes retain censuses beyond machine-word bounds.
+    pub census: Vec<u8>,
+    pub locators: Vec<Vec<u8>>,
+    pub payloads: Vec<(Vec<u8>, Vec<Vec<u8>>)>,
+    pub ordinal: Vec<Vec<u8>>,
+}
+
+impl View for EEvidence {
+    type V = Evidence;
+
+    open spec fn view(&self) -> Evidence {
+        Evidence {
+            census: dec_of(self.census@),
+            locators: byte_rows(self.locators@),
+            payloads: self.payloads@.map_values(
+                |p: (Vec<u8>, Vec<Vec<u8>>)| (p.0@, byte_rows(p.1@)),
+            ),
+            ordinal: byte_rows(self.ordinal@),
+        }
+    }
+}
+
+pub struct ECoverage {
+    pub rows: Vec<ECoverageRow>,
+    pub files: Vec<Vec<u8>>,
+    pub evidence: Vec<EEvidence>,
+}
+
+impl View for ECoverage {
+    type V = Coverage;
+
+    open spec fn view(&self) -> Coverage {
+        Coverage {
+            rows: self.rows@.map_values(|r: ECoverageRow| r@),
+            files: byte_rows(self.files@),
+            evidence: self.evidence@.map_values(|e: EEvidence| e@),
+        }
+    }
+}
+
+pub struct EBundle {
+    pub docid: Vec<u8>,
+    pub ace: Vec<u8>,
+    pub cov: Vec<u8>,
+    pub pay: Vec<u8>,
+    pub cl: Vec<u8>,
+    pub review: Vec<u8>,
+}
+
+impl View for EBundle {
+    type V = Bundle;
+
+    open spec fn view(&self) -> Bundle {
+        Bundle {
+            docid: self.docid@,
+            ace: self.ace@,
+            cov: self.cov@,
+            pay: self.pay@,
+            cl: self.cl@,
+            review: self.review@,
+        }
+    }
+}
+
+pub struct EDecision {
+    pub docid: Vec<u8>,
+    pub digest: Vec<u8>,
+    pub commit: Vec<u8>,
+    pub approved: bool,
+    pub date: Vec<u8>,
+}
+
+impl View for EDecision {
+    type V = Decision;
+
+    open spec fn view(&self) -> Decision {
+        Decision {
+            docid: self.docid@,
+            digest: self.digest@,
+            commit: self.commit@,
+            approved: self.approved,
+            date: self.date@,
+        }
+    }
+}
+
+pub open spec fn byte_rows(v: Seq<Vec<u8>>) -> Seq<Seq<u8>> {
+    v.map_values(|b: Vec<u8>| b@)
+}
+
+pub open spec fn byte_pairs(v: Seq<(Vec<u8>, Vec<u8>)>) -> Seq<(Seq<u8>, Seq<u8>)> {
+    v.map_values(|p: (Vec<u8>, Vec<u8>)| (p.0@, p.1@))
+}
+
+pub open spec fn source_pairs(v: Seq<(Vec<u8>, ESrc)>) -> Seq<(Seq<u8>, Src)> {
+    v.map_values(|p: (Vec<u8>, ESrc)| (p.0@, p.1@))
+}
+
+// Finite shell-read tables: first matching key wins; absent key is Missing.
+pub open spec fn source_lookup(v: Seq<(Seq<u8>, Src)>, key: Seq<u8>, i: nat) -> Src
+    decreases v.len() - i,
+{
+    if i >= v.len() {
+        Src::Missing
+    } else if v[i as int].0 == key {
+        v[i as int].1
+    } else {
+        source_lookup(v, key, i + 1)
+    }
+}
+
+pub open spec fn digest_lookup(v: Seq<(Seq<u8>, Seq<u8>)>, key: Seq<u8>, i: nat) -> Seq<u8>
+    decreases v.len() - i,
+{
+    if i >= v.len() {
+        Seq::empty()
+    } else if v[i as int].0 == key {
+        v[i as int].1
+    } else {
+        digest_lookup(v, key, i + 1)
+    }
+}
+
+pub open spec fn bundles(v: Seq<EBundle>) -> Seq<Bundle> {
+    v.map_values(|b: EBundle| b@)
+}
+
+pub open spec fn decisions(v: Seq<EDecision>) -> Seq<Decision> {
+    v.map_values(|d: EDecision| d@)
+}
+
+pub open spec fn coverage_result(r: Result<ECoverage, EVerdict>) -> Result<Coverage, Verdict> {
+    match r {
+        Result::Ok(c) => Result::Ok(c@),
+        Result::Err(e) => Result::Err(e@),
+    }
+}
+
+pub open spec fn ledger_result(r: Result<Vec<EDecision>, EVerdict>) -> Result<
+    Seq<Decision>,
+    Verdict,
+> {
+    match r {
+        Result::Ok(ds) => Result::Ok(decisions(ds@)),
+        Result::Err(e) => Result::Err(e@),
+    }
+}
+
+pub open spec fn bytes_result(r: Result<Vec<u8>, Vec<u8>>) -> Result<Seq<u8>, Seq<u8>> {
+    match r {
+        Result::Ok(b) => Result::Ok(b@),
+        Result::Err(e) => Result::Err(e@),
+    }
+}
+
+pub open spec fn optional_bytes(r: Option<Vec<u8>>) -> Option<Seq<u8>> {
+    match r {
+        Option::Some(b) => Option::Some(b@),
+        Option::None => Option::None,
+    }
+}
+
 } // verus!
