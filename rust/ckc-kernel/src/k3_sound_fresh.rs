@@ -182,4 +182,17 @@ pub proof fn apply_fresh(t: Term, off: nat, s: Seq<(nat, Term)>)
     }
 }
 
+pub proof fn binds_mono(s: Seq<(nat, Term)>, a: nat, b: nat)
+    requires
+        binds_below(s, a),
+        a <= b,
+    ensures
+        binds_below(s, b),
+{
+    assert forall|i: int| 0 <= i < s.len() implies (#[trigger] s[i]).0 < b && nvars(s[i].1)
+        <= b by {
+        assert(s[i].0 < a && nvars(s[i].1) <= a);
+    }
+}
+
 } // verus!

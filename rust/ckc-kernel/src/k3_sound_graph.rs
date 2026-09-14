@@ -412,4 +412,28 @@ pub proof fn forest_of_sound(
     assert(kids_valid(db, th, conj_leaves(goal), forest_of(db, conj_leaves(goal), log)));
 }
 
+pub proof fn child_raw(
+    db: Seq<DocClause>,
+    roots: Seq<Term>,
+    log: Seq<(Seq<nat>, TEv)>,
+    offsets: Seq<nat>,
+    path: Seq<nat>,
+    m: nat,
+    i: nat,
+)
+    requires
+        path.len() > 0,
+        m < db.len(),
+        i < db[m as int].body.len(),
+        ev_at(log, path) == Option::Some(TEv::Clause(m)),
+    ensures
+        raw_at(db, roots, log, offsets, path.push(i)) == item_term(
+            db[m as int].body[i as int],
+            offset_at(log, offsets, path),
+        ),
+{
+    assert(path.push(i).drop_last() =~= path);
+    assert(path.push(i).last() == i);
+}
+
 } // verus!

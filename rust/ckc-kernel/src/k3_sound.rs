@@ -4,6 +4,9 @@ use ckc_spec::trace::*;
 use ckc_spec::v1text::*;
 use vstd::prelude::*;
 
+#[path = "k3_sound_body.rs"]
+pub mod body;
+
 #[path = "k3_sound_bound.rs"]
 pub mod bounded;
 
@@ -21,6 +24,9 @@ pub mod goals;
 
 #[path = "k3_sound_log.rs"]
 pub mod log;
+
+#[path = "k3_sound_record.rs"]
+pub mod record;
 
 #[path = "k3_sound_shape.rs"]
 pub mod shapes;
