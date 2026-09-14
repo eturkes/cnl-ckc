@@ -1400,13 +1400,23 @@ pub open spec fn class_count(ds: Seq<Decision>, bs: Seq<Bundle>, k: int) -> nat 
     ).len()
 }
 
+// Unreviewed = bundles minus reviewed docids; total: 0 when a ledger names
+// more docids than the manifest holds (unreachable through `ledger`'s
+// known-docid law, R64).
+pub open spec fn unreviewed(ds: Seq<Decision>, bs: Seq<Bundle>) -> nat {
+    if reviewed(ds).len() <= bs.len() {
+        (bs.len() - reviewed(ds).len()) as nat
+    } else {
+        0
+    }
+}
+
 pub open spec fn adjudication_meter(gid: Seq<u8>, ds: Seq<Decision>, bs: Seq<Bundle>) -> Seq<u8> {
     ascii("goal: adjudication "@) + gid + ascii(" approved="@) + nat_bytes(class_count(ds, bs, 0))
         + ascii(" rejected="@) + nat_bytes(class_count(ds, bs, 1)) + ascii(" contested="@)
         + nat_bytes(class_count(ds, bs, 2)) + ascii(" stale="@) + nat_bytes(class_count(ds, bs, 3))
-        + ascii(" unreviewed="@) + nat_bytes((bs.len() - reviewed(ds).len()) as nat) + ascii(
-        " decisions="@,
-    ) + nat_bytes(ds.len()) + seq![0x0Au8]
+        + ascii(" unreviewed="@) + nat_bytes(unreviewed(ds, bs)) + ascii(" decisions="@)
+        + nat_bytes(ds.len()) + seq![0x0Au8]
 }
 
 // --- lexicon gates ---
