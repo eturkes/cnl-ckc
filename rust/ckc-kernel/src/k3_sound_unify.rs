@@ -1,5 +1,7 @@
 #[cfg(verus_keep_ghost)]
 use ckc_spec::{engine::*, term::Term, trace::apply};
+#[cfg(verus_keep_ghost)]
+use crate::k3_sound_bounds::{bindings_bounded, bindings_prepend, state_bind, state_bounded, state_comp, state_tail};
 use vstd::assert_seqs_equal;
 use vstd::prelude::*;
 
@@ -172,9 +174,9 @@ proof fn comp_witness(input: UState, name: Seq<u8>, xs: Seq<Term>, ys: Seq<Term>
     }
 }
 
-pub proof fn unify_n_witness(input: UState, fuel: nat) -> (bindings: Seq<(nat, Term)>)
-    requires unify_n(input, fuel) is Ok,
-    ensures witness(input, unify_n(input, fuel), bindings),
+pub proof fn unify_n_witness(input: UState, fuel: nat, limit: nat) -> (bindings: Seq<(nat, Term)>)
+    requires unify_n(input, fuel) is Ok, state_bounded(input, limit),
+    ensures witness(input, unify_n(input, fuel), bindings), bindings_bounded(bindings, limit),
     decreases fuel,
 {
     reveal_with_fuel(unify_n, 1);
@@ -189,57 +191,69 @@ pub proof fn unify_n_witness(input: UState, fuel: nat) -> (bindings: Seq<(nat, T
     let b = input.pairs[0].1;
     let rest = input.pairs.drop_first();
     let left = (fuel - 1) as nat;
+    assert(nvars(a) <= limit);
+    assert(nvars(b) <= limit);
+    state_tail(input, limit);
     match (a, b) {
         (Term::Var(key), _) => {
             if a == b {
                 let next = UState { pairs: rest, ..input };
-                let bindings = unify_n_witness(next, left);
+                let bindings = unify_n_witness(next, left, limit);
                 skip_witness(input, out, bindings);
                 bindings
             } else if occurs(key, b) {
                 assert(false); Seq::empty()
             } else {
+                reveal(nvars);
+                assert(key < limit);
+                state_bind(input, key, b, limit);
                 let next = u_bind(input, rest, key, b);
-                let bindings = unify_n_witness(next, left);
+                let bindings = unify_n_witness(next, left, limit);
                 subst_absent(b, key, b);
                 reveal(subst);
                 bind_witness(input, key, b, out, bindings);
+                bindings_prepend(key, b, bindings, limit);
                 seq![(key, b)] + bindings
             }
         },
         (_, Term::Var(key)) => {
             if occurs(key, a) { assert(false); return Seq::empty(); }
+            reveal(nvars);
+            assert(key < limit);
+            state_bind(input, key, a, limit);
             let next = u_bind(input, rest, key, a);
-            let bindings = unify_n_witness(next, left);
+            let bindings = unify_n_witness(next, left, limit);
             subst_absent(a, key, a);
             reveal(subst);
             bind_witness(input, key, a, out, bindings);
+            bindings_prepend(key, a, bindings, limit);
             seq![(key, a)] + bindings
         },
         (Term::Comp(name, xs), Term::Comp(other, ys)) => {
             if name != other || xs.len() != ys.len() { assert(false); return Seq::empty(); }
+            state_comp(input, name, xs, ys, limit);
             let next = UState { pairs: zip(xs, ys) + rest, ..input };
-            let bindings = unify_n_witness(next, left);
+            let bindings = unify_n_witness(next, left, limit);
             comp_witness(input, name, xs, ys, out, bindings);
             bindings
         },
         _ => {
             if a != b { assert(false); return Seq::empty(); }
             let next = UState { pairs: rest, ..input };
-            let bindings = unify_n_witness(next, left);
+            let bindings = unify_n_witness(next, left, limit);
             skip_witness(input, out, bindings);
             bindings
         },
     }
 }
 
-pub proof fn unify_witness(input: UState) -> (bindings: Seq<(nat, Term)>)
-    requires unify(input) is Ok,
-    ensures witness(input, unify(input), bindings),
+pub proof fn unify_witness(input: UState, limit: nat) -> (bindings: Seq<(nat, Term)>)
+    requires unify(input) is Ok, state_bounded(input, limit),
+    ensures witness(input, unify(input), bindings), bindings_bounded(bindings, limit),
 {
     reveal(unify);
     let fuel = choose|f: nat| !(unify_n(input, f) is Out);
-    unify_n_witness(input, fuel)
+    unify_n_witness(input, fuel, limit)
 }
 
 pub open spec fn apply_goal(goal: ckc_spec::trace::TGoal, bindings: Seq<(nat, Term)>) -> ckc_spec::trace::TGoal {
@@ -249,16 +263,18 @@ pub open spec fn apply_goal(goal: ckc_spec::trace::TGoal, bindings: Seq<(nat, Te
     }
 }
 
-pub proof fn tunify_witness(pairs: Seq<(Term, Term)>, goals: Seq<ckc_spec::trace::TGoal>) -> (bindings: Seq<(nat, Term)>)
-    requires ckc_spec::trace::tunify(pairs, goals) is Ok,
+pub proof fn tunify_witness(pairs: Seq<(Term, Term)>, goals: Seq<ckc_spec::trace::TGoal>, limit: nat) -> (bindings: Seq<(nat, Term)>)
+    requires
+        ckc_spec::trace::tunify(pairs, goals) is Ok,
+        state_bounded(UState { pairs, stack: Seq::empty(), sol: goals.map_values(|g: ckc_spec::trace::TGoal| ckc_spec::trace::tgoal_term(g)) }, limit),
     ensures
-        solved(pairs, bindings),
+        solved(pairs, bindings), bindings_bounded(bindings, limit),
         ckc_spec::trace::tunify(pairs, goals) == ckc_spec::trace::TUni::Ok(goals.map_values(|g: ckc_spec::trace::TGoal| apply_goal(g, bindings))),
 {
     let input = UState { pairs, stack: Seq::empty(), sol: goals.map_values(|g: ckc_spec::trace::TGoal| ckc_spec::trace::tgoal_term(g)) };
     reveal(ckc_spec::trace::tunify);
     assert(unify(input) is Ok);
-    let bindings = unify_witness(input);
+    let bindings = unify_witness(input, limit);
     let terms = applied_all(input.sol, bindings);
     assert_seqs_equal!(Seq::new(goals.len(), |i: int| ckc_spec::trace::tgoal_with(goals[i], terms[i]))
         == goals.map_values(|g: ckc_spec::trace::TGoal| apply_goal(g, bindings)), i => {
