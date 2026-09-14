@@ -263,11 +263,21 @@ fn predicate_parts(arena: &ETermArena, c: &ECfg, Ghost(db_len): Ghost<nat>) -> (
                         reveal_byteslit(b","); reveal_strlit(",");
                         reveal_byteslit(b"\\+"); reveal_strlit("\\+");
                         reveal(ckc_spec::v1text::ascii);
+                        reveal(ckc_spec::engine::comma_name); reveal(ckc_spec::engine::naf_name);
+                        assert(comma@ == ckc_spec::engine::comma_name());
+                        assert(naf@ == ckc_spec::engine::naf_name());
                     }
                     if (child_roots.len() == 2 && crate::k3_front::bytes_equal(name, comma))
                         || (child_roots.len() == 1 && crate::k3_front::bytes_equal(name, naf)) {
                         None
-                    } else { Some((name.clone(), child_roots.clone(), *depth, path.clone())) }
+                    } else {
+                        proof {
+                            assert(cfg_view(arena.nodes@, c).stack[0] == goal_view(arena.nodes@, &c.stack@[0]));
+                            assert(cfg_view(arena.nodes@, c).stack[0] == TGoal::Lit(Term::Comp(name@, root_terms(arena.nodes@, child_roots@)), *depth as nat, path_view(path@)));
+                            assert(predicate_dispatch(cfg_view(arena.nodes@, c)));
+                        }
+                        Some((name.clone(), child_roots.clone(), *depth, path.clone()))
+                    }
                 },
                 _ => None,
             }
@@ -327,6 +337,9 @@ fn simple(arena: &ETermArena, initial: ECfg, Ghost(db): Ghost<Seq<ckc_spec::v1te
                         reveal_byteslit(b","); reveal_strlit(",");
                         reveal_byteslit(b"\\+"); reveal_strlit("\\+");
                         reveal(ckc_spec::v1text::ascii);
+                        reveal(ckc_spec::engine::comma_name); reveal(ckc_spec::engine::naf_name);
+                        assert(comma@ == ckc_spec::engine::comma_name());
+                        assert(naf@ == ckc_spec::engine::naf_name());
                     }
                     if child_roots.len() == 2 && crate::k3_front::bytes_equal(name, comma) {
                         let ghost terms = crate::k2_term::child_terms(arena.nodes@, child_roots@);

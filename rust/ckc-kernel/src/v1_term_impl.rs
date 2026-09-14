@@ -7978,6 +7978,7 @@ fn parse_term_inner_owned(
     let mut variable_failed = first_var.is_none();
     let mut variable_at = at;
     proof {
+        nodes_prefix_reflexive(arena.nodes@);
         parse_state_initial(bytes@, start);
         tracked_state_initial(entry_stream);
         reveal(current_term);
@@ -8109,6 +8110,7 @@ fn parse_term_inner_owned(
                 reveal(frames_roots_ok);
                 assert(frames_roots_ok_nodes(old_arena_nodes, frames@));
                 frames_roots_prefix(old_arena_nodes, &arena, frames@);
+                nodes_prefix_transitive(arena_entry@, old_arena_nodes, arena.nodes@);
                 assert(arena_entry@.is_prefix_of(arena.nodes@));
             }
             match step {
@@ -8473,6 +8475,10 @@ fn parse_term_inner_owned(
                     },
                 };
                 raise_at(&mut at, atomic_at, bytes.len());
+                proof {
+                    nodes_prefix_transitive(arena_entry@, before_atomic, arena.nodes@);
+                    frames_roots_prefix(before_atomic, &arena, frames@);
+                }
                 if !variable_failed {
                     if let ENodeKind::Var { key, .. } = &arena.nodes[term.root].kind {
                         if *key > next_var || *key == next_var && next_var == usize::MAX {
@@ -8718,7 +8724,12 @@ fn parse_term_inner_owned(
                         }
                     }
                     let name = copy_bytes(&atom.name);
+                    let ghost before_atom = arena.nodes@;
                     let arena_root = push_atom(&mut arena, name);
+                    proof {
+                        nodes_prefix_transitive(arena_entry@, before_atom, arena.nodes@);
+                        frames_roots_prefix(before_atom, &arena, frames@);
+                    }
                     let term = span_atom(bytes, pos, atom, arena_root);
                     let next_pos = term.end;
                     proof {
@@ -11215,18 +11226,18 @@ pub open spec fn bundle_metadata_ok(
 }
 
 fn bundle_metadata_push(
-    meta: &mut Vec<EParsedBundle>,
+    mut meta: Vec<EParsedBundle>,
     ordinal: Vec<u8>,
     count: usize,
     Ghost(bundle): Ghost<ckc_spec::v1text::Bundle>,
     Ghost(bundles): Ghost<Seq<ckc_spec::v1text::Bundle>>,
-)
+) -> (out: Vec<EParsedBundle>)
     requires
-        bundle_metadata_ok(old(meta)@, bundles),
+        bundle_metadata_ok(meta@, bundles),
         ordinal@ == ckc_spec::v1text::udec_bytes(bundle.s),
         count == bundle.clauses.len(),
     ensures
-        bundle_metadata_ok(final(meta)@, bundles.push(bundle)),
+        bundle_metadata_ok(out@, bundles.push(bundle)),
 {
     let ghost before = meta@;
     meta.push(EParsedBundle { ordinal, count, model: Ghost(bundle) });
@@ -11241,6 +11252,7 @@ fn bundle_metadata_push(
             }
         }
     }
+    meta
 }
 
 pub struct EParsedV1 {
@@ -20547,15 +20559,13 @@ fn parse_doc_inner(
                 ));
             }
         }
-        let mut next_bundle_meta = bundle_meta;
-        bundle_metadata_push(
-            &mut next_bundle_meta,
+        bundle_meta = bundle_metadata_push(
+            bundle_meta,
             bundle.ordinal.clone(),
             bundle.clauses.len(),
             Ghost(bundle_model),
             Ghost(old_bundles),
         );
-        bundle_meta = next_bundle_meta;
         clauses.append(&mut bundle.clauses);
         previous_ordinal = bundle.ordinal;
         bundle_count += 1;

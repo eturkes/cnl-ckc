@@ -756,7 +756,7 @@ fn project_roots_inner(mut arena: ETermArena, rows: &Vec<usize>) -> (out: (Vec<u
     (result, arena)
 }
 
-fn project_roots(arena: &mut ETermArena, rows: &Vec<usize>) -> (out: Vec<usize>)
+pub fn project_roots(arena: &mut ETermArena, rows: &Vec<usize>) -> (out: Vec<usize>)
     requires
         arena_ok(old(arena)),
         roots_valid(old(arena).nodes@, rows@),
@@ -1015,7 +1015,7 @@ fn solutions_root(arena: &mut ETermArena, rows: &Vec<Vec<usize>>) -> (out: usize
     comp1(arena, name, list)
 }
 
-fn limit_root(arena: &mut ETermArena) -> (out: usize)
+pub fn limit_root(arena: &mut ETermArena) -> (out: usize)
     requires
         arena_ok(old(arena)),
     ensures

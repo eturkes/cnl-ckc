@@ -11,6 +11,14 @@ use vstd::prelude::*;
 
 verus! {
 
+broadcast use {
+    Seq::to_set_ensures,
+    vstd::seq_lib::lemma_seq_concat_contains_all_elements,
+    Seq::lemma_push_to_set_commute,
+    Seq::lemma_index_contains,
+    vstd::set::group_set_lemmas,
+};
+
 pub open spec fn keys_view(keys: Seq<usize>) -> Seq<nat> { keys.map_values(|k: usize| k as nat) }
 
 proof fn streams_concat(left: Seq<Term>, right: Seq<Term>)
@@ -32,13 +40,23 @@ proof fn firsts_set(values: Seq<nat>, seen: Set<nat>)
 {
     if values.len() > 0 {
         let head = values[0];
+        assert_seqs_equal!(values == seq![head] + values.drop_first());
         firsts_set(values.drop_first(), seen.insert(head));
         reveal(firsts);
         assert_sets_equal!(values.to_set() == values.drop_first().to_set().insert(head));
         if !seen.contains(head) {
-            assert(!firsts(values.drop_first(), seen.insert(head)).contains(head));
+            let rest = firsts(values.drop_first(), seen.insert(head));
+            assert(!rest.contains(head));
+            assert_seqs_equal!(firsts(values, seen) == seq![head] + rest);
             assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
+            assert forall|i: int, j: int| 0 <= i < firsts(values, seen).len() && 0 <= j < firsts(values, seen).len() && i != j
+                implies firsts(values, seen)[i] != firsts(values, seen)[j] by {
+                if i == 0 { assert(firsts(values, seen)[j] == rest[j - 1]); }
+                else if j == 0 { assert(firsts(values, seen)[i] == rest[i - 1]); }
+                else { assert(firsts(values, seen)[i] == rest[i - 1]); assert(firsts(values, seen)[j] == rest[j - 1]); }
+            }
         } else {
+            assert_sets_equal!(seen.insert(head) == seen);
             assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
         }
     } else {
@@ -54,6 +72,7 @@ fn position(keys: &Vec<usize>, key: usize) -> (out: usize)
         out == keys.len() <==> !keys@.contains(key),
 {
     let mut i = 0usize;
+    proof { assert_seqs_equal!(keys@.skip(0) == keys@); }
     while i < keys.len()
         invariant
             i <= keys.len(), forall|j: int| 0 <= j < i ==> keys@[j] != key,
@@ -97,6 +116,8 @@ fn collect(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
         let current = tasks.remove(0);
         proof {
             assert(node_ok(arena.nodes@, current as int));
+            assert(old_tasks[0] == current);
+            assert(root_terms(arena.nodes@, old_tasks)[0] == arena@[current as int]);
             assert_seqs_equal!(root_terms(arena.nodes@, old_tasks).drop_first() == root_terms(arena.nodes@, tasks@));
             reveal(roots_work);
             reveal(var_stream_all);
@@ -107,18 +128,29 @@ fn collect(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
                 let ghost previous = keys@;
                 proof {
                     assert(arena@[current as int] == Term::Var(*key as nat));
-                    reveal(var_stream);
+                    assert(var_stream(arena@[current as int]) == seq![*key as nat]) by { reveal(var_stream); }
+                    assert(var_stream_all(root_terms(arena.nodes@, old_tasks)) == var_stream(arena@[current as int]) + var_stream_all(root_terms(arena.nodes@, tasks@))) by { reveal(var_stream_all); }
                     assert_seqs_equal!(var_stream_all(root_terms(arena.nodes@, old_tasks)) == seq![*key as nat] + var_stream_all(root_terms(arena.nodes@, tasks@)));
                     reveal(firsts);
                 }
                 if found == keys.len() {
+                    proof {
+                        assert forall|j: int| 0 <= j < keys.len() implies keys_view(keys@)[j] != *key as nat by {
+                            assert(keys@[j] != *key);
+                        }
+                        assert(!keys_view(keys@).contains(*key as nat));
+                    }
                     keys.push(*key);
                     proof {
                         assert_seqs_equal!(keys_view(keys@) == keys_view(previous).push(*key as nat));
                         assert_sets_equal!(keys_view(keys@).to_set() == keys_view(previous).to_set().insert(*key as nat));
                     }
                 } else {
-                    proof { assert(keys_view(keys@).to_set().contains(*key as nat)); }
+                    proof {
+                        assert(keys@[found as int] == *key);
+                        assert(keys_view(keys@)[found as int] == *key as nat);
+                        assert(keys_view(keys@).to_set().contains(*key as nat));
+                    }
                 }
             },
             ENodeKind::Comp { name, child_roots, .. } => {
@@ -190,6 +222,7 @@ proof fn pos_member(keys: Seq<nat>, key: nat)
 {
     if keys.len() > 0 && keys[0] != key {
         pos_member(keys.drop_first(), key);
+        assert_seqs_equal!(keys == seq![keys[0]] + keys.drop_first());
         assert(keys.contains(key) == keys.drop_first().contains(key));
     }
     reveal(pos_of);
@@ -248,6 +281,11 @@ proof fn partial_all_step(ts: Seq<Term>, keys: Seq<nat>, base: nat, i: nat)
     if ts.len() > 0 {
         partial_step(ts[0], keys, base, i);
         partial_all_step(ts.drop_first(), keys, base, i);
+        reveal(partial_all);
+        let left = partial_all(ts, keys, base, i);
+        assert(left.len() > 0);
+        assert(left[0] == partial(ts[0], keys, base, i));
+        assert_seqs_equal!(left.drop_first() == partial_all(ts.drop_first(), keys, base, i));
     }
     reveal_with_fuel(partial_all, 2); reveal_with_fuel(ckc_spec::engine::subst_all, 2);
 }
@@ -258,7 +296,14 @@ proof fn partial_done(t: Term, keys: Seq<nat>, base: nat)
     decreases t,
 {
     match t {
-        Term::Var(k) => { pos_member(keys, k); reveal(var_stream); reveal(partial); reveal(number_with); },
+        Term::Var(k) => {
+            pos_member(keys, k); reveal(var_stream);
+            assert(var_stream(t) == seq![k]);
+            assert(var_stream(t)[0] == k);
+            assert(var_stream(t).contains(k));
+            assert(keys.to_set().contains(k));
+            reveal(partial); reveal(number_with);
+        },
         Term::Comp(_, args) => {
             partial_all_done(args, keys, base);
             reveal(partial); reveal(number_with);
@@ -273,6 +318,7 @@ proof fn partial_all_done(ts: Seq<Term>, keys: Seq<nat>, base: nat)
 {
     if ts.len() > 0 {
         reveal(var_stream_all);
+        vstd::seq_lib::seq_to_set_distributes_over_add(var_stream(ts[0]), var_stream_all(ts.drop_first()));
         assert(var_stream(ts[0]).to_set().subset_of(keys.to_set()));
         assert(var_stream_all(ts.drop_first()).to_set().subset_of(keys.to_set()));
         partial_done(ts[0], keys, base);
@@ -302,7 +348,7 @@ fn number_inner(mut arena: ETermArena, root: usize, base: usize) -> (out: (ETerm
     while i < keys.len()
         invariant
             arena_ok(&arena), origin.is_prefix_of(arena.nodes@), root_ok(&arena, current),
-            model == origin[root as int].term@, fs == keys_view(keys@),
+            root < origin.len(), model == origin[root as int].term@, fs == keys_view(keys@),
             fs == firsts(var_stream(model), Set::empty()), fs.no_duplicates(),
             fs.to_set() == var_stream(model).to_set(), i <= keys.len(),
             next as nat == base as nat + i as nat, next <= arena.nodes.len(),
@@ -312,8 +358,13 @@ fn number_inner(mut arena: ETermArena, root: usize, base: usize) -> (out: (ETerm
         let ghost before = arena.nodes@;
         let n = crate::k2_output::int_root(&mut arena, next);
         let name: &[u8] = b"$VAR";
-        proof { reveal_byteslit(b"$VAR"); reveal_strlit("$VAR"); reveal(ckc_spec::v1text::ascii); }
-        let replacement = crate::k2_output::comp1(&mut arena, name, n);
+        proof { reveal_byteslit(b"$VAR"); reveal(ckc_spec::term::dollar_var_name); }
+        let mut args = Vec::new(); args.push(n);
+        proof {
+            assert(name@ == ckc_spec::term::dollar_var_name());
+            crate::k2_term::child_terms_match(arena.nodes@, args@, seq![Term::Int(next as int)]);
+        }
+        let replacement = crate::k2_term::push_comp(&mut arena, vstd::slice::slice_to_vec(name), args);
         proof {
             crate::k2_term::arena_prefix_stable(before, &arena);
             assert(arena@[replacement as int] == dollar_var(next as nat));
