@@ -21,7 +21,7 @@ Dispatch = prod-m5u3s-1; unit total = 20 section groups; batch ≤15 tool calls,
 | 15. lexicon (kernel) | W | goal.py:2721 | composed | ulex/clex/ACE sources + shadow inventory -> kernel |
 | 16. pinned SWI + stage | W+P | goal.py:48–160 | verified section | stage + all 29 ACE red probes exact |
 | 17. documents deterministic compile / proof / load + K1/K2 | W+P | goal.py:641–737 | verified focused probe | 1-doc pipeline 12.317s legacy / 10.530s Rust; stale mutation exact |
-| 18. query fixtures + K2/K3 seams | W+P | goal.py:3306–3614 | partial; R77/K3 pending | 11/16 pretrace cases exact; 5 pre-R77 fixture rejects are ruled re-pins; K3 seam explicit |
+| 18. query fixtures + K2/K3 seams | W+P | goal.py:3306–3614 | R79 register complete; K3 pending | 11/16 exact + 5 R79-ruled = 16/16 accounted; added stale-trace reaches named K3 seam |
 | 19. ACE red probes | W+P | goal.py:1950 | verified 29 probes | exact class/rc/stderr pins; 38.321s legacy / 37.499s Rust |
 | 20. final meter | W+P | goal.py:4650 | implemented | emits only after every section succeeds |
 
@@ -47,7 +47,7 @@ K4 export integration = 7f5ff6ee: lead-authorized one-line `ckc_spec::check` pub
 - `verusfmt --edition 2024 --check ckc/src/*.rs ckc/src/check/*.rs ckc/tests/*.rs` = rc0. No type adapter is needed for the actual crate gates.
 - Lead-authorized `verusfmt` on the K4 public export completed; `verusfmt --edition 2024 --check ckc-kernel/src/lib.rs` = rc0. Removing that formatted export yields byte-identical content to pre-export 11d1ac43; no other kernel change. Supplied :61 location was stale: the only printed line there was `mod k4_render;`; no kernel body was displayed.
 - Fresh `rust/target/release/ckc check` = stdout `goal: fork notices ok 3 trees 9 modified files\n`, stderr `goal: queries-fixtures: trace seam pending\n`, rc2. Expected meter prefix = 1/11; later sections not executed through the dispatcher.
-- Pretrace query failures (5/16): empty-solutions, limit-depth, limit-inner-inference, no-finite-failure, yesno-limit-before-proof. Legacy = `goal: queries: non-demo result for qid …` stdout rc1; current K2 = `ace_to_pl_error(check_load,noncanonical('<fixture>/pl/doc.pl')).` stderr rc2. Direct K1 on no-finite-failure doc.pl = `noncanonical(1,14)` (first line = synthetic product comment). R77 rules these as the R39 fixture re-pin, not kernel defects. Main prepares 20 canonical document headers plus canonical staleness encodings; merge main and re-probe after that commit lands. Main at 50571be0 still carries the synthetic headers; no main merge yet.
+- R77 fixture repair merged in 0cfcd966; R79 ruling imported in 9062037a. Query re-probe = 11/16 exact + five R79-ruled `check_load,noncanonical(<path>)` responses = 16/16 accounted. The added stale-trace case stops at the named K3 seam. All 17 legacy outputs also match their committed expect/golden pins. No query implementation changes in this follow-up.
 - K3 integration points = `probes::trace_numeric`, `queries::trace_raw`, `queries::inspect_trace`; each explicitly fails rc2. Trace raw seam carries caller-specific wall-clock category/detail for query, trace-reject, nonfinite probes.
 - R68 = replace old `check_ledger -> Result` at adjudication.rs with `(prefix, first violation)`, perform prefix commit checks before returning grammar violation. Old-interface limitation remains explicit, not claimed parity.
 - Historical extraction = worktree-local `.goal.tmp.<pid>/guidelines/<gid>` instead of legacy random `/tmp/tmp*`; malformed historical-data diagnostics carry that scratch path. Successful custody is path-independent; exact random-prefix parity not claimed.
@@ -804,3 +804,39 @@ V tools/goal.py:4604 violation("guideline-entry", "invalid guideline id: " + ent
 V tools/goal.py:4615 violation("guidelines", "no guideline directories")
 M tools/goal.py:4650 print("goal: check ok " + str(guideline_count) + " guidelines " + str(document_count) + " documents " + str(probe_count) + " red probes")
 ```
+
+## R77 replay
+
+R77 merge = 0cfcd966 (802b6fb0 + main 2c1e38f2); R79 import = 9062037a (main ruling 3b2c5bfb). Sole merge conflict (`rust/trust/spec-manifest.tsv`) resolved by lead-authorized `python3 -P /home/eturkes/Projects/cnl-ckc/.scratch/m5u1/gen_trust.py <worktree>`. Repeated regeneration = rc0, `cmp` rc0, manifest SHA-256 `33165128fc35d410165f0a654207c89554a3ac4f3935b058455266c0e8f4f81c`; trust meter = `ckc: trust spec=8920 shell=24 assumes=36 deps=ok`.
+
+Original 16-case matrix retained; added stale-trace completes all three requested stale-* cases without dropping an original case. Exactness = complete `(rc, stdout, stderr)` tuple against `goal.py queries_check_command(gid, stage)`; Rust probe calls committed `queries::fixture` and forwards its `v1` child mode to the committed `v1_cli`. One shared APE stage; one subprocess at a time. R79 exceptions require their exact K1 stderr envelope, rc2 and empty stdout. Independently, all 17 legacy outputs/return codes match the committed expect/golden pins. Scratch runner, results and stage removed at close; this matrix and the named committed entry points define replay.
+
+| case | original 16 | legacy rc | Rust rc | outcome |
+|---|---|---|---|---|
+| red/bad-qid | yes | 1 | 1 | exact |
+| red/empty-solutions | yes | 1 | 2 | R79 ruled non-parity |
+| red/limit-depth | yes | 1 | 2 | R79 ruled non-parity |
+| red/limit-inner-inference | yes | 1 | 2 | R79 ruled non-parity |
+| red/malformed-query-file | yes | 1 | 1 | exact |
+| red/missing-trace | yes | 1 | 1 | exact |
+| red/no-finite-failure | yes | 1 | 2 | R79 ruled non-parity |
+| red/orphan-answers | yes | 1 | 1 | exact |
+| red/orphan-pl | yes | 1 | 1 | exact |
+| red/orphan-trace | yes | 1 | 1 | exact |
+| red/stale-answers | yes | 1 | 1 | exact |
+| red/stale-pl | yes | 1 | 1 | exact |
+| red/uncompiled-ace | yes | 1 | 1 | exact |
+| red/yesno-limit-before-proof | yes | 1 | 2 | R79 ruled non-parity |
+| green/absent-queries | yes | 0 | 0 | exact |
+| green/empty-queries | yes | 0 | 0 | exact |
+| red/stale-trace | extra | 1 | 2 | named K3 seam |
+
+Result = 11/16 exact + 5 R79 ruled = 16/16 accounted; additional stale-trace = named K3 dependency boundary. R77-only strict tuple assertion fired rc1 on the five domain rejects; R79-authorized register rerun = rc0. Legacy pin audit = 17/17, rc0. All five canonical-header positive controls =1. R79 queues canonical rewrites for M5.7; the engine-limit laws remain covered by the M5.2 suite, as the ruling states.
+
+- `empty-solutions`, `no-finite-failure`: 0 bundles / 0 clauses. `rust/ckc-spec/src/v1text.rs:604` = `d.bundles.len() >= 1`.
+- `limit-depth`: 1 marker / 119 clauses; `tests/queries/red/limit-depth/tree/guidelines/fx/pl/doc.pl:24` = `deep1 :- deep2, deep_tick.` (non-v1 helper predicates).
+- `limit-inner-inference`: 1 marker / 1 clause; `tests/queries/red/limit-inner-inference/tree/guidelines/fx/pl/doc.pl:23` = `guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- repeat, fail.`
+- `yesno-limit-before-proof`: 1 marker / 5 clauses; `tests/queries/red/yesno-limit-before-proof/tree/guidelines/fx/pl/doc.pl:23` = `guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- between(1,200000,N), N =:= 200000.`
+- `rust/ckc-spec/src/v1text.rs:321–327` `wf_literal` requires a semantic Comp predicate; `wf_clause:355–359` applies that domain to heads + bodies. R77's body-preserving header repair cannot remove these domain violations.
+- Direct K1 on re-pinned no-finite-failure emits `ace_to_pl_error(check_load,noncanonical(1,6)).` stderr rc2. Offset is not a causal diagnosis that its now-canonical first line is wrong.
+- Both stale-answers + stale-pl match legacy exactly. Added stale-trace: legacy stale violation stdout rc1; Rust `goal: queries-fixtures: trace seam pending\n` stderr rc2.
