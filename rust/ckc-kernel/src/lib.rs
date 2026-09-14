@@ -55,7 +55,10 @@ mod k2_term;
 mod k2_walk;
 mod k4_bundle;
 mod k4_bytes;
+mod k4_classify;
 mod k4_impl;
+mod k4_ledger;
+mod k4_scalar;
 mod v1_impl;
 mod v1_term_impl;
 

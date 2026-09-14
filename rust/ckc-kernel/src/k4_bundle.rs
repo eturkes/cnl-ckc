@@ -70,7 +70,17 @@ pub fn header() -> (r: Vec<u8>)
         reveal_strlit(
             "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256\n# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n",
         );
+        reveal_strlit(
+            "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256\n",
+        );
+        reveal_strlit(
+            "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n",
+        );
+        reveal(manifest_header);
+        reveal(manifest_header_1);
+        reveal(manifest_header_2);
         reveal(ascii);
+        assert(h@ == manifest_header());
     }
     copy(h)
 }

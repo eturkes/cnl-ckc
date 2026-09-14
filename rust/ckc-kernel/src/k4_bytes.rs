@@ -163,6 +163,7 @@ pub proof fn byte_rows_push(v: Seq<Vec<u8>>, x: Vec<u8>)
 pub fn split(s: &[u8], b: u8) -> (out: Vec<Vec<u8>>)
     ensures
         byte_rows(out@) == split_on(s@, b),
+        out@.len() > 0,
 {
     let mut out = Vec::new();
     let mut start = 0usize;

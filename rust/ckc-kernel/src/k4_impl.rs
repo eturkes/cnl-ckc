@@ -13,7 +13,8 @@ pub fn check_render_impl(v: &ckc_spec::check::EVerdict) -> (r: ckc_spec::check::
 pub fn check_coverage_impl(
     bytes: &[u8],
     docids: &Vec<Vec<u8>>,
-    files: &Vec<(Vec<u8>, ckc_spec::replay::ESrc)>,
+    files: &Vec<(Vec<u8>, ckc_spec::check::EFileSrc)>,
+    root: &[u8],
 ) -> (r: Result<ckc_spec::check::ECoverage, ckc_spec::check::EVerdict>)
     ensures
         ckc_spec::check::coverage_result(r) == ckc_spec::check::coverage(
@@ -21,6 +22,7 @@ pub fn check_coverage_impl(
             ckc_spec::check::byte_rows(docids@),
             |f: Seq<u8>|
                 ckc_spec::check::source_lookup(ckc_spec::check::source_pairs(files@), f, 0),
+            root@,
         ),
 {
     assert(false);
@@ -39,9 +41,6 @@ pub fn check_payload_impl(c: &ckc_spec::check::ECoverage, docid: &[u8]) -> (r: (
     Option<Vec<u8>>,
     Option<Vec<u8>>,
 ))
-    requires
-        exists|b: Seq<u8>, ds: Seq<Seq<u8>>, fs: spec_fn(Seq<u8>) -> ckc_spec::replay::Src|
-            ckc_spec::check::coverage(b, ds, fs) == Result::Ok(c@),
     ensures
         ckc_spec::check::optional_bytes(r.0) == (match ckc_spec::check::ace_row(c@, docid@) {
             Option::Some(row) => Option::Some(row.line),
@@ -75,15 +74,16 @@ pub fn check_print_manifest_impl(bs: &Vec<ckc_spec::check::EBundle>) -> (r: Vec<
     crate::k4_bundle::manifest(bs)
 }
 
-pub fn check_manifest_accepts_impl(bytes: &[u8], hashes: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: bool)
+pub fn check_parse_manifest_impl(src: &ckc_spec::replay::ESrc, path: &[u8]) -> (r: (
+    Vec<ckc_spec::check::EBundle>,
+    Option<Vec<u8>>,
+))
     ensures
-        r == ckc_spec::check::manifest_accepts(
-            bytes@,
-            |b: Seq<u8>| ckc_spec::check::digest_lookup(ckc_spec::check::byte_pairs(hashes@), b, 0),
-        ),
+        (ckc_spec::check::bundles(r.0@), ckc_spec::check::optional_bytes(r.1))
+            == ckc_spec::check::parse_manifest(src@, path@),
 {
     assert(false);
-    false
+    (Vec::new(), None)
 }
 
 pub fn check_ledger_impl(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: Result<
@@ -96,8 +96,7 @@ pub fn check_ledger_impl(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> 
             ckc_spec::check::byte_rows(known@),
         ),
 {
-    assert(false);
-    Ok(Vec::new())
+    crate::k4_ledger::validate(src, known)
 }
 
 pub fn check_class_count_impl(
@@ -112,8 +111,7 @@ pub fn check_class_count_impl(
             k as int,
         ),
 {
-    assert(false);
-    0
+    crate::k4_classify::count(ds, bs, k)
 }
 
 pub fn check_adjudication_meter_impl(
@@ -128,8 +126,7 @@ pub fn check_adjudication_meter_impl(
             ckc_spec::check::bundles(bs@),
         ),
 {
-    assert(false);
-    Vec::new()
+    crate::k4_classify::meter(gid, ds, bs)
 }
 
 pub fn check_lexicon_impl(

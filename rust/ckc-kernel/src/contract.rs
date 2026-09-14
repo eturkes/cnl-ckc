@@ -109,7 +109,8 @@ pub fn check_render(v: &ckc_spec::check::EVerdict) -> (r: ckc_spec::check::ERend
 pub fn check_coverage(
     bytes: &[u8],
     docids: &Vec<Vec<u8>>,
-    files: &Vec<(Vec<u8>, ckc_spec::replay::ESrc)>,
+    files: &Vec<(Vec<u8>, ckc_spec::check::EFileSrc)>,
+    root: &[u8],
 ) -> (r: Result<ckc_spec::check::ECoverage, ckc_spec::check::EVerdict>)
     ensures
         ckc_spec::check::coverage_result(r) == ckc_spec::check::coverage(
@@ -117,9 +118,10 @@ pub fn check_coverage(
             ckc_spec::check::byte_rows(docids@),
             |f: Seq<u8>|
                 ckc_spec::check::source_lookup(ckc_spec::check::source_pairs(files@), f, 0),
+            root@,
         ),
 {
-    crate::k4_impl::check_coverage_impl(bytes, docids, files)
+    crate::k4_impl::check_coverage_impl(bytes, docids, files, root)
 }
 
 pub fn check_coverage_meter(gid: &[u8], c: &ckc_spec::check::ECoverage) -> (r: Vec<u8>)
@@ -133,9 +135,6 @@ pub fn check_payload(c: &ckc_spec::check::ECoverage, docid: &[u8]) -> (r: (
     Option<Vec<u8>>,
     Option<Vec<u8>>,
 ))
-    requires
-        exists|b: Seq<u8>, ds: Seq<Seq<u8>>, fs: spec_fn(Seq<u8>) -> ckc_spec::replay::Src|
-            ckc_spec::check::coverage(b, ds, fs) == Result::Ok(c@),
     ensures
         ckc_spec::check::optional_bytes(r.0) == (match ckc_spec::check::ace_row(c@, docid@) {
             Option::Some(row) => Option::Some(row.line),
@@ -167,14 +166,15 @@ pub fn check_print_manifest(bs: &Vec<ckc_spec::check::EBundle>) -> (r: Vec<u8>)
     crate::k4_impl::check_print_manifest_impl(bs)
 }
 
-pub fn check_manifest_accepts(bytes: &[u8], hashes: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: bool)
+pub fn check_parse_manifest(src: &ckc_spec::replay::ESrc, path: &[u8]) -> (r: (
+    Vec<ckc_spec::check::EBundle>,
+    Option<Vec<u8>>,
+))
     ensures
-        r == ckc_spec::check::manifest_accepts(
-            bytes@,
-            |b: Seq<u8>| ckc_spec::check::digest_lookup(ckc_spec::check::byte_pairs(hashes@), b, 0),
-        ),
+        (ckc_spec::check::bundles(r.0@), ckc_spec::check::optional_bytes(r.1))
+            == ckc_spec::check::parse_manifest(src@, path@),
 {
-    crate::k4_impl::check_manifest_accepts_impl(bytes, hashes)
+    crate::k4_impl::check_parse_manifest_impl(src, path)
 }
 
 pub fn check_ledger(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: Result<
