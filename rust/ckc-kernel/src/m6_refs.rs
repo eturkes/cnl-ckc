@@ -51,7 +51,9 @@ pub fn first_vars(arena: &ETermArena, slots: &Vec<T>, acc: &Vec<T>) -> (out: Vec
 {
     let mut out = copy(acc);
     let mut i = 0usize;
-    proof { assert(models(slots@).skip(0) == models(slots@)); }
+    proof {
+        assert(models(slots@).skip(0) == models(slots@));
+    }
     while i < slots.len()
         invariant
             arena_ok(arena),
@@ -97,7 +99,9 @@ pub fn nth_var(arena: &mut ETermArena, ordered: &Vec<T>, v: &T) -> (out: usize)
     let ghost start = arena.nodes@;
     let mut out = 1usize;
     let mut i = 0usize;
-    proof { assert(models(ordered@).skip(0) == models(ordered@)); }
+    proof {
+        assert(models(ordered@).skip(0) == models(ordered@));
+    }
     while i < ordered.len()
         invariant
             arena_ok(arena),
@@ -147,7 +151,9 @@ pub fn lookup(arena: &ETermArena, map: &Vec<Binding>, v: &T) -> (out: Option<T>)
         crate::m6_drs::term_opt(out) == spec::lookup(map_model(map@), v@),
 {
     let mut i = 0usize;
-    proof { assert(map_model(map@).skip(0) == map_model(map@)); }
+    proof {
+        assert(map_model(map@).skip(0) == map_model(map@));
+    }
     while i < map.len()
         invariant
             arena_ok(arena),
@@ -235,7 +241,10 @@ pub fn ref_slots(arena: &ETermArena, items: &Vec<I>) -> (out: Vec<T>)
 {
     let mut out = Vec::new();
     let mut i = 0usize;
-    proof { assert(item_models(items@).skip(0) == item_models(items@)); assert_seqs_equal!(models(out@) == Seq::<Term>::empty()); }
+    proof {
+        assert(item_models(items@).skip(0) == item_models(items@));
+        assert_seqs_equal!(models(out@) == Seq::<Term>::empty());
+    }
     while i < items.len()
         invariant
             arena_ok(arena),

@@ -56,6 +56,7 @@ mod k2_term;
 mod k2_walk;
 mod m6_drs;
 mod m6_dump;
+mod m6_expand;
 mod m6_flat;
 mod m6_impl;
 mod m6_model;
