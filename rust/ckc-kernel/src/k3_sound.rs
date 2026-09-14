@@ -4,6 +4,9 @@ use ckc_spec::trace::*;
 use ckc_spec::v1text::*;
 use vstd::prelude::*;
 
+#[path = "k3_sound_bound.rs"]
+pub mod bounded;
+
 #[path = "k3_sound_fresh.rs"]
 pub mod freshness;
 
@@ -47,6 +50,7 @@ pub proof fn apply_extension(a: Term, b: Term, s: Seq<(nat, Term)>, r: Seq<(nat,
 pub proof fn k3_sound_proof(db: Seq<DocClause>, goal: Term)
     requires
         bodies_wf(db),
+        ckc_spec::answers::goal_walk(goal) is None,
         derived_forest(db, goal) is Some,
     ensures
         forest_valid(db, goal, derived_forest(db, goal).unwrap()),
