@@ -59,6 +59,7 @@ mod m6_dump;
 mod m6_flat;
 mod m6_impl;
 mod m6_model;
+mod m6_refs;
 mod m6_symbols;
 mod m6_term;
 mod v1_impl;
