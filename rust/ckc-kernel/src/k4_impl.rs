@@ -47,8 +47,7 @@ pub fn check_payload_impl(c: &ckc_spec::check::ECoverage, docid: &[u8]) -> (r: (
         }),
         ckc_spec::check::optional_bytes(r.1) == ckc_spec::check::payload(c@, docid@),
 {
-    assert(false);
-    (None, None)
+    crate::k4_payload::select(c, docid)
 }
 
 pub fn check_semantic_input_impl(pl: &[u8], docid: &[u8]) -> (r: Result<Vec<u8>, Vec<u8>>)
