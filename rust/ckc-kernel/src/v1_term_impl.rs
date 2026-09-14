@@ -8785,7 +8785,7 @@ pub fn parse_term(
     )
 }
 
-proof fn udec_decimal_value(n: nat)
+pub proof fn udec_decimal_value(n: nat)
     ensures
         decimal_value(ckc_spec::v1text::udec_bytes(n)) == n,
     decreases n,
