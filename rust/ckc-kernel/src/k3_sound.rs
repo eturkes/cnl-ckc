@@ -10,6 +10,12 @@ pub mod bounded;
 #[path = "k3_sound_fresh.rs"]
 pub mod freshness;
 
+#[path = "k3_sound_goals.rs"]
+pub mod goals;
+
+#[path = "k3_sound_shape.rs"]
+pub mod shapes;
+
 #[path = "k3_sound_unify.rs"]
 pub mod unification;
 
