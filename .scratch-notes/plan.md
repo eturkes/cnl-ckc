@@ -9,14 +9,14 @@ Dispatch = prod-m5u3s-1; unit total = 20 section groups; batch ≤15 tool calls,
 | 3. trace-numeric probe | P | goal.py:4246 | unknown | unknown |
 | 4. swipl wall probe | P | goal.py:4280 | unknown | unknown |
 | 5. adjudication fixtures | W+P | goal.py:3228 | unknown | unknown |
-| 6. compendium orgs / rows | W | goal.py:2044–2259 | unknown | unknown |
+| 6. compendium orgs / rows | W | goal.py:2044–2259 | implemented | baseline + header mutant exact |
 | 7. source record / guideline / pl / alignment inventories | W | goal.py:161–257 | implemented | baseline + missing README exact; sorted derived names |
 | 8. red inventory | W | goal.py:1899 | implemented | baseline + orphan ulex exact |
 | 9. Prolog INDEX inventory incl drs_driver | I+W | goal.py:423 | implemented | indexed baseline exact incl drs_driver |
-| 10. projection ledger | W | goal.py:2260 | unknown | unknown |
-| 11. product vocabulary | W | goal.py:2785 | unknown | unknown |
+| 10. projection ledger | W | goal.py:2260 | implemented | baseline + missing LF exact |
+| 11. product vocabulary | W | goal.py:2785 | implemented | baseline + unauthorized functor exact |
 | 12. coverage + payloads (kernel) | W | goal.py:2452 | unknown | unknown |
-| 13. census map | W | goal.py:2300 | unknown | unknown |
+| 13. census map | W | goal.py:2300 | implemented | baseline + invalid census key exact |
 | 14. adjudication + review manifest + ledger + commit custody (kernel/git) | W+C | goal.py:2822–3227 | unknown | unknown |
 | 15. lexicon (kernel) | W | goal.py:2721 | unknown | unknown |
 | 16. pinned SWI + stage | W+P | goal.py:48–160 | unknown | unknown |
@@ -36,3 +36,5 @@ Gates = cargo build --release --locked --offline; cargo clippy --workspace --loc
 Checkpoint eee1df1: build/fmt passed; its commit body prematurely claimed probes because shell continued after the scratch driver failed to compile (sha2 LowerHex). Corrected driver + rerun on eee1df1: 6/7 exact; guideline inventory rejected valid corpus because mapped filenames were not re-sorted. 2acb40d also overstated parity after a failed assertion; committed correction follows actual evidence.
 
 Executed probe rerun after filename-order fix = 7/7 exact stdout/stderr/rc, section_probes_rc=0; all baseline silent sections compared with a positive-control fork meter and matching red failures.
+
+Structural checkpoint: build + clippy -D warnings + verusfmt green; compendium/projection/census/vocabulary probes = 8/8 exact. Text law pins Unicode 15.1 full casefold (1530 mappings) + 68 decimal blocks; Rust lowercase is not Python casefold.
