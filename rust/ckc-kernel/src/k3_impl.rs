@@ -135,12 +135,15 @@ pub fn v1_trace_check_impl(
         crate::k3_front::front_prefix(before_derive, arena.nodes@, &front);
         assert(crate::k3_front::trace_ok(arena.nodes@, &committed));
     }
-    if !crate::k2_sort::term_equal(&arena, derived, committed.result) {
+    if !crate::k2_walk::ground_root(&arena, derived)
+        || !crate::k2_sort::term_equal(&arena, derived, committed.result) {
         let name: &[u8] = b"trace_check";
         let stale: &[u8] = b"stale";
         proof {
             reveal_byteslit(b"trace_check"); reveal_strlit("trace_check");
             reveal_byteslit(b"stale"); reveal_strlit("stale"); reveal(ckc_spec::v1text::ascii);
+            assert(name@ == ckc_spec::v1text::ascii("trace_check"@));
+            assert(stale@ == ckc_spec::v1text::ascii("stale"@));
         }
         return crate::k2_output::named_atom_error(name, stale, true);
     }

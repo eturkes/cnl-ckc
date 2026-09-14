@@ -32,37 +32,86 @@ proof fn streams_concat(left: Seq<Term>, right: Seq<Term>)
     reveal_with_fuel(var_stream_all, 2);
 }
 
+proof fn contains_cons(head: nat, tail: Seq<nat>, key: nat)
+    ensures (seq![head] + tail).contains(key) == (head == key || tail.contains(key)),
+{
+    vstd::seq_lib::lemma_seq_concat_contains_all_elements(seq![head], tail, key);
+    if head == key { assert(seq![head][0] == key); }
+    else { assert forall|i: int| 0 <= i < seq![head].len() implies seq![head][i] != key by {} }
+}
+
+proof fn firsts_member(values: Seq<nat>, seen: Set<nat>, key: nat)
+    ensures firsts(values, seen).contains(key) == (values.contains(key) && !seen.contains(key)),
+    decreases values.len(),
+{
+    if values.len() == 0 {
+        reveal(firsts);
+        vstd::seq_lib::lemma_seq_empty_contains_nothing(key);
+    } else {
+        let head = values[0];
+        let rest = values.drop_first();
+        assert_seqs_equal!(values == seq![head] + rest);
+        contains_cons(head, rest, key);
+        if seen.contains(head) {
+            firsts_member(rest, seen, key);
+        } else {
+            firsts_member(rest, seen.insert(head), key);
+            contains_cons(head, firsts(rest, seen.insert(head)), key);
+            if key == head { vstd::set::lemma_set_insert_same(seen, head); }
+            else { vstd::set::lemma_set_insert_different(seen, key, head); }
+        }
+        reveal(firsts);
+    }
+}
+
 proof fn firsts_set(values: Seq<nat>, seen: Set<nat>)
     ensures
         firsts(values, seen).to_set() == values.to_set().difference(seen),
         firsts(values, seen).no_duplicates(),
     decreases values.len(),
 {
+    firsts(values, seen).to_set_ensures();
+    values.to_set_ensures();
+    assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen), key => {
+        firsts_member(values, seen, key);
+        vstd::set::lemma_set_difference(values.to_set(), seen, key);
+    });
     if values.len() > 0 {
         let head = values[0];
-        assert_seqs_equal!(values == seq![head] + values.drop_first());
-        firsts_set(values.drop_first(), seen.insert(head));
-        reveal(firsts);
-        assert_sets_equal!(values.to_set() == values.drop_first().to_set().insert(head));
-        if !seen.contains(head) {
+        if seen.contains(head) {
+            firsts_set(values.drop_first(), seen);
+            reveal(firsts);
+        } else {
+            firsts_set(values.drop_first(), seen.insert(head));
+            firsts_member(values.drop_first(), seen.insert(head), head);
+            vstd::set::lemma_set_insert_same(seen, head);
             let rest = firsts(values.drop_first(), seen.insert(head));
             assert(!rest.contains(head));
-            assert_seqs_equal!(firsts(values, seen) == seq![head] + rest);
-            assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
-            assert forall|i: int, j: int| 0 <= i < firsts(values, seen).len() && 0 <= j < firsts(values, seen).len() && i != j
-                implies firsts(values, seen)[i] != firsts(values, seen)[j] by {
-                if i == 0 { assert(firsts(values, seen)[j] == rest[j - 1]); }
-                else if j == 0 { assert(firsts(values, seen)[i] == rest[i - 1]); }
-                else { assert(firsts(values, seen)[i] == rest[i - 1]); assert(firsts(values, seen)[j] == rest[j - 1]); }
-            }
-        } else {
-            assert_sets_equal!(seen.insert(head) == seen);
-            assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
+            assert forall|i: int, j: int| 0 <= i < seq![head].len() && 0 <= j < rest.len()
+                implies seq![head][i] != rest[j] by { rest.lemma_index_contains(j); }
+            vstd::seq_lib::lemma_no_dup_in_concat(seq![head], rest);
+            reveal(firsts);
         }
-    } else {
-        reveal(firsts);
-        assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
-    }
+    } else { reveal(firsts); }
+}
+
+proof fn stream_cons(head: Term, tail: Seq<Term>)
+    ensures var_stream_all(seq![head] + tail) == var_stream(head) + var_stream_all(tail),
+{
+    assert((seq![head] + tail).len() > 0);
+    assert((seq![head] + tail)[0] == head);
+    assert_seqs_equal!((seq![head] + tail).drop_first() == tail);
+    reveal(var_stream_all);
+}
+proof fn firsts_cons(head: nat, tail: Seq<nat>, seen: Set<nat>)
+    ensures firsts(seq![head] + tail, seen) == if seen.contains(head) {
+        firsts(tail, seen)
+    } else { seq![head] + firsts(tail, seen.insert(head)) },
+{
+    assert((seq![head] + tail).len() > 0);
+    assert((seq![head] + tail)[0] == head);
+    assert_seqs_equal!((seq![head] + tail).drop_first() == tail);
+    reveal(firsts);
 }
 
 fn position(keys: &Vec<usize>, key: usize) -> (out: usize)
@@ -93,16 +142,110 @@ fn position(keys: &Vec<usize>, key: usize) -> (out: usize)
     i
 }
 
+proof fn work_terms(nodes: Seq<ENode>, roots: Seq<usize>)
+    ensures roots_work(nodes, roots) == crate::k2_engine::terms_size(root_terms(nodes, roots)),
+    decreases roots.len(),
+{
+    if roots.len() > 0 {
+        work_terms(nodes, roots.drop_first());
+        assert_seqs_equal!(root_terms(nodes, roots).drop_first() == root_terms(nodes, roots.drop_first()));
+    }
+    reveal(roots_work); reveal(crate::k2_engine::terms_size);
+}
+
+fn collect_step(arena: &ETermArena, input_tasks: Vec<usize>, input_keys: Vec<usize>) -> (out: (Vec<usize>, Vec<usize>))
+    requires arena_ok(arena), roots_valid(arena.nodes@, input_tasks@), input_tasks.len() > 0,
+    ensures
+        roots_valid(arena.nodes@, out.0@),
+        roots_work(arena.nodes@, out.0@) < roots_work(arena.nodes@, input_tasks@),
+        keys_view(input_keys@) + firsts(var_stream_all(root_terms(arena.nodes@, input_tasks@)), keys_view(input_keys@).to_set())
+            == keys_view(out.1@) + firsts(var_stream_all(root_terms(arena.nodes@, out.0@)), keys_view(out.1@).to_set()),
+{
+    hide(firsts); hide(var_stream_all); hide(var_stream);
+    let mut tasks = input_tasks;
+    let mut keys = input_keys;
+    let ghost old_tasks = tasks@;
+    let current = tasks.remove(0);
+    proof {
+        assert(node_ok(arena.nodes@, current as int));
+        assert(old_tasks[0] == current);
+        assert(root_terms(arena.nodes@, old_tasks)[0] == arena@[current as int]);
+        assert_seqs_equal!(root_terms(arena.nodes@, old_tasks).drop_first() == root_terms(arena.nodes@, tasks@));
+        reveal(roots_work);
+        assert_seqs_equal!(root_terms(arena.nodes@, old_tasks) == seq![arena@[current as int]] + root_terms(arena.nodes@, tasks@));
+        stream_cons(arena@[current as int], root_terms(arena.nodes@, tasks@));
+    }
+    match &arena.nodes[current].kind {
+        ENodeKind::Var { key, .. } => {
+            let found = position(&keys, *key);
+            let ghost previous = keys@;
+            proof {
+                assert(arena@[current as int] == Term::Var(*key as nat));
+                assert(var_stream(arena@[current as int]) == seq![*key as nat]) by { reveal(var_stream); }
+                assert(var_stream_all(root_terms(arena.nodes@, old_tasks)) == seq![*key as nat] + var_stream_all(root_terms(arena.nodes@, tasks@)));
+                firsts_cons(*key as nat, var_stream_all(root_terms(arena.nodes@, tasks@)), keys_view(keys@).to_set());
+            }
+            if found == keys.len() {
+                proof {
+                    assert forall|j: int| 0 <= j < keys.len() implies keys_view(keys@)[j] != *key as nat by {
+                        assert(keys@[j] != *key);
+                    }
+                    assert(!keys_view(keys@).contains(*key as nat));
+                }
+                keys.push(*key);
+                proof {
+                    assert_seqs_equal!(keys_view(keys@) == keys_view(previous).push(*key as nat));
+                    assert_sets_equal!(keys_view(keys@).to_set() == keys_view(previous).to_set().insert(*key as nat));
+                }
+            } else {
+                proof {
+                    assert(keys@[found as int] == *key);
+                    assert(keys_view(keys@)[found as int] == *key as nat);
+                    assert(keys_view(keys@).to_set().contains(*key as nat));
+                }
+            }
+        },
+        ENodeKind::Comp { name, child_roots, .. } => {
+            let mut children = child_roots.clone();
+            proof {
+                crate::k2_engine::node_comp_model(arena.nodes@, current as int, name@, child_roots@);
+                assert_seqs_equal!(root_terms(arena.nodes@, children@) == crate::k2_term::child_terms(arena.nodes@, child_roots@));
+                streams_concat(root_terms(arena.nodes@, children@), root_terms(arena.nodes@, tasks@));
+                assert(var_stream(arena@[current as int]) == var_stream_all(root_terms(arena.nodes@, children@))) by { reveal(var_stream); }
+                crate::k2_engine::roots_work_concat(arena.nodes@, children@, tasks@);
+        work_terms(arena.nodes@, children@);
+                reveal(var_stream);
+                reveal(crate::k2_engine::term_size);
+            }
+            let ghost front = children@;
+            let ghost rest = tasks@;
+            children.append(&mut tasks);
+            tasks = children;
+            proof {
+                assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == root_terms(arena.nodes@, front) + root_terms(arena.nodes@, rest));
+                assert(roots_valid(arena.nodes@, tasks@));
+                assert(var_stream_all(root_terms(arena.nodes@, tasks@)) == var_stream_all(root_terms(arena.nodes@, old_tasks)));
+            }
+        },
+        _ => { proof { reveal(var_stream); } },
+    }
+    (tasks, keys)
+}
+
 fn collect(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
     requires root_ok(arena, root),
     ensures keys_view(out@) == firsts(var_stream(arena@[root as int]), Set::empty()),
 {
+    hide(firsts); hide(var_stream_all); hide(var_stream);
     let ghost model = arena@[root as int];
     let mut tasks = Vec::new(); tasks.push(root);
     let mut keys = Vec::new();
     proof {
         assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == seq![model]);
+        assert_seqs_equal!(keys_view(keys@) == Seq::empty());
+        stream_cons(model, Seq::empty());
         reveal_with_fuel(var_stream_all, 2);
+        assert(var_stream_all(root_terms(arena.nodes@, tasks@)) == var_stream(model));
         assert_sets_equal!(keys_view(keys@).to_set() == Set::<nat>::empty());
     }
     while tasks.len() > 0
@@ -112,68 +255,9 @@ fn collect(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
                 + firsts(var_stream_all(root_terms(arena.nodes@, tasks@)), keys_view(keys@).to_set()),
         decreases roots_work(arena.nodes@, tasks@),
     {
-        let ghost old_tasks = tasks@;
-        let current = tasks.remove(0);
-        proof {
-            assert(node_ok(arena.nodes@, current as int));
-            assert(old_tasks[0] == current);
-            assert(root_terms(arena.nodes@, old_tasks)[0] == arena@[current as int]);
-            assert_seqs_equal!(root_terms(arena.nodes@, old_tasks).drop_first() == root_terms(arena.nodes@, tasks@));
-            reveal(roots_work);
-            reveal(var_stream_all);
-        }
-        match &arena.nodes[current].kind {
-            ENodeKind::Var { key, .. } => {
-                let found = position(&keys, *key);
-                let ghost previous = keys@;
-                proof {
-                    assert(arena@[current as int] == Term::Var(*key as nat));
-                    assert(var_stream(arena@[current as int]) == seq![*key as nat]) by { reveal(var_stream); }
-                    assert(var_stream_all(root_terms(arena.nodes@, old_tasks)) == var_stream(arena@[current as int]) + var_stream_all(root_terms(arena.nodes@, tasks@))) by { reveal(var_stream_all); }
-                    assert_seqs_equal!(var_stream_all(root_terms(arena.nodes@, old_tasks)) == seq![*key as nat] + var_stream_all(root_terms(arena.nodes@, tasks@)));
-                    reveal(firsts);
-                }
-                if found == keys.len() {
-                    proof {
-                        assert forall|j: int| 0 <= j < keys.len() implies keys_view(keys@)[j] != *key as nat by {
-                            assert(keys@[j] != *key);
-                        }
-                        assert(!keys_view(keys@).contains(*key as nat));
-                    }
-                    keys.push(*key);
-                    proof {
-                        assert_seqs_equal!(keys_view(keys@) == keys_view(previous).push(*key as nat));
-                        assert_sets_equal!(keys_view(keys@).to_set() == keys_view(previous).to_set().insert(*key as nat));
-                    }
-                } else {
-                    proof {
-                        assert(keys@[found as int] == *key);
-                        assert(keys_view(keys@)[found as int] == *key as nat);
-                        assert(keys_view(keys@).to_set().contains(*key as nat));
-                    }
-                }
-            },
-            ENodeKind::Comp { name, child_roots, .. } => {
-                let mut children = child_roots.clone();
-                proof {
-                    crate::k2_engine::node_comp_model(arena.nodes@, current as int, name@, child_roots@);
-                    assert_seqs_equal!(root_terms(arena.nodes@, children@) == crate::k2_term::child_terms(arena.nodes@, child_roots@));
-                    streams_concat(root_terms(arena.nodes@, children@), root_terms(arena.nodes@, tasks@));
-                    crate::k2_engine::roots_work_concat(arena.nodes@, children@, tasks@);
-                    reveal(var_stream);
-                    reveal(crate::k2_engine::term_size);
-                }
-                let ghost front = children@;
-                let ghost rest = tasks@;
-                children.append(&mut tasks);
-                tasks = children;
-                proof {
-                    assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == root_terms(arena.nodes@, front) + root_terms(arena.nodes@, rest));
-                    assert(roots_valid(arena.nodes@, tasks@));
-                }
-            },
-            _ => { proof { reveal(var_stream); } },
-        }
+        let (next_tasks, next_keys) = collect_step(arena, tasks, keys);
+        tasks = next_tasks;
+        keys = next_keys;
     }
     proof {
         assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == Seq::empty());

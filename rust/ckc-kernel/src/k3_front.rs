@@ -502,6 +502,7 @@ pub struct ETrace {
 
 pub open spec fn trace_ok(nodes: Seq<ENode>, t: &ETrace) -> bool {
     t.result < nodes.len() && nodes[t.result as int].term@ == t.file@.result
+        && ckc_spec::term::ground(t.file@.result)
 }
 
 pub open spec fn trace_view(out: Result<ETrace, EOut>) -> Result<TracesFile, Out> {
@@ -575,6 +576,10 @@ pub fn trace_custody_exec(
     proof {
         assert(parsed@ is Traces);
         parsed_query_roots_elim(arena.nodes@, &parsed);
+        reveal(crate::v1_term_impl::parsed_v1_ok);
+        reveal(ckc_spec::v1text::wf_v1);
+        reveal(ckc_spec::v1text::wf_traces);
+        assert(ckc_spec::term::ground(t.result));
     }
     if !crate::k2_engine::vec_equal(&parsed.qid, qid) {
         let why: &[u8] = b"qid_mismatch";

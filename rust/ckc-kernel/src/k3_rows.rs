@@ -237,14 +237,15 @@ pub open spec fn rows_view(nodes: Seq<ENode>, out: &ERows) -> Rows {
     match out { ERows::Ok(rs) => Rows::Ok(root_terms(nodes, rs@)), ERows::Trip => Rows::Trip, ERows::Err(o) => Rows::Err(o@) }
 }
 
-fn rows(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: usize, vars: &Vec<usize>, sols: &Vec<usize>) -> (out: (ETermArena, ERows))
-    requires root_ok(&arena, goal), db_valid(arena.nodes@, db@), roots_valid(arena.nodes@, vars@), roots_valid(arena.nodes@, sols@),
+fn rows(input: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: usize, vars: &Vec<usize>, sols: &Vec<usize>) -> (out: (ETermArena, ERows))
+    requires root_ok(&input, goal), db_valid(input.nodes@, db@), roots_valid(input.nodes@, vars@), roots_valid(input.nodes@, sols@),
     ensures
-        arena_ok(&out.0), arena.nodes@.is_prefix_of(out.0.nodes@), out.1 matches ERows::Ok(rs) ==> roots_valid(out.0.nodes@, rs@),
-        rows_view(out.0.nodes@, &out.1) == trace_rows(db_view(arena.nodes@, db@), digests_view(digests@), arena@[goal as int], root_terms(arena.nodes@, vars@), root_terms(arena.nodes@, sols@), 0, trace_run_inf(), 0, Seq::empty()),
+        arena_ok(&out.0), input.nodes@.is_prefix_of(out.0.nodes@), out.1 matches ERows::Ok(rs) ==> roots_valid(out.0.nodes@, rs@),
+        rows_view(out.0.nodes@, &out.1) == trace_rows(db_view(input.nodes@, db@), digests_view(digests@), input@[goal as int], root_terms(input.nodes@, vars@), root_terms(input.nodes@, sols@), 0, trace_run_inf(), 0, Seq::empty()),
 {
     hide(prove_row); hide(trace_rows);
-    let ghost origin = arena.nodes@;
+    let ghost origin = input.nodes@;
+    let mut arena = input;
     let ghost program = db_view(origin, db@);
     let ghost model = arena@[goal as int];
     let ghost v = root_terms(origin, vars@);
@@ -260,6 +261,7 @@ fn rows(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: 
     }
     while i < sols.len()
         invariant
+            origin == input.nodes@,
             arena_ok(&arena), origin.is_prefix_of(arena.nodes@), db_valid(arena.nodes@, db@), db_view(arena.nodes@, db@) == program,
             program == db_view(origin, db@), root_ok(&arena, goal), goal < origin.len(), model == arena@[goal as int], model == origin[goal as int].term@,
             roots_valid(arena.nodes@, vars@), v == root_terms(arena.nodes@, vars@), v == root_terms(origin, vars@),
