@@ -137,7 +137,8 @@ fn derived(g: &Guideline, subdir: &str, suffix: &str) -> Result {
         }
         actual.push(n);
     }
-    let expected: Vec<String> = g.docids.iter().map(|id| format!("{id}.{suffix}")).collect();
+    let mut expected: Vec<String> = g.docids.iter().map(|id| format!("{id}.{suffix}")).collect();
+    expected.sort();
     if actual != expected {
         return Err(violation(
             &format!("{subdir}-inventory"),

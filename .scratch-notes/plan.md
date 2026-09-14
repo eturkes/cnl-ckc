@@ -4,15 +4,15 @@ Dispatch = prod-m5u3s-1; unit total = 20 section groups; batch ≤15 tool calls,
 
 | order / section | state source | oracle anchor | status | parity evidence |
 |---|---|---|---|---|
-| 1. fork notices / pristine / vendor | W+I+C | goal.py:522–639 | unknown | unknown |
+| 1. fork notices / pristine / vendor | W+I+C | goal.py:522–639 | implemented | baseline + unknown-license exact |
 | 2. docid probe | P | goal.py:4235 | unknown | unknown |
 | 3. trace-numeric probe | P | goal.py:4246 | unknown | unknown |
 | 4. swipl wall probe | P | goal.py:4280 | unknown | unknown |
 | 5. adjudication fixtures | W+P | goal.py:3228 | unknown | unknown |
 | 6. compendium orgs / rows | W | goal.py:2044–2259 | unknown | unknown |
-| 7. source record / guideline / pl / alignment inventories | W | goal.py:161–257 | unknown | unknown |
-| 8. red inventory | W | goal.py:1899 | unknown | unknown |
-| 9. Prolog INDEX inventory incl drs_driver | I+W | goal.py:423 | unknown | unknown |
+| 7. source record / guideline / pl / alignment inventories | W | goal.py:161–257 | implemented | baseline + missing README exact; sorted derived names |
+| 8. red inventory | W | goal.py:1899 | implemented | baseline + orphan ulex exact |
+| 9. Prolog INDEX inventory incl drs_driver | I+W | goal.py:423 | implemented | indexed baseline exact incl drs_driver |
 | 10. projection ledger | W | goal.py:2260 | unknown | unknown |
 | 11. product vocabulary | W | goal.py:2785 | unknown | unknown |
 | 12. coverage + payloads (kernel) | W | goal.py:2452 | unknown | unknown |
@@ -33,4 +33,6 @@ Trace seam = explicit `goal: queries-fixtures: trace seam pending` stderr rc2 un
 
 Gates = cargo build --release --locked --offline; cargo clippy --workspace --locked --offline --all-targets -q -- -D warnings; verusfmt --edition 2024 --check ckc/src/*.rs ckc/src/check/*.rs ckc/tests/*.rs. Primary parity harness owns full runtime check.
 
-Checkpoint eee1df1: build/fmt passed; its commit body prematurely claimed probes because shell continued after the scratch driver failed to compile (sha2 LowerHex). Corrected driver + rerun on eee1df1: fork/guidelines/red/prolog baseline exact, unknown-license/missing-README/orphan-ulex first violations exact. Probe result = 7/7.
+Checkpoint eee1df1: build/fmt passed; its commit body prematurely claimed probes because shell continued after the scratch driver failed to compile (sha2 LowerHex). Corrected driver + rerun on eee1df1: 6/7 exact; guideline inventory rejected valid corpus because mapped filenames were not re-sorted. 2acb40d also overstated parity after a failed assertion; committed correction follows actual evidence.
+
+Executed probe rerun after filename-order fix = 7/7 exact stdout/stderr/rc, section_probes_rc=0; all baseline silent sections compared with a positive-control fork meter and matching red failures.
