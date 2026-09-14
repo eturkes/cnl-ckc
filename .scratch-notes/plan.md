@@ -21,7 +21,7 @@ Dispatch = prod-m5u3s-1; unit total = 20 section groups; batch ≤15 tool calls,
 | 15. lexicon (kernel) | W | goal.py:2721 | composed | ulex/clex/ACE sources + shadow inventory -> kernel |
 | 16. pinned SWI + stage | W+P | goal.py:48–160 | verified section | stage + all 29 ACE red probes exact |
 | 17. documents deterministic compile / proof / load + K1/K2 | W+P | goal.py:641–737 | verified focused probe | 1-doc pipeline 12.317s legacy / 10.530s Rust; stale mutation exact |
-| 18. query fixtures + K2/K3 seams | W+P | goal.py:3306–3614 | partial; K2/K3 blocked | 11/16 pretrace cases exact; 5 K2 noncanonical fixture rejects; K3 seam explicit |
+| 18. query fixtures + K2/K3 seams | W+P | goal.py:3306–3614 | partial; R77/K3 pending | 11/16 pretrace cases exact; 5 pre-R77 fixture rejects are ruled re-pins; K3 seam explicit |
 | 19. ACE red probes | W+P | goal.py:1950 | verified 29 probes | exact class/rc/stderr pins; 38.321s legacy / 37.499s Rust |
 | 20. final meter | W+P | goal.py:4650 | implemented | emits only after every section succeeds |
 
@@ -39,18 +39,18 @@ Executed probe rerun after filename-order fix = 7/7 exact stdout/stderr/rc, sect
 
 Structural checkpoint: build + clippy -D warnings + verusfmt green; compendium/projection/census/vocabulary probes = 8/8 exact. Text law pins Unicode 15.1 full casefold (1530 mappings) + 68 decimal blocks; Rust lowercase is not Python casefold.
 
-Composition checkpoint: real cargo build blocked E0432 (ckc_kernel exports no EBundle/ECoverage/EDecision/EFileSrc/EVerdict). A scratch type-only adapter reexports already-public ckc_spec values beside existing ckc_kernel exports; direct rustc -Dwarnings + clippy-driver -Dwarnings pass over complete shell. This is not a cargo/workspace gate. Adapter check prints exact fork meter then explicit trace seam pending stderr rc2. Kernel implementation untouched/unread.
+K4 export integration = 7f5ff6ee: lead-authorized one-line `ckc_spec::check` public reexport. Actual release build + workspace clippy + shell fmt-check pass; scratch type-adapter evidence is superseded. Fresh release checker prints the fork meter then explicit K3 seam-pending stderr rc2. Kernel bodies remain unread; the only kernel mutation is the authorized public reexport.
 
 ## Handoff gates + boundaries
 
-- Final `cargo build --release --locked --offline -q` = rc101; `cargo clippy --workspace --locked --offline --all-targets -q -- -D warnings` = rc101. Cause = E0432: missing public K4 exec types (`EBundle`, `ECoverage`, `EDecision`, `EFileSrc`, `EVerdict`). `cargo doc -p ckc-kernel --no-deps` sidebar census confirms root exports only ECheck/ESrc/EV1Verdict + EModel/EOut/ERow/ESpan + contract; no alternative K4 aliases.
-- `verusfmt --edition 2024 --check ckc/src/*.rs ckc/src/check/*.rs ckc/tests/*.rs` = rc0. Complete shell `rustc -Dwarnings` + `clippy-driver -Dwarnings` with a scratch type-only public reexport adapter = rc0. Adapter exposes public spec values, changes no kernel implementation; not the cargo/workspace gate.
-- Fresh adapter checker = stdout `goal: fork notices ok 3 trees 9 modified files\n`, stderr `goal: queries-fixtures: trace seam pending\n`, rc2. Expected meter prefix = 1/11; later sections not executed through the dispatcher. Standard release binary predates current source because build failed; not used as final-source evidence.
-- Pretrace query failures (5/16): empty-solutions, limit-depth, limit-inner-inference, no-finite-failure, yesno-limit-before-proof. Legacy = `goal: queries: non-demo result for qid …` stdout rc1; current K2 = `ace_to_pl_error(check_load,noncanonical('<fixture>/pl/doc.pl')).` stderr rc2. Direct K1 on no-finite-failure doc.pl = `noncanonical(1,14)` (first line = synthetic product comment). Input fixtures + K1/K2 remain unchanged; lead owns disposition.
+- `cargo build --release --locked --offline -q` = rc0; `cargo clippy --workspace --locked --offline --all-targets -q -- -D warnings` = rc0 after 7f5ff6ee. The missing-K4-export blocker is resolved.
+- `verusfmt --edition 2024 --check ckc/src/*.rs ckc/src/check/*.rs ckc/tests/*.rs` = rc0. No type adapter is needed for the actual crate gates.
+- Fresh `rust/target/release/ckc check` = stdout `goal: fork notices ok 3 trees 9 modified files\n`, stderr `goal: queries-fixtures: trace seam pending\n`, rc2. Expected meter prefix = 1/11; later sections not executed through the dispatcher.
+- Pretrace query failures (5/16): empty-solutions, limit-depth, limit-inner-inference, no-finite-failure, yesno-limit-before-proof. Legacy = `goal: queries: non-demo result for qid …` stdout rc1; current K2 = `ace_to_pl_error(check_load,noncanonical('<fixture>/pl/doc.pl')).` stderr rc2. Direct K1 on no-finite-failure doc.pl = `noncanonical(1,14)` (first line = synthetic product comment). R77 rules these as the R39 fixture re-pin, not kernel defects. Main prepares 20 canonical document headers plus canonical staleness encodings; merge main and re-probe after that commit lands. Main at 50571be0 still carries the synthetic headers; no main merge yet.
 - K3 integration points = `probes::trace_numeric`, `queries::trace_raw`, `queries::inspect_trace`; each explicitly fails rc2. Trace raw seam carries caller-specific wall-clock category/detail for query, trace-reject, nonfinite probes.
 - R68 = replace old `check_ledger -> Result` at adjudication.rs with `(prefix, first violation)`, perform prefix commit checks before returning grammar violation. Old-interface limitation remains explicit, not claimed parity.
 - Historical extraction = worktree-local `.goal.tmp.<pid>/guidelines/<gid>` instead of legacy random `/tmp/tmp*`; malformed historical-data diagnostics carry that scratch path. Successful custody is path-independent; exact random-prefix parity not claimed.
-- Full `ckc check`, full legacy check, P6 full-corpus wall, full query fixture lanes, cargo tests/Verus/trust, and separate adversarial review = not run. LSP schema unavailable (`ToolSearch LSP` returned no match). No corpus/tests/vendor/spec/kernel edits; no dependencies added.
+- Full `ckc check`, full legacy check, P6 full-corpus wall, full query fixture lanes, cargo tests/Verus/trust, and separate adversarial review = not run. LSP schema unavailable (`ToolSearch LSP` returned no match). No corpus/tests/vendor/spec edits; the kernel has the one authorized public reexport line, with no body changes. No dependencies added.
 
 ## Oracle emitter census
 
