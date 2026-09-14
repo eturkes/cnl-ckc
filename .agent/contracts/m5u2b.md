@@ -162,15 +162,16 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
   probe (canonical copy with the proof replaced by `unproved(finite_failure)`,
   custody digests preserved) that must classify `stale` = P5's stale law.
   Tracked fixture re-pin = the queries battery port (R39, FC2 row).
-- R67 `k3_sound` hypothesis `roots_wf(goal)` beside `bodies_wf(db)`: every
-  root literal is a compound that is neither a conjunction nor a negation, or
-  a negation over a nonempty conjunction of such literals — never a bare
-  variable (prod-k3sound-1 counterexample: db `p(\\+ q(0)).`, goal
-  `(p(X), X)` executes the bound variable as a NAF site while `forest_valid`
-  sees the raw `Var` root). Canonical query projections satisfy it (the
-  query grammar emits literals only), so every shell-facing row meets it.
-  Binding: `requires bodies_wf(db), roots_wf(goal), derived_forest(db, goal)
-  is Some`.
+- R67 `k3_sound` hypothesis `answers::goal_walk(goal) is None` beside
+  `bodies_wf(db)` (the EXISTING query-preflight custody law: every conjunct
+  is a v1 semantic-predicate compound — no variable, foreign or negation
+  root; prod-k3sound-1 / prod-m5u2b-2 counterexample: db `p(\\+ q(a)).`,
+  goal `(p(A), A)` executes the bound variable as a NAF site while
+  `forest_valid` sees the raw `Var` root). The trace pipeline enforces it
+  on every committed query (answers.rs Query preflight), so every
+  shell-facing row meets it; a separate `roots_wf` would duplicate it
+  (R-01). Binding: `requires bodies_wf(db), goal_walk(goal) is None,
+  derived_forest(db, goal) is Some`.
 - R60 T-C622/T-C626 cost probes (R32 model) = CLI-observable BOUNDARY rows
   (no cost-visible seam: the kernel exposes no fuel counters and a
   counters-only binding would be trusted surface for testing alone): active
