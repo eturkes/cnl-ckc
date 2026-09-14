@@ -2378,7 +2378,7 @@ proof fn clash_comp(name: Seq<u8>, xs: Seq<Term>, ys: Seq<Term>, rest: Seq<(Term
     }
 }
 
-proof fn clash_fails(u: ckc_spec::engine::UState)
+pub proof fn clash_fails(u: ckc_spec::engine::UState)
     requires
         pair_clash(u.pairs),
     ensures
@@ -2589,7 +2589,7 @@ fn clash_roots(arena: &ETermArena, left: usize, right: usize) -> (out: bool)
 }
 
 // A rigid argument mismatch rejects a trial before renaming or binding its continuation.
-fn head_clash(arena: &ETermArena, args: &Vec<usize>, head: usize, Ghost(off): Ghost<nat>) -> (out:
+pub fn head_clash(arena: &ETermArena, args: &Vec<usize>, head: usize, Ghost(off): Ghost<nat>) -> (out:
     bool)
     requires
         root_ok(arena, head),

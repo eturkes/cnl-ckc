@@ -199,6 +199,21 @@ fn call(
                     assert(clause_valid(arena.nodes@, &db@[m as int]));
                     reveal(ckc_spec::engine::lit_fa);
                 }
+                if crate::k2_engine::head_clash(&arena, &args, db[m].head, Ghost(initial.fresh as nat)) {
+                    proof {
+                        let pairs = ckc_spec::engine::zip(actual, ckc_spec::engine::args_of(
+                            ckc_spec::engine::shift(program[m as int].head, c.fresh)));
+                        let stack = tbody_goals(program[m as int].body, c.fresh, (depth - 1) as nat, path_view(path@)) + continuation;
+                        let state = ckc_spec::engine::UState {
+                            pairs, stack: Seq::empty(), sol: stack.map_values(|g: TGoal| tgoal_term(g)),
+                        };
+                        crate::k2_engine::clash_fails(state);
+                        reveal(tunify);
+                        call_some(program, c, name@, actual, depth as nat, continuation, ci as nat, path_view(path@), m as nat);
+                    }
+                    ci = m + 1;
+                    continue;
+                }
                 let (pairs, stack, fresh) = crate::k3_adapter::prepare(
                     &mut arena, &db[m], &args, &rest, initial.fresh, depth - 1, &path, Ghost(initial.alts.len() as nat),
                 );

@@ -186,6 +186,7 @@ fn prove(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal:
         row_view(out.0.nodes@, &out.1) == prove_row(db_view(arena.nodes@, db@), digests_view(digests@), arena@[goal as int], base as nat),
 {
     let ghost origin = arena.nodes@;
+    let mark = arena.nodes.len();
     let ghost program = db_view(origin, db@);
     let ghost model = arena@[goal as int];
     let goals = flatten(&arena, goal);
@@ -206,10 +207,14 @@ fn prove(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal:
     }
     match result {
         crate::k3_state::EOut::Failed(finite) => {
+            crate::k2_store::truncate(&mut arena, mark);
+            proof { assert(arena.nodes@ == origin); }
             let payload = unproved_root(&mut arena, finite);
             (arena, ERow::Row { payload, work, nodes: 0, base })
         },
         crate::k3_state::EOut::Limit => {
+            crate::k2_store::truncate(&mut arena, mark);
+            proof { assert(arena.nodes@ == origin); }
             let payload = unproved_root(&mut arena, false);
             (arena, ERow::Row { payload, work, nodes: 0, base })
         },
