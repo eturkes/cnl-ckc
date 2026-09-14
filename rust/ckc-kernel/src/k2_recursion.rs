@@ -76,15 +76,27 @@ pub open spec fn indexed_clauses(nodes: Seq<ENode>, db: Seq<EClause>, indices: S
     Seq::new(indices.len(), |i: int| clause_view(nodes, &db[indices[i] as int]))
 }
 
-fn indicator_indices(arena: &ETermArena, db: &Vec<EClause>, which: usize) -> (out: Vec<usize>)
+fn indicator_step(
+    arena: &ETermArena,
+    db: &Vec<EClause>,
+    mut out: Vec<usize>,
+    index: usize,
+    which: usize,
+) -> (result: Vec<usize>)
     requires
         arena_ok(arena),
         db_valid(arena.nodes@, db@),
+        index < db.len(),
         which < 9,
-    ensures
         rule_indices_ok(db@, out@),
         indexed_clauses(arena.nodes@, db@, out@) == indicator_rules(
-            db_view(arena.nodes@, db@),
+            db_view(arena.nodes@, db@).take(index as int),
+            which as int,
+        ),
+    ensures
+        rule_indices_ok(db@, result@),
+        indexed_clauses(arena.nodes@, db@, result@) == indicator_rules(
+            db_view(arena.nodes@, db@).take(index as int + 1),
             which as int,
         ),
 {
@@ -92,60 +104,121 @@ fn indicator_indices(arena: &ETermArena, db: &Vec<EClause>, which: usize) -> (ou
     let ghost cs = db_view(arena.nodes@, db@);
     let ghost pred = |c: DocClause|
         lit_fa(c.head) == Some(indicator(which as int)) && c.body.len() > 0;
-    let mut out = Vec::new();
-    let mut i = 0usize;
     proof {
-        assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@) == Seq::empty());
-        assert_seqs_equal!(cs.take(0) == Seq::empty());
+        assert(crate::k2_engine::clause_valid(arena.nodes@, &db@[index as int]));
+        assert(cs[index as int] == clause_view(arena.nodes@, &db@[index as int]));
+        assert(cs[index as int].head == arena@[db@[index as int].head as int]);
+        assert(cs[index as int].body.len() == db@[index as int].body.len());
     }
-    while i < db.len()
+    let matched = db[index].body.len() > 0 && literal_matches(arena, db[index].head, &name, arity);
+    let ghost before = out@;
+    proof {
+        assert(matched == pred(cs[index as int]));
+        assert_seqs_equal!(cs.take(index as int + 1) == cs.take(index as int).push(cs[index as int]));
+        cs.take(index as int).lemma_filter_push(cs[index as int], pred);
+    }
+    if matched {
+        out.push(index);
+        proof {
+            assert forall|j: int| 0 <= j < out.len() implies out@[j] < db.len()
+                && db@[out@[j] as int].body.len() > 0 by {
+                if j < before.len() {
+                    assert(out@[j] == before[j]);
+                }
+            }
+            assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@)
+                == indexed_clauses(arena.nodes@, db@, before).push(cs[index as int]), j => {
+                if j < before.len() { assert(out@[j] == before[j]); }
+            });
+        }
+    }
+    out
+}
+
+pub open spec fn buckets_ok(
+    nodes: Seq<ENode>,
+    db: Seq<EClause>,
+    buckets: Seq<Vec<usize>>,
+    done: nat,
+) -> bool {
+    buckets.len() == 9 && forall|j: int|
+        #![trigger buckets[j]]
+        0 <= j < 9 ==> {
+            &&& rule_indices_ok(db, buckets[j]@)
+            &&& indexed_clauses(nodes, db, buckets[j]@) == indicator_rules(
+                db_view(nodes, db).take(done as int),
+                j,
+            )
+        }
+}
+
+fn census_row(
+    arena: &ETermArena,
+    db: &Vec<EClause>,
+    mut buckets: Vec<Vec<usize>>,
+    index: usize,
+) -> (out: Vec<Vec<usize>>)
+    requires
+        arena_ok(arena),
+        db_valid(arena.nodes@, db@),
+        index < db.len(),
+        buckets_ok(arena.nodes@, db@, buckets@, index as nat),
+    ensures
+        buckets_ok(arena.nodes@, db@, out@, index as nat + 1),
+{
+    reveal(buckets_ok);
+    let mut j = 0usize;
+    while j < 9
         invariant
             arena_ok(arena),
             db_valid(arena.nodes@, db@),
-            which < 9,
-            i <= db.len(),
-            (name@, arity as nat) == indicator(which as int),
-            cs == db_view(arena.nodes@, db@),
-            pred == |c: DocClause|
-                lit_fa(c.head) == Some(indicator(which as int)) && c.body.len() > 0,
-            rule_indices_ok(db@, out@),
-            indexed_clauses(arena.nodes@, db@, out@) == cs.take(i as int).filter(pred),
-        decreases db.len() - i,
+            index < db.len(),
+            j <= 9,
+            buckets.len() == 9,
+            forall|k: int|
+                0 <= k < 9 ==> {
+                    &&& rule_indices_ok(db@, buckets@[k]@)
+                    &&& indexed_clauses(arena.nodes@, db@, buckets@[k]@) == indicator_rules(
+                        db_view(arena.nodes@, db@).take(
+                            if k < j {
+                                index as int + 1
+                            } else {
+                                index as int
+                            },
+                        ),
+                        k,
+                    )
+                },
+        decreases 9 - j,
     {
+        let ghost previous = buckets@;
+        let bucket = buckets.remove(j);
+        let updated = indicator_step(arena, db, bucket, index, j);
+        buckets.insert(j, updated);
         proof {
-            assert(crate::k2_engine::clause_valid(arena.nodes@, &db@[i as int]));
-            assert(cs[i as int] == clause_view(arena.nodes@, &db@[i as int]));
-            assert(cs[i as int].head == arena@[db@[i as int].head as int]);
-            assert(cs[i as int].body.len() == db@[i as int].body@.len());
-        }
-        let matched = db[i].body.len() > 0 && literal_matches(arena, db[i].head, &name, arity);
-        let ghost before = out@;
-        proof {
-            assert(matched == pred(cs[i as int]));
-            assert_seqs_equal!(cs.take(i as int + 1) == cs.take(i as int).push(cs[i as int]));
-            cs.take(i as int).lemma_filter_push(cs[i as int], pred);
-        }
-        if matched {
-            out.push(i);
-            proof {
-                assert forall|j: int| 0 <= j < out@.len() implies out@[j] < db@.len()
-                    && db@[out@[j] as int].body@.len() > 0 by {
-                    if j < before.len() {
-                        assert(out@[j] == before[j]);
-                    }
+            assert forall|k: int| 0 <= k < 9 implies {
+                &&& rule_indices_ok(db@, buckets@[k]@)
+                &&& indexed_clauses(arena.nodes@, db@, buckets@[k]@) == indicator_rules(
+                    db_view(arena.nodes@, db@).take(
+                        if k < j + 1 {
+                            index as int + 1
+                        } else {
+                            index as int
+                        },
+                    ),
+                    k,
+                )
+            } by {
+                if k != j {
+                    assert(buckets@[k] == previous[k]);
+                } else {
+                    assert(buckets@[k] == updated);
                 }
-                assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@)
-                    == indexed_clauses(arena.nodes@, db@, before).push(cs[i as int]), j => {
-                    if j < before.len() { assert(out@[j] == before[j]); }
-                });
             }
         }
-        i += 1;
+        j += 1;
     }
-    proof {
-        assert_seqs_equal!(cs.take(i as int) == cs);
-    }
-    out
+    buckets
 }
 
 pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
@@ -156,11 +229,44 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
         rule_indices_ok(db@, out@),
         indexed_clauses(arena.nodes@, db@, out@) == rules(db_view(arena.nodes@, db@)),
 {
+    reveal(buckets_ok);
+    let mut buckets: Vec<Vec<usize>> = Vec::new();
+    let mut j = 0usize;
+    while j < 9
+        invariant
+            j <= 9,
+            buckets.len() == j,
+            forall|k: int| 0 <= k < j ==> buckets@[k].len() == 0,
+        decreases 9 - j,
+    {
+        buckets.push(Vec::new());
+        j += 1;
+    }
+    proof {
+        assert_seqs_equal!(db_view(arena.nodes@, db@).take(0) == Seq::empty());
+        assert forall|k: int| 0 <= k < 9 implies indexed_clauses(arena.nodes@, db@, buckets@[k]@)
+            == indicator_rules(db_view(arena.nodes@, db@).take(0), k) by {
+            assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, buckets@[k]@) == Seq::empty());
+        }
+    }
+    let mut c = 0usize;
+    while c < db.len()
+        invariant
+            arena_ok(arena),
+            db_valid(arena.nodes@, db@),
+            c <= db.len(),
+            buckets_ok(arena.nodes@, db@, buckets@, c as nat),
+        decreases db.len() - c,
+    {
+        buckets = census_row(arena, db, buckets, c);
+        c += 1;
+    }
     let ghost cs = db_view(arena.nodes@, db@);
     let ghost parts = Seq::new(9, |i: int| indicator_rules(cs, i));
     let mut out = Vec::new();
     let mut i = 0usize;
     proof {
+        assert_seqs_equal!(cs.take(c as int) == cs);
         assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@) == Seq::empty());
         assert_seqs_equal!(parts.take(0) == Seq::empty());
     }
@@ -169,28 +275,33 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
             arena_ok(arena),
             db_valid(arena.nodes@, db@),
             i <= 9,
+            buckets_ok(arena.nodes@, db@, buckets@, db.len() as nat),
             cs == db_view(arena.nodes@, db@),
             parts == Seq::new(9, |j: int| indicator_rules(cs, j)),
             rule_indices_ok(db@, out@),
             indexed_clauses(arena.nodes@, db@, out@) == parts.take(i as int).flatten(),
         decreases 9 - i,
     {
-        let mut next = indicator_indices(arena, db, i);
+        proof {
+            assert(rule_indices_ok(db@, buckets@[i as int]@));
+            assert_seqs_equal!(db_view(arena.nodes@, db@).take(db.len() as int) == cs);
+            assert(indexed_clauses(arena.nodes@, db@, buckets@[i as int]@) == parts[i as int]);
+        }
+        let mut next = buckets[i].clone();
         let ghost left = out@;
         let ghost right = next@;
         out.append(&mut next);
         proof {
-            assert forall|j: int| 0 <= j < out@.len() implies out@[j] < db@.len()
-                && db@[out@[j] as int].body@.len() > 0 by {
+            assert forall|j: int| 0 <= j < out.len() implies out@[j] < db.len()
+                && db@[out@[j] as int].body.len() > 0 by {
                 if j < left.len() {
                     assert(out@[j] == left[j]);
                 } else {
                     assert(out@[j] == right[j - left.len()]);
                 }
             }
-            assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@)
-                == indexed_clauses(arena.nodes@, db@, left)
-                    + indexed_clauses(arena.nodes@, db@, right), j => {
+            assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@) == indexed_clauses(arena.nodes@, db@, left)
+                + indexed_clauses(arena.nodes@, db@, right), j => {
                 if j < left.len() { assert(out@[j] == left[j]); }
                 else { assert(out@[j] == right[j - left.len()]); }
             });

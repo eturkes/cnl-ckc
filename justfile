@@ -107,6 +107,26 @@ secrets:
     cd "{{ ROOT }}" && gitleaks git --no-banner --redact -c .gitleaks.toml --staged . >/dev/null
     @echo "gate: secrets ok"
 
+# Secondary bounded gate (Kani 0.67.0 over the kernel's public exec surface;
+# harnesses stay outside the Verus workspace). Bootstrap = rust/kani.lock.
+kani:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}/rust/ckc-kani-harness"
+    cargo fmt --check
+    cargo clippy --locked --offline --all-targets -q --target-dir "{{ ROOT }}/rust/target/kani-lint" -- -D warnings
+    # Cargo reads .cargo/config.toml from cwd, not from --manifest-path; a failed
+    # bootstrap must not hide behind `eval "$(...)"`.
+    kani_env=$(CKC_TOOLCHAIN="{{ TOOLCHAIN }}" bash "{{ ROOT }}/rust/kani/bootstrap.sh" --env)
+    eval "$kani_env"
+    cargo metadata --locked --offline --format-version 1 --no-deps >/dev/null
+    for harness in align_two_byte_domain reader_v1_check_small reader_v1_check_prefix_of_committed; do
+        cargo-kani --manifest-path "{{ ROOT }}/rust/ckc-kani-harness/Cargo.toml" \
+            --harness "harness::$harness" --exact --output-format terse \
+            --target-dir "{{ ROOT }}/rust/target/kani"
+    done
+    echo "gate: kani ok"
+
 # Legacy chain (E-- → Python identity, corpus check, fresh compile byte-stable).
 legacy:
     #!/usr/bin/env bash
