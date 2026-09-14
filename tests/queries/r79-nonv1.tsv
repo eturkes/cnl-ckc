@@ -1,0 +1,6 @@
+case	rc	expected_stderr
+empty-solutions	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/empty-solutions/tree/guidelines/fx/pl/doc.pl')).\n
+limit-depth	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/limit-depth/tree/guidelines/fx/pl/doc.pl')).\n
+limit-inner-inference	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/limit-inner-inference/tree/guidelines/fx/pl/doc.pl')).\n
+no-finite-failure	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/no-finite-failure/tree/guidelines/fx/pl/doc.pl')).\n
+yesno-limit-before-proof	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/yesno-limit-before-proof/tree/guidelines/fx/pl/doc.pl')).\n

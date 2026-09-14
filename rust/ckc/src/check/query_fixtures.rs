@@ -1,6 +1,6 @@
 use super::common::*;
 use super::{process, queries};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 const RED_REQUIRED: &[&str] = &[
@@ -90,10 +90,51 @@ fn bad(case: &str, name: &str) -> Failure {
         format!("unsupported entry: {case}/{name}"),
     )
 }
+const R79_CASES: &[&str] = &[
+    "empty-solutions",
+    "limit-depth",
+    "limit-inner-inference",
+    "no-finite-failure",
+    "yesno-limit-before-proof",
+];
+fn non_v1_expectations(root: &Path) -> Result<BTreeMap<String, (u8, Vec<u8>)>> {
+    let path = root.join("r79-nonv1.tsv");
+    let source = corpus_text(&path, "queries-fixtures")?;
+    let bad_table = || violation("queries-fixtures", "invalid R79 expectation table");
+    if source.contains('\r') || !source.ends_with('\n') {
+        return Err(bad_table());
+    }
+    let mut lines = source.split_terminator('\n');
+    if lines.next() != Some("case\trc\texpected_stderr") {
+        return Err(bad_table());
+    }
+    let mut rows = BTreeMap::new();
+    for line in lines {
+        let fields: Vec<_> = line.split('\t').collect();
+        if fields.len() != 3 || !R79_CASES.contains(&fields[0]) || fields[1] != "2" {
+            return Err(bad_table());
+        }
+        let stderr = fields[2].replace("\\n", "\n");
+        if !stderr.starts_with("ace_to_pl_error(check_load,noncanonical('")
+            || !stderr.ends_with("')).\n")
+            || stderr[..stderr.len() - 1].contains('\n')
+            || rows
+                .insert(fields[0].to_owned(), (2, stderr.into_bytes()))
+                .is_some()
+        {
+            return Err(bad_table());
+        }
+    }
+    if rows.len() != R79_CASES.len() || R79_CASES.iter().any(|name| !rows.contains_key(*name)) {
+        return Err(bad_table());
+    }
+    Ok(rows)
+}
 fn case_result(
     case: &Path,
     gid: &Path,
     is_red: bool,
+    non_v1: Option<&(u8, Vec<u8>)>,
     scratch: &process::Scratch,
     swipl: &Path,
     stage: &Path,
@@ -103,6 +144,17 @@ fn case_result(
         Ok(bytes) => (0, bytes, Vec::new()),
         Err(e) => (e.rc, e.out, e.err),
     };
+    if let Some((expected_rc, expected_stderr)) = non_v1 {
+        if rc != *expected_rc || !stdout.is_empty() || stderr != *expected_stderr {
+            return Err(violation(
+                "queries-fixtures",
+                format!("R79 rejection differs from pin for case: {n}"),
+            ));
+        }
+        // R80 substitutes the native rejection; the original pin remains a required readable member.
+        read(&case.join("expect"), "queries-fixtures")?;
+        return Ok(());
+    }
     if rc != u8::from(is_red) {
         return Err(violation(
             "queries-fixtures",
@@ -132,6 +184,7 @@ fn golden(
     gid: &Path,
     manifest: &Path,
     inventory: &mut Vec<String>,
+    non_v1: bool,
 ) -> Result {
     let n = name(case);
     for p in entries(&case.join(lane), "queries-fixtures")? {
@@ -152,12 +205,16 @@ fn golden(
                 format!("{lane} qid has no query: {n}/{id}"),
             ));
         }
+        let expected = read(&p, "queries-fixtures")?;
+        if non_v1 {
+            continue;
+        }
         let bytes = if lane == "answers-golden" {
             queries::answer(id, manifest, &pl)?
         } else {
             queries::trace(id, manifest, &pl, &answers)?
         };
-        if bytes != read(&p, "queries-fixtures")? {
+        if bytes != expected {
             let kind = if lane == "answers-golden" {
                 "answer"
             } else {
@@ -303,13 +360,14 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
     }
     for p in entries(root, "queries-fixtures")? {
         let n = name(&p);
-        if !["red", "green"].contains(&n.as_str()) {
+        if !["red", "green", "r79-nonv1.tsv"].contains(&n.as_str()) {
             return Err(violation(
                 "queries-fixtures",
                 format!("unsupported entry: {n}"),
             ));
         }
     }
+    let non_v1 = non_v1_expectations(root)?;
     let (mut red, mut green, mut pins) = (vec![], vec![], vec![]);
     for color in ["red", "green"] {
         let path = root.join(color);
@@ -399,7 +457,16 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
                 ));
             }
             let gid = &gids[0];
-            case_result(&case, gid, expect, scratch, swipl, stage)?;
+            let native_expectation = if color == "red" { non_v1.get(&n) } else { None };
+            case_result(
+                &case,
+                gid,
+                expect,
+                native_expectation,
+                scratch,
+                swipl,
+                stage,
+            )?;
             if color == "red" {
                 red.push(n.clone());
             } else {
@@ -416,7 +483,15 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
             }
             for lane in ["answers-golden", "traces-golden"] {
                 if members.contains(lane) {
-                    golden(&case, color, lane, gid, &manifest, &mut pins)?;
+                    golden(
+                        &case,
+                        color,
+                        lane,
+                        gid,
+                        &manifest,
+                        &mut pins,
+                        native_expectation.is_some(),
+                    )?;
                 }
             }
             if members.contains("trace-reject") {
