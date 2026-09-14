@@ -146,6 +146,7 @@ fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Opti
         r matches Some(p) ==> {
             &&& crate::v1_term_impl::parsed_v1_ok(bytes@, &p)
             &&& crate::v1_term_impl::parsed_metadata_ok(&p)
+            &&& crate::v1_term_impl::parsed_certify_metadata_ok(&p)
             &&& p@ == ckc_spec::replay::the_v1(bytes@)
             &&& crate::v1_term_impl::parsed_doc_roots_ok(final(arena).nodes@, &p)
             &&& crate::v1_term_impl::parsed_query_roots_ok(final(arena).nodes@, &p)
@@ -277,6 +278,7 @@ pub fn v1_parse(bytes: &[u8], arena: &mut ETermArena) -> (r: Option<EParsedV1>)
         r matches Some(p) ==> {
             &&& crate::v1_term_impl::parsed_v1_ok(bytes@, &p)
             &&& crate::v1_term_impl::parsed_metadata_ok(&p)
+            &&& crate::v1_term_impl::parsed_certify_metadata_ok(&p)
             &&& p@ == ckc_spec::replay::the_v1(bytes@)
             &&& crate::v1_term_impl::parsed_doc_roots_ok(final(arena).nodes@, &p)
             &&& crate::v1_term_impl::parsed_query_roots_ok(final(arena).nodes@, &p)
