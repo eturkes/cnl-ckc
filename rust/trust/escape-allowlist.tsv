@@ -1,4 +1,6 @@
 path	token	count	trimmed_line
+ckc-spec/src/check.rs	external	1	"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n"@,
+ckc-spec/src/check.rs	external	1	||| c == ascii("external"@)
 ckc-spec/src/digest.rs	assume	1	// it — `--no-cheating` rejects uninterp/assume surfaces. The unverified
 ckc-spec/src/v1text.rs	admit	1	// Traces admit '$VAR'/1 as an ordinary compound: their writer runs
 ckc/src/trust.rs	#[path	1	"#[path",

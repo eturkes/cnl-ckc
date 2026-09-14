@@ -58,8 +58,11 @@ uninspected `ckc-kernel/src/k3_impl.rs` (+ modules) + shell seam
   `(D, S, Hex)` resolves to exactly one committed clause line of that
   sentence (`trace_check(join(sentence(D,S), N))`), roots are clause nodes,
   naf leaves only among children, node grammar per the legacy walker
-  (`node_shape`) → demonstration (`non_demo`: yes(proved) or nonempty
-  solutions all proved) → meter `ckc: trace-check ok <qid> nodes=<k>`.
+  (`node_shape`), demonstration (`non_demo`: yes(proved) or nonempty
+  solutions all proved) — evaluated in the spec's order: per solution row in
+  file order, proof presence first then that row's joins (`rows_join`); an
+  earlier row's `non_demo` preempts a later row's join failure → meter
+  `ckc: trace-check ok <qid> nodes=<k>`.
 - Soundness theorem (`contract::k3_sound`): every derived forest is
   `forest_valid` — each clause node's goal unifies with a renaming of its
   clause head under a substitution that instantiates the body into the
@@ -73,10 +76,14 @@ uninspected `ckc-kernel/src/k3_impl.rs` (+ modules) + shell seam
   `v1_trace_check`, `k3_sound` discharged; no new escape sites).
 - P2 `just trust` green after regen (spec manifest gains `trace.rs`).
 - P3 Kani: `rust/ckc-kani-harness/` (separate workspace, res-kani-2 Q6)
-  with ≥1 reader + ≥1 engine + ≥1 trace harness, explicit domains + unwind
-  bounds; `just kani` recipe (bootstrap per `.scratch/kani/` lock → committed
-  `rust/kani.lock` + `rust/kani/bootstrap.sh`) green; secondary gate, not in
-  `just rust` (cost), run at unit close + weekly CI.
+  with the align + 2 reader harnesses green under `just kani` (bootstrap
+  from committed `rust/kani.lock` + `rust/kani/bootstrap.sh`); secondary
+  gate, not in `just rust` (cost), weekly CI. PARTIAL (ruled): an engine
+  harness over `v1_answer` exhausts CBMC at the minimum domain (5 bounded
+  runs rc124 at 1200 s / ~12 GiB: 3 shapes CaDiCaL, Z3, dereference cache)
+  because the whole-file K1 loader replays symbolically before the engine
+  → follow-up: a typed below-parser kernel seam (`.agent/deferred.md` row); a trace
+  harness follows K3.
 - P4 lane D/E: `ckc v1 trace` byte-identical to legacy AND to the 4
   committed `guidelines/*/queries/traces/*.pl`; `k2_corpus_diff.py` gains
   lane `trace`.
@@ -112,6 +119,21 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
 - R35 answers custody folds: `record_nonground`, `record_version(V)`,
   `record_query_sha256` = unreachable through the canonical grammar → the
   `noncanonical` class (R2b enumerated; legacy pins stay oracle evidence).
+- R37 K3 scope boundary: per-qid inventory + freshness verdicts (`goal.py check`
+  queries section: stale pl/answers/trace, missing/orphan artifacts, demo order)
+  = validator tier → M5.3 K4 (`ckc check`); the K3 seam sees compiled files
+  only. Suite rows T-C821/T-C822 carry the K3-observable custody portion.
+- R38 `k3_sound` hypothesis `bodies_wf(db)`: canonical bodies never carry a
+  bare conjunction (`wf_body_item`); a `Pos(','(..))` body would split into two
+  goals at one proof path (prod-m5u2b counterexample). The composition stage
+  yields `wf_v1` documents, so every shell-facing binding meets it.
+- R39 tests/queries fixture header: 20/35 fixture documents open with the
+  legacy `% synthetic attributed product; …` line (not `doc_line1`); the K3
+  replay + suite copies canonicalize LINE 1 ONLY (goldens are header-
+  independent: digests hash clause lines); originals stay byte-identical
+  (FC0); the fixture re-pin lands with the queries battery port (M5.3/M5.7,
+  FC2 row). `red/trace-digest-join`'s hostile-spacing doc = composition
+  `noncanonical(<path>)` class (R24a).
 - R36 trace-check `join` law = the public REFERENCE law (exactly one
   committed clause line of the named sentence block), NOT legacy
   `trace_block_table`'s widening to any dot-terminated line (map S6 #19).

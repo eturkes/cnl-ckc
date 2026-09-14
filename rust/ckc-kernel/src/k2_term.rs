@@ -21,6 +21,7 @@ pub enum ENodeKind {
 }
 
 pub struct ENode {
+    pub maximum: Option<usize>,
     pub kind: ENodeKind,
     pub term: Ghost<Term>,
 }
@@ -60,8 +61,13 @@ pub open spec fn comp_form_ok(form: &ECompForm, name: Seq<u8>, arity: nat) -> bo
     }
 }
 
+pub closed spec fn node_cache_ok(node: &ENode) -> bool {
+    crate::k2_engine::max_var_count(node.maximum) == ckc_spec::engine::nvars(node.term@)
+}
+
 pub open spec fn node_ok(nodes: Seq<ENode>, i: int) -> bool {
     &&& 0 <= i < nodes.len()
+    &&& node_cache_ok(&nodes[i])
     &&& ckc_spec::term::wf_term(nodes[i].term@)
     &&& match (&nodes[i].kind, nodes[i].term@) {
         (ENodeKind::Var { key, spelling, value }, Term::Var(k)) => {
@@ -93,6 +99,18 @@ pub open spec fn node_ok(nodes: Seq<ENode>, i: int) -> bool {
         },
         _ => false,
     }
+}
+
+pub proof fn node_cache_elim(nodes: Seq<ENode>, i: int)
+    requires
+        node_ok(nodes, i),
+    ensures
+        crate::k2_engine::max_var_count(nodes[i].maximum) == ckc_spec::engine::nvars(
+            nodes[i].term@,
+        ),
+{
+    reveal(node_ok);
+    reveal(node_cache_ok);
 }
 
 pub open spec fn arena_ok(arena: &ETermArena) -> bool {
@@ -423,11 +441,13 @@ pub fn push_var(arena: &mut ETermArena, key: usize, spelling: Vec<u8>) -> (root:
         final(arena)@[root as int] == Term::Var(key as nat),
 {
     let node = ENode {
+        maximum: Some(key),
         kind: ENodeKind::Var { key, spelling, value: Ghost(key as nat) },
         term: Ghost(Term::Var(key as nat)),
     };
     proof {
         reveal(node_ok);
+        reveal(node_cache_ok);
         reveal(ckc_spec::term::wf_term);
     }
     push_node(arena, node)
@@ -458,11 +478,13 @@ pub fn push_int(
         final(arena)@[root as int] == Term::Int(value@),
 {
     let node = ENode {
+        maximum: None,
         kind: ENodeKind::Int { spelling, magnitude, negative, value },
         term: Ghost(Term::Int(value@)),
     };
     proof {
         reveal(node_ok);
+        reveal(node_cache_ok);
         reveal(ckc_spec::term::wf_term);
     }
     push_node(arena, node)
@@ -477,9 +499,10 @@ pub fn push_nil(arena: &mut ETermArena) -> (root: usize)
         final(arena).nodes@ == old(arena).nodes@.push(final(arena).nodes@[root as int]),
         final(arena)@[root as int] == Term::Nil,
 {
-    let node = ENode { kind: ENodeKind::Nil, term: Ghost(Term::Nil) };
+    let node = ENode { maximum: None, kind: ENodeKind::Nil, term: Ghost(Term::Nil) };
     proof {
         reveal(node_ok);
+        reveal(node_cache_ok);
         reveal(ckc_spec::term::wf_term);
     }
     push_node(arena, node)
@@ -494,9 +517,14 @@ pub fn push_atom(arena: &mut ETermArena, name: Vec<u8>) -> (root: usize)
         final(arena).nodes@ == old(arena).nodes@.push(final(arena).nodes@[root as int]),
         final(arena)@[root as int] == Term::Atom(name@),
 {
-    let node = ENode { kind: ENodeKind::Atom { name }, term: Ghost(Term::Atom(name@)) };
+    let node = ENode {
+        maximum: None,
+        kind: ENodeKind::Atom { name },
+        term: Ghost(Term::Atom(name@)),
+    };
     proof {
         reveal(node_ok);
+        reveal(node_cache_ok);
         reveal(ckc_spec::term::wf_term);
     }
     push_node(arena, node)
@@ -574,7 +602,12 @@ pub fn push_comp(arena: &mut ETermArena, name: Vec<u8>, child_roots: Vec<usize>)
         reveal(comp_form_ok);
         assert(comp_form_ok(&form, spec_name, roots.len()));
     }
-    let node = ENode { kind: ENodeKind::Comp { name, child_roots, form }, term: Ghost(model) };
+    let maximum = crate::k2_engine::roots_max_var(arena, &child_roots);
+    let node = ENode {
+        maximum,
+        kind: ENodeKind::Comp { name, child_roots, form },
+        term: Ghost(model),
+    };
     proof {
         reveal(arena_ok);
         assert forall|j: int| 0 <= j < roots.len() implies {
@@ -602,6 +635,7 @@ pub fn push_comp(arena: &mut ETermArena, name: Vec<u8>, child_roots: Vec<usize>)
         }
         assert(appended[old_nodes.len() as int] == node);
         reveal(node_ok);
+        reveal(node_cache_ok);
         assert(node_ok(appended, old_nodes.len() as int));
     }
     push_node(arena, node)

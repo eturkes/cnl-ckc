@@ -1,4 +1,4 @@
-> Retired: live rows moved to `.agent/spec.md` Deferred.
+> Retired: live rows → `.agent/deferred.md`; spine units → `.agent/spec.md` `Deferred`.
 
 # polish register
 

@@ -68,7 +68,8 @@ const TRUSTED_KERNEL_FILES: [&str; 1] = ["ckc-kernel/src/contract.rs"];
 // redirect, added member, `[patch]`/`[source]` swap, or same-name/version
 // source replacement compiles unscanned code while src/ stays clean, so the
 // (name,version) deps diff alone is insufficient.
-const TRUSTED_EXTRA: [&str; 10] = [
+const TRUSTED_EXTRA: [&str; 11] = [
+    "ckc/prolog/drs_dump.pl",
     "trust/escape-allowlist.tsv",
     "trust/deps-allowlist.tsv",
     "verus.lock",
