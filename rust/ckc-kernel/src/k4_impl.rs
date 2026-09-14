@@ -139,8 +139,7 @@ pub fn check_lexicon_impl(
             ckc_spec::check::byte_pairs(rulings@),
         ),
 {
-    assert(false);
-    ckc_spec::check::EVerdict::Ok(Vec::new())
+    crate::k4_lexicon::check(path, ulex, clex, ace, rulings)
 }
 
 } // verus!

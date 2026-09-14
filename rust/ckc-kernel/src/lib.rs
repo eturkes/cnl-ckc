@@ -62,6 +62,9 @@ mod k4_evidence;
 mod k4_file_checks;
 mod k4_impl;
 mod k4_ledger;
+mod k4_lexdata;
+mod k4_lexicon;
+mod k4_lexparse;
 mod k4_manifest;
 mod k4_numbers;
 mod k4_payload;
@@ -70,6 +73,8 @@ mod k4_rows;
 mod k4_scalar;
 mod k4_search;
 mod k4_semantic;
+mod k4_set;
+mod k4_words;
 mod v1_impl;
 mod v1_term_impl;
 

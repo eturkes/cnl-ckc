@@ -63,7 +63,7 @@ pub fn class_ok(c: &[u8]) -> (r: bool)
     ensures
         r == uncovered_class_ok(c@),
 {
-    let r = eq(c, b"heading") || eq(c, b"process") || eq(c, b"\x65xternal") || eq(c, b"aim") || eq(
+    let r = eq(c, b"heading") || eq(c, b"process") || eq(c, b"external") || eq(c, b"aim") || eq(
         c,
         b"descriptive",
     ) || eq(c, b"notice");
@@ -75,9 +75,9 @@ pub fn class_ok(c: &[u8]) -> (r: bool)
         reveal_byteslit(b"process");
         reveal_strlit("process");
         assert(b"process"@ == ckc_spec::v1text::ascii("process"@));
-        reveal_byteslit(b"\x65xternal");
-        reveal_strlit("\x65xternal");
-        assert(b"\x65xternal"@ == ckc_spec::v1text::ascii("\x65xternal"@));
+        reveal_byteslit(b"external");
+        reveal_strlit("external");
+        assert(b"external"@ == ckc_spec::v1text::ascii("external"@));
         reveal_byteslit(b"aim");
         reveal_strlit("aim");
         assert(b"aim"@ == ckc_spec::v1text::ascii("aim"@));
