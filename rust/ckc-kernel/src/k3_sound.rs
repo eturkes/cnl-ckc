@@ -4,6 +4,9 @@ use ckc_spec::trace::*;
 use ckc_spec::v1text::*;
 use vstd::prelude::*;
 
+#[path = "k3_sound_fresh.rs"]
+pub mod freshness;
+
 #[path = "k3_sound_unify.rs"]
 pub mod unification;
 
