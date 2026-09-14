@@ -1,0 +1,8 @@
+# Deferral queue
+
+Off-path improvements + ruled deferrals, one row each: `- <what> (<source>). Accept: <check>`. A row enters while its evidence is fresh and leaves in the commit that meets its check; a skipped, xfailed, deleted or tier-demoted case enters here with user approval (`CLAUDE.md` `Engineering`). Unfinished units stay in `.agent/spec.md` `Deferred`.
+
+- Kani engine harness (`rust/ckc-kani-harness` `engine_answer_tiny`, outside the `just kani` recipe): `v1_answer` replays the K1 loader symbolically → CBMC exhausts (5 runs rc124 at 1200 s / ~12 GiB). Accept: typed below-parser kernel seam + one engine harness green in `just kani`.
+- `ace_commit` custody content check (`m5u3` R48; `map-k4` Q4/R3): a current-digest ledger row with a nonempty `ace_commit` proves commit existence only; adjudication fixtures run `ledger-validate` with ODB checking off. Accept: for each current-digest row with nonempty `ace_commit`, `ckc check` re-derives review bundle v2 at that commit and requires its `review_sha256` = the ledger digest; red fixtures = missing commit + bundle mismatch, with ODB checks on.
+- Scratch validators (`.scratch/m5u*/`, `.scratch/m6/`; invocations in `.claude/rules/rust.md` + the unit contracts) = temporary encodings with no committed copy; regeneration = re-author from each unit contract's gate identities. Accept: committed Rust harness ≤ M5.7.
+- `goal align` fail-path probes (legacy `goal.py`, retires at M5.7): the resolver's `fail("align",…)` branches (bad int, unknown side, occurrence miss, overlap, one-sided) have no fixture coverage; render-side twins = `tests/ui/red/align-*`. Accept: one probe per branch → rc 2 + stderr detail, wired as a red battery or `goal.emm` selftest rows.

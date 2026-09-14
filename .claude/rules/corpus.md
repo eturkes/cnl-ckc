@@ -12,7 +12,7 @@ Protocol = docs/REFERENCE.md § Operating; supported ACE constructs = the `ace_t
 
 ## Round roles (corpus `/goal` loop)
 
-Token economics: teammate capacity abundant, MAIN window scarce → MAIN buys orchestration, rulings, faithfulness review, gate reruns, commits; every bulk read, draft, sweep + cross-check routes to a teammate; single-statement fix-ups run MAIN-direct. Mechanics = global `CLAUDE.md` `Subagents`.
+Token economics: teammate capacity abundant, MAIN window scarce → MAIN buys orchestration, rulings, faithfulness review, gate reruns, commits; every bulk read, draft, sweep + cross-check routes to a teammate; single-statement fix-ups = MAIN solo under the prose licence (the ACE file, named by path). Trigger + solo licences = global `CLAUDE.md` `Subagents` b1; mechanics = the same section.
 - `extract-<id>-<k>` — bulk-reads the source; verbatim extraction evidence with page/byte anchors + an anchored normative-statement inventory. Raw material: MAIN spot-checks verbatim fidelity before adopting.
 - `ace-<id>-<k>` — drafts ACE for a MAIN-ruled statement batch: knowledge-only (no witness seed facts, proper-name stand-ins, authored queries), validated in its worktree by `compile` + `check`; lexicon additions ship as a reported delta screened against `audit/lexicon-rejects.tsv` (MAIN appends each refusal). Faithfulness = MAIN review, statement by statement.
 - `rev-<id>-<k>` — adversarial: ACE↔extraction fidelity, coverage-claim soundness, README claims, knowledge-only status, obligation count + discharge, `audit/projection-notes.tsv` fidelity; `file:line` findings; disputed semantics ⇒ MAIN rules.

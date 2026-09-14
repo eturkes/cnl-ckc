@@ -82,7 +82,7 @@ uninspected `ckc-kernel/src/k3_impl.rs` (+ modules) + shell seam
   harness over `v1_answer` exhausts CBMC at the minimum domain (5 bounded
   runs rc124 at 1200 s / ~12 GiB: 3 shapes CaDiCaL, Z3, dereference cache)
   because the whole-file K1 loader replays symbolically before the engine
-  → follow-up: a typed below-parser kernel seam (`Deferred` row); a trace
+  → follow-up: a typed below-parser kernel seam (`.agent/deferred.md` row); a trace
   harness follows K3.
 - P4 lane D/E: `ckc v1 trace` byte-identical to legacy AND to the 4
   committed `guidelines/*/queries/traces/*.pl`; `k2_corpus_diff.py` gains
