@@ -407,6 +407,264 @@ pub open spec fn align_outcome(align: Seq<char>, src: Seq<char>, ace: Seq<char>)
     }
 }
 
+// --- resolver (`goal align`, legacy align_command; contract m5u4 P4): the
+// occurrence-form stdin TSV `group<TAB>side<TAB>occurrence<TAB>span` resolves
+// to artifact rows `group<TAB>side<TAB>start<TAB>span`, ace rows before src
+// rows, each side sorted by (start, end, group, span); the first failure in
+// legacy order = an F-class detail (`goal: align: <detail>`, stderr, rc2).
+// Shell: guideline/docid/payload/ACE-file pre-checks, stdin bytes, the file
+// write, the meter `goal: align <docid> groups <g> spans <n>`. ---
+// Python `int(s)` with `str(int(s)) == s`: canonical digits, or one leading
+// '-' on a nonzero canonical value.
+pub open spec fn is_canonical_int(s: Seq<char>) -> bool {
+    ||| is_canonical_decimal(s)
+    ||| (s.len() > 1 && s[0] == '-' && is_canonical_decimal(s.drop_first()) && s.drop_first()
+        != "0"@)
+}
+
+pub open spec fn int_value(s: Seq<char>) -> int {
+    if s.len() > 0 && s[0] == '-' {
+        0 - dec_value(s.drop_first())
+    } else {
+        dec_value(s)
+    }
+}
+
+// Start of the n-th (1-based) non-overlapping occurrence of `span` in `text`
+// scanning left to right from `i` (Python `text.split(span)` piece
+// arithmetic); -1 when absent.
+pub open spec fn nth_start(text: Seq<char>, span: Seq<char>, n: int, i: int) -> int
+    decreases text.len() - i,
+{
+    if span.len() == 0 || i < 0 || i + span.len() > text.len() {
+        0 - 1
+    } else if text.subrange(i, i + span.len()) == span {
+        if n <= 1 {
+            i
+        } else {
+            nth_start(text, span, n - 1, i + span.len())
+        }
+    } else {
+        nth_start(text, span, n, i + 1)
+    }
+}
+
+pub ghost struct ResSpan {
+    pub start: int,
+    pub end: int,
+    pub group: int,
+    pub span: Seq<char>,
+}
+
+// Rows in legacy failure order: field count, group (canonical, ≥ 0),
+// occurrence (canonical, ≥ 1), empty span, side vocabulary, occurrence found.
+pub open spec fn resolve_rows(
+    rows: Seq<Seq<char>>,
+    n: int,
+    src: Seq<char>,
+    ace: Seq<char>,
+    srcs: Seq<ResSpan>,
+    aces: Seq<ResSpan>,
+) -> Result<(Seq<ResSpan>, Seq<ResSpan>), Seq<char>>
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
+        Ok((srcs, aces))
+    } else {
+        let w = row_prefix(n);
+        let fs = split_at_seps(rows[0], '\t');
+        if fs.len() != 4 {
+            Err(w + "expected group, side, occurrence, span"@)
+        } else if !is_canonical_int(fs[0]) {
+            Err(w + "group must be a canonical decimal"@)
+        } else if int_value(fs[0]) < 0 {
+            Err(w + "group below 0"@)
+        } else if !is_canonical_int(fs[2]) {
+            Err(w + "occurrence must be a canonical decimal"@)
+        } else if int_value(fs[2]) < 1 {
+            Err(w + "occurrence below 1"@)
+        } else if fs[3].len() == 0 {
+            Err(w + "empty span"@)
+        } else if fs[1] != "src"@ && fs[1] != "ace"@ {
+            Err(w + "side must be src or ace"@)
+        } else {
+            let text = if fs[1] == "src"@ {
+                src
+            } else {
+                ace
+            };
+            let k = nth_start(text, fs[3], int_value(fs[2]), 0);
+            if k < 0 {
+                Err(w + "occurrence "@ + fs[2] + " of span not found in "@ + fs[1])
+            } else {
+                let sp = ResSpan {
+                    start: k,
+                    end: k + fs[3].len(),
+                    group: int_value(fs[0]),
+                    span: fs[3],
+                };
+                if fs[1] == "src"@ {
+                    resolve_rows(rows.drop_first(), n + 1, src, ace, srcs.push(sp), aces)
+                } else {
+                    resolve_rows(rows.drop_first(), n + 1, src, ace, srcs, aces.push(sp))
+                }
+            }
+        }
+    }
+}
+
+// Code-point lexicographic order (Python str comparison).
+pub open spec fn chars_le(a: Seq<char>, b: Seq<char>) -> bool
+    decreases a.len(),
+{
+    if a.len() == 0 {
+        true
+    } else if b.len() == 0 {
+        false
+    } else if a[0] < b[0] {
+        true
+    } else if a[0] > b[0] {
+        false
+    } else {
+        chars_le(a.drop_first(), b.drop_first())
+    }
+}
+
+// Python tuple order (start, end, group, span).
+pub open spec fn res_le(a: ResSpan, b: ResSpan) -> bool {
+    ||| a.start < b.start
+    ||| (a.start == b.start && a.end < b.end)
+    ||| (a.start == b.start && a.end == b.end && a.group < b.group)
+    ||| (a.start == b.start && a.end == b.end && a.group == b.group && chars_le(a.span, b.span))
+}
+
+pub open spec fn insert_res(x: ResSpan, s: Seq<ResSpan>) -> Seq<ResSpan>
+    decreases s.len(),
+{
+    if s.len() == 0 {
+        seq![x]
+    } else if res_le(x, s[0]) {
+        seq![x] + s
+    } else {
+        seq![s[0]] + insert_res(x, s.drop_first())
+    }
+}
+
+pub open spec fn sort_res(s: Seq<ResSpan>) -> Seq<ResSpan>
+    decreases s.len(),
+{
+    if s.len() == 0 {
+        s
+    } else {
+        insert_res(s[0], sort_res(s.drop_first()))
+    }
+}
+
+// Distinct groups in first-occurrence order.
+pub open spec fn group_list(spans: Seq<ResSpan>, acc: Seq<int>) -> Seq<int>
+    decreases spans.len(),
+{
+    if spans.len() == 0 {
+        acc
+    } else if acc.contains(spans[0].group) {
+        group_list(spans.drop_first(), acc)
+    } else {
+        group_list(spans.drop_first(), acc.push(spans[0].group))
+    }
+}
+
+pub open spec fn same_groups(a: Seq<int>, b: Seq<int>) -> bool {
+    &&& forall|i: int| 0 <= i < a.len() ==> b.contains(#[trigger] a[i])
+    &&& forall|i: int| 0 <= i < b.len() ==> a.contains(#[trigger] b[i])
+}
+
+// One side's artifact rows in sorted order; an overlap = the first row whose
+// start precedes the previous row's end.
+pub open spec fn side_out(name: Seq<char>, spans: Seq<ResSpan>, prev_end: int) -> Result<
+    Seq<char>,
+    Seq<char>,
+>
+    decreases spans.len(),
+{
+    if spans.len() == 0 {
+        Ok(Seq::empty())
+    } else if spans[0].start < prev_end {
+        Err("overlapping "@ + name + " spans at offset "@ + dec_str(spans[0].start))
+    } else {
+        match side_out(name, spans.drop_first(), spans[0].end) {
+            Err(e) => Err(e),
+            Ok(rest) => Ok(
+                dec_str(spans[0].group) + "\t"@ + name + "\t"@ + dec_str(spans[0].start) + "\t"@
+                    + spans[0].span + "\n"@ + rest,
+            ),
+        }
+    }
+}
+
+pub ghost struct Resolved {
+    pub text: Seq<char>,
+    pub groups: int,
+    pub spans: int,
+}
+
+pub open spec fn resolve(input: Seq<char>, src: Seq<char>, ace: Seq<char>) -> Result<
+    Resolved,
+    Seq<char>,
+> {
+    if !(input.len() > 0 && input.last() == '\n') {
+        Err("input lacks final newline"@)
+    } else if input.len() == 1 {
+        Err("empty input"@)
+    } else {
+        match resolve_rows(
+            split_at_seps(input.drop_last(), '\n'),
+            1,
+            src,
+            ace,
+            Seq::empty(),
+            Seq::empty(),
+        ) {
+            Err(e) => Err(e),
+            Ok((srcs, aces)) => if !same_groups(
+                group_list(srcs, Seq::empty()),
+                group_list(aces, Seq::empty()),
+            ) {
+                Err("every group needs both a src span and an ace span"@)
+            } else {
+                match side_out("ace"@, sort_res(aces), 0) {
+                    Err(e) => Err(e),
+                    Ok(a) => match side_out("src"@, sort_res(srcs), 0) {
+                        Err(e) => Err(e),
+                        Ok(s) => Ok(
+                            Resolved {
+                                text: a + s,
+                                groups: group_list(aces, Seq::empty()).len() as int,
+                                spans: (srcs.len() + aces.len()) as int,
+                            },
+                        ),
+                    },
+                }
+            },
+        }
+    }
+}
+
+pub ghost enum ResolveOutcome {
+    Ok(Resolved),
+    Err(Seq<char>),
+}
+
+pub open spec fn resolve_outcome(
+    input: Seq<char>,
+    src: Seq<char>,
+    ace: Seq<char>,
+) -> ResolveOutcome {
+    match resolve(input, src, ace) {
+        Ok(r) => ResolveOutcome::Ok(r),
+        Err(e) => ResolveOutcome::Err(e),
+    }
+}
+
 // --- exec-facing result types (views bind exec results to the spec) ---
 pub struct ESpan {
     pub start: u64,
@@ -452,6 +710,36 @@ impl View for ECheck {
         match self {
             ECheck::Ok(m) => AlignOutcome::Ok(m@),
             ECheck::Err(e) => AlignOutcome::Err(e@),
+        }
+    }
+}
+
+pub struct EResolved {
+    pub text: Vec<char>,
+    pub groups: u64,
+    pub spans: u64,
+}
+
+impl View for EResolved {
+    type V = Resolved;
+
+    open spec fn view(&self) -> Resolved {
+        Resolved { text: self.text@, groups: self.groups as int, spans: self.spans as int }
+    }
+}
+
+pub enum EResolve {
+    Ok(EResolved),
+    Err(Vec<char>),
+}
+
+impl View for EResolve {
+    type V = ResolveOutcome;
+
+    open spec fn view(&self) -> ResolveOutcome {
+        match self {
+            EResolve::Ok(r) => ResolveOutcome::Ok(r@),
+            EResolve::Err(e) => ResolveOutcome::Err(e@),
         }
     }
 }
