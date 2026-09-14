@@ -708,9 +708,28 @@ pub ghost enum FileSrc {
     Bytes(Seq<u8>),
 }
 
-// Legacy prints evidence paths joined under the guideline path (R62).
+// Legacy prints evidence paths joined under the guideline path through
+// `pathlib` (R62/R74): empty and `.` components collapse (`source//x`,
+// `source/./x`, a trailing `/` → `source/x`); row-field diagnostics keep the
+// raw field.
+pub open spec fn join_slash(segs: Seq<Seq<u8>>) -> Seq<u8>
+    decreases segs.len(),
+{
+    if segs.len() == 0 {
+        Seq::empty()
+    } else if segs.len() == 1 {
+        segs[0]
+    } else {
+        segs[0] + seq![0x2Fu8] + join_slash(segs.drop_first())
+    }
+}
+
+pub open spec fn norm_path(f: Seq<u8>) -> Seq<u8> {
+    join_slash(split_on(f, 0x2F).filter(|s: Seq<u8>| s.len() > 0 && s != ascii("."@)))
+}
+
 pub open spec fn full_path(root: Seq<u8>, f: Seq<u8>) -> Seq<u8> {
-    root + seq![0x2Fu8] + f
+    root + seq![0x2Fu8] + norm_path(f)
 }
 
 // Per cited file in first-reference order: census vs claimed rows, then
