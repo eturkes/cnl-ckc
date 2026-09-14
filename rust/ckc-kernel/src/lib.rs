@@ -60,6 +60,7 @@ mod m6_expand;
 mod m6_flat;
 mod m6_impl;
 mod m6_model;
+mod m6_normal;
 mod m6_refs;
 mod m6_symbols;
 mod m6_term;
