@@ -10,6 +10,9 @@ pub mod body;
 #[path = "k3_sound_bound.rs"]
 pub mod bounded;
 
+#[path = "k3_sound_control.rs"]
+pub mod control;
+
 #[path = "k3_sound_fresh.rs"]
 pub mod freshness;
 
@@ -24,6 +27,9 @@ pub mod goals;
 
 #[path = "k3_sound_log.rs"]
 pub mod log;
+
+#[path = "k3_sound_machine.rs"]
+pub mod machine;
 
 #[path = "k3_sound_record.rs"]
 pub mod record;
@@ -71,6 +77,17 @@ pub proof fn apply_extension(a: Term, b: Term, s: Seq<(nat, Term)>, r: Seq<(nat,
     apply_append(b, s, r);
 }
 
+pub proof fn naf_log_sound(db: Seq<DocClause>, goal: Term, log: Seq<(Seq<nat>, TEv)>)
+    requires
+        bodies_wf(db),
+        ckc_spec::answers::goal_walk(goal) is None,
+        trun(db, roots_cfg(conj_leaves(goal)), trace_inf()).0 == TOut::Proved(log),
+    ensures
+        graph::naf_log_ok(db, log),
+{
+    assert(false);
+}
+
 pub proof fn k3_sound_proof(db: Seq<DocClause>, goal: Term)
     requires
         bodies_wf(db),
@@ -79,7 +96,18 @@ pub proof fn k3_sound_proof(db: Seq<DocClause>, goal: Term)
     ensures
         forest_valid(db, goal, derived_forest(db, goal).unwrap()),
 {
-    assert(false);
+    let roots = conj_leaves(goal);
+    machine::roots_weak(db, goal);
+    match trun(db, roots_cfg(roots), trace_inf()).0 {
+        TOut::Proved(log) => {
+            let cert = choose|cert: state::Cert| #[trigger]
+                machine::complete_cert(db, roots, log, cert);
+            naf_log_sound(db, goal, log);
+            graph::forest_of_sound(db, goal, log, cert.offsets, cert.theta);
+            assert(derived_forest(db, goal) == Option::Some(forest_of(db, roots, log)));
+        },
+        _ => {},
+    }
 }
 
 } // verus!
