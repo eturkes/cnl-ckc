@@ -22,8 +22,7 @@ pub fn certify_doc_impl(
             pl@,
         ),
 {
-    assert(false);  // SEED: unimplemented
-    EOut { rc: 1, out: Vec::new(), err: Vec::new() }
+    crate::m6_doc::certify_doc_impl(ace, asha, usha, docid, dump, pl)
 }
 
 pub fn certify_query_impl(

@@ -57,6 +57,7 @@ mod k2_walk;
 mod m6_ante;
 mod m6_bind;
 mod m6_custody;
+mod m6_doc;
 mod m6_drs;
 mod m6_dump;
 mod m6_expand;
