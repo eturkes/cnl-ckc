@@ -32,3 +32,5 @@ Exit law = violation → escaped detail + stdout LF, rc1; fail → escaped detai
 Trace seam = explicit `goal: queries-fixtures: trace seam pending` stderr rc2 until the K3 binding lands; no silent green. Kernel sections use bindings only.
 
 Gates = cargo build --release --locked --offline; cargo clippy --workspace --locked --offline --all-targets -q -- -D warnings; verusfmt --edition 2024 --check ckc/src/*.rs ckc/src/check/*.rs ckc/tests/*.rs. Primary parity harness owns full runtime check.
+
+Checkpoint eee1df1: build/fmt passed; its commit body prematurely claimed probes because shell continued after the scratch driver failed to compile (sha2 LowerHex). Corrected driver + rerun on eee1df1: fork/guidelines/red/prolog baseline exact, unknown-license/missing-README/orphan-ulex first violations exact. Probe result = 7/7.
