@@ -1308,20 +1308,25 @@ pub open spec fn parse_decision(
     }
 }
 
+// The well-formed row prefix + the first grammar violation (R68): legacy
+// checks each row's recorded commit (a git read, shell tier) inside the same
+// per-row loop, so the shell walks the returned prefix in order — commit
+// absent / historical digest mismatch on row j fires before a grammar
+// violation on a later row.
 pub open spec fn parse_decisions(
     lines: Seq<Seq<u8>>,
     i: nat,
     known: Seq<Seq<u8>>,
     prev: Option<(Seq<u8>, Seq<u8>)>,
     acc: Seq<Decision>,
-) -> Result<Seq<Decision>, Seq<u8>>
+) -> (Seq<Decision>, Option<Seq<u8>>)
     decreases lines.len() - i,
 {
     if i >= lines.len() {
-        Result::Ok(acc)
+        (acc, Option::None)
     } else {
         match parse_decision(lines[i as int], i + 2, known, prev) {
-            Result::Err(e) => Result::Err(e),
+            Result::Err(e) => (acc, Option::Some(e)),
             Result::Ok(d) => parse_decisions(
                 lines,
                 i + 1,
@@ -1333,27 +1338,32 @@ pub open spec fn parse_decisions(
     }
 }
 
-// Ledger bytes → decisions; absent ledger = no decisions.
-pub open spec fn ledger(src: Src, known: Seq<Seq<u8>>) -> Result<Seq<Decision>, Verdict> {
+// Ledger bytes → (decision prefix, first violation); absent ledger = no
+// decisions. Prefix row j (0-based) = ledger row j + 2.
+pub open spec fn ledger(src: Src, known: Seq<Seq<u8>>) -> (Seq<Decision>, Option<Verdict>) {
     match src {
-        Src::Missing => Result::Ok(Seq::empty()),
-        Src::Bad(_) => Result::Err(fail("adjudication"@, ascii("ledger encoding"@))),
+        Src::Missing => (Seq::empty(), Option::None),
+        Src::Bad(_) => (
+            Seq::empty(),
+            Option::Some(fail("adjudication"@, ascii("ledger encoding"@))),
+        ),
         Src::Bytes(b) => if has_byte(b, 0x0D) {
-            Result::Err(fail("adjudication"@, ascii("ledger carriage-return"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger carriage-return"@))))
         } else if !(b.len() > 0 && b.last() == 0x0A) {
-            Result::Err(fail("adjudication"@, ascii("ledger final-newline"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger final-newline"@))))
         } else if !starts(b, ledger_header()) {
-            Result::Err(fail("adjudication"@, ascii("ledger header"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger header"@))))
         } else {
-            match parse_decisions(
+            let (ds, v) = parse_decisions(
                 body_lines(b.skip(ledger_header().len() as int)),
                 0,
                 known,
                 Option::None,
                 Seq::empty(),
-            ) {
-                Result::Err(e) => Result::Err(fail("adjudication"@, e)),
-                Result::Ok(ds) => Result::Ok(ds),
+            );
+            match v {
+                Option::Some(e) => (ds, Option::Some(fail("adjudication"@, e))),
+                Option::None => (ds, Option::None),
             }
         },
     }
