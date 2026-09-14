@@ -86,7 +86,11 @@ pub proof fn state_tail(input: UState, limit: nat)
     assert forall|i: int| 0 <= i < input.pairs.drop_first().len() implies {
         &&& nvars(#[trigger] input.pairs.drop_first()[i].0) <= limit
         &&& nvars(input.pairs.drop_first()[i].1) <= limit
-    } by { assert(input.pairs.drop_first()[i] == input.pairs[i + 1]); }
+    } by {
+        assert(input.pairs.drop_first()[i] == input.pairs[i + 1]);
+        assert(nvars(input.pairs[i + 1].0) <= limit);
+        assert(nvars(input.pairs[i + 1].1) <= limit);
+    }
 }
 
 pub proof fn state_bind(input: UState, key: nat, value: Term, limit: nat)
@@ -189,6 +193,10 @@ proof fn shift_all_above(terms: Seq<Term>, floor: nat)
 {
     if terms.len() > 0 {
         shift_above(terms[0], floor); shift_all_above(terms.drop_first(), floor);
+        reveal(shift_all);
+        assert(shift_all(terms, floor).len() > 0);
+        assert(shift_all(terms, floor)[0] == shift(terms[0], floor));
+        assert_seqs_equal!(shift_all(terms, floor).drop_first() == shift_all(terms.drop_first(), floor));
     }
     reveal(shift_all); reveal(above_all);
 }
