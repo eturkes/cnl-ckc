@@ -93,6 +93,7 @@ pub proof fn map_prefix(before: Seq<ENode>, after: Seq<ENode>, bs: Seq<Binding>)
         map_valid(after, bs),
 {
     assert forall|i: int| 0 <= i < bs.len() implies #[trigger] binding_valid(after, &bs[i]) by {
+        assert(binding_valid(before, &bs[i]));
         prefix(before, after, &bs[i].key);
         prefix(before, after, &bs[i].value);
     }
@@ -114,10 +115,13 @@ pub fn copy_map(arena: &ETermArena, bs: &Vec<Binding>) -> (out: Vec<Binding>)
             map_valid(arena.nodes@, bs@),
             i <= bs.len(),
             map_valid(arena.nodes@, out@),
+            out.len() == i,
             map_model(out@) == map_model(bs@).take(i as int),
         decreases bs.len() - i,
     {
+        proof { assert(binding_valid(arena.nodes@, &bs@[i as int])); }
         let next = Binding { key: bs[i].key.cp(), value: bs[i].value.cp() };
+        proof { assert(next@ == bs@[i as int]@); }
         let ghost before = out@;
         out.push(next);
         proof {
@@ -129,7 +133,18 @@ pub fn copy_map(arena: &ETermArena, bs: &Vec<Binding>) -> (out: Vec<Binding>)
                     assert(out@[j] == before[j]);
                 }
             }
-            assert_seqs_equal!(map_model(out@) == map_model(bs@).take(i as int+1));
+            assert_seqs_equal!(map_model(out@) == map_model(bs@).take(i as int+1), j => {
+                if j < before.len() {
+                    assert(out@[j] == before[j]);
+                    assert(map_model(before)[j] == map_model(bs@)[j]);
+                } else {
+                    assert(j == i);
+                    assert(out@[j] == next);
+                    assert(map_model(out@)[j] == next@);
+                    assert(next@ == bs@[i as int]@);
+                    assert(map_model(bs@)[j] == bs@[i as int]@);
+                }
+            });
         }
         i += 1;
     }
@@ -160,7 +175,7 @@ pub open spec fn item_models(items: Seq<I>) -> Seq<spec::Item> {
 }
 
 pub open spec fn item_valid(nodes: Seq<ENode>, it: &I) -> bool
-    decreases it@, 0int,
+    decreases it, 0int,
 {
     match &it.kind {
         Kind::Anch(c, t) => it@ == spec::Item::Anch(c@, t@) && valid(nodes, c) && valid(nodes, t),
@@ -172,7 +187,7 @@ pub open spec fn item_valid(nodes: Seq<ENode>, it: &I) -> bool
 }
 
 pub open spec fn items_valid(nodes: Seq<ENode>, items: Seq<I>) -> bool
-    decreases item_models(items), 1int,
+    decreases items, 1int,
 {
     if items.len() == 0 {
         true
@@ -220,7 +235,7 @@ pub proof fn item_prefix(before: Seq<ENode>, after: Seq<ENode>, it: &I)
         item_valid(before, it),
     ensures
         item_valid(after, it),
-    decreases it@, 0int,
+    decreases it, 0int,
 {
     reveal(item_valid);
     match &it.kind {
@@ -245,7 +260,7 @@ pub proof fn items_prefix(before: Seq<ENode>, after: Seq<ENode>, items: Seq<I>)
         items_valid(before, items),
     ensures
         items_valid(after, items),
-    decreases item_models(items), 1int,
+    decreases items, 1int,
 {
     reveal_with_fuel(items_valid, 1);
     if items.len() > 0 {
@@ -301,7 +316,7 @@ pub fn copy_item(arena: &ETermArena, it: &I) -> (out: I)
     ensures
         item_valid(arena.nodes@, &out),
         out@ == it@,
-    decreases it@, 0int,
+    decreases it, 0int,
 {
     proof {
         reveal(item_valid);
@@ -320,7 +335,7 @@ pub fn copy_items(arena: &ETermArena, items: &Vec<I>) -> (out: Vec<I>)
     ensures
         items_valid(arena.nodes@, out@),
         item_models(out@) == item_models(items@),
-    decreases item_models(items@), 1int,
+    decreases items@, 1int,
 {
     let mut out = Vec::new();
     let mut i = 0usize;
@@ -449,6 +464,7 @@ pub proof fn bodies_prefix(before: Seq<ENode>, after: Seq<ENode>, bs: Seq<Body>)
         bodies_valid(after, bs),
 {
     assert forall|i: int| 0 <= i < bs.len() implies #[trigger] body_valid(after, &bs[i]) by {
+        assert(body_valid(before, &bs[i]));
         match &bs[i] {
             Body::Pos(t) => prefix(before, after, t),
             Body::Naf(ts) => prefix_all(before, after, ts@),
@@ -472,13 +488,16 @@ pub fn copy_body(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<Body>)
             bodies_valid(arena.nodes@, bs@),
             i <= bs.len(),
             bodies_valid(arena.nodes@, out@),
+            out.len() == i,
             body_models(out@) == body_models(bs@).take(i as int),
         decreases bs.len() - i,
     {
+        proof { assert(body_valid(arena.nodes@, &bs@[i as int])); }
         let next = match &bs[i] {
             Body::Pos(t) => Body::Pos(t.cp()),
             Body::Naf(ts) => Body::Naf(copy(ts)),
         };
+        proof { assert(next@ == bs@[i as int]@); assert(body_valid(arena.nodes@, &next)); }
         let ghost before = out@;
         out.push(next);
         proof {
@@ -490,7 +509,18 @@ pub fn copy_body(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<Body>)
                     assert(out@[j] == before[j]);
                 }
             }
-            assert_seqs_equal!(body_models(out@) == body_models(bs@).take(i as int+1));
+            assert_seqs_equal!(body_models(out@) == body_models(bs@).take(i as int+1), j => {
+                if j < before.len() {
+                    assert(out@[j] == before[j]);
+                    assert(body_models(before)[j] == body_models(bs@)[j]);
+                } else {
+                    assert(j == i);
+                    assert(out@[j] == next);
+                    assert(body_models(out@)[j] == next@);
+                    assert(next@ == bs@[i as int]@);
+                    assert(body_models(bs@)[j] == bs@[i as int]@);
+                }
+            });
         }
         i += 1;
     }
@@ -530,6 +560,7 @@ pub proof fn clauses_prefix(before: Seq<ENode>, after: Seq<ENode>, cs: Seq<Claus
         clauses_valid(after, cs),
 {
     assert forall|i: int| 0 <= i < cs.len() implies #[trigger] clause_valid(after, &cs[i]) by {
+        assert(clause_valid(before, &cs[i]));
         prefix(before, after, &cs[i].head);
         bodies_prefix(before, after, cs[i].body@);
     }
@@ -573,6 +604,7 @@ pub proof fn groups_prefix(before: Seq<ENode>, after: Seq<ENode>, gs: Seq<Group>
         groups_valid(after, gs),
 {
     assert forall|i: int| 0 <= i < gs.len() implies #[trigger] group_valid(after, &gs[i]) by {
+        assert(group_valid(before, &gs[i]));
         map_prefix(before, after, gs[i].pairs@);
         clauses_prefix(before, after, gs[i].clauses@);
     }
@@ -611,6 +643,7 @@ pub proof fn projections_prefix(before: Seq<ENode>, after: Seq<ENode>, ps: Seq<P
         projections_valid(after, ps),
 {
     assert forall|i: int| 0 <= i < ps.len() implies #[trigger] projected_valid(after, &ps[i]) by {
+        assert(projected_valid(before, &ps[i]));
         groups_prefix(before, after, ps[i].groups@);
     }
 }

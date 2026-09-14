@@ -292,13 +292,13 @@ pub fn inner_sentence(arena: &ETermArena, t: &T) -> (out: Option<T>)
             int_refs(ss@),
             ints(ss@) == spec::anchors(t@),
             1 <= i <= ss.len(),
-            forall|j: int| 0 <= j < i ==> ints(ss@)[j] == ints(ss@)[0],
+            forall|j: int| 0 <= j < i ==> #[trigger] ints(ss@)[j] == ints(ss@)[0],
         decreases ss.len() - i,
     {
-        if !equal(arena, &ss[0], &ss[i]) {
+        if !crate::m6_term::equal(arena, &ss[0], &ss[i]) {
             proof {
                 assert(ints(ss@)[i as int] != ints(ss@)[0]);
-                assert(!(forall|j: int| 0 <= j < ints(ss@).len() ==> ints(ss@)[j] == ints(ss@)[0]));
+                assert(!(forall|j: int| 0 <= j < ints(ss@).len() ==> #[trigger] ints(ss@)[j] == ints(ss@)[0]));
             }
             return None;
         }
@@ -584,7 +584,7 @@ fn range_ints(arena: &ETermArena, ts: &Vec<ETag>, low: &T, high: &T, count: usiz
             low@ == Term::Int(1),
             high@ == Term::Int(count as int),
             i <= ts.len(),
-            forall|j: int| 0 <= j < i ==> 1 <= tag_models(ts@)[j].0 <= count,
+            forall|j: int| 0 <= j < i ==> 1 <= (#[trigger] tag_models(ts@)[j]).0 <= count,
         decreases ts.len() - i,
     {
         if !int_le(arena, low, &ts[i].sentence) || !int_le(arena, &ts[i].sentence, high) {
@@ -645,7 +645,7 @@ pub fn of_sentence(arena: &ETermArena, ts: &Vec<ETag>, s: &T) -> (out: Vec<ERoot
             ),
         decreases ts.len() - i,
     {
-        let matched = equal(arena, &ts[i].sentence, s);
+        let matched = crate::m6_term::equal(arena, &ts[i].sentence, s);
         proof {
             assert(matched == pred(tagged[i as int]));
             assert(tagged.take(i as int + 1) == tagged.take(i as int).push(tagged[i as int]));
