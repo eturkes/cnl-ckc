@@ -119,6 +119,12 @@ pub fn carrier(name: &Vec<u8>, arity: usize) -> (out: bool)
     ensures
         out == spec::is_carrier(name@, arity as nat),
 {
+    proof {
+        reveal_strlit("[|]");
+        reveal(ckc_spec::v1text::ascii);
+        assert_seqs_equal!(ckc_spec::v1text::ascii("[|]"@) == ckc_spec::v1text::cons_name());
+        reveal(spec::is_carrier);
+    }
     (has_name(name, &Sym::Drs) && arity == 2) || (has_name(name, &Sym::Question) && arity == 1) || (
     op(name) && arity == 1) || (has_name(name, &Sym::Naf) && arity == 1) || (has_name(
         name,
@@ -207,21 +213,33 @@ pub fn anchors(arena: &ETermArena, t: &T) -> (out: Vec<T>)
         let current = todo.remove(0);
         proof {
             assert(todo@ == before.drop_first());
+            assert(current == before[0]);
+            assert(models(before)[0] == current@);
             assert(models(before).drop_first() == models(todo@));
             reveal_with_fuel(spec::anchors_all, 1);
             reveal_with_fuel(crate::k2_engine::terms_size, 1);
+            assert(spec::anchors_all(models(before)) == spec::anchors(current@) + spec::anchors_all(
+                models(todo@),
+            ));
+            assert(ints(out@) + spec::anchors(current@) + spec::anchors_all(models(todo@))
+                == spec::anchors(t@));
         }
         match anchor(arena, &current) {
             Some(s) => {
                 let a = args(arena, &current);
                 let mut children = Vec::new();
                 children.push(a[0].cp());
+                proof {
+                    assert(models(children@) == seq![a[0]@]);
+                }
                 let ghost previous = out@;
                 proof {
                     extend(arena.nodes@, out@, s);
                 }
                 out.push(s);
                 proof {
+                    assert(spec::anchor_s(current@) == Some(int_value(s@)));
+                    assert(a[0]@ == ckc_spec::replay::arg(current@, 0));
                     assert_seqs_equal!(ints(out@) == ints(previous).push(int_value(s@)));
                     assert forall|j: int| 0 <= j < out.len() implies (
                     #[trigger] out@[j])@ is Int by {
@@ -235,12 +253,18 @@ pub fn anchors(arena: &ETermArena, t: &T) -> (out: Vec<T>)
                     reveal_with_fuel(spec::anchors, 1);
                     reveal_with_fuel(spec::anchors_all, 2);
                     reveal_with_fuel(crate::k2_engine::terms_size, 2);
+                    assert(spec::anchors(current@) == seq![int_value(s@)] + spec::anchors(a[0]@));
+                    assert(ints(out@) + spec::anchors_all(models(children@) + models(todo@))
+                        == spec::anchors(t@));
                 }
                 todo = concat(&children, &todo);
             },
             None => {
                 match parts(arena, &current) {
                     Some((name, children)) => {
+                        proof {
+                            assert(current@ == Term::Comp(name@, models(children@)));
+                        }
                         if carrier(&name, children.len()) {
                             proof {
                                 anchors_concat(models(children@), models(todo@));
@@ -298,7 +322,8 @@ pub fn inner_sentence(arena: &ETermArena, t: &T) -> (out: Option<T>)
         if !crate::m6_term::equal(arena, &ss[0], &ss[i]) {
             proof {
                 assert(ints(ss@)[i as int] != ints(ss@)[0]);
-                assert(!(forall|j: int| 0 <= j < ints(ss@).len() ==> #[trigger] ints(ss@)[j] == ints(ss@)[0]));
+                assert(!(forall|j: int|
+                    0 <= j < ints(ss@).len() ==> #[trigger] ints(ss@)[j] == ints(ss@)[0]));
             }
             return None;
         }
@@ -447,6 +472,20 @@ pub fn tags(arena: &ETermArena, ts: &Vec<T>) -> (out: Option<Vec<ETag>>)
 {
     let mut out = Vec::new();
     let mut i = 0usize;
+    proof {
+        assert(tag_models(out@) == Seq::empty());
+        assert(models(ts@).skip(0) == models(ts@));
+        match spec::tags(models(ts@)) {
+            Some(rest) => {
+                assert(Seq::<(int, spec::Root)>::empty() + rest == rest);
+            },
+            None => {},
+        }
+        assert(spec::tags(models(ts@)) == tag_prefix(
+            tag_models(out@),
+            spec::tags(models(ts@).skip(0)),
+        ));
+    }
     while i < ts.len()
         invariant
             arena_ok(arena),
@@ -524,6 +563,7 @@ pub proof fn tags_prefix(before: Seq<ENode>, after: Seq<ENode>, ts: Seq<ETag>)
         tagged_valid(after, ts),
 {
     assert forall|i: int| 0 <= i < ts.len() implies #[trigger] tag_valid(after, &ts[i]) by {
+        assert(tag_valid(before, &ts[i]));
         prefix(before, after, &ts[i].sentence);
         root_prefix(before, after, &ts[i].root);
     }
@@ -587,7 +627,14 @@ fn range_ints(arena: &ETermArena, ts: &Vec<ETag>, low: &T, high: &T, count: usiz
             forall|j: int| 0 <= j < i ==> 1 <= (#[trigger] tag_models(ts@)[j]).0 <= count,
         decreases ts.len() - i,
     {
+        proof {
+            assert(tag_valid(arena.nodes@, &ts@[i as int]));
+        }
         if !int_le(arena, low, &ts[i].sentence) || !int_le(arena, &ts[i].sentence, high) {
+            proof {
+                assert(!(1 <= tag_models(ts@)[i as int].0 <= count));
+                assert(!spec::in_range(tag_models(ts@), count as nat));
+            }
             return false;
         }
         i += 1;
@@ -616,6 +663,25 @@ pub fn in_range(arena: &mut ETermArena, ts: &Vec<ETag>, count: usize) -> (out: b
     range_ints(arena, ts, &low, &high, count)
 }
 
+pub proof fn of_sentence_step(ts: Seq<(int, spec::Root)>, p: (int, spec::Root), s: int)
+    ensures
+        spec::of_sentence(ts.push(p), s) == if p.0 == s {
+            spec::of_sentence(ts, s).push(p.1)
+        } else {
+            spec::of_sentence(ts, s)
+        },
+{
+    reveal(Seq::filter);
+    reveal(spec::of_sentence);
+    assert(ts.push(p).drop_last() == ts);
+    assert(ts.push(p).last() == p);
+    if p.0 == s {
+        assert_seqs_equal!(spec::of_sentence(ts.push(p), s) == spec::of_sentence(ts, s).push(p.1));
+    } else {
+        assert_seqs_equal!(spec::of_sentence(ts.push(p), s) == spec::of_sentence(ts, s));
+    }
+}
+
 pub fn of_sentence(arena: &ETermArena, ts: &Vec<ETag>, s: &T) -> (out: Vec<ERoot>)
     requires
         arena_ok(arena),
@@ -629,7 +695,6 @@ pub fn of_sentence(arena: &ETermArena, ts: &Vec<ETag>, s: &T) -> (out: Vec<ERoot
     let mut out = Vec::new();
     let mut i = 0usize;
     let ghost tagged = tag_models(ts@);
-    let ghost pred = |p: (int, spec::Root)| p.0 == int_value(s@);
     while i < ts.len()
         invariant
             arena_ok(arena),
@@ -637,19 +702,20 @@ pub fn of_sentence(arena: &ETermArena, ts: &Vec<ETag>, s: &T) -> (out: Vec<ERoot
             valid(arena.nodes@, s),
             s@ is Int,
             tagged == tag_models(ts@),
-            pred == (|p: (int, spec::Root)| p.0 == int_value(s@)),
             i <= ts.len(),
             roots_valid(arena.nodes@, out@),
-            root_models(out@) == tagged.take(i as int).filter(pred).map_values(
-                |p: (int, spec::Root)| p.1,
-            ),
+            root_models(out@) == spec::of_sentence(tagged.take(i as int), int_value(s@)),
         decreases ts.len() - i,
     {
+        proof {
+            assert(tag_valid(arena.nodes@, &ts@[i as int]));
+            assert(tagged[i as int] == ts@[i as int]@);
+        }
         let matched = crate::m6_term::equal(arena, &ts[i].sentence, s);
         proof {
-            assert(matched == pred(tagged[i as int]));
+            assert(matched == (tagged[i as int].0 == int_value(s@)));
             assert(tagged.take(i as int + 1) == tagged.take(i as int).push(tagged[i as int]));
-            tagged.take(i as int).lemma_filter_push(tagged[i as int], pred);
+            of_sentence_step(tagged.take(i as int), tagged[i as int], int_value(s@));
         }
         if matched {
             let root = clone_root(arena, &ts[i].root);
@@ -665,10 +731,14 @@ pub fn of_sentence(arena: &ETermArena, ts: &Vec<ETag>, s: &T) -> (out: Vec<ERoot
                     }
                 }
                 assert_seqs_equal!(root_models(out@) == root_models(before).push(root@));
-                assert_seqs_equal!(tagged.take(i as int+1).filter(pred).map_values(|p: (int, spec::Root)| p.1) == root_models(out@));
+                assert(root@ == tagged[i as int].1);
             }
         }
         i += 1;
+    }
+    proof {
+        reveal(spec::of_sentence);
+        assert(tagged.take(i as int) == tagged);
     }
     out
 }
@@ -783,18 +853,36 @@ pub fn collides(arena: &ETermArena, t: &T) -> (out: bool)
         let ghost before = todo@;
         let current = todo.remove(0);
         proof {
+            assert(current == before[0]);
+            assert(models(before)[0] == current@);
             assert(models(before).drop_first() == models(todo@));
             reveal_with_fuel(spec::collides_all, 1);
             reveal_with_fuel(spec::collides, 1);
             reveal_with_fuel(crate::k2_engine::terms_size, 1);
+            assert(spec::collides_all(models(before)) == (spec::collides(current@)
+                || spec::collides_all(models(todo@))));
+            assert(crate::k2_engine::terms_size(models(before)) == crate::k2_engine::term_size(
+                current@,
+            ) + crate::k2_engine::terms_size(models(todo@)));
         }
         if let Some((name, children)) = parts(arena, &current) {
+            proof {
+                assert(current@ == Term::Comp(name@, models(children@)));
+            }
             if reserved(&name) {
+                proof {
+                    assert(spec::collides(current@));
+                    assert(spec::collides(t@));
+                }
                 return true;
             }
             if let Some(lemma) = lemma_ref(arena, &current) {
                 if let Some(name) = atom_name(arena, &lemma) {
                     if reserved(&name) {
+                        proof {
+                            assert(spec::collides(current@));
+                            assert(spec::collides(t@));
+                        }
                         return true;
                     }
                 }
@@ -803,6 +891,9 @@ pub fn collides(arena: &ETermArena, t: &T) -> (out: bool)
                 collides_concat(models(children@), models(todo@));
                 sizes_concat(models(children@), models(todo@));
                 reveal(crate::k2_engine::term_size);
+                assert(crate::k2_engine::term_size(current@) == 1 + crate::k2_engine::terms_size(
+                    models(children@),
+                ));
             }
             todo = concat(&children, &todo);
         } else {

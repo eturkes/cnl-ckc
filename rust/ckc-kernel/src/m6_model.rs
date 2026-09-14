@@ -119,9 +119,13 @@ pub fn copy_map(arena: &ETermArena, bs: &Vec<Binding>) -> (out: Vec<Binding>)
             map_model(out@) == map_model(bs@).take(i as int),
         decreases bs.len() - i,
     {
-        proof { assert(binding_valid(arena.nodes@, &bs@[i as int])); }
+        proof {
+            assert(binding_valid(arena.nodes@, &bs@[i as int]));
+        }
         let next = Binding { key: bs[i].key.cp(), value: bs[i].value.cp() };
-        proof { assert(next@ == bs@[i as int]@); }
+        proof {
+            assert(next@ == bs@[i as int]@);
+        }
         let ghost before = out@;
         out.push(next);
         proof {
@@ -492,12 +496,17 @@ pub fn copy_body(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<Body>)
             body_models(out@) == body_models(bs@).take(i as int),
         decreases bs.len() - i,
     {
-        proof { assert(body_valid(arena.nodes@, &bs@[i as int])); }
+        proof {
+            assert(body_valid(arena.nodes@, &bs@[i as int]));
+        }
         let next = match &bs[i] {
             Body::Pos(t) => Body::Pos(t.cp()),
             Body::Naf(ts) => Body::Naf(copy(ts)),
         };
-        proof { assert(next@ == bs@[i as int]@); assert(body_valid(arena.nodes@, &next)); }
+        proof {
+            assert(next@ == bs@[i as int]@);
+            assert(body_valid(arena.nodes@, &next));
+        }
         let ghost before = out@;
         out.push(next);
         proof {
