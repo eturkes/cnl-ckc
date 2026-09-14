@@ -10,6 +10,9 @@ pub mod bounded;
 #[path = "k3_sound_fresh.rs"]
 pub mod freshness;
 
+#[path = "k3_sound_frontier.rs"]
+pub mod frontier;
+
 #[path = "k3_sound_graph.rs"]
 pub mod graph;
 
@@ -21,6 +24,9 @@ pub mod log;
 
 #[path = "k3_sound_shape.rs"]
 pub mod shapes;
+
+#[path = "k3_sound_state.rs"]
+pub mod state;
 
 #[path = "k3_sound_unify.rs"]
 pub mod unification;
