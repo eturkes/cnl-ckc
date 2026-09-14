@@ -109,6 +109,10 @@ pub fn v1_trace_check_impl(
             ckc_spec::trace::digests_view(digests@),
         ),
 {
+    hide(ckc_spec::trace::front);
+    hide(ckc_spec::trace::trace_custody);
+    hide(ckc_spec::trace::trace_result);
+    hide(ckc_spec::trace::result_join);
     let mut arena = crate::k2_reject::empty_arena();
     let front = match crate::k3_front::front_exec(&mut arena, mpath, m, pls, pys, query, qsha, answers) {
         Err(o) => return o,

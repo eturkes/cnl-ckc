@@ -72,7 +72,10 @@ fn flatten(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
             reveal(leaves_all); reveal(roots_work);
         }
         let comma: &[u8] = b",";
-        proof { reveal_byteslit(b","); reveal_strlit(","); reveal(ckc_spec::v1text::ascii); }
+        proof {
+            reveal_byteslit(b","); reveal_strlit(","); reveal(ckc_spec::v1text::ascii);
+            assert(comma@ == ckc_spec::engine::comma_name());
+        }
         if crate::k3_front::is_comp(arena, current, comma, 2) {
             let mut children = crate::k2_engine::args_roots(arena, current);
             let ghost child_terms = root_terms(arena.nodes@, children@);
@@ -169,6 +172,8 @@ fn unproved_root(arena: &mut ETermArena, finite: bool) -> (out: usize)
         reveal_byteslit(b"unproved"); reveal_strlit("unproved");
         reveal_byteslit(b"finite_failure"); reveal_strlit("finite_failure");
         reveal_byteslit(b"limit"); reveal_strlit("limit"); reveal(ckc_spec::v1text::ascii);
+        assert(name@ == ckc_spec::v1text::ascii("unproved"@));
+        assert(why@ == ckc_spec::v1text::ascii(if finite { "finite_failure"@ } else { "limit"@ }));
     }
     let reason = crate::k2_output::atom_root(arena, why);
     crate::k2_output::comp1(arena, name, reason)
@@ -185,7 +190,11 @@ fn prove(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal:
     let ghost model = arena@[goal as int];
     let goals = flatten(&arena, goal);
     let initial = crate::k3_machine::roots(&mut arena, &goals, Ghost(db.len() as nat));
-    proof { crate::k2_engine::db_models_prefix(origin, arena.nodes@, db@); }
+    proof {
+        crate::k2_engine::db_models_prefix(origin, arena.nodes@, db@);
+        crate::k2_engine::roots_models_prefix(origin, arena.nodes@, goals@);
+        assert(crate::k3_state::cfg_view(arena.nodes@, &initial) == roots_cfg(conj_leaves(model)));
+    }
     let ghost before_run = arena.nodes@;
     let (result, left) = crate::k3_machine::run(&mut arena, db, initial, 100000);
     let work = 100000usize - left;
@@ -193,6 +202,7 @@ fn prove(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal:
         crate::k2_engine::db_models_prefix(before_run, arena.nodes@, db@);
         crate::k2_engine::roots_models_prefix(before_run, arena.nodes@, goals@);
         reveal(ckc_spec::engine::trace_inf);
+        assert((crate::k3_state::out_view(arena.nodes@, &result), left as nat) == trun(program, roots_cfg(conj_leaves(model)), ckc_spec::engine::trace_inf()));
     }
     match result {
         crate::k3_state::EOut::Failed(finite) => {
@@ -210,7 +220,10 @@ fn prove(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal:
                 crate::k3_materialize::EMat::Ok { roots, base: next, nodes } => {
                     let list = crate::k2_walk::list_root(&mut arena, &roots);
                     let name: &[u8] = b"proved";
-                    proof { reveal_byteslit(b"proved"); reveal_strlit("proved"); reveal(ckc_spec::v1text::ascii); }
+                    proof {
+                        reveal_byteslit(b"proved"); reveal_strlit("proved"); reveal(ckc_spec::v1text::ascii);
+                        assert(name@ == ckc_spec::v1text::ascii("proved"@));
+                    }
                     let payload = crate::k2_output::comp1(&mut arena, name, list);
                     (arena, ERow::Row { payload, work, nodes, base: next })
                 },
@@ -241,10 +254,14 @@ fn rows(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: 
     let mut left = 1000000usize;
     let mut base = 0usize;
     let mut i = 0usize;
+    proof {
+        reveal(trace_run_inf);
+        assert_seqs_equal!(root_terms(arena.nodes@, acc@) == Seq::empty());
+    }
     while i < sols.len()
         invariant
             arena_ok(&arena), origin.is_prefix_of(arena.nodes@), db_valid(arena.nodes@, db@), db_view(arena.nodes@, db@) == program,
-            program == db_view(origin, db@), root_ok(&arena, goal), model == arena@[goal as int], model == origin[goal as int].term@,
+            program == db_view(origin, db@), root_ok(&arena, goal), goal < origin.len(), model == arena@[goal as int], model == origin[goal as int].term@,
             roots_valid(arena.nodes@, vars@), v == root_terms(arena.nodes@, vars@), v == root_terms(origin, vars@),
             roots_valid(arena.nodes@, sols@), ss == root_terms(arena.nodes@, sols@), ss == root_terms(origin, sols@),
             roots_valid(arena.nodes@, acc@), i <= sols.len(), left <= 1000000, base <= arena.nodes.len(),
@@ -255,7 +272,10 @@ fn rows(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: 
         let ghost before = arena.nodes@;
         let ghost old_acc = root_terms(before, acc@);
         let values = crate::k2_walk::arg_root(&mut arena, sols[i], 0);
-        proof { reveal(trace_rows); }
+        proof {
+            assert(origin.is_prefix_of(arena.nodes@));
+            reveal(trace_rows);
+        }
         let value_roots = match crate::k2_walk::list_items_exec(&arena, values) {
             None => return (arena, ERows::Ok(acc)),
             Some(rs) => rs,
@@ -279,7 +299,10 @@ fn rows(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>, goal: 
                 if work > left || nodes > left - work { return (arena, ERows::Trip); }
                 left -= work; left -= nodes; base = next;
                 let name: &[u8] = b"sol";
-                proof { reveal_byteslit(b"sol"); reveal_strlit("sol"); reveal(ckc_spec::v1text::ascii); }
+                proof {
+                    reveal_byteslit(b"sol"); reveal_strlit("sol"); reveal(ckc_spec::v1text::ascii);
+                    assert(name@ == ckc_spec::v1text::ascii("sol"@));
+                }
                 let ghost prior = arena.nodes@;
                 let entry = crate::k2_output::comp2(&mut arena, name, values, payload);
                 let ghost previous = acc@;
@@ -326,6 +349,9 @@ fn result_inner(mut arena: ETermArena, db: &Vec<EClause>, digests: &Vec<Vec<u8>>
     proof {
         reveal_byteslit(b"yes"); reveal_strlit("yes");
         reveal_byteslit(b"solutions"); reveal_strlit("solutions"); reveal(ckc_spec::v1text::ascii);
+        assert(yes@ == ckc_spec::v1text::ascii("yes"@));
+        assert(solutions@ == ckc_spec::v1text::ascii("solutions"@));
+        reveal(trace_run_inf);
     }
     if query.rows.len() == 0 {
         if !crate::k3_front::is_atom(&arena, answer.result, yes) { return (arena, Ok(answer.result)); }

@@ -266,6 +266,13 @@ pub fn traces_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], asha: &[u8],
         reveal_byteslit(b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n");
         reveal_strlit(" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n");
         reveal(ascii);
+        assert(version@ == ascii("v1"@));
+        assert(query_name@ == ascii("query_sha256"@));
+        assert(answers_name@ == ascii("answers_sha256"@));
+        assert(result_name@ == ascii("result"@));
+        assert(record_name@ == ascii("$guideline_traces"@));
+        assert(prefix@ == ascii("% "@));
+        assert(suffix@ == ascii(" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@));
     }
     let v1 = crate::k2_output::atom_root(arena, version);
     let id = crate::k2_output::atom_root(arena, qid);

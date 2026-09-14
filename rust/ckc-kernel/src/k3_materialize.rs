@@ -120,7 +120,10 @@ fn naf(mut arena: ETermArena, root: usize, base: usize) -> (out: (ETermArena, EM
     let ghost numbered_model = number(arena@[root as int], base as nat);
     let (numbered, next) = crate::k3_number::number_exec(&mut arena, root, base);
     let name: &[u8] = b"naf";
-    proof { reveal_byteslit(b"naf"); reveal_strlit("naf"); reveal(ckc_spec::v1text::ascii); }
+    proof {
+        reveal_byteslit(b"naf"); reveal_strlit("naf"); reveal(ckc_spec::v1text::ascii);
+        assert(name@ == ckc_spec::v1text::ascii("naf"@));
+    }
     let root = crate::k2_output::comp1(&mut arena, name, numbered);
     let mut roots = Vec::new(); roots.push(root);
     proof {
@@ -149,6 +152,8 @@ fn clause_node(arena: &mut ETermArena, sentence: usize, hex: &[u8], children: &V
     proof {
         reveal_byteslit(b"clause_sha256"); reveal_strlit("clause_sha256");
         reveal_byteslit(b"clause"); reveal_strlit("clause"); reveal(ckc_spec::v1text::ascii);
+        assert(hash_name@ == ckc_spec::v1text::ascii("clause_sha256"@));
+        assert(clause_name@ == ckc_spec::v1text::ascii("clause"@));
     }
     let hash = crate::k2_output::comp1(arena, hash_name, digest);
     let mut fields = Vec::new(); fields.push(sentence); fields.push(hash); fields.push(children_root);

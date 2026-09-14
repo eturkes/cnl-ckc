@@ -372,6 +372,7 @@ fn simple(arena: &ETermArena, initial: ECfg, Ghost(db): Ghost<Seq<ckc_spec::v1te
                         }
                         let level = c.alts.len();
                         let rest = clone_goals(arena, &c.stack, 0, Ghost(level as nat));
+                        proof { assert_seqs_equal!(goals_view(arena.nodes@, rest@) == model.stack.drop_first()); }
                         let mut expanded = Vec::new();
                         expanded.push(EGoal::Lit { root: child_roots[0], depth: 1000, path: path.clone() });
                         expanded.push(EGoal::NafCut { level });

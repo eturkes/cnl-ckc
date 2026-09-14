@@ -8727,6 +8727,7 @@ fn parse_term_inner_owned(
                     let ghost before_atom = arena.nodes@;
                     let arena_root = push_atom(&mut arena, name);
                     proof {
+                        assert(before_atom.is_prefix_of(arena.nodes@)) by { reveal(Seq::<_>::is_prefix_of); }
                         nodes_prefix_transitive(arena_entry@, before_atom, arena.nodes@);
                         frames_roots_prefix(before_atom, &arena, frames@);
                     }
@@ -11210,7 +11211,6 @@ pub enum EV1Class {
 pub struct EParsedBundle {
     pub ordinal: Vec<u8>,
     pub count: usize,
-    pub model: Ghost<ckc_spec::v1text::Bundle>,
 }
 
 pub open spec fn bundle_metadata_ok(
@@ -11219,7 +11219,6 @@ pub open spec fn bundle_metadata_ok(
 ) -> bool {
     meta.len() == bundles.len() && forall|i: int|
         0 <= i < meta.len() ==> {
-            &&& meta[i].model@ == bundles[i]
             &&& meta[i].ordinal@ == ckc_spec::v1text::udec_bytes(bundles[i].s)
             &&& meta[i].count == bundles[i].clauses.len()
         }
@@ -11240,10 +11239,9 @@ fn bundle_metadata_push(
         bundle_metadata_ok(out@, bundles.push(bundle)),
 {
     let ghost before = meta@;
-    meta.push(EParsedBundle { ordinal, count, model: Ghost(bundle) });
+    meta.push(EParsedBundle { ordinal, count });
     proof {
         assert forall|i: int| 0 <= i < meta.len() implies {
-            &&& meta@[i].model@ == bundles.push(bundle)[i]
             &&& meta@[i].ordinal@ == ckc_spec::v1text::udec_bytes(bundles.push(bundle)[i].s)
             &&& meta@[i].count == bundles.push(bundle)[i].clauses.len()
         } by {

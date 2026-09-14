@@ -151,13 +151,14 @@ pub fn document_coords(parsed: &EParsedV1, Ghost(doc): Ghost<DocFile>) -> (out: 
         let meta = &parsed.bundle_meta[i];
         proof {
             assert(crate::v1_term_impl::bundle_metadata_ok(parsed.bundle_meta@, doc.bundles));
-            assert(meta.model@ == doc.bundles[i as int]);
+            assert(meta.ordinal@ == udec_bytes(doc.bundles[i as int].s));
+            assert(meta.count == doc.bundles[i as int].clauses.len());
         }
         let mut next = repeated_coords(
             &parsed.docid,
             &meta.ordinal,
             meta.count,
-            Ghost(meta.model@.s),
+            Ghost(doc.bundles[i as int].s),
         );
         let ghost left = out@;
         let ghost right = next@;
