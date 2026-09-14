@@ -171,4 +171,15 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin â
   query grammar emits literals only), so every shell-facing row meets it.
   Binding: `requires bodies_wf(db), roots_wf(goal), derived_forest(db, goal)
   is Some`.
+- R60 T-C622/T-C626 cost probes (R32 model) = CLI-observable BOUNDARY rows
+  (no cost-visible seam: the kernel exposes no fuel counters and a
+  counters-only binding would be trusted surface for testing alone): active
+  k3 rows, `legacy: null` (near-boundary legacy parity = non-goal), hand-
+  derived expectations recorded in each manifest (`.scratch/m5u2/diff/
+  k3state/r32-proposed-pins.tsv`): T-C622 = N top-level fact roots with row
+  search â‰¤ 100000 while row-charged materialization would exceed it
+  (`proved` under the model) + the 1000/1001 positive chain (`proved` vs
+  `unproved(limit)`); T-C626 = the NAF fresh-depth reset probe + the
+  1000/1001 chain under a NAF site; target pins derived at harvest must
+  equal the hand-derived expectation.
 
