@@ -1,0 +1,345 @@
+use crate::k2_term::{ENode, ENodeKind, ETermArena};
+#[cfg(verus_keep_ghost)]
+use crate::k2_term::{arena_ok, node_ok, root_ok};
+#[cfg(verus_keep_ghost)]
+use crate::k2_engine::{root_terms, roots_valid, roots_work};
+#[cfg(verus_keep_ghost)]
+use ckc_spec::term::{Term, firsts, var_stream, var_stream_all};
+use ckc_spec::trace::*;
+use vstd::{assert_seqs_equal, assert_sets_equal};
+use vstd::prelude::*;
+
+verus! {
+
+pub open spec fn keys_view(keys: Seq<usize>) -> Seq<nat> { keys.map_values(|k: usize| k as nat) }
+
+proof fn streams_concat(left: Seq<Term>, right: Seq<Term>)
+    ensures var_stream_all(left + right) == var_stream_all(left) + var_stream_all(right),
+    decreases left.len(),
+{
+    if left.len() > 0 {
+        streams_concat(left.drop_first(), right);
+        assert_seqs_equal!((left + right).drop_first() == left.drop_first() + right);
+    }
+    reveal_with_fuel(var_stream_all, 2);
+}
+
+proof fn firsts_set(values: Seq<nat>, seen: Set<nat>)
+    ensures
+        firsts(values, seen).to_set() == values.to_set().difference(seen),
+        firsts(values, seen).no_duplicates(),
+    decreases values.len(),
+{
+    if values.len() > 0 {
+        let head = values[0];
+        firsts_set(values.drop_first(), seen.insert(head));
+        reveal(firsts);
+        assert_sets_equal!(values.to_set() == values.drop_first().to_set().insert(head));
+        if !seen.contains(head) {
+            assert(!firsts(values.drop_first(), seen.insert(head)).contains(head));
+            assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
+        } else {
+            assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
+        }
+    } else {
+        reveal(firsts);
+        assert_sets_equal!(firsts(values, seen).to_set() == values.to_set().difference(seen));
+    }
+}
+
+fn position(keys: &Vec<usize>, key: usize) -> (out: usize)
+    ensures
+        out <= keys.len(), out as nat == pos_of(keys_view(keys@), key as nat),
+        out < keys.len() ==> keys@[out as int] == key,
+        out == keys.len() <==> !keys@.contains(key),
+{
+    let mut i = 0usize;
+    while i < keys.len()
+        invariant
+            i <= keys.len(), forall|j: int| 0 <= j < i ==> keys@[j] != key,
+            pos_of(keys_view(keys@), key as nat) == i as nat + pos_of(keys_view(keys@.skip(i as int)), key as nat),
+        decreases keys.len() - i,
+    {
+        if keys[i] == key {
+            proof { reveal(pos_of); assert(keys@.contains(key)); }
+            return i;
+        }
+        proof {
+            assert_seqs_equal!(keys_view(keys@.skip(i as int)).drop_first() == keys_view(keys@.skip(i as int + 1)));
+            reveal(pos_of);
+        }
+        i += 1;
+    }
+    proof { assert_seqs_equal!(keys_view(keys@.skip(i as int)) == Seq::empty()); reveal(pos_of); }
+    i
+}
+
+fn collect(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
+    requires root_ok(arena, root),
+    ensures keys_view(out@) == firsts(var_stream(arena@[root as int]), Set::empty()),
+{
+    let ghost model = arena@[root as int];
+    let mut tasks = Vec::new(); tasks.push(root);
+    let mut keys = Vec::new();
+    proof {
+        assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == seq![model]);
+        reveal_with_fuel(var_stream_all, 2);
+        assert_sets_equal!(keys_view(keys@).to_set() == Set::<nat>::empty());
+    }
+    while tasks.len() > 0
+        invariant
+            root_ok(arena, root), model == arena@[root as int], roots_valid(arena.nodes@, tasks@),
+            firsts(var_stream(model), Set::empty()) == keys_view(keys@)
+                + firsts(var_stream_all(root_terms(arena.nodes@, tasks@)), keys_view(keys@).to_set()),
+        decreases roots_work(arena.nodes@, tasks@),
+    {
+        let ghost old_tasks = tasks@;
+        let current = tasks.remove(0);
+        proof {
+            assert(node_ok(arena.nodes@, current as int));
+            assert_seqs_equal!(root_terms(arena.nodes@, old_tasks).drop_first() == root_terms(arena.nodes@, tasks@));
+            reveal(roots_work);
+            reveal(var_stream_all);
+        }
+        match &arena.nodes[current].kind {
+            ENodeKind::Var { key, .. } => {
+                let found = position(&keys, *key);
+                let ghost previous = keys@;
+                proof {
+                    assert(arena@[current as int] == Term::Var(*key as nat));
+                    reveal(var_stream);
+                    assert_seqs_equal!(var_stream_all(root_terms(arena.nodes@, old_tasks)) == seq![*key as nat] + var_stream_all(root_terms(arena.nodes@, tasks@)));
+                    reveal(firsts);
+                }
+                if found == keys.len() {
+                    keys.push(*key);
+                    proof {
+                        assert_seqs_equal!(keys_view(keys@) == keys_view(previous).push(*key as nat));
+                        assert_sets_equal!(keys_view(keys@).to_set() == keys_view(previous).to_set().insert(*key as nat));
+                    }
+                } else {
+                    proof { assert(keys_view(keys@).to_set().contains(*key as nat)); }
+                }
+            },
+            ENodeKind::Comp { name, child_roots, .. } => {
+                let mut children = child_roots.clone();
+                proof {
+                    crate::k2_engine::node_comp_model(arena.nodes@, current as int, name@, child_roots@);
+                    assert_seqs_equal!(root_terms(arena.nodes@, children@) == crate::k2_term::child_terms(arena.nodes@, child_roots@));
+                    streams_concat(root_terms(arena.nodes@, children@), root_terms(arena.nodes@, tasks@));
+                    crate::k2_engine::roots_work_concat(arena.nodes@, children@, tasks@);
+                    reveal(var_stream);
+                    reveal(crate::k2_engine::term_size);
+                }
+                let ghost front = children@;
+                let ghost rest = tasks@;
+                children.append(&mut tasks);
+                tasks = children;
+                proof {
+                    assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == root_terms(arena.nodes@, front) + root_terms(arena.nodes@, rest));
+                    assert(roots_valid(arena.nodes@, tasks@));
+                }
+            },
+            _ => { proof { reveal(var_stream); } },
+        }
+    }
+    proof {
+        assert_seqs_equal!(root_terms(arena.nodes@, tasks@) == Seq::empty());
+        reveal(var_stream_all); reveal(firsts);
+    }
+    keys
+}
+
+pub open spec fn partial(t: Term, keys: Seq<nat>, base: nat, count: nat) -> Term
+    decreases t,
+{
+    match t {
+        Term::Var(k) => if pos_of(keys, k) < count { dollar_var(base + pos_of(keys, k)) } else { t },
+        Term::Comp(name, args) => Term::Comp(name, partial_all(args, keys, base, count)),
+        _ => t,
+    }
+}
+
+pub open spec fn partial_all(ts: Seq<Term>, keys: Seq<nat>, base: nat, count: nat) -> Seq<Term>
+    decreases ts,
+{
+    if ts.len() == 0 { Seq::empty() } else {
+        seq![partial(ts[0], keys, base, count)] + partial_all(ts.drop_first(), keys, base, count)
+    }
+}
+
+proof fn pos_unique(keys: Seq<nat>, i: int)
+    requires keys.no_duplicates(), 0 <= i < keys.len(),
+    ensures pos_of(keys, keys[i]) == i,
+    decreases keys.len(),
+{
+    if i > 0 {
+        assert(keys[0] != keys[i]);
+        pos_unique(keys.drop_first(), i - 1);
+        assert(keys.drop_first()[i - 1] == keys[i]);
+    }
+    reveal(pos_of);
+}
+
+proof fn pos_member(keys: Seq<nat>, key: nat)
+    ensures
+        pos_of(keys, key) <= keys.len(),
+        pos_of(keys, key) < keys.len() <==> keys.contains(key),
+        pos_of(keys, key) < keys.len() ==> keys[pos_of(keys, key) as int] == key,
+    decreases keys.len(),
+{
+    if keys.len() > 0 && keys[0] != key {
+        pos_member(keys.drop_first(), key);
+        assert(keys.contains(key) == keys.drop_first().contains(key));
+    }
+    reveal(pos_of);
+}
+
+proof fn dollar_subst(n: nat, key: nat, value: Term)
+    ensures ckc_spec::engine::subst(dollar_var(n), key, value) == dollar_var(n),
+{
+    reveal(dollar_var);
+    reveal_with_fuel(ckc_spec::engine::subst, 3);
+    reveal_with_fuel(ckc_spec::engine::subst_all, 3);
+}
+
+proof fn partial_zero(t: Term, keys: Seq<nat>, base: nat)
+    ensures partial(t, keys, base, 0) == t,
+    decreases t,
+{
+    if let Term::Comp(_, args) = t { partial_all_zero(args, keys, base); }
+}
+proof fn partial_all_zero(ts: Seq<Term>, keys: Seq<nat>, base: nat)
+    ensures partial_all(ts, keys, base, 0) == ts,
+    decreases ts,
+{
+    if ts.len() > 0 {
+        partial_zero(ts[0], keys, base);
+        partial_all_zero(ts.drop_first(), keys, base);
+        assert_seqs_equal!(seq![ts[0]] + ts.drop_first() == ts);
+    }
+    reveal(partial_all);
+}
+
+proof fn partial_step(t: Term, keys: Seq<nat>, base: nat, i: nat)
+    requires keys.no_duplicates(), i < keys.len(),
+    ensures ckc_spec::engine::subst(partial(t, keys, base, i), keys[i as int], dollar_var(base + i)) == partial(t, keys, base, i + 1),
+    decreases t,
+{
+    match t {
+        Term::Var(k) => {
+            pos_unique(keys, i as int);
+            pos_member(keys, k);
+            if pos_of(keys, k) < i { dollar_subst(base + pos_of(keys, k), keys[i as int], dollar_var(base + i)); }
+            reveal(partial); reveal(ckc_spec::engine::subst);
+        },
+        Term::Comp(_, args) => {
+            partial_all_step(args, keys, base, i);
+            reveal(partial); reveal(ckc_spec::engine::subst);
+        },
+        _ => { reveal(partial); reveal(ckc_spec::engine::subst); },
+    }
+}
+proof fn partial_all_step(ts: Seq<Term>, keys: Seq<nat>, base: nat, i: nat)
+    requires keys.no_duplicates(), i < keys.len(),
+    ensures ckc_spec::engine::subst_all(partial_all(ts, keys, base, i), keys[i as int], dollar_var(base + i)) == partial_all(ts, keys, base, i + 1),
+    decreases ts,
+{
+    if ts.len() > 0 {
+        partial_step(ts[0], keys, base, i);
+        partial_all_step(ts.drop_first(), keys, base, i);
+    }
+    reveal_with_fuel(partial_all, 2); reveal_with_fuel(ckc_spec::engine::subst_all, 2);
+}
+
+proof fn partial_done(t: Term, keys: Seq<nat>, base: nat)
+    requires var_stream(t).to_set().subset_of(keys.to_set()),
+    ensures partial(t, keys, base, keys.len()) == number_with(t, keys, base),
+    decreases t,
+{
+    match t {
+        Term::Var(k) => { pos_member(keys, k); reveal(var_stream); reveal(partial); reveal(number_with); },
+        Term::Comp(_, args) => {
+            partial_all_done(args, keys, base);
+            reveal(partial); reveal(number_with);
+        },
+        _ => { reveal(partial); reveal(number_with); },
+    }
+}
+proof fn partial_all_done(ts: Seq<Term>, keys: Seq<nat>, base: nat)
+    requires var_stream_all(ts).to_set().subset_of(keys.to_set()),
+    ensures partial_all(ts, keys, base, keys.len()) == number_all(ts, keys, base),
+    decreases ts,
+{
+    if ts.len() > 0 {
+        reveal(var_stream_all);
+        assert(var_stream(ts[0]).to_set().subset_of(keys.to_set()));
+        assert(var_stream_all(ts.drop_first()).to_set().subset_of(keys.to_set()));
+        partial_done(ts[0], keys, base);
+        partial_all_done(ts.drop_first(), keys, base);
+    }
+    reveal_with_fuel(partial_all, 2); reveal_with_fuel(number_all, 2);
+}
+
+fn number_inner(mut arena: ETermArena, root: usize, base: usize) -> (out: (ETermArena, usize, usize))
+    requires root_ok(&arena, root), base <= arena.nodes.len(),
+    ensures
+        arena_ok(&out.0), arena.nodes@.is_prefix_of(out.0.nodes@), root_ok(&out.0, out.1), out.2 <= out.0.nodes.len(),
+        (out.0@[out.1 as int], out.2 as nat) == number(arena@[root as int], base as nat),
+{
+    let ghost origin = arena.nodes@;
+    let ghost model = arena@[root as int];
+    let keys = collect(&arena, root);
+    let ghost fs = keys_view(keys@);
+    proof {
+        firsts_set(var_stream(model), Set::empty());
+        assert_sets_equal!(var_stream(model).to_set().difference(Set::empty()) == var_stream(model).to_set());
+        partial_zero(model, fs, base as nat);
+    }
+    let mut current = root;
+    let mut next = base;
+    let mut i = 0usize;
+    while i < keys.len()
+        invariant
+            arena_ok(&arena), origin.is_prefix_of(arena.nodes@), root_ok(&arena, current),
+            model == origin[root as int].term@, fs == keys_view(keys@),
+            fs == firsts(var_stream(model), Set::empty()), fs.no_duplicates(),
+            fs.to_set() == var_stream(model).to_set(), i <= keys.len(),
+            next as nat == base as nat + i as nat, next <= arena.nodes.len(),
+            arena@[current as int] == partial(model, fs, base as nat, i as nat),
+        decreases keys.len() - i,
+    {
+        let ghost before = arena.nodes@;
+        let n = crate::k2_output::int_root(&mut arena, next);
+        let name: &[u8] = b"$VAR";
+        proof { reveal_byteslit(b"$VAR"); reveal_strlit("$VAR"); reveal(ckc_spec::v1text::ascii); }
+        let replacement = crate::k2_output::comp1(&mut arena, name, n);
+        proof {
+            crate::k2_term::arena_prefix_stable(before, &arena);
+            assert(arena@[replacement as int] == dollar_var(next as nat));
+            assert(next < arena.nodes.len());
+            partial_step(model, fs, base as nat, i as nat);
+        }
+        current = crate::k2_engine::subst_root(&mut arena, current, keys[i], replacement);
+        next += 1;
+        i += 1;
+    }
+    proof { partial_done(model, fs, base as nat); }
+    (arena, current, next)
+}
+
+pub fn number_exec(arena: &mut ETermArena, root: usize, base: usize) -> (out: (usize, usize))
+    requires root_ok(old(arena), root), base <= old(arena).nodes.len(),
+    ensures
+        arena_ok(final(arena)), old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        root_ok(final(arena), out.0), out.1 <= final(arena).nodes.len(),
+        (final(arena)@[out.0 as int], out.1 as nat) == number(old(arena)@[root as int], base as nat),
+{
+    let mut owned = crate::k2_reject::empty_arena();
+    core::mem::swap(arena, &mut owned);
+    let (mut owned, numbered, next) = number_inner(owned, root, base);
+    core::mem::swap(arena, &mut owned);
+    (numbered, next)
+}
+
+} // verus!

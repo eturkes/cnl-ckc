@@ -7850,7 +7850,6 @@ proof fn make_curly_guide(
     guide
 }
 
-#[verifier::rlimit(5000)]
 fn parse_term_inner(
     bytes: &[u8],
     start: usize,
@@ -7895,6 +7894,70 @@ fn parse_term_inner(
         arena_entry@.is_prefix_of(final(arena).nodes@),
         r matches Some(t) ==> spanned_root_ok(final(arena), &t),
 {
+    let mut owned_arena = crate::k2_reject::empty_arena();
+    core::mem::swap(arena, &mut owned_arena);
+    let mut owned_tracker = new_var_tracker();
+    core::mem::swap(tracker, &mut owned_tracker);
+    let (result, final_arena, final_tracker, final_at) = parse_term_inner_owned(
+        bytes, start, owned_arena, first_var, arena_entry, expected, tracking_expected,
+        initial_stream, track_vars, owned_tracker, *at,
+    );
+    *arena = final_arena;
+    *tracker = final_tracker;
+    *at = final_at;
+    result
+}
+
+#[verifier::rlimit(5000)]
+fn parse_term_inner_owned(
+    bytes: &[u8],
+    start: usize,
+    input_arena: ETermArena,
+    first_var: Option<usize>,
+    arena_entry: Ghost<Seq<ENode>>,
+    expected: Ghost<Option<GTermExpected>>,
+    tracking_expected: Ghost<GTermExpected>,
+    initial_stream: Ghost<Seq<nat>>,
+    track_vars: bool,
+    input_tracker: EVarTracker,
+    input_at: usize,
+) -> (r: (Option<ESpannedTerm>, ETermArena, EVarTracker, usize))
+    requires
+        input_at <= bytes@.len(),
+        start < bytes@.len(),
+        arena_ok(&input_arena),
+        arena_entry@ == input_arena.nodes@,
+        expected@ matches Some(e) ==> {
+            &&& term_at(bytes@, start as int, e.end as int, e.term)
+            &&& term_keys_fit(e.term)
+        },
+        track_vars ==> expected@ == Some(tracking_expected@),
+        initial_stream@ == input_tracker.stream@,
+        input_tracker.valid ==> tracker_state_ok(input_tracker.next, input_tracker.stream@),
+        tracker_complete(input_tracker.valid, input_tracker.stream@),
+    ensures
+        input_at <= r.3 <= bytes@.len(),
+        r.0 matches Some(t) ==> spanned_term_ok(bytes@, &t),
+        r.0 matches Some(t) ==> t.start == start,
+        expected@ matches Some(e) ==> r.0 matches Some(t) && t@ == e.term && t.end == e.end,
+        r.2.valid ==> tracker_state_ok(r.2.next, r.2.stream@),
+        tracker_complete(r.2.valid, r.2.stream@),
+        track_vars ==> match r.0 {
+            Some(t) => {
+                &&& r.2.stream@ == initial_stream@ + ckc_spec::term::var_stream(t@)
+                &&& initial_stream@.len() <= start ==> r.2.stream@.len() <= t.end
+            },
+            None => true,
+        },
+        arena_ok(&r.1),
+        arena_entry@.is_prefix_of(r.1.nodes@),
+        r.0 matches Some(t) ==> spanned_root_ok(&r.1, &t),
+{
+    hide(arena_ok);
+    hide(Seq::<_>::is_prefix_of);
+    let mut arena = input_arena;
+    let mut tracker = input_tracker;
+    let mut at = input_at;
     let ghost entry_stream = initial_stream@;
     let ghost root = match expected@ {
         Some(e) => e.term,
@@ -7913,7 +7976,7 @@ fn parse_term_inner(
         None => 0,
     };
     let mut variable_failed = first_var.is_none();
-    let mut variable_at = *at;
+    let mut variable_at = at;
     proof {
         parse_state_initial(bytes@, start);
         tracked_state_initial(entry_stream);
@@ -7926,13 +7989,13 @@ fn parse_term_inner(
     }
     while pos <= bytes.len()
         invariant
-            *old(at) <= *at <= bytes@.len(),
+            input_at <= at <= bytes@.len(),
             parse_state_ok(bytes@, start, pos, frames@, &current),
             variable_at <= bytes@.len(),
-            arena_ok(arena),
+            arena_ok(&arena),
             arena_entry@.is_prefix_of(arena.nodes@),
-            frames_roots_ok(arena, frames@),
-            current matches Some(term) ==> spanned_root_ok(arena, &term),
+            frames_roots_ok(&arena, frames@),
+            current matches Some(term) ==> spanned_root_ok(&arena, &term),
             expected@ matches Some(e) ==> {
                 &&& root == e.term
                 &&& root_end == e.end as int
@@ -7985,7 +8048,7 @@ fn parse_term_inner(
                         }
                     }
                 }
-                return Some(out);
+                return (Some(out), arena, tracker, at);
             }
             let ghost old_frames = frames@;
             let ghost old_arena_nodes = arena.nodes@;
@@ -8013,8 +8076,8 @@ fn parse_term_inner(
                 reveal(frames_roots_ok_nodes);
                 assert(frame_roots_ok_nodes(old_arena_nodes, &frame));
                 reveal(frame_roots_ok);
-                assert(frame_roots_ok(arena, &frame));
-                assert(spanned_root_ok(arena, &child));
+                assert(frame_roots_ok(&arena, &frame));
+                assert(spanned_root_ok(&arena, &child));
                 assert(child.start == frame_child_start(&frame));
                 if let Some(_) = expected@ {
                     reveal(guided_state_ok);
@@ -8040,12 +8103,12 @@ fn parse_term_inner(
                     assert(guide_frame_ok(bytes@, &frame, guide));
                 }
             }
-            let step = feed_frame(bytes, frame, child, arena, Ghost(active_guide));
+            let step = feed_frame(bytes, frame, child, &mut arena, Ghost(active_guide));
             proof {
                 assert(frames@ == old_frames.drop_last());
                 reveal(frames_roots_ok);
                 assert(frames_roots_ok_nodes(old_arena_nodes, frames@));
-                frames_roots_prefix(old_arena_nodes, arena, frames@);
+                frames_roots_prefix(old_arena_nodes, &arena, frames@);
                 assert(arena_entry@.is_prefix_of(arena.nodes@));
             }
             match step {
@@ -8054,7 +8117,7 @@ fn parse_term_inner(
                     proof {
                         reveal(frame_step_ok);
                         reveal(frame_step_roots_ok);
-                        assert(frame_roots_ok(arena, &next));
+                        assert(frame_roots_ok(&arena, &next));
                         parse_state_replace_last(bytes@, start, pos, old_frames, child, next);
                         if let Some(_) = expected@ {
                             let guide = old_guides.last();
@@ -8138,12 +8201,12 @@ fn parse_term_inner(
                             reveal(spanned_term_ok);
                             assert(done.end > 0);
                         }
-                        raise_at(at, done.end - 1, bytes.len());
+                        raise_at(&mut at, done.end - 1, bytes.len());
                     }
                     proof {
                         reveal(frame_step_ok);
                         reveal(frame_step_roots_ok);
-                        assert(spanned_root_ok(arena, &done));
+                        assert(spanned_root_ok(&arena, &done));
                         parse_state_close_last(bytes@, start, pos, old_frames, child, done);
                         if let Some(_) = expected@ {
                             let guide = old_guides.last();
@@ -8210,7 +8273,7 @@ fn parse_term_inner(
                     pos = next_pos;
                 },
                 EFrameStep::Reject => {
-                    raise_at(at, pos, bytes.len());
+                    raise_at(&mut at, pos, bytes.len());
                     proof {
                         if let Some(_) = expected@ {
                             let guide = old_guides.last();
@@ -8225,7 +8288,7 @@ fn parse_term_inner(
                             assert(false);
                         }
                     }
-                    return None;
+                    return (None, arena, tracker, at);
                 },
             }
         } else {
@@ -8240,7 +8303,7 @@ fn parse_term_inner(
                 }
             }
             if pos == bytes.len() {
-                raise_at(at, pos, bytes.len());
+                raise_at(&mut at, pos, bytes.len());
                 proof {
                     assert(arena_entry@.is_prefix_of(arena.nodes@));
                     if let Some(_) = expected@ {
@@ -8248,7 +8311,7 @@ fn parse_term_inner(
                         assert(false);
                     }
                 }
-                return None;
+                return (None, arena, tracker, at);
             }
             if bytes[pos] == 0x5b && bytes.len() - pos >= 2 && bytes[pos + 1] != 0x5d {
                 let frame = open_list_frame(bytes, pos);
@@ -8386,12 +8449,12 @@ fn parse_term_inner(
                     }
                 }
                 let ghost before_atomic = arena.nodes@;
-                let mut atomic_at = *at;
+                let mut atomic_at = at;
                 let term = match parse_atomic(
                     bytes,
                     pos,
                     next_var,
-                    arena,
+                    &mut arena,
                     Ghost(expected_atomic),
                     &mut atomic_at,
                 ) {
@@ -8402,14 +8465,14 @@ fn parse_term_inner(
                         } else {
                             atomic_at
                         };
-                        raise_at(at, boundary, bytes.len());
+                        raise_at(&mut at, boundary, bytes.len());
                         proof {
                             nodes_prefix_transitive(arena_entry@, before_atomic, arena.nodes@);
                         }
-                        return None;
+                        return (None, arena, tracker, at);
                     },
                 };
-                raise_at(at, atomic_at, bytes.len());
+                raise_at(&mut at, atomic_at, bytes.len());
                 if !variable_failed {
                     if let ENodeKind::Var { key, .. } = &arena.nodes[term.root].kind {
                         if *key > next_var || *key == next_var && next_var == usize::MAX {
@@ -8438,7 +8501,7 @@ fn parse_term_inner(
                         reveal(atomic_term);
                         assert(atomic_term(term@));
                     }
-                    record_atomic_term(bytes, pos, &term, Ghost(atomic_initial), tracker, at);
+                    record_atomic_term(bytes, pos, &term, Ghost(atomic_initial), &mut tracker, &mut at);
                     proof {
                         tracked_state_atomic(
                             entry_stream,
@@ -8539,15 +8602,15 @@ fn parse_term_inner(
                     }
                 }
                 if bytes[pos] == 0x5b && bytes.len() - pos < 2 {
-                    raise_at(at, bytes.len(), bytes.len());
+                    raise_at(&mut at, bytes.len(), bytes.len());
                 }
-                let atom = match parse_atom(bytes, pos, Ghost(expected_atom), at) {
+                let atom = match parse_atom(bytes, pos, Ghost(expected_atom), &mut at) {
                     Some(a) => a,
                     None => {
                         proof {
                             assert(arena_entry@.is_prefix_of(arena.nodes@));
                         }
-                        return None;
+                        return (None, arena, tracker, at);
                     },
                 };
                 if atom.end < bytes.len() && bytes[atom.end] == 0x28 {
@@ -8655,7 +8718,7 @@ fn parse_term_inner(
                         }
                     }
                     let name = copy_bytes(&atom.name);
-                    let arena_root = push_atom(arena, name);
+                    let arena_root = push_atom(&mut arena, name);
                     let term = span_atom(bytes, pos, atom, arena_root);
                     let next_pos = term.end;
                     proof {
@@ -8719,7 +8782,7 @@ fn parse_term_inner(
             }
         }
     }
-    None
+    (None, arena, tracker, at)
 }
 
 #[verifier::rlimit(5000)]
@@ -20484,13 +20547,15 @@ fn parse_doc_inner(
                 ));
             }
         }
+        let mut next_bundle_meta = bundle_meta;
         bundle_metadata_push(
-            &mut bundle_meta,
+            &mut next_bundle_meta,
             bundle.ordinal.clone(),
             bundle.clauses.len(),
             Ghost(bundle_model),
             Ghost(old_bundles),
         );
+        bundle_meta = next_bundle_meta;
         clauses.append(&mut bundle.clauses);
         previous_ordinal = bundle.ordinal;
         bundle_count += 1;

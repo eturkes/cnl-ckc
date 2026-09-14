@@ -155,6 +155,9 @@ fn attach_paths(
     {
         proof {
             assert(crate::k2_engine::goal_valid(arena.nodes@, &prepared@[i as int]));
+            assert(models.take(count as int)[i as int] == models[i as int]);
+            assert(ckc_spec::engine::body_goals(items, off, depth as nat)[i as int]
+                == ckc_spec::engine::Goal::Lit(ckc_spec::engine::item_term(items[i as int], off), depth as nat));
             assert(models[i as int] == ckc_spec::engine::Goal::Lit(
                 ckc_spec::engine::item_term(items[i as int], off),
                 depth as nat,
@@ -255,6 +258,16 @@ pub fn prepare(
     );
     proof {
         crate::k3_state::goals_prefix(before, arena.nodes@, rest@);
+        reveal(crate::k2_engine::bound_state_view);
+        reveal(crate::k2_engine::ustate_view);
+        assert(crate::k2_engine::goals_view(arena.nodes@, state.stack@)
+            == ckc_spec::engine::body_goals(model.body, off as nat, depth as nat)
+                + crate::k2_engine::goals_view(before, engine_rest@));
+        assert(crate::k2_engine::goals_view(arena.nodes@, state.stack@).len() == state.stack.len());
+        assert(crate::k2_engine::goals_view(before, engine_rest@).len() == engine_rest.len());
+        assert(ckc_spec::engine::body_goals(model.body, off as nat, depth as nat).len() == model.body.len());
+        assert(state.stack.len() == model.body.len() + engine_rest.len());
+        assert(clause.body.len() == model.body.len());
         assert_seqs_equal!(crate::k2_engine::goals_view(arena.nodes@, state.stack@).take(clause.body.len() as int) == ckc_spec::engine::body_goals(model.body, off as nat, depth as nat));
     }
     let mut body = attach_paths(
@@ -444,12 +457,19 @@ fn with_terms(
         proof {
             assert(goal_valid(arena.nodes@, &goals@[0]));
             assert(goal_level(&goals@[0], level));
+            assert(goals_view(arena.nodes@, goals@)[0] == models[i as int]);
+            assert(goal_view(arena.nodes@, &goals@[0]) == models[i as int]);
+            assert(root_terms(arena.nodes@, terms@)[i as int] == arena.nodes@[terms@[i as int] as int].term@);
         }
         let g = goals.remove(0);
         let next = match g {
             EGoal::Lit { depth, path, .. } => EGoal::Lit { root: terms[i], depth, path },
             EGoal::NafCut { level } => EGoal::NafCut { level },
         };
+        proof {
+            assert(g == remaining[0]);
+            assert(goal_view(arena.nodes@, &next) == tgoal_with(models[i as int], values[i as int]));
+        }
         let ghost previous = out@;
         out.push(next);
         proof {
