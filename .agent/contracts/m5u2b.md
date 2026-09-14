@@ -183,4 +183,9 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
   `unproved(limit)`); T-C626 = the NAF fresh-depth reset probe + the
   1000/1001 chain under a NAF site; target pins derived at harvest must
   equal the hand-derived expectation.
+- R75 trigger-only: `node_valid`'s Clause existential triggers on the
+  nonrecursive `shift(db[m].head, k)` — the recursive `resolves` term is
+  fuel-indexed (`rec%resolves(…, fuel)`) and a witness proved at another fuel
+  never matches it (prod-k3sound-1 SMT diagnosis + before/after probe);
+  no semantic change.
 
