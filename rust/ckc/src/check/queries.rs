@@ -118,11 +118,23 @@ pub(super) fn trace_raw(
     _manifest: &Path,
     _query: &Path,
     _answers: &Path,
+    _timeout_category: &str,
+    _timeout_detail: &str,
 ) -> Result<process::Output> {
     Err(fail("queries-fixtures", "trace seam pending"))
 }
 pub(super) fn trace(id: &str, manifest: &Path, query: &Path, answers: &Path) -> Result<Vec<u8>> {
-    artifact(trace_raw(manifest, query, answers)?, "trace", id)
+    artifact(
+        trace_raw(
+            manifest,
+            query,
+            answers,
+            "queries",
+            &format!("wall_clock for qid: {id}"),
+        )?,
+        "trace",
+        id,
+    )
 }
 struct TraceInfo {
     demo: bool,

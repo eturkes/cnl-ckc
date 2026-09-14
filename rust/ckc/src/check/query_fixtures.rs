@@ -219,7 +219,13 @@ fn rejects(
                 format!("trace-reject qid has no query: {n}/{id}"),
             ));
         }
-        let out = queries::trace_raw(manifest, &query, &root.join(format!("{id}.answers")))?;
+        let out = queries::trace_raw(
+            manifest,
+            &query,
+            &root.join(format!("{id}.answers")),
+            "queries-fixtures",
+            &format!("wall_clock for trace-reject: {n}/{id}"),
+        )?;
         if out.rc != 2 {
             return Err(violation(
                 "queries-fixtures",
@@ -260,7 +266,13 @@ fn nonfinite(scratch: &process::Scratch) -> Result {
     }
     let answers = scratch.0.join("nonfinite-answers.pl");
     process::write(&answers, candidate.as_bytes())?;
-    let out = queries::trace_raw(&manifest, &gid.join("queries/pl/result-shape.pl"), &answers)?;
+    let out = queries::trace_raw(
+        &manifest,
+        &gid.join("queries/pl/result-shape.pl"),
+        &answers,
+        "trace-nonfinite",
+        "wall_clock for non-finite float probe",
+    )?;
     if out.rc != 1 {
         return Err(violation(
             "trace-nonfinite",
