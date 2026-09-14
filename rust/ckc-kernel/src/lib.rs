@@ -68,6 +68,8 @@ mod m6_model;
 mod m6_normal;
 mod m6_payload;
 mod m6_project;
+mod m6_query_drs;
+mod m6_query_markers;
 mod m6_refs;
 mod m6_rules;
 mod m6_safety;
