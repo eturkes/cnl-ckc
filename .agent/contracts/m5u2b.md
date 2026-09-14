@@ -64,11 +64,12 @@ uninspected `ckc-kernel/src/k3_impl.rs` (+ modules) + shell seam
   earlier row's `non_demo` preempts a later row's join failure → meter
   `ckc: trace-check ok <qid> nodes=<k>`.
 - Soundness theorem (`contract::k3_sound`): every derived forest is
-  `forest_valid` — each clause node's goal unifies with a renaming of its
-  clause head under a substitution that instantiates the body into the
-  children's goals; each naf leaf's payload generalizes the site goal and
-  fails finitely under the trace bounds. This is the `proved ⇒ derivable`
-  claim; legacy never checked it (map S6 #27/#40).
+  `forest_valid` — ONE answer substitution `th` shared by every node (R54):
+  each clause node's goal equals a renaming of its clause head under `th`,
+  the renamed body items = the children's goals; each naf leaf's frozen
+  payload generalizes the site goal under `th` and fails finitely under the
+  trace bounds. This is the `proved ⇒ derivable` claim; legacy never
+  checked it (map S6 #27/#40).
 
 ## Predicates (acceptance)
 
@@ -137,3 +138,28 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
 - R36 trace-check `join` law = the public REFERENCE law (exactly one
   committed clause line of the named sentence block), NOT legacy
   `trace_block_table`'s widening to any dot-terminated line (map S6 #19).
+- R54 `forest_valid` substitution law: per-node independent substitutions
+  (a) never certified the conjunction's joint solution and (b) falsified
+  every NAF leaf whose site goal an earlier sibling had instantiated
+  (prod-m5u2b-2 counterexample: db `p(a).`, goal `(p(A), \\+ q(A))`, forest
+  `[Clause(0,[]), Naf(q(a))]` — ground `q(a)` never instantiates to the
+  original root arg `q(A)`). Law = one existential `th` over the forest
+  (`forest_valid = exists th. kids_valid(db, th, roots, forest)`); children
+  goals stay raw renamed body items, every comparison applies `th` once.
+- R55 (R39 extension) the K3 replay copies canonicalize LINE 1 of every
+  copied fixture file the K1 reader gates — documents, query projections,
+  answers AND traces (goldens are header-independent) — so a legacy header
+  such as `% q-stale-trace  traced …` never masks the law under test;
+  `red/stale-trace` therefore classifies `stale` (P5) on its canonicalized
+  copy. A copy K1 still rejects after the line-1 rewrite = the R15 non-v1
+  census class: expectation `noncanonical(<path>)` (R24a), listed per case
+  with the K1 reject reason; originals stay byte-identical (FC0).
+- R56 `red/stale-trace` under R15/R55: the tracked fixture encodes staleness
+  in its header line alone (two-space `% q-stale-trace  traced …`), which
+  K1 rejects at (1,17) → the original classifies `trace_file(noncanonical)`
+  (R15 non-v1 census); its line-1-canonical copy is byte-identical to the
+  fresh derivation → rc0 control; the replay adds a scratch-only derived
+  probe (canonical copy with the proof replaced by `unproved(finite_failure)`,
+  custody digests preserved) that must classify `stale` = P5's stale law.
+  Tracked fixture re-pin = the queries battery port (R39, FC2 row).
+

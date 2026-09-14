@@ -31,10 +31,30 @@ pub open spec fn fail(cat: Seq<char>, detail: Seq<u8>) -> Verdict {
     Verdict::Fail(ascii(cat), detail)
 }
 
+// Legacy `violation` escapes the detail: LF → `\n`, CR → `\r` (two bytes each).
+pub open spec fn escape_detail(d: Seq<u8>) -> Seq<u8>
+    decreases d.len(),
+{
+    if d.len() == 0 {
+        Seq::empty()
+    } else {
+        (if d[0] == 0x0A {
+            seq![0x5Cu8, 0x6Eu8]
+        } else if d[0] == 0x0D {
+            seq![0x5Cu8, 0x72u8]
+        } else {
+            seq![d[0]]
+        }) + escape_detail(d.drop_first())
+    }
+}
+
 pub open spec fn render(v: Verdict) -> (int, Seq<u8>) {
     match v {
         Verdict::Ok(m) => (0, m),
-        Verdict::Fail(c, d) => (1, ascii("goal: "@) + c + ascii(": "@) + d + seq![0x0Au8]),
+        Verdict::Fail(c, d) => (
+            1,
+            ascii("goal: "@) + c + ascii(": "@) + escape_detail(d) + seq![0x0Au8],
+        ),
     }
 }
 
@@ -300,11 +320,16 @@ pub open spec fn parse_rows(
     }
 }
 
-pub open spec fn row_by_id(rows: Seq<Row>, id: Seq<u8>) -> Option<Row> {
-    if exists|j: int| 0 <= j < rows.len() && (#[trigger] rows[j]).id == id {
-        Option::Some(rows[choose|j: int| 0 <= j < rows.len() && (#[trigger] rows[j]).id == id])
-    } else {
+// First row carrying `id` (accepted ledgers carry each id once).
+pub open spec fn row_by_id(rows: Seq<Row>, id: Seq<u8>) -> Option<Row>
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
         Option::None
+    } else if rows[0].id == id {
+        Option::Some(rows[0])
+    } else {
+        row_by_id(rows.drop_first(), id)
     }
 }
 
@@ -369,21 +394,33 @@ pub open spec fn rows_in(rows: Seq<Row>, file: Seq<u8>) -> Seq<Row> {
 }
 
 // --- evidence files: census + locator regions or ordinal payloads ---
-// `identify the N payloads below` — first match in the file.
-pub open spec fn census_of(text: Seq<u8>) -> Option<nat> {
+// `identify the N payloads below` — the first FULL match in the file (legacy
+// `census_rx.search`): an `identify the ` occurrence whose digit run breaks
+// the pattern is skipped, not terminal.
+pub open spec fn census_at(text: Seq<u8>, k: nat) -> Option<nat>
+    decreases text.len() - k,
+{
     let p = ascii("identify the "@);
-    let k = first_sub(text, p, 0);
     if k >= text.len() {
         Option::None
     } else {
-        let after = text.skip(k as int + p.len() as int);
-        let n = lead_digits(after, 0);
-        if n > 0 && starts(after.skip(n as int), ascii(" payloads below"@)) {
-            Option::Some(dec_of(after.take(n as int)))
-        } else {
+        let hit = first_sub(text, p, k);
+        if hit >= text.len() {
             Option::None
+        } else {
+            let after = text.skip(hit as int + p.len() as int);
+            let n = lead_digits(after, 0);
+            if n > 0 && starts(after.skip(n as int), ascii(" payloads below"@)) {
+                Option::Some(dec_of(after.take(n as int)))
+            } else {
+                census_at(text, k + 1)
+            }
         }
     }
+}
+
+pub open spec fn census_of(text: Seq<u8>) -> Option<nat> {
+    census_at(text, 0)
 }
 
 pub open spec fn lead_digits(s: Seq<u8>, i: nat) -> nat
@@ -555,15 +592,26 @@ pub open spec fn first_multi(pays: Seq<(Seq<u8>, Seq<Seq<u8>>)>, i: nat) -> Opti
     }
 }
 
-pub open spec fn payload_of(e: Evidence, id: Seq<u8>) -> Option<Seq<u8>> {
-    if exists|j: int| 0 <= j < e.payloads.len() && (#[trigger] e.payloads[j]).0 == id {
-        Option::Some(
-            e.payloads[choose|j: int|
-                0 <= j < e.payloads.len() && (#[trigger] e.payloads[j]).0 == id].1[0],
-        )
-    } else {
+// The first payload entry under `id` (accepted evidence carries each id once
+// with exactly one payload, `first_multi`).
+pub open spec fn payload_in(pays: Seq<(Seq<u8>, Seq<Seq<u8>>)>, id: Seq<u8>) -> Option<Seq<u8>>
+    decreases pays.len(),
+{
+    if pays.len() == 0 {
         Option::None
+    } else if pays[0].0 == id {
+        if pays[0].1.len() > 0 {
+            Option::Some(pays[0].1[0])
+        } else {
+            Option::None
+        }
+    } else {
+        payload_in(pays.drop_first(), id)
     }
+}
+
+pub open spec fn payload_of(e: Evidence, id: Seq<u8>) -> Option<Seq<u8>> {
+    payload_in(e.payloads, id)
 }
 
 pub open spec fn dup_locator(locs: Seq<Seq<u8>>, i: nat) -> Option<Seq<u8>>
@@ -727,20 +775,52 @@ pub open spec fn coverage(
     }
 }
 
-// The document's coverage row (bytes incl. LF) and its selected source payload.
-pub open spec fn ace_row(c: Coverage, d: Seq<u8>) -> Option<Row> {
-    if claims(c.rows, d) {
-        Option::Some(
-            c.rows[choose|j: int|
-                0 <= j < c.rows.len() && ace_docid(#[trigger] c.rows[j]) == Option::Some(d)],
-        )
-    } else {
+// The document's coverage row (bytes incl. LF) = the first row claiming it
+// (`parse_rows` claims each docid once), and its selected source payload.
+pub open spec fn first_ace_row(rows: Seq<Row>, d: Seq<u8>) -> Option<Row>
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
         Option::None
+    } else if ace_docid(rows[0]) == Option::Some(d) {
+        Option::Some(rows[0])
+    } else {
+        first_ace_row(rows.drop_first(), d)
+    }
+}
+
+pub open spec fn ace_row(c: Coverage, d: Seq<u8>) -> Option<Row> {
+    first_ace_row(c.rows, d)
+}
+
+// First index of `f` (`files_of` lists each file once); `files.len()` when absent.
+pub open spec fn index_of(files: Seq<Seq<u8>>, f: Seq<u8>) -> int
+    decreases files.len(),
+{
+    if files.len() == 0 {
+        0
+    } else if files[0] == f {
+        0
+    } else {
+        1 + index_of(files.drop_first(), f)
     }
 }
 
 pub open spec fn file_index(c: Coverage, f: Seq<u8>) -> int {
-    choose|i: int| 0 <= i < c.files.len() && c.files[i] == f
+    index_of(c.files, f)
+}
+
+// First index of the row with `id` among `rows`; `rows.len()` when absent.
+pub open spec fn row_index(rows: Seq<Row>, id: Seq<u8>) -> int
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
+        0
+    } else if rows[0].id == id {
+        0
+    } else {
+        1 + row_index(rows.drop_first(), id)
+    }
 }
 
 // Locator mode: the payload under the row's region id; ordinal mode: the
@@ -749,16 +829,20 @@ pub open spec fn payload(c: Coverage, d: Seq<u8>) -> Option<Seq<u8>> {
     match ace_row(c, d) {
         Option::None => Option::None,
         Option::Some(r) => {
-            let ev = c.evidence[file_index(c, r.file)];
-            if ev.locators.len() > 0 {
-                payload_of(ev, r.id)
+            if file_index(c, r.file) >= c.evidence.len() {
+                Option::None
             } else {
-                let cited = rows_in(c.rows, r.file);
-                let k = choose|k: int| 0 <= k < cited.len() && cited[k].id == r.id;
-                if k < ev.ordinal.len() {
-                    Option::Some(ev.ordinal[k])
+                let ev = c.evidence[file_index(c, r.file)];
+                if ev.locators.len() > 0 {
+                    payload_of(ev, r.id)
                 } else {
-                    Option::None
+                    let cited = rows_in(c.rows, r.file);
+                    let k = row_index(cited, r.id);
+                    if k < ev.ordinal.len() {
+                        Option::Some(ev.ordinal[k])
+                    } else {
+                        Option::None
+                    }
                 }
             }
         },
@@ -790,12 +874,21 @@ pub open spec fn record_count(lines: Seq<Seq<u8>>) -> nat {
     lines.filter(|l: Seq<u8>| starts(l, ascii("guideline_document("@))).len()
 }
 
-pub open spec fn all_dotted(lines: Seq<Seq<u8>>) -> bool {
-    forall|i: int|
-        0 <= i < lines.len() ==> (starts(#[trigger] lines[i], ascii("%"@)) || starts(
-            lines[i],
-            ascii(":- "@),
-        ) || ends(lines[i], seq![0x2Eu8]))
+// First line that is neither a comment, a directive, nor dot-terminated
+// (legacy loop order): it names the class of the first violation.
+pub open spec fn first_undotted(lines: Seq<Seq<u8>>) -> Option<Seq<u8>>
+    decreases lines.len(),
+{
+    if lines.len() == 0 {
+        Option::None
+    } else if starts(lines[0], ascii("%"@)) || starts(lines[0], ascii(":- "@)) || ends(
+        lines[0],
+        seq![0x2Eu8],
+    ) {
+        first_undotted(lines.drop_first())
+    } else {
+        Option::Some(lines[0])
+    }
 }
 
 // The bytes the shell hashes for `semantic_clause_sha256`.
@@ -804,8 +897,14 @@ pub open spec fn semantic_input(pl: Seq<u8>, docid: Seq<u8>) -> Result<Seq<u8>, 
         Result::Err(ascii("compiled document lacks final newline: "@) + docid)
     } else {
         let lines = body_lines(pl);
-        if !all_dotted(lines) {
-            Result::Err(ascii("noncanonical clause line in: "@) + docid)
+        if first_undotted(lines) is Some {
+            Result::Err(
+                (if starts(first_undotted(lines).unwrap(), ascii("guideline_document("@)) {
+                    ascii("noncanonical document record in: "@)
+                } else {
+                    ascii("noncanonical clause line in: "@)
+                }) + docid,
+            )
         } else if record_count(lines) != 1 {
             Result::Err(
                 ascii("document record count "@) + nat_bytes(record_count(lines)) + ascii(" for: "@)
