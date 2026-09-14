@@ -218,6 +218,9 @@ pub fn anchors(arena: &ETermArena, t: &T) -> (out: Vec<T>)
             assert(models(before).drop_first() == models(todo@));
             reveal_with_fuel(spec::anchors_all, 1);
             reveal_with_fuel(crate::k2_engine::terms_size, 1);
+            assert(crate::k2_engine::terms_size(models(before)) == crate::k2_engine::term_size(
+                current@,
+            ) + crate::k2_engine::terms_size(models(todo@)));
             assert(spec::anchors_all(models(before)) == spec::anchors(current@) + spec::anchors_all(
                 models(todo@),
             ));
