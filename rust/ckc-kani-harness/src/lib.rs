@@ -45,6 +45,48 @@ mod harness {
         }
     }
 
+    #[kani::proof]
+    #[kani::unwind(949)]
+    fn reader_trace_check_small() {
+        // Constant preflight; eight trace bytes cannot form a v1 envelope.
+        // The exact custody error keeps derivation unreachable. DOC has 948 bytes.
+        let bytes: [u8; 8] = kani::any();
+        for byte in bytes {
+            kani::assume(matches!(
+                byte,
+                b'%' | b'\n' | b'(' | b')' | b'\'' | b'.' | b'a' | b' '
+            ));
+        }
+        const ANSWERS: &[u8] = concat!(
+            "% q answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
+            "'$guideline_answers'(v1,q,query_sha256('4fd2d61c0ba8557964dcf18b59df04f8a955578a5427c57ca177cb5396471fb7'),result(yes)).\n",
+        ).as_bytes();
+        let manifest = ESrc::Bytes(b"d\tp\n".to_vec());
+        let docs = vec![ESrc::Bytes(DOC.to_vec())];
+        let payloads = vec![ESrc::Bytes(Vec::new())];
+        let query = ESrc::Bytes(QUERIES[0].to_vec());
+        let answers = ESrc::Bytes(ANSWERS.to_vec());
+        let trace = ESrc::Bytes(bytes.to_vec());
+        let result = contract::v1_trace_check(
+            b"m",
+            &manifest,
+            &docs,
+            &payloads,
+            &query,
+            QUERY_SHA256[0],
+            &answers,
+            b"29b7d5108c9b67a13f9b6800e45396aaeba8db1c4349fe15ba2d16688bdd1114",
+            &trace,
+            &Vec::new(),
+        );
+        assert_eq!(result.rc, 2);
+        assert!(result.out.is_empty());
+        assert_eq!(
+            result.err.as_slice(),
+            b"ace_to_pl_error(check_load,trace_file(noncanonical)).\n"
+        );
+    }
+
     const DOC: &[u8] = concat!(
         "% d.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
         ":- multifile(guideline_schema_version/1).\n",
