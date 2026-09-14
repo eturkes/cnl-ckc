@@ -65,6 +65,8 @@ mod v1_impl;
 mod v1_term_impl;
 
 pub use ckc_spec::align::{ECheck, EModel, ESpan};
+pub use ckc_spec::check::{
+    EBundle, ECoverage, ECoverageRow, EDecision, EEvidence, EFileSrc, ERendered, EStatus, EVerdict,
+};
 pub use ckc_spec::replay::{EOut, ERow, ESrc};
 pub use ckc_spec::v1text::EV1Verdict;
-pub use ckc_spec::check::{EBundle, ECoverage, ECoverageRow, EDecision, EEvidence, EFileSrc, ERendered, EStatus, EVerdict};
