@@ -1,4 +1,4 @@
-% synthetic attributed product; regeneration recipe: .claude/rules/queries.md (M4.7 queries suite).
+% doc.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
 :- multifile(guideline_document/3).
