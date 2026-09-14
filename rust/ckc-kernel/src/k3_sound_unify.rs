@@ -60,6 +60,7 @@ pub proof fn apply_comp(name: Seq<u8>, args: Seq<Term>, bindings: Seq<(nat, Term
     decreases bindings.len(),
 {
     if bindings.len() == 0 {
+        assert_seqs_equal!(bindings == Seq::empty());
         apply_empty(args);
     } else {
         let key = bindings[0].0;
@@ -68,7 +69,9 @@ pub proof fn apply_comp(name: Seq<u8>, args: Seq<Term>, bindings: Seq<(nat, Term
         assert_seqs_equal!(bindings == seq![(key, value)] + rest);
         apply_all_prepend(args, key, value, rest);
         apply_comp(name, subst_all(args, key, value), rest);
+        apply_prepend(Term::Comp(name, args), key, value, rest);
         reveal(subst);
+        assert(subst(Term::Comp(name, args), key, value) == Term::Comp(name, subst_all(args, key, value)));
     }
     reveal(apply);
 }
