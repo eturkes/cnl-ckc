@@ -115,6 +115,10 @@ mod m6_term;
 mod m6_vars;
 mod release_impl;
 mod release_rows;
+mod resolve_data;
+mod resolve_impl;
+mod resolve_primitives;
+mod resolve_text;
 mod v1_impl;
 mod v1_term_impl;
 

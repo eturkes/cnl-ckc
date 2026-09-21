@@ -79,7 +79,7 @@ fn artifact(out: process::Output, kind: &str, id: &str) -> Result<Vec<u8>> {
     }
     Ok(out.out)
 }
-fn question(
+pub(super) fn question(
     swipl: &Path,
     stage: &Path,
     id: &str,
@@ -170,7 +170,7 @@ fn trace_join_error(bytes: &[u8], id: &str) -> Option<Failure> {
         ),
     ))
 }
-fn inspect_trace(
+pub(super) fn inspect_trace(
     id: &str,
     manifest: &Path,
     query: &Path,
@@ -221,7 +221,7 @@ fn inspect_trace(
             )
         })
 }
-fn query_aces(root: &Path) -> Result<Vec<String>> {
+pub(super) fn query_aces(root: &Path) -> Result<Vec<String>> {
     if root.is_symlink() {
         return Err(violation(
             "queries",

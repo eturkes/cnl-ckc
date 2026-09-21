@@ -2,14 +2,12 @@ use vstd::prelude::*;
 
 verus! {
 
-// M5.4 seed: red stubs, one verification error each (contract.rs binds them).
 pub fn align_resolve_impl(input: &[char], src: &[char], ace: &[char]) -> (r:
     ckc_spec::align::EResolve)
     ensures
         r@ == ckc_spec::align::resolve_outcome(input@, src@, ace@),
 {
-    assert(false);
-    ckc_spec::align::EResolve::Err(Vec::new())
+    crate::resolve_impl::resolve_impl(input, src, ace)
 }
 
 pub fn release_manifest_impl(

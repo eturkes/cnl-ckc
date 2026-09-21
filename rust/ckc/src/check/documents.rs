@@ -1,7 +1,7 @@
 use super::common::*;
 use super::{inventories::Guideline, process, queries, text};
 use std::path::{Path, PathBuf};
-fn compile(swipl: &Path, stage: &Path, g: &Guideline, id: &str, proof: bool) -> Result<Vec<u8>> {
+pub(super) fn compile(swipl: &Path, stage: &Path, g: &Guideline, id: &str, proof: bool) -> Result<Vec<u8>> {
     let bytes = read(&g.ace(id), "guideline")?;
     let mut tail = vec![show(stage), id.to_owned()];
     if let Some(lexicon) = &g.lexicon {
@@ -38,7 +38,7 @@ fn compile(swipl: &Path, stage: &Path, g: &Guideline, id: &str, proof: bool) -> 
     }
     Ok(out.out)
 }
-fn load(path: &Path) -> Result {
+pub(super) fn load(path: &Path) -> Result {
     let bytes = read(path, "check-load")?;
     let utf8 = std::str::from_utf8(&bytes).err().map(|e| e.valid_up_to());
     let at = match ckc_kernel::contract::v1_check(&bytes) {
@@ -58,7 +58,7 @@ fn load(path: &Path) -> Result {
     }
     Ok(())
 }
-fn write_manifest(path: &Path, pairs: &[(PathBuf, PathBuf)]) -> Result {
+pub(super) fn write_manifest(path: &Path, pairs: &[(PathBuf, PathBuf)]) -> Result {
     process::write(
         path,
         pairs
@@ -68,7 +68,7 @@ fn write_manifest(path: &Path, pairs: &[(PathBuf, PathBuf)]) -> Result {
             .as_bytes(),
     )
 }
-fn aggregate(mode: &str, path: &Path, count: usize) -> Result<String> {
+pub(super) fn aggregate(mode: &str, path: &Path, count: usize) -> Result<String> {
     let out = queries::kernel(
         mode,
         &[path],

@@ -43,7 +43,25 @@ pub(super) fn emit(result: Result) -> ExitCode {
     }
 }
 pub(super) fn show(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
+    // pathlib preserves a double root, drops empty/dot components, and keeps .. .
+    let raw = path.to_string_lossy();
+    let prefix = if raw.starts_with("//") && !raw.starts_with("///") {
+        "//"
+    } else if raw.starts_with('/') {
+        "/"
+    } else {
+        ""
+    };
+    let parts: Vec<_> = raw
+        .split('/')
+        .filter(|p| !p.is_empty() && *p != ".")
+        .collect();
+    let normalized = format!("{prefix}{}", parts.join("/"));
+    if normalized.is_empty() {
+        ".".to_owned()
+    } else {
+        normalized
+    }
 }
 pub(super) fn name(path: &Path) -> String {
     path.file_name()
