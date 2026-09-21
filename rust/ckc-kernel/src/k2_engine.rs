@@ -1677,7 +1677,7 @@ proof fn comp_pair_work_decrease(
     ));
 }
 
-proof fn pairs_models_prefix(before: Seq<ENode>, after: Seq<ENode>, pairs: Seq<EPair>)
+pub proof fn pairs_models_prefix(before: Seq<ENode>, after: Seq<ENode>, pairs: Seq<EPair>)
     requires
         before.is_prefix_of(after),
         pair_roots_valid(before, pairs),
@@ -2378,7 +2378,7 @@ proof fn clash_comp(name: Seq<u8>, xs: Seq<Term>, ys: Seq<Term>, rest: Seq<(Term
     }
 }
 
-proof fn clash_fails(u: ckc_spec::engine::UState)
+pub proof fn clash_fails(u: ckc_spec::engine::UState)
     requires
         pair_clash(u.pairs),
     ensures
@@ -2589,8 +2589,12 @@ fn clash_roots(arena: &ETermArena, left: usize, right: usize) -> (out: bool)
 }
 
 // A rigid argument mismatch rejects a trial before renaming or binding its continuation.
-fn head_clash(arena: &ETermArena, args: &Vec<usize>, head: usize, Ghost(off): Ghost<nat>) -> (out:
-    bool)
+pub fn head_clash(
+    arena: &ETermArena,
+    args: &Vec<usize>,
+    head: usize,
+    Ghost(off): Ghost<nat>,
+) -> (out: bool)
     requires
         root_ok(arena, head),
         roots_valid(arena.nodes@, args@),
@@ -4598,7 +4602,7 @@ pub fn args_roots(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
 }
 
 #[verifier::rlimit(5000)]
-fn prepare_clause(
+pub fn prepare_clause(
     arena: &mut ETermArena,
     clause: &EClause,
     args: &Vec<usize>,

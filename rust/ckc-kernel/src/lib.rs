@@ -23,6 +23,7 @@
     clippy::needless_match,
     clippy::match_like_matches_macro,
     clippy::manual_map,
+    clippy::manual_filter,
     clippy::manual_unwrap_or_default,
     clippy::manual_unwrap_or,
     clippy::unnecessary_unwrap,
@@ -53,6 +54,19 @@ mod k2_sort;
 mod k2_store;
 mod k2_term;
 mod k2_walk;
+mod k3_adapter;
+mod k3_coords;
+mod k3_front;
+mod k3_identity;
+mod k3_impl;
+mod k3_join;
+mod k3_machine;
+mod k3_materialize;
+mod k3_number;
+mod k3_print;
+mod k3_rows;
+pub mod k3_sound;
+mod k3_state;
 mod k5_bytes;
 mod k5_impl;
 mod k5_ledger;
