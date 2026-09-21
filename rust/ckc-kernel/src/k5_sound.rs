@@ -55,7 +55,12 @@ pub proof fn records_sound_proof(c: ckc_spec::ui::Corpus, i: int)
             ckc_spec::ui::copy_registry(),
         ),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::records_html);
+    hide(ckc_spec::ui::corpus_bytes);
+    crate::k5_sound_corpus::guideline(c, i);
+    crate::k5_sound_records::page(c.guidelines[i], ckc_spec::ui::corpus_bytes(c));
+    crate::k5_sound_escape::page(ckc_spec::ui::records_html(c.guidelines[i]), c);
 }
 
 pub proof fn document_sound_proof(

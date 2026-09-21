@@ -90,6 +90,8 @@ mod k5_sound_literals;
 mod k5_sound_model;
 mod k5_sound_pages;
 mod k5_sound_post;
+mod k5_sound_record_source;
+mod k5_sound_records;
 mod k5_sound_reflect;
 mod k5_sound_source;
 mod k5_sound_summary;
