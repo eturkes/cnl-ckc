@@ -7,8 +7,7 @@ pub fn ui_render_page_impl(p: &ckc_spec::ui::EPage) -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::ui::render_page(p@),
 {
-    assert(false);
-    Vec::new()
+    crate::k5_render::page(p)
 }
 
 pub fn ui_render_index_impl(c: &ckc_spec::ui::ECorpus) -> (out: Vec<u8>)
@@ -62,8 +61,7 @@ pub fn ui_ledger_candidate_impl(old: &[u8], r: &ckc_spec::ui::ERecord) -> (out: 
     ensures
         out@ == ckc_spec::ui::ledger_candidate(old@, r@),
 {
-    assert(false);
-    Vec::new()
+    crate::k5_ledger::candidate(old, r)
 }
 
 pub fn ui_copy_violation_impl(b: &[u8]) -> (v: Option<Vec<u8>>)

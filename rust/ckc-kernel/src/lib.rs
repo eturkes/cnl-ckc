@@ -53,8 +53,12 @@ mod k2_sort;
 mod k2_store;
 mod k2_term;
 mod k2_walk;
+mod k5_bytes;
 mod k5_impl;
+mod k5_ledger;
+mod k5_render;
 mod k5_sound;
+mod k5_utf8;
 mod v1_impl;
 mod v1_term_impl;
 
