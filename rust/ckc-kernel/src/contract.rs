@@ -446,4 +446,21 @@ pub fn release_manifest(
     )
 }
 
+// M5.6 dist (contract m5u6, shell tier over a pinned gzip dep): the two BagIt
+// digest manifests are pure functions of the member list; tar/gzip bytes, member
+// digests and publish semantics are shell code graded by the 62-case battery.
+pub fn dist_digest_lines(ms: &Vec<ckc_spec::release::EMember>) -> (r: Vec<u8>)
+    ensures
+        r@ == ckc_spec::release::digest_lines(ckc_spec::release::members(ms@)),
+{
+    crate::release_impl::dist_digest_lines_impl(ms)
+}
+
+pub fn dist_tagmanifest_lines(tags: &Vec<ckc_spec::release::EMember>) -> (r: Vec<u8>)
+    ensures
+        r@ == ckc_spec::release::tagmanifest_lines(ckc_spec::release::members(tags@)),
+{
+    crate::release_impl::dist_tagmanifest_lines_impl(tags)
+}
+
 } // verus!

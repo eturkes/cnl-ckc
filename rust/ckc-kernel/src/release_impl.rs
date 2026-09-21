@@ -75,4 +75,21 @@ pub fn release_manifest_impl(
     r
 }
 
+// M5.6 seed: red stubs, one verification error each (contract.rs binds them).
+pub fn dist_digest_lines_impl(ms: &Vec<ckc_spec::release::EMember>) -> (r: Vec<u8>)
+    ensures
+        r@ == ckc_spec::release::digest_lines(ckc_spec::release::members(ms@)),
+{
+    assert(false);
+    Vec::new()
+}
+
+pub fn dist_tagmanifest_lines_impl(tags: &Vec<ckc_spec::release::EMember>) -> (r: Vec<u8>)
+    ensures
+        r@ == ckc_spec::release::tagmanifest_lines(ckc_spec::release::members(tags@)),
+{
+    assert(false);
+    Vec::new()
+}
+
 } // verus!
