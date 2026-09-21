@@ -13,6 +13,12 @@ ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_record.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_shape.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_state.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_unify.rs"]
+ckc-kernel/src/k4_coverage.rs	external	1	"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n",
+ckc-kernel/src/k4_coverage.rs	external	2	b"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n",
+ckc-kernel/src/k4_rows.rs	external	1	let r = eq(c, b"heading") || eq(c, b"process") || eq(c, b"external") || eq(c, b"aim") || eq(
+ckc-kernel/src/k4_rows.rs	external	1	reveal_byteslit(b"external");
+ckc-kernel/src/k4_rows.rs	external	1	reveal_strlit("external");
+ckc-kernel/src/k4_rows.rs	external	2	assert(b"external"@ == ckc_spec::v1text::ascii("external"@));
 ckc-kernel/src/k5_text.rs	unsafe	1	let text = unsafe { str::from_utf8_unchecked(bytes) };
 ckc-spec/src/check.rs	external	1	"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n"@,
 ckc-spec/src/check.rs	external	1	||| c == ascii("external"@)
