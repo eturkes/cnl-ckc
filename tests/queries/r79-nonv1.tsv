@@ -1,0 +1,11 @@
+case	rc	expected_stderr
+empty-solutions	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/empty-solutions/tree/guidelines/fx/pl/doc.pl')).\n
+limit-depth	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/limit-depth/tree/guidelines/fx/pl/doc.pl')).\n
+limit-inner-inference	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/limit-inner-inference/tree/guidelines/fx/pl/doc.pl')).\n
+no-finite-failure	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/no-finite-failure/tree/guidelines/fx/pl/doc.pl')).\n
+numeric-bigint	2	ace_to_pl_error(check_load,noncanonical('tests/queries/green/numeric-bigint/tree/guidelines/fx/pl/doc.pl')).\n
+trace-digest-join	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/trace-digest-join/tree/guidelines/fx/pl/doc.pl')).\n
+trace-indeterminate-mirror	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/trace-indeterminate-mirror/tree/guidelines/fx/pl/doc.pl')).\n
+trace-naf-inference-cut	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/trace-naf-inference-cut/tree/guidelines/fx/pl/doc.pl')).\n
+trace-no-mirror	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/trace-no-mirror/tree/guidelines/fx/pl/doc.pl')).\n
+yesno-limit-before-proof	2	ace_to_pl_error(check_load,noncanonical('tests/queries/red/yesno-limit-before-proof/tree/guidelines/fx/pl/doc.pl')).\n
