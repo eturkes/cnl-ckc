@@ -392,4 +392,50 @@ pub proof fn ui_post_sound(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostStat
     crate::k5_sound::post_sound_proof(req, s)
 }
 
+// M6 emission certification (contract m6, R40–R43). The shell stages APE,
+// runs the trusted driver (twice, byte-equal), hashes the raw ACE/ulex
+// bytes (R3) and hands everything to the kernel; the result = the exact
+// triple of the spec fn. usha = None when the document declares ulex(none).
+pub fn certify_doc(
+    ace: &[u8],
+    asha: &[u8],
+    usha: Option<&Vec<u8>>,
+    docid: &[u8],
+    dump: &[u8],
+    pl: &[u8],
+) -> (r: ckc_spec::replay::EOut)
+    ensures
+        r@ == ckc_spec::emit::certify_doc_output(
+            ace@,
+            asha@,
+            ckc_spec::emit::opt_view(usha),
+            docid@,
+            dump@,
+            pl@,
+        ),
+{
+    crate::m6_impl::certify_doc_impl(ace, asha, usha, docid, dump, pl)
+}
+
+pub fn certify_query(
+    ace: &[u8],
+    asha: &[u8],
+    usha: Option<&Vec<u8>>,
+    qid: &[u8],
+    dump: &[u8],
+    pl: &[u8],
+) -> (r: ckc_spec::replay::EOut)
+    ensures
+        r@ == ckc_spec::emit::certify_query_output(
+            ace@,
+            asha@,
+            ckc_spec::emit::opt_view(usha),
+            qid@,
+            dump@,
+            pl@,
+        ),
+{
+    crate::m6_impl::certify_query_impl(ace, asha, usha, qid, dump, pl)
+}
+
 } // verus!

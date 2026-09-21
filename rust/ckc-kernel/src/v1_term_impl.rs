@@ -6185,7 +6185,7 @@ proof fn udec_bytes_nonempty(n: nat)
     }
 }
 
-proof fn term_bytes_nonempty(term: Term)
+pub proof fn term_bytes_nonempty(term: Term)
     ensures
         ckc_spec::v1text::term_bytes(term).len() > 0,
     decreases term,
@@ -8878,7 +8878,7 @@ pub fn parse_term(
     )
 }
 
-proof fn udec_decimal_value(n: nat)
+pub proof fn udec_decimal_value(n: nat)
     ensures
         decimal_value(ckc_spec::v1text::udec_bytes(n)) == n,
     decreases n,
@@ -9269,7 +9269,7 @@ pub struct EVarTracker {
     pub valid: bool,
 }
 
-fn new_var_tracker() -> (tracker: EVarTracker)
+pub fn new_var_tracker() -> (tracker: EVarTracker)
     ensures
         tracker.next == 0,
         tracker.stream@ == Seq::<nat>::empty(),
@@ -10124,7 +10124,7 @@ proof fn tracker_complete_push_invalid(stream: Seq<nat>, value: nat)
     }
 }
 
-proof fn tracker_state_canonical(next: usize, stream: Seq<nat>)
+pub proof fn tracker_state_canonical(next: usize, stream: Seq<nat>)
     requires
         tracker_state_ok(next, stream),
     ensures
@@ -10175,7 +10175,7 @@ proof fn firsts_contains_at(values: Seq<nat>, seen: Set<nat>, index: int)
     }
 }
 
-proof fn canonical_stream_keys_fit(stream: Seq<nat>)
+pub proof fn canonical_stream_keys_fit(stream: Seq<nat>)
     requires
         ckc_spec::term::var_canonical(stream),
         stream.len() <= usize::MAX as nat,
@@ -10195,7 +10195,7 @@ proof fn canonical_stream_keys_fit(stream: Seq<nat>)
 }
 
 #[verifier::spinoff_prover]
-proof fn term_var_lengths(term: Term)
+pub proof fn term_var_lengths(term: Term)
     ensures
         ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::term_bytes(term).len(),
         ckc_spec::term::var_stream(term).len() <= ckc_spec::v1text::tail_bytes(term).len(),
@@ -10276,7 +10276,7 @@ pub open spec fn stream_keys_fit(stream: Seq<nat>) -> bool {
     forall|i: int| 0 <= i < stream.len() ==> #[trigger] stream[i] <= usize::MAX as nat
 }
 
-proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
+pub proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
     requires
         stream_keys_fit(left + right),
     ensures
@@ -10291,7 +10291,7 @@ proof fn stream_keys_fit_split(left: Seq<nat>, right: Seq<nat>)
     }
 }
 
-proof fn term_keys_from_stream(term: Term)
+pub proof fn term_keys_from_stream(term: Term)
     requires
         stream_keys_fit(ckc_spec::term::var_stream(term)),
     ensures
@@ -11226,6 +11226,35 @@ pub enum EV1Class {
     Traces,
 }
 
+pub struct EBundleMeta {
+    pub ordinal: Vec<u8>,
+    pub text: Vec<u8>,
+    pub count: usize,
+    pub bundle: Ghost<ckc_spec::v1text::Bundle>,
+}
+
+impl View for EBundleMeta {
+    type V = ckc_spec::v1text::Bundle;
+
+    open spec fn view(&self) -> Self::V {
+        self.bundle@
+    }
+}
+
+pub open spec fn bundle_meta_ok(m: &EBundleMeta) -> bool {
+    &&& m.ordinal@ == ckc_spec::v1text::udec_bytes(m@.s)
+    &&& m.text@ == m@.text
+    &&& m.count == m@.clauses.len()
+}
+
+pub open spec fn bundle_metas_ok(ms: Seq<EBundleMeta>) -> bool {
+    forall|i: int| 0 <= i < ms.len() ==> #[trigger] bundle_meta_ok(&ms[i])
+}
+
+pub open spec fn bundle_meta_models(ms: Seq<EBundleMeta>) -> Seq<ckc_spec::v1text::Bundle> {
+    ms.map_values(|m: EBundleMeta| m@)
+}
+
 pub struct EParsedBundle {
     pub ordinal: Vec<u8>,
     pub count: usize,
@@ -11278,6 +11307,10 @@ pub struct EParsedV1 {
     pub doc_ace: Vec<u8>,
     pub doc_ulex: Vec<u8>,
     pub qid: Vec<u8>,
+    pub query_ace: Vec<u8>,
+    pub query_ulex: Vec<u8>,
+    pub query_text: Vec<u8>,
+    pub bundles: Vec<EBundleMeta>,
     pub qsha: Vec<u8>,
     pub asha: Vec<u8>,
     pub result_root: usize,
@@ -11329,6 +11362,20 @@ pub open spec fn parsed_metadata_ok(parsed: &EParsedV1) -> bool {
     &&& parsed.asha@ == match parsed@ {
         ckc_spec::v1text::V1File::Traces(t) => t.asha,
         _ => Seq::empty(),
+    }
+}
+
+pub open spec fn parsed_certify_metadata_ok(parsed: &EParsedV1) -> bool {
+    match parsed@ {
+        ckc_spec::v1text::V1File::Doc(d) => bundle_metas_ok(parsed.bundles@) && bundle_meta_models(
+            parsed.bundles@,
+        ) == d.bundles,
+        ckc_spec::v1text::V1File::Query(q) => {
+            &&& parsed.query_ace@ == q.ace
+            &&& parsed.query_ulex@ == ulex_digest_bytes(q.ulex)
+            &&& parsed.query_text@ == q.qtext
+        },
+        _ => true,
     }
 }
 
@@ -12197,6 +12244,10 @@ pub fn parse_answers(
     Some(
         EParsedV1 {
             class: EV1Class::Answers,
+            query_ace: Vec::new(),
+            query_ulex: Vec::new(),
+            query_text: Vec::new(),
+            bundles: Vec::new(),
             bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
@@ -12977,6 +13028,10 @@ pub fn parse_traces(
     Some(
         EParsedV1 {
             class: EV1Class::Traces,
+            query_ace: Vec::new(),
+            query_ulex: Vec::new(),
+            query_text: Vec::new(),
+            bundles: Vec::new(),
             bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
@@ -14570,7 +14625,12 @@ proof fn spanned_term_at_close(bytes: Seq<u8>, term: &ESpannedTerm)
     reveal(term_boundary);
 }
 
-fn track_parsed_term(bytes: &[u8], term: &ESpannedTerm, tracker: &mut EVarTracker, at: &mut usize)
+pub fn track_parsed_term(
+    bytes: &[u8],
+    term: &ESpannedTerm,
+    tracker: &mut EVarTracker,
+    at: &mut usize,
+)
     requires
         *old(at) <= bytes@.len(),
         spanned_term_ok(bytes@, term),
@@ -14941,6 +15001,7 @@ pub fn parse_query(
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
+        r matches Some(parsed) ==> parsed_certify_metadata_ok(&parsed),
         expected@ matches Some(q) ==> r matches Some(parsed) && parsed@
             == ckc_spec::v1text::V1File::Query(q),
 {
@@ -15050,6 +15111,10 @@ pub fn parse_query(
     Some(
         EParsedV1 {
             class: EV1Class::Query,
+            query_ace: ace.name,
+            query_ulex: ulex.digest,
+            query_text: text.value,
+            bundles: Vec::new(),
             bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
@@ -19062,6 +19127,7 @@ proof fn doc_clauses_concat(
 pub struct EDocBundle {
     pub bundle: Ghost<ckc_spec::v1text::Bundle>,
     pub ordinal: Vec<u8>,
+    pub source_text: Vec<u8>,
     pub clauses: Vec<EDocClause>,
 }
 
@@ -19106,6 +19172,7 @@ fn parse_doc_bundle(
             &&& ckc_spec::v1text::wf_bundle(bundle@)
             &&& canonical_decimal(bundle.ordinal@)
             &&& bundle.ordinal@ == ckc_spec::v1text::udec_bytes(bundle@.s)
+            &&& bundle.source_text@ == bundle@.text
             &&& old(guided).cursor.pos < final(guided).cursor.pos
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_bundle_parts(
                 bundle@,
@@ -19159,6 +19226,7 @@ fn parse_doc_bundle_inner(
             &&& ckc_spec::v1text::wf_bundle(bundle@)
             &&& canonical_decimal(bundle.ordinal@)
             &&& bundle.ordinal@ == ckc_spec::v1text::udec_bytes(bundle@.s)
+            &&& bundle.source_text@ == bundle@.text
             &&& old(guided).cursor.pos < final(guided).cursor.pos
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + doc_bundle_parts(
                 bundle@,
@@ -19757,7 +19825,17 @@ fn parse_doc_bundle_inner(
             assert(model == e.0);
         }
     }
-    (Some(EDocBundle { bundle: Ghost(model), ordinal, clauses: clause_roots }), working_arena)
+    (
+        Some(
+            EDocBundle {
+                bundle: Ghost(model),
+                ordinal,
+                source_text: text.value,
+                clauses: clause_roots,
+            },
+        ),
+        working_arena,
+    )
 }
 
 pub open spec fn pow10(n: nat) -> nat
@@ -20285,6 +20363,7 @@ pub fn parse_doc(
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r matches Some(parsed) ==> parsed_metadata_ok(&parsed),
+        r matches Some(parsed) ==> parsed_certify_metadata_ok(&parsed),
         expected@ matches Some(d) ==> r matches Some(parsed) && parsed@
             == ckc_spec::v1text::V1File::Doc(d),
 {
@@ -20317,6 +20396,7 @@ fn parse_doc_inner(
         *old(at) <= *final(at) <= bytes@.len(),
         r.0 matches Some(parsed) ==> parsed_v1_ok(bytes@, &parsed),
         r.0 matches Some(parsed) ==> parsed_metadata_ok(&parsed),
+        r.0 matches Some(parsed) ==> parsed_certify_metadata_ok(&parsed),
         expected@ matches Some(d) ==> r.0 matches Some(parsed) && parsed@
             == ckc_spec::v1text::V1File::Doc(d),
 {
@@ -20367,6 +20447,10 @@ fn parse_doc_inner(
         bundles: Seq::empty(),
     };
     let ghost mut bundles: Seq<ckc_spec::v1text::Bundle> = Seq::empty();
+    let mut cert_bundles: Vec<EBundleMeta> = Vec::new();
+    proof {
+        assert_seqs_equal!(bundle_meta_models(cert_bundles@) == bundles);
+    }
     let mut clauses: Vec<EDocClause> = Vec::new();
     let mut bundle_meta: Vec<EParsedBundle> = Vec::new();
     proof {
@@ -20416,6 +20500,8 @@ fn parse_doc_inner(
             ckc_spec::v1text::ulex_ok(ulex.value@),
             ulex.digest@ == ulex_digest_bytes(ulex.value@),
             bundle_count == bundles.len(),
+            bundle_metas_ok(cert_bundles@),
+            bundle_meta_models(cert_bundles@) == bundles,
             bundle_count <= guided.cursor.pos,
             guided.cursor.prefix@ == doc_prefix_stage(base) + ckc_spec::v1text::bundles_bytes(
                 bundles,
@@ -20577,6 +20663,27 @@ fn parse_doc_inner(
                 ));
             }
         }
+        proof {
+            doc_clauses_roots_elim(working_arena.nodes@, bundle.clauses@, bundle_model.clauses);
+        }
+        let meta = EBundleMeta {
+            ordinal: bundle.ordinal.clone(),
+            text: bundle.source_text,
+            count: bundle.clauses.len(),
+            bundle: Ghost(bundle_model),
+        };
+        let ghost old_meta = cert_bundles@;
+        cert_bundles.push(meta);
+        proof {
+            assert_seqs_equal!(bundle_meta_models(cert_bundles@) == bundle_meta_models(old_meta).push(bundle_model));
+            assert forall|j: int| 0 <= j < cert_bundles.len() implies #[trigger] bundle_meta_ok(
+                &cert_bundles@[j],
+            ) by {
+                if j < old_meta.len() {
+                    assert(cert_bundles@[j] == old_meta[j]);
+                }
+            }
+        }
         bundle_meta =
         bundle_metadata_push(
             bundle_meta,
@@ -20688,6 +20795,10 @@ fn parse_doc_inner(
         Some(
             EParsedV1 {
                 class: EV1Class::Doc,
+                query_ace: Vec::new(),
+                query_ulex: Vec::new(),
+                query_text: Vec::new(),
+                bundles: cert_bundles,
                 bundle_meta,
                 docid: docid.value,
                 doc_ace: ace.name,

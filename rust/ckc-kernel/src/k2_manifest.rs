@@ -65,7 +65,7 @@ pub(crate) fn udec_vec(n: usize) -> (out: Vec<u8>)
     }
 }
 
-proof fn first_byte_exact(bytes: Seq<u8>, b: u8, start: nat, end: nat)
+pub proof fn first_byte_exact(bytes: Seq<u8>, b: u8, start: nat, end: nat)
     requires
         start <= end <= bytes.len(),
         forall|i: int| start <= i < end ==> bytes[i] != b,
@@ -81,7 +81,7 @@ proof fn first_byte_exact(bytes: Seq<u8>, b: u8, start: nat, end: nat)
     }
 }
 
-fn first_byte_exec(bytes: &[u8], b: u8, start: usize) -> (end: usize)
+pub fn first_byte_exec(bytes: &[u8], b: u8, start: usize) -> (end: usize)
     requires
         start <= bytes@.len(),
     ensures
@@ -210,7 +210,7 @@ proof fn rows_cons(line: Seq<u8>, rest: Seq<Seq<u8>>)
     }
 }
 
-proof fn suffix_line(bytes: Seq<u8>, start: nat, end: nat)
+pub proof fn suffix_line(bytes: Seq<u8>, start: nat, end: nat)
     requires
         start <= end < bytes.len(),
         bytes[end as int] == 0x0a,
