@@ -71,8 +71,7 @@ pub fn ui_copy_violation_impl(b: &[u8]) -> (v: Option<Vec<u8>>)
             Option::None => ckc_spec::ui::copy_violation(b@) is None,
         },
 {
-    assert(false);
-    None
+    crate::k5_copy::violation(b)
 }
 
 } // verus!
