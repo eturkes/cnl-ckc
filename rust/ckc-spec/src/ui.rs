@@ -20,7 +20,7 @@
 // copy-lookalike adds U+00A7/U+00B7/U+2265 punctuation; copy-emoji tests U+2705.
 // Invented-acronym judgment stays an unmechanized design rule.
 use crate::align;
-use crate::check::{self, Bundle, Coverage, Decision, Row, Status};
+use crate::check::{self, Bundle, Coverage, Decision, ECoverage, Row, Status};
 use crate::engine::*;
 use crate::replay::Src;
 use crate::v1text::{self, *};
@@ -1955,30 +1955,6 @@ impl View for ERequest {
     }
 }
 
-pub struct EReviewBundle {
-    pub docid: Vec<u8>,
-    pub ace: Vec<u8>,
-    pub cov: Vec<u8>,
-    pub pay: Vec<u8>,
-    pub cl: Vec<u8>,
-    pub review: Vec<u8>,
-}
-
-impl View for EReviewBundle {
-    type V = Bundle;
-
-    open spec fn view(&self) -> Bundle {
-        Bundle {
-            docid: self.docid@,
-            ace: self.ace@,
-            cov: self.cov@,
-            pay: self.pay@,
-            cl: self.cl@,
-            review: self.review@,
-        }
-    }
-}
-
 pub struct ERecord {
     pub docid: Vec<u8>,
     pub digest: Vec<u8>,
@@ -2031,7 +2007,7 @@ impl View for EPostDocument {
 pub struct EPostGuideline {
     pub gid: Vec<u8>,
     pub documents: Vec<EPostDocument>,
-    pub fresh: Result<Vec<EReviewBundle>, Vec<u8>>,
+    pub fresh: Result<Vec<check::EBundle>, Vec<u8>>,
     pub ledger: crate::replay::ESrc,
     pub ledger_digest: Vec<u8>,
 }
@@ -2044,7 +2020,7 @@ impl View for EPostGuideline {
             gid: self.gid@,
             documents: self.documents@.map_values(|d: EPostDocument| d@),
             fresh: match self.fresh {
-                Ok(bs) => Ok(bs@.map_values(|b: EReviewBundle| b@)),
+                Ok(bs) => Ok(bs@.map_values(|b: check::EBundle| b@)),
                 Err(e) => Err(e@),
             },
             ledger: self.ledger@,
@@ -2716,84 +2692,9 @@ pub open spec fn escaped_slots(page: Html, context: int) -> bool
     }
 }
 
-// Runtime page inputs project to the existing K4 types, not parallel laws.
-pub enum EStatus {
-    Pending,
-    Ace(Vec<u8>),
-    Restates(Vec<u8>),
-    Uncovered,
-}
-
-impl View for EStatus {
-    type V = Status;
-
-    open spec fn view(&self) -> Status {
-        match self {
-            EStatus::Pending => Status::Pending,
-            EStatus::Ace(d) => Status::Ace(d@),
-            EStatus::Restates(r) => Status::Restates(r@),
-            EStatus::Uncovered => Status::Uncovered,
-        }
-    }
-}
-
-pub struct ECoverageRow {
-    pub id: Vec<u8>,
-    pub file: Vec<u8>,
-    pub status: EStatus,
-    pub line: Vec<u8>,
-}
-
-impl View for ECoverageRow {
-    type V = Row;
-
-    open spec fn view(&self) -> Row {
-        Row { id: self.id@, file: self.file@, status: self.status@, line: self.line@ }
-    }
-}
-
-pub struct EEvidence {
-    pub census: u64,
-    pub locators: Vec<Vec<u8>>,
-    pub payloads: Vec<(Vec<u8>, Vec<Vec<u8>>)>,
-    pub ordinal: Vec<Vec<u8>>,
-}
-
-impl View for EEvidence {
-    type V = check::Evidence;
-
-    open spec fn view(&self) -> check::Evidence {
-        check::Evidence {
-            census: self.census as nat,
-            locators: self.locators@.map_values(|x: Vec<u8>| x@),
-            payloads: self.payloads@.map_values(
-                |p: (Vec<u8>, Vec<Vec<u8>>)| (p.0@, p.1@.map_values(|x: Vec<u8>| x@)),
-            ),
-            ordinal: self.ordinal@.map_values(|x: Vec<u8>| x@),
-        }
-    }
-}
-
-pub struct ECoverage {
-    pub rows: Vec<ECoverageRow>,
-    pub files: Vec<Vec<u8>>,
-    pub evidence: Vec<EEvidence>,
-}
-
-impl View for ECoverage {
-    type V = Coverage;
-
-    open spec fn view(&self) -> Coverage {
-        Coverage {
-            rows: self.rows@.map_values(|r: ECoverageRow| r@),
-            files: self.files@.map_values(|x: Vec<u8>| x@),
-            evidence: self.evidence@.map_values(|e: EEvidence| e@),
-        }
-    }
-}
-
+// Runtime page inputs are check.rs's K4 exec mirrors (R92), not parallel laws.
 pub struct EDocument {
-    pub bundle: EReviewBundle,
+    pub bundle: check::EBundle,
     pub ace: Vec<u8>,
     pub pl: Vec<u8>,
     pub alignment: Option<Vec<u8>>,

@@ -109,7 +109,11 @@ const R90_STALE_ANSWERS: &[(&str, &str)] = &[
     ("trace-unproved-limit", "q-unproved-limit"),
 ];
 fn non_v1_expectations(root: &Path) -> Result<BTreeMap<String, (u8, Vec<u8>)>> {
-    let path = root.join("r79-nonv1.tsv");
+    // R80 amended-3: the table lives outside tests/queries (legacy closes that directory).
+    let path = root
+        .parent()
+        .map(|t| t.join("check/r79-nonv1.tsv"))
+        .unwrap_or_default();
     let source = corpus_text(&path, "queries-fixtures")?;
     let bad_table = || violation("queries-fixtures", "invalid R79 expectation table");
     if source.contains('\r') || !source.ends_with('\n') {
@@ -380,7 +384,7 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
     }
     for p in entries(root, "queries-fixtures")? {
         let n = name(&p);
-        if !["red", "green", "r79-nonv1.tsv"].contains(&n.as_str()) {
+        if !["red", "green"].contains(&n.as_str()) {
             return Err(violation(
                 "queries-fixtures",
                 format!("unsupported entry: {n}"),
