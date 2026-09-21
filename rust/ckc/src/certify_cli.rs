@@ -1,10 +1,12 @@
 // M6 shell: immutable input snapshots, upstream APE staging, duplicate DRS
 // runs, source hashes, verified certification. Derived payloads stay in memory.
-use ckc_kernel::EOut;
+use ckc_kernel::{EOut, ESrc};
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Stdio};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread;
 
 struct Stage(PathBuf);
 
@@ -208,6 +210,80 @@ fn ace_paths(dir: &Path, optional: bool) -> Result<Vec<PathBuf>, String> {
     Ok(paths)
 }
 
+struct Artifact {
+    query: bool,
+    id: String,
+    ace: PathBuf,
+}
+
+type Certified = Result<(Vec<u8>, EOut), String>;
+
+fn certify_artifact(
+    artifact: &Artifact,
+    stage: &Stage,
+    root: &Path,
+    guideline: &Path,
+    usha: Option<&Vec<u8>>,
+) -> Certified {
+    let ace = read_text(&artifact.ace, "ace")?;
+    let pl_dir = if artifact.query { "queries/pl" } else { "pl" };
+    let pl = read_text(
+        &guideline.join(pl_dir).join(format!("{}.pl", artifact.id)),
+        "pl",
+    )?;
+    let first = stage.dump(root, &ace, usha.is_some())?;
+    let second = stage.dump(root, &ace, usha.is_some())?;
+    if first != second {
+        return Err("dump_nondeterministic.".to_owned());
+    }
+    let output = certify(artifact.query, &artifact.id, &ace, usha, &first, &pl);
+    Ok((pl, output))
+}
+
+fn certify_parallel(
+    artifacts: &[Artifact],
+    stage: &Stage,
+    root: &Path,
+    guideline: &Path,
+    usha: Option<&Vec<u8>>,
+) -> Result<Vec<Certified>, String> {
+    let workers = thread::available_parallelism()
+        .map(usize::from)
+        .unwrap_or(1)
+        .min(artifacts.len());
+    let next = AtomicUsize::new(0);
+    thread::scope(|scope| {
+        let mut handles = Vec::with_capacity(workers);
+        for _ in 0..workers {
+            handles.push(
+                thread::Builder::new()
+                    .spawn_scoped(scope, || {
+                        let mut results = Vec::new();
+                        loop {
+                            let index = next.fetch_add(1, Ordering::Relaxed);
+                            let Some(artifact) = artifacts.get(index) else {
+                                break;
+                            };
+                            results.push((
+                                index,
+                                certify_artifact(artifact, stage, root, guideline, usha),
+                            ));
+                        }
+                        results
+                    })
+                    .map_err(|_| "worker_unavailable.".to_owned())?,
+            );
+        }
+        let mut results = Vec::with_capacity(artifacts.len());
+        for handle in handles {
+            results.extend(handle.join().map_err(|_| "worker_failed.".to_owned())?);
+        }
+        // Preserve sorted document/query order regardless of driver completion order.
+        results.sort_unstable_by_key(|(index, _)| *index);
+        Ok(results.into_iter().map(|(_, result)| result).collect())
+    })
+}
+
 pub fn run(id: &str) -> ExitCode {
     if !name_ok(id) {
         return reject(id, "guideline_id.");
@@ -231,7 +307,7 @@ pub fn run(id: &str) -> ExitCode {
     let usha = ulex
         .as_ref()
         .map(|u| crate::trust::sha256_hex(u).into_bytes());
-    let mut payloads = Vec::new();
+    let mut artifacts = Vec::with_capacity(docs.len() + queries.len());
     for (query, paths) in [(false, &docs), (true, &queries)] {
         for path in paths {
             let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
@@ -240,24 +316,47 @@ pub fn run(id: &str) -> ExitCode {
             if !name_ok(stem) {
                 return reject(id, "artifact_name.");
             }
-            let pl_dir = if query { "queries/pl" } else { "pl" };
-            let result = (|| {
-                let ace = read_text(path, "ace")?;
-                let pl = read_text(&guideline.join(pl_dir).join(format!("{stem}.pl")), "pl")?;
-                let first = stage.dump(&root, &ace, ulex.is_some())?;
-                let second = stage.dump(&root, &ace, ulex.is_some())?;
-                if first != second {
-                    return Err("dump_nondeterministic.".to_owned());
-                }
-                Ok(certify(query, stem, &ace, usha.as_ref(), &first, &pl))
-            })();
-            match result {
-                Err(why) => return reject(stem, &why),
-                Ok(output) if output.rc != 0 => return emit(output),
-                Ok(output) if !query => payloads.push(output.out),
-                Ok(_) => {}
-            }
+            artifacts.push(Artifact {
+                query,
+                id: stem.to_owned(),
+                ace: path.clone(),
+            });
         }
+    }
+    let results = match certify_parallel(&artifacts, &stage, &root, &guideline, usha.as_ref()) {
+        Ok(results) => results,
+        Err(why) => return reject(id, &why),
+    };
+    let mut manifest = String::new();
+    let mut pls = Vec::with_capacity(docs.len());
+    let mut payloads = Vec::with_capacity(docs.len());
+    for (artifact, result) in artifacts.iter().zip(results) {
+        match result {
+            Err(why) => return reject(&artifact.id, &why),
+            Ok((_, output)) if output.rc != 0 => return emit(output),
+            Ok((pl, output)) if !artifact.query => {
+                // One row and two immutable source snapshots satisfy K2's cells_ok.
+                manifest.push_str(&format!(
+                    "guidelines/{id}/pl/{}.pl\t{}.proof\n",
+                    artifact.id, artifact.id
+                ));
+                pls.push(ESrc::Bytes(pl));
+                payloads.push(ESrc::Bytes(output.out));
+            }
+            Ok(_) => {}
+        }
+    }
+    let aggregate = ckc_kernel::contract::v1_aggregate_check(
+        b"certify",
+        &ESrc::Bytes(manifest.into_bytes()),
+        &pls,
+        &payloads,
+    );
+    if aggregate.rc != 0 {
+        return reject(
+            "aggregate",
+            String::from_utf8_lossy(&aggregate.err).trim_end_matches('\n'),
+        );
     }
     println!(
         "ckc: certify ok {id} {} documents {} queries",
