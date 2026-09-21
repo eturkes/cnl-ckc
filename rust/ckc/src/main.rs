@@ -19,7 +19,7 @@ fn main() -> ExitCode {
         }
         _ => {
             eprintln!(
-                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render> <pl> | ckc check [repo-root]"
+                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc check [repo-root]"
             );
             ExitCode::from(2)
         }

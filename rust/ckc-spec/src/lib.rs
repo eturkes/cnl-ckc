@@ -13,4 +13,5 @@ pub mod release;
 pub mod replay;
 pub mod term;
 pub mod trace;
+pub mod ui;
 pub mod v1text;
