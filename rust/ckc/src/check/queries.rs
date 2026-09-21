@@ -115,13 +115,19 @@ pub(super) fn answer(id: &str, manifest: &Path, query: &Path) -> Result<Vec<u8>>
     )
 }
 pub(super) fn trace_raw(
-    _manifest: &Path,
-    _query: &Path,
-    _answers: &Path,
-    _timeout_category: &str,
-    _timeout_detail: &str,
+    manifest: &Path,
+    query: &Path,
+    answers: &Path,
+    timeout_category: &str,
+    timeout_detail: &str,
 ) -> Result<process::Output> {
-    Err(fail("queries-fixtures", "trace seam pending"))
+    kernel(
+        "trace",
+        &[manifest, query, answers],
+        30,
+        timeout_category,
+        timeout_detail,
+    )
 }
 pub(super) fn trace(id: &str, manifest: &Path, query: &Path, answers: &Path) -> Result<Vec<u8>> {
     artifact(
@@ -136,13 +142,84 @@ pub(super) fn trace(id: &str, manifest: &Path, query: &Path, answers: &Path) -> 
         id,
     )
 }
-struct TraceInfo {
-    demo: bool,
-    nodes: usize,
+fn trace_join_error(bytes: &[u8], id: &str) -> Option<Failure> {
+    // Decode the verified diagnostic only; the shell never walks proof terms.
+    let detail = std::str::from_utf8(bytes)
+        .ok()?
+        .strip_prefix("ace_to_pl_error(proof,trace_check(join(sentence(")?
+        .strip_suffix("))).\n")?;
+    let (sentence, count) = detail.split_once("),")?;
+    let (docid, ordinal) = sentence.rsplit_once(',')?;
+    let docid = docid
+        .strip_prefix('\'')
+        .and_then(|s| s.strip_suffix('\''))
+        .unwrap_or(docid);
+    if !valid_docid(docid) || ordinal.parse::<u64>().ok()? == 0 {
+        return None;
+    }
+    let quantity = match count.parse::<usize>().ok()? {
+        0 => "no",
+        1 => return None,
+        _ => "multiple",
+    };
+    Some(violation(
+        "traces",
+        format!(
+            "trace node resolves to {quantity} committed clause line{}: {id} {docid} S{ordinal}",
+            if quantity == "no" { "" } else { "s" }
+        ),
+    ))
 }
-fn inspect_trace(_bytes: &[u8], _gid: &Path, _id: &str, _path: &Path) -> Result<TraceInfo> {
-    // K3 trace-check owns syntax, node-to-committed-clause joins and demo status.
-    Err(fail("queries-fixtures", "trace seam pending"))
+fn inspect_trace(
+    id: &str,
+    manifest: &Path,
+    query: &Path,
+    answers: &Path,
+    path: &Path,
+) -> Result<usize> {
+    let out = kernel(
+        "trace-check",
+        &[manifest, query, answers, path],
+        30,
+        "queries",
+        &format!("wall_clock for qid: {id}"),
+    )?;
+    if out.rc != 0 && out.out.is_empty() {
+        let error = match (out.rc, out.err.as_slice()) {
+            (1, b"ace_to_pl_error(proof,trace_check(stale)).\n") => Some(violation(
+                "stale",
+                format!(
+                    "committed query trace differs from fresh trace: {}",
+                    show(path)
+                ),
+            )),
+            (1, b"ace_to_pl_error(proof,trace_check(non_demo)).\n") => {
+                Some(violation("traces", format!("non-demo proof for qid: {id}")))
+            }
+            (1, b"ace_to_pl_error(proof,trace_check(node_shape)).\n")
+            | (2, b"ace_to_pl_error(check_load,trace_file(noncanonical)).\n") => Some(violation(
+                "traces",
+                format!("malformed trace artifact: {}", show(path)),
+            )),
+            (1, bytes) => trace_join_error(bytes, id),
+            _ => None,
+        };
+        if let Some(error) = error {
+            return Err(error);
+        }
+    }
+    let bytes = artifact(out, "trace-check", id)?;
+    std::str::from_utf8(&bytes)
+        .ok()
+        .and_then(|s| s.strip_prefix(&format!("ckc: trace-check ok {id} nodes=")))
+        .and_then(|s| s.strip_suffix('\n'))
+        .and_then(|s| s.parse().ok())
+        .ok_or_else(|| {
+            fail(
+                "trace-check-stdout",
+                format!("invalid meter for question: {id}"),
+            )
+        })
 }
 fn query_aces(root: &Path) -> Result<Vec<String>> {
     if root.is_symlink() {
@@ -349,11 +426,7 @@ pub(super) fn validate(
                 ),
             ));
         }
-        let info = inspect_trace(&committed, gid, &id, &path)?;
-        if !info.demo {
-            return Err(violation("traces", format!("non-demo proof for qid: {id}")));
-        }
-        counts.nodes += info.nodes;
+        counts.nodes += inspect_trace(&id, &mpath, &pl, &answers, &path)?;
     }
     Ok(counts)
 }
