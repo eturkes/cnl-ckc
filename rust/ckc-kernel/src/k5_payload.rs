@@ -1,6 +1,7 @@
 use crate::k5_bytes as b;
 use ckc_spec::check as ck;
-use ckc_spec::ui::{self as u, ECoverageRow, EEvidence, EGuideline, EStatus};
+use ckc_spec::check::{ECoverageRow, EEvidence, EStatus};
+use ckc_spec::ui::{self as u, EGuideline};
 use vstd::prelude::*;
 use vstd::slice::slice_to_vec;
 verus! {

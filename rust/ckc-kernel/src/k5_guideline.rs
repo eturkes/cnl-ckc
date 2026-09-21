@@ -3,7 +3,8 @@ use crate::{
     k5_records as records, k5_titles as titles, k5_url as url,
 };
 use ckc_spec::check as ck;
-use ckc_spec::ui::{self as u, ECoverageRow, EDocument, EGuideline, EPage, EStatus};
+use ckc_spec::check::{ECoverageRow, EStatus};
+use ckc_spec::ui::{self as u, EDocument, EGuideline, EPage};
 use vstd::prelude::*;
 verus! {
 

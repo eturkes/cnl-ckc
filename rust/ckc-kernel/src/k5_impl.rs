@@ -41,8 +41,7 @@ pub fn ui_render_document_impl(
     ensures
         out@ == ckc_spec::ui::render_document(g@, d@, prev@, next@, token@),
 {
-    assert(false);
-    Vec::new()
+    crate::k5_render::page(&crate::k5_document::page(g, d, prev, next, token))
 }
 
 pub fn ui_post_outcome_impl(req: &ckc_spec::ui::ERequest, s: &ckc_spec::ui::EPostState) -> (o:

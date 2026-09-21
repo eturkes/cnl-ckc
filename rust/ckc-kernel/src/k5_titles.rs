@@ -2,7 +2,8 @@ use crate::{
     k4_numbers as numbers, k4_search as search, k4_words as words, k5_bytes as b, k5_payload as p,
 };
 use ckc_spec::check as ck;
-use ckc_spec::ui::{self as u, ECoverageRow, EGuideline, EStatus};
+use ckc_spec::check::{ECoverageRow, EStatus};
+use ckc_spec::ui::{self as u, EGuideline};
 use vstd::prelude::*;
 use vstd::slice::slice_to_vec;
 verus! {
