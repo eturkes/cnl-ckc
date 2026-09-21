@@ -15,7 +15,7 @@ default:
     @just --list --unsorted
 
 # Full gate: rust chain, then the legacy chain (authoritative until M5.7).
-gate: rust legacy
+gate: rust legacy certify
 
 # Rust chain: format, lint, verify, build, trust-audit, test, dependency audit, secret scan.
 rust: fmt-check clippy verify build trust test deny secrets
@@ -139,3 +139,16 @@ legacy:
     for g in guidelines/*/; do python3 -P tools/goal.py compile "$(basename "$g")"; done
     git diff --quiet -- guidelines/
     echo "gate: legacy ok"
+
+# Emission certification (M6, R83/R86): every committed document + query certifies
+# against rust/ckc-spec/src/emit.rs through the upstream APE parser, then the
+# tests/certify battery replays. CKC_BIN names a prebuilt binary (CI artifact).
+certify:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    bin="${CKC_BIN:-}"
+    if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
+    for g in guidelines/*/; do "$bin" certify "$(basename "$g")"; done
+    "$bin" certify --cases tests/certify/cases.tsv
+    echo "gate: certify ok"

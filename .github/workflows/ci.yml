@@ -101,6 +101,56 @@ jobs:
       - name: Rust gate
         run: just rust
 
+      - name: Upload ckc binary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ckc
+          path: rust/target/release/ckc
+          retention-days: 1
+
+  # Emission certification (M6, R83) = `just certify` over the rust job's binary
+  # inside the pinned swipl container: the swipl image carries no linker and the
+  # rust runner no SWI-Prolog, so the artifact is the seam.
+  certify:
+    if: github.event_name != 'schedule'
+    needs: rust
+    runs-on: ubuntu-24.04
+    container:
+      image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
+    steps:
+      - name: Install job tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates curl
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Trust workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Bootstrap just (rust/tools.lock)
+        run: |
+          set -eu
+          url=$(awk -F'\t' '$1=="just"{print $5}' rust/tools.lock)
+          sha=$(awk -F'\t' '$1=="just"{print $4}' rust/tools.lock)
+          curl -sSL -o "$RUNNER_TEMP/just.tar.gz" "$url"
+          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/just.tar.gz" | sha256sum -c
+          mkdir -p "$RUNNER_TEMP/just"
+          tar -xzf "$RUNNER_TEMP/just.tar.gz" -C "$RUNNER_TEMP/just" just
+          echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"
+
+      - name: Download ckc binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ckc
+          path: ${{ runner.temp }}/ckc-bin
+
+      - name: Certify
+        run: |
+          chmod +x "$RUNNER_TEMP/ckc-bin/ckc"
+          CKC_BIN="$RUNNER_TEMP/ckc-bin/ckc" just certify
+
   # Weekly: RustSec advisories + license/source policy over the committed Cargo.lock.
   advisories:
     if: github.event_name == 'schedule'

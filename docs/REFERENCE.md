@@ -28,16 +28,27 @@ Every program artifact that a human must read is controlled natural
 language, a direct compilation of it, or part of one small named
 compiler base:
 
-- **ACE → Prolog.** All guideline Prolog (`guidelines/*/pl/`) compiles
-  from ACE. A compiled file quotes each source sentence beside its
-  clauses, and it carries the SHA-256 of the exact ACE and lexicon
+- **ACE → Prolog, certified.** All guideline Prolog (`guidelines/*/pl/`)
+  compiles from ACE. A compiled file quotes each source sentence beside
+  its clauses, and it carries the SHA-256 of the exact ACE and lexicon
   bytes that produced it. The compiler also derives each sentence's
   proof obligation and discharges it against the document's own
-  clauses, alone and co-loaded with the rest of the batch. A shipped
-  clause is therefore one that the compiler has proved follows from the
-  sentence it quotes. A committed query answer ships with a proof
-  trace. Each clause application in that trace names one committed
-  clause line by SHA-256.
+  clauses, alone and co-loaded with the rest of the batch. A committed
+  query answer ships with a proof trace. Each clause application in that
+  trace names one committed clause line by SHA-256. `ckc certify
+  <guideline>` then certifies every committed document and query: it
+  parses the ACE again with the upstream APE parser, and it checks that
+  the committed clauses and each query's projection are exactly what
+  the specification `rust/ckc-spec/src/emit.rs` states for that parse,
+  that the custody digests match, and that the proof obligations replay
+  through the verified engine. The check is machine-verified against the
+  committed specification under a pinned verifier TCB (see
+  `.claude/rules/rust.md`). The emitter `vendor/ape/prolog/ace_to_pl.pl`
+  produces the artifacts, but no human needs to read it: the
+  specification and the certifier's verdict are the audit surface.
+  `tests/certify/cases.tsv` holds 17 hostile edits of committed
+  artifacts that the certifier must reject; `just certify` runs the
+  corpus certification and that battery.
 - **E-- → Python.** All first-party Python (`tools/goal.py`,
   `tools/regen.py`, `tools/ui.py`) compiles from E-- (`tools/*.emm`),
   an English-like language. `tools/regen.py --check` proves that every
@@ -56,12 +67,14 @@ compiler base:
 - **The compiler base is closed and named.** Two vendored forks perform
   those compilations. They are the trusted computing base that a human
   must read directly. `vendor/ape/` holds the ACE parser plus the
-  hand-authored `prolog/ace_to_pl.pl` compiler — the one first-party
-  Prolog artifact not itself compiled from ACE. `vendor/e--/` holds the
-  hand-authored Python that compiles E--. Question projection, query
-  answering, and proof tracing are modes of that same `ace_to_pl.pl`,
-  so those artifact families added no new trusted code. Both trees are
-  pruned to their load closures. `vendor/*/PROVENANCE` records upstream, fork
+  first-party `prolog/ace_to_pl.pl` emitter. The emitter is outside the
+  human-read trust story: `ckc certify` certifies its output against
+  `rust/ckc-spec/src/emit.rs`, and the trusted part of that tree is the
+  upstream parser, run as a separate pinned SWI-Prolog process by the
+  thin driver `rust/ckc/prolog/drs_dump.pl`, which never loads the
+  emitter. `vendor/e--/` holds the hand-authored Python that compiles
+  E--; a human must read it until the Rust cutover retires it. Both
+  trees are pruned to their load closures. `vendor/*/PROVENANCE` records upstream, fork
   base, import commit, license, first-party inventory, and trust
   boundary. Git history is the change record, and `goal.py check` reads
   it. A vendored file counts as touched when a commit after the
@@ -84,7 +97,8 @@ compiler base:
   `tests/adjudication/` holds ledger-validator fixtures.
   `tests/queries/` holds query, answer, and trace fixtures.
   `tests/ui/` holds reviewer-interface fixtures. `tests/copy/` holds
-  copy-register fixtures. Every case pins exact output bytes. One
+  copy-register fixtures. `tests/certify/` holds certification mutants
+  that `ckc certify --cases` must reject. Every case pins exact output bytes. One
   `tools/goal.py check` invocation beside `tools/regen.py --check` (the
   E-- → Python identity above) is the full acceptance gate. `check`:
 

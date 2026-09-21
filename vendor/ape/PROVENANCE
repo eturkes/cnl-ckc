@@ -23,9 +23,13 @@ First-party additions:
   (LGPL-3.0-or-later, APE derivative). Sole first-party entry point into this
   tree; contract in its header.
 
-Trust posture: APE runs in separate SWI-Prolog processes over a scratch copy
-staged by `tools/goal.py` (`shutil.copytree`, then `vendor/clex/clex_lexicon.pl`
-overlaid on the staged demo `prolog/lexicon/clex_lexicon.pl`, then `fit_to_plp`
-grammar build); every staged parse — corpus and red probes — reads the full
-Clex, so the in-tree demo lexicon is unused at runtime. Python moves bytes
-only; DRS interpretation lives entirely in Prolog.
+Trust posture: APE runs in separate SWI-Prolog processes over a scratch
+copy staged from this tree (`vendor/clex/clex_lexicon.pl` overlaid on the
+demo `prolog/lexicon/clex_lexicon.pl`, then `fit_to_plp` grammar build);
+every staged parse reads the full Clex, so the in-tree demo lexicon is
+unused at runtime. The emitter `prolog/ace_to_pl.pl` is not trusted:
+`ckc certify` re-parses every committed document and query with the
+upstream parser through `rust/ckc/prolog/drs_dump.pl` (which loads only
+upstream modules) and certifies the committed Prolog against
+`rust/ckc-spec/src/emit.rs` by translation validation. The trusted Prolog
+in this tree is the upstream parser alone.
