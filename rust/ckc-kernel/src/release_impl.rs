@@ -34,8 +34,47 @@ pub fn release_manifest_impl(
             ckc_spec::release::members(tags@),
         ),
 {
-    assert(false);
-    Vec::new()
+    let (mut pay, src) = crate::release_rows::partition(staged, profiles, urls);
+    let ghost original = ckc_spec::release::members(pay@);
+    let mut i = 0usize;
+    while i < tags.len()
+        invariant
+            i <= tags.len(),
+            original == ckc_spec::release::payload(
+                ckc_spec::release::members(staged@),
+                ckc_spec::check::byte_pairs(profiles@),
+            ),
+            crate::release_rows::source_views(src@) == ckc_spec::release::sources(
+                ckc_spec::release::members(staged@),
+                ckc_spec::check::byte_pairs(profiles@),
+                ckc_spec::check::byte_pairs(urls@),
+            ),
+            ckc_spec::release::members(pay@) == original + ckc_spec::release::members(tags@).take(
+                i as int,
+            ),
+        decreases tags.len() - i,
+    {
+        let x = crate::release_rows::clone_member(&tags[i]);
+        let ghost before = pay@;
+        pay.push(x);
+        proof {
+            vstd::assert_seqs_equal!(ckc_spec::release::members(pay@) == ckc_spec::release::members(before).push(x@));
+            vstd::assert_seqs_equal!(ckc_spec::release::members(tags@).take(i as int + 1) == ckc_spec::release::members(tags@).take(i as int).push(x@));
+        }
+        i += 1;
+    }
+    proof {
+        vstd::assert_seqs_equal!(ckc_spec::release::members(tags@).take(i as int) == ckc_spec::release::members(tags@));
+    }
+    let sorted = crate::release_rows::sorted(&pay);
+    let mut r = crate::release_rows::meta(head, compiler, lexicon);
+    let ms = crate::release_rows::rows(&sorted);
+    crate::k4_bytes::append(&mut r, &ms);
+    let ss = crate::release_rows::source_text(&src);
+    crate::k4_bytes::append(&mut r, &ss);
+    let ls = crate::release_rows::label_text(labels);
+    crate::k4_bytes::append(&mut r, &ls);
+    r
 }
 
 } // verus!
