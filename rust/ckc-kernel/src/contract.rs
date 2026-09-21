@@ -206,11 +206,12 @@ pub fn v1_trace_check(
 pub proof fn k3_sound(db: Seq<ckc_spec::v1text::DocClause>, goal: ckc_spec::term::Term)
     requires
         ckc_spec::trace::bodies_wf(db),
+        ckc_spec::answers::goal_walk(goal) is None,
         ckc_spec::trace::derived_forest(db, goal) is Some,
     ensures
         ckc_spec::trace::forest_valid(db, goal, ckc_spec::trace::derived_forest(db, goal).unwrap()),
 {
-    crate::k3_impl::k3_sound_impl(db, goal)
+    crate::k3_sound::k3_sound_proof(db, goal)
 }
 
 } // verus!
