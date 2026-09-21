@@ -154,4 +154,8 @@ pub use ckc_spec::check::{
     EBundle, ECoverage, ECoverageRow, EDecision, EEvidence, EFileSrc, ERendered, EStatus, EVerdict,
 };
 pub use ckc_spec::replay::{EOut, ERow, ESrc};
+pub use ckc_spec::ui::{
+    ECorpus, EDocument, EGuideline, EPage, EPiece, EPostDocument, EPostGuideline, EPostOutcome,
+    EPostState, ERecord, ERequest, EResponse,
+};
 pub use ckc_spec::v1text::EV1Verdict;
