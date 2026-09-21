@@ -68,6 +68,28 @@ mod k3_print;
 mod k3_rows;
 pub mod k3_sound;
 mod k3_state;
+mod k4_bundle;
+mod k4_bytes;
+mod k4_classify;
+mod k4_coverage;
+mod k4_coverage_rows;
+mod k4_evidence;
+mod k4_file_checks;
+mod k4_impl;
+mod k4_ledger;
+mod k4_lexdata;
+mod k4_lexicon;
+mod k4_lexparse;
+mod k4_manifest;
+mod k4_numbers;
+mod k4_payload;
+mod k4_render;
+mod k4_rows;
+mod k4_scalar;
+mod k4_search;
+mod k4_semantic;
+mod k4_set;
+mod k4_words;
 mod m6_ante;
 mod m6_bind;
 mod m6_custody;
@@ -95,5 +117,8 @@ mod v1_impl;
 mod v1_term_impl;
 
 pub use ckc_spec::align::{ECheck, EModel, ESpan};
+pub use ckc_spec::check::{
+    EBundle, ECoverage, ECoverageRow, EDecision, EEvidence, EFileSrc, ERendered, EStatus, EVerdict,
+};
 pub use ckc_spec::replay::{EOut, ERow, ESrc};
 pub use ckc_spec::v1text::EV1Verdict;
