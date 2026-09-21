@@ -1,6 +1,6 @@
 use super::unification::*;
 use super::*;
-use ckc_spec::answers::goal_walk;
+use ckc_spec::answers::*;
 
 verus! {
 
