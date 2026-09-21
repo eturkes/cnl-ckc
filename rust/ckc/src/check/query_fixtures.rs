@@ -95,7 +95,18 @@ const R79_CASES: &[&str] = &[
     "limit-depth",
     "limit-inner-inference",
     "no-finite-failure",
+    "numeric-bigint",
+    "trace-digest-join",
+    "trace-indeterminate-mirror",
+    "trace-naf-inference-cut",
+    "trace-no-mirror",
     "yesno-limit-before-proof",
+];
+const R90_STALE_ANSWERS: &[(&str, &str)] = &[
+    ("trace-naf-depth-cut", "q-naf-depth"),
+    ("trace-naf-proved", "q-naf-proved"),
+    ("trace-unproved-finite", "q-unproved-finite"),
+    ("trace-unproved-limit", "q-unproved-limit"),
 ];
 fn non_v1_expectations(root: &Path) -> Result<BTreeMap<String, (u8, Vec<u8>)>> {
     let path = root.join("r79-nonv1.tsv");
@@ -140,6 +151,7 @@ fn case_result(
     stage: &Path,
 ) -> Result {
     let n = name(case);
+    let pin = if is_red { "expect" } else { "golden" };
     let (rc, stdout, stderr) = match queries::fixture(scratch, swipl, stage, gid) {
         Ok(bytes) => (0, bytes, Vec::new()),
         Err(e) => (e.rc, e.out, e.err),
@@ -152,7 +164,7 @@ fn case_result(
             ));
         }
         // R80 substitutes the native rejection; the original pin remains a required readable member.
-        read(&case.join("expect"), "queries-fixtures")?;
+        read(&case.join(pin), "queries-fixtures")?;
         return Ok(());
     }
     if rc != u8::from(is_red) {
@@ -167,8 +179,16 @@ fn case_result(
             format!("non-empty stderr for case: {n}"),
         ));
     }
-    let pin = if is_red { "expect" } else { "golden" };
-    if stdout != read(&case.join(pin), "queries-fixtures")? {
+    let mut expected = read(&case.join(pin), "queries-fixtures")?;
+    // R90 re-pins these verdicts only; original files and trace goldens remain required.
+    if is_red && let Some((_, id)) = R90_STALE_ANSWERS.iter().find(|(case, _)| *case == n) {
+        expected = format!(
+            "goal: stale: committed query answers differ from fresh answer: {}\n",
+            show(&gid.join("queries/answers").join(format!("{id}.pl"))),
+        )
+        .into_bytes();
+    }
+    if stdout != expected {
         let p = if is_red { "expect pin" } else { "golden" };
         return Err(violation(
             "queries-fixtures",
@@ -330,7 +350,7 @@ fn nonfinite(scratch: &process::Scratch) -> Result {
         "trace-nonfinite",
         "wall_clock for non-finite float probe",
     )?;
-    if out.rc != 1 {
+    if out.rc != 2 {
         return Err(violation(
             "trace-nonfinite",
             format!("status {} for non-finite float probe", out.rc),
@@ -342,10 +362,10 @@ fn nonfinite(scratch: &process::Scratch) -> Result {
             "non-empty stdout for non-finite float probe",
         ));
     }
-    if out.err != b"ace_to_pl_error(proof,trace_unserializable).\n" {
+    if out.err != b"ace_to_pl_error(check_load,answers_file(noncanonical)).\n" {
         return Err(violation(
             "trace-nonfinite",
-            "stderr differs from pinned trace_unserializable line",
+            "stderr differs from pinned answers_file(noncanonical) line",
         ));
     }
     Ok(())
@@ -457,7 +477,7 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
                 ));
             }
             let gid = &gids[0];
-            let native_expectation = if color == "red" { non_v1.get(&n) } else { None };
+            let native_expectation = non_v1.get(&n);
             case_result(
                 &case,
                 gid,
