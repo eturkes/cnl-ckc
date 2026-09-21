@@ -96,7 +96,15 @@ pub proof fn document_sound_proof(
             ckc_spec::ui::copy_registry(),
         ),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::document_html);
+    hide(ckc_spec::ui::corpus_bytes);
+    let g = c.guidelines[i];
+    let d = g.documents[j];
+    assert(g.documents.contains(d));
+    crate::k5_sound_corpus::guideline(c, i);
+    crate::k5_sound_document::page(g, d, prev, next, token, ckc_spec::ui::corpus_bytes(c));
+    crate::k5_sound_escape::page(ckc_spec::ui::document_html(g, d, prev, next, token), c);
 }
 
 pub proof fn post_sound_proof(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostState)
