@@ -2132,7 +2132,8 @@ pub open spec fn corpus_bytes(c: Corpus) -> Seq<Bytes> {
             seq![g.gid, ledger_data(g.ledger)] + (match g.readme {
                 Some(b) => seq![b],
                 None => Seq::empty(),
-            }) + g.coverage.rows.map_values(|r: Row| r.line) + g.coverage.evidence.map_values(
+            }) + g.coverage.rows.map_values(|r: Row| seq![r.id, r.line]).flatten()
+                + g.coverage.evidence.map_values(
                 |e: check::Evidence|
                     e.ordinal + e.payloads.map_values(|p: (Bytes, Seq<Bytes>)| p.1).flatten(),
             ).flatten() + g.documents.map_values(
