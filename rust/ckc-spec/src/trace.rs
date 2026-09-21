@@ -647,10 +647,13 @@ pub open spec fn naf_fails(db: Seq<DocClause>, t: Term) -> bool {
     trun(db, roots_cfg(seq![t]), trace_inf()).0 == TOut::Failed(true)
 }
 
-// A clause node resolves its goal: some renaming + substitution equates the
-// clause head with the goal and instantiates the body into the children's
-// goals. A naf leaf's payload generalizes the site goal and fails finitely.
-pub open spec fn node_valid(db: Seq<DocClause>, g: Term, node: PNode) -> bool
+// A proof forest certifies its goal under ONE answer substitution `th` shared
+// by every node (the certificate of a single SLDNF derivation: an earlier
+// sibling's bindings reach every later goal). A clause node resolves its goal:
+// some renaming equates the clause head with the goal under `th`, and the
+// renamed body items are the children's goals. A naf leaf's frozen payload
+// generalizes the site goal under `th` and fails finitely.
+pub open spec fn node_valid(db: Seq<DocClause>, th: Seq<(nat, Term)>, g: Term, node: PNode) -> bool
     decreases node, 0int,
 {
     match node {
@@ -658,45 +661,56 @@ pub open spec fn node_valid(db: Seq<DocClause>, g: Term, node: PNode) -> bool
             Term::Comp(name, args) => name == naf_name() && args.len() == 1 && (exists|
                 s: Seq<(nat, Term)>,
             | #[trigger]
-                apply(t, s) == args[0]) && naf_fails(db, t),
+                apply(t, s) == apply(args[0], th)) && naf_fails(db, t),
             _ => false,
         },
-        PNode::Clause(m, kids) => m < db.len() && exists|k: nat, s: Seq<(nat, Term)>| #[trigger]
-            resolves(db, g, m, k, s, kids),
+        // Trigger on the nonrecursive renamed head: the recursive `resolves`
+        // term is fuel-indexed and never matches a witness proved at another
+        // fuel (R75).
+        PNode::Clause(m, kids) => m < db.len() && exists|k: nat|
+            #![trigger shift(db[m as int].head, k)]
+            resolves(db, th, g, m, k, kids),
     }
 }
 
-// One resolution step: goal and renamed head coincide under `s`; the renamed
-// body under `s` = the children's goals.
+// One resolution step: goal and renamed head coincide under `th`; the renamed
+// body = the children's goals, each compared under `th` at its own node.
 pub open spec fn resolves(
     db: Seq<DocClause>,
+    th: Seq<(nat, Term)>,
     g: Term,
     m: nat,
     k: nat,
-    s: Seq<(nat, Term)>,
     kids: Seq<PNode>,
 ) -> bool
     decreases kids, 2int,
 {
-    m < db.len() && apply(g, s) == apply(shift(db[m as int].head, k), s) && kids_valid(
+    m < db.len() && apply(g, th) == apply(shift(db[m as int].head, k), th) && kids_valid(
         db,
-        body_terms(db[m as int].body, k).map_values(|b: Term| apply(b, s)),
+        th,
+        body_terms(db[m as int].body, k),
         kids,
     )
 }
 
-pub open spec fn kids_valid(db: Seq<DocClause>, gs: Seq<Term>, kids: Seq<PNode>) -> bool
+pub open spec fn kids_valid(
+    db: Seq<DocClause>,
+    th: Seq<(nat, Term)>,
+    gs: Seq<Term>,
+    kids: Seq<PNode>,
+) -> bool
     decreases kids, 1int,
 {
-    kids.len() == gs.len() && (kids.len() == 0 || (node_valid(db, gs[0], kids[0]) && kids_valid(
+    kids.len() == gs.len() && (kids.len() == 0 || (node_valid(db, th, gs[0], kids[0]) && kids_valid(
         db,
+        th,
         gs.drop_first(),
         kids.drop_first(),
     )))
 }
 
 pub open spec fn forest_valid(db: Seq<DocClause>, goal: Term, forest: Seq<PNode>) -> bool {
-    kids_valid(db, conj_leaves(goal), forest)
+    exists|th: Seq<(nat, Term)>| #[trigger] kids_valid(db, th, conj_leaves(goal), forest)
 }
 
 // Every body item is a wellformed literal or NAF box — the shape the canonical

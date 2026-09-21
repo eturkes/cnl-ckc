@@ -450,17 +450,19 @@ Define [[check_prolog_inventory]] taking nothing:
     For each tracked in [[sorted]]([[tracked_text.splitlines]]()):
         Set vendored to [[tracked.startswith]]("vendor/ape/").
         Set clex_base to tracked equals "vendor/clex/clex_lexicon.pl".
+        Set drs_driver to tracked equals "rust/ckc/prolog/drs_dump.pl".
         Set compiled to [[compiled_pl_path]](tracked).
         Set fixture_pl to [[fixture_pl_path]](tracked).
         Set query_artifact to [[query_artifact_pl_path]](tracked).
         Set queries_fixture to [[queries_fixture_pl_path]](tracked).
         If not vendored:
             If not clex_base:
-                If not compiled:
-                    If not fixture_pl:
-                        If not query_artifact:
-                            If not queries_fixture:
-                                Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
+                If not drs_driver:
+                    If not compiled:
+                        If not fixture_pl:
+                            If not query_artifact:
+                                If not queries_fixture:
+                                    Do [[violation]]("prolog-inventory", "unauthorized tracked prolog: " plus tracked).
 
 Define [[provenance_field]] taking prov_lines, key:
     Set prefix to key plus ": ".

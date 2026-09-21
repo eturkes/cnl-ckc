@@ -426,17 +426,19 @@ def check_prolog_inventory():
     for tracked in sorted(tracked_text.splitlines()):
         vendored = tracked.startswith("vendor/ape/")
         clex_base = tracked == "vendor/clex/clex_lexicon.pl"
+        drs_driver = tracked == "rust/ckc/prolog/drs_dump.pl"
         compiled = compiled_pl_path(tracked)
         fixture_pl = fixture_pl_path(tracked)
         query_artifact = query_artifact_pl_path(tracked)
         queries_fixture = queries_fixture_pl_path(tracked)
         if not vendored:
             if not clex_base:
-                if not compiled:
-                    if not fixture_pl:
-                        if not query_artifact:
-                            if not queries_fixture:
-                                violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
+                if not drs_driver:
+                    if not compiled:
+                        if not fixture_pl:
+                            if not query_artifact:
+                                if not queries_fixture:
+                                    violation("prolog-inventory", "unauthorized tracked prolog: " + tracked)
 def provenance_field(prov_lines, key):
     prefix = key + ": "
     value = ""

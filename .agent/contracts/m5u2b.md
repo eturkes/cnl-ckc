@@ -64,11 +64,12 @@ uninspected `ckc-kernel/src/k3_impl.rs` (+ modules) + shell seam
   earlier row's `non_demo` preempts a later row's join failure → meter
   `ckc: trace-check ok <qid> nodes=<k>`.
 - Soundness theorem (`contract::k3_sound`): every derived forest is
-  `forest_valid` — each clause node's goal unifies with a renaming of its
-  clause head under a substitution that instantiates the body into the
-  children's goals; each naf leaf's payload generalizes the site goal and
-  fails finitely under the trace bounds. This is the `proved ⇒ derivable`
-  claim; legacy never checked it (map S6 #27/#40).
+  `forest_valid` — ONE answer substitution `th` shared by every node (R54):
+  each clause node's goal equals a renaming of its clause head under `th`,
+  the renamed body items = the children's goals; each naf leaf's frozen
+  payload generalizes the site goal under `th` and fails finitely under the
+  trace bounds. This is the `proved ⇒ derivable` claim; legacy never
+  checked it (map S6 #27/#40).
 
 ## Predicates (acceptance)
 
@@ -137,3 +138,60 @@ tests/queries replay = `python3 -P .scratch/m5u2b/queries_replay.py --rust-bin �
 - R36 trace-check `join` law = the public REFERENCE law (exactly one
   committed clause line of the named sentence block), NOT legacy
   `trace_block_table`'s widening to any dot-terminated line (map S6 #19).
+- R54 `forest_valid` substitution law: per-node independent substitutions
+  (a) never certified the conjunction's joint solution and (b) falsified
+  every NAF leaf whose site goal an earlier sibling had instantiated
+  (prod-m5u2b-2 counterexample: db `p(a).`, goal `(p(A), \\+ q(A))`, forest
+  `[Clause(0,[]), Naf(q(a))]` — ground `q(a)` never instantiates to the
+  original root arg `q(A)`). Law = one existential `th` over the forest
+  (`forest_valid = exists th. kids_valid(db, th, roots, forest)`); children
+  goals stay raw renamed body items, every comparison applies `th` once.
+- R55 (R39 extension) the K3 replay copies canonicalize LINE 1 of every
+  copied fixture file the K1 reader gates — documents, query projections,
+  answers AND traces (goldens are header-independent) — so a legacy header
+  such as `% q-stale-trace  traced …` never masks the law under test;
+  `red/stale-trace` therefore classifies `stale` (P5) on its canonicalized
+  copy. A copy K1 still rejects after the line-1 rewrite = the R15 non-v1
+  census class: expectation `noncanonical(<path>)` (R24a), listed per case
+  with the K1 reject reason; originals stay byte-identical (FC0).
+- R56 `red/stale-trace` under R15/R55: the tracked fixture encodes staleness
+  in its header line alone (two-space `% q-stale-trace  traced …`), which
+  K1 rejects at (1,17) → the original classifies `trace_file(noncanonical)`
+  (R15 non-v1 census); its line-1-canonical copy is byte-identical to the
+  fresh derivation → rc0 control; the replay adds a scratch-only derived
+  probe (canonical copy with the proof replaced by `unproved(finite_failure)`,
+  custody digests preserved) that must classify `stale` = P5's stale law.
+  Tracked fixture re-pin = the queries battery port (R39, FC2 row).
+- R67 `k3_sound` hypothesis `answers::goal_walk(goal) is None` beside
+  `bodies_wf(db)` (the EXISTING query-preflight custody law: every conjunct
+  is a v1 semantic-predicate compound — no variable, foreign or negation
+  root; prod-k3sound-1 / prod-m5u2b-2 counterexample: db `p(\\+ q(a)).`,
+  goal `(p(A), A)` executes the bound variable as a NAF site while
+  `forest_valid` sees the raw `Var` root). The trace pipeline enforces it
+  on every committed query (answers.rs Query preflight), so every
+  shell-facing row meets it; a separate `roots_wf` would duplicate it
+  (R-01). Binding: `requires bodies_wf(db), goal_walk(goal) is None,
+  derived_forest(db, goal) is Some`.
+- R60 T-C622/T-C626 cost probes (R32 model) = CLI-observable BOUNDARY rows
+  (no cost-visible seam: the kernel exposes no fuel counters and a
+  counters-only binding would be trusted surface for testing alone): active
+  k3 rows, `legacy: null` (near-boundary legacy parity = non-goal), hand-
+  derived expectations recorded in each manifest (`.scratch/m5u2/diff/
+  k3state/r32-proposed-pins.tsv`): T-C622 = N top-level fact roots with row
+  search ≤ 100000 while row-charged materialization would exceed it
+  (`proved` under the model) + the 1000/1001 positive chain (`proved` vs
+  `unproved(limit)`); T-C626 = the NAF fresh-depth reset probe + the
+  1000/1001 chain under a NAF site; target pins derived at harvest must
+  equal the hand-derived expectation.
+- R75 trigger-only: `node_valid`'s Clause existential triggers on the
+  nonrecursive `shift(db[m].head, k)` — the recursive `resolves` term is
+  fuel-indexed (`rec%resolves(…, fuel)`) and a witness proved at another fuel
+  never matches it (prod-k3sound-1 SMT diagnosis + before/after probe);
+  no semantic change.
+- R82 Kani trace harness (P3 follow-up): `reader_trace_check_small` (8
+  symbolic trace bytes, unwind 949) exhausts CBMC like the engine harness —
+  no verdict at 60 min wall / 12.6 GiB (the whole-file K1 preflight replays
+  symbolically before the trace checker); it stays in `rust/ckc-kani-harness`
+  OUTSIDE the `just kani` recipe, joining the existing `.agent/deferred.md`
+  Kani row (typed below-parser kernel seam). P3 stays PARTIAL as ruled.
+

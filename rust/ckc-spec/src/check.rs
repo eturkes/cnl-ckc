@@ -31,10 +31,30 @@ pub open spec fn fail(cat: Seq<char>, detail: Seq<u8>) -> Verdict {
     Verdict::Fail(ascii(cat), detail)
 }
 
+// Legacy `violation` escapes the detail: LF → `\n`, CR → `\r` (two bytes each).
+pub open spec fn escape_detail(d: Seq<u8>) -> Seq<u8>
+    decreases d.len(),
+{
+    if d.len() == 0 {
+        Seq::empty()
+    } else {
+        (if d[0] == 0x0A {
+            seq![0x5Cu8, 0x6Eu8]
+        } else if d[0] == 0x0D {
+            seq![0x5Cu8, 0x72u8]
+        } else {
+            seq![d[0]]
+        }) + escape_detail(d.drop_first())
+    }
+}
+
 pub open spec fn render(v: Verdict) -> (int, Seq<u8>) {
     match v {
         Verdict::Ok(m) => (0, m),
-        Verdict::Fail(c, d) => (1, ascii("goal: "@) + c + ascii(": "@) + d + seq![0x0Au8]),
+        Verdict::Fail(c, d) => (
+            1,
+            ascii("goal: "@) + c + ascii(": "@) + escape_detail(d) + seq![0x0Au8],
+        ),
     }
 }
 
@@ -75,33 +95,93 @@ pub open spec fn tab_fields(row: Seq<u8>) -> Seq<Seq<u8>> {
     split_on(row, 0x09)
 }
 
-pub open spec fn strip_ws(s: Seq<u8>) -> Seq<u8> {
-    let l = lead_ws(s, 0);
-    let t = s.skip(l as int);
-    t.take(t.len() - trail_ws(t, t.len()) as int)
-}
-
-pub open spec fn is_ws(b: u8) -> bool {
-    b == 0x20 || b == 0x09 || b == 0x0A || b == 0x0D || b == 0x0B || b == 0x0C
+// Whitespace = Python `str.strip()`/`str.split()` over the UTF-8 text (R61),
+// as byte sequences: ASCII 09–0D, 1C–1F, 20; U+0085/U+00A0 (C2 85/A0); U+1680
+// (E1 9A 80); U+2000–200A (E2 80 80–8A), U+2028/2029 (E2 80 A8/A9), U+202F
+// (E2 80 AF); U+205F (E2 81 9F); U+3000 (E3 80 80). Byte length, 0 = none.
+pub open spec fn ws_len(s: Seq<u8>, i: nat) -> nat {
+    if i >= s.len() {
+        0
+    } else if (0x09 <= s[i as int] && s[i as int] <= 0x0D) || (0x1C <= s[i as int] && s[i as int]
+        <= 0x20) {
+        1
+    } else if i + 2 <= s.len() && s[i as int] == 0xC2 && (s[i as int + 1] == 0x85 || s[i as int + 1]
+        == 0xA0) {
+        2
+    } else if i + 3 <= s.len() && s[i as int] == 0xE1 && s[i as int + 1] == 0x9A && s[i as int + 2]
+        == 0x80 {
+        3
+    } else if i + 3 <= s.len() && s[i as int] == 0xE2 && s[i as int + 1] == 0x80 && ((0x80
+        <= s[i as int + 2] && s[i as int + 2] <= 0x8A) || s[i as int + 2] == 0xA8 || s[i as int + 2]
+        == 0xA9 || s[i as int + 2] == 0xAF) {
+        3
+    } else if i + 3 <= s.len() && s[i as int] == 0xE2 && s[i as int + 1] == 0x81 && s[i as int + 2]
+        == 0x9F {
+        3
+    } else if i + 3 <= s.len() && s[i as int] == 0xE3 && s[i as int + 1] == 0x80 && s[i as int + 2]
+        == 0x80 {
+        3
+    } else {
+        0
+    }
 }
 
 pub open spec fn lead_ws(s: Seq<u8>, i: nat) -> nat
     decreases s.len() - i,
 {
-    if i < s.len() && is_ws(s[i as int]) {
-        lead_ws(s, i + 1)
+    if i < s.len() && ws_len(s, i) > 0 {
+        lead_ws(s, i + ws_len(s, i))
     } else {
         i
     }
 }
 
-pub open spec fn trail_ws(s: Seq<u8>, i: nat) -> nat
-    decreases i,
+// End of the last non-whitespace byte scanned so far (`acc`), forward.
+pub open spec fn last_end(s: Seq<u8>, i: nat, acc: nat) -> nat
+    decreases s.len() - i,
 {
-    if i > 0 && is_ws(s[i as int - 1]) {
-        1 + trail_ws(s, (i - 1) as nat)
+    if i >= s.len() {
+        acc
+    } else if ws_len(s, i) > 0 {
+        last_end(s, i + ws_len(s, i), acc)
     } else {
-        0
+        last_end(s, i + 1, i + 1)
+    }
+}
+
+pub open spec fn strip_ws(s: Seq<u8>) -> Seq<u8> {
+    let l = lead_ws(s, 0);
+    let e = last_end(s, 0, 0);
+    if l < e {
+        s.subrange(l as int, e as int)
+    } else {
+        Seq::empty()
+    }
+}
+
+// Whitespace-separated tokens (`str.split()`): `cur` = the token being read.
+pub open spec fn tokens_acc(s: Seq<u8>, i: nat, cur: Seq<u8>, acc: Seq<Seq<u8>>) -> Seq<Seq<u8>>
+    decreases s.len() - i,
+{
+    if i >= s.len() {
+        if cur.len() > 0 {
+            acc.push(cur)
+        } else {
+            acc
+        }
+    } else if ws_len(s, i) > 0 {
+        tokens_acc(
+            s,
+            i + ws_len(s, i),
+            Seq::empty(),
+            if cur.len() > 0 {
+                acc.push(cur)
+            } else {
+                acc
+            },
+        )
+    } else {
+        tokens_acc(s, i + 1, cur.push(s[i as int]), acc)
     }
 }
 
@@ -300,11 +380,16 @@ pub open spec fn parse_rows(
     }
 }
 
-pub open spec fn row_by_id(rows: Seq<Row>, id: Seq<u8>) -> Option<Row> {
-    if exists|j: int| 0 <= j < rows.len() && (#[trigger] rows[j]).id == id {
-        Option::Some(rows[choose|j: int| 0 <= j < rows.len() && (#[trigger] rows[j]).id == id])
-    } else {
+// First row carrying `id` (accepted ledgers carry each id once).
+pub open spec fn row_by_id(rows: Seq<Row>, id: Seq<u8>) -> Option<Row>
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
         Option::None
+    } else if rows[0].id == id {
+        Option::Some(rows[0])
+    } else {
+        row_by_id(rows.drop_first(), id)
     }
 }
 
@@ -369,21 +454,33 @@ pub open spec fn rows_in(rows: Seq<Row>, file: Seq<u8>) -> Seq<Row> {
 }
 
 // --- evidence files: census + locator regions or ordinal payloads ---
-// `identify the N payloads below` — first match in the file.
-pub open spec fn census_of(text: Seq<u8>) -> Option<nat> {
+// `identify the N payloads below` — the first FULL match in the file (legacy
+// `census_rx.search`): an `identify the ` occurrence whose digit run breaks
+// the pattern is skipped, not terminal.
+pub open spec fn census_at(text: Seq<u8>, k: nat) -> Option<nat>
+    decreases text.len() - k,
+{
     let p = ascii("identify the "@);
-    let k = first_sub(text, p, 0);
     if k >= text.len() {
         Option::None
     } else {
-        let after = text.skip(k as int + p.len() as int);
-        let n = lead_digits(after, 0);
-        if n > 0 && starts(after.skip(n as int), ascii(" payloads below"@)) {
-            Option::Some(dec_of(after.take(n as int)))
-        } else {
+        let hit = first_sub(text, p, k);
+        if hit >= text.len() {
             Option::None
+        } else {
+            let after = text.skip(hit as int + p.len() as int);
+            let n = lead_digits(after, 0);
+            if n > 0 && starts(after.skip(n as int), ascii(" payloads below"@)) {
+                Option::Some(dec_of(after.take(n as int)))
+            } else {
+                census_at(text, k + 1)
+            }
         }
     }
+}
+
+pub open spec fn census_of(text: Seq<u8>) -> Option<nat> {
+    census_at(text, 0)
 }
 
 pub open spec fn lead_digits(s: Seq<u8>, i: nat) -> nat
@@ -555,15 +652,26 @@ pub open spec fn first_multi(pays: Seq<(Seq<u8>, Seq<Seq<u8>>)>, i: nat) -> Opti
     }
 }
 
-pub open spec fn payload_of(e: Evidence, id: Seq<u8>) -> Option<Seq<u8>> {
-    if exists|j: int| 0 <= j < e.payloads.len() && (#[trigger] e.payloads[j]).0 == id {
-        Option::Some(
-            e.payloads[choose|j: int|
-                0 <= j < e.payloads.len() && (#[trigger] e.payloads[j]).0 == id].1[0],
-        )
-    } else {
+// The first payload entry under `id` (accepted evidence carries each id once
+// with exactly one payload, `first_multi`).
+pub open spec fn payload_in(pays: Seq<(Seq<u8>, Seq<Seq<u8>>)>, id: Seq<u8>) -> Option<Seq<u8>>
+    decreases pays.len(),
+{
+    if pays.len() == 0 {
         Option::None
+    } else if pays[0].0 == id {
+        if pays[0].1.len() > 0 {
+            Option::Some(pays[0].1[0])
+        } else {
+            Option::None
+        }
+    } else {
+        payload_in(pays.drop_first(), id)
     }
+}
+
+pub open spec fn payload_of(e: Evidence, id: Seq<u8>) -> Option<Seq<u8>> {
+    payload_in(e.payloads, id)
 }
 
 pub open spec fn dup_locator(locs: Seq<Seq<u8>>, i: nat) -> Option<Seq<u8>>
@@ -590,12 +698,47 @@ pub open spec fn first_unanchored(claimed: Seq<Row>, locs: Seq<Seq<u8>>, i: nat)
     }
 }
 
+// A shell-read evidence file: the legacy read order (symlink, then regular
+// file, then bytes) and the R46 classes (unreadable, invalid UTF-8 at an offset).
+pub ghost enum FileSrc {
+    Symlink,
+    Missing,
+    Unreadable,
+    Bad(nat),
+    Bytes(Seq<u8>),
+}
+
+// Legacy prints evidence paths joined under the guideline path through
+// `pathlib` (R62/R74): empty and `.` components collapse (`source//x`,
+// `source/./x`, a trailing `/` → `source/x`); row-field diagnostics keep the
+// raw field.
+pub open spec fn join_slash(segs: Seq<Seq<u8>>) -> Seq<u8>
+    decreases segs.len(),
+{
+    if segs.len() == 0 {
+        Seq::empty()
+    } else if segs.len() == 1 {
+        segs[0]
+    } else {
+        segs[0] + seq![0x2Fu8] + join_slash(segs.drop_first())
+    }
+}
+
+pub open spec fn norm_path(f: Seq<u8>) -> Seq<u8> {
+    join_slash(split_on(f, 0x2F).filter(|s: Seq<u8>| s.len() > 0 && s != ascii("."@)))
+}
+
+pub open spec fn full_path(root: Seq<u8>, f: Seq<u8>) -> Seq<u8> {
+    root + seq![0x2Fu8] + norm_path(f)
+}
+
 // Per cited file in first-reference order: census vs claimed rows, then
 // locator mode (count, duplicates, anchoring) or ordinal mode.
 pub open spec fn files_check(
     rows: Seq<Row>,
     files: Seq<Seq<u8>>,
-    texts: Seq<Src>,
+    texts: Seq<FileSrc>,
+    root: Seq<u8>,
     i: nat,
 ) -> Result<Seq<Evidence>, Seq<u8>>
     decreases files.len() - i,
@@ -605,7 +748,7 @@ pub open spec fn files_check(
     } else {
         let f = files[i as int];
         match texts[i as int] {
-            Src::Bytes(text) => match evidence_of(text, f) {
+            FileSrc::Bytes(text) => match evidence_of(text, full_path(root, f)) {
                 Result::Err(e) => Result::Err(e),
                 Result::Ok(ev) => {
                     let claimed = rows_in(rows, f);
@@ -631,7 +774,13 @@ pub open spec fn files_check(
                                     Option::Some(id) => Result::Err(
                                         ascii("coverage row without evidence region: "@) + id,
                                     ),
-                                    Option::None => match files_check(rows, files, texts, i + 1) {
+                                    Option::None => match files_check(
+                                        rows,
+                                        files,
+                                        texts,
+                                        root,
+                                        i + 1,
+                                    ) {
                                         Result::Err(e) => Result::Err(e),
                                         Result::Ok(rest) => Result::Ok(seq![ev] + rest),
                                     },
@@ -639,14 +788,17 @@ pub open spec fn files_check(
                             }
                         }
                     } else {
-                        match files_check(rows, files, texts, i + 1) {
+                        match files_check(rows, files, texts, root, i + 1) {
                             Result::Err(e) => Result::Err(e),
                             Result::Ok(rest) => Result::Ok(seq![ev] + rest),
                         }
                     }
                 },
             },
-            _ => Result::Err(ascii("missing: "@) + f),  // shell-read failure (symlink/missing) = the legacy category detail
+            FileSrc::Symlink => Result::Err(ascii("is a symlink: "@) + full_path(root, f)),
+            FileSrc::Missing => Result::Err(ascii("missing: "@) + full_path(root, f)),
+            FileSrc::Unreadable => Result::Err(ascii("unreadable "@) + full_path(root, f)),
+            FileSrc::Bad(_) => Result::Err(ascii("invalid_utf8 "@) + full_path(root, f)),
         }
     }
 }
@@ -681,7 +833,8 @@ pub open spec fn coverage_meter(gid: Seq<u8>, rows: Seq<Row>) -> Seq<u8> {
 pub open spec fn coverage(
     bytes: Seq<u8>,
     docids: Seq<Seq<u8>>,
-    file_texts: spec_fn(Seq<u8>) -> Src,
+    file_texts: spec_fn(Seq<u8>) -> FileSrc,
+    root: Seq<u8>,
 ) -> Result<Coverage, Verdict> {
     if has_byte(bytes, 0x0D) {
         Result::Err(fail("coverage"@, ascii("carriage return byte in ledger"@)))
@@ -712,6 +865,7 @@ pub open spec fn coverage(
                                 rows,
                                 files,
                                 files.map_values(|f: Seq<u8>| file_texts(f)),
+                                root,
                                 0,
                             ) {
                                 Result::Err(e) => Result::Err(fail("coverage"@, e)),
@@ -727,20 +881,52 @@ pub open spec fn coverage(
     }
 }
 
-// The document's coverage row (bytes incl. LF) and its selected source payload.
-pub open spec fn ace_row(c: Coverage, d: Seq<u8>) -> Option<Row> {
-    if claims(c.rows, d) {
-        Option::Some(
-            c.rows[choose|j: int|
-                0 <= j < c.rows.len() && ace_docid(#[trigger] c.rows[j]) == Option::Some(d)],
-        )
-    } else {
+// The document's coverage row (bytes incl. LF) = the first row claiming it
+// (`parse_rows` claims each docid once), and its selected source payload.
+pub open spec fn first_ace_row(rows: Seq<Row>, d: Seq<u8>) -> Option<Row>
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
         Option::None
+    } else if ace_docid(rows[0]) == Option::Some(d) {
+        Option::Some(rows[0])
+    } else {
+        first_ace_row(rows.drop_first(), d)
+    }
+}
+
+pub open spec fn ace_row(c: Coverage, d: Seq<u8>) -> Option<Row> {
+    first_ace_row(c.rows, d)
+}
+
+// First index of `f` (`files_of` lists each file once); `files.len()` when absent.
+pub open spec fn index_of(files: Seq<Seq<u8>>, f: Seq<u8>) -> int
+    decreases files.len(),
+{
+    if files.len() == 0 {
+        0
+    } else if files[0] == f {
+        0
+    } else {
+        1 + index_of(files.drop_first(), f)
     }
 }
 
 pub open spec fn file_index(c: Coverage, f: Seq<u8>) -> int {
-    choose|i: int| 0 <= i < c.files.len() && c.files[i] == f
+    index_of(c.files, f)
+}
+
+// First index of the row with `id` among `rows`; `rows.len()` when absent.
+pub open spec fn row_index(rows: Seq<Row>, id: Seq<u8>) -> int
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
+        0
+    } else if rows[0].id == id {
+        0
+    } else {
+        1 + row_index(rows.drop_first(), id)
+    }
 }
 
 // Locator mode: the payload under the row's region id; ordinal mode: the
@@ -749,16 +935,20 @@ pub open spec fn payload(c: Coverage, d: Seq<u8>) -> Option<Seq<u8>> {
     match ace_row(c, d) {
         Option::None => Option::None,
         Option::Some(r) => {
-            let ev = c.evidence[file_index(c, r.file)];
-            if ev.locators.len() > 0 {
-                payload_of(ev, r.id)
+            if file_index(c, r.file) >= c.evidence.len() {
+                Option::None
             } else {
-                let cited = rows_in(c.rows, r.file);
-                let k = choose|k: int| 0 <= k < cited.len() && cited[k].id == r.id;
-                if k < ev.ordinal.len() {
-                    Option::Some(ev.ordinal[k])
+                let ev = c.evidence[file_index(c, r.file)];
+                if ev.locators.len() > 0 {
+                    payload_of(ev, r.id)
                 } else {
-                    Option::None
+                    let cited = rows_in(c.rows, r.file);
+                    let k = row_index(cited, r.id);
+                    if k < ev.ordinal.len() {
+                        Option::Some(ev.ordinal[k])
+                    } else {
+                        Option::None
+                    }
                 }
             }
         },
@@ -790,12 +980,21 @@ pub open spec fn record_count(lines: Seq<Seq<u8>>) -> nat {
     lines.filter(|l: Seq<u8>| starts(l, ascii("guideline_document("@))).len()
 }
 
-pub open spec fn all_dotted(lines: Seq<Seq<u8>>) -> bool {
-    forall|i: int|
-        0 <= i < lines.len() ==> (starts(#[trigger] lines[i], ascii("%"@)) || starts(
-            lines[i],
-            ascii(":- "@),
-        ) || ends(lines[i], seq![0x2Eu8]))
+// First line that is neither a comment, a directive, nor dot-terminated
+// (legacy loop order): it names the class of the first violation.
+pub open spec fn first_undotted(lines: Seq<Seq<u8>>) -> Option<Seq<u8>>
+    decreases lines.len(),
+{
+    if lines.len() == 0 {
+        Option::None
+    } else if starts(lines[0], ascii("%"@)) || starts(lines[0], ascii(":- "@)) || ends(
+        lines[0],
+        seq![0x2Eu8],
+    ) {
+        first_undotted(lines.drop_first())
+    } else {
+        Option::Some(lines[0])
+    }
 }
 
 // The bytes the shell hashes for `semantic_clause_sha256`.
@@ -804,8 +1003,14 @@ pub open spec fn semantic_input(pl: Seq<u8>, docid: Seq<u8>) -> Result<Seq<u8>, 
         Result::Err(ascii("compiled document lacks final newline: "@) + docid)
     } else {
         let lines = body_lines(pl);
-        if !all_dotted(lines) {
-            Result::Err(ascii("noncanonical clause line in: "@) + docid)
+        if first_undotted(lines) is Some {
+            Result::Err(
+                (if starts(first_undotted(lines).unwrap(), ascii("guideline_document("@)) {
+                    ascii("noncanonical document record in: "@)
+                } else {
+                    ascii("noncanonical clause line in: "@)
+                }) + docid,
+            )
         } else if record_count(lines) != 1 {
             Result::Err(
                 ascii("document record count "@) + nat_bytes(record_count(lines)) + ascii(" for: "@)
@@ -831,10 +1036,20 @@ pub open spec fn bundle_block(
         + seq![0x0Au8]
 }
 
-pub open spec fn manifest_header() -> Seq<u8> {
+pub open spec fn manifest_header_1() -> Seq<u8> {
     ascii(
-        "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256\n# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n"@,
+        "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256\n"@,
     )
+}
+
+pub open spec fn manifest_header_2() -> Seq<u8> {
+    ascii(
+        "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n"@,
+    )
+}
+
+pub open spec fn manifest_header() -> Seq<u8> {
+    manifest_header_1() + manifest_header_2()
 }
 
 pub ghost struct Bundle {
@@ -874,13 +1089,107 @@ pub open spec fn wf_manifest(bs: Seq<Bundle>, docids: Seq<Seq<u8>>) -> bool {
 
 // A committed manifest accepts iff it prints from a wellformed bundle list
 // whose review digests are self-consistent (shell hash of `bundle_block`).
-pub open spec fn manifest_accepts(bytes: Seq<u8>, review_of: spec_fn(Seq<u8>) -> Seq<u8>) -> bool {
-    exists|bs: Seq<Bundle>| #[trigger]
-        print_manifest(bs) == bytes && wf_manifest(bs, bs.map_values(|b: Bundle| b.docid)) && (
-        forall|i: int|
-            0 <= i < bs.len() ==> (#[trigger] bs[i]).review == review_of(
-                bundle_block(bs[i].docid, bs[i].ace, bs[i].cov, bs[i].pay, bs[i].cl),
-            ))
+// --- committed-manifest parse (legacy `parse_review_manifest`, R63): the
+// well-formed row prefix + the first grammar violation. `review_sha256
+// self-consistency` is a shell hash: the shell checks the prefix rows in order
+// BEFORE the reported grammar violation, so the first violation keeps the
+// legacy row order.
+pub open spec fn manifest_row_detail(n: nat, what: Seq<char>) -> Seq<u8> {
+    ascii("manifest row "@) + nat_bytes(n) + seq![0x20u8] + ascii(what)
+}
+
+pub open spec fn parse_rows_of(
+    lines: Seq<Seq<u8>>,
+    i: nat,
+    n: nat,
+    prev: Seq<u8>,
+    acc: Seq<Bundle>,
+) -> (Seq<Bundle>, Option<Seq<u8>>)
+    decreases lines.len() - i,
+{
+    if i >= lines.len() {
+        (acc, Option::None)
+    } else {
+        let fs = split_on(lines[i as int], 0x09);
+        if fs.len() != 6 {
+            (acc, Option::Some(manifest_row_detail(n, "field-count "@) + nat_bytes(fs.len())))
+        } else if !docid_ok(fs[0]) {
+            (acc, Option::Some(manifest_row_detail(n, "docid-grammar"@)))
+        } else if acc.map_values(|b: Bundle| b.docid).contains(fs[0]) {
+            (acc, Option::Some(manifest_row_detail(n, "duplicate-docid "@) + fs[0]))
+        } else if bytes_lt(fs[0], prev) {
+            (
+                acc,
+                Option::Some(
+                    manifest_row_detail(n, "sort-order "@) + fs[0] + ascii(" after "@) + prev,
+                ),
+            )
+        } else if !hex64(fs[1]) {
+            (acc, Option::Some(manifest_row_detail(n, "ace_sha256"@)))
+        } else if !hex64(fs[2]) {
+            (acc, Option::Some(manifest_row_detail(n, "coverage_row_sha256"@)))
+        } else if !hex64(fs[3]) {
+            (acc, Option::Some(manifest_row_detail(n, "region_payload_sha256"@)))
+        } else if !hex64(fs[4]) {
+            (acc, Option::Some(manifest_row_detail(n, "semantic_clause_sha256"@)))
+        } else if !hex64(fs[5]) {
+            (acc, Option::Some(manifest_row_detail(n, "review_sha256"@)))
+        } else {
+            parse_rows_of(
+                lines,
+                i + 1,
+                n + 1,
+                fs[0],
+                acc.push(
+                    Bundle {
+                        docid: fs[0],
+                        ace: fs[1],
+                        cov: fs[2],
+                        pay: fs[3],
+                        cl: fs[4],
+                        review: fs[5],
+                    },
+                ),
+            )
+        }
+    }
+}
+
+pub open spec fn parse_manifest(src: Src, path: Seq<u8>) -> (Seq<Bundle>, Option<Seq<u8>>) {
+    match src {
+        Src::Missing => (Seq::empty(), Option::Some(ascii("manifest missing: "@) + path)),
+        Src::Bad(_) => (Seq::empty(), Option::Some(ascii("manifest encoding"@))),
+        Src::Bytes(b) => if has_byte(b, 0x0D) {
+            (Seq::empty(), Option::Some(ascii("manifest carriage-return"@)))
+        } else if !(b.len() > 0 && b.last() == 0x0A) {
+            (Seq::empty(), Option::Some(ascii("manifest final-newline"@)))
+        } else if !starts(b, manifest_header_1()) {
+            (Seq::empty(), Option::Some(ascii("manifest header line 1"@)))
+        } else if !starts(b.skip(manifest_header_1().len() as int), manifest_header_2()) {
+            (Seq::empty(), Option::Some(ascii("manifest header line 2"@)))
+        } else {
+            let lines = body_lines(b.skip(manifest_header().len() as int));
+            if lines.len() == 0 {
+                (Seq::empty(), Option::Some(ascii("manifest holds no rows: "@) + path))
+            } else {
+                parse_rows_of(lines, 0, 3, Seq::empty(), Seq::empty())
+            }
+        },
+    }
+}
+
+// Acceptance = grammar-clean parse + every row's `review_sha256` = the shell
+// hash of its bundle block (R3).
+pub open spec fn manifest_accepts(
+    src: Src,
+    path: Seq<u8>,
+    review_of: spec_fn(Seq<u8>) -> Seq<u8>,
+) -> bool {
+    let (bs, v) = parse_manifest(src, path);
+    v is None && (forall|i: int|
+        0 <= i < bs.len() ==> (#[trigger] bs[i]).review == review_of(
+            bundle_block(bs[i].docid, bs[i].ace, bs[i].cov, bs[i].pay, bs[i].cl),
+        ))
 }
 
 // --- adjudication ledger ---
@@ -1018,20 +1327,25 @@ pub open spec fn parse_decision(
     }
 }
 
+// The well-formed row prefix + the first grammar violation (R68): legacy
+// checks each row's recorded commit (a git read, shell tier) inside the same
+// per-row loop, so the shell walks the returned prefix in order — commit
+// absent / historical digest mismatch on row j fires before a grammar
+// violation on a later row.
 pub open spec fn parse_decisions(
     lines: Seq<Seq<u8>>,
     i: nat,
     known: Seq<Seq<u8>>,
     prev: Option<(Seq<u8>, Seq<u8>)>,
     acc: Seq<Decision>,
-) -> Result<Seq<Decision>, Seq<u8>>
+) -> (Seq<Decision>, Option<Seq<u8>>)
     decreases lines.len() - i,
 {
     if i >= lines.len() {
-        Result::Ok(acc)
+        (acc, Option::None)
     } else {
         match parse_decision(lines[i as int], i + 2, known, prev) {
-            Result::Err(e) => Result::Err(e),
+            Result::Err(e) => (acc, Option::Some(e)),
             Result::Ok(d) => parse_decisions(
                 lines,
                 i + 1,
@@ -1043,27 +1357,32 @@ pub open spec fn parse_decisions(
     }
 }
 
-// Ledger bytes → decisions; absent ledger = no decisions.
-pub open spec fn ledger(src: Src, known: Seq<Seq<u8>>) -> Result<Seq<Decision>, Verdict> {
+// Ledger bytes → (decision prefix, first violation); absent ledger = no
+// decisions. Prefix row j (0-based) = ledger row j + 2.
+pub open spec fn ledger(src: Src, known: Seq<Seq<u8>>) -> (Seq<Decision>, Option<Verdict>) {
     match src {
-        Src::Missing => Result::Ok(Seq::empty()),
-        Src::Bad(_) => Result::Err(fail("adjudication"@, ascii("ledger encoding"@))),
+        Src::Missing => (Seq::empty(), Option::None),
+        Src::Bad(_) => (
+            Seq::empty(),
+            Option::Some(fail("adjudication"@, ascii("ledger encoding"@))),
+        ),
         Src::Bytes(b) => if has_byte(b, 0x0D) {
-            Result::Err(fail("adjudication"@, ascii("ledger carriage-return"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger carriage-return"@))))
         } else if !(b.len() > 0 && b.last() == 0x0A) {
-            Result::Err(fail("adjudication"@, ascii("ledger final-newline"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger final-newline"@))))
         } else if !starts(b, ledger_header()) {
-            Result::Err(fail("adjudication"@, ascii("ledger header"@)))
+            (Seq::empty(), Option::Some(fail("adjudication"@, ascii("ledger header"@))))
         } else {
-            match parse_decisions(
+            let (ds, v) = parse_decisions(
                 body_lines(b.skip(ledger_header().len() as int)),
                 0,
                 known,
                 Option::None,
                 Seq::empty(),
-            ) {
-                Result::Err(e) => Result::Err(fail("adjudication"@, e)),
-                Result::Ok(ds) => Result::Ok(ds),
+            );
+            match v {
+                Option::Some(e) => (ds, Option::Some(fail("adjudication"@, e))),
+                Option::None => (ds, Option::None),
             }
         },
     }
@@ -1110,13 +1429,23 @@ pub open spec fn class_count(ds: Seq<Decision>, bs: Seq<Bundle>, k: int) -> nat 
     ).len()
 }
 
+// Unreviewed = bundles minus reviewed docids; total: 0 when a ledger names
+// more docids than the manifest holds (unreachable through `ledger`'s
+// known-docid law, R64).
+pub open spec fn unreviewed(ds: Seq<Decision>, bs: Seq<Bundle>) -> nat {
+    if reviewed(ds).len() <= bs.len() {
+        (bs.len() - reviewed(ds).len()) as nat
+    } else {
+        0
+    }
+}
+
 pub open spec fn adjudication_meter(gid: Seq<u8>, ds: Seq<Decision>, bs: Seq<Bundle>) -> Seq<u8> {
     ascii("goal: adjudication "@) + gid + ascii(" approved="@) + nat_bytes(class_count(ds, bs, 0))
         + ascii(" rejected="@) + nat_bytes(class_count(ds, bs, 1)) + ascii(" contested="@)
         + nat_bytes(class_count(ds, bs, 2)) + ascii(" stale="@) + nat_bytes(class_count(ds, bs, 3))
-        + ascii(" unreviewed="@) + nat_bytes((bs.len() - reviewed(ds).len()) as nat) + ascii(
-        " decisions="@,
-    ) + nat_bytes(ds.len()) + seq![0x0Au8]
+        + ascii(" unreviewed="@) + nat_bytes(unreviewed(ds, bs)) + ascii(" decisions="@)
+        + nat_bytes(ds.len()) + seq![0x0Au8]
 }
 
 // --- lexicon gates ---
@@ -1189,17 +1518,7 @@ pub open spec fn ace_tokens(texts: Seq<Seq<u8>>) -> Set<Seq<u8>> {
 }
 
 pub open spec fn ws_split(t: Seq<u8>) -> Seq<Seq<u8>> {
-    split_on(
-        t.map_values(
-            |b: u8|
-                if is_ws(b) {
-                    0x20u8
-                } else {
-                    b
-                },
-        ),
-        0x20,
-    ).filter(|w: Seq<u8>| w.len() > 0)
+    tokens_acc(t, 0, Seq::empty(), Seq::empty())
 }
 
 pub open spec fn clex_lines(clex: Seq<u8>) -> Seq<Seq<u8>> {
