@@ -208,12 +208,15 @@ fn row_index_exec(rows: &Vec<ERow>, path: &Vec<u8>) -> (out: usize)
 pub struct ELoaded {
     pub db: Vec<EClause>,
     pub docids: Vec<usize>,
+    pub coords: Vec<crate::k3_coords::ECoord>,
     pub docs: Ghost<Seq<DocFile>>,
 }
 
 pub open spec fn loaded_ok(nodes: Seq<ENode>, loaded: &ELoaded) -> bool {
     &&& db_valid(nodes, loaded.db@)
     &&& db_view(nodes, loaded.db@) == db_of(loaded.docs@)
+    &&& crate::k3_coords::coords_ok(loaded.coords@)
+    &&& crate::k3_coords::coords_view(loaded.coords@) == ckc_spec::trace::coords_of(loaded.docs@)
     &&& roots_valid(nodes, loaded.docids@)
     &&& loaded.docids@.len() == loaded.docs@.len()
     &&& root_terms(nodes, loaded.docids@) == loaded.docs@.map_values(
@@ -244,10 +247,17 @@ fn empty_loaded(arena: &ETermArena) -> (out: ELoaded)
         loaded_ok(arena.nodes@, &out),
         out.docs@ == Seq::<DocFile>::empty(),
 {
-    let out = ELoaded { db: Vec::new(), docids: Vec::new(), docs: Ghost(Seq::empty()) };
+    let out = ELoaded {
+        db: Vec::new(),
+        docids: Vec::new(),
+        coords: Vec::new(),
+        docs: Ghost(Seq::empty()),
+    };
     proof {
         assert_seqs_equal!(db_view(arena.nodes@, out.db@) == Seq::empty());
         assert_seqs_equal!(out.docs@.map_values(|d: DocFile| doc_db(d)) == Seq::empty());
+        assert_seqs_equal!(out.docs@.map_values(|d: DocFile| ckc_spec::trace::doc_coords(d)) == Seq::empty());
+        assert_seqs_equal!(crate::k3_coords::coords_view(out.coords@) == Seq::empty());
         assert_seqs_equal!(root_terms(arena.nodes@, out.docids@)
             == out.docs@.map_values(|d: DocFile| ckc_spec::term::Term::Atom(d.docid)));
     }
@@ -261,6 +271,16 @@ proof fn db_of_push(docs: Seq<DocFile>, doc: DocFile)
     let parts = docs.map_values(|d: DocFile| doc_db(d));
     assert_seqs_equal!(docs.push(doc).map_values(|d: DocFile| doc_db(d)) == parts.push(doc_db(doc)));
     parts.lemma_flatten_push(doc_db(doc));
+}
+
+proof fn coords_of_push(docs: Seq<DocFile>, doc: DocFile)
+    ensures
+        ckc_spec::trace::coords_of(docs.push(doc)) == ckc_spec::trace::coords_of(docs)
+            + ckc_spec::trace::doc_coords(doc),
+{
+    let parts = docs.map_values(|d: DocFile| ckc_spec::trace::doc_coords(d));
+    assert_seqs_equal!(docs.push(doc).map_values(|d: DocFile| ckc_spec::trace::doc_coords(d)) == parts.push(ckc_spec::trace::doc_coords(doc)));
+    parts.lemma_flatten_push(ckc_spec::trace::doc_coords(doc));
 }
 
 proof fn docs_of_push(members: Seq<ckc_spec::v1text::V1File>, member: ckc_spec::v1text::V1File)
@@ -301,6 +321,7 @@ fn append_document(
 {
     let ghost before = arena.nodes@;
     let ghost docs = loaded.docs@;
+    let mut coords = crate::k3_coords::document_coords(parsed, Ghost(doc));
     let db = crate::k2_bridge::document_db(arena, parsed, Ghost(doc));
     let ghost after_db = arena.nodes@;
     let docid = atom_root(arena, &parsed.docid);
@@ -319,6 +340,13 @@ fn append_document(
         assert(arena.nodes@[docid as int].term@ == ckc_spec::term::Term::Atom(doc.docid));
     }
     loaded.docids.push(docid);
+    let ghost prior_coords = loaded.coords@;
+    let ghost next_coords = coords@;
+    loaded.coords.append(&mut coords);
+    proof {
+        crate::k3_coords::coords_concat(prior_coords, next_coords);
+        coords_of_push(docs, doc);
+    }
     loaded.docs = Ghost(docs.push(doc));
     proof {
         assert forall|i: int| 0 <= i < loaded.docids@.len() implies loaded.docids@[i]

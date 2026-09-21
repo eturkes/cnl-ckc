@@ -98,6 +98,122 @@ pub fn v1_answer(
     crate::k2_impl::v1_answer_impl(mpath, m, pls, pys, query, qsha)
 }
 
+// M5.2b K3: trace mode + trace-check (contract m5u2b). The shell hashes: it
+// asks the kernel which lines (one canonical clause line per loaded clause,
+// in `db_of` order), hashes each with the vendored sha2, and hands the
+// lowercase-hex digests back; qsha/asha = hex sha256 of the raw query/answers
+// bytes (R3). A mode's result = the exact triple of its spec fn.
+pub fn v1_trace_lines(
+    mpath: &[u8],
+    m: &ckc_spec::replay::ESrc,
+    pls: &Vec<ckc_spec::replay::ESrc>,
+    pys: &Vec<ckc_spec::replay::ESrc>,
+    query: &ckc_spec::replay::ESrc,
+    qsha: &[u8],
+    answers: &ckc_spec::replay::ESrc,
+) -> (r: Result<Vec<Vec<u8>>, ckc_spec::replay::EOut>)
+    requires
+        ckc_spec::replay::cells_ok(m@, ckc_spec::replay::srcs(pls@), ckc_spec::replay::srcs(pys@)),
+    ensures
+        ckc_spec::trace::lines_view(r) == ckc_spec::trace::trace_lines(
+            mpath@,
+            m@,
+            ckc_spec::replay::srcs(pls@),
+            ckc_spec::replay::srcs(pys@),
+            query@,
+            qsha@,
+            answers@,
+        ),
+{
+    crate::k3_impl::v1_trace_lines_impl(mpath, m, pls, pys, query, qsha, answers)
+}
+
+pub fn v1_trace(
+    mpath: &[u8],
+    m: &ckc_spec::replay::ESrc,
+    pls: &Vec<ckc_spec::replay::ESrc>,
+    pys: &Vec<ckc_spec::replay::ESrc>,
+    query: &ckc_spec::replay::ESrc,
+    qsha: &[u8],
+    answers: &ckc_spec::replay::ESrc,
+    asha: &[u8],
+    digests: &Vec<Vec<u8>>,
+) -> (r: ckc_spec::replay::EOut)
+    requires
+        ckc_spec::replay::cells_ok(m@, ckc_spec::replay::srcs(pls@), ckc_spec::replay::srcs(pys@)),
+    ensures
+        r@ == ckc_spec::trace::trace_output(
+            mpath@,
+            m@,
+            ckc_spec::replay::srcs(pls@),
+            ckc_spec::replay::srcs(pys@),
+            query@,
+            qsha@,
+            answers@,
+            asha@,
+            ckc_spec::trace::digests_view(digests@),
+        ),
+{
+    crate::k3_impl::v1_trace_impl(mpath, m, pls, pys, query, qsha, answers, asha, digests)
+}
+
+pub fn v1_trace_check(
+    mpath: &[u8],
+    m: &ckc_spec::replay::ESrc,
+    pls: &Vec<ckc_spec::replay::ESrc>,
+    pys: &Vec<ckc_spec::replay::ESrc>,
+    query: &ckc_spec::replay::ESrc,
+    qsha: &[u8],
+    answers: &ckc_spec::replay::ESrc,
+    asha: &[u8],
+    trace: &ckc_spec::replay::ESrc,
+    digests: &Vec<Vec<u8>>,
+) -> (r: ckc_spec::replay::EOut)
+    requires
+        ckc_spec::replay::cells_ok(m@, ckc_spec::replay::srcs(pls@), ckc_spec::replay::srcs(pys@)),
+    ensures
+        r@ == ckc_spec::trace::trace_check_output(
+            mpath@,
+            m@,
+            ckc_spec::replay::srcs(pls@),
+            ckc_spec::replay::srcs(pys@),
+            query@,
+            qsha@,
+            answers@,
+            asha@,
+            trace@,
+            ckc_spec::trace::digests_view(digests@),
+        ),
+{
+    crate::k3_impl::v1_trace_check_impl(
+        mpath,
+        m,
+        pls,
+        pys,
+        query,
+        qsha,
+        answers,
+        asha,
+        trace,
+        digests,
+    )
+}
+
+// K3 soundness (proved ⇒ derivable): every forest the trace derivation
+// produces is a valid proof tree over the loaded program — each clause node
+// resolves its goal through its clause, each naf leaf certifies a bounded
+// finite failure of a generalization of the site goal.
+pub proof fn k3_sound(db: Seq<ckc_spec::v1text::DocClause>, goal: ckc_spec::term::Term)
+    requires
+        ckc_spec::trace::bodies_wf(db),
+        ckc_spec::answers::goal_walk(goal) is None,
+        ckc_spec::trace::derived_forest(db, goal) is Some,
+    ensures
+        ckc_spec::trace::forest_valid(db, goal, ckc_spec::trace::derived_forest(db, goal).unwrap()),
+{
+    crate::k3_sound::k3_sound_proof(db, goal)
+}
+
 // M6 emission certification (contract m6, R40–R43). The shell stages APE,
 // runs the trusted driver (twice, byte-equal), hashes the raw ACE/ulex
 // bytes (R3) and hands everything to the kernel; the result = the exact

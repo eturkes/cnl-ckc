@@ -22,7 +22,7 @@ fn main() -> ExitCode {
         Some("certify-one") if args.len() == 8 => certify_cli::run_one(&args[2..]),
         _ => {
             eprintln!(
-                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render> <pl> | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl>"
+                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl>"
             );
             ExitCode::from(2)
         }
