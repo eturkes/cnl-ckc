@@ -680,10 +680,22 @@ impl Bag {
         if !text.ends_with('\n') || text.contains('\r') {
             return Err("release-manifest newline law".into());
         }
-        Ok(text[..text.len() - 1]
+        let rows: Vec<Vec<String>> = text[..text.len() - 1]
             .split('\n')
             .map(|line| line.split('\t').map(str::to_owned).collect())
-            .collect())
+            .collect();
+        for row in &rows {
+            let width = match row.first().map(String::as_str) {
+                Some("meta" | "label") => 3,
+                Some("member") => 4,
+                Some("source") => 5,
+                _ => return Err("release-manifest row kind".into()),
+            };
+            if row.len() != width {
+                return Err("release-manifest row width".into());
+            }
+        }
+        Ok(rows)
     }
     fn extract(&self, dest: &Path) -> TestResult<PathBuf> {
         let root = dest.join(&self.root);
@@ -1392,14 +1404,12 @@ fn validate_bag(
                             && fields[index].bytes().all(|byte| byte.is_ascii_digit())
                     })
             });
-            let sha_law = lines.get(1).is_some_and(|line| {
-                *line
-                    == format!(
-                        "dist: sha256={} cnl-ckc-kb-g{}.tar.gz\n",
-                        digest(&bag.raw).unwrap_or_default(),
-                        &repo.input_head().unwrap_or_default()[..12]
-                    )
-            });
+            let expected_sha = format!(
+                "dist: sha256={} cnl-ckc-kb-g{}.tar.gz\n",
+                digest(&bag.raw)?,
+                &repo.input_head()?[..12]
+            );
+            let sha_law = lines.get(1).is_some_and(|line| *line == expected_sha);
             run.check(line_law, "success stdout line count/LF");
             run.check(meter_law, "success meter line");
             run.check(sha_law, "sha meter line");
@@ -2026,7 +2036,52 @@ fn scenario(path: &Path, name: &str) -> TestResult<Run> {
         | "rights_second_row_invalid"
         | "reconstructable_empty_url"
         | "stage_clean_refusal" => return rights_case(path, name),
-        _ => (),
+        "reconstructable_source"
+        | "rights_first_row_operative"
+        | "stray_root"
+        | "no_guidelines"
+        | "rights_only"
+        | "committed_state"
+        | "manifest_order"
+        | "runtime_meta"
+        | "manifest_source_drift"
+        | "manifest_tamper"
+        | "restricted_labels"
+        | "rejected_order"
+        | "contested"
+        | "label_classes"
+        | "exec_mode"
+        | "output_collision"
+        | "gzip_header"
+        | "sidecar"
+        | "symlink_member"
+        | "gitlink_member"
+        | "member_precedence"
+        | "success_meter"
+        | "byte_determinism"
+        | "tar_fields"
+        | "longname"
+        | "bagit_closure"
+        | "profile_member_set"
+        | "bag_layout"
+        | "exclusion"
+        | "consumer_copy"
+        | "newline_path"
+        | "invalid_utf8_path"
+        | "backslash_path"
+        | "space_path"
+        | "sha256_command"
+        | "checksum_tamper"
+        | "tag_self_exclusion"
+        | "release_member_digests"
+        | "usage_missing"
+        | "usage_mode"
+        | "default_dest"
+        | "symlink_dest"
+        | "archive_symlink"
+        | "sidecar_directory"
+        | "stage_clean_success" => (),
+        _ => return Err(format!("unknown dist scenario {name}").into()),
     }
     let repo = fixture(path, name)?;
     if name == "usage_missing" || name == "usage_mode" {
