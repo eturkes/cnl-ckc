@@ -74,10 +74,7 @@ fn derive() -> Result<Chrome> {
             },
             ace: b"x".to_vec(),
             pl: Vec::new(),
-            alignment: Some(
-                b"# format: group<TAB>side<TAB>start<TAB>span\n1\tsrc\t0\tx\n1\tace\t0\tx\n"
-                    .to_vec(),
-            ),
+            alignment: Some(b"1\tsrc\t0\tx\n1\tace\t0\tx\n".to_vec()),
         }],
         ledger: ESrc::Missing,
         ledger_digest: b"absent".to_vec(),
