@@ -35,15 +35,21 @@ impl Corpus {
             return Ok(Self::worktree(root));
         }
         let head = git(&absolute, &["rev-parse", "HEAD"]);
-        let Some(commit) = head.map(|b| text(&b).trim().to_owned()).filter(|s| valid_hex(s, 40)) else {
+        let Some(commit) = head
+            .map(|b| text(&b).trim().to_owned())
+            .filter(|s| valid_hex(s, 40))
+        else {
             return Ok(Self::worktree(root));
         };
         let snapshot = Scratch::new()?;
         let dest = snapshot.0.join("corpus");
         fs::create_dir(&dest).map_err(|_| ARCHIVE_ERROR.to_string())?;
         // Git owns tar serialization; preflight its immutable tree before extraction.
-        let tree = git(&absolute, &["ls-tree", "-r", "-z", &commit, "--", "guidelines"])
-            .ok_or(ARCHIVE_ERROR)?;
+        let tree = git(
+            &absolute,
+            &["ls-tree", "-r", "-z", &commit, "--", "guidelines"],
+        )
+        .ok_or(ARCHIVE_ERROR)?;
         for entry in tree.split(|b| *b == 0).filter(|e| !e.is_empty()) {
             let Some(split) = entry.iter().position(|b| *b == b'\t') else {
                 return Err(ARCHIVE_ERROR.into());
@@ -52,7 +58,9 @@ impl Corpus {
             let path = std::str::from_utf8(path).map_err(|_| ARCHIVE_ERROR)?;
             if !(meta.starts_with(b"100644 blob ") || meta.starts_with(b"100755 blob "))
                 || Path::new(path).is_absolute()
-                || Path::new(path).components().any(|p| matches!(p, Component::ParentDir))
+                || Path::new(path)
+                    .components()
+                    .any(|p| matches!(p, Component::ParentDir))
                 || !path.starts_with("guidelines/")
             {
                 return Err(ARCHIVE_ERROR.into());
@@ -70,7 +78,12 @@ impl Corpus {
             return Err(ARCHIVE_ERROR.into());
         }
         let out = Command::new("tar")
-            .args(["--extract", "--no-same-owner", "--no-same-permissions", "--file"])
+            .args([
+                "--extract",
+                "--no-same-owner",
+                "--no-same-permissions",
+                "--file",
+            ])
             .arg(&archive)
             .arg("--directory")
             .arg(&dest)
@@ -86,7 +99,10 @@ impl Corpus {
                     continue;
                 }
                 let committed = path.join("audit/adjudication.tsv");
-                let live = absolute.join("guidelines").join(name(&path)).join("audit/adjudication.tsv");
+                let live = absolute
+                    .join("guidelines")
+                    .join(name(&path))
+                    .join("audit/adjudication.tsv");
                 if live.is_file() {
                     let bytes = fs::read(live).map_err(|_| ARCHIVE_ERROR)?;
                     fs::create_dir_all(committed.parent().ok_or(ARCHIVE_ERROR)?)
@@ -97,21 +113,50 @@ impl Corpus {
                 }
             }
         }
-        Ok(Self { root: dest, real_root: absolute, commit, _snapshot: Some(snapshot) })
+        Ok(Self {
+            root: dest,
+            real_root: absolute,
+            commit,
+            _snapshot: Some(snapshot),
+        })
     }
     pub fn ace_commit(&self, gid: &str, docid: &str) -> Vec<u8> {
         if self.commit.is_empty() {
             return Vec::new();
         }
-        let path = self.real_root.join("guidelines").join(gid).join("ace").join(format!("{docid}.ace"));
-        let Some(bytes) = git(&self.real_root, &["log", "-1", "--format=%H", &self.commit, "--", &path.to_string_lossy()]) else {
+        let path = self
+            .real_root
+            .join("guidelines")
+            .join(gid)
+            .join("ace")
+            .join(format!("{docid}.ace"));
+        let Some(bytes) = git(
+            &self.real_root,
+            &[
+                "log",
+                "-1",
+                "--format=%H",
+                &self.commit,
+                "--",
+                &path.to_string_lossy(),
+            ],
+        ) else {
             return Vec::new();
         };
         let value = text(&bytes).trim().to_owned();
-        if valid_hex(&value, 40) { value.into_bytes() } else { Vec::new() }
+        if valid_hex(&value, 40) {
+            value.into_bytes()
+        } else {
+            Vec::new()
+        }
     }
 }
 fn git(root: &Path, args: &[&str]) -> Option<Vec<u8>> {
-    Command::new("git").args(args).current_dir(root).output().ok()
-        .filter(|out| out.status.success()).map(|out| out.stdout)
+    Command::new("git")
+        .args(args)
+        .current_dir(root)
+        .output()
+        .ok()
+        .filter(|out| out.status.success())
+        .map(|out| out.stdout)
 }

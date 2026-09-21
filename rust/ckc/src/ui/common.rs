@@ -18,7 +18,9 @@ pub(super) fn valid_id(s: &str) -> bool {
             .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
 }
 pub(super) fn valid_hex(s: &str, len: usize) -> bool {
-    s.len() == len && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    s.len() == len
+        && s.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 pub(super) fn entries(path: &Path) -> Result<Vec<PathBuf>> {
     let mut paths = fs::read_dir(path)
@@ -30,7 +32,10 @@ pub(super) fn entries(path: &Path) -> Result<Vec<PathBuf>> {
     Ok(paths)
 }
 pub(super) fn name(path: &Path) -> String {
-    path.file_name().unwrap_or_default().to_string_lossy().into_owned()
+    path.file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned()
 }
 pub(super) fn checked_text(bytes: Vec<u8>, gid: &str, rel: &str) -> Result<Vec<u8>> {
     let decoded = std::str::from_utf8(&bytes)
@@ -41,13 +46,15 @@ pub(super) fn checked_text(bytes: Vec<u8>, gid: &str, rel: &str) -> Result<Vec<u
             || (0x202a..=0x202e).contains(&c)
             || (0x2066..=0x2069).contains(&c)
     }) {
-        return Err(format!("ui: viewmodel: {gid} unsupported control U+{cp:04X} in {rel}"));
+        return Err(format!(
+            "ui: viewmodel: {gid} unsupported control U+{cp:04X} in {rel}"
+        ));
     }
     Ok(bytes)
 }
 pub(super) fn load_text(root: &Path, gid: &str, rel: &str) -> Result<Vec<u8>> {
-    let bytes = fs::read(root.join(rel))
-        .map_err(|_| format!("ui: viewmodel: {gid} missing {rel}"))?;
+    let bytes =
+        fs::read(root.join(rel)).map_err(|_| format!("ui: viewmodel: {gid} missing {rel}"))?;
     checked_text(bytes, gid, rel)
 }
 pub(super) fn random_hex(n: usize) -> std::io::Result<String> {
