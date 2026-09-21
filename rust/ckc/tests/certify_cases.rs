@@ -178,3 +178,32 @@ fn certification_cases_pin_all_mutations_and_unmodified_inputs() {
     assert_eq!(counts, [12, 4]);
     assert_eq!(fixtures.len(), 2);
 }
+
+#[test]
+fn parallel_rejections_follow_document_id_order() {
+    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .unwrap();
+    let fixture = Fixture::new(&repo, false, "pl/cdc2022-opioid-rec01.pl");
+    let source = repo.join("guidelines").join(GUIDELINE);
+    let target = fixture.root.join("guidelines").join(GUIDELINE);
+    for id in ["cdc2022-opioid-rec01", "cdc2022-opioid-rec01-imp01"] {
+        let ace = format!("ace/{id}.ace");
+        fs::copy(source.join(&ace), target.join(ace)).unwrap();
+        let pl = format!("pl/{id}.pl");
+        let original = fs::read_to_string(source.join(&pl)).unwrap();
+        let changed = mutate(&original, "replace-first", "% S1:", "% S1: changed");
+        fs::write(target.join(pl), changed).unwrap();
+    }
+    // The shorter id sorts first, but its `.ace` filename sorts second.
+    for _ in 0..2 {
+        let output = fixture.run();
+        assert_eq!(output.status.code(), Some(1));
+        assert!(output.stdout.is_empty());
+        assert_eq!(
+            output.stderr,
+            b"ckc: certify: cdc2022-opioid-rec01: clauses(1).\n"
+        );
+    }
+}
