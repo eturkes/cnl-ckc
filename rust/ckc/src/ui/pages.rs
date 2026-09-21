@@ -126,10 +126,11 @@ fn tree(corpus: &Corpus, view: &View) -> Result<Tree> {
     }
     for path in order {
         for href in hrefs(&text(&pages[&path])) {
-            if let Some(resolved) = resolve_href(&path, href) {
-                if !pages.contains_key(&resolved) && !assets.contains_key(&resolved) {
-                    return Err(format!("ui: viewmodel: dangling href {path} {href}"));
-                }
+            if let Some(resolved) = resolve_href(&path, href)
+                && !pages.contains_key(&resolved)
+                && !assets.contains_key(&resolved)
+            {
+                return Err(format!("ui: viewmodel: dangling href {path} {href}"));
             }
         }
     }
@@ -326,10 +327,10 @@ pub(super) fn check(root: &Path) -> Result<()> {
         if b.get(rel) != Some(bytes) {
             return Err(format!("ui: render not byte-stable: {rel}"));
         }
-        if !one.assets.contains_key(rel) {
-            if let Some(problem) = invariant(&text(bytes))? {
-                return Err(format!("ui: page invariant failed: {rel} {problem}"));
-            }
+        if !one.assets.contains_key(rel)
+            && let Some(problem) = invariant(&text(bytes))?
+        {
+            return Err(format!("ui: page invariant failed: {rel} {problem}"));
         }
     }
     one.meter();

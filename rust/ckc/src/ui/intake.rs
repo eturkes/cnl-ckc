@@ -125,10 +125,11 @@ fn stems(path: &Path, suffix: &str) -> Result<Vec<String>> {
     }
     let mut values = Vec::new();
     for entry in entries(path)? {
-        if !entry.is_symlink() && entry.is_file() {
-            if let Some(stem) = name(&entry).strip_suffix(suffix) {
-                values.push(stem.to_owned());
-            }
+        if !entry.is_symlink()
+            && entry.is_file()
+            && let Some(stem) = name(&entry).strip_suffix(suffix)
+        {
+            values.push(stem.to_owned());
         }
     }
     values.sort();

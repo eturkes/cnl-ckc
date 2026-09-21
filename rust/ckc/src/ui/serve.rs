@@ -86,18 +86,19 @@ fn parse(stream: &mut TcpStream, port: u16) -> std::io::Result<Option<ERequest>>
             .as_ref()
             .is_none_or(|v| v == &format!("http://{expected}"))
         && content_type == "application/x-www-form-urlencoded";
-    if may_read {
-        if let Some(length) = headers
+    if may_read
+        && let Some(length) = headers
             .get("content-length")
             .and_then(|s| s.parse::<usize>().ok())
+    {
+        let mut bytes = Vec::new();
+        if reader
+            .by_ref()
+            .take(length as u64)
+            .read_to_end(&mut bytes)
+            .is_ok_and(|n| n == length)
         {
-            let mut bytes = Vec::new();
-            if bytes.try_reserve_exact(length).is_ok() {
-                bytes.resize(length, 0);
-                if reader.read_exact(&mut bytes).is_ok() {
-                    body = Some(bytes);
-                }
-            }
+            body = Some(bytes);
         }
     }
     Ok(Some(ERequest {

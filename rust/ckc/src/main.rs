@@ -1,6 +1,6 @@
 // ckc: thin unverified shell (enumerated, fixture-covered). Subcommands:
 // trust-audit (zero-trust gate) + align-check (M5.1 verified seam) + v1
-// (M5.2 KB-consumption seams) + check (M5.3 validators).
+// (M5.2 KB-consumption seams) + check (M5.3 validators) + ui (M5.5 reviewer).
 use std::process::ExitCode;
 
 mod align_cli;

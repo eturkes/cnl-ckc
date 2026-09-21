@@ -421,10 +421,10 @@ fn install(
     };
     if current.as_deref() != Some(expected) {
         drop(lock);
-        if let Ok(models) = &mut state.models {
-            if let Some(model) = models.iter_mut().find(|m| m.gid == gid.as_bytes()) {
-                model.ledger_digest = current.unwrap_or_default();
-            }
+        if let Ok(models) = &mut state.models
+            && let Some(model) = models.iter_mut().find(|m| m.gid == gid.as_bytes())
+        {
+            model.ledger_digest = current.unwrap_or_default();
         }
         return kernel_response(req, state).map(Outcome::Response);
     }
