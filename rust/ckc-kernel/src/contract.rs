@@ -401,4 +401,49 @@ pub fn check_lexicon(
     crate::k4_impl::check_lexicon_impl(path, ulex, clex, ace, rulings)
 }
 
+// M5.4 pipeline (contract m5u4 P1): the alignment resolver (occurrence-form
+// input → committed align table, or the exact fail message) and the release
+// manifest (meta block + sorted member/source/label rows) as pure functions of
+// their spec; the shell reads files, hashes members and stages the bag.
+pub fn align_resolve(input: &[char], src: &[char], ace: &[char]) -> (r: ckc_spec::align::EResolve)
+    ensures
+        r@ == ckc_spec::align::resolve_outcome(input@, src@, ace@),
+{
+    crate::release_impl::align_resolve_impl(input, src, ace)
+}
+
+pub fn release_manifest(
+    head: &[u8],
+    compiler: &[u8],
+    lexicon: &[u8],
+    staged: &Vec<ckc_spec::release::EMember>,
+    profiles: &Vec<(Vec<u8>, Vec<u8>)>,
+    urls: &Vec<(Vec<u8>, Vec<u8>)>,
+    labels: &Vec<(Vec<u8>, Vec<u8>)>,
+    tags: &Vec<ckc_spec::release::EMember>,
+) -> (r: Vec<u8>)
+    ensures
+        r@ == ckc_spec::release::release_manifest(
+            head@,
+            compiler@,
+            lexicon@,
+            ckc_spec::release::members(staged@),
+            ckc_spec::check::byte_pairs(profiles@),
+            ckc_spec::check::byte_pairs(urls@),
+            ckc_spec::check::byte_pairs(labels@),
+            ckc_spec::release::members(tags@),
+        ),
+{
+    crate::release_impl::release_manifest_impl(
+        head,
+        compiler,
+        lexicon,
+        staged,
+        profiles,
+        urls,
+        labels,
+        tags,
+    )
+}
+
 } // verus!
