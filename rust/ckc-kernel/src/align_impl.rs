@@ -37,7 +37,7 @@ fn all_ascii_digits(s: &[char]) -> (r: bool)
     true
 }
 
-fn canonical_decimal(s: &[char]) -> (r: bool)
+pub(crate) fn canonical_decimal(s: &[char]) -> (r: bool)
     ensures
         r == ckc_spec::align::is_canonical_decimal(s@),
 {
@@ -99,7 +99,7 @@ proof fn dec_push(s: Seq<char>, c: char)
     reveal_with_fuel(ckc_spec::align::dec_value, 2);
 }
 
-proof fn digit_bounds(c: char)
+pub(crate) proof fn digit_bounds(c: char)
     requires
         ckc_spec::align::is_ascii_digit(c),
     ensures
@@ -108,7 +108,7 @@ proof fn digit_bounds(c: char)
 {
 }
 
-proof fn all_digits_drop_last(s: Seq<char>)
+pub(crate) proof fn all_digits_drop_last(s: Seq<char>)
     requires
         s.len() > 0,
         ckc_spec::align::all_ascii_digits(s),
@@ -125,7 +125,7 @@ proof fn all_digits_drop_last(s: Seq<char>)
     }
 }
 
-proof fn canonical_drop_last(s: Seq<char>)
+pub(crate) proof fn canonical_drop_last(s: Seq<char>)
     requires
         s.len() > 1,
         ckc_spec::align::is_canonical_decimal(s),
@@ -139,7 +139,7 @@ proof fn canonical_drop_last(s: Seq<char>)
     }
 }
 
-proof fn dec_nonnegative(s: Seq<char>)
+pub(crate) proof fn dec_nonnegative(s: Seq<char>)
     requires
         ckc_spec::align::all_ascii_digits(s),
     ensures
@@ -154,7 +154,7 @@ proof fn dec_nonnegative(s: Seq<char>)
     }
 }
 
-proof fn dec_positive(s: Seq<char>)
+pub(crate) proof fn dec_positive(s: Seq<char>)
     requires
         ckc_spec::align::is_canonical_decimal(s),
         s[0] != '0',
@@ -254,7 +254,7 @@ pub open spec fn decimal_cmp_contract(c: EDecimalCmp, a: Seq<char>, b: Seq<char>
     }
 }
 
-fn decimal_cmp(a: &[char], b: &[char]) -> (c: EDecimalCmp)
+pub(crate) fn decimal_cmp(a: &[char], b: &[char]) -> (c: EDecimalCmp)
     requires
         ckc_spec::align::all_ascii_digits(a@),
         ckc_spec::align::all_ascii_digits(b@),
@@ -341,7 +341,7 @@ fn decimal_le(a: &[char], b: &[char]) -> (r: bool)
     }
 }
 
-fn bounded_decimal(s: &[char], bound: usize) -> (r: Option<usize>)
+pub(crate) fn bounded_decimal(s: &[char], bound: usize) -> (r: Option<usize>)
     requires
         ckc_spec::align::is_canonical_decimal(s@),
     ensures
@@ -404,7 +404,7 @@ fn bounded_decimal(s: &[char], bound: usize) -> (r: Option<usize>)
     }
 }
 
-fn seq_equal(a: &[char], b: &[char]) -> (r: bool)
+pub(crate) fn seq_equal(a: &[char], b: &[char]) -> (r: bool)
     ensures
         r == (a@ == b@),
 {
@@ -635,7 +635,7 @@ proof fn seqs_view_drop_first(s: Seq<Vec<char>>)
 {
 }
 
-proof fn seqs_view_len(s: Seq<Vec<char>>)
+pub(crate) proof fn seqs_view_len(s: Seq<Vec<char>>)
     ensures
         seqs_view(s).len() == s.len(),
     decreases s.len(),
@@ -646,7 +646,7 @@ proof fn seqs_view_len(s: Seq<Vec<char>>)
     }
 }
 
-proof fn seqs_view_index(s: Seq<Vec<char>>, i: int)
+pub(crate) proof fn seqs_view_index(s: Seq<Vec<char>>, i: int)
     requires
         0 <= i < s.len(),
         i < seqs_view(s).len(),
@@ -765,7 +765,7 @@ proof fn split_nonempty(s: Seq<char>, sep: char)
     }
 }
 
-fn split_at_seps(s: &[char], sep: char) -> (out: Vec<Vec<char>>)
+pub(crate) fn split_at_seps(s: &[char], sep: char) -> (out: Vec<Vec<char>>)
     ensures
         seqs_view(out@) == ckc_spec::align::split_at_seps(s@, sep),
     decreases s.len(),
@@ -1360,7 +1360,7 @@ fn digit_char(d: usize) -> (c: char)
     }
 }
 
-fn decimal_chars(n: usize) -> (out: Vec<char>)
+pub(crate) fn decimal_chars(n: usize) -> (out: Vec<char>)
     ensures
         out@ == ckc_spec::align::dec_str(n as int),
     decreases n,
@@ -1567,7 +1567,7 @@ fn lit_overlap_ace() -> (out: Vec<char>)
     out
 }
 
-fn concat_chars(mut left: Vec<char>, mut right: Vec<char>) -> (out: Vec<char>)
+pub(crate) fn concat_chars(mut left: Vec<char>, mut right: Vec<char>) -> (out: Vec<char>)
     ensures
         out@ == left@ + right@,
 {
@@ -1575,7 +1575,7 @@ fn concat_chars(mut left: Vec<char>, mut right: Vec<char>) -> (out: Vec<char>)
     left
 }
 
-fn row_prefix(n: usize) -> (out: Vec<char>)
+pub(crate) fn row_prefix(n: usize) -> (out: Vec<char>)
     ensures
         out@ == ckc_spec::align::row_prefix(n as int),
 {

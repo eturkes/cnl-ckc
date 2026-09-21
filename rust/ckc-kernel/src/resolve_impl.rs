@@ -1,4 +1,4 @@
-use crate::{resolve_data as d, resolve_primitives as a, resolve_text as t};
+use crate::{align_impl as a, resolve_data as d, resolve_text as t};
 use ckc_spec::align::*;
 use vstd::assert_seqs_equal;
 use vstd::prelude::*;
