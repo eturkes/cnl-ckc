@@ -15,7 +15,7 @@ fn main() -> ExitCode {
         Some("v1") => v1_cli::run(&args[2..]),
         _ => {
             eprintln!(
-                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render> <pl>"
+                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> …"
             );
             ExitCode::from(2)
         }

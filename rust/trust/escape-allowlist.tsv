@@ -1,4 +1,18 @@
 path	token	count	trimmed_line
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_body.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_bound.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_control.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_fresh.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_frontier.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_goals.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_graph.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_log.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_machine.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_naf.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_record.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_shape.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_state.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_unify.rs"]
 ckc-spec/src/check.rs	external	1	"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n"@,
 ckc-spec/src/check.rs	external	1	||| c == ascii("external"@)
 ckc-spec/src/digest.rs	assume	1	// it — `--no-cheating` rejects uninterp/assume surfaces. The unverified
