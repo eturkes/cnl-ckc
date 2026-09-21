@@ -1,13 +1,13 @@
 # Certification fixtures
 
 `cases.tsv` pins 12 document edits and four query edits against `cdc-2022-opioid`.
-The native test also certifies both unmodified artifacts.
+The binary replayer also certifies both unmodified artifacts.
 
 | Column | Meaning |
 |---|---|
 | `id` | Unique case name. |
 | `kind` | `doc` or `query`. |
-| `target` | PL path relative to `guidelines/cdc-2022-opioid/`. |
+| `target` | Repository-relative PL path under `guidelines/<id>/`. |
 | `op` | `replace-first`, `swap-lines`, or `truncate-from`. |
 | `arg1` | Original bytes, first line index, or truncation marker. |
 | `arg2` | Replacement bytes or second line index; empty for truncation. |
@@ -20,8 +20,11 @@ Line indices are zero-based.
 Every mutation must change its source.
 Every rejection must have empty stdout.
 
-Run `just test` with the pinned SWI-Prolog toolchain on `PATH`.
-`rust/ckc/tests/certify_cases.rs` runs the built binary in temporary guideline copies.
+Run `ckc certify --cases tests/certify/cases.tsv` from the repository root with pinned SWI-Prolog on `PATH`.
+`just certify` runs the same battery after corpus certification.
+`rust/ckc/src/certify_cases_cli.rs` replays each case through the binary in temporary guideline copies.
 Each copy contains one document or query, its ACE source, and its lexicon.
 The certifier obtains fresh, duplicate DRS dumps through the upstream APE driver.
 No stored DRS dump or Python runner participates in this battery.
+
+`just test` validates the table, edit operations, and document ordering without starting SWI-Prolog.

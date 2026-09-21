@@ -1,17 +1,17 @@
 id	kind	target	op	arg1	arg2	expected_rc	expected_stderr
-doc-drop-clause	doc	pl/cdc2022-opioid-rec01.pl	replace-first	guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec01',1,ref(2),[]),na,eq,1).\n		1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
-doc-swap-ref	doc	pl/cdc2022-opioid-rec01.pl	replace-first	ref(2),[]),'category-B-recommendation'	ref(3),[]),'category-B-recommendation'	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
-doc-lemma	doc	pl/cdc2022-opioid-rec01.pl	replace-first	,recommendation,countable)	,recomendation,countable)	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
-doc-add-clause	doc	pl/cdc2022-opioid-rec01.pl	replace-first	% S2:	guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec01',1,ref(1),[]),extra,pos).\n% S2:	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
-doc-deps	doc	pl/cdc2022-opioid-rec01.pl	replace-first	box(2),[A,B]),-)	box(2),[A]),-)	1	ckc: certify: cdc2022-opioid-rec01: noncanonical.\n
-doc-box	doc	pl/cdc2022-opioid-rec01.pl	replace-first	box(1),[A]),should) :- guideline_entity(actual,A,clinician	box(2),[A]),should) :- guideline_entity(actual,A,clinician	1	ckc: certify: cdc2022-opioid-rec01: clauses(2).\n
-doc-drop-bundle	doc	pl/cdc2022-opioid-rec01.pl	truncate-from	% S4:		1	ckc: certify: cdc2022-opioid-rec01: bundle_count.\n
-doc-reorder	doc	pl/cdc2022-opioid-rec01.pl	swap-lines	22	23	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
-doc-ace-sha	doc	pl/cdc2022-opioid-rec01.pl	replace-first	ace_sha256('41914d85	ace_sha256('51914d85	1	ckc: certify: cdc2022-opioid-rec01: ace_sha256.\n
-doc-marker-text	doc	pl/cdc2022-opioid-rec01.pl	replace-first	% S1: A recommendation is	% S1: A recommendation was	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
-doc-modal	doc	pl/cdc2022-opioid-rec01.pl	replace-first	box(1),[A]),should)	box(1),[A]),must)	1	ckc: certify: cdc2022-opioid-rec01: clauses(2).\n
-doc-drop-body-item	doc	pl/cdc2022-opioid-rec01.pl	replace-first	, guideline_cardinality(actual,A,na,eq,1).\n	.\n	1	ckc: certify: cdc2022-opioid-rec01: clauses(2).\n
-query-goal-lemma	query	queries/pl/category-a-recommendations.pl	replace-first	recommendation,countable),','(guideline_cardinality	recomendation,countable),','(guideline_cardinality	1	ckc: certify: category-a-recommendations: projection.\n
-query-answers-desc	query	queries/pl/category-a-recommendations.pl	replace-first	answer(A,noun(recommendation,countable))	answer(A,noun(recommendation,mass))	1	ckc: certify: category-a-recommendations: projection.\n
-query-q1-text	query	queries/pl/category-a-recommendations.pl	replace-first	% Q1: Which recommendation	% Q1: Which recommendations	1	ckc: certify: category-a-recommendations: query_text.\n
-query-ace-sha	query	queries/pl/category-a-recommendations.pl	replace-first	ace_sha256(e1a55c47	ace_sha256(f1a55c47	1	ckc: certify: category-a-recommendations: ace_sha256.\n
+doc-drop-clause	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec01',1,ref(2),[]),na,eq,1).\n		1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
+doc-swap-ref	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	ref(2),[]),'category-B-recommendation'	ref(3),[]),'category-B-recommendation'	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
+doc-lemma	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	,recommendation,countable)	,recomendation,countable)	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
+doc-add-clause	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	% S2:	guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec01',1,ref(1),[]),extra,pos).\n% S2:	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
+doc-deps	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	box(2),[A,B]),-)	box(2),[A]),-)	1	ckc: certify: cdc2022-opioid-rec01: noncanonical.\n
+doc-box	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	box(1),[A]),should) :- guideline_entity(actual,A,clinician	box(2),[A]),should) :- guideline_entity(actual,A,clinician	1	ckc: certify: cdc2022-opioid-rec01: clauses(2).\n
+doc-drop-bundle	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	truncate-from	% S4:		1	ckc: certify: cdc2022-opioid-rec01: bundle_count.\n
+doc-reorder	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	swap-lines	22	23	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
+doc-ace-sha	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	ace_sha256('41914d85	ace_sha256('51914d85	1	ckc: certify: cdc2022-opioid-rec01: ace_sha256.\n
+doc-marker-text	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	% S1: A recommendation is	% S1: A recommendation was	1	ckc: certify: cdc2022-opioid-rec01: clauses(1).\n
+doc-modal	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	box(1),[A]),should)	box(1),[A]),must)	1	ckc: certify: cdc2022-opioid-rec01: clauses(2).\n
+doc-drop-body-item	doc	guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01.pl	replace-first	, guideline_cardinality(actual,A,na,eq,1).\n	.\n	1	ckc: certify: cdc2022-opioid-rec01: clauses(2).\n
+query-goal-lemma	query	guidelines/cdc-2022-opioid/queries/pl/category-a-recommendations.pl	replace-first	recommendation,countable),','(guideline_cardinality	recomendation,countable),','(guideline_cardinality	1	ckc: certify: category-a-recommendations: projection.\n
+query-answers-desc	query	guidelines/cdc-2022-opioid/queries/pl/category-a-recommendations.pl	replace-first	answer(A,noun(recommendation,countable))	answer(A,noun(recommendation,mass))	1	ckc: certify: category-a-recommendations: projection.\n
+query-q1-text	query	guidelines/cdc-2022-opioid/queries/pl/category-a-recommendations.pl	replace-first	% Q1: Which recommendation	% Q1: Which recommendations	1	ckc: certify: category-a-recommendations: query_text.\n
+query-ace-sha	query	guidelines/cdc-2022-opioid/queries/pl/category-a-recommendations.pl	replace-first	ace_sha256(e1a55c47	ace_sha256(f1a55c47	1	ckc: certify: category-a-recommendations: ace_sha256.\n

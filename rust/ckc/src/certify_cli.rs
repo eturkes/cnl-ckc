@@ -158,7 +158,7 @@ fn emit(output: EOut) -> ExitCode {
     ExitCode::from(output.rc)
 }
 
-fn name_ok(id: &str) -> bool {
+pub(crate) fn name_ok(id: &str) -> bool {
     !id.is_empty()
         && id
             .bytes()
@@ -214,6 +214,10 @@ struct Artifact {
     query: bool,
     id: String,
     ace: PathBuf,
+}
+
+fn order_artifacts(artifacts: &mut [Artifact]) {
+    artifacts.sort_by(|a, b| a.query.cmp(&b.query).then_with(|| a.id.cmp(&b.id)));
 }
 
 type Certified = Result<(Vec<u8>, EOut), String>;
@@ -323,6 +327,7 @@ pub fn run(id: &str) -> ExitCode {
             });
         }
     }
+    order_artifacts(&mut artifacts);
     let results = match certify_parallel(&artifacts, &stage, &root, &guideline, usha.as_ref()) {
         Ok(results) => results,
         Err(why) => return reject(id, &why),
@@ -364,4 +369,28 @@ pub fn run(id: &str) -> ExitCode {
         queries.len()
     );
     ExitCode::SUCCESS
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn jobs_follow_document_id_order_not_filename_order() {
+        let mut jobs: Vec<_> = [(true, "z"), (false, "a-child"), (false, "a"), (true, "a")]
+            .into_iter()
+            .map(|(query, id)| Artifact {
+                query,
+                id: id.to_owned(),
+                ace: PathBuf::from(format!("{id}.ace")),
+            })
+            .collect();
+        order_artifacts(&mut jobs);
+        assert_eq!(
+            jobs.iter()
+                .map(|a| (a.query, a.id.as_str()))
+                .collect::<Vec<_>>(),
+            [(false, "a"), (false, "a-child"), (true, "a"), (true, "z")]
+        );
+    }
 }
