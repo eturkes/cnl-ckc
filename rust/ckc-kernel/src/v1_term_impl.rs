@@ -20323,6 +20323,8 @@ fn parse_doc_inner(
     hide(parsed_metadata_ok);
     hide(bundle_metadata_ok);
     hide(ckc_spec::v1text::wf_doc);
+    // Ordering stays opaque here; its successor trigger saturates the loop query.
+    hide(doc_bundles_ordered);
     hide(arena_ok);
     hide(Seq::<_>::is_prefix_of);
     let mut working_arena = input_arena;
