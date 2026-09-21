@@ -14,24 +14,21 @@ pub fn ui_render_index_impl(c: &ckc_spec::ui::ECorpus) -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::ui::render_index(c@),
 {
-    assert(false);
-    Vec::new()
+    crate::k5_render::page(&crate::k5_index::page(c))
 }
 
 pub fn ui_render_guideline_impl(g: &ckc_spec::ui::EGuideline) -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::ui::render_guideline(g@),
 {
-    assert(false);
-    Vec::new()
+    crate::k5_render::page(&crate::k5_guideline::page(g))
 }
 
 pub fn ui_render_records_impl(g: &ckc_spec::ui::EGuideline) -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::ui::render_records(g@),
 {
-    assert(false);
-    Vec::new()
+    crate::k5_render::page(&crate::k5_records_page::page(g))
 }
 
 pub fn ui_render_document_impl(
@@ -53,8 +50,7 @@ pub fn ui_post_outcome_impl(req: &ckc_spec::ui::ERequest, s: &ckc_spec::ui::EPos
     ensures
         o@ == ckc_spec::ui::post_outcome(req@, s@),
 {
-    assert(false);
-    ckc_spec::ui::EPostOutcome::Read
+    crate::k5_post::outcome(req, s)
 }
 
 pub fn ui_ledger_candidate_impl(old: &[u8], r: &ckc_spec::ui::ERecord) -> (out: Vec<u8>)
