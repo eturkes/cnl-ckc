@@ -13,6 +13,7 @@ ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_record.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_shape.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_state.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_unify.rs"]
+ckc-kernel/src/k5_text.rs	unsafe	1	let text = unsafe { str::from_utf8_unchecked(bytes) };
 ckc-spec/src/check.rs	external	1	"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n"@,
 ckc-spec/src/check.rs	external	1	||| c == ascii("external"@)
 ckc-spec/src/digest.rs	assume	1	// it — `--no-cheating` rejects uninterp/assume surfaces. The unverified

@@ -29,6 +29,7 @@
     clippy::unnecessary_unwrap,
     clippy::if_same_then_else,
     clippy::collapsible_if,
+    clippy::collapsible_match,
     clippy::needless_return,
     clippy::let_and_return,
     non_shorthand_field_patterns
@@ -72,11 +73,16 @@ mod k5_chrome;
 mod k5_codes;
 mod k5_copy;
 mod k5_copy_match;
+mod k5_frame;
+mod k5_highlight;
 mod k5_html;
 mod k5_impl;
 mod k5_ledger;
+mod k5_payload;
+mod k5_records;
 mod k5_render;
 mod k5_sound;
+mod k5_text;
 mod k5_utf8;
 mod v1_impl;
 mod v1_term_impl;
