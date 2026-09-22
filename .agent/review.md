@@ -20,3 +20,13 @@ R-11 | CLAUDE.md conformance | kernel impl never read by MAIN (transcript grep f
 R-12 | CLAUDE.md conformance | every unit landed with contract-before-code (`.agent/archive/contracts/`), one scoped commit per unit, gates green at each commit (CI history) | open |
 R-13 | correctness | perf acceptance (m5u2a R31) holds at close on the committed binary: 3 corpus lanes ≤30 s / ≤2 GB; 10 R30d cases ≤30 s | open |
 R-14 | claim soundness | K3 `k3_sound` theorem statement audited: `forest_valid` = the intended `proved ⇒ derivable` (resolution + NAF finite-failure certificate), no vacuous precondition | open |
+
+## M5.5 close review (check set fixed before the integration diff `73ffa227..wt/prod-m5u5s` was read)
+
+id | lens | check | verdict | evidence
+--- | --- | --- | --- | ---
+U5-01 | contract/parity | P3+P5: `.scratch/m5u5/test/parity.py --rust-bin <committed binary>` render 345/345 + requests 153/153 PASS on the merged tip; P4: `cargo test --test ui_fixtures` 113/113 with `rust/ckc/tests/ui_fixtures.rs` byte-identical to wt/test-m5u5 e31700ab; every FC2 re-pin enumerated | open |
+U5-02 | POST/CAS | guard order in `rust/ckc/src/ui/request.rs` = R84 chain verbatim (Host → 405 → 500 → GET → 404 → Origin/403 → 400 ×3 → csrf/403 → 500 ×2 → subject/409 → CAS/409 → 500 → 303); refusal writes nothing; ledger write = mkstemp/fsync/flock/rename with digest CAS under the lock; loopback-only bind; per-process token; socket smoke rc 0 | open |
+U5-03 | grading integrity | graders unchanged: `sha256sum -c .scratch/m5u5/test/source.SHA256SUMS` rc 0; `tests/ui/**`, `tools/ui.py`, `rust/ckc/tests/ui_fixtures.rs` byte-identical to main 73ffa227 / e31700ab; no gate/threshold/fixture edit in the diff; the one repair (VT byte in `unhex`) carries red-before-fix evidence (`hex-space-red.log` legacy rc 0 / native rc 2 → `hex-space-green.log` 6/6 identical) | open |
+U5-04 | corpus/custody | `git diff --stat 73ffa227 <tip> -- guidelines/ tests/ tools/ vendor/` empty; trust meter green; `escape-allowlist.tsv` deltas = shell quoted-data rows + the R89 `from_utf8_unchecked` site only; `deps-allowlist.tsv` byte-identical; `spec-manifest.tsv` pins the merged spec; kernel impl files unread by MAIN + reviewer (transcript grep) | open |
+U5-05 | claim accuracy | close commit body + `spec.md` Artifacts/Deferred + archived contract state exactly the checks run (gate steps, parity counts, verifier verified/error counts, rc); theorem wording = "machine-verified against the committed spec under a pinned verifier TCB"; R84 register notes carried into this ledger's register; nothing claimed beyond P1–P7 evidence | open |
