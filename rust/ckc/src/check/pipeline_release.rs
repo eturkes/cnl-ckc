@@ -3,19 +3,56 @@ use super::process;
 use ckc_kernel::EMember;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 type Staged = BTreeMap<String, Vec<u8>>;
 type Rights = Vec<Vec<String>>;
 
+pub(super) struct ReleasePlan {
+    pub head: String,
+    pub epoch: i64,
+    pub payload: Staged,
+    pub tags: Staged,
+    pub manifest: Vec<u8>,
+    pub rejected: Vec<String>,
+    pub contested: Vec<String>,
+    pub shipped: usize,
+}
+
+pub(super) struct Scratch(pub PathBuf);
+impl Scratch {
+    pub fn new() -> Result<Self> {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        loop {
+            let path = std::env::temp_dir().join(format!(
+                "ckc-dist.{}.{}",
+                std::process::id(),
+                NEXT.fetch_add(1, Ordering::Relaxed)
+            ));
+            match fs::create_dir(&path) {
+                Ok(()) => return Ok(Self(path)),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(e) => return Err(error(format!("scratch: {e}"))),
+            }
+        }
+    }
+}
+impl Drop for Scratch {
+    fn drop(&mut self) {
+        fs::remove_dir_all(&self.0).ok();
+    }
+}
+
 fn error(detail: impl AsRef<str>) -> Failure {
     violation("dist", detail)
 }
-fn dgit(args: &[&str], detail: &str) -> Result<Vec<u8>> {
+fn dgit(root: &Path, args: &[&str], detail: &str) -> Result<Vec<u8>> {
     let out = Command::new("git")
         .args(args)
+        .current_dir(root)
         .output()
         .map_err(|_| error(detail))?;
     if !out.status.success() {
@@ -23,8 +60,9 @@ fn dgit(args: &[&str], detail: &str) -> Result<Vec<u8>> {
     }
     Ok(out.stdout)
 }
-fn head_file(path: &str) -> Result<Vec<u8>> {
+fn head_file(root: &Path, path: &str) -> Result<Vec<u8>> {
     dgit(
+        root,
         &["show", &format!("HEAD:{path}")],
         &format!("no-input {path}"),
     )
@@ -45,7 +83,7 @@ fn rendered_path(bytes: &[u8]) -> String {
 fn clean(s: &str) -> bool {
     s.chars().all(|c| c >= ' ' && c != '\u{7f}')
 }
-fn path_text(bytes: &[u8]) -> Result<String> {
+pub(super) fn path_text(bytes: &[u8]) -> Result<String> {
     let bad = || error(format!("member-path {}", rendered_path(bytes)));
     let s = std::str::from_utf8(bytes).map_err(|_| bad())?;
     if !clean(s)
@@ -261,7 +299,7 @@ fn readme(
     text += "\n## Replay\n\nThese commands run in the source repository at the commit that this archive names.\n\n- compile: python3 -P tools/goal.py compile <guideline-id>\n- check: python3 -P tools/goal.py check\n- load: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n";
     text + schema
 }
-fn member(path: &str, bytes: &[u8]) -> EMember {
+pub(super) fn member(path: &str, bytes: &[u8]) -> EMember {
     EMember {
         path: path.as_bytes().to_vec(),
         sha: crate::trust::sha256_hex(bytes).into_bytes(),
@@ -269,8 +307,9 @@ fn member(path: &str, bytes: &[u8]) -> EMember {
     }
 }
 
-pub(super) fn run() -> Result {
+pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
     let head = dgit(
+        root,
         &[
             "log",
             "-1",
@@ -287,8 +326,17 @@ pub(super) fn run() -> Result {
     if head.is_empty() {
         return Err(error("no-guidelines"));
     }
-    dgit(&["show", "-s", "--format=%ct", &head], "no-input head")?;
+    let epoch = dgit(
+        root,
+        &["show", "-s", "--format=%ct", &head],
+        "no-input head",
+    )?;
+    let epoch = String::from_utf8_lossy(&epoch)
+        .trim()
+        .parse()
+        .map_err(|_| error("no-input head"))?;
     let raw = dgit(
+        root,
         &["ls-tree", "-r", "-z", "HEAD", "--", "guidelines"],
         "no-guidelines",
     )?;
@@ -318,10 +366,11 @@ pub(super) fn run() -> Result {
         gids.insert(parts[1].to_owned());
     }
     let archive = dgit(
+        root,
         &["archive", "--format=tar", "HEAD", "guidelines"],
         "no-input archive",
     )?;
-    let scratch = process::Scratch::new()?;
+    let scratch = Scratch::new()?;
     let (timed, out) = process::walled(
         Command::new("tar").args(["-x", "-C"]).arg(&scratch.0),
         Some(&archive),
@@ -341,10 +390,10 @@ pub(super) fn run() -> Result {
             );
         }
     }
-    let compiler = head_file("vendor/ape/prolog/ace_to_pl.pl")?;
-    let lexicon = head_file("vendor/clex/clex_lexicon.pl")?;
-    let reference = head_file("docs/REFERENCE.md")?;
-    let notice = head_file("NOTICE")?;
+    let compiler = head_file(root, "vendor/ape/prolog/ace_to_pl.pl")?;
+    let lexicon = head_file(root, "vendor/clex/clex_lexicon.pl")?;
+    let reference = head_file(root, "docs/REFERENCE.md")?;
+    let notice = head_file(root, "NOTICE")?;
     let reference =
         std::str::from_utf8(&reference).map_err(|_| error("no-input docs/REFERENCE.md"))?;
     let mut notice = String::from_utf8(notice).map_err(|_| error("no-input docs/REFERENCE.md"))?;
@@ -375,14 +424,15 @@ pub(super) fn run() -> Result {
         }
     }
     notice += "\nThe pl/ Prolog files in the payload are outputs that the vendored ACE compiler derived from the ace/ source documents.\n";
-    let tags = vec![
-        member(
-            "bagit.txt",
-            b"BagIt-Version: 1.0\nTag-File-Character-Encoding: UTF-8\n",
+    let tags = Staged::from([
+        (
+            "bagit.txt".to_owned(),
+            b"BagIt-Version: 1.0\nTag-File-Character-Encoding: UTF-8\n".to_vec(),
         ),
-        member("README-dist.md", readme.as_bytes()),
-        member("NOTICE", notice.as_bytes()),
-    ];
+        ("README-dist.md".to_owned(), readme.into_bytes()),
+        ("NOTICE".to_owned(), notice.into_bytes()),
+    ]);
+    let tag_members = tags.iter().map(|(p, b)| member(p, b)).collect();
     let members = staged.iter().map(|(p, b)| member(p, b)).collect();
     let profiles = gids
         .iter()
@@ -392,9 +442,9 @@ pub(super) fn run() -> Result {
         .iter()
         .map(|g| (g.as_bytes().to_vec(), rs[g][0][2].as_bytes().to_vec()))
         .collect();
-    let labels = labels
-        .into_iter()
-        .map(|(a, b)| (a.into_bytes(), b.into_bytes()))
+    let label_rows = labels
+        .iter()
+        .map(|(a, b)| (a.as_bytes().to_vec(), b.as_bytes().to_vec()))
         .collect();
     let manifest = ckc_kernel::contract::release_manifest(
         head.as_bytes(),
@@ -403,25 +453,50 @@ pub(super) fn run() -> Result {
         &members,
         &profiles,
         &urls,
-        &labels,
-        &tags,
+        &label_rows,
+        &tag_members,
     );
-    let count = staged
-        .keys()
-        .filter(|p| {
+    let payload = staged
+        .into_iter()
+        .filter(|(p, _)| {
             let gid = p.split('/').nth(1).unwrap_or("");
             let profile = &rs[gid][0][0];
             profile != "restricted"
                 && !(profile == "reconstructable"
                     && p.starts_with(&format!("guidelines/{gid}/source/")))
         })
-        .count()
-        + tags.len();
+        .map(|(p, b)| (format!("data/{p}"), b))
+        .collect();
+    let verdicts = |class: &str| {
+        labels
+            .iter()
+            .filter(|(_, c)| c.as_str() == class)
+            .map(|(id, _)| id.clone())
+            .collect()
+    };
+    Ok(ReleasePlan {
+        head,
+        epoch,
+        payload,
+        tags,
+        manifest,
+        rejected: verdicts("rejected"),
+        contested: verdicts("contested"),
+        shipped,
+    })
+}
+
+pub(super) fn run() -> Result {
+    let plan = derive(Path::new("."))?;
     let target = Path::new("release-manifest.tsv");
     if target.is_symlink() {
         return Err(error("release manifest is a symlink: release-manifest.tsv"));
     }
-    fs::write(target, manifest).map_err(|e| error(e.to_string()))?;
-    println!("goal: release-manifest {shipped} guidelines {count} members");
+    fs::write(target, &plan.manifest).map_err(|e| error(e.to_string()))?;
+    println!(
+        "goal: release-manifest {} guidelines {} members",
+        plan.shipped,
+        plan.payload.len() + plan.tags.len()
+    );
     Ok(())
 }

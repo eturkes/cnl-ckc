@@ -144,6 +144,18 @@ pub open spec fn release_manifest(
     ) + source_rows(sources(staged, profiles, urls)) + label_rows(labels)
 }
 
+// --- BagIt digest manifests (M5.6, contract m5u6): `<sha>  <path>` per member in path
+// order. manifest-sha256.txt lists the payload members; tagmanifest-sha256.txt lists the
+// tag files (NOTICE, README-dist.md, bagit.txt, manifest-sha256.txt, release-manifest.tsv)
+// and never itself.
+pub open spec fn digest_lines(ms: Seq<Member>) -> Seq<u8> {
+    sort_members(ms).map_values(|m: Member| m.sha + ascii("  "@) + m.path + lf()).flatten()
+}
+
+pub open spec fn tagmanifest_lines(tags: Seq<Member>) -> Seq<u8> {
+    digest_lines(tags.filter(|m: Member| m.path != ascii("tagmanifest-sha256.txt"@)))
+}
+
 // --- exec mirror ---
 pub struct EMember {
     pub path: Vec<u8>,

@@ -1,4 +1,5 @@
 name	version
+adler2	2.0.1
 block-buffer	0.12.1
 cfg-if	1.0.4
 ckc	0.1.0
@@ -6,16 +7,20 @@ ckc-kernel	0.1.0
 ckc-spec	0.1.0
 convert_case	0.4.0
 cpufeatures	0.3.1
+crc32fast	1.5.2
 crypto-common	0.2.2
 digest	0.11.3
 equivalent	1.0.2
+flate2	1.1.10
 hashbrown	0.17.1
 hybrid-array	0.4.14
 indexmap	2.14.1
 libc	0.2.189
+miniz_oxide	0.9.1
 proc-macro2	1.0.107
 quote	1.0.47
 sha2	0.11.0
+simd-adler32	0.3.10
 syn	2.0.119
 synstructure	0.13.2
 typenum	1.20.1

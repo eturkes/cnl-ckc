@@ -461,7 +461,8 @@ fn unhex(s: &str) -> Option<Vec<u8>> {
     let mut out = Vec::new();
     let mut bytes = s.bytes().peekable();
     while let Some(c) = bytes.next() {
-        if c.is_ascii_whitespace() {
+        // Python bytes.fromhex accepts VT; Rust's ASCII whitespace set excludes it.
+        if c.is_ascii_whitespace() || c == b'\x0b' {
             continue;
         }
         let hi = char::from(c).to_digit(16)?;
