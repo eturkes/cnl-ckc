@@ -2,12 +2,13 @@ use vstd::prelude::*;
 
 verus! {
 
-// M5.5 K5 seed: red theorem stubs, one verification error each (contract.rs binds them).
 pub proof fn copy_ok_proof()
     ensures
         ckc_spec::ui::copy_ok(ckc_spec::ui::copy_registry()),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::copy_ok);
+    crate::k5_sound_registry::copy_ok();
 }
 
 pub proof fn index_sound_proof(c: ckc_spec::ui::Corpus)
@@ -19,7 +20,11 @@ pub proof fn index_sound_proof(c: ckc_spec::ui::Corpus)
             ckc_spec::ui::copy_registry(),
         ),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::index_html);
+    hide(ckc_spec::ui::corpus_bytes);
+    crate::k5_sound_pages::index(c);
+    crate::k5_sound_escape::page(ckc_spec::ui::index_html(c), c);
 }
 
 pub proof fn guideline_sound_proof(c: ckc_spec::ui::Corpus, i: int)
@@ -33,7 +38,12 @@ pub proof fn guideline_sound_proof(c: ckc_spec::ui::Corpus, i: int)
             ckc_spec::ui::copy_registry(),
         ),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::guideline_html);
+    hide(ckc_spec::ui::corpus_bytes);
+    crate::k5_sound_corpus::guideline(c, i);
+    crate::k5_sound_guideline::page(c.guidelines[i], ckc_spec::ui::corpus_bytes(c));
+    crate::k5_sound_escape::page(ckc_spec::ui::guideline_html(c.guidelines[i]), c);
 }
 
 pub proof fn records_sound_proof(c: ckc_spec::ui::Corpus, i: int)
@@ -47,7 +57,12 @@ pub proof fn records_sound_proof(c: ckc_spec::ui::Corpus, i: int)
             ckc_spec::ui::copy_registry(),
         ),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::records_html);
+    hide(ckc_spec::ui::corpus_bytes);
+    crate::k5_sound_corpus::guideline(c, i);
+    crate::k5_sound_records::page(c.guidelines[i], ckc_spec::ui::corpus_bytes(c));
+    crate::k5_sound_escape::page(ckc_spec::ui::records_html(c.guidelines[i]), c);
 }
 
 pub proof fn document_sound_proof(
@@ -83,7 +98,15 @@ pub proof fn document_sound_proof(
             ckc_spec::ui::copy_registry(),
         ),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::document_html);
+    hide(ckc_spec::ui::corpus_bytes);
+    let g = c.guidelines[i];
+    let d = g.documents[j];
+    assert(g.documents.contains(d));
+    crate::k5_sound_corpus::guideline(c, i);
+    crate::k5_sound_document::page(g, d, prev, next, token, ckc_spec::ui::corpus_bytes(c));
+    crate::k5_sound_escape::page(ckc_spec::ui::document_html(g, d, prev, next, token), c);
 }
 
 pub proof fn post_sound_proof(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostState)
@@ -96,7 +119,9 @@ pub proof fn post_sound_proof(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostS
             ),
         },
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::post_outcome);
+    crate::k5_sound_post::post(req, s);
 }
 
 } // verus!
