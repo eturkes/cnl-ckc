@@ -65,3 +65,31 @@ fn usage_without_arguments_is_rc2() {
     assert!(out.stdout.is_empty());
     assert!(out.stderr.starts_with(b"usage: ckc "));
 }
+
+#[test]
+fn pipeline_arity_keeps_legacy_fail_envelopes() {
+    let cases = [
+        ("compile", " <guideline-id>"),
+        ("queries", " <guideline-id>"),
+        ("align", " <guideline-id> <docid>"),
+        ("review-manifest", " <guideline-id>"),
+        ("derive-review-manifest", " <guideline-dir>"),
+        ("ledger-validate", " <ledger-path> <manifest-path> <label>"),
+        ("release-manifest", ""),
+    ];
+    for (mode, tail) in cases {
+        let args = if mode == "release-manifest" {
+            vec![mode, "extra"]
+        } else {
+            vec![mode]
+        };
+        let out = ckc(&args);
+        assert_eq!(out.status.code(), Some(2), "{mode}");
+        assert!(out.stdout.is_empty(), "{mode}");
+        assert_eq!(
+            out.stderr,
+            format!("goal: usage: expected: goal {mode}{tail}\n").as_bytes(),
+            "{mode}"
+        );
+    }
+}

@@ -260,6 +260,56 @@ fn visible_violation(s: &str) -> Option<&'static str> {
     }
     None
 }
+// Corpus text and quoted attribute values are data, not resource attributes.
+fn resource_tag(tag: &str) -> bool {
+    let tag = tag.trim_start();
+    let end = tag
+        .find(|c: char| !c.is_ascii_alphanumeric() && c != '-')
+        .unwrap_or(tag.len());
+    let (name, mut rest) = tag.split_at(end);
+    if ["img", "link", "iframe", "object"]
+        .iter()
+        .any(|n| name.eq_ignore_ascii_case(n))
+    {
+        return true;
+    }
+    while !rest.trim_start().is_empty() {
+        rest = rest.trim_start();
+        let end = rest
+            .find(|c: char| c.is_ascii_whitespace() || c == '=')
+            .unwrap_or(rest.len());
+        if end == 0 || rest.starts_with('/') {
+            break;
+        }
+        let (name, tail) = rest.split_at(end);
+        if name.eq_ignore_ascii_case("src") {
+            return true;
+        }
+        rest = tail.trim_start();
+        if let Some(value) = rest.strip_prefix('=') {
+            rest = value.trim_start();
+            if let Some(quote @ ('\'' | '"')) = rest.chars().next() {
+                let tail = &rest[1..];
+                rest = tail.split_once(quote).map(|(_, rest)| rest).unwrap_or("");
+            } else {
+                rest = rest
+                    .find(char::is_whitespace)
+                    .map(|i| &rest[i..])
+                    .unwrap_or("");
+            }
+        }
+    }
+    false
+}
+fn resource_reference(page: &str) -> bool {
+    let page = strip_between(page, "<style>", "</style>");
+    let page = strip_between(&page, "<script>", "</script>");
+    let page = strip_between(&page, "<!--", "-->");
+    page.split('<')
+        .skip(1)
+        .filter_map(|p| p.split_once('>').map(|(tag, _)| tag))
+        .any(resource_tag)
+}
 fn invariant(page: &str) -> Result<Option<&'static str>> {
     for (needle, count, label) in [
         ("<!doctype html>", 1, "doctype"),
@@ -294,10 +344,7 @@ fn invariant(page: &str) -> Result<Option<&'static str>> {
     {
         return Ok(Some("external-href"));
     }
-    if ["src=", "<link", "<iframe", "<object", "<img"]
-        .iter()
-        .any(|s| page.contains(s))
-    {
+    if resource_reference(page) {
         return Ok(Some("external-resource"));
     }
     if page.matches(SCOPE).count() != 1 {

@@ -146,13 +146,19 @@ mod m6_safety;
 mod m6_symbols;
 mod m6_term;
 mod m6_vars;
+mod release_impl;
+mod release_rows;
+mod resolve_data;
+mod resolve_impl;
+mod resolve_text;
 mod v1_impl;
 mod v1_term_impl;
 
-pub use ckc_spec::align::{ECheck, EModel, ESpan};
+pub use ckc_spec::align::{ECheck, EModel, EResolve, EResolved, ESpan};
 pub use ckc_spec::check::{
     EBundle, ECoverage, ECoverageRow, EDecision, EEvidence, EFileSrc, ERendered, EStatus, EVerdict,
 };
+pub use ckc_spec::release::EMember;
 pub use ckc_spec::replay::{EOut, ERow, ESrc};
 pub use ckc_spec::ui::{
     ECorpus, EDocument, EGuideline, EPage, EPiece, EPostDocument, EPostGuideline, EPostOutcome,
