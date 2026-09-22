@@ -6,7 +6,9 @@ pub proof fn copy_ok_proof()
     ensures
         ckc_spec::ui::copy_ok(ckc_spec::ui::copy_registry()),
 {
-    assert(false);
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::copy_ok);
+    crate::k5_sound_registry::copy_ok();
 }
 
 pub proof fn index_sound_proof(c: ckc_spec::ui::Corpus)
