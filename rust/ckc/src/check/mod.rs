@@ -1,6 +1,10 @@
 use std::process::ExitCode;
 mod census;
 mod common;
+pub(crate) mod dist;
+mod dist_archive;
+mod dist_check;
+mod dist_probes;
 mod compendium;
 mod fork;
 mod inventories;
@@ -35,6 +39,7 @@ fn check() -> common::Result {
     for g in &plans {
         corpus::check(g)?;
     }
+    dist_check::check()?;
     let swipl = process::swipl()?;
     let scratch = process::Scratch::new()?;
     let stage = process::stage(&scratch, &swipl)?;
