@@ -39,3 +39,12 @@ U5-05 | claim accuracy | close commit body + `spec.md` Artifacts/Deferred + arch
 - Worktree-built binary sha256 7eda1bc9… ≠ main-built fce50147… (embedded build paths); parity grades behavior, both PASS.
 - U5-05 (reviewer): two lead-seeded TSV step labels state expected values that differ from actuals (`prod-m5u5s-1.tsv:7` `seal … rc0` vs source-seal rc 1 on ui.rs; `:9` `8 gate lines` vs 7 recipe meters + trust); evidence cells, notes and the producer commit body report actuals correctly.
 - rev-m5u5-1 completed after the lead's message revived it (08:17Z): U5-01/U5-04 pass, U5-03 literal-rc fail overruled by ruling, U5-02 finding registered, U5-05 register + pass on the close commit body; table persisted in `.scratch/agents/rev-m5u5-1.md`.
+
+## M5.5-cas follow-up review (check set fixed before the diff `c3d02cc5..wt/prod-m5u5cas` was read; contract `.agent/contracts/m5u5-cas.md`)
+
+id | lens | check | verdict | evidence
+--- | --- | --- | --- | ---
+C-01 | lock identity/serialization | `LedgerLock::acquire` validates (dev, ino) of the locked fd against `stat(path)` under the lock; mismatch/ENOENT → release without unlink + reopen + re-lock, bounded → the existing 500 envelope; `Drop` keeps unlink-before-unlock; the I1–I3 argument holds against: orphan waiter + fresh newcomer, two newcomers after one unlink, stale file from a killed holder, three writers | open |
+C-02 | CAS outcomes/ledger preservation | fixed tree: `ui_lock.rs` one 303 + one 409, ledger byte-exact S + accepted row, the refusal leaves the ledger and removes its candidate + lock file; `verdict-cas-conflict`, `verdict-ok-append`, `verdict-ok-create`, `verdict-crash` fixtures unchanged + green | open |
+C-03 | regression independence/real handoff | test + shim sealed (sha256) in the tester's commit before the fix; red on the c3d02cc5-source build AND on `.scratch/gate/ckc-6094717d` (fce50147…), failing at S9(i)/(ii) — not on paths, timeout or deadlock; bytes unchanged after the repair; schedule covers queued waiter (A on ino1) + fresh arrival (B on ino2) + real `Drop`→acquire handoff (B→A); every wait finite on both trees | open |
+C-04 | cleanup/unrelated behavior | `cargo test --workspace` green (ui_fixtures 113/113); parity render 345/345 + requests 153/153 on the fixed binary; `ui_fixtures.rs`, `tests/ui/**`, `tools/**`, `rust/ckc-spec`, `rust/ckc-kernel`, `rust/trust/*.tsv` byte-identical to c3d02cc5; trust meter unchanged; `--fault after-tmp-write` path unchanged | open |
