@@ -56,3 +56,6 @@ ckc/src/trust.rs	verifier(external	1	"verifier(external",
 ckc/src/trust.rs	verifier(external	1	("verifier(external", false),
 ckc/src/trust.rs	verifier::external	1	"verifier::external",
 ckc/src/trust.rs	verifier::external	1	("verifier::external", true),
+ckc/src/ui/chrome.rs	unsafe	1	csp: format!("default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-{hash}'"),
+ckc/src/ui/pages.rs	external	1	return Ok(Some("external-href"));
+ckc/src/ui/pages.rs	external	1	return Ok(Some("external-resource"));
