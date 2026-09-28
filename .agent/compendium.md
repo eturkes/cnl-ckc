@@ -27,14 +27,14 @@ the terminal condition below is exhaustive over its swept organizations
 and explicit about the organizations it defers — not a claim that every
 American clinical guideline holds a row.
 
-Terminal condition — compendium exhaustion, the standing goal's finite
+Terminal condition — compendium exhaustion, the corpus prompt's finite
 stop check, reached when both hold:
 
 - every organization row is `CPGs=no`, or carries `swept` =
   `<date> <method>` or `blocked(<why>)`;
 - every guideline row is `done`, `blocked(<why>)`, or `excluded(<why>)`.
 
-`docs/REFERENCE.md` § Operating adopts this as the goal's terminal clause.
+`docs/REFERENCE.md` § Operating adopts this as the prompt's `Met when` clause.
 
 ## Eligibility
 

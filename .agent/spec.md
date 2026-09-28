@@ -15,7 +15,7 @@ Scope stays minimal: fetch, normalize to ACE, compile, review locally, export de
 Approved; env = `.claude/rules/ops.md`.
 - Reviewer UI — `python3 -P tools/ui.py serve [<port>]` (loopback, reads HEAD); `render <out>`, `check`.
 - ACE representations + compiled KB — `guidelines/<id>/`; `python3 -P tools/goal.py compile <id>` → `queries <id>` → `check`; export `goal.py release-manifest` + `tools/dist.py build`.
-- Corpus-extension workflow — `/goal` loop, body + procedure = `docs/REFERENCE.md` § Operating; worklist `.agent/queue.md` ← `.agent/compendium.{md,tsv}`; roles = `.claude/rules/corpus.md`.
+- Corpus-extension workflow — pasted-prompt loop, prompt + procedure = `docs/REFERENCE.md` § Operating; worklist `.agent/queue.md` ← `.agent/compendium.{md,tsv}`; roles = `.claude/rules/corpus.md`.
 In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`); `rust/target/release/ckc {v1 check|render|aggregate-check|recursion-check|answer|trace|trace-check, align-check, trust-audit, check [repo-root] (M5.3, parity with `goal.py check`), compile <id> | queries <id> | align <id> | review-manifest | derive-review-manifest | ledger-validate | release-manifest (M5.4, byte-parity with goal.py), dist build [<dest>] (M5.6, BagIt bag = tools/dist.py members + tags byte-identical; archive DEFLATE bytes differ, FC4), certify <id> | certify --cases tests/certify/cases.tsv, ui serve [<port>] | render <out> | check | request <method> <path> | copy-check <source.txt> (M5.5, byte parity with `tools/ui.py`; frozen suite `rust/ckc/tests/ui_fixtures.rs`, harness `.scratch/m5u5/test/parity.py --rust-bin`)}`; `just certify` (M6). Tooling `just tools`; full gate `just gate` = rust + legacy + certify.
 
 ## Decisions
@@ -29,14 +29,26 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 - Corpus: knowledge-only fixture-free ACE on the frozen v1 schema; obligations discharged per document + aggregate; answers/traces = machine-derived demonstrations. Neutrality: nothing source-language-specific in tooling/schemas/ledgers; domain rules live in corpus data.
 - Deps minimal + enumerated (`rust/trust/deps-allowlist.tsv`: mature, easily reasoned about, dangerous to hand-write); verifier pinned (`rust/verus.lock`). Review: check set fixed before reading; rows adjudicated in `.agent/review.md`.
 
-## Deferred
+## Tasks
 
-- Queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each); rows below = the unfinished units.
-- M5.3 grading remainder (unit closed dbbcfb75; lead evidence pending): parity on `baseline/tree-r80` (a5cd4b9d + tests from dd0a837f + table move, local commit 054cfdbc; pins re-derived, originals in `.scratch/m5u3/expected-a5cd4b9d/`) = 11/11 identical + batteries 3/3 (`.scratch/gate/m5u3-parity-r80.log`); mutants replay killed at session close after 3 h (late-section mutants ≈ 40 min each) → rerun `python3 -P .scratch/m5u3/mutants.py --check --tree .scratch/m5u3/baseline/tree-r80 --rust-bin <main binary>` in a long background; R98 = re-pin the parity dist meter byte count after M5.6 (1481762 → 1490978 B). Record both in the M5.7 close commit body.
-- M5.7 cutover (contract `.agent/contracts/m5u7.md` P1–P6; fork shrink R95; drafts ready: `.scratch/m5u7/{README.draft.md,reference-edits.txt,mech-edits.txt}`): CI swap; delete `vendor/e--`, `tools/`, `tests/strict`, `red.sh`; NOTICE/REFERENCE/README/rules scrub; release-manifest regen (R72). Accept: `git grep -iE 'e--|\.emm'` empty; new chain green.
-- M5 review (`.agent/review.md`): spec audit, trust-audit hostile probes, mutation campaign scored by verus-acceptance, shell fault probes, differential replay, claim-soundness sweep. Accept: rows all adjudicated.
-- M7 gap coverage: `inexpressible` census class in the coverage grammar; taxonomy from banked blockers + compendium sampling; disposition per class (ACE extension | schema v2 | companion target). Accept: user-ruled plan; first class dispositioned.
-- Corpus rounds to exhaustion (legacy tooling). Accept: meter `terminal remaining: orgs=0 rows=0 provisional=0`; then hard-tier harvest (`archive/hard-tier-register.md`).
+- [ ] M5.3 grading remainder — unit closed dbbcfb75; lead evidence pending
+  - parity on `baseline/tree-r80` (a5cd4b9d + tests from dd0a837f + table move, local commit 054cfdbc; pins re-derived, originals in `.scratch/m5u3/expected-a5cd4b9d/`) = 11/11 identical + batteries 3/3 (`.scratch/gate/m5u3-parity-r80.log`)
+  - mutants replay killed at session close after 3 h (late-section mutants ≈ 40 min each) → rerun `python3 -P .scratch/m5u3/mutants.py --check --tree .scratch/m5u3/baseline/tree-r80 --rust-bin <main binary>` in a long background
+  - R98 = re-pin the parity dist meter byte count after M5.6 (1481762 → 1490978 B)
+  - Record both in the M5.7 close commit body.
+- [ ] M5.7 cutover — contract `.agent/contracts/m5u7.md` P1–P6
+  - fork shrink R95; drafts ready: `.scratch/m5u7/{README.draft.md,reference-edits.txt,mech-edits.txt}`
+  - CI swap; delete `vendor/e--`, `tools/`, `tests/strict`, `red.sh`; NOTICE/REFERENCE/README/rules scrub; release-manifest regen (R72)
+  - Accept: `git grep -iE 'e--|\.emm'` empty; new chain green.
+- [ ] M5 review — `.agent/review.md`
+  - spec audit, trust-audit hostile probes, mutation campaign scored by verus-acceptance, shell fault probes, differential replay, claim-soundness sweep
+  - Accept: rows all adjudicated.
+- [ ] M7 gap coverage
+  - `inexpressible` census class in the coverage grammar; taxonomy from banked blockers + compendium sampling; disposition per class (ACE extension | schema v2 | companion target)
+  - Accept: user-ruled plan; first class dispositioned.
+- [ ] Corpus rounds to exhaustion — legacy tooling
+  - Accept: meter `terminal remaining: orgs=0 rows=0 provisional=0`; then hard-tier harvest (`archive/hard-tier-register.md`).
+- Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
 ## Phase
 

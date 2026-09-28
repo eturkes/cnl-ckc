@@ -19,7 +19,7 @@ guidelines into executable Prolog through controlled natural language:
    lexicon. It compiles every ACE document to plain Prolog under
    `guidelines/<id>/pl/` via `vendor/ape/prolog/ace_to_pl.pl`.
 
-Claude Code's built-in `/goal` command drives all three steps
+A Claude Code session drives all three steps from one pasted prompt
 ("Operating" below).
 
 ## Audit story
@@ -106,7 +106,7 @@ compiler base:
      organizations table plus the `.agent/compendium.tsv` guideline
      rows: row vocabulary, canonical ordering, the one-active-row
      promotion invariant — and prints the terminal meter that the
-     `/goal` exhaustion clause reads;
+     corpus prompt's exhaustion clause reads;
   2. validates layout, source records, and Prolog/lexicon inventory
      closure;
   3. validates every guideline's corpus ledgers — projection-notes
@@ -609,25 +609,24 @@ per guideline beside the queries meter.
 
 ## Operating
 
-Guideline work runs as goal rounds in a Claude Code session opened at
-the repository root, driven by the built-in `/goal` stop-condition
-command:
+Guideline work runs as rounds in a Claude Code session that is opened
+at the repository root. Paste this prompt as the first message of the
+session:
 
 ```
-/goal Process American clinical guidelines through the pipeline as described in docs/REFERENCE.md "Operating", fanning bulk work out to teammates per the round roles in .claude/rules/corpus.md: work the in-progress source document to full coverage before fetching the next; done only when either (a) the user has asked to stop, pause, or wind down — the request alone meets this goal at any point, even mid-round with the worklist unfinished; start nothing new, state where work stands, and stop — or (b) every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
+Process American clinical guidelines through the pipeline as described in docs/REFERENCE.md "Operating", with teammates per the round roles in .claude/rules/corpus.md: work the in-progress source document to full coverage before fetching the next. When the user asks to stop, pause, or wind down, start nothing new, state where work stands, and stop — the request alone ends the run at any point, even mid-round with the worklist unfinished. Met when: every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
 ```
 
-The goal re-arms each time Claude tries to stop, and it survives
-session resume, so halting at any moment is safe. The repository is the
-only persistence. Every round starts by deriving state from it:
+The session works until the `Met when` condition holds or the user
+asks it to stop. The repository is the only persistence, so halting at
+any moment is safe. To continue in a fresh session, paste the same
+prompt again. Every round starts by deriving state from the repository:
 `.agent/queue.md`, `git status`, `tools/goal.py check`, and the
 in-progress guideline README's coverage statement. The round then
 finishes or discards incomplete work before it takes on anything new. A
-user request to stop is condition (a) of the goal itself. "Let's stop
-here" satisfies the stop check at once, mid-round included, rather than
-re-arm against the unmet exhaustion clause. The wind-down is to start
-nothing new, state where work stands, and stop. `/goal clear` remains
-the unconditional disarm. The check validates the fork
+user request to stop ends the run at once, mid-round included, even
+when the exhaustion clause is not met. The wind-down is to start
+nothing new, state where work stands, and stop. The check validates the fork
 notices and the strict and adjudication fixtures first. It then
 validates the compendium — the `.agent/compendium.md` organizations
 table plus `.agent/compendium.tsv`: row format and vocabulary,
@@ -640,11 +639,11 @@ vocabulary) runs for every guideline on every check. The same pass
 re-derives each guideline's review manifest and validates its
 adjudication ledger. It also re-derives every committed query,
 answer, and proof trace, and it joins each trace step to its
-committed clause line. Bulk work (source
-reading, extraction drafting, ACE drafting, adversarial review) fans
-out to subagent teammates per the round roles in
-`.claude/rules/corpus.md`. The session lead
-alone writes the repository and commits.
+committed clause line. The session lead drafts all ACE,
+alone writes the repository, and commits. Source reading and
+extraction go to `researcher` teammates. Completeness sweeps and
+adversarial review go to `reviewer` teammates. The round roles are in
+`.claude/rules/corpus.md`.
 
 Reviewer verdicts live in each guideline's `audit/adjudication.tsv`,
 pinned to content digests in `audit/review-manifest.tsv`. When compiled
