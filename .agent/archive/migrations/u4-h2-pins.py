@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""U4 H2 pin cross-check: every pattern of the M5.1 trust battery
+(.scratch/m5u1/trust-battery/run.py, sha256 9f9d13ab71c0cfa5…) = the same
+bytes in rust/ckc/tests/trust_battery.rs. Scratch source frozen since M5.1;
+rerun: python3 -P .agent/archive/migrations/u4-h2-pins.py → `h2 pins: 16/16`.
+"""
+import ast
+import hashlib
+import pathlib
+import re
+
+py = pathlib.Path('.scratch/m5u1/trust-battery/run.py').read_text()
+pins = {}
+for node in ast.walk(ast.parse(py)):
+    if isinstance(node, ast.Tuple) and len(node.elts) == 3 and isinstance(node.elts[0], ast.Constant) \
+            and str(node.elts[0].value).startswith('p'):
+        pins[node.elts[0].value] = node.elts[2].args[0].value
+    if isinstance(node, ast.Assign) and getattr(node.targets[0], 'id', '') == 'METER':
+        pins['METER'] = node.value.args[0].value
+rs = pathlib.Path('rust/ckc/tests/trust_battery.rs').read_text()
+ported = dict(re.findall(r'\(\s*"(p\d+)",.*?,\s*r#?"(.*?)"#?,\s*\)', rs, re.S))
+ported['METER'] = re.search(r'const METER: &str = r"(.*?)";', rs).group(1)
+same = [k for k, v in pins.items() if ported.get(k) == v]
+extra = sorted(set(ported) - set(pins), key=lambda s: (len(s), s))
+print(f'h2 pins: {len(same)}/{len(pins)} byte-equal (run.py sha256 {hashlib.sha256(py.encode()).hexdigest()[:16]}); '
+      f'rust-only rows: {extra}')

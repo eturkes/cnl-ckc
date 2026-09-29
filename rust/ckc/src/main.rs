@@ -15,6 +15,9 @@ mod v1_cli;
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(|s| s.as_str()) {
+        Some("trust-audit") if args.get(2).is_some_and(|a| a == "--write") => {
+            trust::write(args.get(3).map(|s| s.as_str()).unwrap_or("."))
+        }
         Some("trust-audit") => trust::run(args.get(2).map(|s| s.as_str()).unwrap_or(".")),
         Some("align-check") if args.len() == 5 => align_cli::run(&args[2], &args[3], &args[4]),
         Some("v1") => v1_cli::run(&args[2..]),
@@ -39,7 +42,7 @@ fn main() -> ExitCode {
         }
         _ => {
             eprintln!(
-                "usage: ckc trust-audit [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc check [repo-root] | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl> | ckc compile <guideline-id> | ckc queries <guideline-id> | ckc align <guideline-id> <docid> | ckc review-manifest <guideline-id> | ckc derive-review-manifest <guideline-dir> | ckc ledger-validate <ledger-path> <manifest-path> <label> | ckc release-manifest | ckc dist build [<dest>] | ckc ui <serve|render|check|request|copy-check> …"
+                "usage: ckc trust-audit [--write] [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc check [repo-root] | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl> | ckc compile <guideline-id> | ckc queries <guideline-id> | ckc align <guideline-id> <docid> | ckc review-manifest <guideline-id> | ckc derive-review-manifest <guideline-dir> | ckc ledger-validate <ledger-path> <manifest-path> <label> | ckc release-manifest | ckc dist build [<dest>] | ckc ui <serve|render|check|request|copy-check> …"
             );
             ExitCode::from(2)
         }

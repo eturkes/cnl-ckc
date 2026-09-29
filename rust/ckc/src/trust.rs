@@ -155,9 +155,8 @@ fn count_rs(dir: &Path) -> usize {
 }
 
 // Multiset of (relative path, token, trimmed line) -> occurrence count over
-// every member's src tree, compared exactly against escape-allowlist.tsv
-// (path<TAB>token<TAB>count<TAB>trimmed-line). Returns total matched sites.
-fn scan_escapes(root: &Path, v: &mut Vec<String>) -> usize {
+// every member's src tree; whitespace-obfuscated surplus lands in `v`.
+fn escapes(root: &Path, v: &mut Vec<String>) -> BTreeMap<(String, String, String), usize> {
     let mut found: BTreeMap<(String, String, String), usize> = BTreeMap::new();
     for m in MEMBERS {
         let mut files = Vec::new();
@@ -203,7 +202,13 @@ fn scan_escapes(root: &Path, v: &mut Vec<String>) -> usize {
             }
         }
     }
+    found
+}
 
+// `escapes` compared exactly against escape-allowlist.tsv
+// (path<TAB>token<TAB>count<TAB>trimmed-line). Returns total matched sites.
+fn scan_escapes(root: &Path, v: &mut Vec<String>) -> usize {
+    let found = escapes(root, v);
     let mut allowed: BTreeMap<(String, String, String), usize> = BTreeMap::new();
     let allow_path = root.join("trust").join("escape-allowlist.tsv");
     match fs::read_to_string(&allow_path) {
@@ -353,6 +358,90 @@ fn check_deps(root: &Path, v: &mut Vec<String>) {
             v.push(format!("stale deps-allowlist row: {} {}", k.0, k.1));
         }
     }
+}
+
+// `--write`: explicit rebaseline of trust/ — deps-allowlist from Cargo.lock,
+// escape-allowlist = every scanner hit, spec-manifest re-pinned last (it pins
+// both allowlists) — then the read-only audit decides the exit status. Never
+// part of a gate recipe: the rows it adopts are the diff a reviewer reads.
+pub fn write(root: &str) -> ExitCode {
+    let root = PathBuf::from(root);
+    if !root.join("Cargo.toml").is_file() {
+        eprintln!("ckc: trust-audit: no Cargo.toml at {}", root.display());
+        return ExitCode::from(2);
+    }
+    if let Err(e) = rebaseline(&root) {
+        eprintln!("ckc: trust-audit: {}", e);
+        return ExitCode::from(2);
+    }
+    run(&root.to_string_lossy())
+}
+
+fn rebaseline(root: &Path) -> Result<(), String> {
+    let trust = root.join("trust");
+    let put = |name: &str, text: String| {
+        fs::write(trust.join(name), text).map_err(|e| format!("write trust/{}: {}", name, e))
+    };
+    fs::create_dir_all(&trust).map_err(|e| format!("create trust/: {}", e))?;
+    let lock = fs::read_to_string(root.join("Cargo.lock")).map_err(|_| "missing Cargo.lock")?;
+    let mut deps: Vec<(&str, &str)> = Vec::new();
+    let mut name: Option<&str> = None;
+    for line in lock.lines() {
+        let line = line.trim();
+        if let Some(n) = line.strip_prefix("name = \"") {
+            name = n.strip_suffix('"');
+        } else if let Some(ver) = line.strip_prefix("version = \"")
+            && let (Some(n), Some(w)) = (name.take(), ver.strip_suffix('"'))
+        {
+            deps.push((n, w));
+        }
+    }
+    deps.sort();
+    let mut text = String::from("name\tversion\n");
+    for (n, w) in deps {
+        text += &format!("{}\t{}\n", n, w);
+    }
+    put("deps-allowlist.tsv", text)?;
+
+    let mut sink = Vec::new();
+    let mut rows: Vec<(String, String, String, String)> = escapes(root, &mut sink)
+        .into_iter()
+        .map(|((path, token, line), n)| (path, token, n.to_string(), line))
+        .collect();
+    rows.sort();
+    let mut text = String::from("path\ttoken\tcount\ttrimmed_line\n");
+    for (path, token, n, line) in rows {
+        text += &format!("{}\t{}\t{}\t{}\n", path, token, n, line);
+    }
+    put("escape-allowlist.tsv", text)?;
+
+    let mut spec_files = Vec::new();
+    walk_rs(&root.join("ckc-spec").join("src"), &mut spec_files);
+    let mut paths: Vec<String> = spec_files
+        .iter()
+        .map(|f| {
+            f.strip_prefix(root)
+                .unwrap_or(f)
+                .to_string_lossy()
+                .to_string()
+        })
+        .collect();
+    paths.sort();
+    paths.extend(TRUSTED_KERNEL_FILES.iter().map(|f| f.to_string()));
+    // The M6 driver is pinned only where the tree carries it.
+    paths.extend(
+        TRUSTED_EXTRA
+            .iter()
+            .filter(|f| **f != "ckc/prolog/drs_dump.pl" || root.join(f).is_file())
+            .map(|f| f.to_string()),
+    );
+    let mut text = String::from("sha256\tpath\n");
+    for path in paths {
+        let bytes =
+            fs::read(root.join(&path)).map_err(|_| format!("trusted file unreadable: {}", path))?;
+        text += &format!("{}\t{}\n", sha256_hex(&bytes), path);
+    }
+    put("spec-manifest.tsv", text)
 }
 
 pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
