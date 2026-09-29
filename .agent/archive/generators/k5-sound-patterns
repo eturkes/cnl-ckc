@@ -1,0 +1,26 @@
+from pathlib import Path
+import re,ast
+R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust');src=(R/'ckc-spec/src/ui.rs').read_text()
+body=lambda name:src.split('pub open spec fn '+name+'_tokens() -> Seq<Bytes> {',1)[1].split('\n}',1)[0]
+quoted=lambda text:[m.group(1) for m in re.finditer(r'lit\(\s*("(?:[^"\\]|\\.)*")\s*@\s*,?\s*\)',text,re.S)]
+bv=lambda data:'bs!['+str(data[0])+'u8,'+','.join(map(str,data[1:]))+']'
+out=['use crate::{k5_sound_codes as n,k5_sound_scan as s};','use ckc_spec::{check as ck,ui as u};','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
+for name in ['css','marketing','relative']:
+    literals=quoted(body(name));assert literals
+    words=ast.literal_eval(literals[0]).split(' ') if name!='relative' else list(map(ast.literal_eval,literals));assert all(w and w.isascii() for w in words)
+    ps='seq!['+','.join(bv(w.encode()) for w in words)+']'
+    out += [f'pub open spec fn {name}_bytes() -> Seq<u::Bytes> {{ {ps} }}',f'pub open spec fn {name}_codes() -> Seq<Seq<nat>> {{ s::pattern_codes({name}_bytes()) }}']
+    if name!='relative':
+        text=ast.literal_eval(literals[0]);flat=bv(text.encode());out += [f'pub open spec fn {name}_flat() -> u::Bytes {{ {flat} }}']
+    out += [f'pub proof fn {name}()',f'    ensures n::patterns(u::{name}_tokens())=={name}_codes(),','{','    hide(n::patterns);hide(s::pattern_codes);hide(ck::split_on);']
+    if name!='relative':
+        text=ast.literal_eval(literals[0]);out += [f'    reveal_strlit({literals[0]});',f'    is_ascii_chars_encode_utf8({literals[0]}@);',f'    assert(u::lit({literals[0]}@) =~= {name}_flat());',f'    assert(ck::split_on({name}_flat(),32)=={name}_bytes()) by (compute_only);',f'    assert(forall|i:int|0<=i<{name}_flat().len() ==> #[trigger] {name}_flat()[i]<128);',f'    s::split_ascii({name}_flat(),32);']
+    else:
+        for literal,word in zip(literals,words):out += [f'    reveal_strlit({literal});is_ascii_chars_encode_utf8({literal}@);',f'    assert(u::lit({literal}@) =~= {bv(word.encode())});']
+        out += ['    assert(u::relative_tokens() =~= relative_bytes());','    assert(forall|i:int,j:int|0<=i<relative_bytes().len()&&0<=j<relative_bytes()[i].len() ==> #[trigger] relative_bytes()[i][j]<128);']
+    out += [f'    s::ascii_patterns({name}_bytes());','}']
+out += ['pub proof fn bounds()', '    ensures forall|j:int|0<=j<css_codes().len() ==> (#[trigger] css_codes()[j]).len()<=32,', '        forall|j:int|0<=j<marketing_codes().len() ==> (#[trigger] marketing_codes()[j]).len()<=32,', '        forall|j:int|0<=j<relative_codes().len() ==> (#[trigger] relative_codes()[j]).len()<=32,', '{}']
+out+=['pub proof fn all()','    ensures n::patterns(u::css_tokens())==css_codes(),n::patterns(u::marketing_tokens())==marketing_codes(),n::patterns(u::relative_tokens())==relative_codes(),','{css();marketing();relative();}','}']
+p=R/'ckc-kernel/src/k5_sound_patterns.rs';old=p.read_text()if p.exists()else None
+assert not p.exists()if old is None else p.read_text()==old
+p.write_text('\n'.join(out)+'\n');print('pattern_families=3')

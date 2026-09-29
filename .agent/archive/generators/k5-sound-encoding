@@ -1,0 +1,27 @@
+from pathlib import Path
+import argparse
+ap=argparse.ArgumentParser();ap.add_argument('--probe',action='store_true');args=ap.parse_args()
+R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust');src=(R/'ckc-spec/src/ui.rs').read_text()
+raws={name:src.split('pub open spec fn '+name+'() -> Bytes {',1)[1].split('r##"',1)[1].split('"##@',1)[0] for name in ['css_text','script_html']}
+bv=lambda a:'bs!['+str(a[0])+'u8,'+','.join(map(str,a[1:]))+']'
+out=['use vstd::prelude::*;','use vstd::utf8::*;','use ckc_spec::ui as u;','use crate::k5_sound_chrome as ch;','#[cfg(verus_keep_ghost)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }']
+for name,raw in raws.items():out += [f'#[cfg(verus_keep_ghost)]\nmacro_rules! reveal_{name} {{ () => {{ reveal_strlit(r##"{raw}"##) }}; }}']
+out+=['verus! {']
+for name,raw in raws.items():
+    assert raw.isascii();n=len(raw);count=(n+63)//64;limit=1 if args.probe else count
+    out += [f'pub open spec fn {name}_chars() -> Seq<char> {{ r##"{raw}"##@ }}']
+    for k in range(limit):
+        lo=k*64;hi=min(n,lo+64)
+        out += [f'pub proof fn {name}_block{k}(i:int)',f'    requires {lo}<=i<{hi},',f'    ensures ({name}_chars()[i] as u8)==ch::{name}_bytes()[i], \'\\x00\' <= {name}_chars()[i] <= \'\\x7f\',','{',f'    hide(ch::{name}_bytes);',f'    reveal_{name}!();',f'    assert(ch::{name}_bytes().len()=={n}) by (compute_only);',f'    assert(ch::{name}_bytes().subrange({lo},{hi})=={bv(raw.encode()[lo:hi])}) by (compute_only);','}']
+    if args.probe:continue
+    def tree(a,z):
+        fn=f'{name}_range_{a}_{z}';lo=a*64;hi=min(n,z*64)
+        if z==a+1:body=f'    {name}_block{a}(i);'
+        else:
+            m=(a+z)//2;lf=tree(a,m);rf=tree(m,z);body=f'    if i<{m*64} {{ {lf}(i); }} else {{ {rf}(i); }}'
+        out.extend([f'pub proof fn {fn}(i:int)',f'    requires {lo}<=i<{hi},',f'    ensures ({name}_chars()[i] as u8)==ch::{name}_bytes()[i], \'\\x00\' <= {name}_chars()[i] <= \'\\x7f\',','{',f'    hide({name}_chars);hide(ch::{name}_bytes);',body,'}']);return fn
+    root=tree(0,count)
+    out += [f'pub proof fn {name}_shape()',f'    ensures {name}_chars().len()=={n},ch::{name}_bytes().len()=={n},u::{name}()==encode_utf8({name}_chars()),','{',f'    hide(ch::{name}_bytes);reveal_{name}!();',f'    assert(ch::{name}_bytes().len()=={n}) by (compute_only);','}',f'pub proof fn {name}_encoding()',f'    ensures u::{name}()==ch::{name}_bytes(),','{',f'    hide({name}_chars);hide(ch::{name}_bytes);hide(u::{name});{name}_shape();',f'    assert forall|i:int|0<=i<{name}_chars().len() implies \'\\x00\' <= #[trigger] {name}_chars()[i] <= \'\\x7f\' by {{ {root}(i); }}',f'    is_ascii_chars_encode_utf8({name}_chars());',f'    assert forall|i:int|0<=i<{n} implies #[trigger] encode_utf8({name}_chars())[i]==ch::{name}_bytes()[i] by {{ {root}(i); }}',f'    assert(encode_utf8({name}_chars()) =~= ch::{name}_bytes());','}']
+out+=['}'];p=R/'ckc-kernel/src/k5_sound_encoding.rs';old=p.read_text() if p.exists() else None
+assert not p.exists() if old is None else p.read_text()==old
+p.write_text('\n'.join(out)+'\n');print('encoding_probe='+str(args.probe)+' source_chars='+str(sum(map(len,raws.values()))))

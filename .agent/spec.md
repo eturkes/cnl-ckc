@@ -33,12 +33,12 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 
 - [x] c1069299 U1 ci — `archive/contracts/ci.md`: static musl `ckc` for the container jobs (`certify` red since M6), Kani cold bootstrap, zizmor `just workflows`, weekly `just outdated` drift job in place of Dependabot cargo.
 - [x] 86acf59c U1b fmt — `fmt`/`fmt-check` glob `ckc/src/*.rs` only → 37 shell modules under `ckc/src/{check,ui}/` outside the format gate (2 unformatted: `check/documents.rs`, `check/mod.rs`); red = planted misformat there passes the old gate.
-- [x] U2 cas — `archive/contracts/m5u5-cas.md`: identity-validated ledger lock + std-only regression seen red (review C-01..C-04).
+- [x] c8cbe43b U2 cas — `archive/contracts/m5u5-cas.md`: identity-validated ledger lock + std-only regression seen red (review C-01..C-04).
 - [ ] U3 evidence — pre-cutover binary `.scratch/gate/ckc-f3910477` (sha256 fce50147…), logs `.scratch/gate/`; results ride the U5 body + review rows.
   - M5.3 grading remainder: mutants replay → `.scratch/gate/m5u3-mutants-r80-final.log`; R98 = re-pin the parity dist meter bytes (1481762 → 1490978 B) + rerun parity.
   - R-09 replays done (`.scratch/gate/u3-summary.log`, driver `.scratch/u3/run.sh`): K1 A/H 349/349 ×2, K2 answer/recursion/aggregate 0 divergences + trace D 4/4 E 4/4, queries replay 60/0, M5.2 suite 224 pass/25 pending, K3 matrix 114/114, M5.1 suite 94/94 + diff 0, trust battery 16/16; R-13 perf `.scratch/gate/u3-perf.log` 17 rows 0 failures.
   - Stopped at session close (user direction), rerun both from a clean tree: mutants (partial 22/46, all legacy=ok rust=ok) `python3 -P .scratch/m5u3/mutants.py --check --rust-bin .scratch/gate/ckc-f3910477` → `.scratch/gate/m5u3-mutants-r80-final.log` (~3 h); R98 parity `python3 -P .scratch/m5u3/parity_r98.py --tree .scratch/m5u3/baseline/tree-r80 --legacy-pinned --rust-bin .scratch/gate/ckc-f3910477` → `.scratch/gate/m5u3-parity-r98.log` (~40 min; waits on the legacy lock).
-- [ ] U4 harness — `.agent/contracts/harness.md`: `ckc trust-audit --write`, trust battery, align + v1 suites, align probes, bounded check mutants → committed; each seen red.
+- [x] U4 harness — `archive/contracts/harness.md` (6e5f5eeb H1+H2, 907e41dd, 257bd537 H3, f9f30002 H4, fba6faa9 H5, 82f37216 H6, c541dfea H7, this commit = generators + rules): `ckc trust-audit --write`, trust battery, align + v1 suites, align probes, bounded check mutants → committed; each seen red.
 - [ ] U5a M5.7 cutover — `.agent/contracts/m5u7.md` P1–P7 (R99–R104): tag `legacy`, re-pin, fork shrink, deletions, CI `check` swap, NOTICE, README/REFERENCE/rules scrub (known red: release-manifest freshness).
   - drafts: `.scratch/m5u7/{README.draft.md,reference-edits.txt,mech-edits.txt}`
 - [ ] U5b release-manifest regen from HEAD = U5a → decisive `just gate`.

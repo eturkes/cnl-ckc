@@ -1,0 +1,25 @@
+from pathlib import Path
+R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust')
+s=(R/'ckc-spec/src/ui.rs').read_text()
+def bs(raw):return 'bs!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
+out=['use crate::{k5_sound_context as cx,k5_sound_escape as h,k5_sound_literals as l};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {','broadcast use {vstd::seq::group_seq_axioms,vstd::seq_lib::group_seq_properties};']
+for name,start,end,idx in [('css_text',5,5,38),('script_html',0,0,39)]:
+    raw=s.split('pub open spec fn '+name+'() -> Bytes {',1)[1].split('r##"',1)[1].split('"##@',1)[0];assert raw.isascii()
+    lit='r##"'+raw+'"##';expr=bs(raw.encode());fn=name+'_bytes'
+    out += [f'pub open spec fn {fn}() -> u::Bytes {{ {expr} }}',f'pub proof fn {name}_encoding()',f'    ensures u::{name}()=={fn}(),','{',f'    crate::k5_sound_encoding::{name}_encoding();','}']
+    if name=='css_text':
+        assert '<' not in raw
+        out += ['pub proof fn css_absent()','    ensures cx::absent(css_text_bytes(),60,0,css_text_bytes().len()),','{ assert(cx::absent(css_text_bytes(),60,0,css_text_bytes().len())) by (compute_only); }']
+    else:
+        assert raw.startswith('<script>\n') and raw.endswith('</script>');mid=raw[9:-9].encode();assert 47 not in mid and mid[-1]==10
+        for fnn,data in [('script_pre',b'<script>\n'),('script_mid',mid),('script_post',b'</script>')]:out += [f'pub open spec fn {fnn}() -> u::Bytes {{ {bs(data)} }}']
+        out += ['pub proof fn script_parts()','    ensures script_html_bytes()==script_pre()+script_mid()+script_post(), script_pre().len()>0, script_pre().last()==10, script_mid().len()>0, script_mid().last()==10,','{ hide(script_html_bytes);hide(script_pre);hide(script_mid);hide(script_post); assert(script_html_bytes()==script_pre()+script_mid()+script_post()) by (compute_only); assert(script_pre().len()>0 && script_pre().last()==10 && script_mid().len()>0 && script_mid().last()==10) by (compute_only); }','pub proof fn script_absent()','    ensures cx::absent(script_mid(),47,0,script_mid().len()),','{ assert(cx::absent(script_mid(),47,0,script_mid().len())) by (compute_only); }','pub proof fn script_edges()','    ensures cx::scan(script_pre(),0)==6,cx::scan(script_post(),6)==0,','{ assert(cx::scan(script_pre(),0)==6) by (compute_only); assert(cx::scan(script_post(),6)==0) by (compute_only); }']
+    hides='    hide(u::copy_registry); hide(u::copy_derived); hide(u::css_text); hide(u::script_html); hide(css_text_bytes);'
+    if name=='script_html': hides+=' hide(script_html_bytes); hide(script_pre); hide(script_mid); hide(script_post);'
+    out += [f'pub proof fn {name}(inputs:Seq<u::Bytes>)',f'    ensures h::fragment(u::fixed_bytes(u::{name}()),inputs,{start},{end}),','{',hides,f'    l::l{idx:03}(inputs);',f'    {name}_encoding();']
+    if name=='css_text':out += ['    css_absent();cx::absent_all(css_text_bytes(),60);cx::style(css_text_bytes());']
+    else:out += ['    script_parts();script_absent();script_edges();cx::absent_all(script_mid(),47);cx::script_middle(script_mid()); assert(script_html_bytes() =~= script_pre()+(script_mid()+script_post()));','    cx::add_line(script_mid(),script_post(),6);cx::add_line(script_pre(),script_mid()+script_post(),0);']
+    out += [f'    cx::exact(u::{name}(),{start});',f'    h::fixed(u::{name}(),inputs,{start},{end});','}']
+out+=['}'];p=R/'ckc-kernel/src/k5_sound_chrome.rs';old=p.read_text() if p.exists() else None
+assert not p.exists() if old is None else p.read_text()==old
+p.write_text('\n'.join(out)+'\n');print('chrome proofs split by encoding/certificate/composition')

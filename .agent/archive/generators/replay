@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Replays every archived kernel-file generator (generators.tsv) against a
+# `git archive <rev>` copy of rust/ckc-spec + rust/ckc-kernel, formats each
+# output with the pinned verusfmt, and compares it with the committed file.
+# The k5-sound generators hard-code their worktree root (R=Path(...)); the
+# replay rewrites that one line. Usage (repo root, `just tools` done):
+#   .agent/archive/generators/replay [rev]   → one `identical|differs` line each
+set -euo pipefail
+root=$(git rev-parse --show-toplevel); rev=${1:-HEAD}; here="$root/.agent/archive/generators"
+export RUSTUP_HOME="$root/.toolchain/rustup" CARGO_HOME="$root/.toolchain/cargo" PATH="$root/.toolchain/bin:$PATH"
+t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+git -C "$root" archive "$rev" rust/ckc-spec rust/ckc-kernel | tar -x -C "$t"
+rc=0
+while IFS=$'\t' read -r gen target _input _sha; do
+    [[ "$gen" == \#* ]] && continue
+    rm -f "$t/$target"
+    if [[ "$gen" == k5-sound-* ]]; then
+        sed "s#^R=Path('[^']*')#R=Path('$t/rust')#" "$here/$gen" > "$t/$gen.py"
+        (cd "$t" && python3 -P "$gen.py" > /dev/null)
+    else
+        python3 -P "$here/$gen" "$t" > /dev/null
+    fi
+    verusfmt --edition 2024 "$t/$target"
+    if git -C "$root" show "$rev:$target" | cmp -s - "$t/$target"; then echo "$gen identical"; else echo "$gen differs"; rc=1; fi
+done < "$here/generators.tsv"
+exit $rc

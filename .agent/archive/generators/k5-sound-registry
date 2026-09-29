@@ -1,0 +1,61 @@
+from pathlib import Path
+import re,ast
+R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust');s=(R/'ckc-spec/src/ui.rs').read_text()
+reg=s.split('pub open spec fn copy_registry() -> Seq<Bytes> {',1)[1].split('// --- Copy gate:',1)[0]
+entries=list(re.finditer(r'lit\(\s*("(?:[^"\\]|\\.)*")\s*@\s*,?\s*\)|\b(css_text|script_html)\(\)',reg,re.S));assert len(entries)==239
+bv=lambda raw:'ns!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
+ps='p::css_codes(),p::marketing_codes(),p::relative_codes()'
+out=['use crate::{k5_sound_codes as n,k5_sound_patterns as p,k5_sound_literals as l,k5_sound_scan as scan,k5_sound_chrome as ch,k5_sound_encoding as enc};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
+for i,m in enumerate(entries):
+    if m.group(1):
+        literal=m.group(1);text=ast.literal_eval(literal);vals=list(map(ord,text));seq='ns!['+str(vals[0])+'u32,'+','.join(map(str,vals[1:]))+'].map_values(|x:u32|x as nat)'
+        out += [f'pub open spec fn data_{i:03}() -> Seq<nat> {{ {seq} }}']
+    else:
+        name=m.group(2);raw=s.split('pub open spec fn '+name+'() -> Bytes {',1)[1].split('r##"',1)[1].split('"##@',1)[0];length=len(raw);count=(length+63)//64;assert raw.isascii()
+        out += [f'pub open spec fn data_{i:03}() -> Seq<nat> {{ scan::byte_codes(ch::{name}_bytes()) }}',f'pub proof fn shape_{i:03}()',f'    ensures data_{i:03}().len()=={length},ch::{name}_bytes().len()=={length},','{',f'    hide(ch::{name}_bytes);assert(ch::{name}_bytes().len()=={length}) by (compute_only);','}']
+        windows=[]
+        for k,a in enumerate(range(0,length,256)):
+            z=min(a+256,length);left=max(a-1,0);right=min(length,z+32);windows.append((k,a,z,left,right));chunk=bv(raw.encode()[left:right])
+            out += [f'pub closed spec fn bytes_{i:03}_{k}() -> u::Bytes {{ {chunk} }}',f'pub closed spec fn window_{i:03}_{k}() -> Seq<nat> {{ scan::byte_codes(bytes_{i:03}_{k}()) }}',f'pub proof fn bind_{i:03}_{k}()',f'    ensures data_{i:03}().len()=={length},data_{i:03}().subrange({left},{right})==window_{i:03}_{k}(),window_{i:03}_{k}().len()=={right-left},','{',f'    hide(data_{i:03});hide(ch::{name}_bytes);shape_{i:03}();',f'    assert(ch::{name}_bytes().subrange({left},{right})==bytes_{i:03}_{k}()) by (compute_only);',f'    assert(bytes_{i:03}_{k}().len()=={right-left}) by (compute_only);',f'    scan::byte_codes_subrange(ch::{name}_bytes(),{left},{right});',f'    assert(data_{i:03}()==scan::byte_codes(ch::{name}_bytes())) by {{ reveal(data_{i:03}); }};',f'    assert(window_{i:03}_{k}()==scan::byte_codes(bytes_{i:03}_{k}())) by {{ reveal(window_{i:03}_{k}); }};','}',f'pub proof fn check_{i:03}_{k}()',f'    ensures scan::clean_range(data_{i:03}(),{ps},{a},{z}),','{',f'    hide(data_{i:03});hide(scan::clean_range);hide(p::css_codes);hide(p::marketing_codes);hide(p::relative_codes);bind_{i:03}_{k}();p::bounds();',f'    assert(scan::clean_range(window_{i:03}_{k}(),{ps},{a-left},{z-left})) by (compute_only);',f'    scan::clean_window(data_{i:03}(),{ps},{left},{right},{a},{z});','}']
+        out += [f'pub proof fn clean_{i:03}()',f'    ensures n::clean(data_{i:03}(),{ps}),','{',f'    hide(data_{i:03});hide(scan::clean_range);hide(n::clean);shape_{i:03}();',f'    scan::clean_empty(data_{i:03}(),{ps},0);']
+        for k,a,z,left,right in windows:out += [f'    check_{i:03}_{k}();scan::clean_join(data_{i:03}(),{ps},0,{a},{z});']
+        out += [f'    scan::clean_full(data_{i:03}(),{ps});','}']
+    hides='    hide(u::copy_registry);hide(u::copy_derived);hide(u::copy_literal_ok);hide(n::clean);'
+    if not m.group(1): hides+=f'hide(u::{name});hide(ch::{name}_bytes);hide(enc::{name}_chars);'
+    out += [f'pub proof fn literal_{i:03}()',f'    ensures u::copy_literal_ok(u::copy_registry()[{i}]),','{',hides,f'    l::l{i:03}(Seq::empty());p::all();']
+    if m.group(1):out += [f'    reveal_strlit({literal});',f'    assert(n::codes({literal}@) =~= data_{i:03}());',f'    assert(n::clean(data_{i:03}(),{ps})) by (compute_only);',f'    n::clean_bridge({literal}@);']
+    else:out += [f'    enc::{name}_shape();enc::{name}_encoding();',f'    assert forall|j:int|0<=j<enc::{name}_chars().len() implies \'\\x00\'<=#[trigger] enc::{name}_chars()[j]<=\'\\x7f\' by {{ enc::{name}_range_0_{count}(j); }}',f'    scan::ascii_input(enc::{name}_chars());',f'    assert(n::codes(enc::{name}_chars())==data_{i:03}());',f'    clean_{i:03}();n::clean_bridge(enc::{name}_chars());']
+    out += ['}']
+for a in range(0,len(entries),16):
+    z=min(a+16,len(entries));out += [f'pub proof fn block_{a:03}(i:int)',f'    requires {a}<=i<{z},','    ensures u::copy_literal_ok(u::copy_registry()[i]),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);']
+    for i in range(a,z):out += [('    if'if i==a else'    else if')+f' i=={i} {{ literal_{i:03}(); }}'if i<z-1 else f'    else {{ literal_{i:03}(); }}']
+    out += ['}']
+out += ['pub proof fn literal(i:int)','    requires 0<=i<239,','    ensures u::copy_literal_ok(u::copy_registry()[i]),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);']
+for a in range(0,len(entries),16):
+    z=min(a+16,len(entries));out += [('    if'if a==0 else'    else if')+f' i<{z} {{ block_{a:03}(i); }}'if z<len(entries)else f'    else {{ block_{a:03}(i); }}']
+out += ['}','pub proof fn registry_size()','    ensures u::copy_registry().len()==239,','{ hide(u::lit);hide(u::css_text);hide(u::script_html); }','pub proof fn copy_ok()','    ensures u::copy_ok(u::copy_registry()),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);','    registry_size();','    assert forall|i:int|0<=i<u::copy_registry().len() implies u::copy_literal_ok(#[trigger] u::copy_registry()[i]) by { literal(i); }','}','}']
+full='\n'.join(out)+'\n';start=full.index('pub proof fn block_000');blocks={}
+for i in range(239):
+    a=full.index(f'pub open spec fn data_{i:03}()');z=full.index(f'pub open spec fn data_{i+1:03}()')if i<238 else start;blocks[i]=full[a:z]
+imports='\n'.join(out[:4])+'\n';macro='#[cfg(verus_keep_ghost)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }\n'
+result='use ckc_spec::ui as u;\nuse vstd::prelude::*;\n'+macro
+for a in range(0,239,16):
+    items=[i for i in range(a,min(a+16,239)) if i not in (38,39)]
+    result+=f'pub mod batch_{a:03} {{\n'+imports+'verus! {\n'+''.join(blocks[i]for i in items)+'}\n}\n'
+for i in (38,39):
+    block=blocks[i];name='css'if i==38 else'script';window_starts=[m.start() for m in re.finditer(r'pub closed spec fn bytes_'+f'{i:03}'+r'_\d+\(\)',block)];clean=block.index(f'pub proof fn clean_{i:03}()');result+=f'pub mod {name} {{\n'+imports
+    for k,a in enumerate(window_starts):
+        z=window_starts[k+1]if k+1<len(window_starts)else clean
+        result+=f'pub mod window_{k} {{\n'+imports+f'#[cfg(verus_keep_ghost)]\nuse super::{{data_{i:03},shape_{i:03}}};\nverus! {{\n'+block[a:z]+'}\n}\n'
+    parent=block[:window_starts[0]]+block[clean:]
+    for k in range(len(window_starts)):parent=parent.replace(f'    check_{i:03}_{k}();',f'    window_{k}::check_{i:03}_{k}();')
+    result+='verus! {\n'+parent+'}\n}\n'
+dispatch=full[start:]
+def qualify(m):
+    i=int(m.group(1));module='css'if i==38 else'script'if i==39 else f'batch_{i//16*16:03}'
+    return f'{module}::literal_{i:03}()'
+dispatch=re.sub(r'\bliteral_(\d{3})\(\)',qualify,dispatch)
+result+='verus! {\n'+dispatch
+p=R/'ckc-kernel/src/k5_sound_registry.rs';old=p.read_text()if p.exists()else None
+assert not p.exists()if old is None else p.read_text()==old
+p.write_text(result);print('registry_literals=239 independent_batch_modules=17 local_window_modules=47')
