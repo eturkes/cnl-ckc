@@ -2,11 +2,10 @@
 #![allow(unused_imports)]
 // Trusted surface. Certification = read this crate (+ the manifest-pinned
 // kernel binding files) + run `cargo verus verify --workspace --locked
-// --offline` + `ckc trust-audit`. Nothing else is human-read.
+// --offline -- --no-cheating` + `ckc trust-audit`. Nothing else is human-read.
 pub mod align;
 pub mod answers;
 pub mod check;
-pub mod digest;
 pub mod emit;
 pub mod engine;
 pub mod release;

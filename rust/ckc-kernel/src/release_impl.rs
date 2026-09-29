@@ -10,7 +10,7 @@ verus! {
 pub fn align_resolve_impl(input: &[char], src: &[char], ace: &[char]) -> (r:
     ckc_spec::align::EResolve)
     ensures
-        r@ == ckc_spec::align::resolve_outcome(input@, src@, ace@),
+        r@ == ckc_spec::align::resolve(input@, src@, ace@),
 {
     crate::resolve_impl::resolve_impl(input, src, ace)
 }

@@ -783,10 +783,6 @@ pub ghost struct Group {
     pub clauses: Seq<DocClause>,
 }
 
-pub open spec fn fact_clause(h: Term) -> DocClause {
-    DocClause { head: h, body: Seq::empty() }
-}
-
 pub open spec fn rule_clauses(heads: Seq<Term>, body: Seq<BodyItem>) -> Seq<DocClause> {
     heads.map_values(|h: Term| DocClause { head: h, body })
 }

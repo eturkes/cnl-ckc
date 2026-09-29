@@ -585,7 +585,7 @@ pub fn check_lexicon(
 // their spec; the shell reads files, hashes members and stages the bag.
 pub fn align_resolve(input: &[char], src: &[char], ace: &[char]) -> (r: ckc_spec::align::EResolve)
     ensures
-        r@ == ckc_spec::align::resolve_outcome(input@, src@, ace@),
+        r@ == ckc_spec::align::resolve(input@, src@, ace@),
 {
     crate::release_impl::align_resolve_impl(input, src, ace)
 }

@@ -205,7 +205,7 @@ proof fn split_bound(s: Seq<char>, sep: char)
 
 pub fn resolve_impl(input: &[char], src: &[char], ace: &[char]) -> (r: EResolve)
     ensures
-        r@ == resolve_outcome(input@, src@, ace@),
+        r@ == resolve(input@, src@, ace@),
 {
     if input.len() == 0 || input[input.len() - 1] != '\n' {
         return EResolve::Err(t::newline());
@@ -228,7 +228,6 @@ pub fn resolve_impl(input: &[char], src: &[char], ace: &[char]) -> (r: EResolve)
     };
     proof {
         assert_seqs_equal!(d::groups(Seq::<Vec<char>>::empty()) == Seq::<int>::empty());
-        reveal(resolve_outcome);
         reveal(resolve);
         assert(resolve_rows(
             split_at_seps(input@.drop_last(), '\n'),

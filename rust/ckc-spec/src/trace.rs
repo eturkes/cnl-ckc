@@ -652,7 +652,11 @@ pub open spec fn naf_fails(db: Seq<DocClause>, t: Term) -> bool {
 // sibling's bindings reach every later goal). A clause node resolves its goal:
 // some renaming equates the clause head with the goal under `th`, and the
 // renamed body items are the children's goals. A naf leaf's frozen payload
-// generalizes the site goal under `th` and fails finitely.
+// generalizes the site goal under `th` and fails finitely. Strength: that
+// certifies the engine's call-time finite failure; it implies failure of
+// the site goal itself only when the call was ground (safe negation, which
+// the v1 compilers enforce) — a generalization proves nothing about an
+// instance once the called program itself negates.
 pub open spec fn node_valid(db: Seq<DocClause>, th: Seq<(nat, Term)>, g: Term, node: PNode) -> bool
     decreases node, 0int,
 {

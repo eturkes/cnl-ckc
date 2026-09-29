@@ -649,22 +649,6 @@ pub open spec fn resolve(input: Seq<char>, src: Seq<char>, ace: Seq<char>) -> Re
     }
 }
 
-pub ghost enum ResolveOutcome {
-    Ok(Resolved),
-    Err(Seq<char>),
-}
-
-pub open spec fn resolve_outcome(
-    input: Seq<char>,
-    src: Seq<char>,
-    ace: Seq<char>,
-) -> ResolveOutcome {
-    match resolve(input, src, ace) {
-        Ok(r) => ResolveOutcome::Ok(r),
-        Err(e) => ResolveOutcome::Err(e),
-    }
-}
-
 // --- exec-facing result types (views bind exec results to the spec) ---
 pub struct ESpan {
     pub start: u64,
@@ -734,12 +718,12 @@ pub enum EResolve {
 }
 
 impl View for EResolve {
-    type V = ResolveOutcome;
+    type V = Result<Resolved, Seq<char>>;
 
-    open spec fn view(&self) -> ResolveOutcome {
+    open spec fn view(&self) -> Result<Resolved, Seq<char>> {
         match self {
-            EResolve::Ok(r) => ResolveOutcome::Ok(r@),
-            EResolve::Err(e) => ResolveOutcome::Err(e@),
+            EResolve::Ok(r) => Ok(r@),
+            EResolve::Err(e) => Err(e@),
         }
     }
 }

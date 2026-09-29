@@ -1068,25 +1068,6 @@ pub open spec fn print_manifest(bs: Seq<Bundle>) -> Seq<u8> {
     manifest_header() + bs.map_values(|b: Bundle| manifest_row(b)).flatten()
 }
 
-pub open spec fn sorted_docids(ds: Seq<Seq<u8>>) -> bool {
-    forall|i: int| 0 <= i < ds.len() - 1 ==> bytes_lt(#[trigger] ds[i], ds[i + 1])
-}
-
-// derive: per sorted docid the four component digests (hashed by the shell
-// over ACE bytes, the coverage row incl. LF, the payload, the retained
-// stream) and the review digest over `bundle_block`.
-pub open spec fn wf_manifest(bs: Seq<Bundle>, docids: Seq<Seq<u8>>) -> bool {
-    &&& bs.len() == docids.len()
-    &&& sorted_docids(docids)
-    &&& forall|i: int|
-        0 <= i < bs.len() ==> (#[trigger] bs[i]).docid == docids[i] && docid_ok(bs[i].docid)
-            && hex64(bs[i].ace) && hex64(bs[i].cov) && hex64(bs[i].pay) && hex64(bs[i].cl) && hex64(
-            bs[i].review,
-        )
-}
-
-// A committed manifest accepts iff it prints from a wellformed bundle list
-// whose review digests are self-consistent (shell hash of `bundle_block`).
 // --- committed-manifest parse (legacy `parse_review_manifest`, R63): the
 // well-formed row prefix + the first grammar violation. `review_sha256
 // self-consistency` is a shell hash: the shell checks the prefix rows in order
@@ -1174,20 +1155,6 @@ pub open spec fn parse_manifest(src: Src, path: Seq<u8>) -> (Seq<Bundle>, Option
             }
         },
     }
-}
-
-// Acceptance = grammar-clean parse + every row's `review_sha256` = the shell
-// hash of its bundle block (R3).
-pub open spec fn manifest_accepts(
-    src: Src,
-    path: Seq<u8>,
-    review_of: spec_fn(Seq<u8>) -> Seq<u8>,
-) -> bool {
-    let (bs, v) = parse_manifest(src, path);
-    v is None && (forall|i: int|
-        0 <= i < bs.len() ==> (#[trigger] bs[i]).review == review_of(
-            bundle_block(bs[i].docid, bs[i].ace, bs[i].cov, bs[i].pay, bs[i].cl),
-        ))
 }
 
 // --- adjudication ledger ---

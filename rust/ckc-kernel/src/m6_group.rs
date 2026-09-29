@@ -447,7 +447,7 @@ pub fn fact_group(
     let cs = rule_clauses(arena, &hs, &body);
     proof {
         assert_seqs_equal!(body_models(body@) == Seq::<BodyItem>::empty());
-        assert_seqs_equal!(clause_models(cs@) == models(hs@).map_values(|h: Term| spec::fact_clause(h)));
+        assert_seqs_equal!(clause_models(cs@) == models(hs@).map_values(|h: Term| ckc_spec::engine::fact_clause(h)));
     }
     if !all_head_safe(arena, &cs) {
         return Err(error(arena, &Sym::HeadVariableNotBoundInBody, Ghost(start)));
