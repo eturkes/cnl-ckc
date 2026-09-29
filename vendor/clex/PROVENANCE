@@ -17,12 +17,12 @@ upstream LICENSE (GPLv3 text) retained verbatim. Combination
 conveyance record: root NOTICE.
 
 Role: clex_lexicon.pl (97,541 lines, COMLEX-derived) is the
-general-English base lexicon for the ACE front end. tools/goal.py
-stages APE (copytree of vendor/ape) and copies
+general-English base lexicon for the ACE front end. `ckc` stages
+APE (a scratch copy of vendor/ape) and copies
 vendor/clex/clex_lexicon.pl over the staged demo
 prolog/lexicon/clex_lexicon.pl; APE's prolog/lexicon/clex.pl loader
 consults it per process. Ulex lookup precedence is unchanged;
-goal.py check owns the ulex↔clex boundary (lexicon-redundant,
+`ckc check` owns the ulex↔clex boundary (lexicon-redundant,
 lexicon-shadow + audit/lexicon-shadow.tsv rulings).
 
 A future modification ends pristine status: drop `Pristine: yes`,

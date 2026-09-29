@@ -14,7 +14,7 @@ guidelines into executable Prolog through controlled natural language:
    English (ACE), one document per ruled source region, under
    `guidelines/<id>/ace/`. Domain vocabulary lives in
    `guidelines/<id>/lexicon.ulex`.
-3. **Compile** — `tools/goal.py` stages the vendored APE parser and
+3. **Compile** — `ckc compile` stages the vendored APE parser and
    overlays `vendor/clex/clex_lexicon.pl` as the general-English base
    lexicon. It compiles every ACE document to plain Prolog under
    `guidelines/<id>/pl/` via `vendor/ape/prolog/ace_to_pl.pl`.
@@ -49,35 +49,43 @@ compiler base:
   `tests/certify/cases.tsv` holds 17 hostile edits of committed
   artifacts that the certifier must reject; `just certify` runs the
   corpus certification and that battery.
-- **E-- → Python.** All first-party Python (`tools/goal.py`,
-  `tools/regen.py`, `tools/ui.py`) compiles from E-- (`tools/*.emm`),
-  an English-like language. `tools/regen.py --check` proves that every
-  committed `.py` is byte-identical to a fresh compile of its `.emm`.
-  It also flags any tracked Python outside `vendor/e--/src/` that has
-  no `.emm` source. The reviewer interface is E-- like the rest. It
-  uses the `Try:`/`Catch <name>:` verbs that the E-- fork added for it
-  (`vendor/e--/docs/spec.md` § 5.4). A failing standard-library call
-  then becomes a named HTTP outcome, not a generic server error.
+- **A verified kernel checks every logical step.** All first-party
+  program logic lives in `rust/`: a short, human-read formal
+  specification (`rust/ckc-spec/`), an implementation with
+  machine-checked proofs (`rust/ckc-kernel/`, never read by a human),
+  and a thin shell (`rust/ckc/`) that moves bytes between the file
+  system, SWI-Prolog, the loopback socket, and the kernel.
+  `cargo verus verify --no-cheating` under the pinned verifier
+  (`rust/verus.lock`) proves every kernel entry point against its
+  specification: clause-file acceptance, the composition modes, query
+  answers, proof traces and trace checks, the corpus validators, the
+  release manifest, emission certification, and the reviewer pages.
+  `ckc trust-audit` pins the trusted surface byte for byte
+  (`rust/trust/spec-manifest.tsv`), enumerates every escape site, and
+  rejects any dependency outside the allowlist. The claim is
+  "machine-verified against the committed specification under a
+  pinned verifier TCB", nothing stronger: git, the file system,
+  subprocesses, the clock, the loopback socket, the pinned
+  dependencies and SWI-Prolog stay trusted software under fixture
+  gates.
 - **Review is recorded, not asserted.** A reviewer decision names the
   exact bytes it judged. Each ledger row pins a bundle digest over the
   document's ACE text, its coverage row, its source region payload, and
   its compiled clauses. The reviewer interface reads committed files
   only, so what a reviewer approves is what the repository holds.
   "Reviewer interface" below states the workflow.
-- **The compiler base is closed and named.** Two vendored forks perform
-  those compilations. They are the trusted computing base that a human
-  must read directly. `vendor/ape/` holds the ACE parser plus the
+- **The compiler base is closed and named.** One vendored fork performs
+  the ACE compilation, and a human must read only its upstream parser.
+  `vendor/ape/` holds the ACE parser plus the
   first-party `prolog/ace_to_pl.pl` emitter. The emitter is outside the
   human-read trust story: `ckc certify` certifies its output against
   `rust/ckc-spec/src/emit.rs`, and the trusted part of that tree is the
   upstream parser, run as a separate pinned SWI-Prolog process by the
   thin driver `rust/ckc/prolog/drs_dump.pl`, which never loads the
-  emitter. `vendor/e--/` holds the hand-authored Python that compiles
-  E--; a human must read it until the Rust cutover retires it. Both
-  trees are pruned to their load closures. `vendor/*/PROVENANCE` records upstream, fork
-  base, import commit, license, first-party inventory, and trust
-  boundary. Git history is the change record, and `goal.py check` reads
-  it. A vendored file counts as touched when a commit after the
+  emitter. The tree is pruned to its load closure.
+  `vendor/*/PROVENANCE` records upstream, fork base, import commit,
+  license, first-party inventory, and trust boundary. Git history is
+  the change record, and `ckc check` reads it. A vendored file counts as touched when a commit after the
   recorded import commit changed it, or when the working tree edits it.
   Every touched tracked file must carry a change notice in its first 40
   lines. The notice must be dated where the tree's license is a GPL
@@ -92,15 +100,18 @@ compiler base:
   carry no change notice.
 - **Tests are data.** Each corpus under `tests/` is a fixture set, not
   a program. `tests/red/` holds compiler rejection probes named
-  `<expected-error-class>--<name>.ace`. `tests/strict/` holds E--
-  sources that the strict compiler must reject or must compile.
-  `tests/adjudication/` holds ledger-validator fixtures.
-  `tests/queries/` holds query, answer, and trace fixtures.
-  `tests/ui/` holds reviewer-interface fixtures. `tests/copy/` holds
-  copy-register fixtures. `tests/certify/` holds certification mutants
-  that `ckc certify --cases` must reject. Every case pins exact output bytes. One
-  `tools/goal.py check` invocation beside `tools/regen.py --check` (the
-  E-- → Python identity above) is the full acceptance gate. `check`:
+  `<expected-error-class>--<name>.ace`. `tests/adjudication/` holds
+  ledger-validator fixtures. `tests/queries/` holds query, answer, and
+  trace fixtures. `tests/ui/` holds reviewer-interface fixtures.
+  `tests/copy/` holds copy-register fixtures. `tests/certify/` holds
+  certification mutants that `ckc certify --cases` must reject.
+  `tests/v1/`, `tests/align/`, `tests/align-probes/`,
+  `tests/check-mutants/`, and `tests/dist/` hold the clause-file,
+  alignment, `ckc check`, and export batteries that `cargo test`
+  replays. Every case pins exact output bytes. `just check` is the
+  full acceptance gate, with `just certify` beside it: `ckc check`,
+  `ckc ui check`, and a fresh compile whose output must equal the
+  committed corpus. `ckc check`:
 
   1. validates the compendium ledger — the `.agent/compendium.md`
      organizations table plus the `.agent/compendium.tsv` guideline
@@ -130,34 +141,45 @@ compiler base:
   10. re-derives each committed query artifact twice and
       byte-compares it: compiled query, answer, and proof trace.
       Every trace node must join exactly one committed clause line;
-  11. renders every reviewer page twice and byte-compares the two
-      renders, replays the reviewer fixture corpus against pinned
-      pages and pinned refusals, and scans every string the interface
-      can emit — a standard-library `ast` walk over `tools/ui.py` —
-      against the clinician copy register;
-  12. asserts that the compiler rejects each red probe with its named
+  11. asserts that the compiler rejects each red probe with its named
       error class and exit status.
+
+  `ckc ui check` renders every reviewer page twice, byte-compares the
+  two renders, and checks page invariants and link closure. The
+  kernel's copy theorem covers every string the interface can emit,
+  and `cargo test` replays the reviewer fixture corpus against pinned
+  pages, pinned refusals, and the clinician copy register.
 
 ## Running
 
-The pipeline requires SWI-Prolog 9.2.9 and Python ≥ 3.11. The supported
-invocations use `python3 -P`. CI pins the SWI 9.2.9 container, whose
-Debian Python is 3.11.
+The pipeline requires SWI-Prolog 9.2.9 and the pinned Rust toolchain
+that `just tools` installs; `just build` writes the `ckc` program to
+`rust/target/release/ckc`. `SWIPL` names the SWI-Prolog program (default:
+`swipl` on `PATH`). CI pins the SWI 9.2.9 container and runs a
+statically linked `ckc` inside it. To build SWI-Prolog 9.2.9 from source,
+unpack `https://www.swi-prolog.org/download/stable/src/swipl-9.2.9.tar.gz`,
+then run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release
+-DINSTALL_DOCUMENTATION=OFF -DSWIPL_PACKAGES_JAVA=OFF
+-DSWIPL_PACKAGES_X=OFF -DSWIPL_PACKAGES_ODBC=OFF` and `ninja install`.
 
 ```sh
-python3 -P tools/goal.py compile <guideline-id>   # ACE → Prolog
-python3 -P tools/goal.py queries <guideline-id>   # query/answer/trace artifacts
-python3 -P tools/goal.py check                    # corpus acceptance gate
-python3 -P tools/regen.py --check                 # E-- → Python identity
-python3 -P tools/ui.py serve [<port>]             # reviewer interface
-python3 -P tools/ui.py render <outdir>            # static page export
-python3 -P tools/ui.py check                      # interface self-check (also part of goal check)
+ckc compile <guideline-id>          # ACE → Prolog
+ckc queries <guideline-id>          # query/answer/trace artifacts
+ckc check                           # corpus acceptance gate
+ckc certify <guideline-id>          # emission certification against emit.rs
+ckc ui serve [<port>]               # reviewer interface
+ckc ui render <outdir>              # static page export
+ckc ui check                        # interface self-check
+ckc release-manifest                # refresh release-manifest.tsv
+ckc dist build [<outdir>]           # release archive
+just gate                           # every CI check
 ```
 
 ## Reviewer interface
 
-`tools/ui.py serve` starts the reviewer interface on `127.0.0.1`. The
-server is the Python standard library's `wsgiref`. The interface
+`ckc ui serve` starts the reviewer interface on `127.0.0.1`. The
+server is a standard-library loopback socket in the `ckc` shell, and
+every page byte comes from the verified renderer. The interface
 lists every guideline, then every document. Each document appears
 beside the exact source passage it was written from, its compiled
 Prolog, and its decision history. A reviewer answers one question per
@@ -198,7 +220,7 @@ reviewable, and it does not outdate an existing decision. A document
 that was never committed is not listed. Every recorded decision names
 the commit that wrote the ACE text the reviewer read. The decision
 ledger is the one file the interface writes, so its own writes are not
-uncommitted work. `tools/goal.py check` is the exception: it reads the
+uncommitted work. `ckc check` is the exception: it reads the
 working tree, because it is the gate you run before you commit.
 
 The write path is narrow and guarded. The interface binds the loopback
@@ -210,9 +232,10 @@ fresh derivation from committed state, and the ledger digest must
 still match the ledger on disk. A failed check
 returns a refusal and writes nothing. The ledger write itself is a
 compare-and-swap through a same-directory temporary file, a flush, an
-`fsync`, and an atomic rename. The shared validator in `goal.py`
-approves the new ledger bytes before the rename, so the gate and the
-interface cannot drift apart. Pages carry one fixed script, which
+`fsync`, and an atomic rename under an exclusive lock, and the
+verified ledger validator that the gate uses approves the new ledger
+bytes before the rename, so the gate and the interface cannot drift
+apart. Pages carry one fixed script, which
 drives the click emphasis on highlights. The `Content-Security-Policy`
 header names that script by hash, so the browser runs no other
 script, and the page check rejects any other script element.
@@ -618,13 +641,13 @@ The session works until the `Met when` condition holds or the user
 asks it to stop. The repository is the only persistence, so halting at
 any moment is safe. To continue in a fresh session, paste the same
 prompt again. Every round starts by deriving state from the repository:
-`.agent/queue.md`, `git status`, `tools/goal.py check`, and the
+`.agent/queue.md`, `git status`, `ckc check`, and the
 in-progress guideline README's coverage statement. The round then
 finishes or discards incomplete work before it takes on anything new. A
 user request to stop ends the run at once, mid-round included, even
 when the exhaustion clause is not met. The wind-down is to start
 nothing new, state where work stands, and stop. The check validates the fork
-notices and the strict and adjudication fixtures first. It then
+notices and the adjudication fixtures first. It then
 validates the compendium — the `.agent/compendium.md` organizations
 table plus `.agent/compendium.tsv`: row format and vocabulary,
 canonical ordering, the single-active-row promotion invariant. It prints a terminal meter —
@@ -645,7 +668,7 @@ adversarial review go to `reviewer` teammates. The round roles are in
 Reviewer verdicts live in each guideline's `audit/adjudication.tsv`,
 pinned to content digests in `audit/review-manifest.tsv`. When compiled
 content changes, regenerate the manifest with
-`python3 -P tools/goal.py review-manifest <id>`. Commit the round
+`ckc review-manifest <id>`. Commit the round
 before you open the reviewer interface, because the interface reads
 committed files and shows nothing else. Commit the ledger and
 the manifest together after each review batch; git history is the
@@ -664,7 +687,7 @@ conditions hold:
   compiled, and aligned to its passage, or recorded in the guideline
   README as uncovered with a reason. Compiled means that the
   obligations discharge alone and in aggregate.
-- `python3 -P tools/goal.py check` is green, with the guideline's
+- `ckc check` is green, with the guideline's
   coverage meter reading `pending=0`.
 
 While a document is in progress, a round advances it one increment:
@@ -681,7 +704,7 @@ While a document is in progress, a round advances it one increment:
    `audit/lexicon-rejects.tsv` before you propose a lexicon entry.
    Record each refused candidate there as one
    `candidate<TAB>category<TAB>reason` row.
-3. **Compile** — run `python3 -P tools/goal.py compile <id>`. When the
+3. **Compile** — run `ckc compile <id>`. When the
    compiler rejects a document, adjust the ACE or the lexicon first.
    Only a genuinely new construct extends the `ace_to_pl.pl`
    translation, minimally. Such an extension keeps totality: every
@@ -692,7 +715,7 @@ While a document is in progress, a round advances it one increment:
    came from:
 
    ```
-   python3 -P tools/goal.py align <id> <docid> < rows.tsv
+   ckc align <id> <docid> < rows.tsv
    ```
 
    Each input row is `group<TAB>side<TAB>occurrence<TAB>span`. The
@@ -710,13 +733,11 @@ While a document is in progress, a round advances it one increment:
    be helpful, not exhaustive. When a later edit changes the ACE text
    or the passage, author the alignment again; the render stops on
    stale offsets.
-5. **Close** — `python3 -P tools/goal.py check` must be green; when E--
-   sources changed, `python3 -P tools/regen.py --check` must be green
-   too. Make a scoped commit. When the commit touches `guidelines/`,
-   the vendored compiler or lexicon, `NOTICE`, or the `docs/REFERENCE.md`
-   schema section, `release-manifest.tsv` goes stale: regenerate it with
-   `python3 -P tools/goal.py release-manifest` and commit it as a
-   follow-up. Update `.agent/queue.md` and the guideline README's
+5. **Close** — `ckc check` must be green. Make a scoped commit. When
+   the commit touches `guidelines/`, the vendored compiler or lexicon,
+   `NOTICE`, or the `docs/REFERENCE.md` schema section,
+   `release-manifest.tsv` goes stale: regenerate it with
+   `ckc release-manifest` and commit it as a follow-up. Update `.agent/queue.md` and the guideline README's
    coverage statement.
 
 When no document is in progress, the round fetches the next source: the
@@ -739,12 +760,12 @@ language for later review.
 
 ## Export
 
-`tools/dist.py` packages the committed corpus as one reproducible
+`ckc dist build` packages the committed corpus as one reproducible
 archive:
 
 ```
-python3 -P tools/goal.py release-manifest   # refresh release-manifest.tsv, then commit it
-python3 -P tools/dist.py build [<dest>]     # default destination: dist/
+ckc release-manifest   # refresh release-manifest.tsv, then commit it
+ckc dist build [<dest>]   # default destination: dist/
 ```
 
 The archive is a BagIt 1.0 bag named `cnl-ckc-kb-g<head12>.tar.gz`,
@@ -763,8 +784,8 @@ manifest carries a review label for every shipped document. A rejected
 or contested verdict blocks the build.
 
 The build is deterministic: one commit yields byte-identical archives on
-any machine. `python3 -P tools/goal.py check` rebuilds the archive
-twice, compares the bytes, and re-verifies the checksums on every run. A
+any machine. `ckc check` rebuilds the archive twice, compares the
+bytes, and re-verifies the checksums on every run. A
 stale `release-manifest.tsv` fails the check.
 
 The reviewer interface runs locally on loopback. Web hosting is out of
@@ -775,8 +796,10 @@ scope.
 First-party work outside `vendor/` is Apache-2.0 WITH LLVM-exception
 (`LICENSE`). First-party additions inside a vendored tree adopt that
 tree's license; `vendor/ape/prolog/ace_to_pl.pl` is LGPL-3.0-or-later.
-Vendored trees keep their own licenses: `vendor/e--` Apache-2.0,
-`vendor/ape` LGPL-3.0-or-later, `vendor/clex` GPL-3.0-or-later.
+Vendored trees keep their own licenses: `vendor/ape`
+LGPL-3.0-or-later, `vendor/clex` GPL-3.0-or-later. Rust dependencies
+under `rust/vendor/` keep their own permissive licenses
+(`rust/trust/deps-allowlist.tsv`, `rust/deny.toml`).
 Distribution of the full repository combination conveys under GPLv3.
 First-party work remains Apache-2.0 WITH LLVM-exception and
 independently reusable. See `NOTICE`.
