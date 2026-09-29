@@ -15,9 +15,7 @@ the fork base recorded in `PROVENANCE`.
 - `prolog/parser/` — ACE parser (`ace_to_drs.pl` and dependencies) plus the
   ProFIT grammar sources (`*.fit`) and their translator (`fit_to_plp.pl`,
   `prologfeatures.pl`), which build the untracked `*.plp` grammar files.
-- `prolog/lexicon/` — lexicon machinery. `clex_lexicon.pl` is trimmed to the
-  minimal entry set used by `tests/red/`; guideline vocabulary is supplied
-  per guideline via `lexicon.ulex` files.
+- `prolog/lexicon/` — lexicon machinery. `clex_lexicon.pl` is the upstream demo lexicon; every staged parse overlays the full Clex from `vendor/clex/`, so this file is unused at runtime. Guideline vocabulary is supplied per guideline via `lexicon.ulex` files.
 - `prolog/logger/`, `prolog/utils/` — the error logger and the three DRS
   utility modules the parser closure loads.
 

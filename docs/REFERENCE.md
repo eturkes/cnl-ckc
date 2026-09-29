@@ -49,8 +49,7 @@ compiler base:
   `tests/certify/cases.tsv` holds 17 hostile edits of committed
   artifacts that the certifier must reject; `just certify` runs the
   corpus certification and that battery.
-- **A verified kernel checks every logical step.** All first-party
-  program logic lives in `rust/`: a short, human-read formal
+- **A verified kernel checks every logical step.** All first-party program logic except the ACE emitter (`vendor/ape/prolog/ace_to_pl.pl`, whose output `ckc certify` certifies) lives in `rust/`: a short, human-read formal
   specification (`rust/ckc-spec/`), an implementation with
   machine-checked proofs (`rust/ckc-kernel/`, never read by a human),
   and a thin shell (`rust/ckc/`) that moves bytes between the file
@@ -64,10 +63,7 @@ compiler base:
   (`rust/trust/spec-manifest.tsv`), enumerates every escape site, and
   rejects any dependency outside the allowlist. The claim is
   "machine-verified against the committed specification under a
-  pinned verifier TCB", nothing stronger: git, the file system,
-  subprocesses, the clock, the loopback socket, the pinned
-  dependencies and SWI-Prolog stay trusted software under fixture
-  gates.
+  pinned verifier TCB", nothing stronger: git, the file system, subprocesses, the clock, the loopback socket and HTTP request plumbing, archive assembly, the process and legal validators (fork-notice policy, compendium format, rights profiles), the pinned dependencies and SWI-Prolog stay trusted software under fixture gates. The trace theorem certifies each negation leaf by the finite failure of the call as the engine froze it at call time; the v1 compilers keep negation safe (ground when called), so for compiled documents that is the failure of the negated goal itself.
 - **Review is recorded, not asserted.** A reviewer decision names the
   exact bytes it judged. Each ledger row pins a bundle digest over the
   document's ACE text, its coverage row, its source region payload, and
@@ -172,7 +168,7 @@ ckc ui render <outdir>              # static page export
 ckc ui check                        # interface self-check
 ckc release-manifest                # refresh release-manifest.tsv
 ckc dist build [<outdir>]           # release archive
-just gate                           # every CI check
+just gate                           # every per-push CI check
 ```
 
 ## Reviewer interface
@@ -330,8 +326,7 @@ document-local. Negation-as-failure in a consequent or a root fact
 rejects; assertion-by-absence is meaningless.
 
 A universally quantified sentence becomes one Horn clause per
-consequent condition. All clauses of a rule variant share one identical
-rendered body. A nested `if … then if … then …` consequent curries into
+consequent condition. All clauses of a rule variant share one logical body; each clause line renders it with its own canonical variable letters, so two lines of one variant are equal up to variable renaming. A nested `if … then if … then …` consequent curries into
 one rule whose antecedent concatenates the nested domains. An
 antecedent that contains one disjunction splits into two variants whose
 bodies are the shared conditions plus that arm. The bundle keeps one
@@ -386,9 +381,7 @@ The bounds are depth 4000 inside 1,000,000 inferences; a search that
 exceeds either bound counts as underivable. A group whose heads stay
 non-ground under its own witness rejects with
 `proof, nonground_obligation(…)`. A group whose heads do not derive
-rejects with `proof, underivable_obligation(…)`. Both exit 1. Witness
-terms carry the document's own document, sentence, and variant
-coordinates, so no foreign clause can discharge an obligation. Success
+rejects with `proof, underivable_obligation(…)`. Both exit 1. Witness terms carry the document's own document, sentence, and variant coordinates, so a witness never collides with another document's constructed terms. Success
 is modus ponens over that sentence's own projection.
 
 `ckc v1 aggregate-check <manifest>` replays those obligations across a
@@ -398,10 +391,7 @@ file means the empty composition. The engine loads every document
 into one composition; any load diagnostic is a failure. It checks that the
 distinct `guideline_document/3` records equal the manifest row count
 and that the loaded schema-version set is exactly `[1]`. It then
-re-derives every obligation against the whole batch. Co-loading can
-therefore neither break a document's derivations nor silently repair
-them, and the engine evaluates negation-as-failure against the
-composition it will actually run in. The check reports
+re-derives every obligation against the whole batch. Co-loading therefore cannot break a document's derivations, and the engine evaluates negation-as-failure against the composition it will actually run in. The replay does not isolate documents: a rule in one document can derive another document's obligation head, so the per-document replay above is the check that each document's own clauses suffice. The check reports
 `ace_to_pl aggregate ok <N> documents <G> obligations`.
 
 `ckc v1 recursion-check <manifest>` loads that same composition and
@@ -426,7 +416,7 @@ replay proves any head, four conditions must hold:
   (`variant_sequence`).
 - No group may prove an empty head list (`empty_obligation`).
 - A nonempty payload file must end in the newline that its last term
-  wrote (`check_load, payload_bytes`).
+  wrote (`check_load, payload_term(…)`).
 
 An emptied, truncated, repeated, or misattributed payload therefore
 fails the replay instead of shrinking it. Manifest rows bind product to
@@ -436,14 +426,13 @@ variant of a multi-variant sentence leaves coverage complete and
 variant numbering contiguous. The frozen ABI carries no per-sentence
 variant count to check it against.
 
-Compiled documents are a definite-clause program, so termination is the
+Compiled documents are a normal logic program (Horn clauses plus negation as failure), so termination is the
 consuming engine's responsibility, not a property that the schema can
 promise. Facts and derived heads share one vocabulary by design; that
 is what lets one document's rules consume another's clauses. The same
 sharing lets an authored rule whose consequent entity feeds its own
 antecedent form a cycle. Under naive SLD such a corpus can diverge in
-one clause order and succeed in another. An engine with tabling or
-bottom-up evaluation is immune. This repository's own gates are
+one clause order and succeed in another. Tabling or bottom-up evaluation removes that clause-order dependence when the recursion reaches finitely many terms; a recursion that builds ever deeper Skolem terms can still run without end. This repository's own gates are
 fail-closed against divergence: the check proves every obligation under
 the bounded search above. Those bounds cut a divergent branch, and the
 check reports it as a failed obligation instead of hanging. Left
@@ -543,9 +532,7 @@ must name readable files, and the mode never parses payload terms. A
 v1 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/4`
 record, then the `'$guideline_query_projection'/2` term. The mode
-reads the query file as data and never consults it. Comments and
-layout carry no meaning here; the `check` gate pins committed bytes
-separately.
+reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 
 Success emits a two-line artifact on stdout: a generated-file
 comment, then one ground term
@@ -558,9 +545,7 @@ present), `R` is `solutions(Sols)`, or `indeterminate(limit)` when a
 bound trips. Each distinct solution contributes one `sol(Values)`
 row; rows follow the standard order of terms, and values follow the
 answer-manifest order. For a yes-no query
-(`answers([])`), the first proof is conclusive. `R` is `yes`,
-`no(finite_failure)` on exhaustive failure, or `indeterminate(limit)`
-when a bound trips before any proof. A nonground solution rejects
+(`answers([])`), the first proof is conclusive. `R` is `yes` when a proof is found, `no(finite_failure)` when the search ends without a proof and without a tripped bound, and `indeterminate(limit)` when it ends without a proof after a bound tripped. Inside a negated goal, a bound that cuts the inner search counts as the inner goal's failure, so the negation can succeed and the query can answer `yes`. A nonground solution rejects
 with class `proof` as `nonground_solution(Qid)`. A malformed query
 file rejects with class `check_load` as `query_file(<why>)`. Manifest
 and composition load failures keep the aggregate classes and details.
@@ -604,8 +589,7 @@ claim and stay verbatim.
 
 `P` is `proved(Nodes)`, `unproved(finite_failure)`, or
 `unproved(limit)`. Each proof node is `clause(sentence(DocId, S),
-clause_sha256(Hex), Children)`. It names the clause that resolved
-the goal by document and sentence number. `Hex` is the SHA-256 of
+clause_sha256(Hex), Children)`. It names the resolved clause by document and by the single sentence number that the clause's identity terms carry. A clause whose only identity terms cite an earlier sentence's referent takes that earlier number, and `check` then rejects the trace, because that number does not join the clause's own line. `Hex` is the SHA-256 of
 that clause's rendered document line with its newline. A re-checked
 negation-as-failure goal freezes as a `naf(Goal)` leaf among a
 clause node's children. Root nodes are always clause nodes. The
@@ -614,8 +598,7 @@ clauses. Each row's search runs under depth 1000 and 100000
 inferences. The whole run is bounded at 1000000 inferences. The
 interpreter's depth measure is its own; it is not comparable with
 the answer mode's engine measure. A negation site re-checks under
-the same bounds. A bound that trips inside a negation makes the
-whole row `unproved(limit)`, never a false failure. When the
+the same bounds. A bound that trips inside a negation makes the row `unproved(limit)` unless the inner search still finds a proof; an inner proof absorbs the cut, the negation fails, and the row can end `unproved(finite_failure)`. When the
 whole-run bound trips, the result becomes `indeterminate(limit)` in
 place of the mirror. The direct `ckc v1` invocation has no process
 bound.
@@ -624,7 +607,7 @@ bound.
 and resolves every `clause_sha256` to exactly one clause line of the
 committed document under `pl/`. A committed trace must prove its
 answer: `yes(proved(...))`, or solution rows that are all proved.
-`check` prints one `goal: traces <id> <n> traces; nodes=<k>` meter
+`check` prints one `ckc: traces <id> <n> traces; nodes=<k>` meter
 per guideline beside the queries meter.
 
 ## Operating

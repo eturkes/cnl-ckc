@@ -91,7 +91,7 @@ Run each command in the repository root. The examples call the program
   `ckc ui render <directory>` writes the same pages to a directory.
 - `ckc release-manifest` refreshes `release-manifest.tsv`, and
   `ckc dist build` writes the release archive to `dist/`.
-- `just gate` runs every check that CI runs. The checks are format,
+- `just gate` runs every check that CI runs on each push. CI also runs `just deny`, `just kani`, and `just outdated` once a week. The checks are format,
   lint, verification, tests, dependency audit, secret scan, workflow
   scan, repository checks, and certification.
 

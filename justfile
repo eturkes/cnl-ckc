@@ -113,9 +113,18 @@ build-static:
 trust: build
     cd "{{ ROOT }}/rust" && ./target/release/ckc trust-audit
 
+# Summary lines only; a failing run also prints its panics + failure lists.
 test:
-    cd "{{ ROOT }}/rust" && cargo test --workspace --locked --offline -q 2>&1 | grep -E '^test result' | sort | uniq -c
-    @echo "gate: test ok"
+    #!/usr/bin/env bash
+    set -uo pipefail
+    cd "{{ ROOT }}/rust"
+    log=$(mktemp)
+    cargo test --workspace --locked --offline -q > "$log" 2>&1; rc=$?
+    grep -E '^test result' "$log" | sort | uniq -c
+    if [ "$rc" -ne 0 ]; then grep -E -B2 -A12 'panicked|^failures:' "$log" | head -200; fi
+    rm -f "$log"
+    [ "$rc" -eq 0 ] && echo "gate: test ok"
+    exit "$rc"
 
 # Dependency audit: RustSec advisories, license allowlist, bans, sources (rust/deny.toml).
 deny:
