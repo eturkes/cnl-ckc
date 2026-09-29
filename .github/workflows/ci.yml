@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "17 6 * * 1" # weekly advisories against the committed lock
+    - cron: "17 6 * * 1" # weekly: advisories, Kani, pin drift, online workflow audit
 
 permissions:
   contents: read
@@ -28,6 +28,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Trust workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -65,8 +66,9 @@ jobs:
           test -z "$(git status --porcelain)"
 
   # Rust chain = `just rust`: verusfmt, clippy -D warnings, Verus --no-cheating,
-  # build, trust-audit, tests, cargo-deny, gitleaks. Tools + toolchain come from
-  # the sha256-pinned locks (rust/verus.lock, rust/tools.lock) via `just tools`.
+  # build, trust-audit, tests, cargo-deny, gitleaks, zizmor. Tools + toolchain come
+  # from the sha256-pinned locks (rust/verus.lock, rust/tools.lock) via `just tools`.
+  # The container jobs run its static musl binary (`just build-static`).
   rust:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
@@ -75,6 +77,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # gitleaks scans the whole history
+          persist-credentials: false
 
       - name: Bootstrap just (rust/tools.lock)
         run: |
@@ -101,16 +104,19 @@ jobs:
       - name: Rust gate
         run: just rust
 
+      - name: Build static ckc
+        run: just build-static
+
       - name: Upload ckc binary
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ckc
-          path: rust/target/release/ckc
+          path: rust/target/x86_64-unknown-linux-musl/release/ckc
           retention-days: 1
 
-  # Emission certification (M6, R83) = `just certify` over the rust job's binary
-  # inside the pinned swipl container: the swipl image carries no linker and the
-  # rust runner no SWI-Prolog, so the artifact is the seam.
+  # Emission certification (M6, R83) = `just certify` over the rust job's static
+  # binary inside the pinned swipl container: the swipl image carries no linker and
+  # the rust runner no SWI-Prolog, so the artifact is the seam.
   certify:
     if: github.event_name != 'schedule'
     needs: rust
@@ -125,6 +131,8 @@ jobs:
 
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Trust workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -158,6 +166,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Bootstrap just (rust/tools.lock)
         run: |
@@ -192,6 +202,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Bootstrap just (rust/tools.lock)
         run: |
@@ -217,3 +229,47 @@ jobs:
 
       - name: Kani gate
         run: just kani
+
+  # Weekly: online workflow audits (zizmor with a token) + pin drift (`just outdated`:
+  # every lock pin vs upstream latest; red = bump notice, procedure in .claude/rules/rust.md).
+  updates:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Bootstrap just (rust/tools.lock)
+        run: |
+          set -eu
+          url=$(awk -F'\t' '$1=="just"{print $5}' rust/tools.lock)
+          sha=$(awk -F'\t' '$1=="just"{print $4}' rust/tools.lock)
+          curl -sSL -o "$RUNNER_TEMP/just.tar.gz" "$url"
+          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/just.tar.gz" | sha256sum -c
+          mkdir -p "$RUNNER_TEMP/just"
+          tar -xzf "$RUNNER_TEMP/just.tar.gz" -C "$RUNNER_TEMP/just" just
+          echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"
+
+      - name: Cache toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .toolchain
+            !.toolchain/dl
+          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
+
+      - name: Install pinned tools
+        run: just tools
+
+      - name: Workflow audit (online)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: just workflows
+
+      - name: Pin drift
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: just outdated

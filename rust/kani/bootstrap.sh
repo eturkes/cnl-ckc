@@ -131,8 +131,17 @@ if [[ "$installed_hash" != "$lock_hash" || ! -x "$TOOLCHAIN/bin/rustc" ]] \
 fi
 
 WRAPPER="$PREFIX/wrapper"
-if [[ "$installed_hash" != "$lock_hash" || ! -x "$WRAPPER/bin/cargo-kani" ]] \
-    || [[ "$("$WRAPPER/bin/cargo-kani" --version 2>/dev/null || true)" != "cargo-kani ${value[kani_version]}" ]]; then
+export CARGO_HOME="$STATE/runtime-cargo-home" RUSTUP_HOME="$STATE/runtime-rustup-home"
+export KANI_HOME="$PREFIX/kani-home" CARGO_NET_OFFLINE=true
+export PATH="$WRAPPER/bin:$TOOLCHAIN/bin:$PATH"
+mkdir -p "$CARGO_HOME" "$RUSTUP_HOME"
+# cargo-kani run before `setup` has populated KANI_HOME installs an unpinned bundle
+# from the network, `--version` included ⇒ wrapper identity = cargo's install record.
+wrapper_ok() {
+    [[ -x "$WRAPPER/bin/cargo-kani" && -f "$WRAPPER/.crates.toml" ]] \
+        && grep -Fq "\"kani-verifier ${value[kani_version]} (" "$WRAPPER/.crates.toml"
+}
+if [[ "$installed_hash" != "$lock_hash" ]] || ! wrapper_ok; then
     build="$STATE/wrapper-build"; cargo_home="$STATE/build-cargo-home"; target="$STATE/wrapper-target"
     rm -rf -- "$build" "$cargo_home" "$target" "$WRAPPER"
     mkdir -p "$build/src" "$build/vendor" "$cargo_home" "$target"
@@ -153,12 +162,8 @@ if [[ "$installed_hash" != "$lock_hash" || ! -x "$WRAPPER/bin/cargo-kani" ]] \
         --root "$WRAPPER" > "$LOGS/wrapper-install.log" 2>&1
     rm -rf -- "$build" "$cargo_home" "$target"
 fi
-[[ "$("$WRAPPER/bin/cargo-kani" --version)" == "cargo-kani ${value[kani_version]}" ]] || fail 'cargo-kani version mismatch'
+wrapper_ok || fail 'cargo-kani version mismatch'
 
-export CARGO_HOME="$STATE/runtime-cargo-home" RUSTUP_HOME="$STATE/runtime-rustup-home"
-export KANI_HOME="$PREFIX/kani-home" CARGO_NET_OFFLINE=true
-export PATH="$WRAPPER/bin:$TOOLCHAIN/bin:$PATH"
-mkdir -p "$CARGO_HOME" "$RUSTUP_HOME"
 install="$KANI_HOME/kani-${value[kani_version]}"
 if [[ "$installed_hash" != "$lock_hash" || ! -x "$install/bin/kani-driver" || ! -L "$install/toolchain" ]] \
     || [[ "$(readlink -f -- "$install/toolchain" 2>/dev/null || true)" != "$TOOLCHAIN" ]] \
