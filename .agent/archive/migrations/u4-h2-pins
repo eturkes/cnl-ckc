@@ -2,7 +2,7 @@
 """U4 H2 pin cross-check: every pattern of the M5.1 trust battery
 (.scratch/m5u1/trust-battery/run.py, sha256 9f9d13ab71c0cfa5…) = the same
 bytes in rust/ckc/tests/trust_battery.rs. Scratch source frozen since M5.1;
-rerun: python3 -P .agent/archive/migrations/u4-h2-pins.py → `h2 pins: 16/16`.
+rerun: python3 -P .agent/archive/migrations/u4-h2-pins → `h2 pins: 16/16`.
 """
 import ast
 import hashlib
