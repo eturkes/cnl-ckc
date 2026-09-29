@@ -1,0 +1,4 @@
+Region authority: byte ranges identify the 1 payloads below.
+
+[R1 | p1 | Section]
+é café café aaaa

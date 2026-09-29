@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+"""U4 H5: .scratch/m5u4/align_probes (33 `align` resolver probes: 25 red, 6 green,
+2 guards) → tests/align-probes/.
+
+cases.tsv = id, setup, gid, docid (the probe table of align_probes/run.py);
+<id>/stdin.tsv.in + expected.{rc,stdout,stderr[,tsv]} = the pinned bytes;
+fixture/ = the base probe guideline that run.py's `fixture(tree, "base")` writes
+(`.in` inert); setups (symlinks, chmod 0, non-directory, pending status) stay
+procedural in the runner. Usage: python3 -P <this> <repo-root>.
+"""
+import hashlib
+import runpy
+import sys
+import tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+probes = root / ".scratch/m5u4/align_probes"
+out = root / "tests/align-probes"
+sys.path.insert(0, str(probes.parent))
+ns = runpy.run_path(str(probes / "run.py"), run_name="u4_h5")
+items = ns["cases"]()
+assert len(items) == 33, len(items)
+rows = ["# id\tsetup\tgid\tdocid\n"]
+for case in items:
+    pins = probes / case["id"]
+    assert (pins / "stdin.tsv").read_bytes() == case["stdin"].encode(), case["id"]
+    target = out / case["id"]
+    target.mkdir(parents=True)
+    (target / "stdin.tsv.in").write_bytes((pins / "stdin.tsv").read_bytes())
+    for name in ("expected.rc", "expected.stdout", "expected.stderr", "expected.tsv"):
+        if (pins / name).is_file():
+            (target / name).write_bytes((pins / name).read_bytes())
+    assert ((pins / "expected.tsv").is_file()) == (case["kind"] == "green"), case["id"]
+    rows.append(f"{case['id']}\t{case['setup']}\t{case['gid']}\t{case['docid']}\n")
+(out / "cases.tsv").write_text("".join(rows))
+with tempfile.TemporaryDirectory() as tmp:
+    base = ns["fixture"](Path(tmp), "base")
+    for path in sorted(p for p in base.rglob("*") if p.is_file()):
+        dest = out / "fixture" / path.relative_to(base.parent.parent)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.with_name(dest.name + ".in").write_bytes(path.read_bytes())
+digest = hashlib.sha256()
+for path in sorted(p for p in out.rglob("*") if p.is_file()):
+    digest.update(path.relative_to(out).as_posix().encode() + b"\0" + path.read_bytes() + b"\0")
+print(f"tests/align-probes: {len(items)} probes; tree sha256 {digest.hexdigest()}")
