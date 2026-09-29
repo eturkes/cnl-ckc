@@ -1,0 +1,19 @@
+% Every term of a source file: kind, predicate indicator, start + end char offsets.
+probe_main :-
+    current_prolog_flag(argv, [File]),
+    setup_call_cleanup(open(File, read, S, [encoding(utf8)]),
+        dump(S), close(S)).
+dump(S) :-
+    read_term(S, T, [term_position(P), subterm_positions(SP), syntax_errors(error), module(ace_to_pl)]),
+    ( T == end_of_file -> true
+    ; stream_position_data(char_count, P, Start),
+      arg(2, SP, End0), End is End0,
+      indicator(T, K, PI),
+      format("~w\t~q\t~w\t~w~n", [K, PI, Start, End]),
+      dump(S) ).
+indicator((:- _), directive, none) :- !.
+indicator((H :- _), clause, PI) :- !, head_pi(H, PI).
+indicator((H --> _), dcg, PI) :- !, head_pi(H, PI).
+indicator(H, clause, PI) :- head_pi(H, PI).
+head_pi(M:H, M:N/A) :- !, functor(H, N, A).
+head_pi(H, N/A) :- functor(H, N, A).

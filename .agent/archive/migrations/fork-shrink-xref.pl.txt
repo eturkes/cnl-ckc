@@ -1,0 +1,13 @@
+% Dump local predicate definitions + call edges of a Prolog source via prolog_xref.
+:- use_module(library(prolog_xref)).
+:- use_module(library(lists)).
+probe_main :-
+    current_prolog_flag(argv, [File]),
+    absolute_file_name(File, Abs),
+    xref_source(Abs, [silent(true)]),
+    forall(( xref_defined(Abs, Goal, How), functor(Goal, N, A) ),
+           ( How = local(Line) -> format("def\t~w\t~w\t~w~n", [N, A, Line])
+           ; format("defx\t~w\t~w\t~q~n", [N, A, How]) )),
+    forall(( xref_called(Abs, Called, By), functor(Called, CN, CA), functor(By, BN, BA) ),
+           format("call\t~w/~w\t~w/~w~n", [BN, BA, CN, CA])),
+    forall(xref_hook(Hook), format("hook\t~q~n", [Hook])).

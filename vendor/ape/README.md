@@ -11,7 +11,7 @@ the fork base recorded in `PROVENANCE`.
 ## Layout
 
 - `prolog/ace_to_pl.pl` — first-party compiler entry point (stdin ACE →
-  stdout Prolog; `check` mode loads one compiled document).
+  stdout Prolog; compile, proof and question modes).
 - `prolog/parser/` — ACE parser (`ace_to_drs.pl` and dependencies) plus the
   ProFIT grammar sources (`*.fit`) and their translator (`fit_to_plp.pl`,
   `prologfeatures.pl`), which build the untracked `*.plp` grammar files.
@@ -23,7 +23,6 @@ the fork base recorded in `PROVENANCE`.
 
 ## Use
 
-Always run through `tools/goal.py`: it stages a scratch copy
-(`shutil.copytree`), builds the grammar (`swipl -g "[fit_to_plp], halt."`
-inside `prolog/parser/`), and invokes the compiler there. License:
-LGPL-3.0-or-later (`LICENSE.txt`).
+Always run through `ckc compile`: it stages a scratch copy, builds the
+grammar (`swipl -g "[fit_to_plp], halt."` inside `prolog/parser/`), and
+invokes the compiler there. License: LGPL-3.0-or-later (`LICENSE.txt`).

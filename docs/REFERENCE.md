@@ -368,11 +368,11 @@ terms carry the document's own document, sentence, and variant
 coordinates, so no foreign clause can discharge an obligation. Success
 is modus ponens over that sentence's own projection.
 
-`aggregate-check <manifest>` replays those obligations across a
-composition. The manifest is strict: one `<compiled-pl>` TAB
+`ckc v1 aggregate-check <manifest>` replays those obligations across a
+composition in the verified Rust engine. The manifest is strict: one `<compiled-pl>` TAB
 `<payload>` row per document, with the final newline required. A 0-byte
-file means the empty composition. The compiler loads every document
-into one engine; any load diagnostic is a failure. It checks that the
+file means the empty composition. The engine loads every document
+into one composition; any load diagnostic is a failure. It checks that the
 distinct `guideline_document/3` records equal the manifest row count
 and that the loaded schema-version set is exactly `[1]`. It then
 re-derives every obligation against the whole batch. Co-loading can
@@ -381,8 +381,8 @@ them, and the engine evaluates negation-as-failure against the
 composition it will actually run in. The check reports
 `ace_to_pl aggregate ok <N> documents <G> obligations`.
 
-`recursion-check <manifest>` loads that same composition and ignores
-the payload column. It proves that no clause head unifies with its own
+`ckc v1 recursion-check <manifest>` loads that same composition and
+ignores the payload column. It proves that no clause head unifies with its own
 leftmost body goal, renaming the goal apart first the way SLD renames a
 clause. A match rejects as `proof, left_recursive(Site, Name, Arity)`,
 where `Site` is the offending clause's own `sentence(DocId, S)` when it
@@ -427,9 +427,8 @@ check reports it as a failed obligation instead of hanging. Left
 recursion — a head that unifies with its own leftmost body goal — is
 the shape that makes an open query's termination depend on load order.
 The gate checks it rather than asserts its absence. Every
-`tools/goal.py check` runs `recursion-check` over the loaded
-composition and rejects one, printing the rule-clause count that it
-scanned. The shipped corpus holds none.
+`ckc check` runs `recursion-check` over the loaded composition and
+rejects one, printing the rule-clause count that it scanned. The shipped corpus holds none.
 
 Authoring notes (v1):
 
@@ -466,10 +465,10 @@ Authoring notes (v1):
 ### Question projection
 
 The compiler's `question` mode compiles one ACE question against the
-same v1 vocabulary:
+same v1 vocabulary (`ckc queries` stages the APE tree and runs it):
 
 ```sh
-swipl -q -f none -F none -s vendor/ape/prolog/ace_to_pl.pl -g main \
+swipl -q -f none -F none -s <ape-tree-dir>/prolog/ace_to_pl.pl -g main \
   -t 'halt(9)' -- question <ape-tree-dir> <qid> [<ulex>]   # ACE on stdin
 ```
 
@@ -503,17 +502,16 @@ parser, input, and load failures keep their own classes, details, and
 exit codes. The projection emits no document
 indicators, no declarations, and no proof obligations. It never
 enters a document, aggregate-check, or recursion-check composition.
-`goal.py check` re-derives every committed query separately and
-compares the bytes.
+`ckc check` re-derives every committed query separately and compares
+the bytes.
 
 ### Query answers
 
-The compiler's `answer` mode solves one compiled query against a
-loaded composition:
+`ckc v1 answer` solves one compiled query against a loaded
+composition in the verified Rust engine:
 
 ```sh
-swipl -q -f none -F none -s vendor/ape/prolog/ace_to_pl.pl -g main \
-  -t 'halt(9)' -- answer <manifest> <query-pl>
+ckc v1 answer <manifest> <query-pl>
 ```
 
 `<manifest>` uses the aggregate manifest grammar. The payload column
@@ -547,23 +545,22 @@ and composition load failures keep the aggregate classes and details.
 Committed query artifacts live under `guidelines/<id>/queries/`:
 `<qid>.ace` sources at the root, compiled queries under `pl/`, answer
 artifacts under `answers/`, and proof traces under `traces/`.
-`python3 -P tools/goal.py queries <id>` derives every artifact in
-memory and writes only after every derivation succeeds. `check`
+`ckc queries <id>` derives every artifact in memory and writes only
+after every derivation succeeds. `check`
 re-derives each file per query twice and compares the bytes. A
 committed answer must be `yes` or nonempty `solutions(...)`;
 committed queries stay demonstrations. The `queries` and `check`
 commands bound every compile, answer, and trace subprocess at 30
 seconds of wall-clock time. A run that exceeds the bound fails the
-gate. The direct `swipl` invocation above has no process bound.
+gate. The direct `ckc v1` invocation above has no process bound.
 
 ### Proof traces
 
-The compiler's `trace` mode re-proves the positive claims of one
-answer artifact against a loaded composition:
+`ckc v1 trace` re-proves the positive claims of one answer artifact
+against a loaded composition in the verified Rust engine:
 
 ```sh
-swipl -q -f none -F none -s vendor/ape/prolog/ace_to_pl.pl -g main \
-  -t 'halt(9)' -- trace <manifest> <query-pl> <answers-pl>
+ckc v1 trace <manifest> <query-pl> <answers-pl>
 ```
 
 The manifest and query file follow the answer-mode rules.
@@ -597,7 +594,7 @@ the answer mode's engine measure. A negation site re-checks under
 the same bounds. A bound that trips inside a negation makes the
 whole row `unproved(limit)`, never a false failure. When the
 whole-run bound trips, the result becomes `indeterminate(limit)` in
-place of the mirror. The direct `swipl` invocation has no process
+place of the mirror. The direct `ckc v1` invocation has no process
 bound.
 
 `check` re-derives each committed trace twice, compares the bytes,

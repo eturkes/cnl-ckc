@@ -7,7 +7,7 @@ License: LGPL-3.0-or-later
 First-party files: PROVENANCE, prolog/ace_to_pl.pl
 
 The upstream `LICENSE.txt` is retained verbatim in this directory. The four
-fields above are machine-read by the `fork-notice` gate in `goal.py check`.
+fields above are machine-read by the `fork-notice` gate in `ckc check`.
 
 This tree is a liberal in-place fork: upstream files are edited directly,
 first-party modules are added directly, and everything outside the compiler's
@@ -20,8 +20,10 @@ in their file header.
 First-party additions:
 
 - `prolog/ace_to_pl.pl` — ACE → plain-Prolog compiler over the APE parser
-  (LGPL-3.0-or-later, APE derivative). Sole first-party entry point into this
-  tree; contract in its header.
+  (LGPL-3.0-or-later, APE derivative): compile, proof and question modes.
+  Sole first-party entry point into this tree; contract in its header. The
+  composition modes (check, aggregate-check, recursion-check, answer, trace)
+  live in the verified Rust kernel (`ckc v1`).
 
 Trust posture: APE runs in separate SWI-Prolog processes over a scratch
 copy staged from this tree (`vendor/clex/clex_lexicon.pl` overlaid on the
