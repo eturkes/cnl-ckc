@@ -93,3 +93,49 @@ fn pipeline_arity_keeps_legacy_fail_envelopes() {
         );
     }
 }
+
+// R18 regular-file law on direct arguments: a FIFO, a device and a directory
+// read as `unreadable` (a FIFO without a writer used to block the reader).
+#[test]
+#[cfg(target_os = "linux")]
+fn check_and_render_reject_non_regular_paths() {
+    let dir = std::env::temp_dir().join(format!("ckc-cli-special-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir(&dir).unwrap();
+    let fifo = dir.join("fifo.pl");
+    assert!(
+        Command::new("mkfifo")
+            .arg(&fifo)
+            .status()
+            .unwrap()
+            .success()
+    );
+    for mode in ["check", "render"] {
+        for path in [fifo.to_str().unwrap(), "/dev/null", dir.to_str().unwrap()] {
+            let mut child = Command::new(env!("CARGO_BIN_EXE_ckc"))
+                .args(["v1", mode, path])
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped())
+                .spawn()
+                .unwrap();
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+            while child.try_wait().unwrap().is_none() {
+                if std::time::Instant::now() > deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    let _ = std::fs::remove_dir_all(&dir);
+                    panic!("{mode} {path}: still running after 20 s");
+                }
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+            let out = child.wait_with_output().unwrap();
+            assert_eq!(out.status.code(), Some(2), "{mode} {path}");
+            assert!(out.stdout.is_empty(), "{mode} {path}");
+            assert_eq!(
+                out.stderr, b"ace_to_pl_error(check_load,unreadable).\n",
+                "{mode} {path}"
+            );
+        }
+    }
+    std::fs::remove_dir_all(&dir).unwrap();
+}

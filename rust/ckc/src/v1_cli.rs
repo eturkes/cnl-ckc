@@ -23,9 +23,12 @@ fn line_col(bytes: &[u8], at: usize) -> (u64, u64) {
 }
 
 fn run_file(mode: &str, path: &str) -> ExitCode {
-    let bytes = match std::fs::read(path) {
-        Ok(b) => b,
-        Err(_) => {
+    // R18 on direct arguments too: only a regular file is read (a FIFO without
+    // a writer would block the open; a device reads as content).
+    let regular = std::fs::metadata(path).is_ok_and(|m| m.is_file());
+    let bytes = match regular.then(|| std::fs::read(path)) {
+        Some(Ok(b)) => b,
+        _ => {
             // R1 SWI-authored open-error class: pinned deterministic detail.
             eprintln!("ace_to_pl_error(check_load,unreadable).");
             return ExitCode::from(2);
