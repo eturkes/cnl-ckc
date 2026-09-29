@@ -1,0 +1,1 @@
+fixture-only bodies use `between/3`, `=:=/2`, `deepN/0`, or `deep_tick/0` (for example `red/yesno-limit-before-proof/.../doc.pl`)

@@ -14,3 +14,9 @@ vstd = "=0.0.0-2026-08-30-0159"
 # unexpected_cfgs stays quiet for them and live for anything else.
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(verus_keep_ghost)", "cfg(verus_keep_ghost_body)", "cfg(verus_verify_core)"] }
+
+# `cargo test` replays K2/K3 limit cases (tests/v1: 5000-deep proofs, 10^5-step
+# budgets) through the kernel: unoptimized, three of them take 56–121 s each,
+# optimized 10–19 s. Debug assertions + overflow checks keep their dev defaults.
+[profile.dev.package.ckc-kernel]
+opt-level = 3

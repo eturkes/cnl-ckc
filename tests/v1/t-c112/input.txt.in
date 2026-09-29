@@ -1,0 +1,1 @@
+`:- op(500,xfy,foo).\n` prepended to canonical `doc.pl`

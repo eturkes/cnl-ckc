@@ -1,0 +1,1 @@
+rule head unifies with its own leftmost body goal after renaming apart

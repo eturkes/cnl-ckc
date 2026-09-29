@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""U4 H4: .scratch/m5u2/suite (224 active primary targets) + .scratch/m5u2b
+matrix rows (114 supplemental K3 probes, embedded in the same case.json files)
+→ tests/v1/.
+
+Layout: tests/v1/cases.tsv (case, probe, mode, rc, stderr_lines, args) +
+tests/v1/<case>/<input>.in (inert copies) + tests/v1/<case>/expect/<probe>.{stdout,stderr}.
+Inputs > 100 KB → <input>.tpl.in templates the runner expands (line runs + one
+balanced comma tree); each template's first line pins the expansion's sha256.
+Usage: python3 -P .agent/archive/migrations/u4-h4-v1 <repo-root>
+"""
+import base64
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+cases = root / ".scratch/m5u2/suite/cases"
+out = root / "tests/v1"
+BIG = 100_000
+NUM = re.compile(rb"\d+")
+
+
+def tree(n, first, leaf):
+    layer = [first] + [leaf] * (n - 1)
+    while len(layer) > 1:
+        layer = [b"','(" + layer[i] + b"," + layer[i + 1] + b")" if i + 1 < len(layer) else layer[i]
+                 for i in range(0, len(layer), 2)]
+    return layer[0]
+
+
+def expand(template):
+    lines = template.split(b"\n")
+    assert lines[0].startswith(b"@@sha256 ") and lines[-1] == b""
+    body = []
+    for line in lines[1:-1]:
+        if line.startswith(b"@@run "):
+            _, lo, hi, text = line.split(b" ", 3)
+            for i in range(int(lo), int(hi) + 1):
+                body.append(text.replace(b"@i@", str(i).encode()).replace(b"@j@", str(i + 1).encode()))
+        elif line.startswith(b"@@tree "):
+            n, first, leaf, prefix, suffix = line[len(b"@@tree "):].split(b"\t")
+            body.append(prefix + tree(int(n), first, leaf) + suffix)
+        else:
+            assert not line.startswith(b"@@"), line
+            body.append(line)
+    return b"\n".join(body) + b"\n"
+
+
+def shape(line):
+    """Template of a line whose numeric fields are i or i+1 for one i, else None."""
+    nums = [int(m.group()) for m in NUM.finditer(line)]
+    for i in sorted(set(nums)):
+        if all(n in (i, i + 1) for n in nums if n not in (0, 1) or n in (i, i + 1)):
+            text = NUM.sub(lambda m: b"@i@" if int(m.group()) == i else b"@j@" if int(m.group()) == i + 1
+                           else m.group(), line)
+            if text.count(b"@i@") and (b"@j@" in text) and text.replace(b"@i@", str(i).encode()).replace(
+                    b"@j@", str(i + 1).encode()) == line:
+                return i, text
+    return None
+
+
+def encode(data):
+    assert data.endswith(b"\n")
+    lines = data[:-1].split(b"\n")
+    tree_line = re.fullmatch(rb"('\$guideline_query_projection'\(goal\()(.*)(\),answers\(\[\]\)\)\.)",
+                             lines[-1], re.S) if lines else None
+    body = []
+    if tree_line:
+        leaf = b"guideline_property(actual,token,p,pos)"
+        for first in (leaf, b"guideline_property(actual,token,q,pos)"):
+            for n in (49999, 50000):
+                if tree(n, first, leaf) == tree_line.group(2):
+                    body = lines[:-1] + [b"@@tree " + b"\t".join(
+                        [str(n).encode(), first, leaf, tree_line.group(1), tree_line.group(3)])]
+        assert body, "unrecognized comma tree"
+    else:
+        k = 0
+        while k < len(lines):
+            head = shape(lines[k])
+            run = 1
+            if head:
+                while k + run < len(lines) and shape(lines[k + run]) == (head[0] + run, head[1]):
+                    run += 1
+            if run >= 3:
+                body.append(b"@@run %d %d %s" % (head[0], head[0] + run - 1, head[1]))
+                k += run
+            else:
+                assert not lines[k].startswith(b"@@")
+                body.append(lines[k])
+                k += 1
+    template = b"@@sha256 " + hashlib.sha256(data).hexdigest().encode() + b"\n" + b"\n".join(body) + b"\n"
+    assert expand(template) == data
+    return template
+
+
+rows = ["# case\tprobe\tmode\trc\tstderr_lines\targs\n"]
+counts = {"primary": 0, "supplemental": 0, "inputs": 0, "templates": 0}
+for d in sorted(p for p in cases.iterdir() if p.is_dir()):
+    case = json.loads((d / "case.json").read_text())
+    if case["status"] != "active" or case.get("target") is None:
+        continue
+    target = out / d.name
+    for name in case["input_files"]:
+        data = (d / name).read_bytes()
+        dest = target / name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if len(data) > BIG:
+            dest.with_name(dest.name + ".tpl.in").write_bytes(encode(data))
+            counts["templates"] += 1
+        else:
+            dest.with_name(dest.name + ".in").write_bytes(data)
+        counts["inputs"] += 1
+    probes = [("target", case["target"])] + [(r["id"], r["target"]) for r in case.get("supplemental_probes", [])
+                                             if r.get("target")]
+    assert len({p for p, _ in probes}) == len(probes), d.name
+    for probe, spec in probes:
+        expect = spec["expect"]
+        assert expect["stdout"]["kind"] == expect["stderr"]["kind"] == "exact"
+        assert all(" " not in a and "\t" not in a for a in spec["args"])
+        (target / "expect").mkdir(exist_ok=True)
+        for stream in ("stdout", "stderr"):
+            (target / "expect" / f"{probe}.{stream}").write_bytes(base64.b64decode(expect[stream]["base64"]))
+        lines = expect.get("stderr_lines")
+        rows.append(f"{d.name}\t{probe}\t{spec['mode']}\t{expect['rc']}\t{'-' if lines is None else lines}\t"
+                    f"{' '.join(spec['args'])}\n")
+        counts["primary" if probe == "target" else "supplemental"] += 1
+(out / "cases.tsv").write_text("".join(rows))
+digest = hashlib.sha256()
+for path in sorted(p for p in out.rglob("*") if p.is_file()):
+    digest.update(path.relative_to(out).as_posix().encode() + b"\0" + path.read_bytes() + b"\0")
+print(f"tests/v1: {counts}; tree sha256 {digest.hexdigest()}")

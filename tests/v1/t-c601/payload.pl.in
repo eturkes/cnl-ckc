@@ -1,0 +1,1 @@
+'$guideline_proof'(doc,1,variant(1),witness([]),prove([guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),level(0),pos)])).

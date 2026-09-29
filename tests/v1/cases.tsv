@@ -1,0 +1,339 @@
+# case	probe	mode	rc	stderr_lines	args
+s4-k1-001	target	check	0	-	input.pl
+s4-k1-002	target	check	0	-	input.pl
+s4-k1-003	target	check	0	-	input.pl
+s4-k1-004	target	check	0	-	input.pl
+s4-k1-005	target	check	0	-	input.pl
+s4-k1-006	target	check	0	-	input.pl
+s4-k1-007	target	check	0	-	input.pl
+s4-k1-008	target	check	2	1	input.pl
+s4-k1-009	target	check	2	1	input.pl
+s4-k1-010	target	check	0	-	input.pl
+s4-k1-011	target	check	2	1	input.pl
+s4-k1-012	target	check	2	1	input.pl
+s4-k1-013	target	check	2	1	input.pl
+s4-k1-014	target	check	0	-	input.pl
+s4-k1-015	target	check	2	1	input.pl
+s4-k1-016	target	render	0	-	input.pl
+s4-k1-017	target	render	0	-	input.pl
+s4-k1-018	target	render	0	-	input.pl
+s4-k1-019	target	check	2	-	missing.pl
+s4-k1-020	target	render	2	-	missing.pl
+s4-k1-021	target	check	0	-	input.pl
+s4-k1-022	target	check	2	1	input.pl
+s4-k1-023	target	check	2	1	input.pl
+s4-k1-024	target	check	2	1	input.pl
+s4-k1-025	target	check	0	-	input.pl
+s4-k1-026	target	check	0	-	input.pl
+s4-k1-027	target	check	0	-	input.pl
+s4-k1-028	target	check	0	-	input.pl
+s4-k2-001	target	aggregate-check	0	-	manifest.tsv
+s4-k2-002	target	recursion-check	0	-	manifest.tsv
+s4-k2-003	target	answer	0	-	manifest.tsv query.pl
+s4-k2-004	target	recursion-check	1	-	manifest.tsv
+s4-k3-001	target	trace-check	0	-	manifest.tsv query.pl answers.pl trace.pl
+s4-k3-002	target	trace	0	-	manifest.tsv query.pl answers.pl
+s4-k3-003	target	trace	0	-	manifest.tsv query.pl answers.pl
+s4-k3-004	target	trace	2	-	manifest.tsv query.pl answers.pl
+s4-k3-005	target	trace	2	-	manifest.tsv query.pl answers.pl
+s4-r16-001	target	answer	0	0	manifest.tsv query.pl
+t-c1002	target	check	2	1	
+t-c1004	target	aggregate-check	2	1	
+t-c1005	target	aggregate-check	2	1	manifest.tsv extra
+t-c1006	target	answer	2	1	manifest.tsv
+t-c1007	target	trace	2	1	manifest.tsv query.pl
+t-c101	target	check	0	-	input.pl
+t-c1012	target	aggregate-check	0	0	manifest.tsv
+t-c1013	target	recursion-check	0	0	manifest.tsv
+t-c1014	target	answer	0	0	manifest.tsv query.pl
+t-c1015	target	answer	2	1	manifest.tsv query.pl
+t-c1016	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c1017	target	recursion-check	1	1	manifest.tsv
+t-c102	target	check	0	-	input.pl
+t-c103	target	check	0	-	input.pl
+t-c104	target	check	0	-	input.pl
+t-c105	target	check	2	1	input.pl
+t-c106	target	check	2	1	input.pl
+t-c107	target	check	2	1	input.pl
+t-c108	target	check	2	1	input.pl
+t-c109	target	check	2	1	input.pl
+t-c110	target	check	2	1	input.pl
+t-c111	target	check	2	1	input.pl
+t-c112	target	check	2	1	input.pl
+t-c113	target	check	2	1	input.pl
+t-c114	target	check	0	-	input.pl
+t-c115	target	check	2	1	input.pl
+t-c116	target	check	2	1	input.pl
+t-c201	target	check	2	1	input.pl
+t-c202	target	check	0	-	input.pl
+t-c203	target	check	0	-	input.pl
+t-c204	target	check	0	-	input.pl
+t-c205	target	check	0	-	input.pl
+t-c206	target	check	0	-	input.pl
+t-c207	target	check	0	-	input.pl
+t-c208	target	check	2	1	input.pl
+t-c209	target	check	2	1	input.pl
+t-c212	target	check	0	-	input.pl
+t-c213	target	check	0	-	input.pl
+t-c214	target	check	0	-	input.pl
+t-c215	target	check	2	1	input.pl
+t-c216	target	check	0	-	input.pl
+t-c217	target	check	2	1	input.pl
+t-c301	target	render	0	-	input.pl
+t-c302	target	render	0	-	input.pl
+t-c315	target	render	0	-	input.pl
+t-c317	target	render	2	1	input.pl
+t-c401	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+t-c402	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c403	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c404	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+t-c405	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c406	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+t-c407	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c408	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c409	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c410	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+t-c411	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c411	directive	trace-check	1	1	variants/directive/manifest.tsv variants/directive/query.pl variants/directive/answers.pl variants/directive/trace.pl
+t-c411	schema	trace-check	1	1	variants/schema/manifest.tsv variants/schema/query.pl variants/schema/answers.pl variants/schema/trace.pl
+t-c411	document	trace-check	1	1	variants/document/manifest.tsv variants/document/query.pl variants/document/answers.pl variants/document/trace.pl
+t-c412	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c413	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c413	marker-1	trace-check	2	1	variants/marker-1/manifest.tsv variants/marker-1/query.pl variants/marker-1/answers.pl variants/marker-1/trace.pl
+t-c413	marker-2	trace-check	2	1	variants/marker-2/manifest.tsv variants/marker-2/query.pl variants/marker-2/answers.pl variants/marker-2/trace.pl
+t-c414	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c414	negative	trace-check	2	1	variants/negative/manifest.tsv variants/negative/query.pl variants/negative/answers.pl variants/negative/trace.pl
+t-c415	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c415	long	trace-check	1	1	variants/long/manifest.tsv variants/long/query.pl variants/long/answers.pl variants/long/trace.pl
+t-c415	uppercase	trace-check	1	1	variants/uppercase/manifest.tsv variants/uppercase/query.pl variants/uppercase/answers.pl variants/uppercase/trace.pl
+t-c415	nonhex	trace-check	1	1	variants/nonhex/manifest.tsv variants/nonhex/query.pl variants/nonhex/answers.pl variants/nonhex/trace.pl
+t-c416	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+t-c417	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c418	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c501	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c502	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c503	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c504	target	answer	0	0	manifest.tsv query.pl
+t-c505	target	answer	0	0	manifest.tsv query.pl
+t-c506	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c507	target	aggregate-check	0	0	manifest.tsv
+t-c508	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c509	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c510	target	answer	0	0	manifest.tsv query.pl
+t-c511	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c512	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c513	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c514	target	recursion-check	1	1	manifest.tsv
+t-c515	target	recursion-check	0	0	manifest.tsv
+t-c516	target	answer	0	0	manifest.tsv query.pl
+t-c517	target	answer	0	0	manifest.tsv query.pl
+t-c518	target	answer	2	1	manifest.tsv query.pl
+t-c519	target	answer	2	1	manifest.tsv query.pl
+t-c520	target	answer	2	1	manifest.tsv query.pl
+t-c521	target	answer	0	0	manifest.tsv query.pl
+t-c522	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c601	target	aggregate-check	0	0	manifest.tsv
+t-c602	target	aggregate-check	1	1	manifest.tsv
+t-c603	target	aggregate-check	1	1	manifest.tsv
+t-c604	target	answer	0	0	manifest.tsv query.pl
+t-c605	target	answer	0	0	manifest.tsv query.pl
+t-c606	target	answer	0	0	manifest.tsv query.pl
+t-c607	target	answer	0	0	manifest.tsv query.pl
+t-c608	target	answer	0	0	manifest.tsv query.pl
+t-c609	target	answer	0	0	manifest.tsv query.pl
+t-c610	target	answer	0	0	manifest.tsv query.pl
+t-c611	target	answer	0	0	manifest.tsv query.pl
+t-c612	target	answer	0	0	manifest.tsv query.pl
+t-c613	target	answer	1	1	manifest.tsv query.pl
+t-c614	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c615	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c616	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c617	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c618	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c619	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c620	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c621	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c623	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c625	target	answer	0	0	manifest.tsv query.pl
+t-c701	target	answer	2	1	manifest.tsv query.pl
+t-c702	target	answer	2	1	manifest.tsv query.pl
+t-c703	target	answer	2	1	manifest.tsv query.pl
+t-c704	target	answer	2	1	manifest.tsv query.pl
+t-c705	target	answer	2	1	manifest.tsv query.pl
+t-c706	target	answer	2	1	manifest.tsv query.pl
+t-c707	target	answer	2	1	manifest.tsv query.pl
+t-c708	target	answer	0	0	manifest.tsv query.pl
+t-c709	target	answer	0	0	manifest.tsv query.pl
+t-c710	target	answer	0	0	manifest.tsv query.pl
+t-c711	target	answer	2	1	manifest.tsv query.pl
+t-c712	target	answer	0	0	manifest.tsv query.pl
+t-c713	target	answer	1	1	manifest.tsv query.pl
+t-c714	target	answer	0	0	manifest.tsv query.pl
+t-c715	target	answer	0	0	manifest.tsv query.pl
+t-c716	target	answer	0	0	manifest.tsv query.pl
+t-c717	target	answer	0	0	manifest.tsv query.pl
+t-c718	target	answer	0	0	manifest.tsv different-basename.pl
+t-c719	target	answer	2	1	manifest.tsv query.pl
+t-c720	target	answer	2	1	manifest.tsv absent-query.pl
+t-c721	target	answer	2	1	manifest.tsv query.pl
+t-c801	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c801	two-records	trace	2	1	variants/two-records/manifest.tsv variants/two-records/query.pl variants/two-records/answers.pl
+t-c801	query-class	trace	2	1	variants/query-class/manifest.tsv variants/query-class/query.pl variants/query-class/answers.pl
+t-c801	doc-class	trace	2	1	variants/doc-class/manifest.tsv variants/doc-class/query.pl variants/doc-class/answers.pl
+t-c801	trace-class	trace	2	1	variants/trace-class/manifest.tsv variants/trace-class/query.pl variants/trace-class/answers.pl
+t-c801	wrong-wrapper	trace	2	1	variants/wrong-wrapper/manifest.tsv variants/wrong-wrapper/query.pl variants/wrong-wrapper/answers.pl
+t-c801	nonground	trace	2	1	variants/nonground/manifest.tsv variants/nonground/query.pl variants/nonground/answers.pl
+t-c801	literal-eof	trace	2	1	variants/literal-eof/manifest.tsv variants/literal-eof/query.pl variants/literal-eof/answers.pl
+t-c802	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c802	qid	trace	2	1	variants/qid/manifest.tsv variants/qid/query.pl variants/qid/answers.pl
+t-c802	hash-shape	trace	2	1	variants/hash-shape/manifest.tsv variants/hash-shape/query.pl variants/hash-shape/answers.pl
+t-c802	hash-value	trace	2	1	variants/hash-value/manifest.tsv variants/hash-value/query.pl variants/hash-value/answers.pl
+t-c803	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c803	result-mode	trace	2	1	variants/result-mode/manifest.tsv variants/result-mode/query.pl variants/result-mode/answers.pl
+t-c803	solutions-list	trace	2	1	variants/solutions-list/manifest.tsv variants/solutions-list/query.pl variants/solutions-list/answers.pl
+t-c804	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c804	row-values	trace	2	1	variants/row-values/manifest.tsv variants/row-values/query.pl variants/row-values/answers.pl
+t-c804	row-empty	trace	2	1	variants/row-empty/manifest.tsv variants/row-empty/query.pl variants/row-empty/answers.pl
+t-c804	row-wide	trace	2	1	variants/row-wide/manifest.tsv variants/row-wide/query.pl variants/row-wide/answers.pl
+t-c804	row-nonground	trace	2	1	variants/row-nonground/manifest.tsv variants/row-nonground/query.pl variants/row-nonground/answers.pl
+t-c804	later-row	trace	2	1	variants/later-row/manifest.tsv variants/later-row/query.pl variants/later-row/answers.pl
+t-c804	earlier-row	trace	2	1	variants/earlier-row/manifest.tsv variants/earlier-row/query.pl variants/earlier-row/answers.pl
+t-c805	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c805	shape-nonground	trace	2	1	variants/shape-nonground/manifest.tsv variants/shape-nonground/query.pl variants/shape-nonground/answers.pl
+t-c805	nonground-version	trace	2	1	variants/nonground-version/manifest.tsv variants/nonground-version/query.pl variants/nonground-version/answers.pl
+t-c805	version-qid	trace	2	1	variants/version-qid/manifest.tsv variants/version-qid/query.pl variants/version-qid/answers.pl
+t-c805	qid-hash-shape	trace	2	1	variants/qid-hash-shape/manifest.tsv variants/qid-hash-shape/query.pl variants/qid-hash-shape/answers.pl
+t-c805	hash-shape-value	trace	2	1	variants/hash-shape-value/manifest.tsv variants/hash-shape-value/query.pl variants/hash-shape-value/answers.pl
+t-c805	hash-value-result-shape	trace	2	1	variants/hash-value-result-shape/manifest.tsv variants/hash-value-result-shape/query.pl variants/hash-value-result-shape/answers.pl
+t-c805	result-shape-mode	trace	2	1	variants/result-shape-mode/manifest.tsv variants/result-shape-mode/query.pl variants/result-shape-mode/answers.pl
+t-c805	mode-solutions-list	trace	2	1	variants/mode-solutions-list/manifest.tsv variants/mode-solutions-list/query.pl variants/mode-solutions-list/answers.pl
+t-c805	solutions-list-row-shape	trace	2	1	variants/solutions-list-row-shape/manifest.tsv variants/solutions-list-row-shape/query.pl variants/solutions-list-row-shape/answers.pl
+t-c805	row-shape-values	trace	2	1	variants/row-shape-values/manifest.tsv variants/row-shape-values/query.pl variants/row-shape-values/answers.pl
+t-c805	row-values-arity	trace	2	1	variants/row-values-arity/manifest.tsv variants/row-values-arity/query.pl variants/row-values-arity/answers.pl
+t-c806	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c806	missing	trace	2	1	variants/missing/manifest.tsv variants/missing/query.pl variants/missing/absent-answers.pl
+t-c806	syntax	trace	2	1	variants/syntax/manifest.tsv variants/syntax/query.pl variants/syntax/answers.pl
+t-c807	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c808	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c809	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c809	wh-nonempty	trace	0	0	variants/wh-nonempty/manifest.tsv variants/wh-nonempty/query.pl variants/wh-nonempty/answers.pl
+t-c809	wh-empty	trace	0	0	variants/wh-empty/manifest.tsv variants/wh-empty/query.pl variants/wh-empty/answers.pl
+t-c809	no	trace	0	0	variants/no/manifest.tsv variants/no/query.pl variants/no/answers.pl
+t-c809	yesno-limit	trace	0	0	variants/yesno-limit/manifest.tsv variants/yesno-limit/query.pl variants/yesno-limit/answers.pl
+t-c809	wh-limit	trace	0	0	variants/wh-limit/manifest.tsv variants/wh-limit/query.pl variants/wh-limit/answers.pl
+t-c810	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c811	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c811	naf-root	trace-check	1	1	variants/naf-root/manifest.tsv variants/naf-root/query.pl variants/naf-root/answers.pl variants/naf-root/trace.pl
+t-c811	clause-roots	trace-check	0	0	variants/clause-roots/manifest.tsv variants/clause-roots/query.pl variants/clause-roots/answers.pl variants/clause-roots/trace.pl
+t-c811	identity-name	trace-check	1	1	variants/identity-name/manifest.tsv variants/identity-name/query.pl variants/identity-name/answers.pl variants/identity-name/trace.pl
+t-c812	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c813	target	trace	1	1	manifest.tsv query.pl answers.pl
+t-c813	one	trace	0	0	variants/one/manifest.tsv variants/one/query.pl variants/one/answers.pl
+t-c813	multiple	trace	1	1	variants/multiple/manifest.tsv variants/multiple/query.pl variants/multiple/answers.pl
+t-c813	repeated	trace	0	0	variants/repeated/manifest.tsv variants/repeated/query.pl variants/repeated/answers.pl
+t-c813	pristine-variable	trace	1	1	variants/pristine-variable/manifest.tsv variants/pristine-variable/query.pl variants/pristine-variable/answers.pl
+t-c814	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c814	foreign	trace	2	1	variants/foreign/manifest.tsv variants/foreign/query.pl variants/foreign/answers.pl
+t-c815	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c815	rational	trace	2	1	variants/rational/manifest.tsv variants/rational/query.pl variants/rational/answers.pl
+t-c815	nonfinite	trace	2	1	variants/nonfinite/manifest.tsv variants/nonfinite/query.pl variants/nonfinite/answers.pl
+t-c816	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c816	two-terms	trace-check	2	1	variants/two-terms/manifest.tsv variants/two-terms/query.pl variants/two-terms/answers.pl variants/two-terms/trace.pl
+t-c816	functor	trace-check	2	1	variants/functor/manifest.tsv variants/functor/query.pl variants/functor/answers.pl variants/functor/trace.pl
+t-c816	version	trace-check	2	1	variants/version/manifest.tsv variants/version/query.pl variants/version/answers.pl variants/version/trace.pl
+t-c816	answers-class	trace-check	2	1	variants/answers-class/manifest.tsv variants/answers-class/query.pl variants/answers-class/answers.pl variants/answers-class/trace.pl
+t-c816	qid	trace-check	2	1	variants/qid/manifest.tsv variants/qid/query.pl variants/qid/answers.pl variants/qid/trace.pl
+t-c816	query-hash	trace-check	2	1	variants/query-hash/manifest.tsv variants/query-hash/query.pl variants/query-hash/answers.pl variants/query-hash/trace.pl
+t-c816	answers-hash	trace-check	2	1	variants/answers-hash/manifest.tsv variants/answers-hash/query.pl variants/answers-hash/answers.pl variants/answers-hash/trace.pl
+t-c816	query-hash-shape	trace-check	2	1	variants/query-hash-shape/manifest.tsv variants/query-hash-shape/query.pl variants/query-hash-shape/answers.pl variants/query-hash-shape/trace.pl
+t-c816	answers-hash-wrapper	trace-check	2	1	variants/answers-hash-wrapper/manifest.tsv variants/answers-hash-wrapper/query.pl variants/answers-hash-wrapper/answers.pl variants/answers-hash-wrapper/trace.pl
+t-c816	result-wrapper	trace-check	2	1	variants/result-wrapper/manifest.tsv variants/result-wrapper/query.pl variants/result-wrapper/answers.pl variants/result-wrapper/trace.pl
+t-c816	result-variant	trace-check	1	1	variants/result-variant/manifest.tsv variants/result-variant/query.pl variants/result-variant/answers.pl variants/result-variant/trace.pl
+t-c816	node-arity	trace-check	1	1	variants/node-arity/manifest.tsv variants/node-arity/query.pl variants/node-arity/answers.pl variants/node-arity/trace.pl
+t-c816	qid-before-hashes	trace-check	2	1	variants/qid-before-hashes/manifest.tsv variants/qid-before-hashes/query.pl variants/qid-before-hashes/answers.pl variants/qid-before-hashes/trace.pl
+t-c816	query-before-answers-hash	trace-check	2	1	variants/query-before-answers-hash/manifest.tsv variants/query-before-answers-hash/query.pl variants/query-before-answers-hash/answers.pl variants/query-before-answers-hash/trace.pl
+t-c817	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c817	superscript	trace-check	2	1	variants/superscript/manifest.tsv variants/superscript/query.pl variants/superscript/answers.pl variants/superscript/trace.pl
+t-c817	unicode-initial	trace-check	2	1	variants/unicode-initial/manifest.tsv variants/unicode-initial/query.pl variants/unicode-initial/answers.pl variants/unicode-initial/trace.pl
+t-c817	unicode-continuation	trace-check	2	1	variants/unicode-continuation/manifest.tsv variants/unicode-continuation/query.pl variants/unicode-continuation/answers.pl variants/unicode-continuation/trace.pl
+t-c817	malformed-exponent	trace-check	2	1	variants/malformed-exponent/manifest.tsv variants/malformed-exponent/query.pl variants/malformed-exponent/answers.pl variants/malformed-exponent/trace.pl
+t-c817	float	trace-check	2	1	variants/float/manifest.tsv variants/float/query.pl variants/float/answers.pl variants/float/trace.pl
+t-c817	quoted-unicode	trace-check	1	1	variants/quoted-unicode/manifest.tsv variants/quoted-unicode/query.pl variants/quoted-unicode/answers.pl variants/quoted-unicode/trace.pl
+t-c818	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c818	marker-1	trace-check	2	1	variants/marker-1/manifest.tsv variants/marker-1/query.pl variants/marker-1/answers.pl variants/marker-1/trace.pl
+t-c818	marker-2	trace-check	2	1	variants/marker-2/manifest.tsv variants/marker-2/query.pl variants/marker-2/answers.pl variants/marker-2/trace.pl
+t-c818	opaque-payload	trace-check	0	0	variants/opaque-payload/manifest.tsv variants/opaque-payload/query.pl variants/opaque-payload/answers.pl variants/opaque-payload/trace.pl
+t-c819	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c819	one	trace-check	0	0	variants/one/manifest.tsv variants/one/query.pl variants/one/answers.pl variants/one/trace.pl
+t-c819	zero	trace-check	1	1	variants/zero/manifest.tsv variants/zero/query.pl variants/zero/answers.pl variants/zero/trace.pl
+t-c820	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c820	limit	trace-check	1	1	variants/limit/manifest.tsv variants/limit/query.pl variants/limit/answers.pl variants/limit/trace.pl
+t-c820	empty-solutions	trace-check	1	1	variants/empty-solutions/manifest.tsv variants/empty-solutions/query.pl variants/empty-solutions/answers.pl variants/empty-solutions/trace.pl
+t-c820	unproved-finite	trace-check	1	1	variants/unproved-finite/manifest.tsv variants/unproved-finite/query.pl variants/unproved-finite/answers.pl variants/unproved-finite/trace.pl
+t-c820	unproved-limit	trace-check	1	1	variants/unproved-limit/manifest.tsv variants/unproved-limit/query.pl variants/unproved-limit/answers.pl variants/unproved-limit/trace.pl
+t-c820	mixed	trace-check	1	1	variants/mixed/manifest.tsv variants/mixed/query.pl variants/mixed/answers.pl variants/mixed/trace.pl
+t-c820	all-proved	trace-check	0	0	variants/all-proved/manifest.tsv variants/all-proved/query.pl variants/all-proved/answers.pl variants/all-proved/trace.pl
+t-c821	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c821	query-before-answers	trace-check	2	1	variants/query-before-answers/manifest.tsv variants/query-before-answers/query.pl variants/query-before-answers/answers.pl variants/query-before-answers/trace.pl
+t-c821	trace-custody-before-proof	trace-check	2	1	variants/trace-custody-before-proof/manifest.tsv variants/trace-custody-before-proof/query.pl variants/trace-custody-before-proof/answers.pl variants/trace-custody-before-proof/trace.pl
+t-c821	non-demo-before-later-join	trace-check	1	1	variants/non-demo-before-later-join/manifest.tsv variants/non-demo-before-later-join/query.pl variants/non-demo-before-later-join/answers.pl variants/non-demo-before-later-join/trace.pl
+t-c821	join-before-later-non-demo	trace-check	1	1	variants/join-before-later-non-demo/manifest.tsv variants/join-before-later-non-demo/query.pl variants/join-before-later-non-demo/answers.pl variants/join-before-later-non-demo/trace.pl
+t-c822	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c822	stale	trace-check	1	1	variants/stale/manifest.tsv variants/stale/query.pl variants/stale/answers.pl variants/stale/trace.pl
+t-c822	join	trace-check	1	1	variants/join/manifest.tsv variants/join/query.pl variants/join/answers.pl variants/join/trace.pl
+t-c823	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c823	query-sha256-mismatch	trace	2	1	variants/query-sha256-mismatch/manifest.tsv variants/query-sha256-mismatch/query.pl variants/query-sha256-mismatch/answers.pl
+t-c823	result-shape	trace	2	1	variants/result-shape/manifest.tsv variants/result-shape/query.pl variants/result-shape/answers.pl
+t-c823	result-mode-mismatch	trace	2	1	variants/result-mode-mismatch/manifest.tsv variants/result-mode-mismatch/query.pl variants/result-mode-mismatch/answers.pl
+t-c824	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c824	trace-positive-rule	trace	0	0	variants/trace-positive-rule/manifest.tsv variants/trace-positive-rule/query.pl variants/trace-positive-rule/answers.pl
+t-c824	trace-naf	trace	0	0	variants/trace-naf/manifest.tsv variants/trace-naf/query.pl variants/trace-naf/answers.pl
+t-c824	trace-serializer	trace	0	0	variants/trace-serializer/manifest.tsv variants/trace-serializer/query.pl variants/trace-serializer/answers.pl
+t-c825	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c825	trace-unproved-limit	trace	0	0	variants/trace-unproved-limit/manifest.tsv variants/trace-unproved-limit/query.pl variants/trace-unproved-limit/answers.pl
+t-c825	trace-naf-depth-cut	trace	0	0	variants/trace-naf-depth-cut/manifest.tsv variants/trace-naf-depth-cut/query.pl variants/trace-naf-depth-cut/answers.pl
+t-c825	trace-naf-proved	trace	0	0	variants/trace-naf-proved/manifest.tsv variants/trace-naf-proved/query.pl variants/trace-naf-proved/answers.pl
+t-c825	trace-naf-inference-cut	trace	0	0	variants/trace-naf-inference-cut/manifest.tsv variants/trace-naf-inference-cut/query.pl variants/trace-naf-inference-cut/answers.pl
+t-c825	trace-row-failure-after-cut	trace	0	0	variants/trace-row-failure-after-cut/manifest.tsv variants/trace-row-failure-after-cut/query.pl variants/trace-row-failure-after-cut/answers.pl
+t-c825	naf-success-absorbs-prune	trace	0	0	variants/naf-success-absorbs-prune/manifest.tsv variants/naf-success-absorbs-prune/query.pl variants/naf-success-absorbs-prune/answers.pl
+t-c825	naf-restores-entry-prune	trace	0	0	variants/naf-restores-entry-prune/manifest.tsv variants/naf-restores-entry-prune/query.pl variants/naf-restores-entry-prune/answers.pl
+t-c826	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c826	trace-indeterminate-mirror	trace	0	0	variants/trace-indeterminate-mirror/manifest.tsv variants/trace-indeterminate-mirror/query.pl variants/trace-indeterminate-mirror/answers.pl
+t-c827	target	trace	2	1	manifest.tsv query.pl answers.pl
+t-c827	trailing-layout	trace	2	1	variants/trailing-layout/manifest.tsv variants/trailing-layout/query.pl variants/trailing-layout/answers.pl
+t-c827	inline-layout	trace	2	1	variants/inline-layout/manifest.tsv variants/inline-layout/query.pl variants/inline-layout/answers.pl
+t-c827	canonical-control	trace	0	0	variants/canonical-control/manifest.tsv variants/canonical-control/query.pl variants/canonical-control/answers.pl
+t-c827	stale-answers-digest	trace-check	2	1	variants/stale-answers-digest/manifest.tsv variants/stale-answers-digest/query.pl variants/stale-answers-digest/answers.pl variants/stale-answers-digest/trace.pl
+t-c828	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c828	sentence	trace-check	1	1	variants/sentence/manifest.tsv variants/sentence/query.pl variants/sentence/answers.pl variants/sentence/trace.pl
+t-c828	digest	trace-check	1	1	variants/digest/manifest.tsv variants/digest/query.pl variants/digest/answers.pl variants/digest/trace.pl
+t-c829	target	trace-check	1	1	manifest.tsv query.pl answers.pl trace.pl
+t-c829	first-proof	trace-check	0	0	variants/first-proof/manifest.tsv variants/first-proof/query.pl variants/first-proof/answers.pl variants/first-proof/trace.pl
+t-c830	target	trace-check	2	1	manifest.tsv query.pl answers.pl trace.pl
+t-c830	envelope-record	trace-check	1	1	variants/envelope-record/manifest.tsv variants/envelope-record/query.pl variants/envelope-record/answers.pl variants/envelope-record/trace.pl
+t-c831	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c901	target	aggregate-check	0	0	manifest.tsv
+t-c902	target	aggregate-check	2	1	manifest.tsv
+t-c903	target	aggregate-check	2	1	manifest.tsv
+t-c904	target	aggregate-check	0	0	manifest.tsv
+t-c905	target	recursion-check	2	1	manifest.tsv
+t-c906	target	aggregate-check	2	1	manifest.tsv
+t-c907	target	aggregate-check	1	1	manifest.tsv
+t-c908	target	answer	2	1	manifest.tsv query.pl
+t-c909	target	aggregate-check	2	1	manifest.tsv
+t-c910	target	aggregate-check	1	1	manifest.tsv
+t-c911	target	aggregate-check	1	1	manifest.tsv
+t-c912	target	aggregate-check	1	1	manifest.tsv
+t-c913	target	aggregate-check	1	1	manifest.tsv
+t-c914	target	aggregate-check	2	1	manifest.tsv
+t-c915	target	aggregate-check	2	1	manifest.tsv
+t-c916	target	aggregate-check	0	0	manifest.tsv
+t-c917	target	aggregate-check	0	0	manifest.tsv
+t-c918	target	aggregate-check	1	1	manifest.tsv
+t-c919	target	aggregate-check	1	1	manifest.tsv
+t-c920	target	aggregate-check	0	0	manifest.tsv
+t-c921	target	recursion-check	1	1	manifest.tsv
+t-c922	target	recursion-check	0	0	manifest.tsv
+t-c923	target	recursion-check	2	1	manifest.tsv
+t-c924	target	aggregate-check	0	0	manifest.tsv
+t-c925	target	aggregate-check	1	1	manifest.tsv

@@ -1,0 +1,1 @@
+`ckc v1 render` on SWI-valid noncanonical input: quoted `';'`, CRLF, extra blank, or operator-form query conjunction

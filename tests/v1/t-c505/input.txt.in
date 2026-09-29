@@ -1,0 +1,1 @@
+rule `p(X) :- q(X).` used twice in one conjunction with independent targets

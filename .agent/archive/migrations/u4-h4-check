@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""U4 H4 cross-check: tests/v1 = the scratch suite's graded rows, byte for byte.
+Rows (mode, args, rc, stderr_lines, stdout, stderr) vs case.json target +
+supplemental_probes targets; `.in` inputs vs scratch files; `.tpl.in` expansions
+(u4-h4-v1 `expand`) vs scratch files. Usage: python3 -P <this> <repo-root>.
+"""
+import base64
+import json
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+cases, out = root / ".scratch/m5u2/suite/cases", root / "tests/v1"
+src = (root / ".agent/archive/migrations/u4-h4-v1").read_text()
+ns = {"__name__": "u4_h4_v1"}
+exec(compile(src.split("\nrows = [")[0], "u4-h4-v1", "exec"), ns)
+expand = ns["expand"]
+bad, rows, files = [], 0, 0
+table = [l.split("\t") for l in (out / "cases.tsv").read_text().splitlines() if not l.startswith("#")]
+for case, probe, mode, rc, lines, args in table:
+    c = json.loads((cases / case / "case.json").read_text())
+    spec = c["target"] if probe == "target" else next(r["target"] for r in c["supplemental_probes"] if r["id"] == probe)
+    e = spec["expect"]
+    want = (spec["mode"], " ".join(spec["args"]), str(e["rc"]), str(e.get("stderr_lines", "-")))
+    if (mode, args, rc, lines) != want:
+        bad.append(f"{case}/{probe}: row {(mode, args, rc, lines)} != {want}")
+    for s in ("stdout", "stderr"):
+        if (out / case / "expect" / f"{probe}.{s}").read_bytes() != base64.b64decode(e[s]["base64"]):
+            bad.append(f"{case}/{probe}: {s}")
+    rows += 1
+for path in sorted(p for p in out.rglob("*") if p.is_file() and p.parent.name != "expect" and p.name != "cases.tsv"):
+    rel = path.relative_to(out).as_posix()
+    if rel.endswith(".tpl.in"):
+        got, name = expand(path.read_bytes()), rel[:-len(".tpl.in")]
+    else:
+        got, name = path.read_bytes(), rel[:-len(".in")]
+    if got != (cases / name).read_bytes():
+        bad.append(f"input {rel}")
+    files += 1
+print(f"h4 check: {rows} rows, {files} inputs, {len(bad)} mismatches")
+for b in bad[:10]:
+    print(b)
+sys.exit(1 if bad else 0)

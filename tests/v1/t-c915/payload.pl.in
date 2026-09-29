@@ -1,0 +1,2 @@
+end_of_file.
+'$guideline_proof'(doc,1,variant(1),witness([]),prove([guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable)])).

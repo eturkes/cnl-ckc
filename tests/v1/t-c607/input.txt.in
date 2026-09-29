@@ -1,0 +1,1 @@
+wh answer has 2^32 shallow successful derivations; the inner 100000-inference budget is cumulative across backtracking. Exhaustion must yield indeterminate(limit), never partial solutions; no outer-only or per-success reset claim.

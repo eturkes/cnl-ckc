@@ -1,0 +1,1 @@
+query projection `goal(','(p(A),p(A)))` versus `goal(','(p(_),p(_)))`

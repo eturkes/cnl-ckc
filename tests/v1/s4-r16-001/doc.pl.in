@@ -1,0 +1,146 @@
+% doc.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none)).
+% S1: Suite engine probe.
+guideline_property(actual,1,0,pos).
+guideline_property(actual,1,-1,pos).
+guideline_property(actual,2,-1,pos).
+guideline_property(actual,2,-9223372036854775809,pos).
+guideline_property(actual,3,-9223372036854775808,pos).
+guideline_property(actual,3,-9223372036854775809,pos).
+guideline_property(actual,4,-18446744073709551616,pos).
+guideline_property(actual,4,-18446744073709551617,pos).
+guideline_property(actual,5,-184467440737095516160000000000000000000,pos).
+guideline_property(actual,5,-18446744073709551617,pos).
+guideline_property(actual,6,1,pos).
+guideline_property(actual,6,0,pos).
+guideline_property(actual,7,9223372036854775808,pos).
+guideline_property(actual,7,9223372036854775807,pos).
+guideline_property(actual,8,18446744073709551616,pos).
+guideline_property(actual,8,18446744073709551615,pos).
+guideline_property(actual,9,184467440737095516160000000000000000000,pos).
+guideline_property(actual,9,18446744073709551616,pos).
+guideline_property(actual,10,[],pos).
+guideline_property(actual,10,-184467440737095516160000000000000000000,pos).
+guideline_property(actual,11,[],pos).
+guideline_property(actual,11,0,pos).
+guideline_property(actual,12,184467440737095516160000000000000000000,pos).
+guideline_property(actual,12,[],pos).
+guideline_property(actual,13,'[]',pos).
+guideline_property(actual,13,[],pos).
+guideline_property(actual,14,'',pos).
+guideline_property(actual,14,[],pos).
+guideline_property(actual,15,'A',pos).
+guideline_property(actual,15,[],pos).
+guideline_property(actual,16,a,pos).
+guideline_property(actual,16,[],pos).
+guideline_property(actual,17,'A',pos).
+guideline_property(actual,17,'',pos).
+guideline_property(actual,18,'[]',pos).
+guideline_property(actual,18,'A',pos).
+guideline_property(actual,19,a,pos).
+guideline_property(actual,19,'[]',pos).
+guideline_property(actual,20,aa,pos).
+guideline_property(actual,20,a,pos).
+guideline_property(actual,21,ab,pos).
+guideline_property(actual,21,aa,pos).
+guideline_property(actual,22,a_9,pos).
+guideline_property(actual,22,aBc,pos).
+guideline_property(actual,23,'é',pos).
+guideline_property(actual,23,z,pos).
+guideline_property(actual,24,'μ',pos).
+guideline_property(actual,24,'é',pos).
+guideline_property(actual,25,a,pos).
+guideline_property(actual,25,-999999999999999999999999999999999999999,pos).
+guideline_property(actual,26,f(a),pos).
+guideline_property(actual,26,999999999999999999999999999999999999999,pos).
+guideline_property(actual,27,f(a),pos).
+guideline_property(actual,27,[],pos).
+guideline_property(actual,28,a(a),pos).
+guideline_property(actual,28,z,pos).
+guideline_property(actual,29,'μ'(a),pos).
+guideline_property(actual,29,'μ',pos).
+guideline_property(actual,30,a(a,a),pos).
+guideline_property(actual,30,z(a),pos).
+guideline_property(actual,31,a(a,a,a),pos).
+guideline_property(actual,31,z(a,a),pos).
+guideline_property(actual,32,f(a,b),pos).
+guideline_property(actual,32,f(a),pos).
+guideline_property(actual,33,[a|b],pos).
+guideline_property(actual,33,zzzz(a),pos).
+guideline_property(actual,34,a(a,a,a),pos).
+guideline_property(actual,34,z(a,a),pos).
+guideline_property(actual,35,b(a),pos).
+guideline_property(actual,35,a(z),pos).
+guideline_property(actual,36,ab(a),pos).
+guideline_property(actual,36,aa(z),pos).
+guideline_property(actual,37,g(a,a),pos).
+guideline_property(actual,37,f(z,z),pos).
+guideline_property(actual,38,[a|b],pos).
+guideline_property(actual,38,'ZZZ'(z,z),pos).
+guideline_property(actual,39,abc(a,a),pos).
+guideline_property(actual,39,[z|z],pos).
+guideline_property(actual,40,[a|b],pos).
+guideline_property(actual,40,'[zz'(z,z),pos).
+guideline_property(actual,41,'[}~'(a,a),pos).
+guideline_property(actual,41,[z|z],pos).
+guideline_property(actual,42,[a|b],pos).
+guideline_property(actual,42,'$aa'(z,z),pos).
+guideline_property(actual,43,'~aa'(a,a),pos).
+guideline_property(actual,43,[z|z],pos).
+guideline_property(actual,44,f(b,a),pos).
+guideline_property(actual,44,f(a,z),pos).
+guideline_property(actual,45,f(a,zz),pos).
+guideline_property(actual,45,f(a,z),pos).
+guideline_property(actual,46,f(a,zz,[]),pos).
+guideline_property(actual,46,f(a,zz,0),pos).
+guideline_property(actual,47,f(h(a),z),pos).
+guideline_property(actual,47,f(g(z),a),pos).
+guideline_property(actual,48,f(a,h(a),a),pos).
+guideline_property(actual,48,f(a,g(z),z),pos).
+guideline_property(actual,49,f(a,g(b,h(c,2))),pos).
+guideline_property(actual,49,f(a,g(b,h(c,1))),pos).
+guideline_property(actual,50,f(a,g(b,h(c,a))),pos).
+guideline_property(actual,50,f(a,g(b,h(c,[]))),pos).
+guideline_property(actual,51,f(a,g(b,h(c,k(d,m(e,2))))),pos).
+guideline_property(actual,51,f(a,g(b,h(c,k(d,m(e,1))))),pos).
+guideline_property(actual,52,[a,b,c,2],pos).
+guideline_property(actual,52,[a,b,c,1],pos).
+guideline_property(actual,53,[a,b,c,d],pos).
+guideline_property(actual,53,[a,b,c],pos).
+guideline_property(actual,54,[a,b,c|y],pos).
+guideline_property(actual,54,[a,b,c|x],pos).
+guideline_property(actual,55,f(f(f(999999999999999999999999999999999))),pos).
+guideline_property(actual,55,f(f(f(-999999999999999999999999999999999))),pos).
+guideline_property(actual,56,f(a,g(b,c),h(d,y)),pos).
+guideline_property(actual,56,f(a,g(b,c),h(d,x)),pos).
+guideline_property(actual,57,f(a,g(b,[c,d,e,2])),pos).
+guideline_property(actual,57,f(a,g(b,[c,d,e,1])),pos).
+guideline_property(actual,58,f(a,g(b,h(c,f(d,[])))),pos).
+guideline_property(actual,58,f(a,g(b,h(c,f(d,'[]')))),pos).
+guideline_property(actual,59,f(a,a),pos).
+guideline_property(actual,59,[z|z],pos).
+guideline_property(actual,60,[z|z],pos).
+guideline_property(actual,60,'Aaa'(a,a),pos).
+guideline_property(actual,61,~(a,a),pos).
+guideline_property(actual,61,[z|z],pos).
+guideline_property(actual,62,[z|z],pos).
+guideline_property(actual,62,$(a,a),pos).

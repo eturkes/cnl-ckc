@@ -1,0 +1,63 @@
+term_a	term_b	msort_order	note
+0	-1	-1 < 0	integer value: negative before zero
+-1	-9223372036854775809	-9223372036854775809 < -1	integer value: below signed 64-bit before -1
+-9223372036854775808	-9223372036854775809	-9223372036854775809 < -9223372036854775808	integer value: adjacent signed 64-bit boundary
+-18446744073709551616	-18446744073709551617	-18446744073709551617 < -18446744073709551616	integer value: adjacent negative unsigned 64-bit span
+-184467440737095516160000000000000000000	-18446744073709551617	-184467440737095516160000000000000000000 < -18446744073709551617	integer value: arbitrary negative bigint span
+1	0	0 < 1	integer value: zero before positive
+9223372036854775808	9223372036854775807	9223372036854775807 < 9223372036854775808	integer value: adjacent signed 64-bit boundary
+18446744073709551616	18446744073709551615	18446744073709551615 < 18446744073709551616	integer value: adjacent unsigned 64-bit boundary
+184467440737095516160000000000000000000	18446744073709551616	18446744073709551616 < 184467440737095516160000000000000000000	integer value: arbitrary positive bigint span
+[]	-184467440737095516160000000000000000000	-184467440737095516160000000000000000000 < []	type: every integer before nil
+[]	0	0 < []	type: integer before nil
+184467440737095516160000000000000000000	[]	184467440737095516160000000000000000000 < []	type: every integer before nil
+'[]'	[]	[] < '[]'	type: nil before atom named []
+''	[]	[] < ''	type: nil before empty atom
+'A'	[]	[] < 'A'	type: nil before quoted uppercase atom
+a	[]	[] < a	type: nil before alphabetic atom
+'A'	''	'' < 'A'	atom UTF-8 bytes: empty prefix first
+'[]'	'A'	'A' < '[]'	atom UTF-8 bytes: A before left bracket
+a	'[]'	'[]' < a	atom UTF-8 bytes: left bracket before lowercase a
+aa	a	a < aa	atom UTF-8 bytes: shorter prefix first
+ab	aa	aa < ab	atom UTF-8 bytes: first differing byte
+a_9	aBc	aBc < a_9	atom UTF-8 bytes: B before underscore
+é	z	z < é	atom UTF-8 bytes: ASCII before multibyte UTF-8
+μ	é	é < μ	atom UTF-8 bytes: C3 prefix before CE prefix
+a	-999999999999999999999999999999999999999	-999999999999999999999999999999999999999 < a	type: integer before atom
+f(a)	999999999999999999999999999999999999999	999999999999999999999999999999999999999 < f(a)	type: integer before compound
+f(a)	[]	[] < f(a)	type: nil before compound
+a(a)	z	z < a(a)	type: atom before compound regardless of name
+μ(a)	μ	μ < μ(a)	type: atom before compound with same functor bytes
+a(a,a)	z(a)	z(a) < a(a,a)	compound: arity before functor name
+a(a,a,a)	z(a,a)	z(a,a) < a(a,a,a)	compound: lower arity wins across reverse names
+f(a,b)	f(a)	f(a) < f(a,b)	compound: same functor lower arity first
+[a|b]	zzzz(a)	zzzz(a) < [a|b]	compound: unary before list cell arity two
+a(a,a,a)	z(a,a)	z(a,a) < a(a,a,a)	compound: binary before ternary repeated control
+b(a)	a(z)	a(z) < b(a)	compound: same arity then functor name
+ab(a)	aa(z)	aa(z) < ab(a)	compound: functor first differing byte
+g(a,a)	f(z,z)	f(z,z) < g(a,a)	compound: functor precedes arguments
+[a|b]	'ZZZ'(z,z)	'ZZZ'(z,z) < [a|b]	compound name: ZZZ/2 before [|]/2
+abc(a,a)	[z|z]	[z|z] < abc(a,a)	compound name: [|]/2 before abc/2
+[a|b]	'[zz'(z,z)	'[zz'(z,z) < [a|b]	compound 3-byte name: [zz before [|]
+'[}~'(a,a)	[z|z]	[z|z] < '[}~'(a,a)	compound 3-byte name: [|] before [}~
+[a|b]	'$aa'(z,z)	'$aa'(z,z) < [a|b]	compound 3-byte name: $aa before [|]
+'~aa'(a,a)	[z|z]	[z|z] < '~aa'(a,a)	compound 3-byte name: [|] before ~aa
+f(b,a)	f(a,z)	f(a,z) < f(b,a)	arguments: first argument decides
+f(a,zz)	f(a,z)	f(a,z) < f(a,zz)	arguments: second argument decides after tie
+f(a,zz,[])	f(a,zz,0)	f(a,zz,0) < f(a,zz,[])	arguments: integer before nil at third argument
+f(h(a),z)	f(g(z),a)	f(g(z),a) < f(h(a),z)	arguments: nested first argument decides
+f(a,h(a),a)	f(a,g(z),z)	f(a,g(z),z) < f(a,h(a),a)	arguments: nested second argument decides
+f(a,g(b,h(c,2)))	f(a,g(b,h(c,1)))	f(a,g(b,h(c,1))) < f(a,g(b,h(c,2)))	deep tie: terminal integer decides
+f(a,g(b,h(c,a)))	f(a,g(b,h(c,[])))	f(a,g(b,h(c,[]))) < f(a,g(b,h(c,a)))	deep tie: terminal nil before atom
+f(a,g(b,h(c,k(d,m(e,2)))))	f(a,g(b,h(c,k(d,m(e,1)))))	f(a,g(b,h(c,k(d,m(e,1))))) < f(a,g(b,h(c,k(d,m(e,2)))))	deep tie: six-level terminal integer
+[a,b,c,2]	[a,b,c,1]	[a,b,c,1] < [a,b,c,2]	deep list tie: final element decides
+[a,b,c,d]	[a,b,c]	[a,b,c] < [a,b,c,d]	deep list tie: nil tail before another cons
+[a,b,c|y]	[a,b,c|x]	[a,b,c|x] < [a,b,c|y]	deep improper-list tie: tail atom decides
+f(f(f(999999999999999999999999999999999)))	f(f(f(-999999999999999999999999999999999)))	f(f(f(-999999999999999999999999999999999))) < f(f(f(999999999999999999999999999999999)))	deep tie: nested bigint sign
+f(a,g(b,c),h(d,y))	f(a,g(b,c),h(d,x))	f(a,g(b,c),h(d,x)) < f(a,g(b,c),h(d,y))	deep tie: last nested atom decides
+f(a,g(b,[c,d,e,2]))	f(a,g(b,[c,d,e,1]))	f(a,g(b,[c,d,e,1])) < f(a,g(b,[c,d,e,2]))	deep tie: list inside compound
+f(a,g(b,h(c,f(d,[]))))	f(a,g(b,h(c,f(d,'[]'))))	f(a,g(b,h(c,f(d,[])))) < f(a,g(b,h(c,f(d,'[]'))))	deep tie: nil before atom named []
+f(a,a)	[z|z]	[z|z] < f(a,a)	compound name: [|]/2 before f/2
+[z|z]	'Aaa'(a,a)	'Aaa'(a,a) < [z|z]	compound name: Aaa/2 before [|]/2
+~(a,a)	[z|z]	[z|z] < ~(a,a)	compound name: [|]/2 before tilde/2
+[z|z]	$(a,a)	$(a,a) < [z|z]	compound name: dollar/2 before [|]/2

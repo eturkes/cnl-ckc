@@ -1,0 +1,1 @@
+goal conjunction `g1,g2,g3` where `g1` has two clauses and only its second binding lets `g2` succeed

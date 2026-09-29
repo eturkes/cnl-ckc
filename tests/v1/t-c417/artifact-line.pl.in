@@ -1,0 +1,1 @@
+:-(guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable),guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),eligible,pos)).

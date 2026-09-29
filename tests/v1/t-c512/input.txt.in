@@ -1,0 +1,1 @@
+NAF succeeds with local variable, then a later sibling binds a same-spelled outer variable

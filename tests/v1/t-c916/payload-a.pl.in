@@ -1,0 +1,2 @@
+'$guideline_proof'(doca,1,variant(1),witness([]),prove([guideline_entity(actual,'$guideline_id'(product,doca,1,ref(1),[]),patient,countable)])).
+'$guideline_proof'(doca,2,variant(1),witness([]),prove([guideline_entity(actual,'$guideline_id'(product,doca,2,ref(1),[]),patient,countable)])).

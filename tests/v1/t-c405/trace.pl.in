@@ -1,0 +1,2 @@
+% q-wh traced against the loaded composition by ace_to_pl trace mode; do not edit.
+'$guideline_traces'(v1,'q-wh',query_sha256('5be6ae948479f6f7e0649b74a39ddcfd26f2d2669f5bdca984eee7de5efe8bec'),answers_sha256('6eab83c19ea4bb27d1a66425af5f0389e677af362106d2ff6d4ed5073af3fdeb'),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])],proved([clause(sentence(doc,1),clause_sha256('807118a14d3d37666d1e280a610b4efc3c36b3866b08b5939e80d38ec59ed5f5'),[naf(guideline_event(actual,'$guideline_id'(product,doc,1,ref(1),[]),blocked))])]))]))).

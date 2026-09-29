@@ -17,3 +17,4 @@ guidelines/cdc-2022-opioid/source/** -text
 tests/red/** -text
 vendor/** -text
 tests/align/** -text
+tests/v1/** -text

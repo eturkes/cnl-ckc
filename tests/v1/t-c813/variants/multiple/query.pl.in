@@ -1,0 +1,4 @@
+% q-wh compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'q-wh',ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none)).
+% Q1: Synthetic query.
+'$guideline_query_projection'(goal(guideline_entity(actual,A,B,countable)),answers([answer(A,noun(patient,countable))])).

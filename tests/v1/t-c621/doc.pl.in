@@ -1,0 +1,63 @@
+% doc.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/3).
+:- discontiguous(guideline_document/3).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+guideline_schema_version(1).
+guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none)).
+% S1: Suite engine probe.
+guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- \+ guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(0),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(0),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(1),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(0),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(1),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(1),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(2),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(1),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(2),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(2),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(3),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(2),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(3),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(3),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(4),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(3),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(4),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(4),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(5),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(4),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(5),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(5),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(6),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(5),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(6),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(6),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(7),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(6),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(7),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(7),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(8),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(7),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(8),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(8),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(9),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(8),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(9),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(9),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(10),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(9),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(10),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(10),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(11),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(10),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(11),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(11),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(12),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(11),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(12),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(12),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(13),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(12),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(13),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(13),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(14),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(13),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(14),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(14),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(15),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(14),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(15),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(15),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(16),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(15),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(16),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(16),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(17),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(16),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(17),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(17),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(18),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(17),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(18),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(18),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(19),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(18),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(19),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(19),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(20),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(19),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),naf_branch(20),pos).

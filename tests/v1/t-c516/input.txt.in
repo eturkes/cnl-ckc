@@ -1,0 +1,1 @@
+unification equations force `X = f(X)` through `p(X,X)` vs `p(Y,f(Y))`
