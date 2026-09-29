@@ -16,3 +16,4 @@ NOTICE text eol=lf
 guidelines/cdc-2022-opioid/source/** -text
 tests/red/** -text
 vendor/** -text
+tests/align/** -text
