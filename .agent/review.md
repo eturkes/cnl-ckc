@@ -7,7 +7,7 @@ Adjudication of judgment-bearing rows (`CLAUDE.md` Engineering: check set fixed 
 id | lens | check | verdict | evidence
 --- | --- | --- | --- | ---
 R-01 | spec audit | every `ckc-spec` line traces to a soundness/custody claim (Decisions: verification line); redundant layer / duplicate representation / lemma provable from a neighbour = finding | open |
-R-02 | spec audit | spec readable end-to-end by one human pass: size meter (`ckc trust-audit` spec=) + per-module purpose comment present; module list = K1 term/v1text/digest, K2 engine/replay/answers, K3 trace, align | open |
+R-02 | spec audit | spec readable end-to-end by one human pass: size meter (`ckc trust-audit` spec=) + per-module purpose comment present; module list = K1 term/v1text/digest, K2 engine/replay/answers, K3 trace, align, K4 check/release, K5 ui, M6 emit | open |
 R-03 | spec audit | spec ↔ REFERENCE prose agreement on every normative sentence of § Compiled Prolog schema, § Query answers, § Proof traces (row per sentence in the evidence file) | open |
 R-04 | claim soundness | README/REFERENCE certification wording = "machine-verified against the committed spec under a pinned verifier TCB"; no "proved correct"/"foundational" claim | open |
 R-05 | claim soundness | trusted-surface enumeration complete: every file a certifier must read is in `spec-manifest.tsv`; shell tier enumerated in REFERENCE; deps = `deps-allowlist.tsv` exactly | open |
@@ -16,10 +16,36 @@ R-07 | guarantee vs claim | trust-audit hostile probes: comment-split token, `#[
 R-08 | guarantee vs claim | mutation campaign scored by verus-acceptance over K2/K3 spec-bound exec fns: ≥20 semantic mutants per kernel unit; a surviving verified mutant = spec gap → spec fix + re-run | open |
 R-09 | correctness | differential replay: K1 lanes A/H 349/349; K2 corpus 3 lanes byte-identical; K3 lanes D/E byte-identical to legacy + committed artifacts; tests/queries replay; red suite 0 failures | open |
 R-10 | correctness | shell fault probes: unreadable/FIFO/symlink/invalid-UTF-8 manifest cells, zero-byte + oversized files, argv shapes → pinned envelopes (R9/R18/R24) | open |
-R-11 | CLAUDE.md conformance | kernel impl never read by MAIN (transcript grep for `ckc-kernel/src/*_impl.rs|k2_*.rs|k3_*.rs` Read/cat = 0 hits outside contract.rs) | open |
+R-11 | CLAUDE.md conformance | kernel impl never human-reviewed (user ruling at IMPLEMENT close: MAIN may read + edit kernel files); no README/REFERENCE/rules claim rests on a human reading `ckc-kernel` | open |
 R-12 | CLAUDE.md conformance | every unit landed with contract-before-code (`.agent/archive/contracts/`), one scoped commit per unit, gates green at each commit (CI history) | open |
-R-13 | correctness | perf acceptance (m5u2a R31) holds at close on the committed binary: 3 corpus lanes ≤30 s / ≤2 GB; 10 R30d cases ≤30 s | open |
+R-13 | correctness | perf acceptance (m5u2a R31) holds at close on the closing commit's binary (remeasured after U5): 3 corpus lanes ≤30 s / ≤2 GB; 10 R30d cases ≤30 s | open |
 R-14 | claim soundness | K3 `k3_sound` theorem statement audited: `forest_valid` = the intended `proved ⇒ derivable` (resolution + NAF finite-failure certificate), no vacuous precondition | open |
+
+## IMPLEMENT close review (check set fixed at session open, before any session diff exists; base f3910477)
+
+Lens rows over the session diff `f3910477..<closing tip>`; each lens = one `reviewer` (security-vocabulary rows = MAIN). Findings = red tests (command + failing output) or `/usr/bin/rg -Fn` anchors.
+
+id | lens | check | verdict | evidence
+--- | --- | --- | --- | ---
+S-01 | correctness/spec | cutover preserves behavior: fresh `ckc compile` + `ckc queries` reproduce the committed corpus; every guidelines/ + tests/ byte change between base and tip = an R99 re-pin (mapping in `.agent/contracts/m5u7.md`) or a named ported/new suite file; fork shrink removes exactly the five consumption modes and nothing the compile/proof/question modes reach; red probes 29/29 unchanged | open |
+S-02 | correctness/spec | `ckc trust-audit --write` = `gen_trust.py` semantics (harness.md P1 differential) = an explicit rebaseline outside every gate recipe; the ordinary audit stays read-only | open |
+S-03 | claim soundness | README, docs/REFERENCE.md, NOTICE, vendor/*/PROVENANCE, `.claude/rules/*`, `.agent/spec.md` state only what the committed chain does: every documented command + argv exists, every named gate step exists, certification wording per R-04, no retired tool outside `.agent/archive/` | open |
+S-04 | claim soundness | this session's commit bodies state exactly the checks run (names, counts, rc) and every teammate (name, role, verdict) | open |
+S-05 | guarantee vs claim | CI as written does what rules + README claim: container jobs run the static artifact; `check` job = `just check`; weekly `advisories`/`updates`/`kani` jobs run their recipes; local container reproduction of `check` + `certify` rc 0 | open |
+S-06 | guarantee vs claim | each scanner fires on a plant: zizmor (template injection), gitleaks (planted token), cargo-deny (planted unknown git source), `just outdated` (stale pin); Kani bootstrap never executes unpinned code (no `cargo-kani` run before the local-bundle setup) | open |
+S-07 | verification integrity | every new or changed test was seen red on the unfixed revision (ui_lock, ported suites via plant, zizmor, drift, Kani bootstrap), command + revision in the commit body | open |
+S-08 | verification integrity | graders unchanged except R99 re-pins + new suites: `git diff --stat f3910477 <tip> -- tests rust/ckc/tests` enumerated; re-pin script idempotent (replay from the pre-cutover base = byte-identical tree); ported pins byte-equal to scratch sources, counts equal | open |
+S-09 | CLAUDE.md conformance | one scoped commit per unit; subject `<scope>: <cause> → <fix>`; spec.md Tasks ticked with SHAs at each commit; `.gitignore` current; deferred rows carry acceptance checks; durable text without provenance; README human register (ASD-STE100: ≤20 words per instruction sentence, imperative, active voice) | open |
+S-10 | CLAUDE.md conformance | Met-when: `just gate` green on a clean tree at the closing commit; `Phase: MAINTAIN`; every Decisions entry implemented or deferred with reason; no open row here; prototype retired (never present + tag `legacy`) | open |
+
+### U2 cas review (MAIN; contract `.agent/contracts/m5u5-cas.md`)
+
+id | lens | check | verdict | evidence
+--- | --- | --- | --- | ---
+C-01 | lock identity/serialization | `acquire` validates (dev, ino) of the locked fd against `stat(path)` under the lock; mismatch/ENOENT → release without unlink + reopen + relock, bounded → the existing 500 envelope; `Drop` keeps unlink-before-unlock; I1–I3 hold against: orphan waiter + fresh newcomer, two newcomers after one unlink, stale file from a killed holder, three writers | open |
+C-02 | CAS outcomes/ledger preservation | `ui_lock.rs` → A 409, ledger = fixture S + the newcomer row; `verdict-cas-conflict`, `verdict-ok-append`, `verdict-ok-create`, `verdict-crash` fixtures unchanged + green | open |
+C-03 | regression independence | red on the unfixed tree for the defect itself (A exits 303 while the newcomer holds the lock), not paths/timeouts; schedule covers queued waiter (ino1), newcomer (ino2), post-release reacquire (ENOENT retry); every wait finite on both trees | open |
+C-04 | cleanup/unrelated behavior | `cargo test --workspace` green; `ui_fixtures.rs` + `tests/ui/**` byte-identical; `rust/ckc-spec`, `rust/ckc-kernel`, `rust/trust/*.tsv` unchanged; `--fault after-tmp-write` path unchanged | open |
 
 ## M5.5 close review (check set fixed before the integration diff `73ffa227..wt/prod-m5u5s` was read)
 

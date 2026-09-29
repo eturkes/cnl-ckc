@@ -23,31 +23,27 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 - Product = KB artifacts (`guidelines/*/{ace,pl}` + lexicons + ledgers + committed queries with answers + traces); compiled Prolog = the public interface (schema v1 per REFERENCE); sole in-repo consumer = the loopback reviewer UI. Feature scope final; new scope only by explicit user direction (M5–M7).
 - Language boundary: Prolog owns ACE→knowledge emission (`ace_to_pl.pl` compile/proof/question modes) + stays the portable KB product; hand-authored Prolog confined to that closure. Rust owns the bounded in-repo consumer (v1 read/write, engine, replay, answers, traces, trace check), verification, custody + all non-Prolog tooling — never a general-purpose Prolog runtime, never domain knowledge. E-- + generated Python retire at cutover; until then `regen.py --check` + `goal.py check` stay CI-authoritative.
 - Consumption→Rust affirmed: no mature Prolog verifier ⇒ that role gains human-reviewable verification only by migration; emission stays Prolog, certified at M6 by translation validation.
-- Verification line (grading = `archive/rust-rewrite-plan.md` § Verification line): human-read `ckc-spec` + uninspected `ckc-kernel` (never read) + pinned Verus `--no-cheating` + `ckc trust-audit`. Theorems = KB semantics (K1–K3), custody chain source↔ACE↔clauses↔verdicts↔export (K4 core), render fidelity + POST guard/ledger CAS (K5 core), M6 emission correspondence. Shell tier (enumerated, fixture-gated, no theorems) = the Intent's trusted software + sockets, HTTP, archive assembly. Every spec line traces to a soundness/custody claim; claim = "machine-verified against the committed spec under a pinned verifier TCB". Fallback (Verus blocker, proof:impl >5×, solver brittleness) → Creusot or a narrowed kernel.
-- Spine, soundness-first: M5.2 close → M6 → M5.3–M5.7 re-tiered to the line (M5.8 fork shrink folds into M5.4) → M5 review → M7. Per unit: contract of testable predicates + tier before code (`.agent/contracts/<unit>.md`, archived at close); differential parity before any legacy deletion; corpus + query artifacts byte-stable except ruled re-pins. M5.2 rulings R1–R30 (`archive/contracts/m5u2.md`) bind its sub-units.
+- Verification line (grading = `archive/rust-rewrite-plan.md` § Verification line): human-read `ckc-spec` + AI-authored `ckc-kernel` (never human-reviewed; agents read + edit it) + pinned Verus `--no-cheating` + `ckc trust-audit`. Theorems = KB semantics (K1–K3), custody chain source↔ACE↔clauses↔verdicts↔export (K4 core), render fidelity + POST guard/ledger CAS (K5 core), M6 emission correspondence. Shell tier (enumerated, fixture-gated, no theorems) = the Intent's trusted software + sockets, HTTP, archive assembly. Every spec line traces to a soundness/custody claim; claim = "machine-verified against the committed spec under a pinned verifier TCB". Fallback (Verus blocker, proof:impl >5×, solver brittleness) → Creusot or a narrowed kernel.
+- Spine, soundness-first: M5.2 close → M6 → M5.3–M5.7 re-tiered to the line (M5.8 fork shrink folds into M5.7) → M5 review → IMPLEMENT close; M7 + corpus rounds = MAINTAIN requests (user ruling; `.agent/deferred.md`). Per unit: contract of testable predicates + tier before code (`.agent/contracts/<unit>.md`, archived at close); differential parity before any legacy deletion; corpus + query artifacts byte-stable except ruled re-pins. M5.2 rulings R1–R30 (`archive/contracts/m5u2.md`) bind its sub-units.
 - Compiler not fixed: schema version = the swap seam; ACE extension, schema v2, companion targets (ProbLog) = evaluated at M7, not presumed. Interim: a statement ACE cannot express ⇒ region `pending` + `inexpressible` queue blocker, row blocked (banks the M7 census).
 - Corpus: knowledge-only fixture-free ACE on the frozen v1 schema; obligations discharged per document + aggregate; answers/traces = machine-derived demonstrations. Neutrality: nothing source-language-specific in tooling/schemas/ledgers; domain rules live in corpus data.
 - Deps minimal + enumerated (`rust/trust/deps-allowlist.tsv`: mature, easily reasoned about, dangerous to hand-write); verifier pinned (`rust/verus.lock`). Review: check set fixed before reading; rows adjudicated in `.agent/review.md`.
 
 ## Tasks
 
-- [ ] M5.3 grading remainder — unit closed dbbcfb75; lead evidence pending
-  - parity on `baseline/tree-r80` (a5cd4b9d + tests from dd0a837f + table move, local commit 054cfdbc; pins re-derived, originals in `.scratch/m5u3/expected-a5cd4b9d/`) = 11/11 identical + batteries 3/3 (`.scratch/gate/m5u3-parity-r80.log`)
-  - mutants replay killed at session close after 3 h (late-section mutants ≈ 40 min each) → rerun `python3 -P .scratch/m5u3/mutants.py --check --tree .scratch/m5u3/baseline/tree-r80 --rust-bin <main binary>` in a long background
-  - R98 = re-pin the parity dist meter byte count after M5.6 (1481762 → 1490978 B)
-  - Record both in the M5.7 close commit body.
-- [ ] M5.7 cutover — contract `.agent/contracts/m5u7.md` P1–P6
-  - fork shrink R95; drafts ready: `.scratch/m5u7/{README.draft.md,reference-edits.txt,mech-edits.txt}`
-  - CI swap; delete `vendor/e--`, `tools/`, `tests/strict`, `red.sh`; NOTICE/REFERENCE/README/rules scrub; release-manifest regen (R72)
-  - Accept: `git grep -iE 'e--|\.emm'` empty; new chain green.
-- [ ] M5 review — `.agent/review.md`
-  - spec audit, trust-audit hostile probes, mutation campaign scored by verus-acceptance, shell fault probes, differential replay, claim-soundness sweep
-  - Accept: rows all adjudicated.
-- [ ] M7 gap coverage
-  - `inexpressible` census class in the coverage grammar; taxonomy from banked blockers + compendium sampling; disposition per class (ACE extension | schema v2 | companion target)
-  - Accept: user-ruled plan; first class dispositioned.
-- [ ] Corpus rounds to exhaustion — legacy tooling
-  - Accept: meter `terminal remaining: orgs=0 rows=0 provisional=0`; then hard-tier harvest (`archive/hard-tier-register.md`).
+- [ ] U1 ci — `.agent/contracts/ci.md`: static musl `ckc` for the container jobs (`certify` red since M6), Kani cold bootstrap, zizmor `just workflows`, weekly `just outdated` drift job in place of Dependabot cargo.
+  - U1 evidence in hand: container red = `GLIBC_2.39' not found` (`sudo podman`, image pulled); static musl spike `.scratch/gate/ckc-static-spike` → `certify --cases` 17/3 in the container; Kani cold red `.scratch/gate/u1-kani-red.log`; zizmor 1.30.1 (sha256 e65324f4…) offline = 5 `artipacked` + 2 `dependabot-cooldown`.
+- [ ] U2 cas — `.agent/contracts/m5u5-cas.md`: identity-validated ledger lock + std-only regression seen red (review C-01..C-04).
+- [ ] U3 evidence — pre-cutover binary `.scratch/gate/ckc-f3910477` (sha256 fce50147…), logs `.scratch/gate/`; results ride the U5 body + review rows.
+  - M5.3 grading remainder: mutants replay → `.scratch/gate/m5u3-mutants-r80-final.log`; R98 = re-pin the parity dist meter bytes (1481762 → 1490978 B) + rerun parity.
+  - R-09 replays done (`.scratch/gate/u3-summary.log`, driver `.scratch/u3/run.sh`): K1 A/H 349/349 ×2, K2 answer/recursion/aggregate 0 divergences + trace D 4/4 E 4/4, queries replay 60/0, M5.2 suite 224 pass/25 pending, K3 matrix 114/114, M5.1 suite 94/94 + diff 0, trust battery 16/16; R-13 perf `.scratch/gate/u3-perf.log` 17 rows 0 failures.
+  - Running at checkpoint (nohup, survive session end): mutants pid 43474 (21/46 at 12:59) → `.scratch/gate/m5u3-mutants-r80-final.log`; R98 parity pid 63136 (`.scratch/m5u3/parity_r98.py`, queued on the legacy lock) → `.scratch/gate/m5u3-parity-r98.log`. Harvest: final `mutants:` summary line + `parity:` lines; rc via the log tail.
+- [ ] U4 harness — `.agent/contracts/harness.md`: `ckc trust-audit --write`, trust battery, align + v1 suites, align probes, bounded check mutants → committed; each seen red.
+- [ ] U5a M5.7 cutover — `.agent/contracts/m5u7.md` P1–P7 (R99–R104): tag `legacy`, re-pin, fork shrink, deletions, CI `check` swap, NOTICE, README/REFERENCE/rules scrub (known red: release-manifest freshness).
+  - drafts: `.scratch/m5u7/{README.draft.md,reference-edits.txt,mech-edits.txt}`
+- [ ] U5b release-manifest regen from HEAD = U5a → decisive `just gate`.
+- [ ] U6 M5 review — `.agent/review.md` R-01..R-14 + S-01..S-10 + C-01..C-04; one `reviewer` per lens (security-vocabulary rows = MAIN); fixes land before close.
+- [ ] U7 close — superseded branches deleted after proof (user ruling), Decisions current, deferred rows, archive contracts, `Phase: MAINTAIN`, `just gate` green on the clean closing tree + container `check`/`certify` on the same static artifact.
 - Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
 ## Phase
