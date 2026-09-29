@@ -1,0 +1,1 @@
+goal: adjudication: manifest stale: guidelines/cdc-2022-opioid/audit/review-manifest.tsv; regenerate: python3 -P tools/goal.py review-manifest cdc-2022-opioid

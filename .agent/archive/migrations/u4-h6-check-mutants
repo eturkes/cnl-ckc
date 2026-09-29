@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""U4 H6: the bounded subset of .scratch/m5u3 corpus mutants → tests/check-mutants/.
+
+Subset = the 36 red mutants whose first violation lands before `ckc check`
+reaches its SWI-Prolog stage (fork, probes, adjudication fixtures, compendium,
+inventories, corpus sections): each exits at that violation in seconds. Left out:
+2 green mutants + 6 swipl-stage red mutants (a full check runs ~10 min) + 2
+section-only seams (legacy direct calls). Pins = each mutant's recorded
+`expected.rc` + `expected.txt` (first violation; legacy-pinned, native-matched).
+cases.tsv = name, section, rc; <name>.expect = the first-violation bytes; the
+mutation of each name lives in rust/ckc/tests/check_mutants.rs (mutants.py
+`mutate`, applied to a clone of HEAD). Usage: python3 -P <this> <repo-root>.
+"""
+import hashlib
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+src = (root / ".scratch/m5u3/mutants.py").read_text()
+cases = eval(src[src.index("CASES = [") + len("CASES = "):src.index("]\nBY_ID") + 1])
+LATE = {"check_documents", "check_queries_fixtures", "check_trace_nonfinite_probe", "run_red_probe"}
+out = root / "tests/check-mutants"
+out.mkdir(parents=True)
+rows = ["# name\tsection\trc\n"]
+for name, section, _edit, kind in cases:
+    if kind != "red" or section in LATE:
+        continue
+    pins = root / ".scratch/m5u3/mutants" / name
+    rc = (pins / "expected.rc").read_text().strip()
+    (out / f"{name}.expect").write_bytes((pins / "expected.txt").read_bytes())
+    rows.append(f"{name}\t{section}\t{rc}\n")
+(out / "cases.tsv").write_text("".join(rows))
+digest = hashlib.sha256()
+for path in sorted(p for p in out.rglob("*") if p.is_file()):
+    digest.update(path.relative_to(out).as_posix().encode() + b"\0" + path.read_bytes() + b"\0")
+print(f"tests/check-mutants: {len(rows) - 1} mutants; tree sha256 {digest.hexdigest()}")

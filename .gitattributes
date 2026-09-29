@@ -19,3 +19,4 @@ vendor/** -text
 tests/align/** -text
 tests/v1/** -text
 tests/align-probes/** -text
+tests/check-mutants/** -text
