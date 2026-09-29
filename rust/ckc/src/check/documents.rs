@@ -1,7 +1,13 @@
 use super::common::*;
 use super::{inventories::Guideline, process, queries, text};
 use std::path::{Path, PathBuf};
-pub(super) fn compile(swipl: &Path, stage: &Path, g: &Guideline, id: &str, proof: bool) -> Result<Vec<u8>> {
+pub(super) fn compile(
+    swipl: &Path,
+    stage: &Path,
+    g: &Guideline,
+    id: &str,
+    proof: bool,
+) -> Result<Vec<u8>> {
     let bytes = read(&g.ace(id), "guideline")?;
     let mut tail = vec![show(stage), id.to_owned()];
     if let Some(lexicon) = &g.lexicon {

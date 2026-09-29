@@ -69,10 +69,10 @@ tools:
 
 # Reformat the workspace (verusfmt inside verus!, rustfmt outside).
 fmt:
-    cd "{{ ROOT }}/rust" && verusfmt --edition 2024 ckc-spec/src/*.rs ckc-kernel/src/*.rs ckc/src/*.rs ckc/tests/*.rs
+    cd "{{ ROOT }}/rust" && verusfmt --edition 2024 $(find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' | sort)
 
 fmt-check:
-    cd "{{ ROOT }}/rust" && verusfmt --edition 2024 --check ckc-spec/src/*.rs ckc-kernel/src/*.rs ckc/src/*.rs ckc/tests/*.rs
+    cd "{{ ROOT }}/rust" && verusfmt --edition 2024 --check $(find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' | sort)
     @echo "gate: fmt ok"
 
 clippy:
