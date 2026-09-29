@@ -71,10 +71,12 @@ jobs:
     container:
       image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
     steps:
+      # procps = /bin/kill: `ckc check` kills a timed-out subprocess group with it
+      # (its wall-clock probe always does); the image ships no kill binary.
       - name: Install job tooling
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends git ca-certificates curl
+          apt-get install -y --no-install-recommends git ca-certificates curl procps
 
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
