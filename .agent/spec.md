@@ -32,8 +32,8 @@ In build: verified kernel `rust/` — gate `just rust` (`.claude/rules/rust.md`)
 ## Tasks
 
 - [x] c1069299 U1 ci — `archive/contracts/ci.md`: static musl `ckc` for the container jobs (`certify` red since M6), Kani cold bootstrap, zizmor `just workflows`, weekly `just outdated` drift job in place of Dependabot cargo.
-- [x] U1b fmt — `fmt`/`fmt-check` glob `ckc/src/*.rs` only → 37 shell modules under `ckc/src/{check,ui}/` outside the format gate (2 unformatted: `check/documents.rs`, `check/mod.rs`); red = planted misformat there passes the old gate.
-- [ ] U2 cas — `.agent/contracts/m5u5-cas.md`: identity-validated ledger lock + std-only regression seen red (review C-01..C-04).
+- [x] 86acf59c U1b fmt — `fmt`/`fmt-check` glob `ckc/src/*.rs` only → 37 shell modules under `ckc/src/{check,ui}/` outside the format gate (2 unformatted: `check/documents.rs`, `check/mod.rs`); red = planted misformat there passes the old gate.
+- [x] U2 cas — `archive/contracts/m5u5-cas.md`: identity-validated ledger lock + std-only regression seen red (review C-01..C-04).
 - [ ] U3 evidence — pre-cutover binary `.scratch/gate/ckc-f3910477` (sha256 fce50147…), logs `.scratch/gate/`; results ride the U5 body + review rows.
   - M5.3 grading remainder: mutants replay → `.scratch/gate/m5u3-mutants-r80-final.log`; R98 = re-pin the parity dist meter bytes (1481762 → 1490978 B) + rerun parity.
   - R-09 replays done (`.scratch/gate/u3-summary.log`, driver `.scratch/u3/run.sh`): K1 A/H 349/349 ×2, K2 answer/recursion/aggregate 0 divergences + trace D 4/4 E 4/4, queries replay 60/0, M5.2 suite 224 pass/25 pending, K3 matrix 114/114, M5.1 suite 94/94 + diff 0, trust battery 16/16; R-13 perf `.scratch/gate/u3-perf.log` 17 rows 0 failures.

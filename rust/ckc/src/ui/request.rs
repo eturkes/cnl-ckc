@@ -8,7 +8,7 @@ use ckc_kernel::{
 use std::collections::BTreeMap;
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
-use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -365,19 +365,36 @@ struct LedgerLock {
     file: File,
 }
 impl LedgerLock {
+    // A holder unlinks the path before it unlocks, so a waiter can wake on an
+    // orphaned inode while a newcomer locks a fresh file at the path: the lock
+    // counts only once the path still names the locked inode. Each failed
+    // check follows another holder's completed release.
     fn acquire(audit: &Path) -> Result<Self> {
         let path = audit.join(".adjudication.lock");
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .mode(0o600)
-            .open(&path)
-            .map_err(|_| "ui: verdict: ledger write failed")?;
-        file.lock()
-            .map_err(|_| "ui: verdict: ledger write failed")?;
-        Ok(Self { path, file })
+        for _ in 0..64 {
+            let file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .create(true)
+                .truncate(false)
+                .mode(0o600)
+                .open(&path)
+                .map_err(|_| "ui: verdict: ledger write failed")?;
+            file.lock()
+                .map_err(|_| "ui: verdict: ledger write failed")?;
+            let held = file
+                .metadata()
+                .map_err(|_| "ui: verdict: ledger write failed")?;
+            match fs::metadata(&path) {
+                Ok(named) if named.dev() == held.dev() && named.ino() == held.ino() => {
+                    return Ok(Self { path, file });
+                }
+                Ok(_) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(_) => return Err("ui: verdict: ledger write failed".into()),
+            }
+        }
+        Err("ui: verdict: ledger write failed".into())
     }
 }
 impl Drop for LedgerLock {
