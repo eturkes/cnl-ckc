@@ -190,14 +190,14 @@ pub fn second_header() -> (h: Vec<u8>)
         h@ == manifest_header_2(),
 {
     let h = copy(
-        b"# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n",
+        b"# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: ckc review-manifest <id>; do not edit.\n",
     );
     proof {
         reveal_byteslit(
-            b"# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n",
+            b"# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: ckc review-manifest <id>; do not edit.\n",
         );
         reveal_strlit(
-            "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n",
+            "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: ckc review-manifest <id>; do not edit.\n",
         );
         reveal(ckc_spec::v1text::ascii);
         assert(h@ == manifest_header_2());

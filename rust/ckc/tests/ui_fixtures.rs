@@ -1,6 +1,5 @@
-// M5.5 P4/P6: unchanged legacy fixture bytes grade the shell envelope.
-// FC2 argv map: python3 -P tools/ui.py ARGS -> ckc ui ARGS.
-// Copy fixture map: goal.py copy_scan_source(FILE) -> ckc ui copy-check FILE;
+// M5.5 P4/P6: tests/ui fixture bytes grade the shell envelope.
+// Each case.tsv argv runs as `ckc ui ARGS`; copy fixtures run `ckc ui copy-check FILE`:
 // red = rc1 + expect.txt on stdout; green = rc0 + empty stdout; stderr empty.
 // CKC_UI_TEST_BIN selects a prebuilt executable for diff-blind/red replay.
 use sha2::{Digest, Sha256};

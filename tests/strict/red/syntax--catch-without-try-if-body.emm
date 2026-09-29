@@ -1,3 +1,0 @@
-If True:
-    Catch OSError:
-        Set x to 1.

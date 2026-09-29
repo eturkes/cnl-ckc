@@ -1,2 +1,2 @@
-% q-wh traced against the loaded composition by ace_to_pl trace mode; do not edit.
-'$guideline_traces'(v1,'q-wh',query_sha256('5be6ae948479f6f7e0649b74a39ddcfd26f2d2669f5bdca984eee7de5efe8bec'),answers_sha256('5f6a835d30a028639291eea4dcd80ae61744244cde106d3d0198a6a9f972acf3'),result(solutions([sol(['$guideline_id'(product,'BAD',1,ref(1),[])],proved([clause(sentence('BAD',1),clause_sha256('49e66fb52a369f23e82ec17f846f8c03f53247892e8024e6007279726fed88f5'),[])]))]))).
+% q-wh traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,'q-wh',query_sha256('5be6ae948479f6f7e0649b74a39ddcfd26f2d2669f5bdca984eee7de5efe8bec'),answers_sha256('54aaefe0e9bdf897e78ae869ba83232227cc50daa77fc11d820ad803029ee304'),result(solutions([sol(['$guideline_id'(product,'BAD',1,ref(1),[])],proved([clause(sentence('BAD',1),clause_sha256('49e66fb52a369f23e82ec17f846f8c03f53247892e8024e6007279726fed88f5'),[])]))]))).

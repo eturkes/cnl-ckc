@@ -88,7 +88,7 @@ fn pipeline_arity_keeps_legacy_fail_envelopes() {
         assert!(out.stdout.is_empty(), "{mode}");
         assert_eq!(
             out.stderr,
-            format!("goal: usage: expected: goal {mode}{tail}\n").as_bytes(),
+            format!("ckc: usage: expected: ckc {mode}{tail}\n").as_bytes(),
             "{mode}"
         );
     }

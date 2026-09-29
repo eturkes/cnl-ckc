@@ -228,7 +228,7 @@ pub fn meter(gid: &[u8], ds: &Vec<EDecision>, bs: &Vec<EBundle>) -> (r: Vec<u8>)
         },
     );
     let total = number(ds.len());
-    let mut r = copy(b"goal: adjudication ");
+    let mut r = copy(b"ckc: adjudication ");
     append(&mut r, gid);
     append(&mut r, b" approved=");
     append(&mut r, &approved);
@@ -244,8 +244,8 @@ pub fn meter(gid: &[u8], ds: &Vec<EDecision>, bs: &Vec<EBundle>) -> (r: Vec<u8>)
     append(&mut r, &total);
     r.push(0x0a);
     proof {
-        reveal_byteslit(b"goal: adjudication ");
-        reveal_strlit("goal: adjudication ");
+        reveal_byteslit(b"ckc: adjudication ");
+        reveal_strlit("ckc: adjudication ");
         reveal_byteslit(b" approved=");
         reveal_strlit(" approved=");
         reveal_byteslit(b" rejected=");

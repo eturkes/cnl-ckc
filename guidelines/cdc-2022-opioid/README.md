@@ -105,7 +105,7 @@ that it was published with.
   shared by all documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog that
   `vendor/ape/prolog/ace_to_pl.pl` compiled from the ACE. Regenerate it
-  with `python3 -P tools/goal.py compile cdc-2022-opioid`; the compiler is
+  with `ckc compile cdc-2022-opioid`; the compiler is
   the sole author of these files. Under the full-Clex base lexicon, six
   documents (s8-06, s26-07, s34-10, s37-15, s38-17, s39-12) read verb
   `to`-complements as ditransitive third arguments

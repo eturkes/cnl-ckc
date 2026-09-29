@@ -404,7 +404,7 @@ pub ghost enum V1File {
 // --- envelope rendering ---
 pub open spec fn doc_line1(docid: Seq<u8>) -> Seq<u8> {
     ascii("% "@) + docid + ascii(
-        ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
+        ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n"@,
     )
 }
 
@@ -416,13 +416,13 @@ pub open spec fn query_line1(qid: Seq<u8>) -> Seq<u8> {
 
 pub open spec fn answers_line1(qid: Seq<u8>) -> Seq<u8> {
     ascii("% "@) + qid + ascii(
-        " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+        " answered against the loaded composition by ckc queries; do not edit.\n"@,
     )
 }
 
 pub open spec fn traces_line1(qid: Seq<u8>) -> Seq<u8> {
     ascii("% "@) + qid + ascii(
-        " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+        " traced against the loaded composition by ckc queries; do not edit.\n"@,
     )
 }
 

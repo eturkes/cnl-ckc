@@ -5,8 +5,8 @@ use vstd::prelude::*;
 
 verus! {
 
-// Trusted spec: release-manifest derivation (contract m5u4 P5; legacy
-// tools/dist.py derive_release, byte-exact). Kernel = the TSV the consumer's
+// Trusted spec: release-manifest derivation (contract m5u4 P5,
+// byte-exact). Kernel = the TSV the consumer's
 // `sha256sum -c` anchors to: member partition by rights profile, row order,
 // meta block. Shell = git reads (HEAD, archive, show), path grammar +
 // regular-file checks, rights/label validators, README-dist/NOTICE prose,
@@ -105,7 +105,7 @@ pub open spec fn tab() -> Seq<u8> {
 pub open spec fn meta_block(head: Seq<u8>, compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {
     ascii("meta\tschema\tv1\nmeta\thead\t"@) + head + ascii("\nmeta\tcompiler\t"@) + compiler
         + ascii("\nmeta\tbase-lexicon\t"@) + lexicon + ascii(
-        "\nmeta\tpython\t3.11\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: python3 -P tools/goal.py compile <guideline-id>\nmeta\treplay\tcheck: python3 -P tools/goal.py check\nmeta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
+        "\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
     )
 }
 

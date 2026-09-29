@@ -157,7 +157,7 @@ a { color: inherit; text-decoration: none; }
 <main id="main">
 <h1>Server error</h1>
 <p>The server could not complete the request. Reload the page and try again.</p>
-<!-- ui: adjudication ledger invalid: goal: adjudication: ledger header -->
+<!-- ui: adjudication ledger invalid: ckc: adjudication: ledger header -->
 </main>
 <footer class="scope"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>
 </body>

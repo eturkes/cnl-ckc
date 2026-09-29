@@ -251,10 +251,7 @@ pub(super) fn check(g: &inventories::Guideline, c: &ECoverage) -> Result {
     let bundles = derive(g, c)?;
     let derived = ckc_kernel::contract::check_print_manifest(&bundles);
     let path = g.path.join("audit/review-manifest.tsv");
-    let hint = format!(
-        "; regenerate: python3 -P tools/goal.py review-manifest {}",
-        name(&g.path)
-    );
+    let hint = format!("; regenerate: ckc review-manifest {}", name(&g.path));
     if path.is_symlink() {
         return Err(violation(
             "adjudication",

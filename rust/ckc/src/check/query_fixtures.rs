@@ -187,7 +187,7 @@ fn case_result(
     // R90 re-pins these verdicts only; original files and trace goldens remain required.
     if is_red && let Some((_, id)) = R90_STALE_ANSWERS.iter().find(|(case, _)| *case == n) {
         expected = format!(
-            "goal: stale: committed query answers differ from fresh answer: {}\n",
+            "ckc: stale: committed query answers differ from fresh answer: {}\n",
             show(&gid.join("queries/answers").join(format!("{id}.pl"))),
         )
         .into_bytes();
@@ -572,7 +572,7 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
     }
     nonfinite(scratch)?;
     println!(
-        "goal: queries fixtures ok {} red {} green",
+        "ckc: queries fixtures ok {} red {} green",
         red.len(),
         green.len()
     );

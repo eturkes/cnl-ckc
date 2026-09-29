@@ -296,7 +296,7 @@ fn readme(
             text += &rights_line(gid, row, "Source: ", ".");
         }
     }
-    text += "\n## Replay\n\nThese commands run in the source repository at the commit that this archive names.\n\n- compile: python3 -P tools/goal.py compile <guideline-id>\n- check: python3 -P tools/goal.py check\n- load: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n";
+    text += "\n## Replay\n\nThese commands run in the source repository at the commit that this archive names.\n\n- compile: ckc compile <guideline-id>\n- check: ckc check\n- load: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n";
     text + schema
 }
 pub(super) fn member(path: &str, bytes: &[u8]) -> EMember {
@@ -494,7 +494,7 @@ pub(super) fn run() -> Result {
     }
     fs::write(target, &plan.manifest).map_err(|e| error(e.to_string()))?;
     println!(
-        "goal: release-manifest {} guidelines {} members",
+        "ckc: release-manifest {} guidelines {} members",
         plan.shipped,
         plan.payload.len() + plan.tags.len()
     );

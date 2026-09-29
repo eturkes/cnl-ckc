@@ -12,13 +12,13 @@ pub(super) struct Counts {
 impl Counts {
     pub fn query_meter(&self, gid: &str) -> String {
         format!(
-            "goal: queries {gid} {} queries; wh={} yesno={}",
+            "ckc: queries {gid} {} queries; wh={} yesno={}",
             self.count, self.wh, self.yesno
         )
     }
     pub fn trace_meter(&self, gid: &str) -> String {
         format!(
-            "goal: traces {gid} {} traces; nodes={}",
+            "ckc: traces {gid} {} traces; nodes={}",
             self.count, self.nodes
         )
     }

@@ -5,10 +5,8 @@ use vstd::prelude::*;
 
 verus! {
 
-// Trusted spec: the K4 custody core of `ckc check` (contract m5u3; legacy
-// law = tools/goal.py check_coverage / derive_review_manifest /
-// parse_review_manifest / validate_ledger / check_lexicon, byte-exact on
-// every meter and violation detail, R44). Kernel tier = what a clinician's
+// Trusted spec: the K4 custody core of `ckc check` (contract m5u3; every
+// meter and violation detail byte-exact, R44). Kernel tier = what a clinician's
 // recorded verdict binds to: the coverage ledger's closure over the
 // evidence files, the per-document review bundle (ACE bytes, coverage row,
 // selected source payload, retained clause lines) and its digest, the
@@ -53,7 +51,7 @@ pub open spec fn render(v: Verdict) -> (int, Seq<u8>) {
         Verdict::Ok(m) => (0, m),
         Verdict::Fail(c, d) => (
             1,
-            ascii("goal: "@) + c + ascii(": "@) + escape_detail(d) + seq![0x0Au8],
+            ascii("ckc: "@) + c + ascii(": "@) + escape_detail(d) + seq![0x0Au8],
         ),
     }
 }
@@ -822,7 +820,7 @@ pub open spec fn count_status(rows: Seq<Row>, k: int) -> nat {
 }
 
 pub open spec fn coverage_meter(gid: Seq<u8>, rows: Seq<Row>) -> Seq<u8> {
-    ascii("goal: coverage ok "@) + gid + seq![0x20u8] + nat_bytes(rows.len()) + ascii(
+    ascii("ckc: coverage ok "@) + gid + seq![0x20u8] + nat_bytes(rows.len()) + ascii(
         " regions; ace="@,
     ) + nat_bytes(count_status(rows, 1)) + ascii(" restates="@) + nat_bytes(count_status(rows, 2))
         + ascii(" uncovered="@) + nat_bytes(count_status(rows, 3)) + ascii(" pending="@)
@@ -1044,7 +1042,7 @@ pub open spec fn manifest_header_1() -> Seq<u8> {
 
 pub open spec fn manifest_header_2() -> Seq<u8> {
     ascii(
-        "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n"@,
+        "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: ckc review-manifest <id>; do not edit.\n"@,
     )
 }
 
@@ -1441,7 +1439,7 @@ pub open spec fn unreviewed(ds: Seq<Decision>, bs: Seq<Bundle>) -> nat {
 }
 
 pub open spec fn adjudication_meter(gid: Seq<u8>, ds: Seq<Decision>, bs: Seq<Bundle>) -> Seq<u8> {
-    ascii("goal: adjudication "@) + gid + ascii(" approved="@) + nat_bytes(class_count(ds, bs, 0))
+    ascii("ckc: adjudication "@) + gid + ascii(" approved="@) + nat_bytes(class_count(ds, bs, 0))
         + ascii(" rejected="@) + nat_bytes(class_count(ds, bs, 1)) + ascii(" contested="@)
         + nat_bytes(class_count(ds, bs, 2)) + ascii(" stale="@) + nat_bytes(class_count(ds, bs, 3))
         + ascii(" unreviewed="@) + nat_bytes(unreviewed(ds, bs)) + ascii(" decisions="@)
@@ -1715,7 +1713,7 @@ pub open spec fn ruled_count(
 pub open spec fn lexicon_meter(path: Seq<u8>, entries: nat, clex_facts: nat, ruled: nat) -> Seq<
     u8,
 > {
-    ascii("goal: lexicon ok "@) + path + seq![0x20u8] + nat_bytes(entries) + ascii(" entries "@)
+    ascii("ckc: lexicon ok "@) + path + seq![0x20u8] + nat_bytes(entries) + ascii(" entries "@)
         + nat_bytes(clex_facts) + ascii(" clex facts "@) + nat_bytes(ruled) + ascii(
         " ruled shadows"@,
     ) + seq![0x0Au8]

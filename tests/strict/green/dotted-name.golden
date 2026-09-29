@@ -1,4 +1,0 @@
-try:
-    x = 1
-except a.b.c:
-    x = 2

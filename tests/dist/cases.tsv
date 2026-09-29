@@ -59,5 +59,5 @@ a21-archive-symlink	runner	archive_symlink	1	dist: dest
 a21-sidecar-directory	runner	sidecar_directory	1	dist: dest
 a21-stage-clean-success	runner	stage_clean_success	0	-
 a21-stage-clean-refusal	runner	stage_clean_refusal	1	dist: rights g-red missing
-d07-goal-check-live	runner	goal_check_live	2	goal: swipl-exec: not executable: __dist_red_missing_swipl__
-d07-goal-check-blocked	runner	goal_check_blocked	2	goal: swipl-exec: not executable: __dist_red_missing_swipl__
+d07-goal-check-live	runner	goal_check_live	2	ckc: swipl-exec: not executable: __dist_red_missing_swipl__
+d07-goal-check-blocked	runner	goal_check_blocked	2	ckc: swipl-exec: not executable: __dist_red_missing_swipl__

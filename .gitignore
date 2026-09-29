@@ -8,9 +8,6 @@
 .goal.tmp.*/
 __pycache__/
 rust/target/
-# vendored-crate ballast whose extensions red legacy repo-wide inventory
-# gates (regen unauthorized-python, prolog inventory); cargo builds green
-# without them (cold-verified) — they never compile on x86_64-linux
-rust/vendor/**/*.py
+# vendored-crate ballast: a tracked .pl reds the `ckc check` prolog inventory;
+# cargo builds green without these files (they never compile on x86_64-linux)
 rust/vendor/**/*.pl
-rust/vendor/**/*.emm

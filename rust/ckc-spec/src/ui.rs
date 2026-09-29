@@ -1,6 +1,4 @@
-// M5.5 K5 proposal. tools/ui.py: esc_text/esc_attr 35–38; title helpers 297–384;
-// build_doc_states/build_guideline_model 568–952; hl_*/page_html/build_*_page 1083–1766;
-// parse_form_fields/handle_verdict_post/respond 2256–2654; goal.py copy 3893–3951.
+// M5.5 K5: the reviewer surface.
 // Claims: corpus-bound displayed fields; exact deterministic page bytes;
 // escaped dynamic slots; registry-bound fixed copy; ordered first refusal;
 // seven-column insertion preserving every prior decision row.
@@ -98,7 +96,7 @@ pub open spec fn digits(s: Bytes) -> bool {
     s.len() > 0 && v1text::all_in(s, |b: u8| is_digit_b(b))
 }
 
-// html.escape: quote=False in text; quote=True in attributes (ui.py:35–38).
+// Escaping: `&`, `<`, `>` everywhere; `"` and `'` as well inside attributes.
 pub open spec fn escape(s: Bytes, attr: bool) -> Bytes
     decreases s.len(),
 {
@@ -466,7 +464,7 @@ pub open spec fn human_date(d: Bytes) -> Bytes {
     }
 }
 
-// Fixed rendered bytes: tools/ui.py build_css 1149–1257.
+// Fixed rendered bytes: the stylesheet.
 pub open spec fn css_text() -> Bytes {
     lit(
         r##"body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
@@ -610,7 +608,7 @@ a { color: inherit; text-decoration: none; }
     )
 }
 
-// Fixed rendered bytes: tools/ui.py build_hl_script 1261–1312.
+// Fixed rendered bytes: the highlight script.
 pub open spec fn script_html() -> Bytes {
     lit(
         r##"<script>
@@ -664,7 +662,7 @@ if (ev.target === box) { if (box.checked === false) { clearPick(); } }
     )
 }
 
-// --- Pure render law: ui.py:1083–1766. ---
+// --- Pure render law. ---
 pub open spec fn frame(title: Bytes, crumbs: Html, body: Html) -> Html {
     lines(
         seq![
@@ -1363,7 +1361,7 @@ pub open spec fn stop_words() -> Seq<Bytes> {
     )
 }
 
-// --- POST: ui.py:2256–2457 + 2562–2654. Header/body IO is already parsed. ---
+// --- POST. Header/body IO is already parsed. ---
 pub ghost struct Request {
     pub method: Bytes,
     pub path: Bytes,
@@ -2425,7 +2423,7 @@ pub open spec fn copy_registry() -> Seq<Bytes> {
     ]
 }
 
-// --- Copy gate: tools/goal.py:3893–3934; enumerated copy domain (R76).
+// --- Copy gate: enumerated copy domain (R76).
 pub open spec fn ascii_word(c: char) -> bool {
     ('A' <= c <= 'Z') || ('a' <= c <= 'z') || ('0' <= c <= '9') || c == '_'
 }

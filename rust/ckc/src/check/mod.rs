@@ -54,7 +54,7 @@ fn check() -> common::Result {
     }
     drop(scratch);
     println!(
-        "goal: check ok {} guidelines {documents} documents {} red probes",
+        "ckc: check ok {} guidelines {documents} documents {} red probes",
         plans.len(),
         red.len()
     );

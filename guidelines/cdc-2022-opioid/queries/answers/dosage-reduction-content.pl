@@ -1,2 +1,2 @@
-% dosage-reduction-content answered against the loaded composition by ace_to_pl answer mode; do not edit.
+% dosage-reduction-content answered against the loaded composition by ckc queries; do not edit.
 '$guideline_answers'(v1,'dosage-reduction-content',query_sha256('40bc5c480cb540b014f68a52e915d6d4f8a52a7888ef553f6c65f63490dea2a3'),result(solutions([sol(['$guideline_id'(product,'cdc2022-opioid-rec04-imp03',3,ref(2),[])]),sol(['$guideline_id'(product,'cdc2022-opioid-rec04-imp03',4,ref(2),[])])]))).

@@ -362,7 +362,7 @@ pub(super) fn check() -> Result {
         }
     }
     println!(
-        "goal: compendium ok {org_count} organizations {row_count} rows; terminal remaining: orgs={org_remaining} rows={remaining} provisional={provisional}"
+        "ckc: compendium ok {org_count} organizations {row_count} rows; terminal remaining: orgs={org_remaining} rows={remaining} provisional={provisional}"
     );
     Ok(())
 }

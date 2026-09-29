@@ -1,6 +1,7 @@
-# Gate driver. `just gate` = rust chain + legacy chain; CI runs the same
-# recipes. Every tool is sha256-pinned (rust/verus.lock, rust/tools.lock)
-# and installed under .toolchain/ by `just tools`; CKC_TOOLCHAIN relocates it.
+# Gate driver. `just gate` = rust chain + corpus chain + emission certification;
+# CI runs the same recipes. Every tool is sha256-pinned (rust/verus.lock,
+# rust/tools.lock) and installed under .toolchain/ by `just tools`; CKC_TOOLCHAIN
+# relocates it.
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
@@ -8,14 +9,14 @@ ROOT := justfile_directory()
 TOOLCHAIN := env("CKC_TOOLCHAIN", ROOT / ".toolchain")
 export RUSTUP_HOME := TOOLCHAIN / "rustup"
 export CARGO_HOME := TOOLCHAIN / "cargo"
-# .toolchain/bin first: the swipl + python3 shims must shadow system copies.
+# .toolchain/bin first: the swipl shim must shadow a system copy.
 export PATH := (TOOLCHAIN / "bin") + ":" + (TOOLCHAIN / "verus-x86-linux") + ":" + (TOOLCHAIN / "cargo/bin") + ":" + env("PATH")
 
 default:
     @just --list --unsorted
 
-# Full gate: rust chain, then the legacy chain (authoritative until M5.7).
-gate: rust legacy certify
+# Full gate: rust chain, corpus chain, emission certification.
+gate: rust check certify
 
 # Rust chain: format, lint, verify, build, trust-audit, test, dependency audit, secret scan, workflow scan.
 rust: fmt-check clippy verify build trust test deny secrets workflows
@@ -203,18 +204,23 @@ kani:
     done
     echo "gate: kani ok"
 
-# Legacy chain (E-- → Python identity, corpus check, fresh compile byte-stable).
-legacy:
+# Corpus chain: `ckc check` (every custody, coverage, lexicon, fixture and
+# release-manifest law), `ckc ui check`, then a fresh compile + queries per
+# guideline must leave guidelines/ byte-identical. CKC_BIN names a prebuilt binary.
+check:
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}"
-    export PYTHONDONTWRITEBYTECODE=1
-    PYTHONPATH=vendor/e--/src python3 -P -m e_minus_minus.strict tools/regen.emm | cmp - tools/regen.py
-    python3 -P tools/regen.py --check
-    python3 -P tools/goal.py check
-    for g in guidelines/*/; do python3 -P tools/goal.py compile "$(basename "$g")"; done
+    bin="${CKC_BIN:-}"
+    if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
+    "$bin" check
+    "$bin" ui check
+    for g in guidelines/*/; do
+        "$bin" compile "$(basename "$g")"
+        "$bin" queries "$(basename "$g")"
+    done
     git diff --quiet -- guidelines/
-    echo "gate: legacy ok"
+    echo "gate: check ok"
 
 # Emission certification (M6, R83/R86): every committed document + query certifies
 # against rust/ckc-spec/src/emit.rs through the upstream APE parser, then the

@@ -27,7 +27,7 @@ pub(super) fn check() -> Result {
     let root = Path::new(".");
     let plan = pipeline_release::derive(root)?;
     let manifest = Path::new("release-manifest.tsv");
-    let hint = "; regenerate: python3 -P tools/goal.py release-manifest";
+    let hint = "; regenerate: ckc release-manifest";
     if manifest.is_symlink() {
         return Err(error("release manifest is a symlink: release-manifest.tsv"));
     }
@@ -50,7 +50,7 @@ pub(super) fn check() -> Result {
     dist_probes::check(&scratch.0)?;
     if !plan.rejected.is_empty() || !plan.contested.is_empty() {
         println!(
-            "goal: dist blocked rejected={} contested={}",
+            "ckc: dist blocked rejected={} contested={}",
             plan.rejected.len(),
             plan.contested.len()
         );
@@ -100,7 +100,7 @@ pub(super) fn check() -> Result {
     }
     drop(scratch);
     println!(
-        "goal: dist ok {} guidelines {members} members {} bytes",
+        "ckc: dist ok {} guidelines {members} members {} bytes",
         plan.shipped,
         raw.len()
     );

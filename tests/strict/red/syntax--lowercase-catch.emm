@@ -1,2 +1,0 @@
-catch OSError:
-    Set x to 1.

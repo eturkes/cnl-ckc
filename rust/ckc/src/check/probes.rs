@@ -17,7 +17,7 @@ pub(super) fn trace_numeric() -> Result {
     let bigint = "9".repeat(5000);
     let artifact = |number: &str, ordinal: &str| {
         format!(
-            "% probe traced against the loaded composition by ace_to_pl trace mode; do not edit.\n'$guideline_traces'(v1,probe,query_sha256('{hex}'),answers_sha256('{hex}'),result(solutions([sol([{number}],proved([clause(sentence(doc,{ordinal}),clause_sha256('{hex}'),[])]))]))).\n"
+            "% probe traced against the loaded composition by ckc queries; do not edit.\n'$guideline_traces'(v1,probe,query_sha256('{hex}'),answers_sha256('{hex}'),result(solutions([sol([{number}],proved([clause(sentence(doc,{ordinal}),clause_sha256('{hex}'),[])]))]))).\n"
         )
     };
     let accepted = matches!(
@@ -44,7 +44,7 @@ pub(super) fn trace_numeric() -> Result {
         "% probe compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,probe,ace_sha256('{hex}'),ulex(none)).\n% Q1: Is there a patient?\n'$guideline_query_projection'(goal(guideline_entity(actual,A,patient,countable)),answers([])).\n"
     ).as_bytes())?;
     let mut prefix =
-        "% doc.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"
+        "% doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n"
             .to_owned();
     for predicate in [
         "guideline_schema_version/1",

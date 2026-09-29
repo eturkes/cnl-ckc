@@ -2895,7 +2895,7 @@ v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes) :-
     header_term(DocId, AceDigest, UlexDigest, Header),
     v1_indicators(Indicators),
     with_output_to(string(Out),
-        ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.~n',
+        ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.~n',
               [DocId]),
           v1_render_decls(Indicators),
           render_term_line(guideline_schema_version(1)),

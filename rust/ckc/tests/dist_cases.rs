@@ -1,4 +1,4 @@
-// M5.6 P3: native replay of tests/dist/red.sh; fixture bytes + envelopes stay pinned.
+// M5.6 P3: dist battery over tests/dist/cases.tsv; fixture bytes + envelopes stay pinned.
 use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
 use std::ffi::{OsStr, OsString};
@@ -11,12 +11,8 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-// FC2 changes argv only; R44 retains goal: envelopes, cases.tsv stays verbatim.
-const COMMAND_MAP: [(&str, &[&str]); 3] = [
-    ("tools/dist.py", &["dist"]),
-    ("tools/goal.py release-manifest", &["release-manifest"]),
-    ("tools/goal.py check", &["check"]),
-];
+// Native argv per cases.tsv runner family: 0 = dist, 1 = release-manifest, 2 = check.
+const COMMAND_MAP: [&[&str]; 3] = [&["dist"], &["release-manifest"], &["check"]];
 const GIT_ENV: [(&str, &str); 10] = [
     ("GIT_CONFIG_GLOBAL", "/dev/null"),
     ("GIT_CONFIG_SYSTEM", "/dev/null"),
@@ -31,7 +27,7 @@ const GIT_ENV: [(&str, &str); 10] = [
 ];
 const RIGHTS: &str = "profile\tstatement\turl\tretrieved\tnote\n";
 const REVIEW_1: &str = "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256\n";
-const REVIEW_2: &str = "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: python3 -P tools/goal.py review-manifest <id>; do not edit.\n";
+const REVIEW_2: &str = "# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: ckc review-manifest <id>; do not edit.\n";
 const LEDGER: &str = "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment\n";
 const SCHEMA: &str = "## Compiled Prolog schema (v1)\n\nFixture schema bytes stay verbatim.\n\n### Load\n\nRun `swipl -q -s data/guidelines/g-red/pl/doc-a.pl`.\n\n";
 const NOTICE: &str = "Fixture KB notice.\nFirst-party fixture text.\n";
@@ -262,7 +258,7 @@ fn native(
     env: &[(&str, &str)],
     timeout: u64,
 ) -> TestResult<Run> {
-    let mut argv: Vec<_> = COMMAND_MAP[mapped].1.iter().map(OsString::from).collect();
+    let mut argv: Vec<_> = COMMAND_MAP[mapped].iter().map(OsString::from).collect();
     argv.extend_from_slice(args);
     let binary = std::env::var_os("CKC_DIST_BIN")
         .unwrap_or_else(|| OsString::from(env!("CARGO_BIN_EXE_ckc")));
@@ -1219,7 +1215,6 @@ fn validate_bag(
                         "head",
                         "compiler",
                         "base-lexicon",
-                        "python",
                         "swipl",
                         "verify",
                     ],
@@ -1277,7 +1272,6 @@ fn validate_bag(
                     "base-lexicon",
                     digest(&repo.show("vendor/clex/clex_lexicon.pl")?)?,
                 ),
-                ("python", "3.11".to_owned()),
                 ("swipl", "9.2.9".to_owned()),
                 (
                     "verify",
@@ -1983,7 +1977,7 @@ fn check_case(path: &Path, blocked: bool) -> TestResult<Run> {
     let text = String::from_utf8_lossy(&run.stdout);
     let meters: Vec<_> = text
         .lines()
-        .filter(|line| line.starts_with("goal: dist "))
+        .filter(|line| line.starts_with("ckc: dist "))
         .map(str::to_owned)
         .collect();
     run.check(
@@ -1992,7 +1986,7 @@ fn check_case(path: &Path, blocked: bool) -> TestResult<Run> {
     );
     if blocked {
         run.check(
-            meters == ["goal: dist blocked rejected=1 contested=1"],
+            meters == ["ckc: dist blocked rejected=1 contested=1"],
             format!("blocked meter={meters:?}"),
         );
     } else {
@@ -2002,7 +1996,7 @@ fn check_case(path: &Path, blocked: bool) -> TestResult<Run> {
         );
         if let Some(meter) = meters.first() {
             let blocked_grammar = meter
-                .strip_prefix("goal: dist blocked rejected=")
+                .strip_prefix("ckc: dist blocked rejected=")
                 .and_then(|suffix| suffix.split_once(" contested="))
                 .is_some_and(|(rejected, contested)| {
                     [rejected, contested].iter().all(|part| {
@@ -2010,7 +2004,7 @@ fn check_case(path: &Path, blocked: bool) -> TestResult<Run> {
                     })
                 });
             run.check(
-                meter.starts_with("goal: dist ok ") || blocked_grammar,
+                meter.starts_with("ckc: dist ok ") || blocked_grammar,
                 "goal check dist meter grammar",
             );
         }

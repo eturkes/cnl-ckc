@@ -10410,7 +10410,7 @@ fn record_variable(
 
 pub open spec fn answers_flat(a: ckc_spec::v1text::AnswersFile) -> Seq<u8> {
     ckc_spec::v1text::ascii("% "@) + a.qid + ckc_spec::v1text::ascii(
-        " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+        " answered against the loaded composition by ckc queries; do not edit.\n"@,
     ) + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_answers"@)) + seq![0x28u8]
         + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)) + seq![0x2cu8]
         + ckc_spec::v1text::atom_bytes(a.qid) + seq![0x2cu8] + ckc_spec::v1text::atom_bytes(
@@ -10463,7 +10463,7 @@ pub open spec fn answers_parts(a: ckc_spec::v1text::AnswersFile) -> Seq<Seq<u8>>
         ckc_spec::v1text::ascii("% "@),
         a.qid,
         ckc_spec::v1text::ascii(
-            " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+            " answered against the loaded composition by ckc queries; do not edit.\n"@,
         ),
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_answers"@)),
         seq![0x28u8],
@@ -11731,7 +11731,7 @@ pub fn parse_answers(
     proof {
         if let Some(a) = expected@ {
             reveal_strlit(
-                " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
+                " answered against the loaded composition by ckc queries; do not edit.\n",
             );
             reveal(ckc_spec::v1text::ascii);
             assert(answers_parts(a)[2].len() > 0);
@@ -11753,17 +11753,13 @@ pub fn parse_answers(
     }
 
     let line_suffix: &[u8] =
-        b" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n";
+        b" answered against the loaded composition by ckc queries; do not edit.\n";
     proof {
-        reveal_strlit(
-            " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
-        );
-        reveal_byteslit(
-            b" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
-        );
+        reveal_strlit(" answered against the loaded composition by ckc queries; do not edit.\n");
+        reveal_byteslit(b" answered against the loaded composition by ckc queries; do not edit.\n");
         reveal(ckc_spec::v1text::ascii);
         assert(line_suffix@ == ckc_spec::v1text::ascii(
-            " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+            " answered against the loaded composition by ckc queries; do not edit.\n"@,
         ));
     }
     let before_pos_2 = cursor.pos;
@@ -11773,7 +11769,7 @@ pub fn parse_answers(
             let parts = answers_parts(a);
             answers_part_ready(bytes@, a, 2, &cursor);
             assert(parts[2] == ckc_spec::v1text::ascii(
-                " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+                " answered against the loaded composition by ckc queries; do not edit.\n"@,
             ));
         }
     }
@@ -11783,7 +11779,7 @@ pub fn parse_answers(
         line_suffix,
         Ghost(
             ckc_spec::v1text::ascii(
-                " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+                " answered against the loaded composition by ckc queries; do not edit.\n"@,
             ),
         ),
         at,
@@ -12286,7 +12282,7 @@ pub open spec fn traces_parts(t: ckc_spec::v1text::TracesFile) -> Seq<Seq<u8>> {
         ckc_spec::v1text::ascii("% "@),
         t.qid,
         ckc_spec::v1text::ascii(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+            " traced against the loaded composition by ckc queries; do not edit.\n"@,
         ),
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_traces"@)),
         seq![0x28u8],
@@ -12323,7 +12319,7 @@ proof fn traces_parts_flat(t: ckc_spec::v1text::TracesFile)
         ckc_spec::v1text::ascii("% "@),
         t.qid,
         ckc_spec::v1text::ascii(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+            " traced against the loaded composition by ckc queries; do not edit.\n"@,
         ),
     ];
     let qsha = seq![
@@ -12429,7 +12425,7 @@ proof fn traces_flat_is_print(t: ckc_spec::v1text::TracesFile)
 
 pub open spec fn traces_line_stage(qid: Seq<u8>) -> Seq<u8> {
     ckc_spec::v1text::ascii("% "@) + qid + ckc_spec::v1text::ascii(
-        " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+        " traced against the loaded composition by ckc queries; do not edit.\n"@,
     )
 }
 
@@ -12496,9 +12492,7 @@ fn parse_traces_line(
         if let Some(t) = expected@ {
             reveal(traces_parts);
             reveal(ckc_spec::v1text::wf_traces);
-            reveal_strlit(
-                " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
-            );
+            reveal_strlit(" traced against the loaded composition by ckc queries; do not edit.\n");
             reveal(ckc_spec::v1text::ascii);
         }
     }
@@ -12523,17 +12517,13 @@ fn parse_traces_line(
     };
 
     let line_suffix: &[u8] =
-        b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n";
+        b" traced against the loaded composition by ckc queries; do not edit.\n";
     proof {
-        reveal_strlit(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
-        );
-        reveal_byteslit(
-            b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
-        );
+        reveal_strlit(" traced against the loaded composition by ckc queries; do not edit.\n");
+        reveal_byteslit(b" traced against the loaded composition by ckc queries; do not edit.\n");
         reveal(ckc_spec::v1text::ascii);
         assert(line_suffix@ == ckc_spec::v1text::ascii(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+            " traced against the loaded composition by ckc queries; do not edit.\n"@,
         ));
     }
     if !guided_literal(
@@ -12542,7 +12532,7 @@ fn parse_traces_line(
         line_suffix,
         Ghost(
             ckc_spec::v1text::ascii(
-                " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+                " traced against the loaded composition by ckc queries; do not edit.\n"@,
             ),
         ),
         at,
@@ -15243,7 +15233,7 @@ pub open spec fn doc_line_parts(docid: Seq<u8>) -> Seq<Seq<u8>> {
         ckc_spec::v1text::ascii("% "@),
         docid,
         ckc_spec::v1text::ascii(
-            ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
+            ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n"@,
         ),
     ]
 }
@@ -15827,7 +15817,7 @@ fn parse_doc_line(
             reveal(doc_line_parts);
             reveal(ckc_spec::v1text::wf_doc);
             reveal_strlit(
-                ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
+                ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
             );
             reveal(ckc_spec::v1text::ascii);
         }
@@ -15851,17 +15841,17 @@ fn parse_doc_line(
         None => return None,
     };
     let suffix: &[u8] =
-        b".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n";
+        b".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n";
     proof {
         reveal_strlit(
-            ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
+            ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
         );
         reveal_byteslit(
-            b".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
+            b".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
         );
         reveal(ckc_spec::v1text::ascii);
         assert(suffix@ == ckc_spec::v1text::ascii(
-            ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
+            ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n"@,
         ));
     }
     if !guided_literal(
@@ -15870,7 +15860,7 @@ fn parse_doc_line(
         suffix,
         Ghost(
             ckc_spec::v1text::ascii(
-                ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n"@,
+                ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n"@,
             ),
         ),
         at,

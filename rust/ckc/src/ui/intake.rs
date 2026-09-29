@@ -338,14 +338,14 @@ fn ledger(root: &Path, gid: &str, manifest: &[u8]) -> Result<(ESrc, Vec<u8>)> {
     for (i, bundle) in bundles.iter().enumerate() {
         if bundle.review != digest(&ckc_kernel::contract::check_bundle_block(bundle)) {
             return Err(format!(
-                "ui: adjudication ledger invalid: goal: adjudication: manifest row {} review_sha256 self-consistency",
+                "ui: adjudication ledger invalid: ckc: adjudication: manifest row {} review_sha256 self-consistency",
                 i + 3
             ));
         }
     }
     if let Some(issue) = issue {
         return Err(format!(
-            "ui: adjudication ledger invalid: goal: adjudication: {}",
+            "ui: adjudication ledger invalid: ckc: adjudication: {}",
             text(&issue)
         ));
     }

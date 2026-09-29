@@ -127,6 +127,6 @@ pub(super) fn check() -> Result {
             format!("green case count drift: expected 9 got {green}"),
         ));
     }
-    println!("goal: adjudication fixtures ok {red} red {green} green");
+    println!("ckc: adjudication fixtures ok {red} red {green} green");
     Ok(())
 }

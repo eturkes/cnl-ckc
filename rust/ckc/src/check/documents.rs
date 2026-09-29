@@ -176,7 +176,7 @@ pub(super) fn check(
         ));
     }
     println!(
-        "goal: {}",
+        "ckc: {}",
         text::strip(&aggregate("recursion-check", &forward, pairs.len())?)
     );
     let counts = queries::validate(scratch, swipl, stage, &g.path, g.lexicon.as_deref())?;

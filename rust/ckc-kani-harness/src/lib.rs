@@ -58,7 +58,7 @@ mod harness {
             ));
         }
         const ANSWERS: &[u8] = concat!(
-            "% q answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
+            "% q answered against the loaded composition by ckc queries; do not edit.\n",
             "'$guideline_answers'(v1,q,query_sha256('4fd2d61c0ba8557964dcf18b59df04f8a955578a5427c57ca177cb5396471fb7'),result(yes)).\n",
         ).as_bytes();
         let manifest = ESrc::Bytes(b"d\tp\n".to_vec());
@@ -88,7 +88,7 @@ mod harness {
     }
 
     const DOC: &[u8] = concat!(
-        "% d.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
+        "% d.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
         ":- multifile(guideline_schema_version/1).\n",
         ":- discontiguous(guideline_schema_version/1).\n",
         ":- multifile(guideline_document/3).\n",

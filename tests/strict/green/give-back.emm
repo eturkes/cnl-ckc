@@ -1,5 +1,0 @@
-Define [[identity]] taking value:
-    Try:
-        Give back value.
-    Catch Exception:
-        Give back Nothing.

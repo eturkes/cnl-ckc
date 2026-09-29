@@ -1,4 +1,4 @@
-% cdc2022-opioid-s34-04.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
+% cdc2022-opioid-s34-04.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
 :- multifile(guideline_document/3).

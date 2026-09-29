@@ -13,7 +13,7 @@ pub(super) type Result<T = ()> = std::result::Result<T, Failure>;
 
 fn message(category: &str, detail: impl AsRef<str>) -> Vec<u8> {
     format!(
-        "goal: {category}: {}\n",
+        "ckc: {category}: {}\n",
         detail.as_ref().replace('\n', "\\n").replace('\r', "\\r")
     )
     .into_bytes()

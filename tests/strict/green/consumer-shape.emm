@@ -1,6 +1,0 @@
-Try:
-    Set fd to [[os.open]](path, flags).
-Catch FileExistsError:
-    Set status to 409.
-Catch OSError:
-    Set status to 500.

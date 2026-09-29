@@ -49,14 +49,14 @@ pub fn verdict(v: &EVerdict) -> (r: ERendered)
     match v {
         EVerdict::Ok(m) => ERendered { rc: 0, out: copy(m) },
         EVerdict::Fail(c, d) => {
-            let mut out = copy(b"goal: ");
+            let mut out = copy(b"ckc: ");
             append(&mut out, c);
             append(&mut out, b": ");
             append(&mut out, &escape(d));
             out.push(0x0a);
             proof {
-                reveal_byteslit(b"goal: ");
-                reveal_strlit("goal: ");
+                reveal_byteslit(b"ckc: ");
+                reveal_strlit("ckc: ");
                 reveal_byteslit(b": ");
                 reveal_strlit(": ");
                 reveal(ckc_spec::v1text::ascii);

@@ -86,7 +86,7 @@ fn align(gid: &str, id: &str) -> Result {
     fs::write(dir.join(format!("{id}.tsv")), text.as_bytes())
         .map_err(|e| fail("align", e.to_string()))?;
     println!(
-        "goal: align {id} groups {} spans {}",
+        "ckc: align {id} groups {} spans {}",
         result.groups, result.spans
     );
     Ok(())
@@ -114,7 +114,7 @@ fn review(path: &Path, write: bool) -> Result {
         }
         fs::write(&target, bytes).map_err(|e| fail("adjudication", e.to_string()))?;
         println!(
-            "goal: review-manifest {} {} documents",
+            "ckc: review-manifest {} {} documents",
             name(path),
             g.docids.len()
         );
@@ -145,17 +145,17 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
         _ => Err(fail(
             "usage",
             match args.first().map(String::as_str) {
-                Some("compile") => "expected: goal compile <guideline-id>",
-                Some("queries") => "expected: goal queries <guideline-id>",
-                Some("align") => "expected: goal align <guideline-id> <docid>",
-                Some("review-manifest") => "expected: goal review-manifest <guideline-id>",
+                Some("compile") => "expected: ckc compile <guideline-id>",
+                Some("queries") => "expected: ckc queries <guideline-id>",
+                Some("align") => "expected: ckc align <guideline-id> <docid>",
+                Some("review-manifest") => "expected: ckc review-manifest <guideline-id>",
                 Some("derive-review-manifest") => {
-                    "expected: goal derive-review-manifest <guideline-dir>"
+                    "expected: ckc derive-review-manifest <guideline-dir>"
                 }
                 Some("ledger-validate") => {
-                    "expected: goal ledger-validate <ledger-path> <manifest-path> <label>"
+                    "expected: ckc ledger-validate <ledger-path> <manifest-path> <label>"
                 }
-                Some("release-manifest") => "expected: goal release-manifest",
+                Some("release-manifest") => "expected: ckc release-manifest",
                 _ => "invalid pipeline arguments",
             },
         )),

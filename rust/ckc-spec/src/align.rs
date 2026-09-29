@@ -2,8 +2,8 @@ use vstd::prelude::*;
 
 verus! {
 
-// Trusted spec: render-side align-TSV validator (contract m5u1 R3; legacy
-// identity = tools/ui.py hl_parse_align, byte-exact on error details).
+// Trusted spec: render-side align-TSV validator (contract m5u1 R3; error
+// details byte-exact).
 // Inputs are code-point sequences (UTF-8 decoding = shell boundary).
 // Artifact rows: group<TAB>side<TAB>start<TAB>span; offsets/lengths count
 // code points. `align_outcome` is the one function the kernel binding

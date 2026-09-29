@@ -1,7 +1,7 @@
 use super::common::*;
 use std::collections::BTreeSet;
 use std::path::Path;
-const HEADER: &str = "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes, row shape and per-document row\n# coverage are validated by goal.py check; kept/dropped prose stays document-owned.\n";
+const HEADER: &str = "# format: docid<TAB>region<TAB>kept<TAB>dropped\n# per-document projection loss record: what each minimal rule keeps from its verbatim source\n# region and what it drops or interprets. Header bytes, row shape and per-document row\n# coverage are validated by ckc check; kept/dropped prose stays document-owned.\n";
 pub(super) fn check(root: &Path) -> Result<Vec<(String, String)>> {
     let text = corpus_text(
         &root.join("audit/projection-notes.tsv"),

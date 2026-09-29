@@ -1,6 +1,0 @@
-Try:
-    Set x to 1.
-Catch OSError:
-    Set x to 2.
-Catch oserror:
-    Set x to 3.

@@ -133,9 +133,9 @@ pub(super) fn compile(gid: &str) -> Result {
     documents::aggregate("recursion-check", &manifest, pairs.len())?;
     replace(&new, &pl, &scratch.0.join("pl-old"))?;
     for id in &g.docids {
-        println!("goal: wrote {}", show(&g.pl(id)));
+        println!("ckc: wrote {}", show(&g.pl(id)));
     }
-    println!("goal: compile ok {} documents", g.docids.len());
+    println!("ckc: compile ok {} documents", g.docids.len());
     Ok(())
 }
 
@@ -150,7 +150,7 @@ pub(super) fn queries(gid: &str) -> Result {
                 fs::remove_dir_all(&dir).map_err(|e| fail("queries", e.to_string()))?;
             }
         }
-        println!("goal: queries ok 0 queries");
+        println!("ckc: queries ok 0 queries");
         return Ok(());
     }
     let lexicon = path.join("lexicon.ulex");
@@ -195,11 +195,11 @@ pub(super) fn queries(gid: &str) -> Result {
     for id in &ids {
         for name in ["pl", "answers", "traces"] {
             println!(
-                "goal: wrote {}",
+                "ckc: wrote {}",
                 show(&root.join(name).join(format!("{id}.pl")))
             );
         }
     }
-    println!("goal: queries ok {} queries", ids.len());
+    println!("ckc: queries ok {} queries", ids.len());
     Ok(())
 }

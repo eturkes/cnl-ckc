@@ -178,13 +178,13 @@ fn refusal(e: Failure) -> ExitCode {
     let message = if e.err.is_empty() { &e.out } else { &e.err };
     let text = String::from_utf8_lossy(message);
     let text = text.trim_end_matches(['\r', '\n']);
-    let detail = text.strip_prefix("goal: dist: ").unwrap_or(text);
+    let detail = text.strip_prefix("ckc: dist: ").unwrap_or(text);
     eprintln!("dist: {}", detail.replace('\n', "\\n").replace('\r', "\\r"));
     ExitCode::from(1)
 }
 pub(crate) fn run(args: &[String]) -> ExitCode {
     if args.first().map(String::as_str) != Some("build") || args.len() > 2 {
-        eprintln!("dist: usage: python3 -P tools/dist.py build [<dest>]");
+        eprintln!("dist: usage: ckc dist build [<dest>]");
         return ExitCode::from(2);
     }
     let dest = args.get(1).map(String::as_str).unwrap_or("dist");

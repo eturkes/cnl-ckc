@@ -228,7 +228,7 @@ pub fn meter(gid: &[u8], c: &ECoverage) -> (r: Vec<u8>)
     let restates = number(count(&c.rows, 2));
     let uncovered = number(count(&c.rows, 3));
     let total = number(c.rows.len());
-    let mut r = concat(b"goal: coverage ok ", gid);
+    let mut r = concat(b"ckc: coverage ok ", gid);
     r.push(0x20);
     append(&mut r, &total);
     append(&mut r, b" regions; ace=");
@@ -241,8 +241,8 @@ pub fn meter(gid: &[u8], c: &ECoverage) -> (r: Vec<u8>)
     append(&mut r, &pending);
     r.push(0x0a);
     proof {
-        reveal_byteslit(b"goal: coverage ok ");
-        reveal_strlit("goal: coverage ok ");
+        reveal_byteslit(b"ckc: coverage ok ");
+        reveal_strlit("ckc: coverage ok ");
         reveal_byteslit(b" regions; ace=");
         reveal_strlit(" regions; ace=");
         reveal_byteslit(b" restates=");

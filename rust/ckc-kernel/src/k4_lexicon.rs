@@ -416,7 +416,7 @@ pub fn meter(path: &[u8], entries: usize, clex_facts: usize, ruled: usize) -> (r
     ensures
         r@ == lexicon_meter(path@, entries as nat, clex_facts as nat, ruled as nat),
 {
-    let mut r = concat(b"goal: lexicon ok ", path);
+    let mut r = concat(b"ckc: lexicon ok ", path);
     r.push(0x20);
     append(&mut r, &number(entries));
     append(&mut r, b" entries ");
@@ -425,8 +425,8 @@ pub fn meter(path: &[u8], entries: usize, clex_facts: usize, ruled: usize) -> (r
     append(&mut r, &number(ruled));
     append(&mut r, b" ruled shadows\n");
     proof {
-        reveal_byteslit(b"goal: lexicon ok ");
-        reveal_strlit("goal: lexicon ok ");
+        reveal_byteslit(b"ckc: lexicon ok ");
+        reveal_strlit("ckc: lexicon ok ");
         reveal_byteslit(b" entries ");
         reveal_strlit(" entries ");
         reveal_byteslit(b" clex facts ");

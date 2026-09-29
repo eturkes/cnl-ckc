@@ -1,2 +1,2 @@
-% q-wh answered against the loaded composition by ace_to_pl answer mode; do not edit.
+% q-wh answered against the loaded composition by ckc queries; do not edit.
 '$guideline_answers'(v1,'q-wh',query_sha256('6721d6be67df6879f18514bcbc062ebf3bb76c4a2b31dbc8665ec2811ac2a465'),result(solutions([sol([b00]),sol([b01]),sol([b02]),sol([b03]),sol([b04]),sol([b05]),sol([b06]),sol([b07]),sol([b08]),sol([b09]),sol([b10]),sol([b11]),sol([b12]),sol([b13]),sol([b14])]))).

@@ -272,8 +272,7 @@ pub fn traces_exec(
     let result_name: &[u8] = b"result";
     let record_name: &[u8] = b"$guideline_traces";
     let prefix: &[u8] = b"% ";
-    let suffix: &[u8] =
-        b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n";
+    let suffix: &[u8] = b" traced against the loaded composition by ckc queries; do not edit.\n";
     proof {
         reveal_byteslit(b"v1");
         reveal_strlit("v1");
@@ -287,12 +286,8 @@ pub fn traces_exec(
         reveal_strlit("$guideline_traces");
         reveal_byteslit(b"% ");
         reveal_strlit("% ");
-        reveal_byteslit(
-            b" traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
-        );
-        reveal_strlit(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
-        );
+        reveal_byteslit(b" traced against the loaded composition by ckc queries; do not edit.\n");
+        reveal_strlit(" traced against the loaded composition by ckc queries; do not edit.\n");
         reveal(ascii);
         assert(version@ == ascii("v1"@));
         assert(query_name@ == ascii("query_sha256"@));
@@ -301,7 +296,7 @@ pub fn traces_exec(
         assert(record_name@ == ascii("$guideline_traces"@));
         assert(prefix@ == ascii("% "@));
         assert(suffix@ == ascii(
-            " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n"@,
+            " traced against the loaded composition by ckc queries; do not edit.\n"@,
         ));
     }
     let v1 = crate::k2_output::atom_root(arena, version);

@@ -1,7 +1,0 @@
-try:
-    int("x")
-except ValueError:
-    try:
-        x = 1
-    except Exception:
-        x = 2

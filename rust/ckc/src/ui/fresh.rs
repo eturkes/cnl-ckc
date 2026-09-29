@@ -6,7 +6,7 @@ use std::path::Path;
 
 fn fail(category: &str, detail: impl AsRef<str>) -> String {
     format!(
-        "goal: {category}: {}",
+        "ckc: {category}: {}",
         detail.as_ref().replace('\n', "\\n").replace('\r', "\\r")
     )
 }

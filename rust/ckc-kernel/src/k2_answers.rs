@@ -561,7 +561,7 @@ pub fn parsed_term_count(
                 );
                 bundles_census(doc.bundles);
                 reveal_strlit(
-                    ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
+                    ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
                 );
                 reveal(ckc_spec::v1text::ascii);
                 assert(ckc_spec::v1text::doc_line1(doc.docid).len() >= 20);
@@ -1160,8 +1160,7 @@ pub fn print_answers_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], resul
     let result_name: &[u8] = b"result";
     let record_name: &[u8] = b"$guideline_answers";
     let prefix: &[u8] = b"% ";
-    let suffix: &[u8] =
-        b" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n";
+    let suffix: &[u8] = b" answered against the loaded composition by ckc queries; do not edit.\n";
     proof {
         reveal_byteslit(b"v1");
         reveal_strlit("v1");
@@ -1173,12 +1172,8 @@ pub fn print_answers_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], resul
         reveal_strlit("$guideline_answers");
         reveal_byteslit(b"% ");
         reveal_strlit("% ");
-        reveal_byteslit(
-            b" answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
-        );
-        reveal_strlit(
-            " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
-        );
+        reveal_byteslit(b" answered against the loaded composition by ckc queries; do not edit.\n");
+        reveal_strlit(" answered against the loaded composition by ckc queries; do not edit.\n");
         reveal(ckc_spec::v1text::ascii);
         assert(version@ == ckc_spec::v1text::ascii("v1"@));
         assert(query_name@ == ckc_spec::v1text::ascii("query_sha256"@));
@@ -1186,7 +1181,7 @@ pub fn print_answers_exec(arena: &mut ETermArena, qid: &[u8], qsha: &[u8], resul
         assert(record_name@ == ckc_spec::v1text::ascii("$guideline_answers"@));
         assert(prefix@ == ckc_spec::v1text::ascii("% "@));
         assert(suffix@ == ckc_spec::v1text::ascii(
-            " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n"@,
+            " answered against the loaded composition by ckc queries; do not edit.\n"@,
         ));
     }
     let v1 = atom_root(arena, version);

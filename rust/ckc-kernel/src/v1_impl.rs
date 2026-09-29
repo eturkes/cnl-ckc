@@ -65,7 +65,7 @@ proof fn v1_header_shape(f: text::V1File)
             reveal(text::print_doc);
             reveal(text::doc_line1);
             reveal_strlit(
-                ".pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.\n",
+                ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
             );
         },
         text::V1File::Query(_) => {
@@ -79,16 +79,14 @@ proof fn v1_header_shape(f: text::V1File)
             reveal(text::print_answers);
             reveal(text::answers_line1);
             reveal_strlit(
-                " answered against the loaded composition by ace_to_pl answer mode; do not edit.\n",
+                " answered against the loaded composition by ckc queries; do not edit.\n",
             );
         },
         text::V1File::Traces(_) => {
             reveal(text::wf_traces);
             reveal(text::print_traces);
             reveal(text::traces_line1);
-            reveal_strlit(
-                " traced against the loaded composition by ace_to_pl trace mode; do not edit.\n",
-            );
+            reveal_strlit(" traced against the loaded composition by ckc queries; do not edit.\n");
         },
     }
     reveal_strlit("% ");

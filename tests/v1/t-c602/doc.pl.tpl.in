@@ -1,5 +1,5 @@
-@@sha256 bf2a89bb3e791d584961469cb6fc2372cd3d2650bb39ffeccbfb74e614ae5e57
-% doc.pl compiled from ACE by ace_to_pl; regenerate via tools/goal.py; do not edit.
+@@sha256 ec75c8de504e197ad92254e720024e82789db956975398412e077ca5ba923b8e
+% doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
 :- multifile(guideline_document/3).

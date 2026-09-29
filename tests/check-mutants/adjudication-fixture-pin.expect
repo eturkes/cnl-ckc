@@ -1,1 +1,1 @@
-goal: adjudication-fixtures: stdout differs from golden for case: green-absent-ledger
+ckc: adjudication-fixtures: stdout differs from golden for case: green-absent-ledger

@@ -224,6 +224,6 @@ pub(super) fn check() -> Result {
     if modified == 0 {
         return Err(violation("fork-notice", "no modified vendored files found"));
     }
-    println!("goal: fork notices ok {trees} trees {modified} modified files");
+    println!("ckc: fork notices ok {trees} trees {modified} modified files");
     Ok(())
 }
