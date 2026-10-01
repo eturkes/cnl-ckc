@@ -1,8 +1,9 @@
 // `ckc check` corpus mutants (.agent/contracts/harness.md H6): the 36 M5.3 red
-// mutants whose first violation lands before the SWI-Prolog stage. Each row
-// mutates a fresh clone of HEAD (mutants.py `mutate`, byte for byte) and must end
-// in its pinned rc with the pinned first violation: whole stderr when nonempty,
-// else the last stdout line. CKC_CHECK_TEST_BIN selects a prebuilt executable.
+// mutants whose first violation lands before the SWI-Prolog stage (mutants.py
+// `mutate`, byte for byte) + 3 `.agent/spec.md` shape plants. Each row mutates a
+// fresh clone of HEAD and must end in its pinned rc with the pinned first
+// violation: whole stderr when nonempty, else the last stdout line.
+// CKC_CHECK_TEST_BIN selects a prebuilt executable.
 use std::fs;
 use std::io::Read;
 use std::os::unix::fs::symlink;
@@ -22,6 +23,7 @@ const LEDGER: &str = "guidelines/cdc-2022-opioid/audit/adjudication.tsv";
 const ULEX: &str = "guidelines/cdc-2022-opioid/lexicon.ulex";
 const SHADOW: &str = "guidelines/cdc-2022-opioid/audit/lexicon-shadow.tsv";
 const EVIDENCE: &str = "guidelines/cdc-2022-opioid/source/box3-extraction.txt";
+const SPEC: &str = ".agent/spec.md";
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -165,6 +167,9 @@ fn mutate(t: &Path, name: &str) {
             f[4] = b"invalid".to_vec();
             replace(t, ".agent/compendium.tsv", &row, &joined(&f));
         }
+        "spec-tasks-missing" => replace(t, SPEC, b"\n## Tasks\n", b"\n"),
+        "spec-tick-sha" => replace(t, SPEC, b"\n## Tasks\n\n", b"\n## Tasks\n\n- [x] U9 parity unit\n"),
+        "spec-tasks-last" => replace(t, SPEC, b"\n\n## Phase\n", b"\n- [ ] U9 parity unit\n\n## Phase\n"),
         "source-readme-missing" => remove(t, &format!("{G}/README.md")),
         "source-evidence-symlink" => {
             symlink("box3-extraction.txt", t.join(G).join("source/000-parity-link")).unwrap()
@@ -346,7 +351,7 @@ fn check_mutant_battery() {
         .filter(|l| !l.starts_with('#'))
         .map(|l| l.split('\t').collect())
         .collect();
-    assert_eq!(rows.len(), 36, "tests/check-mutants row count");
+    assert_eq!(rows.len(), 39, "tests/check-mutants row count");
     // Each worker clones HEAD once, then per row: mutate → check → reset + clean
     // back to HEAD (a fresh checkout per row costs ~10× the check itself).
     let next = AtomicUsize::new(0);

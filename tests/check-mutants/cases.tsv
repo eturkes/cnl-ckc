@@ -6,6 +6,9 @@ adjudication-fixture-pin	check_adjudication_fixtures	1
 compendium-header-cr	check_compendium	1
 compendium-org-class	check_compendium_orgs	1
 compendium-row-status	check_compendium_rows	1
+spec-tasks-missing	check_agent_spec	1
+spec-tick-sha	check_agent_spec	1
+spec-tasks-last	check_agent_spec	1
 source-readme-missing	check_source_record	1
 source-evidence-symlink	check_source_record	1
 pl-orphan	check_pl_inventory	1

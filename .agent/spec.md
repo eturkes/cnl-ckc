@@ -33,11 +33,11 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 - [ ] Q1 Kani engine + trace harnesses over a typed below-parser seam.
 - [ ] Q2 `ace_commit` custody content check (user ruling owed: recorded commit = the reviewed snapshot).
-- [ ] Q3 non-v1 tests/queries fixtures → canonical v1 or retired; `tests/check/r79-nonv1.tsv` 0 rows.
+- [x] 0ea7c076 Q3 non-v1 tests/queries fixtures → canonical v1 (10/10 rewritten); `tests/check/r79-nonv1.tsv` header only.
 - [ ] Q4 `.agent/spec.md` shape check in `ckc check`.
 - [ ] Q5 M7 gap coverage (agent part: taxonomy research; user ruling owed).
 - [ ] Q6 corpus rounds to exhaustion (user routing ruling owed).
-- [ ] Q7 K3 negation certificate = call-time instance; unsafe NAF flounders.
+- [ ] Q7 K3 negation certificate = call-time instance; calls failing `naf_safe` cut.
 - [ ] Q8 trace clause identity from the owning `% S<n>:` block.
 - [ ] Q9 single-authority UI copy.
 - [ ] Q10 M5.3 late mutants replayed.

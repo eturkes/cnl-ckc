@@ -113,7 +113,10 @@ compiler base:
      organizations table plus the `.agent/compendium.tsv` guideline
      rows: row vocabulary, canonical ordering, the one-active-row
      promotion invariant — and prints the terminal meter that the
-     corpus prompt's exhaustion clause reads;
+     corpus prompt's exhaustion clause reads. It then checks the shape
+     of `.agent/spec.md`: the five sections in order, each `Tasks` row
+     open (`- [ ]`) or ticked with its commit (`- [x] <sha>`), and the
+     `.agent/deferred.md` pointer as the last `Tasks` line;
   2. validates layout, source records, and Prolog/lexicon inventory
      closure;
   3. validates every guideline's corpus ledgers — projection-notes

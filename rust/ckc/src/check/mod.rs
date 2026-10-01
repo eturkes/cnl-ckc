@@ -1,4 +1,5 @@
 use std::process::ExitCode;
+mod agent_spec;
 mod census;
 mod common;
 mod compendium;
@@ -33,6 +34,7 @@ fn check() -> common::Result {
     probes::wall()?;
     adjudication_fixtures::check()?;
     compendium::check()?;
+    agent_spec::check()?;
     let plans = inventories::guidelines()?;
     let red = inventories::red()?;
     inventories::prolog()?;
