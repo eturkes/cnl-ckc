@@ -100,12 +100,17 @@ fn align_probe_suite() {
             .stderr(Stdio::piped())
             .spawn()
             .unwrap();
-        child
+        // A probe rejected before `ckc align` reads stdin closes the pipe first (EPIPE);
+        // the rc/stdout/stderr pins below still grade the run.
+        match child
             .stdin
             .take()
             .unwrap()
             .write_all(&fs::read(case.join("stdin.tsv.in")).unwrap())
-            .unwrap();
+        {
+            Err(e) if e.kind() != std::io::ErrorKind::BrokenPipe => panic!("{id}: stdin: {e}"),
+            _ => {}
+        }
         let out = child.wait_with_output().unwrap();
         let read = |name: &str| fs::read(case.join(name)).unwrap();
         let rc: i32 = String::from_utf8(read("expected.rc"))
