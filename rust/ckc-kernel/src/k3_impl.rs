@@ -86,6 +86,7 @@ pub fn v1_trace_impl(
     let result = match crate::k3_rows::result_exec(
         &mut arena,
         &front.loaded.db,
+        &front.loaded.coords,
         digests,
         &front.query,
         &front.answer,
@@ -161,6 +162,7 @@ pub fn v1_trace_check_impl(
     let derived = match crate::k3_rows::result_exec(
         &mut arena,
         &front.loaded.db,
+        &front.loaded.coords,
         digests,
         &front.query,
         &front.answer,

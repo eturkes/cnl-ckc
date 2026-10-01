@@ -1,0 +1,2 @@
+% q-wh traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,'q-wh',query_sha256('7debb8a64ff5b3a498091ec301fdc38ea8e5cbafd518dc7e455e3c2f85798793'),answers_sha256('103b13bb82b464b14eab405208f1efe78403c41ec4129864e464d57cfd3282cb'),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])],proved([clause(sentence(doc,1),clause_sha256('792bf0856423b8ebf61de40358ed67b9fc7302da752715b2d974757977d69a8f'),[])]))]))).

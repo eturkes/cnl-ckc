@@ -1,0 +1,2 @@
+% q-wh traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,'q-wh',query_sha256('5be6ae948479f6f7e0649b74a39ddcfd26f2d2669f5bdca984eee7de5efe8bec'),answers_sha256('9083ce7f7d4447df7b1306a09c7d7be9a4b08ca1583c6776bea1c1594a06fa17'),result(solutions([sol([patient],proved([clause(sentence(doc,1),clause_sha256('24a21de7cd5fe33a911fabc83c38465bbf23d54526354c921d48fb496bc1c985'),[])]))]))).

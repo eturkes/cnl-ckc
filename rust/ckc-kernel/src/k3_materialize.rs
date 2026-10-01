@@ -4,6 +4,9 @@ use crate::k2_engine::{clause_valid, db_valid, db_view, root_terms, roots_valid}
 use crate::k2_term::{ENode, ETermArena};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::{arena_ok, root_ok};
+use crate::k3_coords::ECoord;
+#[cfg(verus_keep_ghost)]
+use crate::k3_coords::{coords_ok, coords_view};
 use crate::k3_state::{EEntry, EEvent};
 #[cfg(verus_keep_ghost)]
 use crate::k3_state::{entry_valid, entry_view, event_view, log_valid, log_view, path_view};
@@ -56,15 +59,22 @@ pub open spec fn prepend(acc: Seq<Term>, count: nat, tail: Mat) -> Mat {
 
 proof fn mat_cons(
     db: Seq<ckc_spec::v1text::DocClause>,
+    coords: Seq<Coord>,
     digests: Seq<Seq<u8>>,
     head: PNode,
     tail: Seq<PNode>,
     base: nat,
 )
     ensures
-        mat_all(db, digests, seq![head] + tail, base) == match mat(db, digests, head, base) {
+        mat_all(db, coords, digests, seq![head] + tail, base) == match mat(
+            db,
+            coords,
+            digests,
+            head,
+            base,
+        ) {
             Mat::Err(o) => Mat::Err(o),
-            Mat::Ok(first, next, n) => prepend(first, n, mat_all(db, digests, tail, next)),
+            Mat::Ok(first, next, n) => prepend(first, n, mat_all(db, coords, digests, tail, next)),
         },
 {
     assert((seq![head] + tail).len() > 0);
@@ -279,6 +289,7 @@ fn clause_node(arena: &mut ETermArena, sentence: usize, hex: &[u8], children: &V
 fn node(
     input: ETermArena,
     db: &Vec<EClause>,
+    coords: &Vec<ECoord>,
     digests: &Vec<Vec<u8>>,
     log: &Vec<EEntry>,
     path: &Vec<usize>,
@@ -287,6 +298,7 @@ fn node(
     requires
         arena_ok(&input),
         db_valid(input.nodes@, db@),
+        coords_ok(coords@),
         log_valid(input.nodes@, db.len() as nat, log@),
         base <= input.nodes.len(),
     ensures
@@ -296,6 +308,7 @@ fn node(
         allocation(&out.1, input.nodes.len() as nat, out.0.nodes.len() as nat),
         view(out.0.nodes@, &out.1) == mat(
             db_view(input.nodes@, db@),
+            coords_view(coords@),
             digests_view(digests@),
             build(db_view(input.nodes@, db@), log_view(input.nodes@, log@), path_view(path@)),
             base as nat,
@@ -351,7 +364,7 @@ fn node(
                         ));
                         reveal(mat);
                     }
-                    let sentence = match crate::k3_identity::identity_exec(&mut arena, &db[*m]) {
+                    let sentence = match crate::k3_identity::sentence_exec(&mut arena, coords, *m) {
                         Err(e) => return (arena, EMat::Err(e)),
                         Ok(s) => s,
                     };
@@ -364,6 +377,7 @@ fn node(
                     let (next_arena, result) = children(
                         arena,
                         db,
+                        coords,
                         digests,
                         log,
                         path,
@@ -428,6 +442,7 @@ fn node(
 fn children(
     input: ETermArena,
     db: &Vec<EClause>,
+    coords: &Vec<ECoord>,
     digests: &Vec<Vec<u8>>,
     log: &Vec<EEntry>,
     path: &Vec<usize>,
@@ -437,6 +452,7 @@ fn children(
     requires
         arena_ok(&input),
         db_valid(input.nodes@, db@),
+        coords_ok(coords@),
         log_valid(input.nodes@, db.len() as nat, log@),
         base <= input.nodes.len(),
         path.len() <= log.len(),
@@ -447,6 +463,7 @@ fn children(
         allocation(&out.1, input.nodes.len() as nat, out.0.nodes.len() as nat),
         view(out.0.nodes@, &out.1) == mat_all(
             db_view(input.nodes@, db@),
+            coords_view(coords@),
             digests_view(digests@),
             build_all(
                 db_view(input.nodes@, db@),
@@ -466,6 +483,7 @@ fn children(
     let ghost events = log_view(origin, log@);
     let ghost target = mat_all(
         program,
+        coords_view(coords@),
         digests_view(digests@),
         build_all(program, events, path_view(path@), 0, count as nat),
         base as nat,
@@ -481,6 +499,7 @@ fn children(
             arena_ok(&arena),
             origin.is_prefix_of(arena.nodes@),
             db_valid(arena.nodes@, db@),
+            coords_ok(coords@),
             db_view(arena.nodes@, db@) == program,
             program == db_view(origin, db@),
             log_valid(arena.nodes@, db.len() as nat, log@),
@@ -493,6 +512,7 @@ fn children(
             total <= arena.nodes.len() - origin.len(),
             target == mat_all(
                 program,
+                coords_view(coords@),
                 digests_view(digests@),
                 build_all(program, events, path_view(path@), 0, count as nat),
                 base as nat,
@@ -502,6 +522,7 @@ fn children(
                 total as nat,
                 mat_all(
                     program,
+                    coords_view(coords@),
                     digests_view(digests@),
                     build_all(program, events, path_view(path@), i as nat, count as nat),
                     numbered as nat,
@@ -520,13 +541,14 @@ fn children(
             build_cons(program, events, path_view(path@), i as nat, count as nat);
             mat_cons(
                 program,
+                coords_view(coords@),
                 digests_view(digests@),
                 build(program, events, path_view(child_path@)),
                 build_all(program, events, path_view(path@), i as nat + 1, count as nat),
                 old_base,
             );
         }
-        let (next_arena, child) = node(arena, db, digests, log, &child_path, numbered);
+        let (next_arena, child) = node(arena, db, coords, digests, log, &child_path, numbered);
         arena = next_arena;
         proof {
             crate::k2_engine::db_models_prefix(before, arena.nodes@, db@);
@@ -553,6 +575,7 @@ fn children(
                         nodes as nat,
                         mat_all(
                             program,
+                            coords_view(coords@),
                             digests_view(digests@),
                             build_all(
                                 program,
@@ -612,6 +635,7 @@ proof fn build_all_shape(
 pub fn forest(
     arena: &mut ETermArena,
     db: &Vec<EClause>,
+    coords: &Vec<ECoord>,
     digests: &Vec<Vec<u8>>,
     goals: &Vec<usize>,
     log: &Vec<EEntry>,
@@ -620,6 +644,7 @@ pub fn forest(
     requires
         arena_ok(old(arena)),
         db_valid(old(arena).nodes@, db@),
+        coords_ok(coords@),
         log_valid(old(arena).nodes@, db.len() as nat, log@),
         roots_valid(old(arena).nodes@, goals@),
         base <= old(arena).nodes.len(),
@@ -630,6 +655,7 @@ pub fn forest(
         allocation(&out, old(arena).nodes.len() as nat, final(arena).nodes.len() as nat),
         view(final(arena).nodes@, &out) == mat_all(
             db_view(old(arena).nodes@, db@),
+            coords_view(coords@),
             digests_view(digests@),
             forest_of(
                 db_view(old(arena).nodes@, db@),
@@ -655,7 +681,7 @@ pub fn forest(
     }
     let mut owned = crate::k2_reject::empty_arena();
     core::mem::swap(arena, &mut owned);
-    let (mut owned, result) = children(owned, db, digests, log, &path, goals.len(), base);
+    let (mut owned, result) = children(owned, db, coords, digests, log, &path, goals.len(), base);
     core::mem::swap(arena, &mut owned);
     result
 }

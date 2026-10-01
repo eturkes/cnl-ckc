@@ -227,11 +227,11 @@ t-c811	naf-root	trace-check	1	1	variants/naf-root/manifest.tsv variants/naf-root
 t-c811	clause-roots	trace-check	0	0	variants/clause-roots/manifest.tsv variants/clause-roots/query.pl variants/clause-roots/answers.pl variants/clause-roots/trace.pl
 t-c811	identity-name	trace-check	1	1	variants/identity-name/manifest.tsv variants/identity-name/query.pl variants/identity-name/answers.pl variants/identity-name/trace.pl
 t-c812	target	trace	0	0	manifest.tsv query.pl answers.pl
-t-c813	target	trace	1	1	manifest.tsv query.pl answers.pl
+t-c813	target	trace	0	0	manifest.tsv query.pl answers.pl
 t-c813	one	trace	0	0	variants/one/manifest.tsv variants/one/query.pl variants/one/answers.pl
-t-c813	multiple	trace	1	1	variants/multiple/manifest.tsv variants/multiple/query.pl variants/multiple/answers.pl
+t-c813	multiple	trace	0	0	variants/multiple/manifest.tsv variants/multiple/query.pl variants/multiple/answers.pl
 t-c813	repeated	trace	0	0	variants/repeated/manifest.tsv variants/repeated/query.pl variants/repeated/answers.pl
-t-c813	pristine-variable	trace	1	1	variants/pristine-variable/manifest.tsv variants/pristine-variable/query.pl variants/pristine-variable/answers.pl
+t-c813	pristine-variable	trace	0	0	variants/pristine-variable/manifest.tsv variants/pristine-variable/query.pl variants/pristine-variable/answers.pl
 t-c814	target	trace	2	1	manifest.tsv query.pl answers.pl
 t-c814	foreign	trace	2	1	variants/foreign/manifest.tsv variants/foreign/query.pl variants/foreign/answers.pl
 t-c815	target	trace	2	1	manifest.tsv query.pl answers.pl
@@ -337,3 +337,5 @@ t-c922	target	recursion-check	0	0	manifest.tsv
 t-c923	target	recursion-check	2	1	manifest.tsv
 t-c924	target	aggregate-check	0	0	manifest.tsv
 t-c925	target	aggregate-check	1	1	manifest.tsv
+t-c931	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+t-c931	trace	trace	0	0	manifest.tsv query.pl answers.pl

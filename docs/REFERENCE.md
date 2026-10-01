@@ -592,7 +592,7 @@ claim and stay verbatim.
 
 `P` is `proved(Nodes)`, `unproved(finite_failure)`, or
 `unproved(limit)`. Each proof node is `clause(sentence(DocId, S),
-clause_sha256(Hex), Children)`. It names the resolved clause by document and by the single sentence number that the clause's identity terms carry. A clause whose only identity terms cite an earlier sentence's referent takes that earlier number, and `check` then rejects the trace, because that number does not join the clause's own line. `Hex` is the SHA-256 of
+clause_sha256(Hex), Children)`. It names the resolved clause by its document and by the `% S<n>:` block that holds the clause's line. A clause that cites an earlier sentence's referent still names its own sentence. `Hex` is the SHA-256 of
 that clause's rendered document line with its newline. A re-checked
 negation-as-failure goal freezes as a `naf(Goal)` leaf among a
 clause node's children. Root nodes are always clause nodes. The

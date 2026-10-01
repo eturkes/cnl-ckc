@@ -8,10 +8,11 @@ use vstd::prelude::*;
 verus! {
 
 // Trusted spec: trace mode + trace-check (contract m5u2b, K3). Trace mode =
-// the legacy `ace_to_pl.pl trace_mode` law: one directed first proof per
+// the legacy `ace_to_pl.pl trace_mode` law, except that a clause node names
+// the clause's own `% S<n>:` block (contract q8): one directed first proof per
 // positive claim of a committed answers artifact under the R8 trace bounds,
-// materialized into clause nodes naming the resolving clause by sentence
-// identity + the sha256 of its committed line. Trace-check = the
+// materialized into clause nodes naming the resolving clause by its own
+// `% S<n>:` block + the sha256 of its committed line. Trace-check = the
 // committed-state law (REFERENCE § Proof traces): a committed trace is
 // accepted iff it equals this derivation, every node's digest joins exactly
 // one committed clause line of the named sentence, and every claim is proved.
@@ -459,67 +460,18 @@ pub open spec fn build_all(
 }
 
 // --- materialization: sentence identity, digest, frozen payloads ---
-pub open spec fn id_role(r: Term) -> bool {
-    r == atom("context"@) || r == atom("product"@) || r == atom("witness"@)
-}
-
-pub open spec fn pos_int(t: Term) -> bool {
-    match t {
-        Term::Int(s) => s > 0,
-        _ => false,
-    }
-}
-
-// '$guideline_id'(Role, D, S, _, _) subterms with a schema role, an atom D and a positive S.
-pub open spec fn id_pairs(t: Term) -> Seq<Term>
-    decreases t,
-{
-    match t {
-        Term::Comp(name, args) => (if name == gid_name() && args.len() == 5 && id_role(args[0])
-            && args[1] is Atom && pos_int(args[2]) {
-            seq![pair(args[1], args[2])]
-        } else {
-            Seq::empty()
-        }) + id_pairs_all(args),
-        _ => Seq::empty(),
-    }
-}
-
-pub open spec fn id_pairs_all(ts: Seq<Term>) -> Seq<Term>
-    decreases ts,
-{
-    if ts.len() == 0 {
-        Seq::empty()
-    } else {
-        id_pairs(ts[0]) + id_pairs_all(ts.drop_first())
-    }
-}
-
-pub open spec fn item_ids(it: BodyItem) -> Seq<Term> {
-    match it {
-        BodyItem::Pos(l) => id_pairs(l),
-        BodyItem::Naf(gs) => id_pairs_all(gs),
-    }
-}
-
-// Exactly one distinct pair names the clause; anything else rejects fail-closed.
-pub open spec fn identity(c: DocClause) -> Result<Term, Out> {
-    let ids = sort_unique(
-        id_pairs(c.head) + c.body.map_values(|it: BodyItem| item_ids(it)).flatten(),
-    );
-    if ids.len() == 1 {
-        Result::Ok(Term::Comp(ascii("sentence"@), args_of(ids[0])))
-    } else if ids.len() == 0 {
-        Result::Err(proof_fail(Term::Comp(ascii("clause_identity"@), seq![atom("none"@)])))
-    } else {
-        Result::Err(
-            proof_fail(
-                Term::Comp(
-                    ascii("clause_identity"@),
-                    seq![Term::Comp(ascii("multiple"@), seq![Term::Int(ids.len() as int)])],
-                ),
+// A clause node names the clause's own `% S<n>:` block (records never
+// resolve a semantic goal; the coordinate list parallels the loaded program).
+pub open spec fn sentence_of(coords: Seq<Coord>, m: nat) -> Result<Term, Out> {
+    if m < coords.len() {
+        Result::Ok(
+            Term::Comp(
+                ascii("sentence"@),
+                seq![Term::Atom(coords[m as int].docid), Term::Int(coords[m as int].s as int)],
             ),
         )
+    } else {
+        Result::Err(proof_fail(Term::Comp(ascii("clause_identity"@), seq![atom("none"@)])))
     }
 }
 
@@ -570,7 +522,13 @@ pub ghost enum Mat {
 }
 
 // Node, then its children, then its siblings (the legacy materialization order).
-pub open spec fn mat(db: Seq<DocClause>, digests: Seq<Seq<u8>>, node: PNode, base: nat) -> Mat
+pub open spec fn mat(
+    db: Seq<DocClause>,
+    coords: Seq<Coord>,
+    digests: Seq<Seq<u8>>,
+    node: PNode,
+    base: nat,
+) -> Mat
     decreases node, 0int,
 {
     match node {
@@ -578,9 +536,9 @@ pub open spec fn mat(db: Seq<DocClause>, digests: Seq<Seq<u8>>, node: PNode, bas
             let n = number(t, base);
             Mat::Ok(seq![Term::Comp(ascii("naf"@), seq![n.0])], n.1, 0)
         },
-        PNode::Clause(m, kids) => match identity(db[m as int]) {
+        PNode::Clause(m, kids) => match sentence_of(coords, m) {
             Result::Err(o) => Mat::Err(o),
-            Result::Ok(sentence) => match mat_all(db, digests, kids, base) {
+            Result::Ok(sentence) => match mat_all(db, coords, digests, kids, base) {
                 Mat::Err(o) => Mat::Err(o),
                 Mat::Ok(children, b, n) => Mat::Ok(
                     seq![
@@ -606,6 +564,7 @@ pub open spec fn mat(db: Seq<DocClause>, digests: Seq<Seq<u8>>, node: PNode, bas
 
 pub open spec fn mat_all(
     db: Seq<DocClause>,
+    coords: Seq<Coord>,
     digests: Seq<Seq<u8>>,
     kids: Seq<PNode>,
     base: nat,
@@ -615,9 +574,9 @@ pub open spec fn mat_all(
     if kids.len() == 0 {
         Mat::Ok(Seq::empty(), base, 0)
     } else {
-        match mat(db, digests, kids[0], base) {
+        match mat(db, coords, digests, kids[0], base) {
             Mat::Err(o) => Mat::Err(o),
-            Mat::Ok(first, b1, n1) => match mat_all(db, digests, kids.drop_first(), b1) {
+            Mat::Ok(first, b1, n1) => match mat_all(db, coords, digests, kids.drop_first(), b1) {
                 Mat::Err(o) => Mat::Err(o),
                 Mat::Ok(rest, b2, n2) => Mat::Ok(first + rest, b2, n1 + n2),
             },
@@ -779,6 +738,7 @@ pub open spec fn derived_forest(db: Seq<DocClause>, goal: Term) -> Option<Seq<PN
 // nodes, charged to the run (one per clause node) but never to the row.
 pub open spec fn prove_row(
     db: Seq<DocClause>,
+    coords: Seq<Coord>,
     digests: Seq<Seq<u8>>,
     goal: Term,
     base: nat,
@@ -790,7 +750,7 @@ pub open spec fn prove_row(
         TOut::Failed(true) => RowOut::Row(unproved("finite_failure"@), consumed, base),
         TOut::Failed(false) => RowOut::Row(unproved("limit"@), consumed, base),
         TOut::Limit => RowOut::Row(unproved("limit"@), consumed, base),
-        TOut::Proved(log) => match mat_all(db, digests, forest_of(db, goals, log), base) {
+        TOut::Proved(log) => match mat_all(db, coords, digests, forest_of(db, goals, log), base) {
             Mat::Err(o) => RowOut::Err(o),
             Mat::Ok(nodes, b, n) => RowOut::Row(
                 Term::Comp(ascii("proved"@), seq![list_term(nodes)]),
@@ -824,6 +784,7 @@ pub ghost enum Rows {
 
 pub open spec fn trace_rows(
     db: Seq<DocClause>,
+    coords: Seq<Coord>,
     digests: Seq<Seq<u8>>,
     goal: Term,
     vars: Seq<Term>,
@@ -841,13 +802,20 @@ pub open spec fn trace_rows(
         let values = arg(sols[i as int], 0);
         match list_items(values) {
             Option::None => Rows::Ok(acc),  // unreachable: custody checked every row
-            Option::Some(vs) => match prove_row(db, digests, bind(goal, vars, vs, 0), base) {
+            Option::Some(vs) => match prove_row(
+                db,
+                coords,
+                digests,
+                bind(goal, vars, vs, 0),
+                base,
+            ) {
                 RowOut::Err(o) => Rows::Err(o),
                 RowOut::Row(p, consumed, b) => if consumed > left {
                     Rows::Trip
                 } else {
                     trace_rows(
                         db,
+                        coords,
                         digests,
                         goal,
                         vars,
@@ -867,6 +835,7 @@ pub open spec fn trace_rows(
 // indeterminate mirror verbatim; a whole-run trip replaces the mirror.
 pub open spec fn trace_result(
     db: Seq<DocClause>,
+    coords: Seq<Coord>,
     digests: Seq<Seq<u8>>,
     q: QueryFile,
     arows: Seq<Term>,
@@ -874,7 +843,7 @@ pub open spec fn trace_result(
 ) -> Result<Term, Out> {
     if arows.len() == 0 {
         if a.result == atom("yes"@) {
-            match prove_row(db, digests, q.goal, 0) {
+            match prove_row(db, coords, digests, q.goal, 0) {
                 RowOut::Err(o) => Result::Err(o),
                 RowOut::Row(p, consumed, _) => Result::Ok(
                     if consumed > trace_run_inf() {
@@ -892,6 +861,7 @@ pub open spec fn trace_result(
             Option::None => Result::Ok(a.result),  // unreachable after custody
             Option::Some(sols) => match trace_rows(
                 db,
+                coords,
                 digests,
                 q.goal,
                 arows.map_values(|r: Term| arg(r, 0)),
@@ -977,7 +947,14 @@ pub open spec fn trace_output(
 ) -> Out {
     match front(mpath, manifest, pls, pys, query, qsha, answers) {
         Result::Err(o) => o,
-        Result::Ok(f) => match trace_result(db_of(f.docs), digests, f.q, f.arows, f.a) {
+        Result::Ok(f) => match trace_result(
+            db_of(f.docs),
+            coords_of(f.docs),
+            digests,
+            f.q,
+            f.arows,
+            f.a,
+        ) {
             Result::Err(o) => o,
             Result::Ok(result) => ok(print_traces(TracesFile { qid: f.q.qid, qsha, asha, result })),
         },
@@ -1245,7 +1222,14 @@ pub open spec fn trace_check_output(
         Result::Err(o) => o,
         Result::Ok(f) => match trace_custody(trace, f.q, qsha, asha) {
             Result::Err(o) => o,
-            Result::Ok(t) => match trace_result(db_of(f.docs), digests, f.q, f.arows, f.a) {
+            Result::Ok(t) => match trace_result(
+                db_of(f.docs),
+                coords_of(f.docs),
+                digests,
+                f.q,
+                f.arows,
+                f.a,
+            ) {
                 Result::Err(o) => o,
                 Result::Ok(derived) => if derived != t.result {
                     tc_fail(atom("stale"@))

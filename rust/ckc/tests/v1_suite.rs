@@ -1,5 +1,5 @@
 // M5.2 v1 suite (.agent/contracts/harness.md H4): tests/v1/cases.tsv rows =
-// 224 primary targets + 114 supplemental K3 probes. Every case materializes
+// 225 primary targets + 115 supplemental K3 probes. Every case materializes
 // under one private root at its recording layout (.scratch/m5u2/suite/cases/
 // <case>/…, `.in` dropped, `.tpl.in` expanded), so argv and path-bearing
 // diagnostics keep their recorded bytes; `ckc v1 <mode> <args>` runs with cwd =
@@ -204,7 +204,7 @@ fn v1_suite() {
     let primary = rows.iter().filter(|r| r.probe == "target").count();
     assert_eq!(
         (primary, rows.len() - primary),
-        (224, 114),
+        (225, 115),
         "tests/v1 row census"
     );
     let mut cases: Vec<&str> = rows.iter().map(|r| r.case.as_str()).collect();

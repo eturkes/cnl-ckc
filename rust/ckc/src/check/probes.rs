@@ -60,7 +60,7 @@ pub(super) fn trace_numeric() -> Result {
         prefix += &format!(":- multifile({predicate}).\n:- discontiguous({predicate}).\n");
     }
     prefix += &format!(
-        "guideline_schema_version(1).\nguideline_document(doc,ace_sha256('{hex}'),ulex(none)).\n% S1: There is a patient.\n"
+        "guideline_schema_version(1).\nguideline_document(doc,ace_sha256('{hex}'),ulex(none)).\n"
     );
     let check = || {
         queries::kernel(
@@ -73,8 +73,9 @@ pub(super) fn trace_numeric() -> Result {
     };
     for ordinal in ["1", "9999999999"] {
         // A fresh derivation reaches coord_of; editing a wide trace alone only tests stale.
+        // The node's ordinal = the clause's own `% S<n>:` block.
         process::write(&doc, format!(
-            "{prefix}guideline_entity(actual,'$guideline_id'(product,doc,{ordinal},ref(1),[]),patient,countable).\n"
+            "{prefix}% S{ordinal}: There is a patient.\nguideline_entity(actual,'$guideline_id'(product,doc,{ordinal},ref(1),[]),patient,countable).\n"
         ).as_bytes())?;
         process::write(&answers, &queries::answer("probe", &manifest, &query)?)?;
         let fresh = queries::trace("probe", &manifest, &query, &answers)?;

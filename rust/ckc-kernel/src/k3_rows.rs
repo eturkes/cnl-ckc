@@ -7,6 +7,9 @@ use crate::k2_engine::{db_valid, db_view, root_terms, roots_valid, roots_work};
 use crate::k2_term::{ENode, ENodeKind, ETermArena};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::{arena_ok, node_ok, root_ok};
+use crate::k3_coords::ECoord;
+#[cfg(verus_keep_ghost)]
+use crate::k3_coords::{coords_ok, coords_view};
 use crate::k3_front::EAnswers;
 #[cfg(verus_keep_ghost)]
 use crate::k3_front::answers_ok;
@@ -268,6 +271,7 @@ fn unproved_root(arena: &mut ETermArena, finite: bool) -> (out: usize)
 fn prove(
     mut arena: ETermArena,
     db: &Vec<EClause>,
+    coords: &Vec<ECoord>,
     digests: &Vec<Vec<u8>>,
     goal: usize,
     base: usize,
@@ -275,6 +279,7 @@ fn prove(
     requires
         root_ok(&arena, goal),
         db_valid(arena.nodes@, db@),
+        coords_ok(coords@),
         base <= arena.nodes.len(),
     ensures
         arena_ok(&out.0),
@@ -282,6 +287,7 @@ fn prove(
         row_valid(out.0.nodes@, &out.1),
         row_view(out.0.nodes@, &out.1) == prove_row(
             db_view(arena.nodes@, db@),
+            coords_view(coords@),
             digests_view(digests@),
             arena@[goal as int],
             base as nat,
@@ -330,7 +336,15 @@ fn prove(
         },
         crate::k3_state::EOut::Proved(log) => {
             let ghost before_mat = arena.nodes@;
-            match crate::k3_materialize::forest(&mut arena, db, digests, &goals, &log, base) {
+            match crate::k3_materialize::forest(
+                &mut arena,
+                db,
+                coords,
+                digests,
+                &goals,
+                &log,
+                base,
+            ) {
                 crate::k3_materialize::EMat::Err(e) => (arena, ERow::Err(e)),
                 crate::k3_materialize::EMat::Ok { roots, base: next, nodes } => {
                     let list = crate::k2_walk::list_root(&mut arena, &roots);
@@ -365,6 +379,7 @@ pub open spec fn rows_view(nodes: Seq<ENode>, out: &ERows) -> Rows {
 
 proof fn bad_values_row(
     db: Seq<ckc_spec::v1text::DocClause>,
+    coords: Seq<Coord>,
     digests: Seq<Seq<u8>>,
     goal: Term,
     vars: Seq<Term>,
@@ -378,7 +393,7 @@ proof fn bad_values_row(
         i < sols.len(),
         ckc_spec::answers::list_items(ckc_spec::replay::arg(sols[i as int], 0)) is None,
     ensures
-        trace_rows(db, digests, goal, vars, sols, i, left, base, acc) == Rows::Ok(acc),
+        trace_rows(db, coords, digests, goal, vars, sols, i, left, base, acc) == Rows::Ok(acc),
 {
     reveal(trace_rows);
 }
@@ -386,6 +401,7 @@ proof fn bad_values_row(
 fn rows(
     input: ETermArena,
     db: &Vec<EClause>,
+    coords: &Vec<ECoord>,
     digests: &Vec<Vec<u8>>,
     goal: usize,
     vars: &Vec<usize>,
@@ -394,6 +410,7 @@ fn rows(
     requires
         root_ok(&input, goal),
         db_valid(input.nodes@, db@),
+        coords_ok(coords@),
         roots_valid(input.nodes@, vars@),
         roots_valid(input.nodes@, sols@),
     ensures
@@ -402,6 +419,7 @@ fn rows(
         out.1 matches ERows::Ok(rs) ==> roots_valid(out.0.nodes@, rs@),
         rows_view(out.0.nodes@, &out.1) == trace_rows(
             db_view(input.nodes@, db@),
+            coords_view(coords@),
             digests_view(digests@),
             input@[goal as int],
             root_terms(input.nodes@, vars@),
@@ -422,6 +440,7 @@ fn rows(
     let ghost ss = root_terms(origin, sols@);
     let ghost target = trace_rows(
         program,
+        coords_view(coords@),
         digests_view(digests@),
         model,
         v,
@@ -445,6 +464,7 @@ fn rows(
             arena_ok(&arena),
             origin.is_prefix_of(arena.nodes@),
             db_valid(arena.nodes@, db@),
+            coords_ok(coords@),
             db_view(arena.nodes@, db@) == program,
             program == db_view(origin, db@),
             root_ok(&arena, goal),
@@ -463,6 +483,7 @@ fn rows(
             base <= arena.nodes.len(),
             target == trace_rows(
                 program,
+                coords_view(coords@),
                 digests_view(digests@),
                 model,
                 v,
@@ -474,6 +495,7 @@ fn rows(
             ),
             target == trace_rows(
                 program,
+                coords_view(coords@),
                 digests_view(digests@),
                 model,
                 v,
@@ -502,6 +524,7 @@ fn rows(
                     crate::k2_engine::roots_models_prefix(before, arena.nodes@, acc@);
                     bad_values_row(
                         program,
+                        coords_view(coords@),
                         digests_view(digests@),
                         model,
                         v,
@@ -525,7 +548,7 @@ fn rows(
         proof {
             crate::k2_engine::db_models_prefix(before, arena.nodes@, db@);
         }
-        let (next_arena, payload) = prove(arena, db, digests, bound, base);
+        let (next_arena, payload) = prove(arena, db, coords, digests, bound, base);
         arena = next_arena;
         proof {
             crate::k2_engine::db_models_prefix(before, arena.nodes@, db@);
@@ -575,6 +598,7 @@ fn rows(
 pub fn result_exec(
     arena: &mut ETermArena,
     db: &Vec<EClause>,
+    coords: &Vec<ECoord>,
     digests: &Vec<Vec<u8>>,
     query: &EQuery,
     answer: &EAnswers,
@@ -582,6 +606,7 @@ pub fn result_exec(
     requires
         arena_ok(old(arena)),
         db_valid(old(arena).nodes@, db@),
+        coords_ok(coords@),
         query_ok(old(arena).nodes@, query),
         answers_ok(old(arena).nodes@, answer),
     ensures
@@ -590,6 +615,7 @@ pub fn result_exec(
         out matches Ok(root) ==> root_ok(final(arena), root),
         result_view(final(arena).nodes@, out) == trace_result(
             db_view(old(arena).nodes@, db@),
+            coords_view(coords@),
             digests_view(digests@),
             query.file@,
             root_terms(old(arena).nodes@, query.rows@),
@@ -598,7 +624,7 @@ pub fn result_exec(
 {
     let mut owned = crate::k2_reject::empty_arena();
     core::mem::swap(arena, &mut owned);
-    let (mut owned, result) = result_inner(owned, db, digests, query, answer);
+    let (mut owned, result) = result_inner(owned, db, coords, digests, query, answer);
     core::mem::swap(arena, &mut owned);
     result
 }
@@ -606,6 +632,7 @@ pub fn result_exec(
 fn result_inner(
     mut arena: ETermArena,
     db: &Vec<EClause>,
+    coords: &Vec<ECoord>,
     digests: &Vec<Vec<u8>>,
     query: &EQuery,
     answer: &EAnswers,
@@ -613,6 +640,7 @@ fn result_inner(
     requires
         arena_ok(&arena),
         db_valid(arena.nodes@, db@),
+        coords_ok(coords@),
         query_ok(arena.nodes@, query),
         answers_ok(arena.nodes@, answer),
     ensures
@@ -621,6 +649,7 @@ fn result_inner(
         out.1 matches Ok(root) ==> root_ok(&out.0, root),
         result_view(out.0.nodes@, out.1) == trace_result(
             db_view(arena.nodes@, db@),
+            coords_view(coords@),
             digests_view(digests@),
             query.file@,
             root_terms(arena.nodes@, query.rows@),
@@ -646,7 +675,7 @@ fn result_inner(
         if !crate::k3_front::is_atom(&arena, answer.result, yes) {
             return (arena, Ok(answer.result));
         }
-        let (next_arena, result) = prove(arena, db, digests, query.goal, 0);
+        let (next_arena, result) = prove(arena, db, coords, digests, query.goal, 0);
         arena = next_arena;
         match result {
             ERow::Err(e) => (arena, Err(e)),
@@ -670,7 +699,7 @@ fn result_inner(
             crate::k2_engine::db_models_prefix(origin, arena.nodes@, db@);
             crate::k2_engine::roots_models_prefix(origin, arena.nodes@, sols@);
         }
-        let (next_arena, result) = rows(arena, db, digests, query.goal, &vars, &sols);
+        let (next_arena, result) = rows(arena, db, coords, digests, query.goal, &vars, &sols);
         arena = next_arena;
         match result {
             ERows::Err(e) => (arena, Err(e)),
