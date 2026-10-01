@@ -21,7 +21,7 @@ guideline_schema_version(1).
 guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none)).
 % S1: Synthetic attributed fixture sentence.
 guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- \+ guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),target,burn,countable).
-guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),target,burn,countable) :- guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),_L,left,countable), guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),_R,right,countable), guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),missing,absent,countable).
+guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),target,burn,countable) :- guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),A,left,countable), guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),B,right,countable), guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),missing,absent,countable).
 guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),l0,left,countable).
 guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),l1,left,countable).
 guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),l2,left,countable).

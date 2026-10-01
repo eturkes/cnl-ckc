@@ -20,7 +20,47 @@
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none)).
 % S1: Synthetic attributed fixture sentence.
-guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- between(1,200000,N), N =:= 200000.
+guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(0),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(0),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(1),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(0),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(1),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(1),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(2),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(1),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(2),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(2),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(3),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(2),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(3),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(3),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(4),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(3),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(4),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(4),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(5),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(4),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(5),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(5),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(6),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(5),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(6),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(6),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(7),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(6),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(7),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(7),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(8),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(7),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(8),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(8),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(9),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(8),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(9),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(9),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(10),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(9),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(10),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(10),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(11),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(10),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(11),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(11),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(12),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(11),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(12),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(12),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(13),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(12),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(13),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(13),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(14),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(13),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(14),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(14),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(15),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(14),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(15),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(15),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(16),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(15),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(16),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(16),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(17),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(16),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(17),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(17),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(18),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(17),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(18),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(18),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(19),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(18),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(19),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(19),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(20),pos).
+guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(19),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),branch(20),pos).
 guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable).
 guideline_cardinality(actual,'$guideline_id'(product,doc,1,ref(1),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,doc,1,ref(2),[]),wait).

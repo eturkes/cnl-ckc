@@ -19,3 +19,5 @@
 :- discontiguous(guideline_operator/3).
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none)).
+% S1: Synthetic attributed fixture sentence.
+guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),nurse,countable).
