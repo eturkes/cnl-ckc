@@ -617,19 +617,25 @@ at the repository root. Paste this prompt as the first message of the
 session:
 
 ```
-Process American clinical guidelines through the pipeline as described in docs/REFERENCE.md "Operating", with teammates per the round roles in .claude/rules/corpus.md: work the in-progress source document to full coverage before fetching the next. When the user asks to stop, pause, or wind down, start nothing new, state where work stands, and stop — the request alone ends the run at any point, even mid-round with the worklist unfinished. Met when: every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
+Process American clinical guidelines through the pipeline as described in docs/REFERENCE.md "Operating", with teammates per the round roles in .claude/rules/corpus.md: work the in-progress source document to full coverage before fetching the next. When the user asks to stop or wind down, start nothing new, state where work stands, and stop — the request alone ends the run at any point, even mid-round with the worklist unfinished; a pasted pause prompt runs its own wind-down instead. Met when: every fetched guideline is complete, every remaining .agent/queue.md entry is a recorded blocker, and the compendium exhaustion clause in .agent/compendium.md "Protocol" holds: every guideline row of .agent/compendium.tsv done, blocked, or excluded, and every organization row terminal.
 ```
 
 The session works until the `Met when` condition holds or the user
 asks it to stop. The repository is the only persistence, so halting at
-any moment is safe. To continue in a fresh session, paste the same
-prompt again. Every round starts by deriving state from the repository:
+any moment is safe. `.claude/rules/upstream-sync.md` gives the
+location of the phase-prompt set. To stop now and continue later, paste
+the pause prompt of that set into the running session. The pause
+prompt stops teammates, commits or snapshots open work, and records
+where to continue. To continue in a fresh session, paste the resume
+prompt of the same set. It takes the `Met when` condition above as its
+finish line. Every round starts by deriving state from the repository:
 `.agent/queue.md`, `git status`, `ckc check`, and the
 in-progress guideline README's coverage statement. The round then
 finishes or discards incomplete work before it takes on anything new. A
 user request to stop ends the run at once, mid-round included, even
 when the exhaustion clause is not met. The wind-down is to start
-nothing new, state where work stands, and stop. The check validates the fork
+nothing new, state where work stands, and stop. A pasted pause prompt
+replaces this wind-down with its own. The check validates the fork
 notices and the adjudication fixtures first. It then
 validates the compendium — the `.agent/compendium.md` organizations
 table plus `.agent/compendium.tsv`: row format and vocabulary,

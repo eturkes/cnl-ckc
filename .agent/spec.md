@@ -35,4 +35,4 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 ## Phase
 
-MAINTAIN (IMPLEMENT closed: native chain authoritative; M7 gap coverage + corpus rounds = MAINTAIN requests, `.agent/deferred.md`).
+MAINTAIN, scope = the whole product (IMPLEMENT closed: native chain authoritative; M7 gap coverage + corpus rounds = MAINTAIN requests, `.agent/deferred.md`).

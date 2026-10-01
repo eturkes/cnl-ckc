@@ -5,13 +5,21 @@ paths:
 
 # Upstream sync — `CLAUDE.md` template refresh
 
-`CLAUDE.md` = a verbatim copy of `~/.local/app/agents/claude/CLAUDE.project.md`; a refresh overwrites it whole, so project law never lives there. last-sync = agents@8fc2e19.
-- Refresh = one migration-only session per `~/.local/app/agents/claude/prompts/refresh.md`. last-sync = the upstream commit whose template equals `git show HEAD:CLAUDE.md`: `git -C ~/.local/app/agents log --format=%h -- claude/CLAUDE.project.md | while read -r c; do git -C ~/.local/app/agents show "$c:claude/CLAUDE.project.md" | cmp -s - <(git show HEAD:CLAUDE.md) && { echo "$c"; break; }; done` (the recorded value may be stale). Delta = `git -C ~/.local/app/agents diff <last-sync> HEAD -- claude/CLAUDE.project.md` + the commit bodies of `git -C ~/.local/app/agents log <last-sync>..HEAD -- claude/`.
+`CLAUDE.md` = a verbatim copy of `~/.local/app/agents/claude/CLAUDE.project.md`; a refresh overwrites it whole, so project law never lives there. last-sync = agents@9e81e38.
+- Refresh = one migration-only session per `~/.local/app/agents/claude/prompts/refresh.md` (last-sync derivation, delta, obligations, checks). Phase prompt set = `~/.local/app/agents/claude/prompts/` (`resume.md`, `pause.md`, `maintain.md`, …).
 Invariants a refresh must keep, else restore:
 - Line 1 = `@.agent/spec.md` import (silent when missing — a fresh `claude -p` answering a spec-only question with zero tool calls = the check).
-- `Session flow` names `.agent/spec.md` with five sections — `Intent`, `Artifacts`, `Decisions`, `Tasks` (`- [ ]` open units in order, `- [x] <sha>` once committed, ticked rows cleared at phase close; last line = `.agent/deferred.md` pointer), `Phase` — plus `.agent/deferred.md` (deferral queue) + `.agent/review.md`; `Engineering` routes deferrals to `.agent/deferred.md` rows.
-- `Session flow` teammates bullet cites global `CLAUDE.md` `Subagents` (triggers + mechanics; `rules/corpus.md` + `rules/rust.md` rely on it) + binds `reviewer` to every closing diff; `Execution` Git = commit bodies name each teammate the unit used (name, role, verdict).
+- `Session flow` names `.agent/spec.md` with five sections — `Intent`, `Artifacts` (path each + run command where it runs), `Decisions`, `Tasks` (`- [ ]` open units in order, `- [x] <sha>` once committed, ticked rows cleared at phase close; last line = `.agent/deferred.md` pointer), `Phase` (phase + scope) — plus `.agent/deferred.md` (deferral queue) + `.agent/review.md`; `Engineering` routes deferrals to `.agent/deferred.md` rows.
+- `Session flow` teammates bullet cites global `CLAUDE.md` `Subagents` (triggers + mechanics; `rules/corpus.md` + `rules/rust.md` rely on it) + binds every closing diff → every lens, each its own `reviewer`s; `Execution` Git = commit bodies name each teammate the unit used (name, role, verdict).
+- `Session flow` rulings bullet: `.claude/rules/` = the repo's rulings on template defaults, each keyed on the clause it adapts, retires or marks inapplicable (index below).
 - `Authoring` routes a role's standing rules to `~/.claude/agents/<role>.md` + thinking depth to the launch `--effort` ⇒ project `.claude/settings*.json` carries no model/effort pins and `.claude/agents/` stays absent.
 - `.claude/rules/` two-tier bullet (bare | `paths:`) present — the sole carrier of project law + teammate inheritance.
-- No `## Claude Code` section; no retired-flow references (session commands incl. `/goal`, attached roadmap/polish/memory ledgers).
+- No `## Claude Code` section; no retired-flow references (session commands incl. `/goal`, attached roadmap/polish/memory ledgers, `migrate.md`, stored prototype proof).
+Rulings keyed on template clauses:
+- `Session flow` MAINTAIN bodies → `ops.md` corpus loop: the corpus prompt (`docs/REFERENCE.md` § Operating) = the MAINTAIN body for corpus rounds; continue = `resume.md`, stop to continue later = `pause.md`.
+- `Session flow` closing diff → every lens → `corpus.md` round roles: 7 lenses (L0 completeness, L1–L6 adversarial), one blind pair each.
+- `Session flow` IMPLEMENT contracts + tiers → `ops.md` unit contracts (`.agent/contracts/<unit>.md`, archived at unit close).
+- `Execution` Git → `ops.md` close order (stage, then the decisive check) + `corpus.md` round close (scoped commits, then the release-manifest regen commit).
+- `Authoring` human-facing → `clinician-design.md` (design law + copy/design lint gates); `ops.md` presentation rule.
+- Prototype location, CI, review ledger, spec layout = template defaults: prototype = `prototype/<name>/`; CI = `.github/workflows/ci.yml`; ledger = `.agent/review.md`.
 Post-refresh: `git diff HEAD -- CLAUDE.md` → any repo-measured law in the removed lines outside the upstream delta folds into the owning `.claude/rules/` file; the clinician design law lives only in `rules/clinician-design.md`.
