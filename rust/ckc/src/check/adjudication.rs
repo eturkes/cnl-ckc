@@ -152,7 +152,6 @@ fn commit_row(
     gid: &str,
     index: usize,
     row: &EDecision,
-    bundles: &[EBundle],
     cache: &mut BTreeMap<Vec<u8>, BTreeMap<Vec<u8>, Vec<u8>>>,
 ) -> Result {
     let commit = display(&row.commit);
@@ -166,12 +165,8 @@ fn commit_row(
             format!("ledger row {index} commit absent from repository: {commit}"),
         ));
     }
-    if bundles
-        .iter()
-        .any(|b| b.docid == row.docid && b.review == row.digest)
-    {
-        return Ok(());
-    }
+    // The recorded commit is the one the reviewer viewed: its bundle must re-derive to
+    // the ledger digest even when the digest is current.
     if !cache.contains_key(&row.commit) {
         cache.insert(row.commit.clone(), historical(gid, &commit)?);
     }
@@ -221,7 +216,7 @@ fn ledger(path: &Path, bundles: &Vec<EBundle>, label: &str, odb: bool) -> Result
         let mut cache = BTreeMap::new();
         for (i, row) in decisions.iter().enumerate() {
             if !row.commit.is_empty() {
-                commit_row(label, i + 2, row, bundles, &mut cache)?;
+                commit_row(label, i + 2, row, &mut cache)?;
             }
         }
     }

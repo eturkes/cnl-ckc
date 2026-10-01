@@ -1,6 +1,6 @@
 // `ckc check` corpus mutants (.agent/contracts/harness.md H6): the 36 M5.3 red
 // mutants whose first violation lands before the SWI-Prolog stage (mutants.py
-// `mutate`, byte for byte) + 3 `.agent/spec.md` shape plants. Each row mutates a
+// `mutate`, byte for byte) + 3 `.agent/spec.md` shape plants + 1 ledger bundle-mismatch plant. Each row mutates a
 // fresh clone of HEAD and must end in its pinned rc with the pinned first
 // violation: whole stderr when nonempty, else the last stdout line.
 // CKC_CHECK_TEST_BIN selects a prebuilt executable.
@@ -211,6 +211,12 @@ fn mutate(t: &Path, name: &str) {
             set_field(t, MANIFEST, 1, &flip_first(&f[1]));
         }
         "ledger-commit-absent" => ledger(t, &[b'f'; 40], LEDGER_DATE, None),
+        "ledger-bundle-mismatch" => {
+            // Current digest, recorded commit = one whose s26-07 bundle (clauses) differs.
+            let row = b"cdc2022-opioid-s26-07\t76f2750e20462707ff56a4374132c7df935a68c3ad8602103b76558a332ca4f2\ta1bcb8cd328cd54d04aa3597bd05dfaa57719341\tapproved\tparity\t2026-09-14T00:00:00Z\t\n";
+            let header = b"# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment\n";
+            new_file(t, LEDGER, &[header.as_slice(), row].concat());
+        }
         "ledger-date" => ledger(t, b"", b"2026-02-30T00:00:00Z", None),
         "ledger-bad-digest" => ledger(t, b"", LEDGER_DATE, Some(&[b'g'; 64])),
         "lexicon-duplicate" => {
@@ -351,7 +357,7 @@ fn check_mutant_battery() {
         .filter(|l| !l.starts_with('#'))
         .map(|l| l.split('\t').collect())
         .collect();
-    assert_eq!(rows.len(), 39, "tests/check-mutants row count");
+    assert_eq!(rows.len(), 40, "tests/check-mutants row count");
     // Each worker clones HEAD once, then per row: mutate → check → reset + clean
     // back to HEAD (a fresh checkout per row costs ~10× the check itself).
     let next = AtomicUsize::new(0);

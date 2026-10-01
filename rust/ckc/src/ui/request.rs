@@ -177,7 +177,7 @@ fn post_models(
                         config
                             .commit
                             .clone()
-                            .unwrap_or_else(|| corpus.ace_commit(&gid, &text(&d.bundle.docid)))
+                            .unwrap_or_else(|| corpus.commit.as_bytes().to_vec())
                     } else {
                         Vec::new()
                     };

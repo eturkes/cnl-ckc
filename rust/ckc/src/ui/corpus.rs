@@ -120,36 +120,6 @@ impl Corpus {
             _snapshot: Some(snapshot),
         })
     }
-    pub fn ace_commit(&self, gid: &str, docid: &str) -> Vec<u8> {
-        if self.commit.is_empty() {
-            return Vec::new();
-        }
-        let path = self
-            .real_root
-            .join("guidelines")
-            .join(gid)
-            .join("ace")
-            .join(format!("{docid}.ace"));
-        let Some(bytes) = git(
-            &self.real_root,
-            &[
-                "log",
-                "-1",
-                "--format=%H",
-                &self.commit,
-                "--",
-                &path.to_string_lossy(),
-            ],
-        ) else {
-            return Vec::new();
-        };
-        let value = text(&bytes).trim().to_owned();
-        if valid_hex(&value, 40) {
-            value.into_bytes()
-        } else {
-            Vec::new()
-        }
-    }
 }
 fn git(root: &Path, args: &[&str]) -> Option<Vec<u8>> {
     Command::new("git")

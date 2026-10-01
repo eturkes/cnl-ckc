@@ -21,6 +21,7 @@ coverage-status	check_coverage	1
 census-header	check_census_map	1
 manifest-digest	check_adjudication	1
 ledger-commit-absent	check_ledger_commit_row	1
+ledger-bundle-mismatch	check_ledger_commit_row	1
 lexicon-duplicate	check_lexicon	1
 coverage-duplicate	check_coverage	1
 coverage-file-outside	check_coverage	1

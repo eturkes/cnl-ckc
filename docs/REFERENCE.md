@@ -217,7 +217,8 @@ uncommitted guideline changes, the pages render the last commit
 instead. Three consequences follow. An uncommitted edit is not
 reviewable, and it does not outdate an existing decision. A document
 that was never committed is not listed. Every recorded decision names
-the commit that wrote the ACE text the reviewer read. The decision
+the commit the reviewer read. `ckc check` derives the reviewed bundle
+again at that commit and requires the recorded digest. The decision
 ledger is the one file the interface writes, so its own writes are not
 uncommitted work. `ckc check` is the exception: it reads the
 working tree, because it is the gate you run before you commit.

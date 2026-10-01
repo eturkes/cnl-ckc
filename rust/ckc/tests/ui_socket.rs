@@ -225,6 +225,11 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
         &tree,
         &tmp,
     );
+    // A later commit that leaves every ACE file alone: the ledger row must record
+    // this viewed HEAD, not the last commit that touched the document's ACE text.
+    fs::write(tree.join("NOTES.txt"), "viewed-commit probe\n").unwrap();
+    run(&["git", "add", "-A"], &tree, &tmp);
+    run(&["git", "commit", "-q", "-m", "later commit"], &tree, &tmp);
     let revision = String::from_utf8(run(&["git", "rev-parse", "HEAD"], &tree, &tmp))
         .unwrap()
         .trim()
