@@ -10,6 +10,9 @@ pub mod body;
 #[path = "k3_sound_bound.rs"]
 pub mod bounded;
 
+#[path = "k3_sound_clear.rs"]
+pub mod clear;
+
 #[path = "k3_sound_control.rs"]
 pub mod control;
 

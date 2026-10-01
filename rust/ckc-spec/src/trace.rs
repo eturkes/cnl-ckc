@@ -9,7 +9,8 @@ verus! {
 
 // Trusted spec: trace mode + trace-check (contract m5u2b, K3). Trace mode =
 // the legacy `ace_to_pl.pl trace_mode` law, except that a clause node names
-// the clause's own `% S<n>:` block (contract q8): one directed first proof per
+// the clause's own `% S<n>:` block (contract q8) and a negation call failing
+// `naf_safe` is cut (contract q7): one directed first proof per
 // positive claim of a committed answers artifact under the R8 trace bounds,
 // materialized into clause nodes naming the resolving clause by its own
 // `% S<n>:` block + the sha256 of its committed line. Trace-check = the
@@ -227,6 +228,23 @@ pub open spec fn in_naf(stack: Seq<TGoal>) -> bool {
     exists|i: int| 0 <= i < stack.len() && #[trigger] stack[i] is NafCut
 }
 
+// A negation call is safe when no variable of the negated goal occurs in the
+// rest of its own search level (the stack up to the next naf cut; a deeper
+// level's bindings are discarded): no later binding can then reach the call's
+// free variables, so the frozen payload stays the call-time instance under the
+// final answer substitution. Variables local to the negation stay legal.
+pub open spec fn naf_safe(inner: Term, rest: Seq<TGoal>) -> bool {
+    forall|i: int|
+        0 <= i < rest.len() && !in_naf(rest.take(i)) ==> !shares(
+            inner,
+            #[trigger] tgoal_term(rest[i]),
+        )
+}
+
+pub open spec fn shares(a: Term, b: Term) -> bool {
+    exists|x: nat| #[trigger] occurs(x, a) && occurs(x, b)
+}
+
 pub open spec fn tbody_goals(items: Seq<BodyItem>, off: nat, d: nat, path: Seq<nat>) -> Seq<TGoal> {
     Seq::new(items.len(), |i: int| TGoal::Lit(item_term(items[i], off), d, path.push(i as nat)))
 }
@@ -351,6 +369,9 @@ pub open spec fn tstep(db: Seq<DocClause>, c: TCfg) -> TStep {
                                 ..c
                             },
                         )
+                    } else if name == naf_name() && args.len() == 1 && !naf_safe(args[0], rest) {
+                        // a call that fails `naf_safe` cuts its branch like an exhausted bound
+                        tfail(TCfg { pruned: true, ..c })
                     } else if name == naf_name() && args.len() == 1 {
                         TStep::Next(
                             TCfg {
@@ -610,21 +631,18 @@ pub open spec fn naf_fails(db: Seq<DocClause>, t: Term) -> bool {
 // by every node (the certificate of a single SLDNF derivation: an earlier
 // sibling's bindings reach every later goal). A clause node resolves its goal:
 // some renaming equates the clause head with the goal under `th`, and the
-// renamed body items are the children's goals. A naf leaf's frozen payload
-// generalizes the site goal under `th` and fails finitely. Strength: that
-// certifies the engine's call-time finite failure; it implies failure of
-// the site goal itself only when the call was ground (safe negation, which
-// the v1 compilers enforce) — a generalization proves nothing about an
-// instance once the called program itself negates.
+// renamed body items are the children's goals. A naf leaf's frozen payload IS
+// the site goal under `th` — the goal exactly as called, which the machine
+// guarantees by cutting every call that fails `naf_safe` — and fails finitely.
 pub open spec fn node_valid(db: Seq<DocClause>, th: Seq<(nat, Term)>, g: Term, node: PNode) -> bool
     decreases node, 0int,
 {
     match node {
         PNode::Naf(t) => match g {
-            Term::Comp(name, args) => name == naf_name() && args.len() == 1 && (exists|
-                s: Seq<(nat, Term)>,
-            | #[trigger]
-                apply(t, s) == apply(args[0], th)) && naf_fails(db, t),
+            Term::Comp(name, args) => name == naf_name() && args.len() == 1 && t == apply(
+                args[0],
+                th,
+            ) && naf_fails(db, t),
             _ => false,
         },
         // Trigger on the nonrecursive renamed head: the recursive `resolves`
@@ -1254,6 +1272,49 @@ pub open spec fn lines_view(r: Result<Vec<Vec<u8>>, EOut>) -> Result<Seq<Seq<u8>
 
 pub open spec fn digests_view(v: Seq<Vec<u8>>) -> Seq<Seq<u8>> {
     v.map_values(|d: Vec<u8>| d@)
+}
+
+// --- R-14 regression witness (contract q7 P4) ---
+// db = p(b). q(X) :- \+ p(X). r(c) :- \+ q(a). over guideline_entity(Ctx, _, _, countable);
+// forest = r(c)'s clause node over the naf leaf q(X): a finitely failing
+// generalization of the site goal q(a), which is provable.
+pub open spec fn cx_lit(x: Term, noun: Seq<char>) -> Term {
+    Term::Comp(
+        ascii("guideline_entity"@),
+        seq![
+            Term::Comp(
+                gid_name(),
+                seq![
+                    atom("context"@),
+                    atom("probe"@),
+                    Term::Int(1),
+                    Term::Comp(ascii("box"@), seq![Term::Int(1)]),
+                    Term::Nil,
+                ],
+            ),
+            x,
+            atom(noun),
+            atom("countable"@),
+        ],
+    )
+}
+
+pub open spec fn cx_db() -> Seq<DocClause> {
+    seq![
+        DocClause { head: cx_lit(atom("b"@), "p"@), body: seq![] },
+        DocClause {
+            head: cx_lit(Term::Var(0), "q"@),
+            body: seq![BodyItem::Naf(seq![cx_lit(Term::Var(0), "p"@)])],
+        },
+        DocClause {
+            head: cx_lit(atom("c"@), "r"@),
+            body: seq![BodyItem::Naf(seq![cx_lit(atom("a"@), "q"@)])],
+        },
+    ]
+}
+
+pub open spec fn cx_forest() -> Seq<PNode> {
+    seq![PNode::Clause(2, seq![PNode::Naf(cx_lit(Term::Var(0), "q"@))])]
 }
 
 } // verus!

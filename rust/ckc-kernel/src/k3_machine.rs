@@ -658,6 +658,12 @@ fn simple(
                             ));
                             assert(terms[0] == arena.nodes@[child_roots@[0] as int].term@);
                             assert_seqs_equal!(c.log@.take(c.log.len() as int) == c.log@);
+                            assert(child_roots@[0] < arena.nodes@.len());
+                            assert(goals_view(arena.nodes@, c.stack@) == model.stack.drop_first());
+                        }
+                        if !crate::k3_safe::naf_safe_exec(arena, child_roots[0], &c.stack) {
+                            c.pruned = true;
+                            return fail(arena, c, Ghost(db.len()));
                         }
                         let level = c.alts.len();
                         let rest = clone_goals(arena, &c.stack, 0, Ghost(level as nat));

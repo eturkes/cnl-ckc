@@ -1,4 +1,5 @@
 use super::body::*;
+use super::clear::*;
 use super::control::*;
 use super::goals::*;
 use super::graph::*;
@@ -77,6 +78,7 @@ pub proof fn tfail_preserves(
                         Option::Some(cert) => {
                             outer_no_naf(db, roots, v, cert);
                             assert(!in_naf(stack));
+                            assert(alt_safe(a));
                             record_naf(db, roots, v, cert, inner, 1, path, stack);
                             let after = Cert { theta: cert.theta, offsets: cert.offsets.push(0) };
                             let na = Aux { current: Option::Some(after), saved: tail };
@@ -262,6 +264,11 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
                                     },
                                 }
                                 assert(tstep(db, c) == TStep::Next(nc));
+                            } else if name == naf_name() && args.len() == 1 && !naf_safe(
+                                args[0],
+                                rest,
+                            ) {
+                                tfail_preserves(db, roots, TCfg { pruned: true, ..c }, aux.saved);
                             } else if name == naf_name() && args.len() == 1 {
                                 let inner = args[0];
                                 assert(args =~= seq![inner]);

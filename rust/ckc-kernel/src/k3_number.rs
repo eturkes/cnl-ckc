@@ -47,7 +47,7 @@ proof fn contains_cons(head: nat, tail: Seq<nat>, key: nat)
     }
 }
 
-proof fn firsts_member(values: Seq<nat>, seen: Set<nat>, key: nat)
+pub(crate) proof fn firsts_member(values: Seq<nat>, seen: Set<nat>, key: nat)
     ensures
         firsts(values, seen).contains(key) == (values.contains(key) && !seen.contains(key)),
     decreases values.len(),
@@ -340,7 +340,7 @@ fn collect_step(arena: &ETermArena, input_tasks: Vec<usize>, input_keys: Vec<usi
     (tasks, keys)
 }
 
-fn collect(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
+pub(crate) fn collect(arena: &ETermArena, root: usize) -> (out: Vec<usize>)
     requires
         root_ok(arena, root),
     ensures

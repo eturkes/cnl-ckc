@@ -87,10 +87,10 @@ pub open spec fn weak_event(
             th,
         ),
         TEv::Naf(t) => match g {
-            Term::Comp(name, args) => name == naf_name() && args.len() == 1 && exists|
-                s: Seq<(nat, Term)>,
-            | #[trigger]
-                apply(t, s) == apply(args[0], th),
+            Term::Comp(name, args) => name == naf_name() && args.len() == 1 && t == apply(
+                args[0],
+                th,
+            ),
             _ => false,
         },
     }
@@ -308,8 +308,7 @@ pub proof fn naf_build_valid(
     assert(weak_event(db, roots, log, offsets, th, path, TEv::Naf(t)));
     assert(naf_fails(db, t));
     if let Term::Comp(name, args) = g {
-        let s = choose|s: Seq<(nat, Term)>| apply(t, s) == apply(args[0], th);
-        assert(apply(t, s) == apply(args[0], th));
+        assert(t == apply(args[0], th));
     }
     assert(node_valid(db, th, g, PNode::Naf(t)));
     assert(path.len() <= log.len());

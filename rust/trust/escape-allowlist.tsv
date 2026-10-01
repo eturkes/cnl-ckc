@@ -1,6 +1,7 @@
 path	token	count	trimmed_line
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_body.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_bound.rs"]
+ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_clear.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_control.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_fresh.rs"]
 ckc-kernel/src/k3_sound.rs	#[path	1	#[path = "k3_sound_frontier.rs"]

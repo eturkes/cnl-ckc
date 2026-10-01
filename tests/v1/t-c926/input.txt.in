@@ -1,0 +1,1 @@
+Q7: unsafe NAF shares a variable with a later sibling; the only branch is cut.

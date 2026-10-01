@@ -1,0 +1,2 @@
+% q-naf-local answered against the loaded composition by ckc queries; do not edit.
+'$guideline_answers'(v1,'q-naf-local',query_sha256('227468d2f0dd6f47aae75ee3325e030437a50ea9f41d525d58af3c49b24338f6'),result(solutions([sol([alpha]),sol([beta])]))).

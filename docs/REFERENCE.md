@@ -63,7 +63,7 @@ compiler base:
   (`rust/trust/spec-manifest.tsv`), enumerates every escape site, and
   rejects any dependency outside the allowlist. The claim is
   "machine-verified against the committed specification under a
-  pinned verifier TCB", nothing stronger: git, the file system, subprocesses, the clock, the loopback socket and HTTP request plumbing, archive assembly, the process and legal validators (fork-notice policy, compendium format, rights profiles), the pinned dependencies and SWI-Prolog stay trusted software under fixture gates. The trace theorem certifies each negation leaf by the finite failure of the call as the engine froze it at call time; the v1 compilers keep negation safe (ground when called), so for compiled documents that is the failure of the negated goal itself.
+  pinned verifier TCB", nothing stronger: git, the file system, subprocesses, the clock, the loopback socket and HTTP request plumbing, archive assembly, the process and legal validators (fork-notice policy, compendium format, rights profiles), the pinned dependencies and SWI-Prolog stay trusted software under fixture gates. The trace theorem certifies each negation leaf by the finite failure of the negated goal exactly as it was called. The trace prover cuts a negation call that is not safe, so such a call never becomes a leaf.
 - **Review is recorded, not asserted.** A reviewer decision names the
   exact bytes it judged. Each ledger row pins a bundle digest over the
   document's ACE text, its coverage row, its source region payload, and
@@ -601,7 +601,11 @@ clauses. Each row's search runs under depth 1000 and 100000
 inferences. The whole run is bounded at 1000000 inferences. The
 interpreter's depth measure is its own; it is not comparable with
 the answer mode's engine measure. A negation site re-checks under
-the same bounds. A bound that trips inside a negation makes the row `unproved(limit)` unless the inner search still finds a proof; an inner proof absorbs the cut, the negation fails, and the row can end `unproved(finite_failure)`. When the
+the same bounds. A negation call is safe when no variable of the
+negated goal occurs in a later goal of the same search level; a
+variable that occurs only inside the negation stays free. The prover
+cuts an unsafe call like a tripped bound, so the row ends
+`unproved(limit)` unless another branch proves it. A bound that trips inside a negation makes the row `unproved(limit)` unless the inner search still finds a proof; an inner proof absorbs the cut, the negation fails, and the row can end `unproved(finite_failure)`. When the
 whole-run bound trips, the result becomes `indeterminate(limit)` in
 place of the mirror. The direct `ckc v1` invocation has no process
 bound.

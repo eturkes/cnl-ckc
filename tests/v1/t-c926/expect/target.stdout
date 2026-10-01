@@ -1,0 +1,2 @@
+% q-naf-unsafe traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,'q-naf-unsafe',query_sha256(b476a30b591bbcc5ba440c25a2af0d56e34017369d05de785d01d4a1673dd956),answers_sha256('645ad4e9fe6b9e8bd640ad2310a622b132e20338d55d97ee75145ad1d8e5c19e'),result(yes(unproved(limit)))).

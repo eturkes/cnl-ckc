@@ -206,6 +206,72 @@ pub proof fn rename_occurs_all(x: nat, ts: Seq<Term>, base: nat, delta: nat)
     }
 }
 
+pub proof fn rename_occurs_inv(y: nat, t: Term, base: nat, delta: nat)
+    requires
+        occurs(y, rename(t, base, delta)),
+    ensures
+        exists|x: nat| lift_var(x, base, delta) == y && #[trigger] occurs(x, t),
+    decreases t,
+{
+    match t {
+        Term::Var(z) => {
+            assert(rename(t, base, delta) == Term::Var(lift_var(z, base, delta)));
+            assert(lift_var(z, base, delta) == y);
+            assert(occurs(z, t));
+        },
+        Term::Comp(_, ts) => {
+            rename_occurs_all_inv(y, ts, base, delta);
+            let x = choose|x: nat| lift_var(x, base, delta) == y && #[trigger] occurs_all(x, ts);
+            assert(occurs(x, t));
+        },
+        _ => {},
+    }
+}
+
+pub proof fn rename_occurs_all_inv(y: nat, ts: Seq<Term>, base: nat, delta: nat)
+    requires
+        occurs_all(y, rename_all(ts, base, delta)),
+    ensures
+        exists|x: nat| lift_var(x, base, delta) == y && #[trigger] occurs_all(x, ts),
+    decreases ts,
+{
+    rename_all_index(ts, base, delta);
+    let rs = rename_all(ts, base, delta);
+    if occurs(y, rs[0]) {
+        rename_occurs_inv(y, ts[0], base, delta);
+        let x = choose|x: nat| lift_var(x, base, delta) == y && #[trigger] occurs(x, ts[0]);
+        assert(occurs_all(x, ts));
+    } else {
+        assert(rs.drop_first() =~= rename_all(ts.drop_first(), base, delta));
+        rename_occurs_all_inv(y, ts.drop_first(), base, delta);
+        let x = choose|x: nat|
+            lift_var(x, base, delta) == y && #[trigger] occurs_all(x, ts.drop_first());
+        assert(occurs_all(x, ts));
+    }
+}
+
+pub proof fn shares_rename(a: Term, b: Term, base: nat, delta: nat)
+    ensures
+        shares(rename(a, base, delta), rename(b, base, delta)) == shares(a, b),
+{
+    if shares(a, b) {
+        let x = choose|x: nat| #[trigger] occurs(x, a) && occurs(x, b);
+        rename_occurs(x, a, base, delta);
+        rename_occurs(x, b, base, delta);
+        assert(occurs(lift_var(x, base, delta), rename(a, base, delta)));
+    }
+    if shares(rename(a, base, delta), rename(b, base, delta)) {
+        let y = choose|y: nat| #[trigger]
+            occurs(y, rename(a, base, delta)) && occurs(y, rename(b, base, delta));
+        rename_occurs_inv(y, a, base, delta);
+        rename_occurs_inv(y, b, base, delta);
+        let x = choose|x: nat| lift_var(x, base, delta) == y && #[trigger] occurs(x, a);
+        let z = choose|z: nat| lift_var(z, base, delta) == y && #[trigger] occurs(z, b);
+        lift_var_inj(x, z, base, delta);
+        assert(occurs(x, a) && occurs(x, b));
+    }
+}
+
 pub proof fn rename_subst(t: Term, x: nat, v: Term, base: nat, delta: nat)
     ensures
         rename(subst(t, x, v), base, delta) == subst(
@@ -1377,6 +1443,63 @@ pub open spec fn proj_step(a: TStep, b: TStep, base: nat, delta: nat, off: nat) 
     }
 }
 
+// Projected stacks agree on naf safety: renaming preserves sharing, and the
+// projection's own naf cut closes the level before the embedding's goals.
+pub proof fn safe_proj(x: Term, a: Seq<TGoal>, b: Seq<TGoal>, base: nat, delta: nat, off: nat)
+    requires
+        proj_stack(a, b, base, delta, off),
+    ensures
+        naf_safe(rename(x, base, delta), b) == naf_safe(x, a),
+{
+    let rx = rename(x, base, delta);
+    assert forall|i: int| 0 <= i <= a.len() implies #[trigger] in_naf(b.take(i)) == in_naf(
+        a.take(i),
+    ) by {
+        if in_naf(a.take(i)) {
+            let k = choose|k: int| 0 <= k < a.take(i).len() && #[trigger] a.take(i)[k] is NafCut;
+            assert(proj_goal(a[k], b[k], base, delta, off));
+            assert(b.take(i)[k] == b[k]);
+        }
+        if in_naf(b.take(i)) {
+            let k = choose|k: int| 0 <= k < b.take(i).len() && #[trigger] b.take(i)[k] is NafCut;
+            assert(proj_goal(a[k], b[k], base, delta, off));
+            assert(a.take(i)[k] == a[k]);
+        }
+    }
+    assert forall|i: int| 0 <= i < a.len() implies #[trigger] shares(rx, tgoal_term(b[i]))
+        == shares(x, tgoal_term(a[i])) by {
+        assert(proj_goal(a[i], b[i], base, delta, off));
+        if let TGoal::Lit(t, _, _) = a[i] {
+            shares_rename(x, t, base, delta);
+        }
+    }
+    if naf_safe(x, a) {
+        assert forall|i: int| 0 <= i < b.len() && !in_naf(b.take(i)) implies !shares(
+            rx,
+            #[trigger] tgoal_term(b[i]),
+        ) by {
+            if i < a.len() {
+                assert(in_naf(b.take(i)) == in_naf(a.take(i)));
+                assert(shares(rx, tgoal_term(b[i])) == shares(x, tgoal_term(a[i])));
+            } else if i > a.len() {
+                assert(b.take(i)[a.len() as int] == b[a.len() as int]);
+            } else {
+                assert(tgoal_term(b[i]) == Term::Nil);
+            }
+        }
+    }
+    if naf_safe(rx, b) {
+        assert forall|i: int| 0 <= i < a.len() && !in_naf(a.take(i)) implies !shares(
+            x,
+            #[trigger] tgoal_term(a[i]),
+        ) by {
+            assert(in_naf(b.take(i)) == in_naf(a.take(i)));
+            assert(shares(rx, tgoal_term(b[i])) == shares(x, tgoal_term(a[i])));
+            assert(!shares(rx, tgoal_term(b[i])));
+        }
+    }
+}
+
 pub proof fn proj_stack_tail(a: Seq<TGoal>, b: Seq<TGoal>, base: nat, delta: nat, off: nat)
     requires
         proj_stack(a, b, base, delta, off),
@@ -1793,8 +1916,22 @@ pub proof fn project_transition(
                                     off,
                                 ) by {};
                                 proj_stack_join(ah, bh, ra, rb, base, delta, off);
+                            } else if name == naf_name() && args.len() == 1 && !naf_safe(
+                                args[0],
+                                ra,
+                            ) {
+                                assert(other[0] == rename(args[0], base, delta));
+                                safe_proj(args[0], ra, rb, base, delta, off);
+                                project_fail(
+                                    TCfg { pruned: true, ..a },
+                                    TCfg { pruned: true, ..b },
+                                    base,
+                                    delta,
+                                    off,
+                                );
                             } else if name == naf_name() && args.len() == 1 {
                                 assert(other[0] == rename(args[0], base, delta));
+                                safe_proj(args[0], ra, rb, base, delta, off);
                                 let aa = TAlt::Naf {
                                     stack: ra,
                                     fresh: a.fresh,

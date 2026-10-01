@@ -1,0 +1,2 @@
+% q-naf-existential traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,'q-naf-existential',query_sha256(e57f3687027bf9864d03a14294118de71fb1950eaff726158e787efa035d9c15),answers_sha256('230f19846a7605031c637e1e9c79961ae10c3ebf4bdac4e2f19e945f229309ce'),result(yes(unproved(limit)))).

@@ -202,7 +202,8 @@ pub fn v1_trace_check(
 // K3 soundness (proved ⇒ derivable): every forest the trace derivation
 // produces is a valid proof tree over the loaded program — each clause node
 // resolves its goal through its clause, each naf leaf certifies a bounded
-// finite failure of a generalization of the site goal.
+// finite failure of the site goal exactly as called (a call that fails
+// `naf_safe` never becomes a leaf).
 pub proof fn k3_sound(db: Seq<ckc_spec::v1text::DocClause>, goal: ckc_spec::term::Term)
     requires
         ckc_spec::trace::bodies_wf(db),
@@ -212,6 +213,19 @@ pub proof fn k3_sound(db: Seq<ckc_spec::v1text::DocClause>, goal: ckc_spec::term
         ckc_spec::trace::forest_valid(db, goal, ckc_spec::trace::derived_forest(db, goal).unwrap()),
 {
     crate::k3_sound::k3_sound_proof(db, goal)
+}
+
+// R-14 regression probe (contract q7 P4): evaluates the naf-leaf certificate
+// on the counterexample's concrete terms; `true` = the forest is rejected.
+pub fn k3_naf_counterexample() -> (rejected: bool)
+    ensures
+        rejected ==> !ckc_spec::trace::forest_valid(
+            ckc_spec::trace::cx_db(),
+            ckc_spec::trace::cx_lit(ckc_spec::replay::atom("c"@), "r"@),
+            ckc_spec::trace::cx_forest(),
+        ),
+{
+    crate::k3_probe::naf_counterexample_impl()
 }
 
 // M5.5 K5: reviewer interface (contract m5u5 P1, R84). Pages = the exact bytes

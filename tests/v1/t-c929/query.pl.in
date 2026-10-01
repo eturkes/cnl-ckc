@@ -1,0 +1,4 @@
+% q-naf-existential compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'q-naf-existential',ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none)).
+% Q1: Q7 negation certificate probe.
+'$guideline_query_projection'(goal(','(guideline_property('$guideline_id'(context,doc,1,box(1),[]),A,candidate,pos),guideline_entity(actual,A,patient,countable))),answers([])).

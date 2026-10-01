@@ -1,0 +1,2 @@
+% q-naf-alternative traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,'q-naf-alternative',query_sha256(faaf3d50b759349eb5d72b6cf3abbbcad97cec807c73f49c7b7c6cea06ef1b6f),answers_sha256('3be02a0f3272c03a68556a5bf86617c26315d42ba909420b85b4d8d96535ed20'),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])],proved([clause(sentence(doc,1),clause_sha256(b9c226c8f36f9e3684704778dba52b193e6e0433eeb47b9d9a6a02adb8ed0555),[naf(guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),excluded,pos))])]))]))).

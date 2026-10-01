@@ -1,3 +1,4 @@
+use super::clear::*;
 use super::freshness::*;
 use super::frontier::*;
 use super::goals::*;
@@ -66,9 +67,8 @@ pub open spec fn outer_valid(
         roots,
         v.log,
         paths(v.stack),
-    ) && cover_log(db, roots, v.log, paths(v.stack)) && binds_below(cert.theta, v.fresh) && forall|
-        i: int,
-    |
+    ) && cover_log(db, roots, v.log, paths(v.stack)) && binds_below(cert.theta, v.fresh)
+        && naf_clear(v.log, v.stack, v.fresh) && forall|i: int|
         0 <= i < v.stack.len() ==> #[trigger] slot_valid(db, roots, v, cert, v.stack[i])
 }
 
@@ -93,6 +93,7 @@ pub open spec fn alt_valid(
     level: nat,
 ) -> bool {
     state_valid(db, roots, alt_snapshot(a), state) && cuts_below(alt_snapshot(a).stack, level)
+        && alt_safe(a)
 }
 
 pub open spec fn saved_valid(
@@ -221,6 +222,7 @@ pub proof fn initial_valid(db: Seq<DocClause>, roots: Seq<Term>)
         nvars_all_index(roots, i);
         assert(raw_at(db, roots, seq![], seq![], seq![i as nat]) == roots[i]);
     }
+    assert(naf_clear(v.log, v.stack, v.fresh));
     assert(outer_valid(db, roots, v, cert));
     assert(cuts_below(c.stack, 0));
 }

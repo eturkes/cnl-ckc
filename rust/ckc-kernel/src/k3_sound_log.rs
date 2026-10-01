@@ -1,3 +1,4 @@
+use super::clear::*;
 use super::graph::*;
 use super::*;
 
@@ -146,6 +147,7 @@ pub proof fn weak_extend(
         position(db, roots, log, path),
         logged(log, path),
         weak_event(db, roots, log, offsets, th, path, ev),
+        naf_fixed(ev, s),
     ensures
         weak_event(db, roots, log + extra, offsets + more, th + s, path, ev),
 {
@@ -158,10 +160,8 @@ pub proof fn weak_extend(
         },
         TEv::Naf(t) => {
             if let Term::Comp(_, args) = g {
-                let w = choose|w: Seq<(nat, Term)>| apply(t, w) == apply(args[0], th);
-                apply_append(t, w, s);
                 apply_append(args[0], th, s);
-                assert(apply(t, w + s) == apply(args[0], th + s));
+                assert(apply(args[0], th + s) == apply(t, s));
             }
         },
     }
@@ -179,6 +179,7 @@ pub proof fn cert_old_extend(
 )
     requires
         cert_log(db, roots, log, offsets, th),
+        forall|i: int| 0 <= i < log.len() ==> #[trigger] naf_fixed(log[i].1, s),
     ensures
         forall|i: int|
             0 <= i < log.len() ==> #[trigger] cert_event(
@@ -201,6 +202,7 @@ pub proof fn cert_old_extend(
         log[i].1,
     ) by {
         assert(cert_event(db, roots, log, offsets, th, log[i].0, log[i].1));
+        assert(naf_fixed(log[i].1, s));
         index_logged(log, i);
         position_append(db, roots, log, extra, log[i].0);
         weak_extend(db, roots, log, offsets, th, extra, more, s, log[i].0, log[i].1);

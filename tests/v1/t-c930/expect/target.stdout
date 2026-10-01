@@ -1,0 +1,2 @@
+% q-naf-nested traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,'q-naf-nested',query_sha256(d53f87097be3fa574adef8e5f28e77480fd95ab6f0614102da2db092dc041bfd),answers_sha256('338819ceaac8076b105612e91afd16e3fef62e8fcd7a42881a2fb9e07a81e70e'),result(yes(unproved(limit)))).

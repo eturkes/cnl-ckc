@@ -1,5 +1,6 @@
 use super::body::*;
 use super::bounded::*;
+use super::clear::*;
 use super::freshness::*;
 use super::frontier::*;
 use super::goals::*;
@@ -67,6 +68,8 @@ pub proof fn record_naf(
     requires
         outer_valid(db, roots, v, cert),
         v.stack == seq![TGoal::Lit(Term::Comp(naf_name(), seq![inner]), depth, path)] + rest,
+        naf_safe(inner, rest),
+        !in_naf(rest),
     ensures
         outer_valid(
             db,
@@ -99,12 +102,17 @@ pub proof fn record_naf(
     assert(v.log + extra =~= next.log);
     assert(cert.offsets + more =~= nc.offsets);
     assert(cert.theta + seq![] =~= cert.theta);
+    assert forall|i: int| 0 <= i < v.log.len() implies #[trigger] naf_fixed(v.log[i].1, seq![]) by {
+        if let TEv::Naf(t) = v.log[i].1 {
+            assert(apply(t, seq![]) == t);
+        }
+    }
     cert_old_extend(db, roots, v.log, cert.offsets, cert.theta, extra, more, seq![]);
     raw_append(db, roots, v.log, cert.offsets, extra, more, path);
     position_append(db, roots, v.log, extra, path);
     let raw = raw_at(db, roots, v.log, cert.offsets, path);
     if let Term::Comp(_, args) = raw {
-        assert(apply(inner, seq![]) == apply(args[0], cert.theta));
+        assert(inner == apply(args[0], cert.theta));
     }
     assert(weak_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
     assert(cert_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
@@ -145,6 +153,23 @@ pub proof fn record_naf(
             raw_append(db, roots, v.log, cert.offsets, extra, more, p);
         }
     }
+    assert(v.stack.drop_first() =~= rest);
+    clear_drop(v.log, v.stack, v.fresh);
+    nvars_all_index(seq![inner], 0);
+    assert(nvars(inner) <= v.fresh);
+    safe_clear(inner, rest);
+    assert forall|i: int| 0 <= i < next.log.len() implies #[trigger] clear_event(
+        next.log[i].1,
+        rest,
+        v.fresh,
+    ) by {
+        if i < v.log.len() {
+            assert(next.log[i] == v.log[i]);
+            assert(clear_event(v.log[i].1, rest, v.fresh));
+        } else {
+            assert(next.log[i] == (path, ev));
+        }
+    }
     assert(outer_valid(db, roots, next, nc));
 }
 
@@ -162,6 +187,7 @@ pub proof fn cert_push(
     requires
         cert_log(db, roots, log, offsets, th),
         cert_event(db, roots, log.push((path, ev)), offsets.push(off), th + s, path, ev),
+        forall|i: int| 0 <= i < log.len() ==> #[trigger] naf_fixed(log[i].1, s),
     ensures
         cert_log(db, roots, log.push((path, ev)), offsets.push(off), th + s),
 {
@@ -325,9 +351,9 @@ pub proof fn record_clause(
     assert(nvars_all(args_of(head)) <= fresh);
     pairs_decomp(args, args_of(head), seq![], fresh);
     assert(pairs + seq![] =~= pairs);
-    tunify_bounded(pairs, stack2, fresh);
+    tunify_within(pairs, stack2, fresh);
     let s = choose|s: Seq<(nat, Term)>|
-        tunifier_witness(pairs, stack2, tunify(pairs, stack2), fresh, s);
+        tunifier_witness(pairs, stack2, tunify(pairs, stack2), fresh, s) && within(s, pairs);
     assert(out == tapply_all(stack2, s));
     let ev = TEv::Clause(m);
     let extra = seq![(path, ev)];
@@ -355,6 +381,19 @@ pub proof fn record_clause(
     apply_append(head, cert.theta, s);
     assert(weak_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
     assert(cert_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
+    assert forall|x: nat| x < v.fresh implies !occurs(x, head) by {
+        shifted_absent(cl.head, v.fresh, x);
+    }
+    assert forall|i: int, x: nat|
+        #![trigger occurs(x, tgoal_term(body[i]))]
+        0 <= i < body.len() && x < v.fresh implies !occurs(x, tgoal_term(body[i])) by {
+        assert(wf_body_item(cl.body[i]));
+        item_absent(cl.body[i], v.fresh, x);
+    }
+    assert(tgoal_term(v.stack[0]) == Term::Comp(name, args));
+    clear_after_call(v.log, v.stack, v.fresh, fresh, name, args, name, head, body, s);
+    assert(v.stack.drop_first() =~= rest);
+    assert(body + v.stack.drop_first() =~= stack2);
     cert_push(db, roots, v.log, cert.offsets, cert.theta, path, ev, v.fresh, s);
     binds_mono(cert.theta, v.fresh, fresh);
     binds_append(cert.theta, s, fresh);
@@ -392,6 +431,18 @@ pub proof fn record_clause(
             assert(goal_frame(rest[j]).2 == oldfront[j + 1]);
             slot_extend(db, roots, v, cert, next, nc, extra, more, s, rest[j]);
             assert(out[i] == tapply(rest[j], s));
+        }
+    }
+    assert forall|i: int| 0 <= i < next.log.len() implies #[trigger] clear_event(
+        next.log[i].1,
+        out,
+        fresh,
+    ) by {
+        if i < v.log.len() {
+            assert(next.log[i] == v.log[i]);
+            assert(clear_event(v.log[i].1, out, fresh));
+        } else {
+            assert(next.log[i] == (path, ev));
         }
     }
     assert(outer_valid(db, roots, next, nc));

@@ -38,7 +38,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q5 M7 gap coverage (agent part: taxonomy research; user ruling owed).
 - [ ] Q6 corpus rounds to exhaustion (user routing ruling owed).
 - [ ] Q7 K3 negation certificate = call-time instance; calls failing `naf_safe` cut.
-- [ ] Q8 trace clause identity from the owning `% S<n>:` block.
+- [x] 4dbe27aa Q8 trace clause identity from the owning `% S<n>:` block.
 - [ ] Q9 single-authority UI copy.
 - [x] 3616a400 Q10 M5.3 late mutants replayed (`just late-mutants`).
 - [x] 0d3898cd Q11 corpus.md Inexpressible cite.

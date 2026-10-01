@@ -1,0 +1,1 @@
+Q7: a ground outer NAF contains an unsafe inner call; its prune prevents finite-failure certification.

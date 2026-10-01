@@ -1,3 +1,4 @@
+use super::clear::*;
 use super::frontier::*;
 use super::goals::*;
 use super::graph::*;
@@ -171,6 +172,11 @@ pub proof fn state_transport(
             assert(slot_valid(db, roots, v, cert, v.stack[i]));
             assert(slot_key(v.stack[i]) == slot_key(next.stack[i]));
         }
+        assert forall|i: int| 0 <= i < v.stack.len() implies tgoal_term(#[trigger] v.stack[i])
+            == tgoal_term(next.stack[i]) by {
+            assert(slot_key(v.stack[i]) == slot_key(next.stack[i]));
+        }
+        clear_terms(v.log, v.stack, next.stack, v.fresh);
     }
 }
 
@@ -187,6 +193,7 @@ pub proof fn naf_alternative(
     requires
         aux_valid(db, roots, c, aux),
         c.stack == seq![TGoal::Lit(Term::Comp(naf_name(), seq![inner]), depth, path)] + rest,
+        naf_safe(inner, rest),
     ensures
         alt_valid(
             db,

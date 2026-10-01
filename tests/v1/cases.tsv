@@ -337,5 +337,10 @@ t-c922	target	recursion-check	0	0	manifest.tsv
 t-c923	target	recursion-check	2	1	manifest.tsv
 t-c924	target	aggregate-check	0	0	manifest.tsv
 t-c925	target	aggregate-check	1	1	manifest.tsv
+t-c926	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c927	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c928	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c929	target	trace	0	0	manifest.tsv query.pl answers.pl
+t-c930	target	trace	0	0	manifest.tsv query.pl answers.pl
 t-c931	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
 t-c931	trace	trace	0	0	manifest.tsv query.pl answers.pl
