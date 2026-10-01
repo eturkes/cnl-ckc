@@ -1,0 +1,5 @@
+name	rc
+nonfinite-anchor	1
+queries-fixture-pin	1
+red-expect-altered	1
+red-ace-compiles	1

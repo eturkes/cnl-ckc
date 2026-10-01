@@ -213,6 +213,48 @@ kani:
     done
     echo "gate: kani ok"
 
+# Late `ckc check` mutants (secondary gate; one full check each, so outside `just test`):
+# sections after the SWI-Prolog stage. Each tests/check-mutants/late.tsv row mutates a
+# fresh HEAD clone and must end on its pinned first violation (stderr when nonempty,
+# else the last stdout line). CKC_BIN names a prebuilt binary.
+late-mutants:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    cd "{{ ROOT }}"
+    bin="${CKC_BIN:-}"
+    if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
+    bin=$(readlink -f "$bin")
+    head=$(git rev-parse HEAD)
+    work=$(mktemp -d)
+    trap 'rm -rf "$work"' EXIT
+    fails=0
+    while IFS=$'\t' read -r name rc; do
+        [ "$name" = name ] && continue
+        tree="$work/$name"
+        git clone -q --shared --no-checkout "{{ ROOT }}" "$tree"
+        git -C "$tree" checkout -q --detach "$head"
+        case "$name" in
+            nonfinite-anchor) sed -i 's/result(bogus)/result(other)/' \
+                "$tree/tests/queries/green/trace-direct-rejects/trace-reject/result-shape.answers" ;;
+            queries-fixture-pin) printf '\n' >> "$tree/tests/queries/red/bad-qid/expect" ;;
+            red-expect-altered) printf '\n' >> "$tree/tests/red/ape_messages--definite-no-antecedent.expect" ;;
+            red-ace-compiles) sed -i 's/^The doctor waits\.$/A doctor waits./' \
+                "$tree/tests/red/ape_messages--definite-no-antecedent.ace" ;;
+            *) echo "late-mutants: unknown row $name" >&2; exit 2 ;;
+        esac
+        [ -z "$(git -C "$tree" status --porcelain)" ] && { echo "late-mutants: $name mutation missed" >&2; exit 2; }
+        (cd "$tree" && "$bin" check > "$work/$name.out" 2> "$work/$name.err"); got=$?
+        if [ -s "$work/$name.err" ]; then first=$(cat "$work/$name.err"); else first=$(tail -n 1 "$work/$name.out"); fi
+        if [ "$got" = "$rc" ] && [ "$first" = "$(cat "tests/check-mutants/late/$name.expect")" ]; then
+            echo "late-mutants: $name ok"
+        else
+            echo "late-mutants: $name rc $got first violation: $first" >&2
+            fails=$((fails + 1))
+        fi
+    done < tests/check-mutants/late.tsv
+    [ "$fails" -eq 0 ] || exit 1
+    echo "gate: late-mutants ok"
+
 # Corpus chain: `ckc check` (every custody, coverage, lexicon, fixture and
 # release-manifest law), `ckc ui check`, then a fresh compile + queries per
 # guideline must leave guidelines/ byte-identical. CKC_BIN names a prebuilt binary.

@@ -41,7 +41,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q8 trace clause identity from the owning `% S<n>:` block.
 - [ ] Q9 single-authority UI copy.
 - [ ] Q10 M5.3 late mutants replayed.
-- [ ] Q11 corpus.md Inexpressible cite.
+- [x] 0d3898cd Q11 corpus.md Inexpressible cite.
 - [ ] N1 `align_probes` stdin race.
 - Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
