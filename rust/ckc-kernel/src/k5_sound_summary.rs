@@ -23,9 +23,9 @@ pub proof fn tally_parts(t: (nat, nat, nat), earlier: bool, inputs: Seq<u::Bytes
     b::decimal(t.0, inputs);
     b::decimal(t.1, inputs);
     b::decimal(t.2, inputs);
-    b::cat(ck::nat_bytes(t.0), u::lit(" approved"@), inputs);
-    b::cat(ck::nat_bytes(t.1), u::lit(" rejected"@), inputs);
-    b::cat(ck::nat_bytes(t.2), u::lit(" earlier"@), inputs);
+    b::cat(ck::nat_bytes(t.0), u::sp_approved(), inputs);
+    b::cat(ck::nat_bytes(t.1), u::sp_rejected(), inputs);
+    b::cat(ck::nat_bytes(t.2), u::sp_earlier(), inputs);
 }
 
 pub proof fn tally_cell(t: (nat, nat, nat), inputs: Seq<u::Bytes>)
@@ -40,7 +40,7 @@ pub proof fn tally_cell(t: (nat, nat, nat), inputs: Seq<u::Bytes>)
     l::l061(inputs);
     l::l062(inputs);
     if p.len() > 0 {
-        b::join(p, u::lit(", "@), inputs);
+        b::join(p, u::comma_sep(), inputs);
     }
 }
 
@@ -61,34 +61,30 @@ pub proof fn tally_text(t: (nat, nat, nat), inputs: Seq<u::Bytes>)
     l::l067(inputs);
     l::l068(inputs);
     let main = if p.len() > 0 {
-        u::lit("Decisions on this version: "@) + u::join(p, u::lit(" and "@)) + u::lit("."@)
+        u::decisions_on_this_version_cap() + u::join(p, u::sp_and_sp()) + u::period()
     } else if t.2 > 0 {
-        u::lit("No decision is recorded on this version."@)
+        u::no_decision_is_recorded_on_this_cap()
     } else {
-        u::lit("No decision is recorded."@)
+        u::no_decision_is_recorded_cap()
     };
     if p.len() > 0 {
-        b::join(p, u::lit(" and "@), inputs);
-        b::cat(u::lit("Decisions on this version: "@), u::join(p, u::lit(" and "@)), inputs);
+        b::join(p, u::sp_and_sp(), inputs);
+        b::cat(u::decisions_on_this_version_cap(), u::join(p, u::sp_and_sp()), inputs);
         b::cat(
-            u::lit("Decisions on this version: "@) + u::join(p, u::lit(" and "@)),
-            u::lit("."@),
+            u::decisions_on_this_version_cap() + u::join(p, u::sp_and_sp()),
+            u::period(),
             inputs,
         );
     }
     let tail = if t.2 > 0 {
-        u::lit(" Decisions on earlier versions: "@) + ck::nat_bytes(t.2) + u::lit("."@)
+        u::sp_decisions_on_earlier_versions_cap() + ck::nat_bytes(t.2) + u::period()
     } else {
         u::empty()
     };
     if t.2 > 0 {
         b::decimal(t.2, inputs);
-        b::cat(u::lit(" Decisions on earlier versions: "@), ck::nat_bytes(t.2), inputs);
-        b::cat(
-            u::lit(" Decisions on earlier versions: "@) + ck::nat_bytes(t.2),
-            u::lit("."@),
-            inputs,
-        );
+        b::cat(u::sp_decisions_on_earlier_versions_cap(), ck::nat_bytes(t.2), inputs);
+        b::cat(u::sp_decisions_on_earlier_versions_cap() + ck::nat_bytes(t.2), u::period(), inputs);
     } else {
         m::copy(u::empty(), inputs);
     }
@@ -114,29 +110,29 @@ pub proof fn review(g: u::Guideline, inputs: Seq<u::Bytes>)
     l::l074(inputs);
     if n == 0 {
         b::cat(
-            u::lit("No decisions are recorded for the "@),
+            u::no_decisions_are_recorded_for_the_cap_sp(),
             ck::nat_bytes(g.documents.len()),
             inputs,
         );
         b::cat(
-            u::lit("No decisions are recorded for the "@) + ck::nat_bytes(g.documents.len()),
-            u::lit(" documents in this guideline."@),
+            u::no_decisions_are_recorded_for_the_cap_sp() + ck::nat_bytes(g.documents.len()),
+            u::sp_documents_in_this_guideline(),
             inputs,
         );
     } else {
         b::decimal(n, inputs);
         b::decimal(ck::reviewed(u::decisions(g)).len(), inputs);
-        let a = u::lit("Reviewers recorded "@) + ck::nat_bytes(n);
-        b::cat(u::lit("Reviewers recorded "@), ck::nat_bytes(n), inputs);
-        b::cat(a, u::lit(" decisions on "@), inputs);
-        let a = a + u::lit(" decisions on "@);
+        let a = u::reviewers_recorded_cap_sp() + ck::nat_bytes(n);
+        b::cat(u::reviewers_recorded_cap_sp(), ck::nat_bytes(n), inputs);
+        b::cat(a, u::sp_decisions_on_sp(), inputs);
+        let a = a + u::sp_decisions_on_sp();
         b::cat(a, ck::nat_bytes(ck::reviewed(u::decisions(g)).len()), inputs);
         let a = a + ck::nat_bytes(ck::reviewed(u::decisions(g)).len());
-        b::cat(a, u::lit(" of "@), inputs);
-        let a = a + u::lit(" of "@);
+        b::cat(a, u::sp_of_sp(), inputs);
+        let a = a + u::sp_of_sp();
         b::cat(a, ck::nat_bytes(g.documents.len()), inputs);
         let a = a + ck::nat_bytes(g.documents.len());
-        b::cat(a, u::lit(" documents."@), inputs);
+        b::cat(a, u::sp_documents(), inputs);
     }
 }
 
@@ -154,21 +150,21 @@ pub proof fn region(r: ck::Row, inputs: Seq<u::Bytes>)
     match r.status {
         ck::Status::Restates(_) => {
             let field = u::field(r, 4);
-            m::unprefix(field, u::lit("restates("@), inputs);
-            let inner = u::unprefix(field, u::lit("restates("@));
-            m::unsuffix(inner, u::lit(")"@), inputs);
-            let suffix = u::unsuffix(inner, u::lit(")"@));
+            m::unprefix(field, u::restates_2(), inputs);
+            let inner = u::unprefix(field, u::restates_2());
+            m::unsuffix(inner, u::paren_close(), inputs);
+            let suffix = u::unsuffix(inner, u::paren_close());
             m::copy(suffix, inputs);
             l::l087(inputs);
-            b::cat(u::lit("Restates "@), suffix, inputs);
+            b::cat(u::restates_cap_sp(), suffix, inputs);
         },
         ck::Status::Uncovered(_) => {
             let field = u::field(r, 4);
-            m::unprefix(field, u::lit("uncovered("@), inputs);
-            let raw = u::unprefix(field, u::lit("uncovered("@));
-            m::unsuffix(raw, u::lit(")"@), inputs);
-            let inner = u::unsuffix(raw, u::lit(")"@));
-            let i = ck::first_sub(inner, u::lit(": "@), 0);
+            m::unprefix(field, u::uncovered_2(), inputs);
+            let raw = u::unprefix(field, u::uncovered_2());
+            m::unsuffix(raw, u::paren_close(), inputs);
+            let inner = u::unsuffix(raw, u::paren_close());
+            let i = ck::first_sub(inner, u::colon_sep(), 0);
             let tail = if i + 2 <= inner.len() {
                 inner.skip(i as int + 2)
             } else {
@@ -180,7 +176,7 @@ pub proof fn region(r: ck::Row, inputs: Seq<u::Bytes>)
             }
             m::copy(tail, inputs);
             l::l091(inputs);
-            b::cat(u::lit("Not covered — "@), tail, inputs);
+            b::cat(u::not_covered_cap_sp(), tail, inputs);
         },
         ck::Status::Pending => l::l092(inputs),
         _ => m::copy(u::empty(), inputs),

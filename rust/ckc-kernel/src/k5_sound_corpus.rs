@@ -133,7 +133,7 @@ pub proof fn first_title(ls: Seq<u::Bytes>, fallback: u::Bytes, root: u::Bytes)
     reveal_strlit("# ");
     vstd::utf8::is_ascii_chars_encode_utf8("# "@);
     if ls.len() > 0 {
-        if ck::starts(ls[0], u::lit("# "@)) && ck::strip_ws(ls[0].skip(2)).len() > 0 {
+        if ck::starts(ls[0], u::hash_space()) && ck::strip_ws(ls[0].skip(2)).len() > 0 {
             b::span_sub(ls[0], root, 2, ls[0].len() as int);
             assert(ls[0].skip(2) =~= ls[0].subrange(2, ls[0].len() as int));
             b::stripped(ls[0].skip(2));

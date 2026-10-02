@@ -10,14 +10,14 @@ verus! {
 
 pub open spec fn labels_spec() -> Seq<u::Bytes> {
     seq![
-        u::lit("Passages"@),
-        u::lit("With ACE"@),
-        u::lit("Pending"@),
-        u::lit("Approved"@),
-        u::lit("Rejected"@),
-        u::lit("Contested"@),
-        u::lit("Outdated"@),
-        u::lit("Unreviewed"@),
+        u::passages_cap(),
+        u::with_ace_cap(),
+        u::pending_cap(),
+        u::approved_cap(),
+        u::rejected_cap(),
+        u::contested_cap(),
+        u::outdated_cap(),
+        u::unreviewed_cap(),
     ]
 }
 
@@ -210,7 +210,7 @@ pub open spec fn doc_row_spec(g: u::Guideline, d: u::Document) -> u::Html {
         seq![
             u::cell(
                 u::link(
-                    u::lit("doc/"@) + u::url_seg(id) + u::lit(".html"@),
+                    u::document_dir() + u::url_seg(id) + u::html_ext(),
                     u::text(u::document_title(g, id)),
                 ),
             ),
@@ -244,7 +244,7 @@ pub fn doc_row(g: &EGuideline, m: &model::Model, d: &EDocument) -> (out: EPage)
         assert(h::pages(cells@) =~= seq![
             u::cell(
                 u::link(
-                    u::lit("doc/"@) + u::url_seg(id@) + u::lit(".html"@),
+                    u::document_dir() + u::url_seg(id@) + u::html_ext(),
                     u::text(u::document_title(g@, id@)),
                 ),
             ),
@@ -408,7 +408,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
                         seq![
                             u::cell(
                                 u::link(
-                                    u::lit("doc/"@) + u::url_seg(id) + u::lit(".html"@),
+                                    u::document_dir() + u::url_seg(id) + u::html_ext(),
                                     u::text(u::document_title(g@, id)),
                                 ),
                             ),
@@ -467,33 +467,37 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     body.push(h::fixed("</section>"));
     proof {
         assert(h::pages(body@) =~= seq![
-            u::fixed("<h1>"@) + u::text(title@) + u::fixed("</h1>"@),
-            u::fixed("<p>"@) + u::text(u::review_summary(g@)) + u::fixed(
-                " <a href=\"records.html\">All decision records</a></p>"@,
+            u::fixed_bytes(u::h1_open()) + u::text(title@) + u::fixed_bytes(u::h1_close()),
+            u::fixed_bytes(u::p_open()) + u::text(u::review_summary(g@)) + u::fixed_bytes(
+                u::sp_a_open_all_decision_records_a_close_p_close(),
             ),
-            u::fixed("<section>"@),
-            u::fixed("<h2>Status</h2>"@),
-            u::fixed("<table class=\"compact\">"@),
-            u::fixed("<thead><tr><th>Status</th><th>Count</th></tr></thead>"@),
-            u::fixed("<tbody>"@) + u::lines(h::pages(stats@)) + u::fixed("</tbody>"@),
-            u::fixed("</table>"@),
-            u::fixed("</section>"@),
-            u::fixed("<section>"@),
-            u::fixed("<h2>Documents</h2>"@),
-            u::fixed("<table class=\"compact\">"@),
-            u::fixed(
-                "<thead><tr><th>Document</th><th>Status</th><th>Decisions</th><th>Passage</th></tr></thead>"@,
+            u::fixed_bytes(u::section_open()),
+            u::fixed_bytes(u::h2_open_status_h2_close()),
+            u::fixed_bytes(u::table_open_2()),
+            u::fixed_bytes(u::thead_open_tr_open_th_open_status_th_close_th_open()),
+            u::fixed_bytes(u::tbody_open()) + u::lines(h::pages(stats@)) + u::fixed_bytes(
+                u::tbody_close(),
             ),
-            u::fixed("<tbody>"@) + u::lines(h::pages(docs@)) + u::fixed("</tbody>"@),
-            u::fixed("</table>"@),
-            u::fixed("</section>"@),
-            u::fixed("<section>"@),
-            u::fixed("<h2>Passages without ACE</h2>"@),
-            u::fixed("<table class=\"compact\">"@),
-            u::fixed("<thead><tr><th>Passage</th><th>Status</th><th>Section</th></tr></thead>"@),
-            u::fixed("<tbody>"@) + u::lines(h::pages(other@)) + u::fixed("</tbody>"@),
-            u::fixed("</table>"@),
-            u::fixed("</section>"@),
+            u::fixed_bytes(u::table_close()),
+            u::fixed_bytes(u::section_close()),
+            u::fixed_bytes(u::section_open()),
+            u::fixed_bytes(u::h2_open_documents_h2_close()),
+            u::fixed_bytes(u::table_open_2()),
+            u::fixed_bytes(u::thead_open_tr_open_th_open_document_th_close_th_open()),
+            u::fixed_bytes(u::tbody_open()) + u::lines(h::pages(docs@)) + u::fixed_bytes(
+                u::tbody_close(),
+            ),
+            u::fixed_bytes(u::table_close()),
+            u::fixed_bytes(u::section_close()),
+            u::fixed_bytes(u::section_open()),
+            u::fixed_bytes(u::h2_open_passages_without_ace_h2_close()),
+            u::fixed_bytes(u::table_open_2()),
+            u::fixed_bytes(u::thead_open_tr_open_th_open_passage_th_close_th_open()),
+            u::fixed_bytes(u::tbody_open()) + u::lines(h::pages(other@)) + u::fixed_bytes(
+                u::tbody_close(),
+            ),
+            u::fixed_bytes(u::table_close()),
+            u::fixed_bytes(u::section_close()),
         ]);
     }
     frame::frame(

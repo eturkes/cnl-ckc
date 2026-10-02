@@ -16,8 +16,8 @@ pub fn document(path: &[u8]) -> (out: Option<(Vec<u8>, Vec<u8>)>)
         reveal_strlit("/g/");
         reveal_strlit(".html");
         reveal_with_fuel(vstd::utf8::encode_utf8, 6);
-        assert(u::lit("/g/"@).len() == 3);
-        assert(u::lit(".html"@).len() == 5);
+        assert(u::g_2().len() == 3);
+        assert(u::html_ext().len() == 5);
     }
     if !b::starts(path, &prefix) {
         return None;

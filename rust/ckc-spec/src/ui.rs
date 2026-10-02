@@ -105,15 +105,15 @@ pub open spec fn escape(s: Bytes, attr: bool) -> Bytes
     } else {
         let c = s[0];
         (if c == 38 {
-            lit("&amp;"@)
+            amp_2()
         } else if c == 60 {
-            lit("&lt;"@)
+            lt_2()
         } else if c == 62 {
-            lit("&gt;"@)
+            gt_2()
         } else if attr && c == 34 {
-            lit("&quot;"@)
+            quot_2()
         } else if attr && c == 39 {
-            lit("&#x27;"@)
+            apos()
         } else {
             seq![c]
         }) + escape(s.drop_first(), attr)
@@ -134,11 +134,11 @@ pub open spec fn escaped(s: Bytes, attr: bool) -> bool
     if s.len() == 0 {
         true
     } else if s[0] == 38 {
-        let n: int = if check::starts(s, lit("&amp;"@)) {
+        let n: int = if check::starts(s, amp_2()) {
             5
-        } else if check::starts(s, lit("&lt;"@)) || check::starts(s, lit("&gt;"@)) {
+        } else if check::starts(s, lt_2()) || check::starts(s, gt_2()) {
             4
-        } else if check::starts(s, lit("&quot;"@)) || check::starts(s, lit("&#x27;"@)) {
+        } else if check::starts(s, quot_2()) || check::starts(s, apos()) {
             6
         } else {
             0
@@ -239,19 +239,21 @@ pub open spec fn hjoin(xs: Seq<Html>, sep: Html) -> Html
 }
 
 pub open spec fn lines(xs: Seq<Html>) -> Html {
-    hjoin(xs, fixed("\n"@))
+    hjoin(xs, fixed_bytes(newline()))
 }
 
 pub open spec fn cell(x: Html) -> Html {
-    fixed("<td>"@) + x + fixed("</td>"@)
+    fixed_bytes(td_open()) + x + fixed_bytes(td_close())
 }
 
 pub open spec fn row(xs: Seq<Html>) -> Html {
-    fixed("<tr>"@) + xs.flatten() + fixed("</tr>"@)
+    fixed_bytes(tr_open()) + xs.flatten() + fixed_bytes(tr_close())
 }
 
 pub open spec fn link(href: Bytes, label: Html) -> Html {
-    fixed("<a href=\""@) + attr(href) + fixed("\">"@) + label + fixed("</a>"@)
+    fixed_bytes(a_href_open()) + attr(href) + fixed_bytes(attr_end()) + label + fixed_bytes(
+        a_close(),
+    )
 }
 
 // These are byte-bearing inputs, not independently supplied counts/classes.
@@ -346,39 +348,40 @@ pub open spec fn state(g: Guideline, id: Bytes) -> int {
 
 pub open spec fn state_name(k: int) -> Bytes {
     if k == 0 {
-        lit("approved"@)
+        approved_2()
     } else if k == 1 {
-        lit("rejected"@)
+        rejected_2()
     } else if k == 2 {
-        lit("contested"@)
+        contested_2()
     } else if k == 3 {
-        lit("stale"@)
+        stale_2()
     } else {
-        lit("unreviewed"@)
+        unreviewed_2()
     }
 }
 
 pub open spec fn state_label(k: int) -> Bytes {
     if k == 0 {
-        lit("Approved"@)
+        approved_cap()
     } else if k == 1 {
-        lit("Rejected"@)
+        rejected_cap()
     } else if k == 2 {
-        lit("Contested"@)
+        contested_cap()
     } else if k == 3 {
-        lit("Outdated"@)
+        outdated_cap()
     } else {
-        lit("Unreviewed"@)
+        unreviewed_cap()
     }
 }
 
 pub open spec fn chip(k: int) -> Html {
-    fixed("<span class=\"chip chip-"@) + attr(state_name(k)) + fixed("\">"@) + text(state_label(k))
-        + fixed("</span>"@)
+    fixed_bytes(span_class_chip_chip()) + attr(state_name(k)) + fixed_bytes(attr_end()) + text(
+        state_label(k),
+    ) + fixed_bytes(span_close())
 }
 
 pub open spec fn field(r: Row, n: int) -> Bytes {
-    at(check::tab_fields(unsuffix(r.line, lit("\n"@))), n)
+    at(check::tab_fields(unsuffix(r.line, newline())), n)
 }
 
 pub open spec fn coverage_field(g: Guideline, id: Bytes, n: int) -> Bytes {
@@ -400,7 +403,7 @@ pub open spec fn first_title(ls: Seq<Bytes>, fallback: Bytes) -> Bytes
 {
     if ls.len() == 0 {
         fallback
-    } else if check::starts(ls[0], lit("# "@)) && check::strip_ws(ls[0].skip(2)).len() > 0 {
+    } else if check::starts(ls[0], hash_space()) && check::strip_ws(ls[0].skip(2)).len() > 0 {
         check::strip_ws(ls[0].skip(2))
     } else {
         first_title(ls.drop_first(), fallback)
@@ -423,14 +426,14 @@ pub open spec fn human_section(b: Bytes) -> Bytes {
     } else {
         let h = check::split_on(ss[0], 32);
         let special = h.len() == 2 && digits(at(h, 1));
-        let head = if special && at(h, 0) == lit("Rec"@) {
-            seq![lit("Recommendation "@) + at(h, 1)]
-        } else if special && at(h, 0) == lit("BOX"@) && ss.len() > 1 {
+        let head = if special && at(h, 0) == rec_cap() {
+            seq![recommendation_cap_sp() + at(h, 1)]
+        } else if special && at(h, 0) == box_cap() && ss.len() > 1 {
             Seq::empty()
         } else {
             seq![ss[0]]
         };
-        join(head + ss.drop_first(), lit(" · "@))
+        join(head + ss.drop_first(), middot_sep())
     }
 }
 
@@ -441,7 +444,7 @@ pub open spec fn document_title(g: Guideline, id: Bytes) -> Bytes {
     let shared = g.documents.filter(
         |d: Document| coverage_field(g, d.bundle.docid, 3) == section,
     ).len() > 1;
-    let page = unprefix(check::strip_ws(coverage_field(g, id, 2)), lit("p"@));
+    let page = unprefix(check::strip_ws(coverage_field(g, id, 2)), page_prefix());
     let segs = check::split_on(region, 45);
     let last = at(segs, segs.len() - 1);
     if base.len() == 0 {
@@ -449,16 +452,16 @@ pub open spec fn document_title(g: Guideline, id: Bytes) -> Bytes {
     } else if !shared {
         base
     } else if digits(page) && digits(last) {
-        base + lit(", page "@) + page + lit(", passage "@) + check::nat_bytes(check::dec_of(last))
+        base + page_sp() + page + passage_sp() + check::nat_bytes(check::dec_of(last))
     } else {
-        base + lit(" ("@) + region + lit(")"@)
+        base + paren_open_sep() + region + paren_close()
     }
 }
 
 pub open spec fn human_date(d: Bytes) -> Bytes {
-    let p = check::split_on(unsuffix(d, lit("Z"@)), 84);
-    if check::ends(d, lit("Z"@)) && p.len() == 2 {
-        p[0] + lit(" "@) + p[1] + lit(" UTC"@)
+    let p = check::split_on(unsuffix(d, zulu()), 84);
+    if check::ends(d, zulu()) && p.len() == 2 {
+        p[0] + space_2() + p[1] + utc_suffix()
     } else {
         d
     }
@@ -666,28 +669,28 @@ if (ev.target === box) { if (box.checked === false) { clearPick(); } }
 pub open spec fn frame(title: Bytes, crumbs: Html, body: Html) -> Html {
     lines(
         seq![
-            fixed("<!doctype html>"@),
-            fixed("<html lang=\"en\">"@),
-            fixed("<head>"@),
-            fixed("<meta charset=\"utf-8\">"@),
-            fixed("<title>"@) + text(title) + fixed(" — cnl-ckc reviewer</title>"@),
-            fixed("<style>"@),
-            fixed_bytes(css_text()),
-            fixed("</style>"@),
-            fixed("</head>"@),
-            fixed("<body>"@),
-            fixed("<a class=\"skip\" href=\"#main\">Skip to content</a>"@),
-            fixed("<nav class=\"crumbs\">"@) + crumbs + fixed("</nav>"@),
-            fixed("<main id=\"main\">"@),
-            body,
-            fixed("</main>"@),
-            fixed(
-                "<footer class=\"scope\"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>"@,
+            fixed_bytes(doctype_html()),
+            fixed_bytes(html_open()),
+            fixed_bytes(head_open()),
+            fixed_bytes(meta_open()),
+            fixed_bytes(title_open()) + text(title) + fixed_bytes(
+                sp_cnl_ckc_reviewer_title_close(),
             ),
-            fixed("</body>"@),
-            fixed("</html>"@),
+            fixed_bytes(style_open()),
+            fixed_bytes(css_text()),
+            fixed_bytes(style_close()),
+            fixed_bytes(head_close()),
+            fixed_bytes(body_open()),
+            fixed_bytes(a_open_skip_to_content_a_close()),
+            fixed_bytes(nav_open()) + crumbs + fixed_bytes(nav_close()),
+            fixed_bytes(main_open()),
+            body,
+            fixed_bytes(main_close()),
+            fixed_bytes(footer_open_p_open_this_page_reports_what()),
+            fixed_bytes(body_close()),
+            fixed_bytes(html_close()),
         ],
-    ) + fixed("\n"@)
+    ) + fixed_bytes(newline())
 }
 
 pub open spec fn current(g: Guideline, r: Record) -> bool {
@@ -707,15 +710,15 @@ pub open spec fn tally(g: Guideline, id: Bytes) -> (nat, nat, nat) {
 
 pub open spec fn tally_parts(t: (nat, nat, nat), earlier: bool) -> Seq<Bytes> {
     (if t.0 > 0 {
-        seq![check::nat_bytes(t.0) + lit(" approved"@)]
+        seq![check::nat_bytes(t.0) + sp_approved()]
     } else {
         Seq::empty()
     }) + (if t.1 > 0 {
-        seq![check::nat_bytes(t.1) + lit(" rejected"@)]
+        seq![check::nat_bytes(t.1) + sp_rejected()]
     } else {
         Seq::empty()
     }) + (if earlier && t.2 > 0 {
-        seq![check::nat_bytes(t.2) + lit(" earlier"@)]
+        seq![check::nat_bytes(t.2) + sp_earlier()]
     } else {
         Seq::empty()
     })
@@ -724,22 +727,22 @@ pub open spec fn tally_parts(t: (nat, nat, nat), earlier: bool) -> Seq<Bytes> {
 pub open spec fn tally_cell(t: (nat, nat, nat)) -> Bytes {
     let p = tally_parts(t, true);
     if p.len() == 0 {
-        lit("None"@)
+        none_cap()
     } else {
-        join(p, lit(", "@))
+        join(p, comma_sep())
     }
 }
 
 pub open spec fn tally_text(t: (nat, nat, nat)) -> Bytes {
     let p = tally_parts(t, false);
     (if p.len() > 0 {
-        lit("Decisions on this version: "@) + join(p, lit(" and "@)) + lit("."@)
+        decisions_on_this_version_cap() + join(p, sp_and_sp()) + period()
     } else if t.2 > 0 {
-        lit("No decision is recorded on this version."@)
+        no_decision_is_recorded_on_this_cap()
     } else {
-        lit("No decision is recorded."@)
+        no_decision_is_recorded_cap()
     }) + (if t.2 > 0 {
-        lit(" Decisions on earlier versions: "@) + check::nat_bytes(t.2) + lit("."@)
+        sp_decisions_on_earlier_versions_cap() + check::nat_bytes(t.2) + period()
     } else {
         empty()
     })
@@ -748,13 +751,12 @@ pub open spec fn tally_text(t: (nat, nat, nat)) -> Bytes {
 pub open spec fn review_summary(g: Guideline) -> Bytes {
     let n = decisions(g).len();
     if n == 0 {
-        lit("No decisions are recorded for the "@) + check::nat_bytes(g.documents.len()) + lit(
-            " documents in this guideline."@,
-        )
+        no_decisions_are_recorded_for_the_cap_sp() + check::nat_bytes(g.documents.len())
+            + sp_documents_in_this_guideline()
     } else {
-        lit("Reviewers recorded "@) + check::nat_bytes(n) + lit(" decisions on "@)
-            + check::nat_bytes(check::reviewed(decisions(g)).len()) + lit(" of "@)
-            + check::nat_bytes(g.documents.len()) + lit(" documents."@)
+        reviewers_recorded_cap_sp() + check::nat_bytes(n) + sp_decisions_on_sp() + check::nat_bytes(
+            check::reviewed(decisions(g)).len(),
+        ) + sp_of_sp() + check::nat_bytes(g.documents.len()) + sp_documents()
     }
 }
 
@@ -775,26 +777,26 @@ pub open spec fn index_html(c: Corpus) -> Html {
         |g: Guideline|
             row(
                 seq![
-                    cell(link(lit("g/"@) + url_seg(g.gid) + lit("/index.html"@), text(title(g)))),
+                    cell(
+                        link(guideline_dir() + url_seg(g.gid) + index_page_path(), text(title(g))),
+                    ),
                     cell(number(g.documents.len())),
                     cell(number(g.coverage.rows.len())),
                 ] + class_counts(g).map_values(|n: nat| cell(number(n))),
             ),
     );
     frame(
-        lit("Guidelines"@),
-        fixed("cnl-ckc reviewer"@),
+        guidelines_cap(),
+        fixed_bytes(cnl_ckc_reviewer()),
         lines(
             seq![
-                fixed("<h1>Guidelines</h1>"@),
-                fixed("<section>"@),
-                fixed("<table>"@),
-                fixed(
-                    "<thead><tr><th>Guideline</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>"@,
-                ),
-                fixed("<tbody>"@) + lines(rows) + fixed("</tbody>"@),
-                fixed("</table>"@),
-                fixed("</section>"@),
+                fixed_bytes(h1_open_guidelines_h1_close()),
+                fixed_bytes(section_open()),
+                fixed_bytes(table_open()),
+                fixed_bytes(thead_open_tr_open_th_open_guideline_th_close_th_open()),
+                fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+                fixed_bytes(table_close()),
+                fixed_bytes(section_close()),
             ],
         ),
     )
@@ -806,34 +808,34 @@ pub open spec fn render_index(c: Corpus) -> Bytes {
 
 pub open spec fn region_status(r: Row) -> Bytes {
     match r.status {
-        Status::Restates(_) => lit("Restates "@) + unsuffix(
-            unprefix(field(r, 4), lit("restates("@)),
-            lit(")"@),
+        Status::Restates(_) => restates_cap_sp() + unsuffix(
+            unprefix(field(r, 4), restates_2()),
+            paren_close(),
         ),
         Status::Uncovered(_) => {
-            let inner = unsuffix(unprefix(field(r, 4), lit("uncovered("@)), lit(")"@));
-            let i = check::first_sub(inner, lit(": "@), 0);
-            lit("Not covered — "@) + (if i + 2 <= inner.len() {
+            let inner = unsuffix(unprefix(field(r, 4), uncovered_2()), paren_close());
+            let i = check::first_sub(inner, colon_sep(), 0);
+            not_covered_cap_sp() + (if i + 2 <= inner.len() {
                 inner.skip(i as int + 2)
             } else {
                 empty()
             })
         },
-        Status::Pending => lit("Pending"@),
+        Status::Pending => pending_cap(),
         _ => empty(),
     }
 }
 
 pub open spec fn guideline_html(g: Guideline) -> Html {
     let labels = seq![
-        lit("Passages"@),
-        lit("With ACE"@),
-        lit("Pending"@),
-        lit("Approved"@),
-        lit("Rejected"@),
-        lit("Contested"@),
-        lit("Outdated"@),
-        lit("Unreviewed"@),
+        passages_cap(),
+        with_ace_cap(),
+        pending_cap(),
+        approved_cap(),
+        rejected_cap(),
+        contested_cap(),
+        outdated_cap(),
+        unreviewed_cap(),
     ];
     let counts = seq![
         g.coverage.rows.len(),
@@ -866,7 +868,7 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
                     seq![
                         cell(
                             link(
-                                lit("doc/"@) + url_seg(id) + lit(".html"@),
+                                document_dir() + url_seg(id) + html_ext(),
                                 text(document_title(g, id)),
                             ),
                         ),
@@ -882,36 +884,34 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
     );
     let body = lines(
         seq![
-            fixed("<h1>"@) + text(title(g)) + fixed("</h1>"@),
-            fixed("<p>"@) + text(review_summary(g)) + fixed(
-                " <a href=\"records.html\">All decision records</a></p>"@,
+            fixed_bytes(h1_open()) + text(title(g)) + fixed_bytes(h1_close()),
+            fixed_bytes(p_open()) + text(review_summary(g)) + fixed_bytes(
+                sp_a_open_all_decision_records_a_close_p_close(),
             ),
-            fixed("<section>"@),
-            fixed("<h2>Status</h2>"@),
-            fixed("<table class=\"compact\">"@),
-            fixed("<thead><tr><th>Status</th><th>Count</th></tr></thead>"@),
-            fixed("<tbody>"@) + lines(status_rows) + fixed("</tbody>"@),
-            fixed("</table>"@),
-            fixed("</section>"@),
-            fixed("<section>"@),
-            fixed("<h2>Documents</h2>"@),
-            fixed("<table class=\"compact\">"@),
-            fixed(
-                "<thead><tr><th>Document</th><th>Status</th><th>Decisions</th><th>Passage</th></tr></thead>"@,
-            ),
-            fixed("<tbody>"@) + lines(doc_rows) + fixed("</tbody>"@),
-            fixed("</table>"@),
-            fixed("</section>"@),
-            fixed("<section>"@),
-            fixed("<h2>Passages without ACE</h2>"@),
-            fixed("<table class=\"compact\">"@),
-            fixed("<thead><tr><th>Passage</th><th>Status</th><th>Section</th></tr></thead>"@),
-            fixed("<tbody>"@) + lines(others) + fixed("</tbody>"@),
-            fixed("</table>"@),
-            fixed("</section>"@),
+            fixed_bytes(section_open()),
+            fixed_bytes(h2_open_status_h2_close()),
+            fixed_bytes(table_open_2()),
+            fixed_bytes(thead_open_tr_open_th_open_status_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(status_rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+            fixed_bytes(section_open()),
+            fixed_bytes(h2_open_documents_h2_close()),
+            fixed_bytes(table_open_2()),
+            fixed_bytes(thead_open_tr_open_th_open_document_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(doc_rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+            fixed_bytes(section_open()),
+            fixed_bytes(h2_open_passages_without_ace_h2_close()),
+            fixed_bytes(table_open_2()),
+            fixed_bytes(thead_open_tr_open_th_open_passage_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(others) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
         ],
     );
-    frame(title(g), fixed("<a href=\"../../index.html\">guidelines</a> / "@) + text(title(g)), body)
+    frame(title(g), fixed_bytes(a_open_guidelines_a_close_sp()) + text(title(g)), body)
 }
 
 pub open spec fn render_guideline(g: Guideline) -> Bytes {
@@ -920,7 +920,7 @@ pub open spec fn render_guideline(g: Guideline) -> Bytes {
 
 pub open spec fn version_link(r: Record, version: Bytes) -> Html {
     if r.decision.commit.len() > 0 {
-        link(lit("https://github.com/eturkes/cnl-ckc/commit/"@) + r.decision.commit, text(version))
+        link(https_github_com_eturkes_cnl_ckc() + r.decision.commit, text(version))
     } else {
         text(version)
     }
@@ -946,16 +946,16 @@ pub open spec fn record_row(g: Guideline, r: Record) -> Html {
                 version_link(
                     r,
                     if current(g, r) {
-                        lit("Current"@)
+                        current_cap()
                     } else {
-                        lit("Earlier"@)
+                        earlier_cap()
                     },
                 ),
             ),
             cell(
                 text(
                     if r.comment.len() == 0 {
-                        lit("Not given"@)
+                        not_given_cap()
                     } else {
                         r.comment
                     },
@@ -972,18 +972,16 @@ pub open spec fn record_section(g: Guideline, id: Bytes) -> Seq<Html> {
     } else {
         let rows = Seq::new(hs.len(), |i: int| record_row(g, hs[hs.len() - i - 1]));
         seq![
-            fixed("<section id=\""@) + attr(id) + fixed("\">"@),
-            fixed("<h2>"@) + link(
-                lit("doc/"@) + url_seg(id) + lit(".html"@),
+            fixed_bytes(section_id()) + attr(id) + fixed_bytes(attr_end()),
+            fixed_bytes(h2_open()) + link(
+                document_dir() + url_seg(id) + html_ext(),
                 text(document_title(g, id)),
-            ) + fixed("</h2>"@),
-            fixed("<table class=\"records\">"@),
-            fixed(
-                "<thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>"@,
-            ),
-            fixed("<tbody>"@) + lines(rows) + fixed("</tbody>"@),
-            fixed("</table>"@),
-            fixed("</section>"@),
+            ) + fixed_bytes(h2_close()),
+            fixed_bytes(table_open_3()),
+            fixed_bytes(thead_open_tr_open_th_open_decision_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
         ]
     }
 }
@@ -993,35 +991,32 @@ pub open spec fn records_html(g: Guideline) -> Html {
         |d: Document| record_section(g, d.bundle.docid),
     ).flatten();
     let summary = review_summary(g) + (if decisions(g).len() > 0 {
-        lit(" The newest decision for each document is first."@)
+        sp_the_newest_decision_for_each_document_cap()
     } else {
         empty()
     });
     let notes = if sections.len() == 0 {
-        seq![fixed("<p>Open a document and record a decision to start this list.</p>"@)]
+        seq![fixed_bytes(p_open_open_a_document_and_record())]
     } else {
-        seq![fixed("<p>Each reviewer name is recorded as entered and is not verified.</p>"@)] + (
-        if records(g).filter(|r: Record| r.decision.commit.len() > 0).len() > 0 {
-            seq![
-                fixed(
-                    "<p>Each version links to the stored version of the text that the reviewer read.</p>"@,
-                ),
-            ]
+        seq![fixed_bytes(p_open_each_reviewer_name_is_recorded())] + (if records(g).filter(
+            |r: Record| r.decision.commit.len() > 0,
+        ).len() > 0 {
+            seq![fixed_bytes(p_open_each_version_links_to_the())]
         } else {
             Seq::empty()
         })
     };
     frame(
-        lit("Decision records"@),
-        fixed("<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">"@) + text(
-            title(g),
-        ) + fixed("</a> / records"@),
+        decision_records_cap(),
+        fixed_bytes(a_open_guidelines_a_close_a_open()) + text(title(g)) + fixed_bytes(
+            a_close_records(),
+        ),
         lines(
             seq![
-                fixed("<h1>Decision records</h1>"@),
-                fixed("<p>"@) + text(summary) + fixed("</p>"@),
+                fixed_bytes(h1_open_decision_records_h1_close()),
+                fixed_bytes(p_open()) + text(summary) + fixed_bytes(p_close()),
             ] + sections + notes + seq![
-                fixed("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>"@),
+                fixed_bytes(nav_open_a_open_guideline_index_a_close_nav_close()),
             ],
         ),
     )
@@ -1062,7 +1057,7 @@ pub open spec fn keyword_html(s: Bytes) -> Html
         };
         let word = s.take(e as int);
         (if stop_words().contains(lower(word)) {
-            fixed("<span class=\"kw\">"@) + text(word) + fixed("</span>"@)
+            fixed_bytes(span_open()) + text(word) + fixed_bytes(span_close())
         } else {
             text(word)
         }) + keyword_html(s.skip(e as int))
@@ -1104,10 +1099,15 @@ pub open spec fn marked_html(
         } else {
             text(gap)
         }) + (if p.index < 48 {
-            fixed("<mark class=\"t"@) + attr(v1text::dec_bytes(p.index)) + fixed("\">"@)
+            fixed_bytes(mark_class_t()) + attr(v1text::dec_bytes(p.index)) + fixed_bytes(attr_end())
         } else {
-            fixed("<mark>"@)
-        }) + text(part) + fixed("</mark>"@) + marked_html(s, spans.drop_first(), keywords, p.end)
+            fixed_bytes(mark_open())
+        }) + text(part) + fixed_bytes(mark_close()) + marked_html(
+            s,
+            spans.drop_first(),
+            keywords,
+            p.end,
+        )
     }
 }
 
@@ -1174,9 +1174,9 @@ pub open spec fn latest_name(rs: Seq<Record>, date: Bytes, name: Bytes) -> Bytes
 }
 
 pub open spec fn roster(g: Guideline) -> Html {
-    fixed("<datalist id=\"reviewer-names\">"@) + names(g).map_values(
-        |n: Bytes| fixed("<option value=\""@) + attr(n) + fixed("\"></option>"@),
-    ).flatten() + fixed("</datalist>"@)
+    fixed_bytes(datalist_open()) + names(g).map_values(
+        |n: Bytes| fixed_bytes(option_value()) + attr(n) + fixed_bytes(option_close()),
+    ).flatten() + fixed_bytes(datalist_close())
 }
 
 pub open spec fn linebreak(c: char) -> bool {
@@ -1217,26 +1217,26 @@ pub open spec fn document_html(
     let id = d.bundle.docid;
     let k = state(g, id);
     let region = coverage_field(g, id, 0);
-    let pdfs = g.source_names.filter(|n: Bytes| check::ends(n, lit(".pdf"@)));
+    let pdfs = g.source_names.filter(|n: Bytes| check::ends(n, pdf_ext()));
     let heading = text(title(g)) + (if pdfs.len() == 1 {
-        fixed(" <a class=\"source\" href=\"../source/"@) + attr(url_seg(pdfs[0])) + fixed(
-            "\">PDF</a>"@,
+        fixed_bytes(sp_a_class_source_href_source()) + attr(url_seg(pdfs[0])) + fixed_bytes(
+            pdf_a_close_cap(),
         )
     } else {
         Seq::empty()
     });
-    let source = unprefix(coverage_field(g, id, 1), lit("source/"@));
+    let source = unprefix(coverage_field(g, id, 1), source_dir());
     let prov = (if region.len() > 0 {
         seq![text(region)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
-        seq![link(lit("../source/"@) + url_seg(source), fixed("Source text"@))]
+        seq![link(source_2() + url_seg(source), fixed_bytes(source_text_cap()))]
     } else {
         Seq::empty()
     });
-    let records_href = lit("../records.html"@) + (if history(g, id).len() > 0 {
-        lit("#"@) + url_seg(id)
+    let records_href = records_html_2() + (if history(g, id).len() > 0 {
+        copy_2() + url_seg(id)
     } else {
         empty()
     });
@@ -1245,99 +1245,100 @@ pub open spec fn document_html(
         _ => false,
     };
     let nav = (if prev.len() > 0 {
-        seq![link(url_seg(prev) + lit(".html"@), fixed("Previous document"@))]
+        seq![link(url_seg(prev) + html_ext(), fixed_bytes(previous_document_cap()))]
     } else {
         Seq::empty()
-    }) + seq![fixed("<a href=\"../index.html\">Guideline index</a>"@)] + (if next.len() > 0 {
-        seq![link(url_seg(next) + lit(".html"@), fixed("Next document"@))]
+    }) + seq![fixed_bytes(a_open_guideline_index_a_close())] + (if next.len() > 0 {
+        seq![link(url_seg(next) + html_ext(), fixed_bytes(next_document_cap()))]
     } else {
         Seq::empty()
     });
     let body = lines(
         seq![
-            fixed("<h1>"@) + heading + fixed("</h1>"@),
-            fixed("<h2>"@) + text(document_title(g, id)) + fixed(" "@) + chip(k) + fixed("</h2>"@),
+            fixed_bytes(h1_open()) + heading + fixed_bytes(h1_close()),
+            fixed_bytes(h2_open()) + text(document_title(g, id)) + fixed_bytes(space_2()) + chip(k)
+                + fixed_bytes(h2_close()),
         ] + (if prov.len() > 0 {
-            seq![fixed("<p>"@) + hjoin(prov, fixed(" · "@)) + fixed("</p>"@)]
+            seq![
+                fixed_bytes(p_open()) + hjoin(prov, fixed_bytes(middot_sep())) + fixed_bytes(
+                    p_close(),
+                ),
+            ]
         } else {
             Seq::empty()
         }) + seq![
-            fixed("<p>"@) + text(tally_text(tally(g, id))) + fixed(" "@) + link(
+            fixed_bytes(p_open()) + text(tally_text(tally(g, id))) + fixed_bytes(space_2()) + link(
                 records_href,
-                fixed("All decision records"@),
-            ) + fixed("</p>"@),
+                fixed_bytes(all_decision_records_cap()),
+            ) + fixed_bytes(p_close()),
         ] + (if k == 3 {
             seq![
-                fixed("<section class=\"stale\">"@),
-                fixed(
-                    "<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>"@,
-                ),
-                fixed("</section>"@),
+                fixed_bytes(section_open_2()),
+                fixed_bytes(p_open_the_document_or_its_source()),
+                fixed_bytes(section_close()),
             ]
         } else {
             Seq::empty()
         }) + (if shown {
             seq![
-                fixed(
-                    "<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> Highlighting</label> Try hovering and clicking on highlighted terms for different levels of emphasis.</p>"@,
-                ),
+                fixed_bytes(p_open_label_open_input_open_highlighting_label_close_try()),
                 fixed_bytes(script_html()),
             ]
         } else {
             Seq::empty()
         }) + seq![
-            fixed("<section>"@),
-            fixed("<h3>Original passage</h3>"@),
-            fixed("<pre class=\"prose\">"@) + aligned_text(g, d, false) + fixed("</pre>"@),
-            fixed("</section>"@),
-            fixed("<section>"@),
-            fixed("<h3>Attempto Controlled English (ACE)</h3>"@),
-            fixed("<pre class=\"prose\">"@) + aligned_text(g, d, true) + fixed("</pre>"@),
-            fixed("</section>"@),
-            fixed("<section class=\"verdict-entry\">"@),
-            fixed("<h3>Record a decision</h3>"@),
-            fixed(
-                "<p>Does the ACE representation appropriately reflect the original passage?</p>"@,
-            ),
-            fixed("<form method=\"post\">"@),
-            fixed("<fieldset>"@),
-            fixed("<legend>Decision</legend>"@),
-            fixed(
-                "<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required> Approved</label>"@,
-            ),
-            fixed(
-                "<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>"@,
-            ),
-            fixed("</fieldset>"@),
-            fixed("<label for=\"reviewer\">Reviewer name</label>"@),
-            fixed(
-                "<input type=\"text\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\""@,
-            ) + attr(latest_name(records(g), empty(), empty())) + fixed("\" required>"@),
+            fixed_bytes(section_open()),
+            fixed_bytes(h3_open_original_passage_h3_close()),
+            fixed_bytes(pre_open()) + aligned_text(g, d, false) + fixed_bytes(pre_close()),
+            fixed_bytes(section_close()),
+            fixed_bytes(section_open()),
+            fixed_bytes(h3_open_attempto_controlled_english_ace_h3_close()),
+            fixed_bytes(pre_open()) + aligned_text(g, d, true) + fixed_bytes(pre_close()),
+            fixed_bytes(section_close()),
+            fixed_bytes(section_open_3()),
+            fixed_bytes(h3_open_record_a_decision_h3_close()),
+            fixed_bytes(p_open_does_the_ace_representation_appropriately()),
+            fixed_bytes(form_open()),
+            fixed_bytes(fieldset_open()),
+            fixed_bytes(legend_open_decision_legend_close()),
+            fixed_bytes(label_open_input_open_approved_label_close()),
+            fixed_bytes(label_open_input_open_rejected_label_close()),
+            fixed_bytes(fieldset_close()),
+            fixed_bytes(label_open_reviewer_name_label_close()),
+            fixed_bytes(input_type_text_id_reviewer_name()) + attr(
+                latest_name(records(g), empty(), empty()),
+            ) + fixed_bytes(required_2()),
             roster(g),
-            fixed("<label for=\"comment\">Comment (optional)</label>"@),
-            fixed("<textarea id=\"comment\" name=\"comment\"></textarea>"@),
-            fixed("<input type=\"hidden\" name=\"review_sha256\" value=\""@) + attr(d.bundle.review)
-                + fixed("\">"@),
-            fixed("<input type=\"hidden\" name=\"ledger_sha256\" value=\""@) + attr(g.ledger_digest)
-                + fixed("\">"@),
-            fixed("<input type=\"hidden\" name=\"csrf\" value=\""@) + attr(token) + fixed("\">"@),
-            fixed("<button>Record decision</button>"@),
-            fixed("</form>"@),
-            fixed("</section>"@),
-            fixed("<section>"@),
-            fixed("<details>"@),
-            fixed("<summary>Compiled Prolog ("@) + number(splitline_count(chars(d.pl), false))
-                + fixed(" lines)</summary>"@),
-            fixed("<pre>"@) + text(d.pl) + fixed("</pre>"@),
-            fixed("</details>"@),
-            fixed("</section>"@),
-            fixed("<nav class=\"docnav\">"@) + hjoin(nav, fixed(" · "@)) + fixed("</nav>"@),
+            fixed_bytes(label_open_comment_optional_label_close()),
+            fixed_bytes(textarea_open_textarea_close()),
+            fixed_bytes(input_type_hidden_name_review_sha256_value()) + attr(d.bundle.review)
+                + fixed_bytes(attr_end()),
+            fixed_bytes(input_type_hidden_name_ledger_sha256_value()) + attr(g.ledger_digest)
+                + fixed_bytes(attr_end()),
+            fixed_bytes(input_type_hidden_name_csrf_value()) + attr(token) + fixed_bytes(
+                attr_end(),
+            ),
+            fixed_bytes(button_open_record_decision_button_close()),
+            fixed_bytes(form_close()),
+            fixed_bytes(section_close()),
+            fixed_bytes(section_open()),
+            fixed_bytes(details_open()),
+            fixed_bytes(summary_open_compiled_prolog()) + number(
+                splitline_count(chars(d.pl), false),
+            ) + fixed_bytes(sp_lines_summary_close()),
+            fixed_bytes(pre_open_2()) + text(d.pl) + fixed_bytes(pre_close()),
+            fixed_bytes(details_close()),
+            fixed_bytes(section_close()),
+            fixed_bytes(nav_open_2()) + hjoin(nav, fixed_bytes(middot_sep())) + fixed_bytes(
+                nav_close(),
+            ),
         ],
     );
     frame(
         document_title(g, id),
-        fixed("<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">"@)
-            + text(title(g)) + fixed("</a> / "@) + text(region),
+        fixed_bytes(a_open_guidelines_a_close_a_open_2()) + text(title(g)) + fixed_bytes(
+            a_close_sp(),
+        ) + text(region),
         body,
     )
 }
@@ -1353,12 +1354,7 @@ pub open spec fn render_document(
 }
 
 pub open spec fn stop_words() -> Seq<Bytes> {
-    check::split_on(
-        lit(
-            "a an the every each no all some any this that these those such is are was were be been being has have had does do did should must may can cannot might will would shall could if then and or nor but not it its itself they them their he she who whom whose which what where when there something somebody someone everything everybody everyone nothing nobody of for with without during to at in on by from as against about after before through under over above below into onto per within between among around near than least most more less fewer greater"@,
-        ),
-        32,
-    )
+    check::split_on(a_an_the_every_each_no(), 32)
 }
 
 // --- POST. Header/body IO is already parsed. ---
@@ -1437,8 +1433,8 @@ pub open spec fn error_page(status: nat, title: Bytes, body: Html) -> Response {
         body: render_page(
             frame(
                 title,
-                fixed("cnl-ckc reviewer"@),
-                lines(seq![fixed("<h1>"@) + text(title) + fixed("</h1>"@), body]),
+                fixed_bytes(cnl_ckc_reviewer()),
+                lines(seq![fixed_bytes(h1_open()) + text(title) + fixed_bytes(h1_close()), body]),
             ),
         ),
         allow: empty(),
@@ -1447,9 +1443,8 @@ pub open spec fn error_page(status: nat, title: Bytes, body: Html) -> Response {
 }
 
 pub open spec fn annotated_body(copy: Bytes, detail: Bytes) -> Html {
-    fixed("<p>"@) + text(copy) + fixed("</p>\n<!-- "@) + seq![Piece::Comment(detail)] + fixed(
-        " -->"@,
-    )
+    fixed_bytes(p_open()) + text(copy) + fixed_bytes(p_close_sp()) + seq![Piece::Comment(detail)]
+        + fixed_bytes(sp_copy())
 }
 
 pub open spec fn refusal(status: nat, title: Bytes, detail: Bytes, copy: Bytes) -> PostOutcome {
@@ -1457,54 +1452,41 @@ pub open spec fn refusal(status: nat, title: Bytes, detail: Bytes, copy: Bytes) 
 }
 
 pub open spec fn refused_copy() -> Bytes {
-    lit(
-        "The request was refused. Open the document page again from this site and submit the decision again."@,
-    )
+    the_request_was_refused_open_the_cap()
 }
 
 pub open spec fn invalid_form_copy() -> Bytes {
-    lit(
-        "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."@,
-    )
+    the_submitted_form_was_not_valid_cap()
 }
 
 pub open spec fn forbidden(detail: Bytes) -> PostOutcome {
-    refusal(403, lit("Forbidden"@), detail, refused_copy())
+    refusal(403, forbidden_cap(), detail, refused_copy())
 }
 
 pub open spec fn bad_form(detail: Bytes) -> PostOutcome {
-    refusal(400, lit("Bad request"@), detail, invalid_form_copy())
+    refusal(400, bad_request_cap(), detail, invalid_form_copy())
 }
 
 pub open spec fn server_error(detail: Bytes) -> PostOutcome {
-    refusal(
-        500,
-        lit("Server error"@),
-        detail,
-        lit("The server could not complete the request. Reload the page and try again."@),
-    )
+    refusal(500, server_error_cap(), detail, the_server_could_not_complete_the_cap())
 }
 
 pub open spec fn ledger_changed() -> PostOutcome {
     refusal(
         409,
-        lit("Conflict"@),
-        lit("ui: verdict: ledger changed"@),
-        lit(
-            "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state."@,
-        ),
+        conflict_cap(),
+        ui_verdict_ledger_changed(),
+        another_decision_was_recorded_for_this_cap(),
     )
 }
 
 pub open spec fn doc_route(path: Bytes) -> Option<(Bytes, Bytes)> {
-    if !check::starts(path, lit("/g/"@)) {
+    if !check::starts(path, g_2()) {
         Option::None
     } else {
         let xs = check::split_on(path.skip(3), 47);
-        if xs.len() == 3 && xs[0].len() > 0 && xs[1] == lit("doc"@) && check::ends(
-            xs[2],
-            lit(".html"@),
-        ) && xs[2].len() > 5 {
+        if xs.len() == 3 && xs[0].len() > 0 && xs[1] == doc_2() && check::ends(xs[2], html_ext())
+            && xs[2].len() > 5 {
             Option::Some((xs[0], xs[2].take(xs[2].len() - 5)))
         } else {
             Option::None
@@ -1515,19 +1497,19 @@ pub open spec fn doc_route(path: Bytes) -> Option<(Bytes, Bytes)> {
 pub open spec fn method_response(shaped: bool) -> PostOutcome {
     let r = error_page(
         405,
-        lit("Method not allowed"@),
+        method_not_allowed_cap(),
         if shaped {
-            fixed("<p>Only GET and POST are supported on this page.</p>"@)
+            fixed_bytes(p_open_only_get_and_post_are())
         } else {
-            fixed("<p>Only GET is supported on this page.</p>"@)
+            fixed_bytes(p_open_only_get_is_supported_on())
         },
     );
     PostOutcome::Refused(
         Response {
             allow: if shaped {
-                lit("GET, POST"@)
+                get_post_cap()
             } else {
-                lit("GET"@)
+                get_cap()
             },
             ..r
         },
@@ -1536,7 +1518,7 @@ pub open spec fn method_response(shaped: bool) -> PostOutcome {
 
 pub open spec fn not_found() -> PostOutcome {
     PostOutcome::Refused(
-        error_page(404, lit("Not found"@), fixed("<p>The requested page does not exist.</p>"@)),
+        error_page(404, not_found_cap(), fixed_bytes(p_open_the_requested_page_does_not())),
     )
 }
 
@@ -1573,14 +1555,14 @@ pub open spec fn form_pairs(xs: Seq<Bytes>) -> Result<Seq<(Bytes, Bytes)>, Bytes
         Result::Ok(Seq::empty())
     } else {
         let raw = xs[0];
-        let n = check::first_sub(raw, lit("="@), 0);
+        let n = check::first_sub(raw, copy_3(), 0);
         if n >= raw.len() {
-            Result::Err(lit("ui: verdict: body not parseable"@))
+            Result::Err(ui_verdict_body_not_parseable())
         } else {
             let k = form_unquote(raw.take(n as int));
             let v = form_unquote(raw.skip(n as int + 1));
             if !valid_utf8(k) || !valid_utf8(v) {
-                Result::Err(lit("ui: verdict: body not parseable"@))
+                Result::Err(ui_verdict_body_not_parseable())
             } else {
                 match form_pairs(xs.drop_first()) {
                     Result::Err(e) => Result::Err(e),
@@ -1592,14 +1574,7 @@ pub open spec fn form_pairs(xs: Seq<Bytes>) -> Result<Seq<(Bytes, Bytes)>, Bytes
 }
 
 pub open spec fn field_names() -> Seq<Bytes> {
-    seq![
-        lit("verdict"@),
-        lit("reviewer"@),
-        lit("comment"@),
-        lit("review_sha256"@),
-        lit("ledger_sha256"@),
-        lit("csrf"@),
-    ]
+    seq![verdict_2(), reviewer_2(), comment_2(), review_sha256_2(), ledger_sha256_2(), csrf_2()]
 }
 
 pub open spec fn field_values(ps: Seq<(Bytes, Bytes)>, key: Bytes) -> Seq<Bytes> {
@@ -1612,30 +1587,30 @@ pub open spec fn parse_fields(ps: Seq<(Bytes, Bytes)>) -> Result<Fields, Bytes> 
     let duplicate = ns.filter(|n: Bytes| field_values(ps, n).len() > 1);
     let unknown = ps.filter(|p: (Bytes, Bytes)| !ns.contains(p.0));
     if missing.len() > 0 {
-        Result::Err(lit("ui: verdict: missing field "@) + missing[0])
+        Result::Err(ui_verdict_missing_field_sp() + missing[0])
     } else if duplicate.len() > 0 {
-        Result::Err(lit("ui: verdict: duplicate field "@) + duplicate[0])
+        Result::Err(ui_verdict_duplicate_field_sp() + duplicate[0])
     } else if unknown.len() > 0 {
-        Result::Err(lit("ui: verdict: unknown field "@) + unknown[0].0)
+        Result::Err(ui_verdict_unknown_field_sp() + unknown[0].0)
     } else {
         let f = Fields {
-            verdict: at(field_values(ps, lit("verdict"@)), 0),
-            reviewer: at(field_values(ps, lit("reviewer"@)), 0),
-            comment: at(field_values(ps, lit("comment"@)), 0),
-            review: at(field_values(ps, lit("review_sha256"@)), 0),
-            ledger: at(field_values(ps, lit("ledger_sha256"@)), 0),
-            csrf: at(field_values(ps, lit("csrf"@)), 0),
+            verdict: at(field_values(ps, verdict_2()), 0),
+            reviewer: at(field_values(ps, reviewer_2()), 0),
+            comment: at(field_values(ps, comment_2()), 0),
+            review: at(field_values(ps, review_sha256_2()), 0),
+            ledger: at(field_values(ps, ledger_sha256_2()), 0),
+            csrf: at(field_values(ps, csrf_2()), 0),
         };
-        if f.verdict != lit("approved"@) && f.verdict != lit("rejected"@) {
-            Result::Err(lit("ui: verdict: invalid verdict"@))
+        if f.verdict != approved_2() && f.verdict != rejected_2() {
+            Result::Err(ui_verdict_invalid_verdict())
         } else if f.reviewer.len() == 0 || !check::text_clean(f.reviewer) {
-            Result::Err(lit("ui: verdict: invalid reviewer"@))
+            Result::Err(ui_verdict_invalid_reviewer())
         } else if !check::text_clean(f.comment) {
-            Result::Err(lit("ui: verdict: invalid comment"@))
+            Result::Err(ui_verdict_invalid_comment())
         } else if !hex64(f.review) {
-            Result::Err(lit("ui: verdict: invalid review_sha256"@))
-        } else if f.ledger != lit("absent"@) && !hex64(f.ledger) {
-            Result::Err(lit("ui: verdict: invalid ledger_sha256"@))
+            Result::Err(ui_verdict_invalid_review_sha256())
+        } else if f.ledger != absent_2() && !hex64(f.ledger) {
+            Result::Err(ui_verdict_invalid_ledger_sha256())
         } else {
             Result::Ok(f)
         }
@@ -1644,7 +1619,7 @@ pub open spec fn parse_fields(ps: Seq<(Bytes, Bytes)>) -> Result<Fields, Bytes> 
 
 pub open spec fn parse_form(body: Bytes) -> Result<Fields, Bytes> {
     if !valid_utf8(body) {
-        Result::Err(lit("ui: verdict: body not decodable"@))
+        Result::Err(ui_verdict_body_not_decodable())
     } else {
         let xs = if body.len() == 0 {
             Seq::empty()
@@ -1652,7 +1627,7 @@ pub open spec fn parse_form(body: Bytes) -> Result<Fields, Bytes> {
             check::split_on(body, 38)
         };
         if xs.len() > 32 {
-            Result::Err(lit("ui: verdict: body not parseable"@))
+            Result::Err(ui_verdict_body_not_parseable())
         } else {
             match form_pairs(xs) {
                 Result::Err(e) => Result::Err(e),
@@ -1670,15 +1645,15 @@ pub open spec fn record_line(r: Record) -> Bytes {
             d.digest,
             d.commit,
             if d.approved {
-                lit("approved"@)
+                approved_2()
             } else {
-                lit("rejected"@)
+                rejected_2()
             },
             r.reviewer,
             d.date,
             r.comment,
         ],
-        lit("\t"@),
+        copy_4(),
     )
 }
 
@@ -1689,7 +1664,7 @@ pub open spec fn insert_position(rows: Seq<Bytes>, key: Bytes, i: nat, last: nat
         last
     } else {
         let f = check::tab_fields(rows[i as int]);
-        let oldkey = at(f, 0) + lit("\t"@) + at(f, 5);
+        let oldkey = at(f, 0) + copy_4() + at(f, 5);
         insert_position(
             rows,
             key,
@@ -1707,7 +1682,7 @@ pub open spec fn ledger_candidate(old: Bytes, decision: Record) -> Bytes {
     let rows = raw_rows(old);
     let pos = insert_position(
         rows,
-        decision.decision.docid + lit("\t"@) + decision.decision.date,
+        decision.decision.docid + copy_4() + decision.decision.date,
         0,
         0,
     );
@@ -1718,8 +1693,8 @@ pub open spec fn ledger_candidate(old: Bytes, decision: Record) -> Bytes {
     };
     check::ledger_header() + join(
         rows.take(i) + seq![record_line(decision)] + rows.skip(i),
-        lit("\n"@),
-    ) + lit("\n"@)
+        newline(),
+    ) + newline()
 }
 
 pub open spec fn last_review(bs: Seq<Bundle>, id: Bytes, acc: Bytes) -> Bytes
@@ -1775,17 +1750,15 @@ pub open spec fn prepare_candidate(
         Result::Err(_) => empty(),
     };
     match g.fresh {
-        Result::Err(e) => server_error(lit("ui: verdict: manifest derivation failed: "@) + e),
+        Result::Err(e) => server_error(ui_verdict_manifest_derivation_failed() + e),
         Result::Ok(_) => if fresh.len() == 0 {
-            server_error(lit("ui: verdict: manifest derivation failed: docid row missing"@))
+            server_error(ui_verdict_manifest_derivation_failed_docid())
         } else if f.review != fresh {
             refusal(
                 409,
-                lit("Conflict"@),
-                lit("ui: verdict: subject changed"@),
-                lit(
-                    "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."@,
-                ),
+                conflict_cap(),
+                ui_verdict_subject_changed(),
+                the_document_or_its_source_changed_cap(),
             )
         } else if f.ledger != g.ledger_digest {
             ledger_changed()
@@ -1795,7 +1768,7 @@ pub open spec fn prepare_candidate(
                     docid: d.docid,
                     digest: f.review,
                     commit: d.commit,
-                    approved: f.verdict == lit("approved"@),
+                    approved: f.verdict == approved_2(),
                     date: now,
                 },
                 reviewer: f.reviewer,
@@ -1808,21 +1781,20 @@ pub open spec fn prepare_candidate(
             );
             match checked.1 {
                 Option::Some(v) => server_error(
-                    lit("ui: adjudication ledger invalid: "@) + check::strip_ws(check::render(v).1),
+                    ui_adjudication_ledger_invalid() + check::strip_ws(check::render(v).1),
                 ),
                 Option::None => {
                     let response = error_page(
                         303,
-                        lit("Decision recorded"@),
-                        fixed("<p>The decision was recorded.</p>"@),
+                        decision_recorded_cap(),
+                        fixed_bytes(p_open_the_decision_was_recorded_p_close()),
                     );
                     PostOutcome::Prepared {
                         candidate,
                         expected_ledger: g.ledger_digest,
                         response: Response {
-                            location: lit("/g/"@) + url_seg(g.gid) + lit("/doc/"@) + url_seg(
-                                d.docid,
-                            ) + lit(".html"@),
+                            location: g_2() + url_seg(g.gid) + doc_3() + url_seg(d.docid)
+                                + html_ext(),
                             ..response
                         },
                     }
@@ -1838,18 +1810,18 @@ pub open spec fn handle_post(
     g: PostGuideline,
     d: PostDocument,
 ) -> PostOutcome {
-    let expected = lit("http://127.0.0.1:"@) + check::nat_bytes(s.port);
+    let expected = http_127_0_0_1() + check::nat_bytes(s.port);
     if req.origin.is_some() && req.origin != Option::Some(expected) {
-        forbidden(lit("ui: verdict: origin not allowed"@))
-    } else if req.content_type != lit("application/x-www-form-urlencoded"@) {
-        bad_form(lit("ui: verdict: unsupported content type"@))
+        forbidden(ui_verdict_origin_not_allowed())
+    } else if req.content_type != application_x_www_form_urlencoded() {
+        bad_form(ui_verdict_unsupported_content_type())
     } else {
         match req.body {
-            Option::None => bad_form(lit("ui: verdict: missing body"@)),
+            Option::None => bad_form(ui_verdict_missing_body()),
             Option::Some(b) => match parse_form(b) {
                 Result::Err(e) => bad_form(e),
                 Result::Ok(f) => if s.token.len() == 0 || f.csrf != s.token {
-                    forbidden(lit("ui: verdict: invalid csrf token"@))
+                    forbidden(ui_verdict_invalid_csrf_token())
                 } else {
                     match d.render_error {
                         Option::Some(e) => server_error(e),
@@ -1863,14 +1835,14 @@ pub open spec fn handle_post(
 
 pub open spec fn post_outcome(req: Request, s: PostState) -> PostOutcome {
     let route = doc_route(req.path);
-    if req.host != lit("127.0.0.1:"@) + check::nat_bytes(s.port) {
-        forbidden(lit("ui: request: host not allowed"@))
-    } else if req.method != lit("GET"@) && (req.method != lit("POST"@) || route.is_none()) {
+    if req.host != copy_127_0_0_1() + check::nat_bytes(s.port) {
+        forbidden(ui_request_host_not_allowed())
+    } else if req.method != get_cap() && (req.method != post_cap() || route.is_none()) {
         method_response(route.is_some())
     } else {
         match s.models {
             Result::Err(e) => server_error(e),
-            Result::Ok(gs) => if req.method == lit("GET"@) {
+            Result::Ok(gs) => if req.method == get_cap() {
                 PostOutcome::Read
             } else {
                 match route {
@@ -2150,278 +2122,265 @@ pub open spec fn well_escaped(page: Html) -> bool {
     escaped_slots(page, 0)
 }
 
-// --- Declared static copy/chrome: each literal that reaches a page. ---
-pub open spec fn copy_registry() -> Seq<Bytes> {
-    seq![
-        lit("&amp;"@),
-        lit("&lt;"@),
-        lit("&gt;"@),
-        lit("&quot;"@),
-        lit("&#x27;"@),
-        lit("\n"@),
-        lit("<td>"@),
-        lit("</td>"@),
-        lit("<tr>"@),
-        lit("</tr>"@),
-        lit("<a href=\""@),
-        lit("\">"@),
-        lit("</a>"@),
-        lit("approved"@),
-        lit("rejected"@),
-        lit("contested"@),
-        lit("stale"@),
-        lit("unreviewed"@),
-        lit("Approved"@),
-        lit("Rejected"@),
-        lit("Contested"@),
-        lit("Outdated"@),
-        lit("Unreviewed"@),
-        lit("<span class=\"chip chip-"@),
-        lit("</span>"@),
-        lit("# "@),
-        lit("Rec"@),
-        lit("Recommendation "@),
-        lit("BOX"@),
-        lit(" · "@),
-        lit("p"@),
-        lit(", page "@),
-        lit(", passage "@),
-        lit(" ("@),
-        lit(")"@),
-        lit("Z"@),
-        lit(" "@),
-        lit(" UTC"@),
-        css_text(),
-        script_html(),
-        lit("<!doctype html>"@),
-        lit("<html lang=\"en\">"@),
-        lit("<head>"@),
-        lit("<meta charset=\"utf-8\">"@),
-        lit("<title>"@),
-        lit(" — cnl-ckc reviewer</title>"@),
-        lit("<style>"@),
-        lit("</style>"@),
-        lit("</head>"@),
-        lit("<body>"@),
-        lit("<a class=\"skip\" href=\"#main\">Skip to content</a>"@),
-        lit("<nav class=\"crumbs\">"@),
-        lit("</nav>"@),
-        lit("<main id=\"main\">"@),
-        lit("</main>"@),
-        lit(
-            "<footer class=\"scope\"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>"@,
-        ),
-        lit("</body>"@),
-        lit("</html>"@),
-        lit(" approved"@),
-        lit(" rejected"@),
-        lit(" earlier"@),
-        lit("None"@),
-        lit(", "@),
-        lit("Decisions on this version: "@),
-        lit(" and "@),
-        lit("."@),
-        lit("No decision is recorded on this version."@),
-        lit("No decision is recorded."@),
-        lit(" Decisions on earlier versions: "@),
-        lit("No decisions are recorded for the "@),
-        lit(" documents in this guideline."@),
-        lit("Reviewers recorded "@),
-        lit(" decisions on "@),
-        lit(" of "@),
-        lit(" documents."@),
-        lit("g/"@),
-        lit("/index.html"@),
-        lit("Guidelines"@),
-        lit("cnl-ckc reviewer"@),
-        lit("<h1>Guidelines</h1>"@),
-        lit("<section>"@),
-        lit("<table>"@),
-        lit(
-            "<thead><tr><th>Guideline</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>"@,
-        ),
-        lit("<tbody>"@),
-        lit("</tbody>"@),
-        lit("</table>"@),
-        lit("</section>"@),
-        lit("Restates "@),
-        lit("restates("@),
-        lit("uncovered("@),
-        lit(": "@),
-        lit("Not covered — "@),
-        lit("Pending"@),
-        lit("Passages"@),
-        lit("With ACE"@),
-        lit("doc/"@),
-        lit(".html"@),
-        lit("<h1>"@),
-        lit("</h1>"@),
-        lit("<p>"@),
-        lit(" <a href=\"records.html\">All decision records</a></p>"@),
-        lit("<h2>Status</h2>"@),
-        lit("<table class=\"compact\">"@),
-        lit("<thead><tr><th>Status</th><th>Count</th></tr></thead>"@),
-        lit("<h2>Documents</h2>"@),
-        lit(
-            "<thead><tr><th>Document</th><th>Status</th><th>Decisions</th><th>Passage</th></tr></thead>"@,
-        ),
-        lit("<h2>Passages without ACE</h2>"@),
-        lit("<thead><tr><th>Passage</th><th>Status</th><th>Section</th></tr></thead>"@),
-        lit("<a href=\"../../index.html\">guidelines</a> / "@),
-        lit("https://github.com/eturkes/cnl-ckc/commit/"@),
-        lit("Current"@),
-        lit("Earlier"@),
-        lit("Not given"@),
-        lit("<section id=\""@),
-        lit("<h2>"@),
-        lit("</h2>"@),
-        lit("<table class=\"records\">"@),
-        lit(
-            "<thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>"@,
-        ),
-        lit(" The newest decision for each document is first."@),
-        lit("<p>Open a document and record a decision to start this list.</p>"@),
-        lit("<p>Each reviewer name is recorded as entered and is not verified.</p>"@),
-        lit("<p>Each version links to the stored version of the text that the reviewer read.</p>"@),
-        lit("Decision records"@),
-        lit("<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">"@),
-        lit("</a> / records"@),
-        lit("<h1>Decision records</h1>"@),
-        lit("</p>"@),
-        lit("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>"@),
-        lit("<span class=\"kw\">"@),
-        lit("<mark class=\"t"@),
-        lit("<mark>"@),
-        lit("</mark>"@),
-        lit("<datalist id=\"reviewer-names\">"@),
-        lit("<option value=\""@),
-        lit("\"></option>"@),
-        lit("</datalist>"@),
-        lit(".pdf"@),
-        lit(" <a class=\"source\" href=\"../source/"@),
-        lit("\">PDF</a>"@),
-        lit("source/"@),
-        lit("../source/"@),
-        lit("Source text"@),
-        lit("../records.html"@),
-        lit("#"@),
-        lit("Previous document"@),
-        lit("<a href=\"../index.html\">Guideline index</a>"@),
-        lit("Next document"@),
-        lit("All decision records"@),
-        lit("<section class=\"stale\">"@),
-        lit(
-            "<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>"@,
-        ),
-        lit(
-            "<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> Highlighting</label> Try hovering and clicking on highlighted terms for different levels of emphasis.</p>"@,
-        ),
-        lit("<h3>Original passage</h3>"@),
-        lit("<pre class=\"prose\">"@),
-        lit("</pre>"@),
-        lit("<h3>Attempto Controlled English (ACE)</h3>"@),
-        lit("<section class=\"verdict-entry\">"@),
-        lit("<h3>Record a decision</h3>"@),
-        lit("<p>Does the ACE representation appropriately reflect the original passage?</p>"@),
-        lit("<form method=\"post\">"@),
-        lit("<fieldset>"@),
-        lit("<legend>Decision</legend>"@),
-        lit(
-            "<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required> Approved</label>"@,
-        ),
-        lit(
-            "<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>"@,
-        ),
-        lit("</fieldset>"@),
-        lit("<label for=\"reviewer\">Reviewer name</label>"@),
-        lit(
-            "<input type=\"text\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\""@,
-        ),
-        lit("\" required>"@),
-        lit("<label for=\"comment\">Comment (optional)</label>"@),
-        lit("<textarea id=\"comment\" name=\"comment\"></textarea>"@),
-        lit("<input type=\"hidden\" name=\"review_sha256\" value=\""@),
-        lit("<input type=\"hidden\" name=\"ledger_sha256\" value=\""@),
-        lit("<input type=\"hidden\" name=\"csrf\" value=\""@),
-        lit("<button>Record decision</button>"@),
-        lit("</form>"@),
-        lit("<details>"@),
-        lit("<summary>Compiled Prolog ("@),
-        lit(" lines)</summary>"@),
-        lit("<pre>"@),
-        lit("</details>"@),
-        lit("<nav class=\"docnav\">"@),
-        lit("<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">"@),
-        lit("</a> / "@),
-        lit(
-            "a an the every each no all some any this that these those such is are was were be been being has have had does do did should must may can cannot might will would shall could if then and or nor but not it its itself they them their he she who whom whose which what where when there something somebody someone everything everybody everyone nothing nobody of for with without during to at in on by from as against about after before through under over above below into onto per within between among around near than least most more less fewer greater"@,
-        ),
-        lit("</p>\n<!-- "@),
-        lit(" -->"@),
-        lit(
-            "The request was refused. Open the document page again from this site and submit the decision again."@,
-        ),
-        lit(
-            "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again."@,
-        ),
-        lit("Forbidden"@),
-        lit("Bad request"@),
-        lit("Server error"@),
-        lit("The server could not complete the request. Reload the page and try again."@),
-        lit("Conflict"@),
-        lit("ui: verdict: ledger changed"@),
-        lit(
-            "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state."@,
-        ),
-        lit("/g/"@),
-        lit("doc"@),
-        lit("Method not allowed"@),
-        lit("<p>Only GET and POST are supported on this page.</p>"@),
-        lit("<p>Only GET is supported on this page.</p>"@),
-        lit("GET, POST"@),
-        lit("GET"@),
-        lit("Not found"@),
-        lit("<p>The requested page does not exist.</p>"@),
-        lit("="@),
-        lit("ui: verdict: body not parseable"@),
-        lit("verdict"@),
-        lit("reviewer"@),
-        lit("comment"@),
-        lit("review_sha256"@),
-        lit("ledger_sha256"@),
-        lit("csrf"@),
-        lit("ui: verdict: missing field "@),
-        lit("ui: verdict: duplicate field "@),
-        lit("ui: verdict: unknown field "@),
-        lit("ui: verdict: invalid verdict"@),
-        lit("ui: verdict: invalid reviewer"@),
-        lit("ui: verdict: invalid comment"@),
-        lit("ui: verdict: invalid review_sha256"@),
-        lit("absent"@),
-        lit("ui: verdict: invalid ledger_sha256"@),
-        lit("ui: verdict: body not decodable"@),
-        lit("\t"@),
-        lit("ui: verdict: manifest derivation failed: "@),
-        lit("ui: verdict: manifest derivation failed: docid row missing"@),
-        lit("ui: verdict: subject changed"@),
-        lit(
-            "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version."@,
-        ),
-        lit("ui: adjudication ledger invalid: "@),
-        lit("Decision recorded"@),
-        lit("<p>The decision was recorded.</p>"@),
-        lit("/doc/"@),
-        lit("http://127.0.0.1:"@),
-        lit("ui: verdict: origin not allowed"@),
-        lit("application/x-www-form-urlencoded"@),
-        lit("ui: verdict: unsupported content type"@),
-        lit("ui: verdict: missing body"@),
-        lit("ui: verdict: invalid csrf token"@),
-        lit("127.0.0.1:"@),
-        lit("ui: request: host not allowed"@),
-        lit("POST"@),
-    ]
+} // verus!
+// One definition per fixed page string: each entry becomes a named spec fn,
+// and `copy_registry()` lists the entries in table order.
+macro_rules! copy_table {
+    ($($name:ident $(= $text:literal)?;)*) => {
+        verus! {
+            $( $( pub open spec fn $name() -> Bytes { lit($text@) } )? )*
+
+            // --- Declared static copy/chrome: each literal that reaches a page. ---
+            pub open spec fn copy_registry() -> Seq<Bytes> {
+                seq![$($name()),*]
+            }
+        }
+    };
 }
+
+copy_table! {
+    amp_2 = "&amp;";
+    lt_2 = "&lt;";
+    gt_2 = "&gt;";
+    quot_2 = "&quot;";
+    apos = "&#x27;";
+    newline = "\n";
+    td_open = "<td>";
+    td_close = "</td>";
+    tr_open = "<tr>";
+    tr_close = "</tr>";
+    a_href_open = "<a href=\"";
+    attr_end = "\">";
+    a_close = "</a>";
+    approved_2 = "approved";
+    rejected_2 = "rejected";
+    contested_2 = "contested";
+    stale_2 = "stale";
+    unreviewed_2 = "unreviewed";
+    approved_cap = "Approved";
+    rejected_cap = "Rejected";
+    contested_cap = "Contested";
+    outdated_cap = "Outdated";
+    unreviewed_cap = "Unreviewed";
+    span_class_chip_chip = "<span class=\"chip chip-";
+    span_close = "</span>";
+    hash_space = "# ";
+    rec_cap = "Rec";
+    recommendation_cap_sp = "Recommendation ";
+    box_cap = "BOX";
+    middot_sep = " · ";
+    page_prefix = "p";
+    page_sp = ", page ";
+    passage_sp = ", passage ";
+    paren_open_sep = " (";
+    paren_close = ")";
+    zulu = "Z";
+    space_2 = " ";
+    utc_suffix = " UTC";
+    css_text;
+    script_html;
+    doctype_html = "<!doctype html>";
+    html_open = "<html lang=\"en\">";
+    head_open = "<head>";
+    meta_open = "<meta charset=\"utf-8\">";
+    title_open = "<title>";
+    sp_cnl_ckc_reviewer_title_close = " — cnl-ckc reviewer</title>";
+    style_open = "<style>";
+    style_close = "</style>";
+    head_close = "</head>";
+    body_open = "<body>";
+    a_open_skip_to_content_a_close = "<a class=\"skip\" href=\"#main\">Skip to content</a>";
+    nav_open = "<nav class=\"crumbs\">";
+    nav_close = "</nav>";
+    main_open = "<main id=\"main\">";
+    main_close = "</main>";
+    footer_open_p_open_this_page_reports_what = "<footer class=\"scope\"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>";
+    body_close = "</body>";
+    html_close = "</html>";
+    sp_approved = " approved";
+    sp_rejected = " rejected";
+    sp_earlier = " earlier";
+    none_cap = "None";
+    comma_sep = ", ";
+    decisions_on_this_version_cap = "Decisions on this version: ";
+    sp_and_sp = " and ";
+    period = ".";
+    no_decision_is_recorded_on_this_cap = "No decision is recorded on this version.";
+    no_decision_is_recorded_cap = "No decision is recorded.";
+    sp_decisions_on_earlier_versions_cap = " Decisions on earlier versions: ";
+    no_decisions_are_recorded_for_the_cap_sp = "No decisions are recorded for the ";
+    sp_documents_in_this_guideline = " documents in this guideline.";
+    reviewers_recorded_cap_sp = "Reviewers recorded ";
+    sp_decisions_on_sp = " decisions on ";
+    sp_of_sp = " of ";
+    sp_documents = " documents.";
+    guideline_dir = "g/";
+    index_page_path = "/index.html";
+    guidelines_cap = "Guidelines";
+    cnl_ckc_reviewer = "cnl-ckc reviewer";
+    h1_open_guidelines_h1_close = "<h1>Guidelines</h1>";
+    section_open = "<section>";
+    table_open = "<table>";
+    thead_open_tr_open_th_open_guideline_th_close_th_open = "<thead><tr><th>Guideline</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>";
+    tbody_open = "<tbody>";
+    tbody_close = "</tbody>";
+    table_close = "</table>";
+    section_close = "</section>";
+    restates_cap_sp = "Restates ";
+    restates_2 = "restates(";
+    uncovered_2 = "uncovered(";
+    colon_sep = ": ";
+    not_covered_cap_sp = "Not covered — ";
+    pending_cap = "Pending";
+    passages_cap = "Passages";
+    with_ace_cap = "With ACE";
+    document_dir = "doc/";
+    html_ext = ".html";
+    h1_open = "<h1>";
+    h1_close = "</h1>";
+    p_open = "<p>";
+    sp_a_open_all_decision_records_a_close_p_close = " <a href=\"records.html\">All decision records</a></p>";
+    h2_open_status_h2_close = "<h2>Status</h2>";
+    table_open_2 = "<table class=\"compact\">";
+    thead_open_tr_open_th_open_status_th_close_th_open = "<thead><tr><th>Status</th><th>Count</th></tr></thead>";
+    h2_open_documents_h2_close = "<h2>Documents</h2>";
+    thead_open_tr_open_th_open_document_th_close_th_open = "<thead><tr><th>Document</th><th>Status</th><th>Decisions</th><th>Passage</th></tr></thead>";
+    h2_open_passages_without_ace_h2_close = "<h2>Passages without ACE</h2>";
+    thead_open_tr_open_th_open_passage_th_close_th_open = "<thead><tr><th>Passage</th><th>Status</th><th>Section</th></tr></thead>";
+    a_open_guidelines_a_close_sp = "<a href=\"../../index.html\">guidelines</a> / ";
+    https_github_com_eturkes_cnl_ckc = "https://github.com/eturkes/cnl-ckc/commit/";
+    current_cap = "Current";
+    earlier_cap = "Earlier";
+    not_given_cap = "Not given";
+    section_id = "<section id=\"";
+    h2_open = "<h2>";
+    h2_close = "</h2>";
+    table_open_3 = "<table class=\"records\">";
+    thead_open_tr_open_th_open_decision_th_close_th_open = "<thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>";
+    sp_the_newest_decision_for_each_document_cap = " The newest decision for each document is first.";
+    p_open_open_a_document_and_record = "<p>Open a document and record a decision to start this list.</p>";
+    p_open_each_reviewer_name_is_recorded = "<p>Each reviewer name is recorded as entered and is not verified.</p>";
+    p_open_each_version_links_to_the = "<p>Each version links to the stored version of the text that the reviewer read.</p>";
+    decision_records_cap = "Decision records";
+    a_open_guidelines_a_close_a_open = "<a href=\"../../index.html\">guidelines</a> / <a href=\"index.html\">";
+    a_close_records = "</a> / records";
+    h1_open_decision_records_h1_close = "<h1>Decision records</h1>";
+    p_close = "</p>";
+    nav_open_a_open_guideline_index_a_close_nav_close = "<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>";
+    span_open = "<span class=\"kw\">";
+    mark_class_t = "<mark class=\"t";
+    mark_open = "<mark>";
+    mark_close = "</mark>";
+    datalist_open = "<datalist id=\"reviewer-names\">";
+    option_value = "<option value=\"";
+    option_close = "\"></option>";
+    datalist_close = "</datalist>";
+    pdf_ext = ".pdf";
+    sp_a_class_source_href_source = " <a class=\"source\" href=\"../source/";
+    pdf_a_close_cap = "\">PDF</a>";
+    source_dir = "source/";
+    source_2 = "../source/";
+    source_text_cap = "Source text";
+    records_html_2 = "../records.html";
+    copy_2 = "#";
+    previous_document_cap = "Previous document";
+    a_open_guideline_index_a_close = "<a href=\"../index.html\">Guideline index</a>";
+    next_document_cap = "Next document";
+    all_decision_records_cap = "All decision records";
+    section_open_2 = "<section class=\"stale\">";
+    p_open_the_document_or_its_source = "<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>";
+    p_open_label_open_input_open_highlighting_label_close_try = "<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> Highlighting</label> Try hovering and clicking on highlighted terms for different levels of emphasis.</p>";
+    h3_open_original_passage_h3_close = "<h3>Original passage</h3>";
+    pre_open = "<pre class=\"prose\">";
+    pre_close = "</pre>";
+    h3_open_attempto_controlled_english_ace_h3_close = "<h3>Attempto Controlled English (ACE)</h3>";
+    section_open_3 = "<section class=\"verdict-entry\">";
+    h3_open_record_a_decision_h3_close = "<h3>Record a decision</h3>";
+    p_open_does_the_ace_representation_appropriately = "<p>Does the ACE representation appropriately reflect the original passage?</p>";
+    form_open = "<form method=\"post\">";
+    fieldset_open = "<fieldset>";
+    legend_open_decision_legend_close = "<legend>Decision</legend>";
+    label_open_input_open_approved_label_close = "<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required> Approved</label>";
+    label_open_input_open_rejected_label_close = "<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>";
+    fieldset_close = "</fieldset>";
+    label_open_reviewer_name_label_close = "<label for=\"reviewer\">Reviewer name</label>";
+    input_type_text_id_reviewer_name = "<input type=\"text\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\"";
+    required_2 = "\" required>";
+    label_open_comment_optional_label_close = "<label for=\"comment\">Comment (optional)</label>";
+    textarea_open_textarea_close = "<textarea id=\"comment\" name=\"comment\"></textarea>";
+    input_type_hidden_name_review_sha256_value = "<input type=\"hidden\" name=\"review_sha256\" value=\"";
+    input_type_hidden_name_ledger_sha256_value = "<input type=\"hidden\" name=\"ledger_sha256\" value=\"";
+    input_type_hidden_name_csrf_value = "<input type=\"hidden\" name=\"csrf\" value=\"";
+    button_open_record_decision_button_close = "<button>Record decision</button>";
+    form_close = "</form>";
+    details_open = "<details>";
+    summary_open_compiled_prolog = "<summary>Compiled Prolog (";
+    sp_lines_summary_close = " lines)</summary>";
+    pre_open_2 = "<pre>";
+    details_close = "</details>";
+    nav_open_2 = "<nav class=\"docnav\">";
+    a_open_guidelines_a_close_a_open_2 = "<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">";
+    a_close_sp = "</a> / ";
+    a_an_the_every_each_no = "a an the every each no all some any this that these those such is are was were be been being has have had does do did should must may can cannot might will would shall could if then and or nor but not it its itself they them their he she who whom whose which what where when there something somebody someone everything everybody everyone nothing nobody of for with without during to at in on by from as against about after before through under over above below into onto per within between among around near than least most more less fewer greater";
+    p_close_sp = "</p>\n<!-- ";
+    sp_copy = " -->";
+    the_request_was_refused_open_the_cap = "The request was refused. Open the document page again from this site and submit the decision again.";
+    the_submitted_form_was_not_valid_cap = "The submitted form was not valid. Go back to the document page, reload it, and submit the decision again.";
+    forbidden_cap = "Forbidden";
+    bad_request_cap = "Bad request";
+    server_error_cap = "Server error";
+    the_server_could_not_complete_the_cap = "The server could not complete the request. Reload the page and try again.";
+    conflict_cap = "Conflict";
+    ui_verdict_ledger_changed = "ui: verdict: ledger changed";
+    another_decision_was_recorded_for_this_cap = "Another decision was recorded for this guideline before this one. The decision was not recorded. Open the document page again and check the current state.";
+    g_2 = "/g/";
+    doc_2 = "doc";
+    method_not_allowed_cap = "Method not allowed";
+    p_open_only_get_and_post_are = "<p>Only GET and POST are supported on this page.</p>";
+    p_open_only_get_is_supported_on = "<p>Only GET is supported on this page.</p>";
+    get_post_cap = "GET, POST";
+    get_cap = "GET";
+    not_found_cap = "Not found";
+    p_open_the_requested_page_does_not = "<p>The requested page does not exist.</p>";
+    copy_3 = "=";
+    ui_verdict_body_not_parseable = "ui: verdict: body not parseable";
+    verdict_2 = "verdict";
+    reviewer_2 = "reviewer";
+    comment_2 = "comment";
+    review_sha256_2 = "review_sha256";
+    ledger_sha256_2 = "ledger_sha256";
+    csrf_2 = "csrf";
+    ui_verdict_missing_field_sp = "ui: verdict: missing field ";
+    ui_verdict_duplicate_field_sp = "ui: verdict: duplicate field ";
+    ui_verdict_unknown_field_sp = "ui: verdict: unknown field ";
+    ui_verdict_invalid_verdict = "ui: verdict: invalid verdict";
+    ui_verdict_invalid_reviewer = "ui: verdict: invalid reviewer";
+    ui_verdict_invalid_comment = "ui: verdict: invalid comment";
+    ui_verdict_invalid_review_sha256 = "ui: verdict: invalid review_sha256";
+    absent_2 = "absent";
+    ui_verdict_invalid_ledger_sha256 = "ui: verdict: invalid ledger_sha256";
+    ui_verdict_body_not_decodable = "ui: verdict: body not decodable";
+    copy_4 = "\t";
+    ui_verdict_manifest_derivation_failed = "ui: verdict: manifest derivation failed: ";
+    ui_verdict_manifest_derivation_failed_docid = "ui: verdict: manifest derivation failed: docid row missing";
+    ui_verdict_subject_changed = "ui: verdict: subject changed";
+    the_document_or_its_source_changed_cap = "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version.";
+    ui_adjudication_ledger_invalid = "ui: adjudication ledger invalid: ";
+    decision_recorded_cap = "Decision recorded";
+    p_open_the_decision_was_recorded_p_close = "<p>The decision was recorded.</p>";
+    doc_3 = "/doc/";
+    http_127_0_0_1 = "http://127.0.0.1:";
+    ui_verdict_origin_not_allowed = "ui: verdict: origin not allowed";
+    application_x_www_form_urlencoded = "application/x-www-form-urlencoded";
+    ui_verdict_unsupported_content_type = "ui: verdict: unsupported content type";
+    ui_verdict_missing_body = "ui: verdict: missing body";
+    ui_verdict_invalid_csrf_token = "ui: verdict: invalid csrf token";
+    copy_127_0_0_1 = "127.0.0.1:";
+    ui_request_host_not_allowed = "ui: request: host not allowed";
+    post_cap = "POST";
+}
+
+verus! {
 
 // --- Copy gate: enumerated copy domain (R76).
 pub open spec fn ascii_word(c: char) -> bool {

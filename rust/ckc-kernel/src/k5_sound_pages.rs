@@ -29,7 +29,7 @@ pub proof fn index(c: u::Corpus)
                 seq![
                     u::cell(
                         u::link(
-                            u::lit("g/"@) + u::url_seg(g.gid) + u::lit("/index.html"@),
+                            u::guideline_dir() + u::url_seg(g.gid) + u::index_page_path(),
                             u::text(u::title(g)),
                         ),
                     ),
@@ -43,7 +43,7 @@ pub proof fn index(c: u::Corpus)
         corpus::guideline(c, i);
         corpus::title(g, inputs);
         h::text(u::title(g), inputs);
-        let href = u::lit("g/"@) + u::url_seg(g.gid) + u::lit("/index.html"@);
+        let href = u::guideline_dir() + u::url_seg(g.gid) + u::index_page_path();
         b::link(href, u::text(u::title(g)), inputs);
         b::cell(u::link(href, u::text(u::title(g))), inputs);
         h::number(g.documents.len(), inputs, 0);
@@ -91,8 +91,8 @@ pub proof fn index(c: u::Corpus)
     b::lines(parts, inputs);
     l::l077(inputs);
     l::f078(inputs);
-    b::frame(u::lit("Guidelines"@), b::f(78), u::lines(parts), inputs);
-    assert(u::index_html(c) == u::frame(u::lit("Guidelines"@), b::f(78), u::lines(parts)));
+    b::frame(u::guidelines_cap(), b::f(78), u::lines(parts), inputs);
+    assert(u::index_html(c) == u::frame(u::guidelines_cap(), b::f(78), u::lines(parts)));
 }
 
 } // verus!

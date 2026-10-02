@@ -11,7 +11,7 @@ pub open spec fn row_spec(g: u::Guideline) -> u::Html {
         seq![
             u::cell(
                 u::link(
-                    u::lit("g/"@) + u::url_seg(g.gid) + u::lit("/index.html"@),
+                    u::guideline_dir() + u::url_seg(g.gid) + u::index_page_path(),
                     u::text(u::title(g)),
                 ),
             ),
@@ -41,7 +41,7 @@ pub fn row(g: &EGuideline) -> (out: EPage)
         assert(head =~= seq![
             u::cell(
                 u::link(
-                    u::lit("g/"@) + u::url_seg(g@.gid) + u::lit("/index.html"@),
+                    u::guideline_dir() + u::url_seg(g@.gid) + u::index_page_path(),
                     u::text(u::title(g@)),
                 ),
             ),
@@ -118,15 +118,15 @@ pub fn page(c: &ECorpus) -> (out: EPage)
     body.push(h::fixed("</section>"));
     proof {
         assert(h::pages(body@) =~= seq![
-            u::fixed("<h1>Guidelines</h1>"@),
-            u::fixed("<section>"@),
-            u::fixed("<table>"@),
-            u::fixed(
-                "<thead><tr><th>Guideline</th><th>Documents</th><th>Passages</th><th>Approved</th><th>Rejected</th><th>Contested</th><th>Outdated</th><th>Unreviewed</th></tr></thead>"@,
+            u::fixed_bytes(u::h1_open_guidelines_h1_close()),
+            u::fixed_bytes(u::section_open()),
+            u::fixed_bytes(u::table_open()),
+            u::fixed_bytes(u::thead_open_tr_open_th_open_guideline_th_close_th_open()),
+            u::fixed_bytes(u::tbody_open()) + u::lines(h::pages(rows@)) + u::fixed_bytes(
+                u::tbody_close(),
             ),
-            u::fixed("<tbody>"@) + u::lines(h::pages(rows@)) + u::fixed("</tbody>"@),
-            u::fixed("</table>"@),
-            u::fixed("</section>"@),
+            u::fixed_bytes(u::table_close()),
+            u::fixed_bytes(u::section_close()),
         ]);
         assert(c@.guidelines.map_values(|g: u::Guideline| row_spec(g)) =~= c@.guidelines.map_values(
             |g: u::Guideline|
@@ -134,7 +134,7 @@ pub fn page(c: &ECorpus) -> (out: EPage)
                     seq![
                         u::cell(
                             u::link(
-                                u::lit("g/"@) + u::url_seg(g.gid) + u::lit("/index.html"@),
+                                u::guideline_dir() + u::url_seg(g.gid) + u::index_page_path(),
                                 u::text(u::title(g)),
                             ),
                         ),

@@ -70,7 +70,7 @@ pub proof fn lines(xs: Seq<u::Html>, inputs: Seq<u::Bytes>)
     hide(u::copy_registry);
     hide(u::copy_derived);
     l::f005(inputs, 0);
-    hjoin(xs, u::fixed("\n"@), inputs);
+    hjoin(xs, u::fixed_bytes(u::newline()), inputs);
 }
 
 pub proof fn flow(xs: Seq<u::Html>, cs: Seq<int>, inputs: Seq<u::Bytes>)
@@ -89,8 +89,15 @@ pub proof fn flow(xs: Seq<u::Html>, cs: Seq<int>, inputs: Seq<u::Bytes>)
     } else if xs.len() > 1 {
         flow(xs.drop_first(), cs.drop_first(), inputs);
         l::f005(inputs, cs[1]);
-        h::add(xs[0], u::fixed("\n"@), inputs, cs[0], cs[1], cs[1]);
-        h::add(xs[0] + u::fixed("\n"@), u::lines(xs.drop_first()), inputs, cs[0], cs[1], cs.last());
+        h::add(xs[0], u::fixed_bytes(u::newline()), inputs, cs[0], cs[1], cs[1]);
+        h::add(
+            xs[0] + u::fixed_bytes(u::newline()),
+            u::lines(xs.drop_first()),
+            inputs,
+            cs[0],
+            cs[1],
+            cs.last(),
+        );
     }
 }
 
@@ -235,8 +242,8 @@ pub proof fn frame(title: u::Bytes, crumbs: u::Html, body: u::Html, inputs: Seq<
     let cs = seq![0int, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     flow(xs, cs, inputs);
     l::f005(inputs, 0);
-    add(u::lines(xs), u::fixed("\n"@), inputs);
-    assert(u::frame(title, crumbs, body) =~= u::lines(xs) + u::fixed("\n"@));
+    add(u::lines(xs), u::fixed_bytes(u::newline()), inputs);
+    assert(u::frame(title, crumbs, body) =~= u::lines(xs) + u::fixed_bytes(u::newline()));
 }
 
 } // verus!

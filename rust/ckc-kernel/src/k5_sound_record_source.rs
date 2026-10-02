@@ -189,17 +189,17 @@ pub proof fn human_date(date: u::Bytes, inputs: Seq<u::Bytes>)
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    m::unsuffix(date, u::lit("Z"@), inputs);
-    m::split(u::unsuffix(date, u::lit("Z"@)), inputs, 84);
-    let p = ck::split_on(u::unsuffix(date, u::lit("Z"@)), 84);
-    if ck::ends(date, u::lit("Z"@)) && p.len() == 2 {
+    m::unsuffix(date, u::zulu(), inputs);
+    m::split(u::unsuffix(date, u::zulu()), inputs, 84);
+    let p = ck::split_on(u::unsuffix(date, u::zulu()), 84);
+    if ck::ends(date, u::zulu()) && p.len() == 2 {
         m::copy(p[0], inputs);
         m::copy(p[1], inputs);
         l::l036(inputs);
         l::l037(inputs);
-        b::cat(p[0], u::lit(" "@), inputs);
-        b::cat(p[0] + u::lit(" "@), p[1], inputs);
-        b::cat(p[0] + u::lit(" "@) + p[1], u::lit(" UTC"@), inputs);
+        b::cat(p[0], u::space_2(), inputs);
+        b::cat(p[0] + u::space_2(), p[1], inputs);
+        b::cat(p[0] + u::space_2() + p[1], u::utc_suffix(), inputs);
     } else {
         m::copy(date, inputs);
     }

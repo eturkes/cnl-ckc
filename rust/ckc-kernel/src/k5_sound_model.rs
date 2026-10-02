@@ -143,9 +143,9 @@ pub proof fn field(r: ck::Row, n: int, inputs: Seq<u::Bytes>)
     ensures
         backed(u::field(r, n), inputs),
 {
-    unsuffix(r.line, u::lit("\n"@), inputs);
-    split(u::unsuffix(r.line, u::lit("\n"@)), inputs, 9);
-    at(ck::tab_fields(u::unsuffix(r.line, u::lit("\n"@))), n, inputs);
+    unsuffix(r.line, u::newline(), inputs);
+    split(u::unsuffix(r.line, u::newline()), inputs, 9);
+    at(ck::tab_fields(u::unsuffix(r.line, u::newline())), n, inputs);
 }
 
 pub proof fn ace_row(rows: Seq<ck::Row>, id: u::Bytes)
@@ -222,16 +222,16 @@ pub proof fn human_section(s: u::Bytes, inputs: Seq<u::Bytes>)
         let special = hs.len() == 2 && u::digits(u::at(hs, 1));
         l::l027(inputs);
         l::l029(inputs);
-        b::cat(u::lit("Recommendation "@), u::at(hs, 1), inputs);
-        let head = if special && u::at(hs, 0) == u::lit("Rec"@) {
-            seq![u::lit("Recommendation "@) + u::at(hs, 1)]
-        } else if special && u::at(hs, 0) == u::lit("BOX"@) && ss.len() > 1 {
+        b::cat(u::recommendation_cap_sp(), u::at(hs, 1), inputs);
+        let head = if special && u::at(hs, 0) == u::rec_cap() {
+            seq![u::recommendation_cap_sp() + u::at(hs, 1)]
+        } else if special && u::at(hs, 0) == u::box_cap() && ss.len() > 1 {
             Seq::empty()
         } else {
             seq![ss[0]]
         };
         split_copy(ss.drop_first(), inputs);
-        b::join(head + ss.drop_first(), u::lit(" · "@), inputs);
+        b::join(head + ss.drop_first(), u::middot_sep(), inputs);
     }
 }
 
@@ -254,8 +254,8 @@ pub proof fn document_title(g: u::Guideline, id: u::Bytes, inputs: Seq<u::Bytes>
     let base = u::human_section(section);
     let region = u::coverage_field(g, id, 0);
     stripped(u::coverage_field(g, id, 2), inputs);
-    unprefix(ck::strip_ws(u::coverage_field(g, id, 2)), u::lit("p"@), inputs);
-    let page = u::unprefix(ck::strip_ws(u::coverage_field(g, id, 2)), u::lit("p"@));
+    unprefix(ck::strip_ws(u::coverage_field(g, id, 2)), u::page_prefix(), inputs);
+    let page = u::unprefix(ck::strip_ws(u::coverage_field(g, id, 2)), u::page_prefix());
     split(region, inputs, 45);
     let segs = ck::split_on(region, 45);
     at(segs, segs.len() - 1, inputs);
@@ -270,11 +270,11 @@ pub proof fn document_title(g: u::Guideline, id: u::Bytes, inputs: Seq<u::Bytes>
             l::l032(inputs);
             copy(page, inputs);
             b::decimal(ck::dec_of(last), inputs);
-            b::cat(base, u::lit(", page "@), inputs);
-            b::cat(base + u::lit(", page "@), page, inputs);
-            b::cat(base + u::lit(", page "@) + page, u::lit(", passage "@), inputs);
+            b::cat(base, u::page_sp(), inputs);
+            b::cat(base + u::page_sp(), page, inputs);
+            b::cat(base + u::page_sp() + page, u::passage_sp(), inputs);
             b::cat(
-                base + u::lit(", page "@) + page + u::lit(", passage "@),
+                base + u::page_sp() + page + u::passage_sp(),
                 ck::nat_bytes(ck::dec_of(last)),
                 inputs,
             );
@@ -282,9 +282,9 @@ pub proof fn document_title(g: u::Guideline, id: u::Bytes, inputs: Seq<u::Bytes>
             l::l033(inputs);
             l::l034(inputs);
             copy(region, inputs);
-            b::cat(base, u::lit(" ("@), inputs);
-            b::cat(base + u::lit(" ("@), region, inputs);
-            b::cat(base + u::lit(" ("@) + region, u::lit(")"@), inputs);
+            b::cat(base, u::paren_open_sep(), inputs);
+            b::cat(base + u::paren_open_sep(), region, inputs);
+            b::cat(base + u::paren_open_sep() + region, u::paren_close(), inputs);
         }
     }
 }

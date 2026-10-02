@@ -63,18 +63,18 @@ pub fn section(g: &EGuideline, m: &model::Model, id: &[u8]) -> (out: Vec<EPage>)
     out.push(h::fixed("</section>"));
     proof {
         assert(h::pages(out@) =~= seq![
-            u::fixed("<section id=\""@) + u::attr(id@) + u::fixed("\">"@),
-            u::fixed("<h2>"@) + u::link(
-                u::lit("doc/"@) + u::url_seg(id@) + u::lit(".html"@),
+            u::fixed_bytes(u::section_id()) + u::attr(id@) + u::fixed_bytes(u::attr_end()),
+            u::fixed_bytes(u::h2_open()) + u::link(
+                u::document_dir() + u::url_seg(id@) + u::html_ext(),
                 u::text(u::document_title(g@, id@)),
-            ) + u::fixed("</h2>"@),
-            u::fixed("<table class=\"records\">"@),
-            u::fixed(
-                "<thead><tr><th>Decision</th><th>Reviewer</th><th>Date</th><th>Version</th><th>Comment</th></tr></thead>"@,
+            ) + u::fixed_bytes(u::h2_close()),
+            u::fixed_bytes(u::table_open_3()),
+            u::fixed_bytes(u::thead_open_tr_open_th_open_decision_th_close_th_open()),
+            u::fixed_bytes(u::tbody_open()) + u::lines(h::pages(rows@)) + u::fixed_bytes(
+                u::tbody_close(),
             ),
-            u::fixed("<tbody>"@) + u::lines(h::pages(rows@)) + u::fixed("</tbody>"@),
-            u::fixed("</table>"@),
-            u::fixed("</section>"@),
+            u::fixed_bytes(u::table_close()),
+            u::fixed_bytes(u::section_close()),
         ]);
     }
     out
@@ -179,20 +179,17 @@ pub fn page(g: &EGuideline) -> (out: EPage)
             |d: u::Document| u::record_section(g@, d.bundle.docid),
         ).flatten());
         assert(summary@ == u::review_summary(g@) + (if u::decisions(g@).len() > 0 {
-            u::lit(" The newest decision for each document is first."@)
+            u::sp_the_newest_decision_for_each_document_cap()
         } else {
             u::empty()
         }));
         assert(nv =~= if sv.len() == 0 {
-            seq![u::fixed("<p>Open a document and record a decision to start this list.</p>"@)]
+            seq![u::fixed_bytes(u::p_open_open_a_document_and_record())]
         } else {
-            seq![u::fixed("<p>Each reviewer name is recorded as entered and is not verified.</p>"@)]
-                + (if u::records(g@).filter(|r: u::Record| r.decision.commit.len() > 0).len() > 0 {
-                seq![
-                    u::fixed(
-                        "<p>Each version links to the stored version of the text that the reviewer read.</p>"@,
-                    ),
-                ]
+            seq![u::fixed_bytes(u::p_open_each_reviewer_name_is_recorded())] + (if u::records(
+                g@,
+            ).filter(|r: u::Record| r.decision.commit.len() > 0).len() > 0 {
+                seq![u::fixed_bytes(u::p_open_each_version_links_to_the())]
             } else {
                 Seq::empty()
             })
@@ -206,11 +203,9 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     body.push(h::fixed("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>"));
     proof {
         assert(h::pages(body@) =~= seq![
-            u::fixed("<h1>Decision records</h1>"@),
-            u::fixed("<p>"@) + u::text(summary@) + u::fixed("</p>"@),
-        ] + sv + nv + seq![
-            u::fixed("<nav class=\"docnav\"><a href=\"index.html\">Guideline index</a></nav>"@),
-        ]);
+            u::fixed_bytes(u::h1_open_decision_records_h1_close()),
+            u::fixed_bytes(u::p_open()) + u::text(summary@) + u::fixed_bytes(u::p_close()),
+        ] + sv + nv + seq![u::fixed_bytes(u::nav_open_a_open_guideline_index_a_close_nav_close())]);
     }
     let crumbs = h::cat(
         h::cat(

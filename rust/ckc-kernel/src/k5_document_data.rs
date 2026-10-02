@@ -271,7 +271,9 @@ pub fn roster(g: &EGuideline, m: &model::Model) -> (out: EPage)
             b::views(names@) == u::names(g@),
             h::pages(items@) == b::views(names@).take(i as int).map_values(
                 |n: u::Bytes|
-                    u::fixed("<option value=\""@) + u::attr(n) + u::fixed("\"></option>"@),
+                    u::fixed_bytes(u::option_value()) + u::attr(n) + u::fixed_bytes(
+                        u::option_close(),
+                    ),
             ),
         decreases names.len() - i,
     {
@@ -284,13 +286,17 @@ pub fn roster(g: &EGuideline, m: &model::Model) -> (out: EPage)
         proof {
             assert(b::views(names@).take(i as int + 1).map_values(
                 |n: u::Bytes|
-                    u::fixed("<option value=\""@) + u::attr(n) + u::fixed("\"></option>"@),
+                    u::fixed_bytes(u::option_value()) + u::attr(n) + u::fixed_bytes(
+                        u::option_close(),
+                    ),
             ) =~= b::views(names@).take(i as int).map_values(
                 |n: u::Bytes|
-                    u::fixed("<option value=\""@) + u::attr(n) + u::fixed("\"></option>"@),
+                    u::fixed_bytes(u::option_value()) + u::attr(n) + u::fixed_bytes(
+                        u::option_close(),
+                    ),
             ).push(
-                u::fixed("<option value=\""@) + u::attr(names@[i as int]@) + u::fixed(
-                    "\"></option>"@,
+                u::fixed_bytes(u::option_value()) + u::attr(names@[i as int]@) + u::fixed_bytes(
+                    u::option_close(),
                 ),
             ));
         }

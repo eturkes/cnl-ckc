@@ -46,7 +46,7 @@ pub fn first_title(xs: &Vec<Vec<u8>>, fallback: &[u8]) -> (out: Vec<u8>)
     while i < xs.len()
         invariant
             i <= xs.len(),
-            prefix@ == u::lit("# "@),
+            prefix@ == u::hash_space(),
             prefix.len() == 2,
             u::first_title(b::views(xs@).skip(i as int), fallback@) == u::first_title(
                 b::views(xs@),
@@ -144,14 +144,14 @@ pub fn human_section(s: &[u8]) -> (out: Vec<u8>)
     }
     let ghost head = b::views(parts@);
     proof {
-        assert(head =~= if special && first@ == u::lit("Rec"@) {
-            seq![u::lit("Recommendation "@) + n@]
-        } else if special && first@ == u::lit("BOX"@) && ss.len() > 1 {
+        assert(head =~= if special && first@ == u::rec_cap() {
+            seq![u::recommendation_cap_sp() + n@]
+        } else if special && first@ == u::box_cap() && ss.len() > 1 {
             Seq::<u::Bytes>::empty()
         } else {
             seq![ss@[0]@]
         });
-        assert(u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::lit(" · "@)));
+        assert(u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::middot_sep()));
     }
     let mut i = 1;
     proof {
@@ -160,7 +160,7 @@ pub fn human_section(s: &[u8]) -> (out: Vec<u8>)
     while i < ss.len()
         invariant
             1 <= i <= ss.len(),
-            u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::lit(" · "@)),
+            u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::middot_sep()),
             b::views(parts@) == head + b::views(ss@).subrange(1, i as int),
         decreases ss.len() - i,
     {

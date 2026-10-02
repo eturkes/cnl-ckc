@@ -14,7 +14,7 @@ pub fn error_page(status: u16, title: &[u8], body: EPage) -> (out: EResponse)
     rows.push(body);
     proof {
         assert(h::pages(rows@) =~= seq![
-            u::fixed("<h1>"@) + u::text(title@) + u::fixed("</h1>"@),
+            u::fixed_bytes(u::h1_open()) + u::text(title@) + u::fixed_bytes(u::h1_close()),
             bv,
         ]);
     }

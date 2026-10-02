@@ -59,9 +59,9 @@ pub fn record_line(r: &ERecord) -> (out: Vec<u8>)
             r.digest@,
             r.commit@,
             if r.approved {
-                u::lit("approved"@)
+                u::approved_2()
             } else {
-                u::lit("rejected"@)
+                u::rejected_2()
             },
             r.reviewer@,
             r.date@,

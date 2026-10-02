@@ -41,26 +41,26 @@ pub fn frame(title: &[u8], crumbs: EPage, body: EPage) -> (out: EPage)
     rows.push(h::fixed("</html>"));
     proof {
         assert(h::pages(rows@) =~= seq![
-            u::fixed("<!doctype html>"@),
-            u::fixed("<html lang=\"en\">"@),
-            u::fixed("<head>"@),
-            u::fixed("<meta charset=\"utf-8\">"@),
-            u::fixed("<title>"@) + u::text(title@) + u::fixed(" — cnl-ckc reviewer</title>"@),
-            u::fixed("<style>"@),
-            u::fixed_bytes(u::css_text()),
-            u::fixed("</style>"@),
-            u::fixed("</head>"@),
-            u::fixed("<body>"@),
-            u::fixed("<a class=\"skip\" href=\"#main\">Skip to content</a>"@),
-            u::fixed("<nav class=\"crumbs\">"@) + cv + u::fixed("</nav>"@),
-            u::fixed("<main id=\"main\">"@),
-            bv,
-            u::fixed("</main>"@),
-            u::fixed(
-                "<footer class=\"scope\"><p>This page reports what the loaded guideline documents state. It does not give clinical advice.</p></footer>"@,
+            u::fixed_bytes(u::doctype_html()),
+            u::fixed_bytes(u::html_open()),
+            u::fixed_bytes(u::head_open()),
+            u::fixed_bytes(u::meta_open()),
+            u::fixed_bytes(u::title_open()) + u::text(title@) + u::fixed_bytes(
+                u::sp_cnl_ckc_reviewer_title_close(),
             ),
-            u::fixed("</body>"@),
-            u::fixed("</html>"@),
+            u::fixed_bytes(u::style_open()),
+            u::fixed_bytes(u::css_text()),
+            u::fixed_bytes(u::style_close()),
+            u::fixed_bytes(u::head_close()),
+            u::fixed_bytes(u::body_open()),
+            u::fixed_bytes(u::a_open_skip_to_content_a_close()),
+            u::fixed_bytes(u::nav_open()) + cv + u::fixed_bytes(u::nav_close()),
+            u::fixed_bytes(u::main_open()),
+            bv,
+            u::fixed_bytes(u::main_close()),
+            u::fixed_bytes(u::footer_open_p_open_this_page_reports_what()),
+            u::fixed_bytes(u::body_close()),
+            u::fixed_bytes(u::html_close()),
         ]);
     }
     h::cat(h::lines(&rows), h::fixed("\n"))

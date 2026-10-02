@@ -139,12 +139,12 @@ pub fn form_pairs(xs: &Vec<Vec<u8>>) -> (out: Result<Vec<(Vec<u8>, Vec<u8>)>, Ve
         reveal_strlit("=");
         assert(vstd::utf8::is_ascii_chars("="@));
         vstd::utf8::is_ascii_chars_encode_utf8("="@);
-        assert(u::lit("="@) =~= seq![61u8]);
+        assert(u::copy_3() =~= seq![61u8]);
     }
     while i < xs.len()
         invariant
             i <= xs.len(),
-            u::lit("="@) == seq![61u8],
+            u::copy_3() == seq![61u8],
             u::form_pairs(b::views(xs@)) == match u::form_pairs(b::views(xs@).skip(i as int)) {
                 Ok(t) => Ok(pairs(ps@) + t),
                 Err(e) => Err(e),

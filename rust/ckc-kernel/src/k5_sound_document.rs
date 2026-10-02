@@ -112,7 +112,7 @@ pub proof fn page(
     m::coverage_field(g, id, 0, inputs);
     m::copy(region, inputs);
     h::text(region, inputs);
-    let pdfs = g.source_names.filter(|n: u::Bytes| ck::ends(n, u::lit(".pdf"@)));
+    let pdfs = g.source_names.filter(|n: u::Bytes| ck::ends(n, u::pdf_ext()));
     l::f137(inputs);
     l::f138(inputs);
     h::empty(inputs, 0);
@@ -126,23 +126,23 @@ pub proof fn page(
     }
     b::add(u::text(u::title(g)), pdf, inputs);
     let heading = u::text(u::title(g)) + pdf;
-    let source = u::unprefix(u::coverage_field(g, id, 1), u::lit("source/"@));
+    let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     l::f141(inputs);
-    b::link(u::lit("../source/"@) + u::url_seg(source), b::f(141), inputs);
+    b::link(u::source_2() + u::url_seg(source), b::f(141), inputs);
     let prov = (if region.len() > 0 {
         seq![u::text(region)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
-        seq![u::link(u::lit("../source/"@) + u::url_seg(source), b::f(141))]
+        seq![u::link(u::source_2() + u::url_seg(source), b::f(141))]
     } else {
         Seq::empty()
     });
     l::f029(inputs);
     b::hjoin(prov, b::f(29), inputs);
     let provenance = u::hjoin(prov, b::f(29));
-    let records_href = u::lit("../records.html"@) + (if u::history(g, id).len() > 0 {
-        u::lit("#"@) + u::url_seg(id)
+    let records_href = u::records_html_2() + (if u::history(g, id).len() > 0 {
+        u::copy_2() + u::url_seg(id)
     } else {
         u::empty()
     });
@@ -160,14 +160,14 @@ pub proof fn page(
     l::f144(inputs);
     l::f145(inputs);
     l::f146(inputs);
-    b::link(u::url_seg(prev) + u::lit(".html"@), b::f(144), inputs);
-    b::link(u::url_seg(next) + u::lit(".html"@), b::f(146), inputs);
+    b::link(u::url_seg(prev) + u::html_ext(), b::f(144), inputs);
+    b::link(u::url_seg(next) + u::html_ext(), b::f(146), inputs);
     let nav = (if prev.len() > 0 {
-        seq![u::link(u::url_seg(prev) + u::lit(".html"@), b::f(144))]
+        seq![u::link(u::url_seg(prev) + u::html_ext(), b::f(144))]
     } else {
         Seq::empty()
     }) + seq![b::f(145)] + (if next.len() > 0 {
-        seq![u::link(u::url_seg(next) + u::lit(".html"@), b::f(146))]
+        seq![u::link(u::url_seg(next) + u::html_ext(), b::f(146))]
     } else {
         Seq::empty()
     });

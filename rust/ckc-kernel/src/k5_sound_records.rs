@@ -19,11 +19,7 @@ pub proof fn version(r: u::Record, label: u::Bytes, inputs: Seq<u::Bytes>)
     hide(u::copy_derived);
     h::text(label, inputs);
     if r.decision.commit.len() > 0 {
-        b::link(
-            u::lit("https://github.com/eturkes/cnl-ckc/commit/"@) + r.decision.commit,
-            u::text(label),
-            inputs,
-        );
+        b::link(u::https_github_com_eturkes_cnl_ckc() + r.decision.commit, u::text(label), inputs);
     }
 }
 
@@ -57,16 +53,16 @@ pub proof fn row(g: u::Guideline, r: u::Record, inputs: Seq<u::Bytes>)
     l::l110(inputs);
     l::l111(inputs);
     let label = if u::current(g, r) {
-        u::lit("Current"@)
+        u::current_cap()
     } else {
-        u::lit("Earlier"@)
+        u::earlier_cap()
     };
     version(r, label, inputs);
     b::cell(u::version_link(r, label), inputs);
     l::l112(inputs);
     m::copy(r.comment, inputs);
     let comment = if r.comment.len() == 0 {
-        u::lit("Not given"@)
+        u::not_given_cap()
     } else {
         r.comment
     };
@@ -118,7 +114,7 @@ pub proof fn section(g: u::Guideline, id: u::Bytes, inputs: Seq<u::Bytes>)
         h::add(b::f(113) + u::attr(id), b::f(11), inputs, 0, 2, 0);
         m::document_title(g, id, inputs);
         h::text(u::document_title(g, id), inputs);
-        let href = u::lit("doc/"@) + u::url_seg(id) + u::lit(".html"@);
+        let href = u::document_dir() + u::url_seg(id) + u::html_ext();
         b::link(href, u::text(u::document_title(g, id)), inputs);
         l::f114(inputs);
         l::f115(inputs);
@@ -192,7 +188,7 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     l::l118(inputs);
     m::copy(u::empty(), inputs);
     let suffix = if u::decisions(g).len() > 0 {
-        u::lit(" The newest decision for each document is first."@)
+        u::sp_the_newest_decision_for_each_document_cap()
     } else {
         u::empty()
     };
@@ -230,13 +226,13 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     ];
     b::lines(parts, inputs);
     b::frame(
-        u::lit("Decision records"@),
+        u::decision_records_cap(),
         b::f(123) + u::text(u::title(g)) + b::f(124),
         u::lines(parts),
         inputs,
     );
     assert(u::records_html(g) == u::frame(
-        u::lit("Decision records"@),
+        u::decision_records_cap(),
         b::f(123) + u::text(u::title(g)) + b::f(124),
         u::lines(parts),
     ));

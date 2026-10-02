@@ -11,7 +11,7 @@ verus! {
 
 pub fn pdfs(g: &EGuideline) -> (out: Vec<Vec<u8>>)
     ensures
-        b::views(out@) == g@.source_names.filter(|n: u::Bytes| ck::ends(n, u::lit(".pdf"@))),
+        b::views(out@) == g@.source_names.filter(|n: u::Bytes| ck::ends(n, u::pdf_ext())),
 {
     let suffix = b::literal(".pdf");
     let mut out = Vec::new();
@@ -19,9 +19,9 @@ pub fn pdfs(g: &EGuideline) -> (out: Vec<Vec<u8>>)
     while i < g.source_names.len()
         invariant
             i <= g.source_names.len(),
-            suffix@ == u::lit(".pdf"@),
+            suffix@ == u::pdf_ext(),
             b::views(out@) == g@.source_names.take(i as int).filter(
-                |n: u::Bytes| ck::ends(n, u::lit(".pdf"@)),
+                |n: u::Bytes| ck::ends(n, u::pdf_ext()),
             ),
         decreases g.source_names.len() - i,
     {
@@ -36,7 +36,7 @@ pub fn pdfs(g: &EGuideline) -> (out: Vec<Vec<u8>>)
         proof {
             let before = g@.source_names.take(i as int);
             assert(g@.source_names.take(i as int + 1) =~= before.push(name@));
-            before.lemma_filter_push(name@, |n: u::Bytes| ck::ends(n, u::lit(".pdf"@)));
+            before.lemma_filter_push(name@, |n: u::Bytes| ck::ends(n, u::pdf_ext()));
         }
         i += 1;
     }
@@ -47,10 +47,10 @@ pub fn pdfs(g: &EGuideline) -> (out: Vec<Vec<u8>>)
 }
 
 pub open spec fn heading_spec(g: u::Guideline) -> u::Html {
-    let pdfs = g.source_names.filter(|n: u::Bytes| ck::ends(n, u::lit(".pdf"@)));
+    let pdfs = g.source_names.filter(|n: u::Bytes| ck::ends(n, u::pdf_ext()));
     u::text(u::title(g)) + (if pdfs.len() == 1 {
-        u::fixed(" <a class=\"source\" href=\"../source/"@) + u::attr(u::url_seg(pdfs[0]))
-            + u::fixed("\">PDF</a>"@)
+        u::fixed_bytes(u::sp_a_class_source_href_source()) + u::attr(u::url_seg(pdfs[0]))
+            + u::fixed_bytes(u::pdf_a_close_cap())
     } else {
         Seq::empty()
     })
@@ -80,13 +80,13 @@ pub fn heading(g: &EGuideline) -> (out: EPage)
 
 pub open spec fn provenance_spec(g: u::Guideline, id: u::Bytes) -> Seq<u::Html> {
     let region = u::coverage_field(g, id, 0);
-    let source = u::unprefix(u::coverage_field(g, id, 1), u::lit("source/"@));
+    let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     (if region.len() > 0 {
         seq![u::text(region)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
-        seq![u::link(u::lit("../source/"@) + u::url_seg(source), u::fixed("Source text"@))]
+        seq![u::link(u::source_2() + u::url_seg(source), u::fixed_bytes(u::source_text_cap()))]
     } else {
         Seq::empty()
     })
@@ -115,11 +115,11 @@ pub fn provenance(g: &EGuideline, id: &[u8]) -> (out: Vec<EPage>)
 
 pub open spec fn navigation_spec(prev: u::Bytes, next: u::Bytes) -> Seq<u::Html> {
     (if prev.len() > 0 {
-        seq![u::link(u::url_seg(prev) + u::lit(".html"@), u::fixed("Previous document"@))]
+        seq![u::link(u::url_seg(prev) + u::html_ext(), u::fixed_bytes(u::previous_document_cap()))]
     } else {
         Seq::empty()
-    }) + seq![u::fixed("<a href=\"../index.html\">Guideline index</a>"@)] + (if next.len() > 0 {
-        seq![u::link(u::url_seg(next) + u::lit(".html"@), u::fixed("Next document"@))]
+    }) + seq![u::fixed_bytes(u::a_open_guideline_index_a_close())] + (if next.len() > 0 {
+        seq![u::link(u::url_seg(next) + u::html_ext(), u::fixed_bytes(u::next_document_cap()))]
     } else {
         Seq::empty()
     })
@@ -152,40 +152,32 @@ pub fn navigation(prev: &[u8], next: &[u8]) -> (out: Vec<EPage>)
 
 pub open spec fn form_spec(g: u::Guideline, d: u::Document, token: u::Bytes) -> Seq<u::Html> {
     seq![
-        u::fixed("<section class=\"verdict-entry\">"@),
-        u::fixed("<h3>Record a decision</h3>"@),
-        u::fixed("<p>Does the ACE representation appropriately reflect the original passage?</p>"@),
-        u::fixed("<form method=\"post\">"@),
-        u::fixed("<fieldset>"@),
-        u::fixed("<legend>Decision</legend>"@),
-        u::fixed(
-            "<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required> Approved</label>"@,
-        ),
-        u::fixed(
-            "<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>"@,
-        ),
-        u::fixed("</fieldset>"@),
-        u::fixed("<label for=\"reviewer\">Reviewer name</label>"@),
-        u::fixed(
-            "<input type=\"text\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\""@,
-        ) + u::attr(u::latest_name(u::records(g), u::empty(), u::empty())) + u::fixed(
-            "\" required>"@,
-        ),
+        u::fixed_bytes(u::section_open_3()),
+        u::fixed_bytes(u::h3_open_record_a_decision_h3_close()),
+        u::fixed_bytes(u::p_open_does_the_ace_representation_appropriately()),
+        u::fixed_bytes(u::form_open()),
+        u::fixed_bytes(u::fieldset_open()),
+        u::fixed_bytes(u::legend_open_decision_legend_close()),
+        u::fixed_bytes(u::label_open_input_open_approved_label_close()),
+        u::fixed_bytes(u::label_open_input_open_rejected_label_close()),
+        u::fixed_bytes(u::fieldset_close()),
+        u::fixed_bytes(u::label_open_reviewer_name_label_close()),
+        u::fixed_bytes(u::input_type_text_id_reviewer_name()) + u::attr(
+            u::latest_name(u::records(g), u::empty(), u::empty()),
+        ) + u::fixed_bytes(u::required_2()),
         u::roster(g),
-        u::fixed("<label for=\"comment\">Comment (optional)</label>"@),
-        u::fixed("<textarea id=\"comment\" name=\"comment\"></textarea>"@),
-        u::fixed("<input type=\"hidden\" name=\"review_sha256\" value=\""@) + u::attr(
-            d.bundle.review,
-        ) + u::fixed("\">"@),
-        u::fixed("<input type=\"hidden\" name=\"ledger_sha256\" value=\""@) + u::attr(
-            g.ledger_digest,
-        ) + u::fixed("\">"@),
-        u::fixed("<input type=\"hidden\" name=\"csrf\" value=\""@) + u::attr(token) + u::fixed(
-            "\">"@,
+        u::fixed_bytes(u::label_open_comment_optional_label_close()),
+        u::fixed_bytes(u::textarea_open_textarea_close()),
+        u::fixed_bytes(u::input_type_hidden_name_review_sha256_value()) + u::attr(d.bundle.review)
+            + u::fixed_bytes(u::attr_end()),
+        u::fixed_bytes(u::input_type_hidden_name_ledger_sha256_value()) + u::attr(g.ledger_digest)
+            + u::fixed_bytes(u::attr_end()),
+        u::fixed_bytes(u::input_type_hidden_name_csrf_value()) + u::attr(token) + u::fixed_bytes(
+            u::attr_end(),
         ),
-        u::fixed("<button>Record decision</button>"@),
-        u::fixed("</form>"@),
-        u::fixed("</section>"@),
+        u::fixed_bytes(u::button_open_record_decision_button_close()),
+        u::fixed_bytes(u::form_close()),
+        u::fixed_bytes(u::section_close()),
     ]
 }
 
@@ -277,8 +269,8 @@ pub open spec fn body_spec(
     let k = u::state(g, id);
     let prov = provenance_spec(g, id);
     let nav = navigation_spec(prev, next);
-    let records_href = u::lit("../records.html"@) + (if u::history(g, id).len() > 0 {
-        u::lit("#"@) + u::url_seg(id)
+    let records_href = u::records_html_2() + (if u::history(g, id).len() > 0 {
+        u::copy_2() + u::url_seg(id)
     } else {
         u::empty()
     });
@@ -287,56 +279,62 @@ pub open spec fn body_spec(
         _ => false,
     };
     seq![
-        u::fixed("<h1>"@) + heading_spec(g) + u::fixed("</h1>"@),
-        u::fixed("<h2>"@) + u::text(u::document_title(g, id)) + u::fixed(" "@) + u::chip(k)
-            + u::fixed("</h2>"@),
+        u::fixed_bytes(u::h1_open()) + heading_spec(g) + u::fixed_bytes(u::h1_close()),
+        u::fixed_bytes(u::h2_open()) + u::text(u::document_title(g, id)) + u::fixed_bytes(
+            u::space_2(),
+        ) + u::chip(k) + u::fixed_bytes(u::h2_close()),
     ] + (if prov.len() > 0 {
-        seq![u::fixed("<p>"@) + u::hjoin(prov, u::fixed(" · "@)) + u::fixed("</p>"@)]
+        seq![
+            u::fixed_bytes(u::p_open()) + u::hjoin(prov, u::fixed_bytes(u::middot_sep()))
+                + u::fixed_bytes(u::p_close()),
+        ]
     } else {
         Seq::empty()
     }) + seq![
-        u::fixed("<p>"@) + u::text(u::tally_text(u::tally(g, id))) + u::fixed(" "@) + u::link(
-            records_href,
-            u::fixed("All decision records"@),
-        ) + u::fixed("</p>"@),
+        u::fixed_bytes(u::p_open()) + u::text(u::tally_text(u::tally(g, id))) + u::fixed_bytes(
+            u::space_2(),
+        ) + u::link(records_href, u::fixed_bytes(u::all_decision_records_cap())) + u::fixed_bytes(
+            u::p_close(),
+        ),
     ] + (if k == 3 {
         seq![
-            u::fixed("<section class=\"stale\">"@),
-            u::fixed(
-                "<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>"@,
-            ),
-            u::fixed("</section>"@),
+            u::fixed_bytes(u::section_open_2()),
+            u::fixed_bytes(u::p_open_the_document_or_its_source()),
+            u::fixed_bytes(u::section_close()),
         ]
     } else {
         Seq::empty()
     }) + (if shown {
         seq![
-            u::fixed(
-                "<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> Highlighting</label> Try hovering and clicking on highlighted terms for different levels of emphasis.</p>"@,
-            ),
+            u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
         ]
     } else {
         Seq::empty()
     }) + seq![
-        u::fixed("<section>"@),
-        u::fixed("<h3>Original passage</h3>"@),
-        u::fixed("<pre class=\"prose\">"@) + u::aligned_text(g, d, false) + u::fixed("</pre>"@),
-        u::fixed("</section>"@),
-        u::fixed("<section>"@),
-        u::fixed("<h3>Attempto Controlled English (ACE)</h3>"@),
-        u::fixed("<pre class=\"prose\">"@) + u::aligned_text(g, d, true) + u::fixed("</pre>"@),
-        u::fixed("</section>"@),
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::h3_open_original_passage_h3_close()),
+        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, false) + u::fixed_bytes(
+            u::pre_close(),
+        ),
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::h3_open_attempto_controlled_english_ace_h3_close()),
+        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, true) + u::fixed_bytes(
+            u::pre_close(),
+        ),
+        u::fixed_bytes(u::section_close()),
     ] + form_spec(g, d, token) + seq![
-        u::fixed("<section>"@),
-        u::fixed("<details>"@),
-        u::fixed("<summary>Compiled Prolog ("@) + u::number(
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::details_open()),
+        u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
             u::splitline_count(u::chars(d.pl), false),
-        ) + u::fixed(" lines)</summary>"@),
-        u::fixed("<pre>"@) + u::text(d.pl) + u::fixed("</pre>"@),
-        u::fixed("</details>"@),
-        u::fixed("</section>"@),
-        u::fixed("<nav class=\"docnav\">"@) + u::hjoin(nav, u::fixed(" · "@)) + u::fixed("</nav>"@),
+        ) + u::fixed_bytes(u::sp_lines_summary_close()),
+        u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
+        u::fixed_bytes(u::details_close()),
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::nav_open_2()) + u::hjoin(nav, u::fixed_bytes(u::middot_sep()))
+            + u::fixed_bytes(u::nav_close()),
     ]
 }
 
@@ -350,8 +348,8 @@ pub proof fn decomposition(
     ensures
         u::document_html(g, d, prev, next, token) == u::frame(
             u::document_title(g, d.bundle.docid),
-            u::fixed("<a href=\"../../../index.html\">guidelines</a> / <a href=\"../index.html\">"@)
-                + u::text(u::title(g)) + u::fixed("</a> / "@) + u::text(
+            u::fixed_bytes(u::a_open_guidelines_a_close_a_open_2()) + u::text(u::title(g))
+                + u::fixed_bytes(u::a_close_sp()) + u::text(
                 u::coverage_field(g, d.bundle.docid, 0),
             ),
             u::lines(body_spec(g, d, prev, next, token)),
@@ -372,25 +370,25 @@ pub proof fn decomposition(
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let region = u::coverage_field(g, id, 0);
-    let pdfs = g.source_names.filter(|n: u::Bytes| ck::ends(n, u::lit(".pdf"@)));
+    let pdfs = g.source_names.filter(|n: u::Bytes| ck::ends(n, u::pdf_ext()));
     let heading = u::text(u::title(g)) + (if pdfs.len() == 1 {
-        u::fixed(" <a class=\"source\" href=\"../source/"@) + u::attr(u::url_seg(pdfs[0]))
-            + u::fixed("\">PDF</a>"@)
+        u::fixed_bytes(u::sp_a_class_source_href_source()) + u::attr(u::url_seg(pdfs[0]))
+            + u::fixed_bytes(u::pdf_a_close_cap())
     } else {
         Seq::empty()
     });
-    let source = u::unprefix(u::coverage_field(g, id, 1), u::lit("source/"@));
+    let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     let prov = (if region.len() > 0 {
         seq![u::text(region)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
-        seq![u::link(u::lit("../source/"@) + u::url_seg(source), u::fixed("Source text"@))]
+        seq![u::link(u::source_2() + u::url_seg(source), u::fixed_bytes(u::source_text_cap()))]
     } else {
         Seq::empty()
     });
-    let records_href = u::lit("../records.html"@) + (if u::history(g, id).len() > 0 {
-        u::lit("#"@) + u::url_seg(id)
+    let records_href = u::records_html_2() + (if u::history(g, id).len() > 0 {
+        u::copy_2() + u::url_seg(id)
     } else {
         u::empty()
     });
@@ -399,98 +397,96 @@ pub proof fn decomposition(
         _ => false,
     };
     let nav = (if prev.len() > 0 {
-        seq![u::link(u::url_seg(prev) + u::lit(".html"@), u::fixed("Previous document"@))]
+        seq![u::link(u::url_seg(prev) + u::html_ext(), u::fixed_bytes(u::previous_document_cap()))]
     } else {
         Seq::empty()
-    }) + seq![u::fixed("<a href=\"../index.html\">Guideline index</a>"@)] + (if next.len() > 0 {
-        seq![u::link(u::url_seg(next) + u::lit(".html"@), u::fixed("Next document"@))]
+    }) + seq![u::fixed_bytes(u::a_open_guideline_index_a_close())] + (if next.len() > 0 {
+        seq![u::link(u::url_seg(next) + u::html_ext(), u::fixed_bytes(u::next_document_cap()))]
     } else {
         Seq::empty()
     });
     let original = seq![
-        u::fixed("<h1>"@) + heading + u::fixed("</h1>"@),
-        u::fixed("<h2>"@) + u::text(u::document_title(g, id)) + u::fixed(" "@) + u::chip(k)
-            + u::fixed("</h2>"@),
+        u::fixed_bytes(u::h1_open()) + heading + u::fixed_bytes(u::h1_close()),
+        u::fixed_bytes(u::h2_open()) + u::text(u::document_title(g, id)) + u::fixed_bytes(
+            u::space_2(),
+        ) + u::chip(k) + u::fixed_bytes(u::h2_close()),
     ] + (if prov.len() > 0 {
-        seq![u::fixed("<p>"@) + u::hjoin(prov, u::fixed(" · "@)) + u::fixed("</p>"@)]
+        seq![
+            u::fixed_bytes(u::p_open()) + u::hjoin(prov, u::fixed_bytes(u::middot_sep()))
+                + u::fixed_bytes(u::p_close()),
+        ]
     } else {
         Seq::empty()
     }) + seq![
-        u::fixed("<p>"@) + u::text(u::tally_text(u::tally(g, id))) + u::fixed(" "@) + u::link(
-            records_href,
-            u::fixed("All decision records"@),
-        ) + u::fixed("</p>"@),
+        u::fixed_bytes(u::p_open()) + u::text(u::tally_text(u::tally(g, id))) + u::fixed_bytes(
+            u::space_2(),
+        ) + u::link(records_href, u::fixed_bytes(u::all_decision_records_cap())) + u::fixed_bytes(
+            u::p_close(),
+        ),
     ] + (if k == 3 {
         seq![
-            u::fixed("<section class=\"stale\">"@),
-            u::fixed(
-                "<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>"@,
-            ),
-            u::fixed("</section>"@),
+            u::fixed_bytes(u::section_open_2()),
+            u::fixed_bytes(u::p_open_the_document_or_its_source()),
+            u::fixed_bytes(u::section_close()),
         ]
     } else {
         Seq::empty()
     }) + (if shown {
         seq![
-            u::fixed(
-                "<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> Highlighting</label> Try hovering and clicking on highlighted terms for different levels of emphasis.</p>"@,
-            ),
+            u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
         ]
     } else {
         Seq::empty()
     }) + seq![
-        u::fixed("<section>"@),
-        u::fixed("<h3>Original passage</h3>"@),
-        u::fixed("<pre class=\"prose\">"@) + u::aligned_text(g, d, false) + u::fixed("</pre>"@),
-        u::fixed("</section>"@),
-        u::fixed("<section>"@),
-        u::fixed("<h3>Attempto Controlled English (ACE)</h3>"@),
-        u::fixed("<pre class=\"prose\">"@) + u::aligned_text(g, d, true) + u::fixed("</pre>"@),
-        u::fixed("</section>"@),
-        u::fixed("<section class=\"verdict-entry\">"@),
-        u::fixed("<h3>Record a decision</h3>"@),
-        u::fixed("<p>Does the ACE representation appropriately reflect the original passage?</p>"@),
-        u::fixed("<form method=\"post\">"@),
-        u::fixed("<fieldset>"@),
-        u::fixed("<legend>Decision</legend>"@),
-        u::fixed(
-            "<label><input type=\"radio\" name=\"verdict\" value=\"approved\" required> Approved</label>"@,
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::h3_open_original_passage_h3_close()),
+        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, false) + u::fixed_bytes(
+            u::pre_close(),
         ),
-        u::fixed(
-            "<label><input type=\"radio\" name=\"verdict\" value=\"rejected\" required> Rejected</label>"@,
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::h3_open_attempto_controlled_english_ace_h3_close()),
+        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, true) + u::fixed_bytes(
+            u::pre_close(),
         ),
-        u::fixed("</fieldset>"@),
-        u::fixed("<label for=\"reviewer\">Reviewer name</label>"@),
-        u::fixed(
-            "<input type=\"text\" id=\"reviewer\" name=\"reviewer\" list=\"reviewer-names\" value=\""@,
-        ) + u::attr(u::latest_name(u::records(g), u::empty(), u::empty())) + u::fixed(
-            "\" required>"@,
-        ),
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::section_open_3()),
+        u::fixed_bytes(u::h3_open_record_a_decision_h3_close()),
+        u::fixed_bytes(u::p_open_does_the_ace_representation_appropriately()),
+        u::fixed_bytes(u::form_open()),
+        u::fixed_bytes(u::fieldset_open()),
+        u::fixed_bytes(u::legend_open_decision_legend_close()),
+        u::fixed_bytes(u::label_open_input_open_approved_label_close()),
+        u::fixed_bytes(u::label_open_input_open_rejected_label_close()),
+        u::fixed_bytes(u::fieldset_close()),
+        u::fixed_bytes(u::label_open_reviewer_name_label_close()),
+        u::fixed_bytes(u::input_type_text_id_reviewer_name()) + u::attr(
+            u::latest_name(u::records(g), u::empty(), u::empty()),
+        ) + u::fixed_bytes(u::required_2()),
         u::roster(g),
-        u::fixed("<label for=\"comment\">Comment (optional)</label>"@),
-        u::fixed("<textarea id=\"comment\" name=\"comment\"></textarea>"@),
-        u::fixed("<input type=\"hidden\" name=\"review_sha256\" value=\""@) + u::attr(
-            d.bundle.review,
-        ) + u::fixed("\">"@),
-        u::fixed("<input type=\"hidden\" name=\"ledger_sha256\" value=\""@) + u::attr(
-            g.ledger_digest,
-        ) + u::fixed("\">"@),
-        u::fixed("<input type=\"hidden\" name=\"csrf\" value=\""@) + u::attr(token) + u::fixed(
-            "\">"@,
+        u::fixed_bytes(u::label_open_comment_optional_label_close()),
+        u::fixed_bytes(u::textarea_open_textarea_close()),
+        u::fixed_bytes(u::input_type_hidden_name_review_sha256_value()) + u::attr(d.bundle.review)
+            + u::fixed_bytes(u::attr_end()),
+        u::fixed_bytes(u::input_type_hidden_name_ledger_sha256_value()) + u::attr(g.ledger_digest)
+            + u::fixed_bytes(u::attr_end()),
+        u::fixed_bytes(u::input_type_hidden_name_csrf_value()) + u::attr(token) + u::fixed_bytes(
+            u::attr_end(),
         ),
-        u::fixed("<button>Record decision</button>"@),
-        u::fixed("</form>"@),
-        u::fixed("</section>"@),
-        u::fixed("<section>"@),
-        u::fixed("<details>"@),
-        u::fixed("<summary>Compiled Prolog ("@) + u::number(
+        u::fixed_bytes(u::button_open_record_decision_button_close()),
+        u::fixed_bytes(u::form_close()),
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::details_open()),
+        u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
             u::splitline_count(u::chars(d.pl), false),
-        ) + u::fixed(" lines)</summary>"@),
-        u::fixed("<pre>"@) + u::text(d.pl) + u::fixed("</pre>"@),
-        u::fixed("</details>"@),
-        u::fixed("</section>"@),
-        u::fixed("<nav class=\"docnav\">"@) + u::hjoin(nav, u::fixed(" · "@)) + u::fixed("</nav>"@),
+        ) + u::fixed_bytes(u::sp_lines_summary_close()),
+        u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
+        u::fixed_bytes(u::details_close()),
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::nav_open_2()) + u::hjoin(nav, u::fixed_bytes(u::middot_sep()))
+            + u::fixed_bytes(u::nav_close()),
     ];
     assert(body_spec(g, d, prev, next, token) =~= original);
 }
@@ -499,39 +495,40 @@ pub open spec fn leading_spec(g: u::Guideline, d: u::Document, shown: bool) -> S
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let prov = provenance_spec(g, id);
-    let href = u::lit("../records.html"@) + (if u::history(g, id).len() > 0 {
-        u::lit("#"@) + u::url_seg(id)
+    let href = u::records_html_2() + (if u::history(g, id).len() > 0 {
+        u::copy_2() + u::url_seg(id)
     } else {
         u::empty()
     });
     seq![
-        u::fixed("<h1>"@) + heading_spec(g) + u::fixed("</h1>"@),
-        u::fixed("<h2>"@) + u::text(u::document_title(g, id)) + u::fixed(" "@) + u::chip(k)
-            + u::fixed("</h2>"@),
+        u::fixed_bytes(u::h1_open()) + heading_spec(g) + u::fixed_bytes(u::h1_close()),
+        u::fixed_bytes(u::h2_open()) + u::text(u::document_title(g, id)) + u::fixed_bytes(
+            u::space_2(),
+        ) + u::chip(k) + u::fixed_bytes(u::h2_close()),
     ] + (if prov.len() > 0 {
-        seq![u::fixed("<p>"@) + u::hjoin(prov, u::fixed(" · "@)) + u::fixed("</p>"@)]
+        seq![
+            u::fixed_bytes(u::p_open()) + u::hjoin(prov, u::fixed_bytes(u::middot_sep()))
+                + u::fixed_bytes(u::p_close()),
+        ]
     } else {
         Seq::empty()
     }) + seq![
-        u::fixed("<p>"@) + u::text(u::tally_text(u::tally(g, id))) + u::fixed(" "@) + u::link(
-            href,
-            u::fixed("All decision records"@),
-        ) + u::fixed("</p>"@),
+        u::fixed_bytes(u::p_open()) + u::text(u::tally_text(u::tally(g, id))) + u::fixed_bytes(
+            u::space_2(),
+        ) + u::link(href, u::fixed_bytes(u::all_decision_records_cap())) + u::fixed_bytes(
+            u::p_close(),
+        ),
     ] + (if k == 3 {
         seq![
-            u::fixed("<section class=\"stale\">"@),
-            u::fixed(
-                "<p>The document or its source changed after the last decision. No recorded decision applies to the version shown here.</p>"@,
-            ),
-            u::fixed("</section>"@),
+            u::fixed_bytes(u::section_open_2()),
+            u::fixed_bytes(u::p_open_the_document_or_its_source()),
+            u::fixed_bytes(u::section_close()),
         ]
     } else {
         Seq::empty()
     }) + (if shown {
         seq![
-            u::fixed(
-                "<p class=\"hl-note\"><label><input type=\"checkbox\" class=\"hl-toggle\" checked> Highlighting</label> Try hovering and clicking on highlighted terms for different levels of emphasis.</p>"@,
-            ),
+            u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
         ]
     } else {
@@ -541,31 +538,35 @@ pub open spec fn leading_spec(g: u::Guideline, d: u::Document, shown: bool) -> S
 
 pub open spec fn passages_spec(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
     seq![
-        u::fixed("<section>"@),
-        u::fixed("<h3>Original passage</h3>"@),
-        u::fixed("<pre class=\"prose\">"@) + u::aligned_text(g, d, false) + u::fixed("</pre>"@),
-        u::fixed("</section>"@),
-        u::fixed("<section>"@),
-        u::fixed("<h3>Attempto Controlled English (ACE)</h3>"@),
-        u::fixed("<pre class=\"prose\">"@) + u::aligned_text(g, d, true) + u::fixed("</pre>"@),
-        u::fixed("</section>"@),
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::h3_open_original_passage_h3_close()),
+        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, false) + u::fixed_bytes(
+            u::pre_close(),
+        ),
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::h3_open_attempto_controlled_english_ace_h3_close()),
+        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, true) + u::fixed_bytes(
+            u::pre_close(),
+        ),
+        u::fixed_bytes(u::section_close()),
     ]
 }
 
 pub open spec fn compiled_spec(d: u::Document, prev: u::Bytes, next: u::Bytes) -> Seq<u::Html> {
     seq![
-        u::fixed("<section>"@),
-        u::fixed("<details>"@),
-        u::fixed("<summary>Compiled Prolog ("@) + u::number(
+        u::fixed_bytes(u::section_open()),
+        u::fixed_bytes(u::details_open()),
+        u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
             u::splitline_count(u::chars(d.pl), false),
-        ) + u::fixed(" lines)</summary>"@),
-        u::fixed("<pre>"@) + u::text(d.pl) + u::fixed("</pre>"@),
-        u::fixed("</details>"@),
-        u::fixed("</section>"@),
-        u::fixed("<nav class=\"docnav\">"@) + u::hjoin(
+        ) + u::fixed_bytes(u::sp_lines_summary_close()),
+        u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
+        u::fixed_bytes(u::details_close()),
+        u::fixed_bytes(u::section_close()),
+        u::fixed_bytes(u::nav_open_2()) + u::hjoin(
             navigation_spec(prev, next),
-            u::fixed(" · "@),
-        ) + u::fixed("</nav>"@),
+            u::fixed_bytes(u::middot_sep()),
+        ) + u::fixed_bytes(u::nav_close()),
     ]
 }
 
@@ -629,8 +630,8 @@ pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool) -> 
         b::append(&mut records_href, &url::segment(id));
     }
     proof {
-        assert(records_href@ == u::lit("../records.html"@) + (if u::history(g@, id@).len() > 0 {
-            u::lit("#"@) + u::url_seg(id@)
+        assert(records_href@ == u::records_html_2() + (if u::history(g@, id@).len() > 0 {
+            u::copy_2() + u::url_seg(id@)
         } else {
             u::empty()
         }));

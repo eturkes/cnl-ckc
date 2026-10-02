@@ -262,16 +262,16 @@ pub fn record_row(g: &EGuideline, r: &ERecord) -> (out: EPage)
                 u::version_link(
                     r@,
                     if u::current(g@, r@) {
-                        u::lit("Current"@)
+                        u::current_cap()
                     } else {
-                        u::lit("Earlier"@)
+                        u::earlier_cap()
                     },
                 ),
             ),
             u::cell(
                 u::text(
                     if r.comment@.len() == 0 {
-                        u::lit("Not given"@)
+                        u::not_given_cap()
                     } else {
                         r.comment@
                     },

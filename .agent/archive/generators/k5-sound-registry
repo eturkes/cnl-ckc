@@ -1,8 +1,16 @@
 from pathlib import Path
 import re,ast
 R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust');s=(R/'ckc-spec/src/ui.rs').read_text()
-reg=s.split('pub open spec fn copy_registry() -> Seq<Bytes> {',1)[1].split('// --- Copy gate:',1)[0]
-entries=list(re.finditer(r'lit\(\s*("(?:[^"\\]|\\.)*")\s*@\s*,?\s*\)|\b(css_text|script_html)\(\)',reg,re.S));assert len(entries)==239
+class _Entry:
+    def __init__(self, lit, fn): self._g = (None, lit, fn)
+    def group(self, k): return self._g[k]
+def copy_table(s):
+    """(entries, names): the `copy_table!` rows in order; entries mimic the old registry matches."""
+    block = s.split('copy_table! {', 1)[1].split('\n}\n', 1)[0]
+    rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
+    entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
+    return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
+entries,_names=copy_table(s);assert len(entries)==239
 bv=lambda raw:'ns!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
 ps='p::css_codes(),p::marketing_codes(),p::relative_codes()'
 out=['use crate::{k5_sound_codes as n,k5_sound_patterns as p,k5_sound_literals as l,k5_sound_scan as scan,k5_sound_chrome as ch,k5_sound_encoding as enc};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']

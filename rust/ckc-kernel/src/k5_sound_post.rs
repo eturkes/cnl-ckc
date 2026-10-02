@@ -152,7 +152,7 @@ pub proof fn ledger_changed()
     hide(u::copy_derived);
     l::l191(Seq::empty());
     l::l193(Seq::empty());
-    refusal(409, b::c(191), u::lit("ui: verdict: ledger changed"@), b::c(193));
+    refusal(409, b::c(191), u::ui_verdict_ledger_changed(), b::c(193));
 }
 
 pub proof fn method(shaped: bool)
@@ -207,13 +207,13 @@ pub proof fn prepare(g: u::PostGuideline, d: u::PostDocument, f: u::Fields, now:
         Err(_) => u::empty(),
     };
     match g.fresh {
-        Err(e) => server_error(u::lit("ui: verdict: manifest derivation failed: "@) + e),
+        Err(e) => server_error(u::ui_verdict_manifest_derivation_failed() + e),
         Ok(_) => if fresh.len() == 0 {
-            server_error(u::lit("ui: verdict: manifest derivation failed: docid row missing"@));
+            server_error(u::ui_verdict_manifest_derivation_failed_docid());
         } else if f.review != fresh {
             l::l191(Seq::empty());
             l::l225(Seq::empty());
-            refusal(409, b::c(191), u::lit("ui: verdict: subject changed"@), b::c(225));
+            refusal(409, b::c(191), u::ui_verdict_subject_changed(), b::c(225));
         } else if f.ledger != g.ledger_digest {
             ledger_changed();
         } else {
@@ -222,7 +222,7 @@ pub proof fn prepare(g: u::PostGuideline, d: u::PostDocument, f: u::Fields, now:
                     docid: d.docid,
                     digest: f.review,
                     commit: d.commit,
-                    approved: f.verdict == u::lit("approved"@),
+                    approved: f.verdict == u::approved_2(),
                     date: now,
                 },
                 reviewer: f.reviewer,
@@ -235,7 +235,7 @@ pub proof fn prepare(g: u::PostGuideline, d: u::PostDocument, f: u::Fields, now:
             );
             match checked.1 {
                 Some(v) => server_error(
-                    u::lit("ui: adjudication ledger invalid: "@) + ck::strip_ws(ck::render(v).1),
+                    u::ui_adjudication_ledger_invalid() + ck::strip_ws(ck::render(v).1),
                 ),
                 None => {
                     l::l227(Seq::empty());
@@ -267,18 +267,18 @@ pub proof fn handle(req: u::Request, s: u::PostState, g: u::PostGuideline, d: u:
     hide(u::forbidden);
     hide(u::bad_form);
     hide(u::server_error);
-    let expected = u::lit("http://127.0.0.1:"@) + ck::nat_bytes(s.port);
+    let expected = u::http_127_0_0_1() + ck::nat_bytes(s.port);
     if req.origin.is_some() && req.origin != Some(expected) {
-        forbidden(u::lit("ui: verdict: origin not allowed"@));
-    } else if req.content_type != u::lit("application/x-www-form-urlencoded"@) {
-        bad_form(u::lit("ui: verdict: unsupported content type"@));
+        forbidden(u::ui_verdict_origin_not_allowed());
+    } else if req.content_type != u::application_x_www_form_urlencoded() {
+        bad_form(u::ui_verdict_unsupported_content_type());
     } else {
         match req.body {
-            None => bad_form(u::lit("ui: verdict: missing body"@)),
+            None => bad_form(u::ui_verdict_missing_body()),
             Some(bytes) => match u::parse_form(bytes) {
                 Err(e) => bad_form(e),
                 Ok(f) => if s.token.len() == 0 || f.csrf != s.token {
-                    forbidden(u::lit("ui: verdict: invalid csrf token"@));
+                    forbidden(u::ui_verdict_invalid_csrf_token());
                 } else {
                     match d.render_error {
                         Some(e) => server_error(e),
@@ -306,14 +306,14 @@ pub proof fn post(req: u::Request, s: u::PostState)
     hide(u::server_error);
     hide(u::not_found);
     let route = u::doc_route(req.path);
-    if req.host != u::lit("127.0.0.1:"@) + ck::nat_bytes(s.port) {
-        forbidden(u::lit("ui: request: host not allowed"@));
-    } else if req.method != u::lit("GET"@) && (req.method != u::lit("POST"@) || route.is_none()) {
+    if req.host != u::copy_127_0_0_1() + ck::nat_bytes(s.port) {
+        forbidden(u::ui_request_host_not_allowed());
+    } else if req.method != u::get_cap() && (req.method != u::post_cap() || route.is_none()) {
         method(route.is_some());
     } else {
         match s.models {
             Err(e) => server_error(e),
-            Ok(gs) => if req.method == u::lit("GET"@) {
+            Ok(gs) => if req.method == u::get_cap() {
             } else {
                 match route {
                     None => not_found(),

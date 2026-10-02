@@ -99,7 +99,7 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
                     seq![
                         u::cell(
                             u::link(
-                                u::lit("doc/"@) + u::url_seg(id) + u::lit(".html"@),
+                                u::document_dir() + u::url_seg(id) + u::html_ext(),
                                 u::text(u::document_title(g, id)),
                             ),
                         ),
@@ -121,7 +121,7 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
         m::own(id, inputs);
         m::document_title(g, id, inputs);
         h::text(u::document_title(g, id), inputs);
-        let href = u::lit("doc/"@) + u::url_seg(id) + u::lit(".html"@);
+        let href = u::document_dir() + u::url_seg(id) + u::html_ext();
         b::link(href, u::text(u::document_title(g, id)), inputs);
         b::cell(u::link(href, u::text(u::document_title(g, id))), inputs);
         b::chip(u::state(g, id), inputs);

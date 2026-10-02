@@ -16,19 +16,19 @@ pub proof fn escaped(s: u::Bytes, attr: bool)
         let out = u::escape(s, attr);
         reveal_strlit("&amp;");
         vstd::utf8::is_ascii_chars_encode_utf8("&amp;"@);
-        assert(u::lit("&amp;"@) =~= seq![38u8, 97u8, 109u8, 112u8, 59u8]);
+        assert(u::amp_2() =~= seq![38u8, 97u8, 109u8, 112u8, 59u8]);
         reveal_strlit("&lt;");
         vstd::utf8::is_ascii_chars_encode_utf8("&lt;"@);
-        assert(u::lit("&lt;"@) =~= seq![38u8, 108u8, 116u8, 59u8]);
+        assert(u::lt_2() =~= seq![38u8, 108u8, 116u8, 59u8]);
         reveal_strlit("&gt;");
         vstd::utf8::is_ascii_chars_encode_utf8("&gt;"@);
-        assert(u::lit("&gt;"@) =~= seq![38u8, 103u8, 116u8, 59u8]);
+        assert(u::gt_2() =~= seq![38u8, 103u8, 116u8, 59u8]);
         reveal_strlit("&quot;");
         vstd::utf8::is_ascii_chars_encode_utf8("&quot;"@);
-        assert(u::lit("&quot;"@) =~= seq![38u8, 113u8, 117u8, 111u8, 116u8, 59u8]);
+        assert(u::quot_2() =~= seq![38u8, 113u8, 117u8, 111u8, 116u8, 59u8]);
         reveal_strlit("&#x27;");
         vstd::utf8::is_ascii_chars_encode_utf8("&#x27;"@);
-        assert(u::lit("&#x27;"@) =~= seq![38u8, 35u8, 120u8, 50u8, 55u8, 59u8]);
+        assert(u::apos() =~= seq![38u8, 35u8, 120u8, 50u8, 55u8, 59u8]);
         if s[0] == 38 {
             assert(out.skip(5) =~= tail);
         } else if s[0] == 60 || s[0] == 62 {
