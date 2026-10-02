@@ -32,3 +32,4 @@ green-sort	base	probe	doc
 green-unequal-group-counts	base	probe	doc
 guard-no-payload	unclaimed-doc	probe	doc
 guard-span-linebreak	base	probe	doc
+guard-inexpressible	inexpressible-region	probe	doc

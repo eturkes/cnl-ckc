@@ -179,7 +179,11 @@ pub fn count(rs: &Vec<ECoverageRow>, k: i64) -> (n: usize)
             Status::Pending => k == 0,
             Status::Ace(_) => k == 1,
             Status::Restates(_) => k == 2,
-            Status::Uncovered => k == 3,
+            Status::Uncovered(c) => if c == ckc_spec::v1text::ascii("inexpressible"@) {
+                k == 4
+            } else {
+                k == 3
+            },
         };
     let mut i = 0usize;
     let mut n = 0usize;
@@ -193,15 +197,30 @@ pub fn count(rs: &Vec<ECoverageRow>, k: i64) -> (n: usize)
                     Status::Pending => k == 0,
                     Status::Ace(_) => k == 1,
                     Status::Restates(_) => k == 2,
-                    Status::Uncovered => k == 3,
+                    Status::Uncovered(c) => if c == ckc_spec::v1text::ascii("inexpressible"@) {
+                        k == 4
+                    } else {
+                        k == 3
+                    },
                 },
         decreases rs.len() - i,
     {
+        let inexpressible: &[u8] = b"inexpressible";
+        proof {
+            reveal_byteslit(b"inexpressible");
+            reveal_strlit("inexpressible");
+            reveal(ckc_spec::v1text::ascii);
+            assert(inexpressible@ == ckc_spec::v1text::ascii("inexpressible"@));
+        }
         let hit = match &rs[i].status {
             EStatus::Pending => k == 0,
             EStatus::Ace(_) => k == 1,
             EStatus::Restates(_) => k == 2,
-            EStatus::Uncovered => k == 3,
+            EStatus::Uncovered(c) => if crate::k3_front::bytes_equal(c, inexpressible) {
+                k == 4
+            } else {
+                k == 3
+            },
         };
         proof {
             assert(hit == pred(rs@[i as int]@));
@@ -227,6 +246,7 @@ pub fn meter(gid: &[u8], c: &ECoverage) -> (r: Vec<u8>)
     let ace = number(count(&c.rows, 1));
     let restates = number(count(&c.rows, 2));
     let uncovered = number(count(&c.rows, 3));
+    let inexpressible = number(count(&c.rows, 4));
     let total = number(c.rows.len());
     let mut r = concat(b"ckc: coverage ok ", gid);
     r.push(0x20);
@@ -237,6 +257,8 @@ pub fn meter(gid: &[u8], c: &ECoverage) -> (r: Vec<u8>)
     append(&mut r, &restates);
     append(&mut r, b" uncovered=");
     append(&mut r, &uncovered);
+    append(&mut r, b" inexpressible=");
+    append(&mut r, &inexpressible);
     append(&mut r, b" pending=");
     append(&mut r, &pending);
     r.push(0x0a);
@@ -249,6 +271,8 @@ pub fn meter(gid: &[u8], c: &ECoverage) -> (r: Vec<u8>)
         reveal_strlit(" restates=");
         reveal_byteslit(b" uncovered=");
         reveal_strlit(" uncovered=");
+        reveal_byteslit(b" inexpressible=");
+        reveal_strlit(" inexpressible=");
         reveal_byteslit(b" pending=");
         reveal_strlit(" pending=");
         reveal(ckc_spec::v1text::ascii);

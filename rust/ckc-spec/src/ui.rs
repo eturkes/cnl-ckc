@@ -810,7 +810,7 @@ pub open spec fn region_status(r: Row) -> Bytes {
             unprefix(field(r, 4), lit("restates("@)),
             lit(")"@),
         ),
-        Status::Uncovered => {
+        Status::Uncovered(_) => {
             let inner = unsuffix(unprefix(field(r, 4), lit("uncovered("@)), lit(")"@));
             let i = check::first_sub(inner, lit(": "@), 0);
             lit("Not covered — "@) + (if i + 2 <= inner.len() {

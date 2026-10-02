@@ -194,7 +194,7 @@ pub open spec fn docid_ok(id: Seq<u8>) -> bool {
 // --- coverage ledger ---
 pub open spec fn coverage_header() -> Seq<u8> {
     ascii(
-        "# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n"@,
+        "# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice | inexpressible\n"@,
     )
 }
 
@@ -202,7 +202,7 @@ pub ghost enum Status {
     Pending,
     Ace(Seq<u8>),
     Restates(Seq<u8>),
-    Uncovered,
+    Uncovered(Seq<u8>),  // the class
 }
 
 pub open spec fn uncovered_class_ok(c: Seq<u8>) -> bool {
@@ -212,6 +212,7 @@ pub open spec fn uncovered_class_ok(c: Seq<u8>) -> bool {
     ||| c == ascii("aim"@)
     ||| c == ascii("descriptive"@)
     ||| c == ascii("notice"@)
+    ||| c == ascii("inexpressible"@)
 }
 
 pub open spec fn wrapped(s: Seq<u8>, head: Seq<char>) -> Option<Seq<u8>> {
@@ -265,7 +266,7 @@ pub open spec fn status_of(id: Seq<u8>, s: Seq<u8>) -> Result<Status, Seq<u8>> {
                     } else if reason.len() == 0 {
                         Result::Err(ascii("empty uncovered reason for "@) + id)
                     } else {
-                        Result::Ok(Status::Uncovered)
+                        Result::Ok(Status::Uncovered(class))
                     }
                 }
             },
@@ -814,7 +815,11 @@ pub open spec fn count_status(rows: Seq<Row>, k: int) -> nat {
                 Status::Pending => k == 0,
                 Status::Ace(_) => k == 1,
                 Status::Restates(_) => k == 2,
-                Status::Uncovered => k == 3,
+                Status::Uncovered(c) => if c == ascii("inexpressible"@) {
+                    k == 4
+                } else {
+                    k == 3
+                },
             },
     ).len()
 }
@@ -823,8 +828,9 @@ pub open spec fn coverage_meter(gid: Seq<u8>, rows: Seq<Row>) -> Seq<u8> {
     ascii("ckc: coverage ok "@) + gid + seq![0x20u8] + nat_bytes(rows.len()) + ascii(
         " regions; ace="@,
     ) + nat_bytes(count_status(rows, 1)) + ascii(" restates="@) + nat_bytes(count_status(rows, 2))
-        + ascii(" uncovered="@) + nat_bytes(count_status(rows, 3)) + ascii(" pending="@)
-        + nat_bytes(count_status(rows, 0)) + seq![0x0Au8]
+        + ascii(" uncovered="@) + nat_bytes(count_status(rows, 3)) + ascii(" inexpressible="@)
+        + nat_bytes(count_status(rows, 4)) + ascii(" pending="@) + nat_bytes(count_status(rows, 0))
+        + seq![0x0Au8]
 }
 
 // The coverage law: envelope → rows → restates → docid totality → evidence closure.
@@ -1777,7 +1783,7 @@ pub enum EStatus {
     Pending,
     Ace(Vec<u8>),
     Restates(Vec<u8>),
-    Uncovered,
+    Uncovered(Vec<u8>),
 }
 
 impl View for EStatus {
@@ -1788,7 +1794,7 @@ impl View for EStatus {
             EStatus::Pending => Status::Pending,
             EStatus::Ace(d) => Status::Ace(d@),
             EStatus::Restates(d) => Status::Restates(d@),
-            EStatus::Uncovered => Status::Uncovered,
+            EStatus::Uncovered(c) => Status::Uncovered(c@),
         }
     }
 }

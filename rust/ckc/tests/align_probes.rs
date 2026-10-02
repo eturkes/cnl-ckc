@@ -59,11 +59,16 @@ fn setup(tree: &Path, kind: &str) {
             fs::rename(probe.join("align"), probe.join("align-target")).unwrap();
             symlink("align-target", probe.join("align")).unwrap();
         }
-        "unclaimed-doc" => {
+        "unclaimed-doc" | "inexpressible-region" => {
             let path = probe.join("coverage.tsv");
             let text = fs::read_to_string(&path).unwrap();
             assert_eq!(text.matches("\tace(doc)\n").count(), 1);
-            fs::write(&path, text.replace("\tace(doc)\n", "\tpending\n")).unwrap();
+            let status = if kind == "unclaimed-doc" {
+                "\tpending\n"
+            } else {
+                "\tuncovered(inexpressible: dosing arithmetic beyond v1)\n"
+            };
+            fs::write(&path, text.replace("\tace(doc)\n", status)).unwrap();
         }
         other => panic!("unknown setup {other}"),
     }
@@ -145,7 +150,7 @@ fn align_probe_suite() {
             failures.push(format!("{id}: {}", problems.join("; ")));
         }
     }
-    assert_eq!(rows.len(), 33, "tests/align-probes row count");
+    assert_eq!(rows.len(), 34, "tests/align-probes row count");
     assert!(
         failures.is_empty(),
         "align probes: {} of {} failed:\n{}",

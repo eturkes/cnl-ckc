@@ -66,7 +66,7 @@ pub fn class_ok(c: &[u8]) -> (r: bool)
     let r = eq(c, b"heading") || eq(c, b"process") || eq(c, b"external") || eq(c, b"aim") || eq(
         c,
         b"descriptive",
-    ) || eq(c, b"notice");
+    ) || eq(c, b"notice") || eq(c, b"inexpressible");
     proof {
         reveal(ckc_spec::v1text::ascii);
         reveal_byteslit(b"heading");
@@ -87,6 +87,9 @@ pub fn class_ok(c: &[u8]) -> (r: bool)
         reveal_byteslit(b"notice");
         reveal_strlit("notice");
         assert(b"notice"@ == ckc_spec::v1text::ascii("notice"@));
+        reveal_byteslit(b"inexpressible");
+        reveal_strlit("inexpressible");
+        assert(b"inexpressible"@ == ckc_spec::v1text::ascii("inexpressible"@));
         reveal(ckc_spec::v1text::ascii);
         assert(r == uncovered_class_ok(c@));
     }
@@ -183,7 +186,7 @@ pub fn status(id: &[u8], s: &[u8]) -> (r: Result<EStatus, Vec<u8>>)
                     } else if k + 2 == inner.len() {
                         Err(concat(b"empty uncovered reason for ", id))
                     } else {
-                        Ok(EStatus::Uncovered)
+                        Ok(EStatus::Uncovered(class))
                     }
                 }
             },

@@ -218,7 +218,7 @@ pub fn clone_status(s: &EStatus) -> (r: EStatus)
 {
     match s {
         EStatus::Pending => EStatus::Pending,
-        EStatus::Uncovered => EStatus::Uncovered,
+        EStatus::Uncovered(c) => EStatus::Uncovered(c.clone()),
         EStatus::Ace(d) => EStatus::Ace(copy(d)),
         EStatus::Restates(d) => EStatus::Restates(copy(d)),
     }

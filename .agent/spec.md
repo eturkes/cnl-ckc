@@ -25,18 +25,18 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - Consumption→Rust affirmed: no mature Prolog verifier ⇒ that role gains human-reviewable verification only by migration; emission stays Prolog, certified at M6 by translation validation.
 - Verification line (grading = `archive/rust-rewrite-plan.md` § Verification line): human-read `ckc-spec` + AI-authored `ckc-kernel` (never human-reviewed; agents read + edit it) + pinned Verus `--no-cheating` + `ckc trust-audit`. Theorems = KB semantics (K1–K3), custody chain source↔ACE↔clauses↔verdicts↔export (K4 core), render fidelity + POST guard/ledger CAS (K5 core), M6 emission correspondence. Shell tier (enumerated, fixture-gated, no theorems) = the Intent's trusted software + sockets, HTTP, archive assembly. Every spec line traces to a soundness/custody claim; claim = "machine-verified against the committed spec under a pinned verifier TCB". Fallback (Verus blocker, proof:impl >5×, solver brittleness) → Creusot or a narrowed kernel.
 - Spine: M5 closed (IMPLEMENT); M7 + corpus rounds = MAINTAIN requests (user ruling; `.agent/deferred.md`). Per unit: contract of testable predicates + tier before code (`.agent/contracts/<unit>.md`, archived at close); differential parity before any legacy deletion; corpus + query artifacts byte-stable except ruled re-pins. M5.2 rulings R1–R30 (`archive/contracts/m5u2.md`) bind its sub-units.
-- Compiler not fixed: schema version = the swap seam; ACE extension, schema v2, companion targets (ProbLog) = evaluated at M7, not presumed. Interim: a statement ACE cannot express ⇒ region `pending` + `inexpressible` queue blocker, row blocked (banks the M7 census).
+- Compiler not fixed: schema version = the swap seam; ACE extension, schema v2, companion targets (ProbLog) = evaluated at M7, not presumed. A statement ACE cannot express ⇒ region `uncovered(inexpressible: <reason>)`, counted by the coverage meter (user ruling); gap taxonomy + per-class dispositions ruled = `docs/m7-gap-taxonomy.md` (first class: temporal).
 - Corpus: knowledge-only fixture-free ACE on the frozen v1 schema; obligations discharged per document + aggregate; answers/traces = machine-derived demonstrations. Neutrality: nothing source-language-specific in tooling/schemas/ledgers; domain rules live in corpus data.
 - Deps minimal + enumerated (`rust/trust/deps-allowlist.tsv`: mature, easily reasoned about, dangerous to hand-write); verifier pinned (`rust/verus.lock`). Review: check set fixed before reading; rows adjudicated in `.agent/review.md`.
 
 ## Tasks
 
 - [ ] Q1 Kani engine + trace harnesses over a typed below-parser seam.
-- [ ] Q2 `ace_commit` custody content check (user ruling: recorded commit = the viewed commit).
+- [x] f0e89ff2 Q2 `ace_commit` custody content check (user ruling: recorded commit = the viewed commit).
 - [x] 0ea7c076 Q3 non-v1 tests/queries fixtures → canonical v1 (10/10 rewritten); `tests/check/r79-nonv1.tsv` header only.
 - [x] fed5db86 Q4 `.agent/spec.md` shape check in `ckc check`.
-- [ ] Q5 M7 gap coverage (agent part: taxonomy research; user ruling owed).
-- [ ] Q6 corpus rounds to exhaustion (user routing ruling owed).
+- [ ] Q5 M7 gap coverage: inexpressible class + ruled taxonomy landed; first class (temporal) owed as a user-directed feature unit.
+- [ ] Q6 corpus rounds to exhaustion: user ruling = separate corpus-prompt sessions (not run here).
 - [x] 0844a975 Q7 K3 negation certificate = call-time instance; calls failing `naf_safe` cut.
 - [x] 4dbe27aa Q8 trace clause identity from the owning `% S<n>:` block.
 - [ ] Q9 single-authority UI copy.

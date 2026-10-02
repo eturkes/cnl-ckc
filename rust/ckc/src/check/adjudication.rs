@@ -88,6 +88,7 @@ fn manifest(path: &Path) -> Result<Vec<EBundle>> {
     }
     Ok(rows)
 }
+const PRE_INEXPRESSIBLE_HEADER: &[u8] = b"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice\n";
 fn historical(gid: &str, commit: &str) -> Result<BTreeMap<Vec<u8>, Vec<u8>>> {
     let scratch = process::Scratch::new()?;
     let archive = Command::new("git")
@@ -141,6 +142,16 @@ fn historical(gid: &str, commit: &str) -> Result<BTreeMap<Vec<u8>, Vec<u8>>> {
         ));
     }
     let path = scratch.0.join("guidelines").join(gid);
+    // A commit before the `inexpressible` class pinned the older coverage header; its
+    // classes are a subset of today's grammar and bundle v2 hashes rows only.
+    let ledger = path.join("coverage.tsv");
+    if let Ok(bytes) = std::fs::read(&ledger)
+        && let Some(rest) = bytes.strip_prefix(PRE_INEXPRESSIBLE_HEADER)
+    {
+        let header = &PRE_INEXPRESSIBLE_HEADER[..PRE_INEXPRESSIBLE_HEADER.len() - 1];
+        std::fs::write(&ledger, [header, b" | inexpressible\n", rest].concat())
+            .map_err(|_| fail("adjudication", "historical coverage header upgrade failed"))?;
+    }
     let g = inventories::collect(&path)?;
     let c = coverage::check(&g, false)?;
     Ok(derive(&g, &c)?

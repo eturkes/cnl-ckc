@@ -162,7 +162,7 @@ pub proof fn region(r: ck::Row, inputs: Seq<u::Bytes>)
             l::l087(inputs);
             b::cat(u::lit("Restates "@), suffix, inputs);
         },
-        ck::Status::Uncovered => {
+        ck::Status::Uncovered(_) => {
             let field = u::field(r, 4);
             m::unprefix(field, u::lit("uncovered("@), inputs);
             let raw = u::unprefix(field, u::lit("uncovered("@));

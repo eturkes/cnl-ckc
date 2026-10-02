@@ -45,7 +45,11 @@ pub open spec fn status_pred(r: ck::Row, k: u8) -> bool {
         ck::Status::Pending => k == 0,
         ck::Status::Ace(_) => k == 1,
         ck::Status::Restates(_) => k == 2,
-        ck::Status::Uncovered => k == 3,
+        ck::Status::Uncovered(c) => if c == ckc_spec::v1text::ascii("inexpressible"@) {
+            k == 4
+        } else {
+            k == 3
+        },
     }
 }
 
@@ -65,11 +69,22 @@ pub fn coverage_count(g: &EGuideline, k: u8) -> (n: usize)
         decreases g.coverage.rows.len() - i,
     {
         let r = &g.coverage.rows[i];
+        let inexpressible: &[u8] = b"inexpressible";
+        proof {
+            reveal_byteslit(b"inexpressible");
+            reveal_strlit("inexpressible");
+            reveal(ckc_spec::v1text::ascii);
+            assert(inexpressible@ == ckc_spec::v1text::ascii("inexpressible"@));
+        }
         let matches = match &r.status {
             EStatus::Pending => k == 0,
             EStatus::Ace(_) => k == 1,
             EStatus::Restates(_) => k == 2,
-            EStatus::Uncovered => k == 3,
+            EStatus::Uncovered(c) => if crate::k3_front::bytes_equal(c, inexpressible) {
+                k == 4
+            } else {
+                k == 3
+            },
         };
         if matches {
             n += 1;
@@ -88,7 +103,11 @@ pub fn coverage_count(g: &EGuideline, k: u8) -> (n: usize)
                 ck::Status::Pending => k as int == 0,
                 ck::Status::Ace(_) => k as int == 1,
                 ck::Status::Restates(_) => k as int == 2,
-                ck::Status::Uncovered => k as int == 3,
+                ck::Status::Uncovered(c) => if c == ckc_spec::v1text::ascii("inexpressible"@) {
+                    k as int == 4
+                } else {
+                    k as int == 3
+                },
             }));
     }
     n

@@ -125,7 +125,7 @@ compiler base:
      coverage-ledger closure (row grammar, region totality against each
      evidence file's own payload census and locator inventory, ace-row
      ↔ document-set bijection, single-step restates targets), with a
-     per-guideline `ace/restates/uncovered/pending` meter;
+     per-guideline `ace/restates/uncovered/inexpressible/pending` meter;
      review-manifest freshness against a full re-derivation, then
      adjudication-ledger validation with its verdict meter; lexicon
      liveness and minimality; v1-only product vocabulary;
@@ -750,10 +750,10 @@ URL keeps its recorded id. Changed remote content becomes a new
 versioned id, while every recorded source stays immutable. A paywall or
 rights gate becomes a recorded queue blocker, and the round moves on.
 A normative statement that the controlled language cannot express
-becomes an `inexpressible` queue blocker in the same way. The region
-keeps its `pending` status, the guideline row is blocked, and the
-round moves on. These blockers record the expressiveness gap of the
-language for later review.
+gets the coverage status `uncovered(inexpressible: <reason>)`, like the
+other uncovered classes, and the round moves on. The coverage meter
+counts these regions as `inexpressible=<n>`, so they record the
+expressiveness gap of the language for later work.
 
 ## Export
 

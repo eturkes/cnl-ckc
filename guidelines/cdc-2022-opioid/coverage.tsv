@@ -1,6 +1,6 @@
 # format: id<TAB>file<TAB>page<TAB>section<TAB>status
 # status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending
-# uncovered classes: heading | process | external | aim | descriptive | notice
+# uncovered classes: heading | process | external | aim | descriptive | notice | inexpressible
 # ids: box3-extraction regions=B3-01..B3-16 in file order; other regions retain S<page>-<seq>; page=physical PDF page
 B3-01	source/box3-extraction.txt	p13	BOX 3 > Area heading: Determining Whether or Not to Initiate Opioids for Pain (Recommendations 1 and 2)	uncovered(heading: structural label without directive)
 B3-02	source/box3-extraction.txt	p13	BOX 3 > Recommendation 1	ace(cdc2022-opioid-rec01)

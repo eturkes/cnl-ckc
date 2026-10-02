@@ -85,11 +85,14 @@ fn coverage(bytes: &[u8], gid: &str) -> Result<(ECoverage, Vec<String>)> {
                 .ok_or_else(invalid)?;
             EStatus::Restates(target.as_bytes().to_vec())
         } else if let Some(tail) = f[4].strip_prefix("uncovered(") {
-            let reason = tail.strip_suffix(')').and_then(|s| s.split_once(": "));
-            if !reason.is_some_and(|(_, reason)| !reason.is_empty()) {
+            let Some((class, reason)) = tail.strip_suffix(')').and_then(|s| s.split_once(": "))
+            else {
+                return Err(invalid());
+            };
+            if reason.is_empty() {
                 return Err(invalid());
             }
-            EStatus::Uncovered
+            EStatus::Uncovered(class.as_bytes().to_vec())
         } else if f[4] == "pending" {
             EStatus::Pending
         } else {

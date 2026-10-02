@@ -264,7 +264,7 @@ pub fn region_status(r: &ECoverageRow) -> (out: Vec<u8>)
             let inner = p::unsuffix(&p::unprefix(&s, &b::literal("restates(")), &b::literal(")"));
             b::cat(b::literal("Restates "), &inner)
         },
-        EStatus::Uncovered => {
+        EStatus::Uncovered(_) => {
             let s = p::field(r, 4);
             let inner = p::unsuffix(&p::unprefix(&s, &b::literal("uncovered(")), &b::literal(")"));
             let n = search::sub(&inner, &b::literal(": "), 0);
