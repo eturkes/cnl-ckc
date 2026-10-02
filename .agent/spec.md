@@ -31,7 +31,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 ## Tasks
 
-- [ ] Q1 Kani engine + trace harnesses over a typed below-parser seam.
+- [ ] Q1 Kani engine + trace harnesses: owed — a typed below-parser seam still exhausts CBMC (pilot: 2-fact answer, symbolic 1500 s / concrete 900 s, rc 124).
 - [x] f0e89ff2 Q2 `ace_commit` custody content check (user ruling: recorded commit = the viewed commit).
 - [x] 0ea7c076 Q3 non-v1 tests/queries fixtures → canonical v1 (10/10 rewritten); `tests/check/r79-nonv1.tsv` header only.
 - [x] fed5db86 Q4 `.agent/spec.md` shape check in `ckc check`.
@@ -39,7 +39,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q6 corpus rounds to exhaustion: user ruling = separate corpus-prompt sessions (not run here).
 - [x] 0844a975 Q7 K3 negation certificate = call-time instance; calls failing `naf_safe` cut.
 - [x] 4dbe27aa Q8 trace clause identity from the owning `% S<n>:` block.
-- [ ] Q9 single-authority UI copy.
+- [x] e3f94d64 Q9 single-authority UI copy.
 - [x] 3616a400 Q10 M5.3 late mutants replayed (`just late-mutants`).
 - [x] 0d3898cd Q11 corpus.md Inexpressible cite.
 - [x] 604924fb N1 `align_probes` stdin race.

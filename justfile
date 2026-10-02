@@ -225,9 +225,11 @@ late-mutants:
     if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
     bin=$(readlink -f "$bin")
     head=$(git rev-parse HEAD)
+    table=tests/check-mutants/late.tsv
+    [ "$(awk -F'\t' 'NR > 1 && NF == 2' "$table")" ] || { echo "late-mutants: no rows in $table" >&2; exit 2; }
     work=$(mktemp -d)
     trap 'rm -rf "$work"' EXIT
-    fails=0
+    fails=0 ran=0
     while IFS=$'\t' read -r name rc; do
         [ "$name" = name ] && continue
         tree="$work/$name"
@@ -245,13 +247,15 @@ late-mutants:
         [ -z "$(git -C "$tree" status --porcelain)" ] && { echo "late-mutants: $name mutation missed" >&2; exit 2; }
         (cd "$tree" && "$bin" check > "$work/$name.out" 2> "$work/$name.err"); got=$?
         if [ -s "$work/$name.err" ]; then first=$(cat "$work/$name.err"); else first=$(tail -n 1 "$work/$name.out"); fi
+        ran=$((ran + 1))
         if [ "$got" = "$rc" ] && [ "$first" = "$(cat "tests/check-mutants/late/$name.expect")" ]; then
             echo "late-mutants: $name ok"
         else
             echo "late-mutants: $name rc $got first violation: $first" >&2
             fails=$((fails + 1))
         fi
-    done < tests/check-mutants/late.tsv
+    done < "$table"
+    [ "$ran" -eq "$(awk 'NR > 1' "$table" | wc -l)" ] || { echo "late-mutants: ran $ran rows" >&2; exit 2; }
     [ "$fails" -eq 0 ] || exit 1
     echo "gate: late-mutants ok"
 

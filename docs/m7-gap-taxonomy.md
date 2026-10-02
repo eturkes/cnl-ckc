@@ -16,8 +16,8 @@ statement gets the coverage status `uncovered(inexpressible: <reason>)`.
 
 ## Classes and dispositions
 
-The disposition column is ruled. The first class to implement is
-temporal; each class is a separate feature unit.
+The user ruled the disposition of each class and chose temporal as
+the first class to implement. Each class is a separate feature unit.
 
 | Class | Observed gap | CDC documents | Sample statements | Disposition |
 | --- | --- | --- | --- | --- |
