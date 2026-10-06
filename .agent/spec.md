@@ -32,21 +32,9 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 ## Tasks
 
-- [ ] RESUME (paused 2026-10-02): finish line in force = the MAINTAIN Queue body's `Met when` (every in-scope row closed by its own acceptance check in its own commit, blocked on the user with what it owes, or waiting on its re-open trigger; full gate green on a clean tree at the closing commit; final message per the body). Resumed 2026-10-06 (session 17ba207e): Q1 → waits on its re-open trigger (user ruling; root cause + trigger = `.agent/deferred.md` Kani row); N2 contract approved with D7 (user) → kernel unit on `wt/n2` (`.scratch/worktrees/n2`); N3 = new find, funded after N2; release-manifest content keying = new row, user: decide later. Run record = `.scratch/mq/` (`plan.md`, `roster.md` = teammates + verdicts, `advisor-log.md` = calls + rulings + owed disclosures, `q1-diag.md`, `gate-*.log`) + `.scratch/agents/mq/`. Next = N2 (tester + reviewer pair) → N3 → closing review per lens over 3e1bc2a6..tip → full `just gate` on a clean tree → final message (covers the whole queue run: 96b5bed2..tip). Q5 + Q6 stay for their own sessions (user rulings).
-- [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = a `rust/kani.lock` bump → `engine_answer_tiny` rerun ≤1200 s; root cause = CBMC cannot fold heap-`Vec` enum reads (`.agent/deferred.md` row).
-- [x] f0e89ff2 Q2 `ace_commit` custody content check (user ruling: recorded commit = the viewed commit).
-- [x] 0ea7c076 Q3 non-v1 tests/queries fixtures → canonical v1 (10/10 rewritten); `tests/check/r79-nonv1.tsv` header only.
-- [x] fed5db86 Q4 `.agent/spec.md` shape check in `ckc check`.
+- [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = a `rust/kani.lock` bump → `engine_answer_tiny` rerun ≤1200 s; measured: exhaustion persists below the parser + term-arena reads stay symbolic in CBMC symex (`.agent/deferred.md` row).
 - [ ] Q5 M7 gap coverage: inexpressible class + ruled taxonomy landed; first class (temporal) owed as a user-directed feature unit.
 - [ ] Q6 corpus rounds to exhaustion: user ruling = separate corpus-prompt sessions (not run here).
-- [x] 0844a975 Q7 K3 negation certificate = call-time instance; calls failing `naf_safe` cut.
-- [x] 4dbe27aa Q8 trace clause identity from the owning `% S<n>:` block.
-- [x] e3f94d64 Q9 single-authority UI copy.
-- [x] 3616a400 Q10 M5.3 late mutants replayed (`just late-mutants`).
-- [x] 0d3898cd Q11 corpus.md Inexpressible cite.
-- [x] 604924fb N1 `align_probes` stdin race.
-- [ ] N2 Review records the rendered commit: contract `.agent/archive/contracts/n2.md` (user-approved with D7: posted commit = HEAD or an ancestor).
-- [ ] N3 `ckc check` scratch survives a kill (`.agent/deferred.md` row).
 - Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
 ## Phase

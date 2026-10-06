@@ -1,4 +1,4 @@
-// `ckc ui serve` over a real loopback socket (.agent/contracts/harness.md H7;
+// `ckc ui serve` over a real loopback socket (.agent/archive/contracts/harness.md H7;
 // native assertions of the M5.5 socket smoke). Fixture = tests/ui/green/basic/tree
 // committed into a private git repository; oracles = `ckc ui request` on the
 // same corpus. Linux only: listener scope = /proc/net/tcp.

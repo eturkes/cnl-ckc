@@ -1,4 +1,4 @@
-// M5.2 v1 suite (.agent/contracts/harness.md H4): tests/v1/cases.tsv rows =
+// M5.2 v1 suite (.agent/archive/contracts/harness.md H4): tests/v1/cases.tsv rows =
 // 230 primary targets + 115 supplemental K3 probes. Every case materializes
 // under one private root at its recording layout (.scratch/m5u2/suite/cases/
 // <case>/…, `.in` dropped, `.tpl.in` expanded), so argv and path-bearing

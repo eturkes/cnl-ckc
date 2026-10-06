@@ -1,4 +1,4 @@
-// M5.4 `align` resolver probes (.agent/contracts/harness.md H5): tests/align-probes/
+// M5.4 `align` resolver probes (.agent/archive/contracts/harness.md H5): tests/align-probes/
 // cases.tsv rows (25 red, 6 green, 2 guards) run `ckc align <gid> <docid>` with
 // stdin.tsv in a private tree holding the probe guideline (fixture/, `.in`
 // dropped) after the row's setup. Grade = expected.{rc,stdout,stderr}; green rows

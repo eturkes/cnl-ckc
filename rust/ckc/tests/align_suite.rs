@@ -1,4 +1,4 @@
-// M5.1 align-check suite (.agent/contracts/harness.md H3): tests/align/<case>/
+// M5.1 align-check suite (.agent/archive/contracts/harness.md H3): tests/align/<case>/
 // holds align.tsv.in, src.txt.in, ace.txt.in + expect. Each case runs
 // `ckc align-check <align.tsv> <src.txt> <ace.txt>` on a private copy without
 // the `.in` suffix: stdout = expect byte for byte, rc 0 iff expect starts `ok `.

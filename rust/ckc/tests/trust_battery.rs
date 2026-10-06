@@ -1,4 +1,4 @@
-// Trust-audit hostile battery (.agent/contracts/harness.md H2; review R-07).
+// Trust-audit hostile battery (.agent/archive/contracts/harness.md H2; review R-07).
 // Each plant mutates a private copy of the workspace (target/ + vendor/
 // excluded) and must end in rc 1 with a stderr line matching its pattern; the
 // clean copy must pass with the meter alone. p1–p15 + the control carry the

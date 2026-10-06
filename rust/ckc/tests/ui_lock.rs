@@ -1,4 +1,4 @@
-// Ledger-lock regression (.agent/contracts/m5u5-cas.md P1). The test plays the
+// Ledger-lock regression (.agent/archive/contracts/m5u5-cas.md P1). The test plays the
 // initial holder and a newcomer; the ckc POST is the waiter queued on the inode
 // that the holder's release orphans. Schedule S1–S8 of the contract.
 // Linux only: waiter state = /proc/locks. CKC_UI_TEST_BIN selects a prebuilt ckc.

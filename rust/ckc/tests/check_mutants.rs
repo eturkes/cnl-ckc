@@ -1,4 +1,4 @@
-// `ckc check` corpus mutants (.agent/contracts/harness.md H6): the 36 M5.3 red
+// `ckc check` corpus mutants (.agent/archive/contracts/harness.md H6): the 36 M5.3 red
 // mutants whose first violation lands before the SWI-Prolog stage (mutants.py
 // `mutate`, byte for byte) + 3 `.agent/spec.md` shape plants + 1 ledger bundle-mismatch plant. Each row mutates a
 // fresh clone of HEAD and must end in its pinned rc with the pinned first
