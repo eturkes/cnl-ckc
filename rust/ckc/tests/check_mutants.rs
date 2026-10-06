@@ -6,7 +6,7 @@
 // CKC_CHECK_TEST_BIN selects a prebuilt executable.
 use std::fs;
 use std::io::Read;
-use std::os::unix::fs::symlink;
+use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::Mutex;
@@ -284,17 +284,20 @@ fn mutate(t: &Path, name: &str) {
 }
 
 // 180 s cap: a mutant the checker misses runs on into the SWI-Prolog stage.
-fn check(program: &Path, tree: &Path) -> Result<Output, String> {
-    let mut child = Command::new(program)
+fn check(program: &Path, tree: &Path, swipl: Option<&Path>) -> Result<Output, String> {
+    let mut command = Command::new(program);
+    command
         .arg("check")
         .current_dir(tree)
         .env("GIT_CONFIG_GLOBAL", "/dev/null")
         .env("GIT_CONFIG_SYSTEM", "/dev/null")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
+        .stderr(Stdio::piped());
+    if let Some(swipl) = swipl {
+        command.env("SWIPL", swipl);
+    }
+    let mut child = command.spawn().unwrap();
     let mut pipes = (child.stdout.take().unwrap(), child.stderr.take().unwrap());
     let out = std::thread::spawn(move || {
         let (mut a, mut b) = (Vec::new(), Vec::new());
@@ -341,11 +344,32 @@ impl Drop for Scratch {
     }
 }
 
+fn program() -> PathBuf {
+    std::env::var_os("CKC_CHECK_TEST_BIN")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_ckc")))
+}
+
+fn clone_head(dir: &Path, name: &str, head: &str) -> PathBuf {
+    git(
+        dir,
+        &[
+            "clone",
+            "-q",
+            "--shared",
+            "--no-checkout",
+            root().to_str().unwrap(),
+            name,
+        ],
+    );
+    let tree = dir.join(name);
+    git(&tree, &["checkout", "-q", "--detach", head.trim()]);
+    tree
+}
+
 #[test]
 fn check_mutant_battery() {
-    let program = std::env::var_os("CKC_CHECK_TEST_BIN")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_ckc")));
+    let program = program();
     let suite = root().join("tests/check-mutants");
     let scratch = Scratch(root().join(format!("rust/target/check-mutants/{}", std::process::id())));
     let _ = fs::remove_dir_all(&scratch.0);
@@ -368,25 +392,12 @@ fn check_mutant_battery() {
             let (scratch, head, rows, next, failures, suite, program) =
                 (&scratch, &head, &rows, &next, &failures, &suite, &program);
             scope.spawn(move || {
-                let base = format!("worker-{w}");
-                let tree = scratch.0.join(&base);
-                git(
-                    &scratch.0,
-                    &[
-                        "clone",
-                        "-q",
-                        "--shared",
-                        "--no-checkout",
-                        root().to_str().unwrap(),
-                        &base,
-                    ],
-                );
-                git(&tree, &["checkout", "-q", "--detach", head.trim()]);
+                let tree = clone_head(&scratch.0, &format!("worker-{w}"), head);
                 while let Some(row) = rows.get(next.fetch_add(1, Ordering::Relaxed)) {
                     let (name, rc) = (row[0], row[2].parse::<i32>().unwrap());
                     mutate(&tree, name);
                     let expect = fs::read(suite.join(format!("{name}.expect"))).unwrap();
-                    let verdict = match check(program, &tree) {
+                    let verdict = match check(program, &tree, None) {
                         Err(e) => Some(e),
                         Ok(out)
                             if out.status.code() != Some(rc) || first_violation(&out) != expect =>
@@ -421,4 +432,42 @@ fn check_mutant_battery() {
         rows.len(),
         failures.join("\n")
     );
+}
+
+// A kill skips the `ckc check` scratch Drop: a leftover whose creator pid is gone
+// must neither stop the run nor outlive it. The fake swipl ends the run at the APE
+// stage build, the first step past the scratch.
+#[test]
+fn check_scratch_leftover() {
+    let scratch = Scratch(root().join(format!("rust/target/check-scratch/{}", std::process::id())));
+    let _ = fs::remove_dir_all(&scratch.0);
+    fs::create_dir_all(&scratch.0).unwrap();
+    let head = String::from_utf8(git(&root(), &["rev-parse", "HEAD"])).unwrap();
+    let tree = clone_head(&scratch.0, "tree", &head);
+    let mut child = Command::new("true").spawn().unwrap();
+    let gone = child.id();
+    child.wait().unwrap();
+    for name in [format!(".goal.tmp.{gone}"), format!(".goal.tmp.{gone}.0")] {
+        new_file(&tree, &format!("{name}/ape-stage/leftover"), b"x");
+    }
+    let swipl = scratch.0.join("swipl");
+    fs::write(
+        &swipl,
+        "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 9.2.9 for x86_64-linux'; exit 0; }\necho 'fake swipl: stage build' >&2\nexit 3\n",
+    )
+    .unwrap();
+    fs::set_permissions(&swipl, fs::Permissions::from_mode(0o755)).unwrap();
+    let out = check(&program(), &tree, Some(&swipl)).unwrap();
+    assert_eq!(
+        (out.status.code(), String::from_utf8_lossy(&out.stderr)),
+        (Some(3), "fake swipl: stage build\n".into()),
+        "stdout {}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+    let left: Vec<_> = fs::read_dir(&tree)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .filter(|n| n.starts_with(".goal.tmp."))
+        .collect();
+    assert!(left.is_empty(), "scratch left: {left:?}");
 }

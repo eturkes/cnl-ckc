@@ -1,10 +1,11 @@
 use super::common::*;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::{ErrorKind, Read, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::os::unix::process::{CommandExt, ExitStatusExt};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
@@ -145,16 +146,62 @@ pub(super) fn bounded(command: &mut Command, label: &str, input: Option<&[u8]>) 
     }
     Ok(result)
 }
+// `.goal.tmp.<pid>.<n>` in the cwd. A kill skips Drop ⇒ each new scratch first
+// sweeps leftovers whose creator is gone, then steps past names still taken (a
+// reused pid, an in-process sibling). Liveness = `/proc/<pid>` in this pid namespace.
+static NEXT: AtomicU64 = AtomicU64::new(0);
 pub(super) struct Scratch(pub PathBuf);
 impl Scratch {
     pub fn new() -> Result<Self> {
-        let path = PathBuf::from(format!(".goal.tmp.{}", std::process::id()));
-        if path.exists() {
-            return Err(fail("scratch", format!("already exists: {}", show(&path))));
+        Self::new_in(Path::new(""))
+    }
+    pub fn new_in(base: &Path) -> Result<Self> {
+        let pid = std::process::id();
+        sweep(base, pid);
+        loop {
+            let path = base.join(format!(
+                ".goal.tmp.{pid}.{}",
+                NEXT.fetch_add(1, Ordering::Relaxed)
+            ));
+            match fs::create_dir(&path) {
+                Ok(()) => return Ok(Self(path)),
+                Err(e) if e.kind() == ErrorKind::AlreadyExists => {}
+                Err(_) => return Err(fail("scratch", format!("cannot create: {}", show(&path)))),
+            }
         }
-        fs::create_dir(&path)
-            .map_err(|_| fail("scratch", format!("cannot create: {}", show(&path))))?;
-        Ok(Self(path))
+    }
+}
+// Creator pid of a name `Scratch` writes, or wrote before the `.<n>` suffix.
+fn scratch_pid(name: &str) -> Option<u32> {
+    let rest = name.strip_prefix(".goal.tmp.")?;
+    let (pid, n) = match rest.split_once('.') {
+        Some((pid, n)) => (pid.parse::<u32>().ok()?, Some(n.parse::<u64>().ok()?)),
+        None => (rest.parse::<u32>().ok()?, None),
+    };
+    let canonical = match n {
+        Some(n) => format!(".goal.tmp.{pid}.{n}"),
+        None => format!(".goal.tmp.{pid}"),
+    };
+    (canonical == name).then_some(pid)
+}
+fn sweep(base: &Path, own: u32) {
+    if !Path::new("/proc/self").exists() {
+        return;
+    }
+    let dir = if base.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        base
+    };
+    for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
+        let gone = entry
+            .file_name()
+            .to_str()
+            .and_then(scratch_pid)
+            .is_some_and(|pid| pid != own && !Path::new(&format!("/proc/{pid}")).exists());
+        if gone && entry.file_type().is_ok_and(|t| t.is_dir()) {
+            fs::remove_dir_all(entry.path()).ok();
+        }
     }
 }
 impl Drop for Scratch {
@@ -260,4 +307,61 @@ pub(super) fn compiler(swipl: &Path, stage: &Path, tail: &[String]) -> Command {
 }
 pub(super) fn write(path: &Path, bytes: &[u8]) -> Result {
     fs::write(path, bytes).map_err(|e| fail("scratch", e.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A leftover whose creator is gone is swept; a name a live pid holds (here the
+    // own pid) is stepped past and never removed.
+    #[test]
+    fn scratch_sweeps_gone_and_steps_past_taken() {
+        let base = std::env::temp_dir().join(format!("ckc-scratch-test.{}", std::process::id()));
+        fs::remove_dir_all(&base).ok();
+        fs::create_dir(&base).unwrap();
+        let mut child = Command::new("true").spawn().unwrap();
+        let gone = child.id();
+        child.wait().unwrap();
+        let own = std::process::id();
+        let next = NEXT.load(Ordering::Relaxed);
+        let plant = |name: String| {
+            fs::create_dir(base.join(&name)).unwrap();
+            fs::write(base.join(&name).join("leftover"), b"x").unwrap();
+            name
+        };
+        let swept = [
+            plant(format!(".goal.tmp.{gone}")),
+            plant(format!(".goal.tmp.{gone}.0")),
+        ];
+        let mut kept = vec![
+            plant(format!(".goal.tmp.{own}")),
+            plant(format!(".goal.tmp.0{gone}")),
+            plant(format!(".goal.tmp.{gone}.x")),
+        ];
+        kept.extend((next..next + 3).map(|n| plant(format!(".goal.tmp.{own}.{n}"))));
+        fs::write(base.join(format!(".goal.tmp.{own}.{}", next + 3)), b"x").unwrap();
+        let link = base.join(format!(".goal.tmp.{gone}.1"));
+        std::os::unix::fs::symlink(base.join(&kept[0]), &link).unwrap();
+        let scratch = Scratch::new_in(&base).unwrap();
+        assert_eq!(
+            scratch.0,
+            base.join(format!(".goal.tmp.{own}.{}", next + 4))
+        );
+        assert!(scratch.0.is_dir());
+        for name in &swept {
+            assert!(!base.join(name).exists(), "{name} survived the sweep");
+        }
+        for name in &kept {
+            assert!(
+                base.join(name).join("leftover").is_file(),
+                "{name} was removed"
+            );
+        }
+        assert!(link.is_symlink(), "symlink leftover was removed");
+        let path = scratch.0.clone();
+        drop(scratch);
+        assert!(!path.exists(), "drop left {}", path.display());
+        fs::remove_dir_all(&base).unwrap();
+    }
 }

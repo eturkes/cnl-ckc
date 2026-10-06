@@ -35,6 +35,9 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = a `rust/kani.lock` bump → `engine_answer_tiny` rerun ≤1200 s; measured: exhaustion persists below the parser + term-arena reads stay symbolic in CBMC symex (`.agent/deferred.md` row).
 - [ ] Q5 M7 gap coverage: inexpressible class + ruled taxonomy landed; first class (temporal) owed as a user-directed feature unit.
 - [ ] Q6 corpus rounds to exhaustion: user ruling = separate corpus-prompt sessions (not run here).
+- [ ] N3 `ckc check` scratch kill-safe: `.goal.tmp.<pid>.<n>` + sweep of leftovers whose creator pid is gone (row text + acceptance = contract).
+- [ ] N4 release manifest keyed on input content: contract drafted (drop `meta head`), awaits user approval (changes `dist_cases` grading checks + trusted spec).
+- [ ] N5 pid-named temp paths in `ckc certify --cases` + `ckc dist build` step past same-pid leftovers: contract = `.agent/deferred.md` row, awaits user approval.
 - Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
 ## Phase
