@@ -189,9 +189,15 @@ pub proof fn not_found()
     error(404, b::c(201), b::f(202));
 }
 
-pub proof fn prepare(g: u::PostGuideline, d: u::PostDocument, f: u::Fields, now: u::Bytes)
+pub proof fn prepare(
+    g: u::PostGuideline,
+    d: u::PostDocument,
+    f: u::Fields,
+    snapshot: u::Bytes,
+    now: u::Bytes,
+)
     ensures
-        good(u::prepare_candidate(g, d, f, now)),
+        good(u::prepare_candidate(g, d, f, snapshot, now)),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
@@ -216,12 +222,18 @@ pub proof fn prepare(g: u::PostGuideline, d: u::PostDocument, f: u::Fields, now:
             refusal(409, b::c(191), u::ui_verdict_subject_changed(), b::c(225));
         } else if f.ledger != g.ledger_digest {
             ledger_changed();
+        } else if !((snapshot.len() == 0 && f.commit.len() == 0) || d.at_commit == Some(
+            (f.commit, f.review),
+        )) {
+            l::l191(Seq::empty());
+            l::l225(Seq::empty());
+            refusal(409, b::c(191), u::ui_verdict_commit_does_not_hold(), b::c(225));
         } else {
             let r = u::Record {
                 decision: ck::Decision {
                     docid: d.docid,
                     digest: f.review,
-                    commit: d.commit,
+                    commit: f.commit,
                     approved: f.verdict == u::approved_2(),
                     date: now,
                 },
@@ -245,6 +257,7 @@ pub proof fn prepare(g: u::PostGuideline, d: u::PostDocument, f: u::Fields, now:
                         g,
                         d,
                         f,
+                        snapshot,
                         now,
                     ) {
                         same_body(u::error_page(303, b::c(227), b::f(228)), response);
@@ -282,7 +295,7 @@ pub proof fn handle(req: u::Request, s: u::PostState, g: u::PostGuideline, d: u:
                 } else {
                     match d.render_error {
                         Some(e) => server_error(e),
-                        None => prepare(g, d, f, s.now),
+                        None => prepare(g, d, f, s.commit, s.now),
                     }
                 },
             },

@@ -60,13 +60,14 @@ pub proof fn page(
     prev: u::Bytes,
     next: u::Bytes,
     token: u::Bytes,
+    commit: u::Bytes,
     inputs: Seq<u::Bytes>,
 )
     requires
         corpus::sources(g, inputs),
         g.documents.contains(d),
     ensures
-        h::sound(u::document_html(g, d, prev, next, token), inputs),
+        h::sound(u::document_html(g, d, prev, next, token, commit), inputs),
 {
     hide(h::fragment);
     hide(u::lit);
@@ -207,6 +208,7 @@ pub proof fn page(
     l::f169(inputs);
     l::f170(inputs);
     l::f171(inputs);
+    l::f239(inputs);
     l::f011(inputs);
     l::f172(inputs);
     l::f173(inputs);
@@ -236,6 +238,7 @@ pub proof fn page(
     hl::attribute(b::f(165), name, b::f(166), inputs);
     hl::attribute(b::f(169), d.bundle.review, b::f(11), inputs);
     hl::attribute(b::f(170), g.ledger_digest, b::f(11), inputs);
+    hl::attribute(b::f(239), commit, b::f(11), inputs);
     hl::attribute(b::f(171), token, b::f(11), inputs);
     let count = u::splitline_count(u::chars(d.pl), false);
     h::number(count, inputs, 0);
@@ -287,6 +290,7 @@ pub proof fn page(
         b::f(168),
         b::f(169) + u::attr(d.bundle.review) + b::f(11),
         b::f(170) + u::attr(g.ledger_digest) + b::f(11),
+        b::f(239) + u::attr(commit) + b::f(11),
         b::f(171) + u::attr(token) + b::f(11),
         b::f(172),
         b::f(173),
@@ -303,7 +307,7 @@ pub proof fn page(
     four(b::f(180), u::text(u::title(g)), b::f(181), u::text(region), inputs);
     let crumbs = b::f(180) + u::text(u::title(g)) + b::f(181) + u::text(region);
     b::frame(u::document_title(g, id), crumbs, u::lines(parts), inputs);
-    assert(u::document_html(g, d, prev, next, token) == u::frame(
+    assert(u::document_html(g, d, prev, next, token, commit) == u::frame(
         u::document_title(g, id),
         crumbs,
         u::lines(parts),

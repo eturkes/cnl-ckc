@@ -109,8 +109,14 @@ fn tree(corpus: &Corpus, view: &View) -> Result<Tree> {
                 .get(di + 1)
                 .map(|d| d.bundle.docid.as_slice())
                 .unwrap_or(b"");
-            let body =
-                ckc_kernel::contract::ui_render_document(g, d, prev, next, &view.corpus.token);
+            let body = ckc_kernel::contract::ui_render_document(
+                g,
+                d,
+                prev,
+                next,
+                &view.corpus.token,
+                corpus.commit.as_bytes(),
+            );
             order.push(path.clone());
             pages.insert(path, body);
         }

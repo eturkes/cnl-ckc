@@ -150,7 +150,12 @@ pub fn navigation(prev: &[u8], next: &[u8]) -> (out: Vec<EPage>)
     out
 }
 
-pub open spec fn form_spec(g: u::Guideline, d: u::Document, token: u::Bytes) -> Seq<u::Html> {
+pub open spec fn form_spec(
+    g: u::Guideline,
+    d: u::Document,
+    token: u::Bytes,
+    commit: u::Bytes,
+) -> Seq<u::Html> {
     seq![
         u::fixed_bytes(u::section_open_3()),
         u::fixed_bytes(u::h3_open_record_a_decision_h3_close()),
@@ -172,6 +177,9 @@ pub open spec fn form_spec(g: u::Guideline, d: u::Document, token: u::Bytes) -> 
             + u::fixed_bytes(u::attr_end()),
         u::fixed_bytes(u::input_type_hidden_name_ledger_sha256_value()) + u::attr(g.ledger_digest)
             + u::fixed_bytes(u::attr_end()),
+        u::fixed_bytes(u::input_type_hidden_name_commit_value()) + u::attr(commit) + u::fixed_bytes(
+            u::attr_end(),
+        ),
         u::fixed_bytes(u::input_type_hidden_name_csrf_value()) + u::attr(token) + u::fixed_bytes(
             u::attr_end(),
         ),
@@ -181,11 +189,12 @@ pub open spec fn form_spec(g: u::Guideline, d: u::Document, token: u::Bytes) -> 
     ]
 }
 
-pub fn form(g: &EGuideline, d: &EDocument, m: &model::Model, token: &[u8]) -> (out: Vec<EPage>)
+pub fn form(g: &EGuideline, d: &EDocument, m: &model::Model, token: &[u8], commit: &[u8]) -> (out:
+    Vec<EPage>)
     requires
         model::bound(m, g@),
     ensures
-        h::pages(out@) == form_spec(g@, d@, token@),
+        h::pages(out@) == form_spec(g@, d@, token@, commit@),
 {
     hide(u::roster);
     hide(u::latest_name);
@@ -245,6 +254,12 @@ pub fn form(g: &EGuideline, d: &EDocument, m: &model::Model, token: &[u8]) -> (o
     );
     out.push(
         h::cat(
+            h::cat(h::fixed("<input type=\"hidden\" name=\"commit\" value=\""), h::attr(commit)),
+            h::fixed("\">"),
+        ),
+    );
+    out.push(
+        h::cat(
             h::cat(h::fixed("<input type=\"hidden\" name=\"csrf\" value=\""), h::attr(token)),
             h::fixed("\">"),
         ),
@@ -253,7 +268,7 @@ pub fn form(g: &EGuideline, d: &EDocument, m: &model::Model, token: &[u8]) -> (o
     out.push(h::fixed("</form>"));
     out.push(h::fixed("</section>"));
     proof {
-        assert(h::pages(out@) =~= form_spec(g@, d@, token@));
+        assert(h::pages(out@) =~= form_spec(g@, d@, token@, commit@));
     }
     out
 }
@@ -264,6 +279,7 @@ pub open spec fn body_spec(
     prev: u::Bytes,
     next: u::Bytes,
     token: u::Bytes,
+    commit: u::Bytes,
 ) -> Seq<u::Html> {
     let id = d.bundle.docid;
     let k = u::state(g, id);
@@ -324,7 +340,7 @@ pub open spec fn body_spec(
             u::pre_close(),
         ),
         u::fixed_bytes(u::section_close()),
-    ] + form_spec(g, d, token) + seq![
+    ] + form_spec(g, d, token, commit) + seq![
         u::fixed_bytes(u::section_open()),
         u::fixed_bytes(u::details_open()),
         u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
@@ -344,15 +360,16 @@ pub proof fn decomposition(
     prev: u::Bytes,
     next: u::Bytes,
     token: u::Bytes,
+    commit: u::Bytes,
 )
     ensures
-        u::document_html(g, d, prev, next, token) == u::frame(
+        u::document_html(g, d, prev, next, token, commit) == u::frame(
             u::document_title(g, d.bundle.docid),
             u::fixed_bytes(u::a_open_guidelines_a_close_a_open_2()) + u::text(u::title(g))
                 + u::fixed_bytes(u::a_close_sp()) + u::text(
                 u::coverage_field(g, d.bundle.docid, 0),
             ),
-            u::lines(body_spec(g, d, prev, next, token)),
+            u::lines(body_spec(g, d, prev, next, token, commit)),
         ),
 {
     hide(u::frame);
@@ -471,6 +488,9 @@ pub proof fn decomposition(
             + u::fixed_bytes(u::attr_end()),
         u::fixed_bytes(u::input_type_hidden_name_ledger_sha256_value()) + u::attr(g.ledger_digest)
             + u::fixed_bytes(u::attr_end()),
+        u::fixed_bytes(u::input_type_hidden_name_commit_value()) + u::attr(commit) + u::fixed_bytes(
+            u::attr_end(),
+        ),
         u::fixed_bytes(u::input_type_hidden_name_csrf_value()) + u::attr(token) + u::fixed_bytes(
             u::attr_end(),
         ),
@@ -488,7 +508,7 @@ pub proof fn decomposition(
         u::fixed_bytes(u::nav_open_2()) + u::hjoin(nav, u::fixed_bytes(u::middot_sep()))
             + u::fixed_bytes(u::nav_close()),
     ];
-    assert(body_spec(g, d, prev, next, token) =~= original);
+    assert(body_spec(g, d, prev, next, token, commit) =~= original);
 }
 
 pub open spec fn leading_spec(g: u::Guideline, d: u::Document, shown: bool) -> Seq<u::Html> {
@@ -576,6 +596,7 @@ pub proof fn body_groups(
     prev: u::Bytes,
     next: u::Bytes,
     token: u::Bytes,
+    commit: u::Bytes,
     shown: bool,
 )
     requires
@@ -584,8 +605,10 @@ pub proof fn body_groups(
             _ => false,
         },
     ensures
-        body_spec(g, d, prev, next, token) == leading_spec(g, d, shown) + passages_spec(g, d)
-            + form_spec(g, d, token) + compiled_spec(d, prev, next),
+        body_spec(g, d, prev, next, token, commit) == leading_spec(g, d, shown) + passages_spec(
+            g,
+            d,
+        ) + form_spec(g, d, token, commit) + compiled_spec(d, prev, next),
 {
     hide(u::lit);
     hide(u::title);
@@ -598,8 +621,10 @@ pub proof fn body_groups(
     hide(u::roster);
     hide(u::latest_name);
     hide(u::splitline_count);
-    assert(body_spec(g, d, prev, next, token) =~= leading_spec(g, d, shown) + passages_spec(g, d)
-        + form_spec(g, d, token) + compiled_spec(d, prev, next));
+    assert(body_spec(g, d, prev, next, token, commit) =~= leading_spec(g, d, shown) + passages_spec(
+        g,
+        d,
+    ) + form_spec(g, d, token, commit) + compiled_spec(d, prev, next));
 }
 
 pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool) -> (out: Vec<EPage>)
@@ -763,9 +788,16 @@ pub fn compiled(d: &EDocument, prev: &[u8], next: &[u8]) -> (out: Vec<EPage>)
     body
 }
 
-pub fn page(g: &EGuideline, d: &EDocument, prev: &[u8], next: &[u8], token: &[u8]) -> (out: EPage)
+pub fn page(
+    g: &EGuideline,
+    d: &EDocument,
+    prev: &[u8],
+    next: &[u8],
+    token: &[u8],
+    commit: &[u8],
+) -> (out: EPage)
     ensures
-        out@ == u::document_html(g@, d@, prev@, next@, token@),
+        out@ == u::document_html(g@, d@, prev@, next@, token@, commit@),
 {
     hide(u::frame);
     hide(u::lit);
@@ -790,7 +822,7 @@ pub fn page(g: &EGuideline, d: &EDocument, prev: &[u8], next: &[u8], token: &[u8
     proof {
         assert(h::pages(body@) =~= first + second);
     }
-    let mut form = form(g, d, &m, token);
+    let mut form = form(g, d, &m, token, commit);
     let ghost first = h::pages(body@);
     let ghost second = h::pages(form@);
     body.append(&mut form);
@@ -803,8 +835,8 @@ pub fn page(g: &EGuideline, d: &EDocument, prev: &[u8], next: &[u8], token: &[u8
     body.append(&mut tail);
     proof {
         assert(h::pages(body@) =~= first + second);
-        body_groups(g@, d@, prev@, next@, token@, shown);
-        decomposition(g@, d@, prev@, next@, token@);
+        body_groups(g@, d@, prev@, next@, token@, commit@, shown);
+        decomposition(g@, d@, prev@, next@, token@, commit@);
     }
     let title = titles::document_title(g, &d.bundle.docid);
     let region = payload::coverage_field(g, &d.bundle.docid, 0);

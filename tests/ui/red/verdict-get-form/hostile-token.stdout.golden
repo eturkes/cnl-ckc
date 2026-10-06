@@ -184,6 +184,7 @@ a { color: inherit; text-decoration: none; }
 <textarea id="comment" name="comment"></textarea>
 <input type="hidden" name="review_sha256" value="788c59c39469ffa05dcea391455133cdd38d6257ba389c3045f07ab2194986e1">
 <input type="hidden" name="ledger_sha256" value="4b71012f460c0f14651d8cb2d6b00d4b5f0ae98eb930c3b7c36df4e208df334b">
+<input type="hidden" name="commit" value="">
 <input type="hidden" name="csrf" value="&lt;&amp;&gt;&quot;&#x27;">
 <button>Record decision</button>
 </form>

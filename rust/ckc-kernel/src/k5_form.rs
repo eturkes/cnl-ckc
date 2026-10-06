@@ -11,6 +11,7 @@ pub struct Fields {
     pub review: Vec<u8>,
     pub ledger: Vec<u8>,
     pub csrf: Vec<u8>,
+    pub commit: Vec<u8>,
 }
 
 impl View for Fields {
@@ -24,6 +25,7 @@ impl View for Fields {
             review: self.review@,
             ledger: self.ledger@,
             csrf: self.csrf@,
+            commit: self.commit@,
         }
     }
 }
@@ -204,6 +206,7 @@ pub fn names() -> (out: Vec<Vec<u8>>)
     out.push(b::literal("review_sha256"));
     out.push(b::literal("ledger_sha256"));
     out.push(b::literal("csrf"));
+    out.push(b::literal("commit"));
     proof {
         assert(b::views(out@) =~= u::field_names());
     }
@@ -377,6 +380,30 @@ pub fn hex64(s: &[u8]) -> (yes: bool)
     true
 }
 
+pub fn hex40(s: &[u8]) -> (yes: bool)
+    ensures
+        yes == ckc_spec::v1text::hex40(s@),
+{
+    if s.len() != 40 {
+        return false;
+    }
+    let mut i = 0;
+    while i < s.len()
+        invariant
+            s.len() == 40,
+            i <= s.len(),
+            forall|j: int| 0 <= j < i ==> ckc_spec::v1text::is_hex_lower_b(#[trigger] s@[j]),
+        decreases s.len() - i,
+    {
+        let x = s[i];
+        if !((48 <= x && x <= 57) || (97 <= x && x <= 102)) {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
+
 pub fn value(ps: &Vec<(Vec<u8>, Vec<u8>)>, key: &str) -> (out: Vec<u8>)
     ensures
         out@ == u::at(u::field_values(pairs(ps@), u::lit(key@)), 0),
@@ -425,6 +452,7 @@ pub fn parse_fields(ps: &Vec<(Vec<u8>, Vec<u8>)>) -> (out: Result<Fields, Vec<u8
         review: value(ps, "review_sha256"),
         ledger: value(ps, "ledger_sha256"),
         csrf: value(ps, "csrf"),
+        commit: value(ps, "commit"),
     };
     if !b::equal(&f.verdict, &b::literal("approved")) && !b::equal(
         &f.verdict,
@@ -443,6 +471,9 @@ pub fn parse_fields(ps: &Vec<(Vec<u8>, Vec<u8>)>) -> (out: Result<Fields, Vec<u8
     }
     if !b::equal(&f.ledger, &b::literal("absent")) && !hex64(&f.ledger) {
         return Err(b::literal("ui: verdict: invalid ledger_sha256"));
+    }
+    if f.commit.len() > 0 && !hex40(&f.commit) {
+        return Err(b::literal("ui: verdict: invalid commit"));
     }
     Ok(f)
 }

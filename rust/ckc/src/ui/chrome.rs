@@ -86,6 +86,7 @@ fn derive() -> Result<Chrome> {
         b"",
         b"",
         b"",
+        b"",
     ));
     let css = between(&page, "<style>", "</style>")?.to_owned();
     let code = between(&page, "<script>", "</script>")?;

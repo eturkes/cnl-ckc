@@ -10,7 +10,8 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,_names=copy_table(s);assert len(entries)==239
+entries,_names=copy_table(s);assert len(entries)==243
+N=len(entries)
 bv=lambda raw:'ns!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
 ps='p::css_codes(),p::marketing_codes(),p::relative_codes()'
 out=['use crate::{k5_sound_codes as n,k5_sound_patterns as p,k5_sound_literals as l,k5_sound_scan as scan,k5_sound_chrome as ch,k5_sound_encoding as enc};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
@@ -38,17 +39,17 @@ for a in range(0,len(entries),16):
     z=min(a+16,len(entries));out += [f'pub proof fn block_{a:03}(i:int)',f'    requires {a}<=i<{z},','    ensures u::copy_literal_ok(u::copy_registry()[i]),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);']
     for i in range(a,z):out += [('    if'if i==a else'    else if')+f' i=={i} {{ literal_{i:03}(); }}'if i<z-1 else f'    else {{ literal_{i:03}(); }}']
     out += ['}']
-out += ['pub proof fn literal(i:int)','    requires 0<=i<239,','    ensures u::copy_literal_ok(u::copy_registry()[i]),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);']
+out += ['pub proof fn literal(i:int)',f'    requires 0<=i<{N},','    ensures u::copy_literal_ok(u::copy_registry()[i]),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);']
 for a in range(0,len(entries),16):
     z=min(a+16,len(entries));out += [('    if'if a==0 else'    else if')+f' i<{z} {{ block_{a:03}(i); }}'if z<len(entries)else f'    else {{ block_{a:03}(i); }}']
-out += ['}','pub proof fn registry_size()','    ensures u::copy_registry().len()==239,','{ hide(u::lit);hide(u::css_text);hide(u::script_html); }','pub proof fn copy_ok()','    ensures u::copy_ok(u::copy_registry()),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);','    registry_size();','    assert forall|i:int|0<=i<u::copy_registry().len() implies u::copy_literal_ok(#[trigger] u::copy_registry()[i]) by { literal(i); }','}','}']
+out += ['}','pub proof fn registry_size()',f'    ensures u::copy_registry().len()=={N},','{ hide(u::lit);hide(u::css_text);hide(u::script_html); }','pub proof fn copy_ok()','    ensures u::copy_ok(u::copy_registry()),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);','    registry_size();','    assert forall|i:int|0<=i<u::copy_registry().len() implies u::copy_literal_ok(#[trigger] u::copy_registry()[i]) by { literal(i); }','}','}']
 full='\n'.join(out)+'\n';start=full.index('pub proof fn block_000');blocks={}
-for i in range(239):
-    a=full.index(f'pub open spec fn data_{i:03}()');z=full.index(f'pub open spec fn data_{i+1:03}()')if i<238 else start;blocks[i]=full[a:z]
+for i in range(N):
+    a=full.index(f'pub open spec fn data_{i:03}()');z=full.index(f'pub open spec fn data_{i+1:03}()')if i<N-1 else start;blocks[i]=full[a:z]
 imports='\n'.join(out[:4])+'\n';macro='#[cfg(verus_keep_ghost)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }\n'
 result='use ckc_spec::ui as u;\nuse vstd::prelude::*;\n'+macro
-for a in range(0,239,16):
-    items=[i for i in range(a,min(a+16,239)) if i not in (38,39)]
+for a in range(0,N,16):
+    items=[i for i in range(a,min(a+16,N)) if i not in (38,39)]
     result+=f'pub mod batch_{a:03} {{\n'+imports+'verus! {\n'+''.join(blocks[i]for i in items)+'}\n}\n'
 for i in (38,39):
     block=blocks[i];name='css'if i==38 else'script';window_starts=[m.start() for m in re.finditer(r'pub closed spec fn bytes_'+f'{i:03}'+r'_\d+\(\)',block)];clean=block.index(f'pub proof fn clean_{i:03}()');result+=f'pub mod {name} {{\n'+imports
@@ -66,4 +67,4 @@ dispatch=re.sub(r'\bliteral_(\d{3})\(\)',qualify,dispatch)
 result+='verus! {\n'+dispatch
 p=R/'ckc-kernel/src/k5_sound_registry.rs';old=p.read_text()if p.exists()else None
 assert not p.exists()if old is None else p.read_text()==old
-p.write_text(result);print('registry_literals=239 independent_batch_modules=17 local_window_modules=47')
+p.write_text(result);print(f'registry_literals={N} independent_batch_modules={len(range(0,N,16))+2} local_window_modules=47')

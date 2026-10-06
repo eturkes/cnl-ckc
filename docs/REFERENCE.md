@@ -217,23 +217,25 @@ uncommitted guideline changes, the pages render the last commit
 instead. Three consequences follow. An uncommitted edit is not
 reviewable, and it does not outdate an existing decision. A document
 that was never committed is not listed. Every recorded decision names
-the commit that is current when the decision is saved. The interface
-refuses a decision when the reviewed bundle changed after the page was
-rendered, so that commit holds the bundle the reviewer read. `ckc check`
-derives the bundle again at that commit and requires the recorded
-digest. The decision
-ledger is the one file the interface writes, so its own writes are not
-uncommitted work. `ckc check` is the exception: it reads the
-working tree, because it is the gate you run before you commit.
+a commit that holds the reviewed bundle. The page carries the commit
+that it was rendered from, and the form sends that commit back with the
+decision. The interface derives the bundle at the posted commit again
+and accepts the decision only when that bundle carries the reviewed
+digest. The posted commit must be the current commit or one of its
+ancestors. `ckc check` derives the bundle again at the recorded commit
+and requires the recorded digest. The decision ledger is the one file
+the interface writes, so its own writes are not uncommitted work.
+`ckc check` is the exception: it reads the working tree, because it is
+the gate you run before you commit.
 
 The write path is narrow and guarded. The interface binds the loopback
 address only. It has no accounts and no authentication. The interface
 accepts a decision only when every guard passes. The request must
 carry the process token and a loopback `Host` header, and any
 `Origin` header must match it. The subject digest must still match a
-fresh derivation from committed state, and the ledger digest must
-still match the ledger on disk. A failed check
-returns a refusal and writes nothing. The ledger write itself is a
+fresh derivation from committed state and the derivation at the posted
+commit. The ledger digest must still match the ledger on disk. A failed
+check returns a refusal and writes nothing. The ledger write itself is a
 compare-and-swap through a same-directory temporary file, a flush, an
 `fsync`, and an atomic rename under an exclusive lock, and the
 verified ledger validator that the gate uses approves the new ledger

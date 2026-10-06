@@ -37,11 +37,25 @@ pub fn ui_render_document_impl(
     prev: &[u8],
     next: &[u8],
     token: &[u8],
+    commit: &[u8],
 ) -> (out: Vec<u8>)
     ensures
-        out@ == ckc_spec::ui::render_document(g@, d@, prev@, next@, token@),
+        out@ == ckc_spec::ui::render_document(g@, d@, prev@, next@, token@, commit@),
 {
-    crate::k5_render::page(&crate::k5_document::page(g, d, prev, next, token))
+    crate::k5_render::page(&crate::k5_document::page(g, d, prev, next, token, commit))
+}
+
+pub fn ui_posted_commit_impl(body: &[u8]) -> (out: Option<Vec<u8>>)
+    ensures
+        match out {
+            Option::Some(x) => ckc_spec::ui::posted_commit(body@) == Option::Some(x@),
+            Option::None => ckc_spec::ui::posted_commit(body@) is None,
+        },
+{
+    match crate::k5_form::parse(body) {
+        Ok(f) => Some(f.commit),
+        Err(_) => None,
+    }
 }
 
 pub fn ui_post_outcome_impl(req: &ckc_spec::ui::ERequest, s: &ckc_spec::ui::EPostState) -> (o:

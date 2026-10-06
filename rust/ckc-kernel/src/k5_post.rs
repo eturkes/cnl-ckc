@@ -158,10 +158,15 @@ pub fn fresh_review(g: &EPostGuideline, id: &[u8]) -> (out: Vec<u8>)
     }
 }
 
-pub fn candidate(g: &EPostGuideline, d: &EPostDocument, f: &form::Fields, now: &[u8]) -> (out:
-    EPostOutcome)
+pub fn candidate(
+    g: &EPostGuideline,
+    d: &EPostDocument,
+    f: &form::Fields,
+    snapshot: &[u8],
+    now: &[u8],
+) -> (out: EPostOutcome)
     ensures
-        out@ == u::prepare_candidate(g@, d@, f@, now@),
+        out@ == u::prepare_candidate(g@, d@, f@, snapshot@, now@),
 {
     hide(u::server_error);
     hide(u::refusal);
@@ -193,10 +198,25 @@ pub fn candidate(g: &EPostGuideline, d: &EPostDocument, f: &form::Fields, now: &
     if !b::equal(&f.ledger, &g.ledger_digest) {
         return response::ledger_changed();
     }
+    let unversioned = snapshot.len() == 0 && f.commit.len() == 0;
+    let attested = match &d.at_commit {
+        Some((c, r)) => b::equal(c, &f.commit) && b::equal(r, &f.review),
+        None => false,
+    };
+    if !(unversioned || attested) {
+        return response::refusal(
+            409,
+            &b::literal("Conflict"),
+            &b::literal("ui: verdict: commit does not hold the reviewed bundle"),
+            &b::literal(
+                "The document or its source changed after this page was loaded. The decision was not recorded. Open the document page again and check the current version.",
+            ),
+        );
+    }
     let r = ERecord {
         docid: slice_to_vec(&d.docid),
         digest: slice_to_vec(&f.review),
-        commit: slice_to_vec(&d.commit),
+        commit: slice_to_vec(&f.commit),
         approved: b::equal(&f.verdict, &b::literal("approved")),
         reviewer: slice_to_vec(&f.reviewer),
         date: slice_to_vec(now),
@@ -274,7 +294,7 @@ pub fn handle(req: &ERequest, s: &EPostState, g: &EPostGuideline, d: &EPostDocum
     }
     match &d.render_error {
         Some(e) => response::server_error(e),
-        None => candidate(g, d, &fields, &s.now),
+        None => candidate(g, d, &fields, &s.commit, &s.now),
     }
 }
 

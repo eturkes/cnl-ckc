@@ -268,11 +268,12 @@ pub fn ui_render_document(
     prev: &[u8],
     next: &[u8],
     token: &[u8],
+    commit: &[u8],
 ) -> (out: Vec<u8>)
     ensures
-        out@ == ckc_spec::ui::render_document(g@, d@, prev@, next@, token@),
+        out@ == ckc_spec::ui::render_document(g@, d@, prev@, next@, token@, commit@),
 {
-    crate::k5_impl::ui_render_document_impl(g, d, prev, next, token)
+    crate::k5_impl::ui_render_document_impl(g, d, prev, next, token, commit)
 }
 
 pub fn ui_post_outcome(req: &ckc_spec::ui::ERequest, s: &ckc_spec::ui::EPostState) -> (o:
@@ -281,6 +282,16 @@ pub fn ui_post_outcome(req: &ckc_spec::ui::ERequest, s: &ckc_spec::ui::EPostStat
         o@ == ckc_spec::ui::post_outcome(req@, s@),
 {
     crate::k5_impl::ui_post_outcome_impl(req, s)
+}
+
+pub fn ui_posted_commit(body: &[u8]) -> (out: Option<Vec<u8>>)
+    ensures
+        match out {
+            Option::Some(x) => ckc_spec::ui::posted_commit(body@) == Option::Some(x@),
+            Option::None => ckc_spec::ui::posted_commit(body@) is None,
+        },
+{
+    crate::k5_impl::ui_posted_commit_impl(body)
 }
 
 pub fn ui_ledger_candidate(old: &[u8], r: &ckc_spec::ui::ERecord) -> (out: Vec<u8>)
@@ -366,6 +377,7 @@ pub proof fn ui_document_sound(
     prev: ckc_spec::ui::Bytes,
     next: ckc_spec::ui::Bytes,
     token: ckc_spec::ui::Bytes,
+    commit: ckc_spec::ui::Bytes,
 )
     requires
         0 <= i < c.guidelines.len(),
@@ -378,6 +390,7 @@ pub proof fn ui_document_sound(
                 prev,
                 next,
                 token,
+                commit,
             ),
         ),
         ckc_spec::ui::visible_bytes_from(
@@ -387,12 +400,13 @@ pub proof fn ui_document_sound(
                 prev,
                 next,
                 token,
+                commit,
             ),
             c,
             ckc_spec::ui::copy_registry(),
         ),
 {
-    crate::k5_sound::document_sound_proof(c, i, j, prev, next, token)
+    crate::k5_sound::document_sound_proof(c, i, j, prev, next, token, commit)
 }
 
 pub proof fn ui_post_sound(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostState)

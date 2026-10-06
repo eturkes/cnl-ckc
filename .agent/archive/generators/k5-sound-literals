@@ -11,7 +11,7 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,names=copy_table(s); assert len(entries)==239
+entries,names=copy_table(s); assert len(entries)==243
 fixed={names[n] for n in re.findall(r'\bfixed_bytes\(\s*([a-z0-9_]+)\(\)\s*,?\s*\)',s) if n in names}
 def scan(bs,c):
     while bs:

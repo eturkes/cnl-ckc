@@ -72,6 +72,7 @@ pub proof fn document_sound_proof(
     prev: ckc_spec::ui::Bytes,
     next: ckc_spec::ui::Bytes,
     token: ckc_spec::ui::Bytes,
+    commit: ckc_spec::ui::Bytes,
 )
     requires
         0 <= i < c.guidelines.len(),
@@ -84,6 +85,7 @@ pub proof fn document_sound_proof(
                 prev,
                 next,
                 token,
+                commit,
             ),
         ),
         ckc_spec::ui::visible_bytes_from(
@@ -93,6 +95,7 @@ pub proof fn document_sound_proof(
                 prev,
                 next,
                 token,
+                commit,
             ),
             c,
             ckc_spec::ui::copy_registry(),
@@ -105,8 +108,8 @@ pub proof fn document_sound_proof(
     let d = g.documents[j];
     assert(g.documents.contains(d));
     crate::k5_sound_corpus::guideline(c, i);
-    crate::k5_sound_document::page(g, d, prev, next, token, ckc_spec::ui::corpus_bytes(c));
-    crate::k5_sound_escape::page(ckc_spec::ui::document_html(g, d, prev, next, token), c);
+    crate::k5_sound_document::page(g, d, prev, next, token, commit, ckc_spec::ui::corpus_bytes(c));
+    crate::k5_sound_escape::page(ckc_spec::ui::document_html(g, d, prev, next, token, commit), c);
 }
 
 pub proof fn post_sound_proof(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostState)

@@ -7250,4 +7250,106 @@ pub proof fn l238(inputs: Seq<u::Bytes>)
     b::literal(u::lit("POST"@), inputs);
 }
 
+pub proof fn l239(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<input type=\"hidden\" name=\"commit\" value=\""@)),
+        u::copy_derived(
+            u::lit("<input type=\"hidden\" name=\"commit\" value=\""@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[239] == u::lit("<input type=\"hidden\" name=\"commit\" value=\""@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[239] == u::lit("<input type=\"hidden\" name=\"commit\" value=\""@)
+        && 239 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<input type=\"hidden\" name=\"commit\" value=\""@), inputs);
+}
+
+pub proof fn f239(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<input type=\"hidden\" name=\"commit\" value=\""@), inputs, 0, 2),
+        u::copy_registry()[239] == u::lit("<input type=\"hidden\" name=\"commit\" value=\""@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l239(inputs);
+    reveal_strlit("<input type=\"hidden\" name=\"commit\" value=\"");
+    is_ascii_chars_encode_utf8("<input type=\"hidden\" name=\"commit\" value=\""@);
+    assert(u::lit("<input type=\"hidden\" name=\"commit\" value=\""@)
+        =~= bs![60u8,105,110,112,117,116,32,116,121,112,101,61,34,104,105,100,100,101,110,34,32,110,97,109,101,61,34,99,111,109,109,105,116,34,32,118,97,108,117,101,61,34]);
+    assert(cx::scan(
+        bs![60u8,105,110,112,117,116,32,116,121,112,101,61,34,104,105,100,100,101,110,34,32,110,97,109,101,61,34,99,111,109,109,105,116,34,32,118,97,108,117,101,61,34],
+        0,
+    ) == 2) by (compute_only);
+    cx::exact(u::lit("<input type=\"hidden\" name=\"commit\" value=\""@), 0);
+    h::fixed(u::lit("<input type=\"hidden\" name=\"commit\" value=\""@), inputs, 0, 2);
+}
+
+pub proof fn l240(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("commit"@)),
+        u::copy_derived(u::lit("commit"@), inputs, u::copy_registry()),
+        u::copy_registry()[240] == u::lit("commit"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[240] == u::lit("commit"@) && 240 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("commit"@), inputs);
+}
+
+pub proof fn l241(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("ui: verdict: invalid commit"@)),
+        u::copy_derived(u::lit("ui: verdict: invalid commit"@), inputs, u::copy_registry()),
+        u::copy_registry()[241] == u::lit("ui: verdict: invalid commit"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[241] == u::lit("ui: verdict: invalid commit"@) && 241
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("ui: verdict: invalid commit"@), inputs);
+}
+
+pub proof fn l242(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit("ui: verdict: commit does not hold the reviewed bundle"@),
+        ),
+        u::copy_derived(
+            u::lit("ui: verdict: commit does not hold the reviewed bundle"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[242] == u::lit("ui: verdict: commit does not hold the reviewed bundle"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[242] == u::lit(
+        "ui: verdict: commit does not hold the reviewed bundle"@,
+    ) && 242 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("ui: verdict: commit does not hold the reviewed bundle"@), inputs);
+}
+
 } // verus!

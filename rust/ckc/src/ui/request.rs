@@ -3,7 +3,7 @@ use super::common::*;
 use super::corpus::Corpus;
 use super::{fresh, intake};
 use ckc_kernel::{
-    EPostDocument, EPostGuideline, EPostOutcome, EPostState, ERequest, EResponse, ESrc,
+    EBundle, EPostDocument, EPostGuideline, EPostOutcome, EPostState, ERequest, EResponse, ESrc,
 };
 use std::collections::BTreeMap;
 use std::fs::{self, File, OpenOptions};
@@ -122,6 +122,7 @@ pub(super) fn server_error(detail: String) -> Result<Response> {
             token: Vec::new(),
             models: Err(detail.into_bytes()),
             now: Vec::new(),
+            commit: Vec::new(),
         },
     )
 }
@@ -133,6 +134,7 @@ fn not_found() -> Result<Response> {
             token: Vec::new(),
             models: Ok(Vec::new()),
             now: Vec::new(),
+            commit: Vec::new(),
         },
     )
 }
@@ -152,6 +154,20 @@ fn route(path: &[u8]) -> Option<(&str, &str)> {
     let id = parts[2].strip_suffix(".html").filter(|s| !s.is_empty())?;
     Some((parts[0], id))
 }
+// The commit the pages render: `--commit` (fixture seam) ∨ the git snapshot ∨ empty.
+fn snapshot(corpus: &Corpus, config: &Config) -> Vec<u8> {
+    config
+        .commit
+        .clone()
+        .unwrap_or_else(|| corpus.commit.as_bytes().to_vec())
+}
+fn review(bundles: &[EBundle], docid: &[u8]) -> Option<Vec<u8>> {
+    bundles
+        .iter()
+        .rev()
+        .find(|b| b.docid == docid)
+        .map(|b| b.review.clone())
+}
 fn post_models(
     corpus: &Corpus,
     view: &intake::View,
@@ -159,6 +175,13 @@ fn post_models(
     config: &Config,
 ) -> Vec<EPostGuideline> {
     let target = route(&req.path);
+    let snapshot = snapshot(corpus, config);
+    let posted = req
+        .body
+        .as_deref()
+        .filter(|_| req.method == b"POST")
+        .and_then(ckc_kernel::contract::ui_posted_commit)
+        .filter(|c| !c.is_empty());
     view.corpus
         .guidelines
         .iter()
@@ -166,34 +189,42 @@ fn post_models(
         .map(|(gi, g)| {
             let gid = text(&g.gid);
             let active = req.method == b"POST" && target.is_some_and(|(id, _)| id == gid);
-            let documents = g
-                .documents
-                .iter()
-                .enumerate()
-                .map(|(di, d)| {
-                    let commit = if active
-                        && target.is_some_and(|(_, id)| id.as_bytes() == d.bundle.docid)
-                    {
-                        config
-                            .commit
-                            .clone()
-                            .unwrap_or_else(|| corpus.commit.as_bytes().to_vec())
-                    } else {
-                        Vec::new()
-                    };
-                    EPostDocument {
-                        docid: d.bundle.docid.clone(),
-                        render_error: view.errors[gi][di].as_ref().map(|s| s.as_bytes().to_vec()),
-                        commit,
-                    }
-                })
-                .collect();
             let fresh = if active {
                 fresh::derive(&corpus.root.join("guidelines").join(&gid))
                     .map_err(String::into_bytes)
             } else {
                 Ok(Vec::new())
             };
+            let documents = g
+                .documents
+                .iter()
+                .enumerate()
+                .map(|(di, d)| {
+                    let at_commit = posted
+                        .as_ref()
+                        .filter(|_| {
+                            active && target.is_some_and(|(_, id)| id.as_bytes() == d.bundle.docid)
+                        })
+                        .and_then(|c| {
+                            let digest = if *c == snapshot {
+                                fresh
+                                    .as_ref()
+                                    .ok()
+                                    .and_then(|bs| review(bs, &d.bundle.docid))
+                            } else {
+                                corpus
+                                    .derive_at(&text(c), &gid)
+                                    .and_then(|bs| review(&bs, &d.bundle.docid))
+                            };
+                            digest.map(|r| (c.clone(), r))
+                        });
+                    EPostDocument {
+                        docid: d.bundle.docid.clone(),
+                        render_error: view.errors[gi][di].as_ref().map(|s| s.as_bytes().to_vec()),
+                        at_commit,
+                    }
+                })
+                .collect();
             EPostGuideline {
                 gid: g.gid.clone(),
                 documents,
@@ -204,7 +235,7 @@ fn post_models(
         })
         .collect()
 }
-fn read(corpus: &Corpus, view: &intake::View, req: &ERequest) -> Result<Response> {
+fn read(corpus: &Corpus, view: &intake::View, req: &ERequest, commit: &[u8]) -> Result<Response> {
     let path = text(&req.path);
     if path == "/" || path == "/index.html" {
         return Ok(Response::page(ckc_kernel::contract::ui_render_index(
@@ -283,6 +314,7 @@ fn read(corpus: &Corpus, view: &intake::View, req: &ERequest) -> Result<Response
         prev,
         next,
         &view.corpus.token,
+        commit,
     )))
 }
 pub(super) fn respond(root: &Path, req: &ERequest, config: &Config) -> Result<Outcome> {
@@ -307,10 +339,11 @@ pub(super) fn respond(root: &Path, req: &ERequest, config: &Config) -> Result<Ou
         token: config.token.clone(),
         models,
         now,
+        commit: snapshot(&corpus, config),
     };
     match ckc_kernel::contract::ui_post_outcome(req, &state) {
         EPostOutcome::Refused(response) => Ok(Outcome::Response(response.into())),
-        EPostOutcome::Read => read(&corpus, &view?, req).map(Outcome::Response),
+        EPostOutcome::Read => read(&corpus, &view?, req, &state.commit).map(Outcome::Response),
         EPostOutcome::Prepared {
             candidate,
             expected_ledger,

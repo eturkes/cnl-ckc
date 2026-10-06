@@ -366,6 +366,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
             ("review_sha256", field(body, "review_sha256")),
             ("ledger_sha256", field(body, "ledger_sha256")),
             ("csrf", field(body, "csrf")),
+            ("commit", field(body, "commit")),
         ]
     };
     let body = form(&hidden(&page.body), "socket reviewer");

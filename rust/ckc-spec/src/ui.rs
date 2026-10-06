@@ -1213,6 +1213,7 @@ pub open spec fn document_html(
     prev: Bytes,
     next: Bytes,
     token: Bytes,
+    commit: Bytes,
 ) -> Html {
     let id = d.bundle.docid;
     let k = state(g, id);
@@ -1315,6 +1316,9 @@ pub open spec fn document_html(
                 + fixed_bytes(attr_end()),
             fixed_bytes(input_type_hidden_name_ledger_sha256_value()) + attr(g.ledger_digest)
                 + fixed_bytes(attr_end()),
+            fixed_bytes(input_type_hidden_name_commit_value()) + attr(commit) + fixed_bytes(
+                attr_end(),
+            ),
             fixed_bytes(input_type_hidden_name_csrf_value()) + attr(token) + fixed_bytes(
                 attr_end(),
             ),
@@ -1343,14 +1347,16 @@ pub open spec fn document_html(
     )
 }
 
+// commit = the snapshot commit the page renders; the form posts it back.
 pub open spec fn render_document(
     g: Guideline,
     d: Document,
     prev: Bytes,
     next: Bytes,
     token: Bytes,
+    commit: Bytes,
 ) -> Bytes {
-    render_page(document_html(g, d, prev, next, token))
+    render_page(document_html(g, d, prev, next, token, commit))
 }
 
 pub open spec fn stop_words() -> Seq<Bytes> {
@@ -1374,12 +1380,16 @@ pub ghost struct Fields {
     pub review: Bytes,
     pub ledger: Bytes,
     pub csrf: Bytes,
+    pub commit: Bytes,
 }
 
+// at_commit = the shell's attestation (posted commit, review digest of docid
+// there), present only after the commit exists, is the snapshot commit or its
+// ancestor, and bundle v2 derived there names the docid.
 pub ghost struct PostDocument {
     pub docid: Bytes,
     pub render_error: Option<Bytes>,
-    pub commit: Bytes,
+    pub at_commit: Option<(Bytes, Bytes)>,
 }
 
 pub ghost struct PostGuideline {
@@ -1390,11 +1400,13 @@ pub ghost struct PostGuideline {
     pub ledger_digest: Bytes,
 }
 
+// commit = the snapshot commit the pages render; empty = filesystem mode.
 pub ghost struct PostState {
     pub port: nat,
     pub token: Bytes,
     pub models: Result<Seq<PostGuideline>, Bytes>,
     pub now: Bytes,
+    pub commit: Bytes,
 }
 
 pub ghost struct Response {
@@ -1574,7 +1586,15 @@ pub open spec fn form_pairs(xs: Seq<Bytes>) -> Result<Seq<(Bytes, Bytes)>, Bytes
 }
 
 pub open spec fn field_names() -> Seq<Bytes> {
-    seq![verdict_2(), reviewer_2(), comment_2(), review_sha256_2(), ledger_sha256_2(), csrf_2()]
+    seq![
+        verdict_2(),
+        reviewer_2(),
+        comment_2(),
+        review_sha256_2(),
+        ledger_sha256_2(),
+        csrf_2(),
+        commit_2(),
+    ]
 }
 
 pub open spec fn field_values(ps: Seq<(Bytes, Bytes)>, key: Bytes) -> Seq<Bytes> {
@@ -1600,6 +1620,7 @@ pub open spec fn parse_fields(ps: Seq<(Bytes, Bytes)>) -> Result<Fields, Bytes> 
             review: at(field_values(ps, review_sha256_2()), 0),
             ledger: at(field_values(ps, ledger_sha256_2()), 0),
             csrf: at(field_values(ps, csrf_2()), 0),
+            commit: at(field_values(ps, commit_2()), 0),
         };
         if f.verdict != approved_2() && f.verdict != rejected_2() {
             Result::Err(ui_verdict_invalid_verdict())
@@ -1611,6 +1632,8 @@ pub open spec fn parse_fields(ps: Seq<(Bytes, Bytes)>) -> Result<Fields, Bytes> 
             Result::Err(ui_verdict_invalid_review_sha256())
         } else if f.ledger != absent_2() && !hex64(f.ledger) {
             Result::Err(ui_verdict_invalid_ledger_sha256())
+        } else if f.commit.len() > 0 && !hex40(f.commit) {
+            Result::Err(ui_verdict_invalid_commit())
         } else {
             Result::Ok(f)
         }
@@ -1634,6 +1657,14 @@ pub open spec fn parse_form(body: Bytes) -> Result<Fields, Bytes> {
                 Result::Ok(ps) => parse_fields(ps),
             }
         }
+    }
+}
+
+// The shell reads the posted commit through the verified parser alone.
+pub open spec fn posted_commit(body: Bytes) -> Option<Bytes> {
+    match parse_form(body) {
+        Result::Ok(f) => Option::Some(f.commit),
+        Result::Err(_) => Option::None,
     }
 }
 
@@ -1743,6 +1774,7 @@ pub open spec fn prepare_candidate(
     g: PostGuideline,
     d: PostDocument,
     f: Fields,
+    snapshot: Bytes,
     now: Bytes,
 ) -> PostOutcome {
     let fresh = match g.fresh {
@@ -1762,12 +1794,21 @@ pub open spec fn prepare_candidate(
             )
         } else if f.ledger != g.ledger_digest {
             ledger_changed()
+        } else if !((snapshot.len() == 0 && f.commit.len() == 0) || d.at_commit == Option::Some(
+            (f.commit, f.review),
+        )) {
+            refusal(
+                409,
+                conflict_cap(),
+                ui_verdict_commit_does_not_hold(),
+                the_document_or_its_source_changed_cap(),
+            )
         } else {
             let r = Record {
                 decision: Decision {
                     docid: d.docid,
                     digest: f.review,
-                    commit: d.commit,
+                    commit: f.commit,
                     approved: f.verdict == approved_2(),
                     date: now,
                 },
@@ -1825,7 +1866,7 @@ pub open spec fn handle_post(
                 } else {
                     match d.render_error {
                         Option::Some(e) => server_error(e),
-                        Option::None => prepare_candidate(g, d, f, s.now),
+                        Option::None => prepare_candidate(g, d, f, s.commit, s.now),
                     }
                 },
             },
@@ -1956,7 +1997,7 @@ impl View for ERecord {
 pub struct EPostDocument {
     pub docid: Vec<u8>,
     pub render_error: Option<Vec<u8>>,
-    pub commit: Vec<u8>,
+    pub at_commit: Option<(Vec<u8>, Vec<u8>)>,
 }
 
 impl View for EPostDocument {
@@ -1969,7 +2010,10 @@ impl View for EPostDocument {
                 Some(b) => Some(b@),
                 None => None,
             },
-            commit: self.commit@,
+            at_commit: match self.at_commit {
+                Some((c, r)) => Some((c@, r@)),
+                None => None,
+            },
         }
     }
 }
@@ -2004,6 +2048,7 @@ pub struct EPostState {
     pub token: Vec<u8>,
     pub models: Result<Vec<EPostGuideline>, Vec<u8>>,
     pub now: Vec<u8>,
+    pub commit: Vec<u8>,
 }
 
 impl View for EPostState {
@@ -2018,6 +2063,7 @@ impl View for EPostState {
                 Err(e) => Err(e@),
             },
             now: self.now@,
+            commit: self.commit@,
         }
     }
 }
@@ -2378,6 +2424,10 @@ copy_table! {
     copy_127_0_0_1 = "127.0.0.1:";
     ui_request_host_not_allowed = "ui: request: host not allowed";
     post_cap = "POST";
+    input_type_hidden_name_commit_value = "<input type=\"hidden\" name=\"commit\" value=\"";
+    commit_2 = "commit";
+    ui_verdict_invalid_commit = "ui: verdict: invalid commit";
+    ui_verdict_commit_does_not_hold = "ui: verdict: commit does not hold the reviewed bundle";
 }
 
 verus! {

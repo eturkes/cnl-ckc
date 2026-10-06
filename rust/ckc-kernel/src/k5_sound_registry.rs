@@ -5369,6 +5369,105 @@ pub proof fn literal_238()
     n::clean_bridge("POST"@);
 }
 
+pub open spec fn data_239() -> Seq<nat> {
+    ns![60u32,105,110,112,117,116,32,116,121,112,101,61,34,104,105,100,100,101,110,34,32,110,97,109,101,61,34,99,111,109,109,105,116,34,32,118,97,108,117,101,61,34].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_239()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[239]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l239(Seq::empty());
+    p::all();
+    reveal_strlit("<input type=\"hidden\" name=\"commit\" value=\"");
+    assert(n::codes("<input type=\"hidden\" name=\"commit\" value=\""@) =~= data_239());
+    assert(n::clean(data_239(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<input type=\"hidden\" name=\"commit\" value=\""@);
+}
+
+} // verus!
+}
+pub mod batch_240 {
+    use crate::{
+        k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
+        k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
+    };
+    use ckc_spec::ui as u;
+    use vstd::prelude::*;
+    use vstd::utf8::*;
+    verus! {
+
+pub open spec fn data_240() -> Seq<nat> {
+    ns![99u32,111,109,109,105,116].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_240()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[240]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l240(Seq::empty());
+    p::all();
+    reveal_strlit("commit");
+    assert(n::codes("commit"@) =~= data_240());
+    assert(n::clean(data_240(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("commit"@);
+}
+
+pub open spec fn data_241() -> Seq<nat> {
+    ns![117u32,105,58,32,118,101,114,100,105,99,116,58,32,105,110,118,97,108,105,100,32,99,111,109,109,105,116].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_241()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[241]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l241(Seq::empty());
+    p::all();
+    reveal_strlit("ui: verdict: invalid commit");
+    assert(n::codes("ui: verdict: invalid commit"@) =~= data_241());
+    assert(n::clean(data_241(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("ui: verdict: invalid commit"@);
+}
+
+pub open spec fn data_242() -> Seq<nat> {
+    ns![117u32,105,58,32,118,101,114,100,105,99,116,58,32,99,111,109,109,105,116,32,100,111,101,115,32,110,111,116,32,104,111,108,100,32,116,104,101,32,114,101,118,105,101,119,101,100,32,98,117,110,100,108,101].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_242()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[242]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l242(Seq::empty());
+    p::all();
+    reveal_strlit("ui: verdict: commit does not hold the reviewed bundle");
+    assert(n::codes("ui: verdict: commit does not hold the reviewed bundle"@) =~= data_242());
+    assert(n::clean(data_242(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("ui: verdict: commit does not hold the reviewed bundle"@);
+}
+
 } // verus!
 }
 pub mod css {
@@ -10331,7 +10430,7 @@ pub proof fn block_208(i: int)
 
 pub proof fn block_224(i: int)
     requires
-        224 <= i < 239,
+        224 <= i < 240,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -10365,14 +10464,33 @@ pub proof fn block_224(i: int)
         batch_224::literal_236();
     } else if i == 237 {
         batch_224::literal_237();
-    } else {
+    } else if i == 238 {
         batch_224::literal_238();
+    } else {
+        batch_224::literal_239();
+    }
+}
+
+pub proof fn block_240(i: int)
+    requires
+        240 <= i < 243,
+    ensures
+        u::copy_literal_ok(u::copy_registry()[i]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_literal_ok);
+    if i == 240 {
+        batch_240::literal_240();
+    } else if i == 241 {
+        batch_240::literal_241();
+    } else {
+        batch_240::literal_242();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 239,
+        0 <= i < 243,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -10406,14 +10524,16 @@ pub proof fn literal(i: int)
         block_192(i);
     } else if i < 224 {
         block_208(i);
-    } else {
+    } else if i < 240 {
         block_224(i);
+    } else {
+        block_240(i);
     }
 }
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 239,
+        u::copy_registry().len() == 243,
 {
     hide(u::lit);
     hide(u::css_text);

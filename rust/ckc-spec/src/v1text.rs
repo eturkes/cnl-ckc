@@ -578,6 +578,10 @@ pub open spec fn hex64(h: Seq<u8>) -> bool {
     h.len() == 64 && all_in(h, |b: u8| is_hex_lower_b(b))
 }
 
+pub open spec fn hex40(h: Seq<u8>) -> bool {
+    h.len() == 40 && all_in(h, |b: u8| is_hex_lower_b(b))
+}
+
 pub open spec fn ulex_ok(u: Option<Seq<u8>>) -> bool {
     match u {
         Option::None => true,
