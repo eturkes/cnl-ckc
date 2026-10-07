@@ -619,7 +619,6 @@ pub fn align_resolve(input: &[char], src: &[char], ace: &[char]) -> (r: ckc_spec
 }
 
 pub fn release_manifest(
-    head: &[u8],
     compiler: &[u8],
     lexicon: &[u8],
     staged: &Vec<ckc_spec::release::EMember>,
@@ -630,7 +629,6 @@ pub fn release_manifest(
 ) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::release::release_manifest(
-            head@,
             compiler@,
             lexicon@,
             ckc_spec::release::members(staged@),
@@ -641,7 +639,6 @@ pub fn release_manifest(
         ),
 {
     crate::release_impl::release_manifest_impl(
-        head,
         compiler,
         lexicon,
         staged,
@@ -654,7 +651,7 @@ pub fn release_manifest(
 
 // M5.6 dist (contract m5u6, shell tier over a pinned gzip dep): the two BagIt
 // digest manifests are pure functions of the member list; tar/gzip bytes, member
-// digests and publish semantics are shell code graded by the 62-case battery.
+// digests and publish semantics are shell code graded by the `tests/dist/cases.tsv` battery.
 pub fn dist_digest_lines(ms: &Vec<ckc_spec::release::EMember>) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::release::digest_lines(ckc_spec::release::members(ms@)),

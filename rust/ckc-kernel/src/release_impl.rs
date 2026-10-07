@@ -16,7 +16,6 @@ pub fn align_resolve_impl(input: &[char], src: &[char], ace: &[char]) -> (r:
 }
 
 pub fn release_manifest_impl(
-    head: &[u8],
     compiler: &[u8],
     lexicon: &[u8],
     staged: &Vec<ckc_spec::release::EMember>,
@@ -27,7 +26,6 @@ pub fn release_manifest_impl(
 ) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::release::release_manifest(
-            head@,
             compiler@,
             lexicon@,
             ckc_spec::release::members(staged@),
@@ -70,7 +68,7 @@ pub fn release_manifest_impl(
         vstd::assert_seqs_equal!(ckc_spec::release::members(tags@).take(i as int) == ckc_spec::release::members(tags@));
     }
     let sorted = crate::release_rows::sorted(&pay);
-    let mut r = crate::release_rows::meta(head, compiler, lexicon);
+    let mut r = crate::release_rows::meta(compiler, lexicon);
     let ms = crate::release_rows::rows(&sorted);
     crate::k4_bytes::append(&mut r, &ms);
     let ss = crate::release_rows::source_text(&src);

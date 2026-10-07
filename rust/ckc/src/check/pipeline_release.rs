@@ -271,7 +271,7 @@ fn readme(
     labels: &BTreeMap<String, String>,
     schema: &str,
 ) -> String {
-    let mut text = "# cnl-ckc knowledge base export\n\nThis archive is a BagIt 1.0 bag. It holds the compiled clinical-guideline knowledge base from the cnl-ckc repository. The archive name and the `meta head` row in `release-manifest.tsv` give the source commit.\n\n## Verification\n\nRun `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from this directory. Each line must report OK.\n\n## Contents\n\n".to_owned();
+    let mut text = "# cnl-ckc knowledge base export\n\nThis archive is a BagIt 1.0 bag. It holds the compiled clinical-guideline knowledge base from the cnl-ckc repository. The archive name and the name of its root directory give the source commit.\n\n## Verification\n\nRun `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from this directory. Each line must report OK.\n\n## Contents\n\n".to_owned();
     for gid in gids {
         let n = counts.get(gid).copied().unwrap_or(0);
         text += &match rs[gid][0][0].as_str() {
@@ -447,7 +447,6 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
         .map(|(a, b)| (a.as_bytes().to_vec(), b.as_bytes().to_vec()))
         .collect();
     let manifest = ckc_kernel::contract::release_manifest(
-        head.as_bytes(),
         crate::trust::sha256_hex(&compiler).as_bytes(),
         crate::trust::sha256_hex(&lexicon).as_bytes(),
         &members,

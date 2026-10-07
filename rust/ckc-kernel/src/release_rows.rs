@@ -418,13 +418,11 @@ pub fn label_text(ls: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: Vec<u8>)
     r
 }
 
-pub fn meta(head: &[u8], compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
+pub fn meta(compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
     ensures
-        r@ == meta_block(head@, compiler@, lexicon@),
+        r@ == meta_block(compiler@, lexicon@),
 {
-    let mut r = copy(b"meta\tschema\tv1\nmeta\thead\t");
-    append(&mut r, head);
-    append(&mut r, b"\nmeta\tcompiler\t");
+    let mut r = copy(b"meta\tschema\tv1\nmeta\tcompiler\t");
     append(&mut r, compiler);
     append(&mut r, b"\nmeta\tbase-lexicon\t");
     append(&mut r, lexicon);
@@ -433,10 +431,8 @@ pub fn meta(head: &[u8], compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
         b"\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
     );
     proof {
-        reveal_byteslit(b"meta\tschema\tv1\nmeta\thead\t");
-        reveal_strlit("meta\tschema\tv1\nmeta\thead\t");
-        reveal_byteslit(b"\nmeta\tcompiler\t");
-        reveal_strlit("\nmeta\tcompiler\t");
+        reveal_byteslit(b"meta\tschema\tv1\nmeta\tcompiler\t");
+        reveal_strlit("meta\tschema\tv1\nmeta\tcompiler\t");
         reveal_byteslit(b"\nmeta\tbase-lexicon\t");
         reveal_strlit("\nmeta\tbase-lexicon\t");
         reveal_byteslit(

@@ -102,9 +102,9 @@ pub open spec fn tab() -> Seq<u8> {
     seq![0x09u8]
 }
 
-pub open spec fn meta_block(head: Seq<u8>, compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {
-    ascii("meta\tschema\tv1\nmeta\thead\t"@) + head + ascii("\nmeta\tcompiler\t"@) + compiler
-        + ascii("\nmeta\tbase-lexicon\t"@) + lexicon + ascii(
+pub open spec fn meta_block(compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {
+    ascii("meta\tschema\tv1\nmeta\tcompiler\t"@) + compiler + ascii("\nmeta\tbase-lexicon\t"@)
+        + lexicon + ascii(
         "\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
     )
 }
@@ -129,8 +129,9 @@ pub open spec fn label_rows(ls: Seq<(Seq<u8>, Seq<u8>)>) -> Seq<u8> {
 
 // `staged` = the corpus members in path order; `labels` = (docid, class) in
 // docid order; `tags` = bagit.txt / README-dist.md / NOTICE with their digests.
+// Content only, no commit id: a commit that changes the inputs can carry its own
+// manifest (the archive name + bag root name the source commit).
 pub open spec fn release_manifest(
-    head: Seq<u8>,
     compiler: Seq<u8>,
     lexicon: Seq<u8>,
     staged: Seq<Member>,
@@ -139,9 +140,8 @@ pub open spec fn release_manifest(
     labels: Seq<(Seq<u8>, Seq<u8>)>,
     tags: Seq<Member>,
 ) -> Seq<u8> {
-    meta_block(head, compiler, lexicon) + member_rows(
-        sort_members(payload(staged, profiles) + tags),
-    ) + source_rows(sources(staged, profiles, urls)) + label_rows(labels)
+    meta_block(compiler, lexicon) + member_rows(sort_members(payload(staged, profiles) + tags))
+        + source_rows(sources(staged, profiles, urls)) + label_rows(labels)
 }
 
 // --- BagIt digest manifests (M5.6, contract m5u6): `<sha>  <path>` per member in path

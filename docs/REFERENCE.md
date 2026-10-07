@@ -739,7 +739,8 @@ While a document is in progress, a round advances it one increment:
    the commit touches `guidelines/`, the vendored compiler or lexicon,
    `NOTICE`, or the `docs/REFERENCE.md` schema section,
    `release-manifest.tsv` goes stale: regenerate it with
-   `ckc release-manifest` and commit it as a follow-up. Update `.agent/queue.md` and the guideline README's
+   `ckc release-manifest` and add it to the same commit with
+   `git commit --amend`. Update `.agent/queue.md` and the guideline README's
    coverage statement.
 
 When no document is in progress, the round fetches the next source: the
@@ -771,7 +772,10 @@ ckc dist build [<dest>]   # default destination: dist/
 ```
 
 The archive is a BagIt 1.0 bag named `cnl-ckc-kb-g<head12>.tar.gz`,
-where `<head12>` is the source commit prefix. A `.sha256` sidecar
+where `<head12>` is the source commit prefix: the last commit that
+changed `guidelines/`, the vendored compiler, or the lexicon. The root
+directory of the bag has the same name. The manifest records content
+digests only, so a commit can include its own manifest. A `.sha256` sidecar
 accompanies it. To verify a bag, extract it and run
 `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from the bag
 root. Each line must report OK.

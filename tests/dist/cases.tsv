@@ -61,3 +61,4 @@ a21-stage-clean-success	runner	stage_clean_success	0	-
 a21-stage-clean-refusal	runner	stage_clean_refusal	1	dist: rights g-red missing
 d07-goal-check-live	runner	goal_check_live	2	ckc: swipl-exec: not executable: __dist_red_missing_swipl__
 d07-goal-check-blocked	runner	goal_check_blocked	2	ckc: swipl-exec: not executable: __dist_red_missing_swipl__
+n4-input-manifest-amend	runner	amended_manifest	2	ckc: swipl-exec: not executable: __dist_red_missing_swipl__

@@ -20,7 +20,7 @@ Rulings keyed on template clauses:
 - `Session flow` MAINTAIN bodies → `ops.md` corpus loop: the corpus prompt (`docs/REFERENCE.md` § Operating) = the MAINTAIN body for corpus rounds; continue = `resume.md`, stop to continue later = `pause.md`.
 - `Session flow` closing diff → `corpus.md` round roles: the one closing `reviewer` covers 7 lenses (L0 completeness, L1–L6 adversarial); user ruling = template form, L0 folded in.
 - `Session flow` IMPLEMENT contracts + tiers → `ops.md` unit contracts (`.agent/contracts/<unit>.md`, archived at unit close).
-- `Execution` Git → `ops.md` close order (stage, then the decisive check) + `corpus.md` round close (scoped commits, then the release-manifest regen commit).
+- `Execution` Git → `ops.md` close order (stage, then the decisive check) + `corpus.md` round close (scoped commits, the regenerated release manifest amended into the input-touching commit).
 - `Authoring` human-facing → `clinician-design.md` (design law + copy/design lint gates); `ops.md` presentation rule.
 - Prototype location, CI, review ledger, spec layout = template defaults: prototype = `prototype/<name>/`; CI = `.github/workflows/ci.yml`; ledger = `.agent/review.md`.
 Post-refresh: `git diff HEAD -- CLAUDE.md` → any repo-measured law in the removed lines outside the upstream delta folds into the owning `.claude/rules/` file; the clinician design law lives only in `rules/clinician-design.md`.

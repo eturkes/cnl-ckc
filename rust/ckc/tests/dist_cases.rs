@@ -803,8 +803,10 @@ fn input_head_case(path: &Path) -> TestResult<Run> {
     let bag_one = bag_after(&mut first, &dest);
     if let Some(bag) = &bag_one {
         first.check(
-            meta(&bag.rows()?, "head")? == head_one,
-            "meta head does not bind input head",
+            !bag.rows()?
+                .iter()
+                .any(|row| row[0] == "meta" && row[1] == "head"),
+            "manifest carries a meta head row",
         );
         first.check(
             bag.archive.file_name()
@@ -1091,6 +1093,26 @@ fn after_manifest(repo: &Repo, scenario: &str) -> TestResult<()> {
             repo.write("guidelines/g-red/ace/bad\\name.ace", "bad path\n")?;
             "backslash path"
         }
+        "tar_fields" => {
+            repo.write("docs/unrelated-epoch.txt", "later unrelated commit\n")?;
+            require_ok(repo.git(&["add", "-A"])?, "epoch fixture git add")?;
+            require_ok(
+                command(
+                    OsStr::new("git"),
+                    &[
+                        "commit".into(),
+                        "-q".into(),
+                        "-m".into(),
+                        "later unrelated commit".into(),
+                    ],
+                    &repo.path,
+                    &[("GIT_COMMITTER_DATE", "2026-01-02T00:00:00+00:00")],
+                    180,
+                )?,
+                "epoch fixture git commit",
+            )?;
+            return Ok(());
+        }
         "committed_state" => {
             for (name, bytes) in [
                 (
@@ -1180,9 +1202,18 @@ fn validate_bag(
                 meta(&rows, "compiler")? == digest(&repo.show("vendor/ape/prolog/ace_to_pl.pl")?)?,
                 "working compiler leaked",
             );
+            let input_head = repo.input_head()?;
             run.check(
-                meta(&rows, "head")? == repo.input_head()?,
-                "working input changed head",
+                bag.archive.file_name()
+                    == Some(OsStr::new(&format!(
+                        "cnl-ckc-kb-g{}.tar.gz",
+                        &input_head[..12]
+                    ))),
+                "working input changed archive name",
+            );
+            run.check(
+                bag.root == format!("cnl-ckc-kb-g{}", &input_head[..12]),
+                "working input changed bag root",
             );
             run.check(
                 repo.show("docs/REFERENCE.md")?.starts_with(b"# Fixture"),
@@ -1209,15 +1240,7 @@ fn validate_bag(
                 .map(|row| row[1].as_str())
                 .collect();
             run.check(
-                fixed
-                    == [
-                        "schema",
-                        "head",
-                        "compiler",
-                        "base-lexicon",
-                        "swipl",
-                        "verify",
-                    ],
+                fixed == ["schema", "compiler", "base-lexicon", "swipl", "verify"],
                 "fixed meta order",
             );
             let replay: Vec<_> = rows
@@ -1263,7 +1286,6 @@ fn validate_bag(
         "runtime_meta" => {
             for (key, expected) in [
                 ("schema", "v1".to_owned()),
-                ("head", repo.input_head()?),
                 (
                     "compiler",
                     digest(&repo.show("vendor/ape/prolog/ace_to_pl.pl")?)?,
@@ -1417,6 +1439,17 @@ fn validate_bag(
             let epoch = std::str::from_utf8(&epoch_run.stdout)?
                 .trim()
                 .parse::<u64>()?;
+            let head_epoch = require_ok(
+                repo.git(&["show", "-s", "--format=%ct", "HEAD"])?,
+                "current head epoch",
+            )?;
+            run.check(
+                epoch
+                    != std::str::from_utf8(&head_epoch.stdout)?
+                        .trim()
+                        .parse::<u64>()?,
+                "epoch fixture did not separate input head from current HEAD",
+            );
             run.check(
                 bag.members
                     .windows(2)
@@ -2011,9 +2044,100 @@ fn check_case(path: &Path, blocked: bool) -> TestResult<Run> {
     }
     Ok(run)
 }
+fn amended_manifest_case(path: &Path) -> TestResult<Run> {
+    let clone_path = path.join("amended-clone");
+    require_ok(
+        command(
+            OsStr::new("git"),
+            &[
+                "clone".into(),
+                "-q".into(),
+                "--shared".into(),
+                repo_root().into_os_string(),
+                clone_path.clone().into_os_string(),
+            ],
+            path,
+            &[],
+            180,
+        )?,
+        "amended manifest clone",
+    )?;
+    let repo = Repo { path: clone_path };
+    let before = repo.head()?;
+    let readme = names(&repo.path.join("guidelines"))?
+        .into_iter()
+        .map(|name| Path::new("guidelines").join(name).join("README.md"))
+        .find(|rel| repo.path.join(rel).is_file())
+        .ok_or("amended clone has no guideline README")?;
+    // README whitespace changes release input, not ACE or review payloads.
+    let mut content = fs::read(repo.path.join(&readme))?;
+    content.push(b'\n');
+    repo.write(readme, content)?;
+    repo.commit("fixture release input newline")?;
+    require_ok(writer(&repo)?, "release-manifest for amended input")?;
+    require_ok(
+        repo.git(&["add", "--", "release-manifest.tsv"])?,
+        "stage manifest",
+    )?;
+    require_ok(
+        repo.git(&["commit", "-q", "--amend", "--no-edit"])?,
+        "amend input with manifest",
+    )?;
+    let parent = require_ok(repo.git(&["rev-parse", "HEAD^"])?, "amended parent")?;
+    let mut run = native(
+        &repo,
+        2,
+        &[],
+        &[("SWIPL", "__dist_red_missing_swipl__")],
+        420,
+    )?;
+    run.check(
+        std::str::from_utf8(&parent.stdout)?.trim() == before,
+        "manifest needed a follow-up commit",
+    );
+    run.check(
+        repo.input_head()? == repo.head()?,
+        "amended commit is not the input head",
+    );
+    run.check(repo.clean()?, "amended manifest left worktree dirty");
+    let text = String::from_utf8_lossy(&run.stdout);
+    let meters: Vec<_> = text
+        .lines()
+        .filter(|line| line.starts_with("ckc: dist "))
+        .map(str::to_owned)
+        .collect();
+    let diagnostic = text
+        .lines()
+        .find(|line| line.starts_with("ckc: dist: "))
+        .unwrap_or("-")
+        .to_owned();
+    run.check(
+        meters.len() == 1,
+        format!(
+            "amended manifest dist meter count={}; diagnostic={diagnostic}",
+            meters.len()
+        ),
+    );
+    if let Some(meter) = meters.first() {
+        let blocked_grammar = meter
+            .strip_prefix("ckc: dist blocked rejected=")
+            .and_then(|suffix| suffix.split_once(" contested="))
+            .is_some_and(|(rejected, contested)| {
+                [rejected, contested]
+                    .iter()
+                    .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+            });
+        run.check(
+            meter.starts_with("ckc: dist ok ") || blocked_grammar,
+            "amended manifest dist meter grammar",
+        );
+    }
+    Ok(run)
+}
 fn scenario(path: &Path, name: &str) -> TestResult<Run> {
     match name {
         "input_head" => return input_head_case(path),
+        "amended_manifest" => return amended_manifest_case(path),
         "writer_idempotent" => return writer_case(path),
         "goal_check_live" => return check_case(path, false),
         "goal_check_blocked" => return check_case(path, true),
@@ -2185,11 +2309,11 @@ fn read_cases() -> TestResult<Vec<Case>> {
         ("determinism", 11),
         ("members", 9),
         ("verification", 4),
-        ("runner", 10),
+        ("runner", 11),
     ]);
-    if cases.len() != 62
+    if cases.len() != 63
         || families != expected
-        || codes != BTreeMap::from([(0, 29), (1, 29), (2, 4)])
+        || codes != BTreeMap::from([(0, 29), (1, 29), (2, 5)])
     {
         return Err(format!(
             "case census: total={} families={families:?} rc={codes:?}",
