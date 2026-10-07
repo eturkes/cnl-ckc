@@ -35,6 +35,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → `engine_answer_tiny` rerun ≤1200 s (the 0.68.0 bump rerun: rc 124 at 1200 s ×2); measured: exhaustion persists below the parser + term-arena reads stay symbolic in CBMC symex (`.agent/deferred.md` row).
 - [ ] Q5 M7 gap coverage: inexpressible class + ruled taxonomy landed; first class (temporal) owed as a user-directed feature unit.
 - [ ] Q6 corpus rounds to exhaustion: user ruling = separate corpus-prompt sessions (not run here).
+- [ ] N7 `just verify` warning-free + enforced: 10 pre-existing ckc-kernel Verus warnings (deprecated vstd `Set::finite`, 7 Erase-pass unused macros, 2 `inconsistent_fields` enums) cleaned + the verify step fails on any `^warning` line (user-approved contract `.agent/archive/contracts/n7.md`; kernel tier, behavior-neutral + shell).
 - Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
 ## Phase

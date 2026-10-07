@@ -2,7 +2,7 @@ use crate::{k5_sound_context as cx, k5_sound_escape as h, k5_sound_literals as l
 use ckc_spec::ui as u;
 use vstd::prelude::*;
 use vstd::utf8::*;
-#[cfg(verus_keep_ghost)]
+#[cfg(verus_keep_ghost_body)]
 macro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }
 verus! {
 

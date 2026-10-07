@@ -104,7 +104,7 @@ impl View for ByteSet {
 }
 
 pub open spec fn valid(s: &ByteSet) -> bool {
-    s@.finite() && s.size as nat == s@.len()
+    s.size as nat == s@.len()
 }
 
 pub fn empty() -> (s: ByteSet)

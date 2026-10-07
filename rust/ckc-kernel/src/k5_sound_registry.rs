@@ -1,6 +1,6 @@
 use ckc_spec::ui as u;
 use vstd::prelude::*;
-#[cfg(verus_keep_ghost)]
+#[cfg(verus_keep_ghost_body)]
 macro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }
 pub mod batch_000 {
     use crate::{

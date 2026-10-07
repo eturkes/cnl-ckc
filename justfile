@@ -90,7 +90,14 @@ verify:
     # verifier flag, so the first-party crates are cleaned to force the check.
     cargo verus verify -p ckc-spec --locked --offline >/dev/null
     cargo clean -p ckc-spec -p ckc-kernel --locked --offline
-    cargo verus verify --workspace --locked --offline -- --no-cheating
+    # Verus-pass lints reach no other gate (clippy builds with ghost code
+    # erased), so any first-party warning line fails here; color stays off so
+    # each diagnostic line starts with its `warning` prefix.
+    log="{{ ROOT }}/rust/target/verify.log"
+    mkdir -p "${log%/*}"
+    CARGO_TERM_COLOR=never cargo verus verify --workspace --locked --offline -- --no-cheating 2>&1 | tee "$log"
+    n=$(grep -c '^warning' "$log") || [ $? -eq 1 ]
+    if [ "$n" != 0 ]; then echo "verify: $n warning lines" >&2; exit 1; fi
     echo "gate: verify ok"
 
 build:

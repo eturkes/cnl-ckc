@@ -2,9 +2,9 @@ use crate::k5_sound_chrome as ch;
 use ckc_spec::ui as u;
 use vstd::prelude::*;
 use vstd::utf8::*;
-#[cfg(verus_keep_ghost)]
+#[cfg(verus_keep_ghost_body)]
 macro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }
-#[cfg(verus_keep_ghost)]
+#[cfg(verus_keep_ghost_body)]
 macro_rules! reveal_css_text { () => { reveal_strlit(r##"body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
 a { color: #1d4ed8; }
 a:focus-visible, summary:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
@@ -143,7 +143,7 @@ pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
 a { color: inherit; text-decoration: none; }
 .chip { border: 1px solid #111827; background: none; color: inherit; }
 }"##) }; }
-#[cfg(verus_keep_ghost)]
+#[cfg(verus_keep_ghost_body)]
 macro_rules! reveal_script_html {
     () => {
         reveal_strlit(

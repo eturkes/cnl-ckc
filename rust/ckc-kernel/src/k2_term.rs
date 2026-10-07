@@ -12,6 +12,8 @@ pub enum ECompForm {
     Regular,
 }
 
+// Var/Int ghost values differ in type by design; Verus's `->value` sugar stays unused.
+#[allow(inconsistent_fields)]
 pub enum ENodeKind {
     Var { key: usize, spelling: Vec<u8>, value: Ghost<nat> },
     Int { spelling: Vec<u8>, magnitude: Vec<u8>, negative: bool, value: Ghost<int> },
@@ -121,6 +123,8 @@ pub open spec fn root_ok(arena: &ETermArena, root: usize) -> bool {
     arena_ok(arena) && root < arena.nodes@.len()
 }
 
+// Args models a term sequence, Term/Tail one term; Verus's `->model` sugar stays unused.
+#[allow(inconsistent_fields)]
 pub enum EPrintTask {
     Term { index: usize, model: Ghost<Term> },
     Args { parent: usize, next: usize, model: Ghost<Seq<Term>> },

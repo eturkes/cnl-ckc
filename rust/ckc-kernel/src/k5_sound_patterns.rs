@@ -2,7 +2,7 @@ use crate::{k5_sound_codes as n, k5_sound_scan as s};
 use ckc_spec::{check as ck, ui as u};
 use vstd::prelude::*;
 use vstd::utf8::*;
-#[cfg(verus_keep_ghost)]
+#[cfg(verus_keep_ghost_body)]
 macro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }
 verus! {
 
