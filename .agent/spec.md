@@ -36,8 +36,8 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q5 M7 gap coverage: inexpressible class + ruled taxonomy landed; first class (temporal) owed as a user-directed feature unit.
 - [ ] Q6 corpus rounds to exhaustion: user ruling = separate corpus-prompt sessions (not run here).
 - [x] 6d42b556 N3 `ckc check` scratch kill-safe: `.goal.tmp.<pid>.<n>` + sweep of leftovers whose creator pid is gone.
-- [ ] N4 release manifest keyed on input content: user-approved O1 (drop `meta head`); contract `.agent/archive/contracts/n4.md` (kernel tier).
-- [ ] N5 pid-named temp paths in `ckc certify --cases` + `ckc dist build` step past same-pid leftovers: user-approved; contract = its `.agent/deferred.md` row (shell tier).
+- [x] 6661e240 N4 release manifest keyed on input content: `meta head` dropped (user-approved O1); contract `.agent/archive/contracts/n4.md`.
+- [ ] N5 pid-named temp paths in `ckc certify --cases` + `ckc dist build` step past same-pid leftovers (user-approved; shell tier).
 - Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
 ## Phase

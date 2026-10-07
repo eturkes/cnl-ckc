@@ -3,9 +3,10 @@ use super::{dist_archive, pipeline_release};
 use pipeline_release::{ReleasePlan, member};
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::{ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 fn error(detail: impl AsRef<str>) -> Failure {
     violation("dist", detail)
@@ -58,14 +59,24 @@ fn prepare(root: &Path) -> Result<ReleasePlan> {
     }
     Ok(plan)
 }
+// `<dir>/<target>.tmp.<pid>.<n>`. A killed run skips Drop ⇒ a later run that draws
+// its pid finds its names taken and steps past them.
+static NEXT: AtomicU64 = AtomicU64::new(0);
 struct PendingFile(PathBuf);
 impl PendingFile {
-    fn write(path: PathBuf, bytes: &[u8]) -> Result<Self> {
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-            .map_err(|e| error(e.to_string()))?;
+    fn write(dir: &Path, target: &str, bytes: &[u8]) -> Result<Self> {
+        let pid = std::process::id();
+        let (path, mut file) = loop {
+            let path = dir.join(format!(
+                "{target}.tmp.{pid}.{}",
+                NEXT.fetch_add(1, Ordering::Relaxed)
+            ));
+            match OpenOptions::new().write(true).create_new(true).open(&path) {
+                Ok(file) => break (path, file),
+                Err(e) if e.kind() == ErrorKind::AlreadyExists => {}
+                Err(e) => return Err(error(e.to_string())),
+            }
+        };
         let pending = Self(path);
         file.write_all(bytes).map_err(|e| error(e.to_string()))?;
         Ok(pending)
@@ -129,14 +140,9 @@ fn publish(requested: &Path, name: &str, raw: &[u8]) -> Result {
             "dest sidecar path is not a regular file: {sidecar_name}"
         )));
     }
-    let pid = std::process::id();
-    PendingFile::write(dest.join(format!("{name}.tmp.{pid}")), raw)?.publish(&archive)?;
+    PendingFile::write(dest, name, raw)?.publish(&archive)?;
     let digest = format!("{}  {name}\n", crate::trust::sha256_hex(raw));
-    PendingFile::write(
-        dest.join(format!("{sidecar_name}.tmp.{pid}")),
-        digest.as_bytes(),
-    )?
-    .publish(&sidecar)
+    PendingFile::write(dest, &sidecar_name, digest.as_bytes())?.publish(&sidecar)
 }
 pub(super) struct Build {
     pub name: String,
@@ -204,5 +210,46 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(e) => refusal(e),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Own-pid pending files a killed run left behind (either name form): publish steps
+    // past them, renames its own, and leaves the leftovers untouched.
+    #[test]
+    fn publish_steps_past_taken_pending_names() {
+        let dest = std::env::temp_dir().join(format!("ckc-dist-test.{}", std::process::id()));
+        fs::remove_dir_all(&dest).ok();
+        fs::create_dir(&dest).unwrap();
+        let (pid, next) = (std::process::id(), NEXT.load(Ordering::Relaxed));
+        let mut planted = vec![];
+        for (target, end) in [("x.tar.gz", next + 6), ("x.tar.gz.sha256", next + 10)] {
+            planted.push(format!("{target}.tmp.{pid}"));
+            planted.extend((next..end).map(|n| format!("{target}.tmp.{pid}.{n}")));
+        }
+        for name in &planted {
+            fs::write(dest.join(name), b"leftover").unwrap();
+        }
+        publish(&dest, "x.tar.gz", b"archive").unwrap();
+        assert_eq!(fs::read(dest.join("x.tar.gz")).unwrap(), b"archive");
+        assert_eq!(
+            fs::read(dest.join("x.tar.gz.sha256")).unwrap(),
+            format!("{}  x.tar.gz\n", crate::trust::sha256_hex(b"archive")).into_bytes()
+        );
+        let mut left: Vec<_> = fs::read_dir(&dest)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .filter(|n| n.contains(".tmp."))
+            .collect();
+        left.sort();
+        planted.sort();
+        assert_eq!(left, planted);
+        for name in &planted {
+            assert_eq!(fs::read(dest.join(name)).unwrap(), b"leftover", "{name}");
+        }
+        fs::remove_dir_all(&dest).unwrap();
     }
 }

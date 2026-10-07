@@ -162,15 +162,27 @@ impl Drop for Fixture {
     }
 }
 
-impl Fixture {
-    fn new(repo: &Path, case: &Case) -> Result<Self> {
-        let original = io(fs::read_to_string(repo.join(&case.target)))?;
-        let root = std::env::temp_dir().join(format!(
+// `ckc-certify-cases-<pid>-<n>` under `base`. A killed run skips Drop ⇒ a later run
+// that draws its pid finds its names taken and steps past them.
+fn fresh_root(base: &Path) -> Result<PathBuf> {
+    loop {
+        let root = base.join(format!(
             "ckc-certify-cases-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
-        io(fs::create_dir(&root))?;
+        match fs::create_dir(&root) {
+            Ok(()) => return Ok(root),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(error.to_string()),
+        }
+    }
+}
+
+impl Fixture {
+    fn new(repo: &Path, case: &Case) -> Result<Self> {
+        let original = io(fs::read_to_string(repo.join(&case.target)))?;
+        let root = fresh_root(&std::env::temp_dir())?;
         let fixture = Self {
             pl: root.join(&case.target),
             root,
@@ -303,5 +315,36 @@ mod tests {
         assert!(unescape("\\q").is_err());
         assert!(mutate("a", &Edit::Replace("a".to_owned(), "a".to_owned())).is_err());
         assert!(mutate("a", &Edit::Swap(0, 1)).is_err());
+    }
+
+    // Own-pid fixture roots a killed run left behind: stepped past, never touched.
+    #[test]
+    fn fixture_root_steps_past_taken_names() {
+        let base =
+            std::env::temp_dir().join(format!("ckc-certify-cases-test.{}", std::process::id()));
+        fs::remove_dir_all(&base).ok();
+        fs::create_dir(&base).unwrap();
+        let (pid, next) = (std::process::id(), NEXT.load(Ordering::Relaxed));
+        let planted: Vec<_> = (next..next + 3)
+            .map(|n| base.join(format!("ckc-certify-cases-{pid}-{n}")))
+            .collect();
+        for path in &planted {
+            fs::create_dir(path).unwrap();
+            fs::write(path.join("leftover"), b"x").unwrap();
+        }
+        let root = fresh_root(&base).unwrap();
+        assert!(root.is_dir() && !planted.contains(&root), "{root:?}");
+        assert!(
+            root.starts_with(&base)
+                && root
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .starts_with(&format!("ckc-certify-cases-{pid}-"))
+        );
+        for path in &planted {
+            assert!(path.join("leftover").is_file(), "{path:?} was touched");
+        }
+        fs::remove_dir_all(&base).unwrap();
     }
 }
