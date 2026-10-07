@@ -100,7 +100,7 @@ struct Case {
 impl Case {
     fn new(label: &str) -> Self {
         let work = Scratch(root().join(format!(
-            "rust/target/ui-commit/{}/{label}",
+            "rust/target/ui-commit/{}-{label}",
             std::process::id()
         )));
         let _ = fs::remove_dir_all(&work.0);
@@ -777,4 +777,32 @@ fn p5g_other_override_commit_refuses_without_write() {
         }
     }
     assert_cases(&errors, inputs.len());
+}
+
+// A green case removes every directory it created. The child process runs p1b alone,
+// so an entry naming the child pid is that case's leftover; the child runs the
+// cargo-built ckc, so a red-replay CKC_UI_TEST_BIN cannot decide this harness check.
+#[test]
+fn green_case_leaves_no_scratch() {
+    let child = Command::new(std::env::current_exe().unwrap())
+        .args(["p1b_filesystem_page_carries_empty_commit", "--exact"])
+        .env_remove("CKC_UI_TEST_BIN")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let pid = child.id();
+    let out = child.wait_with_output().unwrap();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        out.status.success() && stdout.contains("test result: ok. 1 passed;"),
+        "child p1b: {stdout}{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let base = root().join("rust/target/ui-commit");
+    let left: Vec<_> = [pid.to_string(), format!("{pid}-p1b")]
+        .into_iter()
+        .filter(|name| base.join(name).exists())
+        .collect();
+    assert!(left.is_empty(), "scratch left: {left:?}");
 }
