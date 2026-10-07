@@ -19,3 +19,4 @@
 - [x] 6661e240 N4 release manifest keyed on input content: `meta head` dropped (user-approved O1); contract `.agent/archive/contracts/n4.md`.
 - [x] 143bcb8e N5 pid-named temp paths in `ckc certify --cases` + `ckc dist build` step past same-pid leftovers.
 - [x] 7b34752c N6 `ui_commit` harness scratch: case roots `rust/target/ui-commit/<pid>-<label>` + child-process probe `green_case_leaves_no_scratch` (user-approved).
+- [x] 7323426f N7 `just verify` warning-free + enforced: 10 ckc-kernel Verus warnings cleaned at their source + the verify step fails on any `^warning` line (user-approved R1–R4); contract `.agent/archive/contracts/n7.md`.
