@@ -193,7 +193,7 @@ outdated:
     [ "$errors" -eq 0 ] || exit 2
     [ "$drift" -eq 0 ] || exit 1
 
-# Secondary bounded gate (Kani 0.67.0 over the kernel's public exec surface;
+# Secondary bounded gate (Kani 0.68.0 over the kernel's public exec surface;
 # harnesses stay outside the Verus workspace). Bootstrap = rust/kani.lock.
 kani:
     #!/usr/bin/env bash

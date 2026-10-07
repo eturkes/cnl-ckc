@@ -77,16 +77,17 @@ BOOTSTRAP_RUSTC="$BOOTSTRAP_TOOLCHAIN/bin/rustc"
 [[ -x "$BOOTSTRAP_CARGO" && -x "$BOOTSTRAP_RUSTC" ]] || fail 'bootstrap toolchain missing; run just tools'
 [[ "$("$BOOTSTRAP_RUSTC" --version)" == "${value[bootstrap_rustc_version]}" ]] || fail 'bootstrap rustc version mismatch'
 
-verify() {
+digest() {
     local actual
-    actual=$(sha256sum -- "$1"); actual=${actual%% *}
-    [[ "$actual" == "$2" ]] || fail "digest mismatch: $1"
+    actual=$(sha256sum -- "$1"); printf '%s' "${actual%% *}"
 }
+verify() { [[ "$(digest "$1")" == "$2" ]] || fail "digest mismatch: $1"; }
 download_tmp=
 trap 'if [[ -n "$download_tmp" ]]; then rm -f -- "$download_tmp"; fi' EXIT
 fetch() {
     local asset=$1 url=$2 hash=$3
-    if [[ ! -f "$ASSETS/$asset" ]]; then
+    # Rust dist basenames carry no date ⇒ a bump finds the old pin's file under the same name.
+    if [[ ! -f "$ASSETS/$asset" || "$(digest "$ASSETS/$asset")" != "$hash" ]]; then
         download_tmp="$ASSETS/.$asset.$$"
         printf 'kani: fetch %s\n' "$asset" >&2
         curl -sSL --fail --retry 3 --proto '=https' --proto-redir '=https' -o "$download_tmp" "$url"
@@ -165,15 +166,22 @@ fi
 wrapper_ok || fail 'cargo-kani version mismatch'
 
 install="$KANI_HOME/kani-${value[kani_version]}"
+# `--version` line 1 = `Kani Rust Verifier <v> (standalone|cargo plugin)`, line 2 = the CBMC version.
+KANI_ID="Kani Rust Verifier ${value[kani_version]}"
+first_line() {
+    local out
+    out=$("$@" 2>/dev/null) || true
+    printf '%s' "${out%%$'\n'*}"
+}
 if [[ "$installed_hash" != "$lock_hash" || ! -x "$install/bin/kani-driver" || ! -L "$install/toolchain" ]] \
     || [[ "$(readlink -f -- "$install/toolchain" 2>/dev/null || true)" != "$TOOLCHAIN" ]] \
-    || [[ "$("$install/bin/kani-driver" --version 2>/dev/null || true)" != "kani ${value[kani_version]}" ]]; then
+    || [[ "$(first_line "$install/bin/kani-driver" --version)" != "$KANI_ID (standalone)" ]]; then
     rm -rf -- "$install"
     cargo-kani setup --use-local-bundle "$ASSETS/${value[bundle_asset]}" \
         --use-local-toolchain "$TOOLCHAIN" > "$LOGS/setup.log" 2>&1
 fi
-[[ "$(cargo-kani --version)" == "cargo-kani ${value[kani_version]}" ]] || fail 'final cargo-kani version mismatch'
-[[ "$(kani --version)" == "kani ${value[kani_version]}" ]] || fail 'final kani version mismatch'
+[[ "$(first_line cargo-kani --version)" == "$KANI_ID (cargo plugin)" ]] || fail 'final cargo-kani version mismatch'
+[[ "$(first_line kani --version)" == "$KANI_ID (standalone)" ]] || fail 'final kani version mismatch'
 [[ "$("$install/bin/cbmc" --version)" == "${value[cbmc_version]}"* ]] || fail 'CBMC version mismatch'
 [[ "$("$install/bin/kissat" --version)" == "${value[kissat_version]}" ]] || fail 'Kissat version mismatch'
 printf '%s\n' "$lock_hash" > "$PREFIX/lock.sha256"

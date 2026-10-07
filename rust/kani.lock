@@ -6,47 +6,47 @@
 # Crate URL = https://static.crates.io/crates/<name>/<name>-<version>.crate.
 # vendor_crate rows reconstruct cargo vendor's package checksums; builds stay offline.
 # bootstrap_rustc_toolchain must equal verus.lock rustc_toolchain (read-only toolchain).
-kani_version	0.67.0
-kani_tag	kani-0.67.0
-kani_commit	4feaaad1d6a2378a6ff6caa3b4fc5d6999c7bb5d
+kani_version	0.68.0
+kani_tag	kani-0.68.0
+kani_commit	0d2328a93f0e0ff66132d6bfa1a7d884877cf862
 host	x86_64-unknown-linux-gnu
 bootstrap_rustc_toolchain	1.97.1-x86_64-unknown-linux-gnu
 bootstrap_rustc_version	rustc 1.97.1 (8bab26f4f 2026-07-14)
-installer_asset	kani-verifier-0.67.0.crate
-installer_url	https://static.crates.io/crates/kani-verifier/kani-verifier-0.67.0.crate
-installer_sha256	d6225a7ec13037e984f6bebdda33d34390e643a1cd2a4522cb5d5e8e6ed85e2b
-installer_cargo_lock_sha256	c568fd0b88de3113dc1a1c964adda05e8b0a20302c23416c52a016a65de7ed96
-bundle_asset	kani-0.67.0-x86_64-unknown-linux-gnu.tar.gz
-bundle_url	https://github.com/model-checking/kani/releases/download/kani-0.67.0/kani-0.67.0-x86_64-unknown-linux-gnu.tar.gz
-bundle_sha256	3b5f7afd3b51603ee720db7bc1bc4fe46b5a4f5d36daad9939c4b4c658b51ac0
-rust_channel	nightly-2025-11-21
-rustc_version	rustc 1.93.0-nightly (53732d5e0 2025-11-20)
+installer_asset	kani-verifier-0.68.0.crate
+installer_url	https://static.crates.io/crates/kani-verifier/kani-verifier-0.68.0.crate
+installer_sha256	842fabd2ba8b13babab862e21fef2946b581d493f23062d5ce86266630f1d1ae
+installer_cargo_lock_sha256	8252c133881fee3dfc6bc2b4810e05cb16924942956bbbb34031b58cc3537de8
+bundle_asset	kani-0.68.0-x86_64-unknown-linux-gnu.tar.gz
+bundle_url	https://github.com/model-checking/kani/releases/download/kani-0.68.0/kani-0.68.0-x86_64-unknown-linux-gnu.tar.gz
+bundle_sha256	32e2b484d73ede0bbf64a2cf0879c4259422497d8aec4ee67d448de9ae7843d3
+rust_channel	nightly-2026-08-21
+rustc_version	rustc 1.100.0-nightly (8925ea358 2026-08-20)
 rust_manifest_asset	channel-rust-nightly.toml
-rust_manifest_url	https://static.rust-lang.org/dist/2025-11-21/channel-rust-nightly.toml
-rust_manifest_sha256	3f7f450a0a5f0d3d38f7cf7e65334474cfe4fc013cebd24a481e2a8dab584d2b
+rust_manifest_url	https://static.rust-lang.org/dist/2026-08-21/channel-rust-nightly.toml
+rust_manifest_sha256	3c30cc655a7549d0b30015cd032f949e8723da5ad039f672d04520bbaea4e76d
 rustc_component_asset	rustc-nightly-x86_64-unknown-linux-gnu.tar.xz
-rustc_component_url	https://static.rust-lang.org/dist/2025-11-21/rustc-nightly-x86_64-unknown-linux-gnu.tar.xz
-rustc_component_sha256	b5727e9c6cd7eff47f3a7b21032302236ab8f592b892b0d4c90da2ea45cd481c
+rustc_component_url	https://static.rust-lang.org/dist/2026-08-21/rustc-nightly-x86_64-unknown-linux-gnu.tar.xz
+rustc_component_sha256	e531815fa551362b5a485e0d286b6c96555312d49359c0b8fe9e8f34c45594b4
 rust_std_component_asset	rust-std-nightly-x86_64-unknown-linux-gnu.tar.xz
-rust_std_component_url	https://static.rust-lang.org/dist/2025-11-21/rust-std-nightly-x86_64-unknown-linux-gnu.tar.xz
-rust_std_component_sha256	323fcadc489ac7d6cbb99a6e18a6427f762cebe6b8a8253e04ccdc564caa11e0
+rust_std_component_url	https://static.rust-lang.org/dist/2026-08-21/rust-std-nightly-x86_64-unknown-linux-gnu.tar.xz
+rust_std_component_sha256	52cd12570c6f967c3d04173e061fdab1cd44ab9613f53df8e04f7ce3b52ea3a3
 cargo_component_asset	cargo-nightly-x86_64-unknown-linux-gnu.tar.xz
-cargo_component_url	https://static.rust-lang.org/dist/2025-11-21/cargo-nightly-x86_64-unknown-linux-gnu.tar.xz
-cargo_component_sha256	03838885f9915f90fe71076d2f7ff9535171128bf8c6dbfe72febb532e3b18af
-cbmc_version	6.8.0
+cargo_component_url	https://static.rust-lang.org/dist/2026-08-21/cargo-nightly-x86_64-unknown-linux-gnu.tar.xz
+cargo_component_sha256	51306dcd70ad7ea807727fb313b6a0cbc6406934ad230b6c18db79a97c539c57
+cbmc_version	6.11.0
 kissat_version	4.0.1
-vendor_crate	android_system_properties	0.1.5	819e7219dbd41043ac279b19830f2efc897156490d7fd6ea916720117ee66311
-vendor_crate	anyhow	1.0.100	a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61
-vendor_crate	bitflags	2.10.0	812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3
+vendor_crate	android_system_properties	0.1.6	ae221649c9976a6f6c56ae1facf410f3ddb33cc661c4b7b61020a912d4237fbc
+vendor_crate	anyhow	1.0.104	330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470
+vendor_crate	bitflags	2.13.2	3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06
 vendor_crate	block2	0.6.2	cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5
 vendor_crate	cfg-if	1.0.4	9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801
-vendor_crate	cfg_aliases	0.2.1	613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724
-vendor_crate	dispatch2	0.3.0	89a09f22a6c6069a18470eb92d2298acf25463f14256d24778e1230d789a2aec
+vendor_crate	cfg_aliases	0.2.2	f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527
+vendor_crate	dispatch2	0.3.1	1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38
 vendor_crate	home	0.5.12	cc627f471c528ff0c4a49e1d5e60450c8f6461dd6d10ba9dcd3a61d3dff7728d
-vendor_crate	libc	0.2.180	bcc35a38544a891a5f7c865aca548a982ccb3b8650a5b06d0fd33a10283c56fc
-vendor_crate	log	0.4.29	5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897
-vendor_crate	nix	0.30.1	74523f3a35e05aba87a1d978330aef40f67b0304ac79c1c00b294c9830543db6
-vendor_crate	objc2	0.6.3	b7c2599ce0ec54857b29ce62166b0ed9b4f6f1a70ccc9a71165b6154caca8c05
+vendor_crate	libc	0.2.189	3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2
+vendor_crate	log	0.4.34	f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6
+vendor_crate	nix	0.31.3	cf20d2fde8ff38632c426f1165ed7436270b44f199fc55284c38276f9db47c3d
+vendor_crate	objc2	0.6.4	3a12a8ed07aefc768292f076dc3ac8c48f3781c8f2d5851dd3d98950e8c5a89f
 vendor_crate	objc2-cloud-kit	0.3.2	73ad74d880bb43877038da939b7427bba67e9dd42004a18b809ba7d87cee241c
 vendor_crate	objc2-core-data	0.3.2	0b402a653efbb5e82ce4df10683b6b28027616a2715e90009947d50b8dd298fa
 vendor_crate	objc2-core-foundation	0.3.2	2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536
@@ -60,6 +60,6 @@ vendor_crate	objc2-io-surface	0.3.2	180788110936d59bab6bd83b6060ffdfffb3b922ba13
 vendor_crate	objc2-quartz-core	0.3.2	96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f
 vendor_crate	objc2-ui-kit	0.3.2	d87d638e33c06f577498cbcc50491496a3ed4246998a7fbba7ccb98b1e7eab22
 vendor_crate	objc2-user-notifications	0.3.2	9df9128cbbfef73cda168416ccf7f837b62737d748333bfe9ab71c245d76613e
-vendor_crate	os_info	3.14.0	e4022a17595a00d6a369236fdae483f0de7f0a339960a53118b818238e132224
+vendor_crate	os_info	3.15.0	9cf20a545b305cf1da722b236b5155c9bb35f1d5ceb28c048bd96ca842f41b5b
 vendor_crate	windows-link	0.2.1	f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5
 vendor_crate	windows-sys	0.61.2	ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc
