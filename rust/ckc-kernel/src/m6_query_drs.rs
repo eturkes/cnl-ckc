@@ -34,15 +34,15 @@ pub fn strip_anchor(arena: &ETermArena, c: &T) -> (out: T)
     }
 }
 
-pub fn supported_leaf(name: &Vec<u8>, arity: usize) -> (out: bool)
+pub fn supported_leaf(name: &Vec<u8>, arity: usize, v2: bool) -> (out: bool)
     ensures
-        out == spec::supported_leaf(name@, arity as nat),
+        out == spec::supported_leaf(name@, arity as nat, v2),
 {
-    (has_name(name, &Sym::Object) && arity == 6) || (has_name(name, &Sym::Predicate) && 3 <= arity
-        && arity <= 5) || (has_name(name, &Sym::ModifierPp) && arity == 3) || (has_name(
+    (v2 && has_name(name, &Sym::Relation) && arity == 3) || (has_name(name, &Sym::Object) && arity
+        == 6) || (has_name(name, &Sym::Predicate) && 3 <= arity && arity <= 5) || (has_name(
         name,
-        &Sym::Property,
-    ) && arity == 3)
+        &Sym::ModifierPp,
+    ) && arity == 3) || (has_name(name, &Sym::Property) && arity == 3)
 }
 
 pub fn wh_tag_ok(arena: &ETermArena, t: &T) -> (out: bool)
@@ -55,12 +55,12 @@ pub fn wh_tag_ok(arena: &ETermArena, t: &T) -> (out: bool)
     is_atom(arena, t, &Sym::Who) || is_atom(arena, t, &Sym::Which) || is_atom(arena, t, &Sym::What)
 }
 
-pub fn scan_box(arena: &ETermArena, b: &T) -> (out: bool)
+pub fn scan_box(arena: &ETermArena, b: &T, v2: bool) -> (out: bool)
     requires
         arena_ok(arena),
         valid(arena.nodes@, b),
     ensures
-        out == spec::scan_box(b@),
+        out == spec::scan_box(b@, v2),
     decreases crate::k2_engine::term_size(b@), 0int,
 {
     proof {
@@ -72,17 +72,17 @@ pub fn scan_box(arena: &ETermArena, b: &T) -> (out: bool)
             proof {
                 crate::m6_drs::child_size(b@, 1);
             }
-            scan_conds(arena, &parts.conds)
+            scan_conds(arena, &parts.conds, v2)
         },
     }
 }
 
-pub fn scan_conds(arena: &ETermArena, l: &T) -> (out: bool)
+pub fn scan_conds(arena: &ETermArena, l: &T, v2: bool) -> (out: bool)
     requires
         arena_ok(arena),
         valid(arena.nodes@, l),
     ensures
-        out == spec::scan_conds(l@),
+        out == spec::scan_conds(l@, v2),
     decreases crate::k2_engine::term_size(l@), 1int,
 {
     proof {
@@ -102,7 +102,7 @@ pub fn scan_conds(arena: &ETermArena, l: &T) -> (out: bool)
                     crate::m6_drs::child_size(l@, 0);
                     crate::m6_drs::child_size(l@, 1);
                 }
-                scan_leaf(arena, &inner) && scan_conds(arena, &args[1])
+                scan_leaf(arena, &inner, v2) && scan_conds(arena, &args[1], v2)
             } else {
                 false
             }
@@ -111,29 +111,34 @@ pub fn scan_conds(arena: &ETermArena, l: &T) -> (out: bool)
     }
 }
 
-pub fn scan_leaf(arena: &ETermArena, leaf: &T) -> (out: bool)
+pub fn scan_leaf(arena: &ETermArena, leaf: &T, v2: bool) -> (out: bool)
     requires
         arena_ok(arena),
         valid(arena.nodes@, leaf),
     ensures
-        out == spec::scan_leaf(leaf@),
+        out == spec::scan_leaf(leaf@, v2),
     decreases crate::k2_engine::term_size(leaf@), 2int,
 {
     proof {
         reveal_with_fuel(spec::scan_leaf, 1);
+        reveal_strlit("[|]");
+        reveal(v1text::ascii);
+        assert_seqs_equal!(symbol(&Sym::Cons) == v1text::cons_name());
     }
     match parts(arena, leaf) {
         None => false,
         Some((name, args)) => {
-            if modal(&name) && args.len() == 1 {
+            if v2 && has_name(&name, &Sym::Cons) && args.len() == 2 {
+                scan_conds(arena, leaf, v2)
+            } else if modal(&name) && args.len() == 1 {
                 proof {
                     crate::m6_drs::child_size(leaf@, 0);
                 }
-                scan_box(arena, &args[0])
+                scan_box(arena, &args[0], v2)
             } else if has_name(&name, &Sym::Query) && args.len() == 2 {
                 wh_tag_ok(arena, &args[1])
             } else {
-                supported_leaf(&name, args.len())
+                supported_leaf(&name, args.len(), v2)
             }
         },
     }

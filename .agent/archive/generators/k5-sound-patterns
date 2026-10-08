@@ -4,7 +4,7 @@ R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust');sr
 body=lambda name:src.split('pub open spec fn '+name+'_tokens() -> Seq<Bytes> {',1)[1].split('\n}',1)[0]
 quoted=lambda text:[m.group(1) for m in re.finditer(r'lit\(\s*("(?:[^"\\]|\\.)*")\s*@\s*,?\s*\)',text,re.S)]
 bv=lambda data:'bs!['+str(data[0])+'u8,'+','.join(map(str,data[1:]))+']'
-out=['use crate::{k5_sound_codes as n,k5_sound_scan as s};','use ckc_spec::{check as ck,ui as u};','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
+out=['use crate::{k5_sound_codes as n,k5_sound_scan as s};','use ckc_spec::{check as ck,ui as u};','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost_body)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
 for name in ['css','marketing','relative']:
     literals=quoted(body(name));assert literals
     words=ast.literal_eval(literals[0]).split(' ') if name!='relative' else list(map(ast.literal_eval,literals));assert all(w and w.isascii() for w in words)

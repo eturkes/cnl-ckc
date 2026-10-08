@@ -1,8 +1,8 @@
 % cdc2022-opioid-s40-01.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s40-01',ace_sha256('4dec4a763f2247516dbf4353cc873a552469e01c70086ca6650c23d95bb58f6c'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s40-01',ace_sha256('4dec4a763f2247516dbf4353cc873a552469e01c70086ca6650c23d95bb58f6c'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a patient takes a short-acting-full-agonist-opioid and the short-acting-full-agonist-opioid has a last-dose and a clinician plans a first-buprenorphine-dose for the patient and a buprenorphine-transition-wait has a duration and the duration includes at least 8 hours then the clinician should use the buprenorphine-transition-wait after the last-dose before the first-buprenorphine-dose and the patient should use the buprenorphine-transition-wait after the last-dose before the first-buprenorphine-dose.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s40-01',1,box(1),[A,B,C,D,E,F,G,H,I,J,K,L,M]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'short-acting-full-agonist-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,take), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'last-dose',countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,have), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,clinician,countable), guideline_cardinality(actual,F,na,eq,1), guideline_entity(actual,G,'first-buprenorphine-dose',countable), guideline_cardinality(actual,G,na,eq,1), guideline_event(actual,H,plan), guideline_arg(actual,H,1,F), guideline_arg(actual,H,2,G), guideline_pp(actual,H,for,A), guideline_entity(actual,I,'buprenorphine-transition-wait',countable), guideline_cardinality(actual,I,na,eq,1), guideline_entity(actual,J,duration,countable), guideline_cardinality(actual,J,na,eq,1), guideline_event(actual,K,have), guideline_arg(actual,K,1,I), guideline_arg(actual,K,2,J), guideline_entity(actual,L,hour,countable), guideline_cardinality(actual,L,na,geq,8), guideline_event(actual,M,include), guideline_arg(actual,M,1,J), guideline_arg(actual,M,2,L).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s40-01',1,box(1),[A,B,C,D,E,F,G,H,I,J,K,L,M]),'$guideline_id'(product,'cdc2022-opioid-s40-01',1,ref(14),[A,B,C,D,E,F,G,H,I,J,K,L,M]),use) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'short-acting-full-agonist-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,take), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'last-dose',countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,have), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,clinician,countable), guideline_cardinality(actual,F,na,eq,1), guideline_entity(actual,G,'first-buprenorphine-dose',countable), guideline_cardinality(actual,G,na,eq,1), guideline_event(actual,H,plan), guideline_arg(actual,H,1,F), guideline_arg(actual,H,2,G), guideline_pp(actual,H,for,A), guideline_entity(actual,I,'buprenorphine-transition-wait',countable), guideline_cardinality(actual,I,na,eq,1), guideline_entity(actual,J,duration,countable), guideline_cardinality(actual,J,na,eq,1), guideline_event(actual,K,have), guideline_arg(actual,K,1,I), guideline_arg(actual,K,2,J), guideline_entity(actual,L,hour,countable), guideline_cardinality(actual,L,na,geq,8), guideline_event(actual,M,include), guideline_arg(actual,M,1,J), guideline_arg(actual,M,2,L).

@@ -4,7 +4,7 @@ use crate::k2_engine::{
     body_item_valid, body_item_view, body_items_valid, body_items_view, clause_valid, clause_view,
     db_valid, db_view, root_terms, roots_valid,
 };
-use crate::k2_output::{atom_root, comp1, comp3, int_root};
+use crate::k2_output::{atom_root, comp1, comp3, comp4, int_root};
 use crate::k2_term::ETermArena;
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::root_ok;
@@ -267,17 +267,17 @@ proof fn bundle_clauses_wf(bundles: Seq<ckc_spec::v1text::Bundle>)
     }
 }
 
-fn schema_root(arena: &mut ETermArena) -> (root: usize)
+fn schema_root(arena: &mut ETermArena, version: u8) -> (root: usize)
     requires
         crate::k2_term::arena_ok(old(arena)),
     ensures
         crate::k2_term::arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         root_ok(final(arena), root),
-        final(arena)@[root as int] == ckc_spec::v1text::schema_version_term(),
+        final(arena)@[root as int] == ckc_spec::v1text::schema_version_term(version as nat),
 {
     let name: &[u8] = b"guideline_schema_version";
-    let one = int_root(arena, 1);
+    let one = int_root(arena, version as usize);
     let root = comp1(arena, name, one);
     proof {
         reveal_byteslit(b"guideline_schema_version");
@@ -343,7 +343,60 @@ fn document_record_root(
     let ace = atom_root(arena, &parsed.doc_ace);
     let ace_field = comp1(arena, ace_bytes, ace);
     let docid = atom_root(arena, &parsed.docid);
-    comp3(arena, doc_bytes, docid, ace_field, ulex_field)
+    if parsed.doc_version == 2 {
+        // m7t D3: the v2 record ends in temporal(sha256(H)).
+        let temporal_bytes: &[u8] = b"temporal";
+        proof {
+            reveal_byteslit(b"temporal");
+            reveal_strlit("temporal");
+            reveal(ckc_spec::v1text::ascii);
+            reveal(ckc_spec::v1text::version_ok);
+            reveal(ckc_spec::v1text::wf_doc);
+            assert(temporal_bytes@ == ckc_spec::v1text::ascii("temporal"@));
+            assert(doc.temporal == Some(parsed.doc_temporal@));
+        }
+        let digest = atom_root(arena, &parsed.doc_temporal);
+        let sha = comp1(arena, sha_bytes, digest);
+        let temporal = comp1(arena, temporal_bytes, sha);
+        let ghost ace_t = arena@[ace_field as int];
+        let ghost ulex_t = arena@[ulex_field as int];
+        let ghost docid_t = arena@[docid as int];
+        let ghost temporal_t = arena@[temporal as int];
+        let root = comp4(arena, doc_bytes, docid, ace_field, ulex_field, temporal);
+        proof {
+            reveal(ckc_spec::v1text::doc_record_term);
+            reveal(ckc_spec::v1text::temporal_terms);
+            assert(temporal_t == ckc_spec::term::Term::Comp(
+                ckc_spec::v1text::ascii("temporal"@),
+                seq![
+                    ckc_spec::term::Term::Comp(
+                        ckc_spec::v1text::ascii("sha256"@),
+                        seq![ckc_spec::term::Term::Atom(parsed.doc_temporal@)],
+                    ),
+                ],
+            ));
+            assert(seq![docid_t, ace_t, ulex_t] + ckc_spec::v1text::temporal_terms(doc.temporal)
+                =~= seq![docid_t, ace_t, ulex_t, temporal_t]);
+        }
+        root
+    } else {
+        proof {
+            reveal(ckc_spec::v1text::version_ok);
+            reveal(ckc_spec::v1text::wf_doc);
+            reveal(ckc_spec::v1text::doc_record_term);
+            reveal(ckc_spec::v1text::temporal_terms);
+            assert(doc.temporal is None);
+        }
+        let ghost ace_t = arena@[ace_field as int];
+        let ghost ulex_t = arena@[ulex_field as int];
+        let ghost docid_t = arena@[docid as int];
+        let root = comp3(arena, doc_bytes, docid, ace_field, ulex_field);
+        proof {
+            assert(seq![docid_t, ace_t, ulex_t] + ckc_spec::v1text::temporal_terms(doc.temporal)
+                =~= seq![docid_t, ace_t, ulex_t]);
+        }
+        root
+    }
 }
 
 pub fn document_db(
@@ -374,7 +427,7 @@ pub fn document_db(
         &parsed.clauses,
         Ghost(doc.bundles.map_values(|b: ckc_spec::v1text::Bundle| b.clauses).flatten()),
     );
-    let schema = schema_root(arena);
+    let schema = schema_root(arena, parsed.doc_version);
     let ghost with_schema = arena.nodes@;
     let record = document_record_root(arena, parsed, Ghost(doc));
     proof {
@@ -389,7 +442,7 @@ pub fn document_db(
     proof {
         assert(db_valid(arena.nodes@, out@));
         assert_seqs_equal!(db_view(arena.nodes@, out@) == seq![
-            ckc_spec::engine::fact_clause(ckc_spec::v1text::schema_version_term()),
+            ckc_spec::engine::fact_clause(ckc_spec::v1text::schema_version_term(doc.version)),
             ckc_spec::engine::fact_clause(ckc_spec::v1text::doc_record_term(doc)),
         ]);
     }

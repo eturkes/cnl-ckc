@@ -102,9 +102,39 @@ pub open spec fn tab() -> Seq<u8> {
     seq![0x09u8]
 }
 
-pub open spec fn meta_block(compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {
-    ascii("meta\tschema\tv1\nmeta\tcompiler\t"@) + compiler + ascii("\nmeta\tbase-lexicon\t"@)
-        + lexicon + ascii(
+// One `meta schema` row per schema version the corpus compiles under (contract
+// m7t D8): a guideline with a staged temporal.tsv is v2, every other one v1 (an
+// empty corpus keeps the v1 row).
+pub open spec fn has_table(staged: Seq<Member>, gid: Seq<u8>) -> bool {
+    exists|i: int|
+        0 <= i < staged.len() && #[trigger] staged[i].path == ascii("guidelines/"@) + gid + ascii(
+            "/temporal.tsv"@,
+        )
+}
+
+pub open spec fn some_table(staged: Seq<Member>, profiles: Seq<(Seq<u8>, Seq<u8>)>) -> bool {
+    exists|i: int| 0 <= i < profiles.len() && has_table(staged, #[trigger] profiles[i].0)
+}
+
+pub open spec fn some_plain(staged: Seq<Member>, profiles: Seq<(Seq<u8>, Seq<u8>)>) -> bool {
+    exists|i: int| 0 <= i < profiles.len() && !has_table(staged, #[trigger] profiles[i].0)
+}
+
+pub open spec fn schema_rows(staged: Seq<Member>, profiles: Seq<(Seq<u8>, Seq<u8>)>) -> Seq<u8> {
+    (if !some_table(staged, profiles) || some_plain(staged, profiles) {
+        ascii("meta\tschema\tv1\n"@)
+    } else {
+        Seq::empty()
+    }) + (if some_table(staged, profiles) {
+        ascii("meta\tschema\tv2\n"@)
+    } else {
+        Seq::empty()
+    })
+}
+
+pub open spec fn meta_block(schema: Seq<u8>, compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {
+    schema + ascii("meta\tcompiler\t"@) + compiler + ascii("\nmeta\tbase-lexicon\t"@) + lexicon
+        + ascii(
         "\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
     )
 }
@@ -140,8 +170,9 @@ pub open spec fn release_manifest(
     labels: Seq<(Seq<u8>, Seq<u8>)>,
     tags: Seq<Member>,
 ) -> Seq<u8> {
-    meta_block(compiler, lexicon) + member_rows(sort_members(payload(staged, profiles) + tags))
-        + source_rows(sources(staged, profiles, urls)) + label_rows(labels)
+    meta_block(schema_rows(staged, profiles), compiler, lexicon) + member_rows(
+        sort_members(payload(staged, profiles) + tags),
+    ) + source_rows(sources(staged, profiles, urls)) + label_rows(labels)
 }
 
 // --- BagIt digest manifests (M5.6, contract m5u6): `<sha>  <path>` per member in path

@@ -1,8 +1,8 @@
 % cdc2022-opioid-rec02-imp09.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp09',ace_sha256('2ac0b29c5e2996f6c45b813e6ec84ce8c2901a6e2092028bf3bd12badd9e7afc'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-rec02-imp09',ace_sha256('2ac0b29c5e2996f6c45b813e6ec84ce8c2901a6e2092028bf3bd12badd9e7afc'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a patient has a chronic-low-back-pain and a nonpharmacologic-approach does not improve the chronic-low-back-pain and the patient does not have a contraindication then every clinician can consider an NSAID and can consider a duloxetine.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp09',1,box(3),[A,B,C,D,E]),can) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'chronic-low-back-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'nonpharmacologic-approach',countable), guideline_cardinality(actual,D,na,eq,1), guideline_operator(actual,F,-), guideline_event(F,G,improve), guideline_arg(F,G,1,D), guideline_arg(F,G,2,B), guideline_operator(actual,H,-), guideline_entity(H,I,contraindication,countable), guideline_cardinality(H,I,na,eq,1), guideline_event(H,J,have), guideline_arg(H,J,1,A), guideline_arg(H,J,2,I), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp09',1,box(3),[A,B,C,D,E]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp09',1,ref(9),[A,B,C,D,E]),'NSAID',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'chronic-low-back-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'nonpharmacologic-approach',countable), guideline_cardinality(actual,D,na,eq,1), guideline_operator(actual,F,-), guideline_event(F,G,improve), guideline_arg(F,G,1,D), guideline_arg(F,G,2,B), guideline_operator(actual,H,-), guideline_entity(H,I,contraindication,countable), guideline_cardinality(H,I,na,eq,1), guideline_event(H,J,have), guideline_arg(H,J,1,A), guideline_arg(H,J,2,I), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).

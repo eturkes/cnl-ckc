@@ -924,7 +924,7 @@ pub open spec fn front(
             Result::Err(o) => Result::Err(o),
             Result::Ok((q, arows)) => match answers_custody(answers, qsha, q, arows.len()) {
                 Result::Err(o) => Result::Err(o),
-                Result::Ok(a) => match composition(rows, pls) {
+                Result::Ok(a) => match composition(rows, pls, q.version) {
                     Result::Err(o) => Result::Err(o),
                     Result::Ok(docs) => Result::Ok(Front { q, arows, a, docs }),
                 },

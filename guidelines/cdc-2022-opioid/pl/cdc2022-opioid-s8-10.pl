@@ -1,8 +1,8 @@
 % cdc2022-opioid-s8-10.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s8-10',ace_sha256('31c46174fcdcbf6483d779d3c55163d017421a667639d636bafa0b5accd03c8f'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s8-10',ace_sha256('31c46174fcdcbf6483d779d3c55163d017421a667639d636bafa0b5accd03c8f'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: Every clinician should avoid an abrupt-opioid-discontinuation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s8-10',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s8-10',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s8-10',1,ref(2),[A]),'abrupt-opioid-discontinuation',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

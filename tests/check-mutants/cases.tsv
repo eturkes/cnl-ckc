@@ -39,3 +39,14 @@ manifest-missing	check_adjudication	1
 lexicon-shadow-missing	check_lexicon	1
 coverage-self-restatement	check_coverage	1
 red-pin-missing	collect_red_probes	1
+temporal-header	corpus_temporal	1
+temporal-no-rows	corpus_temporal	1
+temporal-final-newline	corpus_temporal	1
+temporal-field-count	corpus_temporal	1
+temporal-lemma	corpus_temporal	1
+temporal-unit-id	corpus_temporal	1
+temporal-duplicate-noun	corpus_temporal	1
+temporal-role-id	corpus_temporal	1
+temporal-duplicate-preposition	corpus_temporal	1
+temporal-frame-lemma	corpus_temporal	1
+temporal-kind	corpus_temporal	1

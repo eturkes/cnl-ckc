@@ -1,6 +1,7 @@
 // `ckc check` corpus mutants (.agent/archive/contracts/harness.md H6): the 36 M5.3 red
 // mutants whose first violation lands before the SWI-Prolog stage (mutants.py
-// `mutate`, byte for byte) + 3 `.agent/spec.md` shape plants + 1 ledger bundle-mismatch plant. Each row mutates a
+// `mutate`, byte for byte) + 3 `.agent/spec.md` shape plants + 1 ledger bundle-mismatch plant
+// + 11 temporal.tsv plants (one per m7t D1 rejection). Each row mutates a
 // fresh clone of HEAD and must end in its pinned rc with the pinned first
 // violation: whole stderr when nonempty, else the last stdout line.
 // CKC_CHECK_TEST_BIN selects a prebuilt executable.
@@ -24,6 +25,7 @@ const ULEX: &str = "guidelines/cdc-2022-opioid/lexicon.ulex";
 const SHADOW: &str = "guidelines/cdc-2022-opioid/audit/lexicon-shadow.tsv";
 const EVIDENCE: &str = "guidelines/cdc-2022-opioid/source/box3-extraction.txt";
 const SPEC: &str = ".agent/spec.md";
+const TEMPORAL: &str = "guidelines/cdc-2022-opioid/temporal.tsv";
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -71,6 +73,12 @@ fn replace(t: &Path, rel: &str, old: &[u8], new: &[u8]) {
 fn append(t: &Path, rel: &str, data: &[u8]) {
     let mut bytes = fs::read(t.join(rel)).unwrap();
     bytes.extend_from_slice(data);
+    fs::write(t.join(rel), bytes).unwrap();
+}
+
+fn truncate_to(t: &Path, rel: &str, keep: usize) {
+    let mut bytes = fs::read(t.join(rel)).unwrap();
+    bytes.truncate(keep);
     fs::write(t.join(rel), bytes).unwrap();
 }
 
@@ -137,6 +145,23 @@ const LEDGER_DATE: &[u8] = b"2026-09-14T00:00:00Z";
 
 fn mutate(t: &Path, name: &str) {
     match name {
+        "temporal-header" => replace(t, TEMPORAL, b"# format: kind\tlemma\tvalue\n", b"# format: drift\n"),
+        "temporal-no-rows" => {
+            let header = lines(&fs::read(t.join(TEMPORAL)).unwrap())[..2].concat();
+            truncate_to(t, TEMPORAL, header.len());
+        }
+        "temporal-final-newline" => {
+            let len = fs::read(t.join(TEMPORAL)).unwrap().len();
+            truncate_to(t, TEMPORAL, len - 1);
+        }
+        "temporal-field-count" => append(t, TEMPORAL, b"unit\tminute\n"),
+        "temporal-lemma" => append(t, TEMPORAL, b"unit\tmy minute\tminute\n"),
+        "temporal-unit-id" => append(t, TEMPORAL, b"unit\tfortnight\tfortnight\n"),
+        "temporal-duplicate-noun" => append(t, TEMPORAL, b"unit\tday\tweek\n"),
+        "temporal-role-id" => append(t, TEMPORAL, b"relation\tthrough\tthrough\n"),
+        "temporal-duplicate-preposition" => append(t, TEMPORAL, b"relation\tfor\tafter\n"),
+        "temporal-frame-lemma" => append(t, TEMPORAL, b"spacing\tevery\t\n"),
+        "temporal-kind" => append(t, TEMPORAL, b"frequency\tdaily\tday\n"),
         "fork-entry" => new_file(t, "vendor/000-parity", b"not a vendor directory\n"),
         "vendor-license" => replace(t, "vendor/clex/PROVENANCE", b"License: GPL-3.0-or-later\n", b""),
         "pristine-digest" => {
@@ -259,8 +284,8 @@ fn mutate(t: &Path, name: &str) {
         "semantic-undotted-clause" => replace(
             t,
             DOC,
-            b"guideline_schema_version(1).\n",
-            b"guideline_schema_version(1)\n",
+            b"guideline_schema_version(2).\n",
+            b"guideline_schema_version(2)\n",
         ),
         "semantic-undotted-record" => {
             let rows: Vec<Vec<u8>> = lines(&fs::read(t.join(DOC)).unwrap())
@@ -381,7 +406,7 @@ fn check_mutant_battery() {
         .filter(|l| !l.starts_with('#'))
         .map(|l| l.split('\t').collect())
         .collect();
-    assert_eq!(rows.len(), 40, "tests/check-mutants row count");
+    assert_eq!(rows.len(), 51, "tests/check-mutants row count");
     // Each worker clones HEAD once, then per row: mutate → check → reset + clean
     // back to HEAD (a fresh checkout per row costs ~10× the check itself).
     let next = AtomicUsize::new(0);

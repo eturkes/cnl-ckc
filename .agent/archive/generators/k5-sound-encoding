@@ -4,8 +4,8 @@ ap=argparse.ArgumentParser();ap.add_argument('--probe',action='store_true');args
 R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust');src=(R/'ckc-spec/src/ui.rs').read_text()
 raws={name:src.split('pub open spec fn '+name+'() -> Bytes {',1)[1].split('r##"',1)[1].split('"##@',1)[0] for name in ['css_text','script_html']}
 bv=lambda a:'bs!['+str(a[0])+'u8,'+','.join(map(str,a[1:]))+']'
-out=['use vstd::prelude::*;','use vstd::utf8::*;','use ckc_spec::ui as u;','use crate::k5_sound_chrome as ch;','#[cfg(verus_keep_ghost)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }']
-for name,raw in raws.items():out += [f'#[cfg(verus_keep_ghost)]\nmacro_rules! reveal_{name} {{ () => {{ reveal_strlit(r##"{raw}"##) }}; }}']
+out=['use vstd::prelude::*;','use vstd::utf8::*;','use ckc_spec::ui as u;','use crate::k5_sound_chrome as ch;','#[cfg(verus_keep_ghost_body)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }']
+for name,raw in raws.items():out += [f'#[cfg(verus_keep_ghost_body)]\nmacro_rules! reveal_{name} {{ () => {{ reveal_strlit(r##"{raw}"##) }}; }}']
 out+=['verus! {']
 for name,raw in raws.items():
     assert raw.isascii();n=len(raw);count=(n+63)//64;limit=1 if args.probe else count

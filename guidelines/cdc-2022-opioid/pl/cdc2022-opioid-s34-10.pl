@@ -1,8 +1,8 @@
 % cdc2022-opioid-s34-10.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s34-10',ace_sha256('8f0d72eaea9819419bb6e81ffc21e8e52b9230d5d45e13c9ddecdebf1b2484c0'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s34-10',ace_sha256('8f0d72eaea9819419bb6e81ffc21e8e52b9230d5d45e13c9ddecdebf1b2484c0'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a patient has a combined-opioid-dosage and the combined-opioid-dosage includes at least 50 MME-units-per-day then every clinician should increase a follow-up-frequency and should offer a naloxone-dose to the patient and should provide an opioid-overdose-education to the patient and should offer a naloxone-dose to a patient-household-member and should provide an opioid-overdose-education to a patient-household-member.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s34-10',1,box(1),[A,B,C,D,E,F]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'combined-opioid-dosage',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'MME-unit-per-day',countable), guideline_cardinality(actual,D,na,geq,50), guideline_event(actual,E,include), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,clinician,countable), guideline_cardinality(actual,F,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s34-10',1,box(1),[A,B,C,D,E,F]),'$guideline_id'(product,'cdc2022-opioid-s34-10',1,ref(7),[A,B,C,D,E,F]),'follow-up-frequency',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'combined-opioid-dosage',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'MME-unit-per-day',countable), guideline_cardinality(actual,D,na,geq,50), guideline_event(actual,E,include), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,clinician,countable), guideline_cardinality(actual,F,na,eq,1).

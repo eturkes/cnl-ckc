@@ -24,6 +24,17 @@
 %                                     ride the same canonical classes (new
 %                                     unsupported details: query_expected/1,
 %                                     query_sentences/1, query_unsupported/2)
+%   v2 <ape-tree-dir> <docid> <temporal.tsv> [<ulex>] [proof]
+%   question v2 <ape-tree-dir> <qid> <temporal.tsv> [<ulex>]
+%                                     schema v2 (contract m7t): the v1 projection
+%                                     + guideline_interval/6 and
+%                                     guideline_recurrence/4 annotations read
+%                                     through the temporal.tsv table; record
+%                                     guideline_document/4 (question record /5)
+%                                     ending temporal(sha256(H)); rejects add
+%                                     unsupported temporal_shape(Why,S) and the
+%                                     load class temporal_load (exit 2); law =
+%                                     docs/REFERENCE.md "Schema v2"
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
 %
@@ -32,14 +43,14 @@
 % Success: stdout = compiled Prolog document, stderr = 0 bytes, exit 0.
 % Reject: stdout = 0 bytes; stderr = one canonical ace_to_pl_error(Class,Detail) line.
 % Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|proof;
-%       2=usage|ape_load|ulex_load|uncaught.
+%       2=usage|ape_load|ulex_load|temporal_load|uncaught.
 % v1 assurance: every v1 compile (product or proof emission) derives per-group
 % witness worlds + obligations and replays them against the document's own
 % clauses; an underivable obligation rejects the document (class proof).
-% v1 is the sole schema: every compile projects onto it, and a future ABI
-% extension bumps the version and reintroduces an explicit selector. The
-% frozen v1 path lives under "v1 schema projection" near the end of this
-% file and is documented in docs/REFERENCE.md "Compiled Prolog schema (v1)". v1
+% v1 stays frozen: a v1 compile projects onto it byte for byte, and only the
+% explicit `v2` selector adds annotations. The v1 path lives under "v1 schema
+% projection" near the end of this file and is documented in docs/REFERENCE.md
+% "Compiled Prolog schema (v1, v2)". v1
 % admits copula/ground facts and Horn rules plus modal/classical-negation
 % operator wrappers (reified as guideline_operator/3 edges over context
 % ids), consequent currying, antecedent Horn splits over one disjunction,
@@ -95,6 +106,43 @@ run(Input, Output, ErrorStream) :-
     set_stream(ErrorStream, encoding(utf8)),
     current_prolog_flag(argv, Argv),
     dispatch(Argv, Input, Output, ErrorStream).
+/* v2 (contract m7t D2/D9): a leading `v2` token selects the schema and
+   names the guideline's temporal.tsv; `v2` is reserved as a first token. */
+dispatch([question, v2, Tree, QId, Temporal], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(QId, ErrorStream),
+    compile_mode(query, Tree, QId, none, file(Temporal), Input, Output,
+        ErrorStream).
+dispatch([question, v2, Tree, QId, Temporal, Ulex], Input, Output,
+        ErrorStream) :-
+    !,
+    validated_docid(QId, ErrorStream),
+    validated_ulex_arg(Ulex, ErrorStream),
+    compile_mode(query, Tree, QId, file(Ulex), file(Temporal), Input, Output,
+        ErrorStream).
+dispatch([v2, Tree, DocId, Temporal], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    compile_mode(v1(product), Tree, DocId, none, file(Temporal), Input,
+        Output, ErrorStream).
+dispatch([v2, Tree, DocId, Temporal, proof], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    compile_mode(v1(proof), Tree, DocId, none, file(Temporal), Input, Output,
+        ErrorStream).
+dispatch([v2, Tree, DocId, Temporal, Ulex], Input, Output, ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    validated_ulex_arg(Ulex, ErrorStream),
+    compile_mode(v1(product), Tree, DocId, file(Ulex), file(Temporal), Input,
+        Output, ErrorStream).
+dispatch([v2, Tree, DocId, Temporal, Ulex, proof], Input, Output,
+        ErrorStream) :-
+    !,
+    validated_docid(DocId, ErrorStream),
+    validated_ulex_arg(Ulex, ErrorStream),
+    compile_mode(v1(proof), Tree, DocId, file(Ulex), file(Temporal), Input,
+        Output, ErrorStream).
 dispatch([question, Tree, QId], Input, Output, ErrorStream) :-
     !,
     validated_docid(QId, ErrorStream),
@@ -167,10 +215,14 @@ docid_code(0'-).
 /* ---------- compile mode ---------- */
 
 compile_mode(Mode, Tree, DocId, Ulex, Input, Output, ErrorStream) :-
+    compile_mode(Mode, Tree, DocId, Ulex, none, Input, Output, ErrorStream).
+
+compile_mode(Mode, Tree, DocId, Ulex, Temporal, Input, Output, ErrorStream) :-
     set_stream(Input, type(binary)),
     prompt(_, ''),
     load_ape(Tree, Input, Output, ErrorStream),
     maybe_load_ulex(Ulex, Input, Output, ErrorStream, UlexDigest),
+    maybe_load_temporal(Temporal, ErrorStream),
     read_input(Input, ErrorStream, Bytes, Text),
     mode_line_check(Mode, Text, ErrorStream),
     ( quarantined_call(Input, Output, ErrorStream,
@@ -178,7 +230,7 @@ compile_mode(Mode, Tree, DocId, Ulex, Input, Output, ErrorStream) :-
               Drs, Messages, _Time)) ->
         accept_or_reject(Mode, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
             Messages, Output, ErrorStream)
-    ; throw(error(ape_call_failed, context(ace_to_pl:compile_mode/7, Text)))
+    ; throw(error(ape_call_failed, context(ace_to_pl:compile_mode/8, Text)))
     ).
 
 /* Question mode pins its one-line law before parsing: premise
@@ -715,6 +767,342 @@ canonical_tree(Term) :-
     \+ ( Name == '$VAR', Arity =:= 1 ),
     canonical_args(1, Arity, Term).
 
+/* ---------- v2 temporal vocabulary (contract m7t D1) ----------
+   `temporal.tsv` maps source lemmas onto closed ids, so the projection
+   names no source word. The table parks in a global the projection reads;
+   none = v1. */
+maybe_load_temporal(none, _) :-
+    nb_setval(ace_to_pl_temporal, none).
+maybe_load_temporal(file(File), ErrorStream) :-
+    catch(
+        ( v2_read_temporal(File, Table) ->
+            true
+        ; throw(error(temporal_load_failed(File),
+              context(ace_to_pl:maybe_load_temporal/2, plain_failure)))
+        ),
+        Error,
+        emit_error(ErrorStream, temporal_load, Error, 2)),
+    nb_setval(ace_to_pl_temporal, Table).
+
+v2_temporal_header(Codes) :-
+    atom_codes('# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)\n',
+        Codes).
+
+v2_read_temporal(File, table(Units, Relations, Spacings, Digest)) :-
+    setup_call_cleanup(
+        open(File, read, Stream, [type(binary)]),
+        read_stream_to_codes(Stream, Bytes),
+        close(Stream)),
+    crypto_data_hash(Bytes, Digest, [algorithm(sha256), encoding(octet)]),
+    v2_temporal_header(Header),
+    ( append(Header, Body, Bytes) -> true ; v2_bad(header) ),
+    ( Body \== [] -> true ; v2_bad(no_rows) ),
+    ( append(Lines, [0'\n], Body) -> true ; v2_bad(final_newline) ),
+    split_lf(Lines, Rows),
+    v2_rows(Rows, 1, t([], [], []), t(Units, Relations, Spacings)).
+
+v2_bad(Why) :-
+    throw(error(temporal(Why), context(ace_to_pl:v2_read_temporal/2, _))).
+
+v2_rows([], _, T, T).
+v2_rows([Row|Rows], N, T0, T) :-
+    v2_row(Row, N, T0, T1),
+    N1 is N + 1,
+    v2_rows(Rows, N1, T1, T).
+
+/* One row; checks run in the spec's order (fields, lemma, kind, value,
+   duplicates). A noun is a unit or a frame, never both. */
+v2_row(Row, N, t(U0, R0, S0), T) :-
+    v2_split_tab(Row, Fields),
+    ( Fields = [K, L, V] -> true ; v2_bad(row(N, field_count)) ),
+    ( v2_lemma(L, Lemma) -> true ; v2_bad(row(N, lemma)) ),
+    atom_codes(Kind, K),
+    ( Kind == unit ->
+        ( v2_closed_id(V, [second, minute, hour, day, week, month, year], Unit) ->
+            true
+        ; v2_bad(row(N, unit_id))
+        ),
+        ( ( memberchk(Lemma-_, U0) ; memberchk(_-Lemma, S0) ) ->
+            v2_bad(row(N, duplicate_noun))
+        ; true
+        ),
+        append(U0, [Lemma-Unit], U),
+        T = t(U, R0, S0)
+    ; Kind == relation ->
+        ( v2_closed_id(V, [duration, within, after, before], Role) ->
+            true
+        ; v2_bad(row(N, role_id))
+        ),
+        ( memberchk(Lemma-_, R0) -> v2_bad(row(N, duplicate_preposition)) ; true ),
+        append(R0, [Lemma-Role], R),
+        T = t(U0, R, S0)
+    ; Kind == spacing ->
+        ( v2_lemma(V, Frame) -> true ; v2_bad(row(N, frame_lemma)) ),
+        ( ( memberchk(Lemma-Frame, S0) ; memberchk(Frame-_, U0) ) ->
+            v2_bad(row(N, duplicate_noun))
+        ; true
+        ),
+        append(S0, [Lemma-Frame], S),
+        T = t(U0, R0, S)
+    ; v2_bad(row(N, kind))
+    ).
+
+v2_split_tab(Codes, [Field|Fields]) :-
+    ( append(Field, [0'\t|Rest], Codes) ->
+        v2_split_tab(Rest, Fields)
+    ; Field = Codes,
+      Fields = []
+    ).
+
+/* A lemma field = nonempty UTF-8 bytes, none of them a space, control or
+   DEL byte; Atom = its decoded text (spec temporal.rs lemma_ok). */
+v2_lemma([B|Bs], Atom) :-
+    forall(member(X, [B|Bs]), ( X > 0x20, X =\= 0x7f )),
+    catch(decode_utf8([B|Bs], Codes, 0), _, fail),
+    atom_codes(Atom, Codes).
+
+v2_closed_id(Codes, Ids, Id) :-
+    member(Id, Ids),
+    atom_codes(Id, Codes),
+    !.
+
+v2_table(T) :-
+    nb_current(ace_to_pl_temporal, table(U, R, S, _)),
+    T = t(U, R, S).
+
+/* ---------- v2 annotation pass (contract m7t D4/D5) ----------
+   One scope = one flat item list; a NAF payload is its own scope. A
+   pattern's conditions share their context term (sub-list nesting is
+   irrelevant). The annotation item follows its pp; v1_condition renders
+   it. Reads the DRS through arg/3 + == (non-instantiation law). */
+v2_annotate(S, Items0, Items) :-
+    ( v2_table(T) ->
+        v2_annotate_scope(T, S, Items0, Items)
+    ; Items = Items0
+    ).
+
+v2_annotate_scope(T, S, Items0, Items) :-
+    v2_anns(Items0, T, S, Items0, Anns),
+    v2_claims(Anns, Claims),
+    ( v2_dup(Claims) ->
+        reject(unsupported, temporal_shape(shared_quantity, S))
+    ; true
+    ),
+    v2_consumed(Anns, Links),
+    v2_rebuild(Items0, T, S, Items0, Links, Items).
+
+v2_anns([], _, _, _, []).
+v2_anns([Item|Items], T, S, Scope, Anns) :-
+    ( v2_pp_item(Item, Ctx, PP) ->
+        v2_pp_ann(T, S, Scope, Ctx, PP, Ann),
+        ( Ann == none -> Anns = Rest ; Anns = [Ctx-Ann|Rest] )
+    ; Anns = Rest
+    ),
+    v2_anns(Items, T, S, Scope, Rest).
+
+v2_pp_item(Item, Ctx, PP) :-
+    nonvar(Item),
+    functor(Item, anchored, 2),
+    arg(1, Item, Ctx),
+    arg(2, Item, PP),
+    nonvar(PP),
+    functor(PP, modifier_pp, 3).
+
+v2_pp_ann(t(U, R, Sp), S, Scope, Ctx, PP, Ann) :-
+    arg(1, PP, E),
+    arg(2, PP, P),
+    arg(3, PP, X),
+    v2_of_links(Scope, Ctx, X, Links),
+    length(Links, NL),
+    ( atom(P), memberchk(P-Role, R), v2_qty(U, Scope, Ctx, X, Unit, O) ->
+        ( v2_bound_why(O, Why) -> reject(unsupported, temporal_shape(Why, S)) ; true ),
+        ( NL > 1 ->
+            reject(unsupported, temporal_shape(anchor_count, S))
+        ; NL =:= 0 ->
+            Ann = interval(E, Role, X, Unit, none)
+        ; Role == duration ->
+            reject(unsupported, temporal_shape(duration_anchor, S))
+        ; Links = [A],
+          ( ( nonvar(A)
+            ; v2_qty(U, Scope, Ctx, A, _, _)
+            ; v2_is_frame(Sp, Scope, Ctx, A)
+            ) ->
+              reject(unsupported, temporal_shape(anchor_shape, S))
+          ; Ann = interval(E, Role, X, Unit, A)
+          )
+        )
+    ; v2_obj_of(Scope, Ctx, X, F) ->
+        v2_noun(F, FL),
+        ( atom(P), memberchk(P-FL, Sp) ->
+            ( arg(3, F, countable), arg(4, F, na), arg(5, F, eq), arg(6, F, 1) ->
+                true
+            ; reject(unsupported, temporal_shape(frame_shape, S))
+            ),
+            ( NL =:= 1 -> true ; reject(unsupported, temporal_shape(anchor_count, S)) ),
+            Links = [Q],
+            ( v2_qty(U, Scope, Ctx, Q, Unit, O) ->
+                true
+            ; reject(unsupported, temporal_shape(frame_shape, S))
+            ),
+            ( v2_bound_why(O, Why) -> reject(unsupported, temporal_shape(Why, S)) ; true ),
+            v2_of_links(Scope, Ctx, Q, QLinks),
+            ( QLinks == [] -> true ; reject(unsupported, temporal_shape(anchor_count, S)) ),
+            Ann = recurrence(E, X, Q, Unit)
+        ; Ann = none
+        )
+    ; Ann = none
+    ).
+
+/* The first same-context object(V, …) condition. */
+v2_obj_of([Item|Items], Ctx, V, O) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, C),
+      C == Ctx,
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, object, 6),
+      arg(1, Inner, Ref),
+      Ref == V ->
+        O = Inner
+    ; v2_obj_of(Items, Ctx, V, O)
+    ).
+
+v2_of_links([], _, _, []).
+v2_of_links([Item|Items], Ctx, V, Links) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, C),
+      C == Ctx,
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, relation, 3),
+      arg(1, Inner, X),
+      X == V,
+      arg(2, Inner, Of),
+      Of == of ->
+        arg(3, Inner, Y),
+        Links = [Y|Rest]
+    ; Links = Rest
+    ),
+    v2_of_links(Items, Ctx, V, Rest).
+
+v2_noun(O, L) :-
+    arg(2, O, Noun),
+    ( atom(Noun) -> L = Noun ; L = '' ).
+
+v2_qty(U, Scope, Ctx, V, Unit, O) :-
+    v2_obj_of(Scope, Ctx, V, O),
+    v2_noun(O, L),
+    memberchk(L-Unit, U).
+
+v2_is_frame(Sp, Scope, Ctx, V) :-
+    v2_obj_of(Scope, Ctx, V, O),
+    v2_noun(O, L),
+    memberchk(_-L, Sp).
+
+/* A quantity's bound: a count noun with a comparison and a count >= 1. */
+v2_bound_why(O, Why) :-
+    arg(3, O, Class),
+    arg(4, O, UnitField),
+    arg(5, O, Op),
+    arg(6, O, N),
+    ( \+ ( Class == countable, UnitField == na, Op \== na ) ->
+        Why = no_bound
+    ; integer(N) ->
+        N < 1,
+        Why = zero_bound
+    ; Why = no_bound
+    ).
+
+v2_claims([], []).
+v2_claims([Ctx-interval(_, _, Q, _, _)|Anns], [Ctx-Q|Claims]) :-
+    v2_claims(Anns, Claims).
+v2_claims([Ctx-recurrence(_, F, Q, _)|Anns], [Ctx-F, Ctx-Q|Claims]) :-
+    v2_claims(Anns, Claims).
+
+v2_dup([C|Cs]) :-
+    ( strict_member(C, Cs) -> true ; v2_dup(Cs) ).
+
+v2_consumed([], []).
+v2_consumed([Ctx-interval(_, _, Q, _, A)|Anns], Links) :-
+    ( var(A) -> Links = [Ctx-Q|Rest] ; Links = Rest ),
+    v2_consumed(Anns, Rest).
+v2_consumed([Ctx-recurrence(_, F, _, _)|Anns], [Ctx-F|Links]) :-
+    v2_consumed(Anns, Links).
+
+v2_rebuild(_, _, _, [], _, []).
+v2_rebuild(Scope, T, S, [Item|Items], Links, Out) :-
+    v2_rebuild_item(Scope, T, S, Item, Links, Head),
+    v2_rebuild(Scope, T, S, Items, Links, Tail),
+    append(Head, Tail, Out).
+
+v2_rebuild_item(Scope, T, S, Item, Links, Out) :-
+    ( v2_pp_item(Item, Ctx, PP) ->
+        v2_pp_ann(T, S, Scope, Ctx, PP, Ann),
+        ( Ann == none ->
+            Out = [Item]
+        ; v2_ann_inner(Ann, Inner),
+          Out = [Item, anchored(Ctx, Inner)]
+        )
+    ; nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, Ctx),
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, relation, 3),
+      arg(2, Inner, Of),
+      Of == of,
+      arg(1, Inner, X),
+      v2_linked(Links, Ctx, X) ->
+        Out = []
+    ; nonvar(Item),
+      functor(Item, naf, 2) ->
+        arg(1, Item, Dom),
+        arg(2, Item, Payload),
+        v2_annotate_scope(T, S, Payload, Payload2),
+        Out = [naf(Dom, Payload2)]
+    ; Out = [Item]
+    ).
+
+v2_linked([C-X0|Links], Ctx, X) :-
+    ( C == Ctx, X0 == X -> true ; v2_linked(Links, Ctx, X) ).
+
+v2_ann_inner(interval(E, Role, Q, Unit, A),
+    '$guideline_interval'(E, Role, Q, Unit, A)).
+v2_ann_inner(recurrence(E, _, Q, Unit), '$guideline_recurrence'(E, Q, Unit)).
+
+/* Schema version of the current compile: 2 iff a temporal table loaded. */
+v2_version(V) :-
+    ( v2_table(_) -> V = 2 ; V = 1 ).
+
+v2_indicators(Indicators) :-
+    ( v2_table(_) ->
+        Indicators = [
+            guideline_schema_version/1,
+            guideline_document/4,
+            guideline_entity/4,
+            guideline_cardinality/5,
+            guideline_event/3,
+            guideline_arg/4,
+            guideline_pp/4,
+            guideline_property/4,
+            guideline_operator/3,
+            guideline_interval/6,
+            guideline_recurrence/4
+        ]
+    ; v1_indicators(Indicators)
+    ).
+
+/* v2 records end in temporal(sha256(H)). */
+v2_record(Record0, Record) :-
+    ( nb_current(ace_to_pl_temporal, table(_, _, _, Digest)) ->
+        Record0 =.. List0,
+        append(List0, [temporal(sha256(Digest))], List),
+        Record =.. List
+    ; Record = Record0
+    ).
+
 /* ---------- v1 schema projection (frozen) ----------
 
    The sole compile path. Closed reserved vocabulary: source lemmas
@@ -928,7 +1316,8 @@ v1_root_group([boxed(_)|Items]) :-
 /* ---------- v1 facts ---------- */
 
 v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses) :-
-    v1_flatten_items(Group, root, S, DocId, [], actual, none, 1, _, Items),
+    v1_flatten_items(Group, root, S, DocId, [], actual, none, 1, _, Items0),
+    v2_annotate(S, Items0, Items),
     v1_ref_slots(Items, Slots),
     v1_first_occurrence(Slots, [], Ordered),
     v1_mint_ordinals(Ordered, 1, S, DocId, Map0, Map),
@@ -1017,9 +1406,11 @@ v1_split_conds([C|Cs], [C|Shared], Vs) :-
     v1_split_conds(Cs, Shared, Vs).
 
 v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
-    v1_seg_items(Segs, S, DocId, 1, N1, AItems),
+    v1_seg_items(Segs, S, DocId, 1, N1, AItems0),
+    v2_annotate(S, AItems0, AItems),
     v1_flatten_items(CConds, consequent, S, DocId, ADom, actual, none,
-        N1, _, CItems),
+        N1, _, CItems0),
+    v2_annotate(S, CItems0, CItems),
     v1_ante_refs(AItems, CItems, Map, Ordered, AnteRefs),
     v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
     v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
@@ -1044,17 +1435,22 @@ v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_arm_box(Arm1, S, Dom1, Conds1),
     v1_arm_box(Arm2, S, Dom2, Conds2),
     v1_flatten_items(Shared, antecedent, S, DocId, [], actual, none,
-        1, NS, SharedItems),
+        1, NS, SharedItems0),
+    v2_annotate(S, SharedItems0, SharedItems),
     v1_flatten_items(Conds1, antecedent, S, DocId, [], actual, none,
-        NS, NA1, Arm1Items),
+        NS, NA1, Arm1Items0),
+    v2_annotate(S, Arm1Items0, Arm1Items),
     v1_flatten_items(Conds2, antecedent, S, DocId, [], actual, none,
-        NA1, NA2, Arm2Items),
+        NA1, NA2, Arm2Items0),
+    v2_annotate(S, Arm2Items0, Arm2Items),
     append(ADom, Dom1, Deps1),
     append(ADom, Dom2, Deps2),
     v1_flatten_items(CConds, consequent, S, DocId, Deps1, actual, none,
-        NA2, _, CItems1),
+        NA2, _, CItems10),
+    v2_annotate(S, CItems10, CItems1),
     v1_flatten_items(CConds, consequent, S, DocId, Deps2, actual, none,
-        NA2, _, CItems2),
+        NA2, _, CItems20),
+    v2_annotate(S, CItems20, CItems2),
     append(Arm1Items, Arm2Items, ArmItems),
     append(SharedItems, ArmItems, AnteAll),
     v1_ante_refs(AnteAll, CItems1, Map, Ordered, AnteRefs),
@@ -1311,6 +1707,29 @@ v1_condition(Context, Inner, Map, Sko,
     ; reject(unsupported, property_polarity(Polarity))
     ),
     v1_ref(P0, Map, Sko, P).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_interval(Context, E, Role, Q, Unit, A)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_interval', 5),
+    !,
+    arg(1, Inner, E0),
+    arg(2, Inner, Role),
+    arg(3, Inner, Q0),
+    arg(4, Inner, Unit),
+    arg(5, Inner, A0),
+    v1_ref(E0, Map, Sko, E),
+    v1_ref(Q0, Map, Sko, Q),
+    ( A0 == none -> A = none ; v1_ref(A0, Map, Sko, A) ).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_recurrence(Context, E, Q, Unit)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_recurrence', 3),
+    !,
+    arg(1, Inner, E0),
+    arg(2, Inner, Q0),
+    arg(3, Inner, Unit),
+    v1_ref(E0, Map, Sko, E),
+    v1_ref(Q0, Map, Sko, Q).
 v1_condition(_, Inner, _, _, _) :-
     reject(unsupported, condition_shape(Inner)).
 
@@ -1555,13 +1974,15 @@ v1_vars_subset([V|Vs], Vars) :-
 /* ---------- v1 rendering ---------- */
 
 v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes) :-
-    header_term(DocId, AceDigest, UlexDigest, Header),
-    v1_indicators(Indicators),
+    header_term(DocId, AceDigest, UlexDigest, Header0),
+    v2_record(Header0, Header),
+    v2_indicators(Indicators),
+    v2_version(Version),
     with_output_to(string(Out),
         ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.~n',
               [DocId]),
           v1_render_decls(Indicators),
-          render_term_line(guideline_schema_version(1)),
+          render_term_line(guideline_schema_version(Version)),
           render_term_line(Header),
           v1_render_bundles(Bundles, Lines)
         )),
@@ -1749,7 +2170,10 @@ query_scan_leaf(Leaf) :-
 query_scan_leaf(Leaf) :-
     is_list(Leaf),
     !,
-    reject(unsupported, query_unsupported(leaf(list), 1)).
+    ( v2_table(_), Leaf \== [] ->
+        query_scan_conds(Leaf)
+    ; reject(unsupported, query_unsupported(leaf(list), 1))
+    ).
 query_scan_leaf(Leaf) :-
     query_blocker(Leaf, Blocker),
     !,
@@ -1792,6 +2216,8 @@ query_supported_leaf(predicate, 4).
 query_supported_leaf(predicate, 5).
 query_supported_leaf(modifier_pp, 3).
 query_supported_leaf(property, 3).
+query_supported_leaf(relation, 3) :-
+    v2_table(_).
 
 /* Markers collect per box in pre-order together with that box's
    object/6 sources (same-box law), then validate in marker order:
@@ -1928,7 +2354,8 @@ query_strip_cond(Cond, Cond).
 query_goals(Clean, QId, Goals) :-
     arg(2, Clean, Conds),
     v1_flatten_items(Conds, antecedent, 1, QId, [], actual, none, 1, _,
-        Items),
+        Items0),
+    v2_annotate(1, Items0, Items),
     v1_expand_items(Items, [], [], Goals).
 
 query_header_term(QId, AceDigest, none,
@@ -1947,7 +2374,13 @@ query_comment_codes(Text, Comment) :-
     ).
 
 query_render(QId, AceDigest, UlexDigest, Text, Conj, Answers, OutCodes) :-
-    query_header_term(QId, AceDigest, UlexDigest, Record),
+    query_header_term(QId, AceDigest, UlexDigest, Record1),
+    ( v2_table(_) ->
+        Record1 =.. [F, _|Args1],
+        Record0 =.. [F, v2|Args1]
+    ; Record0 = Record1
+    ),
+    v2_record(Record0, Record),
     query_comment_codes(Text, Comment),
     with_output_to(string(Out),
         ( format('% ~w compiled from ACE question by ace_to_pl question mode; do not edit.~n',
@@ -2065,7 +2498,7 @@ v1_derive_proofs(Bundles, DocId, Payload) :-
     v1_prove_bundles(Bundles, DocId, Payload).
 
 v1_load_proof_world(Bundles) :-
-    v1_indicators(Indicators),
+    v2_indicators(Indicators),
     v1_declare_proof_world(Indicators),
     v1_load_proof_bundles(Bundles).
 

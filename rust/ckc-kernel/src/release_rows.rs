@@ -418,11 +418,127 @@ pub fn label_text(ls: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: Vec<u8>)
     r
 }
 
-pub fn meta(compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
+// m7t D8: one `meta schema` row per schema version among the staged guidelines.
+pub fn has_table_exec(staged: &Vec<EMember>, gid: &[u8]) -> (r: bool)
     ensures
-        r@ == meta_block(compiler@, lexicon@),
+        r == has_table(members(staged@), gid@),
 {
-    let mut r = copy(b"meta\tschema\tv1\nmeta\tcompiler\t");
+    let mut want = copy(b"guidelines/");
+    append(&mut want, gid);
+    append(&mut want, b"/temporal.tsv");
+    proof {
+        reveal_byteslit(b"guidelines/");
+        reveal_strlit("guidelines/");
+        reveal_byteslit(b"/temporal.tsv");
+        reveal_strlit("/temporal.tsv");
+        reveal(ascii);
+        assert(b"guidelines/"@ =~= ascii("guidelines/"@));
+        assert(b"/temporal.tsv"@ =~= ascii("/temporal.tsv"@));
+    }
+    let mut i = 0usize;
+    while i < staged.len()
+        invariant
+            i <= staged@.len(),
+            want@ == ascii("guidelines/"@) + gid@ + ascii("/temporal.tsv"@),
+            forall|j: int| 0 <= j < i ==> #[trigger] members(staged@)[j].path != want@,
+        decreases staged@.len() - i,
+    {
+        if eq(&staged[i].path, &want) {
+            proof {
+                assert(members(staged@)[i as int].path == want@);
+            }
+            return true;
+        }
+        i += 1;
+    }
+    false
+}
+
+pub fn schema_rows_exec(staged: &Vec<EMember>, profiles: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: Vec<u8>)
+    ensures
+        r@ == schema_rows(members(staged@), byte_pairs(profiles@)),
+{
+    let ghost ms = members(staged@);
+    let ghost ps = byte_pairs(profiles@);
+    let mut table = false;
+    let mut plain = false;
+    let mut i = 0usize;
+    while i < profiles.len()
+        invariant
+            i <= profiles@.len(),
+            ms == members(staged@),
+            ps == byte_pairs(profiles@),
+            table == exists|j: int| 0 <= j < i && has_table(ms, #[trigger] ps[j].0),
+            plain == exists|j: int| 0 <= j < i && !has_table(ms, #[trigger] ps[j].0),
+        decreases profiles@.len() - i,
+    {
+        let h = has_table_exec(staged, &profiles[i].0);
+        proof {
+            assert(ps[i as int].0 == profiles@[i as int].0@);
+        }
+        if h {
+            table = true;
+        } else {
+            plain = true;
+        }
+        proof {
+            if table {
+                if !h {
+                    let j = choose|j: int| 0 <= j < i && has_table(ms, #[trigger] ps[j].0);
+                    assert(0 <= j < i + 1 && has_table(ms, ps[j].0));
+                }
+            }
+            if plain {
+                if h {
+                    let j = choose|j: int| 0 <= j < i && !has_table(ms, #[trigger] ps[j].0);
+                    assert(0 <= j < i + 1 && !has_table(ms, ps[j].0));
+                }
+            }
+            assert forall|j: int|
+                0 <= j < i + 1 && has_table(ms, #[trigger] ps[j].0) implies table by {
+                if j == i {
+                    assert(h);
+                }
+            }
+            assert forall|j: int|
+                0 <= j < i + 1 && !has_table(ms, #[trigger] ps[j].0) implies plain by {
+                if j == i {
+                    assert(!h);
+                }
+            }
+        }
+        i += 1;
+    }
+    proof {
+        assert(table == some_table(ms, ps));
+        assert(plain == some_plain(ms, ps));
+        reveal_byteslit(b"meta\tschema\tv1\n");
+        reveal_strlit("meta\tschema\tv1\n");
+        reveal_byteslit(b"meta\tschema\tv2\n");
+        reveal_strlit("meta\tschema\tv2\n");
+        reveal(ascii);
+        assert(b"meta\tschema\tv1\n"@ =~= ascii("meta\tschema\tv1\n"@));
+        assert(b"meta\tschema\tv2\n"@ =~= ascii("meta\tschema\tv2\n"@));
+    }
+    let mut r = Vec::new();
+    if !table || plain {
+        append(&mut r, b"meta\tschema\tv1\n");
+    }
+    if table {
+        append(&mut r, b"meta\tschema\tv2\n");
+    }
+    proof {
+        assert(r@ =~= schema_rows(ms, ps));
+    }
+    r
+}
+
+pub fn meta(schema: &[u8], compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
+    ensures
+        r@ == meta_block(schema@, compiler@, lexicon@),
+{
+    let mut r = copy(schema);
+    append(&mut r, b"meta\tcompiler\t");
     append(&mut r, compiler);
     append(&mut r, b"\nmeta\tbase-lexicon\t");
     append(&mut r, lexicon);
@@ -431,8 +547,8 @@ pub fn meta(compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
         b"\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
     );
     proof {
-        reveal_byteslit(b"meta\tschema\tv1\nmeta\tcompiler\t");
-        reveal_strlit("meta\tschema\tv1\nmeta\tcompiler\t");
+        reveal_byteslit(b"meta\tcompiler\t");
+        reveal_strlit("meta\tcompiler\t");
         reveal_byteslit(b"\nmeta\tbase-lexicon\t");
         reveal_strlit("\nmeta\tbase-lexicon\t");
         reveal_byteslit(

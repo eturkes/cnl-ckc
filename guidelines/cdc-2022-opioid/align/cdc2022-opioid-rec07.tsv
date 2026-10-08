@@ -5,48 +5,60 @@
 5	ace	113	evaluate
 7	ace	125	opioid-benefit
 4	ace	147	patient
-9	ace	155	after 1 week before 4 weeks
-10	ace	191	therapy-start
-11	ace	211	subacute-pain
-5	ace	236	evaluate
-8	ace	248	opioid-risk
-4	ace	267	patient
-9	ace	275	after 1 week before 4 weeks
-10	ace	311	therapy-start
-11	ace	331	subacute-pain
-3	ace	352	clinician
-5	ace	369	evaluate
-7	ace	381	opioid-benefit
-4	ace	403	patient
-9	ace	411	after 1 week before 4 weeks
-10	ace	447	therapy-start
-11	ace	467	chronic-pain
-5	ace	491	evaluate
-8	ace	503	opioid-risk
-4	ace	522	patient
-9	ace	530	after 1 week before 4 weeks
-10	ace	566	therapy-start
-11	ace	586	chronic-pain
-3	ace	606	clinician
-5	ace	623	evaluate
-7	ace	635	opioid-benefit
-4	ace	657	patient
-9	ace	665	after 1 week before 4 weeks
-12	ace	701	dosage-escalation
-5	ace	730	evaluate
-8	ace	742	opioid-risk
-4	ace	761	patient
-9	ace	769	after 1 week before 4 weeks
-12	ace	805	dosage-escalation
-3	ace	830	clinician
-6	ace	847	reevaluate
-7	ace	861	opioid-benefit
-4	ace	883	patient
-13	ace	900	regular-follow-up
-6	ace	929	reevaluate
-8	ace	943	opioid-risk
-4	ace	962	patient
-13	ace	979	regular-follow-up
+9	ace	155	after at least 1 week
+10	ace	182	therapy-start
+9	ace	196	within at most 4 weeks
+10	ace	226	therapy-start
+11	ace	246	subacute-pain
+5	ace	271	evaluate
+8	ace	283	opioid-risk
+4	ace	302	patient
+9	ace	310	after at least 1 week
+10	ace	337	therapy-start
+9	ace	351	within at most 4 weeks
+10	ace	381	therapy-start
+11	ace	401	subacute-pain
+3	ace	422	clinician
+5	ace	439	evaluate
+7	ace	451	opioid-benefit
+4	ace	473	patient
+9	ace	481	after at least 1 week
+10	ace	508	therapy-start
+9	ace	522	within at most 4 weeks
+10	ace	552	therapy-start
+11	ace	572	chronic-pain
+5	ace	596	evaluate
+8	ace	608	opioid-risk
+4	ace	627	patient
+9	ace	635	after at least 1 week
+10	ace	662	therapy-start
+9	ace	676	within at most 4 weeks
+10	ace	706	therapy-start
+11	ace	726	chronic-pain
+3	ace	746	clinician
+5	ace	763	evaluate
+7	ace	775	opioid-benefit
+4	ace	797	patient
+9	ace	805	after at least 1 week
+12	ace	832	dosage-escalation
+9	ace	850	within at most 4 weeks
+12	ace	880	dosage-escalation
+5	ace	909	evaluate
+8	ace	921	opioid-risk
+4	ace	940	patient
+9	ace	948	after at least 1 week
+12	ace	975	dosage-escalation
+9	ace	993	within at most 4 weeks
+12	ace	1023	dosage-escalation
+3	ace	1048	clinician
+6	ace	1065	reevaluate
+7	ace	1079	opioid-benefit
+4	ace	1101	patient
+13	ace	1118	regular-follow-up
+6	ace	1147	reevaluate
+8	ace	1161	opioid-risk
+4	ace	1180	patient
+13	ace	1197	regular-follow-up
 3	src	0	Clinicians
 5	src	18	evaluate
 7	src	27	benefits

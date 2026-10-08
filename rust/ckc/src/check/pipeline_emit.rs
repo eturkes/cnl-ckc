@@ -4,17 +4,29 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+// The guideline-wide inputs a compile reads beside its ACE text.
+#[derive(Clone, Copy)]
+struct Tables<'a> {
+    lexicon: Option<&'a Path>,
+    temporal: Option<&'a Path>,
+}
+
 fn certify(
     swipl: &Path,
     stage: &Path,
     id: &str,
     ace: &Path,
-    lexicon: Option<&Path>,
+    tables: Tables,
     pl: &[u8],
     query: bool,
 ) -> Result<Vec<u8>> {
+    let Tables { lexicon, temporal } = tables;
     let input = read(ace, "certify")?;
     let ulex = lexicon.map(|p| read(p, "certify")).transpose()?;
+    let traw = temporal.map(|p| read(p, "certify")).transpose()?;
+    let tsha = traw
+        .as_ref()
+        .map(|t| crate::trust::sha256_hex(t).into_bytes());
     let mut command = Command::new(swipl);
     command
         .args([
@@ -51,6 +63,8 @@ fn certify(
             id.as_bytes(),
             &dump.out,
             pl,
+            traw.as_ref(),
+            tsha.as_ref(),
         )
     } else {
         ckc_kernel::contract::certify_doc(
@@ -60,6 +74,8 @@ fn certify(
             id.as_bytes(),
             &dump.out,
             pl,
+            traw.as_ref(),
+            tsha.as_ref(),
         )
     };
     if accepted.rc != 0 {
@@ -119,7 +135,10 @@ pub(super) fn compile(gid: &str) -> Result {
             &stage,
             id,
             &g.ace(id),
-            g.lexicon.as_deref(),
+            Tables {
+                lexicon: g.lexicon.as_deref(),
+                temporal: g.temporal.as_deref(),
+            },
             &bytes,
             false,
         )?;
@@ -161,6 +180,7 @@ pub(super) fn queries(gid: &str) -> Result {
         ));
     }
     let lexicon = lexicon.is_file().then_some(lexicon);
+    let temporal = inventories::collect(&path)?.temporal;
     let swipl = process::swipl()?;
     let scratch = process::Scratch::new()?;
     let stage = process::stage(&scratch, &swipl)?;
@@ -171,8 +191,26 @@ pub(super) fn queries(gid: &str) -> Result {
     }
     for id in &ids {
         let ace = root.join(format!("{id}.ace"));
-        let bytes = queries::question(&swipl, &stage, id, &ace, lexicon.as_deref())?;
-        certify(&swipl, &stage, id, &ace, lexicon.as_deref(), &bytes, true)?;
+        let bytes = queries::question(
+            &swipl,
+            &stage,
+            id,
+            &ace,
+            lexicon.as_deref(),
+            temporal.as_deref(),
+        )?;
+        certify(
+            &swipl,
+            &stage,
+            id,
+            &ace,
+            Tables {
+                lexicon: lexicon.as_deref(),
+                temporal: temporal.as_deref(),
+            },
+            &bytes,
+            true,
+        )?;
         let pl = scratch.0.join("pl").join(format!("{id}.pl"));
         process::write(&pl, &bytes)?;
         let answer = queries::answer(id, &manifest, &pl)?;

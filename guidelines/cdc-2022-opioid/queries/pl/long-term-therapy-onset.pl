@@ -1,0 +1,4 @@
+% long-term-therapy-onset compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v2,'long-term-therapy-onset',ace_sha256('2715c71145db59150bf2ca7ce8d4e3064d64d21287fbfbd8f34efb4c95b8e19e'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+% Q1: What may initiate a long-term-opioid-therapy after 30 days?
+'$guideline_query_projection'(goal(','(guideline_operator(actual,A,may),','(guideline_entity(A,B,'long-term-opioid-therapy',countable),','(guideline_cardinality(A,B,na,eq,1),','(guideline_entity(A,C,day,countable),','(guideline_cardinality(A,C,na,eq,30),','(guideline_event(A,D,initiate),','(guideline_arg(A,D,1,E),','(guideline_arg(A,D,2,B),','(guideline_pp(A,D,after,C),guideline_interval(A,D,after,C,day,none))))))))))),answers([answer(E,wh(what))])).

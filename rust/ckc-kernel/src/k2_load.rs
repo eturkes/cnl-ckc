@@ -209,6 +209,7 @@ pub struct ELoaded {
     pub db: Vec<EClause>,
     pub docids: Vec<usize>,
     pub coords: Vec<crate::k3_coords::ECoord>,
+    pub versions: Vec<u8>,
     pub docs: Ghost<Seq<DocFile>>,
 }
 
@@ -222,6 +223,10 @@ pub open spec fn loaded_ok(nodes: Seq<ENode>, loaded: &ELoaded) -> bool {
     &&& root_terms(nodes, loaded.docids@) == loaded.docs@.map_values(
         |d: DocFile| ckc_spec::term::Term::Atom(d.docid),
     )
+    &&& loaded.versions@.len() == loaded.docs@.len()
+    &&& forall|i: int|
+        0 <= i < loaded.docs@.len() ==> #[trigger] loaded.versions@[i] as nat
+            == loaded.docs@[i].version
 }
 
 pub open spec fn loaded_view(out: Result<ELoaded, EOut>) -> Result<Seq<DocFile>, Out> {
@@ -251,6 +256,7 @@ fn empty_loaded(arena: &ETermArena) -> (out: ELoaded)
         db: Vec::new(),
         docids: Vec::new(),
         coords: Vec::new(),
+        versions: Vec::new(),
         docs: Ghost(Seq::empty()),
     };
     proof {
@@ -347,6 +353,10 @@ fn append_document(
         crate::k3_coords::coords_concat(prior_coords, next_coords);
         coords_of_push(docs, doc);
     }
+    proof {
+        reveal(crate::v1_term_impl::parsed_metadata_ok);
+    }
+    loaded.versions.push(parsed.doc_version);
     loaded.docs = Ghost(docs.push(doc));
     proof {
         assert forall|i: int| 0 <= i < loaded.docids@.len() implies loaded.docids@[i]
@@ -511,6 +521,94 @@ fn load_inner(input_arena: ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>) -> (ou
     proof {
         assert_seqs_equal!(ms.take(i as int) == ms);
         reveal_with_fuel(first_bad_member, 1);
+        reveal(loaded_ok);
+        reveal(docs_of);
+    }
+    let ghost staged = load_stage(models, srcs(pls@));
+    proof {
+        assert(staged == match ckc_spec::replay::mixed_version(loaded.docs@) {
+            Some(d) => Err(
+                check_load(
+                    ckc_spec::term::Term::Comp(
+                        ckc_spec::v1text::ascii("schema_version"@),
+                        seq![
+                            ckc_spec::term::Term::Int(loaded.docs@[0].version as int),
+                            ckc_spec::term::Term::Atom(d.docid),
+                        ],
+                    ),
+                ),
+            ),
+            None => Ok(loaded.docs@),
+        });
+    }
+    // m7t D7: one schema version per composition.
+    let mut k = 1usize;
+    while k < loaded.versions.len()
+        invariant
+            arena_ok(&arena),
+            origin.is_prefix_of(arena.nodes@),
+            loaded_ok(arena.nodes@, &loaded),
+            loaded.versions@.len() == loaded.docs@.len(),
+            1 <= k <= loaded.versions@.len() || loaded.versions@.len() == 0,
+            loaded.docs@.len() > 0 ==> ckc_spec::replay::mixed_version(loaded.docs@)
+                == ckc_spec::replay::first_other(loaded.docs@, loaded.docs@[0].version, k as nat),
+            staged == match ckc_spec::replay::mixed_version(loaded.docs@) {
+                Some(d) => Err(
+                    check_load(
+                        ckc_spec::term::Term::Comp(
+                            ckc_spec::v1text::ascii("schema_version"@),
+                            seq![
+                                ckc_spec::term::Term::Int(loaded.docs@[0].version as int),
+                                ckc_spec::term::Term::Atom(d.docid),
+                            ],
+                        ),
+                    ),
+                ),
+                None => Ok(loaded.docs@),
+            },
+            staged == load_stage(models, srcs(pls@)),
+            models == rows@.map_values(|r: ERow| r@),
+            origin == input_arena.nodes@,
+        decreases loaded.versions@.len() - k,
+    {
+        proof {
+            reveal(loaded_ok);
+            assert(loaded.versions@[k as int] as nat == loaded.docs@[k as int].version);
+            assert(loaded.versions@[0] as nat == loaded.docs@[0].version);
+        }
+        if loaded.versions[k] != loaded.versions[0] {
+            let ghost before = arena.nodes@;
+            proof {
+                assert(roots_valid(arena.nodes@, loaded.docids@));
+                assert(root_terms(arena.nodes@, loaded.docids@)[k as int]
+                    == ckc_spec::term::Term::Atom(loaded.docs@[k as int].docid));
+            }
+            let first = crate::k2_output::int_root(&mut arena, loaded.versions[0] as usize);
+            let docid = loaded.docids[k];
+            let ghost mid = arena.nodes@;
+            proof {
+                crate::k2_term::arena_prefix_stable(before, &arena);
+            }
+            let detail = crate::k2_output::comp2(&mut arena, b"schema_version", first, docid);
+            let ghost late = arena.nodes@;
+            let error = crate::k2_output::error_out(&mut arena, detail, false);
+            proof {
+                reveal_byteslit(b"schema_version");
+                reveal_strlit("schema_version");
+                reveal(ckc_spec::v1text::ascii);
+                assert(b"schema_version"@ =~= ckc_spec::v1text::ascii("schema_version"@));
+                prefix_chain(origin, before, mid);
+                prefix_chain(origin, mid, late);
+                prefix_chain(origin, late, arena.nodes@);
+                assert(ckc_spec::replay::first_other(
+                    loaded.docs@,
+                    loaded.docs@[0].version,
+                    k as nat,
+                ) == Some(loaded.docs@[k as int]));
+            }
+            return (Err(error), arena);
+        }
+        k += 1;
     }
     (Ok(loaded), arena)
 }
@@ -576,10 +674,8 @@ pub fn assertions_exec(arena: &ETermArena, rows: &Vec<ERow>, loaded: &ELoaded) -
     }
 }
 
-pub fn composition_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>) -> (out: Result<
-    ELoaded,
-    EOut,
->)
+pub fn composition_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc>, qv: u8) -> (out:
+    Result<ELoaded, EOut>)
     requires
         arena_ok(old(arena)),
         rows.len() == pls.len(),
@@ -590,6 +686,7 @@ pub fn composition_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc
         loaded_view(out) == ckc_spec::answers::composition(
             rows@.map_values(|r: ERow| r@),
             srcs(pls@),
+            qv as nat,
         ),
 {
     if rows.len() == 0 {
@@ -601,6 +698,21 @@ pub fn composition_exec(arena: &mut ETermArena, rows: &Vec<ERow>, pls: &Vec<ESrc
     };
     if let Some(out) = assertions_exec(arena, rows, &loaded) {
         return Err(out);
+    }
+    proof {
+        reveal(loaded_ok);
+        assert(loaded.docs@.len() == rows@.len());
+        assert(loaded.versions@[0] as nat == loaded.docs@[0].version);
+    }
+    // m7t D9: a version-qv query needs a composition of version >= qv.
+    if qv > loaded.versions[0] {
+        proof {
+            reveal_byteslit(b"schema_version");
+            reveal_strlit("schema_version");
+            reveal(ckc_spec::v1text::ascii);
+            assert(b"schema_version"@ =~= ckc_spec::v1text::ascii("schema_version"@));
+        }
+        return Err(crate::k2_answers::query_atom_error(b"schema_version"));
     }
     Ok(loaded)
 }

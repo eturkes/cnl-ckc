@@ -707,7 +707,7 @@ pub fn front_exec(
         query_prefix(before_answers, arena.nodes@, &query);
     }
     let ghost before_load = arena.nodes@;
-    let loaded = match crate::k2_load::composition_exec(arena, &rows, pls) {
+    let loaded = match crate::k2_load::composition_exec(arena, &rows, pls, query.version) {
         Err(o) => return Err(o),
         Ok(loaded) => loaded,
     };

@@ -208,6 +208,7 @@ pub fn sentence_groups(
             env.docid@,
             map_model(map@),
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ),
 {
     hide(spec::rule_groups);
@@ -315,6 +316,7 @@ pub fn project_all(
     docid: &Vec<u8>,
     count: usize,
     base: usize,
+    tab: &Option<crate::m7_temporal::ETemporal>,
 ) -> (out: Result<Vec<Projected>, T>)
     requires
         arena_ok(old(arena)),
@@ -331,6 +333,7 @@ pub fn project_all(
             docid@,
             Seq::empty(),
             base as nat,
+            crate::m7_annotate::tab_view(tab),
         ),
 {
     hide(spec::sentence_groups);
@@ -349,6 +352,7 @@ pub fn project_all(
             docid@,
             Seq::empty(),
             base as nat,
+            crate::m7_annotate::tab_view(tab),
         ) {
             Ok(_) => {},
             Err(_) => {},
@@ -371,6 +375,7 @@ pub fn project_all(
                 docid@,
                 Seq::empty(),
                 base as nat,
+                crate::m7_annotate::tab_view(tab),
             ) == project_prefix(
                 project_models(out@),
                 spec::project_from(
@@ -380,12 +385,13 @@ pub fn project_all(
                     docid@,
                     map_model(map@),
                     base as nat,
+                    crate::m7_annotate::tab_view(tab),
                 ),
             ),
         decreases count - i,
     {
         let s = i + 1;
-        let env = Env { docid: docid.clone(), s, base };
+        let env = Env { docid: docid.clone(), s, base, tab: crate::m7_annotate::clone_tab(tab) };
         let ghost before = arena.nodes@;
         let sn = crate::m6_term::int(arena, s);
         let ghost middle = arena.nodes@;
@@ -423,6 +429,7 @@ pub fn project_all(
             docid@,
             map_model(map2@),
             base as nat,
+            crate::m7_annotate::tab_view(tab),
         );
         proof {
             match future {
@@ -436,6 +443,7 @@ pub fn project_all(
                 docid@,
                 map_model(map@),
                 base as nat,
+                crate::m7_annotate::tab_view(tab),
             ) == project_prefix(seq![p@], future));
             project_prefix_assoc(
                 project_models(out@),
@@ -447,6 +455,7 @@ pub fn project_all(
                     docid@,
                     map_model(map2@),
                     base as nat,
+                    crate::m7_annotate::tab_view(tab),
                 ),
             );
             assert(spec::project_from(
@@ -456,6 +465,7 @@ pub fn project_all(
                 docid@,
                 Seq::empty(),
                 base as nat,
+                crate::m7_annotate::tab_view(tab),
             ) == project_prefix(project_models(out@) + seq![p@], future));
         }
         let ghost previous = out@;
@@ -472,6 +482,7 @@ pub fn project_all(
                 docid@,
                 map_model(map@),
                 base as nat,
+                crate::m7_annotate::tab_view(tab),
             ));
             assert(spec::project_from(
                 tag_models(tagged@),
@@ -480,6 +491,7 @@ pub fn project_all(
                 docid@,
                 Seq::empty(),
                 base as nat,
+                crate::m7_annotate::tab_view(tab),
             ) == project_prefix(project_models(out@), future));
             assert forall|j: int| 0 <= j < out.len() implies #[trigger] projected_valid(
                 arena.nodes@,
@@ -498,10 +510,13 @@ pub fn project_all(
     Ok(out)
 }
 
-pub fn project(arena: &mut ETermArena, drs: &T, docid: &Vec<u8>, count: usize) -> (out: Result<
-    Vec<Projected>,
-    T,
->)
+pub fn project(
+    arena: &mut ETermArena,
+    drs: &T,
+    docid: &Vec<u8>,
+    count: usize,
+    tab: &Option<crate::m7_temporal::ETemporal>,
+) -> (out: Result<Vec<Projected>, T>)
     requires
         arena_ok(old(arena)),
         valid(old(arena).nodes@, drs),
@@ -510,7 +525,12 @@ pub fn project(arena: &mut ETermArena, drs: &T, docid: &Vec<u8>, count: usize) -
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         project_result_valid(final(arena).nodes@, &out),
         out matches Ok(ps) ==> ps.len() == count,
-        project_result(out) == spec::project(drs@, docid@, count as nat),
+        project_result(out) == spec::project(
+            drs@,
+            docid@,
+            count as nat,
+            crate::m7_annotate::tab_view(tab),
+        ),
 {
     hide(spec::project_from);
     hide(spec::collides);
@@ -544,7 +564,7 @@ pub fn project(arena: &mut ETermArena, drs: &T, docid: &Vec<u8>, count: usize) -
         crate::k2_load::prefix_chain(start, middle, before_project);
         tags_prefix(start, before_project, tagged@);
     }
-    let out = project_all(arena, &tagged, docid, count, base);
+    let out = project_all(arena, &tagged, docid, count, base, tab);
     proof {
         crate::k2_load::prefix_chain(start, before_project, arena.nodes@);
     }

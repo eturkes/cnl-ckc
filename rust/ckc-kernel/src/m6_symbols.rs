@@ -6,7 +6,9 @@ verus! {
 pub enum Sym {
     DollarGuideline,
     DollarGuidelineId,
+    DollarGuidelineInterval,
     DollarGuidelineProof,
+    DollarGuidelineRecurrence,
     Comma,
     Minus,
     Slash,
@@ -14,6 +16,8 @@ pub enum Sym {
     Cons,
     AceSha256,
     Actual,
+    AnchorCount,
+    AnchorShape,
     Answer,
     ApeMessages,
     Box,
@@ -23,14 +27,18 @@ pub enum Sym {
     ConditionOutsideSentenceRange,
     ConditionShape,
     Context,
+    Countable,
     DeferredOperator,
     Disjunction,
     DisjunctiveAntecedent,
     Docid,
     Drs,
     DumpNoncanonical,
+    Duration,
+    DurationAnchor,
     Eq,
     Exactly,
+    FrameShape,
     Geq,
     Greater,
     Guideline,
@@ -38,9 +46,11 @@ pub enum Sym {
     GuidelineCardinality,
     GuidelineEntity,
     GuidelineEvent,
+    GuidelineInterval,
     GuidelineOperator,
     GuidelinePp,
     GuidelineProperty,
+    GuidelineRecurrence,
     HeadVariableNotBoundInBody,
     InvalidDrsShape,
     Leq,
@@ -54,11 +64,14 @@ pub enum Sym {
     NafPlacement,
     NafSafety,
     NafShape,
+    NoBound,
     Noncanonical,
+    None,
     NongroundObligation,
     Noun,
     Object,
     ObjectOperator,
+    Of,
     OperatorScopedRule,
     Pos,
     Predicate,
@@ -77,6 +90,7 @@ pub enum Sym {
     Question,
     RecordShape,
     Ref,
+    Relation,
     ReservedNameCollision,
     RootCondition,
     RuleWithoutAntecedent,
@@ -85,7 +99,10 @@ pub enum Sym {
     SentenceLines,
     SentenceShape,
     Sentences,
+    SharedQuantity,
     Should,
+    Temporal,
+    TemporalShape,
     Ulex,
     UnresolvedArgument,
     Unsupported,
@@ -96,6 +113,7 @@ pub enum Sym {
     Which,
     Who,
     Witness,
+    ZeroBound,
     Naf,
 }
 
@@ -103,7 +121,9 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
     match s {
         Sym::DollarGuideline => ckc_spec::v1text::ascii("$guideline_"@),
         Sym::DollarGuidelineId => ckc_spec::v1text::ascii("$guideline_id"@),
+        Sym::DollarGuidelineInterval => ckc_spec::v1text::ascii("$guideline_interval"@),
         Sym::DollarGuidelineProof => ckc_spec::v1text::ascii("$guideline_proof"@),
+        Sym::DollarGuidelineRecurrence => ckc_spec::v1text::ascii("$guideline_recurrence"@),
         Sym::Comma => ckc_spec::v1text::ascii(","@),
         Sym::Minus => ckc_spec::v1text::ascii("-"@),
         Sym::Slash => ckc_spec::v1text::ascii("/"@),
@@ -111,6 +131,8 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::Cons => ckc_spec::v1text::ascii("[|]"@),
         Sym::AceSha256 => ckc_spec::v1text::ascii("ace_sha256"@),
         Sym::Actual => ckc_spec::v1text::ascii("actual"@),
+        Sym::AnchorCount => ckc_spec::v1text::ascii("anchor_count"@),
+        Sym::AnchorShape => ckc_spec::v1text::ascii("anchor_shape"@),
         Sym::Answer => ckc_spec::v1text::ascii("answer"@),
         Sym::ApeMessages => ckc_spec::v1text::ascii("ape_messages"@),
         Sym::Box => ckc_spec::v1text::ascii("box"@),
@@ -122,14 +144,18 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         ),
         Sym::ConditionShape => ckc_spec::v1text::ascii("condition_shape"@),
         Sym::Context => ckc_spec::v1text::ascii("context"@),
+        Sym::Countable => ckc_spec::v1text::ascii("countable"@),
         Sym::DeferredOperator => ckc_spec::v1text::ascii("deferred_operator"@),
         Sym::Disjunction => ckc_spec::v1text::ascii("disjunction"@),
         Sym::DisjunctiveAntecedent => ckc_spec::v1text::ascii("disjunctive_antecedent"@),
         Sym::Docid => ckc_spec::v1text::ascii("docid"@),
         Sym::Drs => ckc_spec::v1text::ascii("drs"@),
         Sym::DumpNoncanonical => ckc_spec::v1text::ascii("dump_noncanonical"@),
+        Sym::Duration => ckc_spec::v1text::ascii("duration"@),
+        Sym::DurationAnchor => ckc_spec::v1text::ascii("duration_anchor"@),
         Sym::Eq => ckc_spec::v1text::ascii("eq"@),
         Sym::Exactly => ckc_spec::v1text::ascii("exactly"@),
+        Sym::FrameShape => ckc_spec::v1text::ascii("frame_shape"@),
         Sym::Geq => ckc_spec::v1text::ascii("geq"@),
         Sym::Greater => ckc_spec::v1text::ascii("greater"@),
         Sym::Guideline => ckc_spec::v1text::ascii("guideline_"@),
@@ -137,9 +163,11 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::GuidelineCardinality => ckc_spec::v1text::ascii("guideline_cardinality"@),
         Sym::GuidelineEntity => ckc_spec::v1text::ascii("guideline_entity"@),
         Sym::GuidelineEvent => ckc_spec::v1text::ascii("guideline_event"@),
+        Sym::GuidelineInterval => ckc_spec::v1text::ascii("guideline_interval"@),
         Sym::GuidelineOperator => ckc_spec::v1text::ascii("guideline_operator"@),
         Sym::GuidelinePp => ckc_spec::v1text::ascii("guideline_pp"@),
         Sym::GuidelineProperty => ckc_spec::v1text::ascii("guideline_property"@),
+        Sym::GuidelineRecurrence => ckc_spec::v1text::ascii("guideline_recurrence"@),
         Sym::HeadVariableNotBoundInBody => ckc_spec::v1text::ascii(
             "head_variable_not_bound_in_body"@,
         ),
@@ -157,11 +185,14 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::NafPlacement => ckc_spec::v1text::ascii("naf_placement"@),
         Sym::NafSafety => ckc_spec::v1text::ascii("naf_safety"@),
         Sym::NafShape => ckc_spec::v1text::ascii("naf_shape"@),
+        Sym::NoBound => ckc_spec::v1text::ascii("no_bound"@),
         Sym::Noncanonical => ckc_spec::v1text::ascii("noncanonical"@),
+        Sym::None => ckc_spec::v1text::ascii("none"@),
         Sym::NongroundObligation => ckc_spec::v1text::ascii("nonground_obligation"@),
         Sym::Noun => ckc_spec::v1text::ascii("noun"@),
         Sym::Object => ckc_spec::v1text::ascii("object"@),
         Sym::ObjectOperator => ckc_spec::v1text::ascii("object_operator"@),
+        Sym::Of => ckc_spec::v1text::ascii("of"@),
         Sym::OperatorScopedRule => ckc_spec::v1text::ascii("operator_scoped_rule"@),
         Sym::Pos => ckc_spec::v1text::ascii("pos"@),
         Sym::Predicate => ckc_spec::v1text::ascii("predicate"@),
@@ -180,6 +211,7 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::Question => ckc_spec::v1text::ascii("question"@),
         Sym::RecordShape => ckc_spec::v1text::ascii("record_shape"@),
         Sym::Ref => ckc_spec::v1text::ascii("ref"@),
+        Sym::Relation => ckc_spec::v1text::ascii("relation"@),
         Sym::ReservedNameCollision => ckc_spec::v1text::ascii("reserved_name_collision"@),
         Sym::RootCondition => ckc_spec::v1text::ascii("root_condition"@),
         Sym::RuleWithoutAntecedent => ckc_spec::v1text::ascii("rule_without_antecedent"@),
@@ -188,7 +220,10 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::SentenceLines => ckc_spec::v1text::ascii("sentence_lines"@),
         Sym::SentenceShape => ckc_spec::v1text::ascii("sentence_shape"@),
         Sym::Sentences => ckc_spec::v1text::ascii("sentences"@),
+        Sym::SharedQuantity => ckc_spec::v1text::ascii("shared_quantity"@),
         Sym::Should => ckc_spec::v1text::ascii("should"@),
+        Sym::Temporal => ckc_spec::v1text::ascii("temporal"@),
+        Sym::TemporalShape => ckc_spec::v1text::ascii("temporal_shape"@),
         Sym::Ulex => ckc_spec::v1text::ascii("ulex"@),
         Sym::UnresolvedArgument => ckc_spec::v1text::ascii("unresolved_argument"@),
         Sym::Unsupported => ckc_spec::v1text::ascii("unsupported"@),
@@ -199,6 +234,7 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::Which => ckc_spec::v1text::ascii("which"@),
         Sym::Who => ckc_spec::v1text::ascii("who"@),
         Sym::Witness => ckc_spec::v1text::ascii("witness"@),
+        Sym::ZeroBound => ckc_spec::v1text::ascii("zero_bound"@),
         Sym::Naf => ckc_spec::v1text::ascii("~"@),
     }
 }
@@ -210,7 +246,9 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
     match s {
         Sym::DollarGuideline => bytes_dollarguideline(),
         Sym::DollarGuidelineId => bytes_dollarguidelineid(),
+        Sym::DollarGuidelineInterval => bytes_dollarguidelineinterval(),
         Sym::DollarGuidelineProof => bytes_dollarguidelineproof(),
+        Sym::DollarGuidelineRecurrence => bytes_dollarguidelinerecurrence(),
         Sym::Comma => bytes_comma(),
         Sym::Minus => bytes_minus(),
         Sym::Slash => bytes_slash(),
@@ -218,6 +256,8 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::Cons => bytes_cons(),
         Sym::AceSha256 => bytes_acesha256(),
         Sym::Actual => bytes_actual(),
+        Sym::AnchorCount => bytes_anchorcount(),
+        Sym::AnchorShape => bytes_anchorshape(),
         Sym::Answer => bytes_answer(),
         Sym::ApeMessages => bytes_apemessages(),
         Sym::Box => bytes_box(),
@@ -227,14 +267,18 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::ConditionOutsideSentenceRange => bytes_conditionoutsidesentencerange(),
         Sym::ConditionShape => bytes_conditionshape(),
         Sym::Context => bytes_context(),
+        Sym::Countable => bytes_countable(),
         Sym::DeferredOperator => bytes_deferredoperator(),
         Sym::Disjunction => bytes_disjunction(),
         Sym::DisjunctiveAntecedent => bytes_disjunctiveantecedent(),
         Sym::Docid => bytes_docid(),
         Sym::Drs => bytes_drs(),
         Sym::DumpNoncanonical => bytes_dumpnoncanonical(),
+        Sym::Duration => bytes_duration(),
+        Sym::DurationAnchor => bytes_durationanchor(),
         Sym::Eq => bytes_eq(),
         Sym::Exactly => bytes_exactly(),
+        Sym::FrameShape => bytes_frameshape(),
         Sym::Geq => bytes_geq(),
         Sym::Greater => bytes_greater(),
         Sym::Guideline => bytes_guideline(),
@@ -242,9 +286,11 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::GuidelineCardinality => bytes_guidelinecardinality(),
         Sym::GuidelineEntity => bytes_guidelineentity(),
         Sym::GuidelineEvent => bytes_guidelineevent(),
+        Sym::GuidelineInterval => bytes_guidelineinterval(),
         Sym::GuidelineOperator => bytes_guidelineoperator(),
         Sym::GuidelinePp => bytes_guidelinepp(),
         Sym::GuidelineProperty => bytes_guidelineproperty(),
+        Sym::GuidelineRecurrence => bytes_guidelinerecurrence(),
         Sym::HeadVariableNotBoundInBody => bytes_headvariablenotboundinbody(),
         Sym::InvalidDrsShape => bytes_invaliddrsshape(),
         Sym::Leq => bytes_leq(),
@@ -258,11 +304,14 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::NafPlacement => bytes_nafplacement(),
         Sym::NafSafety => bytes_nafsafety(),
         Sym::NafShape => bytes_nafshape(),
+        Sym::NoBound => bytes_nobound(),
         Sym::Noncanonical => bytes_noncanonical(),
+        Sym::None => bytes_none(),
         Sym::NongroundObligation => bytes_nongroundobligation(),
         Sym::Noun => bytes_noun(),
         Sym::Object => bytes_object(),
         Sym::ObjectOperator => bytes_objectoperator(),
+        Sym::Of => bytes_of(),
         Sym::OperatorScopedRule => bytes_operatorscopedrule(),
         Sym::Pos => bytes_pos(),
         Sym::Predicate => bytes_predicate(),
@@ -281,6 +330,7 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::Question => bytes_question(),
         Sym::RecordShape => bytes_recordshape(),
         Sym::Ref => bytes_ref(),
+        Sym::Relation => bytes_relation(),
         Sym::ReservedNameCollision => bytes_reservednamecollision(),
         Sym::RootCondition => bytes_rootcondition(),
         Sym::RuleWithoutAntecedent => bytes_rulewithoutantecedent(),
@@ -289,7 +339,10 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::SentenceLines => bytes_sentencelines(),
         Sym::SentenceShape => bytes_sentenceshape(),
         Sym::Sentences => bytes_sentences(),
+        Sym::SharedQuantity => bytes_sharedquantity(),
         Sym::Should => bytes_should(),
+        Sym::Temporal => bytes_temporal(),
+        Sym::TemporalShape => bytes_temporalshape(),
         Sym::Ulex => bytes_ulex(),
         Sym::UnresolvedArgument => bytes_unresolvedargument(),
         Sym::Unsupported => bytes_unsupported(),
@@ -300,6 +353,7 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::Which => bytes_which(),
         Sym::Who => bytes_who(),
         Sym::Witness => bytes_witness(),
+        Sym::ZeroBound => bytes_zerobound(),
         Sym::Naf => bytes_naf(),
     }
 }
@@ -332,6 +386,20 @@ fn bytes_dollarguidelineid() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_dollarguidelineinterval() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("$guideline_interval"@),
+{
+    let b: &[u8] = b"$guideline_interval";
+    proof {
+        reveal_byteslit(b"$guideline_interval");
+        reveal_strlit("$guideline_interval");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("$guideline_interval"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_dollarguidelineproof() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("$guideline_proof"@),
@@ -342,6 +410,20 @@ fn bytes_dollarguidelineproof() -> (out: Vec<u8>)
         reveal_strlit("$guideline_proof");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("$guideline_proof"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_dollarguidelinerecurrence() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("$guideline_recurrence"@),
+{
+    let b: &[u8] = b"$guideline_recurrence";
+    proof {
+        reveal_byteslit(b"$guideline_recurrence");
+        reveal_strlit("$guideline_recurrence");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("$guideline_recurrence"@));
     }
     slice_to_vec(b)
 }
@@ -440,6 +522,34 @@ fn bytes_actual() -> (out: Vec<u8>)
         reveal_strlit("actual");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("actual"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_anchorcount() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("anchor_count"@),
+{
+    let b: &[u8] = b"anchor_count";
+    proof {
+        reveal_byteslit(b"anchor_count");
+        reveal_strlit("anchor_count");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("anchor_count"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_anchorshape() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("anchor_shape"@),
+{
+    let b: &[u8] = b"anchor_shape";
+    proof {
+        reveal_byteslit(b"anchor_shape");
+        reveal_strlit("anchor_shape");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("anchor_shape"@));
     }
     slice_to_vec(b)
 }
@@ -570,6 +680,20 @@ fn bytes_context() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_countable() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("countable"@),
+{
+    let b: &[u8] = b"countable";
+    proof {
+        reveal_byteslit(b"countable");
+        reveal_strlit("countable");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("countable"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_deferredoperator() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("deferred_operator"@),
@@ -654,6 +778,34 @@ fn bytes_dumpnoncanonical() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_duration() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("duration"@),
+{
+    let b: &[u8] = b"duration";
+    proof {
+        reveal_byteslit(b"duration");
+        reveal_strlit("duration");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("duration"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_durationanchor() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("duration_anchor"@),
+{
+    let b: &[u8] = b"duration_anchor";
+    proof {
+        reveal_byteslit(b"duration_anchor");
+        reveal_strlit("duration_anchor");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("duration_anchor"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_eq() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("eq"@),
@@ -678,6 +830,20 @@ fn bytes_exactly() -> (out: Vec<u8>)
         reveal_strlit("exactly");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("exactly"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_frameshape() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("frame_shape"@),
+{
+    let b: &[u8] = b"frame_shape";
+    proof {
+        reveal_byteslit(b"frame_shape");
+        reveal_strlit("frame_shape");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("frame_shape"@));
     }
     slice_to_vec(b)
 }
@@ -780,6 +946,20 @@ fn bytes_guidelineevent() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_guidelineinterval() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("guideline_interval"@),
+{
+    let b: &[u8] = b"guideline_interval";
+    proof {
+        reveal_byteslit(b"guideline_interval");
+        reveal_strlit("guideline_interval");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_interval"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_guidelineoperator() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("guideline_operator"@),
@@ -818,6 +998,20 @@ fn bytes_guidelineproperty() -> (out: Vec<u8>)
         reveal_strlit("guideline_property");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_property"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_guidelinerecurrence() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("guideline_recurrence"@),
+{
+    let b: &[u8] = b"guideline_recurrence";
+    proof {
+        reveal_byteslit(b"guideline_recurrence");
+        reveal_strlit("guideline_recurrence");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_recurrence"@));
     }
     slice_to_vec(b)
 }
@@ -1004,6 +1198,20 @@ fn bytes_nafshape() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_nobound() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("no_bound"@),
+{
+    let b: &[u8] = b"no_bound";
+    proof {
+        reveal_byteslit(b"no_bound");
+        reveal_strlit("no_bound");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("no_bound"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_noncanonical() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("noncanonical"@),
@@ -1014,6 +1222,20 @@ fn bytes_noncanonical() -> (out: Vec<u8>)
         reveal_strlit("noncanonical");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("noncanonical"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_none() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("none"@),
+{
+    let b: &[u8] = b"none";
+    proof {
+        reveal_byteslit(b"none");
+        reveal_strlit("none");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("none"@));
     }
     slice_to_vec(b)
 }
@@ -1070,6 +1292,20 @@ fn bytes_objectoperator() -> (out: Vec<u8>)
         reveal_strlit("object_operator");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("object_operator"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_of() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("of"@),
+{
+    let b: &[u8] = b"of";
+    proof {
+        reveal_byteslit(b"of");
+        reveal_strlit("of");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("of"@));
     }
     slice_to_vec(b)
 }
@@ -1326,6 +1562,20 @@ fn bytes_ref() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_relation() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("relation"@),
+{
+    let b: &[u8] = b"relation";
+    proof {
+        reveal_byteslit(b"relation");
+        reveal_strlit("relation");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("relation"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_reservednamecollision() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("reserved_name_collision"@),
@@ -1438,6 +1688,20 @@ fn bytes_sentences() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_sharedquantity() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("shared_quantity"@),
+{
+    let b: &[u8] = b"shared_quantity";
+    proof {
+        reveal_byteslit(b"shared_quantity");
+        reveal_strlit("shared_quantity");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("shared_quantity"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_should() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("should"@),
@@ -1448,6 +1712,34 @@ fn bytes_should() -> (out: Vec<u8>)
         reveal_strlit("should");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("should"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_temporal() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("temporal"@),
+{
+    let b: &[u8] = b"temporal";
+    proof {
+        reveal_byteslit(b"temporal");
+        reveal_strlit("temporal");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("temporal"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_temporalshape() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("temporal_shape"@),
+{
+    let b: &[u8] = b"temporal_shape";
+    proof {
+        reveal_byteslit(b"temporal_shape");
+        reveal_strlit("temporal_shape");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("temporal_shape"@));
     }
     slice_to_vec(b)
 }
@@ -1588,6 +1880,20 @@ fn bytes_witness() -> (out: Vec<u8>)
         reveal_strlit("witness");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("witness"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_zerobound() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("zero_bound"@),
+{
+    let b: &[u8] = b"zero_bound";
+    proof {
+        reveal_byteslit(b"zero_bound");
+        reveal_strlit("zero_bound");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("zero_bound"@));
     }
     slice_to_vec(b)
 }

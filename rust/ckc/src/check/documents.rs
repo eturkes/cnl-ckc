@@ -9,7 +9,11 @@ pub(super) fn compile(
     proof: bool,
 ) -> Result<Vec<u8>> {
     let bytes = read(&g.ace(id), "guideline")?;
-    let mut tail = vec![show(stage), id.to_owned()];
+    // m7t D2: a guideline carrying temporal.tsv compiles under schema v2.
+    let mut tail = match &g.temporal {
+        Some(t) => vec!["v2".to_owned(), show(stage), id.to_owned(), show(t)],
+        None => vec![show(stage), id.to_owned()],
+    };
     if let Some(lexicon) = &g.lexicon {
         tail.push(show(lexicon));
     }
@@ -179,7 +183,14 @@ pub(super) fn check(
         "ckc: {}",
         text::strip(&aggregate("recursion-check", &forward, pairs.len())?)
     );
-    let counts = queries::validate(scratch, swipl, stage, &g.path, g.lexicon.as_deref())?;
+    let counts = queries::validate(
+        scratch,
+        swipl,
+        stage,
+        &g.path,
+        g.lexicon.as_deref(),
+        g.temporal.as_deref(),
+    )?;
     println!("{}", counts.query_meter(&name(&g.path)));
     println!("{}", counts.trace_meter(&name(&g.path)));
     Ok(())

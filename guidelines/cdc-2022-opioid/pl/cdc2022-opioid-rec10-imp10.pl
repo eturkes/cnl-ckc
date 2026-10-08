@@ -1,8 +1,8 @@
 % cdc2022-opioid-rec10-imp10.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp10',ace_sha256(cabd7e6a6257ebb4cfbb575fcde9d37405e8dd5279ce989cab3d31252a537e7c),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-rec10-imp10',ace_sha256(cabd7e6a6257ebb4cfbb575fcde9d37405e8dd5279ce989cab3d31252a537e7c),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a toxicology-test-result informs a clinical-decision and the clinical-decision has a major-implication for a patient then every clinician should use a confirmatory-testing for the toxicology-test-result.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp10',1,box(1),[A,B,C,D,E,F,G]),should) :- guideline_entity(actual,A,'toxicology-test-result',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'clinical-decision',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,inform), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'major-implication',countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,patient,countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,have), guideline_arg(actual,F,1,B), guideline_arg(actual,F,2,D), guideline_pp(actual,F,for,E), guideline_entity(actual,G,clinician,countable), guideline_cardinality(actual,G,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp10',1,box(1),[A,B,C,D,E,F,G]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp10',1,ref(8),[A,B,C,D,E,F,G]),'confirmatory-testing',countable) :- guideline_entity(actual,A,'toxicology-test-result',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'clinical-decision',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,inform), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'major-implication',countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,patient,countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,have), guideline_arg(actual,F,1,B), guideline_arg(actual,F,2,D), guideline_pp(actual,F,for,E), guideline_entity(actual,G,clinician,countable), guideline_cardinality(actual,G,na,eq,1).

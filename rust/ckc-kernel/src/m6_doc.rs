@@ -41,9 +41,20 @@ pub fn certify_doc_impl(
     docid: &[u8],
     dump: &[u8],
     pl: &[u8],
+    traw: Option<&Vec<u8>>,
+    tsha: Option<&Vec<u8>>,
 ) -> (out: EOut)
     ensures
-        out@ == spec::certify_doc_output(ace@, asha@, spec::opt_view(usha), docid@, dump@, pl@),
+        out@ == spec::certify_doc_output(
+            ace@,
+            asha@,
+            spec::opt_view(usha),
+            docid@,
+            dump@,
+            pl@,
+            spec::opt_view(traw),
+            spec::opt_view(tsha),
+        ),
 {
     hide(spec::project);
     hide(spec::first_mismatch);
@@ -105,12 +116,24 @@ pub fn certify_doc_impl(
     if !ulex_matches(&parsed.doc_ulex, usha, Ghost(doc.ulex)) {
         return reject_sym(&mut arena, docid, &Sym::Ulex);
     }
+    let tab = match crate::m7_annotate::table_exec(traw, tsha) {
+        Some(t) => t,
+        None => return reject_sym(&mut arena, docid, &Sym::Temporal),
+    };
+    if !crate::m7_annotate::temporal_ok(
+        parsed.doc_version,
+        &parsed.doc_temporal,
+        tsha,
+        Ghost(doc.temporal),
+    ) {
+        return reject_sym(&mut arena, docid, &Sym::Temporal);
+    }
     if parsed.bundles.len() != lines.len() {
         return reject_sym(&mut arena, docid, &Sym::BundleCount);
     }
     let drs = from_root(&arena, d.drs);
     let ghost before_project = arena.nodes@;
-    let ps = match project(&mut arena, &drs, &parsed.docid, lines.len()) {
+    let ps = match project(&mut arena, &drs, &parsed.docid, lines.len(), &tab) {
         Ok(ps) => ps,
         Err(e) => {
             let why = c1(&mut arena, &Sym::Unsupported, &e);

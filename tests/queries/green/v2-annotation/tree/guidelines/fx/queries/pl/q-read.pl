@@ -1,0 +1,4 @@
+% q-read compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v2,'q-read',ace_sha256('7a9d2946c83f00e412fe4b5d24df47e4a72ac22af69b2fe92ae6c2855470d23e'),ulex(none),temporal(sha256('1b017245079fd0206a790060fc3208db1db4c72059eda61145257591e61c5e23'))).
+% Q1: Who reads a book at an interval of 2 weeks?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,book,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,interval,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_entity(actual,C,week,countable),','(guideline_cardinality(actual,C,na,eq,2),','(guideline_event(actual,D,read),','(guideline_arg(actual,D,1,E),','(guideline_arg(actual,D,2,A),','(guideline_pp(actual,D,at,B),guideline_recurrence(actual,D,C,week)))))))))))),answers([answer(E,wh(who))])).

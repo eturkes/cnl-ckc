@@ -6,6 +6,8 @@ pub(super) struct Guideline {
     pub path: PathBuf,
     pub docids: Vec<String>,
     pub lexicon: Option<PathBuf>,
+    // m7t D1: present ⇒ every document compiles under schema v2.
+    pub temporal: Option<PathBuf>,
 }
 impl Guideline {
     pub fn ace(&self, id: &str) -> PathBuf {
@@ -109,10 +111,19 @@ pub(super) fn collect(path: &Path) -> Result<Guideline> {
         ));
     }
     let lexicon = lexicon.is_file().then_some(lexicon);
+    let temporal = path.join("temporal.tsv");
+    if temporal.is_symlink() || (temporal.exists() && !temporal.is_file()) {
+        return Err(fail(
+            "guideline",
+            format!("temporal.tsv is not a regular file: {}", show(&temporal)),
+        ));
+    }
+    let temporal = temporal.is_file().then_some(temporal);
     Ok(Guideline {
         path: path.to_owned(),
         docids,
         lexicon,
+        temporal,
     })
 }
 fn derived(g: &Guideline, subdir: &str, suffix: &str) -> Result {
@@ -278,7 +289,7 @@ pub(super) fn red() -> Result<Vec<RedProbe>> {
         return Err(violation("red-dir", "missing: tests/red"));
     }
     let mut probes = vec![];
-    let (mut aces, mut ulex, mut pins) = (vec![], vec![], vec![]);
+    let (mut aces, mut ulex, mut pins, mut tables) = (vec![], vec![], vec![], vec![]);
     for p in entries(root, "red-entry")? {
         let n = name(&p);
         if !p.is_file() || p.is_symlink() {
@@ -294,7 +305,8 @@ pub(super) fn red() -> Result<Vec<RedProbe>> {
             let rc = match class {
                 "input_utf8" | "ape_messages" | "empty_drs" | "sentence_lines" | "unsupported"
                 | "safety" | "proof" => 1,
-                "usage" | "ape_load" | "ulex_load" | "check_load" | "uncaught" => 2,
+                "usage" | "ape_load" | "ulex_load" | "temporal_load" | "check_load"
+                | "uncaught" => 2,
                 _ => {
                     return Err(violation(
                         "red-class",
@@ -310,13 +322,19 @@ pub(super) fn red() -> Result<Vec<RedProbe>> {
             });
         } else if let Some(stem) = n.strip_suffix(".ulex") {
             ulex.push(stem.to_owned());
+        } else if let Some(stem) = n.strip_suffix(".temporal.tsv") {
+            tables.push(stem.to_owned());
         } else if let Some(stem) = n.strip_suffix(".expect") {
             pins.push(stem.to_owned());
         } else {
             return Err(violation("red-entry", format!("unsupported entry: {n}")));
         }
     }
-    for (items, kind) in [(&ulex, "ulex"), (&pins, "expect")] {
+    for (items, kind) in [
+        (&ulex, "ulex"),
+        (&pins, "expect"),
+        (&tables, "temporal.tsv"),
+    ] {
         for s in items {
             if !aces.contains(s) {
                 return Err(violation(

@@ -5,7 +5,24 @@ pub(super) fn run(swipl: &Path, stage: &Path, probe: &RedProbe) -> Result {
     let n = name(&probe.path);
     let input = read(&probe.path, "red-probe")?;
     let lexicon = probe.path.with_extension("ulex");
-    let mut tail = vec![show(stage), "red-probe".to_owned()];
+    // m7t D2/D9: a `<probe>.temporal.tsv` sidecar selects v2; a `<class>--query-…`
+    // probe compiles in question mode.
+    let table = probe.path.with_extension("temporal.tsv");
+    let mut tail = if n.contains("--query-") {
+        vec!["question".to_owned()]
+    } else {
+        vec![]
+    };
+    if table.is_file() {
+        tail.extend([
+            "v2".to_owned(),
+            show(stage),
+            "red-probe".to_owned(),
+            show(&table),
+        ]);
+    } else {
+        tail.extend([show(stage), "red-probe".to_owned()]);
+    }
     if lexicon.is_file() {
         tail.push(show(&lexicon));
     }

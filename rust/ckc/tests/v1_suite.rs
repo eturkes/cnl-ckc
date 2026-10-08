@@ -201,12 +201,16 @@ fn v1_suite() {
             }
         })
         .collect();
-    let primary = rows.iter().filter(|r| r.probe == "target").count();
-    assert_eq!(
-        (primary, rows.len() - primary),
-        (230, 115),
-        "tests/v1 row census"
-    );
+    let census = |temporal| {
+        let family: Vec<_> = rows
+            .iter()
+            .filter(|r| r.case.starts_with("m7t-") == temporal)
+            .collect();
+        let primary = family.iter().filter(|r| r.probe == "target").count();
+        (primary, family.len() - primary)
+    };
+    assert_eq!(census(false), (230, 115), "tests/v1 legacy row census");
+    assert_eq!(census(true), (31, 12), "tests/v1 M7T row census");
     let mut cases: Vec<&str> = rows.iter().map(|r| r.case.as_str()).collect();
     cases.dedup();
     for case in &cases {

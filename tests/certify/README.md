@@ -1,8 +1,10 @@
 # Certification fixtures
 
-`cases.tsv` pins 13 document edits and four query edits against `cdc-2022-opioid`.
-The binary replayer also certifies all three unmodified artifacts.
+`cases.tsv` pins 25 document edits and seven query edits against `cdc-2022-opioid`.
+The binary replayer also certifies all six unmodified artifacts.
 The document cases include removal of a negation-as-failure body item.
+Twelve document cases and three query cases edit a schema v2 annotation or the record's temporal digest.
+A wrong table always changes that digest, so the digest cases cover a pairing with the wrong table.
 
 | Column | Meaning |
 |---|---|

@@ -115,9 +115,17 @@ pub open spec fn ant_relation(shared: Seq<Term>, left: Term, right: Term, env: &
     (spec::Flat, spec::Flat, spec::Flat),
     Term,
 > {
-    match spec::flatten_seq(shared, env.s as nat, env.docid@, 1, env.base as nat) {
+    match spec::flatten_seq(
+        shared,
+        env.s as nat,
+        env.docid@,
+        1,
+        env.base as nat,
+        crate::m7_annotate::tab_view(&env.tab),
+    ) {
         Err(e) => Err(e),
-        Ok(fs) => match spec::flatten_list(
+        Ok(fs) => match spec::flatten_ann(
+            crate::m7_annotate::tab_view(&env.tab),
             left,
             spec::Where::Antecedent,
             env.s as nat,
@@ -129,7 +137,8 @@ pub open spec fn ant_relation(shared: Seq<Term>, left: Term, right: Term, env: &
             env.base as nat,
         ) {
             Err(e) => Err(e),
-            Ok(f1) => match spec::flatten_list(
+            Ok(f1) => match spec::flatten_ann(
+                crate::m7_annotate::tab_view(&env.tab),
                 right,
                 spec::Where::Antecedent,
                 env.s as nat,
@@ -201,7 +210,15 @@ pub open spec fn cons_relation(conds: Term, d1: Term, d2: Term, n: nat, env: &En
     (spec::Flat, spec::Flat),
     Term,
 > {
-    match spec::flatten_cons(conds, env.s as nat, env.docid@, d1, n, env.base as nat) {
+    match spec::flatten_cons(
+        conds,
+        env.s as nat,
+        env.docid@,
+        d1,
+        n,
+        env.base as nat,
+        crate::m7_annotate::tab_view(&env.tab),
+    ) {
         Err(e) => Err(e),
         Ok(c1) => match spec::flatten_cons(
             conds,
@@ -210,6 +227,7 @@ pub open spec fn cons_relation(conds: Term, d1: Term, d2: Term, n: nat, env: &En
             d2,
             n,
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ) {
             Err(e) => Err(e),
             Ok(c2) => Ok((c1, c2)),
@@ -307,6 +325,7 @@ pub fn split_variants(
             env.docid@,
             map_model(map@),
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ),
 {
     hide(spec::flatten_seq);
@@ -406,7 +425,14 @@ pub open spec fn unsplit_relation(
     env: &Env,
     map: Seq<(Term, Term)>,
 ) -> Result<Seq<spec::Group>, Term> {
-    match spec::flatten_seq(shared, env.s as nat, env.docid@, 1, env.base as nat) {
+    match spec::flatten_seq(
+        shared,
+        env.s as nat,
+        env.docid@,
+        1,
+        env.base as nat,
+        crate::m7_annotate::tab_view(&env.tab),
+    ) {
         Err(e) => Err(e),
         Ok(fa) => match spec::flatten_cons(
             cconds,
@@ -415,6 +441,7 @@ pub open spec fn unsplit_relation(
             spec::list_of(adom),
             fa.n,
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ) {
             Err(e) => Err(e),
             Ok(fc) => {
@@ -537,6 +564,7 @@ pub fn rule_groups(
             env.docid@,
             map_model(map@),
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ),
 {
     hide(spec::curry);

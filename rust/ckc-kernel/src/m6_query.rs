@@ -176,7 +176,12 @@ pub open spec fn query_result_valid(nodes: Seq<ENode>, r: &Result<(T, T), T>) ->
     }
 }
 
-pub fn project_query(arena: &mut ETermArena, drs: &T, qid: &Vec<u8>) -> (out: Result<(T, T), T>)
+pub fn project_query(
+    arena: &mut ETermArena,
+    drs: &T,
+    qid: &Vec<u8>,
+    tab: &Option<crate::m7_temporal::ETemporal>,
+) -> (out: Result<(T, T), T>)
     requires
         arena_ok(old(arena)),
         valid(old(arena).nodes@, drs),
@@ -184,7 +189,7 @@ pub fn project_query(arena: &mut ETermArena, drs: &T, qid: &Vec<u8>) -> (out: Re
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         query_result_valid(final(arena).nodes@, &out),
-        query_result(out) == spec::project_query(drs@, qid@),
+        query_result(out) == spec::project_query(drs@, qid@, crate::m7_annotate::tab_view(tab)),
 {
     hide(spec::collides);
     hide(spec::scan_box);
@@ -217,7 +222,7 @@ pub fn project_query(arena: &mut ETermArena, drs: &T, qid: &Vec<u8>) -> (out: Re
     proof {
         prefix(start, n1, &q);
     }
-    if !scan_box(arena, &q) {
+    if !scan_box(arena, &q, tab.is_some()) {
         return Err(error(arena, &Sym::QueryUnsupported, Ghost(start)));
     }
     let markers = box_markers(arena, &q);
@@ -256,7 +261,7 @@ pub fn project_query(arena: &mut ETermArena, drs: &T, qid: &Vec<u8>) -> (out: Re
         prefix(n3, n4, &b.conds);
         prefix_all(n3, n4, answers@);
     }
-    let env = Env { docid: qid.clone(), s: 1, base };
+    let env = Env { docid: qid.clone(), s: 1, base, tab: crate::m7_annotate::clone_tab(tab) };
     let flat_result = flatten_ante(arena, &b.conds, &env, 1);
     let ghost n5 = arena.nodes@;
     proof {
@@ -338,9 +343,20 @@ pub fn certify_query_impl(
     qid: &[u8],
     dump: &[u8],
     pl: &[u8],
+    traw: Option<&Vec<u8>>,
+    tsha: Option<&Vec<u8>>,
 ) -> (out: EOut)
     ensures
-        out@ == spec::certify_query_output(ace@, asha@, spec::opt_view(usha), qid@, dump@, pl@),
+        out@ == spec::certify_query_output(
+            ace@,
+            asha@,
+            spec::opt_view(usha),
+            qid@,
+            dump@,
+            pl@,
+            spec::opt_view(traw),
+            spec::opt_view(tsha),
+        ),
 {
     hide(spec::project_query);
     hide(spec::canon_pair);
@@ -402,13 +418,25 @@ pub fn certify_query_impl(
     if !ulex_matches(&parsed.query_ulex, usha, Ghost(query.ulex)) {
         return reject_sym(&mut arena, qid, &Sym::Ulex);
     }
+    let tab = match crate::m7_annotate::table_exec(traw, tsha) {
+        Some(t) => t,
+        None => return reject_sym(&mut arena, qid, &Sym::Temporal),
+    };
+    if !crate::m7_annotate::temporal_ok(
+        parsed.query_version,
+        &parsed.query_temporal,
+        tsha,
+        Ghost(query.temporal),
+    ) {
+        return reject_sym(&mut arena, qid, &Sym::Temporal);
+    }
     let text = query_text(&lines[0]);
     if !bytes_eq(&parsed.query_text, &text) {
         return reject_sym(&mut arena, qid, &Sym::QueryText);
     }
     let drs = from_root(&arena, d.drs);
     let ghost before_project = arena.nodes@;
-    let (goal, answers) = match project_query(&mut arena, &drs, &parsed.qid) {
+    let (goal, answers) = match project_query(&mut arena, &drs, &parsed.qid, &tab) {
         Ok(pair) => pair,
         Err(e) => {
             let why = c1(&mut arena, &Sym::Unsupported, &e);

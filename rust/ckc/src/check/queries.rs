@@ -85,9 +85,15 @@ pub(super) fn question(
     id: &str,
     ace: &Path,
     lexicon: Option<&Path>,
+    temporal: Option<&Path>,
 ) -> Result<Vec<u8>> {
     let input = read(ace, "queries")?;
-    let mut tail = vec!["question".to_owned(), show(stage), id.to_owned()];
+    let mut tail = vec!["question".to_owned()];
+    if let Some(t) = temporal {
+        tail.extend(["v2".to_owned(), show(stage), id.to_owned(), show(t)]);
+    } else {
+        tail.extend([show(stage), id.to_owned()]);
+    }
     if let Some(p) = lexicon {
         tail.push(show(p));
     }
@@ -315,6 +321,7 @@ pub(super) fn validate(
     stage: &Path,
     gid: &Path,
     lexicon: Option<&Path>,
+    temporal: Option<&Path>,
 ) -> Result<Counts> {
     let root = gid.join("queries");
     let qids = query_aces(&root)?;
@@ -345,8 +352,8 @@ pub(super) fn validate(
     manifest(&mpath, &gid.join("pl"))?;
     for id in qids {
         let ace = root.join(format!("{id}.ace"));
-        let first = question(swipl, stage, &id, &ace, lexicon)?;
-        let second = question(swipl, stage, &id, &ace, lexicon)?;
+        let first = question(swipl, stage, &id, &ace, lexicon, temporal)?;
+        let second = question(swipl, stage, &id, &ace, lexicon, temporal)?;
         if first != second {
             return Err(violation(
                 "determinism",
@@ -454,6 +461,15 @@ pub(super) fn fixture(
     if !stage.is_dir() {
         return Err(fail("ape-stage", format!("missing stage: {}", show(stage))));
     }
-    let counts = validate(scratch, swipl, stage, gid, lexicon.as_deref())?;
+    let temporal = gid.join("temporal.tsv");
+    let temporal = temporal.is_file().then_some(temporal);
+    let counts = validate(
+        scratch,
+        swipl,
+        stage,
+        gid,
+        lexicon.as_deref(),
+        temporal.as_deref(),
+    )?;
     Ok(format!("{}\n", counts.query_meter(&name(gid))).into_bytes())
 }

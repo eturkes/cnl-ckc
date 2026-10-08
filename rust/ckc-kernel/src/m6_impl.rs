@@ -11,6 +11,8 @@ pub fn certify_doc_impl(
     docid: &[u8],
     dump: &[u8],
     pl: &[u8],
+    traw: Option<&Vec<u8>>,
+    tsha: Option<&Vec<u8>>,
 ) -> (r: EOut)
     ensures
         r@ == ckc_spec::emit::certify_doc_output(
@@ -20,9 +22,11 @@ pub fn certify_doc_impl(
             docid@,
             dump@,
             pl@,
+            ckc_spec::emit::opt_view(traw),
+            ckc_spec::emit::opt_view(tsha),
         ),
 {
-    crate::m6_doc::certify_doc_impl(ace, asha, usha, docid, dump, pl)
+    crate::m6_doc::certify_doc_impl(ace, asha, usha, docid, dump, pl, traw, tsha)
 }
 
 pub fn certify_query_impl(
@@ -32,6 +36,8 @@ pub fn certify_query_impl(
     qid: &[u8],
     dump: &[u8],
     pl: &[u8],
+    traw: Option<&Vec<u8>>,
+    tsha: Option<&Vec<u8>>,
 ) -> (r: EOut)
     ensures
         r@ == ckc_spec::emit::certify_query_output(
@@ -41,9 +47,11 @@ pub fn certify_query_impl(
             qid@,
             dump@,
             pl@,
+            ckc_spec::emit::opt_view(traw),
+            ckc_spec::emit::opt_view(tsha),
         ),
 {
-    crate::m6_query::certify_query_impl(ace, asha, usha, qid, dump, pl)
+    crate::m6_query::certify_query_impl(ace, asha, usha, qid, dump, pl, traw, tsha)
 }
 
 } // verus!

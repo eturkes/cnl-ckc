@@ -1,8 +1,8 @@
 % cdc2022-opioid-rec10-imp09.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp09',ace_sha256('15439a0398bdff7f23eab972255d24ea3e7301db823e44bf5c368ee187135d10'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-rec10-imp09',ace_sha256('15439a0398bdff7f23eab972255d24ea3e7301db823e44bf5c368ee187135d10'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a clinician works in a practice-context and the practice-context uses a toxicology-screening-panel and the toxicology-screening-panel includes a drug then the clinician should know the drug and should understand a toxicology-result-interpretation for the drug.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp09',1,box(1),[A,B,C,D,E,F,G]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'practice-context',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,work), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,'toxicology-screening-panel',countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,use), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,drug,countable), guideline_cardinality(actual,F,na,eq,1), guideline_event(actual,G,include), guideline_arg(actual,G,1,D), guideline_arg(actual,G,2,F).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-rec10-imp09',1,box(1),[A,B,C,D,E,F,G]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp09',1,ref(8),[A,B,C,D,E,F,G]),know) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'practice-context',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,work), guideline_arg(actual,C,1,A), guideline_pp(actual,C,in,B), guideline_entity(actual,D,'toxicology-screening-panel',countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,use), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,drug,countable), guideline_cardinality(actual,F,na,eq,1), guideline_event(actual,G,include), guideline_arg(actual,G,1,D), guideline_arg(actual,G,2,F).

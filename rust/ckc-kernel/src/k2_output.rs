@@ -116,6 +116,42 @@ pub fn comp3(arena: &mut ETermArena, name: &[u8], a: usize, b: usize, c: usize) 
     comp_root(arena, name, roots)
 }
 
+pub fn comp4(arena: &mut ETermArena, name: &[u8], a: usize, b: usize, c: usize, d: usize) -> (root:
+    usize)
+    requires
+        root_ok(old(arena), a),
+        root_ok(old(arena), b),
+        root_ok(old(arena), c),
+        root_ok(old(arena), d),
+    ensures
+        crate::k2_term::arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        root_ok(final(arena), root),
+        final(arena)@[root as int] == Term::Comp(
+            name@,
+            seq![
+                old(arena)@[a as int],
+                old(arena)@[b as int],
+                old(arena)@[c as int],
+                old(arena)@[d as int],
+            ],
+        ),
+{
+    let mut roots = Vec::new();
+    roots.push(a);
+    roots.push(b);
+    roots.push(c);
+    roots.push(d);
+    proof {
+        child_terms_match(
+            arena.nodes@,
+            roots@,
+            seq![arena@[a as int], arena@[b as int], arena@[c as int], arena@[d as int]],
+        );
+    }
+    comp_root(arena, name, roots)
+}
+
 pub fn error_out(arena: &mut ETermArena, detail: usize, proof_failure: bool) -> (out: EOut)
     requires
         root_ok(old(arena), detail),

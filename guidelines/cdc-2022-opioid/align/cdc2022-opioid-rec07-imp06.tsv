@@ -3,22 +3,28 @@
 2	ace	24	long-term-opioid-therapy
 0	ace	60	clinician
 3	ace	83	long-term-opioid-reassessment-schedule
+1	ace	130	patient
+1	ace	144	patient
 8	ace	152	receives
 2	ace	163	long-term-opioid-therapy
-3	ace	194	long-term-opioid-reassessment-schedule
-4	ace	239	reassessment-interval
-4	ace	269	reassessment-interval
-6	ace	300	at most
-5	ace	308	3 months
-0	ace	328	clinician
-3	ace	358	long-term-opioid-reassessment-schedule
-0	ace	419	clinician
-7	ace	436	new-patient
-7	ace	456	new-patient
-8	ace	468	receives
-2	ace	479	long-term-opioid-therapy
-0	ace	513	clinician
-3	ace	536	long-term-opioid-reassessment-schedule
+0	ace	199	clinician
+4	ace	227	suggested-long-term-opioid-reassessment-schedule
+1	ace	284	patient
+0	ace	298	clinician
+4	ace	315	suggested-long-term-opioid-reassessment-schedule
+1	ace	370	patient
+0	ace	387	clinician
+3	ace	397	reassesses
+1	ace	412	patient
+5	ace	420	at an interval of at most 3 months
+0	ace	461	clinician
+7	ace	478	new-patient
+7	ace	498	new-patient
+8	ace	510	receives
+2	ace	521	long-term-opioid-therapy
+0	ace	555	clinician
+3	ace	578	long-term-opioid-reassessment-schedule
+7	ace	625	new-patient
 0	src	0	Clinicians
 3	src	18	regularly reassess
 1	src	41	patients
@@ -27,6 +33,5 @@
 7	src	96	patients who are new
 0	src	124	clinician
 2	src	141	long-term opioid therapy
-4	src	184	interval
-5	src	202	3 months
-6	src	214	more frequently
+4	src	174	suggested interval
+5	src	196	every 3 months or more frequently

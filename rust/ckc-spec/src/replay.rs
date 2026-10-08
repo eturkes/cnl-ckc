@@ -264,7 +264,7 @@ pub open spec fn docs_of(ms: Seq<V1File>) -> Seq<DocFile>
 
 // The loaded program: per document its two records then every clause, in file order.
 pub open spec fn doc_db(d: DocFile) -> Seq<DocClause> {
-    seq![fact_clause(schema_version_term()), fact_clause(doc_record_term(d))]
+    seq![fact_clause(schema_version_term(d.version)), fact_clause(doc_record_term(d))]
         + d.bundles.map_values(|b: Bundle| b.clauses).flatten()
 }
 
@@ -583,13 +583,49 @@ pub open spec fn manifest_stage(
     }
 }
 
-// Stage 2: consult every distinct pl path once; the first non-canonical member rejects.
+// One schema version per composition (contract m7t D7): the first document
+// whose version differs from the first document's.
+pub open spec fn first_other(docs: Seq<DocFile>, v: nat, i: nat) -> Option<DocFile>
+    decreases docs.len() - i,
+{
+    if i >= docs.len() {
+        Option::None
+    } else if docs[i as int].version != v {
+        Option::Some(docs[i as int])
+    } else {
+        first_other(docs, v, i + 1)
+    }
+}
+
+pub open spec fn mixed_version(docs: Seq<DocFile>) -> Option<DocFile> {
+    if docs.len() == 0 {
+        Option::None
+    } else {
+        first_other(docs, docs[0].version, 1)
+    }
+}
+
+// Stage 2: consult every distinct pl path once; the first non-canonical member
+// rejects, then a mixed-version composition.
 pub open spec fn load_stage(rows: Seq<MRow>, pls: Seq<Src>) -> Result<Seq<DocFile>, Out> {
     match first_bad_member(rows, pls, unique_paths(rows), 0) {
         Option::Some(p) => Result::Err(
             check_load(Term::Comp(ascii("noncanonical"@), seq![Term::Atom(p)])),
         ),
-        Option::None => Result::Ok(docs_of(members(rows, pls))),
+        Option::None => {
+            let docs = docs_of(members(rows, pls));
+            match mixed_version(docs) {
+                Option::Some(d) => Result::Err(
+                    check_load(
+                        Term::Comp(
+                            ascii("schema_version"@),
+                            seq![Term::Int(docs[0].version as int), Term::Atom(d.docid)],
+                        ),
+                    ),
+                ),
+                Option::None => Result::Ok(docs),
+            }
+        },
     }
 }
 
@@ -668,7 +704,7 @@ pub open spec fn indicator_rules(cs: Seq<DocClause>, i: int) -> Seq<DocClause> {
 }
 
 pub open spec fn rules(cs: Seq<DocClause>) -> Seq<DocClause> {
-    Seq::new(9, |i: int| indicator_rules(cs, i)).flatten()
+    Seq::new(11, |i: int| indicator_rules(cs, i)).flatten()
 }
 
 pub open spec fn leftmost(c: DocClause) -> Term {

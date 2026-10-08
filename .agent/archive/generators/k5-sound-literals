@@ -11,7 +11,7 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,names=copy_table(s); assert len(entries)==243
+entries,names=copy_table(s); assert len(entries)==276
 fixed={names[n] for n in re.findall(r'\bfixed_bytes\(\s*([a-z0-9_]+)\(\)\s*,?\s*\)',s) if n in names}
 def scan(bs,c):
     while bs:
@@ -26,7 +26,7 @@ def scan(bs,c):
             elif (c==2 and bs[0]==34)or(c==3 and bs[0]==39):d=1
         bs=bs[n:];c=d
     return c
-out=['use crate::{k5_sound_context as cx, k5_sound_escape as h, k5_sound_source as b};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
+out=['use crate::{k5_sound_context as cx, k5_sound_escape as h, k5_sound_source as b};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost_body)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
 for i,m in enumerate(entries):
     expr='u::lit('+m.group(1)+'@)' if m.group(1) else 'u::'+m.group(2)+'()'
     out += [f'pub proof fn l{i:03}(inputs:Seq<u::Bytes>)',f'    ensures u::copy_registry().contains({expr}), u::copy_derived({expr},inputs,u::copy_registry()), u::copy_registry()[{i}]=={expr},','{','    hide(u::copy_derived); hide(u::copy_registry); hide(u::lit); hide(u::css_text); hide(u::script_html);',f'    assert(u::copy_registry()[{i}]=={expr} && {i}<u::copy_registry().len()) by {{ reveal(u::copy_registry); }};',f'    b::literal({expr},inputs);','}']

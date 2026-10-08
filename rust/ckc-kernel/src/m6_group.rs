@@ -373,6 +373,7 @@ pub fn fact_group(
             env.docid@,
             map_model(map@),
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ),
 {
     hide(spec::flatten_list);
@@ -401,7 +402,17 @@ pub fn fact_group(
         prefix(n2, n3, &conds);
         prefix(n2, n3, &deps);
     }
-    let flat = flatten_list(arena, &conds, &W::Root, env, &deps, &actual, &E::Top, 1);
+    let flat = crate::m7_annotate::flatten_ann_exec(
+        arena,
+        &env.tab,
+        &conds,
+        &W::Root,
+        env,
+        &deps,
+        &actual,
+        &E::Top,
+        1,
+    );
     let ghost n4 = arena.nodes@;
     proof {
         crate::k2_load::prefix_chain(start, n3, n4);

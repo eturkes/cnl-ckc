@@ -344,3 +344,46 @@ t-c929	target	trace	0	0	manifest.tsv query.pl answers.pl
 t-c930	target	trace	0	0	manifest.tsv query.pl answers.pl
 t-c931	target	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
 t-c931	trace	trace	0	0	manifest.tsv query.pl answers.pl
+m7t-k1-001	target	check	0	0	input.pl
+m7t-k1-002	target	check	0	0	input.pl
+m7t-k1-003	target	check	0	0	input.pl
+m7t-k1-004	target	check	0	0	input.pl
+m7t-k1-005	target	check	0	0	input.pl
+m7t-k1-006	target	check	0	0	input.pl
+m7t-k1-007	target	check	0	0	input.pl
+m7t-k1-001	roundtrip	render	0	0	input.pl
+m7t-k1-002	roundtrip	render	0	0	input.pl
+m7t-k1-008	target	check	2	1	input.pl
+m7t-k1-009	target	check	2	1	input.pl
+m7t-k1-010	target	check	2	1	input.pl
+m7t-k1-011	target	check	2	1	input.pl
+m7t-k1-012	target	check	2	1	input.pl
+m7t-k1-013	target	check	2	1	input.pl
+m7t-k1-014	target	check	2	1	input.pl
+m7t-k1-015	target	check	2	1	input.pl
+m7t-k1-016	target	check	2	1	input.pl
+m7t-k1-017	target	check	2	1	input.pl
+m7t-k1-018	target	check	2	1	input.pl
+m7t-k1-019	target	check	2	1	input.pl
+m7t-k1-020	target	check	2	1	input.pl
+m7t-k2-001	target	aggregate-check	2	1	manifest.tsv
+m7t-k2-001	recursion	recursion-check	2	1	manifest.tsv
+m7t-k2-002	target	aggregate-check	2	1	manifest.tsv
+m7t-k2-002	recursion	recursion-check	2	1	manifest.tsv
+m7t-k2-003	target	aggregate-check	0	0	manifest.tsv
+m7t-k2-003	recursion	recursion-check	0	0	manifest.tsv
+m7t-k2-004	target	aggregate-check	0	0	manifest.tsv
+m7t-k2-004	recursion	recursion-check	0	0	manifest.tsv
+m7t-k2-005	target	recursion-check	1	1	manifest.tsv
+m7t-k3-001	target	answer	2	1	manifest.tsv query.pl
+m7t-k3-001	trace	trace	2	1	manifest.tsv query.pl answers.pl
+m7t-k3-002	target	answer	0	0	manifest.tsv query.pl
+m7t-k3-002	trace	trace	0	0	manifest.tsv query.pl answers.pl
+m7t-k3-002	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+m7t-k3-003	target	answer	0	0	manifest.tsv query.pl
+m7t-k3-003	trace	trace	0	0	manifest.tsv query.pl answers.pl
+m7t-k3-003	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+m7t-k3-004	target	answer	0	0	manifest.tsv query.pl
+m7t-k3-005	target	answer	0	0	manifest.tsv query.pl
+m7t-k3-006	target	answer	2	1	manifest.tsv query.pl
+m7t-k3-006	codec	check	0	0	query.pl

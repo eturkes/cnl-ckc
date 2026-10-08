@@ -1,0 +1,6 @@
+# format: kind	lemma	value
+# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)
+unit	day	day
+unit	week	week
+relation	for	duration
+spacing	at	interval

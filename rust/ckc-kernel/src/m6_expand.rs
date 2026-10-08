@@ -122,6 +122,34 @@ pub fn lit5(arena: &mut ETermArena, sym: &Sym, a: &T, b: &T, d: &T, e: &T, f: &T
     crate::m6_term::c(arena, sym, &ts)
 }
 
+pub fn lit6(arena: &mut ETermArena, sym: &Sym, a: &T, b: &T, d: &T, e: &T, f: &T, g: &T) -> (out: T)
+    requires
+        arena_ok(old(arena)),
+        valid(old(arena).nodes@, a),
+        valid(old(arena).nodes@, b),
+        valid(old(arena).nodes@, d),
+        valid(old(arena).nodes@, e),
+        valid(old(arena).nodes@, f),
+        valid(old(arena).nodes@, g),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        valid(final(arena).nodes@, &out),
+        out@ == Term::Comp(symbol(sym), seq![a@, b@, d@, e@, f@, g@]),
+{
+    let mut ts = Vec::new();
+    ts.push(a.cp());
+    ts.push(b.cp());
+    ts.push(d.cp());
+    ts.push(e.cp());
+    ts.push(f.cp());
+    ts.push(g.cp());
+    proof {
+        assert_seqs_equal!(models(ts@) == seq![a@, b@, d@, e@, f@, g@]);
+    }
+    crate::m6_term::c(arena, sym, &ts)
+}
+
 pub fn resolve(arena: &mut ETermArena, a: &T, map: &Vec<Binding>, sko: &Vec<Binding>) -> (out:
     Result<T, T>)
     requires
@@ -357,6 +385,37 @@ pub fn condition(
                     Err(e) => return Err(e),
                 };
                 let t = lit4(arena, &Sym::GuidelineProperty, ctx, &r, &args[1], &args[2]);
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineInterval) && args.len() == 5 {
+                // m7t D4: an annotate-pass interval item → guideline_interval/6.
+                let e = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let q = match resolve(arena, &args[2], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let a = if is_var(arena, &args[4]) {
+                    match resolve(arena, &args[4], map, sko) {
+                        Ok(t) => t,
+                        Err(x) => return Err(x),
+                    }
+                } else {
+                    args[4].cp()
+                };
+                let t = lit6(arena, &Sym::GuidelineInterval, ctx, &e, &args[1], &q, &args[3], &a);
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineRecurrence) && args.len() == 3 {
+                let e = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let q = match resolve(arena, &args[1], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let t = lit4(arena, &Sym::GuidelineRecurrence, ctx, &e, &q, &args[2]);
                 Ok(one_term(arena, t))
             } else {
                 Err(named(arena, &Sym::ConditionShape))

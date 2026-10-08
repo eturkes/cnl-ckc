@@ -1,0 +1,4 @@
+% tablet-use-spacing compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v2,'tablet-use-spacing',ace_sha256('5e8a791eaeb08349c96dda4478f16140dcb705c5bce02197cd40502cc0831c5a'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+% Q1: What uses 1 tablet at an interval of at least 4 hours?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,tablet,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,interval,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_entity(actual,C,hour,countable),','(guideline_cardinality(actual,C,na,geq,4),','(guideline_event(actual,D,use),','(guideline_arg(actual,D,1,E),','(guideline_arg(actual,D,2,A),','(guideline_pp(actual,D,at,B),guideline_recurrence(actual,D,C,hour)))))))))))),answers([answer(E,wh(what))])).

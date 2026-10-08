@@ -40,5 +40,21 @@ pub(super) fn check(g: &Guideline) -> Result {
     }
     census::check(&g.path, &status)?;
     adjudication::check(g, &c)?;
-    lexicon::check(g)
+    lexicon::check(g)?;
+    temporal(g)
+}
+
+// m7t D1: the temporal.tsv grammar section (the kernel parses the same bytes
+// for compile + certify).
+fn temporal(g: &Guideline) -> Result {
+    let Some(path) = &g.temporal else {
+        return Ok(());
+    };
+    let bytes = corpus(path, "temporal")?;
+    let rel = format!("guidelines/{}/temporal.tsv", name(&g.path));
+    coverage::meter(&coverage::verdict(ckc_kernel::contract::check_temporal(
+        rel.as_bytes(),
+        &bytes,
+    ))?);
+    Ok(())
 }

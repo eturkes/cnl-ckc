@@ -16,13 +16,9 @@
 9	ace	567	with an opioid
 2	ace	605	higher-opioid-harm-risk
 2	ace	649	higher-opioid-harm-risk
-10	ace	679	higher-risk-opioid-reevaluation-schedule
-11	ace	726	reevaluation-interval
-11	ace	756	reevaluation-interval
-12	ace	787	less than
-11	ace	797	3 months
-1	ace	817	clinician
-10	ace	842	higher-risk-opioid-reevaluation-schedule
+1	ace	684	clinician
+10	ace	701	reevaluate
+11	ace	724	at an interval of less than 3 months
 1	src	0	Clinicians
 10	src	18	reevaluate
 0	src	29	patients
@@ -34,5 +30,4 @@
 7	src	224	taking ≥50 MME/day
 8	src	260	central nervous system depressants
 9	src	295	with opioids
-12	src	309	more frequently than
-11	src	330	every 3 months
+11	src	309	more frequently than every 3 months

@@ -21,6 +21,7 @@ use crate::align;
 use crate::check::{self, Bundle, Coverage, Decision, ECoverage, Row, Status};
 use crate::engine::*;
 use crate::replay::Src;
+use crate::term::Term;
 use crate::v1text::{self, *};
 use vstd::prelude::*;
 use vstd::utf8::*;
@@ -1207,6 +1208,334 @@ pub open spec fn splitline_count(cs: Seq<char>, pending: bool) -> nat
     }
 }
 
+// --- Timing as compiled (contract m7t D10): one table row per temporal
+// annotation literal of a v2 document, joined to its event lemma, quantity
+// bound and reference noun. Joins read the annotation's own clause, then every
+// clause head in order; a word renders only when its bytes stand verbatim in
+// the pl, so every visible slot is a copied pl span, declared copy or a decimal.
+pub open spec fn clause_lits(c: DocClause) -> Seq<(Term, int)> {
+    seq![(c.head, 0int)] + c.body.map_values(
+        |it: BodyItem|
+            match it {
+                BodyItem::Pos(l) => seq![(l, 1int)],
+                BodyItem::Naf(gs) => gs.map_values(|g: Term| (g, 2int)),
+            },
+    ).flatten()
+}
+
+pub open spec fn doc_heads(d: DocFile) -> Seq<Term> {
+    d.bundles.map_values(|b: v1text::Bundle| b.clauses.map_values(|c: DocClause| c.head)).flatten()
+}
+
+pub open spec fn join_terms(d: DocFile, c: DocClause) -> Seq<Term> {
+    clause_lits(c).map_values(|p: (Term, int)| p.0) + doc_heads(d)
+}
+
+// The arguments of the first `name/arity` literal whose argument `at` is `key`.
+pub open spec fn first_with(
+    ts: Seq<Term>,
+    name: Seq<char>,
+    arity: nat,
+    at: int,
+    key: Term,
+) -> Option<Seq<Term>>
+    decreases ts.len(),
+{
+    if ts.len() == 0 {
+        Option::None
+    } else {
+        match ts[0] {
+            Term::Comp(n, args) => if n == lit(name) && args.len() == arity && args[at] == key {
+                Option::Some(args)
+            } else {
+                first_with(ts.drop_first(), name, arity, at, key)
+            },
+            _ => first_with(ts.drop_first(), name, arity, at, key),
+        }
+    }
+}
+
+pub open spec fn atom_name(t: Term) -> Bytes {
+    match t {
+        Term::Atom(a) => a,
+        _ => empty(),
+    }
+}
+
+// A pl word as visible text, else `not stated`.
+pub open spec fn pl_word(pl: Bytes, w: Bytes) -> Html {
+    if w.len() > 0 && check::first_sub(pl, w, 0) + w.len() <= pl.len() {
+        text(w)
+    } else {
+        fixed_bytes(not_stated())
+    }
+}
+
+pub open spec fn cmp_html(c: Term) -> Option<Html> {
+    let a = atom_name(c);
+    if !(c is Atom) {
+        Option::None
+    } else if a == lit("eq"@) {
+        Option::Some(Seq::empty())
+    } else if a == lit("exactly"@) {
+        Option::Some(fixed_bytes(exactly_sp()))
+    } else if a == lit("geq"@) {
+        Option::Some(fixed_bytes(at_least_sp()))
+    } else if a == lit("greater"@) {
+        Option::Some(fixed_bytes(more_than_sp()))
+    } else if a == lit("leq"@) {
+        Option::Some(fixed_bytes(at_most_sp()))
+    } else if a == lit("less"@) {
+        Option::Some(fixed_bytes(less_than_sp()))
+    } else {
+        Option::None
+    }
+}
+
+pub open spec fn unit_html(u: Bytes, one: bool) -> Option<Html> {
+    if u == lit("second"@) {
+        Option::Some(
+            if one {
+                fixed_bytes(sp_second())
+            } else {
+                fixed_bytes(sp_seconds())
+            },
+        )
+    } else if u == lit("minute"@) {
+        Option::Some(
+            if one {
+                fixed_bytes(sp_minute())
+            } else {
+                fixed_bytes(sp_minutes())
+            },
+        )
+    } else if u == lit("hour"@) {
+        Option::Some(
+            if one {
+                fixed_bytes(sp_hour())
+            } else {
+                fixed_bytes(sp_hours())
+            },
+        )
+    } else if u == lit("day"@) {
+        Option::Some(
+            if one {
+                fixed_bytes(sp_day())
+            } else {
+                fixed_bytes(sp_days())
+            },
+        )
+    } else if u == lit("week"@) {
+        Option::Some(
+            if one {
+                fixed_bytes(sp_week())
+            } else {
+                fixed_bytes(sp_weeks())
+            },
+        )
+    } else if u == lit("month"@) {
+        Option::Some(
+            if one {
+                fixed_bytes(sp_month())
+            } else {
+                fixed_bytes(sp_months())
+            },
+        )
+    } else if u == lit("year"@) {
+        Option::Some(
+            if one {
+                fixed_bytes(sp_year())
+            } else {
+                fixed_bytes(sp_years())
+            },
+        )
+    } else {
+        Option::None
+    }
+}
+
+// `<cmp> N <unit>` from the quantity's cardinality literal.
+pub open spec fn bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Option<Html> {
+    match first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
+        Option::Some(args) => match (cmp_html(args[3]), args[4]) {
+            (Option::Some(cmp), Term::Int(n)) => if n < 0 {
+                Option::None
+            } else {
+                match unit_html(atom_name(u), n == 1) {
+                    Option::Some(w) => Option::Some(cmp + text(v1text::udec_bytes(n as nat)) + w),
+                    Option::None => Option::None,
+                }
+            },
+            _ => Option::None,
+        },
+        Option::None => Option::None,
+    }
+}
+
+pub open spec fn timing_html(role: Bytes, b: Option<Html>) -> Html {
+    match b {
+        Option::None => fixed_bytes(not_stated()),
+        Option::Some(h) => if role == lit("duration"@) {
+            fixed_bytes(lasts_sp()) + h
+        } else if role == lit("after"@) {
+            h + fixed_bytes(sp_after())
+        } else if role == lit("before"@) {
+            h + fixed_bytes(sp_before())
+        } else if role == lit("within"@) {
+            fixed_bytes(within_sp()) + h + fixed_bytes(sp_of())
+        } else if role == lit("recurrence"@) {
+            fixed_bytes(repeats_sp()) + h + fixed_bytes(sp_apart())
+        } else {
+            fixed_bytes(not_stated())
+        },
+    }
+}
+
+pub open spec fn joined_word(
+    pl: Bytes,
+    d: DocFile,
+    c: DocClause,
+    name: Seq<char>,
+    arity: nat,
+    key: Term,
+    at: int,
+) -> Html {
+    match first_with(join_terms(d, c), name, arity, 1, key) {
+        Option::Some(args) => pl_word(pl, atom_name(args[at])),
+        Option::None => fixed_bytes(not_stated()),
+    }
+}
+
+pub open spec fn part_html(part: int) -> Html {
+    if part == 0 {
+        fixed_bytes(statement_2())
+    } else if part == 1 {
+        fixed_bytes(condition_2())
+    } else {
+        fixed_bytes(excluded_condition())
+    }
+}
+
+pub open spec fn timing_row(
+    pl: Bytes,
+    d: DocFile,
+    s: nat,
+    c: DocClause,
+    l: Term,
+    part: int,
+) -> Option<Html> {
+    match l {
+        Term::Comp(name, args) => if name == lit("guideline_interval"@) && args.len() == 6 {
+            let role = atom_name(args[2]);
+            Option::Some(
+                row(
+                    seq![
+                        cell(text(v1text::udec_bytes(s))),
+                        cell(part_html(part)),
+                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                        cell(timing_html(role, bound_html(d, c, args[3], args[4]))),
+                        cell(
+                            if role == lit("duration"@) {
+                                Seq::empty()
+                            } else if args[5] == Term::Atom(lit("none"@)) {
+                                fixed_bytes(not_stated())
+                            } else {
+                                joined_word(pl, d, c, "guideline_entity"@, 4, args[5], 2)
+                            },
+                        ),
+                    ],
+                ),
+            )
+        } else if name == lit("guideline_recurrence"@) && args.len() == 4 {
+            Option::Some(
+                row(
+                    seq![
+                        cell(text(v1text::udec_bytes(s))),
+                        cell(part_html(part)),
+                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                        cell(timing_html(lit("recurrence"@), bound_html(d, c, args[2], args[3]))),
+                        cell(Seq::empty()),
+                    ],
+                ),
+            )
+        } else {
+            Option::None
+        },
+        _ => Option::None,
+    }
+}
+
+pub open spec fn somes(xs: Seq<Option<Html>>) -> Seq<Html>
+    decreases xs.len(),
+{
+    if xs.len() == 0 {
+        Seq::empty()
+    } else {
+        somes(xs.drop_last()) + match xs.last() {
+            Option::Some(h) => seq![h],
+            Option::None => Seq::empty(),
+        }
+    }
+}
+
+// First occurrence of each row kept.
+pub open spec fn first_rows(xs: Seq<Html>) -> Seq<Html>
+    decreases xs.len(),
+{
+    if xs.len() == 0 {
+        Seq::empty()
+    } else if xs.drop_last().contains(xs.last()) {
+        first_rows(xs.drop_last())
+    } else {
+        first_rows(xs.drop_last()).push(xs.last())
+    }
+}
+
+pub open spec fn bundle_rows(pl: Bytes, d: DocFile, b: v1text::Bundle) -> Seq<Html> {
+    first_rows(
+        somes(
+            b.clauses.map_values(
+                |c: DocClause|
+                    clause_lits(c).map_values(|p: (Term, int)| timing_row(pl, d, b.s, c, p.0, p.1)),
+            ).flatten(),
+        ),
+    )
+}
+
+#[verifier::opaque]
+pub open spec fn timing_rows(pl: Bytes) -> Seq<Html> {
+    if v1text::accepts(pl) {
+        match crate::replay::the_v1(pl) {
+            V1File::Doc(d) => if d.version == 2 {
+                d.bundles.map_values(|b: v1text::Bundle| bundle_rows(pl, d, b)).flatten()
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        }
+    } else {
+        Seq::empty()
+    }
+}
+
+pub open spec fn timing_section(pl: Bytes) -> Seq<Html> {
+    let rows = timing_rows(pl);
+    if rows.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open()),
+            fixed_bytes(h3_open_timing_as_compiled_h3_close()),
+            fixed_bytes(p_open_each_row_is_one_time_limit()),
+            fixed_bytes(table_open()),
+            fixed_bytes(thead_open_tr_open_th_open_sentence_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
 pub open spec fn document_html(
     g: Guideline,
     d: Document,
@@ -1296,6 +1625,7 @@ pub open spec fn document_html(
             fixed_bytes(h3_open_attempto_controlled_english_ace_h3_close()),
             fixed_bytes(pre_open()) + aligned_text(g, d, true) + fixed_bytes(pre_close()),
             fixed_bytes(section_close()),
+        ] + timing_section(d.pl) + seq![
             fixed_bytes(section_open_3()),
             fixed_bytes(h3_open_record_a_decision_h3_close()),
             fixed_bytes(p_open_does_the_ace_representation_appropriately()),
@@ -2428,6 +2758,39 @@ copy_table! {
     commit_2 = "commit";
     ui_verdict_invalid_commit = "ui: verdict: invalid commit";
     ui_verdict_commit_does_not_hold = "ui: verdict: commit does not hold the reviewed bundle";
+    h3_open_timing_as_compiled_h3_close = "<h3>Timing as compiled</h3>";
+    p_open_each_row_is_one_time_limit = "<p>Each row is one time limit that the compiler read from the ACE text. The compiler records these limits and does not calculate dates.</p>";
+    thead_open_tr_open_th_open_sentence_th_close_th_open = "<thead><tr><th>Sentence</th><th>Part</th><th>Action</th><th>Timing</th><th>Reference point</th></tr></thead>";
+    statement_2 = "statement";
+    condition_2 = "condition";
+    excluded_condition = "excluded condition";
+    not_stated = "not stated";
+    exactly_sp = "exactly ";
+    at_least_sp = "at least ";
+    more_than_sp = "more than ";
+    at_most_sp = "at most ";
+    less_than_sp = "less than ";
+    lasts_sp = "lasts ";
+    within_sp = "within ";
+    repeats_sp = "repeats ";
+    sp_after = " after";
+    sp_before = " before";
+    sp_of = " of";
+    sp_apart = " apart";
+    sp_second = " second";
+    sp_seconds = " seconds";
+    sp_minute = " minute";
+    sp_minutes = " minutes";
+    sp_hour = " hour";
+    sp_hours = " hours";
+    sp_day = " day";
+    sp_days = " days";
+    sp_week = " week";
+    sp_weeks = " weeks";
+    sp_month = " month";
+    sp_months = " months";
+    sp_year = " year";
+    sp_years = " years";
 }
 
 verus! {

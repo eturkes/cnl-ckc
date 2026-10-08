@@ -9,12 +9,15 @@
 0	ace	166	patient
 1	ace	180	shorter-duration
 2	ace	197	opioid-use
-9	ace	239	ten-percent
-10	ace	254	remaining-dose
-11	ace	269	per-week
-7	ace	284	approximately-thirty-percent
-8	ace	316	original-dose
-0	ace	357	patient
+0	ace	216	patient
+13	ace	224	reaches
+7	ace	235	approximately-thirty-percent
+8	ace	267	original-dose
+12	ace	306	decrease
+10	ace	317	remaining-opioid-dose
+9	ace	345	approximately-ten-percent
+11	ace	371	at an interval of 1 week
+0	ace	404	patient
 0	src	5	patients
 2	src	19	taken opioids
 1	src	37	shorter durations
@@ -24,7 +27,9 @@
 6	src	149	slower
 7	src	163	approximately 30%
 8	src	188	original dose
+13	src	205	reached
 11	src	228	weekly
-9	src	261	10%
+12	src	235	decrease
+9	src	247	approximately 10%
 10	src	272	remaining dose
 0	src	362	patients

@@ -1,0 +1,1 @@
+'$guideline_proof'(seed,1,variant(1),witness([]),prove([guideline_entity(actual,'$guideline_id'(product,seed,1,ref(1),[]),patient,countable)])).

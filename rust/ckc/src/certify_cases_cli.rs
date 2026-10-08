@@ -118,8 +118,8 @@ fn parse(table: &str) -> Result<Vec<Case>> {
             stderr,
         });
     }
-    if counts != [13, 4] || targets.len() != 3 {
-        return Err("expected 13 document cases, 4 query cases, and 3 targets".to_owned());
+    if counts != [25, 7] || targets.len() != 6 {
+        return Err("expected 25 document cases, 7 query cases, and 6 targets".to_owned());
     }
     Ok(cases)
 }
@@ -196,10 +196,12 @@ impl Fixture {
             .join(if case.query { "queries" } else { "ace" })
             .join(format!("{}.ace", case.artifact));
         io(fs::copy(repo.join(&ace), fixture.root.join(&ace)))?;
-        match fs::read(repo.join(gpath).join("lexicon.ulex")) {
-            Ok(bytes) => io(fs::write(guideline.join("lexicon.ulex"), bytes))?,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error.to_string()),
+        for input in ["lexicon.ulex", "temporal.tsv"] {
+            match fs::read(repo.join(&gpath).join(input)) {
+                Ok(bytes) => io(fs::write(guideline.join(input), bytes))?,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(error.to_string()),
+            }
         }
         io(fs::write(&fixture.pl, &fixture.original))?;
         io(symlink(repo.join("vendor"), fixture.root.join("vendor")))?;
@@ -300,7 +302,7 @@ mod tests {
     fn committed_table_parses_and_every_edit_changes_its_source() {
         let (repo, table) = inputs();
         let cases = parse(&table).unwrap();
-        assert_eq!(cases.len(), 17);
+        assert_eq!(cases.len(), 32);
         for case in cases {
             let source = fs::read_to_string(repo.join(case.target)).unwrap();
             assert_ne!(mutate(&source, &case.edit).unwrap(), source, "{}", case.id);

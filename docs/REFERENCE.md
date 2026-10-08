@@ -250,15 +250,19 @@ current when the document still matches the version it was recorded
 against, and outdated otherwise. A document whose current version
 carries both an approved and a rejected decision reads contested.
 
-## Compiled Prolog schema (v1)
+## Compiled Prolog schema (v1, v2)
 
-Status: **frozen**. Every compiled document emits
-`guideline_schema_version(1).`. The predicate set below is the public
-ABI: an extension requires a version bump. v1 is the compiler's
-sole schema. A future version takes a new explicit invocation argument;
-the compiler never infers a version from content. Authored questions
-reject in document compiles; the separate question mode below compiles
-one question into a query projection over the same vocabulary.
+Status: v1 is **frozen**. Schema v2 adds two temporal annotation
+predicates, widens the document record by a table digest, and keeps
+every v1 clause shape (see Schema v2 below). A
+guideline selects v2 with its `temporal.tsv` table. Every document of
+that guideline then compiles under v2. A guideline without the table
+compiles under v1, byte for byte. The predicate set below is the public
+ABI: an extension requires a version bump. The compiler takes the
+version from an explicit invocation argument and never infers it from
+content. Authored questions reject in document compiles; the separate
+question mode below compiles one question into a query projection over
+the same vocabulary.
 
 Sentences project onto a closed reserved vocabulary. Source words —
 nouns, verbs, adjectives, prepositions — stay opaque data atoms and
@@ -398,8 +402,8 @@ composition in the verified Rust engine. The manifest is strict: one `<compiled-
 `<payload>` row per document, with the final newline required. A 0-byte
 file means the empty composition. The engine loads every document
 into one composition; any load diagnostic is a failure. It checks that the
-distinct `guideline_document/3` records equal the manifest row count
-and that the loaded schema-version set is exactly `[1]`. It then
+distinct document records equal the manifest row count and that the
+composition holds one schema version (Schema v2 below). It then
 re-derives every obligation against the whole batch. Co-loading therefore cannot break a document's derivations, and the engine evaluates negation-as-failure against the composition it will actually run in. The replay does not isolate documents: a rule in one document can derive another document's obligation head, so the per-document replay above is the check that each document's own clauses suffice. The check reports
 `ace_to_pl aggregate ok <N> documents <G> obligations`.
 
@@ -483,6 +487,106 @@ Authoring notes (v1):
   the antecedent referent (`the patient`), or give the consequent
   entity its own noun.
 
+### Schema v2
+
+Schema v2 types the time limits that a sentence states. A guideline
+opts in with the table `guidelines/<id>/temporal.tsv`. The table maps
+source words onto closed identifiers, so no annotation names a source
+word:
+
+```
+# format: kind<TAB>lemma<TAB>value
+# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)
+unit	day	day
+relation	for	duration
+spacing	at	interval
+```
+
+The two header lines are fixed bytes. The table holds at least one row,
+and every row has three fields and ends with a newline. A `unit` row
+maps a noun lemma onto a calendar unit. A `relation` row maps a
+preposition onto a role. A `spacing` row pairs a preposition with a
+frame noun for recurrence, as in `at an interval of 3 months`. A lemma
+is one or more bytes above 0x20, none of them 0x7F. A noun occurs in at
+most one `unit` row and is never also a frame noun. A preposition
+occurs in at most one `relation` row. `ckc check` and `ckc compile`
+reject any other table with `ckc: temporal: <path>: <why> at row <n>`.
+
+The compiler takes v2 from an explicit argument:
+
+```sh
+swipl -q -f none -F none -s <ape-tree-dir>/prolog/ace_to_pl.pl -g main \
+  -t 'halt(9)' -- v2 <ape-tree-dir> <docid> <temporal.tsv> [<ulex>] [proof]
+```
+
+A table that does not load fails the compile with class
+`temporal_load` and exit 2; the compiler never falls back to v1. A v2
+document differs from a v1 document in three places:
+
+- The header reads `guideline_schema_version(2).`.
+- The record gains a fourth argument:
+  `guideline_document(DocId, ace_sha256(H), ulex(none | sha256(H)), temporal(sha256(T)))`.
+  `T` is the SHA-256 of the raw table bytes.
+- The declaration block declares `guideline_document/4` in place of
+  `/3` and then the two annotation indicators, 11 indicators in total.
+
+| Predicate | Meaning |
+| --- | --- |
+| `guideline_interval(Context, Event, Role, Quantity, Unit, Anchor)` | `Event` stands in the time relation `Role` to `Anchor`, bounded by `Quantity` in `Unit`; `Anchor` is `none` when the sentence names no reference point |
+| `guideline_recurrence(Context, Event, Quantity, Unit)` | successive occurrences of `Event` lie `Quantity` in `Unit` apart |
+
+Every v1 clause shape stays legal, and the compiler emits it exactly as
+v1 does. An annotation never replaces a clause. It follows the
+`guideline_pp` clause that it types, in the same context and with the
+same rule body. A v1 document never carries an annotation.
+
+The compiler reads two patterns from the parsed sentence:
+
+- Interval: the event carries a `relation` preposition whose object is
+  a time quantity. The anchor is the single `of` object of that
+  quantity in the same context, as in
+  `within at most 4 weeks of the therapy-start`.
+- Recurrence: the event carries a `spacing` preposition with its frame
+  noun, and the frame has a single `of` object that is a time quantity,
+  as in `at an interval of at most 3 months`.
+
+A time quantity is a referent whose noun is a `unit` lemma. Its
+cardinality clause carries the comparison and the count, as in v1. The
+quantity must be a count noun with a comparison and a count of at least
+1. Every other shape of these patterns rejects with class `unsupported`
+as `temporal_shape(Why, S)`:
+
+| `Why` | Shape |
+| --- | --- |
+| `no_bound` | the quantity has no comparison, or it is not a count noun |
+| `zero_bound` | the count is below 1 |
+| `duration_anchor` | a `duration` role names an anchor |
+| `anchor_count` | an interval quantity has two or more `of` objects, a frame does not have exactly one, or a recurrence quantity has one |
+| `shared_quantity` | two patterns claim one quantity or one frame |
+| `frame_shape` | the frame is not exactly one count noun, or its `of` object is not a time quantity |
+| `anchor_shape` | the anchor is itself a time quantity or a frame |
+
+An `of` link that no pattern consumes still rejects as in v1. The
+compiler checks the patterns left to right, then the shared claims, then
+each negation-as-failure scope. The first violation rejects.
+
+Annotations are data, never schedules. `duration` means that `Event`
+lasts that long. `after` means that `Event` occurs that long after
+`Anchor`, and `before` that long before it. `within` means that `Event`
+and `Anchor` lie that far apart, in either order. `geq` and `leq`
+include the bound; `greater` and `less` exclude it. A unit is a calendar
+label: the compiler converts no unit and calculates no date. Two
+annotations on one event state both limits, so a range is a pair on one
+anchor. Matching stays exact Horn structure: a fact for `geq 30` does
+not satisfy a goal for `geq 20`.
+
+A loaded composition holds one schema version. `ckc v1 <mode>` reads
+v1 and v2 documents. A mixed composition rejects with class
+`check_load` as `schema_version(V, DocId)`: `V` is the first document's
+version, and `DocId` names the first document of another version.
+Certification takes the raw table bytes, so `ckc certify` checks the
+record digest and every annotation against the table.
+
 ### Question projection
 
 The compiler's `question` mode compiles one ACE question against the
@@ -508,6 +612,21 @@ row per wh-placeholder in source order. `Desc` is `noun(Noun, Class)`
 when exactly one same-box `object/6` types the placeholder; otherwise
 it is `wh(who)` or `wh(what)`. Goal and manifest share variables
 inside the one projection term.
+
+A guideline with `temporal.tsv` compiles every question under v2:
+
+```sh
+swipl … -- question v2 <ape-tree-dir> <qid> <temporal.tsv> [<ulex>]
+```
+
+The v2 record is
+`'$guideline_query'(v2, Qid, ace_sha256(H), ulex(none | sha256(H)), temporal(sha256(T)))`.
+A v2 question follows the v1 law with three additions. It admits the
+condition list of an upper-bounding determiner and flattens that list
+into its box; a placeholder inside such a list rejects as
+`condition_shape`. It admits `relation/3` conditions. It runs the Schema
+v2 pattern pass over its goals, with the same rejects. An `of` link that
+no pattern consumes rejects.
 
 Supported forms: `wh(who | which | what)` and yes-no questions over
 conjunctive v1 content, with modal boxes at any nesting of themselves.
@@ -540,12 +659,17 @@ must name readable files, and the mode never parses payload terms. A
 0-byte manifest is the empty composition: the mode still declares the
 v1 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/4`
-record, then the `'$guideline_query_projection'/2` term. The mode
+record (`/5` for v2), then the `'$guideline_query_projection'/2` term.
+A v1 query names the seven v1 semantic predicates only; a v2 query also
+names the two annotations. A v2 query against a v1 composition rejects
+with class `check_load` as `query_file(schema_version)`. A v1 query runs
+against a v1 or a v2 composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 
 Success emits a two-line artifact on stdout: a generated-file
 comment, then one ground term
-`'$guideline_answers'(v1, Qid, query_sha256(H), result(R))`. `H` is
+`'$guideline_answers'(v1, Qid, query_sha256(H), result(R))`. The
+artifact keeps the `v1` token for v1 and v2 queries alike. `H` is
 the SHA-256 of the raw query-file bytes. The solver runs under fixed
 bounds: depth 100 for each derivation, one 100000-inference budget
 that is cumulative across backtracking for the whole query, and

@@ -662,6 +662,7 @@ ui_cases! {
     ui_green_missing_readme_fallback => ("green", "missing-readme-fallback"),
     ui_green_multi_guideline_order => ("green", "multi-guideline-order"),
     ui_green_payload_selection => ("green", "payload-selection"),
+    ui_green_timing => ("green", "timing"),
     ui_green_unicode_digit_region => ("green", "unicode-digit-region"),
     ui_green_verdicts => ("green", "verdicts"),
     ui_red_align_one_sided => ("red", "align-one-sided"),

@@ -10,11 +10,11 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,_names=copy_table(s);assert len(entries)==243
+entries,_names=copy_table(s);assert len(entries)==276
 N=len(entries)
 bv=lambda raw:'ns!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
 ps='p::css_codes(),p::marketing_codes(),p::relative_codes()'
-out=['use crate::{k5_sound_codes as n,k5_sound_patterns as p,k5_sound_literals as l,k5_sound_scan as scan,k5_sound_chrome as ch,k5_sound_encoding as enc};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
+out=['use crate::{k5_sound_codes as n,k5_sound_patterns as p,k5_sound_literals as l,k5_sound_scan as scan,k5_sound_chrome as ch,k5_sound_encoding as enc};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost_body)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {']
 for i,m in enumerate(entries):
     if m.group(1):
         literal=m.group(1);text=ast.literal_eval(literal);vals=list(map(ord,text));seq='ns!['+str(vals[0])+'u32,'+','.join(map(str,vals[1:]))+'].map_values(|x:u32|x as nat)'
@@ -46,7 +46,7 @@ out += ['}','pub proof fn registry_size()',f'    ensures u::copy_registry().len(
 full='\n'.join(out)+'\n';start=full.index('pub proof fn block_000');blocks={}
 for i in range(N):
     a=full.index(f'pub open spec fn data_{i:03}()');z=full.index(f'pub open spec fn data_{i+1:03}()')if i<N-1 else start;blocks[i]=full[a:z]
-imports='\n'.join(out[:4])+'\n';macro='#[cfg(verus_keep_ghost)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }\n'
+imports='\n'.join(out[:4])+'\n';macro='#[cfg(verus_keep_ghost_body)]\nmacro_rules! ns { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }\n'
 result='use ckc_spec::ui as u;\nuse vstd::prelude::*;\n'+macro
 for a in range(0,N,16):
     items=[i for i in range(a,min(a+16,N)) if i not in (38,39)]

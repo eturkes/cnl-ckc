@@ -1,6 +1,7 @@
 use crate::answers::*;
 use crate::engine::*;
 use crate::replay::*;
+use crate::temporal::*;
 use crate::term::*;
 use crate::trace::*;
 use crate::v1text::*;
@@ -606,6 +607,28 @@ pub open spec fn condition(
                     ),
                 }
             }
+        } else if name == ascii("$guideline_interval"@) && args.len() == 5 {
+            match (
+                resolve(args[0], map, sko),
+                resolve(args[2], map, sko),
+                if args[4] is Var {
+                    resolve(args[4], map, sko)
+                } else {
+                    Result::Ok(args[4])
+                },
+            ) {
+                (Result::Ok(e), Result::Ok(q), Result::Ok(a)) => Result::Ok(
+                    seq![lit("guideline_interval"@, seq![ctx, e, args[1], q, args[3], a])],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
+        } else if name == ascii("$guideline_recurrence"@) && args.len() == 3 {
+            match (resolve(args[0], map, sko), resolve(args[1], map, sko)) {
+                (Result::Ok(e), Result::Ok(q)) => Result::Ok(
+                    seq![lit("guideline_recurrence"@, seq![ctx, e, q, args[2]])],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
         } else {
             Result::Err(atom("condition_shape"@))
         },
@@ -776,6 +799,334 @@ pub open spec fn expanded_len(inner: Term) -> nat {
     }
 }
 
+// --- v2 temporal annotations (contract m7t D4/D5) ---
+// One scope = one flat item list; a NAF payload is its own scope. A pattern's
+// conditions share their context term (list nesting is irrelevant: an
+// upper-bound determiner groups its conditions into a sub-list). The
+// annotation = an extra condition right after its pp, reserved-named so only
+// this pass mints one (`project` rejects any reserved name in the DRS).
+pub open spec fn assoc(rows: Seq<(Seq<u8>, Seq<u8>)>, k: Seq<u8>) -> Option<Seq<u8>>
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
+        Option::None
+    } else if rows[0].0 == k {
+        Option::Some(rows[0].1)
+    } else {
+        assoc(rows.drop_first(), k)
+    }
+}
+
+// The first same-context `object(v, …)` condition.
+pub open spec fn obj_of(items: Seq<Item>, ctx: Term, v: Term) -> Option<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Option::None
+    } else {
+        match items[0] {
+            Item::Anch(c, inner) => if c == ctx && is_comp(inner, "object"@, 6) && arg(inner, 0)
+                == v {
+                Option::Some(inner)
+            } else {
+                obj_of(items.drop_first(), ctx, v)
+            },
+            _ => obj_of(items.drop_first(), ctx, v),
+        }
+    }
+}
+
+// The targets y of v's same-context `relation(v, of, y)` conditions, in order.
+pub open spec fn of_links(items: Seq<Item>, ctx: Term, v: Term) -> Seq<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        (match items[0] {
+            Item::Anch(c, inner) => if c == ctx && is_comp(inner, "relation"@, 3) && arg(inner, 0)
+                == v && arg(inner, 1) == atom("of"@) {
+                seq![arg(inner, 2)]
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        }) + of_links(items.drop_first(), ctx, v)
+    }
+}
+
+// An object's noun lemma (empty = none: table lemmas are nonempty).
+pub open spec fn noun_of(o: Term) -> Seq<u8> {
+    match arg(o, 1) {
+        Term::Atom(l) => l,
+        _ => Seq::empty(),
+    }
+}
+
+// v as a time quantity: (unit id, its object) when the noun is a unit lemma.
+pub open spec fn qty(tab: Temporal, items: Seq<Item>, ctx: Term, v: Term) -> Option<
+    (Seq<u8>, Term),
+> {
+    match obj_of(items, ctx, v) {
+        Option::Some(o) => match assoc(tab.units, noun_of(o)) {
+            Option::Some(u) => Option::Some((u, o)),
+            Option::None => Option::None,
+        },
+        Option::None => Option::None,
+    }
+}
+
+pub open spec fn is_frame(tab: Temporal, items: Seq<Item>, ctx: Term, v: Term) -> bool {
+    match obj_of(items, ctx, v) {
+        Option::Some(o) => frames(tab).contains(noun_of(o)),
+        Option::None => false,
+    }
+}
+
+pub open spec fn shape(why: Seq<char>) -> Term {
+    Term::Comp(ascii("temporal_shape"@), seq![atom(why)])
+}
+
+// A quantity's bound: a count noun with a comparison and a count ≥ 1.
+pub open spec fn bound_why(o: Term) -> Option<Term> {
+    if !(arg(o, 2) == atom("countable"@) && arg(o, 3) == atom("na"@) && arg(o, 4) != atom("na"@)) {
+        Option::Some(shape("no_bound"@))
+    } else {
+        match arg(o, 5) {
+            Term::Int(n) => if n >= 1 {
+                Option::None
+            } else {
+                Option::Some(shape("zero_bound"@))
+            },
+            _ => Option::Some(shape("no_bound"@)),
+        }
+    }
+}
+
+pub ghost enum Ann {
+    Interval(Term, Seq<u8>, Term, Seq<u8>, Term),  // event, role, quantity, unit, anchor | none
+    Recurrence(Term, Term, Term, Seq<u8>),  // event, frame, quantity, unit
+}
+
+// The annotation of one `modifier_pp(E, P, X)` in its scope; Ok(None) = a plain pp.
+pub open spec fn pp_ann(tab: Temporal, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
+    Option<Ann>,
+    Term,
+> {
+    let p = match arg(pp, 1) {
+        Term::Atom(a) => a,
+        _ => Seq::empty(),
+    };
+    let x = arg(pp, 2);
+    let links = of_links(items, ctx, x);
+    match (assoc(tab.relations, p), qty(tab, items, ctx, x)) {
+        (Option::Some(role), Option::Some((unit, o))) => if bound_why(o) is Some {
+            Result::Err(bound_why(o).unwrap())
+        } else if links.len() > 1 {
+            Result::Err(shape("anchor_count"@))
+        } else if links.len() == 0 {
+            Result::Ok(Option::Some(Ann::Interval(arg(pp, 0), role, x, unit, atom("none"@))))
+        } else if role == ascii("duration"@) {
+            Result::Err(shape("duration_anchor"@))
+        } else if !(links[0] is Var) || qty(tab, items, ctx, links[0]) is Some || is_frame(
+            tab,
+            items,
+            ctx,
+            links[0],
+        ) {
+            Result::Err(shape("anchor_shape"@))
+        } else {
+            Result::Ok(Option::Some(Ann::Interval(arg(pp, 0), role, x, unit, links[0])))
+        },
+        _ => match obj_of(items, ctx, x) {
+            Option::Some(f) => if !tab.spacings.contains((p, noun_of(f))) {
+                Result::Ok(Option::None)
+            } else if !(arg(f, 2) == atom("countable"@) && arg(f, 3) == atom("na"@) && arg(f, 4)
+                == atom("eq"@) && arg(f, 5) == Term::Int(1)) {
+                Result::Err(shape("frame_shape"@))
+            } else if links.len() != 1 {
+                Result::Err(shape("anchor_count"@))
+            } else {
+                match qty(tab, items, ctx, links[0]) {
+                    Option::None => Result::Err(shape("frame_shape"@)),
+                    Option::Some((unit, o)) => if bound_why(o) is Some {
+                        Result::Err(bound_why(o).unwrap())
+                    } else if of_links(items, ctx, links[0]).len() > 0 {
+                        Result::Err(shape("anchor_count"@))
+                    } else {
+                        Result::Ok(Option::Some(Ann::Recurrence(arg(pp, 0), x, links[0], unit)))
+                    },
+                }
+            },
+            Option::None => Result::Ok(Option::None),
+        },
+    }
+}
+
+// The scope's annotations in item order (context, annotation), or the first violation.
+pub open spec fn anns(tab: Temporal, scope: Seq<Item>, items: Seq<Item>) -> Result<
+    Seq<(Term, Ann)>,
+    Term,
+>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Result::Ok(Seq::empty())
+    } else {
+        let head = match items[0] {
+            Item::Anch(c, inner) => if is_comp(inner, "modifier_pp"@, 3) {
+                match pp_ann(tab, scope, c, inner) {
+                    Result::Err(e) => Result::Err(e),
+                    Result::Ok(Option::Some(a)) => Result::Ok(seq![(c, a)]),
+                    Result::Ok(Option::None) => Result::Ok(Seq::empty()),
+                }
+            } else {
+                Result::Ok(Seq::empty())
+            },
+            _ => Result::Ok(Seq::empty()),
+        };
+        match (head, anns(tab, scope, items.drop_first())) {
+            (Result::Err(e), _) => Result::Err(e),
+            (_, Result::Err(e)) => Result::Err(e),
+            (Result::Ok(h), Result::Ok(t)) => Result::Ok(h + t),
+        }
+    }
+}
+
+// Quantities and frames the annotations claim; a claim is exclusive.
+pub open spec fn claims(ms: Seq<(Term, Ann)>) -> Seq<(Term, Term)> {
+    ms.map_values(
+        |m: (Term, Ann)|
+            match m.1 {
+                Ann::Interval(_, _, q, _, _) => seq![(m.0, q)],
+                Ann::Recurrence(_, f, q, _) => seq![(m.0, f), (m.0, q)],
+            },
+    ).flatten()
+}
+
+// The `of` links the annotations consume: an interval's anchor link, a frame's quantity link.
+pub open spec fn consumed(ms: Seq<(Term, Ann)>) -> Seq<(Term, Term)> {
+    ms.map_values(
+        |m: (Term, Ann)|
+            match m.1 {
+                Ann::Interval(_, _, q, _, a) => if a is Var {
+                    seq![(m.0, q)]
+                } else {
+                    Seq::empty()
+                },
+                Ann::Recurrence(_, f, _, _) => seq![(m.0, f)],
+            },
+    ).flatten()
+}
+
+pub open spec fn ann_inner(a: Ann) -> Term {
+    match a {
+        Ann::Interval(e, role, q, unit, anchor) => Term::Comp(
+            ascii("$guideline_interval"@),
+            seq![e, Term::Atom(role), q, Term::Atom(unit), anchor],
+        ),
+        Ann::Recurrence(e, _, q, unit) => Term::Comp(
+            ascii("$guideline_recurrence"@),
+            seq![e, q, Term::Atom(unit)],
+        ),
+    }
+}
+
+pub open spec fn rebuild_item(
+    tab: Temporal,
+    scope: Seq<Item>,
+    links: Seq<(Term, Term)>,
+    it: Item,
+) -> Result<Seq<Item>, Term>
+    decreases it, 0int,
+{
+    match it {
+        Item::Anch(c, inner) => if is_comp(inner, "modifier_pp"@, 3) {
+            match pp_ann(tab, scope, c, inner) {
+                Result::Ok(Option::Some(a)) => Result::Ok(seq![it, Item::Anch(c, ann_inner(a))]),
+                _ => Result::Ok(seq![it]),
+            }
+        } else if is_comp(inner, "relation"@, 3) && arg(inner, 1) == atom("of"@) && links.contains(
+            (c, arg(inner, 0)),
+        ) {
+            Result::Ok(Seq::empty())
+        } else {
+            Result::Ok(seq![it])
+        },
+        Item::Naf(dom, payload) => match annotate(tab, payload) {
+            Result::Err(e) => Result::Err(e),
+            Result::Ok(p) => Result::Ok(seq![Item::Naf(dom, p)]),
+        },
+        Item::Op(_, _, _, _) => Result::Ok(seq![it]),
+    }
+}
+
+pub open spec fn rebuild(
+    tab: Temporal,
+    scope: Seq<Item>,
+    links: Seq<(Term, Term)>,
+    items: Seq<Item>,
+) -> Result<Seq<Item>, Term>
+    decreases items, 1int,
+{
+    if items.len() == 0 {
+        Result::Ok(Seq::empty())
+    } else {
+        match (
+            rebuild_item(tab, scope, links, items[0]),
+            rebuild(tab, scope, links, items.drop_first()),
+        ) {
+            (Result::Err(e), _) => Result::Err(e),
+            (_, Result::Err(e)) => Result::Err(e),
+            (Result::Ok(h), Result::Ok(t)) => Result::Ok(h + t),
+        }
+    }
+}
+
+// One scope annotated: exclusive claims, consumed `of` links dropped (any other
+// `relation/3` stays and rejects in `condition`).
+pub open spec fn annotate(tab: Temporal, items: Seq<Item>) -> Result<Seq<Item>, Term>
+    decreases items, 2int,
+{
+    match anns(tab, items, items) {
+        Result::Err(e) => Result::Err(e),
+        Result::Ok(ms) => if !claims(ms).no_duplicates() {
+            Result::Err(shape("shared_quantity"@))
+        } else {
+            rebuild(tab, items, consumed(ms), items)
+        },
+    }
+}
+
+// v1 (no table) leaves items as flattened.
+pub open spec fn annotated(tab: Option<Temporal>, items: Seq<Item>) -> Result<Seq<Item>, Term> {
+    match tab {
+        Option::None => Result::Ok(items),
+        Option::Some(t) => annotate(t, items),
+    }
+}
+
+pub open spec fn flatten_ann(
+    tab: Option<Temporal>,
+    l: Term,
+    w: Where,
+    s: nat,
+    docid: Seq<u8>,
+    deps: Term,
+    outer: Term,
+    encl: Encl,
+    n: nat,
+    base: nat,
+) -> Result<Flat, Term> {
+    match flatten_list(l, w, s, docid, deps, outer, encl, n, base) {
+        Result::Err(e) => Result::Err(e),
+        Result::Ok(f) => match annotated(tab, f.items) {
+            Result::Err(e) => Result::Err(e),
+            Result::Ok(items) => Result::Ok(Flat { items, n: f.n }),
+        },
+    }
+}
+
 // --- groups: fact clusters and rule variants ---
 pub ghost struct Group {
     pub k: nat,  // variant ordinal (1 for facts)
@@ -826,10 +1177,12 @@ pub open spec fn fact_group(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
+    tab: Option<Temporal>,
 ) -> Result<(Group, Seq<(Term, Term)>), Term> {
     match roots_conds(roots) {
         Option::None => Result::Err(atom("sentence_shape"@)),
-        Option::Some(conds) => match flatten_list(
+        Option::Some(conds) => match flatten_ann(
+            tab,
             conds,
             Where::Root,
             s,
@@ -945,11 +1298,26 @@ pub open spec fn list_of(ts: Seq<Term>) -> Term {
 }
 
 // Flatten a sequence of raw conditions as antecedent items, threading the box ordinal.
-pub open spec fn flatten_seq(cs: Seq<Term>, s: nat, docid: Seq<u8>, n: nat, base: nat) -> Result<
-    Flat,
-    Term,
-> {
-    flatten_list(list_of(cs), Where::Antecedent, s, docid, Term::Nil, actual(), Encl::Top, n, base)
+pub open spec fn flatten_seq(
+    cs: Seq<Term>,
+    s: nat,
+    docid: Seq<u8>,
+    n: nat,
+    base: nat,
+    tab: Option<Temporal>,
+) -> Result<Flat, Term> {
+    flatten_ann(
+        tab,
+        list_of(cs),
+        Where::Antecedent,
+        s,
+        docid,
+        Term::Nil,
+        actual(),
+        Encl::Top,
+        n,
+        base,
+    )
 }
 
 pub open spec fn cons_locals(ordered: Seq<Term>, ante: Seq<Term>, map: Seq<(Term, Term)>) -> Seq<
@@ -1072,8 +1440,9 @@ pub open spec fn flatten_cons(
     deps: Term,
     n: nat,
     base: nat,
+    tab: Option<Temporal>,
 ) -> Result<Flat, Term> {
-    flatten_list(cconds, Where::Consequent, s, docid, deps, actual(), Encl::Top, n, base)
+    flatten_ann(tab, cconds, Where::Consequent, s, docid, deps, actual(), Encl::Top, n, base)
 }
 
 // The rule law: curry → split scan → one variant, or two over a single
@@ -1086,6 +1455,7 @@ pub open spec fn rule_groups(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
+    tab: Option<Temporal>,
 ) -> Result<Seq<Group>, Term> {
     match curry(ante, cons, 64) {
         Result::Err(e) => Result::Err(e),
@@ -1096,7 +1466,7 @@ pub open spec fn rule_groups(
                 match split_scan(segs) {
                     Option::None => Result::Err(atom("invalid_drs_shape"@)),
                     Option::Some((shared, vs)) => if vs.len() == 0 {
-                        match flatten_seq(shared, s, docid, 1, base) {
+                        match flatten_seq(shared, s, docid, 1, base, tab) {
                             Result::Err(e) => Result::Err(e),
                             Result::Ok(fa) => match flatten_cons(
                                 cconds,
@@ -1105,6 +1475,7 @@ pub open spec fn rule_groups(
                                 list_of(adom),
                                 fa.n,
                                 base,
+                                tab,
                             ) {
                                 Result::Err(e) => Result::Err(e),
                                 Result::Ok(fc) => {
@@ -1148,6 +1519,7 @@ pub open spec fn rule_groups(
                                     docid,
                                     map,
                                     base,
+                                    tab,
                                 )
                             },
                             _ => Result::Err(atom("invalid_drs_shape"@)),
@@ -1173,10 +1545,12 @@ pub open spec fn split_variants(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
+    tab: Option<Temporal>,
 ) -> Result<Seq<Group>, Term> {
-    match flatten_seq(shared, s, docid, 1, base) {
+    match flatten_seq(shared, s, docid, 1, base, tab) {
         Result::Err(e) => Result::Err(e),
-        Result::Ok(fs) => match flatten_list(
+        Result::Ok(fs) => match flatten_ann(
+            tab,
             conds1,
             Where::Antecedent,
             s,
@@ -1188,7 +1562,8 @@ pub open spec fn split_variants(
             base,
         ) {
             Result::Err(e) => Result::Err(e),
-            Result::Ok(f1) => match flatten_list(
+            Result::Ok(f1) => match flatten_ann(
+                tab,
                 conds2,
                 Where::Antecedent,
                 s,
@@ -1204,8 +1579,8 @@ pub open spec fn split_variants(
                     let deps1 = list_of(adom + dom1);
                     let deps2 = list_of(adom + dom2);
                     match (
-                        flatten_cons(cconds, s, docid, deps1, f2.n, base),
-                        flatten_cons(cconds, s, docid, deps2, f2.n, base),
+                        flatten_cons(cconds, s, docid, deps1, f2.n, base, tab),
+                        flatten_cons(cconds, s, docid, deps2, f2.n, base, tab),
                     ) {
                         (Result::Ok(c1), Result::Ok(c2)) => {
                             let ordered = first_vars(
@@ -1262,17 +1637,18 @@ pub open spec fn sentence_groups(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
+    tab: Option<Temporal>,
 ) -> Result<(Seq<Group>, Seq<(Term, Term)>), Term> {
     if roots.len() == 1 && roots[0] is Rule {
         match roots[0] {
-            Root::Rule(a, c) => match rule_groups(a, c, s, docid, map, base) {
+            Root::Rule(a, c) => match rule_groups(a, c, s, docid, map, base, tab) {
                 Result::Err(e) => Result::Err(e),
                 Result::Ok(gs) => Result::Ok((gs, map)),
             },
             _ => Result::Err(atom("sentence_shape"@)),
         }
     } else if forall|i: int| 0 <= i < roots.len() ==> is_fact_root(#[trigger] roots[i]) {
-        match fact_group(roots, s, docid, map, base) {
+        match fact_group(roots, s, docid, map, base, tab) {
             Result::Err(e) => Result::Err(e),
             Result::Ok((g, map2)) => Result::Ok((seq![g], map2)),
         }
@@ -1339,18 +1715,19 @@ pub open spec fn project_from(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
+    tab: Option<Temporal>,
 ) -> Result<Seq<Projected>, Term>
     decreases count + 1 - s,
 {
     if s > count {
         Result::Ok(Seq::empty())
     } else {
-        match sentence_groups(of_sentence(tagged, s as int), s, docid, map, base) {
+        match sentence_groups(of_sentence(tagged, s as int), s, docid, map, base, tab) {
             Result::Err(e) => Result::Err(err_at(s, e)),
             Result::Ok((gs, map2)) => if group_clauses(gs).len() == 0 {
                 Result::Err(err_at(s, atom("sentence_shape"@)))
             } else {
-                match project_from(tagged, s + 1, count, docid, map2, base) {
+                match project_from(tagged, s + 1, count, docid, map2, base, tab) {
                     Result::Err(e) => Result::Err(e),
                     Result::Ok(rest) => Result::Ok(seq![Projected { s, groups: gs }] + rest),
                 }
@@ -1399,7 +1776,10 @@ pub open spec fn collides_all(ts: Seq<Term>) -> bool
 
 // project(drs, docid, count) = the sentence bundles' groups, or the first
 // sentence-attributed reason the fork's law admits no projection.
-pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat) -> Result<Seq<Projected>, Term> {
+pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat, tab: Option<Temporal>) -> Result<
+    Seq<Projected>,
+    Term,
+> {
     match box_parts(drs) {
         Option::None => Result::Err(atom("invalid_drs_shape"@)),
         Option::Some((_, conds)) => if collides(drs) {
@@ -1412,7 +1792,7 @@ pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat) -> Result<Seq<Pr
                     Option::Some(tagged) => if !in_range(tagged, count) {
                         Result::Err(atom("condition_outside_sentence_range"@))
                     } else {
-                        project_from(tagged, 1, count, docid, Seq::empty(), nvars(drs))
+                        project_from(tagged, 1, count, docid, Seq::empty(), nvars(drs), tab)
                     },
                 },
             }
@@ -1472,6 +1852,21 @@ pub open spec fn first_nonground(obs: Seq<Ob>) -> Option<Ob>
 }
 
 // --- custody + the document relation ---
+// The table a certification projects with: v1 = none; v2 = the parsed raw table,
+// supplied with its digest. None = a custody or grammar failure.
+pub open spec fn table_of(traw: Option<Seq<u8>>, tsha: Option<Seq<u8>>) -> Option<
+    Option<Temporal>,
+> {
+    match (traw, tsha) {
+        (Option::None, Option::None) => Option::Some(Option::None),
+        (Option::Some(b), Option::Some(_)) => match parse_temporal(b) {
+            Result::Ok(t) => Option::Some(Option::Some(t)),
+            Result::Err(_) => Option::None,
+        },
+        _ => Option::None,
+    }
+}
+
 pub open spec fn nonempty_lines(bytes: Seq<u8>) -> Seq<Seq<u8>> {
     lines_of(bytes).filter(|l: Seq<u8>| l.len() > 0)
 }
@@ -1521,6 +1916,8 @@ pub open spec fn certify_doc(
     docid: Seq<u8>,
     dump: Seq<u8>,
     pl: Seq<u8>,
+    traw: Option<Seq<u8>>,
+    tsha: Option<Seq<u8>>,
 ) -> Result<Seq<Ob>, Term> {
     if !accepts(pl) {
         Result::Err(atom("noncanonical"@))
@@ -1541,10 +1938,12 @@ pub open spec fn certify_doc(
                     Result::Err(atom("ace_sha256"@))
                 } else if doc.ulex != ulex_of(usha) {
                     Result::Err(atom("ulex"@))
+                } else if doc.temporal != tsha || table_of(traw, tsha) is None {
+                    Result::Err(atom("temporal"@))
                 } else if doc.bundles.len() != lines.len() {
                     Result::Err(atom("bundle_count"@))
                 } else {
-                    match project(d.drs, docid, lines.len()) {
+                    match project(d.drs, docid, lines.len(), table_of(traw, tsha).unwrap()) {
                         Result::Err(e) => Result::Err(Term::Comp(ascii("unsupported"@), seq![e])),
                         Result::Ok(ps) => match first_mismatch(doc.bundles, ps, lines, 0) {
                             Option::Some(s) => Result::Err(
@@ -1582,7 +1981,9 @@ pub open spec fn strip_anchor(c: Term) -> Term {
     }
 }
 
-pub open spec fn supported_leaf(name: Seq<u8>, arity: nat) -> bool {
+// v2 questions also carry `of` links (D9); `annotate` consumes them or they reject.
+pub open spec fn supported_leaf(name: Seq<u8>, arity: nat, v2: bool) -> bool {
+    ||| (v2 && name == ascii("relation"@) && arity == 3)
     ||| (name == ascii("object"@) && arity == 6)
     ||| (name == ascii("predicate"@) && 3 <= arity <= 5)
     ||| (name == ascii("modifier_pp"@) && arity == 3)
@@ -1594,37 +1995,41 @@ pub open spec fn wh_tag_ok(t: Term) -> bool {
 }
 
 // Pre-order blocker scan: conjunctive supported leaves and nested modal boxes only.
-pub open spec fn scan_box(b: Term) -> bool
+// v2 also admits a nested condition list (an upper-bound determiner's group).
+pub open spec fn scan_box(b: Term, v2: bool) -> bool
     decreases b, 0int,
 {
     match box_parts(b) {
         Option::None => false,
-        Option::Some((_, conds)) => scan_conds(conds),
+        Option::Some((_, conds)) => scan_conds(conds, v2),
     }
 }
 
-pub open spec fn scan_conds(l: Term) -> bool
+pub open spec fn scan_conds(l: Term, v2: bool) -> bool
     decreases l, 1int,
 {
     match l {
         Term::Nil => true,
         Term::Comp(name, args) => name == cons_name() && args.len() == 2 && scan_leaf(
             strip_anchor(args[0]),
-        ) && scan_conds(args[1]),
+            v2,
+        ) && scan_conds(args[1], v2),
         _ => false,
     }
 }
 
-pub open spec fn scan_leaf(leaf: Term) -> bool
+pub open spec fn scan_leaf(leaf: Term, v2: bool) -> bool
     decreases leaf, 2int,
 {
     match leaf {
-        Term::Comp(name, args) => if is_modal(name) && args.len() == 1 {
-            scan_box(args[0])
+        Term::Comp(name, args) => if v2 && name == cons_name() && args.len() == 2 {
+            scan_conds(leaf, v2)
+        } else if is_modal(name) && args.len() == 1 {
+            scan_box(args[0], v2)
         } else if name == ascii("query"@) && args.len() == 2 {
             wh_tag_ok(args[1])
         } else {
-            supported_leaf(name, args.len())
+            supported_leaf(name, args.len(), v2)
         },
         _ => false,
     }
@@ -1767,7 +2172,10 @@ pub open spec fn strip_conds(l: Term) -> Term
 }
 
 // project_query(drs, qid) = (goal conjunction, answers list) of the one question.
-pub open spec fn project_query(drs: Term, qid: Seq<u8>) -> Result<(Term, Term), Term> {
+pub open spec fn project_query(drs: Term, qid: Seq<u8>, tab: Option<Temporal>) -> Result<
+    (Term, Term),
+    Term,
+> {
     match box_parts(drs) {
         Option::None => Result::Err(atom("invalid_drs_shape"@)),
         Option::Some((dom, conds)) => if collides(drs) {
@@ -1779,14 +2187,15 @@ pub open spec fn project_query(drs: Term, qid: Seq<u8>) -> Result<(Term, Term), 
             let q = arg(arg(conds, 0), 0);
             if inner_sentence(q) != Option::Some(1int) {
                 Result::Err(atom("mixed_or_missing_sentence_anchors"@))
-            } else if !scan_box(q) {
+            } else if !scan_box(q, tab is Some) {
                 Result::Err(atom("query_unsupported"@))
             } else {
                 match answers_of(box_markers(q), Seq::empty()) {
                     Option::None => Result::Err(atom("query_marker"@)),
                     Option::Some(answers) => match box_parts(strip_box(q)) {
                         Option::None => Result::Err(atom("invalid_drs_shape"@)),
-                        Option::Some((_, clean)) => match flatten_list(
+                        Option::Some((_, clean)) => match flatten_ann(
+                            tab,
                             clean,
                             Where::Antecedent,
                             1,
@@ -1851,6 +2260,8 @@ pub open spec fn certify_query(
     qid: Seq<u8>,
     dump: Seq<u8>,
     pl: Seq<u8>,
+    traw: Option<Seq<u8>>,
+    tsha: Option<Seq<u8>>,
 ) -> Result<(), Term> {
     if !accepts(pl) {
         Result::Err(atom("noncanonical"@))
@@ -1871,10 +2282,12 @@ pub open spec fn certify_query(
                     Result::Err(atom("ace_sha256"@))
                 } else if q.ulex != ulex_of(usha) {
                     Result::Err(atom("ulex"@))
+                } else if q.temporal != tsha || table_of(traw, tsha) is None {
+                    Result::Err(atom("temporal"@))
                 } else if q.qtext != query_text(lines[0]) {
                     Result::Err(atom("query_text"@))
                 } else {
-                    match project_query(d.drs, qid) {
+                    match project_query(d.drs, qid, table_of(traw, tsha).unwrap()) {
                         Result::Err(e) => Result::Err(Term::Comp(ascii("unsupported"@), seq![e])),
                         Result::Ok((goal, answers)) => if canon_pair(goal, answers) != (
                             q.goal,
@@ -1916,8 +2329,10 @@ pub open spec fn certify_doc_output(
     docid: Seq<u8>,
     dump: Seq<u8>,
     pl: Seq<u8>,
+    traw: Option<Seq<u8>>,
+    tsha: Option<Seq<u8>>,
 ) -> Out {
-    match certify_doc(ace, asha, usha, docid, dump, pl) {
+    match certify_doc(ace, asha, usha, docid, dump, pl, traw, tsha) {
         Result::Err(why) => certify_reject(docid, why),
         Result::Ok(obs) => ok(print_payload(obs)),  // stdout = the derived obligations
     }
@@ -1930,8 +2345,10 @@ pub open spec fn certify_query_output(
     qid: Seq<u8>,
     dump: Seq<u8>,
     pl: Seq<u8>,
+    traw: Option<Seq<u8>>,
+    tsha: Option<Seq<u8>>,
 ) -> Out {
-    match certify_query(ace, asha, usha, qid, dump, pl) {
+    match certify_query(ace, asha, usha, qid, dump, pl, traw, tsha) {
         Result::Err(why) => certify_reject(qid, why),
         Result::Ok(()) => ok(ascii("ckc: certify ok "@) + qid + seq![0x0Au8]),
     }

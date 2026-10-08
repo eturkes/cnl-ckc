@@ -1,8 +1,8 @@
 % cdc2022-opioid-s60-16.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s60-16',ace_sha256(a8476ba290c3c6d772b1d1a14a68c02ddceed2a0bd512c67316ed79a6438e568),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s60-16',ace_sha256(a8476ba290c3c6d772b1d1a14a68c02ddceed2a0bd512c67316ed79a6438e568),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a clinician treats a patient in a supervised-setting and the patient receives a regular-buprenorphine-dosage then the clinician may add a short-acting-full-agonist-opioid to the regular-buprenorphine-dosage for the patient and may continue the regular-buprenorphine-dosage for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s60-16',1,box(1),[A,B,C,D,E,F]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,patient,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'supervised-setting',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,treat), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,in,C), guideline_entity(actual,E,'regular-buprenorphine-dosage',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,receive), guideline_arg(actual,F,1,B), guideline_arg(actual,F,2,E).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s60-16',1,box(1),[A,B,C,D,E,F]),'$guideline_id'(product,'cdc2022-opioid-s60-16',1,ref(7),[A,B,C,D,E,F]),'short-acting-full-agonist-opioid',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,patient,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'supervised-setting',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,treat), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,in,C), guideline_entity(actual,E,'regular-buprenorphine-dosage',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,receive), guideline_arg(actual,F,1,B), guideline_arg(actual,F,2,E).

@@ -10,25 +10,25 @@
 0	ace	360	opioid-pain-clinical-practice-guideline
 6	ace	413	pain-care-clinician
 0	ace	440	opioid-pain-clinical-practice-guideline
-7	ace	498	adult-outpatient
-8	ace	515	acute-pain-under-one-month
-0	ace	549	opioid-pain-clinical-practice-guideline
-7	ace	607	adult-outpatient
-9	ace	624	subacute-pain-one-to-three-months
-0	ace	665	opioid-pain-clinical-practice-guideline
-7	ace	723	adult-outpatient
-10	ace	740	chronic-pain-over-three-months
-0	ace	778	opioid-pain-clinical-practice-guideline
-11	ace	823	flexible-guideline
-0	ace	849	opioid-pain-clinical-practice-guideline
-12	ace	896	support
-13	ace	906	person-centered-decision
-14	ace	955	consider
-15	ace	967	expected-health-outcome
-13	ace	1000	person-centered-decision
-14	ace	1049	consider
-16	ace	1060	well-being
-13	ace	1080	person-centered-decision
+7	ace	494	adult-outpatient
+8	ace	520	a pain that lasts for less than 1 month
+0	ace	567	opioid-pain-clinical-practice-guideline
+7	ace	621	adult-outpatient
+9	ace	647	a pain that lasts for at least 1 month for at most 3 months
+0	ace	714	opioid-pain-clinical-practice-guideline
+7	ace	768	adult-outpatient
+10	ace	794	a pain that lasts for more than 3 months
+0	ace	842	opioid-pain-clinical-practice-guideline
+11	ace	887	flexible-guideline
+0	ace	913	opioid-pain-clinical-practice-guideline
+12	ace	960	support
+13	ace	970	person-centered-decision
+14	ace	1019	consider
+15	ace	1031	expected-health-outcome
+13	ace	1064	person-centered-decision
+14	ace	1113	consider
+16	ace	1124	well-being
+13	ace	1144	person-centered-decision
 0	src	5	clinical practice guideline
 1	src	38	clinical tool
 2	src	63	communication between clinicians and patients

@@ -1,8 +1,8 @@
 % cdc2022-opioid-s60-09.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s60-09',ace_sha256(e23a0f3b59e753b75b0e61390edb039556674dd253df538acada44120d129f99),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s60-09',ace_sha256(e23a0f3b59e753b75b0e61390edb039556674dd253df538acada44120d129f99),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a patient chooses an opioid-taper and cannot taper an opioid then every clinician may reassess an opioid-use-disorder for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s60-09',1,box(3),[A,B,C,D]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,choose), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_operator(actual,E,-), guideline_operator(E,F,can), guideline_entity(F,G,opioid,countable), guideline_cardinality(F,G,na,eq,1), guideline_event(F,H,taper), guideline_arg(F,H,1,A), guideline_arg(F,H,2,G), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s60-09',1,box(3),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s60-09',1,ref(7),[A,B,C,D]),'opioid-use-disorder',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-taper',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,choose), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_operator(actual,E,-), guideline_operator(E,F,can), guideline_entity(F,G,opioid,countable), guideline_cardinality(F,G,na,eq,1), guideline_event(F,H,taper), guideline_arg(F,H,1,A), guideline_arg(F,H,2,G), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

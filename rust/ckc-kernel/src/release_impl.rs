@@ -68,7 +68,8 @@ pub fn release_manifest_impl(
         vstd::assert_seqs_equal!(ckc_spec::release::members(tags@).take(i as int) == ckc_spec::release::members(tags@));
     }
     let sorted = crate::release_rows::sorted(&pay);
-    let mut r = crate::release_rows::meta(compiler, lexicon);
+    let schema = crate::release_rows::schema_rows_exec(staged, profiles);
+    let mut r = crate::release_rows::meta(&schema, compiler, lexicon);
     let ms = crate::release_rows::rows(&sorted);
     crate::k4_bytes::append(&mut r, &ms);
     let ss = crate::release_rows::source_text(&src);

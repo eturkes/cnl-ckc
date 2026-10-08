@@ -11,7 +11,6 @@ noun_sg('active-opioid-use-disorder','active-opioid-use-disorder',neutr).
 noun_sg('DSM-5-opioid-use-disorder-assessment','DSM-5-opioid-use-disorder-assessment',neutr).
 noun_sg('DSM-5-opioid-use-disorder-criteria-match','DSM-5-opioid-use-disorder-criteria-match',neutr).
 noun_sg('absolute-boundary','absolute-boundary',neutr).
-noun_sg('acute-opioid-evaluation-schedule','acute-opioid-evaluation-schedule',neutr).
 noun_sg('additional-as-needed-buprenorphine-dose','additional-as-needed-buprenorphine-dose',neutr).
 noun_sg('additional-caution','additional-caution',neutr).
 noun_sg('additional-evaluation','additional-evaluation',neutr).
@@ -21,9 +20,6 @@ noun_sg('additional-prescriber','additional-prescriber',human).
 noun_sg('additional-prescription','additional-prescription',neutr).
 noun_sg('additional-prescription-awareness','additional-prescription-awareness',neutr).
 noun_sg('additional-treatment','additional-treatment',neutr).
-noun_sg('adult-outpatient-acute-pain-under-one-month','adult-outpatient-acute-pain-under-one-month',neutr).
-noun_sg('adult-outpatient-chronic-pain-over-three-months','adult-outpatient-chronic-pain-over-three-months',neutr).
-noun_sg('adult-outpatient-subacute-pain-one-to-three-months','adult-outpatient-subacute-pain-one-to-three-months',neutr).
 noun_sg('affordable-additional-evaluation-access','affordable-additional-evaluation-access',neutr).
 noun_sg('affordable-additional-treatment-access','affordable-additional-treatment-access',neutr).
 noun_sg('affordable-follow-up-evaluation-access','affordable-follow-up-evaluation-access',neutr).
@@ -180,7 +176,6 @@ noun_sg('as-needed-antiemetic','as-needed-antiemetic',neutr).
 noun_sg('as-needed-opioid','as-needed-opioid',neutr).
 noun_sg('as-needed-opioid-example','as-needed-opioid-example',neutr).
 noun_sg('associated-risk','associated-risk',neutr).
-noun_sg('at-least-monthly-follow-up','at-least-monthly-follow-up',neutr).
 noun_sg('back-pain','back-pain',neutr).
 noun_sg('baseline-dosage-taper','baseline-dosage-taper',neutr).
 noun_sg('baseline-opioid-dosage','baseline-opioid-dosage',neutr).
@@ -276,7 +271,6 @@ noun_sg('current-gastrointestinal-bleeding','current-gastrointestinal-bleeding',
 noun_sg('current-opioid-dosage','current-opioid-dosage',neutr).
 noun_sg('cyclooxygenase-2-inhibitor','cyclooxygenase-2-inhibitor',neutr).
 noun_sg('daily-opioid-dosage','daily-opioid-dosage',neutr).
-noun_sg('daily-opioid-dosage-reduction','daily-opioid-dosage-reduction',neutr).
 noun_sg('DAST','DAST',neutr).
 noun_sg('decision-guidepost','decision-guidepost',neutr).
 noun_sg('decreased-medication-clearance','decreased-medication-clearance',neutr).
@@ -312,7 +306,6 @@ noun_sg('empathetic-response','empathetic-response',neutr).
 noun_sg('episodic-migraine-pain','episodic-migraine-pain',neutr).
 noun_sg('ER-LA-opioid-dosage','ER-LA-opioid-dosage',neutr).
 noun_sg('ER-LA-opioid-exposure','ER-LA-opioid-exposure',neutr).
-noun_sg('evaluation-interval','evaluation-interval',neutr).
 noun_sg('evidence-based-default-pain-treatment','evidence-based-default-pain-treatment',neutr).
 noun_sg('evidence-based-medication-treatment','evidence-based-medication-treatment',neutr).
 noun_sg('evidence-of-opioid-benefit','evidence-of-opioid-benefit',neutr).
@@ -387,7 +380,6 @@ noun_sg('higher-opioid-dosage-death-risk','higher-opioid-dosage-death-risk',neut
 noun_sg('higher-opioid-dosage-opioid-use-disorder-risk','higher-opioid-dosage-opioid-use-disorder-risk',neutr).
 noun_sg('higher-opioid-dosage-respiratory-depression-risk','higher-opioid-dosage-respiratory-depression-risk',neutr).
 noun_sg('higher-opioid-harm-risk','higher-opioid-harm-risk',neutr).
-noun_sg('higher-risk-opioid-reevaluation-schedule','higher-risk-opioid-reevaluation-schedule',neutr).
 noun_sg('hip-osteoarthritis','hip-osteoarthritis',neutr).
 noun_sg('hospital-discharge','hospital-discharge',neutr).
 noun_sg('illicit-opioid','illicit-opioid',neutr).
@@ -831,9 +823,7 @@ noun_sg('rapid-opioid-taper','rapid-opioid-taper',neutr).
 noun_sg('rapid-taper','rapid-taper',neutr).
 noun_sg('realistic-benefit','realistic-benefit',neutr).
 noun_sg('realistic-expected-opioid-benefit','realistic-expected-opioid-benefit',neutr).
-noun_sg('reassessment-interval','reassessment-interval',neutr).
 noun_sg('recommended-treatment','recommended-treatment',neutr).
-noun_sg('reevaluation-interval','reevaluation-interval',neutr).
 noun_sg('regular-buprenorphine-dosage','regular-buprenorphine-dosage',neutr).
 noun_sg('regular-follow-up','regular-follow-up',neutr).
 noun_sg('regular-opioid-risk-screening','regular-opioid-risk-screening',neutr).
@@ -933,8 +923,6 @@ noun_sg('support-need','support-need',neutr).
 noun_sg('sustained-function-improvement','sustained-function-improvement',neutr).
 noun_sg('systemic-NSAID','systemic-NSAID',neutr).
 noun_sg('tai-chi','tai-chi',neutr).
-noun_sg('taper-interval','taper-interval',neutr).
-noun_sg('taper-schedule','taper-schedule',neutr).
 noun_sg('temporary-buprenorphine-dosing-frequency-increase','temporary-buprenorphine-dosing-frequency-increase',neutr).
 noun_sg(taper,taper,neutr).
 noun_sg('taper-agreement','taper-agreement',neutr).
@@ -956,7 +944,6 @@ noun_sg('TAPS','TAPS',neutr).
 noun_sg('telehealth-visit','telehealth-visit',neutr).
 noun_sg('telephone-contact','telephone-contact',neutr).
 noun_sg('ten-percent-of-original-dose-per-week-or-slower-first-taper-stage','ten-percent-of-original-dose-per-week-or-slower-first-taper-stage',neutr).
-noun_sg('ten-percent-of-remaining-dose-per-week-after-approximately-thirty-percent-of-original-dose-second-taper-stage','ten-percent-of-remaining-dose-per-week-after-approximately-thirty-percent-of-original-dose-second-taper-stage',neutr).
 noun_sg('ten-percent-per-month-or-slower-taper','ten-percent-per-month-or-slower-taper',neutr).
 noun_sg('tension-headache','tension-headache',neutr).
 noun_sg('test-result-misinterpretation','test-result-misinterpretation',neutr).
@@ -1035,12 +1022,16 @@ noun_sg(methadone,methadone,neutr).
 noun_sg(yoga,yoga,neutr).
 noun_sg('young-child-or-pet-unintentional-opioid-ingestion-risk','young-child-or-pet-unintentional-opioid-ingestion-risk',neutr).
 noun_sg(oversedation,oversedation,neutr).
-noun_sg('shorter-follow-up-interval','shorter-follow-up-interval',neutr).
 noun_sg('drug-detection','drug-detection',neutr).
 noun_sg('patient-safety-improvement','patient-safety-improvement',neutr).
 noun_sg('pain-management-therapy-optimization','pain-management-therapy-optimization',neutr).
+noun_sg('adult-outpatient','adult-outpatient',human).
+noun_sg('approximately-ten-percent','approximately-ten-percent',neutr).
+noun_sg('approximately-thirty-percent-of-original-dose','approximately-thirty-percent-of-original-dose',neutr).
+noun_sg('remaining-opioid-dose','remaining-opioid-dose',neutr).
+noun_sg('shorter-follow-up-schedule','shorter-follow-up-schedule',neutr).
+noun_sg('suggested-long-term-opioid-reassessment-schedule','suggested-long-term-opioid-reassessment-schedule',neutr).
 adj_itr(addressable,addressable).
-prep(per,per).
 tv_infpl(calibrate,calibrate).
 tv_infpl(optimize,optimize).
 tv_infpl(pause,pause).

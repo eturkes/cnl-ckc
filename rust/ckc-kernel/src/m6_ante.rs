@@ -382,7 +382,8 @@ pub fn flatten_at(arena: &mut ETermArena, conds: &T, w: &W, env: &Env, deps: &T,
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         flat_valid_result(final(arena).nodes@, &out),
-        flat_result(out) == spec::flatten_list(
+        flat_result(out) == spec::flatten_ann(
+            crate::m7_annotate::tab_view(&env.tab),
             conds@,
             w@,
             env.s as nat,
@@ -401,7 +402,17 @@ pub fn flatten_at(arena: &mut ETermArena, conds: &T, w: &W, env: &Env, deps: &T,
         prefix(start, middle, conds);
         prefix(start, middle, deps);
     }
-    let out = flatten_list(arena, conds, w, env, deps, &actual, &E::Top, n);
+    let out = crate::m7_annotate::flatten_ann_exec(
+        arena,
+        &env.tab,
+        conds,
+        w,
+        env,
+        deps,
+        &actual,
+        &E::Top,
+        n,
+    );
     proof {
         crate::k2_load::prefix_chain(start, middle, arena.nodes@);
     }
@@ -419,7 +430,8 @@ pub fn flatten_ante(arena: &mut ETermArena, conds: &T, env: &Env, n: usize) -> (
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         flat_valid_result(final(arena).nodes@, &out),
-        flat_result(out) == spec::flatten_list(
+        flat_result(out) == spec::flatten_ann(
+            crate::m7_annotate::tab_view(&env.tab),
             conds@,
             spec::Where::Antecedent,
             env.s as nat,
@@ -461,6 +473,7 @@ pub fn flatten_seq(arena: &mut ETermArena, conds: &Vec<T>, env: &Env, n: usize) 
             env.docid@,
             n as nat,
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ),
 {
     let ghost start = arena.nodes@;
@@ -490,6 +503,7 @@ pub fn flatten_cons(arena: &mut ETermArena, conds: &T, env: &Env, deps: &T, n: u
             deps@,
             n as nat,
             env.base as nat,
+            crate::m7_annotate::tab_view(&env.tab),
         ),
 {
     flatten_at(arena, conds, &W::Consequent, env, deps, n)

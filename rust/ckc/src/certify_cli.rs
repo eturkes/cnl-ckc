@@ -128,19 +128,54 @@ impl Stage {
     }
 }
 
+// (raw temporal.tsv bytes, its sha256 hex): the v2 projection input (m7t D8).
+type Table = (Vec<u8>, Vec<u8>);
+
+fn optional_table(path: &Path) -> Result<Option<Table>, String> {
+    match fs::read(path) {
+        Ok(raw) => {
+            let sha = crate::trust::sha256_hex(&raw).into_bytes();
+            Ok(Some((raw, sha)))
+        }
+        Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(_) => Err("unreadable(temporal).".to_owned()),
+    }
+}
+
 fn certify(
     query: bool,
     id: &str,
     ace: &[u8],
     usha: Option<&Vec<u8>>,
+    table: Option<&Table>,
     dump: &[u8],
     pl: &[u8],
 ) -> EOut {
     let asha = crate::trust::sha256_hex(ace);
+    let traw = table.map(|t| &t.0);
+    let tsha = table.map(|t| &t.1);
     if query {
-        ckc_kernel::contract::certify_query(ace, asha.as_bytes(), usha, id.as_bytes(), dump, pl)
+        ckc_kernel::contract::certify_query(
+            ace,
+            asha.as_bytes(),
+            usha,
+            id.as_bytes(),
+            dump,
+            pl,
+            traw,
+            tsha,
+        )
     } else {
-        ckc_kernel::contract::certify_doc(ace, asha.as_bytes(), usha, id.as_bytes(), dump, pl)
+        ckc_kernel::contract::certify_doc(
+            ace,
+            asha.as_bytes(),
+            usha,
+            id.as_bytes(),
+            dump,
+            pl,
+            traw,
+            tsha,
+        )
     }
 }
 
@@ -180,15 +215,31 @@ pub fn run_one(args: &[String]) -> ExitCode {
         };
         let dump = read_text(Path::new(&args[4]), "dump")?;
         let pl = read_text(Path::new(&args[5]), "pl")?;
-        Ok::<_, String>((ace, ulex, dump, pl))
+        let table = match args.get(6) {
+            Some(path) => {
+                let raw = fs::read(path).map_err(|_| "unreadable(temporal).".to_owned())?;
+                let sha = crate::trust::sha256_hex(&raw).into_bytes();
+                Some((raw, sha))
+            }
+            None => None,
+        };
+        Ok::<_, String>((ace, ulex, dump, pl, table))
     })();
     match inputs {
         Err(why) => reject(id, &why),
-        Ok((ace, ulex, dump, pl)) => {
+        Ok((ace, ulex, dump, pl, table)) => {
             let usha = ulex
                 .as_ref()
                 .map(|u| crate::trust::sha256_hex(u).into_bytes());
-            emit(certify(query, id, &ace, usha.as_ref(), &dump, &pl))
+            emit(certify(
+                query,
+                id,
+                &ace,
+                usha.as_ref(),
+                table.as_ref(),
+                &dump,
+                &pl,
+            ))
         }
     }
 }
@@ -228,6 +279,7 @@ fn certify_artifact(
     root: &Path,
     guideline: &Path,
     usha: Option<&Vec<u8>>,
+    table: Option<&Table>,
 ) -> Certified {
     let ace = read_text(&artifact.ace, "ace")?;
     let pl_dir = if artifact.query { "queries/pl" } else { "pl" };
@@ -240,7 +292,7 @@ fn certify_artifact(
     if first != second {
         return Err("dump_nondeterministic.".to_owned());
     }
-    let output = certify(artifact.query, &artifact.id, &ace, usha, &first, &pl);
+    let output = certify(artifact.query, &artifact.id, &ace, usha, table, &first, &pl);
     Ok((pl, output))
 }
 
@@ -250,6 +302,7 @@ fn certify_parallel(
     root: &Path,
     guideline: &Path,
     usha: Option<&Vec<u8>>,
+    table: Option<&Table>,
 ) -> Result<Vec<Certified>, String> {
     let workers = thread::available_parallelism()
         .map(usize::from)
@@ -270,7 +323,7 @@ fn certify_parallel(
                             };
                             results.push((
                                 index,
-                                certify_artifact(artifact, stage, root, guideline, usha),
+                                certify_artifact(artifact, stage, root, guideline, usha, table),
                             ));
                         }
                         results
@@ -301,10 +354,11 @@ pub fn run(id: &str) -> ExitCode {
         let docs = ace_paths(&guideline.join("ace"), false)?;
         let queries = ace_paths(&guideline.join("queries"), true)?;
         let ulex = optional_ulex(&guideline.join("lexicon.ulex"))?;
+        let table = optional_table(&guideline.join("temporal.tsv"))?;
         let stage = Stage::new(&root, ulex.as_deref())?;
-        Ok::<_, String>((docs, queries, ulex, stage))
+        Ok::<_, String>((docs, queries, ulex, table, stage))
     })();
-    let (docs, queries, ulex, stage) = match inputs {
+    let (docs, queries, ulex, table, stage) = match inputs {
         Ok(inputs) => inputs,
         Err(why) => return reject(id, &why),
     };
@@ -328,7 +382,14 @@ pub fn run(id: &str) -> ExitCode {
         }
     }
     order_artifacts(&mut artifacts);
-    let results = match certify_parallel(&artifacts, &stage, &root, &guideline, usha.as_ref()) {
+    let results = match certify_parallel(
+        &artifacts,
+        &stage,
+        &root,
+        &guideline,
+        usha.as_ref(),
+        table.as_ref(),
+    ) {
         Ok(results) => results,
         Err(why) => return reject(id, &why),
     };

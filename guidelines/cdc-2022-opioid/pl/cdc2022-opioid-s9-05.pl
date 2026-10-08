@@ -1,8 +1,8 @@
 % cdc2022-opioid-s9-05.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s9-05',ace_sha256(d6c5c2777ee4172c29bbc13269ca5d67a1c6da6e271e22d1fbd8b77328e9f485),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s9-05',ace_sha256(e6bf656f2dba7d2b8dcd20a2ddd17f36871978ef71854c0a26fb5fdb1c5d45e6),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: Every opioid-pain-clinical-practice-guideline is a clinical-tool.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',1,ref(2),[A]),'clinical-tool',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -51,24 +55,61 @@ guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',5,re
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',5,ref(3),[A]),apply) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',5,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',5,ref(3),[A]),to,'$guideline_id'(product,'cdc2022-opioid-s9-05',5,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-% S6: Every opioid-pain-clinical-practice-guideline applies during an adult-outpatient-acute-pain-under-one-month.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(2),[A]),'adult-outpatient-acute-pain-under-one-month',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+% S6: Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a pain that lasts for less than 1 month.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(2),[A]),'adult-outpatient',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(3),[A]),apply) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(3),[A]),during,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-% S7: Every opioid-pain-clinical-practice-guideline applies during an adult-outpatient-subacute-pain-one-to-three-months.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(2),[A]),'adult-outpatient-subacute-pain-one-to-three-months',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(3),[A]),pain,countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(3),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(4),[A]),for,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(5),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_interval(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(4),[A]),duration,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(5),[A]),month,none) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(4),[A]),last) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(4),[A]),1,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(3),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(5),[A]),month,countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(5),[A]),na,less,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(6),[A]),have) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(6),[A]),1,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(6),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(3),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(7),[A]),apply) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(7),[A]),1,A) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(7),[A]),to,'$guideline_id'(product,'cdc2022-opioid-s9-05',6,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+% S7: Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a pain that lasts for at least 1 month for at most 3 months.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(2),[A]),'adult-outpatient',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(3),[A]),apply) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(3),[A]),during,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-% S8: Every opioid-pain-clinical-practice-guideline applies during an adult-outpatient-chronic-pain-over-three-months.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(2),[A]),'adult-outpatient-chronic-pain-over-three-months',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(3),[A]),pain,countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(3),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(4),[A]),month,countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(4),[A]),na,geq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(5),[A]),for,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(4),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_interval(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(5),[A]),duration,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(4),[A]),month,none) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(5),[A]),for,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(6),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_interval(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(5),[A]),duration,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(6),[A]),month,none) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(5),[A]),last) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(5),[A]),1,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(3),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(6),[A]),month,countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(6),[A]),na,leq,3) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(7),[A]),have) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(7),[A]),1,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(7),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(3),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(8),[A]),apply) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(8),[A]),1,A) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(8),[A]),to,'$guideline_id'(product,'cdc2022-opioid-s9-05',7,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+% S8: Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a pain that lasts for more than 3 months.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(2),[A]),'adult-outpatient',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(3),[A]),apply) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(3),[A]),during,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(3),[A]),pain,countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(3),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(4),[A]),month,countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(4),[A]),na,greater,3) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(5),[A]),last) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(5),[A]),1,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(3),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(5),[A]),for,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(4),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_interval(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(5),[A]),duration,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(4),[A]),month,none) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(6),[A]),have) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(6),[A]),1,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(6),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(3),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(7),[A]),apply) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(7),[A]),1,A) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(7),[A]),to,'$guideline_id'(product,'cdc2022-opioid-s9-05',8,ref(2),[A])) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 % S9: Every opioid-pain-clinical-practice-guideline is a flexible-guideline.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',9,ref(2),[A]),'flexible-guideline',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-05',9,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).

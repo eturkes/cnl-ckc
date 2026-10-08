@@ -1,8 +1,8 @@
 % cdc2022-opioid-rec10-imp14.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp14',ace_sha256(f9f186045b9e469b25bce82eaf2c816e83c57952702bf67bedb381ee285c0e39),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-rec10-imp14',ace_sha256(f9f186045b9e469b25bce82eaf2c816e83c57952702bf67bedb381ee285c0e39),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: Every opioid-dosage-reduction-decision is an opioid-dosage-management-decision.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp14',1,ref(2),[A]),'opioid-dosage-management-decision',countable) :- guideline_entity(actual,A,'opioid-dosage-reduction-decision',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp14',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-dosage-reduction-decision',countable), guideline_cardinality(actual,A,na,eq,1).

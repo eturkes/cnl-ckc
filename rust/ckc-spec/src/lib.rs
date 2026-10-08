@@ -10,6 +10,7 @@ pub mod emit;
 pub mod engine;
 pub mod release;
 pub mod replay;
+pub mod temporal;
 pub mod term;
 pub mod trace;
 pub mod ui;

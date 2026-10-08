@@ -1,0 +1,4 @@
+% legacy compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,legacy,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none)).
+% Q1: Does a patient wait?
+'$guideline_query_projection'(goal(guideline_interval(actual,A,after,B,day,C)),answers([])).

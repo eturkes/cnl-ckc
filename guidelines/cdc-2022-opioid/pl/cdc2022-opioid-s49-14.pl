@@ -1,8 +1,8 @@
 % cdc2022-opioid-s49-14.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s49-14',ace_sha256(ef2f50d7f8815456b4e42e3c633dbdb02304930a57af1da454b4ed393d9e104c),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s49-14',ace_sha256(ef2f50d7f8815456b4e42e3c633dbdb02304930a57af1da454b4ed393d9e104c),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a patient has a previous-opioid-overdose and a clinician continues an opioid-therapy for the patient then the clinician should discuss an increased-overdose-risk with the patient and should weigh an opioid-benefit against a substantial-opioid-risk for the patient and should incorporate a risk-mitigation-strategy into a management-plan for the patient and should offer a naloxone-dose to the patient and should involve a patient-identified-trusted-family-member in a management-plan for the patient and should increase a monitoring-frequency for the patient and should use a shorter-prescription-duration for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s49-14',1,box(1),[A,B,C,D,E,F]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'previous-opioid-overdose',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,'opioid-therapy',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,continue), guideline_arg(actual,F,1,D), guideline_arg(actual,F,2,E), guideline_pp(actual,F,for,A).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s49-14',1,box(1),[A,B,C,D,E,F]),'$guideline_id'(product,'cdc2022-opioid-s49-14',1,ref(7),[A,B,C,D,E,F]),'increased-overdose-risk',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'previous-opioid-overdose',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,'opioid-therapy',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,continue), guideline_arg(actual,F,1,D), guideline_arg(actual,F,2,E), guideline_pp(actual,F,for,A).

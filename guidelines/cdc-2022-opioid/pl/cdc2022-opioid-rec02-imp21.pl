@@ -1,8 +1,8 @@
 % cdc2022-opioid-rec02-imp21.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp21',ace_sha256('6852b5a8bf072224ff944f419e67de453fb1a8f236c1efbb464736fd454b599c'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-rec02-imp21',ace_sha256('6852b5a8bf072224ff944f419e67de453fb1a8f236c1efbb464736fd454b599c'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: An opioid-continuation may initiate a long-term-opioid-therapy after 30 days.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(1),[]),'opioid-continuation',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(1),[]),na,eq,1).
@@ -31,6 +35,7 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp21',1,box(1),[]
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp21',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(1),[])).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp21',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(2),[])).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec02-imp21',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(4),[]),after,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(3),[])).
+guideline_interval('$guideline_id'(context,'cdc2022-opioid-rec02-imp21',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(4),[]),after,'$guideline_id'(product,'cdc2022-opioid-rec02-imp21',1,ref(3),[]),day,none).
 % S2: If a clinician does not make an intentional-benefit-risk-decision with a patient then the clinician should not initiate a long-term-opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp21',2,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'intentional-benefit-risk-decision',countable), guideline_cardinality(B,C,na,eq,1), guideline_entity(B,D,patient,countable), guideline_cardinality(B,D,na,eq,1), guideline_event(B,E,make), guideline_arg(B,E,1,A), guideline_arg(B,E,2,C), guideline_pp(B,E,with,D).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec02-imp21',2,box(2),[A]),'$guideline_id'(context,'cdc2022-opioid-rec02-imp21',2,box(3),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'intentional-benefit-risk-decision',countable), guideline_cardinality(B,C,na,eq,1), guideline_entity(B,D,patient,countable), guideline_cardinality(B,D,na,eq,1), guideline_event(B,E,make), guideline_arg(B,E,1,A), guideline_arg(B,E,2,C), guideline_pp(B,E,with,D).

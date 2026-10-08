@@ -1,8 +1,8 @@
 % cdc2022-opioid-s47-17.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,12 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
-guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s47-17',ace_sha256('6c8005e5fcceb953097b520d94e8e8336ae01b5fb6084532dd19c8b9ea79b49e'),ulex(sha256('4a882a1996ea910df0fbf91fea897c0805e67d48f9e1ce2fcdbbbd9250c193ae'))).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+guideline_schema_version(2).
+guideline_document('cdc2022-opioid-s47-17',ace_sha256('6c8005e5fcceb953097b520d94e8e8336ae01b5fb6084532dd19c8b9ea79b49e'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
 % S1: If a clinician cares for a pregnant-person and the pregnant-person receives a prescribed-opioid and a facility has a neonatal-opioid-withdrawal-syndrome-monitoring-capability and has a neonatal-opioid-withdrawal-syndrome-evaluation-capability and has a neonatal-opioid-withdrawal-syndrome-treatment-capability then the clinician should arrange a delivery for the pregnant-person at the facility.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s47-17',1,box(1),[A,B,C,D,E,F,G,H,I,J,K,L]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'pregnant-person',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,care), guideline_arg(actual,C,1,A), guideline_pp(actual,C,for,B), guideline_entity(actual,D,'prescribed-opioid',countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,receive), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,facility,countable), guideline_cardinality(actual,F,na,eq,1), guideline_entity(actual,G,'neonatal-opioid-withdrawal-syndrome-monitoring-capability',countable), guideline_cardinality(actual,G,na,eq,1), guideline_event(actual,H,have), guideline_arg(actual,H,1,F), guideline_arg(actual,H,2,G), guideline_entity(actual,I,'neonatal-opioid-withdrawal-syndrome-evaluation-capability',countable), guideline_cardinality(actual,I,na,eq,1), guideline_event(actual,J,have), guideline_arg(actual,J,1,F), guideline_arg(actual,J,2,I), guideline_entity(actual,K,'neonatal-opioid-withdrawal-syndrome-treatment-capability',countable), guideline_cardinality(actual,K,na,eq,1), guideline_event(actual,L,have), guideline_arg(actual,L,1,F), guideline_arg(actual,L,2,K).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s47-17',1,box(1),[A,B,C,D,E,F,G,H,I,J,K,L]),'$guideline_id'(product,'cdc2022-opioid-s47-17',1,ref(13),[A,B,C,D,E,F,G,H,I,J,K,L]),delivery,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'pregnant-person',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,care), guideline_arg(actual,C,1,A), guideline_pp(actual,C,for,B), guideline_entity(actual,D,'prescribed-opioid',countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,receive), guideline_arg(actual,E,1,B), guideline_arg(actual,E,2,D), guideline_entity(actual,F,facility,countable), guideline_cardinality(actual,F,na,eq,1), guideline_entity(actual,G,'neonatal-opioid-withdrawal-syndrome-monitoring-capability',countable), guideline_cardinality(actual,G,na,eq,1), guideline_event(actual,H,have), guideline_arg(actual,H,1,F), guideline_arg(actual,H,2,G), guideline_entity(actual,I,'neonatal-opioid-withdrawal-syndrome-evaluation-capability',countable), guideline_cardinality(actual,I,na,eq,1), guideline_event(actual,J,have), guideline_arg(actual,J,1,F), guideline_arg(actual,J,2,I), guideline_entity(actual,K,'neonatal-opioid-withdrawal-syndrome-treatment-capability',countable), guideline_cardinality(actual,K,na,eq,1), guideline_event(actual,L,have), guideline_arg(actual,L,1,F), guideline_arg(actual,L,2,K).

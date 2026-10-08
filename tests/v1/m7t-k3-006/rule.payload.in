@@ -1,0 +1,1 @@
+'$guideline_proof'(rule,1,variant(1),witness([guideline_entity(actual,w,patient,countable)]),prove([guideline_event(actual,'$guideline_id'(product,rule,1,ref(2),[w]),wait),guideline_cardinality(actual,'$guideline_id'(product,rule,1,ref(3),[w]),na,geq,2),guideline_interval(actual,'$guideline_id'(product,rule,1,ref(2),[w]),after,'$guideline_id'(product,rule,1,ref(3),[w]),day,w)])).
