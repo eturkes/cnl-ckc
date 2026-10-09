@@ -33,8 +33,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 ## Tasks
 
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → `engine_answer_tiny` rerun ≤1200 s (the 0.68.0 bump rerun: rc 124 at 1200 s ×2); measured: exhaustion persists below the parser + term-arena reads stay symbolic in CBMC symex (`.agent/deferred.md` row).
-- [ ] Q5 M7 gap coverage: inexpressible class + ruled taxonomy landed; first class (temporal) = unit M7T (closes with it; remaining classes = new `.agent/deferred.md` row).
-- [ ] M7T temporal annotations (schema v2): contract `.agent/archive/contracts/m7t.md` (user-approved with D9 questions, D10 UI timing table, wider re-authoring); branch `wt/m7t`.
+- [ ] Q5 M7 remaining gap classes: temporal landed (schema v2); next class = the user's pick in its own MAINTAIN session (user ruling; `.agent/deferred.md` row + `docs/m7-gap-taxonomy.md`).
 - [ ] Q6 corpus rounds to exhaustion: user ruling = separate corpus-prompt sessions (not run here).
 - Deferral queue = `.agent/deferred.md` (off-path improvements + ruled deferrals; one line + acceptance check each).
 
