@@ -387,3 +387,10 @@ m7t-k3-004	target	answer	0	0	manifest.tsv query.pl
 m7t-k3-005	target	answer	0	0	manifest.tsv query.pl
 m7t-k3-006	target	answer	2	1	manifest.tsv query.pl
 m7t-k3-006	codec	check	0	0	query.pl
+dq4-k1-001	target	check	2	1	input.pl
+dq4-k1-002	target	check	2	1	input.pl
+dq4-k1-003	target	check	2	1	input.pl
+dq4-k1-004	target	check	2	1	input.pl
+dq4-k1-005	target	check	2	1	input.pl
+dq4-k1-006	target	check	2	1	input.pl
+dq4-k1-007	target	check	2	1	input.pl

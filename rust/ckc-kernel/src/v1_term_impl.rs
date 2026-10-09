@@ -12005,6 +12005,7 @@ pub fn parse_answers(
         Some(a) => Some(answers_atom_expected(bytes@, a, 11, &cursor, a.qsha, 0x29, bytes.len())),
         None => None,
     };
+    let qsha_at = cursor.pos;
     let qsha = match cursor_atom(bytes, &mut cursor, Ghost(qsha_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -12023,6 +12024,7 @@ pub fn parse_answers(
         }
     }
     if !hex64_exec(&qsha.name) {
+        raise_at(at, digest_reject_at(bytes, qsha_at, &qsha.name), bytes.len());
         return None;
     }
     let before_pos_12 = cursor.pos;
@@ -12689,6 +12691,7 @@ fn parse_traces_qsha(
         Some(t) => Some((t.qsha, 0x29u8)),
         None => None,
     };
+    let qsha_at = guided.cursor.pos;
     let qsha = match guided_atom(bytes, guided, Ghost(qsha_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -12700,6 +12703,7 @@ fn parse_traces_qsha(
         }
     }
     if !hex64_exec(&qsha.name) {
+        raise_at(at, digest_reject_at(bytes, qsha_at, &qsha.name), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x29, at) {
@@ -12782,6 +12786,7 @@ fn parse_traces_asha(
         Some(t) => Some((t.asha, 0x29u8)),
         None => None,
     };
+    let asha_at = guided.cursor.pos;
     let asha = match guided_atom(bytes, guided, Ghost(asha_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -12793,6 +12798,7 @@ fn parse_traces_asha(
         }
     }
     if !hex64_exec(&asha.name) {
+        raise_at(at, digest_reject_at(bytes, asha_at, &asha.name), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x29, at) {
@@ -14132,6 +14138,7 @@ fn parse_query_record_prefix(
         Some(q) => Some((q.ace, 0x29u8)),
         None => None,
     };
+    let ace_at = guided.cursor.pos;
     let ace = match guided_atom(bytes, guided, Ghost(ace_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -14143,6 +14150,7 @@ fn parse_query_record_prefix(
         }
     }
     if !hex64_exec(&ace.name) {
+        raise_at(at, digest_reject_at(bytes, ace_at, &ace.name), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x29, at) {
@@ -14844,6 +14852,7 @@ fn parse_record_ulex(
             assert(hash_expected.unwrap().1[0][0] == 0x29);
         }
     }
+    let hash_at = guided.cursor.pos;
     let hash = match parts_guided_atom(bytes, guided, Ghost(0x29u8), Ghost(hash_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -14855,6 +14864,7 @@ fn parse_record_ulex(
         }
     }
     if !hex64_exec(&hash.name) {
+        raise_at(at, digest_reject_at(bytes, hash_at, &hash.name), bytes.len());
         return None;
     }
     let close: &[u8] = b")";
@@ -16731,6 +16741,7 @@ fn parse_doc_record_prefix(
         Some(d) => Some((d.ace, 0x29u8)),
         None => None,
     };
+    let ace_at = guided.cursor.pos;
     let ace = match guided_atom(bytes, guided, Ghost(ace_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -16742,6 +16753,7 @@ fn parse_doc_record_prefix(
         }
     }
     if !hex64_exec(&ace.name) {
+        raise_at(at, digest_reject_at(bytes, ace_at, &ace.name), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x29, at) {
@@ -21245,26 +21257,39 @@ proof fn wf_doc_nonempty(d: ckc_spec::v1text::DocFile)
 
 // Diagnostic offset of the first annotation name (a v1 file's version-law reject).
 // R9 offset of the first annotation literal in a v1 file: its name diverges from
-// every v1 predicate right after the shared `guideline_` prefix.
+// every v1 predicate right after the shared `guideline_` prefix. `%` comment lines
+// and quoted atoms may spell the name and are skipped.
 fn first_annotation_at(bytes: &[u8]) -> (r: usize)
     ensures
         r <= bytes@.len(),
 {
     let a: &[u8] = b"guideline_interval(";
     let b: &[u8] = b"guideline_recurrence(";
+    let mut comment = false;
+    let mut quoted = false;
     let mut i = 0usize;
     while i < bytes.len()
         invariant
             i <= bytes@.len(),
         decreases bytes@.len() - i,
     {
+        if i == 0 || bytes[i - 1] == 0x0a {
+            comment = bytes[i] == 0x25;
+            quoted = false;
+        }
         let rest = vstd::slice::slice_subrange(bytes, i, bytes.len());
-        if crate::k4_bytes::starts_with(rest, a) || crate::k4_bytes::starts_with(rest, b) {
+        if !comment && !quoted && (crate::k4_bytes::starts_with(rest, a)
+            || crate::k4_bytes::starts_with(rest, b)) {
             return if bytes.len() - i >= 10 {
                 i + 10
             } else {
                 i
             };
+        }
+        if !comment && quoted && bytes[i] == 0x5c && i + 1 < bytes.len() {
+            i += 1;
+        } else if !comment && bytes[i] == 0x27 {
+            quoted = !quoted;
         }
         i += 1;
     }
@@ -21396,11 +21421,20 @@ fn digest_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>) -> (r: usize)
     if at >= bytes.len() {
         return bytes.len();
     }
-    let base = if bytes[at] == 0x27 {
+    let quoted = bytes[at] == 0x27;
+    let base = if quoted {
         at + 1
     } else {
         at
     };
+    // A canonical digest atom is quoted iff it starts with a digit.
+    if quoted && name.len() > 0 && !(0x30 <= name[0] && name[0] <= 0x39) {
+        return if base <= bytes.len() {
+            base
+        } else {
+            bytes.len()
+        };
+    }
     let mut k = 0usize;
     while k < name.len() && k < 64
         invariant

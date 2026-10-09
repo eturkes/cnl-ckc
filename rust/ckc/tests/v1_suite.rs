@@ -1,5 +1,6 @@
 // M5.2 v1 suite (.agent/archive/contracts/harness.md H4): tests/v1/cases.tsv rows =
-// 230 primary targets + 115 supplemental K3 probes. Every case materializes
+// 230 primary targets + 115 supplemental K3 probes (+ the m7t- schema-v2 rows and the
+// dq4- reject-offset rows, each counted apart). Every case materializes
 // under one private root at its recording layout (.scratch/m5u2/suite/cases/
 // <case>/…, `.in` dropped, `.tpl.in` expanded), so argv and path-bearing
 // diagnostics keep their recorded bytes; `ckc v1 <mode> <args>` runs with cwd =
@@ -201,16 +202,20 @@ fn v1_suite() {
             }
         })
         .collect();
-    let census = |temporal| {
+    let census = |prefix: &str| {
         let family: Vec<_> = rows
             .iter()
-            .filter(|r| r.case.starts_with("m7t-") == temporal)
+            .filter(|r| match prefix {
+                "" => !r.case.starts_with("m7t-") && !r.case.starts_with("dq4-"),
+                p => r.case.starts_with(p),
+            })
             .collect();
         let primary = family.iter().filter(|r| r.probe == "target").count();
         (primary, family.len() - primary)
     };
-    assert_eq!(census(false), (230, 115), "tests/v1 legacy row census");
-    assert_eq!(census(true), (31, 12), "tests/v1 M7T row census");
+    assert_eq!(census(""), (230, 115), "tests/v1 legacy row census");
+    assert_eq!(census("m7t-"), (31, 12), "tests/v1 M7T row census");
+    assert_eq!(census("dq4-"), (7, 0), "tests/v1 reject-offset row census");
     let mut cases: Vec<&str> = rows.iter().map(|r| r.case.as_str()).collect();
     cases.dedup();
     for case in &cases {
