@@ -276,6 +276,7 @@ pub ghost struct Guideline {
     pub ledger: Src,
     pub ledger_digest: Bytes,
     pub source_names: Seq<Bytes>,
+    pub temporal: Option<Bytes>,
 }
 
 pub ghost struct Corpus {
@@ -827,6 +828,75 @@ pub open spec fn region_status(r: Row) -> Bytes {
     }
 }
 
+// --- Time words (contract q14): the guideline's temporal.tsv rows in plain
+// language — units, then relations, then spacings, each kind in file order. A
+// lemma renders only when its bytes stand verbatim in the table; unit words are
+// the timing table's copy.
+pub open spec fn role_html(r: Bytes) -> Html {
+    if r == lit("duration"@) {
+        fixed_bytes(how_long_the_action_lasts())
+    } else if r == lit("within"@) {
+        fixed_bytes(how_far_the_action_lies_from_a())
+    } else if r == lit("after"@) {
+        fixed_bytes(how_long_after_a_reference_point())
+    } else if r == lit("before"@) {
+        fixed_bytes(how_long_before_a_reference_point())
+    } else {
+        fixed_bytes(not_stated())
+    }
+}
+
+pub open spec fn word_row(a: Html, b: Html) -> Html {
+    row(seq![cell(a), cell(b)])
+}
+
+#[verifier::opaque]
+pub open spec fn word_rows(t: Option<Bytes>) -> Seq<Html> {
+    match t {
+        Option::Some(raw) => match crate::temporal::parse_temporal(raw) {
+            Result::Ok(m) => m.units.map_values(
+                |u: (Bytes, Bytes)|
+                    word_row(
+                        pl_word(raw, u.0),
+                        fixed_bytes(unit_of_time()) + match unit_html(u.1, true) {
+                            Option::Some(w) => w,
+                            Option::None => fixed_bytes(not_stated()),
+                        },
+                    ),
+            ) + m.relations.map_values(
+                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), role_html(r.1)),
+            ) + m.spacings.map_values(
+                |s: (Bytes, Bytes)|
+                    word_row(
+                        pl_word(raw, s.0) + fixed_bytes(paren_open_sep()) + fixed_bytes(with_sp())
+                            + pl_word(raw, s.1) + fixed_bytes(paren_close()),
+                        fixed_bytes(how_far_apart_repeats_of_the_action_lie()),
+                    ),
+            ),
+            Result::Err(_) => Seq::empty(),
+        },
+        Option::None => Seq::empty(),
+    }
+}
+
+pub open spec fn words_section(t: Option<Bytes>) -> Seq<Html> {
+    let rows = word_rows(t);
+    if rows.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open()),
+            fixed_bytes(h2_open_time_words_h2_close()),
+            fixed_bytes(p_open_the_compiler_reads_a_time_limit()),
+            fixed_bytes(table_open_2()),
+            fixed_bytes(thead_open_tr_open_th_open_word_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
 pub open spec fn guideline_html(g: Guideline) -> Html {
     let labels = seq![
         passages_cap(),
@@ -896,6 +966,7 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
             fixed_bytes(tbody_open()) + lines(status_rows) + fixed_bytes(tbody_close()),
             fixed_bytes(table_close()),
             fixed_bytes(section_close()),
+        ] + words_section(g.temporal) + seq![
             fixed_bytes(section_open()),
             fixed_bytes(h2_open_documents_h2_close()),
             fixed_bytes(table_open_2()),
@@ -1262,7 +1333,8 @@ pub open spec fn atom_name(t: Term) -> Bytes {
     }
 }
 
-// A pl word as visible text, else `not stated`.
+// A word of `pl` (a document's pl, or a time-word table) as visible text, else
+// `not stated`.
 pub open spec fn pl_word(pl: Bytes, w: Bytes) -> Html {
     if w.len() > 0 && check::first_sub(pl, w, 0) + w.len() <= pl.len() {
         text(w)
@@ -2460,7 +2532,10 @@ pub open spec fn corpus_bytes(c: Corpus) -> Seq<Bytes> {
                     e.ordinal + e.payloads.map_values(|p: (Bytes, Seq<Bytes>)| p.1).flatten(),
             ).flatten() + g.documents.map_values(
                 |d: Document| seq![d.bundle.docid, d.ace, d.pl],
-            ).flatten(),
+            ).flatten() + (match g.temporal {
+                Some(b) => seq![b],
+                None => Seq::empty(),
+            }),
     ).flatten()
 }
 
@@ -2791,6 +2866,16 @@ copy_table! {
     sp_months = " months";
     sp_year = " year";
     sp_years = " years";
+    h2_open_time_words_h2_close = "<h2>Time words</h2>";
+    p_open_the_compiler_reads_a_time_limit = "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>";
+    thead_open_tr_open_th_open_word_th_close_th_open = "<thead><tr><th>Word</th><th>Read as</th></tr></thead>";
+    unit_of_time = "unit of time:";
+    how_long_the_action_lasts = "how long the action lasts";
+    how_far_the_action_lies_from_a = "how far the action lies from a reference point, before or after it";
+    how_long_after_a_reference_point = "how long after a reference point the action occurs";
+    how_long_before_a_reference_point = "how long before a reference point the action occurs";
+    how_far_apart_repeats_of_the_action_lie = "how far apart repeats of the action lie";
+    with_sp = "with ";
 }
 
 verus! {
@@ -3094,6 +3179,7 @@ pub struct EGuideline {
     pub ledger: crate::replay::ESrc,
     pub ledger_digest: Vec<u8>,
     pub source_names: Vec<Vec<u8>>,
+    pub temporal: Option<Vec<u8>>,
 }
 
 impl View for EGuideline {
@@ -3111,6 +3197,10 @@ impl View for EGuideline {
             ledger: self.ledger@,
             ledger_digest: self.ledger_digest@,
             source_names: self.source_names@.map_values(|x: Vec<u8>| x@),
+            temporal: match self.temporal {
+                Some(x) => Some(x@),
+                None => None,
+            },
         }
     }
 }

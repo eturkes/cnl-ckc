@@ -10,7 +10,7 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,_names=copy_table(s);assert len(entries)==276
+entries,_names=copy_table(s);assert len(entries)==286
 N=len(entries)
 bv=lambda raw:'ns!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
 ps='p::css_codes(),p::marketing_codes(),p::relative_codes()'

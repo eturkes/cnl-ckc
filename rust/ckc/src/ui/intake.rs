@@ -2,7 +2,7 @@ use super::common::*;
 use super::corpus::Corpus;
 use ckc_kernel::{
     EBundle, ECheck, ECorpus, ECoverage, ECoverageRow, EDocument, EEvidence, EGuideline, ESrc,
-    EStatus,
+    EStatus, EVerdict,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -429,6 +429,17 @@ fn document(root: &Path, gid: &str, c: &ECoverage, bundle: &EBundle) -> Result<C
     };
     Ok(Content { ace, pl, alignment })
 }
+// The time-word table, validated by the grammar that `ckc check` applies.
+fn temporal(root: &Path, gid: &str) -> Result<Option<Vec<u8>>> {
+    if !root.join("temporal.tsv").is_file() {
+        return Ok(None);
+    }
+    let bytes = load_text(root, gid, "temporal.tsv")?;
+    match ckc_kernel::contract::check_temporal(b"temporal.tsv", &bytes) {
+        EVerdict::Ok(_) => Ok(Some(bytes)),
+        EVerdict::Fail(_, detail) => Err(format!("ui: viewmodel: {gid} {}", text(&detail))),
+    }
+}
 fn guideline(root: &Path, gid: &str) -> Result<(EGuideline, Vec<Option<String>>)> {
     if !valid_id(gid) {
         return Err(format!("ui: viewmodel: {gid} invalid guideline id"));
@@ -454,6 +465,7 @@ fn guideline(root: &Path, gid: &str) -> Result<(EGuideline, Vec<Option<String>>)
         .map(|b| checked_text(b, gid, "README.md"))
         .transpose()?;
     let source_names = assets(root)?;
+    let temporal = temporal(root, gid)?;
     let mut documents = Vec::new();
     let mut errors = Vec::new();
     for id in ids {
@@ -488,6 +500,7 @@ fn guideline(root: &Path, gid: &str) -> Result<(EGuideline, Vec<Option<String>>)
             ledger,
             ledger_digest,
             source_names,
+            temporal,
         },
         errors,
     ))

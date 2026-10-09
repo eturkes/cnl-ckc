@@ -345,7 +345,7 @@ pub fn atom_of(arena: &ETermArena, t: &T) -> (out: Option<Vec<u8>>)
     }
 }
 
-fn is(a: &[u8], s: &str) -> (out: bool)
+pub fn is(a: &[u8], s: &str) -> (out: bool)
     ensures
         out == (a@ == u::lit(s@)),
 {

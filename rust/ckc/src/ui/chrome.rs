@@ -79,6 +79,7 @@ fn derive() -> Result<Chrome> {
         ledger: ESrc::Missing,
         ledger_digest: b"absent".to_vec(),
         source_names: Vec::new(),
+        temporal: None,
     };
     let page = text(&ckc_kernel::contract::ui_render_document(
         &g,

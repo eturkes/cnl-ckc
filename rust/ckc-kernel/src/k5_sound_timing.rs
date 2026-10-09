@@ -57,7 +57,7 @@ proof fn first_sub_found(s: u::Bytes, p: u::Bytes, i: nat)
     }
 }
 
-proof fn pl_word(pl: u::Bytes, w: u::Bytes, inputs: Seq<u::Bytes>)
+pub proof fn pl_word(pl: u::Bytes, w: u::Bytes, inputs: Seq<u::Bytes>)
     requires
         m::backed(pl, inputs),
     ensures

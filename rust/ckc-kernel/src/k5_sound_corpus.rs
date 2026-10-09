@@ -15,7 +15,10 @@ pub open spec fn inputs(g: u::Guideline) -> Seq<u::Bytes> {
             e.ordinal + e.payloads.map_values(|p: (u::Bytes, Seq<u::Bytes>)| p.1).flatten(),
     ).flatten() + g.documents.map_values(
         |d: u::Document| seq![d.bundle.docid, d.ace, d.pl],
-    ).flatten()
+    ).flatten() + (match g.temporal {
+        Some(x) => seq![x],
+        None => Seq::empty(),
+    })
 }
 
 pub open spec fn sources(g: u::Guideline, xs: Seq<u::Bytes>) -> bool {
@@ -56,7 +59,10 @@ pub proof fn guideline(c: u::Corpus, i: int)
                         ).flatten(),
                 ).flatten() + g.documents.map_values(
                     |d: u::Document| seq![d.bundle.docid, d.ace, d.pl],
-                ).flatten()
+                ).flatten() + (match g.temporal {
+                    Some(x) => seq![x],
+                    None => Seq::empty(),
+                })
             },
     );
     assert(bags =~= raw);
@@ -102,6 +108,19 @@ pub proof fn row(g: u::Guideline, r: ck::Row, xs: Seq<u::Bytes>)
     flat(bags, i, r.line);
     assert(inputs(g).contains(r.id));
     assert(inputs(g).contains(r.line));
+}
+
+pub proof fn temporal(g: u::Guideline, xs: Seq<u::Bytes>)
+    requires
+        sources(g, xs),
+    ensures
+        g.temporal matches Some(x) ==> xs.contains(x),
+{
+    if let Some(x) = g.temporal {
+        let all = inputs(g);
+        assert(all[all.len() - 1] == x);
+        assert(all.contains(x));
+    }
 }
 
 pub proof fn document(g: u::Guideline, d: u::Document, xs: Seq<u::Bytes>)

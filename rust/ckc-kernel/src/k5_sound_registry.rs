@@ -6202,6 +6202,232 @@ pub proof fn literal_275()
     n::clean_bridge(" years"@);
 }
 
+pub open spec fn data_276() -> Seq<nat> {
+    ns![60u32,104,50,62,84,105,109,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
+        |x: u32| x as nat,
+    )
+}
+
+pub proof fn literal_276()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[276]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l276(Seq::empty());
+    p::all();
+    reveal_strlit("<h2>Time words</h2>");
+    assert(n::codes("<h2>Time words</h2>"@) =~= data_276());
+    assert(n::clean(data_276(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<h2>Time words</h2>"@);
+}
+
+pub open spec fn data_277() -> Seq<nat> {
+    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,116,105,109,101,32,108,105,109,105,116,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,84,105,109,105,110,103,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_277()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[277]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l277(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>",
+    );
+    assert(n::codes(
+        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+    ) =~= data_277());
+    assert(n::clean(data_277(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+    );
+}
+
+pub open spec fn data_278() -> Seq<nat> {
+    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,116,104,62,82,101,97,100,32,97,115,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_278()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[278]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l278(Seq::empty());
+    p::all();
+    reveal_strlit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>");
+    assert(n::codes("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@) =~= data_278());
+    assert(n::clean(data_278(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@);
+}
+
+pub open spec fn data_279() -> Seq<nat> {
+    ns![117u32,110,105,116,32,111,102,32,116,105,109,101,58].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_279()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[279]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l279(Seq::empty());
+    p::all();
+    reveal_strlit("unit of time:");
+    assert(n::codes("unit of time:"@) =~= data_279());
+    assert(n::clean(data_279(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("unit of time:"@);
+}
+
+pub open spec fn data_280() -> Seq<nat> {
+    ns![104u32,111,119,32,108,111,110,103,32,116,104,101,32,97,99,116,105,111,110,32,108,97,115,116,115].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_280()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[280]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l280(Seq::empty());
+    p::all();
+    reveal_strlit("how long the action lasts");
+    assert(n::codes("how long the action lasts"@) =~= data_280());
+    assert(n::clean(data_280(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("how long the action lasts"@);
+}
+
+pub open spec fn data_281() -> Seq<nat> {
+    ns![104u32,111,119,32,102,97,114,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101,115,32,102,114,111,109,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,44,32,98,101,102,111,114,101,32,111,114,32,97,102,116,101,114,32,105,116].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_281()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[281]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l281(Seq::empty());
+    p::all();
+    reveal_strlit("how far the action lies from a reference point, before or after it");
+    assert(n::codes("how far the action lies from a reference point, before or after it"@)
+        =~= data_281());
+    assert(n::clean(data_281(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("how far the action lies from a reference point, before or after it"@);
+}
+
+pub open spec fn data_282() -> Seq<nat> {
+    ns![104u32,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_282()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[282]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l282(Seq::empty());
+    p::all();
+    reveal_strlit("how long after a reference point the action occurs");
+    assert(n::codes("how long after a reference point the action occurs"@) =~= data_282());
+    assert(n::clean(data_282(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("how long after a reference point the action occurs"@);
+}
+
+pub open spec fn data_283() -> Seq<nat> {
+    ns![104u32,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_283()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[283]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l283(Seq::empty());
+    p::all();
+    reveal_strlit("how long before a reference point the action occurs");
+    assert(n::codes("how long before a reference point the action occurs"@) =~= data_283());
+    assert(n::clean(data_283(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("how long before a reference point the action occurs"@);
+}
+
+pub open spec fn data_284() -> Seq<nat> {
+    ns![104u32,111,119,32,102,97,114,32,97,112,97,114,116,32,114,101,112,101,97,116,115,32,111,102,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_284()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[284]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l284(Seq::empty());
+    p::all();
+    reveal_strlit("how far apart repeats of the action lie");
+    assert(n::codes("how far apart repeats of the action lie"@) =~= data_284());
+    assert(n::clean(data_284(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("how far apart repeats of the action lie"@);
+}
+
+pub open spec fn data_285() -> Seq<nat> {
+    ns![119u32,105,116,104,32].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_285()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[285]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l285(Seq::empty());
+    p::all();
+    reveal_strlit("with ");
+    assert(n::codes("with "@) =~= data_285());
+    assert(n::clean(data_285(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("with "@);
+}
+
 } // verus!
 }
 pub mod css {
@@ -11293,7 +11519,7 @@ pub proof fn block_256(i: int)
 
 pub proof fn block_272(i: int)
     requires
-        272 <= i < 276,
+        272 <= i < 286,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -11305,14 +11531,34 @@ pub proof fn block_272(i: int)
         batch_272::literal_273();
     } else if i == 274 {
         batch_272::literal_274();
-    } else {
+    } else if i == 275 {
         batch_272::literal_275();
+    } else if i == 276 {
+        batch_272::literal_276();
+    } else if i == 277 {
+        batch_272::literal_277();
+    } else if i == 278 {
+        batch_272::literal_278();
+    } else if i == 279 {
+        batch_272::literal_279();
+    } else if i == 280 {
+        batch_272::literal_280();
+    } else if i == 281 {
+        batch_272::literal_281();
+    } else if i == 282 {
+        batch_272::literal_282();
+    } else if i == 283 {
+        batch_272::literal_283();
+    } else if i == 284 {
+        batch_272::literal_284();
+    } else {
+        batch_272::literal_285();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 276,
+        0 <= i < 286,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -11359,7 +11605,7 @@ pub proof fn literal(i: int)
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 276,
+        u::copy_registry().len() == 286,
 {
     hide(u::lit);
     hide(u::css_text);

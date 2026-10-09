@@ -212,6 +212,16 @@ each side. A file that breaks these rules stops the render. Whether
 an alignment is helpful is a judgment for the reviewer, who sees it
 on the page beside the texts it describes.
 
+A guideline under schema v2 shows its time limits in two places. A
+document page with a typed time limit lists the limits that the
+compiler read from its ACE text, in the table "Timing as compiled".
+The guideline page lists the rows of `temporal.tsv` under "Time
+words", after the status table. Each row names one word and how the
+compiler reads it. A word reads as a unit of time, as a time relation,
+or as the spacing of repeats. The compiler reads a time limit only
+through these words. A table that fails the `ckc check` grammar stops the
+interface with `ui: viewmodel: <id> temporal.tsv: <why>`.
+
 The interface reads committed files. When the working tree holds
 uncommitted guideline changes, the pages render the last commit
 instead. Three consequences follow. An uncommitted edit is not

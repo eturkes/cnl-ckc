@@ -775,6 +775,22 @@ pub proof fn l033(inputs: Seq<u::Bytes>)
     b::literal(u::lit(" ("@), inputs);
 }
 
+pub proof fn f033(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(" ("@), inputs, 0, 0),
+        u::copy_registry()[33] == u::lit(" ("@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l033(inputs);
+    reveal_strlit(" (");
+    is_ascii_chars_encode_utf8(" ("@);
+    assert(u::lit(" ("@) =~= bs![32u8,40]);
+    assert(cx::scan(bs![32u8,40], 0) == 0) by (compute_only);
+    cx::exact(u::lit(" ("@), 0);
+    h::fixed(u::lit(" ("@), inputs, 0, 0);
+}
+
 pub proof fn l034(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit(")"@)),
@@ -790,6 +806,22 @@ pub proof fn l034(inputs: Seq<u::Bytes>)
         reveal(u::copy_registry);
     };
     b::literal(u::lit(")"@), inputs);
+}
+
+pub proof fn f034(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(")"@), inputs, 0, 0),
+        u::copy_registry()[34] == u::lit(")"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l034(inputs);
+    reveal_strlit(")");
+    is_ascii_chars_encode_utf8(")"@);
+    assert(u::lit(")"@) =~= bs![41u8,]);
+    assert(cx::scan(bs![41u8,], 0) == 0) by (compute_only);
+    cx::exact(u::lit(")"@), 0);
+    h::fixed(u::lit(")"@), inputs, 0, 0);
 }
 
 pub proof fn l035(inputs: Seq<u::Bytes>)
@@ -8547,6 +8579,471 @@ pub proof fn f275(inputs: Seq<u::Bytes>)
     assert(cx::scan(bs![32u8,121,101,97,114,115], 0) == 0) by (compute_only);
     cx::exact(u::lit(" years"@), 0);
     h::fixed(u::lit(" years"@), inputs, 0, 0);
+}
+
+pub proof fn l276(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h2>Time words</h2>"@)),
+        u::copy_derived(u::lit("<h2>Time words</h2>"@), inputs, u::copy_registry()),
+        u::copy_registry()[276] == u::lit("<h2>Time words</h2>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[276] == u::lit("<h2>Time words</h2>"@) && 276
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h2>Time words</h2>"@), inputs);
+}
+
+pub proof fn f276(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h2>Time words</h2>"@), inputs, 0, 0),
+        u::copy_registry()[276] == u::lit("<h2>Time words</h2>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l276(inputs);
+    reveal_strlit("<h2>Time words</h2>");
+    is_ascii_chars_encode_utf8("<h2>Time words</h2>"@);
+    assert(u::lit("<h2>Time words</h2>"@)
+        =~= bs![60u8,104,50,62,84,105,109,101,32,119,111,114,100,115,60,47,104,50,62]);
+    assert(cx::scan(bs![60u8,104,50,62,84,105,109,101,32,119,111,114,100,115,60,47,104,50,62], 0)
+        == 0) by (compute_only);
+    cx::exact(u::lit("<h2>Time words</h2>"@), 0);
+    h::fixed(u::lit("<h2>Time words</h2>"@), inputs, 0, 0);
+}
+
+pub proof fn l277(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[277] == u::lit(
+            "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[277] == u::lit(
+        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+    ) && 277 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f277(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[277] == u::lit(
+            "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l277(inputs);
+    reveal_strlit(
+        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+    );
+    assert(u::lit(
+        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+    )
+        =~= bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,116,105,109,101,32,108,105,109,105,116,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,84,105,109,105,110,103,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,116,105,109,101,32,108,105,109,105,116,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,84,105,109,105,110,103,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l278(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@),
+        ),
+        u::copy_derived(
+            u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[278] == u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[278] == u::lit(
+        "<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@,
+    ) && 278 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@), inputs);
+}
+
+pub proof fn f278(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[278] == u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l278(inputs);
+    reveal_strlit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>");
+    is_ascii_chars_encode_utf8("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@);
+    assert(u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@)
+        =~= bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,116,104,62,82,101,97,100,32,97,115,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62]);
+    assert(cx::scan(
+        bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,116,104,62,82,101,97,100,32,97,115,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@), 0);
+    h::fixed(u::lit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@), inputs, 0, 0);
+}
+
+pub proof fn l279(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("unit of time:"@)),
+        u::copy_derived(u::lit("unit of time:"@), inputs, u::copy_registry()),
+        u::copy_registry()[279] == u::lit("unit of time:"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[279] == u::lit("unit of time:"@) && 279 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("unit of time:"@), inputs);
+}
+
+pub proof fn f279(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("unit of time:"@), inputs, 0, 0),
+        u::copy_registry()[279] == u::lit("unit of time:"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l279(inputs);
+    reveal_strlit("unit of time:");
+    is_ascii_chars_encode_utf8("unit of time:"@);
+    assert(u::lit("unit of time:"@) =~= bs![117u8,110,105,116,32,111,102,32,116,105,109,101,58]);
+    assert(cx::scan(bs![117u8,110,105,116,32,111,102,32,116,105,109,101,58], 0) == 0)
+        by (compute_only);
+    cx::exact(u::lit("unit of time:"@), 0);
+    h::fixed(u::lit("unit of time:"@), inputs, 0, 0);
+}
+
+pub proof fn l280(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("how long the action lasts"@)),
+        u::copy_derived(u::lit("how long the action lasts"@), inputs, u::copy_registry()),
+        u::copy_registry()[280] == u::lit("how long the action lasts"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[280] == u::lit("how long the action lasts"@) && 280
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("how long the action lasts"@), inputs);
+}
+
+pub proof fn f280(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("how long the action lasts"@), inputs, 0, 0),
+        u::copy_registry()[280] == u::lit("how long the action lasts"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l280(inputs);
+    reveal_strlit("how long the action lasts");
+    is_ascii_chars_encode_utf8("how long the action lasts"@);
+    assert(u::lit("how long the action lasts"@)
+        =~= bs![104u8,111,119,32,108,111,110,103,32,116,104,101,32,97,99,116,105,111,110,32,108,97,115,116,115]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,108,111,110,103,32,116,104,101,32,97,99,116,105,111,110,32,108,97,115,116,115],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("how long the action lasts"@), 0);
+    h::fixed(u::lit("how long the action lasts"@), inputs, 0, 0);
+}
+
+pub proof fn l281(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit("how far the action lies from a reference point, before or after it"@),
+        ),
+        u::copy_derived(
+            u::lit("how far the action lies from a reference point, before or after it"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[281] == u::lit(
+            "how far the action lies from a reference point, before or after it"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[281] == u::lit(
+        "how far the action lies from a reference point, before or after it"@,
+    ) && 281 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit("how far the action lies from a reference point, before or after it"@),
+        inputs,
+    );
+}
+
+pub proof fn f281(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed("how far the action lies from a reference point, before or after it"@),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[281] == u::lit(
+            "how far the action lies from a reference point, before or after it"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l281(inputs);
+    reveal_strlit("how far the action lies from a reference point, before or after it");
+    is_ascii_chars_encode_utf8(
+        "how far the action lies from a reference point, before or after it"@,
+    );
+    assert(u::lit("how far the action lies from a reference point, before or after it"@)
+        =~= bs![104u8,111,119,32,102,97,114,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101,115,32,102,114,111,109,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,44,32,98,101,102,111,114,101,32,111,114,32,97,102,116,101,114,32,105,116]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,102,97,114,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101,115,32,102,114,111,109,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,44,32,98,101,102,111,114,101,32,111,114,32,97,102,116,101,114,32,105,116],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("how far the action lies from a reference point, before or after it"@), 0);
+    h::fixed(
+        u::lit("how far the action lies from a reference point, before or after it"@),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l282(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("how long after a reference point the action occurs"@)),
+        u::copy_derived(
+            u::lit("how long after a reference point the action occurs"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[282] == u::lit("how long after a reference point the action occurs"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[282] == u::lit("how long after a reference point the action occurs"@)
+        && 282 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("how long after a reference point the action occurs"@), inputs);
+}
+
+pub proof fn f282(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("how long after a reference point the action occurs"@), inputs, 0, 0),
+        u::copy_registry()[282] == u::lit("how long after a reference point the action occurs"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l282(inputs);
+    reveal_strlit("how long after a reference point the action occurs");
+    is_ascii_chars_encode_utf8("how long after a reference point the action occurs"@);
+    assert(u::lit("how long after a reference point the action occurs"@)
+        =~= bs![104u8,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("how long after a reference point the action occurs"@), 0);
+    h::fixed(u::lit("how long after a reference point the action occurs"@), inputs, 0, 0);
+}
+
+pub proof fn l283(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("how long before a reference point the action occurs"@)),
+        u::copy_derived(
+            u::lit("how long before a reference point the action occurs"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[283] == u::lit("how long before a reference point the action occurs"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[283] == u::lit("how long before a reference point the action occurs"@)
+        && 283 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("how long before a reference point the action occurs"@), inputs);
+}
+
+pub proof fn f283(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("how long before a reference point the action occurs"@), inputs, 0, 0),
+        u::copy_registry()[283] == u::lit("how long before a reference point the action occurs"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l283(inputs);
+    reveal_strlit("how long before a reference point the action occurs");
+    is_ascii_chars_encode_utf8("how long before a reference point the action occurs"@);
+    assert(u::lit("how long before a reference point the action occurs"@)
+        =~= bs![104u8,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("how long before a reference point the action occurs"@), 0);
+    h::fixed(u::lit("how long before a reference point the action occurs"@), inputs, 0, 0);
+}
+
+pub proof fn l284(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("how far apart repeats of the action lie"@)),
+        u::copy_derived(
+            u::lit("how far apart repeats of the action lie"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[284] == u::lit("how far apart repeats of the action lie"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[284] == u::lit("how far apart repeats of the action lie"@) && 284
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("how far apart repeats of the action lie"@), inputs);
+}
+
+pub proof fn f284(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("how far apart repeats of the action lie"@), inputs, 0, 0),
+        u::copy_registry()[284] == u::lit("how far apart repeats of the action lie"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l284(inputs);
+    reveal_strlit("how far apart repeats of the action lie");
+    is_ascii_chars_encode_utf8("how far apart repeats of the action lie"@);
+    assert(u::lit("how far apart repeats of the action lie"@)
+        =~= bs![104u8,111,119,32,102,97,114,32,97,112,97,114,116,32,114,101,112,101,97,116,115,32,111,102,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,102,97,114,32,97,112,97,114,116,32,114,101,112,101,97,116,115,32,111,102,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("how far apart repeats of the action lie"@), 0);
+    h::fixed(u::lit("how far apart repeats of the action lie"@), inputs, 0, 0);
+}
+
+pub proof fn l285(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("with "@)),
+        u::copy_derived(u::lit("with "@), inputs, u::copy_registry()),
+        u::copy_registry()[285] == u::lit("with "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[285] == u::lit("with "@) && 285 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("with "@), inputs);
+}
+
+pub proof fn f285(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("with "@), inputs, 0, 0),
+        u::copy_registry()[285] == u::lit("with "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l285(inputs);
+    reveal_strlit("with ");
+    is_ascii_chars_encode_utf8("with "@);
+    assert(u::lit("with "@) =~= bs![119u8,105,116,104,32]);
+    assert(cx::scan(bs![119u8,105,116,104,32], 0) == 0) by (compute_only);
+    cx::exact(u::lit("with "@), 0);
+    h::fixed(u::lit("with "@), inputs, 0, 0);
 }
 
 } // verus!

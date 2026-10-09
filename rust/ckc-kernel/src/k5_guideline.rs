@@ -374,6 +374,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     hide(u::state);
     hide(u::tally);
     hide(u::class_counts);
+    hide(u::words_section);
     let m = model::prepare(g);
     let title = titles::title(g);
     let stats = status_rows(g, &m);
@@ -447,6 +448,13 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     body.push(h::cat(h::cat(h::fixed("<tbody>"), h::lines(&stats)), h::fixed("</tbody>")));
     body.push(h::fixed("</table>"));
     body.push(h::fixed("</section>"));
+    let ghost head = h::pages(body@);
+    let mut words = crate::k5_words::words_section_exec(g);
+    let ghost mid = h::pages(words@);
+    body.append(&mut words);
+    proof {
+        assert(h::pages(body@) =~= head + mid);
+    }
     body.push(h::fixed("<section>"));
     body.push(h::fixed("<h2>Documents</h2>"));
     body.push(h::fixed("<table class=\"compact\">"));
@@ -480,6 +488,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
             ),
             u::fixed_bytes(u::table_close()),
             u::fixed_bytes(u::section_close()),
+        ] + u::words_section(g@.temporal) + seq![
             u::fixed_bytes(u::section_open()),
             u::fixed_bytes(u::h2_open_documents_h2_close()),
             u::fixed_bytes(u::table_open_2()),
