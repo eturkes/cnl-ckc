@@ -25,7 +25,9 @@ fn semantic_name(name: &Vec<u8>, arity: usize, v: u8) -> (out: bool)
         reveal(ckc_spec::v1text::version_pred);
         reveal(ckc_spec::v1text::indicator_count);
     }
-    let end: usize = if v == 2 {
+    let end: usize = if v == 3 {
+        15
+    } else if v == 2 {
         11
     } else {
         9
@@ -582,11 +584,13 @@ pub fn parsed_term_count(
                     ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
                 );
                 reveal(ckc_spec::v1text::ascii);
-                assert(ckc_spec::v1text::doc_line1(doc.docid).len() >= 24);
-                assert(parsed.clauses.len() + 24 <= bytes.len());
+                assert(ckc_spec::v1text::doc_line1(doc.docid).len() >= 32);
+                assert(parsed.clauses.len() + 32 <= bytes.len());
                 reveal(ckc_spec::v1text::indicator_count);
             }
-            parsed.clauses.len() + if parsed.doc_version == 2 {
+            parsed.clauses.len() + if parsed.doc_version == 3 {
+                32
+            } else if parsed.doc_version == 2 {
                 24
             } else {
                 20

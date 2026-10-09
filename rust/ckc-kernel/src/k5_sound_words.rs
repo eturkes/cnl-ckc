@@ -44,11 +44,11 @@ proof fn unit(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     b::row(seq![u::cell(u::pl_word(raw, p.0)), u::cell(b::f(279) + word)], inputs);
 }
 
-proof fn relation(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
+proof fn relation(raw: u::Bytes, v: nat, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     requires
         m::backed(raw, inputs),
     ensures
-        h::sound(w::relation_row(raw, p), inputs),
+        h::sound(w::relation_row(raw, v, p), inputs),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
@@ -62,10 +62,37 @@ proof fn relation(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     l::f281(inputs);
     l::f282(inputs);
     l::f283(inputs);
+    l::f286(inputs);
+    l::f287(inputs);
     assert(h::sound(u::role_html(p.1), inputs));
+    assert(h::sound(u::role_html_v(p.1, v), inputs));
     b::cell(u::pl_word(raw, p.0), inputs);
-    b::cell(u::role_html(p.1), inputs);
-    b::row(seq![u::cell(u::pl_word(raw, p.0)), u::cell(u::role_html(p.1))], inputs);
+    b::cell(u::role_html_v(p.1, v), inputs);
+    b::row(seq![u::cell(u::pl_word(raw, p.0)), u::cell(u::role_html_v(p.1, v))], inputs);
+}
+
+proof fn framed(raw: u::Bytes, a: u::Bytes, f: u::Bytes, inputs: Seq<u::Bytes>)
+    requires
+        m::backed(raw, inputs),
+    ensures
+        h::sound(u::framed_word(raw, a, f), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lit);
+    hide(u::pl_word);
+    t::pl_word(raw, a, inputs);
+    t::pl_word(raw, f, inputs);
+    l::f033(inputs);
+    l::f034(inputs);
+    l::f285(inputs);
+    let a1 = u::pl_word(raw, a) + b::f(33);
+    let a2 = a1 + b::f(285);
+    let a3 = a2 + u::pl_word(raw, f);
+    b::add(u::pl_word(raw, a), b::f(33), inputs);
+    b::add(a1, b::f(285), inputs);
+    b::add(a2, u::pl_word(raw, f), inputs);
+    b::add(a3, b::f(34), inputs);
 }
 
 proof fn spacing(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
@@ -76,27 +103,51 @@ proof fn spacing(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
+    hide(u::framed_word);
+    hide(u::cell);
+    hide(u::row);
+    framed(raw, p.0, p.1, inputs);
+    l::f284(inputs);
+    b::cell(u::framed_word(raw, p.0, p.1), inputs);
+    b::cell(b::f(284), inputs);
+    b::row(seq![u::cell(u::framed_word(raw, p.0, p.1)), u::cell(b::f(284))], inputs);
+}
+
+proof fn window(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
+    requires
+        m::backed(raw, inputs),
+    ensures
+        h::sound(w::window_row(raw, p), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::framed_word);
+    hide(u::cell);
+    hide(u::row);
+    framed(raw, p.0, p.1, inputs);
+    l::f288(inputs);
+    b::cell(u::framed_word(raw, p.0, p.1), inputs);
+    b::cell(b::f(288), inputs);
+    b::row(seq![u::cell(u::framed_word(raw, p.0, p.1)), u::cell(b::f(288))], inputs);
+}
+
+proof fn frequency(raw: u::Bytes, f: u::Bytes, inputs: Seq<u::Bytes>)
+    requires
+        m::backed(raw, inputs),
+    ensures
+        h::sound(w::frequency_row(raw, f), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
     hide(u::lit);
     hide(u::pl_word);
     hide(u::cell);
     hide(u::row);
-    t::pl_word(raw, p.0, inputs);
-    t::pl_word(raw, p.1, inputs);
-    l::f033(inputs);
-    l::f034(inputs);
-    l::f284(inputs);
-    l::f285(inputs);
-    let a1 = u::pl_word(raw, p.0) + b::f(33);
-    let a2 = a1 + b::f(285);
-    let a3 = a2 + u::pl_word(raw, p.1);
-    let a4 = a3 + b::f(34);
-    b::add(u::pl_word(raw, p.0), b::f(33), inputs);
-    b::add(a1, b::f(285), inputs);
-    b::add(a2, u::pl_word(raw, p.1), inputs);
-    b::add(a3, b::f(34), inputs);
-    b::cell(a4, inputs);
-    b::cell(b::f(284), inputs);
-    b::row(seq![u::cell(a4), u::cell(b::f(284))], inputs);
+    t::pl_word(raw, f, inputs);
+    l::f289(inputs);
+    b::cell(u::pl_word(raw, f), inputs);
+    b::cell(b::f(289), inputs);
+    b::row(seq![u::cell(u::pl_word(raw, f)), u::cell(b::f(289))], inputs);
 }
 
 proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
@@ -108,19 +159,31 @@ proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
     hide(w::unit_row);
     hide(w::relation_row);
     hide(w::spacing_row);
+    hide(w::window_row);
+    hide(w::frequency_row);
     let us = tm.units.map_values(|p: (u::Bytes, u::Bytes)| w::unit_row(raw, p));
-    let rs = tm.relations.map_values(|p: (u::Bytes, u::Bytes)| w::relation_row(raw, p));
+    let rs = tm.relations.map_values(|p: (u::Bytes, u::Bytes)| w::relation_row(raw, tm.version, p));
     let ss = tm.spacings.map_values(|p: (u::Bytes, u::Bytes)| w::spacing_row(raw, p));
+    let ws = tm.windows.map_values(|p: (u::Bytes, u::Bytes)| w::window_row(raw, p));
+    let fs = tm.frequencies.map_values(|f: u::Bytes| w::frequency_row(raw, f));
     assert forall|i: int| 0 <= i < us.len() implies h::sound(#[trigger] us[i], inputs) by {
         unit(raw, tm.units[i], inputs);
     }
     assert forall|i: int| 0 <= i < rs.len() implies h::sound(#[trigger] rs[i], inputs) by {
-        relation(raw, tm.relations[i], inputs);
+        relation(raw, tm.version, tm.relations[i], inputs);
     }
     assert forall|i: int| 0 <= i < ss.len() implies h::sound(#[trigger] ss[i], inputs) by {
         spacing(raw, tm.spacings[i], inputs);
     }
+    assert forall|i: int| 0 <= i < ws.len() implies h::sound(#[trigger] ws[i], inputs) by {
+        window(raw, tm.windows[i], inputs);
+    }
+    assert forall|i: int| 0 <= i < fs.len() implies h::sound(#[trigger] fs[i], inputs) by {
+        frequency(raw, tm.frequencies[i], inputs);
+    }
     t::cat3(us, rs, ss, inputs);
+    t::cat3(us + rs + ss, ws, fs, inputs);
+    assert(w::rows_of(raw, tm) =~= us + rs + ss + ws + fs);
 }
 
 pub proof fn section(g: u::Guideline, inputs: Seq<u::Bytes>)

@@ -1,6 +1,7 @@
 iv_infpl(collaborate,collaborate).
 noun_pl('MME-units-per-day','MME-unit-per-day',neutr).
 noun_pl('acetaminophen-milligrams','acetaminophen-milligram',neutr).
+noun_pl('buprenorphine-administrations','buprenorphine-administration',neutr).
 noun_pl('concurrent-opioid-prescriptions','concurrent-opioid-prescription',neutr).
 noun_pl('hydrocodone-milligrams','hydrocodone-milligram',neutr).
 noun_pl('opioid-free-days','opioid-free-day',neutr).
@@ -46,6 +47,7 @@ noun_sg('benzodiazepine-taper-rate','benzodiazepine-taper-rate',neutr).
 noun_sg('bowel-regimen','bowel-regimen',neutr).
 noun_sg('brief-withdrawal-minimizing-taper','brief-withdrawal-minimizing-taper',neutr).
 noun_sg('broader-nonpharmacologic-intervention-array','broader-nonpharmacologic-intervention-array',neutr).
+noun_sg('buprenorphine-administration','buprenorphine-administration',neutr).
 noun_sg('buprenorphine-discontinuation-decision','buprenorphine-discontinuation-decision',neutr).
 noun_sg('buprenorphine-dose','buprenorphine-dose',neutr).
 noun_sg('buprenorphine-exposure','buprenorphine-exposure',neutr).
@@ -408,7 +410,6 @@ noun_sg('inflexible-standard','inflexible-standard',neutr).
 noun_sg('informed-discussion','informed-discussion',neutr).
 noun_sg('initial-diagnosis','initial-diagnosis',neutr).
 noun_sg('initial-follow-up-interval','initial-follow-up-interval',neutr).
-noun_sg('initial-follow-up-period','initial-follow-up-period',neutr).
 noun_sg('initial-opioid-therapy','initial-opioid-therapy',neutr).
 noun_sg('initial-pain-worsening-and-usual-improvement-expectation','initial-pain-worsening-and-usual-improvement-expectation',neutr).
 noun_sg(initiation,initiation,neutr).
@@ -1038,3 +1039,4 @@ tv_infpl(pause,pause).
 tv_infpl(prioritize,prioritize).
 tv_infpl(reevaluate,reevaluate).
 tv_infpl(refer,refer).
+prep(per,per).

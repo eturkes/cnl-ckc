@@ -1,0 +1,4 @@
+prep(per,per).
+prep(for,for).
+noun_sg(d,d,neutr).
+noun_pl(d,d,neutr).

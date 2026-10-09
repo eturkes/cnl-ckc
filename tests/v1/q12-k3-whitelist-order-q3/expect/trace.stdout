@@ -1,0 +1,2 @@
+% query traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,query,query_sha256('2cac6388953d707c7eb084d0e82187e93ca602e353c4fd2eaf22c7a073803bc8'),answers_sha256(a808a5198d77cd091d461b42f5729863722ac08a16a0a85e42b74b246a78b30b),result(yes(proved([clause(sentence(seed3,1),clause_sha256('1c079c422b579b836ea19a6b406d7df234386fe8d76cf1d4434fface6d00b135'),[])])))).

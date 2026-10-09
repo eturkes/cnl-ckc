@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-rec09-imp12',ace_sha256('7ec6d93eac3fcdb7068ee69c8ab9b7c857068d6166293133a0f330e9aaca4717'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-rec09-imp12',ace_sha256('7ec6d93eac3fcdb7068ee69c8ab9b7c857068d6166293133a0f330e9aaca4717'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a patient receives at least 2 overlapping-prescribed-opioids from at least 2 clinicians and the clinicians do not coordinate a care for the patient then every clinician should discuss an increased-respiratory-depression-risk with the patient and should discuss an increased-overdose-risk with the patient and should offer a naloxone-dose to the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec09-imp12',1,box(2),[A,B,C,D,E]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'overlapping-prescribed-opioid',countable), guideline_cardinality(actual,B,na,geq,2), guideline_entity(actual,C,clinician,countable), guideline_cardinality(actual,C,na,geq,2), guideline_event(actual,D,receive), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,from,C), guideline_operator(actual,F,-), guideline_entity(F,G,care,countable), guideline_cardinality(F,G,na,eq,1), guideline_event(F,H,coordinate), guideline_arg(F,H,1,C), guideline_arg(F,H,2,G), guideline_pp(F,H,for,A), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec09-imp12',1,box(2),[A,B,C,D,E]),'$guideline_id'(product,'cdc2022-opioid-rec09-imp12',1,ref(8),[A,B,C,D,E]),'increased-respiratory-depression-risk',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'overlapping-prescribed-opioid',countable), guideline_cardinality(actual,B,na,geq,2), guideline_entity(actual,C,clinician,countable), guideline_cardinality(actual,C,na,geq,2), guideline_event(actual,D,receive), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,from,C), guideline_operator(actual,F,-), guideline_entity(F,G,care,countable), guideline_cardinality(F,G,na,eq,1), guideline_event(F,H,coordinate), guideline_arg(F,H,1,C), guideline_arg(F,H,2,G), guideline_pp(F,H,for,A), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).

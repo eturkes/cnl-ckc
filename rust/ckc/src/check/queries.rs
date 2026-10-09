@@ -90,7 +90,7 @@ pub(super) fn question(
     let input = read(ace, "queries")?;
     let mut tail = vec!["question".to_owned()];
     if let Some(t) = temporal {
-        tail.extend(["v2".to_owned(), show(stage), id.to_owned(), show(t)]);
+        tail.extend([selector(t), show(stage), id.to_owned(), show(t)]);
     } else {
         tail.extend([show(stage), id.to_owned()]);
     }

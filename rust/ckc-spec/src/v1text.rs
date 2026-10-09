@@ -229,7 +229,8 @@ pub open spec fn tail_bytes(t: Term) -> Seq<u8>
 
 // --- ABI indicators (frozen order = the emitted declaration block): v1 =
 // positions 0..8; v2 (contract m7t D3) widens the record to /4 and appends the
-// two temporal annotations (9, 10).
+// two temporal annotations (9, 10); v3 (contract q12 D2) keeps the v2 record
+// and appends frequency, order, scoped recurrence and range (11..14).
 pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
     if i == 0 {
         (ascii("guideline_schema_version"@), 1)
@@ -251,13 +252,23 @@ pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
         (ascii("guideline_operator"@), 3)
     } else if i == 9 {
         (ascii("guideline_interval"@), 6)
-    } else {
+    } else if i == 10 {
         (ascii("guideline_recurrence"@), 4)
+    } else if i == 11 {
+        (ascii("guideline_frequency"@), 5)
+    } else if i == 12 {
+        (ascii("guideline_order"@), 4)
+    } else if i == 13 {
+        (ascii("guideline_recurrence_window"@), 7)
+    } else {
+        (ascii("guideline_range"@), 3)
     }
 }
 
 pub open spec fn indicator_count(v: nat) -> int {
-    if v == 2 {
+    if v == 3 {
+        15
+    } else if v == 2 {
         11
     } else {
         9
@@ -265,18 +276,18 @@ pub open spec fn indicator_count(v: nat) -> int {
 }
 
 pub open spec fn decl_indicator(v: nat, i: int) -> (Seq<u8>, nat) {
-    if v == 2 && i == 1 {
+    if (v == 2 || v == 3) && i == 1 {
         (ascii("guideline_document"@), 4)
     } else {
         indicator(i)
     }
 }
 
-// The semantic indicators (positions 2..10) are the only head/body predicates
+// The semantic indicators (positions 2..14) are the only head/body predicates
 // of bundle clauses (contract R14: foreign or variable body goals are
 // grammar-unrepresentable); a version-v file uses positions 2..indicator_count(v).
 pub open spec fn is_semantic_pred(name: Seq<u8>, arity: nat) -> bool {
-    exists|i: int| 2 <= i < 11 && #[trigger] indicator(i) == (name, arity)
+    exists|i: int| 2 <= i < 15 && #[trigger] indicator(i) == (name, arity)
 }
 
 pub open spec fn version_pred(name: Seq<u8>, arity: nat, v: nat) -> bool {
@@ -393,10 +404,10 @@ pub ghost struct Bundle {
 
 pub ghost struct DocFile {
     pub docid: Seq<u8>,
-    pub version: nat,  // schema version 1 | 2
+    pub version: nat,  // schema version 1 | 2 | 3
     pub ace: Seq<u8>,  // 64 lowercase hex
     pub ulex: Option<Seq<u8>>,  // None = ulex(none)
-    pub temporal: Option<Seq<u8>>,  // v2: the temporal.tsv digest; v1: None
+    pub temporal: Option<Seq<u8>>,  // v2 | v3: the temporal.tsv digest; v1: None
     pub bundles: Seq<Bundle>,
 }
 
@@ -488,7 +499,7 @@ pub open spec fn schema_version_term(v: nat) -> Term {
     Term::Comp(ascii("guideline_schema_version"@), seq![Term::Int(v as int)])
 }
 
-// v2 records end in `temporal(sha256(H))`; v1 records carry none.
+// v2 + v3 records end in `temporal(sha256(H))`; v1 records carry none.
 pub open spec fn temporal_terms(t: Option<Seq<u8>>) -> Seq<Term> {
     match t {
         Option::None => Seq::empty(),
@@ -511,7 +522,9 @@ pub open spec fn doc_record_term(d: DocFile) -> Term {
 
 pub open spec fn version_atom(v: nat) -> Term {
     Term::Atom(
-        if v == 2 {
+        if v == 3 {
+            ascii("v3"@)
+        } else if v == 2 {
             ascii("v2"@)
         } else {
             ascii("v1"@)
@@ -650,12 +663,12 @@ pub open spec fn wf_bundle(b: Bundle) -> bool {
     &&& forall|i: int| #![auto] 0 <= i < b.clauses.len() ==> wf_clause(b.clauses[i])
 }
 
-// Version law (contract m7t D3): v1 records no temporal digest, v2 records one;
-// every clause literal of a version-v file is a version-v predicate.
+// Version law (contracts m7t D3, q12 D2): v1 records no temporal digest, v2 +
+// v3 record one; every clause literal of a version-v file is a version-v predicate.
 pub open spec fn version_ok(v: nat, t: Option<Seq<u8>>) -> bool {
     match t {
         Option::None => v == 1,
-        Option::Some(h) => v == 2 && hex64(h),
+        Option::Some(h) => (v == 2 || v == 3) && hex64(h),
     }
 }
 

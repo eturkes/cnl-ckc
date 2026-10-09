@@ -1,0 +1,44 @@
+% measure--alias-within.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('measure--alias-within',ace_sha256('40fbc0141d32141c409506a840217b10d0fca44cfb2a973ea5ad5a81b5e14fdc'),ulex(sha256('29762127aa5c112935a3e23843a9793168210e6e977026b17b197641eb14e090')),temporal(sha256('3e1a708b1d520fdacc61f52afd9b22ce68189e2baa2dd62d5f9e965d1a50d438'))).
+% S1: A patient eats within 3 d of a meeting.
+guideline_entity(actual,'$guideline_id'(product,'measure--alias-within',1,ref(1),[]),patient,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'measure--alias-within',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'measure--alias-within',1,ref(2),[]),d,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'measure--alias-within',1,ref(2),[]),na,eq,3).
+guideline_entity(actual,'$guideline_id'(product,'measure--alias-within',1,ref(3),[]),meeting,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'measure--alias-within',1,ref(3),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'measure--alias-within',1,ref(4),[]),eat).
+guideline_arg(actual,'$guideline_id'(product,'measure--alias-within',1,ref(4),[]),1,'$guideline_id'(product,'measure--alias-within',1,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'measure--alias-within',1,ref(4),[]),within,'$guideline_id'(product,'measure--alias-within',1,ref(2),[])).
+guideline_interval(actual,'$guideline_id'(product,'measure--alias-within',1,ref(4),[]),within,'$guideline_id'(product,'measure--alias-within',1,ref(2),[]),day,'$guideline_id'(product,'measure--alias-within',1,ref(3),[])).

@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-rec02-imp15',ace_sha256(c2de973e6032de4ba643657ba79ee29bae70e31c4222bce21c972dd975d940f2),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-rec02-imp15',ace_sha256(c2de973e6032de4ba643657ba79ee29bae70e31c4222bce21c972dd975d940f2),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: Every clinician should not impose a nonpharmacologic-failure-requirement before an opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -34,6 +42,7 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(2),[A
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',1,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',1,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',1,ref(4),[A]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_order('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',1,ref(4),[A]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 % S2: Every clinician should not impose a nonopioid-pharmacologic-failure-requirement before an opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -45,6 +54,7 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(2),[A
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',2,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',2,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',2,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',2,ref(4),[A]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',2,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_order('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',2,ref(4),[A]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',2,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 % S3: Every clinician should not impose a specific-treatment-requirement before an opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -56,3 +66,4 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(2),[A
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',3,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',3,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',3,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',3,ref(4),[A]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',3,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_order('$guideline_id'(context,'cdc2022-opioid-rec02-imp15',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',3,ref(4),[A]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp15',3,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

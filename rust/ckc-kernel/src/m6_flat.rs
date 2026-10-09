@@ -18,7 +18,7 @@ pub struct Env {
     pub docid: Vec<u8>,
     pub s: usize,
     pub base: usize,
-    pub tab: Option<crate::m7_temporal::ETemporal>,
+    pub tab: Option<crate::m7_v3::EEnv>,
 }
 
 pub open spec fn flat_valid_result(nodes: Seq<ENode>, r: &Result<Flat, T>) -> bool {

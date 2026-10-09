@@ -394,3 +394,135 @@ dq4-k1-004	target	check	2	1	input.pl
 dq4-k1-005	target	check	2	1	input.pl
 dq4-k1-006	target	check	2	1	input.pl
 dq4-k1-007	target	check	2	1	input.pl
+q12-k1-document	target	check	0	0	input.pl
+q12-k1-document	roundtrip	render	0	0	input.pl
+q12-k1-question	target	check	0	0	input.pl
+q12-k1-question	roundtrip	render	0	0	input.pl
+q12-k1-document-digests	target	check	0	0	input.pl
+q12-k1-document-digests	roundtrip	render	0	0	input.pl
+q12-k1-question-digests	target	check	0	0	input.pl
+q12-k1-question-digests	roundtrip	render	0	0	input.pl
+q12-k1-body-naf	target	check	0	0	input.pl
+q12-k1-body-naf	roundtrip	render	0	0	input.pl
+q12-k1-v2-frequency	target	check	2	1	input.pl
+q12-k1-v2-order	target	check	2	1	input.pl
+q12-k1-v2-window	target	check	2	1	input.pl
+q12-k1-v2-range	target	check	2	1	input.pl
+q12-k1-v2-body	target	check	2	1	input.pl
+q12-k1-v2-naf	target	check	2	1	input.pl
+q12-k1-header-over-v3	target	check	2	1	input.pl
+q12-k1-decls-short	target	check	2	1	input.pl
+q12-k1-decls-missing	target	check	2	1	input.pl
+q12-k1-decls-arity	target	check	2	1	input.pl
+q12-k1-document-record	target	check	2	1	input.pl
+q12-k1-question-record	target	check	2	1	input.pl
+q12-k1-frequency-short	target	check	2	1	input.pl
+q12-k1-frequency-long	target	check	2	1	input.pl
+q12-k1-order-short	target	check	2	1	input.pl
+q12-k1-order-long	target	check	2	1	input.pl
+q12-k1-window-short	target	check	2	1	input.pl
+q12-k1-window-long	target	check	2	1	input.pl
+q12-k1-range-short	target	check	2	1	input.pl
+q12-k1-range-long	target	check	2	1	input.pl
+q12-k1-header-v4	target	check	2	1	input.pl
+q12-k1-question-v4	target	check	2	1	input.pl
+q12-k1-document-temporal-digest	target	check	2	1	input.pl
+q12-k1-question-temporal-digest	target	check	2	1	input.pl
+q12-k1-final-newline	target	check	2	1	input.pl
+q12-k2-mixed-2-3	target	aggregate-check	2	1	manifest.tsv
+q12-k2-mixed-2-3	recursion	recursion-check	2	1	manifest.tsv
+q12-k2-mixed-3-2	target	aggregate-check	2	1	manifest.tsv
+q12-k2-mixed-3-2	recursion	recursion-check	2	1	manifest.tsv
+q12-k2-mixed-1-3	target	aggregate-check	2	1	manifest.tsv
+q12-k2-mixed-1-3	recursion	recursion-check	2	1	manifest.tsv
+q12-k2-mixed-3-1	target	aggregate-check	2	1	manifest.tsv
+q12-k2-mixed-3-1	recursion	recursion-check	2	1	manifest.tsv
+q12-k2-homogeneous	target	aggregate-check	0	0	manifest.tsv
+q12-k2-homogeneous	recursion	recursion-check	0	0	manifest.tsv
+q12-k3-matrix-empty-q1	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-empty-q1	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-empty-q2	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-empty-q2	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-empty-q3	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-empty-q3	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-1-q1	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-1-q1	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-1-q1	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-matrix-1-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-1-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-1-q3	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-1-q3	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-2-q1	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-2-q1	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-2-q1	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-matrix-2-q2	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-2-q2	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-2-q2	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-matrix-2-q3	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-2-q3	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-q1	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-3-q1	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-q1	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-matrix-3-q2	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-3-q2	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-q2	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-matrix-3-q3	target	answer	0	0	manifest.tsv query.pl
+q12-k3-matrix-3-q3	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-q3	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-matrix-2-3-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-2-3-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-2-3-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-2-3-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-2-3-q3	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-2-3-q3	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-2-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-3-2-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-2-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-3-2-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-2-q3	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-3-2-q3	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-1-3-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-1-3-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-1-3-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-1-3-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-1-3-q3	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-1-3-q3	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-1-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-3-1-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-1-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-3-1-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-matrix-3-1-q3	target	answer	2	1	manifest.tsv query.pl
+q12-k3-matrix-3-1-q3	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-frequency-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-frequency-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-frequency-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-frequency-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-frequency-q3	target	answer	0	0	manifest.tsv query.pl
+q12-k3-whitelist-frequency-q3	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-frequency-q3	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-whitelist-order-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-order-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-order-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-order-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-order-q3	target	answer	0	0	manifest.tsv query.pl
+q12-k3-whitelist-order-q3	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-order-q3	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-whitelist-window-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-window-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-window-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-window-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-window-q3	target	answer	0	0	manifest.tsv query.pl
+q12-k3-whitelist-window-q3	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-window-q3	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k3-whitelist-range-q1	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-range-q1	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-range-q2	target	answer	2	1	manifest.tsv query.pl
+q12-k3-whitelist-range-q2	trace	trace	2	1	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-range-q3	target	answer	0	0	manifest.tsv query.pl
+q12-k3-whitelist-range-q3	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k3-whitelist-range-q3	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q12-k2-typed-antecedent	target	aggregate-check	0	0	manifest.tsv
+q12-k2-typed-antecedent	recursion	recursion-check	0	0	manifest.tsv
+q12-k2-typed-antecedent	answer	answer	0	0	manifest.tsv query.pl
+q12-k2-typed-antecedent	trace	trace	0	0	manifest.tsv query.pl answers.pl
+q12-k2-typed-antecedent	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl

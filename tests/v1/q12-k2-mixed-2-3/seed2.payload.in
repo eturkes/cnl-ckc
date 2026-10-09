@@ -1,0 +1,1 @@
+'$guideline_proof'(seed2,1,variant(1),witness([]),prove([guideline_event(actual,'$guideline_id'(product,seed2,1,ref(1),[]),wait)])).

@@ -34,6 +34,21 @@ pub fn sentence_count(arena: &ETermArena, d: &EDump) -> (out: Option<usize>)
     }
 }
 
+// The scalar fields of a well-formed document (revealing wf_doc here instantiates
+// its ordering quantifier along every bundle chain).
+proof fn wf_doc_fields(d: DocFile)
+    requires
+        v1text::wf_doc(d),
+    ensures
+        v1text::name_ok(d.docid),
+        v1text::version_ok(d.version, d.temporal),
+        v1text::hex64(d.ace),
+        v1text::ulex_ok(d.ulex),
+        d.bundles.len() >= 1,
+{
+    reveal(v1text::wf_doc);
+}
+
 pub fn certify_doc_impl(
     ace: &[u8],
     asha: &[u8],
@@ -61,6 +76,8 @@ pub fn certify_doc_impl(
     hide(spec::obligations);
     hide(spec::first_nonground);
     hide(replay::print_payload);
+    // wf_doc's ordering quantifier chains along the bundles (q12: rlimit).
+    hide(v1text::wf_doc);
     let mut arena = crate::k2_reject::empty_arena();
     let parsed = match crate::v1_impl::v1_parse(pl, &mut arena) {
         Some(p) => p,
@@ -83,7 +100,7 @@ pub fn certify_doc_impl(
         assert(parsed@ == V1File::Doc(doc));
         reveal(parsed_v1_ok);
         reveal(v1text::wf_v1);
-        reveal(v1text::wf_doc);
+        wf_doc_fields(doc);
         parsed_doc_roots_elim(arena.nodes@, &parsed);
     }
     let actual = read_clauses(&arena, &parsed.clauses, Ghost(doc_clause_models(doc.bundles)));
@@ -127,6 +144,11 @@ pub fn certify_doc_impl(
         Ghost(doc.temporal),
     ) {
         return reject_sym(&mut arena, docid, &Sym::Temporal);
+    }
+    // q12 D10: the record's schema version = the table's (v1 without one).
+
+    if parsed.doc_version != crate::m7_v3::tab_version_exec(&tab) {
+        return reject_sym(&mut arena, docid, &Sym::SchemaVersion);
     }
     if parsed.bundles.len() != lines.len() {
         return reject_sym(&mut arena, docid, &Sym::BundleCount);

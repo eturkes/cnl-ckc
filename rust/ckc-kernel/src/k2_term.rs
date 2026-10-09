@@ -645,7 +645,7 @@ pub fn push_comp(arena: &mut ETermArena, name: Vec<u8>, child_roots: Vec<usize>)
     push_node(arena, node)
 }
 
-fn append_bytes(out: &mut Vec<u8>, bytes: &[u8])
+pub(crate) fn append_bytes(out: &mut Vec<u8>, bytes: &[u8])
     ensures
         final(out)@ == old(out)@ + bytes@,
 {

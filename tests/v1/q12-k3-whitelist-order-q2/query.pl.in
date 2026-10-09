@@ -1,0 +1,4 @@
+% query compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v2,query,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),temporal(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
+% Q1: Does a patient wait?
+'$guideline_query_projection'(goal(guideline_order(actual,'$guideline_id'(product,seed3,1,ref(1),[]),before,a)),answers([])).

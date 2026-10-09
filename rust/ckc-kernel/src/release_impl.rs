@@ -23,6 +23,7 @@ pub fn release_manifest_impl(
     urls: &Vec<(Vec<u8>, Vec<u8>)>,
     labels: &Vec<(Vec<u8>, Vec<u8>)>,
     tags: &Vec<ckc_spec::release::EMember>,
+    tables: &Vec<(Vec<u8>, Vec<u8>)>,
 ) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::release::release_manifest(
@@ -33,6 +34,7 @@ pub fn release_manifest_impl(
             ckc_spec::check::byte_pairs(urls@),
             ckc_spec::check::byte_pairs(labels@),
             ckc_spec::release::members(tags@),
+            ckc_spec::check::byte_pairs(tables@),
         ),
 {
     let (mut pay, src) = crate::release_rows::partition(staged, profiles, urls);
@@ -68,7 +70,7 @@ pub fn release_manifest_impl(
         vstd::assert_seqs_equal!(ckc_spec::release::members(tags@).take(i as int) == ckc_spec::release::members(tags@));
     }
     let sorted = crate::release_rows::sorted(&pay);
-    let schema = crate::release_rows::schema_rows_exec(staged, profiles);
+    let schema = crate::release_rows::schema_rows_exec(staged, profiles, tables);
     let mut r = crate::release_rows::meta(&schema, compiler, lexicon);
     let ms = crate::release_rows::rows(&sorted);
     crate::k4_bytes::append(&mut r, &ms);

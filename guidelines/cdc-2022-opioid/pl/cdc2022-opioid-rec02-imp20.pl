@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-rec02-imp20',ace_sha256('4f4058c75f594c9da28580160329c47328e2e18e59ce262a67b055ea9a3b0385'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-rec02-imp20',ace_sha256('4f4058c75f594c9da28580160329c47328e2e18e59ce262a67b055ea9a3b0385'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a patient has a subacute-pain and starts an opioid-therapy for an acute-pain and receives the opioid-therapy during at least 30 days then every clinician should address a potentially-reversible-chronic-pain-cause and should reassess the opioid-therapy and should prevent an unintentional-long-term-opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp20',1,box(1),[A,B,C,D,E,F,G,H,I]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'subacute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'opioid-therapy',countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,'acute-pain',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,start), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,D), guideline_pp(actual,F,for,E), guideline_entity(actual,G,day,countable), guideline_cardinality(actual,G,na,geq,30), guideline_event(actual,H,receive), guideline_arg(actual,H,1,A), guideline_arg(actual,H,2,D), guideline_pp(actual,H,during,G), guideline_interval(actual,H,duration,G,day,none), guideline_entity(actual,I,clinician,countable), guideline_cardinality(actual,I,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp20',1,box(1),[A,B,C,D,E,F,G,H,I]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp20',1,ref(10),[A,B,C,D,E,F,G,H,I]),'potentially-reversible-chronic-pain-cause',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'subacute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'opioid-therapy',countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,'acute-pain',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,start), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,D), guideline_pp(actual,F,for,E), guideline_entity(actual,G,day,countable), guideline_cardinality(actual,G,na,geq,30), guideline_event(actual,H,receive), guideline_arg(actual,H,1,A), guideline_arg(actual,H,2,D), guideline_pp(actual,H,during,G), guideline_interval(actual,H,duration,G,day,none), guideline_entity(actual,I,clinician,countable), guideline_cardinality(actual,I,na,eq,1).

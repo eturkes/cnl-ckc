@@ -343,7 +343,7 @@ fn document_record_root(
     let ace = atom_root(arena, &parsed.doc_ace);
     let ace_field = comp1(arena, ace_bytes, ace);
     let docid = atom_root(arena, &parsed.docid);
-    if parsed.doc_version == 2 {
+    if parsed.doc_version >= 2 {
         // m7t D3: the v2 record ends in temporal(sha256(H)).
         let temporal_bytes: &[u8] = b"temporal";
         proof {

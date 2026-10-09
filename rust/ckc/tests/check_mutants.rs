@@ -145,6 +145,10 @@ const LEDGER_DATE: &[u8] = b"2026-09-14T00:00:00Z";
 
 fn mutate(t: &Path, name: &str) {
     match name {
+        name if name.starts_with("temporal-v3-") => {
+            let input = root().join("tests/check-mutants").join(format!("{name}.temporal.tsv.in"));
+            fs::write(t.join(TEMPORAL), fs::read(input).unwrap()).unwrap();
+        }
         "temporal-header" => replace(t, TEMPORAL, b"# format: kind\tlemma\tvalue\n", b"# format: drift\n"),
         "temporal-no-rows" => {
             let header = lines(&fs::read(t.join(TEMPORAL)).unwrap())[..2].concat();
@@ -161,7 +165,7 @@ fn mutate(t: &Path, name: &str) {
         "temporal-role-id" => append(t, TEMPORAL, b"relation\tthrough\tthrough\n"),
         "temporal-duplicate-preposition" => append(t, TEMPORAL, b"relation\tfor\tafter\n"),
         "temporal-frame-lemma" => append(t, TEMPORAL, b"spacing\tevery\t\n"),
-        "temporal-kind" => append(t, TEMPORAL, b"frequency\tdaily\tday\n"),
+        "temporal-kind" => append(t, TEMPORAL, b"cadence\tdaily\tday\n"),
         "fork-entry" => new_file(t, "vendor/000-parity", b"not a vendor directory\n"),
         "vendor-license" => replace(t, "vendor/clex/PROVENANCE", b"License: GPL-3.0-or-later\n", b""),
         "pristine-digest" => {
@@ -284,8 +288,8 @@ fn mutate(t: &Path, name: &str) {
         "semantic-undotted-clause" => replace(
             t,
             DOC,
-            b"guideline_schema_version(2).\n",
-            b"guideline_schema_version(2)\n",
+            b"guideline_schema_version(3).\n",
+            b"guideline_schema_version(3)\n",
         ),
         "semantic-undotted-record" => {
             let rows: Vec<Vec<u8>> = lines(&fs::read(t.join(DOC)).unwrap())
@@ -406,7 +410,16 @@ fn check_mutant_battery() {
         .filter(|l| !l.starts_with('#'))
         .map(|l| l.split('\t').collect())
         .collect();
-    assert_eq!(rows.len(), 51, "tests/check-mutants row count");
+    let v3_rows = rows
+        .iter()
+        .filter(|r| r[0].starts_with("temporal-v3-"))
+        .count();
+    assert_eq!(
+        rows.len() - v3_rows,
+        51,
+        "tests/check-mutants legacy row count"
+    );
+    assert_eq!(v3_rows, 30, "tests/check-mutants q12 row count");
     // Each worker clones HEAD once, then per row: mutate → check → reset + clean
     // back to HEAD (a fresh checkout per row costs ~10× the check itself).
     let next = AtomicUsize::new(0);

@@ -1,0 +1,2 @@
+% query answered against the loaded composition by ckc queries; do not edit.
+'$guideline_answers'(v1,query,query_sha256(bb3e755c2ae83592a90dda8764085fda84171e5386b86f5a86461ff298d71a25),result(no(finite_failure))).

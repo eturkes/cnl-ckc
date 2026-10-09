@@ -207,7 +207,7 @@ pub fn v1_trace_check(
 pub proof fn k3_sound(db: Seq<ckc_spec::v1text::DocClause>, goal: ckc_spec::term::Term)
     requires
         ckc_spec::trace::bodies_wf(db),
-        ckc_spec::answers::goal_walk(goal, 2) is None,
+        ckc_spec::answers::goal_walk(goal, 3) is None,
         ckc_spec::trace::derived_forest(db, goal) is Some,
     ensures
         ckc_spec::trace::forest_valid(db, goal, ckc_spec::trace::derived_forest(db, goal).unwrap()),
@@ -643,6 +643,7 @@ pub fn release_manifest(
     urls: &Vec<(Vec<u8>, Vec<u8>)>,
     labels: &Vec<(Vec<u8>, Vec<u8>)>,
     tags: &Vec<ckc_spec::release::EMember>,
+    tables: &Vec<(Vec<u8>, Vec<u8>)>,
 ) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::release::release_manifest(
@@ -653,6 +654,7 @@ pub fn release_manifest(
             ckc_spec::check::byte_pairs(urls@),
             ckc_spec::check::byte_pairs(labels@),
             ckc_spec::release::members(tags@),
+            ckc_spec::check::byte_pairs(tables@),
         ),
 {
     crate::release_impl::release_manifest_impl(
@@ -663,6 +665,7 @@ pub fn release_manifest(
         urls,
         labels,
         tags,
+        tables,
     )
 }
 

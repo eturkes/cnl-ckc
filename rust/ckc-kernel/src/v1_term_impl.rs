@@ -13343,7 +13343,9 @@ pub open spec fn query_line_stage(qid: Seq<u8>) -> Seq<u8> {
 }
 
 pub open spec fn query_version_name(v: nat) -> Seq<u8> {
-    if v == 2 {
+    if v == 3 {
+        ckc_spec::v1text::ascii("v3"@)
+    } else if v == 2 {
         ckc_spec::v1text::ascii("v2"@)
     } else {
         ckc_spec::v1text::ascii("v1"@)
@@ -14016,7 +14018,7 @@ fn parse_query_record_prefix(
         r matches Some((ace, v)) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(ace.name@)
-            &&& (v == 1 || v == 2)
+            &&& (1 <= v <= 3)
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
                 + query_record_prefix_stage(line_qid.value@, ace.name@, v as nat)
         },
@@ -14067,20 +14069,25 @@ fn parse_query_record_prefix(
         Some(q) => Some((query_version_name(q.version), 0x2cu8)),
         None => None,
     };
+    let version_at = guided.cursor.pos;
     let version = match guided_atom(bytes, guided, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
     };
     let v1_name: &[u8] = b"v1";
     let v2_name: &[u8] = b"v2";
+    let v3_name: &[u8] = b"v3";
     proof {
         reveal_strlit("v1");
         reveal_byteslit(b"v1");
         reveal_strlit("v2");
         reveal_byteslit(b"v2");
+        reveal_strlit("v3");
+        reveal_byteslit(b"v3");
         reveal(ckc_spec::v1text::ascii);
         assert(v1_name@ == ckc_spec::v1text::ascii("v1"@));
         assert(v2_name@ == ckc_spec::v1text::ascii("v2"@));
+        assert(v3_name@ == ckc_spec::v1text::ascii("v3"@));
         if let Some(q) = expected@ {
             reveal(ckc_spec::v1text::wf_query);
             reveal(ckc_spec::v1text::version_ok);
@@ -14090,7 +14097,10 @@ fn parse_query_record_prefix(
         1
     } else if vec_slice_equal(&version.name, v2_name) {
         2
+    } else if vec_slice_equal(&version.name, v3_name) {
+        3
     } else {
+        raise_at(at, version_reject_at(bytes, version_at, &version.name), bytes.len());
         return None;
     };
     proof {
@@ -15576,7 +15586,7 @@ pub fn parse_query(
             reveal(ckc_spec::v1text::version_ok);
         }
     }
-    let ulex = match parse_query_ulex(bytes, &mut guided, expected, qversion == 2, at) {
+    let ulex = match parse_query_ulex(bytes, &mut guided, expected, qversion >= 2, at) {
         Some(field) => field,
         None => return None,
     };
@@ -15617,7 +15627,7 @@ pub fn parse_query(
     }
     let ghost model = ckc_spec::v1text::QueryFile {
         version: qversion as nat,
-        temporal: tail_of(qversion == 2, ulex.temporal@),
+        temporal: tail_of(qversion >= 2, ulex.temporal@),
         qid: line_qid.value@,
         ace: ace.name@,
         ulex: ulex.value@,
@@ -16463,7 +16473,349 @@ fn parse_doc_line(
 // m7t D3: the declaration block selects the schema version; the block bytes
 // first differ at the record arity (`/3` v1, `/4` v2), so that prefix decides
 // and the chosen block's guided literal keeps the longest-canonical-prefix `at`.
-#[verifier::rlimit(4000)]
+// q12 D2: in a v2 document the byte after the declaration block opens the
+// schema line (`g`), never the `:` that continues a v3 block.
+proof fn doc_v2_after_decls(bytes: Seq<u8>, d: ckc_spec::v1text::DocFile, pos: int)
+    requires
+        bytes == doc_parts(d).flatten(),
+        d.version == 2,
+        doc_line_parts(d.docid).len() == 3,
+        pos == doc_parts(d).take(3).flatten().len(),
+    ensures
+        pos + ckc_spec::v1text::decls_from(2, 0).len() < bytes.len(),
+        bytes[pos + ckc_spec::v1text::decls_from(2, 0).len()] == 0x67u8,
+{
+    let parts = doc_parts(d);
+    reveal(doc_parts);
+    reveal(doc_prefix_parts);
+    reveal(doc_decl_parts);
+    assert(parts[3] == ckc_spec::v1text::decls_from(2, 0));
+    assert(parts[4] == ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term(2)));
+    let schema: Seq<u8> = b"guideline_schema_version(2).\n"@;
+    let name = ckc_spec::v1text::ascii("guideline_schema_version"@);
+    let n = Term::Int(2);
+    reveal_byteslit(b"guideline_schema_version(2).\n");
+    reveal_strlit("guideline_schema_version");
+    reveal_strlit(".\n");
+    reveal(ckc_spec::v1text::ascii);
+    reveal(ckc_spec::v1text::curly_name);
+    schema_version_name_bare();
+    args_one_bytes(n);
+    regular_comp_bytes(name, seq![n]);
+    reveal(ckc_spec::v1text::schema_version_term);
+    reveal(ckc_spec::v1text::term_line);
+    reveal_with_fuel(ckc_spec::v1text::term_bytes, 1);
+    reveal(ckc_spec::v1text::dec_bytes);
+    reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
+    reveal(ckc_spec::v1text::digit_byte);
+    assert(schema =~= parts[4]);
+    flattened_part(bytes, parts, 4);
+    assert(parts.take(4) =~= parts.take(3).push(parts[3]));
+    parts.take(3).lemma_flatten_push(parts[3]);
+    assert(bytes.subrange(pos + parts[3].len(), pos + parts[3].len() + parts[4].len())[0]
+        == parts[4][0]);
+}
+
+// `:- multifile(N/A).\n:- discontiguous(N/A).\n` = decl_pair(v, i), appended piece by piece:
+// one extensional equality over a whole declaration-block literal costs ~2e9 z3 rlimit units
+// (670 B; the 1138 B v3 block passes 2^32, the largest count Verus parses).
+fn push_decl_pair(out: &mut Vec<u8>, name: &[u8], arity: u8, v: Ghost<nat>, i: Ghost<int>)
+    requires
+        name@ == ckc_spec::v1text::decl_indicator(v@, i@).0,
+        arity as nat == ckc_spec::v1text::decl_indicator(v@, i@).1,
+        1 <= arity <= 9,
+    ensures
+        final(out)@ == old(out)@ + ckc_spec::v1text::decl_pair(v@, i@),
+        final(out)@.len() == old(out)@.len() + 40 + 2 * name@.len(),
+        final(out)@[old(out)@.len() + 14 + name@.len() as int] == 0x30 + arity,
+{
+    let ghost base = out@;
+    let multifile: &[u8] = b":- multifile(";
+    let close: &[u8] = b").\n";
+    let discontiguous: &[u8] = b":- discontiguous(";
+    crate::k2_term::append_bytes(out, multifile);
+    crate::k2_term::append_bytes(out, name);
+    out.push(0x2f);
+    out.push(0x30 + arity);
+    crate::k2_term::append_bytes(out, close);
+    crate::k2_term::append_bytes(out, discontiguous);
+    crate::k2_term::append_bytes(out, name);
+    out.push(0x2f);
+    out.push(0x30 + arity);
+    crate::k2_term::append_bytes(out, close);
+    proof {
+        reveal_strlit(":- multifile(");
+        reveal_byteslit(b":- multifile(");
+        reveal_strlit(").\n");
+        reveal_byteslit(b").\n");
+        reveal_strlit(":- discontiguous(");
+        reveal_byteslit(b":- discontiguous(");
+        reveal(ckc_spec::v1text::ascii);
+        reveal(ckc_spec::v1text::decl_pair);
+        reveal_with_fuel(ckc_spec::v1text::udec_bytes, 1);
+        reveal(ckc_spec::v1text::digit_byte);
+        assert(multifile@ =~= ckc_spec::v1text::ascii(":- multifile("@));
+        assert(close@ =~= ckc_spec::v1text::ascii(").\n"@));
+        assert(discontiguous@ =~= ckc_spec::v1text::ascii(":- discontiguous("@));
+        assert(ckc_spec::v1text::udec_bytes(arity as nat) =~= seq![(0x30 + arity) as u8]);
+        assert(out@ =~= base + ckc_spec::v1text::decl_pair(v@, i@));
+    }
+}
+
+proof fn decls_step(out: Seq<u8>, v: nat, k: int)
+    requires
+        0 <= k < ckc_spec::v1text::indicator_count(v),
+        out + ckc_spec::v1text::decls_from(v, k) == ckc_spec::v1text::decls_from(v, 0),
+    ensures
+        (out + ckc_spec::v1text::decl_pair(v, k)) + ckc_spec::v1text::decls_from(v, k + 1)
+            == ckc_spec::v1text::decls_from(v, 0),
+{
+    reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
+    assert_seqs_equal!((out + ckc_spec::v1text::decl_pair(v, k)) + ckc_spec::v1text::decls_from(v, k + 1)
+        == out + ckc_spec::v1text::decls_from(v, k));
+}
+
+proof fn decls_end(out: Seq<u8>, v: nat)
+    requires
+        out + ckc_spec::v1text::decls_from(v, ckc_spec::v1text::indicator_count(v))
+            == ckc_spec::v1text::decls_from(v, 0),
+    ensures
+        out == ckc_spec::v1text::decls_from(v, 0),
+{
+    reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
+    assert_seqs_equal!(out == out + ckc_spec::v1text::decls_from(v, ckc_spec::v1text::indicator_count(v)));
+}
+
+// The schema-v declaration block decls_from(v, 0), assembled one pair at a time.
+#[verifier::rlimit(100)]
+fn decls_block(v: u8) -> (r: Vec<u8>)
+    requires
+        1 <= v <= 3,
+    ensures
+        r@ == ckc_spec::v1text::decls_from(v as nat, 0),
+        v == 1 ==> r@.len() == 670 && r@[120] == 0x33,
+        v == 2 ==> r@.len() == 826 && r@[120] == 0x34,
+        v == 3 ==> r@.len() == 1138,
+{
+    let ghost gv = v as nat;
+    let mut out: Vec<u8> = Vec::new();
+    proof {
+        reveal(ckc_spec::v1text::indicator_count);
+        reveal(ckc_spec::v1text::indicator);
+        reveal(ckc_spec::v1text::decl_indicator);
+        reveal(ckc_spec::v1text::ascii);
+        assert(out@ + ckc_spec::v1text::decls_from(gv, 0) =~= ckc_spec::v1text::decls_from(gv, 0));
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_schema_version";
+    proof {
+        reveal_strlit("guideline_schema_version");
+        reveal_byteslit(b"guideline_schema_version");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_schema_version"@));
+    }
+    push_decl_pair(&mut out, name, 1, Ghost(gv), Ghost(0int));
+    proof {
+        decls_step(before, gv, 0);
+    }
+    let doc_arity: u8 = if v == 1 {
+        3
+    } else {
+        4
+    };
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_document";
+    proof {
+        reveal_strlit("guideline_document");
+        reveal_byteslit(b"guideline_document");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_document"@));
+    }
+    push_decl_pair(&mut out, name, doc_arity, Ghost(gv), Ghost(1int));
+    proof {
+        decls_step(before, gv, 1);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_entity";
+    proof {
+        reveal_strlit("guideline_entity");
+        reveal_byteslit(b"guideline_entity");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_entity"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(2int));
+    proof {
+        decls_step(before, gv, 2);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_cardinality";
+    proof {
+        reveal_strlit("guideline_cardinality");
+        reveal_byteslit(b"guideline_cardinality");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_cardinality"@));
+    }
+    push_decl_pair(&mut out, name, 5, Ghost(gv), Ghost(3int));
+    proof {
+        decls_step(before, gv, 3);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_event";
+    proof {
+        reveal_strlit("guideline_event");
+        reveal_byteslit(b"guideline_event");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_event"@));
+    }
+    push_decl_pair(&mut out, name, 3, Ghost(gv), Ghost(4int));
+    proof {
+        decls_step(before, gv, 4);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_arg";
+    proof {
+        reveal_strlit("guideline_arg");
+        reveal_byteslit(b"guideline_arg");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_arg"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(5int));
+    proof {
+        decls_step(before, gv, 5);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_pp";
+    proof {
+        reveal_strlit("guideline_pp");
+        reveal_byteslit(b"guideline_pp");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_pp"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(6int));
+    proof {
+        decls_step(before, gv, 6);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_property";
+    proof {
+        reveal_strlit("guideline_property");
+        reveal_byteslit(b"guideline_property");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_property"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(7int));
+    proof {
+        decls_step(before, gv, 7);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_operator";
+    proof {
+        reveal_strlit("guideline_operator");
+        reveal_byteslit(b"guideline_operator");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_operator"@));
+    }
+    push_decl_pair(&mut out, name, 3, Ghost(gv), Ghost(8int));
+    proof {
+        decls_step(before, gv, 8);
+    }
+    if v == 1 {
+        proof {
+            decls_end(out@, gv);
+        }
+        return out;
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_interval";
+    proof {
+        reveal_strlit("guideline_interval");
+        reveal_byteslit(b"guideline_interval");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_interval"@));
+    }
+    push_decl_pair(&mut out, name, 6, Ghost(gv), Ghost(9int));
+    proof {
+        decls_step(before, gv, 9);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_recurrence";
+    proof {
+        reveal_strlit("guideline_recurrence");
+        reveal_byteslit(b"guideline_recurrence");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_recurrence"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(10int));
+    proof {
+        decls_step(before, gv, 10);
+    }
+    if v == 2 {
+        proof {
+            decls_end(out@, gv);
+        }
+        return out;
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_frequency";
+    proof {
+        reveal_strlit("guideline_frequency");
+        reveal_byteslit(b"guideline_frequency");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_frequency"@));
+    }
+    push_decl_pair(&mut out, name, 5, Ghost(gv), Ghost(11int));
+    proof {
+        decls_step(before, gv, 11);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_order";
+    proof {
+        reveal_strlit("guideline_order");
+        reveal_byteslit(b"guideline_order");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_order"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(12int));
+    proof {
+        decls_step(before, gv, 12);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_recurrence_window";
+    proof {
+        reveal_strlit("guideline_recurrence_window");
+        reveal_byteslit(b"guideline_recurrence_window");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_recurrence_window"@));
+    }
+    push_decl_pair(&mut out, name, 7, Ghost(gv), Ghost(13int));
+    proof {
+        decls_step(before, gv, 13);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_range";
+    proof {
+        reveal_strlit("guideline_range");
+        reveal_byteslit(b"guideline_range");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_range"@));
+    }
+    push_decl_pair(&mut out, name, 3, Ghost(gv), Ghost(14int));
+    proof {
+        decls_step(before, gv, 14);
+    }
+    proof {
+        decls_end(out@, gv);
+    }
+    out
+}
+
+// The v3 declaration block extends the v2 block: indicators 0..10 agree, 11..14 follow.
+proof fn decls_v3_extends(i: int)
+    requires
+        0 <= i <= 11,
+    ensures
+        ckc_spec::v1text::decls_from(3, i) == ckc_spec::v1text::decls_from(2, i)
+            + ckc_spec::v1text::decls_from(3, 11),
+    decreases 11 - i,
+{
+    reveal(ckc_spec::v1text::indicator_count);
+    reveal(ckc_spec::v1text::decl_indicator);
+    reveal(ckc_spec::v1text::decl_pair);
+    reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
+    if i < 11 {
+        decls_v3_extends(i + 1);
+        assert(ckc_spec::v1text::decl_pair(3, i) == ckc_spec::v1text::decl_pair(2, i));
+    }
+    assert_seqs_equal!(ckc_spec::v1text::decls_from(3, i)
+        == ckc_spec::v1text::decls_from(2, i) + ckc_spec::v1text::decls_from(3, 11));
+}
+
+#[verifier::rlimit(30)]
 fn parse_doc_declarations(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
@@ -16479,7 +16831,7 @@ fn parse_doc_declarations(
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(v) ==> {
-            &&& v == 1 || v == 2
+            &&& 1 <= v <= 3
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
                 + ckc_spec::v1text::decls_from(v as nat, 0) + ckc_spec::v1text::term_line(
@@ -16493,47 +16845,29 @@ fn parse_doc_declarations(
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost old_prefix = guided.cursor.prefix@;
-    let v1_decls: &[u8] =
-        b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/3).\n:- discontiguous(guideline_document/3).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n";
-    let v2_decls: &[u8] =
-        b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/4).\n:- discontiguous(guideline_document/4).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n:- multifile(guideline_interval/6).\n:- discontiguous(guideline_interval/6).\n:- multifile(guideline_recurrence/4).\n:- discontiguous(guideline_recurrence/4).\n";
-    let marker: &[u8] =
-        b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/4";
+    let v1_block = decls_block(1);
+    let v2_block = decls_block(2);
+    let v3_block = decls_block(3);
+    let v1_decls = v1_block.as_slice();
+    let v2_decls = v2_block.as_slice();
+    let v3_decls = v3_block.as_slice();
+    let marker = vstd::slice::slice_subrange(v2_decls, 0, 121);
+    let v3_marker = vstd::slice::slice_subrange(v3_decls, 0, 827);
     proof {
-        reveal_byteslit(
-            b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/3).\n:- discontiguous(guideline_document/3).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n",
-        );
-        reveal_byteslit(
-            b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/4).\n:- discontiguous(guideline_document/4).\n:- multifile(guideline_entity/4).\n:- discontiguous(guideline_entity/4).\n:- multifile(guideline_cardinality/5).\n:- discontiguous(guideline_cardinality/5).\n:- multifile(guideline_event/3).\n:- discontiguous(guideline_event/3).\n:- multifile(guideline_arg/4).\n:- discontiguous(guideline_arg/4).\n:- multifile(guideline_pp/4).\n:- discontiguous(guideline_pp/4).\n:- multifile(guideline_property/4).\n:- discontiguous(guideline_property/4).\n:- multifile(guideline_operator/3).\n:- discontiguous(guideline_operator/3).\n:- multifile(guideline_interval/6).\n:- discontiguous(guideline_interval/6).\n:- multifile(guideline_recurrence/4).\n:- discontiguous(guideline_recurrence/4).\n",
-        );
-        reveal_byteslit(
-            b":- multifile(guideline_schema_version/1).\n:- discontiguous(guideline_schema_version/1).\n:- multifile(guideline_document/4",
-        );
-        reveal_strlit(":- multifile(");
-        reveal_strlit(").\n");
-        reveal_strlit(":- discontiguous(");
-        reveal_strlit("guideline_schema_version");
-        reveal_strlit("guideline_document");
-        reveal_strlit("guideline_entity");
-        reveal_strlit("guideline_cardinality");
-        reveal_strlit("guideline_event");
-        reveal_strlit("guideline_arg");
-        reveal_strlit("guideline_pp");
-        reveal_strlit("guideline_property");
-        reveal_strlit("guideline_operator");
-        reveal_strlit("guideline_interval");
-        reveal_strlit("guideline_recurrence");
-        reveal(ckc_spec::v1text::ascii);
-        reveal(ckc_spec::v1text::indicator);
-        reveal(ckc_spec::v1text::decl_indicator);
-        reveal(ckc_spec::v1text::indicator_count);
-        reveal(ckc_spec::v1text::decl_pair);
-        reveal_with_fuel(ckc_spec::v1text::decls_from, 13);
-        reveal(ckc_spec::v1text::digit_byte);
-        reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
-        assert(v1_decls@ =~= ckc_spec::v1text::decls_from(1, 0));
-        assert(v2_decls@ =~= ckc_spec::v1text::decls_from(2, 0));
+        decls_v3_extends(0);
+        assert(v3_decls@ =~= v2_decls@ + ckc_spec::v1text::decls_from(3, 11));
+        assert(ckc_spec::v1text::decls_from(3, 11)[0] == 0x3au8) by {
+            reveal(ckc_spec::v1text::indicator_count);
+            reveal(ckc_spec::v1text::decl_pair);
+            reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
+            reveal_strlit(":- multifile(");
+            reveal(ckc_spec::v1text::ascii);
+        }
+        assert(v3_marker@ =~= v3_decls@.take(v3_marker@.len() as int));
+        assert(v3_marker@.take(v2_decls@.len() as int) =~= v2_decls@);
+        assert(v3_marker@[v2_decls@.len() as int] == 0x3au8);
         assert(marker@ =~= v2_decls@.take(marker@.len() as int));
+        assert(marker@ =~= v3_marker@.take(marker@.len() as int));
         assert(v1_decls@[marker@.len() - 1] != marker@[marker@.len() - 1]);
         assert(v1_decls@.len() >= marker@.len());
         if let Some(d) = expected@ {
@@ -16551,7 +16885,9 @@ fn parse_doc_declarations(
     }
     let pos = guided.cursor.pos;
     let rest = vstd::slice::slice_subrange(bytes, pos, bytes.len());
-    let version: u8 = if crate::k4_bytes::starts_with(rest, marker) {
+    let version: u8 = if crate::k4_bytes::starts_with(rest, v3_marker) {
+        3
+    } else if crate::k4_bytes::starts_with(rest, marker) {
         2
     } else {
         1
@@ -16561,7 +16897,21 @@ fn parse_doc_declarations(
             let blk = ckc_spec::v1text::decls_from(d.version, 0);
             assert(bytes@.subrange(pos as int, pos as int + blk.len()) == blk);
             assert(rest@ =~= bytes@.subrange(pos as int, bytes@.len() as int));
-            if d.version == 2 {
+            if d.version == 3 {
+                assert(rest@.take(v3_marker@.len() as int) =~= v3_marker@);
+            } else if d.version == 2 {
+                reveal(doc_parts);
+                reveal(doc_prefix_parts);
+                reveal(doc_line_parts);
+                reveal(guided_cursor_ok);
+                reveal(parts_progress);
+                let g = guided.guide@.unwrap();
+                assert(g.parts == doc_parts(d));
+                assert(doc_line_parts(d.docid).len() == 3);
+                assert(guided.cursor.prefix@.len() == pos);
+                assert(pos as int == doc_parts(d).take(3).flatten().len());
+                doc_v2_after_decls(bytes@, d, pos as int);
+                assert(rest@[v2_decls@.len() as int] == 0x67u8);
                 assert(rest@.take(marker@.len() as int) =~= marker@);
             } else {
                 assert(d.version == 1);
@@ -16570,7 +16920,9 @@ fn parse_doc_declarations(
             assert(version == d.version as u8);
         }
     }
-    let declarations: &[u8] = if version == 2 {
+    let declarations: &[u8] = if version == 3 {
+        v3_decls
+    } else if version == 2 {
         v2_decls
     } else {
         v1_decls
@@ -16584,7 +16936,9 @@ fn parse_doc_declarations(
     ) {
         return None;
     }
-    let schema: &[u8] = if version == 2 {
+    let schema: &[u8] = if version == 3 {
+        b"guideline_schema_version(3).\n"
+    } else if version == 2 {
         b"guideline_schema_version(2).\n"
     } else {
         b"guideline_schema_version(1).\n"
@@ -16594,6 +16948,7 @@ fn parse_doc_declarations(
         let n = Term::Int(version as int);
         reveal_byteslit(b"guideline_schema_version(1).\n");
         reveal_byteslit(b"guideline_schema_version(2).\n");
+        reveal_byteslit(b"guideline_schema_version(3).\n");
         reveal_strlit("guideline_schema_version");
         reveal_strlit(".\n");
         reveal(ckc_spec::v1text::ascii);
@@ -17349,25 +17704,91 @@ fn annotation_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     accepted
 }
 
+// q12 D2: the four v3 indicators (positions 11..14).
+fn v3_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
+    ensures
+        r == exists|i: int|
+            11 <= i < 15 && #[trigger] ckc_spec::v1text::indicator(i) == (name@, arity as nat),
+{
+    let frequency_name: &[u8] = b"guideline_frequency";
+    let order_name: &[u8] = b"guideline_order";
+    let window_name: &[u8] = b"guideline_recurrence_window";
+    let range_name: &[u8] = b"guideline_range";
+    proof {
+        reveal_strlit("guideline_frequency");
+        reveal_strlit("guideline_order");
+        reveal_strlit("guideline_recurrence_window");
+        reveal_strlit("guideline_range");
+        reveal_byteslit(b"guideline_frequency");
+        reveal_byteslit(b"guideline_order");
+        reveal_byteslit(b"guideline_recurrence_window");
+        reveal_byteslit(b"guideline_range");
+        reveal(ckc_spec::v1text::ascii);
+        assert(frequency_name@ == ckc_spec::v1text::ascii("guideline_frequency"@));
+        assert(order_name@ == ckc_spec::v1text::ascii("guideline_order"@));
+        assert(window_name@ == ckc_spec::v1text::ascii("guideline_recurrence_window"@));
+        assert(range_name@ == ckc_spec::v1text::ascii("guideline_range"@));
+    }
+    let frequency = vec_slice_equal(name, frequency_name);
+    let order = vec_slice_equal(name, order_name);
+    let window = vec_slice_equal(name, window_name);
+    let range = vec_slice_equal(name, range_name);
+    let accepted = frequency && arity == 5 || order && arity == 4 || window && arity == 7 || range
+        && arity == 3;
+    proof {
+        reveal(ckc_spec::v1text::indicator);
+        if accepted {
+            if frequency && arity == 5 {
+                assert(ckc_spec::v1text::indicator(11) == (name@, arity as nat));
+            } else if order && arity == 4 {
+                assert(ckc_spec::v1text::indicator(12) == (name@, arity as nat));
+            } else if window && arity == 7 {
+                assert(ckc_spec::v1text::indicator(13) == (name@, arity as nat));
+            } else {
+                assert(ckc_spec::v1text::indicator(14) == (name@, arity as nat));
+            }
+        } else {
+            assert forall|i: int| 11 <= i < 15 implies ckc_spec::v1text::indicator(i) != (
+                name@,
+                arity as nat,
+            ) by {
+                if i == 11 {
+                    assert(!frequency || arity != 5);
+                } else if i == 12 {
+                    assert(!order || arity != 4);
+                } else if i == 13 {
+                    assert(!window || arity != 7);
+                } else {
+                    assert(!range || arity != 3);
+                }
+            }
+        }
+    }
+    accepted
+}
+
 fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
 {
     let base = semantic_v1_exec(name, arity);
     let ann = annotation_pred_exec(name, arity);
+    let v3 = v3_pred_exec(name, arity);
     proof {
         reveal(ckc_spec::v1text::is_semantic_pred);
         if ckc_spec::v1text::is_semantic_pred(name@, arity as nat) {
             let i = choose|i: int|
-                2 <= i < 11 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
+                2 <= i < 15 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             if i < 9 {
                 assert(base);
-            } else {
+            } else if i < 11 {
                 assert(ann);
+            } else {
+                assert(v3);
             }
         }
     }
-    base || ann
+    base || ann || v3
 }
 
 fn version_pred_exec(name: &Vec<u8>, arity: usize, v: u8) -> (r: bool)
@@ -17376,6 +17797,7 @@ fn version_pred_exec(name: &Vec<u8>, arity: usize, v: u8) -> (r: bool)
 {
     let base = semantic_v1_exec(name, arity);
     let ann = annotation_pred_exec(name, arity);
+    let v3 = v3_pred_exec(name, arity);
     proof {
         reveal(ckc_spec::v1text::version_pred);
         reveal(ckc_spec::v1text::indicator_count);
@@ -17386,8 +17808,10 @@ fn version_pred_exec(name: &Vec<u8>, arity: usize, v: u8) -> (r: bool)
                 ) == (name@, arity as nat);
             if i < 9 {
                 assert(base);
+            } else if i < 11 {
+                assert((v == 2 || v == 3) && ann);
             } else {
-                assert(v == 2 && ann);
+                assert(v == 3 && v3);
             }
         }
         if base {
@@ -17395,13 +17819,18 @@ fn version_pred_exec(name: &Vec<u8>, arity: usize, v: u8) -> (r: bool)
                 2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             assert(2 <= i < ckc_spec::v1text::indicator_count(v as nat));
         }
-        if v == 2 && ann {
+        if (v == 2 || v == 3) && ann {
             let i = choose|i: int|
                 9 <= i < 11 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             assert(2 <= i < ckc_spec::v1text::indicator_count(v as nat));
         }
+        if v == 3 && v3 {
+            let i = choose|i: int|
+                11 <= i < 15 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
+            assert(2 <= i < ckc_spec::v1text::indicator_count(v as nat));
+        }
     }
-    base || (v == 2 && ann)
+    base || ((v == 2 || v == 3) && ann) || (v == 3 && v3)
 }
 
 // m7t D3: a literal root's predicate is a version-v predicate.
@@ -17744,7 +18173,7 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
         name[0] == 0x67,
 {
     reveal(ckc_spec::v1text::is_semantic_pred);
-    let i = choose|i: int| 2 <= i < 11 && ckc_spec::v1text::indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 15 && ckc_spec::v1text::indicator(i) == (name, arity);
     reveal(ckc_spec::v1text::indicator);
     if i == 2 {
         reveal_strlit("guideline_entity");
@@ -17770,9 +18199,21 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
     } else if i == 9 {
         reveal_strlit("guideline_interval");
         reveal(ckc_spec::v1text::ascii);
-    } else {
-        assert(i == 10);
+    } else if i == 10 {
         reveal_strlit("guideline_recurrence");
+        reveal(ckc_spec::v1text::ascii);
+    } else if i == 11 {
+        reveal_strlit("guideline_frequency");
+        reveal(ckc_spec::v1text::ascii);
+    } else if i == 12 {
+        reveal_strlit("guideline_order");
+        reveal(ckc_spec::v1text::ascii);
+    } else if i == 13 {
+        reveal_strlit("guideline_recurrence_window");
+        reveal(ckc_spec::v1text::ascii);
+    } else {
+        assert(i == 14);
+        reveal_strlit("guideline_range");
         reveal(ckc_spec::v1text::ascii);
     }
 }
@@ -21255,16 +21696,23 @@ proof fn wf_doc_nonempty(d: ckc_spec::v1text::DocFile)
     reveal(ckc_spec::v1text::wf_doc);
 }
 
-// Diagnostic offset of the first annotation name (a v1 file's version-law reject).
-// R9 offset of the first annotation literal in a v1 file: its name diverges from
-// every v1 predicate right after the shared `guideline_` prefix. `%` comment lines
+// R9 offset of the first literal whose predicate the file's version does not
+// declare (the version-law reject): its name diverges from every declared
+// predicate after their longest common prefix (`foreign_cut`). `%` comment lines
 // and quoted atoms may spell the name and are skipped.
 fn first_annotation_at(bytes: &[u8]) -> (r: usize)
     ensures
         r <= bytes@.len(),
 {
-    let a: &[u8] = b"guideline_interval(";
-    let b: &[u8] = b"guideline_recurrence(";
+    let v = file_version(bytes);
+    let names: [&[u8]; 6] = [
+        b"guideline_interval(",
+        b"guideline_recurrence(",
+        b"guideline_frequency(",
+        b"guideline_order(",
+        b"guideline_recurrence_window(",
+        b"guideline_range(",
+    ];
     let mut comment = false;
     let mut quoted = false;
     let mut i = 0usize;
@@ -21277,14 +21725,39 @@ fn first_annotation_at(bytes: &[u8]) -> (r: usize)
             comment = bytes[i] == 0x25;
             quoted = false;
         }
-        let rest = vstd::slice::slice_subrange(bytes, i, bytes.len());
-        if !comment && !quoted && (crate::k4_bytes::starts_with(rest, a)
-            || crate::k4_bytes::starts_with(rest, b)) {
-            return if bytes.len() - i >= 10 {
-                i + 10
-            } else {
-                i
-            };
+        if !comment && !quoted {
+            let rest = vstd::slice::slice_subrange(bytes, i, bytes.len());
+            let mut k = 0usize;
+            while k < 6
+                invariant
+                    k <= 6,
+                    i < bytes@.len(),
+                decreases 6 - k,
+            {
+                let n = names[k];
+                if crate::k4_bytes::starts_with(rest, n) {
+                    let min: u8 = if k < 2 {
+                        2
+                    } else {
+                        3
+                    };
+                    if v < min {
+                        let cut: usize = if k == 3 || (k == 5 && v >= 2) {
+                            11
+                        } else if k == 4 && v >= 2 {
+                            20
+                        } else {
+                            10
+                        };
+                        return if bytes.len() - i >= cut {
+                            i + cut
+                        } else {
+                            i
+                        };
+                    }
+                }
+                k += 1;
+            }
         }
         if !comment && quoted && bytes[i] == 0x5c && i + 1 < bytes.len() {
             i += 1;
@@ -21387,28 +21860,94 @@ fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
         ETermTop::Comp(n, a) => (n, *a),
         _ => return start,
     };
-    let interval: &[u8] = b"guideline_interval";
-    let recurrence: &[u8] = b"guideline_recurrence";
-    let v2_header: &[u8] = b"\nguideline_schema_version(2).\n";
-    let want = if crate::k4_bytes::eq(name, interval) {
-        6usize
-    } else if crate::k4_bytes::eq(name, recurrence) {
-        4usize
-    } else {
-        return start;
+    let (want, min) = match annotation_kind(name) {
+        Some(k) => k,
+        None => return start,
     };
-    if arity == want {
-        start
-    } else if !contains_at(bytes, v2_header) {
-        if term.end - term.start > 10 {
-            start + 10
+    let v = file_version(bytes);
+    if v < min {
+        let cut = foreign_cut(name, v);
+        if term.end - term.start > cut {
+            start + cut
         } else {
             start
         }
+    } else if arity == want {
+        start
     } else if arity < want {
         term.end - 1
     } else {
         top_comma(bytes, term.start, term.end, want)
+    }
+}
+
+// (arity, first schema version) of an annotation predicate name, else none.
+fn annotation_kind(name: &[u8]) -> (r: Option<(usize, u8)>) {
+    if crate::k4_bytes::eq(name, b"guideline_interval") {
+        Some((6, 2))
+    } else if crate::k4_bytes::eq(name, b"guideline_recurrence") {
+        Some((4, 2))
+    } else if crate::k4_bytes::eq(name, b"guideline_frequency") {
+        Some((5, 3))
+    } else if crate::k4_bytes::eq(name, b"guideline_order") {
+        Some((4, 3))
+    } else if crate::k4_bytes::eq(name, b"guideline_recurrence_window") {
+        Some((7, 3))
+    } else if crate::k4_bytes::eq(name, b"guideline_range") {
+        Some((3, 3))
+    } else {
+        None
+    }
+}
+
+// The schema version a file's header names (diagnostics only; 1 without a v2/v3 line).
+fn file_version(bytes: &[u8]) -> (r: u8) {
+    if contains_at(bytes, b"\nguideline_schema_version(3).\n") {
+        3
+    } else if contains_at(bytes, b"\nguideline_schema_version(2).\n") {
+        2
+    } else {
+        1
+    }
+}
+
+// R9 offset inside a name that version v does not declare: the length of its
+// longest common prefix with a version-v predicate name (`guideline_` shared;
+// `o` continues operator, `r` continues the v2 recurrence).
+fn foreign_cut(name: &[u8], v: u8) -> (r: usize) {
+    if crate::k4_bytes::eq(name, b"guideline_order") {
+        11
+    } else if v >= 2 && crate::k4_bytes::eq(name, b"guideline_range") {
+        11
+    } else if v >= 2 && crate::k4_bytes::eq(name, b"guideline_recurrence_window") {
+        20
+    } else {
+        10
+    }
+}
+
+// R9 offset of a query version atom that starts at `at` and names no schema
+// version: the canonical names are the unquoted `v1`..`v3`, each followed by `,`.
+fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>) -> (r: usize)
+    ensures
+        r <= bytes@.len(),
+{
+    if at >= bytes.len() || bytes[at] == 0x27 || name.len() == 0 || name[0] != 0x76 {
+        return if at <= bytes.len() {
+            at
+        } else {
+            bytes.len()
+        };
+    }
+    let k: usize = if name.len() >= 2 && 0x31 <= name[1] && name[1] <= 0x33 {
+        2
+    } else {
+        1
+    };
+    if k <= bytes.len() - at {
+        at + k
+    } else {
+        bytes.len()
     }
 }
 
@@ -21563,6 +22102,75 @@ proof fn wf_doc_intro(d: ckc_spec::v1text::DocFile)
     reveal(ckc_spec::v1text::wf_doc);
 }
 
+// A well-formed document's table digest is present iff its version is 2 or 3
+// (split out of parse_doc_inner: revealing wf_doc there instantiates its ordering
+// quantifier along every bundle chain).
+proof fn wf_doc_temporal(d: ckc_spec::v1text::DocFile)
+    requires
+        ckc_spec::v1text::wf_doc(d),
+    ensures
+        (d.temporal is Some) == (d.version >= 2),
+        1 <= d.version <= 3,
+{
+    reveal(ckc_spec::v1text::wf_doc);
+    reveal(ckc_spec::v1text::version_ok);
+}
+
+// A well-formed document's clauses obey its version law (split out of
+// parse_doc_inner: revealing wf_doc inside its query exhausts the solver).
+proof fn wf_doc_clauses_in(d: ckc_spec::v1text::DocFile)
+    requires
+        ckc_spec::v1text::wf_doc(d),
+    ensures
+        forall|k: int|
+            0 <= k < doc_clause_models(d.bundles).len() ==> ckc_spec::v1text::clause_in(
+                #[trigger] doc_clause_models(d.bundles)[k],
+                d.version,
+            ),
+{
+    reveal(ckc_spec::v1text::wf_doc);
+    clauses_in_from_bundles(d.bundles, d.version);
+}
+
+// The parsed model is well formed and prints the parsed bytes (split out of
+// parse_doc_inner for the same reason).
+proof fn doc_model_ok(
+    bytes: Seq<u8>,
+    base: ckc_spec::v1text::DocFile,
+    model: ckc_spec::v1text::DocFile,
+)
+    requires
+        bytes == doc_prefix_stage(base) + ckc_spec::v1text::bundles_bytes(model.bundles),
+        base.docid == model.docid,
+        base.ace == model.ace,
+        base.ulex == model.ulex,
+        base.version == model.version,
+        base.temporal == model.temporal,
+        forall|k: int|
+            0 <= k < doc_clause_models(model.bundles).len() ==> ckc_spec::v1text::clause_in(
+                #[trigger] doc_clause_models(model.bundles)[k],
+                model.version,
+            ),
+        ckc_spec::v1text::version_ok(model.version, model.temporal),
+        ckc_spec::v1text::name_ok(model.docid),
+        ckc_spec::v1text::hex64(model.ace),
+        ckc_spec::v1text::ulex_ok(model.ulex),
+        model.bundles.len() >= 1,
+        doc_bundles_wf(model.bundles),
+        doc_bundles_ordered(model.bundles),
+    ensures
+        ckc_spec::v1text::wf_doc(model),
+        ckc_spec::v1text::print_doc(model) == bytes,
+{
+    bundles_in_from_clauses(model.bundles, model.version);
+    reveal(doc_prefix_stage);
+    reveal(doc_flat);
+    assert(doc_prefix_stage(base) == doc_prefix_stage(model));
+    assert(bytes == doc_flat(model));
+    doc_flat_is_print(model);
+    wf_doc_intro(model);
+}
+
 #[verifier::rlimit(100)]
 #[verifier::spinoff_prover]
 pub fn parse_doc(
@@ -21656,22 +22264,21 @@ fn parse_doc_inner(
     };
     proof {
         if let Some(d) = expected@ {
-            reveal(ckc_spec::v1text::wf_doc);
-            reveal(ckc_spec::v1text::version_ok);
+            wf_doc_temporal(d);
         }
     }
     let ace = match parse_doc_record_prefix(bytes, &mut guided, &docid, expected, at) {
         Some(ace) => ace,
         None => return (None, working_arena),
     };
-    let ulex = match parse_doc_ulex(bytes, &mut guided, expected, version == 2, at) {
+    let ulex = match parse_doc_ulex(bytes, &mut guided, expected, version >= 2, at) {
         Some(ulex) => ulex,
         None => return (None, working_arena),
     };
 
     let ghost base = ckc_spec::v1text::DocFile {
         version: version as nat,
-        temporal: tail_of(version == 2, ulex.temporal@),
+        temporal: tail_of(version >= 2, ulex.temporal@),
         docid: docid.value@,
         ace: ace.name@,
         ulex: ulex.value@,
@@ -21989,9 +22596,8 @@ fn parse_doc_inner(
         proof {
             if let Some(d) = expected@ {
                 reveal(doc_clauses_roots_ok);
-                reveal(ckc_spec::v1text::wf_doc);
                 assert(bundles == d.bundles);
-                clauses_in_from_bundles(d.bundles, d.version);
+                wf_doc_clauses_in(d);
                 assert forall|i: int| 0 <= i < clauses@.len() implies ckc_spec::v1text::clause_in(
                     #[trigger] clauses@[i]@,
                     version as nat,
@@ -22005,7 +22611,7 @@ fn parse_doc_inner(
     }
     let ghost model = ckc_spec::v1text::DocFile {
         version: version as nat,
-        temporal: tail_of(version == 2, ulex.temporal@),
+        temporal: tail_of(version >= 2, ulex.temporal@),
         docid: docid.value@,
         ace: ace.name@,
         ulex: ulex.value@,
@@ -22022,11 +22628,6 @@ fn parse_doc_inner(
             bytes@.subrange(0, bytes@.len() as int) == bytes@
         );
         assert(guided.cursor.prefix@ == bytes@);
-        assert(base.docid == model.docid);
-        assert(base.ace == model.ace);
-        assert(base.ulex == model.ulex);
-        assert(base.version == model.version);
-        assert(base.temporal == model.temporal);
         reveal(doc_clauses_roots_ok);
         assert forall|k: int|
             0 <= k < doc_clause_models(bundles).len() implies ckc_spec::v1text::clause_in(
@@ -22035,15 +22636,9 @@ fn parse_doc_inner(
         ) by {
             assert(clauses@[k]@ == doc_clause_models(bundles)[k]);
         }
-        bundles_in_from_clauses(model.bundles, model.version);
         reveal(ckc_spec::v1text::version_ok);
-        reveal(doc_flat);
-        assert(doc_prefix_stage(base) == doc_prefix_stage(model));
-        assert(guided.cursor.prefix@ == doc_flat(model));
-        doc_flat_is_print(model);
-        assert(model.bundles.len() >= 1);
-        wf_doc_intro(model);
-        assert(ckc_spec::v1text::wf_doc(model));
+        assert(ckc_spec::v1text::version_ok(model.version, model.temporal));
+        doc_model_ok(bytes@, base, model);
         if let Some(d) = expected@ {
             assert(docid.value@ == d.docid);
             assert(ace.name@ == d.ace);

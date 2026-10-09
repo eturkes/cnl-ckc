@@ -86,7 +86,7 @@ pub proof fn apply_extension(a: Term, b: Term, s: Seq<(nat, Term)>, r: Seq<(nat,
 pub proof fn naf_log_sound(db: Seq<DocClause>, goal: Term, log: Seq<(Seq<nat>, TEv)>)
     requires
         bodies_wf(db),
-        ckc_spec::answers::goal_walk(goal, 2) is None,
+        ckc_spec::answers::goal_walk(goal, 3) is None,
         trun(db, roots_cfg(conj_leaves(goal)), trace_inf()).0 == TOut::Proved(log),
     ensures
         graph::naf_log_ok(db, log),
@@ -106,7 +106,7 @@ pub proof fn naf_log_sound(db: Seq<DocClause>, goal: Term, log: Seq<(Seq<nat>, T
 pub proof fn k3_sound_proof(db: Seq<DocClause>, goal: Term)
     requires
         bodies_wf(db),
-        ckc_spec::answers::goal_walk(goal, 2) is None,
+        ckc_spec::answers::goal_walk(goal, 3) is None,
         derived_forest(db, goal) is Some,
     ensures
         forest_valid(db, goal, derived_forest(db, goal).unwrap()),

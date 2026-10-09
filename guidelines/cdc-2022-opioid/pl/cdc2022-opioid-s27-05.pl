@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-s27-05',ace_sha256(eeadefa5fc8d8bffa15aae1172d81ba3ade1d9014b4a646a7bbf5fa17ee337da),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-s27-05',ace_sha256(eeadefa5fc8d8bffa15aae1172d81ba3ade1d9014b4a646a7bbf5fa17ee337da),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a patient has a gastrointestinal-comorbidity and does not have a current-gastrointestinal-bleeding and does not have a previous-gastrointestinal-bleeding then every clinician may use a cyclooxygenase-2-inhibitor for the patient during a gastrointestinal-risk-minimization.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s27-05',1,box(3),[A,B,C,D]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'gastrointestinal-comorbidity',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_operator(actual,E,-), guideline_entity(E,F,'current-gastrointestinal-bleeding',countable), guideline_cardinality(E,F,na,eq,1), guideline_event(E,G,have), guideline_arg(E,G,1,A), guideline_arg(E,G,2,F), guideline_operator(actual,H,-), guideline_entity(H,I,'previous-gastrointestinal-bleeding',countable), guideline_cardinality(H,I,na,eq,1), guideline_event(H,J,have), guideline_arg(H,J,1,A), guideline_arg(H,J,2,I), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s27-05',1,box(3),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s27-05',1,ref(9),[A,B,C,D]),'cyclooxygenase-2-inhibitor',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'gastrointestinal-comorbidity',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_operator(actual,E,-), guideline_entity(E,F,'current-gastrointestinal-bleeding',countable), guideline_cardinality(E,F,na,eq,1), guideline_event(E,G,have), guideline_arg(E,G,1,A), guideline_arg(E,G,2,F), guideline_operator(actual,H,-), guideline_entity(H,I,'previous-gastrointestinal-bleeding',countable), guideline_cardinality(H,I,na,eq,1), guideline_event(H,J,have), guideline_arg(H,J,1,A), guideline_arg(H,J,2,I), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

@@ -629,6 +629,41 @@ pub open spec fn condition(
                 ),
                 _ => Result::Err(atom("unresolved_argument"@)),
             }
+        } else if name == ascii("$guideline_frequency"@) && args.len() == 4 {
+            match (
+                resolve(args[0], map, sko),
+                resolve(args[1], map, sko),
+                resolve(args[2], map, sko),
+            ) {
+                (Result::Ok(e), Result::Ok(c), Result::Ok(w)) => Result::Ok(
+                    seq![lit("guideline_frequency"@, seq![ctx, e, c, w, args[3]])],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
+        } else if name == ascii("$guideline_order"@) && args.len() == 3 {
+            match (resolve(args[0], map, sko), resolve(args[2], map, sko)) {
+                (Result::Ok(e), Result::Ok(a)) => Result::Ok(
+                    seq![lit("guideline_order"@, seq![ctx, e, args[1], a])],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
+        } else if name == ascii("$guideline_recurrence_window"@) && args.len() == 6 {
+            match (
+                resolve(args[0], map, sko),
+                resolve(args[1], map, sko),
+                resolve(args[3], map, sko),
+                resolve(args[4], map, sko),
+            ) {
+                (Result::Ok(e), Result::Ok(q), Result::Ok(a), Result::Ok(l)) => Result::Ok(
+                    seq![
+                        lit(
+                            "guideline_recurrence_window"@,
+                            seq![ctx, e, q, args[2], a, l, args[5]],
+                        ),
+                    ],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
         } else {
             Result::Err(atom("condition_shape"@))
         },
@@ -906,13 +941,276 @@ pub open spec fn bound_why(o: Term) -> Option<Term> {
 pub ghost enum Ann {
     Interval(Term, Seq<u8>, Term, Seq<u8>, Term),  // event, role, quantity, unit, anchor | none
     Recurrence(Term, Term, Term, Seq<u8>),  // event, frame, quantity, unit
+    Window(Term, Term, Term, Seq<u8>, Term),  // v3: event, frame, length, unit, anchor
+    Frequency(Term, Term, Term, Seq<u8>),  // v3: event, counted, period, unit
+    Order(Term, Seq<u8>, Term),  // v3: event, relation, anchor
 }
 
-// The annotation of one `modifier_pp(E, P, X)` in its scope; Ok(None) = a plain pp.
-pub open spec fn pp_ann(tab: Temporal, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
+// --- v3 (contract q12): referent classification over the document DRS (D3) ---
+// The annotation environment: the table + the declaration of every referent of
+// the document (or question) DRS, in preorder. APE introduces each referent by
+// one `object/6` condition, so variable identity finds its declaration in any
+// box or sentence.
+pub ghost struct Decl {
+    pub var: nat,
+    pub noun: Seq<u8>,
+    pub bounded:
+        bool,  // countable, unit na, a comparison, count ≥ 1 (bound_why None)
+}
+
+pub ghost struct Env {
+    pub tab: Temporal,
+    pub decls: Seq<Decl>,
+}
+
+pub open spec fn objects(t: Term) -> Seq<Term>
+    decreases t, 0int,
+{
+    match t {
+        Term::Comp(name, args) => if name == ascii("object"@) && args.len() == 6 {
+            seq![t]
+        } else {
+            objects_all(args)
+        },
+        _ => Seq::empty(),
+    }
+}
+
+pub open spec fn objects_all(ts: Seq<Term>) -> Seq<Term>
+    decreases ts, 1int,
+{
+    if ts.len() == 0 {
+        Seq::empty()
+    } else {
+        objects(ts[0]) + objects_all(ts.drop_first())
+    }
+}
+
+// Object conditions with a variable referent, as declarations.
+pub open spec fn decls_of(objs: Seq<Term>) -> Seq<Decl>
+    decreases objs.len(),
+{
+    if objs.len() == 0 {
+        Seq::empty()
+    } else {
+        (match arg(objs[0], 0) {
+            Term::Var(k) => seq![
+                Decl { var: k, noun: noun_of(objs[0]), bounded: bound_why(objs[0]) is None },
+            ],
+            _ => Seq::empty(),
+        }) + decls_of(objs.drop_first())
+    }
+}
+
+pub open spec fn env_of(tab: Option<Temporal>, drs: Term) -> Option<Env> {
+    match tab {
+        Option::Some(t) => Option::Some(Env { tab: t, decls: decls_of(objects(drs)) }),
+        Option::None => Option::None,
+    }
+}
+
+// The first declaration of variable k.
+pub open spec fn decl(ds: Seq<Decl>, k: nat) -> Option<Decl>
+    decreases ds.len(),
+{
+    if ds.len() == 0 {
+        Option::None
+    } else if ds[0].var == k {
+        Option::Some(ds[0])
+    } else {
+        decl(ds.drop_first(), k)
+    }
+}
+
+// A plain referent: a DRS variable whose noun is neither a unit lemma nor a
+// frame noun.
+pub open spec fn plain(env: Env, v: Term) -> bool {
+    match v {
+        Term::Var(k) => match decl(env.decls, k) {
+            Option::Some(d) => d.noun.len() > 0 && assoc(env.tab.units, d.noun) is None && !frames(
+                env.tab,
+            ).contains(d.noun),
+            Option::None => false,
+        },
+        _ => false,
+    }
+}
+
+pub open spec fn frame_shaped(o: Term) -> bool {
+    arg(o, 2) == atom("countable"@) && arg(o, 3) == atom("na"@) && arg(o, 4) == atom("eq"@) && arg(
+        o,
+        5,
+    ) == Term::Int(1)
+}
+
+pub open spec fn name_of(t: Term) -> Seq<u8> {
+    match t {
+        Term::Atom(a) => a,
+        _ => Seq::empty(),
+    }
+}
+
+// E's first same-context `predicate/4|5` condition.
+pub open spec fn pred_of(items: Seq<Item>, ctx: Term, e: Term) -> Option<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Option::None
+    } else {
+        match items[0] {
+            Item::Anch(c, inner) => if c == ctx && (is_comp(inner, "predicate"@, 4) || is_comp(
+                inner,
+                "predicate"@,
+                5,
+            )) && arg(inner, 0) == e {
+                Option::Some(inner)
+            } else {
+                pred_of(items.drop_first(), ctx, e)
+            },
+            _ => pred_of(items.drop_first(), ctx, e),
+        }
+    }
+}
+
+// D5: the counted item = E's second participant (the predicate's 4th
+// argument), a plain referent with a bound.
+pub open spec fn counted(env: Env, items: Seq<Item>, ctx: Term, e: Term) -> Option<Term> {
+    match pred_of(items, ctx, e) {
+        Option::Some(pr) => match arg(pr, 3) {
+            Term::Var(k) => match decl(env.decls, k) {
+                Option::Some(d) => if plain(env, arg(pr, 3)) && d.bounded {
+                    Option::Some(arg(pr, 3))
+                } else {
+                    Option::None
+                },
+                Option::None => Option::None,
+            },
+            _ => Option::None,
+        },
+        Option::None => Option::None,
+    }
+}
+
+// D6: the same-context window pps on event e among `rest` (scope = the whole scope).
+pub open spec fn window_pps(
+    tab: Temporal,
+    scope: Seq<Item>,
+    rest: Seq<Item>,
+    ctx: Term,
+    e: Term,
+) -> nat
+    decreases rest.len(),
+{
+    if rest.len() == 0 {
+        0
+    } else {
+        (match rest[0] {
+            Item::Anch(c, inner) => if c == ctx && is_comp(inner, "modifier_pp"@, 3) && arg(
+                inner,
+                0,
+            ) == e && match obj_of(scope, ctx, arg(inner, 2)) {
+                Option::Some(o) => tab.windows.contains((name_of(arg(inner, 1)), noun_of(o))),
+                Option::None => false,
+            } {
+                1nat
+            } else {
+                0nat
+            },
+            _ => 0nat,
+        }) + window_pps(tab, scope, rest.drop_first(), ctx, e)
+    }
+}
+
+// D6: `modifier_pp(E, P, F)` with (P, noun F) a window pair: the only window pp on
+// E, F frame-shaped, F of L (a time quantity), L of A (a plain referent).
+pub open spec fn window_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term, o: Term) -> Result<
     Option<Ann>,
     Term,
 > {
+    let f = arg(pp, 2);
+    let fl = of_links(items, ctx, f);
+    if window_pps(env.tab, items, items, ctx, arg(pp, 0)) > 1 || !frame_shaped(o) || fl.len() != 1 {
+        Result::Err(shape("window_shape"@))
+    } else {
+        match qty(env.tab, items, ctx, fl[0]) {
+            Option::None => Result::Err(shape("window_shape"@)),
+            Option::Some((unit, lo)) => if bound_why(lo) is Some {
+                Result::Err(bound_why(lo).unwrap())
+            } else {
+                let al = of_links(items, ctx, fl[0]);
+                if al.len() != 1 || !plain(env, al[0]) {
+                    Result::Err(shape("window_shape"@))
+                } else {
+                    Result::Ok(Option::Some(Ann::Window(arg(pp, 0), f, fl[0], unit, al[0])))
+                }
+            },
+        }
+    }
+}
+
+// D5: `modifier_pp(E, P, W)` with P a frequency lemma and W a time quantity.
+pub open spec fn frequency_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
+    Option<Ann>,
+    Term,
+> {
+    let w = arg(pp, 2);
+    match qty(env.tab, items, ctx, w) {
+        Option::None => Result::Ok(Option::None),
+        Option::Some((unit, wo)) => if bound_why(wo) is Some {
+            Result::Err(bound_why(wo).unwrap())
+        } else if arg(wo, 4) != atom("eq"@) || of_links(items, ctx, w).len() > 0 {
+            Result::Err(shape("frequency_shape"@))
+        } else {
+            match counted(env, items, ctx, arg(pp, 0)) {
+                Option::None => Result::Err(shape("frequency_shape"@)),
+                Option::Some(c) => Result::Ok(Option::Some(Ann::Frequency(arg(pp, 0), c, w, unit))),
+            }
+        },
+    }
+}
+
+// The v3 patterns of a pp the v2 patterns leave plain: window, frequency, then
+// order (D4: a before|after relation over a plain referent). v2 tables stop here.
+pub open spec fn v3_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
+    Option<Ann>,
+    Term,
+> {
+    let tab = env.tab;
+    let p = name_of(arg(pp, 1));
+    let x = arg(pp, 2);
+    let role = assoc(tab.relations, p);
+    if tab.version != 3 {
+        Result::Ok(Option::None)
+    } else {
+        match obj_of(items, ctx, x) {
+            Option::Some(o) => if tab.windows.contains((p, noun_of(o))) {
+                window_ann(env, items, ctx, pp, o)
+            } else if tab.frequencies.contains(p) {
+                frequency_ann(env, items, ctx, pp)
+            } else if (role == Option::Some(ascii("before"@)) || role == Option::Some(
+                ascii("after"@),
+            )) && plain(env, x) {
+                Result::Ok(Option::Some(Ann::Order(arg(pp, 0), role.unwrap(), x)))
+            } else {
+                Result::Ok(Option::None)
+            },
+            Option::None => if (role == Option::Some(ascii("before"@)) || role == Option::Some(
+                ascii("after"@),
+            )) && plain(env, x) {
+                Result::Ok(Option::Some(Ann::Order(arg(pp, 0), role.unwrap(), x)))
+            } else {
+                Result::Ok(Option::None)
+            },
+        }
+    }
+}
+
+// The annotation of one `modifier_pp(E, P, X)` in its scope; Ok(None) = a plain pp.
+pub open spec fn pp_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
+    Option<Ann>,
+    Term,
+> {
+    let tab = env.tab;
     let p = match arg(pp, 1) {
         Term::Atom(a) => a,
         _ => Seq::empty(),
@@ -940,7 +1238,7 @@ pub open spec fn pp_ann(tab: Temporal, items: Seq<Item>, ctx: Term, pp: Term) ->
         },
         _ => match obj_of(items, ctx, x) {
             Option::Some(f) => if !tab.spacings.contains((p, noun_of(f))) {
-                Result::Ok(Option::None)
+                v3_ann(env, items, ctx, pp)
             } else if !(arg(f, 2) == atom("countable"@) && arg(f, 3) == atom("na"@) && arg(f, 4)
                 == atom("eq"@) && arg(f, 5) == Term::Int(1)) {
                 Result::Err(shape("frame_shape"@))
@@ -958,13 +1256,13 @@ pub open spec fn pp_ann(tab: Temporal, items: Seq<Item>, ctx: Term, pp: Term) ->
                     },
                 }
             },
-            Option::None => Result::Ok(Option::None),
+            Option::None => v3_ann(env, items, ctx, pp),
         },
     }
 }
 
 // The scope's annotations in item order (context, annotation), or the first violation.
-pub open spec fn anns(tab: Temporal, scope: Seq<Item>, items: Seq<Item>) -> Result<
+pub open spec fn anns(env: Env, scope: Seq<Item>, items: Seq<Item>) -> Result<
     Seq<(Term, Ann)>,
     Term,
 >
@@ -975,7 +1273,7 @@ pub open spec fn anns(tab: Temporal, scope: Seq<Item>, items: Seq<Item>) -> Resu
     } else {
         let head = match items[0] {
             Item::Anch(c, inner) => if is_comp(inner, "modifier_pp"@, 3) {
-                match pp_ann(tab, scope, c, inner) {
+                match pp_ann(env, scope, c, inner) {
                     Result::Err(e) => Result::Err(e),
                     Result::Ok(Option::Some(a)) => Result::Ok(seq![(c, a)]),
                     Result::Ok(Option::None) => Result::Ok(Seq::empty()),
@@ -985,7 +1283,7 @@ pub open spec fn anns(tab: Temporal, scope: Seq<Item>, items: Seq<Item>) -> Resu
             },
             _ => Result::Ok(Seq::empty()),
         };
-        match (head, anns(tab, scope, items.drop_first())) {
+        match (head, anns(env, scope, items.drop_first())) {
             (Result::Err(e), _) => Result::Err(e),
             (_, Result::Err(e)) => Result::Err(e),
             (Result::Ok(h), Result::Ok(t)) => Result::Ok(h + t),
@@ -1000,6 +1298,9 @@ pub open spec fn claims(ms: Seq<(Term, Ann)>) -> Seq<(Term, Term)> {
             match m.1 {
                 Ann::Interval(_, _, q, _, _) => seq![(m.0, q)],
                 Ann::Recurrence(_, f, q, _) => seq![(m.0, f), (m.0, q)],
+                Ann::Window(_, f, l, _, _) => seq![(m.0, f), (m.0, l)],
+                Ann::Frequency(_, c, w, _) => seq![(m.0, c), (m.0, w)],
+                Ann::Order(_, _, _) => Seq::empty(),
             },
     ).flatten()
 }
@@ -1015,26 +1316,99 @@ pub open spec fn consumed(ms: Seq<(Term, Ann)>) -> Seq<(Term, Term)> {
                     Seq::empty()
                 },
                 Ann::Recurrence(_, f, _, _) => seq![(m.0, f)],
+                Ann::Window(_, f, l, _, _) => seq![(m.0, f), (m.0, l)],
+                _ => Seq::empty(),
             },
     ).flatten()
 }
 
-pub open spec fn ann_inner(a: Ann) -> Term {
+// The scope's window on event e in context c (D6), as (length, unit, anchor).
+pub open spec fn window_of(ms: Seq<(Term, Ann)>, c: Term, e: Term) -> Option<(Term, Seq<u8>, Term)>
+    decreases ms.len(),
+{
+    if ms.len() == 0 {
+        Option::None
+    } else {
+        match ms[0].1 {
+            Ann::Window(e2, _, l, unit, a) => if ms[0].0 == c && e2 == e {
+                Option::Some((l, unit, a))
+            } else {
+                window_of(ms.drop_first(), c, e)
+            },
+            _ => window_of(ms.drop_first(), c, e),
+        }
+    }
+}
+
+// The reserved item an annotation adds after its pp; a recurrence under a
+// window becomes a scoped recurrence; a window adds none of its own.
+pub open spec fn ann_inner(a: Ann, ms: Seq<(Term, Ann)>, c: Term) -> Option<Term> {
     match a {
-        Ann::Interval(e, role, q, unit, anchor) => Term::Comp(
-            ascii("$guideline_interval"@),
-            seq![e, Term::Atom(role), q, Term::Atom(unit), anchor],
+        Ann::Interval(e, role, q, unit, anchor) => Option::Some(
+            Term::Comp(
+                ascii("$guideline_interval"@),
+                seq![e, Term::Atom(role), q, Term::Atom(unit), anchor],
+            ),
         ),
-        Ann::Recurrence(e, _, q, unit) => Term::Comp(
-            ascii("$guideline_recurrence"@),
-            seq![e, q, Term::Atom(unit)],
+        Ann::Recurrence(e, _, q, unit) => match window_of(ms, c, e) {
+            Option::None => Option::Some(
+                Term::Comp(ascii("$guideline_recurrence"@), seq![e, q, Term::Atom(unit)]),
+            ),
+            Option::Some((l, lunit, anchor)) => Option::Some(
+                Term::Comp(
+                    ascii("$guideline_recurrence_window"@),
+                    seq![e, q, Term::Atom(unit), anchor, l, Term::Atom(lunit)],
+                ),
+            ),
+        },
+        Ann::Window(_, _, _, _, _) => Option::None,
+        Ann::Frequency(e, cnt, w, unit) => Option::Some(
+            Term::Comp(ascii("$guideline_frequency"@), seq![e, cnt, w, Term::Atom(unit)]),
+        ),
+        Ann::Order(e, role, anchor) => Option::Some(
+            Term::Comp(ascii("$guideline_order"@), seq![e, Term::Atom(role), anchor]),
         ),
     }
 }
 
+pub open spec fn event_of(a: Ann) -> Term {
+    match a {
+        Ann::Interval(e, _, _, _, _) => e,
+        Ann::Recurrence(e, _, _, _) => e,
+        Ann::Window(e, _, _, _, _) => e,
+        Ann::Frequency(e, _, _, _) => e,
+        Ann::Order(e, _, _) => e,
+    }
+}
+
+pub open spec fn recurrences_on(ms: Seq<(Term, Ann)>, c: Term, e: Term) -> nat
+    decreases ms.len(),
+{
+    if ms.len() == 0 {
+        0
+    } else {
+        (if ms[0].0 == c && event_of(ms[0].1) == e && ms[0].1 is Recurrence {
+            1nat
+        } else {
+            0nat
+        }) + recurrences_on(ms.drop_first(), c, e)
+    }
+}
+
+// D6: each window's event carries ≥1 recurrence in the same context.
+pub open spec fn windows_ok(ms: Seq<(Term, Ann)>, all: Seq<(Term, Ann)>) -> bool
+    decreases ms.len(),
+{
+    ms.len() == 0 || ((match ms[0].1 {
+        Ann::Window(e, _, _, _, _) => recurrences_on(all, ms[0].0, e) >= 1,
+        _ => true,
+    }) && windows_ok(ms.drop_first(), all))
+}
+
 pub open spec fn rebuild_item(
-    tab: Temporal,
+    env: Env,
     scope: Seq<Item>,
+    ms: Seq<(Term, Ann)>,
     links: Seq<(Term, Term)>,
     it: Item,
 ) -> Result<Seq<Item>, Term>
@@ -1042,8 +1416,11 @@ pub open spec fn rebuild_item(
 {
     match it {
         Item::Anch(c, inner) => if is_comp(inner, "modifier_pp"@, 3) {
-            match pp_ann(tab, scope, c, inner) {
-                Result::Ok(Option::Some(a)) => Result::Ok(seq![it, Item::Anch(c, ann_inner(a))]),
+            match pp_ann(env, scope, c, inner) {
+                Result::Ok(Option::Some(a)) => match ann_inner(a, ms, c) {
+                    Option::Some(t) => Result::Ok(seq![it, Item::Anch(c, t)]),
+                    Option::None => Result::Ok(seq![it]),
+                },
                 _ => Result::Ok(seq![it]),
             }
         } else if is_comp(inner, "relation"@, 3) && arg(inner, 1) == atom("of"@) && links.contains(
@@ -1053,7 +1430,7 @@ pub open spec fn rebuild_item(
         } else {
             Result::Ok(seq![it])
         },
-        Item::Naf(dom, payload) => match annotate(tab, payload) {
+        Item::Naf(dom, payload) => match annotate(env, payload) {
             Result::Err(e) => Result::Err(e),
             Result::Ok(p) => Result::Ok(seq![Item::Naf(dom, p)]),
         },
@@ -1062,8 +1439,9 @@ pub open spec fn rebuild_item(
 }
 
 pub open spec fn rebuild(
-    tab: Temporal,
+    env: Env,
     scope: Seq<Item>,
+    ms: Seq<(Term, Ann)>,
     links: Seq<(Term, Term)>,
     items: Seq<Item>,
 ) -> Result<Seq<Item>, Term>
@@ -1073,8 +1451,8 @@ pub open spec fn rebuild(
         Result::Ok(Seq::empty())
     } else {
         match (
-            rebuild_item(tab, scope, links, items[0]),
-            rebuild(tab, scope, links, items.drop_first()),
+            rebuild_item(env, scope, ms, links, items[0]),
+            rebuild(env, scope, ms, links, items.drop_first()),
         ) {
             (Result::Err(e), _) => Result::Err(e),
             (_, Result::Err(e)) => Result::Err(e),
@@ -1083,23 +1461,25 @@ pub open spec fn rebuild(
     }
 }
 
-// One scope annotated: exclusive claims, consumed `of` links dropped (any other
-// `relation/3` stays and rejects in `condition`).
-pub open spec fn annotate(tab: Temporal, items: Seq<Item>) -> Result<Seq<Item>, Term>
+// One scope annotated: exclusive claims, windows over recurrences, consumed
+// `of` links dropped (any other `relation/3` stays and rejects in `condition`).
+pub open spec fn annotate(env: Env, items: Seq<Item>) -> Result<Seq<Item>, Term>
     decreases items, 2int,
 {
-    match anns(tab, items, items) {
+    match anns(env, items, items) {
         Result::Err(e) => Result::Err(e),
         Result::Ok(ms) => if !claims(ms).no_duplicates() {
             Result::Err(shape("shared_quantity"@))
+        } else if !windows_ok(ms, ms) {
+            Result::Err(shape("window_shape"@))
         } else {
-            rebuild(tab, items, consumed(ms), items)
+            rebuild(env, items, ms, consumed(ms), items)
         },
     }
 }
 
 // v1 (no table) leaves items as flattened.
-pub open spec fn annotated(tab: Option<Temporal>, items: Seq<Item>) -> Result<Seq<Item>, Term> {
+pub open spec fn annotated(tab: Option<Env>, items: Seq<Item>) -> Result<Seq<Item>, Term> {
     match tab {
         Option::None => Result::Ok(items),
         Option::Some(t) => annotate(t, items),
@@ -1107,7 +1487,7 @@ pub open spec fn annotated(tab: Option<Temporal>, items: Seq<Item>) -> Result<Se
 }
 
 pub open spec fn flatten_ann(
-    tab: Option<Temporal>,
+    tab: Option<Env>,
     l: Term,
     w: Where,
     s: nat,
@@ -1177,7 +1557,7 @@ pub open spec fn fact_group(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
-    tab: Option<Temporal>,
+    tab: Option<Env>,
 ) -> Result<(Group, Seq<(Term, Term)>), Term> {
     match roots_conds(roots) {
         Option::None => Result::Err(atom("sentence_shape"@)),
@@ -1304,7 +1684,7 @@ pub open spec fn flatten_seq(
     docid: Seq<u8>,
     n: nat,
     base: nat,
-    tab: Option<Temporal>,
+    tab: Option<Env>,
 ) -> Result<Flat, Term> {
     flatten_ann(
         tab,
@@ -1440,7 +1820,7 @@ pub open spec fn flatten_cons(
     deps: Term,
     n: nat,
     base: nat,
-    tab: Option<Temporal>,
+    tab: Option<Env>,
 ) -> Result<Flat, Term> {
     flatten_ann(tab, cconds, Where::Consequent, s, docid, deps, actual(), Encl::Top, n, base)
 }
@@ -1455,7 +1835,7 @@ pub open spec fn rule_groups(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
-    tab: Option<Temporal>,
+    tab: Option<Env>,
 ) -> Result<Seq<Group>, Term> {
     match curry(ante, cons, 64) {
         Result::Err(e) => Result::Err(e),
@@ -1545,7 +1925,7 @@ pub open spec fn split_variants(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
-    tab: Option<Temporal>,
+    tab: Option<Env>,
 ) -> Result<Seq<Group>, Term> {
     match flatten_seq(shared, s, docid, 1, base, tab) {
         Result::Err(e) => Result::Err(e),
@@ -1637,7 +2017,7 @@ pub open spec fn sentence_groups(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
-    tab: Option<Temporal>,
+    tab: Option<Env>,
 ) -> Result<(Seq<Group>, Seq<(Term, Term)>), Term> {
     if roots.len() == 1 && roots[0] is Rule {
         match roots[0] {
@@ -1715,7 +2095,7 @@ pub open spec fn project_from(
     docid: Seq<u8>,
     map: Seq<(Term, Term)>,
     base: nat,
-    tab: Option<Temporal>,
+    tab: Option<Env>,
 ) -> Result<Seq<Projected>, Term>
     decreases count + 1 - s,
 {
@@ -1792,7 +2172,15 @@ pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat, tab: Option<Temp
                     Option::Some(tagged) => if !in_range(tagged, count) {
                         Result::Err(atom("condition_outside_sentence_range"@))
                     } else {
-                        project_from(tagged, 1, count, docid, Seq::empty(), nvars(drs), tab)
+                        project_from(
+                            tagged,
+                            1,
+                            count,
+                            docid,
+                            Seq::empty(),
+                            nvars(drs),
+                            env_of(tab, drs),
+                        )
                     },
                 },
             }
@@ -1852,8 +2240,8 @@ pub open spec fn first_nonground(obs: Seq<Ob>) -> Option<Ob>
 }
 
 // --- custody + the document relation ---
-// The table a certification projects with: v1 = none; v2 = the parsed raw table,
-// supplied with its digest. None = a custody or grammar failure.
+// The table a certification projects with: v1 = none; v2 | v3 = the parsed raw
+// table, supplied with its digest. None = a custody or grammar failure.
 pub open spec fn table_of(traw: Option<Seq<u8>>, tsha: Option<Seq<u8>>) -> Option<
     Option<Temporal>,
 > {
@@ -1864,6 +2252,15 @@ pub open spec fn table_of(traw: Option<Seq<u8>>, tsha: Option<Seq<u8>>) -> Optio
             Result::Err(_) => Option::None,
         },
         _ => Option::None,
+    }
+}
+
+// The schema version a certification projects under: v1 = no table, else the
+// table's header version (contract q12 D10).
+pub open spec fn tab_version(t: Option<Temporal>) -> nat {
+    match t {
+        Option::None => 1,
+        Option::Some(x) => x.version,
     }
 }
 
@@ -1940,6 +2337,8 @@ pub open spec fn certify_doc(
                     Result::Err(atom("ulex"@))
                 } else if doc.temporal != tsha || table_of(traw, tsha) is None {
                     Result::Err(atom("temporal"@))
+                } else if doc.version != tab_version(table_of(traw, tsha).unwrap()) {
+                    Result::Err(atom("schema_version"@))
                 } else if doc.bundles.len() != lines.len() {
                     Result::Err(atom("bundle_count"@))
                 } else {
@@ -2195,7 +2594,7 @@ pub open spec fn project_query(drs: Term, qid: Seq<u8>, tab: Option<Temporal>) -
                     Option::Some(answers) => match box_parts(strip_box(q)) {
                         Option::None => Result::Err(atom("invalid_drs_shape"@)),
                         Option::Some((_, clean)) => match flatten_ann(
-                            tab,
+                            env_of(tab, drs),
                             clean,
                             Where::Antecedent,
                             1,
@@ -2284,6 +2683,8 @@ pub open spec fn certify_query(
                     Result::Err(atom("ulex"@))
                 } else if q.temporal != tsha || table_of(traw, tsha) is None {
                     Result::Err(atom("temporal"@))
+                } else if q.version != tab_version(table_of(traw, tsha).unwrap()) {
+                    Result::Err(atom("schema_version"@))
                 } else if q.qtext != query_text(lines[0]) {
                     Result::Err(atom("query_text"@))
                 } else {

@@ -19,22 +19,34 @@ pub open spec fn unit_row(raw: u::Bytes, p: (u::Bytes, u::Bytes)) -> u::Html {
     )
 }
 
-pub open spec fn relation_row(raw: u::Bytes, p: (u::Bytes, u::Bytes)) -> u::Html {
-    u::word_row(u::pl_word(raw, p.0), u::role_html(p.1))
+pub open spec fn relation_row(raw: u::Bytes, v: nat, p: (u::Bytes, u::Bytes)) -> u::Html {
+    u::word_row(u::pl_word(raw, p.0), u::role_html_v(p.1, v))
 }
 
 pub open spec fn spacing_row(raw: u::Bytes, p: (u::Bytes, u::Bytes)) -> u::Html {
     u::word_row(
-        u::pl_word(raw, p.0) + u::fixed_bytes(u::paren_open_sep()) + u::fixed_bytes(u::with_sp())
-            + u::pl_word(raw, p.1) + u::fixed_bytes(u::paren_close()),
+        u::framed_word(raw, p.0, p.1),
         u::fixed_bytes(u::how_far_apart_repeats_of_the_action_lie()),
     )
 }
 
+pub open spec fn window_row(raw: u::Bytes, p: (u::Bytes, u::Bytes)) -> u::Html {
+    u::word_row(
+        u::framed_word(raw, p.0, p.1),
+        u::fixed_bytes(u::the_time_window_in_which_the_spacing()),
+    )
+}
+
+pub open spec fn frequency_row(raw: u::Bytes, f: u::Bytes) -> u::Html {
+    u::word_row(u::pl_word(raw, f), u::fixed_bytes(u::how_many_of_an_item_the_action()))
+}
+
 pub open spec fn rows_of(raw: u::Bytes, t: Temporal) -> Seq<u::Html> {
     t.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw, p)) + t.relations.map_values(
-        |p: (u::Bytes, u::Bytes)| relation_row(raw, p),
-    ) + t.spacings.map_values(|p: (u::Bytes, u::Bytes)| spacing_row(raw, p))
+        |p: (u::Bytes, u::Bytes)| relation_row(raw, t.version, p),
+    ) + t.spacings.map_values(|p: (u::Bytes, u::Bytes)| spacing_row(raw, p)) + t.windows.map_values(
+        |p: (u::Bytes, u::Bytes)| window_row(raw, p),
+    ) + t.frequencies.map_values(|f: u::Bytes| frequency_row(raw, f))
 }
 
 pub proof fn rows_unfold(t: Option<u::Bytes>)
@@ -47,6 +59,12 @@ pub proof fn rows_unfold(t: Option<u::Bytes>)
             Option::None => Seq::<u::Html>::empty(),
         },
 {
+    hide(parse_temporal);
+    hide(u::pl_word);
+    hide(u::unit_html);
+    hide(u::role_html_v);
+    hide(u::framed_word);
+    hide(u::word_row);
     reveal(u::word_rows);
     if let Option::Some(raw) = t {
         if let Result::Ok(m) = parse_temporal(raw) {
@@ -61,17 +79,32 @@ pub proof fn rows_unfold(t: Option<u::Bytes>)
                     ),
             ) =~= m.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw, p)));
             assert(m.relations.map_values(
-                |p: (u::Bytes, u::Bytes)| u::word_row(u::pl_word(raw, p.0), u::role_html(p.1)),
-            ) =~= m.relations.map_values(|p: (u::Bytes, u::Bytes)| relation_row(raw, p)));
+                |r: (u::Bytes, u::Bytes)|
+                    u::word_row(u::pl_word(raw, r.0), u::role_html_v(r.1, m.version)),
+            ) =~= m.relations.map_values(
+                |p: (u::Bytes, u::Bytes)| relation_row(raw, m.version, p),
+            ));
             assert(m.spacings.map_values(
-                |p: (u::Bytes, u::Bytes)|
+                |s: (u::Bytes, u::Bytes)|
                     u::word_row(
-                        u::pl_word(raw, p.0) + u::fixed_bytes(u::paren_open_sep()) + u::fixed_bytes(
-                            u::with_sp(),
-                        ) + u::pl_word(raw, p.1) + u::fixed_bytes(u::paren_close()),
+                        u::framed_word(raw, s.0, s.1),
                         u::fixed_bytes(u::how_far_apart_repeats_of_the_action_lie()),
                     ),
             ) =~= m.spacings.map_values(|p: (u::Bytes, u::Bytes)| spacing_row(raw, p)));
+            assert(m.windows.map_values(
+                |w: (u::Bytes, u::Bytes)|
+                    u::word_row(
+                        u::framed_word(raw, w.0, w.1),
+                        u::fixed_bytes(u::the_time_window_in_which_the_spacing()),
+                    ),
+            ) =~= m.windows.map_values(|p: (u::Bytes, u::Bytes)| window_row(raw, p)));
+            assert(m.frequencies.map_values(
+                |f: u::Bytes|
+                    u::word_row(
+                        u::pl_word(raw, f),
+                        u::fixed_bytes(u::how_many_of_an_item_the_action()),
+                    ),
+            ) =~= m.frequencies.map_values(|f: u::Bytes| frequency_row(raw, f)));
         }
     }
 }
@@ -93,6 +126,23 @@ pub fn role_exec(r: &[u8]) -> (out: EPage)
     }
 }
 
+pub fn role_v_exec(r: &[u8], v: u8) -> (out: EPage)
+    ensures
+        out@ == u::role_html_v(r@, v as nat),
+{
+    if v == 3 && is(r, "after") {
+        h::fixed(
+            "how long after a reference point the action occurs, or only that it occurs after it",
+        )
+    } else if v == 3 && is(r, "before") {
+        h::fixed(
+            "how long before a reference point the action occurs, or only that it occurs before it",
+        )
+    } else {
+        role_exec(r)
+    }
+}
+
 fn row2(a: EPage, b: EPage) -> (out: EPage)
     ensures
         out@ == u::word_row(a@, b@),
@@ -108,56 +158,61 @@ fn row2(a: EPage, b: EPage) -> (out: EPage)
     h::row(&cells)
 }
 
-fn unit_row_exec(raw: &[u8], p: &(Vec<u8>, Vec<u8>)) -> (out: EPage)
+fn framed_exec(raw: &[u8], p: &[u8], f: &[u8]) -> (out: EPage)
     ensures
-        out@ == unit_row(raw@, (p.0@, p.1@)),
+        out@ == u::framed_word(raw@, p@, f@),
 {
-    let w = match unit_exec(&p.1, true) {
-        Some(w) => w,
-        None => h::fixed("not stated"),
-    };
-    row2(pl_word_exec(raw, &p.0), h::cat(h::fixed("unit of time:"), w))
-}
-
-fn relation_row_exec(raw: &[u8], p: &(Vec<u8>, Vec<u8>)) -> (out: EPage)
-    ensures
-        out@ == relation_row(raw@, (p.0@, p.1@)),
-{
-    row2(pl_word_exec(raw, &p.0), role_exec(&p.1))
-}
-
-fn spacing_row_exec(raw: &[u8], p: &(Vec<u8>, Vec<u8>)) -> (out: EPage)
-    ensures
-        out@ == spacing_row(raw@, (p.0@, p.1@)),
-{
-    let a = h::cat(
+    h::cat(
         h::cat(
-            h::cat(h::cat(pl_word_exec(raw, &p.0), h::fixed(" (")), h::fixed("with ")),
-            pl_word_exec(raw, &p.1),
+            h::cat(h::cat(pl_word_exec(raw, p), h::fixed(" (")), h::fixed("with ")),
+            pl_word_exec(raw, f),
         ),
         h::fixed(")"),
-    );
-    row2(a, h::fixed("how far apart repeats of the action lie"))
+    )
 }
 
-// Row kinds: 0 = unit, 1 = relation, 2 = spacing.
-pub open spec fn kind_row(raw: u::Bytes, kind: u8, p: (u::Bytes, u::Bytes)) -> u::Html {
+// Row kinds: 0 = unit, 1 = relation, 2 = spacing, 3 = window.
+pub open spec fn kind_row(raw: u::Bytes, v: nat, kind: u8, p: (u::Bytes, u::Bytes)) -> u::Html {
     if kind == 0 {
         unit_row(raw, p)
     } else if kind == 1 {
-        relation_row(raw, p)
-    } else {
+        relation_row(raw, v, p)
+    } else if kind == 2 {
         spacing_row(raw, p)
+    } else {
+        window_row(raw, p)
     }
 }
 
-fn kind_rows(raw: &[u8], ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out: Vec<EPage>)
+fn kind_row_exec(raw: &[u8], v: u8, kind: u8, p: &(Vec<u8>, Vec<u8>)) -> (out: EPage)
+    ensures
+        out@ == kind_row(raw@, v as nat, kind, (p.0@, p.1@)),
+{
+    if kind == 0 {
+        let w = match unit_exec(&p.1, true) {
+            Some(w) => w,
+            None => h::fixed("not stated"),
+        };
+        row2(pl_word_exec(raw, &p.0), h::cat(h::fixed("unit of time:"), w))
+    } else if kind == 1 {
+        row2(pl_word_exec(raw, &p.0), role_v_exec(&p.1, v))
+    } else if kind == 2 {
+        row2(framed_exec(raw, &p.0, &p.1), h::fixed("how far apart repeats of the action lie"))
+    } else {
+        row2(
+            framed_exec(raw, &p.0, &p.1),
+            h::fixed("the time window in which the spacing of repeats holds"),
+        )
+    }
+}
+
+fn kind_rows(raw: &[u8], v: u8, ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out: Vec<EPage>)
     ensures
         h::pages(out@) == crate::m7_temporal::pairs_view(ps@).map_values(
-            |p: (u::Bytes, u::Bytes)| kind_row(raw@, kind, p),
+            |p: (u::Bytes, u::Bytes)| kind_row(raw@, v as nat, kind, p),
         ),
 {
-    let ghost f = |p: (u::Bytes, u::Bytes)| kind_row(raw@, kind, p);
+    let ghost f = |p: (u::Bytes, u::Bytes)| kind_row(raw@, v as nat, kind, p);
     let ghost pv = crate::m7_temporal::pairs_view(ps@);
     let mut out: Vec<EPage> = Vec::new();
     let mut i = 0usize;
@@ -167,19 +222,13 @@ fn kind_rows(raw: &[u8], ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out: Vec<EP
     while i < ps.len()
         invariant
             i <= ps@.len(),
-            f == (|p: (u::Bytes, u::Bytes)| kind_row(raw@, kind, p)),
+            f == (|p: (u::Bytes, u::Bytes)| kind_row(raw@, v as nat, kind, p)),
             pv == crate::m7_temporal::pairs_view(ps@),
             pv.len() == ps@.len(),
             h::pages(out@) == pv.take(i as int).map_values(f),
         decreases ps@.len() - i,
     {
-        let r = if kind == 0 {
-            unit_row_exec(raw, &ps[i])
-        } else if kind == 1 {
-            relation_row_exec(raw, &ps[i])
-        } else {
-            spacing_row_exec(raw, &ps[i])
-        };
+        let r = kind_row_exec(raw, v, kind, &ps[i]);
         let ghost before = out@;
         out.push(r);
         proof {
@@ -194,6 +243,50 @@ fn kind_rows(raw: &[u8], ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out: Vec<EP
     }
     proof {
         assert(pv.take(ps@.len() as int) =~= pv);
+    }
+    out
+}
+
+fn frequency_rows(raw: &[u8], fs: &Vec<Vec<u8>>) -> (out: Vec<EPage>)
+    ensures
+        h::pages(out@) == crate::m7_temporal::lemmas_view(fs@).map_values(
+            |f: u::Bytes| frequency_row(raw@, f),
+        ),
+{
+    let ghost g = |f: u::Bytes| frequency_row(raw@, f);
+    let ghost lv = crate::m7_temporal::lemmas_view(fs@);
+    let mut out: Vec<EPage> = Vec::new();
+    let mut i = 0usize;
+    proof {
+        assert(h::pages(out@) =~= lv.take(0).map_values(g));
+    }
+    while i < fs.len()
+        invariant
+            i <= fs@.len(),
+            g == (|f: u::Bytes| frequency_row(raw@, f)),
+            lv == crate::m7_temporal::lemmas_view(fs@),
+            lv.len() == fs@.len(),
+            h::pages(out@) == lv.take(i as int).map_values(g),
+        decreases fs@.len() - i,
+    {
+        let r = row2(
+            pl_word_exec(raw, &fs[i]),
+            h::fixed("how many of an item the action involves in each period"),
+        );
+        let ghost before = out@;
+        out.push(r);
+        proof {
+            assert(lv[i as int] == fs@[i as int]@);
+            assert(r@ == g(lv[i as int]));
+            assert(lv.take(i + 1).map_values(g) =~= lv.take(i as int).map_values(g).push(
+                g(lv[i as int]),
+            ));
+            assert(h::pages(out@) =~= h::pages(before).push(r@));
+        }
+        i += 1;
+    }
+    proof {
+        assert(lv.take(fs@.len() as int) =~= lv);
     }
     out
 }
@@ -222,24 +315,35 @@ pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
                 out
             },
             Ok((t, _)) => {
-                let mut out = kind_rows(raw, &t.units, 0);
-                let mut rel = kind_rows(raw, &t.relations, 1);
-                let mut spa = kind_rows(raw, &t.spacings, 2);
+                let v = t.version;
+                let mut out = kind_rows(raw, v, &t.units, 0);
+                let mut rel = kind_rows(raw, v, &t.relations, 1);
+                let mut spa = kind_rows(raw, v, &t.spacings, 2);
+                let mut win = kind_rows(raw, v, &t.windows, 3);
+                let mut fre = frequency_rows(raw, &t.frequencies);
                 let ghost a = h::pages(out@);
                 let ghost b = h::pages(rel@);
                 let ghost c = h::pages(spa@);
+                let ghost d = h::pages(win@);
+                let ghost e = h::pages(fre@);
                 out.append(&mut rel);
                 out.append(&mut spa);
+                out.append(&mut win);
+                out.append(&mut fre);
                 proof {
                     let m = t@;
-                    assert(h::pages(out@) =~= a + b + c);
+                    assert(h::pages(out@) =~= a + b + c + d + e);
                     assert(a =~= m.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw@, p)));
                     assert(b =~= m.relations.map_values(
-                        |p: (u::Bytes, u::Bytes)| relation_row(raw@, p),
+                        |p: (u::Bytes, u::Bytes)| relation_row(raw@, m.version, p),
                     ));
                     assert(c =~= m.spacings.map_values(
                         |p: (u::Bytes, u::Bytes)| spacing_row(raw@, p),
                     ));
+                    assert(d =~= m.windows.map_values(
+                        |p: (u::Bytes, u::Bytes)| window_row(raw@, p),
+                    ));
+                    assert(e =~= m.frequencies.map_values(|f: u::Bytes| frequency_row(raw@, f)));
                     assert(h::pages(out@) =~= rows_of(raw@, m));
                 }
                 out

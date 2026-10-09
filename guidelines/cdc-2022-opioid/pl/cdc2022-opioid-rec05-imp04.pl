@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-rec05-imp04',ace_sha256('92caebd100e12f6c51798067887134caa12f6c49924d7b4171218a19607c09fe'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-rec05-imp04',ace_sha256('92caebd100e12f6c51798067887134caa12f6c49924d7b4171218a19607c09fe'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a continued-opioid-benefit matches a continued-opioid-risk then a shared-decision-making is important with a patient.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp04',1,ref(4),[A,B,C]),'shared-decision-making',countable) :- guideline_entity(actual,A,'continued-opioid-benefit',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'continued-opioid-risk',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,match), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp04',1,ref(4),[A,B,C]),na,eq,1) :- guideline_entity(actual,A,'continued-opioid-benefit',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'continued-opioid-risk',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,match), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

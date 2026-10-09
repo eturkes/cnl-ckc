@@ -6,6 +6,11 @@
 5	ace	122	consider
 6	ace	133	temporary-buprenorphine-dosing-frequency-increase
 0	ace	191	patient
+4	ace	205	clinician
+6	ace	222	temporary-buprenorphine-dosing-frequency-increase
+0	ace	278	patient
+0	ace	295	patient
+7	ace	315	2 buprenorphine-administrations per 1 day
 0	src	4	patients
 1	src	21	treated with buprenorphine
 2	src	52	opioid use disorder
@@ -13,3 +18,4 @@
 4	src	99	clinicians
 5	src	114	consider
 6	src	123	temporarily increasing the buprenorphine dosing frequency
+7	src	191	twice per day

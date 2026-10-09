@@ -9046,4 +9046,477 @@ pub proof fn f285(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("with "@), inputs, 0, 0);
 }
 
+pub proof fn l286(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "how long after a reference point the action occurs, or only that it occurs after it"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "how long after a reference point the action occurs, or only that it occurs after it"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[286] == u::lit(
+            "how long after a reference point the action occurs, or only that it occurs after it"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[286] == u::lit(
+        "how long after a reference point the action occurs, or only that it occurs after it"@,
+    ) && 286 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "how long after a reference point the action occurs, or only that it occurs after it"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f286(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "how long after a reference point the action occurs, or only that it occurs after it"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[286] == u::lit(
+            "how long after a reference point the action occurs, or only that it occurs after it"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l286(inputs);
+    reveal_strlit(
+        "how long after a reference point the action occurs, or only that it occurs after it",
+    );
+    is_ascii_chars_encode_utf8(
+        "how long after a reference point the action occurs, or only that it occurs after it"@,
+    );
+    assert(u::lit(
+        "how long after a reference point the action occurs, or only that it occurs after it"@,
+    )
+        =~= bs![104u8,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,97,102,116,101,114,32,105,116]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,97,102,116,101,114,32,105,116],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "how long after a reference point the action occurs, or only that it occurs after it"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "how long after a reference point the action occurs, or only that it occurs after it"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l287(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "how long before a reference point the action occurs, or only that it occurs before it"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "how long before a reference point the action occurs, or only that it occurs before it"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[287] == u::lit(
+            "how long before a reference point the action occurs, or only that it occurs before it"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[287] == u::lit(
+        "how long before a reference point the action occurs, or only that it occurs before it"@,
+    ) && 287 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "how long before a reference point the action occurs, or only that it occurs before it"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f287(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "how long before a reference point the action occurs, or only that it occurs before it"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[287] == u::lit(
+            "how long before a reference point the action occurs, or only that it occurs before it"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l287(inputs);
+    reveal_strlit(
+        "how long before a reference point the action occurs, or only that it occurs before it",
+    );
+    is_ascii_chars_encode_utf8(
+        "how long before a reference point the action occurs, or only that it occurs before it"@,
+    );
+    assert(u::lit(
+        "how long before a reference point the action occurs, or only that it occurs before it"@,
+    )
+        =~= bs![104u8,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,98,101,102,111,114,101,32,105,116]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,98,101,102,111,114,101,32,105,116],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "how long before a reference point the action occurs, or only that it occurs before it"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "how long before a reference point the action occurs, or only that it occurs before it"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l288(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit("the time window in which the spacing of repeats holds"@),
+        ),
+        u::copy_derived(
+            u::lit("the time window in which the spacing of repeats holds"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[288] == u::lit("the time window in which the spacing of repeats holds"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[288] == u::lit(
+        "the time window in which the spacing of repeats holds"@,
+    ) && 288 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("the time window in which the spacing of repeats holds"@), inputs);
+}
+
+pub proof fn f288(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed("the time window in which the spacing of repeats holds"@),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[288] == u::lit("the time window in which the spacing of repeats holds"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l288(inputs);
+    reveal_strlit("the time window in which the spacing of repeats holds");
+    is_ascii_chars_encode_utf8("the time window in which the spacing of repeats holds"@);
+    assert(u::lit("the time window in which the spacing of repeats holds"@)
+        =~= bs![116u8,104,101,32,116,105,109,101,32,119,105,110,100,111,119,32,105,110,32,119,104,105,99,104,32,116,104,101,32,115,112,97,99,105,110,103,32,111,102,32,114,101,112,101,97,116,115,32,104,111,108,100,115]);
+    assert(cx::scan(
+        bs![116u8,104,101,32,116,105,109,101,32,119,105,110,100,111,119,32,105,110,32,119,104,105,99,104,32,116,104,101,32,115,112,97,99,105,110,103,32,111,102,32,114,101,112,101,97,116,115,32,104,111,108,100,115],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("the time window in which the spacing of repeats holds"@), 0);
+    h::fixed(u::lit("the time window in which the spacing of repeats holds"@), inputs, 0, 0);
+}
+
+pub proof fn l289(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit("how many of an item the action involves in each period"@),
+        ),
+        u::copy_derived(
+            u::lit("how many of an item the action involves in each period"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[289] == u::lit(
+            "how many of an item the action involves in each period"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[289] == u::lit(
+        "how many of an item the action involves in each period"@,
+    ) && 289 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("how many of an item the action involves in each period"@), inputs);
+}
+
+pub proof fn f289(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed("how many of an item the action involves in each period"@),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[289] == u::lit(
+            "how many of an item the action involves in each period"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l289(inputs);
+    reveal_strlit("how many of an item the action involves in each period");
+    is_ascii_chars_encode_utf8("how many of an item the action involves in each period"@);
+    assert(u::lit("how many of an item the action involves in each period"@)
+        =~= bs![104u8,111,119,32,109,97,110,121,32,111,102,32,97,110,32,105,116,101,109,32,116,104,101,32,97,99,116,105,111,110,32,105,110,118,111,108,118,101,115,32,105,110,32,101,97,99,104,32,112,101,114,105,111,100]);
+    assert(cx::scan(
+        bs![104u8,111,119,32,109,97,110,121,32,111,102,32,97,110,32,105,116,101,109,32,116,104,101,32,97,99,116,105,111,110,32,105,110,118,111,108,118,101,115,32,105,110,32,101,97,99,104,32,112,101,114,105,111,100],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("how many of an item the action involves in each period"@), 0);
+    h::fixed(u::lit("how many of an item the action involves in each period"@), inputs, 0, 0);
+}
+
+pub proof fn l290(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("before"@)),
+        u::copy_derived(u::lit("before"@), inputs, u::copy_registry()),
+        u::copy_registry()[290] == u::lit("before"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[290] == u::lit("before"@) && 290 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("before"@), inputs);
+}
+
+pub proof fn f290(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("before"@), inputs, 0, 0),
+        u::copy_registry()[290] == u::lit("before"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l290(inputs);
+    reveal_strlit("before");
+    is_ascii_chars_encode_utf8("before"@);
+    assert(u::lit("before"@) =~= bs![98u8,101,102,111,114,101]);
+    assert(cx::scan(bs![98u8,101,102,111,114,101], 0) == 0) by (compute_only);
+    cx::exact(u::lit("before"@), 0);
+    h::fixed(u::lit("before"@), inputs, 0, 0);
+}
+
+pub proof fn l291(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("after"@)),
+        u::copy_derived(u::lit("after"@), inputs, u::copy_registry()),
+        u::copy_registry()[291] == u::lit("after"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[291] == u::lit("after"@) && 291 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("after"@), inputs);
+}
+
+pub proof fn f291(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("after"@), inputs, 0, 0),
+        u::copy_registry()[291] == u::lit("after"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l291(inputs);
+    reveal_strlit("after");
+    is_ascii_chars_encode_utf8("after"@);
+    assert(u::lit("after"@) =~= bs![97u8,102,116,101,114]);
+    assert(cx::scan(bs![97u8,102,116,101,114], 0) == 0) by (compute_only);
+    cx::exact(u::lit("after"@), 0);
+    h::fixed(u::lit("after"@), inputs, 0, 0);
+}
+
+pub proof fn l292(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" per "@)),
+        u::copy_derived(u::lit(" per "@), inputs, u::copy_registry()),
+        u::copy_registry()[292] == u::lit(" per "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[292] == u::lit(" per "@) && 292 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" per "@), inputs);
+}
+
+pub proof fn f292(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(" per "@), inputs, 0, 0),
+        u::copy_registry()[292] == u::lit(" per "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l292(inputs);
+    reveal_strlit(" per ");
+    is_ascii_chars_encode_utf8(" per "@);
+    assert(u::lit(" per "@) =~= bs![32u8,112,101,114,32]);
+    assert(cx::scan(bs![32u8,112,101,114,32], 0) == 0) by (compute_only);
+    cx::exact(u::lit(" per "@), 0);
+    h::fixed(u::lit(" per "@), inputs, 0, 0);
+}
+
+pub proof fn l293(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(", counted item: "@)),
+        u::copy_derived(u::lit(", counted item: "@), inputs, u::copy_registry()),
+        u::copy_registry()[293] == u::lit(", counted item: "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[293] == u::lit(", counted item: "@) && 293 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(", counted item: "@), inputs);
+}
+
+pub proof fn f293(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(", counted item: "@), inputs, 0, 0),
+        u::copy_registry()[293] == u::lit(", counted item: "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l293(inputs);
+    reveal_strlit(", counted item: ");
+    is_ascii_chars_encode_utf8(", counted item: "@);
+    assert(u::lit(", counted item: "@)
+        =~= bs![44u8,32,99,111,117,110,116,101,100,32,105,116,101,109,58,32]);
+    assert(cx::scan(bs![44u8,32,99,111,117,110,116,101,100,32,105,116,101,109,58,32], 0) == 0)
+        by (compute_only);
+    cx::exact(u::lit(", counted item: "@), 0);
+    h::fixed(u::lit(", counted item: "@), inputs, 0, 0);
+}
+
+pub proof fn l294(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" apart during "@)),
+        u::copy_derived(u::lit(" apart during "@), inputs, u::copy_registry()),
+        u::copy_registry()[294] == u::lit(" apart during "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[294] == u::lit(" apart during "@) && 294 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" apart during "@), inputs);
+}
+
+pub proof fn f294(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(" apart during "@), inputs, 0, 0),
+        u::copy_registry()[294] == u::lit(" apart during "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l294(inputs);
+    reveal_strlit(" apart during ");
+    is_ascii_chars_encode_utf8(" apart during "@);
+    assert(u::lit(" apart during "@) =~= bs![32u8,97,112,97,114,116,32,100,117,114,105,110,103,32]);
+    assert(cx::scan(bs![32u8,97,112,97,114,116,32,100,117,114,105,110,103,32], 0) == 0)
+        by (compute_only);
+    cx::exact(u::lit(" apart during "@), 0);
+    h::fixed(u::lit(" apart during "@), inputs, 0, 0);
+}
+
+pub proof fn l295(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" from"@)),
+        u::copy_derived(u::lit(" from"@), inputs, u::copy_registry()),
+        u::copy_registry()[295] == u::lit(" from"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[295] == u::lit(" from"@) && 295 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" from"@), inputs);
+}
+
+pub proof fn f295(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(" from"@), inputs, 0, 0),
+        u::copy_registry()[295] == u::lit(" from"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l295(inputs);
+    reveal_strlit(" from");
+    is_ascii_chars_encode_utf8(" from"@);
+    assert(u::lit(" from"@) =~= bs![32u8,102,114,111,109]);
+    assert(cx::scan(bs![32u8,102,114,111,109], 0) == 0) by (compute_only);
+    cx::exact(u::lit(" from"@), 0);
+    h::fixed(u::lit(" from"@), inputs, 0, 0);
+}
+
 } // verus!

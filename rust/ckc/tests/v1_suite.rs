@@ -206,7 +206,11 @@ fn v1_suite() {
         let family: Vec<_> = rows
             .iter()
             .filter(|r| match prefix {
-                "" => !r.case.starts_with("m7t-") && !r.case.starts_with("dq4-"),
+                "" => {
+                    !r.case.starts_with("m7t-")
+                        && !r.case.starts_with("dq4-")
+                        && !r.case.starts_with("q12-")
+                }
                 p => r.case.starts_with(p),
             })
             .collect();
@@ -216,6 +220,7 @@ fn v1_suite() {
     assert_eq!(census(""), (230, 115), "tests/v1 legacy row census");
     assert_eq!(census("m7t-"), (31, 12), "tests/v1 M7T row census");
     assert_eq!(census("dq4-"), (7, 0), "tests/v1 reject-offset row census");
+    assert_eq!(census("q12-"), (72, 60), "tests/v1 q12 row census");
     let mut cases: Vec<&str> = rows.iter().map(|r| r.case.as_str()).collect();
     cases.dedup();
     for case in &cases {

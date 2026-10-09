@@ -316,7 +316,7 @@ pub fn project_all(
     docid: &Vec<u8>,
     count: usize,
     base: usize,
-    tab: &Option<crate::m7_temporal::ETemporal>,
+    tab: &Option<crate::m7_v3::EEnv>,
 ) -> (out: Result<Vec<Projected>, T>)
     requires
         arena_ok(old(arena)),
@@ -529,12 +529,14 @@ pub fn project(
             drs@,
             docid@,
             count as nat,
-            crate::m7_annotate::tab_view(tab),
+            crate::m7_v3::ttab_view(tab),
         ),
 {
     hide(spec::project_from);
     hide(spec::collides);
     hide(spec::tags);
+    hide(spec::env_of);
+    let env = crate::m7_v3::env_exec(arena, tab, drs);
     let ghost start = arena.nodes@;
     let b = match box_parts(arena, drs) {
         Some(b) => b,
@@ -564,7 +566,7 @@ pub fn project(
         crate::k2_load::prefix_chain(start, middle, before_project);
         tags_prefix(start, before_project, tagged@);
     }
-    let out = project_all(arena, &tagged, docid, count, base, tab);
+    let out = project_all(arena, &tagged, docid, count, base, &env);
     proof {
         crate::k2_load::prefix_chain(start, before_project, arena.nodes@);
     }

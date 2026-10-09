@@ -417,6 +417,63 @@ pub fn condition(
                 };
                 let t = lit4(arena, &Sym::GuidelineRecurrence, ctx, &e, &q, &args[2]);
                 Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineFrequency) && args.len() == 4 {
+                // q12 D5: an annotate-pass frequency item → guideline_frequency/5.
+                let e = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let cnt = match resolve(arena, &args[1], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let w = match resolve(arena, &args[2], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let t = lit5(arena, &Sym::GuidelineFrequency, ctx, &e, &cnt, &w, &args[3]);
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineOrder) && args.len() == 3 {
+                let e = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let a = match resolve(arena, &args[2], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let t = lit4(arena, &Sym::GuidelineOrder, ctx, &e, &args[1], &a);
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineRecurrenceWindow) && args.len() == 6 {
+                let e = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let q = match resolve(arena, &args[1], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let a = match resolve(arena, &args[3], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let l = match resolve(arena, &args[4], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let mut ts = Vec::new();
+                ts.push(ctx.cp());
+                ts.push(e);
+                ts.push(q);
+                ts.push(args[2].cp());
+                ts.push(a);
+                ts.push(l);
+                ts.push(args[5].cp());
+                proof {
+                    assert_seqs_equal!(models(ts@) == seq![ctx@, e@, q@, args[2]@, a@, l@, args[5]@]);
+                }
+                let t = crate::m6_term::c(arena, &Sym::GuidelineRecurrenceWindow, &ts);
+                Ok(one_term(arena, t))
             } else {
                 Err(named(arena, &Sym::ConditionShape))
             }

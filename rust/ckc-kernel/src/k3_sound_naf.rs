@@ -2551,7 +2551,7 @@ pub proof fn recorded_naf_fails(
 )
     requires
         bodies_wf(db),
-        goal_walk(goal, 2) is None,
+        goal_walk(goal, 3) is None,
         trun(db, roots_cfg(conj_leaves(goal)), trace_inf()).0 == TOut::Proved(log),
         log.contains((path, TEv::Naf(t))),
     ensures

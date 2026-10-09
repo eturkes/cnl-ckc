@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-s42-16',ace_sha256('9ab92f5bd4bc4dfc3b9251aeb7f3a53ce1e164c0e8ea44fedc62758b3299253f'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-s42-16',ace_sha256('9ab92f5bd4bc4dfc3b9251aeb7f3a53ce1e164c0e8ea44fedc62758b3299253f'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a patient has a continuous-opioid-use that lasts for at least 1 week for less than 1 month then every clinician may use a gradual-taper for the patient and may reduce a daily-opioid-dosage by 20 percent at an interval of 2 days for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s42-16',1,box(1),[A,B,C,D,E,F,G]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'continuous-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,week,countable), guideline_cardinality(actual,C,na,geq,1), guideline_pp(actual,E,for,C), guideline_interval(actual,E,duration,C,week,none), guideline_pp(actual,E,for,D), guideline_interval(actual,E,duration,D,month,none), guideline_event(actual,E,last), guideline_arg(actual,E,1,B), guideline_entity(actual,D,month,countable), guideline_cardinality(actual,D,na,less,1), guideline_event(actual,F,have), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,B), guideline_entity(actual,G,clinician,countable), guideline_cardinality(actual,G,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s42-16',1,box(1),[A,B,C,D,E,F,G]),'$guideline_id'(product,'cdc2022-opioid-s42-16',1,ref(8),[A,B,C,D,E,F,G]),'gradual-taper',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'continuous-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,week,countable), guideline_cardinality(actual,C,na,geq,1), guideline_pp(actual,E,for,C), guideline_interval(actual,E,duration,C,week,none), guideline_pp(actual,E,for,D), guideline_interval(actual,E,duration,D,month,none), guideline_event(actual,E,last), guideline_arg(actual,E,1,B), guideline_entity(actual,D,month,countable), guideline_cardinality(actual,D,na,less,1), guideline_event(actual,F,have), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,B), guideline_entity(actual,G,clinician,countable), guideline_cardinality(actual,G,na,eq,1).

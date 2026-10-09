@@ -742,9 +742,325 @@ pub fn row_exec(
             ]);
         }
         Some(h::row(&cells))
+    } else if is(&name, "guideline_order") && args.len() == 4 {
+        Some(order_row_exec(arena, pl, join, Ghost(d), Ghost(c), ordinal, Ghost(s), &args, part))
+    } else if is(&name, "guideline_frequency") && args.len() == 5 {
+        Some(
+            frequency_row_exec(arena, pl, join, Ghost(d), Ghost(c), ordinal, Ghost(s), &args, part),
+        )
+    } else if is(&name, "guideline_recurrence_window") && args.len() == 7 {
+        Some(window_row_exec(arena, pl, join, Ghost(d), Ghost(c), ordinal, Ghost(s), &args, part))
     } else {
         None
     }
+}
+
+// --- q12 D11: the v3 timing rows ---
+pub fn order_html_exec(role: &[u8]) -> (out: EPage)
+    ensures
+        out@ == u::order_html(role@),
+{
+    if is(role, "before") {
+        h::fixed("before")
+    } else if is(role, "after") {
+        h::fixed("after")
+    } else {
+        h::fixed("not stated")
+    }
+}
+
+// u::count_html: `<cmp> N` from the referent's cardinality literal.
+pub fn count_exec(
+    arena: &ETermArena,
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    q: &T,
+) -> (out: Option<EPage>)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        valid(arena.nodes@, q),
+    ensures
+        opt_page(out) == u::count_html(d, c, q@),
+{
+    let name = crate::k5_bytes::literal("guideline_cardinality");
+    let args = match first_with_exec(arena, join, &name, Ghost("guideline_cardinality"@), 5, 1, q) {
+        None => return None,
+        Some(a) => a,
+    };
+    proof {
+        assert(models(args@)[3] == args@[3]@);
+        assert(models(args@)[4] == args@[4]@);
+        assert(valid(arena.nodes@, &args@[3]));
+        assert(valid(arena.nodes@, &args@[4]));
+    }
+    let cmp = match cmp_exec(arena, &args[3]) {
+        None => return None,
+        Some(p) => p,
+    };
+    proof {
+        assert(crate::k2_term::node_ok(arena.nodes@, args@[4].root as int));
+        reveal(crate::k2_term::node_ok);
+    }
+    let (magnitude, negative) = match &arena.nodes[args[4].root].kind {
+        ENodeKind::Int { magnitude, negative, .. } => (magnitude.clone(), *negative),
+        _ => return None,
+    };
+    if negative {
+        return None;
+    }
+    Some(h::cat(cmp, h::text(&magnitude)))
+}
+
+pub fn frequency_html_exec(
+    arena: &ETermArena,
+    pl: &[u8],
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    args: &Vec<T>,
+) -> (out: EPage)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        crate::m6_term::valid_all(arena.nodes@, args@),
+        args.len() == 5,
+    ensures
+        out@ == u::frequency_html(pl@, d, c, models(args@)),
+{
+    proof {
+        assert(valid(arena.nodes@, &args@[2]) && valid(arena.nodes@, &args@[3]) && valid(
+            arena.nodes@,
+            &args@[4],
+        ));
+    }
+    match (
+        count_exec(arena, join, Ghost(d), Ghost(c), &args[2]),
+        bound_exec(arena, join, Ghost(d), Ghost(c), &args[3], &args[4]),
+    ) {
+        (Some(n), Some(w)) => {
+            let noun = joined_exec(
+                arena,
+                pl,
+                join,
+                Ghost(d),
+                Ghost(c),
+                "guideline_entity",
+                4,
+                &args[2],
+                2,
+            );
+            h::cat(
+                h::cat(h::cat(h::cat(n, h::fixed(" per ")), w), h::fixed(", counted item: ")),
+                noun,
+            )
+        },
+        _ => h::fixed("not stated"),
+    }
+}
+
+pub fn window_html_exec(
+    arena: &ETermArena,
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    args: &Vec<T>,
+) -> (out: EPage)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        crate::m6_term::valid_all(arena.nodes@, args@),
+        args.len() == 7,
+    ensures
+        out@ == u::window_html(d, c, models(args@)),
+{
+    proof {
+        assert(valid(arena.nodes@, &args@[2]) && valid(arena.nodes@, &args@[3]));
+        assert(valid(arena.nodes@, &args@[5]) && valid(arena.nodes@, &args@[6]));
+    }
+    match (
+        bound_exec(arena, join, Ghost(d), Ghost(c), &args[2], &args[3]),
+        bound_exec(arena, join, Ghost(d), Ghost(c), &args[5], &args[6]),
+    ) {
+        (Some(g), Some(l)) => h::cat(
+            h::cat(h::cat(h::cat(h::fixed("repeats "), g), h::fixed(" apart during ")), l),
+            h::fixed(" from"),
+        ),
+        _ => h::fixed("not stated"),
+    }
+}
+
+fn five_cells(a: EPage, b: EPage, c: EPage, d: EPage, e: EPage) -> (out: EPage)
+    ensures
+        out@ == u::row(seq![u::cell(a@), u::cell(b@), u::cell(c@), u::cell(d@), u::cell(e@)]),
+{
+    let ghost (av, bv, cv, dv, ev) = (a@, b@, c@, d@, e@);
+    let mut cells = Vec::new();
+    cells.push(h::cell(a));
+    cells.push(h::cell(b));
+    cells.push(h::cell(c));
+    cells.push(h::cell(d));
+    cells.push(h::cell(e));
+    proof {
+        assert(h::pages(cells@) =~= seq![
+            u::cell(av),
+            u::cell(bv),
+            u::cell(cv),
+            u::cell(dv),
+            u::cell(ev),
+        ]);
+    }
+    h::row(&cells)
+}
+
+pub fn order_row_exec(
+    arena: &ETermArena,
+    pl: &[u8],
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    ordinal: &[u8],
+    Ghost(s): Ghost<nat>,
+    args: &Vec<T>,
+    part: u8,
+) -> (out: EPage)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        crate::m6_term::valid_all(arena.nodes@, args@),
+        args.len() == 4,
+        ordinal@ == v::udec_bytes(s),
+        part <= 2,
+    ensures
+        out@ == u::row(
+            seq![
+                u::cell(u::text(v::udec_bytes(s))),
+                u::cell(u::part_html(part as int)),
+                u::cell(u::joined_word(pl@, d, c, "guideline_event"@, 3, models(args@)[1], 2)),
+                u::cell(u::order_html(u::atom_name(models(args@)[2]))),
+                u::cell(u::joined_word(pl@, d, c, "guideline_entity"@, 4, models(args@)[3], 2)),
+            ],
+        ),
+{
+    proof {
+        assert(valid(arena.nodes@, &args@[1]) && valid(arena.nodes@, &args@[2]) && valid(
+            arena.nodes@,
+            &args@[3],
+        ));
+    }
+    let event = joined_exec(arena, pl, join, Ghost(d), Ghost(c), "guideline_event", 3, &args[1], 2);
+    let role = match atom_of(arena, &args[2]) {
+        Some(a) => a,
+        None => Vec::new(),
+    };
+    let anchor = joined_exec(
+        arena,
+        pl,
+        join,
+        Ghost(d),
+        Ghost(c),
+        "guideline_entity",
+        4,
+        &args[3],
+        2,
+    );
+    five_cells(h::text(ordinal), part_exec(part), event, order_html_exec(&role), anchor)
+}
+
+pub fn frequency_row_exec(
+    arena: &ETermArena,
+    pl: &[u8],
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    ordinal: &[u8],
+    Ghost(s): Ghost<nat>,
+    args: &Vec<T>,
+    part: u8,
+) -> (out: EPage)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        crate::m6_term::valid_all(arena.nodes@, args@),
+        args.len() == 5,
+        ordinal@ == v::udec_bytes(s),
+        part <= 2,
+    ensures
+        out@ == u::row(
+            seq![
+                u::cell(u::text(v::udec_bytes(s))),
+                u::cell(u::part_html(part as int)),
+                u::cell(u::joined_word(pl@, d, c, "guideline_event"@, 3, models(args@)[1], 2)),
+                u::cell(u::frequency_html(pl@, d, c, models(args@))),
+                u::cell(Seq::empty()),
+            ],
+        ),
+{
+    proof {
+        assert(valid(arena.nodes@, &args@[1]));
+    }
+    let event = joined_exec(arena, pl, join, Ghost(d), Ghost(c), "guideline_event", 3, &args[1], 2);
+    let timing = frequency_html_exec(arena, pl, join, Ghost(d), Ghost(c), args);
+    let blank = EPage { parts: Vec::new() };
+    proof {
+        assert(blank@ =~= Seq::<u::Piece>::empty());
+    }
+    five_cells(h::text(ordinal), part_exec(part), event, timing, blank)
+}
+
+pub fn window_row_exec(
+    arena: &ETermArena,
+    pl: &[u8],
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    ordinal: &[u8],
+    Ghost(s): Ghost<nat>,
+    args: &Vec<T>,
+    part: u8,
+) -> (out: EPage)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        crate::m6_term::valid_all(arena.nodes@, args@),
+        args.len() == 7,
+        ordinal@ == v::udec_bytes(s),
+        part <= 2,
+    ensures
+        out@ == u::row(
+            seq![
+                u::cell(u::text(v::udec_bytes(s))),
+                u::cell(u::part_html(part as int)),
+                u::cell(u::joined_word(pl@, d, c, "guideline_event"@, 3, models(args@)[1], 2)),
+                u::cell(u::window_html(d, c, models(args@))),
+                u::cell(u::joined_word(pl@, d, c, "guideline_entity"@, 4, models(args@)[4], 2)),
+            ],
+        ),
+{
+    proof {
+        assert(valid(arena.nodes@, &args@[1]) && valid(arena.nodes@, &args@[4]));
+    }
+    let event = joined_exec(arena, pl, join, Ghost(d), Ghost(c), "guideline_event", 3, &args[1], 2);
+    let timing = window_html_exec(arena, join, Ghost(d), Ghost(c), args);
+    let anchor = joined_exec(
+        arena,
+        pl,
+        join,
+        Ghost(d),
+        Ghost(c),
+        "guideline_entity",
+        4,
+        &args[4],
+        2,
+    );
+    five_cells(h::text(ordinal), part_exec(part), event, timing, anchor)
 }
 
 fn piece_eq(a: &EPiece, b: &EPiece) -> (out: bool)
@@ -1198,7 +1514,7 @@ pub fn timing_rows_exec(pl: &[u8]) -> (out: Vec<EPage>)
         assert(parsed@ is Doc);
         assert(parsed@ == v::V1File::Doc(doc));
     }
-    if parsed.doc_version != 2 {
+    if parsed.doc_version < 2 {
         return no_rows();
     }
     proof {

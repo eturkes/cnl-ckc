@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-rec02-imp24',ace_sha256('9bff4ac26c083e9e6960bbfbeb66b608a8c099424327217a60e77565b1fb7a40'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-rec02-imp24',ace_sha256('9bff4ac26c083e9e6960bbfbeb66b608a8c099424327217a60e77565b1fb7a40'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: A patient-education is critical before an opioid-initiation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[]),'patient-education',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[]),na,eq,1).
@@ -33,6 +41,7 @@ guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,re
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(3),[])).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(2),[])).
+guideline_order(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',1,ref(2),[])).
 % S2: A patient-discussion is critical before an opioid-initiation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(1),[]),'patient-discussion',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(1),[]),na,eq,1).
@@ -43,6 +52,7 @@ guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,re
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(3),[])).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(2),[])).
+guideline_order(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',2,ref(2),[])).
 % S3: A patient-preference can inform a clinical-decision.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(1),[]),'patient-preference',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp24',3,ref(1),[]),na,eq,1).

@@ -152,6 +152,110 @@ proof fn bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u:
     }
 }
 
+proof fn count(d: v::DocFile, c: v::DocClause, q: Term, inputs: Seq<u::Bytes>)
+    ensures
+        opt_sound(u::count_html(d, c, q), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::text);
+    hide(u::lit);
+    hide(u::first_with);
+    h::empty(inputs, 0);
+    l::f250(inputs);
+    l::f251(inputs);
+    l::f252(inputs);
+    l::f253(inputs);
+    l::f254(inputs);
+    if let Some(args) = u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
+        if let (Some(cmp), Term::Int(n)) = (u::cmp_html(args[3]), args[4]) {
+            if n >= 0 {
+                decimal_text(n as nat, inputs);
+                b::add(cmp, u::text(v::udec_bytes(n as nat)), inputs);
+            }
+        }
+    }
+}
+
+proof fn order(role: u::Bytes, inputs: Seq<u::Bytes>)
+    ensures
+        h::sound(u::order_html(role), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lit);
+    l::f249(inputs);
+    l::f290(inputs);
+    l::f291(inputs);
+}
+
+proof fn frequency(
+    pl: u::Bytes,
+    d: v::DocFile,
+    c: v::DocClause,
+    args: Seq<Term>,
+    inputs: Seq<u::Bytes>,
+)
+    requires
+        m::backed(pl, inputs),
+        args.len() == 5,
+    ensures
+        h::sound(u::frequency_html(pl, d, c, args), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lit);
+    hide(u::count_html);
+    hide(u::bound_html);
+    hide(u::joined_word);
+    l::f249(inputs);
+    l::f292(inputs);
+    l::f293(inputs);
+    count(d, c, args[2], inputs);
+    bound(d, c, args[3], args[4], inputs);
+    joined_word(pl, d, c, "guideline_entity"@, 4, args[2], 2, inputs);
+    if let (Some(n), Some(w)) = (
+        u::count_html(d, c, args[2]),
+        u::bound_html(d, c, args[3], args[4]),
+    ) {
+        b::add(n, b::f(292), inputs);
+        b::add(n + b::f(292), w, inputs);
+        b::add(n + b::f(292) + w, b::f(293), inputs);
+        b::add(
+            n + b::f(292) + w + b::f(293),
+            u::joined_word(pl, d, c, "guideline_entity"@, 4, args[2], 2),
+            inputs,
+        );
+    }
+}
+
+proof fn window(d: v::DocFile, c: v::DocClause, args: Seq<Term>, inputs: Seq<u::Bytes>)
+    requires
+        args.len() == 7,
+    ensures
+        h::sound(u::window_html(d, c, args), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lit);
+    hide(u::bound_html);
+    l::f249(inputs);
+    l::f257(inputs);
+    l::f294(inputs);
+    l::f295(inputs);
+    bound(d, c, args[2], args[3], inputs);
+    bound(d, c, args[5], args[6], inputs);
+    if let (Some(g), Some(ln)) = (
+        u::bound_html(d, c, args[2], args[3]),
+        u::bound_html(d, c, args[5], args[6]),
+    ) {
+        b::add(b::f(257), g, inputs);
+        b::add(b::f(257) + g, b::f(294), inputs);
+        b::add(b::f(257) + g + b::f(294), ln, inputs);
+        b::add(b::f(257) + g + b::f(294) + ln, b::f(295), inputs);
+    }
+}
+
 proof fn timing(role: u::Bytes, bnd: Option<u::Html>, inputs: Seq<u::Bytes>)
     requires
         opt_sound(bnd, inputs),
@@ -215,6 +319,9 @@ proof fn row(
     hide(u::joined_word);
     hide(u::timing_html);
     hide(u::bound_html);
+    hide(u::order_html);
+    hide(u::frequency_html);
+    hide(u::window_html);
     if let Term::Comp(name, args) = t {
         decimal_text(s, inputs);
         b::cell(u::text(v::udec_bytes(s)), inputs);
@@ -261,6 +368,46 @@ proof fn row(
                 u::cell(u::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
                 u::cell(tm),
                 u::cell(Seq::empty()),
+            ];
+            assert(all_sound(xs, inputs));
+            b::row(xs, inputs);
+        } else if name == u::lit("guideline_order"@) && args.len() == 4 {
+            order(u::atom_name(args[2]), inputs);
+            b::cell(u::order_html(u::atom_name(args[2])), inputs);
+            joined_word(pl, d, c, "guideline_entity"@, 4, args[3], 2, inputs);
+            b::cell(u::joined_word(pl, d, c, "guideline_entity"@, 4, args[3], 2), inputs);
+            let xs = seq![
+                u::cell(u::text(v::udec_bytes(s))),
+                u::cell(u::part_html(k)),
+                u::cell(u::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                u::cell(u::order_html(u::atom_name(args[2]))),
+                u::cell(u::joined_word(pl, d, c, "guideline_entity"@, 4, args[3], 2)),
+            ];
+            assert(all_sound(xs, inputs));
+            b::row(xs, inputs);
+        } else if name == u::lit("guideline_frequency"@) && args.len() == 5 {
+            frequency(pl, d, c, args, inputs);
+            b::cell(u::frequency_html(pl, d, c, args), inputs);
+            let xs = seq![
+                u::cell(u::text(v::udec_bytes(s))),
+                u::cell(u::part_html(k)),
+                u::cell(u::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                u::cell(u::frequency_html(pl, d, c, args)),
+                u::cell(Seq::empty()),
+            ];
+            assert(all_sound(xs, inputs));
+            b::row(xs, inputs);
+        } else if name == u::lit("guideline_recurrence_window"@) && args.len() == 7 {
+            window(d, c, args, inputs);
+            b::cell(u::window_html(d, c, args), inputs);
+            joined_word(pl, d, c, "guideline_entity"@, 4, args[4], 2, inputs);
+            b::cell(u::joined_word(pl, d, c, "guideline_entity"@, 4, args[4], 2), inputs);
+            let xs = seq![
+                u::cell(u::text(v::udec_bytes(s))),
+                u::cell(u::part_html(k)),
+                u::cell(u::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                u::cell(u::window_html(d, c, args)),
+                u::cell(u::joined_word(pl, d, c, "guideline_entity"@, 4, args[4], 2)),
             ];
             assert(all_sound(xs, inputs));
             b::row(xs, inputs);
@@ -408,7 +555,7 @@ pub proof fn section(pl: u::Bytes, inputs: Seq<u::Bytes>)
     let rows = u::timing_rows(pl);
     if v::accepts(pl) {
         if let v::V1File::Doc(d) = ckc_spec::replay::the_v1(pl) {
-            if d.version == 2 {
+            if d.version >= 2 {
                 let g = |bd: v::Bundle| u::bundle_rows(pl, d, bd);
                 let xss = d.bundles.map_values(g);
                 assert forall|i: int| 0 <= i < xss.len() implies all_sound(

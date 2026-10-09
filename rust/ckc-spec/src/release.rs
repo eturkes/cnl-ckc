@@ -102,9 +102,10 @@ pub open spec fn tab() -> Seq<u8> {
     seq![0x09u8]
 }
 
-// One `meta schema` row per schema version the corpus compiles under (contract
-// m7t D8): a guideline with a staged temporal.tsv is v2, every other one v1 (an
-// empty corpus keeps the v1 row).
+// One `meta schema` row per schema version the corpus compiles under (contracts
+// m7t D8, q12 D1): a guideline with a staged temporal.tsv compiles under its
+// header's version (v3 header → v3, else v2), every other one under v1 (an
+// empty corpus keeps the v1 row). `tables` = (guideline id, raw table bytes).
 pub open spec fn has_table(staged: Seq<Member>, gid: Seq<u8>) -> bool {
     exists|i: int|
         0 <= i < staged.len() && #[trigger] staged[i].path == ascii("guidelines/"@) + gid + ascii(
@@ -112,21 +113,50 @@ pub open spec fn has_table(staged: Seq<Member>, gid: Seq<u8>) -> bool {
         )
 }
 
+pub open spec fn table_v3(tables: Seq<(Seq<u8>, Seq<u8>)>, gid: Seq<u8>) -> bool {
+    exists|i: int|
+        0 <= i < tables.len() && #[trigger] tables[i].0 == gid && starts(
+            tables[i].1,
+            crate::temporal::temporal_header_v3(),
+        )
+}
+
 pub open spec fn some_table(staged: Seq<Member>, profiles: Seq<(Seq<u8>, Seq<u8>)>) -> bool {
     exists|i: int| 0 <= i < profiles.len() && has_table(staged, #[trigger] profiles[i].0)
+}
+
+pub open spec fn some_version(
+    staged: Seq<Member>,
+    profiles: Seq<(Seq<u8>, Seq<u8>)>,
+    tables: Seq<(Seq<u8>, Seq<u8>)>,
+    v3: bool,
+) -> bool {
+    exists|i: int|
+        0 <= i < profiles.len() && has_table(staged, #[trigger] profiles[i].0) && table_v3(
+            tables,
+            profiles[i].0,
+        ) == v3
 }
 
 pub open spec fn some_plain(staged: Seq<Member>, profiles: Seq<(Seq<u8>, Seq<u8>)>) -> bool {
     exists|i: int| 0 <= i < profiles.len() && !has_table(staged, #[trigger] profiles[i].0)
 }
 
-pub open spec fn schema_rows(staged: Seq<Member>, profiles: Seq<(Seq<u8>, Seq<u8>)>) -> Seq<u8> {
+pub open spec fn schema_rows(
+    staged: Seq<Member>,
+    profiles: Seq<(Seq<u8>, Seq<u8>)>,
+    tables: Seq<(Seq<u8>, Seq<u8>)>,
+) -> Seq<u8> {
     (if !some_table(staged, profiles) || some_plain(staged, profiles) {
         ascii("meta\tschema\tv1\n"@)
     } else {
         Seq::empty()
-    }) + (if some_table(staged, profiles) {
+    }) + (if some_version(staged, profiles, tables, false) {
         ascii("meta\tschema\tv2\n"@)
+    } else {
+        Seq::empty()
+    }) + (if some_version(staged, profiles, tables, true) {
+        ascii("meta\tschema\tv3\n"@)
     } else {
         Seq::empty()
     })
@@ -169,8 +199,9 @@ pub open spec fn release_manifest(
     urls: Seq<(Seq<u8>, Seq<u8>)>,
     labels: Seq<(Seq<u8>, Seq<u8>)>,
     tags: Seq<Member>,
+    tables: Seq<(Seq<u8>, Seq<u8>)>,
 ) -> Seq<u8> {
-    meta_block(schema_rows(staged, profiles), compiler, lexicon) + member_rows(
+    meta_block(schema_rows(staged, profiles, tables), compiler, lexicon) + member_rows(
         sort_members(payload(staged, profiles) + tags),
     ) + source_rows(sources(staged, profiles, urls)) + label_rows(labels)
 }

@@ -96,7 +96,9 @@ compiler base:
   carry no change notice.
 - **Tests are data.** Each corpus under `tests/` is a fixture set, not
   a program. `tests/red/` holds compiler rejection probes named
-  `<expected-error-class>--<name>.ace`. `tests/adjudication/` holds
+  `<expected-error-class>--<name>.ace`. `tests/green/` holds compiler
+  acceptance probes; each `.expect` file pins the compiled document or
+  question. `tests/adjudication/` holds
   ledger-validator fixtures. `tests/queries/` holds query, answer, and
   trace fixtures. `tests/ui/` holds reviewer-interface fixtures.
   `tests/copy/` holds copy-register fixtures. `tests/certify/` holds
@@ -141,7 +143,8 @@ compiler base:
       byte-compares it: compiled query, answer, and proof trace.
       Every trace node must join exactly one committed clause line;
   11. asserts that the compiler rejects each red probe with its named
-      error class and exit status.
+      error class and exit status, and that it compiles each green
+      probe to its pinned bytes.
 
   `ckc ui check` renders every reviewer page twice, byte-compares the
   two renders, and checks page invariants and link closure. The
@@ -212,14 +215,18 @@ each side. A file that breaks these rules stops the render. Whether
 an alignment is helpful is a judgment for the reviewer, who sees it
 on the page beside the texts it describes.
 
-A guideline under schema v2 shows its time limits in two places. A
-document page with a typed time limit lists the limits that the
+A guideline under schema v2 or v3 shows its time limits in two places.
+A document page with a typed time limit lists the limits that the
 compiler read from its ACE text, in the table "Timing as compiled".
+Under v3 the table also lists each order with no stated time, each
+count per period with its counted item, and each recurrence inside a
+time window with the window's length and reference point.
 The guideline page lists the rows of `temporal.tsv` under "Time
 words", after the status table. Each row names one word and how the
 compiler reads it. A word reads as a unit of time, as a time relation,
-or as the spacing of repeats. The compiler reads a time limit only
-through these words. A table that fails the `ckc check` grammar stops the
+or as the spacing of repeats. A v3 word can also read as the frame of
+a time window or as the word of a count per period. The compiler reads
+a time limit only through these words. A table that fails the `ckc check` grammar stops the
 interface with `ui: viewmodel: <id> temporal.tsv: <why>`.
 
 The interface reads committed files. When the working tree holds
@@ -264,10 +271,12 @@ carries both an approved and a rejected decision reads contested.
 
 Status: v1 is **frozen**. Schema v2 adds two temporal annotation
 predicates, widens the document record by a table digest, and keeps
-every v1 clause shape (see Schema v2 below). A
-guideline selects v2 with its `temporal.tsv` table. Every document of
-that guideline then compiles under v2. A guideline without the table
-compiles under v1, byte for byte. The predicate set below is the public
+every v1 clause shape (see Schema v2 below). Schema v3 adds four more
+predicates and keeps every v2 shape (see Schema v3 below). A
+guideline selects v2 or v3 with the header of its `temporal.tsv`
+table. Every document of that guideline then compiles under that
+version. A guideline without the table compiles under v1, byte for
+byte. The predicate set below is the public
 ABI: an extension requires a version bump. The compiler takes the
 version from an explicit invocation argument and never infers it from
 content. Authored questions reject in document compiles; the separate
@@ -596,6 +605,84 @@ v1 and v2 documents. A mixed composition rejects with class
 version, and `DocId` names the first document of another version.
 Certification takes the raw table bytes, so `ckc certify` checks the
 record digest and every annotation against the table.
+
+### Schema v3
+
+Schema v3 types three more temporal shapes. They are a count per
+period, a recurrence inside a time window, and an order with no stated
+time. A guideline opts in with a `temporal.tsv` whose header names the
+v3 kinds:
+
+```
+# format: kind<TAB>lemma<TAB>value
+# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)
+unit	day	day
+relation	before	before
+spacing	at	interval
+window	during	window
+frequency	per	period
+```
+
+A v3 table holds every v2 row kind and two more. A `window` row pairs a
+preposition with the frame noun of a time window, as in
+`during a window of 1 week of the methadone-start`. A `frequency` row
+names the preposition of a count per period, as in `per 1 day`; its
+value is always `period`. A preposition occurs in at most one
+`frequency` row and never in a `relation` row. A pair of a preposition
+and a frame noun occurs once across the `spacing` and `window` rows. A
+frame noun is never a unit noun. The
+header names `approximation` and `range` rows, but the grammar does not
+accept them yet.
+
+The compiler takes v3 from the argument `v3` in place of `v2`. A table
+whose header names another version fails the compile with class
+`temporal_load`. A v3 document differs from a v2 document in two
+places: the header reads `guideline_schema_version(3).`, and the
+declaration block appends four indicators, 15 in total.
+
+| Predicate | Meaning |
+| --- | --- |
+| `guideline_frequency(Context, Event, Counted, Period, Unit)` | `Event` involves the stated count of `Counted`'s items in each period of `Period` in `Unit` |
+| `guideline_order(Context, Event, Relation, Anchor)` | each occurrence of `Event` lies `before` or `after` `Anchor`; no time bound is stated |
+| `guideline_recurrence_window(Context, Event, Gap, GapUnit, Anchor, Length, LengthUnit)` | consecutive occurrences of `Event` inside the window that starts at `Anchor` and lasts `Length` in `LengthUnit` lie `Gap` in `GapUnit` apart |
+| `guideline_range(Context, Low, High)` | reserved; the compiler emits no clause of it in this version |
+
+The patterns read referents by their noun anywhere in the document. A
+referent whose noun is no unit and no frame noun is a plain referent.
+
+- Order: the event carries a `relation` preposition with role `before`
+  or `after`, and its object is a plain referent. The object may come
+  from the antecedent or from an earlier sentence.
+- Count per period: the event carries a `frequency` preposition whose
+  object is a time quantity with an exact count and no `of` object. The
+  counted item is the second participant of the event. It is a count
+  noun with a comparison and a count of at least 1, as in
+  `receives 2 buprenorphine-administrations per 1 day`.
+- Scoped recurrence: the event carries a `window` preposition. Its
+  frame is one count noun with one `of` object, a time quantity, and
+  that quantity has one `of` object, a plain referent. The event must
+  also carry a recurrence. Each recurrence on that event becomes a
+  `guideline_recurrence_window` clause, and no plain
+  `guideline_recurrence` clause is emitted for it.
+
+Other shapes of these patterns reject with class `unsupported` as
+`temporal_shape(Why, S)`. `Why` is `frequency_shape` or
+`window_shape`, or a schema v2 reason where its rule applies: a
+quantity without a bound (`no_bound`, `zero_bound`) or a quantity that
+two patterns claim (`shared_quantity`). A count per period does not set calendar buckets, a
+first occurrence or a minimum gap. A window does not set the first
+occurrence and says nothing about occurrences outside it.
+
+An abbreviation such as `d` or `h` can type as a unit. The corpus
+lexicon must declare it as a count noun, and a `unit` row must map it.
+ACE also parses `3 d` as a measured number, but the compiler
+rejects that form as `unresolved_argument`.
+
+A composition holds one version. A question runs over a composition of
+its own version or a later one. A v3 question over a v1 or v2
+composition rejects with class `check_load`. The question record
+names `v3`. Certification checks that the record version equals the
+table header's version.
 
 ### Question projection
 

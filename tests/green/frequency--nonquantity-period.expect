@@ -1,0 +1,44 @@
+% frequency--nonquantity-period.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('frequency--nonquantity-period',ace_sha256('9eb78ab1d2e36c5b0baa9b64fe4b0a25cc726bb36c00efa1b83de60d744e656f'),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),temporal(sha256(bec3540718d479bac3ed36dfdd59f3fef887b20ead3d9bfaa3bdc213a613bdb9))).
+% S1: A man reads 2 books per a visit.
+guideline_entity(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(1),[]),man,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(2),[]),book,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(2),[]),na,eq,2).
+guideline_entity(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(3),[]),visit,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(3),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(4),[]),read).
+guideline_arg(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(4),[]),1,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(4),[]),2,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(2),[])).
+guideline_pp(actual,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(4),[]),per,'$guideline_id'(product,'frequency--nonquantity-period',1,ref(3),[])).

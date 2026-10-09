@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-rec02-imp22',ace_sha256('632dd227fb27b7d0bf082dfb29cace7ffac2ca14a61ec1916a11ef0a1ef495b5'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-rec02-imp22',ace_sha256('632dd227fb27b7d0bf082dfb29cace7ffac2ca14a61ec1916a11ef0a1ef495b5'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a clinician sees a new-patient who receives an opioid then the clinician should establish a treatment-goal and should establish a functional-goal for a continued-opioid-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp22',1,box(1),[A,B,C,D,E]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'new-patient',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,opioid,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,receive), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_event(actual,E,see), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp22',1,box(1),[A,B,C,D,E]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp22',1,ref(6),[A,B,C,D,E]),'treatment-goal',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'new-patient',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,opioid,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,receive), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_event(actual,E,see), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,B).

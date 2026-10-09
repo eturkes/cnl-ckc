@@ -1,0 +1,42 @@
+% order--local-anchor.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('order--local-anchor',ace_sha256('5ea36d7137501e69eea621fe1be3c9eb38bbe46c2c35003d5b4e8a70209f19b0'),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),temporal(sha256(bec3540718d479bac3ed36dfdd59f3fef887b20ead3d9bfaa3bdc213a613bdb9))).
+% S1: A patient eats before a meeting.
+guideline_entity(actual,'$guideline_id'(product,'order--local-anchor',1,ref(1),[]),patient,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'order--local-anchor',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'order--local-anchor',1,ref(2),[]),meeting,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'order--local-anchor',1,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'order--local-anchor',1,ref(3),[]),eat).
+guideline_arg(actual,'$guideline_id'(product,'order--local-anchor',1,ref(3),[]),1,'$guideline_id'(product,'order--local-anchor',1,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'order--local-anchor',1,ref(3),[]),before,'$guideline_id'(product,'order--local-anchor',1,ref(2),[])).
+guideline_order(actual,'$guideline_id'(product,'order--local-anchor',1,ref(3),[]),before,'$guideline_id'(product,'order--local-anchor',1,ref(2),[])).

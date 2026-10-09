@@ -454,56 +454,177 @@ pub fn has_table_exec(staged: &Vec<EMember>, gid: &[u8]) -> (r: bool)
     false
 }
 
-pub fn schema_rows_exec(staged: &Vec<EMember>, profiles: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: Vec<u8>)
+// q12 D1: a staged table whose bytes open with the v3 header.
+pub fn table_v3_exec(tables: &Vec<(Vec<u8>, Vec<u8>)>, gid: &[u8]) -> (r: bool)
     ensures
-        r@ == schema_rows(members(staged@), byte_pairs(profiles@)),
+        r == table_v3(byte_pairs(tables@), gid@),
+{
+    let h3: &[u8] =
+        b"# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n";
+    proof {
+        reveal_byteslit(
+            b"# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n",
+        );
+        reveal_strlit(
+            "# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n",
+        );
+        reveal(ascii);
+        assert(h3@ =~= ckc_spec::temporal::temporal_header_v3());
+    }
+    let ghost ts = byte_pairs(tables@);
+    let mut i = 0usize;
+    while i < tables.len()
+        invariant
+            i <= tables@.len(),
+            ts == byte_pairs(tables@),
+            h3@ == ckc_spec::temporal::temporal_header_v3(),
+            forall|j: int|
+                0 <= j < i ==> !(#[trigger] ts[j].0 == gid@ && ckc_spec::check::starts(
+                    ts[j].1,
+                    ckc_spec::temporal::temporal_header_v3(),
+                )),
+        decreases tables@.len() - i,
+    {
+        proof {
+            assert(ts[i as int] == (tables@[i as int].0@, tables@[i as int].1@));
+        }
+        if eq(&tables[i].0, gid) && starts_with(&tables[i].1, h3) {
+            proof {
+                assert(ts[i as int].0 == gid@ && ckc_spec::check::starts(
+                    ts[i as int].1,
+                    ckc_spec::temporal::temporal_header_v3(),
+                ));
+            }
+            return true;
+        }
+        i += 1;
+    }
+    false
+}
+
+pub fn schema_rows_exec(
+    staged: &Vec<EMember>,
+    profiles: &Vec<(Vec<u8>, Vec<u8>)>,
+    tables: &Vec<(Vec<u8>, Vec<u8>)>,
+) -> (r: Vec<u8>)
+    ensures
+        r@ == schema_rows(members(staged@), byte_pairs(profiles@), byte_pairs(tables@)),
 {
     let ghost ms = members(staged@);
     let ghost ps = byte_pairs(profiles@);
+    let ghost ts = byte_pairs(tables@);
     let mut table = false;
     let mut plain = false;
+    let mut v2 = false;
+    let mut v3 = false;
     let mut i = 0usize;
     while i < profiles.len()
         invariant
             i <= profiles@.len(),
             ms == members(staged@),
             ps == byte_pairs(profiles@),
+            ts == byte_pairs(tables@),
             table == exists|j: int| 0 <= j < i && has_table(ms, #[trigger] ps[j].0),
             plain == exists|j: int| 0 <= j < i && !has_table(ms, #[trigger] ps[j].0),
+            v2 == exists|j: int|
+                0 <= j < i && has_table(ms, #[trigger] ps[j].0) && !table_v3(ts, ps[j].0),
+            v3 == exists|j: int|
+                0 <= j < i && has_table(ms, #[trigger] ps[j].0) && table_v3(ts, ps[j].0),
         decreases profiles@.len() - i,
     {
         let h = has_table_exec(staged, &profiles[i].0);
+        let t3 = table_v3_exec(tables, &profiles[i].0);
         proof {
             assert(ps[i as int].0 == profiles@[i as int].0@);
         }
+        let ghost (table0, plain0, v20, v30) = (table, plain, v2, v3);
         if h {
             table = true;
+            if t3 {
+                v3 = true;
+            } else {
+                v2 = true;
+            }
         } else {
             plain = true;
         }
         proof {
-            if table {
-                if !h {
-                    let j = choose|j: int| 0 <= j < i && has_table(ms, #[trigger] ps[j].0);
-                    assert(0 <= j < i + 1 && has_table(ms, ps[j].0));
-                }
-            }
-            if plain {
-                if h {
-                    let j = choose|j: int| 0 <= j < i && !has_table(ms, #[trigger] ps[j].0);
-                    assert(0 <= j < i + 1 && !has_table(ms, ps[j].0));
-                }
-            }
             assert forall|j: int|
                 0 <= j < i + 1 && has_table(ms, #[trigger] ps[j].0) implies table by {
                 if j == i {
                     assert(h);
+                } else {
+                    assert(table0);
                 }
             }
             assert forall|j: int|
                 0 <= j < i + 1 && !has_table(ms, #[trigger] ps[j].0) implies plain by {
                 if j == i {
                     assert(!h);
+                } else {
+                    assert(plain0);
+                }
+            }
+            assert forall|j: int|
+                0 <= j < i + 1 && has_table(ms, #[trigger] ps[j].0) && !table_v3(
+                    ts,
+                    ps[j].0,
+                ) implies v2 by {
+                if j == i {
+                    assert(h && !t3);
+                } else {
+                    assert(v20);
+                }
+            }
+            assert forall|j: int|
+                0 <= j < i + 1 && has_table(ms, #[trigger] ps[j].0) && table_v3(
+                    ts,
+                    ps[j].0,
+                ) implies v3 by {
+                if j == i {
+                    assert(h && t3);
+                } else {
+                    assert(v30);
+                }
+            }
+            if table {
+                if !table0 {
+                    assert(0 <= i < i + 1 && has_table(ms, ps[i as int].0));
+                } else {
+                    let j = choose|j: int| 0 <= j < i && has_table(ms, #[trigger] ps[j].0);
+                    assert(0 <= j < i + 1 && has_table(ms, ps[j].0));
+                }
+            }
+            if plain {
+                if !plain0 {
+                    assert(0 <= i < i + 1 && !has_table(ms, ps[i as int].0));
+                } else {
+                    let j = choose|j: int| 0 <= j < i && !has_table(ms, #[trigger] ps[j].0);
+                    assert(0 <= j < i + 1 && !has_table(ms, ps[j].0));
+                }
+            }
+            if v2 {
+                if !v20 {
+                    assert(0 <= i < i + 1 && has_table(ms, ps[i as int].0) && !table_v3(
+                        ts,
+                        ps[i as int].0,
+                    ));
+                } else {
+                    let j = choose|j: int|
+                        0 <= j < i && has_table(ms, #[trigger] ps[j].0) && !table_v3(ts, ps[j].0);
+                    assert(0 <= j < i + 1 && has_table(ms, ps[j].0) && !table_v3(ts, ps[j].0));
+                }
+            }
+            if v3 {
+                if !v30 {
+                    assert(0 <= i < i + 1 && has_table(ms, ps[i as int].0) && table_v3(
+                        ts,
+                        ps[i as int].0,
+                    ));
+                } else {
+                    let j = choose|j: int|
+                        0 <= j < i && has_table(ms, #[trigger] ps[j].0) && table_v3(ts, ps[j].0);
+                    assert(0 <= j < i + 1 && has_table(ms, ps[j].0) && table_v3(ts, ps[j].0));
                 }
             }
         }
@@ -512,23 +633,31 @@ pub fn schema_rows_exec(staged: &Vec<EMember>, profiles: &Vec<(Vec<u8>, Vec<u8>)
     proof {
         assert(table == some_table(ms, ps));
         assert(plain == some_plain(ms, ps));
+        assert(v2 == some_version(ms, ps, ts, false));
+        assert(v3 == some_version(ms, ps, ts, true));
         reveal_byteslit(b"meta\tschema\tv1\n");
         reveal_strlit("meta\tschema\tv1\n");
         reveal_byteslit(b"meta\tschema\tv2\n");
         reveal_strlit("meta\tschema\tv2\n");
+        reveal_byteslit(b"meta\tschema\tv3\n");
+        reveal_strlit("meta\tschema\tv3\n");
         reveal(ascii);
         assert(b"meta\tschema\tv1\n"@ =~= ascii("meta\tschema\tv1\n"@));
         assert(b"meta\tschema\tv2\n"@ =~= ascii("meta\tschema\tv2\n"@));
+        assert(b"meta\tschema\tv3\n"@ =~= ascii("meta\tschema\tv3\n"@));
     }
     let mut r = Vec::new();
     if !table || plain {
         append(&mut r, b"meta\tschema\tv1\n");
     }
-    if table {
+    if v2 {
         append(&mut r, b"meta\tschema\tv2\n");
     }
+    if v3 {
+        append(&mut r, b"meta\tschema\tv3\n");
+    }
     proof {
-        assert(r@ =~= schema_rows(ms, ps));
+        assert(r@ =~= schema_rows(ms, ps, ts));
     }
     r
 }

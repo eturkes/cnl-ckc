@@ -1,0 +1,2 @@
+% query traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,query,query_sha256('058f6372c5dd493bc6d8312bc2947d10c3d5b960d9c8c43a730d6218479f6bb1'),answers_sha256(eed7d695324d81cbebd6b9c0ebf9e574809bde3dad51b29c4d8bd7760a6acacd),result(no(finite_failure))).

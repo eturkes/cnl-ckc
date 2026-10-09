@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-s60-08',ace_sha256('5c356fec13f397825de1ec04eb0a4a1881f221153905ac49d34e1169debf428e'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-s60-08',ace_sha256('5c356fec13f397825de1ec04eb0a4a1881f221153905ac49d34e1169debf428e'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a patient has an opioid-misuse and has a pain and does not have an opioid-use-disorder then every clinician should reassess the pain and should ensure a pain-management-therapy-optimization for the patient and should discuss a current-dosage-opioid-continuation with the patient and should weigh a benefit against a risk for a current-dosage-opioid-continuation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s60-08',1,box(2),[A,B,C,D,E,F]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-misuse',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,pain,countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,D), guideline_operator(actual,G,-), guideline_entity(G,H,'opioid-use-disorder',countable), guideline_cardinality(G,H,na,eq,1), guideline_event(G,I,have), guideline_arg(G,I,1,A), guideline_arg(G,I,2,H), guideline_entity(actual,F,clinician,countable), guideline_cardinality(actual,F,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s60-08',1,box(2),[A,B,C,D,E,F]),'$guideline_id'(product,'cdc2022-opioid-s60-08',1,ref(9),[A,B,C,D,E,F]),reassess) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-misuse',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,pain,countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,D), guideline_operator(actual,G,-), guideline_entity(G,H,'opioid-use-disorder',countable), guideline_cardinality(G,H,na,eq,1), guideline_event(G,I,have), guideline_arg(G,I,1,A), guideline_arg(G,I,2,H), guideline_entity(actual,F,clinician,countable), guideline_cardinality(actual,F,na,eq,1).

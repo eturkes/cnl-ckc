@@ -1,0 +1,1 @@
+'$guideline_proof'(rule3,1,variant(1),witness([guideline_frequency(actual,e,c,w,day)]),prove([guideline_property(actual,'$guideline_id'(product,rule3,1,ref(1),[e,c,w]),ready,pos)])).

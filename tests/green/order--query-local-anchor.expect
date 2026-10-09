@@ -1,0 +1,4 @@
+% order--query-local-anchor compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v3,'order--query-local-anchor',ace_sha256(e7137d9e511fcd54845233f0e81dc8345b733ef47acd244d9cd1c70dfb1f26e8),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),temporal(sha256(bec3540718d479bac3ed36dfdd59f3fef887b20ead3d9bfaa3bdc213a613bdb9))).
+% Q1: Does a patient eat before a meeting?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,patient,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,meeting,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_event(actual,C,eat),','(guideline_arg(actual,C,1,A),','(guideline_pp(actual,C,before,B),guideline_order(actual,C,before,B))))))))),answers([])).

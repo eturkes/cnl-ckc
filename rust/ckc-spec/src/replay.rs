@@ -704,7 +704,7 @@ pub open spec fn indicator_rules(cs: Seq<DocClause>, i: int) -> Seq<DocClause> {
 }
 
 pub open spec fn rules(cs: Seq<DocClause>) -> Seq<DocClause> {
-    Seq::new(11, |i: int| indicator_rules(cs, i)).flatten()
+    Seq::new(15, |i: int| indicator_rules(cs, i)).flatten()
 }
 
 pub open spec fn leftmost(c: DocClause) -> Term {

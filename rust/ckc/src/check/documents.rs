@@ -9,9 +9,10 @@ pub(super) fn compile(
     proof: bool,
 ) -> Result<Vec<u8>> {
     let bytes = read(&g.ace(id), "guideline")?;
-    // m7t D2: a guideline carrying temporal.tsv compiles under schema v2.
+    // m7t D2 + q12 D1: a guideline carrying temporal.tsv compiles under the
+    // schema its header names.
     let mut tail = match &g.temporal {
-        Some(t) => vec!["v2".to_owned(), show(stage), id.to_owned(), show(t)],
+        Some(t) => vec![selector(t), show(stage), id.to_owned(), show(t)],
         None => vec![show(stage), id.to_owned()],
     };
     if let Some(lexicon) = &g.lexicon {

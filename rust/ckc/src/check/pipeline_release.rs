@@ -446,6 +446,17 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
         .iter()
         .map(|(a, b)| (a.as_bytes().to_vec(), b.as_bytes().to_vec()))
         .collect();
+    // q12 D1: each staged temporal table's bytes name its guideline's schema version.
+    let tables = gids
+        .iter()
+        .filter_map(|g| {
+            let path = format!("guidelines/{g}/temporal.tsv");
+            staged
+                .iter()
+                .find(|(p, _)| **p == path)
+                .map(|(_, b)| (g.as_bytes().to_vec(), b.clone()))
+        })
+        .collect();
     let manifest = ckc_kernel::contract::release_manifest(
         crate::trust::sha256_hex(&compiler).as_bytes(),
         crate::trust::sha256_hex(&lexicon).as_bytes(),
@@ -454,6 +465,7 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
         &urls,
         &label_rows,
         &tag_members,
+        &tables,
     );
     let payload = staged
         .into_iter()

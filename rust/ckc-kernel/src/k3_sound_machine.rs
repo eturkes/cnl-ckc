@@ -374,7 +374,7 @@ pub proof fn trun_weak(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux: Aux, 
 pub proof fn roots_weak(db: Seq<DocClause>, goal: Term)
     requires
         bodies_wf(db),
-        ckc_spec::answers::goal_walk(goal, 2) is None,
+        ckc_spec::answers::goal_walk(goal, 3) is None,
     ensures
         trun(db, roots_cfg(conj_leaves(goal)), trace_inf()).0 matches TOut::Proved(log)
             ==> has_weak_certificate(db, conj_leaves(goal), log),

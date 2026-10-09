@@ -1,31 +1,37 @@
 use super::common::*;
 use super::{inventories::RedProbe, process};
 use std::path::Path;
-pub(super) fn run(swipl: &Path, stage: &Path, probe: &RedProbe) -> Result {
-    let n = name(&probe.path);
-    let input = read(&probe.path, "red-probe")?;
-    let lexicon = probe.path.with_extension("ulex");
-    // m7t D2/D9: a `<probe>.temporal.tsv` sidecar selects v2; a `<class>--query-…`
-    // probe compiles in question mode.
-    let table = probe.path.with_extension("temporal.tsv");
-    let mut tail = if n.contains("--query-") {
+// m7t D2/D9 + q12 D1: a `<probe>.temporal.tsv` sidecar selects its header's schema
+// (a `<probe>.argv` sidecar names the selector outright); a `<stem>--query-…` probe
+// compiles in question mode.
+pub(super) fn tail(stage: &Path, probe: &Path, id: &str) -> Result<Vec<String>> {
+    let table = probe.with_extension("temporal.tsv");
+    let forced = probe.with_extension("argv");
+    let lexicon = probe.with_extension("ulex");
+    let mut tail = if name(probe).contains("--query-") {
         vec!["question".to_owned()]
     } else {
         vec![]
     };
     if table.is_file() {
-        tail.extend([
-            "v2".to_owned(),
-            show(stage),
-            "red-probe".to_owned(),
-            show(&table),
-        ]);
+        let token = if forced.is_file() {
+            text(&forced, "red-probe")?.trim().to_owned()
+        } else {
+            selector(&table)
+        };
+        tail.extend([token, show(stage), id.to_owned(), show(&table)]);
     } else {
-        tail.extend([show(stage), "red-probe".to_owned()]);
+        tail.extend([show(stage), id.to_owned()]);
     }
     if lexicon.is_file() {
         tail.push(show(&lexicon));
     }
+    Ok(tail)
+}
+pub(super) fn run(swipl: &Path, stage: &Path, probe: &RedProbe) -> Result {
+    let n = name(&probe.path);
+    let input = read(&probe.path, "red-probe")?;
+    let tail = tail(stage, &probe.path, "red-probe")?;
     let out = process::bounded(
         &mut process::compiler(swipl, stage, &tail),
         &format!("red-probe {n}"),

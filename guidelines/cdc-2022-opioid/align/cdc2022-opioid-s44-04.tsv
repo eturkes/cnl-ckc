@@ -7,11 +7,25 @@
 3	ace	176	dosage
 7	ace	223	consider
 5	ace	234	shorter-follow-up-schedule
-5	ace	300	shorter-follow-up-schedule
-6	ace	398	at an interval of at least 2 days
-6	ace	432	at an interval of at most 3 days
-4	ace	475	initial-follow-up-period
-4	ace	505	lasts for 1 week
+0	ace	293	starts
+2	ace	302	methadone
+2	ace	344	methadone
+0	ace	370	therapy-start
+5	ace	409	shorter-follow-up-schedule
+6	ace	509	at an interval of at least 2 days
+6	ace	543	at an interval of at most 3 days
+4	ace	576	during a window of 1 week
+0	ace	609	therapy-start
+1	ace	639	increases
+2	ace	651	methadone
+3	ace	661	dosage
+2	ace	690	methadone
+1	ace	713	dosage-increase
+5	ace	754	shorter-follow-up-schedule
+6	ace	854	at an interval of at least 2 days
+6	ace	888	at an interval of at most 3 days
+4	ace	921	during a window of 1 week
+1	ace	954	dosage-increase
 5	src	0	Shorter follow-up intervals
 6	src	35	2–3 days
 4	src	52	first week

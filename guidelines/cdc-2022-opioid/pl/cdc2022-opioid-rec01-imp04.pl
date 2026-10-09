@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document('cdc2022-opioid-rec01-imp04',ace_sha256('35d0ac323bfada3b413b0d89203cc88a5ddc36c3914a4479b184fc184469eecb'),ulex(sha256('91e746c5bcd4cd921613eef21bbe590b36f690a3199d3ecc6310436f36baacab')),temporal(sha256('453ec475d0109cb207adcaf4fbfb5a512f931e03f54cc4bb8267a18f87ed3f9c'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(3).
+guideline_document('cdc2022-opioid-rec01-imp04',ace_sha256('35d0ac323bfada3b413b0d89203cc88a5ddc36c3914a4479b184fc184469eecb'),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
 % S1: If a patient has a long-term-opioid-use and needs an additional-medication for an acute-pain and a nonopioid-medication is possible then every clinician should use the nonopioid-medication.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec01-imp04',1,box(1),[A,B,C,D,E,F,G,H,I,J]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'additional-medication',countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,'acute-pain',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,need), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,D), guideline_pp(actual,F,for,E), guideline_entity(actual,G,'nonopioid-medication',countable), guideline_cardinality(actual,G,na,eq,1), guideline_property(actual,H,possible,pos), guideline_event(actual,I,be), guideline_arg(actual,I,1,G), guideline_arg(actual,I,2,H), guideline_entity(actual,J,clinician,countable), guideline_cardinality(actual,J,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-rec01-imp04',1,box(1),[A,B,C,D,E,F,G,H,I,J]),'$guideline_id'(product,'cdc2022-opioid-rec01-imp04',1,ref(11),[A,B,C,D,E,F,G,H,I,J]),use) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'additional-medication',countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,'acute-pain',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,need), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,D), guideline_pp(actual,F,for,E), guideline_entity(actual,G,'nonopioid-medication',countable), guideline_cardinality(actual,G,na,eq,1), guideline_property(actual,H,possible,pos), guideline_event(actual,I,be), guideline_arg(actual,I,1,G), guideline_arg(actual,I,2,H), guideline_entity(actual,J,clinician,countable), guideline_cardinality(actual,J,na,eq,1).

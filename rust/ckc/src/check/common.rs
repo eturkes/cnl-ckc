@@ -42,6 +42,13 @@ pub(super) fn emit(result: Result) -> ExitCode {
         }
     }
 }
+// q12 D1: the schema selector a temporal table names — the v3 header selects
+// `v3`, any other table `v2` (the compiler re-checks the header and fails closed).
+const V3_HEADER: &[u8] = b"# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n";
+pub(crate) fn selector(table: &Path) -> String {
+    let v3 = std::fs::read(table).is_ok_and(|b| b.starts_with(V3_HEADER));
+    if v3 { "v3" } else { "v2" }.to_owned()
+}
 pub(super) fn show(path: &Path) -> String {
     // pathlib preserves a double root, drops empty/dot components, and keeps .. .
     let raw = path.to_string_lossy();

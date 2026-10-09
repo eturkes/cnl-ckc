@@ -18,6 +18,7 @@ mod adjudication_fixtures;
 mod corpus;
 mod coverage;
 mod documents;
+mod green;
 mod lexicon;
 pub(crate) mod pipeline;
 mod pipeline_emit;
@@ -37,6 +38,7 @@ fn check() -> common::Result {
     agent_spec::check()?;
     let plans = inventories::guidelines()?;
     let red = inventories::red()?;
+    let green = inventories::green()?;
     inventories::prolog()?;
     for g in &plans {
         corpus::check(g)?;
@@ -54,11 +56,15 @@ fn check() -> common::Result {
     for probe in &red {
         red::run(&swipl, &stage, probe)?;
     }
+    for probe in &green {
+        green::run(&swipl, &stage, probe)?;
+    }
     drop(scratch);
     println!(
-        "ckc: check ok {} guidelines {documents} documents {} red probes",
+        "ckc: check ok {} guidelines {documents} documents {} red probes {} green probes",
         plans.len(),
-        red.len()
+        red.len(),
+        green.len()
     );
     Ok(())
 }

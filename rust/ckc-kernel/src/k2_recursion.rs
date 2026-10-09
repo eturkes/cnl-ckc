@@ -19,7 +19,7 @@ verus! {
 
 pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
     requires
-        i < 11,
+        i < 15,
     ensures
         (out.0@, out.1 as nat) == indicator(i as int),
 {
@@ -34,13 +34,18 @@ pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
         7 => b"guideline_property",
         8 => b"guideline_operator",
         9 => b"guideline_interval",
-        _ => b"guideline_recurrence",
+        10 => b"guideline_recurrence",
+        11 => b"guideline_frequency",
+        12 => b"guideline_order",
+        13 => b"guideline_recurrence_window",
+        _ => b"guideline_range",
     };
     let arity: usize = match i {
         0 => 1,
-        1 | 4 | 8 => 3,
-        3 => 5,
+        1 | 4 | 8 | 14 => 3,
+        3 | 11 => 5,
         9 => 6,
+        13 => 7,
         _ => 4,
     };
     proof {
@@ -66,6 +71,14 @@ pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
         reveal_strlit("guideline_interval");
         reveal_byteslit(b"guideline_recurrence");
         reveal_strlit("guideline_recurrence");
+        reveal_byteslit(b"guideline_frequency");
+        reveal_strlit("guideline_frequency");
+        reveal_byteslit(b"guideline_order");
+        reveal_strlit("guideline_order");
+        reveal_byteslit(b"guideline_recurrence_window");
+        reveal_strlit("guideline_recurrence_window");
+        reveal_byteslit(b"guideline_range");
+        reveal_strlit("guideline_range");
         reveal(ckc_spec::v1text::ascii);
         assert(name@ == indicator(i as int).0);
     }
@@ -94,7 +107,7 @@ fn indicator_step(
         arena_ok(arena),
         db_valid(arena.nodes@, db@),
         index < db.len(),
-        which < 11,
+        which < 15,
         rule_indices_ok(db@, out@),
         indexed_clauses(arena.nodes@, db@, out@) == indicator_rules(
             db_view(arena.nodes@, db@).take(index as int),
@@ -148,9 +161,9 @@ pub open spec fn buckets_ok(
     buckets: Seq<Vec<usize>>,
     done: nat,
 ) -> bool {
-    buckets.len() == 11 && forall|j: int|
+    buckets.len() == 15 && forall|j: int|
         #![trigger buckets[j]]
-        0 <= j < 11 ==> {
+        0 <= j < 15 ==> {
             &&& rule_indices_ok(db, buckets[j]@)
             &&& indexed_clauses(nodes, db, buckets[j]@) == indicator_rules(
                 db_view(nodes, db).take(done as int),
@@ -175,15 +188,15 @@ fn census_row(
 {
     reveal(buckets_ok);
     let mut j = 0usize;
-    while j < 11
+    while j < 15
         invariant
             arena_ok(arena),
             db_valid(arena.nodes@, db@),
             index < db.len(),
-            j <= 11,
-            buckets.len() == 11,
+            j <= 15,
+            buckets.len() == 15,
             forall|k: int|
-                0 <= k < 11 ==> {
+                0 <= k < 15 ==> {
                     &&& rule_indices_ok(db@, buckets@[k]@)
                     &&& indexed_clauses(arena.nodes@, db@, buckets@[k]@) == indicator_rules(
                         db_view(arena.nodes@, db@).take(
@@ -196,14 +209,14 @@ fn census_row(
                         k,
                     )
                 },
-        decreases 11 - j,
+        decreases 15 - j,
     {
         let ghost previous = buckets@;
         let bucket = buckets.remove(j);
         let updated = indicator_step(arena, db, bucket, index, j);
         buckets.insert(j, updated);
         proof {
-            assert forall|k: int| 0 <= k < 11 implies {
+            assert forall|k: int| 0 <= k < 15 implies {
                 &&& rule_indices_ok(db@, buckets@[k]@)
                 &&& indexed_clauses(arena.nodes@, db@, buckets@[k]@) == indicator_rules(
                     db_view(arena.nodes@, db@).take(
@@ -239,19 +252,19 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
     reveal(buckets_ok);
     let mut buckets: Vec<Vec<usize>> = Vec::new();
     let mut j = 0usize;
-    while j < 11
+    while j < 15
         invariant
-            j <= 11,
+            j <= 15,
             buckets.len() == j,
             forall|k: int| 0 <= k < j ==> buckets@[k].len() == 0,
-        decreases 11 - j,
+        decreases 15 - j,
     {
         buckets.push(Vec::new());
         j += 1;
     }
     proof {
         assert_seqs_equal!(db_view(arena.nodes@, db@).take(0) == Seq::empty());
-        assert forall|k: int| 0 <= k < 11 implies indexed_clauses(arena.nodes@, db@, buckets@[k]@)
+        assert forall|k: int| 0 <= k < 15 implies indexed_clauses(arena.nodes@, db@, buckets@[k]@)
             == indicator_rules(db_view(arena.nodes@, db@).take(0), k) by {
             assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, buckets@[k]@) == Seq::empty());
         }
@@ -269,7 +282,7 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
         c += 1;
     }
     let ghost cs = db_view(arena.nodes@, db@);
-    let ghost parts = Seq::new(11, |i: int| indicator_rules(cs, i));
+    let ghost parts = Seq::new(15, |i: int| indicator_rules(cs, i));
     let mut out = Vec::new();
     let mut i = 0usize;
     proof {
@@ -277,17 +290,17 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
         assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@) == Seq::empty());
         assert_seqs_equal!(parts.take(0) == Seq::empty());
     }
-    while i < 11
+    while i < 15
         invariant
             arena_ok(arena),
             db_valid(arena.nodes@, db@),
-            i <= 11,
+            i <= 15,
             buckets_ok(arena.nodes@, db@, buckets@, db.len() as nat),
             cs == db_view(arena.nodes@, db@),
-            parts == Seq::new(11, |j: int| indicator_rules(cs, j)),
+            parts == Seq::new(15, |j: int| indicator_rules(cs, j)),
             rule_indices_ok(db@, out@),
             indexed_clauses(arena.nodes@, db@, out@) == parts.take(i as int).flatten(),
-        decreases 11 - i,
+        decreases 15 - i,
     {
         proof {
             assert(rule_indices_ok(db@, buckets@[i as int]@));

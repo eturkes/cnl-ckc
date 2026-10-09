@@ -280,80 +280,102 @@ pub(super) struct RedProbe {
     pub class: String,
     pub rc: i32,
 }
-pub(super) fn red() -> Result<Vec<RedProbe>> {
-    let root = Path::new("tests/red");
+// Probe directory law shared by tests/red + tests/green: each `<stem>.ace` carries
+// a `<stem>.expect` pin; `.ulex`, `.temporal.tsv` + `.argv` sidecars are optional.
+fn probe_dir(kind: &str) -> Result<Vec<(PathBuf, String)>> {
+    let dir = format!("tests/{kind}");
+    let root = Path::new(&dir);
+    let (dir_cat, entry) = (format!("{kind}-dir"), format!("{kind}-entry"));
     if root.is_symlink() {
-        return Err(violation("red-dir", "is a symlink: tests/red"));
+        return Err(violation(&dir_cat, format!("is a symlink: {dir}")));
     }
     if !root.is_dir() {
-        return Err(violation("red-dir", "missing: tests/red"));
+        return Err(violation(&dir_cat, format!("missing: {dir}")));
     }
-    let mut probes = vec![];
-    let (mut aces, mut ulex, mut pins, mut tables) = (vec![], vec![], vec![], vec![]);
-    for p in entries(root, "red-entry")? {
+    let mut aces = vec![];
+    let (mut ulex, mut pins, mut tables, mut argvs) = (vec![], vec![], vec![], vec![]);
+    for p in entries(root, &entry)? {
         let n = name(&p);
         if !p.is_file() || p.is_symlink() {
-            return Err(violation("red-entry", format!("not a regular file: {n}")));
+            return Err(violation(&entry, format!("not a regular file: {n}")));
         }
         if let Some(stem) = n.strip_suffix(".ace") {
-            let Some((class, _)) = stem.split_once("--").filter(|(c, _)| !c.is_empty()) else {
-                return Err(violation(
-                    "red-probe",
-                    format!("probe name lacks <class>-- prefix: {n}"),
-                ));
-            };
-            let rc = match class {
-                "input_utf8" | "ape_messages" | "empty_drs" | "sentence_lines" | "unsupported"
-                | "safety" | "proof" => 1,
-                "usage" | "ape_load" | "ulex_load" | "temporal_load" | "check_load"
-                | "uncaught" => 2,
-                _ => {
-                    return Err(violation(
-                        "red-class",
-                        format!("unknown error class: {class}"),
-                    ));
-                }
-            };
-            aces.push(stem.to_owned());
-            probes.push(RedProbe {
-                path: p,
-                class: class.to_owned(),
-                rc,
-            });
+            aces.push((p.clone(), stem.to_owned()));
         } else if let Some(stem) = n.strip_suffix(".ulex") {
             ulex.push(stem.to_owned());
         } else if let Some(stem) = n.strip_suffix(".temporal.tsv") {
             tables.push(stem.to_owned());
+        } else if let Some(stem) = n.strip_suffix(".argv") {
+            argvs.push(stem.to_owned());
         } else if let Some(stem) = n.strip_suffix(".expect") {
             pins.push(stem.to_owned());
         } else {
-            return Err(violation("red-entry", format!("unsupported entry: {n}")));
+            return Err(violation(&entry, format!("unsupported entry: {n}")));
         }
     }
-    for (items, kind) in [
+    for (items, ext) in [
         (&ulex, "ulex"),
         (&pins, "expect"),
         (&tables, "temporal.tsv"),
+        (&argvs, "argv"),
     ] {
         for s in items {
-            if !aces.contains(s) {
+            if !aces.iter().any(|(_, a)| a == s) {
                 return Err(violation(
-                    "red-entry",
-                    format!("orphan {kind} without ace probe: {s}"),
+                    &entry,
+                    format!("orphan {ext} without ace probe: {s}"),
                 ));
             }
         }
     }
-    for s in aces {
-        if !pins.contains(&s) {
+    for (_, s) in &aces {
+        if !pins.contains(s) {
+            return Err(violation(&entry, format!("probe lacks expect pin: {s}")));
+        }
+    }
+    if aces.is_empty() {
+        return Err(violation(&dir_cat, format!("no {kind} probes found")));
+    }
+    Ok(aces)
+}
+pub(super) fn red() -> Result<Vec<RedProbe>> {
+    let mut probes = vec![];
+    for (path, stem) in probe_dir("red")? {
+        let Some((class, _)) = stem.split_once("--").filter(|(c, _)| !c.is_empty()) else {
             return Err(violation(
-                "red-entry",
-                format!("probe lacks expect pin: {s}"),
+                "red-probe",
+                format!("probe name lacks <class>-- prefix: {stem}.ace"),
+            ));
+        };
+        let rc = match class {
+            "input_utf8" | "ape_messages" | "empty_drs" | "sentence_lines" | "unsupported"
+            | "safety" | "proof" => 1,
+            "usage" | "ape_load" | "ulex_load" | "temporal_load" | "check_load" | "uncaught" => 2,
+            _ => {
+                return Err(violation(
+                    "red-class",
+                    format!("unknown error class: {class}"),
+                ));
+            }
+        };
+        probes.push(RedProbe {
+            path,
+            class: class.to_owned(),
+            rc,
+        });
+    }
+    Ok(probes)
+}
+// q12 P4: green probes compile under the docid of their stem.
+pub(super) fn green() -> Result<Vec<PathBuf>> {
+    let probes = probe_dir("green")?;
+    for (_, stem) in &probes {
+        if !valid_docid(stem) {
+            return Err(violation(
+                "green-probe",
+                format!("probe name is no docid: {stem}"),
             ));
         }
     }
-    if probes.is_empty() {
-        return Err(violation("red-dir", "no red probes found"));
-    }
-    Ok(probes)
+    Ok(probes.into_iter().map(|(p, _)| p).collect())
 }

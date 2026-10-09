@@ -846,8 +846,24 @@ pub open spec fn role_html(r: Bytes) -> Html {
     }
 }
 
+// v3 tables (contract q12 D11): before/after also read an order with no stated time.
+pub open spec fn role_html_v(r: Bytes, v: nat) -> Html {
+    if v == 3 && r == lit("after"@) {
+        fixed_bytes(how_long_after_or_only_after())
+    } else if v == 3 && r == lit("before"@) {
+        fixed_bytes(how_long_before_or_only_before())
+    } else {
+        role_html(r)
+    }
+}
+
 pub open spec fn word_row(a: Html, b: Html) -> Html {
     row(seq![cell(a), cell(b)])
+}
+
+pub open spec fn framed_word(raw: Bytes, p: Bytes, f: Bytes) -> Html {
+    pl_word(raw, p) + fixed_bytes(paren_open_sep()) + fixed_bytes(with_sp()) + pl_word(raw, f)
+        + fixed_bytes(paren_close())
 }
 
 #[verifier::opaque]
@@ -864,14 +880,21 @@ pub open spec fn word_rows(t: Option<Bytes>) -> Seq<Html> {
                         },
                     ),
             ) + m.relations.map_values(
-                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), role_html(r.1)),
+                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), role_html_v(r.1, m.version)),
             ) + m.spacings.map_values(
                 |s: (Bytes, Bytes)|
                     word_row(
-                        pl_word(raw, s.0) + fixed_bytes(paren_open_sep()) + fixed_bytes(with_sp())
-                            + pl_word(raw, s.1) + fixed_bytes(paren_close()),
+                        framed_word(raw, s.0, s.1),
                         fixed_bytes(how_far_apart_repeats_of_the_action_lie()),
                     ),
+            ) + m.windows.map_values(
+                |w: (Bytes, Bytes)|
+                    word_row(
+                        framed_word(raw, w.0, w.1),
+                        fixed_bytes(the_time_window_in_which_the_spacing()),
+                    ),
+            ) + m.frequencies.map_values(
+                |f: Bytes| word_row(pl_word(raw, f), fixed_bytes(how_many_of_an_item_the_action())),
             ),
             Result::Err(_) => Seq::empty(),
         },
@@ -1478,6 +1501,53 @@ pub open spec fn joined_word(
     }
 }
 
+// --- v3 timing rows (contract q12 D11) ---
+pub open spec fn order_html(role: Bytes) -> Html {
+    if role == lit("before"@) {
+        fixed_bytes(before())
+    } else if role == lit("after"@) {
+        fixed_bytes(after())
+    } else {
+        fixed_bytes(not_stated())
+    }
+}
+
+// `<cmp> N` from a referent's cardinality literal (no unit word).
+pub open spec fn count_html(d: DocFile, c: DocClause, q: Term) -> Option<Html> {
+    match first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
+        Option::Some(args) => match (cmp_html(args[3]), args[4]) {
+            (Option::Some(cmp), Term::Int(n)) => if n < 0 {
+                Option::None
+            } else {
+                Option::Some(cmp + text(v1text::udec_bytes(n as nat)))
+            },
+            _ => Option::None,
+        },
+        Option::None => Option::None,
+    }
+}
+
+// guideline_frequency(Ctx, E, C, W, Unit): `<cmp> N per <cmp> M <unit>, counted item: <noun>`.
+pub open spec fn frequency_html(pl: Bytes, d: DocFile, c: DocClause, args: Seq<Term>) -> Html {
+    match (count_html(d, c, args[2]), bound_html(d, c, args[3], args[4])) {
+        (Option::Some(n), Option::Some(w)) => n + fixed_bytes(sp_per_sp()) + w + fixed_bytes(
+            counted_item_sep(),
+        ) + joined_word(pl, d, c, "guideline_entity"@, 4, args[2], 2),
+        _ => fixed_bytes(not_stated()),
+    }
+}
+
+// guideline_recurrence_window(Ctx, E, Q, QUnit, A, L, LUnit):
+// `repeats <gap> apart during <length> from`.
+pub open spec fn window_html(d: DocFile, c: DocClause, args: Seq<Term>) -> Html {
+    match (bound_html(d, c, args[2], args[3]), bound_html(d, c, args[5], args[6])) {
+        (Option::Some(g), Option::Some(l)) => fixed_bytes(repeats_sp()) + g + fixed_bytes(
+            sp_apart_during_sp(),
+        ) + l + fixed_bytes(sp_from()),
+        _ => fixed_bytes(not_stated()),
+    }
+}
+
 pub open spec fn part_html(part: int) -> Html {
     if part == 0 {
         fixed_bytes(statement_2())
@@ -1530,6 +1600,42 @@ pub open spec fn timing_row(
                     ],
                 ),
             )
+        } else if name == lit("guideline_order"@) && args.len() == 4 {
+            Option::Some(
+                row(
+                    seq![
+                        cell(text(v1text::udec_bytes(s))),
+                        cell(part_html(part)),
+                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                        cell(order_html(atom_name(args[2]))),
+                        cell(joined_word(pl, d, c, "guideline_entity"@, 4, args[3], 2)),
+                    ],
+                ),
+            )
+        } else if name == lit("guideline_frequency"@) && args.len() == 5 {
+            Option::Some(
+                row(
+                    seq![
+                        cell(text(v1text::udec_bytes(s))),
+                        cell(part_html(part)),
+                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                        cell(frequency_html(pl, d, c, args)),
+                        cell(Seq::empty()),
+                    ],
+                ),
+            )
+        } else if name == lit("guideline_recurrence_window"@) && args.len() == 7 {
+            Option::Some(
+                row(
+                    seq![
+                        cell(text(v1text::udec_bytes(s))),
+                        cell(part_html(part)),
+                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+                        cell(window_html(d, c, args)),
+                        cell(joined_word(pl, d, c, "guideline_entity"@, 4, args[4], 2)),
+                    ],
+                ),
+            )
         } else {
             Option::None
         },
@@ -1578,7 +1684,7 @@ pub open spec fn bundle_rows(pl: Bytes, d: DocFile, b: v1text::Bundle) -> Seq<Ht
 pub open spec fn timing_rows(pl: Bytes) -> Seq<Html> {
     if v1text::accepts(pl) {
         match crate::replay::the_v1(pl) {
-            V1File::Doc(d) => if d.version == 2 {
+            V1File::Doc(d) => if d.version >= 2 {
                 d.bundles.map_values(|b: v1text::Bundle| bundle_rows(pl, d, b)).flatten()
             } else {
                 Seq::empty()
@@ -2876,6 +2982,16 @@ copy_table! {
     how_long_before_a_reference_point = "how long before a reference point the action occurs";
     how_far_apart_repeats_of_the_action_lie = "how far apart repeats of the action lie";
     with_sp = "with ";
+    how_long_after_or_only_after = "how long after a reference point the action occurs, or only that it occurs after it";
+    how_long_before_or_only_before = "how long before a reference point the action occurs, or only that it occurs before it";
+    the_time_window_in_which_the_spacing = "the time window in which the spacing of repeats holds";
+    how_many_of_an_item_the_action = "how many of an item the action involves in each period";
+    before = "before";
+    after = "after";
+    sp_per_sp = " per ";
+    counted_item_sep = ", counted item: ";
+    sp_apart_during_sp = " apart during ";
+    sp_from = " from";
 }
 
 verus! {
