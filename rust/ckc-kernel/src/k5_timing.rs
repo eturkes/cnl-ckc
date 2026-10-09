@@ -375,6 +375,8 @@ pub fn cmp_exec(arena: &ETermArena, c: &T) -> (out: Option<EPage>)
                 Some(h::fixed("at most "))
             } else if is(&a, "less") {
                 Some(h::fixed("less than "))
+            } else if is(&a, "about") {
+                Some(h::fixed("about "))
             } else {
                 None
             }
@@ -515,6 +517,141 @@ pub fn bound_exec(
         Some(w) => w,
     };
     Some(h::cat(h::cat(cmp, h::text(&magnitude)), w))
+}
+
+// (magnitude, one) of a nonnegative integer literal (`one` = it is 1), else None.
+fn count_parts(arena: &ETermArena, t: &T) -> (out: Option<(Vec<u8>, bool)>)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, t),
+    ensures
+        match out {
+            Some((m, one)) => match t@ {
+                Term::Int(n) => 0 <= n && m@ == v::udec_bytes(n as nat) && one == (n == 1),
+                _ => false,
+            },
+            None => !(t@ matches Term::Int(n) && 0 <= n),
+        },
+{
+    proof {
+        assert(crate::k2_term::node_ok(arena.nodes@, t.root as int));
+        reveal(crate::k2_term::node_ok);
+    }
+    let (magnitude, negative) = match &arena.nodes[t.root].kind {
+        ENodeKind::Int { magnitude, negative, .. } => (magnitude.clone(), *negative),
+        _ => return None,
+    };
+    if negative {
+        return None;
+    }
+    let one = magnitude.len() == 1 && magnitude[0] == 0x31;
+    proof {
+        if let Term::Int(n) = t@ {
+            reveal_with_fuel(v::udec_bytes, 2);
+            reveal(v::digit_byte);
+            assert(v::udec_bytes(1) =~= seq![0x31u8]);
+            if one {
+                assert(magnitude@ =~= v::udec_bytes(1));
+                crate::v1_term_impl::udec_bytes_injective(n as nat, 1);
+            }
+            if n == 1 {
+                assert(magnitude@ == v::udec_bytes(1));
+            }
+        }
+    }
+    Some((magnitude, one))
+}
+
+// u::range_bound_html: a range's low end renders `a minimum of N to M <unit>`.
+pub fn range_bound_exec(
+    arena: &ETermArena,
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    q: &T,
+    un: &T,
+) -> (out: Option<EPage>)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        valid(arena.nodes@, q),
+        valid(arena.nodes@, un),
+    ensures
+        opt_page(out) == u::range_bound_html(d, c, q@, un@),
+{
+    let rname = crate::k5_bytes::literal("guideline_range");
+    let r = match first_with_exec(arena, join, &rname, Ghost("guideline_range"@), 3, 1, q) {
+        None => return bound_exec(arena, join, Ghost(d), Ghost(c), q, un),
+        Some(a) => a,
+    };
+    proof {
+        assert(models(r@)[2] == r@[2]@);
+        assert(valid(arena.nodes@, &r@[2]));
+    }
+    let name = crate::k5_bytes::literal("guideline_cardinality");
+    let lo = match first_with_exec(arena, join, &name, Ghost("guideline_cardinality"@), 5, 1, q) {
+        None => return None,
+        Some(a) => a,
+    };
+    let hi = match first_with_exec(
+        arena,
+        join,
+        &name,
+        Ghost("guideline_cardinality"@),
+        5,
+        1,
+        &r[2],
+    ) {
+        None => return None,
+        Some(a) => a,
+    };
+    proof {
+        assert(models(lo@)[3] == lo@[3]@);
+        assert(models(lo@)[4] == lo@[4]@);
+        assert(models(hi@)[3] == hi@[3]@);
+        assert(models(hi@)[4] == hi@[4]@);
+        assert(valid(arena.nodes@, &lo@[3]));
+        assert(valid(arena.nodes@, &lo@[4]));
+        assert(valid(arena.nodes@, &hi@[3]));
+        assert(valid(arena.nodes@, &hi@[4]));
+    }
+    let (ml, _) = match count_parts(arena, &lo[4]) {
+        None => return None,
+        Some(p) => p,
+    };
+    let (mh, one) = match count_parts(arena, &hi[4]) {
+        None => return None,
+        Some(p) => p,
+    };
+    let geq = match atom_of(arena, &lo[3]) {
+        Some(a) => is(&a, "geq"),
+        None => false,
+    };
+    let eq = match atom_of(arena, &hi[3]) {
+        Some(a) => is(&a, "eq"),
+        None => false,
+    };
+    if !(geq && eq) {
+        return None;
+    }
+    let ua = match atom_of(arena, un) {
+        Some(a) => a,
+        None => Vec::new(),
+    };
+    let w = match unit_exec(&ua, one) {
+        None => return None,
+        Some(w) => w,
+    };
+    Some(
+        h::cat(
+            h::cat(
+                h::cat(h::cat(h::fixed("a minimum of "), h::text(&ml)), h::fixed(" to ")),
+                h::text(&mh),
+            ),
+            w,
+        ),
+    )
 }
 
 pub fn timing_html_exec(role: &[u8], b: Option<EPage>) -> (out: EPage)
@@ -661,7 +798,7 @@ pub fn row_exec(
             &args[1],
             2,
         );
-        let bound = bound_exec(arena, join, Ghost(d), Ghost(c), &args[3], &args[4]);
+        let bound = range_bound_exec(arena, join, Ghost(d), Ghost(c), &args[3], &args[4]);
         let timing = timing_html_exec(&role, bound);
         let anchor = if is(&role, "duration") {
             let blank = EPage { parts: Vec::new() };
@@ -695,7 +832,7 @@ pub fn row_exec(
                 u::cell(
                     u::timing_html(
                         u::atom_name(args@[2]@),
-                        u::bound_html(d, c, args@[3]@, args@[4]@),
+                        u::range_bound_html(d, c, args@[3]@, args@[4]@),
                     ),
                 ),
                 cells@[4]@,

@@ -9519,4 +9519,197 @@ pub proof fn f295(inputs: Seq<u::Bytes>)
     h::fixed(u::lit(" from"@), inputs, 0, 0);
 }
 
+pub proof fn l296(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("about "@)),
+        u::copy_derived(u::lit("about "@), inputs, u::copy_registry()),
+        u::copy_registry()[296] == u::lit("about "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[296] == u::lit("about "@) && 296 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("about "@), inputs);
+}
+
+pub proof fn f296(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("about "@), inputs, 0, 0),
+        u::copy_registry()[296] == u::lit("about "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l296(inputs);
+    reveal_strlit("about ");
+    is_ascii_chars_encode_utf8("about "@);
+    assert(u::lit("about "@) =~= bs![97u8,98,111,117,116,32]);
+    assert(cx::scan(bs![97u8,98,111,117,116,32], 0) == 0) by (compute_only);
+    cx::exact(u::lit("about "@), 0);
+    h::fixed(u::lit("about "@), inputs, 0, 0);
+}
+
+pub proof fn l297(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("a minimum of "@)),
+        u::copy_derived(u::lit("a minimum of "@), inputs, u::copy_registry()),
+        u::copy_registry()[297] == u::lit("a minimum of "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[297] == u::lit("a minimum of "@) && 297 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("a minimum of "@), inputs);
+}
+
+pub proof fn f297(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("a minimum of "@), inputs, 0, 0),
+        u::copy_registry()[297] == u::lit("a minimum of "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l297(inputs);
+    reveal_strlit("a minimum of ");
+    is_ascii_chars_encode_utf8("a minimum of "@);
+    assert(u::lit("a minimum of "@) =~= bs![97u8,32,109,105,110,105,109,117,109,32,111,102,32]);
+    assert(cx::scan(bs![97u8,32,109,105,110,105,109,117,109,32,111,102,32], 0) == 0)
+        by (compute_only);
+    cx::exact(u::lit("a minimum of "@), 0);
+    h::fixed(u::lit("a minimum of "@), inputs, 0, 0);
+}
+
+pub proof fn l298(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" to "@)),
+        u::copy_derived(u::lit(" to "@), inputs, u::copy_registry()),
+        u::copy_registry()[298] == u::lit(" to "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[298] == u::lit(" to "@) && 298 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" to "@), inputs);
+}
+
+pub proof fn f298(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(" to "@), inputs, 0, 0),
+        u::copy_registry()[298] == u::lit(" to "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l298(inputs);
+    reveal_strlit(" to ");
+    is_ascii_chars_encode_utf8(" to "@);
+    assert(u::lit(" to "@) =~= bs![32u8,116,111,32]);
+    assert(cx::scan(bs![32u8,116,111,32], 0) == 0) by (compute_only);
+    cx::exact(u::lit(" to "@), 0);
+    h::fixed(u::lit(" to "@), inputs, 0, 0);
+}
+
+pub proof fn l299(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("marks a time limit as approximate"@)),
+        u::copy_derived(u::lit("marks a time limit as approximate"@), inputs, u::copy_registry()),
+        u::copy_registry()[299] == u::lit("marks a time limit as approximate"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[299] == u::lit("marks a time limit as approximate"@) && 299
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("marks a time limit as approximate"@), inputs);
+}
+
+pub proof fn f299(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("marks a time limit as approximate"@), inputs, 0, 0),
+        u::copy_registry()[299] == u::lit("marks a time limit as approximate"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l299(inputs);
+    reveal_strlit("marks a time limit as approximate");
+    is_ascii_chars_encode_utf8("marks a time limit as approximate"@);
+    assert(u::lit("marks a time limit as approximate"@)
+        =~= bs![109u8,97,114,107,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,97,115,32,97,112,112,114,111,120,105,109,97,116,101]);
+    assert(cx::scan(
+        bs![109u8,97,114,107,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,97,115,32,97,112,112,114,111,120,105,109,97,116,101],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("marks a time limit as approximate"@), 0);
+    h::fixed(u::lit("marks a time limit as approximate"@), inputs, 0, 0);
+}
+
+pub proof fn l300(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit("joins the upper end of a minimum that is stated as a range"@),
+        ),
+        u::copy_derived(
+            u::lit("joins the upper end of a minimum that is stated as a range"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[300] == u::lit(
+            "joins the upper end of a minimum that is stated as a range"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[300] == u::lit(
+        "joins the upper end of a minimum that is stated as a range"@,
+    ) && 300 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("joins the upper end of a minimum that is stated as a range"@), inputs);
+}
+
+pub proof fn f300(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed("joins the upper end of a minimum that is stated as a range"@),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[300] == u::lit(
+            "joins the upper end of a minimum that is stated as a range"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l300(inputs);
+    reveal_strlit("joins the upper end of a minimum that is stated as a range");
+    is_ascii_chars_encode_utf8("joins the upper end of a minimum that is stated as a range"@);
+    assert(u::lit("joins the upper end of a minimum that is stated as a range"@)
+        =~= bs![106u8,111,105,110,115,32,116,104,101,32,117,112,112,101,114,32,101,110,100,32,111,102,32,97,32,109,105,110,105,109,117,109,32,116,104,97,116,32,105,115,32,115,116,97,116,101,100,32,97,115,32,97,32,114,97,110,103,101]);
+    assert(cx::scan(
+        bs![106u8,111,105,110,115,32,116,104,101,32,117,112,112,101,114,32,101,110,100,32,111,102,32,97,32,109,105,110,105,109,117,109,32,116,104,97,116,32,105,115,32,115,116,97,116,101,100,32,97,115,32,97,32,114,97,110,103,101],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("joins the upper end of a minimum that is stated as a range"@), 0);
+    h::fixed(u::lit("joins the upper end of a minimum that is stated as a range"@), inputs, 0, 0);
+}
+
 } // verus!

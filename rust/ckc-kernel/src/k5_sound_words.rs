@@ -150,6 +150,28 @@ proof fn frequency(raw: u::Bytes, f: u::Bytes, inputs: Seq<u::Bytes>)
     b::row(seq![u::cell(u::pl_word(raw, f)), u::cell(b::f(289))], inputs);
 }
 
+proof fn lemma_word(raw: u::Bytes, a: u::Bytes, k: int, inputs: Seq<u::Bytes>)
+    requires
+        m::backed(raw, inputs),
+        k == 299 || k == 300,
+    ensures
+        k == 299 ==> h::sound(w::approximation_row(raw, a), inputs),
+        k == 300 ==> h::sound(w::range_row(raw, a), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lit);
+    hide(u::pl_word);
+    hide(u::cell);
+    hide(u::row);
+    t::pl_word(raw, a, inputs);
+    l::f299(inputs);
+    l::f300(inputs);
+    b::cell(u::pl_word(raw, a), inputs);
+    b::cell(b::f(k), inputs);
+    b::row(seq![u::cell(u::pl_word(raw, a)), u::cell(b::f(k))], inputs);
+}
+
 proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
     requires
         m::backed(raw, inputs),
@@ -161,11 +183,15 @@ proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
     hide(w::spacing_row);
     hide(w::window_row);
     hide(w::frequency_row);
+    hide(w::approximation_row);
+    hide(w::range_row);
     let us = tm.units.map_values(|p: (u::Bytes, u::Bytes)| w::unit_row(raw, p));
     let rs = tm.relations.map_values(|p: (u::Bytes, u::Bytes)| w::relation_row(raw, tm.version, p));
     let ss = tm.spacings.map_values(|p: (u::Bytes, u::Bytes)| w::spacing_row(raw, p));
     let ws = tm.windows.map_values(|p: (u::Bytes, u::Bytes)| w::window_row(raw, p));
     let fs = tm.frequencies.map_values(|f: u::Bytes| w::frequency_row(raw, f));
+    let xs = tm.approximations.map_values(|a: u::Bytes| w::approximation_row(raw, a));
+    let gs = tm.ranges.map_values(|r: u::Bytes| w::range_row(raw, r));
     assert forall|i: int| 0 <= i < us.len() implies h::sound(#[trigger] us[i], inputs) by {
         unit(raw, tm.units[i], inputs);
     }
@@ -181,9 +207,16 @@ proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
     assert forall|i: int| 0 <= i < fs.len() implies h::sound(#[trigger] fs[i], inputs) by {
         frequency(raw, tm.frequencies[i], inputs);
     }
+    assert forall|i: int| 0 <= i < xs.len() implies h::sound(#[trigger] xs[i], inputs) by {
+        lemma_word(raw, tm.approximations[i], 299, inputs);
+    }
+    assert forall|i: int| 0 <= i < gs.len() implies h::sound(#[trigger] gs[i], inputs) by {
+        lemma_word(raw, tm.ranges[i], 300, inputs);
+    }
     t::cat3(us, rs, ss, inputs);
     t::cat3(us + rs + ss, ws, fs, inputs);
-    assert(w::rows_of(raw, tm) =~= us + rs + ss + ws + fs);
+    t::cat3(us + rs + ss + ws + fs, xs, gs, inputs);
+    assert(w::rows_of(raw, tm) =~= us + rs + ss + ws + fs + xs + gs);
 }
 
 pub proof fn section(g: u::Guideline, inputs: Seq<u::Bytes>)

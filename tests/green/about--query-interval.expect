@@ -1,0 +1,4 @@
+% about--query-interval compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v3,'about--query-interval',ace_sha256('1e6d41b5883108ae3fe397602a4a11e6d02b36c5ea5f43201497e42331f3f162'),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),temporal(sha256('5d943eb2393af1176618324c84a9d9d72728a7533380ea5ace775c2699315217'))).
+% Q1: Does a patient wait for 2 approximate hours?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,patient,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,hour,countable),','(guideline_cardinality(actual,B,na,about,2),','(guideline_property(actual,B,approximate,pos),','(guideline_event(actual,C,wait),','(guideline_arg(actual,C,1,A),','(guideline_pp(actual,C,for,B),guideline_interval(actual,C,duration,B,hour,none)))))))))),answers([])).

@@ -895,6 +895,12 @@ pub open spec fn word_rows(t: Option<Bytes>) -> Seq<Html> {
                     ),
             ) + m.frequencies.map_values(
                 |f: Bytes| word_row(pl_word(raw, f), fixed_bytes(how_many_of_an_item_the_action())),
+            ) + m.approximations.map_values(
+                |a: Bytes|
+                    word_row(pl_word(raw, a), fixed_bytes(marks_a_time_limit_as_approximate())),
+            ) + m.ranges.map_values(
+                |r: Bytes|
+                    word_row(pl_word(raw, r), fixed_bytes(joins_the_upper_end_of_a_minimum())),
             ),
             Result::Err(_) => Seq::empty(),
         },
@@ -1382,6 +1388,8 @@ pub open spec fn cmp_html(c: Term) -> Option<Html> {
         Option::Some(fixed_bytes(at_most_sp()))
     } else if a == lit("less"@) {
         Option::Some(fixed_bytes(less_than_sp()))
+    } else if a == lit("about"@) {
+        Option::Some(fixed_bytes(about_sp()))
     } else {
         Option::None
     }
@@ -1464,6 +1472,36 @@ pub open spec fn bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Optio
             _ => Option::None,
         },
         Option::None => Option::None,
+    }
+}
+
+// q13 D8: an interval quantity q that a `guideline_range(_, q, h)` literal names
+// as its low end renders `a minimum of N to M <unit>` (q at least N, h exactly M);
+// any other quantity renders bound_html.
+pub open spec fn range_bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Option<Html> {
+    match first_with(join_terms(d, c), "guideline_range"@, 3, 1, q) {
+        Option::None => bound_html(d, c, q, u),
+        Option::Some(r) => match (
+            first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, q),
+            first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, r[2]),
+        ) {
+            (Option::Some(lo), Option::Some(hi)) => match (lo[4], hi[4]) {
+                (Term::Int(n), Term::Int(m)) => if lo[3] == Term::Atom(lit("geq"@)) && hi[3]
+                    == Term::Atom(lit("eq"@)) && 0 <= n && 0 <= m {
+                    match unit_html(atom_name(u), m == 1) {
+                        Option::Some(w) => Option::Some(
+                            fixed_bytes(a_minimum_of_sp()) + text(v1text::udec_bytes(n as nat))
+                                + fixed_bytes(sp_to_sp()) + text(v1text::udec_bytes(m as nat)) + w,
+                        ),
+                        Option::None => Option::None,
+                    }
+                } else {
+                    Option::None
+                },
+                _ => Option::None,
+            },
+            _ => Option::None,
+        },
     }
 }
 
@@ -1575,7 +1613,7 @@ pub open spec fn timing_row(
                         cell(text(v1text::udec_bytes(s))),
                         cell(part_html(part)),
                         cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
-                        cell(timing_html(role, bound_html(d, c, args[3], args[4]))),
+                        cell(timing_html(role, range_bound_html(d, c, args[3], args[4]))),
                         cell(
                             if role == lit("duration"@) {
                                 Seq::empty()
@@ -2992,6 +3030,11 @@ copy_table! {
     counted_item_sep = ", counted item: ";
     sp_apart_during_sp = " apart during ";
     sp_from = " from";
+    about_sp = "about ";
+    a_minimum_of_sp = "a minimum of ";
+    sp_to_sp = " to ";
+    marks_a_time_limit_as_approximate = "marks a time limit as approximate";
+    joins_the_upper_end_of_a_minimum = "joins the upper end of a minimum that is stated as a range";
 }
 
 verus! {

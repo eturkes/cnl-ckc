@@ -220,12 +220,16 @@ A document page with a typed time limit lists the limits that the
 compiler read from its ACE text, in the table "Timing as compiled".
 Under v3 the table also lists each order with no stated time, each
 count per period with its counted item, and each recurrence inside a
-time window with the window's length and reference point.
+time window with the window's length and reference point. An
+approximate time limit reads `about`, as in `lasts about 2 hours`. A
+minimum stated as a range reads `a minimum of 8 to 12 hours` in the row
+of its interval.
 The guideline page lists the rows of `temporal.tsv` under "Time
 words", after the status table. Each row names one word and how the
 compiler reads it. A word reads as a unit of time, as a time relation,
 or as the spacing of repeats. A v3 word can also read as the frame of
-a time window or as the word of a count per period. The compiler reads
+a time window, as the word of a count per period, as the mark of an
+approximate time limit, or as the upper end of a ranged minimum. The compiler reads
 a time limit only through these words. A table that fails the `ckc check` grammar stops the
 interface with `ui: viewmodel: <id> temporal.tsv: <why>`.
 
@@ -608,10 +612,11 @@ record digest and every annotation against the table.
 
 ### Schema v3
 
-Schema v3 types three more temporal shapes. They are a count per
-period, a recurrence inside a time window, and an order with no stated
-time. A guideline opts in with a `temporal.tsv` whose header names the
-v3 kinds:
+Schema v3 types five more temporal shapes. They are a count per
+period, a recurrence inside a time window, an order with no stated
+time, an approximate time limit, and a minimum stated as a range. A
+guideline opts in with a `temporal.tsv` whose header names the v3
+kinds:
 
 ```
 # format: kind<TAB>lemma<TAB>value
@@ -621,18 +626,25 @@ relation	before	before
 spacing	at	interval
 window	during	window
 frequency	per	period
+approximation	approximate	about
+range	to	minimum
 ```
 
-A v3 table holds every v2 row kind and two more. A `window` row pairs a
+A v3 table holds every v2 row kind and four more. A `window` row pairs a
 preposition with the frame noun of a time window, as in
 `during a window of 1 week of the methadone-start`. A `frequency` row
 names the preposition of a count per period, as in `per 1 day`; its
 value is always `period`. A preposition occurs in at most one
 `frequency` row and never in a `relation` row. A pair of a preposition
 and a frame noun occurs once across the `spacing` and `window` rows. A
-frame noun is never a unit noun. The
-header names `approximation` and `range` rows, but the grammar does not
-accept them yet.
+frame noun is never a unit noun. An `approximation` row names an
+adjective that marks a time quantity as approximate, as in
+`2 approximate hours`; its value is always `about`. A `range` row names
+the preposition that joins the upper end of a minimum stated as a
+range, as in `for at least 8 hours to 12 hours`; its value is always
+`minimum`. An adjective occurs in at most one `approximation` row. A
+preposition occurs in at most one `relation`, `frequency` or `range`
+row.
 
 The compiler takes v3 from the argument `v3` in place of `v2`. A table
 whose header names another version fails the compile with class
@@ -645,7 +657,7 @@ declaration block appends four indicators, 15 in total.
 | `guideline_frequency(Context, Event, Counted, Period, Unit)` | `Event` involves the stated count of `Counted`'s items in each period of `Period` in `Unit` |
 | `guideline_order(Context, Event, Relation, Anchor)` | each occurrence of `Event` lies `before` or `after` `Anchor`; no time bound is stated |
 | `guideline_recurrence_window(Context, Event, Gap, GapUnit, Anchor, Length, LengthUnit)` | consecutive occurrences of `Event` inside the window that starts at `Anchor` and lasts `Length` in `LengthUnit` lie `Gap` in `GapUnit` apart |
-| `guideline_range(Context, Low, High)` | reserved; the compiler emits no clause of it in this version |
+| `guideline_range(Context, Low, High)` | the minimum that the interval quantity `Low` states lies from the count of `Low` to the count of `High`; `High` bounds nothing about the event |
 
 The patterns read referents by their noun anywhere in the document. A
 referent whose noun is no unit and no frame noun is a plain referent.
@@ -664,10 +676,24 @@ referent whose noun is no unit and no frame noun is a plain referent.
   also carry a recurrence. Each recurrence on that event becomes a
   `guideline_recurrence_window` clause, and no plain
   `guideline_recurrence` clause is emitted for it.
+- Approximate time limit: an `approximation` adjective on a typed time
+  quantity, or on the spacing or window frame of the quantity, marks it
+  approximate. Its `guideline_cardinality` clause then has the
+  comparison `about` in place of `eq`, as in
+  `at an approximate interval of 2 hours`. The comparison `about` names
+  no tolerance; `about 2` matches only `about 2`. An approximate
+  quantity must state an exact count.
+- Ranged minimum: a `range` preposition whose object is an exact time
+  quantity pairs with the one `at least` interval on the same event,
+  as in `for at least 8 hours to 12 hours`. The pair emits
+  `guideline_range(Context, Low, High)` beside the interval clause. The
+  pair needs the same unit and a smaller lower count. The interval keeps
+  its own `at least` comparison.
 
 Other shapes of these patterns reject with class `unsupported` as
-`temporal_shape(Why, S)`. `Why` is `frequency_shape` or
-`window_shape`, or a schema v2 reason where its rule applies: a
+`temporal_shape(Why, S)`. `Why` is `frequency_shape`, `window_shape`,
+`approximate_bound` or `range_shape`, or a schema v2 reason where its
+rule applies: a
 quantity without a bound (`no_bound`, `zero_bound`) or a quantity that
 two patterns claim (`shared_quantity`). A count per period does not set calendar buckets, a
 first occurrence or a minimum gap. A window does not set the first
@@ -710,14 +736,16 @@ when exactly one same-box `object/6` types the placeholder; otherwise
 it is `wh(who)` or `wh(what)`. Goal and manifest share variables
 inside the one projection term.
 
-A guideline with `temporal.tsv` compiles every question under v2:
+A guideline with `temporal.tsv` compiles every question under the
+version that the table header names, v2 or v3:
 
 ```sh
-swipl … -- question v2 <ape-tree-dir> <qid> <temporal.tsv> [<ulex>]
+swipl … -- question v2|v3 <ape-tree-dir> <qid> <temporal.tsv> [<ulex>]
 ```
 
-The v2 record is
-`'$guideline_query'(v2, Qid, ace_sha256(H), ulex(none | sha256(H)), temporal(sha256(T)))`.
+The record is
+`'$guideline_query'(V, Qid, ace_sha256(H), ulex(none | sha256(H)), temporal(sha256(T)))`
+with `V` = `v2` or `v3`.
 A v2 question follows the v1 law with three additions. It admits the
 condition list of an upper-bounding determiner and flattens that list
 into its box; a placeholder inside such a list rejects as

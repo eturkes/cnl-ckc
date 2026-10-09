@@ -11,8 +11,11 @@ verus! {
 // relation rows map a preposition lemma to an interval role, spacing rows pair
 // a preposition with the frame noun of a recurrence (`at an interval of …`).
 // The header selects the schema version: v2 = those three kinds; v3 adds window
-// rows (the frame of a scoped recurrence, `during a window of …`) and frequency
-// rows (the preposition of a count per period, `per 1 day`).
+// rows (the frame of a scoped recurrence, `during a window of …`), frequency
+// rows (the preposition of a count per period, `per 1 day`), approximation rows
+// (an adjective that marks a time quantity approximate, `2 approximate hours`;
+// contract q13) and range rows (the preposition of a ranged minimum's upper end,
+// `at least 8 hours to 12 hours`).
 pub ghost struct Temporal {
     pub version: nat,  // 2 | 3
     pub units: Seq<(Seq<u8>, Seq<u8>)>,
@@ -20,6 +23,8 @@ pub ghost struct Temporal {
     pub spacings: Seq<(Seq<u8>, Seq<u8>)>,
     pub windows: Seq<(Seq<u8>, Seq<u8>)>,  // v3
     pub frequencies: Seq<Seq<u8>>,  // v3: preposition lemmas
+    pub approximations: Seq<Seq<u8>>,  // v3: adjective lemmas
+    pub ranges: Seq<Seq<u8>>,  // v3: preposition lemmas
 }
 
 pub open spec fn temporal_header() -> Seq<u8> {
@@ -28,7 +33,6 @@ pub open spec fn temporal_header() -> Seq<u8> {
     )
 }
 
-// The v3 header names every v3 kind; approximation + range rows parse from q13.
 pub open spec fn temporal_header_v3() -> Seq<u8> {
     ascii(
         "# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n"@,
@@ -70,6 +74,7 @@ pub open spec fn frames(t: Temporal) -> Seq<Seq<u8>> {
 
 pub open spec fn row_count(t: Temporal) -> nat {
     t.units.len() + t.relations.len() + t.spacings.len() + t.windows.len() + t.frequencies.len()
+        + t.approximations.len() + t.ranges.len()
 }
 
 pub open spec fn empty_table(version: nat) -> Temporal {
@@ -80,6 +85,8 @@ pub open spec fn empty_table(version: nat) -> Temporal {
         spacings: Seq::empty(),
         windows: Seq::empty(),
         frequencies: Seq::empty(),
+        approximations: Seq::empty(),
+        ranges: Seq::empty(),
     }
 }
 
@@ -98,8 +105,8 @@ pub open spec fn frame_row(t: Temporal, f: Seq<Seq<u8>>) -> Option<Seq<u8>> {
 }
 
 // One body row added to the table, or the grammar it breaks. A noun is a unit
-// or a frame, never both; each lemma maps once per kind; a v3 frequency
-// preposition is never a relation preposition.
+// or a frame, never both; each lemma maps once per kind; a preposition maps to
+// at most one of relation, frequency (v3) and range (v3).
 pub open spec fn add_row(t: Temporal, line: Seq<u8>) -> Result<Temporal, Seq<u8>> {
     let f = split_on(line, 0x09);
     if f.len() != 3 {
@@ -117,7 +124,8 @@ pub open spec fn add_row(t: Temporal, line: Seq<u8>) -> Result<Temporal, Seq<u8>
     } else if f[0] == ascii("relation"@) {
         if !role_ids().contains(f[2]) {
             Result::Err(ascii("role id"@))
-        } else if keys(t.relations).contains(f[1]) || t.frequencies.contains(f[1]) {
+        } else if keys(t.relations).contains(f[1]) || t.frequencies.contains(f[1])
+            || t.ranges.contains(f[1]) {
             Result::Err(ascii("duplicate preposition"@))
         } else {
             Result::Ok(Temporal { relations: t.relations.push((f[1], f[2])), ..t })
@@ -135,10 +143,28 @@ pub open spec fn add_row(t: Temporal, line: Seq<u8>) -> Result<Temporal, Seq<u8>
     } else if t.version == 3 && f[0] == ascii("frequency"@) {
         if f[2] != ascii("period"@) {
             Result::Err(ascii("frequency value"@))
-        } else if t.frequencies.contains(f[1]) || keys(t.relations).contains(f[1]) {
+        } else if t.frequencies.contains(f[1]) || keys(t.relations).contains(f[1])
+            || t.ranges.contains(f[1]) {
             Result::Err(ascii("duplicate preposition"@))
         } else {
             Result::Ok(Temporal { frequencies: t.frequencies.push(f[1]), ..t })
+        }
+    } else if t.version == 3 && f[0] == ascii("approximation"@) {
+        if f[2] != ascii("about"@) {
+            Result::Err(ascii("approximation value"@))
+        } else if t.approximations.contains(f[1]) {
+            Result::Err(ascii("duplicate adjective"@))
+        } else {
+            Result::Ok(Temporal { approximations: t.approximations.push(f[1]), ..t })
+        }
+    } else if t.version == 3 && f[0] == ascii("range"@) {
+        if f[2] != ascii("minimum"@) {
+            Result::Err(ascii("range value"@))
+        } else if t.ranges.contains(f[1]) || keys(t.relations).contains(f[1])
+            || t.frequencies.contains(f[1]) {
+            Result::Err(ascii("duplicate preposition"@))
+        } else {
+            Result::Ok(Temporal { ranges: t.ranges.push(f[1]), ..t })
         }
     } else {
         Result::Err(ascii("kind"@))

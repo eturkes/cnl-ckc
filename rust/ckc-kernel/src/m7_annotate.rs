@@ -403,6 +403,7 @@ pub enum EAnn {
     Window(T, T, T, Vec<u8>, T),
     Frequency(T, T, T, Vec<u8>),
     Order(T, Vec<u8>, T),
+    Range(T, T, Vec<u8>),
 }
 
 pub open spec fn ann_view(a: &EAnn) -> spec::Ann {
@@ -412,6 +413,7 @@ pub open spec fn ann_view(a: &EAnn) -> spec::Ann {
         EAnn::Window(e, f, l, u, an) => spec::Ann::Window(e@, f@, l@, u@, an@),
         EAnn::Frequency(e, c, w, u) => spec::Ann::Frequency(e@, c@, w@, u@),
         EAnn::Order(e, r, an) => spec::Ann::Order(e@, r@, an@),
+        EAnn::Range(e, h, u) => spec::Ann::Range(e@, h@, u@),
     }
 }
 
@@ -423,6 +425,7 @@ pub open spec fn ann_valid(nodes: Seq<ENode>, a: &EAnn) -> bool {
             && valid(nodes, an),
         EAnn::Frequency(e, c, w, _) => valid(nodes, e) && valid(nodes, c) && valid(nodes, w),
         EAnn::Order(e, _, an) => valid(nodes, e) && valid(nodes, an),
+        EAnn::Range(e, h, _) => valid(nodes, e) && valid(nodes, h),
     }
 }
 
@@ -471,6 +474,9 @@ pub fn pp_ann_exec(
     if let (Some(role), Some((unit, o))) = (role, q) {
         if let Some(why) = bound_why_exec(arena, &o) {
             return Err(why);
+        }
+        if crate::m7_v3::approx_why_exec(arena, tab, scope, ctx, &x, &x, &o) {
+            return Err(Sym::ApproximateBound);
         }
         if links.len() > 1 {
             return Err(Sym::AnchorCount);
@@ -527,6 +533,9 @@ pub fn pp_ann_exec(
                 Some((unit, o)) => {
                     if let Some(why) = bound_why_exec(arena, &o) {
                         return Err(why);
+                    }
+                    if crate::m7_v3::approx_why_exec(arena, tab, scope, ctx, &qv, &x, &o) {
+                        return Err(Sym::ApproximateBound);
                     }
                     if of_links_exec(arena, scope, ctx, &qv).len() > 0 {
                         return Err(Sym::AnchorCount);
@@ -701,6 +710,7 @@ pub open spec fn claim_of(m: (Term, spec::Ann)) -> Seq<(Term, Term)> {
         spec::Ann::Window(_, f, l, _, _) => seq![(m.0, f), (m.0, l)],
         spec::Ann::Frequency(_, c, w, _) => seq![(m.0, c), (m.0, w)],
         spec::Ann::Order(_, _, _) => Seq::empty(),
+        spec::Ann::Range(_, h, _) => seq![(m.0, h)],
     }
 }
 
@@ -717,7 +727,7 @@ pub open spec fn consumed_of(m: (Term, spec::Ann)) -> Seq<(Term, Term)> {
     }
 }
 
-proof fn flat_take(
+pub proof fn flat_take(
     s: Seq<(Term, spec::Ann)>,
     f: spec_fn((Term, spec::Ann)) -> Seq<(Term, Term)>,
     i: int,
@@ -762,6 +772,7 @@ pub fn links_exec(arena: &ETermArena, v: &Vec<(T, EAnn)>, kind: bool) -> (out: V
                             spec::Ann::Window(_, f, l, _, _) => seq![(m.0, f), (m.0, l)],
                             spec::Ann::Frequency(_, c, w, _) => seq![(m.0, c), (m.0, w)],
                             spec::Ann::Order(_, _, _) => Seq::empty(),
+                            spec::Ann::Range(_, h, _) => seq![(m.0, h)],
                         },
                 ));
             }
@@ -830,6 +841,11 @@ pub fn links_exec(arena: &ETermArena, v: &Vec<(T, EAnn)>, kind: bool) -> (out: V
                 }
             },
             EAnn::Order(_, _, _) => {},
+            EAnn::Range(_, h, _) => {
+                if kind {
+                    out.push((c.cp(), h.cp()));
+                }
+            },
         }
         proof {
             flat_take(av, f, i as int);
@@ -938,10 +954,16 @@ pub fn link_in(arena: &ETermArena, links: &Vec<(T, T)>, c: &T, x: &T) -> (out: b
     false
 }
 
-pub fn ann_inner_exec(arena: &mut ETermArena, a: &EAnn, ms: &Vec<(T, EAnn)>, cx: &T) -> (out:
-    Option<T>)
+pub fn ann_inner_exec(
+    arena: &mut ETermArena,
+    scope: &Vec<I>,
+    a: &EAnn,
+    ms: &Vec<(T, EAnn)>,
+    cx: &T,
+) -> (out: Option<T>)
     requires
         arena_ok(old(arena)),
+        items_valid(old(arena).nodes@, scope@),
         ann_valid(old(arena).nodes@, a),
         anns_valid(old(arena).nodes@, ms@),
         valid(old(arena).nodes@, cx),
@@ -949,7 +971,7 @@ pub fn ann_inner_exec(arena: &mut ETermArena, a: &EAnn, ms: &Vec<(T, EAnn)>, cx:
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         out matches Some(t) ==> valid(final(arena).nodes@, &t),
-        opt_model(out) == spec::ann_inner(ann_view(a), anns_view(ms@), cx@),
+        opt_model(out) == spec::ann_inner(item_models(scope@), ann_view(a), anns_view(ms@), cx@),
 {
     let ghost start = arena.nodes@;
     match a {
@@ -1056,6 +1078,22 @@ pub fn ann_inner_exec(arena: &mut ETermArena, a: &EAnn, ms: &Vec<(T, EAnn)>, cx:
             }
             Some(c(arena, &Sym::DollarGuidelineOrder, &ts))
         },
+        EAnn::Range(e, h, _) => {
+            let ps = crate::m7_v3::partners_exec(arena, scope, ms, cx, e);
+            if ps.len() != 1 {
+                return None;
+            }
+            proof {
+                assert(crate::m7_v3::partners_view(ps@)[0] == (ps@[0].0@, ps@[0].1@));
+            }
+            let mut ts = Vec::new();
+            ts.push(ps[0].0.cp());
+            ts.push(h.cp());
+            proof {
+                assert(models(ts@) =~= seq![ps@[0].0@, h@]);
+            }
+            Some(c(arena, &Sym::DollarGuidelineRange, &ts))
+        },
     }
 }
 
@@ -1072,6 +1110,7 @@ pub fn rebuild_item_exec(
     scope: &Vec<I>,
     anns: &Vec<(T, EAnn)>,
     links: &Vec<(T, T)>,
+    approx: &Vec<(T, T)>,
     none: &T,
     it: &I,
 ) -> (out: Result<Vec<I>, Sym>)
@@ -1080,6 +1119,7 @@ pub fn rebuild_item_exec(
         items_valid(old(arena).nodes@, scope@),
         anns_valid(old(arena).nodes@, anns@),
         pairs_valid(old(arena).nodes@, links@),
+        pairs_valid(old(arena).nodes@, approx@),
         valid(old(arena).nodes@, none),
         none@ == ckc_spec::replay::atom("none"@),
         item_valid(old(arena).nodes@, it),
@@ -1092,6 +1132,7 @@ pub fn rebuild_item_exec(
             item_models(scope@),
             anns_view(anns@),
             pairs_models(links@),
+            pairs_models(approx@),
             it@,
         ),
     decreases it, 0int,
@@ -1105,7 +1146,7 @@ pub fn rebuild_item_exec(
             if is_comp(arena, inner, &Sym::ModifierPp, 3) {
                 match pp_ann_exec(arena, env, scope, c, inner, none) {
                     Ok(Some(a)) => {
-                        let inner_t = ann_inner_exec(arena, &a, anns, c);
+                        let inner_t = ann_inner_exec(arena, scope, &a, anns, c);
                         proof {
                             item_prefix(start, arena.nodes@, it);
                             crate::m6_term::prefix(start, arena.nodes@, c);
@@ -1150,6 +1191,22 @@ pub fn rebuild_item_exec(
                     }
                     return Ok(Vec::new());
                 }
+            } else if is_comp(arena, inner, &Sym::Object, 6) {
+                let a0 = arg_at(arena, inner, 0);
+                if link_in(arena, approx, c, &a0) {
+                    let o = crate::m7_v3::about_object_exec(arena, inner);
+                    proof {
+                        crate::m6_term::prefix(start, arena.nodes@, c);
+                    }
+                    let one = anch(arena, c, &o);
+                    let mut v = Vec::new();
+                    v.push(one);
+                    proof {
+                        reveal_with_fuel(items_valid, 2);
+                        assert(item_models(v@) =~= seq![spec::Item::Anch(c@, o@)]);
+                    }
+                    return Ok(v);
+                }
             }
         },
         Kind::Naf { dom, payload } => {
@@ -1188,6 +1245,7 @@ pub fn rebuild_exec(
     scope: &Vec<I>,
     anns: &Vec<(T, EAnn)>,
     links: &Vec<(T, T)>,
+    approx: &Vec<(T, T)>,
     none: &T,
     items: &Vec<I>,
 ) -> (out: Result<Vec<I>, Sym>)
@@ -1197,6 +1255,7 @@ pub fn rebuild_exec(
         items_valid(old(arena).nodes@, items@),
         anns_valid(old(arena).nodes@, anns@),
         pairs_valid(old(arena).nodes@, links@),
+        pairs_valid(old(arena).nodes@, approx@),
         valid(old(arena).nodes@, none),
         none@ == ckc_spec::replay::atom("none"@),
     ensures
@@ -1208,6 +1267,7 @@ pub fn rebuild_exec(
             item_models(scope@),
             anns_view(anns@),
             pairs_models(links@),
+            pairs_models(approx@),
             item_models(items@),
         ),
     decreases items@, 1int,
@@ -1219,6 +1279,7 @@ pub fn rebuild_exec(
     let ghost ms = item_models(items@);
     let ghost sm = item_models(scope@);
     let ghost lm = pairs_models(links@);
+    let ghost xm = pairs_models(approx@);
     let ghost am = anns_view(anns@);
     let mut out: Vec<I> = Vec::new();
     let mut i = 0usize;
@@ -1226,7 +1287,7 @@ pub fn rebuild_exec(
         assert(ms.skip(0) =~= ms);
         reveal_with_fuel(items_valid, 1);
         assert(item_models(out@) =~= Seq::<spec::Item>::empty());
-        match spec::rebuild(env_view(env), sm, am, lm, ms) {
+        match spec::rebuild(env_view(env), sm, am, lm, xm, ms) {
             Ok(t) => assert(Seq::<spec::Item>::empty() + t =~= t),
             Err(_) => {},
         }
@@ -1242,6 +1303,8 @@ pub fn rebuild_exec(
             anns_valid(arena.nodes@, anns@),
             am == anns_view(anns@),
             pairs_valid(arena.nodes@, links@),
+            pairs_valid(arena.nodes@, approx@),
+            xm == pairs_models(approx@),
             valid(arena.nodes@, none),
             none@ == ckc_spec::replay::atom("none"@),
             items_valid(arena.nodes@, out@),
@@ -1249,9 +1312,9 @@ pub fn rebuild_exec(
             sm == item_models(scope@),
             lm == pairs_models(links@),
             ms.len() == items@.len(),
-            spec::rebuild(env_view(env), sm, am, lm, ms) == prepend(
+            spec::rebuild(env_view(env), sm, am, lm, xm, ms) == prepend(
                 item_models(out@),
-                spec::rebuild(env_view(env), sm, am, lm, ms.skip(i as int)),
+                spec::rebuild(env_view(env), sm, am, lm, xm, ms.skip(i as int)),
             ),
         decreases items@.len() - i,
     {
@@ -1263,11 +1326,11 @@ pub fn rebuild_exec(
         }
         let ghost before_nodes = arena.nodes@;
         let ghost before = out@;
-        let ghost rest = spec::rebuild(env_view(env), sm, am, lm, ms.skip(i + 1));
+        let ghost rest = spec::rebuild(env_view(env), sm, am, lm, xm, ms.skip(i + 1));
         proof {
             reveal_with_fuel(spec::rebuild, 1);
-            assert(spec::rebuild(env_view(env), sm, am, lm, ms.skip(i as int)) == match (
-                spec::rebuild_item(env_view(env), sm, am, lm, ms[i as int]),
+            assert(spec::rebuild(env_view(env), sm, am, lm, xm, ms.skip(i as int)) == match (
+                spec::rebuild_item(env_view(env), sm, am, lm, xm, ms[i as int]),
                 rest,
             ) {
                 (Err(e), _) => Err(e),
@@ -1275,7 +1338,7 @@ pub fn rebuild_exec(
                 (Ok(h), Ok(t)) => Ok(h + t),
             });
         }
-        let r = rebuild_item_exec(arena, env, scope, anns, links, none, &items[i]);
+        let r = rebuild_item_exec(arena, env, scope, anns, links, approx, none, &items[i]);
         proof {
             items_prefix(before_nodes, arena.nodes@, scope@);
             items_prefix(before_nodes, arena.nodes@, items@);
@@ -1288,6 +1351,13 @@ pub fn rebuild_exec(
             ) && valid(arena.nodes@, &links@[j].1) by {
                 crate::m6_term::prefix(before_nodes, arena.nodes@, &links@[j].0);
                 crate::m6_term::prefix(before_nodes, arena.nodes@, &links@[j].1);
+            }
+            assert forall|j: int| 0 <= j < approx@.len() implies valid(
+                arena.nodes@,
+                &(#[trigger] approx@[j]).0,
+            ) && valid(arena.nodes@, &approx@[j].1) by {
+                crate::m6_term::prefix(before_nodes, arena.nodes@, &approx@[j].0);
+                crate::m6_term::prefix(before_nodes, arena.nodes@, &approx@[j].1);
             }
             crate::k2_load::prefix_chain(start, before_nodes, arena.nodes@);
         }
@@ -1343,6 +1413,13 @@ pub fn annotate_exec(arena: &mut ETermArena, env: &EEnv, items: &Vec<I>, none: &
         Err(s) => return Err(s),
         Ok(ms) => ms,
     };
+    let lows = match crate::m7_v3::range_lows_exec(arena, items, &ms) {
+        Err(s) => return Err(s),
+        Ok(lows) => lows,
+    };
+    if !no_dup_exec(arena, &lows) {
+        return Err(Sym::RangeShape);
+    }
     let claims = links_exec(arena, &ms, true);
     if !no_dup_exec(arena, &claims) {
         return Err(Sym::SharedQuantity);
@@ -1351,7 +1428,8 @@ pub fn annotate_exec(arena: &mut ETermArena, env: &EEnv, items: &Vec<I>, none: &
         return Err(Sym::WindowShape);
     }
     let consumed = links_exec(arena, &ms, false);
-    rebuild_exec(arena, env, items, &ms, &consumed, none, items)
+    let approx = crate::m7_v3::abouts_exec(arena, &env.tab, items, &ms);
+    rebuild_exec(arena, env, items, &ms, &consumed, &approx, none, items)
 }
 
 pub proof fn anns_prefix(before: Seq<ENode>, after: Seq<ENode>, v: Seq<(T, EAnn)>)
@@ -1392,6 +1470,10 @@ pub proof fn anns_prefix(before: Seq<ENode>, after: Seq<ENode>, v: Seq<(T, EAnn)
             EAnn::Order(e, _, an) => {
                 crate::m6_term::prefix(before, after, e);
                 crate::m6_term::prefix(before, after, an);
+            },
+            EAnn::Range(e, h, _) => {
+                crate::m6_term::prefix(before, after, e);
+                crate::m6_term::prefix(before, after, h);
             },
         }
     }

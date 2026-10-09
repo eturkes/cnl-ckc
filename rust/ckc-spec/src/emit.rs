@@ -515,8 +515,11 @@ pub open spec fn resolve(a: Term, map: Seq<(Term, Term)>, sko: Seq<(Term, Term)>
     }
 }
 
+// `about` (contract q13) = schema v3 only: the v3 annotate pass mints it in place
+// of `eq`; APE's comparisons never include it.
 pub open spec fn card_op_ok(op: Term) -> bool {
     ||| op == atom("eq"@)
+    ||| op == atom("about"@)
     ||| op == atom("geq"@)
     ||| op == atom("greater"@)
     ||| op == atom("leq"@)
@@ -644,6 +647,13 @@ pub open spec fn condition(
             match (resolve(args[0], map, sko), resolve(args[2], map, sko)) {
                 (Result::Ok(e), Result::Ok(a)) => Result::Ok(
                     seq![lit("guideline_order"@, seq![ctx, e, args[1], a])],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
+        } else if name == ascii("$guideline_range"@) && args.len() == 2 {
+            match (resolve(args[0], map, sko), resolve(args[1], map, sko)) {
+                (Result::Ok(l), Result::Ok(h)) => Result::Ok(
+                    seq![lit("guideline_range"@, seq![ctx, l, h])],
                 ),
                 _ => Result::Err(atom("unresolved_argument"@)),
             }
@@ -944,6 +954,7 @@ pub ghost enum Ann {
     Window(Term, Term, Term, Seq<u8>, Term),  // v3: event, frame, length, unit, anchor
     Frequency(Term, Term, Term, Seq<u8>),  // v3: event, counted, period, unit
     Order(Term, Seq<u8>, Term),  // v3: event, relation, anchor
+    Range(Term, Term, Seq<u8>),  // v3 (q13): event, high end, unit
 }
 
 // --- v3 (contract q12): referent classification over the document DRS (D3) ---
@@ -1043,6 +1054,42 @@ pub open spec fn frame_shaped(o: Term) -> bool {
     ) == Term::Int(1)
 }
 
+// q13 D3: a same-context `property(r, A, pos)` with A an approximation lemma.
+pub open spec fn approximate(tab: Temporal, items: Seq<Item>, ctx: Term, r: Term) -> bool
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        false
+    } else {
+        (match items[0] {
+            Item::Anch(c, inner) => c == ctx && is_comp(inner, "property"@, 3) && arg(inner, 0) == r
+                && arg(inner, 2) == atom("pos"@) && tab.approximations.contains(
+                name_of(arg(inner, 1)),
+            ),
+            _ => false,
+        }) || approximate(tab, items.drop_first(), ctx, r)
+    }
+}
+
+// D3: a claimed quantity q (object o) marked approximate on itself or on its
+// frame f (f = q without a frame) needs the comparison eq.
+pub open spec fn approx_why(
+    tab: Temporal,
+    items: Seq<Item>,
+    ctx: Term,
+    q: Term,
+    f: Term,
+    o: Term,
+) -> Option<Term> {
+    if (approximate(tab, items, ctx, q) || approximate(tab, items, ctx, f)) && arg(o, 4) != atom(
+        "eq"@,
+    ) {
+        Option::Some(shape("approximate_bound"@))
+    } else {
+        Option::None
+    }
+}
+
 pub open spec fn name_of(t: Term) -> Seq<u8> {
     match t {
         Term::Atom(a) => a,
@@ -1136,6 +1183,8 @@ pub open spec fn window_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term, o: 
             Option::None => Result::Err(shape("window_shape"@)),
             Option::Some((unit, lo)) => if bound_why(lo) is Some {
                 Result::Err(bound_why(lo).unwrap())
+            } else if approx_why(env.tab, items, ctx, fl[0], f, lo) is Some {
+                Result::Err(approx_why(env.tab, items, ctx, fl[0], f, lo).unwrap())
             } else {
                 let al = of_links(items, ctx, fl[0]);
                 if al.len() != 1 || !plain(env, al[0]) {
@@ -1169,8 +1218,32 @@ pub open spec fn frequency_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) 
     }
 }
 
-// The v3 patterns of a pp the v2 patterns leave plain: window, frequency, then
-// order (D4: a before|after relation over a plain referent). v2 tables stop here.
+// q13 D4: `modifier_pp(E, P, H)` with P a range lemma and H an exact, unanchored,
+// unapproximated time quantity; its partner minimum pairs after the pass.
+pub open spec fn range_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
+    Option<Ann>,
+    Term,
+> {
+    let h = arg(pp, 2);
+    match qty(env.tab, items, ctx, h) {
+        Option::None => Result::Ok(Option::None),
+        Option::Some((unit, ho)) => if bound_why(ho) is Some {
+            Result::Err(bound_why(ho).unwrap())
+        } else if arg(ho, 4) != atom("eq"@) || of_links(items, ctx, h).len() > 0 || approximate(
+            env.tab,
+            items,
+            ctx,
+            h,
+        ) {
+            Result::Err(shape("range_shape"@))
+        } else {
+            Result::Ok(Option::Some(Ann::Range(arg(pp, 0), h, unit)))
+        },
+    }
+}
+
+// The v3 patterns of a pp the v2 patterns leave plain: window, frequency, range,
+// then order (D4: a before|after relation over a plain referent). v2 tables stop here.
 pub open spec fn v3_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
     Option<Ann>,
     Term,
@@ -1187,6 +1260,8 @@ pub open spec fn v3_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Resu
                 window_ann(env, items, ctx, pp, o)
             } else if tab.frequencies.contains(p) {
                 frequency_ann(env, items, ctx, pp)
+            } else if tab.ranges.contains(p) && qty(tab, items, ctx, x) is Some {
+                range_ann(env, items, ctx, pp)
             } else if (role == Option::Some(ascii("before"@)) || role == Option::Some(
                 ascii("after"@),
             )) && plain(env, x) {
@@ -1220,6 +1295,8 @@ pub open spec fn pp_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Resu
     match (assoc(tab.relations, p), qty(tab, items, ctx, x)) {
         (Option::Some(role), Option::Some((unit, o))) => if bound_why(o) is Some {
             Result::Err(bound_why(o).unwrap())
+        } else if approx_why(tab, items, ctx, x, x, o) is Some {
+            Result::Err(approx_why(tab, items, ctx, x, x, o).unwrap())
         } else if links.len() > 1 {
             Result::Err(shape("anchor_count"@))
         } else if links.len() == 0 {
@@ -1249,6 +1326,8 @@ pub open spec fn pp_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Resu
                     Option::None => Result::Err(shape("frame_shape"@)),
                     Option::Some((unit, o)) => if bound_why(o) is Some {
                         Result::Err(bound_why(o).unwrap())
+                    } else if approx_why(tab, items, ctx, links[0], x, o) is Some {
+                        Result::Err(approx_why(tab, items, ctx, links[0], x, o).unwrap())
                     } else if of_links(items, ctx, links[0]).len() > 0 {
                         Result::Err(shape("anchor_count"@))
                     } else {
@@ -1301,6 +1380,7 @@ pub open spec fn claims(ms: Seq<(Term, Ann)>) -> Seq<(Term, Term)> {
                 Ann::Window(_, f, l, _, _) => seq![(m.0, f), (m.0, l)],
                 Ann::Frequency(_, c, w, _) => seq![(m.0, c), (m.0, w)],
                 Ann::Order(_, _, _) => Seq::empty(),
+                Ann::Range(_, h, _) => seq![(m.0, h)],
             },
     ).flatten()
 }
@@ -1340,9 +1420,130 @@ pub open spec fn window_of(ms: Seq<(Term, Ann)>, c: Term, e: Term) -> Option<(Te
     }
 }
 
+// q13 D4: the minimums on event e in context c — interval quantities whose
+// comparison is geq — as (quantity, unit), in item order.
+pub open spec fn partners(scope: Seq<Item>, ms: Seq<(Term, Ann)>, c: Term, e: Term) -> Seq<
+    (Term, Seq<u8>),
+>
+    decreases ms.len(),
+{
+    if ms.len() == 0 {
+        Seq::empty()
+    } else {
+        (match ms[0].1 {
+            Ann::Interval(e2, _, q, unit, _) => if ms[0].0 == c && e2 == e && match obj_of(
+                scope,
+                c,
+                q,
+            ) {
+                Option::Some(o) => arg(o, 4) == atom("geq"@),
+                Option::None => false,
+            } {
+                seq![(q, unit)]
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        }) + partners(scope, ms.drop_first(), c, e)
+    }
+}
+
+pub open spec fn count_of(scope: Seq<Item>, c: Term, q: Term) -> int {
+    match obj_of(scope, c, q) {
+        Option::Some(o) => match arg(o, 5) {
+            Term::Int(n) => n,
+            _ => 0,
+        },
+        Option::None => 0,
+    }
+}
+
+// D4: each range's (context, low end) — its one partner minimum, of its unit and
+// below its count — in order, or the first range that fails.
+pub open spec fn range_lows(scope: Seq<Item>, ms: Seq<(Term, Ann)>, rs: Seq<(Term, Ann)>) -> Result<
+    Seq<(Term, Term)>,
+    Term,
+>
+    decreases rs.len(),
+{
+    if rs.len() == 0 {
+        Result::Ok(Seq::empty())
+    } else {
+        let head = match rs[0].1 {
+            Ann::Range(e, h, unit) => {
+                let ps = partners(scope, ms, rs[0].0, e);
+                if ps.len() != 1 || ps[0].1 != unit || count_of(scope, rs[0].0, ps[0].0)
+                    >= count_of(scope, rs[0].0, h) {
+                    Result::Err(shape("range_shape"@))
+                } else {
+                    Result::Ok(seq![(rs[0].0, ps[0].0)])
+                }
+            },
+            _ => Result::Ok(Seq::empty()),
+        };
+        match (head, range_lows(scope, ms, rs.drop_first())) {
+            (Result::Err(e), _) => Result::Err(e),
+            (_, Result::Err(e)) => Result::Err(e),
+            (Result::Ok(a), Result::Ok(b)) => Result::Ok(a + b),
+        }
+    }
+}
+
+// D3: claimed eq quantities an approximation marks, on the quantity or on its
+// frame (a recurrence gap's spacing frame, a window length's window frame).
+pub open spec fn eq_approx(tab: Temporal, scope: Seq<Item>, c: Term, q: Term, f: Term) -> bool {
+    match obj_of(scope, c, q) {
+        Option::Some(o) => arg(o, 4) == atom("eq"@) && (approximate(tab, scope, c, q)
+            || approximate(tab, scope, c, f)),
+        Option::None => false,
+    }
+}
+
+pub open spec fn abouts(tab: Temporal, scope: Seq<Item>, ms: Seq<(Term, Ann)>) -> Seq<
+    (Term, Term),
+> {
+    ms.map_values(
+        |m: (Term, Ann)|
+            match m.1 {
+                Ann::Interval(_, _, q, _, _) => if eq_approx(tab, scope, m.0, q, q) {
+                    seq![(m.0, q)]
+                } else {
+                    Seq::empty()
+                },
+                Ann::Recurrence(_, f, q, _) => if eq_approx(tab, scope, m.0, q, f) {
+                    seq![(m.0, q)]
+                } else {
+                    Seq::empty()
+                },
+                Ann::Window(_, f, l, _, _) => if eq_approx(tab, scope, m.0, l, f) {
+                    seq![(m.0, l)]
+                } else {
+                    Seq::empty()
+                },
+                Ann::Frequency(_, _, w, _) => if eq_approx(tab, scope, m.0, w, w) {
+                    seq![(m.0, w)]
+                } else {
+                    Seq::empty()
+                },
+                _ => Seq::empty(),
+            },
+    ).flatten()
+}
+
+// The object condition of an approximate quantity, compared `about` in place of `eq`.
+pub open spec fn about_object(o: Term) -> Term {
+    Term::Comp(
+        ascii("object"@),
+        seq![arg(o, 0), arg(o, 1), arg(o, 2), arg(o, 3), atom("about"@), arg(o, 5)],
+    )
+}
+
 // The reserved item an annotation adds after its pp; a recurrence under a
-// window becomes a scoped recurrence; a window adds none of its own.
-pub open spec fn ann_inner(a: Ann, ms: Seq<(Term, Ann)>, c: Term) -> Option<Term> {
+// window becomes a scoped recurrence; a window adds none of its own; a range
+// names its partner minimum.
+pub open spec fn ann_inner(scope: Seq<Item>, a: Ann, ms: Seq<(Term, Ann)>, c: Term) -> Option<
+    Term,
+> {
     match a {
         Ann::Interval(e, role, q, unit, anchor) => Option::Some(
             Term::Comp(
@@ -1368,6 +1569,14 @@ pub open spec fn ann_inner(a: Ann, ms: Seq<(Term, Ann)>, c: Term) -> Option<Term
         Ann::Order(e, role, anchor) => Option::Some(
             Term::Comp(ascii("$guideline_order"@), seq![e, Term::Atom(role), anchor]),
         ),
+        Ann::Range(e, h, _) => {
+            let ps = partners(scope, ms, c, e);
+            if ps.len() == 1 {
+                Option::Some(Term::Comp(ascii("$guideline_range"@), seq![ps[0].0, h]))
+            } else {
+                Option::None
+            }
+        },
     }
 }
 
@@ -1378,6 +1587,7 @@ pub open spec fn event_of(a: Ann) -> Term {
         Ann::Window(e, _, _, _, _) => e,
         Ann::Frequency(e, _, _, _) => e,
         Ann::Order(e, _, _) => e,
+        Ann::Range(e, _, _) => e,
     }
 }
 
@@ -1410,6 +1620,7 @@ pub open spec fn rebuild_item(
     scope: Seq<Item>,
     ms: Seq<(Term, Ann)>,
     links: Seq<(Term, Term)>,
+    approx: Seq<(Term, Term)>,
     it: Item,
 ) -> Result<Seq<Item>, Term>
     decreases it, 0int,
@@ -1417,7 +1628,7 @@ pub open spec fn rebuild_item(
     match it {
         Item::Anch(c, inner) => if is_comp(inner, "modifier_pp"@, 3) {
             match pp_ann(env, scope, c, inner) {
-                Result::Ok(Option::Some(a)) => match ann_inner(a, ms, c) {
+                Result::Ok(Option::Some(a)) => match ann_inner(scope, a, ms, c) {
                     Option::Some(t) => Result::Ok(seq![it, Item::Anch(c, t)]),
                     Option::None => Result::Ok(seq![it]),
                 },
@@ -1427,6 +1638,8 @@ pub open spec fn rebuild_item(
             (c, arg(inner, 0)),
         ) {
             Result::Ok(Seq::empty())
+        } else if is_comp(inner, "object"@, 6) && approx.contains((c, arg(inner, 0))) {
+            Result::Ok(seq![Item::Anch(c, about_object(inner))])
         } else {
             Result::Ok(seq![it])
         },
@@ -1443,6 +1656,7 @@ pub open spec fn rebuild(
     scope: Seq<Item>,
     ms: Seq<(Term, Ann)>,
     links: Seq<(Term, Term)>,
+    approx: Seq<(Term, Term)>,
     items: Seq<Item>,
 ) -> Result<Seq<Item>, Term>
     decreases items, 1int,
@@ -1451,8 +1665,8 @@ pub open spec fn rebuild(
         Result::Ok(Seq::empty())
     } else {
         match (
-            rebuild_item(env, scope, ms, links, items[0]),
-            rebuild(env, scope, ms, links, items.drop_first()),
+            rebuild_item(env, scope, ms, links, approx, items[0]),
+            rebuild(env, scope, ms, links, approx, items.drop_first()),
         ) {
             (Result::Err(e), _) => Result::Err(e),
             (_, Result::Err(e)) => Result::Err(e),
@@ -1461,19 +1675,25 @@ pub open spec fn rebuild(
     }
 }
 
-// One scope annotated: exclusive claims, windows over recurrences, consumed
-// `of` links dropped (any other `relation/3` stays and rejects in `condition`).
+// One scope annotated: ranges paired with one minimum each, exclusive claims,
+// windows over recurrences, consumed `of` links dropped (any other `relation/3`
+// stays and rejects in `condition`), approximate quantities compared `about`.
 pub open spec fn annotate(env: Env, items: Seq<Item>) -> Result<Seq<Item>, Term>
     decreases items, 2int,
 {
     match anns(env, items, items) {
         Result::Err(e) => Result::Err(e),
-        Result::Ok(ms) => if !claims(ms).no_duplicates() {
-            Result::Err(shape("shared_quantity"@))
-        } else if !windows_ok(ms, ms) {
-            Result::Err(shape("window_shape"@))
-        } else {
-            rebuild(env, items, ms, consumed(ms), items)
+        Result::Ok(ms) => match range_lows(items, ms, ms) {
+            Result::Err(e) => Result::Err(e),
+            Result::Ok(lows) => if !lows.no_duplicates() {
+                Result::Err(shape("range_shape"@))
+            } else if !claims(ms).no_duplicates() {
+                Result::Err(shape("shared_quantity"@))
+            } else if !windows_ok(ms, ms) {
+                Result::Err(shape("window_shape"@))
+            } else {
+                rebuild(env, items, ms, consumed(ms), abouts(env.tab, items, ms), items)
+            },
         },
     }
 }

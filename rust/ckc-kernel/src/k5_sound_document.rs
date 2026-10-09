@@ -168,6 +168,9 @@ pub open spec fn tail_parts(
     ]
 }
 
+// q13: the default rlimit ran out once the copy table reached 301 entries; the
+// profile shows no matching loop (8.6K instantiations), 20 passes in 2 min.
+#[verifier::rlimit(20)]
 proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     requires
         corpus::sources(g, inputs),

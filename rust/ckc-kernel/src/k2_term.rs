@@ -1766,6 +1766,102 @@ proof fn decimal_lex_irreflexive(a: Seq<u8>)
     }
 }
 
+// The integer an optional arena node holds; a non-integer or no node reads 0
+// (q13: the counts of a ranged minimum's ends, spec::count_of).
+pub open spec fn int_or_zero(t: Term) -> int {
+    match t {
+        Term::Int(n) => n,
+        _ => 0,
+    }
+}
+
+pub open spec fn opt_int(nodes: Seq<ENode>, a: Option<usize>) -> int {
+    match a {
+        Some(i) => int_or_zero(nodes[i as int].term@),
+        None => 0,
+    }
+}
+
+fn zero_parts() -> (z: (bool, Vec<u8>))
+    ensures
+        canonical_decimal(z.1@),
+        !z.0,
+        decimal_value(z.1@) == 0,
+{
+    let mut v: Vec<u8> = Vec::new();
+    v.push(0x30);
+    proof {
+        udec_canonical(0);
+        udec_decimal_value(0);
+        reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
+        reveal(ckc_spec::v1text::digit_byte);
+        assert(v@ =~= ckc_spec::v1text::udec_bytes(0));
+    }
+    (false, v)
+}
+
+// (negative, magnitude) of opt_int.
+fn int_parts(arena: &ETermArena, a: Option<usize>) -> (r: (bool, Vec<u8>))
+    requires
+        arena_ok(arena),
+        a matches Some(i) ==> i < arena.nodes@.len(),
+    ensures
+        canonical_decimal(r.1@),
+        opt_int(arena.nodes@, a) == if r.0 {
+            -(decimal_value(r.1@) as int)
+        } else {
+            decimal_value(r.1@) as int
+        },
+        r.0 ==> decimal_value(r.1@) > 0,
+{
+    match a {
+        None => zero_parts(),
+        Some(i) => {
+            proof {
+                assert(node_ok(arena.nodes@, i as int));
+                reveal(node_ok);
+            }
+            match &arena.nodes[i].kind {
+                ENodeKind::Int { magnitude, negative, value, .. } => {
+                    proof {
+                        let n = value@;
+                        let m: nat = if n < 0 {
+                            (-n) as nat
+                        } else {
+                            n as nat
+                        };
+                        udec_canonical(m);
+                        udec_decimal_value(m);
+                    }
+                    (*negative, magnitude.clone())
+                },
+                _ => zero_parts(),
+            }
+        },
+    }
+}
+
+pub fn opt_int_less(arena: &ETermArena, a: Option<usize>, b: Option<usize>) -> (r: bool)
+    requires
+        arena_ok(arena),
+        a matches Some(i) ==> i < arena.nodes@.len(),
+        b matches Some(i) ==> i < arena.nodes@.len(),
+    ensures
+        r == (opt_int(arena.nodes@, a) < opt_int(arena.nodes@, b)),
+{
+    let (na, ma) = int_parts(arena, a);
+    let (nb, mb) = int_parts(arena, b);
+    if na && !nb {
+        true
+    } else if !na && nb {
+        false
+    } else if !na {
+        decimal_bytes_less(&ma, &mb)
+    } else {
+        decimal_bytes_less(&mb, &ma)
+    }
+}
+
 fn decimal_bytes_less(a: &Vec<u8>, b: &Vec<u8>) -> (r: bool)
     requires
         canonical_decimal(a@),

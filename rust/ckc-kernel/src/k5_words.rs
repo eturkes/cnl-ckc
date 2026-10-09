@@ -41,12 +41,33 @@ pub open spec fn frequency_row(raw: u::Bytes, f: u::Bytes) -> u::Html {
     u::word_row(u::pl_word(raw, f), u::fixed_bytes(u::how_many_of_an_item_the_action()))
 }
 
+pub open spec fn approximation_row(raw: u::Bytes, a: u::Bytes) -> u::Html {
+    u::word_row(u::pl_word(raw, a), u::fixed_bytes(u::marks_a_time_limit_as_approximate()))
+}
+
+pub open spec fn range_row(raw: u::Bytes, r: u::Bytes) -> u::Html {
+    u::word_row(u::pl_word(raw, r), u::fixed_bytes(u::joins_the_upper_end_of_a_minimum()))
+}
+
+// Lemma row kinds: 0 = frequency, 1 = approximation, 2 = range.
+pub open spec fn lemma_row(raw: u::Bytes, kind: u8, f: u::Bytes) -> u::Html {
+    if kind == 0 {
+        frequency_row(raw, f)
+    } else if kind == 1 {
+        approximation_row(raw, f)
+    } else {
+        range_row(raw, f)
+    }
+}
+
 pub open spec fn rows_of(raw: u::Bytes, t: Temporal) -> Seq<u::Html> {
     t.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw, p)) + t.relations.map_values(
         |p: (u::Bytes, u::Bytes)| relation_row(raw, t.version, p),
     ) + t.spacings.map_values(|p: (u::Bytes, u::Bytes)| spacing_row(raw, p)) + t.windows.map_values(
         |p: (u::Bytes, u::Bytes)| window_row(raw, p),
-    ) + t.frequencies.map_values(|f: u::Bytes| frequency_row(raw, f))
+    ) + t.frequencies.map_values(|f: u::Bytes| frequency_row(raw, f)) + t.approximations.map_values(
+        |a: u::Bytes| approximation_row(raw, a),
+    ) + t.ranges.map_values(|r: u::Bytes| range_row(raw, r))
 }
 
 pub proof fn rows_unfold(t: Option<u::Bytes>)
@@ -105,6 +126,20 @@ pub proof fn rows_unfold(t: Option<u::Bytes>)
                         u::fixed_bytes(u::how_many_of_an_item_the_action()),
                     ),
             ) =~= m.frequencies.map_values(|f: u::Bytes| frequency_row(raw, f)));
+            assert(m.approximations.map_values(
+                |a: u::Bytes|
+                    u::word_row(
+                        u::pl_word(raw, a),
+                        u::fixed_bytes(u::marks_a_time_limit_as_approximate()),
+                    ),
+            ) =~= m.approximations.map_values(|a: u::Bytes| approximation_row(raw, a)));
+            assert(m.ranges.map_values(
+                |r: u::Bytes|
+                    u::word_row(
+                        u::pl_word(raw, r),
+                        u::fixed_bytes(u::joins_the_upper_end_of_a_minimum()),
+                    ),
+            ) =~= m.ranges.map_values(|r: u::Bytes| range_row(raw, r)));
         }
     }
 }
@@ -247,13 +282,32 @@ fn kind_rows(raw: &[u8], v: u8, ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out:
     out
 }
 
-fn frequency_rows(raw: &[u8], fs: &Vec<Vec<u8>>) -> (out: Vec<EPage>)
+fn lemma_row_exec(raw: &[u8], kind: u8, f: &[u8]) -> (out: EPage)
+    ensures
+        out@ == lemma_row(raw@, kind, f@),
+{
+    if kind == 0 {
+        row2(
+            pl_word_exec(raw, f),
+            h::fixed("how many of an item the action involves in each period"),
+        )
+    } else if kind == 1 {
+        row2(pl_word_exec(raw, f), h::fixed("marks a time limit as approximate"))
+    } else {
+        row2(
+            pl_word_exec(raw, f),
+            h::fixed("joins the upper end of a minimum that is stated as a range"),
+        )
+    }
+}
+
+fn lemma_rows(raw: &[u8], fs: &Vec<Vec<u8>>, kind: u8) -> (out: Vec<EPage>)
     ensures
         h::pages(out@) == crate::m7_temporal::lemmas_view(fs@).map_values(
-            |f: u::Bytes| frequency_row(raw@, f),
+            |f: u::Bytes| lemma_row(raw@, kind, f),
         ),
 {
-    let ghost g = |f: u::Bytes| frequency_row(raw@, f);
+    let ghost g = |f: u::Bytes| lemma_row(raw@, kind, f);
     let ghost lv = crate::m7_temporal::lemmas_view(fs@);
     let mut out: Vec<EPage> = Vec::new();
     let mut i = 0usize;
@@ -263,16 +317,13 @@ fn frequency_rows(raw: &[u8], fs: &Vec<Vec<u8>>) -> (out: Vec<EPage>)
     while i < fs.len()
         invariant
             i <= fs@.len(),
-            g == (|f: u::Bytes| frequency_row(raw@, f)),
+            g == (|f: u::Bytes| lemma_row(raw@, kind, f)),
             lv == crate::m7_temporal::lemmas_view(fs@),
             lv.len() == fs@.len(),
             h::pages(out@) == lv.take(i as int).map_values(g),
         decreases fs@.len() - i,
     {
-        let r = row2(
-            pl_word_exec(raw, &fs[i]),
-            h::fixed("how many of an item the action involves in each period"),
-        );
+        let r = lemma_row_exec(raw, kind, &fs[i]);
         let ghost before = out@;
         out.push(r);
         proof {
@@ -320,19 +371,25 @@ pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
                 let mut rel = kind_rows(raw, v, &t.relations, 1);
                 let mut spa = kind_rows(raw, v, &t.spacings, 2);
                 let mut win = kind_rows(raw, v, &t.windows, 3);
-                let mut fre = frequency_rows(raw, &t.frequencies);
+                let mut fre = lemma_rows(raw, &t.frequencies, 0);
+                let mut apx = lemma_rows(raw, &t.approximations, 1);
+                let mut rng = lemma_rows(raw, &t.ranges, 2);
                 let ghost a = h::pages(out@);
                 let ghost b = h::pages(rel@);
                 let ghost c = h::pages(spa@);
                 let ghost d = h::pages(win@);
                 let ghost e = h::pages(fre@);
+                let ghost x = h::pages(apx@);
+                let ghost y = h::pages(rng@);
                 out.append(&mut rel);
                 out.append(&mut spa);
                 out.append(&mut win);
                 out.append(&mut fre);
+                out.append(&mut apx);
+                out.append(&mut rng);
                 proof {
                     let m = t@;
-                    assert(h::pages(out@) =~= a + b + c + d + e);
+                    assert(h::pages(out@) =~= a + b + c + d + e + x + y);
                     assert(a =~= m.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw@, p)));
                     assert(b =~= m.relations.map_values(
                         |p: (u::Bytes, u::Bytes)| relation_row(raw@, m.version, p),
@@ -344,6 +401,10 @@ pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
                         |p: (u::Bytes, u::Bytes)| window_row(raw@, p),
                     ));
                     assert(e =~= m.frequencies.map_values(|f: u::Bytes| frequency_row(raw@, f)));
+                    assert(x =~= m.approximations.map_values(
+                        |f: u::Bytes| approximation_row(raw@, f),
+                    ));
+                    assert(y =~= m.ranges.map_values(|f: u::Bytes| range_row(raw@, f)));
                     assert(h::pages(out@) =~= rows_of(raw@, m));
                 }
                 out

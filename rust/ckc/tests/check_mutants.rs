@@ -419,7 +419,12 @@ fn check_mutant_battery() {
         51,
         "tests/check-mutants legacy row count"
     );
-    assert_eq!(v3_rows, 30, "tests/check-mutants q12 row count");
+    let q13_rows = rows
+        .iter()
+        .filter(|r| r[0].starts_with("temporal-v3-q13-"))
+        .count();
+    assert_eq!(v3_rows - q13_rows, 30, "tests/check-mutants q12 row count");
+    assert_eq!(q13_rows, 16, "tests/check-mutants q13 row count");
     // Each worker clones HEAD once, then per row: mutate → check → reset + clean
     // back to HEAD (a fresh checkout per row costs ~10× the check itself).
     let next = AtomicUsize::new(0);

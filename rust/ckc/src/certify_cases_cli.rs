@@ -118,8 +118,8 @@ fn parse(table: &str) -> Result<Vec<Case>> {
             stderr,
         });
     }
-    if counts != [41, 7] || targets.len() != 10 {
-        return Err("expected 41 document cases, 7 query cases, and 10 targets".to_owned());
+    if counts != [48, 7] || targets.len() != 15 {
+        return Err("expected 48 document cases, 7 query cases, and 15 targets".to_owned());
     }
     Ok(cases)
 }
@@ -302,7 +302,7 @@ mod tests {
     fn committed_table_parses_and_every_edit_changes_its_source() {
         let (repo, table) = inputs();
         let cases = parse(&table).unwrap();
-        assert_eq!(cases.len(), 48);
+        assert_eq!(cases.len(), 55);
         for case in cases {
             let source = fs::read_to_string(repo.join(case.target)).unwrap();
             assert_ne!(mutate(&source, &case.edit).unwrap(), source, "{}", case.id);

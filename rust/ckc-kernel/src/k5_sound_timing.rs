@@ -125,6 +125,7 @@ proof fn bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u:
     l::f252(inputs);
     l::f253(inputs);
     l::f254(inputs);
+    l::f296(inputs);
     l::f262(inputs);
     l::f263(inputs);
     l::f264(inputs);
@@ -167,11 +168,62 @@ proof fn count(d: v::DocFile, c: v::DocClause, q: Term, inputs: Seq<u::Bytes>)
     l::f252(inputs);
     l::f253(inputs);
     l::f254(inputs);
+    l::f296(inputs);
     if let Some(args) = u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
         if let (Some(cmp), Term::Int(n)) = (u::cmp_html(args[3]), args[4]) {
             if n >= 0 {
                 decimal_text(n as nat, inputs);
                 b::add(cmp, u::text(v::udec_bytes(n as nat)), inputs);
+            }
+        }
+    }
+}
+
+// q13 D8: a range's low end, `a minimum of N to M <unit>`.
+proof fn range_bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u::Bytes>)
+    ensures
+        opt_sound(u::range_bound_html(d, c, q, un), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::text);
+    hide(u::lit);
+    hide(u::first_with);
+    hide(u::bound_html);
+    bound(d, c, q, un, inputs);
+    l::f262(inputs);
+    l::f263(inputs);
+    l::f264(inputs);
+    l::f265(inputs);
+    l::f266(inputs);
+    l::f267(inputs);
+    l::f268(inputs);
+    l::f269(inputs);
+    l::f270(inputs);
+    l::f271(inputs);
+    l::f272(inputs);
+    l::f273(inputs);
+    l::f274(inputs);
+    l::f275(inputs);
+    l::f297(inputs);
+    l::f298(inputs);
+    if let Some(r) = u::first_with(u::join_terms(d, c), "guideline_range"@, 3, 1, q) {
+        if let (Some(lo), Some(hi)) = (
+            u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q),
+            u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, r[2]),
+        ) {
+            if let (Term::Int(n), Term::Int(m)) = (lo[4], hi[4]) {
+                if 0 <= n && 0 <= m {
+                    if let Some(w) = u::unit_html(u::atom_name(un), m == 1) {
+                        decimal_text(n as nat, inputs);
+                        decimal_text(m as nat, inputs);
+                        let a1 = b::f(297) + u::text(v::udec_bytes(n as nat));
+                        b::add(b::f(297), u::text(v::udec_bytes(n as nat)), inputs);
+                        b::add(a1, b::f(298), inputs);
+                        b::add(a1 + b::f(298), u::text(v::udec_bytes(m as nat)), inputs);
+                        b::add(a1 + b::f(298) + u::text(v::udec_bytes(m as nat)), w, inputs);
+                    }
+                }
             }
         }
     }
@@ -319,6 +371,7 @@ proof fn row(
     hide(u::joined_word);
     hide(u::timing_html);
     hide(u::bound_html);
+    hide(u::range_bound_html);
     hide(u::order_html);
     hide(u::frequency_html);
     hide(u::window_html);
@@ -333,9 +386,9 @@ proof fn row(
         b::cell(Seq::empty(), inputs);
         if name == u::lit("guideline_interval"@) && args.len() == 6 {
             let role = u::atom_name(args[2]);
-            bound(d, c, args[3], args[4], inputs);
-            timing(role, u::bound_html(d, c, args[3], args[4]), inputs);
-            let tm = u::timing_html(role, u::bound_html(d, c, args[3], args[4]));
+            range_bound(d, c, args[3], args[4], inputs);
+            timing(role, u::range_bound_html(d, c, args[3], args[4]), inputs);
+            let tm = u::timing_html(role, u::range_bound_html(d, c, args[3], args[4]));
             b::cell(tm, inputs);
             l::f249(inputs);
             joined_word(pl, d, c, "guideline_entity"@, 4, args[5], 2, inputs);

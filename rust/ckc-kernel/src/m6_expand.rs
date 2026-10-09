@@ -184,15 +184,12 @@ pub fn card_ok(arena: &ETermArena, op: &T) -> (out: bool)
     ensures
         out == spec::card_op_ok(op@),
 {
-    is_atom(arena, op, &Sym::Eq) || is_atom(arena, op, &Sym::Geq) || is_atom(
+    is_atom(arena, op, &Sym::Eq) || is_atom(arena, op, &Sym::About) || is_atom(arena, op, &Sym::Geq)
+        || is_atom(arena, op, &Sym::Greater) || is_atom(arena, op, &Sym::Leq) || is_atom(
         arena,
         op,
-        &Sym::Greater,
-    ) || is_atom(arena, op, &Sym::Leq) || is_atom(arena, op, &Sym::Less) || is_atom(
-        arena,
-        op,
-        &Sym::Exactly,
-    ) || is_atom(arena, op, &Sym::Na)
+        &Sym::Less,
+    ) || is_atom(arena, op, &Sym::Exactly) || is_atom(arena, op, &Sym::Na)
 }
 
 pub fn participants(
@@ -443,6 +440,24 @@ pub fn condition(
                     Err(x) => return Err(x),
                 };
                 let t = lit4(arena, &Sym::GuidelineOrder, ctx, &e, &args[1], &a);
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineRange) && args.len() == 2 {
+                let l = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let h = match resolve(arena, &args[1], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let mut ts = Vec::new();
+                ts.push(ctx.cp());
+                ts.push(l);
+                ts.push(h);
+                proof {
+                    assert_seqs_equal!(models(ts@) == seq![ctx@, l@, h@]);
+                }
+                let t = crate::m6_term::c(arena, &Sym::GuidelineRange, &ts);
                 Ok(one_term(arena, t))
             } else if has_name(&name, &Sym::DollarGuidelineRecurrenceWindow) && args.len() == 6 {
                 let e = match resolve(arena, &args[0], map, sko) {

@@ -6666,6 +6666,113 @@ pub proof fn literal_295()
     n::clean_bridge(" from"@);
 }
 
+pub open spec fn data_296() -> Seq<nat> {
+    ns![97u32,98,111,117,116,32].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_296()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[296]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l296(Seq::empty());
+    p::all();
+    reveal_strlit("about ");
+    assert(n::codes("about "@) =~= data_296());
+    assert(n::clean(data_296(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("about "@);
+}
+
+pub open spec fn data_297() -> Seq<nat> {
+    ns![97u32,32,109,105,110,105,109,117,109,32,111,102,32].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_297()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[297]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l297(Seq::empty());
+    p::all();
+    reveal_strlit("a minimum of ");
+    assert(n::codes("a minimum of "@) =~= data_297());
+    assert(n::clean(data_297(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("a minimum of "@);
+}
+
+pub open spec fn data_298() -> Seq<nat> {
+    ns![32u32,116,111,32].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_298()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[298]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l298(Seq::empty());
+    p::all();
+    reveal_strlit(" to ");
+    assert(n::codes(" to "@) =~= data_298());
+    assert(n::clean(data_298(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(" to "@);
+}
+
+pub open spec fn data_299() -> Seq<nat> {
+    ns![109u32,97,114,107,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,97,115,32,97,112,112,114,111,120,105,109,97,116,101].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_299()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[299]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l299(Seq::empty());
+    p::all();
+    reveal_strlit("marks a time limit as approximate");
+    assert(n::codes("marks a time limit as approximate"@) =~= data_299());
+    assert(n::clean(data_299(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("marks a time limit as approximate"@);
+}
+
+pub open spec fn data_300() -> Seq<nat> {
+    ns![106u32,111,105,110,115,32,116,104,101,32,117,112,112,101,114,32,101,110,100,32,111,102,32,97,32,109,105,110,105,109,117,109,32,116,104,97,116,32,105,115,32,115,116,97,116,101,100,32,97,115,32,97,32,114,97,110,103,101].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_300()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[300]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l300(Seq::empty());
+    p::all();
+    reveal_strlit("joins the upper end of a minimum that is stated as a range");
+    assert(n::codes("joins the upper end of a minimum that is stated as a range"@) =~= data_300());
+    assert(n::clean(data_300(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("joins the upper end of a minimum that is stated as a range"@);
+}
+
 } // verus!
 }
 pub mod css {
@@ -11800,7 +11907,7 @@ pub proof fn block_272(i: int)
 
 pub proof fn block_288(i: int)
     requires
-        288 <= i < 296,
+        288 <= i < 301,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -11820,14 +11927,24 @@ pub proof fn block_288(i: int)
         batch_288::literal_293();
     } else if i == 294 {
         batch_288::literal_294();
-    } else {
+    } else if i == 295 {
         batch_288::literal_295();
+    } else if i == 296 {
+        batch_288::literal_296();
+    } else if i == 297 {
+        batch_288::literal_297();
+    } else if i == 298 {
+        batch_288::literal_298();
+    } else if i == 299 {
+        batch_288::literal_299();
+    } else {
+        batch_288::literal_300();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 296,
+        0 <= i < 301,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -11876,7 +11993,7 @@ pub proof fn literal(i: int)
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 296,
+        u::copy_registry().len() == 301,
 {
     hide(u::lit);
     hide(u::css_text);

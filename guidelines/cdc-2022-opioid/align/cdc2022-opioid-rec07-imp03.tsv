@@ -5,13 +5,11 @@
 5	ace	126	opioid-dosage
 6	ace	149	less than
 7	ace	159	50 MME-units-per-day
-0	ace	186	initial-follow-up-interval
-0	ace	219	duration
-0	ace	236	duration
-1	ace	245	approximates
-2	ace	258	4 weeks
-8	ace	289	consider
-0	ace	302	initial-follow-up-interval
+8	ace	199	may
+0	ace	214	initial-follow-up
+2	ace	255	4
+1	ace	257	approximate
+2	ace	269	weeks
 0	src	3	initial follow-up interval
 1	src	30	closer to
 2	src	40	4 weeks

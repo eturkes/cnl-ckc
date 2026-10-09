@@ -38,7 +38,10 @@
 %                                     guideline_order/4 and
 %                                     guideline_recurrence_window/7 (a table whose
 %                                     header names another version fails
-%                                     temporal_load); law = docs/REFERENCE.md
+%                                     temporal_load); v3 approximation rows mark
+%                                     a quantity `about`, range rows emit
+%                                     guideline_range/3 (contract q13); law =
+%                                     docs/REFERENCE.md
 %                                     "Schema v2", "Schema v3"
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
@@ -810,7 +813,7 @@ v2_temporal_header(3, Codes) :-
 
 /* The header must be the selected version's (q12 D1: no cross-version read). */
 v2_read_temporal(File, table(N, Units, Relations, Spacings, Windows, Frequencies,
-        Digest)) :-
+        Approximations, Ranges, Digest)) :-
     nb_getval(ace_to_pl_schema, N),
     setup_call_cleanup(
         open(File, read, Stream, [type(binary)]),
@@ -822,8 +825,8 @@ v2_read_temporal(File, table(N, Units, Relations, Spacings, Windows, Frequencies
     ( Body \== [] -> true ; v2_bad(no_rows) ),
     ( append(Lines, [0'\n], Body) -> true ; v2_bad(final_newline) ),
     split_lf(Lines, Rows),
-    v2_rows(Rows, 1, t(N, [], [], [], [], []),
-        t(N, Units, Relations, Spacings, Windows, Frequencies)).
+    v2_rows(Rows, 1, t(N, [], [], [], [], [], [], []),
+        t(N, Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges)).
 
 v2_bad(Why) :-
     throw(error(temporal(Why), context(ace_to_pl:v2_read_temporal/2, _))).
@@ -837,7 +840,7 @@ v2_rows([Row|Rows], N, T0, T) :-
 /* One row; checks run in the spec's order (fields, lemma, kind, value,
    duplicates). A noun is a unit or a frame, never both; a v3 frequency
    preposition is never a relation preposition. */
-v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0), T) :-
+v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0, A0, G0), T) :-
     v2_split_tab(Row, Fields),
     ( Fields = [K, L, V] -> true ; v2_bad(row(N, field_count)) ),
     ( v2_lemma(L, Lemma) -> true ; v2_bad(row(N, lemma)) ),
@@ -852,18 +855,18 @@ v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0), T) :-
         ; true
         ),
         append(U0, [Lemma-Unit], U),
-        T = t(Ver, U, R0, S0, W0, F0)
+        T = t(Ver, U, R0, S0, W0, F0, A0, G0)
     ; Kind == relation ->
         ( v2_closed_id(V, [duration, within, after, before], Role) ->
             true
         ; v2_bad(row(N, role_id))
         ),
-        ( ( memberchk(Lemma-_, R0) ; memberchk(Lemma, F0) ) ->
+        ( ( memberchk(Lemma-_, R0) ; memberchk(Lemma, F0) ; memberchk(Lemma, G0) ) ->
             v2_bad(row(N, duplicate_preposition))
         ; true
         ),
         append(R0, [Lemma-Role], R),
-        T = t(Ver, U0, R, S0, W0, F0)
+        T = t(Ver, U0, R, S0, W0, F0, A0, G0)
     ; ( Kind == spacing ; Ver =:= 3, Kind == window ) ->
         ( v2_lemma(V, Frame) -> true ; v2_bad(row(N, frame_lemma)) ),
         ( ( memberchk(Lemma-Frame, S0) ; memberchk(Lemma-Frame, W0)
@@ -873,18 +876,31 @@ v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0), T) :-
         ),
         ( Kind == spacing ->
             append(S0, [Lemma-Frame], S),
-            T = t(Ver, U0, R0, S, W0, F0)
+            T = t(Ver, U0, R0, S, W0, F0, A0, G0)
         ; append(W0, [Lemma-Frame], W),
-          T = t(Ver, U0, R0, S0, W, F0)
+          T = t(Ver, U0, R0, S0, W, F0, A0, G0)
         )
     ; Ver =:= 3, Kind == frequency ->
         ( atom_codes(period, V) -> true ; v2_bad(row(N, frequency_value)) ),
-        ( ( memberchk(Lemma, F0) ; memberchk(Lemma-_, R0) ) ->
+        ( ( memberchk(Lemma, F0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, G0) ) ->
             v2_bad(row(N, duplicate_preposition))
         ; true
         ),
         append(F0, [Lemma], F),
-        T = t(Ver, U0, R0, S0, W0, F)
+        T = t(Ver, U0, R0, S0, W0, F, A0, G0)
+    ; Ver =:= 3, Kind == approximation ->
+        ( atom_codes(about, V) -> true ; v2_bad(row(N, approximation_value)) ),
+        ( memberchk(Lemma, A0) -> v2_bad(row(N, duplicate_adjective)) ; true ),
+        append(A0, [Lemma], A),
+        T = t(Ver, U0, R0, S0, W0, F0, A, G0)
+    ; Ver =:= 3, Kind == range ->
+        ( atom_codes(minimum, V) -> true ; v2_bad(row(N, range_value)) ),
+        ( ( memberchk(Lemma, G0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, F0) ) ->
+            v2_bad(row(N, duplicate_preposition))
+        ; true
+        ),
+        append(G0, [Lemma], G),
+        T = t(Ver, U0, R0, S0, W0, F0, A0, G)
     ; v2_bad(row(N, kind))
     ).
 
@@ -908,8 +924,8 @@ v2_closed_id(Codes, Ids, Id) :-
     !.
 
 v2_table(T) :-
-    nb_current(ace_to_pl_temporal, table(V, U, R, S, W, F, _)),
-    T = t(V, U, R, S, W, F).
+    nb_current(ace_to_pl_temporal, table(V, U, R, S, W, F, A, G, _)),
+    T = t(V, U, R, S, W, F, A, G).
 
 /* ---------- v2 annotation pass (contract m7t D4/D5) ----------
    One scope = one flat item list; a NAF payload is its own scope. A
@@ -924,6 +940,11 @@ v2_annotate(S, Items0, Items) :-
 
 v2_annotate_scope(T, S, Items0, Items) :-
     v2_anns(Items0, T, S, Items0, Anns),
+    v3_range_lows(Anns, Items0, Anns, S, Lows),
+    ( v2_dup(Lows) ->
+        reject(unsupported, temporal_shape(range_shape, S))
+    ; true
+    ),
     v2_claims(Anns, Claims),
     ( v2_dup(Claims) ->
         reject(unsupported, temporal_shape(shared_quantity, S))
@@ -934,7 +955,8 @@ v2_annotate_scope(T, S, Items0, Items) :-
     ; reject(unsupported, temporal_shape(window_shape, S))
     ),
     v2_consumed(Anns, Links),
-    v2_rebuild(Items0, T, S, Items0, Anns, Links, Items).
+    v3_abouts(Anns, T, Items0, Approx),
+    v2_rebuild(Items0, T, S, Items0, Anns, Links, Approx, Items).
 
 v2_anns([], _, _, _, []).
 v2_anns([Item|Items], T, S, Scope, Anns) :-
@@ -954,7 +976,7 @@ v2_pp_item(Item, Ctx, PP) :-
     functor(PP, modifier_pp, 3).
 
 v2_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
-    T = t(_, U, R, Sp, W, _),
+    T = t(_, U, R, Sp, W, _, _, _),
     append(Sp, W, Frames),
     arg(1, PP, E),
     arg(2, PP, P),
@@ -963,6 +985,7 @@ v2_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
     length(Links, NL),
     ( atom(P), memberchk(P-Role, R), v2_qty(U, Scope, Ctx, X, Unit, O) ->
         ( v2_bound_why(O, Why) -> reject(unsupported, temporal_shape(Why, S)) ; true ),
+        v3_approx_check(T, S, Scope, Ctx, X, X, O),
         ( NL > 1 ->
             reject(unsupported, temporal_shape(anchor_count, S))
         ; NL =:= 0 ->
@@ -992,6 +1015,7 @@ v2_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
             ; reject(unsupported, temporal_shape(frame_shape, S))
             ),
             ( v2_bound_why(O, Why) -> reject(unsupported, temporal_shape(Why, S)) ; true ),
+            v3_approx_check(T, S, Scope, Ctx, Q, X, O),
             v2_of_links(Scope, Ctx, Q, QLinks),
             ( QLinks == [] -> true ; reject(unsupported, temporal_shape(anchor_count, S)) ),
             Ann = recurrence(E, X, Q, Unit)
@@ -1073,6 +1097,8 @@ v2_claims([Ctx-frequency(_, C, W, _)|Anns], [Ctx-C, Ctx-W|Claims]) :-
     v2_claims(Anns, Claims).
 v2_claims([_-order(_, _, _)|Anns], Claims) :-
     v2_claims(Anns, Claims).
+v2_claims([Ctx-range(_, H, _)|Anns], [Ctx-H|Claims]) :-
+    v2_claims(Anns, Claims).
 
 v2_dup([C|Cs]) :-
     ( strict_member(C, Cs) -> true ; v2_dup(Cs) ).
@@ -1089,19 +1115,21 @@ v2_consumed([_-frequency(_, _, _, _)|Anns], Links) :-
     v2_consumed(Anns, Links).
 v2_consumed([_-order(_, _, _)|Anns], Links) :-
     v2_consumed(Anns, Links).
+v2_consumed([_-range(_, _, _)|Anns], Links) :-
+    v2_consumed(Anns, Links).
 
-v2_rebuild(_, _, _, [], _, _, []).
-v2_rebuild(Scope, T, S, [Item|Items], Anns, Links, Out) :-
-    v2_rebuild_item(Scope, T, S, Item, Anns, Links, Head),
-    v2_rebuild(Scope, T, S, Items, Anns, Links, Tail),
+v2_rebuild(_, _, _, [], _, _, _, []).
+v2_rebuild(Scope, T, S, [Item|Items], Anns, Links, Approx, Out) :-
+    v2_rebuild_item(Scope, T, S, Item, Anns, Links, Approx, Head),
+    v2_rebuild(Scope, T, S, Items, Anns, Links, Approx, Tail),
     append(Head, Tail, Out).
 
-v2_rebuild_item(Scope, T, S, Item, Anns, Links, Out) :-
+v2_rebuild_item(Scope, T, S, Item, Anns, Links, Approx, Out) :-
     ( v2_pp_item(Item, Ctx, PP) ->
         v2_pp_ann(T, S, Scope, Ctx, PP, Ann),
         ( Ann == none ->
             Out = [Item]
-        ; v2_ann_inner(Ann, Anns, Ctx, Inner) ->
+        ; v2_ann_inner(Ann, Scope, Anns, Ctx, Inner) ->
             Out = [Item, anchored(Ctx, Inner)]
         ; Out = [Item]
         )
@@ -1117,6 +1145,19 @@ v2_rebuild_item(Scope, T, S, Item, Anns, Links, Out) :-
       v2_linked(Links, Ctx, X) ->
         Out = []
     ; nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, Ctx),
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, object, 6),
+      arg(1, Inner, Q),
+      v2_linked(Approx, Ctx, Q) ->
+        arg(2, Inner, Noun),
+        arg(3, Inner, Class),
+        arg(4, Inner, UnitField),
+        arg(6, Inner, Count),
+        Out = [anchored(Ctx, object(Q, Noun, Class, UnitField, about, Count))]
+    ; nonvar(Item),
       functor(Item, naf, 2) ->
         arg(1, Item, Dom),
         arg(2, Item, Payload),
@@ -1129,16 +1170,19 @@ v2_linked([C-X0|Links], Ctx, X) :-
     ( C == Ctx, X0 == X -> true ; v2_linked(Links, Ctx, X) ).
 
 /* The reserved item an annotation adds after its pp; a recurrence under a
-   window becomes a scoped recurrence (q12 D6); a window adds none. */
-v2_ann_inner(interval(E, Role, Q, Unit, A), _, _,
+   window becomes a scoped recurrence (q12 D6); a window adds none; a range
+   names its partner minimum (q13 D4). */
+v2_ann_inner(interval(E, Role, Q, Unit, A), _, _, _,
     '$guideline_interval'(E, Role, Q, Unit, A)).
-v2_ann_inner(recurrence(E, _, Q, Unit), Anns, Ctx, Inner) :-
+v2_ann_inner(recurrence(E, _, Q, Unit), _, Anns, Ctx, Inner) :-
     ( v3_window_of(Anns, Ctx, E, L, LUnit, A) ->
         Inner = '$guideline_recurrence_window'(E, Q, Unit, A, L, LUnit)
     ; Inner = '$guideline_recurrence'(E, Q, Unit)
     ).
-v2_ann_inner(frequency(E, C, W, Unit), _, _, '$guideline_frequency'(E, C, W, Unit)).
-v2_ann_inner(order(E, Role, A), _, _, '$guideline_order'(E, Role, A)).
+v2_ann_inner(frequency(E, C, W, Unit), _, _, _, '$guideline_frequency'(E, C, W, Unit)).
+v2_ann_inner(order(E, Role, A), _, _, _, '$guideline_order'(E, Role, A)).
+v2_ann_inner(range(E, H, _), Scope, Anns, Ctx, '$guideline_range'(L, H)) :-
+    v3_partners(Anns, Scope, Ctx, E, [L-_]).
 
 /* ---------- v3 patterns (contract q12 D3-D6) ----------
    Referents classify by their object condition anywhere in the DRS (the
@@ -1189,7 +1233,7 @@ v3_decl_in([V0-d(N0, B0)|Ds], V, Noun, Bounded) :-
     ).
 
 /* A plain referent: a variable whose noun is neither a unit nor a frame noun. */
-v3_plain(t(_, U, _, Sp, W, _), X) :-
+v3_plain(t(_, U, _, Sp, W, _, _, _), X) :-
     var(X),
     v3_decl(X, d(Noun, _)),
     atom(Noun),
@@ -1205,7 +1249,7 @@ v3_frame_shaped(O) :-
     arg(6, O, N), N == 1.
 
 v3_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
-    T = t(Ver, _, R, _, W, F),
+    T = t(Ver, U, R, _, W, F, _, G),
     ( Ver =:= 3 ->
         arg(1, PP, E),
         arg(2, PP, P),
@@ -1220,6 +1264,8 @@ v3_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
                 v3_window(T, S, Scope, Ctx, PP, O, Ann)
             ; atom(P), memberchk(P, F) ->
                 v3_frequency(T, S, Scope, Ctx, PP, Ann)
+            ; atom(P), memberchk(P, G), v2_qty(U, Scope, Ctx, X, _, _) ->
+                v3_range(T, S, Scope, Ctx, PP, Ann)
             ; Ordered \== none, v3_plain(T, X) ->
                 Ann = order(E, Ordered, X)
             ; Ann = none
@@ -1234,7 +1280,7 @@ v3_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
 /* D6: the only window pp on E, F frame-shaped, F of L (a time quantity), L of A
    (a plain referent). */
 v3_window(T, S, Scope, Ctx, PP, O, window(E, F, L, Unit, A)) :-
-    T = t(_, U, _, _, _, _),
+    T = t(_, U, _, _, _, _, _, _),
     arg(1, PP, E),
     arg(3, PP, F),
     v2_of_links(Scope, Ctx, F, FL),
@@ -1248,6 +1294,7 @@ v3_window(T, S, Scope, Ctx, PP, O, window(E, F, L, Unit, A)) :-
     ; reject(unsupported, temporal_shape(window_shape, S))
     ),
     ( v2_bound_why(LO, Why) -> reject(unsupported, temporal_shape(Why, S)) ; true ),
+    v3_approx_check(T, S, Scope, Ctx, L, F, LO),
     v2_of_links(Scope, Ctx, L, AL),
     ( AL = [A], v3_plain(T, A) ->
         true
@@ -1256,7 +1303,7 @@ v3_window(T, S, Scope, Ctx, PP, O, window(E, F, L, Unit, A)) :-
 
 /* D5: W an unanchored exact period; the counted item = E's second participant. */
 v3_frequency(T, S, Scope, Ctx, PP, Ann) :-
-    T = t(_, U, _, _, _, _),
+    T = t(_, U, _, _, _, _, _, _),
     arg(1, PP, E),
     arg(3, PP, W),
     ( v2_qty(U, Scope, Ctx, W, Unit, WO) ->
@@ -1311,7 +1358,7 @@ v3_window_of([_|Anns], Ctx, E, L, Unit, A) :-
 v3_window_pps([], _, _, _, _, 0).
 v3_window_pps([Item|Items], Scope, T, Ctx, E, N) :-
     v3_window_pps(Items, Scope, T, Ctx, E, N0),
-    T = t(_, _, _, _, W, _),
+    T = t(_, _, _, _, W, _, _, _),
     (   nonvar(Item),
         functor(Item, anchored, 2),
         arg(1, Item, C0),
@@ -1349,9 +1396,105 @@ v3_count([C0-Ann|Anns], Ctx, E, Kind, N) :-
     ; N = N0
     ).
 
+/* ---------- q13 D3/D4: about + ranged minimum ---------- */
+/* A same-context property(R, A, pos) with A an approximation lemma. */
+v3_approximate(T, Scope, Ctx, R) :-
+    T = t(_, _, _, _, _, _, Ap, _),
+    member(Item, Scope),
+    nonvar(Item),
+    functor(Item, anchored, 2),
+    arg(1, Item, C0),
+    C0 == Ctx,
+    arg(2, Item, Inner),
+    nonvar(Inner),
+    functor(Inner, property, 3),
+    arg(1, Inner, R0),
+    R0 == R,
+    arg(3, Inner, Degree),
+    Degree == pos,
+    arg(2, Inner, A),
+    atom(A),
+    memberchk(A, Ap),
+    !.
+
+/* D3: a claimed quantity Q (object O, frame F) marked approximate needs eq. */
+v3_approx_check(T, S, Scope, Ctx, Q, F, O) :-
+    ( ( v3_approximate(T, Scope, Ctx, Q) ; v3_approximate(T, Scope, Ctx, F) ),
+      arg(5, O, Op),
+      Op \== eq ->
+        reject(unsupported, temporal_shape(approximate_bound, S))
+    ; true
+    ).
+
+/* D4: H an exact, unanchored, unapproximated time quantity. */
+v3_range(T, S, Scope, Ctx, PP, range(E, H, Unit)) :-
+    T = t(_, U, _, _, _, _, _, _),
+    arg(1, PP, E),
+    arg(3, PP, H),
+    v2_qty(U, Scope, Ctx, H, Unit, HO),
+    ( v2_bound_why(HO, Why) -> reject(unsupported, temporal_shape(Why, S)) ; true ),
+    arg(5, HO, Op),
+    v2_of_links(Scope, Ctx, H, HL),
+    ( Op == eq, HL == [], \+ v3_approximate(T, Scope, Ctx, H) ->
+        true
+    ; reject(unsupported, temporal_shape(range_shape, S))
+    ).
+
+/* D4: the at-least interval quantities on E in Ctx, as L-Unit, in item order. */
+v3_partners([], _, _, _, []).
+v3_partners([C0-Ann|Anns], Scope, Ctx, E, Ps) :-
+    ( C0 == Ctx,
+      Ann = interval(E0, _, Q, Unit, _),
+      E0 == E,
+      v2_obj_of(Scope, Ctx, Q, O),
+      arg(5, O, Op),
+      Op == geq ->
+        Ps = [Q-Unit|Rest]
+    ; Ps = Rest
+    ),
+    v3_partners(Anns, Scope, Ctx, E, Rest).
+
+v3_count_of(Scope, Ctx, V, N) :-
+    ( v2_obj_of(Scope, Ctx, V, O), arg(6, O, N0), integer(N0) -> N = N0 ; N = 0 ).
+
+/* D4: each range's Ctx-L: its one partner, of its unit, below its count. */
+v3_range_lows([], _, _, _, []).
+v3_range_lows([Ctx-Ann|Anns], Scope, All, S, Lows) :-
+    ( Ann = range(E, H, Unit) ->
+        v3_partners(All, Scope, Ctx, E, Ps),
+        ( Ps = [L-Unit0],
+          Unit0 == Unit,
+          v3_count_of(Scope, Ctx, L, NL),
+          v3_count_of(Scope, Ctx, H, NH),
+          NL < NH ->
+            Lows = [Ctx-L|Rest]
+        ; reject(unsupported, temporal_shape(range_shape, S))
+        )
+    ; Lows = Rest
+    ),
+    v3_range_lows(Anns, Scope, All, S, Rest).
+
+/* D3: the approximate eq quantities, as Ctx-Q. */
+v3_abouts([], _, _, []).
+v3_abouts([Ctx-Ann|Anns], T, Scope, Out) :-
+    ( v3_about_target(Ann, Q, F),
+      v2_obj_of(Scope, Ctx, Q, O),
+      arg(5, O, Op),
+      Op == eq,
+      ( v3_approximate(T, Scope, Ctx, Q) -> true ; v3_approximate(T, Scope, Ctx, F) ) ->
+        Out = [Ctx-Q|Rest]
+    ; Out = Rest
+    ),
+    v3_abouts(Anns, T, Scope, Rest).
+
+v3_about_target(interval(_, _, Q, _, _), Q, Q).
+v3_about_target(recurrence(_, F, Q, _), Q, F).
+v3_about_target(window(_, F, L, _, _), L, F).
+v3_about_target(frequency(_, _, W, _), W, W).
+
 /* Schema version of the current compile: 2 iff a temporal table loaded. */
 v2_version(V) :-
-    ( v2_table(t(V0, _, _, _, _, _)) -> V = V0 ; V = 1 ).
+    ( v2_table(t(V0, _, _, _, _, _, _, _)) -> V = V0 ; V = 1 ).
 
 v2_indicators(Indicators) :-
     ( v2_table(_) ->
@@ -1382,7 +1525,7 @@ v2_indicators(Indicators) :-
 
 /* v2 records end in temporal(sha256(H)). */
 v2_record(Record0, Record) :-
-    ( nb_current(ace_to_pl_temporal, table(_, _, _, _, _, _, Digest)) ->
+    ( nb_current(ace_to_pl_temporal, table(_, _, _, _, _, _, _, _, Digest)) ->
         Record0 =.. List0,
         append(List0, [temporal(sha256(Digest))], List),
         Record =.. List
@@ -2053,6 +2196,14 @@ v1_condition(Context, Inner, Map, Sko,
     v1_ref(Q0, Map, Sko, Q),
     v1_ref(A0, Map, Sko, A),
     v1_ref(L0, Map, Sko, L).
+v1_condition(Context, Inner, Map, Sko, [guideline_range(Context, L, H)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_range', 2),
+    !,
+    arg(1, Inner, L0),
+    arg(2, Inner, H0),
+    v1_ref(L0, Map, Sko, L),
+    v1_ref(H0, Map, Sko, H).
 v1_condition(_, Inner, _, _, _) :-
     reject(unsupported, condition_shape(Inner)).
 
@@ -2070,7 +2221,7 @@ v1_participants(Index, Arity, Inner, Map, Sko, Context, E,
 
 v1_check_operator(Op) :-
     ( atom(Op),
-      memberchk(Op, [eq, geq, greater, leq, less, exactly, na]) ->
+      memberchk(Op, [eq, about, geq, greater, leq, less, exactly, na]) ->
         true
     ; reject(unsupported, object_operator(Op))
     ).

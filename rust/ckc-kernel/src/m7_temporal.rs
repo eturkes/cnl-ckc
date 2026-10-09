@@ -17,6 +17,8 @@ pub struct ETemporal {
     pub spacings: Vec<(Vec<u8>, Vec<u8>)>,
     pub windows: Vec<(Vec<u8>, Vec<u8>)>,
     pub frequencies: Vec<Vec<u8>>,
+    pub approximations: Vec<Vec<u8>>,
+    pub ranges: Vec<Vec<u8>>,
 }
 
 pub open spec fn pairs_view(v: Seq<(Vec<u8>, Vec<u8>)>) -> Seq<(Seq<u8>, Seq<u8>)> {
@@ -38,6 +40,8 @@ impl View for ETemporal {
             spacings: pairs_view(self.spacings@),
             windows: pairs_view(self.windows@),
             frequencies: lemmas_view(self.frequencies@),
+            approximations: lemmas_view(self.approximations@),
+            ranges: lemmas_view(self.ranges@),
         }
     }
 }
@@ -69,7 +73,36 @@ proof fn literals()
         b"frequency"@ == ascii("frequency"@),
         b"frequency value"@ == ascii("frequency value"@),
         b"period"@ == ascii("period"@),
+        b"approximation"@ == ascii("approximation"@),
+        b"approximation value"@ == ascii("approximation value"@),
+        b"about"@ == ascii("about"@),
+        b"duplicate adjective"@ == ascii("duplicate adjective"@),
+        b"range"@ == ascii("range"@),
+        b"range value"@ == ascii("range value"@),
+        b"minimum"@ == ascii("minimum"@),
 {
+    reveal_byteslit(b"approximation");
+    reveal_strlit("approximation");
+    reveal_byteslit(b"approximation value");
+    reveal_strlit("approximation value");
+    reveal_byteslit(b"about");
+    reveal_strlit("about");
+    reveal_byteslit(b"duplicate adjective");
+    reveal_strlit("duplicate adjective");
+    reveal_byteslit(b"range");
+    reveal_strlit("range");
+    reveal_byteslit(b"range value");
+    reveal_strlit("range value");
+    reveal_byteslit(b"minimum");
+    reveal_strlit("minimum");
+    reveal(ascii);
+    assert(b"approximation"@ =~= ascii("approximation"@));
+    assert(b"approximation value"@ =~= ascii("approximation value"@));
+    assert(b"about"@ =~= ascii("about"@));
+    assert(b"duplicate adjective"@ =~= ascii("duplicate adjective"@));
+    assert(b"range"@ =~= ascii("range"@));
+    assert(b"range value"@ =~= ascii("range value"@));
+    assert(b"minimum"@ =~= ascii("minimum"@));
     reveal_byteslit(b"window");
     reveal_strlit("window");
     reveal_byteslit(b"frequency");
@@ -514,6 +547,8 @@ pub fn clone_tab(t: &ETemporal) -> (r: ETemporal)
         spacings: clone_pairs(&t.spacings),
         windows: clone_pairs(&t.windows),
         frequencies: clone_lemmas(&t.frequencies),
+        approximations: clone_lemmas(&t.approximations),
+        ranges: clone_lemmas(&t.ranges),
     }
 }
 
@@ -555,7 +590,10 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
         if !role_id_ok(&f[2]) {
             return why(b"role id");
         }
-        if key_in(&t.relations, &f[1]) || seq_in(&t.frequencies, &f[1]) {
+        if key_in(&t.relations, &f[1]) || seq_in(&t.frequencies, &f[1]) || seq_in(
+            &t.ranges,
+            &f[1],
+        ) {
             return why(b"duplicate preposition");
         }
         let mut r = clone_tab(t);
@@ -592,13 +630,45 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
         if !eq(&f[2], b"period") {
             return why(b"frequency value");
         }
-        if seq_in(&t.frequencies, &f[1]) || key_in(&t.relations, &f[1]) {
+        if seq_in(&t.frequencies, &f[1]) || key_in(&t.relations, &f[1]) || seq_in(
+            &t.ranges,
+            &f[1],
+        ) {
             return why(b"duplicate preposition");
         }
         let mut r = clone_tab(t);
         r.frequencies.push(copy(&f[1]));
         proof {
             assert(lemmas_view(r.frequencies@) =~= lemmas_view(t.frequencies@).push(f@[1]@));
+        }
+        Ok(r)
+    } else if t.version == 3 && eq(&f[0], b"approximation") {
+        if !eq(&f[2], b"about") {
+            return why(b"approximation value");
+        }
+        if seq_in(&t.approximations, &f[1]) {
+            return why(b"duplicate adjective");
+        }
+        let mut r = clone_tab(t);
+        r.approximations.push(copy(&f[1]));
+        proof {
+            assert(lemmas_view(r.approximations@) =~= lemmas_view(t.approximations@).push(f@[1]@));
+        }
+        Ok(r)
+    } else if t.version == 3 && eq(&f[0], b"range") {
+        if !eq(&f[2], b"minimum") {
+            return why(b"range value");
+        }
+        if seq_in(&t.ranges, &f[1]) || key_in(&t.relations, &f[1]) || seq_in(
+            &t.frequencies,
+            &f[1],
+        ) {
+            return why(b"duplicate preposition");
+        }
+        let mut r = clone_tab(t);
+        r.ranges.push(copy(&f[1]));
+        proof {
+            assert(lemmas_view(r.ranges@) =~= lemmas_view(t.ranges@).push(f@[1]@));
         }
         Ok(r)
     } else {
@@ -694,6 +764,8 @@ pub fn parse_temporal_exec(bytes: &[u8]) -> (r: Result<(ETemporal, usize), Vec<u
         spacings: Vec::new(),
         windows: Vec::new(),
         frequencies: Vec::new(),
+        approximations: Vec::new(),
+        ranges: Vec::new(),
     };
     let mut i = 0usize;
     proof {
@@ -702,6 +774,8 @@ pub fn parse_temporal_exec(bytes: &[u8]) -> (r: Result<(ETemporal, usize), Vec<u
         assert(t@.spacings =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
         assert(t@.windows =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
         assert(t@.frequencies =~= Seq::<Seq<u8>>::empty());
+        assert(t@.approximations =~= Seq::<Seq<u8>>::empty());
+        assert(t@.ranges =~= Seq::<Seq<u8>>::empty());
         assert(t@ == e0);
         assert(rows.skip(0) =~= rows);
     }

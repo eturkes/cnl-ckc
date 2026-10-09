@@ -30,7 +30,7 @@
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
 guideline_schema_version(3).
-guideline_document('cdc2022-opioid-s11-01',ace_sha256(a52bec7b9ab6afb16f6f7d80e1e89d6bce82a18f38d942913104d99e4d8af235),ulex(sha256(be24cf56c59049d3c31fba641013faa22821ecda0669443a1fc4a49979ef57ae)),temporal(sha256('29a90281976bb48dfa32d9ef80651076896404c524c9bf1d7a55b06c1880be2a'))).
+guideline_document('cdc2022-opioid-s11-01',ace_sha256(a52bec7b9ab6afb16f6f7d80e1e89d6bce82a18f38d942913104d99e4d8af235),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),temporal(sha256(d7b0d6c9af49f8d4b3dc12370d6b1cc20e923a69a5ce745ee26a1bc0f21effb6))).
 % S1: Every opioid-pain-clinical-practice-guideline contains an opioid-use-disorder-pain-management-content.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s11-01',1,ref(2),[A]),'opioid-use-disorder-pain-management-content',countable) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s11-01',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-pain-clinical-practice-guideline',countable), guideline_cardinality(actual,A,na,eq,1).

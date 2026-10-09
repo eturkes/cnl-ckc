@@ -4,7 +4,6 @@ noun_pl('acetaminophen-milligrams','acetaminophen-milligram',neutr).
 noun_pl('buprenorphine-administrations','buprenorphine-administration',neutr).
 noun_pl('concurrent-opioid-prescriptions','concurrent-opioid-prescription',neutr).
 noun_pl('hydrocodone-milligrams','hydrocodone-milligram',neutr).
-noun_pl('opioid-free-days','opioid-free-day',neutr).
 noun_pl('overlapping-prescribed-opioids','overlapping-prescribed-opioid',neutr).
 noun_pl('respiratory-depressant-medications','respiratory-depressant-medication',neutr).
 noun_pl(clinicians,clinician,human).
@@ -53,7 +52,6 @@ noun_sg('buprenorphine-dose','buprenorphine-dose',neutr).
 noun_sg('buprenorphine-exposure','buprenorphine-exposure',neutr).
 noun_sg('buprenorphine-for-pain-transition','buprenorphine-for-pain-transition',neutr).
 noun_sg('buprenorphine-prescribing-waiver','buprenorphine-prescribing-waiver',neutr).
-noun_sg('buprenorphine-transition-wait','buprenorphine-transition-wait',neutr).
 noun_sg('buprenorphine-treatment','buprenorphine-treatment',neutr).
 noun_sg('cancer-related-pain','cancer-related-pain',neutr).
 noun_sg('care-coordinating-clinician','care-coordinating-clinician',human).
@@ -103,6 +101,7 @@ noun_sg('individualized-person-centered-care-replacement','individualized-person
 noun_sg('individualized-person-centered-decision','individualized-person-centered-decision',neutr).
 noun_sg('inflexible-requirement','inflexible-requirement',neutr).
 noun_sg('informed-person-centered-pain-care-decision','informed-person-centered-pain-care-decision',neutr).
+noun_sg('initial-follow-up','initial-follow-up',neutr).
 noun_sg('initial-opioid-prescription','initial-opioid-prescription',neutr).
 noun_sg('linguistically-appropriate-communication','linguistically-appropriate-communication',neutr).
 noun_sg('long-term-services-and-supports','long-term-services-and-supports',neutr).
@@ -255,7 +254,6 @@ noun_sg('continuing-care','continuing-care',neutr).
 noun_sg('continuous-opioid-use','continuous-opioid-use',neutr).
 noun_sg('contraceptive-option','contraceptive-option',neutr).
 noun_sg('controlled-substance','controlled-substance',neutr).
-noun_sg('standard-buprenorphine-titration-interval','standard-buprenorphine-titration-interval',neutr).
 noun_sg(contraindication,contraindication,neutr).
 noun_sg('controlled-substance-prescription-history','controlled-substance-prescription-history',neutr).
 noun_sg('conversion-factor','conversion-factor',neutr).
@@ -409,7 +407,6 @@ noun_sg('inequitable-toxicology-testing-cost-burden','inequitable-toxicology-tes
 noun_sg('inflexible-standard','inflexible-standard',neutr).
 noun_sg('informed-discussion','informed-discussion',neutr).
 noun_sg('initial-diagnosis','initial-diagnosis',neutr).
-noun_sg('initial-follow-up-interval','initial-follow-up-interval',neutr).
 noun_sg('initial-opioid-therapy','initial-opioid-therapy',neutr).
 noun_sg('initial-pain-worsening-and-usual-improvement-expectation','initial-pain-worsening-and-usual-improvement-expectation',neutr).
 noun_sg(initiation,initiation,neutr).
