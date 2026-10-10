@@ -11890,6 +11890,7 @@ pub fn parse_answers(
         assert(version_name@ == ckc_spec::v1text::ascii("v1"@));
     }
     if !vec_slice_equal(&version.name, version_name) {
+        raise_at(at, version_reject_at(bytes, before_pos_5, &version.name, 1), bytes.len());
         return None;
     }
     let before_pos_6 = cursor.pos;
@@ -12635,6 +12636,7 @@ fn parse_traces_qsha(
         Some(_) => Some((ckc_spec::v1text::ascii("v1"@), 0x2cu8)),
         None => None,
     };
+    let version_at = guided.cursor.pos;
     let version = match guided_atom(bytes, guided, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -12647,6 +12649,7 @@ fn parse_traces_qsha(
         assert(version_name@ == ckc_spec::v1text::ascii("v1"@));
     }
     if !vec_slice_equal(&version.name, version_name) {
+        raise_at(at, version_reject_at(bytes, version_at, &version.name, 1), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x2c, at) {
@@ -14100,7 +14103,7 @@ fn parse_query_record_prefix(
     } else if vec_slice_equal(&version.name, v3_name) {
         3
     } else {
-        raise_at(at, version_reject_at(bytes, version_at, &version.name), bytes.len());
+        raise_at(at, version_reject_at(bytes, version_at, &version.name, 3), bytes.len());
         return None;
     };
     proof {
@@ -21926,9 +21929,10 @@ fn foreign_cut(name: &[u8], v: u8) -> (r: usize) {
     }
 }
 
-// R9 offset of a query version atom that starts at `at` and names no schema
-// version: the canonical names are the unquoted `v1`..`v3`, each followed by `,`.
-fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>) -> (r: usize)
+// R9 offset of a record version atom that starts at `at` and names no version of
+// its record kind: the canonical names are the unquoted `v1`..`v<max>`, each
+// followed by `,` (queries: max 3; answers + traces: max 1).
+fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>, max: u8) -> (r: usize)
     ensures
         r <= bytes@.len(),
 {
@@ -21939,7 +21943,7 @@ fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>) -> (r: usize)
             bytes.len()
         };
     }
-    let k: usize = if name.len() >= 2 && 0x31 <= name[1] && name[1] <= 0x33 {
+    let k: usize = if name.len() >= 2 && 0x31 <= name[1] && max <= 9 && name[1] <= 0x30 + max {
         2
     } else {
         1

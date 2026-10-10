@@ -526,3 +526,7 @@ q12-k2-typed-antecedent	recursion	recursion-check	0	0	manifest.tsv
 q12-k2-typed-antecedent	answer	answer	0	0	manifest.tsv query.pl
 q12-k2-typed-antecedent	trace	trace	0	0	manifest.tsv query.pl answers.pl
 q12-k2-typed-antecedent	trace-check	trace-check	0	0	manifest.tsv query.pl answers.pl trace.pl
+q15-k1-001	target	check	2	1	input.pl
+q15-k1-002	target	check	2	1	input.pl
+q15-k1-003	target	check	2	1	input.pl
+q15-k1-005	target	check	2	1	input.pl

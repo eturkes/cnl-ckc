@@ -35,8 +35,8 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s.
 - [ ] Q5 M7 next gap class = strength (user pick): its own fresh MAINTAIN session; remaining classes = `docs/m7-gap-taxonomy.md`.
-- [ ] Q15 R9 offsets at answers/traces version atoms (Q12 find): an unknown version reports line 1, the R9 law names the version byte.
 - [ ] Q16 exec bindings with preconditions (Q12 review register): six `contract.rs` bindings require `cells_ok`, the rust.md binding rule says none do.
+- [ ] Q17 R9 offsets at quoted spellings of fixed atoms (Q15 find): the token end is reported, the law names the opening quote.
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling).
 - Deferral queue = `.agent/deferred.md` (each row above + ruled deferrals; one line + acceptance check each).
 

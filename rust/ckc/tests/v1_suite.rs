@@ -1,6 +1,6 @@
 // M5.2 v1 suite (.agent/archive/contracts/harness.md H4): tests/v1/cases.tsv rows =
-// 230 primary targets + 115 supplemental K3 probes (+ the m7t- schema-v2 rows and the
-// dq4- reject-offset rows, each counted apart). Every case materializes
+// 230 primary targets + 115 supplemental K3 probes (+ the m7t-/q12- schema rows
+// and dq4-/q15- reject-offset rows, each counted apart). Every case materializes
 // under one private root at its recording layout (.scratch/m5u2/suite/cases/
 // <case>/…, `.in` dropped, `.tpl.in` expanded), so argv and path-bearing
 // diagnostics keep their recorded bytes; `ckc v1 <mode> <args>` runs with cwd =
@@ -210,6 +210,7 @@ fn v1_suite() {
                     !r.case.starts_with("m7t-")
                         && !r.case.starts_with("dq4-")
                         && !r.case.starts_with("q12-")
+                        && !r.case.starts_with("q15-")
                 }
                 p => r.case.starts_with(p),
             })
@@ -221,6 +222,7 @@ fn v1_suite() {
     assert_eq!(census("m7t-"), (31, 12), "tests/v1 M7T row census");
     assert_eq!(census("dq4-"), (7, 0), "tests/v1 reject-offset row census");
     assert_eq!(census("q12-"), (72, 60), "tests/v1 q12 row census");
+    assert_eq!(census("q15-"), (4, 0), "tests/v1 q15 row census");
     let mut cases: Vec<&str> = rows.iter().map(|r| r.case.as_str()).collect();
     cases.dedup();
     for case in &cases {
