@@ -150,28 +150,35 @@ workflows:
     cd "{{ ROOT }}" && zizmor --no-progress --color never $([ -n "${GH_TOKEN:-}" ] || echo --offline) .github
     @echo "gate: workflows ok"
 
-# Prints `pin current latest status`; rc 1 = drift (bump procedure: .claude/rules/rust.md),
-# rc 2 = a failed or empty upstream answer; CKC_OUTDATED_ROOT = tree holding the locks.
+# Prints `pin current latest status [detail]`; rc 1 = drift (bump procedure: .claude/rules/rust.md),
+# rc 2 = a failed or empty upstream answer or a failed dry run; CKC_OUTDATED_ROOT = tree holding rust/ (locks + manifests).
+# held = a crate with a newer upstream version that cargo's resolver cannot select under the
+# locked graph's requirements; `by` names its direct dependents in the locks.
 # Pin drift: every lock pin vs upstream latest (crates.io, GitHub releases, rustup).
 outdated:
     #!/usr/bin/env bash
     set -uo pipefail
     R="{{ env('CKC_OUTDATED_ROOT', ROOT) }}/rust"
-    pins=0 drift=0 errors=0
-    for f in Cargo.lock ckc-kani-harness/Cargo.lock tools.lock verus.lock kani.lock; do
+    pins=0 drift=0 held=0 errors=0
+    for f in Cargo.toml Cargo.lock ckc-kani-harness/Cargo.toml ckc-kani-harness/Cargo.lock tools.lock verus.lock kani.lock; do
         [ -s "$R/$f" ] || { echo "outdated: missing $R/$f" >&2; exit 2; }
     done
     tok="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
     get() { curl -sSfL --retry 3 --max-time 60 -A 'cnl-ckc-outdated (https://github.com/eturkes/cnl-ckc)' "$@"; }
-    latest_tag() { # owner/repo → tag of the latest GitHub release
-        if [ -n "$tok" ]; then get -H "Authorization: Bearer $tok" "https://api.github.com/repos/$1/releases/latest"
-        else get "https://api.github.com/repos/$1/releases/latest"; fi | jq -r '.tag_name // empty'
+    latest_tag() { # owner/repo → tag of the latest GitHub release; nothing on a failed request
+        local tag
+        tag=$(if [ -n "$tok" ]; then get -H "Authorization: Bearer $tok" "https://api.github.com/repos/$1/releases/latest"
+            else get "https://api.github.com/repos/$1/releases/latest"; fi | jq -r '.tag_name // empty') && printf '%s\n' "$tag"
     }
-    report() { # pin current latest
+    tab=$'\t'
+    report() { # pin current latest [status detail]
         pins=$((pins + 1))
-        if [ -z "$3" ]; then errors=$((errors + 1)); printf '%s\t%s\t?\terror\n' "$1" "$2"
-        elif [ "$2" = "$3" ]; then printf '%s\t%s\t%s\tok\n' "$1" "$2" "$3"
-        else drift=$((drift + 1)); printf '%s\t%s\t%s\tdrift\n' "$1" "$2" "$3"; fi
+        local latest=$3 status=${4:-drift} detail=${5:-}
+        if [ -z "$latest" ]; then errors=$((errors + 1)) latest='?' status=error detail=
+        elif [ "$2" = "$latest" ]; then status=ok detail=
+        elif [ "$status" = held ]; then held=$((held + 1))
+        else drift=$((drift + 1)); fi
+        printf '%s\t%s\t%s\t%s%s\n' "$1" "$2" "$latest" "$status" "${detail:+$tab$detail}"
     }
     lockval() { awk -F'\t' -v k="$2" '$1==k{print $2}' "$R/$1"; }
     # Verifier family = one unit keyed on the Verus release: its rustc, Z3 and
@@ -183,20 +190,54 @@ outdated:
         [ "$tool" = tool ] && continue
         case "$url" in
             https://github.com/*) latest=$(latest_tag "$(cut -d/ -f4-5 <<< "$url")" | sed 's/^v//') ;;
-            https://static.rust-lang.org/rustup/*) latest=$(get https://static.rust-lang.org/rustup/release-stable.toml | sed -n "s/^version = '\(.*\)'$/\1/p") ;;
+            https://static.rust-lang.org/rustup/*) latest=$(get https://static.rust-lang.org/rustup/release-stable.toml | sed -n "s/^version = '\(.*\)'$/\1/p") || latest= ;;
             *) latest= ;;
         esac
         report "tool:$tool" "$version" "$latest"
     done < "$R/tools.lock"
+    # Fixable = what `cargo update` would move: a dry run per workspace from cwd `/` with an
+    # empty CARGO_HOME, so neither the vendored-source config nor a user config applies.
+    tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+    fixable=
+    for m in Cargo.toml ckc-kani-harness/Cargo.toml; do
+        if out=$(cd / && CARGO_HOME="$tmp/cargo" CARGO_TERM_COLOR=never RUSTUP_TOOLCHAIN="$(lockval verus.lock rustc_toolchain)" \
+            cargo update --dry-run --manifest-path "$R/$m" 2>&1); then
+            # A row cargo would change: `name version to <v>` (Updating, Downgrading) or
+            # `name version removed` (Removing = consolidated into another locked version).
+            fixable+=$(sed -n -e 's/^ *\(Updating\|Downgrading\) \([^ ]*\) v\([^ ]*\) -> v\([^ ]*\).*/\2 \3 to \4/p' \
+                -e 's/^ *Removing \([^ ]*\) v\([^ ]*\).*/\1 \2 removed/p' <<< "$out")$'\n'
+        else
+            errors=$((errors + 1)); printf 'cargo-update:%s\t-\t?\terror\n' "$m"; sed 's/^/  /' <<< "$out" >&2
+        fi
+    done
+    # Direct dependents per locked crate: `name version dependent`; an unqualified entry
+    # names the one version of that crate in its own lock (pass 1 per lock).
+    edges=$(for lock in "$R/Cargo.lock" "$R/ckc-kani-harness/Cargo.lock"; do
+        awk '
+            /^\[\[package\]\]/ { n = ""; f = 0; next }
+            /^name = / { n = $3; gsub(/"/, "", n); next }
+            /^version = / { if (n != "") { v = $3; gsub(/"/, "", v); if (FNR == NR) only[n] = v }; next }
+            FNR == NR { next }
+            /^dependencies = \[/ { f = 1; next }
+            f && /^\]/ { f = 0; next }
+            f { d = $0; gsub(/^[ \t]*"|",?[ \t]*$/, "", d); split(d, a, " "); print a[1], (a[2] != "" ? a[2] : only[a[1]]), n " " v }
+        ' "$lock" "$lock"
+    done | sort -u)
     while read -r name version; do
         case "$name" in
             vstd|verus_*) printf 'crate:%s\t%s\t-\tfollows verus\n' "$name" "$version"; continue ;;
         esac
-        report "crate:$name" "$version" "$(get "https://crates.io/api/v1/crates/$name" | jq -r '.crate.max_stable_version // empty')"
+        latest=$(get "https://crates.io/api/v1/crates/$name" | jq -r '.crate.max_stable_version // empty') || latest=
+        fix=$(awk -v n="$name" -v v="$version" '$1==n && $2==v {$1 = $2 = ""; sub(/^ +/, ""); print; exit}' <<< "$fixable")
+        if [ -n "$fix" ]; then report "crate:$name" "$version" "$latest" drift "$fix"
+        else
+            by=$(awk -v n="$name" -v v="$version" '$1==n && $2==v {print $3 " " $4}' <<< "$edges" | paste -sd, - | sed 's/,/, /g')
+            report "crate:$name" "$version" "$latest" held "by ${by:-the workspace}"
+        fi
         sleep 1 # crates.io crawler policy: at most one request per second
     done < <(awk -F' = ' '$1=="name"{n=$2} $1=="version"{v=$2} $1=="source" && $2 ~ /crates\.io-index/{print n, v}' \
         "$R/Cargo.lock" "$R/ckc-kani-harness/Cargo.lock" | tr -d '"' | sort -u)
-    echo "outdated: $pins pins, $drift drift, $errors errors"
+    echo "outdated: $pins pins, $drift drift, $held held, $errors errors"
     [ "$errors" -eq 0 ] || exit 2
     [ "$drift" -eq 0 ] || exit 1
 
