@@ -6237,6 +6237,31 @@ proof fn args_bytes_nonempty(terms: Seq<Term>)
     reveal_with_fuel(ckc_spec::v1text::args_bytes, 2);
 }
 
+// Version atoms `v1`..`v3` print bare: their first canonical byte is `v`, so a
+// quote at a version slot is the R9 divergence (q17).
+proof fn version_atom_first(name: Seq<u8>)
+    requires
+        name == ckc_spec::v1text::ascii("v1"@) || name == ckc_spec::v1text::ascii("v2"@) || name
+            == ckc_spec::v1text::ascii("v3"@),
+    ensures
+        ckc_spec::v1text::atom_bytes(name).len() > 0,
+        ckc_spec::v1text::atom_bytes(name)[0] == 0x76,
+{
+    reveal_strlit("v1");
+    reveal_strlit("v2");
+    reveal_strlit("v3");
+    reveal(ckc_spec::v1text::ascii);
+    reveal(ckc_spec::v1text::atom_bytes);
+    reveal(ckc_spec::v1text::atom_bare);
+    reveal(ckc_spec::v1text::alpha_bare);
+    reveal(ckc_spec::v1text::all_in);
+    reveal(ckc_spec::v1text::is_lower_b);
+    reveal(ckc_spec::v1text::is_alnum_b);
+    reveal(ckc_spec::v1text::is_digit_b);
+    assert(name.len() == 2);
+    assert(ckc_spec::v1text::alpha_bare(name));
+}
+
 proof fn atom_bytes_first_safe(name: Seq<u8>)
     ensures
         ckc_spec::v1text::atom_bytes(name).len() > 0,
@@ -11873,6 +11898,18 @@ pub fn parse_answers(
         ),
         None => None,
     };
+    if before_pos_5 < bytes.len() && bytes[before_pos_5] == 0x27 {
+        proof {
+            if let Some(_) = expected@ {
+                let g = version_expected.unwrap();
+                version_atom_first(g.name);
+                assert(bytes@.subrange(before_pos_5 as int, g.end as int)[0]
+                    == bytes@[before_pos_5 as int]);
+            }
+        }
+        raise_at(at, before_pos_5, bytes.len());
+        return None;
+    }
     let version = match cursor_atom(bytes, &mut cursor, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -12637,6 +12674,25 @@ fn parse_traces_qsha(
         None => None,
     };
     let version_at = guided.cursor.pos;
+    if version_at < bytes.len() && bytes[version_at] == 0x27 {
+        proof {
+            if let Some(_) = expected@ {
+                let g = guided.guide@.unwrap();
+                reveal(guided_cursor_ok);
+                parts_part_ready(bytes@, g.parts, g.index, &guided.cursor);
+                version_atom_first(ckc_spec::v1text::ascii("v1"@));
+                assert(g.parts[g.index] == ckc_spec::v1text::atom_bytes(
+                    ckc_spec::v1text::ascii("v1"@),
+                ));
+                assert(bytes@.subrange(
+                    version_at as int,
+                    version_at as int + g.parts[g.index].len(),
+                )[0] == bytes@[version_at as int]);
+            }
+        }
+        raise_at(at, version_at, bytes.len());
+        return None;
+    }
     let version = match guided_atom(bytes, guided, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
@@ -14073,6 +14129,25 @@ fn parse_query_record_prefix(
         None => None,
     };
     let version_at = guided.cursor.pos;
+    if version_at < bytes.len() && bytes[version_at] == 0x27 {
+        proof {
+            if let Some(q) = expected@ {
+                let g = guided.guide@.unwrap();
+                reveal(guided_cursor_ok);
+                parts_part_ready(bytes@, g.parts, g.index, &guided.cursor);
+                version_atom_first(query_version_name(q.version));
+                assert(g.parts[g.index] == ckc_spec::v1text::atom_bytes(
+                    query_version_name(q.version),
+                ));
+                assert(bytes@.subrange(
+                    version_at as int,
+                    version_at as int + g.parts[g.index].len(),
+                )[0] == bytes@[version_at as int]);
+            }
+        }
+        raise_at(at, version_at, bytes.len());
+        return None;
+    }
     let version = match guided_atom(bytes, guided, Ghost(version_expected), at) {
         Some(atom) => atom,
         None => return None,
