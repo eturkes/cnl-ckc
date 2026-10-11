@@ -271,7 +271,7 @@ current when the document still matches the version it was recorded
 against, and outdated otherwise. A document whose current version
 carries both an approved and a rejected decision reads contested.
 
-## Compiled Prolog schema (v1, v2)
+## Compiled Prolog schema (v1, v2, v3)
 
 Status: v1 is **frozen**. Schema v2 adds two temporal annotation
 predicates, widens the document record by a table digest, and keeps

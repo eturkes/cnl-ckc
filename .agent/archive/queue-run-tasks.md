@@ -25,3 +25,13 @@
 
 - [x] 35ad5f12 M7T schema v2 temporal annotations: interval + recurrence annotations compiled, certified, queried and rendered; CDC corpus on v2 (12 re-authored, 8 annotated unchanged, 317 header-only); contract `.agent/archive/contracts/m7t.md`.
 - [x] df87ec51 K1-diag R9 reject offsets: every digest site (quote-aware) + annotation search skipping comments and quoted atoms; tests/v1 dq4-k1-001..007.
+
+## 342dc2a6..close
+
+- [x] dba75f60 Q14 guideline page "Time words" section: the `temporal.tsv` words the compiler reads as units, relations or spacing frames (K5); contract `.agent/archive/contracts/q14.md`.
+- [x] 68bfba68 Q12 schema v3: guideline_frequency/5, guideline_order/4, guideline_recurrence_window/7 compiled, certified, queried and rendered, guideline_range/3 reserved (user rulings: counts per period, recurrence window, unquantified order); parse_doc_declarations rebuilt pair by pair (the Verus rlimit-count crash); contract `.agent/archive/contracts/q12.md`.
+- [x] 68bafb80 Q13 comparison `about` + guideline_range/3 ranged minimum (user ruling: no tolerance); 5 CDC documents re-authored; contract `.agent/archive/contracts/q13.md`.
+- [x] 4a12806a Q15 R9 offsets at answers/traces version atoms; contract `.agent/archive/contracts/q15.md`.
+- [x] dd631018 Q16 rust.md binding rule names the six `cells_ok` bindings as the ruled exception; contract `.agent/archive/contracts/q16.md`.
+- [x] e6287a30 Q17 R9 offsets at quoted version atoms; contract `.agent/archive/contracts/q17.md`.
+- [x] a8cd22a8 Q18 R9 offsets at every fixed-name slot (record names + document predicate names, misspelled or quoted); contract `.agent/archive/contracts/q18.md`.
