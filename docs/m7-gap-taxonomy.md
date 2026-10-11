@@ -22,18 +22,18 @@ the first class to implement. Each class is a separate feature unit.
 | Class | Observed gap | CDC documents | Sample statements | Disposition |
 | --- | --- | --- | --- | --- |
 | temporal | durations, frequencies, deadlines, sequencing | 81 | 44 | implemented: schema v2 interval and recurrence annotations; schema v3 count per period, scoped recurrence, order, approximate bound and ranged minimum (`docs/REFERENCE.md` § Schema v2, § Schema v3) |
-| strength | recommendation grade, preference of one option over another | 63 | 49 | schema v2: graded recommendation record |
-| regimen-choice | one of several permitted options | — | 10 | ACE extension or schema v2 disjunction |
-| numeric-threshold | numeric comparison, ranges, unit conversion | — | 27 | schema v2: comparison built-ins |
-| dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | schema v2: arithmetic built-ins |
-| derived-measure | quantities computed from measurements | — | 3 | schema v2: arithmetic built-ins |
+| strength | recommendation grade, preference of one option over another | 63 | 49 | new schema version: graded recommendation record |
+| regimen-choice | one of several permitted options | — | 10 | ACE extension or new schema version: disjunction |
+| numeric-threshold | numeric comparison, ranges, unit conversion | — | 27 | new schema version: comparison built-ins |
+| dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | new schema version: arithmetic built-ins |
+| derived-measure | quantities computed from measurements | — | 3 | new schema version: arithmetic built-ins |
 | probability | numeric likelihood, probabilistic update | 53 | 0 | companion target (ProbLog), deferred |
 | condition-scope | exceptions and prerequisites | 96 | — | ACE extension (exception clauses) |
 | quantification | set scope, example generalized to rule | 68 | — | ACE extension (group coordination) |
 | relation-structure | cause and purpose links | 209 | — | authoring fidelity, ACE extension |
 
-Temporal status: the CDC guideline compiles under schema v3, and 51 of
-its 337 documents carry annotations. A census of the 81 documents with
+Temporal status: 51 of the CDC guideline's 337 documents carry
+annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
 whose sources state a bound that schema v2 can carry. All 12
 were re-authored and now compile with typed annotations. The other 69
@@ -54,7 +54,7 @@ an approximate bound as the comparison `about` (`cdc2022-opioid-s59-06`,
 `periodically`) stay recorded losses by user ruling. A relation other than before or
 after without a quantity (`during a visit`), a window anchored on a
 start or end point that the source does not name, and a measured
-number such as `3 d` stay outside schema v3.
+number such as `3 d` stay outside the schema.
 
 The CDC counts record what the projections lost or approximated, not
 proven limits of v1: v1 already carries Horn prerequisites and

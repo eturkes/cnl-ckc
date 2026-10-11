@@ -58,7 +58,7 @@
 % v1 stays frozen: a v1 compile projects onto it byte for byte, and only the
 % explicit `v2` or `v3` selector adds annotations. The v1 path lives under "v1 schema
 % projection" near the end of this file and is documented in docs/REFERENCE.md
-% "Compiled Prolog schema (v1, v2, v3)". v1
+% "Compiled Prolog schema". v1
 % admits copula/ground facts and Horn rules plus modal/classical-negation
 % operator wrappers (reified as guideline_operator/3 edges over context
 % ids), consequent currying, antecedent Horn splits over one disjunction,
@@ -1556,7 +1556,7 @@ v2_record(Record0, Record) :-
    forbidden_operator(Pos,naf,S), deferred_operator(Pos,Op,S),
    naf_shape(Conds), naf_variable_not_bound, naf_local_escape,
    invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
-   See docs/REFERENCE.md "Compiled Prolog schema (v1, v2, v3)". */
+   See docs/REFERENCE.md "Compiled Prolog schema". */
 
 /* Uniform declaration block (F2): every v1 document declares all nine
    indicators regardless of population. */

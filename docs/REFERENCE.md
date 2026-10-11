@@ -215,7 +215,7 @@ each side. A file that breaks these rules stops the render. Whether
 an alignment is helpful is a judgment for the reviewer, who sees it
 on the page beside the texts it describes.
 
-A guideline under schema v2 or v3 shows its time limits in two places.
+A guideline with a `temporal.tsv` table shows its time limits in two places.
 A document page with a typed time limit lists the limits that the
 compiler read from its ACE text, in the table "Timing as compiled".
 Under v3 the table also lists each order with no stated time, each
@@ -271,13 +271,13 @@ current when the document still matches the version it was recorded
 against, and outdated otherwise. A document whose current version
 carries both an approved and a rejected decision reads contested.
 
-## Compiled Prolog schema (v1, v2, v3)
+## Compiled Prolog schema
 
 Status: v1 is **frozen**. Schema v2 adds two temporal annotation
 predicates, widens the document record by a table digest, and keeps
 every v1 clause shape (see Schema v2 below). Schema v3 adds four more
 predicates and keeps every v2 shape (see Schema v3 below). A
-guideline selects v2 or v3 with the header of its `temporal.tsv`
+guideline selects its version with the header of its `temporal.tsv`
 table. Every document of that guideline then compiles under that
 version. A guideline without the table compiles under v1, byte for
 byte. The predicate set below is the public

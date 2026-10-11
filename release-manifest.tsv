@@ -1,5 +1,5 @@
 meta	schema	v3
-meta	compiler	c041f3eb286d20a3b4768dd127e234f0f604378bbe62d04eb1439bd97a4fa129
+meta	compiler	9e9648a423dcb65f1fe69ba7242fb75c710efb42ad5f2a35e19aa425ade52e37
 meta	base-lexicon	2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec
 meta	swipl	9.2.9
 meta	verify	sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt
@@ -10,7 +10,7 @@ meta	generated	release-manifest.tsv
 meta	generated	manifest-sha256.txt
 meta	generated	tagmanifest-sha256.txt
 member	NOTICE	d9ed734ad82b5c34f60d7d95513d3fce86ef5a03620fcfa2f8d835a55eadb361	1401
-member	README-dist.md	683d7fc01e2e814dc6b63fb4876edff8c20e9906bd81a1116bd65667f020c5c5	35760
+member	README-dist.md	e73166f0ca83edd77a8897280064911639b7431d320cc46a8192ae9e365473ba	35750
 member	bagit.txt	1712ecfb074bf29c4188ad3421032509159a09739fd604f8fe57038b4ddefcc9	54
 member	data/guidelines/cdc-2022-opioid/README.md	07250f2516f3812a4866066d4967c22de021f32c7409d7c5f31b450b818d0c6b	12854
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp01.ace	f03a66470307db0b5004dcda583ae54d8f91ba03d9c9c0033c67a92f7cc88568	164
