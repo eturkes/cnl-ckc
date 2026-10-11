@@ -35,6 +35,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s.
 - [ ] Q5 M7 next gap class = strength (user pick): its own fresh MAINTAIN session; remaining classes = `docs/m7-gap-taxonomy.md`.
+- [ ] N8 pinned Verus predates interpreter soundness fixes (queue-run find): waits on the first stable Verus release holding verus-lang/verus #3046, #3049, #3108, #3126 (contract on `wt/n8`).
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling).
 - Deferral queue = `.agent/deferred.md` (each row above + ruled deferrals; one line + acceptance check each).
 

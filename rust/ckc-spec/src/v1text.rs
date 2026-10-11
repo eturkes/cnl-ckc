@@ -116,7 +116,7 @@ pub open spec fn uhex4(v: int) -> Seq<u8> {
 }
 
 // Quoted-content escape law (probe-pinned).
-// `\u{5C}` spells the backslash: verusfmt 0.7.2's lexer reads a literal that
+// `\u{5C}` spells the backslash: verusfmt's lexer reads a literal that
 // ends in an escaped backslash as unterminated (verus.pest `string`).
 pub open spec fn esc_byte(b: u8) -> Seq<u8> {
     if b == 0x5C {
