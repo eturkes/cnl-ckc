@@ -11845,10 +11845,25 @@ pub fn parse_answers(
         ),
         None => None,
     };
-    let wrapper = match cursor_atom(bytes, &mut cursor, Ghost(wrapper_expected), at) {
+    let wrapper_slot = cursor.pos;
+    let mut wrapper_probe = *at;
+    let wrapper = match cursor_atom(
+        bytes,
+        &mut cursor,
+        Ghost(wrapper_expected),
+        &mut wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, wrapper_slot, b"$guideline_answers", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, wrapper_probe, bytes.len());
     proof {
         if let Some(a) = expected@ {
             advance_answers_progress(bytes@, a, 3, before_pos_3, before_3, &cursor);
@@ -11862,6 +11877,11 @@ pub fn parse_answers(
         assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_answers"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, wrapper_slot, b"$guideline_answers", 0x28),
+            bytes.len(),
+        );
         return None;
     }
     let before_pos_4 = cursor.pos;
@@ -11954,16 +11974,36 @@ pub fn parse_answers(
         Some(a) => Some(answers_atom_expected(bytes@, a, 7, &cursor, a.qid, 0x2c, bytes.len())),
         None => None,
     };
-    let record_qid = match cursor_atom(bytes, &mut cursor, Ghost(record_qid_expected), at) {
+    let record_qid_slot = cursor.pos;
+    let mut record_qid_probe = *at;
+    let record_qid = match cursor_atom(
+        bytes,
+        &mut cursor,
+        Ghost(record_qid_expected),
+        &mut record_qid_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, record_qid_slot, line_qid.value.as_slice(), 0x2c),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, record_qid_probe, bytes.len());
     proof {
         if let Some(a) = expected@ {
             advance_answers_progress(bytes@, a, 7, before_pos_7, before_7, &cursor);
         }
     }
     if !vec_equal(&line_qid.value, &record_qid.name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, record_qid_slot, line_qid.value.as_slice(), 0x2c),
+            bytes.len(),
+        );
         return None;
     }
     let before_pos_8 = cursor.pos;
@@ -12000,10 +12040,25 @@ pub fn parse_answers(
         ),
         None => None,
     };
-    let query_wrapper = match cursor_atom(bytes, &mut cursor, Ghost(query_wrapper_expected), at) {
+    let query_wrapper_slot = cursor.pos;
+    let mut query_wrapper_probe = *at;
+    let query_wrapper = match cursor_atom(
+        bytes,
+        &mut cursor,
+        Ghost(query_wrapper_expected),
+        &mut query_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, query_wrapper_slot, b"query_sha256", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, query_wrapper_probe, bytes.len());
     proof {
         if let Some(a) = expected@ {
             advance_answers_progress(bytes@, a, 9, before_pos_9, before_9, &cursor);
@@ -12017,6 +12072,11 @@ pub fn parse_answers(
         assert(query_wrapper_name@ == ckc_spec::v1text::ascii("query_sha256"@));
     }
     if !vec_slice_equal(&query_wrapper.name, query_wrapper_name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, query_wrapper_slot, b"query_sha256", 0x28),
+            bytes.len(),
+        );
         return None;
     }
     let before_pos_10 = cursor.pos;
@@ -12117,10 +12177,21 @@ pub fn parse_answers(
         ),
         None => None,
     };
-    let result_wrapper = match cursor_atom(bytes, &mut cursor, Ghost(result_wrapper_expected), at) {
+    let result_wrapper_slot = cursor.pos;
+    let mut result_wrapper_probe = *at;
+    let result_wrapper = match cursor_atom(
+        bytes,
+        &mut cursor,
+        Ghost(result_wrapper_expected),
+        &mut result_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, result_wrapper_slot, b"result", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, result_wrapper_probe, bytes.len());
     proof {
         if let Some(a) = expected@ {
             advance_answers_progress(bytes@, a, 14, before_pos_14, before_14, &cursor);
@@ -12134,6 +12205,7 @@ pub fn parse_answers(
         assert(result_wrapper_name@ == ckc_spec::v1text::ascii("result"@));
     }
     if !vec_slice_equal(&result_wrapper.name, result_wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, result_wrapper_slot, b"result", 0x28), bytes.len());
         return None;
     }
     let before_pos_15 = cursor.pos;
@@ -12652,10 +12724,20 @@ fn parse_traces_qsha(
         Some(_) => Some((ckc_spec::v1text::ascii("$guideline_traces"@), 0x28u8)),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
+    let wrapper_slot = guided.cursor.pos;
+    let mut wrapper_probe = *at;
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), &mut wrapper_probe) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, wrapper_slot, b"$guideline_traces", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, wrapper_probe, bytes.len());
     let wrapper_name: &[u8] = b"$guideline_traces";
     proof {
         reveal_strlit("$guideline_traces");
@@ -12664,6 +12746,7 @@ fn parse_traces_qsha(
         assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_traces"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, wrapper_slot, b"$guideline_traces", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -12715,11 +12798,31 @@ fn parse_traces_qsha(
         Some(t) => Some((t.qid, 0x2cu8)),
         None => None,
     };
-    let record_qid = match guided_atom(bytes, guided, Ghost(record_qid_expected), at) {
+    let record_qid_slot = guided.cursor.pos;
+    let mut record_qid_probe = *at;
+    let record_qid = match guided_atom(
+        bytes,
+        guided,
+        Ghost(record_qid_expected),
+        &mut record_qid_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, record_qid_slot, line_qid.value.as_slice(), 0x2c),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, record_qid_probe, bytes.len());
     if !vec_equal(&line_qid.value, &record_qid.name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, record_qid_slot, line_qid.value.as_slice(), 0x2c),
+            bytes.len(),
+        );
         return None;
     }
     if !guided_byte(bytes, guided, 0x2c, at) {
@@ -12729,10 +12832,25 @@ fn parse_traces_qsha(
         Some(_) => Some((ckc_spec::v1text::ascii("query_sha256"@), 0x28u8)),
         None => None,
     };
-    let query_wrapper = match guided_atom(bytes, guided, Ghost(query_wrapper_expected), at) {
+    let query_wrapper_slot = guided.cursor.pos;
+    let mut query_wrapper_probe = *at;
+    let query_wrapper = match guided_atom(
+        bytes,
+        guided,
+        Ghost(query_wrapper_expected),
+        &mut query_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, query_wrapper_slot, b"query_sha256", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, query_wrapper_probe, bytes.len());
     let query_wrapper_name: &[u8] = b"query_sha256";
     proof {
         reveal_strlit("query_sha256");
@@ -12741,6 +12859,11 @@ fn parse_traces_qsha(
         assert(query_wrapper_name@ == ckc_spec::v1text::ascii("query_sha256"@));
     }
     if !vec_slice_equal(&query_wrapper.name, query_wrapper_name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, query_wrapper_slot, b"query_sha256", 0x28),
+            bytes.len(),
+        );
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -12824,10 +12947,20 @@ fn parse_traces_asha(
         Some(_) => Some((ckc_spec::v1text::ascii("answers_sha256"@), 0x28u8)),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
+    let wrapper_slot = guided.cursor.pos;
+    let mut wrapper_probe = *at;
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), &mut wrapper_probe) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, wrapper_slot, b"answers_sha256", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, wrapper_probe, bytes.len());
     let wrapper_name: &[u8] = b"answers_sha256";
     proof {
         reveal_strlit("answers_sha256");
@@ -12836,6 +12969,7 @@ fn parse_traces_asha(
         assert(wrapper_name@ == ckc_spec::v1text::ascii("answers_sha256"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, wrapper_slot, b"answers_sha256", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -12924,10 +13058,16 @@ fn parse_traces_result(
         Some(_) => Some((ckc_spec::v1text::ascii("result"@), 0x28u8)),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
+    let wrapper_slot = guided.cursor.pos;
+    let mut wrapper_probe = *at;
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), &mut wrapper_probe) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, wrapper_slot, b"result", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, wrapper_probe, bytes.len());
     let wrapper_name: &[u8] = b"result";
     proof {
         reveal_strlit("result");
@@ -12936,6 +13076,7 @@ fn parse_traces_result(
         assert(wrapper_name@ == ckc_spec::v1text::ascii("result"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, wrapper_slot, b"result", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -14107,10 +14248,20 @@ fn parse_query_record_prefix(
         Some(_) => Some((ckc_spec::v1text::ascii("$guideline_query"@), 0x28u8)),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
+    let wrapper_slot = guided.cursor.pos;
+    let mut wrapper_probe = *at;
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), &mut wrapper_probe) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, wrapper_slot, b"$guideline_query", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, wrapper_probe, bytes.len());
     let wrapper_name: &[u8] = b"$guideline_query";
     proof {
         reveal_strlit("$guideline_query");
@@ -14119,6 +14270,7 @@ fn parse_query_record_prefix(
         assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_query"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, wrapper_slot, b"$guideline_query", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -14191,11 +14343,31 @@ fn parse_query_record_prefix(
         Some(q) => Some((q.qid, 0x2cu8)),
         None => None,
     };
-    let record_qid = match guided_atom(bytes, guided, Ghost(record_qid_expected), at) {
+    let record_qid_slot = guided.cursor.pos;
+    let mut record_qid_probe = *at;
+    let record_qid = match guided_atom(
+        bytes,
+        guided,
+        Ghost(record_qid_expected),
+        &mut record_qid_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, record_qid_slot, line_qid.value.as_slice(), 0x2c),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, record_qid_probe, bytes.len());
     if !vec_equal(&line_qid.value, &record_qid.name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, record_qid_slot, line_qid.value.as_slice(), 0x2c),
+            bytes.len(),
+        );
         return None;
     }
     if !guided_byte(bytes, guided, 0x2c, at) {
@@ -14205,10 +14377,25 @@ fn parse_query_record_prefix(
         Some(_) => Some((ckc_spec::v1text::ascii("ace_sha256"@), 0x28u8)),
         None => None,
     };
-    let ace_wrapper = match guided_atom(bytes, guided, Ghost(ace_wrapper_expected), at) {
+    let ace_wrapper_slot = guided.cursor.pos;
+    let mut ace_wrapper_probe = *at;
+    let ace_wrapper = match guided_atom(
+        bytes,
+        guided,
+        Ghost(ace_wrapper_expected),
+        &mut ace_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, ace_wrapper_slot, b"ace_sha256", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, ace_wrapper_probe, bytes.len());
     let ace_wrapper_name: &[u8] = b"ace_sha256";
     proof {
         reveal_strlit("ace_sha256");
@@ -14217,6 +14404,7 @@ fn parse_query_record_prefix(
         assert(ace_wrapper_name@ == ckc_spec::v1text::ascii("ace_sha256"@));
     }
     if !vec_slice_equal(&ace_wrapper.name, ace_wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, ace_wrapper_slot, b"ace_sha256", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -14251,10 +14439,21 @@ fn parse_query_record_prefix(
         Some(_) => Some((ckc_spec::v1text::ascii("ulex"@), 0x28u8)),
         None => None,
     };
-    let ulex_wrapper = match guided_atom(bytes, guided, Ghost(ulex_wrapper_expected), at) {
+    let ulex_wrapper_slot = guided.cursor.pos;
+    let mut ulex_wrapper_probe = *at;
+    let ulex_wrapper = match guided_atom(
+        bytes,
+        guided,
+        Ghost(ulex_wrapper_expected),
+        &mut ulex_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, ulex_wrapper_slot, b"ulex", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, ulex_wrapper_probe, bytes.len());
     let ulex_wrapper_name: &[u8] = b"ulex";
     proof {
         reveal_strlit("ulex");
@@ -14263,6 +14462,7 @@ fn parse_query_record_prefix(
         assert(ulex_wrapper_name@ == ckc_spec::v1text::ascii("ulex"@));
     }
     if !vec_slice_equal(&ulex_wrapper.name, ulex_wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, ulex_wrapper_slot, b"ulex", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -14402,16 +14602,29 @@ fn parse_temporal_tail(
             assert(name_expected.unwrap().1[0][0] == 0x28);
         }
     }
-    let tag = match parts_guided_atom(bytes, guided, Ghost(0x28u8), Ghost(name_expected), at) {
+    let tag_slot = guided.cursor.pos;
+    let mut tag_probe = *at;
+    let tag = match parts_guided_atom(
+        bytes,
+        guided,
+        Ghost(0x28u8),
+        Ghost(name_expected),
+        &mut tag_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, tag_slot, b"temporal", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, tag_probe, bytes.len());
     if !vec_slice_equal(&tag.name, temporal_name) {
         proof {
             if expected@ is Some {
                 assert(false);
             }
         }
+        raise_at(at, fixed_reject_at(bytes, tag_slot, b"temporal", 0x28), bytes.len());
         return None;
     }
     let ghost after_open1 = match expected@ {
@@ -14454,16 +14667,29 @@ fn parse_temporal_tail(
             assert(sha_expected.unwrap().1[0][0] == 0x28);
         }
     }
-    let sha = match parts_guided_atom(bytes, guided, Ghost(0x28u8), Ghost(sha_expected), at) {
+    let sha_slot = guided.cursor.pos;
+    let mut sha_probe = *at;
+    let sha = match parts_guided_atom(
+        bytes,
+        guided,
+        Ghost(0x28u8),
+        Ghost(sha_expected),
+        &mut sha_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, sha_slot, b"sha256", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, sha_probe, bytes.len());
     if !vec_slice_equal(&sha.name, sha_name) {
         proof {
             if expected@ is Some {
                 assert(false);
             }
         }
+        raise_at(at, fixed_reject_at(bytes, sha_slot, b"sha256", 0x28), bytes.len());
         return None;
     }
     let ghost after_open2 = match expected@ {
@@ -14744,10 +14970,23 @@ fn parse_record_ulex(
             assert(tag_expected.unwrap().1[0][0] == tag_next);
         }
     }
-    let tag = match parts_guided_atom(bytes, guided, Ghost(tag_next), Ghost(tag_expected), at) {
+    let tag_slot = guided.cursor.pos;
+    let mut tag_probe = *at;
+    let tag = match parts_guided_atom(
+        bytes,
+        guided,
+        Ghost(tag_next),
+        Ghost(tag_expected),
+        &mut tag_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, tag_slot, b"none", 0x29), bytes.len());
+            raise_at(at, fixed_reject_at(bytes, tag_slot, b"sha256", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, tag_probe, bytes.len());
     let none_name: &[u8] = b"none";
     let sha_name: &[u8] = b"sha256";
     proof {
@@ -14877,6 +15116,8 @@ fn parse_record_ulex(
                 assert(false);
             }
         }
+        raise_at(at, fixed_reject_at(bytes, tag_slot, b"none", 0x29), bytes.len());
+        raise_at(at, fixed_reject_at(bytes, tag_slot, b"sha256", 0x28), bytes.len());
         return None;
     }
     proof {
@@ -15403,10 +15644,20 @@ fn parse_query_projection(
         Some(_) => Some((ckc_spec::v1text::ascii("$guideline_query_projection"@), 0x28u8)),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
+    let wrapper_slot = guided.cursor.pos;
+    let mut wrapper_probe = *at;
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), &mut wrapper_probe) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, wrapper_slot, b"$guideline_query_projection", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, wrapper_probe, bytes.len());
     let wrapper_name: &[u8] = b"$guideline_query_projection";
     proof {
         reveal_strlit("$guideline_query_projection");
@@ -15415,6 +15666,11 @@ fn parse_query_projection(
         assert(wrapper_name@ == ckc_spec::v1text::ascii("$guideline_query_projection"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, wrapper_slot, b"$guideline_query_projection", 0x28),
+            bytes.len(),
+        );
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -15424,10 +15680,21 @@ fn parse_query_projection(
         Some(_) => Some((ckc_spec::v1text::ascii("goal"@), 0x28u8)),
         None => None,
     };
-    let goal_wrapper = match guided_atom(bytes, guided, Ghost(goal_wrapper_expected), at) {
+    let goal_wrapper_slot = guided.cursor.pos;
+    let mut goal_wrapper_probe = *at;
+    let goal_wrapper = match guided_atom(
+        bytes,
+        guided,
+        Ghost(goal_wrapper_expected),
+        &mut goal_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, goal_wrapper_slot, b"goal", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, goal_wrapper_probe, bytes.len());
     let goal_wrapper_name: &[u8] = b"goal";
     proof {
         reveal_strlit("goal");
@@ -15436,6 +15703,7 @@ fn parse_query_projection(
         assert(goal_wrapper_name@ == ckc_spec::v1text::ascii("goal"@));
     }
     if !vec_slice_equal(&goal_wrapper.name, goal_wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, goal_wrapper_slot, b"goal", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -15484,10 +15752,25 @@ fn parse_query_projection(
         Some(_) => Some((ckc_spec::v1text::ascii("answers"@), 0x28u8)),
         None => None,
     };
-    let answers_wrapper = match guided_atom(bytes, guided, Ghost(answers_wrapper_expected), at) {
+    let answers_wrapper_slot = guided.cursor.pos;
+    let mut answers_wrapper_probe = *at;
+    let answers_wrapper = match guided_atom(
+        bytes,
+        guided,
+        Ghost(answers_wrapper_expected),
+        &mut answers_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, answers_wrapper_slot, b"answers", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, answers_wrapper_probe, bytes.len());
     let answers_wrapper_name: &[u8] = b"answers";
     proof {
         reveal_strlit("answers");
@@ -15496,6 +15779,7 @@ fn parse_query_projection(
         assert(answers_wrapper_name@ == ckc_spec::v1text::ascii("answers"@));
     }
     if !vec_slice_equal(&answers_wrapper.name, answers_wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, answers_wrapper_slot, b"answers", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -17118,10 +17402,20 @@ fn parse_doc_record_prefix(
         Some(_) => Some((ckc_spec::v1text::ascii("guideline_document"@), 0x28u8)),
         None => None,
     };
-    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), at) {
+    let wrapper_slot = guided.cursor.pos;
+    let mut wrapper_probe = *at;
+    let wrapper = match guided_atom(bytes, guided, Ghost(wrapper_expected), &mut wrapper_probe) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, wrapper_slot, b"guideline_document", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, wrapper_probe, bytes.len());
     let wrapper_name: &[u8] = b"guideline_document";
     proof {
         reveal_strlit("guideline_document");
@@ -17130,6 +17424,11 @@ fn parse_doc_record_prefix(
         assert(wrapper_name@ == ckc_spec::v1text::ascii("guideline_document"@));
     }
     if !vec_slice_equal(&wrapper.name, wrapper_name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, wrapper_slot, b"guideline_document", 0x28),
+            bytes.len(),
+        );
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -17139,11 +17438,31 @@ fn parse_doc_record_prefix(
         Some(d) => Some((d.docid, 0x2cu8)),
         None => None,
     };
-    let record_docid = match guided_atom(bytes, guided, Ghost(record_docid_expected), at) {
+    let record_docid_slot = guided.cursor.pos;
+    let mut record_docid_probe = *at;
+    let record_docid = match guided_atom(
+        bytes,
+        guided,
+        Ghost(record_docid_expected),
+        &mut record_docid_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, record_docid_slot, line_docid.value.as_slice(), 0x2c),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, record_docid_probe, bytes.len());
     if !vec_equal(&line_docid.value, &record_docid.name) {
+        raise_at(
+            at,
+            fixed_reject_at(bytes, record_docid_slot, line_docid.value.as_slice(), 0x2c),
+            bytes.len(),
+        );
         return None;
     }
     if !guided_byte(bytes, guided, 0x2c, at) {
@@ -17153,10 +17472,25 @@ fn parse_doc_record_prefix(
         Some(_) => Some((ckc_spec::v1text::ascii("ace_sha256"@), 0x28u8)),
         None => None,
     };
-    let ace_wrapper = match guided_atom(bytes, guided, Ghost(ace_wrapper_expected), at) {
+    let ace_wrapper_slot = guided.cursor.pos;
+    let mut ace_wrapper_probe = *at;
+    let ace_wrapper = match guided_atom(
+        bytes,
+        guided,
+        Ghost(ace_wrapper_expected),
+        &mut ace_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(
+                at,
+                fixed_reject_at(bytes, ace_wrapper_slot, b"ace_sha256", 0x28),
+                bytes.len(),
+            );
+            return None;
+        },
     };
+    raise_at(at, ace_wrapper_probe, bytes.len());
     let ace_wrapper_name: &[u8] = b"ace_sha256";
     proof {
         reveal_strlit("ace_sha256");
@@ -17165,6 +17499,7 @@ fn parse_doc_record_prefix(
         assert(ace_wrapper_name@ == ckc_spec::v1text::ascii("ace_sha256"@));
     }
     if !vec_slice_equal(&ace_wrapper.name, ace_wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, ace_wrapper_slot, b"ace_sha256", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -17199,10 +17534,21 @@ fn parse_doc_record_prefix(
         Some(_) => Some((ckc_spec::v1text::ascii("ulex"@), 0x28u8)),
         None => None,
     };
-    let ulex_wrapper = match guided_atom(bytes, guided, Ghost(ulex_wrapper_expected), at) {
+    let ulex_wrapper_slot = guided.cursor.pos;
+    let mut ulex_wrapper_probe = *at;
+    let ulex_wrapper = match guided_atom(
+        bytes,
+        guided,
+        Ghost(ulex_wrapper_expected),
+        &mut ulex_wrapper_probe,
+    ) {
         Some(atom) => atom,
-        None => return None,
+        None => {
+            raise_at(at, fixed_reject_at(bytes, ulex_wrapper_slot, b"ulex", 0x28), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, ulex_wrapper_probe, bytes.len());
     let ulex_wrapper_name: &[u8] = b"ulex";
     proof {
         reveal_strlit("ulex");
@@ -17211,6 +17557,7 @@ fn parse_doc_record_prefix(
         assert(ulex_wrapper_name@ == ckc_spec::v1text::ascii("ulex"@));
     }
     if !vec_slice_equal(&ulex_wrapper.name, ulex_wrapper_name) {
+        raise_at(at, fixed_reject_at(bytes, ulex_wrapper_slot, b"ulex", 0x28), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x28, at) {
@@ -18179,12 +18526,26 @@ fn parse_doc_literal(
     } else {
         None
     };
-    let term = match doc_guided_term(bytes, arena, first_var, guided, next, expected, at) {
+    let term_slot = guided.cursor.pos;
+    let mut term_probe = *at;
+    let term = match doc_guided_term(
+        bytes,
+        arena,
+        first_var,
+        guided,
+        next,
+        expected,
+        &mut term_probe,
+    ) {
         Some(term) => term,
-        None => return None,
+        None => {
+            raise_at(at, literal_slot_reject_at(bytes, term_slot, term_probe), bytes.len());
+            return None;
+        },
     };
+    raise_at(at, term_probe, bytes.len());
     if term.end >= bytes.len() {
-        raise_at(at, term.end, bytes.len());
+        raise_at(at, literal_slot_reject_at(bytes, term_slot, bytes.len()), bytes.len());
         proof {
             if expected@ is Some {
                 assert(false);
@@ -18194,7 +18555,7 @@ fn parse_doc_literal(
     }
     if bytes[term.end] == 0x2e {
         if term.end + 1 >= bytes.len() {
-            raise_at(at, bytes.len(), bytes.len());
+            raise_at(at, literal_slot_reject_at(bytes, term_slot, bytes.len()), bytes.len());
             proof {
                 if let Some(e) = expected@ {
                     assert(e.1[0][0] == next@);
@@ -18205,7 +18566,7 @@ fn parse_doc_literal(
             return None;
         }
         if bytes[term.end + 1] != 0x0a {
-            raise_at(at, term.end + 1, bytes.len());
+            raise_at(at, literal_slot_reject_at(bytes, term_slot, term.end + 1), bytes.len());
             proof {
                 if let Some(e) = expected@ {
                     assert(e.1[0][0] == next@);
@@ -18216,7 +18577,7 @@ fn parse_doc_literal(
             return None;
         }
     } else if bytes[term.end] != 0x2c && bytes[term.end] != 0x29 && bytes[term.end] != 0x20 {
-        raise_at(at, term.end, bytes.len());
+        raise_at(at, literal_slot_reject_at(bytes, term_slot, term.end), bytes.len());
         proof {
             if expected@ is Some {
                 assert(false);
@@ -21776,8 +22137,8 @@ proof fn wf_doc_nonempty(d: ckc_spec::v1text::DocFile)
 
 // R9 offset of the first literal whose predicate the file's version does not
 // declare (the version-law reject): its name diverges from every declared
-// predicate after their longest common prefix (`foreign_cut`). `%` comment lines
-// and quoted atoms may spell the name and are skipped.
+// predicate after their longest common prefix (`pred_name_reject_at`). `%` comment
+// lines and quoted atoms may spell the name and are skipped.
 fn first_annotation_at(bytes: &[u8]) -> (r: usize)
     ensures
         r <= bytes@.len(),
@@ -21820,18 +22181,7 @@ fn first_annotation_at(bytes: &[u8]) -> (r: usize)
                         3
                     };
                     if v < min {
-                        let cut: usize = if k == 3 || (k == 5 && v >= 2) {
-                            11
-                        } else if k == 4 && v >= 2 {
-                            20
-                        } else {
-                            10
-                        };
-                        return if bytes.len() - i >= cut {
-                            i + cut
-                        } else {
-                            i
-                        };
+                        return pred_name_reject_at(bytes, i, v);
                     }
                 }
                 k += 1;
@@ -21918,10 +22268,10 @@ fn top_comma(bytes: &[u8], start: usize, end: usize, k: usize) -> (r: usize)
     end - 1
 }
 
-// R9 offset of a parsed term that is no semantic literal. An annotation name with
-// the wrong arity diverges after the shared `guideline_` prefix in a v1 file, at its
-// closing paren (too few arguments) or its extra comma (too many) in a v2 file; any
-// other term keeps its start (the established v1 pin).
+// R9 offset of a parsed term that is no semantic literal. A name the file's schema version
+// does not declare diverges past the longest prefix it shares with a declared name; a
+// declared annotation name with the wrong arity diverges at its closing paren (too few
+// arguments) or its extra comma (too many); any other term keeps its start.
 fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
     ensures
         r <= bytes@.len(),
@@ -21934,22 +22284,35 @@ fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
     if !(term.start < term.end && term.end <= bytes.len()) {
         return start;
     }
+    let v = file_version(bytes);
     let (name, arity) = match &term.parsed.top {
         ETermTop::Comp(n, a) => (n, *a),
-        _ => return start,
+        // A name the version declares, read as a bare atom = an arity-zero use: its start.
+        ETermTop::Atom(n) => {
+            let declared = base_pred_name(n) || match annotation_kind(n) {
+                Some((_, min)) => v >= min,
+                None => false,
+            };
+            return if declared {
+                start
+            } else {
+                pred_name_reject_at(bytes, start, v)
+            };
+        },
+        _ => return pred_name_reject_at(bytes, start, v),
     };
     let (want, min) = match annotation_kind(name) {
         Some(k) => k,
-        None => return start,
+        None => {
+            return if base_pred_name(name) {
+                start
+            } else {
+                pred_name_reject_at(bytes, start, v)
+            };
+        },
     };
-    let v = file_version(bytes);
     if v < min {
-        let cut = foreign_cut(name, v);
-        if term.end - term.start > cut {
-            start + cut
-        } else {
-            start
-        }
+        pred_name_reject_at(bytes, start, v)
     } else if arity == want {
         start
     } else if arity < want {
@@ -21989,21 +22352,6 @@ fn file_version(bytes: &[u8]) -> (r: u8) {
     }
 }
 
-// R9 offset inside a name that version v does not declare: the length of its
-// longest common prefix with a version-v predicate name (`guideline_` shared;
-// `o` continues operator, `r` continues the v2 recurrence).
-fn foreign_cut(name: &[u8], v: u8) -> (r: usize) {
-    if crate::k4_bytes::eq(name, b"guideline_order") {
-        11
-    } else if v >= 2 && crate::k4_bytes::eq(name, b"guideline_range") {
-        11
-    } else if v >= 2 && crate::k4_bytes::eq(name, b"guideline_recurrence_window") {
-        20
-    } else {
-        10
-    }
-}
-
 // R9 offset of a record version atom that starts at `at` and names no version of
 // its record kind: the canonical names are the unquoted `v1`..`v<max>`, each
 // followed by `,` (queries: max 3; answers + traces: max 1).
@@ -22028,6 +22376,136 @@ fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>, max: u8) -> (r: us
     } else {
         bytes.len()
     }
+}
+
+// R9 offset at a slot whose canonical text is the atom `name` followed by `next`: the
+// first byte past the prefix `bytes[slot..]` shares with that text.
+fn fixed_reject_at(bytes: &[u8], slot: usize, name: &[u8], next: u8) -> (r: usize)
+    ensures
+        r <= bytes@.len(),
+{
+    if slot >= bytes.len() {
+        return bytes.len();
+    }
+    let mut text: Vec<u8> = Vec::new();
+    crate::k2_term::append_atom(&mut text, name);
+    text.push(next);
+    let mut k: usize = 0;
+    while k < text.len() && k < bytes.len() - slot && bytes[slot + k] == text[k]
+        invariant
+            slot < bytes@.len(),
+            k <= text@.len(),
+            k <= bytes@.len() - slot,
+        decreases text@.len() - k,
+    {
+        k += 1;
+    }
+    slot + k
+}
+
+// R9 offset of a literal whose name schema version v does not declare: the first byte
+// past the longest prefix it shares with a version-v predicate name and its `(`.
+fn pred_name_reject_at(bytes: &[u8], start: usize, v: u8) -> (r: usize)
+    ensures
+        r <= bytes@.len(),
+{
+    let mut best = if start <= bytes.len() {
+        start
+    } else {
+        bytes.len()
+    };
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_entity", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_cardinality", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_event", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_arg", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_pp", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_property", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_operator", 0x28), bytes.len());
+    if v >= 2 {
+        raise_at(
+            &mut best,
+            fixed_reject_at(bytes, start, b"guideline_interval", 0x28),
+            bytes.len(),
+        );
+        raise_at(
+            &mut best,
+            fixed_reject_at(bytes, start, b"guideline_recurrence", 0x28),
+            bytes.len(),
+        );
+    }
+    if v >= 3 {
+        raise_at(
+            &mut best,
+            fixed_reject_at(bytes, start, b"guideline_frequency", 0x28),
+            bytes.len(),
+        );
+        raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_order", 0x28), bytes.len());
+        raise_at(
+            &mut best,
+            fixed_reject_at(bytes, start, b"guideline_recurrence_window", 0x28),
+            bytes.len(),
+        );
+        raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_range", 0x28), bytes.len());
+    }
+    best
+}
+
+// R9 at a literal slot, which holds a declared predicate name and its `(`: unless it does,
+// the literal diverges past the longest prefix shared with one (a quote, a capital or a
+// digit at once), never where the term reader stopped; else at `fallback`.
+fn literal_slot_reject_at(bytes: &[u8], slot: usize, fallback: usize) -> (r: usize)
+    requires
+        fallback <= bytes@.len(),
+    ensures
+        r <= bytes@.len(),
+{
+    let v = file_version(bytes);
+    if declared_name_at(bytes, slot, v) {
+        fallback
+    } else {
+        pred_name_reject_at(bytes, slot, v)
+    }
+}
+
+// Whether `bytes[start..]` opens with a version-v predicate name and its `(`.
+fn declared_name_at(bytes: &[u8], start: usize, v: u8) -> (r: bool) {
+    let n = if start <= bytes.len() {
+        start
+    } else {
+        bytes.len()
+    };
+    let rest = vstd::slice::slice_subrange(bytes, n, bytes.len());
+    let base = crate::k4_bytes::starts_with(rest, b"guideline_entity(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_cardinality(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_event(") || crate::k4_bytes::starts_with(
+        rest,
+        b"guideline_arg(",
+    ) || crate::k4_bytes::starts_with(rest, b"guideline_pp(") || crate::k4_bytes::starts_with(
+        rest,
+        b"guideline_property(",
+    ) || crate::k4_bytes::starts_with(rest, b"guideline_operator(");
+    let v2 = v >= 2 && (crate::k4_bytes::starts_with(rest, b"guideline_interval(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_recurrence("));
+    let v3 = v >= 3 && (crate::k4_bytes::starts_with(rest, b"guideline_frequency(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_order(") || crate::k4_bytes::starts_with(
+        rest,
+        b"guideline_recurrence_window(",
+    ) || crate::k4_bytes::starts_with(rest, b"guideline_range("));
+    base || v2 || v3
+}
+
+// The v1 predicate names (`guideline_entity` .. `guideline_operator`).
+fn base_pred_name(name: &[u8]) -> (r: bool) {
+    crate::k4_bytes::eq(name, b"guideline_entity") || crate::k4_bytes::eq(
+        name,
+        b"guideline_cardinality",
+    ) || crate::k4_bytes::eq(name, b"guideline_event") || crate::k4_bytes::eq(
+        name,
+        b"guideline_arg",
+    ) || crate::k4_bytes::eq(name, b"guideline_pp") || crate::k4_bytes::eq(
+        name,
+        b"guideline_property",
+    ) || crate::k4_bytes::eq(name, b"guideline_operator")
 }
 
 // R9 offset of a hex digest atom that starts at `at`: its first non-hex byte, or

@@ -869,7 +869,7 @@ fn append_esc(out: &mut Vec<u8>, b: u8)
     }
 }
 
-fn append_atom(out: &mut Vec<u8>, name: &[u8])
+pub(crate) fn append_atom(out: &mut Vec<u8>, name: &[u8])
     ensures
         final(out)@ == old(out)@ + ckc_spec::v1text::atom_bytes(name@),
 {
