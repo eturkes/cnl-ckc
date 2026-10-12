@@ -35,3 +35,8 @@
 - [x] dd631018 Q16 rust.md binding rule names the six `cells_ok` bindings as the ruled exception; contract `.agent/archive/contracts/q16.md`.
 - [x] e6287a30 Q17 R9 offsets at quoted version atoms; contract `.agent/archive/contracts/q17.md`.
 - [x] a8cd22a8 Q18 R9 offsets at every fixed-name slot (record names + document predicate names, misspelled or quoted); contract `.agent/archive/contracts/q18.md`.
+
+## 89787a1d..close
+
+- [x] 67fcdcd0 N9 pin drift outside the Verus family: rustup-init 1.29.1, verusfmt 0.7.4, cfg-if, hybrid-array, indexmap, libc, unicode-ident (both locks + vendor); contract `.agent/archive/contracts/n9.md`.
+- [x] f0b8b313 N10 `just outdated` reports semver-held crates as `held`; only fixable drift reds the weekly job (user ruling: Verus bumped every stable release); contract `.agent/archive/contracts/n10.md`.
