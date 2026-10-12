@@ -62,8 +62,9 @@ jobs:
           retention-days: 1
 
   # Corpus chain = `just check` over the rust job's static binary inside the pinned
-  # swipl container (the reference runtime): ckc check, ckc ui check, fresh compile +
-  # queries byte-stable. Full history: fork-notice dates + ledger commits read git log.
+  # swipl container (the reference runtime): spec-lint, ckc check, ckc ui check, fresh
+  # compile + queries byte-stable. Full history: fork-notice dates + ledger commits
+  # read git log.
   check:
     if: github.event_name != 'schedule'
     needs: rust

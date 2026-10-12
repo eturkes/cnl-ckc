@@ -107,9 +107,11 @@ compiler base:
   `tests/check-mutants/`, and `tests/dist/` hold the clause-file,
   alignment, `ckc check`, and export batteries that `cargo test`
   replays. Every case pins exact output bytes. `just check` is the
-  full acceptance gate, with `just certify` beside it: `ckc check`,
-  `ckc ui check`, and a fresh compile whose output must equal the
-  committed corpus. `ckc check`:
+  full acceptance gate, with `just certify` beside it. It runs
+  `.agent/spec-lint`, `ckc check`, `ckc ui check`, and a fresh
+  compile whose output must equal the committed corpus.
+  `.agent/spec-lint` checks the shape of `.agent/spec.md`, the
+  `Phase` section included. `ckc check`:
 
   1. validates the compendium ledger — the `.agent/compendium.md`
      organizations table plus the `.agent/compendium.tsv` guideline
@@ -885,8 +887,9 @@ Process American clinical guidelines through the pipeline as described in docs/R
 The session works until the `Met when` condition holds or the user
 asks it to stop. The repository is the only persistence, so halting at
 any moment is safe. `.claude/rules/upstream-sync.md` gives the
-location of the phase-prompt set. To stop now and continue later, paste
-the pause prompt of that set into the running session. The pause
+location of the phase-prompt set. To stop at once and continue later,
+paste the pause-now prompt of that set into the running session. To let
+in-flight work finish first, paste the pause prompt instead. Each pause
 prompt stops teammates, commits or snapshots open work, and records
 where to continue. To continue in a fresh session, paste the resume
 prompt of the same set. It takes the `Met when` condition above as its

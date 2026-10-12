@@ -307,13 +307,16 @@ late-mutants:
     [ "$fails" -eq 0 ] || exit 1
     echo "gate: late-mutants ok"
 
-# Corpus chain: `ckc check` (every custody, coverage, lexicon, fixture and
-# release-manifest law), `ckc ui check`, then a fresh compile + queries per
-# guideline must leave guidelines/ byte-identical. CKC_BIN names a prebuilt binary.
+# Corpus chain: `.agent/spec-lint` (spec.md shape, the template's byte copy),
+# `ckc check` (every custody, coverage, lexicon, fixture and release-manifest law),
+# `ckc ui check`, then a fresh compile + queries per guideline must leave
+# guidelines/ byte-identical. CKC_BIN names a prebuilt binary.
 check:
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}"
+    .agent/spec-lint
+    echo "spec-lint: ok"
     bin="${CKC_BIN:-}"
     if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
     "$bin" check
