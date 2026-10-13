@@ -111,6 +111,11 @@ _relock crate version:
     tc=$(awk -F'\t' '$1 == "rustc_toolchain" {print $2}' "$R/verus.lock")
     [ -n "$tc" ] || { echo "bump: no rustc_toolchain in rust/verus.lock" >&2; exit 2; }
     export RUSTUP_TOOLCHAIN=$tc
+    # Own pins follow upstream (user ruling): a member's `=` requirement on the crate moves with it.
+    for toml in "$R/Cargo.toml" "$R"/*/Cargo.toml; do
+        grep -qE '^{{ crate }} = (\{ *version = )?"=' "$toml" || continue
+        sed -i -E 's/^({{ crate }} = (\{ *version = )?")=[^"]*"/\1={{ version }}"/' "$toml"
+    done
     n=0
     for ws in "$R" "$R/ckc-kani-harness"; do
         grep -qx 'name = "{{ crate }}"' "$ws/Cargo.lock" || continue
@@ -370,6 +375,7 @@ workflows:
 # rc 2 = a failed or empty upstream answer or a failed dry run; CKC_OUTDATED_ROOT = tree holding rust/ (locks + manifests).
 # held = a crate with a newer upstream version that cargo's resolver cannot select under the
 # locked graph's requirements; `by` names its direct dependents in the locks.
+# drift `pinned by` = a crate that only members' own `=` requirements hold (own pins follow upstream).
 # Pin drift: every lock pin vs upstream latest (crates.io, GitHub releases, rustup).
 outdated:
     #!/usr/bin/env bash
@@ -426,6 +432,19 @@ outdated:
             errors=$((errors + 1)); printf 'cargo-update:%s\t-\t?\terror\n' "$m"; sed 's/^/  /' <<< "$out" >&2
         fi
     done
+    # Requirements the workspace members declare (`member version crate req`, tab-separated, from
+    # cargo metadata without resolution): own `=` pins follow upstream (user ruling), so a crate
+    # held only by members pinning it with `=` reports drift.
+    reqs=
+    for m in Cargo.toml ckc-kani-harness/Cargo.toml; do
+        if out=$(cd / && CARGO_HOME="$tmp/cargo" RUSTUP_TOOLCHAIN="$(lockval verus.lock rustc_toolchain)" \
+            cargo metadata --format-version 1 --no-deps --offline --manifest-path "$R/$m" 2> "$tmp/err") &&
+            rows=$(jq -r '.packages[] | .name as $p | .version as $v | .dependencies[] | [$p, $v, .name, .req] | @tsv' <<< "$out"); then
+            reqs+=$rows$'\n'
+        else
+            errors=$((errors + 1)); printf 'cargo-metadata:%s\t-\t?\terror\n' "$m"; sed 's/^/  /' "$tmp/err" >&2
+        fi
+    done
     # Direct dependents per locked crate: `name version dependent`; an unqualified entry
     # names the one version of that crate in its own lock (pass 1 per lock).
     edges=$(for lock in "$R/Cargo.lock" "$R/ckc-kani-harness/Cargo.lock"; do
@@ -445,7 +464,14 @@ outdated:
         esac
         latest=$(get "https://crates.io/api/v1/crates/$name" | jq -r '.crate.max_stable_version // empty') || latest=
         fix=$(awk -v n="$name" -v v="$version" '$1==n && $2==v {$1 = $2 = ""; sub(/^ +/, ""); print; exit}' <<< "$fixable")
+        # Own pin = every direct dependent is a member whose requirement on the crate starts `=`.
+        pin=$(awk -F'\t' -v n="$name" -v v="$version" '
+            FILENAME == ARGV[1] { if ($4 ~ /^=/) req[$1 " " $2 " " $3] = $4; next }
+            { split($0, e, " ") }
+            e[1] == n && e[2] == v { d++; r = req[e[3] " " e[4] " " n]; if (r != "") { k++; s = s (s != "" ? ", " : "") e[3] " " e[4] " (" r ")" } }
+            END { if (d && k == d) print s }' <(printf '%s' "$reqs") <(printf '%s\n' "$edges"))
         if [ -n "$fix" ]; then report "crate:$name" "$version" "$latest" drift "$fix"
+        elif [ -n "$pin" ]; then report "crate:$name" "$version" "$latest" drift "pinned by $pin"
         else
             by=$(awk -v n="$name" -v v="$version" '$1==n && $2==v {print $3 " " $4}' <<< "$edges" | paste -sd, - | sed 's/,/, /g')
             report "crate:$name" "$version" "$latest" held "by ${by:-the workspace}"

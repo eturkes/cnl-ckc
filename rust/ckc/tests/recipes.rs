@@ -835,3 +835,243 @@ fn bump_tool_writes_rows_from_release_data_and_refuses_bad_digests() {
         assert_eq!(fx.calls(), "", "{name}: installed");
     }
 }
+
+// Mock cargo: logs its arguments; `metadata` + `update --dry-run` answer from fixture files per
+// workspace (main | harness), `metadata-fails` makes metadata exit 101.
+const CARGO: &str = r#"#!/usr/bin/env bash
+echo "$*" >> "$MOCK_DATA/cargo.log"
+ws=main
+case "$*" in *ckc-kani-harness/Cargo.toml*) ws=harness ;; esac
+case "$*" in
+    *metadata*) [ ! -e "$MOCK_DATA/metadata-fails" ] || exit 101; cat "$MOCK_DATA/metadata-$ws.json" ;;
+    *"update --dry-run"*) cat "$MOCK_DATA/update-$ws.txt" >&2 ;;
+esac
+"#;
+
+const REGISTRY: &str = "registry+https://github.com/rust-lang/crates.io-index";
+
+// One `outdated` run over a fixture tree: member ckc pins sha2 `=0.11.0` (held by ckc alone),
+// requires zlib-x `^1.0` (a newer major exists), and reaches syn through ext-macro.
+fn outdated_case(s: &Scratch, name: &str, justfile: &str, metadata_fails: bool) -> Output {
+    let fx = Fixture::new(s, name, justfile);
+    put_exec(&fx.mock.join("cargo"), CARGO);
+    put_exec(&fx.mock.join("sleep"), "#!/usr/bin/env bash\nexit 0\n");
+    let rust = fx.root.join("rust");
+    put(
+        &rust.join("Cargo.toml"),
+        "[workspace]\nmembers = [\"ckc\"]\n",
+    );
+    put(
+        &rust.join("ckc-kani-harness/Cargo.toml"),
+        "[package]\nname = \"ckc-kani-harness\"\n",
+    );
+    let package = |name: &str, version: &str, source: bool, deps: &[&str]| {
+        let mut p = format!("\n[[package]]\nname = \"{name}\"\nversion = \"{version}\"\n");
+        if source {
+            p.push_str(&format!("source = \"{REGISTRY}\"\n"));
+        }
+        if !deps.is_empty() {
+            p.push_str("dependencies = [\n");
+            for d in deps {
+                p.push_str(&format!(" \"{d}\",\n"));
+            }
+            p.push_str("]\n");
+        }
+        p
+    };
+    put(
+        &rust.join("Cargo.lock"),
+        [
+            "version = 4\n".to_owned(),
+            package("ckc", "0.1.0", false, &["ext-macro", "sha2", "zlib-x"]),
+            package("ext-macro", "1.0.0", true, &["syn"]),
+            package("sha2", "0.11.0", true, &[]),
+            package("syn", "2.0.1", true, &[]),
+            package("zlib-x", "1.0.0", true, &[]),
+        ]
+        .concat(),
+    );
+    put(
+        &rust.join("ckc-kani-harness/Cargo.lock"),
+        [
+            "version = 4\n".to_owned(),
+            package("ckc-kani-harness", "0.0.0", false, &[]),
+        ]
+        .concat(),
+    );
+    put(
+        &rust.join("tools.lock"),
+        format!(
+            "tool\tversion\tasset\tsha256\turl\njust\t1.58.0\tjust.tar.gz\t{}\thttps://github.com/casey/just/releases/download/1.58.0/just.tar.gz\n",
+            "3".repeat(64)
+        ),
+    );
+    put(
+        &rust.join("verus.lock"),
+        "verus_release\trelease/0.2026.10.04.426d8b0\nrustc_toolchain\t1.97.1-x86_64-unknown-linux-gnu\nz3_version\t4.16.0\n",
+    );
+    put(&rust.join("kani.lock"), "kani_version\t0.68.0\n");
+    put(
+        &fx.data.join("metadata-main.json"),
+        r#"{"packages": [{"name": "ckc", "version": "0.1.0", "dependencies": [
+            {"name": "ext-macro", "req": "^1.0"}, {"name": "sha2", "req": "=0.11.0"}, {"name": "zlib-x", "req": "^1.0"}]}]}"#,
+    );
+    put(
+        &fx.data.join("metadata-harness.json"),
+        r#"{"packages": [{"name": "ckc-kani-harness", "version": "0.0.0", "dependencies": []}]}"#,
+    );
+    let dry_run = "     Locking 0 packages to latest compatible versions\nwarning: aborting update due to dry run\n";
+    put(&fx.data.join("update-main.txt"), dry_run);
+    put(&fx.data.join("update-harness.txt"), dry_run);
+    if metadata_fails {
+        put(&fx.data.join("metadata-fails"), "");
+    }
+    let api = "https://api.github.com/repos";
+    fx.route(
+        &format!("{api}/verus-lang/verus/releases/latest"),
+        r#"{"tag_name": "release/0.2026.10.04.426d8b0"}"#,
+    );
+    fx.route(
+        &format!("{api}/model-checking/kani/releases/latest"),
+        r#"{"tag_name": "kani-0.68.0"}"#,
+    );
+    fx.route(
+        &format!("{api}/casey/just/releases/latest"),
+        r#"{"tag_name": "1.58.0"}"#,
+    );
+    for (name, latest) in [
+        ("ext-macro", "1.0.0"),
+        ("sha2", "0.11.1"),
+        ("syn", "3.0.0"),
+        ("zlib-x", "2.0.0"),
+    ] {
+        fx.route(
+            &format!("https://crates.io/api/v1/crates/{name}"),
+            format!(r#"{{"crate": {{"max_stable_version": "{latest}"}}}}"#),
+        );
+    }
+    fx.run("outdated", &[])
+}
+
+#[test]
+fn outdated_reports_a_crate_only_own_pins_hold_as_drift() {
+    let s = scratch("outdated");
+    let text = justfile();
+    let head = "verus\trelease/0.2026.10.04.426d8b0\trelease/0.2026.10.04.426d8b0\tok
+rustc_toolchain\t1.97.1-x86_64-unknown-linux-gnu\t-\tfollows verus
+z3_version\t4.16.0\t-\tfollows verus
+kani\t0.68.0\t0.68.0\tok
+tool:just\t1.58.0\t1.58.0\tok
+crate:ext-macro\t1.0.0\t1.0.0\tok
+";
+    let tail = "crate:syn\t2.0.1\t3.0.0\theld\tby ext-macro 1.0.0
+crate:zlib-x\t1.0.0\t2.0.0\theld\tby ckc 0.1.0
+";
+    let out = outdated_case(&s, "own-pin", &text, false);
+    assert_eq!(out.status.code(), Some(1), "own pin: {}", show(&out));
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        format!(
+            "{head}crate:sha2\t0.11.0\t0.11.1\tdrift\tpinned by ckc 0.1.0 (=0.11.0)\n{tail}outdated: 7 pins, 1 drift, 2 held, 0 errors\n"
+        )
+    );
+    // An unreadable member requirement set is an error, never a silent `held`.
+    let out = outdated_case(&s, "metadata-fails", &text, true);
+    assert_eq!(out.status.code(), Some(2), "metadata fails: {}", show(&out));
+    assert!(
+        String::from_utf8_lossy(&out.stdout).contains("cargo-metadata:Cargo.toml\t-\t?\terror\n"),
+        "metadata fails: {}",
+        show(&out)
+    );
+    // The pre-rule recipe reports the own pin as held: rc 0, nothing for the weekly job.
+    let planted = plant(
+        &text,
+        &[(
+            "        elif [ -n \"$pin\" ]; then report \"crate:$name\" \"$version\" \"$latest\" drift \"pinned by $pin\"\n",
+            "",
+        )],
+    );
+    let out = outdated_case(&s, "own-pin-planted", &planted, false);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "the planted pre-rule recipe no longer slips through: {}",
+        show(&out)
+    );
+    assert!(
+        String::from_utf8_lossy(&out.stdout)
+            .contains("crate:sha2\t0.11.0\t0.11.1\theld\tby ckc 0.1.0\n")
+    );
+}
+
+#[test]
+fn bump_crate_moves_a_members_own_pin() {
+    let s = scratch("bump-crate");
+    let text = justfile();
+    let ckc_toml = "[dependencies]\nflate2 = { version = \"=1.1.10\", default-features = false }\nsha2 = { version = \"=0.11.0\", default-features = false }\nsha2-extra = \"=0.11.0\"\n";
+    let harness_toml = "[dependencies]\nsha2 = \"0.11\"\n";
+    let workspace_toml = "[workspace]\nmembers = [\"ckc\"]\n\n[workspace.dependencies]\nvstd = \"=0.0.0-2026-08-30-0159\"\n";
+    let case = |name: &str, justfile: &str| {
+        let fx = Fixture::new(&s, name, justfile);
+        put_exec(&fx.mock.join("cargo"), CARGO);
+        put_exec(
+            &fx.mock.join("ckc"),
+            "#!/usr/bin/env bash\n[ \"$1 $2 $3\" = \"trust-audit --write rust\" ] || exit 64\n",
+        );
+        let rust = fx.root.join("rust");
+        put(&rust.join("Cargo.toml"), workspace_toml);
+        put(&rust.join("ckc/Cargo.toml"), ckc_toml);
+        put(&rust.join("ckc-kani-harness/Cargo.toml"), harness_toml);
+        put(
+            &rust.join("Cargo.lock"),
+            format!(
+                "version = 4\n\n[[package]]\nname = \"sha2\"\nversion = \"0.11.0\"\nsource = \"{REGISTRY}\"\n"
+            ),
+        );
+        put(&rust.join("ckc-kani-harness/Cargo.lock"), "version = 4\n");
+        put(
+            &rust.join("verus.lock"),
+            "rustc_toolchain\t1.97.1-x86_64-unknown-linux-gnu\n",
+        );
+        put(
+            &rust.join("trust/escape-allowlist.tsv"),
+            "path\ttoken\tcount\tline\n",
+        );
+        let out = fx.run("bump-crate", &["sha2", "0.11.1"]);
+        (out, fx)
+    };
+    let (out, fx) = case("own-pin", &text);
+    assert_eq!(out.status.code(), Some(0), "bump-crate: {}", show(&out));
+    assert_eq!(
+        fx.read("rust/ckc/Cargo.toml"),
+        ckc_toml.replace(
+            "sha2 = { version = \"=0.11.0\"",
+            "sha2 = { version = \"=0.11.1\""
+        )
+    );
+    assert_eq!(fx.read("rust/Cargo.toml"), workspace_toml);
+    assert_eq!(fx.read("rust/ckc-kani-harness/Cargo.toml"), harness_toml);
+    let rust = fx.root.join("rust");
+    let r = rust.display();
+    assert_eq!(
+        fs::read_to_string(fx.data.join("cargo.log")).unwrap(),
+        format!(
+            "update -q --manifest-path {r}/Cargo.toml -p sha2 --precise 0.11.1\nvendor -q --locked --manifest-path {r}/Cargo.toml --sync {r}/ckc-kani-harness/Cargo.toml {r}/vendor\n"
+        )
+    );
+    // The pre-rule recipe leaves the pin, so cargo's --precise relock fails on a real tree.
+    let planted = plant(
+        &text,
+        &[(
+            "        sed -i -E 's/^({{ crate }} = (\\{ *version = )?\")=[^\"]*\"/\\1={{ version }}\"/' \"$toml\"\n",
+            "",
+        )],
+    );
+    let (out, fx) = case("own-pin-planted", &planted);
+    assert_eq!(out.status.code(), Some(0), "planted: {}", show(&out));
+    assert_eq!(
+        fx.read("rust/ckc/Cargo.toml"),
+        ckc_toml,
+        "the planted pre-rule recipe no longer slips through"
+    );
+}
