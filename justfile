@@ -482,6 +482,35 @@ late-mutants:
     [ "$fails" -eq 0 ] || exit 1
     echo "gate: late-mutants ok"
 
+# A test that pins already-passing behavior earns credit once its run kills the mutants of the
+# files it imports or calls (global CLAUDE.md `Engineering`). In place inside a disposable worktree
+# of HEAD: copy mode would copy rust/ alone, while suites read repo fixtures outside it. Target
+# words reach every cargo phase (the build phase otherwise compiles every test target);
+# --no-config keeps the default operators; cargo metadata ignores --cargo-arg, so CARGO_NET_OFFLINE
+# keeps it offline. `verus!` bodies yield no mutants (cargo-mutants skips macro calls). Positional
+# arguments keep each file glob one argument: `{{ files }}` would re-split it at its spaces.
+# Mutation run: <target> = cargo target selection [`-- <test-binary args>`], <files> rust/-relative;
+# results → rust/target/mutants/<HEAD>/mutants.out/; rc = cargo-mutants' (2 = missed mutants).
+[positional-arguments]
+mutants target +files:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sel=$1 filter=; shift
+    cd "{{ ROOT }}"
+    out="{{ ROOT }}/rust/target/mutants/$(git rev-parse --short HEAD)"
+    git worktree remove --force "$out/tree" 2>/dev/null || true
+    rm -rf "$out"; git worktree prune
+    git worktree add -q --detach "$out/tree" HEAD
+    trap 'git -C "{{ ROOT }}" worktree remove --force "$out/tree"' EXIT
+    set -f # target words split unexpanded
+    if [[ "$sel" == *" -- "* ]]; then filter=${sel#* -- } sel=${sel%% -- *}; fi
+    args=()
+    for a in $sel; do args+=("--cargo-arg=$a"); done
+    for f in "$@"; do args+=(--file "$f"); done
+    cd "$out/tree/rust"
+    CARGO_NET_OFFLINE=true cargo mutants --in-place --no-config --cargo-arg=--locked --cargo-arg=--offline \
+        "${args[@]}" --output "$out" ${filter:+-- -- $filter}
+
 # Corpus chain: `.agent/spec-lint` (spec.md shape, the template's byte copy),
 # `ckc check` (every custody, coverage, lexicon, fixture and release-manifest law),
 # `ckc ui check`, then a fresh compile + queries per guideline must leave
