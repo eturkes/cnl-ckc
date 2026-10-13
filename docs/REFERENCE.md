@@ -160,11 +160,10 @@ The pipeline requires SWI-Prolog 9.2.9 and the pinned Rust toolchain
 that `just tools` installs; `just build` writes the `ckc` program to
 `rust/target/release/ckc`. `SWIPL` names the SWI-Prolog program (default:
 `swipl` on `PATH`). CI pins the SWI 9.2.9 container and runs a
-statically linked `ckc` inside it. To build SWI-Prolog 9.2.9 from source,
-unpack `https://www.swi-prolog.org/download/stable/src/swipl-9.2.9.tar.gz`,
-then run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release
--DINSTALL_DOCUMENTATION=OFF -DSWIPL_PACKAGES_JAVA=OFF
--DSWIPL_PACKAGES_X=OFF -DSWIPL_PACKAGES_ODBC=OFF` and `ninja install`.
+statically linked `ckc` inside it. `just swipl` builds SWI-Prolog 9.2.9
+from source into the toolchain directory. The recipe verifies the source
+archive against its pinned SHA-256 digest. It skips the build when the
+installed copy came from that archive.
 
 ```sh
 ckc compile <guideline-id>          # ACE → Prolog
@@ -990,9 +989,9 @@ While a document is in progress, a round advances it one increment:
 5. **Close** — `ckc check` must be green. Make a scoped commit. When
    the commit touches `guidelines/`, the vendored compiler or lexicon,
    `NOTICE`, or the `docs/REFERENCE.md` schema section,
-   `release-manifest.tsv` goes stale: regenerate it with
-   `ckc release-manifest` and add it to the same commit with
-   `git commit --amend`. Update `.agent/queue.md` and the guideline README's
+   `release-manifest.tsv` goes stale: run `just amend-manifest` after
+   the commit. It regenerates the manifest and amends it into the same
+   commit. Update `.agent/queue.md` and the guideline README's
    coverage statement.
 
 When no document is in progress, the round fetches the next source: the

@@ -1,3 +1,15 @@
+---
+paths:
+  - "README.md"
+  - "docs/**"
+  - "guidelines/*/README.md"
+  - "rust/ckc/src/ui/**"
+  - "rust/ckc-spec/src/ui.rs"
+  - "rust/ckc/src/check/pipeline_release.rs"
+  - "tests/ui/**"
+  - "tests/copy/**"
+---
+
 # Clinician design law
 
 This project's human surfaces = clinician-facing in a conservative clinical setting → calm print-like craft: neutral high-contrast palette, color encodes state only (muted, colorblind-safe), typographic hierarchy + real tables, whitespace over boxes, sentence case, absolute ISO dates, print-clean pages. AI-slop banned: gradients/glassmorphism/animation, decorative icons + emoji, dashboard stat-card walls, functionless chrome (avatars, bells, settings, teaser affordances), exclamatory/marketing copy, invented acronym expansions. Technical plumbing (digests, internal ids, raw schema functors) stays out of visible copy — URLs, hidden fields + ledgers carry it; status/staleness/limits read as plain language. State capabilities + epistemic scope honestly (prepared questions, bounded search, reports what the loaded guidelines state — not clinical advice). Enforcement: every UI unit carries copy/design lint gates (banned-token scans over emitted strings) + design-system invariants.

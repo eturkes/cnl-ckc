@@ -1,7 +1,7 @@
 # Gate driver. `just gate` = rust chain + corpus chain + emission certification;
 # CI runs the same recipes. Every tool is sha256-pinned (rust/verus.lock,
-# rust/tools.lock) and installed under .toolchain/ by `just tools`; CKC_TOOLCHAIN
-# relocates it.
+# rust/tools.lock, the swipl recipe) and installed under .toolchain/ by
+# `just tools` + `just swipl`; CKC_TOOLCHAIN relocates it.
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
@@ -67,6 +67,181 @@ tools:
         printf '%s\n' "$(lock verus_asset_sha256)" > "$T/verus-x86-linux/.pin"
     fi
     echo "tools: ok rustc=$tc verus=$(lock verus_release) $(awk -F'\t' 'NR>1{printf "%s=%s ", $1, $2}' "{{ ROOT }}/rust/tools.lock")"
+
+# The system swipl is too new; CI runs the digest-pinned swipl:9.2.9 container. Shims: swipl → this
+# prefix, python3 → uv cpython 3.13 (scratch + archived migration scripts only); .pin = tarball sha256.
+# Dev-workstation SWI-Prolog 9.2.9: digest-verified source build into the toolchain dir (idempotent).
+swipl:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    T="{{ TOOLCHAIN }}"; v=9.2.9; sha=53f428e2d9bbdf30e53b06c9c42def9a13ff82fc36a111d410fc8b0bc889ee2d
+    P="$T/swipl-$v"; tgz="$T/dl/swipl-$v.tar.gz"; mkdir -p "$T/dl" "$T/bin"
+    if [ ! -x "$P/bin/swipl" ] || [ "$(cat "$P/.pin" 2>/dev/null)" != "$sha" ]; then
+        printf '%s  %s\n' "$sha" "$tgz" | sha256sum -c --quiet >/dev/null 2>&1 \
+            || curl -sSL --fail --retry 3 -o "$tgz" "https://www.swi-prolog.org/download/stable/src/swipl-$v.tar.gz"
+        printf '%s  %s\n' "$sha" "$tgz" | sha256sum -c --quiet
+        b=$(mktemp -d "$T/swipl-build.XXXXXX"); trap 'rm -rf "$b"' EXIT
+        tar -xzf "$tgz" -C "$b"
+        step() { log=$1; shift; "$@" > "$b/$log" 2>&1 || { tail -n 30 "$b/$log" >&2; exit 1; }; }
+        step cmake.log cmake -S "$b/swipl-$v" -B "$b/build" -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$P" -DINSTALL_DOCUMENTATION=OFF \
+            -DSWIPL_PACKAGES_JAVA=OFF -DSWIPL_PACKAGES_X=OFF -DSWIPL_PACKAGES_ODBC=OFF
+        step build.log ninja -C "$b/build"
+        rm -rf "$P"; step install.log ninja -C "$b/build" install
+        printf '%s\n' "$sha" > "$P/.pin"
+    fi
+    # Probes run as assignments: set -e ignores a failed command substitution inside an argument.
+    py=$(uv python find 3.13)
+    ln -sfn "../swipl-$v/bin/swipl" "$T/bin/swipl"
+    ln -sfn "$py" "$T/bin/python3"
+    ver=$("$T/bin/swipl" --version)
+    echo "swipl: ok $ver"
+
+# Crate bump: <crate> at <version> in every Cargo.lock holding it + rust/vendor/ + trust re-pin; then `just rust`.
+bump-crate crate version: (_relock crate version)
+
+# Cargo runs from cwd `/` (as in `outdated`), so the vendored-source and offline configs stay out
+# without edits, under the pinned rustc whose cargo produced rust/vendor/ (one tree for both
+# workspaces). Escape rows come from member sources, which a relock leaves alone. CKC_BIN = prebuilt binary.
+# Relock <crate> at <version>, revendor, re-pin trust (deps-allowlist + spec-manifest).
+_relock crate version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    R="{{ ROOT }}/rust"
+    tc=$(awk -F'\t' '$1 == "rustc_toolchain" {print $2}' "$R/verus.lock")
+    [ -n "$tc" ] || { echo "bump: no rustc_toolchain in rust/verus.lock" >&2; exit 2; }
+    export RUSTUP_TOOLCHAIN=$tc
+    n=0
+    for ws in "$R" "$R/ckc-kani-harness"; do
+        grep -qx 'name = "{{ crate }}"' "$ws/Cargo.lock" || continue
+        (cd / && cargo update -q --manifest-path "$ws/Cargo.toml" -p "{{ crate }}" --precise "{{ version }}")
+        n=$((n + 1))
+    done
+    [ "$n" -gt 0 ] || { echo "bump: {{ crate }} is in no Cargo.lock" >&2; exit 2; }
+    (cd / && cargo vendor -q --locked --manifest-path "$R/Cargo.toml" --sync "$R/ckc-kani-harness/Cargo.toml" "$R/vendor" > /dev/null)
+    escape=$(sha256sum < "$R/trust/escape-allowlist.tsv")
+    cd "{{ ROOT }}"
+    bin="${CKC_BIN:-}"
+    if [ -z "$bin" ]; then just build > /dev/null; bin="$R/target/release/ckc"; fi
+    "$bin" trust-audit --write rust
+    [ "$(sha256sum < "$R/trust/escape-allowlist.tsv")" = "$escape" ] || { echo "bump: escape-allowlist changed" >&2; exit 1; }
+
+# A pin = a stable `release/<version>` tag: the Monday cron rebuilds the rolling tag into one, and every
+# push to verus main deletes the rolling assets. Rows: GitHub release asset name + `digest` + URL, the tag
+# commit's rust-toolchain.toml channel + source/vstd version, Z3 = the bundled z3's version; rust-toolchain.toml,
+# the vstd pin + kani.lock bootstrap rows follow; `just tools` installs the release; the vstd family relocks.
+# Verus bump: repin to the stable release <tag> (e.g. release/0.2026.10.04.426d8b0); then `just rust`.
+bump-verus tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    fail() { echo "bump-verus: $*" >&2; exit 1; }
+    tag="{{ tag }}"; enc=${tag//\//%2F}; api=https://api.github.com/repos/verus-lang/verus
+    [[ "$tag" =~ ^release/0\.[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9a-f]{7}$ ]] || fail "not a stable release tag: $tag"
+    tok="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+    get() { curl -sSfL --retry 3 --max-time 60 -A 'cnl-ckc-bump (https://github.com/eturkes/cnl-ckc)' \
+        ${tok:+-H "Authorization: Bearer $tok"} "$@"; }
+    rel=$(get "$api/releases/tags/$enc")
+    [ "$(jq -r .prerelease <<< "$rel")" = false ] || fail "$tag is a prerelease"
+    asset=$(jq -r '[.assets[] | select(.name | endswith("-x86-linux.zip"))][0].name // empty' <<< "$rel")
+    sha=$(jq -r --arg a "$asset" '.assets[] | select(.name == $a) | .digest // empty' <<< "$rel" | sed -n 's/^sha256://p')
+    ref=$(get "$api/git/ref/tags/$tag" | jq -r '.object.type + " " + .object.sha')
+    case "$ref" in "tag "*) commit=$(get "$api/git/tags/${ref#tag }" | jq -r .object.sha) ;; *) commit=${ref#commit } ;; esac
+    file() { get "$api/contents/$1?ref=$commit" | jq -r .content | base64 -d; }
+    channel=$(file rust-toolchain.toml | sed -n 's/^channel = "\(.*\)"$/\1/p')
+    vstd=$(file source/vstd/Cargo.toml | sed -n '0,/^version = /s/^version = "\(.*\)"$/\1/p')
+    for x in asset sha commit channel vstd; do [ -n "${!x}" ] || fail "no $x for $tag"; done
+    tc="$channel-x86_64-unknown-linux-gnu"
+    set_row() { # lock key value: replace the value of an existing key row
+        [ -n "$3" ] || fail "empty $2"
+        grep -q "^$2"$'\t' "$1" || fail "$1 has no $2 row"
+        K="$2" V="$3" awk -F'\t' -v OFS='\t' '$1 == ENVIRON["K"] {$2 = ENVIRON["V"]} 1' "$1" > "$1.new"; mv "$1.new" "$1"
+    }
+    set_row rust/verus.lock verus_release "$tag"
+    set_row rust/verus.lock verus_asset "$asset"
+    set_row rust/verus.lock verus_asset_sha256 "$sha"
+    set_row rust/verus.lock verus_asset_url "https://github.com/verus-lang/verus/releases/download/$enc/$asset"
+    set_row rust/verus.lock rustc_toolchain "$tc"
+    sed -i "s/^channel = \".*\"$/channel = \"$channel\"/" rust/rust-toolchain.toml
+    sed -i "s/^vstd = \"=.*\"$/vstd = \"=$vstd\"/" rust/Cargo.toml
+    just tools > /dev/null
+    # Probes run as assignments: set -e ignores a failed command substitution inside an argument.
+    z3=$("{{ TOOLCHAIN }}/verus-x86-linux/z3" --version | awk '{print $3}')
+    brv=$("$RUSTUP_HOME/toolchains/$tc/bin/rustc" --version)
+    set_row rust/verus.lock z3_version "$z3"
+    set_row rust/kani.lock bootstrap_rustc_toolchain "$tc"
+    set_row rust/kani.lock bootstrap_rustc_version "$brv"
+    just _relock vstd "$vstd"
+    echo "bump-verus: $tag commit=${commit:0:10} rustc=$channel vstd=$vstd"
+
+# kani.lock rows: tag commit (GitHub ref API), bundle = release asset `digest`, installer crate checksum
+# (crates.io) + its Cargo.lock sha256 + one vendor_crate row per registry package (lock order), the
+# nightly its rust-toolchain.toml names (channel manifest sha256 = the published .sha256; component
+# xz_hash; rustc version), CBMC + Kissat = the bundle binaries' --version, bootstrap rows = the
+# verus.lock rustc as installed. Downloads land in the toolchain's kani/dl, which bootstrap.sh reuses.
+# Kani bump: rewrite rust/kani.lock for Kani <version> (e.g. 0.68.0); then `just kani` + the Q1 trigger rerun.
+bump-kani version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    fail() { echo "bump-kani: $*" >&2; exit 1; }
+    v="{{ version }}"; tag="kani-$v"; L="{{ ROOT }}/rust/kani.lock"; DL="{{ TOOLCHAIN }}/kani/dl"; host=x86_64-unknown-linux-gnu
+    mkdir -p "$DL"; w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    tok="${GITHUB_TOKEN:-${GH_TOKEN:-}}"; api=https://api.github.com/repos/model-checking/kani
+    get() { curl -sSfL --retry 3 --max-time 600 --proto '=https' -A 'cnl-ckc-bump (https://github.com/eturkes/cnl-ckc)' "$@"; }
+    hub() { get ${tok:+-H "Authorization: Bearer $tok"} "$api/$1"; }
+    fetch() { # asset url sha256 → $DL/asset, digest-verified
+        [ -f "$DL/$1" ] && [ "$(sha256sum < "$DL/$1" | cut -d' ' -f1)" = "$3" ] && return
+        get -o "$w/$1" "$2"; [ "$(sha256sum < "$w/$1" | cut -d' ' -f1)" = "$3" ] || fail "digest mismatch: $1"
+        mv "$w/$1" "$DL/$1"
+    }
+    ref=$(hub "git/ref/tags/$tag" | jq -r '.object.type + " " + .object.sha')
+    case "$ref" in "tag "*) commit=$(hub "git/tags/${ref#tag }" | jq -r .object.sha) ;; *) commit=${ref#commit } ;; esac
+    bundle="kani-$v-$host.tar.gz"; rel=$(hub "releases/tags/$tag")
+    bundle_url=$(jq -r --arg a "$bundle" '.assets[] | select(.name == $a) | .browser_download_url' <<< "$rel")
+    bundle_sha=$(jq -r --arg a "$bundle" '.assets[] | select(.name == $a) | .digest // empty' <<< "$rel" | sed -n 's/^sha256://p')
+    inst="kani-verifier-$v.crate"; inst_url="https://static.crates.io/crates/kani-verifier/$inst"
+    inst_sha=$(get "https://crates.io/api/v1/crates/kani-verifier/$v" | jq -r '.version.checksum // empty')
+    for x in commit bundle_url bundle_sha inst_sha; do [ -n "${!x}" ] || fail "no $x for $tag"; done
+    fetch "$inst" "$inst_url" "$inst_sha"
+    tar -xzf "$DL/$inst" -C "$w"; src="$w/kani-verifier-$v"
+    channel=$(sed -n 's/^channel = "\(.*\)"$/\1/p' "$src/rust-toolchain.toml")
+    man_url="https://static.rust-lang.org/dist/${channel#nightly-}/channel-rust-nightly.toml"
+    man_sha=$(get "$man_url.sha256" | cut -d' ' -f1)
+    fetch channel-rust-nightly.toml "$man_url" "$man_sha"
+    section() { # TOML table header → its `key = "value"` lines as key<TAB>value
+        awk -v s="[$1]" '$0 == s {f = 1; next} /^\[/ {f = 0} f && / = "/ {k = $1; sub(/^[^"]*"/, ""); sub(/"$/, ""); print k "\t" $0}' \
+            "$DL/channel-rust-nightly.toml"
+    }
+    fetch "$bundle" "$bundle_url" "$bundle_sha"
+    tar -xzf "$DL/$bundle" -C "$w" "kani-$v/bin/cbmc" "kani-$v/bin/kissat"
+    # Probes run as assignments: set -e ignores a failed command substitution inside an argument.
+    cbmc=$("$w/kani-$v/bin/cbmc" --version | awk '{print $1}')
+    kissat=$("$w/kani-$v/bin/kissat" --version)
+    rustc_v=$(section pkg.rustc | awk -F'\t' '$1 == "version" {print $2}')
+    lock_sha=$(sha256sum < "$src/Cargo.lock" | cut -d' ' -f1)
+    tc=$(awk -F'\t' '$1 == "rustc_toolchain" {print $2}' "{{ ROOT }}/rust/verus.lock")
+    brv=$("$RUSTUP_HOME/toolchains/$tc/bin/rustc" --version) || fail "rustc $tc missing: run just tools"
+    for x in cbmc kissat rustc_v tc; do [ -n "${!x}" ] || fail "no $x for $tag"; done
+    {
+        sed -n '/^#/p' "$L"
+        printf '%s\t%s\n' kani_version "$v" kani_tag "$tag" kani_commit "$commit" host "$host" \
+            bootstrap_rustc_toolchain "$tc" bootstrap_rustc_version "$brv" \
+            installer_asset "$inst" installer_url "$inst_url" installer_sha256 "$inst_sha" installer_cargo_lock_sha256 "$lock_sha" \
+            bundle_asset "$bundle" bundle_url "$bundle_url" bundle_sha256 "$bundle_sha" \
+            rust_channel "$channel" rustc_version "rustc $rustc_v" \
+            rust_manifest_asset channel-rust-nightly.toml rust_manifest_url "$man_url" rust_manifest_sha256 "$man_sha"
+        for c in rustc rust-std cargo; do
+            u=$(section "pkg.$c.target.$host" | awk -F'\t' '$1 == "xz_url" {print $2}')
+            h=$(section "pkg.$c.target.$host" | awk -F'\t' '$1 == "xz_hash" {print $2}')
+            printf '%s\t%s\n' "${c//-/_}_component_asset" "${u##*/}" "${c//-/_}_component_url" "$u" "${c//-/_}_component_sha256" "$h"
+        done
+        printf '%s\t%s\n' cbmc_version "$cbmc" kissat_version "$kissat"
+        awk '/^\[\[package\]\]/ {n = v = ""} /^name = / {n = $3} /^version = / {v = $3}
+            /^checksum = / {s = $3; gsub(/"/, "", n); gsub(/"/, "", v); gsub(/"/, "", s); print "vendor_crate\t" n "\t" v "\t" s}' "$src/Cargo.lock"
+    } > "$w/kani.lock"
+    awk -F'\t' '!/^#/ && ($2 == "" || $NF == "")' "$w/kani.lock" | grep -q . && fail "empty field in generated lock"
+    mv "$w/kani.lock" "$L"
+    echo "bump-kani: $tag commit=${commit:0:10} $channel"
 
 # Reformat the workspace (verusfmt inside verus!, rustfmt outside).
 fmt:
@@ -340,3 +515,22 @@ certify:
     for g in guidelines/*/; do "$bin" certify "$(basename "$g")"; done
     "$bin" certify --cases tests/certify/cases.tsv
     echo "gate: certify ok"
+
+# `ckc release-manifest` digests HEAD's release inputs (guidelines/, the fork, clex, NOTICE, the
+# REFERENCE schema section) without a commit id, so a commit touching them carries its own manifest.
+# Release manifest: refresh it from HEAD, amend it into HEAD when it changed. CKC_BIN = prebuilt binary.
+amend-manifest:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    # `git diff HEAD` reads the working file alone, and the pathspec amend below would
+    # replace a staged manifest edit: the working file and the index must both match HEAD.
+    { git diff --quiet HEAD -- release-manifest.tsv && git diff --quiet --cached -- release-manifest.tsv; } \
+        || { echo "amend-manifest: release-manifest.tsv differs from HEAD (working file or index); commit or restore it first" >&2; exit 2; }
+    bin="${CKC_BIN:-}"
+    if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
+    "$bin" release-manifest
+    if git diff --quiet -- release-manifest.tsv; then echo "amend-manifest: current"; exit 0; fi
+    # The pathspec amends the manifest alone; other staged changes stay staged.
+    git commit --amend --no-edit -q -- release-manifest.tsv
+    echo "amend-manifest: amended $(git rev-parse --short HEAD)"
