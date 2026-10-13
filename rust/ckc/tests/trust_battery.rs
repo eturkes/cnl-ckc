@@ -240,14 +240,19 @@ const PLANTS: [Plant; 22] = [
     (
         "p20",
         |r| {
+            // sha2's locked version moves with every bump (own pins follow upstream).
+            let lock = fs::read_to_string(r.join("Cargo.lock")).unwrap();
+            let record = "name = \"sha2\"\nversion = \"";
+            let at = lock.find(record).expect("Cargo.lock: sha2 record") + record.len();
+            let version = &lock[at..at + lock[at..].find('"').unwrap()];
             replace_once(
                 r,
                 "Cargo.lock",
-                "name = \"sha2\"\nversion = \"0.11.0\"",
-                "name = \"sha2\"\nversion = \"0.11.1\"",
+                &format!("{record}{version}\""),
+                &format!("{record}0.0.0-planted\""),
             )
         },
-        r"^ckc: trust-audit: dep not allowlisted: sha2 0\.11\.1$",
+        r"^ckc: trust-audit: dep not allowlisted: sha2 0\.0\.0-planted$",
     ),
     (
         "p21",

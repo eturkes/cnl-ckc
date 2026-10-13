@@ -19,7 +19,7 @@ libc	0.2.190
 miniz_oxide	0.9.1
 proc-macro2	1.0.107
 quote	1.0.47
-sha2	0.11.0
+sha2	0.11.1
 simd-adler32	0.3.10
 syn	2.0.119
 synstructure	0.13.2
