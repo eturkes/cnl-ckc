@@ -243,6 +243,47 @@ bump-kani version:
     mv "$w/kani.lock" "$L"
     echo "bump-kani: $tag commit=${commit:0:10} $channel"
 
+# tools.lock row from the release: GitHub → the row's tag + asset name with the version swapped,
+# sha256 = the release asset `digest`, URL = its download URL; rustup-init → the archive URL for the
+# version + its published .sha256. The asset downloads into the toolchain's dl/ (the cache `just tools`
+# reuses) and must match before the row changes.
+# Tool bump: rewrite the rust/tools.lock row of <tool> for <version> (e.g. zizmor 1.31.0); then `just rust`.
+bump-tool tool version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    fail() { echo "bump-tool: $*" >&2; exit 1; }
+    L=rust/tools.lock t="{{ tool }}" v="{{ version }}" DL="{{ TOOLCHAIN }}/dl"
+    row=$(awk -F'\t' -v t="$t" 'NR > 1 && $1 == t' "$L")
+    [ -n "$row" ] || fail "no $t row in $L"
+    IFS=$'\t' read -r _ old asset _ url <<< "$row"
+    tok="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+    get() { curl -sSfL --retry 3 --max-time 300 --proto '=https' -A 'cnl-ckc-bump (https://github.com/eturkes/cnl-ckc)' "$@"; }
+    case "$url" in
+        https://github.com/*/releases/download/*)
+            repo=$(cut -d/ -f4-5 <<< "$url") tag=$(cut -d/ -f8 <<< "$url")
+            [[ "$tag" == *"$old" ]] || fail "tag $tag does not end in $old"
+            tag=${tag%"$old"}$v asset=${asset//"$old"/$v}
+            rel=$(get ${tok:+-H "Authorization: Bearer $tok"} "https://api.github.com/repos/$repo/releases/tags/$tag")
+            sha=$(jq -r --arg a "$asset" '.assets[] | select(.name == $a) | .digest // empty' <<< "$rel" | sed -n 's/^sha256://p')
+            url=$(jq -r --arg a "$asset" '.assets[] | select(.name == $a) | .browser_download_url // empty' <<< "$rel") ;;
+        https://static.rust-lang.org/rustup/archive/*)
+            url=${url/"/archive/$old/"/"/archive/$v/"}
+            sha=$(get "$url.sha256" | cut -d' ' -f1) ;;
+        *) fail "no release source for $url" ;;
+    esac
+    [[ "$sha" =~ ^[0-9a-f]{64}$ && -n "$url" ]] || fail "no $asset with a sha256 for $t $v"
+    mkdir -p "$DL"; w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    get -o "$w/$asset" "$url"
+    got=$(sha256sum < "$w/$asset" | cut -d' ' -f1)
+    [ "$got" = "$sha" ] || fail "digest mismatch: $asset"
+    mv "$w/$asset" "$DL/$asset"
+    T="$t" V="$v" A="$asset" S="$sha" U="$url" awk -F'\t' -v OFS='\t' \
+        '$1 == ENVIRON["T"] {$2 = ENVIRON["V"]; $3 = ENVIRON["A"]; $4 = ENVIRON["S"]; $5 = ENVIRON["U"]} 1' "$L" > "$w/tools.lock"
+    mv "$w/tools.lock" "$L"
+    just tools > /dev/null
+    echo "bump-tool: $t $old → $v"
+
 # Reformat the workspace (verusfmt inside verus!, rustfmt outside).
 fmt:
     cd "{{ ROOT }}/rust" && verusfmt --edition 2024 $(find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' | sort)
