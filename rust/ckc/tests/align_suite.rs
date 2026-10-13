@@ -59,7 +59,7 @@ fn align_check_suite() {
             ));
         }
     }
-    assert_eq!(cases.len(), 94, "tests/align case count");
+    assert_eq!(cases.len(), 96, "tests/align case count");
     assert!(
         failures.is_empty(),
         "align suite: {} of {} failed:\n{}",
