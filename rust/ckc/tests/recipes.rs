@@ -143,7 +143,8 @@ impl Drop for Scratch {
 }
 
 fn scratch(name: &str) -> Scratch {
-    let dir = root().join(format!("rust/target/recipes/{}/{name}", std::process::id()));
+    // One flat entry per test: removing it leaves nothing behind under rust/target/recipes/.
+    let dir = root().join(format!("rust/target/recipes/{}-{name}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     Scratch(dir)
 }
