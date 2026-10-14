@@ -40,3 +40,16 @@
 
 - [x] 67fcdcd0 N9 pin drift outside the Verus family: rustup-init 1.29.1, verusfmt 0.7.4, cfg-if, hybrid-array, indexmap, libc, unicode-ident (both locks + vendor); contract `.agent/archive/contracts/n9.md`.
 - [x] f0b8b313 N10 `just outdated` reports semver-held crates as `held`; only fixable drift reds the weekly job (user ruling: Verus bumped every stable release); contract `.agent/archive/contracts/n10.md`.
+
+## fddc538d..close
+
+- [x] c7e77431 N12 resume-note prefix: the paused run's `RESUME (paused 2026-10-12)` row renamed to `RESUME: …` (refresh find).
+- [x] d4bfc7eb N11 cargo-mutants 27.1.0 pinned + `just mutants`; align_suite credited (59 mutants: 32 caught, 27 missed); contract `.agent/archive/contracts/n11.md`.
+- [x] bec21066 N13 `just bump-tool <tool> <version>`: a `tools.lock` row from the release; every current row regenerates byte-identical; contract `.agent/archive/contracts/n13.md`.
+- [x] de45ac41 N14 recipe checks in `just test` (`rust/ckc/tests/recipes.rs`, planted pre-fix forms); contract `.agent/archive/contracts/n14.md`.
+- [x] c2b983d7 N15 unicode-ident 1.0.27; contract `.agent/archive/contracts/n15.md`.
+- [x] c047d426 N16 align_suite U+202F + U+206A allowed cases (N11 survivors killed); contract `.agent/archive/contracts/n16.md`.
+- [x] 1e3932fb N18 own `=` pins follow upstream: `outdated` drift `pinned by`, `bump-crate` moves the pin (user ruling); contract `.agent/archive/contracts/n18.md`.
+- [x] 73fc12c0 N19 sha2 0.11.1 (the trust battery's p20 plant reads the locked version); contract `.agent/archive/contracts/n19.md`.
+- [x] d9584b2e N20 recipes.rs fixture roots leave no scratch entry; contract `.agent/archive/contracts/n20.md`.
+- Open at close: Q1 Kani (waits on the next `rust/kani.lock` bump), N17 Verus issues filed 2026-10-12/13 (waits on a fixing release), N8 Verus interpreter fixes (waits on the first stable release holding all four; its state + next action = its Tasks row), Q5 M7 strength + Q6 corpus rounds (owed: own sessions, user rulings).
