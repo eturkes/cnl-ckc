@@ -12,10 +12,10 @@ Protocol = docs/REFERENCE.md § Operating; supported ACE constructs = the `ace_t
 
 ## Round roles (corpus loop)
 
-MAIN drafts every ACE document; teammates read + attack (fits, offload economics + mechanics = global `CLAUDE.md` `Subagents`).
+MAIN drafts every ACE document; teammates read + attack (fits, offload economics + mechanics = `CLAUDE.md` `Teammates`).
 - MAIN — ACE per ruled statement batch: knowledge-only (no witness seed facts, proper-name stand-ins, authored queries), validated by `compile` + `check`; lexicon deltas screened against `audit/lexicon-rejects.tsv` (MAIN appends each refusal). Faithfulness = MAIN review, statement by statement. Also MAIN: `ace_to_pl.pl` + lexicon edits, all primary-tree writes, `ckc check` validator pins (`ckc-spec` + fixtures), guideline README + queue updates, id choice, rights rulings, statement batch verdicts, gate reruns, commits.
 - `researcher`, extraction — bulk-reads the source; verbatim extraction evidence with page/byte anchors + an anchored normative-statement inventory. Raw material: MAIN spot-checks verbatim fidelity before adopting.
-- `researcher`, fetch rounds — candidate discovery, rights/licensing quotes, URL verification (explicit WebSearch allowance; authenticated-web route per global `CLAUDE.md`).
+- `researcher`, fetch rounds — candidate discovery, rights/licensing quotes, URL verification (brief names its WebSearch allowance + browser access).
 - Closing `reviewer` = one covering every lens below, dispatched where MAIN judges it needed (`CLAUDE.md` `Session flow`; user ruling: template form); `file:line` findings; disputed semantics ⇒ MAIN rules.
   - L0 completeness: source normative statements vs `ace/` inventory vs README uncovered-list; grades the coverage statement + the stop check.
   - Adversarial: L1 ACE↔extraction fidelity, L2 coverage-claim soundness, L3 README claims, L4 knowledge-only status, L5 obligation count + discharge, L6 `audit/projection-notes.tsv` fidelity.

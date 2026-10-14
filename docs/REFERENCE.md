@@ -885,22 +885,14 @@ Process American clinical guidelines through the pipeline as described in docs/R
 
 The session works until the `Met when` condition holds or the user
 asks it to stop. The repository is the only persistence, so halting at
-any moment is safe. `.claude/rules/upstream-sync.md` gives the
-location of the phase-prompt set. To stop at once and continue later,
-paste the pause-now prompt of that set into the running session. To let
-in-flight work finish first, paste the pause prompt instead. Each pause
-prompt stops teammates, commits or snapshots open work, and records
-where to continue. To continue in a fresh session, paste the resume
-prompt of the same set. It takes the `Met when` condition above as its
-finish line. Every round starts by deriving state from the repository:
-`.agent/queue.md`, `git status`, `ckc check`, and the
+any moment is safe. Every round starts by deriving state from the
+repository: `.agent/queue.md`, `git status`, `ckc check`, and the
 in-progress guideline README's coverage statement. The round then
 finishes or discards incomplete work before it takes on anything new. A
 user request to stop ends the run at once, mid-round included, even
 when the exhaustion clause is not met. The wind-down is to start
-nothing new, state where work stands, and stop. A pasted pause prompt
-replaces this wind-down with its own. The check validates the fork
-notices and the adjudication fixtures first. It then
+nothing new, state where work stands, and stop. The check validates
+the fork notices and the adjudication fixtures first. It then
 validates the compendium — the `.agent/compendium.md` organizations
 table plus `.agent/compendium.tsv`: row format and vocabulary,
 canonical ordering, the single-active-row promotion invariant. It prints a terminal meter —

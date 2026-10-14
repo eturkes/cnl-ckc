@@ -15,11 +15,27 @@ export PATH := (TOOLCHAIN / "bin") + ":" + (TOOLCHAIN / "verus-x86-linux") + ":"
 default:
     @just --list --unsorted
 
+RUST_STEPS := "fmt-check clippy verify build trust test deny secrets workflows"
+
 # Full gate: rust chain, corpus chain, emission certification.
-gate: rust check certify
+gate: (_timed RUST_STEPS + " check certify")
 
 # Rust chain: format, lint, verify, build, trust-audit, test, dependency audit, secret scan, workflow scan.
-rust: fmt-check clippy verify build trust test deny secrets workflows
+rust: (_timed RUST_STEPS)
+
+# Every gate run blocks the critical path, so each step's wall-clock follows its own output, a failed
+# step's included. Steps run in list order without their dependencies (trust's build precedes it).
+_timed steps:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    start=$SECONDS
+    for s in {{ steps }}; do
+        t=$SECONDS
+        just --justfile "{{ justfile() }}" --no-deps "$s"; rc=$?
+        echo "time: $s $((SECONDS - t)) s"
+        [ "$rc" -eq 0 ] || exit "$rc"
+    done
+    echo "time: total $((SECONDS - start)) s"
 
 # Install every pinned tool into the toolchain dir (idempotent, digest-verified).
 tools:
@@ -341,14 +357,22 @@ build-static:
 trust: build
     cd "{{ ROOT }}/rust" && ./target/release/ckc trust-audit
 
-# Summary lines only; a failing run also prints its panics + failure lists.
+# Summary lines only: totals + the 5 slowest test binaries; a failing run also prints its panics +
+# failure lists.
 test:
     #!/usr/bin/env bash
     set -uo pipefail
     cd "{{ ROOT }}/rust"
     log=$(mktemp)
-    cargo test --workspace --locked --offline -q > "$log" 2>&1; rc=$?
-    grep -E '^test result' "$log" | sort | uniq -c
+    # cargo's status lines stay on, uncolored: each `Running` | `Doc-tests` line names the binary
+    # whose `test result` line follows; libtest stays terse.
+    CARGO_TERM_COLOR=never cargo test --workspace --locked --offline -- --quiet > "$log" 2>&1; rc=$?
+    awk '/^ +Running /{n=$NF; gsub(/[()]/, "", n); sub(/.*\//, "", n); sub(/-[0-9a-f]+$/, "", n)}
+        /^ +Doc-tests /{n="doc:" $2}
+        /^test result/{t=$NF; sub(/s$/, "", t); printf "%s %s %s %s %s\n", t, n, $4, $6, $8}' "$log" > "$log.t"
+    awk '{b++; p+=$3; f+=$4; i+=$5} END {printf "test: %d binaries, %d passed, %d failed, %d ignored\n", b, p, f, i}' "$log.t"
+    sort -rn "$log.t" | head -5 | awk '{printf "test: slowest %s s %s (%d tests)\n", $1, $2, $3 + $4 + $5}'
+    rm -f "$log.t"
     if [ "$rc" -ne 0 ]; then grep -E -B2 -A12 'panicked|^failures:' "$log" | head -200; fi
     rm -f "$log"
     [ "$rc" -eq 0 ] && echo "gate: test ok"
@@ -550,7 +574,7 @@ late-mutants:
     echo "gate: late-mutants ok"
 
 # A test that pins already-passing behavior earns credit once its run kills the mutants of the
-# files it imports or calls (global CLAUDE.md `Engineering`). In place inside a disposable worktree
+# files it imports or calls (CLAUDE.md `Engineering`). In place inside a disposable worktree
 # of HEAD: copy mode would copy rust/ alone, while suites read repo fixtures outside it. Target
 # words reach every cargo phase (the build phase otherwise compiles every test target);
 # --no-config keeps the default operators; cargo metadata ignores --cargo-arg, so CARGO_NET_OFFLINE
