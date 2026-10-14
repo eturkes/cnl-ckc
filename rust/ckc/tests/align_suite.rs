@@ -21,11 +21,42 @@ impl Drop for Scratch {
     }
 }
 
+fn program() -> PathBuf {
+    std::env::var_os("CKC_ALIGN_TEST_BIN")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_ckc")))
+}
+
+// m5u1 CLI seam: align-check takes exactly three operands; any other count is a
+// usage error (rc 2, usage on stderr, stdout empty), even when the first three
+// operands name a valid case.
+#[test]
+fn align_check_operand_count_is_usage() {
+    let case = root().join("tests/align/001-basic-zero");
+    let operands =
+        ["align.tsv.in", "src.txt.in", "ace.txt.in", "surplus"].map(|name| case.join(name));
+    for count in [0, 1, 2, 4] {
+        let out = Command::new(program())
+            .arg("align-check")
+            .args(&operands[..count])
+            .output()
+            .unwrap();
+        assert_eq!(
+            (out.status.code(), out.stdout.as_slice()),
+            (Some(2), &b""[..]),
+            "{count} operands"
+        );
+        assert!(
+            out.stderr.starts_with(b"usage: ckc "),
+            "{count} operands: stderr {:?}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+}
+
 #[test]
 fn align_check_suite() {
-    let program = std::env::var_os("CKC_ALIGN_TEST_BIN")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_ckc")));
+    let program = program();
     let suite = root().join("tests/align");
     let scratch = Scratch(root().join(format!("rust/target/align-suite/{}", std::process::id())));
     let mut cases: Vec<PathBuf> = fs::read_dir(&suite)
