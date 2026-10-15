@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Regenerates tests/certify-one/ (contract n25 D1) from the ACE texts below, deterministically:
+# SWI 9.2.9 (`.toolchain/bin` on PATH) + vendor/ape + clex → each case's compiled pl + its DRS
+# dump (rust/ckc/prolog/drs_dump.pl, no ulex) + the accepted `ckc certify-one` stdout.
+# Usage: .agent/archive/generators/certify-one-fixtures <repo-root> [<ckc-binary>] → rerun = no change.
+set -euo pipefail
+root=$(cd "$1" && pwd); bin=${2:-$root/rust/target/release/ckc}
+out=$root/tests/certify-one
+stage=$(mktemp -d); trap 'rm -rf "$stage"' EXIT
+cp -a "$root/vendor/ape" "$stage/ape-stage"
+cp "$root/vendor/clex/clex_lexicon.pl" "$stage/ape-stage/prolog/lexicon/clex_lexicon.pl"
+(cd "$stage/ape-stage/prolog/parser" && swipl -O -f none -F none \
+    -g "working_directory(_, '$stage/ape-stage/prolog/parser'), [fit_to_plp], halt." -t halt >/dev/null 2>&1)
+compile() { swipl -q -f none -F none -s "$stage/ape-stage/prolog/ace_to_pl.pl" -g main -t 'halt(9)' -- "$@"; }
+dump() { swipl -q -f none -F none -s "$root/rust/ckc/prolog/drs_dump.pl" -g main -t 'halt(9)' -- "$stage/ape-stage"; }
+# case mode id ace [temporal-rows]
+case_() {
+    local dir=$out/$1 mode=$2 id=$3 ace=$4 rows=${5:-}
+    mkdir -p "$dir"
+    printf '%s\n' "$ace" > "$dir/ace.txt.in"
+    local table=()
+    if [ -n "$rows" ]; then
+        { sed -n 1,2p "$root/tests/certify-one/v3-header.txt.in"; printf '%b' "$rows"; } > "$dir/temporal.tsv.in"
+        table=("$dir/temporal.tsv.in")
+    fi
+    if [ "$mode" = query ]; then
+        compile question "$stage/ape-stage" "$id" < "$dir/ace.txt.in" > "$dir/pl.txt.in"
+    elif [ ${#table[@]} -gt 0 ]; then
+        compile v3 "$stage/ape-stage" "$id" "${table[@]}" < "$dir/ace.txt.in" > "$dir/pl.txt.in"
+    else
+        compile "$stage/ape-stage" "$id" < "$dir/ace.txt.in" > "$dir/pl.txt.in"
+    fi
+    dump < "$dir/ace.txt.in" > "$dir/dump.txt.in"
+    "$bin" certify-one "$mode" "$id" "$dir/ace.txt.in" - "$dir/dump.txt.in" "$dir/pl.txt.in" "${table[@]}" > "$dir/stdout.expect"
+}
+case_ doc doc fx-doc 'Every patient is a person.'
+case_ query query fx-query 'Is there a patient?'
+case_ v3 doc fx-timed 'Every patient waits for at most 2 hours.' 'unit\thour\thour\nrelation\tfor\tduration\n'
+echo "certify-one fixtures: $(find "$out" -type f | wc -l) files under tests/certify-one"

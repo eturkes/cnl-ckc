@@ -40,7 +40,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling).
 - [x] 5ae7878d N21 align_suite survivor rulings: reviewer-1 (non-author) ruled S08 specified → operand-count usage case; 24 open, recorded in the N21 body.
 - [x] 7fe4245f N22 reviewer UI viewport meta + narrow-screen table rule (user ruling: meta + table scroll box; widened acceptance).
-- [ ] N23 reviewer UI separators replaced (user ruling: section-path mark ` > `, spaced nav links, `Passage <id>` source line, `Not covered: <reason>`, `<title>` = page title alone).
+- [x] fe361e4a N23 reviewer UI separators replaced (user ruling: section-path mark ` > `, spaced nav links, `Passage <id>` source line, `Not covered: <reason>`, `<title>` = page title alone).
 - [x] d3a4df7d N24 `just check` speedup at equal strength (parallel SWI-stage work): `check` 3221 s → 1267 s.
 - [ ] N25 `ckc certify-one` fixture test (N21 find; user ruling: keep + fixture test).
 - Deferral queue = `.agent/deferred.md` (each row above + ruled deferrals; one entry + acceptance check each).
