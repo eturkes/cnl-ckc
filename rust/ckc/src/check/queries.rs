@@ -1,5 +1,5 @@
 use super::common::*;
-use super::{process, text};
+use super::{par, process, text};
 use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
@@ -315,6 +315,96 @@ fn answer_result(bytes: &[u8]) -> String {
         .unwrap_or("")
         .to_owned()
 }
+// One question's checks, in order: (yes/no question, trace node count).
+fn question_checks(
+    swipl: &Path,
+    stage: &Path,
+    root: &Path,
+    mpath: &Path,
+    id: &str,
+    lexicon: Option<&Path>,
+    temporal: Option<&Path>,
+) -> Result<(bool, usize)> {
+    let ace = root.join(format!("{id}.ace"));
+    let first = question(swipl, stage, id, &ace, lexicon, temporal)?;
+    let second = question(swipl, stage, id, &ace, lexicon, temporal)?;
+    if first != second {
+        return Err(violation(
+            "determinism",
+            format!("two query compiles differ for question: {id}"),
+        ));
+    }
+    let pl = root.join("pl").join(format!("{id}.pl"));
+    if first != read(&pl, "queries")? {
+        return Err(violation(
+            "stale",
+            format!(
+                "committed query pl differs from fresh compile: {}",
+                show(&pl)
+            ),
+        ));
+    }
+    let first_answer = answer(id, mpath, &pl)?;
+    let second_answer = answer(id, mpath, &pl)?;
+    if first_answer != second_answer {
+        return Err(violation(
+            "determinism",
+            format!("two answer runs differ for question: {id}"),
+        ));
+    }
+    let answers = root.join("answers").join(format!("{id}.pl"));
+    if first_answer != read(&answers, "queries")? {
+        return Err(violation(
+            "stale",
+            format!(
+                "committed query answers differ from fresh answer: {}",
+                show(&answers)
+            ),
+        ));
+    }
+    let result = answer_result(&first_answer);
+    if result.is_empty() {
+        return Err(violation(
+            "queries",
+            format!("unparsable answer artifact for qid: {id}"),
+        ));
+    }
+    if result != "yes" && !(result.starts_with("solutions(") && result != "solutions([])") {
+        return Err(violation(
+            "queries",
+            format!("non-demo result for qid {id}: {result}"),
+        ));
+    }
+    let text = String::from_utf8_lossy(&first);
+    let lines: Vec<&str> = text::lines(&text).collect();
+    if lines.len() != 4 {
+        return Err(violation(
+            "queries",
+            format!("unexpected query pl shape for qid: {id}"),
+        ));
+    }
+    let yesno = lines[3].ends_with("answers([])).");
+    let first_trace = trace(id, mpath, &pl, &answers)?;
+    let second_trace = trace(id, mpath, &pl, &answers)?;
+    if first_trace != second_trace {
+        return Err(violation(
+            "determinism",
+            format!("two trace runs differ for question: {id}"),
+        ));
+    }
+    let path = root.join("traces").join(format!("{id}.pl"));
+    let committed = read(&path, "traces")?;
+    if first_trace != committed {
+        return Err(violation(
+            "stale",
+            format!(
+                "committed query trace differs from fresh trace: {}",
+                show(&path)
+            ),
+        ));
+    }
+    Ok((yesno, inspect_trace(id, mpath, &pl, &answers, &path)?))
+}
 pub(super) fn validate(
     scratch: &process::Scratch,
     swipl: &Path,
@@ -350,90 +440,16 @@ pub(super) fn validate(
     }
     let mpath = scratch.0.join(format!("queries-manifest-{}", name(gid)));
     manifest(&mpath, &gid.join("pl"))?;
-    for id in qids {
-        let ace = root.join(format!("{id}.ace"));
-        let first = question(swipl, stage, &id, &ace, lexicon, temporal)?;
-        let second = question(swipl, stage, &id, &ace, lexicon, temporal)?;
-        if first != second {
-            return Err(violation(
-                "determinism",
-                format!("two query compiles differ for question: {id}"),
-            ));
-        }
-        let pl = root.join("pl").join(format!("{id}.pl"));
-        if first != read(&pl, "queries")? {
-            return Err(violation(
-                "stale",
-                format!(
-                    "committed query pl differs from fresh compile: {}",
-                    show(&pl)
-                ),
-            ));
-        }
-        let first_answer = answer(&id, &mpath, &pl)?;
-        let second_answer = answer(&id, &mpath, &pl)?;
-        if first_answer != second_answer {
-            return Err(violation(
-                "determinism",
-                format!("two answer runs differ for question: {id}"),
-            ));
-        }
-        let answers = root.join("answers").join(format!("{id}.pl"));
-        if first_answer != read(&answers, "queries")? {
-            return Err(violation(
-                "stale",
-                format!(
-                    "committed query answers differ from fresh answer: {}",
-                    show(&answers)
-                ),
-            ));
-        }
-        let result = answer_result(&first_answer);
-        if result.is_empty() {
-            return Err(violation(
-                "queries",
-                format!("unparsable answer artifact for qid: {id}"),
-            ));
-        }
-        if result != "yes" && !(result.starts_with("solutions(") && result != "solutions([])") {
-            return Err(violation(
-                "queries",
-                format!("non-demo result for qid {id}: {result}"),
-            ));
-        }
-        let text = String::from_utf8_lossy(&first);
-        let lines: Vec<&str> = text::lines(&text).collect();
-        if lines.len() != 4 {
-            return Err(violation(
-                "queries",
-                format!("unexpected query pl shape for qid: {id}"),
-            ));
-        }
-        if lines[3].ends_with("answers([])).") {
+    let tallies = par::map(&qids, |id| {
+        question_checks(swipl, stage, &root, &mpath, id, lexicon, temporal)
+    })?;
+    for (yesno, nodes) in tallies {
+        if yesno {
             counts.yesno += 1;
         } else {
             counts.wh += 1;
         }
-        let first_trace = trace(&id, &mpath, &pl, &answers)?;
-        let second_trace = trace(&id, &mpath, &pl, &answers)?;
-        if first_trace != second_trace {
-            return Err(violation(
-                "determinism",
-                format!("two trace runs differ for question: {id}"),
-            ));
-        }
-        let path = root.join("traces").join(format!("{id}.pl"));
-        let committed = read(&path, "traces")?;
-        if first_trace != committed {
-            return Err(violation(
-                "stale",
-                format!(
-                    "committed query trace differs from fresh trace: {}",
-                    show(&path)
-                ),
-            ));
-        }
-        counts.nodes += inspect_trace(&id, &mpath, &pl, &answers, &path)?;
+        counts.nodes += nodes;
     }
     Ok(counts)
 }

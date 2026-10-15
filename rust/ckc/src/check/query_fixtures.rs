@@ -1,5 +1,5 @@
 use super::common::*;
-use super::{process, queries};
+use super::{par, process, queries};
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -329,6 +329,117 @@ fn nonfinite(scratch: &process::Scratch) -> Result {
     }
     Ok(())
 }
+// One fixture case, in the sequential check order: its name + the golden pins it holds.
+fn fixture_case(
+    case: &Path,
+    color: &str,
+    scratch: &process::Scratch,
+    swipl: &Path,
+    stage: &Path,
+) -> Result<(String, Vec<String>)> {
+    let mut pins = vec![];
+    let n = name(case);
+    if case.is_symlink() || !case.is_dir() {
+        return Err(violation(
+            "queries-fixtures",
+            format!("not a case directory: {n}"),
+        ));
+    }
+    if !valid_docid(&n) {
+        return Err(violation(
+            "queries-fixtures",
+            format!("invalid case name: {n}"),
+        ));
+    }
+    let mut members = BTreeSet::new();
+    for p in entries(case, "queries-fixtures")? {
+        let m = name(&p);
+        if p.is_symlink() {
+            return Err(bad(&n, &m));
+        }
+        match m.as_str() {
+            "tree" | "answers-golden" | "traces-golden" | "trace-reject" if p.is_dir() => {}
+            "expect" | "golden" if p.is_file() => (),
+            _ => return Err(bad(&n, &m)),
+        }
+        members.insert(m);
+    }
+    if !members.contains("tree") {
+        return Err(violation(
+            "queries-fixtures",
+            format!("case without tree: {n}"),
+        ));
+    }
+    let expect = members.contains("expect");
+    let golden_pin = members.contains("golden");
+    if expect && golden_pin {
+        return Err(violation(
+            "queries-fixtures",
+            format!("case pins both expect and golden: {n}"),
+        ));
+    }
+    if !expect && !golden_pin {
+        return Err(violation(
+            "queries-fixtures",
+            format!("case without expect or golden pin: {n}"),
+        ));
+    }
+    if color == "red" && golden_pin {
+        return Err(violation(
+            "queries-fixtures",
+            format!("red case pins golden: {n}"),
+        ));
+    }
+    if color == "green" && expect {
+        return Err(violation(
+            "queries-fixtures",
+            format!("green case pins expect: {n}"),
+        ));
+    }
+    let gids = case.join("tree/guidelines");
+    if !gids.is_dir() {
+        return Err(violation(
+            "queries-fixtures",
+            format!("case tree without guidelines: {n}"),
+        ));
+    }
+    let gids = entries(&gids, "queries-fixtures")?;
+    if gids.len() != 1 || !gids[0].is_dir() || !valid_docid(&name(&gids[0])) {
+        return Err(violation(
+            "queries-fixtures",
+            format!("case tree without one guideline: {n}"),
+        ));
+    }
+    let gid = &gids[0];
+    // All cases name their guideline `fx`: a private scratch per case keeps
+    // concurrent validations off one manifest path.
+    case_result(
+        case,
+        gid,
+        expect,
+        &process::Scratch::new_in(&scratch.0)?,
+        swipl,
+        stage,
+    )?;
+    let manifest = scratch
+        .0
+        .join(format!("queries-fixture-manifest-{color}-{n}"));
+    if ["answers-golden", "traces-golden", "trace-reject"]
+        .iter()
+        .any(|s| members.contains(*s))
+    {
+        queries::manifest(&manifest, &gid.join("pl"))?;
+    }
+    for lane in ["answers-golden", "traces-golden"] {
+        if members.contains(lane) {
+            golden(case, color, lane, gid, &manifest, &mut pins)?;
+        }
+    }
+    if members.contains("trace-reject") {
+        rejects(case, color, gid, &manifest, &mut pins)?;
+    }
+    Ok((n, pins))
+}
 pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> Result {
     let root = Path::new("tests/queries");
     if root.is_symlink() {
@@ -362,103 +473,16 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
                 format!("missing: {}", show(&path)),
             ));
         }
-        for case in entries(&path, "queries-fixtures")? {
-            let n = name(&case);
-            if case.is_symlink() || !case.is_dir() {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("not a case directory: {n}"),
-                ));
-            }
-            if !valid_docid(&n) {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("invalid case name: {n}"),
-                ));
-            }
-            let mut members = BTreeSet::new();
-            for p in entries(&case, "queries-fixtures")? {
-                let m = name(&p);
-                if p.is_symlink() {
-                    return Err(bad(&n, &m));
-                }
-                match m.as_str() {
-                    "tree" | "answers-golden" | "traces-golden" | "trace-reject" if p.is_dir() => {}
-                    "expect" | "golden" if p.is_file() => (),
-                    _ => return Err(bad(&n, &m)),
-                }
-                members.insert(m);
-            }
-            if !members.contains("tree") {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("case without tree: {n}"),
-                ));
-            }
-            let expect = members.contains("expect");
-            let golden_pin = members.contains("golden");
-            if expect && golden_pin {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("case pins both expect and golden: {n}"),
-                ));
-            }
-            if !expect && !golden_pin {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("case without expect or golden pin: {n}"),
-                ));
-            }
-            if color == "red" && golden_pin {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("red case pins golden: {n}"),
-                ));
-            }
-            if color == "green" && expect {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("green case pins expect: {n}"),
-                ));
-            }
-            let gids = case.join("tree/guidelines");
-            if !gids.is_dir() {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("case tree without guidelines: {n}"),
-                ));
-            }
-            let gids = entries(&gids, "queries-fixtures")?;
-            if gids.len() != 1 || !gids[0].is_dir() || !valid_docid(&name(&gids[0])) {
-                return Err(violation(
-                    "queries-fixtures",
-                    format!("case tree without one guideline: {n}"),
-                ));
-            }
-            let gid = &gids[0];
-            case_result(&case, gid, expect, scratch, swipl, stage)?;
+        let cases = entries(&path, "queries-fixtures")?;
+        for (n, case_pins) in par::map(&cases, |case| {
+            fixture_case(case, color, scratch, swipl, stage)
+        })? {
             if color == "red" {
-                red.push(n.clone());
+                red.push(n);
             } else {
-                green.push(n.clone());
+                green.push(n);
             }
-            let manifest = scratch
-                .0
-                .join(format!("queries-fixture-manifest-{color}-{n}"));
-            if ["answers-golden", "traces-golden", "trace-reject"]
-                .iter()
-                .any(|s| members.contains(*s))
-            {
-                queries::manifest(&manifest, &gid.join("pl"))?;
-            }
-            for lane in ["answers-golden", "traces-golden"] {
-                if members.contains(lane) {
-                    golden(&case, color, lane, gid, &manifest, &mut pins)?;
-                }
-            }
-            if members.contains("trace-reject") {
-                rejects(&case, color, gid, &manifest, &mut pins)?;
-            }
+            pins.extend(case_pins);
         }
     }
     for (required, present, color) in [

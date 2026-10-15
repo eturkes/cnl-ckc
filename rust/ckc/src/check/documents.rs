@@ -1,5 +1,5 @@
 use super::common::*;
-use super::{inventories::Guideline, process, queries, text};
+use super::{inventories::Guideline, par, process, queries, text};
 use std::path::{Path, PathBuf};
 pub(super) fn compile(
     swipl: &Path,
@@ -112,6 +112,45 @@ pub(super) fn aggregate(mode: &str, path: &Path, count: usize) -> Result<String>
     }
     Ok(text)
 }
+// One document's checks, in order; its proof payload lands in `payload_dir`.
+fn document(
+    swipl: &Path,
+    stage: &Path,
+    g: &Guideline,
+    payload_dir: &Path,
+    id: &str,
+) -> Result<(PathBuf, PathBuf)> {
+    let first = compile(swipl, stage, g, id, false)?;
+    let second = compile(swipl, stage, g, id, false)?;
+    if first != second {
+        return Err(violation(
+            "determinism",
+            format!("two compiles differ for document: {id}"),
+        ));
+    }
+    let committed = g.pl(id);
+    if first != read(&committed, "stale")? {
+        return Err(violation(
+            "stale",
+            format!(
+                "committed pl differs from fresh compile: {}",
+                show(&committed)
+            ),
+        ));
+    }
+    let first = compile(swipl, stage, g, id, true)?;
+    let second = compile(swipl, stage, g, id, true)?;
+    if first != second {
+        return Err(violation(
+            "determinism",
+            format!("two proof runs differ for document: {id}"),
+        ));
+    }
+    let payload = payload_dir.join(format!("{id}.proof"));
+    process::write(&payload, &first)?;
+    load(&committed)?;
+    Ok((committed, payload))
+}
 pub(super) fn check(
     scratch: &process::Scratch,
     swipl: &Path,
@@ -122,39 +161,7 @@ pub(super) fn check(
     if !payload_dir.is_dir() {
         std::fs::create_dir(&payload_dir).map_err(|e| fail("scratch", e.to_string()))?;
     }
-    let mut pairs = Vec::new();
-    for id in &g.docids {
-        let first = compile(swipl, stage, g, id, false)?;
-        let second = compile(swipl, stage, g, id, false)?;
-        if first != second {
-            return Err(violation(
-                "determinism",
-                format!("two compiles differ for document: {id}"),
-            ));
-        }
-        let committed = g.pl(id);
-        if first != read(&committed, "stale")? {
-            return Err(violation(
-                "stale",
-                format!(
-                    "committed pl differs from fresh compile: {}",
-                    show(&committed)
-                ),
-            ));
-        }
-        let first = compile(swipl, stage, g, id, true)?;
-        let second = compile(swipl, stage, g, id, true)?;
-        if first != second {
-            return Err(violation(
-                "determinism",
-                format!("two proof runs differ for document: {id}"),
-            ));
-        }
-        let payload = payload_dir.join(format!("{id}.proof"));
-        process::write(&payload, &first)?;
-        pairs.push((committed.clone(), payload));
-        load(&committed)?;
-    }
+    let pairs = par::map(&g.docids, |id| document(swipl, stage, g, &payload_dir, id))?;
     let manifest_ids: Vec<String> = pairs
         .iter()
         .map(|(p, _)| name(p).strip_suffix(".pl").unwrap_or("").to_owned())
@@ -170,11 +177,17 @@ pub(super) fn check(
     }
     let forward = scratch.0.join("manifest-forward");
     write_manifest(&forward, &pairs)?;
-    let report = aggregate("aggregate-check", &forward, pairs.len())?;
     let reverse = scratch.0.join("manifest-reverse");
-    pairs.reverse();
-    write_manifest(&reverse, &pairs)?;
-    if report != aggregate("aggregate-check", &reverse, pairs.len())? {
+    // The reverse job writes its own manifest: failures keep the sequential order.
+    let reports = par::map(&[false, true], |&backward| {
+        if !backward {
+            return aggregate("aggregate-check", &forward, pairs.len());
+        }
+        let reversed: Vec<_> = pairs.iter().rev().cloned().collect();
+        write_manifest(&reverse, &reversed)?;
+        aggregate("aggregate-check", &reverse, pairs.len())
+    })?;
+    if reports[0] != reports[1] {
         return Err(violation(
             "aggregate-order",
             "forward and reverse manifests disagree",

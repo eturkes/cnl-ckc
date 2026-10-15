@@ -20,6 +20,7 @@ mod coverage;
 mod documents;
 mod green;
 mod lexicon;
+mod par;
 pub(crate) mod pipeline;
 mod pipeline_emit;
 mod pipeline_release;
@@ -53,12 +54,8 @@ fn check() -> common::Result {
         documents += g.docids.len();
     }
     query_fixtures::check(&scratch, &swipl, &stage)?;
-    for probe in &red {
-        red::run(&swipl, &stage, probe)?;
-    }
-    for probe in &green {
-        green::run(&swipl, &stage, probe)?;
-    }
+    par::map(&red, |probe| red::run(&swipl, &stage, probe))?;
+    par::map(&green, |probe| green::run(&swipl, &stage, probe))?;
     drop(scratch);
     println!(
         "ckc: check ok {} guidelines {documents} documents {} red probes {} green probes",

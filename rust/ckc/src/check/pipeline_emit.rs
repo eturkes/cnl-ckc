@@ -1,5 +1,5 @@
 use super::common::*;
-use super::{documents, inventories, pipeline, process, queries};
+use super::{documents, inventories, par, pipeline, process, queries};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -124,8 +124,7 @@ pub(super) fn compile(gid: &str) -> Result {
     let stage = process::stage(&scratch, &swipl)?;
     let new = scratch.0.join("pl-new");
     mkdir(&new)?;
-    let mut pairs = Vec::new();
-    for id in &g.docids {
+    let pairs = par::map(&g.docids, |id| {
         let bytes = documents::compile(&swipl, &stage, &g, id, false)?;
         let target = new.join(format!("{id}.pl"));
         process::write(&target, &bytes)?;
@@ -144,8 +143,8 @@ pub(super) fn compile(gid: &str) -> Result {
         )?;
         let proof = scratch.0.join(format!("{id}.proof"));
         process::write(&proof, &payload)?;
-        pairs.push((target, proof));
-    }
+        Ok((target, proof))
+    })?;
     let manifest = scratch.0.join("compile-manifest");
     documents::write_manifest(&manifest, &pairs)?;
     documents::aggregate("aggregate-check", &manifest, pairs.len())?;
@@ -189,7 +188,7 @@ pub(super) fn queries(gid: &str) -> Result {
     for name in ["pl", "answers", "traces"] {
         mkdir(&scratch.0.join(name))?;
     }
-    for id in &ids {
+    par::map(&ids, |id| {
         let ace = root.join(format!("{id}.ace"));
         let bytes = queries::question(
             &swipl,
@@ -219,8 +218,8 @@ pub(super) fn queries(gid: &str) -> Result {
         let trace = queries::trace(id, &manifest, &pl, &answers)?;
         let traces = scratch.0.join("traces").join(format!("{id}.pl"));
         process::write(&traces, &trace)?;
-        queries::inspect_trace(id, &manifest, &pl, &answers, &traces)?;
-    }
+        queries::inspect_trace(id, &manifest, &pl, &answers, &traces)
+    })?;
     // The three accepted inventories replace their old directories only after
     // every query has certified, answered and passed trace replay.
     for name in ["pl", "answers", "traces"] {
