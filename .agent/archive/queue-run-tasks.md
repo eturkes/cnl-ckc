@@ -53,3 +53,12 @@
 - [x] 73fc12c0 N19 sha2 0.11.1 (the trust battery's p20 plant reads the locked version); contract `.agent/archive/contracts/n19.md`.
 - [x] d9584b2e N20 recipes.rs fixture roots leave no scratch entry; contract `.agent/archive/contracts/n20.md`.
 - Open at close: Q1 Kani (waits on the next `rust/kani.lock` bump), N17 Verus issues filed 2026-10-12/13 (waits on a fixing release), N8 Verus interpreter fixes (waits on the first stable release holding all four; its state + next action = its Tasks row), Q5 M7 strength + Q6 corpus rounds (owed: own sessions, user rulings).
+
+## 8681e3a9..close
+
+- [x] 5ae7878d N21 align_suite survivor rulings: reviewer-1 ruled S08 specified → operand-count usage case; 24 open; contract `.agent/archive/contracts/n21.md`.
+- [x] 7fe4245f N22 viewport meta + narrow-screen table rule (user ruling: meta + table scroll box); 0 of 348 pages scroll sideways at 390 px; contract `.agent/archive/contracts/n22.md`.
+- [x] fe361e4a N23 separators replaced (user ruling: section-path mark ` > `, spaced nav + provenance, `Not covered: `, bare titles); contract `.agent/archive/contracts/n23.md`.
+- [x] d3a4df7d N24 `just check` speedup at equal strength: per-item SWI work on `CKC_JOBS` workers, `check` 3221 s → 1267 s; contract `.agent/archive/contracts/n24.md`.
+- [x] bab0e4ad N25 `ckc certify-one` fixture test (user ruling: keep + fixture test); contract `.agent/archive/contracts/n25.md`.
+- Open at close: Q1 Kani (waits on the next `rust/kani.lock` bump; Kani latest = the pinned 0.68.0 on 2026-10-15), N17 Verus issues (waits on a fixing stable release; latest stable = 0.2026.10.04, older than the issues), N8 Verus interpreter fixes (waits on the first stable release holding all four; the 2026-10-12 cut failed, latest stable 0.2026.10.04), Q6 corpus rounds (own sessions). Routed: Q5 M7 strength → IMPLEMENT (user ruling).

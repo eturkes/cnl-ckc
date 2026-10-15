@@ -34,17 +34,13 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 ## Tasks
 
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s.
-- [ ] Q5 M7 next gap class = strength (user pick): its own session, phase per `Routing`; remaining classes = `docs/m7-gap-taxonomy.md`.
 - [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3147, #3154–#3160.
 - [ ] N8 pinned Verus predates interpreter soundness fixes (queue-run find): waits on the first stable Verus release holding verus-lang/verus #3046, #3049, #3108, #3126 (the 2026-10-12 cut failed upstream: release run 38203627466, macos-x86_64 artifact upload ENOTFOUND, copy-release skipped; the cron cuts Mondays ~04:00 UTC). Committed, unlanded on `wt/n8` 5d3d29a2 (base 8aba11e9; worktree .scratch/worktrees/n8; contract `.agent/contracts/n8.md` there, R1–R5; tester-1 canary suite; vstd 0.0.0-2026-10-11-0230 family in both locks + vendor; rustc 1.98.1; kani.lock bootstrap rows; clippy 1.98 `ui_fixtures.rs` fix; trust re-pin; canary = first `just verify` step); only `rust/verus.lock` waits; it lands as a path-scoped delta. Next once `gh api repos/verus-lang/verus/releases/latest` ≠ release/0.2026.10.04.426d8b0: `bash .scratch/dq6/n8-cut.sh <tag>` (each fix `ahead`, asset digest, `verus --version`, canary rc 0) → wt/n8 onto main → `just bump-verus <tag>` → `just kani` + `timeout 1200 cargo-kani --harness harness::engine_answer_tiny --exact` (the Q1 trigger) → prune the N8 rows, archive its contract → land → `just gate` + `just build-static` + reviewer (check set .scratch/dq6/review-n8-checkset.md R1–R9; body draft .scratch/dq6/n8-body-draft.txt) — gitignored inputs, snapshot branch `wip/dq6-n8`; branch wt/tester-1 d2b5194a = the canary suite. The same bump runs the Verus-issue row's scans. Its close moves `rust.md`'s bump procedures onto the `bump-*` recipes and runs `rust.md`'s rules upkeep (user rulings).
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling).
-- [x] 5ae7878d N21 align_suite survivor rulings: reviewer-1 (non-author) ruled S08 specified → operand-count usage case; 24 open, recorded in the N21 body.
-- [x] 7fe4245f N22 reviewer UI viewport meta + narrow-screen table rule (user ruling: meta + table scroll box; widened acceptance).
-- [x] fe361e4a N23 reviewer UI separators replaced (user ruling: section-path mark ` > `, spaced nav links, `Passage <id>` source line, `Not covered: <reason>`, `<title>` = page title alone).
-- [x] d3a4df7d N24 `just check` speedup at equal strength (parallel SWI-stage work): `check` 3221 s → 1267 s.
-- [ ] N25 `ckc certify-one` fixture test (N21 find; user ruling: keep + fixture test).
 - Deferral queue = `.agent/deferred.md` (each row above + ruled deferrals; one entry + acceptance check each).
 
 ## Phase
 
-MAINTAIN — the whole product
+IMPLEMENT — M7 gap class strength
+> M7 gap coverage, class strength (user pick; phase IMPLEMENT by user ruling): recommendation grade, preference of one option over another; ruled disposition = a new schema version with a graded recommendation record (taxonomy, counts + dispositions = `docs/m7-gap-taxonomy.md`). Accept: the class's disposition implemented under its own unit contract, with ≥1 corpus statement of that class previously approximated now compiled and certified.
+Suspended: MAINTAIN — the whole product
