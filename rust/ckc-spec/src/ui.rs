@@ -598,6 +598,7 @@ main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-c
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
+@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
@@ -675,6 +676,7 @@ pub open spec fn frame(title: Bytes, crumbs: Html, body: Html) -> Html {
             fixed_bytes(html_open()),
             fixed_bytes(head_open()),
             fixed_bytes(meta_open()),
+            fixed_bytes(meta_viewport()),
             fixed_bytes(title_open()) + text(title) + fixed_bytes(
                 sp_cnl_ckc_reviewer_title_close(),
             ),
@@ -3035,6 +3037,7 @@ copy_table! {
     sp_to_sp = " to ";
     marks_a_time_limit_as_approximate = "marks a time limit as approximate";
     joins_the_upper_end_of_a_minimum = "joins the upper end of a minimum that is stated as a range";
+    meta_viewport = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
 }
 
 verus! {

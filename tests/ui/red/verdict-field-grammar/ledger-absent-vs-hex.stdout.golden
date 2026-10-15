@@ -9,6 +9,7 @@ Cache-Control: no-store
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Conflict — cnl-ckc reviewer</title>
 <style>
 body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
@@ -137,6 +138,7 @@ main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-c
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
+@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }

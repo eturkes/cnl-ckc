@@ -9712,4 +9712,71 @@ pub proof fn f300(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("joins the upper end of a minimum that is stated as a range"@), inputs, 0, 0);
 }
 
+pub proof fn l301(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
+        ),
+        u::copy_derived(
+            u::lit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[301] == u::lit(
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[301] == u::lit(
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
+    ) && 301 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
+        inputs,
+    );
+}
+
+pub proof fn f301(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[301] == u::lit(
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l301(inputs);
+    reveal_strlit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
+    is_ascii_chars_encode_utf8(
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
+    );
+    assert(u::lit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@)
+        =~= bs![60u8,109,101,116,97,32,110,97,109,101,61,34,118,105,101,119,112,111,114,116,34,32,99,111,110,116,101,110,116,61,34,119,105,100,116,104,61,100,101,118,105,99,101,45,119,105,100,116,104,44,32,105,110,105,116,105,97,108,45,115,99,97,108,101,61,49,34,62]);
+    assert(cx::scan(
+        bs![60u8,109,101,116,97,32,110,97,109,101,61,34,118,105,101,119,112,111,114,116,34,32,99,111,110,116,101,110,116,61,34,119,105,100,116,104,61,100,101,118,105,99,101,45,119,105,100,116,104,44,32,105,110,105,116,105,97,108,45,115,99,97,108,101,61,49,34,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
+        0,
+    );
+    h::fixed(
+        u::lit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
+        inputs,
+        0,
+        0,
+    );
+}
+
 } // verus!

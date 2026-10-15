@@ -213,6 +213,7 @@ pub proof fn frame(title: u::Bytes, crumbs: u::Html, body: u::Html, inputs: Seq<
     l::f055(inputs);
     l::f056(inputs);
     l::f057(inputs);
+    l::f301(inputs);
     h::text(title, inputs);
     chrome::css_text(inputs);
     add(f(44), u::text(title), inputs);
@@ -224,6 +225,7 @@ pub proof fn frame(title: u::Bytes, crumbs: u::Html, body: u::Html, inputs: Seq<
         f(41),
         f(42),
         f(43),
+        f(301),
         f(44) + u::text(title) + f(45),
         f(46),
         u::fixed_bytes(u::css_text()),
@@ -239,7 +241,7 @@ pub proof fn frame(title: u::Bytes, crumbs: u::Html, body: u::Html, inputs: Seq<
         f(56),
         f(57),
     ];
-    let cs = seq![0int, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let cs = seq![0int, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     flow(xs, cs, inputs);
     l::f005(inputs, 0);
     add(u::lines(xs), u::fixed_bytes(u::newline()), inputs);

@@ -134,6 +134,7 @@ main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-c
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
+@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }

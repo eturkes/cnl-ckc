@@ -190,6 +190,12 @@ document: does the ACE representation appropriately reflect the
 original passage? The answer, the reviewer name, and an optional
 comment append to `guidelines/<id>/audit/adjudication.tsv`.
 
+The pages fit the screen of a phone. Each page sets its layout width
+to the width of the screen. On a screen narrower than 40rem, a table
+that is wider than the screen scrolls sideways inside its own box,
+and the rest of the page keeps the width of the screen. Printed pages
+do not change.
+
 The document page links the two texts through an authored alignment.
 The author of the ACE text records which part of the passage each
 ACE term came from, in `guidelines/<id>/align/<docid>.tsv`. The page

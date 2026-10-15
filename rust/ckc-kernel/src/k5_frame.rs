@@ -16,6 +16,7 @@ pub fn frame(title: &[u8], crumbs: EPage, body: EPage) -> (out: EPage)
     rows.push(h::fixed("<html lang=\"en\">"));
     rows.push(h::fixed("<head>"));
     rows.push(h::fixed("<meta charset=\"utf-8\">"));
+    rows.push(h::fixed("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"));
     rows.push(
         h::cat(
             h::cat(h::fixed("<title>"), h::text(title)),
@@ -45,6 +46,7 @@ pub fn frame(title: &[u8], crumbs: EPage, body: EPage) -> (out: EPage)
             u::fixed_bytes(u::html_open()),
             u::fixed_bytes(u::head_open()),
             u::fixed_bytes(u::meta_open()),
+            u::fixed_bytes(u::meta_viewport()),
             u::fixed_bytes(u::title_open()) + u::text(title@) + u::fixed_bytes(
                 u::sp_cnl_ckc_reviewer_title_close(),
             ),

@@ -131,6 +131,7 @@ main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-c
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
+@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
@@ -327,6 +328,7 @@ main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-c
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
+@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }
 @media print {
 body { max-width: none; padding: 0; }
 nav.crumbs, nav.docnav, .skip, form, .verdict-entry, .hl-note { display: none; }
@@ -350,7 +352,7 @@ pub proof fn css_text_block0(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(0, 64)
         == bs![98u8,111,100,121,32,123,32,109,97,114,103,105,110,58,32,48,32,97,117,116,111,59,32,109,97,120,45,119,105,100,116,104,58,32,55,50,114,101,109,59,32,112,97,100,100,105,110,103,58,32,48,32,49,46,53,114,101,109,32,52,114,101,109,59])
         by (compute_only);
@@ -365,7 +367,7 @@ pub proof fn css_text_block1(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(64, 128)
         == bs![32u8,102,111,110,116,45,102,97,109,105,108,121,58,32,115,121,115,116,101,109,45,117,105,44,32,115,97,110,115,45,115,101,114,105,102,59,32,108,105,110,101,45,104,101,105,103,104,116,58,32,49,46,53,53,59,32,99,111,108,111,114,58,32,35])
         by (compute_only);
@@ -380,7 +382,7 @@ pub proof fn css_text_block2(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(128, 192)
         == bs![49u8,49,49,56,50,55,59,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,102,102,102,102,102,59,32,125,10,97,32,123,32,99,111,108,111,114,58,32,35,49,100,52,101,100,56,59,32,125,10,97,58,102,111,99,117,115,45,118,105,115])
         by (compute_only);
@@ -395,7 +397,7 @@ pub proof fn css_text_block3(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(192, 256)
         == bs![105u8,98,108,101,44,32,115,117,109,109,97,114,121,58,102,111,99,117,115,45,118,105,115,105,98,108,101,32,123,32,111,117,116,108,105,110,101,58,32,51,112,120,32,115,111,108,105,100,32,35,49,100,52,101,100,56,59,32,111,117,116,108,105,110])
         by (compute_only);
@@ -410,7 +412,7 @@ pub proof fn css_text_block4(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(256, 320)
         == bs![101u8,45,111,102,102,115,101,116,58,32,50,112,120,59,32,125,10,46,115,107,105,112,32,123,32,112,111,115,105,116,105,111,110,58,32,97,98,115,111,108,117,116,101,59,32,108,101,102,116,58,32,45,57,57,57,112,120,59,32,116,111,112,58,32])
         by (compute_only);
@@ -425,7 +427,7 @@ pub proof fn css_text_block5(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(320, 384)
         == bs![48u8,59,32,112,97,100,100,105,110,103,58,32,48,46,53,114,101,109,32,49,114,101,109,59,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,102,102,102,102,102,59,32,99,111,108,111,114,58,32,35,49,100,52,101,100,56,59,32,125,10])
         by (compute_only);
@@ -440,7 +442,7 @@ pub proof fn css_text_block6(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(384, 448)
         == bs![46u8,115,107,105,112,58,102,111,99,117,115,32,123,32,108,101,102,116,58,32,48,59,32,122,45,105,110,100,101,120,58,32,49,59,32,125,10,110,97,118,46,99,114,117,109,98,115,32,123,32,112,97,100,100,105,110,103,58,32,49,114,101,109,32])
         by (compute_only);
@@ -455,7 +457,7 @@ pub proof fn css_text_block7(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(448, 512)
         == bs![48u8,59,32,98,111,114,100,101,114,45,98,111,116,116,111,109,58,32,49,112,120,32,115,111,108,105,100,32,35,101,53,101,55,101,98,59,32,125,10,104,49,32,123,32,102,111,110,116,45,115,105,122,101,58,32,49,46,53,114,101,109,59,32,125])
         by (compute_only);
@@ -470,7 +472,7 @@ pub proof fn css_text_block8(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(512, 576)
         == bs![10u8,104,50,32,123,32,102,111,110,116,45,115,105,122,101,58,32,49,46,50,53,114,101,109,59,32,125,10,104,51,32,123,32,102,111,110,116,45,115,105,122,101,58,32,49,46,48,53,114,101,109,59,32,125,10,104,49,32,97,46,115,111,117,114])
         by (compute_only);
@@ -485,7 +487,7 @@ pub proof fn css_text_block9(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(576, 640)
         == bs![99u8,101,32,123,32,102,111,110,116,45,115,105,122,101,58,32,49,114,101,109,59,32,102,111,110,116,45,119,101,105,103,104,116,58,32,52,48,48,59,32,109,97,114,103,105,110,45,108,101,102,116,58,32,48,46,53,114,101,109,59,32,125,10,116])
         by (compute_only);
@@ -500,7 +502,7 @@ pub proof fn css_text_block10(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(640, 704)
         == bs![97u8,98,108,101,32,123,32,98,111,114,100,101,114,45,99,111,108,108,97,112,115,101,58,32,99,111,108,108,97,112,115,101,59,32,119,105,100,116,104,58,32,49,48,48,37,59,32,109,97,114,103,105,110,58,32,49,114,101,109,32,48,59,32,125])
         by (compute_only);
@@ -515,7 +517,7 @@ pub proof fn css_text_block11(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(704, 768)
         == bs![10u8,116,104,44,32,116,100,32,123,32,116,101,120,116,45,97,108,105,103,110,58,32,108,101,102,116,59,32,112,97,100,100,105,110,103,58,32,48,46,52,114,101,109,32,48,46,54,114,101,109,59,32,98,111,114,100,101,114,45,98,111,116,116,111])
         by (compute_only);
@@ -530,7 +532,7 @@ pub proof fn css_text_block12(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(768, 832)
         == bs![109u8,58,32,49,112,120,32,115,111,108,105,100,32,35,101,53,101,55,101,98,59,32,118,101,114,116,105,99,97,108,45,97,108,105,103,110,58,32,116,111,112,59,32,125,10,116,104,32,123,32,98,111,114,100,101,114,45,98,111,116,116,111,109,58])
         by (compute_only);
@@ -545,7 +547,7 @@ pub proof fn css_text_block13(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(832, 896)
         == bs![32u8,50,112,120,32,115,111,108,105,100,32,35,49,49,49,56,50,55,59,32,125,10,116,97,98,108,101,46,99,111,109,112,97,99,116,32,123,32,119,105,100,116,104,58,32,97,117,116,111,59,32,125,10,116,97,98,108,101,46,99,111,109,112,97])
         by (compute_only);
@@ -560,7 +562,7 @@ pub proof fn css_text_block14(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(896, 960)
         == bs![99u8,116,32,116,104,44,32,116,97,98,108,101,46,99,111,109,112,97,99,116,32,116,100,32,123,32,112,97,100,100,105,110,103,45,114,105,103,104,116,58,32,50,114,101,109,59,32,125,10,116,97,98,108,101,46,114,101,99,111,114,100,115,32,123])
         by (compute_only);
@@ -575,7 +577,7 @@ pub proof fn css_text_block15(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(960, 1024)
         == bs![32u8,116,97,98,108,101,45,108,97,121,111,117,116,58,32,102,105,120,101,100,59,32,125,10,116,97,98,108,101,46,114,101,99,111,114,100,115,32,116,104,32,123,32,98,111,120,45,115,105,122,105,110,103,58,32,98,111,114,100,101,114,45,98,111])
         by (compute_only);
@@ -590,7 +592,7 @@ pub proof fn css_text_block16(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1024, 1088)
         == bs![120u8,59,32,125,10,116,97,98,108,101,46,114,101,99,111,114,100,115,32,116,104,58,110,116,104,45,99,104,105,108,100,40,49,41,32,123,32,119,105,100,116,104,58,32,49,50,37,59,32,125,10,116,97,98,108,101,46,114,101,99,111,114,100,115])
         by (compute_only);
@@ -605,7 +607,7 @@ pub proof fn css_text_block17(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1088, 1152)
         == bs![32u8,116,104,58,110,116,104,45,99,104,105,108,100,40,50,41,32,123,32,119,105,100,116,104,58,32,49,56,37,59,32,125,10,116,97,98,108,101,46,114,101,99,111,114,100,115,32,116,104,58,110,116,104,45,99,104,105,108,100,40,51,41,32,123])
         by (compute_only);
@@ -620,7 +622,7 @@ pub proof fn css_text_block18(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1152, 1216)
         == bs![32u8,119,105,100,116,104,58,32,50,50,37,59,32,125,10,116,97,98,108,101,46,114,101,99,111,114,100,115,32,116,104,58,110,116,104,45,99,104,105,108,100,40,52,41,32,123,32,119,105,100,116,104,58,32,49,48,37,59,32,125,10,46,99,104])
         by (compute_only);
@@ -635,7 +637,7 @@ pub proof fn css_text_block19(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1216, 1280)
         == bs![105u8,112,32,123,32,100,105,115,112,108,97,121,58,32,105,110,108,105,110,101,45,98,108,111,99,107,59,32,112,97,100,100,105,110,103,58,32,48,46,49,114,101,109,32,48,46,54,114,101,109,59,32,98,111,114,100,101,114,45,114,97,100,105,117])
         by (compute_only);
@@ -650,7 +652,7 @@ pub proof fn css_text_block20(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1280, 1344)
         == bs![115u8,58,32,57,57,57,112,120,59,32,102,111,110,116,45,115,105,122,101,58,32,48,46,56,53,114,101,109,59,32,102,111,110,116,45,119,101,105,103,104,116,58,32,54,48,48,59,32,125,10,46,99,104,105,112,45,97,112,112,114,111,118,101,100])
         by (compute_only);
@@ -665,7 +667,7 @@ pub proof fn css_text_block21(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1344, 1408)
         == bs![32u8,123,32,99,111,108,111,114,58,32,35,49,52,53,51,50,100,59,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,99,102,99,101,55,59,32,125,10,46,99,104,105,112,45,114,101,106,101,99,116,101,100,32,123,32,99,111,108,111,114])
         by (compute_only);
@@ -680,7 +682,7 @@ pub proof fn css_text_block22(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1408, 1472)
         == bs![58u8,32,35,55,102,49,100,49,100,59,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,101,50,101,50,59,32,125,10,46,99,104,105,112,45,99,111,110,116,101,115,116,101,100,32,123,32,99,111,108,111,114,58,32,35,52,99,49,100])
         by (compute_only);
@@ -695,7 +697,7 @@ pub proof fn css_text_block23(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1472, 1536)
         == bs![57u8,53,59,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,100,101,57,102,101,59,32,125,10,46,99,104,105,112,45,115,116,97,108,101,32,123,32,99,111,108,111,114,58,32,35,55,56,51,53,48,102,59,32,98,97,99,107,103,114,111])
         by (compute_only);
@@ -710,7 +712,7 @@ pub proof fn css_text_block24(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1536, 1600)
         == bs![117u8,110,100,58,32,35,102,101,102,51,99,55,59,32,125,10,46,99,104,105,112,45,117,110,114,101,118,105,101,119,101,100,32,123,32,99,111,108,111,114,58,32,35,49,102,50,57,51,55,59,32,98,97,99,107,103,114,111,117,110,100,58,32,35])
         by (compute_only);
@@ -725,7 +727,7 @@ pub proof fn css_text_block25(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1600, 1664)
         == bs![101u8,53,101,55,101,98,59,32,125,10,112,114,101,32,123,32,112,97,100,100,105,110,103,58,32,48,46,55,53,114,101,109,32,49,114,101,109,59,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,101,53,101,55,101,98])
         by (compute_only);
@@ -740,7 +742,7 @@ pub proof fn css_text_block26(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1664, 1728)
         == bs![59u8,32,119,104,105,116,101,45,115,112,97,99,101,58,32,112,114,101,45,119,114,97,112,59,32,111,118,101,114,102,108,111,119,45,120,58,32,97,117,116,111,59,32,125,10,112,114,101,44,32,99,111,100,101,32,123,32,102,111,110,116,45,102,97])
         by (compute_only);
@@ -755,7 +757,7 @@ pub proof fn css_text_block27(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1728, 1792)
         == bs![109u8,105,108,121,58,32,117,105,45,109,111,110,111,115,112,97,99,101,44,32,77,101,110,108,111,44,32,67,111,110,115,111,108,97,115,44,32,109,111,110,111,115,112,97,99,101,59,32,102,111,110,116,45,115,105,122,101,58,32,48,46,57,53,114])
         by (compute_only);
@@ -770,7 +772,7 @@ pub proof fn css_text_block28(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1792, 1856)
         == bs![101u8,109,59,32,125,10,112,114,101,46,112,114,111,115,101,32,123,32,102,111,110,116,45,102,97,109,105,108,121,58,32,71,101,111,114,103,105,97,44,32,115,101,114,105,102,59,32,102,111,110,116,45,115,105,122,101,58,32,49,46,48,53,114,101])
         by (compute_only);
@@ -785,7 +787,7 @@ pub proof fn css_text_block29(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1856, 1920)
         == bs![109u8,59,32,111,118,101,114,102,108,111,119,45,119,114,97,112,58,32,97,110,121,119,104,101,114,101,59,32,125,10,100,116,32,123,32,102,111,110,116,45,119,101,105,103,104,116,58,32,54,48,48,59,32,109,97,114,103,105,110,45,116,111,112,58])
         by (compute_only);
@@ -800,7 +802,7 @@ pub proof fn css_text_block30(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1920, 1984)
         == bs![32u8,48,46,54,114,101,109,59,32,125,10,100,100,32,123,32,109,97,114,103,105,110,45,108,101,102,116,58,32,48,59,32,125,10,115,117,109,109,97,114,121,32,123,32,99,117,114,115,111,114,58,32,112,111,105,110,116,101,114,59,32,125,10,115])
         by (compute_only);
@@ -815,7 +817,7 @@ pub proof fn css_text_block31(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(1984, 2048)
         == bs![101u8,99,116,105,111,110,32,123,32,109,97,114,103,105,110,58,32,49,46,53,114,101,109,32,48,59,32,125,10,110,97,118,46,100,111,99,110,97,118,32,123,32,112,97,100,100,105,110,103,58,32,49,114,101,109,32,48,59,32,98,111,114,100,101])
         by (compute_only);
@@ -830,7 +832,7 @@ pub proof fn css_text_block32(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2048, 2112)
         == bs![114u8,45,116,111,112,58,32,49,112,120,32,115,111,108,105,100,32,35,101,53,101,55,101,98,59,32,125,10,102,111,111,116,101,114,46,115,99,111,112,101,32,123,32,109,97,114,103,105,110,45,116,111,112,58,32,50,114,101,109,59,32,112,97,100])
         by (compute_only);
@@ -845,7 +847,7 @@ pub proof fn css_text_block33(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2112, 2176)
         == bs![100u8,105,110,103,58,32,49,114,101,109,32,48,59,32,98,111,114,100,101,114,45,116,111,112,58,32,49,112,120,32,115,111,108,105,100,32,35,101,53,101,55,101,98,59,32,102,111,110,116,45,115,105,122,101,58,32,48,46,57,114,101,109,59,32])
         by (compute_only);
@@ -860,7 +862,7 @@ pub proof fn css_text_block34(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2176, 2240)
         == bs![125u8,10,102,111,114,109,32,108,97,98,101,108,32,123,32,100,105,115,112,108,97,121,58,32,98,108,111,99,107,59,32,109,97,114,103,105,110,45,116,111,112,58,32,49,114,101,109,59,32,102,111,110,116,45,119,101,105,103,104,116,58,32,54,48])
         by (compute_only);
@@ -875,7 +877,7 @@ pub proof fn css_text_block35(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2240, 2304)
         == bs![48u8,59,32,125,10,102,105,101,108,100,115,101,116,32,123,32,98,111,114,100,101,114,58,32,48,59,32,109,97,114,103,105,110,58,32,49,114,101,109,32,48,32,48,59,32,112,97,100,100,105,110,103,58,32,48,59,32,109,97,120,45,119,105,100])
         by (compute_only);
@@ -890,7 +892,7 @@ pub proof fn css_text_block36(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2304, 2368)
         == bs![116u8,104,58,32,50,56,114,101,109,59,32,125,10,108,101,103,101,110,100,32,123,32,102,111,110,116,45,119,101,105,103,104,116,58,32,54,48,48,59,32,112,97,100,100,105,110,103,58,32,48,59,32,125,10,102,105,101,108,100,115,101,116,32,108])
         by (compute_only);
@@ -905,7 +907,7 @@ pub proof fn css_text_block37(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2368, 2432)
         == bs![97u8,98,101,108,32,123,32,109,97,114,103,105,110,45,116,111,112,58,32,48,46,53,114,101,109,59,32,102,111,110,116,45,119,101,105,103,104,116,58,32,52,48,48,59,32,125,10,105,110,112,117,116,91,116,121,112,101,61,34,116,101,120,116,34])
         by (compute_only);
@@ -920,7 +922,7 @@ pub proof fn css_text_block38(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2432, 2496)
         == bs![93u8,44,32,116,101,120,116,97,114,101,97,32,123,32,100,105,115,112,108,97,121,58,32,98,108,111,99,107,59,32,98,111,120,45,115,105,122,105,110,103,58,32,98,111,114,100,101,114,45,98,111,120,59,32,119,105,100,116,104,58,32,49,48,48])
         by (compute_only);
@@ -935,7 +937,7 @@ pub proof fn css_text_block39(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2496, 2560)
         == bs![37u8,59,32,109,97,120,45,119,105,100,116,104,58,32,50,56,114,101,109,59,32,109,97,114,103,105,110,45,116,111,112,58,32,48,46,51,114,101,109,59,32,112,97,100,100,105,110,103,58,32,48,46,52,53,114,101,109,32,48,46,54,114,101,109])
         by (compute_only);
@@ -950,7 +952,7 @@ pub proof fn css_text_block40(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2560, 2624)
         == bs![59u8,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,101,53,101,55,101,98,59,32,102,111,110,116,45,102,97,109,105,108,121,58,32,105,110,104,101,114,105,116,59,32,102,111,110,116,45,115,105,122,101,58,32,49,114])
         by (compute_only);
@@ -965,7 +967,7 @@ pub proof fn css_text_block41(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2624, 2688)
         == bs![101u8,109,59,32,99,111,108,111,114,58,32,35,49,49,49,56,50,55,59,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,102,102,102,102,102,59,32,125,10,116,101,120,116,97,114,101,97,32,123,32,109,105,110,45,104,101,105,103,104,116])
         by (compute_only);
@@ -980,7 +982,7 @@ pub proof fn css_text_block42(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2688, 2752)
         == bs![58u8,32,54,114,101,109,59,32,125,10,105,110,112,117,116,91,116,121,112,101,61,34,114,97,100,105,111,34,93,44,32,105,110,112,117,116,91,116,121,112,101,61,34,99,104,101,99,107,98,111,120,34,93,32,123,32,97,99,99,101,110,116,45,99])
         by (compute_only);
@@ -995,7 +997,7 @@ pub proof fn css_text_block43(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2752, 2816)
         == bs![111u8,108,111,114,58,32,35,49,49,49,56,50,55,59,32,125,10,105,110,112,117,116,91,116,121,112,101,61,34,116,101,120,116,34,93,58,102,111,99,117,115,45,118,105,115,105,98,108,101,44,32,105,110,112,117,116,91,116,121,112,101,61,34,114])
         by (compute_only);
@@ -1010,7 +1012,7 @@ pub proof fn css_text_block44(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2816, 2880)
         == bs![97u8,100,105,111,34,93,58,102,111,99,117,115,45,118,105,115,105,98,108,101,44,32,105,110,112,117,116,91,116,121,112,101,61,34,99,104,101,99,107,98,111,120,34,93,58,102,111,99,117,115,45,118,105,115,105,98,108,101,44,32,116,101,120,116])
         by (compute_only);
@@ -1025,7 +1027,7 @@ pub proof fn css_text_block45(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2880, 2944)
         == bs![97u8,114,101,97,58,102,111,99,117,115,45,118,105,115,105,98,108,101,44,32,98,117,116,116,111,110,58,102,111,99,117,115,45,118,105,115,105,98,108,101,32,123,32,111,117,116,108,105,110,101,58,32,51,112,120,32,115,111,108,105,100,32,35,49])
         by (compute_only);
@@ -1040,7 +1042,7 @@ pub proof fn css_text_block46(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(2944, 3008)
         == bs![100u8,52,101,100,56,59,32,111,117,116,108,105,110,101,45,111,102,102,115,101,116,58,32,50,112,120,59,32,125,10,98,117,116,116,111,110,32,123,32,109,97,114,103,105,110,45,116,111,112,58,32,49,46,50,53,114,101,109,59,32,112,97,100,100])
         by (compute_only);
@@ -1055,7 +1057,7 @@ pub proof fn css_text_block47(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3008, 3072)
         == bs![105u8,110,103,58,32,48,46,53,114,101,109,32,49,46,50,114,101,109,59,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,49,49,49,56,50,55,59,32,102,111,110,116,45,102,97,109,105,108,121,58,32,105,110,104,101])
         by (compute_only);
@@ -1070,7 +1072,7 @@ pub proof fn css_text_block48(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3072, 3136)
         == bs![114u8,105,116,59,32,102,111,110,116,45,115,105,122,101,58,32,49,114,101,109,59,32,102,111,110,116,45,119,101,105,103,104,116,58,32,54,48,48,59,32,99,111,108,111,114,58,32,35,102,102,102,102,102,102,59,32,98,97,99,107,103,114,111,117])
         by (compute_only);
@@ -1085,7 +1087,7 @@ pub proof fn css_text_block49(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3136, 3200)
         == bs![110u8,100,58,32,35,49,49,49,56,50,55,59,32,125,10,109,97,114,107,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,98,101,97,102,101,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,116,101,120,116,45])
         by (compute_only);
@@ -1100,7 +1102,7 @@ pub proof fn css_text_block50(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3200, 3264)
         == bs![100u8,101,99,111,114,97,116,105,111,110,58,32,117,110,100,101,114,108,105,110,101,32,100,111,116,116,101,100,32,35,52,98,53,53,54,51,59,32,116,101,120,116,45,117,110,100,101,114,108,105,110,101,45,111,102,102,115,101,116,58,32,48,46,49])
         by (compute_only);
@@ -1115,7 +1117,7 @@ pub proof fn css_text_block51(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3264, 3328)
         == bs![53u8,101,109,59,32,125,10,46,107,119,32,123,32,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,46,104,108,45,110,111,116,101,32,123,32,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,102,111,110,116,45,115])
         by (compute_only);
@@ -1130,7 +1132,7 @@ pub proof fn css_text_block52(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3328, 3392)
         == bs![105u8,122,101,58,32,48,46,57,114,101,109,59,32,125,10,109,97,114,107,46,116,49,44,32,109,97,114,107,46,116,49,51,44,32,109,97,114,107,46,116,50,53,44,32,109,97,114,107,46,116,51,55,32,123,32,98,97,99,107,103,114,111,117,110])
         by (compute_only);
@@ -1145,7 +1147,7 @@ pub proof fn css_text_block53(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3392, 3456)
         == bs![100u8,58,32,35,102,101,102,57,99,51,59,32,125,10,109,97,114,107,46,116,50,44,32,109,97,114,107,46,116,49,52,44,32,109,97,114,107,46,116,50,54,44,32,109,97,114,107,46,116,51,56,32,123,32,98,97,99,107,103,114,111,117,110,100])
         by (compute_only);
@@ -1160,7 +1162,7 @@ pub proof fn css_text_block54(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3456, 3520)
         == bs![58u8,32,35,102,51,101,56,102,102,59,32,125,10,109,97,114,107,46,116,51,44,32,109,97,114,107,46,116,49,53,44,32,109,97,114,107,46,116,50,55,44,32,109,97,114,107,46,116,51,57,32,123,32,98,97,99,107,103,114,111,117,110,100,58])
         by (compute_only);
@@ -1175,7 +1177,7 @@ pub proof fn css_text_block55(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3520, 3584)
         == bs![32u8,35,102,102,101,100,100,53,59,32,125,10,109,97,114,107,46,116,52,44,32,109,97,114,107,46,116,49,54,44,32,109,97,114,107,46,116,50,56,44,32,109,97,114,107,46,116,52,48,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32])
         by (compute_only);
@@ -1190,7 +1192,7 @@ pub proof fn css_text_block56(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3584, 3648)
         == bs![35u8,99,99,102,98,102,49,59,32,125,10,109,97,114,107,46,116,53,44,32,109,97,114,107,46,116,49,55,44,32,109,97,114,107,46,116,50,57,44,32,109,97,114,107,46,116,52,49,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35])
         by (compute_only);
@@ -1205,7 +1207,7 @@ pub proof fn css_text_block57(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3648, 3712)
         == bs![102u8,102,101,52,101,54,59,32,125,10,109,97,114,107,46,116,54,44,32,109,97,114,107,46,116,49,56,44,32,109,97,114,107,46,116,51,48,44,32,109,97,114,107,46,116,52,50,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100])
         by (compute_only);
@@ -1220,7 +1222,7 @@ pub proof fn css_text_block58(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3712, 3776)
         == bs![99u8,102,99,101,55,59,32,125,10,109,97,114,107,46,116,55,44,32,109,97,114,107,46,116,49,57,44,32,109,97,114,107,46,116,51,49,44,32,109,97,114,107,46,116,52,51,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,97])
         by (compute_only);
@@ -1235,7 +1237,7 @@ pub proof fn css_text_block59(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3776, 3840)
         == bs![101u8,56,102,102,59,32,125,10,109,97,114,107,46,116,56,44,32,109,97,114,107,46,116,50,48,44,32,109,97,114,107,46,116,51,50,44,32,109,97,114,107,46,116,52,52,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,99,102,102])
         by (compute_only);
@@ -1250,7 +1252,7 @@ pub proof fn css_text_block60(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3840, 3904)
         == bs![97u8,102,101,59,32,125,10,109,97,114,107,46,116,57,44,32,109,97,114,107,46,116,50,49,44,32,109,97,114,107,46,116,51,51,44,32,109,97,114,107,46,116,52,53,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,99,102,99])
         by (compute_only);
@@ -1265,7 +1267,7 @@ pub proof fn css_text_block61(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3904, 3968)
         == bs![99u8,98,59,32,125,10,109,97,114,107,46,116,49,48,44,32,109,97,114,107,46,116,50,50,44,32,109,97,114,107,46,116,51,52,44,32,109,97,114,107,46,116,52,54,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,48,101,55])
         by (compute_only);
@@ -1280,7 +1282,7 @@ pub proof fn css_text_block62(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(3968, 4032)
         == bs![102u8,102,59,32,125,10,109,97,114,107,46,116,49,49,44,32,109,97,114,107,46,116,50,51,44,32,109,97,114,107,46,116,51,53,44,32,109,97,114,107,46,116,52,55,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,55,101,53])
         by (compute_only);
@@ -1295,7 +1297,7 @@ pub proof fn css_text_block63(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4032, 4096)
         == bs![101u8,52,59,32,125,10,109,97,114,107,46,116,48,44,32,109,97,114,107,46,116,49,50,44,32,109,97,114,107,46,116,50,52,44,32,109,97,114,107,46,116,51,54,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111])
         by (compute_only);
@@ -1310,7 +1312,7 @@ pub proof fn css_text_block64(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4096, 4160)
         == bs![108u8,111,114,58,32,35,50,53,54,51,101,98,59,32,125,10,109,97,114,107,46,116,49,44,32,109,97,114,107,46,116,49,51,44,32,109,97,114,107,46,116,50,53,44,32,109,97,114,107,46,116,51,55,32,123,32,116,101,120,116,45,100,101,99])
         by (compute_only);
@@ -1325,7 +1327,7 @@ pub proof fn css_text_block65(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4160, 4224)
         == bs![111u8,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,97,49,54,50,48,55,59,32,125,10,109,97,114,107,46,116,50,44,32,109,97,114,107,46,116,49,52,44,32,109,97,114,107,46,116,50,54,44,32,109,97,114,107,46,116,51,56,32])
         by (compute_only);
@@ -1340,7 +1342,7 @@ pub proof fn css_text_block66(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4224, 4288)
         == bs![123u8,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,55,99,51,97,101,100,59,32,125,10,109,97,114,107,46,116,51,44,32,109,97,114,107,46,116,49,53,44,32,109,97,114,107,46,116,50,55,44])
         by (compute_only);
@@ -1355,7 +1357,7 @@ pub proof fn css_text_block67(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4288, 4352)
         == bs![32u8,109,97,114,107,46,116,51,57,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,99,50,52,49,48,99,59,32,125,10,109,97,114,107,46,116,52,44,32,109,97,114,107,46,116,49,54,44])
         by (compute_only);
@@ -1370,7 +1372,7 @@ pub proof fn css_text_block68(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4352, 4416)
         == bs![32u8,109,97,114,107,46,116,50,56,44,32,109,97,114,107,46,116,52,48,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,48,102,55,54,54,101,59,32,125,10,109,97,114,107,46,116,53,44])
         by (compute_only);
@@ -1385,7 +1387,7 @@ pub proof fn css_text_block69(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4416, 4480)
         == bs![32u8,109,97,114,107,46,116,49,55,44,32,109,97,114,107,46,116,50,57,44,32,109,97,114,107,46,116,52,49,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,98,101,49,50,51,99,59,32])
         by (compute_only);
@@ -1400,7 +1402,7 @@ pub proof fn css_text_block70(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4480, 4544)
         == bs![125u8,10,109,97,114,107,46,116,54,44,32,109,97,114,107,46,116,49,56,44,32,109,97,114,107,46,116,51,48,44,32,109,97,114,107,46,116,52,50,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58])
         by (compute_only);
@@ -1415,7 +1417,7 @@ pub proof fn css_text_block71(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4544, 4608)
         == bs![32u8,35,49,53,56,48,51,100,59,32,125,10,109,97,114,107,46,116,55,44,32,109,97,114,107,46,116,49,57,44,32,109,97,114,107,46,116,51,49,44,32,109,97,114,107,46,116,52,51,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116])
         by (compute_only);
@@ -1430,7 +1432,7 @@ pub proof fn css_text_block72(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4608, 4672)
         == bs![105u8,111,110,45,99,111,108,111,114,58,32,35,97,50,49,99,97,102,59,32,125,10,109,97,114,107,46,116,56,44,32,109,97,114,107,46,116,50,48,44,32,109,97,114,107,46,116,51,50,44,32,109,97,114,107,46,116,52,52,32,123,32,116,101])
         by (compute_only);
@@ -1445,7 +1447,7 @@ pub proof fn css_text_block73(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4672, 4736)
         == bs![120u8,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,48,101,55,52,57,48,59,32,125,10,109,97,114,107,46,116,57,44,32,109,97,114,107,46,116,50,49,44,32,109,97,114,107,46,116,51,51,44,32,109,97,114])
         by (compute_only);
@@ -1460,7 +1462,7 @@ pub proof fn css_text_block74(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4736, 4800)
         == bs![107u8,46,116,52,53,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,100,55,99,48,102,59,32,125,10,109,97,114,107,46,116,49,48,44,32,109,97,114,107,46,116,50,50,44,32,109,97])
         by (compute_only);
@@ -1475,7 +1477,7 @@ pub proof fn css_text_block75(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4800, 4864)
         == bs![114u8,107,46,116,51,52,44,32,109,97,114,107,46,116,52,54,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,102,52,54,101,53,59,32,125,10,109,97,114,107,46,116,49,49,44,32,109])
         by (compute_only);
@@ -1490,7 +1492,7 @@ pub proof fn css_text_block76(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4864, 4928)
         == bs![97u8,114,107,46,116,50,51,44,32,109,97,114,107,46,116,51,53,44,32,109,97,114,107,46,116,52,55,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,53,55,53,51,52,101,59,32,125,10])
         by (compute_only);
@@ -1505,7 +1507,7 @@ pub proof fn css_text_block77(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4928, 4992)
         == bs![109u8,97,105,110,58,104,97,115,40,109,97,114,107,46,116,48,58,104,111,118,101,114,41,32,109,97,114,107,46,116,48,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,98,102,100,98,102,101,59,32,116,101,120,116,45,100,101,99,111])
         by (compute_only);
@@ -1520,7 +1522,7 @@ pub proof fn css_text_block78(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(4992, 5056)
         == bs![114u8,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,32,123,32,98,97,99,107,103,114,111])
         by (compute_only);
@@ -1535,7 +1537,7 @@ pub proof fn css_text_block79(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5056, 5120)
         == bs![117u8,110,100,58,32,35,102,101,102,48,56,97,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,58,104])
         by (compute_only);
@@ -1550,7 +1552,7 @@ pub proof fn css_text_block80(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5120, 5184)
         == bs![111u8,118,101,114,41,32,109,97,114,107,46,116,50,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,57,100,53,102,102,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105])
         by (compute_only);
@@ -1565,7 +1567,7 @@ pub proof fn css_text_block81(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5184, 5248)
         == bs![100u8,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,100,55,97,97,59,32,116,101,120,116])
         by (compute_only);
@@ -1580,7 +1582,7 @@ pub proof fn css_text_block82(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5248, 5312)
         == bs![45u8,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,58,104,111,118,101,114,41,32,109,97,114,107,46,116,52,32,123,32,98,97])
         by (compute_only);
@@ -1595,7 +1597,7 @@ pub proof fn css_text_block83(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5312, 5376)
         == bs![99u8,107,103,114,111,117,110,100,58,32,35,57,57,102,54,101,52,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107])
         by (compute_only);
@@ -1610,7 +1612,7 @@ pub proof fn css_text_block84(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5376, 5440)
         == bs![46u8,116,53,58,104,111,118,101,114,41,32,109,97,114,107,46,116,53,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,99,100,100,51,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58])
         by (compute_only);
@@ -1625,7 +1627,7 @@ pub proof fn css_text_block85(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5440, 5504)
         == bs![32u8,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,54,58,104,111,118,101,114,41,32,109,97,114,107,46,116,54,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,98,98,102,55,100,48,59])
         by (compute_only);
@@ -1640,7 +1642,7 @@ pub proof fn css_text_block86(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5504, 5568)
         == bs![32u8,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,55,58,104,111,118,101,114,41,32,109,97,114,107,46,116,55])
         by (compute_only);
@@ -1655,7 +1657,7 @@ pub proof fn css_text_block87(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5568, 5632)
         == bs![32u8,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,53,100,48,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115])
         by (compute_only);
@@ -1670,7 +1672,7 @@ pub proof fn css_text_block88(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5632, 5696)
         == bs![40u8,109,97,114,107,46,116,56,58,104,111,118,101,114,41,32,109,97,114,107,46,116,56,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,97,53,102,51,102,99,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115])
         by (compute_only);
@@ -1685,7 +1687,7 @@ pub proof fn css_text_block89(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5696, 5760)
         == bs![116u8,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,57,58,104,111,118,101,114,41,32,109,97,114,107,46,116,57,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,57])
         by (compute_only);
@@ -1700,7 +1702,7 @@ pub proof fn css_text_block90(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5760, 5824)
         == bs![102u8,57,57,100,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,48,58,104,111,118,101,114,41,32,109])
         by (compute_only);
@@ -1715,7 +1717,7 @@ pub proof fn css_text_block91(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5824, 5888)
         == bs![97u8,114,107,46,116,49,48,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,99,55,100,50,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109])
         by (compute_only);
@@ -1730,7 +1732,7 @@ pub proof fn css_text_block92(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5888, 5952)
         == bs![97u8,105,110,58,104,97,115,40,109,97,114,107,46,116,49,49,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,49,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,54,100,51,100,49,59,32,116,101,120,116,45,100,101,99])
         by (compute_only);
@@ -1745,7 +1747,7 @@ pub proof fn css_text_block93(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(5952, 6016)
         == bs![111u8,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,50,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,50,32,123,32,98,97,99,107])
         by (compute_only);
@@ -1760,7 +1762,7 @@ pub proof fn css_text_block94(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6016, 6080)
         == bs![103u8,114,111,117,110,100,58,32,35,98,102,100,98,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116])
         by (compute_only);
@@ -1775,7 +1777,7 @@ pub proof fn css_text_block95(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6080, 6144)
         == bs![49u8,51,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,51,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,102,48,56,97,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58])
         by (compute_only);
@@ -1790,7 +1792,7 @@ pub proof fn css_text_block96(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6144, 6208)
         == bs![32u8,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,52,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,52,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,57,100,53,102])
         by (compute_only);
@@ -1805,7 +1807,7 @@ pub proof fn css_text_block97(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6208, 6272)
         == bs![102u8,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,53,58,104,111,118,101,114,41,32,109,97,114,107])
         by (compute_only);
@@ -1820,7 +1822,7 @@ pub proof fn css_text_block98(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6272, 6336)
         == bs![46u8,116,49,53,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,100,55,97,97,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110])
         by (compute_only);
@@ -1835,7 +1837,7 @@ pub proof fn css_text_block99(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6336, 6400)
         == bs![58u8,104,97,115,40,109,97,114,107,46,116,49,54,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,54,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,57,57,102,54,101,52,59,32,116,101,120,116,45,100,101,99,111,114,97])
         by (compute_only);
@@ -1850,7 +1852,7 @@ pub proof fn css_text_block100(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6400, 6464)
         == bs![116u8,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,55,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,55,32,123,32,98,97,99,107,103,114,111])
         by (compute_only);
@@ -1865,7 +1867,7 @@ pub proof fn css_text_block101(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6464, 6528)
         == bs![117u8,110,100,58,32,35,102,101,99,100,100,51,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,56,58])
         by (compute_only);
@@ -1880,7 +1882,7 @@ pub proof fn css_text_block102(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6528, 6592)
         == bs![104u8,111,118,101,114,41,32,109,97,114,107,46,116,49,56,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,98,98,102,55,100,48,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111])
         by (compute_only);
@@ -1895,7 +1897,7 @@ pub proof fn css_text_block103(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6592, 6656)
         == bs![108u8,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,49,57,58,104,111,118,101,114,41,32,109,97,114,107,46,116,49,57,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,53,100,48,102,101,59,32])
         by (compute_only);
@@ -1910,7 +1912,7 @@ pub proof fn css_text_block104(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6656, 6720)
         == bs![116u8,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,48,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50])
         by (compute_only);
@@ -1925,7 +1927,7 @@ pub proof fn css_text_block105(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6720, 6784)
         == bs![48u8,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,97,53,102,51,102,99,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97])
         by (compute_only);
@@ -1940,7 +1942,7 @@ pub proof fn css_text_block106(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6784, 6848)
         == bs![115u8,40,109,97,114,107,46,116,50,49,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50,49,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,57,102,57,57,100,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111])
         by (compute_only);
@@ -1955,7 +1957,7 @@ pub proof fn css_text_block107(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6848, 6912)
         == bs![110u8,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,50,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50,50,32,123,32,98,97,99,107,103,114,111,117,110,100])
         by (compute_only);
@@ -1970,7 +1972,7 @@ pub proof fn css_text_block108(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6912, 6976)
         == bs![58u8,32,35,99,55,100,50,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,51,58,104,111,118])
         by (compute_only);
@@ -1985,7 +1987,7 @@ pub proof fn css_text_block109(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(6976, 7040)
         == bs![101u8,114,41,32,109,97,114,107,46,116,50,51,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,54,100,51,100,49,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100])
         by (compute_only);
@@ -2000,7 +2002,7 @@ pub proof fn css_text_block110(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7040, 7104)
         == bs![59u8,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,52,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50,52,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,98,102,100,98,102,101,59,32,116,101,120])
         by (compute_only);
@@ -2015,7 +2017,7 @@ pub proof fn css_text_block111(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7104, 7168)
         == bs![116u8,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,53,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50,53,32,123])
         by (compute_only);
@@ -2030,7 +2032,7 @@ pub proof fn css_text_block112(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7168, 7232)
         == bs![32u8,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,102,48,56,97,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109])
         by (compute_only);
@@ -2045,7 +2047,7 @@ pub proof fn css_text_block113(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7232, 7296)
         == bs![97u8,114,107,46,116,50,54,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50,54,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,57,100,53,102,102,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115])
         by (compute_only);
@@ -2060,7 +2062,7 @@ pub proof fn css_text_block114(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7296, 7360)
         == bs![116u8,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,55,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50,55,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35])
         by (compute_only);
@@ -2075,7 +2077,7 @@ pub proof fn css_text_block115(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7360, 7424)
         == bs![102u8,101,100,55,97,97,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,56,58,104,111,118,101,114,41])
         by (compute_only);
@@ -2090,7 +2092,7 @@ pub proof fn css_text_block116(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7424, 7488)
         == bs![32u8,109,97,114,107,46,116,50,56,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,57,57,102,54,101,52,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125])
         by (compute_only);
@@ -2105,7 +2107,7 @@ pub proof fn css_text_block117(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7488, 7552)
         == bs![10u8,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,50,57,58,104,111,118,101,114,41,32,109,97,114,107,46,116,50,57,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,99,100,100,51,59,32,116,101,120,116,45,100])
         by (compute_only);
@@ -2120,7 +2122,7 @@ pub proof fn css_text_block118(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7552, 7616)
         == bs![101u8,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51,48,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,48,32,123,32,98,97])
         by (compute_only);
@@ -2135,7 +2137,7 @@ pub proof fn css_text_block119(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7616, 7680)
         == bs![99u8,107,103,114,111,117,110,100,58,32,35,98,98,102,55,100,48,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107])
         by (compute_only);
@@ -2150,7 +2152,7 @@ pub proof fn css_text_block120(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7680, 7744)
         == bs![46u8,116,51,49,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,49,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,53,100,48,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108])
         by (compute_only);
@@ -2165,7 +2167,7 @@ pub proof fn css_text_block121(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7744, 7808)
         == bs![101u8,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51,50,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,50,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,97,53,102])
         by (compute_only);
@@ -2180,7 +2182,7 @@ pub proof fn css_text_block122(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7808, 7872)
         == bs![51u8,102,99,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51,51,58,104,111,118,101,114,41,32,109,97])
         by (compute_only);
@@ -2195,7 +2197,7 @@ pub proof fn css_text_block123(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7872, 7936)
         == bs![114u8,107,46,116,51,51,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,57,102,57,57,100,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97])
         by (compute_only);
@@ -2210,7 +2212,7 @@ pub proof fn css_text_block124(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(7936, 8000)
         == bs![105u8,110,58,104,97,115,40,109,97,114,107,46,116,51,52,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,52,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,99,55,100,50,102,101,59,32,116,101,120,116,45,100,101,99,111])
         by (compute_only);
@@ -2225,7 +2227,7 @@ pub proof fn css_text_block125(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8000, 8064)
         == bs![114u8,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51,53,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,53,32,123,32,98,97,99,107,103])
         by (compute_only);
@@ -2240,7 +2242,7 @@ pub proof fn css_text_block126(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8064, 8128)
         == bs![114u8,111,117,110,100,58,32,35,100,54,100,51,100,49,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51])
         by (compute_only);
@@ -2255,7 +2257,7 @@ pub proof fn css_text_block127(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8128, 8192)
         == bs![54u8,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,54,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,98,102,100,98,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32])
         by (compute_only);
@@ -2270,7 +2272,7 @@ pub proof fn css_text_block128(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8192, 8256)
         == bs![115u8,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51,55,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,55,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,102,48,56,97])
         by (compute_only);
@@ -2285,7 +2287,7 @@ pub proof fn css_text_block129(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8256, 8320)
         == bs![59u8,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,51,56,58,104,111,118,101,114,41,32,109,97,114,107,46])
         by (compute_only);
@@ -2300,7 +2302,7 @@ pub proof fn css_text_block130(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8320, 8384)
         == bs![116u8,51,56,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,101,57,100,53,102,102,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58])
         by (compute_only);
@@ -2315,7 +2317,7 @@ pub proof fn css_text_block131(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8384, 8448)
         == bs![104u8,97,115,40,109,97,114,107,46,116,51,57,58,104,111,118,101,114,41,32,109,97,114,107,46,116,51,57,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,100,55,97,97,59,32,116,101,120,116,45,100,101,99,111,114,97,116])
         by (compute_only);
@@ -2330,7 +2332,7 @@ pub proof fn css_text_block132(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8448, 8512)
         == bs![105u8,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,48,58,104,111,118,101,114,41,32,109,97,114,107,46,116,52,48,32,123,32,98,97,99,107,103,114,111,117])
         by (compute_only);
@@ -2345,7 +2347,7 @@ pub proof fn css_text_block133(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8512, 8576)
         == bs![110u8,100,58,32,35,57,57,102,54,101,52,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,49,58,104])
         by (compute_only);
@@ -2360,7 +2362,7 @@ pub proof fn css_text_block134(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8576, 8640)
         == bs![111u8,118,101,114,41,32,109,97,114,107,46,116,52,49,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,101,99,100,100,51,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108])
         by (compute_only);
@@ -2375,7 +2377,7 @@ pub proof fn css_text_block135(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8640, 8704)
         == bs![105u8,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,50,58,104,111,118,101,114,41,32,109,97,114,107,46,116,52,50,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,98,98,102,55,100,48,59,32,116])
         by (compute_only);
@@ -2390,7 +2392,7 @@ pub proof fn css_text_block136(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8704, 8768)
         == bs![101u8,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,51,58,104,111,118,101,114,41,32,109,97,114,107,46,116,52,51])
         by (compute_only);
@@ -2405,7 +2407,7 @@ pub proof fn css_text_block137(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8768, 8832)
         == bs![32u8,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,102,53,100,48,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115])
         by (compute_only);
@@ -2420,7 +2422,7 @@ pub proof fn css_text_block138(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8832, 8896)
         == bs![40u8,109,97,114,107,46,116,52,52,58,104,111,118,101,114,41,32,109,97,114,107,46,116,52,52,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,97,53,102,51,102,99,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110])
         by (compute_only);
@@ -2435,7 +2437,7 @@ pub proof fn css_text_block139(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8896, 8960)
         == bs![45u8,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,53,58,104,111,118,101,114,41,32,109,97,114,107,46,116,52,53,32,123,32,98,97,99,107,103,114,111,117,110,100,58])
         by (compute_only);
@@ -2450,7 +2452,7 @@ pub proof fn css_text_block140(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(8960, 9024)
         == bs![32u8,35,100,57,102,57,57,100,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,54,58,104,111,118,101])
         by (compute_only);
@@ -2465,7 +2467,7 @@ pub proof fn css_text_block141(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9024, 9088)
         == bs![114u8,41,32,109,97,114,107,46,116,52,54,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,99,55,100,50,102,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59])
         by (compute_only);
@@ -2480,7 +2482,7 @@ pub proof fn css_text_block142(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9088, 9152)
         == bs![32u8,125,10,109,97,105,110,58,104,97,115,40,109,97,114,107,46,116,52,55,58,104,111,118,101,114,41,32,109,97,114,107,46,116,52,55,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,35,100,54,100,51,100,49,59,32,116,101,120,116])
         by (compute_only);
@@ -2495,7 +2497,7 @@ pub proof fn css_text_block143(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9152, 9216)
         == bs![45u8,100,101,99,111,114,97,116,105,111,110,45,115,116,121,108,101,58,32,115,111,108,105,100,59,32,125,10,46,104,108,45,110,111,116,101,32,108,97,98,101,108,32,123,32,109,97,114,103,105,110,45,114,105,103,104,116,58,32,48,46,55,53,114])
         by (compute_only);
@@ -2510,7 +2512,7 @@ pub proof fn css_text_block144(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9216, 9280)
         == bs![101u8,109,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,123,32,99,111,108,111,114,58,32,35,57,99,97,51,97,102,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32])
         by (compute_only);
@@ -2525,7 +2527,7 @@ pub proof fn css_text_block145(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9280, 9344)
         == bs![112u8,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,35,57,99,97,51,97,102,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,58,110])
         by (compute_only);
@@ -2540,7 +2542,7 @@ pub proof fn css_text_block146(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9344, 9408)
         == bs![111u8,116,40,46,104,108,45,112,105,99,107,41,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,57,99,97,51,97,102,59])
         by (compute_only);
@@ -2555,7 +2557,7 @@ pub proof fn css_text_block147(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9408, 9472)
         == bs![32u8,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99,107,32,123,32,99,111,108,111,114,58,32,35,49,49,49,56,50,55,59,32,125,10,98,111,100,121])
         by (compute_only);
@@ -2570,7 +2572,7 @@ pub proof fn css_text_block148(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9472, 9536)
         == bs![58u8,104,97,115,40,105,110,112,117,116,46,104,108,45,116,111,103,103,108,101,58,110,111,116,40,58,99,104,101,99,107,101,100,41,41,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,32,123,32,98,97,99,107,103,114,111,117,110,100,58])
         by (compute_only);
@@ -2585,7 +2587,7 @@ pub proof fn css_text_block149(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9536, 9600)
         == bs![32u8,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,110,111,110,101,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,98,111,100,121,58,104,97,115,40,105,110,112,117,116,46,104])
         by (compute_only);
@@ -2600,7 +2602,7 @@ pub proof fn css_text_block150(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9600, 9664)
         == bs![108u8,45,116,111,103,103,108,101,58,110,111,116,40,58,99,104,101,99,107,101,100,41,41,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,64,109,101,100,105,97])
         by (compute_only);
@@ -2615,9 +2617,9 @@ pub proof fn css_text_block151(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9664, 9728)
-        == bs![32u8,112,114,105,110,116,32,123,10,98,111,100,121,32,123,32,109,97,120,45,119,105,100,116,104,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48,59,32,125,10,110,97,118,46,99,114,117,109,98,115,44,32,110,97,118,46,100])
+        == bs![32u8,115,99,114,101,101,110,32,97,110,100,32,40,109,97,120,45,119,105,100,116,104,58,32,52,48,114,101,109,41,32,123,32,116,97,98,108,101,32,123,32,100,105,115,112,108,97,121,58,32,98,108,111,99,107,59,32,111,118,101,114,102,108,111])
         by (compute_only);
 }
 
@@ -2630,9 +2632,9 @@ pub proof fn css_text_block152(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9728, 9792)
-        == bs![111u8,99,110,97,118,44,32,46,115,107,105,112,44,32,102,111,114,109,44,32,46,118,101,114,100,105,99,116,45,101,110,116,114,121,44,32,46,104,108,45,110,111,116,101,32,123,32,100,105,115,112,108,97,121,58,32,110,111,110,101,59,32,125,10])
+        == bs![119u8,45,120,58,32,97,117,116,111,59,32,125,32,125,10,64,109,101,100,105,97,32,112,114,105,110,116,32,123,10,98,111,100,121,32,123,32,109,97,120,45,119,105,100,116,104,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48])
         by (compute_only);
 }
 
@@ -2645,9 +2647,9 @@ pub proof fn css_text_block153(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9792, 9856)
-        == bs![109u8,97,114,107,44,32,109,97,114,107,91,99,108,97,115,115,93,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98])
+        == bs![59u8,32,125,10,110,97,118,46,99,114,117,109,98,115,44,32,110,97,118,46,100,111,99,110,97,118,44,32,46,115,107,105,112,44,32,102,111,114,109,44,32,46,118,101,114,100,105,99,116,45,101,110,116,114,121,44,32,46,104,108,45,110,111,116])
         by (compute_only);
 }
 
@@ -2660,9 +2662,9 @@ pub proof fn css_text_block154(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9856, 9920)
-        == bs![53u8,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,44,32,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108])
+        == bs![101u8,32,123,32,100,105,115,112,108,97,121,58,32,110,111,110,101,59,32,125,10,109,97,114,107,44,32,109,97,114,107,91,99,108,97,115,115,93,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45])
         by (compute_only);
 }
 
@@ -2675,9 +2677,9 @@ pub proof fn css_text_block155(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9920, 9984)
-        == bs![45u8,112,105,99,107,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,35])
+        == bs![100u8,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,44,32,109,97,105,110,46,104,108,45,99,108])
         by (compute_only);
 }
 
@@ -2690,9 +2692,9 @@ pub proof fn css_text_block156(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(9984, 10048)
-        == bs![52u8,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,58,110,111,116,40,46,104,108,45,112,105,99,107,41,32,123,32,116,101,120,116,45,100,101,99,111])
+        == bs![105u8,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99,107,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101])
         by (compute_only);
 }
 
@@ -2705,9 +2707,9 @@ pub proof fn css_text_block157(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(10048, 10112)
-        == bs![114u8,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,100,101,116,97,105,108,115,58,58,100,101,116,97,105,108,115,45,99,111,110,116,101,110,116,32,123,32,99,111,110,116,101,110,116,45,118,105,115,105])
+        == bs![46u8,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,58,110,111,116,40])
         by (compute_only);
 }
 
@@ -2720,9 +2722,9 @@ pub proof fn css_text_block158(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(10112, 10176)
-        == bs![98u8,105,108,105,116,121,58,32,118,105,115,105,98,108,101,59,32,125,10,112,114,101,32,123,32,98,111,114,100,101,114,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48,59,32,119,104,105,116,101,45,115,112,97,99,101,58,32])
+        == bs![46u8,104,108,45,112,105,99,107,41,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,100,101,116,97,105,108,115,58,58,100,101,116,97,105,108,115,45,99])
         by (compute_only);
 }
 
@@ -2735,9 +2737,9 @@ pub proof fn css_text_block159(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(10176, 10240)
-        == bs![112u8,114,101,45,119,114,97,112,59,32,111,118,101,114,102,108,111,119,45,120,58,32,118,105,115,105,98,108,101,59,32,125,10,97,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,116,101,120,116,45,100,101,99,111,114,97])
+        == bs![111u8,110,116,101,110,116,32,123,32,99,111,110,116,101,110,116,45,118,105,115,105,98,105,108,105,116,121,58,32,118,105,115,105,98,108,101,59,32,125,10,112,114,101,32,123,32,98,111,114,100,101,114,58,32,110,111,110,101,59,32,112,97,100,100])
         by (compute_only);
 }
 
@@ -2750,24 +2752,39 @@ pub proof fn css_text_block160(i: int)
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
     assert(ch::css_text_bytes().subrange(10240, 10304)
-        == bs![116u8,105,111,110,58,32,110,111,110,101,59,32,125,10,46,99,104,105,112,32,123,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,49,49,49,56,50,55,59,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110])
+        == bs![105u8,110,103,58,32,48,59,32,119,104,105,116,101,45,115,112,97,99,101,58,32,112,114,101,45,119,114,97,112,59,32,111,118,101,114,102,108,111,119,45,120,58,32,118,105,115,105,98,108,101,59,32,125,10,97,32,123,32,99,111,108,111,114,58])
         by (compute_only);
 }
 
 pub proof fn css_text_block161(i: int)
     requires
-        10304 <= i < 10326,
+        10304 <= i < 10368,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
-    assert(ch::css_text_bytes().subrange(10304, 10326)
-        == bs![101u8,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,125])
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
+    assert(ch::css_text_bytes().subrange(10304, 10368)
+        == bs![32u8,105,110,104,101,114,105,116,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,110,111,110,101,59,32,125,10,46,99,104,105,112,32,123,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,49,49])
+        by (compute_only);
+}
+
+pub proof fn css_text_block162(i: int)
+    requires
+        10368 <= i < 10411,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(ch::css_text_bytes);
+    reveal_css_text!();
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
+    assert(ch::css_text_bytes().subrange(10368, 10411)
+        == bs![49u8,56,50,55,59,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,125])
         by (compute_only);
 }
 
@@ -5979,22 +5996,6 @@ pub proof fn css_text_range_117_118(i: int)
     css_text_block117(i);
 }
 
-pub proof fn css_text_range_116_118(i: int)
-    requires
-        7424 <= i < 7552,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7488 {
-        css_text_range_116_117(i);
-    } else {
-        css_text_range_117_118(i);
-    }
-}
-
 pub proof fn css_text_range_118_119(i: int)
     requires
         7552 <= i < 7616,
@@ -6005,6 +6006,38 @@ pub proof fn css_text_range_118_119(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block118(i);
+}
+
+pub proof fn css_text_range_117_119(i: int)
+    requires
+        7488 <= i < 7616,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7552 {
+        css_text_range_117_118(i);
+    } else {
+        css_text_range_118_119(i);
+    }
+}
+
+pub proof fn css_text_range_116_119(i: int)
+    requires
+        7424 <= i < 7616,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7488 {
+        css_text_range_116_117(i);
+    } else {
+        css_text_range_117_119(i);
+    }
 }
 
 pub proof fn css_text_range_119_120(i: int)
@@ -6031,102 +6064,6 @@ pub proof fn css_text_range_120_121(i: int)
     css_text_block120(i);
 }
 
-pub proof fn css_text_range_119_121(i: int)
-    requires
-        7616 <= i < 7744,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7680 {
-        css_text_range_119_120(i);
-    } else {
-        css_text_range_120_121(i);
-    }
-}
-
-pub proof fn css_text_range_118_121(i: int)
-    requires
-        7552 <= i < 7744,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7616 {
-        css_text_range_118_119(i);
-    } else {
-        css_text_range_119_121(i);
-    }
-}
-
-pub proof fn css_text_range_116_121(i: int)
-    requires
-        7424 <= i < 7744,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7552 {
-        css_text_range_116_118(i);
-    } else {
-        css_text_range_118_121(i);
-    }
-}
-
-pub proof fn css_text_range_111_121(i: int)
-    requires
-        7104 <= i < 7744,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7424 {
-        css_text_range_111_116(i);
-    } else {
-        css_text_range_116_121(i);
-    }
-}
-
-pub proof fn css_text_range_101_121(i: int)
-    requires
-        6464 <= i < 7744,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7104 {
-        css_text_range_101_111(i);
-    } else {
-        css_text_range_111_121(i);
-    }
-}
-
-pub proof fn css_text_range_81_121(i: int)
-    requires
-        5184 <= i < 7744,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 6464 {
-        css_text_range_81_101(i);
-    } else {
-        css_text_range_101_121(i);
-    }
-}
-
 pub proof fn css_text_range_121_122(i: int)
     requires
         7744 <= i < 7808,
@@ -6137,6 +6074,102 @@ pub proof fn css_text_range_121_122(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block121(i);
+}
+
+pub proof fn css_text_range_120_122(i: int)
+    requires
+        7680 <= i < 7808,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7744 {
+        css_text_range_120_121(i);
+    } else {
+        css_text_range_121_122(i);
+    }
+}
+
+pub proof fn css_text_range_119_122(i: int)
+    requires
+        7616 <= i < 7808,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7680 {
+        css_text_range_119_120(i);
+    } else {
+        css_text_range_120_122(i);
+    }
+}
+
+pub proof fn css_text_range_116_122(i: int)
+    requires
+        7424 <= i < 7808,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7616 {
+        css_text_range_116_119(i);
+    } else {
+        css_text_range_119_122(i);
+    }
+}
+
+pub proof fn css_text_range_111_122(i: int)
+    requires
+        7104 <= i < 7808,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7424 {
+        css_text_range_111_116(i);
+    } else {
+        css_text_range_116_122(i);
+    }
+}
+
+pub proof fn css_text_range_101_122(i: int)
+    requires
+        6464 <= i < 7808,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7104 {
+        css_text_range_101_111(i);
+    } else {
+        css_text_range_111_122(i);
+    }
+}
+
+pub proof fn css_text_range_81_122(i: int)
+    requires
+        5184 <= i < 7808,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 6464 {
+        css_text_range_81_101(i);
+    } else {
+        css_text_range_101_122(i);
+    }
 }
 
 pub proof fn css_text_range_122_123(i: int)
@@ -6151,22 +6184,6 @@ pub proof fn css_text_range_122_123(i: int)
     css_text_block122(i);
 }
 
-pub proof fn css_text_range_121_123(i: int)
-    requires
-        7744 <= i < 7872,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7808 {
-        css_text_range_121_122(i);
-    } else {
-        css_text_range_122_123(i);
-    }
-}
-
 pub proof fn css_text_range_123_124(i: int)
     requires
         7872 <= i < 7936,
@@ -6177,6 +6194,22 @@ pub proof fn css_text_range_123_124(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block123(i);
+}
+
+pub proof fn css_text_range_122_124(i: int)
+    requires
+        7808 <= i < 7936,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7872 {
+        css_text_range_122_123(i);
+    } else {
+        css_text_range_123_124(i);
+    }
 }
 
 pub proof fn css_text_range_124_125(i: int)
@@ -6203,54 +6236,6 @@ pub proof fn css_text_range_125_126(i: int)
     css_text_block125(i);
 }
 
-pub proof fn css_text_range_124_126(i: int)
-    requires
-        7936 <= i < 8064,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8000 {
-        css_text_range_124_125(i);
-    } else {
-        css_text_range_125_126(i);
-    }
-}
-
-pub proof fn css_text_range_123_126(i: int)
-    requires
-        7872 <= i < 8064,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7936 {
-        css_text_range_123_124(i);
-    } else {
-        css_text_range_124_126(i);
-    }
-}
-
-pub proof fn css_text_range_121_126(i: int)
-    requires
-        7744 <= i < 8064,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7872 {
-        css_text_range_121_123(i);
-    } else {
-        css_text_range_123_126(i);
-    }
-}
-
 pub proof fn css_text_range_126_127(i: int)
     requires
         8064 <= i < 8128,
@@ -6261,6 +6246,54 @@ pub proof fn css_text_range_126_127(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block126(i);
+}
+
+pub proof fn css_text_range_125_127(i: int)
+    requires
+        8000 <= i < 8128,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8064 {
+        css_text_range_125_126(i);
+    } else {
+        css_text_range_126_127(i);
+    }
+}
+
+pub proof fn css_text_range_124_127(i: int)
+    requires
+        7936 <= i < 8128,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8000 {
+        css_text_range_124_125(i);
+    } else {
+        css_text_range_125_127(i);
+    }
+}
+
+pub proof fn css_text_range_122_127(i: int)
+    requires
+        7808 <= i < 8128,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 7936 {
+        css_text_range_122_124(i);
+    } else {
+        css_text_range_124_127(i);
+    }
 }
 
 pub proof fn css_text_range_127_128(i: int)
@@ -6275,22 +6308,6 @@ pub proof fn css_text_range_127_128(i: int)
     css_text_block127(i);
 }
 
-pub proof fn css_text_range_126_128(i: int)
-    requires
-        8064 <= i < 8192,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8128 {
-        css_text_range_126_127(i);
-    } else {
-        css_text_range_127_128(i);
-    }
-}
-
 pub proof fn css_text_range_128_129(i: int)
     requires
         8192 <= i < 8256,
@@ -6301,6 +6318,22 @@ pub proof fn css_text_range_128_129(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block128(i);
+}
+
+pub proof fn css_text_range_127_129(i: int)
+    requires
+        8128 <= i < 8256,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8192 {
+        css_text_range_127_128(i);
+    } else {
+        css_text_range_128_129(i);
+    }
 }
 
 pub proof fn css_text_range_129_130(i: int)
@@ -6327,70 +6360,6 @@ pub proof fn css_text_range_130_131(i: int)
     css_text_block130(i);
 }
 
-pub proof fn css_text_range_129_131(i: int)
-    requires
-        8256 <= i < 8384,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8320 {
-        css_text_range_129_130(i);
-    } else {
-        css_text_range_130_131(i);
-    }
-}
-
-pub proof fn css_text_range_128_131(i: int)
-    requires
-        8192 <= i < 8384,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8256 {
-        css_text_range_128_129(i);
-    } else {
-        css_text_range_129_131(i);
-    }
-}
-
-pub proof fn css_text_range_126_131(i: int)
-    requires
-        8064 <= i < 8384,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8192 {
-        css_text_range_126_128(i);
-    } else {
-        css_text_range_128_131(i);
-    }
-}
-
-pub proof fn css_text_range_121_131(i: int)
-    requires
-        7744 <= i < 8384,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8064 {
-        css_text_range_121_126(i);
-    } else {
-        css_text_range_126_131(i);
-    }
-}
-
 pub proof fn css_text_range_131_132(i: int)
     requires
         8384 <= i < 8448,
@@ -6401,6 +6370,70 @@ pub proof fn css_text_range_131_132(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block131(i);
+}
+
+pub proof fn css_text_range_130_132(i: int)
+    requires
+        8320 <= i < 8448,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8384 {
+        css_text_range_130_131(i);
+    } else {
+        css_text_range_131_132(i);
+    }
+}
+
+pub proof fn css_text_range_129_132(i: int)
+    requires
+        8256 <= i < 8448,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8320 {
+        css_text_range_129_130(i);
+    } else {
+        css_text_range_130_132(i);
+    }
+}
+
+pub proof fn css_text_range_127_132(i: int)
+    requires
+        8128 <= i < 8448,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8256 {
+        css_text_range_127_129(i);
+    } else {
+        css_text_range_129_132(i);
+    }
+}
+
+pub proof fn css_text_range_122_132(i: int)
+    requires
+        7808 <= i < 8448,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8128 {
+        css_text_range_122_127(i);
+    } else {
+        css_text_range_127_132(i);
+    }
 }
 
 pub proof fn css_text_range_132_133(i: int)
@@ -6415,22 +6448,6 @@ pub proof fn css_text_range_132_133(i: int)
     css_text_block132(i);
 }
 
-pub proof fn css_text_range_131_133(i: int)
-    requires
-        8384 <= i < 8512,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8448 {
-        css_text_range_131_132(i);
-    } else {
-        css_text_range_132_133(i);
-    }
-}
-
 pub proof fn css_text_range_133_134(i: int)
     requires
         8512 <= i < 8576,
@@ -6441,6 +6458,22 @@ pub proof fn css_text_range_133_134(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block133(i);
+}
+
+pub proof fn css_text_range_132_134(i: int)
+    requires
+        8448 <= i < 8576,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8512 {
+        css_text_range_132_133(i);
+    } else {
+        css_text_range_133_134(i);
+    }
 }
 
 pub proof fn css_text_range_134_135(i: int)
@@ -6467,54 +6500,6 @@ pub proof fn css_text_range_135_136(i: int)
     css_text_block135(i);
 }
 
-pub proof fn css_text_range_134_136(i: int)
-    requires
-        8576 <= i < 8704,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8640 {
-        css_text_range_134_135(i);
-    } else {
-        css_text_range_135_136(i);
-    }
-}
-
-pub proof fn css_text_range_133_136(i: int)
-    requires
-        8512 <= i < 8704,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8576 {
-        css_text_range_133_134(i);
-    } else {
-        css_text_range_134_136(i);
-    }
-}
-
-pub proof fn css_text_range_131_136(i: int)
-    requires
-        8384 <= i < 8704,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8512 {
-        css_text_range_131_133(i);
-    } else {
-        css_text_range_133_136(i);
-    }
-}
-
 pub proof fn css_text_range_136_137(i: int)
     requires
         8704 <= i < 8768,
@@ -6525,6 +6510,54 @@ pub proof fn css_text_range_136_137(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block136(i);
+}
+
+pub proof fn css_text_range_135_137(i: int)
+    requires
+        8640 <= i < 8768,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8704 {
+        css_text_range_135_136(i);
+    } else {
+        css_text_range_136_137(i);
+    }
+}
+
+pub proof fn css_text_range_134_137(i: int)
+    requires
+        8576 <= i < 8768,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8640 {
+        css_text_range_134_135(i);
+    } else {
+        css_text_range_135_137(i);
+    }
+}
+
+pub proof fn css_text_range_132_137(i: int)
+    requires
+        8448 <= i < 8768,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8576 {
+        css_text_range_132_134(i);
+    } else {
+        css_text_range_134_137(i);
+    }
 }
 
 pub proof fn css_text_range_137_138(i: int)
@@ -6539,22 +6572,6 @@ pub proof fn css_text_range_137_138(i: int)
     css_text_block137(i);
 }
 
-pub proof fn css_text_range_136_138(i: int)
-    requires
-        8704 <= i < 8832,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8768 {
-        css_text_range_136_137(i);
-    } else {
-        css_text_range_137_138(i);
-    }
-}
-
 pub proof fn css_text_range_138_139(i: int)
     requires
         8832 <= i < 8896,
@@ -6565,6 +6582,22 @@ pub proof fn css_text_range_138_139(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block138(i);
+}
+
+pub proof fn css_text_range_137_139(i: int)
+    requires
+        8768 <= i < 8896,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8832 {
+        css_text_range_137_138(i);
+    } else {
+        css_text_range_138_139(i);
+    }
 }
 
 pub proof fn css_text_range_139_140(i: int)
@@ -6591,86 +6624,6 @@ pub proof fn css_text_range_140_141(i: int)
     css_text_block140(i);
 }
 
-pub proof fn css_text_range_139_141(i: int)
-    requires
-        8896 <= i < 9024,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8960 {
-        css_text_range_139_140(i);
-    } else {
-        css_text_range_140_141(i);
-    }
-}
-
-pub proof fn css_text_range_138_141(i: int)
-    requires
-        8832 <= i < 9024,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8896 {
-        css_text_range_138_139(i);
-    } else {
-        css_text_range_139_141(i);
-    }
-}
-
-pub proof fn css_text_range_136_141(i: int)
-    requires
-        8704 <= i < 9024,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8832 {
-        css_text_range_136_138(i);
-    } else {
-        css_text_range_138_141(i);
-    }
-}
-
-pub proof fn css_text_range_131_141(i: int)
-    requires
-        8384 <= i < 9024,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8704 {
-        css_text_range_131_136(i);
-    } else {
-        css_text_range_136_141(i);
-    }
-}
-
-pub proof fn css_text_range_121_141(i: int)
-    requires
-        7744 <= i < 9024,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 8384 {
-        css_text_range_121_131(i);
-    } else {
-        css_text_range_131_141(i);
-    }
-}
-
 pub proof fn css_text_range_141_142(i: int)
     requires
         9024 <= i < 9088,
@@ -6681,6 +6634,86 @@ pub proof fn css_text_range_141_142(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block141(i);
+}
+
+pub proof fn css_text_range_140_142(i: int)
+    requires
+        8960 <= i < 9088,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9024 {
+        css_text_range_140_141(i);
+    } else {
+        css_text_range_141_142(i);
+    }
+}
+
+pub proof fn css_text_range_139_142(i: int)
+    requires
+        8896 <= i < 9088,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8960 {
+        css_text_range_139_140(i);
+    } else {
+        css_text_range_140_142(i);
+    }
+}
+
+pub proof fn css_text_range_137_142(i: int)
+    requires
+        8768 <= i < 9088,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8896 {
+        css_text_range_137_139(i);
+    } else {
+        css_text_range_139_142(i);
+    }
+}
+
+pub proof fn css_text_range_132_142(i: int)
+    requires
+        8448 <= i < 9088,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8768 {
+        css_text_range_132_137(i);
+    } else {
+        css_text_range_137_142(i);
+    }
+}
+
+pub proof fn css_text_range_122_142(i: int)
+    requires
+        7808 <= i < 9088,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 8448 {
+        css_text_range_122_132(i);
+    } else {
+        css_text_range_132_142(i);
+    }
 }
 
 pub proof fn css_text_range_142_143(i: int)
@@ -6695,22 +6728,6 @@ pub proof fn css_text_range_142_143(i: int)
     css_text_block142(i);
 }
 
-pub proof fn css_text_range_141_143(i: int)
-    requires
-        9024 <= i < 9152,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9088 {
-        css_text_range_141_142(i);
-    } else {
-        css_text_range_142_143(i);
-    }
-}
-
 pub proof fn css_text_range_143_144(i: int)
     requires
         9152 <= i < 9216,
@@ -6721,6 +6738,22 @@ pub proof fn css_text_range_143_144(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block143(i);
+}
+
+pub proof fn css_text_range_142_144(i: int)
+    requires
+        9088 <= i < 9216,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9152 {
+        css_text_range_142_143(i);
+    } else {
+        css_text_range_143_144(i);
+    }
 }
 
 pub proof fn css_text_range_144_145(i: int)
@@ -6747,54 +6780,6 @@ pub proof fn css_text_range_145_146(i: int)
     css_text_block145(i);
 }
 
-pub proof fn css_text_range_144_146(i: int)
-    requires
-        9216 <= i < 9344,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9280 {
-        css_text_range_144_145(i);
-    } else {
-        css_text_range_145_146(i);
-    }
-}
-
-pub proof fn css_text_range_143_146(i: int)
-    requires
-        9152 <= i < 9344,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9216 {
-        css_text_range_143_144(i);
-    } else {
-        css_text_range_144_146(i);
-    }
-}
-
-pub proof fn css_text_range_141_146(i: int)
-    requires
-        9024 <= i < 9344,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9152 {
-        css_text_range_141_143(i);
-    } else {
-        css_text_range_143_146(i);
-    }
-}
-
 pub proof fn css_text_range_146_147(i: int)
     requires
         9344 <= i < 9408,
@@ -6805,6 +6790,54 @@ pub proof fn css_text_range_146_147(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block146(i);
+}
+
+pub proof fn css_text_range_145_147(i: int)
+    requires
+        9280 <= i < 9408,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9344 {
+        css_text_range_145_146(i);
+    } else {
+        css_text_range_146_147(i);
+    }
+}
+
+pub proof fn css_text_range_144_147(i: int)
+    requires
+        9216 <= i < 9408,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9280 {
+        css_text_range_144_145(i);
+    } else {
+        css_text_range_145_147(i);
+    }
+}
+
+pub proof fn css_text_range_142_147(i: int)
+    requires
+        9088 <= i < 9408,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9216 {
+        css_text_range_142_144(i);
+    } else {
+        css_text_range_144_147(i);
+    }
 }
 
 pub proof fn css_text_range_147_148(i: int)
@@ -6819,22 +6852,6 @@ pub proof fn css_text_range_147_148(i: int)
     css_text_block147(i);
 }
 
-pub proof fn css_text_range_146_148(i: int)
-    requires
-        9344 <= i < 9472,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9408 {
-        css_text_range_146_147(i);
-    } else {
-        css_text_range_147_148(i);
-    }
-}
-
 pub proof fn css_text_range_148_149(i: int)
     requires
         9472 <= i < 9536,
@@ -6845,6 +6862,22 @@ pub proof fn css_text_range_148_149(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block148(i);
+}
+
+pub proof fn css_text_range_147_149(i: int)
+    requires
+        9408 <= i < 9536,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9472 {
+        css_text_range_147_148(i);
+    } else {
+        css_text_range_148_149(i);
+    }
 }
 
 pub proof fn css_text_range_149_150(i: int)
@@ -6871,70 +6904,6 @@ pub proof fn css_text_range_150_151(i: int)
     css_text_block150(i);
 }
 
-pub proof fn css_text_range_149_151(i: int)
-    requires
-        9536 <= i < 9664,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9600 {
-        css_text_range_149_150(i);
-    } else {
-        css_text_range_150_151(i);
-    }
-}
-
-pub proof fn css_text_range_148_151(i: int)
-    requires
-        9472 <= i < 9664,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9536 {
-        css_text_range_148_149(i);
-    } else {
-        css_text_range_149_151(i);
-    }
-}
-
-pub proof fn css_text_range_146_151(i: int)
-    requires
-        9344 <= i < 9664,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9472 {
-        css_text_range_146_148(i);
-    } else {
-        css_text_range_148_151(i);
-    }
-}
-
-pub proof fn css_text_range_141_151(i: int)
-    requires
-        9024 <= i < 9664,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9344 {
-        css_text_range_141_146(i);
-    } else {
-        css_text_range_146_151(i);
-    }
-}
-
 pub proof fn css_text_range_151_152(i: int)
     requires
         9664 <= i < 9728,
@@ -6945,6 +6914,70 @@ pub proof fn css_text_range_151_152(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block151(i);
+}
+
+pub proof fn css_text_range_150_152(i: int)
+    requires
+        9600 <= i < 9728,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9664 {
+        css_text_range_150_151(i);
+    } else {
+        css_text_range_151_152(i);
+    }
+}
+
+pub proof fn css_text_range_149_152(i: int)
+    requires
+        9536 <= i < 9728,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9600 {
+        css_text_range_149_150(i);
+    } else {
+        css_text_range_150_152(i);
+    }
+}
+
+pub proof fn css_text_range_147_152(i: int)
+    requires
+        9408 <= i < 9728,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9536 {
+        css_text_range_147_149(i);
+    } else {
+        css_text_range_149_152(i);
+    }
+}
+
+pub proof fn css_text_range_142_152(i: int)
+    requires
+        9088 <= i < 9728,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9408 {
+        css_text_range_142_147(i);
+    } else {
+        css_text_range_147_152(i);
+    }
 }
 
 pub proof fn css_text_range_152_153(i: int)
@@ -6959,22 +6992,6 @@ pub proof fn css_text_range_152_153(i: int)
     css_text_block152(i);
 }
 
-pub proof fn css_text_range_151_153(i: int)
-    requires
-        9664 <= i < 9792,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9728 {
-        css_text_range_151_152(i);
-    } else {
-        css_text_range_152_153(i);
-    }
-}
-
 pub proof fn css_text_range_153_154(i: int)
     requires
         9792 <= i < 9856,
@@ -6985,6 +7002,22 @@ pub proof fn css_text_range_153_154(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block153(i);
+}
+
+pub proof fn css_text_range_152_154(i: int)
+    requires
+        9728 <= i < 9856,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9792 {
+        css_text_range_152_153(i);
+    } else {
+        css_text_range_153_154(i);
+    }
 }
 
 pub proof fn css_text_range_154_155(i: int)
@@ -7011,54 +7044,6 @@ pub proof fn css_text_range_155_156(i: int)
     css_text_block155(i);
 }
 
-pub proof fn css_text_range_154_156(i: int)
-    requires
-        9856 <= i < 9984,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9920 {
-        css_text_range_154_155(i);
-    } else {
-        css_text_range_155_156(i);
-    }
-}
-
-pub proof fn css_text_range_153_156(i: int)
-    requires
-        9792 <= i < 9984,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9856 {
-        css_text_range_153_154(i);
-    } else {
-        css_text_range_154_156(i);
-    }
-}
-
-pub proof fn css_text_range_151_156(i: int)
-    requires
-        9664 <= i < 9984,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 9792 {
-        css_text_range_151_153(i);
-    } else {
-        css_text_range_153_156(i);
-    }
-}
-
 pub proof fn css_text_range_156_157(i: int)
     requires
         9984 <= i < 10048,
@@ -7069,6 +7054,54 @@ pub proof fn css_text_range_156_157(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block156(i);
+}
+
+pub proof fn css_text_range_155_157(i: int)
+    requires
+        9920 <= i < 10048,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9984 {
+        css_text_range_155_156(i);
+    } else {
+        css_text_range_156_157(i);
+    }
+}
+
+pub proof fn css_text_range_154_157(i: int)
+    requires
+        9856 <= i < 10048,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9920 {
+        css_text_range_154_155(i);
+    } else {
+        css_text_range_155_157(i);
+    }
+}
+
+pub proof fn css_text_range_152_157(i: int)
+    requires
+        9728 <= i < 10048,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 9856 {
+        css_text_range_152_154(i);
+    } else {
+        css_text_range_154_157(i);
+    }
 }
 
 pub proof fn css_text_range_157_158(i: int)
@@ -7095,38 +7128,6 @@ pub proof fn css_text_range_158_159(i: int)
     css_text_block158(i);
 }
 
-pub proof fn css_text_range_157_159(i: int)
-    requires
-        10048 <= i < 10176,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 10112 {
-        css_text_range_157_158(i);
-    } else {
-        css_text_range_158_159(i);
-    }
-}
-
-pub proof fn css_text_range_156_159(i: int)
-    requires
-        9984 <= i < 10176,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 10048 {
-        css_text_range_156_157(i);
-    } else {
-        css_text_range_157_159(i);
-    }
-}
-
 pub proof fn css_text_range_159_160(i: int)
     requires
         10176 <= i < 10240,
@@ -7137,6 +7138,38 @@ pub proof fn css_text_range_159_160(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     css_text_block159(i);
+}
+
+pub proof fn css_text_range_158_160(i: int)
+    requires
+        10112 <= i < 10240,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 10176 {
+        css_text_range_158_159(i);
+    } else {
+        css_text_range_159_160(i);
+    }
+}
+
+pub proof fn css_text_range_157_160(i: int)
+    requires
+        10048 <= i < 10240,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 10112 {
+        css_text_range_157_158(i);
+    } else {
+        css_text_range_158_160(i);
+    }
 }
 
 pub proof fn css_text_range_160_161(i: int)
@@ -7153,7 +7186,7 @@ pub proof fn css_text_range_160_161(i: int)
 
 pub proof fn css_text_range_161_162(i: int)
     requires
-        10304 <= i < 10326,
+        10304 <= i < 10368,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
@@ -7163,9 +7196,37 @@ pub proof fn css_text_range_161_162(i: int)
     css_text_block161(i);
 }
 
-pub proof fn css_text_range_160_162(i: int)
+pub proof fn css_text_range_162_163(i: int)
     requires
-        10240 <= i < 10326,
+        10368 <= i < 10411,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    css_text_block162(i);
+}
+
+pub proof fn css_text_range_161_163(i: int)
+    requires
+        10304 <= i < 10411,
+    ensures
+        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
+        '\x00' <= css_text_chars()[i] <= '\x7f',
+{
+    hide(css_text_chars);
+    hide(ch::css_text_bytes);
+    if i < 10368 {
+        css_text_range_161_162(i);
+    } else {
+        css_text_range_162_163(i);
+    }
+}
+
+pub proof fn css_text_range_160_163(i: int)
+    requires
+        10240 <= i < 10411,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
@@ -7175,13 +7236,13 @@ pub proof fn css_text_range_160_162(i: int)
     if i < 10304 {
         css_text_range_160_161(i);
     } else {
-        css_text_range_161_162(i);
+        css_text_range_161_163(i);
     }
 }
 
-pub proof fn css_text_range_159_162(i: int)
+pub proof fn css_text_range_157_163(i: int)
     requires
-        10176 <= i < 10326,
+        10048 <= i < 10411,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
@@ -7189,95 +7250,79 @@ pub proof fn css_text_range_159_162(i: int)
     hide(css_text_chars);
     hide(ch::css_text_bytes);
     if i < 10240 {
-        css_text_range_159_160(i);
+        css_text_range_157_160(i);
     } else {
-        css_text_range_160_162(i);
+        css_text_range_160_163(i);
     }
 }
 
-pub proof fn css_text_range_156_162(i: int)
+pub proof fn css_text_range_152_163(i: int)
     requires
-        9984 <= i < 10326,
+        9728 <= i < 10411,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
 {
     hide(css_text_chars);
     hide(ch::css_text_bytes);
-    if i < 10176 {
-        css_text_range_156_159(i);
+    if i < 10048 {
+        css_text_range_152_157(i);
     } else {
-        css_text_range_159_162(i);
+        css_text_range_157_163(i);
     }
 }
 
-pub proof fn css_text_range_151_162(i: int)
+pub proof fn css_text_range_142_163(i: int)
     requires
-        9664 <= i < 10326,
+        9088 <= i < 10411,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
 {
     hide(css_text_chars);
     hide(ch::css_text_bytes);
-    if i < 9984 {
-        css_text_range_151_156(i);
+    if i < 9728 {
+        css_text_range_142_152(i);
     } else {
-        css_text_range_156_162(i);
+        css_text_range_152_163(i);
     }
 }
 
-pub proof fn css_text_range_141_162(i: int)
+pub proof fn css_text_range_122_163(i: int)
     requires
-        9024 <= i < 10326,
+        7808 <= i < 10411,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
 {
     hide(css_text_chars);
     hide(ch::css_text_bytes);
-    if i < 9664 {
-        css_text_range_141_151(i);
+    if i < 9088 {
+        css_text_range_122_142(i);
     } else {
-        css_text_range_151_162(i);
+        css_text_range_142_163(i);
     }
 }
 
-pub proof fn css_text_range_121_162(i: int)
+pub proof fn css_text_range_81_163(i: int)
     requires
-        7744 <= i < 10326,
+        5184 <= i < 10411,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
 {
     hide(css_text_chars);
     hide(ch::css_text_bytes);
-    if i < 9024 {
-        css_text_range_121_141(i);
+    if i < 7808 {
+        css_text_range_81_122(i);
     } else {
-        css_text_range_141_162(i);
+        css_text_range_122_163(i);
     }
 }
 
-pub proof fn css_text_range_81_162(i: int)
+pub proof fn css_text_range_0_163(i: int)
     requires
-        5184 <= i < 10326,
-    ensures
-        (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
-        '\x00' <= css_text_chars()[i] <= '\x7f',
-{
-    hide(css_text_chars);
-    hide(ch::css_text_bytes);
-    if i < 7744 {
-        css_text_range_81_121(i);
-    } else {
-        css_text_range_121_162(i);
-    }
-}
-
-pub proof fn css_text_range_0_162(i: int)
-    requires
-        0 <= i < 10326,
+        0 <= i < 10411,
     ensures
         (css_text_chars()[i] as u8) == ch::css_text_bytes()[i],
         '\x00' <= css_text_chars()[i] <= '\x7f',
@@ -7287,19 +7332,19 @@ pub proof fn css_text_range_0_162(i: int)
     if i < 5184 {
         css_text_range_0_81(i);
     } else {
-        css_text_range_81_162(i);
+        css_text_range_81_163(i);
     }
 }
 
 pub proof fn css_text_shape()
     ensures
-        css_text_chars().len() == 10326,
-        ch::css_text_bytes().len() == 10326,
+        css_text_chars().len() == 10411,
+        ch::css_text_bytes().len() == 10411,
         u::css_text() == encode_utf8(css_text_chars()),
 {
     hide(ch::css_text_bytes);
     reveal_css_text!();
-    assert(ch::css_text_bytes().len() == 10326) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10411) by (compute_only);
 }
 
 pub proof fn css_text_encoding()
@@ -7312,12 +7357,12 @@ pub proof fn css_text_encoding()
     css_text_shape();
     assert forall|i: int| 0 <= i < css_text_chars().len() implies '\x00'
         <= #[trigger] css_text_chars()[i] <= '\x7f' by {
-        css_text_range_0_162(i);
+        css_text_range_0_163(i);
     }
     is_ascii_chars_encode_utf8(css_text_chars());
-    assert forall|i: int| 0 <= i < 10326 implies #[trigger] encode_utf8(css_text_chars())[i]
+    assert forall|i: int| 0 <= i < 10411 implies #[trigger] encode_utf8(css_text_chars())[i]
         == ch::css_text_bytes()[i] by {
-        css_text_range_0_162(i);
+        css_text_range_0_163(i);
     }
     assert(encode_utf8(css_text_chars()) =~= ch::css_text_bytes());
 }
