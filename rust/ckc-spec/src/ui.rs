@@ -435,7 +435,7 @@ pub open spec fn human_section(b: Bytes) -> Bytes {
         } else {
             seq![ss[0]]
         };
-        join(head + ss.drop_first(), middot_sep())
+        join(head + ss.drop_first(), gt_sep())
     }
 }
 
@@ -507,6 +507,8 @@ dd { margin-left: 0; }
 summary { cursor: pointer; }
 section { margin: 1.5rem 0; }
 nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
+nav.docnav a + a { margin-left: 1.5rem; }
+p.provenance span + a { margin-left: 0.75rem; }
 footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid #e5e7eb; font-size: 0.9rem; }
 form label { display: block; margin-top: 1rem; font-weight: 600; }
 fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }
@@ -677,9 +679,7 @@ pub open spec fn frame(title: Bytes, crumbs: Html, body: Html) -> Html {
             fixed_bytes(head_open()),
             fixed_bytes(meta_open()),
             fixed_bytes(meta_viewport()),
-            fixed_bytes(title_open()) + text(title) + fixed_bytes(
-                sp_cnl_ckc_reviewer_title_close(),
-            ),
+            fixed_bytes(title_open()) + text(title) + fixed_bytes(title_close()),
             fixed_bytes(style_open()),
             fixed_bytes(css_text()),
             fixed_bytes(style_close()),
@@ -819,7 +819,7 @@ pub open spec fn region_status(r: Row) -> Bytes {
         Status::Uncovered(_) => {
             let inner = unsuffix(unprefix(field(r, 4), uncovered_2()), paren_close());
             let i = check::first_sub(inner, colon_sep(), 0);
-            not_covered_cap_sp() + (if i + 2 <= inner.len() {
+            not_covered_cap_colon_sp() + (if i + 2 <= inner.len() {
                 inner.skip(i as int + 2)
             } else {
                 empty()
@@ -1775,7 +1775,10 @@ pub open spec fn document_html(
     });
     let source = unprefix(coverage_field(g, id, 1), source_dir());
     let prov = (if region.len() > 0 {
-        seq![text(region)]
+        seq![
+            fixed_bytes(span_plain_open()) + fixed_bytes(passage_cap_sp()) + text(region)
+                + fixed_bytes(span_close()),
+        ]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
@@ -1808,9 +1811,8 @@ pub open spec fn document_html(
                 + fixed_bytes(h2_close()),
         ] + (if prov.len() > 0 {
             seq![
-                fixed_bytes(p_open()) + hjoin(prov, fixed_bytes(middot_sep())) + fixed_bytes(
-                    p_close(),
-                ),
+                fixed_bytes(p_class_provenance_open()) + hjoin(prov, fixed_bytes(space_2()))
+                    + fixed_bytes(p_close()),
             ]
         } else {
             Seq::empty()
@@ -1881,7 +1883,7 @@ pub open spec fn document_html(
             fixed_bytes(pre_open_2()) + text(d.pl) + fixed_bytes(pre_close()),
             fixed_bytes(details_close()),
             fixed_bytes(section_close()),
-            fixed_bytes(nav_open_2()) + hjoin(nav, fixed_bytes(middot_sep())) + fixed_bytes(
+            fixed_bytes(nav_open_2()) + hjoin(nav, fixed_bytes(space_2())) + fixed_bytes(
                 nav_close(),
             ),
         ],
@@ -2765,7 +2767,7 @@ copy_table! {
     rec_cap = "Rec";
     recommendation_cap_sp = "Recommendation ";
     box_cap = "BOX";
-    middot_sep = " · ";
+    gt_sep = " > ";
     page_prefix = "p";
     page_sp = ", page ";
     passage_sp = ", passage ";
@@ -2781,7 +2783,7 @@ copy_table! {
     head_open = "<head>";
     meta_open = "<meta charset=\"utf-8\">";
     title_open = "<title>";
-    sp_cnl_ckc_reviewer_title_close = " — cnl-ckc reviewer</title>";
+    title_close = "</title>";
     style_open = "<style>";
     style_close = "</style>";
     head_close = "</head>";
@@ -2827,7 +2829,7 @@ copy_table! {
     restates_2 = "restates(";
     uncovered_2 = "uncovered(";
     colon_sep = ": ";
-    not_covered_cap_sp = "Not covered — ";
+    not_covered_cap_colon_sp = "Not covered: ";
     pending_cap = "Pending";
     passages_cap = "Passages";
     with_ace_cap = "With ACE";
@@ -3038,6 +3040,9 @@ copy_table! {
     marks_a_time_limit_as_approximate = "marks a time limit as approximate";
     joins_the_upper_end_of_a_minimum = "joins the upper end of a minimum that is stated as a range";
     meta_viewport = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
+    p_class_provenance_open = "<p class=\"provenance\">";
+    span_plain_open = "<span>";
+    passage_cap_sp = "Passage ";
 }
 
 verus! {

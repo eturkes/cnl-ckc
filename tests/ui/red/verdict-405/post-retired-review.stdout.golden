@@ -11,7 +11,7 @@ Allow: GET
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Method not allowed — cnl-ckc reviewer</title>
+<title>Method not allowed</title>
 <style>
 body { margin: 0 auto; max-width: 72rem; padding: 0 1.5rem 4rem; font-family: system-ui, sans-serif; line-height: 1.55; color: #111827; background: #ffffff; }
 a { color: #1d4ed8; }
@@ -48,6 +48,8 @@ dd { margin-left: 0; }
 summary { cursor: pointer; }
 section { margin: 1.5rem 0; }
 nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
+nav.docnav a + a { margin-left: 1.5rem; }
+p.provenance span + a { margin-left: 0.75rem; }
 footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid #e5e7eb; font-size: 0.9rem; }
 form label { display: block; margin-top: 1rem; font-weight: 600; }
 fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }

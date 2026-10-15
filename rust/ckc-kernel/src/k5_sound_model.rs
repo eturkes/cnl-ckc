@@ -231,7 +231,7 @@ pub proof fn human_section(s: u::Bytes, inputs: Seq<u::Bytes>)
             seq![ss[0]]
         };
         split_copy(ss.drop_first(), inputs);
-        b::join(head + ss.drop_first(), u::middot_sep(), inputs);
+        b::join(head + ss.drop_first(), u::gt_sep(), inputs);
     }
 }
 

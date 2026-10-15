@@ -151,7 +151,7 @@ pub fn human_section(s: &[u8]) -> (out: Vec<u8>)
         } else {
             seq![ss@[0]@]
         });
-        assert(u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::middot_sep()));
+        assert(u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::gt_sep()));
     }
     let mut i = 1;
     proof {
@@ -160,7 +160,7 @@ pub fn human_section(s: &[u8]) -> (out: Vec<u8>)
     while i < ss.len()
         invariant
             1 <= i <= ss.len(),
-            u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::middot_sep()),
+            u::human_section(s@) == u::join(head + b::views(ss@).drop_first(), u::gt_sep()),
             b::views(parts@) == head + b::views(ss@).subrange(1, i as int),
         decreases ss.len() - i,
     {
@@ -179,7 +179,7 @@ pub fn human_section(s: &[u8]) -> (out: Vec<u8>)
     proof {
         assert(b::views(ss@).subrange(1, i as int) =~= b::views(ss@).drop_first());
     }
-    b::join(&parts, &b::literal(" · "))
+    b::join(&parts, &b::literal(" > "))
 }
 
 pub fn section_count(g: &EGuideline, section: &[u8]) -> (n: usize)
@@ -273,7 +273,7 @@ pub fn region_status(r: &ECoverageRow) -> (out: Vec<u8>)
             } else {
                 Vec::new()
             };
-            b::cat(b::literal("Not covered — "), &tail)
+            b::cat(b::literal("Not covered: "), &tail)
         },
         EStatus::Pending => b::literal("Pending"),
         _ => Vec::new(),

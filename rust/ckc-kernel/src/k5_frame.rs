@@ -17,12 +17,7 @@ pub fn frame(title: &[u8], crumbs: EPage, body: EPage) -> (out: EPage)
     rows.push(h::fixed("<head>"));
     rows.push(h::fixed("<meta charset=\"utf-8\">"));
     rows.push(h::fixed("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"));
-    rows.push(
-        h::cat(
-            h::cat(h::fixed("<title>"), h::text(title)),
-            h::fixed(" — cnl-ckc reviewer</title>"),
-        ),
-    );
+    rows.push(h::cat(h::cat(h::fixed("<title>"), h::text(title)), h::fixed("</title>")));
     rows.push(h::fixed("<style>"));
     rows.push(h::fixed_bytes(&chrome::css_text()));
     rows.push(h::fixed("</style>"));
@@ -47,9 +42,7 @@ pub fn frame(title: &[u8], crumbs: EPage, body: EPage) -> (out: EPage)
             u::fixed_bytes(u::head_open()),
             u::fixed_bytes(u::meta_open()),
             u::fixed_bytes(u::meta_viewport()),
-            u::fixed_bytes(u::title_open()) + u::text(title@) + u::fixed_bytes(
-                u::sp_cnl_ckc_reviewer_title_close(),
-            ),
+            u::fixed_bytes(u::title_open()) + u::text(title@) + u::fixed_bytes(u::title_close()),
             u::fixed_bytes(u::style_open()),
             u::fixed_bytes(u::css_text()),
             u::fixed_bytes(u::style_close()),

@@ -284,11 +284,14 @@ pub proof fn unsuffix(s: u::Bytes, p: u::Bytes)
     }
 }
 
+// n23: once the copy table grew to 305 entries this query exceeded the default rlimit in
+// the module's shared solver session; its own session keeps it independent of the rest.
+// The registry is unreachable from this query, so its own session declares no fuel to hide.
+#[verifier::spinoff_prover]
 pub proof fn slice(s: u::Bytes, l: int, r: int)
     ensures
         span(u::slice_text(s, l, r), s),
 {
-    hide(u::copy_registry);
     let cs = u::chars(s);
     if 0 <= l <= r <= cs.len() && valid_utf8(s) {
         decode_utf8_encode_utf8(s);

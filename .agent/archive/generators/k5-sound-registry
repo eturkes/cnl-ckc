@@ -10,7 +10,7 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,_names=copy_table(s);assert len(entries)==302
+entries,_names=copy_table(s);assert len(entries)==305
 N=len(entries)
 bv=lambda raw:'ns!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
 ps='p::css_codes(),p::marketing_codes(),p::relative_codes()'
@@ -37,7 +37,7 @@ for i,m in enumerate(entries):
     out += ['}']
 for a in range(0,len(entries),16):
     z=min(a+16,len(entries));out += [f'pub proof fn block_{a:03}(i:int)',f'    requires {a}<=i<{z},','    ensures u::copy_literal_ok(u::copy_registry()[i]),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);']
-    for i in range(a,z):out += [('    if'if i==a else'    else if')+f' i=={i} {{ literal_{i:03}(); }}'if i<z-1 else f'    else {{ literal_{i:03}(); }}']
+    for i in range(a,z):out += [f'    literal_{i:03}();'if z-a==1 else('    if'if i==a else'    else if')+f' i=={i} {{ literal_{i:03}(); }}'if i<z-1 else f'    else {{ literal_{i:03}(); }}']
     out += ['}']
 out += ['pub proof fn literal(i:int)',f'    requires 0<=i<{N},','    ensures u::copy_literal_ok(u::copy_registry()[i]),','{','    hide(u::copy_registry);hide(u::copy_literal_ok);']
 for a in range(0,len(entries),16):

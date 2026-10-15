@@ -176,7 +176,7 @@ pub proof fn region(r: ck::Row, inputs: Seq<u::Bytes>)
             }
             m::copy(tail, inputs);
             l::l091(inputs);
-            b::cat(u::not_covered_cap_sp(), tail, inputs);
+            b::cat(u::not_covered_cap_colon_sp(), tail, inputs);
         },
         ck::Status::Pending => l::l092(inputs),
         _ => m::copy(u::empty(), inputs),

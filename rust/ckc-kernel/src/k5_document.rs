@@ -82,7 +82,11 @@ pub open spec fn provenance_spec(g: u::Guideline, id: u::Bytes) -> Seq<u::Html> 
     let region = u::coverage_field(g, id, 0);
     let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     (if region.len() > 0 {
-        seq![u::text(region)]
+        seq![
+            u::fixed_bytes(u::span_plain_open()) + u::fixed_bytes(u::passage_cap_sp()) + u::text(
+                region,
+            ) + u::fixed_bytes(u::span_close()),
+        ]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
@@ -101,7 +105,12 @@ pub fn provenance(g: &EGuideline, id: &[u8]) -> (out: Vec<EPage>)
     let source = payload::unprefix(&file, &b::literal("source/"));
     let mut out = Vec::new();
     if region.len() > 0 {
-        out.push(h::text(&region));
+        out.push(
+            h::cat(
+                h::cat(h::cat(h::fixed("<span>"), h::fixed("Passage ")), h::text(&region)),
+                h::fixed("</span>"),
+            ),
+        );
     }
     if bytes::contains(&g.source_names, &source) {
         let href = b::cat(b::literal("../source/"), &url::segment(&source));
@@ -301,8 +310,10 @@ pub open spec fn body_spec(
         ) + u::chip(k) + u::fixed_bytes(u::h2_close()),
     ] + (if prov.len() > 0 {
         seq![
-            u::fixed_bytes(u::p_open()) + u::hjoin(prov, u::fixed_bytes(u::middot_sep()))
-                + u::fixed_bytes(u::p_close()),
+            u::fixed_bytes(u::p_class_provenance_open()) + u::hjoin(
+                prov,
+                u::fixed_bytes(u::space_2()),
+            ) + u::fixed_bytes(u::p_close()),
         ]
     } else {
         Seq::empty()
@@ -349,7 +360,7 @@ pub open spec fn body_spec(
         u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
         u::fixed_bytes(u::details_close()),
         u::fixed_bytes(u::section_close()),
-        u::fixed_bytes(u::nav_open_2()) + u::hjoin(nav, u::fixed_bytes(u::middot_sep()))
+        u::fixed_bytes(u::nav_open_2()) + u::hjoin(nav, u::fixed_bytes(u::space_2()))
             + u::fixed_bytes(u::nav_close()),
     ]
 }
@@ -397,7 +408,11 @@ pub proof fn decomposition(
     });
     let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     let prov = (if region.len() > 0 {
-        seq![u::text(region)]
+        seq![
+            u::fixed_bytes(u::span_plain_open()) + u::fixed_bytes(u::passage_cap_sp()) + u::text(
+                region,
+            ) + u::fixed_bytes(u::span_close()),
+        ]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
@@ -430,8 +445,10 @@ pub proof fn decomposition(
         ) + u::chip(k) + u::fixed_bytes(u::h2_close()),
     ] + (if prov.len() > 0 {
         seq![
-            u::fixed_bytes(u::p_open()) + u::hjoin(prov, u::fixed_bytes(u::middot_sep()))
-                + u::fixed_bytes(u::p_close()),
+            u::fixed_bytes(u::p_class_provenance_open()) + u::hjoin(
+                prov,
+                u::fixed_bytes(u::space_2()),
+            ) + u::fixed_bytes(u::p_close()),
         ]
     } else {
         Seq::empty()
@@ -507,7 +524,7 @@ pub proof fn decomposition(
         u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
         u::fixed_bytes(u::details_close()),
         u::fixed_bytes(u::section_close()),
-        u::fixed_bytes(u::nav_open_2()) + u::hjoin(nav, u::fixed_bytes(u::middot_sep()))
+        u::fixed_bytes(u::nav_open_2()) + u::hjoin(nav, u::fixed_bytes(u::space_2()))
             + u::fixed_bytes(u::nav_close()),
     ];
     assert(body_spec(g, d, prev, next, token, commit) =~= original);
@@ -529,8 +546,10 @@ pub open spec fn leading_spec(g: u::Guideline, d: u::Document, shown: bool) -> S
         ) + u::chip(k) + u::fixed_bytes(u::h2_close()),
     ] + (if prov.len() > 0 {
         seq![
-            u::fixed_bytes(u::p_open()) + u::hjoin(prov, u::fixed_bytes(u::middot_sep()))
-                + u::fixed_bytes(u::p_close()),
+            u::fixed_bytes(u::p_class_provenance_open()) + u::hjoin(
+                prov,
+                u::fixed_bytes(u::space_2()),
+            ) + u::fixed_bytes(u::p_close()),
         ]
     } else {
         Seq::empty()
@@ -587,7 +606,7 @@ pub open spec fn compiled_spec(d: u::Document, prev: u::Bytes, next: u::Bytes) -
         u::fixed_bytes(u::section_close()),
         u::fixed_bytes(u::nav_open_2()) + u::hjoin(
             navigation_spec(prev, next),
-            u::fixed_bytes(u::middot_sep()),
+            u::fixed_bytes(u::space_2()),
         ) + u::fixed_bytes(u::nav_close()),
     ]
 }
@@ -677,7 +696,10 @@ pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool) -> 
     );
     if prov.len() > 0 {
         body.push(
-            h::cat(h::cat(h::fixed("<p>"), h::hjoin(&prov, &h::fixed(" · "))), h::fixed("</p>")),
+            h::cat(
+                h::cat(h::fixed("<p class=\"provenance\">"), h::hjoin(&prov, &h::fixed(" "))),
+                h::fixed("</p>"),
+            ),
         );
     }
     body.push(
@@ -781,7 +803,7 @@ pub fn compiled(d: &EDocument, prev: &[u8], next: &[u8]) -> (out: Vec<EPage>)
     body.push(h::fixed("</section>"));
     body.push(
         h::cat(
-            h::cat(h::fixed("<nav class=\"docnav\">"), h::hjoin(&nav, &h::fixed(" · "))),
+            h::cat(h::fixed("<nav class=\"docnav\">"), h::hjoin(&nav, &h::fixed(" "))),
             h::fixed("</nav>"),
         ),
     );

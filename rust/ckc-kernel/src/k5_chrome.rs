@@ -43,6 +43,8 @@ dd { margin-left: 0; }
 summary { cursor: pointer; }
 section { margin: 1.5rem 0; }
 nav.docnav { padding: 1rem 0; border-top: 1px solid #e5e7eb; }
+nav.docnav a + a { margin-left: 1.5rem; }
+p.provenance span + a { margin-left: 0.75rem; }
 footer.scope { margin-top: 2rem; padding: 1rem 0; border-top: 1px solid #e5e7eb; font-size: 0.9rem; }
 form label { display: block; margin-top: 1rem; font-weight: 600; }
 fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }

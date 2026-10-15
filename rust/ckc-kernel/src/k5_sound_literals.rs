@@ -668,43 +668,19 @@ pub proof fn l028(inputs: Seq<u::Bytes>)
 
 pub proof fn l029(inputs: Seq<u::Bytes>)
     ensures
-        u::copy_registry().contains(u::lit(" · "@)),
-        u::copy_derived(u::lit(" · "@), inputs, u::copy_registry()),
-        u::copy_registry()[29] == u::lit(" · "@),
+        u::copy_registry().contains(u::lit(" > "@)),
+        u::copy_derived(u::lit(" > "@), inputs, u::copy_registry()),
+        u::copy_registry()[29] == u::lit(" > "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[29] == u::lit(" · "@) && 29 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[29] == u::lit(" > "@) && 29 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
-    b::literal(u::lit(" · "@), inputs);
-}
-
-pub proof fn f029(inputs: Seq<u::Bytes>)
-    ensures
-        h::fragment(u::fixed(" · "@), inputs, 0, 0),
-        u::copy_registry()[29] == u::lit(" · "@),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    l029(inputs);
-    reveal_strlit(" · ");
-    let cs = " · "@;
-    assert(cs =~= cs.take(1) + seq![cs[1]] + cs.skip(2));
-    is_ascii_chars_encode_utf8(cs.take(1));
-    is_ascii_chars_encode_utf8(cs.skip(2));
-    encode_utf8_concat(cs.take(1), seq![cs[1]]);
-    encode_utf8_concat(cs.take(1) + seq![cs[1]], cs.skip(2));
-    reveal_with_fuel(encode_utf8, 2);
-    assert(encode_scalar(183u32) == bs![194u8,183]) by (compute_only);
-    assert(cs[1] as u32 == 183);
-    assert(u::lit(" · "@) =~= bs![32u8,194,183,32]);
-    assert(cx::scan(bs![32u8,194,183,32], 0) == 0) by (compute_only);
-    cx::exact(u::lit(" · "@), 0);
-    h::fixed(u::lit(" · "@), inputs, 0, 0);
+    b::literal(u::lit(" > "@), inputs);
 }
 
 pub proof fn l030(inputs: Seq<u::Bytes>)
@@ -1103,48 +1079,35 @@ pub proof fn f044(inputs: Seq<u::Bytes>)
 
 pub proof fn l045(inputs: Seq<u::Bytes>)
     ensures
-        u::copy_registry().contains(u::lit(" — cnl-ckc reviewer</title>"@)),
-        u::copy_derived(u::lit(" — cnl-ckc reviewer</title>"@), inputs, u::copy_registry()),
-        u::copy_registry()[45] == u::lit(" — cnl-ckc reviewer</title>"@),
+        u::copy_registry().contains(u::lit("</title>"@)),
+        u::copy_derived(u::lit("</title>"@), inputs, u::copy_registry()),
+        u::copy_registry()[45] == u::lit("</title>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[45] == u::lit(" — cnl-ckc reviewer</title>"@) && 45
-        < u::copy_registry().len()) by {
+    assert(u::copy_registry()[45] == u::lit("</title>"@) && 45 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
-    b::literal(u::lit(" — cnl-ckc reviewer</title>"@), inputs);
+    b::literal(u::lit("</title>"@), inputs);
 }
 
 pub proof fn f045(inputs: Seq<u::Bytes>)
     ensures
-        h::fragment(u::fixed(" — cnl-ckc reviewer</title>"@), inputs, 0, 0),
-        u::copy_registry()[45] == u::lit(" — cnl-ckc reviewer</title>"@),
+        h::fragment(u::fixed("</title>"@), inputs, 0, 0),
+        u::copy_registry()[45] == u::lit("</title>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
     l045(inputs);
-    reveal_strlit(" — cnl-ckc reviewer</title>");
-    let cs = " — cnl-ckc reviewer</title>"@;
-    assert(cs =~= cs.take(1) + seq![cs[1]] + cs.skip(2));
-    is_ascii_chars_encode_utf8(cs.take(1));
-    is_ascii_chars_encode_utf8(cs.skip(2));
-    encode_utf8_concat(cs.take(1), seq![cs[1]]);
-    encode_utf8_concat(cs.take(1) + seq![cs[1]], cs.skip(2));
-    reveal_with_fuel(encode_utf8, 2);
-    assert(encode_scalar(8212u32) == bs![226u8,128,148]) by (compute_only);
-    assert(cs[1] as u32 == 8212);
-    assert(u::lit(" — cnl-ckc reviewer</title>"@)
-        =~= bs![32u8,226,128,148,32,99,110,108,45,99,107,99,32,114,101,118,105,101,119,101,114,60,47,116,105,116,108,101,62]);
-    assert(cx::scan(
-        bs![32u8,226,128,148,32,99,110,108,45,99,107,99,32,114,101,118,105,101,119,101,114,60,47,116,105,116,108,101,62],
-        0,
-    ) == 0) by (compute_only);
-    cx::exact(u::lit(" — cnl-ckc reviewer</title>"@), 0);
-    h::fixed(u::lit(" — cnl-ckc reviewer</title>"@), inputs, 0, 0);
+    reveal_strlit("</title>");
+    is_ascii_chars_encode_utf8("</title>"@);
+    assert(u::lit("</title>"@) =~= bs![60u8,47,116,105,116,108,101,62]);
+    assert(cx::scan(bs![60u8,47,116,105,116,108,101,62], 0) == 0) by (compute_only);
+    cx::exact(u::lit("</title>"@), 0);
+    h::fixed(u::lit("</title>"@), inputs, 0, 0);
 }
 
 pub proof fn l046(inputs: Seq<u::Bytes>)
@@ -2390,20 +2353,19 @@ pub proof fn l090(inputs: Seq<u::Bytes>)
 
 pub proof fn l091(inputs: Seq<u::Bytes>)
     ensures
-        u::copy_registry().contains(u::lit("Not covered — "@)),
-        u::copy_derived(u::lit("Not covered — "@), inputs, u::copy_registry()),
-        u::copy_registry()[91] == u::lit("Not covered — "@),
+        u::copy_registry().contains(u::lit("Not covered: "@)),
+        u::copy_derived(u::lit("Not covered: "@), inputs, u::copy_registry()),
+        u::copy_registry()[91] == u::lit("Not covered: "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[91] == u::lit("Not covered — "@) && 91 < u::copy_registry().len())
-        by {
+    assert(u::copy_registry()[91] == u::lit("Not covered: "@) && 91 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
-    b::literal(u::lit("Not covered — "@), inputs);
+    b::literal(u::lit("Not covered: "@), inputs);
 }
 
 pub proof fn l092(inputs: Seq<u::Bytes>)
@@ -9777,6 +9739,110 @@ pub proof fn f301(inputs: Seq<u::Bytes>)
         0,
         0,
     );
+}
+
+pub proof fn l302(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<p class=\"provenance\">"@)),
+        u::copy_derived(u::lit("<p class=\"provenance\">"@), inputs, u::copy_registry()),
+        u::copy_registry()[302] == u::lit("<p class=\"provenance\">"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[302] == u::lit("<p class=\"provenance\">"@) && 302
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<p class=\"provenance\">"@), inputs);
+}
+
+pub proof fn f302(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<p class=\"provenance\">"@), inputs, 0, 0),
+        u::copy_registry()[302] == u::lit("<p class=\"provenance\">"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l302(inputs);
+    reveal_strlit("<p class=\"provenance\">");
+    is_ascii_chars_encode_utf8("<p class=\"provenance\">"@);
+    assert(u::lit("<p class=\"provenance\">"@)
+        =~= bs![60u8,112,32,99,108,97,115,115,61,34,112,114,111,118,101,110,97,110,99,101,34,62]);
+    assert(cx::scan(
+        bs![60u8,112,32,99,108,97,115,115,61,34,112,114,111,118,101,110,97,110,99,101,34,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<p class=\"provenance\">"@), 0);
+    h::fixed(u::lit("<p class=\"provenance\">"@), inputs, 0, 0);
+}
+
+pub proof fn l303(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<span>"@)),
+        u::copy_derived(u::lit("<span>"@), inputs, u::copy_registry()),
+        u::copy_registry()[303] == u::lit("<span>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[303] == u::lit("<span>"@) && 303 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<span>"@), inputs);
+}
+
+pub proof fn f303(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<span>"@), inputs, 0, 0),
+        u::copy_registry()[303] == u::lit("<span>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l303(inputs);
+    reveal_strlit("<span>");
+    is_ascii_chars_encode_utf8("<span>"@);
+    assert(u::lit("<span>"@) =~= bs![60u8,115,112,97,110,62]);
+    assert(cx::scan(bs![60u8,115,112,97,110,62], 0) == 0) by (compute_only);
+    cx::exact(u::lit("<span>"@), 0);
+    h::fixed(u::lit("<span>"@), inputs, 0, 0);
+}
+
+pub proof fn l304(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Passage "@)),
+        u::copy_derived(u::lit("Passage "@), inputs, u::copy_registry()),
+        u::copy_registry()[304] == u::lit("Passage "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[304] == u::lit("Passage "@) && 304 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Passage "@), inputs);
+}
+
+pub proof fn f304(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Passage "@), inputs, 0, 0),
+        u::copy_registry()[304] == u::lit("Passage "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l304(inputs);
+    reveal_strlit("Passage ");
+    is_ascii_chars_encode_utf8("Passage "@);
+    assert(u::lit("Passage "@) =~= bs![80u8,97,115,115,97,103,101,32]);
+    assert(cx::scan(bs![80u8,97,115,115,97,103,101,32], 0) == 0) by (compute_only);
+    cx::exact(u::lit("Passage "@), 0);
+    h::fixed(u::lit("Passage "@), inputs, 0, 0);
 }
 
 } // verus!
