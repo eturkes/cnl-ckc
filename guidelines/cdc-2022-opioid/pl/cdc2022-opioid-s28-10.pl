@@ -34,7 +34,7 @@
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s28-10',ace_sha256(d4e0a3408c1850d33c4641b7644ecc7686f07455cfd86c1ef97900a7be098cac),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
+guideline_document('cdc2022-opioid-s28-10',ace_sha256(d4e0a3408c1850d33c4641b7644ecc7686f07455cfd86c1ef97900a7be098cac),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: Every clinician may assess a patient-function with a PEG-assessment-scale.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s28-10',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s28-10',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s28-10',1,ref(2),[A]),'patient-function',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

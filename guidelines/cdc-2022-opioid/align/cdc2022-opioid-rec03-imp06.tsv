@@ -1,4 +1,9 @@
 0	ace	36	methadone-treatment
 1	ace	62	first-choice-ER-LA-decision
+0	ace	97	methadone-treatment
+2	ace	117	should not be
+1	ace	131	first-line
+1	ace	149	ER-LA-opioid
 0	src	0	Methadone
+2	src	10	should not be
 1	src	28	first choice for an ER/LA opioid

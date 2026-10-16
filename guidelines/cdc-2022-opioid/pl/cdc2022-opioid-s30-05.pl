@@ -34,7 +34,7 @@
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s30-05',ace_sha256('16ce2b46e972e18d509df003146d8c17b65308e06dad602acbd8c76e48df3a70'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
+guideline_document('cdc2022-opioid-s30-05',ace_sha256('16ce2b46e972e18d509df003146d8c17b65308e06dad602acbd8c76e48df3a70'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a multimodal-therapy is needed then every clinician should combine a medication with a nonpharmacologic-therapy.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s30-05',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,'multimodal-therapy',countable), guideline_cardinality(actual,A,na,eq,1), guideline_property(actual,B,needed,pos), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s30-05',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s30-05',1,ref(5),[A,B,C,D]),medication,countable) :- guideline_entity(actual,A,'multimodal-therapy',countable), guideline_cardinality(actual,A,na,eq,1), guideline_property(actual,B,needed,pos), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).

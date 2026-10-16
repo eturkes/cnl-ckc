@@ -74,7 +74,7 @@ that it was published with.
     behavioral-health specialists serving as taper-support team members).
 - `ace/cdc2022-opioid-<region-id>.ace` — one ACE document per formalized
   front-matter or recommendation 1–5 supporting-rationale region outside
-  the implementation-consideration lists (107 documents; docid = the
+  the implementation-consideration lists (109 documents; docid = the
   region id lowercased, S25-04 → `s25-04`). These documents follow the
   same knowledge-only projection contract and
   `audit/projection-notes.tsv` discipline as the implementation
@@ -139,7 +139,7 @@ guideline conclusions.
   parenthetical and simplified action rules. It adds one document per
   formalized recommendation 1–5 implementation-consideration region
   (67 documents). It adds one document per formalized front-matter and
-  recommendation 1–5 rationale region (107 documents). It adds one
+  recommendation 1–5 rationale region (109 documents). It adds one
   document per formalized recommendation 6–12 body,
   implementation-consideration, special-populations, and conclusion
   region (151 documents). The rules encode
@@ -149,9 +149,9 @@ guideline conclusions.
   region.
 - `coverage.tsv` records one status row per payload region (all 718), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (337);
+  - `ace(<docid>)` — formalized (339);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
-    region (262);
+    region (260);
   - `uncovered(<class>: <reason>)` — deliberately not formalized (119;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet
@@ -178,9 +178,10 @@ guideline conclusions.
   region formalize rather than restate (S49-14, S52-10, S55-01). An
   emphasis qualifier alone does not (S56-12).
 - Projection rulings (wave-1 review). ACE "does not V a N" negates the
-  existential — a takes-none reading (S37-13). An unhedged source
-  endorsement ("preferred", "are recommended") renders as a should-shaped
-  duty. Practice hedges ("typically", "generally", "ideally") drop with a
+  existential — a takes-none reading (S37-13). A source preference
+  ("preferred", "instead of", "rather than", "first-line", "first choice")
+  types as `guideline_preference` (schema S1); "are recommended" renders
+  as a should-shaped duty. Practice hedges ("typically", "generally", "ideally") drop with a
   notes admission; "can"/"might" render as may. Source or-alternatives may
   split into conjunctive consider/discuss duties or parallel non-exclusive
   permissions, admitted in notes. "Only if"/"only after" restrictions

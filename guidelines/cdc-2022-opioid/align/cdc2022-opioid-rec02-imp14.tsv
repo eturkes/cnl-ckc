@@ -18,7 +18,20 @@
 0	ace	297	opioid
 1	ace	304	therapy
 6	ace	318	chronic-pain
+5	ace	351	subacute-pain
+0	ace	373	opioid
+1	ace	380	therapy
+7	ace	388	should not be
+2	ace	402	first-line
+5	ace	421	subacute-pain
+6	ace	455	chronic-pain
+0	ace	476	opioid
+1	ace	483	therapy
+7	ace	491	should not be
+2	ace	505	first-line
+6	ace	524	chronic-pain
 0	src	0	Opioid
+7	src	8	should not be
 4	src	22	considered
 2	src	33	first-line
 3	src	47	routine

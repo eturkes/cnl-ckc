@@ -1,8 +1,9 @@
 0	ace	19	kidney-stone-pain
-1	ace	69	contraindication
-2	ace	114	use
-3	ace	121	NSAID
-0	ace	135	kidney-stone-pain
+3	ace	70	NSAID
+1	ace	76	contraindication
+3	ace	101	NSAID
+2	ace	110	preferred
+0	ace	128	kidney-stone-pain
 0	src	10	kidney stone pain
 3	src	29	NSAIDs
 0	src	162	kidney stone pain

@@ -34,7 +34,7 @@
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec06',ace_sha256('3fb9daa7136b6c988cce4863837cae390c6d263828ab9046d3cb92a4943687fd'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
+guideline_document('cdc2022-opioid-rec06',ace_sha256('3fb9daa7136b6c988cce4863837cae390c6d263828ab9046d3cb92a4943687fd'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: A recommendation is a category-A-recommendation and is an evidence-type-4-recommendation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(1),[]),recommendation,countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(1),[]),na,eq,1).
@@ -43,11 +43,13 @@ guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,re
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(3),[]),be).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(2),[])).
+guideline_grade(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(1),[]),strength,strong,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(2),[])).
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(4),[]),'evidence-type-4-recommendation',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(4),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(5),[]),be).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(4),[])).
+guideline_grade(actual,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(1),[]),evidence,very_low,'$guideline_id'(product,'cdc2022-opioid-rec06',1,ref(4),[])).
 % S2: If an opioid is needed for an acute-pain then every clinician should limit an opioid-quantity for an expected-severe-pain-duration.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec06',2,box(1),[A,B,C,D,E]),should) :- guideline_entity(actual,A,opioid,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'acute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_property(actual,C,needed,pos), guideline_event(actual,D,be), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,C), guideline_pp(actual,D,for,B), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec06',2,box(1),[A,B,C,D,E]),'$guideline_id'(product,'cdc2022-opioid-rec06',2,ref(6),[A,B,C,D,E]),'opioid-quantity',countable) :- guideline_entity(actual,A,opioid,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'acute-pain',countable), guideline_cardinality(actual,B,na,eq,1), guideline_property(actual,C,needed,pos), guideline_event(actual,D,be), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,C), guideline_pp(actual,D,for,B), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).

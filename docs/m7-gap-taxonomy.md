@@ -22,7 +22,7 @@ the first class to implement. Each class is a separate feature unit.
 | Class | Observed gap | CDC documents | Sample statements | Disposition |
 | --- | --- | --- | --- | --- |
 | temporal | durations, frequencies, deadlines, sequencing | 81 | 44 | implemented: interval and recurrence annotations; count per period, scoped recurrence, order, approximate bound and ranged minimum (`docs/REFERENCE.md` § Vocabulary table and time annotations) |
-| strength | recommendation grade, preference of one option over another | 63 | 49 | schema revision: graded recommendation record |
+| strength | recommendation grade, preference of one option over another | 63 | 49 | implemented: grade and preference annotations (`docs/REFERENCE.md` § Strength annotations); hedges open |
 | regimen-choice | one of several permitted options | — | 10 | ACE extension or schema revision: disjunction |
 | numeric-threshold | numeric comparison, ranges, unit conversion | — | 27 | schema revision: comparison built-ins |
 | dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | schema revision: arithmetic built-ins |
@@ -32,7 +32,15 @@ the first class to implement. Each class is a separate feature unit.
 | quantification | set scope, example generalized to rule | 68 | — | ACE extension (group coordination) |
 | relation-structure | cause and purpose links | 209 | — | authoring fidelity, ACE extension |
 
-Temporal status: 51 of the CDC guideline's 337 documents carry
+Strength status: the table's grade nouns give the 12 recommendation
+documents 24 grade records, one strength and one evidence value each.
+12 documents type 24 preferences: `preferred` and `first-line` copulas
+and `instead-of` alternatives. Two of them, `cdc2022-opioid-s22-02` and
+`cdc2022-opioid-s37-09`, are new documents for regions that earlier
+restated a recommendation without its preference. Hedges such as
+"typically", "ideally" and "might" stay open for their own unit.
+
+Temporal status: 51 of the CDC guideline's 339 documents carry
 annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
 whose sources state a bound that the interval and recurrence

@@ -1,0 +1,79 @@
+4	ace	19	low-back-pain
+4	ace	41	low-back-pain
+11	ace	55	is acute
+0	ace	72	opioid
+1	ace	79	therapy
+2	ace	87	should not be
+3	ace	101	first-line
+4	ace	120	low-back-pain
+5	ace	154	neck-pain
+5	ace	172	neck-pain
+11	ace	182	is acute
+0	ace	199	opioid
+1	ace	206	therapy
+2	ace	214	should not be
+3	ace	228	first-line
+5	ace	247	neck-pain
+6	ace	277	painful-musculoskeletal-injury
+6	ace	316	painful-musculoskeletal-injury
+11	ace	347	is acute
+0	ace	364	opioid
+1	ace	371	therapy
+2	ace	379	should not be
+3	ace	393	first-line
+6	ace	412	painful-musculoskeletal-injury
+7	ace	463	minor-surgery-pain
+7	ace	490	minor-surgery-pain
+11	ace	509	is acute
+0	ace	526	opioid
+1	ace	533	therapy
+2	ace	541	should not be
+3	ace	555	first-line
+7	ace	574	minor-surgery-pain
+8	ace	613	dental-pain
+8	ace	633	dental-pain
+11	ace	645	is acute
+0	ace	662	opioid
+1	ace	669	therapy
+2	ace	677	should not be
+3	ace	691	first-line
+8	ace	710	dental-pain
+9	ace	742	kidney-stone-pain
+9	ace	768	kidney-stone-pain
+11	ace	786	is acute
+0	ace	803	opioid
+1	ace	810	therapy
+2	ace	818	should not be
+3	ace	832	first-line
+9	ace	851	kidney-stone-pain
+12	ace	889	headache
+12	ace	906	headache
+11	ace	915	is acute
+0	ace	932	opioid
+1	ace	939	therapy
+2	ace	947	should not be
+3	ace	961	first-line
+12	ace	980	headache
+10	ace	1010	episodic-migraine-pain
+10	ace	1041	episodic-migraine-pain
+11	ace	1064	is acute
+0	ace	1081	opioid
+1	ace	1088	therapy
+2	ace	1096	should not be
+3	ace	1110	first-line
+10	ace	1129	episodic-migraine-pain
+0	src	154	opioids
+2	src	166	not recommended
+3	src	185	first-line
+1	src	196	therapy
+11	src	220	acute
+4	src	253	low back pain
+5	src	268	neck pain
+6	src	279	pain
+6	src	301	musculoskeletal injuries
+7	src	378	pain
+7	src	394	minor surgeries
+8	src	525	dental pain
+9	src	538	kidney stone pain
+12	src	561	headaches
+10	src	581	episodic migraine

@@ -1,8 +1,25 @@
 1	ace	23	explain
-2	ace	33	manageable-rather-than-eliminated-pain-goal
-0	ace	84	patient
-3	ace	102	opioid-dose-need-assessment
+3	ace	33	opioid-dose
+7	ace	45	pain
+2	ace	61	goal
+0	ace	73	patient
+3	ace	91	opioid-dose-need-assessment
+3	ace	126	opioid-dose
+7	ace	138	pain
+2	ace	154	goal
+4	ace	164	manageable
+7	ace	175	pain
+2	ace	180	goal
+5	ace	185	instead-of
+7	ace	198	pain
+6	ace	203	elimination
+2	ace	215	goal
 0	src	8	patients
 3	src	17	assess when a dose of opioids is needed
 1	src	58	explain
-2	src	71	the goal is to reduce pain to make it manageable rather than to eliminate pain
+2	src	75	goal
+7	src	93	pain
+4	src	109	manageable
+5	src	120	rather than
+6	src	135	eliminate
+7	src	145	pain

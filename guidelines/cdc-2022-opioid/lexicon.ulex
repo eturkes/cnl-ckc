@@ -322,7 +322,6 @@ noun_sg('expected-pain-duration','expected-pain-duration',neutr).
 noun_sg('expected-severe-pain-duration','expected-severe-pain-duration',neutr).
 noun_sg('expected-unreported-drug-absence','expected-unreported-drug-absence',neutr).
 noun_sg('expected-unreported-nonprescribed-controlled-substance-absence','expected-unreported-nonprescribed-controlled-substance-absence',neutr).
-noun_sg('extended-release-opioid','extended-release-opioid',neutr).
 noun_sg('face-to-face-visit','face-to-face-visit',neutr).
 noun_sg('fall-risk','fall-risk',neutr).
 noun_sg('false-negative-test-result','false-negative-test-result',neutr).
@@ -430,7 +429,6 @@ noun_sg('limited-toxicology-screening','limited-toxicology-screening',neutr).
 noun_sg('local-delivery','local-delivery',neutr).
 noun_sg('local-laboratory','local-laboratory',neutr).
 noun_sg('long-acting-full-agonist-opioid','long-acting-full-agonist-opioid',neutr).
-noun_sg('long-acting-opioid','long-acting-opioid',neutr).
 noun_sg('long-term-opioid-and-benzodiazepine-therapy','long-term-opioid-and-benzodiazepine-therapy',neutr).
 noun_sg('long-term-opioid-exposure','long-term-opioid-exposure',neutr).
 noun_sg('long-term-opioid-reassessment-schedule','long-term-opioid-reassessment-schedule',neutr).
@@ -458,7 +456,6 @@ noun_sg('lowest-effective-dosage','lowest-effective-dosage',neutr).
 noun_sg('lowest-effective-dose','lowest-effective-dose',neutr).
 noun_sg('maintained-or-increased-physical-activity','maintained-or-increased-physical-activity',neutr).
 noun_sg('major-implication','major-implication',neutr).
-noun_sg('manageable-rather-than-eliminated-pain-goal','manageable-rather-than-eliminated-pain-goal',neutr).
 noun_sg('management-plan','management-plan',neutr).
 noun_sg('manual-therapy','manual-therapy',neutr).
 noun_sg('meaningful-functional-goal','meaningful-functional-goal',neutr).
@@ -1029,7 +1026,18 @@ noun_sg('approximately-thirty-percent-of-original-dose','approximately-thirty-pe
 noun_sg('remaining-opioid-dose','remaining-opioid-dose',neutr).
 noun_sg('shorter-follow-up-schedule','shorter-follow-up-schedule',neutr).
 noun_sg('suggested-long-term-opioid-reassessment-schedule','suggested-long-term-opioid-reassessment-schedule',neutr).
+noun_sg('NSAID-contraindication','NSAID-contraindication',neutr).
+noun_sg('opioid-dose-pain-management-goal','opioid-dose-pain-management-goal',neutr).
+noun_sg('manageable-pain-goal','manageable-pain-goal',neutr).
+noun_sg('pain-elimination-goal','pain-elimination-goal',neutr).
+noun_sg('universal-application','universal-application',neutr).
+noun_sg('assumption-based-differential-application','assumption-based-differential-application',neutr).
+noun_sg('withdrawal-management','withdrawal-management',neutr).
+noun_sg('taper-slowing','taper-slowing',neutr).
+noun_sg('taper-pause','taper-pause',neutr).
+noun_sg('minor-surgery-pain','minor-surgery-pain',neutr).
 adj_itr(addressable,addressable).
+adj_itr('first-line','first-line').
 tv_infpl(calibrate,calibrate).
 tv_infpl(optimize,optimize).
 tv_infpl(pause,pause).
@@ -1037,3 +1045,4 @@ tv_infpl(prioritize,prioritize).
 tv_infpl(reevaluate,reevaluate).
 tv_infpl(refer,refer).
 prep(per,per).
+prep('instead-of','instead-of').
