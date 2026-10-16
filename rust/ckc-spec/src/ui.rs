@@ -918,6 +918,76 @@ pub open spec fn words_section(t: Option<Bytes>) -> Seq<Html> {
     }
 }
 
+// --- Grade + preference words (contract s1 D8): the table's strength,
+// evidence, preference and alternative rows in plain language, each kind in
+// file order; a group without rows renders nothing.
+#[verifier::opaque]
+pub open spec fn strength_word_rows(t: Option<Bytes>, grades: bool) -> Seq<Html> {
+    match t {
+        Option::Some(raw) => match crate::vocabulary::parse_vocabulary(raw) {
+            Result::Ok(m) => if grades {
+                m.strengths.map_values(
+                    |r: (Bytes, Bytes)|
+                        word_row(
+                            pl_word(raw, r.0),
+                            fixed_bytes(strength_of_the_recommendation_sep()) + grade_value_html(
+                                r.1,
+                            ),
+                        ),
+                ) + m.evidences.map_values(
+                    |r: (Bytes, Bytes)|
+                        word_row(
+                            pl_word(raw, r.0),
+                            fixed_bytes(certainty_of_the_evidence_sep()) + grade_value_html(r.1),
+                        ),
+                )
+            } else {
+                m.preferences.map_values(
+                    |a: Bytes| word_row(pl_word(raw, a), fixed_bytes(marks_the_preferred_option())),
+                ) + m.alternatives.map_values(
+                    |a: Bytes|
+                        word_row(
+                            pl_word(raw, a),
+                            fixed_bytes(joins_the_option_that_the_preferred()),
+                        ),
+                )
+            },
+            Result::Err(_) => Seq::empty(),
+        },
+        Option::None => Seq::empty(),
+    }
+}
+
+pub open spec fn strength_words_section(t: Option<Bytes>, grades: bool) -> Seq<Html> {
+    let rows = strength_word_rows(t, grades);
+    if rows.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open()),
+            fixed_bytes(
+                if grades {
+                    h2_open_grade_words_h2_close()
+                } else {
+                    h2_open_preference_words_h2_close()
+                },
+            ),
+            fixed_bytes(
+                if grades {
+                    p_open_the_compiler_reads_a_grade()
+                } else {
+                    p_open_the_compiler_reads_a_preference()
+                },
+            ),
+            fixed_bytes(table_open_2()),
+            fixed_bytes(thead_open_tr_open_th_open_word_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
 pub open spec fn guideline_html(g: Guideline) -> Html {
     let labels = seq![
         passages_cap(),
@@ -987,7 +1057,8 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
             fixed_bytes(tbody_open()) + lines(status_rows) + fixed_bytes(tbody_close()),
             fixed_bytes(table_close()),
             fixed_bytes(section_close()),
-        ] + words_section(g.vocabulary) + seq![
+        ] + words_section(g.vocabulary) + strength_words_section(g.vocabulary, true)
+            + strength_words_section(g.vocabulary, false) + seq![
             fixed_bytes(section_open()),
             fixed_bytes(h2_open_documents_h2_close()),
             fixed_bytes(table_open_2()),
@@ -1742,6 +1813,232 @@ pub open spec fn timing_section(pl: Bytes) -> Seq<Html> {
     }
 }
 
+// --- Grade + preferences as compiled (contract s1 D8): one row per strength
+// literal of a document, joined as the timing table (the literal's own clause,
+// then every clause head in order); a word renders only when its bytes stand in
+// the pl, so every visible slot is a copied pl span, declared copy or a decimal.
+pub open spec fn noun_html(pl: Bytes, d: DocFile, c: DocClause, r: Term) -> Html {
+    match first_with(join_terms(d, c), "guideline_entity"@, 4, 1, r) {
+        Option::Some(args) => pl_word(pl, atom_name(args[2])),
+        Option::None => fixed_bytes(not_stated()),
+    }
+}
+
+pub open spec fn grade_value_html(v: Bytes) -> Html {
+    if v == lit("strong"@) {
+        fixed_bytes(grade_strong())
+    } else if v == lit("conditional"@) {
+        fixed_bytes(grade_conditional())
+    } else if v == lit("high"@) {
+        fixed_bytes(grade_high())
+    } else if v == lit("moderate"@) {
+        fixed_bytes(grade_moderate())
+    } else if v == lit("low"@) {
+        fixed_bytes(grade_low())
+    } else if v == lit("very_low"@) {
+        fixed_bytes(grade_very_low())
+    } else {
+        fixed_bytes(not_stated())
+    }
+}
+
+pub open spec fn dimension_html(dim: Bytes) -> Html {
+    if dim == lit("strength"@) {
+        fixed_bytes(strength_of_the_recommendation())
+    } else if dim == lit("evidence"@) {
+        fixed_bytes(certainty_of_the_evidence())
+    } else {
+        fixed_bytes(not_stated())
+    }
+}
+
+pub open spec fn grade_row(pl: Bytes, d: DocFile, c: DocClause, l: Term) -> Option<Html> {
+    match l {
+        Term::Comp(name, args) => if name == lit("guideline_grade"@) && args.len() == 5 {
+            Option::Some(
+                row(
+                    seq![
+                        cell(dimension_html(atom_name(args[2]))),
+                        cell(grade_value_html(atom_name(args[3]))),
+                        cell(noun_html(pl, d, c, args[4])),
+                    ],
+                ),
+            )
+        } else {
+            Option::None
+        },
+        _ => Option::None,
+    }
+}
+
+pub open spec fn op_html(op: Bytes) -> Html {
+    if op == lit("should"@) {
+        fixed_bytes(op_should())
+    } else if op == lit("must"@) {
+        fixed_bytes(op_must())
+    } else if op == lit("can"@) {
+        fixed_bytes(op_can())
+    } else if op == lit("may"@) {
+        fixed_bytes(op_may())
+    } else if op == lit("-"@) {
+        fixed_bytes(op_not())
+    } else {
+        fixed_bytes(not_stated())
+    }
+}
+
+// The operators from `actual` to context ctx, outermost first: each step reads
+// the `guideline_operator(Outer, Ctx, Op)` literal that opens ctx.
+pub open spec fn stated_ops(ts: Seq<Term>, ctx: Term, fuel: nat) -> Seq<Html>
+    decreases fuel,
+{
+    if fuel == 0 || ctx == Term::Atom(lit("actual"@)) {
+        Seq::empty()
+    } else {
+        match first_with(ts, "guideline_operator"@, 3, 1, ctx) {
+            Option::Some(args) => stated_ops(ts, args[0], (fuel - 1) as nat).push(
+                op_html(atom_name(args[2])),
+            ),
+            Option::None => Seq::empty(),
+        }
+    }
+}
+
+pub open spec fn spaced(xs: Seq<Html>) -> Html
+    decreases xs.len(),
+{
+    if xs.len() == 0 {
+        Seq::empty()
+    } else if xs.len() == 1 {
+        xs[0]
+    } else {
+        spaced(xs.drop_last()) + fixed_bytes(word_sep()) + xs.last()
+    }
+}
+
+pub open spec fn stated_html(d: DocFile, c: DocClause, ctx: Term) -> Html {
+    let ts = join_terms(d, c);
+    let ops = stated_ops(ts, ctx, ts.len());
+    if ops.len() == 0 {
+        fixed_bytes(as_a_fact())
+    } else {
+        spaced(ops)
+    }
+}
+
+pub open spec fn preference_row(
+    pl: Bytes,
+    d: DocFile,
+    s: nat,
+    c: DocClause,
+    l: Term,
+    part: int,
+) -> Option<Html> {
+    match l {
+        Term::Comp(name, args) => if name == lit("guideline_preference"@) && args.len() == 4 {
+            Option::Some(
+                row(
+                    seq![
+                        cell(text(v1text::udec_bytes(s))),
+                        cell(part_html(part)),
+                        cell(stated_html(d, c, args[0])),
+                        cell(
+                            match first_with(join_terms(d, c), "guideline_event"@, 3, 1, args[1]) {
+                                Option::Some(e) => pl_word(pl, atom_name(e[2])),
+                                Option::None => fixed_bytes(not_stated()),
+                            },
+                        ),
+                        cell(noun_html(pl, d, c, args[2])),
+                        cell(
+                            if args[3] == Term::Atom(lit("none"@)) {
+                                fixed_bytes(none_named())
+                            } else {
+                                noun_html(pl, d, c, args[3])
+                            },
+                        ),
+                    ],
+                ),
+            )
+        } else {
+            Option::None
+        },
+        _ => Option::None,
+    }
+}
+
+pub open spec fn strength_bundle_rows(
+    pl: Bytes,
+    d: DocFile,
+    b: v1text::Bundle,
+    grades: bool,
+) -> Seq<Html> {
+    first_rows(
+        somes(
+            b.clauses.map_values(
+                |c: DocClause|
+                    clause_lits(c).map_values(
+                        |p: (Term, int)|
+                            if grades {
+                                grade_row(pl, d, c, p.0)
+                            } else {
+                                preference_row(pl, d, b.s, c, p.0, p.1)
+                            },
+                    ),
+            ).flatten(),
+        ),
+    )
+}
+
+#[verifier::opaque]
+pub open spec fn strength_rows(pl: Bytes, grades: bool) -> Seq<Html> {
+    if v1text::accepts(pl) {
+        match crate::replay::the_v1(pl) {
+            V1File::Doc(d) => d.bundles.map_values(
+                |b: v1text::Bundle| strength_bundle_rows(pl, d, b, grades),
+            ).flatten(),
+            _ => Seq::empty(),
+        }
+    } else {
+        Seq::empty()
+    }
+}
+
+pub open spec fn strength_section(pl: Bytes, grades: bool) -> Seq<Html> {
+    let rows = strength_rows(pl, grades);
+    if rows.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open()),
+            fixed_bytes(
+                if grades {
+                    h3_open_grade_as_compiled_h3_close()
+                } else {
+                    h3_open_preferences_as_compiled_h3_close()
+                },
+            ),
+            fixed_bytes(
+                if grades {
+                    p_open_each_row_is_one_grade()
+                } else {
+                    p_open_each_row_is_one_preference()
+                },
+            ),
+            fixed_bytes(table_open()),
+            fixed_bytes(
+                if grades {
+                    thead_open_tr_open_th_open_measure()
+                } else {
+                    thead_open_tr_open_th_open_sentence_stated()
+                },
+            ),
+            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
 pub open spec fn document_html(
     g: Guideline,
     d: Document,
@@ -1833,7 +2130,8 @@ pub open spec fn document_html(
             fixed_bytes(h3_open_attempto_controlled_english_ace_h3_close()),
             fixed_bytes(pre_open()) + aligned_text(g, d, true) + fixed_bytes(pre_close()),
             fixed_bytes(section_close()),
-        ] + timing_section(d.pl) + seq![
+        ] + timing_section(d.pl) + strength_section(d.pl, true) + strength_section(d.pl, false)
+            + seq![
             fixed_bytes(section_open_3()),
             fixed_bytes(h3_open_record_a_decision_h3_close()),
             fixed_bytes(p_open_does_the_ace_representation_appropriately()),
@@ -3031,6 +3329,36 @@ copy_table! {
     p_class_provenance_open = "<p class=\"provenance\">";
     span_plain_open = "<span>";
     passage_cap_sp = "Passage ";
+    h3_open_grade_as_compiled_h3_close = "<h3>Grade as compiled</h3>";
+    p_open_each_row_is_one_grade = "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>";
+    thead_open_tr_open_th_open_measure = "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>";
+    strength_of_the_recommendation = "Strength of the recommendation";
+    certainty_of_the_evidence = "Certainty of the evidence";
+    grade_strong = "strong";
+    grade_conditional = "conditional";
+    grade_high = "high";
+    grade_moderate = "moderate";
+    grade_low = "low";
+    grade_very_low = "very low";
+    h3_open_preferences_as_compiled_h3_close = "<h3>Preferences as compiled</h3>";
+    p_open_each_row_is_one_preference = "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>";
+    thead_open_tr_open_th_open_sentence_stated = "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>";
+    op_should = "should";
+    op_must = "must";
+    op_can = "can";
+    op_may = "may";
+    op_not = "not";
+    as_a_fact = "as a fact";
+    none_named = "none named";
+    word_sep = " ";
+    h2_open_grade_words_h2_close = "<h2>Grade words</h2>";
+    p_open_the_compiler_reads_a_grade = "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>";
+    strength_of_the_recommendation_sep = "strength of the recommendation: ";
+    certainty_of_the_evidence_sep = "certainty of the evidence: ";
+    h2_open_preference_words_h2_close = "<h2>Preference words</h2>";
+    p_open_the_compiler_reads_a_preference = "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>";
+    marks_the_preferred_option = "marks the preferred option";
+    joins_the_option_that_the_preferred = "joins the option that the preferred option replaces";
 }
 
 verus! {

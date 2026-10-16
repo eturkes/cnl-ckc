@@ -9805,4 +9805,1346 @@ pub proof fn f304(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Passage "@), inputs, 0, 0);
 }
 
+pub proof fn l305(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h3>Grade as compiled</h3>"@)),
+        u::copy_derived(u::lit("<h3>Grade as compiled</h3>"@), inputs, u::copy_registry()),
+        u::copy_registry()[305] == u::lit("<h3>Grade as compiled</h3>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[305] == u::lit("<h3>Grade as compiled</h3>"@) && 305
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h3>Grade as compiled</h3>"@), inputs);
+}
+
+pub proof fn f305(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h3>Grade as compiled</h3>"@), inputs, 0, 0),
+        u::copy_registry()[305] == u::lit("<h3>Grade as compiled</h3>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l305(inputs);
+    reveal_strlit("<h3>Grade as compiled</h3>");
+    is_ascii_chars_encode_utf8("<h3>Grade as compiled</h3>"@);
+    assert(u::lit("<h3>Grade as compiled</h3>"@)
+        =~= bs![60u8,104,51,62,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62]);
+    assert(cx::scan(
+        bs![60u8,104,51,62,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<h3>Grade as compiled</h3>"@), 0);
+    h::fixed(u::lit("<h3>Grade as compiled</h3>"@), inputs, 0, 0);
+}
+
+pub proof fn l306(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[306] == u::lit(
+            "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[306] == u::lit(
+        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+    ) && 306 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f306(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[306] == u::lit(
+            "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l306(inputs);
+    reveal_strlit(
+        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+    );
+    assert(u::lit(
+        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+    )
+        =~= bs![60u8,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,105,115,32,100,111,99,117,109,101,110,116,46,32,65,32,103,114,97,100,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,115,116,97,116,101,109,101,110,116,32,111,102,32,116,104,101,32,100,111,99,117,109,101,110,116,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,105,115,32,100,111,99,117,109,101,110,116,46,32,65,32,103,114,97,100,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,115,116,97,116,101,109,101,110,116,32,111,102,32,116,104,101,32,100,111,99,117,109,101,110,116,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l307(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[307] == u::lit(
+            "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[307] == u::lit(
+        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+    ) && 307 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f307(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[307] == u::lit(
+            "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l307(inputs);
+    reveal_strlit(
+        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+    );
+    assert(u::lit(
+        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+    )
+        =~= bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,77,101,97,115,117,114,101,60,47,116,104,62,60,116,104,62,86,97,108,117,101,60,47,116,104,62,60,116,104,62,76,97,98,101,108,32,105,110,32,116,104,101,32,115,111,117,114,99,101,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62]);
+    assert(cx::scan(
+        bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,77,101,97,115,117,114,101,60,47,116,104,62,60,116,104,62,86,97,108,117,101,60,47,116,104,62,60,116,104,62,76,97,98,101,108,32,105,110,32,116,104,101,32,115,111,117,114,99,101,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l308(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Strength of the recommendation"@)),
+        u::copy_derived(u::lit("Strength of the recommendation"@), inputs, u::copy_registry()),
+        u::copy_registry()[308] == u::lit("Strength of the recommendation"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[308] == u::lit("Strength of the recommendation"@) && 308
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Strength of the recommendation"@), inputs);
+}
+
+pub proof fn f308(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Strength of the recommendation"@), inputs, 0, 0),
+        u::copy_registry()[308] == u::lit("Strength of the recommendation"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l308(inputs);
+    reveal_strlit("Strength of the recommendation");
+    is_ascii_chars_encode_utf8("Strength of the recommendation"@);
+    assert(u::lit("Strength of the recommendation"@)
+        =~= bs![83u8,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110]);
+    assert(cx::scan(
+        bs![83u8,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("Strength of the recommendation"@), 0);
+    h::fixed(u::lit("Strength of the recommendation"@), inputs, 0, 0);
+}
+
+pub proof fn l309(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Certainty of the evidence"@)),
+        u::copy_derived(u::lit("Certainty of the evidence"@), inputs, u::copy_registry()),
+        u::copy_registry()[309] == u::lit("Certainty of the evidence"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[309] == u::lit("Certainty of the evidence"@) && 309
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Certainty of the evidence"@), inputs);
+}
+
+pub proof fn f309(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Certainty of the evidence"@), inputs, 0, 0),
+        u::copy_registry()[309] == u::lit("Certainty of the evidence"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l309(inputs);
+    reveal_strlit("Certainty of the evidence");
+    is_ascii_chars_encode_utf8("Certainty of the evidence"@);
+    assert(u::lit("Certainty of the evidence"@)
+        =~= bs![67u8,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101]);
+    assert(cx::scan(
+        bs![67u8,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("Certainty of the evidence"@), 0);
+    h::fixed(u::lit("Certainty of the evidence"@), inputs, 0, 0);
+}
+
+pub proof fn l310(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("strong"@)),
+        u::copy_derived(u::lit("strong"@), inputs, u::copy_registry()),
+        u::copy_registry()[310] == u::lit("strong"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[310] == u::lit("strong"@) && 310 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("strong"@), inputs);
+}
+
+pub proof fn f310(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("strong"@), inputs, 0, 0),
+        u::copy_registry()[310] == u::lit("strong"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l310(inputs);
+    reveal_strlit("strong");
+    is_ascii_chars_encode_utf8("strong"@);
+    assert(u::lit("strong"@) =~= bs![115u8,116,114,111,110,103]);
+    assert(cx::scan(bs![115u8,116,114,111,110,103], 0) == 0) by (compute_only);
+    cx::exact(u::lit("strong"@), 0);
+    h::fixed(u::lit("strong"@), inputs, 0, 0);
+}
+
+pub proof fn l311(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("conditional"@)),
+        u::copy_derived(u::lit("conditional"@), inputs, u::copy_registry()),
+        u::copy_registry()[311] == u::lit("conditional"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[311] == u::lit("conditional"@) && 311 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("conditional"@), inputs);
+}
+
+pub proof fn f311(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("conditional"@), inputs, 0, 0),
+        u::copy_registry()[311] == u::lit("conditional"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l311(inputs);
+    reveal_strlit("conditional");
+    is_ascii_chars_encode_utf8("conditional"@);
+    assert(u::lit("conditional"@) =~= bs![99u8,111,110,100,105,116,105,111,110,97,108]);
+    assert(cx::scan(bs![99u8,111,110,100,105,116,105,111,110,97,108], 0) == 0) by (compute_only);
+    cx::exact(u::lit("conditional"@), 0);
+    h::fixed(u::lit("conditional"@), inputs, 0, 0);
+}
+
+pub proof fn l312(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("high"@)),
+        u::copy_derived(u::lit("high"@), inputs, u::copy_registry()),
+        u::copy_registry()[312] == u::lit("high"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[312] == u::lit("high"@) && 312 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("high"@), inputs);
+}
+
+pub proof fn f312(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("high"@), inputs, 0, 0),
+        u::copy_registry()[312] == u::lit("high"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l312(inputs);
+    reveal_strlit("high");
+    is_ascii_chars_encode_utf8("high"@);
+    assert(u::lit("high"@) =~= bs![104u8,105,103,104]);
+    assert(cx::scan(bs![104u8,105,103,104], 0) == 0) by (compute_only);
+    cx::exact(u::lit("high"@), 0);
+    h::fixed(u::lit("high"@), inputs, 0, 0);
+}
+
+pub proof fn l313(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("moderate"@)),
+        u::copy_derived(u::lit("moderate"@), inputs, u::copy_registry()),
+        u::copy_registry()[313] == u::lit("moderate"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[313] == u::lit("moderate"@) && 313 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("moderate"@), inputs);
+}
+
+pub proof fn f313(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("moderate"@), inputs, 0, 0),
+        u::copy_registry()[313] == u::lit("moderate"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l313(inputs);
+    reveal_strlit("moderate");
+    is_ascii_chars_encode_utf8("moderate"@);
+    assert(u::lit("moderate"@) =~= bs![109u8,111,100,101,114,97,116,101]);
+    assert(cx::scan(bs![109u8,111,100,101,114,97,116,101], 0) == 0) by (compute_only);
+    cx::exact(u::lit("moderate"@), 0);
+    h::fixed(u::lit("moderate"@), inputs, 0, 0);
+}
+
+pub proof fn l314(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("low"@)),
+        u::copy_derived(u::lit("low"@), inputs, u::copy_registry()),
+        u::copy_registry()[314] == u::lit("low"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[314] == u::lit("low"@) && 314 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("low"@), inputs);
+}
+
+pub proof fn f314(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("low"@), inputs, 0, 0),
+        u::copy_registry()[314] == u::lit("low"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l314(inputs);
+    reveal_strlit("low");
+    is_ascii_chars_encode_utf8("low"@);
+    assert(u::lit("low"@) =~= bs![108u8,111,119]);
+    assert(cx::scan(bs![108u8,111,119], 0) == 0) by (compute_only);
+    cx::exact(u::lit("low"@), 0);
+    h::fixed(u::lit("low"@), inputs, 0, 0);
+}
+
+pub proof fn l315(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("very low"@)),
+        u::copy_derived(u::lit("very low"@), inputs, u::copy_registry()),
+        u::copy_registry()[315] == u::lit("very low"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[315] == u::lit("very low"@) && 315 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("very low"@), inputs);
+}
+
+pub proof fn f315(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("very low"@), inputs, 0, 0),
+        u::copy_registry()[315] == u::lit("very low"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l315(inputs);
+    reveal_strlit("very low");
+    is_ascii_chars_encode_utf8("very low"@);
+    assert(u::lit("very low"@) =~= bs![118u8,101,114,121,32,108,111,119]);
+    assert(cx::scan(bs![118u8,101,114,121,32,108,111,119], 0) == 0) by (compute_only);
+    cx::exact(u::lit("very low"@), 0);
+    h::fixed(u::lit("very low"@), inputs, 0, 0);
+}
+
+pub proof fn l316(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h3>Preferences as compiled</h3>"@)),
+        u::copy_derived(u::lit("<h3>Preferences as compiled</h3>"@), inputs, u::copy_registry()),
+        u::copy_registry()[316] == u::lit("<h3>Preferences as compiled</h3>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[316] == u::lit("<h3>Preferences as compiled</h3>"@) && 316
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h3>Preferences as compiled</h3>"@), inputs);
+}
+
+pub proof fn f316(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h3>Preferences as compiled</h3>"@), inputs, 0, 0),
+        u::copy_registry()[316] == u::lit("<h3>Preferences as compiled</h3>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l316(inputs);
+    reveal_strlit("<h3>Preferences as compiled</h3>");
+    is_ascii_chars_encode_utf8("<h3>Preferences as compiled</h3>"@);
+    assert(u::lit("<h3>Preferences as compiled</h3>"@)
+        =~= bs![60u8,104,51,62,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62]);
+    assert(cx::scan(
+        bs![60u8,104,51,62,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<h3>Preferences as compiled</h3>"@), 0);
+    h::fixed(u::lit("<h3>Preferences as compiled</h3>"@), inputs, 0, 0);
+}
+
+pub proof fn l317(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[317] == u::lit(
+            "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[317] == u::lit(
+        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+    ) && 317 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f317(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[317] == u::lit(
+            "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l317(inputs);
+    reveal_strlit(
+        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+    );
+    assert(u::lit(
+        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+    )
+        =~= bs![60u8,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,112,114,101,102,101,114,101,110,99,101,32,110,97,109,101,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,115,111,117,114,99,101,32,112,114,101,102,101,114,115,46,32,73,116,32,100,111,101,115,32,110,111,116,32,102,111,114,98,105,100,32,116,104,101,32,111,116,104,101,114,32,111,112,116,105,111,110,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,112,114,101,102,101,114,101,110,99,101,32,110,97,109,101,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,115,111,117,114,99,101,32,112,114,101,102,101,114,115,46,32,73,116,32,100,111,101,115,32,110,111,116,32,102,111,114,98,105,100,32,116,104,101,32,111,116,104,101,114,32,111,112,116,105,111,110,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l318(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[318] == u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[318] == u::lit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+    ) && 318 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f318(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[318] == u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l318(inputs);
+    reveal_strlit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+    );
+    assert(u::lit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+    )
+        =~= bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,80,114,101,102,101,114,114,101,100,60,47,116,104,62,60,116,104,62,73,110,115,116,101,97,100,32,111,102,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62]);
+    assert(cx::scan(
+        bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,80,114,101,102,101,114,114,101,100,60,47,116,104,62,60,116,104,62,73,110,115,116,101,97,100,32,111,102,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l319(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("should"@)),
+        u::copy_derived(u::lit("should"@), inputs, u::copy_registry()),
+        u::copy_registry()[319] == u::lit("should"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[319] == u::lit("should"@) && 319 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("should"@), inputs);
+}
+
+pub proof fn f319(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("should"@), inputs, 0, 0),
+        u::copy_registry()[319] == u::lit("should"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l319(inputs);
+    reveal_strlit("should");
+    is_ascii_chars_encode_utf8("should"@);
+    assert(u::lit("should"@) =~= bs![115u8,104,111,117,108,100]);
+    assert(cx::scan(bs![115u8,104,111,117,108,100], 0) == 0) by (compute_only);
+    cx::exact(u::lit("should"@), 0);
+    h::fixed(u::lit("should"@), inputs, 0, 0);
+}
+
+pub proof fn l320(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("must"@)),
+        u::copy_derived(u::lit("must"@), inputs, u::copy_registry()),
+        u::copy_registry()[320] == u::lit("must"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[320] == u::lit("must"@) && 320 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("must"@), inputs);
+}
+
+pub proof fn f320(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("must"@), inputs, 0, 0),
+        u::copy_registry()[320] == u::lit("must"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l320(inputs);
+    reveal_strlit("must");
+    is_ascii_chars_encode_utf8("must"@);
+    assert(u::lit("must"@) =~= bs![109u8,117,115,116]);
+    assert(cx::scan(bs![109u8,117,115,116], 0) == 0) by (compute_only);
+    cx::exact(u::lit("must"@), 0);
+    h::fixed(u::lit("must"@), inputs, 0, 0);
+}
+
+pub proof fn l321(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("can"@)),
+        u::copy_derived(u::lit("can"@), inputs, u::copy_registry()),
+        u::copy_registry()[321] == u::lit("can"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[321] == u::lit("can"@) && 321 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("can"@), inputs);
+}
+
+pub proof fn f321(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("can"@), inputs, 0, 0),
+        u::copy_registry()[321] == u::lit("can"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l321(inputs);
+    reveal_strlit("can");
+    is_ascii_chars_encode_utf8("can"@);
+    assert(u::lit("can"@) =~= bs![99u8,97,110]);
+    assert(cx::scan(bs![99u8,97,110], 0) == 0) by (compute_only);
+    cx::exact(u::lit("can"@), 0);
+    h::fixed(u::lit("can"@), inputs, 0, 0);
+}
+
+pub proof fn l322(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("may"@)),
+        u::copy_derived(u::lit("may"@), inputs, u::copy_registry()),
+        u::copy_registry()[322] == u::lit("may"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[322] == u::lit("may"@) && 322 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("may"@), inputs);
+}
+
+pub proof fn f322(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("may"@), inputs, 0, 0),
+        u::copy_registry()[322] == u::lit("may"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l322(inputs);
+    reveal_strlit("may");
+    is_ascii_chars_encode_utf8("may"@);
+    assert(u::lit("may"@) =~= bs![109u8,97,121]);
+    assert(cx::scan(bs![109u8,97,121], 0) == 0) by (compute_only);
+    cx::exact(u::lit("may"@), 0);
+    h::fixed(u::lit("may"@), inputs, 0, 0);
+}
+
+pub proof fn l323(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("not"@)),
+        u::copy_derived(u::lit("not"@), inputs, u::copy_registry()),
+        u::copy_registry()[323] == u::lit("not"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[323] == u::lit("not"@) && 323 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("not"@), inputs);
+}
+
+pub proof fn f323(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("not"@), inputs, 0, 0),
+        u::copy_registry()[323] == u::lit("not"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l323(inputs);
+    reveal_strlit("not");
+    is_ascii_chars_encode_utf8("not"@);
+    assert(u::lit("not"@) =~= bs![110u8,111,116]);
+    assert(cx::scan(bs![110u8,111,116], 0) == 0) by (compute_only);
+    cx::exact(u::lit("not"@), 0);
+    h::fixed(u::lit("not"@), inputs, 0, 0);
+}
+
+pub proof fn l324(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("as a fact"@)),
+        u::copy_derived(u::lit("as a fact"@), inputs, u::copy_registry()),
+        u::copy_registry()[324] == u::lit("as a fact"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[324] == u::lit("as a fact"@) && 324 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("as a fact"@), inputs);
+}
+
+pub proof fn f324(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("as a fact"@), inputs, 0, 0),
+        u::copy_registry()[324] == u::lit("as a fact"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l324(inputs);
+    reveal_strlit("as a fact");
+    is_ascii_chars_encode_utf8("as a fact"@);
+    assert(u::lit("as a fact"@) =~= bs![97u8,115,32,97,32,102,97,99,116]);
+    assert(cx::scan(bs![97u8,115,32,97,32,102,97,99,116], 0) == 0) by (compute_only);
+    cx::exact(u::lit("as a fact"@), 0);
+    h::fixed(u::lit("as a fact"@), inputs, 0, 0);
+}
+
+pub proof fn l325(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("none named"@)),
+        u::copy_derived(u::lit("none named"@), inputs, u::copy_registry()),
+        u::copy_registry()[325] == u::lit("none named"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[325] == u::lit("none named"@) && 325 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("none named"@), inputs);
+}
+
+pub proof fn f325(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("none named"@), inputs, 0, 0),
+        u::copy_registry()[325] == u::lit("none named"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l325(inputs);
+    reveal_strlit("none named");
+    is_ascii_chars_encode_utf8("none named"@);
+    assert(u::lit("none named"@) =~= bs![110u8,111,110,101,32,110,97,109,101,100]);
+    assert(cx::scan(bs![110u8,111,110,101,32,110,97,109,101,100], 0) == 0) by (compute_only);
+    cx::exact(u::lit("none named"@), 0);
+    h::fixed(u::lit("none named"@), inputs, 0, 0);
+}
+
+pub proof fn l326(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" "@)),
+        u::copy_derived(u::lit(" "@), inputs, u::copy_registry()),
+        u::copy_registry()[326] == u::lit(" "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[326] == u::lit(" "@) && 326 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" "@), inputs);
+}
+
+pub proof fn f326(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(" "@), inputs, 0, 0),
+        u::copy_registry()[326] == u::lit(" "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l326(inputs);
+    reveal_strlit(" ");
+    is_ascii_chars_encode_utf8(" "@);
+    assert(u::lit(" "@) =~= bs![32u8,]);
+    assert(cx::scan(bs![32u8,], 0) == 0) by (compute_only);
+    cx::exact(u::lit(" "@), 0);
+    h::fixed(u::lit(" "@), inputs, 0, 0);
+}
+
+pub proof fn l327(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h2>Grade words</h2>"@)),
+        u::copy_derived(u::lit("<h2>Grade words</h2>"@), inputs, u::copy_registry()),
+        u::copy_registry()[327] == u::lit("<h2>Grade words</h2>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[327] == u::lit("<h2>Grade words</h2>"@) && 327
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h2>Grade words</h2>"@), inputs);
+}
+
+pub proof fn f327(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h2>Grade words</h2>"@), inputs, 0, 0),
+        u::copy_registry()[327] == u::lit("<h2>Grade words</h2>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l327(inputs);
+    reveal_strlit("<h2>Grade words</h2>");
+    is_ascii_chars_encode_utf8("<h2>Grade words</h2>"@);
+    assert(u::lit("<h2>Grade words</h2>"@)
+        =~= bs![60u8,104,50,62,71,114,97,100,101,32,119,111,114,100,115,60,47,104,50,62]);
+    assert(cx::scan(bs![60u8,104,50,62,71,114,97,100,101,32,119,111,114,100,115,60,47,104,50,62], 0)
+        == 0) by (compute_only);
+    cx::exact(u::lit("<h2>Grade words</h2>"@), 0);
+    h::fixed(u::lit("<h2>Grade words</h2>"@), inputs, 0, 0);
+}
+
+pub proof fn l328(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[328] == u::lit(
+            "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[328] == u::lit(
+        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+    ) && 328 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f328(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[328] == u::lit(
+            "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l328(inputs);
+    reveal_strlit(
+        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+    );
+    assert(u::lit(
+        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+    )
+        =~= bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,116,104,101,32,103,114,97,100,101,32,111,102,32,97,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,116,104,101,32,103,114,97,100,101,32,111,102,32,97,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l329(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("strength of the recommendation: "@)),
+        u::copy_derived(u::lit("strength of the recommendation: "@), inputs, u::copy_registry()),
+        u::copy_registry()[329] == u::lit("strength of the recommendation: "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[329] == u::lit("strength of the recommendation: "@) && 329
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("strength of the recommendation: "@), inputs);
+}
+
+pub proof fn f329(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("strength of the recommendation: "@), inputs, 0, 0),
+        u::copy_registry()[329] == u::lit("strength of the recommendation: "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l329(inputs);
+    reveal_strlit("strength of the recommendation: ");
+    is_ascii_chars_encode_utf8("strength of the recommendation: "@);
+    assert(u::lit("strength of the recommendation: "@)
+        =~= bs![115u8,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,58,32]);
+    assert(cx::scan(
+        bs![115u8,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,58,32],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("strength of the recommendation: "@), 0);
+    h::fixed(u::lit("strength of the recommendation: "@), inputs, 0, 0);
+}
+
+pub proof fn l330(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("certainty of the evidence: "@)),
+        u::copy_derived(u::lit("certainty of the evidence: "@), inputs, u::copy_registry()),
+        u::copy_registry()[330] == u::lit("certainty of the evidence: "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[330] == u::lit("certainty of the evidence: "@) && 330
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("certainty of the evidence: "@), inputs);
+}
+
+pub proof fn f330(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("certainty of the evidence: "@), inputs, 0, 0),
+        u::copy_registry()[330] == u::lit("certainty of the evidence: "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l330(inputs);
+    reveal_strlit("certainty of the evidence: ");
+    is_ascii_chars_encode_utf8("certainty of the evidence: "@);
+    assert(u::lit("certainty of the evidence: "@)
+        =~= bs![99u8,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101,58,32]);
+    assert(cx::scan(
+        bs![99u8,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101,58,32],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("certainty of the evidence: "@), 0);
+    h::fixed(u::lit("certainty of the evidence: "@), inputs, 0, 0);
+}
+
+pub proof fn l331(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h2>Preference words</h2>"@)),
+        u::copy_derived(u::lit("<h2>Preference words</h2>"@), inputs, u::copy_registry()),
+        u::copy_registry()[331] == u::lit("<h2>Preference words</h2>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[331] == u::lit("<h2>Preference words</h2>"@) && 331
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h2>Preference words</h2>"@), inputs);
+}
+
+pub proof fn f331(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h2>Preference words</h2>"@), inputs, 0, 0),
+        u::copy_registry()[331] == u::lit("<h2>Preference words</h2>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l331(inputs);
+    reveal_strlit("<h2>Preference words</h2>");
+    is_ascii_chars_encode_utf8("<h2>Preference words</h2>"@);
+    assert(u::lit("<h2>Preference words</h2>"@)
+        =~= bs![60u8,104,50,62,80,114,101,102,101,114,101,110,99,101,32,119,111,114,100,115,60,47,104,50,62]);
+    assert(cx::scan(
+        bs![60u8,104,50,62,80,114,101,102,101,114,101,110,99,101,32,119,111,114,100,115,60,47,104,50,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<h2>Preference words</h2>"@), 0);
+    h::fixed(u::lit("<h2>Preference words</h2>"@), inputs, 0, 0);
+}
+
+pub proof fn l332(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[332] == u::lit(
+            "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[332] == u::lit(
+        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+    ) && 332 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f332(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[332] == u::lit(
+            "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l332(inputs);
+    reveal_strlit(
+        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+    );
+    assert(u::lit(
+        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+    )
+        =~= bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,112,114,101,102,101,114,101,110,99,101,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,112,114,101,102,101,114,101,110,99,101,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l333(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("marks the preferred option"@)),
+        u::copy_derived(u::lit("marks the preferred option"@), inputs, u::copy_registry()),
+        u::copy_registry()[333] == u::lit("marks the preferred option"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[333] == u::lit("marks the preferred option"@) && 333
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("marks the preferred option"@), inputs);
+}
+
+pub proof fn f333(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("marks the preferred option"@), inputs, 0, 0),
+        u::copy_registry()[333] == u::lit("marks the preferred option"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l333(inputs);
+    reveal_strlit("marks the preferred option");
+    is_ascii_chars_encode_utf8("marks the preferred option"@);
+    assert(u::lit("marks the preferred option"@)
+        =~= bs![109u8,97,114,107,115,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110]);
+    assert(cx::scan(
+        bs![109u8,97,114,107,115,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("marks the preferred option"@), 0);
+    h::fixed(u::lit("marks the preferred option"@), inputs, 0, 0);
+}
+
+pub proof fn l334(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("joins the option that the preferred option replaces"@)),
+        u::copy_derived(
+            u::lit("joins the option that the preferred option replaces"@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[334] == u::lit("joins the option that the preferred option replaces"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[334] == u::lit("joins the option that the preferred option replaces"@)
+        && 334 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("joins the option that the preferred option replaces"@), inputs);
+}
+
+pub proof fn f334(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("joins the option that the preferred option replaces"@), inputs, 0, 0),
+        u::copy_registry()[334] == u::lit("joins the option that the preferred option replaces"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l334(inputs);
+    reveal_strlit("joins the option that the preferred option replaces");
+    is_ascii_chars_encode_utf8("joins the option that the preferred option replaces"@);
+    assert(u::lit("joins the option that the preferred option replaces"@)
+        =~= bs![106u8,111,105,110,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110,32,114,101,112,108,97,99,101,115]);
+    assert(cx::scan(
+        bs![106u8,111,105,110,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110,32,114,101,112,108,97,99,101,115],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("joins the option that the preferred option replaces"@), 0);
+    h::fixed(u::lit("joins the option that the preferred option replaces"@), inputs, 0, 0);
+}
+
 } // verus!

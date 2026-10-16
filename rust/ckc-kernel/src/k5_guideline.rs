@@ -375,6 +375,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     hide(u::tally);
     hide(u::class_counts);
     hide(u::words_section);
+    hide(u::strength_words_section);
     let m = model::prepare(g);
     let title = titles::title(g);
     let stats = status_rows(g, &m);
@@ -455,6 +456,20 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     proof {
         assert(h::pages(body@) =~= head + mid);
     }
+    let mut strength = crate::k5_strength_words::strength_words_section_exec(g, true);
+    let ghost first = h::pages(body@);
+    let ghost second = h::pages(strength@);
+    body.append(&mut strength);
+    proof {
+        assert(h::pages(body@) =~= first + second);
+    }
+    let mut strength = crate::k5_strength_words::strength_words_section_exec(g, false);
+    let ghost first = h::pages(body@);
+    let ghost second = h::pages(strength@);
+    body.append(&mut strength);
+    proof {
+        assert(h::pages(body@) =~= first + second);
+    }
     body.push(h::fixed("<section>"));
     body.push(h::fixed("<h2>Documents</h2>"));
     body.push(h::fixed("<table class=\"compact\">"));
@@ -488,7 +503,8 @@ pub fn page(g: &EGuideline) -> (out: EPage)
             ),
             u::fixed_bytes(u::table_close()),
             u::fixed_bytes(u::section_close()),
-        ] + u::words_section(g@.vocabulary) + seq![
+        ] + u::words_section(g@.vocabulary) + u::strength_words_section(g@.vocabulary, true)
+            + u::strength_words_section(g@.vocabulary, false) + seq![
             u::fixed_bytes(u::section_open()),
             u::fixed_bytes(u::h2_open_documents_h2_close()),
             u::fixed_bytes(u::table_open_2()),

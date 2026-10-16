@@ -75,7 +75,7 @@ pub proof fn pl_word(pl: u::Bytes, w: u::Bytes, inputs: Seq<u::Bytes>)
     }
 }
 
-proof fn joined_word(
+pub proof fn joined_word(
     pl: u::Bytes,
     d: v::DocFile,
     c: v::DocClause,
@@ -99,7 +99,7 @@ proof fn joined_word(
     }
 }
 
-proof fn decimal_text(n: nat, inputs: Seq<u::Bytes>)
+pub proof fn decimal_text(n: nat, inputs: Seq<u::Bytes>)
     ensures
         h::sound(u::text(v::udec_bytes(n)), inputs),
 {
@@ -336,7 +336,7 @@ proof fn timing(role: u::Bytes, bnd: Option<u::Html>, inputs: Seq<u::Bytes>)
     }
 }
 
-proof fn part(k: int, inputs: Seq<u::Bytes>)
+pub proof fn part(k: int, inputs: Seq<u::Bytes>)
     ensures
         h::sound(u::part_html(k), inputs),
 {
@@ -468,7 +468,7 @@ proof fn row(
     }
 }
 
-proof fn somes(xs: Seq<Option<u::Html>>, inputs: Seq<u::Bytes>)
+pub proof fn somes(xs: Seq<Option<u::Html>>, inputs: Seq<u::Bytes>)
     requires
         forall|i: int| 0 <= i < xs.len() ==> opt_sound(#[trigger] xs[i], inputs),
     ensures
@@ -485,7 +485,7 @@ proof fn somes(xs: Seq<Option<u::Html>>, inputs: Seq<u::Bytes>)
     }
 }
 
-proof fn first_rows(xs: Seq<u::Html>, inputs: Seq<u::Bytes>)
+pub proof fn first_rows(xs: Seq<u::Html>, inputs: Seq<u::Bytes>)
     requires
         all_sound(xs, inputs),
     ensures
@@ -502,7 +502,7 @@ proof fn first_rows(xs: Seq<u::Html>, inputs: Seq<u::Bytes>)
     }
 }
 
-proof fn flat_opts(xss: Seq<Seq<Option<u::Html>>>, inputs: Seq<u::Bytes>)
+pub proof fn flat_opts(xss: Seq<Seq<Option<u::Html>>>, inputs: Seq<u::Bytes>)
     requires
         forall|i: int, j: int|
             0 <= i < xss.len() && 0 <= j < xss[i].len() ==> opt_sound(#[trigger] xss[i][j], inputs),
@@ -538,7 +538,7 @@ proof fn flat_opts(xss: Seq<Seq<Option<u::Html>>>, inputs: Seq<u::Bytes>)
     }
 }
 
-proof fn flat_rows(xss: Seq<Seq<u::Html>>, inputs: Seq<u::Bytes>)
+pub proof fn flat_rows(xss: Seq<Seq<u::Html>>, inputs: Seq<u::Bytes>)
     requires
         forall|i: int| 0 <= i < xss.len() ==> all_sound(#[trigger] xss[i], inputs),
     ensures

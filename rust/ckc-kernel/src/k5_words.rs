@@ -162,7 +162,7 @@ pub fn role_exec(r: &[u8]) -> (out: EPage)
     }
 }
 
-fn row2(a: EPage, b: EPage) -> (out: EPage)
+pub fn row2(a: EPage, b: EPage) -> (out: EPage)
     ensures
         out@ == u::word_row(a@, b@),
 {

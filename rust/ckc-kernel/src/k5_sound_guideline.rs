@@ -322,6 +322,7 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     hide(u::number);
     hide(u::url_seg);
     hide(u::words_section);
+    hide(u::strength_words_section);
     l::l080(inputs);
     l::l083(inputs);
     l::l084(inputs);
@@ -344,8 +345,22 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     words::section(g, inputs);
     let head = head_parts(g);
     let tail = tail_parts(g);
-    t::cat3(head, u::words_section(g.vocabulary), tail, inputs);
-    let parts = head + u::words_section(g.vocabulary) + tail;
+    crate::k5_sound_strength_words::section(g, true, inputs);
+    crate::k5_sound_strength_words::section(g, false, inputs);
+    let middle = u::words_section(g.vocabulary) + u::strength_words_section(g.vocabulary, true)
+        + u::strength_words_section(g.vocabulary, false);
+    t::cat3(
+        u::words_section(g.vocabulary),
+        u::strength_words_section(g.vocabulary, true),
+        u::strength_words_section(g.vocabulary, false),
+        inputs,
+    );
+    t::cat3(head, middle, tail, inputs);
+    let parts = head + u::words_section(g.vocabulary) + u::strength_words_section(
+        g.vocabulary,
+        true,
+    ) + u::strength_words_section(g.vocabulary, false) + tail;
+    assert(parts =~= head + middle + tail);
     b::lines(parts, inputs);
     corpus::title(g, inputs);
     h::text(u::title(g), inputs);

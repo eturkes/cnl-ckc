@@ -11,8 +11,17 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,names=copy_table(s); assert len(entries)==305
-fixed={names[n] for n in re.findall(r'\bfixed_bytes\(\s*([a-z0-9_]+)\(\)\s*,?\s*\)',s) if n in names}
+entries,names=copy_table(s); assert len(entries)==335
+fixed=set()
+for call in re.finditer(r'\bfixed_bytes\(',s):
+    depth=1;end=call.end()
+    for token in re.finditer(r'"(?:[^"\\]|\\.)*"|[()]',s[call.end():]):
+        if token.group()=='(':depth+=1
+        elif token.group()==')':depth-=1
+        if depth==0:
+            end=call.end()+token.start();break
+    else:raise ValueError('unclosed fixed_bytes argument')
+    fixed.update(names[n] for n in re.findall(r'\b([a-z0-9_]+)\(\)',s[call.end():end]) if n in names)
 def scan(bs,c):
     while bs:
         n=1; d=c
