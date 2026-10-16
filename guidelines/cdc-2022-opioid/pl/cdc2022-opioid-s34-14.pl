@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s34-14',ace_sha256('9b6f001b95c301598e54a5f37b49da313fa0b4420b141a3b14825748b49d168b'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: Every clinician should review a state-MME-threshold-policy and should review a state-clinical-protocol.

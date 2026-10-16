@@ -1,0 +1,3 @@
+sentences([[^,'Is',a,recommendation,a,'strong-grade',?]]).
+drs(drs([],[question(drs([A,B,C],[-(object(A,recommendation,countable,na,eq,1),/(1,3)),-(object(B,'strong-grade',countable,na,eq,1),/(1,5)),-(predicate(C,be,A,B),/(1,1))]))])).
+messages([]).

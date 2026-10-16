@@ -4,4 +4,4 @@ k5-sound-encoding	rust/ckc-kernel/src/k5_sound_encoding.rs	rust/ckc-spec/src/ui.
 k5-sound-literals	rust/ckc-kernel/src/k5_sound_literals.rs	rust/ckc-spec/src/ui.rs	6bc6ea6cf8763aeda8e2c41b76c700f803f977ab1165a202add7eb5d75efb45b
 k5-sound-patterns	rust/ckc-kernel/src/k5_sound_patterns.rs	rust/ckc-spec/src/ui.rs	0e8a43fc613e8dc48043b948f7db2b2b17be3acd52d5f6deebaf5fe9e22a05b2
 k5-sound-registry	rust/ckc-kernel/src/k5_sound_registry.rs	rust/ckc-spec/src/ui.rs	0aa681be94bd5fa489a98e49e9a650acce5257e848d8413d83ba677322f11855
-m6-symbols	rust/ckc-kernel/src/m6_symbols.rs	rust/ckc-spec/src/emit.rs	cee813e5e377bbcfa0f8b10189e70653b08411bc56c879bc78ab9f5449920e01
+m6-symbols	rust/ckc-kernel/src/m6_symbols.rs	rust/ckc-spec/src/emit.rs	a857d811b32906e573e735c31f8645bbfadf49f2d94d6893e67327073457a71c

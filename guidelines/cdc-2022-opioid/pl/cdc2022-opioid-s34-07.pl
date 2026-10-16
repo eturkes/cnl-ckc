@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s34-07',ace_sha256(e703c3015da59a1a86bc33c988cb416c07577878a9e13feae80ca789b37a438f),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a clinician increases an opioid-dosage during an acute-pain-treatment for an opioid-naive-patient during a few-day-period then the clinician should conduct a close-patient-monitoring.

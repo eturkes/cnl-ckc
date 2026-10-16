@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s49-14',ace_sha256(ef2f50d7f8815456b4e42e3c633dbdb02304930a57af1da454b4ed393d9e104c),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a patient has a previous-opioid-overdose and a clinician continues an opioid-therapy for the patient then the clinician should discuss an increased-overdose-risk with the patient and should weigh an opioid-benefit against a substantial-opioid-risk for the patient and should incorporate a risk-mitigation-strategy into a management-plan for the patient and should offer a naloxone-dose to the patient and should involve a patient-identified-trusted-family-member in a management-plan for the patient and should increase a monitoring-frequency for the patient and should use a shorter-prescription-duration for the patient.

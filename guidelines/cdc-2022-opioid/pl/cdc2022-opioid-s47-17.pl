@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s47-17',ace_sha256('6c8005e5fcceb953097b520d94e8e8336ae01b5fb6084532dd19c8b9ea79b49e'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a clinician cares for a pregnant-person and the pregnant-person receives a prescribed-opioid and a facility has a neonatal-opioid-withdrawal-syndrome-monitoring-capability and has a neonatal-opioid-withdrawal-syndrome-evaluation-capability and has a neonatal-opioid-withdrawal-syndrome-treatment-capability then the clinician should arrange a delivery for the pregnant-person at the facility.

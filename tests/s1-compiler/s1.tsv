@@ -1,0 +1,11 @@
+# format: kind	lemma	value
+strength	category-A-recommendation	strong
+strength	category-B-recommendation	conditional
+evidence	evidence-type-1-recommendation	high
+evidence	evidence-type-2-recommendation	moderate
+evidence	evidence-type-3-recommendation	low
+evidence	evidence-type-4-recommendation	very_low
+preference	preferred	preferred
+preference	first-line	preferred
+alternative	instead-of	alternative
+alternative	rather-than	alternative

@@ -1,0 +1,12 @@
+noun_sg('category-A-recommendation','category-A-recommendation',neutr).
+noun_sg('category-B-recommendation','category-B-recommendation',neutr).
+noun_sg('evidence-type-1-recommendation','evidence-type-1-recommendation',neutr).
+noun_sg('evidence-type-2-recommendation','evidence-type-2-recommendation',neutr).
+noun_sg('evidence-type-3-recommendation','evidence-type-3-recommendation',neutr).
+noun_sg('evidence-type-4-recommendation','evidence-type-4-recommendation',neutr).
+adj_itr(preferred,preferred).
+adj_itr('first-line','first-line').
+prep('instead-of','instead-of').
+prep('rather-than','rather-than').
+prep(per,per).
+prep(for,for).

@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s60-13',ace_sha256(b7c9221ffa1f898b5b9a04efb62a6d34288dfe5de8813498d30f8ef9d216d7a8),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a patient has a pain and has an active-opioid-use-disorder and does not receive an opioid-use-disorder-treatment then every clinician should consider a buprenorphine-treatment for the patient and should consider a methadone-treatment for the patient.

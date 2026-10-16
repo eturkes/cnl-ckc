@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s49-10',ace_sha256('131b8f4e6142593f9515444e5fce59153421e7c81ff982a323e1fa022d756731'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a clinician prescribes an opioid to a patient and a substance-use-disorder-treatment-provider provides a substance-use-disorder-treatment to the patient then the clinician should communicate with the substance-use-disorder-treatment-provider.

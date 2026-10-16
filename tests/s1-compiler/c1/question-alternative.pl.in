@@ -1,0 +1,4 @@
+% question-alternative compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'question-alternative',ace_sha256('85d52ac33c9578a7bde6033a5e01fe4717f11ff6cdbf3c0678a8c3ee12de6521'),ulex(sha256('4a6219be85ac2623b5f59ca1fa5280d14d1c00090c982033d726ee6380622af4')),vocabulary(sha256('4b2d79cee988cc18e9d106f9938296e29eab4dbafebd26c5cd8a6e50c0590685'))).
+% Q1: Does a man see a dog instead-of a cat?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,man,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,dog,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_entity(actual,C,cat,countable),','(guideline_cardinality(actual,C,na,eq,1),','(guideline_event(actual,D,see),','(guideline_arg(actual,D,1,A),','(guideline_arg(actual,D,2,B),guideline_pp(actual,D,'instead-of',C))))))))))),answers([])).

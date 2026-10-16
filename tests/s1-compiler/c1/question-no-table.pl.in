@@ -1,0 +1,4 @@
+% question-no-table compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'question-no-table',ace_sha256(f52c10b285a0b09f83246842f301e0ad173e1ac882e206e69a3805cca7e3a453),ulex(sha256('4a6219be85ac2623b5f59ca1fa5280d14d1c00090c982033d726ee6380622af4')),vocabulary(none)).
+% Q1: Is a dog preferred instead-of a cat?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,dog,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,cat,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_property(actual,C,preferred,pos),','(guideline_event(actual,D,be),','(guideline_arg(actual,D,1,A),','(guideline_arg(actual,D,2,C),guideline_pp(actual,D,'instead-of',B)))))))))),answers([])).

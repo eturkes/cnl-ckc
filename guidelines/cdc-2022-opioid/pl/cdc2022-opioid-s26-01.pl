@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s26-01',ace_sha256(efe64f9ef9596489c20c0600fe981969995f5344cbef933cfc95dcdf53547be9),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If an active-nonpharmacologic-approach has a patient-engagement and is possible then every clinician should use the active-nonpharmacologic-approach and should reserve a passive-nonpharmacologic-approach for a supplementary-role.

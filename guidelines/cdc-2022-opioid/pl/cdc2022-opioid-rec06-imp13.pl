@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec06-imp13',ace_sha256(fbc9f1df5712b14d7b002e3ec97a097e90d6d3f2c8d0dd10c4f89e86a5100e48),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a patient has a prolonged-around-the-clock-opioid-use for an acute-pain during a few-day-period then every clinician should prescribe a brief-withdrawal-minimizing-taper for the patient during an opioid-discontinuation.

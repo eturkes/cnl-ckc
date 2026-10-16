@@ -1,0 +1,4 @@
+% pref-query compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'pref-query',ace_sha256(b2d4114643056d6137fd53cc52b59027238df902d3cb62e1f394c5da6f406bf3),ulex(sha256(aed74ee12be77cfbff28f1d8bf70f584ed70b17aaf2b44ee7f8d9adb1013bcdf)),vocabulary(sha256('14eab4b3d52d7032027f4cc724859dd8029a61990d4f3dda838c1a08f6ae898a'))).
+% Q1: Which medicine is preferred?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,medicine,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_property(actual,B,preferred,pos),','(guideline_event(actual,C,be),','(guideline_arg(actual,C,1,A),guideline_arg(actual,C,2,B))))))),answers([answer(A,noun(medicine,countable))])).

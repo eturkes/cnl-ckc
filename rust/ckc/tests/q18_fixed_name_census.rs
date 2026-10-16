@@ -1,5 +1,5 @@
-// C1 D2/D3/D14 + retained Q18 law: canonical candidates + byte LCP oracle.
-// Contract-derived seed bytes cover every predicate and optional-digest state.
+// S1 D1 + retained C1/Q18 law: canonical candidates + byte LCP oracle.
+// Contract-derived seed bytes cover all 15 predicates and optional-digest states.
 // CKC_V1_TEST_BIN selects a prebuilt executable for red replay.
 use std::collections::BTreeSet;
 use std::fs;
@@ -7,7 +7,7 @@ use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const PREDICATES: [(&str, usize); 13] = [
+const PREDICATES: [(&str, usize); 15] = [
     ("guideline_entity", 4),
     ("guideline_cardinality", 5),
     ("guideline_event", 3),
@@ -21,6 +21,8 @@ const PREDICATES: [(&str, usize); 13] = [
     ("guideline_order", 4),
     ("guideline_recurrence_window", 7),
     ("guideline_range", 3),
+    ("guideline_grade", 5),
+    ("guideline_preference", 4),
 ];
 
 fn sha(bytes: &[u8]) -> String {
@@ -654,27 +656,27 @@ fn q18_fixed_name_census() {
     }
     assert_eq!(
         predicate_coverage.len(),
-        208,
+        240,
         "per-document predicate/context census"
     );
-    assert_eq!(slots, [10, 2, 3, 20, 8, 24, 212, 10], "S1–S8 slot census");
+    assert_eq!(slots, [10, 2, 3, 20, 8, 24, 244, 10], "S1–S8 slot census");
     assert_eq!(
         mandatory,
-        [10, 4, 6, 40, 16, 48, 424, 14],
+        [10, 4, 6, 40, 16, 48, 488, 14],
         "mutation census"
     );
-    assert_eq!(properties.len(), 84, "prefix-property domains");
+    assert_eq!(properties.len(), 92, "prefix-property domains");
     assert_eq!(
         property_checks,
-        [160, 38, 67, 95, 24, 132, 1864, 82],
+        [160, 38, 67, 95, 24, 132, 2152, 82],
         "prefix-property checks"
     );
     assert_eq!(
         controls,
-        [10, 922, 19, 10, 134, 12],
+        [10, 1066, 19, 10, 150, 12],
         "canonical/free/digest/id/literal/version controls"
     );
-    assert_eq!(runner.checked, 4131, "complete check census");
+    assert_eq!(runner.checked, 4643, "complete check census");
     eprintln!(
         "Q18 census: seeds={} slots={slots:?} mandatory={mandatory:?} property-domains={} property-checks={property_checks:?} controls={controls:?} checked={} deviations={}",
         seeds.len(),

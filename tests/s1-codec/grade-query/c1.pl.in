@@ -1,0 +1,4 @@
+% grade-query compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'grade-query',ace_sha256('2afc98d18715360e2ba752bf87d1629aabc3c0a6b54d3a5a16ee1dd8f292e62c'),ulex(sha256(aed74ee12be77cfbff28f1d8bf70f584ed70b17aaf2b44ee7f8d9adb1013bcdf)),vocabulary(sha256('14eab4b3d52d7032027f4cc724859dd8029a61990d4f3dda838c1a08f6ae898a'))).
+% Q1: Is a recommendation a strong-grade?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,recommendation,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,'strong-grade',countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_event(actual,C,be),','(guideline_arg(actual,C,1,A),guideline_arg(actual,C,2,B)))))))),answers([])).

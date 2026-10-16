@@ -16727,7 +16727,7 @@ fn parse_doc_line(
 
 // `:- multifile(N/A).\n:- discontiguous(N/A).\n` = decl_pair(i), appended piece by piece:
 // one extensional equality over a whole declaration-block literal costs ~2e9 z3 rlimit units
-// (670 B; the 1138 B block passes 2^32, the largest count Verus parses).
+// (670 B; the 1288 B block passes 2^32, the largest count Verus parses).
 fn push_decl_pair(out: &mut Vec<u8>, name: &[u8], arity: u8, i: Ghost<int>)
     requires
         name@ == ckc_spec::v1text::indicator(i@).0,
@@ -16800,7 +16800,7 @@ proof fn decls_end(out: Seq<u8>)
 fn decls_block() -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::v1text::decls_from(0),
-        r@.len() == 1138,
+        r@.len() == 1288,
 {
     let mut out: Vec<u8> = Vec::new();
     proof {
@@ -16974,6 +16974,28 @@ fn decls_block() -> (r: Vec<u8>)
     push_decl_pair(&mut out, name, 3, Ghost(14int));
     proof {
         decls_step(before, 14);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_grade";
+    proof {
+        reveal_strlit("guideline_grade");
+        reveal_byteslit(b"guideline_grade");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_grade"@));
+    }
+    push_decl_pair(&mut out, name, 5, Ghost(15int));
+    proof {
+        decls_step(before, 15);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_preference";
+    proof {
+        reveal_strlit("guideline_preference");
+        reveal_byteslit(b"guideline_preference");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_preference"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(16int));
+    proof {
+        decls_step(before, 16);
     }
     proof {
         decls_end(out@);
@@ -17910,6 +17932,50 @@ fn q12_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     accepted
 }
 
+// s1 D1: the two strength indicators (positions 15, 16).
+fn strength_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
+    ensures
+        r == exists|i: int|
+            15 <= i < 17 && #[trigger] ckc_spec::v1text::indicator(i) == (name@, arity as nat),
+{
+    let grade_name: &[u8] = b"guideline_grade";
+    let preference_name: &[u8] = b"guideline_preference";
+    proof {
+        reveal_strlit("guideline_grade");
+        reveal_strlit("guideline_preference");
+        reveal_byteslit(b"guideline_grade");
+        reveal_byteslit(b"guideline_preference");
+        reveal(ckc_spec::v1text::ascii);
+        assert(grade_name@ == ckc_spec::v1text::ascii("guideline_grade"@));
+        assert(preference_name@ == ckc_spec::v1text::ascii("guideline_preference"@));
+    }
+    let grade = vec_slice_equal(name, grade_name);
+    let preference = vec_slice_equal(name, preference_name);
+    let accepted = grade && arity == 5 || preference && arity == 4;
+    proof {
+        reveal(ckc_spec::v1text::indicator);
+        if accepted {
+            if grade && arity == 5 {
+                assert(ckc_spec::v1text::indicator(15) == (name@, arity as nat));
+            } else {
+                assert(ckc_spec::v1text::indicator(16) == (name@, arity as nat));
+            }
+        } else {
+            assert forall|i: int| 15 <= i < 17 implies ckc_spec::v1text::indicator(i) != (
+                name@,
+                arity as nat,
+            ) by {
+                if i == 15 {
+                    assert(!grade || arity != 5);
+                } else {
+                    assert(!preference || arity != 4);
+                }
+            }
+        }
+    }
+    accepted
+}
+
 fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
@@ -17917,21 +17983,24 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     let base = semantic_v1_exec(name, arity);
     let ann = annotation_pred_exec(name, arity);
     let q12 = q12_pred_exec(name, arity);
+    let s1 = strength_pred_exec(name, arity);
     proof {
         reveal(ckc_spec::v1text::is_semantic_pred);
         if ckc_spec::v1text::is_semantic_pred(name@, arity as nat) {
             let i = choose|i: int|
-                2 <= i < 15 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
+                2 <= i < 17 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             if i < 9 {
                 assert(base);
             } else if i < 11 {
                 assert(ann);
-            } else {
+            } else if i < 15 {
                 assert(q12);
+            } else {
+                assert(s1);
             }
         }
     }
-    base || ann || q12
+    base || ann || q12 || s1
 }
 
 fn semantic_literal_exec(term: &EParsedTerm) -> (r: bool)
@@ -18123,7 +18192,7 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
         name[0] == 0x67,
 {
     reveal(ckc_spec::v1text::is_semantic_pred);
-    let i = choose|i: int| 2 <= i < 15 && ckc_spec::v1text::indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 17 && ckc_spec::v1text::indicator(i) == (name, arity);
     reveal(ckc_spec::v1text::indicator);
     if i == 2 {
         reveal_strlit("guideline_entity");
@@ -18161,9 +18230,15 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
     } else if i == 13 {
         reveal_strlit("guideline_recurrence_window");
         reveal(ckc_spec::v1text::ascii);
-    } else {
-        assert(i == 14);
+    } else if i == 14 {
         reveal_strlit("guideline_range");
+        reveal(ckc_spec::v1text::ascii);
+    } else if i == 15 {
+        reveal_strlit("guideline_grade");
+        reveal(ckc_spec::v1text::ascii);
+    } else {
+        assert(i == 16);
+        reveal_strlit("guideline_preference");
         reveal(ckc_spec::v1text::ascii);
     }
 }
@@ -20561,6 +20636,8 @@ fn parse_doc_bundle_inner(
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
+    // The clause parser owns literal validity; keep its indicator census opaque here.
+    hide(ckc_spec::v1text::wf_clause);
     hide(arena_ok);
     hide(Seq::<_>::is_prefix_of);
     let mut working_arena = input_arena;
@@ -21009,7 +21086,11 @@ fn parse_doc_bundle_inner(
                         let remaining = e.0.clauses.skip(clauses.len() as int);
                         let next = remaining[0];
                         reveal(doc_clauses_parts);
-                        wf_literal_term_prefix_safe(next.head);
+                        assert(ckc_spec::v1text::term_bytes(next.head).len() > 0
+                            && ckc_spec::v1text::term_bytes(next.head)[0] != 0x25) by {
+                            reveal(ckc_spec::v1text::wf_clause);
+                            wf_literal_term_prefix_safe(next.head);
+                        }
                         assert(guide_rest(guided.guide@.unwrap()) == doc_clause_parts(next)
                             + doc_clauses_parts(remaining.drop_first()) + e.1);
                         assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
@@ -21052,7 +21133,11 @@ fn parse_doc_bundle_inner(
                         let remaining = e.0.clauses.skip(clauses.len() as int);
                         let next = remaining[0];
                         reveal(doc_clauses_parts);
-                        wf_literal_term_prefix_safe(next.head);
+                        assert(ckc_spec::v1text::term_bytes(next.head).len() > 0
+                            && ckc_spec::v1text::term_bytes(next.head)[0] != 0x25) by {
+                            reveal(ckc_spec::v1text::wf_clause);
+                            wf_literal_term_prefix_safe(next.head);
+                        }
                         assert(guide_rest(guided.guide@.unwrap()) == doc_clause_parts(next)
                             + doc_clauses_parts(remaining.drop_first()) + e.1);
                         assert(doc_clause_parts(next).len() > 0);
@@ -21772,6 +21857,10 @@ fn semantic_arity(name: &[u8]) -> (r: Option<usize>) {
         Some(7)
     } else if crate::k4_bytes::eq(name, b"guideline_range") {
         Some(3)
+    } else if crate::k4_bytes::eq(name, b"guideline_grade") {
+        Some(5)
+    } else if crate::k4_bytes::eq(name, b"guideline_preference") {
+        Some(4)
     } else {
         None
     }
@@ -21856,6 +21945,8 @@ fn pred_name_reject_at(bytes: &[u8], start: usize) -> (r: usize)
         bytes.len(),
     );
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_range", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_grade", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_preference", 0x28), bytes.len());
     best
 }
 
@@ -21899,7 +21990,9 @@ fn declared_name_at(bytes: &[u8], start: usize) -> (r: bool) {
         rest,
         b"guideline_recurrence_window(",
     ) || crate::k4_bytes::starts_with(rest, b"guideline_range(");
-    base || timing
+    let strength = crate::k4_bytes::starts_with(rest, b"guideline_grade(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_preference(");
+    base || timing || strength
 }
 
 // R9 offset of a hex digest atom that starts at `at`: its first non-hex byte, or

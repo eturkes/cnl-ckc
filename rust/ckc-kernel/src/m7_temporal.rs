@@ -18,6 +18,10 @@ pub struct EVocabulary {
     pub frequencies: Vec<Vec<u8>>,
     pub approximations: Vec<Vec<u8>>,
     pub ranges: Vec<Vec<u8>>,
+    pub strengths: Vec<(Vec<u8>, Vec<u8>)>,
+    pub evidences: Vec<(Vec<u8>, Vec<u8>)>,
+    pub preferences: Vec<Vec<u8>>,
+    pub alternatives: Vec<Vec<u8>>,
 }
 
 pub open spec fn pairs_view(v: Seq<(Vec<u8>, Vec<u8>)>) -> Seq<(Seq<u8>, Seq<u8>)> {
@@ -40,6 +44,10 @@ impl View for EVocabulary {
             frequencies: lemmas_view(self.frequencies@),
             approximations: lemmas_view(self.approximations@),
             ranges: lemmas_view(self.ranges@),
+            strengths: pairs_view(self.strengths@),
+            evidences: pairs_view(self.evidences@),
+            preferences: lemmas_view(self.preferences@),
+            alternatives: lemmas_view(self.alternatives@),
         }
     }
 }
@@ -79,7 +87,44 @@ proof fn literals()
         b"range"@ == ascii("range"@),
         b"range value"@ == ascii("range value"@),
         b"minimum"@ == ascii("minimum"@),
+        b"strength"@ == ascii("strength"@),
+        b"strength value"@ == ascii("strength value"@),
+        b"evidence"@ == ascii("evidence"@),
+        b"evidence value"@ == ascii("evidence value"@),
+        b"preference"@ == ascii("preference"@),
+        b"preference value"@ == ascii("preference value"@),
+        b"preferred"@ == ascii("preferred"@),
+        b"alternative"@ == ascii("alternative"@),
+        b"alternative value"@ == ascii("alternative value"@),
 {
+    reveal_byteslit(b"strength");
+    reveal_strlit("strength");
+    reveal_byteslit(b"strength value");
+    reveal_strlit("strength value");
+    reveal_byteslit(b"evidence");
+    reveal_strlit("evidence");
+    reveal_byteslit(b"evidence value");
+    reveal_strlit("evidence value");
+    reveal_byteslit(b"preference");
+    reveal_strlit("preference");
+    reveal_byteslit(b"preference value");
+    reveal_strlit("preference value");
+    reveal_byteslit(b"preferred");
+    reveal_strlit("preferred");
+    reveal_byteslit(b"alternative");
+    reveal_strlit("alternative");
+    reveal_byteslit(b"alternative value");
+    reveal_strlit("alternative value");
+    reveal(ascii);
+    assert(b"strength"@ =~= ascii("strength"@));
+    assert(b"strength value"@ =~= ascii("strength value"@));
+    assert(b"evidence"@ =~= ascii("evidence"@));
+    assert(b"evidence value"@ =~= ascii("evidence value"@));
+    assert(b"preference"@ =~= ascii("preference"@));
+    assert(b"preference value"@ =~= ascii("preference value"@));
+    assert(b"preferred"@ =~= ascii("preferred"@));
+    assert(b"alternative"@ =~= ascii("alternative"@));
+    assert(b"alternative value"@ =~= ascii("alternative value"@));
     reveal_byteslit(b"approximation");
     reveal_strlit("approximation");
     reveal_byteslit(b"approximation value");
@@ -429,6 +474,68 @@ pub fn role_id_ok(v: &[u8]) -> (r: bool)
     r
 }
 
+pub fn strength_id_ok(v: &[u8]) -> (r: bool)
+    ensures
+        r == strength_ids().contains(v@),
+{
+    let r = eq(v, b"strong") || eq(v, b"conditional");
+    proof {
+        reveal_byteslit(b"strong");
+        reveal_byteslit(b"conditional");
+        reveal_strlit("strong");
+        reveal_strlit("conditional");
+        reveal(ascii);
+        let u = strength_ids();
+        assert(u.len() == 2);
+        assert(u[0] =~= b"strong"@);
+        assert(u[1] =~= b"conditional"@);
+        if r {
+            if v@ == u[0] {
+                assert(u.contains(v@));
+            } else {
+                assert(u.contains(v@));
+            }
+        }
+    }
+    r
+}
+
+pub fn evidence_id_ok(v: &[u8]) -> (r: bool)
+    ensures
+        r == evidence_ids().contains(v@),
+{
+    let r = eq(v, b"high") || eq(v, b"moderate") || eq(v, b"low") || eq(v, b"very_low");
+    proof {
+        reveal_byteslit(b"high");
+        reveal_byteslit(b"moderate");
+        reveal_byteslit(b"low");
+        reveal_byteslit(b"very_low");
+        reveal_strlit("high");
+        reveal_strlit("moderate");
+        reveal_strlit("low");
+        reveal_strlit("very_low");
+        reveal(ascii);
+        let u = evidence_ids();
+        assert(u.len() == 4);
+        assert(u[0] =~= b"high"@);
+        assert(u[1] =~= b"moderate"@);
+        assert(u[2] =~= b"low"@);
+        assert(u[3] =~= b"very_low"@);
+        if r {
+            if v@ == u[0] {
+                assert(u.contains(v@));
+            } else if v@ == u[1] {
+                assert(u.contains(v@));
+            } else if v@ == u[2] {
+                assert(u.contains(v@));
+            } else {
+                assert(u.contains(v@));
+            }
+        }
+    }
+    r
+}
+
 pub fn why(s: &[u8]) -> (r: Result<EVocabulary, Vec<u8>>)
     ensures
         r matches Err(e) && e@ == s@,
@@ -538,6 +645,45 @@ pub fn frame_in(t: &EVocabulary, k: &[u8]) -> (r: bool)
     a || b
 }
 
+// grade_nouns(t).contains(k): a strength or evidence noun.
+pub fn grade_noun_in(t: &EVocabulary, k: &[u8]) -> (r: bool)
+    ensures
+        r == grade_nouns(t@).contains(k@),
+{
+    let a = key_in(&t.strengths, k);
+    let b = key_in(&t.evidences, k);
+    proof {
+        concat_contains(keys(pairs_view(t.strengths@)), keys(pairs_view(t.evidences@)), k@);
+    }
+    a || b
+}
+
+// time_prepositions(t).contains(k): a relation, spacing, window, frequency or range preposition.
+pub fn time_prep_in(t: &EVocabulary, k: &[u8]) -> (r: bool)
+    ensures
+        r == time_prepositions(t@).contains(k@),
+{
+    let a = key_in(&t.relations, k);
+    let b = key_in(&t.spacings, k);
+    let c = key_in(&t.windows, k);
+    let d = seq_in(&t.frequencies, k);
+    let e = seq_in(&t.ranges, k);
+    proof {
+        let (ra, sa, wa, fa, ga) = (
+            keys(pairs_view(t.relations@)),
+            keys(pairs_view(t.spacings@)),
+            keys(pairs_view(t.windows@)),
+            lemmas_view(t.frequencies@),
+            lemmas_view(t.ranges@),
+        );
+        concat_contains(ra, sa, k@);
+        concat_contains(ra + sa, wa, k@);
+        concat_contains(ra + sa + wa, fa, k@);
+        concat_contains(ra + sa + wa + fa, ga, k@);
+    }
+    a || b || c || d || e
+}
+
 pub fn clone_tab(t: &EVocabulary) -> (r: EVocabulary)
     ensures
         r@ == t@,
@@ -550,6 +696,10 @@ pub fn clone_tab(t: &EVocabulary) -> (r: EVocabulary)
         frequencies: clone_lemmas(&t.frequencies),
         approximations: clone_lemmas(&t.approximations),
         ranges: clone_lemmas(&t.ranges),
+        strengths: clone_pairs(&t.strengths),
+        evidences: clone_pairs(&t.evidences),
+        preferences: clone_lemmas(&t.preferences),
+        alternatives: clone_lemmas(&t.alternatives),
     }
 }
 
@@ -581,7 +731,7 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !unit_id_ok(&f[2]) {
             return why(b"unit id");
         }
-        if key_in(&t.units, &f[1]) || frame_in(t, &f[1]) {
+        if key_in(&t.units, &f[1]) || frame_in(t, &f[1]) || grade_noun_in(t, &f[1]) {
             return why(b"duplicate noun");
         }
         let mut r = clone_tab(t);
@@ -594,10 +744,8 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !role_id_ok(&f[2]) {
             return why(b"role id");
         }
-        if key_in(&t.relations, &f[1]) || seq_in(&t.frequencies, &f[1]) || seq_in(
-            &t.ranges,
-            &f[1],
-        ) {
+        if key_in(&t.relations, &f[1]) || seq_in(&t.frequencies, &f[1]) || seq_in(&t.ranges, &f[1])
+            || seq_in(&t.alternatives, &f[1]) {
             return why(b"duplicate preposition");
         }
         let mut r = clone_tab(t);
@@ -614,8 +762,11 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if pair_in(&t.spacings, &f[1], &f[2]) || pair_in(&t.windows, &f[1], &f[2]) || key_in(
             &t.units,
             &f[2],
-        ) {
+        ) || grade_noun_in(t, &f[2]) {
             return why(b"duplicate noun");
+        }
+        if seq_in(&t.alternatives, &f[1]) {
+            return why(b"duplicate preposition");
         }
         let mut r = clone_tab(t);
         if spacing {
@@ -634,10 +785,8 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !eq(&f[2], b"period") {
             return why(b"frequency value");
         }
-        if seq_in(&t.frequencies, &f[1]) || key_in(&t.relations, &f[1]) || seq_in(
-            &t.ranges,
-            &f[1],
-        ) {
+        if seq_in(&t.frequencies, &f[1]) || key_in(&t.relations, &f[1]) || seq_in(&t.ranges, &f[1])
+            || seq_in(&t.alternatives, &f[1]) {
             return why(b"duplicate preposition");
         }
         let mut r = clone_tab(t);
@@ -650,7 +799,7 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !eq(&f[2], b"about") {
             return why(b"approximation value");
         }
-        if seq_in(&t.approximations, &f[1]) {
+        if seq_in(&t.approximations, &f[1]) || seq_in(&t.preferences, &f[1]) {
             return why(b"duplicate adjective");
         }
         let mut r = clone_tab(t);
@@ -663,16 +812,68 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !eq(&f[2], b"minimum") {
             return why(b"range value");
         }
-        if seq_in(&t.ranges, &f[1]) || key_in(&t.relations, &f[1]) || seq_in(
-            &t.frequencies,
-            &f[1],
-        ) {
+        if seq_in(&t.ranges, &f[1]) || key_in(&t.relations, &f[1]) || seq_in(&t.frequencies, &f[1])
+            || seq_in(&t.alternatives, &f[1]) {
             return why(b"duplicate preposition");
         }
         let mut r = clone_tab(t);
         r.ranges.push(copy(&f[1]));
         proof {
             assert(lemmas_view(r.ranges@) =~= lemmas_view(t.ranges@).push(f@[1]@));
+        }
+        Ok(r)
+    } else if eq(&f[0], b"strength") || eq(&f[0], b"evidence") {
+        let strength = eq(&f[0], b"strength");
+        if strength && !strength_id_ok(&f[2]) {
+            return why(b"strength value");
+        }
+        if !strength && !evidence_id_ok(&f[2]) {
+            return why(b"evidence value");
+        }
+        if grade_noun_in(t, &f[1]) || key_in(&t.units, &f[1]) || frame_in(t, &f[1]) {
+            return why(b"duplicate noun");
+        }
+        let mut r = clone_tab(t);
+        if strength {
+            r.strengths.push((copy(&f[1]), copy(&f[2])));
+            proof {
+                assert(pairs_view(r.strengths@) =~= pairs_view(t.strengths@).push(
+                    (f@[1]@, f@[2]@),
+                ));
+            }
+        } else {
+            r.evidences.push((copy(&f[1]), copy(&f[2])));
+            proof {
+                assert(pairs_view(r.evidences@) =~= pairs_view(t.evidences@).push(
+                    (f@[1]@, f@[2]@),
+                ));
+            }
+        }
+        Ok(r)
+    } else if eq(&f[0], b"preference") {
+        if !eq(&f[2], b"preferred") {
+            return why(b"preference value");
+        }
+        if seq_in(&t.preferences, &f[1]) || seq_in(&t.approximations, &f[1]) {
+            return why(b"duplicate adjective");
+        }
+        let mut r = clone_tab(t);
+        r.preferences.push(copy(&f[1]));
+        proof {
+            assert(lemmas_view(r.preferences@) =~= lemmas_view(t.preferences@).push(f@[1]@));
+        }
+        Ok(r)
+    } else if eq(&f[0], b"alternative") {
+        if !eq(&f[2], b"alternative") {
+            return why(b"alternative value");
+        }
+        if seq_in(&t.alternatives, &f[1]) || time_prep_in(t, &f[1]) {
+            return why(b"duplicate preposition");
+        }
+        let mut r = clone_tab(t);
+        r.alternatives.push(copy(&f[1]));
+        proof {
+            assert(lemmas_view(r.alternatives@) =~= lemmas_view(t.alternatives@).push(f@[1]@));
         }
         Ok(r)
     } else {
@@ -741,6 +942,10 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         frequencies: Vec::new(),
         approximations: Vec::new(),
         ranges: Vec::new(),
+        strengths: Vec::new(),
+        evidences: Vec::new(),
+        preferences: Vec::new(),
+        alternatives: Vec::new(),
     };
     let mut i = 0usize;
     proof {
@@ -751,6 +956,10 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         assert(t@.frequencies =~= Seq::<Seq<u8>>::empty());
         assert(t@.approximations =~= Seq::<Seq<u8>>::empty());
         assert(t@.ranges =~= Seq::<Seq<u8>>::empty());
+        assert(t@.strengths =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
+        assert(t@.evidences =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
+        assert(t@.preferences =~= Seq::<Seq<u8>>::empty());
+        assert(t@.alternatives =~= Seq::<Seq<u8>>::empty());
         assert(t@ == e0);
         assert(rows.skip(0) =~= rows);
     }

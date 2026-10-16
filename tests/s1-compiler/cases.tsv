@@ -1,0 +1,89 @@
+# row	id	mode	table	grade-events	preference-events	expect	ace
+E6	grade-both	doc	s1	2	0	ok	A recommendation is a category-A-recommendation and is an evidence-type-4-recommendation.
+E7	grade-strong	doc	s1	1	0	ok	A recommendation is a category-A-recommendation.
+E7	grade-conditional	doc	s1	1	0	ok	A recommendation is a category-B-recommendation.
+E7	grade-high	doc	s1	1	0	ok	A recommendation is an evidence-type-1-recommendation.
+E7	grade-moderate	doc	s1	1	0	ok	A recommendation is an evidence-type-2-recommendation.
+E7	grade-low	doc	s1	1	0	ok	A recommendation is an evidence-type-3-recommendation.
+E7	grade-very-low	doc	s1	1	0	ok	A recommendation is an evidence-type-4-recommendation.
+E7	grade-earlier-rec	doc	s1	1	0	ok	A recommendation exists.\nThe recommendation is a category-A-recommendation.
+E7	grade-earlier-label	doc	s1	1	0	ok	A category-A-recommendation exists.\nA recommendation is the category-A-recommendation.
+E8	grade-duplicate-same	doc	s1	0	0	grade_shape(duplicate_dimension,1)	A recommendation is a category-A-recommendation and is a category-B-recommendation.
+E8	grade-duplicate-identical	doc	s1	0	0	grade_shape(duplicate_dimension,1)	A recommendation is a category-A-recommendation and is a category-A-recommendation.
+E8	grade-duplicate-later	doc	s1	0	0	grade_shape(duplicate_dimension,2)	A recommendation is a category-A-recommendation.\nThe recommendation is a category-B-recommendation.
+E8	grade-duplicate-other-rec	doc	s1	0	0	grade_shape(duplicate_dimension,2)	A recommendation is a category-A-recommendation.\nA recommendation is a category-A-recommendation.
+E8	grade-duplicate-evidence	doc	s1	0	0	grade_shape(duplicate_dimension,2)	A recommendation is an evidence-type-4-recommendation.\nA recommendation is an evidence-type-4-recommendation.
+E9	grade-modal	doc	s1	0	0	ok	A recommendation should be a category-A-recommendation.
+E9	grade-negated	doc	s1	0	0	ok	A recommendation is not a category-A-recommendation.
+E9	grade-rule	doc	s1	0	0	ok	If a man sleeps then a recommendation is a category-A-recommendation.
+E9	grade-rule-antecedent	doc	s1	0	0	ok	If a recommendation is a category-A-recommendation then a man sleeps.
+E9	grade-naf	doc	s1	0	0	ok	Every recommendation that is not provably a category-A-recommendation exists.
+E9	grade-noncopula	doc	s1	0	0	ok	A man sees a category-A-recommendation.
+E9	grade-arg-one	doc	s1	0	0	ok	A category-A-recommendation is a recommendation.
+E10	preference-bare	doc	s1	0	1	ok	A dog is preferred.
+E10	preference-first-line	doc	s1	0	1	ok	A dog is first-line.
+E10	preference-attributive	doc	s1	0	0	ok	A preferred dog sleeps.
+E11	preference-transitive	doc	s1	0	1	ok	A man sees a dog instead-of a cat.
+E11	preference-passive	doc	s1	0	1	ok	A dog is seen by a man instead-of a cat.
+E12	preference-combined	doc	s1	0	1	ok	A dog is preferred instead-of a cat.
+E13	preference-entity-copula	doc	s1	0	1	ok	A choice is a dog instead-of a cat.
+E14	preference-antecedent	doc	s1	0	1	ok	If a dog is preferred then a man sees the dog.
+E14	preference-antecedent-combined	doc	s1	0	1	ok	If a dog is preferred instead-of a cat then a man sees the dog.
+E15	preference-consequent	doc	s1	0	1	ok	If a man owns a dog then the dog is preferred.
+E15	preference-bound-endpoints	doc	s1	0	1	ok	If a man sees a dog and sees a cat then the man sees the dog instead-of the cat.
+E15	preference-modal	doc	s1	0	1	ok	A man should see a dog instead-of a cat.
+E15	preference-negated	doc	s1	0	1	ok	A dog is not preferred.
+E15	preference-should-not	doc	s1	0	1	ok	A dog should not be first-line.
+E15	preference-naf	doc	s1	0	1	ok	Every dog that is not provably preferred sleeps.
+E15	preference-naf-combined	doc	s1	0	1	ok	Every dog that is not provably preferred instead-of a cat sleeps.
+E15	preference-naf-two-groups	doc	s1	0	2	ok	Every dog that is not provably preferred instead-of a cat and that is not provably preferred instead-of a bird sleeps.
+E15	preference-two-contexts	doc	s1	0	2	ok	A dog is preferred instead-of a cat and should be preferred instead-of a bird.
+E16	preference-two-alternatives	doc	s1	0	0	preference_shape(alternative_count,1)	A man sees a dog instead-of a cat instead-of a bird.
+E16	preference-two-aliases	doc	s1	0	0	preference_shape(alternative_count,1)	A man sees a dog instead-of a cat rather-than a bird.
+E16	preference-no-preferred	doc	s1	0	0	preference_shape(no_preferred,1)	A man waits instead-of a dog.
+E16	preference-property-endpoint	doc	s1	0	0	preference_shape(endpoint,1)	A man is happy instead-of a dog.
+E16	preference-time-preferred	doc	all	0	0	preference_shape(endpoint,1)	2 hours are preferred.
+E16	preference-time-alternative	doc	all	0	0	preference_shape(endpoint,1)	A man sees a dog instead-of 2 hours.
+E16	preference-frame-preferred	doc	all	0	0	preference_shape(endpoint,1)	An interval is preferred.
+E16	preference-frame-alternative	doc	all	0	0	preference_shape(endpoint,1)	A man sees a dog instead-of a window.
+E17	preference-different-events	doc	s1	0	2	ok	A man sees a dog instead-of a cat and sees a bird instead-of a snake.
+E17	preference-zero-alternatives	doc	s1	0	0	ok	A man sees a dog.
+E18	preference-time-insertion	doc	all	0	1	ok	A man sees a dog instead-of a cat for 2 hours.
+E18	grade-and-preference	doc	s1	1	1	ok	A recommendation is a category-A-recommendation instead-of a choice.
+E18	order-time-before-preference	doc	all	0	0	temporal_shape(range_shape,1)	If a man has a visit then the man is happy instead-of a dog for at least 2 hours to less than 3 hours.
+E18	order-parent-before-later-naf	doc	s1	0	0	preference_shape(no_preferred,1)	Every man that waits instead-of a dog and that does not provably see a cat instead-of a bird instead-of a snake sleeps.
+E18	order-naf-before-later-parent	doc	s1	0	0	preference_shape(alternative_count,1)	Every man that does not provably see a cat instead-of a bird instead-of a snake and that waits instead-of a dog sleeps.
+E18	order-naf-time-before-parent	doc	all	0	0	temporal_shape(range_shape,1)	Every man that waits instead-of a dog and that does not provably wait for at least 2 hours to less than 3 hours sleeps.
+E18	order-events	doc	s1	0	0	preference_shape(no_preferred,1)	A man waits instead-of a dog and sees a cat instead-of a bird instead-of a snake.
+E18	order-preference-before-grade	doc	s1	0	0	preference_shape(no_preferred,1)	A recommendation is a category-A-recommendation and is a category-B-recommendation and waits instead-of a dog.
+E18	order-earlier-duplicate	doc	s1	0	0	grade_shape(duplicate_dimension,2)	A recommendation is a category-A-recommendation.\nA recommendation is a category-B-recommendation.\nA man waits instead-of a dog.
+E20	no-table-preference	doc	-	0	0	ok	A dog is preferred instead-of a cat.
+E20	no-table-grade	doc	-	0	0	ok	A recommendation is a category-A-recommendation.
+E20	old-table-preference	doc	old	0	0	ok	A dog is preferred instead-of a cat.
+E20	old-table-grade	doc	old	0	0	ok	A recommendation is a category-A-recommendation.
+E20	unused-s1-rows	doc	unused	0	0	ok	A dog is preferred instead-of a cat.
+E20	unused-all-rows	doc	all	0	0	ok	A man sleeps.
+E21	question-preferred	query	s1	0	0	ok	Is a dog preferred?
+E21	question-combined	query	s1	0	0	ok	Is a dog preferred instead-of a cat?
+E21	question-alternative	query	s1	0	0	ok	Does a man see a dog instead-of a cat?
+E21	question-several-referents	query	s1	0	0	ok	Which man sees a dog instead-of a cat?
+E21	question-grade	query	s1	0	0	ok	Is a recommendation a category-A-recommendation?
+E21	question-two-alternatives	query	s1	0	0	ok	Does a man see a dog instead-of a cat instead-of a bird?
+E21	question-no-table	query	-	0	0	ok	Is a dog preferred instead-of a cat?
+E21	question-old-table	query	old	0	0	ok	Is a dog preferred instead-of a cat?
+E6	grade-aliases	doc	aliases	2	0	ok	A recommendation is a cat and is a dog.
+E10	preference-adjective-alias	doc	aliases	0	1	ok	A bird is happy beside a snake.
+E11	preference-preposition-alias	doc	aliases	0	1	ok	A man sees a cat beside a dog.
+E20	unmapped-spellings	doc	aliases	0	0	ok	A dog is preferred instead-of a cat.
+E18	order-count-before-no-preferred	doc	s1	0	0	preference_shape(alternative_count,1)	A man waits instead-of a dog instead-of a cat.
+E18	order-count-before-endpoint	doc	s1	0	0	preference_shape(alternative_count,1)	A man is happy instead-of a dog instead-of a cat.
+E18	order-no-preferred-before-endpoint	doc	all	0	0	preference_shape(no_preferred,1)	A man waits instead-of 2 hours.
+E22	declarations	doc	-	0	0	ok	A man sleeps.
+E6	proof-grade-both	proof	s1	2	0	ok	A recommendation is a category-A-recommendation and is an evidence-type-4-recommendation.
+E10	proof-preference-bare	proof	s1	0	1	ok	A dog is preferred.
+E11	proof-preference-transitive	proof	s1	0	1	ok	A man sees a dog instead-of a cat.
+E11	proof-preference-passive	proof	s1	0	1	ok	A dog is seen by a man instead-of a cat.
+E12	proof-preference-combined	proof	s1	0	1	ok	A dog is preferred instead-of a cat.
+E14	proof-preference-antecedent	proof	s1	0	1	ok	If a dog is preferred then a man sees the dog.
+E15	proof-preference-consequent	proof	s1	0	1	ok	If a man owns a dog then the dog is preferred.
+E15	proof-preference-modal	proof	s1	0	1	ok	A man should see a dog instead-of a cat.

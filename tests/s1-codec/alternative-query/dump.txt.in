@@ -1,0 +1,3 @@
+sentences([[^,'Does',a,medicine,precede,a,treatment,'instead-of',a,procedure,?]]).
+drs(drs([],[question(drs([A,B,C,D],[-(object(A,medicine,countable,na,eq,1),/(1,3)),-(object(B,treatment,countable,na,eq,1),/(1,6)),-(object(C,procedure,countable,na,eq,1),/(1,9)),-(predicate(D,precede,A,B),/(1,4)),-(modifier_pp(D,'instead-of',C),/(1,7))]))])).
+messages([]).

@@ -1,0 +1,39 @@
+% preference-attributive.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(1).
+guideline_document('preference-attributive',ace_sha256(d67f270b243458850781b8841c129f94a3e440fc944130e940aafe1fa6eafe05),ulex(sha256('4a6219be85ac2623b5f59ca1fa5280d14d1c00090c982033d726ee6380622af4')),vocabulary(sha256('4b2d79cee988cc18e9d106f9938296e29eab4dbafebd26c5cd8a6e50c0590685'))).
+% S1: A preferred dog sleeps.
+guideline_entity(actual,'$guideline_id'(product,'preference-attributive',1,ref(1),[]),dog,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'preference-attributive',1,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'preference-attributive',1,ref(1),[]),preferred,pos).
+guideline_event(actual,'$guideline_id'(product,'preference-attributive',1,ref(2),[]),sleep).
+guideline_arg(actual,'$guideline_id'(product,'preference-attributive',1,ref(2),[]),1,'$guideline_id'(product,'preference-attributive',1,ref(1),[])).

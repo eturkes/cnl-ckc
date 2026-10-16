@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec11-imp01',ace_sha256(da167dc23c1d86a58ef8b8dac5c220406a6b6fc8fc57f6a4be6684ce9e40bcec),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a patient has a severe-acute-pain and receives a benzodiazepine during a long-term-therapy and the benzodiazepine has a stable-low-dosage then an opioid-prescription may be an appropriate-therapy for the patient.

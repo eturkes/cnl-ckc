@@ -674,6 +674,28 @@ pub open spec fn condition(
                 ),
                 _ => Result::Err(atom("unresolved_argument"@)),
             }
+        } else if name == ascii("$guideline_grade"@) && args.len() == 4 {
+            match (resolve(args[0], map, sko), resolve(args[3], map, sko)) {
+                (Result::Ok(r), Result::Ok(l)) => Result::Ok(
+                    seq![lit("guideline_grade"@, seq![ctx, r, args[1], args[2], l])],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
+        } else if name == ascii("$guideline_preference"@) && args.len() == 3 {
+            match (
+                resolve(args[0], map, sko),
+                resolve(args[1], map, sko),
+                if args[2] is Var {
+                    resolve(args[2], map, sko)
+                } else {
+                    Result::Ok(args[2])
+                },
+            ) {
+                (Result::Ok(e), Result::Ok(p), Result::Ok(a)) => Result::Ok(
+                    seq![lit("guideline_preference"@, seq![ctx, e, p, a])],
+                ),
+                _ => Result::Err(atom("unresolved_argument"@)),
+            }
         } else {
             Result::Err(atom("condition_shape"@))
         },
@@ -1722,6 +1744,256 @@ pub open spec fn flatten_ann(
     }
 }
 
+// --- strength annotations (contract s1 D3/D4: documents with a table) ---
+// After a scope's temporal pass: a grade right after its root-fact copula; a
+// preference right after its alternative pp or, without one, after its
+// copula. Endpoints resolve document-wide (`plain`); questions never run it.
+pub open spec fn s1_shape(kind: Seq<char>, why: Seq<char>) -> Term {
+    Term::Comp(ascii(kind), seq![atom(why)])
+}
+
+pub open spec fn is_pred(t: Term) -> bool {
+    is_comp(t, "predicate"@, 3) || is_comp(t, "predicate"@, 4) || is_comp(t, "predicate"@, 5)
+}
+
+// E's first same-context `predicate/3..5` condition.
+pub open spec fn event_pred(items: Seq<Item>, ctx: Term, e: Term) -> Option<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Option::None
+    } else {
+        match items[0] {
+            Item::Anch(c, inner) => if c == ctx && is_pred(inner) && arg(inner, 0) == e {
+                Option::Some(inner)
+            } else {
+                event_pred(items.drop_first(), ctx, e)
+            },
+            _ => event_pred(items.drop_first(), ctx, e),
+        }
+    }
+}
+
+// A same-context `property(p, A, pos)` with A a preference adjective.
+pub open spec fn preferred_prop(tab: Vocabulary, items: Seq<Item>, ctx: Term, p: Term) -> bool
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        false
+    } else {
+        (match items[0] {
+            Item::Anch(c, inner) => c == ctx && is_comp(inner, "property"@, 3) && arg(inner, 0) == p
+                && arg(inner, 2) == atom("pos"@) && tab.preferences.contains(
+                name_of(arg(inner, 1)),
+            ),
+            _ => false,
+        }) || preferred_prop(tab, items.drop_first(), ctx, p)
+    }
+}
+
+// The objects of E's same-context alternative pps, in item order.
+pub open spec fn alternatives_of(tab: Vocabulary, items: Seq<Item>, ctx: Term, e: Term) -> Seq<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        (match items[0] {
+            Item::Anch(c, inner) => if c == ctx && is_comp(inner, "modifier_pp"@, 3) && arg(
+                inner,
+                0,
+            ) == e && tab.alternatives.contains(name_of(arg(inner, 1))) {
+                seq![arg(inner, 2)]
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        }) + alternatives_of(tab, items.drop_first(), ctx, e)
+    }
+}
+
+// D4: (preferred, alternative | none) of the event whose predicate is `pred`;
+// none where no pattern applies. A preference copula `be(x, p)` (p a
+// preference property) prefers x; any other event with one alternative pp
+// prefers its second participant.
+pub open spec fn preference_of(env: Env, items: Seq<Item>, ctx: Term, pred: Term) -> Result<
+    Option<(Term, Term)>,
+    Term,
+> {
+    let alts = alternatives_of(env.tab, items, ctx, arg(pred, 0));
+    let copula = is_comp(pred, "predicate"@, 4) && arg(pred, 1) == atom("be"@) && preferred_prop(
+        env.tab,
+        items,
+        ctx,
+        arg(pred, 3),
+    );
+    if alts.len() > 1 {
+        Result::Err(s1_shape("preference_shape"@, "alternative_count"@))
+    } else if !copula && alts.len() == 0 {
+        Result::Ok(Option::None)
+    } else if !copula && is_comp(pred, "predicate"@, 3) {
+        Result::Err(s1_shape("preference_shape"@, "no_preferred"@))
+    } else {
+        let p = if copula {
+            arg(pred, 2)
+        } else {
+            arg(pred, 3)
+        };
+        let a = if alts.len() == 1 {
+            alts[0]
+        } else {
+            atom("none"@)
+        };
+        if !plain(env, p) || (alts.len() == 1 && !plain(env, a)) {
+            Result::Err(s1_shape("preference_shape"@, "endpoint"@))
+        } else {
+            Result::Ok(Option::Some((p, a)))
+        }
+    }
+}
+
+// D3: (dimension, value) of a root-fact copula `be(r, l)` in context actual
+// whose complement's noun is a grade noun.
+pub open spec fn grade_of(env: Env, ctx: Term, pred: Term) -> Option<(Seq<u8>, Seq<u8>)> {
+    if ctx == actual() && is_comp(pred, "predicate"@, 4) && arg(pred, 1) == atom("be"@) && plain(
+        env,
+        arg(pred, 2),
+    ) {
+        match arg(pred, 3) {
+            Term::Var(k) => match decl(env.decls, k) {
+                Option::Some(d) => match assoc(env.tab.strengths, d.noun) {
+                    Option::Some(v) => Option::Some((ascii("strength"@), v)),
+                    Option::None => match assoc(env.tab.evidences, d.noun) {
+                        Option::Some(v) => Option::Some((ascii("evidence"@), v)),
+                        Option::None => Option::None,
+                    },
+                },
+                Option::None => Option::None,
+            },
+            _ => Option::None,
+        }
+    } else {
+        Option::None
+    }
+}
+
+pub open spec fn preference_item(c: Term, e: Term, pa: (Term, Term)) -> Item {
+    Item::Anch(c, Term::Comp(ascii("$guideline_preference"@), seq![e, pa.0, pa.1]))
+}
+
+// One item and the annotations that follow it. A violation reports at the
+// event's predicate item.
+pub open spec fn strength_item(env: Env, facts: bool, scope: Seq<Item>, it: Item) -> Result<
+    Seq<Item>,
+    Term,
+>
+    decreases it, 0int,
+{
+    match it {
+        Item::Anch(c, inner) => if is_pred(inner) {
+            let gs = match (if facts {
+                grade_of(env, c, inner)
+            } else {
+                Option::None
+            }) {
+                Option::Some((dim, v)) => seq![
+                    Item::Anch(
+                        c,
+                        Term::Comp(
+                            ascii("$guideline_grade"@),
+                            seq![arg(inner, 2), Term::Atom(dim), Term::Atom(v), arg(inner, 3)],
+                        ),
+                    ),
+                ],
+                Option::None => Seq::empty(),
+            };
+            match preference_of(env, scope, c, inner) {
+                Result::Err(e) => Result::Err(e),
+                Result::Ok(Option::Some(pa)) => if pa.1 == atom("none"@) {
+                    Result::Ok(seq![it] + gs + seq![preference_item(c, arg(inner, 0), pa)])
+                } else {
+                    Result::Ok(seq![it] + gs)
+                },
+                Result::Ok(Option::None) => Result::Ok(seq![it] + gs),
+            }
+        } else if is_comp(inner, "modifier_pp"@, 3) && env.tab.alternatives.contains(
+            name_of(arg(inner, 1)),
+        ) {
+            match event_pred(scope, c, arg(inner, 0)) {
+                Option::Some(pred) => match preference_of(env, scope, c, pred) {
+                    Result::Ok(Option::Some(pa)) => Result::Ok(
+                        seq![it, preference_item(c, arg(inner, 0), pa)],
+                    ),
+                    _ => Result::Ok(seq![it]),
+                },
+                Option::None => Result::Ok(seq![it]),
+            }
+        } else {
+            Result::Ok(seq![it])
+        },
+        Item::Naf(dom, payload) => match strength(env, false, payload) {
+            Result::Err(e) => Result::Err(e),
+            Result::Ok(p) => Result::Ok(seq![Item::Naf(dom, p)]),
+        },
+        Item::Op(_, _, _, _) => Result::Ok(seq![it]),
+    }
+}
+
+pub open spec fn strength_items(
+    env: Env,
+    facts: bool,
+    scope: Seq<Item>,
+    items: Seq<Item>,
+) -> Result<Seq<Item>, Term>
+    decreases items, 1int,
+{
+    if items.len() == 0 {
+        Result::Ok(Seq::empty())
+    } else {
+        match (
+            strength_item(env, facts, scope, items[0]),
+            strength_items(env, facts, scope, items.drop_first()),
+        ) {
+            (Result::Err(e), _) => Result::Err(e),
+            (_, Result::Err(e)) => Result::Err(e),
+            (Result::Ok(h), Result::Ok(t)) => Result::Ok(h + t),
+        }
+    }
+}
+
+pub open spec fn strength(env: Env, facts: bool, items: Seq<Item>) -> Result<Seq<Item>, Term>
+    decreases items, 2int,
+{
+    strength_items(env, facts, items, items)
+}
+
+// A document scope: the temporal pass, then (with a table) the strength pass;
+// `facts` = a root fact cluster, the only scope a grade may come from.
+pub open spec fn flatten_doc(
+    tab: Option<Env>,
+    facts: bool,
+    l: Term,
+    w: Where,
+    s: nat,
+    docid: Seq<u8>,
+    deps: Term,
+    outer: Term,
+    encl: Encl,
+    n: nat,
+    base: nat,
+) -> Result<Flat, Term> {
+    match flatten_ann(tab, l, w, s, docid, deps, outer, encl, n, base) {
+        Result::Err(e) => Result::Err(e),
+        Result::Ok(f) => match tab {
+            Option::None => Result::Ok(f),
+            Option::Some(env) => match strength(env, facts, f.items) {
+                Result::Err(e) => Result::Err(e),
+                Result::Ok(items) => Result::Ok(Flat { items, n: f.n }),
+            },
+        },
+    }
+}
+
 // --- groups: fact clusters and rule variants ---
 pub ghost struct Group {
     pub k: nat,  // variant ordinal (1 for facts)
@@ -1776,8 +2048,9 @@ pub open spec fn fact_group(
 ) -> Result<(Group, Seq<(Term, Term)>), Term> {
     match roots_conds(roots) {
         Option::None => Result::Err(atom("sentence_shape"@)),
-        Option::Some(conds) => match flatten_ann(
+        Option::Some(conds) => match flatten_doc(
             tab,
+            true,
             conds,
             Where::Root,
             s,
@@ -1901,8 +2174,9 @@ pub open spec fn flatten_seq(
     base: nat,
     tab: Option<Env>,
 ) -> Result<Flat, Term> {
-    flatten_ann(
+    flatten_doc(
         tab,
+        false,
         list_of(cs),
         Where::Antecedent,
         s,
@@ -2037,7 +2311,7 @@ pub open spec fn flatten_cons(
     base: nat,
     tab: Option<Env>,
 ) -> Result<Flat, Term> {
-    flatten_ann(tab, cconds, Where::Consequent, s, docid, deps, actual(), Encl::Top, n, base)
+    flatten_doc(tab, false, cconds, Where::Consequent, s, docid, deps, actual(), Encl::Top, n, base)
 }
 
 // The rule law: curry → split scan → one variant, or two over a single
@@ -2144,8 +2418,9 @@ pub open spec fn split_variants(
 ) -> Result<Seq<Group>, Term> {
     match flatten_seq(shared, s, docid, 1, base, tab) {
         Result::Err(e) => Result::Err(e),
-        Result::Ok(fs) => match flatten_ann(
+        Result::Ok(fs) => match flatten_doc(
             tab,
+            false,
             conds1,
             Where::Antecedent,
             s,
@@ -2157,8 +2432,9 @@ pub open spec fn split_variants(
             base,
         ) {
             Result::Err(e) => Result::Err(e),
-            Result::Ok(f1) => match flatten_ann(
+            Result::Ok(f1) => match flatten_doc(
                 tab,
+                false,
                 conds2,
                 Where::Antecedent,
                 s,
@@ -2303,6 +2579,15 @@ pub open spec fn err_at(s: nat, why: Term) -> Term {
     Term::Comp(ascii("sentence"@), seq![Term::Int(s as int), why])
 }
 
+// s1 D3: the dimension of each grade literal among the clauses, in order.
+pub open spec fn grade_dims(cs: Seq<DocClause>) -> Seq<Term> {
+    cs.filter(|c: DocClause| is_comp(c.head, "guideline_grade"@, 5)).map_values(
+        |c: DocClause| arg(c.head, 2),
+    )
+}
+
+// `dims` = the grade dimensions of the earlier sentences: one grade per
+// dimension per document.
 pub open spec fn project_from(
     tagged: Seq<(int, Root)>,
     s: nat,
@@ -2311,6 +2596,7 @@ pub open spec fn project_from(
     map: Seq<(Term, Term)>,
     base: nat,
     tab: Option<Env>,
+    dims: Seq<Term>,
 ) -> Result<Seq<Projected>, Term>
     decreases count + 1 - s,
 {
@@ -2319,12 +2605,17 @@ pub open spec fn project_from(
     } else {
         match sentence_groups(of_sentence(tagged, s as int), s, docid, map, base, tab) {
             Result::Err(e) => Result::Err(err_at(s, e)),
-            Result::Ok((gs, map2)) => if group_clauses(gs).len() == 0 {
-                Result::Err(err_at(s, atom("sentence_shape"@)))
-            } else {
-                match project_from(tagged, s + 1, count, docid, map2, base, tab) {
-                    Result::Err(e) => Result::Err(e),
-                    Result::Ok(rest) => Result::Ok(seq![Projected { s, groups: gs }] + rest),
+            Result::Ok((gs, map2)) => {
+                let dims2 = dims + grade_dims(group_clauses(gs));
+                if group_clauses(gs).len() == 0 {
+                    Result::Err(err_at(s, atom("sentence_shape"@)))
+                } else if !dims2.no_duplicates() {
+                    Result::Err(err_at(s, s1_shape("grade_shape"@, "duplicate_dimension"@)))
+                } else {
+                    match project_from(tagged, s + 1, count, docid, map2, base, tab, dims2) {
+                        Result::Err(e) => Result::Err(e),
+                        Result::Ok(rest) => Result::Ok(seq![Projected { s, groups: gs }] + rest),
+                    }
                 }
             },
         }
@@ -2395,6 +2686,7 @@ pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat, tab: Option<Voca
                             Seq::empty(),
                             nvars(drs),
                             env_of(tab, drs),
+                            Seq::empty(),
                         )
                     },
                 },

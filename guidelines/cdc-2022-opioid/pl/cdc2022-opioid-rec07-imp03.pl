@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec07-imp03',ace_sha256(eacef80acd9c77d1acbb5610c815607c87ed2b4106c6181a4b367c7d38e380c0),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a clinician starts an immediate-release-opioid for a patient and the immediate-release-opioid has an opioid-dosage and the opioid-dosage includes less than 50 MME-units-per-day then the clinician may conduct an initial-follow-up with the patient after 4 approximate weeks of a therapy-start.

@@ -1,0 +1,4 @@
+% alternative-query compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'alternative-query',ace_sha256('658c629478bbcf052af3f573831c2a7f9795c4cb7c40717a6fd004be3f517c0d'),ulex(sha256(aed74ee12be77cfbff28f1d8bf70f584ed70b17aaf2b44ee7f8d9adb1013bcdf)),vocabulary(sha256('14eab4b3d52d7032027f4cc724859dd8029a61990d4f3dda838c1a08f6ae898a'))).
+% Q1: Does a medicine precede a treatment instead-of a procedure?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,medicine,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,treatment,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_entity(actual,C,procedure,countable),','(guideline_cardinality(actual,C,na,eq,1),','(guideline_event(actual,D,precede),','(guideline_arg(actual,D,1,A),','(guideline_arg(actual,D,2,B),guideline_pp(actual,D,'instead-of',C))))))))))),answers([])).

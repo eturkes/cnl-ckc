@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec08-imp09',ace_sha256('56af5bd2d320feed64466b4f0f310deebe3698cae7ec80c1b3b09394356c31bb'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a clinician makes a pain-opioid-initiation-decision with a patient during a pregnancy then the clinician should collaborate with the patient during the pain-opioid-initiation-decision and should weigh an opioid-benefit against an opioid-risk with the patient.

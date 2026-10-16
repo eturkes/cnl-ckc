@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec09-imp02',ace_sha256('1d61b9e54bde4025c32f5daaf93826902a6710b6ea1316e5844ce21f820cc22f'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a jurisdiction has a PDMP-availability and has a PDMP-access-policy and has a practicable-clinical-practice-setting and a clinician prescribes an opioid-prescription for an acute-pain in the jurisdiction then the clinician should review a state-PDMP-record before the opioid-prescription.

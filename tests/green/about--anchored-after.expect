@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('about--anchored-after',ace_sha256(ed50283e78a05db87233837c0e286d435a28d349e1b8df4e8e2544f4b1f1a0bd),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256('24f9752224fcecc844f72322d0844d101a96e07fe3643cd98b9a4e96e6f7ad44'))).
 % S1: If a patient has a surgery then the patient takes a drug after 4 approximate weeks of the surgery.

@@ -402,9 +402,10 @@ pub fn fact_group(
         prefix(n2, n3, &conds);
         prefix(n2, n3, &deps);
     }
-    let flat = crate::m7_annotate::flatten_ann_exec(
+    let flat = crate::m7_strength::flatten_doc(
         arena,
         &env.tab,
+        true,
         &conds,
         &W::Root,
         env,

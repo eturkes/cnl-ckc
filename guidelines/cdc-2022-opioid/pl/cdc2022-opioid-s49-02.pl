@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s49-02',ace_sha256('293fdba3d8fe53cfe09bafc98b6fd82d210a125aca6df3267b51762e4cd656a4'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a clinician uses an opioid-risk-assessment-tool then the clinician should supplement the opioid-risk-assessment-tool with a patient-discussion and should supplement the opioid-risk-assessment-tool with a family-member-discussion and should supplement the opioid-risk-assessment-tool with a caregiver-discussion and should supplement the opioid-risk-assessment-tool with a clinical-record and should supplement the opioid-risk-assessment-tool with a state-PDMP-record and should supplement the opioid-risk-assessment-tool with a toxicology-screening-data.

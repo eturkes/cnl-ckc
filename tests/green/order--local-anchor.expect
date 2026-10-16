@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('order--local-anchor',ace_sha256('5ea36d7137501e69eea621fe1be3c9eb38bbe46c2c35003d5b4e8a70209f19b0'),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256(c058a3dfa8cf288d37e663be0948539f77e302371f329257103e927753ce14f9))).
 % S1: A patient eats before a meeting.

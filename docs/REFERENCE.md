@@ -286,7 +286,8 @@ evolves in place: each revision recompiles the whole corpus and every
 fixture, and the identifier stays `1`. The predicate set below is the
 public interface. An optional per-guideline table, `vocabulary.tsv`,
 adds the time annotations of the section "Vocabulary table and time
-annotations" below. The compiler takes the table from an explicit
+annotations" and the grade and preference annotations of the section
+"Strength annotations" below. The compiler takes the table from an explicit
 invocation argument and never infers it from content. Authored
 questions reject in document compiles; the separate question mode below
 compiles one question into a query projection over the same vocabulary.
@@ -310,9 +311,10 @@ domain-neutral:
 
 The six time annotations (`guideline_interval/6`,
 `guideline_recurrence/4`, `guideline_frequency/5`, `guideline_order/4`,
-`guideline_recurrence_window/7`, `guideline_range/3`) complete the
-vocabulary; the section "Vocabulary table and time annotations" below
-defines them. In the record, `H` is the SHA-256 of the raw ACE bytes,
+`guideline_recurrence_window/7`, `guideline_range/3`) and the two
+strength annotations (`guideline_grade/5`, `guideline_preference/4`)
+complete the vocabulary. The sections "Vocabulary table and time
+annotations" and "Strength annotations" below define them. In the record, `H` is the SHA-256 of the raw ACE bytes,
 `U` the SHA-256 of the guideline's user lexicon, and `T` the SHA-256
 of its raw `vocabulary.tsv` bytes. `none` means that the file does not
 exist.
@@ -400,7 +402,7 @@ one vocabulary, a rule body consumes another document's facts or heads
 by ordinary resolution.
 
 Every document opens with the same declaration block: `multifile`
-and `discontiguous` for all 15 indicators, whether or not it
+and `discontiguous` for all 17 indicators, whether or not it
 populates them. After the block come `guideline_schema_version(1).`,
 the document record, and then, per sentence, a
 `% S<n>: <verbatim sentence>` comment with that sentence's contiguous
@@ -538,6 +540,10 @@ window	during	window
 frequency	per	period
 approximation	approximate	about
 range	to	minimum
+strength	category-A-recommendation	strong
+evidence	evidence-type-1-recommendation	high
+preference	preferred	preferred
+alternative	instead-of	alternative
 ```
 
 The header line is fixed bytes. The table holds at least one row, and
@@ -556,14 +562,27 @@ that marks a time quantity as approximate, as in `2 approximate hours`;
 its value is always `about`. A `range` row names the preposition that
 joins the upper end of a minimum stated as a range, as in
 `for at least 8 hours to 12 hours`; its value is always `minimum`.
+A `strength` row maps a grade noun onto the strength of a
+recommendation (`strong`, `conditional`). An `evidence` row maps a
+grade noun onto the certainty of its evidence (`high`, `moderate`,
+`low`, `very_low`). A `preference` row names an adjective that marks
+the preferred option on a copula, as in `An NSAID is preferred.`; its
+value is always `preferred`. An `alternative` row names the preposition
+that joins the option a preference replaces, as in
+`… prescribe an immediate-release-opioid instead-of an ER-LA-opioid`;
+its value is always `alternative`. The section "Strength annotations"
+below uses these rows.
 
 A lemma is one or more bytes above 0x20, none of them 0x7F, that form
-valid UTF-8. A noun occurs in at most one `unit` row and is never also
-a frame noun. A pair of a preposition and a frame noun occurs once
-across the `spacing` and `window` rows. A preposition occurs in at most
-one `relation`, `frequency` or `range` row. An adjective occurs in at
-most one `approximation` row. The checks run in row order: comment,
-field count, lemma, kind, value, duplicates. `ckc check` rejects any
+valid UTF-8. A noun occurs in at most one `unit`, `strength` or
+`evidence` row, and a noun in such a row is never also a frame noun. A
+pair of a preposition and a frame noun occurs once across the `spacing`
+and `window` rows. A preposition occurs in at most one `relation`,
+`frequency` or `range` row. A preposition in an `alternative` row
+occurs in no other row. An adjective occurs in at most one
+`approximation` or `preference` row. The later row of a conflict reports
+it. The checks run in row order: comment, field count, lemma, kind,
+value, duplicates. `ckc check` rejects any
 other table with `ckc: vocabulary: <path>: <why>`, where `<why>` names the
 broken law and, for a row law, ends with `at row <n>`. The compiler, and
 so `ckc compile`, rejects it with class `vocabulary_load` (below). A
@@ -687,6 +706,56 @@ and a question runs against any composition. Certification takes the
 raw table bytes, so `ckc certify` checks the record digest and every
 annotation against the table.
 
+### Strength annotations
+
+The strength annotations type the grade of a recommendation and the
+preference of one option over another. They need the `strength`,
+`evidence`, `preference` and `alternative` rows of the vocabulary
+table. Only documents carry them; question mode never adds them.
+
+| Predicate | Meaning |
+| --- | --- |
+| `guideline_grade(Context, Rec, Dimension, Value, Label)` | the recommendation `Rec` has, in `Dimension` (`strength` or `evidence`), the common value `Value`; `Label` is the referent whose noun is the source's own grade label |
+| `guideline_preference(Context, Event, Preferred, Alternative)` | in `Event`, the source prefers the option `Preferred` to `Alternative`; `Alternative` is `none` when the source names no other option |
+
+The compiler reads these patterns from the parsed sentence:
+
+- Grade: a fact sentence states `R is a L` in the context `actual`, and
+  the noun of `L` is in a `strength` or `evidence` row, as in
+  `A recommendation is a category-A-recommendation and is an evidence-type-4-recommendation.`
+  The grade clause follows the `be` event's second participant. A
+  document has at most one grade for each dimension. The grade applies
+  to every statement of its document: `Rec` carries the document
+  identifier. A grade noun in a rule, an operator box, a
+  negation-as-failure group or a question adds no grade.
+- Preference: an event carries one `alternative` preposition, or a
+  copula `X is A` has an `A` from a `preference` row. A preference
+  copula prefers `X`; any other event prefers its second participant.
+  The alternative is the object of the `alternative` preposition, or
+  `none`. The preference clause follows the preposition's `guideline_pp`
+  clause, or the copula's second participant when no alternative
+  exists. It takes the context of its event, so a preference in a rule
+  antecedent becomes a body goal of every clause of the rule, and a
+  preference under an operator stands in that operator's context.
+
+Every other shape of these patterns rejects with class `unsupported`:
+
+| Detail | Shape |
+| --- | --- |
+| `grade_shape(duplicate_dimension, S)` | a second grade of one dimension in one document |
+| `preference_shape(alternative_count, S)` | an event with two or more `alternative` prepositions |
+| `preference_shape(no_preferred, S)` | an event with an `alternative` preposition and no second participant |
+| `preference_shape(endpoint, S)` | a preferred option or an alternative that is not a plain referent (a property, a time quantity or a frame) |
+
+Annotations are data, never inference. A grade does not rank
+recommendations, and a preference does not forbid the alternative or
+oblige the preferred option. Erasing every strength annotation from a
+document gives the clauses that the same sentences give without the
+strength rows; an annotation in a rule antecedent adds one body goal.
+A question asks for a grade by its source label and for a preference
+by its words; a program queries `guideline_grade/5` and
+`guideline_preference/4` directly.
+
 ### Question projection
 
 The compiler's `question` mode compiles one ACE question against the
@@ -755,7 +824,7 @@ must name readable files, and the mode never parses payload terms. A
 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/5`
 record, then the `'$guideline_query_projection'/2` term. A query names
-any of the 13 semantic predicates and runs against any composition. The mode
+any of the 15 semantic predicates and runs against any composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 
 Success emits a two-line artifact on stdout: a generated-file

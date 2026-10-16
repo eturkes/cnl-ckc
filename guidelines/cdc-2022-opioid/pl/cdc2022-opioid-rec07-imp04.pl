@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec07-imp04',ace_sha256('77c3d7b0dc82d5c5d3387855eae4198667bf371f898c28155e26d9d9d6f1fcad'),ulex(sha256('0b669018d532f506c518a6b0edffa4994f771b930477e7e2b36faf50d2b75d33')),vocabulary(sha256('2f4bce49f36cfa02a94052aaedfa18b7f19cf3430cbffe4588d5f64c9a68f3e1'))).
 % S1: If a patient has a subacute-pain and starts an opioid-therapy for an acute-pain and receives the opioid-therapy during at least 30 days then every clinician should conduct a follow-up with the patient and should evaluate the patient and should reassess the subacute-pain for the patient and should reassess a patient-function for the patient and should reassess a treatment-course for the patient and should address a potentially-reversible-chronic-pain-cause for the patient and should prevent an unintentional-long-term-opioid-therapy-initiation for the patient.

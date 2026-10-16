@@ -310,6 +310,107 @@ pub proof fn project_prefix_assoc(
     }
 }
 
+pub fn grade_dims(arena: &ETermArena, cs: &Vec<Clause>) -> (out: Vec<T>)
+    requires
+        arena_ok(arena),
+        clauses_valid(arena.nodes@, cs@),
+    ensures
+        valid_all(arena.nodes@, out@),
+        models(out@) == spec::grade_dims(clause_models(cs@)),
+{
+    let ghost ms = clause_models(cs@);
+    let ghost pred = |c: DocClause| spec::is_comp(c.head, "guideline_grade"@, 5);
+    let mut out: Vec<T> = Vec::new();
+    let mut i = 0usize;
+    proof {
+        reveal(Seq::filter);
+        assert(ms.take(0) =~= Seq::<DocClause>::empty());
+        assert(models(out@) =~= spec::grade_dims(ms.take(0)));
+    }
+    while i < cs.len()
+        invariant
+            arena_ok(arena),
+            clauses_valid(arena.nodes@, cs@),
+            valid_all(arena.nodes@, out@),
+            i <= cs.len(),
+            ms == clause_models(cs@),
+            ms.len() == cs.len(),
+            pred == (|c: DocClause| spec::is_comp(c.head, "guideline_grade"@, 5)),
+            models(out@) == spec::grade_dims(ms.take(i as int)),
+        decreases cs.len() - i,
+    {
+        proof {
+            assert(clause_valid(arena.nodes@, &cs@[i as int]));
+            assert(ms[i as int] == cs@[i as int]@);
+            assert(ms.take(i + 1) =~= ms.take(i as int).push(ms[i as int]));
+            ms.take(i as int).lemma_filter_push(ms[i as int], pred);
+        }
+        let ghost before = out@;
+        if is_comp(arena, &cs[i].head, &Sym::GuidelineGrade, 5) {
+            let d = crate::m7_annotate::arg_at(arena, &cs[i].head, 2);
+            proof {
+                extend(arena.nodes@, out@, d);
+            }
+            out.push(d);
+            proof {
+                assert(models(out@) =~= models(before).push(d@));
+            }
+        }
+        proof {
+            assert(models(out@) =~= spec::grade_dims(ms.take(i + 1)));
+        }
+        i += 1;
+    }
+    proof {
+        assert(ms.take(i as int) =~= ms);
+    }
+    out
+}
+
+pub fn no_duplicate_dims(arena: &ETermArena, dims: &Vec<T>) -> (out: bool)
+    requires
+        arena_ok(arena),
+        valid_all(arena.nodes@, dims@),
+    ensures
+        out == models(dims@).no_duplicates(),
+{
+    let ghost ms = models(dims@);
+    let mut i = 0usize;
+    while i < dims.len()
+        invariant
+            arena_ok(arena),
+            valid_all(arena.nodes@, dims@),
+            i <= dims.len(),
+            ms == models(dims@),
+            ms.len() == dims.len(),
+            forall|a: int, b: int| 0 <= a < b < i ==> ms[a] != ms[b],
+        decreases dims.len() - i,
+    {
+        let mut j = 0usize;
+        while j < i
+            invariant
+                arena_ok(arena),
+                valid_all(arena.nodes@, dims@),
+                j <= i < dims.len(),
+                ms == models(dims@),
+                ms.len() == dims.len(),
+                forall|a: int, b: int| 0 <= a < b < i ==> ms[a] != ms[b],
+                forall|a: int| 0 <= a < j ==> ms[a] != ms[i as int],
+            decreases i - j,
+        {
+            if crate::m6_term::equal(arena, &dims[i], &dims[j]) {
+                proof {
+                    assert(ms[j as int] == ms[i as int]);
+                }
+                return false;
+            }
+            j += 1;
+        }
+        i += 1;
+    }
+    true
+}
+
 pub fn project_all(
     arena: &mut ETermArena,
     tagged: &Vec<ETag>,
@@ -334,6 +435,7 @@ pub fn project_all(
             Seq::empty(),
             base as nat,
             crate::m7_annotate::tab_view(tab),
+            Seq::empty(),
         ),
 {
     hide(spec::sentence_groups);
@@ -341,10 +443,12 @@ pub fn project_all(
     let ghost start = arena.nodes@;
     let mut out = Vec::new();
     let mut map = Vec::new();
+    let mut dims: Vec<T> = Vec::new();
     let mut i = 0usize;
     proof {
         assert_seqs_equal!(project_models(out@) == Seq::<spec::Projected>::empty());
         assert_seqs_equal!(map_model(map@) == Seq::<(Term, Term)>::empty());
+        assert_seqs_equal!(models(dims@) == Seq::<Term>::empty());
         match spec::project_from(
             tag_models(tagged@),
             1,
@@ -353,6 +457,7 @@ pub fn project_all(
             Seq::empty(),
             base as nat,
             crate::m7_annotate::tab_view(tab),
+            Seq::empty(),
         ) {
             Ok(_) => {},
             Err(_) => {},
@@ -366,6 +471,7 @@ pub fn project_all(
             tagged_valid(arena.nodes@, tagged@),
             projections_valid(arena.nodes@, out@),
             map_valid(arena.nodes@, map@),
+            valid_all(arena.nodes@, dims@),
             i <= count,
             out.len() == i,
             spec::project_from(
@@ -376,6 +482,7 @@ pub fn project_all(
                 Seq::empty(),
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
+                Seq::empty(),
             ) == project_prefix(
                 project_models(out@),
                 spec::project_from(
@@ -386,6 +493,7 @@ pub fn project_all(
                     map_model(map@),
                     base as nat,
                     crate::m7_annotate::tab_view(tab),
+                    models(dims@),
                 ),
             ),
         decreases count - i,
@@ -400,6 +508,7 @@ pub fn project_all(
             tags_prefix(before, middle, tagged@);
             projections_prefix(before, middle, out@);
             map_prefix(before, middle, map@);
+            prefix_all(before, middle, dims@);
             reveal_with_fuel(spec::project_from, 1);
         }
         let roots = of_sentence(arena, tagged, &sn);
@@ -408,6 +517,7 @@ pub fn project_all(
             crate::k2_load::prefix_chain(start, middle, arena.nodes@);
             tags_prefix(middle, arena.nodes@, tagged@);
             projections_prefix(middle, arena.nodes@, out@);
+            prefix_all(middle, arena.nodes@, dims@);
         }
         let (groups, map2) = match result {
             Ok(pair) => pair,
@@ -421,6 +531,28 @@ pub fn project_all(
         proof {
             assert(spec::group_clauses(group_models(groups@)).len() > 0);
         }
+        let current_dims = grade_dims(arena, &clauses);
+        let dims2 = concat(&dims, &current_dims);
+        proof {
+            assert forall|j: int| 0 <= j < dims2.len() implies #[trigger] valid(
+                arena.nodes@,
+                &dims2@[j],
+            ) by {
+                if j < dims.len() {
+                    assert(dims2@[j] == dims@[j]);
+                } else {
+                    assert(dims2@[j] == current_dims@[j - dims.len()]);
+                }
+            }
+        }
+        if !no_duplicate_dims(arena, &dims2) {
+            let ghost before_error = arena.nodes@;
+            let e = crate::m7_strength::shape(arena, &Sym::GradeShape, &Sym::DuplicateDimension);
+            proof {
+                crate::k2_load::prefix_chain(start, before_error, arena.nodes@);
+            }
+            return Err(err_at(arena, s, &e, Ghost(start)));
+        }
         let p = Projected { s, groups };
         let ghost future = spec::project_from(
             tag_models(tagged@),
@@ -430,6 +562,7 @@ pub fn project_all(
             map_model(map2@),
             base as nat,
             crate::m7_annotate::tab_view(tab),
+            models(dims2@),
         );
         proof {
             match future {
@@ -444,6 +577,7 @@ pub fn project_all(
                 map_model(map@),
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
+                models(dims@),
             ) == project_prefix(seq![p@], future));
             project_prefix_assoc(
                 project_models(out@),
@@ -456,6 +590,7 @@ pub fn project_all(
                     map_model(map2@),
                     base as nat,
                     crate::m7_annotate::tab_view(tab),
+                    models(dims2@),
                 ),
             );
             assert(spec::project_from(
@@ -466,11 +601,13 @@ pub fn project_all(
                 Seq::empty(),
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
+                Seq::empty(),
             ) == project_prefix(project_models(out@) + seq![p@], future));
         }
         let ghost previous = out@;
         out.push(p);
         map = map2;
+        dims = dims2;
         proof {
             assert(map_model(map@) == map_model(map2@));
             assert_seqs_equal!(project_models(out@) == project_models(previous).push(p@));
@@ -483,6 +620,7 @@ pub fn project_all(
                 map_model(map@),
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
+                models(dims@),
             ));
             assert(spec::project_from(
                 tag_models(tagged@),
@@ -492,6 +630,7 @@ pub fn project_all(
                 Seq::empty(),
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
+                Seq::empty(),
             ) == project_prefix(project_models(out@), future));
             assert forall|j: int| 0 <= j < out.len() implies #[trigger] projected_valid(
                 arena.nodes@,

@@ -1,1 +1,1 @@
-ace_to_pl_error(check_load,answers_file(term_count(36))).
+ace_to_pl_error(check_load,answers_file(term_count(40))).

@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document(t,ace_sha256('80b28b8a92556c401791f7adf46640ab50a0f5846616a87acd1340eecc986aaf'),ulex(none),vocabulary(sha256('670651837132a2fb284088f9dae3f578349cff3317f0fd681c5ae4603b169a0b'))).
 % S1: Every man waits for 1 day.

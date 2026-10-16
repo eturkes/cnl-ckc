@@ -172,6 +172,7 @@ mod m6_term;
 mod m6_vars;
 mod m7_annotate;
 mod m7_q12;
+mod m7_strength;
 mod m7_temporal;
 mod release_impl;
 mod release_rows;

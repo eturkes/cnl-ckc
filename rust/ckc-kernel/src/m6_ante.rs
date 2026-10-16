@@ -382,8 +382,9 @@ pub fn flatten_at(arena: &mut ETermArena, conds: &T, w: &W, env: &Env, deps: &T,
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         flat_valid_result(final(arena).nodes@, &out),
-        flat_result(out) == spec::flatten_ann(
+        flat_result(out) == spec::flatten_doc(
             crate::m7_annotate::tab_view(&env.tab),
+            false,
             conds@,
             w@,
             env.s as nat,
@@ -402,9 +403,10 @@ pub fn flatten_at(arena: &mut ETermArena, conds: &T, w: &W, env: &Env, deps: &T,
         prefix(start, middle, conds);
         prefix(start, middle, deps);
     }
-    let out = crate::m7_annotate::flatten_ann_exec(
+    let out = crate::m7_strength::flatten_doc(
         arena,
         &env.tab,
+        false,
         conds,
         w,
         env,
@@ -430,8 +432,9 @@ pub fn flatten_ante(arena: &mut ETermArena, conds: &T, env: &Env, n: usize) -> (
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         flat_valid_result(final(arena).nodes@, &out),
-        flat_result(out) == spec::flatten_ann(
+        flat_result(out) == spec::flatten_doc(
             crate::m7_annotate::tab_view(&env.tab),
+            false,
             conds@,
             spec::Where::Antecedent,
             env.s as nat,

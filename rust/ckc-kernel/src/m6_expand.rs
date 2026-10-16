@@ -489,6 +489,36 @@ pub fn condition(
                 }
                 let t = crate::m6_term::c(arena, &Sym::GuidelineRecurrenceWindow, &ts);
                 Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineGrade) && args.len() == 4 {
+                let r = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let l = match resolve(arena, &args[3], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let t = lit5(arena, &Sym::GuidelineGrade, ctx, &r, &args[1], &args[2], &l);
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelinePreference) && args.len() == 3 {
+                let e = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let p = match resolve(arena, &args[1], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let a = if is_var(arena, &args[2]) {
+                    match resolve(arena, &args[2], map, sko) {
+                        Ok(t) => t,
+                        Err(x) => return Err(x),
+                    }
+                } else {
+                    args[2].cp()
+                };
+                let t = lit4(arena, &Sym::GuidelinePreference, ctx, &e, &p, &a);
+                Ok(one_term(arena, t))
             } else {
                 Err(named(arena, &Sym::ConditionShape))
             }

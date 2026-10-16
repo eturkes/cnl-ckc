@@ -1,0 +1,48 @@
+% preference-time-insertion.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(1).
+guideline_document('preference-time-insertion',ace_sha256('0b6059fdec8e4b20331caacf07bd2b14e32a44b55d19caeffc947ee247d6b189'),ulex(sha256('4a6219be85ac2623b5f59ca1fa5280d14d1c00090c982033d726ee6380622af4')),vocabulary(sha256('24f9752224fcecc844f72322d0844d101a96e07fe3643cd98b9a4e96e6f7ad44'))).
+% S1: A man sees a dog instead-of a cat for 2 hours.
+guideline_entity(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(1),[]),man,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(2),[]),dog,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(2),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(3),[]),cat,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(3),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(4),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(4),[]),na,eq,2).
+guideline_event(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(5),[]),see).
+guideline_arg(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(5),[]),1,'$guideline_id'(product,'preference-time-insertion',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(5),[]),2,'$guideline_id'(product,'preference-time-insertion',1,ref(2),[])).
+guideline_pp(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(5),[]),for,'$guideline_id'(product,'preference-time-insertion',1,ref(4),[])).
+guideline_interval(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(5),[]),duration,'$guideline_id'(product,'preference-time-insertion',1,ref(4),[]),hour,none).
+guideline_pp(actual,'$guideline_id'(product,'preference-time-insertion',1,ref(5),[]),'instead-of','$guideline_id'(product,'preference-time-insertion',1,ref(3),[])).

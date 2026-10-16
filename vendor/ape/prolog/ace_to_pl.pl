@@ -30,10 +30,13 @@
 %   A vocabulary.tsv (the guideline's lemma -> closed-id table) adds the
 %   interval, recurrence, order, frequency, scoped-recurrence, approximation and
 %   range annotations its rows reach (contracts m7t, q12, q13; the v2_/v3_
-%   predicate prefixes below name those contracts' pattern families) and
-%   admits relation/3 leaves + upper-bound condition lists in questions; rejects
-%   add unsupported temporal_shape(Why,S) and the load class vocabulary_load
-%   (exit 2). Law = docs/REFERENCE.md "Compiled Prolog schema".
+%   predicate prefixes below name those contracts' pattern families), in
+%   documents the grade + preference annotations of its strength, evidence,
+%   preference and alternative rows (contract s1; the s1_ prefix), and admits
+%   relation/3 leaves + upper-bound condition lists in questions; rejects add
+%   unsupported temporal_shape(Why,S), grade_shape(Why,S), preference_shape(Why,S)
+%   and the load class vocabulary_load (exit 2). Law = docs/REFERENCE.md
+%   "Compiled Prolog schema".
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
 %
@@ -744,7 +747,7 @@ vocabulary_header(Codes) :-
     atom_codes('# format: kind\tlemma\tvalue\n', Codes).
 
 read_vocabulary(File, table(Units, Relations, Spacings, Windows, Frequencies,
-        Approximations, Ranges, Digest)) :-
+        Approximations, Ranges, Strength, Digest)) :-
     setup_call_cleanup(
         open(File, read, Stream, [type(binary)]),
         read_stream_to_codes(Stream, Bytes),
@@ -755,8 +758,9 @@ read_vocabulary(File, table(Units, Relations, Spacings, Windows, Frequencies,
     ( Body \== [] -> true ; v2_bad(no_rows) ),
     ( append(Lines, [0'\n], Body) -> true ; v2_bad(final_newline) ),
     split_lf(Lines, Rows),
-    v2_rows(Rows, 1, t([], [], [], [], [], [], []),
-        t(Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges)).
+    v2_rows(Rows, 1, t([], [], [], [], [], [], [], k([], [], [], [])),
+        t(Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges,
+          Strength)).
 
 v2_bad(Why) :-
     throw(error(vocabulary(Why), context(ace_to_pl:read_vocabulary/2, _))).
@@ -769,9 +773,13 @@ v2_rows([Row|Rows], N, T0, T) :-
 
 /* One row; checks run in the spec's order (comment, fields, lemma, kind,
    value, duplicates). A `#` row is a comment, never a row, so a pre-c1
-   two-line header fails at row 1. A noun is a unit or a frame, never both;
-   a preposition maps to at most one of relation, frequency and range. */
-v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0), T) :-
+   two-line header fails at row 1. A noun is one of unit, frame and grade
+   noun; a preposition maps to at most one of relation, frequency and range,
+   and an alternative preposition to no other kind; an adjective is an
+   approximation or a preference (s1 D2). K = k(Strengths, Evidences,
+   Preferences, Alternatives). */
+v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
+    K0 = k(GS0, GE0, P0, Alt0),
     ( Row = [0'#|_] -> v2_bad(row(N, comment)) ; true ),
     v2_split_tab(Row, Fields),
     ( Fields = [K, L, V] -> true ; v2_bad(row(N, field_count)) ),
@@ -782,57 +790,99 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0), T) :-
             true
         ; v2_bad(row(N, unit_id))
         ),
-        ( ( memberchk(Lemma-_, U0) ; memberchk(_-Lemma, S0) ; memberchk(_-Lemma, W0) ) ->
+        ( ( memberchk(Lemma-_, U0) ; memberchk(_-Lemma, S0) ; memberchk(_-Lemma, W0)
+          ; memberchk(Lemma-_, GS0) ; memberchk(Lemma-_, GE0) ) ->
             v2_bad(row(N, duplicate_noun))
         ; true
         ),
         append(U0, [Lemma-Unit], U),
-        T = t(U, R0, S0, W0, F0, A0, G0)
+        T = t(U, R0, S0, W0, F0, A0, G0, K0)
     ; Kind == relation ->
         ( v2_closed_id(V, [duration, within, after, before], Role) ->
             true
         ; v2_bad(row(N, role_id))
         ),
-        ( ( memberchk(Lemma-_, R0) ; memberchk(Lemma, F0) ; memberchk(Lemma, G0) ) ->
+        ( ( memberchk(Lemma-_, R0) ; memberchk(Lemma, F0) ; memberchk(Lemma, G0)
+          ; memberchk(Lemma, Alt0) ) ->
             v2_bad(row(N, duplicate_preposition))
         ; true
         ),
         append(R0, [Lemma-Role], R),
-        T = t(U0, R, S0, W0, F0, A0, G0)
+        T = t(U0, R, S0, W0, F0, A0, G0, K0)
     ; ( Kind == spacing ; Kind == window ) ->
         ( v2_lemma(V, Frame) -> true ; v2_bad(row(N, frame_lemma)) ),
         ( ( memberchk(Lemma-Frame, S0) ; memberchk(Lemma-Frame, W0)
-          ; memberchk(Frame-_, U0) ) ->
+          ; memberchk(Frame-_, U0) ; memberchk(Frame-_, GS0) ; memberchk(Frame-_, GE0) ) ->
             v2_bad(row(N, duplicate_noun))
         ; true
         ),
+        ( memberchk(Lemma, Alt0) -> v2_bad(row(N, duplicate_preposition)) ; true ),
         ( Kind == spacing ->
             append(S0, [Lemma-Frame], S),
-            T = t(U0, R0, S, W0, F0, A0, G0)
+            T = t(U0, R0, S, W0, F0, A0, G0, K0)
         ; append(W0, [Lemma-Frame], W),
-          T = t(U0, R0, S0, W, F0, A0, G0)
+          T = t(U0, R0, S0, W, F0, A0, G0, K0)
         )
     ; Kind == frequency ->
         ( atom_codes(period, V) -> true ; v2_bad(row(N, frequency_value)) ),
-        ( ( memberchk(Lemma, F0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, G0) ) ->
+        ( ( memberchk(Lemma, F0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, G0)
+          ; memberchk(Lemma, Alt0) ) ->
             v2_bad(row(N, duplicate_preposition))
         ; true
         ),
         append(F0, [Lemma], F),
-        T = t(U0, R0, S0, W0, F, A0, G0)
+        T = t(U0, R0, S0, W0, F, A0, G0, K0)
     ; Kind == approximation ->
         ( atom_codes(about, V) -> true ; v2_bad(row(N, approximation_value)) ),
-        ( memberchk(Lemma, A0) -> v2_bad(row(N, duplicate_adjective)) ; true ),
+        ( ( memberchk(Lemma, A0) ; memberchk(Lemma, P0) ) ->
+            v2_bad(row(N, duplicate_adjective))
+        ; true
+        ),
         append(A0, [Lemma], A),
-        T = t(U0, R0, S0, W0, F0, A, G0)
+        T = t(U0, R0, S0, W0, F0, A, G0, K0)
     ; Kind == range ->
         ( atom_codes(minimum, V) -> true ; v2_bad(row(N, range_value)) ),
-        ( ( memberchk(Lemma, G0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, F0) ) ->
+        ( ( memberchk(Lemma, G0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, F0)
+          ; memberchk(Lemma, Alt0) ) ->
             v2_bad(row(N, duplicate_preposition))
         ; true
         ),
         append(G0, [Lemma], G),
-        T = t(U0, R0, S0, W0, F0, A0, G)
+        T = t(U0, R0, S0, W0, F0, A0, G, K0)
+    ; ( Kind == strength ; Kind == evidence ) ->
+        ( Kind == strength ->
+            Ids = [strong, conditional], Why = strength_value
+        ; Ids = [high, moderate, low, very_low], Why = evidence_value
+        ),
+        ( v2_closed_id(V, Ids, Value) -> true ; v2_bad(row(N, Why)) ),
+        ( ( memberchk(Lemma-_, GS0) ; memberchk(Lemma-_, GE0) ; memberchk(Lemma-_, U0)
+          ; memberchk(_-Lemma, S0) ; memberchk(_-Lemma, W0) ) ->
+            v2_bad(row(N, duplicate_noun))
+        ; true
+        ),
+        ( Kind == strength ->
+            append(GS0, [Lemma-Value], GS),
+            T = t(U0, R0, S0, W0, F0, A0, G0, k(GS, GE0, P0, Alt0))
+        ; append(GE0, [Lemma-Value], GE),
+          T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE, P0, Alt0))
+        )
+    ; Kind == preference ->
+        ( atom_codes(preferred, V) -> true ; v2_bad(row(N, preference_value)) ),
+        ( ( memberchk(Lemma, P0) ; memberchk(Lemma, A0) ) ->
+            v2_bad(row(N, duplicate_adjective))
+        ; true
+        ),
+        append(P0, [Lemma], P),
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P, Alt0))
+    ; Kind == alternative ->
+        ( atom_codes(alternative, V) -> true ; v2_bad(row(N, alternative_value)) ),
+        ( ( memberchk(Lemma, Alt0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma-_, S0)
+          ; memberchk(Lemma-_, W0) ; memberchk(Lemma, F0) ; memberchk(Lemma, G0) ) ->
+            v2_bad(row(N, duplicate_preposition))
+        ; true
+        ),
+        append(Alt0, [Lemma], Alt),
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt))
     ; v2_bad(row(N, kind))
     ).
 
@@ -856,7 +906,7 @@ v2_closed_id(Codes, Ids, Id) :-
     !.
 
 v2_table(T) :-
-    nb_current(ace_to_pl_vocabulary, table(U, R, S, W, F, A, G, _)),
+    nb_current(ace_to_pl_vocabulary, table(U, R, S, W, F, A, G, _, _)),
     T = t(U, R, S, W, F, A, G).
 
 /* ---------- v2 annotation pass (contract m7t D4/D5) ----------
@@ -1115,6 +1165,180 @@ v2_ann_inner(frequency(E, C, W, Unit), _, _, _, '$guideline_frequency'(E, C, W, 
 v2_ann_inner(order(E, Role, A), _, _, _, '$guideline_order'(E, Role, A)).
 v2_ann_inner(range(E, H, _), Scope, Anns, Ctx, '$guideline_range'(L, H)) :-
     v3_partners(Anns, Scope, Ctx, E, [L-_]).
+
+/* ---------- s1 strength pass (contract s1 D3/D4: documents with a table) ----------
+   After a scope's temporal pass (spec emit.rs `strength`): a grade right
+   after its root-fact copula; a preference right after its alternative pp
+   or, without one, after its copula. Endpoints classify document-wide
+   (v3_plain); a violation reports at the event's predicate condition;
+   question mode never runs it. */
+s1_strength(S, Facts, Items0, Items) :-
+    ( nb_current(ace_to_pl_vocabulary, table(U, R, Sp, W, F, A, G, K, _)) ->
+        s1_items(Items0, t(U, R, Sp, W, F, A, G), K, S, Facts, Items0, Items)
+    ; Items = Items0
+    ).
+
+s1_items([], _, _, _, _, _, []).
+s1_items([Item|Items], T, K, S, Facts, Scope, Out) :-
+    s1_item(Item, T, K, S, Facts, Scope, Head),
+    s1_items(Items, T, K, S, Facts, Scope, Tail),
+    append(Head, Tail, Out).
+
+s1_item(Item, T, K, S, Facts, Scope, Out) :-
+    ( s1_anchored(Item, Ctx, Inner), s1_is_pred(Inner) ->
+        arg(1, Inner, E),
+        ( Facts == true, s1_grade(T, K, Ctx, Inner, Dim, Value) ->
+            arg(3, Inner, Rec),
+            arg(4, Inner, Label),
+            Gs = [anchored(Ctx, '$guideline_grade'(Rec, Dim, Value, Label))]
+        ; Gs = []
+        ),
+        s1_preference_of(T, K, Scope, Ctx, Inner, Pref),
+        ( Pref = err(Why) ->
+            reject(unsupported, preference_shape(Why, S))
+        ; Pref = some(P, A), A == none ->
+            append([Item|Gs], [anchored(Ctx, '$guideline_preference'(E, P, none))], Out)
+        ; Out = [Item|Gs]
+        )
+    ; s1_anchored(Item, Ctx, Inner),
+      functor(Inner, modifier_pp, 3),
+      arg(2, Inner, Prep),
+      atom(Prep),
+      K = k(_, _, _, Alt),
+      memberchk(Prep, Alt) ->
+        arg(1, Inner, E),
+        ( s1_event_pred(Scope, Ctx, E, Pred),
+          s1_preference_of(T, K, Scope, Ctx, Pred, some(P, A)) ->
+            Out = [Item, anchored(Ctx, '$guideline_preference'(E, P, A))]
+        ; Out = [Item]
+        )
+    ; nonvar(Item),
+      functor(Item, naf, 2) ->
+        arg(1, Item, Dom),
+        arg(2, Item, Payload),
+        s1_items(Payload, T, K, S, false, Payload, Payload2),
+        Out = [naf(Dom, Payload2)]
+    ; Out = [Item]
+    ).
+
+s1_anchored(Item, Ctx, Inner) :-
+    nonvar(Item),
+    functor(Item, anchored, 2),
+    arg(1, Item, Ctx),
+    arg(2, Item, Inner),
+    nonvar(Inner).
+
+s1_is_pred(Inner) :-
+    functor(Inner, predicate, Arity),
+    Arity >= 3,
+    Arity =< 5.
+
+/* E's first same-context predicate/3..5 condition. */
+s1_event_pred([Item|Items], Ctx, E, Pred) :-
+    ( s1_anchored(Item, C0, Inner),
+      C0 == Ctx,
+      s1_is_pred(Inner),
+      arg(1, Inner, E0),
+      E0 == E ->
+        Pred = Inner
+    ; s1_event_pred(Items, Ctx, E, Pred)
+    ).
+
+/* A same-context property(P, Adj, pos) with Adj a preference adjective. */
+s1_preferred_prop([Item|Items], Prefs, Ctx, P) :-
+    ( s1_anchored(Item, C0, Inner),
+      C0 == Ctx,
+      functor(Inner, property, 3),
+      arg(1, Inner, P0),
+      P0 == P,
+      arg(2, Inner, Adj),
+      atom(Adj),
+      memberchk(Adj, Prefs),
+      arg(3, Inner, Pol),
+      Pol == pos ->
+        true
+    ; s1_preferred_prop(Items, Prefs, Ctx, P)
+    ).
+
+/* The objects of E's same-context alternative pps, in item order. */
+s1_alternatives([], _, _, _, []).
+s1_alternatives([Item|Items], Alt, Ctx, E, Objs) :-
+    ( s1_anchored(Item, C0, Inner),
+      C0 == Ctx,
+      functor(Inner, modifier_pp, 3),
+      arg(1, Inner, E0),
+      E0 == E,
+      arg(2, Inner, Prep),
+      atom(Prep),
+      memberchk(Prep, Alt) ->
+        arg(3, Inner, O),
+        Objs = [O|Rest]
+    ; Objs = Rest
+    ),
+    s1_alternatives(Items, Alt, Ctx, E, Rest).
+
+/* D4: some(Preferred, Alternative | none), none, or err(Why). A preference
+   copula be(X, P) (P a preference property) prefers X; any other event with
+   one alternative pp prefers its second participant. */
+s1_preference_of(T, k(_, _, Prefs, Alt), Scope, Ctx, Pred, Result) :-
+    arg(1, Pred, E),
+    s1_alternatives(Scope, Alt, Ctx, E, Alts),
+    length(Alts, NA),
+    ( functor(Pred, predicate, 4),
+      arg(2, Pred, Verb),
+      Verb == be,
+      arg(4, Pred, P0),
+      s1_preferred_prop(Scope, Prefs, Ctx, P0) ->
+        Copula = true
+    ; Copula = false
+    ),
+    ( NA > 1 ->
+        Result = err(alternative_count)
+    ; Copula == false, NA =:= 0 ->
+        Result = none
+    ; Copula == false, functor(Pred, predicate, 3) ->
+        Result = err(no_preferred)
+    ; ( Copula == true -> arg(3, Pred, P) ; arg(4, Pred, P) ),
+      ( NA =:= 1 -> Alts = [A] ; A = none ),
+      ( v3_plain(T, P), ( NA =:= 0 ; v3_plain(T, A) ) ->
+          Result = some(P, A)
+      ; Result = err(endpoint)
+      )
+    ).
+
+/* D3: the grade of a root-fact copula be(R, L) in context actual whose
+   complement's noun is a grade noun. */
+s1_grade(T, k(Strengths, Evidences, _, _), Ctx, Pred, Dim, Value) :-
+    Ctx == actual,
+    functor(Pred, predicate, 4),
+    arg(2, Pred, Verb),
+    Verb == be,
+    arg(3, Pred, Rec),
+    v3_plain(T, Rec),
+    arg(4, Pred, Label),
+    var(Label),
+    v3_decl(Label, d(Noun, _)),
+    atom(Noun),
+    ( memberchk(Noun-Value, Strengths) ->
+        Dim = strength
+    ; memberchk(Noun-Value, Evidences) ->
+        Dim = evidence
+    ).
+
+/* D3: one grade per dimension per document; Dims = the earlier sentences'. */
+s1_grade_dims([], Dims, Dims).
+s1_grade_dims([group(_, _, _, Clauses)|Groups], Dims0, Dims) :-
+    s1_clause_dims(Clauses, Dims0, Dims1),
+    s1_grade_dims(Groups, Dims1, Dims).
+
+s1_clause_dims([], Dims, Dims).
+s1_clause_dims([clause(Head, _)|Clauses], Dims0, Dims) :-
+    ( functor(Head, guideline_grade, 5) ->
+        arg(3, Head, Dim),
+        append(Dims0, [Dim], Dims1)
+    ; Dims1 = Dims0
+    ),
+    s1_clause_dims(Clauses, Dims1, Dims).
 
 /* ---------- v3 patterns (contract q12 D3-D6) ----------
    Referents classify by their object condition anywhere in the DRS (the
@@ -1424,7 +1648,7 @@ v3_about_target(frequency(_, _, W, _), W, W).
 /* Every record (document /4, question /5) ends in vocabulary(none) |
    vocabulary(sha256(T)), T = the digest of the raw table bytes (c1 D2/D3). */
 vocabulary_record(Record0, Record) :-
-    ( nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _, Digest)) ->
+    ( nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _, _, Digest)) ->
         Wrapper = vocabulary(sha256(Digest))
     ; Wrapper = vocabulary(none)
     ),
@@ -1458,8 +1682,8 @@ vocabulary_record(Record0, Record) :-
    invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
    See docs/REFERENCE.md "Compiled Prolog schema". */
 
-/* Uniform declaration block (F2, c1 D2): every document declares all 15
-   indicators regardless of population or table. */
+/* Uniform declaration block (F2, c1 D2, s1 D1): every document declares all
+   17 indicators regardless of population or table. */
 v1_indicators([
     guideline_schema_version/1,
     guideline_document/4,
@@ -1475,7 +1699,9 @@ v1_indicators([
     guideline_frequency/5,
     guideline_order/4,
     guideline_recurrence_window/7,
-    guideline_range/3
+    guideline_range/3,
+    guideline_grade/5,
+    guideline_preference/4
 ]).
 
 v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
@@ -1501,7 +1727,7 @@ v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
     v1_collision_scan(Conds),
     v1_tag_conditions(Conds, Tagged),
     group_by_sentence(1, SentenceCount, Tagged, Groups),
-    v1_translate_groups(Groups, DocId, [], Bundles),
+    v1_translate_groups(Groups, DocId, [], [], Bundles),
     v1_derive_proofs(Bundles, DocId, Payload),
     ( Emit == product ->
         v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles,
@@ -1612,8 +1838,8 @@ v1_reserved_atom(Atom) :-
    WitnessPairs = Var-WitnessId assignments over the group's positive
    body (P3-P4); the renderer flattens groups in order, so emitted
    bytes stay identical to the pre-IR pipeline. */
-v1_translate_groups([], _, _, []).
-v1_translate_groups([S-Group|Groups], DocId, Map0,
+v1_translate_groups([], _, _, _, []).
+v1_translate_groups([S-Group|Groups], DocId, Map0, Dims0,
         [bundle(S, SGroups)|Bundles]) :-
     v1_sentence(Group, S, DocId, Map0, Map, SGroups),
     v1_groups_clause_count(SGroups, ClauseCount),
@@ -1621,7 +1847,12 @@ v1_translate_groups([S-Group|Groups], DocId, Map0,
         reject(unsupported, sentence_shape(Group))
     ; true
     ),
-    v1_translate_groups(Groups, DocId, Map, Bundles).
+    s1_grade_dims(SGroups, Dims0, Dims),
+    ( is_set(Dims) ->
+        true
+    ; reject(unsupported, grade_shape(duplicate_dimension, S))
+    ),
+    v1_translate_groups(Groups, DocId, Map, Dims, Bundles).
 
 v1_groups_clause_count([], 0).
 v1_groups_clause_count([group(_, _, _, Clauses)|Groups], Count) :-
@@ -1652,7 +1883,8 @@ v1_root_group([boxed(_)|Items]) :-
 
 v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses) :-
     v1_flatten_items(Group, root, S, DocId, [], actual, none, 1, _, Items0),
-    v2_annotate(S, Items0, Items),
+    v2_annotate(S, Items0, Items1),
+    s1_strength(S, true, Items1, Items),
     v1_ref_slots(Items, Slots),
     v1_first_occurrence(Slots, [], Ordered),
     v1_mint_ordinals(Ordered, 1, S, DocId, Map0, Map),
@@ -1742,10 +1974,12 @@ v1_split_conds([C|Cs], [C|Shared], Vs) :-
 
 v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_seg_items(Segs, S, DocId, 1, N1, AItems0),
-    v2_annotate(S, AItems0, AItems),
+    v2_annotate(S, AItems0, AItems1),
+    s1_strength(S, false, AItems1, AItems),
     v1_flatten_items(CConds, consequent, S, DocId, ADom, actual, none,
         N1, _, CItems0),
-    v2_annotate(S, CItems0, CItems),
+    v2_annotate(S, CItems0, CItems1),
+    s1_strength(S, false, CItems1, CItems),
     v1_ante_refs(AItems, CItems, Map, Ordered, AnteRefs),
     v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
     v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
@@ -1771,21 +2005,26 @@ v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_arm_box(Arm2, S, Dom2, Conds2),
     v1_flatten_items(Shared, antecedent, S, DocId, [], actual, none,
         1, NS, SharedItems0),
-    v2_annotate(S, SharedItems0, SharedItems),
+    v2_annotate(S, SharedItems0, SharedItems1),
+    s1_strength(S, false, SharedItems1, SharedItems),
     v1_flatten_items(Conds1, antecedent, S, DocId, [], actual, none,
         NS, NA1, Arm1Items0),
-    v2_annotate(S, Arm1Items0, Arm1Items),
+    v2_annotate(S, Arm1Items0, Arm1Items1),
+    s1_strength(S, false, Arm1Items1, Arm1Items),
     v1_flatten_items(Conds2, antecedent, S, DocId, [], actual, none,
         NA1, NA2, Arm2Items0),
-    v2_annotate(S, Arm2Items0, Arm2Items),
+    v2_annotate(S, Arm2Items0, Arm2Items1),
+    s1_strength(S, false, Arm2Items1, Arm2Items),
     append(ADom, Dom1, Deps1),
     append(ADom, Dom2, Deps2),
     v1_flatten_items(CConds, consequent, S, DocId, Deps1, actual, none,
         NA2, _, CItems10),
-    v2_annotate(S, CItems10, CItems1),
+    v2_annotate(S, CItems10, CItems11),
+    s1_strength(S, false, CItems11, CItems1),
     v1_flatten_items(CConds, consequent, S, DocId, Deps2, actual, none,
         NA2, _, CItems20),
-    v2_annotate(S, CItems20, CItems2),
+    v2_annotate(S, CItems20, CItems21),
+    s1_strength(S, false, CItems21, CItems2),
     append(Arm1Items, Arm2Items, ArmItems),
     append(SharedItems, ArmItems, AnteAll),
     v1_ante_refs(AnteAll, CItems1, Map, Ordered, AnteRefs),
@@ -2110,6 +2349,28 @@ v1_condition(Context, Inner, Map, Sko, [guideline_range(Context, L, H)]) :-
     arg(2, Inner, H0),
     v1_ref(L0, Map, Sko, L),
     v1_ref(H0, Map, Sko, H).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_grade(Context, Rec, Dim, Value, Label)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_grade', 4),
+    !,
+    arg(1, Inner, Rec0),
+    arg(2, Inner, Dim),
+    arg(3, Inner, Value),
+    arg(4, Inner, Label0),
+    v1_ref(Rec0, Map, Sko, Rec),
+    v1_ref(Label0, Map, Sko, Label).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_preference(Context, E, P, A)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_preference', 3),
+    !,
+    arg(1, Inner, E0),
+    arg(2, Inner, P0),
+    arg(3, Inner, A0),
+    v1_ref(E0, Map, Sko, E),
+    v1_ref(P0, Map, Sko, P),
+    ( A0 == none -> A = none ; v1_ref(A0, Map, Sko, A) ).
 v1_condition(_, Inner, _, _, _) :-
     reject(unsupported, condition_shape(Inner)).
 

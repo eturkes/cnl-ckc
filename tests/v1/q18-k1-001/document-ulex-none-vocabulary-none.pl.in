@@ -29,6 +29,10 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256('50d37c6003b789975dc29ca154c819734f6145121deade51ec69075f7a1396e0'),ulex(none),vocabulary(none)).
 % S1: A structural clause.
@@ -45,4 +49,6 @@ guideline_frequency(x,x,x,x,x).
 guideline_order(x,x,x,x).
 guideline_recurrence_window(x,x,x,x,x,x,x).
 guideline_range(x,x,x).
-guideline_entity(control,control,control,control) :- guideline_entity(x,x,x,x), guideline_cardinality(x,x,x,x,x), guideline_event(x,x,x), guideline_arg(x,x,x,x), guideline_pp(x,x,x,x), guideline_property(x,x,x,x), guideline_operator(x,x,x), guideline_interval(x,x,x,x,x,x), guideline_recurrence(x,x,x,x), guideline_frequency(x,x,x,x,x), guideline_order(x,x,x,x), guideline_recurrence_window(x,x,x,x,x,x,x), guideline_range(x,x,x), \+ guideline_entity(x,x,x,x), \+ guideline_cardinality(x,x,x,x,x), \+ guideline_event(x,x,x), \+ guideline_arg(x,x,x,x), \+ guideline_pp(x,x,x,x), \+ guideline_property(x,x,x,x), \+ guideline_operator(x,x,x), \+ guideline_interval(x,x,x,x,x,x), \+ guideline_recurrence(x,x,x,x), \+ guideline_frequency(x,x,x,x,x), \+ guideline_order(x,x,x,x), \+ guideline_recurrence_window(x,x,x,x,x,x,x), \+ guideline_range(x,x,x), \+ (guideline_entity(x,x,x,x), guideline_cardinality(x,x,x,x,x), guideline_event(x,x,x), guideline_arg(x,x,x,x), guideline_pp(x,x,x,x), guideline_property(x,x,x,x), guideline_operator(x,x,x), guideline_interval(x,x,x,x,x,x), guideline_recurrence(x,x,x,x), guideline_frequency(x,x,x,x,x), guideline_order(x,x,x,x), guideline_recurrence_window(x,x,x,x,x,x,x), guideline_range(x,x,x)).
+guideline_grade(x,x,x,x,x).
+guideline_preference(x,x,x,x).
+guideline_entity(control,control,control,control) :- guideline_entity(x,x,x,x), guideline_cardinality(x,x,x,x,x), guideline_event(x,x,x), guideline_arg(x,x,x,x), guideline_pp(x,x,x,x), guideline_property(x,x,x,x), guideline_operator(x,x,x), guideline_interval(x,x,x,x,x,x), guideline_recurrence(x,x,x,x), guideline_frequency(x,x,x,x,x), guideline_order(x,x,x,x), guideline_recurrence_window(x,x,x,x,x,x,x), guideline_range(x,x,x), guideline_grade(x,x,x,x,x), guideline_preference(x,x,x,x), \+ guideline_entity(x,x,x,x), \+ guideline_cardinality(x,x,x,x,x), \+ guideline_event(x,x,x), \+ guideline_arg(x,x,x,x), \+ guideline_pp(x,x,x,x), \+ guideline_property(x,x,x,x), \+ guideline_operator(x,x,x), \+ guideline_interval(x,x,x,x,x,x), \+ guideline_recurrence(x,x,x,x), \+ guideline_frequency(x,x,x,x,x), \+ guideline_order(x,x,x,x), \+ guideline_recurrence_window(x,x,x,x,x,x,x), \+ guideline_range(x,x,x), \+ guideline_grade(x,x,x,x,x), \+ guideline_preference(x,x,x,x), \+ (guideline_entity(x,x,x,x), guideline_cardinality(x,x,x,x,x), guideline_event(x,x,x), guideline_arg(x,x,x,x), guideline_pp(x,x,x,x), guideline_property(x,x,x,x), guideline_operator(x,x,x), guideline_interval(x,x,x,x,x,x), guideline_recurrence(x,x,x,x), guideline_frequency(x,x,x,x,x), guideline_order(x,x,x,x), guideline_recurrence_window(x,x,x,x,x,x,x), guideline_range(x,x,x), guideline_grade(x,x,x,x,x), guideline_preference(x,x,x,x)).

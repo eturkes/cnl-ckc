@@ -1,7 +1,6 @@
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
 use crate::k2_term::{ENode, ETermArena};
-use crate::m6_ante::flatten_ante;
 use crate::m6_custody::{nonempty_lines, ulex_matches};
 use crate::m6_doc::sentence_count;
 use crate::m6_drs::{box_parts, collides, inner_sentence};
@@ -262,9 +261,30 @@ pub fn project_query(
         prefix_all(n3, n4, answers@);
     }
     let env = Env { docid: qid.clone(), s: 1, base, tab: crate::m7_q12::env_exec(arena, tab, drs) };
-    let flat_result = flatten_ante(arena, &b.conds, &env, 1);
+    // s1 D6: questions retain the temporal-only pass.
+    let deps = nil(arena);
+    let ghost nd = arena.nodes@;
+    let actual = named(arena, &Sym::Actual);
+    let ghost na = arena.nodes@;
+    proof {
+        crate::k2_load::prefix_chain(n4, nd, na);
+        prefix(n4, na, &b.conds);
+        prefix(nd, na, &deps);
+    }
+    let flat_result = crate::m7_annotate::flatten_ann_exec(
+        arena,
+        &env.tab,
+        &b.conds,
+        &W::Antecedent,
+        &env,
+        &deps,
+        &actual,
+        &E::Top,
+        1,
+    );
     let ghost n5 = arena.nodes@;
     proof {
+        crate::k2_load::prefix_chain(n4, na, n5);
         crate::k2_load::prefix_chain(start, n4, n5);
         prefix_all(n4, n5, answers@);
     }

@@ -1,0 +1,4 @@
+noun_sg('strong-grade','strong-grade',neutr).
+noun_sg('low-grade','low-grade',neutr).
+adj_itr(preferred,preferred).
+prep('instead-of','instead-of').

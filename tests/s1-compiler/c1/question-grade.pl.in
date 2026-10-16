@@ -1,0 +1,4 @@
+% question-grade compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'question-grade',ace_sha256('51d6e62e02091b361265358058b4bb1f8f5ca0de0184b1ff585609276e395400'),ulex(sha256('4a6219be85ac2623b5f59ca1fa5280d14d1c00090c982033d726ee6380622af4')),vocabulary(sha256('4b2d79cee988cc18e9d106f9938296e29eab4dbafebd26c5cd8a6e50c0590685'))).
+% Q1: Is a recommendation a category-A-recommendation?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,recommendation,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,'category-A-recommendation',countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_event(actual,C,be),','(guideline_arg(actual,C,1,A),guideline_arg(actual,C,2,B)))))))),answers([])).
