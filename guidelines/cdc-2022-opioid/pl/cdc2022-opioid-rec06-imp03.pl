@@ -36,11 +36,12 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec06-imp03',ace_sha256('030da1015416e6e3e8c1fee6766e9a6d1aced1409eea49a1026f8d43b5c96579'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
-% S1: Every clinician should avoid a precautionary-additional-opioid-prescription.
+guideline_document('cdc2022-opioid-rec06-imp03',ace_sha256(c610a7fa664a5bb56288b95213099cd61e9e98540f626b1f459dd1493c9f1d72),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+% S1: Every clinician should generally avoid a precautionary-additional-opioid-prescription.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec06-imp03',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec06-imp03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec06-imp03',1,ref(2),[A]),'precautionary-additional-opioid-prescription',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec06-imp03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec06-imp03',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-rec06-imp03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec06-imp03',1,ref(3),[A]),usuality,generally) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-rec06-imp03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec06-imp03',1,ref(3),[A]),avoid) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec06-imp03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec06-imp03',1,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec06-imp03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec06-imp03',1,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec06-imp03',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

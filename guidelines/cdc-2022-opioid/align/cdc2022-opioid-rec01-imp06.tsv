@@ -20,15 +20,17 @@
 8	ace	376	invasive-surgery
 9	ace	400	NSAID
 10	ace	409	contraindicated
-11	ace	432	other-therapy
+15	ace	432	other-therapy
 10	ace	449	contraindicated
 9	ace	471	NSAID
-12	ace	480	ineffective
-11	ace	499	other-therapy
-12	ace	516	ineffective
-0	ace	536	opioid-therapy
-1	ace	558	important-role
-13	ace	580	other-severe-acute-pain
+14	ace	477	likely
+12	ace	487	ineffective
+15	ace	506	other-therapy
+14	ace	520	likely
+12	ace	530	ineffective
+0	ace	550	opioid-therapy
+1	ace	572	important-role
+13	ace	594	other-severe-acute-pain
 0	src	0	Opioid therapy
 1	src	22	important role
 2	src	41	acute pain
@@ -41,6 +43,7 @@
 7	src	172	moderate to severe postoperative pain
 13	src	215	other severe acute pain
 9	src	244	NSAID
-11	src	255	other therapies
+15	src	255	other therapies
 10	src	275	contraindicated
+14	src	294	likely
 12	src	307	ineffective

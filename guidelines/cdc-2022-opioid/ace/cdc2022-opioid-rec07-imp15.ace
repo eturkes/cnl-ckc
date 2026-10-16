@@ -7,4 +7,6 @@ If a patient requests a dosage-reduction then the patient has an opioid-taper-in
 If a patient requests an opioid-discontinuation then the patient has an opioid-taper-indication.
 If a patient experiences an overdose then the patient has an opioid-taper-indication.
 If a patient experiences a serious-opioid-adverse-event then the patient has an opioid-taper-indication.
-If a patient has an opioid-taper-indication then every clinician should collaborate with the patient during an opioid-taper and may reduce an opioid-dosage for the patient and may discontinue an opioid for the patient.
+If a patient has an opioid-taper-indication then every clinician should collaborate with the patient during an opioid-taper.
+If a patient has an opioid-taper-indication and an opioid-dosage-reduction is possible for the patient then every clinician may reduce an opioid-dosage for the patient.
+If a patient has an opioid-taper-indication and an opioid-discontinuation is possible for the patient then every clinician may discontinue an opioid for the patient.

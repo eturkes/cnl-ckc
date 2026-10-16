@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec09-imp16',ace_sha256(e309907420fb0ec0e138ee5dd7ce6ba37037df098d0f56cc4ef8644d292a2186),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
+guideline_document('cdc2022-opioid-rec09-imp16',ace_sha256(e309907420fb0ec0e138ee5dd7ce6ba37037df098d0f56cc4ef8644d292a2186),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician conducts an MME-dosage-determination then the clinician should not include a buprenorphine in the MME-dosage-determination.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec09-imp16',1,box(1),[A,B,C]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'MME-dosage-determination',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,conduct), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec09-imp16',1,box(1),[A,B,C]),'$guideline_id'(context,'cdc2022-opioid-rec09-imp16',1,box(2),[A,B,C]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'MME-dosage-determination',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,conduct), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

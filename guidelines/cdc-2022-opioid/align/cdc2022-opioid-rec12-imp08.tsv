@@ -10,10 +10,12 @@
 4	ace	172	does not have
 5	ace	188	sufficient-opioid-use-disorder-treatment-capacity
 0	ace	247	clinician
-6	ace	264	obtain
-7	ace	273	buprenorphine-prescribing-waiver
-8	ace	313	opioid-use-disorder-treatment
+9	ace	264	particularly
+6	ace	277	obtain
+7	ace	286	buprenorphine-prescribing-waiver
+8	ace	326	opioid-use-disorder-treatment
 0	src	4	clinicians
+9	src	20	particularly
 0	src	33	clinicians
 1	src	44	prescribing
 2	src	56	opioids

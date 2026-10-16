@@ -6,8 +6,10 @@
 0	ace	124	patient
 4	ace	148	contraindication
 5	ace	176	clinician
+9	ace	186	may
 6	ace	190	consider
 7	ace	202	NSAID
+9	ace	212	may
 6	ace	216	consider
 8	ace	227	duloxetine
 0	src	5	patients
@@ -15,6 +17,7 @@
 3	src	53	insufficient response
 2	src	78	nonpharmacologic approaches
 5	src	124	clinicians
+9	src	135	can
 6	src	139	consider
 7	src	148	NSAIDs
 8	src	158	duloxetine

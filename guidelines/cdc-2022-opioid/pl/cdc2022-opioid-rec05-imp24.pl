@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp24',ace_sha256('6d6b3149138e48dc1a005efad6d77d170ab939c9c92a97deadc17393368e3fc4'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
+guideline_document('cdc2022-opioid-rec05-imp24',ace_sha256('4e5d342f8cd46c7aa45d4a71054e2a7ce9db8c3c1cef564d723854a4dce26684'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician must ensure a coordinated-pain-management.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp24',1,box(1),[A]),must) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',1,ref(2),[A]),'coordinated-pain-management',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -51,9 +51,9 @@ guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',2,box
 guideline_event('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',2,ref(3),[A]),ensure) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',2,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-% S3: Every clinician must ensure an opioid-use-disorder-management.
+% S3: Every clinician must ensure a coordinated-opioid-use-disorder-management.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp24',3,box(1),[A]),must) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',3,ref(2),[A]),'opioid-use-disorder-management',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',3,ref(2),[A]),'coordinated-opioid-use-disorder-management',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',3,ref(3),[A]),ensure) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',3,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

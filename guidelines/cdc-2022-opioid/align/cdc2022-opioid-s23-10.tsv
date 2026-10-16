@@ -1,16 +1,25 @@
 0	ace	23	discuss
 2	ace	34	opioid-driving-or-machinery-safety-effect
 1	ace	83	patient
-0	ace	115	discuss
-3	ace	126	opioid-initiation-driving-or-machinery-safety-effect
-1	ace	186	patient
-0	ace	218	discuss
-4	ace	228	concurrent-central-nervous-system-depressant-driving-or-machinery-safety-effect
-1	ace	315	patient
+3	ace	107	starts
+3	ace	117	opioid-therapy
+1	ace	138	patient
+6	ace	172	particularly
+0	ace	185	discuss
+2	ace	196	opioid-driving-or-machinery-safety-effect
+1	ace	247	patient
+1	ace	261	patient
+4	ace	269	uses
+4	ace	276	central-nervous-system-depressant
+6	ace	353	particularly
+0	ace	366	discuss
+2	ace	377	opioid-driving-or-machinery-safety-effect
+1	ace	428	patient
 0	src	0	Discuss
 2	src	8	effects that opioids might have
 1	src	45	person
 2	src	65	safely operate a vehicle or other machinery
+6	src	110	particularly
 3	src	128	opioids are initiated
 4	src	158	other central nervous system depressants
 4	src	234	are used concurrently

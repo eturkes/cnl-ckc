@@ -1,7 +1,19 @@
 0	ace	15	reduces an opioid
-2	ace	65	withdrawal-minimizing-taper
-1	ace	109	discontinues an opioid
-2	ace	164	withdrawal-minimizing-taper
+3	ace	59	slowly
+5	ace	66	taper
+4	ace	76	opioid
+6	ace	89	withdrawal
+7	ace	100	minimization
+1	ace	129	discontinues an opioid
+3	ace	178	slowly
+5	ace	185	taper
+4	ace	195	opioid
+6	ace	208	withdrawal
+7	ace	219	minimization
+4	src	5	opioids
 0	src	17	reduced
 1	src	28	discontinued
-2	src	42	a taper slow enough to minimize symptoms and signs of opioid withdrawal
+5	src	44	taper
+3	src	50	slow
+7	src	65	minimize
+6	src	103	withdrawal

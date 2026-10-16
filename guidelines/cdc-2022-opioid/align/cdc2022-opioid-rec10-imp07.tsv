@@ -14,20 +14,28 @@
 7	ace	212	unreported-nonprescribed-controlled-substance-absence
 1	ace	271	patient
 0	ace	286	clinician
-3	ace	303	ask
-8	ace	309	nonjudgmental
-9	ace	323	prescribed-drug-use-question
-1	ace	361	patient
-0	ace	387	clinician
-3	ace	404	ask
-8	ace	410	nonjudgmental
-10	ace	424	other-drug-use-question
-1	ace	457	patient
-0	ace	483	clinician
-3	ace	500	ask
-8	ace	506	nonjudgmental
-11	ace	520	possible-unexpected-result-question
-1	ace	565	patient
+12	ace	303	nonjudgmentally
+13	ace	319	ask
+14	ace	325	prescribed
+15	ace	336	drug
+16	ace	341	use
+13	ace	345	question
+1	ace	363	patient
+0	ace	389	clinician
+12	ace	406	nonjudgmentally
+13	ace	422	ask
+17	ace	429	other
+15	ace	435	drug
+16	ace	440	use
+13	ace	444	question
+1	ace	462	patient
+0	ace	488	clinician
+12	ace	505	nonjudgmentally
+13	ace	521	ask
+18	ace	527	possible
+19	ace	536	unexpected-result
+13	ace	554	question
+1	ace	572	patient
 0	src	0	Clinicians
 2	src	18	explain
 4	src	26	expected
@@ -38,10 +46,12 @@
 7	src	116	nonprescribed controlled substances
 7	src	152	not reported
 1	src	172	patient
-3	src	185	ask
+13	src	185	ask
 1	src	189	patient
-8	src	203	nonjudgmental manner
-9	src	230	use of prescribed
-10	src	252	other drugs
-11	src	282	might
-11	src	291	unexpected results
+12	src	203	nonjudgmental
+16	src	230	use
+14	src	237	prescribed
+17	src	252	other
+15	src	258	drugs
+18	src	282	might
+19	src	291	unexpected results

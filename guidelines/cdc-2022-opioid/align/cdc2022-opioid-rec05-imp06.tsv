@@ -1,31 +1,56 @@
-0	ace	5	patient
+10	ace	5	patient
 2	ace	13	agrees to a lower-opioid-dosage-taper
 1	ace	62	clinician
 4	ace	79	establish
 5	ace	91	continued-opioid-goal
-0	ace	122	patient
-6	ace	141	maximize
-7	ace	152	nonpharmacologic-treatment
-6	ace	190	maximize
-8	ace	201	nonopioid-pharmacologic-treatment
-0	ace	241	patient
-3	ace	249	continues a high-dosage-opioid
-1	ace	291	clinician
-4	ace	308	establish
-5	ace	320	continued-opioid-goal
-0	ace	351	patient
-6	ace	370	maximize
-7	ace	381	nonpharmacologic-treatment
-6	ace	419	maximize
-8	ace	430	nonopioid-pharmacologic-treatment
-0	src	4	patient
+10	ace	122	patient
+10	ace	136	patient
+2	ace	144	agrees to a lower-opioid-dosage-taper
+7	ace	188	nonpharmacologic-treatment
+9	ace	218	appropriate
+10	ace	238	patient
+1	ace	257	clinician
+11	ace	274	maximize
+7	ace	287	nonpharmacologic-treatment
+10	ace	320	patient
+2	ace	328	agrees to a lower-opioid-dosage-taper
+12	ace	372	nonopioid-pharmacologic-treatment
+9	ace	409	appropriate
+10	ace	429	patient
+1	ace	448	clinician
+11	ace	465	maximize
+12	ace	478	nonopioid-pharmacologic-treatment
+10	ace	518	patient
+3	ace	526	continues a high-dosage-opioid
+1	ace	568	clinician
+4	ace	585	establish
+5	ace	597	continued-opioid-goal
+10	ace	628	patient
+10	ace	642	patient
+3	ace	650	continues a high-dosage-opioid
+7	ace	687	nonpharmacologic-treatment
+9	ace	717	appropriate
+10	ace	737	patient
+1	ace	756	clinician
+11	ace	773	maximize
+7	ace	786	nonpharmacologic-treatment
+10	ace	819	patient
+3	ace	827	continues a high-dosage-opioid
+12	ace	864	nonopioid-pharmacologic-treatment
+9	ace	901	appropriate
+10	ace	921	patient
+1	ace	940	clinician
+11	ace	957	maximize
+12	ace	970	nonopioid-pharmacologic-treatment
+10	src	4	patient
 2	src	13	agreeing to taper to lower opioid dosages
 3	src	69	remaining on higher opioid dosages
 1	src	105	clinicians
 4	src	123	establish
 5	src	133	goals
-0	src	148	patient
+10	src	148	patient
 5	src	160	continued opioid therapy
-6	src	219	maximize
+11	src	219	maximize
 7	src	248	nonpharmacologic
-8	src	269	nonopioid pharmacologic treatments
+12	src	269	nonopioid pharmacologic treatments
+9	src	304	as appropriate

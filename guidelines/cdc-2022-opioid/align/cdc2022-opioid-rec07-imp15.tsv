@@ -1,28 +1,79 @@
 1	ace	5	patient
 2	ace	19	continued-opioid-risk
+1	ace	49	patient
 2	ace	63	continued-opioid-benefit
 2	ace	96	continued-opioid-risk
 2	ace	118	outweighs
 2	ace	132	continued-opioid-benefit
+1	ace	166	patient
+17	ace	188	taper
+1	ace	211	patient
 3	ace	235	meaningful-sustained-pain-improvement
+1	ace	281	patient
 3	ace	305	meaningful-sustained-function-improvement
+1	ace	356	patient
+17	ace	378	taper
+1	ace	401	patient
 4	ace	415	combined-opioid-dosage
 4	ace	446	combined-opioid-dosage
 4	ace	478	at least
 4	ace	487	50 MME-units-per-day
+1	ace	516	patient
 5	ace	541	evidence-of-opioid-benefit
+1	ace	577	patient
+17	ace	599	taper
+1	ace	622	patient
 6	ace	630	takes an opioid with a benzodiazepine
+1	ace	676	patient
 5	ace	701	evidence-of-opioid-benefit
+1	ace	737	patient
+17	ace	759	taper
+1	ace	782	patient
 7	ace	797	unfavorable-continued-opioid-benefit-risk-assessment
+1	ace	859	patient
+17	ace	881	taper
+1	ace	904	patient
+18	ace	912	requests
 8	ace	923	dosage-reduction
+1	ace	949	patient
+17	ace	971	taper
+1	ace	994	patient
+18	ace	1002	requests
 9	ace	1014	opioid-discontinuation
+1	ace	1046	patient
+17	ace	1068	taper
+1	ace	1091	patient
+19	ace	1099	experiences
 10	ace	1114	overdose
+1	ace	1132	patient
+17	ace	1154	taper
+1	ace	1177	patient
+19	ace	1185	experiences
 11	ace	1199	serious-opioid-adverse-event
+1	ace	1237	patient
+17	ace	1259	taper
+1	ace	1282	patient
+17	ace	1304	taper
 0	ace	1332	clinician
 12	ace	1349	collaborate with
-13	ace	1388	opioid-taper
-14	ace	1409	reduce an opioid-dosage
-15	ace	1457	discontinue an opioid
+1	ace	1370	patient
+17	ace	1395	taper
+1	ace	1407	patient
+17	ace	1429	taper
+14	ace	1453	opioid-dosage-reduction
+16	ace	1480	possible
+1	ace	1497	patient
+0	ace	1516	clinician
+14	ace	1530	reduce an opioid-dosage
+1	ace	1562	patient
+1	ace	1576	patient
+17	ace	1598	taper
+9	ace	1622	opioid-discontinuation
+16	ace	1648	possible
+1	ace	1665	patient
+0	ace	1684	clinician
+15	ace	1698	discontinue an opioid
+1	ace	1728	patient
 2	src	3	risks outweigh benefits of continued opioid therapy
 1	src	65	patients
 3	src	92	meaningful, sustained improvements in pain and function
@@ -30,13 +81,16 @@
 6	src	276	opioids combined with benzodiazepines
 5	src	323	evidence of benefit
 7	src	364	benefits no longer outweigh risks
+18	src	411	request
 8	src	419	dosage reduction
 9	src	439	discontinuation
+19	src	471	experience
 10	src	482	overdose
 11	src	500	serious adverse events
 0	src	525	clinicians
 12	src	543	work with
-13	src	565	taper
+17	src	565	taper
 14	src	575	reduce opioid dosage
-13	src	599	taper
+17	src	599	taper
 15	src	609	discontinue opioids
+16	src	629	when possible

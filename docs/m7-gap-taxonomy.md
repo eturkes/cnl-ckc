@@ -22,7 +22,7 @@ the first class to implement. Each class is a separate feature unit.
 | Class | Observed gap | CDC documents | Sample statements | Disposition |
 | --- | --- | --- | --- | --- |
 | temporal | durations, frequencies, deadlines, sequencing | 81 | 44 | implemented: interval and recurrence annotations; count per period, scoped recurrence, order, approximate bound and ranged minimum (`docs/REFERENCE.md` § Vocabulary table and time annotations) |
-| strength | recommendation grade, preference of one option over another | 63 | 49 | implemented: grade and preference annotations (`docs/REFERENCE.md` § Strength annotations); hedges open |
+| strength | recommendation grade, preference of one option over another, hedges | 63 | 49 | implemented: grade, preference and qualifier annotations (`docs/REFERENCE.md` § Strength annotations) |
 | regimen-choice | one of several permitted options | — | 10 | ACE extension or schema revision: disjunction |
 | numeric-threshold | numeric comparison, ranges, unit conversion | — | 27 | schema revision: comparison built-ins |
 | dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | schema revision: arithmetic built-ins |
@@ -37,10 +37,26 @@ documents 24 grade records, one strength and one evidence value each.
 12 documents type 24 preferences: `preferred` and `first-line` copulas
 and `instead-of` alternatives. Two of them, `cdc2022-opioid-s22-02` and
 `cdc2022-opioid-s37-09`, are new documents for regions that earlier
-restated a recommendation without its preference. Hedges such as
-"typically", "ideally" and "might" stay open for their own unit.
+restated a recommendation without its preference. The table's 56
+qualifier rows type the hedges of 157 documents on the actions that
+they qualify, in seven classes: manner (64 documents), applicability
+(42), possibility (29), usuality (26), focus (23), ideality (5) and
+force (2). A "might" claim compiles under "can" with "possibly". An
+applicability hedge ("as appropriate", "when feasible") compiles as a
+condition. 36 new documents formalize regions that earlier restated a
+statement without its qualified content. Eight more restating regions
+carry an unhedged capability claim that no target types; a deferred
+row tracks them. A census of the 599 formalized and
+restating regions (`.agent/archive/s2-census/`) rules each of their 680
+hedge occurrences. 13 documents keep a hedge that no event carries. Most
+such hedges sit inside a nominalized action ("avoid rapid tapering") or
+name a manner that has no English adverb ("coordinated management"),
+and stay in the nouns of the ACE. Two emphasize a whole prohibition
+("In particular", "special attention" in `cdc2022-opioid-s25-08` and
+`cdc2022-opioid-s51-11`); they stay untyped, and the projection notes
+record them.
 
-Temporal status: 51 of the CDC guideline's 339 documents carry
+Temporal status: 52 of the CDC guideline's 375 documents carry
 annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
 whose sources state a bound that the interval and recurrence
@@ -62,7 +78,9 @@ an approximate bound as the comparison `about` (`cdc2022-opioid-s59-06`,
 `cdc2022-opioid-rec07-imp03`) and a minimum stated as a range
 (`cdc2022-opioid-s40-01`, `cdc2022-opioid-s59-12`,
 `cdc2022-opioid-s47-16`). Bare calendar adverbs (`daily`,
-`periodically`) stay recorded losses by user ruling. A relation other than before or
+`periodically`) carry no time bound by user ruling; `periodically`
+types as a usuality qualifier (schema S2), and `daily` stays a recorded
+loss. A relation other than before or
 after without a quantity (`during a visit`), a window anchored on a
 start or end point that the source does not name, and a measured
 number such as `3 d` stay outside the schema.

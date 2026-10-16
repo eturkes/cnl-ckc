@@ -2,26 +2,42 @@
 1	ace	13	does not take an opioid
 2	ace	62	determine
 3	ace	74	lowest-effective-dose
-4	ace	103	product-labeling
-5	ace	128	calibrate
-3	ace	140	lowest-effective-dose
-6	ace	169	pain-severity
-0	ace	189	patient
-7	ace	203	renal-insufficiency
-5	ace	248	calibrate
-3	ace	260	lowest-effective-dose
-7	ace	289	renal-insufficiency
-0	ace	315	patient
-8	ace	329	hepatic-insufficiency
-5	ace	376	calibrate
-3	ace	388	lowest-effective-dose
-8	ace	417	hepatic-insufficiency
+10	ace	103	product-labeling
+0	ace	126	patient
+1	ace	134	does not take an opioid
+5	ace	169	calibration
+9	ace	184	needed
+0	ace	199	patient
+5	ace	232	calibrate
+3	ace	244	lowest-effective-dose
+6	ace	273	pain-severity
+0	ace	293	patient
+1	ace	301	does not take an opioid
+0	ace	333	patient
+7	ace	347	renal-insufficiency
+5	ace	378	calibration
+9	ace	393	needed
+0	ace	408	patient
+5	ace	441	calibrate
+3	ace	453	lowest-effective-dose
+7	ace	482	renal-insufficiency
+0	ace	508	patient
+1	ace	516	does not take an opioid
+0	ace	548	patient
+8	ace	562	hepatic-insufficiency
+5	ace	595	calibration
+9	ace	610	needed
+0	ace	625	patient
+5	ace	658	calibrate
+3	ace	670	lowest-effective-dose
+8	ace	699	hepatic-insufficiency
 0	src	4	patients
 1	src	13	not already taking opioids
 3	src	45	lowest effective dose
 2	src	74	determined
-4	src	91	product labeling
+10	src	91	product labeling
 5	src	133	calibration
+9	src	145	as needed
 6	src	168	severity of pain
 7	src	220	renal
 8	src	229	hepatic insufficiency

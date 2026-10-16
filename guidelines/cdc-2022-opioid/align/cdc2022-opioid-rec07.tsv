@@ -4,7 +4,7 @@
 3	ace	96	clinician
 5	ace	113	evaluate
 7	ace	125	opioid-benefit
-4	ace	147	patient
+15	ace	147	patient
 9	ace	155	after at least 1 week
 10	ace	182	therapy-start
 9	ace	196	within at most 4 weeks
@@ -12,7 +12,7 @@
 11	ace	246	subacute-pain
 5	ace	271	evaluate
 8	ace	283	opioid-risk
-4	ace	302	patient
+15	ace	302	patient
 9	ace	310	after at least 1 week
 10	ace	337	therapy-start
 9	ace	351	within at most 4 weeks
@@ -21,7 +21,7 @@
 3	ace	422	clinician
 5	ace	439	evaluate
 7	ace	451	opioid-benefit
-4	ace	473	patient
+15	ace	473	patient
 9	ace	481	after at least 1 week
 10	ace	508	therapy-start
 9	ace	522	within at most 4 weeks
@@ -29,7 +29,7 @@
 11	ace	572	chronic-pain
 5	ace	596	evaluate
 8	ace	608	opioid-risk
-4	ace	627	patient
+15	ace	627	patient
 9	ace	635	after at least 1 week
 10	ace	662	therapy-start
 9	ace	676	within at most 4 weeks
@@ -38,42 +38,47 @@
 3	ace	746	clinician
 5	ace	763	evaluate
 7	ace	775	opioid-benefit
-4	ace	797	patient
+15	ace	797	patient
 9	ace	805	after at least 1 week
 12	ace	832	dosage-escalation
 9	ace	850	within at most 4 weeks
 12	ace	880	dosage-escalation
 5	ace	909	evaluate
 8	ace	921	opioid-risk
-4	ace	940	patient
+15	ace	940	patient
 9	ace	948	after at least 1 week
 12	ace	975	dosage-escalation
 9	ace	993	within at most 4 weeks
 12	ace	1023	dosage-escalation
-3	ace	1048	clinician
-6	ace	1065	reevaluate
-7	ace	1079	opioid-benefit
-4	ace	1101	patient
-13	ace	1118	regular-follow-up
-6	ace	1147	reevaluate
-8	ace	1161	opioid-risk
-4	ace	1180	patient
-13	ace	1197	regular-follow-up
+15	ace	1047	patient
+16	ace	1055	continues
+17	ace	1068	opioid-therapy
+3	ace	1094	clinician
+14	ace	1111	regularly
+6	ace	1121	reevaluate
+7	ace	1135	opioid-benefit
+15	ace	1159	patient
+14	ace	1178	regularly
+6	ace	1188	reevaluate
+8	ace	1202	opioid-risk
+15	ace	1223	patient
 3	src	0	Clinicians
 5	src	18	evaluate
 7	src	27	benefits
 8	src	40	risks
-4	src	51	patients
+15	src	51	patients
 9	src	60	within 1–4 weeks
 10	src	80	starting opioid therapy
 11	src	108	subacute or chronic pain
 12	src	139	dosage escalation
 3	src	158	Clinicians
-13	src	176	regularly
+14	src	176	regularly
 6	src	186	reevaluate
 7	src	197	benefits
 8	src	210	risks
-4	src	249	patients
+16	src	219	continued
+17	src	229	opioid therapy
+15	src	249	patients
 0	src	259	recommendation
 1	src	274	category: A
 2	src	287	evidence type: 4

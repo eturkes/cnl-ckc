@@ -17,10 +17,14 @@
 1	ace	314	patient
 1	ace	328	patient
 2	ace	342	subacute-pain
-0	ace	367	clinician
-7	ace	384	optimize
-8	ace	395	pain-management
-1	ace	419	patient
+8	ace	362	pain-management
+7	ace	378	optimization
+9	ace	394	needed
+1	ace	409	patient
+0	ace	428	clinician
+7	ace	445	optimize
+8	ace	456	pain-management
+1	ace	480	patient
 0	src	0	Clinicians
 3	src	18	reevaluate
 1	src	29	patients
@@ -30,3 +34,4 @@
 6	src	147	addressed
 7	src	162	optimize
 8	src	171	pain management
+9	src	187	as needed

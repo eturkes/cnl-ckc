@@ -1,0 +1,36 @@
+0	ace	37	mitigate
+1	ace	48	potential-care-barrier
+2	ace	77	sociodemographic-group
+3	ace	141	linguistically-tailored-care
+1	ace	176	potential-care-barrier
+0	ace	199	mitigation
+4	ace	224	cost-assistance-program
+1	ace	254	potential-care-barrier
+0	ace	277	mitigation
+5	ace	294	pharmacotherapy
+6	ace	313	appropriate
+7	ace	381	ensure
+5	ace	390	pharmacotherapy
+8	ace	406	access
+9	ace	435	psychological-support
+11	ace	460	needed
+7	ace	523	ensure
+9	ace	532	psychological-support
+8	ace	554	access
+10	ace	583	physical-therapy
+11	ace	603	needed
+7	ace	666	ensure
+10	ace	675	physical-therapy
+8	ace	692	access
+2	src	34	sociodemographic groups
+0	src	80	mitigation
+1	src	94	potential barriers to care
+3	src	138	linguistically tailored care
+4	src	171	cost-assistance programs
+7	src	199	ensure
+8	src	206	access
+6	src	216	appropriate
+5	src	228	pharmacotherapy
+9	src	245	psychological support
+10	src	272	physical therapy
+11	src	292	needed

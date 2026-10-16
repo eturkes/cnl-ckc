@@ -63,9 +63,9 @@ that it was published with.
   Each document holds one or more knowledge sentences — typically
   universal rules (21 documents hold a single sentence, the rest 2 to 25).
   The sentences project the region's directive, per
-  `audit/projection-notes.tsv`. For a region that states a benefit or
-  possibility rather than an imperative, they project the clinician
-  consideration that it supports. Implementation considerations carry no
+  `audit/projection-notes.tsv`. For a region that states a benefit or a
+  possibility rather than an imperative, they state the claim under
+  "can" with its qualifier (schema S2). Implementation considerations carry no
   category/evidence parenthetical. Three non-clinician actor regions use
   their own classes:
   - S24-02 `health-insurer-or-health-system` (neutral);
@@ -74,7 +74,7 @@ that it was published with.
     behavioral-health specialists serving as taper-support team members).
 - `ace/cdc2022-opioid-<region-id>.ace` — one ACE document per formalized
   front-matter or recommendation 1–5 supporting-rationale region outside
-  the implementation-consideration lists (109 documents; docid = the
+  the implementation-consideration lists (129 documents; docid = the
   region id lowercased, S25-04 → `s25-04`). These documents follow the
   same knowledge-only projection contract and
   `audit/projection-notes.tsv` discipline as the implementation
@@ -90,7 +90,7 @@ that it was published with.
   recommendation itself as rule subject.
 - `ace/` recommendation 6–12 documents — one ACE document per formalized
   recommendation 6–12 body or implementation-consideration region,
-  special-populations region, and conclusion region (151 documents;
+  special-populations region, and conclusion region (167 documents;
   docid rules unchanged: reserved-ordinal `recNN-impKK` for
   implementation lists, the region id lowercased otherwise). These
   documents follow the same knowledge-only projection contract and
@@ -139,19 +139,19 @@ guideline conclusions.
   parenthetical and simplified action rules. It adds one document per
   formalized recommendation 1–5 implementation-consideration region
   (67 documents). It adds one document per formalized front-matter and
-  recommendation 1–5 rationale region (109 documents). It adds one
+  recommendation 1–5 rationale region (129 documents). It adds one
   document per formalized recommendation 6–12 body,
   implementation-consideration, special-populations, and conclusion
-  region (151 documents). The rules encode
+  region (167 documents). The rules encode
   deontic modality ("should"), conditions, and negation where the source
   region states them. `audit/projection-notes.tsv` (kept/dropped columns)
   and `coverage.tsv` record each document's remaining simplifications per
   region.
 - `coverage.tsv` records one status row per payload region (all 718), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (339);
+  - `ace(<docid>)` — formalized (375);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
-    region (260);
+    region (224);
   - `uncovered(<class>: <reason>)` — deliberately not formalized (119;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet
@@ -172,17 +172,24 @@ guideline conclusions.
   third-party body or document (S10-02, S31-06). A region that fuses
   several canonical duties without adding one takes
   `uncovered(descriptive: … canonical at <ids>)` (S8-04, S17-03, S22-06,
-  S41-02). Weak-modality considerations ("can", "might be needed")
-  formalize as the consideration they support. A novel condition,
+  S41-02). Weak-modality statements formalize: a possible claim ("can",
+  "might be needed") as the claim under "can" with its qualifier, and
+  optional advice ("might consider") as "may". A novel condition,
   permission, or strategy added to an otherwise-canonical echo makes the
-  region formalize rather than restate (S49-14, S52-10, S55-01). An
-  emphasis qualifier alone does not (S56-12).
+  region formalize rather than restate (S49-14, S52-10, S55-01). A
+  qualifier that the canonical statement does not have also makes the
+  region formalize, and its document types the qualifier (S56-12).
 - Projection rulings (wave-1 review). ACE "does not V a N" negates the
   existential — a takes-none reading (S37-13). A source preference
   ("preferred", "instead of", "rather than", "first-line", "first choice")
   types as `guideline_preference` (schema S1); "are recommended" renders
-  as a should-shaped duty. Practice hedges ("typically", "generally", "ideally") drop with a
-  notes admission; "can"/"might" render as may. Source or-alternatives may
+  as a should-shaped duty. A hedge types as `guideline_qualifier` (schema
+  S2) on the action that it qualifies ("typically", "generally",
+  "ideally", "carefully"). A "might" claim renders as "can" with
+  "possibly". Softened advice ("might consider") renders as "may". An
+  applicability hedge ("as appropriate", "when feasible", "as needed")
+  renders as a condition on the thing that it judges. A hedge on a thing
+  ("effects that opioids might have") stays in its noun. Source or-alternatives may
   split into conjunctive consider/discuss duties or parallel non-exclusive
   permissions, admitted in notes. "Only if"/"only after" restrictions
   render as prohibition-unless-guard conditionals that bind clinician,
@@ -194,7 +201,7 @@ guideline conclusions.
   — altered conditions, population scope, modality force, invented bounds
   or triggers — require an ACE fix regardless of notes disclosure.
   Structural approximations — identity splits, fresh witnesses,
-  nominalizations, admitted hedge or example drops — are cured by a notes
+  nominalizations, admitted example drops — are cured by a notes
   admission (S51-09 line). A source threshold stated as a bare percentage
   may render as an at-least bound when the notes row admits the reading
   (S44-17). Batch-flag sentence counts are advisory; the source text
@@ -210,5 +217,7 @@ guideline conclusions.
 - `audit/projection-notes.tsv` records, per ACE document, what the rule
   keeps from its source region and what it drops or interprets. That
   includes the regions that state a benefit, criticality, or weak
-  possibility rather than an imperative; the projection renders those as
-  a clinician consideration, decision, or education action.
+  possibility rather than an imperative; the projection renders a
+  possibility as a claim under "can" with its qualifier, and a benefit or
+  criticality as a clinician consideration, decision, or education
+  action.

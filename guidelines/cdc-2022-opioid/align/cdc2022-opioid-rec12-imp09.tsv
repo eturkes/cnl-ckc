@@ -14,25 +14,33 @@
 7	ace	307	span
 8	ace	314	patient-needed
 9	ace	329	level-of-care
-6	ace	350	opioid-use-disorder-referral-network
-10	ace	391	enable
-11	ace	400	rapid
-12	ace	406	clinical-collaboration
-6	ace	436	opioid-use-disorder-referral-network
-10	ace	477	enable
+11	ace	349	rapid
+12	ace	355	clinical-collaboration
+18	ace	381	needed
+6	ace	399	opioid-use-disorder-referral-network
+10	ace	440	enable
+11	ace	451	rapid
+12	ace	457	clinical-collaboration
 11	ace	486	rapid
 13	ace	492	patient-referral
-0	ace	515	clinician
-1	ace	525	prescribes an opioid
-0	ace	555	clinician
-14	ace	572	participate
-0	ace	609	clinician
-14	ace	619	collaboration
-0	ace	659	clinician
-14	ace	669	collaboration
-15	ace	690	ensure
-16	ace	699	sufficient-opioid-use-disorder-treatment-capacity
-17	ace	754	clinical-practice-organization
+18	ace	512	needed
+6	ace	530	opioid-use-disorder-referral-network
+10	ace	571	enable
+11	ace	582	rapid
+13	ace	588	patient-referral
+0	ace	611	clinician
+1	ace	621	prescribes an opioid
+0	ace	651	clinician
+14	ace	668	participate
+1	ace	686	opioid-prescribing
+0	ace	705	clinician
+14	ace	715	collaboration
+1	ace	736	opioid-prescribing
+0	ace	755	clinician
+14	ace	765	collaboration
+15	ace	786	ensure
+16	ace	795	sufficient-opioid-use-disorder-treatment-capacity
+17	ace	850	clinical-practice-organization
 0	src	0	Clinicians
 1	src	11	prescribing opioids
 2	src	38	identify
@@ -47,6 +55,7 @@
 11	src	213	rapid
 12	src	219	collaboration
 13	src	237	referral
+18	src	247	when needed
 14	src	264	work together
 15	src	281	ensure
 16	src	288	sufficient treatment capacity for opioid use disorder

@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s33-01',ace_sha256('4d60fe7c1fe9f6bba1c8e90f4ad1607edf66629ef64f577e5c725e9d7fb0205a'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
+guideline_document('cdc2022-opioid-s33-01',ace_sha256('4d60fe7c1fe9f6bba1c8e90f4ad1607edf66629ef64f577e5c725e9d7fb0205a'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should multiply an opioid-dosage by a conversion-factor for an MME-dosage-determination.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s33-01',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s33-01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s33-01',1,ref(2),[A]),'opioid-dosage',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

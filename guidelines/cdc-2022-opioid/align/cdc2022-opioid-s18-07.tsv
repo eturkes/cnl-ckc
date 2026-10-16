@@ -1,13 +1,17 @@
-0	ace	23	avoid
-1	ace	32	opioid-pain-guideline-misapplication-beyond-intended-use
-0	ace	124	avoid
-2	ace	132	purported-guideline-derived-policy
-3	ace	172	unintended
-5	ace	183	patient-consequence
-0	ace	238	avoid
-2	ace	246	purported-guideline-derived-policy
-4	ace	286	potentially-harmful
-5	ace	306	patient-consequence
+6	ace	23	particularly
+0	ace	36	avoid
+1	ace	45	opioid-pain-guideline-misapplication-beyond-intended-use
+6	ace	137	particularly
+0	ace	150	avoid
+2	ace	158	purported-guideline-derived-policy
+3	ace	198	unintended
+5	ace	209	patient-consequence
+6	ace	264	particularly
+0	ace	277	avoid
+2	ace	285	purported-guideline-derived-policy
+4	ace	325	potentially-harmful
+5	ace	345	patient-consequence
+6	src	0	Special attention
 0	src	37	avoid
 1	src	43	misapplying this clinical practice guideline beyond its intended use
 2	src	128	policies purportedly derived from it

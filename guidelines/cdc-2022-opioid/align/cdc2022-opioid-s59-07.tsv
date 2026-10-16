@@ -1,13 +1,11 @@
 0	ace	15	discontinues
-1	ace	30	buprenorphine
-2	ace	100	very-gradual
-1	ace	113	buprenorphine
-2	ace	127	taper
-2	ace	156	very-gradual
-1	ace	169	buprenorphine
-2	ace	183	taper
-3	ace	196	continue for more than 1 month
+5	ace	30	buprenorphine
+4	ace	94	very-gradually
+6	ace	109	taper
+5	ace	119	buprenorphine
+3	ace	159	for more than 1 month
 0	src	3	discontinued
-1	src	17	buprenorphine
-2	src	41	tapered very gradually
+5	src	17	buprenorphine
+6	src	41	tapered
+4	src	49	very gradually
 3	src	65	over several months

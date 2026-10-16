@@ -11,10 +11,11 @@
 8	ace	220	discuss
 9	ace	230	current-dosage-opioid-continuation
 0	ace	274	patient
-10	ace	293	weigh
-11	ace	301	benefit
-12	ace	319	risk
-9	ace	330	current-dosage-opioid-continuation
+13	ace	293	carefully
+10	ace	303	weigh
+11	ace	311	benefit
+12	ace	329	risk
+9	ace	340	current-dosage-opioid-continuation
 0	src	4	patient
 1	src	18	opioid misuse
 2	src	37	does not meet criteria for opioid use disorder
@@ -27,6 +28,7 @@
 7	src	254	therapies for pain management have been optimized
 8	src	328	discuss
 0	src	341	patient
+13	src	355	carefully
 10	src	365	weigh
 11	src	371	benefits
 12	src	384	risks

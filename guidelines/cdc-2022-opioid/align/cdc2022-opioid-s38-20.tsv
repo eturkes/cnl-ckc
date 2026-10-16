@@ -1,0 +1,21 @@
+4	ace	6	opioid
+0	ace	13	taper
+1	ace	23	last
+2	ace	44	month
+4	ace	57	opioid
+0	ace	64	taper
+3	ace	79	depends
+4	ace	93	opioid
+5	ace	100	dosage
+6	ace	131	individualize
+4	ace	148	opioid
+0	ace	155	taper
+7	ace	168	patient-goal-and-concern
+0	src	0	Tapers
+1	src	11	be completed over
+2	src	37	months
+3	src	53	depending
+4	src	70	opioid
+5	src	77	dosage
+6	src	98	individualized
+7	src	122	patient goals and concerns

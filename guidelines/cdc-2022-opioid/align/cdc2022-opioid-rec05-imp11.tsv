@@ -1,6 +1,12 @@
 0	ace	6	opioid-therapy
 1	ace	27	longer-duration
-2	ace	56	may require a longer-duration
+4	ace	50	taper
+3	ace	60	possibly
+5	ace	69	require
+1	ace	79	longer-duration
 1	src	0	Longer duration
 0	src	19	previous opioid therapy
-2	src	43	might require a longer taper
+3	src	43	might
+5	src	49	require
+1	src	59	longer
+4	src	66	taper

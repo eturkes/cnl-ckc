@@ -27,8 +27,16 @@
 0	ace	853	contraindication
 1	ace	898	use
 9	ace	904	triptan-NSAID-or-combination
-10	ace	941	as-needed-antiemetic
-8	ace	970	episodic-migraine-pain
+8	ace	941	episodic-migraine-pain
+8	ace	985	episodic-migraine-pain
+0	ace	1040	contraindication
+12	ace	1064	antiemetic
+11	ace	1078	needed
+1	ace	1129	use
+12	ace	1137	antiemetic
+13	ace	1148	with
+9	ace	1155	triptan-NSAID-or-combination
+8	ace	1192	episodic-migraine-pain
 0	src	9	contraindicated
 2	src	26	NSAIDs
 1	src	43	used
@@ -39,5 +47,7 @@
 7	src	182	kidney stone pain
 9	src	201	triptans, NSAIDs, or their combinations
 1	src	251	used
-10	src	267	antiemetics as needed
+13	src	256	along with
+12	src	267	antiemetics
+11	src	279	as needed
 8	src	293	acute pain related to episodic migraine

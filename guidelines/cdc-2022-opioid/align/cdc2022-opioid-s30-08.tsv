@@ -1,10 +1,14 @@
-1	ace	23	heed
-1	ace	30	medication-combination-caution
-0	ace	70	medication-combination-use
-2	ace	121	avoid
-3	ace	129	synergistic-medication-risk
-0	ace	166	medication-combination-use
-0	src	9	this approach should be used
-1	src	38	with caution
+6	ace	15	uses
+5	ace	22	medication-combination
+6	ace	85	use
+5	ace	93	medication-combination
+4	ace	116	cautiously
+2	ace	167	avoid
+3	ace	175	synergistic-medication-risk
+5	ace	212	medication-combination
+6	ace	235	use
+5	src	9	this approach
+6	src	33	used
+4	src	43	caution
 2	src	54	avoid
 3	src	60	synergistic risks of medications

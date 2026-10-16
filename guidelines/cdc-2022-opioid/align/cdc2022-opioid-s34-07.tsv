@@ -1,12 +1,25 @@
-3	ace	15	increases
-3	ace	28	opioid-dosage
-1	ace	52	acute-pain-treatment
-0	ace	80	opioid-naive-patient
-2	ace	110	few-day-period
-4	ace	151	conduct
-4	ace	161	close-patient-monitoring
+1	ace	15	conducts
+1	ace	27	acute-pain-treatment
+1	ace	48	with an opioid
+0	ace	70	opioid-naive-patient
+2	ace	100	few-day-period
+3	ace	123	opioid-dosage-increase
+5	ace	146	usually
+7	ace	161	unnecessary
+0	ace	181	opioid-naive-patient
+3	ace	218	increases
+3	ace	231	opioid-dosage
+1	ace	255	acute-pain-treatment
+0	ace	283	opioid-naive-patient
+2	ace	313	few-day-period
+6	ace	354	closely
+8	ace	362	monitor
+0	ace	374	opioid-naive-patient
 0	src	4	opioid-naïve outpatients
 1	src	34	acute pain treated with an opioid
 2	src	72	a few days or less
 3	src	92	dosage increases
-4	src	169	close monitoring
+5	src	113	usually
+7	src	121	unnecessary
+6	src	169	close
+8	src	175	monitoring

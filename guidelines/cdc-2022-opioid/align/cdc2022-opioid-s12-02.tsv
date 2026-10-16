@@ -1,14 +1,21 @@
-0	ace	6	category-B-recommendation
-1	ace	38	possible-partial-person-applicability
-0	ace	83	category-B-recommendation
-2	ace	109	indicates
-3	ace	122	appropriate-different-choice
-5	ace	175	base
-4	ace	182	category-B-decision
-6	ace	207	patient-circumstance
+7	ace	5	recommendation
+0	ace	25	category-B-recommendation
+7	ace	60	recommendation
+11	ace	75	possibly
+12	ace	91	inapplicable
+10	ace	110	addressed-person
+0	ace	134	category-B-recommendation
+2	ace	160	indicates
+3	ace	173	appropriate-different-choice
+5	ace	226	base
+4	ace	233	category-B-decision
+6	ace	258	patient-circumstance
 0	src	0	Category B recommendations
 2	src	27	indicate
-1	src	60	might not apply to all persons
+7	src	45	recommendation
+11	src	60	might
+12	src	66	not apply
+10	src	83	persons in the group addressed
 3	src	148	different choices will be appropriate
 4	src	214	decisions
 5	src	239	based

@@ -1,0 +1,23 @@
+1	ace	23	use
+0	ace	29	systemic-NSAID
+2	ace	49	lowest-effective-dose
+3	ace	80	shortest-needed-duration
+0	ace	108	systemic-NSAID
+4	ace	123	risk
+5	ace	132	possibly
+6	ace	141	increase
+7	ace	159	longer
+7	ace	172	use
+5	ace	184	possibly
+6	ace	193	increase
+8	ace	207	higher
+8	ace	220	dosage
+0	src	9	systemic NSAIDs
+1	src	35	used
+2	src	47	lowest effective dosage
+3	src	75	shortest duration needed
+4	src	108	risks
+5	src	114	might
+6	src	120	increase
+7	src	134	longer use
+8	src	152	higher dosages

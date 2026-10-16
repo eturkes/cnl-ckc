@@ -4,49 +4,75 @@
 0	ace	58	clinician
 2	ace	75	offer
 3	ace	83	naloxone-dose
+1	ace	104	patient
 0	ace	118	clinician
 4	ace	128	prescribes an opioid
+1	ace	154	patient
+1	ace	170	patient
 5	ace	185	overdose-history
 0	ace	211	clinician
-2	ace	228	offer
-3	ace	236	naloxone-dose
-0	ace	271	clinician
-4	ace	281	prescribes an opioid
-6	ace	337	substance-use-disorder-history
-0	ace	377	clinician
-2	ace	394	offer
-3	ace	402	naloxone-dose
-0	ace	437	clinician
-4	ace	447	prescribes an opioid
-7	ace	503	sleep-disordered-breathing
-0	ace	539	clinician
-2	ace	556	offer
-3	ace	564	naloxone-dose
-0	ace	599	clinician
-4	ace	609	prescribes an opioid
-8	ace	666	opioid-dosage
-8	ace	688	opioid-dosage
-8	ace	711	at least
-8	ace	720	50 MME-units-per-day
-0	ace	750	clinician
-2	ace	767	offer
-3	ace	775	naloxone-dose
-0	ace	810	clinician
-4	ace	820	prescribes an opioid
-9	ace	870	takes a benzodiazepine
-0	ace	902	clinician
-2	ace	919	offer
-3	ace	927	naloxone-dose
-0	ace	962	clinician
-4	ace	972	prescribes an opioid
-10	ace	1028	lost-tolerance-high-dose-return-risk
-0	ace	1074	clinician
-2	ace	1091	offer
-3	ace	1099	naloxone-dose
+11	ace	228	particularly
+2	ace	241	offer
+3	ace	249	naloxone-dose
+1	ace	270	patient
+0	ace	284	clinician
+4	ace	294	prescribes an opioid
+1	ace	320	patient
+1	ace	336	patient
+6	ace	350	substance-use-disorder-history
+0	ace	390	clinician
+11	ace	407	particularly
+2	ace	420	offer
+3	ace	428	naloxone-dose
+1	ace	449	patient
+0	ace	463	clinician
+4	ace	473	prescribes an opioid
+1	ace	499	patient
+1	ace	515	patient
+7	ace	529	sleep-disordered-breathing
+0	ace	565	clinician
+11	ace	582	particularly
+2	ace	595	offer
+3	ace	603	naloxone-dose
+1	ace	624	patient
+0	ace	638	clinician
+4	ace	648	prescribes an opioid
+1	ace	674	patient
+1	ace	690	patient
+8	ace	705	opioid-dosage
+8	ace	727	opioid-dosage
+8	ace	750	at least
+8	ace	759	50 MME-units-per-day
+0	ace	789	clinician
+11	ace	806	particularly
+2	ace	819	offer
+3	ace	827	naloxone-dose
+1	ace	848	patient
+0	ace	862	clinician
+4	ace	872	prescribes an opioid
+1	ace	898	patient
+1	ace	914	patient
+9	ace	922	takes a benzodiazepine
+0	ace	954	clinician
+11	ace	971	particularly
+2	ace	984	offer
+3	ace	992	naloxone-dose
+1	ace	1013	patient
+0	ace	1027	clinician
+4	ace	1037	prescribes an opioid
+1	ace	1063	patient
+1	ace	1079	patient
+10	ace	1093	lost-tolerance-high-dose-return-risk
+0	ace	1139	clinician
+11	ace	1156	particularly
+2	ace	1169	offer
+3	ace	1177	naloxone-dose
+1	ace	1198	patient
 0	src	0	Clinicians
 2	src	18	offer
 3	src	24	naloxone
 4	src	38	prescribing opioids
+11	src	59	particularly
 1	src	75	patients
 5	src	142	history of overdose
 6	src	179	history of substance use disorder

@@ -1,0 +1,65 @@
+0	ace	5	clinician
+1	ace	26	practice
+1	ace	51	practice
+2	ace	68	uses
+3	ace	75	toxicology-screening-panel
+3	ace	110	toxicology-screening-panel
+4	ace	137	includes
+5	ace	148	drug
+0	ace	162	clinician
+6	ace	176	know
+5	ace	185	drug
+7	ace	198	understand
+8	ace	222	result-interpretation
+5	ace	252	drug
+9	ace	273	practice
+11	ace	299	ensure
+12	ace	308	toxicology-expert
+13	ace	326	availability
+14	ace	346	unexpected
+14	ace	368	result
+10	ace	382	health-system
+11	ace	400	ensure
+12	ace	409	toxicology-expert
+13	ace	427	availability
+14	ace	447	unexpected
+14	ace	469	result
+9	ace	492	practice
+11	ace	518	ensure
+15	ace	527	non-burdensome
+16	ace	542	patient-cost
+10	ace	562	health-system
+11	ace	580	ensure
+15	ace	589	non-burdensome
+16	ace	604	patient-cost
+9	ace	633	practice
+11	ace	659	ensure
+17	ace	668	bias-minimizing
+18	ace	684	testing
+19	ace	692	policy
+10	ace	706	health-system
+11	ace	724	ensure
+17	ace	733	bias-minimizing
+18	ace	749	testing
+19	ace	757	policy
+0	src	13	clinicians
+6	src	28	become familiar with
+5	src	53	drugs
+4	src	59	included
+3	src	71	toxicology testing panels
+2	src	97	used
+1	src	111	practice
+7	src	124	understand
+8	src	142	interpret results
+9	src	161	practices
+10	src	175	health systems
+11	src	194	ensure
+12	src	203	laboratorian
+12	src	219	toxicologist
+13	src	235	available
+14	src	256	unexpected results
+16	src	281	costs to patients
+15	src	303	not burdensome
+19	src	328	practice policies
+18	src	356	testing
+17	src	382	minimize bias

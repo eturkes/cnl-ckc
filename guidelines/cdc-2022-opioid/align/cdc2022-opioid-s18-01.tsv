@@ -1,14 +1,19 @@
-0	ace	6	implementation-consideration
+8	ace	6	implementation-consideration
 1	ace	42	inform
 2	ace	51	clinician-patient-decision
 3	ace	84	recommendation
-0	ace	106	implementation-consideration
-4	ace	151	rigid
-0	ace	176	implementation-consideration
-5	ace	222	inflexible
-0	src	4	implementation considerations
+2	ace	106	clinician
+6	ace	127	rigidly
+9	ace	135	follow
+8	ace	145	implementation-consideration
+2	ace	181	clinician
+7	ace	202	inflexibly
+9	ace	213	follow
+8	ace	223	implementation-consideration
+8	src	4	implementation considerations
 1	src	108	inform
 2	src	115	clinician-patient decision-making
 3	src	168	recommendation
-4	src	207	rigidly
-5	src	218	inflexibly
+6	src	207	rigidly
+7	src	218	inflexibly
+9	src	229	followed

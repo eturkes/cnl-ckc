@@ -1,0 +1,22 @@
+0	ace	6	opioid
+1	ace	13	benefit
+3	ace	21	outweighs
+0	ace	34	opioid
+2	ace	41	risk
+4	ace	71	clinician
+5	ace	88	not insist
+0	ace	105	opioid
+6	ace	112	taper
+5	ace	145	not insist
+0	ace	162	opioid
+7	ace	169	discontinuation
+4	src	0	Clinicians
+5	src	18	not insist
+0	src	32	opioid
+6	src	39	tapering
+7	src	51	discontinuation
+0	src	72	opioid
+1	src	114	benefits
+0	src	126	opioid
+3	src	134	outweigh
+2	src	143	risks
