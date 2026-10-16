@@ -180,7 +180,7 @@ pub fn project_query(
     arena: &mut ETermArena,
     drs: &T,
     qid: &Vec<u8>,
-    tab: &Option<crate::m7_temporal::ETemporal>,
+    tab: &Option<crate::m7_temporal::EVocabulary>,
 ) -> (out: Result<(T, T), T>)
     requires
         arena_ok(old(arena)),
@@ -189,7 +189,7 @@ pub fn project_query(
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         query_result_valid(final(arena).nodes@, &out),
-        query_result(out) == spec::project_query(drs@, qid@, crate::m7_v3::ttab_view(tab)),
+        query_result(out) == spec::project_query(drs@, qid@, crate::m7_q12::ttab_view(tab)),
 {
     hide(spec::collides);
     hide(spec::scan_box);
@@ -261,7 +261,7 @@ pub fn project_query(
         prefix(n3, n4, &b.conds);
         prefix_all(n3, n4, answers@);
     }
-    let env = Env { docid: qid.clone(), s: 1, base, tab: crate::m7_v3::env_exec(arena, tab, drs) };
+    let env = Env { docid: qid.clone(), s: 1, base, tab: crate::m7_q12::env_exec(arena, tab, drs) };
     let flat_result = flatten_ante(arena, &b.conds, &env, 1);
     let ghost n5 = arena.nodes@;
     proof {
@@ -420,18 +420,10 @@ pub fn certify_query_impl(
     }
     let tab = match crate::m7_annotate::table_exec(traw, tsha) {
         Some(t) => t,
-        None => return reject_sym(&mut arena, qid, &Sym::Temporal),
+        None => return reject_sym(&mut arena, qid, &Sym::Vocabulary),
     };
-    if !crate::m7_annotate::temporal_ok(
-        parsed.query_version,
-        &parsed.query_temporal,
-        tsha,
-        Ghost(query.temporal),
-    ) {
-        return reject_sym(&mut arena, qid, &Sym::Temporal);
-    }
-    if parsed.query_version != crate::m7_v3::tab_version_exec(&tab) {
-        return reject_sym(&mut arena, qid, &Sym::SchemaVersion);
+    if !crate::m7_annotate::vocabulary_ok(&parsed.query_vocabulary, tsha, Ghost(query.vocabulary)) {
+        return reject_sym(&mut arena, qid, &Sym::Vocabulary);
     }
     let text = query_text(&lines[0]);
     if !bytes_eq(&parsed.query_text, &text) {

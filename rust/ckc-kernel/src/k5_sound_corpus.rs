@@ -15,7 +15,7 @@ pub open spec fn inputs(g: u::Guideline) -> Seq<u::Bytes> {
             e.ordinal + e.payloads.map_values(|p: (u::Bytes, Seq<u::Bytes>)| p.1).flatten(),
     ).flatten() + g.documents.map_values(
         |d: u::Document| seq![d.bundle.docid, d.ace, d.pl],
-    ).flatten() + (match g.temporal {
+    ).flatten() + (match g.vocabulary {
         Some(x) => seq![x],
         None => Seq::empty(),
     })
@@ -59,7 +59,7 @@ pub proof fn guideline(c: u::Corpus, i: int)
                         ).flatten(),
                 ).flatten() + g.documents.map_values(
                     |d: u::Document| seq![d.bundle.docid, d.ace, d.pl],
-                ).flatten() + (match g.temporal {
+                ).flatten() + (match g.vocabulary {
                     Some(x) => seq![x],
                     None => Seq::empty(),
                 })
@@ -110,13 +110,13 @@ pub proof fn row(g: u::Guideline, r: ck::Row, xs: Seq<u::Bytes>)
     assert(inputs(g).contains(r.line));
 }
 
-pub proof fn temporal(g: u::Guideline, xs: Seq<u::Bytes>)
+pub proof fn vocabulary(g: u::Guideline, xs: Seq<u::Bytes>)
     requires
         sources(g, xs),
     ensures
-        g.temporal matches Some(x) ==> xs.contains(x),
+        g.vocabulary matches Some(x) ==> xs.contains(x),
 {
-    if let Some(x) = g.temporal {
+    if let Some(x) = g.vocabulary {
         let all = inputs(g);
         assert(all[all.len() - 1] == x);
         assert(all.contains(x));

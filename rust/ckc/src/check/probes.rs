@@ -41,26 +41,16 @@ pub(super) fn trace_numeric() -> Result {
         format!("{}\t{}\n", show(&doc), show(&doc)).as_bytes(),
     )?;
     process::write(&query, format!(
-        "% probe compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,probe,ace_sha256('{hex}'),ulex(none)).\n% Q1: Is there a patient?\n'$guideline_query_projection'(goal(guideline_entity(actual,A,patient,countable)),answers([])).\n"
+        "% probe compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,probe,ace_sha256('{hex}'),ulex(none),vocabulary(none)).\n% Q1: Is there a patient?\n'$guideline_query_projection'(goal(guideline_entity(actual,A,patient,countable)),answers([])).\n"
     ).as_bytes())?;
     let mut prefix =
         "% doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n"
             .to_owned();
-    for predicate in [
-        "guideline_schema_version/1",
-        "guideline_document/3",
-        "guideline_entity/4",
-        "guideline_cardinality/5",
-        "guideline_event/3",
-        "guideline_arg/4",
-        "guideline_pp/4",
-        "guideline_property/4",
-        "guideline_operator/3",
-    ] {
+    for predicate in super::functors::INDICATORS {
         prefix += &format!(":- multifile({predicate}).\n:- discontiguous({predicate}).\n");
     }
     prefix += &format!(
-        "guideline_schema_version(1).\nguideline_document(doc,ace_sha256('{hex}'),ulex(none)).\n"
+        "guideline_schema_version(1).\nguideline_document(doc,ace_sha256('{hex}'),ulex(none),vocabulary(none)).\n"
     );
     let check = || {
         queries::kernel(

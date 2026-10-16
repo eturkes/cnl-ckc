@@ -1,8 +1,8 @@
 % fx-doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,20 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
 guideline_schema_version(1).
-guideline_document('fx-doc',ace_sha256('35cc01e601e3b8402cc61ca8ae4d094a32b67a2c697909ba2fe75fe15511b680'),ulex(none)).
+guideline_document('fx-doc',ace_sha256('35cc01e601e3b8402cc61ca8ae4d094a32b67a2c697909ba2fe75fe15511b680'),ulex(none),vocabulary(none)).
 % S1: Every patient is a person.
 guideline_entity(actual,'$guideline_id'(product,'fx-doc',1,ref(2),[A]),person,countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'fx-doc',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1).

@@ -1,5 +1,5 @@
-// Q18 D1/P2: fixed-name mutations; oracle = local canonical candidates + byte LCP.
-// Seeds cover every schema predicate in heads, bodies and both NAF forms.
+// C1 D2/D3/D14 + retained Q18 law: canonical candidates + byte LCP oracle.
+// Contract-derived seed bytes cover every predicate and optional-digest state.
 // CKC_V1_TEST_BIN selects a prebuilt executable for red replay.
 use std::collections::BTreeSet;
 use std::fs;
@@ -7,37 +7,166 @@ use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const PREDICATES: [&str; 13] = [
-    "guideline_entity",
-    "guideline_cardinality",
-    "guideline_event",
-    "guideline_arg",
-    "guideline_pp",
-    "guideline_property",
-    "guideline_operator",
-    "guideline_interval",
-    "guideline_recurrence",
-    "guideline_frequency",
-    "guideline_order",
-    "guideline_recurrence_window",
-    "guideline_range",
+const PREDICATES: [(&str, usize); 13] = [
+    ("guideline_entity", 4),
+    ("guideline_cardinality", 5),
+    ("guideline_event", 3),
+    ("guideline_arg", 4),
+    ("guideline_pp", 4),
+    ("guideline_property", 4),
+    ("guideline_operator", 3),
+    ("guideline_interval", 6),
+    ("guideline_recurrence", 4),
+    ("guideline_frequency", 5),
+    ("guideline_order", 4),
+    ("guideline_recurrence_window", 7),
+    ("guideline_range", 3),
 ];
-const SEEDS: [&str; 14] = [
-    "answers",
-    "traces",
-    "query-v1-none",
-    "query-v1-sha256",
-    "query-v2-none",
-    "query-v2-sha256",
-    "query-v3-none",
-    "query-v3-sha256",
-    "document-v1-none",
-    "document-v1-sha256",
-    "document-v2-none",
-    "document-v2-sha256",
-    "document-v3-none",
-    "document-v3-sha256",
-];
+
+fn sha(bytes: &[u8]) -> String {
+    use sha2::Digest;
+    sha2::Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
+fn atom(raw: &str) -> String {
+    if raw.as_bytes()[0].is_ascii_lowercase()
+        && raw.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        raw.into()
+    } else {
+        format!("'{raw}'")
+    }
+}
+
+fn digest(bytes: Option<&[u8]>) -> String {
+    bytes.map_or_else(|| "none".into(), |b| format!("sha256({})", atom(&sha(b))))
+}
+
+// No production printer or old seed bytes enter this model.
+fn contract_seeds() -> Vec<(String, Vec<u8>)> {
+    let declarations: String = [("guideline_schema_version", 1), ("guideline_document", 4)]
+        .into_iter()
+        .chain(PREDICATES)
+        .map(|(name, arity)| {
+            format!(":- multifile({name}/{arity}).\n:- discontiguous({name}/{arity}).\n")
+        })
+        .collect();
+    let literals: Vec<_> = PREDICATES
+        .iter()
+        .map(|(name, arity)| format!("{name}({})", vec!["x"; *arity].join(",")))
+        .collect();
+    let clauses: String = literals.iter().map(|lit| format!("{lit}.\n")).collect();
+    let body = literals.join(", ");
+    let naf = literals
+        .iter()
+        .map(|lit| format!("\\+ {lit}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let bundle = format!(
+        "% S1: A structural clause.\n{clauses}guideline_entity(control,control,control,control) :- {body}, {naf}, \\+ ({body}).\n"
+    );
+    let ace_doc = sha(b"A structural clause.\n");
+    let ace_query = sha(b"Which person exists?\n");
+    let mut seeds = Vec::new();
+    for ulex in [false, true] {
+        for vocabulary in [false, true] {
+            let label = |present| if present { "sha256" } else { "none" };
+            let suffix = format!("ulex-{}-vocabulary-{}", label(ulex), label(vocabulary));
+            let u = digest(ulex.then_some(b"prep(for,for).\n"));
+            let v =
+                digest(vocabulary.then_some(b"# format: kind\tlemma\tvalue\nunit\thour\thour\n"));
+            let docid = if ulex { "doc-id" } else { "doc" };
+            let qid = if ulex { "query-id" } else { "query" };
+            let document = format!(
+                "% {docid}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{declarations}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({u}),vocabulary({v})).\n{bundle}",
+                atom(docid),
+                atom(&ace_doc)
+            );
+            let query = format!(
+                "% {qid} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex({u}),vocabulary({v})).\n% Q1: Which person exists?\n'$guideline_query_projection'(goal(guideline_entity(x,A,x,x)),answers([answer(A,noun(person,countable))])).\n",
+                atom(qid),
+                atom(&ace_query)
+            );
+            seeds.push((format!("document-{suffix}"), document.into_bytes()));
+            seeds.push((format!("query-{suffix}"), query.into_bytes()));
+        }
+    }
+    let query = &seeds
+        .iter()
+        .find(|(name, _)| name == "query-ulex-sha256-vocabulary-sha256")
+        .unwrap()
+        .1;
+    let qsha = atom(&sha(query));
+    let answers = format!(
+        "% query-id answered against the loaded composition by ckc queries; do not edit.\n'$guideline_answers'(v1,'query-id',query_sha256({qsha}),result(solutions([sol([x])]))).\n"
+    );
+    let traces = format!(
+        "% query-id traced against the loaded composition by ckc queries; do not edit.\n'$guideline_traces'(v1,'query-id',query_sha256({qsha}),answers_sha256({}),result(solutions([sol([x],proved([clause(sentence('doc-id',1),clause_sha256({}),[])]))]))).\n",
+        atom(&sha(answers.as_bytes())),
+        atom(&sha(format!("{}.\n", literals[0]).as_bytes()))
+    );
+    seeds.push(("answers".into(), answers.into_bytes()));
+    seeds.push(("traces".into(), traces.into_bytes()));
+    seeds
+}
+
+fn seed_files(root: &Path) -> Result<Vec<(String, Vec<u8>)>, &'static str> {
+    let seeds = contract_seeds();
+    assert_eq!(seeds.len(), 10, "C1 seed census");
+    let dir = root.join("tests/v1/q18-k1-001");
+    let files: BTreeSet<_> = fs::read_dir(&dir)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().into_string().unwrap())
+        .filter(|name| name.ends_with(".pl.in") && name != "input.pl.in")
+        .collect();
+    let expected: BTreeSet<_> = seeds
+        .iter()
+        .map(|(name, _)| format!("{name}.pl.in"))
+        .collect();
+    if files != expected {
+        return Err("seed inventory");
+    }
+    for (name, bytes) in &seeds {
+        if fs::read(dir.join(format!("{name}.pl.in"))).unwrap() != *bytes {
+            return Err("contract seed bytes");
+        }
+    }
+    Ok(seeds)
+}
+
+#[test]
+fn q18_contract_seed_bytes() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .unwrap();
+    let seeds = seed_files(&root).unwrap();
+    let scratch = Scratch(root.join(format!("rust/target/q18-seed-law/{}", std::process::id())));
+    let dir = scratch.0.join("tests/v1/q18-k1-001");
+    fs::create_dir_all(&dir).unwrap();
+    for (name, bytes) in &seeds {
+        fs::write(dir.join(format!("{name}.pl.in")), bytes).unwrap();
+    }
+    assert!(seed_files(&scratch.0).is_ok());
+    let (name, bytes) = &seeds[0];
+    let path = dir.join(format!("{name}.pl.in"));
+    let mut changed = bytes.clone();
+    changed.push(b' ');
+    fs::write(&path, changed).unwrap();
+    assert_eq!(seed_files(&scratch.0).unwrap_err(), "contract seed bytes");
+    fs::remove_file(&path).unwrap();
+    assert_eq!(seed_files(&scratch.0).unwrap_err(), "seed inventory");
+    fs::write(&path, bytes).unwrap();
+    let extra = dir.join("stray.pl.in");
+    fs::write(&extra, bytes).unwrap();
+    assert_eq!(seed_files(&scratch.0).unwrap_err(), "seed inventory");
+    fs::remove_file(extra).unwrap();
+    assert!(seed_files(&scratch.0).is_ok());
+    eprintln!("Q18 seed law: 10 byte-equal seeds; changed/omitted/unlisted plants rejected");
+}
 
 struct Scratch(PathBuf);
 impl Drop for Scratch {
@@ -122,12 +251,18 @@ impl Domain {
         self.digests.push(node.args[0].span.clone());
     }
 
-    fn ulex(&mut self, bytes: &[u8], node: &Term, kind: usize) {
-        self.fixed(bytes, node, kind, "ulex");
+    fn optional_digest(
+        &mut self,
+        bytes: &[u8],
+        node: &Term,
+        kind: usize,
+        contexts: (&'static str, &'static str),
+    ) {
+        self.fixed(bytes, node, kind, contexts.0);
         let value = &node.args[0];
         self.slots.push(Slot {
             kind,
-            context: "ulex-value",
+            context: contexts.1,
             name: value.name.clone(),
             candidates: vec![b"none)".to_vec(), b"sha256(".to_vec()],
         });
@@ -155,15 +290,10 @@ impl Domain {
         self.ids.push(node.span.clone());
     }
 
-    fn temporal(&mut self, bytes: &[u8], node: &Term, kind: usize) {
-        self.fixed(bytes, node, kind, "temporal");
-        self.digest(bytes, &node.args[0], kind, "temporal-sha256");
-    }
-
-    fn literal(&mut self, node: &Term, predicates: &[&str], context: &'static str) {
+    fn literal(&mut self, node: &Term, predicates: &[(&str, usize)], context: &'static str) {
         let mut candidates: Vec<Vec<u8>> = predicates
             .iter()
-            .map(|name| format!("{name}(").into_bytes())
+            .map(|(name, _)| format!("{name}(").into_bytes())
             .collect();
         match context {
             "head" => candidates.push(b"%".to_vec()),
@@ -180,7 +310,13 @@ impl Domain {
             .extend(node.args.iter().map(|arg| arg.span.clone()));
     }
 
-    fn body(&mut self, bytes: &[u8], at: &mut usize, predicates: &[&str], context: &'static str) {
+    fn body(
+        &mut self,
+        bytes: &[u8],
+        at: &mut usize,
+        predicates: &[(&str, usize)],
+        context: &'static str,
+    ) {
         loop {
             if bytes[*at..].starts_with(b"\\+ ") {
                 *at += 3;
@@ -205,14 +341,7 @@ impl Domain {
 
 fn domain(bytes: &[u8], seed: &str) -> Domain {
     let mut domain = Domain::default();
-    let version = if seed.contains("v3") {
-        3
-    } else if seed.contains("v2") {
-        2
-    } else {
-        1
-    };
-    let predicates = &PREDICATES[..[0, 7, 9, 13][version]];
+    let predicates = &PREDICATES;
     let mut offset = 0;
     for line in bytes.split_inclusive(|&b| b == b'\n') {
         if offset == 0 || line.starts_with(b":-") || line.starts_with(b"guideline_schema_version(")
@@ -251,10 +380,13 @@ fn domain(bytes: &[u8], seed: &str) -> Domain {
                     domain.versions.push(record.args[0].name.clone());
                     domain.backref(bytes, &record.args[1], "query-qid", false);
                     domain.digest(bytes, &record.args[2], 3, "ace_sha256");
-                    domain.ulex(bytes, &record.args[3], 3);
-                    if version > 1 {
-                        domain.temporal(bytes, &record.args[4], 3);
-                    }
+                    domain.optional_digest(bytes, &record.args[3], 3, ("ulex", "ulex-value"));
+                    domain.optional_digest(
+                        bytes,
+                        &record.args[4],
+                        3,
+                        ("vocabulary", "vocabulary-value"),
+                    );
                 }
                 b"'$guideline_query_projection'" => {
                     domain.fixed(bytes, &record, 0, "projection");
@@ -267,10 +399,13 @@ fn domain(bytes: &[u8], seed: &str) -> Domain {
                     domain.fixed(bytes, &record, 5, "document");
                     domain.backref(bytes, &record.args[0], "document-docid", true);
                     domain.digest(bytes, &record.args[1], 5, "ace_sha256");
-                    domain.ulex(bytes, &record.args[2], 5);
-                    if version > 1 {
-                        domain.temporal(bytes, &record.args[3], 5);
-                    }
+                    domain.optional_digest(bytes, &record.args[2], 5, ("ulex", "ulex-value"));
+                    domain.optional_digest(
+                        bytes,
+                        &record.args[3],
+                        5,
+                        ("vocabulary", "vocabulary-value"),
+                    );
                 }
                 b"guideline_schema_version" => {}
                 _ => {
@@ -396,38 +531,38 @@ fn q18_fixed_name_census() {
     let mut mandatory = [0usize; 8];
     let mut properties = BTreeSet::new();
     let mut predicate_coverage = BTreeSet::new();
-    let mut controls = 0;
-    for seed in SEEDS {
-        let bytes = fs::read(root.join(format!("tests/v1/q18-k1-001/{seed}.pl.in"))).unwrap();
-        runner.check(&format!("{seed}/canonical"), &bytes, None);
-        controls += 1;
-        let domain = domain(&bytes, seed);
-        let version = seed.split('-').nth(1).unwrap_or("v1");
+    let mut controls = [0usize; 6];
+    let mut property_checks = [0usize; 8];
+    let seeds = seed_files(&root).unwrap();
+    for (seed, bytes) in &seeds {
+        runner.check(&format!("{seed}/canonical"), bytes, None);
+        controls[0] += 1;
+        let domain = domain(bytes, seed);
         for span in &domain.free {
-            let mutated = replace(&bytes, span.clone(), b"free_fixed_name");
+            let mutated = replace(bytes, span.clone(), b"free_fixed_name");
             runner.check(&format!("{seed}/free@{}", span.start), &mutated, None);
-            controls += 1;
+            controls[1] += 1;
         }
         for span in &domain.digests {
-            let mutated = replace(&bytes, span.clone(), &[b'f'; 64]);
+            let mutated = replace(bytes, span.clone(), &[b'f'; 64]);
             runner.check(&format!("{seed}/digest@{}", span.start), &mutated, None);
-            controls += 1;
+            controls[2] += 1;
         }
         for span in &domain.ids {
-            let mutated = replace(&bytes, span.clone(), b"free");
+            let mutated = replace(bytes, span.clone(), b"free");
             let coupled = replace(
                 &mutated,
-                header_name(&bytes, seed.starts_with("document-")),
+                header_name(bytes, seed.starts_with("document-")),
                 b"free",
             );
             runner.check(&format!("{seed}/coupled-id@{}", span.start), &coupled, None);
-            controls += 1;
+            controls[3] += 1;
         }
         for &at in &domain.literal_controls {
             let mut mutated = bytes.clone();
             mutated[at] = b'z';
             runner.check(&format!("{seed}/literal@{at}"), &mutated, Some(at));
-            controls += 1;
+            controls[4] += 1;
         }
         for span in &domain.versions {
             let mut mutated = bytes.clone();
@@ -440,10 +575,10 @@ fn q18_fixed_name_census() {
             let quoted = [b"'", &bytes[span.clone()], b"'"].concat();
             runner.check(
                 &format!("{seed}/version-quote"),
-                &replace(&bytes, span.clone(), &quoted),
+                &replace(bytes, span.clone(), &quoted),
                 Some(span.start),
             );
-            controls += 2;
+            controls[5] += 2;
         }
         for slot in domain.slots {
             slots[slot.kind] += 1;
@@ -459,28 +594,29 @@ fn q18_fixed_name_census() {
             let mut typo = name.to_vec();
             let last = name.len() - if quoted { 2 } else { 1 };
             typo[last] = b'z';
-            runner.mutation(&format!("{label}/last"), &bytes, &slot, &typo);
+            runner.mutation(&format!("{label}/last"), bytes, &slot, &typo);
             mandatory[slot.kind] += 1;
             if !quoted {
                 runner.mutation(
                     &format!("{label}/quote"),
-                    &bytes,
+                    bytes,
                     &slot,
                     &[b"'", name, b"'"].concat(),
                 );
                 mandatory[slot.kind] += 1;
             }
             if slot.kind == 6 {
-                predicate_coverage.insert((version.to_owned(), slot.context, name.to_vec()));
+                predicate_coverage.insert((seed.clone(), slot.context, name.to_vec()));
             }
-            if properties.insert((version.to_owned(), slot.kind, slot.context, name.to_vec())) {
+            if properties.insert((slot.kind, slot.context, name.to_vec())) {
+                let before = runner.checked;
                 // Every lexical prefix length: a different byte, an ended atom, and an extension.
                 let first = usize::from(quoted);
                 let end = name.len() - usize::from(quoted);
                 for cut in first..end {
                     let mut altered = name.to_vec();
                     altered[cut] = b'z';
-                    runner.mutation(&format!("{label}/byte-{cut}"), &bytes, &slot, &altered);
+                    runner.mutation(&format!("{label}/byte-{cut}"), bytes, &slot, &altered);
                     let shorter = if quoted {
                         [&name[..cut], b"'"].concat()
                     } else if cut == 0 {
@@ -494,39 +630,54 @@ fn q18_fixed_name_census() {
                         .iter()
                         .any(|candidate| candidate[..candidate.len() - 1] == shorter)
                     {
-                        runner.mutation(&format!("{label}/prefix-{cut}"), &bytes, &slot, &shorter);
+                        runner.mutation(&format!("{label}/prefix-{cut}"), bytes, &slot, &shorter);
                     }
                 }
                 let extended = [&name[..end], b"z", &name[end..]].concat();
-                runner.mutation(&format!("{label}/extended"), &bytes, &slot, &extended);
+                runner.mutation(&format!("{label}/extended"), bytes, &slot, &extended);
+                property_checks[slot.kind] += runner.checked - before;
             }
         }
     }
-    for (version, count) in [("v1", 7), ("v2", 9), ("v3", 13)] {
+    for (seed, _) in seeds
+        .iter()
+        .filter(|(name, _)| name.starts_with("document-"))
+    {
         for context in ["head", "body", "naf", "grouped-naf"] {
-            for name in &PREDICATES[..count] {
-                assert!(predicate_coverage.contains(&(
-                    version.to_owned(),
-                    context,
-                    name.as_bytes().to_vec()
-                )));
+            for (name, _) in &PREDICATES {
+                assert!(
+                    predicate_coverage.contains(&(seed.clone(), context, name.as_bytes().to_vec())),
+                    "{seed}/{context}/{name}"
+                );
             }
         }
     }
-    assert_eq!(slots, [14, 2, 3, 26, 12, 32, 238, 14], "S1–S8 slot census");
+    assert_eq!(
+        predicate_coverage.len(),
+        208,
+        "per-document predicate/context census"
+    );
+    assert_eq!(slots, [10, 2, 3, 20, 8, 24, 212, 10], "S1–S8 slot census");
     assert_eq!(
         mandatory,
-        [14, 4, 6, 52, 24, 64, 476, 24],
+        [10, 4, 6, 40, 16, 48, 424, 14],
         "mutation census"
     );
-    assert_eq!(properties.len(), 178, "prefix-property domains");
+    assert_eq!(properties.len(), 84, "prefix-property domains");
     assert_eq!(
-        controls, 1225,
-        "canonical, free-slot and fixed-byte controls"
+        property_checks,
+        [160, 38, 67, 95, 24, 132, 1864, 82],
+        "prefix-property checks"
     );
+    assert_eq!(
+        controls,
+        [10, 922, 19, 10, 134, 12],
+        "canonical/free/digest/id/literal/version controls"
+    );
+    assert_eq!(runner.checked, 4131, "complete check census");
     eprintln!(
-        "Q18 census: seeds={} slots={slots:?} mandatory={mandatory:?} property-domains={} controls={controls} checked={} deviations={}",
-        SEEDS.len(),
+        "Q18 census: seeds={} slots={slots:?} mandatory={mandatory:?} property-domains={} property-checks={property_checks:?} controls={controls:?} checked={} deviations={}",
+        seeds.len(),
         properties.len(),
         runner.checked,
         runner.failures.len()

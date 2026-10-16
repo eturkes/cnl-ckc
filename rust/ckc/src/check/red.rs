@@ -1,31 +1,38 @@
 use super::common::*;
 use super::{inventories::RedProbe, process};
 use std::path::Path;
-// m7t D2/D9 + q12 D1: a `<probe>.temporal.tsv` sidecar selects its header's schema
-// (a `<probe>.argv` sidecar names the selector outright); a `<stem>--query-…` probe
-// compiles in question mode.
+// c1 D5 + D11: argv = `[question] <tree> <id> <vocabulary|-> <ulex|->` from the
+// `<probe>.vocabulary.tsv` + `<probe>.ulex` sidecars (`<stem>--query-…` = question
+// mode); a `<probe>.argv` sidecar names the whole tail (`@TREE@`, `@ID@`, `@TABLE@`,
+// `@ULEX@` = the stage, the id and the sidecar paths) so every argv shape is pinnable.
 pub(super) fn tail(stage: &Path, probe: &Path, id: &str) -> Result<Vec<String>> {
-    let table = probe.with_extension("temporal.tsv");
+    let table = probe.with_extension("vocabulary.tsv");
     let forced = probe.with_extension("argv");
     let lexicon = probe.with_extension("ulex");
+    let file_or_dash = |p: &Path| if p.is_file() { show(p) } else { "-".to_owned() };
+    if forced.is_file() {
+        return Ok(text(&forced, "red-probe")?
+            .split_whitespace()
+            .map(|t| match t {
+                "@TREE@" => show(stage),
+                "@ID@" => id.to_owned(),
+                "@TABLE@" => show(&table),
+                "@ULEX@" => show(&lexicon),
+                other => other.to_owned(),
+            })
+            .collect());
+    }
     let mut tail = if name(probe).contains("--query-") {
         vec!["question".to_owned()]
     } else {
         vec![]
     };
-    if table.is_file() {
-        let token = if forced.is_file() {
-            text(&forced, "red-probe")?.trim().to_owned()
-        } else {
-            selector(&table)
-        };
-        tail.extend([token, show(stage), id.to_owned(), show(&table)]);
-    } else {
-        tail.extend([show(stage), id.to_owned()]);
-    }
-    if lexicon.is_file() {
-        tail.push(show(&lexicon));
-    }
+    tail.extend([
+        show(stage),
+        id.to_owned(),
+        file_or_dash(&table),
+        file_or_dash(&lexicon),
+    ]);
     Ok(tail)
 }
 pub(super) fn run(swipl: &Path, stage: &Path, probe: &RedProbe) -> Result {

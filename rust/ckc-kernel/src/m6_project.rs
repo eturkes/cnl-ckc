@@ -316,7 +316,7 @@ pub fn project_all(
     docid: &Vec<u8>,
     count: usize,
     base: usize,
-    tab: &Option<crate::m7_v3::EEnv>,
+    tab: &Option<crate::m7_q12::EEnv>,
 ) -> (out: Result<Vec<Projected>, T>)
     requires
         arena_ok(old(arena)),
@@ -515,7 +515,7 @@ pub fn project(
     drs: &T,
     docid: &Vec<u8>,
     count: usize,
-    tab: &Option<crate::m7_temporal::ETemporal>,
+    tab: &Option<crate::m7_temporal::EVocabulary>,
 ) -> (out: Result<Vec<Projected>, T>)
     requires
         arena_ok(old(arena)),
@@ -529,14 +529,14 @@ pub fn project(
             drs@,
             docid@,
             count as nat,
-            crate::m7_v3::ttab_view(tab),
+            crate::m7_q12::ttab_view(tab),
         ),
 {
     hide(spec::project_from);
     hide(spec::collides);
     hide(spec::tags);
     hide(spec::env_of);
-    let env = crate::m7_v3::env_exec(arena, tab, drs);
+    let env = crate::m7_q12::env_exec(arena, tab, drs);
     let ghost start = arena.nodes@;
     let b = match box_parts(arena, drs) {
         Some(b) => b,

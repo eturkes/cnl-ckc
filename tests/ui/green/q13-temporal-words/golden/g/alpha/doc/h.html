@@ -204,7 +204,7 @@ a { color: inherit; text-decoration: none; }
 <datalist id="reviewer-names"></datalist>
 <label for="comment">Comment (optional)</label>
 <textarea id="comment" name="comment"></textarea>
-<input type="hidden" name="review_sha256" value="ee90fe1e8397fbc8a3e9e6c84d78e003f1ce2a13c84fafd938d0572bfd9a2316">
+<input type="hidden" name="review_sha256" value="69396a360f9b58fbbc356eadbbb2b98fe6503714080bee5166db845fb5c1c6c3">
 <input type="hidden" name="ledger_sha256" value="absent">
 <input type="hidden" name="commit" value="">
 <input type="hidden" name="csrf" value="">
@@ -245,8 +245,8 @@ a { color: inherit; text-decoration: none; }
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
-guideline_schema_version(3).
-guideline_document(h,ace_sha256('31c53b2332173e5ef42969570b88ec5fc6a00193ab6d4dc263248f2c9c381c1d'),ulex(none),temporal(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
+guideline_schema_version(1).
+guideline_document(h,ace_sha256('31c53b2332173e5ef42969570b88ec5fc6a00193ab6d4dc263248f2c9c381c1d'),ulex(none),vocabulary(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
 % S1: A man waits.
 guideline_event(actual,e101,wait).
 guideline_cardinality(actual,h101,na,eq,3).

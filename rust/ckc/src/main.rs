@@ -44,7 +44,7 @@ fn main() -> ExitCode {
         }
         _ => {
             eprintln!(
-                "usage: ckc trust-audit [--write] [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc check [repo-root] | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl> [<temporal>] | ckc compile <guideline-id> | ckc queries <guideline-id> | ckc align <guideline-id> <docid> | ckc review-manifest <guideline-id> | ckc derive-review-manifest <guideline-dir> | ckc ledger-validate <ledger-path> <manifest-path> <label> | ckc release-manifest | ckc dist build [<dest>] | ckc ui <serve|render|check|request|copy-check> …"
+                "usage: ckc trust-audit [--write] [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc check [repo-root] | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl> [<vocabulary>] | ckc compile <guideline-id> | ckc queries <guideline-id> | ckc align <guideline-id> <docid> | ckc review-manifest <guideline-id> | ckc derive-review-manifest <guideline-dir> | ckc ledger-validate <ledger-path> <manifest-path> <label> | ckc release-manifest | ckc dist build [<dest>] | ckc ui <serve|render|check|request|copy-check> …"
             );
             ExitCode::from(2)
         }

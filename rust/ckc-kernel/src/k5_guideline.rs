@@ -488,7 +488,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
             ),
             u::fixed_bytes(u::table_close()),
             u::fixed_bytes(u::section_close()),
-        ] + u::words_section(g@.temporal) + seq![
+        ] + u::words_section(g@.vocabulary) + seq![
             u::fixed_bytes(u::section_open()),
             u::fixed_bytes(u::h2_open_documents_h2_close()),
             u::fixed_bytes(u::table_open_2()),

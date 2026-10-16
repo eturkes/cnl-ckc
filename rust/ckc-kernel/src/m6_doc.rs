@@ -41,9 +41,9 @@ proof fn wf_doc_fields(d: DocFile)
         v1text::wf_doc(d),
     ensures
         v1text::name_ok(d.docid),
-        v1text::version_ok(d.version, d.temporal),
         v1text::hex64(d.ace),
-        v1text::ulex_ok(d.ulex),
+        v1text::digest_ok(d.ulex),
+        v1text::digest_ok(d.vocabulary),
         d.bundles.len() >= 1,
 {
     reveal(v1text::wf_doc);
@@ -135,20 +135,10 @@ pub fn certify_doc_impl(
     }
     let tab = match crate::m7_annotate::table_exec(traw, tsha) {
         Some(t) => t,
-        None => return reject_sym(&mut arena, docid, &Sym::Temporal),
+        None => return reject_sym(&mut arena, docid, &Sym::Vocabulary),
     };
-    if !crate::m7_annotate::temporal_ok(
-        parsed.doc_version,
-        &parsed.doc_temporal,
-        tsha,
-        Ghost(doc.temporal),
-    ) {
-        return reject_sym(&mut arena, docid, &Sym::Temporal);
-    }
-    // q12 D10: the record's schema version = the table's (v1 without one).
-
-    if parsed.doc_version != crate::m7_v3::tab_version_exec(&tab) {
-        return reject_sym(&mut arena, docid, &Sym::SchemaVersion);
+    if !crate::m7_annotate::vocabulary_ok(&parsed.doc_vocabulary, tsha, Ghost(doc.vocabulary)) {
+        return reject_sym(&mut arena, docid, &Sym::Vocabulary);
     }
     if parsed.bundles.len() != lines.len() {
         return reject_sym(&mut arena, docid, &Sym::BundleCount);

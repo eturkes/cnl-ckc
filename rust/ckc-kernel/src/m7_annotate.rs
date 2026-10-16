@@ -1,4 +1,4 @@
-// m7t D4/D5: the v2 annotate pass — exec mirror of ckc_spec::emit::annotate.
+// m7t D4/D5: the annotate pass — exec mirror of ckc_spec::emit::annotate.
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
 use crate::k2_term::{ENode, ENodeKind, ETermArena};
@@ -7,16 +7,16 @@ use crate::m6_symbols::Sym;
 #[cfg(verus_keep_ghost)]
 use crate::m6_symbols::symbol;
 use crate::m6_term::*;
-use crate::m7_temporal::ETemporal;
+use crate::m7_q12::EEnv;
+#[cfg(verus_keep_ghost)]
+use crate::m7_q12::{env_view, envo_view, ttab_view};
+use crate::m7_temporal::EVocabulary;
 #[cfg(verus_keep_ghost)]
 use crate::m7_temporal::pairs_view;
-use crate::m7_v3::EEnv;
-#[cfg(verus_keep_ghost)]
-use crate::m7_v3::{env_view, envo_view, ttab_view};
 use ckc_spec::emit as spec;
-#[cfg(verus_keep_ghost)]
-use ckc_spec::temporal::*;
 use ckc_spec::term::Term;
+#[cfg(verus_keep_ghost)]
+use ckc_spec::vocabulary::*;
 use vstd::prelude::*;
 
 verus! {
@@ -301,7 +301,7 @@ pub fn of_links_exec(arena: &ETermArena, items: &Vec<I>, ctx: &T, v: &T) -> (out
     out
 }
 
-pub fn qty_exec(arena: &ETermArena, tab: &ETemporal, items: &Vec<I>, ctx: &T, v: &T) -> (out:
+pub fn qty_exec(arena: &ETermArena, tab: &EVocabulary, items: &Vec<I>, ctx: &T, v: &T) -> (out:
     Option<(Vec<u8>, T)>)
     requires
         arena_ok(arena),
@@ -328,7 +328,7 @@ pub fn qty_exec(arena: &ETermArena, tab: &ETemporal, items: &Vec<I>, ctx: &T, v:
     }
 }
 
-pub fn is_frame_exec(arena: &ETermArena, tab: &ETemporal, items: &Vec<I>, ctx: &T, v: &T) -> (out:
+pub fn is_frame_exec(arena: &ETermArena, tab: &EVocabulary, items: &Vec<I>, ctx: &T, v: &T) -> (out:
     bool)
     requires
         arena_ok(arena),
@@ -475,7 +475,7 @@ pub fn pp_ann_exec(
         if let Some(why) = bound_why_exec(arena, &o) {
             return Err(why);
         }
-        if crate::m7_v3::approx_why_exec(arena, tab, scope, ctx, &x, &x, &o) {
+        if crate::m7_q12::approx_why_exec(arena, tab, scope, ctx, &x, &x, &o) {
             return Err(Sym::ApproximateBound);
         }
         if links.len() > 1 {
@@ -503,12 +503,12 @@ pub fn pp_ann_exec(
         return Ok(Some(EAnn::Interval(e, role, x, unit, anchor)));
     }
     match obj_of_exec(arena, scope, ctx, &x) {
-        None => crate::m7_v3::v3_ann_exec(arena, env, scope, ctx, pp),
+        None => crate::m7_q12::q12_ann_exec(arena, env, scope, ctx, pp),
         Some(f) => {
             let f1 = arg_at(arena, &f, 1);
             let noun = atom_bytes(arena, &f1);
             if !crate::m7_temporal::pair_in(&tab.spacings, &p, &noun) {
-                return crate::m7_v3::v3_ann_exec(arena, env, scope, ctx, pp);
+                return crate::m7_q12::q12_ann_exec(arena, env, scope, ctx, pp);
             }
             let f2 = arg_at(arena, &f, 2);
             let f3 = arg_at(arena, &f, 3);
@@ -534,7 +534,7 @@ pub fn pp_ann_exec(
                     if let Some(why) = bound_why_exec(arena, &o) {
                         return Err(why);
                     }
-                    if crate::m7_v3::approx_why_exec(arena, tab, scope, ctx, &qv, &x, &o) {
+                    if crate::m7_q12::approx_why_exec(arena, tab, scope, ctx, &qv, &x, &o) {
                         return Err(Sym::ApproximateBound);
                     }
                     if of_links_exec(arena, scope, ctx, &qv).len() > 0 {
@@ -997,7 +997,7 @@ pub fn ann_inner_exec(
             Some(c(arena, &Sym::DollarGuidelineInterval, &ts))
         },
         EAnn::Recurrence(e, _, q, unit) => {
-            match crate::m7_v3::window_of_exec(arena, ms, cx, e) {
+            match crate::m7_q12::window_of_exec(arena, ms, cx, e) {
                 None => {
                     let u = atom(arena, unit);
                     proof {
@@ -1079,12 +1079,12 @@ pub fn ann_inner_exec(
             Some(c(arena, &Sym::DollarGuidelineOrder, &ts))
         },
         EAnn::Range(e, h, _) => {
-            let ps = crate::m7_v3::partners_exec(arena, scope, ms, cx, e);
+            let ps = crate::m7_q12::partners_exec(arena, scope, ms, cx, e);
             if ps.len() != 1 {
                 return None;
             }
             proof {
-                assert(crate::m7_v3::partners_view(ps@)[0] == (ps@[0].0@, ps@[0].1@));
+                assert(crate::m7_q12::partners_view(ps@)[0] == (ps@[0].0@, ps@[0].1@));
             }
             let mut ts = Vec::new();
             ts.push(ps[0].0.cp());
@@ -1194,7 +1194,7 @@ pub fn rebuild_item_exec(
             } else if is_comp(arena, inner, &Sym::Object, 6) {
                 let a0 = arg_at(arena, inner, 0);
                 if link_in(arena, approx, c, &a0) {
-                    let o = crate::m7_v3::about_object_exec(arena, inner);
+                    let o = crate::m7_q12::about_object_exec(arena, inner);
                     proof {
                         crate::m6_term::prefix(start, arena.nodes@, c);
                     }
@@ -1413,7 +1413,7 @@ pub fn annotate_exec(arena: &mut ETermArena, env: &EEnv, items: &Vec<I>, none: &
         Err(s) => return Err(s),
         Ok(ms) => ms,
     };
-    let lows = match crate::m7_v3::range_lows_exec(arena, items, &ms) {
+    let lows = match crate::m7_q12::range_lows_exec(arena, items, &ms) {
         Err(s) => return Err(s),
         Ok(lows) => lows,
     };
@@ -1424,11 +1424,11 @@ pub fn annotate_exec(arena: &mut ETermArena, env: &EEnv, items: &Vec<I>, none: &
     if !no_dup_exec(arena, &claims) {
         return Err(Sym::SharedQuantity);
     }
-    if !crate::m7_v3::windows_ok_exec(arena, &ms) {
+    if !crate::m7_q12::windows_ok_exec(arena, &ms) {
         return Err(Sym::WindowShape);
     }
     let consumed = links_exec(arena, &ms, false);
-    let approx = crate::m7_v3::abouts_exec(arena, &env.tab, items, &ms);
+    let approx = crate::m7_q12::abouts_exec(arena, &env.tab, items, &ms);
     rebuild_exec(arena, env, items, &ms, &consumed, &approx, none, items)
 }
 
@@ -1483,7 +1483,7 @@ pub open spec fn flat_res(r: Result<Flat, T>) -> Result<spec::Flat, Term> {
     flat_result(r)
 }
 
-// flatten_list, then (v2) the annotate pass over the flat items.
+// flatten_list, then (with a table) the annotate pass over the flat items.
 pub fn annotated_exec(arena: &mut ETermArena, tab: &Option<EEnv>, items: Vec<I>) -> (out: Result<
     Vec<I>,
     T,
@@ -1573,10 +1573,10 @@ pub fn clone_tab(t: &Option<EEnv>) -> (out: Option<EEnv>)
     ensures
         tab_view(&out) == tab_view(t),
 {
-    crate::m7_v3::clone_env(t)
+    crate::m7_q12::clone_env(t)
 }
 
-pub open spec fn table_view(o: Option<Option<ETemporal>>) -> Option<Option<Temporal>> {
+pub open spec fn table_view(o: Option<Option<EVocabulary>>) -> Option<Option<Vocabulary>> {
     match o {
         None => None,
         Some(t) => Some(ttab_view(&t)),
@@ -1585,14 +1585,14 @@ pub open spec fn table_view(o: Option<Option<ETemporal>>) -> Option<Option<Tempo
 
 // spec::table_of: the projection table of a certification (m7t D8).
 pub fn table_exec(traw: Option<&Vec<u8>>, tsha: Option<&Vec<u8>>) -> (out: Option<
-    Option<ETemporal>,
+    Option<EVocabulary>,
 >)
     ensures
         table_view(out) == spec::table_of(spec::opt_view(traw), spec::opt_view(tsha)),
 {
     match (traw, tsha) {
         (None, None) => Some(None),
-        (Some(raw), Some(_)) => match crate::m7_temporal::parse_temporal_exec(raw) {
+        (Some(raw), Some(_)) => match crate::m7_temporal::parse_vocabulary_exec(raw) {
             Ok((t, _)) => Some(Some(t)),
             Err(_) => None,
         },
@@ -1600,25 +1600,25 @@ pub fn table_exec(traw: Option<&Vec<u8>>, tsha: Option<&Vec<u8>>) -> (out: Optio
     }
 }
 
-// The recorded temporal digest (`digest` = its bytes, empty = none) equals tsha.
-pub fn temporal_ok(
-    version: u8,
+// The recorded vocabulary digest (`digest` = its bytes, empty = none) equals tsha.
+pub fn vocabulary_ok(
     digest: &Vec<u8>,
     tsha: Option<&Vec<u8>>,
     Ghost(t): Ghost<Option<Seq<u8>>>,
 ) -> (out: bool)
     requires
-        ckc_spec::v1text::version_ok(version as nat, t),
+        ckc_spec::v1text::digest_ok(t),
         digest@ == crate::v1_term_impl::ulex_digest_bytes(t),
     ensures
         out == (t == spec::opt_view(tsha)),
 {
     proof {
-        reveal(ckc_spec::v1text::version_ok);
+        reveal(ckc_spec::v1text::digest_ok);
+        reveal(ckc_spec::v1text::hex64);
     }
     match tsha {
-        None => version == 1,
-        Some(h) => (version == 2 || version == 3) && crate::k4_bytes::eq(digest, h),
+        None => digest.len() == 0,
+        Some(h) => digest.len() != 0 && crate::k4_bytes::eq(digest, h),
     }
 }
 

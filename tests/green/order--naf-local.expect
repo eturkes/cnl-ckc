@@ -29,8 +29,8 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
-guideline_schema_version(3).
-guideline_document('order--naf-local',ace_sha256(d6b192fd8540728b9a8544d46f771dbbe087ae6aba3387a4053901d48a5eb5b7),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),temporal(sha256(bec3540718d479bac3ed36dfdd59f3fef887b20ead3d9bfaa3bdc213a613bdb9))).
+guideline_schema_version(1).
+guideline_document('order--naf-local',ace_sha256(d6b192fd8540728b9a8544d46f771dbbe087ae6aba3387a4053901d48a5eb5b7),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256(c058a3dfa8cf288d37e663be0948539f77e302371f329257103e927753ce14f9))).
 % S1: Every patient that does not provably eat before a meeting sleeps.
 guideline_event(actual,'$guideline_id'(product,'order--naf-local',1,ref(4),[A]),sleep) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), \+ (guideline_entity(actual,B,meeting,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,eat), guideline_arg(actual,C,1,A), guideline_pp(actual,C,before,B), guideline_order(actual,C,before,B)).
 guideline_arg(actual,'$guideline_id'(product,'order--naf-local',1,ref(4),[A]),1,A) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), \+ (guideline_entity(actual,B,meeting,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,eat), guideline_arg(actual,C,1,A), guideline_pp(actual,C,before,B), guideline_order(actual,C,before,B)).

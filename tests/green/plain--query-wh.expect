@@ -1,0 +1,4 @@
+% plain--query-wh compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'plain--query-wh',ace_sha256('40437c3506810ada5a8f00b9b0a3eaa5231f90948602a2b1c9ad4fc10102add2'),ulex(none),vocabulary(none)).
+% Q1: Which patient is a person?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,patient,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,person,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_event(actual,C,be),','(guideline_arg(actual,C,1,A),guideline_arg(actual,C,2,B)))))))),answers([answer(A,noun(patient,countable))])).

@@ -1,2 +1,2 @@
 % result-mode-mismatch answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'result-mode-mismatch',query_sha256(c0f646175bb6da8be2a2a8327fc0d4b9723ea64874bce7838d94f7f2c2e0e254),result(yes)).
+'$guideline_answers'(v1,'result-mode-mismatch',query_sha256('7d0be3f7108c02ad3dc5a59ec9b0aa2f3279fd77a47e1594a27613a205dc116f'),result(yes)).

@@ -132,7 +132,7 @@ compiler base:
      per-guideline `ace/restates/uncovered/inexpressible/pending` meter;
      review-manifest freshness against a full re-derivation, then
      adjudication-ledger validation with its verdict meter; lexicon
-     liveness and minimality; v1-only product vocabulary;
+     liveness and minimality; the schema's product vocabulary;
   4. verifies that the resolved SWI-Prolog is exactly 9.2.9;
   5. recompiles every guideline twice (byte-determinism);
   6. compares the recompile against the committed Prolog (freshness);
@@ -222,23 +222,23 @@ each side. A file that breaks these rules stops the render. Whether
 an alignment is helpful is a judgment for the reviewer, who sees it
 on the page beside the texts it describes.
 
-A guideline with a `temporal.tsv` table shows its time limits in two places.
+A guideline with a `vocabulary.tsv` table shows its time limits in two places.
 A document page with a typed time limit lists the limits that the
 compiler read from its ACE text, in the table "Timing as compiled".
-Under v3 the table also lists each order with no stated time, each
+The table also lists each order with no stated time, each
 count per period with its counted item, and each recurrence inside a
 time window with the window's length and reference point. An
 approximate time limit reads `about`, as in `lasts about 2 hours`. A
 minimum stated as a range reads `a minimum of 8 to 12 hours` in the row
 of its interval.
-The guideline page lists the rows of `temporal.tsv` under "Time
+The guideline page lists the rows of `vocabulary.tsv` under "Time
 words", after the status table. Each row names one word and how the
 compiler reads it. A word reads as a unit of time, as a time relation,
-or as the spacing of repeats. A v3 word can also read as the frame of
+or as the spacing of repeats. A word can also read as the frame of
 a time window, as the word of a count per period, as the mark of an
 approximate time limit, or as the upper end of a ranged minimum. The compiler reads
 a time limit only through these words. A table that fails the `ckc check` grammar stops the
-interface with `ui: viewmodel: <id> temporal.tsv: <why>`.
+interface with `ui: viewmodel: <id> vocabulary.tsv: <why>`.
 
 The interface reads committed files. When the working tree holds
 uncommitted guideline changes, the pages render the last commit
@@ -280,19 +280,16 @@ carries both an approved and a rejected decision reads contested.
 
 ## Compiled Prolog schema
 
-Status: v1 is **frozen**. Schema v2 adds two temporal annotation
-predicates, widens the document record by a table digest, and keeps
-every v1 clause shape (see Schema v2 below). Schema v3 adds four more
-predicates and keeps every v2 shape (see Schema v3 below). A
-guideline selects its version with the header of its `temporal.tsv`
-table. Every document of that guideline then compiles under that
-version. A guideline without the table compiles under v1, byte for
-byte. The predicate set below is the public
-ABI: an extension requires a version bump. The compiler takes the
-version from an explicit invocation argument and never infers it from
-content. Authored questions reject in document compiles; the separate
-question mode below compiles one question into a query projection over
-the same vocabulary.
+Status: one schema with the identifier `1`. Every document and every
+question compiles under it. Until the first publication the schema
+evolves in place: each revision recompiles the whole corpus and every
+fixture, and the identifier stays `1`. The predicate set below is the
+public interface. An optional per-guideline table, `vocabulary.tsv`,
+adds the time annotations of the section "Vocabulary table and time
+annotations" below. The compiler takes the table from an explicit
+invocation argument and never infers it from content. Authored
+questions reject in document compiles; the separate question mode below
+compiles one question into a query projection over the same vocabulary.
 
 Sentences project onto a closed reserved vocabulary. Source words —
 nouns, verbs, adjectives, prepositions — stay opaque data atoms and
@@ -301,18 +298,28 @@ domain-neutral:
 
 | Predicate | Meaning |
 | --- | --- |
-| `guideline_schema_version(Version)` | schema version of this document (`1`) |
-| `guideline_document(DocId, ace_sha256(H), ulex(none \| sha256(H)))` | document record + source digests |
+| `guideline_schema_version(Version)` | schema identifier of this document (`1`) |
+| `guideline_document(DocId, ace_sha256(H), ulex(none \| sha256(U)), vocabulary(none \| sha256(T)))` | document record + source digests |
 | `guideline_entity(Context, Ref, Noun, Class)` | an entity referent and its noun/class |
 | `guideline_cardinality(Context, Ref, Unit, Comparison, Count)` | that referent's quantity payload, verbatim |
 | `guideline_event(Context, EventRef, Lemma)` | an event referent and its verb |
 | `guideline_arg(Context, EventRef, Position, Ref)` | participant at `Position` (1-based, DRS order) |
 | `guideline_pp(Context, EventRef, Preposition, Ref)` | prepositional attachment on the event |
-| `guideline_property(Context, PropertyRef, Lemma, Polarity)` | adjectival property (`pos` in v1) |
+| `guideline_property(Context, PropertyRef, Lemma, Polarity)` | adjectival property (`pos`) |
 | `guideline_operator(OuterContext, InnerContext, Operator)` | reified modal/negation wrapper: `InnerContext`'s content stands under `Operator` relative to `OuterContext` |
 
+The six time annotations (`guideline_interval/6`,
+`guideline_recurrence/4`, `guideline_frequency/5`, `guideline_order/4`,
+`guideline_recurrence_window/7`, `guideline_range/3`) complete the
+vocabulary; the section "Vocabulary table and time annotations" below
+defines them. In the record, `H` is the SHA-256 of the raw ACE bytes,
+`U` the SHA-256 of the guideline's user lexicon, and `T` the SHA-256
+of its raw `vocabulary.tsv` bytes. `none` means that the file does not
+exist.
+
 `Comparison` is exactly one of `eq`, `geq`, `greater`, `leq`, `less`,
-`exactly`, `na`. The compiler copies units and counts through as data.
+`exactly`, `na`, or `about` (an approximate time quantity, below). The
+compiler copies units and counts through as data.
 It performs no arithmetic, no unit conversion, no counting, and no
 modal inference: a cardinality clause records what the sentence said,
 nothing more.
@@ -320,7 +327,7 @@ nothing more.
 Every one of those values is reachable, but not from every position. An
 upper-bounding determiner (`at most n`, `exactly n`, `less than n`) is
 scoped. At the root of an asserted sentence, ACE groups the conditions
-that the determiner binds into a condition list. v1 has no construct
+that the determiner binds into a condition list. The schema has no construct
 for that scope, so the document rejects with
 `unsupported, root_condition([…])` rather than flatten an upper bound
 into an existential claim; `tests/red/unsupported--v1-root-at-most.ace`
@@ -392,25 +399,24 @@ identity, or uniqueness claim. Because facts and derived heads share
 one vocabulary, a rule body consumes another document's facts or heads
 by ordinary resolution.
 
-Every v1 document opens with the same declaration block: `multifile`
-and `discontiguous` for all nine indicators, whether or not it
+Every document opens with the same declaration block: `multifile`
+and `discontiguous` for all 15 indicators, whether or not it
 populates them. After the block come `guideline_schema_version(1).`,
 the document record, and then, per sentence, a
 `% S<n>: <verbatim sentence>` comment with that sentence's contiguous
-clauses in deterministic order. Any subset of v1 documents therefore
+clauses in deterministic order. Any set of documents therefore
 co-loads into one engine in any order with no warnings. Names that
 begin with `guideline_` and the identity constructor `'$guideline_id'`
 are reserved: a colliding name rejects the document rather than
 silently shadow schema vocabulary. The compiler scans both the parsed
 sentence and every lexicon entry — used or not — for one.
-`guideline_part/3` is reserved for a later unit and stays unemitted in
-v1. Shapes still outside the schema (group coordination, disjunctive
+`guideline_part/3` is reserved for a later unit and stays unemitted. Shapes still outside the schema (group coordination, disjunctive
 consequents, rules scoped inside an operator) reject with a canonical
 `ace_to_pl_error(unsupported, …)` line. A question inside a document
 rejects with `question_not_supported(Form, S)`, where `Form` is
 `wh(Tag)`, `universal`, or `yesno`.
 
-Compilation is checked, not asserted. Every v1 compile derives the
+Compilation is checked, not asserted. Every compile derives the
 document's proof obligations and discharges them before it emits
 anything. Appending `proof` to the invocation prints the derivation
 payload in place of the document. The payload is one
@@ -432,8 +438,7 @@ composition in the verified Rust engine. The manifest is strict: one `<compiled-
 `<payload>` row per document, with the final newline required. A 0-byte
 file means the empty composition. The engine loads every document
 into one composition; any load diagnostic is a failure. It checks that the
-distinct document records equal the manifest row count and that the
-composition holds one schema version (Schema v2 below). It then
+distinct document records equal the manifest row count. It then
 re-derives every obligation against the whole batch. Co-loading therefore cannot break a document's derivations, and the engine evaluates negation-as-failure against the composition it will actually run in. The replay does not isolate documents: a rule in one document can derive another document's obligation head, so the per-document replay above is the check that each document's own clauses suffice. The check reports
 `ace_to_pl aggregate ok <N> documents <G> obligations`.
 
@@ -466,7 +471,7 @@ fails the replay instead of shrinking it. Manifest rows bind product to
 payload for provenance; replay soundness rests on that composition-wide
 coverage. One residue is open by construction: dropping the LAST
 variant of a multi-variant sentence leaves coverage complete and
-variant numbering contiguous. The frozen ABI carries no per-sentence
+variant numbering contiguous. The schema carries no per-sentence
 variant count to check it against.
 
 Compiled documents are a normal logic program (Horn clauses plus negation as failure), so termination is the
@@ -485,7 +490,7 @@ The gate checks it rather than asserts its absence. Every
 `ckc check` runs `recursion-check` over the loaded composition and
 rejects one, printing the rule-clause count that it scanned. The shipped corpus holds none.
 
-Authoring notes (v1):
+Authoring notes:
 
 - State guideline knowledge and nothing else in an ACE document: no
   witness seed facts, no proper-name stand-ins, no authored probe
@@ -517,117 +522,15 @@ Authoring notes (v1):
   the antecedent referent (`the patient`), or give the consequent
   entity its own noun.
 
-### Schema v2
+### Vocabulary table and time annotations
 
-Schema v2 types the time limits that a sentence states. A guideline
-opts in with the table `guidelines/<id>/temporal.tsv`. The table maps
-source words onto closed identifiers, so no annotation names a source
-word:
-
-```
-# format: kind<TAB>lemma<TAB>value
-# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)
-unit	day	day
-relation	for	duration
-spacing	at	interval
-```
-
-The two header lines are fixed bytes. The table holds at least one row,
-and every row has three fields and ends with a newline. A `unit` row
-maps a noun lemma onto a calendar unit. A `relation` row maps a
-preposition onto a role. A `spacing` row pairs a preposition with a
-frame noun for recurrence, as in `at an interval of 3 months`. A lemma
-is one or more bytes above 0x20, none of them 0x7F. A noun occurs in at
-most one `unit` row and is never also a frame noun. A preposition
-occurs in at most one `relation` row. `ckc check` and `ckc compile`
-reject any other table with `ckc: temporal: <path>: <why> at row <n>`.
-
-The compiler takes v2 from an explicit argument:
-
-```sh
-swipl -q -f none -F none -s <ape-tree-dir>/prolog/ace_to_pl.pl -g main \
-  -t 'halt(9)' -- v2 <ape-tree-dir> <docid> <temporal.tsv> [<ulex>] [proof]
-```
-
-A table that does not load fails the compile with class
-`temporal_load` and exit 2; the compiler never falls back to v1. A v2
-document differs from a v1 document in three places:
-
-- The header reads `guideline_schema_version(2).`.
-- The record gains a fourth argument:
-  `guideline_document(DocId, ace_sha256(H), ulex(none | sha256(H)), temporal(sha256(T)))`.
-  `T` is the SHA-256 of the raw table bytes.
-- The declaration block declares `guideline_document/4` in place of
-  `/3` and then the two annotation indicators, 11 indicators in total.
-
-| Predicate | Meaning |
-| --- | --- |
-| `guideline_interval(Context, Event, Role, Quantity, Unit, Anchor)` | `Event` stands in the time relation `Role` to `Anchor`, bounded by `Quantity` in `Unit`; `Anchor` is `none` when the sentence names no reference point |
-| `guideline_recurrence(Context, Event, Quantity, Unit)` | successive occurrences of `Event` lie `Quantity` in `Unit` apart |
-
-Every v1 clause shape stays legal, and the compiler emits it exactly as
-v1 does. An annotation never replaces a clause. It follows the
-`guideline_pp` clause that it types, in the same context and with the
-same rule body. A v1 document never carries an annotation.
-
-The compiler reads two patterns from the parsed sentence:
-
-- Interval: the event carries a `relation` preposition whose object is
-  a time quantity. The anchor is the single `of` object of that
-  quantity in the same context, as in
-  `within at most 4 weeks of the therapy-start`.
-- Recurrence: the event carries a `spacing` preposition with its frame
-  noun, and the frame has a single `of` object that is a time quantity,
-  as in `at an interval of at most 3 months`.
-
-A time quantity is a referent whose noun is a `unit` lemma. Its
-cardinality clause carries the comparison and the count, as in v1. The
-quantity must be a count noun with a comparison and a count of at least
-1. Every other shape of these patterns rejects with class `unsupported`
-as `temporal_shape(Why, S)`:
-
-| `Why` | Shape |
-| --- | --- |
-| `no_bound` | the quantity has no comparison, or it is not a count noun |
-| `zero_bound` | the count is below 1 |
-| `duration_anchor` | a `duration` role names an anchor |
-| `anchor_count` | an interval quantity has two or more `of` objects, a frame does not have exactly one, or a recurrence quantity has one |
-| `shared_quantity` | two patterns claim one quantity or one frame |
-| `frame_shape` | the frame is not exactly one count noun, or its `of` object is not a time quantity |
-| `anchor_shape` | the anchor is itself a time quantity or a frame |
-
-An `of` link that no pattern consumes still rejects as in v1. The
-compiler checks the patterns left to right, then the shared claims, then
-each negation-as-failure scope. The first violation rejects.
-
-Annotations are data, never schedules. `duration` means that `Event`
-lasts that long. `after` means that `Event` occurs that long after
-`Anchor`, and `before` that long before it. `within` means that `Event`
-and `Anchor` lie that far apart, in either order. `geq` and `leq`
-include the bound; `greater` and `less` exclude it. A unit is a calendar
-label: the compiler converts no unit and calculates no date. Two
-annotations on one event state both limits, so a range is a pair on one
-anchor. Matching stays exact Horn structure: a fact for `geq 30` does
-not satisfy a goal for `geq 20`.
-
-A loaded composition holds one schema version. `ckc v1 <mode>` reads
-v1 and v2 documents. A mixed composition rejects with class
-`check_load` as `schema_version(V, DocId)`: `V` is the first document's
-version, and `DocId` names the first document of another version.
-Certification takes the raw table bytes, so `ckc certify` checks the
-record digest and every annotation against the table.
-
-### Schema v3
-
-Schema v3 types five more temporal shapes. They are a count per
-period, a recurrence inside a time window, an order with no stated
-time, an approximate time limit, and a minimum stated as a range. A
-guideline opts in with a `temporal.tsv` whose header names the v3
-kinds:
+The time annotations type the time limits that a sentence states. A
+guideline opts in with the table `guidelines/<id>/vocabulary.tsv`. The
+table maps source words onto closed identifiers, so no annotation names
+a source word:
 
 ```
 # format: kind<TAB>lemma<TAB>value
-# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)
 unit	day	day
 relation	before	before
 spacing	at	interval
@@ -637,38 +540,81 @@ approximation	approximate	about
 range	to	minimum
 ```
 
-A v3 table holds every v2 row kind and four more. A `window` row pairs a
-preposition with the frame noun of a time window, as in
+The header line is fixed bytes. The table holds at least one row, and
+every row has three fields and ends with a newline. A row whose first
+byte is `#` is a comment and rejects. A `unit` row maps a noun lemma
+onto a calendar unit (`second`, `minute`, `hour`, `day`, `week`,
+`month`, `year`). A `relation` row maps a preposition onto a role
+(`duration`, `within`, `after`, `before`). A `spacing` row pairs a
+preposition with a frame noun for recurrence, as in
+`at an interval of 3 months`. A `window` row pairs a preposition with
+the frame noun of a time window, as in
 `during a window of 1 week of the methadone-start`. A `frequency` row
 names the preposition of a count per period, as in `per 1 day`; its
-value is always `period`. A preposition occurs in at most one
-`frequency` row and never in a `relation` row. A pair of a preposition
-and a frame noun occurs once across the `spacing` and `window` rows. A
-frame noun is never a unit noun. An `approximation` row names an
-adjective that marks a time quantity as approximate, as in
-`2 approximate hours`; its value is always `about`. A `range` row names
-the preposition that joins the upper end of a minimum stated as a
-range, as in `for at least 8 hours to 12 hours`; its value is always
-`minimum`. An adjective occurs in at most one `approximation` row. A
-preposition occurs in at most one `relation`, `frequency` or `range`
-row.
+value is always `period`. An `approximation` row names an adjective
+that marks a time quantity as approximate, as in `2 approximate hours`;
+its value is always `about`. A `range` row names the preposition that
+joins the upper end of a minimum stated as a range, as in
+`for at least 8 hours to 12 hours`; its value is always `minimum`.
 
-The compiler takes v3 from the argument `v3` in place of `v2`. A table
-whose header names another version fails the compile with class
-`temporal_load`. A v3 document differs from a v2 document in two
-places: the header reads `guideline_schema_version(3).`, and the
-declaration block appends four indicators, 15 in total.
+A lemma is one or more bytes above 0x20, none of them 0x7F, that form
+valid UTF-8. A noun occurs in at most one `unit` row and is never also
+a frame noun. A pair of a preposition and a frame noun occurs once
+across the `spacing` and `window` rows. A preposition occurs in at most
+one `relation`, `frequency` or `range` row. An adjective occurs in at
+most one `approximation` row. The checks run in row order: comment,
+field count, lemma, kind, value, duplicates. `ckc check` rejects any
+other table with `ckc: vocabulary: <path>: <why>`, where `<why>` names the
+broken law and, for a row law, ends with `at row <n>`. The compiler, and
+so `ckc compile`, rejects it with class `vocabulary_load` (below). A
+guideline folder that holds a file named `temporal.tsv` is refused by every command that
+reads the table: rename the file to `vocabulary.tsv` and replace its
+header with the one line above.
+
+The compiler takes the table from an explicit argument. `-` in a file
+slot means no file:
+
+```sh
+swipl -q -f none -F none -s <ape-tree-dir>/prolog/ace_to_pl.pl -g main \
+  -t 'halt(9)' -- <ape-tree-dir> <docid> <vocabulary.tsv | -> <ulex | -> [proof]
+```
+
+A table that does not load fails the compile with class
+`vocabulary_load` and exit 2; the compiler never falls back to no
+table. The word `proof` in the vocabulary or ulex slot rejects with
+class `usage` as `vocabulary_arg(proof)` or `ulex_arg(proof)`. A
+leading `v1`, `v2` or `v3` token and every other argument vector reject
+with class `usage` as `argv(Argv)`. A document compiled with a table
+records the table digest in `vocabulary(sha256(T))`; without one it
+records `vocabulary(none)`. The declaration block, the identifier line
+and every clause shape are the same either way.
 
 | Predicate | Meaning |
 | --- | --- |
+| `guideline_interval(Context, Event, Role, Quantity, Unit, Anchor)` | `Event` stands in the time relation `Role` to `Anchor`, bounded by `Quantity` in `Unit`; `Anchor` is `none` when the sentence names no reference point |
+| `guideline_recurrence(Context, Event, Quantity, Unit)` | successive occurrences of `Event` lie `Quantity` in `Unit` apart |
 | `guideline_frequency(Context, Event, Counted, Period, Unit)` | `Event` involves the stated count of `Counted`'s items in each period of `Period` in `Unit` |
 | `guideline_order(Context, Event, Relation, Anchor)` | each occurrence of `Event` lies `before` or `after` `Anchor`; no time bound is stated |
 | `guideline_recurrence_window(Context, Event, Gap, GapUnit, Anchor, Length, LengthUnit)` | consecutive occurrences of `Event` inside the window that starts at `Anchor` and lasts `Length` in `LengthUnit` lie `Gap` in `GapUnit` apart |
 | `guideline_range(Context, Low, High)` | the minimum that the interval quantity `Low` states lies from the count of `Low` to the count of `High`; `High` bounds nothing about the event |
 
-The patterns read referents by their noun anywhere in the document. A
-referent whose noun is no unit and no frame noun is a plain referent.
+An annotation never replaces a clause. It follows the `guideline_pp`
+clause that it types, in the same context and with the same rule body.
+A document compiled without a table never carries an annotation.
 
+The compiler reads these patterns from the parsed sentence. A time
+quantity is a referent whose noun is a `unit` lemma. Its cardinality
+clause carries the comparison and the count. The patterns read
+referents by their noun anywhere in the document. A referent whose noun
+is no unit and no frame noun is a plain referent.
+
+- Interval: the event carries a `relation` preposition whose object is
+  a time quantity. The anchor is the single `of` object of that
+  quantity in the same context, as in
+  `within at most 4 weeks of the therapy-start`.
+- Recurrence: the event carries a `spacing` preposition with its frame
+  noun, and the frame has a single `of` object that is a time quantity,
+  as in `at an interval of at most 3 months`.
 - Order: the event carries a `relation` preposition with role `before`
   or `after`, and its object is a plain referent. The object may come
   from the antecedent or from an earlier sentence.
@@ -697,43 +643,67 @@ referent whose noun is no unit and no frame noun is a plain referent.
   pair needs the same unit and a smaller lower count. The interval keeps
   its own `at least` comparison.
 
-Other shapes of these patterns reject with class `unsupported` as
-`temporal_shape(Why, S)`. `Why` is `frequency_shape`, `window_shape`,
-`approximate_bound` or `range_shape`, or a schema v2 reason where its
-rule applies: a
-quantity without a bound (`no_bound`, `zero_bound`) or a quantity that
-two patterns claim (`shared_quantity`). A count per period does not set calendar buckets, a
-first occurrence or a minimum gap. A window does not set the first
-occurrence and says nothing about occurrences outside it.
+An interval or recurrence quantity must be a count noun with a
+comparison and a count of at least 1. Every other shape of these
+patterns rejects with class `unsupported` as `temporal_shape(Why, S)`:
+
+| `Why` | Shape |
+| --- | --- |
+| `no_bound` | the quantity has no comparison, or it is not a count noun |
+| `zero_bound` | the count is below 1 |
+| `duration_anchor` | a `duration` role names an anchor |
+| `anchor_count` | an interval quantity has two or more `of` objects, a frame does not have exactly one, or a recurrence quantity has one |
+| `shared_quantity` | two patterns claim one quantity or one frame |
+| `frame_shape` | the frame is not exactly one count noun, or its `of` object is not a time quantity |
+| `anchor_shape` | the anchor is itself a time quantity or a frame |
+| `frequency_shape` | a count per period breaks its pattern |
+| `window_shape` | a time window breaks its pattern |
+| `approximate_bound` | an approximate quantity states no exact count |
+| `range_shape` | a ranged minimum breaks its pattern |
+
+An `of` link that no pattern consumes rejects. The compiler checks the
+patterns left to right, then the shared claims, then each
+negation-as-failure scope. The first violation rejects.
+
+Annotations are data, never schedules. `duration` means that `Event`
+lasts that long. `after` means that `Event` occurs that long after
+`Anchor`, and `before` that long before it. `within` means that `Event`
+and `Anchor` lie that far apart, in either order. `geq` and `leq`
+include the bound; `greater` and `less` exclude it. A unit is a calendar
+label: the compiler converts no unit and calculates no date. Two
+annotations on one event state both limits, so a range is a pair on one
+anchor. Matching stays exact Horn structure: a fact for `geq 30` does
+not satisfy a goal for `geq 20`. A count per period does not set
+calendar buckets, a first occurrence or a minimum gap. A window does not
+set the first occurrence and says nothing about occurrences outside it.
 
 An abbreviation such as `d` or `h` can type as a unit. The corpus
 lexicon must declare it as a count noun, and a `unit` row must map it.
 ACE also parses `3 d` as a measured number, but the compiler
 rejects that form as `unresolved_argument`.
 
-A composition holds one version. A question runs over a composition of
-its own version or a later one. A v3 question over a v1 or v2
-composition rejects with class `check_load`. The question record
-names `v3`. Certification checks that the record version equals the
-table header's version.
+Documents compiled with and without a table load into one composition,
+and a question runs against any composition. Certification takes the
+raw table bytes, so `ckc certify` checks the record digest and every
+annotation against the table.
 
 ### Question projection
 
 The compiler's `question` mode compiles one ACE question against the
-same v1 vocabulary (`ckc queries` stages the APE tree and runs it):
+same vocabulary (`ckc queries` stages the APE tree and runs it):
 
 ```sh
 swipl -q -f none -F none -s <ape-tree-dir>/prolog/ace_to_pl.pl -g main \
-  -t 'halt(9)' -- question <ape-tree-dir> <qid> [<ulex>]   # ACE on stdin
+  -t 'halt(9)' -- question <ape-tree-dir> <qid> <vocabulary.tsv | -> <ulex | ->   # ACE on stdin
 ```
 
 The input must be exactly one sentence line that parses to one root
 question box. `<qid>` follows the docid grammar. Success emits four
 lines. Line 1 is a generated-file comment. Line 2 is the ground
-`'$guideline_query'(v1, Qid, ace_sha256(H), ulex(none | sha256(H)))`
+`'$guideline_query'(v1, Qid, ace_sha256(H), ulex(none | sha256(U)), vocabulary(none | sha256(T)))`
 record. Line 3 is a `% Q1:` comment with the verbatim sentence. Line 4
 is one `'$guideline_query_projection'(goal(Conj), answers(Manifest))`
-term. `Conj` is an explicit `','/2` conjunction of v1 goals rendered
+term. `Conj` is an explicit `','/2` conjunction of goals rendered
 through the rule-antecedent pipeline. The root context is `actual`,
 and referents stay variables. A modal box contributes its
 `guideline_operator/3` edge before its payload goals, under a shared
@@ -743,25 +713,18 @@ when exactly one same-box `object/6` types the placeholder; otherwise
 it is `wh(who)` or `wh(what)`. Goal and manifest share variables
 inside the one projection term.
 
-A guideline with `temporal.tsv` compiles every question under the
-version that the table header names, v2 or v3:
-
-```sh
-swipl … -- question v2|v3 <ape-tree-dir> <qid> <temporal.tsv> [<ulex>]
-```
-
-The record is
-`'$guideline_query'(V, Qid, ace_sha256(H), ulex(none | sha256(H)), temporal(sha256(T)))`
-with `V` = `v2` or `v3`.
-A v2 question follows the v1 law with three additions. It admits the
-condition list of an upper-bounding determiner and flattens that list
-into its box; a placeholder inside such a list rejects as
-`condition_shape`. It admits `relation/3` conditions. It runs the Schema
-v2 pattern pass over its goals, with the same rejects. An `of` link that
-no pattern consumes rejects.
+A question of a guideline with `vocabulary.tsv` compiles with the
+table, and its record carries the table digest. With a table, a
+question admits three more shapes. It admits the condition list of an
+upper-bounding determiner and flattens that list into its box; a
+placeholder inside such a list rejects as `condition_shape`. It admits
+`relation/3` conditions. It runs the pattern pass of the section
+"Vocabulary table and time annotations" over its goals, with the same
+rejects. An `of` link that no pattern consumes rejects. Without a
+table, a question admits none of these shapes.
 
 Supported forms: `wh(who | which | what)` and yes-no questions over
-conjunctive v1 content, with modal boxes at any nesting of themselves.
+conjunctive content, with modal boxes at any nesting of themselves.
 Structural and blocker failures reject with class `unsupported` and
 exit 1. `query_expected(S)` means that no root question exists.
 `query_sentences(N)` means that the input is not exactly one sentence.
@@ -789,19 +752,15 @@ ckc v1 answer <manifest> <query-pl>
 `<manifest>` uses the aggregate manifest grammar. The payload column
 must name readable files, and the mode never parses payload terms. A
 0-byte manifest is the empty composition: the mode still declares the
-v1 indicators and solves against no clauses. `<query-pl>` must read
-as exactly two terms in order: the ground `'$guideline_query'/4`
-record (`/5` for v2), then the `'$guideline_query_projection'/2` term.
-A v1 query names the seven v1 semantic predicates only; a v2 query also
-names the two annotations. A v2 query against a v1 composition rejects
-with class `check_load` as `query_file(schema_version)`. A v1 query runs
-against a v1 or a v2 composition. The mode
+indicators and solves against no clauses. `<query-pl>` must read
+as exactly two terms in order: the ground `'$guideline_query'/5`
+record, then the `'$guideline_query_projection'/2` term. A query names
+any of the 13 semantic predicates and runs against any composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 
 Success emits a two-line artifact on stdout: a generated-file
 comment, then one ground term
-`'$guideline_answers'(v1, Qid, query_sha256(H), result(R))`. The
-artifact keeps the `v1` token for v1 and v2 queries alike. `H` is
+`'$guideline_answers'(v1, Qid, query_sha256(H), result(R))`. `H` is
 the SHA-256 of the raw query-file bytes. The solver runs under fixed
 bounds: depth 100 for each derivation, one 100000-inference budget
 that is cumulative across backtracking for the whole query, and
@@ -905,8 +864,8 @@ canonical ordering, the single-active-row promotion invariant. It prints a termi
 remaining non-terminal organizations and unfinished guideline rows —
 that measures the exhaustion clause directly. Corpus validation
 (projection-ledger totality, coverage-ledger closure with its
-region-status meter, lexicon liveness and minimality, v1-only product
-vocabulary) runs for every guideline on every check. The same pass
+region-status meter, lexicon liveness and minimality, the schema's
+product vocabulary) runs for every guideline on every check. The same pass
 re-derives each guideline's review manifest and validates its
 adjudication ledger. It also re-derives every committed query,
 answer, and proof trace, and it joins each trace step to its

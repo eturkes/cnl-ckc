@@ -146,7 +146,7 @@ pub fn v1_answer_impl(
         Ok(query) => query,
     };
     let ghost before_composition = arena.nodes@;
-    let loaded = match crate::k2_load::composition_exec(&mut arena, &rows, pls, query.version) {
+    let loaded = match crate::k2_load::composition_exec(&mut arena, &rows, pls) {
         Err(out) => return out,
         Ok(loaded) => loaded,
     };

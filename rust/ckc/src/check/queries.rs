@@ -85,18 +85,18 @@ pub(super) fn question(
     id: &str,
     ace: &Path,
     lexicon: Option<&Path>,
-    temporal: Option<&Path>,
+    vocabulary: Option<&Path>,
 ) -> Result<Vec<u8>> {
     let input = read(ace, "queries")?;
-    let mut tail = vec!["question".to_owned()];
-    if let Some(t) = temporal {
-        tail.extend([selector(t), show(stage), id.to_owned(), show(t)]);
-    } else {
-        tail.extend([show(stage), id.to_owned()]);
-    }
-    if let Some(p) = lexicon {
-        tail.push(show(p));
-    }
+    // c1 D5: `question <tree> <qid> <vocabulary|-> <ulex|->`.
+    let dash = |p: Option<&Path>| p.map_or("-".to_owned(), show);
+    let tail = vec![
+        "question".to_owned(),
+        show(stage),
+        id.to_owned(),
+        dash(vocabulary),
+        dash(lexicon),
+    ];
     let (timed, out) = process::walled(
         &mut process::compiler(swipl, stage, &tail),
         Some(&input),
@@ -323,11 +323,11 @@ fn question_checks(
     mpath: &Path,
     id: &str,
     lexicon: Option<&Path>,
-    temporal: Option<&Path>,
+    vocabulary: Option<&Path>,
 ) -> Result<(bool, usize)> {
     let ace = root.join(format!("{id}.ace"));
-    let first = question(swipl, stage, id, &ace, lexicon, temporal)?;
-    let second = question(swipl, stage, id, &ace, lexicon, temporal)?;
+    let first = question(swipl, stage, id, &ace, lexicon, vocabulary)?;
+    let second = question(swipl, stage, id, &ace, lexicon, vocabulary)?;
     if first != second {
         return Err(violation(
             "determinism",
@@ -411,7 +411,7 @@ pub(super) fn validate(
     stage: &Path,
     gid: &Path,
     lexicon: Option<&Path>,
-    temporal: Option<&Path>,
+    vocabulary: Option<&Path>,
 ) -> Result<Counts> {
     let root = gid.join("queries");
     let qids = query_aces(&root)?;
@@ -441,7 +441,7 @@ pub(super) fn validate(
     let mpath = scratch.0.join(format!("queries-manifest-{}", name(gid)));
     manifest(&mpath, &gid.join("pl"))?;
     let tallies = par::map(&qids, |id| {
-        question_checks(swipl, stage, &root, &mpath, id, lexicon, temporal)
+        question_checks(swipl, stage, &root, &mpath, id, lexicon, vocabulary)
     })?;
     for (yesno, nodes) in tallies {
         if yesno {
@@ -477,15 +477,16 @@ pub(super) fn fixture(
     if !stage.is_dir() {
         return Err(fail("ape-stage", format!("missing stage: {}", show(stage))));
     }
-    let temporal = gid.join("temporal.tsv");
-    let temporal = temporal.is_file().then_some(temporal);
+    super::inventories::retired_table(gid)?;
+    let vocabulary = gid.join("vocabulary.tsv");
+    let vocabulary = vocabulary.is_file().then_some(vocabulary);
     let counts = validate(
         scratch,
         swipl,
         stage,
         gid,
         lexicon.as_deref(),
-        temporal.as_deref(),
+        vocabulary.as_deref(),
     )?;
     Ok(format!("{}\n", counts.query_meter(&name(gid))).into_bytes())
 }

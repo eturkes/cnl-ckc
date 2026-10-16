@@ -17,26 +17,20 @@ use vstd::slice::slice_to_vec;
 
 verus! {
 
-fn semantic_name(name: &Vec<u8>, arity: usize, v: u8) -> (out: bool)
+fn semantic_name(name: &Vec<u8>, arity: usize) -> (out: bool)
     ensures
-        out == ckc_spec::v1text::version_pred(name@, arity as nat, v as nat),
+        out == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
 {
     proof {
-        reveal(ckc_spec::v1text::version_pred);
+        reveal(ckc_spec::v1text::is_semantic_pred);
         reveal(ckc_spec::v1text::indicator_count);
     }
-    let end: usize = if v == 3 {
-        15
-    } else if v == 2 {
-        11
-    } else {
-        9
-    };
+    let end: usize = 15;
     let mut i = 2usize;
     while i < end
         invariant
             2 <= i <= end,
-            end as int == ckc_spec::v1text::indicator_count(v as nat),
+            end as int == ckc_spec::v1text::indicator_count(),
             forall|j: int|
                 2 <= j < i ==> #[trigger] ckc_spec::v1text::indicator(j) != (name@, arity as nat),
         decreases end - i,
@@ -53,31 +47,31 @@ fn semantic_name(name: &Vec<u8>, arity: usize, v: u8) -> (out: bool)
     false
 }
 
-spec fn walk_goals(goals: Seq<Term>, v: nat) -> Option<Term>
+spec fn walk_goals(goals: Seq<Term>) -> Option<Term>
     decreases goals.len(),
 {
     if goals.len() == 0 {
         None
     } else {
-        match goal_walk(goals[0], v) {
+        match goal_walk(goals[0]) {
             Some(why) => Some(why),
-            None => walk_goals(goals.drop_first(), v),
+            None => walk_goals(goals.drop_first()),
         }
     }
 }
 
-proof fn walk_goals_concat(left: Seq<Term>, right: Seq<Term>, v: nat)
+proof fn walk_goals_concat(left: Seq<Term>, right: Seq<Term>)
     ensures
-        walk_goals(left + right, v) == match walk_goals(left, v) {
+        walk_goals(left + right) == match walk_goals(left) {
             Some(why) => Some(why),
-            None => walk_goals(right, v),
+            None => walk_goals(right),
         },
     decreases left.len(),
 {
     reveal_with_fuel(walk_goals, 1);
     if left.len() > 0 {
         assert_seqs_equal!((left + right).drop_first() == left.drop_first() + right);
-        walk_goals_concat(left.drop_first(), right, v);
+        walk_goals_concat(left.drop_first(), right);
     } else {
         assert_seqs_equal!(left + right == right);
     }
@@ -90,16 +84,14 @@ spec fn comma_goal(t: Term) -> bool {
     }
 }
 
-fn goal_offender(arena: &ETermArena, goal: usize, v: u8) -> (out: Option<usize>)
+fn goal_offender(arena: &ETermArena, goal: usize) -> (out: Option<usize>)
     requires
         root_ok(arena, goal),
     ensures
-        out.is_none() == goal_walk(arena@[goal as int], v as nat).is_none(),
+        out.is_none() == goal_walk(arena@[goal as int]).is_none(),
         out matches Some(root) ==> root < arena.nodes.len() && !comma_goal(arena@[root as int])
-            && goal_walk(arena@[root as int], v as nat).is_some() && goal_walk(
-            arena@[root as int],
-            v as nat,
-        ) == goal_walk(arena@[goal as int], v as nat),
+            && goal_walk(arena@[root as int]).is_some() && goal_walk(arena@[root as int])
+            == goal_walk(arena@[goal as int]),
 {
     hide(goal_walk);
     hide(walk_goals);
@@ -118,10 +110,7 @@ fn goal_offender(arena: &ETermArena, goal: usize, v: u8) -> (out: Option<usize>)
         invariant
             root_ok(arena, goal),
             roots_valid(arena.nodes@, pending@),
-            goal_walk(arena@[goal as int], v as nat) == walk_goals(
-                root_terms(arena.nodes@, pending@),
-                v as nat,
-            ),
+            goal_walk(arena@[goal as int]) == walk_goals(root_terms(arena.nodes@, pending@)),
             comma@ == ckc_spec::engine::comma_name(),
         decreases roots_work(arena.nodes@, pending@),
     {
@@ -161,11 +150,11 @@ fn goal_offender(arena: &ETermArena, goal: usize, v: u8) -> (out: Option<usize>)
                         assert_seqs_equal!(models.drop_first() == seq![models[1]]);
                         assert_seqs_equal!(seq![models[1]].drop_first() == Seq::empty());
                         reveal_with_fuel(walk_goals, 3);
-                        walk_goals_concat(models, root_terms(arena.nodes@, rest), v as nat);
+                        walk_goals_concat(models, root_terms(arena.nodes@, rest));
                         crate::k2_engine::roots_work_concat(arena.nodes@, children, rest);
                         crate::k2_engine::terms_size_root_terms(arena.nodes@, children);
                     }
-                } else if !semantic_name(name, args.len(), v) {
+                } else if !semantic_name(name, args.len()) {
                     return Some(root);
                 }
             },
@@ -207,15 +196,15 @@ pub fn query_atom_error(why: &[u8]) -> (out: EOut)
     query_error(&mut arena, why)
 }
 
-fn goal_leaf_error(arena: &mut ETermArena, root: usize, v: u8) -> (out: EOut)
+fn goal_leaf_error(arena: &mut ETermArena, root: usize) -> (out: EOut)
     requires
         root_ok(old(arena), root),
         !comma_goal(old(arena)@[root as int]),
-        goal_walk(old(arena)@[root as int], v as nat).is_some(),
+        goal_walk(old(arena)@[root as int]).is_some(),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
-        Some(out@) == (match goal_walk(old(arena)@[root as int], v as nat) {
+        Some(out@) == (match goal_walk(old(arena)@[root as int]) {
             Some(why) => Some(query_reject(why)),
             None => None,
         }),
@@ -251,22 +240,19 @@ fn goal_leaf_error(arena: &mut ETermArena, root: usize, v: u8) -> (out: EOut)
     query_error(arena, why)
 }
 
-pub fn goal_check_exec(arena: &mut ETermArena, goal: usize, v: u8) -> (out: Option<EOut>)
+pub fn goal_check_exec(arena: &mut ETermArena, goal: usize) -> (out: Option<EOut>)
     requires
         root_ok(old(arena), goal),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
-        crate::k2_output::option_out_view(out) == (match goal_walk(
-            old(arena)@[goal as int],
-            v as nat,
-        ) {
+        crate::k2_output::option_out_view(out) == (match goal_walk(old(arena)@[goal as int]) {
             Some(why) => Some(query_reject(why)),
             None => None,
         }),
 {
-    match goal_offender(arena, goal, v) {
-        Some(root) => Some(goal_leaf_error(arena, root, v)),
+    match goal_offender(arena, goal) {
+        Some(root) => Some(goal_leaf_error(arena, root)),
         None => None,
     }
 }
@@ -588,13 +574,7 @@ pub fn parsed_term_count(
                 assert(parsed.clauses.len() + 32 <= bytes.len());
                 reveal(ckc_spec::v1text::indicator_count);
             }
-            parsed.clauses.len() + if parsed.doc_version == 3 {
-                32
-            } else if parsed.doc_version == 2 {
-                24
-            } else {
-                20
-            }
+            parsed.clauses.len() + 32
         },
         crate::v1_term_impl::EV1Class::Query => 2,
         _ => 1,
@@ -603,7 +583,6 @@ pub fn parsed_term_count(
 
 pub struct EQuery {
     pub qid: Vec<u8>,
-    pub version: u8,
     pub goal: usize,
     pub rows: Vec<usize>,
     pub file: Ghost<QueryFile>,
@@ -611,7 +590,6 @@ pub struct EQuery {
 
 pub open spec fn query_ok(nodes: Seq<ENode>, query: &EQuery) -> bool {
     &&& query.qid@ == query.file@.qid
-    &&& query.version as nat == query.file@.version
     &&& query.goal < nodes.len()
     &&& nodes[query.goal as int].term@ == query.file@.goal
     &&& roots_valid(nodes, query.rows@)
@@ -706,9 +684,8 @@ pub fn custody_exec(arena: &mut ETermArena, source: &ESrc) -> (out: Result<EQuer
     let ghost before_goal = arena.nodes@;
     proof {
         reveal(ckc_spec::v1text::wf_query);
-        reveal(ckc_spec::v1text::version_ok);
     }
-    let failed = goal_check_exec(arena, goal, parsed.query_version);
+    let failed = goal_check_exec(arena, goal);
     proof {
         crate::k2_term::arena_prefix_stable(before_goal, arena);
         reveal(ckc_spec::answers::custody);
@@ -732,7 +709,7 @@ pub fn custody_exec(arena: &mut ETermArena, source: &ESrc) -> (out: Result<EQuer
     if let Some(out) = rows_check_exec(arena, &rows, goal) {
         return Err(out);
     }
-    Ok(EQuery { qid: parsed.qid, version: parsed.query_version, goal, rows, file: Ghost(query) })
+    Ok(EQuery { qid: parsed.qid, goal, rows, file: Ghost(query) })
 }
 
 fn project_roots_inner(mut arena: ETermArena, rows: &Vec<usize>) -> (out: (Vec<usize>, ETermArena))

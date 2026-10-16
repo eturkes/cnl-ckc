@@ -1,8 +1,8 @@
 % doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -17,8 +17,20 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
 guideline_schema_version(1).
-guideline_document(doc,ace_sha256('8647489d63cfcde8184eb52d11768ae0aeed396bf4c03d5e4ef108d354040ca7'),ulex(none)).
+guideline_document(doc,ace_sha256('8647489d63cfcde8184eb52d11768ae0aeed396bf4c03d5e4ef108d354040ca7'),ulex(none),vocabulary(none)).
 % S1: Synthetic attributed fixture sentence.
 guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(10),[]),chain,positive).
 guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable).

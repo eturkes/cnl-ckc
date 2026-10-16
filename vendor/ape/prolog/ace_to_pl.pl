@@ -5,44 +5,35 @@
 % Copyright 2026 Emir Turkes. Derivative of APE; licensed under
 % LGPL-3.0-or-later like the surrounding tree (see ../LICENSE.txt).
 %
-% Modes (argv after --):
-%   <ape-tree-dir> <docid>            compile onto the v1 schema; ACE bytes on
+% Modes (argv after --; contract c1 D5; `-` = no file):
+%   <ape-tree-dir> <docid> <vocabulary.tsv|-> <ulex|->
+%                                     compile onto the schema; ACE bytes on
 %                                     stdin -> Prolog on stdout
-%   <ape-tree-dir> <docid> <ulex>     compile with user lexicon file
 %   ... proof                         derive + emit the proof payload (one ground
 %                                     '$guideline_proof'/5 term per group) instead of
 %                                     the product; same derivation check either way
-%   question <ape-tree-dir> <qid> [<ulex>]
+%   question <ape-tree-dir> <qid> <vocabulary.tsv|-> <ulex|->
 %                                     compile one ACE question (exactly one
 %                                     sentence line parsing to one root question
-%                                     box) into a '$guideline_query'/4 record and
+%                                     box) into a '$guideline_query'/5 record and
 %                                     one '$guideline_query_projection'/2 term:
-%                                     goal(<','/2 conjunction over the v1
+%                                     goal(<','/2 conjunction over the
 %                                     indicator vocabulary>) + answers([answer(
 %                                     Var,noun(Noun,Class)|wh(who|what)),...]).
 %                                     <qid> follows the docid grammar; rejects
 %                                     ride the same canonical classes (new
 %                                     unsupported details: query_expected/1,
 %                                     query_sentences/1, query_unsupported/2)
-%   v2|v3 <ape-tree-dir> <docid> <temporal.tsv> [<ulex>] [proof]
-%   question v2|v3 <ape-tree-dir> <qid> <temporal.tsv> [<ulex>]
-%                                     schema v2 (contract m7t): the v1 projection
-%                                     + guideline_interval/6 and
-%                                     guideline_recurrence/4 annotations read
-%                                     through the temporal.tsv table; record
-%                                     guideline_document/4 (question record /5)
-%                                     ending temporal(sha256(H)); rejects add
-%                                     unsupported temporal_shape(Why,S) and the
-%                                     load class temporal_load (exit 2); schema
-%                                     v3 (contract q12) adds guideline_frequency/5,
-%                                     guideline_order/4 and
-%                                     guideline_recurrence_window/7 (a table whose
-%                                     header names another version fails
-%                                     temporal_load); v3 approximation rows mark
-%                                     a quantity `about`, range rows emit
-%                                     guideline_range/3 (contract q13); law =
-%                                     docs/REFERENCE.md
-%                                     "Schema v2", "Schema v3"
+%   `proof` in the vocabulary or ulex slot rejects usage vocabulary_arg(proof) |
+%   ulex_arg(proof); a leading schema word (v1|v2|v3, after `question` too) and
+%   every other vector reject usage argv(Argv) — each before any file loads.
+%   A vocabulary.tsv (the guideline's lemma -> closed-id table) adds the
+%   interval, recurrence, order, frequency, scoped-recurrence, approximation and
+%   range annotations its rows reach (contracts m7t, q12, q13; the v2_/v3_
+%   predicate prefixes below name those contracts' pattern families) and
+%   admits relation/3 leaves + upper-bound condition lists in questions; rejects
+%   add unsupported temporal_shape(Why,S) and the load class vocabulary_load
+%   (exit 2). Law = docs/REFERENCE.md "Compiled Prolog schema".
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
 %
@@ -51,14 +42,12 @@
 % Success: stdout = compiled Prolog document, stderr = 0 bytes, exit 0.
 % Reject: stdout = 0 bytes; stderr = one canonical ace_to_pl_error(Class,Detail) line.
 % Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|proof;
-%       2=usage|ape_load|ulex_load|temporal_load|uncaught.
-% v1 assurance: every v1 compile (product or proof emission) derives per-group
+%       2=usage|ape_load|ulex_load|vocabulary_load|uncaught.
+% Assurance: every compile (product or proof emission) derives per-group
 % witness worlds + obligations and replays them against the document's own
 % clauses; an underivable obligation rejects the document (class proof).
-% v1 stays frozen: a v1 compile projects onto it byte for byte, and only the
-% explicit `v2` or `v3` selector adds annotations. The v1 path lives under "v1 schema
-% projection" near the end of this file and is documented in docs/REFERENCE.md
-% "Compiled Prolog schema". v1
+% One schema, identifier 1 (contract c1): every document + question; the
+% projection lives under "schema projection" near the end of this file. It
 % admits copula/ground facts and Horn rules plus modal/classical-negation
 % operator wrappers (reified as guideline_operator/3 edges over context
 % ids), consequent currying, antecedent Horn splits over one disjunction,
@@ -114,99 +103,50 @@ run(Input, Output, ErrorStream) :-
     set_stream(ErrorStream, encoding(utf8)),
     current_prolog_flag(argv, Argv),
     dispatch(Argv, Input, Output, ErrorStream).
-/* v2 | v3 (contracts m7t D2/D9, q12 D1): a leading `v2` | `v3` token selects
-   the schema and names the guideline's temporal.tsv; both are reserved as a
-   first token. */
-schema_token(v2, 2).
-schema_token(v3, 3).
 
-dispatch([question, V, Tree, QId, Temporal], Input, Output, ErrorStream) :-
-    schema_token(V, N),
+/* c1 D5: every slot is positional, so each vector names its whole input;
+   validation order = shape, id, vocabulary slot, ulex slot. */
+dispatch([question|Rest], Input, Output, ErrorStream) :-
     !,
-    validated_docid(QId, ErrorStream),
-    compile_mode(query, Tree, QId, none, file(N, Temporal), Input, Output,
-        ErrorStream).
-dispatch([question, V, Tree, QId, Temporal, Ulex], Input, Output,
-        ErrorStream) :-
-    schema_token(V, N),
-    !,
-    validated_docid(QId, ErrorStream),
-    validated_ulex_arg(Ulex, ErrorStream),
-    compile_mode(query, Tree, QId, file(Ulex), file(N, Temporal), Input, Output,
-        ErrorStream).
-dispatch([V, Tree, DocId, Temporal], Input, Output, ErrorStream) :-
-    schema_token(V, N),
-    !,
-    validated_docid(DocId, ErrorStream),
-    compile_mode(v1(product), Tree, DocId, none, file(N, Temporal), Input,
-        Output, ErrorStream).
-dispatch([V, Tree, DocId, Temporal, proof], Input, Output, ErrorStream) :-
-    schema_token(V, N),
-    !,
-    validated_docid(DocId, ErrorStream),
-    compile_mode(v1(proof), Tree, DocId, none, file(N, Temporal), Input, Output,
-        ErrorStream).
-dispatch([V, Tree, DocId, Temporal, Ulex], Input, Output, ErrorStream) :-
-    schema_token(V, N),
-    !,
-    validated_docid(DocId, ErrorStream),
-    validated_ulex_arg(Ulex, ErrorStream),
-    compile_mode(v1(product), Tree, DocId, file(Ulex), file(N, Temporal), Input,
-        Output, ErrorStream).
-dispatch([V, Tree, DocId, Temporal, Ulex, proof], Input, Output,
-        ErrorStream) :-
-    schema_token(V, N),
-    !,
-    validated_docid(DocId, ErrorStream),
-    validated_ulex_arg(Ulex, ErrorStream),
-    compile_mode(v1(proof), Tree, DocId, file(Ulex), file(N, Temporal), Input,
-        Output, ErrorStream).
-dispatch([question, Tree, QId], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(QId, ErrorStream),
-    compile_mode(query, Tree, QId, none, Input, Output, ErrorStream).
-dispatch([question, Tree, QId, Ulex], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(QId, ErrorStream),
-    validated_ulex_arg(Ulex, ErrorStream),
-    compile_mode(query, Tree, QId, file(Ulex), Input, Output, ErrorStream).
-dispatch([question|Rest], _, _, ErrorStream) :-
-    !,
-    emit_error(ErrorStream, usage, argv([question|Rest]), 2).
-dispatch([Tree, DocId], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(DocId, ErrorStream),
-    compile_mode(v1(product), Tree, DocId, none, Input, Output, ErrorStream).
-dispatch([Tree, DocId, proof], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(DocId, ErrorStream),
-    compile_mode(v1(proof), Tree, DocId, none, Input, Output, ErrorStream).
-dispatch([Tree, DocId, Ulex], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(DocId, ErrorStream),
-    validated_ulex_arg(Ulex, ErrorStream),
-    compile_mode(v1(product), Tree, DocId, file(Ulex), Input, Output,
-        ErrorStream).
-dispatch([Tree, DocId, Ulex, proof], Input, Output, ErrorStream) :-
-    !,
-    validated_docid(DocId, ErrorStream),
-    validated_ulex_arg(Ulex, ErrorStream),
-    compile_mode(v1(proof), Tree, DocId, file(Ulex), Input, Output,
-        ErrorStream).
-dispatch(Argv, _, _, ErrorStream) :-
-    emit_error(ErrorStream, usage, argv(Argv), 2).
+    ( Rest = [Tree, QId, Vocabulary, Ulex], \+ schema_word(Tree) ->
+        validated_docid(QId, ErrorStream),
+        validated_file_arg(vocabulary_arg, Vocabulary, ErrorStream, Table),
+        validated_file_arg(ulex_arg, Ulex, ErrorStream, Lexicon),
+        compile_mode(query, Tree, QId, Lexicon, Table, Input, Output,
+            ErrorStream)
+    ; emit_error(ErrorStream, usage, argv([question|Rest]), 2)
+    ).
+dispatch(Argv, Input, Output, ErrorStream) :-
+    ( Argv = [Tree, DocId, Vocabulary, Ulex|Tail],
+      \+ schema_word(Tree),
+      proof_tail(Tail, Mode) ->
+        validated_docid(DocId, ErrorStream),
+        validated_file_arg(vocabulary_arg, Vocabulary, ErrorStream, Table),
+        validated_file_arg(ulex_arg, Ulex, ErrorStream, Lexicon),
+        compile_mode(Mode, Tree, DocId, Lexicon, Table, Input, Output,
+            ErrorStream)
+    ; emit_error(ErrorStream, usage, argv(Argv), 2)
+    ).
 
-/* `proof` is a reserved argv token: a bare third slot spelling `proof`
-   reads as the proof mode, so a user lexicon file literally named
-   `proof` is unaddressable; the explicit ulex+proof form
-   (`<tree> <docid> proof proof`) rejects it as usage — pass a lexicon
-   under any other name. */
-reserved_argv_token(proof).
+proof_tail([], v1(product)).
+proof_tail([proof], v1(proof)).
 
-validated_ulex_arg(Ulex, ErrorStream) :-
-    ( reserved_argv_token(Ulex) ->
-        emit_error(ErrorStream, usage, ulex_arg(Ulex), 2)
-    ; true
+/* A pre-c1 selector vector (`v2 <tree> …`, `question v3 <tree> …`) is
+   refused whole rather than read as a tree named v2. */
+schema_word(v1).
+schema_word(v2).
+schema_word(v3).
+
+/* `-` = no file; `proof` is reserved in both file slots, so the pre-c1
+   `<tree> <docid> <ulex> proof` form rejects; a file literally named `-` or
+   `proof` is unaddressable. */
+validated_file_arg(Slot, Arg, ErrorStream, File) :-
+    ( Arg == proof ->
+        Detail =.. [Slot, Arg],
+        emit_error(ErrorStream, usage, Detail, 2)
+    ; Arg == '-' ->
+        File = none
+    ; File = file(Arg)
     ).
 
 /* Docid lands in the header term and a comment line; the grammar keeps
@@ -232,15 +172,12 @@ docid_code(0'-).
 
 /* ---------- compile mode ---------- */
 
-compile_mode(Mode, Tree, DocId, Ulex, Input, Output, ErrorStream) :-
-    compile_mode(Mode, Tree, DocId, Ulex, none, Input, Output, ErrorStream).
-
-compile_mode(Mode, Tree, DocId, Ulex, Temporal, Input, Output, ErrorStream) :-
+compile_mode(Mode, Tree, DocId, Ulex, Vocabulary, Input, Output, ErrorStream) :-
     set_stream(Input, type(binary)),
     prompt(_, ''),
     load_ape(Tree, Input, Output, ErrorStream),
     maybe_load_ulex(Ulex, Input, Output, ErrorStream, UlexDigest),
-    maybe_load_temporal(Temporal, ErrorStream),
+    maybe_load_vocabulary(Vocabulary, ErrorStream),
     read_input(Input, ErrorStream, Bytes, Text),
     mode_line_check(Mode, Text, ErrorStream),
     ( quarantined_call(Input, Output, ErrorStream,
@@ -786,50 +723,43 @@ canonical_tree(Term) :-
     \+ ( Name == '$VAR', Arity =:= 1 ),
     canonical_args(1, Arity, Term).
 
-/* ---------- v2 temporal vocabulary (contract m7t D1) ----------
-   `temporal.tsv` maps source lemmas onto closed ids, so the projection
+/* ---------- vocabulary table (contracts m7t D1, q12 D1, q13 D1, c1 D4) ----------
+   `vocabulary.tsv` maps source lemmas onto closed ids, so the projection
    names no source word. The table parks in a global the projection reads;
-   none = v1. */
-maybe_load_temporal(none, _) :-
-    nb_setval(ace_to_pl_temporal, none).
-maybe_load_temporal(file(N, File), ErrorStream) :-
-    nb_setval(ace_to_pl_schema, N),
+   none = no table. */
+maybe_load_vocabulary(none, _) :-
+    nb_setval(ace_to_pl_vocabulary, none).
+maybe_load_vocabulary(file(File), ErrorStream) :-
     catch(
-        ( v2_read_temporal(File, Table) ->
+        ( read_vocabulary(File, Table) ->
             true
-        ; throw(error(temporal_load_failed(File),
-              context(ace_to_pl:maybe_load_temporal/2, plain_failure)))
+        ; throw(error(vocabulary_load_failed(File),
+              context(ace_to_pl:maybe_load_vocabulary/2, plain_failure)))
         ),
         Error,
-        emit_error(ErrorStream, temporal_load, Error, 2)),
-    nb_setval(ace_to_pl_temporal, Table).
+        emit_error(ErrorStream, vocabulary_load, Error, 2)),
+    nb_setval(ace_to_pl_vocabulary, Table).
 
-v2_temporal_header(2, Codes) :-
-    atom_codes('# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)\n',
-        Codes).
-v2_temporal_header(3, Codes) :-
-    atom_codes('# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n',
-        Codes).
+vocabulary_header(Codes) :-
+    atom_codes('# format: kind\tlemma\tvalue\n', Codes).
 
-/* The header must be the selected version's (q12 D1: no cross-version read). */
-v2_read_temporal(File, table(N, Units, Relations, Spacings, Windows, Frequencies,
+read_vocabulary(File, table(Units, Relations, Spacings, Windows, Frequencies,
         Approximations, Ranges, Digest)) :-
-    nb_getval(ace_to_pl_schema, N),
     setup_call_cleanup(
         open(File, read, Stream, [type(binary)]),
         read_stream_to_codes(Stream, Bytes),
         close(Stream)),
     crypto_data_hash(Bytes, Digest, [algorithm(sha256), encoding(octet)]),
-    v2_temporal_header(N, Header),
+    vocabulary_header(Header),
     ( append(Header, Body, Bytes) -> true ; v2_bad(header) ),
     ( Body \== [] -> true ; v2_bad(no_rows) ),
     ( append(Lines, [0'\n], Body) -> true ; v2_bad(final_newline) ),
     split_lf(Lines, Rows),
-    v2_rows(Rows, 1, t(N, [], [], [], [], [], [], []),
-        t(N, Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges)).
+    v2_rows(Rows, 1, t([], [], [], [], [], [], []),
+        t(Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges)).
 
 v2_bad(Why) :-
-    throw(error(temporal(Why), context(ace_to_pl:v2_read_temporal/2, _))).
+    throw(error(vocabulary(Why), context(ace_to_pl:read_vocabulary/2, _))).
 
 v2_rows([], _, T, T).
 v2_rows([Row|Rows], N, T0, T) :-
@@ -837,10 +767,12 @@ v2_rows([Row|Rows], N, T0, T) :-
     N1 is N + 1,
     v2_rows(Rows, N1, T1, T).
 
-/* One row; checks run in the spec's order (fields, lemma, kind, value,
-   duplicates). A noun is a unit or a frame, never both; a v3 frequency
-   preposition is never a relation preposition. */
-v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0, A0, G0), T) :-
+/* One row; checks run in the spec's order (comment, fields, lemma, kind,
+   value, duplicates). A `#` row is a comment, never a row, so a pre-c1
+   two-line header fails at row 1. A noun is a unit or a frame, never both;
+   a preposition maps to at most one of relation, frequency and range. */
+v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0), T) :-
+    ( Row = [0'#|_] -> v2_bad(row(N, comment)) ; true ),
     v2_split_tab(Row, Fields),
     ( Fields = [K, L, V] -> true ; v2_bad(row(N, field_count)) ),
     ( v2_lemma(L, Lemma) -> true ; v2_bad(row(N, lemma)) ),
@@ -855,7 +787,7 @@ v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0, A0, G0), T) :-
         ; true
         ),
         append(U0, [Lemma-Unit], U),
-        T = t(Ver, U, R0, S0, W0, F0, A0, G0)
+        T = t(U, R0, S0, W0, F0, A0, G0)
     ; Kind == relation ->
         ( v2_closed_id(V, [duration, within, after, before], Role) ->
             true
@@ -866,8 +798,8 @@ v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0, A0, G0), T) :-
         ; true
         ),
         append(R0, [Lemma-Role], R),
-        T = t(Ver, U0, R, S0, W0, F0, A0, G0)
-    ; ( Kind == spacing ; Ver =:= 3, Kind == window ) ->
+        T = t(U0, R, S0, W0, F0, A0, G0)
+    ; ( Kind == spacing ; Kind == window ) ->
         ( v2_lemma(V, Frame) -> true ; v2_bad(row(N, frame_lemma)) ),
         ( ( memberchk(Lemma-Frame, S0) ; memberchk(Lemma-Frame, W0)
           ; memberchk(Frame-_, U0) ) ->
@@ -876,31 +808,31 @@ v2_row(Row, N, t(Ver, U0, R0, S0, W0, F0, A0, G0), T) :-
         ),
         ( Kind == spacing ->
             append(S0, [Lemma-Frame], S),
-            T = t(Ver, U0, R0, S, W0, F0, A0, G0)
+            T = t(U0, R0, S, W0, F0, A0, G0)
         ; append(W0, [Lemma-Frame], W),
-          T = t(Ver, U0, R0, S0, W, F0, A0, G0)
+          T = t(U0, R0, S0, W, F0, A0, G0)
         )
-    ; Ver =:= 3, Kind == frequency ->
+    ; Kind == frequency ->
         ( atom_codes(period, V) -> true ; v2_bad(row(N, frequency_value)) ),
         ( ( memberchk(Lemma, F0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, G0) ) ->
             v2_bad(row(N, duplicate_preposition))
         ; true
         ),
         append(F0, [Lemma], F),
-        T = t(Ver, U0, R0, S0, W0, F, A0, G0)
-    ; Ver =:= 3, Kind == approximation ->
+        T = t(U0, R0, S0, W0, F, A0, G0)
+    ; Kind == approximation ->
         ( atom_codes(about, V) -> true ; v2_bad(row(N, approximation_value)) ),
         ( memberchk(Lemma, A0) -> v2_bad(row(N, duplicate_adjective)) ; true ),
         append(A0, [Lemma], A),
-        T = t(Ver, U0, R0, S0, W0, F0, A, G0)
-    ; Ver =:= 3, Kind == range ->
+        T = t(U0, R0, S0, W0, F0, A, G0)
+    ; Kind == range ->
         ( atom_codes(minimum, V) -> true ; v2_bad(row(N, range_value)) ),
         ( ( memberchk(Lemma, G0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, F0) ) ->
             v2_bad(row(N, duplicate_preposition))
         ; true
         ),
         append(G0, [Lemma], G),
-        T = t(Ver, U0, R0, S0, W0, F0, A0, G)
+        T = t(U0, R0, S0, W0, F0, A0, G)
     ; v2_bad(row(N, kind))
     ).
 
@@ -912,7 +844,7 @@ v2_split_tab(Codes, [Field|Fields]) :-
     ).
 
 /* A lemma field = nonempty UTF-8 bytes, none of them a space, control or
-   DEL byte; Atom = its decoded text (spec temporal.rs lemma_ok). */
+   DEL byte; Atom = its decoded text (spec vocabulary.rs lemma_ok). */
 v2_lemma([B|Bs], Atom) :-
     forall(member(X, [B|Bs]), ( X > 0x20, X =\= 0x7f )),
     catch(decode_utf8([B|Bs], Codes, 0), _, fail),
@@ -924,8 +856,8 @@ v2_closed_id(Codes, Ids, Id) :-
     !.
 
 v2_table(T) :-
-    nb_current(ace_to_pl_temporal, table(V, U, R, S, W, F, A, G, _)),
-    T = t(V, U, R, S, W, F, A, G).
+    nb_current(ace_to_pl_vocabulary, table(U, R, S, W, F, A, G, _)),
+    T = t(U, R, S, W, F, A, G).
 
 /* ---------- v2 annotation pass (contract m7t D4/D5) ----------
    One scope = one flat item list; a NAF payload is its own scope. A
@@ -976,7 +908,7 @@ v2_pp_item(Item, Ctx, PP) :-
     functor(PP, modifier_pp, 3).
 
 v2_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
-    T = t(_, U, R, Sp, W, _, _, _),
+    T = t(U, R, Sp, W, _, _, _),
     append(Sp, W, Frames),
     arg(1, PP, E),
     arg(2, PP, P),
@@ -1233,7 +1165,7 @@ v3_decl_in([V0-d(N0, B0)|Ds], V, Noun, Bounded) :-
     ).
 
 /* A plain referent: a variable whose noun is neither a unit nor a frame noun. */
-v3_plain(t(_, U, _, Sp, W, _, _, _), X) :-
+v3_plain(t(U, _, Sp, W, _, _, _), X) :-
     var(X),
     v3_decl(X, d(Noun, _)),
     atom(Noun),
@@ -1249,38 +1181,35 @@ v3_frame_shaped(O) :-
     arg(6, O, N), N == 1.
 
 v3_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
-    T = t(Ver, U, R, _, W, F, _, G),
-    ( Ver =:= 3 ->
-        arg(1, PP, E),
-        arg(2, PP, P),
-        arg(3, PP, X),
-        ( atom(P), memberchk(P-Role, R), memberchk(Role, [before, after]) ->
-            Ordered = Role
-        ; Ordered = none
-        ),
-        ( v2_obj_of(Scope, Ctx, X, O) ->
-            v2_noun(O, NL),
-            ( atom(P), memberchk(P-NL, W) ->
-                v3_window(T, S, Scope, Ctx, PP, O, Ann)
-            ; atom(P), memberchk(P, F) ->
-                v3_frequency(T, S, Scope, Ctx, PP, Ann)
-            ; atom(P), memberchk(P, G), v2_qty(U, Scope, Ctx, X, _, _) ->
-                v3_range(T, S, Scope, Ctx, PP, Ann)
-            ; Ordered \== none, v3_plain(T, X) ->
-                Ann = order(E, Ordered, X)
-            ; Ann = none
-            )
+    T = t(U, R, _, W, F, _, G),
+    arg(1, PP, E),
+    arg(2, PP, P),
+    arg(3, PP, X),
+    ( atom(P), memberchk(P-Role, R), memberchk(Role, [before, after]) ->
+        Ordered = Role
+    ; Ordered = none
+    ),
+    ( v2_obj_of(Scope, Ctx, X, O) ->
+        v2_noun(O, NL),
+        ( atom(P), memberchk(P-NL, W) ->
+            v3_window(T, S, Scope, Ctx, PP, O, Ann)
+        ; atom(P), memberchk(P, F) ->
+            v3_frequency(T, S, Scope, Ctx, PP, Ann)
+        ; atom(P), memberchk(P, G), v2_qty(U, Scope, Ctx, X, _, _) ->
+            v3_range(T, S, Scope, Ctx, PP, Ann)
         ; Ordered \== none, v3_plain(T, X) ->
             Ann = order(E, Ordered, X)
         ; Ann = none
         )
+    ; Ordered \== none, v3_plain(T, X) ->
+        Ann = order(E, Ordered, X)
     ; Ann = none
     ).
 
 /* D6: the only window pp on E, F frame-shaped, F of L (a time quantity), L of A
    (a plain referent). */
 v3_window(T, S, Scope, Ctx, PP, O, window(E, F, L, Unit, A)) :-
-    T = t(_, U, _, _, _, _, _, _),
+    T = t(U, _, _, _, _, _, _),
     arg(1, PP, E),
     arg(3, PP, F),
     v2_of_links(Scope, Ctx, F, FL),
@@ -1303,7 +1232,7 @@ v3_window(T, S, Scope, Ctx, PP, O, window(E, F, L, Unit, A)) :-
 
 /* D5: W an unanchored exact period; the counted item = E's second participant. */
 v3_frequency(T, S, Scope, Ctx, PP, Ann) :-
-    T = t(_, U, _, _, _, _, _, _),
+    T = t(U, _, _, _, _, _, _),
     arg(1, PP, E),
     arg(3, PP, W),
     ( v2_qty(U, Scope, Ctx, W, Unit, WO) ->
@@ -1358,7 +1287,7 @@ v3_window_of([_|Anns], Ctx, E, L, Unit, A) :-
 v3_window_pps([], _, _, _, _, 0).
 v3_window_pps([Item|Items], Scope, T, Ctx, E, N) :-
     v3_window_pps(Items, Scope, T, Ctx, E, N0),
-    T = t(_, _, _, _, W, _, _, _),
+    T = t(_, _, _, W, _, _, _),
     (   nonvar(Item),
         functor(Item, anchored, 2),
         arg(1, Item, C0),
@@ -1399,7 +1328,7 @@ v3_count([C0-Ann|Anns], Ctx, E, Kind, N) :-
 /* ---------- q13 D3/D4: about + ranged minimum ---------- */
 /* A same-context property(R, A, pos) with A an approximation lemma. */
 v3_approximate(T, Scope, Ctx, R) :-
-    T = t(_, _, _, _, _, _, Ap, _),
+    T = t(_, _, _, _, _, Ap, _),
     member(Item, Scope),
     nonvar(Item),
     functor(Item, anchored, 2),
@@ -1428,7 +1357,7 @@ v3_approx_check(T, S, Scope, Ctx, Q, F, O) :-
 
 /* D4: H an exact, unanchored, unapproximated time quantity. */
 v3_range(T, S, Scope, Ctx, PP, range(E, H, Unit)) :-
-    T = t(_, U, _, _, _, _, _, _),
+    T = t(U, _, _, _, _, _, _),
     arg(1, PP, E),
     arg(3, PP, H),
     v2_qty(U, Scope, Ctx, H, Unit, HO),
@@ -1492,47 +1421,18 @@ v3_about_target(recurrence(_, F, Q, _), Q, F).
 v3_about_target(window(_, F, L, _, _), L, F).
 v3_about_target(frequency(_, _, W, _), W, W).
 
-/* Schema version of the current compile: 2 iff a temporal table loaded. */
-v2_version(V) :-
-    ( v2_table(t(V0, _, _, _, _, _, _, _)) -> V = V0 ; V = 1 ).
-
-v2_indicators(Indicators) :-
-    ( v2_table(_) ->
-        Indicators = [
-            guideline_schema_version/1,
-            guideline_document/4,
-            guideline_entity/4,
-            guideline_cardinality/5,
-            guideline_event/3,
-            guideline_arg/4,
-            guideline_pp/4,
-            guideline_property/4,
-            guideline_operator/3,
-            guideline_interval/6,
-            guideline_recurrence/4
-        |V3]
-    ; v1_indicators(Indicators)
+/* Every record (document /4, question /5) ends in vocabulary(none) |
+   vocabulary(sha256(T)), T = the digest of the raw table bytes (c1 D2/D3). */
+vocabulary_record(Record0, Record) :-
+    ( nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _, Digest)) ->
+        Wrapper = vocabulary(sha256(Digest))
+    ; Wrapper = vocabulary(none)
     ),
-    ( v2_version(3) ->
-        V3 = [
-            guideline_frequency/5,
-            guideline_order/4,
-            guideline_recurrence_window/7,
-            guideline_range/3
-        ]
-    ; V3 = []
-    ).
+    Record0 =.. List0,
+    append(List0, [Wrapper], List),
+    Record =.. List.
 
-/* v2 records end in temporal(sha256(H)). */
-v2_record(Record0, Record) :-
-    ( nb_current(ace_to_pl_temporal, table(_, _, _, _, _, _, _, _, Digest)) ->
-        Record0 =.. List0,
-        append(List0, [temporal(sha256(Digest))], List),
-        Record =.. List
-    ; Record = Record0
-    ).
-
-/* ---------- v1 schema projection (frozen) ----------
+/* ---------- schema projection ----------
 
    The sole compile path. Closed reserved vocabulary: source lemmas
    (nouns/verbs/adjectives/prepositions) are opaque data atoms, never
@@ -1558,18 +1458,24 @@ v2_record(Record0, Record) :-
    invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
    See docs/REFERENCE.md "Compiled Prolog schema". */
 
-/* Uniform declaration block (F2): every v1 document declares all nine
-   indicators regardless of population. */
+/* Uniform declaration block (F2, c1 D2): every document declares all 15
+   indicators regardless of population or table. */
 v1_indicators([
     guideline_schema_version/1,
-    guideline_document/3,
+    guideline_document/4,
     guideline_entity/4,
     guideline_cardinality/5,
     guideline_event/3,
     guideline_arg/4,
     guideline_pp/4,
     guideline_property/4,
-    guideline_operator/3
+    guideline_operator/3,
+    guideline_interval/6,
+    guideline_recurrence/4,
+    guideline_frequency/5,
+    guideline_order/4,
+    guideline_recurrence_window/7,
+    guideline_range/3
 ]).
 
 v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
@@ -2449,14 +2355,13 @@ v1_vars_subset([V|Vs], Vars) :-
 
 v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes) :-
     header_term(DocId, AceDigest, UlexDigest, Header0),
-    v2_record(Header0, Header),
-    v2_indicators(Indicators),
-    v2_version(Version),
+    vocabulary_record(Header0, Header),
+    v1_indicators(Indicators),
     with_output_to(string(Out),
         ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.~n',
               [DocId]),
           v1_render_decls(Indicators),
-          render_term_line(guideline_schema_version(Version)),
+          render_term_line(guideline_schema_version(1)),
           render_term_line(Header),
           v1_render_bundles(Bundles, Lines)
         )),
@@ -2848,14 +2753,8 @@ query_comment_codes(Text, Comment) :-
     ).
 
 query_render(QId, AceDigest, UlexDigest, Text, Conj, Answers, OutCodes) :-
-    query_header_term(QId, AceDigest, UlexDigest, Record1),
-    ( v2_version(V), V > 1 ->
-        schema_token(Token, V),
-        Record1 =.. [F, _|Args1],
-        Record0 =.. [F, Token|Args1]
-    ; Record0 = Record1
-    ),
-    v2_record(Record0, Record),
+    query_header_term(QId, AceDigest, UlexDigest, Record0),
+    vocabulary_record(Record0, Record),
     query_comment_codes(Text, Comment),
     with_output_to(string(Out),
         ( format('% ~w compiled from ACE question by ace_to_pl question mode; do not edit.~n',
@@ -2973,7 +2872,7 @@ v1_derive_proofs(Bundles, DocId, Payload) :-
     v1_prove_bundles(Bundles, DocId, Payload).
 
 v1_load_proof_world(Bundles) :-
-    v2_indicators(Indicators),
+    v1_indicators(Indicators),
     v1_declare_proof_world(Indicators),
     v1_load_proof_bundles(Bundles).
 
@@ -3164,4 +3063,5 @@ fallback_error_line(proof, "ace_to_pl_error(proof,unserializable).\n") :- !.
 fallback_error_line(usage, "ace_to_pl_error(usage,unserializable).\n") :- !.
 fallback_error_line(ape_load, "ace_to_pl_error(ape_load,unserializable).\n") :- !.
 fallback_error_line(ulex_load, "ace_to_pl_error(ulex_load,unserializable).\n") :- !.
+fallback_error_line(vocabulary_load, "ace_to_pl_error(vocabulary_load,unserializable).\n") :- !.
 fallback_error_line(_, "ace_to_pl_error(uncaught,unserializable).\n").

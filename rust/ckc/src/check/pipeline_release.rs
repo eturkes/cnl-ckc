@@ -357,6 +357,15 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
             return Err(error(format!("member-not-regular {path}")));
         }
     }
+    // c1 D4: a guideline holding the pre-c1 table name is refused, never exported.
+    if let Some((_, path)) = inventory
+        .iter()
+        .find(|(_, p)| p.ends_with("/temporal.tsv") && p.matches('/').count() == 2)
+    {
+        return Err(error(format!(
+            "retired table name: {path} (rename to vocabulary.tsv)"
+        )));
+    }
     let mut gids = BTreeSet::new();
     for (_, path) in &inventory {
         let parts: Vec<&str> = path.split('/').collect();
@@ -446,17 +455,6 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
         .iter()
         .map(|(a, b)| (a.as_bytes().to_vec(), b.as_bytes().to_vec()))
         .collect();
-    // q12 D1: each staged temporal table's bytes name its guideline's schema version.
-    let tables = gids
-        .iter()
-        .filter_map(|g| {
-            let path = format!("guidelines/{g}/temporal.tsv");
-            staged
-                .iter()
-                .find(|(p, _)| **p == path)
-                .map(|(_, b)| (g.as_bytes().to_vec(), b.clone()))
-        })
-        .collect();
     let manifest = ckc_kernel::contract::release_manifest(
         crate::trust::sha256_hex(&compiler).as_bytes(),
         crate::trust::sha256_hex(&lexicon).as_bytes(),
@@ -465,7 +463,6 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
         &urls,
         &label_rows,
         &tag_members,
-        &tables,
     );
     let payload = staged
         .into_iter()

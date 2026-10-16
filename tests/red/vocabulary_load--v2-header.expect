@@ -1,0 +1,1 @@
+ace_to_pl_error(vocabulary_load,error(vocabulary(header),context(:(ace_to_pl,/(read_vocabulary,2)),A))).

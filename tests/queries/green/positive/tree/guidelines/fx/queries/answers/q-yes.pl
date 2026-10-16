@@ -1,2 +1,2 @@
 % q-yes answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-yes',query_sha256('0d74be3f7b884393411dddd243f54e3e12e6c09e4a7941e86e3aa26445baf4eb'),result(yes)).
+'$guideline_answers'(v1,'q-yes',query_sha256('21fffcd01bf37b048d857fea29e7b87fe866311b3155b346b7d0a689b5851178'),result(yes)).

@@ -2,8 +2,10 @@ use super::common::*;
 use super::{process, red};
 use std::path::Path;
 // q12 P4: a green probe compiles under the docid of its stem (red-probe sidecars)
-// to exactly its `.expect` pin, which the kernel reader accepts.
-pub(super) fn run(swipl: &Path, stage: &Path, probe: &Path) -> Result {
+// to exactly its `.expect` pin, which the kernel reader accepts; c1 P4: its optional
+// `.proof.expect` pin = the proof-mode payload of the same argv + `proof`.
+// Ok(true) = the proof lane ran too.
+pub(super) fn run(swipl: &Path, stage: &Path, probe: &Path) -> Result<bool> {
     let n = name(probe);
     let input = read(probe, "green-probe")?;
     let id = n.strip_suffix(".ace").unwrap_or(&n);
@@ -34,5 +36,28 @@ pub(super) fn run(swipl: &Path, stage: &Path, probe: &Path) -> Result {
             format!("kernel reader rejects probe output: {n}"),
         ));
     }
-    Ok(())
+    let pin = probe.with_extension("proof.expect");
+    if !pin.is_file() {
+        return Ok(false);
+    }
+    let mut tail = tail;
+    tail.push("proof".to_owned());
+    let proof = process::bounded(
+        &mut process::compiler(swipl, stage, &tail),
+        &format!("green-probe {n} proof"),
+        Some(&input),
+    )?;
+    if proof.rc != 0 || !proof.err.is_empty() {
+        return Err(violation(
+            "green-exit",
+            format!("status {} for proof probe: {n}", proof.rc),
+        ));
+    }
+    if proof.out != read(&pin, "green-expect")? {
+        return Err(violation(
+            "green-expect",
+            format!("stdout differs from proof pin for probe: {n}"),
+        ));
+    }
+    Ok(true)
 }

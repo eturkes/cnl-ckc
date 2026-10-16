@@ -21,8 +21,16 @@
 :- discontiguous(guideline_interval/6).
 :- multifile(guideline_recurrence/4).
 :- discontiguous(guideline_recurrence/4).
-guideline_schema_version(2).
-guideline_document(doc,ace_sha256(e1b497038774f29540d369419e71988662932bc7328ebf9f177897d947daf92f),ulex(none),temporal(sha256('1b017245079fd0206a790060fc3208db1db4c72059eda61145257591e61c5e23'))).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+guideline_schema_version(1).
+guideline_document(doc,ace_sha256(e1b497038774f29540d369419e71988662932bc7328ebf9f177897d947daf92f),ulex(none),vocabulary(sha256('4d554e69a44f325ae34f930739183f4abd6a6019b7ebe43057cc2b65462c7c21'))).
 % S1: A man waits for 3 days.
 guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),man,countable).
 guideline_cardinality(actual,'$guideline_id'(product,doc,1,ref(1),[]),na,eq,1).

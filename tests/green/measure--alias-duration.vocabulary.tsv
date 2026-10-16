@@ -1,0 +1,12 @@
+# format: kind	lemma	value
+unit	hour	hour
+unit	day	day
+unit	week	week
+relation	for	duration
+relation	within	within
+relation	after	after
+relation	before	before
+spacing	at	interval
+window	during	window
+frequency	per	period
+unit	d	day

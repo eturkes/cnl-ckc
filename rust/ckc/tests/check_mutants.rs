@@ -1,7 +1,8 @@
 // `ckc check` corpus mutants (.agent/archive/contracts/harness.md H6): the 36 M5.3 red
 // mutants whose first violation lands before the SWI-Prolog stage (mutants.py
 // `mutate`, byte for byte) + 3 `.agent/spec.md` shape plants + 1 ledger bundle-mismatch plant
-// + 11 temporal.tsv plants (one per m7t D1 rejection). Each row mutates a
+// + 11 vocabulary.tsv row-law plants (`temporal-*`) + 35 table file plants (`temporal-v3-*`,
+// `<name>.vocabulary.tsv.in`) + 4 c1 D4 plants (`vocabulary-*`). Each row mutates a
 // fresh clone of HEAD and must end in its pinned rc with the pinned first
 // violation: whole stderr when nonempty, else the last stdout line.
 // CKC_CHECK_TEST_BIN selects a prebuilt executable.
@@ -25,7 +26,7 @@ const ULEX: &str = "guidelines/cdc-2022-opioid/lexicon.ulex";
 const SHADOW: &str = "guidelines/cdc-2022-opioid/audit/lexicon-shadow.tsv";
 const EVIDENCE: &str = "guidelines/cdc-2022-opioid/source/box3-extraction.txt";
 const SPEC: &str = ".agent/spec.md";
-const TEMPORAL: &str = "guidelines/cdc-2022-opioid/temporal.tsv";
+const VOCABULARY: &str = "guidelines/cdc-2022-opioid/vocabulary.tsv";
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -146,26 +147,36 @@ const LEDGER_DATE: &[u8] = b"2026-09-14T00:00:00Z";
 fn mutate(t: &Path, name: &str) {
     match name {
         name if name.starts_with("temporal-v3-") => {
-            let input = root().join("tests/check-mutants").join(format!("{name}.temporal.tsv.in"));
-            fs::write(t.join(TEMPORAL), fs::read(input).unwrap()).unwrap();
+            let input = root().join("tests/check-mutants").join(format!("{name}.vocabulary.tsv.in"));
+            fs::write(t.join(VOCABULARY), fs::read(input).unwrap()).unwrap();
         }
-        "temporal-header" => replace(t, TEMPORAL, b"# format: kind\tlemma\tvalue\n", b"# format: drift\n"),
+        "temporal-header" => replace(t, VOCABULARY, b"# format: kind\tlemma\tvalue\n", b"# format: drift\n"),
         "temporal-no-rows" => {
-            let header = lines(&fs::read(t.join(TEMPORAL)).unwrap())[..2].concat();
-            truncate_to(t, TEMPORAL, header.len());
+            let header = lines(&fs::read(t.join(VOCABULARY)).unwrap())[..1].concat();
+            truncate_to(t, VOCABULARY, header.len());
         }
         "temporal-final-newline" => {
-            let len = fs::read(t.join(TEMPORAL)).unwrap().len();
-            truncate_to(t, TEMPORAL, len - 1);
+            let len = fs::read(t.join(VOCABULARY)).unwrap().len();
+            truncate_to(t, VOCABULARY, len - 1);
         }
-        "temporal-field-count" => append(t, TEMPORAL, b"unit\tminute\n"),
-        "temporal-lemma" => append(t, TEMPORAL, b"unit\tmy minute\tminute\n"),
-        "temporal-unit-id" => append(t, TEMPORAL, b"unit\tfortnight\tfortnight\n"),
-        "temporal-duplicate-noun" => append(t, TEMPORAL, b"unit\tday\tweek\n"),
-        "temporal-role-id" => append(t, TEMPORAL, b"relation\tthrough\tthrough\n"),
-        "temporal-duplicate-preposition" => append(t, TEMPORAL, b"relation\tfor\tafter\n"),
-        "temporal-frame-lemma" => append(t, TEMPORAL, b"spacing\tevery\t\n"),
-        "temporal-kind" => append(t, TEMPORAL, b"cadence\tdaily\tday\n"),
+        "temporal-field-count" => append(t, VOCABULARY, b"unit\tminute\n"),
+        "temporal-lemma" => append(t, VOCABULARY, b"unit\tmy minute\tminute\n"),
+        "temporal-unit-id" => append(t, VOCABULARY, b"unit\tfortnight\tfortnight\n"),
+        "temporal-duplicate-noun" => append(t, VOCABULARY, b"unit\tday\tweek\n"),
+        "temporal-role-id" => append(t, VOCABULARY, b"relation\tthrough\tthrough\n"),
+        "temporal-duplicate-preposition" => append(t, VOCABULARY, b"relation\tfor\tafter\n"),
+        "temporal-frame-lemma" => append(t, VOCABULARY, b"spacing\tevery\t\n"),
+        "temporal-kind" => append(t, VOCABULARY, b"cadence\tdaily\tday\n"),
+        // c1 D4: a `#` row is a comment ahead of every other row law; the retired name
+        // is refused alone and beside the table.
+        "vocabulary-comment-row" => append(t, VOCABULARY, b"# note\n"),
+        "vocabulary-comment-precedence" => append(t, VOCABULARY, b"#unit\tday\tweek\n"),
+        "vocabulary-retired-alone" => {
+            fs::rename(t.join(VOCABULARY), t.join(G).join("temporal.tsv")).unwrap();
+        }
+        "vocabulary-retired-beside" => {
+            new_file(t, &format!("{G}/temporal.tsv"), &fs::read(t.join(VOCABULARY)).unwrap());
+        }
         "fork-entry" => new_file(t, "vendor/000-parity", b"not a vendor directory\n"),
         "vendor-license" => replace(t, "vendor/clex/PROVENANCE", b"License: GPL-3.0-or-later\n", b""),
         "pristine-digest" => {
@@ -288,8 +299,8 @@ fn mutate(t: &Path, name: &str) {
         "semantic-undotted-clause" => replace(
             t,
             DOC,
-            b"guideline_schema_version(3).\n",
-            b"guideline_schema_version(3)\n",
+            b"guideline_schema_version(1).\n",
+            b"guideline_schema_version(1)\n",
         ),
         "semantic-undotted-record" => {
             let rows: Vec<Vec<u8>> = lines(&fs::read(t.join(DOC)).unwrap())
@@ -410,21 +421,17 @@ fn check_mutant_battery() {
         .filter(|l| !l.starts_with('#'))
         .map(|l| l.split('\t').collect())
         .collect();
-    let v3_rows = rows
-        .iter()
-        .filter(|r| r[0].starts_with("temporal-v3-"))
-        .count();
+    let count = |prefix: &str| rows.iter().filter(|r| r[0].starts_with(prefix)).count();
+    let (files, c1) = (count("temporal-v3-"), count("vocabulary-"));
     assert_eq!(
-        rows.len() - v3_rows,
+        rows.len() - files - c1,
         51,
         "tests/check-mutants legacy row count"
     );
-    let q13_rows = rows
-        .iter()
-        .filter(|r| r[0].starts_with("temporal-v3-q13-"))
-        .count();
-    assert_eq!(v3_rows - q13_rows, 30, "tests/check-mutants q12 row count");
-    assert_eq!(q13_rows, 16, "tests/check-mutants q13 row count");
+    let q13 = count("temporal-v3-q13-");
+    assert_eq!(files - q13, 21, "tests/check-mutants q12 file-plant count");
+    assert_eq!(q13, 14, "tests/check-mutants q13 file-plant count");
+    assert_eq!(c1, 4, "tests/check-mutants c1 plant count");
     // Each worker clones HEAD once, then per row: mutate → check → reset + clean
     // back to HEAD (a fresh checkout per row costs ~10× the check itself).
     let next = AtomicUsize::new(0);

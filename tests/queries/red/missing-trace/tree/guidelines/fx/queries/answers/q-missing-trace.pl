@@ -1,2 +1,2 @@
 % q-missing-trace answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-missing-trace',query_sha256('9523b7b226e8be54e28c468e20e6a9d9626f38c28a0ac66b06768411793fdb17'),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])])]))).
+'$guideline_answers'(v1,'q-missing-trace',query_sha256(bfab2859c639032799df3c86333815380ba7a8e15fb8a2ded73563a2b1c2e1ce),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])])]))).

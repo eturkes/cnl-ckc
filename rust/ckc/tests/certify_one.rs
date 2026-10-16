@@ -1,6 +1,6 @@
 // N25: `ckc certify-one` over the committed tests/certify-one fixtures (contract n25 D2;
 // regenerate them with .agent/archive/generators/certify-one-fixtures): accepted doc, query
-// and v3 runs pin rc 0 + stdout; every reject pins rc 1 + its stderr line, stdout empty.
+// and table-backed (`v3`) runs pin rc 0 + stdout; every reject pins rc 1 + its stderr line, stdout empty.
 // CKC_CERTIFY_ONE_TEST_BIN selects a prebuilt executable.
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -52,7 +52,7 @@ fn certify_one(args: &[&Path]) -> (Option<i32>, Vec<u8>, Vec<u8>) {
     (out.status.code(), out.stdout, out.stderr)
 }
 
-// doc | query, id, ace, ulex, dump, pl, [temporal] for one fixture case, with overrides.
+// doc | query, id, ace, ulex, dump, pl, [vocabulary] for one fixture case, with overrides.
 fn argv<'a>(mode: &'a str, id: &'a str, case: &str, swap: &[(usize, &'a Path)]) -> Vec<PathBuf> {
     let mut v: Vec<PathBuf> = vec![
         mode.into(),
@@ -63,7 +63,7 @@ fn argv<'a>(mode: &'a str, id: &'a str, case: &str, swap: &[(usize, &'a Path)]) 
         fixture(case, "pl.txt.in"),
     ];
     if case == "v3" {
-        v.push(fixture(case, "temporal.tsv.in"));
+        v.push(fixture(case, "vocabulary.tsv.in"));
     }
     for (i, p) in swap {
         if *i == v.len() {
@@ -147,7 +147,7 @@ fn unreadable_and_invalid_inputs_reject() {
     );
     rejects(
         argv("doc", "fx-timed", "v3", &[(6, &missing)]),
-        "ckc: certify: fx-timed: unreadable(temporal).\n",
+        "ckc: certify: fx-timed: unreadable(vocabulary).\n",
     );
 }
 
@@ -161,17 +161,17 @@ fn certification_rejects_altered_inputs() {
         argv("doc", "fx-doc", "doc", &[(5, &tampered)]),
         "ckc: certify: fx-doc: clauses(1).\n",
     );
-    let mut table = fs::read(fixture("v3", "temporal.tsv.in")).unwrap();
+    let mut table = fs::read(fixture("v3", "vocabulary.tsv.in")).unwrap();
     table.extend_from_slice(b"unit\tday\tday\n");
     let foreign = s.file("foreign.tsv", &table);
     rejects(
         argv("doc", "fx-timed", "v3", &[(6, &foreign)]),
-        "ckc: certify: fx-timed: temporal.\n",
+        "ckc: certify: fx-timed: vocabulary.\n",
     );
-    let v3_table = fixture("v3", "temporal.tsv.in");
+    let v3_table = fixture("v3", "vocabulary.tsv.in");
     rejects(
         argv("doc", "fx-doc", "doc", &[(6, &v3_table)]),
-        "ckc: certify: fx-doc: temporal.\n",
+        "ckc: certify: fx-doc: vocabulary.\n",
     );
     rejects(
         argv("query", "fx-doc", "doc", &[]),

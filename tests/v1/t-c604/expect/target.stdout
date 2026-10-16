@@ -1,2 +1,2 @@
 % q-wh answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-wh',query_sha256(d89c7b546c1e6da0f075878dc20ba262abb782bd3562ee0ae49f325e71e86585),result(yes)).
+'$guideline_answers'(v1,'q-wh',query_sha256('08582978c56028dcd2ef23dd2b493baf067aabee2137e09bd0da755de81ad29b'),result(yes)).

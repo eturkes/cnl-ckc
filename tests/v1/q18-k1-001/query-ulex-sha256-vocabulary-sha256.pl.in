@@ -1,0 +1,4 @@
+% query-id compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'query-id',ace_sha256('561b7e6b7138e4620521cd7fc0d8937cfe2dd6ae487236ad16f89b0c92f615b4'),ulex(sha256('3b9b7da19ca2e65b147b8463d15c838cfd4e5945522746211f801550f7420e74')),vocabulary(sha256(dc84bd4f777cbb132c7bd9ecf44240426c992fa1be4dd77797351c5f8b8784da))).
+% Q1: Which person exists?
+'$guideline_query_projection'(goal(guideline_entity(x,A,x,x)),answers([answer(A,noun(person,countable))])).

@@ -29,8 +29,8 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
-guideline_schema_version(3).
-guideline_document('frequency--ditransitive',ace_sha256(a23063286205ccbf5dc08e11b038b7b4d255c840aeb27e885e5832916fd3d7ff),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),temporal(sha256(bec3540718d479bac3ed36dfdd59f3fef887b20ead3d9bfaa3bdc213a613bdb9))).
+guideline_schema_version(1).
+guideline_document('frequency--ditransitive',ace_sha256(a23063286205ccbf5dc08e11b038b7b4d255c840aeb27e885e5832916fd3d7ff),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256(c058a3dfa8cf288d37e663be0948539f77e302371f329257103e927753ce14f9))).
 % S1: A man gives 2 books to a woman per 1 day.
 guideline_entity(actual,'$guideline_id'(product,'frequency--ditransitive',1,ref(1),[]),man,countable).
 guideline_cardinality(actual,'$guideline_id'(product,'frequency--ditransitive',1,ref(1),[]),na,eq,1).

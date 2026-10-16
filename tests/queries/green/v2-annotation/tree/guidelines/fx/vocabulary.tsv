@@ -1,0 +1,5 @@
+# format: kind	lemma	value
+unit	day	day
+unit	week	week
+relation	for	duration
+spacing	at	interval

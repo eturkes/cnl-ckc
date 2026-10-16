@@ -1,17 +1,16 @@
 use crate::k4_bytes::{append, copy, eq, split, starts_with};
 use ckc_spec::check::*;
-use ckc_spec::temporal::*;
 #[cfg(verus_keep_ghost)]
 use ckc_spec::v1text::{all_in, ascii, udec_bytes};
+use ckc_spec::vocabulary::*;
 use vstd::prelude::*;
 use vstd::slice::slice_subrange;
 
 verus! {
 
-// m7t D1 + q12 D1: the temporal.tsv grammar (v2 | v3 header), parsed once for
-// `ckc check` and for the v2/v3 projection.
-pub struct ETemporal {
-    pub version: u8,
+// m7t D1 + q12 D1 + c1 D4: the vocabulary.tsv grammar, parsed once for
+// `ckc check` and for the annotating projection.
+pub struct EVocabulary {
     pub units: Vec<(Vec<u8>, Vec<u8>)>,
     pub relations: Vec<(Vec<u8>, Vec<u8>)>,
     pub spacings: Vec<(Vec<u8>, Vec<u8>)>,
@@ -29,12 +28,11 @@ pub open spec fn lemmas_view(v: Seq<Vec<u8>>) -> Seq<Seq<u8>> {
     v.map_values(|x: Vec<u8>| x@)
 }
 
-impl View for ETemporal {
-    type V = Temporal;
+impl View for EVocabulary {
+    type V = Vocabulary;
 
-    open spec fn view(&self) -> Temporal {
-        Temporal {
-            version: self.version as nat,
+    open spec fn view(&self) -> Vocabulary {
+        Vocabulary {
             units: pairs_view(self.units@),
             relations: pairs_view(self.relations@),
             spacings: pairs_view(self.spacings@),
@@ -64,11 +62,12 @@ proof fn literals()
         b"no rows"@ == ascii("no rows"@),
         b"final newline"@ == ascii("final newline"@),
         b" at row "@ == ascii(" at row "@),
-        b"ckc: temporal ok "@ == ascii("ckc: temporal ok "@),
+        b"ckc: vocabulary ok "@ == ascii("ckc: vocabulary ok "@),
+        b"comment"@ == ascii("comment"@),
         b" "@ == ascii(" "@),
         b" rows\n"@ == ascii(" rows\n"@),
         b": "@ == ascii(": "@),
-        b"temporal"@ == ascii("temporal"@),
+        b"vocabulary"@ == ascii("vocabulary"@),
         b"window"@ == ascii("window"@),
         b"frequency"@ == ascii("frequency"@),
         b"frequency value"@ == ascii("frequency value"@),
@@ -162,9 +161,12 @@ proof fn literals()
     reveal_byteslit(b" at row ");
     reveal_strlit(" at row ");
     assert(b" at row "@ =~= ascii(" at row "@));
-    reveal_byteslit(b"ckc: temporal ok ");
-    reveal_strlit("ckc: temporal ok ");
-    assert(b"ckc: temporal ok "@ =~= ascii("ckc: temporal ok "@));
+    reveal_byteslit(b"ckc: vocabulary ok ");
+    reveal_strlit("ckc: vocabulary ok ");
+    assert(b"ckc: vocabulary ok "@ =~= ascii("ckc: vocabulary ok "@));
+    reveal_byteslit(b"comment");
+    reveal_strlit("comment");
+    assert(b"comment"@ =~= ascii("comment"@));
     reveal_byteslit(b" ");
     reveal_strlit(" ");
     assert(b" "@ =~= ascii(" "@));
@@ -174,9 +176,9 @@ proof fn literals()
     reveal_byteslit(b": ");
     reveal_strlit(": ");
     assert(b": "@ =~= ascii(": "@));
-    reveal_byteslit(b"temporal");
-    reveal_strlit("temporal");
-    assert(b"temporal"@ =~= ascii("temporal"@));
+    reveal_byteslit(b"vocabulary");
+    reveal_strlit("vocabulary");
+    assert(b"vocabulary"@ =~= ascii("vocabulary"@));
 }
 
 pub fn lemma_ok_exec(l: &[u8]) -> (r: bool)
@@ -427,14 +429,14 @@ pub fn role_id_ok(v: &[u8]) -> (r: bool)
     r
 }
 
-pub fn why(s: &[u8]) -> (r: Result<ETemporal, Vec<u8>>)
+pub fn why(s: &[u8]) -> (r: Result<EVocabulary, Vec<u8>>)
     ensures
         r matches Err(e) && e@ == s@,
 {
     Err(copy(s))
 }
 
-pub open spec fn tview(r: Result<ETemporal, Vec<u8>>) -> Result<Temporal, Seq<u8>> {
+pub open spec fn tview(r: Result<EVocabulary, Vec<u8>>) -> Result<Vocabulary, Seq<u8>> {
     match r {
         Ok(t) => Ok(t@),
         Err(e) => Err(e@),
@@ -520,7 +522,7 @@ proof fn concat_contains<A>(a: Seq<A>, b: Seq<A>, x: A)
 }
 
 // frames(t).contains(k): a spacing or window frame noun.
-pub fn frame_in(t: &ETemporal, k: &[u8]) -> (r: bool)
+pub fn frame_in(t: &EVocabulary, k: &[u8]) -> (r: bool)
     ensures
         r == frames(t@).contains(k@),
 {
@@ -536,12 +538,11 @@ pub fn frame_in(t: &ETemporal, k: &[u8]) -> (r: bool)
     a || b
 }
 
-pub fn clone_tab(t: &ETemporal) -> (r: ETemporal)
+pub fn clone_tab(t: &EVocabulary) -> (r: EVocabulary)
     ensures
         r@ == t@,
 {
-    ETemporal {
-        version: t.version,
+    EVocabulary {
         units: clone_pairs(&t.units),
         relations: clone_pairs(&t.relations),
         spacings: clone_pairs(&t.spacings),
@@ -552,7 +553,7 @@ pub fn clone_tab(t: &ETemporal) -> (r: ETemporal)
     }
 }
 
-pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>>)
+pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec<u8>>)
     ensures
         tview(r) == add_row(t@, line@),
 {
@@ -560,6 +561,9 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
     proof {
         literals();
         assert(byte_rows(f@).len() == f@.len());
+    }
+    if line.len() > 0 && line[0] == 0x23 {
+        return why(b"comment");
     }
     if f.len() != 3 {
         return why(b"field count");
@@ -602,7 +606,7 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
             assert(pairs_view(r.relations@) =~= pairs_view(t.relations@).push((f@[1]@, f@[2]@)));
         }
         Ok(r)
-    } else if eq(&f[0], b"spacing") || (t.version == 3 && eq(&f[0], b"window")) {
+    } else if eq(&f[0], b"spacing") || eq(&f[0], b"window") {
         let spacing = eq(&f[0], b"spacing");
         if !lemma_ok_exec(&f[2]) {
             return why(b"frame lemma");
@@ -626,7 +630,7 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
             }
         }
         Ok(r)
-    } else if t.version == 3 && eq(&f[0], b"frequency") {
+    } else if eq(&f[0], b"frequency") {
         if !eq(&f[2], b"period") {
             return why(b"frequency value");
         }
@@ -642,7 +646,7 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
             assert(lemmas_view(r.frequencies@) =~= lemmas_view(t.frequencies@).push(f@[1]@));
         }
         Ok(r)
-    } else if t.version == 3 && eq(&f[0], b"approximation") {
+    } else if eq(&f[0], b"approximation") {
         if !eq(&f[2], b"about") {
             return why(b"approximation value");
         }
@@ -655,7 +659,7 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
             assert(lemmas_view(r.approximations@) =~= lemmas_view(t.approximations@).push(f@[1]@));
         }
         Ok(r)
-    } else if t.version == 3 && eq(&f[0], b"range") {
+    } else if eq(&f[0], b"range") {
         if !eq(&f[2], b"minimum") {
             return why(b"range value");
         }
@@ -676,13 +680,16 @@ pub fn add_row_exec(t: &ETemporal, line: &[u8]) -> (r: Result<ETemporal, Vec<u8>
     }
 }
 
-proof fn add_row_count(t: Temporal, line: Seq<u8>)
+proof fn add_row_count(t: Vocabulary, line: Seq<u8>)
     ensures
         add_row(t, line) matches Ok(t2) ==> row_count(t2) == row_count(t) + 1,
 {
 }
 
-pub open spec fn counted_view(r: Result<(ETemporal, usize), Vec<u8>>) -> Result<Temporal, Seq<u8>> {
+pub open spec fn counted_view(r: Result<(EVocabulary, usize), Vec<u8>>) -> Result<
+    Vocabulary,
+    Seq<u8>,
+> {
     match r {
         Ok((t, _)) => Ok(t@),
         Err(e) => Err(e@),
@@ -690,57 +697,26 @@ pub open spec fn counted_view(r: Result<(ETemporal, usize), Vec<u8>>) -> Result<
 }
 
 // The table + its row count (the count rides the parse: the Vec lengths need no sum).
-pub fn parse_temporal_exec(bytes: &[u8]) -> (r: Result<(ETemporal, usize), Vec<u8>>)
+pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), Vec<u8>>)
     ensures
-        counted_view(r) == parse_temporal(bytes@),
+        counted_view(r) == parse_vocabulary(bytes@),
         r matches Ok((t, n)) ==> n == row_count(t@),
 {
-    let h2: &[u8] =
-        b"# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)\n";
-    let h3: &[u8] =
-        b"# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n";
+    let h: &[u8] = b"# format: kind\tlemma\tvalue\n";
     proof {
-        reveal_byteslit(
-            b"# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)\n",
-        );
-        reveal_strlit(
-            "# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma)\n",
-        );
-        reveal_byteslit(
-            b"# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n",
-        );
-        reveal_strlit(
-            "# format: kind\tlemma\tvalue\n# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n",
-        );
+        reveal_byteslit(b"# format: kind\tlemma\tvalue\n");
+        reveal_strlit("# format: kind\tlemma\tvalue\n");
         reveal(ascii);
-        assert(h2@ =~= temporal_header());
-        assert(h3@ =~= temporal_header_v3());
+        assert(h@ =~= vocabulary_header());
         literals();
     }
-    let v2 = starts_with(bytes, h2);
-    let v3 = !v2 && starts_with(bytes, h3);
-    if !v2 && !v3 {
+    if !starts_with(bytes, h) {
         return Err(copy(b"header"));
     }
-    let version: u8 = if v2 {
-        2
-    } else {
-        3
-    };
-    let hl = if v2 {
-        h2.len()
-    } else {
-        h3.len()
-    };
-    let ghost h = if v2 {
-        temporal_header()
-    } else {
-        temporal_header_v3()
-    };
+    let hl = h.len();
     let body = slice_subrange(bytes, hl, bytes.len());
     proof {
-        assert(hl == h.len());
-        assert(body@ =~= bytes@.skip(h.len() as int));
+        assert(body@ =~= bytes@.skip(vocabulary_header().len() as int));
     }
     if body.len() == 0 {
         return Err(copy(b"no rows"));
@@ -751,14 +727,13 @@ pub fn parse_temporal_exec(bytes: &[u8]) -> (r: Result<(ETemporal, usize), Vec<u
     let lines = split(body, 0x0A);
     let n = lines.len() - 1;
     let ghost rows = body_lines(body@);
-    let ghost e0 = empty_table(version as nat);
+    let ghost e0 = empty_table();
     proof {
         assert(rows =~= byte_rows(lines@).drop_last());
         assert(body@.last() == 0x0A);
-        assert(parse_temporal(bytes@) == add_rows(e0, rows, 1));
+        assert(parse_vocabulary(bytes@) == add_rows(e0, rows, 1));
     }
-    let mut t = ETemporal {
-        version,
+    let mut t = EVocabulary {
         units: Vec::new(),
         relations: Vec::new(),
         spacings: Vec::new(),
@@ -786,7 +761,7 @@ pub fn parse_temporal_exec(bytes: &[u8]) -> (r: Result<(ETemporal, usize), Vec<u
             rows == byte_rows(lines@).drop_last(),
             add_rows(e0, rows, 1) == add_rows(t@, rows.skip(i as int), (i + 1) as nat),
             row_count(t@) == i,
-            parse_temporal(bytes@) == add_rows(e0, rows, 1),
+            parse_vocabulary(bytes@) == add_rows(e0, rows, 1),
         decreases n - i,
     {
         proof {
@@ -805,8 +780,8 @@ pub fn parse_temporal_exec(bytes: &[u8]) -> (r: Result<(ETemporal, usize), Vec<u
                     let rest = rows.skip(i as int);
                     assert(rest.len() > 0);
                     assert(rest[0] == lines@[i as int]@);
-                    assert(add_row(t@, rest[0]) == Err::<Temporal, Seq<u8>>(ev));
-                    assert(add_rows(t@, rest, (i + 1) as nat) == Err::<Temporal, Seq<u8>>(
+                    assert(add_row(t@, rest[0]) == Err::<Vocabulary, Seq<u8>>(ev));
+                    assert(add_rows(t@, rest, (i + 1) as nat) == Err::<Vocabulary, Seq<u8>>(
                         ev + ascii(" at row "@) + udec_bytes((i + 1) as nat),
                     ));
                     assert(out@ =~= ev + ascii(" at row "@) + udec_bytes((i + 1) as nat));
@@ -828,16 +803,16 @@ pub fn parse_temporal_exec(bytes: &[u8]) -> (r: Result<(ETemporal, usize), Vec<u
     Ok((t, n))
 }
 
-pub fn check_temporal_impl(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EVerdict)
+pub fn check_vocabulary_impl(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EVerdict)
     ensures
-        r@ == temporal_check(path@, bytes@),
+        r@ == vocabulary_check(path@, bytes@),
 {
     proof {
         literals();
     }
-    match parse_temporal_exec(bytes) {
+    match parse_vocabulary_exec(bytes) {
         Ok((_, count)) => {
-            let mut m = copy(b"ckc: temporal ok ");
+            let mut m = copy(b"ckc: vocabulary ok ");
             append(&mut m, path);
             append(&mut m, b" ");
             let num = crate::k2_manifest::udec_vec(count);
@@ -849,7 +824,7 @@ pub fn check_temporal_impl(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EV
             let mut d = copy(path);
             append(&mut d, b": ");
             append(&mut d, &why);
-            ckc_spec::check::EVerdict::Fail(copy(b"temporal"), d)
+            ckc_spec::check::EVerdict::Fail(copy(b"vocabulary"), d)
         },
     }
 }

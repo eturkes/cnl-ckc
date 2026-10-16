@@ -109,20 +109,19 @@ pub enum Sym {
     RootCondition,
     RuleWithoutAntecedent,
     RuleWithoutConsequent,
-    SchemaVersion,
     Sentence,
     SentenceLines,
     SentenceShape,
     Sentences,
     SharedQuantity,
     Should,
-    Temporal,
     TemporalShape,
     Ulex,
     UnresolvedArgument,
     Unsupported,
     V,
     Variant,
+    Vocabulary,
     Wh,
     What,
     Which,
@@ -248,20 +247,19 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::RootCondition => ckc_spec::v1text::ascii("root_condition"@),
         Sym::RuleWithoutAntecedent => ckc_spec::v1text::ascii("rule_without_antecedent"@),
         Sym::RuleWithoutConsequent => ckc_spec::v1text::ascii("rule_without_consequent"@),
-        Sym::SchemaVersion => ckc_spec::v1text::ascii("schema_version"@),
         Sym::Sentence => ckc_spec::v1text::ascii("sentence"@),
         Sym::SentenceLines => ckc_spec::v1text::ascii("sentence_lines"@),
         Sym::SentenceShape => ckc_spec::v1text::ascii("sentence_shape"@),
         Sym::Sentences => ckc_spec::v1text::ascii("sentences"@),
         Sym::SharedQuantity => ckc_spec::v1text::ascii("shared_quantity"@),
         Sym::Should => ckc_spec::v1text::ascii("should"@),
-        Sym::Temporal => ckc_spec::v1text::ascii("temporal"@),
         Sym::TemporalShape => ckc_spec::v1text::ascii("temporal_shape"@),
         Sym::Ulex => ckc_spec::v1text::ascii("ulex"@),
         Sym::UnresolvedArgument => ckc_spec::v1text::ascii("unresolved_argument"@),
         Sym::Unsupported => ckc_spec::v1text::ascii("unsupported"@),
         Sym::V => ckc_spec::v1text::ascii("v"@),
         Sym::Variant => ckc_spec::v1text::ascii("variant"@),
+        Sym::Vocabulary => ckc_spec::v1text::ascii("vocabulary"@),
         Sym::Wh => ckc_spec::v1text::ascii("wh"@),
         Sym::What => ckc_spec::v1text::ascii("what"@),
         Sym::Which => ckc_spec::v1text::ascii("which"@),
@@ -383,20 +381,19 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::RootCondition => bytes_rootcondition(),
         Sym::RuleWithoutAntecedent => bytes_rulewithoutantecedent(),
         Sym::RuleWithoutConsequent => bytes_rulewithoutconsequent(),
-        Sym::SchemaVersion => bytes_schemaversion(),
         Sym::Sentence => bytes_sentence(),
         Sym::SentenceLines => bytes_sentencelines(),
         Sym::SentenceShape => bytes_sentenceshape(),
         Sym::Sentences => bytes_sentences(),
         Sym::SharedQuantity => bytes_sharedquantity(),
         Sym::Should => bytes_should(),
-        Sym::Temporal => bytes_temporal(),
         Sym::TemporalShape => bytes_temporalshape(),
         Sym::Ulex => bytes_ulex(),
         Sym::UnresolvedArgument => bytes_unresolvedargument(),
         Sym::Unsupported => bytes_unsupported(),
         Sym::V => bytes_v(),
         Sym::Variant => bytes_variant(),
+        Sym::Vocabulary => bytes_vocabulary(),
         Sym::Wh => bytes_wh(),
         Sym::What => bytes_what(),
         Sym::Which => bytes_which(),
@@ -1878,20 +1875,6 @@ fn bytes_rulewithoutconsequent() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
-fn bytes_schemaversion() -> (out: Vec<u8>)
-    ensures
-        out@ == ckc_spec::v1text::ascii("schema_version"@),
-{
-    let b: &[u8] = b"schema_version";
-    proof {
-        reveal_byteslit(b"schema_version");
-        reveal_strlit("schema_version");
-        reveal(ckc_spec::v1text::ascii);
-        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("schema_version"@));
-    }
-    slice_to_vec(b)
-}
-
 fn bytes_sentence() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("sentence"@),
@@ -1976,20 +1959,6 @@ fn bytes_should() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
-fn bytes_temporal() -> (out: Vec<u8>)
-    ensures
-        out@ == ckc_spec::v1text::ascii("temporal"@),
-{
-    let b: &[u8] = b"temporal";
-    proof {
-        reveal_byteslit(b"temporal");
-        reveal_strlit("temporal");
-        reveal(ckc_spec::v1text::ascii);
-        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("temporal"@));
-    }
-    slice_to_vec(b)
-}
-
 fn bytes_temporalshape() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("temporal_shape"@),
@@ -2070,6 +2039,20 @@ fn bytes_variant() -> (out: Vec<u8>)
         reveal_strlit("variant");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("variant"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_vocabulary() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("vocabulary"@),
+{
+    let b: &[u8] = b"vocabulary";
+    proof {
+        reveal_byteslit(b"vocabulary");
+        reveal_strlit("vocabulary");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("vocabulary"@));
     }
     slice_to_vec(b)
 }

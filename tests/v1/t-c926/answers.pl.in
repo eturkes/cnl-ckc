@@ -1,2 +1,2 @@
 % q-naf-unsafe answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-naf-unsafe',query_sha256(b476a30b591bbcc5ba440c25a2af0d56e34017369d05de785d01d4a1673dd956),result(yes)).
+'$guideline_answers'(v1,'q-naf-unsafe',query_sha256('79d7e77fd0d6dc91b4a0ce33724be06b5b7701075b8f3a0b75b25c39a7b34a4f'),result(yes)).

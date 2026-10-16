@@ -42,7 +42,7 @@ pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
     };
     let arity: usize = match i {
         0 => 1,
-        1 | 4 | 8 | 14 => 3,
+        4 | 8 | 14 => 3,
         3 | 11 => 5,
         9 => 6,
         13 => 7,

@@ -11331,13 +11331,11 @@ pub struct EParsedV1 {
     pub docid: Vec<u8>,
     pub doc_ace: Vec<u8>,
     pub doc_ulex: Vec<u8>,
-    pub doc_version: u8,
-    pub doc_temporal: Vec<u8>,
+    pub doc_vocabulary: Vec<u8>,
     pub qid: Vec<u8>,
     pub query_ace: Vec<u8>,
     pub query_ulex: Vec<u8>,
-    pub query_version: u8,
-    pub query_temporal: Vec<u8>,
+    pub query_vocabulary: Vec<u8>,
     pub query_text: Vec<u8>,
     pub bundles: Vec<EBundleMeta>,
     pub qsha: Vec<u8>,
@@ -11368,21 +11366,16 @@ pub open spec fn parsed_metadata_ok(parsed: &EParsedV1) -> bool {
             &&& parsed.docid@ == d.docid
             &&& parsed.doc_ace@ == d.ace
             &&& parsed.doc_ulex@ == ulex_digest_bytes(d.ulex)
-            &&& parsed.doc_version as nat == d.version
-            &&& parsed.doc_temporal@ == ulex_digest_bytes(d.temporal)
+            &&& parsed.doc_vocabulary@ == ulex_digest_bytes(d.vocabulary)
             &&& bundle_metadata_ok(parsed.bundle_meta@, d.bundles)
         },
         _ => {
             &&& parsed.docid@ == Seq::<u8>::empty()
             &&& parsed.doc_ace@ == Seq::<u8>::empty()
             &&& parsed.doc_ulex@ == Seq::<u8>::empty()
-            &&& parsed.doc_temporal@ == Seq::<u8>::empty()
+            &&& parsed.doc_vocabulary@ == Seq::<u8>::empty()
             &&& parsed.bundle_meta.len() == 0
         },
-    }
-    &&& parsed.query_version as nat == match parsed@ {
-        ckc_spec::v1text::V1File::Query(q) => q.version,
-        _ => 1,
     }
     &&& parsed.qid@ == match parsed@ {
         ckc_spec::v1text::V1File::Query(q) => q.qid,
@@ -11409,7 +11402,7 @@ pub open spec fn parsed_certify_metadata_ok(parsed: &EParsedV1) -> bool {
         ckc_spec::v1text::V1File::Query(q) => {
             &&& parsed.query_ace@ == q.ace
             &&& parsed.query_ulex@ == ulex_digest_bytes(q.ulex)
-            &&& parsed.query_temporal@ == ulex_digest_bytes(q.temporal)
+            &&& parsed.query_vocabulary@ == ulex_digest_bytes(q.vocabulary)
             &&& parsed.query_text@ == q.qtext
         },
         _ => true,
@@ -12326,6 +12319,8 @@ pub fn parse_answers(
         }
     }
     if cursor.pos != bytes.len() {
+        // R9: a byte past the canonical file diverges where it starts.
+        raise_at(at, cursor.pos, bytes.len());
         return None;
     }
     let ghost model = ckc_spec::v1text::AnswersFile {
@@ -12366,16 +12361,14 @@ pub fn parse_answers(
             class: EV1Class::Answers,
             query_ace: Vec::new(),
             query_ulex: Vec::new(),
-            query_version: 1,
-            query_temporal: Vec::new(),
+            query_vocabulary: Vec::new(),
             query_text: Vec::new(),
             bundles: Vec::new(),
             bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
-            doc_version: 1,
-            doc_temporal: Vec::new(),
+            doc_vocabulary: Vec::new(),
             qid: line_qid.value,
             qsha: qsha.name,
             asha: Vec::new(),
@@ -13197,6 +13190,8 @@ pub fn parse_traces(
         }
     }
     if guided.cursor.pos != bytes.len() {
+        // R9: a byte past the canonical file diverges where it starts.
+        raise_at(at, guided.cursor.pos, bytes.len());
         return None;
     }
     let ghost model = ckc_spec::v1text::TracesFile {
@@ -13242,16 +13237,14 @@ pub fn parse_traces(
             class: EV1Class::Traces,
             query_ace: Vec::new(),
             query_ulex: Vec::new(),
-            query_version: 1,
-            query_temporal: Vec::new(),
+            query_vocabulary: Vec::new(),
             query_text: Vec::new(),
             bundles: Vec::new(),
             bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
-            doc_version: 1,
-            doc_temporal: Vec::new(),
+            doc_vocabulary: Vec::new(),
             qid: line_qid.value,
             qsha: qsha.name,
             asha: asha.name,
@@ -13542,19 +13535,9 @@ pub open spec fn query_line_stage(qid: Seq<u8>) -> Seq<u8> {
     )
 }
 
-pub open spec fn query_version_name(v: nat) -> Seq<u8> {
-    if v == 3 {
-        ckc_spec::v1text::ascii("v3"@)
-    } else if v == 2 {
-        ckc_spec::v1text::ascii("v2"@)
-    } else {
-        ckc_spec::v1text::ascii("v1"@)
-    }
-}
-
-pub open spec fn query_record_head_stage(qid: Seq<u8>, v: nat) -> Seq<u8> {
+pub open spec fn query_record_head_stage(qid: Seq<u8>) -> Seq<u8> {
     ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)) + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(query_version_name(v)) + seq![0x2cu8]
+        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)) + seq![0x2cu8]
         + ckc_spec::v1text::atom_bytes(qid) + seq![0x2cu8]
 }
 
@@ -13567,8 +13550,8 @@ pub open spec fn query_record_ulex_open_stage() -> Seq<u8> {
     ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@)) + seq![0x28u8]
 }
 
-pub open spec fn query_record_prefix_stage(qid: Seq<u8>, ace: Seq<u8>, v: nat) -> Seq<u8> {
-    query_record_head_stage(qid, v) + query_record_ace_stage(ace) + query_record_ulex_open_stage()
+pub open spec fn query_record_prefix_stage(qid: Seq<u8>, ace: Seq<u8>) -> Seq<u8> {
+    query_record_head_stage(qid) + query_record_ace_stage(ace) + query_record_ulex_open_stage()
 }
 
 pub open spec fn query_ulex_stage(ulex: Option<Seq<u8>>) -> Seq<u8> {
@@ -13580,19 +13563,16 @@ pub open spec fn query_ulex_stage(ulex: Option<Seq<u8>>) -> Seq<u8> {
     }
 }
 
-pub open spec fn query_record_suffix_stage() -> Seq<u8> {
-    seq![0x29u8, 0x29u8] + ckc_spec::v1text::ascii(".\n"@)
-}
-
-// m7t D3: a v2 record carries `,temporal(sha256(H))` between the ulex value's
-// `)` and the record's `)`.
-pub open spec fn temporal_tail_parts(t: Option<Seq<u8>>) -> Seq<Seq<u8>> {
-    match t {
-        None => Seq::empty(),
+// c1 D2/D3: every record carries `,vocabulary(none)` | `,vocabulary(sha256(H))`
+// between the ulex value's `)` and the record's `)`.
+pub open spec fn vocabulary_tail_parts(t: Option<Seq<u8>>) -> Seq<Seq<u8>> {
+    seq![
+        seq![0x2cu8],
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("vocabulary"@)),
+        seq![0x28u8],
+    ] + match t {
+        None => seq![ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("none"@)), seq![0x29u8]],
         Some(h) => seq![
-            seq![0x2cu8],
-            ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("temporal"@)),
-            seq![0x28u8],
             ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("sha256"@)),
             seq![0x28u8],
             ckc_spec::v1text::atom_bytes(h),
@@ -13602,8 +13582,8 @@ pub open spec fn temporal_tail_parts(t: Option<Seq<u8>>) -> Seq<Seq<u8>> {
     }
 }
 
-pub open spec fn temporal_tail_stage(t: Option<Seq<u8>>) -> Seq<u8> {
-    temporal_tail_parts(t).flatten()
+pub open spec fn vocabulary_tail_stage(t: Option<Seq<u8>>) -> Seq<u8> {
+    vocabulary_tail_parts(t).flatten()
 }
 
 pub open spec fn record_ulex_parts(ulex: Option<Seq<u8>>, t: Option<Seq<u8>>) -> Seq<Seq<u8>> {
@@ -13616,11 +13596,11 @@ pub open spec fn record_ulex_parts(ulex: Option<Seq<u8>>, t: Option<Seq<u8>>) ->
             seq![0x29u8],
             seq![0x29u8],
         ],
-    }) + temporal_tail_parts(t) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
+    }) + vocabulary_tail_parts(t) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
 }
 
 pub open spec fn record_suffix_stage(t: Option<Seq<u8>>) -> Seq<u8> {
-    seq![0x29u8] + temporal_tail_stage(t) + seq![0x29u8] + ckc_spec::v1text::ascii(".\n"@)
+    seq![0x29u8] + vocabulary_tail_stage(t) + seq![0x29u8] + ckc_spec::v1text::ascii(".\n"@)
 }
 
 proof fn record_ulex_parts_flat(ulex: Option<Seq<u8>>, t: Option<Seq<u8>>)
@@ -13638,7 +13618,7 @@ proof fn record_ulex_parts_flat(ulex: Option<Seq<u8>>, t: Option<Seq<u8>>)
     };
     let close = seq![seq![0x29u8]];
     let end = seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)];
-    assert(record_ulex_parts(ulex, t) =~= ((value + close) + temporal_tail_parts(t)) + end) by {
+    assert(record_ulex_parts(ulex, t) =~= ((value + close) + vocabulary_tail_parts(t)) + end) by {
         reveal(record_ulex_parts);
     }
     assert(value.flatten() == query_ulex_stage(ulex)) by {
@@ -13655,35 +13635,22 @@ proof fn record_ulex_parts_flat(ulex: Option<Seq<u8>>, t: Option<Seq<u8>>)
         reveal_with_fuel(Seq::<_>::flatten, 3);
     }
     vstd::seq_lib::lemma_flatten_concat(value, close);
-    vstd::seq_lib::lemma_flatten_concat(value + close, temporal_tail_parts(t));
-    vstd::seq_lib::lemma_flatten_concat((value + close) + temporal_tail_parts(t), end);
+    vstd::seq_lib::lemma_flatten_concat(value + close, vocabulary_tail_parts(t));
+    vstd::seq_lib::lemma_flatten_concat((value + close) + vocabulary_tail_parts(t), end);
     reveal(record_suffix_stage);
-    reveal(temporal_tail_stage);
+    reveal(vocabulary_tail_stage);
     assert(record_ulex_parts(ulex, t).flatten() =~= query_ulex_stage(ulex) + record_suffix_stage(
         t,
     ));
-}
-
-proof fn record_suffix_stage_v1()
-    ensures
-        record_suffix_stage(None) == query_record_suffix_stage(),
-{
-    reveal(record_suffix_stage);
-    reveal(temporal_tail_stage);
-    reveal(temporal_tail_parts);
-    reveal(query_record_suffix_stage);
-    reveal_with_fuel(Seq::<_>::flatten, 1);
-    assert(record_suffix_stage(None) =~= query_record_suffix_stage());
 }
 
 pub open spec fn query_record_stage(
     qid: Seq<u8>,
     ace: Seq<u8>,
     ulex: Option<Seq<u8>>,
-    v: nat,
     t: Option<Seq<u8>>,
 ) -> Seq<u8> {
-    query_record_prefix_stage(qid, ace, v) + query_ulex_stage(ulex) + record_suffix_stage(t)
+    query_record_prefix_stage(qid, ace) + query_ulex_stage(ulex) + record_suffix_stage(t)
 }
 
 pub open spec fn query_text_stage(text: Seq<u8>) -> Seq<u8> {
@@ -13713,7 +13680,7 @@ pub open spec fn query_projection_stage(goal: Term, answers: Term) -> Seq<u8> {
 }
 
 pub open spec fn query_flat(q: ckc_spec::v1text::QueryFile) -> Seq<u8> {
-    query_line_stage(q.qid) + query_record_stage(q.qid, q.ace, q.ulex, q.version, q.temporal)
+    query_line_stage(q.qid) + query_record_stage(q.qid, q.ace, q.ulex, q.vocabulary)
         + query_text_stage(q.qtext) + query_projection_stage(q.goal, q.answers)
 }
 
@@ -13727,11 +13694,11 @@ pub open spec fn query_line_parts(qid: Seq<u8>) -> Seq<Seq<u8>> {
     ]
 }
 
-pub open spec fn query_record_head_parts(qid: Seq<u8>, ace: Seq<u8>, v: nat) -> Seq<Seq<u8>> {
+pub open spec fn query_record_head_parts(qid: Seq<u8>, ace: Seq<u8>) -> Seq<Seq<u8>> {
     seq![
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)),
         seq![0x28u8],
-        ckc_spec::v1text::atom_bytes(query_version_name(v)),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
         seq![0x2cu8],
         ckc_spec::v1text::atom_bytes(qid),
         seq![0x2cu8],
@@ -13749,10 +13716,9 @@ pub open spec fn query_record_parts(
     qid: Seq<u8>,
     ace: Seq<u8>,
     ulex: Option<Seq<u8>>,
-    v: nat,
     t: Option<Seq<u8>>,
 ) -> Seq<Seq<u8>> {
-    query_record_head_parts(qid, ace, v) + record_ulex_parts(ulex, t)
+    query_record_head_parts(qid, ace) + record_ulex_parts(ulex, t)
 }
 
 pub open spec fn query_text_parts(text: Seq<u8>) -> Seq<Seq<u8>> {
@@ -13778,7 +13744,7 @@ pub open spec fn query_projection_parts(goal: Term, answers: Term) -> Seq<Seq<u8
 }
 
 pub open spec fn query_parts(q: ckc_spec::v1text::QueryFile) -> Seq<Seq<u8>> {
-    query_line_parts(q.qid) + query_record_parts(q.qid, q.ace, q.ulex, q.version, q.temporal)
+    query_line_parts(q.qid) + query_record_parts(q.qid, q.ace, q.ulex, q.vocabulary)
         + query_text_parts(q.qtext) + query_projection_parts(q.goal, q.answers)
 }
 
@@ -13786,7 +13752,7 @@ pub open spec fn query_record_end(ulex: Option<Seq<u8>>, t: Option<Seq<u8>>) -> 
     (match ulex {
         None => 20int,
         Some(_) => 23int,
-    }) + temporal_tail_parts(t).len()
+    }) + vocabulary_tail_parts(t).len()
 }
 
 pub open spec fn query_text_end(ulex: Option<Seq<u8>>, t: Option<Seq<u8>>) -> int {
@@ -13811,22 +13777,15 @@ proof fn query_record_parts_flat(
     qid: Seq<u8>,
     ace: Seq<u8>,
     ulex: Option<Seq<u8>>,
-    v: nat,
     t: Option<Seq<u8>>,
 )
     ensures
-        query_record_parts(qid, ace, ulex, v, t).flatten() == query_record_stage(
-            qid,
-            ace,
-            ulex,
-            v,
-            t,
-        ),
+        query_record_parts(qid, ace, ulex, t).flatten() == query_record_stage(qid, ace, ulex, t),
 {
     let head = seq![
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)),
         seq![0x28u8],
-        ckc_spec::v1text::atom_bytes(query_version_name(v)),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
         seq![0x2cu8],
         ckc_spec::v1text::atom_bytes(qid),
         seq![0x2cu8],
@@ -13842,10 +13801,10 @@ proof fn query_record_parts_flat(
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("ulex"@)),
         seq![0x28u8],
     ];
-    assert(query_record_head_parts(qid, ace, v) =~= (head + ace_parts) + ulex_open) by {
+    assert(query_record_head_parts(qid, ace) =~= (head + ace_parts) + ulex_open) by {
         reveal(query_record_head_parts);
     }
-    assert(head.flatten() == query_record_head_stage(qid, v)) by {
+    assert(head.flatten() == query_record_head_stage(qid)) by {
         reveal(query_record_head_stage);
         reveal_with_fuel(Seq::<_>::flatten, 8);
     }
@@ -13861,17 +13820,16 @@ proof fn query_record_parts_flat(
     vstd::seq_lib::lemma_flatten_concat(head, ace_parts);
     vstd::seq_lib::lemma_flatten_concat(head + ace_parts, ulex_open);
     vstd::seq_lib::lemma_flatten_concat(
-        query_record_head_parts(qid, ace, v),
+        query_record_head_parts(qid, ace),
         record_ulex_parts(ulex, t),
     );
     reveal(query_record_parts);
     reveal(query_record_stage);
     reveal(query_record_prefix_stage);
-    assert(query_record_parts(qid, ace, ulex, v, t).flatten() =~= query_record_stage(
+    assert(query_record_parts(qid, ace, ulex, t).flatten() =~= query_record_stage(
         qid,
         ace,
         ulex,
-        v,
         t,
     ));
 }
@@ -13938,14 +13896,14 @@ proof fn query_parts_flat(q: ckc_spec::v1text::QueryFile)
         query_parts(q).flatten() == query_flat(q),
 {
     let line = query_line_parts(q.qid);
-    let record = query_record_parts(q.qid, q.ace, q.ulex, q.version, q.temporal);
+    let record = query_record_parts(q.qid, q.ace, q.ulex, q.vocabulary);
     let text = query_text_parts(q.qtext);
     let projection = query_projection_parts(q.goal, q.answers);
     assert(query_parts(q) == (line + record) + (text + projection)) by {
         reveal(query_parts);
     }
     query_line_parts_flat(q.qid);
-    query_record_parts_flat(q.qid, q.ace, q.ulex, q.version, q.temporal);
+    query_record_parts_flat(q.qid, q.ace, q.ulex, q.vocabulary);
     query_text_parts_flat(q.qtext);
     query_projection_parts_flat(q.goal, q.answers);
     vstd::seq_lib::lemma_flatten_concat(line, record);
@@ -13968,7 +13926,7 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     ensures
         query_flat(q) == ckc_spec::v1text::print_query(q),
 {
-    let v1_name = query_version_name(q.version);
+    let v1_name = ckc_spec::v1text::ascii("v1"@);
     let ace_name = ckc_spec::v1text::ascii("ace_sha256"@);
     let ulex_name = ckc_spec::v1text::ascii("ulex"@);
     let sha_name = ckc_spec::v1text::ascii("sha256"@);
@@ -13980,13 +13938,11 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     let qid = Term::Atom(q.qid);
     let ace_hash = Term::Atom(q.ace);
     let ace = Term::Comp(ace_name, seq![ace_hash]);
-    let ulex_value = ckc_spec::v1text::ulex_term(q.ulex);
+    let ulex_value = ckc_spec::v1text::digest_term(q.ulex);
     let ulex = Term::Comp(ulex_name, seq![ulex_value]);
     let goal = Term::Comp(goal_name, seq![q.goal]);
     let answers = Term::Comp(answers_name, seq![q.answers]);
     reveal_strlit("v1");
-    reveal_strlit("v2");
-    reveal_strlit("temporal");
     reveal_strlit("sha256");
     reveal_strlit("ace_sha256");
     reveal_strlit("ulex");
@@ -14025,50 +13981,35 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     }
     args_one_bytes(ulex_value);
     regular_comp_bytes(ulex_name, seq![ulex_value]);
-    reveal(ckc_spec::v1text::temporal_terms);
-    reveal(ckc_spec::v1text::version_atom);
-    reveal(query_version_name);
-    reveal(temporal_tail_stage);
-    reveal(temporal_tail_parts);
+    reveal(vocabulary_tail_stage);
+    reveal(vocabulary_tail_parts);
     reveal(record_suffix_stage);
-    assert(ckc_spec::v1text::version_atom(q.version) == v1);
-    match q.temporal {
+    reveal(ckc_spec::v1text::vocabulary_term);
+    let vocab_name = ckc_spec::v1text::ascii("vocabulary"@);
+    let vocab_value = ckc_spec::v1text::digest_term(q.vocabulary);
+    reveal_strlit("vocabulary");
+    reveal(ckc_spec::v1text::ascii);
+    assert(vocab_name != ckc_spec::v1text::curly_name());
+    match q.vocabulary {
         None => {
-            reveal_with_fuel(Seq::<_>::flatten, 1);
-            assert(seq![v1, qid, ace, ulex] + ckc_spec::v1text::temporal_terms(q.temporal) =~= seq![
-                v1,
-                qid,
-                ace,
-                ulex,
-            ]);
-            args_four_bytes(v1, qid, ace, ulex);
-            regular_comp_bytes(query_name, seq![v1, qid, ace, ulex]);
+            let none_name = ckc_spec::v1text::ascii("none"@);
+            reveal_strlit("none");
+            reveal(ckc_spec::v1text::ascii);
+            atom_term_bytes(none_name);
         },
         Some(h) => {
-            let temporal_name = ckc_spec::v1text::ascii("temporal"@);
-            let sha_name = ckc_spec::v1text::ascii("sha256"@);
-            assert(temporal_name != ckc_spec::v1text::curly_name());
-            assert(sha_name != ckc_spec::v1text::curly_name());
             let h_term = Term::Atom(h);
             atom_term_bytes(h);
             args_one_bytes(h_term);
             regular_comp_bytes(sha_name, seq![h_term]);
-            let sha_term = Term::Comp(sha_name, seq![h_term]);
-            args_one_bytes(sha_term);
-            regular_comp_bytes(temporal_name, seq![sha_term]);
-            let tt = Term::Comp(temporal_name, seq![sha_term]);
-            assert(seq![v1, qid, ace, ulex] + ckc_spec::v1text::temporal_terms(q.temporal) =~= seq![
-                v1,
-                qid,
-                ace,
-                ulex,
-                tt,
-            ]);
-            args_five_bytes(v1, qid, ace, ulex, tt);
-            regular_comp_bytes(query_name, seq![v1, qid, ace, ulex, tt]);
-            reveal_with_fuel(Seq::<_>::flatten, 9);
         },
     }
+    args_one_bytes(vocab_value);
+    regular_comp_bytes(vocab_name, seq![vocab_value]);
+    let vt = Term::Comp(vocab_name, seq![vocab_value]);
+    args_five_bytes(v1, qid, ace, ulex, vt);
+    regular_comp_bytes(query_name, seq![v1, qid, ace, ulex, vt]);
+    reveal_with_fuel(Seq::<_>::flatten, 9);
     args_one_bytes(q.goal);
     regular_comp_bytes(goal_name, seq![q.goal]);
     args_one_bytes(q.answers);
@@ -14094,13 +14035,20 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     reveal(ckc_spec::v1text::term_line);
     reveal(ckc_spec::v1text::query_record_term);
     reveal(ckc_spec::v1text::projection_term);
-    reveal(ckc_spec::v1text::ulex_term);
+    reveal(ckc_spec::v1text::digest_term);
 }
 
 pub struct EUlexField {
     pub value: Ghost<Option<Seq<u8>>>,
     pub digest: Vec<u8>,
-    pub temporal: Vec<u8>,
+    pub vocabulary: Ghost<Option<Seq<u8>>>,
+    pub vocabulary_digest: Vec<u8>,
+}
+
+// An optional digest value `none` | `sha256(H)` (+ its digest bytes, empty for none).
+pub struct EDigestField {
+    pub value: Ghost<Option<Seq<u8>>>,
+    pub digest: Vec<u8>,
 }
 
 #[verifier::rlimit(200)]
@@ -14202,7 +14150,7 @@ fn parse_query_record_prefix(
     line_qid: &ENameField,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
     at: &mut usize,
-) -> (r: Option<(EParsedAtom, u8)>)
+) -> (r: Option<EParsedAtom>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
@@ -14215,17 +14163,15 @@ fn parse_query_record_prefix(
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
-        r matches Some((ace, v)) ==> {
+        r matches Some(ace) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& ckc_spec::v1text::hex64(ace.name@)
-            &&& (1 <= v <= 3)
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
-                + query_record_prefix_stage(line_qid.value@, ace.name@, v as nat)
+                + query_record_prefix_stage(line_qid.value@, ace.name@)
         },
         expected@ matches Some(q) ==> {
-            &&& r matches Some((ace, v))
+            &&& r matches Some(ace)
             &&& ace.name@ == q.ace
-            &&& v as nat == q.version
             &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index == 16
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
@@ -14277,7 +14223,7 @@ fn parse_query_record_prefix(
         return None;
     }
     let ghost version_expected = match expected@ {
-        Some(q) => Some((query_version_name(q.version), 0x2cu8)),
+        Some(q) => Some((ckc_spec::v1text::ascii("v1"@), 0x2cu8)),
         None => None,
     };
     let version_at = guided.cursor.pos;
@@ -14287,9 +14233,9 @@ fn parse_query_record_prefix(
                 let g = guided.guide@.unwrap();
                 reveal(guided_cursor_ok);
                 parts_part_ready(bytes@, g.parts, g.index, &guided.cursor);
-                version_atom_first(query_version_name(q.version));
+                version_atom_first(ckc_spec::v1text::ascii("v1"@));
                 assert(g.parts[g.index] == ckc_spec::v1text::atom_bytes(
-                    query_version_name(q.version),
+                    ckc_spec::v1text::ascii("v1"@),
                 ));
                 assert(bytes@.subrange(
                     version_at as int,
@@ -14305,36 +14251,15 @@ fn parse_query_record_prefix(
         None => return None,
     };
     let v1_name: &[u8] = b"v1";
-    let v2_name: &[u8] = b"v2";
-    let v3_name: &[u8] = b"v3";
     proof {
         reveal_strlit("v1");
         reveal_byteslit(b"v1");
-        reveal_strlit("v2");
-        reveal_byteslit(b"v2");
-        reveal_strlit("v3");
-        reveal_byteslit(b"v3");
         reveal(ckc_spec::v1text::ascii);
         assert(v1_name@ == ckc_spec::v1text::ascii("v1"@));
-        assert(v2_name@ == ckc_spec::v1text::ascii("v2"@));
-        assert(v3_name@ == ckc_spec::v1text::ascii("v3"@));
-        if let Some(q) = expected@ {
-            reveal(ckc_spec::v1text::wf_query);
-            reveal(ckc_spec::v1text::version_ok);
-        }
     }
-    let v: u8 = if vec_slice_equal(&version.name, v1_name) {
-        1
-    } else if vec_slice_equal(&version.name, v2_name) {
-        2
-    } else if vec_slice_equal(&version.name, v3_name) {
-        3
-    } else {
-        raise_at(at, version_reject_at(bytes, version_at, &version.name, 3), bytes.len());
+    if !vec_slice_equal(&version.name, v1_name) {
+        raise_at(at, version_reject_at(bytes, version_at, &version.name, 1), bytes.len());
         return None;
-    };
-    proof {
-        assert(version.name@ == query_version_name(v as nat));
     }
     if !guided_byte(bytes, guided, 0x2c, at) {
         return None;
@@ -14476,100 +14401,114 @@ fn parse_query_record_prefix(
         assert_seqs_equal!(
             guided.cursor.prefix@
                 == old_prefix
-                    + query_record_prefix_stage(line_qid.value@, ace.name@, v as nat)
+                    + query_record_prefix_stage(line_qid.value@, ace.name@)
         );
     }
-    Some((ace, v))
+    Some(ace)
 }
 
-// m7t D3: `,temporal(sha256(H))` — the v2 record tail between the ulex
-// value's `)` and the record's `)`.
+// c1 D2/D3: `,vocabulary(none)` | `,vocabulary(sha256(H))` — the record tail
+// between the ulex value's `)` and the record's `)`.
 #[verifier::rlimit(500)]
-fn parse_temporal_tail(
+fn parse_vocabulary_tail(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
-    expected: Ghost<Option<(Seq<u8>, Seq<Seq<u8>>)>>,
+    expected: Ghost<Option<(Option<Seq<u8>>, Seq<Seq<u8>>)>>,
     at: &mut usize,
-) -> (r: Option<Vec<u8>>)
+) -> (r: Option<EDigestField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == temporal_tail_parts(
-                Some(e.0),
-            ) + e.1
-            &&& ckc_spec::v1text::hex64(e.0)
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == vocabulary_tail_parts(e.0)
+                + e.1
+            &&& ckc_spec::v1text::digest_ok(e.0)
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
-        r matches Some(h) ==> {
+        r matches Some(f) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
-            &&& ckc_spec::v1text::hex64(h@)
-            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + temporal_tail_stage(
-                Some(h@),
+            &&& ckc_spec::v1text::digest_ok(f.value@)
+            &&& f.digest@ == ulex_digest_bytes(f.value@)
+            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + vocabulary_tail_stage(
+                f.value@,
             )
         },
         expected@ matches Some(e) ==> {
-            &&& r matches Some(h) && h@ == e.0
+            &&& r matches Some(f) && f.value@ == e.0
             &&& old(guided).guide@ matches Some(before)
             &&& final(guided).guide@ matches Some(after) && after.parts == before.parts
-                && after.index == before.index + 8 && guide_rest(after) == e.1
+                && after.index == before.index + vocabulary_tail_parts(e.0).len() && guide_rest(
+                after,
+            ) == e.1
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost entry = guided.cursor.prefix@;
-    let ghost entry_guide = guided.guide@;
     let comma: &[u8] = b",";
     let open: &[u8] = b"(";
     let close: &[u8] = b")";
-    let temporal_name: &[u8] = b"temporal";
+    let vocab_name: &[u8] = b"vocabulary";
+    let none_name: &[u8] = b"none";
     let sha_name: &[u8] = b"sha256";
     let ghost comma_chunk = seq![0x2cu8];
     let ghost open_chunk = seq![0x28u8];
     let ghost close_chunk = seq![0x29u8];
-    let ghost tname = ckc_spec::v1text::ascii("temporal"@);
+    let ghost vname = ckc_spec::v1text::ascii("vocabulary"@);
+    let ghost nname = ckc_spec::v1text::ascii("none"@);
     let ghost sname = ckc_spec::v1text::ascii("sha256"@);
     proof {
         reveal_byteslit(b",");
         reveal_byteslit(b"(");
         reveal_byteslit(b")");
-        reveal_strlit("temporal");
-        reveal_byteslit(b"temporal");
+        reveal_strlit("vocabulary");
+        reveal_byteslit(b"vocabulary");
+        reveal_strlit("none");
+        reveal_byteslit(b"none");
         reveal_strlit("sha256");
         reveal_byteslit(b"sha256");
         reveal(ckc_spec::v1text::ascii);
         assert(comma@ == seq![0x2cu8]);
         assert(open@ == seq![0x28u8]);
         assert(close@ == seq![0x29u8]);
-        assert(temporal_name@ == tname);
+        assert(vocab_name@ == vname);
+        assert(none_name@ == nname);
         assert(sha_name@ == sname);
-        reveal(temporal_tail_parts);
+        reveal(vocabulary_tail_parts);
+        reveal(ckc_spec::v1text::digest_ok);
     }
-    let ghost h = match expected@ {
-        Some(e) => e.0,
-        None => Seq::<u8>::empty(),
-    };
     let ghost rest = match expected@ {
         Some(e) => e.1,
         None => Seq::<Seq<u8>>::empty(),
     };
-    let ghost after_comma = match expected@ {
-        Some(_) => Some(
-            seq![
-                ckc_spec::v1text::atom_bytes(tname),
-                seq![0x28u8],
+    // The value parts after `vocabulary(`: `none )` | `sha256 ( H ) )`.
+    let ghost value_parts = match expected@ {
+        Some(e) => match e.0 {
+            None => seq![ckc_spec::v1text::atom_bytes(nname), seq![0x29u8]],
+            Some(h) => seq![
                 ckc_spec::v1text::atom_bytes(sname),
                 seq![0x28u8],
                 ckc_spec::v1text::atom_bytes(h),
                 seq![0x29u8],
                 seq![0x29u8],
-            ] + rest,
+            ],
+        },
+        None => Seq::<Seq<u8>>::empty(),
+    };
+    let ghost after_comma = match expected@ {
+        Some(_) => Some(
+            seq![ckc_spec::v1text::atom_bytes(vname), seq![0x28u8]] + value_parts + rest,
         ),
         None => None,
     };
     proof {
-        if expected@ is Some {
+        if let Some(e) = expected@ {
+            assert(vocabulary_tail_parts(e.0) =~= seq![
+                seq![0x2cu8],
+                ckc_spec::v1text::atom_bytes(vname),
+                seq![0x28u8],
+            ] + value_parts);
             assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
                 == seq![seq![0x2cu8]] + after_comma.unwrap());
         }
@@ -14578,19 +14517,7 @@ fn parse_temporal_tail(
         return None;
     }
     let ghost name_expected = match expected@ {
-        Some(_) => Some(
-            (
-                tname,
-                seq![
-                    seq![0x28u8],
-                    ckc_spec::v1text::atom_bytes(sname),
-                    seq![0x28u8],
-                    ckc_spec::v1text::atom_bytes(h),
-                    seq![0x29u8],
-                    seq![0x29u8],
-                ] + rest,
-            ),
-        ),
+        Some(_) => Some((vname, seq![seq![0x28u8]] + value_parts + rest)),
         None => None,
     };
     proof {
@@ -14613,84 +14540,140 @@ fn parse_temporal_tail(
     ) {
         Some(atom) => atom,
         None => {
-            raise_at(at, fixed_reject_at(bytes, tag_slot, b"temporal", 0x28), bytes.len());
+            raise_at(at, fixed_reject_at(bytes, tag_slot, b"vocabulary", 0x28), bytes.len());
             return None;
         },
     };
     raise_at(at, tag_probe, bytes.len());
-    if !vec_slice_equal(&tag.name, temporal_name) {
+    if !vec_slice_equal(&tag.name, vocab_name) {
         proof {
             if expected@ is Some {
                 assert(false);
             }
         }
-        raise_at(at, fixed_reject_at(bytes, tag_slot, b"temporal", 0x28), bytes.len());
+        raise_at(at, fixed_reject_at(bytes, tag_slot, b"vocabulary", 0x28), bytes.len());
         return None;
     }
-    let ghost after_open1 = match expected@ {
-        Some(_) => Some(
-            seq![
-                ckc_spec::v1text::atom_bytes(sname),
-                seq![0x28u8],
-                ckc_spec::v1text::atom_bytes(h),
-                seq![0x29u8],
-                seq![0x29u8],
-            ] + rest,
-        ),
+    let ghost after_open = match expected@ {
+        Some(_) => Some(value_parts + rest),
         None => None,
     };
     proof {
         if expected@ is Some {
             assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
-                == seq![seq![0x28u8]] + after_open1.unwrap());
+                == seq![seq![0x28u8]] + after_open.unwrap());
         }
     }
-    if !doc_guided_literal(bytes, guided, open, Ghost(open_chunk), Ghost(after_open1), at) {
+    if !doc_guided_literal(bytes, guided, open, Ghost(open_chunk), Ghost(after_open), at) {
         return None;
     }
-    let ghost sha_expected = match expected@ {
-        Some(_) => Some(
-            (
-                sname,
-                seq![seq![0x28u8], ckc_spec::v1text::atom_bytes(h), seq![0x29u8], seq![0x29u8]]
-                    + rest,
+    let ghost value_expected = match expected@ {
+        Some(e) => match e.0 {
+            None => Some((nname, seq![seq![0x29u8]] + rest)),
+            Some(h) => Some(
+                (
+                    sname,
+                    seq![seq![0x28u8], ckc_spec::v1text::atom_bytes(h), seq![0x29u8], seq![0x29u8]]
+                        + rest,
+                ),
             ),
-        ),
+        },
         None => None,
     };
+    let ghost value_next = match expected@ {
+        Some(e) => if e.0 is None {
+            0x29u8
+        } else {
+            0x28u8
+        },
+        None => 0x29u8,
+    };
     proof {
-        if expected@ is Some {
+        if let Some(e) = expected@ {
             assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
                 == seq![ckc_spec::v1text::atom_bytes(
-                    sha_expected.unwrap().0,
-                )] + sha_expected.unwrap().1);
-            assert(sha_expected.unwrap().1[0][0] == 0x28);
+                    value_expected.unwrap().0,
+                )] + value_expected.unwrap().1);
+            assert(value_expected.unwrap().1.len() > 0);
+            assert(value_expected.unwrap().1[0].len() > 0);
+            assert(value_expected.unwrap().1[0][0] == value_next);
         }
     }
-    let sha_slot = guided.cursor.pos;
-    let mut sha_probe = *at;
-    let sha = match parts_guided_atom(
+    let value_slot = guided.cursor.pos;
+    let mut value_probe = *at;
+    let value = match parts_guided_atom(
         bytes,
         guided,
-        Ghost(0x28u8),
-        Ghost(sha_expected),
-        &mut sha_probe,
+        Ghost(value_next),
+        Ghost(value_expected),
+        &mut value_probe,
     ) {
         Some(atom) => atom,
         None => {
-            raise_at(at, fixed_reject_at(bytes, sha_slot, b"sha256", 0x28), bytes.len());
+            raise_at(at, fixed_reject_at(bytes, value_slot, b"none", 0x29), bytes.len());
+            raise_at(at, fixed_reject_at(bytes, value_slot, b"sha256", 0x28), bytes.len());
             return None;
         },
     };
-    raise_at(at, sha_probe, bytes.len());
-    if !vec_slice_equal(&sha.name, sha_name) {
+    raise_at(at, value_probe, bytes.len());
+    if vec_slice_equal(&value.name, none_name) {
+        proof {
+            if let Some(e) = expected@ {
+                match e.0 {
+                    None => {},
+                    Some(_) => assert(false),
+                }
+            }
+        }
+        let ghost after_none = match expected@ {
+            Some(_) => Some(rest),
+            None => None,
+        };
+        proof {
+            if expected@ is Some {
+                assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
+                    == seq![close_chunk] + after_none.unwrap());
+            }
+        }
+        if !doc_guided_literal(bytes, guided, close, Ghost(close_chunk), Ghost(after_none), at) {
+            return None;
+        }
+        proof {
+            reveal(vocabulary_tail_stage);
+            reveal_with_fuel(Seq::<_>::flatten, 6);
+            assert(tag.name@ == vname);
+            assert(value.name@ == nname);
+            assert_seqs_equal!(guided.cursor.prefix@ == entry + vocabulary_tail_stage(None));
+            if let Some(e) = expected@ {
+                assert(vocabulary_tail_parts(e.0).len() == 5);
+            }
+        }
+        return Some(EDigestField { value: Ghost(None), digest: Vec::new() });
+    }
+    if !vec_slice_equal(&value.name, sha_name) {
         proof {
             if expected@ is Some {
                 assert(false);
             }
         }
-        raise_at(at, fixed_reject_at(bytes, sha_slot, b"sha256", 0x28), bytes.len());
+        raise_at(at, fixed_reject_at(bytes, value_slot, b"none", 0x29), bytes.len());
+        raise_at(at, fixed_reject_at(bytes, value_slot, b"sha256", 0x28), bytes.len());
         return None;
+    }
+    let ghost h = match expected@ {
+        Some(e) => match e.0 {
+            Some(h) => h,
+            None => Seq::<u8>::empty(),
+        },
+        None => Seq::<u8>::empty(),
+    };
+    proof {
+        if let Some(e) = expected@ {
+            match e.0 {
+                Some(_) => {},
+                None => assert(false),
+            }
+        }
     }
     let ghost after_open2 = match expected@ {
         Some(_) => Some(seq![ckc_spec::v1text::atom_bytes(h), seq![0x29u8], seq![0x29u8]] + rest),
@@ -14726,7 +14709,9 @@ fn parse_temporal_tail(
     if !hex64_exec(&hash.name) {
         raise_at(at, digest_reject_at(bytes, hash_at, &hash.name), bytes.len());
         proof {
-            if expected@ is Some {
+            if let Some(e) = expected@ {
+                assert(hash.name@ == h);
+                assert(ckc_spec::v1text::hex64(h));
                 assert(false);
             }
         }
@@ -14759,101 +14744,18 @@ fn parse_temporal_tail(
         return None;
     }
     proof {
-        reveal(temporal_tail_stage);
+        reveal(vocabulary_tail_stage);
         reveal_with_fuel(Seq::<_>::flatten, 9);
-        assert(tag.name@ == tname);
-        assert(sha.name@ == sname);
+        assert(tag.name@ == vname);
+        assert(value.name@ == sname);
         assert_seqs_equal!(guided.cursor.prefix@
-            == entry + temporal_tail_stage(Some(hash.name@)));
-    }
-    Some(hash.name)
-}
-
-pub open spec fn tail_of(temporal: bool, h: Seq<u8>) -> Option<Seq<u8>> {
-    if temporal {
-        Some(h)
-    } else {
-        None
-    }
-}
-
-// The tail when `temporal`, else nothing (empty digest).
-fn parse_tail_if(
-    bytes: &[u8],
-    guided: &mut EGuidedCursor,
-    expected: Ghost<Option<(Option<Seq<u8>>, Seq<Seq<u8>>)>>,
-    tex: Ghost<Option<Seq<u8>>>,
-    temporal: bool,
-    at: &mut usize,
-) -> (r: Option<Vec<u8>>)
-    requires
-        *old(at) <= bytes@.len(),
-        guided_cursor_ok(bytes@, old(guided)),
-        expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == temporal_tail_parts(tex@)
-                + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1
-            &&& (tex@ is Some) == temporal
-            &&& tex@ matches Some(h) ==> ckc_spec::v1text::hex64(h)
-        },
-        expected@ is None ==> old(guided).guide@ is None,
-    ensures
-        *old(at) <= *final(at) <= bytes@.len(),
-        r matches Some(th) ==> {
-            &&& guided_cursor_ok(bytes@, final(guided))
-            &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + temporal_tail_stage(
-                tail_of(temporal, th@),
-            )
-            &&& temporal ==> ckc_spec::v1text::hex64(th@)
-            &&& !temporal ==> th@ == Seq::<u8>::empty()
-        },
-        expected@ matches Some(e) ==> {
-            &&& r matches Some(th) && tail_of(temporal, th@) == tex@
-            &&& old(guided).guide@ matches Some(before)
-            &&& final(guided).guide@ matches Some(after) && after.parts == before.parts
-                && after.index == before.index + temporal_tail_parts(tex@).len() && guide_rest(
-                after,
-            ) == seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1
-        },
-        expected@ is None ==> final(guided).guide@ is None,
-{
-    if !temporal {
-        proof {
-            reveal(temporal_tail_stage);
-            reveal(temporal_tail_parts);
-            reveal_with_fuel(Seq::<_>::flatten, 1);
-            assert(guided.cursor.prefix@ =~= guided.cursor.prefix@ + temporal_tail_stage(None));
-            if let Some(e) = expected@ {
-                assert(temporal_tail_parts(tex@) =~= Seq::<Seq<u8>>::empty());
-                assert(guide_rest(guided.guide@.unwrap()) =~= seq![
-                    seq![0x29u8],
-                    ckc_spec::v1text::ascii(".\n"@),
-                ] + e.1);
-            }
-        }
-        return Some(Vec::new());
-    }
-    let ghost tail_expected = match (expected@, tex@) {
-        (Some(e), Some(h)) => Some((h, seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1)),
-        _ => None,
-    };
-    proof {
+            == entry + vocabulary_tail_stage(Some(hash.name@)));
         if let Some(e) = expected@ {
-            assert(tex@ is Some);
-            let h = tex@.unwrap();
-            assert(guide_rest(guided.guide@.unwrap()) =~= temporal_tail_parts(Some(h)) + (seq![
-                seq![0x29u8],
-                ckc_spec::v1text::ascii(".\n"@),
-            ] + e.1));
+            assert(hash.name@ == h);
+            assert(vocabulary_tail_parts(e.0).len() == 8);
         }
     }
-    let h = match parse_temporal_tail(bytes, guided, Ghost(tail_expected), at) {
-        Some(h) => h,
-        None => return None,
-    };
-    proof {
-        reveal(temporal_tail_parts);
-    }
-    Some(h)
+    Some(EDigestField { value: Ghost(Some(hash.name@)), digest: hash.name })
 }
 
 #[verifier::rlimit(2000)]
@@ -14862,39 +14764,36 @@ fn parse_record_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<(Option<Seq<u8>>, Seq<Seq<u8>>)>>,
-    tex: Ghost<Option<Seq<u8>>>,
-    temporal: bool,
+    vex: Ghost<Option<Seq<u8>>>,
     at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> {
-            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == record_ulex_parts(e.0, tex@)
+            &&& old(guided).guide@ matches Some(g) && guide_rest(g) == record_ulex_parts(e.0, vex@)
                 + e.1
-            &&& ckc_spec::v1text::ulex_ok(e.0)
-            &&& (tex@ is Some) == temporal
-            &&& tex@ matches Some(h) ==> ckc_spec::v1text::hex64(h)
+            &&& ckc_spec::v1text::digest_ok(e.0)
+            &&& ckc_spec::v1text::digest_ok(vex@)
         },
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
-            &&& ckc_spec::v1text::ulex_ok(ulex.value@)
+            &&& ckc_spec::v1text::digest_ok(ulex.value@)
             &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
+            &&& ckc_spec::v1text::digest_ok(ulex.vocabulary@)
+            &&& ulex.vocabulary_digest@ == ulex_digest_bytes(ulex.vocabulary@)
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_ulex_stage(
                 ulex.value@,
-            ) + record_suffix_stage(tail_of(temporal, ulex.temporal@))
-            &&& temporal ==> ckc_spec::v1text::hex64(ulex.temporal@)
-            &&& !temporal ==> ulex.temporal@ == Seq::<u8>::empty()
+            ) + record_suffix_stage(ulex.vocabulary@)
         },
         expected@ matches Some(e) ==> {
-            &&& r matches Some(ulex) && ulex.value@ == e.0 && tail_of(temporal, ulex.temporal@)
-                == tex@
+            &&& r matches Some(ulex) && ulex.value@ == e.0 && ulex.vocabulary@ == vex@
             &&& old(guided).guide@ matches Some(before)
             &&& final(guided).guide@ matches Some(after) && after.parts == before.parts
-                && after.index == before.index + record_ulex_parts(e.0, tex@).len() && guide_rest(
+                && after.index == before.index + record_ulex_parts(e.0, vex@).len() && guide_rest(
                 after,
             ) == e.1
         },
@@ -14905,7 +14804,7 @@ fn parse_record_ulex(
     proof {
         if let Some(e) = expected@ {
             reveal(record_ulex_parts);
-            reveal(ckc_spec::v1text::ulex_ok);
+            reveal(ckc_spec::v1text::digest_ok);
             match e.0 {
                 None => {},
                 Some(_) => {},
@@ -14918,7 +14817,7 @@ fn parse_record_ulex(
             None => Some(
                 (
                     ckc_spec::v1text::ascii("none"@),
-                    seq![seq![0x29u8]] + temporal_tail_parts(tex@) + seq![
+                    seq![seq![0x29u8]] + vocabulary_tail_parts(vex@) + seq![
                         seq![0x29u8],
                         ckc_spec::v1text::ascii(".\n"@),
                     ] + e.1,
@@ -14932,7 +14831,7 @@ fn parse_record_ulex(
                         ckc_spec::v1text::atom_bytes(hash),
                         seq![0x29u8],
                         seq![0x29u8],
-                    ] + temporal_tail_parts(tex@) + seq![
+                    ] + vocabulary_tail_parts(vex@) + seq![
                         seq![0x29u8],
                         ckc_spec::v1text::ascii(".\n"@),
                     ] + e.1,
@@ -15007,7 +14906,7 @@ fn parse_record_ulex(
                     Some(_) => assert(false),
                 }
                 assert(guide_rest(guided.guide@.unwrap()) == seq![seq![0x29u8]]
-                    + temporal_tail_parts(tex@) + seq![
+                    + vocabulary_tail_parts(vex@) + seq![
                     seq![0x29u8],
                     ckc_spec::v1text::ascii(".\n"@),
                 ] + e.1);
@@ -15021,7 +14920,7 @@ fn parse_record_ulex(
         }
         let ghost after_first_close = match expected@ {
             Some(e) => Some(
-                temporal_tail_parts(tex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
+                vocabulary_tail_parts(vex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
                     + e.1,
             ),
             None => None,
@@ -15042,7 +14941,17 @@ fn parse_record_ulex(
         ) {
             return None;
         }
-        let th = match parse_tail_if(bytes, guided, expected, tex, temporal, at) {
+        let ghost tail_expected = match expected@ {
+            Some(e) => Some((vex@, seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1)),
+            None => None,
+        };
+        proof {
+            if let Some(e) = expected@ {
+                assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
+                    == vocabulary_tail_parts(vex@) + tail_expected.unwrap().1);
+            }
+        }
+        let th = match parse_vocabulary_tail(bytes, guided, Ghost(tail_expected), at) {
             Some(th) => th,
             None => return None,
         };
@@ -15098,17 +15007,24 @@ fn parse_record_ulex(
             if let Some(e) = expected@ {
                 assert(e.0 is None);
                 reveal(record_ulex_parts);
-                assert(record_ulex_parts(e.0, tex@).len() == 4 + temporal_tail_parts(tex@).len());
+                assert(record_ulex_parts(e.0, vex@).len() == 4 + vocabulary_tail_parts(vex@).len());
             }
             reveal(record_suffix_stage);
             reveal(query_ulex_stage);
             assert_seqs_equal!(guided.cursor.prefix@
                 == entry_prefix
                     + query_ulex_stage(None)
-                    + record_suffix_stage(tail_of(temporal, th@)));
-            reveal(ckc_spec::v1text::ulex_ok);
+                    + record_suffix_stage(th.value@));
+            reveal(ckc_spec::v1text::digest_ok);
         }
-        return Some(EUlexField { value: Ghost(None), digest: Vec::new(), temporal: th });
+        return Some(
+            EUlexField {
+                value: Ghost(None),
+                digest: Vec::new(),
+                vocabulary: th.value,
+                vocabulary_digest: th.digest,
+            },
+        );
     }
     if !vec_slice_equal(&tag.name, sha_name) {
         proof {
@@ -15131,7 +15047,7 @@ fn parse_record_ulex(
                 ckc_spec::v1text::atom_bytes(e.0.unwrap()),
                 seq![0x29u8],
                 seq![0x29u8],
-            ] + temporal_tail_parts(tex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
+            ] + vocabulary_tail_parts(vex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
                 + e.1);
         }
     }
@@ -15144,7 +15060,7 @@ fn parse_record_ulex(
     let ghost after_open = match expected@ {
         Some(e) => Some(
             seq![ckc_spec::v1text::atom_bytes(e.0.unwrap()), seq![0x29u8], seq![0x29u8]]
-                + temporal_tail_parts(tex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
+                + vocabulary_tail_parts(vex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)]
                 + e.1,
         ),
         None => None,
@@ -15162,7 +15078,7 @@ fn parse_record_ulex(
         Some(e) => Some(
             (
                 e.0.unwrap(),
-                seq![seq![0x29u8], seq![0x29u8]] + temporal_tail_parts(tex@) + seq![
+                seq![seq![0x29u8], seq![0x29u8]] + vocabulary_tail_parts(vex@) + seq![
                     seq![0x29u8],
                     ckc_spec::v1text::ascii(".\n"@),
                 ] + e.1,
@@ -15204,7 +15120,7 @@ fn parse_record_ulex(
     }
     let ghost after_hash_close = match expected@ {
         Some(e) => Some(
-            seq![seq![0x29u8]] + temporal_tail_parts(tex@) + seq![
+            seq![seq![0x29u8]] + vocabulary_tail_parts(vex@) + seq![
                 seq![0x29u8],
                 ckc_spec::v1text::ascii(".\n"@),
             ] + e.1,
@@ -15222,7 +15138,7 @@ fn parse_record_ulex(
     }
     let ghost after_ulex_close = match expected@ {
         Some(e) => Some(
-            temporal_tail_parts(tex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1,
+            vocabulary_tail_parts(vex@) + seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1,
         ),
         None => None,
     };
@@ -15235,7 +15151,17 @@ fn parse_record_ulex(
     if !doc_guided_literal(bytes, guided, close, Ghost(close_chunk), Ghost(after_ulex_close), at) {
         return None;
     }
-    let th = match parse_tail_if(bytes, guided, expected, tex, temporal, at) {
+    let ghost tail_expected = match expected@ {
+        Some(e) => Some((vex@, seq![seq![0x29u8], ckc_spec::v1text::ascii(".\n"@)] + e.1)),
+        None => None,
+    };
+    proof {
+        if let Some(e) = expected@ {
+            assert_seqs_equal!(guide_rest(guided.guide@.unwrap())
+                == vocabulary_tail_parts(vex@) + tail_expected.unwrap().1);
+        }
+    }
+    let th = match parse_vocabulary_tail(bytes, guided, Ghost(tail_expected), at) {
         Some(th) => th,
         None => return None,
     };
@@ -15291,17 +15217,24 @@ fn parse_record_ulex(
         if let Some(e) = expected@ {
             assert(e.0 == Some(hash.name@));
             reveal(record_ulex_parts);
-            assert(record_ulex_parts(e.0, tex@).len() == 7 + temporal_tail_parts(tex@).len());
+            assert(record_ulex_parts(e.0, vex@).len() == 7 + vocabulary_tail_parts(vex@).len());
         }
         reveal(record_suffix_stage);
         reveal(query_ulex_stage);
         assert_seqs_equal!(guided.cursor.prefix@
             == entry_prefix
                 + query_ulex_stage(Some(hash.name@))
-                + record_suffix_stage(tail_of(temporal, th@)));
-        reveal(ckc_spec::v1text::ulex_ok);
+                + record_suffix_stage(th.value@));
+        reveal(ckc_spec::v1text::digest_ok);
     }
-    Some(EUlexField { value: Ghost(Some(hash.name@)), digest: hash.name, temporal: th })
+    Some(
+        EUlexField {
+            value: Ghost(Some(hash.name@)),
+            digest: hash.name,
+            vocabulary: th.value,
+            vocabulary_digest: th.digest,
+        },
+    )
 }
 
 #[verifier::rlimit(500)]
@@ -15309,7 +15242,6 @@ fn parse_query_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::QueryFile>>,
-    temporal: bool,
     at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
@@ -15317,26 +15249,26 @@ fn parse_query_ulex(
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g) && g.parts == query_parts(
             q,
-        ) && g.index == 16 && ckc_spec::v1text::wf_query(q) && (q.temporal is Some) == temporal,
+        ) && g.index == 16 && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
-            &&& ckc_spec::v1text::ulex_ok(ulex.value@)
+            &&& ckc_spec::v1text::digest_ok(ulex.value@)
             &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
+            &&& ckc_spec::v1text::digest_ok(ulex.vocabulary@)
+            &&& ulex.vocabulary_digest@ == ulex_digest_bytes(ulex.vocabulary@)
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_ulex_stage(
                 ulex.value@,
-            ) + record_suffix_stage(tail_of(temporal, ulex.temporal@))
-            &&& temporal ==> ckc_spec::v1text::hex64(ulex.temporal@)
-            &&& !temporal ==> ulex.temporal@ == Seq::<u8>::empty()
+            ) + record_suffix_stage(ulex.vocabulary@)
         },
         expected@ matches Some(q) ==> {
             &&& r matches Some(ulex)
             &&& ulex.value@ == q.ulex
-            &&& tail_of(temporal, ulex.temporal@) == q.temporal
+            &&& ulex.vocabulary@ == q.vocabulary
             &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index
-                == query_record_end(q.ulex, q.temporal)
+                == query_record_end(q.ulex, q.vocabulary)
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
@@ -15360,29 +15292,21 @@ fn parse_query_ulex(
                 Some(_) => {},
             }
             reveal(guide_rest);
-            assert(guide_rest(guided.guide@.unwrap()) =~= record_ulex_parts(q.ulex, q.temporal)
+            assert(guide_rest(guided.guide@.unwrap()) =~= record_ulex_parts(q.ulex, q.vocabulary)
                 + tail);
         }
     }
-    let ghost tex = match expected@ {
-        Some(q) => q.temporal,
+    let ghost vex = match expected@ {
+        Some(q) => q.vocabulary,
         None => None,
     };
     proof {
         if let Some(q) = expected@ {
             reveal(ckc_spec::v1text::wf_query);
-            reveal(ckc_spec::v1text::version_ok);
             reveal(query_record_head_parts);
         }
     }
-    let ulex = match parse_record_ulex(
-        bytes,
-        guided,
-        Ghost(generic_expected),
-        Ghost(tex),
-        temporal,
-        at,
-    ) {
+    let ulex = match parse_record_ulex(bytes, guided, Ghost(generic_expected), Ghost(vex), at) {
         Some(ulex) => ulex,
         None => return None,
     };
@@ -15411,7 +15335,7 @@ fn parse_query_text(
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g) && g.parts == query_parts(
             q,
-        ) && g.index == query_record_end(q.ulex, q.temporal) && ckc_spec::v1text::wf_query(q),
+        ) && g.index == query_record_end(q.ulex, q.vocabulary) && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
@@ -15426,7 +15350,7 @@ fn parse_query_text(
             &&& r matches Some(text)
             &&& text.value@ == q.qtext
             &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index
-                == query_text_end(q.ulex, q.temporal)
+                == query_text_end(q.ulex, q.vocabulary)
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -15579,7 +15503,7 @@ fn parse_query_projection(
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(q) ==> old(guided).guide@ matches Some(g) && g.parts == query_parts(
             q,
-        ) && g.index == query_text_end(q.ulex, q.temporal) && ckc_spec::v1text::wf_query(q),
+        ) && g.index == query_text_end(q.ulex, q.vocabulary) && ckc_spec::v1text::wf_query(q),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         r matches Some(p) ==> p.goal_root == p.goal.root && p.answers_root == p.answers.root,
@@ -15611,7 +15535,7 @@ fn parse_query_projection(
             &&& projection.goal@ == q.goal
             &&& projection.answers@ == q.answers
             &&& final(guided).guide@ matches Some(g) && g.parts == query_parts(q) && g.index
-                == query_parts_end(q.ulex, q.temporal)
+                == query_parts_end(q.ulex, q.vocabulary)
         },
         expected@ is None && r is Some ==> final(guided).guide@ is None,
 {
@@ -15932,23 +15856,11 @@ pub fn parse_query(
         Some(qid) => qid,
         None => return None,
     };
-    let (ace, qversion) = match parse_query_record_prefix(
-        bytes,
-        &mut guided,
-        &line_qid,
-        expected,
-        at,
-    ) {
+    let ace = match parse_query_record_prefix(bytes, &mut guided, &line_qid, expected, at) {
         Some(found) => found,
         None => return None,
     };
-    proof {
-        if let Some(q) = expected@ {
-            reveal(ckc_spec::v1text::wf_query);
-            reveal(ckc_spec::v1text::version_ok);
-        }
-    }
-    let ulex = match parse_query_ulex(bytes, &mut guided, expected, qversion >= 2, at) {
+    let ulex = match parse_query_ulex(bytes, &mut guided, expected, at) {
         Some(field) => field,
         None => return None,
     };
@@ -15978,18 +15890,19 @@ pub fn parse_query(
                 Some(_) => {},
             }
             query_parts(q).lemma_take_len();
-            assert(query_parts_end(q.ulex, q.temporal) == query_parts(q).len());
+            assert(query_parts_end(q.ulex, q.vocabulary) == query_parts(q).len());
             assert(guided.cursor.prefix@ == bytes@);
             assert(guided.cursor.prefix@.len() == guided.cursor.pos);
             assert(guided.cursor.pos == bytes.len());
         }
     }
     if guided.cursor.pos != bytes.len() {
+        // R9: a byte past the canonical file diverges where it starts.
+        raise_at(at, guided.cursor.pos, bytes.len());
         return None;
     }
     let ghost model = ckc_spec::v1text::QueryFile {
-        version: qversion as nat,
-        temporal: tail_of(qversion >= 2, ulex.temporal@),
+        vocabulary: ulex.vocabulary@,
         qid: line_qid.value@,
         ace: ace.name@,
         ulex: ulex.value@,
@@ -16037,16 +15950,14 @@ pub fn parse_query(
             class: EV1Class::Query,
             query_ace: ace.name,
             query_ulex: ulex.digest,
-            query_version: qversion,
-            query_temporal: ulex.temporal,
+            query_vocabulary: ulex.vocabulary_digest,
             query_text: text.value,
             bundles: Vec::new(),
             bundle_meta: Vec::new(),
             docid: Vec::new(),
             doc_ace: Vec::new(),
             doc_ulex: Vec::new(),
-            doc_version: 1,
-            doc_temporal: Vec::new(),
+            doc_vocabulary: Vec::new(),
             qid: line_qid.value,
             qsha: Vec::new(),
             asha: Vec::new(),
@@ -16158,9 +16069,9 @@ pub open spec fn doc_record_stage(
 }
 
 pub open spec fn doc_prefix_stage(d: ckc_spec::v1text::DocFile) -> Seq<u8> {
-    doc_line_stage(d.docid) + ckc_spec::v1text::decls_from(d.version, 0)
-        + ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term(d.version))
-        + doc_record_stage(d.docid, d.ace, d.ulex, d.temporal)
+    doc_line_stage(d.docid) + ckc_spec::v1text::decls_from(0) + ckc_spec::v1text::term_line(
+        ckc_spec::v1text::schema_version_term(),
+    ) + doc_record_stage(d.docid, d.ace, d.ulex, d.vocabulary)
 }
 
 pub open spec fn doc_flat(d: ckc_spec::v1text::DocFile) -> Seq<u8> {
@@ -16177,8 +16088,8 @@ pub open spec fn doc_line_parts(docid: Seq<u8>) -> Seq<Seq<u8>> {
     ]
 }
 
-pub open spec fn doc_decl_parts(v: nat) -> Seq<Seq<u8>> {
-    seq![ckc_spec::v1text::decls_from(v, 0)]
+pub open spec fn doc_decl_parts() -> Seq<Seq<u8>> {
+    seq![ckc_spec::v1text::decls_from(0)]
 }
 
 pub open spec fn doc_record_head_parts(docid: Seq<u8>, ace: Seq<u8>) -> Seq<Seq<u8>> {
@@ -16291,9 +16202,9 @@ pub open spec fn doc_bundles_parts(bs: Seq<ckc_spec::v1text::Bundle>) -> Seq<Seq
 }
 
 pub open spec fn doc_prefix_parts(d: ckc_spec::v1text::DocFile) -> Seq<Seq<u8>> {
-    doc_line_parts(d.docid) + doc_decl_parts(d.version) + seq![
-        ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term(d.version)),
-    ] + doc_record_parts(d.docid, d.ace, d.ulex, d.temporal)
+    doc_line_parts(d.docid) + doc_decl_parts() + seq![
+        ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term()),
+    ] + doc_record_parts(d.docid, d.ace, d.ulex, d.vocabulary)
 }
 
 pub open spec fn doc_parts(d: ckc_spec::v1text::DocFile) -> Seq<Seq<u8>> {
@@ -16310,16 +16221,13 @@ proof fn doc_line_parts_flat(docid: Seq<u8>)
     reveal_with_fuel(Seq::<_>::flatten, 5);
 }
 
-proof fn doc_decl_parts_flat(v: nat)
+proof fn doc_decl_parts_flat()
     ensures
-        doc_decl_parts(v).flatten() == ckc_spec::v1text::decls_from(v, 0),
+        doc_decl_parts().flatten() == ckc_spec::v1text::decls_from(0),
 {
     reveal(doc_decl_parts);
     reveal_with_fuel(Seq::<_>::flatten, 2);
-    assert(seq![ckc_spec::v1text::decls_from(v, 0)].flatten() =~= ckc_spec::v1text::decls_from(
-        v,
-        0,
-    ));
+    assert(seq![ckc_spec::v1text::decls_from(0)].flatten() =~= ckc_spec::v1text::decls_from(0));
 }
 
 #[verifier::rlimit(500)]
@@ -16562,7 +16470,7 @@ proof fn args_three_bytes(a: Term, b: Term, c: Term)
 #[verifier::spinoff_prover]
 proof fn doc_record_stage_is_print(d: ckc_spec::v1text::DocFile)
     ensures
-        doc_record_stage(d.docid, d.ace, d.ulex, d.temporal) == ckc_spec::v1text::term_line(
+        doc_record_stage(d.docid, d.ace, d.ulex, d.vocabulary) == ckc_spec::v1text::term_line(
             ckc_spec::v1text::doc_record_term(d),
         ),
 {
@@ -16570,23 +16478,23 @@ proof fn doc_record_stage_is_print(d: ckc_spec::v1text::DocFile)
     let ace_name = ckc_spec::v1text::ascii("ace_sha256"@);
     let ulex_name = ckc_spec::v1text::ascii("ulex"@);
     let sha_name = ckc_spec::v1text::ascii("sha256"@);
-    let temporal_name = ckc_spec::v1text::ascii("temporal"@);
+    let vocab_name = ckc_spec::v1text::ascii("vocabulary"@);
     let docid = Term::Atom(d.docid);
     let ace_hash = Term::Atom(d.ace);
     let ace = Term::Comp(ace_name, seq![ace_hash]);
-    let ulex_value = ckc_spec::v1text::ulex_term(d.ulex);
+    let ulex_value = ckc_spec::v1text::digest_term(d.ulex);
     let ulex = Term::Comp(ulex_name, seq![ulex_value]);
     reveal_strlit("guideline_document");
     reveal_strlit("ace_sha256");
     reveal_strlit("ulex");
     reveal_strlit("sha256");
-    reveal_strlit("temporal");
+    reveal_strlit("vocabulary");
     reveal(ckc_spec::v1text::ascii);
     reveal(ckc_spec::v1text::curly_name);
     assert(ace_name != ckc_spec::v1text::curly_name());
     assert(ulex_name != ckc_spec::v1text::curly_name());
     assert(sha_name != ckc_spec::v1text::curly_name());
-    assert(temporal_name != ckc_spec::v1text::curly_name());
+    assert(vocab_name != ckc_spec::v1text::curly_name());
     atom_term_bytes(d.docid);
     atom_term_bytes(d.ace);
     args_one_bytes(ace_hash);
@@ -16613,43 +16521,33 @@ proof fn doc_record_stage_is_print(d: ckc_spec::v1text::DocFile)
     reveal(query_record_ulex_open_stage);
     reveal(query_ulex_stage);
     reveal(record_suffix_stage);
-    reveal(temporal_tail_stage);
-    reveal(temporal_tail_parts);
+    reveal(vocabulary_tail_stage);
+    reveal(vocabulary_tail_parts);
     reveal(ckc_spec::v1text::term_line);
     reveal(ckc_spec::v1text::doc_record_term);
-    reveal(ckc_spec::v1text::temporal_terms);
-    reveal(ckc_spec::v1text::ulex_term);
-    match d.temporal {
+    reveal(ckc_spec::v1text::vocabulary_term);
+    reveal(ckc_spec::v1text::digest_term);
+    let vocab_value = ckc_spec::v1text::digest_term(d.vocabulary);
+    match d.vocabulary {
         None => {
-            reveal_with_fuel(Seq::<_>::flatten, 1);
-            assert(seq![docid, ace, ulex] + ckc_spec::v1text::temporal_terms(d.temporal) =~= seq![
-                docid,
-                ace,
-                ulex,
-            ]);
-            args_three_bytes(docid, ace, ulex);
-            regular_comp_bytes(doc_name, seq![docid, ace, ulex]);
+            let none_name = ckc_spec::v1text::ascii("none"@);
+            reveal_strlit("none");
+            reveal(ckc_spec::v1text::ascii);
+            atom_term_bytes(none_name);
         },
         Some(h) => {
             let h_term = Term::Atom(h);
             atom_term_bytes(h);
             args_one_bytes(h_term);
             regular_comp_bytes(sha_name, seq![h_term]);
-            let sha_term = Term::Comp(sha_name, seq![h_term]);
-            args_one_bytes(sha_term);
-            regular_comp_bytes(temporal_name, seq![sha_term]);
-            let tt = Term::Comp(temporal_name, seq![sha_term]);
-            assert(seq![docid, ace, ulex] + ckc_spec::v1text::temporal_terms(d.temporal) =~= seq![
-                docid,
-                ace,
-                ulex,
-                tt,
-            ]);
-            args_four_bytes(docid, ace, ulex, tt);
-            regular_comp_bytes(doc_name, seq![docid, ace, ulex, tt]);
-            reveal_with_fuel(Seq::<_>::flatten, 9);
         },
     }
+    args_one_bytes(vocab_value);
+    regular_comp_bytes(vocab_name, seq![vocab_value]);
+    let vt = Term::Comp(vocab_name, seq![vocab_value]);
+    args_four_bytes(docid, ace, ulex, vt);
+    regular_comp_bytes(doc_name, seq![docid, ace, ulex, vt]);
+    reveal_with_fuel(Seq::<_>::flatten, 9);
 }
 
 proof fn doc_prefix_parts_flat(d: ckc_spec::v1text::DocFile)
@@ -16657,20 +16555,17 @@ proof fn doc_prefix_parts_flat(d: ckc_spec::v1text::DocFile)
         doc_prefix_parts(d).flatten() == doc_prefix_stage(d),
 {
     let line = doc_line_parts(d.docid);
-    let decls = doc_decl_parts(d.version);
-    let schema = seq![
-        ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term(d.version)),
-    ];
-    let record = doc_record_parts(d.docid, d.ace, d.ulex, d.temporal);
+    let decls = doc_decl_parts();
+    let schema = seq![ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term())];
+    let record = doc_record_parts(d.docid, d.ace, d.ulex, d.vocabulary);
     assert(doc_prefix_parts(d) == ((line + decls) + schema) + record) by {
         reveal(doc_prefix_parts);
     }
     doc_line_parts_flat(d.docid);
-    doc_decl_parts_flat(d.version);
-    doc_record_parts_flat(d.docid, d.ace, d.ulex, d.temporal);
-    assert(schema.flatten() == ckc_spec::v1text::term_line(
-        ckc_spec::v1text::schema_version_term(d.version),
-    )) by {
+    doc_decl_parts_flat();
+    doc_record_parts_flat(d.docid, d.ace, d.ulex, d.vocabulary);
+    assert(schema.flatten() == ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term()))
+        by {
         reveal_with_fuel(Seq::<_>::flatten, 3);
     }
     vstd::seq_lib::lemma_flatten_concat(line, decls);
@@ -16830,64 +16725,16 @@ fn parse_doc_line(
     Some(docid)
 }
 
-#[verifier::rlimit(5000)]
-#[verifier::spinoff_prover]
-// m7t D3: the declaration block selects the schema version; the block bytes
-// first differ at the record arity (`/3` v1, `/4` v2), so that prefix decides
-// and the chosen block's guided literal keeps the longest-canonical-prefix `at`.
-// q12 D2: in a v2 document the byte after the declaration block opens the
-// schema line (`g`), never the `:` that continues a v3 block.
-proof fn doc_v2_after_decls(bytes: Seq<u8>, d: ckc_spec::v1text::DocFile, pos: int)
-    requires
-        bytes == doc_parts(d).flatten(),
-        d.version == 2,
-        doc_line_parts(d.docid).len() == 3,
-        pos == doc_parts(d).take(3).flatten().len(),
-    ensures
-        pos + ckc_spec::v1text::decls_from(2, 0).len() < bytes.len(),
-        bytes[pos + ckc_spec::v1text::decls_from(2, 0).len()] == 0x67u8,
-{
-    let parts = doc_parts(d);
-    reveal(doc_parts);
-    reveal(doc_prefix_parts);
-    reveal(doc_decl_parts);
-    assert(parts[3] == ckc_spec::v1text::decls_from(2, 0));
-    assert(parts[4] == ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term(2)));
-    let schema: Seq<u8> = b"guideline_schema_version(2).\n"@;
-    let name = ckc_spec::v1text::ascii("guideline_schema_version"@);
-    let n = Term::Int(2);
-    reveal_byteslit(b"guideline_schema_version(2).\n");
-    reveal_strlit("guideline_schema_version");
-    reveal_strlit(".\n");
-    reveal(ckc_spec::v1text::ascii);
-    reveal(ckc_spec::v1text::curly_name);
-    schema_version_name_bare();
-    args_one_bytes(n);
-    regular_comp_bytes(name, seq![n]);
-    reveal(ckc_spec::v1text::schema_version_term);
-    reveal(ckc_spec::v1text::term_line);
-    reveal_with_fuel(ckc_spec::v1text::term_bytes, 1);
-    reveal(ckc_spec::v1text::dec_bytes);
-    reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
-    reveal(ckc_spec::v1text::digit_byte);
-    assert(schema =~= parts[4]);
-    flattened_part(bytes, parts, 4);
-    assert(parts.take(4) =~= parts.take(3).push(parts[3]));
-    parts.take(3).lemma_flatten_push(parts[3]);
-    assert(bytes.subrange(pos + parts[3].len(), pos + parts[3].len() + parts[4].len())[0]
-        == parts[4][0]);
-}
-
-// `:- multifile(N/A).\n:- discontiguous(N/A).\n` = decl_pair(v, i), appended piece by piece:
+// `:- multifile(N/A).\n:- discontiguous(N/A).\n` = decl_pair(i), appended piece by piece:
 // one extensional equality over a whole declaration-block literal costs ~2e9 z3 rlimit units
-// (670 B; the 1138 B v3 block passes 2^32, the largest count Verus parses).
-fn push_decl_pair(out: &mut Vec<u8>, name: &[u8], arity: u8, v: Ghost<nat>, i: Ghost<int>)
+// (670 B; the 1138 B block passes 2^32, the largest count Verus parses).
+fn push_decl_pair(out: &mut Vec<u8>, name: &[u8], arity: u8, i: Ghost<int>)
     requires
-        name@ == ckc_spec::v1text::decl_indicator(v@, i@).0,
-        arity as nat == ckc_spec::v1text::decl_indicator(v@, i@).1,
+        name@ == ckc_spec::v1text::indicator(i@).0,
+        arity as nat == ckc_spec::v1text::indicator(i@).1,
         1 <= arity <= 9,
     ensures
-        final(out)@ == old(out)@ + ckc_spec::v1text::decl_pair(v@, i@),
+        final(out)@ == old(out)@ + ckc_spec::v1text::decl_pair(i@),
         final(out)@.len() == old(out)@.len() + 40 + 2 * name@.len(),
         final(out)@[old(out)@.len() + 14 + name@.len() as int] == 0x30 + arity,
 {
@@ -16920,53 +16767,47 @@ fn push_decl_pair(out: &mut Vec<u8>, name: &[u8], arity: u8, v: Ghost<nat>, i: G
         assert(close@ =~= ckc_spec::v1text::ascii(").\n"@));
         assert(discontiguous@ =~= ckc_spec::v1text::ascii(":- discontiguous("@));
         assert(ckc_spec::v1text::udec_bytes(arity as nat) =~= seq![(0x30 + arity) as u8]);
-        assert(out@ =~= base + ckc_spec::v1text::decl_pair(v@, i@));
+        assert(out@ =~= base + ckc_spec::v1text::decl_pair(i@));
     }
 }
 
-proof fn decls_step(out: Seq<u8>, v: nat, k: int)
+proof fn decls_step(out: Seq<u8>, k: int)
     requires
-        0 <= k < ckc_spec::v1text::indicator_count(v),
-        out + ckc_spec::v1text::decls_from(v, k) == ckc_spec::v1text::decls_from(v, 0),
+        0 <= k < ckc_spec::v1text::indicator_count(),
+        out + ckc_spec::v1text::decls_from(k) == ckc_spec::v1text::decls_from(0),
     ensures
-        (out + ckc_spec::v1text::decl_pair(v, k)) + ckc_spec::v1text::decls_from(v, k + 1)
-            == ckc_spec::v1text::decls_from(v, 0),
+        (out + ckc_spec::v1text::decl_pair(k)) + ckc_spec::v1text::decls_from(k + 1)
+            == ckc_spec::v1text::decls_from(0),
 {
     reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
-    assert_seqs_equal!((out + ckc_spec::v1text::decl_pair(v, k)) + ckc_spec::v1text::decls_from(v, k + 1)
-        == out + ckc_spec::v1text::decls_from(v, k));
+    assert_seqs_equal!((out + ckc_spec::v1text::decl_pair(k)) + ckc_spec::v1text::decls_from(k + 1)
+        == out + ckc_spec::v1text::decls_from(k));
 }
 
-proof fn decls_end(out: Seq<u8>, v: nat)
+proof fn decls_end(out: Seq<u8>)
     requires
-        out + ckc_spec::v1text::decls_from(v, ckc_spec::v1text::indicator_count(v))
-            == ckc_spec::v1text::decls_from(v, 0),
+        out + ckc_spec::v1text::decls_from(ckc_spec::v1text::indicator_count())
+            == ckc_spec::v1text::decls_from(0),
     ensures
-        out == ckc_spec::v1text::decls_from(v, 0),
+        out == ckc_spec::v1text::decls_from(0),
 {
     reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
-    assert_seqs_equal!(out == out + ckc_spec::v1text::decls_from(v, ckc_spec::v1text::indicator_count(v)));
+    assert_seqs_equal!(out == out + ckc_spec::v1text::decls_from(ckc_spec::v1text::indicator_count()));
 }
 
-// The schema-v declaration block decls_from(v, 0), assembled one pair at a time.
+// The declaration block decls_from(0), assembled one pair at a time.
 #[verifier::rlimit(100)]
-fn decls_block(v: u8) -> (r: Vec<u8>)
-    requires
-        1 <= v <= 3,
+fn decls_block() -> (r: Vec<u8>)
     ensures
-        r@ == ckc_spec::v1text::decls_from(v as nat, 0),
-        v == 1 ==> r@.len() == 670 && r@[120] == 0x33,
-        v == 2 ==> r@.len() == 826 && r@[120] == 0x34,
-        v == 3 ==> r@.len() == 1138,
+        r@ == ckc_spec::v1text::decls_from(0),
+        r@.len() == 1138,
 {
-    let ghost gv = v as nat;
     let mut out: Vec<u8> = Vec::new();
     proof {
         reveal(ckc_spec::v1text::indicator_count);
         reveal(ckc_spec::v1text::indicator);
-        reveal(ckc_spec::v1text::decl_indicator);
         reveal(ckc_spec::v1text::ascii);
-        assert(out@ + ckc_spec::v1text::decls_from(gv, 0) =~= ckc_spec::v1text::decls_from(gv, 0));
+        assert(out@ + ckc_spec::v1text::decls_from(0) =~= ckc_spec::v1text::decls_from(0));
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_schema_version";
@@ -16975,15 +16816,11 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_schema_version");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_schema_version"@));
     }
-    push_decl_pair(&mut out, name, 1, Ghost(gv), Ghost(0int));
+    push_decl_pair(&mut out, name, 1, Ghost(0int));
     proof {
-        decls_step(before, gv, 0);
+        decls_step(before, 0);
     }
-    let doc_arity: u8 = if v == 1 {
-        3
-    } else {
-        4
-    };
+    let doc_arity: u8 = 4;
     let ghost before = out@;
     let name: &[u8] = b"guideline_document";
     proof {
@@ -16991,9 +16828,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_document");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_document"@));
     }
-    push_decl_pair(&mut out, name, doc_arity, Ghost(gv), Ghost(1int));
+    push_decl_pair(&mut out, name, doc_arity, Ghost(1int));
     proof {
-        decls_step(before, gv, 1);
+        decls_step(before, 1);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_entity";
@@ -17002,9 +16839,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_entity");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_entity"@));
     }
-    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(2int));
+    push_decl_pair(&mut out, name, 4, Ghost(2int));
     proof {
-        decls_step(before, gv, 2);
+        decls_step(before, 2);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_cardinality";
@@ -17013,9 +16850,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_cardinality");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_cardinality"@));
     }
-    push_decl_pair(&mut out, name, 5, Ghost(gv), Ghost(3int));
+    push_decl_pair(&mut out, name, 5, Ghost(3int));
     proof {
-        decls_step(before, gv, 3);
+        decls_step(before, 3);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_event";
@@ -17024,9 +16861,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_event");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_event"@));
     }
-    push_decl_pair(&mut out, name, 3, Ghost(gv), Ghost(4int));
+    push_decl_pair(&mut out, name, 3, Ghost(4int));
     proof {
-        decls_step(before, gv, 4);
+        decls_step(before, 4);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_arg";
@@ -17035,9 +16872,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_arg");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_arg"@));
     }
-    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(5int));
+    push_decl_pair(&mut out, name, 4, Ghost(5int));
     proof {
-        decls_step(before, gv, 5);
+        decls_step(before, 5);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_pp";
@@ -17046,9 +16883,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_pp");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_pp"@));
     }
-    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(6int));
+    push_decl_pair(&mut out, name, 4, Ghost(6int));
     proof {
-        decls_step(before, gv, 6);
+        decls_step(before, 6);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_property";
@@ -17057,9 +16894,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_property");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_property"@));
     }
-    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(7int));
+    push_decl_pair(&mut out, name, 4, Ghost(7int));
     proof {
-        decls_step(before, gv, 7);
+        decls_step(before, 7);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_operator";
@@ -17068,15 +16905,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_operator");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_operator"@));
     }
-    push_decl_pair(&mut out, name, 3, Ghost(gv), Ghost(8int));
+    push_decl_pair(&mut out, name, 3, Ghost(8int));
     proof {
-        decls_step(before, gv, 8);
-    }
-    if v == 1 {
-        proof {
-            decls_end(out@, gv);
-        }
-        return out;
+        decls_step(before, 8);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_interval";
@@ -17085,9 +16916,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_interval");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_interval"@));
     }
-    push_decl_pair(&mut out, name, 6, Ghost(gv), Ghost(9int));
+    push_decl_pair(&mut out, name, 6, Ghost(9int));
     proof {
-        decls_step(before, gv, 9);
+        decls_step(before, 9);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_recurrence";
@@ -17096,15 +16927,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_recurrence");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_recurrence"@));
     }
-    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(10int));
+    push_decl_pair(&mut out, name, 4, Ghost(10int));
     proof {
-        decls_step(before, gv, 10);
-    }
-    if v == 2 {
-        proof {
-            decls_end(out@, gv);
-        }
-        return out;
+        decls_step(before, 10);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_frequency";
@@ -17113,9 +16938,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_frequency");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_frequency"@));
     }
-    push_decl_pair(&mut out, name, 5, Ghost(gv), Ghost(11int));
+    push_decl_pair(&mut out, name, 5, Ghost(11int));
     proof {
-        decls_step(before, gv, 11);
+        decls_step(before, 11);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_order";
@@ -17124,9 +16949,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_order");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_order"@));
     }
-    push_decl_pair(&mut out, name, 4, Ghost(gv), Ghost(12int));
+    push_decl_pair(&mut out, name, 4, Ghost(12int));
     proof {
-        decls_step(before, gv, 12);
+        decls_step(before, 12);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_recurrence_window";
@@ -17135,9 +16960,9 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_recurrence_window");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_recurrence_window"@));
     }
-    push_decl_pair(&mut out, name, 7, Ghost(gv), Ghost(13int));
+    push_decl_pair(&mut out, name, 7, Ghost(13int));
     proof {
-        decls_step(before, gv, 13);
+        decls_step(before, 13);
     }
     let ghost before = out@;
     let name: &[u8] = b"guideline_range";
@@ -17146,35 +16971,14 @@ fn decls_block(v: u8) -> (r: Vec<u8>)
         reveal_byteslit(b"guideline_range");
         assert(name@ =~= ckc_spec::v1text::ascii("guideline_range"@));
     }
-    push_decl_pair(&mut out, name, 3, Ghost(gv), Ghost(14int));
+    push_decl_pair(&mut out, name, 3, Ghost(14int));
     proof {
-        decls_step(before, gv, 14);
+        decls_step(before, 14);
     }
     proof {
-        decls_end(out@, gv);
+        decls_end(out@);
     }
     out
-}
-
-// The v3 declaration block extends the v2 block: indicators 0..10 agree, 11..14 follow.
-proof fn decls_v3_extends(i: int)
-    requires
-        0 <= i <= 11,
-    ensures
-        ckc_spec::v1text::decls_from(3, i) == ckc_spec::v1text::decls_from(2, i)
-            + ckc_spec::v1text::decls_from(3, 11),
-    decreases 11 - i,
-{
-    reveal(ckc_spec::v1text::indicator_count);
-    reveal(ckc_spec::v1text::decl_indicator);
-    reveal(ckc_spec::v1text::decl_pair);
-    reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
-    if i < 11 {
-        decls_v3_extends(i + 1);
-        assert(ckc_spec::v1text::decl_pair(3, i) == ckc_spec::v1text::decl_pair(2, i));
-    }
-    assert_seqs_equal!(ckc_spec::v1text::decls_from(3, i)
-        == ckc_spec::v1text::decls_from(2, i) + ckc_spec::v1text::decls_from(3, 11));
 }
 
 #[verifier::rlimit(30)]
@@ -17183,7 +16987,7 @@ fn parse_doc_declarations(
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
     at: &mut usize,
-) -> (r: Option<u8>)
+) -> (r: bool)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
@@ -17192,125 +16996,27 @@ fn parse_doc_declarations(
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
-        r matches Some(v) ==> {
-            &&& 1 <= v <= 3
+        r ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@
-                + ckc_spec::v1text::decls_from(v as nat, 0) + ckc_spec::v1text::term_line(
-                ckc_spec::v1text::schema_version_term(v as nat),
+                + ckc_spec::v1text::decls_from(0) + ckc_spec::v1text::term_line(
+                ckc_spec::v1text::schema_version_term(),
             )
         },
         expected@ matches Some(d) ==> {
-            &&& r == Some(d.version as u8)
+            &&& r
             &&& final(guided).guide@ matches Some(g) && g.parts == doc_parts(d) && g.index == 5
         },
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost old_prefix = guided.cursor.prefix@;
-    let v1_block = decls_block(1);
-    let v2_block = decls_block(2);
-    let v3_block = decls_block(3);
-    let v1_decls = v1_block.as_slice();
-    let v2_decls = v2_block.as_slice();
-    let v3_decls = v3_block.as_slice();
-    let marker = vstd::slice::slice_subrange(v2_decls, 0, 121);
-    let v3_marker = vstd::slice::slice_subrange(v3_decls, 0, 827);
-    proof {
-        decls_v3_extends(0);
-        assert(v3_decls@ =~= v2_decls@ + ckc_spec::v1text::decls_from(3, 11));
-        assert(ckc_spec::v1text::decls_from(3, 11)[0] == 0x3au8) by {
-            reveal(ckc_spec::v1text::indicator_count);
-            reveal(ckc_spec::v1text::decl_pair);
-            reveal_with_fuel(ckc_spec::v1text::decls_from, 1);
-            reveal_strlit(":- multifile(");
-            reveal(ckc_spec::v1text::ascii);
-        }
-        assert(v3_marker@ =~= v3_decls@.take(v3_marker@.len() as int));
-        assert(v3_marker@.take(v2_decls@.len() as int) =~= v2_decls@);
-        assert(v3_marker@[v2_decls@.len() as int] == 0x3au8);
-        assert(marker@ =~= v2_decls@.take(marker@.len() as int));
-        assert(marker@ =~= v3_marker@.take(marker@.len() as int));
-        assert(v1_decls@[marker@.len() - 1] != marker@[marker@.len() - 1]);
-        assert(v1_decls@.len() >= marker@.len());
-        if let Some(d) = expected@ {
-            reveal(doc_parts);
-            reveal(doc_prefix_parts);
-            reveal(doc_line_parts);
-            reveal(doc_decl_parts);
-            reveal(ckc_spec::v1text::wf_doc);
-            reveal(ckc_spec::v1text::version_ok);
-            reveal(guided_cursor_ok);
-            let g = guided.guide@.unwrap();
-            assert(g.parts[3] == ckc_spec::v1text::decls_from(d.version, 0));
-            parts_part_ready(bytes@, g.parts, 3, &guided.cursor);
-        }
-    }
-    let pos = guided.cursor.pos;
-    let rest = vstd::slice::slice_subrange(bytes, pos, bytes.len());
-    let version: u8 = if crate::k4_bytes::starts_with(rest, v3_marker) {
-        3
-    } else if crate::k4_bytes::starts_with(rest, marker) {
-        2
-    } else {
-        1
-    };
-    proof {
-        if let Some(d) = expected@ {
-            let blk = ckc_spec::v1text::decls_from(d.version, 0);
-            assert(bytes@.subrange(pos as int, pos as int + blk.len()) == blk);
-            assert(rest@ =~= bytes@.subrange(pos as int, bytes@.len() as int));
-            if d.version == 3 {
-                assert(rest@.take(v3_marker@.len() as int) =~= v3_marker@);
-            } else if d.version == 2 {
-                reveal(doc_parts);
-                reveal(doc_prefix_parts);
-                reveal(doc_line_parts);
-                reveal(guided_cursor_ok);
-                reveal(parts_progress);
-                let g = guided.guide@.unwrap();
-                assert(g.parts == doc_parts(d));
-                assert(doc_line_parts(d.docid).len() == 3);
-                assert(guided.cursor.prefix@.len() == pos);
-                assert(pos as int == doc_parts(d).take(3).flatten().len());
-                doc_v2_after_decls(bytes@, d, pos as int);
-                assert(rest@[v2_decls@.len() as int] == 0x67u8);
-                assert(rest@.take(marker@.len() as int) =~= marker@);
-            } else {
-                assert(d.version == 1);
-                assert(rest@[marker@.len() - 1] == v1_decls@[marker@.len() - 1]);
-            }
-            assert(version == d.version as u8);
-        }
-    }
-    let declarations: &[u8] = if version == 3 {
-        v3_decls
-    } else if version == 2 {
-        v2_decls
-    } else {
-        v1_decls
-    };
-    if !guided_literal(
-        bytes,
-        guided,
-        declarations,
-        Ghost(ckc_spec::v1text::decls_from(version as nat, 0)),
-        at,
-    ) {
-        return None;
-    }
-    let schema: &[u8] = if version == 3 {
-        b"guideline_schema_version(3).\n"
-    } else if version == 2 {
-        b"guideline_schema_version(2).\n"
-    } else {
-        b"guideline_schema_version(1).\n"
-    };
+    let block = decls_block();
+    let declarations = block.as_slice();
+    let schema: &[u8] = b"guideline_schema_version(1).\n";
     proof {
         let name = ckc_spec::v1text::ascii("guideline_schema_version"@);
-        let n = Term::Int(version as int);
+        let n = Term::Int(1);
         reveal_byteslit(b"guideline_schema_version(1).\n");
-        reveal_byteslit(b"guideline_schema_version(2).\n");
-        reveal_byteslit(b"guideline_schema_version(3).\n");
         reveal_strlit("guideline_schema_version");
         reveal_strlit(".\n");
         reveal(ckc_spec::v1text::ascii);
@@ -17325,28 +17031,50 @@ fn parse_doc_declarations(
         reveal(ckc_spec::v1text::dec_bytes);
         reveal_with_fuel(ckc_spec::v1text::udec_bytes, 2);
         reveal(ckc_spec::v1text::digit_byte);
-        assert(schema@ =~= ckc_spec::v1text::term_line(
-            ckc_spec::v1text::schema_version_term(version as nat),
-        ));
+        assert(schema@ =~= ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term()));
+        if let Some(d) = expected@ {
+            reveal(doc_parts);
+            reveal(doc_prefix_parts);
+            reveal(doc_line_parts);
+            reveal(doc_decl_parts);
+            let g = guided.guide@.unwrap();
+            assert(g.parts[3] == ckc_spec::v1text::decls_from(0));
+            assert(g.parts[4] == ckc_spec::v1text::term_line(
+                ckc_spec::v1text::schema_version_term(),
+            ));
+        }
+    }
+    if !guided_literal(bytes, guided, declarations, Ghost(ckc_spec::v1text::decls_from(0)), at) {
+        return false;
+    }
+    proof {
+        if let Some(d) = expected@ {
+            reveal(doc_parts);
+            reveal(doc_prefix_parts);
+            reveal(doc_line_parts);
+            reveal(doc_decl_parts);
+            let g = guided.guide@.unwrap();
+            assert(g.parts[4] == ckc_spec::v1text::term_line(
+                ckc_spec::v1text::schema_version_term(),
+            ));
+        }
     }
     if !guided_literal(
         bytes,
         guided,
         schema,
-        Ghost(ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term(version as nat))),
+        Ghost(ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term())),
         at,
     ) {
-        return None;
+        return false;
     }
     proof {
         assert_seqs_equal!(guided.cursor.prefix@
             == old_prefix
-                + ckc_spec::v1text::decls_from(version as nat, 0)
-                + ckc_spec::v1text::term_line(
-                    ckc_spec::v1text::schema_version_term(version as nat),
-                ));
+                + ckc_spec::v1text::decls_from(0)
+                + ckc_spec::v1text::term_line(ckc_spec::v1text::schema_version_term()));
     }
-    Some(version)
+    true
 }
 
 #[verifier::rlimit(1000)]
@@ -17582,32 +17310,30 @@ fn parse_doc_ulex(
     bytes: &[u8],
     guided: &mut EGuidedCursor,
     expected: Ghost<Option<ckc_spec::v1text::DocFile>>,
-    temporal: bool,
     at: &mut usize,
 ) -> (r: Option<EUlexField>)
     requires
         *old(at) <= bytes@.len(),
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(d) ==> old(guided).guide@ matches Some(g) && g.parts == doc_parts(d)
-            && g.index == 16 && ckc_spec::v1text::wf_doc(d) && (d.temporal is Some) == temporal,
+            && g.index == 16 && ckc_spec::v1text::wf_doc(d),
         expected@ is None ==> old(guided).guide@ is None,
     ensures
         *old(at) <= *final(at) <= bytes@.len(),
         r matches Some(ulex) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
-            &&& ckc_spec::v1text::ulex_ok(ulex.value@)
+            &&& ckc_spec::v1text::digest_ok(ulex.value@)
             &&& ulex.digest@ == ulex_digest_bytes(ulex.value@)
+            &&& ckc_spec::v1text::digest_ok(ulex.vocabulary@)
+            &&& ulex.vocabulary_digest@ == ulex_digest_bytes(ulex.vocabulary@)
             &&& final(guided).cursor.prefix@ == old(guided).cursor.prefix@ + query_ulex_stage(
                 ulex.value@,
-            ) + record_suffix_stage(tail_of(temporal, ulex.temporal@))
-            &&& temporal ==> ckc_spec::v1text::hex64(ulex.temporal@)
-            &&& !temporal ==> ulex.temporal@ == Seq::<u8>::empty()
+            ) + record_suffix_stage(ulex.vocabulary@)
         },
         expected@ matches Some(d) ==> {
-            &&& r matches Some(ulex) && ulex.value@ == d.ulex && tail_of(temporal, ulex.temporal@)
-                == d.temporal
+            &&& r matches Some(ulex) && ulex.value@ == d.ulex && ulex.vocabulary@ == d.vocabulary
             &&& final(guided).guide@ matches Some(g) && g.parts == doc_parts(d) && g.index
-                == query_record_end(d.ulex, d.temporal) && guide_rest(g) == doc_bundles_parts(
+                == query_record_end(d.ulex, d.vocabulary) && guide_rest(g) == doc_bundles_parts(
                 d.bundles,
             )
         },
@@ -17631,28 +17357,20 @@ fn parse_doc_ulex(
             reveal(doc_record_parts);
             reveal(doc_record_head_parts);
             reveal(record_ulex_parts);
-            reveal(ckc_spec::v1text::version_ok);
             match d.ulex {
                 None => {},
                 Some(_) => {},
             }
             reveal(guide_rest);
-            assert(guide_rest(guided.guide@.unwrap()) =~= record_ulex_parts(d.ulex, d.temporal)
+            assert(guide_rest(guided.guide@.unwrap()) =~= record_ulex_parts(d.ulex, d.vocabulary)
                 + tail);
         }
     }
-    let ghost tex = match expected@ {
-        Some(d) => d.temporal,
+    let ghost vex = match expected@ {
+        Some(d) => d.vocabulary,
         None => None,
     };
-    let ulex = match parse_record_ulex(
-        bytes,
-        guided,
-        Ghost(generic_expected),
-        Ghost(tex),
-        temporal,
-        at,
-    ) {
+    let ulex = match parse_record_ulex(bytes, guided, Ghost(generic_expected), Ghost(vex), at) {
         Some(ulex) => ulex,
         None => return None,
     };
@@ -17661,7 +17379,7 @@ fn parse_doc_ulex(
         if let Some(d) = expected@ {
             reveal(record_ulex_parts);
             reveal(query_record_end);
-            reveal(temporal_tail_parts);
+            reveal(vocabulary_tail_parts);
             match d.ulex {
                 None => {},
                 Some(_) => {},
@@ -18085,7 +17803,7 @@ fn semantic_v1_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     accepted
 }
 
-// m7t D3: the two v2 annotation indicators (positions 9, 10).
+// m7t D3: the two m7t annotation indicators (positions 9, 10).
 fn annotation_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == exists|i: int|
@@ -18129,8 +17847,8 @@ fn annotation_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     accepted
 }
 
-// q12 D2: the four v3 indicators (positions 11..14).
-fn v3_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
+// q12 D2: the four q12 indicators (positions 11..14).
+fn q12_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == exists|i: int|
             11 <= i < 15 && #[trigger] ckc_spec::v1text::indicator(i) == (name@, arity as nat),
@@ -18198,7 +17916,7 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
 {
     let base = semantic_v1_exec(name, arity);
     let ann = annotation_pred_exec(name, arity);
-    let v3 = v3_pred_exec(name, arity);
+    let q12 = q12_pred_exec(name, arity);
     proof {
         reveal(ckc_spec::v1text::is_semantic_pred);
         if ckc_spec::v1text::is_semantic_pred(name@, arity as nat) {
@@ -18209,218 +17927,11 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
             } else if i < 11 {
                 assert(ann);
             } else {
-                assert(v3);
+                assert(q12);
             }
         }
     }
-    base || ann || v3
-}
-
-fn version_pred_exec(name: &Vec<u8>, arity: usize, v: u8) -> (r: bool)
-    ensures
-        r == ckc_spec::v1text::version_pred(name@, arity as nat, v as nat),
-{
-    let base = semantic_v1_exec(name, arity);
-    let ann = annotation_pred_exec(name, arity);
-    let v3 = v3_pred_exec(name, arity);
-    proof {
-        reveal(ckc_spec::v1text::version_pred);
-        reveal(ckc_spec::v1text::indicator_count);
-        if ckc_spec::v1text::version_pred(name@, arity as nat, v as nat) {
-            let i = choose|i: int|
-                2 <= i < ckc_spec::v1text::indicator_count(v as nat) && ckc_spec::v1text::indicator(
-                    i,
-                ) == (name@, arity as nat);
-            if i < 9 {
-                assert(base);
-            } else if i < 11 {
-                assert((v == 2 || v == 3) && ann);
-            } else {
-                assert(v == 3 && v3);
-            }
-        }
-        if base {
-            let i = choose|i: int|
-                2 <= i < 9 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
-            assert(2 <= i < ckc_spec::v1text::indicator_count(v as nat));
-        }
-        if (v == 2 || v == 3) && ann {
-            let i = choose|i: int|
-                9 <= i < 11 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
-            assert(2 <= i < ckc_spec::v1text::indicator_count(v as nat));
-        }
-        if v == 3 && v3 {
-            let i = choose|i: int|
-                11 <= i < 15 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
-            assert(2 <= i < ckc_spec::v1text::indicator_count(v as nat));
-        }
-    }
-    base || ((v == 2 || v == 3) && ann) || (v == 3 && v3)
-}
-
-// m7t D3: a literal root's predicate is a version-v predicate.
-fn literal_in_exec(arena: &ETermArena, root: usize, v: u8) -> (r: bool)
-    requires
-        arena_ok(arena),
-        root < arena.nodes@.len(),
-    ensures
-        r == ckc_spec::v1text::lit_in(arena@[root as int], v as nat),
-{
-    proof {
-        assert(crate::k2_term::node_ok(arena.nodes@, root as int));
-        reveal(ckc_spec::v1text::lit_in);
-    }
-    match &arena.nodes[root].kind {
-        ENodeKind::Comp { name, child_roots, .. } => version_pred_exec(name, child_roots.len(), v),
-        _ => false,
-    }
-}
-
-fn roots_in_exec(arena: &ETermArena, roots: &Vec<usize>, Ghost(ts): Ghost<Seq<Term>>, v: u8) -> (r:
-    bool)
-    requires
-        arena_ok(arena),
-        roots_ok_nodes(arena.nodes@, roots@, ts),
-    ensures
-        r == forall|q: int|
-            0 <= q < ts.len() ==> ckc_spec::v1text::lit_in(#[trigger] ts[q], v as nat),
-{
-    let mut q = 0usize;
-    while q < roots.len()
-        invariant
-            q <= roots@.len(),
-            arena_ok(arena),
-            roots_ok_nodes(arena.nodes@, roots@, ts),
-            forall|j: int| 0 <= j < q ==> ckc_spec::v1text::lit_in(#[trigger] ts[j], v as nat),
-        decreases roots@.len() - q,
-    {
-        proof {
-            let qi = q as int;
-            assert(ts[qi] == ts[qi]);
-            assert(roots@[qi] < arena.nodes@.len() && arena.nodes@[roots@[qi] as int].term@
-                == ts[qi]);
-        }
-        let ok = literal_in_exec(arena, roots[q], v);
-        proof {
-            assert(arena@[roots@[q as int] as int] == ts[q as int]);
-        }
-        if !ok {
-            return false;
-        }
-        q += 1;
-    }
-    true
-}
-
-fn item_in_exec(
-    arena: &ETermArena,
-    root: &EBodyRoot,
-    Ghost(item): Ghost<ckc_spec::v1text::BodyItem>,
-    v: u8,
-) -> (r: bool)
-    requires
-        arena_ok(arena),
-        body_root_ok(arena.nodes@, root, item),
-    ensures
-        r == ckc_spec::v1text::item_in(item, v as nat),
-{
-    proof {
-        body_root_elim(arena.nodes@, root, item);
-        reveal(ckc_spec::v1text::item_in);
-    }
-    match root {
-        EBodyRoot::Pos(index) => {
-            let r = literal_in_exec(arena, *index, v);
-            proof {
-                if let ckc_spec::v1text::BodyItem::Pos(t) = item {
-                    assert(arena@[*index as int] == t);
-                }
-            }
-            r
-        },
-        EBodyRoot::Naf(roots) => {
-            let ghost ts = match item {
-                ckc_spec::v1text::BodyItem::Naf(ts) => ts,
-                _ => Seq::empty(),
-            };
-            roots_in_exec(arena, roots, Ghost(ts), v)
-        },
-    }
-}
-
-fn clause_in_exec(arena: &ETermArena, c: &EDocClause, v: u8) -> (r: bool)
-    requires
-        arena_ok(arena),
-        doc_clause_roots_ok(arena.nodes@, c),
-    ensures
-        r == ckc_spec::v1text::clause_in(c@, v as nat),
-{
-    proof {
-        doc_clause_roots_elim(arena.nodes@, c);
-        body_roots_elim(arena.nodes@, c.body@, c@.body);
-        reveal(ckc_spec::v1text::clause_in);
-        assert(arena@[c.head_root as int] == c@.head);
-    }
-    if !literal_in_exec(arena, c.head_root, v) {
-        return false;
-    }
-    let mut k = 0usize;
-    while k < c.body.len()
-        invariant
-            k <= c.body@.len(),
-            arena_ok(arena),
-            c.body@.len() == c@.body.len(),
-            forall|m: int|
-                0 <= m < c.body@.len() ==> #[trigger] body_root_ok(
-                    arena.nodes@,
-                    &c.body@[m],
-                    c@.body[m],
-                ),
-            forall|m: int|
-                0 <= m < k ==> ckc_spec::v1text::item_in(#[trigger] c@.body[m], v as nat),
-        decreases c.body@.len() - k,
-    {
-        if !item_in_exec(arena, &c.body[k], Ghost(c@.body[k as int]), v) {
-            return false;
-        }
-        k += 1;
-    }
-    true
-}
-
-// m7t D3: every literal of every clause is a version-v predicate.
-fn clauses_in_exec(arena: &ETermArena, clauses: &Vec<EDocClause>, v: u8) -> (r: bool)
-    requires
-        arena_ok(arena),
-        forall|i: int|
-            0 <= i < clauses@.len() ==> #[trigger] doc_clause_roots_ok(arena.nodes@, &clauses@[i]),
-    ensures
-        r == forall|i: int|
-            0 <= i < clauses@.len() ==> ckc_spec::v1text::clause_in(
-                #[trigger] clauses@[i]@,
-                v as nat,
-            ),
-{
-    let mut i = 0usize;
-    while i < clauses.len()
-        invariant
-            i <= clauses@.len(),
-            arena_ok(arena),
-            forall|j: int|
-                0 <= j < clauses@.len() ==> #[trigger] doc_clause_roots_ok(
-                    arena.nodes@,
-                    &clauses@[j],
-                ),
-            forall|j: int|
-                0 <= j < i ==> ckc_spec::v1text::clause_in(#[trigger] clauses@[j]@, v as nat),
-        decreases clauses@.len() - i,
-    {
-        if !clause_in_exec(arena, &clauses[i], v) {
-            return false;
-        }
-        i += 1;
-    }
-    true
+    base || ann || q12
 }
 
 fn semantic_literal_exec(term: &EParsedTerm) -> (r: bool)
@@ -22135,83 +21646,6 @@ proof fn wf_doc_nonempty(d: ckc_spec::v1text::DocFile)
     reveal(ckc_spec::v1text::wf_doc);
 }
 
-// R9 offset of the first literal whose predicate the file's version does not
-// declare (the version-law reject): its name diverges from every declared
-// predicate after their longest common prefix (`pred_name_reject_at`). `%` comment
-// lines and quoted atoms may spell the name and are skipped.
-fn first_annotation_at(bytes: &[u8]) -> (r: usize)
-    ensures
-        r <= bytes@.len(),
-{
-    let v = file_version(bytes);
-    let names: [&[u8]; 6] = [
-        b"guideline_interval(",
-        b"guideline_recurrence(",
-        b"guideline_frequency(",
-        b"guideline_order(",
-        b"guideline_recurrence_window(",
-        b"guideline_range(",
-    ];
-    let mut comment = false;
-    let mut quoted = false;
-    let mut i = 0usize;
-    while i < bytes.len()
-        invariant
-            i <= bytes@.len(),
-        decreases bytes@.len() - i,
-    {
-        if i == 0 || bytes[i - 1] == 0x0a {
-            comment = bytes[i] == 0x25;
-            quoted = false;
-        }
-        if !comment && !quoted {
-            let rest = vstd::slice::slice_subrange(bytes, i, bytes.len());
-            let mut k = 0usize;
-            while k < 6
-                invariant
-                    k <= 6,
-                    i < bytes@.len(),
-                decreases 6 - k,
-            {
-                let n = names[k];
-                if crate::k4_bytes::starts_with(rest, n) {
-                    let min: u8 = if k < 2 {
-                        2
-                    } else {
-                        3
-                    };
-                    if v < min {
-                        return pred_name_reject_at(bytes, i, v);
-                    }
-                }
-                k += 1;
-            }
-        }
-        if !comment && quoted && bytes[i] == 0x5c && i + 1 < bytes.len() {
-            i += 1;
-        } else if !comment && bytes[i] == 0x27 {
-            quoted = !quoted;
-        }
-        i += 1;
-    }
-    bytes.len()
-}
-
-fn contains_at(bytes: &[u8], p: &[u8]) -> (r: bool) {
-    let mut i = 0usize;
-    while i < bytes.len()
-        invariant
-            i <= bytes@.len(),
-        decreases bytes@.len() - i,
-    {
-        if crate::k4_bytes::starts_with(vstd::slice::slice_subrange(bytes, i, bytes.len()), p) {
-            return true;
-        }
-        i += 1;
-    }
-    false
-}
-
 // Index of the `k`-th top-level comma in the argument list of the term at
 // bytes[start..end) (quoted atoms skipped), else its last byte.
 fn top_comma(bytes: &[u8], start: usize, end: usize, k: usize) -> (r: usize)
@@ -22268,10 +21702,10 @@ fn top_comma(bytes: &[u8], start: usize, end: usize, k: usize) -> (r: usize)
     end - 1
 }
 
-// R9 offset of a parsed term that is no semantic literal. A name the file's schema version
-// does not declare diverges past the longest prefix it shares with a declared name; a
-// declared annotation name with the wrong arity diverges at its closing paren (too few
-// arguments) or its extra comma (too many); any other term keeps its start.
+// R9 offset of a parsed term that is no semantic literal. An undeclared name diverges
+// past the longest prefix it shares with a declared name; a declared name with the
+// wrong arity diverges at its closing paren (too few arguments) or its extra comma (too
+// many); any other term keeps its start.
 fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
     ensures
         r <= bytes@.len(),
@@ -22284,36 +21718,24 @@ fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
     if !(term.start < term.end && term.end <= bytes.len()) {
         return start;
     }
-    let v = file_version(bytes);
     let (name, arity) = match &term.parsed.top {
         ETermTop::Comp(n, a) => (n, *a),
-        // A name the version declares, read as a bare atom = an arity-zero use: its start.
+        // A declared name read as a bare atom = an arity-zero use: its start.
         ETermTop::Atom(n) => {
-            let declared = base_pred_name(n) || match annotation_kind(n) {
-                Some((_, min)) => v >= min,
-                None => false,
-            };
+            let declared = semantic_arity(n).is_some();
             return if declared {
                 start
             } else {
-                pred_name_reject_at(bytes, start, v)
+                pred_name_reject_at(bytes, start)
             };
         },
-        _ => return pred_name_reject_at(bytes, start, v),
+        _ => return pred_name_reject_at(bytes, start),
     };
-    let (want, min) = match annotation_kind(name) {
+    let want = match semantic_arity(name) {
         Some(k) => k,
-        None => {
-            return if base_pred_name(name) {
-                start
-            } else {
-                pred_name_reject_at(bytes, start, v)
-            };
-        },
+        None => return pred_name_reject_at(bytes, start),
     };
-    if v < min {
-        pred_name_reject_at(bytes, start, v)
-    } else if arity == want {
+    if arity == want {
         start
     } else if arity < want {
         term.end - 1
@@ -22322,39 +21744,42 @@ fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
     }
 }
 
-// (arity, first schema version) of an annotation predicate name, else none.
-fn annotation_kind(name: &[u8]) -> (r: Option<(usize, u8)>) {
-    if crate::k4_bytes::eq(name, b"guideline_interval") {
-        Some((6, 2))
+// The arity of a semantic predicate name, else none.
+fn semantic_arity(name: &[u8]) -> (r: Option<usize>) {
+    if crate::k4_bytes::eq(name, b"guideline_entity") {
+        Some(4)
+    } else if crate::k4_bytes::eq(name, b"guideline_cardinality") {
+        Some(5)
+    } else if crate::k4_bytes::eq(name, b"guideline_event") {
+        Some(3)
+    } else if crate::k4_bytes::eq(name, b"guideline_arg") {
+        Some(4)
+    } else if crate::k4_bytes::eq(name, b"guideline_pp") {
+        Some(4)
+    } else if crate::k4_bytes::eq(name, b"guideline_property") {
+        Some(4)
+    } else if crate::k4_bytes::eq(name, b"guideline_operator") {
+        Some(3)
+    } else if crate::k4_bytes::eq(name, b"guideline_interval") {
+        Some(6)
     } else if crate::k4_bytes::eq(name, b"guideline_recurrence") {
-        Some((4, 2))
+        Some(4)
     } else if crate::k4_bytes::eq(name, b"guideline_frequency") {
-        Some((5, 3))
+        Some(5)
     } else if crate::k4_bytes::eq(name, b"guideline_order") {
-        Some((4, 3))
+        Some(4)
     } else if crate::k4_bytes::eq(name, b"guideline_recurrence_window") {
-        Some((7, 3))
+        Some(7)
     } else if crate::k4_bytes::eq(name, b"guideline_range") {
-        Some((3, 3))
+        Some(3)
     } else {
         None
     }
 }
 
-// The schema version a file's header names (diagnostics only; 1 without a v2/v3 line).
-fn file_version(bytes: &[u8]) -> (r: u8) {
-    if contains_at(bytes, b"\nguideline_schema_version(3).\n") {
-        3
-    } else if contains_at(bytes, b"\nguideline_schema_version(2).\n") {
-        2
-    } else {
-        1
-    }
-}
-
 // R9 offset of a record version atom that starts at `at` and names no version of
 // its record kind: the canonical names are the unquoted `v1`..`v<max>`, each
-// followed by `,` (queries: max 3; answers + traces: max 1).
+// followed by `,` (queries, answers + traces: max 1).
 fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>, max: u8) -> (r: usize)
     ensures
         r <= bytes@.len(),
@@ -22403,9 +21828,9 @@ fn fixed_reject_at(bytes: &[u8], slot: usize, name: &[u8], next: u8) -> (r: usiz
     slot + k
 }
 
-// R9 offset of a literal whose name schema version v does not declare: the first byte
-// past the longest prefix it shares with a version-v predicate name and its `(`.
-fn pred_name_reject_at(bytes: &[u8], start: usize, v: u8) -> (r: usize)
+// R9 offset of a literal whose name is undeclared: the first byte past the longest
+// prefix it shares with a declared predicate name and its `(`.
+fn pred_name_reject_at(bytes: &[u8], start: usize) -> (r: usize)
     ensures
         r <= bytes@.len(),
 {
@@ -22421,32 +21846,16 @@ fn pred_name_reject_at(bytes: &[u8], start: usize, v: u8) -> (r: usize)
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_pp", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_property", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_operator", 0x28), bytes.len());
-    if v >= 2 {
-        raise_at(
-            &mut best,
-            fixed_reject_at(bytes, start, b"guideline_interval", 0x28),
-            bytes.len(),
-        );
-        raise_at(
-            &mut best,
-            fixed_reject_at(bytes, start, b"guideline_recurrence", 0x28),
-            bytes.len(),
-        );
-    }
-    if v >= 3 {
-        raise_at(
-            &mut best,
-            fixed_reject_at(bytes, start, b"guideline_frequency", 0x28),
-            bytes.len(),
-        );
-        raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_order", 0x28), bytes.len());
-        raise_at(
-            &mut best,
-            fixed_reject_at(bytes, start, b"guideline_recurrence_window", 0x28),
-            bytes.len(),
-        );
-        raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_range", 0x28), bytes.len());
-    }
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_interval", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_recurrence", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_frequency", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_order", 0x28), bytes.len());
+    raise_at(
+        &mut best,
+        fixed_reject_at(bytes, start, b"guideline_recurrence_window", 0x28),
+        bytes.len(),
+    );
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_range", 0x28), bytes.len());
     best
 }
 
@@ -22459,16 +21868,15 @@ fn literal_slot_reject_at(bytes: &[u8], slot: usize, fallback: usize) -> (r: usi
     ensures
         r <= bytes@.len(),
 {
-    let v = file_version(bytes);
-    if declared_name_at(bytes, slot, v) {
+    if declared_name_at(bytes, slot) {
         fallback
     } else {
-        pred_name_reject_at(bytes, slot, v)
+        pred_name_reject_at(bytes, slot)
     }
 }
 
-// Whether `bytes[start..]` opens with a version-v predicate name and its `(`.
-fn declared_name_at(bytes: &[u8], start: usize, v: u8) -> (r: bool) {
+// Whether `bytes[start..]` opens with a declared predicate name and its `(`.
+fn declared_name_at(bytes: &[u8], start: usize) -> (r: bool) {
     let n = if start <= bytes.len() {
         start
     } else {
@@ -22484,28 +21892,14 @@ fn declared_name_at(bytes: &[u8], start: usize, v: u8) -> (r: bool) {
         rest,
         b"guideline_property(",
     ) || crate::k4_bytes::starts_with(rest, b"guideline_operator(");
-    let v2 = v >= 2 && (crate::k4_bytes::starts_with(rest, b"guideline_interval(")
-        || crate::k4_bytes::starts_with(rest, b"guideline_recurrence("));
-    let v3 = v >= 3 && (crate::k4_bytes::starts_with(rest, b"guideline_frequency(")
+    let timing = crate::k4_bytes::starts_with(rest, b"guideline_interval(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_recurrence(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_frequency(")
         || crate::k4_bytes::starts_with(rest, b"guideline_order(") || crate::k4_bytes::starts_with(
         rest,
         b"guideline_recurrence_window(",
-    ) || crate::k4_bytes::starts_with(rest, b"guideline_range("));
-    base || v2 || v3
-}
-
-// The v1 predicate names (`guideline_entity` .. `guideline_operator`).
-fn base_pred_name(name: &[u8]) -> (r: bool) {
-    crate::k4_bytes::eq(name, b"guideline_entity") || crate::k4_bytes::eq(
-        name,
-        b"guideline_cardinality",
-    ) || crate::k4_bytes::eq(name, b"guideline_event") || crate::k4_bytes::eq(
-        name,
-        b"guideline_arg",
-    ) || crate::k4_bytes::eq(name, b"guideline_pp") || crate::k4_bytes::eq(
-        name,
-        b"guideline_property",
-    ) || crate::k4_bytes::eq(name, b"guideline_operator")
+    ) || crate::k4_bytes::starts_with(rest, b"guideline_range(");
+    base || timing
 }
 
 // R9 offset of a hex digest atom that starts at `at`: its first non-hex byte, or
@@ -22550,104 +21944,12 @@ fn digest_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>) -> (r: usize)
     }
 }
 
-proof fn bundles_in_from_clauses(bundles: Seq<ckc_spec::v1text::Bundle>, v: nat)
-    requires
-        forall|k: int|
-            0 <= k < doc_clause_models(bundles).len() ==> ckc_spec::v1text::clause_in(
-                #[trigger] doc_clause_models(bundles)[k],
-                v,
-            ),
-    ensures
-        forall|i: int|
-            0 <= i < bundles.len() ==> ckc_spec::v1text::bundle_in(#[trigger] bundles[i], v),
-    decreases bundles.len(),
-{
-    if bundles.len() > 0 {
-        let init = bundles.drop_last();
-        let last = bundles.last();
-        assert(bundles =~= init.push(last));
-        doc_clause_models_push(init, last);
-        let n = doc_clause_models(init).len();
-        assert forall|k: int|
-            0 <= k < doc_clause_models(init).len() implies ckc_spec::v1text::clause_in(
-            #[trigger] doc_clause_models(init)[k],
-            v,
-        ) by {
-            assert(doc_clause_models(bundles)[k] == doc_clause_models(init)[k]);
-        }
-        bundles_in_from_clauses(init, v);
-        assert(ckc_spec::v1text::bundle_in(last, v)) by {
-            reveal(ckc_spec::v1text::bundle_in);
-            assert forall|j: int| 0 <= j < last.clauses.len() implies ckc_spec::v1text::clause_in(
-                #[trigger] last.clauses[j],
-                v,
-            ) by {
-                assert(doc_clause_models(bundles)[n + j] == last.clauses[j]);
-            }
-        }
-        assert forall|i: int| 0 <= i < bundles.len() implies ckc_spec::v1text::bundle_in(
-            #[trigger] bundles[i],
-            v,
-        ) by {
-            if i < bundles.len() - 1 {
-                assert(bundles[i] == init[i]);
-            }
-        }
-    }
-}
-
-proof fn clauses_in_from_bundles(bundles: Seq<ckc_spec::v1text::Bundle>, v: nat)
-    requires
-        forall|i: int|
-            0 <= i < bundles.len() ==> ckc_spec::v1text::bundle_in(#[trigger] bundles[i], v),
-    ensures
-        forall|k: int|
-            0 <= k < doc_clause_models(bundles).len() ==> ckc_spec::v1text::clause_in(
-                #[trigger] doc_clause_models(bundles)[k],
-                v,
-            ),
-    decreases bundles.len(),
-{
-    if bundles.len() > 0 {
-        let init = bundles.drop_last();
-        let last = bundles.last();
-        assert(bundles =~= init.push(last));
-        doc_clause_models_push(init, last);
-        assert forall|i: int| 0 <= i < init.len() implies ckc_spec::v1text::bundle_in(
-            #[trigger] init[i],
-            v,
-        ) by {
-            assert(init[i] == bundles[i]);
-        }
-        clauses_in_from_bundles(init, v);
-        let n = doc_clause_models(init).len();
-        assert forall|k: int|
-            0 <= k < doc_clause_models(bundles).len() implies ckc_spec::v1text::clause_in(
-            #[trigger] doc_clause_models(bundles)[k],
-            v,
-        ) by {
-            if k < n {
-                assert(doc_clause_models(bundles)[k] == doc_clause_models(init)[k]);
-            } else {
-                assert(doc_clause_models(bundles)[k] == last.clauses[k - n]);
-                assert(ckc_spec::v1text::bundle_in(bundles[bundles.len() - 1], v));
-                reveal(ckc_spec::v1text::bundle_in);
-            }
-        }
-    }
-}
-
 proof fn wf_doc_intro(d: ckc_spec::v1text::DocFile)
     requires
-        ckc_spec::v1text::version_ok(d.version, d.temporal),
-        forall|i: int|
-            0 <= i < d.bundles.len() ==> ckc_spec::v1text::bundle_in(
-                #[trigger] d.bundles[i],
-                d.version,
-            ),
         ckc_spec::v1text::name_ok(d.docid),
         ckc_spec::v1text::hex64(d.ace),
-        ckc_spec::v1text::ulex_ok(d.ulex),
+        ckc_spec::v1text::digest_ok(d.ulex),
+        ckc_spec::v1text::digest_ok(d.vocabulary),
         d.bundles.len() >= 1,
         doc_bundles_wf(d.bundles),
         doc_bundles_ordered(d.bundles),
@@ -22657,36 +21959,6 @@ proof fn wf_doc_intro(d: ckc_spec::v1text::DocFile)
     reveal(doc_bundles_wf);
     reveal(doc_bundles_ordered);
     reveal(ckc_spec::v1text::wf_doc);
-}
-
-// A well-formed document's table digest is present iff its version is 2 or 3
-// (split out of parse_doc_inner: revealing wf_doc there instantiates its ordering
-// quantifier along every bundle chain).
-proof fn wf_doc_temporal(d: ckc_spec::v1text::DocFile)
-    requires
-        ckc_spec::v1text::wf_doc(d),
-    ensures
-        (d.temporal is Some) == (d.version >= 2),
-        1 <= d.version <= 3,
-{
-    reveal(ckc_spec::v1text::wf_doc);
-    reveal(ckc_spec::v1text::version_ok);
-}
-
-// A well-formed document's clauses obey its version law (split out of
-// parse_doc_inner: revealing wf_doc inside its query exhausts the solver).
-proof fn wf_doc_clauses_in(d: ckc_spec::v1text::DocFile)
-    requires
-        ckc_spec::v1text::wf_doc(d),
-    ensures
-        forall|k: int|
-            0 <= k < doc_clause_models(d.bundles).len() ==> ckc_spec::v1text::clause_in(
-                #[trigger] doc_clause_models(d.bundles)[k],
-                d.version,
-            ),
-{
-    reveal(ckc_spec::v1text::wf_doc);
-    clauses_in_from_bundles(d.bundles, d.version);
 }
 
 // The parsed model is well formed and prints the parsed bytes (split out of
@@ -22701,17 +21973,11 @@ proof fn doc_model_ok(
         base.docid == model.docid,
         base.ace == model.ace,
         base.ulex == model.ulex,
-        base.version == model.version,
-        base.temporal == model.temporal,
-        forall|k: int|
-            0 <= k < doc_clause_models(model.bundles).len() ==> ckc_spec::v1text::clause_in(
-                #[trigger] doc_clause_models(model.bundles)[k],
-                model.version,
-            ),
-        ckc_spec::v1text::version_ok(model.version, model.temporal),
+        base.vocabulary == model.vocabulary,
         ckc_spec::v1text::name_ok(model.docid),
         ckc_spec::v1text::hex64(model.ace),
-        ckc_spec::v1text::ulex_ok(model.ulex),
+        ckc_spec::v1text::digest_ok(model.ulex),
+        ckc_spec::v1text::digest_ok(model.vocabulary),
         model.bundles.len() >= 1,
         doc_bundles_wf(model.bundles),
         doc_bundles_ordered(model.bundles),
@@ -22719,7 +21985,6 @@ proof fn doc_model_ok(
         ckc_spec::v1text::wf_doc(model),
         ckc_spec::v1text::print_doc(model) == bytes,
 {
-    bundles_in_from_clauses(model.bundles, model.version);
     reveal(doc_prefix_stage);
     reveal(doc_flat);
     assert(doc_prefix_stage(base) == doc_prefix_stage(model));
@@ -22815,27 +22080,20 @@ fn parse_doc_inner(
         Some(docid) => docid,
         None => return (None, working_arena),
     };
-    let version = match parse_doc_declarations(bytes, &mut guided, expected, at) {
-        Some(v) => v,
-        None => return (None, working_arena),
-    };
-    proof {
-        if let Some(d) = expected@ {
-            wf_doc_temporal(d);
-        }
+    if !parse_doc_declarations(bytes, &mut guided, expected, at) {
+        return (None, working_arena);
     }
     let ace = match parse_doc_record_prefix(bytes, &mut guided, &docid, expected, at) {
         Some(ace) => ace,
         None => return (None, working_arena),
     };
-    let ulex = match parse_doc_ulex(bytes, &mut guided, expected, version >= 2, at) {
+    let ulex = match parse_doc_ulex(bytes, &mut guided, expected, at) {
         Some(ulex) => ulex,
         None => return (None, working_arena),
     };
 
     let ghost base = ckc_spec::v1text::DocFile {
-        version: version as nat,
-        temporal: tail_of(version >= 2, ulex.temporal@),
+        vocabulary: ulex.vocabulary@,
         docid: docid.value@,
         ace: ace.name@,
         ulex: ulex.value@,
@@ -22891,7 +22149,7 @@ fn parse_doc_inner(
             guided_cursor_ok(bytes@, &guided),
             ckc_spec::v1text::name_ok(docid.value@),
             ckc_spec::v1text::hex64(ace.name@),
-            ckc_spec::v1text::ulex_ok(ulex.value@),
+            ckc_spec::v1text::digest_ok(ulex.value@),
             ulex.digest@ == ulex_digest_bytes(ulex.value@),
             bundle_count == bundles.len(),
             bundle_metas_ok(cert_bundles@),
@@ -23142,33 +22400,8 @@ fn parse_doc_inner(
         }
         return (None, working_arena);
     }
-    // m7t D3: the version law, checked once over every parsed clause.
-
-    proof {
-        reveal(doc_clauses_roots_ok);
-    }
-    if !clauses_in_exec(&working_arena, &clauses, version) {
-        let pos = first_annotation_at(bytes);
-        raise_at(at, pos, bytes.len());
-        proof {
-            if let Some(d) = expected@ {
-                reveal(doc_clauses_roots_ok);
-                assert(bundles == d.bundles);
-                wf_doc_clauses_in(d);
-                assert forall|i: int| 0 <= i < clauses@.len() implies ckc_spec::v1text::clause_in(
-                    #[trigger] clauses@[i]@,
-                    version as nat,
-                ) by {
-                    assert(clauses@[i]@ == doc_clause_models(bundles)[i]);
-                }
-                assert(false);
-            }
-        }
-        return (None, working_arena);
-    }
     let ghost model = ckc_spec::v1text::DocFile {
-        version: version as nat,
-        temporal: tail_of(version >= 2, ulex.temporal@),
+        vocabulary: ulex.vocabulary@,
         docid: docid.value@,
         ace: ace.name@,
         ulex: ulex.value@,
@@ -23185,24 +22418,13 @@ fn parse_doc_inner(
             bytes@.subrange(0, bytes@.len() as int) == bytes@
         );
         assert(guided.cursor.prefix@ == bytes@);
-        reveal(doc_clauses_roots_ok);
-        assert forall|k: int|
-            0 <= k < doc_clause_models(bundles).len() implies ckc_spec::v1text::clause_in(
-            #[trigger] doc_clause_models(bundles)[k],
-            model.version,
-        ) by {
-            assert(clauses@[k]@ == doc_clause_models(bundles)[k]);
-        }
-        reveal(ckc_spec::v1text::version_ok);
-        assert(ckc_spec::v1text::version_ok(model.version, model.temporal));
         doc_model_ok(bytes@, base, model);
         if let Some(d) = expected@ {
             assert(docid.value@ == d.docid);
             assert(ace.name@ == d.ace);
             assert(ulex.value@ == d.ulex);
             assert(bundles == d.bundles);
-            assert(version as nat == d.version);
-            assert(model.temporal == d.temporal);
+            assert(model.vocabulary == d.vocabulary);
             assert(model == d);
         }
         reveal(ckc_spec::v1text::wf_v1);
@@ -23220,16 +22442,14 @@ fn parse_doc_inner(
                 class: EV1Class::Doc,
                 query_ace: Vec::new(),
                 query_ulex: Vec::new(),
-                query_version: 1,
-                query_temporal: Vec::new(),
+                query_vocabulary: Vec::new(),
                 query_text: Vec::new(),
                 bundles: cert_bundles,
                 bundle_meta,
                 docid: docid.value,
                 doc_ace: ace.name,
                 doc_ulex: ulex.digest,
-                doc_version: version,
-                doc_temporal: ulex.temporal,
+                doc_vocabulary: ulex.vocabulary_digest,
                 qid: Vec::new(),
                 qsha: Vec::new(),
                 asha: Vec::new(),

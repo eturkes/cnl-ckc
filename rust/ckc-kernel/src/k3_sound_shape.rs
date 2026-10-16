@@ -17,7 +17,6 @@ pub open spec fn trace_literal(t: Term) -> bool {
     positive(t) || match t {
         Term::Comp(name, args) => name == naf_name() && args.len() == 1 && goal_walk(
             args[0],
-            3,
         ) is None,
         _ => false,
     }
@@ -47,7 +46,7 @@ pub proof fn positive_walk(t: Term)
     requires
         positive(t),
     ensures
-        goal_walk(t, 3) is None,
+        goal_walk(t) is None,
 {
     if let Term::Comp(name, args) = t {
         semantic_arity(name, args.len());
@@ -78,9 +77,9 @@ pub proof fn positive_apply(t: Term, s: Seq<(nat, Term)>)
 
 pub proof fn goal_walk_subst(t: Term, x: nat, v: Term)
     requires
-        goal_walk(t, 3) is None,
+        goal_walk(t) is None,
     ensures
-        goal_walk(subst(t, x, v), 3) is None,
+        goal_walk(subst(t, x, v)) is None,
     decreases t,
 {
     if let Term::Comp(name, args) = t {
@@ -94,9 +93,9 @@ pub proof fn goal_walk_subst(t: Term, x: nat, v: Term)
 
 pub proof fn goal_walk_shift(t: Term, off: nat)
     requires
-        goal_walk(t, 3) is None,
+        goal_walk(t) is None,
     ensures
-        goal_walk(shift(t, off), 3) is None,
+        goal_walk(shift(t, off)) is None,
     decreases t,
 {
     if let Term::Comp(name, args) = t {
@@ -110,9 +109,9 @@ pub proof fn goal_walk_shift(t: Term, off: nat)
 
 pub proof fn goal_walk_apply(t: Term, s: Seq<(nat, Term)>)
     requires
-        goal_walk(t, 3) is None,
+        goal_walk(t) is None,
     ensures
-        goal_walk(apply(t, s), 3) is None,
+        goal_walk(apply(t, s)) is None,
     decreases s.len(),
 {
     if s.len() > 0 {
@@ -123,7 +122,7 @@ pub proof fn goal_walk_apply(t: Term, s: Seq<(nat, Term)>)
 
 pub proof fn root_shapes(t: Term)
     requires
-        goal_walk(t, 3) is None,
+        goal_walk(t) is None,
     ensures
         forall|i: int| 0 <= i < conj_leaves(t).len() ==> #[trigger] positive(conj_leaves(t)[i]),
     decreases t,
@@ -152,7 +151,7 @@ pub proof fn conj_term_walk(gs: Seq<Term>)
         gs.len() > 0,
         forall|i: int| 0 <= i < gs.len() ==> #[trigger] positive(gs[i]),
     ensures
-        goal_walk(conj_term(gs), 3) is None,
+        goal_walk(conj_term(gs)) is None,
     decreases gs.len(),
 {
     positive_walk(gs[0]);

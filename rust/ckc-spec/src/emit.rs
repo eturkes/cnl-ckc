@@ -1,10 +1,10 @@
 use crate::answers::*;
 use crate::engine::*;
 use crate::replay::*;
-use crate::temporal::*;
 use crate::term::*;
 use crate::trace::*;
 use crate::v1text::*;
+use crate::vocabulary::*;
 use vstd::prelude::*;
 
 verus! {
@@ -515,7 +515,7 @@ pub open spec fn resolve(a: Term, map: Seq<(Term, Term)>, sko: Seq<(Term, Term)>
     }
 }
 
-// `about` (contract q13) = schema v3 only: the v3 annotate pass mints it in place
+// `about` (contract q13) = table-backed only: the annotate pass mints it in place
 // of `eq`; APE's comparisons never include it.
 pub open spec fn card_op_ok(op: Term) -> bool {
     ||| op == atom("eq"@)
@@ -844,7 +844,7 @@ pub open spec fn expanded_len(inner: Term) -> nat {
     }
 }
 
-// --- v2 temporal annotations (contract m7t D4/D5) ---
+// --- temporal annotations (contracts m7t D4/D5, q12, q13; c1 D6: with a table) ---
 // One scope = one flat item list; a NAF payload is its own scope. A pattern's
 // conditions share their context term (list nesting is irrelevant: an
 // upper-bound determiner groups its conditions into a sub-list). The
@@ -909,7 +909,7 @@ pub open spec fn noun_of(o: Term) -> Seq<u8> {
 }
 
 // v as a time quantity: (unit id, its object) when the noun is a unit lemma.
-pub open spec fn qty(tab: Temporal, items: Seq<Item>, ctx: Term, v: Term) -> Option<
+pub open spec fn qty(tab: Vocabulary, items: Seq<Item>, ctx: Term, v: Term) -> Option<
     (Seq<u8>, Term),
 > {
     match obj_of(items, ctx, v) {
@@ -921,7 +921,7 @@ pub open spec fn qty(tab: Temporal, items: Seq<Item>, ctx: Term, v: Term) -> Opt
     }
 }
 
-pub open spec fn is_frame(tab: Temporal, items: Seq<Item>, ctx: Term, v: Term) -> bool {
+pub open spec fn is_frame(tab: Vocabulary, items: Seq<Item>, ctx: Term, v: Term) -> bool {
     match obj_of(items, ctx, v) {
         Option::Some(o) => frames(tab).contains(noun_of(o)),
         Option::None => false,
@@ -951,13 +951,13 @@ pub open spec fn bound_why(o: Term) -> Option<Term> {
 pub ghost enum Ann {
     Interval(Term, Seq<u8>, Term, Seq<u8>, Term),  // event, role, quantity, unit, anchor | none
     Recurrence(Term, Term, Term, Seq<u8>),  // event, frame, quantity, unit
-    Window(Term, Term, Term, Seq<u8>, Term),  // v3: event, frame, length, unit, anchor
-    Frequency(Term, Term, Term, Seq<u8>),  // v3: event, counted, period, unit
-    Order(Term, Seq<u8>, Term),  // v3: event, relation, anchor
-    Range(Term, Term, Seq<u8>),  // v3 (q13): event, high end, unit
+    Window(Term, Term, Term, Seq<u8>, Term),  // event, frame, length, unit, anchor
+    Frequency(Term, Term, Term, Seq<u8>),  // event, counted, period, unit
+    Order(Term, Seq<u8>, Term),  // event, relation, anchor
+    Range(Term, Term, Seq<u8>),  // q13: event, high end, unit
 }
 
-// --- v3 (contract q12): referent classification over the document DRS (D3) ---
+// --- referent classification over the document DRS (contract q12 D3) ---
 // The annotation environment: the table + the declaration of every referent of
 // the document (or question) DRS, in preorder. APE introduces each referent by
 // one `object/6` condition, so variable identity finds its declaration in any
@@ -970,7 +970,7 @@ pub ghost struct Decl {
 }
 
 pub ghost struct Env {
-    pub tab: Temporal,
+    pub tab: Vocabulary,
     pub decls: Seq<Decl>,
 }
 
@@ -1013,7 +1013,7 @@ pub open spec fn decls_of(objs: Seq<Term>) -> Seq<Decl>
     }
 }
 
-pub open spec fn env_of(tab: Option<Temporal>, drs: Term) -> Option<Env> {
+pub open spec fn env_of(tab: Option<Vocabulary>, drs: Term) -> Option<Env> {
     match tab {
         Option::Some(t) => Option::Some(Env { tab: t, decls: decls_of(objects(drs)) }),
         Option::None => Option::None,
@@ -1055,7 +1055,7 @@ pub open spec fn frame_shaped(o: Term) -> bool {
 }
 
 // q13 D3: a same-context `property(r, A, pos)` with A an approximation lemma.
-pub open spec fn approximate(tab: Temporal, items: Seq<Item>, ctx: Term, r: Term) -> bool
+pub open spec fn approximate(tab: Vocabulary, items: Seq<Item>, ctx: Term, r: Term) -> bool
     decreases items.len(),
 {
     if items.len() == 0 {
@@ -1074,7 +1074,7 @@ pub open spec fn approximate(tab: Temporal, items: Seq<Item>, ctx: Term, r: Term
 // D3: a claimed quantity q (object o) marked approximate on itself or on its
 // frame f (f = q without a frame) needs the comparison eq.
 pub open spec fn approx_why(
-    tab: Temporal,
+    tab: Vocabulary,
     items: Seq<Item>,
     ctx: Term,
     q: Term,
@@ -1140,7 +1140,7 @@ pub open spec fn counted(env: Env, items: Seq<Item>, ctx: Term, e: Term) -> Opti
 
 // D6: the same-context window pps on event e among `rest` (scope = the whole scope).
 pub open spec fn window_pps(
-    tab: Temporal,
+    tab: Vocabulary,
     scope: Seq<Item>,
     rest: Seq<Item>,
     ctx: Term,
@@ -1242,9 +1242,9 @@ pub open spec fn range_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> R
     }
 }
 
-// The v3 patterns of a pp the v2 patterns leave plain: window, frequency, range,
-// then order (D4: a before|after relation over a plain referent). v2 tables stop here.
-pub open spec fn v3_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
+// The q12 patterns of a pp the m7t patterns leave plain: window, frequency, range,
+// then order (q12 D4: a before|after relation over a plain referent).
+pub open spec fn q12_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Result<
     Option<Ann>,
     Term,
 > {
@@ -1252,31 +1252,26 @@ pub open spec fn v3_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Resu
     let p = name_of(arg(pp, 1));
     let x = arg(pp, 2);
     let role = assoc(tab.relations, p);
-    if tab.version != 3 {
-        Result::Ok(Option::None)
-    } else {
-        match obj_of(items, ctx, x) {
-            Option::Some(o) => if tab.windows.contains((p, noun_of(o))) {
-                window_ann(env, items, ctx, pp, o)
-            } else if tab.frequencies.contains(p) {
-                frequency_ann(env, items, ctx, pp)
-            } else if tab.ranges.contains(p) && qty(tab, items, ctx, x) is Some {
-                range_ann(env, items, ctx, pp)
-            } else if (role == Option::Some(ascii("before"@)) || role == Option::Some(
-                ascii("after"@),
-            )) && plain(env, x) {
-                Result::Ok(Option::Some(Ann::Order(arg(pp, 0), role.unwrap(), x)))
-            } else {
-                Result::Ok(Option::None)
-            },
-            Option::None => if (role == Option::Some(ascii("before"@)) || role == Option::Some(
-                ascii("after"@),
-            )) && plain(env, x) {
-                Result::Ok(Option::Some(Ann::Order(arg(pp, 0), role.unwrap(), x)))
-            } else {
-                Result::Ok(Option::None)
-            },
-        }
+    match obj_of(items, ctx, x) {
+        Option::Some(o) => if tab.windows.contains((p, noun_of(o))) {
+            window_ann(env, items, ctx, pp, o)
+        } else if tab.frequencies.contains(p) {
+            frequency_ann(env, items, ctx, pp)
+        } else if tab.ranges.contains(p) && qty(tab, items, ctx, x) is Some {
+            range_ann(env, items, ctx, pp)
+        } else if (role == Option::Some(ascii("before"@)) || role == Option::Some(ascii("after"@)))
+            && plain(env, x) {
+            Result::Ok(Option::Some(Ann::Order(arg(pp, 0), role.unwrap(), x)))
+        } else {
+            Result::Ok(Option::None)
+        },
+        Option::None => if (role == Option::Some(ascii("before"@)) || role == Option::Some(
+            ascii("after"@),
+        )) && plain(env, x) {
+            Result::Ok(Option::Some(Ann::Order(arg(pp, 0), role.unwrap(), x)))
+        } else {
+            Result::Ok(Option::None)
+        },
     }
 }
 
@@ -1315,7 +1310,7 @@ pub open spec fn pp_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Resu
         },
         _ => match obj_of(items, ctx, x) {
             Option::Some(f) => if !tab.spacings.contains((p, noun_of(f))) {
-                v3_ann(env, items, ctx, pp)
+                q12_ann(env, items, ctx, pp)
             } else if !(arg(f, 2) == atom("countable"@) && arg(f, 3) == atom("na"@) && arg(f, 4)
                 == atom("eq"@) && arg(f, 5) == Term::Int(1)) {
                 Result::Err(shape("frame_shape"@))
@@ -1335,7 +1330,7 @@ pub open spec fn pp_ann(env: Env, items: Seq<Item>, ctx: Term, pp: Term) -> Resu
                     },
                 }
             },
-            Option::None => v3_ann(env, items, ctx, pp),
+            Option::None => q12_ann(env, items, ctx, pp),
         },
     }
 }
@@ -1491,7 +1486,7 @@ pub open spec fn range_lows(scope: Seq<Item>, ms: Seq<(Term, Ann)>, rs: Seq<(Ter
 
 // D3: claimed eq quantities an approximation marks, on the quantity or on its
 // frame (a recurrence gap's spacing frame, a window length's window frame).
-pub open spec fn eq_approx(tab: Temporal, scope: Seq<Item>, c: Term, q: Term, f: Term) -> bool {
+pub open spec fn eq_approx(tab: Vocabulary, scope: Seq<Item>, c: Term, q: Term, f: Term) -> bool {
     match obj_of(scope, c, q) {
         Option::Some(o) => arg(o, 4) == atom("eq"@) && (approximate(tab, scope, c, q)
             || approximate(tab, scope, c, f)),
@@ -1499,7 +1494,7 @@ pub open spec fn eq_approx(tab: Temporal, scope: Seq<Item>, c: Term, q: Term, f:
     }
 }
 
-pub open spec fn abouts(tab: Temporal, scope: Seq<Item>, ms: Seq<(Term, Ann)>) -> Seq<
+pub open spec fn abouts(tab: Vocabulary, scope: Seq<Item>, ms: Seq<(Term, Ann)>) -> Seq<
     (Term, Term),
 > {
     ms.map_values(
@@ -1698,7 +1693,7 @@ pub open spec fn annotate(env: Env, items: Seq<Item>) -> Result<Seq<Item>, Term>
     }
 }
 
-// v1 (no table) leaves items as flattened.
+// Without a table the items stay as flattened.
 pub open spec fn annotated(tab: Option<Env>, items: Seq<Item>) -> Result<Seq<Item>, Term> {
     match tab {
         Option::None => Result::Ok(items),
@@ -2376,7 +2371,7 @@ pub open spec fn collides_all(ts: Seq<Term>) -> bool
 
 // project(drs, docid, count) = the sentence bundles' groups, or the first
 // sentence-attributed reason the fork's law admits no projection.
-pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat, tab: Option<Temporal>) -> Result<
+pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat, tab: Option<Vocabulary>) -> Result<
     Seq<Projected>,
     Term,
 > {
@@ -2460,27 +2455,18 @@ pub open spec fn first_nonground(obs: Seq<Ob>) -> Option<Ob>
 }
 
 // --- custody + the document relation ---
-// The table a certification projects with: v1 = none; v2 | v3 = the parsed raw
-// table, supplied with its digest. None = a custody or grammar failure.
+// The table a certification projects with: none, or the parsed raw table
+// supplied with its digest (contract c1 D8). None = a custody or grammar failure.
 pub open spec fn table_of(traw: Option<Seq<u8>>, tsha: Option<Seq<u8>>) -> Option<
-    Option<Temporal>,
+    Option<Vocabulary>,
 > {
     match (traw, tsha) {
         (Option::None, Option::None) => Option::Some(Option::None),
-        (Option::Some(b), Option::Some(_)) => match parse_temporal(b) {
+        (Option::Some(b), Option::Some(_)) => match parse_vocabulary(b) {
             Result::Ok(t) => Option::Some(Option::Some(t)),
             Result::Err(_) => Option::None,
         },
         _ => Option::None,
-    }
-}
-
-// The schema version a certification projects under: v1 = no table, else the
-// table's header version (contract q12 D10).
-pub open spec fn tab_version(t: Option<Temporal>) -> nat {
-    match t {
-        Option::None => 1,
-        Option::Some(x) => x.version,
     }
 }
 
@@ -2555,10 +2541,8 @@ pub open spec fn certify_doc(
                     Result::Err(atom("ace_sha256"@))
                 } else if doc.ulex != ulex_of(usha) {
                     Result::Err(atom("ulex"@))
-                } else if doc.temporal != tsha || table_of(traw, tsha) is None {
-                    Result::Err(atom("temporal"@))
-                } else if doc.version != tab_version(table_of(traw, tsha).unwrap()) {
-                    Result::Err(atom("schema_version"@))
+                } else if doc.vocabulary != tsha || table_of(traw, tsha) is None {
+                    Result::Err(atom("vocabulary"@))
                 } else if doc.bundles.len() != lines.len() {
                     Result::Err(atom("bundle_count"@))
                 } else {
@@ -2600,9 +2584,9 @@ pub open spec fn strip_anchor(c: Term) -> Term {
     }
 }
 
-// v2 questions also carry `of` links (D9); `annotate` consumes them or they reject.
-pub open spec fn supported_leaf(name: Seq<u8>, arity: nat, v2: bool) -> bool {
-    ||| (v2 && name == ascii("relation"@) && arity == 3)
+// Table-backed questions also carry `of` links (m7t D9); `annotate` consumes them or they reject.
+pub open spec fn supported_leaf(name: Seq<u8>, arity: nat, table: bool) -> bool {
+    ||| (table && name == ascii("relation"@) && arity == 3)
     ||| (name == ascii("object"@) && arity == 6)
     ||| (name == ascii("predicate"@) && 3 <= arity <= 5)
     ||| (name == ascii("modifier_pp"@) && arity == 3)
@@ -2614,41 +2598,41 @@ pub open spec fn wh_tag_ok(t: Term) -> bool {
 }
 
 // Pre-order blocker scan: conjunctive supported leaves and nested modal boxes only.
-// v2 also admits a nested condition list (an upper-bound determiner's group).
-pub open spec fn scan_box(b: Term, v2: bool) -> bool
+// A table also admits a nested condition list (an upper-bound determiner's group; c1 D6: table presence gates both, as before).
+pub open spec fn scan_box(b: Term, table: bool) -> bool
     decreases b, 0int,
 {
     match box_parts(b) {
         Option::None => false,
-        Option::Some((_, conds)) => scan_conds(conds, v2),
+        Option::Some((_, conds)) => scan_conds(conds, table),
     }
 }
 
-pub open spec fn scan_conds(l: Term, v2: bool) -> bool
+pub open spec fn scan_conds(l: Term, table: bool) -> bool
     decreases l, 1int,
 {
     match l {
         Term::Nil => true,
         Term::Comp(name, args) => name == cons_name() && args.len() == 2 && scan_leaf(
             strip_anchor(args[0]),
-            v2,
-        ) && scan_conds(args[1], v2),
+            table,
+        ) && scan_conds(args[1], table),
         _ => false,
     }
 }
 
-pub open spec fn scan_leaf(leaf: Term, v2: bool) -> bool
+pub open spec fn scan_leaf(leaf: Term, table: bool) -> bool
     decreases leaf, 2int,
 {
     match leaf {
-        Term::Comp(name, args) => if v2 && name == cons_name() && args.len() == 2 {
-            scan_conds(leaf, v2)
+        Term::Comp(name, args) => if table && name == cons_name() && args.len() == 2 {
+            scan_conds(leaf, table)
         } else if is_modal(name) && args.len() == 1 {
-            scan_box(args[0], v2)
+            scan_box(args[0], table)
         } else if name == ascii("query"@) && args.len() == 2 {
             wh_tag_ok(args[1])
         } else {
-            supported_leaf(name, args.len(), v2)
+            supported_leaf(name, args.len(), table)
         },
         _ => false,
     }
@@ -2791,7 +2775,7 @@ pub open spec fn strip_conds(l: Term) -> Term
 }
 
 // project_query(drs, qid) = (goal conjunction, answers list) of the one question.
-pub open spec fn project_query(drs: Term, qid: Seq<u8>, tab: Option<Temporal>) -> Result<
+pub open spec fn project_query(drs: Term, qid: Seq<u8>, tab: Option<Vocabulary>) -> Result<
     (Term, Term),
     Term,
 > {
@@ -2901,10 +2885,8 @@ pub open spec fn certify_query(
                     Result::Err(atom("ace_sha256"@))
                 } else if q.ulex != ulex_of(usha) {
                     Result::Err(atom("ulex"@))
-                } else if q.temporal != tsha || table_of(traw, tsha) is None {
-                    Result::Err(atom("temporal"@))
-                } else if q.version != tab_version(table_of(traw, tsha).unwrap()) {
-                    Result::Err(atom("schema_version"@))
+                } else if q.vocabulary != tsha || table_of(traw, tsha) is None {
+                    Result::Err(atom("vocabulary"@))
                 } else if q.qtext != query_text(lines[0]) {
                     Result::Err(atom("query_text"@))
                 } else {

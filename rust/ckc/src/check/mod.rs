@@ -8,10 +8,10 @@ mod dist_archive;
 mod dist_check;
 mod dist_probes;
 mod fork;
+mod functors;
 mod inventories;
 mod projection;
 mod text;
-mod vocabulary;
 
 mod adjudication;
 mod adjudication_fixtures;
@@ -55,13 +55,14 @@ fn check() -> common::Result {
     }
     query_fixtures::check(&scratch, &swipl, &stage)?;
     par::map(&red, |probe| red::run(&swipl, &stage, probe))?;
-    par::map(&green, |probe| green::run(&swipl, &stage, probe))?;
+    let proofs = par::map(&green, |probe| green::run(&swipl, &stage, probe))?;
     drop(scratch);
     println!(
-        "ckc: check ok {} guidelines {documents} documents {} red probes {} green probes",
+        "ckc: check ok {} guidelines {documents} documents {} red probes {} green probes ({} proof)",
         plans.len(),
         red.len(),
-        green.len()
+        green.len(),
+        proofs.iter().filter(|p| **p).count()
     );
     Ok(())
 }

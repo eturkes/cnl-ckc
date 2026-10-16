@@ -1,2 +1,2 @@
 % q-row-cut answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-row-cut',query_sha256(d0db0774793531f48c53089f74167ec53a182d756b3040c494425dde75e43183),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])])]))).
+'$guideline_answers'(v1,'q-row-cut',query_sha256('484f5b989376d333824cd4b6c5fc379e10e564ff59bedb36f76497b8ec10e29f'),result(solutions([sol(['$guideline_id'(product,doc,1,ref(1),[])])]))).

@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Regenerates every tests/red + tests/green pin from the tracked compiler, the way
+`ckc check` replays them: a full-Clex stage (check/process.rs `stage`), the argv of
+check/red.rs `tail` (docid `red-probe` | the green stem), red pin = stderr, green pin =
+stdout, `<stem>.proof.expect` = stdout of the same argv + `proof`.
+Usage: .agent/archive/generators/probe-pins <repo-root> [--check]   (swipl 9.2.9 on PATH)
+--check = compare only; rc 1 + one `differs <pin>` line per stale pin.
+"""
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+check = "--check" in sys.argv[2:]
+
+
+def tail(stage, probe, ident):
+    table, lexicon, forced = (probe.with_suffix(s) for s in (".vocabulary.tsv", ".ulex", ".argv"))
+    rel = lambda p: str(p.relative_to(root))
+    if forced.is_file():
+        subst = {"@TREE@": str(stage), "@ID@": ident, "@TABLE@": rel(table), "@ULEX@": rel(lexicon)}
+        return [subst.get(t, t) for t in forced.read_text().split()]
+    head = ["question"] if "--query-" in probe.name else []
+    return head + [str(stage), ident, rel(table) if table.is_file() else "-",
+                   rel(lexicon) if lexicon.is_file() else "-"]
+
+
+def compile_probe(stage, probe, ident, proof=False):
+    argv = ["swipl", "-q", "-f", "none", "-F", "none", "-s", str(stage / "prolog/ace_to_pl.pl"),
+            "-g", "main", "-t", "halt(9)", "--"] + tail(stage, probe, ident) + (["proof"] if proof else [])
+    r = subprocess.run(argv, cwd=root, input=probe.read_bytes(), capture_output=True, timeout=300)
+    return r.returncode, r.stdout, r.stderr
+
+
+stale = []
+
+
+def pin(path, blob):
+    if path.is_file() and path.read_bytes() == blob:
+        return
+    stale.append(str(path.relative_to(root)))
+    if not check:
+        path.write_bytes(blob)
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    stage = Path(tmp) / "ape-stage"
+    shutil.copytree(root / "vendor/ape", stage)
+    shutil.copy(root / "vendor/clex/clex_lexicon.pl", stage / "prolog/lexicon/clex_lexicon.pl")
+    built = subprocess.run(["swipl", "-O", "-f", "none", "-F", "none", "-g",
+                            f"working_directory(_, '{stage}/prolog/parser'), [fit_to_plp], halt.",
+                            "-t", "halt"], cwd=root, capture_output=True)
+    if built.returncode != 0 or not (stage / "prolog/parser/grammar.plp").is_file():
+        sys.exit(f"probe-pins: stage build failed: {built.stderr.decode()}")
+    for probe in sorted((root / "tests/red").glob("*.ace")):
+        rc, so, se = compile_probe(stage, probe, "red-probe")
+        if rc not in (1, 2) or so:
+            sys.exit(f"probe-pins: red probe compiled: {probe.name} rc {rc}")
+        pin(probe.with_suffix(".expect"), se)
+    for probe in sorted((root / "tests/green").glob("*.ace")):
+        rc, so, se = compile_probe(stage, probe, probe.stem)
+        if rc != 0 or se:
+            sys.exit(f"probe-pins: green probe rejected: {probe.name} rc {rc} {se.decode()}")
+        pin(probe.with_suffix(".expect"), so)
+        if probe.with_suffix(".proof.expect").is_file():
+            rc, so, se = compile_probe(stage, probe, probe.stem, proof=True)
+            if rc != 0 or se:
+                sys.exit(f"probe-pins: green proof rejected: {probe.name} rc {rc} {se.decode()}")
+            pin(probe.with_suffix(".proof.expect"), so)
+for p in stale:
+    print(f"{'differs' if check else 'wrote'} {p}")
+sys.exit(1 if check and stale else 0)

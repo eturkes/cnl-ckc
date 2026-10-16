@@ -28,7 +28,7 @@ pub open spec fn clause_count(bs: Seq<Bundle>) -> nat
 // Doc = 2 directives per declared indicator + 2 records + clauses; answers/traces = one record.
 pub open spec fn term_count(f: V1File) -> nat {
     match f {
-        V1File::Doc(d) => (2 * indicator_count(d.version) + 2) as nat + clause_count(d.bundles),
+        V1File::Doc(d) => (2 * indicator_count() + 2) as nat + clause_count(d.bundles),
         V1File::Query(_) => 2,
         _ => 1,
     }
@@ -39,18 +39,18 @@ pub open spec fn foreign(name: Term, arity: nat) -> Term {
     Term::Comp(ascii("goal_foreign"@), seq![name, Term::Int(arity as int)])
 }
 
-// A version-v query names version-v predicates only (contract m7t D9).
-pub open spec fn goal_walk(g: Term, v: nat) -> Option<Term>
+// A query names semantic predicates only (the 13 indicators; contract c1 D3).
+pub open spec fn goal_walk(g: Term) -> Option<Term>
     decreases g,
 {
     match g {
         Term::Var(_) => Option::Some(atom("goal_variable"@)),
         Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
-            match goal_walk(args[0], v) {
+            match goal_walk(args[0]) {
                 Option::Some(w) => Option::Some(w),
-                Option::None => goal_walk(args[1], v),
+                Option::None => goal_walk(args[1]),
             }
-        } else if version_pred(name, args.len(), v) {
+        } else if is_semantic_pred(name, args.len()) {
             Option::None
         } else {
             Option::Some(foreign(Term::Atom(name), args.len()))
@@ -129,7 +129,7 @@ pub open spec fn custody(query: Src) -> Result<(QueryFile, Seq<Term>), Out> {
             Result::Err(query_reject(atom("noncanonical"@)))
         } else {
             match the_v1(b) {
-                V1File::Query(q) => match goal_walk(q.goal, q.version) {
+                V1File::Query(q) => match goal_walk(q.goal) {
                     Option::Some(w) => Result::Err(query_reject(w)),
                     Option::None => match list_items(q.answers) {
                         Option::None => Result::Err(query_reject(atom("answers_list"@))),
@@ -200,8 +200,8 @@ pub open spec fn answer_result(db: Seq<DocClause>, q: QueryFile, rows: Seq<Term>
     }
 }
 
-// A version-qv query needs a composition of version ≥ qv (contract m7t D9).
-pub open spec fn composition(rows: Seq<MRow>, pls: Seq<Src>, qv: nat) -> Result<Seq<DocFile>, Out> {
+// Any composition answers any query (contract c1 D7).
+pub open spec fn composition(rows: Seq<MRow>, pls: Seq<Src>) -> Result<Seq<DocFile>, Out> {
     if rows.len() == 0 {
         Result::Ok(Seq::empty())
     } else {
@@ -209,11 +209,7 @@ pub open spec fn composition(rows: Seq<MRow>, pls: Seq<Src>, qv: nat) -> Result<
             Result::Err(o) => Result::Err(o),
             Result::Ok(docs) => match assertions(rows, docs) {
                 Option::Some(o) => Result::Err(o),
-                Option::None => if qv > docs[0].version {
-                    Result::Err(query_reject(atom("schema_version"@)))
-                } else {
-                    Result::Ok(docs)
-                },
+                Option::None => Result::Ok(docs),
             },
         }
     }
@@ -232,7 +228,7 @@ pub open spec fn answer_output(
         Result::Err(o) => o,
         Result::Ok(rows) => match custody(query) {
             Result::Err(o) => o,
-            Result::Ok((q, arows)) => match composition(rows, pls, q.version) {
+            Result::Ok((q, arows)) => match composition(rows, pls) {
                 Result::Err(o) => o,
                 Result::Ok(docs) => match answer_result(db_of(docs), q, arows) {
                     Result::Err(o) => o,

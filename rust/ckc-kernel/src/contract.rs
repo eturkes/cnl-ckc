@@ -207,7 +207,7 @@ pub fn v1_trace_check(
 pub proof fn k3_sound(db: Seq<ckc_spec::v1text::DocClause>, goal: ckc_spec::term::Term)
     requires
         ckc_spec::trace::bodies_wf(db),
-        ckc_spec::answers::goal_walk(goal, 3) is None,
+        ckc_spec::answers::goal_walk(goal) is None,
         ckc_spec::trace::derived_forest(db, goal) is Some,
     ensures
         ckc_spec::trace::forest_valid(db, goal, ckc_spec::trace::derived_forest(db, goal).unwrap()),
@@ -424,7 +424,7 @@ pub proof fn ui_post_sound(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostStat
 // runs the trusted driver (twice, byte-equal), hashes the raw ACE/ulex
 // bytes (R3) and hands everything to the kernel; the result = the exact
 // triple of the spec fn. usha = None when the document declares ulex(none);
-// traw/tsha = the guideline's temporal.tsv bytes + digest (v2), else None.
+// traw/tsha = the guideline's vocabulary.tsv bytes + digest, else None (contract c1 D8).
 pub fn certify_doc(
     ace: &[u8],
     asha: &[u8],
@@ -616,12 +616,12 @@ pub fn check_lexicon(
     crate::k4_impl::check_lexicon_impl(path, ulex, clex, ace, rulings)
 }
 
-// m7t D1: the temporal.tsv grammar (`ckc check` section; compile + certify read the same bytes).
-pub fn check_temporal(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EVerdict)
+// c1 D4: the vocabulary.tsv grammar (`ckc check` section; compile + certify read the same bytes).
+pub fn check_vocabulary(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EVerdict)
     ensures
-        r@ == ckc_spec::temporal::temporal_check(path@, bytes@),
+        r@ == ckc_spec::vocabulary::vocabulary_check(path@, bytes@),
 {
-    crate::m7_temporal::check_temporal_impl(path, bytes)
+    crate::m7_temporal::check_vocabulary_impl(path, bytes)
 }
 
 // M5.4 pipeline (contract m5u4 P1): the alignment resolver (occurrence-form
@@ -643,7 +643,6 @@ pub fn release_manifest(
     urls: &Vec<(Vec<u8>, Vec<u8>)>,
     labels: &Vec<(Vec<u8>, Vec<u8>)>,
     tags: &Vec<ckc_spec::release::EMember>,
-    tables: &Vec<(Vec<u8>, Vec<u8>)>,
 ) -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::release::release_manifest(
@@ -654,7 +653,6 @@ pub fn release_manifest(
             ckc_spec::check::byte_pairs(urls@),
             ckc_spec::check::byte_pairs(labels@),
             ckc_spec::release::members(tags@),
-            ckc_spec::check::byte_pairs(tables@),
         ),
 {
     crate::release_impl::release_manifest_impl(
@@ -665,7 +663,6 @@ pub fn release_manifest(
         urls,
         labels,
         tags,
-        tables,
     )
 }
 

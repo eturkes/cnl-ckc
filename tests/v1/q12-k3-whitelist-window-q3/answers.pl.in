@@ -1,2 +1,2 @@
 % query answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,query,query_sha256('86fdaa5051fe7a98df215001418fefee0cef65b51672f51bab3db12166549b74'),result(yes)).
+'$guideline_answers'(v1,query,query_sha256('96dc47715df6910dbc711057e7e2a744cc202d5a3a10ec5bace40b97e96ea091'),result(yes)).

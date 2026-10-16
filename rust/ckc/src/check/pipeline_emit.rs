@@ -8,7 +8,7 @@ use std::process::Command;
 #[derive(Clone, Copy)]
 struct Tables<'a> {
     lexicon: Option<&'a Path>,
-    temporal: Option<&'a Path>,
+    vocabulary: Option<&'a Path>,
 }
 
 fn certify(
@@ -20,10 +20,13 @@ fn certify(
     pl: &[u8],
     query: bool,
 ) -> Result<Vec<u8>> {
-    let Tables { lexicon, temporal } = tables;
+    let Tables {
+        lexicon,
+        vocabulary,
+    } = tables;
     let input = read(ace, "certify")?;
     let ulex = lexicon.map(|p| read(p, "certify")).transpose()?;
-    let traw = temporal.map(|p| read(p, "certify")).transpose()?;
+    let traw = vocabulary.map(|p| read(p, "certify")).transpose()?;
     let tsha = traw
         .as_ref()
         .map(|t| crate::trust::sha256_hex(t).into_bytes());
@@ -136,7 +139,7 @@ pub(super) fn compile(gid: &str) -> Result {
             &g.ace(id),
             Tables {
                 lexicon: g.lexicon.as_deref(),
-                temporal: g.temporal.as_deref(),
+                vocabulary: g.vocabulary.as_deref(),
             },
             &bytes,
             false,
@@ -159,6 +162,7 @@ pub(super) fn compile(gid: &str) -> Result {
 
 pub(super) fn queries(gid: &str) -> Result {
     let path = pipeline::guideline_path(gid, false)?;
+    inventories::retired_table(&path)?;
     let root = path.join("queries");
     let ids = queries::query_aces(&root)?;
     if ids.is_empty() {
@@ -179,7 +183,7 @@ pub(super) fn queries(gid: &str) -> Result {
         ));
     }
     let lexicon = lexicon.is_file().then_some(lexicon);
-    let temporal = inventories::collect(&path)?.temporal;
+    let vocabulary = inventories::collect(&path)?.vocabulary;
     let swipl = process::swipl()?;
     let scratch = process::Scratch::new()?;
     let stage = process::stage(&scratch, &swipl)?;
@@ -196,7 +200,7 @@ pub(super) fn queries(gid: &str) -> Result {
             id,
             &ace,
             lexicon.as_deref(),
-            temporal.as_deref(),
+            vocabulary.as_deref(),
         )?;
         certify(
             &swipl,
@@ -205,7 +209,7 @@ pub(super) fn queries(gid: &str) -> Result {
             &ace,
             Tables {
                 lexicon: lexicon.as_deref(),
-                temporal: temporal.as_deref(),
+                vocabulary: vocabulary.as_deref(),
             },
             &bytes,
             true,

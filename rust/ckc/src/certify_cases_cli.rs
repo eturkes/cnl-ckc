@@ -196,7 +196,7 @@ impl Fixture {
             .join(if case.query { "queries" } else { "ace" })
             .join(format!("{}.ace", case.artifact));
         io(fs::copy(repo.join(&ace), fixture.root.join(&ace)))?;
-        for input in ["lexicon.ulex", "temporal.tsv"] {
+        for input in ["lexicon.ulex", "vocabulary.tsv"] {
             match fs::read(repo.join(&gpath).join(input)) {
                 Ok(bytes) => io(fs::write(guideline.join(input), bytes))?,
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}

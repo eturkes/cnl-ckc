@@ -1,5 +1,5 @@
 // m7t D10: the reviewer page's "Timing as compiled" table — exec mirror of
-// ckc_spec::ui::timing_section over the K1-parsed v2 document.
+// ckc_spec::ui::timing_section over the K1-parsed document.
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
 use crate::k2_term::{ENodeKind, ETermArena};
@@ -892,7 +892,7 @@ pub fn row_exec(
     }
 }
 
-// --- q12 D11: the v3 timing rows ---
+// --- q12 D11: the q12 timing rows ---
 pub fn order_html_exec(role: &[u8]) -> (out: EPage)
     ensures
         out@ == u::order_html(role@),
@@ -1650,9 +1650,6 @@ pub fn timing_rows_exec(pl: &[u8]) -> (out: Vec<EPage>)
     proof {
         assert(parsed@ is Doc);
         assert(parsed@ == v::V1File::Doc(doc));
-    }
-    if parsed.doc_version < 2 {
-        return no_rows();
     }
     proof {
         crate::v1_term_impl::parsed_doc_roots_elim(arena.nodes@, &parsed);

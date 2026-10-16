@@ -9,15 +9,14 @@ pub(super) fn compile(
     proof: bool,
 ) -> Result<Vec<u8>> {
     let bytes = read(&g.ace(id), "guideline")?;
-    // m7t D2 + q12 D1: a guideline carrying temporal.tsv compiles under the
-    // schema its header names.
-    let mut tail = match &g.temporal {
-        Some(t) => vec![selector(t), show(stage), id.to_owned(), show(t)],
-        None => vec![show(stage), id.to_owned()],
-    };
-    if let Some(lexicon) = &g.lexicon {
-        tail.push(show(lexicon));
-    }
+    // c1 D5: `<tree> <docid> <vocabulary|-> <ulex|-> [proof]`.
+    let dash = |p: &Option<PathBuf>| p.as_deref().map_or("-".to_owned(), show);
+    let mut tail = vec![
+        show(stage),
+        id.to_owned(),
+        dash(&g.vocabulary),
+        dash(&g.lexicon),
+    ];
     if proof {
         tail.push("proof".to_owned());
     }
@@ -203,7 +202,7 @@ pub(super) fn check(
         stage,
         &g.path,
         g.lexicon.as_deref(),
-        g.temporal.as_deref(),
+        g.vocabulary.as_deref(),
     )?;
     println!("{}", counts.query_meter(&name(&g.path)));
     println!("{}", counts.trace_meter(&name(&g.path)));

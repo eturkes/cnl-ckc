@@ -29,8 +29,8 @@
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
-guideline_schema_version(3).
-guideline_document(h,ace_sha256('31c53b2332173e5ef42969570b88ec5fc6a00193ab6d4dc263248f2c9c381c1d'),ulex(none),temporal(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
+guideline_schema_version(1).
+guideline_document(h,ace_sha256('31c53b2332173e5ef42969570b88ec5fc6a00193ab6d4dc263248f2c9c381c1d'),ulex(none),vocabulary(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
 % S1: A man waits.
 guideline_event(actual,e101,wait).
 guideline_cardinality(actual,h101,na,eq,3).

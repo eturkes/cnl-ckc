@@ -429,13 +429,20 @@ fn document(root: &Path, gid: &str, c: &ECoverage, bundle: &EBundle) -> Result<C
     };
     Ok(Content { ace, pl, alignment })
 }
-// The time-word table, validated by the grammar that `ckc check` applies.
-fn temporal(root: &Path, gid: &str) -> Result<Option<Vec<u8>>> {
-    if !root.join("temporal.tsv").is_file() {
+// The vocabulary table, validated by the grammar that `ckc check` applies; the
+// retired name is refused (c1 D4).
+fn vocabulary(root: &Path, gid: &str) -> Result<Option<Vec<u8>>> {
+    let retired = root.join("temporal.tsv");
+    if retired.exists() || retired.is_symlink() {
+        return Err(format!(
+            "ui: viewmodel: {gid} temporal.tsv: retired table name (rename to vocabulary.tsv)"
+        ));
+    }
+    if !root.join("vocabulary.tsv").is_file() {
         return Ok(None);
     }
-    let bytes = load_text(root, gid, "temporal.tsv")?;
-    match ckc_kernel::contract::check_temporal(b"temporal.tsv", &bytes) {
+    let bytes = load_text(root, gid, "vocabulary.tsv")?;
+    match ckc_kernel::contract::check_vocabulary(b"vocabulary.tsv", &bytes) {
         EVerdict::Ok(_) => Ok(Some(bytes)),
         EVerdict::Fail(_, detail) => Err(format!("ui: viewmodel: {gid} {}", text(&detail))),
     }
@@ -465,7 +472,7 @@ fn guideline(root: &Path, gid: &str) -> Result<(EGuideline, Vec<Option<String>>)
         .map(|b| checked_text(b, gid, "README.md"))
         .transpose()?;
     let source_names = assets(root)?;
-    let temporal = temporal(root, gid)?;
+    let vocabulary = vocabulary(root, gid)?;
     let mut documents = Vec::new();
     let mut errors = Vec::new();
     for id in ids {
@@ -500,7 +507,7 @@ fn guideline(root: &Path, gid: &str) -> Result<(EGuideline, Vec<Option<String>>)
             ledger,
             ledger_digest,
             source_names,
-            temporal,
+            vocabulary,
         },
         errors,
     ))

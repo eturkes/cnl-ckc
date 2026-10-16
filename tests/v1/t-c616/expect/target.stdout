@@ -1,2 +1,2 @@
 % q-wh traced against the loaded composition by ckc queries; do not edit.
-'$guideline_traces'(v1,'q-wh',query_sha256(b4726e977d4a7c0cb31ff6fd183101d4df02afb4fe337b83b25b90311980e859),answers_sha256('3053df8d2b2f0b8cc7ca5c2b3d01a4b81c2e7b461cd4e2c5dcf82ba40114bad7'),result(yes(unproved(finite_failure)))).
+'$guideline_traces'(v1,'q-wh',query_sha256(c6f3e4f3960218cfaeb0fa836425b0aa8bf6ab1e4f328d5018108a768edc8c67),answers_sha256('0cc08470f118726ea62d7e7057ae7fb50e20a7696ee11cb10d27dbf6f757fb54'),result(yes(unproved(finite_failure)))).

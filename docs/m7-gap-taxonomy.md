@@ -21,12 +21,12 @@ the first class to implement. Each class is a separate feature unit.
 
 | Class | Observed gap | CDC documents | Sample statements | Disposition |
 | --- | --- | --- | --- | --- |
-| temporal | durations, frequencies, deadlines, sequencing | 81 | 44 | implemented: schema v2 interval and recurrence annotations; schema v3 count per period, scoped recurrence, order, approximate bound and ranged minimum (`docs/REFERENCE.md` § Schema v2, § Schema v3) |
-| strength | recommendation grade, preference of one option over another | 63 | 49 | new schema version: graded recommendation record |
-| regimen-choice | one of several permitted options | — | 10 | ACE extension or new schema version: disjunction |
-| numeric-threshold | numeric comparison, ranges, unit conversion | — | 27 | new schema version: comparison built-ins |
-| dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | new schema version: arithmetic built-ins |
-| derived-measure | quantities computed from measurements | — | 3 | new schema version: arithmetic built-ins |
+| temporal | durations, frequencies, deadlines, sequencing | 81 | 44 | implemented: interval and recurrence annotations; count per period, scoped recurrence, order, approximate bound and ranged minimum (`docs/REFERENCE.md` § Vocabulary table and time annotations) |
+| strength | recommendation grade, preference of one option over another | 63 | 49 | schema revision: graded recommendation record |
+| regimen-choice | one of several permitted options | — | 10 | ACE extension or schema revision: disjunction |
+| numeric-threshold | numeric comparison, ranges, unit conversion | — | 27 | schema revision: comparison built-ins |
+| dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | schema revision: arithmetic built-ins |
+| derived-measure | quantities computed from measurements | — | 3 | schema revision: arithmetic built-ins |
 | probability | numeric likelihood, probabilistic update | 53 | 0 | companion target (ProbLog), deferred |
 | condition-scope | exceptions and prerequisites | 96 | — | ACE extension (exception clauses) |
 | quantification | set scope, example generalized to rule | 68 | — | ACE extension (group coordination) |
@@ -35,18 +35,21 @@ the first class to implement. Each class is a separate feature unit.
 Temporal status: 51 of the CDC guideline's 337 documents carry
 annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
-whose sources state a bound that schema v2 can carry. All 12
+whose sources state a bound that the interval and recurrence
+annotations can carry. All 12
 were re-authored and now compile with typed annotations. The other 69
 keep a recorded loss: their sources state no integer bound (several, a
 few, regularly), an approximate or ranged bound, a count per period
 (twice per day), or an ordering without a quantity. Four of the 69, and
 four documents outside the census, already stated a bound in ACE and
-gained annotations without an ACE change. Schema v3 types the count per
+gained annotations without an ACE change. The later patterns type the
+count per
 period (`cdc2022-opioid-s60-14`), the recurrence inside a time window
 (`cdc2022-opioid-s44-04`) and the order without a quantity: 30
 documents gained 87 order clauses without an ACE change. A unit
 abbreviation such as `d` types as a unit through a lexicon count noun
-and a `unit` row; no schema change is needed. Schema v3 also types
+and a `unit` row; no schema change is needed. The approximation and
+range rows also type
 an approximate bound as the comparison `about` (`cdc2022-opioid-s59-06`,
 `cdc2022-opioid-rec07-imp03`) and a minimum stated as a range
 (`cdc2022-opioid-s40-01`, `cdc2022-opioid-s59-12`,

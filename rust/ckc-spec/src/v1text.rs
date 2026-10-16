@@ -227,15 +227,14 @@ pub open spec fn tail_bytes(t: Term) -> Seq<u8>
     }
 }
 
-// --- ABI indicators (frozen order = the emitted declaration block): v1 =
-// positions 0..8; v2 (contract m7t D3) widens the record to /4 and appends the
-// two temporal annotations (9, 10); v3 (contract q12 D2) keeps the v2 record
-// and appends frequency, order, scoped recurrence and range (11..14).
+// --- ABI indicators (order = the emitted declaration block; contract c1 D2):
+// schema version, the document record, the seven primitives (2..8), the
+// temporal annotations (9..14).
 pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
     if i == 0 {
         (ascii("guideline_schema_version"@), 1)
     } else if i == 1 {
-        (ascii("guideline_document"@), 3)
+        (ascii("guideline_document"@), 4)
     } else if i == 2 {
         (ascii("guideline_entity"@), 4)
     } else if i == 3 {
@@ -265,33 +264,15 @@ pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
     }
 }
 
-pub open spec fn indicator_count(v: nat) -> int {
-    if v == 3 {
-        15
-    } else if v == 2 {
-        11
-    } else {
-        9
-    }
-}
-
-pub open spec fn decl_indicator(v: nat, i: int) -> (Seq<u8>, nat) {
-    if (v == 2 || v == 3) && i == 1 {
-        (ascii("guideline_document"@), 4)
-    } else {
-        indicator(i)
-    }
+pub open spec fn indicator_count() -> int {
+    15
 }
 
 // The semantic indicators (positions 2..14) are the only head/body predicates
 // of bundle clauses (contract R14: foreign or variable body goals are
-// grammar-unrepresentable); a version-v file uses positions 2..indicator_count(v).
+// grammar-unrepresentable), in any document (contract c1 D2).
 pub open spec fn is_semantic_pred(name: Seq<u8>, arity: nat) -> bool {
     exists|i: int| 2 <= i < 15 && #[trigger] indicator(i) == (name, arity)
-}
-
-pub open spec fn version_pred(name: Seq<u8>, arity: nat, v: nat) -> bool {
-    exists|i: int| 2 <= i < indicator_count(v) && #[trigger] indicator(i) == (name, arity)
 }
 
 // --- clause lines ---
@@ -404,19 +385,17 @@ pub ghost struct Bundle {
 
 pub ghost struct DocFile {
     pub docid: Seq<u8>,
-    pub version: nat,  // schema version 1 | 2 | 3
     pub ace: Seq<u8>,  // 64 lowercase hex
     pub ulex: Option<Seq<u8>>,  // None = ulex(none)
-    pub temporal: Option<Seq<u8>>,  // v2 | v3: the temporal.tsv digest; v1: None
+    pub vocabulary: Option<Seq<u8>>,  // the vocabulary.tsv digest; None = vocabulary(none)
     pub bundles: Seq<Bundle>,
 }
 
 pub ghost struct QueryFile {
     pub qid: Seq<u8>,
-    pub version: nat,
     pub ace: Seq<u8>,
     pub ulex: Option<Seq<u8>>,
-    pub temporal: Option<Seq<u8>>,
+    pub vocabulary: Option<Seq<u8>>,
     pub qtext: Seq<u8>,  // "% Q1: " payload
     pub goal: Term,
     pub answers: Term,
@@ -467,20 +446,20 @@ pub open spec fn traces_line1(qid: Seq<u8>) -> Seq<u8> {
     )
 }
 
-pub open spec fn decl_pair(v: nat, i: int) -> Seq<u8> {
-    ascii(":- multifile("@) + decl_indicator(v, i).0 + seq![0x2Fu8] + udec_bytes(
-        decl_indicator(v, i).1,
-    ) + ascii(").\n"@) + ascii(":- discontiguous("@) + decl_indicator(v, i).0 + seq![0x2Fu8]
-        + udec_bytes(decl_indicator(v, i).1) + ascii(").\n"@)
+pub open spec fn decl_pair(i: int) -> Seq<u8> {
+    ascii(":- multifile("@) + indicator(i).0 + seq![0x2Fu8] + udec_bytes(indicator(i).1) + ascii(
+        ").\n"@,
+    ) + ascii(":- discontiguous("@) + indicator(i).0 + seq![0x2Fu8] + udec_bytes(indicator(i).1)
+        + ascii(").\n"@)
 }
 
-pub open spec fn decls_from(v: nat, i: int) -> Seq<u8>
-    decreases indicator_count(v) - i,
+pub open spec fn decls_from(i: int) -> Seq<u8>
+    decreases indicator_count() - i,
 {
-    if i < 0 || i >= indicator_count(v) {
+    if i < 0 || i >= indicator_count() {
         Seq::empty()
     } else {
-        decl_pair(v, i) + decls_from(v, i + 1)
+        decl_pair(i) + decls_from(i + 1)
     }
 }
 
@@ -488,25 +467,20 @@ pub open spec fn marker_line(s: nat, text: Seq<u8>) -> Seq<u8> {
     ascii("% S"@) + udec_bytes(s) + ascii(": "@) + text + seq![0x0Au8]
 }
 
-pub open spec fn ulex_term(u: Option<Seq<u8>>) -> Term {
+pub open spec fn digest_term(u: Option<Seq<u8>>) -> Term {
     match u {
         Option::None => Term::Atom(ascii("none"@)),
         Option::Some(h) => Term::Comp(ascii("sha256"@), seq![Term::Atom(h)]),
     }
 }
 
-pub open spec fn schema_version_term(v: nat) -> Term {
-    Term::Comp(ascii("guideline_schema_version"@), seq![Term::Int(v as int)])
+// One schema, identifier 1 (contract c1 D1).
+pub open spec fn schema_version_term() -> Term {
+    Term::Comp(ascii("guideline_schema_version"@), seq![Term::Int(1)])
 }
 
-// v2 + v3 records end in `temporal(sha256(H))`; v1 records carry none.
-pub open spec fn temporal_terms(t: Option<Seq<u8>>) -> Seq<Term> {
-    match t {
-        Option::None => Seq::empty(),
-        Option::Some(h) => seq![
-            Term::Comp(ascii("temporal"@), seq![Term::Comp(ascii("sha256"@), seq![Term::Atom(h)])]),
-        ],
-    }
+pub open spec fn vocabulary_term(t: Option<Seq<u8>>) -> Term {
+    Term::Comp(ascii("vocabulary"@), seq![digest_term(t)])
 }
 
 pub open spec fn doc_record_term(d: DocFile) -> Term {
@@ -515,20 +489,9 @@ pub open spec fn doc_record_term(d: DocFile) -> Term {
         seq![
             Term::Atom(d.docid),
             Term::Comp(ascii("ace_sha256"@), seq![Term::Atom(d.ace)]),
-            Term::Comp(ascii("ulex"@), seq![ulex_term(d.ulex)]),
-        ] + temporal_terms(d.temporal),
-    )
-}
-
-pub open spec fn version_atom(v: nat) -> Term {
-    Term::Atom(
-        if v == 3 {
-            ascii("v3"@)
-        } else if v == 2 {
-            ascii("v2"@)
-        } else {
-            ascii("v1"@)
-        },
+            Term::Comp(ascii("ulex"@), seq![digest_term(d.ulex)]),
+            vocabulary_term(d.vocabulary),
+        ],
     )
 }
 
@@ -536,11 +499,12 @@ pub open spec fn query_record_term(q: QueryFile) -> Term {
     Term::Comp(
         ascii("$guideline_query"@),
         seq![
-            version_atom(q.version),
+            Term::Atom(ascii("v1"@)),
             Term::Atom(q.qid),
             Term::Comp(ascii("ace_sha256"@), seq![Term::Atom(q.ace)]),
-            Term::Comp(ascii("ulex"@), seq![ulex_term(q.ulex)]),
-        ] + temporal_terms(q.temporal),
+            Term::Comp(ascii("ulex"@), seq![digest_term(q.ulex)]),
+            vocabulary_term(q.vocabulary),
+        ],
     )
 }
 
@@ -602,8 +566,9 @@ pub open spec fn bundles_bytes(bs: Seq<Bundle>) -> Seq<u8>
 }
 
 pub open spec fn print_doc(d: DocFile) -> Seq<u8> {
-    doc_line1(d.docid) + decls_from(d.version, 0) + term_line(schema_version_term(d.version))
-        + term_line(doc_record_term(d)) + bundles_bytes(d.bundles)
+    doc_line1(d.docid) + decls_from(0) + term_line(schema_version_term()) + term_line(
+        doc_record_term(d),
+    ) + bundles_bytes(d.bundles)
 }
 
 pub open spec fn print_query(q: QueryFile) -> Seq<u8> {
@@ -644,7 +609,7 @@ pub open spec fn hex40(h: Seq<u8>) -> bool {
     h.len() == 40 && all_in(h, |b: u8| is_hex_lower_b(b))
 }
 
-pub open spec fn ulex_ok(u: Option<Seq<u8>>) -> bool {
+pub open spec fn digest_ok(u: Option<Seq<u8>>) -> bool {
     match u {
         Option::None => true,
         Option::Some(h) => hex64(h),
@@ -663,54 +628,22 @@ pub open spec fn wf_bundle(b: Bundle) -> bool {
     &&& forall|i: int| #![auto] 0 <= i < b.clauses.len() ==> wf_clause(b.clauses[i])
 }
 
-// Version law (contracts m7t D3, q12 D2): v1 records no temporal digest, v2 +
-// v3 record one; every clause literal of a version-v file is a version-v predicate.
-pub open spec fn version_ok(v: nat, t: Option<Seq<u8>>) -> bool {
-    match t {
-        Option::None => v == 1,
-        Option::Some(h) => (v == 2 || v == 3) && hex64(h),
-    }
-}
-
-pub open spec fn lit_in(t: Term, v: nat) -> bool {
-    match t {
-        Term::Comp(name, args) => version_pred(name, args.len(), v),
-        _ => false,
-    }
-}
-
-pub open spec fn item_in(it: BodyItem, v: nat) -> bool {
-    match it {
-        BodyItem::Pos(l) => lit_in(l, v),
-        BodyItem::Naf(gs) => forall|j: int| 0 <= j < gs.len() ==> lit_in(#[trigger] gs[j], v),
-    }
-}
-
-pub open spec fn clause_in(c: DocClause, v: nat) -> bool {
-    lit_in(c.head, v) && forall|i: int| 0 <= i < c.body.len() ==> item_in(#[trigger] c.body[i], v)
-}
-
-pub open spec fn bundle_in(b: Bundle, v: nat) -> bool {
-    forall|i: int| 0 <= i < b.clauses.len() ==> clause_in(#[trigger] b.clauses[i], v)
-}
-
 pub open spec fn wf_doc(d: DocFile) -> bool {
     &&& name_ok(d.docid)
-    &&& version_ok(d.version, d.temporal)
     &&& hex64(d.ace)
-    &&& ulex_ok(d.ulex)
+    &&& digest_ok(d.ulex)
+    &&& digest_ok(d.vocabulary)
     &&& d.bundles.len() >= 1
     &&& forall|i: int| #![auto] 0 <= i < d.bundles.len() ==> wf_bundle(d.bundles[i])
-    &&& forall|i: int| 0 <= i < d.bundles.len() ==> bundle_in(#[trigger] d.bundles[i], d.version)
     &&& forall|i: int|
         0 <= i < d.bundles.len() - 1 ==> #[trigger] d.bundles[i].s < d.bundles[i + 1].s
 }
 
 pub open spec fn wf_query(q: QueryFile) -> bool {
     &&& name_ok(q.qid)
-    &&& version_ok(q.version, q.temporal)
     &&& hex64(q.ace)
-    &&& ulex_ok(q.ulex)
+    &&& digest_ok(q.ulex)
+    &&& digest_ok(q.vocabulary)
     &&& text_ok(q.qtext)
     &&& wf_term(q.goal) && no_dollar_var(q.goal)
     &&& wf_term(q.answers) && no_dollar_var(q.answers)

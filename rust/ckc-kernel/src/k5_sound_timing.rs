@@ -608,17 +608,15 @@ pub proof fn section(pl: u::Bytes, inputs: Seq<u::Bytes>)
     let rows = u::timing_rows(pl);
     if v::accepts(pl) {
         if let v::V1File::Doc(d) = ckc_spec::replay::the_v1(pl) {
-            if d.version >= 2 {
-                let g = |bd: v::Bundle| u::bundle_rows(pl, d, bd);
-                let xss = d.bundles.map_values(g);
-                assert forall|i: int| 0 <= i < xss.len() implies all_sound(
-                    #[trigger] xss[i],
-                    inputs,
-                ) by {
-                    bundle(pl, d, d.bundles[i], inputs);
-                }
-                flat_rows(xss, inputs);
+            let g = |bd: v::Bundle| u::bundle_rows(pl, d, bd);
+            let xss = d.bundles.map_values(g);
+            assert forall|i: int| 0 <= i < xss.len() implies all_sound(
+                #[trigger] xss[i],
+                inputs,
+            ) by {
+                bundle(pl, d, d.bundles[i], inputs);
             }
+            flat_rows(xss, inputs);
         }
     }
     assert(all_sound(rows, inputs));

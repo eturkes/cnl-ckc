@@ -8871,26 +8871,6 @@ pub proof fn l282(inputs: Seq<u::Bytes>)
     b::literal(u::lit("how long after a reference point the action occurs"@), inputs);
 }
 
-pub proof fn f282(inputs: Seq<u::Bytes>)
-    ensures
-        h::fragment(u::fixed("how long after a reference point the action occurs"@), inputs, 0, 0),
-        u::copy_registry()[282] == u::lit("how long after a reference point the action occurs"@),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    l282(inputs);
-    reveal_strlit("how long after a reference point the action occurs");
-    is_ascii_chars_encode_utf8("how long after a reference point the action occurs"@);
-    assert(u::lit("how long after a reference point the action occurs"@)
-        =~= bs![104u8,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115]);
-    assert(cx::scan(
-        bs![104u8,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115],
-        0,
-    ) == 0) by (compute_only);
-    cx::exact(u::lit("how long after a reference point the action occurs"@), 0);
-    h::fixed(u::lit("how long after a reference point the action occurs"@), inputs, 0, 0);
-}
-
 pub proof fn l283(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("how long before a reference point the action occurs"@)),
@@ -8911,26 +8891,6 @@ pub proof fn l283(inputs: Seq<u::Bytes>)
         reveal(u::copy_registry);
     };
     b::literal(u::lit("how long before a reference point the action occurs"@), inputs);
-}
-
-pub proof fn f283(inputs: Seq<u::Bytes>)
-    ensures
-        h::fragment(u::fixed("how long before a reference point the action occurs"@), inputs, 0, 0),
-        u::copy_registry()[283] == u::lit("how long before a reference point the action occurs"@),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    l283(inputs);
-    reveal_strlit("how long before a reference point the action occurs");
-    is_ascii_chars_encode_utf8("how long before a reference point the action occurs"@);
-    assert(u::lit("how long before a reference point the action occurs"@)
-        =~= bs![104u8,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115]);
-    assert(cx::scan(
-        bs![104u8,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115],
-        0,
-    ) == 0) by (compute_only);
-    cx::exact(u::lit("how long before a reference point the action occurs"@), 0);
-    h::fixed(u::lit("how long before a reference point the action occurs"@), inputs, 0, 0);
 }
 
 pub proof fn l284(inputs: Seq<u::Bytes>)

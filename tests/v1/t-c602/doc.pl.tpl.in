@@ -1,9 +1,9 @@
-@@sha256 ec75c8de504e197ad92254e720024e82789db956975398412e077ca5ba923b8e
+@@sha256 7d2adf9e80a74033a57d49ba47d5afec0d11adb13d229516bf03e80c9ba2f06b
 % doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
-:- multifile(guideline_document/3).
-:- discontiguous(guideline_document/3).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
 :- multifile(guideline_entity/4).
 :- discontiguous(guideline_entity/4).
 :- multifile(guideline_cardinality/5).
@@ -18,8 +18,20 @@
 :- discontiguous(guideline_property/4).
 :- multifile(guideline_operator/3).
 :- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
 guideline_schema_version(1).
-guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none)).
+guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none),vocabulary(none)).
 % S1: Suite engine probe.
 guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),level(0),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),level(1),pos).
 guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),level(1),pos) :- guideline_property(actual,'$guideline_id'(product,doc,1,ref(1),[]),level(2),pos).

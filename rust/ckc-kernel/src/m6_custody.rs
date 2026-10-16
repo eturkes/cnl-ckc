@@ -119,12 +119,12 @@ pub fn ulex_matches(
 ) -> (out: bool)
     requires
         actual@ == ulex_digest_bytes(model),
-        v1text::ulex_ok(model),
+        v1text::digest_ok(model),
     ensures
         out == (model == spec::opt_view(wanted)),
 {
     proof {
-        reveal(v1text::ulex_ok);
+        reveal(v1text::digest_ok);
         reveal(v1text::hex64);
     }
     match wanted {

@@ -13,22 +13,22 @@ cp "$root/vendor/clex/clex_lexicon.pl" "$stage/ape-stage/prolog/lexicon/clex_lex
     -g "working_directory(_, '$stage/ape-stage/prolog/parser'), [fit_to_plp], halt." -t halt >/dev/null 2>&1)
 compile() { swipl -q -f none -F none -s "$stage/ape-stage/prolog/ace_to_pl.pl" -g main -t 'halt(9)' -- "$@"; }
 dump() { swipl -q -f none -F none -s "$root/rust/ckc/prolog/drs_dump.pl" -g main -t 'halt(9)' -- "$stage/ape-stage"; }
-# case mode id ace [temporal-rows]
+# case mode id ace [vocabulary-rows]
 case_() {
     local dir=$out/$1 mode=$2 id=$3 ace=$4 rows=${5:-}
     mkdir -p "$dir"
     printf '%s\n' "$ace" > "$dir/ace.txt.in"
     local table=()
     if [ -n "$rows" ]; then
-        { sed -n 1,2p "$root/tests/certify-one/v3-header.txt.in"; printf '%b' "$rows"; } > "$dir/temporal.tsv.in"
-        table=("$dir/temporal.tsv.in")
+        { printf '# format: kind\tlemma\tvalue\n'; printf '%b' "$rows"; } > "$dir/vocabulary.tsv.in"
+        table=("$dir/vocabulary.tsv.in")
     fi
     if [ "$mode" = query ]; then
-        compile question "$stage/ape-stage" "$id" < "$dir/ace.txt.in" > "$dir/pl.txt.in"
+        compile question "$stage/ape-stage" "$id" - - < "$dir/ace.txt.in" > "$dir/pl.txt.in"
     elif [ ${#table[@]} -gt 0 ]; then
-        compile v3 "$stage/ape-stage" "$id" "${table[@]}" < "$dir/ace.txt.in" > "$dir/pl.txt.in"
+        compile "$stage/ape-stage" "$id" "${table[@]}" - < "$dir/ace.txt.in" > "$dir/pl.txt.in"
     else
-        compile "$stage/ape-stage" "$id" < "$dir/ace.txt.in" > "$dir/pl.txt.in"
+        compile "$stage/ape-stage" "$id" - - < "$dir/ace.txt.in" > "$dir/pl.txt.in"
     fi
     dump < "$dir/ace.txt.in" > "$dir/dump.txt.in"
     "$bin" certify-one "$mode" "$id" "$dir/ace.txt.in" - "$dir/dump.txt.in" "$dir/pl.txt.in" "${table[@]}" > "$dir/stdout.expect"

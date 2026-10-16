@@ -344,8 +344,8 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     words::section(g, inputs);
     let head = head_parts(g);
     let tail = tail_parts(g);
-    t::cat3(head, u::words_section(g.temporal), tail, inputs);
-    let parts = head + u::words_section(g.temporal) + tail;
+    t::cat3(head, u::words_section(g.vocabulary), tail, inputs);
+    let parts = head + u::words_section(g.vocabulary) + tail;
     b::lines(parts, inputs);
     corpus::title(g, inputs);
     h::text(u::title(g), inputs);

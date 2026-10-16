@@ -223,7 +223,7 @@ fn v1_suite() {
     assert_eq!(census(""), (230, 115), "tests/v1 legacy row census");
     assert_eq!(census("m7t-"), (31, 12), "tests/v1 M7T row census");
     assert_eq!(census("dq4-"), (7, 0), "tests/v1 reject-offset row census");
-    assert_eq!(census("q12-"), (72, 60), "tests/v1 q12 row census");
+    assert_eq!(census("q12-"), (53, 38), "tests/v1 q12 row census");
     assert_eq!(census("q15-"), (4, 0), "tests/v1 q15 row census");
     assert_eq!(census("q17-"), (3, 0), "tests/v1 q17 row census");
     assert_eq!(census("q18-"), (39, 0), "tests/v1 q18 row census");

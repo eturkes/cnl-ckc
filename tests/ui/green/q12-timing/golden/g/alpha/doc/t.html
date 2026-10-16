@@ -208,7 +208,7 @@ a { color: inherit; text-decoration: none; }
 <datalist id="reviewer-names"></datalist>
 <label for="comment">Comment (optional)</label>
 <textarea id="comment" name="comment"></textarea>
-<input type="hidden" name="review_sha256" value="2872773bf79e3c406b2b8ea024d8f4c6d1b85708f5515483e5afdaf967a949b1">
+<input type="hidden" name="review_sha256" value="cf3e54c0b03b1289b072f4205f14cd45737be86a2dbd79e5272962ea7fe65ed0">
 <input type="hidden" name="ledger_sha256" value="absent">
 <input type="hidden" name="commit" value="">
 <input type="hidden" name="csrf" value="">
@@ -249,8 +249,8 @@ a { color: inherit; text-decoration: none; }
 :- discontiguous(guideline_recurrence_window/7).
 :- multifile(guideline_range/3).
 :- discontiguous(guideline_range/3).
-guideline_schema_version(3).
-guideline_document(t,ace_sha256(eb9ba835f99b13a3356d3e78c4038422175db79c6d054edfd5fb7a2014da32f3),ulex(none),temporal(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
+guideline_schema_version(1).
+guideline_document(t,ace_sha256(eb9ba835f99b13a3356d3e78c4038422175db79c6d054edfd5fb7a2014da32f3),ulex(none),vocabulary(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
 % S1: A man reads a book before a visit after a trip.
 guideline_event(actual,e1,read).
 guideline_entity(actual,a1,visit,countable).

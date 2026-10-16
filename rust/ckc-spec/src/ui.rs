@@ -276,7 +276,7 @@ pub ghost struct Guideline {
     pub ledger: Src,
     pub ledger_digest: Bytes,
     pub source_names: Seq<Bytes>,
-    pub temporal: Option<Bytes>,
+    pub vocabulary: Option<Bytes>,
 }
 
 pub ghost struct Corpus {
@@ -830,32 +830,22 @@ pub open spec fn region_status(r: Row) -> Bytes {
     }
 }
 
-// --- Time words (contract q14): the guideline's temporal.tsv rows in plain
-// language — units, then relations, then spacings, each kind in file order. A
-// lemma renders only when its bytes stand verbatim in the table; unit words are
-// the timing table's copy.
+// --- Time words (contracts q14, c1 D9): the guideline's vocabulary.tsv rows in
+// plain language — units, relations, spacings, windows, frequencies,
+// approximations, ranges, each kind in file order. A lemma renders only when its
+// bytes stand verbatim in the table; unit words are the timing table's copy.
+// Before/after also read an order with no stated time (contract q12 D11).
 pub open spec fn role_html(r: Bytes) -> Html {
     if r == lit("duration"@) {
         fixed_bytes(how_long_the_action_lasts())
     } else if r == lit("within"@) {
         fixed_bytes(how_far_the_action_lies_from_a())
     } else if r == lit("after"@) {
-        fixed_bytes(how_long_after_a_reference_point())
-    } else if r == lit("before"@) {
-        fixed_bytes(how_long_before_a_reference_point())
-    } else {
-        fixed_bytes(not_stated())
-    }
-}
-
-// v3 tables (contract q12 D11): before/after also read an order with no stated time.
-pub open spec fn role_html_v(r: Bytes, v: nat) -> Html {
-    if v == 3 && r == lit("after"@) {
         fixed_bytes(how_long_after_or_only_after())
-    } else if v == 3 && r == lit("before"@) {
+    } else if r == lit("before"@) {
         fixed_bytes(how_long_before_or_only_before())
     } else {
-        role_html(r)
+        fixed_bytes(not_stated())
     }
 }
 
@@ -871,7 +861,7 @@ pub open spec fn framed_word(raw: Bytes, p: Bytes, f: Bytes) -> Html {
 #[verifier::opaque]
 pub open spec fn word_rows(t: Option<Bytes>) -> Seq<Html> {
     match t {
-        Option::Some(raw) => match crate::temporal::parse_temporal(raw) {
+        Option::Some(raw) => match crate::vocabulary::parse_vocabulary(raw) {
             Result::Ok(m) => m.units.map_values(
                 |u: (Bytes, Bytes)|
                     word_row(
@@ -882,7 +872,7 @@ pub open spec fn word_rows(t: Option<Bytes>) -> Seq<Html> {
                         },
                     ),
             ) + m.relations.map_values(
-                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), role_html_v(r.1, m.version)),
+                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), role_html(r.1)),
             ) + m.spacings.map_values(
                 |s: (Bytes, Bytes)|
                     word_row(
@@ -997,7 +987,7 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
             fixed_bytes(tbody_open()) + lines(status_rows) + fixed_bytes(tbody_close()),
             fixed_bytes(table_close()),
             fixed_bytes(section_close()),
-        ] + words_section(g.temporal) + seq![
+        ] + words_section(g.vocabulary) + seq![
             fixed_bytes(section_open()),
             fixed_bytes(h2_open_documents_h2_close()),
             fixed_bytes(table_open_2()),
@@ -1310,8 +1300,8 @@ pub open spec fn splitline_count(cs: Seq<char>, pending: bool) -> nat
     }
 }
 
-// --- Timing as compiled (contract m7t D10): one table row per temporal
-// annotation literal of a v2 document, joined to its event lemma, quantity
+// --- Timing as compiled (contracts m7t D10, c1 D9): one table row per temporal
+// annotation literal of a document, joined to its event lemma, quantity
 // bound and reference noun. Joins read the annotation's own clause, then every
 // clause head in order; a word renders only when its bytes stand verbatim in
 // the pl, so every visible slot is a copied pl span, declared copy or a decimal.
@@ -1541,7 +1531,7 @@ pub open spec fn joined_word(
     }
 }
 
-// --- v3 timing rows (contract q12 D11) ---
+// --- q12 timing rows (contract q12 D11) ---
 pub open spec fn order_html(role: Bytes) -> Html {
     if role == lit("before"@) {
         fixed_bytes(before())
@@ -1724,11 +1714,9 @@ pub open spec fn bundle_rows(pl: Bytes, d: DocFile, b: v1text::Bundle) -> Seq<Ht
 pub open spec fn timing_rows(pl: Bytes) -> Seq<Html> {
     if v1text::accepts(pl) {
         match crate::replay::the_v1(pl) {
-            V1File::Doc(d) => if d.version >= 2 {
-                d.bundles.map_values(|b: v1text::Bundle| bundle_rows(pl, d, b)).flatten()
-            } else {
-                Seq::empty()
-            },
+            V1File::Doc(d) => d.bundles.map_values(
+                |b: v1text::Bundle| bundle_rows(pl, d, b),
+            ).flatten(),
             _ => Seq::empty(),
         }
     } else {
@@ -2680,7 +2668,7 @@ pub open spec fn corpus_bytes(c: Corpus) -> Seq<Bytes> {
                     e.ordinal + e.payloads.map_values(|p: (Bytes, Seq<Bytes>)| p.1).flatten(),
             ).flatten() + g.documents.map_values(
                 |d: Document| seq![d.bundle.docid, d.ace, d.pl],
-            ).flatten() + (match g.temporal {
+            ).flatten() + (match g.vocabulary {
                 Some(b) => seq![b],
                 None => Seq::empty(),
             }),
@@ -3346,7 +3334,7 @@ pub struct EGuideline {
     pub ledger: crate::replay::ESrc,
     pub ledger_digest: Vec<u8>,
     pub source_names: Vec<Vec<u8>>,
-    pub temporal: Option<Vec<u8>>,
+    pub vocabulary: Option<Vec<u8>>,
 }
 
 impl View for EGuideline {
@@ -3364,7 +3352,7 @@ impl View for EGuideline {
             ledger: self.ledger@,
             ledger_digest: self.ledger_digest@,
             source_names: self.source_names@.map_values(|x: Vec<u8>| x@),
-            temporal: match self.temporal {
+            vocabulary: match self.vocabulary {
                 Some(x) => Some(x@),
                 None => None,
             },

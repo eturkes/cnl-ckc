@@ -1,11 +1,11 @@
 // K5 render of the q14 time-word section (`u::words_section`): the guideline's
-// temporal.tsv rows in plain language, placed after the Status section.
+// vocabulary.tsv rows in plain language, placed after the Status section.
 use crate::k5_html as h;
 use crate::k5_timing::{is, pl_word_exec, unit_exec};
-use crate::m7_temporal::parse_temporal_exec;
-#[cfg(verus_keep_ghost)]
-use ckc_spec::temporal::{Temporal, parse_temporal};
+use crate::m7_temporal::parse_vocabulary_exec;
 use ckc_spec::ui::{self as u, EGuideline, EPage};
+#[cfg(verus_keep_ghost)]
+use ckc_spec::vocabulary::{Vocabulary, parse_vocabulary};
 use vstd::prelude::*;
 verus! {
 
@@ -19,8 +19,8 @@ pub open spec fn unit_row(raw: u::Bytes, p: (u::Bytes, u::Bytes)) -> u::Html {
     )
 }
 
-pub open spec fn relation_row(raw: u::Bytes, v: nat, p: (u::Bytes, u::Bytes)) -> u::Html {
-    u::word_row(u::pl_word(raw, p.0), u::role_html_v(p.1, v))
+pub open spec fn relation_row(raw: u::Bytes, p: (u::Bytes, u::Bytes)) -> u::Html {
+    u::word_row(u::pl_word(raw, p.0), u::role_html(p.1))
 }
 
 pub open spec fn spacing_row(raw: u::Bytes, p: (u::Bytes, u::Bytes)) -> u::Html {
@@ -60,9 +60,9 @@ pub open spec fn lemma_row(raw: u::Bytes, kind: u8, f: u::Bytes) -> u::Html {
     }
 }
 
-pub open spec fn rows_of(raw: u::Bytes, t: Temporal) -> Seq<u::Html> {
+pub open spec fn rows_of(raw: u::Bytes, t: Vocabulary) -> Seq<u::Html> {
     t.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw, p)) + t.relations.map_values(
-        |p: (u::Bytes, u::Bytes)| relation_row(raw, t.version, p),
+        |p: (u::Bytes, u::Bytes)| relation_row(raw, p),
     ) + t.spacings.map_values(|p: (u::Bytes, u::Bytes)| spacing_row(raw, p)) + t.windows.map_values(
         |p: (u::Bytes, u::Bytes)| window_row(raw, p),
     ) + t.frequencies.map_values(|f: u::Bytes| frequency_row(raw, f)) + t.approximations.map_values(
@@ -73,22 +73,22 @@ pub open spec fn rows_of(raw: u::Bytes, t: Temporal) -> Seq<u::Html> {
 pub proof fn rows_unfold(t: Option<u::Bytes>)
     ensures
         u::word_rows(t) == match t {
-            Option::Some(raw) => match parse_temporal(raw) {
+            Option::Some(raw) => match parse_vocabulary(raw) {
                 Result::Ok(m) => rows_of(raw, m),
                 Result::Err(_) => Seq::<u::Html>::empty(),
             },
             Option::None => Seq::<u::Html>::empty(),
         },
 {
-    hide(parse_temporal);
+    hide(parse_vocabulary);
     hide(u::pl_word);
     hide(u::unit_html);
-    hide(u::role_html_v);
+    hide(u::role_html);
     hide(u::framed_word);
     hide(u::word_row);
     reveal(u::word_rows);
     if let Option::Some(raw) = t {
-        if let Result::Ok(m) = parse_temporal(raw) {
+        if let Result::Ok(m) = parse_vocabulary(raw) {
             assert(m.units.map_values(
                 |p: (u::Bytes, u::Bytes)|
                     u::word_row(
@@ -100,11 +100,8 @@ pub proof fn rows_unfold(t: Option<u::Bytes>)
                     ),
             ) =~= m.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw, p)));
             assert(m.relations.map_values(
-                |r: (u::Bytes, u::Bytes)|
-                    u::word_row(u::pl_word(raw, r.0), u::role_html_v(r.1, m.version)),
-            ) =~= m.relations.map_values(
-                |p: (u::Bytes, u::Bytes)| relation_row(raw, m.version, p),
-            ));
+                |r: (u::Bytes, u::Bytes)| u::word_row(u::pl_word(raw, r.0), u::role_html(r.1)),
+            ) =~= m.relations.map_values(|p: (u::Bytes, u::Bytes)| relation_row(raw, p)));
             assert(m.spacings.map_values(
                 |s: (u::Bytes, u::Bytes)|
                     u::word_row(
@@ -153,28 +150,15 @@ pub fn role_exec(r: &[u8]) -> (out: EPage)
     } else if is(r, "within") {
         h::fixed("how far the action lies from a reference point, before or after it")
     } else if is(r, "after") {
-        h::fixed("how long after a reference point the action occurs")
-    } else if is(r, "before") {
-        h::fixed("how long before a reference point the action occurs")
-    } else {
-        h::fixed("not stated")
-    }
-}
-
-pub fn role_v_exec(r: &[u8], v: u8) -> (out: EPage)
-    ensures
-        out@ == u::role_html_v(r@, v as nat),
-{
-    if v == 3 && is(r, "after") {
         h::fixed(
             "how long after a reference point the action occurs, or only that it occurs after it",
         )
-    } else if v == 3 && is(r, "before") {
+    } else if is(r, "before") {
         h::fixed(
             "how long before a reference point the action occurs, or only that it occurs before it",
         )
     } else {
-        role_exec(r)
+        h::fixed("not stated")
     }
 }
 
@@ -207,11 +191,11 @@ fn framed_exec(raw: &[u8], p: &[u8], f: &[u8]) -> (out: EPage)
 }
 
 // Row kinds: 0 = unit, 1 = relation, 2 = spacing, 3 = window.
-pub open spec fn kind_row(raw: u::Bytes, v: nat, kind: u8, p: (u::Bytes, u::Bytes)) -> u::Html {
+pub open spec fn kind_row(raw: u::Bytes, kind: u8, p: (u::Bytes, u::Bytes)) -> u::Html {
     if kind == 0 {
         unit_row(raw, p)
     } else if kind == 1 {
-        relation_row(raw, v, p)
+        relation_row(raw, p)
     } else if kind == 2 {
         spacing_row(raw, p)
     } else {
@@ -219,9 +203,9 @@ pub open spec fn kind_row(raw: u::Bytes, v: nat, kind: u8, p: (u::Bytes, u::Byte
     }
 }
 
-fn kind_row_exec(raw: &[u8], v: u8, kind: u8, p: &(Vec<u8>, Vec<u8>)) -> (out: EPage)
+fn kind_row_exec(raw: &[u8], kind: u8, p: &(Vec<u8>, Vec<u8>)) -> (out: EPage)
     ensures
-        out@ == kind_row(raw@, v as nat, kind, (p.0@, p.1@)),
+        out@ == kind_row(raw@, kind, (p.0@, p.1@)),
 {
     if kind == 0 {
         let w = match unit_exec(&p.1, true) {
@@ -230,7 +214,7 @@ fn kind_row_exec(raw: &[u8], v: u8, kind: u8, p: &(Vec<u8>, Vec<u8>)) -> (out: E
         };
         row2(pl_word_exec(raw, &p.0), h::cat(h::fixed("unit of time:"), w))
     } else if kind == 1 {
-        row2(pl_word_exec(raw, &p.0), role_v_exec(&p.1, v))
+        row2(pl_word_exec(raw, &p.0), role_exec(&p.1))
     } else if kind == 2 {
         row2(framed_exec(raw, &p.0, &p.1), h::fixed("how far apart repeats of the action lie"))
     } else {
@@ -241,13 +225,13 @@ fn kind_row_exec(raw: &[u8], v: u8, kind: u8, p: &(Vec<u8>, Vec<u8>)) -> (out: E
     }
 }
 
-fn kind_rows(raw: &[u8], v: u8, ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out: Vec<EPage>)
+fn kind_rows(raw: &[u8], ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out: Vec<EPage>)
     ensures
         h::pages(out@) == crate::m7_temporal::pairs_view(ps@).map_values(
-            |p: (u::Bytes, u::Bytes)| kind_row(raw@, v as nat, kind, p),
+            |p: (u::Bytes, u::Bytes)| kind_row(raw@, kind, p),
         ),
 {
-    let ghost f = |p: (u::Bytes, u::Bytes)| kind_row(raw@, v as nat, kind, p);
+    let ghost f = |p: (u::Bytes, u::Bytes)| kind_row(raw@, kind, p);
     let ghost pv = crate::m7_temporal::pairs_view(ps@);
     let mut out: Vec<EPage> = Vec::new();
     let mut i = 0usize;
@@ -257,13 +241,13 @@ fn kind_rows(raw: &[u8], v: u8, ps: &Vec<(Vec<u8>, Vec<u8>)>, kind: u8) -> (out:
     while i < ps.len()
         invariant
             i <= ps@.len(),
-            f == (|p: (u::Bytes, u::Bytes)| kind_row(raw@, v as nat, kind, p)),
+            f == (|p: (u::Bytes, u::Bytes)| kind_row(raw@, kind, p)),
             pv == crate::m7_temporal::pairs_view(ps@),
             pv.len() == ps@.len(),
             h::pages(out@) == pv.take(i as int).map_values(f),
         decreases ps@.len() - i,
     {
-        let r = kind_row_exec(raw, v, kind, &ps[i]);
+        let r = kind_row_exec(raw, kind, &ps[i]);
         let ghost before = out@;
         out.push(r);
         proof {
@@ -344,12 +328,12 @@ fn lemma_rows(raw: &[u8], fs: &Vec<Vec<u8>>, kind: u8) -> (out: Vec<EPage>)
 
 pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
     ensures
-        h::pages(out@) == u::word_rows(g@.temporal),
+        h::pages(out@) == u::word_rows(g@.vocabulary),
 {
     proof {
-        rows_unfold(g@.temporal);
+        rows_unfold(g@.vocabulary);
     }
-    match &g.temporal {
+    match &g.vocabulary {
         None => {
             let out: Vec<EPage> = Vec::new();
             proof {
@@ -357,7 +341,7 @@ pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
             }
             out
         },
-        Some(raw) => match parse_temporal_exec(raw) {
+        Some(raw) => match parse_vocabulary_exec(raw) {
             Err(_) => {
                 let out: Vec<EPage> = Vec::new();
                 proof {
@@ -366,11 +350,10 @@ pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
                 out
             },
             Ok((t, _)) => {
-                let v = t.version;
-                let mut out = kind_rows(raw, v, &t.units, 0);
-                let mut rel = kind_rows(raw, v, &t.relations, 1);
-                let mut spa = kind_rows(raw, v, &t.spacings, 2);
-                let mut win = kind_rows(raw, v, &t.windows, 3);
+                let mut out = kind_rows(raw, &t.units, 0);
+                let mut rel = kind_rows(raw, &t.relations, 1);
+                let mut spa = kind_rows(raw, &t.spacings, 2);
+                let mut win = kind_rows(raw, &t.windows, 3);
                 let mut fre = lemma_rows(raw, &t.frequencies, 0);
                 let mut apx = lemma_rows(raw, &t.approximations, 1);
                 let mut rng = lemma_rows(raw, &t.ranges, 2);
@@ -392,7 +375,7 @@ pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
                     assert(h::pages(out@) =~= a + b + c + d + e + x + y);
                     assert(a =~= m.units.map_values(|p: (u::Bytes, u::Bytes)| unit_row(raw@, p)));
                     assert(b =~= m.relations.map_values(
-                        |p: (u::Bytes, u::Bytes)| relation_row(raw@, m.version, p),
+                        |p: (u::Bytes, u::Bytes)| relation_row(raw@, p),
                     ));
                     assert(c =~= m.spacings.map_values(
                         |p: (u::Bytes, u::Bytes)| spacing_row(raw@, p),
@@ -415,14 +398,14 @@ pub fn word_rows_exec(g: &EGuideline) -> (out: Vec<EPage>)
 
 pub fn words_section_exec(g: &EGuideline) -> (out: Vec<EPage>)
     ensures
-        h::pages(out@) == u::words_section(g@.temporal),
+        h::pages(out@) == u::words_section(g@.vocabulary),
 {
     hide(u::lit);
     let rows = word_rows_exec(g);
     if rows.len() == 0 {
         let out: Vec<EPage> = Vec::new();
         proof {
-            assert(h::pages(out@) =~= u::words_section(g@.temporal));
+            assert(h::pages(out@) =~= u::words_section(g@.vocabulary));
         }
         return out;
     }
@@ -440,7 +423,7 @@ pub fn words_section_exec(g: &EGuideline) -> (out: Vec<EPage>)
     out.push(h::fixed("</table>"));
     out.push(h::fixed("</section>"));
     proof {
-        assert(h::pages(out@) =~= u::words_section(g@.temporal));
+        assert(h::pages(out@) =~= u::words_section(g@.vocabulary));
     }
     out
 }

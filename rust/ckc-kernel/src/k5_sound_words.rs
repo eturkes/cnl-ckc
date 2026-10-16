@@ -1,11 +1,11 @@
 // K5 render soundness of the q14 time-word section: every visible slot is a
-// registry literal or a span of the guideline's temporal.tsv bytes.
+// registry literal or a span of the guideline's vocabulary.tsv bytes.
 use crate::{
     k5_sound_build as b, k5_sound_corpus as corpus, k5_sound_escape as h, k5_sound_literals as l,
     k5_sound_model as m, k5_sound_timing as t, k5_words as w,
 };
-use ckc_spec::temporal::*;
 use ckc_spec::ui as u;
+use ckc_spec::vocabulary::*;
 use vstd::prelude::*;
 verus! {
 
@@ -44,11 +44,11 @@ proof fn unit(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     b::row(seq![u::cell(u::pl_word(raw, p.0)), u::cell(b::f(279) + word)], inputs);
 }
 
-proof fn relation(raw: u::Bytes, v: nat, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
+proof fn relation(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     requires
         m::backed(raw, inputs),
     ensures
-        h::sound(w::relation_row(raw, v, p), inputs),
+        h::sound(w::relation_row(raw, p), inputs),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
@@ -60,15 +60,13 @@ proof fn relation(raw: u::Bytes, v: nat, p: (u::Bytes, u::Bytes), inputs: Seq<u:
     l::f249(inputs);
     l::f280(inputs);
     l::f281(inputs);
-    l::f282(inputs);
-    l::f283(inputs);
     l::f286(inputs);
     l::f287(inputs);
     assert(h::sound(u::role_html(p.1), inputs));
-    assert(h::sound(u::role_html_v(p.1, v), inputs));
+    assert(h::sound(u::role_html(p.1), inputs));
     b::cell(u::pl_word(raw, p.0), inputs);
-    b::cell(u::role_html_v(p.1, v), inputs);
-    b::row(seq![u::cell(u::pl_word(raw, p.0)), u::cell(u::role_html_v(p.1, v))], inputs);
+    b::cell(u::role_html(p.1), inputs);
+    b::row(seq![u::cell(u::pl_word(raw, p.0)), u::cell(u::role_html(p.1))], inputs);
 }
 
 proof fn framed(raw: u::Bytes, a: u::Bytes, f: u::Bytes, inputs: Seq<u::Bytes>)
@@ -172,7 +170,7 @@ proof fn lemma_word(raw: u::Bytes, a: u::Bytes, k: int, inputs: Seq<u::Bytes>)
     b::row(seq![u::cell(u::pl_word(raw, a)), u::cell(b::f(k))], inputs);
 }
 
-proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
+proof fn rows(raw: u::Bytes, tm: Vocabulary, inputs: Seq<u::Bytes>)
     requires
         m::backed(raw, inputs),
     ensures
@@ -186,7 +184,7 @@ proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
     hide(w::approximation_row);
     hide(w::range_row);
     let us = tm.units.map_values(|p: (u::Bytes, u::Bytes)| w::unit_row(raw, p));
-    let rs = tm.relations.map_values(|p: (u::Bytes, u::Bytes)| w::relation_row(raw, tm.version, p));
+    let rs = tm.relations.map_values(|p: (u::Bytes, u::Bytes)| w::relation_row(raw, p));
     let ss = tm.spacings.map_values(|p: (u::Bytes, u::Bytes)| w::spacing_row(raw, p));
     let ws = tm.windows.map_values(|p: (u::Bytes, u::Bytes)| w::window_row(raw, p));
     let fs = tm.frequencies.map_values(|f: u::Bytes| w::frequency_row(raw, f));
@@ -196,7 +194,7 @@ proof fn rows(raw: u::Bytes, tm: Temporal, inputs: Seq<u::Bytes>)
         unit(raw, tm.units[i], inputs);
     }
     assert forall|i: int| 0 <= i < rs.len() implies h::sound(#[trigger] rs[i], inputs) by {
-        relation(raw, tm.version, tm.relations[i], inputs);
+        relation(raw, tm.relations[i], inputs);
     }
     assert forall|i: int| 0 <= i < ss.len() implies h::sound(#[trigger] ss[i], inputs) by {
         spacing(raw, tm.spacings[i], inputs);
@@ -223,18 +221,18 @@ pub proof fn section(g: u::Guideline, inputs: Seq<u::Bytes>)
     requires
         corpus::sources(g, inputs),
     ensures
-        t::all_sound(u::words_section(g.temporal), inputs),
+        t::all_sound(u::words_section(g.vocabulary), inputs),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
     hide(u::lit);
     hide(u::lines);
     hide(w::rows_of);
-    let rs = u::word_rows(g.temporal);
-    w::rows_unfold(g.temporal);
-    corpus::temporal(g, inputs);
-    if let Some(raw) = g.temporal {
-        if let Ok(tm) = parse_temporal(raw) {
+    let rs = u::word_rows(g.vocabulary);
+    w::rows_unfold(g.vocabulary);
+    corpus::vocabulary(g, inputs);
+    if let Some(raw) = g.vocabulary {
+        if let Ok(tm) = parse_vocabulary(raw) {
             m::own(raw, inputs);
             rows(raw, tm, inputs);
         }

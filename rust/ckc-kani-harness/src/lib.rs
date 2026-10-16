@@ -46,10 +46,10 @@ mod harness {
     }
 
     #[kani::proof]
-    #[kani::unwind(949)]
+    #[kani::unwind(1432)]
     fn reader_trace_check_small() {
         // Constant preflight; eight trace bytes cannot form a v1 envelope.
-        // The exact custody error keeps derivation unreachable. DOC has 948 bytes.
+        // The exact custody error keeps derivation unreachable. DOC has 1431 bytes.
         let bytes: [u8; 8] = kani::any();
         for byte in bytes {
             kani::assume(matches!(
@@ -59,7 +59,7 @@ mod harness {
         }
         const ANSWERS: &[u8] = concat!(
             "% q answered against the loaded composition by ckc queries; do not edit.\n",
-            "'$guideline_answers'(v1,q,query_sha256('4fd2d61c0ba8557964dcf18b59df04f8a955578a5427c57ca177cb5396471fb7'),result(yes)).\n",
+            "'$guideline_answers'(v1,q,query_sha256(dd523d5359c8a608a6ac911f7c1734f0fabfd86381bf8a07b6c5a530c6719f0a),result(yes)).\n",
         ).as_bytes();
         let manifest = ESrc::Bytes(b"d\tp\n".to_vec());
         let docs = vec![ESrc::Bytes(DOC.to_vec())];
@@ -75,7 +75,7 @@ mod harness {
             &query,
             QUERY_SHA256[0],
             &answers,
-            b"29b7d5108c9b67a13f9b6800e45396aaeba8db1c4349fe15ba2d16688bdd1114",
+            b"b7f9bfbc307f93705715cc723da79426c178316eb66a55579901a112a3115c45",
             &trace,
             &Vec::new(),
         );
@@ -91,8 +91,8 @@ mod harness {
         "% d.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
         ":- multifile(guideline_schema_version/1).\n",
         ":- discontiguous(guideline_schema_version/1).\n",
-        ":- multifile(guideline_document/3).\n",
-        ":- discontiguous(guideline_document/3).\n",
+        ":- multifile(guideline_document/4).\n",
+        ":- discontiguous(guideline_document/4).\n",
         ":- multifile(guideline_entity/4).\n",
         ":- discontiguous(guideline_entity/4).\n",
         ":- multifile(guideline_cardinality/5).\n",
@@ -107,40 +107,52 @@ mod harness {
         ":- discontiguous(guideline_property/4).\n",
         ":- multifile(guideline_operator/3).\n",
         ":- discontiguous(guideline_operator/3).\n",
+        ":- multifile(guideline_interval/6).\n",
+        ":- discontiguous(guideline_interval/6).\n",
+        ":- multifile(guideline_recurrence/4).\n",
+        ":- discontiguous(guideline_recurrence/4).\n",
+        ":- multifile(guideline_frequency/5).\n",
+        ":- discontiguous(guideline_frequency/5).\n",
+        ":- multifile(guideline_order/4).\n",
+        ":- discontiguous(guideline_order/4).\n",
+        ":- multifile(guideline_recurrence_window/7).\n",
+        ":- discontiguous(guideline_recurrence_window/7).\n",
+        ":- multifile(guideline_range/3).\n",
+        ":- discontiguous(guideline_range/3).\n",
         "guideline_schema_version(1).\n",
-        "guideline_document(d,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none)).\n",
+        "guideline_document(d,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
         "% S1: x\n",
         "guideline_event(a,b,c).\n",
         "guideline_event(a,d,c).\n",
     ).as_bytes();
     const QUERIES: [&[u8]; 2] = [concat!(
         "% q compiled from ACE question by ace_to_pl question mode; do not edit.\n",
-        "'$guideline_query'(v1,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none)).\n",
+        "'$guideline_query'(v1,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
         "% Q1: x\n",
         "'$guideline_query_projection'(goal(guideline_event(a,b,c)),answers([])).\n",
     ).as_bytes(), concat!(
         "% q compiled from ACE question by ace_to_pl question mode; do not edit.\n",
-        "'$guideline_query'(v1,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none)).\n",
+        "'$guideline_query'(v1,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
         "% Q1: x\n",
         "'$guideline_query_projection'(goal(guideline_event(a,d,c)),answers([])).\n",
     ).as_bytes()];
     // Raw query SHA-256 values: the shell normally supplies these to v1_answer.
     const QUERY_SHA256: [&[u8]; 2] = [
-        b"4fd2d61c0ba8557964dcf18b59df04f8a955578a5427c57ca177cb5396471fb7",
-        b"37c2e2002241510a0a5779db05f046574993d8759b3f4eb78824a1a9f080b4d5",
+        b"dd523d5359c8a608a6ac911f7c1734f0fabfd86381bf8a07b6c5a530c6719f0a",
+        b"d900583f8ae07892e279df2a3fc0e25866db9702b277122efa50dd91d5692614",
     ];
 
     #[kani::proof]
-    #[kani::unwind(949)]
+    #[kani::unwind(1432)]
     fn engine_answer_tiny() {
         // One canonical document, two ground facts, one ground goal, two successful queries.
         // No rules/NAF/variables: at most two clause attempts; semantic arguments are atoms.
-        // The longest byte scan is DOC.len() = 948; bound = 948 + one exit check.
+        // The longest byte scan is DOC.len() = 1431; bound = 1431 + one exit check.
         // One symbolic goal byte, fixed input addresses; hash bytes follow the same choice.
         let variant: u8 = kani::any();
         kani::assume(variant < 2);
         let mut query = QUERIES[0].to_vec();
-        query[247] = b'b' + 2 * variant;
+        query[264] = b'b' + 2 * variant;
         let mut qsha = [0u8; 64];
         for (index, byte) in qsha.iter_mut().enumerate() {
             *byte = if variant == 0 {

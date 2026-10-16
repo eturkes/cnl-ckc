@@ -1,0 +1,1 @@
+ace_to_pl_error(vocabulary_load,error(existence_error(source_sink,'tests/red/absent.vocabulary.tsv'),context(:(system,/(open,4)),'No such file or directory'))).

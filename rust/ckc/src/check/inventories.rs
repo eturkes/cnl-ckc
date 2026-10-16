@@ -6,8 +6,8 @@ pub(super) struct Guideline {
     pub path: PathBuf,
     pub docids: Vec<String>,
     pub lexicon: Option<PathBuf>,
-    // m7t D1: present ⇒ every document compiles under schema v2.
-    pub temporal: Option<PathBuf>,
+    // c1 D4: present ⇒ every document + question compiles with typed annotations.
+    pub vocabulary: Option<PathBuf>,
 }
 impl Guideline {
     pub fn ace(&self, id: &str) -> PathBuf {
@@ -111,20 +111,39 @@ pub(super) fn collect(path: &Path) -> Result<Guideline> {
         ));
     }
     let lexicon = lexicon.is_file().then_some(lexicon);
-    let temporal = path.join("temporal.tsv");
-    if temporal.is_symlink() || (temporal.exists() && !temporal.is_file()) {
+    retired_table(path)?;
+    let vocabulary = path.join("vocabulary.tsv");
+    if vocabulary.is_symlink() || (vocabulary.exists() && !vocabulary.is_file()) {
         return Err(fail(
             "guideline",
-            format!("temporal.tsv is not a regular file: {}", show(&temporal)),
+            format!(
+                "vocabulary.tsv is not a regular file: {}",
+                show(&vocabulary)
+            ),
         ));
     }
-    let temporal = temporal.is_file().then_some(temporal);
+    let vocabulary = vocabulary.is_file().then_some(vocabulary);
     Ok(Guideline {
         path: path.to_owned(),
         docids,
         lexicon,
-        temporal,
+        vocabulary,
     })
+}
+// c1 D4: the pre-c1 table name is refused, so no command reads such a guideline as
+// table-free.
+pub(crate) fn retired_table(guideline: &Path) -> Result {
+    let old = guideline.join("temporal.tsv");
+    if old.exists() || old.is_symlink() {
+        return Err(fail(
+            "guideline",
+            format!(
+                "retired table name: {} (rename to vocabulary.tsv)",
+                show(&old)
+            ),
+        ));
+    }
+    Ok(())
 }
 fn derived(g: &Guideline, subdir: &str, suffix: &str) -> Result {
     let p = g.path.join(subdir);
@@ -281,7 +300,8 @@ pub(super) struct RedProbe {
     pub rc: i32,
 }
 // Probe directory law shared by tests/red + tests/green: each `<stem>.ace` carries
-// a `<stem>.expect` pin; `.ulex`, `.temporal.tsv` + `.argv` sidecars are optional.
+// a `<stem>.expect` pin; `.ulex`, `.vocabulary.tsv` + `.argv` sidecars are optional, and a
+// green probe may carry a `.proof.expect` pin (c1 P4: the proof-mode payload).
 fn probe_dir(kind: &str) -> Result<Vec<(PathBuf, String)>> {
     let dir = format!("tests/{kind}");
     let root = Path::new(&dir);
@@ -294,6 +314,7 @@ fn probe_dir(kind: &str) -> Result<Vec<(PathBuf, String)>> {
     }
     let mut aces = vec![];
     let (mut ulex, mut pins, mut tables, mut argvs) = (vec![], vec![], vec![], vec![]);
+    let mut proofs = vec![];
     for p in entries(root, &entry)? {
         let n = name(&p);
         if !p.is_file() || p.is_symlink() {
@@ -303,10 +324,12 @@ fn probe_dir(kind: &str) -> Result<Vec<(PathBuf, String)>> {
             aces.push((p.clone(), stem.to_owned()));
         } else if let Some(stem) = n.strip_suffix(".ulex") {
             ulex.push(stem.to_owned());
-        } else if let Some(stem) = n.strip_suffix(".temporal.tsv") {
+        } else if let Some(stem) = n.strip_suffix(".vocabulary.tsv") {
             tables.push(stem.to_owned());
         } else if let Some(stem) = n.strip_suffix(".argv") {
             argvs.push(stem.to_owned());
+        } else if let Some(stem) = n.strip_suffix(".proof.expect").filter(|_| kind == "green") {
+            proofs.push(stem.to_owned());
         } else if let Some(stem) = n.strip_suffix(".expect") {
             pins.push(stem.to_owned());
         } else {
@@ -316,8 +339,9 @@ fn probe_dir(kind: &str) -> Result<Vec<(PathBuf, String)>> {
     for (items, ext) in [
         (&ulex, "ulex"),
         (&pins, "expect"),
-        (&tables, "temporal.tsv"),
+        (&tables, "vocabulary.tsv"),
         (&argvs, "argv"),
+        (&proofs, "proof.expect"),
     ] {
         for s in items {
             if !aces.iter().any(|(_, a)| a == s) {
@@ -350,7 +374,7 @@ pub(super) fn red() -> Result<Vec<RedProbe>> {
         let rc = match class {
             "input_utf8" | "ape_messages" | "empty_drs" | "sentence_lines" | "unsupported"
             | "safety" | "proof" => 1,
-            "usage" | "ape_load" | "ulex_load" | "temporal_load" | "check_load" | "uncaught" => 2,
+            "usage" | "ape_load" | "ulex_load" | "vocabulary_load" | "check_load" | "uncaught" => 2,
             _ => {
                 return Err(violation(
                     "red-class",

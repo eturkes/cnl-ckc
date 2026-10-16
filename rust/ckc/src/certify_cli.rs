@@ -128,7 +128,7 @@ impl Stage {
     }
 }
 
-// (raw temporal.tsv bytes, its sha256 hex): the v2 projection input (m7t D8).
+// (raw vocabulary.tsv bytes, its sha256 hex): the annotating projection input (c1 D8).
 type Table = (Vec<u8>, Vec<u8>);
 
 fn optional_table(path: &Path) -> Result<Option<Table>, String> {
@@ -138,7 +138,7 @@ fn optional_table(path: &Path) -> Result<Option<Table>, String> {
             Ok(Some((raw, sha)))
         }
         Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
-        Err(_) => Err("unreadable(temporal).".to_owned()),
+        Err(_) => Err("unreadable(vocabulary).".to_owned()),
     }
 }
 
@@ -217,7 +217,7 @@ pub fn run_one(args: &[String]) -> ExitCode {
         let pl = read_text(Path::new(&args[5]), "pl")?;
         let table = match args.get(6) {
             Some(path) => {
-                let raw = fs::read(path).map_err(|_| "unreadable(temporal).".to_owned())?;
+                let raw = fs::read(path).map_err(|_| "unreadable(vocabulary).".to_owned())?;
                 let sha = crate::trust::sha256_hex(&raw).into_bytes();
                 Some((raw, sha))
             }
@@ -354,7 +354,11 @@ pub fn run(id: &str) -> ExitCode {
         let docs = ace_paths(&guideline.join("ace"), false)?;
         let queries = ace_paths(&guideline.join("queries"), true)?;
         let ulex = optional_ulex(&guideline.join("lexicon.ulex"))?;
-        let table = optional_table(&guideline.join("temporal.tsv"))?;
+        let retired = guideline.join("temporal.tsv");
+        if retired.exists() || retired.is_symlink() {
+            return Err("retired_table(temporal.tsv).".to_owned());
+        }
+        let table = optional_table(&guideline.join("vocabulary.tsv"))?;
         let stage = Stage::new(&root, ulex.as_deref())?;
         Ok::<_, String>((docs, queries, ulex, table, stage))
     })();

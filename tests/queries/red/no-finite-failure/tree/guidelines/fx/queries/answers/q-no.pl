@@ -1,2 +1,2 @@
 % q-no answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-no',query_sha256('04d98fe01138e584ec8e33ab591dec9425d6b0185edd8d7109234e512439abcc'),result(no(finite_failure))).
+'$guideline_answers'(v1,'q-no',query_sha256('81d8024e033fcbc3153cdd09e0bcdd848c4d9c2eca752897fcc8d4a4e5a615ca'),result(no(finite_failure))).

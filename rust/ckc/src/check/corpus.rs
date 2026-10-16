@@ -1,6 +1,6 @@
 use super::common::*;
 use super::{
-    adjudication, census, coverage, inventories::Guideline, lexicon, projection, vocabulary,
+    adjudication, census, coverage, functors, inventories::Guideline, lexicon, projection,
 };
 pub(super) fn check(g: &Guideline) -> Result {
     let pairs = projection::check(&g.path)?;
@@ -19,7 +19,7 @@ pub(super) fn check(g: &Guideline) -> Result {
                 format!("docid missing projection row: {id}"),
             ));
         }
-        vocabulary::check(&g.path, id)?;
+        functors::check(&g.path, id)?;
     }
     let c = coverage::check(g, true)?;
     let status = coverage::statuses(&c);
@@ -41,18 +41,18 @@ pub(super) fn check(g: &Guideline) -> Result {
     census::check(&g.path, &status)?;
     adjudication::check(g, &c)?;
     lexicon::check(g)?;
-    temporal(g)
+    vocabulary_table(g)
 }
 
-// m7t D1: the temporal.tsv grammar section (the kernel parses the same bytes
+// c1 D4: the vocabulary.tsv grammar section (the kernel parses the same bytes
 // for compile + certify).
-fn temporal(g: &Guideline) -> Result {
-    let Some(path) = &g.temporal else {
+fn vocabulary_table(g: &Guideline) -> Result {
+    let Some(path) = &g.vocabulary else {
         return Ok(());
     };
-    let bytes = corpus(path, "temporal")?;
-    let rel = format!("guidelines/{}/temporal.tsv", name(&g.path));
-    coverage::meter(&coverage::verdict(ckc_kernel::contract::check_temporal(
+    let bytes = corpus(path, "vocabulary")?;
+    let rel = format!("guidelines/{}/vocabulary.tsv", name(&g.path));
+    coverage::meter(&coverage::verdict(ckc_kernel::contract::check_vocabulary(
         rel.as_bytes(),
         &bytes,
     ))?);
