@@ -55,15 +55,27 @@
 29	ace	930	appropriately
 36	ace	944	discontinue
 37	ace	960	opioid
-3	ace	974	clinician
-19	ace	1016	life-threatening-warning
-27	ace	1052	abruptly
-36	ace	1061	discontinue
-37	ace	1076	opioid
-28	ace	1098	rapidly
-38	ace	1106	reduce
-35	ace	1116	opioid-dosage
-22	ace	1137	higher-dosage
+3	ace	982	clinician
+40	ace	1002	not
+41	ace	1015	detect
+19	ace	1024	life-threatening-warning
+42	ace	1060	recommended
+3	ace	1081	clinician
+39	ace	1096	not
+27	ace	1100	abruptly
+36	ace	1109	discontinue
+37	ace	1124	opioid
+3	ace	1146	clinician
+40	ace	1166	not
+41	ace	1179	detect
+19	ace	1188	life-threatening-warning
+42	ace	1224	recommended
+3	ace	1245	clinician
+39	ace	1260	not
+28	ace	1264	rapidly
+38	ace	1272	reduce
+35	ace	1282	opioid-dosage
+22	ace	1303	higher-dosage
 4	src	4	patient
 5	src	13	already receiving opioid therapy
 3	src	47	clinicians
@@ -99,11 +111,18 @@
 33	src	571	taper
 36	src	581	discontinue
 37	src	593	opioids
+40	src	602	Unless
+41	src	619	indications
 19	src	636	life-threatening issue
 19	src	667	warning signs of impending overdose
+37	src	751	opioid therapy
+42	src	766	should
+39	src	773	not
 36	src	780	discontinue
 27	src	793	abruptly
 3	src	807	clinicians
+42	src	818	should
+39	src	825	not
 28	src	829	rapidly
 38	src	837	reduce
 35	src	844	opioid dosages

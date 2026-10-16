@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s18-01',ace_sha256(a4f7fb911529f88640414419436a6be06350ea1b58b0f2d4808b1ff080f51efe),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s18-01',ace_sha256(acdabe78a27a2546b013a5fd35a64f98e9b5056a337396f4789143d51862ad2b),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every implementation-consideration should inform a clinician-patient-decision for a recommendation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s18-01',1,box(1),[A]),should) :- guideline_entity(actual,A,'implementation-consideration',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s18-01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',1,ref(2),[A]),'clinician-patient-decision',countable) :- guideline_entity(actual,A,'implementation-consideration',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -47,18 +47,18 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-s18-01',1,box(1),[A]),'$
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s18-01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',1,ref(4),[A]),1,A) :- guideline_entity(actual,A,'implementation-consideration',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s18-01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',1,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s18-01',1,ref(2),[A])) :- guideline_entity(actual,A,'implementation-consideration',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s18-01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',1,ref(4),[A]),for,'$guideline_id'(product,'cdc2022-opioid-s18-01',1,ref(3),[A])) :- guideline_entity(actual,A,'implementation-consideration',countable), guideline_cardinality(actual,A,na,eq,1).
-% S2: Every clinician should not rigidly follow an implementation-consideration.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_operator('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S2: If there is a clinician then it is recommended that the clinician does not rigidly follow an implementation-consideration.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',2,ref(2),[A]),'implementation-consideration',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',2,ref(3),[A]),manner,rigidly) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',2,ref(3),[A]),follow) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s18-01',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s18-01',2,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-% S3: Every clinician should not inflexibly follow an implementation-consideration.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_operator('$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S3: If there is a clinician then it is recommended that the clinician does not inflexibly follow an implementation-consideration.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator('$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',3,ref(2),[A]),'implementation-consideration',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s18-01',3,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s18-01',3,ref(3),[A]),manner,inflexibly) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

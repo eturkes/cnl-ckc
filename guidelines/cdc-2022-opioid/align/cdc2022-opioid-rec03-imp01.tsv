@@ -1,20 +1,34 @@
-0	ace	6	clinician
-2	ace	27	treat
-3	ace	36	acute-pain
-1	ace	55	ER-LA-opioid
-0	ace	75	clinician
-4	ace	96	initiate
-1	ace	108	ER-LA-opioid
-5	ace	127	subacute-pain
-0	ace	148	clinician
-4	ace	169	initiate
-1	ace	181	ER-LA-opioid
-6	ace	200	chronic-pain
-0	ace	220	clinician
-7	ace	241	prescribe
-1	ace	254	ER-LA-opioid
-8	ace	274	intermittent-or-as-needed-use
+0	ace	14	clinician
+9	ace	35	recommended
+0	ace	56	clinician
+10	ace	71	not
+2	ace	75	treat
+3	ace	84	acute-pain
+1	ace	103	ER-LA-opioid
+0	ace	131	clinician
+9	ace	152	recommended
+0	ace	173	clinician
+10	ace	188	not
+4	ace	192	initiate
+1	ace	204	ER-LA-opioid
+5	ace	223	subacute-pain
+0	ace	252	clinician
+9	ace	273	recommended
+0	ace	294	clinician
+10	ace	309	not
+4	ace	313	initiate
+1	ace	325	ER-LA-opioid
+6	ace	344	chronic-pain
+0	ace	372	clinician
+9	ace	393	recommended
+0	ace	414	clinician
+10	ace	429	not
+7	ace	433	prescribe
+1	ace	446	ER-LA-opioid
+8	ace	466	intermittent-or-as-needed-use
 0	src	0	Clinicians
+9	src	11	should
+10	src	18	not
 2	src	22	treat
 3	src	28	acute pain
 1	src	44	ER/LA opioids
@@ -23,6 +37,8 @@
 6	src	103	chronic pain
 1	src	121	ER/LA opioids
 0	src	140	clinicians
+9	src	151	should
+10	src	158	not
 7	src	162	prescribe
 1	src	172	ER/LA opioids
 8	src	190	intermittent or as-needed use

@@ -2,21 +2,28 @@
 1	ace	58	pain-evaluation
 2	ace	108	physical-examination
 1	ace	138	pain-evaluation
+1	ace	170	conducts
 1	ace	181	pain-evaluation
 3	ace	203	diagnostic-testing
+6	ace	225	not
 4	ace	229	indicated
 1	ace	250	pain-evaluation
-3	ace	308	diagnostic-testing
-1	ace	338	pain-evaluation
-1	ace	381	pain-evaluation
-3	ace	403	diagnostic-testing
-4	ace	425	indicated
-1	ace	446	pain-evaluation
-3	ace	497	diagnostic-testing
-1	ace	527	pain-evaluation
+5	ace	277	recommended
+6	ace	313	not
+3	ace	317	conduct
+3	ace	329	diagnostic-testing
+1	ace	359	pain-evaluation
+1	ace	402	pain-evaluation
+3	ace	424	diagnostic-testing
+4	ace	446	indicated
+1	ace	467	pain-evaluation
+3	ace	518	diagnostic-testing
+1	ace	548	pain-evaluation
 1	src	0	Evaluation
+5	src	11	should
 0	src	28	focused history
 1	src	86	pain
 2	src	222	physical examination
 3	src	249	imaging or other diagnostic testing
+6	src	285	only
 4	src	293	indicated

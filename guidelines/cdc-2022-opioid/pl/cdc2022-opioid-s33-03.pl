@@ -36,10 +36,10 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s33-03',ace_sha256('65b44948e9ad51027503457377b221909d7c1b37a0d33a51faec535cf0b12182'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
-% S1: Every clinician should not use a calculated-MME-dosage for an opioid-conversion-dosage.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(1),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_operator('$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(2),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_document('cdc2022-opioid-s33-03',ace_sha256('4c88e97fde7e61eb736c5782ce3be28e300e375fd2f699b3357ae998e18806ce'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+% S1: If there is a clinician then it is recommended that the clinician does not use a calculated-MME-dosage for an opioid-conversion-dosage.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator('$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s33-03',1,ref(2),[A]),'calculated-MME-dosage',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s33-03',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s33-03',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s33-03',1,ref(3),[A]),'opioid-conversion-dosage',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

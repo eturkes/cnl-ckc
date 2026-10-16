@@ -11,28 +11,34 @@
 5	ace	217	nonopioid-therapy
 6	ace	243	acute-pain
 9	ace	261	opioid-benefit
+20	ace	281	not
 17	ace	285	likely
 10	ace	292	outweigh
 11	ace	304	opioid-risk
-3	ace	327	clinician
-14	ace	348	consider
-7	ace	360	opioid-therapy
-6	ace	382	acute-pain
-3	ace	400	clinician
-15	ace	417	discuss
-12	ace	427	realistic-benefit
-16	ace	452	patient
-8	ace	470	opioid-prescription
-15	ace	501	discuss
-13	ace	511	known-risk
-16	ace	529	patient
-8	ace	547	opioid-prescription
+3	ace	331	clinician
+19	ace	352	recommended
+3	ace	373	clinician
+20	ace	388	not
+14	ace	392	consider
+7	ace	404	opioid-therapy
+6	ace	426	acute-pain
+3	ace	444	clinician
+15	ace	461	discuss
+12	ace	471	realistic-benefit
+16	ace	496	patient
+8	ace	514	opioid-prescription
+15	ace	545	discuss
+13	ace	555	known-risk
+16	ace	573	patient
+8	ace	591	opioid-prescription
 5	src	0	Nonopioid therapies
 6	src	82	acute pain
 3	src	94	Clinicians
+19	src	105	should
 4	src	112	maximize
 5	src	149	nonopioid pharmacologic therapies
 18	src	183	as appropriate
+20	src	241	only
 14	src	246	consider
 7	src	255	opioid therapy
 6	src	274	acute pain

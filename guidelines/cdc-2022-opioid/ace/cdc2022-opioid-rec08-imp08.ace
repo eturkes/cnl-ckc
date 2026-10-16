@@ -1,2 +1,4 @@
-If a patient has a moderate-sleep-disordered-breathing and an opioid-prescription-avoidance is possible for the patient then every clinician should not prescribe an opioid to the patient and should minimize a respiratory-depression-risk for the patient.
-If a patient has a severe-sleep-disordered-breathing and an opioid-prescription-avoidance is possible for the patient then every clinician should not prescribe an opioid to the patient and should minimize a respiratory-depression-risk for the patient.
+If a patient has a moderate-sleep-disordered-breathing and an opioid-prescription-avoidance is possible for the patient and there is a clinician then it is recommended that the clinician does not prescribe an opioid to the patient.
+If a patient has a moderate-sleep-disordered-breathing and an opioid-prescription-avoidance is possible for the patient then every clinician should minimize a respiratory-depression-risk for the patient.
+If a patient has a severe-sleep-disordered-breathing and an opioid-prescription-avoidance is possible for the patient and there is a clinician then it is recommended that the clinician does not prescribe an opioid to the patient.
+If a patient has a severe-sleep-disordered-breathing and an opioid-prescription-avoidance is possible for the patient then every clinician should minimize a respiratory-depression-risk for the patient.

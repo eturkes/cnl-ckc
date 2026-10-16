@@ -1,45 +1,67 @@
-0	ace	6	opioid-policy-setter
-1	ace	38	impose
-2	ace	47	rigid-dose-standard
-1	ace	82	impose
-3	ace	91	rigid-duration-standard
-1	ace	130	impose
-4	ace	139	performance-incentive
-0	ace	168	opioid-policy-setter
-5	ace	196	ensure
-6	ace	205	cautionary-threshold-policy
-14	ace	238	does not cause
-12	ace	255	rapid-opioid-taper
-0	ace	281	opioid-policy-setter
-5	ace	309	ensure
-6	ace	318	cautionary-threshold-policy
-14	ace	351	does not cause
-13	ace	369	abrupt-opioid-discontinuation
-0	ace	406	opioid-policy-setter
-7	ace	434	not penalize
-8	ace	449	clinician
-9	ace	468	high-dosage-patient-acceptance
-0	ace	506	opioid-policy-setter
-7	ace	534	not penalize
-8	ace	549	clinician
-17	ace	564	does not
-11	ace	573	rapidly
-15	ace	581	taper
-16	ace	589	long-term-opioid-medication
-18	ace	623	patient
+0	ace	15	opioid-policy-setter
+20	ace	47	recommended
+0	ace	68	opioid-policy-setter
+21	ace	94	not
+1	ace	98	impose
+2	ace	107	rigid
+3	ace	113	dose
+2	ace	118	standard
+0	ace	143	opioid-policy-setter
+20	ace	175	recommended
+0	ace	196	opioid-policy-setter
+21	ace	222	not
+1	ace	226	impose
+2	ace	235	rigid
+19	ace	241	duration
+2	ace	250	standard
+0	ace	275	opioid-policy-setter
+20	ace	307	recommended
+0	ace	328	opioid-policy-setter
+21	ace	354	not
+1	ace	358	impose
+4	ace	367	performance-incentive
+0	ace	396	opioid-policy-setter
+5	ace	424	ensure
+6	ace	433	cautionary-threshold-policy
+14	ace	466	does not cause
+12	ace	483	rapid-opioid-taper
+0	ace	509	opioid-policy-setter
+5	ace	537	ensure
+6	ace	546	cautionary-threshold-policy
+14	ace	579	does not cause
+13	ace	597	abrupt-opioid-discontinuation
+0	ace	643	opioid-policy-setter
+20	ace	675	recommended
+0	ace	696	opioid-policy-setter
+7	ace	722	not penalize
+8	ace	737	clinician
+9	ace	756	high-dosage-patient-acceptance
+0	ace	803	opioid-policy-setter
+20	ace	835	recommended
+0	ace	856	opioid-policy-setter
+7	ace	882	not penalize
+8	ace	897	clinician
+17	ace	912	does not
+11	ace	921	rapidly
+15	ace	929	taper
+16	ace	937	long-term-opioid-medication
+18	ace	971	patient
 0	src	0	Payers
 0	src	8	health systems
 0	src	28	state medical boards
+20	src	49	should
+21	src	56	not
 1	src	100	set
 2	src	104	rigid standards
 4	src	123	performance incentives
-2	src	157	dose
-3	src	165	duration
+3	src	157	dose
+19	src	165	duration
 5	src	200	ensure
 6	src	212	policies based on cautionary dosage thresholds
 14	src	259	do not result in
 12	src	276	rapid tapers
 13	src	292	abrupt discontinuation
+20	src	331	should
 7	src	359	do not penalize
 8	src	375	clinicians
 9	src	390	accepting new patients who are using prescribed opioids for chronic pain, including those receiving high dosages of opioids

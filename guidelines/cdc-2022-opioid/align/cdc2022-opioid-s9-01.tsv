@@ -4,35 +4,46 @@
 2	ace	142	individualized-person-centered-care-replacement
 0	ace	197	opioid-pain-clinical-practice-guideline
 3	ace	247	inflexible-standard
-0	ace	274	opioid-pain-clinical-practice-guideline
-4	ace	333	rapid-opioid-taper
-0	ace	359	opioid-pain-clinical-practice-guideline
-5	ace	419	abrupt-opioid-discontinuation
-0	ace	456	opioid-pain-clinical-practice-guideline
-9	ace	505	clinical-practice
-6	ace	523	law
-0	ace	534	opioid-pain-clinical-practice-guideline
-9	ace	583	clinical-practice
-7	ace	601	regulation
-0	ace	619	opioid-pain-clinical-practice-guideline
-9	ace	668	clinical-practice
-8	ace	686	policy
-0	ace	700	opioid-pain-clinical-practice-guideline
-10	ace	750	FDA-approved-labeling-substitute
-0	ace	790	opioid-pain-clinical-practice-guideline
-11	ace	854	sickle-cell-disease-pain
-0	ace	886	opioid-pain-clinical-practice-guideline
-12	ace	950	cancer-related-pain
-0	ace	977	opioid-pain-clinical-practice-guideline
-13	ace	1041	palliative-care
-0	ace	1064	opioid-pain-clinical-practice-guideline
-14	ace	1129	end-of-life-care
-0	ace	1153	opioid-pain-clinical-practice-guideline
-15	ace	1203	opioid-use-disorder-medication-guideline
+0	ace	283	opioid-pain-clinical-practice-guideline
+18	ace	334	recommended
+0	ace	355	opioid-pain-clinical-practice-guideline
+17	ace	400	not
+16	ace	404	cause
+4	ace	412	rapid-opioid-taper
+0	ace	447	opioid-pain-clinical-practice-guideline
+18	ace	498	recommended
+0	ace	519	opioid-pain-clinical-practice-guideline
+17	ace	564	not
+16	ace	568	cause
+5	ace	577	abrupt-opioid-discontinuation
+0	ace	614	opioid-pain-clinical-practice-guideline
+9	ace	663	clinical-practice
+6	ace	681	law
+0	ace	692	opioid-pain-clinical-practice-guideline
+9	ace	741	clinical-practice
+7	ace	759	regulation
+0	ace	777	opioid-pain-clinical-practice-guideline
+9	ace	826	clinical-practice
+8	ace	844	policy
+0	ace	858	opioid-pain-clinical-practice-guideline
+10	ace	908	FDA-approved-labeling-substitute
+0	ace	948	opioid-pain-clinical-practice-guideline
+11	ace	1012	sickle-cell-disease-pain
+0	ace	1044	opioid-pain-clinical-practice-guideline
+12	ace	1108	cancer-related-pain
+0	ace	1135	opioid-pain-clinical-practice-guideline
+13	ace	1199	palliative-care
+0	ace	1222	opioid-pain-clinical-practice-guideline
+14	ace	1287	end-of-life-care
+0	ace	1311	opioid-pain-clinical-practice-guideline
+15	ace	1361	opioid-use-disorder-medication-guideline
 0	src	5	clinical practice guideline
+17	src	36	not
 1	src	42	replacement for clinical judgment
 2	src	79	individualized, person-centered care
+18	src	117	intended
 3	src	143	inflexible standards of care
+16	src	325	lead to
 4	src	337	rapid tapering
 5	src	355	abrupt discontinuation of opioids
 6	src	405	law

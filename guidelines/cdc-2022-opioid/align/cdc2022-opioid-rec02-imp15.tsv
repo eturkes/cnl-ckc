@@ -1,9 +1,20 @@
-0	ace	36	nonpharmacologic-failure-requirement
-3	ace	83	opioid-therapy
-1	ace	135	nonopioid-pharmacologic-failure-requirement
-3	ace	189	opioid-therapy
-2	ace	241	specific-treatment-requirement
-3	ace	282	opioid-therapy
+4	ace	35	recommended
+5	ace	71	not
+0	ace	75	impose
+0	ace	84	nonpharmacologic-failure-requirement
+3	ace	131	opioid-therapy
+4	ace	182	recommended
+5	ace	218	not
+0	ace	222	impose
+1	ace	231	nonopioid-pharmacologic-failure-requirement
+3	ace	285	opioid-therapy
+4	ace	336	recommended
+5	ace	372	not
+2	ace	376	impose
+2	ace	385	specific-treatment-requirement
+3	ace	426	opioid-therapy
+5	src	10	not
+4	src	33	should
 0	src	43	required to sequentially fail nonpharmacologic
 1	src	94	nonopioid pharmacologic therapy
 2	src	132	required to use any specific treatment
