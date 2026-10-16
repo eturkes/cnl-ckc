@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec07-imp14',ace_sha256('2fd0fc58e0b6ab5c7c15f939dc2bb51285a1c4d2cbdaf663582db214c473cc4b'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: Every clinician should ask a patient about a continued-opioid-preference.

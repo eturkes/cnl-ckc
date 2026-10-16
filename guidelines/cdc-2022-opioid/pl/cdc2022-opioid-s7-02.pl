@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s7-02',ace_sha256(c471e56c9c9e2a4e4d5204e2f856d60dae81f2d937850a4d5765c0ed4ebb7c4e),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: Every recommendation does not apply during a hospital-care.

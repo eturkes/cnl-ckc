@@ -1,0 +1,3 @@
+sentences([[^,'A',dog,should,be,seen,by,a,man,carefully,'.']]).
+drs(drs([A],[-(object(A,dog,countable,na,eq,1),/(1,2)),should(drs([B,C],[-(object(B,man,countable,na,eq,1),/(1,8)),-(predicate(C,see,B,A),/(1,5)),-(modifier_adv(C,carefully,pos),/(1,9))]))])).
+messages([]).

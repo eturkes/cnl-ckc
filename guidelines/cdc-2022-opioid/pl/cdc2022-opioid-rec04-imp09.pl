@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec04-imp09',ace_sha256('952838224a7389bfe35c23a5a6aef985103b74a6150faf3306945e37d972da3b'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: Every clinician should evaluate a further-dosage-increase with an individualized-benefit-risk-assessment.

@@ -384,7 +384,6 @@ pub fn flatten_at(arena: &mut ETermArena, conds: &T, w: &W, env: &Env, deps: &T,
         flat_valid_result(final(arena).nodes@, &out),
         flat_result(out) == spec::flatten_doc(
             crate::m7_annotate::tab_view(&env.tab),
-            false,
             conds@,
             w@,
             env.s as nat,
@@ -406,7 +405,6 @@ pub fn flatten_at(arena: &mut ETermArena, conds: &T, w: &W, env: &Env, deps: &T,
     let out = crate::m7_strength::flatten_doc(
         arena,
         &env.tab,
-        false,
         conds,
         w,
         env,
@@ -434,7 +432,6 @@ pub fn flatten_ante(arena: &mut ETermArena, conds: &T, env: &Env, n: usize) -> (
         flat_valid_result(final(arena).nodes@, &out),
         flat_result(out) == spec::flatten_doc(
             crate::m7_annotate::tab_view(&env.tab),
-            false,
             conds@,
             spec::Where::Antecedent,
             env.s as nat,

@@ -1,0 +1,3 @@
+sentences([[^,'Every',dog,that,is,not,provably,feasible,sleeps,'.']]).
+drs(drs([],[=>(drs([A],[-(object(A,dog,countable,na,eq,1),/(1,2)),~(drs([B,C],[-(property(B,feasible,pos),/(1,7)),-(predicate(C,be,A,B),/(1,4))]))]),drs([D],[-(predicate(D,sleep,A),/(1,8))]))])).
+messages([]).

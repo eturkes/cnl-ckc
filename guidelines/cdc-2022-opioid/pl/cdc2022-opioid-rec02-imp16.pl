@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec02-imp16',ace_sha256('9d0bc697a1c35f22ae195c5ff52906b2332377d25289629d708087d62cfbe8f1'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: Every clinician should weigh a context-specific-expected-benefit against a risk before an opioid-initiation.

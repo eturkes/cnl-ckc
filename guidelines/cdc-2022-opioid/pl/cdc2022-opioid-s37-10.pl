@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s37-10',ace_sha256(ad7d8f0934031a27e52fe01a7128265668a2071d1531209e95dc181011d2b918),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a patient uses at least 2 respiratory-depressant-medications then every clinician may consider a respiratory-depression-risk-reducing-medication-taper for the patient.

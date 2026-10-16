@@ -1,0 +1,3 @@
+sentences([[^,'If',a,treatment,is,feasible,then,the,treatment,exists,'.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,treatment,countable,na,eq,1),/(1,3)),-(property(B,feasible,pos),/(1,5)),-(predicate(C,be,A,B),/(1,4))]),drs([D],[-(predicate(D,exist,A),/(1,9))]))])).
+messages([]).

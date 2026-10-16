@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s60-08',ace_sha256('5c356fec13f397825de1ec04eb0a4a1881f221153905ac49d34e1169debf428e'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a patient has an opioid-misuse and has a pain and does not have an opioid-use-disorder then every clinician should reassess the pain and should ensure a pain-management-therapy-optimization for the patient and should discuss a current-dosage-opioid-continuation with the patient and should weigh a benefit against a risk for a current-dosage-opioid-continuation.

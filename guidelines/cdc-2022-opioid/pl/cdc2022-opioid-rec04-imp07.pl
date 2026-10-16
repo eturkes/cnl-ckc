@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec04-imp07',ace_sha256('76a9be7e2a645f1955f3175e2f634515ba3152dfb8f67ac50258f025f28273a4'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If an opioid-dosage-increase includes at least 50 MME-units-per-day then every clinician should pause an opioid-dosage-increase and should reassess a benefit and should reassess a risk.

@@ -1,4 +1,4 @@
-// S1 D1/D3–D7, P1/P4/P5; authority = contract + seed d7eda02e.
+// S1 D1/D3–D7/P1/P4/P5 + S2 D1/P9; oracle = the contracts.
 // C1 fixture bytes + explicit D3/D4 insertions are the oracle, never S1 output.
 // CKC_S1_TEST_BIN selects a prebuilt executable; compiler = this tree's fork.
 use std::fs;
@@ -9,7 +9,7 @@ use std::sync::OnceLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-const INDICATORS: [(&str, usize); 17] = [
+const INDICATORS: [(&str, usize); 18] = [
     ("guideline_schema_version", 1),
     ("guideline_document", 4),
     ("guideline_entity", 4),
@@ -27,6 +27,7 @@ const INDICATORS: [(&str, usize); 17] = [
     ("guideline_range", 3),
     ("guideline_grade", 5),
     ("guideline_preference", 4),
+    ("guideline_qualifier", 4),
 ];
 static SERIAL: AtomicUsize = AtomicUsize::new(0);
 
@@ -309,12 +310,12 @@ fn a01_seventeen_indicators_and_r9_boundaries() {
         "doc",
         &["guideline_entity(actual,a,patient,countable)".into()],
     );
-    c.check("17-pair block", &text);
+    c.check("18-pair block", &text);
     let pairs: Vec<_> = INDICATORS
         .iter()
         .map(|(n, a)| format!(":- multifile({n}/{a}).\n:- discontiguous({n}/{a}).\n"))
         .collect();
-    for count in [15, 16] {
+    for count in [15, 16, 17] {
         c.mutation(
             &format!("{count}-pair block"),
             &text,
@@ -323,10 +324,10 @@ fn a01_seventeen_indicators_and_r9_boundaries() {
         );
     }
     c.mutation(
-        "18-pair block",
+        "19-pair block",
         &text,
         &declarations(),
-        &(declarations() + &pairs[16]),
+        &(declarations() + &pairs[17]),
     );
     c.mutation(
         "swapped new pairs",
@@ -412,7 +413,7 @@ fn a02_new_literals_are_structural_in_every_position() {
             }
         }
     }
-    assert_eq!(c.total, 512);
+    assert_eq!(c.total, 768);
     c.finish();
 }
 #[test]

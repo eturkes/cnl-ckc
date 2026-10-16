@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('range--after-anchor',ace_sha256('465a29d381c4ca906ac5d1f73dcb1fa5114daa19af531175765674e5d52259f4'),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256('24f9752224fcecc844f72322d0844d101a96e07fe3643cd98b9a4e96e6f7ad44'))).
 % S1: If a patient has a surgery then the patient takes a drug after at least 8 hours of the surgery to 12 hours.

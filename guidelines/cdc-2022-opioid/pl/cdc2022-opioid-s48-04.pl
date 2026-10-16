@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s48-04',ace_sha256('3199c172c6a74c53203e37bf7f8a056393f615e6e10a1e21f94bf23a092d3356'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a clinician considers a new-drug-prescription then the clinician should review a current-medication before the new-drug-prescription and should review an over-the-counter-drug before the new-drug-prescription and should review a natural-remedy before the new-drug-prescription.

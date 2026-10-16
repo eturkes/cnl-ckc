@@ -22,6 +22,7 @@ pub struct EVocabulary {
     pub evidences: Vec<(Vec<u8>, Vec<u8>)>,
     pub preferences: Vec<Vec<u8>>,
     pub alternatives: Vec<Vec<u8>>,
+    pub qualifiers: Vec<(Vec<u8>, Vec<u8>)>,
 }
 
 pub open spec fn pairs_view(v: Seq<(Vec<u8>, Vec<u8>)>) -> Seq<(Seq<u8>, Seq<u8>)> {
@@ -48,6 +49,7 @@ impl View for EVocabulary {
             evidences: pairs_view(self.evidences@),
             preferences: lemmas_view(self.preferences@),
             alternatives: lemmas_view(self.alternatives@),
+            qualifiers: pairs_view(self.qualifiers@),
         }
     }
 }
@@ -96,7 +98,20 @@ proof fn literals()
         b"preferred"@ == ascii("preferred"@),
         b"alternative"@ == ascii("alternative"@),
         b"alternative value"@ == ascii("alternative value"@),
+        b"qualifier"@ == ascii("qualifier"@),
+        b"qualifier value"@ == ascii("qualifier value"@),
+        b"duplicate qualifier"@ == ascii("duplicate qualifier"@),
 {
+    reveal(ascii);
+    reveal_byteslit(b"qualifier");
+    reveal_strlit("qualifier");
+    assert(b"qualifier"@ =~= ascii("qualifier"@));
+    reveal_byteslit(b"qualifier value");
+    reveal_strlit("qualifier value");
+    assert(b"qualifier value"@ =~= ascii("qualifier value"@));
+    reveal_byteslit(b"duplicate qualifier");
+    reveal_strlit("duplicate qualifier");
+    assert(b"duplicate qualifier"@ =~= ascii("duplicate qualifier"@));
     reveal_byteslit(b"strength");
     reveal_strlit("strength");
     reveal_byteslit(b"strength value");
@@ -438,6 +453,60 @@ pub fn unit_id_ok(v: &[u8]) -> (r: bool)
     r
 }
 
+pub fn qualifier_id_ok(v: &[u8]) -> (r: bool)
+    ensures
+        r == qualifier_ids().contains(v@),
+{
+    let r = eq(v, b"usuality") || eq(v, b"ideality") || eq(v, b"focus") || eq(v, b"manner") || eq(
+        v,
+        b"force",
+    ) || eq(v, b"possibility") || eq(v, b"applicability");
+    proof {
+        reveal_byteslit(b"usuality");
+        reveal_byteslit(b"ideality");
+        reveal_byteslit(b"focus");
+        reveal_byteslit(b"manner");
+        reveal_byteslit(b"force");
+        reveal_byteslit(b"possibility");
+        reveal_byteslit(b"applicability");
+        reveal_strlit("usuality");
+        reveal_strlit("ideality");
+        reveal_strlit("focus");
+        reveal_strlit("manner");
+        reveal_strlit("force");
+        reveal_strlit("possibility");
+        reveal_strlit("applicability");
+        reveal(ascii);
+        let u = qualifier_ids();
+        assert(u.len() == 7);
+        assert(u[0] =~= b"usuality"@);
+        assert(u[1] =~= b"ideality"@);
+        assert(u[2] =~= b"focus"@);
+        assert(u[3] =~= b"manner"@);
+        assert(u[4] =~= b"force"@);
+        assert(u[5] =~= b"possibility"@);
+        assert(u[6] =~= b"applicability"@);
+        if r {
+            if v@ == u[0] {
+                assert(u.contains(v@));
+            } else if v@ == u[1] {
+                assert(u.contains(v@));
+            } else if v@ == u[2] {
+                assert(u.contains(v@));
+            } else if v@ == u[3] {
+                assert(u.contains(v@));
+            } else if v@ == u[4] {
+                assert(u.contains(v@));
+            } else if v@ == u[5] {
+                assert(u.contains(v@));
+            } else {
+                assert(u.contains(v@));
+            }
+        }
+    }
+    r
+}
+
 pub fn role_id_ok(v: &[u8]) -> (r: bool)
     ensures
         r == role_ids().contains(v@),
@@ -700,6 +769,7 @@ pub fn clone_tab(t: &EVocabulary) -> (r: EVocabulary)
         evidences: clone_pairs(&t.evidences),
         preferences: clone_lemmas(&t.preferences),
         alternatives: clone_lemmas(&t.alternatives),
+        qualifiers: clone_pairs(&t.qualifiers),
     }
 }
 
@@ -799,7 +869,10 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !eq(&f[2], b"about") {
             return why(b"approximation value");
         }
-        if seq_in(&t.approximations, &f[1]) || seq_in(&t.preferences, &f[1]) {
+        if seq_in(&t.approximations, &f[1]) || seq_in(&t.preferences, &f[1]) || key_in(
+            &t.qualifiers,
+            &f[1],
+        ) {
             return why(b"duplicate adjective");
         }
         let mut r = clone_tab(t);
@@ -854,7 +927,10 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !eq(&f[2], b"preferred") {
             return why(b"preference value");
         }
-        if seq_in(&t.preferences, &f[1]) || seq_in(&t.approximations, &f[1]) {
+        if seq_in(&t.preferences, &f[1]) || seq_in(&t.approximations, &f[1]) || key_in(
+            &t.qualifiers,
+            &f[1],
+        ) {
             return why(b"duplicate adjective");
         }
         let mut r = clone_tab(t);
@@ -874,6 +950,22 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         r.alternatives.push(copy(&f[1]));
         proof {
             assert(lemmas_view(r.alternatives@) =~= lemmas_view(t.alternatives@).push(f@[1]@));
+        }
+        Ok(r)
+    } else if eq(&f[0], b"qualifier") {
+        if !qualifier_id_ok(&f[2]) {
+            return why(b"qualifier value");
+        }
+        if key_in(&t.qualifiers, &f[1]) {
+            return why(b"duplicate qualifier");
+        }
+        if seq_in(&t.approximations, &f[1]) || seq_in(&t.preferences, &f[1]) {
+            return why(b"duplicate adjective");
+        }
+        let mut r = clone_tab(t);
+        r.qualifiers.push((copy(&f[1]), copy(&f[2])));
+        proof {
+            assert(pairs_view(r.qualifiers@) =~= pairs_view(t.qualifiers@).push((f@[1]@, f@[2]@)));
         }
         Ok(r)
     } else {
@@ -946,6 +1038,7 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         evidences: Vec::new(),
         preferences: Vec::new(),
         alternatives: Vec::new(),
+        qualifiers: Vec::new(),
     };
     let mut i = 0usize;
     proof {
@@ -960,6 +1053,7 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         assert(t@.evidences =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
         assert(t@.preferences =~= Seq::<Seq<u8>>::empty());
         assert(t@.alternatives =~= Seq::<Seq<u8>>::empty());
+        assert(t@.qualifiers =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
         assert(t@ == e0);
         assert(rows.skip(0) =~= rows);
     }

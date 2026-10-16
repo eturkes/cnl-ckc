@@ -1,0 +1,16 @@
+# row	name	why
+T2a	s2-bad-class	qualifier value at row 1
+T2b	s2-duplicate-qualifier-false	duplicate qualifier at row 2
+T2b	s2-duplicate-qualifier-true	duplicate qualifier at row 2
+T2c	s2-adjective-approximation-false	duplicate adjective at row 2
+T2c	s2-adjective-approximation-true	duplicate adjective at row 2
+T2c	s2-adjective-preference-false	duplicate adjective at row 2
+T2c	s2-adjective-preference-true	duplicate adjective at row 2
+T2d	s2-value-before-qualifier	qualifier value at row 2
+T2d	s2-value-before-approximation	qualifier value at row 2
+T2d	s2-value-before-preference	qualifier value at row 2
+T2d	s2-old-value-before-approximation	approximation value at row 2
+T2d	s2-old-value-before-preference	preference value at row 2
+T2f	s2-comment	comment at row 1
+T2f	s2-fields	field count at row 1
+T2f	s2-lemma	lemma at row 1

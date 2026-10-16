@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec09-imp06',ace_sha256(b8bae2e4c0f522c2b678e6151c87a93affe8b876c121e0c44cbae72593f7bf55),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a patient receives a prescribed-opioid from an additional-prescriber then every clinician should review a state-PDMP-record for the patient and should assess a combined-opioid-dosage for an overdose-risk and should assess a medication-combination for an overdose-risk.

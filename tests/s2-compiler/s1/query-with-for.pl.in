@@ -1,0 +1,4 @@
+% query-with-for compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'query-with-for',ace_sha256(fae8ef7835dc161c7d0ebf2ba2a2d2f773e0c0bb0a021419c41caea1340fb4d6),ulex(sha256('34135e18179535d7ec29307b60a62601cbdb820ea582b8d8e31e3a4c4461e825')),vocabulary(sha256('299d693be3585b49087a8a37d671c84cd2ee6bca0bbd248786301324a07f49d4'))).
+% Q1: Is a dog appropriate for a man?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,dog,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,man,countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_property(actual,C,appropriate,pos),','(guideline_event(actual,D,be),','(guideline_arg(actual,D,1,A),','(guideline_arg(actual,D,2,C),guideline_pp(actual,D,for,B)))))))))),answers([])).

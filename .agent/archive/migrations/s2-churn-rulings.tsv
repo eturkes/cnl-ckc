@@ -1,0 +1,2 @@
+# family	item	path	old	new	count	reason
+scope	s2-native	tests	@freeze	s2-compiler/**\ns2-codec/**\ncheck-mutants/s2*	1	D9: S2-native fixture families stay byte-identical; every other scoped path retains the no-qualifier premise

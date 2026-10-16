@@ -228,8 +228,8 @@ pub open spec fn tail_bytes(t: Term) -> Seq<u8>
 }
 
 // --- ABI indicators (order = the emitted declaration block; contracts c1 D2,
-// s1 D1): schema version, the document record, the seven primitives (2..8), the
-// temporal annotations (9..14), the strength annotations (15..16).
+// s1 D1, s2 D1): schema version, the document record, the seven primitives
+// (2..8), the temporal annotations (9..14), the strength annotations (15..17).
 pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
     if i == 0 {
         (ascii("guideline_schema_version"@), 1)
@@ -263,20 +263,22 @@ pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
         (ascii("guideline_range"@), 3)
     } else if i == 15 {
         (ascii("guideline_grade"@), 5)
-    } else {
+    } else if i == 16 {
         (ascii("guideline_preference"@), 4)
+    } else {
+        (ascii("guideline_qualifier"@), 4)
     }
 }
 
 pub open spec fn indicator_count() -> int {
-    17
+    18
 }
 
-// The semantic indicators (positions 2..16) are the only head/body predicates
+// The semantic indicators (positions 2..17) are the only head/body predicates
 // of bundle clauses (contract R14: foreign or variable body goals are
 // grammar-unrepresentable), in any document (contract c1 D2).
 pub open spec fn is_semantic_pred(name: Seq<u8>, arity: nat) -> bool {
-    exists|i: int| 2 <= i < 17 && #[trigger] indicator(i) == (name, arity)
+    exists|i: int| 2 <= i < 18 && #[trigger] indicator(i) == (name, arity)
 }
 
 // --- clause lines ---

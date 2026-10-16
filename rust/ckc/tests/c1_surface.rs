@@ -1,4 +1,4 @@
-// C1 D2–D6/D9–D10 + S1 D1/D10: contract-derived probes; CKC_C1_TEST_BIN selects red replay.
+// C1 D2–D6/D9–D10 + S1 D1/D10 + S2 D1/P9: contract-derived probes; CKC_C1_TEST_BIN selects red replay.
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -15,7 +15,7 @@ const RETIRED_PATH: &str = "guidelines/cdc-2022-opioid/temporal.tsv";
 const ULEX: &str = "prep(per,per).\nprep(for,for).\n";
 const ALL_ROWS: &str = "unit\thour\thour\nunit\tday\tday\nunit\tweek\tweek\nunit\tsecond\tsecond\nunit\tminute\tminute\nunit\tmonth\tmonth\nunit\tyear\tyear\nrelation\tfor\tduration\nrelation\tbefore\tbefore\nrelation\tafter\tafter\nrelation\twithin\twithin\nspacing\tat\tinterval\nwindow\tduring\twindow\nfrequency\tper\tperiod\napproximation\tapproximate\tabout\nrange\tto\tminimum\n";
 const OLD_KIND_HEADER: &str = "# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n";
-const INDICATORS: [(&str, usize); 17] = [
+const INDICATORS: [(&str, usize); 18] = [
     ("schema_version", 1),
     ("document", 4),
     ("entity", 4),
@@ -33,6 +33,7 @@ const INDICATORS: [(&str, usize); 17] = [
     ("range", 3),
     ("grade", 5),
     ("preference", 4),
+    ("qualifier", 4),
 ];
 const GIT_ENV: [(&str, &str); 9] = [
     ("GIT_CONFIG_GLOBAL", "/dev/null"),
@@ -1496,8 +1497,8 @@ fn b15_document_header_matrix() {
                     format!("table={with_table} ulex={with_ulex}: D2 header differs"),
                 );
                 checks.require(
-                    actual.matches(":- multifile(").count() == 17
-                        && actual.matches(":- discontiguous(").count() == 17,
+                    actual.matches(":- multifile(").count() == 18
+                        && actual.matches(":- discontiguous(").count() == 18,
                     "D2 declaration count",
                 );
                 checks.require(

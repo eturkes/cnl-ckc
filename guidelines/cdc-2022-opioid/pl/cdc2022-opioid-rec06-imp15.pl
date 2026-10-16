@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec06-imp15',ace_sha256('5c6393c7aebefc49341b3ffbf1309505ac657130e616bcd825b043a126efa6c8'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a patient has a taper-plan and the patient has a hospital-discharge and a care-coordinating-clinician coordinates an outpatient-care for the patient then every clinician should discuss the taper-plan with the patient before the hospital-discharge and should discuss the taper-plan with the care-coordinating-clinician before the hospital-discharge.

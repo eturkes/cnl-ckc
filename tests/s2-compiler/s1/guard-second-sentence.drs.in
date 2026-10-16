@@ -1,0 +1,3 @@
+sentences([[^,'A',man,sleeps,'.'],[^,'The',man,usually,sees,a,dog,'.']]).
+drs(drs([A,B,C,D],[-(object(A,man,countable,na,eq,1),/(1,2)),-(predicate(B,sleep,A),/(1,3)),-(object(C,dog,countable,na,eq,1),/(2,6)),-(modifier_adv(D,usually,pos),/(2,3)),-(predicate(D,see,A,C),/(2,4))])).
+messages([]).

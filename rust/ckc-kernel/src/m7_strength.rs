@@ -1,4 +1,4 @@
-// s1 D3/D4: document-only grade + preference pass, after temporal annotation.
+// s1/s2 D3: document-only grade, preference + qualifier pass after temporal annotation.
 use crate::k2_term::ETermArena;
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
@@ -467,21 +467,244 @@ pub fn grade_item(
     anch(arena, ctx, &inner)
 }
 
-pub open spec fn strength_result(r: Result<Vec<I>, Sym>) -> Result<Seq<spec::Item>, Term> {
+pub fn qualifier_item(arena: &mut ETermArena, ctx: &T, e: &T, k: &Vec<u8>, word: &T) -> (out: I)
+    requires
+        arena_ok(old(arena)),
+        valid(old(arena).nodes@, ctx),
+        valid(old(arena).nodes@, e),
+        valid(old(arena).nodes@, word),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        item_valid(final(arena).nodes@, &out),
+        out@ == spec::qualifier_item(ctx@, e@, k@, word@),
+{
+    let ghost start = arena.nodes@;
+    let class = atom(arena, k);
+    let ghost middle = arena.nodes@;
+    proof {
+        prefix(start, middle, e);
+        prefix(start, middle, word);
+    }
+    let inner = c3(arena, &Sym::DollarGuidelineQualifier, e, &class, word);
+    proof {
+        crate::k2_load::prefix_chain(start, middle, arena.nodes@);
+        prefix(start, arena.nodes@, ctx);
+    }
+    anch(arena, ctx, &inner)
+}
+
+pub fn attenuating(k: &Vec<u8>) -> (out: bool)
+    ensures
+        out == spec::attenuating(k@),
+{
+    has_name(k, &Sym::Usuality) || has_name(k, &Sym::Ideality) || has_name(k, &Sym::Possibility)
+        || has_name(k, &Sym::Applicability)
+}
+
+pub open spec fn edge_view(e: Option<(T, Vec<u8>)>) -> Option<(Term, Seq<u8>)> {
+    match e {
+        Some((outer, op)) => Some((outer@, op@)),
+        None => None,
+    }
+}
+
+pub fn edge_of(arena: &ETermArena, items: &Vec<I>, ctx: &T) -> (out: Option<(T, Vec<u8>)>)
+    requires
+        arena_ok(arena),
+        items_valid(arena.nodes@, items@),
+        valid(arena.nodes@, ctx),
+    ensures
+        out matches Some((outer, _)) ==> valid(arena.nodes@, &outer),
+        edge_view(out) == spec::edge_of(item_models(items@), ctx@),
+{
+    let ghost ms = item_models(items@);
+    let mut i = 0usize;
+    proof {
+        assert(ms.skip(0) =~= ms);
+    }
+    while i < items.len()
+        invariant
+            i <= items@.len(),
+            arena_ok(arena),
+            items_valid(arena.nodes@, items@),
+            valid(arena.nodes@, ctx),
+            ms == item_models(items@),
+            ms.len() == items@.len(),
+            spec::edge_of(ms, ctx@) == spec::edge_of(ms.skip(i as int), ctx@),
+        decreases items@.len() - i,
+    {
+        proof {
+            items_at(arena.nodes@, items@, i as int);
+            reveal(item_valid);
+            assert(ms.skip(i as int)[0] == ms[i as int]);
+            assert(ms[i as int] == items@[i as int]@);
+            assert(ms.skip(i as int).drop_first() =~= ms.skip(i + 1));
+        }
+        if let Kind::Op { outer, inner, op, .. } = &items[i].kind {
+            if crate::m6_term::equal(arena, inner, ctx) {
+                return Some((outer.cp(), crate::k4_bytes::copy(op)));
+            }
+        }
+        i += 1;
+    }
+    proof {
+        assert(ms.skip(i as int).len() == 0);
+    }
+    None
+}
+
+pub fn under_modal(arena: &ETermArena, scope: &Vec<I>, ctx: &T, fuel: usize) -> (out: bool)
+    requires
+        arena_ok(arena),
+        items_valid(arena.nodes@, scope@),
+        valid(arena.nodes@, ctx),
+    ensures
+        out == spec::under_modal(item_models(scope@), ctx@, fuel as nat),
+    decreases fuel,
+{
+    if fuel == 0 || is_atom(arena, ctx, &Sym::Actual) {
+        false
+    } else {
+        match edge_of(arena, scope, ctx) {
+            Some((outer, op)) => crate::m6_drs::modal(&op) || under_modal(
+                arena,
+                scope,
+                &outer,
+                fuel - 1,
+            ),
+            None => false,
+        }
+    }
+}
+
+pub fn property_only(arena: &ETermArena, env: &EEnv, v: &T) -> (out: bool)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, v),
+    ensures
+        out == spec::property_only(env_view(env), v@),
+{
+    if is_var(arena, v) {
+        decl_exec(&env.decls, var_index(arena, v)).is_none()
+    } else {
+        false
+    }
+}
+
+pub fn copula_qualifiers(
+    arena: &mut ETermArena,
+    tab: &EVocabulary,
+    items: &Vec<I>,
+    ctx: &T,
+    e: &T,
+    p: &T,
+) -> (out: Vec<I>)
+    requires
+        arena_ok(old(arena)),
+        items_valid(old(arena).nodes@, items@),
+        valid(old(arena).nodes@, ctx),
+        valid(old(arena).nodes@, e),
+        valid(old(arena).nodes@, p),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        items_valid(final(arena).nodes@, out@),
+        item_models(out@) == spec::copula_qualifiers(tab@, item_models(items@), ctx@, e@, p@),
+{
+    let ghost start = arena.nodes@;
+    let ghost ms = item_models(items@);
+    let mut out: Vec<I> = Vec::new();
+    let mut i = 0usize;
+    proof {
+        assert(ms.skip(0) =~= ms);
+        reveal_with_fuel(items_valid, 1);
+        assert(item_models(out@) =~= Seq::<spec::Item>::empty());
+        assert(item_models(out@) + spec::copula_qualifiers(tab@, ms, ctx@, e@, p@)
+            =~= spec::copula_qualifiers(tab@, ms, ctx@, e@, p@));
+    }
+    while i < items.len()
+        invariant
+            i <= items@.len(),
+            arena_ok(arena),
+            start == old(arena).nodes@,
+            start.is_prefix_of(arena.nodes@),
+            items_valid(arena.nodes@, items@),
+            items_valid(arena.nodes@, out@),
+            valid(arena.nodes@, ctx),
+            valid(arena.nodes@, e),
+            valid(arena.nodes@, p),
+            ms == item_models(items@),
+            ms.len() == items@.len(),
+            spec::copula_qualifiers(tab@, ms, ctx@, e@, p@) == item_models(out@)
+                + spec::copula_qualifiers(tab@, ms.skip(i as int), ctx@, e@, p@),
+        decreases items@.len() - i,
+    {
+        proof {
+            items_at(arena.nodes@, items@, i as int);
+            reveal(item_valid);
+            assert(ms.skip(i as int)[0] == ms[i as int]);
+            assert(ms[i as int] == items@[i as int]@);
+            assert(ms.skip(i as int).drop_first() =~= ms.skip(i + 1));
+        }
+        let ghost before = out@;
+        let ghost before_nodes = arena.nodes@;
+        if let Kind::Anch(c, inner) = &items[i].kind {
+            if crate::m6_term::equal(arena, c, ctx) && is_comp(arena, inner, &Sym::Property, 3) {
+                let a0 = arg_at(arena, inner, 0);
+                let a1 = arg_at(arena, inner, 1);
+                let a2 = arg_at(arena, inner, 2);
+                if crate::m6_term::equal(arena, &a0, p) && is_atom(arena, &a2, &Sym::Pos) {
+                    if let Some(k) = assoc_exec(&tab.qualifiers, &atom_bytes(arena, &a1)) {
+                        let qi = qualifier_item(arena, ctx, e, &k, &a1);
+                        proof {
+                            items_prefix(before_nodes, arena.nodes@, out@);
+                            reveal_with_fuel(items_valid, 2);
+                            assert(items_valid(arena.nodes@, seq![qi]));
+                            items_concat(arena.nodes@, out@, seq![qi]);
+                        }
+                        out.push(qi);
+                        proof {
+                            assert(out@ =~= before + seq![qi]);
+                        }
+                    }
+                }
+            }
+        }
+        proof {
+            items_prefix(before_nodes, arena.nodes@, items@);
+            prefix(before_nodes, arena.nodes@, ctx);
+            prefix(before_nodes, arena.nodes@, e);
+            prefix(before_nodes, arena.nodes@, p);
+            crate::k2_load::prefix_chain(start, before_nodes, arena.nodes@);
+            assert(item_models(out@) =~= item_models(before) + item_models(out@).skip(
+                before.len() as int,
+            ));
+        }
+        i += 1;
+    }
+    proof {
+        assert(ms.skip(i as int).len() == 0);
+        assert(item_models(out@) + Seq::<spec::Item>::empty() =~= item_models(out@));
+    }
+    out
+}
+
+pub open spec fn strength_result(r: Result<Vec<I>, (Sym, Sym)>) -> Result<Seq<spec::Item>, Term> {
     match r {
         Ok(v) => Ok(item_models(v@)),
-        Err(s) => Err(pref_error(s)),
+        Err((kind, why)) => Err(Term::Comp(symbol(&kind), seq![Term::Atom(symbol(&why))])),
     }
 }
 
 pub fn strength_item(
     arena: &mut ETermArena,
     env: &EEnv,
-    facts: bool,
+    w: &W,
     scope: &Vec<I>,
     it: &I,
     none: &T,
-) -> (out: Result<Vec<I>, Sym>)
+) -> (out: Result<Vec<I>, (Sym, Sym)>)
     requires
         arena_ok(old(arena)),
         items_valid(old(arena).nodes@, scope@),
@@ -492,7 +715,7 @@ pub fn strength_item(
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         out matches Ok(v) ==> items_valid(final(arena).nodes@, v@),
-        strength_result(out) == spec::strength_item(env_view(env), facts, item_models(scope@), it@),
+        strength_result(out) == spec::strength_item(env_view(env), w@, item_models(scope@), it@),
     decreases it, 0int,
 {
     let ghost start = arena.nodes@;
@@ -510,7 +733,7 @@ pub fn strength_item(
                 assert(item_models(v@) =~= seq![it@]);
             }
             if is_pred(arena, inner) {
-                let g = if facts {
+                let g = if matches!(w, W::Root) {
                     grade_of(arena, env, ctx, inner)
                 } else {
                     None
@@ -533,7 +756,7 @@ pub fn strength_item(
                     None => Seq::empty(),
                 };
                 let pa = match preference_of(arena, env, scope, ctx, inner, none) {
-                    Err(s) => return Err(s),
+                    Err(s) => return Err((Sym::PreferenceShape, s)),
                     Ok(pa) => pa,
                 };
                 let e = arg_at(arena, inner, 0);
@@ -553,6 +776,50 @@ pub fn strength_item(
                 }
                 proof {
                     assert(item_models(v@) =~= seq![it@] + gs);
+                    prefix(start, arena.nodes@, inner);
+                    prefix(start, arena.nodes@, ctx);
+                    prefix(start, arena.nodes@, &e);
+                    items_prefix(start, arena.nodes@, scope@);
+                }
+                let ghost graded = arena.nodes@;
+                let mut qs = if is_comp(arena, inner, &Sym::Predicate, 4) {
+                    let verb = arg_at(arena, inner, 1);
+                    let p = arg_at(arena, inner, 3);
+                    if is_atom(arena, &verb, &Sym::Be) && property_only(arena, env, &p) {
+                        copula_qualifiers(arena, &env.tab, scope, ctx, &e, &p)
+                    } else {
+                        Vec::new()
+                    }
+                } else {
+                    Vec::new()
+                };
+                let ghost qm = if spec::is_comp(inner@, "predicate"@, 4) && ckc_spec::replay::arg(
+                    inner@,
+                    1,
+                ) == ckc_spec::replay::atom("be"@) && spec::property_only(
+                    env_view(env),
+                    ckc_spec::replay::arg(inner@, 3),
+                ) {
+                    spec::copula_qualifiers(
+                        env.tab@,
+                        item_models(scope@),
+                        ctx@,
+                        e@,
+                        ckc_spec::replay::arg(inner@, 3),
+                    )
+                } else {
+                    Seq::empty()
+                };
+                proof {
+                    reveal_with_fuel(items_valid, 1);
+                    assert(item_models(qs@) =~= qm);
+                    items_prefix(graded, arena.nodes@, v@);
+                    items_concat(arena.nodes@, v@, qs@);
+                    crate::k2_load::prefix_chain(start, graded, arena.nodes@);
+                }
+                v.append(&mut qs);
+                proof {
+                    assert(item_models(v@) =~= seq![it@] + gs + qm);
                 }
                 let ghost mid = arena.nodes@;
                 match pa {
@@ -570,9 +837,13 @@ pub fn strength_item(
                                 crate::k2_load::prefix_chain(start, mid, arena.nodes@);
                             }
                             let ghost before = v@;
+                            proof {
+                                reveal_with_fuel(items_valid, 2);
+                                items_concat(arena.nodes@, v@, seq![pi]);
+                            }
                             v.push(pi);
                             proof {
-                                reveal_with_fuel(items_valid, 4);
+                                assert(v@ =~= before + seq![pi]);
                                 assert(item_models(v@) =~= item_models(before) + seq![pi@]);
                             }
                         }
@@ -581,6 +852,16 @@ pub fn strength_item(
                 }
                 Ok(v)
             } else if is_comp(arena, inner, &Sym::ModifierPp, 3) {
+                proof {
+                    reveal_strlit("modifier_pp");
+                    reveal_strlit("modifier_adv");
+                    reveal(ckc_spec::v1text::ascii);
+                    assert(spec::is_comp(inner@, "modifier_pp"@, 3));
+                    assert(ckc_spec::v1text::ascii("modifier_pp"@).len() == 11);
+                    assert(ckc_spec::v1text::ascii("modifier_adv"@).len() == 12);
+                    reveal(spec::is_comp);
+                    assert(!spec::is_comp(inner@, "modifier_adv"@, 3));
+                }
                 let prep = arg_at(arena, inner, 1);
                 if seq_in(&env.tab.alternatives, &atom_bytes(arena, &prep)) {
                     let e = arg_at(arena, inner, 0);
@@ -599,11 +880,39 @@ pub fn strength_item(
                     }
                 }
                 Ok(v)
+            } else if is_comp(arena, inner, &Sym::ModifierAdv, 3) {
+                let word = arg_at(arena, inner, 1);
+                match assoc_exec(&env.tab.qualifiers, &atom_bytes(arena, &word)) {
+                    None => Ok(v),
+                    Some(k) => {
+                        let degree = arg_at(arena, inner, 2);
+                        if !is_atom(arena, &degree, &Sym::Pos) {
+                            return Err((Sym::QualifierShape, Sym::Degree));
+                        }
+                        if attenuating(&k) && !matches!(w, W::Antecedent) && !under_modal(
+                            arena,
+                            scope,
+                            ctx,
+                            scope.len(),
+                        ) {
+                            return Err((Sym::QualifierShape, Sym::Asserted));
+                        }
+                        let e = arg_at(arena, inner, 0);
+                        let qi = qualifier_item(arena, ctx, &e, &k, &word);
+                        let mut out = Vec::new();
+                        out.push(qi);
+                        proof {
+                            reveal_with_fuel(items_valid, 2);
+                            assert(item_models(out@) =~= seq![qi@]);
+                        }
+                        Ok(out)
+                    },
+                }
             } else {
                 Ok(v)
             }
         },
-        Kind::Naf { dom, payload } => match strength(arena, env, false, payload, none) {
+        Kind::Naf { dom, payload } => match strength(arena, env, &W::Antecedent, payload, none) {
             Err(s) => Err(s),
             Ok(p) => {
                 proof {
@@ -635,11 +944,11 @@ pub fn strength_item(
 pub fn strength_items(
     arena: &mut ETermArena,
     env: &EEnv,
-    facts: bool,
+    w: &W,
     scope: &Vec<I>,
     items: &Vec<I>,
     none: &T,
-) -> (out: Result<Vec<I>, Sym>)
+) -> (out: Result<Vec<I>, (Sym, Sym)>)
     requires
         arena_ok(old(arena)),
         items_valid(old(arena).nodes@, scope@),
@@ -652,7 +961,7 @@ pub fn strength_items(
         out matches Ok(v) ==> items_valid(final(arena).nodes@, v@),
         strength_result(out) == spec::strength_items(
             env_view(env),
-            facts,
+            w@,
             item_models(scope@),
             item_models(items@),
         ),
@@ -667,7 +976,7 @@ pub fn strength_items(
         assert(ms.skip(0) =~= ms);
         reveal_with_fuel(items_valid, 1);
         assert(item_models(out@) =~= Seq::<spec::Item>::empty());
-        match spec::strength_items(env_view(env), facts, sm, ms) {
+        match spec::strength_items(env_view(env), w@, sm, ms) {
             Ok(t) => assert(Seq::<spec::Item>::empty() + t =~= t),
             Err(_) => {},
         }
@@ -686,9 +995,9 @@ pub fn strength_items(
             ms == item_models(items@),
             sm == item_models(scope@),
             ms.len() == items@.len(),
-            spec::strength_items(env_view(env), facts, sm, ms) == prepend(
+            spec::strength_items(env_view(env), w@, sm, ms) == prepend(
                 item_models(out@),
-                spec::strength_items(env_view(env), facts, sm, ms.skip(i as int)),
+                spec::strength_items(env_view(env), w@, sm, ms.skip(i as int)),
             ),
         decreases items@.len() - i,
     {
@@ -700,11 +1009,11 @@ pub fn strength_items(
         }
         let ghost before_nodes = arena.nodes@;
         let ghost before = out@;
-        let ghost rest = spec::strength_items(env_view(env), facts, sm, ms.skip(i + 1));
+        let ghost rest = spec::strength_items(env_view(env), w@, sm, ms.skip(i + 1));
         proof {
             reveal_with_fuel(spec::strength_items, 1);
-            assert(spec::strength_items(env_view(env), facts, sm, ms.skip(i as int)) == match (
-                spec::strength_item(env_view(env), facts, sm, ms[i as int]),
+            assert(spec::strength_items(env_view(env), w@, sm, ms.skip(i as int)) == match (
+                spec::strength_item(env_view(env), w@, sm, ms[i as int]),
                 rest,
             ) {
                 (Err(e), _) => Err(e),
@@ -712,7 +1021,7 @@ pub fn strength_items(
                 (Ok(h), Ok(t)) => Ok(h + t),
             });
         }
-        let r = strength_item(arena, env, facts, scope, &items[i], none);
+        let r = strength_item(arena, env, w, scope, &items[i], none);
         proof {
             items_prefix(before_nodes, arena.nodes@, scope@);
             items_prefix(before_nodes, arena.nodes@, items@);
@@ -747,8 +1056,8 @@ pub fn strength_items(
     Ok(out)
 }
 
-pub fn strength(arena: &mut ETermArena, env: &EEnv, facts: bool, items: &Vec<I>, none: &T) -> (out:
-    Result<Vec<I>, Sym>)
+pub fn strength(arena: &mut ETermArena, env: &EEnv, w: &W, items: &Vec<I>, none: &T) -> (out:
+    Result<Vec<I>, (Sym, Sym)>)
     requires
         arena_ok(old(arena)),
         items_valid(old(arena).nodes@, items@),
@@ -758,16 +1067,15 @@ pub fn strength(arena: &mut ETermArena, env: &EEnv, facts: bool, items: &Vec<I>,
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         out matches Ok(v) ==> items_valid(final(arena).nodes@, v@),
-        strength_result(out) == spec::strength(env_view(env), facts, item_models(items@)),
+        strength_result(out) == spec::strength(env_view(env), w@, item_models(items@)),
     decreases items@, 2int,
 {
-    strength_items(arena, env, facts, items, items, none)
+    strength_items(arena, env, w, items, items, none)
 }
 
 pub fn flatten_doc(
     arena: &mut ETermArena,
     tab: &Option<EEnv>,
-    facts: bool,
     l: &T,
     w: &W,
     env: &crate::m6_flat::Env,
@@ -787,7 +1095,6 @@ pub fn flatten_doc(
         crate::m6_flat::flat_valid_result(final(arena).nodes@, &out),
         flat_result(out) == spec::flatten_doc(
             envo_view(tab),
-            facts,
             l@,
             w@,
             env.s as nat,
@@ -824,15 +1131,15 @@ pub fn flatten_doc(
                 crate::k2_load::prefix_chain(start, before, middle);
                 items_prefix(before, middle, f.items@);
             }
-            let r = strength(arena, t, facts, &f.items, &none);
+            let r = strength(arena, t, w, &f.items, &none);
             let ghost after = arena.nodes@;
             proof {
                 crate::k2_load::prefix_chain(start, middle, after);
             }
             match r {
                 Ok(items) => Ok(Flat { items, n: f.n }),
-                Err(s) => {
-                    let e = shape(arena, &Sym::PreferenceShape, &s);
+                Err((kind, why)) => {
+                    let e = shape(arena, &kind, &why);
                     proof {
                         crate::k2_load::prefix_chain(start, after, arena.nodes@);
                     }

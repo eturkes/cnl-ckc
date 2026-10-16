@@ -1,0 +1,3 @@
+sentences([[^,'A',treatment,is,feasible,and,appropriate,'.']]).
+drs(drs([A,B,C],[-(object(A,treatment,countable,na,eq,1),/(1,2)),-(property(B,feasible,pos),/(1,4)),-(property(B,appropriate,pos),/(1,6)),-(predicate(C,be,A,B),/(1,3))])).
+messages([]).

@@ -6,7 +6,7 @@ use vstd::utf8::*;
 verus! {
 
 // Trusted spec: the per-guideline vocabulary table `vocabulary.tsv` (contracts
-// m7t D1, q12 D1, q13 D1, c1 D4, s1 D2). Corpus data maps source lemmas onto closed
+// m7t D1, q12 D1, q13 D1, c1 D4, s1 D2, s2 D2). Corpus data maps source lemmas onto closed
 // schema ids, so the compiler names no source word: unit rows map a noun lemma
 // to a unit id, relation rows map a preposition lemma to an interval role,
 // spacing rows pair a preposition with the frame noun of a recurrence
@@ -17,7 +17,9 @@ verus! {
 // ranged minimum's upper end (`at least 8 hours to 12 hours`); strength and
 // evidence rows map a grade noun to its common value, preference rows an
 // adjective that marks the preferred option on a copula, alternative rows the
-// preposition that joins the option a preference names as its alternative.
+// preposition that joins the option a preference names as its alternative;
+// qualifier rows map an adverb, or the adjective of a copula, to the function
+// class of the qualifier it carries.
 pub ghost struct Vocabulary {
     pub units: Seq<(Seq<u8>, Seq<u8>)>,
     pub relations: Seq<(Seq<u8>, Seq<u8>)>,
@@ -30,6 +32,7 @@ pub ghost struct Vocabulary {
     pub evidences: Seq<(Seq<u8>, Seq<u8>)>,  // grade noun → evidence value
     pub preferences: Seq<Seq<u8>>,  // adjective lemmas
     pub alternatives: Seq<Seq<u8>>,  // preposition lemmas
+    pub qualifiers: Seq<(Seq<u8>, Seq<u8>)>,  // adverb | copula adjective → class
 }
 
 pub open spec fn vocabulary_header() -> Seq<u8> {
@@ -58,6 +61,18 @@ pub open spec fn strength_ids() -> Seq<Seq<u8>> {
 
 pub open spec fn evidence_ids() -> Seq<Seq<u8>> {
     seq![ascii("high"@), ascii("moderate"@), ascii("low"@), ascii("very_low"@)]
+}
+
+pub open spec fn qualifier_ids() -> Seq<Seq<u8>> {
+    seq![
+        ascii("usuality"@),
+        ascii("ideality"@),
+        ascii("focus"@),
+        ascii("manner"@),
+        ascii("force"@),
+        ascii("possibility"@),
+        ascii("applicability"@),
+    ]
 }
 
 // A lemma field: nonempty UTF-8 with no space, control or DEL byte (the
@@ -90,7 +105,7 @@ pub open spec fn time_prepositions(t: Vocabulary) -> Seq<Seq<u8>> {
 pub open spec fn row_count(t: Vocabulary) -> nat {
     t.units.len() + t.relations.len() + t.spacings.len() + t.windows.len() + t.frequencies.len()
         + t.approximations.len() + t.ranges.len() + t.strengths.len() + t.evidences.len()
-        + t.preferences.len() + t.alternatives.len()
+        + t.preferences.len() + t.alternatives.len() + t.qualifiers.len()
 }
 
 pub open spec fn empty_table() -> Vocabulary {
@@ -106,6 +121,7 @@ pub open spec fn empty_table() -> Vocabulary {
         evidences: Seq::empty(),
         preferences: Seq::empty(),
         alternatives: Seq::empty(),
+        qualifiers: Seq::empty(),
     }
 }
 
@@ -149,8 +165,9 @@ pub open spec fn grade_row(
 // with `#` is a comment, never a row (a pre-c1 two-line header fails at row 1).
 // A noun is one of unit, frame and grade noun; each lemma maps once per kind; a
 // preposition maps to at most one of relation, frequency and range, and an
-// alternative preposition to no other kind; an adjective is an approximation
-// or a preference, never both. The later row of a conflict reports it.
+// alternative preposition to no other kind; a lemma is at most one of an
+// approximation, a preference and a qualifier (the three read `property`
+// conditions), each once. The later row of a conflict reports it.
 pub open spec fn add_row(t: Vocabulary, line: Seq<u8>) -> Result<Vocabulary, Seq<u8>> {
     let f = split_on(line, 0x09);
     if line.len() > 0 && line[0] == 0x23 {
@@ -200,7 +217,9 @@ pub open spec fn add_row(t: Vocabulary, line: Seq<u8>) -> Result<Vocabulary, Seq
     } else if f[0] == ascii("approximation"@) {
         if f[2] != ascii("about"@) {
             Result::Err(ascii("approximation value"@))
-        } else if t.approximations.contains(f[1]) || t.preferences.contains(f[1]) {
+        } else if t.approximations.contains(f[1]) || t.preferences.contains(f[1]) || keys(
+            t.qualifiers,
+        ).contains(f[1]) {
             Result::Err(ascii("duplicate adjective"@))
         } else {
             Result::Ok(Vocabulary { approximations: t.approximations.push(f[1]), ..t })
@@ -231,7 +250,9 @@ pub open spec fn add_row(t: Vocabulary, line: Seq<u8>) -> Result<Vocabulary, Seq
     } else if f[0] == ascii("preference"@) {
         if f[2] != ascii("preferred"@) {
             Result::Err(ascii("preference value"@))
-        } else if t.preferences.contains(f[1]) || t.approximations.contains(f[1]) {
+        } else if t.preferences.contains(f[1]) || t.approximations.contains(f[1]) || keys(
+            t.qualifiers,
+        ).contains(f[1]) {
             Result::Err(ascii("duplicate adjective"@))
         } else {
             Result::Ok(Vocabulary { preferences: t.preferences.push(f[1]), ..t })
@@ -243,6 +264,16 @@ pub open spec fn add_row(t: Vocabulary, line: Seq<u8>) -> Result<Vocabulary, Seq
             Result::Err(ascii("duplicate preposition"@))
         } else {
             Result::Ok(Vocabulary { alternatives: t.alternatives.push(f[1]), ..t })
+        }
+    } else if f[0] == ascii("qualifier"@) {
+        if !qualifier_ids().contains(f[2]) {
+            Result::Err(ascii("qualifier value"@))
+        } else if keys(t.qualifiers).contains(f[1]) {
+            Result::Err(ascii("duplicate qualifier"@))
+        } else if t.approximations.contains(f[1]) || t.preferences.contains(f[1]) {
+            Result::Err(ascii("duplicate adjective"@))
+        } else {
+            Result::Ok(Vocabulary { qualifiers: t.qualifiers.push((f[1], f[2])), ..t })
         }
     } else {
         Result::Err(ascii("kind"@))

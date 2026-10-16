@@ -1,0 +1,3 @@
+sentences([[^,'If',a,patient,sleeps,or,a,doctor,waits,then,a,man,should,carefully,review,a,record,'.']]).
+drs(drs([],[=>(drs([],[v(drs([A,B],[-(object(A,patient,countable,na,eq,1),/(1,3)),-(predicate(B,sleep,A),/(1,4))]),drs([C,D],[-(object(C,doctor,countable,na,eq,1),/(1,7)),-(predicate(D,wait,C),/(1,8))]))]),drs([E],[-(object(E,man,countable,na,eq,1),/(1,11)),should(drs([F,G],[-(object(F,record,countable,na,eq,1),/(1,16)),-(modifier_adv(G,carefully,pos),/(1,13)),-(predicate(G,review,E,F),/(1,14))]))]))])).
+messages([]).

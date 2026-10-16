@@ -1,0 +1,1 @@
+ace_to_pl_error(ape_messages,[message(error,sentence,-(1,4),'Every man should <> and see a dog.','This is the first sentence that was not ACE. The sign <> indicates the position where parsing failed.')]).

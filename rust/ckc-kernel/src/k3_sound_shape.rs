@@ -28,7 +28,7 @@ pub proof fn semantic_arity(name: Seq<u8>, arity: nat)
     ensures
         3 <= arity <= 7,
 {
-    let i = choose|i: int| 2 <= i < 17 && indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 18 && indicator(i) == (name, arity);
 }
 
 pub proof fn shift_all_map(ts: Seq<Term>, off: nat)

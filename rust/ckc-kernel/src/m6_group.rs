@@ -405,7 +405,6 @@ pub fn fact_group(
     let flat = crate::m7_strength::flatten_doc(
         arena,
         &env.tab,
-        true,
         &conds,
         &W::Root,
         env,

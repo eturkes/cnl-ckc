@@ -311,9 +311,9 @@ domain-neutral:
 
 The six time annotations (`guideline_interval/6`,
 `guideline_recurrence/4`, `guideline_frequency/5`, `guideline_order/4`,
-`guideline_recurrence_window/7`, `guideline_range/3`) and the two
-strength annotations (`guideline_grade/5`, `guideline_preference/4`)
-complete the vocabulary. The sections "Vocabulary table and time
+`guideline_recurrence_window/7`, `guideline_range/3`) and the three
+strength annotations (`guideline_grade/5`, `guideline_preference/4`,
+`guideline_qualifier/4`) complete the vocabulary. The sections "Vocabulary table and time
 annotations" and "Strength annotations" below define them. In the record, `H` is the SHA-256 of the raw ACE bytes,
 `U` the SHA-256 of the guideline's user lexicon, and `T` the SHA-256
 of its raw `vocabulary.tsv` bytes. `none` means that the file does not
@@ -402,7 +402,7 @@ one vocabulary, a rule body consumes another document's facts or heads
 by ordinary resolution.
 
 Every document opens with the same declaration block: `multifile`
-and `discontiguous` for all 17 indicators, whether or not it
+and `discontiguous` for all 18 indicators, whether or not it
 populates them. After the block come `guideline_schema_version(1).`,
 the document record, and then, per sentence, a
 `% S<n>: <verbatim sentence>` comment with that sentence's contiguous
@@ -544,6 +544,8 @@ strength	category-A-recommendation	strong
 evidence	evidence-type-1-recommendation	high
 preference	preferred	preferred
 alternative	instead-of	alternative
+qualifier	ideally	ideality
+qualifier	feasible	applicability
 ```
 
 The header line is fixed bytes. The table holds at least one row, and
@@ -570,8 +572,11 @@ the preferred option on a copula, as in `An NSAID is preferred.`; its
 value is always `preferred`. An `alternative` row names the preposition
 that joins the option a preference replaces, as in
 `… prescribe an immediate-release-opioid instead-of an ER-LA-opioid`;
-its value is always `alternative`. The section "Strength annotations"
-below uses these rows.
+its value is always `alternative`. A `qualifier` row maps an adverb,
+or the adjective of a copula, onto the function class of a qualifier:
+`usuality`, `ideality`, `focus`, `manner`, `force`, `possibility` or
+`applicability`. The section "Strength annotations" below uses these
+rows.
 
 A lemma is one or more bytes above 0x20, none of them 0x7F, that form
 valid UTF-8. A noun occurs in at most one `unit`, `strength` or
@@ -579,8 +584,9 @@ valid UTF-8. A noun occurs in at most one `unit`, `strength` or
 pair of a preposition and a frame noun occurs once across the `spacing`
 and `window` rows. A preposition occurs in at most one `relation`,
 `frequency` or `range` row. A preposition in an `alternative` row
-occurs in no other row. An adjective occurs in at most one
-`approximation` or `preference` row. The later row of a conflict reports
+occurs in no `relation`, `spacing`, `window`, `frequency` or `range`
+row. A lemma occurs in at most one `approximation`,
+`preference` or `qualifier` row. The later row of a conflict reports
 it. The checks run in row order: comment, field count, lemma, kind,
 value, duplicates. `ckc check` rejects any
 other table with `ckc: vocabulary: <path>: <why>`, where `<why>` names the
@@ -708,15 +714,18 @@ annotation against the table.
 
 ### Strength annotations
 
-The strength annotations type the grade of a recommendation and the
-preference of one option over another. They need the `strength`,
-`evidence`, `preference` and `alternative` rows of the vocabulary
-table. Only documents carry them; question mode never adds them.
+The strength annotations type the grade of a recommendation, the
+preference of one option over another and the qualifiers of a
+statement, such as `ideally`, `typically` or `when feasible`. They need
+the `strength`, `evidence`, `preference`, `alternative` and `qualifier`
+rows of the vocabulary table. Only documents carry them; question mode
+never adds them.
 
 | Predicate | Meaning |
 | --- | --- |
 | `guideline_grade(Context, Rec, Dimension, Value, Label)` | the recommendation `Rec` has, in `Dimension` (`strength` or `evidence`), the common value `Value`; `Label` is the referent whose noun is the source's own grade label |
 | `guideline_preference(Context, Event, Preferred, Alternative)` | in `Event`, the source prefers the option `Preferred` to `Alternative`; `Alternative` is `none` when the source names no other option |
+| `guideline_qualifier(Context, Event, Class, Word)` | the source qualifies `Event` with the word `Word`, whose function class is `Class` |
 
 The compiler reads these patterns from the parsed sentence:
 
@@ -737,6 +746,47 @@ The compiler reads these patterns from the parsed sentence:
   exists. It takes the context of its event, so a preference in a rule
   antecedent becomes a body goal of every clause of the rule, and a
   preference under an operator stands in that operator's context.
+- Qualifier: an adverb on an event has a `qualifier` row, as in
+  `Every clinician should ideally review a record.` The qualifier clause
+  takes the place of the adverb in the order of the sentence. A copula
+  `X is A` whose adjective `A` has a `qualifier` row also gets a
+  qualifier clause, after the copula's second participant, as in
+  `If a treatment is feasible then …`. Each such adjective of the copula
+  gets its own clause, and the adjective clauses stay. An adjective on a
+  noun, as in `X is a feasible option`, qualifies a thing and adds no
+  qualifier. A qualifier takes the context of its event, as a
+  preference does. An adverb without a `qualifier` row rejects as
+  `condition_shape`.
+
+The class of a qualifier names the function of the word:
+
+| Class | Words, for example | Function |
+| --- | --- | --- |
+| `usuality` | typically, usually, often, regularly | how usual or how frequent the event is |
+| `ideality` | ideally, optimally, preferably | the ideal or best form of the event |
+| `focus` | particularly, especially, importantly | the source emphasizes the event in its scope |
+| `manner` | carefully, closely, cautiously | how the event is carried out |
+| `force` | strongly | the strength of the wording of the advice |
+| `possibility` | possibly, potentially, likely | the event is possible or likely |
+| `applicability` | appropriate, feasible, possible, needed, indicated | the event or thing fits the case |
+
+The context of a clause, not the class of its qualifier, tells whether
+the clause is asserted. An adverb of class `usuality`, `ideality`,
+`possibility` or `applicability` weakens what its clause says. Thus such
+an adverb cannot qualify an asserted clause: a fact or a rule head that
+stands under no modal operator (`should`, `must`, `can`, `may`). A
+classical negation alone does not make a clause unasserted. Write the
+claim under a modal operator, as in
+`… then the patient can possibly need a bowel-therapy.` An adverb of
+class `focus`, `manner` or `force` and every copula adjective can
+qualify an asserted clause. A qualifier in a condition is a goal that a
+matching fact must meet.
+
+A qualifier belongs to the description of its event. A negation or an
+operator covers the event together with its qualifiers:
+`should not abruptly discontinue` prohibits an abrupt discontinuation,
+not every discontinuation. A program that matches an event must also
+match the qualifiers of that event.
 
 Every other shape of these patterns rejects with class `unsupported`:
 
@@ -746,15 +796,20 @@ Every other shape of these patterns rejects with class `unsupported`:
 | `preference_shape(alternative_count, S)` | an event with two or more `alternative` prepositions |
 | `preference_shape(no_preferred, S)` | an event with an `alternative` preposition and no second participant |
 | `preference_shape(endpoint, S)` | a preferred option or an alternative that is not a plain referent (a property, a time quantity or a frame) |
+| `qualifier_shape(degree, S)` | a qualifier adverb in a comparative or superlative form, as in `more carefully` |
+| `qualifier_shape(asserted, S)` | an adverb of class `usuality`, `ideality`, `possibility` or `applicability` that qualifies an asserted clause |
 
 Annotations are data, never inference. A grade does not rank
 recommendations, and a preference does not forbid the alternative or
-oblige the preferred option. Erasing every strength annotation from a
-document gives the clauses that the same sentences give without the
-strength rows; an annotation in a rule antecedent adds one body goal.
-A question asks for a grade by its source label and for a preference
-by its words; a program queries `guideline_grade/5` and
-`guideline_preference/4` directly.
+oblige the preferred option. A qualifier sets no frequency,
+probability, priority or condition. Erasing every strength annotation
+from a document gives the clauses that the same sentences give without
+the strength rows and without the qualifier adverbs; an annotation in a
+rule antecedent adds one body goal, which a matching fact must also
+carry. A question asks for a grade by its source label and for a
+preference by its words; a question cannot contain an adverb. A program
+queries `guideline_grade/5`, `guideline_preference/4` and
+`guideline_qualifier/4` directly.
 
 ### Question projection
 
@@ -824,7 +879,7 @@ must name readable files, and the mode never parses payload terms. A
 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/5`
 record, then the `'$guideline_query_projection'/2` term. A query names
-any of the 15 semantic predicates and runs against any composition. The mode
+any of the 16 semantic predicates and runs against any composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 
 Success emits a two-line artifact on stdout: a generated-file

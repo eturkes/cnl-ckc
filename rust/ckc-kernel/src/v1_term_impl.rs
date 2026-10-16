@@ -16800,7 +16800,7 @@ proof fn decls_end(out: Seq<u8>)
 fn decls_block() -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::v1text::decls_from(0),
-        r@.len() == 1288,
+        r@.len() == 1366,
 {
     let mut out: Vec<u8> = Vec::new();
     proof {
@@ -16996,6 +16996,17 @@ fn decls_block() -> (r: Vec<u8>)
     push_decl_pair(&mut out, name, 4, Ghost(16int));
     proof {
         decls_step(before, 16);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_qualifier";
+    proof {
+        reveal_strlit("guideline_qualifier");
+        reveal_byteslit(b"guideline_qualifier");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_qualifier"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(17int));
+    proof {
+        decls_step(before, 17);
     }
     proof {
         decls_end(out@);
@@ -17932,14 +17943,15 @@ fn q12_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     accepted
 }
 
-// s1 D1: the two strength indicators (positions 15, 16).
+// s1/s2 D1: the strength indicators (positions 15..17).
 fn strength_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == exists|i: int|
-            15 <= i < 17 && #[trigger] ckc_spec::v1text::indicator(i) == (name@, arity as nat),
+            15 <= i < 18 && #[trigger] ckc_spec::v1text::indicator(i) == (name@, arity as nat),
 {
     let grade_name: &[u8] = b"guideline_grade";
     let preference_name: &[u8] = b"guideline_preference";
+    let qualifier_name: &[u8] = b"guideline_qualifier";
     proof {
         reveal_strlit("guideline_grade");
         reveal_strlit("guideline_preference");
@@ -17948,27 +17960,35 @@ fn strength_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
         reveal(ckc_spec::v1text::ascii);
         assert(grade_name@ == ckc_spec::v1text::ascii("guideline_grade"@));
         assert(preference_name@ == ckc_spec::v1text::ascii("guideline_preference"@));
+        reveal_strlit("guideline_qualifier");
+        reveal_byteslit(b"guideline_qualifier");
+        assert(qualifier_name@ == ckc_spec::v1text::ascii("guideline_qualifier"@));
     }
     let grade = vec_slice_equal(name, grade_name);
     let preference = vec_slice_equal(name, preference_name);
-    let accepted = grade && arity == 5 || preference && arity == 4;
+    let qualifier = vec_slice_equal(name, qualifier_name);
+    let accepted = grade && arity == 5 || preference && arity == 4 || qualifier && arity == 4;
     proof {
         reveal(ckc_spec::v1text::indicator);
         if accepted {
             if grade && arity == 5 {
                 assert(ckc_spec::v1text::indicator(15) == (name@, arity as nat));
-            } else {
+            } else if preference && arity == 4 {
                 assert(ckc_spec::v1text::indicator(16) == (name@, arity as nat));
+            } else {
+                assert(ckc_spec::v1text::indicator(17) == (name@, arity as nat));
             }
         } else {
-            assert forall|i: int| 15 <= i < 17 implies ckc_spec::v1text::indicator(i) != (
+            assert forall|i: int| 15 <= i < 18 implies ckc_spec::v1text::indicator(i) != (
                 name@,
                 arity as nat,
             ) by {
                 if i == 15 {
                     assert(!grade || arity != 5);
-                } else {
+                } else if i == 16 {
                     assert(!preference || arity != 4);
+                } else {
+                    assert(!qualifier || arity != 4);
                 }
             }
         }
@@ -17988,7 +18008,7 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
         reveal(ckc_spec::v1text::is_semantic_pred);
         if ckc_spec::v1text::is_semantic_pred(name@, arity as nat) {
             let i = choose|i: int|
-                2 <= i < 17 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
+                2 <= i < 18 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             if i < 9 {
                 assert(base);
             } else if i < 11 {
@@ -18192,7 +18212,7 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
         name[0] == 0x67,
 {
     reveal(ckc_spec::v1text::is_semantic_pred);
-    let i = choose|i: int| 2 <= i < 17 && ckc_spec::v1text::indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 18 && ckc_spec::v1text::indicator(i) == (name, arity);
     reveal(ckc_spec::v1text::indicator);
     if i == 2 {
         reveal_strlit("guideline_entity");
@@ -18236,9 +18256,12 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
     } else if i == 15 {
         reveal_strlit("guideline_grade");
         reveal(ckc_spec::v1text::ascii);
-    } else {
-        assert(i == 16);
+    } else if i == 16 {
         reveal_strlit("guideline_preference");
+        reveal(ckc_spec::v1text::ascii);
+    } else {
+        assert(i == 17);
+        reveal_strlit("guideline_qualifier");
         reveal(ckc_spec::v1text::ascii);
     }
 }
@@ -21861,6 +21884,8 @@ fn semantic_arity(name: &[u8]) -> (r: Option<usize>) {
         Some(5)
     } else if crate::k4_bytes::eq(name, b"guideline_preference") {
         Some(4)
+    } else if crate::k4_bytes::eq(name, b"guideline_qualifier") {
+        Some(4)
     } else {
         None
     }
@@ -21947,6 +21972,7 @@ fn pred_name_reject_at(bytes: &[u8], start: usize) -> (r: usize)
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_range", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_grade", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_preference", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_qualifier", 0x28), bytes.len());
     best
 }
 
@@ -21991,7 +22017,8 @@ fn declared_name_at(bytes: &[u8], start: usize) -> (r: bool) {
         b"guideline_recurrence_window(",
     ) || crate::k4_bytes::starts_with(rest, b"guideline_range(");
     let strength = crate::k4_bytes::starts_with(rest, b"guideline_grade(")
-        || crate::k4_bytes::starts_with(rest, b"guideline_preference(");
+        || crate::k4_bytes::starts_with(rest, b"guideline_preference(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_qualifier(");
     base || timing || strength
 }
 

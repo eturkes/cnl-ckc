@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('measure--alias-within',ace_sha256('40fbc0141d32141c409506a840217b10d0fca44cfb2a973ea5ad5a81b5e14fdc'),ulex(sha256('29762127aa5c112935a3e23843a9793168210e6e977026b17b197641eb14e090')),vocabulary(sha256(fa2b699b93e9514e800aea9786f1dbaff5a813bda5bf6477c423aae18ac12041))).
 % S1: A patient eats within 3 d of a meeting.

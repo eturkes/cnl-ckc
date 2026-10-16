@@ -1,0 +1,4 @@
+% query-copula-old compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'query-copula-old',ace_sha256(c253f76b4835223978fe047c6d3cfb3baf44c8ddbc3e0ae8a5613b467fb3cb97),ulex(sha256('34135e18179535d7ec29307b60a62601cbdb820ea582b8d8e31e3a4c4461e825')),vocabulary(sha256('299d693be3585b49087a8a37d671c84cd2ee6bca0bbd248786301324a07f49d4'))).
+% Q1: Is a dog feasible and preferred?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,dog,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_property(actual,B,feasible,pos),','(guideline_property(actual,B,preferred,pos),','(guideline_event(actual,C,be),','(guideline_arg(actual,C,1,A),guideline_arg(actual,C,2,B)))))))),answers([])).

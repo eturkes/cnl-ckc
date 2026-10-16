@@ -519,6 +519,13 @@ pub fn condition(
                 };
                 let t = lit4(arena, &Sym::GuidelinePreference, ctx, &e, &p, &a);
                 Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineQualifier) && args.len() == 3 {
+                let e = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let t = lit4(arena, &Sym::GuidelineQualifier, ctx, &e, &args[1], &args[2]);
+                Ok(one_term(arena, t))
             } else {
                 Err(named(arena, &Sym::ConditionShape))
             }

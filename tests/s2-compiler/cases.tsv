@@ -1,0 +1,153 @@
+# row	id	mode	table	expect	adverbs(sentence:scope:verb:nth:placement:word)	ace
+T3a	class-usuality-pre	doc	all	ok	1:head:see:1:pre:usually	Every man should usually see a dog.
+T3a	class-usuality-final	doc	all	ok	1:head:see:1:post:usually	Every man should see a dog usually.
+T3a	class-ideality-pre	doc	all	ok	1:head:see:1:pre:ideally	Every man should ideally see a dog.
+T3a	class-ideality-final	doc	all	ok	1:head:see:1:post:ideally	Every man should see a dog ideally.
+T3a	class-focus-pre	doc	all	ok	1:head:see:1:pre:especially	Every man should especially see a dog.
+T3a	class-focus-final	doc	all	ok	1:head:see:1:post:especially	Every man should see a dog especially.
+T3a	class-manner-pre	doc	all	ok	1:head:see:1:pre:carefully	Every man should carefully see a dog.
+T3a	class-manner-final	doc	all	ok	1:head:see:1:post:carefully	Every man should see a dog carefully.
+T3a	class-force-pre	doc	all	ok	1:head:see:1:pre:strongly	Every man should strongly see a dog.
+T3a	class-force-final	doc	all	ok	1:head:see:1:post:strongly	Every man should see a dog strongly.
+T3a	class-possibility-pre	doc	all	ok	1:head:see:1:pre:possibly	Every man should possibly see a dog.
+T3a	class-possibility-final	doc	all	ok	1:head:see:1:post:possibly	Every man should see a dog possibly.
+T3a	class-applicability-pre	doc	all	ok	1:head:see:1:pre:appropriately	Every man should appropriately see a dog.
+T3a	class-applicability-final	doc	all	ok	1:head:see:1:post:appropriately	Every man should see a dog appropriately.
+T3a	class-hyphenated	doc	all	ok	1:head:see:1:pre:when-suitable	Every man should when-suitable see a dog.
+T3b	two-adverbs	doc	all	ok	1:head:see:1:pre:carefully;1:head:see:1:post:ideally	Every man should carefully see a dog ideally.
+T3b	two-pre-adverbs	doc	all	ok	1:head:see:1:pre:especially;1:head:see:1:pre:carefully	Every man should carefully and especially see a dog.
+T3b	copula-adverb	doc	all	ok	1:head:be:1:preprop:especially	A dog especially is happy.
+T3b	passive-pre	doc	all	ok	1:head:see:1:pre:carefully	A dog should be carefully seen by a man.
+T3b	passive-final	doc	all	ok	1:head:see:1:post:carefully	A dog should be seen by a man carefully.
+T3c	copula-for	doc	all	ok	-	A dog is appropriate for a man.
+T3c	copula-antecedent	doc	all	ok	-	If a dog is feasible then a man sees the dog.
+T3c	copula-negated	doc	all	ok	-	A dog is not indicated.
+T3c	copula-two-adjectives	doc	all	ok	-	A dog is feasible and appropriate.
+T3c	copula-qualifier-preference	doc	all	ok	-	A dog is feasible and preferred.
+T3c	copula-preference-qualifier	doc	all	ok	-	A dog is preferred and feasible.
+T3c	copula-with-alternative	doc	all	ok	-	A dog is feasible and preferred instead-of a cat.
+T3c	grade-preference-overlap	doc	all	ok	-	A recommendation is a preferred category-A-recommendation.
+T3c	copula-noun-bound	doc	all	ok	-	A recommendation is a feasible category-A-recommendation.
+T3c	attributive-noun-bound	doc	all	ok	-	A feasible dog sleeps.
+T3c	copula-earlier-object	doc	all	ok	-	A feasible dog sleeps.\nA cat is the dog.
+T3c	copula-earlier-property	doc	all	ok	-	A dog is feasible.\nThe dog is appropriate.
+T3c	copula-possibility-actual	doc	all	ok	-	A dog is likely.
+T3c	copula-naf	doc	all	ok	-	Every dog that is not provably feasible sleeps.
+T3d	root-manner	doc	all	ok	1:head:see:1:pre:carefully	A man carefully sees a dog.
+T3d	antecedent-adverb	doc	all	ok	1:body:see:1:pre:usually	If a man usually sees a dog then the man owns the dog.
+T3d	antecedent-horn	doc	all	ok	1:body:see:1:pre:usually	If a man usually sees a dog or a woman usually sees a cat then a bird sleeps.
+T3d	shared-horn	doc	all	ok	1:body:see:1:pre:usually	If a man usually sees a dog and the dog sleeps or waits then a bird sleeps.
+T3d	consequent-adverb	doc	all	ok	1:head:see:1:pre:ideally	If a man owns a dog then the man should ideally see the dog.
+T3d	operator-should	doc	all	ok	1:head:see:1:pre:usually	A man should usually see a dog.
+T3d	operator-must	doc	all	ok	1:head:see:1:pre:usually	A man must usually see a dog.
+T3d	operator-can	doc	all	ok	1:head:see:1:pre:usually	A man can usually see a dog.
+T3d	operator-may	doc	all	ok	1:head:see:1:pre:usually	A man may usually see a dog.
+T3d	negated-focus	doc	all	ok	1:head:see:1:pre:especially	A man does not especially see a dog.
+T3d	nested-can-must	doc	all	ok	1:head:see:1:pre:usually	It is possible that a man must usually see a dog.
+T3d	naf-adverb	doc	all	ok	1:naf:see:1:pre:usually	Every man that does not provably usually see a dog sleeps.
+T3d	naf-final	doc	all	ok	1:naf:see:1:post:usually	Every man that does not provably see a dog usually sleeps.
+T3e	horn-local-event	doc	all	ok	1:head:review:1:pre:carefully	If a patient sleeps or a doctor waits then a man should carefully review a record.
+T3e	horn-local-actual	doc	all	ok	1:head:review:1:pre:carefully	If a patient sleeps or a doctor waits then a man carefully reviews a record.
+T3f	degree-comp	doc	all	qualifier_shape(degree,1)	-	Every man should more carefully see a dog.
+T3f	degree-comp-antecedent	doc	all	qualifier_shape(degree,1)	-	If a man sees a dog more carefully then the man sleeps.
+T3f	degree-sup	doc	all	qualifier_shape(degree,1)	-	Every man should most carefully see a dog.
+T3f	degree-sup-antecedent	doc	all	qualifier_shape(degree,1)	-	If a man sees a dog most carefully then the man sleeps.
+T3f	degree-sentence-two	doc	all	qualifier_shape(degree,2)	-	A man sleeps.\nThe man should more carefully see a dog.
+T3g	guard-usuality-root	doc	all	qualifier_shape(asserted,1)	-	A man usually sees a dog.
+T3g	guard-usuality-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man usually sees the dog.
+T3g	guard-usuality-negative	doc	all	qualifier_shape(asserted,1)	-	A man does not usually see a dog.
+T3g	guard-usuality-negative-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man does not usually see the dog.
+T3g	guard-exempt-usuality-can	doc	all	ok	1:head:see:1:pre:usually	A man can usually see a dog.
+T3g	guard-exempt-usuality-should	doc	all	ok	1:head:see:1:pre:usually	A man should usually see a dog.
+T3g	guard-exempt-usuality-should-not	doc	all	ok	1:head:see:1:pre:usually	A man should not usually see a dog.
+T3g	guard-exempt-usuality-can-not	doc	all	ok	1:head:see:1:pre:usually	It is possible that a man does not usually see a dog.
+T3g	guard-exempt-usuality-antecedent	doc	all	ok	1:body:see:1:pre:usually	If a man usually sees a dog then the man sleeps.
+T3g	guard-exempt-usuality-naf	doc	all	ok	1:naf:see:1:pre:usually	Every man that does not provably usually see a dog sleeps.
+T3g	guard-ideality-root	doc	all	qualifier_shape(asserted,1)	-	A man ideally sees a dog.
+T3g	guard-ideality-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man ideally sees the dog.
+T3g	guard-ideality-negative	doc	all	qualifier_shape(asserted,1)	-	A man does not ideally see a dog.
+T3g	guard-ideality-negative-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man does not ideally see the dog.
+T3g	guard-exempt-ideality-can	doc	all	ok	1:head:see:1:pre:ideally	A man can ideally see a dog.
+T3g	guard-exempt-ideality-should	doc	all	ok	1:head:see:1:pre:ideally	A man should ideally see a dog.
+T3g	guard-exempt-ideality-should-not	doc	all	ok	1:head:see:1:pre:ideally	A man should not ideally see a dog.
+T3g	guard-exempt-ideality-can-not	doc	all	ok	1:head:see:1:pre:ideally	It is possible that a man does not ideally see a dog.
+T3g	guard-exempt-ideality-antecedent	doc	all	ok	1:body:see:1:pre:ideally	If a man ideally sees a dog then the man sleeps.
+T3g	guard-exempt-ideality-naf	doc	all	ok	1:naf:see:1:pre:ideally	Every man that does not provably ideally see a dog sleeps.
+T3g	guard-possibility-root	doc	all	qualifier_shape(asserted,1)	-	A man possibly sees a dog.
+T3g	guard-possibility-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man possibly sees the dog.
+T3g	guard-possibility-negative	doc	all	qualifier_shape(asserted,1)	-	A man does not possibly see a dog.
+T3g	guard-possibility-negative-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man does not possibly see the dog.
+T3g	guard-exempt-possibility-can	doc	all	ok	1:head:see:1:pre:possibly	A man can possibly see a dog.
+T3g	guard-exempt-possibility-should	doc	all	ok	1:head:see:1:pre:possibly	A man should possibly see a dog.
+T3g	guard-exempt-possibility-should-not	doc	all	ok	1:head:see:1:pre:possibly	A man should not possibly see a dog.
+T3g	guard-exempt-possibility-can-not	doc	all	ok	1:head:see:1:pre:possibly	It is possible that a man does not possibly see a dog.
+T3g	guard-exempt-possibility-antecedent	doc	all	ok	1:body:see:1:pre:possibly	If a man possibly sees a dog then the man sleeps.
+T3g	guard-exempt-possibility-naf	doc	all	ok	1:naf:see:1:pre:possibly	Every man that does not provably possibly see a dog sleeps.
+T3g	guard-applicability-root	doc	all	qualifier_shape(asserted,1)	-	A man appropriately sees a dog.
+T3g	guard-applicability-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man appropriately sees the dog.
+T3g	guard-applicability-negative	doc	all	qualifier_shape(asserted,1)	-	A man does not appropriately see a dog.
+T3g	guard-applicability-negative-consequent	doc	all	qualifier_shape(asserted,1)	-	If a man owns a dog then the man does not appropriately see the dog.
+T3g	guard-exempt-applicability-can	doc	all	ok	1:head:see:1:pre:appropriately	A man can appropriately see a dog.
+T3g	guard-exempt-applicability-should	doc	all	ok	1:head:see:1:pre:appropriately	A man should appropriately see a dog.
+T3g	guard-exempt-applicability-should-not	doc	all	ok	1:head:see:1:pre:appropriately	A man should not appropriately see a dog.
+T3g	guard-exempt-applicability-can-not	doc	all	ok	1:head:see:1:pre:appropriately	It is possible that a man does not appropriately see a dog.
+T3g	guard-exempt-applicability-antecedent	doc	all	ok	1:body:see:1:pre:appropriately	If a man appropriately sees a dog then the man sleeps.
+T3g	guard-exempt-applicability-naf	doc	all	ok	1:naf:see:1:pre:appropriately	Every man that does not provably appropriately see a dog sleeps.
+T3g	asserted-focus	doc	all	ok	1:head:see:1:pre:especially	A man especially sees a dog.
+T3g	asserted-negative-focus	doc	all	ok	1:head:see:1:pre:especially	A man does not especially see a dog.
+T3g	asserted-manner	doc	all	ok	1:head:see:1:pre:carefully	A man carefully sees a dog.
+T3g	asserted-negative-manner	doc	all	ok	1:head:see:1:pre:carefully	A man does not carefully see a dog.
+T3g	asserted-force	doc	all	ok	1:head:see:1:pre:strongly	A man strongly sees a dog.
+T3g	asserted-negative-force	doc	all	ok	1:head:see:1:pre:strongly	A man does not strongly see a dog.
+T3g	guard-second-sentence	doc	all	qualifier_shape(asserted,2)	-	A man sleeps.\nThe man usually sees a dog.
+T3h	guard-before-own-preference	doc	all	qualifier_shape(asserted,1)	-	A man usually waits instead-of a dog.
+T3h	preference-before-degree	doc	all	preference_shape(no_preferred,1)	-	A man waits instead-of a dog and should more carefully see a cat.
+T3h	degree-before-preference	doc	all	qualifier_shape(degree,1)	-	A man should more carefully see a cat and waits instead-of a dog.
+T3h	preference-before-asserted	doc	all	preference_shape(no_preferred,1)	-	A man waits instead-of a dog and usually sees a cat.
+T3h	asserted-before-preference	doc	all	qualifier_shape(asserted,1)	-	A man usually sees a cat and waits instead-of a dog.
+T3h	degree-before-unmapped	doc	all	qualifier_shape(degree,1)	-	A man rapidly sees a dog and should more carefully see a cat.
+T3h	asserted-before-unmapped	doc	all	qualifier_shape(asserted,1)	-	A man rapidly sees a dog and usually sees a cat.
+T3h	degree-before-asserted	doc	all	qualifier_shape(degree,1)	-	A man more carefully sees a dog and usually sees a cat.
+T3h	asserted-before-degree	doc	all	qualifier_shape(asserted,1)	-	A man usually sees a dog and more carefully sees a cat.
+T3h	parent-before-naf	doc	all	preference_shape(no_preferred,1)	-	Every man that waits instead-of a dog and that does not provably more carefully see a cat sleeps.
+T3h	naf-before-parent	doc	all	qualifier_shape(degree,1)	-	Every man that does not provably more carefully see a cat and that waits instead-of a dog sleeps.
+T3h	antecedent-before-head	doc	all	qualifier_shape(degree,1)	-	If a man more carefully sees a dog then the man waits instead-of a cat.
+T3h	head-after-antecedent	doc	all	preference_shape(no_preferred,1)	-	If a man waits instead-of a dog then the man should more carefully see a cat.
+T3h	time-before-degree	doc	all	temporal_shape(range_shape,1)	-	A man should more carefully wait for at least 2 hours to less than 3 hours.
+T3i	unmapped-table	doc	old	condition_shape(modifier_adv(A,rapidly,pos))	-	A man rapidly sees a dog.
+T3i	unmapped-no-table	doc	-	condition_shape(modifier_adv(A,carefully,pos))	-	A man carefully sees a dog.
+T3i	unmapped-other-qualifier	doc	unused	condition_shape(modifier_adv(A,rapidly,pos))	-	A man rapidly sees a dog.
+T3j	scope-first-event	doc	all	ok	1:head:see:1:pre:carefully	A man should carefully see a dog and should see a cat.
+T3j	scope-second-event	doc	all	ok	1:head:see:2:pre:carefully	A man should see a dog and should carefully see a cat.
+T3j	scope-first-shared-box	doc	all	ok	1:head:see:1:pre:carefully	It is possible that a man carefully sees a dog and sees a cat.
+T3j	scope-second-shared-box	doc	all	ok	1:head:see:2:pre:carefully	It is possible that a man sees a dog and carefully sees a cat.
+T3k	all-carriers	doc	all	ok	2:head:see:1:pre:carefully	A recommendation is a preferred category-A-recommendation.\nA man should carefully see a dog instead-of a cat for 2 hours.
+T3k	copula-adverb-qualifier-preference	doc	all	ok	1:head:be:1:preprop:especially	A dog especially is feasible and preferred.
+T3k	post-adverb-before-time	doc	all	ok	1:head:see:1:post:carefully	A man should see a dog carefully for 2 hours.
+T3k	post-adverb-after-time	doc	all	ok	1:head:see:1:post:carefully	A man should see a dog for 2 hours carefully.
+T3l	reclass-modal	doc	only	ok	1:head:see:1:pre:carefully	Every man should carefully see a dog.
+T3l	reclass-root	doc	only	ok	1:head:see:1:pre:carefully	A man carefully sees a dog.
+T3m	qualified-naf-contradiction	doc	all	naf-qualified	1:naf:see:1:pre:usually	If a man sees a dog and it is not provable that the man usually sees the dog then the man sleeps.
+T3n	identity-none	doc	-	ok	-	A dog is feasible and preferred.
+T3n	identity-old	doc	old	ok	-	A dog is feasible and preferred.
+T3n	identity-unused	doc	unused	ok	-	A dog is feasible and preferred.
+T3n	inert-filter-row	doc	only	ok	1:head:see:1:pre:carefully	A man carefully sees a dog.
+T3o	query-adverb-none	query	-	query_unsupported(leaf(/(modifier_adv,3)),1)	-	Does a man carefully see a dog?
+T3o	query-copula-none	query	-	ok	-	Is a dog feasible and preferred?
+T3o	query-adverb-old	query	old	query_unsupported(leaf(/(modifier_adv,3)),1)	-	Does a man carefully see a dog?
+T3o	query-copula-old	query	old	ok	-	Is a dog feasible and preferred?
+T3o	query-adverb-all	query	all	query_unsupported(leaf(/(modifier_adv,3)),1)	-	Does a man carefully see a dog?
+T3o	query-copula-all	query	all	ok	-	Is a dog feasible and preferred?
+T3o	query-with-for	query	all	ok	-	Is a dog appropriate for a man?
+T3a	proof-class-ideality-pre	proof	all	ok	1:head:see:1:pre:ideally	Every man should ideally see a dog.
+T3a	proof-class-usuality-final	proof	all	ok	1:head:see:1:post:usually	Every man should see a dog usually.
+T3b	proof-two-adverbs	proof	all	ok	1:head:see:1:pre:carefully;1:head:see:1:post:ideally	Every man should carefully see a dog ideally.
+T3c	proof-copula-for	proof	all	ok	-	A dog is appropriate for a man.
+T3c	proof-copula-two-adjectives	proof	all	ok	-	A dog is feasible and appropriate.
+T3c	proof-copula-qualifier-preference	proof	all	ok	-	A dog is feasible and preferred.
+T3d	proof-antecedent-adverb	proof	all	ok	1:body:see:1:pre:usually	If a man usually sees a dog then the man owns the dog.
+T3d	proof-consequent-adverb	proof	all	ok	1:head:see:1:pre:ideally	If a man owns a dog then the man should ideally see the dog.
+T3d	proof-operator-can	proof	all	ok	1:head:see:1:pre:usually	A man can usually see a dog.
+T3d	proof-nested-can-must	proof	all	ok	1:head:see:1:pre:usually	It is possible that a man must usually see a dog.
+T3e	proof-horn-local-event	proof	all	ok	1:head:review:1:pre:carefully	If a patient sleeps or a doctor waits then a man should carefully review a record.
+T3k	proof-all-carriers	proof	all	ok	2:head:see:1:pre:carefully	A recommendation is a preferred category-A-recommendation.\nA man should carefully see a dog instead-of a cat for 2 hours.

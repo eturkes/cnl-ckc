@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec09-imp20',ace_sha256('0a5a22c41c645f8c4532f78a1d5f58eeec713a6fe213274d2b8f1e6d6e9876fe'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a clinician manages a patient then the clinician should screen a substance-use for the patient and should discuss a substance-use-concern with the patient in a nonjudgmental-manner.

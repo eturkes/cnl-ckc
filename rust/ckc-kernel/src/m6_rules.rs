@@ -126,7 +126,6 @@ pub open spec fn ant_relation(shared: Seq<Term>, left: Term, right: Term, env: &
         Err(e) => Err(e),
         Ok(fs) => match spec::flatten_doc(
             crate::m7_annotate::tab_view(&env.tab),
-            false,
             left,
             spec::Where::Antecedent,
             env.s as nat,
@@ -140,7 +139,6 @@ pub open spec fn ant_relation(shared: Seq<Term>, left: Term, right: Term, env: &
             Err(e) => Err(e),
             Ok(f1) => match spec::flatten_doc(
                 crate::m7_annotate::tab_view(&env.tab),
-                false,
                 right,
                 spec::Where::Antecedent,
                 env.s as nat,

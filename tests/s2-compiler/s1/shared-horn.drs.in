@@ -1,0 +1,3 @@
+sentences([[^,'If',a,man,usually,sees,a,dog,and,the,dog,sleeps,or,waits,then,a,bird,sleeps,'.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,man,countable,na,eq,1),/(1,3)),-(object(B,dog,countable,na,eq,1),/(1,7)),-(modifier_adv(C,usually,pos),/(1,4)),-(predicate(C,see,A,B),/(1,5)),v(drs([D],[-(predicate(D,sleep,B),/(1,11))]),drs([E],[-(predicate(E,wait,B),/(1,13))]))]),drs([F,G],[-(object(F,bird,countable,na,eq,1),/(1,16)),-(predicate(G,sleep,F),/(1,17))]))])).
+messages([]).

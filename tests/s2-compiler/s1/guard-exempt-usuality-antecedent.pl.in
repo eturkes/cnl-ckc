@@ -1,0 +1,40 @@
+% guard-exempt-usuality-antecedent.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+guideline_schema_version(1).
+guideline_document('guard-exempt-usuality-antecedent',ace_sha256('5c9fcb41991f87a02af3a79d3c7b4d7378d25c473524fcda7c0667b0b38b2787'),ulex(sha256('34135e18179535d7ec29307b60a62601cbdb820ea582b8d8e31e3a4c4461e825')),vocabulary(sha256('299d693be3585b49087a8a37d671c84cd2ee6bca0bbd248786301324a07f49d4'))).
+% S1: If a man sees a dog then the man sleeps.
+guideline_event(actual,'$guideline_id'(product,'guard-exempt-usuality-antecedent',1,ref(4),[A,B,C]),sleep) :- guideline_entity(actual,A,man,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,dog,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,see), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
+guideline_arg(actual,'$guideline_id'(product,'guard-exempt-usuality-antecedent',1,ref(4),[A,B,C]),1,A) :- guideline_entity(actual,A,man,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,dog,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,see), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s42-15',ace_sha256('9af0b395018f76e2f670d29dd19804d2ca335d3faa7b0e380ccbae7bd26042b2'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a patient has a continuous-opioid-use and the continuous-opioid-use has a duration and the duration includes more than 3 days and the duration includes less than 7 days then every clinician may reduce a daily-opioid-dosage to 50 percent during 2 days for an opioid-withdrawal-symptom-amelioration during an opioid-discontinuation for the patient.

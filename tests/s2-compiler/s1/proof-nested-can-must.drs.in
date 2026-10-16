@@ -1,0 +1,3 @@
+sentences([[^,'It',is,possible,that,a,man,must,usually,see,a,dog,'.']]).
+drs(drs([],[can(drs([A],[-(object(A,man,countable,na,eq,1),/(1,6)),must(drs([B,C],[-(object(B,dog,countable,na,eq,1),/(1,11)),-(modifier_adv(C,usually,pos),/(1,8)),-(predicate(C,see,A,B),/(1,9))]))]))])).
+messages([]).

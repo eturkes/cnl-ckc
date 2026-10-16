@@ -1,0 +1,3 @@
+sentences([[^,'A',man,waits,'instead-of',a,dog,and,should,more,carefully,see,a,cat,'.']]).
+drs(drs([A,B,C],[-(object(A,man,countable,na,eq,1),/(1,2)),-(object(B,dog,countable,na,eq,1),/(1,6)),-(predicate(C,wait,A),/(1,3)),-(modifier_pp(C,'instead-of',B),/(1,4)),should(drs([D,E],[-(object(D,cat,countable,na,eq,1),/(1,13)),-(modifier_adv(E,carefully,comp),/(1,10)),-(predicate(E,see,A,D),/(1,11))]))])).
+messages([]).

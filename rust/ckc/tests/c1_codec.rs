@@ -1,4 +1,4 @@
-// C1 P1/P2/P5 + S1 D1/D10; oracle = the contracts, not the implementation.
+// C1 P1/P2/P5 + S1 D1/D10 + S2 D1/P9; oracle = the contracts, not the implementation.
 // CKC_C1_TEST_BIN selects a prebuilt executable; default = the release binary.
 use std::fs;
 use std::io::Read;
@@ -7,7 +7,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-const INDICATORS: [(&str, usize); 17] = [
+const INDICATORS: [(&str, usize); 18] = [
     ("guideline_schema_version", 1),
     ("guideline_document", 4),
     ("guideline_entity", 4),
@@ -25,6 +25,7 @@ const INDICATORS: [(&str, usize); 17] = [
     ("guideline_range", 3),
     ("guideline_grade", 5),
     ("guideline_preference", 4),
+    ("guideline_qualifier", 4),
 ];
 const TABLE: &str = "# format: kind\tlemma\tvalue\nunit\thour\thour\nrelation\tfor\tduration\n";
 const SIMPLE: &str = "guideline_entity(actual,a,patient,countable)";
@@ -103,7 +104,7 @@ fn document(
 ) -> String {
     format!(
         "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{}",
-        declarations(17, 4),
+        declarations(18, 4),
         atom(id),
         atom(&sha(ace)),
         digest(ulex),
@@ -146,8 +147,8 @@ fn legacy_document(version: usize) -> String {
     let h = sha(TABLE);
     let d = plain_doc(None, (version != 1).then_some(h.as_str()));
     let d = d.replace(
-        &declarations(17, 4),
-        &declarations([0, 9, 11, 17][version], if version == 1 { 3 } else { 4 }),
+        &declarations(18, 4),
+        &declarations([0, 9, 11, 18][version], if version == 1 { 3 } else { 4 }),
     );
     let d = d.replace(
         "guideline_schema_version(1).",
@@ -378,7 +379,7 @@ fn a05_all_semantic_indicators_in_every_clause_position() {
             }
         }
     }
-    assert_eq!(c.total, 480);
+    assert_eq!(c.total, 512);
     c.finish();
 }
 
@@ -1029,7 +1030,7 @@ fn a20_query_vocabulary_and_goal_whitelist_are_composition_independent() {
             let q = query("query", "Question?\n", None, table, &goal, "[]");
             check_chain(
                 &mut c,
-                &format!("all 15 goals {name} table={}", table.is_some()),
+                &format!("all 16 goals {name} table={}", table.is_some()),
                 "query",
                 &q,
                 "no(finite_failure)",

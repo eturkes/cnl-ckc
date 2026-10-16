@@ -784,7 +784,7 @@ pub fn lemma_ref(arena: &ETermArena, t: &T) -> (out: Option<T>)
                 && a.len() >= 3) || (has_name(&name, &Sym::Property) && a.len() == 3) || (has_name(
                 &name,
                 &Sym::ModifierPp,
-            ) && a.len() == 3) {
+            ) && a.len() == 3) || (has_name(&name, &Sym::ModifierAdv) && a.len() == 3) {
                 Some(a[1].cp())
             } else {
                 None

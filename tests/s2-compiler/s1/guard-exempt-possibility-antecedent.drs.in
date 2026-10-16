@@ -1,0 +1,3 @@
+sentences([[^,'If',a,man,possibly,sees,a,dog,then,the,man,sleeps,'.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,man,countable,na,eq,1),/(1,3)),-(object(B,dog,countable,na,eq,1),/(1,7)),-(modifier_adv(C,possibly,pos),/(1,4)),-(predicate(C,see,A,B),/(1,5))]),drs([D],[-(predicate(D,sleep,A),/(1,11))]))])).
+messages([]).

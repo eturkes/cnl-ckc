@@ -1,4 +1,4 @@
-// S1 D1–D7/P2–P3: diff-blind compiler + vocabulary probes; CKC_S1_TEST_BIN selects red replay.
+// S1 D1–D7/P2–P3 + S2 D1/P9: diff-blind compiler + vocabulary probes; CKC_S1_TEST_BIN selects red replay.
 #[path = "../../../tests/s1-compiler/model.rs"]
 mod model;
 
@@ -12,6 +12,8 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::Instant;
 
+const QUALIFIER_DECLARATIONS: &str =
+    ":- multifile(guideline_qualifier/4).\n:- discontiguous(guideline_qualifier/4).\n";
 const TABLE_PATH: &str = "guidelines/cdc-2022-opioid/vocabulary.tsv";
 const ALIAS_TABLE_PATH: &str = "guidelines/alpha/vocabulary.tsv";
 const GIT_ENV: [(&str, &str); 2] = [
@@ -770,7 +772,11 @@ fn expected(c: &Case) -> String {
             "{} reference annotation census",
             c.id
         );
-        out
+        out.replacen(
+            &model::declarations(),
+            &(model::declarations() + QUALIFIER_DECLARATIONS),
+            1,
+        )
     };
     model::rebind(
         &text,
@@ -898,7 +904,7 @@ fn e00_reference_baselines_and_oracle_properties() {
         );
         let predicted = expected(c);
         assert_eq!(
-            model::erase(&predicted, &old),
+            model::erase(&predicted.replacen(QUALIFIER_DECLARATIONS, "", 1), &old),
             old,
             "{} erase(insert(C1)) = C1",
             c.id
@@ -1016,7 +1022,7 @@ fn e19_every_green_projection_erases_to_c1() {
         );
         if actual.ok() {
             let old = baseline(c);
-            let erased = model::erase(&actual.stdout, &old);
+            let erased = model::erase(&actual.stdout.replacen(QUALIFIER_DECLARATIONS, "", 1), &old);
             checks.require(
                 erased == old,
                 format!("{} erased projection: {}", c.id, difference(&old, &erased)),
@@ -1039,7 +1045,7 @@ fn e21_question_identity_and_no_s1_goals() {
 fn e22_all_documents_have_ordered_17_indicator_block() {
     let results = results();
     let mut checks = Checks::new("E22");
-    let expected = model::declarations();
+    let expected = model::declarations() + QUALIFIER_DECLARATIONS;
     let mut documents: Vec<_> = cases()
         .into_iter()
         .filter(|c| c.mode == "doc" && c.expect == "ok")

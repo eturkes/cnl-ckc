@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s47-08',ace_sha256(b83f6c9191de1fcf9a23725caa5452d1a13cc4c6e5c2d63343e4b4a516b61b73),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If a clinician provides a supportive-contraceptive-counseling to a patient then the clinician should apply a patient-centered-reproductive-justice-framework and should use a shared-decision-making with the patient.

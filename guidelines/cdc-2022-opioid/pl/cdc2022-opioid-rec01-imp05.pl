@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec01-imp05',ace_sha256('3c03d82d961cff78e6423ae929e947963b1d635aefabed2d874f7643476c535a'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: Every clinician should explain an expected-opioid-benefit with a patient before an opioid-initiation and should explain a common-opioid-risk with a patient before an opioid-initiation and should explain a serious-opioid-risk with a patient before an opioid-initiation and should explain an opioid-alternative with a patient before an opioid-initiation.

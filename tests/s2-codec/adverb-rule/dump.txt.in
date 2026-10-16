@@ -1,0 +1,3 @@
+sentences([[^,'If',a,clinician,carefully,reviews,a,record,then,the,clinician,waits,'.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,clinician,countable,na,eq,1),/(1,3)),-(object(B,record,countable,na,eq,1),/(1,7)),-(modifier_adv(C,carefully,pos),/(1,4)),-(predicate(C,review,A,B),/(1,5))]),drs([D],[-(predicate(D,wait,A),/(1,11))]))])).
+messages([]).

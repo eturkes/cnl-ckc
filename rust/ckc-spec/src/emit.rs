@@ -696,6 +696,13 @@ pub open spec fn condition(
                 ),
                 _ => Result::Err(atom("unresolved_argument"@)),
             }
+        } else if name == ascii("$guideline_qualifier"@) && args.len() == 3 {
+            match resolve(args[0], map, sko) {
+                Result::Err(er) => Result::Err(er),
+                Result::Ok(e) => Result::Ok(
+                    seq![lit("guideline_qualifier"@, seq![ctx, e, args[1], args[2]])],
+                ),
+            }
         } else {
             Result::Err(atom("condition_shape"@))
         },
@@ -1744,10 +1751,11 @@ pub open spec fn flatten_ann(
     }
 }
 
-// --- strength annotations (contract s1 D3/D4: documents with a table) ---
+// --- strength annotations (contracts s1 D3/D4, s2 D3: documents with a table) ---
 // After a scope's temporal pass: a grade right after its root-fact copula; a
 // preference right after its alternative pp or, without one, after its
-// copula. Endpoints resolve document-wide (`plain`); questions never run it.
+// copula; a qualifier in place of its adverb, or right after its copula.
+// Endpoints resolve document-wide (`plain`); questions never run it.
 pub open spec fn s1_shape(kind: Seq<char>, why: Seq<char>) -> Term {
     Term::Comp(ascii(kind), seq![atom(why)])
 }
@@ -1881,9 +1889,96 @@ pub open spec fn preference_item(c: Term, e: Term, pa: (Term, Term)) -> Item {
     Item::Anch(c, Term::Comp(ascii("$guideline_preference"@), seq![e, pa.0, pa.1]))
 }
 
-// One item and the annotations that follow it. A violation reports at the
-// event's predicate item.
-pub open spec fn strength_item(env: Env, facts: bool, scope: Seq<Item>, it: Item) -> Result<
+pub open spec fn qualifier_item(c: Term, e: Term, k: Seq<u8>, word: Term) -> Item {
+    Item::Anch(c, Term::Comp(ascii("$guideline_qualifier"@), seq![e, Term::Atom(k), word]))
+}
+
+// s2 D3.7: the classes whose adverb weakens what its clause asserts.
+pub open spec fn attenuating(k: Seq<u8>) -> bool {
+    ||| k == ascii("usuality"@)
+    ||| k == ascii("ideality"@)
+    ||| k == ascii("possibility"@)
+    ||| k == ascii("applicability"@)
+}
+
+// s2 D3.7: c lies under a modal operator (should, must, can, may) on its path
+// from `actual`; classical negations alone leave it asserted.
+pub open spec fn edge_of(items: Seq<Item>, c: Term) -> Option<(Term, Seq<u8>)>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Option::None
+    } else {
+        match items[0] {
+            Item::Op(_, outer, inner, op) => if inner == c {
+                Option::Some((outer, op))
+            } else {
+                edge_of(items.drop_first(), c)
+            },
+            _ => edge_of(items.drop_first(), c),
+        }
+    }
+}
+
+pub open spec fn under_modal(scope: Seq<Item>, c: Term, fuel: nat) -> bool
+    decreases fuel,
+{
+    if fuel == 0 || c == actual() {
+        false
+    } else {
+        match edge_of(scope, c) {
+            Option::Some((outer, op)) => is_modal(op) || under_modal(
+                scope,
+                outer,
+                (fuel - 1) as nat,
+            ),
+            Option::None => false,
+        }
+    }
+}
+
+// s2 D3.2: a copula complement that names no thing (no `object` declaration).
+pub open spec fn property_only(env: Env, v: Term) -> bool {
+    match v {
+        Term::Var(k) => decl(env.decls, k) is None,
+        _ => false,
+    }
+}
+
+// s2 D3.2: one qualifier per same-context `property(p, A, pos)` of a copula
+// `be(x, p)` whose A is a qualifier lemma, in item order.
+pub open spec fn copula_qualifiers(
+    tab: Vocabulary,
+    items: Seq<Item>,
+    ctx: Term,
+    e: Term,
+    p: Term,
+) -> Seq<Item>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        (match items[0] {
+            Item::Anch(c, inner) => if c == ctx && is_comp(inner, "property"@, 3) && arg(inner, 0)
+                == p && arg(inner, 2) == atom("pos"@) {
+                match assoc(tab.qualifiers, name_of(arg(inner, 1))) {
+                    Option::Some(k) => seq![qualifier_item(ctx, e, k, arg(inner, 1))],
+                    Option::None => Seq::empty(),
+                }
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        }) + copula_qualifiers(tab, items.drop_first(), ctx, e, p)
+    }
+}
+
+// One item and the annotations that follow it (s2: an adverb item becomes its
+// qualifier). A violation reports at its item. `w` = the scope's place: a grade
+// comes from a root scope alone; a head outside the antecedent with no modal
+// operator on its context path is asserted (s2 D3.7).
+pub open spec fn strength_item(env: Env, w: Where, scope: Seq<Item>, it: Item) -> Result<
     Seq<Item>,
     Term,
 >
@@ -1891,7 +1986,7 @@ pub open spec fn strength_item(env: Env, facts: bool, scope: Seq<Item>, it: Item
 {
     match it {
         Item::Anch(c, inner) => if is_pred(inner) {
-            let gs = match (if facts {
+            let gs = match (if w is Root {
                 grade_of(env, c, inner)
             } else {
                 Option::None
@@ -1907,14 +2002,20 @@ pub open spec fn strength_item(env: Env, facts: bool, scope: Seq<Item>, it: Item
                 ],
                 Option::None => Seq::empty(),
             };
+            let qs = if is_comp(inner, "predicate"@, 4) && arg(inner, 1) == atom("be"@)
+                && property_only(env, arg(inner, 3)) {
+                copula_qualifiers(env.tab, scope, c, arg(inner, 0), arg(inner, 3))
+            } else {
+                Seq::empty()
+            };
             match preference_of(env, scope, c, inner) {
                 Result::Err(e) => Result::Err(e),
                 Result::Ok(Option::Some(pa)) => if pa.1 == atom("none"@) {
-                    Result::Ok(seq![it] + gs + seq![preference_item(c, arg(inner, 0), pa)])
+                    Result::Ok(seq![it] + gs + qs + seq![preference_item(c, arg(inner, 0), pa)])
                 } else {
-                    Result::Ok(seq![it] + gs)
+                    Result::Ok(seq![it] + gs + qs)
                 },
-                Result::Ok(Option::None) => Result::Ok(seq![it] + gs),
+                Result::Ok(Option::None) => Result::Ok(seq![it] + gs + qs),
             }
         } else if is_comp(inner, "modifier_pp"@, 3) && env.tab.alternatives.contains(
             name_of(arg(inner, 1)),
@@ -1928,10 +2029,26 @@ pub open spec fn strength_item(env: Env, facts: bool, scope: Seq<Item>, it: Item
                 },
                 Option::None => Result::Ok(seq![it]),
             }
+        } else if is_comp(inner, "modifier_adv"@, 3) {
+            // An unmapped adverb stays; the expansion rejects it.
+            match assoc(env.tab.qualifiers, name_of(arg(inner, 1))) {
+                Option::None => Result::Ok(seq![it]),
+                Option::Some(k) => if arg(inner, 2) != atom("pos"@) {
+                    Result::Err(s1_shape("qualifier_shape"@, "degree"@))
+                } else if attenuating(k) && !(w is Antecedent) && !under_modal(
+                    scope,
+                    c,
+                    scope.len(),
+                ) {
+                    Result::Err(s1_shape("qualifier_shape"@, "asserted"@))
+                } else {
+                    Result::Ok(seq![qualifier_item(c, arg(inner, 0), k, arg(inner, 1))])
+                },
+            }
         } else {
             Result::Ok(seq![it])
         },
-        Item::Naf(dom, payload) => match strength(env, false, payload) {
+        Item::Naf(dom, payload) => match strength(env, Where::Antecedent, payload) {
             Result::Err(e) => Result::Err(e),
             Result::Ok(p) => Result::Ok(seq![Item::Naf(dom, p)]),
         },
@@ -1939,20 +2056,18 @@ pub open spec fn strength_item(env: Env, facts: bool, scope: Seq<Item>, it: Item
     }
 }
 
-pub open spec fn strength_items(
-    env: Env,
-    facts: bool,
-    scope: Seq<Item>,
-    items: Seq<Item>,
-) -> Result<Seq<Item>, Term>
+pub open spec fn strength_items(env: Env, w: Where, scope: Seq<Item>, items: Seq<Item>) -> Result<
+    Seq<Item>,
+    Term,
+>
     decreases items, 1int,
 {
     if items.len() == 0 {
         Result::Ok(Seq::empty())
     } else {
         match (
-            strength_item(env, facts, scope, items[0]),
-            strength_items(env, facts, scope, items.drop_first()),
+            strength_item(env, w, scope, items[0]),
+            strength_items(env, w, scope, items.drop_first()),
         ) {
             (Result::Err(e), _) => Result::Err(e),
             (_, Result::Err(e)) => Result::Err(e),
@@ -1961,17 +2076,15 @@ pub open spec fn strength_items(
     }
 }
 
-pub open spec fn strength(env: Env, facts: bool, items: Seq<Item>) -> Result<Seq<Item>, Term>
+pub open spec fn strength(env: Env, w: Where, items: Seq<Item>) -> Result<Seq<Item>, Term>
     decreases items, 2int,
 {
-    strength_items(env, facts, items, items)
+    strength_items(env, w, items, items)
 }
 
-// A document scope: the temporal pass, then (with a table) the strength pass;
-// `facts` = a root fact cluster, the only scope a grade may come from.
+// A document scope: the temporal pass, then (with a table) the strength pass.
 pub open spec fn flatten_doc(
     tab: Option<Env>,
-    facts: bool,
     l: Term,
     w: Where,
     s: nat,
@@ -1986,7 +2099,7 @@ pub open spec fn flatten_doc(
         Result::Err(e) => Result::Err(e),
         Result::Ok(f) => match tab {
             Option::None => Result::Ok(f),
-            Option::Some(env) => match strength(env, facts, f.items) {
+            Option::Some(env) => match strength(env, w, f.items) {
                 Result::Err(e) => Result::Err(e),
                 Result::Ok(items) => Result::Ok(Flat { items, n: f.n }),
             },
@@ -2050,7 +2163,6 @@ pub open spec fn fact_group(
         Option::None => Result::Err(atom("sentence_shape"@)),
         Option::Some(conds) => match flatten_doc(
             tab,
-            true,
             conds,
             Where::Root,
             s,
@@ -2176,7 +2288,6 @@ pub open spec fn flatten_seq(
 ) -> Result<Flat, Term> {
     flatten_doc(
         tab,
-        false,
         list_of(cs),
         Where::Antecedent,
         s,
@@ -2311,7 +2422,7 @@ pub open spec fn flatten_cons(
     base: nat,
     tab: Option<Env>,
 ) -> Result<Flat, Term> {
-    flatten_doc(tab, false, cconds, Where::Consequent, s, docid, deps, actual(), Encl::Top, n, base)
+    flatten_doc(tab, cconds, Where::Consequent, s, docid, deps, actual(), Encl::Top, n, base)
 }
 
 // The rule law: curry → split scan → one variant, or two over a single
@@ -2420,7 +2531,6 @@ pub open spec fn split_variants(
         Result::Err(e) => Result::Err(e),
         Result::Ok(fs) => match flatten_doc(
             tab,
-            false,
             conds1,
             Where::Antecedent,
             s,
@@ -2434,7 +2544,6 @@ pub open spec fn split_variants(
             Result::Err(e) => Result::Err(e),
             Result::Ok(f1) => match flatten_doc(
                 tab,
-                false,
                 conds2,
                 Where::Antecedent,
                 s,
@@ -2632,7 +2741,9 @@ pub open spec fn lemma_of(t: Term) -> Option<Term> {
     match t {
         Term::Comp(name, args) => if (name == ascii("object"@) && args.len() == 6) || (name
             == ascii("predicate"@) && args.len() >= 3) || (name == ascii("property"@) && args.len()
-            == 3) || (name == ascii("modifier_pp"@) && args.len() == 3) {
+            == 3) || (name == ascii("modifier_pp"@) && args.len() == 3) || (name == ascii(
+            "modifier_adv"@,
+        ) && args.len() == 3) {
             Option::Some(args[1])
         } else {
             Option::None

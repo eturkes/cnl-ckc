@@ -1,0 +1,3 @@
+sentences([[^,'Is',there,a,patient,?]]).
+drs(drs([],[question(drs([A],[-(object(A,patient,countable,na,eq,1),/(1,4))]))])).
+messages([]).

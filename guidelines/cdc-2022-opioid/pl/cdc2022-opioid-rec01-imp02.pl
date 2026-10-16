@@ -33,6 +33,8 @@
 :- discontiguous(guideline_grade/5).
 :- multifile(guideline_preference/4).
 :- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec01-imp02',ace_sha256('827a00f98cf682a8da35fcff8042c867380d23707454ddfe780f52bb84ae81c0'),ulex(sha256('6028ca436ba3763c4e3a5f23e316b6a1b582cdb7dc76e395f1787016efb02bee')),vocabulary(sha256(c1f07c5282df4f4d69b5a8c2ef4b1fbe8beae14dbb75f5931ece77ea612f2d95))).
 % S1: If an acute-pain-diagnosis warrants an opioid-use and an acute-pain-severity warrants an opioid-use then every clinician should prescribe an immediate-release-opioid at a lowest-effective-dose for an expected-severe-pain-duration.

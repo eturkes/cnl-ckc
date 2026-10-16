@@ -32,11 +32,12 @@
 %   range annotations its rows reach (contracts m7t, q12, q13; the v2_/v3_
 %   predicate prefixes below name those contracts' pattern families), in
 %   documents the grade + preference annotations of its strength, evidence,
-%   preference and alternative rows (contract s1; the s1_ prefix), and admits
-%   relation/3 leaves + upper-bound condition lists in questions; rejects add
-%   unsupported temporal_shape(Why,S), grade_shape(Why,S), preference_shape(Why,S)
-%   and the load class vocabulary_load (exit 2). Law = docs/REFERENCE.md
-%   "Compiled Prolog schema".
+%   preference and alternative rows (contract s1; the s1_ prefix) and the
+%   qualifier annotations of its qualifier rows (contract s2; the s2_ prefix),
+%   and admits relation/3 leaves + upper-bound condition lists in questions;
+%   rejects add unsupported temporal_shape(Why,S), grade_shape(Why,S),
+%   preference_shape(Why,S), qualifier_shape(Why,S) and the load class
+%   vocabulary_load (exit 2). Law = docs/REFERENCE.md "Compiled Prolog schema".
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
 %
@@ -758,7 +759,7 @@ read_vocabulary(File, table(Units, Relations, Spacings, Windows, Frequencies,
     ( Body \== [] -> true ; v2_bad(no_rows) ),
     ( append(Lines, [0'\n], Body) -> true ; v2_bad(final_newline) ),
     split_lf(Lines, Rows),
-    v2_rows(Rows, 1, t([], [], [], [], [], [], [], k([], [], [], [])),
+    v2_rows(Rows, 1, t([], [], [], [], [], [], [], k([], [], [], [], [])),
         t(Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges,
           Strength)).
 
@@ -775,11 +776,11 @@ v2_rows([Row|Rows], N, T0, T) :-
    value, duplicates). A `#` row is a comment, never a row, so a pre-c1
    two-line header fails at row 1. A noun is one of unit, frame and grade
    noun; a preposition maps to at most one of relation, frequency and range,
-   and an alternative preposition to no other kind; an adjective is an
-   approximation or a preference (s1 D2). K = k(Strengths, Evidences,
-   Preferences, Alternatives). */
+   and an alternative preposition to no other kind; a lemma is at most one of
+   an approximation, a preference and a qualifier (s1 D2, s2 D2). K =
+   k(Strengths, Evidences, Preferences, Alternatives, Qualifiers). */
 v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
-    K0 = k(GS0, GE0, P0, Alt0),
+    K0 = k(GS0, GE0, P0, Alt0, Q0),
     ( Row = [0'#|_] -> v2_bad(row(N, comment)) ; true ),
     v2_split_tab(Row, Fields),
     ( Fields = [K, L, V] -> true ; v2_bad(row(N, field_count)) ),
@@ -834,7 +835,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         T = t(U0, R0, S0, W0, F, A0, G0, K0)
     ; Kind == approximation ->
         ( atom_codes(about, V) -> true ; v2_bad(row(N, approximation_value)) ),
-        ( ( memberchk(Lemma, A0) ; memberchk(Lemma, P0) ) ->
+        ( ( memberchk(Lemma, A0) ; memberchk(Lemma, P0) ; memberchk(Lemma-_, Q0) ) ->
             v2_bad(row(N, duplicate_adjective))
         ; true
         ),
@@ -862,18 +863,18 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ),
         ( Kind == strength ->
             append(GS0, [Lemma-Value], GS),
-            T = t(U0, R0, S0, W0, F0, A0, G0, k(GS, GE0, P0, Alt0))
+            T = t(U0, R0, S0, W0, F0, A0, G0, k(GS, GE0, P0, Alt0, Q0))
         ; append(GE0, [Lemma-Value], GE),
-          T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE, P0, Alt0))
+          T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE, P0, Alt0, Q0))
         )
     ; Kind == preference ->
         ( atom_codes(preferred, V) -> true ; v2_bad(row(N, preference_value)) ),
-        ( ( memberchk(Lemma, P0) ; memberchk(Lemma, A0) ) ->
+        ( ( memberchk(Lemma, P0) ; memberchk(Lemma, A0) ; memberchk(Lemma-_, Q0) ) ->
             v2_bad(row(N, duplicate_adjective))
         ; true
         ),
         append(P0, [Lemma], P),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P, Alt0))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P, Alt0, Q0))
     ; Kind == alternative ->
         ( atom_codes(alternative, V) -> true ; v2_bad(row(N, alternative_value)) ),
         ( ( memberchk(Lemma, Alt0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma-_, S0)
@@ -882,7 +883,20 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(Alt0, [Lemma], Alt),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt, Q0))
+    ; Kind == qualifier ->
+        ( v2_closed_id(V, [usuality, ideality, focus, manner, force, possibility,
+              applicability], Class) ->
+            true
+        ; v2_bad(row(N, qualifier_value))
+        ),
+        ( memberchk(Lemma-_, Q0) -> v2_bad(row(N, duplicate_qualifier)) ; true ),
+        ( ( memberchk(Lemma, A0) ; memberchk(Lemma, P0) ) ->
+            v2_bad(row(N, duplicate_adjective))
+        ; true
+        ),
+        append(Q0, [Lemma-Class], Q),
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt0, Q))
     ; v2_bad(row(N, kind))
     ).
 
@@ -1166,45 +1180,50 @@ v2_ann_inner(order(E, Role, A), _, _, _, '$guideline_order'(E, Role, A)).
 v2_ann_inner(range(E, H, _), Scope, Anns, Ctx, '$guideline_range'(L, H)) :-
     v3_partners(Anns, Scope, Ctx, E, [L-_]).
 
-/* ---------- s1 strength pass (contract s1 D3/D4: documents with a table) ----------
+/* ---------- s1 strength pass (contracts s1 D3/D4, s2 D3: documents with a table) ----------
    After a scope's temporal pass (spec emit.rs `strength`): a grade right
    after its root-fact copula; a preference right after its alternative pp
-   or, without one, after its copula. Endpoints classify document-wide
-   (v3_plain); a violation reports at the event's predicate condition;
+   or, without one, after its copula; a qualifier in place of its adverb, or
+   right after its copula. Where = root | antecedent | consequent: a grade
+   comes from a root scope alone; an attenuating adverb qualifier on a head
+   in context actual outside the antecedent rejects (s2 D3.7). Endpoints
+   classify document-wide (v3_plain); a violation reports at its item;
    question mode never runs it. */
-s1_strength(S, Facts, Items0, Items) :-
+s1_strength(S, Where, Items0, Items) :-
     ( nb_current(ace_to_pl_vocabulary, table(U, R, Sp, W, F, A, G, K, _)) ->
-        s1_items(Items0, t(U, R, Sp, W, F, A, G), K, S, Facts, Items0, Items)
+        s1_items(Items0, t(U, R, Sp, W, F, A, G), K, S, Where, Items0, Items)
     ; Items = Items0
     ).
 
 s1_items([], _, _, _, _, _, []).
-s1_items([Item|Items], T, K, S, Facts, Scope, Out) :-
-    s1_item(Item, T, K, S, Facts, Scope, Head),
-    s1_items(Items, T, K, S, Facts, Scope, Tail),
+s1_items([Item|Items], T, K, S, Where, Scope, Out) :-
+    s1_item(Item, T, K, S, Where, Scope, Head),
+    s1_items(Items, T, K, S, Where, Scope, Tail),
     append(Head, Tail, Out).
 
-s1_item(Item, T, K, S, Facts, Scope, Out) :-
+s1_item(Item, T, K, S, Where, Scope, Out) :-
     ( s1_anchored(Item, Ctx, Inner), s1_is_pred(Inner) ->
         arg(1, Inner, E),
-        ( Facts == true, s1_grade(T, K, Ctx, Inner, Dim, Value) ->
+        ( Where == root, s1_grade(T, K, Ctx, Inner, Dim, Value) ->
             arg(3, Inner, Rec),
             arg(4, Inner, Label),
             Gs = [anchored(Ctx, '$guideline_grade'(Rec, Dim, Value, Label))]
         ; Gs = []
         ),
+        s2_copula_qualifiers(K, Scope, Ctx, Inner, Qs),
+        append(Gs, Qs, GQs),
         s1_preference_of(T, K, Scope, Ctx, Inner, Pref),
         ( Pref = err(Why) ->
             reject(unsupported, preference_shape(Why, S))
         ; Pref = some(P, A), A == none ->
-            append([Item|Gs], [anchored(Ctx, '$guideline_preference'(E, P, none))], Out)
-        ; Out = [Item|Gs]
+            append([Item|GQs], [anchored(Ctx, '$guideline_preference'(E, P, none))], Out)
+        ; Out = [Item|GQs]
         )
     ; s1_anchored(Item, Ctx, Inner),
       functor(Inner, modifier_pp, 3),
       arg(2, Inner, Prep),
       atom(Prep),
-      K = k(_, _, _, Alt),
+      K = k(_, _, _, Alt, _),
       memberchk(Prep, Alt) ->
         arg(1, Inner, E),
         ( s1_event_pred(Scope, Ctx, E, Pred),
@@ -1212,14 +1231,86 @@ s1_item(Item, T, K, S, Facts, Scope, Out) :-
             Out = [Item, anchored(Ctx, '$guideline_preference'(E, P, A))]
         ; Out = [Item]
         )
+    ; s1_anchored(Item, Ctx, Inner),
+      functor(Inner, modifier_adv, 3),
+      arg(2, Inner, Adv),
+      atom(Adv),
+      K = k(_, _, _, _, Quals),
+      memberchk(Adv-Class, Quals) ->
+        arg(1, Inner, E),
+        arg(3, Inner, Degree),
+        ( Degree \== pos ->
+            reject(unsupported, qualifier_shape(degree, S))
+        ; s2_attenuating(Class), Where \== antecedent, \+ s2_under_modal(Scope, Ctx) ->
+            reject(unsupported, qualifier_shape(asserted, S))
+        ; Out = [anchored(Ctx, '$guideline_qualifier'(E, Class, Adv))]
+        )
     ; nonvar(Item),
       functor(Item, naf, 2) ->
         arg(1, Item, Dom),
         arg(2, Item, Payload),
-        s1_items(Payload, T, K, S, false, Payload, Payload2),
+        s1_items(Payload, T, K, S, antecedent, Payload, Payload2),
         Out = [naf(Dom, Payload2)]
     ; Out = [Item]
     ).
+
+/* s2 D3.7: the classes whose adverb weakens what its clause asserts. */
+s2_attenuating(usuality).
+s2_attenuating(ideality).
+s2_attenuating(possibility).
+s2_attenuating(applicability).
+
+/* s2 D3.7: Ctx lies under a modal operator on its path from actual;
+   classical negations alone leave it asserted. */
+s2_under_modal(Scope, Ctx) :-
+    Ctx \== actual,
+    s2_edge(Scope, Ctx, Outer, Op),
+    ( memberchk(Op, [should, must, can, may]) ->
+        true
+    ; s2_under_modal(Scope, Outer)
+    ).
+
+s2_edge([Item|Items], Ctx, Outer, Op) :-
+    ( nonvar(Item),
+      functor(Item, operator, 4),
+      arg(3, Item, Inner),
+      Inner == Ctx ->
+        arg(2, Item, Outer),
+        arg(4, Item, Op)
+    ; s2_edge(Items, Ctx, Outer, Op)
+    ).
+
+/* s2 D3.2: one qualifier per same-context property(P, Adj, pos) of a copula
+   be(X, P) whose complement P names no thing (no object declaration) and
+   whose Adj is a qualifier lemma, in item order. */
+s2_copula_qualifiers(k(_, _, _, _, Quals), Scope, Ctx, Pred, Qs) :-
+    ( functor(Pred, predicate, 4),
+      arg(2, Pred, Verb),
+      Verb == be,
+      arg(4, Pred, P),
+      var(P),
+      \+ v3_decl(P, _) ->
+        arg(1, Pred, E),
+        s2_property_qualifiers(Scope, Quals, Ctx, E, P, Qs)
+    ; Qs = []
+    ).
+
+s2_property_qualifiers([], _, _, _, _, []).
+s2_property_qualifiers([Item|Items], Quals, Ctx, E, P, Qs) :-
+    ( s1_anchored(Item, C0, Inner),
+      C0 == Ctx,
+      functor(Inner, property, 3),
+      arg(1, Inner, P0),
+      P0 == P,
+      arg(3, Inner, Pol),
+      Pol == pos,
+      arg(2, Inner, Adj),
+      atom(Adj),
+      memberchk(Adj-Class, Quals) ->
+        Qs = [anchored(Ctx, '$guideline_qualifier'(E, Class, Adj))|Rest]
+    ; Qs = Rest
+    ),
+    s2_property_qualifiers(Items, Quals, Ctx, E, P, Rest).
 
 s1_anchored(Item, Ctx, Inner) :-
     nonvar(Item),
@@ -1280,7 +1371,7 @@ s1_alternatives([Item|Items], Alt, Ctx, E, Objs) :-
 /* D4: some(Preferred, Alternative | none), none, or err(Why). A preference
    copula be(X, P) (P a preference property) prefers X; any other event with
    one alternative pp prefers its second participant. */
-s1_preference_of(T, k(_, _, Prefs, Alt), Scope, Ctx, Pred, Result) :-
+s1_preference_of(T, k(_, _, Prefs, Alt, _), Scope, Ctx, Pred, Result) :-
     arg(1, Pred, E),
     s1_alternatives(Scope, Alt, Ctx, E, Alts),
     length(Alts, NA),
@@ -1308,7 +1399,7 @@ s1_preference_of(T, k(_, _, Prefs, Alt), Scope, Ctx, Pred, Result) :-
 
 /* D3: the grade of a root-fact copula be(R, L) in context actual whose
    complement's noun is a grade noun. */
-s1_grade(T, k(Strengths, Evidences, _, _), Ctx, Pred, Dim, Value) :-
+s1_grade(T, k(Strengths, Evidences, _, _, _), Ctx, Pred, Dim, Value) :-
     Ctx == actual,
     functor(Pred, predicate, 4),
     arg(2, Pred, Verb),
@@ -1682,8 +1773,8 @@ vocabulary_record(Record0, Record) :-
    invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
    See docs/REFERENCE.md "Compiled Prolog schema". */
 
-/* Uniform declaration block (F2, c1 D2, s1 D1): every document declares all
-   17 indicators regardless of population or table. */
+/* Uniform declaration block (F2, c1 D2, s1 D1, s2 D1): every document
+   declares all 18 indicators regardless of population or table. */
 v1_indicators([
     guideline_schema_version/1,
     guideline_document/4,
@@ -1701,7 +1792,8 @@ v1_indicators([
     guideline_recurrence_window/7,
     guideline_range/3,
     guideline_grade/5,
-    guideline_preference/4
+    guideline_preference/4,
+    guideline_qualifier/4
 ]).
 
 v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
@@ -1825,6 +1917,9 @@ v1_lemma_slot(Sub, Lemma) :-
 v1_lemma_slot(Sub, Lemma) :-
     functor(Sub, modifier_pp, 3),
     arg(2, Sub, Lemma).
+v1_lemma_slot(Sub, Lemma) :-
+    functor(Sub, modifier_adv, 3),
+    arg(2, Sub, Lemma).
 
 v1_reserved_atom(Atom) :-
     ( sub_atom(Atom, 0, _, _, guideline_) ->
@@ -1884,7 +1979,7 @@ v1_root_group([boxed(_)|Items]) :-
 v1_fact_bundle(Group, S, DocId, Map0, Map, Clauses) :-
     v1_flatten_items(Group, root, S, DocId, [], actual, none, 1, _, Items0),
     v2_annotate(S, Items0, Items1),
-    s1_strength(S, true, Items1, Items),
+    s1_strength(S, root, Items1, Items),
     v1_ref_slots(Items, Slots),
     v1_first_occurrence(Slots, [], Ordered),
     v1_mint_ordinals(Ordered, 1, S, DocId, Map0, Map),
@@ -1975,11 +2070,11 @@ v1_split_conds([C|Cs], [C|Shared], Vs) :-
 v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_seg_items(Segs, S, DocId, 1, N1, AItems0),
     v2_annotate(S, AItems0, AItems1),
-    s1_strength(S, false, AItems1, AItems),
+    s1_strength(S, antecedent, AItems1, AItems),
     v1_flatten_items(CConds, consequent, S, DocId, ADom, actual, none,
         N1, _, CItems0),
     v2_annotate(S, CItems0, CItems1),
-    s1_strength(S, false, CItems1, CItems),
+    s1_strength(S, consequent, CItems1, CItems),
     v1_ante_refs(AItems, CItems, Map, Ordered, AnteRefs),
     v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
     v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
@@ -2006,25 +2101,25 @@ v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_flatten_items(Shared, antecedent, S, DocId, [], actual, none,
         1, NS, SharedItems0),
     v2_annotate(S, SharedItems0, SharedItems1),
-    s1_strength(S, false, SharedItems1, SharedItems),
+    s1_strength(S, antecedent, SharedItems1, SharedItems),
     v1_flatten_items(Conds1, antecedent, S, DocId, [], actual, none,
         NS, NA1, Arm1Items0),
     v2_annotate(S, Arm1Items0, Arm1Items1),
-    s1_strength(S, false, Arm1Items1, Arm1Items),
+    s1_strength(S, antecedent, Arm1Items1, Arm1Items),
     v1_flatten_items(Conds2, antecedent, S, DocId, [], actual, none,
         NA1, NA2, Arm2Items0),
     v2_annotate(S, Arm2Items0, Arm2Items1),
-    s1_strength(S, false, Arm2Items1, Arm2Items),
+    s1_strength(S, antecedent, Arm2Items1, Arm2Items),
     append(ADom, Dom1, Deps1),
     append(ADom, Dom2, Deps2),
     v1_flatten_items(CConds, consequent, S, DocId, Deps1, actual, none,
         NA2, _, CItems10),
     v2_annotate(S, CItems10, CItems11),
-    s1_strength(S, false, CItems11, CItems1),
+    s1_strength(S, consequent, CItems11, CItems1),
     v1_flatten_items(CConds, consequent, S, DocId, Deps2, actual, none,
         NA2, _, CItems20),
     v2_annotate(S, CItems20, CItems21),
-    s1_strength(S, false, CItems21, CItems2),
+    s1_strength(S, consequent, CItems21, CItems2),
     append(Arm1Items, Arm2Items, ArmItems),
     append(SharedItems, ArmItems, AnteAll),
     v1_ante_refs(AnteAll, CItems1, Map, Ordered, AnteRefs),
@@ -2371,6 +2466,15 @@ v1_condition(Context, Inner, Map, Sko,
     v1_ref(E0, Map, Sko, E),
     v1_ref(P0, Map, Sko, P),
     ( A0 == none -> A = none ; v1_ref(A0, Map, Sko, A) ).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_qualifier(Context, E, Class, Word)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_qualifier', 3),
+    !,
+    arg(1, Inner, E0),
+    arg(2, Inner, Class),
+    arg(3, Inner, Word),
+    v1_ref(E0, Map, Sko, E).
 v1_condition(_, Inner, _, _, _) :-
     reject(unsupported, condition_shape(Inner)).
 

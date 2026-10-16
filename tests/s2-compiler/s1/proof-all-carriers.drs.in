@@ -1,0 +1,3 @@
+sentences([[^,'A',recommendation,is,a,preferred,'category-A-recommendation','.'],[^,'A',man,should,carefully,see,a,dog,'instead-of',a,cat,for,2,hours,'.']]).
+drs(drs([A,B,C,D],[-(object(A,recommendation,countable,na,eq,1),/(1,2)),-(object(B,'category-A-recommendation',countable,na,eq,1),/(1,6)),-(property(B,preferred,pos),/(1,5)),-(predicate(C,be,A,B),/(1,3)),-(object(D,man,countable,na,eq,1),/(2,2)),should(drs([E,F,G,H],[-(object(E,dog,countable,na,eq,1),/(2,7)),-(object(F,cat,countable,na,eq,1),/(2,10)),-(object(G,hour,countable,na,eq,2),/(2,13)),-(modifier_adv(H,carefully,pos),/(2,4)),-(predicate(H,see,D,E),/(2,5)),-(modifier_pp(H,for,G),/(2,11)),-(modifier_pp(H,'instead-of',F),/(2,8))]))])).
+messages([]).
