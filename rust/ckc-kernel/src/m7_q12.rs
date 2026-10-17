@@ -973,65 +973,7 @@ pub fn approximate_exec(
     ensures
         out == spec::approximate(tab@, item_models(items@), ctx@, r@),
 {
-    let ghost ms = item_models(items@);
-    let mut i = 0usize;
-    proof {
-        assert(ms.skip(0) =~= ms);
-    }
-    while i < items.len()
-        invariant
-            i <= items@.len(),
-            arena_ok(arena),
-            items_valid(arena.nodes@, items@),
-            valid(arena.nodes@, ctx),
-            valid(arena.nodes@, r),
-            ms == item_models(items@),
-            ms.len() == items@.len(),
-            spec::approximate(tab@, ms, ctx@, r@) == spec::approximate(
-                tab@,
-                ms.skip(i as int),
-                ctx@,
-                r@,
-            ),
-        decreases items@.len() - i,
-    {
-        proof {
-            items_at(arena.nodes@, items@, i as int);
-            assert(ms.skip(i as int)[0] == ms[i as int]);
-            assert(ms[i as int] == items@[i as int]@);
-            assert(ms.skip(i as int).drop_first() =~= ms.skip(i + 1));
-            reveal_with_fuel(spec::approximate, 1);
-        }
-        let hit = match &items[i].kind {
-            Kind::Anch(c, inner) => {
-                if crate::m6_term::equal(arena, c, ctx) && is_comp(
-                    arena,
-                    inner,
-                    &Sym::Property,
-                    3,
-                ) {
-                    let a0 = arg_at(arena, inner, 0);
-                    let a1 = arg_at(arena, inner, 1);
-                    let a2 = arg_at(arena, inner, 2);
-                    let noun = atom_bytes(arena, &a1);
-                    crate::m6_term::equal(arena, &a0, r) && is_atom(arena, &a2, &Sym::Pos)
-                        && crate::m7_temporal::seq_in(&tab.approximations, &noun)
-                } else {
-                    false
-                }
-            },
-            _ => false,
-        };
-        if hit {
-            return true;
-        }
-        i += 1;
-    }
-    proof {
-        assert(ms.skip(i as int).len() == 0);
-        reveal_with_fuel(spec::approximate, 1);
-    }
-    false
+    crate::m7_strength::pos_property_exec(arena, &tab.approximations, items, ctx, r)
 }
 
 // spec::approx_why is Some: q (object o, frame f) is approximate and not eq.

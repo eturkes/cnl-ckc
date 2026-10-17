@@ -1335,21 +1335,25 @@ s1_event_pred([Item|Items], Ctx, E, Pred) :-
     ; s1_event_pred(Items, Ctx, E, Pred)
     ).
 
-/* A same-context property(P, Adj, pos) with Adj a preference adjective. */
-s1_preferred_prop([Item|Items], Prefs, Ctx, P) :-
-    ( s1_anchored(Item, C0, Inner),
-      C0 == Ctx,
-      functor(Inner, property, 3),
-      arg(1, Inner, P0),
-      P0 == P,
-      arg(2, Inner, Adj),
-      atom(Adj),
-      memberchk(Adj, Prefs),
-      arg(3, Inner, Pol),
-      Pol == pos ->
-        true
-    ; s1_preferred_prop(Items, Prefs, Ctx, P)
-    ).
+/* A same-context property(X, A, pos) with A in Lemmas (an approximation lemma,
+   q13 D3; a preference adjective, s1 D4). The cut follows every guard, so a late
+   match still succeeds; referents compare by ==, never bound. */
+pos_property(Lemmas, Items, Ctx, X) :-
+    member(Item, Items),
+    s1_anchored(Item, C0, Inner),
+    C0 == Ctx,
+    functor(Inner, property, 3),
+    arg(1, Inner, X0),
+    X0 == X,
+    arg(3, Inner, Degree),
+    Degree == pos,
+    arg(2, Inner, A),
+    atom(A),
+    memberchk(A, Lemmas),
+    !.
+
+s1_preferred_prop(Items, Prefs, Ctx, P) :-
+    pos_property(Prefs, Items, Ctx, P).
 
 /* The objects of E's same-context alternative pps, in item order. */
 s1_alternatives([], _, _, _, []).
@@ -1641,25 +1645,9 @@ v3_count([C0-Ann|Anns], Ctx, E, Kind, N) :-
     ).
 
 /* ---------- q13 D3/D4: about + ranged minimum ---------- */
-/* A same-context property(R, A, pos) with A an approximation lemma. */
 v3_approximate(T, Scope, Ctx, R) :-
     T = t(_, _, _, _, _, Ap, _),
-    member(Item, Scope),
-    nonvar(Item),
-    functor(Item, anchored, 2),
-    arg(1, Item, C0),
-    C0 == Ctx,
-    arg(2, Item, Inner),
-    nonvar(Inner),
-    functor(Inner, property, 3),
-    arg(1, Inner, R0),
-    R0 == R,
-    arg(3, Inner, Degree),
-    Degree == pos,
-    arg(2, Inner, A),
-    atom(A),
-    memberchk(A, Ap),
-    !.
+    pos_property(Ap, Scope, Ctx, R).
 
 /* D3: a claimed quantity Q (object O, frame F) marked approximate needs eq. */
 v3_approx_check(T, S, Scope, Ctx, Q, F, O) :-

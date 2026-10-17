@@ -13,6 +13,8 @@ use crate::m7_annotate::{opt_model, prepend};
 use crate::m7_q12::{EEnv, decl_exec, plain_exec};
 #[cfg(verus_keep_ghost)]
 use crate::m7_q12::{env_view, envo_view};
+#[cfg(verus_keep_ghost)]
+use crate::m7_temporal::lemmas_view;
 use crate::m7_temporal::{EVocabulary, seq_in};
 use ckc_spec::emit as spec;
 use ckc_spec::term::Term;
@@ -87,6 +89,81 @@ pub fn event_pred(arena: &ETermArena, items: &Vec<I>, ctx: &T, e: &T) -> (out: O
     None
 }
 
+// spec::pos_property: a same-context `property(x, A, pos)` with A in `lemmas`.
+pub fn pos_property_exec(
+    arena: &ETermArena,
+    lemmas: &Vec<Vec<u8>>,
+    items: &Vec<I>,
+    ctx: &T,
+    x: &T,
+) -> (out: bool)
+    requires
+        arena_ok(arena),
+        items_valid(arena.nodes@, items@),
+        valid(arena.nodes@, ctx),
+        valid(arena.nodes@, x),
+    ensures
+        out == spec::pos_property(lemmas_view(lemmas@), item_models(items@), ctx@, x@),
+{
+    let ghost ls = lemmas_view(lemmas@);
+    let ghost ms = item_models(items@);
+    let mut i = 0usize;
+    proof {
+        assert(ms.skip(0) =~= ms);
+    }
+    while i < items.len()
+        invariant
+            i <= items@.len(),
+            arena_ok(arena),
+            items_valid(arena.nodes@, items@),
+            valid(arena.nodes@, ctx),
+            valid(arena.nodes@, x),
+            ls == lemmas_view(lemmas@),
+            ms == item_models(items@),
+            ms.len() == items@.len(),
+            spec::pos_property(ls, ms, ctx@, x@) == spec::pos_property(
+                ls,
+                ms.skip(i as int),
+                ctx@,
+                x@,
+            ),
+        decreases items@.len() - i,
+    {
+        proof {
+            items_at(arena.nodes@, items@, i as int);
+            assert(ms.skip(i as int)[0] == ms[i as int]);
+            assert(ms[i as int] == items@[i as int]@);
+            assert(ms.skip(i as int).drop_first() =~= ms.skip(i + 1));
+            reveal_with_fuel(spec::pos_property, 1);
+        }
+        match &items[i].kind {
+            Kind::Anch(c, inner) => {
+                if crate::m6_term::equal(arena, c, ctx) && is_comp(
+                    arena,
+                    inner,
+                    &Sym::Property,
+                    3,
+                ) {
+                    let a0 = arg_at(arena, inner, 0);
+                    let a1 = arg_at(arena, inner, 1);
+                    let a2 = arg_at(arena, inner, 2);
+                    if crate::m6_term::equal(arena, &a0, x) && is_atom(arena, &a2, &Sym::Pos)
+                        && seq_in(lemmas, &atom_bytes(arena, &a1)) {
+                        return true;
+                    }
+                }
+            },
+            _ => {},
+        }
+        i += 1;
+    }
+    proof {
+        assert(ms.skip(i as int).len() == 0);
+        reveal_with_fuel(spec::pos_property, 1);
+    }
+    false
+}
+
 pub fn preferred_prop(
     arena: &ETermArena,
     tab: &EVocabulary,
@@ -102,59 +179,7 @@ pub fn preferred_prop(
     ensures
         out == spec::preferred_prop(tab@, item_models(items@), ctx@, p@),
 {
-    let ghost ms = item_models(items@);
-    let mut i = 0usize;
-    proof {
-        assert(ms.skip(0) =~= ms);
-    }
-    while i < items.len()
-        invariant
-            i <= items@.len(),
-            arena_ok(arena),
-            items_valid(arena.nodes@, items@),
-            valid(arena.nodes@, ctx),
-            valid(arena.nodes@, p),
-            ms == item_models(items@),
-            ms.len() == items@.len(),
-            spec::preferred_prop(tab@, ms, ctx@, p@) == spec::preferred_prop(
-                tab@,
-                ms.skip(i as int),
-                ctx@,
-                p@,
-            ),
-        decreases items@.len() - i,
-    {
-        proof {
-            items_at(arena.nodes@, items@, i as int);
-            assert(ms.skip(i as int)[0] == ms[i as int]);
-            assert(ms[i as int] == items@[i as int]@);
-            assert(ms.skip(i as int).drop_first() =~= ms.skip(i + 1));
-        }
-        match &items[i].kind {
-            Kind::Anch(c, inner) => {
-                if crate::m6_term::equal(arena, c, ctx) && is_comp(
-                    arena,
-                    inner,
-                    &Sym::Property,
-                    3,
-                ) {
-                    let a0 = arg_at(arena, inner, 0);
-                    let a1 = arg_at(arena, inner, 1);
-                    let a2 = arg_at(arena, inner, 2);
-                    if crate::m6_term::equal(arena, &a0, p) && is_atom(arena, &a2, &Sym::Pos)
-                        && seq_in(&tab.preferences, &atom_bytes(arena, &a1)) {
-                        return true;
-                    }
-                }
-            },
-            _ => {},
-        }
-        i += 1;
-    }
-    proof {
-        assert(ms.skip(i as int).len() == 0);
-    }
-    false
+    pos_property_exec(arena, &tab.preferences, items, ctx, p)
 }
 
 pub fn alternatives_of(

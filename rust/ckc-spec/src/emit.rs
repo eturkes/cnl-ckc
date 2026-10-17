@@ -1083,21 +1083,24 @@ pub open spec fn frame_shaped(o: Term) -> bool {
     ) == Term::Int(1)
 }
 
-// q13 D3: a same-context `property(r, A, pos)` with A an approximation lemma.
-pub open spec fn approximate(tab: Vocabulary, items: Seq<Item>, ctx: Term, r: Term) -> bool
+// A same-context `property(x, A, pos)` with A in `lemmas` (an approximation lemma, q13 D3;
+// a preference adjective, s1 D4).
+pub open spec fn pos_property(lemmas: Seq<Seq<u8>>, items: Seq<Item>, ctx: Term, x: Term) -> bool
     decreases items.len(),
 {
     if items.len() == 0 {
         false
     } else {
         (match items[0] {
-            Item::Anch(c, inner) => c == ctx && is_comp(inner, "property"@, 3) && arg(inner, 0) == r
-                && arg(inner, 2) == atom("pos"@) && tab.approximations.contains(
-                name_of(arg(inner, 1)),
-            ),
+            Item::Anch(c, inner) => c == ctx && is_comp(inner, "property"@, 3) && arg(inner, 0) == x
+                && arg(inner, 2) == atom("pos"@) && lemmas.contains(name_of(arg(inner, 1))),
             _ => false,
-        }) || approximate(tab, items.drop_first(), ctx, r)
+        }) || pos_property(lemmas, items.drop_first(), ctx, x)
     }
+}
+
+pub open spec fn approximate(tab: Vocabulary, items: Seq<Item>, ctx: Term, r: Term) -> bool {
+    pos_property(tab.approximations, items, ctx, r)
 }
 
 // D3: a claimed quantity q (object o) marked approximate on itself or on its
@@ -1782,21 +1785,8 @@ pub open spec fn event_pred(items: Seq<Item>, ctx: Term, e: Term) -> Option<Term
     }
 }
 
-// A same-context `property(p, A, pos)` with A a preference adjective.
-pub open spec fn preferred_prop(tab: Vocabulary, items: Seq<Item>, ctx: Term, p: Term) -> bool
-    decreases items.len(),
-{
-    if items.len() == 0 {
-        false
-    } else {
-        (match items[0] {
-            Item::Anch(c, inner) => c == ctx && is_comp(inner, "property"@, 3) && arg(inner, 0) == p
-                && arg(inner, 2) == atom("pos"@) && tab.preferences.contains(
-                name_of(arg(inner, 1)),
-            ),
-            _ => false,
-        }) || preferred_prop(tab, items.drop_first(), ctx, p)
-    }
+pub open spec fn preferred_prop(tab: Vocabulary, items: Seq<Item>, ctx: Term, p: Term) -> bool {
+    pos_property(tab.preferences, items, ctx, p)
 }
 
 // The objects of E's same-context alternative pps, in item order.

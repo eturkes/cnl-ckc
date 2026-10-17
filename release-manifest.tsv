@@ -1,5 +1,5 @@
 meta	schema	v1
-meta	compiler	e89ee8863ad5997bdbe7141b762dc9ca69d7834202d5304f7be60a4da08a8b46
+meta	compiler	d5814bc9d421259d0373e56ddd6ad1a6ceaf62be6b107e07e55820204d3ef8e4
 meta	base-lexicon	2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec
 meta	swipl	9.2.9
 meta	verify	sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt
