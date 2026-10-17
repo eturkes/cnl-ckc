@@ -7566,6 +7566,297 @@ pub proof fn literal_334()
     n::clean_bridge("joins the option that the preferred option replaces"@);
 }
 
+pub open spec fn data_335() -> Seq<nat> {
+    ns![60u32,104,51,62,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_335()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[335]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l335(Seq::empty());
+    p::all();
+    reveal_strlit("<h3>Qualifiers as compiled</h3>");
+    assert(n::codes("<h3>Qualifiers as compiled</h3>"@) =~= data_335());
+    assert(n::clean(data_335(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<h3>Qualifiers as compiled</h3>"@);
+}
+
+} // verus!
+}
+pub mod batch_336 {
+    use crate::{
+        k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
+        k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
+    };
+    use ckc_spec::ui as u;
+    use vstd::prelude::*;
+    use vstd::utf8::*;
+    verus! {
+
+pub open spec fn data_336() -> Seq<nat> {
+    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,113,117,97,108,105,102,105,101,114,32,119,111,114,100,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,113,117,97,108,105,102,105,101,114,32,100,101,115,99,114,105,98,101,115,32,116,104,101,32,119,111,114,100,105,110,103,32,111,102,32,105,116,115,32,97,99,116,105,111,110,32,111,114,32,99,111,110,100,105,116,105,111,110,46,32,65,32,113,117,97,108,105,102,105,101,114,32,111,110,32,97,32,99,111,110,100,105,116,105,111,110,32,109,117,115,116,32,97,108,115,111,32,104,111,108,100,32,105,110,32,116,104,101,32,102,97,99,116,115,32,116,104,97,116,32,109,101,101,116,32,116,104,101,32,99,111,110,100,105,116,105,111,110,46,32,65,110,32,101,120,99,108,117,100,101,100,32,99,111,110,100,105,116,105,111,110,32,116,101,115,116,115,32,116,104,101,32,99,111,110,100,105,116,105,111,110,32,116,111,103,101,116,104,101,114,32,119,105,116,104,32,105,116,115,32,113,117,97,108,105,102,105,101,114,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_336()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[336]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l336(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>",
+    );
+    assert(n::codes(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+    ) =~= data_336());
+    assert(n::clean(data_336(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+    );
+}
+
+pub open spec fn data_337() -> Seq<nat> {
+    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,75,105,110,100,60,47,116,104,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_337()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[337]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l337(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>",
+    );
+    assert(n::codes(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+    ) =~= data_337());
+    assert(n::clean(data_337(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+    );
+}
+
+pub open spec fn data_338() -> Seq<nat> {
+    ns![72u32,111,119,32,111,102,116,101,110].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_338()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[338]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l338(Seq::empty());
+    p::all();
+    reveal_strlit("How often");
+    assert(n::codes("How often"@) =~= data_338());
+    assert(n::clean(data_338(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("How often"@);
+}
+
+pub open spec fn data_339() -> Seq<nat> {
+    ns![66u32,101,115,116,32,99,97,115,101].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_339()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[339]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l339(Seq::empty());
+    p::all();
+    reveal_strlit("Best case");
+    assert(n::codes("Best case"@) =~= data_339());
+    assert(n::clean(data_339(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("Best case"@);
+}
+
+pub open spec fn data_340() -> Seq<nat> {
+    ns![69u32,109,112,104,97,115,105,115].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_340()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[340]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l340(Seq::empty());
+    p::all();
+    reveal_strlit("Emphasis");
+    assert(n::codes("Emphasis"@) =~= data_340());
+    assert(n::clean(data_340(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("Emphasis"@);
+}
+
+pub open spec fn data_341() -> Seq<nat> {
+    ns![77u32,97,110,110,101,114].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_341()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[341]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l341(Seq::empty());
+    p::all();
+    reveal_strlit("Manner");
+    assert(n::codes("Manner"@) =~= data_341());
+    assert(n::clean(data_341(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("Manner"@);
+}
+
+pub open spec fn data_342() -> Seq<nat> {
+    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,119,111,114,100,105,110,103].map_values(
+        |x: u32| x as nat,
+    )
+}
+
+pub proof fn literal_342()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[342]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l342(Seq::empty());
+    p::all();
+    reveal_strlit("Strength of wording");
+    assert(n::codes("Strength of wording"@) =~= data_342());
+    assert(n::clean(data_342(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("Strength of wording"@);
+}
+
+pub open spec fn data_343() -> Seq<nat> {
+    ns![80u32,111,115,115,105,98,105,108,105,116,121].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_343()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[343]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l343(Seq::empty());
+    p::all();
+    reveal_strlit("Possibility");
+    assert(n::codes("Possibility"@) =~= data_343());
+    assert(n::clean(data_343(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("Possibility"@);
+}
+
+pub open spec fn data_344() -> Seq<nat> {
+    ns![67u32,111,110,100,105,116,105,111,110,32,111,102,32,117,115,101].map_values(
+        |x: u32| x as nat,
+    )
+}
+
+pub proof fn literal_344()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[344]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l344(Seq::empty());
+    p::all();
+    reveal_strlit("Condition of use");
+    assert(n::codes("Condition of use"@) =~= data_344());
+    assert(n::clean(data_344(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("Condition of use"@);
+}
+
+pub open spec fn data_345() -> Seq<nat> {
+    ns![60u32,104,50,62,81,117,97,108,105,102,105,101,114,32,119,111,114,100,115,60,47,104,50,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_345()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[345]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l345(Seq::empty());
+    p::all();
+    reveal_strlit("<h2>Qualifier words</h2>");
+    assert(n::codes("<h2>Qualifier words</h2>"@) =~= data_345());
+    assert(n::clean(data_345(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<h2>Qualifier words</h2>"@);
+}
+
+pub open spec fn data_346() -> Seq<nat> {
+    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,113,117,97,108,105,102,105,101,114,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,113,117,97,108,105,102,105,101,114,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_346()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[346]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l346(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>",
+    );
+    assert(n::codes(
+        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+    ) =~= data_346());
+    assert(n::clean(data_346(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+    );
+}
+
 } // verus!
 }
 pub mod css {
@@ -12876,7 +13167,7 @@ pub proof fn block_304(i: int)
 
 pub proof fn block_320(i: int)
     requires
-        320 <= i < 335,
+        320 <= i < 336,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -12910,14 +13201,49 @@ pub proof fn block_320(i: int)
         batch_320::literal_332();
     } else if i == 333 {
         batch_320::literal_333();
-    } else {
+    } else if i == 334 {
         batch_320::literal_334();
+    } else {
+        batch_320::literal_335();
+    }
+}
+
+pub proof fn block_336(i: int)
+    requires
+        336 <= i < 347,
+    ensures
+        u::copy_literal_ok(u::copy_registry()[i]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_literal_ok);
+    if i == 336 {
+        batch_336::literal_336();
+    } else if i == 337 {
+        batch_336::literal_337();
+    } else if i == 338 {
+        batch_336::literal_338();
+    } else if i == 339 {
+        batch_336::literal_339();
+    } else if i == 340 {
+        batch_336::literal_340();
+    } else if i == 341 {
+        batch_336::literal_341();
+    } else if i == 342 {
+        batch_336::literal_342();
+    } else if i == 343 {
+        batch_336::literal_343();
+    } else if i == 344 {
+        batch_336::literal_344();
+    } else if i == 345 {
+        batch_336::literal_345();
+    } else {
+        batch_336::literal_346();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 335,
+        0 <= i < 347,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -12963,14 +13289,16 @@ pub proof fn literal(i: int)
         block_288(i);
     } else if i < 320 {
         block_304(i);
-    } else {
+    } else if i < 336 {
         block_320(i);
+    } else {
+        block_336(i);
     }
 }
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 335,
+        u::copy_registry().len() == 347,
 {
     hide(u::lit);
     hide(u::css_text);

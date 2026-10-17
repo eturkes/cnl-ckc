@@ -1,4 +1,5 @@
 // S1 D8/P6: contract-only UI tests; copy oracle = b83e4a78:ckc-spec/src/ui.rs.
+// Copula Action: S2 D7 + seed-3 ui::{participant, verb_html}.
 // CKC_S1B_TEST_BIN selects a prebuilt executable; no candidate output supplies expectations.
 use std::collections::BTreeMap;
 use std::fs;
@@ -628,7 +629,7 @@ fn u3_bare_preference_without_timing_is_a_fact() {
                     1,
                     "statement",
                     "as a fact",
-                    "be",
+                    noun,
                     noun,
                     "none named",
                 )],
@@ -661,7 +662,11 @@ fn u4_alternatives_actions_and_reference_renaming() {
                         1,
                         "statement",
                         "as a fact",
-                        action,
+                        if action == "be" {
+                            "chosen-option"
+                        } else {
+                            action
+                        },
                         "chosen-option",
                         "other-option",
                     )],
@@ -747,7 +752,7 @@ fn u5_conditions_consequents_naf_and_sentence_deduplication() {
                 sentence,
                 "condition",
                 "as a fact",
-                "be",
+                "condition-option",
                 "condition-option",
                 "none named",
             ),
@@ -755,7 +760,7 @@ fn u5_conditions_consequents_naf_and_sentence_deduplication() {
                 sentence,
                 "excluded condition",
                 "as a fact",
-                "be",
+                "excluded-option",
                 "excluded-option",
                 "none named",
             ),
@@ -828,7 +833,7 @@ fn u6_operator_paths_are_outermost_first() {
                     1,
                     "statement",
                     stated,
-                    "be",
+                    "option",
                     "option",
                     "none named",
                 )],
@@ -849,7 +854,7 @@ fn u6_operator_paths_are_outermost_first() {
                 1,
                 "condition",
                 "must not",
-                "be",
+                "option",
                 "option",
                 "none named",
             )],
@@ -1249,4 +1254,130 @@ fn u10_new_sections_keep_mobile_and_print_frame_bytes() {
         }
     }
     c.finish("U10; frame invariants control: green at base");
+}
+
+#[test]
+fn u11_copula_actions_name_subjects_not_properties_or_options() {
+    let fx = Fixture::plain();
+    let mut c = Checks::default();
+    for adjective in ["preferred", "first-line"] {
+        for noun in ["NSAID", "nonopioid-therapy", "word:<&>\"'漢"] {
+            let mut terms = preference(1, 1, "be", noun, None, &[]);
+            for term in &mut terms {
+                *term = term.replace(",preferred,pos)", &format!(",{},pos)", atom(adjective)));
+            }
+            terms.extend(preference(
+                1,
+                100,
+                "prescribe",
+                "therapy",
+                Some("alternative"),
+                &["should"],
+            ));
+            fx.document_with_comment(&[facts(&terms)], &format!("{noun} is {adjective}."));
+            c.section(
+                &fx.request(DOC_ROUTE),
+                PREFERENCE,
+                &expected_section(
+                    PREFERENCE,
+                    &[
+                        preference_row(1, "statement", "as a fact", noun, noun, "none named"),
+                        preference_row(
+                            1,
+                            "statement",
+                            "should",
+                            "prescribe",
+                            "therapy",
+                            "alternative",
+                        ),
+                    ],
+                ),
+                &format!("copula subject={noun} adjective={adjective}; ordinary verb unchanged"),
+            );
+        }
+    }
+    fx.document(&[concat!(
+        "guideline_entity(actual,subject,'global-subject',countable).\n",
+        "guideline_entity(actual,preferred,'preferred-option',countable).\n",
+        "guideline_entity(actual,complement,'complement-noun',countable).\n",
+        "guideline_arg(actual,e,2,complement).\n",
+        "guideline_arg(actual,e,1,subject).\n",
+        "guideline_event(actual,e,be).\n",
+        "guideline_preference(actual,e,preferred,none) :- guideline_event(actual,e,be), guideline_arg(actual,e,1,local), guideline_entity(actual,local,'local-subject',countable).\n"
+    ).into()]);
+    c.section(
+        &fx.request(DOC_ROUTE),
+        PREFERENCE,
+        &expected_section(
+            PREFERENCE,
+            &[preference_row(
+                1,
+                "statement",
+                "as a fact",
+                "local-subject",
+                "preferred-option",
+                "none named",
+            )],
+        ),
+        "copula Action joins the clause-local subject, not the Preferred endpoint",
+    );
+    c.finish("U11");
+}
+
+#[test]
+fn u12_copula_missing_subject_and_first_participant_fallbacks() {
+    let fx = Fixture::plain();
+    let mut c = Checks::default();
+    for (args, expected) in [
+        ("", "not stated"),
+        ("guideline_arg(actual,e,1,missing).\n", "not stated"),
+        ("guideline_arg(actual,e,3,subject).\n", "not stated"),
+        ("guideline_arg(actual,e,'1',subject).\n", "not stated"),
+        (
+            "guideline_arg(actual,e,1,first).\nguideline_arg(actual,e,1,subject).\n",
+            "not stated",
+        ),
+        (
+            "guideline_arg(actual,e,1,subject).\nguideline_arg(actual,e,1,missing).\n",
+            "subject-noun",
+        ),
+        (
+            "guideline_arg(actual,e,1,subject).\nguideline_entity(actual,subject,noun(subject),countable).\n",
+            "not stated",
+        ),
+        (
+            "guideline_arg(actual,e,1,subject).\nguideline_entity(actual,subject,'',countable).\n",
+            "not stated",
+        ),
+    ] {
+        fx.document(&[format!(
+            concat!(
+                "{args}",
+                "guideline_entity(actual,subject,'subject-noun',countable).\n",
+                "guideline_entity(actual,preferred,option,countable).\n",
+                "guideline_event(actual,e,be).\n",
+                "guideline_arg(actual,e,2,property).\n",
+                "guideline_property(actual,property,preferred,pos).\n",
+                "guideline_preference(actual,e,preferred,none).\n"
+            ),
+            args = args
+        )]);
+        c.section(
+            &fx.request(DOC_ROUTE),
+            PREFERENCE,
+            &expected_section(
+                PREFERENCE,
+                &[preference_row(
+                    1,
+                    "statement",
+                    "as a fact",
+                    expected,
+                    "option",
+                    "none named",
+                )],
+            ),
+            &format!("copula subject fallback: {args:?}"),
+        );
+    }
+    c.finish("U12");
 }

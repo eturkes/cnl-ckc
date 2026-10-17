@@ -1,4 +1,4 @@
-// Shared K1 traversal for the timing, grade and preference tables.
+// Shared K1 traversal for the timing, grade, preference and qualifier tables.
 use crate::k2_term::ETermArena;
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
@@ -16,7 +16,7 @@ use ckc_spec::v1text as v;
 use vstd::prelude::*;
 verus! {
 
-// kind: 0 = timing, 1 = grades, 2 = preferences.
+// kind: 0 = timing, 1 = grades, 2 = preferences, 3 = qualifiers.
 pub open spec fn row_kind(
     pl: u::Bytes,
     d: v::DocFile,
@@ -30,6 +30,8 @@ pub open spec fn row_kind(
         u::timing_row(pl, d, s, c, l, part)
     } else if kind == 1 {
         u::grade_row(pl, d, c, l)
+    } else if kind == 3 {
+        u::qualifier_row(pl, d, s, c, l, part)
     } else {
         u::preference_row(pl, d, s, c, l, part)
     }
@@ -38,6 +40,8 @@ pub open spec fn row_kind(
 pub open spec fn bundle_kind(pl: u::Bytes, d: v::DocFile, b: v::Bundle, kind: u8) -> Seq<u::Html> {
     if kind == 0 {
         u::bundle_rows(pl, d, b)
+    } else if kind == 3 {
+        u::qualifier_bundle_rows(pl, d, b)
     } else {
         u::strength_bundle_rows(pl, d, b, kind == 1)
     }
@@ -46,6 +50,8 @@ pub open spec fn bundle_kind(pl: u::Bytes, d: v::DocFile, b: v::Bundle, kind: u8
 pub open spec fn rows_kind(pl: u::Bytes, kind: u8) -> Seq<u::Html> {
     if kind == 0 {
         u::timing_rows(pl)
+    } else if kind == 3 {
+        u::qualifier_rows(pl)
     } else {
         u::strength_rows(pl, kind == 1)
     }
@@ -62,12 +68,15 @@ proof fn bundle_unfold(pl: u::Bytes, d: v::DocFile, b: v::Bundle, kind: u8)
     hide(u::timing_row);
     hide(u::grade_row);
     hide(u::preference_row);
+    hide(u::qualifier_row);
     hide(u::first_rows);
     hide(u::somes);
     let f = |c: v::DocClause| row_opts(pl, d, b.s, c, kind);
     let g = |c: v::DocClause|
         if kind == 0 {
             u::clause_lits(c).map_values(|p: (Term, int)| u::timing_row(pl, d, b.s, c, p.0, p.1))
+        } else if kind == 3 {
+            u::clause_lits(c).map_values(|p: (Term, int)| u::qualifier_row(pl, d, b.s, c, p.0, p.1))
         } else {
             u::clause_lits(c).map_values(
                 |p: (Term, int)|
@@ -89,6 +98,13 @@ proof fn bundle_unfold(pl: u::Bytes, d: v::DocFile, b: v::Bundle, kind: u8)
             |c: v::DocClause|
                 u::clause_lits(c).map_values(
                     |p: (Term, int)| u::timing_row(pl, d, b.s, c, p.0, p.1),
+                ),
+        ));
+    } else if kind == 3 {
+        assert(b.clauses.map_values(g) =~= b.clauses.map_values(
+            |c: v::DocClause|
+                u::clause_lits(c).map_values(
+                    |p: (Term, int)| u::qualifier_row(pl, d, b.s, c, p.0, p.1),
                 ),
         ));
     } else {
@@ -121,14 +137,20 @@ proof fn rows_unfold(pl: u::Bytes, kind: u8)
 {
     hide(u::bundle_rows);
     hide(u::strength_bundle_rows);
+    hide(u::qualifier_bundle_rows);
     reveal(u::timing_rows);
     reveal(u::strength_rows);
+    reveal(u::qualifier_rows);
     if v::accepts(pl) {
         if let v::V1File::Doc(d) = ckc_spec::replay::the_v1(pl) {
             let f = |b: v::Bundle| bundle_kind(pl, d, b, kind);
             if kind == 0 {
                 assert(d.bundles.map_values(f) =~= d.bundles.map_values(
                     |b: v::Bundle| u::bundle_rows(pl, d, b),
+                ));
+            } else if kind == 3 {
+                assert(d.bundles.map_values(f) =~= d.bundles.map_values(
+                    |b: v::Bundle| u::qualifier_bundle_rows(pl, d, b),
                 ));
             } else {
                 assert(d.bundles.map_values(f) =~= d.bundles.map_values(
@@ -164,10 +186,23 @@ fn row_exec(
     hide(u::timing_row);
     hide(u::grade_row);
     hide(u::preference_row);
+    hide(u::qualifier_row);
     if kind == 0 {
         crate::k5_timing::row_exec(arena, pl, join, Ghost(d), Ghost(c), ordinal, Ghost(s), l, part)
     } else if kind == 1 {
         crate::k5_strength::grade_row_exec(arena, pl, join, Ghost(d), Ghost(c), l)
+    } else if kind == 3 {
+        crate::k5_qualifier::row_exec(
+            arena,
+            pl,
+            join,
+            Ghost(d),
+            Ghost(c),
+            ordinal,
+            Ghost(s),
+            l,
+            part,
+        )
     } else {
         crate::k5_strength::preference_row_exec(
             arena,
@@ -439,7 +474,7 @@ pub fn no_rows() -> (out: Vec<EPage>)
     out
 }
 
-// The three compiled tables share one K1 parse traversal.
+// The compiled tables share one K1 parse traversal.
 pub fn rows_exec(pl: &[u8], kind: u8) -> (out: Vec<EPage>)
     ensures
         h::pages(out@) == rows_kind(pl@, kind),

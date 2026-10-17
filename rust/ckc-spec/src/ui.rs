@@ -988,6 +988,39 @@ pub open spec fn strength_words_section(t: Option<Bytes>, grades: bool) -> Seq<H
     }
 }
 
+// --- Qualifier words (contract s2 D7): the table's qualifier rows in file
+// order, each word with its kind; a table without one renders nothing.
+#[verifier::opaque]
+pub open spec fn qualifier_word_rows(t: Option<Bytes>) -> Seq<Html> {
+    match t {
+        Option::Some(raw) => match crate::vocabulary::parse_vocabulary(raw) {
+            Result::Ok(m) => m.qualifiers.map_values(
+                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), kind_html(r.1)),
+            ),
+            Result::Err(_) => Seq::empty(),
+        },
+        Option::None => Seq::empty(),
+    }
+}
+
+pub open spec fn qualifier_words_section(t: Option<Bytes>) -> Seq<Html> {
+    let rows = qualifier_word_rows(t);
+    if rows.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open()),
+            fixed_bytes(h2_open_qualifier_words_h2_close()),
+            fixed_bytes(p_open_the_compiler_reads_a_qualifier()),
+            fixed_bytes(table_open_2()),
+            fixed_bytes(thead_open_tr_open_th_open_word_th_close_th_open()),
+            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
 pub open spec fn guideline_html(g: Guideline) -> Html {
     let labels = seq![
         passages_cap(),
@@ -1058,7 +1091,8 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
             fixed_bytes(table_close()),
             fixed_bytes(section_close()),
         ] + words_section(g.vocabulary) + strength_words_section(g.vocabulary, true)
-            + strength_words_section(g.vocabulary, false) + seq![
+            + strength_words_section(g.vocabulary, false) + qualifier_words_section(g.vocabulary)
+            + seq![
             fixed_bytes(section_open()),
             fixed_bytes(h2_open_documents_h2_close()),
             fixed_bytes(table_open_2()),
@@ -1942,12 +1976,7 @@ pub open spec fn preference_row(
                         cell(text(v1text::udec_bytes(s))),
                         cell(part_html(part)),
                         cell(stated_html(d, c, args[0])),
-                        cell(
-                            match first_with(join_terms(d, c), "guideline_event"@, 3, 1, args[1]) {
-                                Option::Some(e) => pl_word(pl, atom_name(e[2])),
-                                Option::None => fixed_bytes(not_stated()),
-                            },
-                        ),
+                        cell(verb_html(pl, d, c, args[1])),
                         cell(noun_html(pl, d, c, args[2])),
                         cell(
                             if args[3] == Term::Atom(lit("none"@)) {
@@ -2032,6 +2061,149 @@ pub open spec fn strength_section(pl: Bytes, grades: bool) -> Seq<Html> {
                     thead_open_tr_open_th_open_sentence_stated()
                 },
             ),
+            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
+// --- Qualifiers as compiled (contract s2 D7): one row per qualifier literal of
+// a document, joined as the timing table; Action = the event lemma, then the
+// noun of its second participant where it names one.
+pub open spec fn kind_html(k: Bytes) -> Html {
+    if k == lit("usuality"@) {
+        fixed_bytes(kind_how_often())
+    } else if k == lit("ideality"@) {
+        fixed_bytes(kind_best_case())
+    } else if k == lit("focus"@) {
+        fixed_bytes(kind_emphasis())
+    } else if k == lit("manner"@) {
+        fixed_bytes(kind_manner())
+    } else if k == lit("force"@) {
+        fixed_bytes(kind_strength_of_wording())
+    } else if k == lit("possibility"@) {
+        fixed_bytes(kind_possibility())
+    } else if k == lit("applicability"@) {
+        fixed_bytes(kind_condition_of_use())
+    } else {
+        fixed_bytes(not_stated())
+    }
+}
+
+// Participant `n` of event e: the first `guideline_arg(_, e, n, X)`.
+pub open spec fn participant(ts: Seq<Term>, e: Term, n: int) -> Option<Term>
+    decreases ts.len(),
+{
+    if ts.len() == 0 {
+        Option::None
+    } else {
+        match ts[0] {
+            Term::Comp(name, args) => if name == lit("guideline_arg"@) && args.len() == 4 && args[1]
+                == e && args[2] == Term::Int(n) {
+                Option::Some(args[3])
+            } else {
+                participant(ts.drop_first(), e, n)
+            },
+            _ => participant(ts.drop_first(), e, n),
+        }
+    }
+}
+
+// The action word of event e: its lemma, except that a copula (`be`) names its
+// subject's noun, the thing that the row judges (user ruling at the phase close).
+pub open spec fn verb_html(pl: Bytes, d: DocFile, c: DocClause, e: Term) -> Html {
+    match first_with(join_terms(d, c), "guideline_event"@, 3, 1, e) {
+        Option::Some(args) => if atom_name(args[2]) == lit("be"@) {
+            match participant(join_terms(d, c), e, 1) {
+                Option::Some(x) => noun_html(pl, d, c, x),
+                Option::None => fixed_bytes(not_stated()),
+            }
+        } else {
+            pl_word(pl, atom_name(args[2]))
+        },
+        Option::None => fixed_bytes(not_stated()),
+    }
+}
+
+pub open spec fn action_html(pl: Bytes, d: DocFile, c: DocClause, e: Term) -> Html {
+    let verb = verb_html(pl, d, c, e);
+    match participant(join_terms(d, c), e, 2) {
+        Option::Some(x) => match first_with(join_terms(d, c), "guideline_entity"@, 4, 1, x) {
+            Option::Some(args) => verb + fixed_bytes(word_sep()) + pl_word(pl, atom_name(args[2])),
+            Option::None => verb,
+        },
+        Option::None => verb,
+    }
+}
+
+pub open spec fn qualifier_row(
+    pl: Bytes,
+    d: DocFile,
+    s: nat,
+    c: DocClause,
+    l: Term,
+    part: int,
+) -> Option<Html> {
+    match l {
+        Term::Comp(name, args) => if name == lit("guideline_qualifier"@) && args.len() == 4 {
+            Option::Some(
+                row(
+                    seq![
+                        cell(text(v1text::udec_bytes(s))),
+                        cell(part_html(part)),
+                        cell(stated_html(d, c, args[0])),
+                        cell(action_html(pl, d, c, args[1])),
+                        cell(kind_html(atom_name(args[2]))),
+                        cell(pl_word(pl, atom_name(args[3]))),
+                    ],
+                ),
+            )
+        } else {
+            Option::None
+        },
+        _ => Option::None,
+    }
+}
+
+pub open spec fn qualifier_bundle_rows(pl: Bytes, d: DocFile, b: v1text::Bundle) -> Seq<Html> {
+    first_rows(
+        somes(
+            b.clauses.map_values(
+                |c: DocClause|
+                    clause_lits(c).map_values(
+                        |p: (Term, int)| qualifier_row(pl, d, b.s, c, p.0, p.1),
+                    ),
+            ).flatten(),
+        ),
+    )
+}
+
+#[verifier::opaque]
+pub open spec fn qualifier_rows(pl: Bytes) -> Seq<Html> {
+    if v1text::accepts(pl) {
+        match crate::replay::the_v1(pl) {
+            V1File::Doc(d) => d.bundles.map_values(
+                |b: v1text::Bundle| qualifier_bundle_rows(pl, d, b),
+            ).flatten(),
+            _ => Seq::empty(),
+        }
+    } else {
+        Seq::empty()
+    }
+}
+
+pub open spec fn qualifier_section(pl: Bytes) -> Seq<Html> {
+    let rows = qualifier_rows(pl);
+    if rows.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open()),
+            fixed_bytes(h3_open_qualifiers_as_compiled_h3_close()),
+            fixed_bytes(p_open_each_row_is_one_qualifier()),
+            fixed_bytes(table_open()),
+            fixed_bytes(thead_open_tr_open_th_open_sentence_kind()),
             fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
             fixed_bytes(table_close()),
             fixed_bytes(section_close()),
@@ -2131,7 +2303,7 @@ pub open spec fn document_html(
             fixed_bytes(pre_open()) + aligned_text(g, d, true) + fixed_bytes(pre_close()),
             fixed_bytes(section_close()),
         ] + timing_section(d.pl) + strength_section(d.pl, true) + strength_section(d.pl, false)
-            + seq![
+            + qualifier_section(d.pl) + seq![
             fixed_bytes(section_open_3()),
             fixed_bytes(h3_open_record_a_decision_h3_close()),
             fixed_bytes(p_open_does_the_ace_representation_appropriately()),
@@ -3359,6 +3531,18 @@ copy_table! {
     p_open_the_compiler_reads_a_preference = "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>";
     marks_the_preferred_option = "marks the preferred option";
     joins_the_option_that_the_preferred = "joins the option that the preferred option replaces";
+    h3_open_qualifiers_as_compiled_h3_close = "<h3>Qualifiers as compiled</h3>";
+    p_open_each_row_is_one_qualifier = "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>";
+    thead_open_tr_open_th_open_sentence_kind = "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>";
+    kind_how_often = "How often";
+    kind_best_case = "Best case";
+    kind_emphasis = "Emphasis";
+    kind_manner = "Manner";
+    kind_strength_of_wording = "Strength of wording";
+    kind_possibility = "Possibility";
+    kind_condition_of_use = "Condition of use";
+    h2_open_qualifier_words_h2_close = "<h2>Qualifier words</h2>";
+    p_open_the_compiler_reads_a_qualifier = "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>";
 }
 
 verus! {

@@ -352,7 +352,7 @@ pub open spec fn body_spec(
         ),
         u::fixed_bytes(u::section_close()),
     ] + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(d.pl, false)
-        + form_spec(g, d, token, commit) + seq![
+        + u::qualifier_section(d.pl) + form_spec(g, d, token, commit) + seq![
         u::fixed_bytes(u::section_open()),
         u::fixed_bytes(u::details_open()),
         u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
@@ -390,6 +390,7 @@ pub proof fn decomposition(
     hide(u::document_title);
     hide(u::timing_section);
     hide(u::strength_section);
+    hide(u::qualifier_section);
     hide(u::alignment);
     hide(u::aligned_text);
     hide(u::tally);
@@ -489,7 +490,7 @@ pub proof fn decomposition(
         ),
         u::fixed_bytes(u::section_close()),
     ] + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(d.pl, false)
-        + seq![
+        + u::qualifier_section(d.pl) + seq![
         u::fixed_bytes(u::section_open_3()),
         u::fixed_bytes(u::h3_open_record_a_decision_h3_close()),
         u::fixed_bytes(u::p_open_does_the_ace_representation_appropriately()),
@@ -635,13 +636,18 @@ pub proof fn body_groups(
         ) + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(
             d.pl,
             false,
-        ) + form_spec(g, d, token, commit) + compiled_spec(d, prev, next),
+        ) + u::qualifier_section(d.pl) + form_spec(g, d, token, commit) + compiled_spec(
+            d,
+            prev,
+            next,
+        ),
 {
     hide(u::lit);
     hide(u::title);
     hide(u::document_title);
     hide(u::timing_section);
     hide(u::strength_section);
+    hide(u::qualifier_section);
     hide(u::alignment);
     hide(u::aligned_text);
     hide(u::tally);
@@ -654,7 +660,11 @@ pub proof fn body_groups(
         g,
         d,
     ) + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(d.pl, false)
-        + form_spec(g, d, token, commit) + compiled_spec(d, prev, next));
+        + u::qualifier_section(d.pl) + form_spec(g, d, token, commit) + compiled_spec(
+        d,
+        prev,
+        next,
+    ));
 }
 
 pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool) -> (out: Vec<EPage>)
@@ -842,6 +852,7 @@ pub fn page(
     hide(compiled_spec);
     hide(u::timing_section);
     hide(u::strength_section);
+    hide(u::qualifier_section);
     let m = model::prepare(g);
     let source = payload::payload(g, &d.bundle.docid);
     let alignment = data::alignment(g, d, &source);
@@ -875,6 +886,13 @@ pub fn page(
     let ghost first = h::pages(body@);
     let ghost second = h::pages(strength@);
     body.append(&mut strength);
+    proof {
+        assert(h::pages(body@) =~= first + second);
+    }
+    let mut qualifiers = crate::k5_qualifier::qualifier_section_exec(&d.pl);
+    let ghost first = h::pages(body@);
+    let ghost second = h::pages(qualifiers@);
+    body.append(&mut qualifiers);
     proof {
         assert(h::pages(body@) =~= first + second);
     }

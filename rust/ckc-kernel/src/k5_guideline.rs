@@ -376,6 +376,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     hide(u::class_counts);
     hide(u::words_section);
     hide(u::strength_words_section);
+    hide(u::qualifier_words_section);
     let m = model::prepare(g);
     let title = titles::title(g);
     let stats = status_rows(g, &m);
@@ -470,6 +471,13 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     proof {
         assert(h::pages(body@) =~= first + second);
     }
+    let mut qualifiers = crate::k5_qualifier_words::qualifier_words_section_exec(g);
+    let ghost first = h::pages(body@);
+    let ghost second = h::pages(qualifiers@);
+    body.append(&mut qualifiers);
+    proof {
+        assert(h::pages(body@) =~= first + second);
+    }
     body.push(h::fixed("<section>"));
     body.push(h::fixed("<h2>Documents</h2>"));
     body.push(h::fixed("<table class=\"compact\">"));
@@ -504,7 +512,9 @@ pub fn page(g: &EGuideline) -> (out: EPage)
             u::fixed_bytes(u::table_close()),
             u::fixed_bytes(u::section_close()),
         ] + u::words_section(g@.vocabulary) + u::strength_words_section(g@.vocabulary, true)
-            + u::strength_words_section(g@.vocabulary, false) + seq![
+            + u::strength_words_section(g@.vocabulary, false) + u::qualifier_words_section(
+            g@.vocabulary,
+        ) + seq![
             u::fixed_bytes(u::section_open()),
             u::fixed_bytes(u::h2_open_documents_h2_close()),
             u::fixed_bytes(u::table_open_2()),

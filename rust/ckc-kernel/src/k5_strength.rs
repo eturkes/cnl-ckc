@@ -1,7 +1,7 @@
 // S1 D8: document grade + preference tables; joins share the timing renderer.
-use crate::k2_term::ETermArena;
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::arena_ok;
+use crate::k2_term::{ENodeKind, ETermArena};
 use crate::k5_html as h;
 use crate::k5_timing as t;
 use crate::m6_term::T;
@@ -77,6 +77,147 @@ pub fn noun_exec(
         out@ == u::noun_html(pl@, d, c, r@),
 {
     t::joined_exec(arena, pl, join, Ghost(d), Ghost(c), "guideline_entity", 4, r, 2)
+}
+
+fn position(arena: &ETermArena, x: &T, digits: &[u8], Ghost(n): Ghost<nat>) -> (out: bool)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, x),
+        digits@ == v::udec_bytes(n),
+    ensures
+        out == (x@ == Term::Int(n as int)),
+{
+    proof {
+        assert(crate::k2_term::node_ok(arena.nodes@, x.root as int));
+        reveal(crate::k2_term::node_ok);
+    }
+    match &arena.nodes[x.root].kind {
+        ENodeKind::Int { magnitude, negative, value, .. } => {
+            if *negative {
+                return false;
+            }
+            let same = crate::k5_bytes::equal(magnitude, digits);
+            proof {
+                if same {
+                    crate::v1_term_impl::udec_bytes_injective(value@ as nat, n);
+                }
+            }
+            same
+        },
+        _ => false,
+    }
+}
+
+pub fn participant_exec(arena: &ETermArena, ts: &Vec<T>, event: &T, n: u64) -> (out: Option<T>)
+    requires
+        arena_ok(arena),
+        valid_all(arena.nodes@, ts@),
+        valid(arena.nodes@, event),
+    ensures
+        match out {
+            Some(x) => valid(arena.nodes@, &x) && u::participant(models(ts@), event@, n as int)
+                == Some(x@),
+            None => u::participant(models(ts@), event@, n as int) is None,
+        },
+{
+    let digits = crate::k5_bytes::nat_bytes(n);
+    let ghost ms = models(ts@);
+    let mut i = 0usize;
+    proof {
+        assert(ms.skip(0) =~= ms);
+    }
+    while i < ts.len()
+        invariant
+            i <= ts@.len(),
+            arena_ok(arena),
+            valid_all(arena.nodes@, ts@),
+            valid(arena.nodes@, event),
+            digits@ == v::udec_bytes(n as nat),
+            ms == models(ts@),
+            ms.len() == ts@.len(),
+            u::participant(ms, event@, n as int) == u::participant(
+                ms.skip(i as int),
+                event@,
+                n as int,
+            ),
+        decreases ts@.len() - i,
+    {
+        proof {
+            assert(ms.skip(i as int)[0] == ms[i as int]);
+            assert(ms.skip(i as int).drop_first() =~= ms.skip(i + 1));
+            assert(valid(arena.nodes@, &ts@[i as int]));
+        }
+        match crate::m6_term::parts(arena, &ts[i]) {
+            Some((name, args)) => {
+                if t::is(&name, "guideline_arg") && args.len() == 4 {
+                    proof {
+                        assert forall|j: int| 0 <= j < args@.len() implies models(args@)[j]
+                            == args@[j]@ && valid(arena.nodes@, &args@[j]) by {}
+                    }
+                    if crate::m6_term::equal(arena, &args[1], event) && position(
+                        arena,
+                        &args[2],
+                        &digits,
+                        Ghost(n as nat),
+                    ) {
+                        return Some(args[3].cp());
+                    }
+                }
+            },
+            None => {},
+        }
+        i += 1;
+    }
+    proof {
+        assert(ms.skip(i as int).len() == 0);
+    }
+    None
+}
+
+pub fn verb_exec(
+    arena: &ETermArena,
+    pl: &[u8],
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    event: &T,
+) -> (out: EPage)
+    requires
+        arena_ok(arena),
+        valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        valid(arena.nodes@, event),
+    ensures
+        out@ == u::verb_html(pl@, d, c, event@),
+{
+    hide(u::noun_html);
+    hide(u::pl_word);
+    let name = crate::k5_bytes::literal("guideline_event");
+    let args = match t::first_with_exec(
+        arena,
+        join,
+        &name,
+        Ghost("guideline_event"@),
+        3,
+        1,
+        event,
+    ) {
+        None => return h::fixed("not stated"),
+        Some(a) => a,
+    };
+    proof {
+        assert(models(args@)[2] == args@[2]@);
+        assert(valid(arena.nodes@, &args@[2]));
+    }
+    let lemma = atom_name_exec(arena, &args[2]);
+    if t::is(&lemma, "be") {
+        match participant_exec(arena, join, event, 1) {
+            Some(subject) => noun_exec(arena, pl, join, Ghost(d), Ghost(c), &subject),
+            None => h::fixed("not stated"),
+        }
+    } else {
+        t::pl_word_exec(pl, &lemma)
+    }
 }
 
 pub fn grade_row_exec(
@@ -324,7 +465,7 @@ pub open spec fn preference_cells(
         u::cell(u::text(v::udec_bytes(s))),
         u::cell(u::part_html(part)),
         u::cell(u::stated_html(d, c, args[0])),
-        u::cell(u::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
+        u::cell(u::verb_html(pl, d, c, args[1])),
         u::cell(u::noun_html(pl, d, c, args[2])),
         u::cell(
             if args[3] == Term::Atom(u::lit("none"@)) {
@@ -357,16 +498,12 @@ pub proof fn preference_unfold(
     hide(u::noun_html);
     hide(u::stated_html);
     hide(u::part_html);
-    hide(u::pl_word);
+    hide(u::verb_html);
     hide(u::lit);
     reveal_with_fuel(Seq::<_>::flatten, 7);
     broadcast use {vstd::seq::group_seq_lemmas, vstd::seq_lib::group_seq_properties};
 
-    let action = match u::first_with(u::join_terms(d, c), "guideline_event"@, 3, 1, args[1]) {
-        Some(e) => u::pl_word(pl, u::atom_name(e[2])),
-        None => u::fixed_bytes(u::not_stated()),
-    };
-    assert(u::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2) == action);
+    let action = u::verb_html(pl, d, c, args[1]);
     let cells = seq![
         u::cell(u::text(v::udec_bytes(s))),
         u::cell(u::part_html(part)),
@@ -408,7 +545,7 @@ pub fn preference_row_exec(
 {
     hide(u::noun_html);
     hide(u::stated_html);
-    hide(u::joined_word);
+    hide(u::verb_html);
     hide(u::part_html);
     hide(u::row);
     hide(u::cell);
@@ -429,17 +566,7 @@ pub fn preference_row_exec(
     let a = h::text(ordinal);
     let b = t::part_exec(part);
     let stated = stated_exec(arena, join, Ghost(d), Ghost(c), &args[0]);
-    let event = t::joined_exec(
-        arena,
-        pl,
-        join,
-        Ghost(d),
-        Ghost(c),
-        "guideline_event",
-        3,
-        &args[1],
-        2,
-    );
+    let event = verb_exec(arena, pl, join, Ghost(d), Ghost(c), &args[1]);
     let preferred = noun_exec(arena, pl, join, Ghost(d), Ghost(c), &args[2]);
     let none = match t::atom_of(arena, &args[3]) {
         Some(a) => t::is(&a, "none"),

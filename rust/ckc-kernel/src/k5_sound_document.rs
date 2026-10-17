@@ -209,6 +209,7 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     hide(u::script_html);
     hide(u::timing_section);
     hide(u::strength_section);
+    hide(u::qualifier_section);
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let region = u::coverage_field(g, id, 0);
@@ -349,6 +350,7 @@ proof fn tail_sound(
     hide(u::script_html);
     hide(u::timing_section);
     hide(u::strength_section);
+    hide(u::qualifier_section);
     let id = d.bundle.docid;
     let nav = (if prev.len() > 0 {
         seq![u::link(u::url_seg(prev) + u::html_ext(), b::f(144))]
@@ -461,6 +463,7 @@ pub proof fn page(
     hide(u::script_html);
     hide(u::timing_section);
     hide(u::strength_section);
+    hide(u::qualifier_section);
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let region = u::coverage_field(g, id, 0);
@@ -537,7 +540,8 @@ pub proof fn page(
     m::own(d.pl, inputs);
     crate::k5_sound_strength::section(d.pl, true, inputs);
     crate::k5_sound_strength::section(d.pl, false, inputs);
-    let middle = u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(
+    crate::k5_sound_qualifier::section(d.pl, inputs);
+    let earlier = u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(
         d.pl,
         false,
     );
@@ -547,9 +551,12 @@ pub proof fn page(
         u::strength_section(d.pl, false),
         inputs,
     );
+    let middle = earlier + u::qualifier_section(d.pl);
+    crate::k5_sound_timing::cat3(earlier, u::qualifier_section(d.pl), Seq::empty(), inputs);
+    assert(middle =~= earlier + u::qualifier_section(d.pl) + Seq::<u::Html>::empty());
     crate::k5_sound_timing::cat3(head, middle, tail, inputs);
     let parts = head + u::timing_section(d.pl) + u::strength_section(d.pl, true)
-        + u::strength_section(d.pl, false) + tail;
+        + u::strength_section(d.pl, false) + u::qualifier_section(d.pl) + tail;
     assert(parts =~= head + middle + tail);
     b::lines(parts, inputs);
     let crumbs = b::f(180) + u::text(u::title(g)) + b::f(181) + u::text(region);

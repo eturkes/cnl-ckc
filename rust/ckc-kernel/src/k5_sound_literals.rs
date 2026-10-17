@@ -11147,4 +11147,568 @@ pub proof fn f334(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("joins the option that the preferred option replaces"@), inputs, 0, 0);
 }
 
+pub proof fn l335(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h3>Qualifiers as compiled</h3>"@)),
+        u::copy_derived(u::lit("<h3>Qualifiers as compiled</h3>"@), inputs, u::copy_registry()),
+        u::copy_registry()[335] == u::lit("<h3>Qualifiers as compiled</h3>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[335] == u::lit("<h3>Qualifiers as compiled</h3>"@) && 335
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h3>Qualifiers as compiled</h3>"@), inputs);
+}
+
+pub proof fn f335(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h3>Qualifiers as compiled</h3>"@), inputs, 0, 0),
+        u::copy_registry()[335] == u::lit("<h3>Qualifiers as compiled</h3>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l335(inputs);
+    reveal_strlit("<h3>Qualifiers as compiled</h3>");
+    is_ascii_chars_encode_utf8("<h3>Qualifiers as compiled</h3>"@);
+    assert(u::lit("<h3>Qualifiers as compiled</h3>"@)
+        =~= bs![60u8,104,51,62,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62]);
+    assert(cx::scan(
+        bs![60u8,104,51,62,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<h3>Qualifiers as compiled</h3>"@), 0);
+    h::fixed(u::lit("<h3>Qualifiers as compiled</h3>"@), inputs, 0, 0);
+}
+
+pub proof fn l336(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[336] == u::lit(
+            "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[336] == u::lit(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+    ) && 336 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f336(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[336] == u::lit(
+            "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l336(inputs);
+    reveal_strlit(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+    );
+    assert(u::lit(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+    )
+        =~= bs![60u8,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,113,117,97,108,105,102,105,101,114,32,119,111,114,100,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,113,117,97,108,105,102,105,101,114,32,100,101,115,99,114,105,98,101,115,32,116,104,101,32,119,111,114,100,105,110,103,32,111,102,32,105,116,115,32,97,99,116,105,111,110,32,111,114,32,99,111,110,100,105,116,105,111,110,46,32,65,32,113,117,97,108,105,102,105,101,114,32,111,110,32,97,32,99,111,110,100,105,116,105,111,110,32,109,117,115,116,32,97,108,115,111,32,104,111,108,100,32,105,110,32,116,104,101,32,102,97,99,116,115,32,116,104,97,116,32,109,101,101,116,32,116,104,101,32,99,111,110,100,105,116,105,111,110,46,32,65,110,32,101,120,99,108,117,100,101,100,32,99,111,110,100,105,116,105,111,110,32,116,101,115,116,115,32,116,104,101,32,99,111,110,100,105,116,105,111,110,32,116,111,103,101,116,104,101,114,32,119,105,116,104,32,105,116,115,32,113,117,97,108,105,102,105,101,114,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,113,117,97,108,105,102,105,101,114,32,119,111,114,100,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,113,117,97,108,105,102,105,101,114,32,100,101,115,99,114,105,98,101,115,32,116,104,101,32,119,111,114,100,105,110,103,32,111,102,32,105,116,115,32,97,99,116,105,111,110,32,111,114,32,99,111,110,100,105,116,105,111,110,46,32,65,32,113,117,97,108,105,102,105,101,114,32,111,110,32,97,32,99,111,110,100,105,116,105,111,110,32,109,117,115,116,32,97,108,115,111,32,104,111,108,100,32,105,110,32,116,104,101,32,102,97,99,116,115,32,116,104,97,116,32,109,101,101,116,32,116,104,101,32,99,111,110,100,105,116,105,111,110,46,32,65,110,32,101,120,99,108,117,100,101,100,32,99,111,110,100,105,116,105,111,110,32,116,101,115,116,115,32,116,104,101,32,99,111,110,100,105,116,105,111,110,32,116,111,103,101,116,104,101,114,32,119,105,116,104,32,105,116,115,32,113,117,97,108,105,102,105,101,114,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l337(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[337] == u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[337] == u::lit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+    ) && 337 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f337(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[337] == u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l337(inputs);
+    reveal_strlit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+    );
+    assert(u::lit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+    )
+        =~= bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,75,105,110,100,60,47,116,104,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62]);
+    assert(cx::scan(
+        bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,75,105,110,100,60,47,116,104,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l338(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("How often"@)),
+        u::copy_derived(u::lit("How often"@), inputs, u::copy_registry()),
+        u::copy_registry()[338] == u::lit("How often"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[338] == u::lit("How often"@) && 338 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("How often"@), inputs);
+}
+
+pub proof fn f338(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("How often"@), inputs, 0, 0),
+        u::copy_registry()[338] == u::lit("How often"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l338(inputs);
+    reveal_strlit("How often");
+    is_ascii_chars_encode_utf8("How often"@);
+    assert(u::lit("How often"@) =~= bs![72u8,111,119,32,111,102,116,101,110]);
+    assert(cx::scan(bs![72u8,111,119,32,111,102,116,101,110], 0) == 0) by (compute_only);
+    cx::exact(u::lit("How often"@), 0);
+    h::fixed(u::lit("How often"@), inputs, 0, 0);
+}
+
+pub proof fn l339(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Best case"@)),
+        u::copy_derived(u::lit("Best case"@), inputs, u::copy_registry()),
+        u::copy_registry()[339] == u::lit("Best case"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[339] == u::lit("Best case"@) && 339 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Best case"@), inputs);
+}
+
+pub proof fn f339(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Best case"@), inputs, 0, 0),
+        u::copy_registry()[339] == u::lit("Best case"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l339(inputs);
+    reveal_strlit("Best case");
+    is_ascii_chars_encode_utf8("Best case"@);
+    assert(u::lit("Best case"@) =~= bs![66u8,101,115,116,32,99,97,115,101]);
+    assert(cx::scan(bs![66u8,101,115,116,32,99,97,115,101], 0) == 0) by (compute_only);
+    cx::exact(u::lit("Best case"@), 0);
+    h::fixed(u::lit("Best case"@), inputs, 0, 0);
+}
+
+pub proof fn l340(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Emphasis"@)),
+        u::copy_derived(u::lit("Emphasis"@), inputs, u::copy_registry()),
+        u::copy_registry()[340] == u::lit("Emphasis"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[340] == u::lit("Emphasis"@) && 340 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Emphasis"@), inputs);
+}
+
+pub proof fn f340(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Emphasis"@), inputs, 0, 0),
+        u::copy_registry()[340] == u::lit("Emphasis"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l340(inputs);
+    reveal_strlit("Emphasis");
+    is_ascii_chars_encode_utf8("Emphasis"@);
+    assert(u::lit("Emphasis"@) =~= bs![69u8,109,112,104,97,115,105,115]);
+    assert(cx::scan(bs![69u8,109,112,104,97,115,105,115], 0) == 0) by (compute_only);
+    cx::exact(u::lit("Emphasis"@), 0);
+    h::fixed(u::lit("Emphasis"@), inputs, 0, 0);
+}
+
+pub proof fn l341(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Manner"@)),
+        u::copy_derived(u::lit("Manner"@), inputs, u::copy_registry()),
+        u::copy_registry()[341] == u::lit("Manner"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[341] == u::lit("Manner"@) && 341 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Manner"@), inputs);
+}
+
+pub proof fn f341(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Manner"@), inputs, 0, 0),
+        u::copy_registry()[341] == u::lit("Manner"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l341(inputs);
+    reveal_strlit("Manner");
+    is_ascii_chars_encode_utf8("Manner"@);
+    assert(u::lit("Manner"@) =~= bs![77u8,97,110,110,101,114]);
+    assert(cx::scan(bs![77u8,97,110,110,101,114], 0) == 0) by (compute_only);
+    cx::exact(u::lit("Manner"@), 0);
+    h::fixed(u::lit("Manner"@), inputs, 0, 0);
+}
+
+pub proof fn l342(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Strength of wording"@)),
+        u::copy_derived(u::lit("Strength of wording"@), inputs, u::copy_registry()),
+        u::copy_registry()[342] == u::lit("Strength of wording"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[342] == u::lit("Strength of wording"@) && 342
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Strength of wording"@), inputs);
+}
+
+pub proof fn f342(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Strength of wording"@), inputs, 0, 0),
+        u::copy_registry()[342] == u::lit("Strength of wording"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l342(inputs);
+    reveal_strlit("Strength of wording");
+    is_ascii_chars_encode_utf8("Strength of wording"@);
+    assert(u::lit("Strength of wording"@)
+        =~= bs![83u8,116,114,101,110,103,116,104,32,111,102,32,119,111,114,100,105,110,103]);
+    assert(cx::scan(
+        bs![83u8,116,114,101,110,103,116,104,32,111,102,32,119,111,114,100,105,110,103],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("Strength of wording"@), 0);
+    h::fixed(u::lit("Strength of wording"@), inputs, 0, 0);
+}
+
+pub proof fn l343(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Possibility"@)),
+        u::copy_derived(u::lit("Possibility"@), inputs, u::copy_registry()),
+        u::copy_registry()[343] == u::lit("Possibility"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[343] == u::lit("Possibility"@) && 343 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Possibility"@), inputs);
+}
+
+pub proof fn f343(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Possibility"@), inputs, 0, 0),
+        u::copy_registry()[343] == u::lit("Possibility"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l343(inputs);
+    reveal_strlit("Possibility");
+    is_ascii_chars_encode_utf8("Possibility"@);
+    assert(u::lit("Possibility"@) =~= bs![80u8,111,115,115,105,98,105,108,105,116,121]);
+    assert(cx::scan(bs![80u8,111,115,115,105,98,105,108,105,116,121], 0) == 0) by (compute_only);
+    cx::exact(u::lit("Possibility"@), 0);
+    h::fixed(u::lit("Possibility"@), inputs, 0, 0);
+}
+
+pub proof fn l344(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Condition of use"@)),
+        u::copy_derived(u::lit("Condition of use"@), inputs, u::copy_registry()),
+        u::copy_registry()[344] == u::lit("Condition of use"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[344] == u::lit("Condition of use"@) && 344 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Condition of use"@), inputs);
+}
+
+pub proof fn f344(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("Condition of use"@), inputs, 0, 0),
+        u::copy_registry()[344] == u::lit("Condition of use"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l344(inputs);
+    reveal_strlit("Condition of use");
+    is_ascii_chars_encode_utf8("Condition of use"@);
+    assert(u::lit("Condition of use"@)
+        =~= bs![67u8,111,110,100,105,116,105,111,110,32,111,102,32,117,115,101]);
+    assert(cx::scan(bs![67u8,111,110,100,105,116,105,111,110,32,111,102,32,117,115,101], 0) == 0)
+        by (compute_only);
+    cx::exact(u::lit("Condition of use"@), 0);
+    h::fixed(u::lit("Condition of use"@), inputs, 0, 0);
+}
+
+pub proof fn l345(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h2>Qualifier words</h2>"@)),
+        u::copy_derived(u::lit("<h2>Qualifier words</h2>"@), inputs, u::copy_registry()),
+        u::copy_registry()[345] == u::lit("<h2>Qualifier words</h2>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[345] == u::lit("<h2>Qualifier words</h2>"@) && 345
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h2>Qualifier words</h2>"@), inputs);
+}
+
+pub proof fn f345(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h2>Qualifier words</h2>"@), inputs, 0, 0),
+        u::copy_registry()[345] == u::lit("<h2>Qualifier words</h2>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l345(inputs);
+    reveal_strlit("<h2>Qualifier words</h2>");
+    is_ascii_chars_encode_utf8("<h2>Qualifier words</h2>"@);
+    assert(u::lit("<h2>Qualifier words</h2>"@)
+        =~= bs![60u8,104,50,62,81,117,97,108,105,102,105,101,114,32,119,111,114,100,115,60,47,104,50,62]);
+    assert(cx::scan(
+        bs![60u8,104,50,62,81,117,97,108,105,102,105,101,114,32,119,111,114,100,115,60,47,104,50,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<h2>Qualifier words</h2>"@), 0);
+    h::fixed(u::lit("<h2>Qualifier words</h2>"@), inputs, 0, 0);
+}
+
+pub proof fn l346(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[346] == u::lit(
+            "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[346] == u::lit(
+        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+    ) && 346 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f346(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[346] == u::lit(
+            "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l346(inputs);
+    reveal_strlit(
+        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+    );
+    assert(u::lit(
+        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+    )
+        =~= bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,113,117,97,108,105,102,105,101,114,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,113,117,97,108,105,102,105,101,114,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,113,117,97,108,105,102,105,101,114,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,113,117,97,108,105,102,105,101,114,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
 } // verus!

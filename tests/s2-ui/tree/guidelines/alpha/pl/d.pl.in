@@ -1,0 +1,41 @@
+% d.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+guideline_schema_version(1).
+guideline_document(d,ace_sha256('7ce3a7e218a79a5f5d4f53587a0164309d4506ee5cbf5115ec64f1afb7cd527c'),ulex(none),vocabulary(none)).
+% S1: A clinician chooses an option.
+guideline_entity(actual,option,option,countable).

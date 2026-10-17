@@ -50,6 +50,30 @@ proof fn noun(pl: u::Bytes, d: v::DocFile, c: v::DocClause, r: Term, inputs: Seq
     t::joined_word(pl, d, c, "guideline_entity"@, 4, r, 2, inputs);
 }
 
+pub proof fn verb(pl: u::Bytes, d: v::DocFile, c: v::DocClause, event: Term, inputs: Seq<u::Bytes>)
+    requires
+        m::backed(pl, inputs),
+    ensures
+        h::sound(u::verb_html(pl, d, c, event), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lit);
+    hide(u::pl_word);
+    hide(u::noun_html);
+    let ts = u::join_terms(d, c);
+    l::f249(inputs);
+    if let Some(args) = u::first_with(ts, "guideline_event"@, 3, 1, event) {
+        if u::atom_name(args[2]) == u::lit("be"@) {
+            if let Some(subject) = u::participant(ts, event, 1) {
+                noun(pl, d, c, subject, inputs);
+            }
+        } else {
+            t::pl_word(pl, u::atom_name(args[2]), inputs);
+        }
+    }
+}
+
 proof fn grade_row(pl: u::Bytes, d: v::DocFile, c: v::DocClause, x: Term, inputs: Seq<u::Bytes>)
     requires
         m::backed(pl, inputs),
@@ -148,7 +172,7 @@ proof fn spaced(xs: Seq<u::Html>, inputs: Seq<u::Bytes>)
     }
 }
 
-proof fn stated(d: v::DocFile, c: v::DocClause, ctx: Term, inputs: Seq<u::Bytes>)
+pub proof fn stated(d: v::DocFile, c: v::DocClause, ctx: Term, inputs: Seq<u::Bytes>)
     ensures
         h::sound(u::stated_html(d, c, ctx), inputs),
 {
@@ -185,7 +209,7 @@ proof fn preference_row(
     hide(u::lit);
     hide(u::noun_html);
     hide(u::stated_html);
-    hide(u::joined_word);
+    hide(u::verb_html);
     hide(u::part_html);
     hide(u::cell);
     hide(u::row);
@@ -195,14 +219,14 @@ proof fn preference_row(
             t::decimal_text(s, inputs);
             t::part(part, inputs);
             stated(d, c, args[0], inputs);
-            t::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2, inputs);
+            verb(pl, d, c, args[1], inputs);
             noun(pl, d, c, args[2], inputs);
             noun(pl, d, c, args[3], inputs);
             l::f325(inputs);
             let a = u::text(v::udec_bytes(s));
             let b1 = u::part_html(part);
             let c1 = u::stated_html(d, c, args[0]);
-            let e = u::joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2);
+            let e = u::verb_html(pl, d, c, args[1]);
             let p = u::noun_html(pl, d, c, args[2]);
             let alt = if args[3] == Term::Atom(u::lit("none"@)) {
                 b::f(325)
