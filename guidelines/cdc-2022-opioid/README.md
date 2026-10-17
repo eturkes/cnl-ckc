@@ -90,7 +90,7 @@ that it was published with.
   recommendation itself as rule subject.
 - `ace/` recommendation 6–12 documents — one ACE document per formalized
   recommendation 6–12 body or implementation-consideration region,
-  special-populations region, and conclusion region (167 documents;
+  special-populations region, and conclusion region (175 documents;
   docid rules unchanged: reserved-ordinal `recNN-impKK` for
   implementation lists, the region id lowercased otherwise). These
   documents follow the same knowledge-only projection contract and
@@ -142,16 +142,16 @@ guideline conclusions.
   recommendation 1–5 rationale region (129 documents). It adds one
   document per formalized recommendation 6–12 body,
   implementation-consideration, special-populations, and conclusion
-  region (167 documents). The rules encode
+  region (175 documents). The rules encode
   deontic modality ("should"), conditions, and negation where the source
   region states them. `audit/projection-notes.tsv` (kept/dropped columns)
   and `coverage.tsv` record each document's remaining simplifications per
   region.
 - `coverage.tsv` records one status row per payload region (all 718), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (375);
+  - `ace(<docid>)` — formalized (383);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
-    region (224);
+    region (216);
   - `uncovered(<class>: <reason>)` — deliberately not formalized (119;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet
@@ -178,7 +178,11 @@ guideline conclusions.
   permission, or strategy added to an otherwise-canonical echo makes the
   region formalize rather than restate (S49-14, S52-10, S55-01). A
   qualifier that the canonical statement does not have also makes the
-  region formalize, and its document types the qualifier (S56-12).
+  region formalize, and its document types the qualifier (S56-12). A
+  capability or possibility claim ("can") that the canonical statement
+  does not have also makes the region formalize, and its document states
+  the claim under "can" (S44-13, S49-11, S50-03, S52-04, S54-08, S55-12,
+  S57-02, S60-11).
 - Projection rulings (wave-1 review). ACE "does not V a N" negates the
   existential — a takes-none reading (S37-13). A source preference
   ("preferred", "instead of", "rather than", "first-line", "first choice")

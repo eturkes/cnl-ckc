@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp25',ace_sha256('3edd35994ca8abfb5998de531993d5e05e42a9d7a65e18c742af975c10bc6f44'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec05-imp25',ace_sha256('3edd35994ca8abfb5998de531993d5e05e42a9d7a65e18c742af975c10bc6f44'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If there is an opioid-policy-setter then it is recommended that the opioid-policy-setter does not impose a rigid-dose-standard.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp25',1,box(1),[A]),should) :- guideline_entity(actual,A,'opioid-policy-setter',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec05-imp25',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec05-imp25',1,box(2),[A]),-) :- guideline_entity(actual,A,'opioid-policy-setter',countable), guideline_cardinality(actual,A,na,eq,1).

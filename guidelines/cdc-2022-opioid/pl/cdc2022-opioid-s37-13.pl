@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s37-13',ace_sha256(a4ac52af9ff1ee41a13bbbc3e122889a3bc1b948ae802f3adbecf7dcc788bb5a),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s37-13',ace_sha256(a4ac52af9ff1ee41a13bbbc3e122889a3bc1b948ae802f3adbecf7dcc788bb5a),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient does not take a prescribed-opioid then the patient does not require an opioid-taper.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s37-13',1,box(2),[A]),-) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'prescribed-opioid',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,take), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s37-13',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s37-13',1,ref(4),[A]),'opioid-taper',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_operator(actual,B,-), guideline_entity(B,C,'prescribed-opioid',countable), guideline_cardinality(B,C,na,eq,1), guideline_event(B,D,take), guideline_arg(B,D,1,A), guideline_arg(B,D,2,C).

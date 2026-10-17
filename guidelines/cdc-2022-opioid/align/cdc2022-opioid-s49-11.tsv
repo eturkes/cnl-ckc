@@ -1,0 +1,38 @@
+0	ace	6	substance-use-disorder
+1	ace	29	can
+2	ace	33	alter
+3	ace	42	expected
+4	ace	51	opioid
+5	ace	58	benefit
+1	ace	70	can
+2	ace	74	alter
+3	ace	83	expected
+4	ace	92	opioid
+6	ace	99	risk
+7	ace	110	patient
+8	ace	124	pain
+7	ace	137	patient
+0	ace	151	substance-use-disorder
+7	ace	183	patient
+9	ace	191	must receive
+10	ace	207	ongoing-pain-management
+11	ace	236	maximizes
+5	ace	248	benefit
+12	ace	256	over
+6	ace	263	risk
+0	src	9	substance use disorders
+1	src	33	can
+2	src	37	alter
+3	src	47	expected
+5	src	56	benefits
+6	src	69	risks
+4	src	78	opioid
+7	src	103	patients
+8	src	130	pain
+0	src	139	substance use disorder
+9	src	162	require
+10	src	170	ongoing pain management
+11	src	199	maximizes
+5	src	209	benefits
+12	src	218	relative to
+6	src	230	risks

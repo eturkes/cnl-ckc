@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec09-imp20',ace_sha256('463fd3ed8afde2116b25a8f8df9561106e8c5464cbc25aac3fa827308039fe5d'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec09-imp20',ace_sha256('463fd3ed8afde2116b25a8f8df9561106e8c5464cbc25aac3fa827308039fe5d'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician manages a patient then the clinician should screen a substance-use for the patient and should nonjudgmentally discuss a substance-use-concern with the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec09-imp20',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,patient,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,manage), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec09-imp20',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-rec09-imp20',1,ref(4),[A,B,C]),'substance-use',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,patient,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,manage), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

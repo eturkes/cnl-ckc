@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02',ace_sha256(d0bc9eba15c20f4b6ae8ffd1b672d1f76c28679597f090fc8e4f60bd356d1eb3),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec02',ace_sha256(d0bc9eba15c20f4b6ae8ffd1b672d1f76c28679597f090fc8e4f60bd356d1eb3),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: A recommendation is a category-A-recommendation and is an evidence-type-2-recommendation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02',1,ref(1),[]),recommendation,countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02',1,ref(1),[]),na,eq,1).

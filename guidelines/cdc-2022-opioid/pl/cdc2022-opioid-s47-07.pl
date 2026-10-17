@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s47-07',ace_sha256('7e201a460229fcd922b2ee37ab43263bd75eec2df08a5f695eb5c7f73abe3275'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s47-07',ace_sha256('7e201a460229fcd922b2ee37ab43263bd75eec2df08a5f695eb5c7f73abe3275'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should review a prescribed-medication during a prepregnancy-care and should review a nonprescribed-medication during a prepregnancy-care and should review a prescribed-medication during an interpregnancy-care and should review a nonprescribed-medication during an interpregnancy-care.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s47-07',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s47-07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s47-07',1,ref(2),[A]),'prescribed-medication',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

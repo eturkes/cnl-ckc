@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s12-02',ace_sha256('3322bd1746dd66de3fbb29de27046d3551f0065bc40f3e13308184cc68a14ebb'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s12-02',ace_sha256('3322bd1746dd66de3fbb29de27046d3551f0065bc40f3e13308184cc68a14ebb'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a recommendation is a category-B-recommendation then the recommendation possibly can be inapplicable to an addressed-person.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s12-02',1,box(1),[A,B,C]),can) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'category-B-recommendation',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s12-02',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s12-02',1,ref(4),[A,B,C]),'addressed-person',countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'category-B-recommendation',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

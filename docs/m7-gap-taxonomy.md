@@ -44,9 +44,9 @@ they qualify, in seven classes: manner (64 documents), applicability
 force (2). A "might" claim compiles under "can" with "possibly". An
 applicability hedge ("as appropriate", "when feasible") compiles as a
 condition. 36 new documents formalize regions that earlier restated a
-statement without its qualified content. Eight more restating regions
-carry an unhedged capability claim that no target types; a deferred
-row tracks them. A census of the 599 formalized and
+statement without its qualified content. Eight more new documents
+formalize restating regions whose capability claim no target typed;
+each states the claim under "can". A census of the 599 formalized and
 restating regions (`.agent/archive/s2-census/`) rules each of their 680
 hedge occurrences. 13 documents keep a hedge that no event carries. Most
 such hedges sit inside a nominalized action ("avoid rapid tapering") or

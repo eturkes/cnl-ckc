@@ -111,6 +111,10 @@ noun_sg('most-circumstance-course-of-action','most-circumstance-course-of-action
 noun_sg('multimodal-and-multidisciplinary-pain-management-approach','multimodal-and-multidisciplinary-pain-management-approach',neutr).
 noun_sg('NSAID','NSAID',neutr).
 noun_sg('NSAID-use-dose-and-duration-decision','NSAID-use-dose-and-duration-decision',neutr).
+noun_sg('opioid-associated-respiratory-depression','opioid-associated-respiratory-depression',neutr).
+noun_sg('opioid-use-disorder-identification','opioid-use-disorder-identification',neutr).
+noun_sg('other-explanation','other-explanation',neutr).
+noun_sg('PDMP-result','PDMP-result',neutr).
 noun_sg('PEG-assessment-scale','PEG-assessment-scale',neutr).
 noun_sg('multimodal-treatment-option-accessibility','multimodal-treatment-option-accessibility',neutr).
 noun_sg('multimodal-treatment-option-availability','multimodal-treatment-option-availability',neutr).
@@ -210,6 +214,7 @@ noun_sg('sufficient-substance-use-disorder-treatment-capacity','sufficient-subst
 noun_sg('toxicology-expert-availability','toxicology-expert-availability',neutr).
 noun_sg('toxicology-testing-recommendation','toxicology-testing-recommendation',neutr).
 noun_sg('treatment-modality','treatment-modality',neutr).
+noun_sg('unintended-patient-effect','unintended-patient-effect',neutr).
 noun_sg('unused-opioid','unused-opioid',neutr).
 noun_sg('very-limited-oral-naltrexone-circumstance','very-limited-oral-naltrexone-circumstance',neutr).
 noun_sg(benzodiazepine,benzodiazepine,neutr).
@@ -1085,6 +1090,7 @@ adj_itr('first-line','first-line').
 tv_infpl(calibrate,calibrate).
 tv_infpl(optimize,optimize).
 tv_infpl(pause,pause).
+tv_infpl(potentiate,potentiate).
 tv_infpl(prioritize,prioritize).
 tv_infpl(reevaluate,reevaluate).
 tv_infpl(refer,refer).

@@ -36,7 +36,7 @@
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s62-03',ace_sha256('9d7d09b930d9b6d8a94b6d4d19fdf0f99400d5f8e48095def64e1927f4dffa5c'),ulex(sha256('67d1410100ff45477e758b366ae03bb860a5c23e3fd444d55dc901b2f3c7d8a1')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s62-03',ace_sha256('9d7d09b930d9b6d8a94b6d4d19fdf0f99400d5f8e48095def64e1927f4dffa5c'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every robust-evidence-based-treatment-coverage may facilitate an evidence-based-default-pain-treatment and may encourage an evidence-based-default-pain-treatment.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s62-03',1,box(1),[A]),may) :- guideline_entity(actual,A,'robust-evidence-based-treatment-coverage',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s62-03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s62-03',1,ref(2),[A]),'evidence-based-default-pain-treatment',countable) :- guideline_entity(actual,A,'robust-evidence-based-treatment-coverage',countable), guideline_cardinality(actual,A,na,eq,1).
