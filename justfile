@@ -372,24 +372,31 @@ build-static:
 trust: build
     cd "{{ ROOT }}/rust" && ./target/release/ckc trust-audit
 
-# Summary lines only: totals + the 5 slowest test binaries; a failing run also prints its panics +
-# failure lists.
+# Summary lines only: totals + the 5 slowest test binaries; a failing run also prints each binary
+# that started without a result line, its panics + failure lists and cargo's own error lines: a
+# binary killed by a signal or a harness error prints no panic and no `test result` line, so
+# cargo's lines hold its cause. Every run leaves its log in rust/target/test.log.
 test:
     #!/usr/bin/env bash
     set -uo pipefail
     cd "{{ ROOT }}/rust"
-    log=$(mktemp)
+    mkdir -p target; log=target/test.log
     # cargo's status lines stay on, uncolored: each `Running` | `Doc-tests` line names the binary
     # whose `test result` line follows; libtest stays terse.
     CARGO_TERM_COLOR=never cargo test --workspace --locked --offline -- --quiet > "$log" 2>&1; rc=$?
-    awk '/^ +Running /{n=$NF; gsub(/[()]/, "", n); sub(/.*\//, "", n); sub(/-[0-9a-f]+$/, "", n)}
-        /^ +Doc-tests /{n="doc:" $2}
+    awk '/^ +Running /{n=$NF; gsub(/[()]/, "", n); sub(/.*\//, "", n); sub(/-[0-9a-f]+$/, "", n); print "start", n}
+        /^ +Doc-tests /{n="doc:" $2; print "start", n}
         /^test result/{t=$NF; sub(/s$/, "", t); printf "%s %s %s %s %s\n", t, n, $4, $6, $8}' "$log" > "$log.t"
-    awk '{b++; p+=$3; f+=$4; i+=$5} END {printf "test: %d binaries, %d passed, %d failed, %d ignored\n", b, p, f, i}' "$log.t"
-    sort -rn "$log.t" | head -5 | awk '{printf "test: slowest %s s %s (%d tests)\n", $1, $2, $3 + $4 + $5}'
+    grep -v '^start ' "$log.t" | awk '{b++; p+=$3; f+=$4; i+=$5} END {printf "test: %d binaries, %d passed, %d failed, %d ignored\n", b, p, f, i}'
+    grep -v '^start ' "$log.t" | sort -rn | head -5 | awk '{printf "test: slowest %s s %s (%d tests)\n", $1, $2, $3 + $4 + $5}'
+    if [ "$rc" -ne 0 ]; then
+        awk '$1 == "start" {if (n != "" && !d) print "test: no result line: " n; n = $2; d = 0; next} {d = 1}
+            END {if (n != "" && !d) print "test: no result line: " n}' "$log.t"
+        grep -E -B2 -A12 'panicked|^failures:' "$log" | head -200
+        grep -E "^error|process didn't exit successfully" "$log" | head -40
+        echo "test: rc $rc, log kept at rust/$log"
+    fi
     rm -f "$log.t"
-    if [ "$rc" -ne 0 ]; then grep -E -B2 -A12 'panicked|^failures:' "$log" | head -200; fi
-    rm -f "$log"
     [ "$rc" -eq 0 ] && echo "gate: test ok"
     exit "$rc"
 

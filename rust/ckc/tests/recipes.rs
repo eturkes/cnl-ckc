@@ -1163,3 +1163,76 @@ fn bump_crate_moves_a_members_own_pin() {
         "the planted pre-rule recipe no longer slips through"
     );
 }
+
+// Mock cargo for `test`: a run whose second binary dies by a signal, as cargo reports it: no
+// panic, no `test result` line, the cause only in cargo's own error lines; exits 101.
+const CARGO_TEST: &str = r#"#!/usr/bin/env bash
+cat <<'LOG'
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.40s
+     Running unittests src/lib.rs (target/debug/deps/ckc-0123456789abcdef)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/aaa_abort.rs (target/debug/deps/aaa_abort-33c9abcd291590e3)
+error: test failed, to rerun pass `-p ckc --test aaa_abort`
+
+Caused by:
+  process didn't exit successfully: `/x/rust/target/debug/deps/aaa_abort-33c9abcd291590e3 --quiet` (signal: 6, SIGABRT: process abort signal)
+LOG
+exit 101
+"#;
+
+#[test]
+fn test_recipe_names_a_binary_that_dies_without_a_result() {
+    let s = scratch("test-recipe");
+    let text = justfile();
+    let case = |name: &str, justfile: &str| {
+        let fx = Fixture::new(&s, name, justfile);
+        put_exec(&fx.mock.join("cargo"), CARGO_TEST);
+        fs::create_dir_all(fx.root.join("rust")).unwrap();
+        let out = fx.run("test", &[]);
+        (out, fx)
+    };
+    let (out, fx) = case("signal", &text);
+    assert_eq!(out.status.code(), Some(101), "signal: {}", show(&out));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    for line in [
+        "test: 1 binaries, 7 passed, 0 failed, 0 ignored\n",
+        "test: no result line: aaa_abort\n",
+        "error: test failed, to rerun pass `-p ckc --test aaa_abort`\n",
+        "(signal: 6, SIGABRT: process abort signal)\n",
+        "test: rc 101, log kept at rust/target/test.log\n",
+    ] {
+        assert!(stdout.contains(line), "missing {line:?}: {}", show(&out));
+    }
+    assert!(
+        fx.read("rust/target/test.log").contains("SIGABRT"),
+        "log kept"
+    );
+    // The pre-fix recipe (temp log deleted, panics + failure lists alone) prints no cause.
+    let planted = plant(
+        &text,
+        &[
+            (
+                "        awk '$1 == \"start\" {if (n != \"\" && !d) print \"test: no result line: \" n; n = $2; d = 0; next} {d = 1}\n            END {if (n != \"\" && !d) print \"test: no result line: \" n}' \"$log.t\"\n",
+                "",
+            ),
+            (
+                "        grep -E \"^error|process didn't exit successfully\" \"$log\" | head -40\n",
+                "",
+            ),
+            (
+                "        echo \"test: rc $rc, log kept at rust/$log\"\n",
+                "        rm -f \"$log\"\n",
+            ),
+        ],
+    );
+    let (out, fx) = case("signal-planted", &planted);
+    assert_eq!(out.status.code(), Some(101), "planted: {}", show(&out));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        !stdout.contains("SIGABRT") && !stdout.contains("aaa_abort"),
+        "the planted pre-fix recipe no longer slips through: {}",
+        show(&out)
+    );
+    assert!(!fx.root.join("rust/target/test.log").exists());
+}
