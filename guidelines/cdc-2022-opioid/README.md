@@ -183,7 +183,10 @@ guideline conclusions.
   existential — a takes-none reading (S37-13). A source preference
   ("preferred", "instead of", "rather than", "first-line", "first choice")
   types as `guideline_preference` (schema S1); "are recommended" renders
-  as a should-shaped duty. A hedge types as `guideline_qualifier` (schema
+  as a should-shaped duty. A source prohibition ("should not V") renders
+  as a recommendation over a negation: "it is recommended that the
+  clinician does not V". The ACE form "should not V" states only that no
+  duty to V exists. A hedge types as `guideline_qualifier` (schema
   S2) on the action that it qualifies ("typically", "generally",
   "ideally", "carefully"). A "might" claim renders as "can" with
   "possibly". Softened advice ("might consider") renders as "may". An

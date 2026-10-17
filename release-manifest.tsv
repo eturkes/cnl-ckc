@@ -10,9 +10,9 @@ meta	generated	release-manifest.tsv
 meta	generated	manifest-sha256.txt
 meta	generated	tagmanifest-sha256.txt
 member	NOTICE	d9ed734ad82b5c34f60d7d95513d3fce86ef5a03620fcfa2f8d835a55eadb361	1401
-member	README-dist.md	88cc60da665a001c57bf282f0b09917f5df448c9c815669c545dc44d6a127f87	42150
+member	README-dist.md	14846a3a52efdc6e291b4c8c1c9f382d6298450242798e1a9394b70bd94aafa8	42212
 member	bagit.txt	1712ecfb074bf29c4188ad3421032509159a09739fd604f8fe57038b4ddefcc9	54
-member	data/guidelines/cdc-2022-opioid/README.md	3e3c13c78173f8d66b6c1196154a0081ff4c42938bd0459f053e4804b0ae5d89	13530
+member	data/guidelines/cdc-2022-opioid/README.md	62793872484dc00e2d474ccc0e0bacf33bbb2c861a62a842d49849ac3e237c14	13736
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp01.ace	6e0aebe35e96bdf3da641fb34355287c16b504575c5262febeafc343bc3490b1	342
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp02.ace	827a00f98cf682a8da35fcff8042c867380d23707454ddfe780f52bb84ae81c0	231
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp03.ace	bafa5bba8cc4479743a58c976e281fc62e77a1e5a38db61fda6fbea8e4a31426	570

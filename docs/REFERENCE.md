@@ -240,6 +240,25 @@ approximate time limit, or as the upper end of a ranged minimum. The compiler re
 a time limit only through these words. A table that fails the `ckc check` grammar stops the
 interface with `ui: viewmodel: <id> vocabulary.tsv: <why>`.
 
+A guideline with grade, preference or qualifier rows in `vocabulary.tsv`
+shows the strength of its statements in the same two places. A document
+page with a grade shows the table "Grade as compiled": the measure, the
+value and the label in the source. A document page with a preference or
+a qualifier shows the tables "Preferences as compiled" and "Qualifiers
+as compiled". Each row names its sentence and the part of the sentence
+that holds it. The column "Stated as" gives the operators of the
+statement, outermost first. Thus `should not` recommends against the
+action, and `not should` states only that no duty exists. A statement
+without an operator reads `as a fact`. The column "Action" names the
+verb. A copula has no verb of its own, so its row names the noun of its
+subject. In the qualifier table, the action also names the object of the
+verb, and the column "Kind" names the function of the word: How often,
+Best case, Emphasis, Manner, Strength of wording, Possibility or
+Condition of use. Identical rows of one sentence show once. The
+guideline page lists the grade, preference and qualifier rows of
+`vocabulary.tsv` under "Grade words", "Preference words" and "Qualifier
+words", after the time words.
+
 The interface reads committed files. When the working tree holds
 uncommitted guideline changes, the pages render the last commit
 instead. Three consequences follow. An uncommitted edit is not
@@ -784,8 +803,9 @@ matching fact must meet.
 
 A qualifier belongs to the description of its event. A negation or an
 operator covers the event together with its qualifiers:
-`should not abruptly discontinue` prohibits an abrupt discontinuation,
-not every discontinuation. A program that matches an event must also
+`it is recommended that the clinician does not abruptly discontinue an
+opioid` recommends against an abrupt discontinuation, not against every
+discontinuation. A program that matches an event must also
 match the qualifiers of that event.
 
 Every other shape of these patterns rejects with class `unsupported`:
