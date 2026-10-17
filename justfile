@@ -17,8 +17,8 @@ default:
 
 RUST_STEPS := "fmt-check clippy verify build trust test deny secrets workflows"
 
-# Full gate: rust chain, corpus chain, emission certification.
-gate: (_timed RUST_STEPS + " check certify")
+# Full gate: rust chain, phone layout, corpus chain, emission certification.
+gate: (_timed RUST_STEPS + " mobile check certify")
 
 # Rust chain: format, lint, verify, build, trust-audit, test, dependency audit, secret scan, workflow scan.
 rust: (_timed RUST_STEPS)
@@ -66,6 +66,7 @@ tools:
         case "$asset" in
             *.tar.gz) tar -xzf "$DL/$asset" -C "$T/$tool" ;;
             *.tar.xz) tar -xJf "$DL/$asset" -C "$T/$tool" ;;
+            *.zip) unzip -q "$DL/$asset" -d "$T/$tool" ;;
             *) cp "$DL/$asset" "$T/$tool/$tool"; chmod +x "$T/$tool/$tool" ;;
         esac
         bin=$(find "$T/$tool" -type f -name "$tool" -perm -u+x | head -1)
@@ -266,15 +267,17 @@ bump-kani version:
 
 # tools.lock row from the release: GitHub → the row's tag + asset name with the version swapped,
 # sha256 = the release asset `digest`, URL = its download URL; rustup-init → the archive URL for the
-# version + its published .sha256. The asset downloads into the toolchain's dl/ (the cache `just tools`
-# reuses) and must match before the row changes.
+# version + its published .sha256; node → the version swapped + nodejs.org's SHASUMS256.txt;
+# chrome-headless-shell (Chrome for Testing publishes no sha256) → the version swapped, the GCS
+# object md5 checks the download, whose sha256 becomes the row's. The asset downloads into the
+# toolchain's dl/ (the cache `just tools` reuses) and must match before the row changes.
 # Tool bump: rewrite the rust/tools.lock row of <tool> for <version> (e.g. zizmor 1.31.0); then `just rust`.
 bump-tool tool version:
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}"
     fail() { echo "bump-tool: $*" >&2; exit 1; }
-    L=rust/tools.lock t="{{ tool }}" v="{{ version }}" DL="{{ TOOLCHAIN }}/dl"
+    L=rust/tools.lock t="{{ tool }}" v="{{ version }}" DL="{{ TOOLCHAIN }}/dl" sha= md5=
     row=$(awk -F'\t' -v t="$t" 'NR > 1 && $1 == t' "$L")
     [ -n "$row" ] || fail "no $t row in $L"
     IFS=$'\t' read -r _ old asset _ url <<< "$row"
@@ -291,12 +294,24 @@ bump-tool tool version:
         https://static.rust-lang.org/rustup/archive/*)
             url=${url/"/archive/$old/"/"/archive/$v/"}
             sha=$(get "$url.sha256" | cut -d' ' -f1) ;;
+        https://nodejs.org/dist/*)
+            url=${url//"$old"/$v} asset=${asset//"$old"/$v}
+            sha=$(get "${url%/*}/SHASUMS256.txt" | awk -v a="$asset" '$2 == a {print $1}') ;;
+        https://storage.googleapis.com/chrome-for-testing-public/*)
+            url=${url//"$old"/$v} obj=${url#https://storage.googleapis.com/chrome-for-testing-public/}
+            md5=$(get "https://storage.googleapis.com/storage/v1/b/chrome-for-testing-public/o/${obj//\//%2F}" \
+                | jq -r '.md5Hash // empty' | base64 -d | od -An -tx1 | tr -d ' \n') ;;
         *) fail "no release source for $url" ;;
     esac
-    [[ "$sha" =~ ^[0-9a-f]{64}$ && -n "$url" ]] || fail "no $asset with a sha256 for $t $v"
+    [[ -n "$url" ]] && { [[ "$sha" =~ ^[0-9a-f]{64}$ ]] || [[ "$md5" =~ ^[0-9a-f]{32}$ ]]; } \
+        || fail "no $asset with a digest for $t $v"
     mkdir -p "$DL"; w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
     get -o "$w/$asset" "$url"
     got=$(sha256sum < "$w/$asset" | cut -d' ' -f1)
+    if [ -n "$md5" ]; then
+        [ "$(md5sum < "$w/$asset" | cut -d' ' -f1)" = "$md5" ] || fail "digest mismatch: $asset"
+        sha=$got
+    fi
     [ "$got" = "$sha" ] || fail "digest mismatch: $asset"
     mv "$w/$asset" "$DL/$asset"
     T="$t" V="$v" A="$asset" S="$sha" U="$url" awk -F'\t' -v OFS='\t' \
@@ -437,6 +452,8 @@ outdated:
         case "$url" in
             https://github.com/*) latest=$(latest_tag "$(cut -d/ -f4-5 <<< "$url")" | sed 's/^v//') ;;
             https://static.rust-lang.org/rustup/*) latest=$(get https://static.rust-lang.org/rustup/release-stable.toml | sed -n "s/^version = '\(.*\)'$/\1/p") || latest= ;;
+            https://nodejs.org/dist/*) latest=$(get https://nodejs.org/dist/index.json | jq -r '[.[] | select(.lts != false)][0].version // empty' | sed 's/^v//') || latest= ;;
+            https://storage.googleapis.com/chrome-for-testing-public/*) latest=$(get https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version // empty') || latest= ;;
             *) latest= ;;
         esac
         report "tool:$tool" "$version" "$latest"
@@ -601,6 +618,35 @@ mutants target +files:
     cd "$out/tree/rust"
     CARGO_NET_OFFLINE=true cargo mutants --in-place --no-config --cargo-arg=--locked --cargo-arg=--offline \
         "${args[@]}" --output "$out" ${filter:+-- -- $filter}
+
+# Phone layout (n22): every `ckc ui render` page loads at 390 px in the pinned headless browser
+# (tools/ui-mobile-probe.mjs under the pinned node). The recipe's own red inputs run every time:
+# the render with its viewport meta stripped must fail on every page, with its narrow-screen
+# table rule stripped on at least one. CKC_BIN names a prebuilt binary.
+mobile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    bin="${CKC_BIN:-}"
+    if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
+    w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    probe() { "{{ TOOLCHAIN }}/bin/node" tools/ui-mobile-probe.mjs "{{ TOOLCHAIN }}/bin/chrome-headless-shell" "$1"; }
+    "$bin" ui render "$w/pages" >/dev/null
+    probe "$w/pages"
+    n=$(find "$w/pages" -name '*.html' | wc -l)
+    red() { # name anchor min-bad: the anchor sits on every page; stripped, ≥ min-bad pages fail (rc 1)
+        cp -a "$w/pages" "$w/$1"
+        [ "$(grep -rlF -- "$2" "$w/$1" | wc -l)" = "$n" ] || { echo "mobile: $1: anchor missing from a page" >&2; exit 2; }
+        find "$w/$1" -name '*.html' -exec sed -i "s|$2||" {} +
+        ! grep -rqF -- "$2" "$w/$1" || { echo "mobile: $1: anchor left on a page" >&2; exit 2; }
+        rc=0; out=$(probe "$w/$1") || rc=$?
+        bad=$(sed -n 's/^ui-mobile: [0-9]* pages, \([0-9]*\) bad.*/\1/p' <<< "$out")
+        [ "$rc" = 1 ] && [ "${bad:-0}" -ge "$3" ] || { printf '%s\n' "$out" >&2; echo "mobile: $1: rc $rc, $bad bad pages (≥ $3 expected)" >&2; exit 1; }
+        echo "mobile: red input $1: $bad of $n pages bad"
+    }
+    red no-viewport-meta '<meta name="viewport" content="width=device-width, initial-scale=1">' "$n"
+    red no-narrow-table-rule '@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }' 1
+    echo "gate: mobile ok"
 
 # Corpus chain: `.agent/spec-lint` (spec.md shape, the template's byte copy),
 # `ckc check` (every custody, coverage, lexicon, fixture and release-manifest law),

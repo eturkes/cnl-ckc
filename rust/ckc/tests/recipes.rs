@@ -745,7 +745,23 @@ const TOOLS_LOCK: &str = "tool\tversion\tasset\tsha256\turl
 rustup-init\t1.29.1\trustup-init\t1111111111111111111111111111111111111111111111111111111111111111\thttps://static.rust-lang.org/rustup/archive/1.29.1/x86_64-unknown-linux-gnu/rustup-init
 just\t1.58.0\tjust-1.58.0-x86_64-unknown-linux-musl.tar.gz\t3333333333333333333333333333333333333333333333333333333333333333\thttps://github.com/casey/just/releases/download/1.58.0/just-1.58.0-x86_64-unknown-linux-musl.tar.gz
 zizmor\t1.30.1\tzizmor-x86_64-unknown-linux-gnu.tar.gz\t2222222222222222222222222222222222222222222222222222222222222222\thttps://github.com/zizmorcore/zizmor/releases/download/v1.30.1/zizmor-x86_64-unknown-linux-gnu.tar.gz
+node\t24.22.0\tnode-v24.22.0-linux-x64.tar.xz\t4444444444444444444444444444444444444444444444444444444444444444\thttps://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.xz
+chrome-headless-shell\t155.0.8059.84\tchrome-headless-shell-linux64.zip\t5555555555555555555555555555555555555555555555555555555555555555\thttps://storage.googleapis.com/chrome-for-testing-public/155.0.8059.84/linux64/chrome-headless-shell-linux64.zip
 ";
+
+// Where a bump control's digest comes from: the GitHub release API, rustup's `.sha256`,
+// nodejs.org's SHASUMS256.txt, or the GCS object metadata of a Chrome for Testing asset (an md5
+// that checks the download; the row pins the download's sha256).
+enum Source {
+    GitHub(&'static str),
+    Rustup,
+    Node,
+    Gcs(&'static str),
+}
+
+// md5 of `chrome-headless-shell 156.0.7000.1 fixture asset\n`, base64 as GCS serves it.
+const CFT_MD5: &str = "lwEUb9P188C1E6v8PPfR0g==";
+const CFT_META: &str = "https://storage.googleapis.com/storage/v1/b/chrome-for-testing-public/o/156.0.7000.1%2Flinux64%2Fchrome-headless-shell-linux64.zip";
 
 #[test]
 fn bump_tool_writes_rows_from_release_data_and_refuses_bad_digests() {
@@ -766,33 +782,51 @@ fn bump_tool_writes_rows_from_release_data_and_refuses_bad_digests() {
         (
             "zizmor",
             "1.31.0",
-            "https://api.github.com/repos/zizmorcore/zizmor/releases/tags/v1.31.0",
+            Source::GitHub("https://api.github.com/repos/zizmorcore/zizmor/releases/tags/v1.31.0"),
             "zizmor-x86_64-unknown-linux-gnu.tar.gz",
             "https://github.com/zizmorcore/zizmor/releases/download/v1.31.0/zizmor-x86_64-unknown-linux-gnu.tar.gz",
         ),
         (
             "just",
             "1.59.0",
-            "https://api.github.com/repos/casey/just/releases/tags/1.59.0",
+            Source::GitHub("https://api.github.com/repos/casey/just/releases/tags/1.59.0"),
             "just-1.59.0-x86_64-unknown-linux-musl.tar.gz",
             "https://github.com/casey/just/releases/download/1.59.0/just-1.59.0-x86_64-unknown-linux-musl.tar.gz",
         ),
         (
             "rustup-init",
             "1.29.2",
-            "",
+            Source::Rustup,
             "rustup-init",
             "https://static.rust-lang.org/rustup/archive/1.29.2/x86_64-unknown-linux-gnu/rustup-init",
         ),
+        (
+            "node",
+            "24.23.0",
+            Source::Node,
+            "node-v24.23.0-linux-x64.tar.xz",
+            "https://nodejs.org/dist/v24.23.0/node-v24.23.0-linux-x64.tar.xz",
+        ),
+        (
+            "chrome-headless-shell",
+            "156.0.7000.1",
+            Source::Gcs(CFT_MD5),
+            "chrome-headless-shell-linux64.zip",
+            "https://storage.googleapis.com/chrome-for-testing-public/156.0.7000.1/linux64/chrome-headless-shell-linux64.zip",
+        ),
     ];
-    for (tool, version, api, asset, url) in controls {
+    for (tool, version, source, asset, url) in controls {
         let fx = fixture(tool);
         let bytes = format!("{tool} {version} fixture asset\n");
         let digest = hex(bytes.as_bytes());
-        if api.is_empty() {
-            fx.route(&format!("{url}.sha256"), format!("{digest} *./{asset}\n"));
-        } else {
-            fx.route(api, release(asset, url, Some(&digest)));
+        match source {
+            Source::GitHub(api) => fx.route(api, release(asset, url, Some(&digest))),
+            Source::Rustup => fx.route(&format!("{url}.sha256"), format!("{digest} *./{asset}\n")),
+            Source::Node => fx.route(
+                "https://nodejs.org/dist/v24.23.0/SHASUMS256.txt",
+                format!("{}  {asset}.sig\n{digest}  {asset}\n", "6".repeat(64)),
+            ),
+            Source::Gcs(md5) => fx.route(CFT_META, format!(r#"{{"md5Hash": "{md5}"}}"#)),
         }
         fx.route(url, &bytes);
         let out = fx.run("bump-tool", &[tool, version]);
@@ -814,7 +848,45 @@ fn bump_tool_writes_rows_from_release_data_and_refuses_bad_digests() {
             bytes.as_bytes()
         );
     }
-    // A digest that disagrees with the download, then a release without one: refused, untouched.
+    // Digests that disagree with the download (GitHub, then GCS md5) and sources without one
+    // (a GitHub release, a SHASUMS256.txt missing the asset): refused, untouched.
+    let cft = "https://storage.googleapis.com/chrome-for-testing-public/156.0.7000.1/linux64/chrome-headless-shell-linux64.zip";
+    for (name, md5) in [
+        ("md5-mismatch", "euS8epvTd5yXpe+ELbSYlg=="),
+        ("md5-missing", ""),
+    ] {
+        let fx = fixture(name);
+        fx.route(CFT_META, format!(r#"{{"md5Hash": "{md5}"}}"#));
+        fx.route(cft, "chrome-headless-shell 156.0.7000.1 fixture asset\n");
+        let out = fx.run("bump-tool", &["chrome-headless-shell", "156.0.7000.1"]);
+        assert_ne!(out.status.code(), Some(0), "{name}: {}", show(&out));
+        assert_eq!(
+            fx.read("rust/tools.lock"),
+            TOOLS_LOCK,
+            "{name}: lock changed"
+        );
+        assert_eq!(fx.calls(), "", "{name}: installed");
+    }
+    let fx = fixture("shasums-missing");
+    let node = "https://nodejs.org/dist/v24.23.0/node-v24.23.0-linux-x64.tar.xz";
+    fx.route(
+        "https://nodejs.org/dist/v24.23.0/SHASUMS256.txt",
+        format!("{}  node-v24.23.0-darwin-arm64.tar.gz\n", "6".repeat(64)),
+    );
+    fx.route(node, "node 24.23.0 fixture asset\n");
+    let out = fx.run("bump-tool", &["node", "24.23.0"]);
+    assert_ne!(
+        out.status.code(),
+        Some(0),
+        "shasums-missing: {}",
+        show(&out)
+    );
+    assert_eq!(
+        fx.read("rust/tools.lock"),
+        TOOLS_LOCK,
+        "shasums-missing: lock changed"
+    );
+    assert_eq!(fx.calls(), "", "shasums-missing: installed");
     let api = "https://api.github.com/repos/zizmorcore/zizmor/releases/tags/v1.31.0";
     let asset = "zizmor-x86_64-unknown-linux-gnu.tar.gz";
     let url = "https://github.com/zizmorcore/zizmor/releases/download/v1.31.0/zizmor-x86_64-unknown-linux-gnu.tar.gz";
@@ -903,8 +975,12 @@ fn outdated_case(s: &Scratch, name: &str, justfile: &str, metadata_fails: bool) 
     put(
         &rust.join("tools.lock"),
         format!(
-            "tool\tversion\tasset\tsha256\turl\njust\t1.58.0\tjust.tar.gz\t{}\thttps://github.com/casey/just/releases/download/1.58.0/just.tar.gz\n",
-            "3".repeat(64)
+            "tool\tversion\tasset\tsha256\turl\njust\t1.58.0\tjust.tar.gz\t{}\thttps://github.com/casey/just/releases/download/1.58.0/just.tar.gz
+node\t24.22.0\tnode.tar.xz\t{}\thttps://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.xz
+chrome-headless-shell\t155.0.8059.84\tchs.zip\t{}\thttps://storage.googleapis.com/chrome-for-testing-public/155.0.8059.84/linux64/chrome-headless-shell-linux64.zip\n",
+            "3".repeat(64),
+            "4".repeat(64),
+            "5".repeat(64)
         ),
     );
     put(
@@ -940,6 +1016,15 @@ fn outdated_case(s: &Scratch, name: &str, justfile: &str, metadata_fails: bool) 
         &format!("{api}/casey/just/releases/latest"),
         r#"{"tag_name": "1.58.0"}"#,
     );
+    // Latest node = the newest LTS line: a newer current (non-LTS) release stays out.
+    fx.route(
+        "https://nodejs.org/dist/index.json",
+        r#"[{"version": "v26.1.0", "lts": false}, {"version": "v24.22.0", "lts": "Krypton"}, {"version": "v24.21.0", "lts": "Krypton"}]"#,
+    );
+    fx.route(
+        "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json",
+        r#"{"channels": {"Stable": {"version": "155.0.8059.84"}, "Beta": {"version": "156.0.8100.2"}}}"#,
+    );
     for (name, latest) in [
         ("ext-macro", "1.0.0"),
         ("sha2", "0.11.1"),
@@ -963,6 +1048,8 @@ rustc_toolchain\t1.97.1-x86_64-unknown-linux-gnu\t-\tfollows verus
 z3_version\t4.16.0\t-\tfollows verus
 kani\t0.68.0\t0.68.0\tok
 tool:just\t1.58.0\t1.58.0\tok
+tool:node\t24.22.0\t24.22.0\tok
+tool:chrome-headless-shell\t155.0.8059.84\t155.0.8059.84\tok
 crate:ext-macro\t1.0.0\t1.0.0\tok
 ";
     let tail = "crate:syn\t2.0.1\t3.0.0\theld\tby ext-macro 1.0.0
@@ -973,7 +1060,7 @@ crate:zlib-x\t1.0.0\t2.0.0\theld\tby ckc 0.1.0
     assert_eq!(
         String::from_utf8_lossy(&out.stdout),
         format!(
-            "{head}crate:sha2\t0.11.0\t0.11.1\tdrift\tpinned by ckc 0.1.0 (=0.11.0)\n{tail}outdated: 7 pins, 1 drift, 2 held, 0 errors\n"
+            "{head}crate:sha2\t0.11.0\t0.11.1\tdrift\tpinned by ckc 0.1.0 (=0.11.0)\n{tail}outdated: 9 pins, 1 drift, 2 held, 0 errors\n"
         )
     );
     // An unreadable member requirement set is an error, never a silent `held`.

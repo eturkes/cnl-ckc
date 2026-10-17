@@ -70,8 +70,13 @@ The project supports Linux on x86-64.
 3. Install `just`. Use your package manager, or the release that
    `rust/tools.lock` records.
 4. In the repository root, run `just tools`. This command downloads
-   the pinned Rust toolchain, the verifier, and the audit tools into
+   the pinned Rust toolchain, the verifier, the audit tools, and a
+   headless browser with Node.js for the phone-layout check into
    `.toolchain/`. It checks every download against its recorded digest.
+   The headless browser needs the shared libraries of Google Chrome. On
+   Debian or Ubuntu, the file
+   `.toolchain/chrome-headless-shell/chrome-headless-shell-linux64/deb.deps`
+   lists the packages.
 5. Run `just build`. The program is `rust/target/release/ckc`.
 
 ## Run
@@ -93,7 +98,7 @@ Run each command in the repository root. The examples call the program
   `ckc dist build` writes the release archive to `dist/`.
 - `just gate` runs every check that CI runs on each push. CI also runs `just deny`, `just kani`, and `just outdated` once a week. The checks are format,
   lint, verification, tests, dependency audit, secret scan, workflow
-  scan, repository checks, and certification.
+  scan, phone layout, repository checks, and certification.
 
 ## Configure
 
@@ -101,9 +106,9 @@ Run each command in the repository root. The examples call the program
   `swipl` from your `PATH`.
 - `CKC_TOOLCHAIN` names the directory of the pinned tools. The default
   is `.toolchain/` in the repository root.
-- `CKC_BIN` names a prebuilt `ckc` program for `just check` and
-  `just certify`. If you do not set it, these recipes build `ckc`
-  first.
+- `CKC_BIN` names a prebuilt `ckc` program for `just mobile`,
+  `just check`, and `just certify`. If you do not set it, these recipes
+  build `ckc` first.
 - The reviewer site listens on `127.0.0.1` only. To choose the port,
   give a port number to `ckc ui serve`.
 

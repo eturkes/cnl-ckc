@@ -194,7 +194,10 @@ The pages fit the screen of a phone. Each page sets its layout width
 to the width of the screen. On a screen narrower than 40rem, a table
 that is wider than the screen scrolls sideways inside its own box,
 and the rest of the page keeps the width of the screen. Printed pages
-do not change.
+do not change. `just mobile` loads every rendered page at the width of
+a phone in a pinned headless browser. The check fails when a page is
+wider than the screen or when a wide table cannot show its last
+column.
 
 The document page links the two texts through an authored alignment.
 The author of the ACE text records which part of the passage each
