@@ -6,7 +6,8 @@ use std::io::Write;
 use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Condvar, Mutex, OnceLock};
 
 const HEADER: &str = "# format: kind\tlemma\tvalue\n";
 const GID: &str = "cdc-2022-opioid";
@@ -236,17 +237,28 @@ impl Checks {
 }
 
 struct CheckTree {
-    scratch: Scratch,
+    _scratch: Option<Scratch>,
+    dir: PathBuf,
     tree: PathBuf,
     swipl: PathBuf,
 }
 impl CheckTree {
     fn new() -> Self {
         let scratch = Scratch::new();
-        let tree = scratch.0.join("tree");
+        let dir = scratch.0.clone();
+        Self::build(Some(scratch), dir)
+    }
+    // A clone in a fixed directory, emptied first (the run-wide table pool).
+    fn at(dir: PathBuf) -> Self {
+        remove(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        Self::build(None, dir)
+    }
+    fn build(scratch: Option<Scratch>, dir: PathBuf) -> Self {
+        let tree = dir.join("tree");
         let head = text(&git(&root(), &["rev-parse", "HEAD"]));
         git(
-            &scratch.0,
+            &dir,
             &[
                 "clone",
                 "-q",
@@ -257,14 +269,15 @@ impl CheckTree {
             ],
         );
         git(&tree, &["checkout", "-q", "--detach", head.trim()]);
-        let swipl = scratch.0.join("swipl-stop");
+        let swipl = dir.join("swipl-stop");
         write(
             &swipl,
             "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 9.2.9 for x86_64-linux'; exit 0; }\necho 'c1-surface: stage reached' >&2\nexit 3\n",
         );
         fs::set_permissions(&swipl, fs::Permissions::from_mode(0o755)).unwrap();
         Self {
-            scratch,
+            _scratch: scratch,
+            dir,
             tree,
             swipl,
         }
@@ -283,24 +296,104 @@ impl CheckTree {
             &[("SWIPL", &self.swipl)],
         )
     }
-    fn check_table(&self, checks: &mut Checks, label: &str, bytes: &[u8]) {
-        self.table(bytes);
-        let out = self.run(&["check"]);
-        match reference_table(bytes) {
-            Ok(rows) => {
-                let meter = format!("ckc: vocabulary ok {TABLE_PATH} {rows} rows\n");
-                checks.require(
-                    text(&out.stdout).contains(&meter),
-                    format!("{label}: missing {meter:?}; {}", observed(&out)),
-                );
+}
+
+fn judge_table(checks: &mut Checks, label: &str, bytes: &[u8], out: &Output) {
+    match reference_table(bytes) {
+        Ok(rows) => {
+            let meter = format!("ckc: vocabulary ok {TABLE_PATH} {rows} rows\n");
+            checks.require(
+                text(&out.stdout).contains(&meter),
+                format!("{label}: missing {meter:?}; {}", observed(out)),
+            );
+        }
+        Err(why) => {
+            let expected = format!("ckc: vocabulary: {TABLE_PATH}: {why}\n");
+            checks.require(
+                out.status.code() == Some(1) && diagnostic(out) == expected,
+                format!("{label}: expected rc1 {expected:?}; {}", observed(out)),
+            );
+        }
+    }
+}
+
+// Each `ckc check` of a full HEAD clone costs seconds and a test's table cases are independent:
+// the table cases of every test share TABLE_WORKERS HEAD clones (checked out once per run in
+// rust/target/c1-surface/pool-<k>; a case rewrites the table before its `ckc check`, so a clone
+// carries no state between cases), and each test's verdicts fold in case order, so the
+// assertions and their failure text are a sequential run's. One pool bounds the concurrent
+// checks and checkouts for the whole binary.
+const TABLE_WORKERS: usize = 8;
+
+fn table_pool() -> &'static (Mutex<Vec<CheckTree>>, Condvar) {
+    static POOL: OnceLock<(Mutex<Vec<CheckTree>>, Condvar)> = OnceLock::new();
+    POOL.get_or_init(|| {
+        let trees = (0..TABLE_WORKERS)
+            .map(|k| CheckTree::at(root().join(format!("rust/target/c1-surface/pool-{k}"))))
+            .collect();
+        (Mutex::new(trees), Condvar::new())
+    })
+}
+
+// A pool clone on loan; dropping the loan (a panic included) returns it.
+struct Loan(Option<CheckTree>);
+impl Loan {
+    fn take() -> Self {
+        let (free, ready) = table_pool();
+        let mut trees = free.lock().unwrap_or_else(|e| e.into_inner());
+        loop {
+            if let Some(tree) = trees.pop() {
+                return Self(Some(tree));
             }
-            Err(why) => {
-                let expected = format!("ckc: vocabulary: {TABLE_PATH}: {why}\n");
-                checks.require(
-                    out.status.code() == Some(1) && diagnostic(&out) == expected,
-                    format!("{label}: expected rc1 {expected:?}; {}", observed(&out)),
-                );
-            }
+            trees = ready.wait(trees).unwrap_or_else(|e| e.into_inner());
+        }
+    }
+}
+impl Drop for Loan {
+    fn drop(&mut self) {
+        let (free, ready) = table_pool();
+        free.lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(self.0.take().unwrap());
+        ready.notify_one();
+    }
+}
+
+#[derive(Default)]
+struct TableCases(Vec<(String, Vec<u8>)>);
+impl TableCases {
+    fn add(&mut self, label: &str, bytes: &[u8]) {
+        self.0.push((label.into(), bytes.into()));
+    }
+    fn run(self, checks: &mut Checks) {
+        let next = AtomicUsize::new(0);
+        let mut outs = std::thread::scope(|s| {
+            let workers = (0..TABLE_WORKERS.min(self.0.len()))
+                .map(|_| {
+                    s.spawn(|| {
+                        let mut done = Vec::new();
+                        loop {
+                            let i = next.fetch_add(1, Ordering::Relaxed);
+                            let Some((_, bytes)) = self.0.get(i) else {
+                                return done;
+                            };
+                            let loan = Loan::take();
+                            let tree = loan.0.as_ref().unwrap();
+                            tree.table(bytes);
+                            done.push((i, tree.run(&["check"])));
+                        }
+                    })
+                })
+                .collect::<Vec<_>>();
+            workers
+                .into_iter()
+                .flat_map(|w| w.join().unwrap())
+                .collect::<Vec<_>>()
+        });
+        outs.sort_by_key(|(i, _)| *i);
+        assert_eq!(outs.len(), self.0.len(), "every table case ran");
+        for ((label, bytes), (_, out)) in self.0.iter().zip(&outs) {
+            judge_table(checks, label, bytes, out);
         }
     }
 }
@@ -548,38 +641,30 @@ fn reference_ui_table(bytes: &[u8]) -> Result<usize, String> {
 
 #[test]
 fn b01_exact_header() {
-    let tree = CheckTree::new();
+    let mut cases = TableCases::default();
     let mut checks = Checks::new("B1");
     let valid = format!("{HEADER}unit\thour\thour\n");
-    tree.check_table(&mut checks, "exact header", valid.as_bytes());
+    cases.add("exact header", valid.as_bytes());
     for i in 0..HEADER.len() {
         let mut changed = valid.as_bytes().to_vec();
         changed[i] = if changed[i] == b'x' { b'y' } else { b'x' };
-        tree.check_table(&mut checks, &format!("header byte {i}"), &changed);
+        cases.add(&format!("header byte {i}"), &changed);
     }
     for prefix in ["\u{feff}", "\n", " "] {
-        tree.check_table(
-            &mut checks,
-            "header prefix",
-            format!("{prefix}{valid}").as_bytes(),
-        );
+        cases.add("header prefix", format!("{prefix}{valid}").as_bytes());
     }
-    tree.check_table(
-        &mut checks,
-        "CRLF header",
-        valid.replacen('\n', "\r\n", 1).as_bytes(),
-    );
-    tree.check_table(
-        &mut checks,
+    cases.add("CRLF header", valid.replacen('\n', "\r\n", 1).as_bytes());
+    cases.add(
         "old two-line header",
         format!("{HEADER}# kind: unit (value: hour)\nunit\thour\thour\n").as_bytes(),
     );
+    cases.run(&mut checks);
     checks.finish();
 }
 
 #[test]
 fn b02_comment_precedence() {
-    let tree = CheckTree::new();
+    let mut cases = TableCases::default();
     let mut checks = Checks::new("B2");
     for row in [
         "#",
@@ -589,24 +674,23 @@ fn b02_comment_precedence() {
         "##\u{7f}",
     ] {
         for leading in ["", "unit\thour\thour\n"] {
-            tree.check_table(
-                &mut checks,
+            cases.add(
                 &format!("{row:?} after {leading:?}"),
                 format!("{HEADER}{leading}{row}\n").as_bytes(),
             );
         }
     }
-    tree.check_table(
-        &mut checks,
+    cases.add(
         "earlier row violation before comment",
         format!("{HEADER}unit\thour\tbad\n#\n").as_bytes(),
     );
+    cases.run(&mut checks);
     checks.finish();
 }
 
 #[test]
 fn b03_row_laws_and_order_properties() {
-    let tree = CheckTree::new();
+    let mut cases = TableCases::default();
     let mut checks = Checks::new("B3");
     let invalid = [
         "",
@@ -642,8 +726,7 @@ fn b03_row_laws_and_order_properties() {
             } else {
                 format!("{row}\n{valid}")
             };
-            tree.check_table(
-                &mut checks,
+            cases.add(
                 &format!("row-law {i}, reversed={reversed}"),
                 format!("{HEADER}{body}").as_bytes(),
             );
@@ -665,8 +748,7 @@ fn b03_row_laws_and_order_properties() {
     ];
     for (i, (left, right)) in pairs.iter().enumerate() {
         for (a, b) in [(left, right), (right, left)] {
-            tree.check_table(
-                &mut checks,
+            cases.add(
                 &format!("pair {i}: {a:?}/{b:?}"),
                 format!("{HEADER}{a}\n{b}\n").as_bytes(),
             );
@@ -679,14 +761,14 @@ fn b03_row_laws_and_order_properties() {
     ];
     for (left, lv) in preps {
         for (right, rv) in preps {
-            tree.check_table(
-                &mut checks,
+            cases.add(
                 &format!("preposition {left}/{right}"),
                 format!("{HEADER}{left}\tx\t{lv}\n{right}\tx\t{rv}\n").as_bytes(),
             );
         }
     }
     // UTF-8, quoting and non-ASCII aliases are data; only the declared key spaces conflict.
+    cases.run(&mut checks);
     let ui = UiTree::new();
     let mut generated = 0;
     for alias in ["x", "é", "Ω", "'", "a&<b>", "x\\y", "a-b", "\u{a0}"] {
@@ -762,13 +844,9 @@ fn b03_row_laws_and_order_properties() {
 
 #[test]
 fn b04_all_seven_kinds_and_meter() {
-    let tree = CheckTree::new();
+    let mut cases = TableCases::default();
     let mut checks = Checks::new("B4");
-    tree.check_table(
-        &mut checks,
-        "all kinds",
-        format!("{HEADER}{ALL_ROWS}").as_bytes(),
-    );
+    cases.add("all kinds", format!("{HEADER}{ALL_ROWS}").as_bytes());
     let rows: Vec<_> = ALL_ROWS.lines().collect();
     for shift in 0..rows.len() {
         let body = rows
@@ -779,31 +857,24 @@ fn b04_all_seven_kinds_and_meter() {
             .copied()
             .collect::<Vec<_>>()
             .join("\n");
-        tree.check_table(
-            &mut checks,
+        cases.add(
             &format!("row rotation {shift}"),
             format!("{HEADER}{body}\n").as_bytes(),
         );
     }
     for unit in ["second", "minute", "hour", "day", "week", "month", "year"] {
-        tree.check_table(
-            &mut checks,
-            unit,
-            format!("{HEADER}unit\tx\t{unit}\n").as_bytes(),
-        );
+        cases.add(unit, format!("{HEADER}unit\tx\t{unit}\n").as_bytes());
     }
     for role in ["duration", "within", "after", "before"] {
-        tree.check_table(
-            &mut checks,
-            role,
-            format!("{HEADER}relation\tx\t{role}\n").as_bytes(),
-        );
+        cases.add(role, format!("{HEADER}relation\tx\t{role}\n").as_bytes());
     }
+    cases.run(&mut checks);
     checks.finish();
 }
 
 #[test]
 fn b05_table_boundaries_and_file_laws() {
+    let mut cases = TableCases::default();
     let tree = CheckTree::new();
     let mut checks = Checks::new("B5");
     for bytes in [
@@ -815,8 +886,9 @@ fn b05_table_boundaries_and_file_laws() {
         b"# format: kind\tlemma\tvalue\nunit\t\xff\thour\n",
         b"# format: kind\tlemma\tvalue\nwindow\tx\t\xff\n",
     ] {
-        tree.check_table(&mut checks, &format!("boundary {bytes:?}"), bytes);
+        cases.add(&format!("boundary {bytes:?}"), bytes);
     }
+    cases.run(&mut checks);
     for kind in ["directory", "symlink", "dangling"] {
         tree.table(format!("{HEADER}unit\tx\thour\n").as_bytes());
         let path = tree.tree.join(TABLE_PATH);
@@ -825,12 +897,12 @@ fn b05_table_boundaries_and_file_laws() {
             "directory" => fs::create_dir(&path).unwrap(),
             "symlink" => {
                 write(
-                    &tree.scratch.0.join("target.tsv"),
+                    &tree.dir.join("target.tsv"),
                     format!("{HEADER}unit\tx\thour\n"),
                 );
-                symlink(tree.scratch.0.join("target.tsv"), &path).unwrap();
+                symlink(tree.dir.join("target.tsv"), &path).unwrap();
             }
-            _ => symlink(tree.scratch.0.join("missing.tsv"), &path).unwrap(),
+            _ => symlink(tree.dir.join("missing.tsv"), &path).unwrap(),
         }
         let out = tree.run(&["check"]);
         let diag = diagnostic(&out);
@@ -876,7 +948,7 @@ fn b06_retired_name_refused_by_every_reader() {
                     "retired table fixture",
                 ],
             );
-            let dest = tree.scratch.0.join("dist");
+            let dest = tree.dir.join("dist");
             let ui_root = tree.tree.to_str().unwrap();
             for args in [
                 vec!["check"],
@@ -1060,10 +1132,17 @@ struct Compiler {
     scratch: Scratch,
     stage: PathBuf,
 }
-impl Compiler {
-    fn new() -> Self {
-        let scratch = Scratch::new();
-        let stage = scratch.0.join("ape");
+
+// One staged compiler per test process (APE + Clex + the compiled parser + Clex qcompiled
+// beside its source: every compile then loads the same clauses from the .qlf in ~0.3 s instead
+// of ~1.2 s from source). Compiles only read the stage; each Compiler keeps its own scratch for
+// inputs. The stage directory is rebuilt at first use in every run.
+fn compiler_stage() -> &'static Path {
+    static STAGE: OnceLock<PathBuf> = OnceLock::new();
+    STAGE.get_or_init(|| {
+        let dir = root().join("rust/target/c1-surface/stage");
+        remove(&dir);
+        let stage = dir.join("ape");
         copy_tree(&root().join("vendor/ape"), &stage);
         fs::copy(
             root().join("vendor/clex/clex_lexicon.pl"),
@@ -1071,12 +1150,13 @@ impl Compiler {
         )
         .unwrap();
         let goal = format!(
-            "working_directory(_, {}), [fit_to_plp], halt.",
-            atom(stage.join("prolog/parser").to_str().unwrap())
+            "working_directory(_, {}), [fit_to_plp], working_directory(_, {}), qcompile(clex_lexicon), halt.",
+            atom(stage.join("prolog/parser").to_str().unwrap()),
+            atom(stage.join("prolog/lexicon").to_str().unwrap())
         );
         let out = command(
             Path::new("swipl"),
-            &scratch.0,
+            &dir,
             &[
                 "-O".into(),
                 "-f".into(),
@@ -1092,11 +1172,21 @@ impl Compiler {
             &[],
         );
         assert!(out.status.success(), "compiler stage: {}", observed(&out));
+        stage
+    })
+}
+
+impl Compiler {
+    fn new() -> Self {
+        let scratch = Scratch::new();
         write(
             &scratch.0.join("-"),
             b"a file named dash is not a table or lexicon\n",
         );
-        Self { scratch, stage }
+        Self {
+            scratch,
+            stage: compiler_stage().to_path_buf(),
+        }
     }
     fn input(&self, name: &str, bytes: &[u8]) -> String {
         let path = self.scratch.0.join(name);

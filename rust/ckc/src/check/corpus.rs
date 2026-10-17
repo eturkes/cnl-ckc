@@ -3,6 +3,9 @@ use super::{
     adjudication, census, coverage, functors, inventories::Guideline, lexicon, projection,
 };
 pub(super) fn check(g: &Guideline) -> Result {
+    // The table grammar reads one small file; it runs before the corpus ledgers and the
+    // lexicon (a full Clex pass, the costliest section), so a table defect stops the run early.
+    vocabulary_table(g)?;
     let pairs = projection::check(&g.path)?;
     for (id, _) in &pairs {
         if !g.docids.contains(id) {
@@ -40,8 +43,7 @@ pub(super) fn check(g: &Guideline) -> Result {
     }
     census::check(&g.path, &status)?;
     adjudication::check(g, &c)?;
-    lexicon::check(g)?;
-    vocabulary_table(g)
+    lexicon::check(g)
 }
 
 // c1 D4: the vocabulary.tsv grammar section (the kernel parses the same bytes

@@ -123,7 +123,8 @@ compiler base:
      `.agent/deferred.md` pointer as the last `Tasks` line;
   2. validates layout, source records, and Prolog/lexicon inventory
      closure;
-  3. validates every guideline's corpus ledgers — projection-notes
+  3. validates every guideline's vocabulary table grammar first, then
+     its corpus ledgers — projection-notes
      header bytes and per-document totality, with each row's region
      resolving to the coverage row that carries its `ace(docid)`;
      coverage-ledger closure (row grammar, region totality against each
