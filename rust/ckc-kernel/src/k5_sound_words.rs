@@ -60,8 +60,8 @@ proof fn relation(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     l::f249(inputs);
     l::f280(inputs);
     l::f281(inputs);
-    l::f286(inputs);
-    l::f287(inputs);
+    l::f284(inputs);
+    l::f285(inputs);
     assert(h::sound(u::role_html(p.1), inputs));
     assert(h::sound(u::role_html(p.1), inputs));
     b::cell(u::pl_word(raw, p.0), inputs);
@@ -83,12 +83,12 @@ proof fn framed(raw: u::Bytes, a: u::Bytes, f: u::Bytes, inputs: Seq<u::Bytes>)
     t::pl_word(raw, f, inputs);
     l::f033(inputs);
     l::f034(inputs);
-    l::f285(inputs);
+    l::f283(inputs);
     let a1 = u::pl_word(raw, a) + b::f(33);
-    let a2 = a1 + b::f(285);
+    let a2 = a1 + b::f(283);
     let a3 = a2 + u::pl_word(raw, f);
     b::add(u::pl_word(raw, a), b::f(33), inputs);
-    b::add(a1, b::f(285), inputs);
+    b::add(a1, b::f(283), inputs);
     b::add(a2, u::pl_word(raw, f), inputs);
     b::add(a3, b::f(34), inputs);
 }
@@ -105,10 +105,10 @@ proof fn spacing(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     hide(u::cell);
     hide(u::row);
     framed(raw, p.0, p.1, inputs);
-    l::f284(inputs);
+    l::f282(inputs);
     b::cell(u::framed_word(raw, p.0, p.1), inputs);
-    b::cell(b::f(284), inputs);
-    b::row(seq![u::cell(u::framed_word(raw, p.0, p.1)), u::cell(b::f(284))], inputs);
+    b::cell(b::f(282), inputs);
+    b::row(seq![u::cell(u::framed_word(raw, p.0, p.1)), u::cell(b::f(282))], inputs);
 }
 
 proof fn window(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
@@ -123,10 +123,10 @@ proof fn window(raw: u::Bytes, p: (u::Bytes, u::Bytes), inputs: Seq<u::Bytes>)
     hide(u::cell);
     hide(u::row);
     framed(raw, p.0, p.1, inputs);
-    l::f288(inputs);
+    l::f286(inputs);
     b::cell(u::framed_word(raw, p.0, p.1), inputs);
-    b::cell(b::f(288), inputs);
-    b::row(seq![u::cell(u::framed_word(raw, p.0, p.1)), u::cell(b::f(288))], inputs);
+    b::cell(b::f(286), inputs);
+    b::row(seq![u::cell(u::framed_word(raw, p.0, p.1)), u::cell(b::f(286))], inputs);
 }
 
 proof fn frequency(raw: u::Bytes, f: u::Bytes, inputs: Seq<u::Bytes>)
@@ -142,19 +142,19 @@ proof fn frequency(raw: u::Bytes, f: u::Bytes, inputs: Seq<u::Bytes>)
     hide(u::cell);
     hide(u::row);
     t::pl_word(raw, f, inputs);
-    l::f289(inputs);
+    l::f287(inputs);
     b::cell(u::pl_word(raw, f), inputs);
-    b::cell(b::f(289), inputs);
-    b::row(seq![u::cell(u::pl_word(raw, f)), u::cell(b::f(289))], inputs);
+    b::cell(b::f(287), inputs);
+    b::row(seq![u::cell(u::pl_word(raw, f)), u::cell(b::f(287))], inputs);
 }
 
 proof fn lemma_word(raw: u::Bytes, a: u::Bytes, k: int, inputs: Seq<u::Bytes>)
     requires
         m::backed(raw, inputs),
-        k == 299 || k == 300,
+        k == 297 || k == 298,
     ensures
-        k == 299 ==> h::sound(w::approximation_row(raw, a), inputs),
-        k == 300 ==> h::sound(w::range_row(raw, a), inputs),
+        k == 297 ==> h::sound(w::approximation_row(raw, a), inputs),
+        k == 298 ==> h::sound(w::range_row(raw, a), inputs),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
@@ -163,8 +163,8 @@ proof fn lemma_word(raw: u::Bytes, a: u::Bytes, k: int, inputs: Seq<u::Bytes>)
     hide(u::cell);
     hide(u::row);
     t::pl_word(raw, a, inputs);
-    l::f299(inputs);
-    l::f300(inputs);
+    l::f297(inputs);
+    l::f298(inputs);
     b::cell(u::pl_word(raw, a), inputs);
     b::cell(b::f(k), inputs);
     b::row(seq![u::cell(u::pl_word(raw, a)), u::cell(b::f(k))], inputs);
@@ -206,10 +206,10 @@ proof fn rows(raw: u::Bytes, tm: Vocabulary, inputs: Seq<u::Bytes>)
         frequency(raw, tm.frequencies[i], inputs);
     }
     assert forall|i: int| 0 <= i < xs.len() implies h::sound(#[trigger] xs[i], inputs) by {
-        lemma_word(raw, tm.approximations[i], 299, inputs);
+        lemma_word(raw, tm.approximations[i], 297, inputs);
     }
     assert forall|i: int| 0 <= i < gs.len() implies h::sound(#[trigger] gs[i], inputs) by {
-        lemma_word(raw, tm.ranges[i], 300, inputs);
+        lemma_word(raw, tm.ranges[i], 298, inputs);
     }
     t::cat3(us, rs, ss, inputs);
     t::cat3(us + rs + ss, ws, fs, inputs);

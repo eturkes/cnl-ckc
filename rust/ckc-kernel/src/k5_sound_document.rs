@@ -67,7 +67,7 @@ pub open spec fn head_parts(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
     let heading = u::text(u::title(g)) + pdf;
     let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     let prov = (if region.len() > 0 {
-        seq![b::f(303) + b::f(304) + u::text(region) + b::f(24)]
+        seq![b::f(301) + b::f(302) + u::text(region) + b::f(24)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
@@ -89,7 +89,7 @@ pub open spec fn head_parts(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
         b::f(97) + heading + b::f(98),
         b::f(114) + u::text(u::document_title(g, id)) + b::f(36) + u::chip(k) + b::f(115),
     ] + (if prov.len() > 0 {
-        seq![b::f(302) + provenance + b::f(126)]
+        seq![b::f(300) + provenance + b::f(126)]
     } else {
         Seq::empty()
     }) + seq![
@@ -222,7 +222,7 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     let heading = u::text(u::title(g)) + pdf;
     let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     let prov = (if region.len() > 0 {
-        seq![b::f(303) + b::f(304) + u::text(region) + b::f(24)]
+        seq![b::f(301) + b::f(302) + u::text(region) + b::f(24)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
@@ -243,9 +243,9 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     l::f137(inputs);
     l::f138(inputs);
     l::f141(inputs);
+    l::f300(inputs);
+    l::f301(inputs);
     l::f302(inputs);
-    l::f303(inputs);
-    l::f304(inputs);
     l::f024(inputs);
     l::f147(inputs);
     l::f150(inputs);
@@ -273,8 +273,8 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     m::coverage_field(g, id, 0, inputs);
     m::copy(region, inputs);
     h::text(region, inputs);
-    b::add(b::f(303), b::f(304), inputs);
-    three(b::f(303) + b::f(304), u::text(region), b::f(24), inputs);
+    b::add(b::f(301), b::f(302), inputs);
+    three(b::f(301) + b::f(302), u::text(region), b::f(24), inputs);
     h::empty(inputs, 0);
     if pdfs.len() == 1 {
         hl::attribute(b::f(137), u::url_seg(pdfs[0]), b::f(138), inputs);
@@ -291,7 +291,7 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     hl::aligned(g, d, true, inputs);
     three(b::f(97), heading, b::f(98), inputs);
     five(b::f(114), u::text(u::document_title(g, id)), b::f(36), u::chip(k), b::f(115), inputs);
-    three(b::f(302), provenance, b::f(126), inputs);
+    three(b::f(300), provenance, b::f(126), inputs);
     five(
         b::f(99),
         u::text(u::tally_text(u::tally(g, id))),
@@ -473,9 +473,9 @@ pub proof fn page(
     l::f137(inputs);
     l::f138(inputs);
     l::f141(inputs);
+    l::f300(inputs);
+    l::f301(inputs);
     l::f302(inputs);
-    l::f303(inputs);
-    l::f304(inputs);
     l::f024(inputs);
     l::f147(inputs);
     l::f150(inputs);

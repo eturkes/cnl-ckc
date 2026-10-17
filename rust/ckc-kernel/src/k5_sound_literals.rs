@@ -8851,78 +8851,34 @@ pub proof fn f281(inputs: Seq<u::Bytes>)
 
 pub proof fn l282(inputs: Seq<u::Bytes>)
     ensures
-        u::copy_registry().contains(u::lit("how long after a reference point the action occurs"@)),
-        u::copy_derived(
-            u::lit("how long after a reference point the action occurs"@),
-            inputs,
-            u::copy_registry(),
-        ),
-        u::copy_registry()[282] == u::lit("how long after a reference point the action occurs"@),
-{
-    hide(u::copy_derived);
-    hide(u::copy_registry);
-    hide(u::lit);
-    hide(u::css_text);
-    hide(u::script_html);
-    assert(u::copy_registry()[282] == u::lit("how long after a reference point the action occurs"@)
-        && 282 < u::copy_registry().len()) by {
-        reveal(u::copy_registry);
-    };
-    b::literal(u::lit("how long after a reference point the action occurs"@), inputs);
-}
-
-pub proof fn l283(inputs: Seq<u::Bytes>)
-    ensures
-        u::copy_registry().contains(u::lit("how long before a reference point the action occurs"@)),
-        u::copy_derived(
-            u::lit("how long before a reference point the action occurs"@),
-            inputs,
-            u::copy_registry(),
-        ),
-        u::copy_registry()[283] == u::lit("how long before a reference point the action occurs"@),
-{
-    hide(u::copy_derived);
-    hide(u::copy_registry);
-    hide(u::lit);
-    hide(u::css_text);
-    hide(u::script_html);
-    assert(u::copy_registry()[283] == u::lit("how long before a reference point the action occurs"@)
-        && 283 < u::copy_registry().len()) by {
-        reveal(u::copy_registry);
-    };
-    b::literal(u::lit("how long before a reference point the action occurs"@), inputs);
-}
-
-pub proof fn l284(inputs: Seq<u::Bytes>)
-    ensures
         u::copy_registry().contains(u::lit("how far apart repeats of the action lie"@)),
         u::copy_derived(
             u::lit("how far apart repeats of the action lie"@),
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[284] == u::lit("how far apart repeats of the action lie"@),
+        u::copy_registry()[282] == u::lit("how far apart repeats of the action lie"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[284] == u::lit("how far apart repeats of the action lie"@) && 284
+    assert(u::copy_registry()[282] == u::lit("how far apart repeats of the action lie"@) && 282
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("how far apart repeats of the action lie"@), inputs);
 }
 
-pub proof fn f284(inputs: Seq<u::Bytes>)
+pub proof fn f282(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("how far apart repeats of the action lie"@), inputs, 0, 0),
-        u::copy_registry()[284] == u::lit("how far apart repeats of the action lie"@),
+        u::copy_registry()[282] == u::lit("how far apart repeats of the action lie"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l284(inputs);
+    l282(inputs);
     reveal_strlit("how far apart repeats of the action lie");
     is_ascii_chars_encode_utf8("how far apart repeats of the action lie"@);
     assert(u::lit("how far apart repeats of the action lie"@)
@@ -8935,31 +8891,31 @@ pub proof fn f284(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("how far apart repeats of the action lie"@), inputs, 0, 0);
 }
 
-pub proof fn l285(inputs: Seq<u::Bytes>)
+pub proof fn l283(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("with "@)),
         u::copy_derived(u::lit("with "@), inputs, u::copy_registry()),
-        u::copy_registry()[285] == u::lit("with "@),
+        u::copy_registry()[283] == u::lit("with "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[285] == u::lit("with "@) && 285 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[283] == u::lit("with "@) && 283 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("with "@), inputs);
 }
 
-pub proof fn f285(inputs: Seq<u::Bytes>)
+pub proof fn f283(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("with "@), inputs, 0, 0),
-        u::copy_registry()[285] == u::lit("with "@),
+        u::copy_registry()[283] == u::lit("with "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l285(inputs);
+    l283(inputs);
     reveal_strlit("with ");
     is_ascii_chars_encode_utf8("with "@);
     assert(u::lit("with "@) =~= bs![119u8,105,116,104,32]);
@@ -8968,7 +8924,7 @@ pub proof fn f285(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("with "@), inputs, 0, 0);
 }
 
-pub proof fn l286(inputs: Seq<u::Bytes>)
+pub proof fn l284(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -8982,7 +8938,7 @@ pub proof fn l286(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[286] == u::lit(
+        u::copy_registry()[284] == u::lit(
             "how long after a reference point the action occurs, or only that it occurs after it"@,
         ),
 {
@@ -8991,9 +8947,9 @@ pub proof fn l286(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[286] == u::lit(
+    assert(u::copy_registry()[284] == u::lit(
         "how long after a reference point the action occurs, or only that it occurs after it"@,
-    ) && 286 < u::copy_registry().len()) by {
+    ) && 284 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -9004,7 +8960,7 @@ pub proof fn l286(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f286(inputs: Seq<u::Bytes>)
+pub proof fn f284(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -9014,13 +8970,13 @@ pub proof fn f286(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[286] == u::lit(
+        u::copy_registry()[284] == u::lit(
             "how long after a reference point the action occurs, or only that it occurs after it"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l286(inputs);
+    l284(inputs);
     reveal_strlit(
         "how long after a reference point the action occurs, or only that it occurs after it",
     );
@@ -9051,7 +9007,7 @@ pub proof fn f286(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l287(inputs: Seq<u::Bytes>)
+pub proof fn l285(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -9065,7 +9021,7 @@ pub proof fn l287(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[287] == u::lit(
+        u::copy_registry()[285] == u::lit(
             "how long before a reference point the action occurs, or only that it occurs before it"@,
         ),
 {
@@ -9074,9 +9030,9 @@ pub proof fn l287(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[287] == u::lit(
+    assert(u::copy_registry()[285] == u::lit(
         "how long before a reference point the action occurs, or only that it occurs before it"@,
-    ) && 287 < u::copy_registry().len()) by {
+    ) && 285 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -9087,7 +9043,7 @@ pub proof fn l287(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f287(inputs: Seq<u::Bytes>)
+pub proof fn f285(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -9097,13 +9053,13 @@ pub proof fn f287(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[287] == u::lit(
+        u::copy_registry()[285] == u::lit(
             "how long before a reference point the action occurs, or only that it occurs before it"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l287(inputs);
+    l285(inputs);
     reveal_strlit(
         "how long before a reference point the action occurs, or only that it occurs before it",
     );
@@ -9134,7 +9090,7 @@ pub proof fn f287(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l288(inputs: Seq<u::Bytes>)
+pub proof fn l286(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit("the time window in which the spacing of repeats holds"@),
@@ -9144,22 +9100,22 @@ pub proof fn l288(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[288] == u::lit("the time window in which the spacing of repeats holds"@),
+        u::copy_registry()[286] == u::lit("the time window in which the spacing of repeats holds"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[288] == u::lit(
+    assert(u::copy_registry()[286] == u::lit(
         "the time window in which the spacing of repeats holds"@,
-    ) && 288 < u::copy_registry().len()) by {
+    ) && 286 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("the time window in which the spacing of repeats holds"@), inputs);
 }
 
-pub proof fn f288(inputs: Seq<u::Bytes>)
+pub proof fn f286(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed("the time window in which the spacing of repeats holds"@),
@@ -9167,11 +9123,11 @@ pub proof fn f288(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[288] == u::lit("the time window in which the spacing of repeats holds"@),
+        u::copy_registry()[286] == u::lit("the time window in which the spacing of repeats holds"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l288(inputs);
+    l286(inputs);
     reveal_strlit("the time window in which the spacing of repeats holds");
     is_ascii_chars_encode_utf8("the time window in which the spacing of repeats holds"@);
     assert(u::lit("the time window in which the spacing of repeats holds"@)
@@ -9184,7 +9140,7 @@ pub proof fn f288(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("the time window in which the spacing of repeats holds"@), inputs, 0, 0);
 }
 
-pub proof fn l289(inputs: Seq<u::Bytes>)
+pub proof fn l287(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit("how many of an item the action involves in each period"@),
@@ -9194,7 +9150,7 @@ pub proof fn l289(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[289] == u::lit(
+        u::copy_registry()[287] == u::lit(
             "how many of an item the action involves in each period"@,
         ),
 {
@@ -9203,15 +9159,15 @@ pub proof fn l289(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[289] == u::lit(
+    assert(u::copy_registry()[287] == u::lit(
         "how many of an item the action involves in each period"@,
-    ) && 289 < u::copy_registry().len()) by {
+    ) && 287 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("how many of an item the action involves in each period"@), inputs);
 }
 
-pub proof fn f289(inputs: Seq<u::Bytes>)
+pub proof fn f287(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed("how many of an item the action involves in each period"@),
@@ -9219,13 +9175,13 @@ pub proof fn f289(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[289] == u::lit(
+        u::copy_registry()[287] == u::lit(
             "how many of an item the action involves in each period"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l289(inputs);
+    l287(inputs);
     reveal_strlit("how many of an item the action involves in each period");
     is_ascii_chars_encode_utf8("how many of an item the action involves in each period"@);
     assert(u::lit("how many of an item the action involves in each period"@)
@@ -9238,31 +9194,31 @@ pub proof fn f289(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("how many of an item the action involves in each period"@), inputs, 0, 0);
 }
 
-pub proof fn l290(inputs: Seq<u::Bytes>)
+pub proof fn l288(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("before"@)),
         u::copy_derived(u::lit("before"@), inputs, u::copy_registry()),
-        u::copy_registry()[290] == u::lit("before"@),
+        u::copy_registry()[288] == u::lit("before"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[290] == u::lit("before"@) && 290 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[288] == u::lit("before"@) && 288 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("before"@), inputs);
 }
 
-pub proof fn f290(inputs: Seq<u::Bytes>)
+pub proof fn f288(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("before"@), inputs, 0, 0),
-        u::copy_registry()[290] == u::lit("before"@),
+        u::copy_registry()[288] == u::lit("before"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l290(inputs);
+    l288(inputs);
     reveal_strlit("before");
     is_ascii_chars_encode_utf8("before"@);
     assert(u::lit("before"@) =~= bs![98u8,101,102,111,114,101]);
@@ -9271,31 +9227,31 @@ pub proof fn f290(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("before"@), inputs, 0, 0);
 }
 
-pub proof fn l291(inputs: Seq<u::Bytes>)
+pub proof fn l289(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("after"@)),
         u::copy_derived(u::lit("after"@), inputs, u::copy_registry()),
-        u::copy_registry()[291] == u::lit("after"@),
+        u::copy_registry()[289] == u::lit("after"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[291] == u::lit("after"@) && 291 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[289] == u::lit("after"@) && 289 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("after"@), inputs);
 }
 
-pub proof fn f291(inputs: Seq<u::Bytes>)
+pub proof fn f289(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("after"@), inputs, 0, 0),
-        u::copy_registry()[291] == u::lit("after"@),
+        u::copy_registry()[289] == u::lit("after"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l291(inputs);
+    l289(inputs);
     reveal_strlit("after");
     is_ascii_chars_encode_utf8("after"@);
     assert(u::lit("after"@) =~= bs![97u8,102,116,101,114]);
@@ -9304,31 +9260,31 @@ pub proof fn f291(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("after"@), inputs, 0, 0);
 }
 
-pub proof fn l292(inputs: Seq<u::Bytes>)
+pub proof fn l290(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit(" per "@)),
         u::copy_derived(u::lit(" per "@), inputs, u::copy_registry()),
-        u::copy_registry()[292] == u::lit(" per "@),
+        u::copy_registry()[290] == u::lit(" per "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[292] == u::lit(" per "@) && 292 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[290] == u::lit(" per "@) && 290 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit(" per "@), inputs);
 }
 
-pub proof fn f292(inputs: Seq<u::Bytes>)
+pub proof fn f290(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed(" per "@), inputs, 0, 0),
-        u::copy_registry()[292] == u::lit(" per "@),
+        u::copy_registry()[290] == u::lit(" per "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l292(inputs);
+    l290(inputs);
     reveal_strlit(" per ");
     is_ascii_chars_encode_utf8(" per "@);
     assert(u::lit(" per "@) =~= bs![32u8,112,101,114,32]);
@@ -9337,32 +9293,32 @@ pub proof fn f292(inputs: Seq<u::Bytes>)
     h::fixed(u::lit(" per "@), inputs, 0, 0);
 }
 
-pub proof fn l293(inputs: Seq<u::Bytes>)
+pub proof fn l291(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit(", counted item: "@)),
         u::copy_derived(u::lit(", counted item: "@), inputs, u::copy_registry()),
-        u::copy_registry()[293] == u::lit(", counted item: "@),
+        u::copy_registry()[291] == u::lit(", counted item: "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[293] == u::lit(", counted item: "@) && 293 < u::copy_registry().len())
+    assert(u::copy_registry()[291] == u::lit(", counted item: "@) && 291 < u::copy_registry().len())
         by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit(", counted item: "@), inputs);
 }
 
-pub proof fn f293(inputs: Seq<u::Bytes>)
+pub proof fn f291(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed(", counted item: "@), inputs, 0, 0),
-        u::copy_registry()[293] == u::lit(", counted item: "@),
+        u::copy_registry()[291] == u::lit(", counted item: "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l293(inputs);
+    l291(inputs);
     reveal_strlit(", counted item: ");
     is_ascii_chars_encode_utf8(", counted item: "@);
     assert(u::lit(", counted item: "@)
@@ -9373,32 +9329,32 @@ pub proof fn f293(inputs: Seq<u::Bytes>)
     h::fixed(u::lit(", counted item: "@), inputs, 0, 0);
 }
 
-pub proof fn l294(inputs: Seq<u::Bytes>)
+pub proof fn l292(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit(" apart during "@)),
         u::copy_derived(u::lit(" apart during "@), inputs, u::copy_registry()),
-        u::copy_registry()[294] == u::lit(" apart during "@),
+        u::copy_registry()[292] == u::lit(" apart during "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[294] == u::lit(" apart during "@) && 294 < u::copy_registry().len())
+    assert(u::copy_registry()[292] == u::lit(" apart during "@) && 292 < u::copy_registry().len())
         by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit(" apart during "@), inputs);
 }
 
-pub proof fn f294(inputs: Seq<u::Bytes>)
+pub proof fn f292(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed(" apart during "@), inputs, 0, 0),
-        u::copy_registry()[294] == u::lit(" apart during "@),
+        u::copy_registry()[292] == u::lit(" apart during "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l294(inputs);
+    l292(inputs);
     reveal_strlit(" apart during ");
     is_ascii_chars_encode_utf8(" apart during "@);
     assert(u::lit(" apart during "@) =~= bs![32u8,97,112,97,114,116,32,100,117,114,105,110,103,32]);
@@ -9408,31 +9364,31 @@ pub proof fn f294(inputs: Seq<u::Bytes>)
     h::fixed(u::lit(" apart during "@), inputs, 0, 0);
 }
 
-pub proof fn l295(inputs: Seq<u::Bytes>)
+pub proof fn l293(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit(" from"@)),
         u::copy_derived(u::lit(" from"@), inputs, u::copy_registry()),
-        u::copy_registry()[295] == u::lit(" from"@),
+        u::copy_registry()[293] == u::lit(" from"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[295] == u::lit(" from"@) && 295 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[293] == u::lit(" from"@) && 293 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit(" from"@), inputs);
 }
 
-pub proof fn f295(inputs: Seq<u::Bytes>)
+pub proof fn f293(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed(" from"@), inputs, 0, 0),
-        u::copy_registry()[295] == u::lit(" from"@),
+        u::copy_registry()[293] == u::lit(" from"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l295(inputs);
+    l293(inputs);
     reveal_strlit(" from");
     is_ascii_chars_encode_utf8(" from"@);
     assert(u::lit(" from"@) =~= bs![32u8,102,114,111,109]);
@@ -9441,31 +9397,31 @@ pub proof fn f295(inputs: Seq<u::Bytes>)
     h::fixed(u::lit(" from"@), inputs, 0, 0);
 }
 
-pub proof fn l296(inputs: Seq<u::Bytes>)
+pub proof fn l294(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("about "@)),
         u::copy_derived(u::lit("about "@), inputs, u::copy_registry()),
-        u::copy_registry()[296] == u::lit("about "@),
+        u::copy_registry()[294] == u::lit("about "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[296] == u::lit("about "@) && 296 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[294] == u::lit("about "@) && 294 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("about "@), inputs);
 }
 
-pub proof fn f296(inputs: Seq<u::Bytes>)
+pub proof fn f294(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("about "@), inputs, 0, 0),
-        u::copy_registry()[296] == u::lit("about "@),
+        u::copy_registry()[294] == u::lit("about "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l296(inputs);
+    l294(inputs);
     reveal_strlit("about ");
     is_ascii_chars_encode_utf8("about "@);
     assert(u::lit("about "@) =~= bs![97u8,98,111,117,116,32]);
@@ -9474,32 +9430,32 @@ pub proof fn f296(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("about "@), inputs, 0, 0);
 }
 
-pub proof fn l297(inputs: Seq<u::Bytes>)
+pub proof fn l295(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("a minimum of "@)),
         u::copy_derived(u::lit("a minimum of "@), inputs, u::copy_registry()),
-        u::copy_registry()[297] == u::lit("a minimum of "@),
+        u::copy_registry()[295] == u::lit("a minimum of "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[297] == u::lit("a minimum of "@) && 297 < u::copy_registry().len())
+    assert(u::copy_registry()[295] == u::lit("a minimum of "@) && 295 < u::copy_registry().len())
         by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("a minimum of "@), inputs);
 }
 
-pub proof fn f297(inputs: Seq<u::Bytes>)
+pub proof fn f295(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("a minimum of "@), inputs, 0, 0),
-        u::copy_registry()[297] == u::lit("a minimum of "@),
+        u::copy_registry()[295] == u::lit("a minimum of "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l297(inputs);
+    l295(inputs);
     reveal_strlit("a minimum of ");
     is_ascii_chars_encode_utf8("a minimum of "@);
     assert(u::lit("a minimum of "@) =~= bs![97u8,32,109,105,110,105,109,117,109,32,111,102,32]);
@@ -9509,31 +9465,31 @@ pub proof fn f297(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("a minimum of "@), inputs, 0, 0);
 }
 
-pub proof fn l298(inputs: Seq<u::Bytes>)
+pub proof fn l296(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit(" to "@)),
         u::copy_derived(u::lit(" to "@), inputs, u::copy_registry()),
-        u::copy_registry()[298] == u::lit(" to "@),
+        u::copy_registry()[296] == u::lit(" to "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[298] == u::lit(" to "@) && 298 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[296] == u::lit(" to "@) && 296 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit(" to "@), inputs);
 }
 
-pub proof fn f298(inputs: Seq<u::Bytes>)
+pub proof fn f296(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed(" to "@), inputs, 0, 0),
-        u::copy_registry()[298] == u::lit(" to "@),
+        u::copy_registry()[296] == u::lit(" to "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l298(inputs);
+    l296(inputs);
     reveal_strlit(" to ");
     is_ascii_chars_encode_utf8(" to "@);
     assert(u::lit(" to "@) =~= bs![32u8,116,111,32]);
@@ -9542,32 +9498,32 @@ pub proof fn f298(inputs: Seq<u::Bytes>)
     h::fixed(u::lit(" to "@), inputs, 0, 0);
 }
 
-pub proof fn l299(inputs: Seq<u::Bytes>)
+pub proof fn l297(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("marks a time limit as approximate"@)),
         u::copy_derived(u::lit("marks a time limit as approximate"@), inputs, u::copy_registry()),
-        u::copy_registry()[299] == u::lit("marks a time limit as approximate"@),
+        u::copy_registry()[297] == u::lit("marks a time limit as approximate"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[299] == u::lit("marks a time limit as approximate"@) && 299
+    assert(u::copy_registry()[297] == u::lit("marks a time limit as approximate"@) && 297
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("marks a time limit as approximate"@), inputs);
 }
 
-pub proof fn f299(inputs: Seq<u::Bytes>)
+pub proof fn f297(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("marks a time limit as approximate"@), inputs, 0, 0),
-        u::copy_registry()[299] == u::lit("marks a time limit as approximate"@),
+        u::copy_registry()[297] == u::lit("marks a time limit as approximate"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l299(inputs);
+    l297(inputs);
     reveal_strlit("marks a time limit as approximate");
     is_ascii_chars_encode_utf8("marks a time limit as approximate"@);
     assert(u::lit("marks a time limit as approximate"@)
@@ -9580,7 +9536,7 @@ pub proof fn f299(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("marks a time limit as approximate"@), inputs, 0, 0);
 }
 
-pub proof fn l300(inputs: Seq<u::Bytes>)
+pub proof fn l298(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit("joins the upper end of a minimum that is stated as a range"@),
@@ -9590,7 +9546,7 @@ pub proof fn l300(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[300] == u::lit(
+        u::copy_registry()[298] == u::lit(
             "joins the upper end of a minimum that is stated as a range"@,
         ),
 {
@@ -9599,15 +9555,15 @@ pub proof fn l300(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[300] == u::lit(
+    assert(u::copy_registry()[298] == u::lit(
         "joins the upper end of a minimum that is stated as a range"@,
-    ) && 300 < u::copy_registry().len()) by {
+    ) && 298 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("joins the upper end of a minimum that is stated as a range"@), inputs);
 }
 
-pub proof fn f300(inputs: Seq<u::Bytes>)
+pub proof fn f298(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed("joins the upper end of a minimum that is stated as a range"@),
@@ -9615,13 +9571,13 @@ pub proof fn f300(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[300] == u::lit(
+        u::copy_registry()[298] == u::lit(
             "joins the upper end of a minimum that is stated as a range"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l300(inputs);
+    l298(inputs);
     reveal_strlit("joins the upper end of a minimum that is stated as a range");
     is_ascii_chars_encode_utf8("joins the upper end of a minimum that is stated as a range"@);
     assert(u::lit("joins the upper end of a minimum that is stated as a range"@)
@@ -9634,7 +9590,7 @@ pub proof fn f300(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("joins the upper end of a minimum that is stated as a range"@), inputs, 0, 0);
 }
 
-pub proof fn l301(inputs: Seq<u::Bytes>)
+pub proof fn l299(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
@@ -9644,7 +9600,7 @@ pub proof fn l301(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[301] == u::lit(
+        u::copy_registry()[299] == u::lit(
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
         ),
 {
@@ -9653,9 +9609,9 @@ pub proof fn l301(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[301] == u::lit(
+    assert(u::copy_registry()[299] == u::lit(
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
-    ) && 301 < u::copy_registry().len()) by {
+    ) && 299 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -9664,7 +9620,7 @@ pub proof fn l301(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f301(inputs: Seq<u::Bytes>)
+pub proof fn f299(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@),
@@ -9672,13 +9628,13 @@ pub proof fn f301(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[301] == u::lit(
+        u::copy_registry()[299] == u::lit(
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l301(inputs);
+    l299(inputs);
     reveal_strlit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
     is_ascii_chars_encode_utf8(
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@,
@@ -9701,32 +9657,32 @@ pub proof fn f301(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l302(inputs: Seq<u::Bytes>)
+pub proof fn l300(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<p class=\"provenance\">"@)),
         u::copy_derived(u::lit("<p class=\"provenance\">"@), inputs, u::copy_registry()),
-        u::copy_registry()[302] == u::lit("<p class=\"provenance\">"@),
+        u::copy_registry()[300] == u::lit("<p class=\"provenance\">"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[302] == u::lit("<p class=\"provenance\">"@) && 302
+    assert(u::copy_registry()[300] == u::lit("<p class=\"provenance\">"@) && 300
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<p class=\"provenance\">"@), inputs);
 }
 
-pub proof fn f302(inputs: Seq<u::Bytes>)
+pub proof fn f300(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<p class=\"provenance\">"@), inputs, 0, 0),
-        u::copy_registry()[302] == u::lit("<p class=\"provenance\">"@),
+        u::copy_registry()[300] == u::lit("<p class=\"provenance\">"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l302(inputs);
+    l300(inputs);
     reveal_strlit("<p class=\"provenance\">");
     is_ascii_chars_encode_utf8("<p class=\"provenance\">"@);
     assert(u::lit("<p class=\"provenance\">"@)
@@ -9739,31 +9695,31 @@ pub proof fn f302(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<p class=\"provenance\">"@), inputs, 0, 0);
 }
 
-pub proof fn l303(inputs: Seq<u::Bytes>)
+pub proof fn l301(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<span>"@)),
         u::copy_derived(u::lit("<span>"@), inputs, u::copy_registry()),
-        u::copy_registry()[303] == u::lit("<span>"@),
+        u::copy_registry()[301] == u::lit("<span>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[303] == u::lit("<span>"@) && 303 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[301] == u::lit("<span>"@) && 301 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<span>"@), inputs);
 }
 
-pub proof fn f303(inputs: Seq<u::Bytes>)
+pub proof fn f301(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<span>"@), inputs, 0, 0),
-        u::copy_registry()[303] == u::lit("<span>"@),
+        u::copy_registry()[301] == u::lit("<span>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l303(inputs);
+    l301(inputs);
     reveal_strlit("<span>");
     is_ascii_chars_encode_utf8("<span>"@);
     assert(u::lit("<span>"@) =~= bs![60u8,115,112,97,110,62]);
@@ -9772,31 +9728,31 @@ pub proof fn f303(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<span>"@), inputs, 0, 0);
 }
 
-pub proof fn l304(inputs: Seq<u::Bytes>)
+pub proof fn l302(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Passage "@)),
         u::copy_derived(u::lit("Passage "@), inputs, u::copy_registry()),
-        u::copy_registry()[304] == u::lit("Passage "@),
+        u::copy_registry()[302] == u::lit("Passage "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[304] == u::lit("Passage "@) && 304 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[302] == u::lit("Passage "@) && 302 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Passage "@), inputs);
 }
 
-pub proof fn f304(inputs: Seq<u::Bytes>)
+pub proof fn f302(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Passage "@), inputs, 0, 0),
-        u::copy_registry()[304] == u::lit("Passage "@),
+        u::copy_registry()[302] == u::lit("Passage "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l304(inputs);
+    l302(inputs);
     reveal_strlit("Passage ");
     is_ascii_chars_encode_utf8("Passage "@);
     assert(u::lit("Passage "@) =~= bs![80u8,97,115,115,97,103,101,32]);
@@ -9805,32 +9761,32 @@ pub proof fn f304(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Passage "@), inputs, 0, 0);
 }
 
-pub proof fn l305(inputs: Seq<u::Bytes>)
+pub proof fn l303(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<h3>Grade as compiled</h3>"@)),
         u::copy_derived(u::lit("<h3>Grade as compiled</h3>"@), inputs, u::copy_registry()),
-        u::copy_registry()[305] == u::lit("<h3>Grade as compiled</h3>"@),
+        u::copy_registry()[303] == u::lit("<h3>Grade as compiled</h3>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[305] == u::lit("<h3>Grade as compiled</h3>"@) && 305
+    assert(u::copy_registry()[303] == u::lit("<h3>Grade as compiled</h3>"@) && 303
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<h3>Grade as compiled</h3>"@), inputs);
 }
 
-pub proof fn f305(inputs: Seq<u::Bytes>)
+pub proof fn f303(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<h3>Grade as compiled</h3>"@), inputs, 0, 0),
-        u::copy_registry()[305] == u::lit("<h3>Grade as compiled</h3>"@),
+        u::copy_registry()[303] == u::lit("<h3>Grade as compiled</h3>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l305(inputs);
+    l303(inputs);
     reveal_strlit("<h3>Grade as compiled</h3>");
     is_ascii_chars_encode_utf8("<h3>Grade as compiled</h3>"@);
     assert(u::lit("<h3>Grade as compiled</h3>"@)
@@ -9843,7 +9799,7 @@ pub proof fn f305(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<h3>Grade as compiled</h3>"@), inputs, 0, 0);
 }
 
-pub proof fn l306(inputs: Seq<u::Bytes>)
+pub proof fn l304(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -9857,7 +9813,7 @@ pub proof fn l306(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[306] == u::lit(
+        u::copy_registry()[304] == u::lit(
             "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
         ),
 {
@@ -9866,9 +9822,9 @@ pub proof fn l306(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[306] == u::lit(
+    assert(u::copy_registry()[304] == u::lit(
         "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
-    ) && 306 < u::copy_registry().len()) by {
+    ) && 304 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -9879,7 +9835,7 @@ pub proof fn l306(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f306(inputs: Seq<u::Bytes>)
+pub proof fn f304(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -9889,13 +9845,13 @@ pub proof fn f306(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[306] == u::lit(
+        u::copy_registry()[304] == u::lit(
             "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l306(inputs);
+    l304(inputs);
     reveal_strlit(
         "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>",
     );
@@ -9926,7 +9882,7 @@ pub proof fn f306(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l307(inputs: Seq<u::Bytes>)
+pub proof fn l305(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -9940,7 +9896,7 @@ pub proof fn l307(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[307] == u::lit(
+        u::copy_registry()[305] == u::lit(
             "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
         ),
 {
@@ -9949,9 +9905,9 @@ pub proof fn l307(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[307] == u::lit(
+    assert(u::copy_registry()[305] == u::lit(
         "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
-    ) && 307 < u::copy_registry().len()) by {
+    ) && 305 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -9962,7 +9918,7 @@ pub proof fn l307(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f307(inputs: Seq<u::Bytes>)
+pub proof fn f305(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -9972,13 +9928,13 @@ pub proof fn f307(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[307] == u::lit(
+        u::copy_registry()[305] == u::lit(
             "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l307(inputs);
+    l305(inputs);
     reveal_strlit(
         "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>",
     );
@@ -10009,32 +9965,32 @@ pub proof fn f307(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l308(inputs: Seq<u::Bytes>)
+pub proof fn l306(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Strength of the recommendation"@)),
         u::copy_derived(u::lit("Strength of the recommendation"@), inputs, u::copy_registry()),
-        u::copy_registry()[308] == u::lit("Strength of the recommendation"@),
+        u::copy_registry()[306] == u::lit("Strength of the recommendation"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[308] == u::lit("Strength of the recommendation"@) && 308
+    assert(u::copy_registry()[306] == u::lit("Strength of the recommendation"@) && 306
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Strength of the recommendation"@), inputs);
 }
 
-pub proof fn f308(inputs: Seq<u::Bytes>)
+pub proof fn f306(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Strength of the recommendation"@), inputs, 0, 0),
-        u::copy_registry()[308] == u::lit("Strength of the recommendation"@),
+        u::copy_registry()[306] == u::lit("Strength of the recommendation"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l308(inputs);
+    l306(inputs);
     reveal_strlit("Strength of the recommendation");
     is_ascii_chars_encode_utf8("Strength of the recommendation"@);
     assert(u::lit("Strength of the recommendation"@)
@@ -10047,32 +10003,32 @@ pub proof fn f308(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Strength of the recommendation"@), inputs, 0, 0);
 }
 
-pub proof fn l309(inputs: Seq<u::Bytes>)
+pub proof fn l307(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Certainty of the evidence"@)),
         u::copy_derived(u::lit("Certainty of the evidence"@), inputs, u::copy_registry()),
-        u::copy_registry()[309] == u::lit("Certainty of the evidence"@),
+        u::copy_registry()[307] == u::lit("Certainty of the evidence"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[309] == u::lit("Certainty of the evidence"@) && 309
+    assert(u::copy_registry()[307] == u::lit("Certainty of the evidence"@) && 307
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Certainty of the evidence"@), inputs);
 }
 
-pub proof fn f309(inputs: Seq<u::Bytes>)
+pub proof fn f307(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Certainty of the evidence"@), inputs, 0, 0),
-        u::copy_registry()[309] == u::lit("Certainty of the evidence"@),
+        u::copy_registry()[307] == u::lit("Certainty of the evidence"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l309(inputs);
+    l307(inputs);
     reveal_strlit("Certainty of the evidence");
     is_ascii_chars_encode_utf8("Certainty of the evidence"@);
     assert(u::lit("Certainty of the evidence"@)
@@ -10085,31 +10041,31 @@ pub proof fn f309(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Certainty of the evidence"@), inputs, 0, 0);
 }
 
-pub proof fn l310(inputs: Seq<u::Bytes>)
+pub proof fn l308(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("strong"@)),
         u::copy_derived(u::lit("strong"@), inputs, u::copy_registry()),
-        u::copy_registry()[310] == u::lit("strong"@),
+        u::copy_registry()[308] == u::lit("strong"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[310] == u::lit("strong"@) && 310 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[308] == u::lit("strong"@) && 308 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("strong"@), inputs);
 }
 
-pub proof fn f310(inputs: Seq<u::Bytes>)
+pub proof fn f308(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("strong"@), inputs, 0, 0),
-        u::copy_registry()[310] == u::lit("strong"@),
+        u::copy_registry()[308] == u::lit("strong"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l310(inputs);
+    l308(inputs);
     reveal_strlit("strong");
     is_ascii_chars_encode_utf8("strong"@);
     assert(u::lit("strong"@) =~= bs![115u8,116,114,111,110,103]);
@@ -10118,31 +10074,31 @@ pub proof fn f310(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("strong"@), inputs, 0, 0);
 }
 
-pub proof fn l311(inputs: Seq<u::Bytes>)
+pub proof fn l309(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("conditional"@)),
         u::copy_derived(u::lit("conditional"@), inputs, u::copy_registry()),
-        u::copy_registry()[311] == u::lit("conditional"@),
+        u::copy_registry()[309] == u::lit("conditional"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[311] == u::lit("conditional"@) && 311 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[309] == u::lit("conditional"@) && 309 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("conditional"@), inputs);
 }
 
-pub proof fn f311(inputs: Seq<u::Bytes>)
+pub proof fn f309(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("conditional"@), inputs, 0, 0),
-        u::copy_registry()[311] == u::lit("conditional"@),
+        u::copy_registry()[309] == u::lit("conditional"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l311(inputs);
+    l309(inputs);
     reveal_strlit("conditional");
     is_ascii_chars_encode_utf8("conditional"@);
     assert(u::lit("conditional"@) =~= bs![99u8,111,110,100,105,116,105,111,110,97,108]);
@@ -10151,31 +10107,31 @@ pub proof fn f311(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("conditional"@), inputs, 0, 0);
 }
 
-pub proof fn l312(inputs: Seq<u::Bytes>)
+pub proof fn l310(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("high"@)),
         u::copy_derived(u::lit("high"@), inputs, u::copy_registry()),
-        u::copy_registry()[312] == u::lit("high"@),
+        u::copy_registry()[310] == u::lit("high"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[312] == u::lit("high"@) && 312 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[310] == u::lit("high"@) && 310 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("high"@), inputs);
 }
 
-pub proof fn f312(inputs: Seq<u::Bytes>)
+pub proof fn f310(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("high"@), inputs, 0, 0),
-        u::copy_registry()[312] == u::lit("high"@),
+        u::copy_registry()[310] == u::lit("high"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l312(inputs);
+    l310(inputs);
     reveal_strlit("high");
     is_ascii_chars_encode_utf8("high"@);
     assert(u::lit("high"@) =~= bs![104u8,105,103,104]);
@@ -10184,31 +10140,31 @@ pub proof fn f312(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("high"@), inputs, 0, 0);
 }
 
-pub proof fn l313(inputs: Seq<u::Bytes>)
+pub proof fn l311(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("moderate"@)),
         u::copy_derived(u::lit("moderate"@), inputs, u::copy_registry()),
-        u::copy_registry()[313] == u::lit("moderate"@),
+        u::copy_registry()[311] == u::lit("moderate"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[313] == u::lit("moderate"@) && 313 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[311] == u::lit("moderate"@) && 311 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("moderate"@), inputs);
 }
 
-pub proof fn f313(inputs: Seq<u::Bytes>)
+pub proof fn f311(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("moderate"@), inputs, 0, 0),
-        u::copy_registry()[313] == u::lit("moderate"@),
+        u::copy_registry()[311] == u::lit("moderate"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l313(inputs);
+    l311(inputs);
     reveal_strlit("moderate");
     is_ascii_chars_encode_utf8("moderate"@);
     assert(u::lit("moderate"@) =~= bs![109u8,111,100,101,114,97,116,101]);
@@ -10217,31 +10173,31 @@ pub proof fn f313(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("moderate"@), inputs, 0, 0);
 }
 
-pub proof fn l314(inputs: Seq<u::Bytes>)
+pub proof fn l312(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("low"@)),
         u::copy_derived(u::lit("low"@), inputs, u::copy_registry()),
-        u::copy_registry()[314] == u::lit("low"@),
+        u::copy_registry()[312] == u::lit("low"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[314] == u::lit("low"@) && 314 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[312] == u::lit("low"@) && 312 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("low"@), inputs);
 }
 
-pub proof fn f314(inputs: Seq<u::Bytes>)
+pub proof fn f312(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("low"@), inputs, 0, 0),
-        u::copy_registry()[314] == u::lit("low"@),
+        u::copy_registry()[312] == u::lit("low"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l314(inputs);
+    l312(inputs);
     reveal_strlit("low");
     is_ascii_chars_encode_utf8("low"@);
     assert(u::lit("low"@) =~= bs![108u8,111,119]);
@@ -10250,31 +10206,31 @@ pub proof fn f314(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("low"@), inputs, 0, 0);
 }
 
-pub proof fn l315(inputs: Seq<u::Bytes>)
+pub proof fn l313(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("very low"@)),
         u::copy_derived(u::lit("very low"@), inputs, u::copy_registry()),
-        u::copy_registry()[315] == u::lit("very low"@),
+        u::copy_registry()[313] == u::lit("very low"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[315] == u::lit("very low"@) && 315 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[313] == u::lit("very low"@) && 313 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("very low"@), inputs);
 }
 
-pub proof fn f315(inputs: Seq<u::Bytes>)
+pub proof fn f313(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("very low"@), inputs, 0, 0),
-        u::copy_registry()[315] == u::lit("very low"@),
+        u::copy_registry()[313] == u::lit("very low"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l315(inputs);
+    l313(inputs);
     reveal_strlit("very low");
     is_ascii_chars_encode_utf8("very low"@);
     assert(u::lit("very low"@) =~= bs![118u8,101,114,121,32,108,111,119]);
@@ -10283,32 +10239,32 @@ pub proof fn f315(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("very low"@), inputs, 0, 0);
 }
 
-pub proof fn l316(inputs: Seq<u::Bytes>)
+pub proof fn l314(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<h3>Preferences as compiled</h3>"@)),
         u::copy_derived(u::lit("<h3>Preferences as compiled</h3>"@), inputs, u::copy_registry()),
-        u::copy_registry()[316] == u::lit("<h3>Preferences as compiled</h3>"@),
+        u::copy_registry()[314] == u::lit("<h3>Preferences as compiled</h3>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[316] == u::lit("<h3>Preferences as compiled</h3>"@) && 316
+    assert(u::copy_registry()[314] == u::lit("<h3>Preferences as compiled</h3>"@) && 314
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<h3>Preferences as compiled</h3>"@), inputs);
 }
 
-pub proof fn f316(inputs: Seq<u::Bytes>)
+pub proof fn f314(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<h3>Preferences as compiled</h3>"@), inputs, 0, 0),
-        u::copy_registry()[316] == u::lit("<h3>Preferences as compiled</h3>"@),
+        u::copy_registry()[314] == u::lit("<h3>Preferences as compiled</h3>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l316(inputs);
+    l314(inputs);
     reveal_strlit("<h3>Preferences as compiled</h3>");
     is_ascii_chars_encode_utf8("<h3>Preferences as compiled</h3>"@);
     assert(u::lit("<h3>Preferences as compiled</h3>"@)
@@ -10321,7 +10277,7 @@ pub proof fn f316(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<h3>Preferences as compiled</h3>"@), inputs, 0, 0);
 }
 
-pub proof fn l317(inputs: Seq<u::Bytes>)
+pub proof fn l315(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -10335,7 +10291,7 @@ pub proof fn l317(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[317] == u::lit(
+        u::copy_registry()[315] == u::lit(
             "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
         ),
 {
@@ -10344,9 +10300,9 @@ pub proof fn l317(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[317] == u::lit(
+    assert(u::copy_registry()[315] == u::lit(
         "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
-    ) && 317 < u::copy_registry().len()) by {
+    ) && 315 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -10357,7 +10313,7 @@ pub proof fn l317(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f317(inputs: Seq<u::Bytes>)
+pub proof fn f315(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -10367,13 +10323,13 @@ pub proof fn f317(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[317] == u::lit(
+        u::copy_registry()[315] == u::lit(
             "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l317(inputs);
+    l315(inputs);
     reveal_strlit(
         "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>",
     );
@@ -10404,7 +10360,7 @@ pub proof fn f317(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l318(inputs: Seq<u::Bytes>)
+pub proof fn l316(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -10418,7 +10374,7 @@ pub proof fn l318(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[318] == u::lit(
+        u::copy_registry()[316] == u::lit(
             "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
         ),
 {
@@ -10427,9 +10383,9 @@ pub proof fn l318(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[318] == u::lit(
+    assert(u::copy_registry()[316] == u::lit(
         "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
-    ) && 318 < u::copy_registry().len()) by {
+    ) && 316 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -10440,7 +10396,7 @@ pub proof fn l318(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f318(inputs: Seq<u::Bytes>)
+pub proof fn f316(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -10450,13 +10406,13 @@ pub proof fn f318(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[318] == u::lit(
+        u::copy_registry()[316] == u::lit(
             "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l318(inputs);
+    l316(inputs);
     reveal_strlit(
         "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>",
     );
@@ -10487,31 +10443,31 @@ pub proof fn f318(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l319(inputs: Seq<u::Bytes>)
+pub proof fn l317(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("should"@)),
         u::copy_derived(u::lit("should"@), inputs, u::copy_registry()),
-        u::copy_registry()[319] == u::lit("should"@),
+        u::copy_registry()[317] == u::lit("should"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[319] == u::lit("should"@) && 319 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[317] == u::lit("should"@) && 317 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("should"@), inputs);
 }
 
-pub proof fn f319(inputs: Seq<u::Bytes>)
+pub proof fn f317(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("should"@), inputs, 0, 0),
-        u::copy_registry()[319] == u::lit("should"@),
+        u::copy_registry()[317] == u::lit("should"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l319(inputs);
+    l317(inputs);
     reveal_strlit("should");
     is_ascii_chars_encode_utf8("should"@);
     assert(u::lit("should"@) =~= bs![115u8,104,111,117,108,100]);
@@ -10520,31 +10476,31 @@ pub proof fn f319(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("should"@), inputs, 0, 0);
 }
 
-pub proof fn l320(inputs: Seq<u::Bytes>)
+pub proof fn l318(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("must"@)),
         u::copy_derived(u::lit("must"@), inputs, u::copy_registry()),
-        u::copy_registry()[320] == u::lit("must"@),
+        u::copy_registry()[318] == u::lit("must"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[320] == u::lit("must"@) && 320 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[318] == u::lit("must"@) && 318 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("must"@), inputs);
 }
 
-pub proof fn f320(inputs: Seq<u::Bytes>)
+pub proof fn f318(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("must"@), inputs, 0, 0),
-        u::copy_registry()[320] == u::lit("must"@),
+        u::copy_registry()[318] == u::lit("must"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l320(inputs);
+    l318(inputs);
     reveal_strlit("must");
     is_ascii_chars_encode_utf8("must"@);
     assert(u::lit("must"@) =~= bs![109u8,117,115,116]);
@@ -10553,31 +10509,31 @@ pub proof fn f320(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("must"@), inputs, 0, 0);
 }
 
-pub proof fn l321(inputs: Seq<u::Bytes>)
+pub proof fn l319(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("can"@)),
         u::copy_derived(u::lit("can"@), inputs, u::copy_registry()),
-        u::copy_registry()[321] == u::lit("can"@),
+        u::copy_registry()[319] == u::lit("can"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[321] == u::lit("can"@) && 321 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[319] == u::lit("can"@) && 319 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("can"@), inputs);
 }
 
-pub proof fn f321(inputs: Seq<u::Bytes>)
+pub proof fn f319(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("can"@), inputs, 0, 0),
-        u::copy_registry()[321] == u::lit("can"@),
+        u::copy_registry()[319] == u::lit("can"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l321(inputs);
+    l319(inputs);
     reveal_strlit("can");
     is_ascii_chars_encode_utf8("can"@);
     assert(u::lit("can"@) =~= bs![99u8,97,110]);
@@ -10586,31 +10542,31 @@ pub proof fn f321(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("can"@), inputs, 0, 0);
 }
 
-pub proof fn l322(inputs: Seq<u::Bytes>)
+pub proof fn l320(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("may"@)),
         u::copy_derived(u::lit("may"@), inputs, u::copy_registry()),
-        u::copy_registry()[322] == u::lit("may"@),
+        u::copy_registry()[320] == u::lit("may"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[322] == u::lit("may"@) && 322 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[320] == u::lit("may"@) && 320 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("may"@), inputs);
 }
 
-pub proof fn f322(inputs: Seq<u::Bytes>)
+pub proof fn f320(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("may"@), inputs, 0, 0),
-        u::copy_registry()[322] == u::lit("may"@),
+        u::copy_registry()[320] == u::lit("may"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l322(inputs);
+    l320(inputs);
     reveal_strlit("may");
     is_ascii_chars_encode_utf8("may"@);
     assert(u::lit("may"@) =~= bs![109u8,97,121]);
@@ -10619,31 +10575,31 @@ pub proof fn f322(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("may"@), inputs, 0, 0);
 }
 
-pub proof fn l323(inputs: Seq<u::Bytes>)
+pub proof fn l321(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("not"@)),
         u::copy_derived(u::lit("not"@), inputs, u::copy_registry()),
-        u::copy_registry()[323] == u::lit("not"@),
+        u::copy_registry()[321] == u::lit("not"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[323] == u::lit("not"@) && 323 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[321] == u::lit("not"@) && 321 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("not"@), inputs);
 }
 
-pub proof fn f323(inputs: Seq<u::Bytes>)
+pub proof fn f321(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("not"@), inputs, 0, 0),
-        u::copy_registry()[323] == u::lit("not"@),
+        u::copy_registry()[321] == u::lit("not"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l323(inputs);
+    l321(inputs);
     reveal_strlit("not");
     is_ascii_chars_encode_utf8("not"@);
     assert(u::lit("not"@) =~= bs![110u8,111,116]);
@@ -10652,31 +10608,31 @@ pub proof fn f323(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("not"@), inputs, 0, 0);
 }
 
-pub proof fn l324(inputs: Seq<u::Bytes>)
+pub proof fn l322(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("as a fact"@)),
         u::copy_derived(u::lit("as a fact"@), inputs, u::copy_registry()),
-        u::copy_registry()[324] == u::lit("as a fact"@),
+        u::copy_registry()[322] == u::lit("as a fact"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[324] == u::lit("as a fact"@) && 324 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[322] == u::lit("as a fact"@) && 322 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("as a fact"@), inputs);
 }
 
-pub proof fn f324(inputs: Seq<u::Bytes>)
+pub proof fn f322(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("as a fact"@), inputs, 0, 0),
-        u::copy_registry()[324] == u::lit("as a fact"@),
+        u::copy_registry()[322] == u::lit("as a fact"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l324(inputs);
+    l322(inputs);
     reveal_strlit("as a fact");
     is_ascii_chars_encode_utf8("as a fact"@);
     assert(u::lit("as a fact"@) =~= bs![97u8,115,32,97,32,102,97,99,116]);
@@ -10685,31 +10641,31 @@ pub proof fn f324(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("as a fact"@), inputs, 0, 0);
 }
 
-pub proof fn l325(inputs: Seq<u::Bytes>)
+pub proof fn l323(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("none named"@)),
         u::copy_derived(u::lit("none named"@), inputs, u::copy_registry()),
-        u::copy_registry()[325] == u::lit("none named"@),
+        u::copy_registry()[323] == u::lit("none named"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[325] == u::lit("none named"@) && 325 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[323] == u::lit("none named"@) && 323 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("none named"@), inputs);
 }
 
-pub proof fn f325(inputs: Seq<u::Bytes>)
+pub proof fn f323(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("none named"@), inputs, 0, 0),
-        u::copy_registry()[325] == u::lit("none named"@),
+        u::copy_registry()[323] == u::lit("none named"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l325(inputs);
+    l323(inputs);
     reveal_strlit("none named");
     is_ascii_chars_encode_utf8("none named"@);
     assert(u::lit("none named"@) =~= bs![110u8,111,110,101,32,110,97,109,101,100]);
@@ -10718,31 +10674,31 @@ pub proof fn f325(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("none named"@), inputs, 0, 0);
 }
 
-pub proof fn l326(inputs: Seq<u::Bytes>)
+pub proof fn l324(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit(" "@)),
         u::copy_derived(u::lit(" "@), inputs, u::copy_registry()),
-        u::copy_registry()[326] == u::lit(" "@),
+        u::copy_registry()[324] == u::lit(" "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[326] == u::lit(" "@) && 326 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[324] == u::lit(" "@) && 324 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit(" "@), inputs);
 }
 
-pub proof fn f326(inputs: Seq<u::Bytes>)
+pub proof fn f324(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed(" "@), inputs, 0, 0),
-        u::copy_registry()[326] == u::lit(" "@),
+        u::copy_registry()[324] == u::lit(" "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l326(inputs);
+    l324(inputs);
     reveal_strlit(" ");
     is_ascii_chars_encode_utf8(" "@);
     assert(u::lit(" "@) =~= bs![32u8,]);
@@ -10751,32 +10707,32 @@ pub proof fn f326(inputs: Seq<u::Bytes>)
     h::fixed(u::lit(" "@), inputs, 0, 0);
 }
 
-pub proof fn l327(inputs: Seq<u::Bytes>)
+pub proof fn l325(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<h2>Grade words</h2>"@)),
         u::copy_derived(u::lit("<h2>Grade words</h2>"@), inputs, u::copy_registry()),
-        u::copy_registry()[327] == u::lit("<h2>Grade words</h2>"@),
+        u::copy_registry()[325] == u::lit("<h2>Grade words</h2>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[327] == u::lit("<h2>Grade words</h2>"@) && 327
+    assert(u::copy_registry()[325] == u::lit("<h2>Grade words</h2>"@) && 325
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<h2>Grade words</h2>"@), inputs);
 }
 
-pub proof fn f327(inputs: Seq<u::Bytes>)
+pub proof fn f325(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<h2>Grade words</h2>"@), inputs, 0, 0),
-        u::copy_registry()[327] == u::lit("<h2>Grade words</h2>"@),
+        u::copy_registry()[325] == u::lit("<h2>Grade words</h2>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l327(inputs);
+    l325(inputs);
     reveal_strlit("<h2>Grade words</h2>");
     is_ascii_chars_encode_utf8("<h2>Grade words</h2>"@);
     assert(u::lit("<h2>Grade words</h2>"@)
@@ -10787,7 +10743,7 @@ pub proof fn f327(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<h2>Grade words</h2>"@), inputs, 0, 0);
 }
 
-pub proof fn l328(inputs: Seq<u::Bytes>)
+pub proof fn l326(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -10801,7 +10757,7 @@ pub proof fn l328(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[328] == u::lit(
+        u::copy_registry()[326] == u::lit(
             "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
         ),
 {
@@ -10810,9 +10766,9 @@ pub proof fn l328(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[328] == u::lit(
+    assert(u::copy_registry()[326] == u::lit(
         "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
-    ) && 328 < u::copy_registry().len()) by {
+    ) && 326 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -10823,7 +10779,7 @@ pub proof fn l328(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f328(inputs: Seq<u::Bytes>)
+pub proof fn f326(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -10833,13 +10789,13 @@ pub proof fn f328(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[328] == u::lit(
+        u::copy_registry()[326] == u::lit(
             "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l328(inputs);
+    l326(inputs);
     reveal_strlit(
         "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>",
     );
@@ -10870,32 +10826,32 @@ pub proof fn f328(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l329(inputs: Seq<u::Bytes>)
+pub proof fn l327(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("strength of the recommendation: "@)),
         u::copy_derived(u::lit("strength of the recommendation: "@), inputs, u::copy_registry()),
-        u::copy_registry()[329] == u::lit("strength of the recommendation: "@),
+        u::copy_registry()[327] == u::lit("strength of the recommendation: "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[329] == u::lit("strength of the recommendation: "@) && 329
+    assert(u::copy_registry()[327] == u::lit("strength of the recommendation: "@) && 327
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("strength of the recommendation: "@), inputs);
 }
 
-pub proof fn f329(inputs: Seq<u::Bytes>)
+pub proof fn f327(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("strength of the recommendation: "@), inputs, 0, 0),
-        u::copy_registry()[329] == u::lit("strength of the recommendation: "@),
+        u::copy_registry()[327] == u::lit("strength of the recommendation: "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l329(inputs);
+    l327(inputs);
     reveal_strlit("strength of the recommendation: ");
     is_ascii_chars_encode_utf8("strength of the recommendation: "@);
     assert(u::lit("strength of the recommendation: "@)
@@ -10908,32 +10864,32 @@ pub proof fn f329(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("strength of the recommendation: "@), inputs, 0, 0);
 }
 
-pub proof fn l330(inputs: Seq<u::Bytes>)
+pub proof fn l328(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("certainty of the evidence: "@)),
         u::copy_derived(u::lit("certainty of the evidence: "@), inputs, u::copy_registry()),
-        u::copy_registry()[330] == u::lit("certainty of the evidence: "@),
+        u::copy_registry()[328] == u::lit("certainty of the evidence: "@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[330] == u::lit("certainty of the evidence: "@) && 330
+    assert(u::copy_registry()[328] == u::lit("certainty of the evidence: "@) && 328
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("certainty of the evidence: "@), inputs);
 }
 
-pub proof fn f330(inputs: Seq<u::Bytes>)
+pub proof fn f328(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("certainty of the evidence: "@), inputs, 0, 0),
-        u::copy_registry()[330] == u::lit("certainty of the evidence: "@),
+        u::copy_registry()[328] == u::lit("certainty of the evidence: "@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l330(inputs);
+    l328(inputs);
     reveal_strlit("certainty of the evidence: ");
     is_ascii_chars_encode_utf8("certainty of the evidence: "@);
     assert(u::lit("certainty of the evidence: "@)
@@ -10946,32 +10902,32 @@ pub proof fn f330(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("certainty of the evidence: "@), inputs, 0, 0);
 }
 
-pub proof fn l331(inputs: Seq<u::Bytes>)
+pub proof fn l329(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<h2>Preference words</h2>"@)),
         u::copy_derived(u::lit("<h2>Preference words</h2>"@), inputs, u::copy_registry()),
-        u::copy_registry()[331] == u::lit("<h2>Preference words</h2>"@),
+        u::copy_registry()[329] == u::lit("<h2>Preference words</h2>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[331] == u::lit("<h2>Preference words</h2>"@) && 331
+    assert(u::copy_registry()[329] == u::lit("<h2>Preference words</h2>"@) && 329
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<h2>Preference words</h2>"@), inputs);
 }
 
-pub proof fn f331(inputs: Seq<u::Bytes>)
+pub proof fn f329(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<h2>Preference words</h2>"@), inputs, 0, 0),
-        u::copy_registry()[331] == u::lit("<h2>Preference words</h2>"@),
+        u::copy_registry()[329] == u::lit("<h2>Preference words</h2>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l331(inputs);
+    l329(inputs);
     reveal_strlit("<h2>Preference words</h2>");
     is_ascii_chars_encode_utf8("<h2>Preference words</h2>"@);
     assert(u::lit("<h2>Preference words</h2>"@)
@@ -10984,7 +10940,7 @@ pub proof fn f331(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<h2>Preference words</h2>"@), inputs, 0, 0);
 }
 
-pub proof fn l332(inputs: Seq<u::Bytes>)
+pub proof fn l330(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -10998,7 +10954,7 @@ pub proof fn l332(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[332] == u::lit(
+        u::copy_registry()[330] == u::lit(
             "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
         ),
 {
@@ -11007,9 +10963,9 @@ pub proof fn l332(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[332] == u::lit(
+    assert(u::copy_registry()[330] == u::lit(
         "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
-    ) && 332 < u::copy_registry().len()) by {
+    ) && 330 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -11020,7 +10976,7 @@ pub proof fn l332(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f332(inputs: Seq<u::Bytes>)
+pub proof fn f330(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -11030,13 +10986,13 @@ pub proof fn f332(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[332] == u::lit(
+        u::copy_registry()[330] == u::lit(
             "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l332(inputs);
+    l330(inputs);
     reveal_strlit(
         "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>",
     );
@@ -11067,32 +11023,32 @@ pub proof fn f332(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l333(inputs: Seq<u::Bytes>)
+pub proof fn l331(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("marks the preferred option"@)),
         u::copy_derived(u::lit("marks the preferred option"@), inputs, u::copy_registry()),
-        u::copy_registry()[333] == u::lit("marks the preferred option"@),
+        u::copy_registry()[331] == u::lit("marks the preferred option"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[333] == u::lit("marks the preferred option"@) && 333
+    assert(u::copy_registry()[331] == u::lit("marks the preferred option"@) && 331
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("marks the preferred option"@), inputs);
 }
 
-pub proof fn f333(inputs: Seq<u::Bytes>)
+pub proof fn f331(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("marks the preferred option"@), inputs, 0, 0),
-        u::copy_registry()[333] == u::lit("marks the preferred option"@),
+        u::copy_registry()[331] == u::lit("marks the preferred option"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l333(inputs);
+    l331(inputs);
     reveal_strlit("marks the preferred option");
     is_ascii_chars_encode_utf8("marks the preferred option"@);
     assert(u::lit("marks the preferred option"@)
@@ -11105,7 +11061,7 @@ pub proof fn f333(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("marks the preferred option"@), inputs, 0, 0);
 }
 
-pub proof fn l334(inputs: Seq<u::Bytes>)
+pub proof fn l332(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("joins the option that the preferred option replaces"@)),
         u::copy_derived(
@@ -11113,28 +11069,28 @@ pub proof fn l334(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[334] == u::lit("joins the option that the preferred option replaces"@),
+        u::copy_registry()[332] == u::lit("joins the option that the preferred option replaces"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[334] == u::lit("joins the option that the preferred option replaces"@)
-        && 334 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[332] == u::lit("joins the option that the preferred option replaces"@)
+        && 332 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("joins the option that the preferred option replaces"@), inputs);
 }
 
-pub proof fn f334(inputs: Seq<u::Bytes>)
+pub proof fn f332(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("joins the option that the preferred option replaces"@), inputs, 0, 0),
-        u::copy_registry()[334] == u::lit("joins the option that the preferred option replaces"@),
+        u::copy_registry()[332] == u::lit("joins the option that the preferred option replaces"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l334(inputs);
+    l332(inputs);
     reveal_strlit("joins the option that the preferred option replaces");
     is_ascii_chars_encode_utf8("joins the option that the preferred option replaces"@);
     assert(u::lit("joins the option that the preferred option replaces"@)
@@ -11147,32 +11103,32 @@ pub proof fn f334(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("joins the option that the preferred option replaces"@), inputs, 0, 0);
 }
 
-pub proof fn l335(inputs: Seq<u::Bytes>)
+pub proof fn l333(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<h3>Qualifiers as compiled</h3>"@)),
         u::copy_derived(u::lit("<h3>Qualifiers as compiled</h3>"@), inputs, u::copy_registry()),
-        u::copy_registry()[335] == u::lit("<h3>Qualifiers as compiled</h3>"@),
+        u::copy_registry()[333] == u::lit("<h3>Qualifiers as compiled</h3>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[335] == u::lit("<h3>Qualifiers as compiled</h3>"@) && 335
+    assert(u::copy_registry()[333] == u::lit("<h3>Qualifiers as compiled</h3>"@) && 333
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<h3>Qualifiers as compiled</h3>"@), inputs);
 }
 
-pub proof fn f335(inputs: Seq<u::Bytes>)
+pub proof fn f333(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<h3>Qualifiers as compiled</h3>"@), inputs, 0, 0),
-        u::copy_registry()[335] == u::lit("<h3>Qualifiers as compiled</h3>"@),
+        u::copy_registry()[333] == u::lit("<h3>Qualifiers as compiled</h3>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l335(inputs);
+    l333(inputs);
     reveal_strlit("<h3>Qualifiers as compiled</h3>");
     is_ascii_chars_encode_utf8("<h3>Qualifiers as compiled</h3>"@);
     assert(u::lit("<h3>Qualifiers as compiled</h3>"@)
@@ -11185,7 +11141,7 @@ pub proof fn f335(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<h3>Qualifiers as compiled</h3>"@), inputs, 0, 0);
 }
 
-pub proof fn l336(inputs: Seq<u::Bytes>)
+pub proof fn l334(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -11199,7 +11155,7 @@ pub proof fn l336(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[336] == u::lit(
+        u::copy_registry()[334] == u::lit(
             "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
         ),
 {
@@ -11208,9 +11164,9 @@ pub proof fn l336(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[336] == u::lit(
+    assert(u::copy_registry()[334] == u::lit(
         "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
-    ) && 336 < u::copy_registry().len()) by {
+    ) && 334 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -11221,7 +11177,7 @@ pub proof fn l336(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f336(inputs: Seq<u::Bytes>)
+pub proof fn f334(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -11231,13 +11187,13 @@ pub proof fn f336(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[336] == u::lit(
+        u::copy_registry()[334] == u::lit(
             "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l336(inputs);
+    l334(inputs);
     reveal_strlit(
         "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>",
     );
@@ -11268,7 +11224,7 @@ pub proof fn f336(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l337(inputs: Seq<u::Bytes>)
+pub proof fn l335(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -11282,7 +11238,7 @@ pub proof fn l337(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[337] == u::lit(
+        u::copy_registry()[335] == u::lit(
             "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
         ),
 {
@@ -11291,9 +11247,9 @@ pub proof fn l337(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[337] == u::lit(
+    assert(u::copy_registry()[335] == u::lit(
         "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
-    ) && 337 < u::copy_registry().len()) by {
+    ) && 335 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -11304,7 +11260,7 @@ pub proof fn l337(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f337(inputs: Seq<u::Bytes>)
+pub proof fn f335(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -11314,13 +11270,13 @@ pub proof fn f337(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[337] == u::lit(
+        u::copy_registry()[335] == u::lit(
             "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l337(inputs);
+    l335(inputs);
     reveal_strlit(
         "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>",
     );
@@ -11351,31 +11307,31 @@ pub proof fn f337(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn l338(inputs: Seq<u::Bytes>)
+pub proof fn l336(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("How often"@)),
         u::copy_derived(u::lit("How often"@), inputs, u::copy_registry()),
-        u::copy_registry()[338] == u::lit("How often"@),
+        u::copy_registry()[336] == u::lit("How often"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[338] == u::lit("How often"@) && 338 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[336] == u::lit("How often"@) && 336 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("How often"@), inputs);
 }
 
-pub proof fn f338(inputs: Seq<u::Bytes>)
+pub proof fn f336(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("How often"@), inputs, 0, 0),
-        u::copy_registry()[338] == u::lit("How often"@),
+        u::copy_registry()[336] == u::lit("How often"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l338(inputs);
+    l336(inputs);
     reveal_strlit("How often");
     is_ascii_chars_encode_utf8("How often"@);
     assert(u::lit("How often"@) =~= bs![72u8,111,119,32,111,102,116,101,110]);
@@ -11384,31 +11340,31 @@ pub proof fn f338(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("How often"@), inputs, 0, 0);
 }
 
-pub proof fn l339(inputs: Seq<u::Bytes>)
+pub proof fn l337(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Best case"@)),
         u::copy_derived(u::lit("Best case"@), inputs, u::copy_registry()),
-        u::copy_registry()[339] == u::lit("Best case"@),
+        u::copy_registry()[337] == u::lit("Best case"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[339] == u::lit("Best case"@) && 339 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[337] == u::lit("Best case"@) && 337 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Best case"@), inputs);
 }
 
-pub proof fn f339(inputs: Seq<u::Bytes>)
+pub proof fn f337(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Best case"@), inputs, 0, 0),
-        u::copy_registry()[339] == u::lit("Best case"@),
+        u::copy_registry()[337] == u::lit("Best case"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l339(inputs);
+    l337(inputs);
     reveal_strlit("Best case");
     is_ascii_chars_encode_utf8("Best case"@);
     assert(u::lit("Best case"@) =~= bs![66u8,101,115,116,32,99,97,115,101]);
@@ -11417,31 +11373,31 @@ pub proof fn f339(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Best case"@), inputs, 0, 0);
 }
 
-pub proof fn l340(inputs: Seq<u::Bytes>)
+pub proof fn l338(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Emphasis"@)),
         u::copy_derived(u::lit("Emphasis"@), inputs, u::copy_registry()),
-        u::copy_registry()[340] == u::lit("Emphasis"@),
+        u::copy_registry()[338] == u::lit("Emphasis"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[340] == u::lit("Emphasis"@) && 340 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[338] == u::lit("Emphasis"@) && 338 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Emphasis"@), inputs);
 }
 
-pub proof fn f340(inputs: Seq<u::Bytes>)
+pub proof fn f338(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Emphasis"@), inputs, 0, 0),
-        u::copy_registry()[340] == u::lit("Emphasis"@),
+        u::copy_registry()[338] == u::lit("Emphasis"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l340(inputs);
+    l338(inputs);
     reveal_strlit("Emphasis");
     is_ascii_chars_encode_utf8("Emphasis"@);
     assert(u::lit("Emphasis"@) =~= bs![69u8,109,112,104,97,115,105,115]);
@@ -11450,31 +11406,31 @@ pub proof fn f340(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Emphasis"@), inputs, 0, 0);
 }
 
-pub proof fn l341(inputs: Seq<u::Bytes>)
+pub proof fn l339(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Manner"@)),
         u::copy_derived(u::lit("Manner"@), inputs, u::copy_registry()),
-        u::copy_registry()[341] == u::lit("Manner"@),
+        u::copy_registry()[339] == u::lit("Manner"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[341] == u::lit("Manner"@) && 341 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[339] == u::lit("Manner"@) && 339 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Manner"@), inputs);
 }
 
-pub proof fn f341(inputs: Seq<u::Bytes>)
+pub proof fn f339(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Manner"@), inputs, 0, 0),
-        u::copy_registry()[341] == u::lit("Manner"@),
+        u::copy_registry()[339] == u::lit("Manner"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l341(inputs);
+    l339(inputs);
     reveal_strlit("Manner");
     is_ascii_chars_encode_utf8("Manner"@);
     assert(u::lit("Manner"@) =~= bs![77u8,97,110,110,101,114]);
@@ -11483,32 +11439,32 @@ pub proof fn f341(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Manner"@), inputs, 0, 0);
 }
 
-pub proof fn l342(inputs: Seq<u::Bytes>)
+pub proof fn l340(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Strength of wording"@)),
         u::copy_derived(u::lit("Strength of wording"@), inputs, u::copy_registry()),
-        u::copy_registry()[342] == u::lit("Strength of wording"@),
+        u::copy_registry()[340] == u::lit("Strength of wording"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[342] == u::lit("Strength of wording"@) && 342
+    assert(u::copy_registry()[340] == u::lit("Strength of wording"@) && 340
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Strength of wording"@), inputs);
 }
 
-pub proof fn f342(inputs: Seq<u::Bytes>)
+pub proof fn f340(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Strength of wording"@), inputs, 0, 0),
-        u::copy_registry()[342] == u::lit("Strength of wording"@),
+        u::copy_registry()[340] == u::lit("Strength of wording"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l342(inputs);
+    l340(inputs);
     reveal_strlit("Strength of wording");
     is_ascii_chars_encode_utf8("Strength of wording"@);
     assert(u::lit("Strength of wording"@)
@@ -11521,31 +11477,31 @@ pub proof fn f342(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Strength of wording"@), inputs, 0, 0);
 }
 
-pub proof fn l343(inputs: Seq<u::Bytes>)
+pub proof fn l341(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Possibility"@)),
         u::copy_derived(u::lit("Possibility"@), inputs, u::copy_registry()),
-        u::copy_registry()[343] == u::lit("Possibility"@),
+        u::copy_registry()[341] == u::lit("Possibility"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[343] == u::lit("Possibility"@) && 343 < u::copy_registry().len()) by {
+    assert(u::copy_registry()[341] == u::lit("Possibility"@) && 341 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Possibility"@), inputs);
 }
 
-pub proof fn f343(inputs: Seq<u::Bytes>)
+pub proof fn f341(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Possibility"@), inputs, 0, 0),
-        u::copy_registry()[343] == u::lit("Possibility"@),
+        u::copy_registry()[341] == u::lit("Possibility"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l343(inputs);
+    l341(inputs);
     reveal_strlit("Possibility");
     is_ascii_chars_encode_utf8("Possibility"@);
     assert(u::lit("Possibility"@) =~= bs![80u8,111,115,115,105,98,105,108,105,116,121]);
@@ -11554,32 +11510,32 @@ pub proof fn f343(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Possibility"@), inputs, 0, 0);
 }
 
-pub proof fn l344(inputs: Seq<u::Bytes>)
+pub proof fn l342(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Condition of use"@)),
         u::copy_derived(u::lit("Condition of use"@), inputs, u::copy_registry()),
-        u::copy_registry()[344] == u::lit("Condition of use"@),
+        u::copy_registry()[342] == u::lit("Condition of use"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[344] == u::lit("Condition of use"@) && 344 < u::copy_registry().len())
+    assert(u::copy_registry()[342] == u::lit("Condition of use"@) && 342 < u::copy_registry().len())
         by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("Condition of use"@), inputs);
 }
 
-pub proof fn f344(inputs: Seq<u::Bytes>)
+pub proof fn f342(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("Condition of use"@), inputs, 0, 0),
-        u::copy_registry()[344] == u::lit("Condition of use"@),
+        u::copy_registry()[342] == u::lit("Condition of use"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l344(inputs);
+    l342(inputs);
     reveal_strlit("Condition of use");
     is_ascii_chars_encode_utf8("Condition of use"@);
     assert(u::lit("Condition of use"@)
@@ -11590,32 +11546,32 @@ pub proof fn f344(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("Condition of use"@), inputs, 0, 0);
 }
 
-pub proof fn l345(inputs: Seq<u::Bytes>)
+pub proof fn l343(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("<h2>Qualifier words</h2>"@)),
         u::copy_derived(u::lit("<h2>Qualifier words</h2>"@), inputs, u::copy_registry()),
-        u::copy_registry()[345] == u::lit("<h2>Qualifier words</h2>"@),
+        u::copy_registry()[343] == u::lit("<h2>Qualifier words</h2>"@),
 {
     hide(u::copy_derived);
     hide(u::copy_registry);
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[345] == u::lit("<h2>Qualifier words</h2>"@) && 345
+    assert(u::copy_registry()[343] == u::lit("<h2>Qualifier words</h2>"@) && 343
         < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(u::lit("<h2>Qualifier words</h2>"@), inputs);
 }
 
-pub proof fn f345(inputs: Seq<u::Bytes>)
+pub proof fn f343(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(u::fixed("<h2>Qualifier words</h2>"@), inputs, 0, 0),
-        u::copy_registry()[345] == u::lit("<h2>Qualifier words</h2>"@),
+        u::copy_registry()[343] == u::lit("<h2>Qualifier words</h2>"@),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l345(inputs);
+    l343(inputs);
     reveal_strlit("<h2>Qualifier words</h2>");
     is_ascii_chars_encode_utf8("<h2>Qualifier words</h2>"@);
     assert(u::lit("<h2>Qualifier words</h2>"@)
@@ -11628,7 +11584,7 @@ pub proof fn f345(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<h2>Qualifier words</h2>"@), inputs, 0, 0);
 }
 
-pub proof fn l346(inputs: Seq<u::Bytes>)
+pub proof fn l344(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(
             u::lit(
@@ -11642,7 +11598,7 @@ pub proof fn l346(inputs: Seq<u::Bytes>)
             inputs,
             u::copy_registry(),
         ),
-        u::copy_registry()[346] == u::lit(
+        u::copy_registry()[344] == u::lit(
             "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
         ),
 {
@@ -11651,9 +11607,9 @@ pub proof fn l346(inputs: Seq<u::Bytes>)
     hide(u::lit);
     hide(u::css_text);
     hide(u::script_html);
-    assert(u::copy_registry()[346] == u::lit(
+    assert(u::copy_registry()[344] == u::lit(
         "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
-    ) && 346 < u::copy_registry().len()) by {
+    ) && 344 < u::copy_registry().len()) by {
         reveal(u::copy_registry);
     };
     b::literal(
@@ -11664,7 +11620,7 @@ pub proof fn l346(inputs: Seq<u::Bytes>)
     );
 }
 
-pub proof fn f346(inputs: Seq<u::Bytes>)
+pub proof fn f344(inputs: Seq<u::Bytes>)
     ensures
         h::fragment(
             u::fixed(
@@ -11674,13 +11630,13 @@ pub proof fn f346(inputs: Seq<u::Bytes>)
             0,
             0,
         ),
-        u::copy_registry()[346] == u::lit(
+        u::copy_registry()[344] == u::lit(
             "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
         ),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    l346(inputs);
+    l344(inputs);
     reveal_strlit(
         "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>",
     );

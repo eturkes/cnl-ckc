@@ -30,12 +30,12 @@ proof fn grade_word(
     hide(u::row);
     t::pl_word(raw, p.0, inputs);
     strength::grade_value(p.1, inputs);
-    l::f329(inputs);
-    l::f330(inputs);
+    l::f327(inputs);
+    l::f328(inputs);
     let prefix = if is_strength {
-        b::f(329)
+        b::f(327)
     } else {
-        b::f(330)
+        b::f(328)
     };
     let value = prefix + u::grade_value_html(p.1);
     b::add(prefix, u::grade_value_html(p.1), inputs);
@@ -57,12 +57,12 @@ proof fn preference_word(raw: u::Bytes, p: u::Bytes, preference: bool, inputs: S
     hide(u::cell);
     hide(u::row);
     t::pl_word(raw, p, inputs);
-    l::f333(inputs);
-    l::f334(inputs);
+    l::f331(inputs);
+    l::f332(inputs);
     let value = if preference {
-        b::f(333)
+        b::f(331)
     } else {
-        b::f(334)
+        b::f(332)
     };
     b::cell(u::pl_word(raw, p), inputs);
     b::cell(value, inputs);
@@ -125,10 +125,10 @@ pub proof fn section(g: u::Guideline, grades: bool, inputs: Seq<u::Bytes>)
     assert(t::all_sound(rs, inputs));
     if rs.len() > 0 {
         l::f080(inputs);
-        l::f327(inputs);
-        l::f328(inputs);
-        l::f331(inputs);
-        l::f332(inputs);
+        l::f325(inputs);
+        l::f326(inputs);
+        l::f329(inputs);
+        l::f330(inputs);
         l::f102(inputs);
         l::f278(inputs);
         l::f083(inputs);

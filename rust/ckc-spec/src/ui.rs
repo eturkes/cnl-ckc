@@ -3478,8 +3478,6 @@ copy_table! {
     unit_of_time = "unit of time:";
     how_long_the_action_lasts = "how long the action lasts";
     how_far_the_action_lies_from_a = "how far the action lies from a reference point, before or after it";
-    how_long_after_a_reference_point = "how long after a reference point the action occurs";
-    how_long_before_a_reference_point = "how long before a reference point the action occurs";
     how_far_apart_repeats_of_the_action_lie = "how far apart repeats of the action lie";
     with_sp = "with ";
     how_long_after_or_only_after = "how long after a reference point the action occurs, or only that it occurs after it";

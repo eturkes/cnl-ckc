@@ -56,8 +56,8 @@ pub proof fn section(g: u::Guideline, inputs: Seq<u::Bytes>)
     assert(t::all_sound(rows, inputs));
     if rows.len() > 0 {
         l::f080(inputs);
-        l::f345(inputs);
-        l::f346(inputs);
+        l::f343(inputs);
+        l::f344(inputs);
         l::f102(inputs);
         l::f278(inputs);
         l::f083(inputs);

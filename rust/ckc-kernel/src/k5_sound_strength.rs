@@ -18,12 +18,12 @@ pub proof fn grade_value(value: u::Bytes, inputs: Seq<u::Bytes>)
     hide(u::copy_derived);
     hide(u::lit);
     l::f249(inputs);
+    l::f308(inputs);
+    l::f309(inputs);
     l::f310(inputs);
     l::f311(inputs);
     l::f312(inputs);
     l::f313(inputs);
-    l::f314(inputs);
-    l::f315(inputs);
 }
 
 proof fn dimension(dim: u::Bytes, inputs: Seq<u::Bytes>)
@@ -34,8 +34,8 @@ proof fn dimension(dim: u::Bytes, inputs: Seq<u::Bytes>)
     hide(u::copy_derived);
     hide(u::lit);
     l::f249(inputs);
-    l::f308(inputs);
-    l::f309(inputs);
+    l::f306(inputs);
+    l::f307(inputs);
 }
 
 proof fn noun(pl: u::Bytes, d: v::DocFile, c: v::DocClause, r: Term, inputs: Seq<u::Bytes>)
@@ -112,11 +112,11 @@ proof fn op(value: u::Bytes, inputs: Seq<u::Bytes>)
     hide(u::copy_derived);
     hide(u::lit);
     l::f249(inputs);
+    l::f317(inputs);
+    l::f318(inputs);
     l::f319(inputs);
     l::f320(inputs);
     l::f321(inputs);
-    l::f322(inputs);
-    l::f323(inputs);
 }
 
 proof fn stated_ops(ts: Seq<Term>, ctx: Term, fuel: nat, inputs: Seq<u::Bytes>)
@@ -165,10 +165,10 @@ proof fn spaced(xs: Seq<u::Html>, inputs: Seq<u::Bytes>)
             assert(init[i] == xs[i]);
         }
         spaced(init, inputs);
-        l::f326(inputs);
+        l::f324(inputs);
         assert(h::sound(xs[xs.len() - 1], inputs));
-        b::add(u::spaced(init), b::f(326), inputs);
-        b::add(u::spaced(init) + b::f(326), xs.last(), inputs);
+        b::add(u::spaced(init), b::f(324), inputs);
+        b::add(u::spaced(init) + b::f(324), xs.last(), inputs);
     }
 }
 
@@ -184,7 +184,7 @@ pub proof fn stated(d: v::DocFile, c: v::DocClause, ctx: Term, inputs: Seq<u::By
     let ops = u::stated_ops(ts, ctx, ts.len());
     stated_ops(ts, ctx, ts.len(), inputs);
     if ops.len() == 0 {
-        l::f324(inputs);
+        l::f322(inputs);
     } else {
         spaced(ops, inputs);
     }
@@ -222,14 +222,14 @@ proof fn preference_row(
             verb(pl, d, c, args[1], inputs);
             noun(pl, d, c, args[2], inputs);
             noun(pl, d, c, args[3], inputs);
-            l::f325(inputs);
+            l::f323(inputs);
             let a = u::text(v::udec_bytes(s));
             let b1 = u::part_html(part);
             let c1 = u::stated_html(d, c, args[0]);
             let e = u::verb_html(pl, d, c, args[1]);
             let p = u::noun_html(pl, d, c, args[2]);
             let alt = if args[3] == Term::Atom(u::lit("none"@)) {
-                b::f(325)
+                b::f(323)
             } else {
                 u::noun_html(pl, d, c, args[3])
             };
@@ -314,12 +314,12 @@ pub proof fn section(pl: u::Bytes, grades: bool, inputs: Seq<u::Bytes>)
     assert(t::all_sound(rows, inputs));
     if rows.len() > 0 {
         l::f080(inputs);
+        l::f303(inputs);
+        l::f304(inputs);
         l::f305(inputs);
-        l::f306(inputs);
-        l::f307(inputs);
+        l::f314(inputs);
+        l::f315(inputs);
         l::f316(inputs);
-        l::f317(inputs);
-        l::f318(inputs);
         l::f081(inputs);
         l::f083(inputs);
         l::f084(inputs);

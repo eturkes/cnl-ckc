@@ -6341,7 +6341,7 @@ pub proof fn literal_281()
 }
 
 pub open spec fn data_282() -> Seq<nat> {
-    ns![104u32,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115].map_values(
+    ns![104u32,111,119,32,102,97,114,32,97,112,97,114,116,32,114,101,112,101,97,116,115,32,111,102,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101].map_values(
     |x: u32| x as nat)
 }
 
@@ -6355,16 +6355,15 @@ pub proof fn literal_282()
     hide(n::clean);
     l::l282(Seq::empty());
     p::all();
-    reveal_strlit("how long after a reference point the action occurs");
-    assert(n::codes("how long after a reference point the action occurs"@) =~= data_282());
+    reveal_strlit("how far apart repeats of the action lie");
+    assert(n::codes("how far apart repeats of the action lie"@) =~= data_282());
     assert(n::clean(data_282(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("how long after a reference point the action occurs"@);
+    n::clean_bridge("how far apart repeats of the action lie"@);
 }
 
 pub open spec fn data_283() -> Seq<nat> {
-    ns![104u32,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115].map_values(
-    |x: u32| x as nat)
+    ns![119u32,105,116,104,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_283()
@@ -6377,15 +6376,15 @@ pub proof fn literal_283()
     hide(n::clean);
     l::l283(Seq::empty());
     p::all();
-    reveal_strlit("how long before a reference point the action occurs");
-    assert(n::codes("how long before a reference point the action occurs"@) =~= data_283());
+    reveal_strlit("with ");
+    assert(n::codes("with "@) =~= data_283());
     assert(n::clean(data_283(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("how long before a reference point the action occurs"@);
+    n::clean_bridge("with "@);
 }
 
 pub open spec fn data_284() -> Seq<nat> {
-    ns![104u32,111,119,32,102,97,114,32,97,112,97,114,116,32,114,101,112,101,97,116,115,32,111,102,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101].map_values(
+    ns![104u32,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,97,102,116,101,114,32,105,116].map_values(
     |x: u32| x as nat)
 }
 
@@ -6399,15 +6398,22 @@ pub proof fn literal_284()
     hide(n::clean);
     l::l284(Seq::empty());
     p::all();
-    reveal_strlit("how far apart repeats of the action lie");
-    assert(n::codes("how far apart repeats of the action lie"@) =~= data_284());
+    reveal_strlit(
+        "how long after a reference point the action occurs, or only that it occurs after it",
+    );
+    assert(n::codes(
+        "how long after a reference point the action occurs, or only that it occurs after it"@,
+    ) =~= data_284());
     assert(n::clean(data_284(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("how far apart repeats of the action lie"@);
+    n::clean_bridge(
+        "how long after a reference point the action occurs, or only that it occurs after it"@,
+    );
 }
 
 pub open spec fn data_285() -> Seq<nat> {
-    ns![119u32,105,116,104,32].map_values(|x: u32| x as nat)
+    ns![104u32,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,98,101,102,111,114,101,32,105,116].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_285()
@@ -6420,15 +6426,21 @@ pub proof fn literal_285()
     hide(n::clean);
     l::l285(Seq::empty());
     p::all();
-    reveal_strlit("with ");
-    assert(n::codes("with "@) =~= data_285());
+    reveal_strlit(
+        "how long before a reference point the action occurs, or only that it occurs before it",
+    );
+    assert(n::codes(
+        "how long before a reference point the action occurs, or only that it occurs before it"@,
+    ) =~= data_285());
     assert(n::clean(data_285(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("with "@);
+    n::clean_bridge(
+        "how long before a reference point the action occurs, or only that it occurs before it"@,
+    );
 }
 
 pub open spec fn data_286() -> Seq<nat> {
-    ns![104u32,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,97,102,116,101,114,32,105,116].map_values(
+    ns![116u32,104,101,32,116,105,109,101,32,119,105,110,100,111,119,32,105,110,32,119,104,105,99,104,32,116,104,101,32,115,112,97,99,105,110,103,32,111,102,32,114,101,112,101,97,116,115,32,104,111,108,100,115].map_values(
     |x: u32| x as nat)
 }
 
@@ -6442,21 +6454,15 @@ pub proof fn literal_286()
     hide(n::clean);
     l::l286(Seq::empty());
     p::all();
-    reveal_strlit(
-        "how long after a reference point the action occurs, or only that it occurs after it",
-    );
-    assert(n::codes(
-        "how long after a reference point the action occurs, or only that it occurs after it"@,
-    ) =~= data_286());
+    reveal_strlit("the time window in which the spacing of repeats holds");
+    assert(n::codes("the time window in which the spacing of repeats holds"@) =~= data_286());
     assert(n::clean(data_286(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "how long after a reference point the action occurs, or only that it occurs after it"@,
-    );
+    n::clean_bridge("the time window in which the spacing of repeats holds"@);
 }
 
 pub open spec fn data_287() -> Seq<nat> {
-    ns![104u32,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,98,101,102,111,114,101,32,105,116].map_values(
+    ns![104u32,111,119,32,109,97,110,121,32,111,102,32,97,110,32,105,116,101,109,32,116,104,101,32,97,99,116,105,111,110,32,105,110,118,111,108,118,101,115,32,105,110,32,101,97,99,104,32,112,101,114,105,111,100].map_values(
     |x: u32| x as nat)
 }
 
@@ -6470,17 +6476,11 @@ pub proof fn literal_287()
     hide(n::clean);
     l::l287(Seq::empty());
     p::all();
-    reveal_strlit(
-        "how long before a reference point the action occurs, or only that it occurs before it",
-    );
-    assert(n::codes(
-        "how long before a reference point the action occurs, or only that it occurs before it"@,
-    ) =~= data_287());
+    reveal_strlit("how many of an item the action involves in each period");
+    assert(n::codes("how many of an item the action involves in each period"@) =~= data_287());
     assert(n::clean(data_287(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "how long before a reference point the action occurs, or only that it occurs before it"@,
-    );
+    n::clean_bridge("how many of an item the action involves in each period"@);
 }
 
 } // verus!
@@ -6496,8 +6496,7 @@ pub mod batch_288 {
     verus! {
 
 pub open spec fn data_288() -> Seq<nat> {
-    ns![116u32,104,101,32,116,105,109,101,32,119,105,110,100,111,119,32,105,110,32,119,104,105,99,104,32,116,104,101,32,115,112,97,99,105,110,103,32,111,102,32,114,101,112,101,97,116,115,32,104,111,108,100,115].map_values(
-    |x: u32| x as nat)
+    ns![98u32,101,102,111,114,101].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_288()
@@ -6510,16 +6509,15 @@ pub proof fn literal_288()
     hide(n::clean);
     l::l288(Seq::empty());
     p::all();
-    reveal_strlit("the time window in which the spacing of repeats holds");
-    assert(n::codes("the time window in which the spacing of repeats holds"@) =~= data_288());
+    reveal_strlit("before");
+    assert(n::codes("before"@) =~= data_288());
     assert(n::clean(data_288(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("the time window in which the spacing of repeats holds"@);
+    n::clean_bridge("before"@);
 }
 
 pub open spec fn data_289() -> Seq<nat> {
-    ns![104u32,111,119,32,109,97,110,121,32,111,102,32,97,110,32,105,116,101,109,32,116,104,101,32,97,99,116,105,111,110,32,105,110,118,111,108,118,101,115,32,105,110,32,101,97,99,104,32,112,101,114,105,111,100].map_values(
-    |x: u32| x as nat)
+    ns![97u32,102,116,101,114].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_289()
@@ -6532,15 +6530,15 @@ pub proof fn literal_289()
     hide(n::clean);
     l::l289(Seq::empty());
     p::all();
-    reveal_strlit("how many of an item the action involves in each period");
-    assert(n::codes("how many of an item the action involves in each period"@) =~= data_289());
+    reveal_strlit("after");
+    assert(n::codes("after"@) =~= data_289());
     assert(n::clean(data_289(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("how many of an item the action involves in each period"@);
+    n::clean_bridge("after"@);
 }
 
 pub open spec fn data_290() -> Seq<nat> {
-    ns![98u32,101,102,111,114,101].map_values(|x: u32| x as nat)
+    ns![32u32,112,101,114,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_290()
@@ -6553,15 +6551,15 @@ pub proof fn literal_290()
     hide(n::clean);
     l::l290(Seq::empty());
     p::all();
-    reveal_strlit("before");
-    assert(n::codes("before"@) =~= data_290());
+    reveal_strlit(" per ");
+    assert(n::codes(" per "@) =~= data_290());
     assert(n::clean(data_290(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("before"@);
+    n::clean_bridge(" per "@);
 }
 
 pub open spec fn data_291() -> Seq<nat> {
-    ns![97u32,102,116,101,114].map_values(|x: u32| x as nat)
+    ns![44u32,32,99,111,117,110,116,101,100,32,105,116,101,109,58,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_291()
@@ -6574,15 +6572,15 @@ pub proof fn literal_291()
     hide(n::clean);
     l::l291(Seq::empty());
     p::all();
-    reveal_strlit("after");
-    assert(n::codes("after"@) =~= data_291());
+    reveal_strlit(", counted item: ");
+    assert(n::codes(", counted item: "@) =~= data_291());
     assert(n::clean(data_291(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("after"@);
+    n::clean_bridge(", counted item: "@);
 }
 
 pub open spec fn data_292() -> Seq<nat> {
-    ns![32u32,112,101,114,32].map_values(|x: u32| x as nat)
+    ns![32u32,97,112,97,114,116,32,100,117,114,105,110,103,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_292()
@@ -6595,15 +6593,15 @@ pub proof fn literal_292()
     hide(n::clean);
     l::l292(Seq::empty());
     p::all();
-    reveal_strlit(" per ");
-    assert(n::codes(" per "@) =~= data_292());
+    reveal_strlit(" apart during ");
+    assert(n::codes(" apart during "@) =~= data_292());
     assert(n::clean(data_292(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" per "@);
+    n::clean_bridge(" apart during "@);
 }
 
 pub open spec fn data_293() -> Seq<nat> {
-    ns![44u32,32,99,111,117,110,116,101,100,32,105,116,101,109,58,32].map_values(|x: u32| x as nat)
+    ns![32u32,102,114,111,109].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_293()
@@ -6616,15 +6614,15 @@ pub proof fn literal_293()
     hide(n::clean);
     l::l293(Seq::empty());
     p::all();
-    reveal_strlit(", counted item: ");
-    assert(n::codes(", counted item: "@) =~= data_293());
+    reveal_strlit(" from");
+    assert(n::codes(" from"@) =~= data_293());
     assert(n::clean(data_293(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(", counted item: "@);
+    n::clean_bridge(" from"@);
 }
 
 pub open spec fn data_294() -> Seq<nat> {
-    ns![32u32,97,112,97,114,116,32,100,117,114,105,110,103,32].map_values(|x: u32| x as nat)
+    ns![97u32,98,111,117,116,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_294()
@@ -6637,15 +6635,15 @@ pub proof fn literal_294()
     hide(n::clean);
     l::l294(Seq::empty());
     p::all();
-    reveal_strlit(" apart during ");
-    assert(n::codes(" apart during "@) =~= data_294());
+    reveal_strlit("about ");
+    assert(n::codes("about "@) =~= data_294());
     assert(n::clean(data_294(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" apart during "@);
+    n::clean_bridge("about "@);
 }
 
 pub open spec fn data_295() -> Seq<nat> {
-    ns![32u32,102,114,111,109].map_values(|x: u32| x as nat)
+    ns![97u32,32,109,105,110,105,109,117,109,32,111,102,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_295()
@@ -6658,15 +6656,15 @@ pub proof fn literal_295()
     hide(n::clean);
     l::l295(Seq::empty());
     p::all();
-    reveal_strlit(" from");
-    assert(n::codes(" from"@) =~= data_295());
+    reveal_strlit("a minimum of ");
+    assert(n::codes("a minimum of "@) =~= data_295());
     assert(n::clean(data_295(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" from"@);
+    n::clean_bridge("a minimum of "@);
 }
 
 pub open spec fn data_296() -> Seq<nat> {
-    ns![97u32,98,111,117,116,32].map_values(|x: u32| x as nat)
+    ns![32u32,116,111,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_296()
@@ -6679,15 +6677,16 @@ pub proof fn literal_296()
     hide(n::clean);
     l::l296(Seq::empty());
     p::all();
-    reveal_strlit("about ");
-    assert(n::codes("about "@) =~= data_296());
+    reveal_strlit(" to ");
+    assert(n::codes(" to "@) =~= data_296());
     assert(n::clean(data_296(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("about "@);
+    n::clean_bridge(" to "@);
 }
 
 pub open spec fn data_297() -> Seq<nat> {
-    ns![97u32,32,109,105,110,105,109,117,109,32,111,102,32].map_values(|x: u32| x as nat)
+    ns![109u32,97,114,107,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,97,115,32,97,112,112,114,111,120,105,109,97,116,101].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_297()
@@ -6700,15 +6699,16 @@ pub proof fn literal_297()
     hide(n::clean);
     l::l297(Seq::empty());
     p::all();
-    reveal_strlit("a minimum of ");
-    assert(n::codes("a minimum of "@) =~= data_297());
+    reveal_strlit("marks a time limit as approximate");
+    assert(n::codes("marks a time limit as approximate"@) =~= data_297());
     assert(n::clean(data_297(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("a minimum of "@);
+    n::clean_bridge("marks a time limit as approximate"@);
 }
 
 pub open spec fn data_298() -> Seq<nat> {
-    ns![32u32,116,111,32].map_values(|x: u32| x as nat)
+    ns![106u32,111,105,110,115,32,116,104,101,32,117,112,112,101,114,32,101,110,100,32,111,102,32,97,32,109,105,110,105,109,117,109,32,116,104,97,116,32,105,115,32,115,116,97,116,101,100,32,97,115,32,97,32,114,97,110,103,101].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_298()
@@ -6721,15 +6721,15 @@ pub proof fn literal_298()
     hide(n::clean);
     l::l298(Seq::empty());
     p::all();
-    reveal_strlit(" to ");
-    assert(n::codes(" to "@) =~= data_298());
+    reveal_strlit("joins the upper end of a minimum that is stated as a range");
+    assert(n::codes("joins the upper end of a minimum that is stated as a range"@) =~= data_298());
     assert(n::clean(data_298(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" to "@);
+    n::clean_bridge("joins the upper end of a minimum that is stated as a range"@);
 }
 
 pub open spec fn data_299() -> Seq<nat> {
-    ns![109u32,97,114,107,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,97,115,32,97,112,112,114,111,120,105,109,97,116,101].map_values(
+    ns![60u32,109,101,116,97,32,110,97,109,101,61,34,118,105,101,119,112,111,114,116,34,32,99,111,110,116,101,110,116,61,34,119,105,100,116,104,61,100,101,118,105,99,101,45,119,105,100,116,104,44,32,105,110,105,116,105,97,108,45,115,99,97,108,101,61,49,34,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -6743,15 +6743,16 @@ pub proof fn literal_299()
     hide(n::clean);
     l::l299(Seq::empty());
     p::all();
-    reveal_strlit("marks a time limit as approximate");
-    assert(n::codes("marks a time limit as approximate"@) =~= data_299());
+    reveal_strlit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
+    assert(n::codes("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@)
+        =~= data_299());
     assert(n::clean(data_299(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("marks a time limit as approximate"@);
+    n::clean_bridge("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@);
 }
 
 pub open spec fn data_300() -> Seq<nat> {
-    ns![106u32,111,105,110,115,32,116,104,101,32,117,112,112,101,114,32,101,110,100,32,111,102,32,97,32,109,105,110,105,109,117,109,32,116,104,97,116,32,105,115,32,115,116,97,116,101,100,32,97,115,32,97,32,114,97,110,103,101].map_values(
+    ns![60u32,112,32,99,108,97,115,115,61,34,112,114,111,118,101,110,97,110,99,101,34,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -6765,16 +6766,15 @@ pub proof fn literal_300()
     hide(n::clean);
     l::l300(Seq::empty());
     p::all();
-    reveal_strlit("joins the upper end of a minimum that is stated as a range");
-    assert(n::codes("joins the upper end of a minimum that is stated as a range"@) =~= data_300());
+    reveal_strlit("<p class=\"provenance\">");
+    assert(n::codes("<p class=\"provenance\">"@) =~= data_300());
     assert(n::clean(data_300(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("joins the upper end of a minimum that is stated as a range"@);
+    n::clean_bridge("<p class=\"provenance\">"@);
 }
 
 pub open spec fn data_301() -> Seq<nat> {
-    ns![60u32,109,101,116,97,32,110,97,109,101,61,34,118,105,101,119,112,111,114,116,34,32,99,111,110,116,101,110,116,61,34,119,105,100,116,104,61,100,101,118,105,99,101,45,119,105,100,116,104,44,32,105,110,105,116,105,97,108,45,115,99,97,108,101,61,49,34,62].map_values(
-    |x: u32| x as nat)
+    ns![60u32,115,112,97,110,62].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_301()
@@ -6787,17 +6787,15 @@ pub proof fn literal_301()
     hide(n::clean);
     l::l301(Seq::empty());
     p::all();
-    reveal_strlit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-    assert(n::codes("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@)
-        =~= data_301());
+    reveal_strlit("<span>");
+    assert(n::codes("<span>"@) =~= data_301());
     assert(n::clean(data_301(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@);
+    n::clean_bridge("<span>"@);
 }
 
 pub open spec fn data_302() -> Seq<nat> {
-    ns![60u32,112,32,99,108,97,115,115,61,34,112,114,111,118,101,110,97,110,99,101,34,62].map_values(
-    |x: u32| x as nat)
+    ns![80u32,97,115,115,97,103,101,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_302()
@@ -6810,15 +6808,16 @@ pub proof fn literal_302()
     hide(n::clean);
     l::l302(Seq::empty());
     p::all();
-    reveal_strlit("<p class=\"provenance\">");
-    assert(n::codes("<p class=\"provenance\">"@) =~= data_302());
+    reveal_strlit("Passage ");
+    assert(n::codes("Passage "@) =~= data_302());
     assert(n::clean(data_302(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<p class=\"provenance\">"@);
+    n::clean_bridge("Passage "@);
 }
 
 pub open spec fn data_303() -> Seq<nat> {
-    ns![60u32,115,112,97,110,62].map_values(|x: u32| x as nat)
+    ns![60u32,104,51,62,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_303()
@@ -6831,11 +6830,11 @@ pub proof fn literal_303()
     hide(n::clean);
     l::l303(Seq::empty());
     p::all();
-    reveal_strlit("<span>");
-    assert(n::codes("<span>"@) =~= data_303());
+    reveal_strlit("<h3>Grade as compiled</h3>");
+    assert(n::codes("<h3>Grade as compiled</h3>"@) =~= data_303());
     assert(n::clean(data_303(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<span>"@);
+    n::clean_bridge("<h3>Grade as compiled</h3>"@);
 }
 
 } // verus!
@@ -6851,7 +6850,8 @@ pub mod batch_304 {
     verus! {
 
 pub open spec fn data_304() -> Seq<nat> {
-    ns![80u32,97,115,115,97,103,101,32].map_values(|x: u32| x as nat)
+    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,105,115,32,100,111,99,117,109,101,110,116,46,32,65,32,103,114,97,100,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,115,116,97,116,101,109,101,110,116,32,111,102,32,116,104,101,32,100,111,99,117,109,101,110,116,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_304()
@@ -6864,15 +6864,21 @@ pub proof fn literal_304()
     hide(n::clean);
     l::l304(Seq::empty());
     p::all();
-    reveal_strlit("Passage ");
-    assert(n::codes("Passage "@) =~= data_304());
+    reveal_strlit(
+        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>",
+    );
+    assert(n::codes(
+        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+    ) =~= data_304());
     assert(n::clean(data_304(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Passage "@);
+    n::clean_bridge(
+        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
+    );
 }
 
 pub open spec fn data_305() -> Seq<nat> {
-    ns![60u32,104,51,62,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
+    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,77,101,97,115,117,114,101,60,47,116,104,62,60,116,104,62,86,97,108,117,101,60,47,116,104,62,60,116,104,62,76,97,98,101,108,32,105,110,32,116,104,101,32,115,111,117,114,99,101,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -6886,15 +6892,21 @@ pub proof fn literal_305()
     hide(n::clean);
     l::l305(Seq::empty());
     p::all();
-    reveal_strlit("<h3>Grade as compiled</h3>");
-    assert(n::codes("<h3>Grade as compiled</h3>"@) =~= data_305());
+    reveal_strlit(
+        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>",
+    );
+    assert(n::codes(
+        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+    ) =~= data_305());
     assert(n::clean(data_305(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<h3>Grade as compiled</h3>"@);
+    n::clean_bridge(
+        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
+    );
 }
 
 pub open spec fn data_306() -> Seq<nat> {
-    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,105,115,32,100,111,99,117,109,101,110,116,46,32,65,32,103,114,97,100,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,115,116,97,116,101,109,101,110,116,32,111,102,32,116,104,101,32,100,111,99,117,109,101,110,116,46,60,47,112,62].map_values(
+    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110].map_values(
     |x: u32| x as nat)
 }
 
@@ -6908,21 +6920,15 @@ pub proof fn literal_306()
     hide(n::clean);
     l::l306(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>",
-    );
-    assert(n::codes(
-        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
-    ) =~= data_306());
+    reveal_strlit("Strength of the recommendation");
+    assert(n::codes("Strength of the recommendation"@) =~= data_306());
     assert(n::clean(data_306(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
-    );
+    n::clean_bridge("Strength of the recommendation"@);
 }
 
 pub open spec fn data_307() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,77,101,97,115,117,114,101,60,47,116,104,62,60,116,104,62,86,97,108,117,101,60,47,116,104,62,60,116,104,62,76,97,98,101,108,32,105,110,32,116,104,101,32,115,111,117,114,99,101,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
+    ns![67u32,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101].map_values(
     |x: u32| x as nat)
 }
 
@@ -6936,22 +6942,15 @@ pub proof fn literal_307()
     hide(n::clean);
     l::l307(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>",
-    );
-    assert(n::codes(
-        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
-    ) =~= data_307());
+    reveal_strlit("Certainty of the evidence");
+    assert(n::codes("Certainty of the evidence"@) =~= data_307());
     assert(n::clean(data_307(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
-    );
+    n::clean_bridge("Certainty of the evidence"@);
 }
 
 pub open spec fn data_308() -> Seq<nat> {
-    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110].map_values(
-    |x: u32| x as nat)
+    ns![115u32,116,114,111,110,103].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_308()
@@ -6964,16 +6963,15 @@ pub proof fn literal_308()
     hide(n::clean);
     l::l308(Seq::empty());
     p::all();
-    reveal_strlit("Strength of the recommendation");
-    assert(n::codes("Strength of the recommendation"@) =~= data_308());
+    reveal_strlit("strong");
+    assert(n::codes("strong"@) =~= data_308());
     assert(n::clean(data_308(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Strength of the recommendation"@);
+    n::clean_bridge("strong"@);
 }
 
 pub open spec fn data_309() -> Seq<nat> {
-    ns![67u32,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101].map_values(
-    |x: u32| x as nat)
+    ns![99u32,111,110,100,105,116,105,111,110,97,108].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_309()
@@ -6986,15 +6984,15 @@ pub proof fn literal_309()
     hide(n::clean);
     l::l309(Seq::empty());
     p::all();
-    reveal_strlit("Certainty of the evidence");
-    assert(n::codes("Certainty of the evidence"@) =~= data_309());
+    reveal_strlit("conditional");
+    assert(n::codes("conditional"@) =~= data_309());
     assert(n::clean(data_309(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Certainty of the evidence"@);
+    n::clean_bridge("conditional"@);
 }
 
 pub open spec fn data_310() -> Seq<nat> {
-    ns![115u32,116,114,111,110,103].map_values(|x: u32| x as nat)
+    ns![104u32,105,103,104].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_310()
@@ -7007,15 +7005,15 @@ pub proof fn literal_310()
     hide(n::clean);
     l::l310(Seq::empty());
     p::all();
-    reveal_strlit("strong");
-    assert(n::codes("strong"@) =~= data_310());
+    reveal_strlit("high");
+    assert(n::codes("high"@) =~= data_310());
     assert(n::clean(data_310(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("strong"@);
+    n::clean_bridge("high"@);
 }
 
 pub open spec fn data_311() -> Seq<nat> {
-    ns![99u32,111,110,100,105,116,105,111,110,97,108].map_values(|x: u32| x as nat)
+    ns![109u32,111,100,101,114,97,116,101].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_311()
@@ -7028,15 +7026,15 @@ pub proof fn literal_311()
     hide(n::clean);
     l::l311(Seq::empty());
     p::all();
-    reveal_strlit("conditional");
-    assert(n::codes("conditional"@) =~= data_311());
+    reveal_strlit("moderate");
+    assert(n::codes("moderate"@) =~= data_311());
     assert(n::clean(data_311(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("conditional"@);
+    n::clean_bridge("moderate"@);
 }
 
 pub open spec fn data_312() -> Seq<nat> {
-    ns![104u32,105,103,104].map_values(|x: u32| x as nat)
+    ns![108u32,111,119].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_312()
@@ -7049,15 +7047,15 @@ pub proof fn literal_312()
     hide(n::clean);
     l::l312(Seq::empty());
     p::all();
-    reveal_strlit("high");
-    assert(n::codes("high"@) =~= data_312());
+    reveal_strlit("low");
+    assert(n::codes("low"@) =~= data_312());
     assert(n::clean(data_312(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("high"@);
+    n::clean_bridge("low"@);
 }
 
 pub open spec fn data_313() -> Seq<nat> {
-    ns![109u32,111,100,101,114,97,116,101].map_values(|x: u32| x as nat)
+    ns![118u32,101,114,121,32,108,111,119].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_313()
@@ -7070,15 +7068,16 @@ pub proof fn literal_313()
     hide(n::clean);
     l::l313(Seq::empty());
     p::all();
-    reveal_strlit("moderate");
-    assert(n::codes("moderate"@) =~= data_313());
+    reveal_strlit("very low");
+    assert(n::codes("very low"@) =~= data_313());
     assert(n::clean(data_313(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("moderate"@);
+    n::clean_bridge("very low"@);
 }
 
 pub open spec fn data_314() -> Seq<nat> {
-    ns![108u32,111,119].map_values(|x: u32| x as nat)
+    ns![60u32,104,51,62,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_314()
@@ -7091,15 +7090,16 @@ pub proof fn literal_314()
     hide(n::clean);
     l::l314(Seq::empty());
     p::all();
-    reveal_strlit("low");
-    assert(n::codes("low"@) =~= data_314());
+    reveal_strlit("<h3>Preferences as compiled</h3>");
+    assert(n::codes("<h3>Preferences as compiled</h3>"@) =~= data_314());
     assert(n::clean(data_314(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("low"@);
+    n::clean_bridge("<h3>Preferences as compiled</h3>"@);
 }
 
 pub open spec fn data_315() -> Seq<nat> {
-    ns![118u32,101,114,121,32,108,111,119].map_values(|x: u32| x as nat)
+    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,112,114,101,102,101,114,101,110,99,101,32,110,97,109,101,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,115,111,117,114,99,101,32,112,114,101,102,101,114,115,46,32,73,116,32,100,111,101,115,32,110,111,116,32,102,111,114,98,105,100,32,116,104,101,32,111,116,104,101,114,32,111,112,116,105,111,110,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_315()
@@ -7112,15 +7112,21 @@ pub proof fn literal_315()
     hide(n::clean);
     l::l315(Seq::empty());
     p::all();
-    reveal_strlit("very low");
-    assert(n::codes("very low"@) =~= data_315());
+    reveal_strlit(
+        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>",
+    );
+    assert(n::codes(
+        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+    ) =~= data_315());
     assert(n::clean(data_315(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("very low"@);
+    n::clean_bridge(
+        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
+    );
 }
 
 pub open spec fn data_316() -> Seq<nat> {
-    ns![60u32,104,51,62,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
+    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,80,114,101,102,101,114,114,101,100,60,47,116,104,62,60,116,104,62,73,110,115,116,101,97,100,32,111,102,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -7134,16 +7140,21 @@ pub proof fn literal_316()
     hide(n::clean);
     l::l316(Seq::empty());
     p::all();
-    reveal_strlit("<h3>Preferences as compiled</h3>");
-    assert(n::codes("<h3>Preferences as compiled</h3>"@) =~= data_316());
+    reveal_strlit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>",
+    );
+    assert(n::codes(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+    ) =~= data_316());
     assert(n::clean(data_316(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<h3>Preferences as compiled</h3>"@);
+    n::clean_bridge(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
+    );
 }
 
 pub open spec fn data_317() -> Seq<nat> {
-    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,112,114,101,102,101,114,101,110,99,101,32,110,97,109,101,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,115,111,117,114,99,101,32,112,114,101,102,101,114,115,46,32,73,116,32,100,111,101,115,32,110,111,116,32,102,111,114,98,105,100,32,116,104,101,32,111,116,104,101,114,32,111,112,116,105,111,110,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
+    ns![115u32,104,111,117,108,100].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_317()
@@ -7156,22 +7167,15 @@ pub proof fn literal_317()
     hide(n::clean);
     l::l317(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>",
-    );
-    assert(n::codes(
-        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
-    ) =~= data_317());
+    reveal_strlit("should");
+    assert(n::codes("should"@) =~= data_317());
     assert(n::clean(data_317(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
-    );
+    n::clean_bridge("should"@);
 }
 
 pub open spec fn data_318() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,80,114,101,102,101,114,114,101,100,60,47,116,104,62,60,116,104,62,73,110,115,116,101,97,100,32,111,102,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
-    |x: u32| x as nat)
+    ns![109u32,117,115,116].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_318()
@@ -7184,21 +7188,15 @@ pub proof fn literal_318()
     hide(n::clean);
     l::l318(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>",
-    );
-    assert(n::codes(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
-    ) =~= data_318());
+    reveal_strlit("must");
+    assert(n::codes("must"@) =~= data_318());
     assert(n::clean(data_318(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
-    );
+    n::clean_bridge("must"@);
 }
 
 pub open spec fn data_319() -> Seq<nat> {
-    ns![115u32,104,111,117,108,100].map_values(|x: u32| x as nat)
+    ns![99u32,97,110].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_319()
@@ -7211,11 +7209,11 @@ pub proof fn literal_319()
     hide(n::clean);
     l::l319(Seq::empty());
     p::all();
-    reveal_strlit("should");
-    assert(n::codes("should"@) =~= data_319());
+    reveal_strlit("can");
+    assert(n::codes("can"@) =~= data_319());
     assert(n::clean(data_319(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("should"@);
+    n::clean_bridge("can"@);
 }
 
 } // verus!
@@ -7231,7 +7229,7 @@ pub mod batch_320 {
     verus! {
 
 pub open spec fn data_320() -> Seq<nat> {
-    ns![109u32,117,115,116].map_values(|x: u32| x as nat)
+    ns![109u32,97,121].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_320()
@@ -7244,15 +7242,15 @@ pub proof fn literal_320()
     hide(n::clean);
     l::l320(Seq::empty());
     p::all();
-    reveal_strlit("must");
-    assert(n::codes("must"@) =~= data_320());
+    reveal_strlit("may");
+    assert(n::codes("may"@) =~= data_320());
     assert(n::clean(data_320(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("must"@);
+    n::clean_bridge("may"@);
 }
 
 pub open spec fn data_321() -> Seq<nat> {
-    ns![99u32,97,110].map_values(|x: u32| x as nat)
+    ns![110u32,111,116].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_321()
@@ -7265,15 +7263,15 @@ pub proof fn literal_321()
     hide(n::clean);
     l::l321(Seq::empty());
     p::all();
-    reveal_strlit("can");
-    assert(n::codes("can"@) =~= data_321());
+    reveal_strlit("not");
+    assert(n::codes("not"@) =~= data_321());
     assert(n::clean(data_321(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("can"@);
+    n::clean_bridge("not"@);
 }
 
 pub open spec fn data_322() -> Seq<nat> {
-    ns![109u32,97,121].map_values(|x: u32| x as nat)
+    ns![97u32,115,32,97,32,102,97,99,116].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_322()
@@ -7286,15 +7284,15 @@ pub proof fn literal_322()
     hide(n::clean);
     l::l322(Seq::empty());
     p::all();
-    reveal_strlit("may");
-    assert(n::codes("may"@) =~= data_322());
+    reveal_strlit("as a fact");
+    assert(n::codes("as a fact"@) =~= data_322());
     assert(n::clean(data_322(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("may"@);
+    n::clean_bridge("as a fact"@);
 }
 
 pub open spec fn data_323() -> Seq<nat> {
-    ns![110u32,111,116].map_values(|x: u32| x as nat)
+    ns![110u32,111,110,101,32,110,97,109,101,100].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_323()
@@ -7307,15 +7305,15 @@ pub proof fn literal_323()
     hide(n::clean);
     l::l323(Seq::empty());
     p::all();
-    reveal_strlit("not");
-    assert(n::codes("not"@) =~= data_323());
+    reveal_strlit("none named");
+    assert(n::codes("none named"@) =~= data_323());
     assert(n::clean(data_323(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("not"@);
+    n::clean_bridge("none named"@);
 }
 
 pub open spec fn data_324() -> Seq<nat> {
-    ns![97u32,115,32,97,32,102,97,99,116].map_values(|x: u32| x as nat)
+    ns![32u32,].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_324()
@@ -7328,15 +7326,17 @@ pub proof fn literal_324()
     hide(n::clean);
     l::l324(Seq::empty());
     p::all();
-    reveal_strlit("as a fact");
-    assert(n::codes("as a fact"@) =~= data_324());
+    reveal_strlit(" ");
+    assert(n::codes(" "@) =~= data_324());
     assert(n::clean(data_324(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("as a fact"@);
+    n::clean_bridge(" "@);
 }
 
 pub open spec fn data_325() -> Seq<nat> {
-    ns![110u32,111,110,101,32,110,97,109,101,100].map_values(|x: u32| x as nat)
+    ns![60u32,104,50,62,71,114,97,100,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
+        |x: u32| x as nat,
+    )
 }
 
 pub proof fn literal_325()
@@ -7349,15 +7349,16 @@ pub proof fn literal_325()
     hide(n::clean);
     l::l325(Seq::empty());
     p::all();
-    reveal_strlit("none named");
-    assert(n::codes("none named"@) =~= data_325());
+    reveal_strlit("<h2>Grade words</h2>");
+    assert(n::codes("<h2>Grade words</h2>"@) =~= data_325());
     assert(n::clean(data_325(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("none named"@);
+    n::clean_bridge("<h2>Grade words</h2>"@);
 }
 
 pub open spec fn data_326() -> Seq<nat> {
-    ns![32u32,].map_values(|x: u32| x as nat)
+    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,116,104,101,32,103,114,97,100,101,32,111,102,32,97,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_326()
@@ -7370,17 +7371,22 @@ pub proof fn literal_326()
     hide(n::clean);
     l::l326(Seq::empty());
     p::all();
-    reveal_strlit(" ");
-    assert(n::codes(" "@) =~= data_326());
+    reveal_strlit(
+        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>",
+    );
+    assert(n::codes(
+        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+    ) =~= data_326());
     assert(n::clean(data_326(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" "@);
+    n::clean_bridge(
+        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
+    );
 }
 
 pub open spec fn data_327() -> Seq<nat> {
-    ns![60u32,104,50,62,71,114,97,100,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
-        |x: u32| x as nat,
-    )
+    ns![115u32,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,58,32].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_327()
@@ -7393,15 +7399,15 @@ pub proof fn literal_327()
     hide(n::clean);
     l::l327(Seq::empty());
     p::all();
-    reveal_strlit("<h2>Grade words</h2>");
-    assert(n::codes("<h2>Grade words</h2>"@) =~= data_327());
+    reveal_strlit("strength of the recommendation: ");
+    assert(n::codes("strength of the recommendation: "@) =~= data_327());
     assert(n::clean(data_327(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<h2>Grade words</h2>"@);
+    n::clean_bridge("strength of the recommendation: "@);
 }
 
 pub open spec fn data_328() -> Seq<nat> {
-    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,116,104,101,32,103,114,97,100,101,32,111,102,32,97,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
+    ns![99u32,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101,58,32].map_values(
     |x: u32| x as nat)
 }
 
@@ -7415,21 +7421,15 @@ pub proof fn literal_328()
     hide(n::clean);
     l::l328(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>",
-    );
-    assert(n::codes(
-        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
-    ) =~= data_328());
+    reveal_strlit("certainty of the evidence: ");
+    assert(n::codes("certainty of the evidence: "@) =~= data_328());
     assert(n::clean(data_328(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
-    );
+    n::clean_bridge("certainty of the evidence: "@);
 }
 
 pub open spec fn data_329() -> Seq<nat> {
-    ns![115u32,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,58,32].map_values(
+    ns![60u32,104,50,62,80,114,101,102,101,114,101,110,99,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -7443,15 +7443,15 @@ pub proof fn literal_329()
     hide(n::clean);
     l::l329(Seq::empty());
     p::all();
-    reveal_strlit("strength of the recommendation: ");
-    assert(n::codes("strength of the recommendation: "@) =~= data_329());
+    reveal_strlit("<h2>Preference words</h2>");
+    assert(n::codes("<h2>Preference words</h2>"@) =~= data_329());
     assert(n::clean(data_329(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("strength of the recommendation: "@);
+    n::clean_bridge("<h2>Preference words</h2>"@);
 }
 
 pub open spec fn data_330() -> Seq<nat> {
-    ns![99u32,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101,58,32].map_values(
+    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,112,114,101,102,101,114,101,110,99,101,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -7465,15 +7465,21 @@ pub proof fn literal_330()
     hide(n::clean);
     l::l330(Seq::empty());
     p::all();
-    reveal_strlit("certainty of the evidence: ");
-    assert(n::codes("certainty of the evidence: "@) =~= data_330());
+    reveal_strlit(
+        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>",
+    );
+    assert(n::codes(
+        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+    ) =~= data_330());
     assert(n::clean(data_330(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("certainty of the evidence: "@);
+    n::clean_bridge(
+        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
+    );
 }
 
 pub open spec fn data_331() -> Seq<nat> {
-    ns![60u32,104,50,62,80,114,101,102,101,114,101,110,99,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
+    ns![109u32,97,114,107,115,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110].map_values(
     |x: u32| x as nat)
 }
 
@@ -7487,15 +7493,15 @@ pub proof fn literal_331()
     hide(n::clean);
     l::l331(Seq::empty());
     p::all();
-    reveal_strlit("<h2>Preference words</h2>");
-    assert(n::codes("<h2>Preference words</h2>"@) =~= data_331());
+    reveal_strlit("marks the preferred option");
+    assert(n::codes("marks the preferred option"@) =~= data_331());
     assert(n::clean(data_331(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<h2>Preference words</h2>"@);
+    n::clean_bridge("marks the preferred option"@);
 }
 
 pub open spec fn data_332() -> Seq<nat> {
-    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,112,114,101,102,101,114,101,110,99,101,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
+    ns![106u32,111,105,110,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110,32,114,101,112,108,97,99,101,115].map_values(
     |x: u32| x as nat)
 }
 
@@ -7509,21 +7515,15 @@ pub proof fn literal_332()
     hide(n::clean);
     l::l332(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>",
-    );
-    assert(n::codes(
-        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
-    ) =~= data_332());
+    reveal_strlit("joins the option that the preferred option replaces");
+    assert(n::codes("joins the option that the preferred option replaces"@) =~= data_332());
     assert(n::clean(data_332(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
-    );
+    n::clean_bridge("joins the option that the preferred option replaces"@);
 }
 
 pub open spec fn data_333() -> Seq<nat> {
-    ns![109u32,97,114,107,115,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110].map_values(
+    ns![60u32,104,51,62,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -7537,15 +7537,15 @@ pub proof fn literal_333()
     hide(n::clean);
     l::l333(Seq::empty());
     p::all();
-    reveal_strlit("marks the preferred option");
-    assert(n::codes("marks the preferred option"@) =~= data_333());
+    reveal_strlit("<h3>Qualifiers as compiled</h3>");
+    assert(n::codes("<h3>Qualifiers as compiled</h3>"@) =~= data_333());
     assert(n::clean(data_333(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("marks the preferred option"@);
+    n::clean_bridge("<h3>Qualifiers as compiled</h3>"@);
 }
 
 pub open spec fn data_334() -> Seq<nat> {
-    ns![106u32,111,105,110,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110,32,114,101,112,108,97,99,101,115].map_values(
+    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,113,117,97,108,105,102,105,101,114,32,119,111,114,100,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,113,117,97,108,105,102,105,101,114,32,100,101,115,99,114,105,98,101,115,32,116,104,101,32,119,111,114,100,105,110,103,32,111,102,32,105,116,115,32,97,99,116,105,111,110,32,111,114,32,99,111,110,100,105,116,105,111,110,46,32,65,32,113,117,97,108,105,102,105,101,114,32,111,110,32,97,32,99,111,110,100,105,116,105,111,110,32,109,117,115,116,32,97,108,115,111,32,104,111,108,100,32,105,110,32,116,104,101,32,102,97,99,116,115,32,116,104,97,116,32,109,101,101,116,32,116,104,101,32,99,111,110,100,105,116,105,111,110,46,32,65,110,32,101,120,99,108,117,100,101,100,32,99,111,110,100,105,116,105,111,110,32,116,101,115,116,115,32,116,104,101,32,99,111,110,100,105,116,105,111,110,32,116,111,103,101,116,104,101,114,32,119,105,116,104,32,105,116,115,32,113,117,97,108,105,102,105,101,114,46,60,47,112,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -7559,15 +7559,21 @@ pub proof fn literal_334()
     hide(n::clean);
     l::l334(Seq::empty());
     p::all();
-    reveal_strlit("joins the option that the preferred option replaces");
-    assert(n::codes("joins the option that the preferred option replaces"@) =~= data_334());
+    reveal_strlit(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>",
+    );
+    assert(n::codes(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+    ) =~= data_334());
     assert(n::clean(data_334(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("joins the option that the preferred option replaces"@);
+    n::clean_bridge(
+        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
+    );
 }
 
 pub open spec fn data_335() -> Seq<nat> {
-    ns![60u32,104,51,62,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
+    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,75,105,110,100,60,47,116,104,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -7581,11 +7587,17 @@ pub proof fn literal_335()
     hide(n::clean);
     l::l335(Seq::empty());
     p::all();
-    reveal_strlit("<h3>Qualifiers as compiled</h3>");
-    assert(n::codes("<h3>Qualifiers as compiled</h3>"@) =~= data_335());
+    reveal_strlit(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>",
+    );
+    assert(n::codes(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+    ) =~= data_335());
     assert(n::clean(data_335(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<h3>Qualifiers as compiled</h3>"@);
+    n::clean_bridge(
+        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
+    );
 }
 
 } // verus!
@@ -7601,8 +7613,7 @@ pub mod batch_336 {
     verus! {
 
 pub open spec fn data_336() -> Seq<nat> {
-    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,113,117,97,108,105,102,105,101,114,32,119,111,114,100,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,113,117,97,108,105,102,105,101,114,32,100,101,115,99,114,105,98,101,115,32,116,104,101,32,119,111,114,100,105,110,103,32,111,102,32,105,116,115,32,97,99,116,105,111,110,32,111,114,32,99,111,110,100,105,116,105,111,110,46,32,65,32,113,117,97,108,105,102,105,101,114,32,111,110,32,97,32,99,111,110,100,105,116,105,111,110,32,109,117,115,116,32,97,108,115,111,32,104,111,108,100,32,105,110,32,116,104,101,32,102,97,99,116,115,32,116,104,97,116,32,109,101,101,116,32,116,104,101,32,99,111,110,100,105,116,105,111,110,46,32,65,110,32,101,120,99,108,117,100,101,100,32,99,111,110,100,105,116,105,111,110,32,116,101,115,116,115,32,116,104,101,32,99,111,110,100,105,116,105,111,110,32,116,111,103,101,116,104,101,114,32,119,105,116,104,32,105,116,115,32,113,117,97,108,105,102,105,101,114,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
+    ns![72u32,111,119,32,111,102,116,101,110].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_336()
@@ -7615,22 +7626,15 @@ pub proof fn literal_336()
     hide(n::clean);
     l::l336(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>",
-    );
-    assert(n::codes(
-        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
-    ) =~= data_336());
+    reveal_strlit("How often");
+    assert(n::codes("How often"@) =~= data_336());
     assert(n::clean(data_336(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
-    );
+    n::clean_bridge("How often"@);
 }
 
 pub open spec fn data_337() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,75,105,110,100,60,47,116,104,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
-    |x: u32| x as nat)
+    ns![66u32,101,115,116,32,99,97,115,101].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_337()
@@ -7643,21 +7647,15 @@ pub proof fn literal_337()
     hide(n::clean);
     l::l337(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>",
-    );
-    assert(n::codes(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
-    ) =~= data_337());
+    reveal_strlit("Best case");
+    assert(n::codes("Best case"@) =~= data_337());
     assert(n::clean(data_337(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
-    );
+    n::clean_bridge("Best case"@);
 }
 
 pub open spec fn data_338() -> Seq<nat> {
-    ns![72u32,111,119,32,111,102,116,101,110].map_values(|x: u32| x as nat)
+    ns![69u32,109,112,104,97,115,105,115].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_338()
@@ -7670,15 +7668,15 @@ pub proof fn literal_338()
     hide(n::clean);
     l::l338(Seq::empty());
     p::all();
-    reveal_strlit("How often");
-    assert(n::codes("How often"@) =~= data_338());
+    reveal_strlit("Emphasis");
+    assert(n::codes("Emphasis"@) =~= data_338());
     assert(n::clean(data_338(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("How often"@);
+    n::clean_bridge("Emphasis"@);
 }
 
 pub open spec fn data_339() -> Seq<nat> {
-    ns![66u32,101,115,116,32,99,97,115,101].map_values(|x: u32| x as nat)
+    ns![77u32,97,110,110,101,114].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_339()
@@ -7691,15 +7689,17 @@ pub proof fn literal_339()
     hide(n::clean);
     l::l339(Seq::empty());
     p::all();
-    reveal_strlit("Best case");
-    assert(n::codes("Best case"@) =~= data_339());
+    reveal_strlit("Manner");
+    assert(n::codes("Manner"@) =~= data_339());
     assert(n::clean(data_339(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Best case"@);
+    n::clean_bridge("Manner"@);
 }
 
 pub open spec fn data_340() -> Seq<nat> {
-    ns![69u32,109,112,104,97,115,105,115].map_values(|x: u32| x as nat)
+    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,119,111,114,100,105,110,103].map_values(
+        |x: u32| x as nat,
+    )
 }
 
 pub proof fn literal_340()
@@ -7712,15 +7712,15 @@ pub proof fn literal_340()
     hide(n::clean);
     l::l340(Seq::empty());
     p::all();
-    reveal_strlit("Emphasis");
-    assert(n::codes("Emphasis"@) =~= data_340());
+    reveal_strlit("Strength of wording");
+    assert(n::codes("Strength of wording"@) =~= data_340());
     assert(n::clean(data_340(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Emphasis"@);
+    n::clean_bridge("Strength of wording"@);
 }
 
 pub open spec fn data_341() -> Seq<nat> {
-    ns![77u32,97,110,110,101,114].map_values(|x: u32| x as nat)
+    ns![80u32,111,115,115,105,98,105,108,105,116,121].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_341()
@@ -7733,15 +7733,15 @@ pub proof fn literal_341()
     hide(n::clean);
     l::l341(Seq::empty());
     p::all();
-    reveal_strlit("Manner");
-    assert(n::codes("Manner"@) =~= data_341());
+    reveal_strlit("Possibility");
+    assert(n::codes("Possibility"@) =~= data_341());
     assert(n::clean(data_341(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Manner"@);
+    n::clean_bridge("Possibility"@);
 }
 
 pub open spec fn data_342() -> Seq<nat> {
-    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,119,111,114,100,105,110,103].map_values(
+    ns![67u32,111,110,100,105,116,105,111,110,32,111,102,32,117,115,101].map_values(
         |x: u32| x as nat,
     )
 }
@@ -7756,15 +7756,16 @@ pub proof fn literal_342()
     hide(n::clean);
     l::l342(Seq::empty());
     p::all();
-    reveal_strlit("Strength of wording");
-    assert(n::codes("Strength of wording"@) =~= data_342());
+    reveal_strlit("Condition of use");
+    assert(n::codes("Condition of use"@) =~= data_342());
     assert(n::clean(data_342(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Strength of wording"@);
+    n::clean_bridge("Condition of use"@);
 }
 
 pub open spec fn data_343() -> Seq<nat> {
-    ns![80u32,111,115,115,105,98,105,108,105,116,121].map_values(|x: u32| x as nat)
+    ns![60u32,104,50,62,81,117,97,108,105,102,105,101,114,32,119,111,114,100,115,60,47,104,50,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_343()
@@ -7777,17 +7778,16 @@ pub proof fn literal_343()
     hide(n::clean);
     l::l343(Seq::empty());
     p::all();
-    reveal_strlit("Possibility");
-    assert(n::codes("Possibility"@) =~= data_343());
+    reveal_strlit("<h2>Qualifier words</h2>");
+    assert(n::codes("<h2>Qualifier words</h2>"@) =~= data_343());
     assert(n::clean(data_343(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("Possibility"@);
+    n::clean_bridge("<h2>Qualifier words</h2>"@);
 }
 
 pub open spec fn data_344() -> Seq<nat> {
-    ns![67u32,111,110,100,105,116,105,111,110,32,111,102,32,117,115,101].map_values(
-        |x: u32| x as nat,
-    )
+    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,113,117,97,108,105,102,105,101,114,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,113,117,97,108,105,102,105,101,114,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_344()
@@ -7800,57 +7800,13 @@ pub proof fn literal_344()
     hide(n::clean);
     l::l344(Seq::empty());
     p::all();
-    reveal_strlit("Condition of use");
-    assert(n::codes("Condition of use"@) =~= data_344());
-    assert(n::clean(data_344(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Condition of use"@);
-}
-
-pub open spec fn data_345() -> Seq<nat> {
-    ns![60u32,104,50,62,81,117,97,108,105,102,105,101,114,32,119,111,114,100,115,60,47,104,50,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_345()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[345]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l345(Seq::empty());
-    p::all();
-    reveal_strlit("<h2>Qualifier words</h2>");
-    assert(n::codes("<h2>Qualifier words</h2>"@) =~= data_345());
-    assert(n::clean(data_345(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<h2>Qualifier words</h2>"@);
-}
-
-pub open spec fn data_346() -> Seq<nat> {
-    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,113,117,97,108,105,102,105,101,114,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,113,117,97,108,105,102,105,101,114,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_346()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[346]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l346(Seq::empty());
-    p::all();
     reveal_strlit(
         "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>",
     );
     assert(n::codes(
         "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
-    ) =~= data_346());
-    assert(n::clean(data_346(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+    ) =~= data_344());
+    assert(n::clean(data_344(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
     n::clean_bridge(
         "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
@@ -13210,7 +13166,7 @@ pub proof fn block_320(i: int)
 
 pub proof fn block_336(i: int)
     requires
-        336 <= i < 347,
+        336 <= i < 345,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -13232,18 +13188,14 @@ pub proof fn block_336(i: int)
         batch_336::literal_342();
     } else if i == 343 {
         batch_336::literal_343();
-    } else if i == 344 {
-        batch_336::literal_344();
-    } else if i == 345 {
-        batch_336::literal_345();
     } else {
-        batch_336::literal_346();
+        batch_336::literal_344();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 347,
+        0 <= i < 345,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -13298,7 +13250,7 @@ pub proof fn literal(i: int)
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 347,
+        u::copy_registry().len() == 345,
 {
     hide(u::lit);
     hide(u::css_text);

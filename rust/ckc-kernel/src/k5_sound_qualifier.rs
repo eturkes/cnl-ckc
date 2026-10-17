@@ -18,13 +18,13 @@ pub proof fn kind(value: u::Bytes, inputs: Seq<u::Bytes>)
     hide(u::copy_derived);
     hide(u::lit);
     l::f249(inputs);
+    l::f336(inputs);
+    l::f337(inputs);
     l::f338(inputs);
     l::f339(inputs);
     l::f340(inputs);
     l::f341(inputs);
     l::f342(inputs);
-    l::f343(inputs);
-    l::f344(inputs);
 }
 
 proof fn action(pl: u::Bytes, d: v::DocFile, c: v::DocClause, event: Term, inputs: Seq<u::Bytes>)
@@ -44,9 +44,9 @@ proof fn action(pl: u::Bytes, d: v::DocFile, c: v::DocClause, event: Term, input
         if let Some(args) = u::first_with(u::join_terms(d, c), "guideline_entity"@, 4, 1, object) {
             let noun = u::pl_word(pl, u::atom_name(args[2]));
             t::pl_word(pl, u::atom_name(args[2]), inputs);
-            l::f326(inputs);
-            b::add(verb, b::f(326), inputs);
-            b::add(verb + b::f(326), noun, inputs);
+            l::f324(inputs);
+            b::add(verb, b::f(324), inputs);
+            b::add(verb + b::f(324), noun, inputs);
         }
     }
 }
@@ -163,9 +163,9 @@ pub proof fn section(pl: u::Bytes, inputs: Seq<u::Bytes>)
     assert(t::all_sound(rows, inputs));
     if rows.len() > 0 {
         l::f080(inputs);
+        l::f333(inputs);
+        l::f334(inputs);
         l::f335(inputs);
-        l::f336(inputs);
-        l::f337(inputs);
         l::f081(inputs);
         l::f083(inputs);
         l::f084(inputs);

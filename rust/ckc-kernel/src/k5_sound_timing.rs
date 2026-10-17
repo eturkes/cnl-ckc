@@ -125,7 +125,7 @@ proof fn bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u:
     l::f252(inputs);
     l::f253(inputs);
     l::f254(inputs);
-    l::f296(inputs);
+    l::f294(inputs);
     l::f262(inputs);
     l::f263(inputs);
     l::f264(inputs);
@@ -168,7 +168,7 @@ proof fn count(d: v::DocFile, c: v::DocClause, q: Term, inputs: Seq<u::Bytes>)
     l::f252(inputs);
     l::f253(inputs);
     l::f254(inputs);
-    l::f296(inputs);
+    l::f294(inputs);
     if let Some(args) = u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
         if let (Some(cmp), Term::Int(n)) = (u::cmp_html(args[3]), args[4]) {
             if n >= 0 {
@@ -205,8 +205,8 @@ proof fn range_bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: 
     l::f273(inputs);
     l::f274(inputs);
     l::f275(inputs);
-    l::f297(inputs);
-    l::f298(inputs);
+    l::f295(inputs);
+    l::f296(inputs);
     if let Some(r) = u::first_with(u::join_terms(d, c), "guideline_range"@, 3, 1, q) {
         if let (Some(lo), Some(hi)) = (
             u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q),
@@ -217,11 +217,11 @@ proof fn range_bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: 
                     if let Some(w) = u::unit_html(u::atom_name(un), m == 1) {
                         decimal_text(n as nat, inputs);
                         decimal_text(m as nat, inputs);
-                        let a1 = b::f(297) + u::text(v::udec_bytes(n as nat));
-                        b::add(b::f(297), u::text(v::udec_bytes(n as nat)), inputs);
-                        b::add(a1, b::f(298), inputs);
-                        b::add(a1 + b::f(298), u::text(v::udec_bytes(m as nat)), inputs);
-                        b::add(a1 + b::f(298) + u::text(v::udec_bytes(m as nat)), w, inputs);
+                        let a1 = b::f(295) + u::text(v::udec_bytes(n as nat));
+                        b::add(b::f(295), u::text(v::udec_bytes(n as nat)), inputs);
+                        b::add(a1, b::f(296), inputs);
+                        b::add(a1 + b::f(296), u::text(v::udec_bytes(m as nat)), inputs);
+                        b::add(a1 + b::f(296) + u::text(v::udec_bytes(m as nat)), w, inputs);
                     }
                 }
             }
@@ -237,8 +237,8 @@ proof fn order(role: u::Bytes, inputs: Seq<u::Bytes>)
     hide(u::copy_derived);
     hide(u::lit);
     l::f249(inputs);
-    l::f290(inputs);
-    l::f291(inputs);
+    l::f288(inputs);
+    l::f289(inputs);
 }
 
 proof fn frequency(
@@ -261,8 +261,8 @@ proof fn frequency(
     hide(u::bound_html);
     hide(u::joined_word);
     l::f249(inputs);
-    l::f292(inputs);
-    l::f293(inputs);
+    l::f290(inputs);
+    l::f291(inputs);
     count(d, c, args[2], inputs);
     bound(d, c, args[3], args[4], inputs);
     joined_word(pl, d, c, "guideline_entity"@, 4, args[2], 2, inputs);
@@ -270,11 +270,11 @@ proof fn frequency(
         u::count_html(d, c, args[2]),
         u::bound_html(d, c, args[3], args[4]),
     ) {
-        b::add(n, b::f(292), inputs);
-        b::add(n + b::f(292), w, inputs);
-        b::add(n + b::f(292) + w, b::f(293), inputs);
+        b::add(n, b::f(290), inputs);
+        b::add(n + b::f(290), w, inputs);
+        b::add(n + b::f(290) + w, b::f(291), inputs);
         b::add(
-            n + b::f(292) + w + b::f(293),
+            n + b::f(290) + w + b::f(291),
             u::joined_word(pl, d, c, "guideline_entity"@, 4, args[2], 2),
             inputs,
         );
@@ -293,8 +293,8 @@ proof fn window(d: v::DocFile, c: v::DocClause, args: Seq<Term>, inputs: Seq<u::
     hide(u::bound_html);
     l::f249(inputs);
     l::f257(inputs);
-    l::f294(inputs);
-    l::f295(inputs);
+    l::f292(inputs);
+    l::f293(inputs);
     bound(d, c, args[2], args[3], inputs);
     bound(d, c, args[5], args[6], inputs);
     if let (Some(g), Some(ln)) = (
@@ -302,9 +302,9 @@ proof fn window(d: v::DocFile, c: v::DocClause, args: Seq<Term>, inputs: Seq<u::
         u::bound_html(d, c, args[5], args[6]),
     ) {
         b::add(b::f(257), g, inputs);
-        b::add(b::f(257) + g, b::f(294), inputs);
-        b::add(b::f(257) + g + b::f(294), ln, inputs);
-        b::add(b::f(257) + g + b::f(294) + ln, b::f(295), inputs);
+        b::add(b::f(257) + g, b::f(292), inputs);
+        b::add(b::f(257) + g + b::f(292), ln, inputs);
+        b::add(b::f(257) + g + b::f(292) + ln, b::f(293), inputs);
     }
 }
 
