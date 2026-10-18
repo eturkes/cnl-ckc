@@ -92,6 +92,7 @@ pub(super) fn extract(raw: &[u8], bag: &str, destination: &Path) -> Result<usize
         "tagmanifest-sha256.txt",
         "README-dist.md",
         "NOTICE",
+        "LICENSE",
         "release-manifest.tsv",
     ];
     let mut at = 0usize;

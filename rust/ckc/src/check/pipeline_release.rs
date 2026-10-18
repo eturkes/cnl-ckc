@@ -407,6 +407,7 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
     let lexicon = head_file(root, "vendor/clex/clex_lexicon.pl")?;
     let reference = head_file(root, "docs/REFERENCE.md")?;
     let notice = head_file(root, "NOTICE")?;
+    let license = head_file(root, "LICENSE")?;
     let reference =
         std::str::from_utf8(&reference).map_err(|_| error("no-input docs/REFERENCE.md"))?;
     let mut notice = String::from_utf8(notice).map_err(|_| error("no-input docs/REFERENCE.md"))?;
@@ -444,6 +445,7 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
         ),
         ("README-dist.md".to_owned(), readme.into_bytes()),
         ("NOTICE".to_owned(), notice.into_bytes()),
+        ("LICENSE".to_owned(), license),
     ]);
     let tag_members = tags.iter().map(|(p, b)| member(p, b)).collect();
     let members = staged.iter().map(|(p, b)| member(p, b)).collect();

@@ -60,6 +60,7 @@ fn seed(repo: &Path) -> Result {
             "# Probe KB\n\n## Compiled Prolog schema (v1)\n\nProbe schema bytes.\n\n## Operating\n\nRun the checks.\n",
         ),
         ("NOTICE", "Probe notice.\n"),
+        ("LICENSE", "Probe license.\n"),
         ("vendor/ape/prolog/ace_to_pl.pl", "% probe compiler\n"),
         ("vendor/clex/clex_lexicon.pl", "% probe lexicon\n"),
         (

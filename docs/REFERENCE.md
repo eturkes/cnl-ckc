@@ -1212,7 +1212,7 @@ While a document is in progress, a round advances it one increment:
    stale offsets.
 5. **Close** — `ckc check` must be green. Make a scoped commit. When
    the commit touches `guidelines/`, the vendored compiler or lexicon,
-   `NOTICE`, or the `docs/REFERENCE.md` schema section,
+   `NOTICE`, `LICENSE`, or the `docs/REFERENCE.md` schema section,
    `release-manifest.tsv` goes stale: run `just amend-manifest` after
    the commit. It regenerates the manifest and amends it into the same
    commit. Update `.agent/queue.md` and the guideline README's
@@ -1257,7 +1257,8 @@ root. Each line must report OK.
 
 The payload is the committed `guidelines/` corpus, its common member
 `guidelines/schema.pl` included, plus `README-dist.md`,
-`NOTICE`, and `release-manifest.tsv`. The profile in each guideline's
+`NOTICE`, `LICENSE`, and `release-manifest.tsv`. `LICENSE` is the
+committed repository license, copied unchanged. The profile in each guideline's
 `rights.tsv` controls what ships. A `redistributable` guideline ships
 whole. A `reconstructable` guideline ships without its `source/` files;
 the manifest lists them as `source` rows with fetch URLs. A `restricted`

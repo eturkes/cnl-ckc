@@ -9,6 +9,7 @@ meta	replay	load: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guid
 meta	generated	release-manifest.tsv
 meta	generated	manifest-sha256.txt
 meta	generated	tagmanifest-sha256.txt
+member	LICENSE	a518c888aba7765db6bb0974a385e00afdd89196342fcc8d8cecd12b5ef84c28	12242
 member	NOTICE	d9ed734ad82b5c34f60d7d95513d3fce86ef5a03620fcfa2f8d835a55eadb361	1401
 member	README-dist.md	cc383513f2177ec9b9dc5f5d4d69d1e001321d31a10efb4e9deba7ba71c4453f	48729
 member	bagit.txt	1712ecfb074bf29c4188ad3421032509159a09739fd604f8fe57038b4ddefcc9	54

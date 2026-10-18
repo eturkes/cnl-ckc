@@ -31,6 +31,7 @@ const REVIEW_2: &str = "# bundle v2; review_sha256 = sha256 of the labeled compo
 const LEDGER: &str = "# format: docid<TAB>review_sha256<TAB>ace_commit<TAB>verdict<TAB>reviewer<TAB>date<TAB>comment\n";
 const SCHEMA: &str = "## Compiled Prolog schema (v1)\n\nFixture schema bytes stay verbatim.\n\n### Load\n\nRun `swipl -q -s data/guidelines/g-red/pl/doc-a.pl`.\n\n";
 const NOTICE: &str = "Fixture KB notice.\nFirst-party fixture text.\n";
+const LICENSE: &str = "Fixture KB license.\nFirst-party license text.\n";
 const DATE: &str = "2026-01-01T00:00:00Z";
 static NEXT_TMP: AtomicUsize = AtomicUsize::new(0);
 type TestResult<T> = Result<T, Box<dyn Error>>;
@@ -435,6 +436,7 @@ fn base_repo(
     let repo = Repo::new(path)?;
     repo.write("docs/REFERENCE.md", format!("# Fixture KB\n\nFixture repository.\n\n{SCHEMA}## Operating\n\nRun the checks.\n\n## Licensing\n\nFixture licensing.\n"))?;
     repo.write("NOTICE", NOTICE)?;
+    repo.write("LICENSE", LICENSE)?;
     repo.write("vendor/ape/prolog/ace_to_pl.pl", "% fixture compiler\n")?;
     repo.write("vendor/clex/clex_lexicon.pl", "% fixture base lexicon\n")?;
     for directory in ["tools", "tests", ".agent", ".github"] {
@@ -1122,6 +1124,7 @@ fn after_manifest(repo: &Repo, scenario: &str) -> TestResult<()> {
                 ("guidelines/g-red/rights.tsv", b"bad\xff"),
                 ("docs/REFERENCE.md", b"dirty reference\n"),
                 ("NOTICE", b"dirty notice\n"),
+                ("LICENSE", b"dirty license\n"),
                 ("vendor/ape/prolog/ace_to_pl.pl", b"% dirty compiler\n"),
                 ("release-manifest.tsv", b"dirty manifest\n"),
             ] {
@@ -1200,6 +1203,14 @@ fn validate_bag(
             run.check(
                 !has(bag.bytes("NOTICE"), b"dirty notice"),
                 "working NOTICE leaked",
+            );
+            run.check(
+                bag.bytes("LICENSE") == repo.show("LICENSE")?,
+                "committed LICENSE absent",
+            );
+            run.check(
+                !has(bag.bytes("LICENSE"), b"dirty license"),
+                "working LICENSE leaked",
             );
             run.check(
                 bag.bytes("release-manifest.tsv") == repo.show("release-manifest.tsv")?,
@@ -1541,6 +1552,7 @@ fn validate_bag(
                 "bagit.txt".to_owned(),
                 "README-dist.md".to_owned(),
                 "NOTICE".to_owned(),
+                "LICENSE".to_owned(),
             ]);
             expected.sort();
             run.check(actual == expected, "release member closure");
@@ -1628,6 +1640,7 @@ fn validate_bag(
                 "tagmanifest-sha256.txt",
                 "README-dist.md",
                 "NOTICE",
+                "LICENSE",
                 "release-manifest.tsv",
             ];
             run.check(
@@ -1683,6 +1696,10 @@ fn validate_bag(
                 "schema section not embedded verbatim",
             );
             run.check(has(notice, NOTICE.as_bytes()), "root NOTICE not embedded");
+            run.check(
+                bag.bytes("LICENSE") == LICENSE.as_bytes(),
+                "root LICENSE not shipped verbatim",
+            );
             for gid in ["g-red", "g-fetch", "g-hold"] {
                 let statement = format!("Fixture rights statement for {gid}.");
                 run.check(

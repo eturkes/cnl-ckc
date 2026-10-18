@@ -2324,6 +2324,7 @@ impl ExportRepo {
             format!("# Fixture reference\n\n{schema}## Operating\n\nC1_AFTER_SCHEMA_SENTINEL\n"),
         );
         write(&tree.join("NOTICE"), "C1 fixture notice.\n");
+        write(&tree.join("LICENSE"), "C1 fixture license.\n");
         write(
             &tree.join("vendor/ape/prolog/ace_to_pl.pl"),
             "% fixture compiler\n",

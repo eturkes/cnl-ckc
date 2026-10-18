@@ -144,6 +144,7 @@ fn make_repo(scratch: &Path, profile: &str) -> PathBuf {
         "# Fixture\n\n## Compiled Prolog schema (v1)\n\nLoad guidelines/schema.pl before a document.\n\n## Operating\n\nFixture.\n",
     );
     write(&tree.join("NOTICE"), "Numeric fixture.\n");
+    write(&tree.join("LICENSE"), "Numeric fixture license.\n");
     write(
         &tree.join("vendor/ape/prolog/ace_to_pl.pl"),
         "% fixture compiler\n",

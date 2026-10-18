@@ -134,7 +134,7 @@ pub open spec fn label_rows(ls: Seq<(Seq<u8>, Seq<u8>)>) -> Seq<u8> {
 }
 
 // `staged` = the corpus members in path order; `labels` = (docid, class) in
-// docid order; `tags` = bagit.txt / README-dist.md / NOTICE with their digests.
+// docid order; `tags` = bagit.txt / README-dist.md / NOTICE / LICENSE with their digests.
 // Content only, no commit id: a commit that changes the inputs can carry its own
 // manifest (the archive name + bag root name the source commit).
 pub open spec fn release_manifest(
@@ -153,8 +153,8 @@ pub open spec fn release_manifest(
 
 // --- BagIt digest manifests (M5.6, contract m5u6): `<sha>  <path>` per member in path
 // order. manifest-sha256.txt lists the payload members; tagmanifest-sha256.txt lists the
-// tag files (NOTICE, README-dist.md, bagit.txt, manifest-sha256.txt, release-manifest.tsv)
-// and never itself.
+// tag files (LICENSE, NOTICE, README-dist.md, bagit.txt, manifest-sha256.txt,
+// release-manifest.tsv) and never itself.
 pub open spec fn digest_lines(ms: Seq<Member>) -> Seq<u8> {
     sort_members(ms).map_values(|m: Member| m.sha + ascii("  "@) + m.path + lf()).flatten()
 }
