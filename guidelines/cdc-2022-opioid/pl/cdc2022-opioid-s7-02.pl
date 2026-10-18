@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s7-02',ace_sha256(c471e56c9c9e2a4e4d5204e2f856d60dae81f2d937850a4d5765c0ed4ebb7c4e),ulex(sha256('3e37dcfbb36dbdd0830d644235c88914b28def633a7ac43d2b5bb53faf8ba507')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s7-02',ace_sha256(c471e56c9c9e2a4e4d5204e2f856d60dae81f2d937850a4d5765c0ed4ebb7c4e),ulex(sha256(ebe2d3db8559958f9ed44ec7a76cb2fb6ea75017f9f9437c3ea03b07092b0e75)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every recommendation does not apply during a hospital-care.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s7-02',1,box(1),[A]),-) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s7-02',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s7-02',1,ref(2),[A]),'hospital-care',countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).

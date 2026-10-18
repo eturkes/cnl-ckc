@@ -10,6 +10,8 @@ noun_pl(clinicians,clinician,human).
 noun_pl('morphine-milligrams-per-day','morphine-milligram-per-day',neutr).
 noun_pl('negative-tests','negative-test',neutr).
 noun_pl('oxycodone-milligrams-per-day','oxycodone-milligram-per-day',neutr).
+noun_pl('nonopioid-medications','nonopioid-medication',neutr).
+noun_pl('nonprescribed-substances','nonprescribed-substance',neutr).
 noun_sg('active-opioid-use-disorder','active-opioid-use-disorder',neutr).
 noun_sg('DSM-5-opioid-use-disorder-assessment','DSM-5-opioid-use-disorder-assessment',neutr).
 noun_sg('DSM-5-opioid-use-disorder-criteria-match','DSM-5-opioid-use-disorder-criteria-match',neutr).
@@ -1089,6 +1091,10 @@ noun_sg('negative-test','negative-test',neutr).
 noun_sg('opioid-pain-medication-use','opioid-pain-medication-use',neutr).
 noun_sg('immediate-release-oral-morphine-dosage','immediate-release-oral-morphine-dosage',neutr).
 noun_sg('immediate-release-oral-oxycodone-dosage','immediate-release-oral-oxycodone-dosage',neutr).
+noun_sg('scheduled-opioid-example','scheduled-opioid-example',neutr).
+noun_sg('medication-combination-example','medication-combination-example',neutr).
+noun_sg('mechanism-of-action','mechanism-of-action',neutr).
+noun_sg('benzodiazepine-class','benzodiazepine-class',neutr).
 adj_itr(addressable,addressable).
 adj_itr('first-line','first-line').
 tv_infpl(calibrate,calibrate).

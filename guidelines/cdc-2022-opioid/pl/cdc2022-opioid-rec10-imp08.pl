@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp08',ace_sha256('56bbc26ef5a6568f0f1ad500cab570cc6cb403cf6366fe1f5249ccc5c3ba8b71'),ulex(sha256('3e37dcfbb36dbdd0830d644235c88914b28def633a7ac43d2b5bb53faf8ba507')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec10-imp08',ace_sha256('24d8faa5c2e4daad4c6f5fade5bb30a5e3b1034fd93577521a60fffbed3f2277'),ulex(sha256(ebe2d3db8559958f9ed44ec7a76cb2fb6ea75017f9f9437c3ea03b07092b0e75)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician may use a relatively-inexpensive-presumptive-immunoassay-panel during a limited-toxicology-screening.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp08',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',1,ref(2),[A]),'relatively-inexpensive-presumptive-immunoassay-panel',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -49,7 +49,7 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',1,box(1),[A
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',1,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',1,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',1,ref(4),[A]),during,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-% S2: A relatively-inexpensive-presumptive-immunoassay-panel can assess an opiate-class and can assess a benzodiazepine and can assess a nonprescribed-substance.
+% S2: A relatively-inexpensive-presumptive-immunoassay-panel can assess an opiate-class and can assess a benzodiazepine-class and can assess some nonprescribed-substances.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(1),[]),'relatively-inexpensive-presumptive-immunoassay-panel',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(1),[]),na,eq,1).
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(1),[]),can).
@@ -59,14 +59,14 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(1),[]
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(1),[])).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(2),[])).
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(2),[]),can).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(4),[]),benzodiazepine,countable).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(4),[]),'benzodiazepine-class',countable).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(4),[]),na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(5),[]),assess).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(1),[])).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(4),[])).
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(3),[]),can).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(3),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(6),[]),'nonprescribed-substance',countable).
-guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(3),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(6),[]),na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(3),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(6),[]),na,geq,2).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(3),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(7),[]),assess).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(3),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(7),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(1),[])).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp08',2,box(3),[]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(7),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp08',2,ref(6),[])).
