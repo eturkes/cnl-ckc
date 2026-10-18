@@ -4,10 +4,11 @@ use vstd::prelude::*;
 
 verus! {
 
-// Trusted spec: the bounded v1 engine (contract m5u2 R8/R13/R14/R15/R16).
-// One deterministic machine = SWI's depth-first, leftmost, clause-order
-// search with negation as failure and occurs-check unification (R13),
-// under two bounds: a depth budget per goal (call_with_depth_limit) and
+// Trusted spec: the bounded v1 engine (contract m5u2 R8/R13/R14/R15/R16, eso).
+// One deterministic machine = SWI's depth-first, clause-order search with
+// negation as failure and occurs-check unification (R13), whose goal
+// selection defers an operator goal until its box content binds the box
+// (contract eso, `selected` below), under two bounds: a depth budget per goal (call_with_depth_limit) and
 // one fuel of machine transitions (call_with_inference_limit). A
 // transition = one goal dispatch (call or redo, including its whole
 // clause scan + head unification), one cut, one pruned goal or one
@@ -299,7 +300,7 @@ pub ghost struct Cfg {
     pub sol: Seq<Term>,  // solution template (answer variables) with bindings applied
     pub alts: Seq<Alt>,
     pub fresh: nat,  // every live variable index is below fresh
-    pub ci: nat,  // clause index the front goal resumes from
+    pub ci: nat,  // clause index the selected goal resumes from
     pub pruned: bool,  // some branch hit depth 0
     pub rows: Seq<Seq<Term>>,  // collected solutions
     pub collect: bool,  // true = findall, false = stop at the first solution
@@ -352,6 +353,77 @@ pub proof fn next_match_bound(db: Seq<DocClause>, name: Seq<u8>, arity: nat, fro
     }
 }
 
+// --- goal selection (contract eso) ---
+// The machine runs the leftmost goal, except that an operator goal whose
+// inner context is still a variable waits while a later goal of its run binds
+// that context: a predicate literal whose first argument is the variable, or
+// a conjunction that holds one. The run = the leading goals that are compound
+// terms other than a negation; a negation, a naf cut or any other goal ends
+// it. The machine selects the leftmost goal that does not wait, and the
+// selected goal's clause body (or its two conjuncts) takes its place. A
+// waiting goal is followed by a run goal, so the selection never passes a
+// negation or a naf cut: each reaches the front only after every goal left
+// of it, and every goal those goals spawned, has run. Over ground facts and
+// clauses whose head variables occur in positive body items and whose
+// negations' outer variables occur in earlier positive body items
+// (`emit::head_safe`, `emit::naf_safe`: every certified document), a negation
+// is therefore called with its outer variables ground, as in leftmost order,
+// and where both orders' searches are finite they yield the same answers; a
+// negation outside that safety can see more bindings and answer differently.
+// Termination, bounds and first proofs follow this order.
+pub open spec fn operator_name() -> Seq<u8> {
+    ascii("guideline_operator"@)
+}
+
+pub open spec fn binds(t: Term, x: Term) -> bool
+    decreases t,
+{
+    match t {
+        Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
+            binds(args[0], x) || binds(args[1], x)
+        } else {
+            args.len() > 0 && args[0] == x
+        },
+        _ => false,
+    }
+}
+
+pub open spec fn run_binds(gs: Seq<Goal>, x: Term) -> bool
+    decreases gs.len(),
+{
+    if gs.len() == 0 {
+        false
+    } else {
+        match gs[0] {
+            Goal::Lit(t, _) => match t {
+                Term::Comp(name, args) => !(name == naf_name() && args.len() == 1) && (binds(t, x)
+                    || run_binds(gs.drop_first(), x)),
+                _ => false,
+            },
+            Goal::NafCut(_) => false,
+        }
+    }
+}
+
+pub open spec fn waits(g: Goal, later: Seq<Goal>) -> bool {
+    match g {
+        Goal::Lit(Term::Comp(name, args), _) => name == operator_name() && args.len() == 3
+            && args[1] is Var && run_binds(later, args[1]),
+        _ => false,
+    }
+}
+
+// Index of the selected goal.
+pub open spec fn selected(stack: Seq<Goal>) -> nat
+    decreases stack.len(),
+{
+    if stack.len() > 1 && waits(stack[0], stack.drop_first()) {
+        1 + selected(stack.drop_first())
+    } else {
+        0
+    }
+}
+
 // Backtrack: resume the newest choicepoint, or end the search.
 pub open spec fn fail(c: Cfg) -> Step {
     if c.alts.len() == 0 {
@@ -371,15 +443,16 @@ pub open spec fn fail(c: Cfg) -> Step {
     }
 }
 
-// Call/redo of a predicate goal: enter the first clause from index ci whose
-// renamed-apart head unifies with the goal, leaving a choicepoint at the
-// next index; no clause left = failure.
+// Call/redo of the selected predicate goal (between `pre` and `rest`): enter
+// the first clause from index ci whose renamed-apart head unifies with the
+// goal, leaving a choicepoint at the next index; no clause left = failure.
 pub open spec fn call(
     db: Seq<DocClause>,
     c: Cfg,
     name: Seq<u8>,
     args: Seq<Term>,
     d: nat,
+    pre: Seq<Goal>,
     rest: Seq<Goal>,
     ci: nat,
 ) -> Step
@@ -394,7 +467,7 @@ pub open spec fn call(
             }
             let u = UState {
                 pairs: zip(args, args_of(shift(cl.head, c.fresh))),
-                stack: body_goals(cl.body, c.fresh, (d - 1) as nat) + rest,
+                stack: pre + body_goals(cl.body, c.fresh, (d - 1) as nat) + rest,
                 sol: c.sol,
             };
             match unify(u) {
@@ -410,7 +483,7 @@ pub open spec fn call(
                         ..c
                     },
                 ),
-                UOut::Fail => call(db, c, name, args, d, rest, m + 1),
+                UOut::Fail => call(db, c, name, args, d, pre, rest, m + 1),
                 UOut::Out => Step::Stuck,
             }
         },
@@ -425,8 +498,11 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
             Step::Sol
         }
     } else {
-        let rest = c.stack.drop_first();
-        match c.stack[0] {
+        let k = selected(c.stack);
+        let pre = c.stack.take(k as int);
+        let rest = c.stack.skip(k as int + 1);
+        // a naf cut or a negation ends the run, so it is selected at the front (k = 0)
+        match c.stack[k as int] {
             Goal::NafCut(lvl) => fail(Cfg { alts: c.alts.take(lvl as int), ..c }),
             Goal::Lit(g, d) => if d == 0 {
                 fail(Cfg { pruned: true, ..c })
@@ -435,7 +511,8 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
                     Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
                         Step::Next(
                             Cfg {
-                                stack: seq![Goal::Lit(args[0], d), Goal::Lit(args[1], d)] + rest,
+                                stack: pre + seq![Goal::Lit(args[0], d), Goal::Lit(args[1], d)]
+                                    + rest,
                                 ..c
                             },
                         )
@@ -456,7 +533,7 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
                             },
                         )
                     } else {
-                        call(db, c, name, args, d, rest, c.ci)
+                        call(db, c, name, args, d, pre, rest, c.ci)
                     },
                     _ => fail(c),
                 }

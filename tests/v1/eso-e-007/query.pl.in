@@ -1,0 +1,4 @@
+% q compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,q,ace_sha256(e1117b3073db3a8c45de21a042516a72cb293cff33064e59e8a2c7f0ed13229f),ulex(none),vocabulary(none)).
+% Q1: Does the selection succeed?
+'$guideline_query_projection'(goal(','(guideline_operator(actual,A,can),guideline_entity(A,B,q,countable))),answers([answer(B,wh(what))])).

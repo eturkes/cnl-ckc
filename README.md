@@ -59,6 +59,12 @@ program, its formal specification, and its proofs.
   beside it so that the simplification is always visible.
 - The stored questions and answers are prepared demonstrations, not a
   clinical search service.
+- The `ckc` program searches for answers in its own order. It checks
+  an operator box, such as "should" or a negation, after the goal that
+  names the content of the box. A standard Prolog engine searches the
+  same clauses from left to right. For the documents in this
+  repository, both orders give the same answers when both searches
+  end. A standard engine can need much more time for some questions.
 
 ## Install
 

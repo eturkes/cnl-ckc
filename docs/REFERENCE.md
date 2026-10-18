@@ -922,6 +922,43 @@ with class `proof` as `nonground_solution(Qid)`. A malformed query
 file rejects with class `check_load` as `query_file(<why>)`. Manifest
 and composition load failures keep the aggregate classes and details.
 
+The engine searches depth-first and tries clauses in file order. It
+runs the leftmost goal first, with one exception. An operator goal
+`guideline_operator(Outer, Inner, Op)` waits when `Inner` is still a
+variable and a later goal names that variable as its first argument.
+Such a later goal is part of the box content, so its result binds the
+box context. Only the goals before the next negation-as-failure goal
+count, and a conjunction counts with its parts. The engine runs the
+leftmost goal that does not wait. The clause body that resolves this
+goal takes its place, so the waiting operator goal runs directly after
+the head unification that binds its context. A rule whose consequent
+box is a different box therefore fails before its body runs. The same
+rule applies to the goals of a question.
+
+A goal never moves past a negation. A negation runs only after every
+goal to its left has run, together with all goals that those goals
+started. In every certified document, each variable of a negation
+that also occurs outside the negation occurs in an earlier positive
+goal of the same body. For such documents, each negation runs with
+the same bindings as in the left-to-right order. When the search ends
+in both orders, it gives the same answers. A negation in a document
+that the compiler did not certify can run with more bindings than in
+the left-to-right order, and it can then give a different answer. The
+order of the search decides which branch a bound cuts, whether a
+search ends, and which proof the engine finds first.
+
+Each step of the search costs one inference: a call or a retry of a
+goal (the clause scan and the head unification included), the split of
+a conjunction, the entry into a negation, the cut that ends a
+negation, a pruned goal, and a recorded solution. The step that
+reports a yes-no proof costs one inference too.
+
+The compiled Prolog keeps the body order that the compiler writes, so
+a standard Prolog engine searches these documents left to right.
+`recursion-check` checks the leftmost body goal, which is the first
+goal of that order. The engine in this repository can run a later goal
+first.
+
 Committed query artifacts live under `guidelines/<id>/queries/`:
 `<qid>.ace` sources at the root, compiled queries under `pl/`, answer
 artifacts under `answers/`, and proof traces under `traces/`.
@@ -966,8 +1003,11 @@ that clause's rendered document line with its newline. A re-checked
 negation-as-failure goal freezes as a `naf(Goal)` leaf among a
 clause node's children. Root nodes are always clause nodes. The
 prover is a directed first-proof interpreter over the loaded
-clauses. Each row's search runs under depth 1000 and 100000
-inferences. The whole run is bounded at 1000000 inferences. The
+clauses. It selects goals as the answer mode does: an operator goal
+waits for its box content. The goals of a row are separate roots, and
+each root keeps its place in the proof. Each row's search runs under
+depth 1000 and 100000 inferences. Each materialized clause node adds
+one inference to the whole run but not to its row. The whole run is bounded at 1000000 inferences. The
 interpreter's depth measure is its own; it is not comparable with
 the answer mode's engine measure. A negation site re-checks under
 the same bounds. A negation call is safe when no variable of the

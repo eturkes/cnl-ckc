@@ -107,6 +107,7 @@ pub proof fn tcall_preserves(
     name: Seq<u8>,
     args: Seq<Term>,
     depth: nat,
+    pre: Seq<TGoal>,
     rest: Seq<TGoal>,
     ci: nat,
     path: Seq<nat>,
@@ -114,10 +115,10 @@ pub proof fn tcall_preserves(
     requires
         bodies_wf(db),
         aux_valid(db, roots, c, aux),
-        c.stack == seq![TGoal::Lit(Term::Comp(name, args), depth, path)] + rest,
+        c.stack == pre + seq![TGoal::Lit(Term::Comp(name, args), depth, path)] + rest,
     ensures
-        continued(db, roots, tcall(db, c, name, args, depth, rest, ci, path)),
-        !(tcall(db, c, name, args, depth, rest, ci, path) is Sol),
+        continued(db, roots, tcall(db, c, name, args, depth, pre, rest, ci, path)),
+        !(tcall(db, c, name, args, depth, pre, rest, ci, path) is Sol),
     decreases db.len() - ci,
 {
     hide(tunify);
@@ -130,11 +131,11 @@ pub proof fn tcall_preserves(
         Option::Some(m) => {
             let cl = db[m as int];
             let body = tbody_goals(cl.body, c.fresh, (depth - 1) as nat, path);
-            let stack2 = body + rest;
+            let stack2 = pre + body + rest;
             let pairs = zip(args, args_of(shift(cl.head, c.fresh)));
             match tunify(pairs, stack2) {
                 TUni::Fail => {
-                    tcall_preserves(db, roots, c, aux, name, args, depth, rest, m + 1, path);
+                    tcall_preserves(db, roots, c, aux, name, args, depth, pre, rest, m + 1, path);
                 },
                 TUni::Out => {},
                 TUni::Ok(out) => {
@@ -157,11 +158,15 @@ pub proof fn tcall_preserves(
                         alts,
                         pruned: c.pruned,
                     };
-                    assert(c.stack.drop_first() =~= rest);
-                    cuts_tail(c.stack, c.alts.len());
+                    let n = pre.len() as int;
+                    assert(c.stack.take(n) =~= pre);
+                    assert(c.stack.skip(n + 1) =~= rest);
+                    super::select::cuts_parts(c.stack, n, c.alts.len());
+                    cuts_mono(pre, c.alts.len(), alts.len());
                     cuts_mono(rest, c.alts.len(), alts.len());
                     tbody_cuts(cl.body, c.fresh, (depth - 1) as nat, path, alts.len());
-                    cuts_add(body, rest, alts.len());
+                    cuts_add(pre, body, alts.len());
+                    cuts_add(pre + body, rest, alts.len());
                     tunify_frames(pairs, stack2);
                     cuts_frames(stack2, out, alts.len());
                     match aux.current {
@@ -176,6 +181,7 @@ pub proof fn tcall_preserves(
                                 args,
                                 depth,
                                 path,
+                                pre,
                                 rest,
                                 m,
                                 out,
@@ -196,15 +202,19 @@ pub proof fn tcall_preserves(
                             continued_next(db, roots, nc, na);
                         },
                         Option::None => {
-                            in_naf_tail(c.stack);
-                            in_naf_suffix(body, rest);
+                            super::select::in_naf_splice(
+                                pre,
+                                TGoal::Lit(Term::Comp(name, args), depth, path),
+                                rest,
+                                body,
+                            );
                             in_naf_frames(stack2, out);
                             let na = Aux { current: Option::None, saved };
                             assert(aux_valid(db, roots, nc, na));
                             continued_next(db, roots, nc, na);
                         },
                     }
-                    assert(tcall(db, c, name, args, depth, rest, ci, path) == TStep::Next(nc));
+                    assert(tcall(db, c, name, args, depth, pre, rest, ci, path) == TStep::Next(nc));
                 },
             }
         },
@@ -220,10 +230,14 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
         tstep(db, c) matches TStep::Sol(log) ==> c.stack.len() == 0 && log == c.log,
 {
     if c.stack.len() > 0 {
-        let rest = c.stack.drop_first();
-        assert(seq![c.stack[0]] + rest =~= c.stack);
-        match c.stack[0] {
+        super::select::tsel_facts(c.stack);
+        let k = tselected(c.stack);
+        let pre = c.stack.take(k as int);
+        let rest = c.stack.skip(k as int + 1);
+        super::select::split_at(c.stack, k as int);
+        match c.stack[k as int] {
             TGoal::NafCut(lvl) => {
+                assert(k == 0);
                 assert(goal_frame(c.stack[0]).0);
                 assert(lvl < c.alts.len());
                 match c.alts[lvl as int] {
@@ -246,18 +260,23 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
                                     TGoal::Lit(args[0], depth, path),
                                     TGoal::Lit(args[1], depth, path),
                                 ];
-                                let nc = TCfg { stack: prefix + rest, ..c };
+                                let nc = TCfg { stack: pre + prefix + rest, ..c };
                                 match aux.current {
                                     Option::Some(cert) => {
-                                        outer_literal_shape(db, roots, snapshot(c), cert, 0);
+                                        outer_literal_shape(db, roots, snapshot(c), cert, k as int);
                                         assert(args.len() != 2);
                                     },
                                     Option::None => {
-                                        in_naf_tail(c.stack);
-                                        in_naf_suffix(prefix, rest);
-                                        cuts_tail(c.stack, c.alts.len());
+                                        super::select::in_naf_splice(
+                                            pre,
+                                            c.stack[k as int],
+                                            rest,
+                                            prefix,
+                                        );
+                                        super::select::cuts_parts(c.stack, k as int, c.alts.len());
                                         assert(cuts_below(prefix, c.alts.len()));
-                                        cuts_add(prefix, rest, c.alts.len());
+                                        cuts_add(pre, prefix, c.alts.len());
+                                        cuts_add(pre + prefix, rest, c.alts.len());
                                         let na = Aux { current: Option::None, saved: aux.saved };
                                         assert(aux_valid(db, roots, nc, na));
                                         continued_next(db, roots, nc, na);
@@ -270,6 +289,8 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
                             ) {
                                 tfail_preserves(db, roots, TCfg { pruned: true, ..c }, aux.saved);
                             } else if name == naf_name() && args.len() == 1 {
+                                assert(k == 0);
+                                assert(rest =~= c.stack.drop_first());
                                 let inner = args[0];
                                 assert(args =~= seq![inner]);
                                 let a = TAlt::Naf {
@@ -280,6 +301,7 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
                                     inner,
                                     pruned: c.pruned,
                                 };
+                                assert(seq![c.stack[0]] + rest =~= c.stack);
                                 naf_alternative(db, roots, c, aux, inner, depth, path, rest);
                                 saved_push(db, roots, c.alts, aux.saved, a, aux.current);
                                 let alts = c.alts.push(a);
@@ -310,6 +332,7 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
                                     name,
                                     args,
                                     depth,
+                                    pre,
                                     rest,
                                     c.ci,
                                     path,

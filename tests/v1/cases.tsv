@@ -531,3 +531,122 @@ q18-k1-036	target	check	2	1	input.pl
 q18-k1-037	target	check	2	1	input.pl
 q18-k1-038	target	check	2	1	input.pl
 q18-k1-039	target	check	2	1	input.pl
+eso-a-001	target	answer	0	0	manifest.tsv query.pl
+eso-a-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-a-001	check-doc	check	0	0	doc.pl
+eso-a-001	check-query	check	0	0	query.pl
+eso-b-001	target	answer	0	0	manifest.tsv query.pl
+eso-b-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-b-001	check-doc	check	0	0	doc.pl
+eso-b-001	check-query	check	0	0	query.pl
+eso-c-001	target	answer	0	0	manifest.tsv query.pl
+eso-c-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-c-001	check-doc	check	0	0	doc.pl
+eso-c-001	check-query	check	0	0	query.pl
+eso-c-002	target	answer	0	0	manifest.tsv query.pl
+eso-c-002	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-c-002	check-doc	check	0	0	doc.pl
+eso-c-002	check-query	check	0	0	query.pl
+eso-d-001	target	answer	0	0	manifest.tsv query.pl
+eso-d-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-d-001	check-doc	check	0	0	doc.pl
+eso-d-001	check-query	check	0	0	query.pl
+eso-e-001	target	answer	0	0	manifest.tsv query.pl
+eso-e-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-e-001	check-doc	check	0	0	doc.pl
+eso-e-001	check-query	check	0	0	query.pl
+eso-e-002	target	answer	0	0	manifest.tsv query.pl
+eso-e-002	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-e-002	check-doc	check	0	0	doc.pl
+eso-e-002	check-query	check	0	0	query.pl
+eso-e-003	target	answer	0	0	manifest.tsv query.pl
+eso-e-003	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-e-003	check-doc	check	0	0	doc.pl
+eso-e-003	check-query	check	0	0	query.pl
+eso-e-004	target	answer	0	0	manifest.tsv query.pl
+eso-e-004	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-e-004	check-doc	check	0	0	doc.pl
+eso-e-004	check-query	check	0	0	query.pl
+eso-e-005	target	answer	0	0	manifest.tsv query.pl
+eso-e-005	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-e-005	check-doc	check	0	0	doc.pl
+eso-e-005	check-query	check	0	0	query.pl
+eso-e-006	target	answer	0	0	manifest.tsv query.pl
+eso-e-006	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-e-006	check-doc	check	0	0	doc.pl
+eso-e-006	check-query	check	0	0	query.pl
+eso-f-001	target	answer	0	0	manifest.tsv query.pl
+eso-f-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-f-001	check-doc	check	0	0	doc.pl
+eso-f-001	check-query	check	0	0	query.pl
+eso-f-002	target	answer	0	0	manifest.tsv query.pl
+eso-f-002	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-f-002	check-doc	check	0	0	doc.pl
+eso-f-002	check-query	check	0	0	query.pl
+eso-g-001	target	answer	0	0	manifest.tsv query.pl
+eso-g-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-g-001	check-doc	check	0	0	doc.pl
+eso-g-001	check-query	check	0	0	query.pl
+eso-h-001	target	answer	0	0	manifest.tsv query.pl
+eso-h-001	check-doc	check	0	0	doc.pl
+eso-h-001	check-query	check	0	0	query.pl
+eso-h-002	target	answer	0	0	manifest.tsv query.pl
+eso-h-002	check-doc	check	0	0	doc.pl
+eso-h-002	check-query	check	0	0	query.pl
+eso-h-003	target	answer	0	0	manifest.tsv query.pl
+eso-h-003	check-doc	check	0	0	doc.pl
+eso-h-003	check-query	check	0	0	query.pl
+eso-h-004	target	answer	0	0	manifest.tsv query.pl
+eso-h-004	check-doc	check	0	0	doc.pl
+eso-h-004	check-query	check	0	0	query.pl
+eso-h-005	target	trace	0	0	manifest.tsv query.pl answers.pl
+eso-h-005	check-doc	check	0	0	doc.pl
+eso-h-005	check-query	check	0	0	query.pl
+eso-i-001	target	answer	0	0	manifest.tsv query.pl
+eso-i-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-i-001	check-doc	check	0	0	doc.pl
+eso-i-001	check-query	check	0	0	query.pl
+eso-j-001	target	answer	0	0	manifest.tsv query.pl
+eso-j-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-j-001	check-doc	check	0	0	doc.pl
+eso-j-001	check-query	check	0	0	query.pl
+eso-k-001	target	answer	0	0	manifest.tsv query.pl
+eso-k-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-k-001	check-doc	check	0	0	doc.pl
+eso-k-001	check-query	check	0	0	query.pl
+eso-k-002	target	answer	0	0	manifest.tsv query.pl
+eso-k-002	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-k-002	check-doc	check	0	0	doc.pl
+eso-k-002	check-query	check	0	0	query.pl
+eso-k-003	target	answer	0	0	manifest.tsv query.pl
+eso-k-003	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-k-003	check-doc	check	0	0	doc.pl
+eso-k-003	check-query	check	0	0	query.pl
+eso-l-001	target	answer	0	0	manifest.tsv query.pl
+eso-l-001	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-l-001	check-doc	check	0	0	doc.pl
+eso-l-001	check-query	check	0	0	query.pl
+eso-l-002	target	answer	0	0	manifest.tsv query.pl
+eso-l-002	trace	trace	0	0	manifest.tsv query.pl answers.pl
+eso-l-002	check-doc	check	0	0	doc.pl
+eso-l-002	check-query	check	0	0	query.pl
+eso-m-001	target	answer	0	0	manifest.tsv query.pl
+eso-m-001	shallow	answer	0	0	manifest.tsv shallow.pl
+eso-m-001	check-doc	check	0	0	doc.pl
+eso-m-001	check-query	check	0	0	query.pl
+eso-m-001	check-shallow	check	0	0	shallow.pl
+eso-m-002	target	answer	0	0	manifest.tsv query.pl
+eso-m-002	shallow	answer	0	0	manifest.tsv shallow.pl
+eso-m-002	check-doc	check	0	0	doc.pl
+eso-m-002	check-query	check	0	0	query.pl
+eso-m-002	check-shallow	check	0	0	shallow.pl
+eso-e-007	target	answer	1	1	manifest.tsv query.pl
+eso-e-007	check-doc	check	0	0	doc.pl
+eso-e-007	check-query	check	0	0	query.pl
+eso-f-003	check-doc	check	0	0	doc.pl
+eso-f-003	target	answer	0	0	manifest.tsv query.pl
+eso-f-003	check-target	check	0	0	query.pl
+eso-f-003	below	answer	0	0	manifest.tsv below.pl
+eso-f-003	check-below	check	0	0	below.pl
+eso-f-003	above	answer	0	0	manifest.tsv above.pl
+eso-f-003	check-above	check	0	0	above.pl

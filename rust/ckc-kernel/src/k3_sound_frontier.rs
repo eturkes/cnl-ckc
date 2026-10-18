@@ -201,14 +201,15 @@ pub proof fn covered_move(
     log: Seq<(Seq<nat>, TEv)>,
     p: Seq<nat>,
     ev: TEv,
+    pre: Seq<Seq<nat>>,
     rest: Seq<Seq<nat>>,
     kids: Seq<Seq<nat>>,
     q: Seq<nat>,
 )
     requires
-        covered(log, seq![p] + rest, q),
+        covered(log, pre + seq![p] + rest, q),
     ensures
-        covered(log.push((p, ev)), kids + rest, q),
+        covered(log.push((p, ev)), pre + kids + rest, q),
 {
     if logged(log, q) {
         ev_append(log, seq![(p, ev)], q);
@@ -216,38 +217,45 @@ pub proof fn covered_move(
     } else if q == p {
         ev_push(log, p, ev);
     } else {
-        let old = seq![p] + rest;
+        let old = pre + seq![p] + rest;
+        let front = pre + kids + rest;
         let i = choose|i: int| 0 <= i < old.len() && old[i] == q;
-        assert(i > 0);
-        assert(rest[i - 1] == q);
-        assert((kids + rest)[kids.len() + i - 1] == q);
-        assert((kids + rest).contains(q));
+        if i < pre.len() {
+            assert(front[i] == q);
+        } else {
+            assert(i > pre.len());
+            assert(rest[i - pre.len() - 1] == q);
+            assert(front[pre.len() + kids.len() + i - pre.len() - 1] == q);
+        }
+        assert(front.contains(q));
     }
 }
 
+// The selected position `p` (behind `pre`, ahead of `rest`) is replaced by its event's children.
 pub proof fn cover_replace(
     db: Seq<DocClause>,
     roots: Seq<Term>,
     log: Seq<(Seq<nat>, TEv)>,
+    pre: Seq<Seq<nat>>,
     p: Seq<nat>,
     ev: TEv,
     rest: Seq<Seq<nat>>,
 )
     requires
-        cover_log(db, roots, log, seq![p] + rest),
+        cover_log(db, roots, log, pre + seq![p] + rest),
         ev matches TEv::Clause(m) ==> m < db.len(),
     ensures
-        cover_log(db, roots, log.push((p, ev)), event_children(db, p, ev) + rest),
+        cover_log(db, roots, log.push((p, ev)), pre + event_children(db, p, ev) + rest),
 {
     let kids = event_children(db, p, ev);
     let next = log.push((p, ev));
-    let front = kids + rest;
+    let front = pre + kids + rest;
     assert forall|i: int| 0 <= i < roots.len() implies #[trigger] covered(
         next,
         front,
         seq![i as nat],
     ) by {
-        covered_move(log, p, ev, rest, kids, seq![i as nat]);
+        covered_move(log, p, ev, pre, rest, kids, seq![i as nat]);
     }
     assert forall|j: int| 0 <= j < next.len() implies #[trigger] cover_event(
         db,
@@ -257,14 +265,14 @@ pub proof fn cover_replace(
         next[j].1,
     ) by {
         if j < log.len() {
-            assert(cover_event(db, log, seq![p] + rest, log[j].0, log[j].1));
+            assert(cover_event(db, log, pre + seq![p] + rest, log[j].0, log[j].1));
             if let TEv::Clause(m) = log[j].1 {
                 assert forall|i: int| 0 <= i < db[m as int].body.len() implies #[trigger] covered(
                     next,
                     front,
                     log[j].0.push(i as nat),
                 ) by {
-                    covered_move(log, p, ev, rest, kids, log[j].0.push(i as nat));
+                    covered_move(log, p, ev, pre, rest, kids, log[j].0.push(i as nat));
                 }
             }
         } else {
@@ -275,7 +283,7 @@ pub proof fn cover_replace(
                     p.push(i as nat),
                 ) by {
                     assert(kids[i] == p.push(i as nat));
-                    assert(front[i] == p.push(i as nat));
+                    assert(front[pre.len() + i] == p.push(i as nat));
                     assert(front.contains(p.push(i as nat)));
                 }
             }
@@ -287,35 +295,74 @@ pub proof fn frontier_replace(
     db: Seq<DocClause>,
     roots: Seq<Term>,
     log: Seq<(Seq<nat>, TEv)>,
+    pre: Seq<Seq<nat>>,
     p: Seq<nat>,
     ev: TEv,
     rest: Seq<Seq<nat>>,
 )
     requires
         positioned_log(db, roots, log),
-        frontier_ok(db, roots, log, seq![p] + rest),
+        frontier_ok(db, roots, log, pre + seq![p] + rest),
         ev matches TEv::Clause(m) ==> m < db.len(),
     ensures
-        frontier_ok(db, roots, log.push((p, ev)), event_children(db, p, ev) + rest),
+        frontier_ok(db, roots, log.push((p, ev)), pre + event_children(db, p, ev) + rest),
 {
-    let old = seq![p] + rest;
+    let old = pre + seq![p] + rest;
     let kids = event_children(db, p, ev);
-    let front = kids + rest;
+    let front = pre + kids + rest;
     let next = log.push((p, ev));
-    assert(open_position(db, roots, log, old[0]));
-    assert(old[0] == p);
+    let n = pre.len();
+    let kn = kids.len();
+    assert(open_position(db, roots, log, old[n as int]));
+    assert(old[n as int] == p);
     ev_push(log, p, ev);
+    // old index of a non-kid front position
+    assert forall|i: int| 0 <= i < front.len() && !(n <= i < n + kn) implies #[trigger] front[i]
+        == old[if i < n {
+        i
+    } else {
+        i - kn + 1
+    }] by {
+        if i < n {
+            assert(front[i] == pre[i]);
+            assert(old[i] == pre[i]);
+        } else {
+            assert(front[i] == rest[i - n - kn]);
+            assert(old[i - kn + 1] == rest[i - n - kn]);
+        }
+    }
     assert forall|i: int, j: int| 0 <= i < j < front.len() implies #[trigger] front[i]
         != #[trigger] front[j] by {
-        if j < kids.len() {
-            assert(front[i].last() == i as nat);
-            assert(front[j].last() == j as nat);
-        } else if i < kids.len() {
-            let q = rest[j - kids.len()];
-            assert(open_position(db, roots, log, old[j - kids.len() + 1]));
-            fresh_position_not_child(db, roots, log, q, p, i as nat);
+        let ii = if i < n {
+            i
         } else {
-            assert(old[i - kids.len() + 1] != old[j - kids.len() + 1]);
+            i - kn + 1
+        };
+        let jj = if j < n {
+            j
+        } else {
+            j - kn + 1
+        };
+        if n <= i < n + kn && n <= j < n + kn {
+            assert(front[i] == kids[i - n]);
+            assert(front[j] == kids[j - n]);
+            assert(front[i].last() == (i - n) as nat);
+            assert(front[j].last() == (j - n) as nat);
+        } else if n <= i < n + kn {
+            assert(front[j] == old[jj]);
+            assert(open_position(db, roots, log, old[jj]));
+            assert(front[i] == p.push((i - n) as nat));
+            fresh_position_not_child(db, roots, log, old[jj], p, (i - n) as nat);
+        } else if n <= j < n + kn {
+            assert(front[i] == old[ii]);
+            assert(open_position(db, roots, log, old[ii]));
+            assert(front[j] == p.push((j - n) as nat));
+            fresh_position_not_child(db, roots, log, old[ii], p, (j - n) as nat);
+        } else {
+            assert(front[i] == old[ii]);
+            assert(front[j] == old[jj]);
+            assert(ii < jj);
+            assert(old[ii] != old[jj]);
         }
     }
     assert(unique_paths(front));
@@ -325,18 +372,23 @@ pub proof fn frontier_replace(
         next,
         front[i],
     ) by {
-        if i < kids.len() {
-            assert(front[i] == p.push(i as nat));
+        if n <= i < n + kn {
+            assert(front[i] == kids[i - n]);
+            assert(front[i] == p.push((i - n) as nat));
             assert(front[i].drop_last() =~= p);
-            assert(front[i].last() == i as nat);
-            child_unlogged(db, roots, log, p, ev, i as nat);
+            assert(front[i].last() == (i - n) as nat);
+            child_unlogged(db, roots, log, p, ev, (i - n) as nat);
         } else {
-            let j = i - kids.len();
-            assert(open_position(db, roots, log, old[j + 1]));
-            assert(old[j + 1] == front[i]);
+            let ii = if i < n {
+                i
+            } else {
+                i - kn + 1
+            };
+            assert(front[i] == old[ii]);
+            assert(open_position(db, roots, log, old[ii]));
             position_append(db, roots, log, seq![(p, ev)], front[i]);
             assert(log + seq![(p, ev)] =~= next);
-            assert(old[0] != old[j + 1]);
+            assert(old[n as int] != old[ii]);
             ev_push_other(log, p, ev, front[i]);
         }
     }

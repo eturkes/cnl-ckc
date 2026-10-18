@@ -95,10 +95,11 @@ pub proof fn record_naf(
     assert(slot_valid(db, roots, v, cert, v.stack[0]));
     naf_slot_image(db, roots, v, cert, inner, depth, path);
     cert_positioned(db, roots, v.log, cert.offsets, cert.theta);
-    frontier_replace(db, roots, v.log, path, ev, tail);
-    cover_replace(db, roots, v.log, path, ev, tail);
+    assert(seq![] + seq![path] + tail =~= seq![path] + tail);
+    frontier_replace(db, roots, v.log, seq![], path, ev, tail);
+    cover_replace(db, roots, v.log, seq![], path, ev, tail);
     log_push_unique(v.log, path, ev);
-    assert(event_children(db, path, ev) + tail =~= tail);
+    assert(seq![] + event_children(db, path, ev) + tail =~= tail);
     assert(v.log + extra =~= next.log);
     assert(cert.offsets + more =~= nc.offsets);
     assert(cert.theta + seq![] =~= cert.theta);
@@ -303,6 +304,7 @@ pub proof fn record_clause(
     args: Seq<Term>,
     depth: nat,
     path: Seq<nat>,
+    pre: Seq<TGoal>,
     rest: Seq<TGoal>,
     m: nat,
     out: Seq<TGoal>,
@@ -310,12 +312,12 @@ pub proof fn record_clause(
     requires
         bodies_wf(db),
         outer_valid(db, roots, v, cert),
-        v.stack == seq![TGoal::Lit(Term::Comp(name, args), depth, path)] + rest,
+        v.stack == pre + seq![TGoal::Lit(Term::Comp(name, args), depth, path)] + rest,
         m < db.len(),
         lit_fa(db[m as int].head) == Option::Some((name, args.len())),
         tunify(
             zip(args, args_of(shift(db[m as int].head, v.fresh))),
-            tbody_goals(db[m as int].body, v.fresh, (depth - 1) as nat, path) + rest,
+            pre + tbody_goals(db[m as int].body, v.fresh, (depth - 1) as nat, path) + rest,
         ) == TUni::Ok(out),
     ensures
         exists|nc: Cert| #[trigger]
@@ -335,15 +337,20 @@ pub proof fn record_clause(
     let head = shift(cl.head, v.fresh);
     let pairs = zip(args, args_of(head));
     let body = tbody_goals(cl.body, v.fresh, (depth - 1) as nat, path);
-    let stack2 = body + rest;
+    let stack2 = pre + body + rest;
+    let n = pre.len();
     let oldfront = paths(v.stack);
+    let lead = paths(pre);
     let tail = paths(rest);
-    paths_add(seq![TGoal::Lit(Term::Comp(name, args), depth, path)], rest);
-    assert(paths(seq![TGoal::Lit(Term::Comp(name, args), depth, path)]) =~= seq![path]);
-    assert(oldfront == seq![path] + tail);
-    assert(open_position(db, roots, v.log, oldfront[0]));
-    assert(oldfront[0] == path);
-    assert(slot_valid(db, roots, v, cert, v.stack[0]));
+    let sel = seq![TGoal::Lit(Term::Comp(name, args), depth, path)];
+    paths_add(pre, sel);
+    paths_add(pre + sel, rest);
+    assert(paths(sel) =~= seq![path]);
+    assert(oldfront == lead + seq![path] + tail);
+    assert(v.stack[n as int] == TGoal::Lit(Term::Comp(name, args), depth, path));
+    assert(open_position(db, roots, v.log, oldfront[n as int]));
+    assert(oldfront[n as int] == path);
+    assert(slot_valid(db, roots, v, cert, v.stack[n as int]));
     shift_head_fa(cl.head, name, args.len(), v.fresh);
     shift_bound(cl.head, v.fresh);
     assert(head == Term::Comp(name, args_of(head)));
@@ -363,13 +370,14 @@ pub proof fn record_clause(
     assert(v.log + extra =~= next.log);
     assert(cert.offsets + more =~= nc.offsets);
     cert_positioned(db, roots, v.log, cert.offsets, cert.theta);
-    frontier_replace(db, roots, v.log, path, ev, tail);
-    cover_replace(db, roots, v.log, path, ev, tail);
+    frontier_replace(db, roots, v.log, lead, path, ev, tail);
+    cover_replace(db, roots, v.log, lead, path, ev, tail);
     log_push_unique(v.log, path, ev);
     paths_apply(stack2, s);
-    paths_add(body, rest);
+    paths_add(pre, body);
+    paths_add(pre + body, rest);
     tbody_paths(cl.body, v.fresh, (depth - 1) as nat, path);
-    assert(paths(next.stack) == event_children(db, path, ev) + tail);
+    assert(paths(next.stack) == lead + event_children(db, path, ev) + tail);
     raw_append(db, roots, v.log, cert.offsets, extra, more, path);
     position_append(db, roots, v.log, extra, path);
     offset_push(v.log, cert.offsets, path, ev, v.fresh);
@@ -390,10 +398,9 @@ pub proof fn record_clause(
         assert(wf_body_item(cl.body[i]));
         item_absent(cl.body[i], v.fresh, x);
     }
-    assert(tgoal_term(v.stack[0]) == Term::Comp(name, args));
-    clear_after_call(v.log, v.stack, v.fresh, fresh, name, args, name, head, body, s);
-    assert(v.stack.drop_first() =~= rest);
-    assert(body + v.stack.drop_first() =~= stack2);
+    assert(tgoal_term(v.stack[n as int]) == Term::Comp(name, args));
+    assert(v.stack == pre + seq![v.stack[n as int]] + rest);
+    clear_after_call(v.log, v.stack, v.fresh, fresh, name, args, name, head, pre, body, rest, s);
     cert_push(db, roots, v.log, cert.offsets, cert.theta, path, ev, v.fresh, s);
     binds_mono(cert.theta, v.fresh, fresh);
     binds_append(cert.theta, s, fresh);
@@ -404,7 +411,15 @@ pub proof fn record_clause(
         nc,
         out[i],
     ) by {
-        if i < cl.body.len() {
+        if i < n {
+            assert(v.stack[i] == pre[i]);
+            assert(slot_valid(db, roots, v, cert, v.stack[i]));
+            assert(open_position(db, roots, v.log, oldfront[i]));
+            assert(goal_frame(pre[i]).2 == oldfront[i]);
+            slot_extend(db, roots, v, cert, next, nc, extra, more, s, pre[i]);
+            assert(out[i] == tapply(pre[i], s));
+        } else if i < n + cl.body.len() {
+            let c = i - n;
             child_slot(
                 db,
                 roots,
@@ -412,23 +427,25 @@ pub proof fn record_clause(
                 nc,
                 path,
                 m,
-                i as nat,
+                c as nat,
                 v.fresh,
                 cert.theta,
                 s,
                 (depth - 1) as nat,
             );
+            assert(stack2[i] == body[c]);
             assert(out[i] == TGoal::Lit(
-                apply(item_term(cl.body[i], v.fresh), s),
+                apply(item_term(cl.body[c], v.fresh), s),
                 (depth - 1) as nat,
-                path.push(i as nat),
+                path.push(c as nat),
             ));
         } else {
-            let j = i - cl.body.len();
-            assert(v.stack[j + 1] == rest[j]);
-            assert(slot_valid(db, roots, v, cert, v.stack[j + 1]));
-            assert(open_position(db, roots, v.log, oldfront[j + 1]));
-            assert(goal_frame(rest[j]).2 == oldfront[j + 1]);
+            let j = i - n - cl.body.len();
+            assert(stack2[i] == rest[j]);
+            assert(v.stack[n + 1 + j] == rest[j]);
+            assert(slot_valid(db, roots, v, cert, v.stack[n + 1 + j]));
+            assert(open_position(db, roots, v.log, oldfront[n + 1 + j]));
+            assert(goal_frame(rest[j]).2 == oldfront[n + 1 + j]);
             slot_extend(db, roots, v, cert, next, nc, extra, more, s, rest[j]);
             assert(out[i] == tapply(rest[j], s));
         }

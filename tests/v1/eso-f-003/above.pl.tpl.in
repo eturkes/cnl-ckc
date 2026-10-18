@@ -1,0 +1,5 @@
+@@sha256 dcf2a6470f7be2667a8f861e080c9e26d0c3c9c416a520f1d6c1072e51669df6
+% q compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,q,ace_sha256(e1117b3073db3a8c45de21a042516a72cb293cff33064e59e8a2c7f0ed13229f),ulex(none),vocabulary(none)).
+% Q1: Does the selection succeed?
+@@tree 50001	guideline_operator(actual,A,can)	guideline_entity(A,witness,q,countable)	'$guideline_query_projection'(goal(	),answers([])).

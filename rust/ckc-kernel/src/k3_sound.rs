@@ -40,6 +40,9 @@ pub mod naf;
 #[path = "k3_sound_record.rs"]
 pub mod record;
 
+#[path = "k3_sound_select.rs"]
+pub mod select;
+
 #[path = "k3_sound_shape.rs"]
 pub mod shapes;
 

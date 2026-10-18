@@ -1,0 +1,2 @@
+% q traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,q,query_sha256('98a48af0b8beff601718ca98eafd6f7bf3e46dbc5b811fd2662340bf95e0f1c7'),answers_sha256(f79f1a0d8c02306b9574db7c7d7c7b7c11ea08121d01909dcee8535cea76518d),result(yes(proved([clause(sentence(doc,1),clause_sha256('1b5efc23397b975666ec288d59b3990fbc81e68c70a20303ad448a1f49c4360f'),[naf(guideline_entity(actual,a,blocked,countable))]),clause(sentence(doc,1),clause_sha256(de530b716430c43b979eb6b6e20cef6af8045acfff115c9ca97c5b5af0c7b618),[])])))).

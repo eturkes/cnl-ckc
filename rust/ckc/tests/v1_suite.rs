@@ -213,6 +213,7 @@ fn v1_suite() {
                         && !r.case.starts_with("q15-")
                         && !r.case.starts_with("q17-")
                         && !r.case.starts_with("q18-")
+                        && !r.case.starts_with("eso-")
                 }
                 p => r.case.starts_with(p),
             })
@@ -227,6 +228,7 @@ fn v1_suite() {
     assert_eq!(census("q15-"), (4, 0), "tests/v1 q15 row census");
     assert_eq!(census("q17-"), (3, 0), "tests/v1 q17 row census");
     assert_eq!(census("q18-"), (39, 0), "tests/v1 q18 row census");
+    assert_eq!(census("eso-"), (30, 89), "tests/v1 ESO row census");
     let mut cases: Vec<&str> = rows.iter().map(|r| r.case.as_str()).collect();
     cases.dedup();
     for case in &cases {

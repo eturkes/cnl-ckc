@@ -19,7 +19,7 @@ pub open spec fn root_terms(nodes: Seq<ENode>, roots: Seq<usize>) -> Seq<Term> {
     Seq::new(roots.len(), |i: int| nodes[roots[i] as int].term@)
 }
 
-proof fn node_var_model(nodes: Seq<ENode>, i: int, key: usize)
+pub proof fn node_var_model(nodes: Seq<ENode>, i: int, key: usize)
     requires
         0 <= i < nodes.len(),
         node_ok(nodes, i),
@@ -3758,6 +3758,7 @@ pub fn step_simple(
         arena_ok(arena),
         cfg_valid(arena.nodes@, &initial),
         !predicate_dispatch(cfg_view(arena.nodes@, &initial)),
+        ckc_spec::engine::selected(cfg_view(arena.nodes@, &initial).stack) == 0,
     ensures
         step_valid(arena.nodes@, &step),
         step_base(&step, initial.base),
@@ -3798,6 +3799,8 @@ pub fn step_simple(
         reveal(goal_view);
         reveal(ckc_spec::engine::step);
         reveal(predicate_dispatch);
+        assert(before.stack.take(0) =~= Seq::<ckc_spec::engine::Goal>::empty());
+        assert(before.stack.skip(1) =~= before.stack.drop_first());
     }
     match front {
         EGoal::NafCut { level } => {
@@ -3896,6 +3899,25 @@ pub fn step_simple(
                                 ckc_spec::engine::Goal::Lit(arena@[child_roots@[0] as int], depth as nat),
                                 ckc_spec::engine::Goal::Lit(arena@[child_roots@[1] as int], depth as nat),
                             ] + rest_model);
+                            assert(Seq::<ckc_spec::engine::Goal>::empty() + seq![
+                                ckc_spec::engine::Goal::Lit(
+                                    arena@[child_roots@[0] as int],
+                                    depth as nat,
+                                ),
+                                ckc_spec::engine::Goal::Lit(
+                                    arena@[child_roots@[1] as int],
+                                    depth as nat,
+                                ),
+                            ] =~= seq![
+                                ckc_spec::engine::Goal::Lit(
+                                    arena@[child_roots@[0] as int],
+                                    depth as nat,
+                                ),
+                                ckc_spec::engine::Goal::Lit(
+                                    arena@[child_roots@[1] as int],
+                                    depth as nat,
+                                ),
+                            ]);
                         }
                         proof {
                             assert(cfg_valid(arena.nodes@, &c));
@@ -4802,13 +4824,16 @@ proof fn call_no_match(
     name: Seq<u8>,
     args: Seq<Term>,
     depth: nat,
+    pre: Seq<ckc_spec::engine::Goal>,
     rest: Seq<ckc_spec::engine::Goal>,
     from: nat,
 )
     requires
         ckc_spec::engine::next_match(db, name, args.len(), from) is None,
     ensures
-        ckc_spec::engine::call(db, c, name, args, depth, rest, from) == ckc_spec::engine::fail(c),
+        ckc_spec::engine::call(db, c, name, args, depth, pre, rest, from) == ckc_spec::engine::fail(
+            c,
+        ),
 {
     reveal(ckc_spec::engine::call);
 }
@@ -4819,6 +4844,7 @@ proof fn call_match(
     name: Seq<u8>,
     args: Seq<Term>,
     depth: nat,
+    pre: Seq<ckc_spec::engine::Goal>,
     rest: Seq<ckc_spec::engine::Goal>,
     from: nat,
     matched: nat,
@@ -4833,7 +4859,7 @@ proof fn call_match(
                     ckc_spec::engine::shift(db[matched as int].head, c.fresh),
                 ),
             ),
-            stack: ckc_spec::engine::body_goals(
+            stack: pre + ckc_spec::engine::body_goals(
                 db[matched as int].body,
                 c.fresh,
                 (depth - 1) as nat,
@@ -4841,7 +4867,7 @@ proof fn call_match(
             sol: c.sol,
         }),
     ensures
-        ckc_spec::engine::call(db, c, name, args, depth, rest, from)
+        ckc_spec::engine::call(db, c, name, args, depth, pre, rest, from)
             == match ckc_spec::engine::unify(u) {
             ckc_spec::engine::UOut::Ok(stack, sol) => ckc_spec::engine::Step::Next(
                 ckc_spec::engine::Cfg {
@@ -4866,6 +4892,7 @@ proof fn call_match(
                 name,
                 args,
                 depth,
+                pre,
                 rest,
                 matched + 1,
             ),
@@ -4873,6 +4900,53 @@ proof fn call_match(
         },
 {
     reveal(ckc_spec::engine::call);
+}
+
+// The selected goal's `pre` goals ride ahead of the prepared body, so the
+// head's bindings reach them too (contract eso D3).
+fn prefix_state(
+    arena: &ETermArena,
+    pre: &Vec<EGoal>,
+    prepared: EBoundState,
+    Ghost(level): Ghost<nat>,
+) -> (out: EBoundState)
+    requires
+        arena_ok(arena),
+        bound_state_valid(arena.nodes@, &prepared),
+        goals_levels(prepared.stack@, level),
+        goals_valid(arena.nodes@, pre@),
+        goals_levels(pre@, level),
+    ensures
+        bound_state_valid(arena.nodes@, &out),
+        goals_levels(out.stack@, level),
+        bound_state_view(arena.nodes@, &out) == (ckc_spec::engine::UState {
+            stack: goals_view(arena.nodes@, pre@) + bound_state_view(arena.nodes@, &prepared).stack,
+            ..bound_state_view(arena.nodes@, &prepared)
+        }),
+{
+    let EBoundState { pairs, stack, sol } = prepared;
+    let mut tail = stack;
+    let ghost suffix = tail@;
+    let mut out = pre.clone();
+    proof {
+        assert(out@ =~= pre@);
+        goals_view_concat(arena.nodes@, pre@, suffix);
+    }
+    out.append(&mut tail);
+    proof {
+        assert(out@ == pre@ + suffix);
+        assert forall|i: int| 0 <= i < out@.len() implies {
+            &&& goal_valid(arena.nodes@, &out@[i])
+            &&& goal_level_valid(&out@[i], level)
+        } by {
+            if i < pre@.len() {
+                assert(out@[i] == pre@[i]);
+            } else {
+                assert(out@[i] == suffix[i - pre@.len()]);
+            }
+        }
+    }
+    EBoundState { pairs, stack: out, sol }
 }
 
 #[verifier::rlimit(5000)]
@@ -4883,6 +4957,7 @@ pub fn call(
     name: Vec<u8>,
     args: Vec<usize>,
     depth: usize,
+    pre: Vec<EGoal>,
     rest: Vec<EGoal>,
     from: usize,
 ) -> (out: EStep)
@@ -4891,6 +4966,8 @@ pub fn call(
         db_valid(old(arena).nodes@, db@),
         cfg_valid(old(arena).nodes@, &initial),
         roots_valid(old(arena).nodes@, args@),
+        goals_valid(old(arena).nodes@, pre@),
+        goals_levels(pre@, initial.alts@.len()),
         goals_valid(old(arena).nodes@, rest@),
         goals_levels(rest@, initial.alts@.len()),
         depth > 0,
@@ -4905,6 +4982,7 @@ pub fn call(
             name@,
             root_terms(old(arena).nodes@, args@),
             depth as nat,
+            goals_view(old(arena).nodes@, pre@),
             goals_view(old(arena).nodes@, rest@),
             from as nat,
         ),
@@ -4914,6 +4992,7 @@ pub fn call(
     let ghost model_db = db_view(base, db@);
     let ghost c = cfg_view(base, &initial);
     let ghost actual_args = root_terms(base, args@);
+    let ghost prefix = goals_view(base, pre@);
     let ghost continuation = goals_view(base, rest@);
     let mut ci = from;
     while ci < db.len()
@@ -4925,12 +5004,15 @@ pub fn call(
             db_valid(base, db@),
             cfg_valid(base, &initial),
             roots_valid(base, args@),
+            goals_valid(base, pre@),
+            goals_levels(pre@, initial.alts@.len()),
             goals_valid(base, rest@),
             goals_levels(rest@, initial.alts@.len()),
             depth > 0,
             model_db == db_view(base, db@),
             c == cfg_view(base, &initial),
             actual_args == root_terms(base, args@),
+            prefix == goals_view(base, pre@),
             continuation == goals_view(base, rest@),
             ckc_spec::engine::call(
                 model_db,
@@ -4938,6 +5020,7 @@ pub fn call(
                 name@,
                 actual_args,
                 depth as nat,
+                prefix,
                 continuation,
                 from as nat,
             ) == ckc_spec::engine::call(
@@ -4946,6 +5029,7 @@ pub fn call(
                 name@,
                 actual_args,
                 depth as nat,
+                prefix,
                 continuation,
                 ci as nat,
             ),
@@ -4955,6 +5039,7 @@ pub fn call(
             db_models_prefix(base, arena.nodes@, db@);
             cfg_models_prefix(base, arena.nodes@, &initial);
             roots_models_prefix(base, arena.nodes@, args@);
+            goals_models_prefix(base, arena.nodes@, pre@);
             goals_models_prefix(base, arena.nodes@, rest@);
         }
         let matched = next_match(arena, db, &name, args.len(), ci);
@@ -4967,6 +5052,7 @@ pub fn call(
                         name@,
                         actual_args,
                         depth as nat,
+                        prefix,
                         continuation,
                         ci as nat,
                     );
@@ -4987,7 +5073,7 @@ pub fn call(
                                     ckc_spec::engine::shift(model_db[m as int].head, c.fresh),
                                 ),
                             ),
-                            stack: ckc_spec::engine::body_goals(
+                            stack: prefix + ckc_spec::engine::body_goals(
                                 model_db[m as int].body,
                                 c.fresh,
                                 (depth - 1) as nat,
@@ -5001,6 +5087,7 @@ pub fn call(
                             name@,
                             actual_args,
                             depth as nat,
+                            prefix,
                             continuation,
                             ci as nat,
                             m as nat,
@@ -5010,7 +5097,7 @@ pub fn call(
                     ci = m + 1;
                     continue;
                 }
-                let (state, fresh) = prepare_clause(
+                let (prepared, fresh) = prepare_clause(
                     arena,
                     &db[m],
                     &args,
@@ -5020,8 +5107,37 @@ pub fn call(
                     depth - 1,
                     Ghost(initial.alts@.len()),
                 );
+                let ghost pv = bound_state_view(arena.nodes@, &prepared);
+                proof {
+                    goals_models_prefix(base, arena.nodes@, pre@);
+                    assert(pv == (ckc_spec::engine::UState {
+                        pairs: ckc_spec::engine::zip(
+                            actual_args,
+                            ckc_spec::engine::args_of(
+                                ckc_spec::engine::shift(model_db[m as int].head, c.fresh),
+                            ),
+                        ),
+                        stack: ckc_spec::engine::body_goals(
+                            model_db[m as int].body,
+                            c.fresh,
+                            (depth - 1) as nat,
+                        ) + continuation,
+                        sol: c.sol,
+                    }));
+                }
+                let state = prefix_state(arena, &pre, prepared, Ghost(initial.alts@.len()));
                 let ghost u = bound_state_view(arena.nodes@, &state);
                 proof {
+                    assert(u.stack == prefix + pv.stack);
+                    assert(prefix + (ckc_spec::engine::body_goals(
+                        model_db[m as int].body,
+                        c.fresh,
+                        (depth - 1) as nat,
+                    ) + continuation) =~= prefix + ckc_spec::engine::body_goals(
+                        model_db[m as int].body,
+                        c.fresh,
+                        (depth - 1) as nat,
+                    ) + continuation);
                     goals_levels_model(arena.nodes@, state.stack@, initial.alts@.len());
                     unify_preserves_levels(u, initial.alts@.len());
                     call_match(
@@ -5030,6 +5146,7 @@ pub fn call(
                         name@,
                         actual_args,
                         depth as nat,
+                        prefix,
                         continuation,
                         ci as nat,
                         m as nat,
@@ -5062,7 +5179,16 @@ pub fn call(
     proof {
         cfg_models_prefix(base, arena.nodes@, &initial);
         reveal(ckc_spec::engine::next_match);
-        call_no_match(model_db, c, name@, actual_args, depth as nat, continuation, ci as nat);
+        call_no_match(
+            model_db,
+            c,
+            name@,
+            actual_args,
+            depth as nat,
+            prefix,
+            continuation,
+            ci as nat,
+        );
     }
     fail(arena, initial)
 }
@@ -5155,18 +5281,192 @@ pub fn step(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: E
         ),
 {
     let ghost before = cfg_view(arena.nodes@, &initial);
+    proof {
+        reveal(cfg_valid);
+    }
+    let k = crate::k2_select::selected_exec(arena, &initial.stack);
+    if k > 0 {
+        proof {
+            crate::k2_select::selected_facts(before.stack);
+        }
+        return step_selected(arena, db, initial, k);
+    }
     match predicate_parts(arena, &initial) {
         None => step_simple(arena, initial, Ghost(db_view(arena.nodes@, db@))),
         Some((name, args, depth)) => {
             let mut rest = initial.stack.clone();
             let unused = rest.remove(0);
             let from = initial.ci;
+            let pre: Vec<EGoal> = Vec::new();
             proof {
                 assert_seqs_equal!(goals_view(arena.nodes@, rest@) == before.stack.drop_first());
+                assert(before.stack.skip(1) =~= before.stack.drop_first());
+                assert(goals_view(arena.nodes@, pre@) =~= before.stack.take(0));
                 reveal(ckc_spec::engine::step);
                 reveal(predicate_dispatch);
             }
-            call(arena, db, initial, name, args, depth, rest, from)
+            call(arena, db, initial, name, args, depth, pre, rest, from)
+        },
+    }
+}
+
+// A goal selected past the front (contract eso D3): a predicate literal is
+// resolved in place, a conjunction splits in place.
+#[verifier::rlimit(5000)]
+fn step_selected(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg, k: usize) -> (out: EStep)
+    requires
+        arena_ok(old(arena)),
+        db_valid(old(arena).nodes@, db@),
+        cfg_valid(old(arena).nodes@, &initial),
+        0 < k < initial.stack.len(),
+        k == ckc_spec::engine::selected(cfg_view(old(arena).nodes@, &initial).stack),
+        crate::k2_select::run_goal(cfg_view(old(arena).nodes@, &initial).stack[k as int]),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        step_valid(final(arena).nodes@, &out),
+        step_base(&out, initial.base),
+        step_view(final(arena).nodes@, &out) == ckc_spec::engine::step(
+            db_view(old(arena).nodes@, db@),
+            cfg_view(old(arena).nodes@, &initial),
+        ),
+{
+    let ghost before = cfg_view(arena.nodes@, &initial);
+    let ghost nodes = arena.nodes@;
+    proof {
+        reveal(cfg_valid);
+        reveal(cfg_storage_valid);
+        reveal(alt_valid);
+        assert(goal_valid(arena.nodes@, &initial.stack@[k as int]));
+        assert(goal_valid(arena.nodes@.take(initial.mark as int), &initial.stack@[k as int]));
+        assert(goal_level_valid(&initial.stack@[k as int], initial.alts@.len()));
+        reveal(ckc_spec::engine::step);
+    }
+    let goal = initial.stack[k];
+    let mut pre = initial.stack.clone();
+    let mut rest = pre.split_off(k + 1);
+    pre.truncate(k);
+    proof {
+        assert(pre@ =~= initial.stack@.subrange(0, k as int));
+        assert(rest@ =~= initial.stack@.subrange(k as int + 1, initial.stack@.len() as int));
+        assert(goals_view(nodes, pre@) =~= before.stack.take(k as int));
+        assert(goals_view(nodes, rest@) =~= before.stack.skip(k as int + 1));
+        assert forall|i: int| 0 <= i < pre@.len() implies {
+            &&& goal_valid(nodes, &pre@[i])
+            &&& goal_valid(nodes.take(initial.mark as int), &pre@[i])
+            &&& goal_level_valid(&pre@[i], initial.alts@.len())
+        } by {
+            assert(pre@[i] == initial.stack@[i]);
+        }
+        assert forall|i: int| 0 <= i < rest@.len() implies {
+            &&& goal_valid(nodes, &rest@[i])
+            &&& goal_valid(nodes.take(initial.mark as int), &rest@[i])
+            &&& goal_level_valid(&rest@[i], initial.alts@.len())
+        } by {
+            assert(rest@[i] == initial.stack@[k + 1 + i]);
+        }
+    }
+    match goal {
+        EGoal::Lit { root, depth } => {
+            proof {
+                assert(before.stack[k as int] == ckc_spec::engine::Goal::Lit(
+                    arena@[root as int],
+                    depth as nat,
+                ));
+            }
+            if depth == 0 {
+                let mut c = initial;
+                c.pruned = true;
+                proof {
+                    assert(cfg_view(arena.nodes@, &c) == ckc_spec::engine::Cfg {
+                        pruned: true,
+                        ..before
+                    });
+                }
+                return fail(arena, c);
+            }
+            proof {
+                reveal(arena_ok);
+                assert(node_ok(arena.nodes@, root as int));
+                reveal(node_ok);
+            }
+            let (name, args) = match &arena.nodes[root].kind {
+                ENodeKind::Comp { name, child_roots, .. } => {
+                    proof {
+                        node_comp_model(arena.nodes@, root as int, name@, child_roots@);
+                    }
+                    (name.clone(), child_roots.clone())
+                },
+                _ => {
+                    proof {
+                        assert(false);
+                    }
+                    (Vec::new(), Vec::new())
+                },
+            };
+            proof {
+                reveal(crate::k2_term::child_terms);
+                assert(root_terms(arena.nodes@, args@) == crate::k2_term::child_terms(
+                    arena.nodes@,
+                    args@,
+                ));
+                assert(arena@[root as int] == Term::Comp(name@, root_terms(arena.nodes@, args@)));
+                assert(forall|j: int| 0 <= j < args@.len() ==> #[trigger] args@[j] < root);
+            }
+            let comma: &[u8] = b",";
+            proof {
+                reveal_byteslit(b",");
+                reveal_strlit(",");
+                reveal(ckc_spec::v1text::ascii);
+                reveal(ckc_spec::engine::comma_name);
+                assert(comma@ == ckc_spec::engine::comma_name());
+            }
+            if args.len() == 2 && crate::k3_front::bytes_equal(&name, comma) {
+                let left = args[0];
+                let right = args[1];
+                let mut c = initial;
+                let mut next = pre;
+                let ghost head = next@;
+                next.push(EGoal::Lit { root: left, depth });
+                next.push(EGoal::Lit { root: right, depth });
+                let ghost tail = rest@;
+                next.append(&mut rest);
+                c.stack = next;
+                proof {
+                    assert(c.stack@ == head + seq![
+                        EGoal::Lit { root: left, depth },
+                        EGoal::Lit { root: right, depth },
+                    ] + tail);
+                    assert forall|i: int| 0 <= i < c.stack@.len() implies {
+                        &&& goal_valid(nodes, &c.stack@[i])
+                        &&& goal_valid(nodes.take(c.mark as int), &c.stack@[i])
+                        &&& goal_level_valid(&c.stack@[i], c.alts@.len())
+                    } by {
+                        if i < head.len() {
+                            assert(c.stack@[i] == head[i]);
+                        } else if i < head.len() + 2 {
+                        } else {
+                            assert(c.stack@[i] == tail[i - head.len() - 2]);
+                        }
+                    }
+                    assert(cfg_storage_valid(arena.nodes@, &c));
+                    assert(cfg_valid(arena.nodes@, &c));
+                    assert_seqs_equal!(goals_view(arena.nodes@, c.stack@)
+                        == before.stack.take(k as int) + seq![
+                            ckc_spec::engine::Goal::Lit(arena@[left as int], depth as nat),
+                            ckc_spec::engine::Goal::Lit(arena@[right as int], depth as nat),
+                        ] + before.stack.skip(k as int + 1));
+                }
+                return EStep::Next(c);
+            }
+            let from = initial.ci;
+            call(arena, db, initial, name, args, depth, pre, rest, from)
+        },
+        EGoal::NafCut { .. } => {
+            proof {
+                assert(false);
+            }
+            fail(arena, initial)
         },
     }
 }

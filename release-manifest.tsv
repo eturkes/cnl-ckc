@@ -10,7 +10,7 @@ meta	generated	release-manifest.tsv
 meta	generated	manifest-sha256.txt
 meta	generated	tagmanifest-sha256.txt
 member	NOTICE	d9ed734ad82b5c34f60d7d95513d3fce86ef5a03620fcfa2f8d835a55eadb361	1401
-member	README-dist.md	f0bb2eacd734b79e39d12062a9ccc391f9430ffbce90626706a851e278752ef3	42212
+member	README-dist.md	ccf59b70d4d4d0f2ec4d25683ddcb3d92705807dde3ded35ad0edec4424f3378	44597
 member	bagit.txt	1712ecfb074bf29c4188ad3421032509159a09739fd604f8fe57038b4ddefcc9	54
 member	data/guidelines/cdc-2022-opioid/README.md	fdc94e5cf41346f1a5ec5195666c2fb691627602572930e043061de603082cfb	13974
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp01.ace	6e0aebe35e96bdf3da641fb34355287c16b504575c5262febeafc343bc3490b1	342

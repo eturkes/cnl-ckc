@@ -925,7 +925,7 @@ pub open spec fn stack_cuts(stack: Seq<TGoal>, alts: Seq<TAlt>, limit: nat) -> b
 }
 
 pub open spec fn call_stack(stack: Seq<TGoal>) -> bool {
-    stack.len() > 0 && match stack[0] {
+    stack.len() > 0 && match stack[tselected(stack) as int] {
         TGoal::Lit(Term::Comp(n, ts), d, _) => d > 0 && !(n == comma_name() && ts.len() == 2) && !(n
             == naf_name() && ts.len() == 1),
         _ => false,
@@ -1247,12 +1247,47 @@ pub proof fn head_pairs_bounded(args: Seq<Term>, cl: DocClause, name: Seq<u8>, o
     }
 }
 
+pub proof fn stack_parts_wf(stack: Seq<TGoal>, k: int, bound: nat, alts: Seq<TAlt>, limit: nat)
+    requires
+        0 <= k < stack.len(),
+        stack_bound(stack, bound),
+        stack_cuts(stack, alts, limit),
+    ensures
+        stack_bound(stack.take(k), bound),
+        stack_bound(stack.skip(k + 1), bound),
+        stack_cuts(stack.take(k), alts, limit),
+        stack_cuts(stack.skip(k + 1), alts, limit),
+        nvars(tgoal_term(stack[k])) <= bound,
+{
+    assert forall|i: int| 0 <= i < stack.take(k).len() implies nvars(
+        tgoal_term(#[trigger] stack.take(k)[i]),
+    ) <= bound by {
+        assert(stack.take(k)[i] == stack[i]);
+    }
+    assert forall|i: int| 0 <= i < stack.skip(k + 1).len() implies nvars(
+        tgoal_term(#[trigger] stack.skip(k + 1)[i]),
+    ) <= bound by {
+        assert(stack.skip(k + 1)[i] == stack[k + 1 + i]);
+    }
+    assert forall|i: int| 0 <= i < stack.take(k).len() implies (#[trigger] stack.take(
+        k,
+    )[i] matches TGoal::NafCut(l) ==> l < limit && alts[l as int] is Naf) by {
+        assert(stack.take(k)[i] == stack[i]);
+    }
+    assert forall|i: int| 0 <= i < stack.skip(k + 1).len() implies (#[trigger] stack.skip(
+        k + 1,
+    )[i] matches TGoal::NafCut(l) ==> l < limit && alts[l as int] is Naf) by {
+        assert(stack.skip(k + 1)[i] == stack[k + 1 + i]);
+    }
+}
+
 pub proof fn tcall_wf(
     db: Seq<DocClause>,
     c: TCfg,
     name: Seq<u8>,
     args: Seq<Term>,
     d: nat,
+    pre: Seq<TGoal>,
     rest: Seq<TGoal>,
     ci: nat,
     path: Seq<nat>,
@@ -1261,9 +1296,9 @@ pub proof fn tcall_wf(
         bodies_wf(db),
         cfg_wf(c),
         call_stack(c.stack),
-        c.stack == seq![TGoal::Lit(Term::Comp(name, args), d, path)] + rest,
+        c.stack == pre + seq![TGoal::Lit(Term::Comp(name, args), d, path)] + rest,
     ensures
-        tcall(db, c, name, args, d, rest, ci, path) matches TStep::Next(c2) ==> cfg_wf(c2),
+        tcall(db, c, name, args, d, pre, rest, ci, path) matches TStep::Next(c2) ==> cfg_wf(c2),
     decreases db.len() - ci,
 {
     match next_match(db, name, args.len(), ci) {
@@ -1274,36 +1309,43 @@ pub proof fn tcall_wf(
             let cl = db[m as int];
             let fresh = c.fresh + clause_nvars(cl);
             let body = tbody_goals(cl.body, c.fresh, (d - 1) as nat, path);
-            let stack2 = body + rest;
+            let stack2 = pre + body + rest;
             let pairs = zip(args, args_of(shift(cl.head, c.fresh)));
             let alt = TAlt::Cl { stack: c.stack, fresh: c.fresh, ci: m + 1, log: c.log };
             let alts = c.alts.push(alt);
-            assert(nvars(tgoal_term(c.stack[0])) <= c.fresh);
+            let n = pre.len() as int;
+            assert(c.stack.take(n) =~= pre);
+            assert(c.stack.skip(n + 1) =~= rest);
+            stack_parts_wf(c.stack, n, c.fresh, c.alts, c.alts.len());
+            assert(nvars(tgoal_term(c.stack[n])) <= c.fresh);
             assert forall|i: int| 0 <= i < cl.body.len() implies wf_body_item(
                 #[trigger] cl.body[i],
             ) by {
                 assert(wf_body_item(db[m as int].body[i]));
             }
             tbody_bounded(cl.body, c.fresh, (d - 1) as nat, path);
-            assert(rest =~= c.stack.drop_first());
-            stack_tail_wf(c.stack, c.fresh, c.alts, c.alts.len());
             assert(alts.take(c.alts.len() as int) =~= c.alts);
             assert(c.alts.take(c.alts.len() as int) =~= c.alts);
             stack_cuts_prefix(c.stack, c.alts, alts, c.alts.len());
+            stack_cuts_prefix(pre, c.alts, alts, c.alts.len());
             stack_cuts_prefix(rest, c.alts, alts, c.alts.len());
             alts_wf_push(c.alts, alt);
+            assert(stack_bound(pre, fresh));
             assert(stack_bound(body, fresh));
             assert(stack_bound(rest, fresh));
-            stack_bound_join(body, rest, fresh);
+            stack_bound_join(pre, body, fresh);
+            stack_bound_join(pre + body, rest, fresh);
+            assert(stack_cuts(pre, alts, alts.len()));
             assert(stack_cuts(body, alts, alts.len()));
             assert(stack_cuts(rest, alts, alts.len()));
-            stack_cuts_join(body, rest, alts, alts.len());
+            stack_cuts_join(pre, body, alts, alts.len());
+            stack_cuts_join(pre + body, rest, alts, alts.len());
             head_pairs_bounded(args, cl, name, c.fresh);
             tunify_bounded(pairs, stack2, fresh);
             tunify_cuts(pairs, stack2, alts, alts.len());
             match tunify(pairs, stack2) {
                 TUni::Ok(_) => {},
-                TUni::Fail => tcall_wf(db, c, name, args, d, rest, m + 1, path),
+                TUni::Fail => tcall_wf(db, c, name, args, d, pre, rest, m + 1, path),
                 TUni::Out => {},
             }
         },
@@ -1318,10 +1360,15 @@ pub proof fn tstep_wf(db: Seq<DocClause>, c: TCfg)
         tstep(db, c) matches TStep::Next(c2) ==> cfg_wf(c2),
 {
     if c.stack.len() > 0 {
-        let rest = c.stack.drop_first();
-        stack_tail_wf(c.stack, c.fresh, c.alts, c.alts.len());
-        match c.stack[0] {
+        super::select::tsel_facts(c.stack);
+        let k = tselected(c.stack);
+        let pre = c.stack.take(k as int);
+        let rest = c.stack.skip(k as int + 1);
+        super::select::split_at(c.stack, k as int);
+        stack_parts_wf(c.stack, k as int, c.fresh, c.alts, c.alts.len());
+        match c.stack[k as int] {
             TGoal::NafCut(lvl) => {
+                assert(k == 0);
                 assert(lvl < c.alts.len() && c.alts[lvl as int] is Naf);
                 alts_wf_take(c.alts, lvl);
                 if let TAlt::Naf { pruned, .. } = c.alts[lvl as int] {
@@ -1345,10 +1392,13 @@ pub proof fn tstep_wf(db: Seq<DocClause>, c: TCfg)
                                 ];
                                 assert(stack_bound(front, c.fresh));
                                 assert(stack_cuts(front, c.alts, c.alts.len()));
-                                stack_bound_join(front, rest, c.fresh);
-                                stack_cuts_join(front, rest, c.alts, c.alts.len());
+                                stack_bound_join(pre, front, c.fresh);
+                                stack_bound_join(pre + front, rest, c.fresh);
+                                stack_cuts_join(pre, front, c.alts, c.alts.len());
+                                stack_cuts_join(pre + front, rest, c.alts, c.alts.len());
                             } else if name == naf_name() && args.len() == 1 {
                                 assert(c.ci == 0);
+                                assert(k == 0);
                                 nvars_all_index(args, 0);
                                 let alt = TAlt::Naf {
                                     stack: rest,
@@ -1373,8 +1423,7 @@ pub proof fn tstep_wf(db: Seq<DocClause>, c: TCfg)
                                 stack_bound_join(front, rest, c.fresh);
                                 stack_cuts_join(front, rest, alts, alts.len());
                             } else {
-                                assert(seq![c.stack[0]] + rest =~= c.stack);
-                                tcall_wf(db, c, name, args, d, rest, c.ci, path);
+                                tcall_wf(db, c, name, args, d, pre, rest, c.ci, path);
                             }
                         },
                         _ => tfail_wf(c),
@@ -1397,6 +1446,18 @@ pub open spec fn proj_stack(a: Seq<TGoal>, b: Seq<TGoal>, base: nat, delta: nat,
     off > 0 && a.len() < b.len() && b[a.len() as int] == TGoal::NafCut((off - 1) as nat) && forall|
         i: int,
     |
+        0 <= i < a.len() ==> proj_goal(#[trigger] a[i], b[i], base, delta, off)
+}
+
+// Equal-length pointwise projection: the goals a selection leaves ahead of the selected one.
+pub open spec fn proj_prefix(
+    a: Seq<TGoal>,
+    b: Seq<TGoal>,
+    base: nat,
+    delta: nat,
+    off: nat,
+) -> bool {
+    a.len() == b.len() && forall|i: int|
         0 <= i < a.len() ==> proj_goal(#[trigger] a[i], b[i], base, delta, off)
 }
 
@@ -1545,6 +1606,39 @@ pub proof fn proj_stack_join(
             assert(proj_goal(ah[i], bh[i], base, delta, off));
         } else {
             assert(proj_goal(a[i - ah.len()], b[i - bh.len()], base, delta, off));
+        }
+    }
+}
+
+pub proof fn proj_prefix_join(
+    qa: Seq<TGoal>,
+    qb: Seq<TGoal>,
+    sa: Seq<TGoal>,
+    sb: Seq<TGoal>,
+    base: nat,
+    delta: nat,
+    off: nat,
+)
+    requires
+        proj_prefix(qa, qb, base, delta, off),
+        proj_stack(sa, sb, base, delta, off),
+    ensures
+        proj_stack(qa + sa, qb + sb, base, delta, off),
+{
+    assert((qb + sb)[(qa + sa).len() as int] == sb[sa.len() as int]);
+    assert forall|i: int| 0 <= i < (qa + sa).len() implies proj_goal(
+        #[trigger] (qa + sa)[i],
+        (qb + sb)[i],
+        base,
+        delta,
+        off,
+    ) by {
+        if i < qa.len() {
+            assert((qa + sa)[i] == qa[i]);
+            assert((qb + sb)[i] == qb[i]);
+        } else {
+            assert((qa + sa)[i] == sa[i - qa.len()]);
+            assert((qb + sb)[i] == sb[i - qa.len()]);
         }
     }
 }
@@ -1753,6 +1847,8 @@ pub proof fn project_call(
     name: Seq<u8>,
     args: Seq<Term>,
     d: nat,
+    qa: Seq<TGoal>,
+    qb: Seq<TGoal>,
     ra: Seq<TGoal>,
     rb: Seq<TGoal>,
     ci: nat,
@@ -1765,11 +1861,12 @@ pub proof fn project_call(
     requires
         bodies_wf(db),
         proj_cfg(a, b, base, delta, off),
+        proj_prefix(qa, qb, base, delta, off),
         proj_stack(ra, rb, base, delta, off),
     ensures
         proj_step(
-            tcall(db, a, name, args, d, ra, ci, pa),
-            tcall(db, b, name, rename_all(args, base, delta), d, rb, ci, pb),
+            tcall(db, a, name, args, d, qa, ra, ci, pa),
+            tcall(db, b, name, rename_all(args, base, delta), d, qb, rb, ci, pb),
             base,
             delta,
             off,
@@ -1792,6 +1889,9 @@ pub proof fn project_call(
             }
             tbody_project(cl.body, a.fresh, (d - 1) as nat, pa, pb, base, delta, off);
             proj_stack_join(ah, bh, ra, rb, base, delta, off);
+            proj_prefix_join(qa, qb, ah + ra, bh + rb, base, delta, off);
+            assert(qa + ah + ra =~= qa + (ah + ra));
+            assert(qb + bh + rb =~= qb + (bh + rb));
             let ap = zip(args, args_of(shift(cl.head, a.fresh)));
             let bp = zip(rename_all(args, base, delta), args_of(shift(cl.head, b.fresh)));
             shifted_args_len(cl.head, a.fresh);
@@ -1810,11 +1910,11 @@ pub proof fn project_call(
                 rename_all(args, base, delta),
                 rename_all(args_of(shift(cl.head, a.fresh)), base, delta),
             ) + Seq::empty() =~= bp);
-            project_unify(ap, bp, ah + ra, bh + rb, base, delta, off);
+            project_unify(ap, bp, qa + ah + ra, qb + bh + rb, base, delta, off);
             let aa = TAlt::Cl { stack: a.stack, fresh: a.fresh, ci: m + 1, log: a.log };
             let ba = TAlt::Cl { stack: b.stack, fresh: b.fresh, ci: m + 1, log: b.log };
             proj_alts_push(a.alts, b.alts, aa, ba, base, delta, off);
-            match (tunify(ap, ah + ra), tunify(bp, bh + rb)) {
+            match (tunify(ap, qa + ah + ra), tunify(bp, qb + bh + rb)) {
                 (TUni::Ok(_), TUni::Ok(_)) => {},
                 (TUni::Fail, TUni::Fail) => project_call(
                     db,
@@ -1823,6 +1923,8 @@ pub proof fn project_call(
                     name,
                     args,
                     d,
+                    qa,
+                    qb,
                     ra,
                     rb,
                     m + 1,
@@ -1855,28 +1957,35 @@ pub proof fn project_transition(
 {
     if a.stack.len() == 0 {
         assert(b.stack[0] == TGoal::NafCut((off - 1) as nat));
+        super::select::tsel_front_cut(b.stack);
         if let TAlt::Naf { pruned, .. } = b.alts[(off - 1) as int] {
             let c = TCfg { alts: b.alts.take((off - 1) as int), pruned, ..b };
             tfail_size(c);
         }
     } else {
-        assert(proj_goal(a.stack[0], b.stack[0], base, delta, off));
-        let ra = a.stack.drop_first();
-        let rb = b.stack.drop_first();
-        proj_stack_tail(a.stack, b.stack, base, delta, off);
-        match (a.stack[0], b.stack[0]) {
-            (TGoal::NafCut(l), TGoal::NafCut(k)) => {
-                assert(k < b.alts.len() && b.alts[k as int] is Naf);
+        super::select::tsel_facts(a.stack);
+        super::select::tselected_proj(a.stack, b.stack, base, delta, off);
+        let k = tselected(a.stack);
+        assert(tselected(b.stack) == k);
+        super::select::proj_split(a.stack, b.stack, k as int, base, delta, off);
+        let qa = a.stack.take(k as int);
+        let qb = b.stack.take(k as int);
+        let ra = a.stack.skip(k as int + 1);
+        let rb = b.stack.skip(k as int + 1);
+        match (a.stack[k as int], b.stack[k as int]) {
+            (TGoal::NafCut(l), TGoal::NafCut(kk)) => {
+                assert(k == 0);
+                assert(kk < b.alts.len() && b.alts[kk as int] is Naf);
                 assert(l < a.alts.len());
                 assert(proj_alt(a.alts[l as int], b.alts[(l + off) as int], base, delta, off));
                 proj_alts_take(a.alts, b.alts, l, base, delta, off);
                 if let (TAlt::Naf { pruned: p, .. }, TAlt::Naf { pruned: q, .. }) = (
                     a.alts[l as int],
-                    b.alts[k as int],
+                    b.alts[kk as int],
                 ) {
                     project_fail(
                         TCfg { alts: a.alts.take(l as int), pruned: p, ..a },
-                        TCfg { alts: b.alts.take(k as int), pruned: q, ..b },
+                        TCfg { alts: b.alts.take(kk as int), pruned: q, ..b },
                         base,
                         delta,
                         off,
@@ -1916,10 +2025,14 @@ pub proof fn project_transition(
                                     off,
                                 ) by {};
                                 proj_stack_join(ah, bh, ra, rb, base, delta, off);
+                                proj_prefix_join(qa, qb, ah + ra, bh + rb, base, delta, off);
+                                assert(qa + ah + ra =~= qa + (ah + ra));
+                                assert(qb + bh + rb =~= qb + (bh + rb));
                             } else if name == naf_name() && args.len() == 1 && !naf_safe(
                                 args[0],
                                 ra,
                             ) {
+                                assert(k == 0);
                                 assert(other[0] == rename(args[0], base, delta));
                                 safe_proj(args[0], ra, rb, base, delta, off);
                                 project_fail(
@@ -1930,6 +2043,7 @@ pub proof fn project_transition(
                                     off,
                                 );
                             } else if name == naf_name() && args.len() == 1 {
+                                assert(k == 0);
                                 assert(other[0] == rename(args[0], base, delta));
                                 safe_proj(args[0], ra, rb, base, delta, off);
                                 let aa = TAlt::Naf {
@@ -1973,6 +2087,8 @@ pub proof fn project_transition(
                                     name,
                                     args,
                                     d,
+                                    qa,
+                                    qb,
                                     ra,
                                     rb,
                                     a.ci,
@@ -2078,12 +2194,13 @@ pub proof fn tcall_prefix(
     name: Seq<u8>,
     args: Seq<Term>,
     depth: nat,
+    pre: Seq<TGoal>,
     rest: Seq<TGoal>,
     ci: nat,
     path: Seq<nat>,
 )
     ensures
-        tcall(db, c, name, args, depth, rest, ci, path) matches TStep::Next(d) ==> alts_prefix(
+        tcall(db, c, name, args, depth, pre, rest, ci, path) matches TStep::Next(d) ==> alts_prefix(
             c.alts,
             d.alts,
         ) && (d.alts.len() > c.alts.len() ==> d.alts.last() is Cl),
@@ -2099,9 +2216,9 @@ pub proof fn tcall_prefix(
             let cl = db[m as int];
             match tunify(
                 zip(args, args_of(shift(cl.head, c.fresh))),
-                tbody_goals(cl.body, c.fresh, (depth - 1) as nat, path) + rest,
+                pre + tbody_goals(cl.body, c.fresh, (depth - 1) as nat, path) + rest,
             ) {
-                TUni::Fail => tcall_prefix(db, c, name, args, depth, rest, m + 1, path),
+                TUni::Fail => tcall_prefix(db, c, name, args, depth, pre, rest, m + 1, path),
                 _ => {},
             }
         },
@@ -2115,9 +2232,13 @@ pub proof fn tstep_prefix(db: Seq<DocClause>, c: TCfg)
         tstep(db, c) matches TStep::Next(d) ==> alts_prefix(c.alts, d.alts),
 {
     if c.stack.len() > 0 {
-        let rest = c.stack.drop_first();
-        match c.stack[0] {
+        super::select::tsel_facts(c.stack);
+        let k = tselected(c.stack);
+        let pre = c.stack.take(k as int);
+        let rest = c.stack.skip(k as int + 1);
+        match c.stack[k as int] {
             TGoal::NafCut(l) => {
+                assert(k == 0);
                 assert(l < c.alts.len());
                 if let TAlt::Naf { pruned, .. } = c.alts[l as int] {
                     let c2 = TCfg { alts: c.alts.take(l as int), pruned, ..c };
@@ -2133,7 +2254,7 @@ pub proof fn tstep_prefix(db: Seq<DocClause>, c: TCfg)
                         Term::Comp(name, args) => {
                             if !(name == comma_name() && args.len() == 2) && !(name == naf_name()
                                 && args.len() == 1) {
-                                tcall_prefix(db, c, name, args, depth, rest, c.ci, path);
+                                tcall_prefix(db, c, name, args, depth, pre, rest, c.ci, path);
                             }
                         },
                         _ => tfail_prefix(c),
@@ -2199,9 +2320,13 @@ pub proof fn new_frame_valid(db: Seq<DocClause>, c: TCfg, d: TCfg, fuel: nat)
         frame_valid(db, d, fuel, c.alts.len()),
 {
     if c.stack.len() > 0 {
-        let rest = c.stack.drop_first();
-        match c.stack[0] {
+        super::select::tsel_facts(c.stack);
+        let k = tselected(c.stack);
+        let pre = c.stack.take(k as int);
+        let rest = c.stack.skip(k as int + 1);
+        match c.stack[k as int] {
             TGoal::NafCut(l) => {
+                assert(k == 0);
                 assert(l < c.alts.len());
                 if let TAlt::Naf { pruned, .. } = c.alts[l as int] {
                     tfail_size(TCfg { alts: c.alts.take(l as int), pruned, ..c });
@@ -2215,12 +2340,15 @@ pub proof fn new_frame_valid(db: Seq<DocClause>, c: TCfg, d: TCfg, fuel: nat)
                         Term::Comp(name, args) => {
                             if name == comma_name() && args.len() == 2 {
                             } else if name == naf_name() && args.len() == 1 {
+                                assert(k == 0);
+                                assert(rest =~= c.stack.drop_first());
                                 assert(c.ci == 0);
+                                stack_parts_wf(c.stack, 0, c.fresh, c.alts, c.alts.len());
                                 assert(nvars(g) <= c.fresh);
                                 nvars_all_index(args, 0);
                                 initialize_shadow(db, c, args[0], path, fuel);
                             } else {
-                                tcall_prefix(db, c, name, args, depth, rest, c.ci, path);
+                                tcall_prefix(db, c, name, args, depth, pre, rest, c.ci, path);
                                 assert(d.alts.len() == c.alts.len() + 1);
                                 assert(d.alts[c.alts.len() as int] is Cl);
                             }
@@ -2390,16 +2518,20 @@ pub proof fn tcall_logs(
     name: Seq<u8>,
     args: Seq<Term>,
     depth: nat,
+    pre: Seq<TGoal>,
     rest: Seq<TGoal>,
     ci: nat,
     path: Seq<nat>,
 )
     requires
         logs_safe(db, c),
-        returns_ok(db, c.alts, tcall(db, c, name, args, depth, rest, ci, path)),
+        returns_ok(db, c.alts, tcall(db, c, name, args, depth, pre, rest, ci, path)),
     ensures
-        tcall(db, c, name, args, depth, rest, ci, path) matches TStep::Next(d) ==> logs_safe(db, d),
-        !(tcall(db, c, name, args, depth, rest, ci, path) is Sol),
+        tcall(db, c, name, args, depth, pre, rest, ci, path) matches TStep::Next(d) ==> logs_safe(
+            db,
+            d,
+        ),
+        !(tcall(db, c, name, args, depth, pre, rest, ci, path) is Sol),
     decreases db.len() - ci,
 {
     match next_match(db, name, args.len(), ci) {
@@ -2409,7 +2541,7 @@ pub proof fn tcall_logs(
             let cl = db[m as int];
             match tunify(
                 zip(args, args_of(shift(cl.head, c.fresh))),
-                tbody_goals(cl.body, c.fresh, (depth - 1) as nat, path) + rest,
+                pre + tbody_goals(cl.body, c.fresh, (depth - 1) as nat, path) + rest,
             ) {
                 TUni::Ok(_) => {
                     log_safe_push(db, c.log, path, TEv::Clause(m));
@@ -2419,7 +2551,7 @@ pub proof fn tcall_logs(
                         TAlt::Cl { stack: c.stack, fresh: c.fresh, ci: m + 1, log: c.log },
                     );
                 },
-                TUni::Fail => tcall_logs(db, c, name, args, depth, rest, m + 1, path),
+                TUni::Fail => tcall_logs(db, c, name, args, depth, pre, rest, m + 1, path),
                 TUni::Out => {},
             }
         },
@@ -2436,9 +2568,13 @@ pub proof fn tstep_logs(db: Seq<DocClause>, c: TCfg)
         tstep(db, c) matches TStep::Sol(log) ==> log_safe(db, log),
 {
     if c.stack.len() > 0 {
-        let rest = c.stack.drop_first();
-        match c.stack[0] {
+        super::select::tsel_facts(c.stack);
+        let k = tselected(c.stack);
+        let pre = c.stack.take(k as int);
+        let rest = c.stack.skip(k as int + 1);
+        match c.stack[k as int] {
             TGoal::NafCut(l) => {
+                assert(k == 0);
                 assert(l < c.alts.len());
                 if let TAlt::Naf { pruned, .. } = c.alts[l as int] {
                     let d = TCfg { alts: c.alts.take(l as int), pruned, ..c };
@@ -2468,7 +2604,7 @@ pub proof fn tstep_logs(db: Seq<DocClause>, c: TCfg)
                                     },
                                 );
                             } else {
-                                tcall_logs(db, c, name, args, depth, rest, c.ci, path);
+                                tcall_logs(db, c, name, args, depth, pre, rest, c.ci, path);
                             }
                         },
                         _ => tfail_logs(db, c),

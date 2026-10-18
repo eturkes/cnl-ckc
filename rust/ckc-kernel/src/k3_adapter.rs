@@ -39,13 +39,6 @@ pub open spec fn uni_valid(nodes: Seq<ENode>, out: &EUni, level: nat) -> bool {
     }
 }
 
-pub open spec fn erase(g: TGoal) -> ckc_spec::engine::Goal {
-    match g {
-        TGoal::Lit(t, d, _) => ckc_spec::engine::Goal::Lit(t, d),
-        TGoal::NafCut(l) => ckc_spec::engine::Goal::NafCut(l),
-    }
-}
-
 fn to_engine(arena: &ETermArena, goals: &Vec<EGoal>, Ghost(level): Ghost<nat>) -> (out: Vec<KGoal>)
     requires
         arena_ok(arena),

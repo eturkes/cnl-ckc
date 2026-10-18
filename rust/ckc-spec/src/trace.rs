@@ -9,8 +9,9 @@ verus! {
 
 // Trusted spec: trace mode + trace-check (contract m5u2b, K3). Trace mode =
 // the legacy `ace_to_pl.pl trace_mode` law, except that a clause node names
-// the clause's own `% S<n>:` block (contract q8) and a negation call failing
-// `naf_safe` is cut (contract q7): one directed first proof per
+// the clause's own `% S<n>:` block (contract q8), a negation call failing
+// `naf_safe` is cut (contract q7) and goals are selected as the engine
+// selects them (contract eso): one directed first proof per
 // positive claim of a committed answers artifact under the R8 trace bounds,
 // materialized into clause nodes naming the resolving clause by its own
 // `% S<n>:` block + the sha256 of its committed line. Trace-check = the
@@ -163,7 +164,8 @@ pub open spec fn answers_custody(answers: Src, qsha: Seq<u8>, q: QueryFile, arit
 }
 
 // --- the trace machine: the engine's search with proof recording, a fresh
-// site-local depth for every negation, and the legacy NAF site protocol ---
+// site-local depth for every negation, and the legacy NAF site protocol; it
+// selects goals as the engine does (paths aside) ---
 pub ghost enum TGoal {
     Lit(Term, nat, Seq<nat>),  // goal, remaining depth, proof-forest position
     NafCut(nat),
@@ -206,6 +208,17 @@ pub ghost enum TUni {
     Ok(Seq<TGoal>),
     Fail,
     Out,
+}
+
+pub open spec fn erase(g: TGoal) -> Goal {
+    match g {
+        TGoal::Lit(t, d, _) => Goal::Lit(t, d),
+        TGoal::NafCut(l) => Goal::NafCut(l),
+    }
+}
+
+pub open spec fn tselected(stack: Seq<TGoal>) -> nat {
+    selected(stack.map_values(|g: TGoal| erase(g)))
 }
 
 pub open spec fn tgoal_term(g: TGoal) -> Term {
@@ -304,6 +317,7 @@ pub open spec fn tcall(
     name: Seq<u8>,
     args: Seq<Term>,
     d: nat,
+    pre: Seq<TGoal>,
     rest: Seq<TGoal>,
     ci: nat,
     path: Seq<nat>,
@@ -317,7 +331,7 @@ pub open spec fn tcall(
             proof {
                 next_match_bound(db, name, args.len(), ci);
             }
-            let stack2 = tbody_goals(cl.body, c.fresh, (d - 1) as nat, path) + rest;
+            let stack2 = pre + tbody_goals(cl.body, c.fresh, (d - 1) as nat, path) + rest;
             match tunify(zip(args, args_of(shift(cl.head, c.fresh))), stack2) {
                 TUni::Ok(stack) => TStep::Next(
                     TCfg {
@@ -335,7 +349,7 @@ pub open spec fn tcall(
                         pruned: c.pruned,
                     },
                 ),
-                TUni::Fail => tcall(db, c, name, args, d, rest, m + 1, path),
+                TUni::Fail => tcall(db, c, name, args, d, pre, rest, m + 1, path),
                 TUni::Out => TStep::Limit,
             }
         },
@@ -346,8 +360,11 @@ pub open spec fn tstep(db: Seq<DocClause>, c: TCfg) -> TStep {
     if c.stack.len() == 0 {
         TStep::Sol(c.log)
     } else {
-        let rest = c.stack.drop_first();
-        match c.stack[0] {
+        let k = tselected(c.stack);
+        let pre = c.stack.take(k as int);
+        let rest = c.stack.skip(k as int + 1);
+        // a naf cut or a negation ends the run, so it is selected at the front (k = 0)
+        match c.stack[k as int] {
             // the negation's inner proof succeeded: the site fails; prunes inside the site are absorbed
             TGoal::NafCut(lvl) => match c.alts[lvl as int] {
                 TAlt::Naf { pruned, .. } => tfail(
@@ -362,7 +379,7 @@ pub open spec fn tstep(db: Seq<DocClause>, c: TCfg) -> TStep {
                     Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
                         TStep::Next(
                             TCfg {
-                                stack: seq![
+                                stack: pre + seq![
                                     TGoal::Lit(args[0], d, path),
                                     TGoal::Lit(args[1], d, path),
                                 ] + rest,
@@ -394,7 +411,7 @@ pub open spec fn tstep(db: Seq<DocClause>, c: TCfg) -> TStep {
                             },
                         )
                     } else {
-                        tcall(db, c, name, args, d, rest, c.ci, path)
+                        tcall(db, c, name, args, d, pre, rest, c.ci, path)
                     },
                     // variable/atomic goals: grammar-unrepresentable after custody (R14)
                     _ => tfail(c),

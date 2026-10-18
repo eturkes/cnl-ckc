@@ -1,0 +1,142 @@
+% doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+guideline_schema_version(1).
+guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none),vocabulary(none)).
+% S1: ESO selection probe.
+guideline_event(actual,A,0) :- guideline_event(actual,A,1).
+guideline_event(actual,A,1) :- guideline_event(actual,A,2).
+guideline_event(actual,A,2) :- guideline_event(actual,A,3).
+guideline_event(actual,A,3) :- guideline_event(actual,A,4).
+guideline_event(actual,A,4) :- guideline_event(actual,A,5).
+guideline_event(actual,A,5) :- guideline_event(actual,A,6).
+guideline_event(actual,A,6) :- guideline_event(actual,A,7).
+guideline_event(actual,A,7) :- guideline_event(actual,A,8).
+guideline_event(actual,A,8) :- guideline_event(actual,A,9).
+guideline_event(actual,A,9) :- guideline_event(actual,A,10).
+guideline_event(actual,A,10) :- guideline_event(actual,A,11).
+guideline_event(actual,A,11) :- guideline_event(actual,A,12).
+guideline_event(actual,A,12) :- guideline_event(actual,A,13).
+guideline_event(actual,A,13) :- guideline_event(actual,A,14).
+guideline_event(actual,A,14) :- guideline_event(actual,A,15).
+guideline_event(actual,A,15) :- guideline_event(actual,A,16).
+guideline_event(actual,A,16) :- guideline_event(actual,A,17).
+guideline_event(actual,A,17) :- guideline_event(actual,A,18).
+guideline_event(actual,A,18) :- guideline_event(actual,A,19).
+guideline_event(actual,A,19) :- guideline_event(actual,A,20).
+guideline_event(actual,A,20) :- guideline_event(actual,A,21).
+guideline_event(actual,A,21) :- guideline_event(actual,A,22).
+guideline_event(actual,A,22) :- guideline_event(actual,A,23).
+guideline_event(actual,A,23) :- guideline_event(actual,A,24).
+guideline_event(actual,A,24) :- guideline_event(actual,A,25).
+guideline_event(actual,A,25) :- guideline_event(actual,A,26).
+guideline_event(actual,A,26) :- guideline_event(actual,A,27).
+guideline_event(actual,A,27) :- guideline_event(actual,A,28).
+guideline_event(actual,A,28) :- guideline_event(actual,A,29).
+guideline_event(actual,A,29) :- guideline_event(actual,A,30).
+guideline_event(actual,A,30) :- guideline_event(actual,A,31).
+guideline_event(actual,A,31) :- guideline_event(actual,A,32).
+guideline_event(actual,A,32) :- guideline_event(actual,A,33).
+guideline_event(actual,A,33) :- guideline_event(actual,A,34).
+guideline_event(actual,A,34) :- guideline_event(actual,A,35).
+guideline_event(actual,A,35) :- guideline_event(actual,A,36).
+guideline_event(actual,A,36) :- guideline_event(actual,A,37).
+guideline_event(actual,A,37) :- guideline_event(actual,A,38).
+guideline_event(actual,A,38) :- guideline_event(actual,A,39).
+guideline_event(actual,A,39) :- guideline_event(actual,A,40).
+guideline_event(actual,A,40) :- guideline_event(actual,A,41).
+guideline_event(actual,A,41) :- guideline_event(actual,A,42).
+guideline_event(actual,A,42) :- guideline_event(actual,A,43).
+guideline_event(actual,A,43) :- guideline_event(actual,A,44).
+guideline_event(actual,A,44) :- guideline_event(actual,A,45).
+guideline_event(actual,A,45) :- guideline_event(actual,A,46).
+guideline_event(actual,A,46) :- guideline_event(actual,A,47).
+guideline_event(actual,A,47) :- guideline_event(actual,A,48).
+guideline_event(actual,A,48) :- guideline_event(actual,A,49).
+guideline_event(actual,A,49) :- guideline_event(actual,A,50).
+guideline_event(actual,A,50) :- guideline_event(actual,A,51).
+guideline_event(actual,A,51) :- guideline_event(actual,A,52).
+guideline_event(actual,A,52) :- guideline_event(actual,A,53).
+guideline_event(actual,A,53) :- guideline_event(actual,A,54).
+guideline_event(actual,A,54) :- guideline_event(actual,A,55).
+guideline_event(actual,A,55) :- guideline_event(actual,A,56).
+guideline_event(actual,A,56) :- guideline_event(actual,A,57).
+guideline_event(actual,A,57) :- guideline_event(actual,A,58).
+guideline_event(actual,A,58) :- guideline_event(actual,A,59).
+guideline_event(actual,A,59) :- guideline_event(actual,A,60).
+guideline_event(actual,A,60) :- guideline_event(actual,A,61).
+guideline_event(actual,A,61) :- guideline_event(actual,A,62).
+guideline_event(actual,A,62) :- guideline_event(actual,A,63).
+guideline_event(actual,A,63) :- guideline_event(actual,A,64).
+guideline_event(actual,A,64) :- guideline_event(actual,A,65).
+guideline_event(actual,A,65) :- guideline_event(actual,A,66).
+guideline_event(actual,A,66) :- guideline_event(actual,A,67).
+guideline_event(actual,A,67) :- guideline_event(actual,A,68).
+guideline_event(actual,A,68) :- guideline_event(actual,A,69).
+guideline_event(actual,A,69) :- guideline_event(actual,A,70).
+guideline_event(actual,A,70) :- guideline_event(actual,A,71).
+guideline_event(actual,A,71) :- guideline_event(actual,A,72).
+guideline_event(actual,A,72) :- guideline_event(actual,A,73).
+guideline_event(actual,A,73) :- guideline_event(actual,A,74).
+guideline_event(actual,A,74) :- guideline_event(actual,A,75).
+guideline_event(actual,A,75) :- guideline_event(actual,A,76).
+guideline_event(actual,A,76) :- guideline_event(actual,A,77).
+guideline_event(actual,A,77) :- guideline_event(actual,A,78).
+guideline_event(actual,A,78) :- guideline_event(actual,A,79).
+guideline_event(actual,A,79) :- guideline_event(actual,A,80).
+guideline_event(actual,A,80) :- guideline_event(actual,A,81).
+guideline_event(actual,A,81) :- guideline_event(actual,A,82).
+guideline_event(actual,A,82) :- guideline_event(actual,A,83).
+guideline_event(actual,A,83) :- guideline_event(actual,A,84).
+guideline_event(actual,A,84) :- guideline_event(actual,A,85).
+guideline_event(actual,A,85) :- guideline_event(actual,A,86).
+guideline_event(actual,A,86) :- guideline_event(actual,A,87).
+guideline_event(actual,A,87) :- guideline_event(actual,A,88).
+guideline_event(actual,A,88) :- guideline_event(actual,A,89).
+guideline_event(actual,A,89) :- guideline_event(actual,A,90).
+guideline_event(actual,A,90) :- guideline_event(actual,A,91).
+guideline_event(actual,A,91) :- guideline_event(actual,A,92).
+guideline_event(actual,A,92) :- guideline_event(actual,A,93).
+guideline_event(actual,A,93) :- guideline_event(actual,A,94).
+guideline_event(actual,A,94) :- guideline_event(actual,A,95).
+guideline_event(actual,A,95) :- guideline_event(actual,A,96).
+guideline_event(actual,A,96) :- guideline_event(actual,A,97).
+guideline_event(actual,A,97) :- guideline_event(actual,A,98).
+guideline_event(actual,A,98) :- guideline_event(actual,A,99).
+guideline_event(actual,A,99) :- guideline_operator(actual,A,can).
+guideline_operator(actual,'$guideline_id'(context,doc,1,box(2),[]),can).
+guideline_entity('$guideline_id'(context,doc,1,box(2),[]),witness,q,countable).

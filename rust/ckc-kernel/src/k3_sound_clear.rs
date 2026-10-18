@@ -509,13 +509,16 @@ pub proof fn clear_after_call(
     args: Seq<Term>,
     hname: Seq<u8>,
     head: Term,
+    pre: Seq<TGoal>,
     body: Seq<TGoal>,
+    rest: Seq<TGoal>,
     s: Seq<(nat, Term)>,
 )
     requires
         naf_clear(log, stack, fresh),
-        stack.len() > 0,
-        tgoal_term(stack[0]) == Term::Comp(gname, args),
+        stack.len() == pre.len() + 1 + rest.len(),
+        stack == pre + seq![stack[pre.len() as int]] + rest,
+        tgoal_term(stack[pre.len() as int]) == Term::Comp(gname, args),
         args.len() == args_of(head).len(),
         head == Term::Comp(hname, args_of(head)),
         forall|x: nat| x < fresh ==> !occurs(x, head),
@@ -526,10 +529,12 @@ pub proof fn clear_after_call(
         fresh <= nfresh,
     ensures
         forall|i: int| 0 <= i < log.len() ==> #[trigger] naf_fixed(log[i].1, s),
-        naf_clear(log, tapply_all(body + stack.drop_first(), s), nfresh),
+        naf_clear(log, tapply_all(pre + body + rest, s), nfresh),
 {
     let pairs = zip(args, args_of(head));
-    let out = tapply_all(body + stack.drop_first(), s);
+    let whole = pre + body + rest;
+    let out = tapply_all(whole, s);
+    let n = pre.len();
     assert forall|i: int| #![trigger log[i]] 0 <= i < log.len() implies naf_fixed(log[i].1, s)
         && clear_event(log[i].1, out, nfresh) by {
         assert(clear_event(log[i].1, stack, fresh));
@@ -546,8 +551,8 @@ pub proof fn clear_after_call(
                     occurs_below(y, t);
                     if occurs(y, args[j]) {
                         occurs_all_index(y, args, j);
-                        assert(occurs(y, tgoal_term(stack[0])));
-                        assert(!shares(t, tgoal_term(stack[0])));
+                        assert(occurs(y, tgoal_term(stack[n as int])));
+                        assert(!shares(t, tgoal_term(stack[n as int])));
                     } else {
                         occurs_all_index(y, args_of(head), j);
                         assert(occurs(y, head));
@@ -562,7 +567,7 @@ pub proof fn clear_after_call(
                 t,
                 #[trigger] tgoal_term(out[k]),
             ) by {
-                let g = (body + stack.drop_first())[k];
+                let g = whole[k];
                 assert(out[k] == tapply(g, s));
                 assert(tgoal_term(out[k]) == apply(tgoal_term(g), s)) by {
                     match g {
@@ -579,9 +584,14 @@ pub proof fn clear_after_call(
                     apply_occurs(tgoal_term(g), s, y);
                     if occurs(y, tgoal_term(g)) {
                         occurs_below(y, t);
-                        if k < body.len() {
-                            assert(g == body[k]);
+                        if k < n {
+                            assert(g == pre[k]);
+                            assert(g == stack[k]);
+                            assert(!shares(t, tgoal_term(stack[k])));
+                        } else if k < n + body.len() {
+                            assert(g == body[k - n]);
                         } else {
+                            assert(g == rest[k - n - body.len()]);
                             assert(g == stack[k - body.len() + 1]);
                             assert(!shares(t, tgoal_term(stack[k - body.len() + 1])));
                         }
