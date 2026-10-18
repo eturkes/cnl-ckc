@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s49-03',ace_sha256('04445cd9e7fbb9d9fe3913425ba6e112af6518ff0bb81349e711fb2c2807f4c8'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician considers an opioid then the clinician should always consider the opioid cautiously.

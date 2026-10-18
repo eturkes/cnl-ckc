@@ -141,17 +141,18 @@ pub fn rule_clauses(arena: &ETermArena, heads: &Vec<T>, body: &Vec<Body>) -> (ou
 
 pub fn variant(
     arena: &mut ETermArena,
-    aitems: &Vec<I>,
+    aitems0: &Vec<I>,
     citems: &Vec<I>,
     ordered: &Vec<T>,
     map: &Vec<Binding>,
     deps: &T,
     env: &Env,
     k: usize,
+    cb: usize,
 ) -> (out: Result<Group, T>)
     requires
         arena_ok(old(arena)),
-        items_valid(old(arena).nodes@, aitems@),
+        items_valid(old(arena).nodes@, aitems0@),
         items_valid(old(arena).nodes@, citems@),
         valid_all(old(arena).nodes@, ordered@),
         map_valid(old(arena).nodes@, map@),
@@ -161,7 +162,7 @@ pub fn variant(
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         group_result_valid(final(arena).nodes@, &out),
         group_result(out) == spec::variant(
-            item_models(aitems@),
+            item_models(aitems0@),
             item_models(citems@),
             models(ordered@),
             map_model(map@),
@@ -169,9 +170,11 @@ pub fn variant(
             env.s as nat,
             env.docid@,
             k as nat,
+            cb as nat,
         ),
 {
     hide(spec::expand);
+    hide(spec::compared);
     hide(spec::skolem);
     hide(spec::witness_pairs);
     hide(spec::cons_locals);
@@ -182,15 +185,22 @@ pub fn variant(
     proof {
         assert_seqs_equal!(models(empty@) == Seq::<Term>::empty());
     }
-    let arefs = ref_slots(arena, aitems);
+    let arefs = ref_slots(arena, aitems0);
     let ante = first_vars(arena, &arefs, &empty);
     let locals = cons_locals(arena, ordered, &ante, map);
     let sko = skolem(arena, &locals, ordered, deps, env);
+    let ghost ns = arena.nodes@;
+    proof {
+        items_prefix(start, ns, aitems0@);
+    }
+    let converted = crate::m6_compare::compared(arena, aitems0, cb);
+    let aitems = &converted;
     let ghost n1 = arena.nodes@;
     proof {
-        items_prefix(start, n1, aitems@);
+        crate::k2_load::prefix_chain(start, ns, n1);
         items_prefix(start, n1, citems@);
         map_prefix(start, n1, map@);
+        map_prefix(ns, n1, sko@);
     }
     let goals_result = expand(arena, aitems, map, &sko);
     let ghost n2 = arena.nodes@;
@@ -210,6 +220,7 @@ pub fn variant(
     let ghost n3 = arena.nodes@;
     proof {
         crate::k2_load::prefix_chain(start, n2, n3);
+        crate::k2_load::prefix_chain(n1, n2, n3);
         bodies_prefix(n2, n3, goals@);
     }
     let heads = match heads_result {
@@ -225,7 +236,7 @@ pub fn variant(
     let hterms = pos_terms(arena, &heads);
     let cs = rule_clauses(arena, &hterms, &goals);
     proof {
-        items_prefix(start, n3, aitems@);
+        items_prefix(n1, n3, aitems@);
     }
     let ds = body_doms(arena, aitems);
     proof {

@@ -1,0 +1,2 @@
+run :- current_prolog_flag(argv, [Path]), open(Path, read, In), catch(rows(In), Error, (write_term(user_error, Error, [quoted(true), ignore_ops(true)]), nl(user_error), close(In), halt(1))), close(In), halt(0).
+rows(In) :- read_term(In, Term, []), (Term == end_of_file -> true ; Term = probe(Id, Goal), copy_term(Goal, Original), findall(Goal, Goal, Solutions), (once(Goal) -> (Goal =@= Original -> true ; throw(bound_argument(Id))) ; true), length(Solutions, Count), format('~d\t~d~n', [Id, Count]), rows(In)).

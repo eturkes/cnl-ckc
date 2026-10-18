@@ -97,6 +97,7 @@ pub proof fn run_binds_proj(
                 crate::k2_select::run_binds_lit(ea, x, t, d);
                 crate::k2_select::run_binds_lit(eb, rx, u, e);
                 binds_rename(t, x, base, delta);
+                rename_ground(t, base, delta);
                 match t {
                     Term::Comp(n, ts) => {
                         rename_all_index(ts, base, delta);

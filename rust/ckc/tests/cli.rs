@@ -161,3 +161,42 @@ fn check_and_render_reject_non_regular_paths() {
     }
     std::fs::remove_dir_all(&dir).unwrap();
 }
+
+// `ckc compile` refuses a symlinked `guidelines/schema.pl` (rc 2, as a symlinked pl dir)
+// instead of writing the schema bytes through it: the link target stays untouched.
+#[test]
+#[cfg(unix)]
+fn compile_refuses_a_symlinked_schema_file() {
+    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let root = std::env::temp_dir().join(format!("ckc-cli-schema-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(root.join("rust/ckc")).unwrap();
+    std::os::unix::fs::symlink(repo.join("vendor"), root.join("vendor")).unwrap();
+    std::os::unix::fs::symlink(repo.join("rust/ckc/prolog"), root.join("rust/ckc/prolog")).unwrap();
+    let fixture = repo.join("tests/queries/green/positive/tree/guidelines");
+    let copy = Command::new("cp")
+        .arg("-a")
+        .arg(&fixture)
+        .arg(root.join("guidelines"))
+        .status()
+        .unwrap();
+    assert!(copy.success());
+    let outside = root.join("outside.txt");
+    std::fs::write(&outside, b"keep\n").unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("guidelines/schema.pl")).unwrap();
+    let out = Command::new(env!("CARGO_BIN_EXE_ckc"))
+        .args(["compile", "fx"])
+        .current_dir(&root)
+        .output()
+        .unwrap();
+    let text =
+        String::from_utf8_lossy(&out.stdout).into_owned() + &String::from_utf8_lossy(&out.stderr);
+    let kept = std::fs::read(&outside).unwrap();
+    std::fs::remove_dir_all(&root).unwrap();
+    assert_eq!(out.status.code(), Some(2), "{text}");
+    assert!(
+        text.contains("ckc: schema-file: not a regular file: guidelines/schema.pl"),
+        "{text}"
+    );
+    assert_eq!(kept, b"keep\n");
+}

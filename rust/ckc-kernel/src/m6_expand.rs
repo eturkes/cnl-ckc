@@ -526,6 +526,79 @@ pub fn condition(
                 };
                 let t = lit4(arena, &Sym::GuidelineQualifier, ctx, &e, &args[1], &args[2]);
                 Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineUnit) && args.len() == 2 {
+                let q = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let t = c3(arena, &Sym::GuidelineUnit, ctx, &q, &args[1]);
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineBound) && args.len() == 8 {
+                let r = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let entity = lit4(arena, &Sym::GuidelineEntity, ctx, &r, &args[1], &args[2]);
+                let ghost n1 = arena.nodes@;
+                proof {
+                    prefix(start, n1, ctx);
+                    prefix(start, n1, &r);
+                    prefix_all(start, n1, args@);
+                }
+                let card = lit5(
+                    arena,
+                    &Sym::GuidelineCardinality,
+                    ctx,
+                    &r,
+                    &args[3],
+                    &args[4],
+                    &args[5],
+                );
+                let ghost n2 = arena.nodes@;
+                proof {
+                    crate::k2_load::prefix_chain(start, n1, n2);
+                    prefix_all(n1, n2, args@);
+                }
+                let filter = lit4(
+                    arena,
+                    &Sym::GuidelineSatisfies,
+                    &args[4],
+                    &args[5],
+                    &args[6],
+                    &args[7],
+                );
+                proof {
+                    crate::k2_load::prefix_chain(start, n2, arena.nodes@);
+                    crate::k2_load::prefix_chain(n1, n2, arena.nodes@);
+                    prefix(n1, arena.nodes@, &entity);
+                    prefix(n2, arena.nodes@, &card);
+                }
+                let mut out = Vec::new();
+                out.push(entity);
+                out.push(card);
+                out.push(filter);
+                proof {
+                    assert_seqs_equal!(models(out@) == seq![entity@, card@, filter@]);
+                }
+                Ok(out)
+            } else if has_name(&name, &Sym::DollarGuidelineMeasure) && args.len() == 4 {
+                let r = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let t = lit5(
+                    arena,
+                    &Sym::GuidelineCardinality,
+                    ctx,
+                    &r,
+                    &args[1],
+                    &args[2],
+                    &args[3],
+                );
+                Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineScaled) && args.len() == 6 {
+                let t = crate::m6_term::c(arena, &Sym::GuidelineSatisfies, &args);
+                Ok(one_term(arena, t))
             } else {
                 Err(named(arena, &Sym::ConditionShape))
             }

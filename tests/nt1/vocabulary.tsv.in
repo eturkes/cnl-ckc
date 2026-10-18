@@ -1,0 +1,8 @@
+# format: kind	lemma	value
+unit	second	second
+unit	minute	minute
+unit	hour	hour
+unit	day	day
+unit	week	week
+unit	month	month
+unit	year	year

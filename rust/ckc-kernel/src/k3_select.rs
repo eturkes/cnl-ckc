@@ -1,6 +1,6 @@
 // Goal selection over the K3 trace stack (contract eso D4): the engine's
 // selector on the erased stack, scanned lazily.
-use crate::k2_select::{binds_root, is_comp_root, is_naf_root};
+use crate::k2_select::{binds_root, is_comp_root, is_naf_root, nonground_builtin_root};
 #[cfg(verus_keep_ghost)]
 use crate::k2_term::{ENode, arena_ok, child_terms, node_ok};
 use crate::k2_term::{ENodeKind, ETermArena};
@@ -55,7 +55,10 @@ pub fn run_binds_from(arena: &ETermArena, goals: &Vec<EGoal>, from: usize, key: 
         match &goals[j] {
             EGoal::Lit { root, .. } => {
                 let root = *root;
-                if !is_comp_root(arena, root) || is_naf_root(arena, root) {
+                if !is_comp_root(arena, root) || is_naf_root(arena, root) || nonground_builtin_root(
+                    arena,
+                    root,
+                ) {
                     return false;
                 }
                 if binds_root(arena, root, key) {

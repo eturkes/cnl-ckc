@@ -53,6 +53,8 @@ fn contract_seeds() -> Vec<(String, Vec<u8>)> {
     let declarations: String = [("guideline_schema_version", 1), ("guideline_document", 4)]
         .into_iter()
         .chain(PREDICATES)
+        // nt1 D2 adds declarations; the migrated seed payloads retain their census.
+        .chain([("guideline_unit", 3)])
         .map(|(name, arity)| {
             format!(":- multifile({name}/{arity}).\n:- discontiguous({name}/{arity}).\n")
         })
@@ -674,10 +676,10 @@ fn q18_fixed_name_census() {
     );
     assert_eq!(
         controls,
-        [10, 1130, 19, 10, 158, 12],
+        [10, 1130, 19, 10, 166, 12],
         "canonical/free/digest/id/literal/version controls"
     );
-    assert_eq!(runner.checked, 4903, "complete check census");
+    assert_eq!(runner.checked, 4911, "complete check census");
     eprintln!(
         "Q18 census: seeds={} slots={slots:?} mandatory={mandatory:?} property-domains={} property-checks={property_checks:?} controls={controls:?} checked={} deviations={}",
         seeds.len(),

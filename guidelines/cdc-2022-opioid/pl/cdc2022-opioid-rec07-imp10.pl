@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec07-imp10',ace_sha256('398696a147ff8b4962176d048d759bf196b3e9a1d31c56a5fd906c520a452a4d'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a person is a patient then every clinician may ensure an affordable-follow-up-evaluation-access for the person.

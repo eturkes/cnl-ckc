@@ -156,6 +156,8 @@ pub(super) fn compile(gid: &str) -> Result {
     for id in &g.docids {
         println!("ckc: wrote {}", show(&g.pl(id)));
     }
+    super::schema::write()?;
+    println!("ckc: wrote guidelines/{}", super::schema::FILE);
     println!("ckc: compile ok {} documents", g.docids.len());
     Ok(())
 }

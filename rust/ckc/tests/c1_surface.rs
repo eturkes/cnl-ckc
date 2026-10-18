@@ -1,4 +1,6 @@
 // C1 D2–D6/D9–D10 + S1 D1/D10 + S2 D1/P9: contract-derived probes; CKC_C1_TEST_BIN selects red replay.
+#[path = "support/nt_projection.rs"]
+mod nt_projection;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -16,7 +18,7 @@ const RETIRED_PATH: &str = "guidelines/cdc-2022-opioid/temporal.tsv";
 const ULEX: &str = "prep(per,per).\nprep(for,for).\n";
 const ALL_ROWS: &str = "unit\thour\thour\nunit\tday\tday\nunit\tweek\tweek\nunit\tsecond\tsecond\nunit\tminute\tminute\nunit\tmonth\tmonth\nunit\tyear\tyear\nrelation\tfor\tduration\nrelation\tbefore\tbefore\nrelation\tafter\tafter\nrelation\twithin\twithin\nspacing\tat\tinterval\nwindow\tduring\twindow\nfrequency\tper\tperiod\napproximation\tapproximate\tabout\nrange\tto\tminimum\n";
 const OLD_KIND_HEADER: &str = "# kind: unit (value: second|minute|hour|day|week|month|year) | relation (value: duration|within|after|before) | spacing (value: frame noun lemma) | window (value: frame noun lemma) | frequency (value: period) | approximation (value: about) | range (value: minimum)\n";
-const INDICATORS: [(&str, usize); 18] = [
+const INDICATORS: [(&str, usize); 19] = [
     ("schema_version", 1),
     ("document", 4),
     ("entity", 4),
@@ -35,6 +37,7 @@ const INDICATORS: [(&str, usize); 18] = [
     ("grade", 5),
     ("preference", 4),
     ("qualifier", 4),
+    ("unit", 3),
 ];
 const GIT_ENV: [(&str, &str); 9] = [
     ("GIT_CONFIG_GLOBAL", "/dev/null"),
@@ -1113,6 +1116,7 @@ fn simple_facts(id: &str, timed: bool) -> Vec<String> {
         facts.extend([
             format!("guideline_entity(actual,{qty},hour,countable)"),
             format!("guideline_cardinality(actual,{qty},na,eq,2)"),
+            format!("guideline_unit(actual,{qty},hour)"),
         ]);
     }
     facts.extend([
@@ -1587,8 +1591,8 @@ fn b15_document_header_matrix() {
                     format!("table={with_table} ulex={with_ulex}: D2 header differs"),
                 );
                 checks.require(
-                    actual.matches(":- multifile(").count() == 18
-                        && actual.matches(":- discontiguous(").count() == 18,
+                    actual.matches(":- multifile(").count() == 19
+                        && actual.matches(":- discontiguous(").count() == 19,
                     "D2 declaration count",
                 );
                 checks.require(
@@ -1686,6 +1690,29 @@ fn expected_annotation(pattern: &str, mode: &str) -> Vec<String> {
     }
 }
 
+// C1 range question's source occurrences: patient, low hours, high hours, event.
+fn range_query_source() -> String {
+    let terms = [
+        "guideline_entity(actual,A,patient,countable)",
+        "guideline_cardinality(actual,A,na,eq,1)",
+        "guideline_entity(actual,B,hour,countable)",
+        "guideline_cardinality(actual,B,na,geq,8)",
+        "guideline_entity(actual,C,hour,countable)",
+        "guideline_cardinality(actual,C,na,eq,12)",
+        "guideline_event(actual,D,wait)",
+        "guideline_arg(actual,D,1,A)",
+        "guideline_pp(actual,D,for,B)",
+        "guideline_interval(actual,D,duration,B,hour,none)",
+        "guideline_pp(actual,D,to,C)",
+        "guideline_range(actual,B,C)",
+    ];
+    let mut goal = terms.last().unwrap().to_string();
+    for term in terms[..terms.len() - 1].iter().rev() {
+        goal = format!("','({term},{goal})");
+    }
+    format!("'$guideline_query_projection'(goal({goal}),answers([])).\n")
+}
+
 #[test]
 fn b17_all_annotation_patterns_in_documents_and_questions() {
     let compiler = Compiler::new();
@@ -1740,6 +1767,11 @@ fn b17_all_annotation_patterns_in_documents_and_questions() {
             let out = compiler.compile(mode, ace, Some(table.as_bytes()), Some(ULEX.as_bytes()));
             if checks.success(&out, &format!("{label}/{mode}")) {
                 let rendered = text(&out.stdout);
+                let rendered = if label == "range" && mode == "question" {
+                    nt_projection::erase(&rendered, &range_query_source())
+                } else {
+                    rendered
+                };
                 let payload = if mode == "product" {
                     product_body(&rendered)
                 } else {

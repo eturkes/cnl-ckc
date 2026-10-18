@@ -14,10 +14,12 @@ verus! {
 // selects them (contract eso): one directed first proof per
 // positive claim of a committed answers artifact under the R8 trace bounds,
 // materialized into clause nodes naming the resolving clause by its own
-// `% S<n>:` block + the sha256 of its committed line. Trace-check = the
+// `% S<n>:` block + the sha256 of its committed line, and builtin leaves for
+// the comparison built-ins it evaluated (contract nt1 D6). Trace-check = the
 // committed-state law (REFERENCE § Proof traces): a committed trace is
-// accepted iff it equals this derivation, every node's digest joins exactly
-// one committed clause line of the named sentence, and every claim is proved.
+// accepted iff it equals this derivation, every clause node's digest joins
+// exactly one committed clause line of the named sentence, and every claim is
+// proved.
 // Digests arrive from the shell (R3): `digests[i]` = lowercase-hex sha256 of
 // `clause_line(db[i])`, the bytes `trace_lines` hands it; the kernel never hashes.
 pub open spec fn trace_run_inf() -> nat {
@@ -174,6 +176,7 @@ pub ghost enum TGoal {
 pub ghost enum TEv {
     Clause(nat),  // the resolving clause = db index
     Naf(Term),  // the negation succeeded: its inner goal as it stood at the site
+    Builtin(Term),  // a comparison built-in held: the goal as called (ground)
 }
 
 pub ghost enum TAlt {
@@ -410,6 +413,22 @@ pub open spec fn tstep(db: Seq<DocClause>, c: TCfg) -> TStep {
                                 ..c
                             },
                         )
+                    } else if crate::compare::is_builtin(name, args.len()) {
+                        if crate::compare::holds(g) {
+                            TStep::Next(
+                                TCfg {
+                                    stack: pre + rest,
+                                    log: if in_naf(c.stack) {
+                                        c.log
+                                    } else {
+                                        c.log.push((path, TEv::Builtin(g)))
+                                    },
+                                    ..c
+                                },
+                            )
+                        } else {
+                            tfail(c)
+                        }
                     } else {
                         tcall(db, c, name, args, d, pre, rest, c.ci, path)
                     },
@@ -447,6 +466,7 @@ pub open spec fn trun(db: Seq<DocClause>, c: TCfg, fuel: nat) -> (TOut, nat)
 pub ghost enum PNode {
     Clause(nat, Seq<PNode>),
     Naf(Term),
+    Builtin(Term),
 }
 
 pub open spec fn ev_at(log: Seq<(Seq<nat>, TEv)>, path: Seq<nat>) -> Option<TEv>
@@ -476,6 +496,7 @@ pub open spec fn build(db: Seq<DocClause>, log: Seq<(Seq<nat>, TEv)>, path: Seq<
                 build_all(db, log, path, 0, db[m as int].body.len()),
             ),
             Option::Some(TEv::Naf(t)) => PNode::Naf(t),
+            Option::Some(TEv::Builtin(t)) => PNode::Builtin(t),
             Option::None => PNode::Naf(Term::Nil),
         }
     }
@@ -574,6 +595,8 @@ pub open spec fn mat(
             let n = number(t, base);
             Mat::Ok(seq![Term::Comp(ascii("naf"@), seq![n.0])], n.1, 0)
         },
+        // ground by `compare::holds`: no numbering, no clause-node charge
+        PNode::Builtin(t) => Mat::Ok(seq![Term::Comp(ascii("builtin"@), seq![t])], base, 0),
         PNode::Clause(m, kids) => match sentence_of(coords, m) {
             Result::Err(o) => Mat::Err(o),
             Result::Ok(sentence) => match mat_all(db, coords, digests, kids, base) {
@@ -662,6 +685,7 @@ pub open spec fn node_valid(db: Seq<DocClause>, th: Seq<(nat, Term)>, g: Term, n
             ) && naf_fails(db, t),
             _ => false,
         },
+        PNode::Builtin(t) => t == apply(g, th) && crate::compare::holds(t),
         // Trigger on the nonrecursive renamed head: the recursive `resolves`
         // term is fuel-indexed and never matches a witness proved at another
         // fuel (R75).
@@ -1121,7 +1145,7 @@ pub open spec fn node_join(coords: Seq<Coord>, digests: Seq<Seq<u8>>, node: Term
                 },
                 _ => Join::Bad(atom("node_shape"@)),
             }
-        } else if name == ascii("naf"@) && args.len() == 1 {
+        } else if (name == ascii("naf"@) || name == ascii("builtin"@)) && args.len() == 1 {
             Join::Ok(0)
         } else {
             Join::Bad(atom("node_shape"@))
@@ -1151,13 +1175,21 @@ pub open spec fn list_join(coords: Seq<Coord>, digests: Seq<Seq<u8>>, t: Term) -
     }
 }
 
-// Roots are clause nodes; naf leaves live only among a clause node's children.
+pub open spec fn is_builtin_node(node: Term) -> bool {
+    match node {
+        Term::Comp(name, args) => name == ascii("builtin"@) && args.len() == 1,
+        _ => false,
+    }
+}
+
+// Roots are clause nodes or builtin leaves (a question's comparison goal);
+// naf leaves live only among a clause node's children.
 pub open spec fn roots_join(coords: Seq<Coord>, digests: Seq<Seq<u8>>, nodes: Seq<Term>) -> Join
     decreases nodes.len(),
 {
     if nodes.len() == 0 {
         Join::Ok(0)
-    } else if !is_clause_node(nodes[0]) {
+    } else if !is_clause_node(nodes[0]) && !is_builtin_node(nodes[0]) {
         Join::Bad(atom("node_shape"@))
     } else {
         match node_join(coords, digests, nodes[0]) {

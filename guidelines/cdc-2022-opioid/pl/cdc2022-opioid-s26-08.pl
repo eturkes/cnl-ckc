@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s26-08',ace_sha256('60ab539095021ce53ec0e10dcd30c00d08b3d4a5f2ef79059efc3641a48e0ecd'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should understand a community-nonpharmacologic-option.

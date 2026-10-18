@@ -1,6 +1,8 @@
 // S2 P2/P3: contract-only oracle + frozen S1 bytes; CKC_S2_TEST_BIN selects red replay.
 #[path = "../../../tests/s2-compiler/model.rs"]
 mod model;
+#[path = "support/nt_projection.rs"]
+mod nt_projection;
 
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -625,12 +627,13 @@ fn compiler_row(row: &'static str, predicate: impl Fn(&Case) -> bool) {
             );
             if actual.ok() {
                 let predicted = expected(c, c.table.as_deref());
+                let projected = nt_projection::erase(&actual.stdout, &predicted);
                 checks.require(
-                    actual.stdout == predicted,
+                    projected == predicted,
                     format!(
                         "{} exact contract projection: {}",
                         c.id,
-                        difference(&predicted, &actual.stdout)
+                        difference(&predicted, &projected)
                     ),
                 );
             }
@@ -908,12 +911,13 @@ fn t3l_reclassification_invariance_and_guard() {
                 if actual.ok() {
                     let table = format!("{}qualifier\tcarefully\t{class}\n", model::HEADER);
                     let predicted = expected(c, Some(&table));
+                    let projected = nt_projection::erase(&actual.stdout, &predicted);
                     checks.require(
-                        actual.stdout == predicted,
+                        projected == predicted,
                         format!(
                             "{} {class} class-only reclassification: {}",
                             c.id,
-                            difference(&predicted, &actual.stdout)
+                            difference(&predicted, &projected)
                         ),
                     );
                 }
@@ -935,17 +939,19 @@ fn t3m_every_green_erases_to_s1_and_naf_obligation_boundary() {
         if actual.ok() {
             if c.expect == "naf-qualified" {
                 let predicted = expected(c, c.table.as_deref());
+                let projected = nt_projection::erase(&actual.stdout, &predicted);
                 checks.require(
-                    actual.stdout == predicted,
+                    projected == predicted,
                     format!(
                         "{} exact NAF qualification: {}",
                         c.id,
-                        difference(&predicted, &actual.stdout)
+                        difference(&predicted, &projected)
                     ),
                 );
             }
             let old = frozen(c, "pl.in");
-            let erased = model::erase(&actual.stdout, &old);
+            let projected = nt_projection::erase(&actual.stdout, &expected(c, c.table.as_deref()));
+            let erased = model::erase(&projected, &old);
             checks.require(
                 erased == old,
                 format!(
@@ -964,7 +970,8 @@ fn t3m_every_green_erases_to_s1_and_naf_obligation_boundary() {
             );
             if erased.ok() {
                 let old = frozen(c, "pl.in");
-                let normalized = model::erase(&erased.stdout, &old);
+                let projected = nt_projection::erase(&erased.stdout, &old);
+                let normalized = model::erase(&projected, &old);
                 checks.require(
                     normalized == old,
                     format!(

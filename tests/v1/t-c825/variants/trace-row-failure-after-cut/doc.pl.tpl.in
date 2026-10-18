@@ -1,4 +1,4 @@
-@@sha256 b4d4861b153a989e2ae39f6b1624bea9cf003f0c674852176d69eb90e4813681
+@@sha256 0d935f59b5a2af480320d4a2461d250bdb50ae0be40a5fc1664b9905b989b1ec
 % doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
@@ -36,6 +36,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none),vocabulary(none)).
 % S1: Synthetic attributed fixture sentence.

@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec02-imp09',ace_sha256('5a8021a6c4b042712577b23e7f8b84e88875ab2263b5defdef20f59bed8600e0'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has a chronic-low-back-pain and a nonpharmacologic-approach does not improve the chronic-low-back-pain and the patient does not have a contraindication then every clinician may consider an NSAID and may consider a duloxetine.

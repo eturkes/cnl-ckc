@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec06-imp04',ace_sha256('996f9d71e42d0438620f35a816d33db74e470e74c215034a525cb3d3a71ee7fe'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has a severe-acute-pain and the severe-acute-pain continues after an expected-pain-duration then every clinician should maintain a prolonged-severe-acute-pain-care-mechanism for the patient.

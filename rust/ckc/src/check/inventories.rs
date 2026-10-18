@@ -188,6 +188,10 @@ pub(super) fn guidelines() -> Result<Vec<Guideline>> {
     let mut plans = vec![];
     for p in entries(root, "guidelines")? {
         let n = name(&p);
+        // nt1 D10: the one common member; its own check (`schema.rs`) owns its law.
+        if n == super::schema::FILE && !p.is_symlink() && p.is_file() {
+            continue;
+        }
         if p.is_symlink() {
             return Err(violation("guideline-entry", format!("symlink: {n}")));
         }
@@ -221,7 +225,7 @@ fn known_pl(s: &str) -> bool {
     if s.starts_with("vendor/ape/")
         || matches!(
             s,
-            "vendor/clex/clex_lexicon.pl" | "rust/ckc/prolog/drs_dump.pl"
+            "vendor/clex/clex_lexicon.pl" | "rust/ckc/prolog/drs_dump.pl" | "guidelines/schema.pl"
         )
     {
         return true;

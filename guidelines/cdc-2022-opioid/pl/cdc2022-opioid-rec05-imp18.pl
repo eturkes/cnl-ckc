@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec05-imp18',ace_sha256('7cd13ad88e69eb568e4e4f137726c33c2f953ffc69b4d8454cbd087dbaaf5413'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician determines an opioid-discontinuation-goal with a patient and the patient reaches a smallest-available-dose then the clinician can extend a dose-interval.

@@ -197,6 +197,7 @@ pub fn project_query(
     hide(spec::strip_box);
     hide(spec::flatten_list);
     hide(spec::expand);
+    hide(spec::compared);
     let ghost start = arena.nodes@;
     let root = match box_parts(arena, drs) {
         Some(b) => b,
@@ -296,9 +297,20 @@ pub fn project_query(
     proof {
         assert_seqs_equal!(map_model(empty@) == Seq::<(Term, Term)>::empty());
     }
-    let goals_result = expand(arena, &flat.items, &empty, &empty);
+    let cb = crate::m6_flat::add(arena, base, flat.n);
+    let ghost nb = arena.nodes@;
+    proof {
+        items_prefix(n5, nb, flat.items@);
+    }
+    let converted = crate::m6_compare::compared(arena, &flat.items, cb);
+    let ghost nc = arena.nodes@;
+    proof {
+        crate::k2_load::prefix_chain(n5, nb, nc);
+    }
+    let goals_result = expand(arena, &converted, &empty, &empty);
     let ghost n6 = arena.nodes@;
     proof {
+        crate::k2_load::prefix_chain(n5, nc, n6);
         crate::k2_load::prefix_chain(start, n5, n6);
         prefix_all(n5, n6, answers@);
     }

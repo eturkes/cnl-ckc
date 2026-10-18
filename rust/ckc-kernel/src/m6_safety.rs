@@ -69,41 +69,43 @@ pub proof fn occ_all_bridge(ts: Seq<Term>, x: nat)
     reveal(spec::occ_all);
 }
 
+pub open spec fn positive_terms_model(bs: Seq<BodyItem>) -> Seq<Term> {
+    spec::pos_terms(bs.filter(|it: BodyItem| it is Pos))
+}
+
 pub proof fn positive_step(bs: Seq<BodyItem>, b: BodyItem)
     ensures
-        spec::positive_goals(bs.push(b)) == match b {
-            BodyItem::Pos(t) => spec::positive_goals(bs).push(t),
-            BodyItem::Naf(_) => spec::positive_goals(bs),
+        positive_terms_model(bs.push(b)) == match b {
+            BodyItem::Pos(t) => positive_terms_model(bs).push(t),
+            BodyItem::Naf(_) => positive_terms_model(bs),
         },
 {
     reveal(Seq::filter);
-    reveal(spec::positive_goals);
     reveal(spec::pos_terms);
     assert(bs.push(b).drop_last() == bs);
     assert(bs.push(b).last() == b);
     match b {
         BodyItem::Pos(t) => {
-            assert_seqs_equal!(spec::positive_goals(bs.push(b)) == spec::positive_goals(bs).push(t));
+            assert_seqs_equal!(positive_terms_model(bs.push(b)) == positive_terms_model(bs).push(t));
         },
         BodyItem::Naf(_) => {
-            assert_seqs_equal!(spec::positive_goals(bs.push(b)) == spec::positive_goals(bs));
+            assert_seqs_equal!(positive_terms_model(bs.push(b)) == positive_terms_model(bs));
         },
     }
 }
 
-pub fn positive_goals(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<T>)
+pub fn positive_terms(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<T>)
     requires
         arena_ok(arena),
         bodies_valid(arena.nodes@, bs@),
     ensures
         valid_all(arena.nodes@, out@),
-        models(out@) == spec::positive_goals(body_models(bs@)),
+        models(out@) == positive_terms_model(body_models(bs@)),
 {
     let mut out = Vec::new();
     let mut i = 0usize;
     proof {
         reveal(Seq::filter);
-        reveal(spec::positive_goals);
         reveal(spec::pos_terms);
     }
     while i < bs.len()
@@ -112,7 +114,7 @@ pub fn positive_goals(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<T>)
             bodies_valid(arena.nodes@, bs@),
             valid_all(arena.nodes@, out@),
             i <= bs.len(),
-            models(out@) == spec::positive_goals(body_models(bs@).take(i as int)),
+            models(out@) == positive_terms_model(body_models(bs@).take(i as int)),
         decreases bs.len() - i,
     {
         proof {
@@ -133,6 +135,69 @@ pub fn positive_goals(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<T>)
     }
     proof {
         assert(body_models(bs@).take(i as int) == body_models(bs@));
+    }
+    out
+}
+
+pub fn is_builtin_lit(arena: &ETermArena, t: &T) -> (out: bool)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, t),
+    ensures
+        out == spec::is_builtin_lit(t@),
+{
+    match parts(arena, t) {
+        Some((name, args)) => crate::compare_impl::is_builtin_exec(&name, args.len()),
+        None => false,
+    }
+}
+
+pub fn positive_goals(arena: &ETermArena, bs: &Vec<Body>) -> (out: Vec<T>)
+    requires
+        arena_ok(arena),
+        bodies_valid(arena.nodes@, bs@),
+    ensures
+        valid_all(arena.nodes@, out@),
+        models(out@) == spec::positive_goals(body_models(bs@)),
+{
+    let terms = positive_terms(arena, bs);
+    let mut out = Vec::new();
+    let mut i = 0usize;
+    proof {
+        reveal(Seq::filter);
+    }
+    while i < terms.len()
+        invariant
+            arena_ok(arena),
+            valid_all(arena.nodes@, terms@),
+            valid_all(arena.nodes@, out@),
+            models(terms@) == positive_terms_model(body_models(bs@)),
+            i <= terms.len(),
+            models(out@) == models(terms@).take(i as int).filter(
+                |t: Term| !spec::is_builtin_lit(t),
+            ),
+        decreases terms.len() - i,
+    {
+        proof {
+            assert(models(terms@).take(i as int + 1) == models(terms@).take(i as int).push(
+                models(terms@)[i as int],
+            ));
+            models(terms@).take(i as int).lemma_filter_push(
+                models(terms@)[i as int],
+                |t: Term| !spec::is_builtin_lit(t),
+            );
+        }
+        if !is_builtin_lit(arena, &terms[i]) {
+            let next = terms[i].cp();
+            proof {
+                extend(arena.nodes@, out@, next);
+            }
+            out.push(next);
+        }
+        i += 1;
+    }
+    proof {
+        assert(models(terms@).take(i as int) == models(terms@));
     }
     out
 }
@@ -215,7 +280,7 @@ pub proof fn naf_count(bs: Seq<BodyItem>, x: nat)
 }
 
 pub open spec fn clause_stream(c: DocClause) -> Seq<nat> {
-    term::var_stream(c.head) + term::var_stream_all(spec::positive_goals(c.body)) + naf_stream(
+    term::var_stream(c.head) + term::var_stream_all(positive_terms_model(c.body)) + naf_stream(
         c.body,
     )
 }
@@ -228,7 +293,7 @@ pub fn clause_vars(arena: &ETermArena, c: &Clause) -> (out: Vec<usize>)
         nums(out@) == clause_stream(c@),
 {
     let hs = stream(arena, &c.head);
-    let pos = positive_goals(arena, &c.body);
+    let pos = positive_terms(arena, &c.body);
     let ps = stream_all(arena, &pos);
     let ns = naf_vars(arena, &c.body);
     let hp = concat_nums(&hs, &ps);
@@ -240,20 +305,20 @@ pub proof fn clause_count(c: DocClause, x: nat)
         occurrences(clause_stream(c), x) == spec::clause_occ(x, c),
 {
     occurrences_concat(
-        term::var_stream(c.head) + term::var_stream_all(spec::positive_goals(c.body)),
+        term::var_stream(c.head) + term::var_stream_all(positive_terms_model(c.body)),
         naf_stream(c.body),
         x,
     );
     occurrences_concat(
         term::var_stream(c.head),
-        term::var_stream_all(spec::positive_goals(c.body)),
+        term::var_stream_all(positive_terms_model(c.body)),
         x,
     );
     occ_bridge(c.head, x);
-    occ_all_bridge(spec::positive_goals(c.body), x);
+    occ_all_bridge(positive_terms_model(c.body), x);
     naf_count(c.body, x);
     reveal(spec::clause_occ);
-    reveal(spec::positive_goals);
+    reveal(positive_terms_model);
 }
 
 pub fn head_safe(arena: &ETermArena, c: &Clause) -> (out: bool)
@@ -264,7 +329,7 @@ pub fn head_safe(arena: &ETermArena, c: &Clause) -> (out: bool)
         out == spec::head_safe(c@),
 {
     let h = stream(arena, &c.head);
-    let goals = positive_goals(arena, &c.body);
+    let goals = positive_terms(arena, &c.body);
     let p = stream_all(arena, &goals);
     subset(&h, &p)
 }
@@ -549,6 +614,8 @@ pub fn expanded_len(arena: &ETermArena, inner: &T) -> (out: usize)
         Some((name, args)) => {
             if has_name(&name, &Sym::Object) && args.len() == 6 {
                 2
+            } else if has_name(&name, &Sym::DollarGuidelineBound) && args.len() == 8 {
+                3
             } else if has_name(&name, &Sym::Predicate) && args.len() >= 3 {
                 args.len() - 1
             } else {

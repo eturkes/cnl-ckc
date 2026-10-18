@@ -551,6 +551,19 @@ pub fn witness_pairs(
             Kind::Anch(_, inner) => {
                 let refs = cond_refs(arena, inner);
                 out = witness_refs(arena, &refs, ordered, map, env, k, &out);
+                proof {
+                    prefix(before, arena.nodes@, inner);
+                }
+                if is_comp(arena, inner, &Sym::DollarGuidelineBound, 8) {
+                    let xs = args(arena, inner);
+                    out = push_binding(arena, out, &xs[4], xs[6].cp());
+                    out = push_binding(arena, out, &xs[5], xs[7].cp());
+                } else if is_comp(arena, inner, &Sym::DollarGuidelineScaled, 6) {
+                    let xs = args(arena, inner);
+                    out = push_binding(arena, out, &xs[0], xs[3].cp());
+                    out = push_binding(arena, out, &xs[1], xs[4].cp());
+                    out = push_binding(arena, out, &xs[2], xs[5].cp());
+                }
             },
         }
         proof {

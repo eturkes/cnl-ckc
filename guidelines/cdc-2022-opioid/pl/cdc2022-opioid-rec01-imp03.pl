@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec01-imp03',ace_sha256(bafa5bba8cc4479743a58c976e281fc62e77a1e5a38db61fda6fbea8e4a31426),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should prescribe an as-needed-opioid instead-of a scheduled-opioid for a moderate-to-severe-pain and should advise an as-needed-opioid instead-of a scheduled-opioid for a moderate-to-severe-pain.
@@ -83,6 +85,7 @@ guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,r
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(7),[]),na,eq,1).
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(8),[]),hour,countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(8),[]),na,geq,4).
+guideline_unit(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(8),[]),hour).
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(9),[]),'moderate-to-severe-pain',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(9),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(10),[]),use).

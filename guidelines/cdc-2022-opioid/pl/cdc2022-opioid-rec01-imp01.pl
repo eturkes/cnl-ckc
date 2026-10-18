@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec01-imp01',ace_sha256('6e0aebe35e96bdf3da641fb34355287c16b504575c5262febeafc343bc3490b1'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a nonopioid-pharmacologic-therapy is appropriate for a specific-condition then every clinician should maximize the nonopioid-pharmacologic-therapy for the specific-condition.

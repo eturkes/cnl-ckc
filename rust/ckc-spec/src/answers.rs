@@ -39,7 +39,8 @@ pub open spec fn foreign(name: Term, arity: nat) -> Term {
     Term::Comp(ascii("goal_foreign"@), seq![name, Term::Int(arity as int)])
 }
 
-// A query names semantic predicates only (the 13 indicators; contract c1 D3).
+// A query names semantic predicates (contract c1 D3) and the comparison
+// built-ins (contract nt1 D5) only.
 pub open spec fn goal_walk(g: Term) -> Option<Term>
     decreases g,
 {
@@ -50,7 +51,10 @@ pub open spec fn goal_walk(g: Term) -> Option<Term>
                 Option::Some(w) => Option::Some(w),
                 Option::None => goal_walk(args[1]),
             }
-        } else if is_semantic_pred(name, args.len()) {
+        } else if is_semantic_pred(name, args.len()) || crate::compare::is_builtin(
+            name,
+            args.len(),
+        ) {
             Option::None
         } else {
             Option::Some(foreign(Term::Atom(name), args.len()))

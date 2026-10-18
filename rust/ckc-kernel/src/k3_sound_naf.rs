@@ -146,6 +146,61 @@ pub proof fn rename_all_index(ts: Seq<Term>, base: nat, delta: nat)
     }
 }
 
+pub proof fn rename_ground(t: Term, base: nat, delta: nat)
+    ensures
+        ground(rename(t, base, delta)) == ground(t),
+    decreases t,
+{
+    if let Term::Comp(_, ts) = t {
+        rename_all_ground(ts, base, delta);
+    }
+}
+
+pub proof fn rename_all_ground(ts: Seq<Term>, base: nat, delta: nat)
+    ensures
+        ground_all(rename_all(ts, base, delta)) == ground_all(ts),
+    decreases ts,
+{
+    rename_all_index(ts, base, delta);
+    if ts.len() > 0 {
+        rename_ground(ts[0], base, delta);
+        rename_all_ground(ts.drop_first(), base, delta);
+        assert(rename_all(ts, base, delta).drop_first() =~= rename_all(
+            ts.drop_first(),
+            base,
+            delta,
+        ));
+    }
+}
+
+proof fn scalar_rename(t: Term, base: nat, delta: nat)
+    ensures
+        match t {
+            Term::Atom(_) | Term::Int(_) => rename(t, base, delta) == t,
+            _ => !(rename(t, base, delta) is Atom) && !(rename(t, base, delta) is Int),
+        },
+{
+}
+
+pub proof fn builtin_rename(t: Term, base: nat, delta: nat)
+    ensures
+        ckc_spec::compare::holds(rename(t, base, delta)) == ckc_spec::compare::holds(t),
+{
+    if let Term::Comp(_, ts) = t {
+        rename_all_index(ts, base, delta);
+        if ts.len() == 4 || ts.len() == 6 {
+            scalar_rename(ts[0], base, delta);
+            scalar_rename(ts[1], base, delta);
+            scalar_rename(ts[2], base, delta);
+            scalar_rename(ts[3], base, delta);
+            if ts.len() == 6 {
+                scalar_rename(ts[4], base, delta);
+                scalar_rename(ts[5], base, delta);
+            }
+        }
+    }
+}
+
 pub proof fn rename_inj(a: Term, b: Term, base: nat, delta: nat)
     ensures
         (rename(a, base, delta) == rename(b, base, delta)) == (a == b),
@@ -927,7 +982,7 @@ pub open spec fn stack_cuts(stack: Seq<TGoal>, alts: Seq<TAlt>, limit: nat) -> b
 pub open spec fn call_stack(stack: Seq<TGoal>) -> bool {
     stack.len() > 0 && match stack[tselected(stack) as int] {
         TGoal::Lit(Term::Comp(n, ts), d, _) => d > 0 && !(n == comma_name() && ts.len() == 2) && !(n
-            == naf_name() && ts.len() == 1),
+            == naf_name() && ts.len() == 1) && !ckc_spec::compare::is_builtin(n, ts.len()),
         _ => false,
     }
 }
@@ -1422,6 +1477,14 @@ pub proof fn tstep_wf(db: Seq<DocClause>, c: TCfg)
                                 assert(stack_cuts(rest, alts, alts.len()));
                                 stack_bound_join(front, rest, c.fresh);
                                 stack_cuts_join(front, rest, alts, alts.len());
+                            } else if ckc_spec::compare::is_builtin(name, args.len()) {
+                                if ckc_spec::compare::holds(g) {
+                                    assert(c.ci == 0);
+                                    stack_bound_join(pre, rest, c.fresh);
+                                    stack_cuts_join(pre, rest, c.alts, c.alts.len());
+                                } else {
+                                    tfail_wf(c);
+                                }
                             } else {
                                 tcall_wf(db, c, name, args, d, pre, rest, c.ci, path);
                             }
@@ -1940,6 +2003,9 @@ pub proof fn project_call(
     }
 }
 
+// Its own z3 process: in the shared module session the query outgrew its rlimit
+// once the comparison branch joined (whole-workspace run; alone it verified).
+#[verifier::spinoff_prover]
 pub proof fn project_transition(
     db: Seq<DocClause>,
     a: TCfg,
@@ -2079,6 +2145,13 @@ pub proof fn project_transition(
                                     off,
                                 ) by {};
                                 proj_stack_join(ah, bh, ra, rb, base, delta, off);
+                            } else if ckc_spec::compare::is_builtin(name, args.len()) {
+                                builtin_rename(g, base, delta);
+                                if ckc_spec::compare::holds(g) {
+                                    proj_prefix_join(qa, qb, ra, rb, base, delta, off);
+                                } else {
+                                    project_fail(a, b, base, delta, off);
+                                }
                             } else {
                                 project_call(
                                     db,
@@ -2254,7 +2327,13 @@ pub proof fn tstep_prefix(db: Seq<DocClause>, c: TCfg)
                         Term::Comp(name, args) => {
                             if !(name == comma_name() && args.len() == 2) && !(name == naf_name()
                                 && args.len() == 1) {
-                                tcall_prefix(db, c, name, args, depth, pre, rest, c.ci, path);
+                                if ckc_spec::compare::is_builtin(name, args.len()) {
+                                    if !ckc_spec::compare::holds(g) {
+                                        tfail_prefix(c);
+                                    }
+                                } else {
+                                    tcall_prefix(db, c, name, args, depth, pre, rest, c.ci, path);
+                                }
                             }
                         },
                         _ => tfail_prefix(c),
@@ -2347,6 +2426,10 @@ pub proof fn new_frame_valid(db: Seq<DocClause>, c: TCfg, d: TCfg, fuel: nat)
                                 assert(nvars(g) <= c.fresh);
                                 nvars_all_index(args, 0);
                                 initialize_shadow(db, c, args[0], path, fuel);
+                            } else if ckc_spec::compare::is_builtin(name, args.len()) {
+                                if !ckc_spec::compare::holds(g) {
+                                    tfail_size(c);
+                                }
                             } else {
                                 tcall_prefix(db, c, name, args, depth, pre, rest, c.ci, path);
                                 assert(d.alts.len() == c.alts.len() + 1);
@@ -2392,6 +2475,7 @@ pub open spec fn event_safe(db: Seq<DocClause>, event: TEv) -> bool {
     match event {
         TEv::Clause(_) => true,
         TEv::Naf(t) => naf_fails(db, t),
+        TEv::Builtin(_) => true,
     }
 }
 
@@ -2603,6 +2687,12 @@ pub proof fn tstep_logs(db: Seq<DocClause>, c: TCfg)
                                         pruned: c.pruned,
                                     },
                                 );
+                            } else if ckc_spec::compare::is_builtin(name, args.len()) {
+                                if ckc_spec::compare::holds(g) {
+                                    log_safe_push(db, c.log, path, TEv::Builtin(g));
+                                } else {
+                                    tfail_logs(db, c);
+                                }
                             } else {
                                 tcall_logs(db, c, name, args, depth, pre, rest, c.ci, path);
                             }

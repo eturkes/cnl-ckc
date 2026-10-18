@@ -1554,14 +1554,59 @@ pub open spec fn unit_html(u: Bytes, one: bool) -> Option<Html> {
     }
 }
 
-// `<cmp> N <unit>` from the quantity's cardinality literal.
-pub open spec fn bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Option<Html> {
+// The comparison built-in over a converted cardinality's comparison variables.
+pub open spec fn filter_of(ts: Seq<Term>, cv: Term, nv: Term) -> Option<Seq<Term>>
+    decreases ts.len(),
+{
+    if ts.len() == 0 {
+        Option::None
+    } else {
+        match ts[0] {
+            Term::Comp(n, args) => if n == lit("guideline_satisfies"@) && (args.len() == 4
+                || args.len() == 6) && args[0] == cv && args[1] == nv {
+                Option::Some(args)
+            } else {
+                filter_of(ts.drop_first(), cv, nv)
+            },
+            _ => filter_of(ts.drop_first(), cv, nv),
+        }
+    }
+}
+
+// A quantity's stated bound: (comparison, count, unit of the bound when the
+// condition compares time units). A condition's bound sits in its comparison
+// built-in (contract nt1 D11); a fact's in its cardinality literal.
+pub open spec fn bound_of(d: DocFile, c: DocClause, q: Term) -> Option<(Term, Term, Option<Term>)> {
     match first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
-        Option::Some(args) => match (cmp_html(args[3]), args[4]) {
+        Option::Some(args) => if args[3] is Var {
+            match filter_of(join_terms(d, c), args[3], args[4]) {
+                Option::Some(f) => if f.len() == 4 {
+                    Option::Some((f[2], f[3], Option::None))
+                } else {
+                    Option::Some((f[3], f[4], Option::Some(f[5])))
+                },
+                Option::None => Option::None,
+            }
+        } else {
+            Option::Some((args[3], args[4], Option::None))
+        },
+        Option::None => Option::None,
+    }
+}
+
+// `<cmp> N <unit>` from the quantity's bound; a converted condition names the
+// bound's unit, its annotation a unit variable.
+pub open spec fn bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Option<Html> {
+    match bound_of(d, c, q) {
+        Option::Some((op, count, bu)) => match (cmp_html(op), count) {
             (Option::Some(cmp), Term::Int(n)) => if n < 0 {
                 Option::None
             } else {
-                match unit_html(atom_name(u), n == 1) {
+                let unit = match bu {
+                    Option::Some(b) => b,
+                    Option::None => u,
+                };
+                match unit_html(atom_name(unit), n == 1) {
                     Option::Some(w) => Option::Some(cmp + text(v1text::udec_bytes(n as nat)) + w),
                     Option::None => Option::None,
                 }
@@ -1578,14 +1623,19 @@ pub open spec fn bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Optio
 pub open spec fn range_bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Option<Html> {
     match first_with(join_terms(d, c), "guideline_range"@, 3, 1, q) {
         Option::None => bound_html(d, c, q, u),
-        Option::Some(r) => match (
-            first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, q),
-            first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, r[2]),
-        ) {
-            (Option::Some(lo), Option::Some(hi)) => match (lo[4], hi[4]) {
-                (Term::Int(n), Term::Int(m)) => if lo[3] == Term::Atom(lit("geq"@)) && hi[3]
+        Option::Some(r) => match (bound_of(d, c, q), bound_of(d, c, r[2])) {
+            (Option::Some(lo), Option::Some(hi)) => match (lo.1, hi.1) {
+                (Term::Int(n), Term::Int(m)) => if lo.0 == Term::Atom(lit("geq"@)) && hi.0
                     == Term::Atom(lit("eq"@)) && 0 <= n && 0 <= m {
-                    match unit_html(atom_name(u), m == 1) {
+                    match unit_html(
+                        atom_name(
+                            match lo.2 {
+                                Option::Some(b) => b,
+                                Option::None => u,
+                            },
+                        ),
+                        m == 1,
+                    ) {
                         Option::Some(w) => Option::Some(
                             fixed_bytes(a_minimum_of_sp()) + text(v1text::udec_bytes(n as nat))
                                 + fixed_bytes(sp_to_sp()) + text(v1text::udec_bytes(m as nat)) + w,
@@ -1647,10 +1697,10 @@ pub open spec fn order_html(role: Bytes) -> Html {
     }
 }
 
-// `<cmp> N` from a referent's cardinality literal (no unit word).
+// `<cmp> N` from a referent's bound (no unit word).
 pub open spec fn count_html(d: DocFile, c: DocClause, q: Term) -> Option<Html> {
-    match first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
-        Option::Some(args) => match (cmp_html(args[3]), args[4]) {
+    match bound_of(d, c, q) {
+        Option::Some((op, count, _)) => match (cmp_html(op), count) {
             (Option::Some(cmp), Term::Int(n)) => if n < 0 {
                 Option::None
             } else {
@@ -1851,10 +1901,21 @@ pub open spec fn timing_section(pl: Bytes) -> Seq<Html> {
 // literal of a document, joined as the timing table (the literal's own clause,
 // then every clause head in order); a word renders only when its bytes stand in
 // the pl, so every visible slot is a copied pl span, declared copy or a decimal.
+// A converted time quantity keeps no entity literal: it reads as its bound's
+// unit word (contract nt1 D11).
 pub open spec fn noun_html(pl: Bytes, d: DocFile, c: DocClause, r: Term) -> Html {
     match first_with(join_terms(d, c), "guideline_entity"@, 4, 1, r) {
         Option::Some(args) => pl_word(pl, atom_name(args[2])),
-        Option::None => fixed_bytes(not_stated()),
+        Option::None => match bound_of(d, c, r) {
+            Option::Some((_, Term::Int(n), Option::Some(b))) => match unit_html(
+                atom_name(b),
+                n == 1,
+            ) {
+                Option::Some(w) => w,
+                Option::None => fixed_bytes(not_stated()),
+            },
+            _ => fixed_bytes(not_stated()),
+        },
     }
 }
 
@@ -2131,7 +2192,16 @@ pub open spec fn action_html(pl: Bytes, d: DocFile, c: DocClause, e: Term) -> Ht
     match participant(join_terms(d, c), e, 2) {
         Option::Some(x) => match first_with(join_terms(d, c), "guideline_entity"@, 4, 1, x) {
             Option::Some(args) => verb + fixed_bytes(word_sep()) + pl_word(pl, atom_name(args[2])),
-            Option::None => verb,
+            Option::None => match bound_of(d, c, x) {
+                Option::Some((_, Term::Int(n), Option::Some(b))) => match unit_html(
+                    atom_name(b),
+                    n == 1,
+                ) {
+                    Option::Some(w) => verb + w,
+                    Option::None => verb,
+                },
+                _ => verb,
+            },
         },
         Option::None => verb,
     }

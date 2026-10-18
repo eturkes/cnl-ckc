@@ -18,7 +18,9 @@ that it came from, and every decision stays on record.
 - **Plain Prolog as the product.** The compiled knowledge base is
   ordinary Prolog clauses over a small, fixed vocabulary. Modality
   ("should", "must") and negation are recorded as data, not buried in
-  code, and any conforming engine can load the result.
+  code, and any conforming engine can load the result. The file
+  `guidelines/schema.pl` defines the numeric comparisons of the
+  conditions. Load it with the documents.
 - **Proof-checked compilation.** The compiler derives a proof
   obligation for every sentence and discharges it before it emits
   anything: a shipped clause is one that the compiler has proved
@@ -59,6 +61,11 @@ program, its formal specification, and its proofs.
   beside it so that the simplification is always visible.
 - The stored questions and answers are prepared demonstrations, not a
   clinical search service.
+- A condition with a number, such as "at least 50 MME/day", matches a
+  stated value that meets it: 60 meets it, and "at most 70" does not. A
+  plain number in a statement means at least that many. To state a
+  measured value, use `exactly`. Seconds, minutes, hours, days and weeks
+  convert, and months convert to years. Days and months do not convert.
 - The `ckc` program searches for answers in its own order. It checks
   an operator box, such as "should" or a negation, after the goal that
   names the content of the box. A standard Prolog engine searches the
@@ -93,7 +100,8 @@ Run each command in the repository root. The examples call the program
 - `ckc check` validates the repository: sources, coverage, lexicon,
   review records, fixtures, proofs, and the release manifest. It
   prints one line per section.
-- `ckc compile <guideline-id>` compiles the ACE documents again.
+- `ckc compile <guideline-id>` compiles the ACE documents again and
+  writes `guidelines/schema.pl`.
   `ckc queries <guideline-id>` derives the answers and the proof
   traces again. The results must equal the committed files.
 - `ckc certify <guideline-id>` certifies every committed document and

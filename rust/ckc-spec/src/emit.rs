@@ -413,6 +413,10 @@ pub open spec fn cond_refs(inner: Term) -> Seq<Term> {
             seq![args[0], args[2]]
         } else if name == ascii("property"@) && args.len() == 3 {
             seq![args[0]]
+        } else if (name == ascii("$guideline_bound"@) && args.len() == 8) || (name == ascii(
+            "$guideline_measure"@,
+        ) && args.len() == 4) {
+            seq![args[0]]
         } else {
             Seq::empty()
         },
@@ -703,6 +707,31 @@ pub open spec fn condition(
                     seq![lit("guideline_qualifier"@, seq![ctx, e, args[1], args[2]])],
                 ),
             }
+        } else if name == ascii("$guideline_unit"@) && args.len() == 2 {
+            match resolve(args[0], map, sko) {
+                Result::Err(er) => Result::Err(er),
+                Result::Ok(q) => Result::Ok(seq![lit("guideline_unit"@, seq![ctx, q, args[1]])]),
+            }
+        } else if name == ascii("$guideline_bound"@) && args.len() == 8 {
+            match resolve(args[0], map, sko) {
+                Result::Err(er) => Result::Err(er),
+                Result::Ok(r) => Result::Ok(
+                    seq![
+                        lit("guideline_entity"@, seq![ctx, r, args[1], args[2]]),
+                        lit("guideline_cardinality"@, seq![ctx, r, args[3], args[4], args[5]]),
+                        lit("guideline_satisfies"@, seq![args[4], args[5], args[6], args[7]]),
+                    ],
+                ),
+            }
+        } else if name == ascii("$guideline_measure"@) && args.len() == 4 {
+            match resolve(args[0], map, sko) {
+                Result::Err(er) => Result::Err(er),
+                Result::Ok(r) => Result::Ok(
+                    seq![lit("guideline_cardinality"@, seq![ctx, r, args[1], args[2], args[3]])],
+                ),
+            }
+        } else if name == ascii("$guideline_scaled"@) && args.len() == 6 {
+            Result::Ok(seq![lit("guideline_satisfies"@, args)])
         } else {
             Result::Err(atom("condition_shape"@))
         },
@@ -864,6 +893,8 @@ pub open spec fn expanded_len(inner: Term) -> nat {
     match inner {
         Term::Comp(name, args) => if name == ascii("object"@) && args.len() == 6 {
             2
+        } else if name == ascii("$guideline_bound"@) && args.len() == 8 {
+            3
         } else if name == ascii("predicate"@) && args.len() >= 3 {
             (args.len() - 1) as nat
         } else {
@@ -1665,8 +1696,28 @@ pub open spec fn rebuild_item(
             (c, arg(inner, 0)),
         ) {
             Result::Ok(Seq::empty())
-        } else if is_comp(inner, "object"@, 6) && approx.contains((c, arg(inner, 0))) {
-            Result::Ok(seq![Item::Anch(c, about_object(inner))])
+        } else if is_comp(inner, "object"@, 6) {
+            let o = if approx.contains((c, arg(inner, 0))) {
+                about_object(inner)
+            } else {
+                inner
+            };
+            // nt1 D2: a time quantity carries its unit id beside its cardinality
+            match assoc(env.tab.units, noun_of(inner)) {
+                Option::Some(u) => Result::Ok(
+                    seq![
+                        Item::Anch(c, o),
+                        Item::Anch(
+                            c,
+                            Term::Comp(
+                                ascii("$guideline_unit"@),
+                                seq![arg(inner, 0), Term::Atom(u)],
+                            ),
+                        ),
+                    ],
+                ),
+                Option::None => Result::Ok(seq![Item::Anch(c, o)]),
+            }
         } else {
             Result::Ok(seq![it])
         },
@@ -2097,6 +2148,312 @@ pub open spec fn flatten_doc(
     }
 }
 
+// --- comparison conditions (contract nt1 D3): rule bodies + question goals ---
+// A body object whose comparison bounds its count compares the stated count of
+// a matching fact with that bound through a comparison built-in. A time
+// quantity (the referent D2 gave a unit item) leaves its entity literal out and
+// compares across units: its unit and the unit slots of the annotations that
+// name it become one variable. The j-th convertible object of the body (scope
+// preorder, NAF payloads included) owns the fresh variables cb + 3j, +1, +2,
+// above every DRS referent and box context of the sentence.
+pub open spec fn convertible(c: Term) -> bool {
+    c == atom("exactly"@) || c == atom("geq"@) || c == atom("greater"@) || c == atom("leq"@) || c
+        == atom("less"@)
+}
+
+pub open spec fn is_object_cmp(inner: Term) -> bool {
+    is_comp(inner, "object"@, 6) && convertible(arg(inner, 4))
+}
+
+pub open spec fn conv_item(it: Item) -> Seq<Term>
+    decreases it, 0int,
+{
+    match it {
+        Item::Anch(_, inner) => if is_object_cmp(inner) {
+            seq![arg(inner, 0)]
+        } else {
+            Seq::empty()
+        },
+        Item::Naf(_, payload) => conv_refs(payload),
+        Item::Op(_, _, _, _) => Seq::empty(),
+    }
+}
+
+// Referents of the convertible objects, in preorder.
+pub open spec fn conv_refs(items: Seq<Item>) -> Seq<Term>
+    decreases items, 1int,
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        conv_item(items[0]) + conv_refs(items.drop_first())
+    }
+}
+
+pub open spec fn ref_pos(refs: Seq<Term>, r: Term) -> nat
+    decreases refs.len(),
+{
+    if refs.len() == 0 || refs[0] == r {
+        0
+    } else {
+        1 + ref_pos(refs.drop_first(), r)
+    }
+}
+
+pub open spec fn cvar(cb: nat, refs: Seq<Term>, r: Term, i: nat) -> Term {
+    Term::Var(cb + 3 * ref_pos(refs, r) + i)
+}
+
+pub open spec fn unit_of(scope: Seq<Item>, r: Term) -> Option<Term>
+    decreases scope.len(),
+{
+    if scope.len() == 0 {
+        Option::None
+    } else {
+        match scope[0] {
+            Item::Anch(_, inner) => if is_comp(inner, "$guideline_unit"@, 2) && arg(inner, 0) == r {
+                Option::Some(arg(inner, 1))
+            } else {
+                unit_of(scope.drop_first(), r)
+            },
+            _ => unit_of(scope.drop_first(), r),
+        }
+    }
+}
+
+// The convertible time quantities of one scope (no recursion into payloads).
+pub open spec fn scope_times(scope: Seq<Item>, items: Seq<Item>) -> Seq<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        (match items[0] {
+            Item::Anch(_, inner) => if is_object_cmp(inner) && unit_of(
+                scope,
+                arg(inner, 0),
+            ) is Some {
+                seq![arg(inner, 0)]
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        }) + scope_times(scope, items.drop_first())
+    }
+}
+
+pub open spec fn time_item(it: Item) -> Seq<Term>
+    decreases it, 0int,
+{
+    match it {
+        Item::Naf(_, payload) => time_refs(payload),
+        _ => Seq::empty(),
+    }
+}
+
+pub open spec fn nested_times(items: Seq<Item>) -> Seq<Term>
+    decreases items, 1int,
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        time_item(items[0]) + nested_times(items.drop_first())
+    }
+}
+
+pub open spec fn time_refs(items: Seq<Item>) -> Seq<Term>
+    decreases items, 2int,
+{
+    scope_times(items, items) + nested_times(items)
+}
+
+// The first object of r in a scope.
+pub open spec fn object_of(scope: Seq<Item>, r: Term) -> Option<Term>
+    decreases scope.len(),
+{
+    if scope.len() == 0 {
+        Option::None
+    } else {
+        match scope[0] {
+            Item::Anch(_, inner) => if is_comp(inner, "object"@, 6) && arg(inner, 0) == r {
+                Option::Some(inner)
+            } else {
+                object_of(scope.drop_first(), r)
+            },
+            _ => object_of(scope.drop_first(), r),
+        }
+    }
+}
+
+pub open spec fn comp(name: Seq<char>, args: Seq<Term>) -> Term {
+    Term::Comp(ascii(name), args)
+}
+
+// An annotation naming a converted time quantity carries its unit variable.
+pub open spec fn relink(times: Seq<Term>, refs: Seq<Term>, cb: nat, inner: Term) -> Term {
+    if is_comp(inner, "$guideline_interval"@, 5) && times.contains(arg(inner, 2)) {
+        comp(
+            "$guideline_interval"@,
+            seq![
+                arg(inner, 0),
+                arg(inner, 1),
+                arg(inner, 2),
+                cvar(cb, refs, arg(inner, 2), 2),
+                arg(inner, 4),
+            ],
+        )
+    } else if is_comp(inner, "$guideline_recurrence"@, 3) && times.contains(arg(inner, 1)) {
+        comp(
+            "$guideline_recurrence"@,
+            seq![arg(inner, 0), arg(inner, 1), cvar(cb, refs, arg(inner, 1), 2)],
+        )
+    } else if is_comp(inner, "$guideline_recurrence_window"@, 6) {
+        comp(
+            "$guideline_recurrence_window"@,
+            seq![
+                arg(inner, 0),
+                arg(inner, 1),
+                if times.contains(arg(inner, 1)) {
+                    cvar(cb, refs, arg(inner, 1), 2)
+                } else {
+                    arg(inner, 2)
+                },
+                arg(inner, 3),
+                arg(inner, 4),
+                if times.contains(arg(inner, 4)) {
+                    cvar(cb, refs, arg(inner, 4), 2)
+                } else {
+                    arg(inner, 5)
+                },
+            ],
+        )
+    } else {
+        inner
+    }
+}
+
+// The fresh variables of a payload's conversions: local to that NAF goal.
+pub open spec fn fresh_of(cb: nat, refs: Seq<Term>, rs: Seq<Term>) -> Seq<Term>
+    decreases rs.len(),
+{
+    if rs.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![cvar(cb, refs, rs[0], 0), cvar(cb, refs, rs[0], 1), cvar(cb, refs, rs[0], 2)]
+            + fresh_of(cb, refs, rs.drop_first())
+    }
+}
+
+pub open spec fn compare_item(
+    scope: Seq<Item>,
+    times: Seq<Term>,
+    refs: Seq<Term>,
+    cb: nat,
+    it: Item,
+) -> Seq<Item>
+    decreases it, 0int,
+{
+    match it {
+        Item::Anch(c, inner) => if is_object_cmp(inner) {
+            let r = arg(inner, 0);
+            if times.contains(r) {
+                seq![
+                    Item::Anch(
+                        c,
+                        comp(
+                            "$guideline_measure"@,
+                            seq![r, arg(inner, 3), cvar(cb, refs, r, 0), cvar(cb, refs, r, 1)],
+                        ),
+                    ),
+                ]
+            } else {
+                seq![
+                    Item::Anch(
+                        c,
+                        comp(
+                            "$guideline_bound"@,
+                            seq![
+                                r,
+                                arg(inner, 1),
+                                arg(inner, 2),
+                                arg(inner, 3),
+                                cvar(cb, refs, r, 0),
+                                cvar(cb, refs, r, 1),
+                                arg(inner, 4),
+                                arg(inner, 5),
+                            ],
+                        ),
+                    ),
+                ]
+            }
+        } else if is_comp(inner, "$guideline_unit"@, 2) && times.contains(arg(inner, 0)) {
+            let r = arg(inner, 0);
+            match object_of(scope, r) {
+                Option::Some(o) => seq![
+                    Item::Anch(c, comp("$guideline_unit"@, seq![r, cvar(cb, refs, r, 2)])),
+                    Item::Anch(
+                        c,
+                        comp(
+                            "$guideline_scaled"@,
+                            seq![
+                                cvar(cb, refs, r, 0),
+                                cvar(cb, refs, r, 1),
+                                cvar(cb, refs, r, 2),
+                                arg(o, 4),
+                                arg(o, 5),
+                                arg(inner, 1),
+                            ],
+                        ),
+                    ),
+                ],
+                Option::None => seq![it],
+            }
+        } else {
+            seq![Item::Anch(c, relink(times, refs, cb, inner))]
+        },
+        Item::Naf(dom, payload) => seq![
+            Item::Naf(
+                dom + fresh_of(cb, refs, conv_refs(payload)),
+                compare_list(payload, times, refs, cb, payload),
+            ),
+        ],
+        Item::Op(_, _, _, _) => seq![it],
+    }
+}
+
+pub open spec fn compare_list(
+    scope: Seq<Item>,
+    times: Seq<Term>,
+    refs: Seq<Term>,
+    cb: nat,
+    items: Seq<Item>,
+) -> Seq<Item>
+    decreases items, 1int,
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        compare_item(scope, times, refs, cb, items[0]) + compare_list(
+            scope,
+            times,
+            refs,
+            cb,
+            items.drop_first(),
+        )
+    }
+}
+
+pub open spec fn compared(items: Seq<Item>, cb: nat) -> Seq<Item> {
+    compare_list(items, time_refs(items), conv_refs(items), cb, items)
+}
+
+pub open spec fn is_builtin_lit(t: Term) -> bool {
+    match t {
+        Term::Comp(name, args) => crate::compare::is_builtin(name, args.len()),
+        _ => false,
+    }
+}
+
 // --- groups: fact clusters and rule variants ---
 pub ghost struct Group {
     pub k: nat,  // variant ordinal (1 for facts)
@@ -2330,7 +2687,19 @@ pub open spec fn witness_pairs(
                 acc
             },
             Item::Naf(_, _) => acc,
-            Item::Anch(_, inner) => witness_refs(cond_refs(inner), ordered, map, docid, s, k, acc),
+            Item::Anch(_, inner) => {
+                let acc0 = witness_refs(cond_refs(inner), ordered, map, docid, s, k, acc);
+                // nt1 D4: a converted condition's witness states its own bound
+                if is_comp(inner, "$guideline_bound"@, 8) {
+                    acc0.push((arg(inner, 4), arg(inner, 6))).push((arg(inner, 5), arg(inner, 7)))
+                } else if is_comp(inner, "$guideline_scaled"@, 6) {
+                    acc0.push((arg(inner, 0), arg(inner, 3))).push(
+                        (arg(inner, 1), arg(inner, 4)),
+                    ).push((arg(inner, 2), arg(inner, 5)))
+                } else {
+                    acc0
+                }
+            },
         };
         witness_pairs(items.drop_first(), ordered, map, docid, s, k, acc1)
     }
@@ -2364,9 +2733,10 @@ pub open spec fn witness_refs(
     }
 }
 
-// One Horn variant: body = antecedent items, one clause per consequent head.
+// One Horn variant: body = antecedent items (comparison conditions converted,
+// nt1 D3), one clause per consequent head.
 pub open spec fn variant(
-    aitems: Seq<Item>,
+    aitems0: Seq<Item>,
     citems: Seq<Item>,
     ordered: Seq<Term>,
     map: Seq<(Term, Term)>,
@@ -2374,9 +2744,11 @@ pub open spec fn variant(
     s: nat,
     docid: Seq<u8>,
     k: nat,
+    cb: nat,
 ) -> Result<Group, Term> {
-    let ante_refs = first_vars(ref_slots(aitems), Seq::empty());
+    let ante_refs = first_vars(ref_slots(aitems0), Seq::empty());
     let sko = skolem(cons_locals(ordered, ante_refs, map), ordered, deps, s, docid);
+    let aitems = compared(aitems0, cb);
     match (expand(aitems, map, sko), expand(citems, map, sko)) {
         (Result::Ok(goals), Result::Ok(heads)) => if goals.len() == 0 {
             Result::Err(atom("rule_without_antecedent"@))
@@ -2462,6 +2834,7 @@ pub open spec fn rule_groups(
                                         s,
                                         docid,
                                         1,
+                                        base + fc.n,
                                     ) {
                                         Result::Err(e) => Result::Err(e),
                                         Result::Ok(g) => Result::Ok(seq![g]),
@@ -2567,6 +2940,7 @@ pub open spec fn split_variants(
                                     s,
                                     docid,
                                     1,
+                                    base + c1.n,
                                 ),
                                 variant(
                                     fs.items + f2.items,
@@ -2577,6 +2951,7 @@ pub open spec fn split_variants(
                                     s,
                                     docid,
                                     2,
+                                    base + c1.n,
                                 ),
                             ) {
                                 (Result::Ok(g1), Result::Ok(g2)) => Result::Ok(seq![g1, g2]),
@@ -2810,8 +3185,10 @@ pub open spec fn bind_all(t: Term, pairs: Seq<(Term, Term)>) -> Term
     }
 }
 
+// Witness facts: the positive body goals other than the comparison built-ins,
+// which hold under the witness without a fact (nt1 D4).
 pub open spec fn positive_goals(body: Seq<BodyItem>) -> Seq<Term> {
-    pos_terms(body.filter(|it: BodyItem| it is Pos))
+    pos_terms(body.filter(|it: BodyItem| it is Pos)).filter(|t: Term| !is_builtin_lit(t))
 }
 
 pub open spec fn obligation(g: Group, docid: Seq<u8>, s: nat) -> Ob {
@@ -3203,7 +3580,11 @@ pub open spec fn project_query(drs: Term, qid: Seq<u8>, tab: Option<Vocabulary>)
                             nvars(drs),
                         ) {
                             Result::Err(e) => Result::Err(e),
-                            Result::Ok(f) => match expand(f.items, Seq::empty(), Seq::empty()) {
+                            Result::Ok(f) => match expand(
+                                compared(f.items, nvars(drs) + f.n),
+                                Seq::empty(),
+                                Seq::empty(),
+                            ) {
                                 Result::Err(e) => Result::Err(e),
                                 Result::Ok(goals) => if goals.len() == 0 || !all_pos(goals) {
                                     Result::Err(atom("query_unsupported"@))

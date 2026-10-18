@@ -291,16 +291,20 @@ pub fn node_join_exec(
     let ghost model = arena@[root as int];
     let clause: &[u8] = b"clause";
     let naf: &[u8] = b"naf";
+    let builtin: &[u8] = b"builtin";
     let cons: &[u8] = b"[|]";
     proof {
         reveal_byteslit(b"clause");
         reveal_strlit("clause");
         reveal_byteslit(b"naf");
         reveal_strlit("naf");
+        reveal_byteslit(b"builtin");
+        reveal_strlit("builtin");
         reveal_byteslit(b"[|]");
         reveal(ascii);
         assert(clause@ == ascii("clause"@));
         assert(naf@ == ascii("naf"@));
+        assert(builtin@ == ascii("builtin"@));
         assert(cons@ == cons_name());
     }
     let mut pending = Vec::new();
@@ -326,6 +330,7 @@ pub fn node_join_exec(
             ),
             clause@ == ascii("clause"@),
             naf@ == ascii("naf"@),
+            builtin@ == ascii("builtin"@),
             cons@ == cons_name(),
         decreases pending_work(arena.nodes@, pending@),
     {
@@ -428,7 +433,7 @@ pub fn node_join_exec(
                             pending_join(arena.nodes@, cs, ds, pending@),
                         ));
                     }
-                } else if !is_comp(arena, n, naf, 1) {
+                } else if !is_comp(arena, n, naf, 1) && !is_comp(arena, n, builtin, 1) {
                     return EJoin::Bad(EWhy::NodeShape);
                 }
             },
@@ -540,11 +545,15 @@ pub fn roots_join_exec(
     let ghost ds = digests_view(digests@);
     let ghost models = root_terms(arena.nodes@, nodes@);
     let clause: &[u8] = b"clause";
+    let builtin: &[u8] = b"builtin";
     proof {
         reveal_byteslit(b"clause");
         reveal_strlit("clause");
+        reveal_byteslit(b"builtin");
+        reveal_strlit("builtin");
         reveal(ascii);
         assert(clause@ == ascii("clause"@));
+        assert(builtin@ == ascii("builtin"@));
         assert_seqs_equal!(models.skip(0) == models);
     }
     let mut counted: Vec<usize> = Vec::new();
@@ -559,6 +568,7 @@ pub fn roots_join_exec(
             ds == digests_view(digests@),
             models == root_terms(arena.nodes@, nodes@),
             clause@ == ascii("clause"@),
+            builtin@ == ascii("builtin"@),
             roots_join(cs, ds, models) == plus(
                 Join::Ok(counted.len() as nat),
                 roots_join(cs, ds, models.skip(i as int)),
@@ -569,7 +579,7 @@ pub fn roots_join_exec(
             reveal_with_fuel(roots_join, 1);
             assert_seqs_equal!(models.skip(i as int).drop_first() == models.skip(i as int + 1));
         }
-        if !is_comp(arena, nodes[i], clause, 3) {
+        if !is_comp(arena, nodes[i], clause, 3) && !is_comp(arena, nodes[i], builtin, 1) {
             return EJoin::Bad(EWhy::NodeShape);
         }
         match node_join_exec(arena, coords, digests, nodes[i]) {

@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec08-imp21',ace_sha256('30bd3184d2af5ae9374e900b46a3c92e2b12c7dbf56fd4d8c6e017eb5a6adc1c'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician continues an opioid-therapy for a patient and the patient has an overdose-history then the clinician should discuss an increased-overdose-risk with the patient and should carefully weigh an opioid-benefit against a substantial-opioid-risk for the patient and should incorporate a risk-mitigation-strategy in a management-plan with the patient.

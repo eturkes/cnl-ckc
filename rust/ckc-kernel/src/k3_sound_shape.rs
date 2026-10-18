@@ -8,7 +8,8 @@ broadcast use {vstd::seq::group_seq_axioms, vstd::seq_lib::group_seq_properties}
 
 pub open spec fn positive(t: Term) -> bool {
     match t {
-        Term::Comp(name, args) => is_semantic_pred(name, args.len()),
+        Term::Comp(name, args) => is_semantic_pred(name, args.len())
+            || ckc_spec::compare::is_builtin(name, args.len()),
         _ => false,
     }
 }
@@ -24,11 +25,13 @@ pub open spec fn trace_literal(t: Term) -> bool {
 
 pub proof fn semantic_arity(name: Seq<u8>, arity: nat)
     requires
-        is_semantic_pred(name, arity),
+        is_semantic_pred(name, arity) || ckc_spec::compare::is_builtin(name, arity),
     ensures
         3 <= arity <= 7,
 {
-    let i = choose|i: int| 2 <= i < 18 && indicator(i) == (name, arity);
+    if is_semantic_pred(name, arity) {
+        let i = choose|i: int| 2 <= i < 19 && indicator(i) == (name, arity);
+    }
 }
 
 pub proof fn shift_all_map(ts: Seq<Term>, off: nat)
@@ -194,7 +197,7 @@ pub proof fn item_literal(it: BodyItem, off: nat)
             assert forall|i: int| 0 <= i < shift_all(gs, off).len() implies #[trigger] positive(
                 shift_all(gs, off)[i],
             ) by {
-                assert(wf_literal(gs[i]));
+                assert(wf_body_literal(gs[i]));
                 positive_shift(gs[i], off);
             }
             conj_term_walk(shift_all(gs, off));

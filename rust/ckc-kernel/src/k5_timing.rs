@@ -275,6 +275,142 @@ pub fn first_with_exec(
     None
 }
 
+pub fn filter_exec(arena: &ETermArena, ts: &Vec<T>, cv: &T, nv: &T) -> (out: Option<Vec<T>>)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, ts@),
+        valid(arena.nodes@, cv),
+        valid(arena.nodes@, nv),
+    ensures
+        match out {
+            Some(a) => crate::m6_term::valid_all(arena.nodes@, a@) && (a@.len() == 4 || a@.len()
+                == 6) && u::filter_of(models(ts@), cv@, nv@) == Some(models(a@)),
+            None => u::filter_of(models(ts@), cv@, nv@) is None,
+        },
+{
+    let name = crate::k5_bytes::literal("guideline_satisfies");
+    let ghost ms = models(ts@);
+    let mut i = 0usize;
+    proof {
+        assert(ms.skip(0) =~= ms);
+    }
+    while i < ts.len()
+        invariant
+            i <= ts@.len(),
+            arena_ok(arena),
+            crate::m6_term::valid_all(arena.nodes@, ts@),
+            valid(arena.nodes@, cv),
+            valid(arena.nodes@, nv),
+            name@ == u::lit("guideline_satisfies"@),
+            ms == models(ts@),
+            ms.len() == ts@.len(),
+            u::filter_of(ms, cv@, nv@) == u::filter_of(ms.skip(i as int), cv@, nv@),
+        decreases ts@.len() - i,
+    {
+        proof {
+            assert(ms.skip(i as int)[0] == ms[i as int]);
+            assert(ms.skip(i as int).drop_first() =~= ms.skip(i + 1));
+            assert(valid(arena.nodes@, &ts@[i as int]));
+        }
+        match crate::m6_term::parts(arena, &ts[i]) {
+            Some((n, a)) => {
+                if crate::k4_bytes::eq(&n, &name) && (a.len() == 4 || a.len() == 6) {
+                    proof {
+                        assert(models(a@)[0] == a@[0]@);
+                        assert(models(a@)[1] == a@[1]@);
+                        assert(valid(arena.nodes@, &a@[0]));
+                        assert(valid(arena.nodes@, &a@[1]));
+                    }
+                    if crate::m6_term::equal(arena, &a[0], cv) && crate::m6_term::equal(
+                        arena,
+                        &a[1],
+                        nv,
+                    ) {
+                        return Some(a);
+                    }
+                }
+            },
+            None => {},
+        }
+        i += 1;
+    }
+    proof {
+        assert(ms.skip(i as int).len() == 0);
+    }
+    None
+}
+
+pub open spec fn bound_view(b: Option<(T, T, Option<T>)>) -> Option<(Term, Term, Option<Term>)> {
+    match b {
+        Some((op, count, unit)) => Some(
+            (
+                op@,
+                count@,
+                match unit {
+                    Some(u) => Some(u@),
+                    None => None,
+                },
+            ),
+        ),
+        None => None,
+    }
+}
+
+pub fn bound_of_exec(
+    arena: &ETermArena,
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    q: &T,
+) -> (out: Option<(T, T, Option<T>)>)
+    requires
+        arena_ok(arena),
+        crate::m6_term::valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        valid(arena.nodes@, q),
+    ensures
+        bound_view(out) == u::bound_of(d, c, q@),
+        match out {
+            Some((op, count, unit)) => valid(arena.nodes@, &op) && valid(arena.nodes@, &count)
+                && match unit {
+                Some(u) => valid(arena.nodes@, &u),
+                None => true,
+            },
+            None => true,
+        },
+{
+    let name = crate::k5_bytes::literal("guideline_cardinality");
+    let args = match first_with_exec(arena, join, &name, Ghost("guideline_cardinality"@), 5, 1, q) {
+        None => return None,
+        Some(a) => a,
+    };
+    proof {
+        assert(models(args@)[3] == args@[3]@);
+        assert(models(args@)[4] == args@[4]@);
+        assert(valid(arena.nodes@, &args@[3]));
+        assert(valid(arena.nodes@, &args@[4]));
+    }
+    if crate::m6_term::is_var(arena, &args[3]) {
+        let f = match filter_exec(arena, join, &args[3], &args[4]) {
+            None => return None,
+            Some(a) => a,
+        };
+        proof {
+            assert forall|i: int| 0 <= i < f@.len() implies models(f@)[i] == f@[i]@ && valid(
+                arena.nodes@,
+                &f@[i],
+            ) by {}
+        }
+        if f.len() == 4 {
+            Some((f[2].cp(), f[3].cp(), None))
+        } else {
+            Some((f[3].cp(), f[4].cp(), Some(f[5].cp())))
+        }
+    } else {
+        Some((args[3].cp(), args[4].cp(), None))
+    }
+}
+
 // u::pl_word: the word as visible text when its bytes occur in the pl.
 pub fn pl_word_exec(pl: &[u8], w: &[u8]) -> (out: EPage)
     ensures
@@ -467,48 +603,24 @@ pub fn bound_exec(
     ensures
         opt_page(out) == u::bound_html(d, c, q@, un@),
 {
-    let name = crate::k5_bytes::literal("guideline_cardinality");
-    let args = match first_with_exec(arena, join, &name, Ghost("guideline_cardinality"@), 5, 1, q) {
+    hide(u::bound_of);
+    let (op, count, unit) = match bound_of_exec(arena, join, Ghost(d), Ghost(c), q) {
         None => return None,
-        Some(a) => a,
+        Some(b) => b,
     };
-    proof {
-        assert(models(args@)[3] == args@[3]@);
-        assert(models(args@)[4] == args@[4]@);
-        assert(valid(arena.nodes@, &args@[3]));
-        assert(valid(arena.nodes@, &args@[4]));
-    }
-    let cmp = match cmp_exec(arena, &args[3]) {
+    let cmp = match cmp_exec(arena, &op) {
         None => return None,
         Some(p) => p,
     };
-    proof {
-        assert(crate::k2_term::node_ok(arena.nodes@, args@[4].root as int));
-        reveal(crate::k2_term::node_ok);
-    }
-    let (magnitude, negative) = match &arena.nodes[args[4].root].kind {
-        ENodeKind::Int { magnitude, negative, .. } => (magnitude.clone(), *negative),
-        _ => return None,
+    let (magnitude, one) = match count_parts(arena, &count) {
+        None => return None,
+        Some(p) => p,
     };
-    if negative {
-        return None;
-    }
-    let one = magnitude.len() == 1 && magnitude[0] == 0x31;
-    proof {
-        if let Term::Int(n) = args@[4]@ {
-            reveal_with_fuel(v::udec_bytes, 2);
-            reveal(v::digit_byte);
-            assert(v::udec_bytes(1) =~= seq![0x31u8]);
-            if one {
-                assert(magnitude@ =~= v::udec_bytes(1));
-                crate::v1_term_impl::udec_bytes_injective(n as nat, 1);
-            }
-            if n == 1 {
-                assert(magnitude@ == v::udec_bytes(1));
-            }
-        }
-    }
-    let ua = match atom_of(arena, un) {
+    let unit = match unit {
+        Some(b) => b,
+        None => un.cp(),
+    };
+    let ua = match atom_of(arena, &unit) {
         Some(a) => a,
         None => Vec::new(),
     };
@@ -580,6 +692,7 @@ pub fn range_bound_exec(
     ensures
         opt_page(out) == u::range_bound_html(d, c, q@, un@),
 {
+    hide(u::bound_of);
     let rname = crate::k5_bytes::literal("guideline_range");
     let r = match first_with_exec(arena, join, &rname, Ghost("guideline_range"@), 3, 1, q) {
         None => return bound_exec(arena, join, Ghost(d), Ghost(c), q, un),
@@ -589,53 +702,38 @@ pub fn range_bound_exec(
         assert(models(r@)[2] == r@[2]@);
         assert(valid(arena.nodes@, &r@[2]));
     }
-    let name = crate::k5_bytes::literal("guideline_cardinality");
-    let lo = match first_with_exec(arena, join, &name, Ghost("guideline_cardinality"@), 5, 1, q) {
+    let (lo_op, lo_count, lo_unit) = match bound_of_exec(arena, join, Ghost(d), Ghost(c), q) {
         None => return None,
-        Some(a) => a,
+        Some(b) => b,
     };
-    let hi = match first_with_exec(
-        arena,
-        join,
-        &name,
-        Ghost("guideline_cardinality"@),
-        5,
-        1,
-        &r[2],
-    ) {
+    let (hi_op, hi_count, _) = match bound_of_exec(arena, join, Ghost(d), Ghost(c), &r[2]) {
         None => return None,
-        Some(a) => a,
+        Some(b) => b,
     };
-    proof {
-        assert(models(lo@)[3] == lo@[3]@);
-        assert(models(lo@)[4] == lo@[4]@);
-        assert(models(hi@)[3] == hi@[3]@);
-        assert(models(hi@)[4] == hi@[4]@);
-        assert(valid(arena.nodes@, &lo@[3]));
-        assert(valid(arena.nodes@, &lo@[4]));
-        assert(valid(arena.nodes@, &hi@[3]));
-        assert(valid(arena.nodes@, &hi@[4]));
-    }
-    let (ml, _) = match count_parts(arena, &lo[4]) {
+    let (ml, _) = match count_parts(arena, &lo_count) {
         None => return None,
         Some(p) => p,
     };
-    let (mh, one) = match count_parts(arena, &hi[4]) {
+    let (mh, one) = match count_parts(arena, &hi_count) {
         None => return None,
         Some(p) => p,
     };
-    let geq = match atom_of(arena, &lo[3]) {
+    let geq = match atom_of(arena, &lo_op) {
         Some(a) => is(&a, "geq"),
         None => false,
     };
-    let eq = match atom_of(arena, &hi[3]) {
+    let eq = match atom_of(arena, &hi_op) {
         Some(a) => is(&a, "eq"),
         None => false,
     };
     if !(geq && eq) {
         return None;
     }
-    let ua = match atom_of(arena, un) {
+    let unit = match lo_unit {
+        Some(b) => b,
+        None => un.cp(),
+    };
+    let ua = match atom_of(arena, &unit) {
         Some(a) => a,
         None => Vec::new(),
     };
@@ -906,7 +1004,7 @@ pub fn order_html_exec(role: &[u8]) -> (out: EPage)
     }
 }
 
-// u::count_html: `<cmp> N` from the referent's cardinality literal.
+// u::count_html: `<cmp> N` from the referent's bound.
 pub fn count_exec(
     arena: &ETermArena,
     join: &Vec<T>,
@@ -922,32 +1020,19 @@ pub fn count_exec(
     ensures
         opt_page(out) == u::count_html(d, c, q@),
 {
-    let name = crate::k5_bytes::literal("guideline_cardinality");
-    let args = match first_with_exec(arena, join, &name, Ghost("guideline_cardinality"@), 5, 1, q) {
+    hide(u::bound_of);
+    let (op, count, _) = match bound_of_exec(arena, join, Ghost(d), Ghost(c), q) {
         None => return None,
-        Some(a) => a,
+        Some(b) => b,
     };
-    proof {
-        assert(models(args@)[3] == args@[3]@);
-        assert(models(args@)[4] == args@[4]@);
-        assert(valid(arena.nodes@, &args@[3]));
-        assert(valid(arena.nodes@, &args@[4]));
-    }
-    let cmp = match cmp_exec(arena, &args[3]) {
+    let cmp = match cmp_exec(arena, &op) {
         None => return None,
         Some(p) => p,
     };
-    proof {
-        assert(crate::k2_term::node_ok(arena.nodes@, args@[4].root as int));
-        reveal(crate::k2_term::node_ok);
-    }
-    let (magnitude, negative) = match &arena.nodes[args[4].root].kind {
-        ENodeKind::Int { magnitude, negative, .. } => (magnitude.clone(), *negative),
-        _ => return None,
+    let (magnitude, _) = match count_parts(arena, &count) {
+        None => return None,
+        Some(p) => p,
     };
-    if negative {
-        return None;
-    }
     Some(h::cat(cmp, h::text(&magnitude)))
 }
 

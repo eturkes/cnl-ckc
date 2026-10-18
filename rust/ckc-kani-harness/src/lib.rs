@@ -46,10 +46,10 @@ mod harness {
     }
 
     #[kani::proof]
-    #[kani::unwind(1660)]
+    #[kani::unwind(1728)]
     fn reader_trace_check_small() {
         // Constant preflight; eight trace bytes cannot form a v1 envelope.
-        // The exact custody error keeps derivation unreachable. DOC has 1659 bytes.
+        // The exact custody error keeps derivation unreachable. DOC has 1727 bytes.
         let bytes: [u8; 8] = kani::any();
         for byte in bytes {
             kani::assume(matches!(
@@ -125,6 +125,8 @@ mod harness {
         ":- discontiguous(guideline_preference/4).\n",
         ":- multifile(guideline_qualifier/4).\n",
         ":- discontiguous(guideline_qualifier/4).\n",
+        ":- multifile(guideline_unit/3).\n",
+        ":- discontiguous(guideline_unit/3).\n",
         "guideline_schema_version(1).\n",
         "guideline_document(d,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
         "% S1: x\n",
@@ -149,11 +151,11 @@ mod harness {
     ];
 
     #[kani::proof]
-    #[kani::unwind(1660)]
+    #[kani::unwind(1728)]
     fn engine_answer_tiny() {
         // One canonical document, two ground facts, one ground goal, two successful queries.
         // No rules/NAF/variables: at most two clause attempts; semantic arguments are atoms.
-        // The longest byte scan is DOC.len() = 1659; bound = 1659 + one exit check.
+        // The longest byte scan is DOC.len() = 1727; bound = 1727 + one exit check.
         // One symbolic goal byte, fixed input addresses; hash bytes follow the same choice.
         let variant: u8 = kani::any();
         kani::assume(variant < 2);

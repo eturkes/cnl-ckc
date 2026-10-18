@@ -1193,20 +1193,48 @@ pub fn rebuild_item_exec(
                 }
             } else if is_comp(arena, inner, &Sym::Object, 6) {
                 let a0 = arg_at(arena, inner, 0);
-                if link_in(arena, approx, c, &a0) {
-                    let o = crate::m7_q12::about_object_exec(arena, inner);
-                    proof {
-                        crate::m6_term::prefix(start, arena.nodes@, c);
-                    }
-                    let one = anch(arena, c, &o);
-                    let mut v = Vec::new();
-                    v.push(one);
-                    proof {
-                        reveal_with_fuel(items_valid, 2);
-                        assert(item_models(v@) =~= seq![spec::Item::Anch(c@, o@)]);
-                    }
-                    return Ok(v);
+                let a1 = arg_at(arena, inner, 1);
+                let noun = atom_bytes(arena, &a1);
+                let unit = assoc_exec(&env.tab.units, &noun);
+                let o = if link_in(arena, approx, c, &a0) {
+                    crate::m7_q12::about_object_exec(arena, inner)
+                } else {
+                    inner.cp()
+                };
+                let ghost n1 = arena.nodes@;
+                proof {
+                    crate::m6_term::prefix(start, n1, c);
+                    crate::m6_term::prefix(start, n1, &a0);
                 }
+                let one = anch(arena, c, &o);
+                let mut v = Vec::new();
+                v.push(one);
+                proof {
+                    reveal_with_fuel(items_valid, 2);
+                    assert(item_models(v@) =~= seq![spec::Item::Anch(c@, o@)]);
+                }
+                if let Some(u) = unit {
+                    let u = atom(arena, &u);
+                    let ghost n2 = arena.nodes@;
+                    proof {
+                        crate::m6_term::prefix(n1, n2, c);
+                        crate::m6_term::prefix(n1, n2, &a0);
+                    }
+                    let tag = c2(arena, &Sym::DollarGuidelineUnit, &a0, &u);
+                    proof {
+                        crate::k2_load::prefix_chain(n1, n2, arena.nodes@);
+                        crate::k2_load::prefix_chain(start, n1, arena.nodes@);
+                        crate::m6_term::prefix(n2, arena.nodes@, c);
+                        items_prefix(n1, arena.nodes@, v@);
+                    }
+                    let next = anch(arena, c, &tag);
+                    v.push(next);
+                    proof {
+                        reveal_with_fuel(items_valid, 3);
+                        assert(item_models(v@) =~= seq![spec::Item::Anch(c@, o@), next@]);
+                    }
+                }
+                return Ok(v);
             }
         },
         Kind::Naf { dom, payload } => {

@@ -35,11 +35,14 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('about--interval',ace_sha256(ed87bbce8b24d06a6d270f4e0883e4860bc342eb306b019f970f9bf98236ab7b),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256('24f9752224fcecc844f72322d0844d101a96e07fe3643cd98b9a4e96e6f7ad44'))).
 % S1: If a patient has a surgery then the patient waits for 2 approximate hours.
 guideline_entity(actual,'$guideline_id'(product,'about--interval',1,ref(4),[A,B,C]),hour,countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,surgery,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_cardinality(actual,'$guideline_id'(product,'about--interval',1,ref(4),[A,B,C]),na,about,2) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,surgery,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
+guideline_unit(actual,'$guideline_id'(product,'about--interval',1,ref(4),[A,B,C]),hour) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,surgery,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_property(actual,'$guideline_id'(product,'about--interval',1,ref(4),[A,B,C]),approximate,pos) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,surgery,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_event(actual,'$guideline_id'(product,'about--interval',1,ref(5),[A,B,C]),wait) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,surgery,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_arg(actual,'$guideline_id'(product,'about--interval',1,ref(5),[A,B,C]),1,A) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,surgery,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

@@ -17,6 +17,7 @@ pub enum EGoal {
 pub enum EEvent {
     Clause(usize),
     Naf(usize),
+    Builtin(usize),
 }
 
 pub struct EEntry {
@@ -103,6 +104,7 @@ pub open spec fn event_view(nodes: Seq<ENode>, event: &EEvent) -> TEv {
     match event {
         EEvent::Clause(m) => TEv::Clause(*m as nat),
         EEvent::Naf(root) => TEv::Naf(nodes[*root as int].term@),
+        EEvent::Builtin(root) => TEv::Builtin(nodes[*root as int].term@),
     }
 }
 
@@ -117,7 +119,7 @@ pub open spec fn log_view(nodes: Seq<ENode>, log: Seq<EEntry>) -> Seq<(Seq<nat>,
 pub open spec fn entry_valid(nodes: Seq<ENode>, db_len: nat, entry: &EEntry) -> bool {
     match entry.event {
         EEvent::Clause(m) => m < db_len,
-        EEvent::Naf(root) => root < nodes.len(),
+        EEvent::Naf(root) | EEvent::Builtin(root) => root < nodes.len(),
     }
 }
 
@@ -269,7 +271,7 @@ pub proof fn log_prefix(before: Seq<ENode>, after: Seq<ENode>, db_len: nat, log:
         assert(entry_valid(before, db_len, &log[i]));
         match log[i].event {
             EEvent::Clause(_) => {},
-            EEvent::Naf(root) => {
+            EEvent::Naf(root) | EEvent::Builtin(root) => {
                 assert(before[root as int] == after[root as int]);
             },
         }

@@ -296,7 +296,7 @@ fn readme(
             text += &rights_line(gid, row, "Source: ", ".");
         }
     }
-    text += "\n## Replay\n\nThese commands run in the source repository at the commit that this archive names.\n\n- compile: ckc compile <guideline-id>\n- check: ckc check\n- load: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n";
+    text += "\n## Replay\n\nThese commands run in the source repository at the commit that this archive names.\n\n- compile: ckc compile <guideline-id>\n- check: ckc check\n- load: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n";
     text + schema
 }
 pub(super) fn member(path: &str, bytes: &[u8]) -> EMember {
@@ -370,6 +370,10 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
     for (_, path) in &inventory {
         let parts: Vec<&str> = path.split('/').collect();
         if parts.len() == 2 {
+            // nt1 D10: the schema file ships with every archive, outside any guideline's rights
+            if path == "guidelines/schema.pl" {
+                continue;
+            }
             return Err(error(format!("stray-root-member {path}")));
         }
         gids.insert(parts[1].to_owned());
@@ -467,6 +471,9 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
     let payload = staged
         .into_iter()
         .filter(|(p, _)| {
+            if p == "guidelines/schema.pl" {
+                return true;
+            }
             let gid = p.split('/').nth(1).unwrap_or("");
             let profile = &rs[gid][0][0];
             profile != "restricted"

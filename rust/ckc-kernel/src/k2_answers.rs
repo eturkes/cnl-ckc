@@ -25,7 +25,7 @@ fn semantic_name(name: &Vec<u8>, arity: usize) -> (out: bool)
         reveal(ckc_spec::v1text::is_semantic_pred);
         reveal(ckc_spec::v1text::indicator_count);
     }
-    let end: usize = 18;
+    let end: usize = 19;
     let mut i = 2usize;
     while i < end
         invariant
@@ -154,7 +154,10 @@ fn goal_offender(arena: &ETermArena, goal: usize) -> (out: Option<usize>)
                         crate::k2_engine::roots_work_concat(arena.nodes@, children, rest);
                         crate::k2_engine::terms_size_root_terms(arena.nodes@, children);
                     }
-                } else if !semantic_name(name, args.len()) {
+                } else if !semantic_name(name, args.len()) && !crate::compare_impl::is_builtin_exec(
+                    name,
+                    args.len(),
+                ) {
                     return Some(root);
                 }
             },
@@ -570,11 +573,11 @@ pub fn parsed_term_count(
                     ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
                 );
                 reveal(ckc_spec::v1text::ascii);
-                assert(ckc_spec::v1text::doc_line1(doc.docid).len() >= 38);
-                assert(parsed.clauses.len() + 38 <= bytes.len());
+                assert(ckc_spec::v1text::doc_line1(doc.docid).len() >= 40);
+                assert(parsed.clauses.len() + 40 <= bytes.len());
                 reveal(ckc_spec::v1text::indicator_count);
             }
-            parsed.clauses.len() + 38
+            parsed.clauses.len() + 40
         },
         crate::v1_term_impl::EV1Class::Query => 2,
         _ => 1,

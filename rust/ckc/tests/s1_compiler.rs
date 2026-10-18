@@ -1,6 +1,8 @@
 // S1 D1–D7/P2–P3 + S2 D1/P9: diff-blind compiler + vocabulary probes; CKC_S1_TEST_BIN selects red replay.
 #[path = "../../../tests/s1-compiler/model.rs"]
 mod model;
+#[path = "support/nt_projection.rs"]
+mod nt_projection;
 
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -796,12 +798,13 @@ fn compiler_row(row: &'static str) {
             );
             if actual.ok() {
                 let predicted = expected(c);
+                let projected = nt_projection::erase(&actual.stdout, &predicted);
                 checks.require(
-                    actual.stdout == predicted,
+                    projected == predicted,
                     format!(
                         "{} exact C1 + D1/D3/D4: {}",
                         c.id,
-                        difference(&predicted, &actual.stdout)
+                        difference(&predicted, &projected)
                     ),
                 );
             }
@@ -1022,7 +1025,8 @@ fn e19_every_green_projection_erases_to_c1() {
         );
         if actual.ok() {
             let old = baseline(c);
-            let erased = model::erase(&actual.stdout.replacen(QUALIFIER_DECLARATIONS, "", 1), &old);
+            let projected = nt_projection::erase(&actual.stdout, &expected(c));
+            let erased = model::erase(&projected.replacen(QUALIFIER_DECLARATIONS, "", 1), &old);
             checks.require(
                 erased == old,
                 format!("{} erased projection: {}", c.id, difference(&old, &erased)),
@@ -1045,7 +1049,7 @@ fn e21_question_identity_and_no_s1_goals() {
 fn e22_all_documents_have_ordered_17_indicator_block() {
     let results = results();
     let mut checks = Checks::new("E22");
-    let expected = model::declarations() + QUALIFIER_DECLARATIONS;
+    let expected = model::declarations() + QUALIFIER_DECLARATIONS + nt_projection::DECLARATIONS;
     let mut documents: Vec<_> = cases()
         .into_iter()
         .filter(|c| c.mode == "doc" && c.expect == "ok")

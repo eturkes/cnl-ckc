@@ -19,6 +19,7 @@ pub open spec fn clear_event(ev: TEv, stack: Seq<TGoal>, fresh: nat) -> bool {
     match ev {
         TEv::Naf(t) => nvars(t) <= fresh && clear_of(t, stack),
         TEv::Clause(_) => true,
+        TEv::Builtin(_) => true,
     }
 }
 
@@ -51,6 +52,7 @@ pub open spec fn naf_fixed(ev: TEv, s: Seq<(nat, Term)>) -> bool {
     match ev {
         TEv::Naf(t) => apply(t, s) == t,
         TEv::Clause(_) => true,
+        TEv::Builtin(_) => true,
     }
 }
 

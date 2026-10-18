@@ -110,15 +110,13 @@ pub proof fn decimal_text(n: nat, inputs: Seq<u::Bytes>)
     h::text(v::udec_bytes(n), inputs);
 }
 
-proof fn bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u::Bytes>)
+proof fn comparison(op: Term, inputs: Seq<u::Bytes>)
     ensures
-        opt_sound(u::bound_html(d, c, q, un), inputs),
+        opt_sound(u::cmp_html(op), inputs),
 {
     hide(u::copy_registry);
     hide(u::copy_derived);
-    hide(u::text);
     hide(u::lit);
-    hide(u::first_with);
     h::empty(inputs, 0);
     l::f250(inputs);
     l::f251(inputs);
@@ -126,6 +124,15 @@ proof fn bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u:
     l::f253(inputs);
     l::f254(inputs);
     l::f294(inputs);
+}
+
+pub proof fn unit(un: u::Bytes, one: bool, inputs: Seq<u::Bytes>)
+    ensures
+        opt_sound(u::unit_html(un, one), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lit);
     l::f262(inputs);
     l::f263(inputs);
     l::f264(inputs);
@@ -140,9 +147,27 @@ proof fn bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u:
     l::f273(inputs);
     l::f274(inputs);
     l::f275(inputs);
-    if let Some(args) = u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
-        if let (Some(cmp), Term::Int(n)) = (u::cmp_html(args[3]), args[4]) {
+}
+
+proof fn bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: Seq<u::Bytes>)
+    ensures
+        opt_sound(u::bound_html(d, c, q, un), inputs),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::text);
+    hide(u::bound_of);
+    hide(u::cmp_html);
+    hide(u::unit_html);
+    if let Some((op, count, bu)) = u::bound_of(d, c, q) {
+        comparison(op, inputs);
+        if let (Some(cmp), Term::Int(n)) = (u::cmp_html(op), count) {
             if n >= 0 {
+                let un = match bu {
+                    Some(b) => b,
+                    None => un,
+                };
+                unit(u::atom_name(un), n == 1, inputs);
                 if let Some(w) = u::unit_html(u::atom_name(un), n == 1) {
                     decimal_text(n as nat, inputs);
                     b::add(cmp, u::text(v::udec_bytes(n as nat)), inputs);
@@ -160,17 +185,11 @@ proof fn count(d: v::DocFile, c: v::DocClause, q: Term, inputs: Seq<u::Bytes>)
     hide(u::copy_registry);
     hide(u::copy_derived);
     hide(u::text);
-    hide(u::lit);
-    hide(u::first_with);
-    h::empty(inputs, 0);
-    l::f250(inputs);
-    l::f251(inputs);
-    l::f252(inputs);
-    l::f253(inputs);
-    l::f254(inputs);
-    l::f294(inputs);
-    if let Some(args) = u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
-        if let (Some(cmp), Term::Int(n)) = (u::cmp_html(args[3]), args[4]) {
+    hide(u::bound_of);
+    hide(u::cmp_html);
+    if let Some((op, count, _)) = u::bound_of(d, c, q) {
+        comparison(op, inputs);
+        if let (Some(cmp), Term::Int(n)) = (u::cmp_html(op), count) {
             if n >= 0 {
                 decimal_text(n as nat, inputs);
                 b::add(cmp, u::text(v::udec_bytes(n as nat)), inputs);
@@ -190,30 +209,20 @@ proof fn range_bound(d: v::DocFile, c: v::DocClause, q: Term, un: Term, inputs: 
     hide(u::lit);
     hide(u::first_with);
     hide(u::bound_html);
+    hide(u::bound_of);
+    hide(u::unit_html);
     bound(d, c, q, un, inputs);
-    l::f262(inputs);
-    l::f263(inputs);
-    l::f264(inputs);
-    l::f265(inputs);
-    l::f266(inputs);
-    l::f267(inputs);
-    l::f268(inputs);
-    l::f269(inputs);
-    l::f270(inputs);
-    l::f271(inputs);
-    l::f272(inputs);
-    l::f273(inputs);
-    l::f274(inputs);
-    l::f275(inputs);
     l::f295(inputs);
     l::f296(inputs);
     if let Some(r) = u::first_with(u::join_terms(d, c), "guideline_range"@, 3, 1, q) {
-        if let (Some(lo), Some(hi)) = (
-            u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, q),
-            u::first_with(u::join_terms(d, c), "guideline_cardinality"@, 5, 1, r[2]),
-        ) {
-            if let (Term::Int(n), Term::Int(m)) = (lo[4], hi[4]) {
+        if let (Some(lo), Some(hi)) = (u::bound_of(d, c, q), u::bound_of(d, c, r[2])) {
+            if let (Term::Int(n), Term::Int(m)) = (lo.1, hi.1) {
                 if 0 <= n && 0 <= m {
+                    let un = match lo.2 {
+                        Some(b) => b,
+                        None => un,
+                    };
+                    unit(u::atom_name(un), m == 1, inputs);
                     if let Some(w) = u::unit_html(u::atom_name(un), m == 1) {
                         decimal_text(n as nat, inputs);
                         decimal_text(m as nat, inputs);

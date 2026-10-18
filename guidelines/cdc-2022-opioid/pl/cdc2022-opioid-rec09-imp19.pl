@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec09-imp19',ace_sha256(b18943a06e6d9d90f9f804378d831990948772926804b261188f3847c376d1f7),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician plans a care-coordination with an other-clinician for a patient then the clinician should ideally discuss a safety-concern with the patient before the care-coordination and should ideally explain the care-coordination with the patient before the care-coordination.

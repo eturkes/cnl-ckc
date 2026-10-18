@@ -7,7 +7,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-const INDICATORS: [(&str, usize); 18] = [
+const INDICATORS: [(&str, usize); 19] = [
     ("guideline_schema_version", 1),
     ("guideline_document", 4),
     ("guideline_entity", 4),
@@ -26,6 +26,7 @@ const INDICATORS: [(&str, usize); 18] = [
     ("guideline_grade", 5),
     ("guideline_preference", 4),
     ("guideline_qualifier", 4),
+    ("guideline_unit", 3),
 ];
 const TABLE: &str = "# format: kind\tlemma\tvalue\nunit\thour\thour\nrelation\tfor\tduration\n";
 const SIMPLE: &str = "guideline_entity(actual,a,patient,countable)";
@@ -104,7 +105,7 @@ fn document(
 ) -> String {
     format!(
         "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{}",
-        declarations(18, 4),
+        declarations(19, 4),
         atom(id),
         atom(&sha(ace)),
         digest(ulex),
@@ -147,8 +148,8 @@ fn legacy_document(version: usize) -> String {
     let h = sha(TABLE);
     let d = plain_doc(None, (version != 1).then_some(h.as_str()));
     let d = d.replace(
-        &declarations(18, 4),
-        &declarations([0, 9, 11, 18][version], if version == 1 { 3 } else { 4 }),
+        &declarations(19, 4),
+        &declarations([0, 9, 11, 19][version], if version == 1 { 3 } else { 4 }),
     );
     let d = d.replace(
         "guideline_schema_version(1).",
@@ -379,7 +380,7 @@ fn a05_all_semantic_indicators_in_every_clause_position() {
             }
         }
     }
-    assert_eq!(c.total, 512);
+    assert_eq!(c.total, 544);
     c.finish();
 }
 
@@ -1324,6 +1325,10 @@ impl CertCase {
             format!("guideline_pp(actual,{event},for,{quantity})"),
         ];
         if table {
+            goals.insert(
+                goals.len() - 1,
+                format!("guideline_unit(actual,{quantity},hour)"),
+            );
             goals.push(format!(
                 "guideline_interval(actual,{event},duration,{quantity},hour,none)"
             ));

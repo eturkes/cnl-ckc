@@ -11,8 +11,9 @@ verus! {
 // (contract eso, `selected` below), under two bounds: a depth budget per goal (call_with_depth_limit) and
 // one fuel of machine transitions (call_with_inference_limit). A
 // transition = one goal dispatch (call or redo, including its whole
-// clause scan + head unification), one cut, one pruned goal or one
-// recorded solution — the rust cost model of R15; SWI's outer run limit
+// clause scan + head unification), one comparison built-in, one cut, one
+// pruned goal or one recorded solution — the rust cost model of R15 (+ nt1
+// D5); SWI's outer run limit
 // counts the same events at 10x, so the per-call limit alone binds.
 // --- R8 constants ---
 pub open spec fn replay_depth() -> nat {
@@ -358,12 +359,13 @@ pub proof fn next_match_bound(db: Seq<DocClause>, name: Seq<u8>, arity: nat, fro
 // inner context is still a variable waits while a later goal of its run binds
 // that context: a predicate literal whose first argument is the variable, or
 // a conjunction that holds one. The run = the leading goals that are compound
-// terms other than a negation; a negation, a naf cut or any other goal ends
-// it. The machine selects the leftmost goal that does not wait, and the
-// selected goal's clause body (or its two conjuncts) takes its place. A
-// waiting goal is followed by a run goal, so the selection never passes a
-// negation or a naf cut: each reaches the front only after every goal left
-// of it, and every goal those goals spawned, has run. Over ground facts and
+// terms other than a negation or a nonground comparison built-in; such a goal,
+// a naf cut or any other goal ends it. The machine selects the leftmost goal
+// that does not wait, and the selected goal's clause body (or its two
+// conjuncts) takes its place. A waiting goal is followed by a run goal, so the
+// selection never passes a negation, a nonground built-in or a naf cut: each
+// reaches the front only after every goal left of it, and every goal those
+// goals spawned, has run. Over ground facts and
 // clauses whose head variables occur in positive body items and whose
 // negations' outer variables occur in earlier positive body items
 // (`emit::head_safe`, `emit::naf_safe`: every certified document), a negation
@@ -375,6 +377,8 @@ pub open spec fn operator_name() -> Seq<u8> {
     ascii("guideline_operator"@)
 }
 
+// A comparison built-in binds nothing: it filters values earlier goals bound
+// (contract nt1 D5), so it never makes an operator goal wait.
 pub open spec fn binds(t: Term, x: Term) -> bool
     decreases t,
 {
@@ -382,12 +386,15 @@ pub open spec fn binds(t: Term, x: Term) -> bool
         Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
             binds(args[0], x) || binds(args[1], x)
         } else {
-            args.len() > 0 && args[0] == x
+            !crate::compare::is_builtin(name, args.len()) && args.len() > 0 && args[0] == x
         },
         _ => false,
     }
 }
 
+// A nonground comparison built-in ends the run as a negation does (contract
+// nt1 D5): an operator goal never waits past an unbound filter, so the filter
+// never runs before a goal that leftmost order runs first.
 pub open spec fn run_binds(gs: Seq<Goal>, x: Term) -> bool
     decreases gs.len(),
 {
@@ -396,7 +403,8 @@ pub open spec fn run_binds(gs: Seq<Goal>, x: Term) -> bool
     } else {
         match gs[0] {
             Goal::Lit(t, _) => match t {
-                Term::Comp(name, args) => !(name == naf_name() && args.len() == 1) && (binds(t, x)
+                Term::Comp(name, args) => !(name == naf_name() && args.len() == 1) && !(
+                crate::compare::is_builtin(name, args.len()) && !ground(t)) && (binds(t, x)
                     || run_binds(gs.drop_first(), x)),
                 _ => false,
             },
@@ -532,6 +540,13 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
                                 ..c
                             },
                         )
+                    } else if crate::compare::is_builtin(name, args.len()) {
+                        // a comparison built-in: one transition, no clause, no choicepoint
+                        if crate::compare::holds(g) {
+                            Step::Next(Cfg { stack: pre + rest, ..c })
+                        } else {
+                            fail(c)
+                        }
                     } else {
                         call(db, c, name, args, d, pre, rest, c.ci)
                     },

@@ -1183,6 +1183,13 @@ fn validate_bag(
                 "committed schema section absent",
             );
             run.check(
+                has(
+                    bag.bytes("README-dist.md"),
+                    b"- load: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\n",
+                ),
+                "README-dist load line omits the schema file",
+            );
+            run.check(
                 !has(bag.bytes("README-dist.md"), b"dirty reference"),
                 "working docs/REFERENCE.md leaked",
             );

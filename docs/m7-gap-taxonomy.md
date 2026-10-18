@@ -24,7 +24,7 @@ the first class to implement. Each class is a separate feature unit.
 | temporal | durations, frequencies, deadlines, sequencing | 81 | 44 | implemented: interval and recurrence annotations; count per period, scoped recurrence, order, approximate bound and ranged minimum (`docs/REFERENCE.md` § Vocabulary table and time annotations) |
 | strength | recommendation grade, preference of one option over another, hedges | 63 | 49 | implemented: grade, preference and qualifier annotations (`docs/REFERENCE.md` § Strength annotations) |
 | regimen-choice | one of several permitted options | — | 10 | ACE extension or schema revision: disjunction |
-| numeric-threshold | numeric comparison, ranges, unit conversion | — | 27 | schema revision: comparison built-ins |
+| numeric-threshold | numeric comparison, ranges, unit conversion | 19 | 27 | implemented: comparison built-ins and time-unit conversion (`docs/REFERENCE.md` § Comparison conditions) |
 | dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | schema revision: arithmetic built-ins |
 | derived-measure | quantities computed from measurements | — | 3 | schema revision: arithmetic built-ins |
 | probability | numeric likelihood, probabilistic update | 53 | 0 | companion target (ProbLog), deferred |

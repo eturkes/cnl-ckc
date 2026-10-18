@@ -23,6 +23,7 @@ pub open spec fn event_children(db: Seq<DocClause>, path: Seq<nat>, ev: TEv) -> 
             seq![]
         },
         TEv::Naf(_) => seq![],
+        TEv::Builtin(_) => seq![],
     }
 }
 
@@ -80,6 +81,7 @@ pub open spec fn cover_event(
                 path.push(i as nat),
             ),
         TEv::Naf(_) => true,
+        TEv::Builtin(_) => true,
     }
 }
 

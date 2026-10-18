@@ -47,7 +47,14 @@ proof fn noun(pl: u::Bytes, d: v::DocFile, c: v::DocClause, r: Term, inputs: Seq
     hide(u::copy_registry);
     hide(u::copy_derived);
     hide(u::pl_word);
-    t::joined_word(pl, d, c, "guideline_entity"@, 4, r, 2, inputs);
+    hide(u::bound_of);
+    hide(u::unit_html);
+    l::f249(inputs);
+    if let Some(args) = u::first_with(u::join_terms(d, c), "guideline_entity"@, 4, 1, r) {
+        t::pl_word(pl, u::atom_name(args[2]), inputs);
+    } else if let Some((_, Term::Int(n), Some(b))) = u::bound_of(d, c, r) {
+        t::unit(u::atom_name(b), n == 1, inputs);
+    }
 }
 
 pub proof fn verb(pl: u::Bytes, d: v::DocFile, c: v::DocClause, event: Term, inputs: Seq<u::Bytes>)

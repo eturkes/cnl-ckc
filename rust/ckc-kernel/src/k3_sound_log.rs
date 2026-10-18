@@ -130,6 +130,32 @@ pub proof fn raw_append(
     }
 }
 
+pub proof fn builtin_fixed(t: Term, s: Seq<(nat, Term)>)
+    requires
+        ckc_spec::compare::holds(t),
+    ensures
+        apply(t, s) == t,
+{
+    if let Term::Comp(_, args) = t {
+        assert(args.len() == 4 || args.len() == 6);
+        assert forall|i: int| 0 <= i < args.len() implies nvars(#[trigger] args[i]) <= 0 by {
+            if args.len() == 4 {
+                assert(i == 0 || i == 1 || i == 2 || i == 3);
+            } else {
+                assert(i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5);
+            }
+        }
+        super::naf::nvars_all_upper(args, 0);
+    }
+    assert(nvars(t) == 0);
+    assert forall|i: int| 0 <= i < s.len() implies !occurs((#[trigger] s[i]).0, t) by {
+        if occurs(s[i].0, t) {
+            occurs_below(s[i].0, t);
+        }
+    }
+    apply_avoid(t, s);
+}
+
 pub proof fn weak_extend(
     db: Seq<DocClause>,
     roots: Seq<Term>,
@@ -157,6 +183,10 @@ pub proof fn weak_extend(
     match ev {
         TEv::Clause(m) => {
             apply_extension(g, shift(db[m as int].head, offset_at(log, offsets, path)), th, s);
+        },
+        TEv::Builtin(t) => {
+            builtin_fixed(t, s);
+            apply_append(g, th, s);
         },
         TEv::Naf(t) => {
             if let Term::Comp(_, args) = g {

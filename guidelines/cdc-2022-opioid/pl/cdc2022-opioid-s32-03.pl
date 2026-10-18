@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s32-03',ace_sha256('97f3f2c22e585d57213626afe58af45b93e0107a4ca558cb3e537293efc7ce8c'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician prescribes an ER-LA-opioid then a predictable-pharmacokinetic-and-pharmacodynamic-ER-LA-opioid is preferred for an unintentional-overdose-risk-minimization.

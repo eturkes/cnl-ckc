@@ -69,7 +69,10 @@ pub fn action_exec(
         1,
         &object,
     ) {
-        None => return verb,
+        None => return match s::bound_unit_exec(arena, join, Ghost(d), Ghost(c), &object) {
+            Some(w) => h::cat(verb, w),
+            None => verb,
+        },
         Some(a) => a,
     };
     proof {

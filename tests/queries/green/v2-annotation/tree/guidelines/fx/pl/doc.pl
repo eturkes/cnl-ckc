@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256(e1b497038774f29540d369419e71988662932bc7328ebf9f177897d947daf92f),ulex(none),vocabulary(sha256('4d554e69a44f325ae34f930739183f4abd6a6019b7ebe43057cc2b65462c7c21'))).
 % S1: A man waits for 3 days.
@@ -42,6 +44,7 @@ guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),man,countable).
 guideline_cardinality(actual,'$guideline_id'(product,doc,1,ref(1),[]),na,eq,1).
 guideline_entity(actual,'$guideline_id'(product,doc,1,ref(2),[]),day,countable).
 guideline_cardinality(actual,'$guideline_id'(product,doc,1,ref(2),[]),na,eq,3).
+guideline_unit(actual,'$guideline_id'(product,doc,1,ref(2),[]),day).
 guideline_event(actual,'$guideline_id'(product,doc,1,ref(3),[]),wait).
 guideline_arg(actual,'$guideline_id'(product,doc,1,ref(3),[]),1,'$guideline_id'(product,doc,1,ref(1),[])).
 guideline_pp(actual,'$guideline_id'(product,doc,1,ref(3),[]),for,'$guideline_id'(product,doc,1,ref(2),[])).
@@ -55,6 +58,7 @@ guideline_entity(actual,'$guideline_id'(product,doc,2,ref(3),[]),interval,counta
 guideline_cardinality(actual,'$guideline_id'(product,doc,2,ref(3),[]),na,eq,1).
 guideline_entity(actual,'$guideline_id'(product,doc,2,ref(4),[]),week,countable).
 guideline_cardinality(actual,'$guideline_id'(product,doc,2,ref(4),[]),na,eq,2).
+guideline_unit(actual,'$guideline_id'(product,doc,2,ref(4),[]),week).
 guideline_event(actual,'$guideline_id'(product,doc,2,ref(5),[]),read).
 guideline_arg(actual,'$guideline_id'(product,doc,2,ref(5),[]),1,'$guideline_id'(product,doc,2,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,doc,2,ref(5),[]),2,'$guideline_id'(product,doc,2,ref(2),[])).

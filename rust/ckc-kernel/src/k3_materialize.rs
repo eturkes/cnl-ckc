@@ -349,6 +349,24 @@ fn node(
                     }
                     naf(arena, *root, base)
                 },
+                EEvent::Builtin(root) => {
+                    let name: &[u8] = b"builtin";
+                    proof {
+                        reveal_byteslit(b"builtin");
+                        reveal_strlit("builtin");
+                        reveal(ckc_spec::v1text::ascii);
+                        assert(name@ == ckc_spec::v1text::ascii("builtin"@));
+                        assert(root_ok(&arena, *root));
+                        reveal(mat);
+                    }
+                    let wrapped = crate::k2_output::comp1(&mut arena, name, *root);
+                    let mut roots = Vec::new();
+                    roots.push(wrapped);
+                    proof {
+                        assert_seqs_equal!(root_terms(arena.nodes@, roots@) == seq![arena@[wrapped as int]]);
+                    }
+                    (arena, EMat::Ok { roots, base, nodes: 0 })
+                },
                 EEvent::Clause(m) => {
                     proof {
                         assert(clause_valid(arena.nodes@, &db@[*m as int]));

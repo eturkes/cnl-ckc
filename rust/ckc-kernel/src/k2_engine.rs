@@ -5305,7 +5305,32 @@ pub fn step(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: E
                 reveal(ckc_spec::engine::step);
                 reveal(predicate_dispatch);
             }
-            call(arena, db, initial, name, args, depth, pre, rest, from)
+            if crate::compare_impl::is_builtin_exec(&name, args.len()) {
+                if crate::compare_impl::holds_exec(arena, &name, &args) {
+                    let mut c = initial;
+                    c.stack = rest;
+                    proof {
+                        reveal(cfg_valid);
+                        reveal(cfg_storage_valid);
+                        assert forall|i: int| 0 <= i < c.stack@.len() implies {
+                            &&& goal_valid(arena.nodes@, &c.stack@[i])
+                            &&& goal_valid(arena.nodes@.take(c.mark as int), &c.stack@[i])
+                            &&& goal_level_valid(&c.stack@[i], c.alts@.len())
+                        } by {
+                            assert(c.stack@[i] == initial.stack@[i + 1]);
+                        }
+                        assert(cfg_view(arena.nodes@, &c) == ckc_spec::engine::Cfg {
+                            stack: before.stack.drop_first(),
+                            ..before
+                        });
+                    }
+                    EStep::Next(c)
+                } else {
+                    fail(arena, initial)
+                }
+            } else {
+                call(arena, db, initial, name, args, depth, pre, rest, from)
+            }
         },
     }
 }
@@ -5458,6 +5483,38 @@ fn step_selected(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg, k: us
                         ] + before.stack.skip(k as int + 1));
                 }
                 return EStep::Next(c);
+            }
+            if crate::compare_impl::is_builtin_exec(&name, args.len()) {
+                if crate::compare_impl::holds_exec(arena, &name, &args) {
+                    let mut c = initial;
+                    let ghost head = pre@;
+                    let ghost tail = rest@;
+                    pre.append(&mut rest);
+                    c.stack = pre;
+                    proof {
+                        assert(c.stack@ == head + tail);
+                        assert forall|i: int| 0 <= i < c.stack@.len() implies {
+                            &&& goal_valid(nodes, &c.stack@[i])
+                            &&& goal_valid(nodes.take(c.mark as int), &c.stack@[i])
+                            &&& goal_level_valid(&c.stack@[i], c.alts@.len())
+                        } by {
+                            if i < head.len() {
+                                assert(c.stack@[i] == head[i]);
+                            } else {
+                                assert(c.stack@[i] == tail[i - head.len()]);
+                            }
+                        }
+                        goals_view_concat(nodes, head, tail);
+                        assert(cfg_storage_valid(nodes, &c));
+                        assert(cfg_valid(nodes, &c));
+                        assert(cfg_view(nodes, &c) == ckc_spec::engine::Cfg {
+                            stack: before.stack.take(k as int) + before.stack.skip(k as int + 1),
+                            ..before
+                        });
+                    }
+                    return EStep::Next(c);
+                }
+                return fail(arena, initial);
             }
             let from = initial.ci;
             call(arena, db, initial, name, args, depth, pre, rest, from)

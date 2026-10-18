@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s62-03',ace_sha256('9d7d09b930d9b6d8a94b6d4d19fdf0f99400d5f8e48095def64e1927f4dffa5c'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every robust-evidence-based-treatment-coverage may facilitate an evidence-based-default-pain-treatment and may encourage an evidence-based-default-pain-treatment.

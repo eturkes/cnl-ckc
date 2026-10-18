@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s22-08',ace_sha256('89011b7743a03b22fcca6907f18a6a6d7d6046e5f622a3fd13e0c6a7e7034146'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient is an opioid-naive-patient and has an acute-pain and an opioid-use-minimizing-strategy is possible then every clinician should implement the opioid-use-minimizing-strategy for the patient.

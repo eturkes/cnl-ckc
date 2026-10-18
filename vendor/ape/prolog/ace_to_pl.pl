@@ -34,6 +34,9 @@
 %   documents the grade + preference annotations of its strength, evidence,
 %   preference and alternative rows (contract s1; the s1_ prefix) and the
 %   qualifier annotations of its qualifier rows (contract s2; the s2_ prefix),
+%   a guideline_unit/3 literal after every time quantity of its unit rows and,
+%   in antecedents + questions, value comparisons through guideline_satisfies/4|6
+%   (contract nt1; the nt1_ prefix; definitions = guidelines/schema.pl),
 %   and admits relation/3 leaves + upper-bound condition lists in questions;
 %   rejects add unsupported temporal_shape(Why,S), grade_shape(Why,S),
 %   preference_shape(Why,S), qualifier_shape(Why,S) and the load class
@@ -1145,14 +1148,23 @@ v2_rebuild_item(Scope, T, S, Item, Anns, Links, Approx, Out) :-
       arg(1, Item, Ctx),
       arg(2, Item, Inner),
       nonvar(Inner),
-      functor(Inner, object, 6),
-      arg(1, Inner, Q),
-      v2_linked(Approx, Ctx, Q) ->
-        arg(2, Inner, Noun),
-        arg(3, Inner, Class),
-        arg(4, Inner, UnitField),
-        arg(6, Inner, Count),
-        Out = [anchored(Ctx, object(Q, Noun, Class, UnitField, about, Count))]
+      functor(Inner, object, 6) ->
+        arg(1, Inner, Q),
+        ( v2_linked(Approx, Ctx, Q) ->
+            arg(2, Inner, Noun),
+            arg(3, Inner, Class),
+            arg(4, Inner, UnitField),
+            arg(6, Inner, Count),
+            Obj = object(Q, Noun, Class, UnitField, about, Count)
+        ; Obj = Inner
+        ),
+        T = t(U, _, _, _, _, _, _),
+        v2_noun(Inner, L),
+        % nt1 D2: a time quantity carries its unit id beside its cardinality
+        ( memberchk(L-Unit, U) ->
+            Out = [anchored(Ctx, Obj), anchored(Ctx, '$guideline_unit'(Q, Unit))]
+        ; Out = [anchored(Ctx, Obj)]
+        )
     ; nonvar(Item),
       functor(Item, naf, 2) ->
         arg(1, Item, Dom),
@@ -1781,7 +1793,8 @@ v1_indicators([
     guideline_range/3,
     guideline_grade/5,
     guideline_preference/4,
-    guideline_qualifier/4
+    guideline_qualifier/4,
+    guideline_unit/3
 ]).
 
 v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
@@ -2055,6 +2068,231 @@ v1_split_conds([C|Cs], Shared, [v(Arm1, Arm2)|Vs]) :-
 v1_split_conds([C|Cs], [C|Shared], Vs) :-
     v1_split_conds(Cs, Shared, Vs).
 
+/* ---------- comparison conditions (contract nt1 D3) ----------
+   Rule antecedents (every Horn-split variant) and question goals: an object
+   whose comparison bounds its count compares the stated count of a matching
+   fact with that bound through guideline_satisfies/4; a time quantity (the
+   referent D2 gave a '$guideline_unit' item) leaves its entity literal out and
+   compares across units through guideline_satisfies/6, its unit and the unit
+   slots of the annotations that name it sharing one variable. Each converted
+   referent owns fresh variables v(S, N, V); a NAF payload's join its domain. */
+nt1_convertible(Op) :-
+    atom(Op),
+    memberchk(Op, [exactly, geq, greater, leq, less]).
+
+nt1_object_cmp(Item, Ctx, Inner) :-
+    nonvar(Item),
+    functor(Item, anchored, 2),
+    arg(1, Item, Ctx),
+    arg(2, Item, Inner),
+    nonvar(Inner),
+    functor(Inner, object, 6),
+    arg(5, Inner, Op),
+    nt1_convertible(Op).
+
+nt1_builtin_goal(Goal) :-
+    nonvar(Goal),
+    ( functor(Goal, guideline_satisfies, 4)
+    ; functor(Goal, guideline_satisfies, 6)
+    ),
+    !.
+
+/* R-v(S, N, V) per convertible object, preorder, NAF payloads included. */
+nt1_vars([], []).
+nt1_vars([Item|Items], Vars) :-
+    ( nt1_object_cmp(Item, _, Inner) ->
+        arg(1, Inner, R),
+        Vars = [R-v(_, _, _)|Rest]
+    ; nonvar(Item),
+      functor(Item, naf, 2) ->
+        arg(2, Item, Payload),
+        nt1_vars(Payload, PV),
+        append(PV, Rest, Vars)
+    ; Vars = Rest
+    ),
+    nt1_vars(Items, Rest).
+
+nt1_unit_of([Item|Items], R, Unit) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, '$guideline_unit', 2),
+      arg(1, Inner, R0),
+      R0 == R ->
+        arg(2, Inner, Unit)
+    ; nt1_unit_of(Items, R, Unit)
+    ).
+
+nt1_object_of([Item|Items], R, Obj) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, object, 6),
+      arg(1, Inner, R0),
+      R0 == R ->
+        Obj = Inner
+    ; nt1_object_of(Items, R, Obj)
+    ).
+
+/* The converted time quantities: per scope, a convertible object whose scope
+   holds its unit item. */
+nt1_times(Scope, Times) :-
+    nt1_scope_times(Scope, Scope, Here),
+    nt1_nested_times(Scope, Nested),
+    append(Here, Nested, Times).
+
+nt1_scope_times(_, [], []).
+nt1_scope_times(Scope, [Item|Items], Times) :-
+    ( nt1_object_cmp(Item, _, Inner),
+      arg(1, Inner, R),
+      nt1_unit_of(Scope, R, _) ->
+        Times = [R|Rest]
+    ; Times = Rest
+    ),
+    nt1_scope_times(Scope, Items, Rest).
+
+nt1_nested_times([], []).
+nt1_nested_times([Item|Items], Times) :-
+    ( nonvar(Item),
+      functor(Item, naf, 2) ->
+        arg(2, Item, Payload),
+        nt1_times(Payload, Here),
+        append(Here, Rest, Times)
+    ; Times = Rest
+    ),
+    nt1_nested_times(Items, Rest).
+
+nt1_compare(Items0, Items) :-
+    nt1_vars(Items0, Vars),
+    nt1_times(Items0, Times),
+    nt1_compare_list(Items0, Vars, Times, Items0, Items).
+
+nt1_compare_list(_, _, _, [], []).
+nt1_compare_list(Scope, Vars, Times, [Item|Items], Out) :-
+    nt1_compare_item(Scope, Vars, Times, Item, Head),
+    nt1_compare_list(Scope, Vars, Times, Items, Tail),
+    append(Head, Tail, Out).
+
+nt1_compare_item(Scope, Vars, Times, Item, Out) :-
+    ( nt1_object_cmp(Item, Ctx, Inner) ->
+        arg(1, Inner, R),
+        arg(2, Inner, Noun),
+        arg(3, Inner, Class),
+        arg(4, Inner, UnitField),
+        arg(5, Inner, Op),
+        arg(6, Inner, Count),
+        v1_lookup(Vars, R, v(S, N, _)),
+        ( strict_member(R, Times) ->
+            Out = [anchored(Ctx, '$guideline_measure'(R, UnitField, S, N))]
+        ; Out = [anchored(Ctx,
+              '$guideline_bound'(R, Noun, Class, UnitField, S, N, Op, Count))]
+        )
+    ; nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, '$guideline_unit', 2),
+      arg(1, Inner, R),
+      strict_member(R, Times),
+      nt1_object_of(Scope, R, Obj) ->
+        arg(1, Item, Ctx),
+        arg(2, Inner, Unit),
+        arg(5, Obj, Op),
+        arg(6, Obj, Count),
+        v1_lookup(Vars, R, v(S, N, V)),
+        Out = [anchored(Ctx, '$guideline_unit'(R, V)),
+               anchored(Ctx, '$guideline_scaled'(S, N, V, Op, Count, Unit))]
+    ; nonvar(Item),
+      functor(Item, anchored, 2) ->
+        arg(1, Item, Ctx),
+        arg(2, Item, Inner),
+        nt1_relink(Vars, Times, Inner, Inner2),
+        Out = [anchored(Ctx, Inner2)]
+    ; nonvar(Item),
+      functor(Item, naf, 2) ->
+        arg(1, Item, Dom),
+        arg(2, Item, Payload),
+        nt1_vars(Payload, PV),
+        nt1_fresh(PV, Vars, Fresh),
+        append(Dom, Fresh, Dom2),
+        nt1_compare_list(Payload, Vars, Times, Payload, Payload2),
+        Out = [naf(Dom2, Payload2)]
+    ; Out = [Item]
+    ).
+
+/* A payload's conversion variables, as the body-wide table names them. */
+nt1_fresh([], _, []).
+nt1_fresh([R-_|PV], Vars, [S, N, V|Fresh]) :-
+    v1_lookup(Vars, R, v(S, N, V)),
+    nt1_fresh(PV, Vars, Fresh).
+
+/* An annotation naming a converted time quantity carries its unit variable. */
+nt1_relink(Vars, Times, Inner, Out) :-
+    ( nonvar(Inner),
+      functor(Inner, '$guideline_interval', 5),
+      arg(3, Inner, Q),
+      strict_member(Q, Times) ->
+        Inner = '$guideline_interval'(E, Role, Q, _, A),
+        v1_lookup(Vars, Q, v(_, _, V)),
+        Out = '$guideline_interval'(E, Role, Q, V, A)
+    ; nonvar(Inner),
+      functor(Inner, '$guideline_recurrence', 3),
+      arg(2, Inner, Q),
+      strict_member(Q, Times) ->
+        Inner = '$guideline_recurrence'(E, Q, _),
+        v1_lookup(Vars, Q, v(_, _, V)),
+        Out = '$guideline_recurrence'(E, Q, V)
+    ; nonvar(Inner),
+      functor(Inner, '$guideline_recurrence_window', 6) ->
+        Inner = '$guideline_recurrence_window'(E, Q, GU0, A, L, LU0),
+        nt1_unit_slot(Vars, Times, Q, GU0, GU),
+        nt1_unit_slot(Vars, Times, L, LU0, LU),
+        Out = '$guideline_recurrence_window'(E, Q, GU, A, L, LU)
+    ; Out = Inner
+    ).
+
+nt1_unit_slot(Vars, Times, Q, U0, U) :-
+    ( strict_member(Q, Times) -> v1_lookup(Vars, Q, v(_, _, U)) ; U = U0 ).
+
+/* The per-document replay module states the comparison built-ins exactly as
+   guidelines/schema.pl does (contract nt1 D9, D10). */
+nt1_schema_clauses([
+    (guideline_satisfies(S, N, B, M) :-
+        atom(S), integer(N), atom(B), integer(M), guideline_within(S, N, B, M)),
+    (guideline_satisfies(S, N, U, B, M, V) :-
+        atom(S), integer(N), atom(U), atom(B), integer(M), atom(V),
+        guideline_scale(U, G, R), guideline_scale(V, G, Q),
+        X is N * R, Y is M * Q, guideline_within(S, X, B, Y)),
+    (guideline_within(eq, X, geq, Y) :- X >= Y),
+    (guideline_within(exactly, X, geq, Y) :- X >= Y),
+    (guideline_within(geq, X, geq, Y) :- X >= Y),
+    (guideline_within(greater, X, geq, Y) :- X >= Y),
+    (guideline_within(eq, X, greater, Y) :- X > Y),
+    (guideline_within(exactly, X, greater, Y) :- X > Y),
+    (guideline_within(geq, X, greater, Y) :- X > Y),
+    (guideline_within(greater, X, greater, Y) :- X >= Y),
+    (guideline_within(exactly, X, leq, Y) :- X =< Y),
+    (guideline_within(leq, X, leq, Y) :- X =< Y),
+    (guideline_within(less, X, leq, Y) :- X =< Y),
+    (guideline_within(exactly, X, less, Y) :- X < Y),
+    (guideline_within(leq, X, less, Y) :- X < Y),
+    (guideline_within(less, X, less, Y) :- X =< Y),
+    (guideline_within(exactly, X, exactly, Y) :- X =:= Y),
+    guideline_scale(second, time, 1),
+    guideline_scale(minute, time, 60),
+    guideline_scale(hour, time, 3600),
+    guideline_scale(day, time, 86400),
+    guideline_scale(week, time, 604800),
+    guideline_scale(month, calendar, 1),
+    guideline_scale(year, calendar, 12)
+]).
+
+nt1_assert_schema :-
+    nt1_schema_clauses(Clauses),
+    forall(member(C, Clauses), assertz(ace_to_pl_proof_world:C)).
+
 v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_seg_items(Segs, S, DocId, 1, N1, AItems0),
     v2_annotate(S, AItems0, AItems1),
@@ -2066,8 +2304,9 @@ v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_ante_refs(AItems, CItems, Map, Ordered, AnteRefs),
     v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
     v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
-    v1_variant(AItems, CItems, Map, Sko, S, Clauses),
-    v1_witness_pairs(AItems, Ordered, Map, DocId, S, 1, Pairs),
+    nt1_compare(AItems, AItemsC),
+    v1_variant(AItemsC, CItems, Map, Sko, S, Clauses),
+    v1_witness_pairs(AItemsC, Ordered, Map, DocId, S, 1, Pairs),
     SGroups = [group(rule, 1, Pairs, Clauses)].
 
 v1_seg_items([], _, _, N, N, []).
@@ -2114,8 +2353,10 @@ v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
     v1_skolem_map(ConsLocals, Ordered, Deps1, S, DocId, Sko1),
     v1_skolem_map(ConsLocals, Ordered, Deps2, S, DocId, Sko2),
-    append(SharedItems, Arm1Items, Ante1),
-    append(SharedItems, Arm2Items, Ante2),
+    append(SharedItems, Arm1Items, Ante10),
+    append(SharedItems, Arm2Items, Ante20),
+    nt1_compare(Ante10, Ante1),
+    nt1_compare(Ante20, Ante2),
     v1_variant(Ante1, CItems1, Map, Sko1, S, Clauses1),
     v1_variant(Ante2, CItems2, Map, Sko2, S, Clauses2),
     v1_witness_pairs(Ante1, Ordered, Map, DocId, S, 1, Pairs1),
@@ -2463,6 +2704,34 @@ v1_condition(Context, Inner, Map, Sko,
     arg(2, Inner, Class),
     arg(3, Inner, Word),
     v1_ref(E0, Map, Sko, E).
+v1_condition(Context, Inner, Map, Sko, [guideline_unit(Context, Q, Unit)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_unit', 2),
+    !,
+    arg(1, Inner, Q0),
+    arg(2, Inner, Unit),
+    v1_ref(Q0, Map, Sko, Q).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_entity(Context, Ref, Noun, Class),
+         guideline_cardinality(Context, Ref, UnitField, S, N),
+         guideline_satisfies(S, N, Op, Count)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_bound', 8),
+    !,
+    Inner = '$guideline_bound'(Ref0, Noun, Class, UnitField, S, N, Op, Count),
+    v1_ref(Ref0, Map, Sko, Ref).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_cardinality(Context, Ref, UnitField, S, N)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_measure', 4),
+    !,
+    Inner = '$guideline_measure'(Ref0, UnitField, S, N),
+    v1_ref(Ref0, Map, Sko, Ref).
+v1_condition(_, Inner, _, _, [guideline_satisfies(S, N, V, Op, Count, Unit)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_scaled', 6),
+    !,
+    Inner = '$guideline_scaled'(S, N, V, Op, Count, Unit).
 v1_condition(_, Inner, _, _, _) :-
     reject(unsupported, condition_shape(Inner)).
 
@@ -2538,6 +2807,13 @@ v1_cond_refs(Inner, [P]) :-
     functor(Inner, property, 3),
     !,
     arg(1, Inner, P).
+v1_cond_refs(Inner, [R]) :-
+    nonvar(Inner),
+    ( functor(Inner, '$guideline_bound', 8)
+    ; functor(Inner, '$guideline_measure', 4)
+    ),
+    !,
+    arg(1, Inner, R).
 v1_cond_refs(_, []).
 
 v1_arg_list(Index, Arity, _, []) :-
@@ -2605,7 +2881,25 @@ v1_witness_items([anchored(_, Inner)|Items], Ordered, Map, DocId, S, K,
         Acc0, Acc) :-
     v1_cond_refs(Inner, Refs),
     v1_witness_refs(Refs, Ordered, Map, DocId, S, K, Acc0, Acc1),
-    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc1, Acc).
+    nt1_witness(Inner, Acc1, Acc2),
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc2, Acc).
+
+/* nt1 D4: a converted condition's witness states its own bound, so its
+   comparison holds reflexively. */
+nt1_witness(Inner, Acc0, Acc) :-
+    ( nonvar(Inner),
+      functor(Inner, '$guideline_bound', 8) ->
+        arg(5, Inner, CV),
+        arg(6, Inner, NV),
+        arg(7, Inner, Op),
+        arg(8, Inner, Count),
+        Acc = [NV-Count, CV-Op|Acc0]
+    ; nonvar(Inner),
+      functor(Inner, '$guideline_scaled', 6) ->
+        Inner = '$guideline_scaled'(CV, NV, UV, Op, Count, Unit),
+        Acc = [UV-Unit, NV-Count, CV-Op|Acc0]
+    ; Acc = Acc0
+    ).
 
 v1_witness_refs([], _, _, _, _, _, Acc, Acc).
 v1_witness_refs([Ref|Refs], Ordered, Map, DocId, S, K, Acc0, Acc) :-
@@ -3087,7 +3381,8 @@ query_goals(Clean, QId, Goals) :-
     arg(2, Clean, Conds),
     v1_flatten_items(Conds, antecedent, 1, QId, [], actual, none, 1, _,
         Items0),
-    v2_annotate(1, Items0, Items),
+    v2_annotate(1, Items0, Items1),
+    nt1_compare(Items1, Items),
     v1_expand_items(Items, [], [], Goals).
 
 query_header_term(QId, AceDigest, none,
@@ -3227,6 +3522,7 @@ v1_derive_proofs(Bundles, DocId, Payload) :-
 v1_load_proof_world(Bundles) :-
     v1_indicators(Indicators),
     v1_declare_proof_world(Indicators),
+    nt1_assert_schema,
     v1_load_proof_bundles(Bundles).
 
 v1_declare_proof_world([]).
@@ -3308,6 +3604,10 @@ v1_bind_witness([Var-Id|Pairs]) :-
 
 v1_positive_goals([], []).
 v1_positive_goals([naf(_, _)|Goals], Facts) :-
+    !,
+    v1_positive_goals(Goals, Facts).
+v1_positive_goals([Goal|Goals], Facts) :-
+    nt1_builtin_goal(Goal),
     !,
     v1_positive_goals(Goals, Facts).
 v1_positive_goals([Goal|Goals], [Goal|Facts]) :-

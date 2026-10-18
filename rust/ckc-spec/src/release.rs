@@ -49,7 +49,8 @@ pub open spec fn data_member(m: Member) -> Member {
 }
 
 // Shipped payload: every staged member of a non-restricted guideline except
-// the source files of a reconstructable one.
+// the source files of a reconstructable one; `guidelines/schema.pl` belongs to
+// no guideline (no rights profile) and always ships (contract nt1 D10).
 pub open spec fn payload(staged: Seq<Member>, profiles: Seq<(Seq<u8>, Seq<u8>)>) -> Seq<Member> {
     staged.filter(
         |m: Member|
@@ -110,7 +111,7 @@ pub open spec fn schema_rows() -> Seq<u8> {
 pub open spec fn meta_block(schema: Seq<u8>, compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {
     schema + ascii("meta\tcompiler\t"@) + compiler + ascii("\nmeta\tbase-lexicon\t"@) + lexicon
         + ascii(
-        "\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
+        "\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
     )
 }
 

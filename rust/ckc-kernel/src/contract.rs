@@ -683,4 +683,13 @@ pub fn dist_tagmanifest_lines(tags: &Vec<ckc_spec::release::EMember>) -> (r: Vec
     crate::release_impl::dist_tagmanifest_lines_impl(tags)
 }
 
+// nt1 D10: `guidelines/schema.pl` = the comparison built-ins for standard Prolog
+// engines, byte for byte the spec's printer over the relation's own rows.
+pub fn schema_file() -> (r: Vec<u8>)
+    ensures
+        r@ == ckc_spec::compare::schema_bytes(),
+{
+    crate::compare_impl::schema_file_impl()
+}
+
 } // verus!

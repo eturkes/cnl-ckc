@@ -93,6 +93,7 @@ pub open spec fn weak_event(
             ),
             _ => false,
         },
+        TEv::Builtin(t) => t == apply(g, th) && ckc_spec::compare::holds(t),
     }
 }
 
@@ -145,6 +146,7 @@ pub open spec fn closed_event(
         TEv::Clause(m) => m < db.len() && forall|i: int|
             0 <= i < db[m as int].body.len() ==> #[trigger] logged(log, path.push(i as nat)),
         TEv::Naf(_) => true,
+        TEv::Builtin(_) => true,
     }
 }
 
@@ -163,6 +165,7 @@ pub open spec fn naf_event_ok(db: Seq<DocClause>, ev: TEv) -> bool {
     match ev {
         TEv::Naf(t) => naf_fails(db, t),
         TEv::Clause(_) => true,
+        TEv::Builtin(_) => true,
     }
 }
 
@@ -338,6 +341,10 @@ pub proof fn build_valid(
     match ev {
         TEv::Naf(t) => {
             naf_build_valid(db, roots, log, offsets, th, path, t);
+        },
+        TEv::Builtin(t) => {
+            reveal(node_valid);
+            assert(build(db, log, path) == PNode::Builtin(t));
         },
         TEv::Clause(m) => {
             let k = offset_at(log, offsets, path);

@@ -1,0 +1,3 @@
+sentences([[^,'If',a,patient,takes,more,than,3,days,then,the,patient,waits,'.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,patient,countable,na,eq,1),/(1,3)),-(object(B,day,countable,na,greater,3),/(1,8)),-(predicate(C,take,A,B),/(1,4))]),drs([D],[-(predicate(D,wait,A),/(1,12))]))])).
+messages([]).

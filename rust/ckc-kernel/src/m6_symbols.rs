@@ -5,6 +5,12 @@ verus! {
 
 pub enum Sym {
     DollarGuideline,
+    DollarGuidelineBound,
+    DollarGuidelineMeasure,
+    DollarGuidelineScaled,
+    DollarGuidelineUnit,
+    GuidelineSatisfies,
+    GuidelineUnit,
     DollarGuidelineFrequency,
     DollarGuidelineGrade,
     DollarGuidelineId,
@@ -158,6 +164,12 @@ pub enum Sym {
 pub open spec fn symbol(s: &Sym) -> Seq<u8> {
     match s {
         Sym::DollarGuideline => ckc_spec::v1text::ascii("$guideline_"@),
+        Sym::DollarGuidelineBound => ckc_spec::v1text::ascii("$guideline_bound"@),
+        Sym::DollarGuidelineMeasure => ckc_spec::v1text::ascii("$guideline_measure"@),
+        Sym::DollarGuidelineScaled => ckc_spec::v1text::ascii("$guideline_scaled"@),
+        Sym::DollarGuidelineUnit => ckc_spec::v1text::ascii("$guideline_unit"@),
+        Sym::GuidelineSatisfies => ckc_spec::v1text::ascii("guideline_satisfies"@),
+        Sym::GuidelineUnit => ckc_spec::v1text::ascii("guideline_unit"@),
         Sym::DollarGuidelineFrequency => ckc_spec::v1text::ascii("$guideline_frequency"@),
         Sym::DollarGuidelineGrade => ckc_spec::v1text::ascii("$guideline_grade"@),
         Sym::DollarGuidelineId => ckc_spec::v1text::ascii("$guideline_id"@),
@@ -323,6 +335,12 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
 {
     match s {
         Sym::DollarGuideline => bytes_dollarguideline(),
+        Sym::DollarGuidelineBound => bytes_dollarguidelinebound(),
+        Sym::DollarGuidelineMeasure => bytes_dollarguidelinemeasure(),
+        Sym::DollarGuidelineScaled => bytes_dollarguidelinescaled(),
+        Sym::DollarGuidelineUnit => bytes_dollarguidelineunit(),
+        Sym::GuidelineSatisfies => bytes_guidelinesatisfies(),
+        Sym::GuidelineUnit => bytes_guidelineunit(),
         Sym::DollarGuidelineFrequency => bytes_dollarguidelinefrequency(),
         Sym::DollarGuidelineGrade => bytes_dollarguidelinegrade(),
         Sym::DollarGuidelineId => bytes_dollarguidelineid(),
@@ -472,6 +490,90 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::ZeroBound => bytes_zerobound(),
         Sym::Naf => bytes_naf(),
     }
+}
+
+fn bytes_dollarguidelinebound() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("$guideline_bound"@),
+{
+    let b: &[u8] = b"$guideline_bound";
+    proof {
+        reveal_byteslit(b"$guideline_bound");
+        reveal_strlit("$guideline_bound");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("$guideline_bound"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_dollarguidelinemeasure() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("$guideline_measure"@),
+{
+    let b: &[u8] = b"$guideline_measure";
+    proof {
+        reveal_byteslit(b"$guideline_measure");
+        reveal_strlit("$guideline_measure");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("$guideline_measure"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_dollarguidelinescaled() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("$guideline_scaled"@),
+{
+    let b: &[u8] = b"$guideline_scaled";
+    proof {
+        reveal_byteslit(b"$guideline_scaled");
+        reveal_strlit("$guideline_scaled");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("$guideline_scaled"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_dollarguidelineunit() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("$guideline_unit"@),
+{
+    let b: &[u8] = b"$guideline_unit";
+    proof {
+        reveal_byteslit(b"$guideline_unit");
+        reveal_strlit("$guideline_unit");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("$guideline_unit"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_guidelinesatisfies() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("guideline_satisfies"@),
+{
+    let b: &[u8] = b"guideline_satisfies";
+    proof {
+        reveal_byteslit(b"guideline_satisfies");
+        reveal_strlit("guideline_satisfies");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_satisfies"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_guidelineunit() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("guideline_unit"@),
+{
+    let b: &[u8] = b"guideline_unit";
+    proof {
+        reveal_byteslit(b"guideline_unit");
+        reveal_strlit("guideline_unit");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_unit"@));
+    }
+    slice_to_vec(b)
 }
 
 fn bytes_dollarguideline() -> (out: Vec<u8>)

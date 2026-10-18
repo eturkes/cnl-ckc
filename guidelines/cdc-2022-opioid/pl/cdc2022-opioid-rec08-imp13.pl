@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec08-imp13',ace_sha256('7d0aac55fcaf4d335c71844a32dc6f5322d3073bb401c264effdd6ff438ac72a'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient is an older-adult and the patient receives an opioid-therapy then every clinician should implement a constipation-prevention-intervention for the patient and should assess a fall-risk for the patient and should monitor a cognitive-impairment for the patient.

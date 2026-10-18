@@ -295,6 +295,125 @@ pub proof fn child_slot(
     apply_below(item_term(it, off), s, next.fresh);
 }
 
+pub proof fn record_builtin(
+    db: Seq<DocClause>,
+    roots: Seq<Term>,
+    v: Snapshot,
+    cert: Cert,
+    t: Term,
+    depth: nat,
+    path: Seq<nat>,
+    pre: Seq<TGoal>,
+    rest: Seq<TGoal>,
+)
+    requires
+        outer_valid(db, roots, v, cert),
+        v.stack == pre + seq![TGoal::Lit(t, depth, path)] + rest,
+        ckc_spec::compare::holds(t),
+    ensures
+        outer_valid(
+            db,
+            roots,
+            Snapshot {
+                stack: pre + rest,
+                fresh: v.fresh,
+                log: v.log.push((path, TEv::Builtin(t))),
+            },
+            Cert { theta: cert.theta, offsets: cert.offsets.push(0) },
+        ),
+{
+    let ev = TEv::Builtin(t);
+    let extra = seq![(path, ev)];
+    let more = seq![0nat];
+    let next = Snapshot { stack: pre + rest, fresh: v.fresh, log: v.log.push((path, ev)) };
+    let nc = Cert { theta: cert.theta, offsets: cert.offsets.push(0) };
+    let n = pre.len();
+    let oldfront = paths(v.stack);
+    let lead = paths(pre);
+    let tail = paths(rest);
+    let sel = seq![TGoal::Lit(t, depth, path)];
+    paths_add(pre, sel);
+    paths_add(pre + sel, rest);
+    paths_add(pre, rest);
+    assert(paths(sel) =~= seq![path]);
+    assert(oldfront == lead + seq![path] + tail);
+    assert(v.stack[n as int] == TGoal::Lit(t, depth, path));
+    assert(slot_valid(db, roots, v, cert, v.stack[n as int]));
+    assert(open_position(db, roots, v.log, oldfront[n as int]));
+    assert(oldfront[n as int] == path);
+    cert_positioned(db, roots, v.log, cert.offsets, cert.theta);
+    frontier_replace(db, roots, v.log, lead, path, ev, tail);
+    cover_replace(db, roots, v.log, lead, path, ev, tail);
+    log_push_unique(v.log, path, ev);
+    assert(lead + event_children(db, path, ev) + tail =~= paths(next.stack));
+    assert(v.log + extra =~= next.log);
+    assert(cert.offsets + more =~= nc.offsets);
+    raw_append(db, roots, v.log, cert.offsets, extra, more, path);
+    position_append(db, roots, v.log, extra, path);
+    assert(weak_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
+    assert(cert_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
+    assert(cert.theta + seq![] =~= cert.theta);
+    assert forall|i: int| 0 <= i < v.log.len() implies #[trigger] naf_fixed(v.log[i].1, seq![]) by {
+        if let TEv::Naf(u) = v.log[i].1 {
+            assert(apply(u, seq![]) == u);
+        }
+    }
+    cert_push(db, roots, v.log, cert.offsets, cert.theta, path, ev, 0, seq![]);
+    assert forall|i: int| 0 <= i < next.stack.len() implies #[trigger] slot_valid(
+        db,
+        roots,
+        next,
+        nc,
+        next.stack[i],
+    ) by {
+        let j = if i < n {
+            i
+        } else {
+            i + 1
+        };
+        assert(next.stack[i] == v.stack[j]);
+        assert(slot_valid(db, roots, v, cert, v.stack[j]));
+        assert(open_position(db, roots, v.log, oldfront[j]));
+        assert(goal_frame(v.stack[j]).2 == oldfront[j]);
+        slot_extend(db, roots, v, cert, next, nc, extra, more, seq![], v.stack[j]);
+        assert(tapply(v.stack[j], seq![]) == v.stack[j]) by {
+            match v.stack[j] {
+                TGoal::Lit(u, _, _) => {
+                    assert(apply(u, seq![]) == u);
+                },
+                TGoal::NafCut(_) => {},
+            }
+        }
+    }
+    assert forall|i: int| 0 <= i < next.log.len() implies #[trigger] clear_event(
+        next.log[i].1,
+        next.stack,
+        v.fresh,
+    ) by {
+        if i < v.log.len() {
+            assert(next.log[i] == v.log[i]);
+            assert(clear_event(v.log[i].1, v.stack, v.fresh));
+            if let TEv::Naf(u) = v.log[i].1 {
+                assert forall|j: int| 0 <= j < next.stack.len() implies !shares(
+                    u,
+                    #[trigger] tgoal_term(next.stack[j]),
+                ) by {
+                    let k = if j < n {
+                        j
+                    } else {
+                        j + 1
+                    };
+                    assert(next.stack[j] == v.stack[k]);
+                    assert(!shares(u, tgoal_term(v.stack[k])));
+                }
+            }
+        } else {
+            assert(next.log[i] == (path, ev));
+        }
+    }
+    assert(outer_valid(db, roots, next, nc));
+}
+
 pub proof fn record_clause(
     db: Seq<DocClause>,
     roots: Seq<Term>,

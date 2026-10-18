@@ -1,2 +1,2 @@
 % tablet-use-spacing answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'tablet-use-spacing',query_sha256('7a01391091671b5f0f8eefd2c4a5c8aa7d1e15319786d2fcb23aa8a4ccb45495'),result(solutions([sol(['$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(1),[])])]))).
+'$guideline_answers'(v1,'tablet-use-spacing',query_sha256('055b4bcfe6fe4cddd7870a78426bf9999084969ea1b0b9b92e24a663ad39a3ba'),result(solutions([sol(['$guideline_id'(product,'cdc2022-opioid-rec01-imp03',2,ref(1),[])])]))).

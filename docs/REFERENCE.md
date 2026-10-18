@@ -144,7 +144,8 @@ compiler base:
   9. scans that composition for left recursion;
   10. re-derives each committed query artifact twice and
       byte-compares it: compiled query, answer, and proof trace.
-      Every trace node must join exactly one committed clause line;
+      Every clause node of a trace must join exactly one committed clause
+      line (a comparison leaf names no clause);
   11. asserts that the compiler rejects each red probe with its named
       error class and exit status, and that it compiles each green
       probe to its pinned bytes.
@@ -167,7 +168,7 @@ archive against its pinned SHA-256 digest. It skips the build when the
 installed copy came from that archive.
 
 ```sh
-ckc compile <guideline-id>          # ACE → Prolog
+ckc compile <guideline-id>          # ACE → Prolog (+ guidelines/schema.pl)
 ckc queries <guideline-id>          # query/answer/trace artifacts
 ckc check                           # corpus acceptance gate
 ckc certify <guideline-id>          # emission certification against emit.rs
@@ -334,20 +335,26 @@ domain-neutral:
 
 The six time annotations (`guideline_interval/6`,
 `guideline_recurrence/4`, `guideline_frequency/5`, `guideline_order/4`,
-`guideline_recurrence_window/7`, `guideline_range/3`) and the three
+`guideline_recurrence_window/7`, `guideline_range/3`), the three
 strength annotations (`guideline_grade/5`, `guideline_preference/4`,
-`guideline_qualifier/4`) complete the vocabulary. The sections "Vocabulary table and time
+`guideline_qualifier/4`) and the unit annotation `guideline_unit/3`
+complete the vocabulary. The comparison built-ins
+`guideline_satisfies/4` and `guideline_satisfies/6` test the conditions
+of rules and questions; the section "Comparison conditions" below defines
+them. The sections "Vocabulary table and time
 annotations" and "Strength annotations" below define them. In the record, `H` is the SHA-256 of the raw ACE bytes,
 `U` the SHA-256 of the guideline's user lexicon, and `T` the SHA-256
 of its raw `vocabulary.tsv` bytes. `none` means that the file does not
 exist.
 
 `Comparison` is exactly one of `eq`, `geq`, `greater`, `leq`, `less`,
-`exactly`, `na`, or `about` (an approximate time quantity, below). The
-compiler copies units and counts through as data.
-It performs no arithmetic, no unit conversion, no counting, and no
-modal inference: a cardinality clause records what the sentence said,
-nothing more.
+`exactly`, `na`, or `about` (an approximate time quantity, below). A
+plain number (`eq`) states at least that many, as in ACE: `3 cars` allows
+more cars. `exactly` states the count itself. The compiler copies units
+and counts through as data and performs no arithmetic and no modal
+inference: a cardinality clause of a fact or a rule head records what the
+sentence said, nothing more. A condition with a comparison compares; the
+section "Comparison conditions" below states how.
 
 Every one of those values is reachable, but not from every position. An
 upper-bounding determiner (`at most n`, `exactly n`, `less than n`) is
@@ -425,7 +432,7 @@ one vocabulary, a rule body consumes another document's facts or heads
 by ordinary resolution.
 
 Every document opens with the same declaration block: `multifile`
-and `discontiguous` for all 18 indicators, whether or not it
+and `discontiguous` for all 19 indicators, whether or not it
 populates them. After the block come `guideline_schema_version(1).`,
 the document record, and then, per sentence, a
 `% S<n>: <verbatim sentence>` comment with that sentence's contiguous
@@ -718,10 +725,11 @@ lasts that long. `after` means that `Event` occurs that long after
 `Anchor`, and `before` that long before it. `within` means that `Event`
 and `Anchor` lie that far apart, in either order. `geq` and `leq`
 include the bound; `greater` and `less` exclude it. A unit is a calendar
-label: the compiler converts no unit and calculates no date. Two
+label: the compiler calculates no date, and only a condition compares
+quantities in different units (section "Comparison conditions"). Two
 annotations on one event state both limits, so a range is a pair on one
-anchor. Matching stays exact Horn structure: a fact for `geq 30` does
-not satisfy a goal for `geq 20`. A count per period does not set
+anchor. A condition compares by value: a fact for `geq 30` meets a
+condition for `geq 20`. A count per period does not set
 calendar buckets, a first occurrence or a minimum gap. A window does not
 set the first occurrence and says nothing about occurrences outside it.
 
@@ -835,6 +843,71 @@ preference by its words; a question cannot contain an adverb. A program
 queries `guideline_grade/5`, `guideline_preference/4` and
 `guideline_qualifier/4` directly.
 
+### Comparison conditions
+
+A condition of a rule or a question compares a stated quantity with its
+bound. The condition `at least 50 MME-units-per-day` is met by a fact
+that states `exactly 60`, `60`, `at least 60` or `more than 50`. It is not
+met by `at most 70`, `about 60` or a quantity without a number. A condition
+is met when every value that the stated quantity allows is a value that
+the condition allows. A plain number allows that count or more, `exactly`
+allows the count alone, `geq` and `leq` include their bound, and `greater`
+and `less` exclude it. Counts are integers, and the comparison treats the
+values between them as possible. The comparison is therefore safe and can
+miss an entailment that holds only for whole counts: `more than 49` does
+not meet `at least 50`.
+
+The compiler converts each body object whose comparison is `exactly`,
+`geq`, `greater`, `leq` or `less`. The object keeps its cardinality
+literal with two new variables, and the built-in compares them with the
+bound:
+
+```
+guideline_entity(actual,B,'MME-unit-per-day',countable),
+guideline_cardinality(actual,B,na,C,D), guideline_satisfies(C,D,geq,50)
+```
+
+A plain-number condition (`eq`), an `about` condition, a quantity without
+a number, every rule head and every root fact keep their literals as data.
+
+A time quantity carries its unit in the annotation
+`guideline_unit(Context, Quantity, Unit)` wherever it appears, when the
+guideline has a vocabulary table. A converted time quantity compares across
+units: seconds, minutes, hours, days and weeks convert exactly, and months
+convert to years at twelve to one. A day and a month never compare. The
+condition leaves out the entity literal of the quantity, because the noun
+of a time quantity names its unit, and the unit slots of the annotations
+that name the quantity share one variable:
+
+```
+guideline_cardinality(actual,F,na,G,H), guideline_unit(actual,F,I),
+guideline_satisfies(G,H,I,greater,3,day)
+```
+
+A fact `exactly 1 week` meets this condition. A fact `exactly 1 month`
+does not.
+
+The built-ins are no document predicates. No clause heads them, and no
+declaration names them. The verified engine evaluates them, and
+`guidelines/schema.pl` states them in ISO Prolog for other engines. An
+engine gives exact results when its integers can hold each count
+multiplied by 604800, the number of seconds in one week. SWI-Prolog
+9.2.9 has unbounded integers. A consumer loads that file with the
+documents. `ckc compile` writes the
+file, `ckc check` rejects a missing or stale copy, and the release
+archive ships it. A built-in call with an argument of another shape
+fails and raises no error.
+
+A program that matches patient data states each value as a fact. A
+measured value takes `exactly`, as a quantity without a comparator does in
+FHIR. A reported bound takes `geq`, `greater`, `leq` or `less`. Each time
+quantity also takes its `guideline_unit` literal. ACE root facts cannot
+state an exact value, because an upper bound at the root of a sentence
+rejects. A ranged minimum (`guideline_range/3`) states an uncertain
+minimum, not an interval of values: its upper end and every count-per-
+period period keep exact matching. An `about` quantity carries no
+tolerance and meets no comparison.
+
 ### Question projection
 
 The compiler's `question` mode compiles one ACE question against the
@@ -903,7 +976,8 @@ must name readable files, and the mode never parses payload terms. A
 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/5`
 record, then the `'$guideline_query_projection'/2` term. A query names
-any of the 16 semantic predicates and runs against any composition. The mode
+any of the 17 semantic predicates and the comparison built-ins, and it
+runs against any composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 
 Success emits a two-line artifact on stdout: a generated-file
@@ -927,7 +1001,10 @@ runs the leftmost goal first, with one exception. An operator goal
 `guideline_operator(Outer, Inner, Op)` waits when `Inner` is still a
 variable and a later goal names that variable as its first argument.
 Such a later goal is part of the box content, so its result binds the
-box context. Only the goals before the next negation-as-failure goal
+box context. A comparison built-in never names a box context, and one
+whose arguments are not bound yet ends the run as a negation does, so a
+waiting operator goal never lets a comparison run before its values.
+Only the goals before the next negation-as-failure goal
 count, and a conjunction counts with its parts. The engine runs the
 leftmost goal that does not wait. The clause body that resolves this
 goal takes its place, so the waiting operator goal runs directly after
@@ -950,7 +1027,7 @@ search ends, and which proof the engine finds first.
 Each step of the search costs one inference: a call or a retry of a
 goal (the clause scan and the head unification included), the split of
 a conjunction, the entry into a negation, the cut that ends a
-negation, a pruned goal, and a recorded solution. The step that
+negation, a comparison built-in, a pruned goal, and a recorded solution. The step that
 reports a yes-no proof costs one inference too.
 
 The compiled Prolog keeps the body order that the compiler writes, so
@@ -1001,7 +1078,9 @@ claim and stay verbatim.
 clause_sha256(Hex), Children)`. It names the resolved clause by its document and by the `% S<n>:` block that holds the clause's line. A clause that cites an earlier sentence's referent still names its own sentence. `Hex` is the SHA-256 of
 that clause's rendered document line with its newline. A re-checked
 negation-as-failure goal freezes as a `naf(Goal)` leaf among a
-clause node's children. Root nodes are always clause nodes. The
+clause node's children. A comparison built-in that held freezes as a
+`builtin(Goal)` leaf, the goal as called, with no clause digest. Root
+nodes are clause nodes or `builtin(Goal)` leaves. The
 prover is a directed first-proof interpreter over the loaded
 clauses. It selects goals as the answer mode does: an operator goal
 waits for its box content. The goals of a row are separate roots, and
@@ -1056,8 +1135,8 @@ region-status meter, lexicon liveness and minimality, the schema's
 product vocabulary) runs for every guideline on every check. The same pass
 re-derives each guideline's review manifest and validates its
 adjudication ledger. It also re-derives every committed query,
-answer, and proof trace, and it joins each trace step to its
-committed clause line. The session lead drafts all ACE,
+answer, and proof trace, and it joins each clause step of a trace to
+its committed clause line. The session lead drafts all ACE,
 alone writes the repository, and commits. Source reading and
 extraction go to `researcher` teammates. Completeness sweeps and
 adversarial review go to `reviewer` teammates. The round roles are in
@@ -1176,7 +1255,8 @@ accompanies it. To verify a bag, extract it and run
 `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from the bag
 root. Each line must report OK.
 
-The payload is the committed `guidelines/` corpus plus `README-dist.md`,
+The payload is the committed `guidelines/` corpus, its common member
+`guidelines/schema.pl` included, plus `README-dist.md`,
 `NOTICE`, and `release-manifest.tsv`. The profile in each guideline's
 `rights.tsv` controls what ships. A `redistributable` guideline ships
 whole. A `reconstructable` guideline ships without its `source/` files;

@@ -29,6 +29,7 @@ mod process;
 mod queries;
 mod query_fixtures;
 mod red;
+pub(crate) mod schema;
 fn check() -> common::Result {
     fork::check()?;
     probes::docid()?;
@@ -41,6 +42,7 @@ fn check() -> common::Result {
     let red = inventories::red()?;
     let green = inventories::green()?;
     inventories::prolog()?;
+    schema::check()?;
     for g in &plans {
         corpus::check(g)?;
     }

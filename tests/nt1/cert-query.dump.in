@@ -1,0 +1,3 @@
+sentences([[^,'Does',a,patient,take,at,least,50,tablets,?]]).
+drs(drs([],[question(drs([A,B,C],[-(object(A,patient,countable,na,eq,1),/(1,3)),-(object(B,tablet,countable,na,geq,50),/(1,8)),-(predicate(C,take,A,B),/(1,4))]))])).
+messages([]).

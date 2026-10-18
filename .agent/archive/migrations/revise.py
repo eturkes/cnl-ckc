@@ -6,7 +6,7 @@ guideline_preference/4 --frozen tests/s1-compiler/ --frozen tests/s1-codec/ --fr
 tests/s2-compiler/ --frozen tests/s2-codec/ --label s2`).
 
 Usage: python3 -I <this> <repo-root> <ckc-binary> --add NAME/ARITY [--add …] --after NAME/ARITY
-       [--frozen PREFIX …] [--label TEXT] [--dry]
+       [--frozen PREFIX …] [--label TEXT] [--dry] [--semantic [--recompile QUERY-CASE …]]
 Toolchain PATH = swipl 9.2.9; repo-root carries the revised compiler, whose `v1_indicators`
 list = the old block with the added indicators after the anchor (checked). --dry computes
 Phase A without writing. Scope = tracked guidelines/, tests/, the Kani harness, minus each
@@ -26,6 +26,12 @@ Predicted churn: R9 offsets past the insertion point +2 lines per indicator; UI
 compiled-line counts likewise; a document read as answers has term_count(N+2k); raw-pl
 custody hashes rebound. Question records, answer artifacts + review bundle v2 digests stay
 unchanged. Two fresh base copies must give one scope sha256; rerunning must change no bytes.
+
+--semantic (a revision that changes clause bytes too, nt1): Phase B records each corpus
+command's drift instead of requiring Phase A identity, the --recompile query cases regenerate,
+`guidelines/schema.pl` may join the output census, and the predictions above give way to the
+unit's churn oracle (nt1: nt1-churn.py; certify mutants then re-anchor via
+nt1-certify-repin.py, since Phase A shifts their operands by the declaration block alone).
 """
 import argparse
 import hashlib
@@ -56,9 +62,17 @@ def block(indicators):
 # Set by configure(): the old + new declaration blocks, the added pairs, the anchor's end
 # inside the old block, the frozen prefixes, the report label.
 OLD_BLOCK = NEW_BLOCK = ADDED = b""
-CUT = 0
+CUT = b""
 FROZEN = ()
 LABEL = "revise"
+# --semantic (nt1): the revision also changes clause bytes, so the corpus recompile
+# may drift from Phase A (the unit's churn oracle grades it) and the schema file
+# `guidelines/schema.pl` may join the census. --recompile names the tests/queries cases
+# whose trees are compiler output (the old compiler reproduces them; the other cases are
+# hand-shaped and keep Phase A bytes): they recompile like the corpus.
+SEMANTIC = False
+SCHEMA = "guidelines/schema.pl"
+RECOMPILE = ()
 
 
 def indicator(text):
@@ -314,7 +328,7 @@ def phase_b(root, ckc):
     before = {p: (root / p).read_bytes() for p in tracked(root, *SCOPE)}
 
     def put(rel, blob):
-        assert rel in before, ("outside tracked output census", rel)
+        assert rel in before or (SEMANTIC and rel == SCHEMA), ("outside tracked output census", rel)
         target = root / rel
         if not target.is_file() or target.read_bytes() != blob:
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -387,6 +401,30 @@ def phase_b(root, ckc):
                     for rel in sorted(fresh):
                         put(f"{case}/golden/{rel}", (dest / rel).read_bytes())
 
+    # A recompiled case's answer + trace goldens follow its tree where they mirrored it.
+    for case in RECOMPILE:
+        source = root / "tests/queries" / case
+        with tempfile.TemporaryDirectory() as tmp:
+            stage = Path(tmp)
+            (stage / "vendor").symlink_to(root / "vendor")
+            (stage / "rust/ckc").mkdir(parents=True)
+            (stage / "rust/ckc/prolog").symlink_to(root / "rust/ckc/prolog")
+            shutil.copytree(source / "tree/guidelines", stage / "guidelines")
+            (gid,) = [p.name for p in (stage / "guidelines").iterdir()]
+            for command in ("compile", "queries"):
+                rc, _, se = run([str(ckc), command, gid], stage)
+                assert rc == 0, (case, command, se)
+            tree = f"tests/queries/{case}/tree/guidelines/{gid}"
+            fresh = stage / "guidelines" / gid
+            for path in sorted(p for p in fresh.rglob("*") if p.is_file()):
+                put(f"{tree}/{path.relative_to(fresh).as_posix()}", path.read_bytes())
+            for lane, kind in (("answers-golden", "answers"), ("traces-golden", "traces")):
+                for golden in sorted((source / lane).glob("*.pl")):
+                    pin, mirrored = f"tests/queries/{case}/{lane}/{golden.name}", f"{tree}/queries/{kind}/{golden.name}"
+                    if before[pin] == before[mirrored]:
+                        put(pin, (root / mirrored).read_bytes())
+        print(f"{LABEL} queries fixture: {case} recompiled", flush=True)
+
     corpus = {p: (root / p).read_bytes() for p in tracked(root, "guidelines", others=True)}
     for guideline in sorted((root / "guidelines").iterdir()):
         if guideline.is_dir():
@@ -395,13 +433,19 @@ def phase_b(root, ckc):
                 assert rc == 0, (command, guideline.name, se)
                 fresh = {p: (root / p).read_bytes() for p in tracked(root, "guidelines", others=True)}
                 drift = sorted(p for p in corpus.keys() | fresh.keys() if corpus.get(p) != fresh.get(p))
+                if SEMANTIC:
+                    print(f"{LABEL} corpus: {command} {guideline.name} {len(drift)} files drift (oracle grades)", flush=True)
+                    corpus = fresh
+                    continue
                 assert not drift, (command, guideline.name, "changed Phase A corpus bytes", drift)
                 print(f"{LABEL} corpus: {command} {guideline.name} byte-identical ({len(corpus)} files)", flush=True)
     rc, _, se = run(["bash", str(root / ".agent/archive/generators/certify-one-fixtures"), str(root), str(ckc)], root)
     assert rc == 0, se
 
     after = {p: (root / p).read_bytes() for p in tracked(root, *SCOPE, others=True)}
-    assert after.keys() == before.keys(), ("changed output census", sorted(after.keys() ^ before.keys()))
+    added = after.keys() - before.keys()
+    assert after.keys() >= before.keys() and added <= ({SCHEMA} if SEMANTIC else set()), (
+        "changed output census", sorted(after.keys() ^ before.keys()))
     regenerated = sorted(p for p in before if before[p] != after[p])
     digest = hashlib.sha256()
     for p, blob in sorted(after.items()):
@@ -418,7 +462,13 @@ def main():
     parser.add_argument("--frozen", action="append", default=[], metavar="PREFIX")
     parser.add_argument("--label", default="revise")
     parser.add_argument("--dry", action="store_true")
+    parser.add_argument("--semantic", action="store_true")
+    parser.add_argument("--recompile", action="append", default=[], metavar="QUERY-CASE")
     args = parser.parse_args()
+    global SEMANTIC, RECOMPILE
+    SEMANTIC, RECOMPILE = args.semantic, tuple(args.recompile)
+    if RECOMPILE and not SEMANTIC:
+        parser.error("--recompile needs --semantic")
     root, ckc = args.repo_root.resolve(), args.ckc_binary.resolve()
     configure(root, args.add, args.after, args.frozen, args.label)
     if not args.dry and (not ckc.is_file() or not os.access(ckc, os.X_OK)):

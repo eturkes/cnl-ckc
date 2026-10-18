@@ -38,6 +38,8 @@ proof fn action(pl: u::Bytes, d: v::DocFile, c: v::DocClause, event: Term, input
     hide(u::lit);
     hide(u::pl_word);
     hide(u::verb_html);
+    hide(u::bound_of);
+    hide(u::unit_html);
     s::verb(pl, d, c, event, inputs);
     let verb = u::verb_html(pl, d, c, event);
     if let Some(object) = u::participant(u::join_terms(d, c), event, 2) {
@@ -47,6 +49,11 @@ proof fn action(pl: u::Bytes, d: v::DocFile, c: v::DocClause, event: Term, input
             l::f324(inputs);
             b::add(verb, b::f(324), inputs);
             b::add(verb + b::f(324), noun, inputs);
+        } else if let Some((_, Term::Int(n), Some(b))) = u::bound_of(d, c, object) {
+            t::unit(u::atom_name(b), n == 1, inputs);
+            if let Some(w) = u::unit_html(u::atom_name(b), n == 1) {
+                b::add(verb, w, inputs);
+            }
         }
     }
 }

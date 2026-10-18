@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec02-imp11',ace_sha256('5c9020a423da9ca98205220168644723b0867e9a7871c10ac5b988280addf5db'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient is an older-adult then every clinician should judiciously make a case-by-case-decision about a tricyclic-antidepressant and should weigh a confusion-risk against a benefit and should weigh a fall-risk against a benefit.

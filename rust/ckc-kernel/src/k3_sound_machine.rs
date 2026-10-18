@@ -323,6 +323,59 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
                                 assert(aux_valid(db, roots, nc, na));
                                 continued_next(db, roots, nc, na);
                                 assert(tstep(db, c) == TStep::Next(nc));
+                            } else if ckc_spec::compare::is_builtin(name, args.len()) {
+                                if ckc_spec::compare::holds(g) {
+                                    let log = if in_naf(c.stack) {
+                                        c.log
+                                    } else {
+                                        c.log.push((path, TEv::Builtin(g)))
+                                    };
+                                    let nc = TCfg { stack: pre + rest, log, ..c };
+                                    super::select::cuts_parts(c.stack, k as int, c.alts.len());
+                                    cuts_add(pre, rest, c.alts.len());
+                                    match aux.current {
+                                        Option::Some(cert) => {
+                                            outer_no_naf(db, roots, snapshot(c), cert);
+                                            record_builtin(
+                                                db,
+                                                roots,
+                                                snapshot(c),
+                                                cert,
+                                                g,
+                                                depth,
+                                                path,
+                                                pre,
+                                                rest,
+                                            );
+                                            let after = Cert {
+                                                theta: cert.theta,
+                                                offsets: cert.offsets.push(0),
+                                            };
+                                            let na = Aux {
+                                                current: Option::Some(after),
+                                                saved: aux.saved,
+                                            };
+                                            continued_next(db, roots, nc, na);
+                                        },
+                                        Option::None => {
+                                            super::select::in_naf_splice(
+                                                pre,
+                                                c.stack[k as int],
+                                                rest,
+                                                seq![],
+                                            );
+                                            assert(pre + seq![] + rest =~= pre + rest);
+                                            let na = Aux {
+                                                current: Option::None,
+                                                saved: aux.saved,
+                                            };
+                                            continued_next(db, roots, nc, na);
+                                        },
+                                    }
+                                    assert(tstep(db, c) == TStep::Next(nc));
+                                } else {
+                                    tfail_preserves(db, roots, c, aux.saved);
+                                }
                             } else {
                                 tcall_preserves(
                                     db,

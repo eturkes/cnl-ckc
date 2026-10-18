@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec08-imp18',ace_sha256('2e25594805e7694dc2b515b871e8afe621d389ffe0d6ed4c0fbac20c987c7e29'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician considers a chronic-opioid-therapy for a patient and the patient has a substance-use-disorder then the clinician should discuss an opioid-use-disorder-risk with the patient and should discuss an overdose-risk with the patient and should carefully weigh an opioid-benefit against an opioid-risk for the patient and should incorporate a risk-mitigation-strategy in a management-plan with the patient.

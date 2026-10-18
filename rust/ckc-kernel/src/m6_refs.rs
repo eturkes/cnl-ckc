@@ -203,6 +203,11 @@ pub fn cond_refs(arena: &ETermArena, inner: &T) -> (out: Vec<T>)
                 out.push(args[2].cp());
             } else if has_name(&name, &Sym::Property) && args.len() == 3 {
                 out.push(args[0].cp());
+            } else if (has_name(&name, &Sym::DollarGuidelineBound) && args.len() == 8) || (has_name(
+                &name,
+                &Sym::DollarGuidelineMeasure,
+            ) && args.len() == 4) {
+                out.push(args[0].cp());
             }
         },
         None => {},

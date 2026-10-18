@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s56-02',ace_sha256('96772f89bf76e43072aae59e50b8e5e5ee1770ffb1fc70524379b00f89b9209c'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has a long-term-opioid-and-benzodiazepine-therapy and a clinician considers a concurrent-therapy-continuation-decision for the patient then the clinician should carefully weigh a benefit against a risk during the concurrent-therapy-continuation-decision.

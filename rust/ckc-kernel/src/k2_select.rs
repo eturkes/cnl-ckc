@@ -139,8 +139,9 @@ pub proof fn run_binds_lit(gs: Seq<Goal>, x: Term, t: Term, d: nat)
         gs[0] == Goal::Lit(t, d),
     ensures
         run_binds(gs, x) == match t {
-            Term::Comp(name, args) => !(name == naf_name() && args.len() == 1) && (binds(t, x)
-                || run_binds(gs.drop_first(), x)),
+            Term::Comp(name, args) => !(name == naf_name() && args.len() == 1) && !(
+            ckc_spec::compare::is_builtin(name, args.len()) && !ckc_spec::term::ground(t)) && (
+            binds(t, x) || run_binds(gs.drop_first(), x)),
             _ => false,
         },
 {
@@ -153,7 +154,7 @@ pub proof fn binds_unfold(t: Term, x: Term)
             Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
                 binds(args[0], x) || binds(args[1], x)
             } else {
-                args.len() > 0 && args[0] == x
+                !ckc_spec::compare::is_builtin(name, args.len()) && args.len() > 0 && args[0] == x
             },
             _ => false,
         },
@@ -307,6 +308,10 @@ pub fn binds_root(arena: &ETermArena, root: usize, key: usize) -> (out: bool)
                         roots_binds_unfold(arena.nodes@, mid, x);
                         assert(mid.drop_last() =~= rest);
                     }
+                } else if crate::compare_impl::is_builtin_exec(name, child_roots.len()) {
+                    proof {
+                        assert(!binds(t, x));
+                    }
                 } else if child_roots.len() > 0 {
                     let first = child_roots[0];
                     proof {
@@ -381,6 +386,33 @@ pub fn is_comp_root(arena: &ETermArena, root: usize) -> (out: bool)
     }
 }
 
+pub fn nonground_builtin_root(arena: &ETermArena, root: usize) -> (out: bool)
+    requires
+        root_ok(arena, root),
+    ensures
+        out == match arena@[root as int] {
+            Term::Comp(name, args) => ckc_spec::compare::is_builtin(name, args.len())
+                && !ckc_spec::term::ground(arena@[root as int]),
+            _ => false,
+        },
+{
+    proof {
+        assert(node_ok(arena.nodes@, root as int));
+        reveal(node_ok);
+    }
+    match &arena.nodes[root].kind {
+        ENodeKind::Comp { name, child_roots, .. } => {
+            proof {
+                node_comp_model(arena.nodes@, root as int, name@, child_roots@);
+                reveal(child_terms);
+            }
+            crate::compare_impl::is_builtin_exec(name, child_roots.len())
+                && !crate::k2_walk::ground_root(arena, root)
+        },
+        _ => false,
+    }
+}
+
 pub fn run_binds_from(arena: &ETermArena, goals: &Vec<EGoal>, from: usize, key: usize) -> (out:
     bool)
     requires
@@ -417,7 +449,10 @@ pub fn run_binds_from(arena: &ETermArena, goals: &Vec<EGoal>, from: usize, key: 
                     assert(view[j as int] == Goal::Lit(arena@[root as int], depth as nat));
                     run_binds_lit(s, x, arena@[root as int], depth as nat);
                 }
-                if !is_comp_root(arena, root) || is_naf_root(arena, root) {
+                if !is_comp_root(arena, root) || is_naf_root(arena, root) || nonground_builtin_root(
+                    arena,
+                    root,
+                ) {
                     return false;
                 }
                 if binds_root(arena, root, key) {

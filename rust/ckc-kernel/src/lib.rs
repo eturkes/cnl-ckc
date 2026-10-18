@@ -38,6 +38,9 @@
 // every other module = uninspected impl+proofs whose sole review is
 // `cargo verus verify`.
 mod align_impl;
+mod compare_decimal;
+mod compare_impl;
+mod compare_schema;
 pub mod contract;
 mod k2_aggregate;
 mod k2_answers;
@@ -160,6 +163,8 @@ mod k5_utf8;
 mod k5_words;
 mod m6_ante;
 mod m6_bind;
+mod m6_compare;
+mod m6_compare_refs;
 mod m6_custody;
 mod m6_doc;
 mod m6_drs;

@@ -364,15 +364,23 @@ pub fn split_variants(
         prefix(start, n3, cconds);
     }
     let cons_result = consequents(arena, cconds, &deps1, &deps2, ants.right.n, env);
-    let ghost n4 = arena.nodes@;
+    let ghost nc = arena.nodes@;
     proof {
-        crate::k2_load::prefix_chain(start, n3, n4);
-        ants_prefix(n3, n4, &ants);
+        crate::k2_load::prefix_chain(start, n3, nc);
     }
     let (c1, c2) = match cons_result {
         Ok(pair) => pair,
         Err(e) => return Err(e),
     };
+    let cb = crate::m6_flat::add(arena, env.base, c1.n);
+    let ghost n4 = arena.nodes@;
+    proof {
+        crate::k2_load::prefix_chain(start, nc, n4);
+        crate::k2_load::prefix_chain(n3, nc, n4);
+        ants_prefix(n3, n4, &ants);
+        items_prefix(nc, n4, c1.items@);
+        items_prefix(nc, n4, c2.items@);
+    }
     let all1 = concat_items(arena, &ants.shared.items, &ants.left.items);
     let all2 = concat_items(arena, &all1, &ants.right.items);
     let all3 = concat_items(arena, &all2, &c1.items);
@@ -389,7 +397,7 @@ pub fn split_variants(
         prefix(n3, n4, &deps2);
         map_prefix(start, n4, map@);
     }
-    let g1_result = variant(arena, &a1, &c1.items, &ordered, map, &deps1, env, 1);
+    let g1_result = variant(arena, &a1, &c1.items, &ordered, map, &deps1, env, 1, cb);
     let ghost n5 = arena.nodes@;
     proof {
         crate::k2_load::prefix_chain(start, n4, n5);
@@ -405,7 +413,7 @@ pub fn split_variants(
         map_prefix(n4, n5, map@);
         prefix(n4, n5, &deps2);
     }
-    let g2_result = variant(arena, &a2, &c2.items, &ordered, map, &deps2, env, 2);
+    let g2_result = variant(arena, &a2, &c2.items, &ordered, map, &deps2, env, 2, cb);
     let ghost n6 = arena.nodes@;
     proof {
         crate::k2_load::prefix_chain(start, n5, n6);
@@ -455,6 +463,7 @@ pub open spec fn unsplit_relation(
                     env.s as nat,
                     env.docid@,
                     1,
+                    env.base as nat + fc.n,
                 ) {
                     Err(e) => Err(e),
                     Ok(g) => Ok(seq![g]),
@@ -513,15 +522,22 @@ pub fn unsplit(
         prefix(n1, n2, &deps);
     }
     let fc_result = flatten_cons(arena, cconds, env, &deps, fa.n);
-    let ghost n3 = arena.nodes@;
+    let ghost nc = arena.nodes@;
     proof {
-        crate::k2_load::prefix_chain(start, n2, n3);
-        items_prefix(n2, n3, fa.items@);
+        crate::k2_load::prefix_chain(start, n2, nc);
     }
     let fc = match fc_result {
         Ok(f) => f,
         Err(e) => return Err(e),
     };
+    let cb = crate::m6_flat::add(arena, env.base, fc.n);
+    let ghost n3 = arena.nodes@;
+    proof {
+        crate::k2_load::prefix_chain(start, nc, n3);
+        crate::k2_load::prefix_chain(n2, nc, n3);
+        items_prefix(n2, n3, fa.items@);
+        items_prefix(nc, n3, fc.items@);
+    }
     let all = concat_items(arena, &fa.items, &fc.items);
     let refs = ref_slots(arena, &all);
     let empty = Vec::new();
@@ -531,7 +547,7 @@ pub fn unsplit(
         map_prefix(start, n3, map@);
     }
     let ordered = first_vars(arena, &refs, &empty);
-    let g_result = variant(arena, &fa.items, &fc.items, &ordered, map, &deps, env, 1);
+    let g_result = variant(arena, &fa.items, &fc.items, &ordered, map, &deps, env, 1, cb);
     proof {
         crate::k2_load::prefix_chain(start, n3, arena.nodes@);
     }

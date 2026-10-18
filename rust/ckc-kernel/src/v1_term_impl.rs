@@ -16800,7 +16800,7 @@ proof fn decls_end(out: Seq<u8>)
 fn decls_block() -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::v1text::decls_from(0),
-        r@.len() == 1366,
+        r@.len() == 1434,
 {
     let mut out: Vec<u8> = Vec::new();
     proof {
@@ -17007,6 +17007,17 @@ fn decls_block() -> (r: Vec<u8>)
     push_decl_pair(&mut out, name, 4, Ghost(17int));
     proof {
         decls_step(before, 17);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_unit";
+    proof {
+        reveal_strlit("guideline_unit");
+        reveal_byteslit(b"guideline_unit");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_unit"@));
+    }
+    push_decl_pair(&mut out, name, 3, Ghost(18int));
+    proof {
+        decls_step(before, 18);
     }
     proof {
         decls_end(out@);
@@ -17996,6 +18007,20 @@ fn strength_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     accepted
 }
 
+fn unit_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
+    ensures
+        r == (ckc_spec::v1text::indicator(18) == (name@, arity as nat)),
+{
+    let unit: &[u8] = b"guideline_unit";
+    proof {
+        reveal_strlit("guideline_unit");
+        reveal_byteslit(b"guideline_unit");
+        reveal(ckc_spec::v1text::ascii);
+        assert(unit@ == ckc_spec::v1text::ascii("guideline_unit"@));
+    }
+    arity == 3 && vec_slice_equal(name, unit)
+}
+
 fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
@@ -18004,39 +18029,53 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     let ann = annotation_pred_exec(name, arity);
     let q12 = q12_pred_exec(name, arity);
     let s1 = strength_pred_exec(name, arity);
+    let unit = unit_pred_exec(name, arity);
     proof {
         reveal(ckc_spec::v1text::is_semantic_pred);
         if ckc_spec::v1text::is_semantic_pred(name@, arity as nat) {
             let i = choose|i: int|
-                2 <= i < 18 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
+                2 <= i < 19 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             if i < 9 {
                 assert(base);
             } else if i < 11 {
                 assert(ann);
             } else if i < 15 {
                 assert(q12);
-            } else {
+            } else if i < 18 {
                 assert(s1);
+            } else {
+                assert(unit);
             }
         }
     }
-    base || ann || q12 || s1
+    base || ann || q12 || s1 || unit
 }
 
-fn semantic_literal_exec(term: &EParsedTerm) -> (r: bool)
+pub open spec fn literal_wf(term: Term, body: bool) -> bool {
+    if body {
+        ckc_spec::v1text::wf_body_literal(term)
+    } else {
+        ckc_spec::v1text::wf_literal(term)
+    }
+}
+
+fn literal_exec(term: &EParsedTerm, body: bool) -> (r: bool)
     requires
         parsed_term_ok(term),
     ensures
-        r == ckc_spec::v1text::wf_literal(term@),
+        r == literal_wf(term@, body),
 {
-    let semantic = match &term.top {
-        ETermTop::Comp(name, arity) => semantic_pred_exec(name, *arity),
+    let named = match &term.top {
+        ETermTop::Comp(name, arity) => semantic_pred_exec(name, *arity) || body
+            && crate::compare_impl::is_builtin_exec(name, *arity),
         _ => false,
     };
-    let accepted = semantic && term.no_dollar;
+    let accepted = named && term.no_dollar;
     proof {
         reveal(parsed_term_ok);
         reveal(top_matches);
+        reveal(literal_wf);
+        reveal(ckc_spec::v1text::wf_body_literal);
         reveal(ckc_spec::v1text::wf_literal);
         reveal(ckc_spec::term::wf_term);
         reveal(ckc_spec::term::no_dollar_var);
@@ -18066,6 +18105,7 @@ proof fn spanned_term_at_doc_delimiter(bytes: Seq<u8>, term: &ESpannedTerm)
 
 fn parse_doc_literal(
     bytes: &[u8],
+    body: bool,
     arena: &mut ETermArena,
     guided: &mut EGuidedCursor,
     next: Ghost<u8>,
@@ -18079,9 +18119,9 @@ fn parse_doc_literal(
         guided_cursor_ok(bytes@, old(guided)),
         expected@ matches Some(e) ==> old(guided).guide@ matches Some(g) && guide_rest(g) == seq![
             ckc_spec::v1text::term_bytes(e.0),
-        ] + e.1 && ckc_spec::v1text::wf_literal(e.0) && term_keys_fit(e.0) && e.1.len() > 0
-            && e.1[0].len() > 0 && e.1[0][0] == next@ && (next@ == 0x2c || next@ == 0x29 || next@
-            == 0x20 || next@ == 0x2e && e.1[0].len() > 1 && e.1[0][1] == 0x0a),
+        ] + e.1 && literal_wf(e.0, body) && term_keys_fit(e.0) && e.1.len() > 0 && e.1[0].len() > 0
+            && e.1[0][0] == next@ && (next@ == 0x2c || next@ == 0x29 || next@ == 0x20 || next@
+            == 0x2e && e.1[0].len() > 1 && e.1[0][1] == 0x0a),
         expected@ is None ==> old(guided).guide@ is None,
         old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
         tracker_complete(old(tracker).valid, old(tracker).stream@),
@@ -18094,7 +18134,7 @@ fn parse_doc_literal(
         r matches Some(term) ==> {
             &&& guided_cursor_ok(bytes@, final(guided))
             &&& spanned_term_ok(bytes@, &term)
-            &&& ckc_spec::v1text::wf_literal(term@)
+            &&& literal_wf(term@, body)
             &&& final(tracker).stream@ == old(tracker).stream@ + ckc_spec::term::var_stream(term@)
             &&& final(tracker).valid ==> tracker_state_ok(
                 final(tracker).next,
@@ -18139,13 +18179,13 @@ fn parse_doc_literal(
     ) {
         Some(term) => term,
         None => {
-            raise_at(at, literal_slot_reject_at(bytes, term_slot, term_probe), bytes.len());
+            raise_at(at, literal_slot_reject_at(bytes, body, term_slot, term_probe), bytes.len());
             return None;
         },
     };
     raise_at(at, term_probe, bytes.len());
     if term.end >= bytes.len() {
-        raise_at(at, literal_slot_reject_at(bytes, term_slot, bytes.len()), bytes.len());
+        raise_at(at, literal_slot_reject_at(bytes, body, term_slot, bytes.len()), bytes.len());
         proof {
             if expected@ is Some {
                 assert(false);
@@ -18155,7 +18195,7 @@ fn parse_doc_literal(
     }
     if bytes[term.end] == 0x2e {
         if term.end + 1 >= bytes.len() {
-            raise_at(at, literal_slot_reject_at(bytes, term_slot, bytes.len()), bytes.len());
+            raise_at(at, literal_slot_reject_at(bytes, body, term_slot, bytes.len()), bytes.len());
             proof {
                 if let Some(e) = expected@ {
                     assert(e.1[0][0] == next@);
@@ -18166,7 +18206,7 @@ fn parse_doc_literal(
             return None;
         }
         if bytes[term.end + 1] != 0x0a {
-            raise_at(at, literal_slot_reject_at(bytes, term_slot, term.end + 1), bytes.len());
+            raise_at(at, literal_slot_reject_at(bytes, body, term_slot, term.end + 1), bytes.len());
             proof {
                 if let Some(e) = expected@ {
                     assert(e.1[0][0] == next@);
@@ -18177,7 +18217,7 @@ fn parse_doc_literal(
             return None;
         }
     } else if bytes[term.end] != 0x2c && bytes[term.end] != 0x29 && bytes[term.end] != 0x20 {
-        raise_at(at, literal_slot_reject_at(bytes, term_slot, term.end), bytes.len());
+        raise_at(at, literal_slot_reject_at(bytes, body, term_slot, term.end), bytes.len());
         proof {
             if expected@ is Some {
                 assert(false);
@@ -18185,9 +18225,9 @@ fn parse_doc_literal(
         }
         return None;
     }
-    if !semantic_literal_exec(&term.parsed) {
+    if !literal_exec(&term.parsed, body) {
         if term.parsed.no_dollar {
-            raise_at(at, literal_reject_at(bytes, &term), bytes.len());
+            raise_at(at, literal_reject_at(bytes, &term, body), bytes.len());
         }
         proof {
             if let Some(e) = expected@ {
@@ -18212,7 +18252,7 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
         name[0] == 0x67,
 {
     reveal(ckc_spec::v1text::is_semantic_pred);
-    let i = choose|i: int| 2 <= i < 18 && ckc_spec::v1text::indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 19 && ckc_spec::v1text::indicator(i) == (name, arity);
     reveal(ckc_spec::v1text::indicator);
     if i == 2 {
         reveal_strlit("guideline_entity");
@@ -18259,9 +18299,12 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
     } else if i == 16 {
         reveal_strlit("guideline_preference");
         reveal(ckc_spec::v1text::ascii);
-    } else {
-        assert(i == 17);
+    } else if i == 17 {
         reveal_strlit("guideline_qualifier");
+        reveal(ckc_spec::v1text::ascii);
+    } else {
+        assert(i == 18);
+        reveal_strlit("guideline_unit");
         reveal(ckc_spec::v1text::ascii);
     }
 }
@@ -18299,6 +18342,30 @@ proof fn wf_literal_term_prefix_safe(term: Term)
             reveal_with_fuel(ckc_spec::v1text::term_bytes, 1);
         },
         _ => assert(false),
+    }
+}
+
+proof fn wf_body_literal_term_prefix_safe(term: Term)
+    requires
+        ckc_spec::v1text::wf_body_literal(term),
+    ensures
+        ckc_spec::v1text::term_bytes(term).len() > 0,
+        ckc_spec::v1text::term_bytes(term)[0] != 0x25,
+        ckc_spec::v1text::term_bytes(term)[0] != 0x5c,
+        ckc_spec::v1text::term_bytes(term)[0] != 0x28,
+        ckc_spec::v1text::term_bytes(term)[0] != 0x29,
+        ckc_spec::v1text::term_bytes(term)[0] != 0x2c,
+{
+    if ckc_spec::v1text::wf_literal(term) {
+        wf_literal_term_prefix_safe(term);
+    } else {
+        reveal(ckc_spec::v1text::wf_body_literal);
+        reveal(ckc_spec::compare::is_builtin);
+        reveal(ckc_spec::compare::satisfies_name);
+        reveal_strlit("guideline_satisfies");
+        reveal(ckc_spec::v1text::ascii);
+        reveal(ckc_spec::v1text::atom_bytes);
+        reveal_with_fuel(ckc_spec::v1text::term_bytes, 1);
     }
 }
 
@@ -18508,7 +18575,7 @@ fn parse_doc_pos_item(
             &&& old(guided).guide@ matches Some(g) && guide_rest(g) == seq![
                 ckc_spec::v1text::term_bytes(e.0),
             ] + e.1
-            &&& ckc_spec::v1text::wf_literal(e.0)
+            &&& ckc_spec::v1text::wf_body_literal(e.0)
             &&& term_keys_fit(e.0)
             &&& e.1.len() > 0
             &&& e.1[0].len() > 0
@@ -18552,7 +18619,7 @@ fn parse_doc_pos_item(
         expected@ is None ==> final(guided).guide@ is None,
 {
     let ghost entry_stream = tracker.stream@;
-    let term = match parse_doc_literal(bytes, arena, guided, next, expected, tracker, at) {
+    let term = match parse_doc_literal(bytes, true, arena, guided, next, expected, tracker, at) {
         Some(term) => term,
         None => return None,
     };
@@ -18590,7 +18657,7 @@ fn parse_doc_naf_singleton(
                 ckc_spec::v1text::ascii("\\+ "@),
                 ckc_spec::v1text::term_bytes(e.0),
             ] + e.1
-            &&& ckc_spec::v1text::wf_literal(e.0)
+            &&& ckc_spec::v1text::wf_body_literal(e.0)
             &&& term_keys_fit(e.0)
             &&& e.1.len() > 0
             &&& e.1[0].len() > 0
@@ -18660,7 +18727,7 @@ fn parse_doc_naf_singleton(
     ) {
         return None;
     }
-    let term = match parse_doc_literal(bytes, arena, guided, next, expected, tracker, at) {
+    let term = match parse_doc_literal(bytes, true, arena, guided, next, expected, tracker, at) {
         Some(term) => term,
         None => return None,
     };
@@ -18671,7 +18738,9 @@ fn parse_doc_naf_singleton(
         reveal_with_fuel(ckc_spec::term::var_stream_all, 2);
         assert(seq![term@].drop_first() == Seq::<Term>::empty());
         assert(ckc_spec::term::var_stream_all(seq![term@]) == ckc_spec::term::var_stream(term@));
-        assert forall|i: int| 0 <= i < 1 implies ckc_spec::v1text::wf_literal(seq![term@][i]) by {
+        assert forall|i: int| 0 <= i < 1 implies ckc_spec::v1text::wf_body_literal(
+            seq![term@][i],
+        ) by {
             assert(i == 0);
         }
         assert(entry_stream == old(tracker).stream@);
@@ -18719,7 +18788,7 @@ fn parse_doc_naf_conjunction(
             ) + e.1
             &&& e.0.len() >= 2
             &&& terms_keys_fit(e.0)
-            &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_literal(e.0[i])
+            &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_body_literal(e.0[i])
         },
         expected@ is None ==> old(guided).guide@ is None,
         old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
@@ -18787,7 +18856,7 @@ fn parse_doc_naf_conjunction_inner(
             ) + e.1
             &&& e.0.len() >= 2
             &&& terms_keys_fit(e.0)
-            &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_literal(e.0[i])
+            &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_body_literal(e.0[i])
         },
         expected@ is None ==> old(guided).guide@ is None,
         old(tracker).valid ==> tracker_state_ok(old(tracker).next, old(tracker).stream@),
@@ -18905,7 +18974,9 @@ fn parse_doc_naf_conjunction_inner(
         assert(ckc_spec::term::var_stream_all(lits) == Seq::<nat>::empty());
         assert_seqs_equal!(entry_stream + Seq::<nat>::empty() == entry_stream);
         assert(tracker.stream@ == entry_stream + ckc_spec::term::var_stream_all(lits));
-        assert forall|i: int| 0 <= i < lits.len() implies ckc_spec::v1text::wf_literal(lits[i]) by {
+        assert forall|i: int| 0 <= i < lits.len() implies ckc_spec::v1text::wf_body_literal(
+            lits[i],
+        ) by {
             assert(false);
         }
         if let Some(e) = expected@ {
@@ -18947,12 +19018,12 @@ fn parse_doc_naf_conjunction_inner(
             tracker_complete(tracker.valid, tracker.stream@),
             tracker.stream@ == entry_stream + ckc_spec::term::var_stream_all(lits),
             tracker.stream@.len() <= guided.cursor.pos,
-            forall|i: int| 0 <= i < lits.len() ==> ckc_spec::v1text::wf_literal(lits[i]),
+            forall|i: int| 0 <= i < lits.len() ==> ckc_spec::v1text::wf_body_literal(lits[i]),
             !more ==> lits.len() >= 1,
             expected@ matches Some(e) ==> {
                 &&& e.0.len() >= 2
                 &&& terms_keys_fit(e.0)
-                &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_literal(e.0[i])
+                &&& forall|i: int| 0 <= i < e.0.len() ==> ckc_spec::v1text::wf_body_literal(e.0[i])
                 &&& lits == e.0.take(lits.len() as int)
                 &&& lits.len() <= e.0.len()
                 &&& more ==> lits.len() < e.0.len()
@@ -18999,7 +19070,7 @@ fn parse_doc_naf_conjunction_inner(
                 assert(0 <= lits.len() < e.0.len());
                 assert(remaining.len() == e.0.len() - lits.len());
                 assert(remaining.len() > 0);
-                assert(ckc_spec::v1text::wf_literal(e.0[lits.len() as int]));
+                assert(ckc_spec::v1text::wf_body_literal(e.0[lits.len() as int]));
                 assert(remaining[0] == e.0[lits.len() as int]);
                 terms_keys_fit_at(e.0, lits.len() as int);
                 reveal(doc_lit_parts);
@@ -19033,6 +19104,7 @@ fn parse_doc_naf_conjunction_inner(
         let ghost before_nodes = working_arena.nodes@;
         let arena_result = parse_doc_literal(
             bytes,
+            true,
             &mut working_arena,
             guided,
             Ghost(term_next),
@@ -19093,7 +19165,7 @@ fn parse_doc_naf_conjunction_inner(
                         + ckc_spec::term::var_stream(term@))
             );
             assert(tracker.stream@ == entry_stream + ckc_spec::term::var_stream_all(lits));
-            assert forall|i: int| 0 <= i < lits.len() implies ckc_spec::v1text::wf_literal(
+            assert forall|i: int| 0 <= i < lits.len() implies ckc_spec::v1text::wf_body_literal(
                 lits[i],
             ) by {
                 if i < old_lits.len() {
@@ -19313,7 +19385,7 @@ fn parse_doc_body_item(
             reveal(doc_body_item_parts);
             match e.0 {
                 ckc_spec::v1text::BodyItem::Pos(lit) => {
-                    wf_literal_term_prefix_safe(lit);
+                    wf_body_literal_term_prefix_safe(lit);
                     assert(guide_rest(guided.guide@.unwrap()) == seq![
                         ckc_spec::v1text::term_bytes(lit),
                     ] + e.1);
@@ -19339,7 +19411,7 @@ fn parse_doc_body_item(
                     assert(ckc_spec::v1text::ascii("\\+ "@)[0] == 0x5c);
                     assert(bytes@[guided.cursor.pos as int] == 0x5c);
                     if gs.len() == 1 {
-                        wf_literal_term_prefix_safe(gs[0]);
+                        wf_body_literal_term_prefix_safe(gs[0]);
                         assert(guide_rest(guided.guide@.unwrap()) == seq![
                             ckc_spec::v1text::ascii("\\+ "@),
                             ckc_spec::v1text::term_bytes(gs[0]),
@@ -19407,7 +19479,7 @@ fn parse_doc_body_item(
         if let Some(e) = expected@ {
             match e.0 {
                 ckc_spec::v1text::BodyItem::Pos(lit) => {
-                    wf_literal_term_prefix_safe(lit);
+                    wf_body_literal_term_prefix_safe(lit);
                     assert(bytes@[guided.cursor.pos as int] == ckc_spec::v1text::term_bytes(
                         lit,
                     )[0]);
@@ -19429,7 +19501,7 @@ fn parse_doc_body_item(
         assert(guided.cursor.pos + 3 < bytes.len());
         if let Some((ckc_spec::v1text::BodyItem::Naf(gs), tail)) = expected@ {
             if gs.len() == 1 {
-                wf_literal_term_prefix_safe(gs[0]);
+                wf_body_literal_term_prefix_safe(gs[0]);
                 assert(guide_rest(guided.guide@.unwrap()) == seq![
                     ckc_spec::v1text::ascii("\\+ "@),
                     ckc_spec::v1text::term_bytes(gs[0]),
@@ -19465,7 +19537,7 @@ fn parse_doc_body_item(
         proof {
             if let Some((ckc_spec::v1text::BodyItem::Naf(gs), _)) = expected@ {
                 if gs.len() == 1 {
-                    wf_literal_term_prefix_safe(gs[0]);
+                    wf_body_literal_term_prefix_safe(gs[0]);
                     assert(false);
                 }
                 assert(gs.len() >= 2);
@@ -19885,6 +19957,7 @@ fn parse_doc_clause_inner(
     let ghost before_nodes = working_arena.nodes@;
     let arena_result = parse_doc_literal(
         bytes,
+        false,
         &mut working_arena,
         guided,
         Ghost(head_next),
@@ -21810,11 +21883,9 @@ fn top_comma(bytes: &[u8], start: usize, end: usize, k: usize) -> (r: usize)
     end - 1
 }
 
-// R9 offset of a parsed term that is no semantic literal. An undeclared name diverges
-// past the longest prefix it shares with a declared name; a declared name with the
-// wrong arity diverges at its closing paren (too few arguments) or its extra comma (too
-// many); any other term keeps its start.
-fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
+// R9: rejected names diverge past their longest allowed-name prefix; wrong arity
+// diverges at the closing paren (too few arguments) or extra comma (too many).
+fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm, body: bool) -> (r: usize)
     ensures
         r <= bytes@.len(),
 {
@@ -21828,20 +21899,20 @@ fn literal_reject_at(bytes: &[u8], term: &ESpannedTerm) -> (r: usize)
     }
     let (name, arity) = match &term.parsed.top {
         ETermTop::Comp(n, a) => (n, *a),
-        // A declared name read as a bare atom = an arity-zero use: its start.
+        // An allowed name read as a bare atom = an arity-zero use: its start.
         ETermTop::Atom(n) => {
-            let declared = semantic_arity(n).is_some();
+            let declared = literal_arity(n, 0, body).is_some();
             return if declared {
                 start
             } else {
-                pred_name_reject_at(bytes, start)
+                pred_name_reject_at(bytes, start, body)
             };
         },
-        _ => return pred_name_reject_at(bytes, start),
+        _ => return pred_name_reject_at(bytes, start, body),
     };
-    let want = match semantic_arity(name) {
+    let want = match literal_arity(name, arity, body) {
         Some(k) => k,
-        None => return pred_name_reject_at(bytes, start),
+        None => return pred_name_reject_at(bytes, start, body),
     };
     if arity == want {
         start
@@ -21886,8 +21957,25 @@ fn semantic_arity(name: &[u8]) -> (r: Option<usize>) {
         Some(4)
     } else if crate::k4_bytes::eq(name, b"guideline_qualifier") {
         Some(4)
+    } else if crate::k4_bytes::eq(name, b"guideline_unit") {
+        Some(3)
     } else {
         None
+    }
+}
+
+// With two built-in arities, a fifth argument still fits the six-argument form.
+fn literal_arity(name: &[u8], arity: usize, body: bool) -> (r: Option<usize>) {
+    if body && crate::k4_bytes::eq(name, b"guideline_satisfies") {
+        Some(
+            if arity <= 4 {
+                4
+            } else {
+                6
+            },
+        )
+    } else {
+        semantic_arity(name)
     }
 }
 
@@ -21942,9 +22030,8 @@ fn fixed_reject_at(bytes: &[u8], slot: usize, name: &[u8], next: u8) -> (r: usiz
     slot + k
 }
 
-// R9 offset of a literal whose name is undeclared: the first byte past the longest
-// prefix it shares with a declared predicate name and its `(`.
-fn pred_name_reject_at(bytes: &[u8], start: usize) -> (r: usize)
+// R9 name rejection: first byte past the longest allowed-name + `(` prefix.
+fn pred_name_reject_at(bytes: &[u8], start: usize, body: bool) -> (r: usize)
     ensures
         r <= bytes@.len(),
 {
@@ -21973,27 +22060,33 @@ fn pred_name_reject_at(bytes: &[u8], start: usize) -> (r: usize)
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_grade", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_preference", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_qualifier", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_unit", 0x28), bytes.len());
+    if body {
+        raise_at(
+            &mut best,
+            fixed_reject_at(bytes, start, b"guideline_satisfies", 0x28),
+            bytes.len(),
+        );
+    }
     best
 }
 
-// R9 at a literal slot, which holds a declared predicate name and its `(`: unless it does,
-// the literal diverges past the longest prefix shared with one (a quote, a capital or a
-// digit at once), never where the term reader stopped; else at `fallback`.
-fn literal_slot_reject_at(bytes: &[u8], slot: usize, fallback: usize) -> (r: usize)
+// R9: a foreign-name slot reports the name divergence, not the term reader stop.
+fn literal_slot_reject_at(bytes: &[u8], body: bool, slot: usize, fallback: usize) -> (r: usize)
     requires
         fallback <= bytes@.len(),
     ensures
         r <= bytes@.len(),
 {
-    if declared_name_at(bytes, slot) {
+    if literal_name_at(bytes, slot, body) {
         fallback
     } else {
-        pred_name_reject_at(bytes, slot)
+        pred_name_reject_at(bytes, slot, body)
     }
 }
 
-// Whether `bytes[start..]` opens with a declared predicate name and its `(`.
-fn declared_name_at(bytes: &[u8], start: usize) -> (r: bool) {
+// Whether `bytes[start..]` opens with an allowed literal name and its `(`.
+fn literal_name_at(bytes: &[u8], start: usize, body: bool) -> (r: bool) {
     let n = if start <= bytes.len() {
         start
     } else {
@@ -22019,7 +22112,8 @@ fn declared_name_at(bytes: &[u8], start: usize) -> (r: bool) {
     let strength = crate::k4_bytes::starts_with(rest, b"guideline_grade(")
         || crate::k4_bytes::starts_with(rest, b"guideline_preference(")
         || crate::k4_bytes::starts_with(rest, b"guideline_qualifier(");
-    base || timing || strength
+    base || timing || strength || crate::k4_bytes::starts_with(rest, b"guideline_unit(") || body
+        && crate::k4_bytes::starts_with(rest, b"guideline_satisfies(")
 }
 
 // R9 offset of a hex digest atom that starts at `at`: its first non-hex byte, or

@@ -35,6 +35,8 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s27-05',ace_sha256(eeadefa5fc8d8bffa15aae1172d81ba3ade1d9014b4a646a7bbf5fa17ee337da),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has a gastrointestinal-comorbidity and does not have a current-gastrointestinal-bleeding and does not have a previous-gastrointestinal-bleeding then every clinician may use a cyclooxygenase-2-inhibitor for the patient during a gastrointestinal-risk-minimization.

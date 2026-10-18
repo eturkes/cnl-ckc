@@ -170,6 +170,52 @@ fn enter_clause(
     EStep::Next(c)
 }
 
+fn enter_builtin(
+    arena: &ETermArena,
+    initial: ECfg,
+    stack: Vec<EGoal>,
+    root: usize,
+    path: Vec<usize>,
+    Ghost(db_len): Ghost<nat>,
+) -> (out: EStep)
+    requires
+        cfg_valid(arena.nodes@, db_len, &initial),
+        goals_valid(arena.nodes@, stack@),
+        goals_levels(stack@, initial.alts.len() as nat),
+        root < arena.nodes.len(),
+    ensures
+        step_valid(arena.nodes@, db_len, &out),
+        step_view(arena.nodes@, &out) == TStep::Next(
+            TCfg {
+                stack: goals_view(arena.nodes@, stack@),
+                log: if in_naf(cfg_view(arena.nodes@, &initial).stack) {
+                    cfg_view(arena.nodes@, &initial).log
+                } else {
+                    cfg_view(arena.nodes@, &initial).log.push(
+                        (path_view(path@), TEv::Builtin(arena@[root as int])),
+                    )
+                },
+                ..cfg_view(arena.nodes@, &initial)
+            },
+        ),
+{
+    let record = !in_naf_exec(arena, &initial.stack);
+    let mut c = initial;
+    if record {
+        let ghost old_log = c.log@;
+        let entry = EEntry { path, event: EEvent::Builtin(root) };
+        proof {
+            push_log(arena.nodes@, db_len, c.log@, entry);
+        }
+        c.log.push(entry);
+        proof {
+            alts_log_prefix(arena.nodes@, old_log, c.log@, c.alts@);
+        }
+    }
+    c.stack = stack;
+    EStep::Next(c)
+}
+
 proof fn call_none(
     db: Seq<ckc_spec::v1text::DocClause>,
     c: TCfg,
@@ -803,7 +849,44 @@ fn step(input: ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: (ETermAren
             proof {
                 assert(goals_view(input.nodes@, pre@) =~= before.stack.take(0));
             }
-            call(input, db, initial, name, args, depth, pre, rest, from, path)
+            if crate::compare_impl::is_builtin_exec(&name, args.len()) {
+                if crate::compare_impl::holds_exec(&input, &name, &args) {
+                    let root = match &initial.stack[0] {
+                        EGoal::Lit { root, .. } => *root,
+                        EGoal::NafCut { .. } => {
+                            proof {
+                                assert(false);
+                            }
+                            0
+                        },
+                    };
+                    proof {
+                        assert(goal_valid(input.nodes@, &initial.stack@[0]));
+                        assert(before.stack[0] == goal_view(input.nodes@, &initial.stack@[0]));
+                        assert(input@[root as int] == Term::Comp(
+                            name@,
+                            root_terms(input.nodes@, args@),
+                        ));
+                        assert(before.stack.skip(1) =~= before.stack.drop_first());
+                        assert(before.stack.take(0) + before.stack.drop_first()
+                            =~= before.stack.drop_first());
+                    }
+                    let result = enter_builtin(
+                        &input,
+                        initial,
+                        rest,
+                        root,
+                        path,
+                        Ghost(db.len() as nat),
+                    );
+                    (input, result)
+                } else {
+                    let result = fail(&input, initial, Ghost(db.len() as nat));
+                    (input, result)
+                }
+            } else {
+                call(input, db, initial, name, args, depth, pre, rest, from, path)
+            }
         },
     }
 }
@@ -931,6 +1014,24 @@ fn step_selected(input: ETermArena, db: &Vec<EClause>, initial: ECfg, k: usize) 
             ] + before.stack.skip(k as int + 1));
         }
         return (input, EStep::Next(c));
+    }
+    if crate::compare_impl::is_builtin_exec(&name, args.len()) {
+        if crate::compare_impl::holds_exec(&input, &name, &args) {
+            let mut tail = rest;
+            proof {
+                goals_concat(nodes, pre@, tail@, level as nat);
+            }
+            pre.append(&mut tail);
+            proof {
+                assert(goals_view(nodes, pre@) =~= before.stack.take(k as int) + before.stack.skip(
+                    k as int + 1,
+                ));
+            }
+            let result = enter_builtin(&input, initial, pre, root, path, Ghost(db.len() as nat));
+            return (input, result);
+        }
+        let result = fail(&input, initial, Ghost(db.len() as nat));
+        return (input, result);
     }
     let from = initial.ci;
     call(input, db, initial, name, args, depth, pre, rest, from, path)

@@ -35,12 +35,15 @@
 :- discontiguous(guideline_preference/4).
 :- multifile(guideline_qualifier/4).
 :- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s38-20',ace_sha256('2bea84859cee3d8666e05aa14479d8015ee2977487a1704c2980de59f27c6277'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every opioid-taper can continue during some months and can continue during some years.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A]),can) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(2),[A]),month,countable) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(2),[A]),na,geq,2) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_unit('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(2),[A]),month) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(3),[A]),continue) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(3),[A]),during,'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(2),[A])) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -48,6 +51,7 @@ guideline_interval('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(1),[A])
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(2),[A]),can) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(4),[A]),year,countable) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(4),[A]),na,geq,2) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_unit('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(4),[A]),year) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(5),[A]),continue) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(5),[A]),1,A) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s38-20',1,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(5),[A]),during,'$guideline_id'(product,'cdc2022-opioid-s38-20',1,ref(4),[A])) :- guideline_entity(actual,A,'opioid-taper',countable), guideline_cardinality(actual,A,na,eq,1).

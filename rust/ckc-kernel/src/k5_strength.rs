@@ -60,6 +60,41 @@ pub fn dimension_exec(dim: &[u8]) -> (out: EPage)
     }
 }
 
+pub fn bound_unit_exec(
+    arena: &ETermArena,
+    join: &Vec<T>,
+    Ghost(d): Ghost<v::DocFile>,
+    Ghost(c): Ghost<v::DocClause>,
+    r: &T,
+) -> (out: Option<EPage>)
+    requires
+        arena_ok(arena),
+        valid_all(arena.nodes@, join@),
+        models(join@) == u::join_terms(d, c),
+        valid(arena.nodes@, r),
+    ensures
+        t::opt_page(out) == match u::bound_of(d, c, r@) {
+            Some((_, Term::Int(n), Some(b))) => u::unit_html(u::atom_name(b), n == 1),
+            _ => None,
+        },
+{
+    hide(u::bound_of);
+    let (_, count, unit) = match t::bound_of_exec(arena, join, Ghost(d), Ghost(c), r) {
+        Some(b) => b,
+        None => return None,
+    };
+    let unit = match unit {
+        Some(b) => b,
+        None => return None,
+    };
+    if !crate::m6_term::is_int(arena, &count) {
+        return None;
+    }
+    let digits = crate::k5_bytes::nat_bytes(1);
+    let one = position(arena, &count, &digits, Ghost(1));
+    t::unit_exec(&atom_name_exec(arena, &unit), one)
+}
+
 pub fn noun_exec(
     arena: &ETermArena,
     pl: &[u8],
@@ -76,7 +111,22 @@ pub fn noun_exec(
     ensures
         out@ == u::noun_html(pl@, d, c, r@),
 {
-    t::joined_exec(arena, pl, join, Ghost(d), Ghost(c), "guideline_entity", 4, r, 2)
+    hide(u::bound_of);
+    hide(u::pl_word);
+    let name = crate::k5_bytes::literal("guideline_entity");
+    match t::first_with_exec(arena, join, &name, Ghost("guideline_entity"@), 4, 1, r) {
+        Some(args) => {
+            proof {
+                assert(models(args@)[2] == args@[2]@);
+                assert(valid(arena.nodes@, &args@[2]));
+            }
+            t::pl_word_exec(pl, &atom_name_exec(arena, &args[2]))
+        },
+        None => match bound_unit_exec(arena, join, Ghost(d), Ghost(c), r) {
+            Some(w) => w,
+            None => h::fixed("not stated"),
+        },
+    }
 }
 
 fn position(arena: &ETermArena, x: &T, digits: &[u8], Ghost(n): Ghost<nat>) -> (out: bool)
