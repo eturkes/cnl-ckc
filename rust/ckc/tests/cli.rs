@@ -67,6 +67,28 @@ fn usage_without_arguments_is_rc2() {
 }
 
 #[test]
+fn v1_trace_arities_dispatch_on_the_mode_word() {
+    const USAGE: &[u8] = b"usage: ckc v1 <check|render> <pl> | ckc v1 <aggregate-check|recursion-check> <manifest> | ckc v1 answer <manifest> <query.pl> | ckc v1 trace <manifest> <query.pl> <answers.pl> | ckc v1 trace-check <manifest> <query.pl> <answers.pl> <traces.pl>\n";
+    for args in [
+        &["v1", "answer", "m", "q", "a"][..],
+        &["v1", "answer", "m", "q", "a", "t"],
+        &["v1", "trace-check", "m", "q", "a"],
+        &["v1", "trace", "m", "q", "a", "t"],
+    ] {
+        let out = ckc(args);
+        assert_eq!(
+            (
+                out.status.code(),
+                out.stdout.as_slice(),
+                out.stderr.as_slice()
+            ),
+            (Some(2), &b""[..], USAGE),
+            "{args:?}"
+        );
+    }
+}
+
+#[test]
 fn pipeline_arity_keeps_legacy_fail_envelopes() {
     let cases = [
         ("compile", " <guideline-id>"),
