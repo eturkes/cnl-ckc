@@ -48,4 +48,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 ## Phase
 
-MAINTAIN — the whole product
+IMPLEMENT — M7 gap class numeric-threshold
+> M7 gap coverage, class numeric-threshold (user pick; phase IMPLEMENT by user ruling): numeric comparison, ranges, unit conversion; ruled disposition = a schema revision with comparison built-ins (taxonomy, counts + dispositions = `docs/m7-gap-taxonomy.md`). Measured: 19 CDC documents compare a quantity with a number, each bound a `guideline_cardinality(…, <comparison>, <count>)` on the counted noun — 8 compare MME/day with 50 (`geq` in 7, s34-09 also `greater`; `less` in rec07-imp03), the rest durations (`day geq 30`, `day less 7`, `day greater 3`, `year geq 1`, `week geq 1`, `month less 1`), age (`year geq 65`), `percent geq 30` + counts of 2 or more medications, prescriptions or clinicians; matching stays exact Horn structure (REFERENCE § Vocabulary table and time annotations: a fact for `geq 30` does not satisfy a goal for `geq 20`), so a patient at 60 MME/day never matches "at least 50". Accept: the class's disposition implemented under its own unit contract, with ≥1 corpus statement of that class previously approximated now compiled and certified.
+> User ruling (AskUserQuestion): "numeric-threshold (Recommended)" — route the class as its own IMPLEMENT request.
+Suspended: MAINTAIN — the whole product
