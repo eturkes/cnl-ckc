@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s49-11',ace_sha256(fd4daebfcaef1872142e52dc38cd78b40cd13ad9dc4d080e897ff77650a6d44d),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s49-11',ace_sha256(fd4daebfcaef1872142e52dc38cd78b40cd13ad9dc4d080e897ff77650a6d44d),ulex(sha256('3e37dcfbb36dbdd0830d644235c88914b28def633a7ac43d2b5bb53faf8ba507')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every substance-use-disorder can alter an expected-opioid-benefit and can alter an expected-opioid-risk.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s49-11',1,box(1),[A]),can) :- guideline_entity(actual,A,'substance-use-disorder',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s49-11',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s49-11',1,ref(2),[A]),'expected-opioid-benefit',countable) :- guideline_entity(actual,A,'substance-use-disorder',countable), guideline_cardinality(actual,A,na,eq,1).

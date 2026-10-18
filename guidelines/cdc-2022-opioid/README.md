@@ -74,7 +74,7 @@ that it was published with.
     behavioral-health specialists serving as taper-support team members).
 - `ace/cdc2022-opioid-<region-id>.ace` — one ACE document per formalized
   front-matter or recommendation 1–5 supporting-rationale region outside
-  the implementation-consideration lists (129 documents; docid = the
+  the implementation-consideration lists (130 documents; docid = the
   region id lowercased, S25-04 → `s25-04`). These documents follow the
   same knowledge-only projection contract and
   `audit/projection-notes.tsv` discipline as the implementation
@@ -90,7 +90,7 @@ that it was published with.
   recommendation itself as rule subject.
 - `ace/` recommendation 6–12 documents — one ACE document per formalized
   recommendation 6–12 body or implementation-consideration region,
-  special-populations region, and conclusion region (175 documents;
+  special-populations region, and conclusion region (176 documents;
   docid rules unchanged: reserved-ordinal `recNN-impKK` for
   implementation lists, the region id lowercased otherwise). These
   documents follow the same knowledge-only projection contract and
@@ -139,19 +139,19 @@ guideline conclusions.
   parenthetical and simplified action rules. It adds one document per
   formalized recommendation 1–5 implementation-consideration region
   (67 documents). It adds one document per formalized front-matter and
-  recommendation 1–5 rationale region (129 documents). It adds one
+  recommendation 1–5 rationale region (130 documents). It adds one
   document per formalized recommendation 6–12 body,
   implementation-consideration, special-populations, and conclusion
-  region (175 documents). The rules encode
+  region (176 documents). The rules encode
   deontic modality ("should"), conditions, and negation where the source
   region states them. `audit/projection-notes.tsv` (kept/dropped columns)
   and `coverage.tsv` record each document's remaining simplifications per
   region.
 - `coverage.tsv` records one status row per payload region (all 718), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (383);
+  - `ace(<docid>)` — formalized (385);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
-    region (216);
+    region (214);
   - `uncovered(<class>: <reason>)` — deliberately not formalized (119;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet

@@ -34,13 +34,13 @@ the first class to implement. Each class is a separate feature unit.
 
 Strength status: the table's grade nouns give the 12 recommendation
 documents 24 grade records, one strength and one evidence value each.
-12 documents type 24 preferences: `preferred` and `first-line` copulas
+13 documents type 26 preferences: `preferred` and `first-line` copulas
 and `instead-of` alternatives. Two of them, `cdc2022-opioid-s22-02` and
 `cdc2022-opioid-s37-09`, are new documents for regions that earlier
 restated a recommendation without its preference. The table's 56
-qualifier rows type the hedges of 157 documents on the actions that
+qualifier rows type the hedges of 158 documents on the actions that
 they qualify, in seven classes: manner (64 documents), applicability
-(42), possibility (29), usuality (26), focus (23), ideality (5) and
+(43), possibility (29), usuality (26), focus (23), ideality (5) and
 force (2). A "might" claim compiles under "can" with "possibly". An
 applicability hedge ("as appropriate", "when feasible") compiles as a
 condition. 36 new documents formalize regions that earlier restated a
@@ -56,7 +56,7 @@ and stay in the nouns of the ACE. Two emphasize a whole prohibition
 `cdc2022-opioid-s51-11`); they stay untyped, and the projection notes
 record them.
 
-Temporal status: 52 of the CDC guideline's 375 documents carry
+Temporal status: 55 of the CDC guideline's 385 documents carry
 annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
 whose sources state a bound that the interval and recurrence
@@ -84,6 +84,27 @@ loss. A relation other than before or
 after without a quantity (`during a visit`), a window anchored on a
 start or end point that the source does not name, and a measured
 number such as `3 d` stay outside the schema.
+
+Numeric-threshold status: 30 of the CDC guideline's 385 documents
+compare a quantity with a number, and 33 state a time quantity with its
+unit. The 19 documents that stated a comparison in ACE before the
+comparison built-ins compile it as a value comparison without an ACE
+change. A census of the 702 regions outside Box 3
+(`.agent/archive/nt-census/`) recorded 241 numeric statements. It found
+11 regions whose sources state a threshold that the ACE approximated: an
+age (at least 18, less than 18 and at least 65 years), osteoarthritis
+pain in multiple joints and repeatedly negative tests (at least 2), more
+than one prescribed opioid, opioid use less often than once a day (an
+interval of more than 1 day), opioids continued for at least 1 month,
+and certain daily dosages for at least 1 week. All 11 were re-authored.
+Two of them, `cdc2022-opioid-s31-04` and `cdc2022-opioid-s40-14`, are new
+documents for regions that earlier restated a recommendation without the
+threshold. A passage keeps its source unit: `cdc2022-opioid-rec02-imp20`
+keeps 30 days and `cdc2022-opioid-s40-14` states 1 month, because a day
+and a month never compare. A bare calendar adverb (`daily`) still carries
+no bound. A dose rate such as `MME-units-per-day` compares as a count of
+its unit noun; a conversion between dose units stays in the
+dose-arithmetic class.
 
 The CDC counts record what the projections lost or approximated, not
 proven limits of v1: v1 already carries Horn prerequisites and

@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp16',ace_sha256('9d0bc697a1c35f22ae195c5ff52906b2332377d25289629d708087d62cfbe8f1'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec02-imp16',ace_sha256('9d0bc697a1c35f22ae195c5ff52906b2332377d25289629d708087d62cfbe8f1'),ulex(sha256('3e37dcfbb36dbdd0830d644235c88914b28def633a7ac43d2b5bb53faf8ba507')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should weigh a context-specific-expected-benefit against a risk before an opioid-initiation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp16',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp16',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp16',1,ref(2),[A]),'context-specific-expected-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

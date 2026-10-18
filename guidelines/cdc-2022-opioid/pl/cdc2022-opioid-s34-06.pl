@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s34-06',ace_sha256('527c24acf00c2b631db53abb72c81ddeb5eb20fb88c99fe7ed9e9bb867049b70'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s34-06',ace_sha256('527c24acf00c2b631db53abb72c81ddeb5eb20fb88c99fe7ed9e9bb867049b70'),ulex(sha256('3e37dcfbb36dbdd0830d644235c88914b28def633a7ac43d2b5bb53faf8ba507')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should generally avoid an unnecessary-dosage-increase.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s34-06',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s34-06',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s34-06',1,ref(2),[A]),'unnecessary-dosage-increase',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

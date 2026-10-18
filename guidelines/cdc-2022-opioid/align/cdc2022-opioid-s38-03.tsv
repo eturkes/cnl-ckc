@@ -20,16 +20,21 @@
 8	ace	270	include
 9	ace	280	patient-concern
 10	ace	301	taper-plan
-0	ace	319	clinician
-8	ace	333	include
-1	ace	343	patient
-12	ace	356	medication-first-decrease
-11	ace	382	decision
-0	ace	398	clinician
-8	ace	412	include
-1	ace	422	patient
-13	ace	435	taper-speed
-11	ace	447	decision
+1	ace	318	patient
+14	ace	326	receives
+15	ace	335	more than 1
+14	ace	347	prescribed
+16	ace	358	opioid
+0	ace	376	clinician
+8	ace	390	include
+1	ace	402	patient
+12	ace	415	medication-first-decrease
+11	ace	441	decision
+0	ace	457	clinician
+8	ace	471	include
+1	ace	481	patient
+13	ace	494	taper-speed
+11	ace	506	decision
 0	src	0	Clinicians
 2	src	15	discuss
 1	src	28	patient
@@ -46,4 +51,7 @@
 11	src	200	making decisions
 12	src	225	which medication will be decreased first
 1	src	276	patient
+14	src	285	prescribed
+15	src	296	more than one
+16	src	310	opioid
 13	src	322	how quickly tapering will occur

@@ -40,7 +40,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 ## Tasks
 
-- [ ] NT1 comparison built-ins + time-unit conversion (kernel unit; contract `.agent/archive/contracts/nt1.md`; branch `wt/nt1`): `guideline_satisfies/4|6` + `guideline_unit/3` (19 indicators), condition conversion in bodies + questions, engine step + eso barrier, trace `builtin(G)` leaves, certification, fork, `guidelines/schema.pl` (generated, checked, shipped), UI bound joins; diff-blind tester; migration (`revise.py` nt1 extension) + oracle; reviewer per lens.
+- [x] d7fbf1cd NT1 comparison built-ins + time-unit conversion (kernel unit; contract `.agent/archive/contracts/nt1.md`; branch `wt/nt1`): `guideline_satisfies/4|6` + `guideline_unit/3` (19 indicators), condition conversion in bodies + questions, engine step + eso barrier, trace `builtin(G)` leaves, certification, fork, `guidelines/schema.pl` (generated, checked, shipped), UI bound joins; diff-blind tester; migration (`revise.py` nt1 extension) + oracle; reviewer per lens.
 - [ ] NT2 numeric-threshold corpus (rulings `.scratch/nt/census-rulings.md` → archived census): re-author the approximated thresholds (s9-05, s10-04, s34-04, s48-02, new s40-14 at 1 month (S42-09 restates it; rec02-imp20 keeps 30 days), rec05-imp18, s38-03, rec02-imp07, s27-02, s54-15, new s31-04); align + projection notes + coverage + manifests; taxonomy row.
 - [ ] NT close: REFERENCE + README + taxonomy + rules upkeep (`compiler.md`, `queries.md`, `ui.md`, `corpus.md`, `rust.md`); `.agent/review.md` rows closed; `Phase` → MAINTAIN — the whole product.
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s.

@@ -1,27 +1,29 @@
 0	ace	5	patient
-2	ace	19	multiple-joint
-1	ace	34	osteoarthritis-pain
-5	ace	79	use
-3	ace	85	systemic-NSAID
-0	ace	108	patient
-5	ace	124	use
-4	ace	130	duloxetine
-0	ace	149	patient
-0	ace	163	patient
-1	ace	178	osteoarthritis-pain
-6	ace	204	topical-NSAID
-7	ace	223	not completely
-8	ace	238	control
-1	ace	250	osteoarthritis-pain
-5	ace	295	use
-3	ace	301	systemic-NSAID
-0	ace	324	patient
-5	ace	340	use
-4	ace	346	duloxetine
-0	ace	365	patient
+1	ace	20	osteoarthritis-pain
+2	ace	43	at least 2
+9	ace	54	joints
+5	ace	86	use
+3	ace	92	systemic-NSAID
+0	ace	115	patient
+5	ace	131	use
+4	ace	137	duloxetine
+0	ace	156	patient
+0	ace	170	patient
+1	ace	185	osteoarthritis-pain
+6	ace	211	topical-NSAID
+7	ace	230	not completely
+8	ace	245	control
+1	ace	257	osteoarthritis-pain
+5	ace	302	use
+3	ace	308	systemic-NSAID
+0	ace	331	patient
+5	ace	347	use
+4	ace	353	duloxetine
+0	ace	372	patient
 0	src	3	patients
 1	src	17	osteoarthritis pain
-2	src	40	multiple joints
+2	src	40	multiple
+9	src	49	joints
 7	src	59	incompletely
 8	src	72	controlled
 1	src	83	pain

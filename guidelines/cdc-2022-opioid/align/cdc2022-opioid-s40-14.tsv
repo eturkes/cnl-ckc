@@ -1,0 +1,23 @@
+0	ace	25	opioid-therapy
+1	ace	47	acute-pain
+2	ace	65	at least 1 month
+3	ace	93	clinician
+4	ace	110	address
+5	ace	120	potentially-reversible-chronic-pain-cause
+6	ace	173	reassess
+0	ace	186	opioid-therapy
+9	ace	212	prevent
+8	ace	223	unintentional
+7	ace	237	long-term-opioid-therapy
+0	src	3	opioids
+2	src	29	≥1 month
+3	src	39	clinicians
+9	src	57	ensure
+5	src	69	potentially reversible causes of chronic pain
+4	src	119	addressed
+0	src	138	opioid prescribing
+1	src	161	acute pain
+9	src	172	does not
+8	src	181	unintentionally
+7	src	204	long-term opioid therapy
+6	src	278	reassessment

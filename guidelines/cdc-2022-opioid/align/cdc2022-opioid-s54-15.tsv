@@ -1,30 +1,36 @@
 0	ace	5	patient
 1	ace	19	prescribed-opioid
 5	ace	47	prescribed-opioid-nonuse
-2	ace	78	repeated-negative-test-series
-4	ace	108	verifies
-5	ace	121	prescribed-opioid-nonuse
-3	ace	152	confirmatory-test
-4	ace	170	verifies
-5	ace	183	prescribed-opioid-nonuse
-6	ace	219	clinician
-7	ace	233	discontinue the prescribed-opioid
-9	ace	275	discuss
-10	ace	285	safe-unused-opioid-disposal-option
-0	ace	329	patient
-0	ace	343	patient
-1	ace	357	prescribed-opioid
-5	ace	385	prescribed-opioid-nonuse
-2	ace	416	repeated-negative-test-series
-4	ace	446	verifies
-5	ace	459	prescribed-opioid-nonuse
-3	ace	490	confirmatory-test
-4	ace	508	verifies
-5	ace	521	prescribed-opioid-nonuse
-0	ace	555	patient
-8	ace	563	does not require an opioid-taper
+2	ace	76	at least 2
+12	ace	87	negative
+11	ace	96	tests
+4	ace	102	verify
+5	ace	113	prescribed-opioid-nonuse
+3	ace	144	confirmatory-test
+4	ace	162	verifies
+5	ace	175	prescribed-opioid-nonuse
+6	ace	211	clinician
+7	ace	225	discontinue the prescribed-opioid
+9	ace	267	discuss
+10	ace	277	safe-unused-opioid-disposal-option
+0	ace	321	patient
+0	ace	335	patient
+1	ace	349	prescribed-opioid
+5	ace	377	prescribed-opioid-nonuse
+2	ace	406	at least 2
+12	ace	417	negative
+11	ace	426	tests
+4	ace	432	verify
+5	ace	443	prescribed-opioid-nonuse
+3	ace	474	confirmatory-test
+4	ace	492	verifies
+5	ace	505	prescribed-opioid-nonuse
+0	ace	539	patient
+8	ace	547	does not require an opioid-taper
+11	src	3	tests
 1	src	13	prescribed opioids
-2	src	36	repeatedly negative
+2	src	36	repeatedly
+12	src	47	negative
 3	src	67	confirmatory tests
 6	src	95	clinician
 4	src	109	verified

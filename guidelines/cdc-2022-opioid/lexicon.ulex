@@ -7,6 +7,9 @@ noun_pl('hydrocodone-milligrams','hydrocodone-milligram',neutr).
 noun_pl('overlapping-prescribed-opioids','overlapping-prescribed-opioid',neutr).
 noun_pl('respiratory-depressant-medications','respiratory-depressant-medication',neutr).
 noun_pl(clinicians,clinician,human).
+noun_pl('morphine-milligrams-per-day','morphine-milligram-per-day',neutr).
+noun_pl('negative-tests','negative-test',neutr).
+noun_pl('oxycodone-milligrams-per-day','oxycodone-milligram-per-day',neutr).
 noun_sg('active-opioid-use-disorder','active-opioid-use-disorder',neutr).
 noun_sg('DSM-5-opioid-use-disorder-assessment','DSM-5-opioid-use-disorder-assessment',neutr).
 noun_sg('DSM-5-opioid-use-disorder-criteria-match','DSM-5-opioid-use-disorder-criteria-match',neutr).
@@ -119,7 +122,6 @@ noun_sg('PEG-assessment-scale','PEG-assessment-scale',neutr).
 noun_sg('multimodal-treatment-option-accessibility','multimodal-treatment-option-accessibility',neutr).
 noun_sg('multimodal-treatment-option-availability','multimodal-treatment-option-availability',neutr).
 noun_sg('multimodal-treatment-option-reimbursement','multimodal-treatment-option-reimbursement',neutr).
-noun_sg('multiple-joint-osteoarthritis-pain','multiple-joint-osteoarthritis-pain',neutr).
 noun_sg('non-burdensome-patient-cost','non-burdensome-patient-cost',neutr).
 noun_sg('observational-setting-care','observational-setting-care',neutr).
 noun_sg('opioid-continuation-benefit','opioid-continuation-benefit',neutr).
@@ -443,7 +445,6 @@ noun_sg('kidney-stone-pain','kidney-stone-pain',neutr).
 noun_sg('knee-osteoarthritis','knee-osteoarthritis',neutr).
 noun_sg('known-risk','known-risk',neutr).
 noun_sg('last-dose','last-dose',neutr).
-noun_sg('less-than-once-daily-opioid-use','less-than-once-daily-opioid-use',neutr).
 noun_sg('lidocaine-patch','lidocaine-patch',neutr).
 noun_sg('life-threatening-warning','life-threatening-warning',neutr).
 noun_sg('limited-exercise-access','limited-exercise-access',neutr).
@@ -538,7 +539,6 @@ noun_sg('moderate-to-severe-pain','moderate-to-severe-pain',neutr).
 noun_sg('moderate-to-severe-postoperative-pain','moderate-to-severe-postoperative-pain',neutr).
 noun_sg('multidisciplinary-rehabilitation','multidisciplinary-rehabilitation',neutr).
 noun_sg('multimodal-therapy','multimodal-therapy',neutr).
-noun_sg('multiple-joint-osteoarthritis','multiple-joint-osteoarthritis',neutr).
 noun_sg('mutual-help-group-referral','mutual-help-group-referral',neutr).
 noun_sg('myofascial-release-massage','myofascial-release-massage',neutr).
 noun_sg('naloxone-access','naloxone-access',neutr).
@@ -831,7 +831,6 @@ noun_sg('relaxation-technique-education','relaxation-technique-education',neutr)
 noun_sg('relevant-testing','relevant-testing',neutr).
 noun_sg('renal-dysfunction','renal-dysfunction',neutr).
 noun_sg('renal-insufficiency','renal-insufficiency',neutr).
-noun_sg('repeated-negative-test-series','repeated-negative-test-series',neutr).
 noun_sg('reproductive-potential','reproductive-potential',neutr).
 noun_sg('respiratory-depressant-medication-prescriber','respiratory-depressant-medication-prescriber',human).
 noun_sg('respiratory-depression','respiratory-depression',neutr).
@@ -983,7 +982,6 @@ noun_sg('triptan-NSAID-or-combination','triptan-NSAID-or-combination',neutr).
 noun_sg('unintended-long-term-opioid-use-risk','unintended-long-term-opioid-use-risk',neutr).
 noun_sg('typical-post-voluntary-long-term-opioid-reduction-nonworsened-or-decreased-pain-outcome','typical-post-voluntary-long-term-opioid-reduction-nonworsened-or-decreased-pain-outcome',neutr).
 noun_sg('typical-post-voluntary-long-term-opioid-reduction-stable-or-improved-function-anxiety-and-mood-outcome','typical-post-voluntary-long-term-opioid-reduction-stable-or-improved-function-anxiety-and-mood-outcome',neutr).
-noun_sg('under-18-opioid-pain-medication-use','under-18-opioid-pain-medication-use',neutr).
 noun_sg('undue-travel-burden','undue-travel-burden',neutr).
 noun_sg('unexpected-result-response-plan','unexpected-result-response-plan',neutr).
 noun_sg('unexpected-screening-toxicology-test-result','unexpected-screening-toxicology-test-result',neutr).
@@ -1085,6 +1083,12 @@ noun_sg('transdermal-fentanyl-dosing-effect','transdermal-fentanyl-dosing-effect
 noun_sg('unnecessary-dosage-increase','unnecessary-dosage-increase',neutr).
 noun_sg('withdrawal-minimization','withdrawal-minimization',neutr).
 noun_sg(antiemetic,antiemetic,neutr).
+noun_sg('certain-daily-immediate-release-opioid-dosage','certain-daily-immediate-release-opioid-dosage',neutr).
+noun_sg('equianalgesic-immediate-release-opioid-dosage','equianalgesic-immediate-release-opioid-dosage',neutr).
+noun_sg('negative-test','negative-test',neutr).
+noun_sg('opioid-pain-medication-use','opioid-pain-medication-use',neutr).
+noun_sg('immediate-release-oral-morphine-dosage','immediate-release-oral-morphine-dosage',neutr).
+noun_sg('immediate-release-oral-oxycodone-dosage','immediate-release-oral-oxycodone-dosage',neutr).
 adj_itr(addressable,addressable).
 adj_itr('first-line','first-line').
 tv_infpl(calibrate,calibrate).

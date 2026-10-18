@@ -1,26 +1,29 @@
 0	ace	5	patient
-1	ace	19	multiple-joint
-2	ace	34	osteoarthritis
-8	ace	70	may
-5	ace	74	consider
-6	ace	85	duloxetine
-8	ace	100	may
-5	ace	104	consider
-7	ace	115	systemic-NSAID
-0	ace	136	patient
-2	ace	151	osteoarthritis-pain
-3	ace	177	topical-NSAID
-4	ace	191	does not control
-2	ace	212	osteoarthritis-pain
-8	ace	253	may
-5	ace	257	consider
-6	ace	268	duloxetine
-8	ace	283	may
-5	ace	287	consider
-7	ace	298	systemic-NSAID
+2	ace	20	osteoarthritis
+2	ace	35	pain
+1	ace	43	at least 2
+9	ace	54	joints
+8	ace	82	may
+5	ace	86	consider
+6	ace	97	duloxetine
+8	ace	112	may
+5	ace	116	consider
+7	ace	127	systemic-NSAID
+0	ace	148	patient
+2	ace	163	osteoarthritis-pain
+3	ace	189	topical-NSAID
+4	ace	203	does not control
+2	ace	224	osteoarthritis-pain
+8	ace	265	may
+5	ace	269	consider
+6	ace	280	duloxetine
+8	ace	295	may
+5	ace	299	consider
+7	ace	310	systemic-NSAID
 0	src	4	patients
 2	src	18	osteoarthritis pain
-1	src	41	multiple joints
+1	src	41	multiple
+9	src	50	joints
 4	src	60	incompletely controlled
 3	src	89	topical NSAIDs
 6	src	105	duloxetine

@@ -8,10 +8,20 @@
 0	ace	131	clinician
 6	ace	145	extend
 7	ace	154	dose-interval
-1	ace	174	patient
-8	ace	188	less-than-once-daily-opioid-use
-0	ace	231	clinician
-9	ace	245	stop
+0	ace	174	clinician
+2	ace	184	determines
+3	ace	198	opioid-discontinuation-goal
+1	ace	233	patient
+1	ace	249	patient
+4	ace	257	reaches
+5	ace	267	smallest-available-dose
+1	ace	299	patient
+8	ace	307	uses
+11	ace	315	opioid
+10	ace	322	at an interval of more than 1 day
+0	ace	365	clinician
+9	ace	379	stop
+11	ace	388	opioid
 0	src	7	clinician
 2	src	21	determined
 1	src	41	patient
@@ -20,6 +30,7 @@
 4	src	147	reached
 7	src	159	interval between doses
 6	src	189	extended
-8	src	202	opioids
+11	src	202	opioids
 9	src	217	stopped
-8	src	230	taken less frequently than once a day
+8	src	230	taken
+10	src	236	less frequently than once a day

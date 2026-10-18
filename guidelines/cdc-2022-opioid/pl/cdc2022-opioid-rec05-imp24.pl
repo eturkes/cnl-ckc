@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp24',ace_sha256('4e5d342f8cd46c7aa45d4a71054e2a7ce9db8c3c1cef564d723854a4dce26684'),ulex(sha256(d08a8bd3e80ef6e01301a079bb5496315f35233bf199aa89b2d2ccc93b858776)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec05-imp24',ace_sha256('4e5d342f8cd46c7aa45d4a71054e2a7ce9db8c3c1cef564d723854a4dce26684'),ulex(sha256('3e37dcfbb36dbdd0830d644235c88914b28def633a7ac43d2b5bb53faf8ba507')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician must ensure a coordinated-pain-management.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp24',1,box(1),[A]),must) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp24',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp24',1,ref(2),[A]),'coordinated-pain-management',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
