@@ -66,6 +66,17 @@ program, its formal specification, and its proofs.
   plain number in a statement means at least that many. To state a
   measured value, use `exactly`. Seconds, minutes, hours, days and weeks
   convert, and months convert to years. Days and months do not convert.
+- A guideline can state where its recommendations do not apply, for
+  example for patients with cancer-related pain. The compiler turns
+  such a statement into a scope exclusion. When the condition of an
+  exclusion holds for the patient, the knowledge base derives no
+  "should", "must" or "may" statement of that guideline. If no
+  exclusion holds, this does not prove that the guideline applies to
+  the patient. One set of loaded facts must describe one patient. A
+  condition with "does not provably" holds when the loaded facts and
+  rules do not establish its content, so a missing record counts as
+  absence. When the search of the `ckc` program stops at its limit, it
+  establishes nothing, and the answer is `indeterminate(limit)`.
 - The `ckc` program searches for answers in its own order. It checks
   an operator box, such as "should" or a negation, after the goal that
   names the content of the box. A standard Prolog engine searches the
