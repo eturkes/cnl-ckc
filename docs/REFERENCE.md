@@ -358,15 +358,18 @@ section "Comparison conditions" below states how.
 
 Every one of those values is reachable, but not from every position. An
 upper-bounding determiner (`at most n`, `exactly n`, `less than n`) is
-scoped. At the root of an asserted sentence, ACE groups the conditions
-that the determiner binds into a condition list. The schema has no construct
-for that scope, so the document rejects with
-`unsupported, root_condition([…])` rather than flatten an upper bound
-into an existential claim; `tests/red/unsupported--v1-root-at-most.ace`
-pins the detail. The same phrase inside a rule or an operator box
-carries no group and compiles, emitting `leq`, `exactly`, or `less`
-under that context. `at least n` and `more than n` bound below, are
-never grouped, and compile in any position.
+scoped: ACE groups the conditions that the determiner binds into a
+condition list. Inside a rule or an operator box, the compiler flattens
+the list into that context and emits `leq`, `exactly` or `less`. At the
+root of an asserted sentence, the compiler flattens the list only when
+every upper bound among the root's own conditions is `exactly n` with n
+of at least 1. Such a count implies that the counted things exist, so
+the conditions hold as facts. A root `at most n`, `less than n` or
+`exactly 0` admits zero, so the document rejects with
+`unsupported, root_condition([…])` rather than claim that the thing
+exists; `tests/red/unsupported--v1-root-at-most.ace` pins the detail.
+`at least n` and `more than n` bound below, are never grouped, and
+compile in any position.
 
 `Context` is `actual` for asserted content, or a generated operator
 context:
@@ -901,9 +904,9 @@ fails and raises no error.
 A program that matches patient data states each value as a fact. A
 measured value takes `exactly`, as a quantity without a comparator does in
 FHIR. A reported bound takes `geq`, `greater`, `leq` or `less`. Each time
-quantity also takes its `guideline_unit` literal. ACE root facts cannot
-state an exact value, because an upper bound at the root of a sentence
-rejects. A ranged minimum (`guideline_range/3`) states an uncertain
+quantity also takes its `guideline_unit` literal. An ACE root fact
+states an exact value as `exactly n` with n of at least 1; a root
+`at most n` or `less than n` rejects, because it admits zero. A ranged minimum (`guideline_range/3`) states an uncertain
 minimum, not an interval of values: its upper end and every count-per-
 period period keep exact matching. An `about` quantity carries no
 tolerance and meets no comparison.

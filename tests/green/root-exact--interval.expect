@@ -1,0 +1,56 @@
+% root-exact--interval.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+guideline_schema_version(1).
+guideline_document('root-exact--interval',ace_sha256(e4c02eef035ed312cce1604e2975a0e268d941e64ec469798cb7e50a9a0f6c2d),ulex(none),vocabulary(sha256(f7862a1c88a249e2145a2a935a320aa33a572012bb6e486e8a8800a25690164d))).
+% S1: A man takes exactly 1 tablet at an interval of exactly 4 hours.
+guideline_entity(actual,'$guideline_id'(product,'root-exact--interval',1,ref(1),[]),man,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact--interval',1,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'root-exact--interval',1,ref(2),[]),at,'$guideline_id'(product,'root-exact--interval',1,ref(3),[])).
+guideline_recurrence(actual,'$guideline_id'(product,'root-exact--interval',1,ref(2),[]),'$guideline_id'(product,'root-exact--interval',1,ref(5),[]),hour).
+guideline_event(actual,'$guideline_id'(product,'root-exact--interval',1,ref(2),[]),take).
+guideline_arg(actual,'$guideline_id'(product,'root-exact--interval',1,ref(2),[]),1,'$guideline_id'(product,'root-exact--interval',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'root-exact--interval',1,ref(2),[]),2,'$guideline_id'(product,'root-exact--interval',1,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'root-exact--interval',1,ref(5),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact--interval',1,ref(5),[]),na,exactly,4).
+guideline_unit(actual,'$guideline_id'(product,'root-exact--interval',1,ref(5),[]),hour).
+guideline_entity(actual,'$guideline_id'(product,'root-exact--interval',1,ref(3),[]),interval,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact--interval',1,ref(3),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'root-exact--interval',1,ref(4),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact--interval',1,ref(4),[]),na,exactly,1).

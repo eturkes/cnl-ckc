@@ -1,0 +1,3 @@
+sentences([[^,'A','scheduled-opioid-example',uses,exactly,1,tablet,at,an,interval,of,exactly,4,hours,'.']]).
+drs(drs([A,B,C,D,E],[-(object(A,'scheduled-opioid-example',countable,na,eq,1),/(1,2)),[-(modifier_pp(E,at,C),/(1,7)),-(predicate(E,use,A,B),/(1,3)),[-(relation(C,of,D),/(1,10)),-(object(D,hour,countable,na,exactly,4),/(1,13))],-(object(C,interval,countable,na,eq,1),/(1,9)),-(object(B,tablet,countable,na,exactly,1),/(1,6))]])).
+messages([]).

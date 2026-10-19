@@ -8,19 +8,19 @@
 14	ace	121	instead-of
 5	ace	134	scheduled-opioid
 16	ace	155	as-needed-opioid-example
-6	ace	189	5 hydrocodone-milligrams
-7	ace	227	325 acetaminophen-milligrams
-8	ace	265	1 tablet at an interval of at least 4 hours
-4	ace	315	moderate-to-severe-pain
-17	ace	342	scheduled-opioid-example
-15	ace	372	1 tablet at an interval of 4 hours
-9	ace	437	around-the-clock-opioid-use
-10	ace	471	few-day-period
-0	ace	497	clinician
-11	ace	514	encourage
-13	ace	527	opioid-taper
-12	ace	551	recommend
-13	ace	564	opioid-taper
+6	ace	189	exactly 5 hydrocodone-milligrams
+7	ace	235	exactly 325 acetaminophen-milligrams
+8	ace	281	exactly 1 tablet at an interval of at least 4 hours
+4	ace	339	moderate-to-severe-pain
+17	ace	366	scheduled-opioid-example
+15	ace	396	exactly 1 tablet at an interval of exactly 4 hours
+9	ace	477	around-the-clock-opioid-use
+10	ace	511	few-day-period
+0	ace	537	clinician
+11	ace	554	encourage
+13	ace	567	opioid-taper
+12	ace	591	recommend
+13	ace	604	opioid-taper
 0	src	0	Clinicians
 1	src	18	prescribe
 2	src	32	advise

@@ -1,0 +1,3 @@
+sentences([[^,'Exactly',2,men,do,not,sleep,'.']]).
+drs(drs([A],[[-(drs([B],[-(predicate(B,sleep,A),/(1,6))])),-(object(A,man,countable,na,exactly,2),/(1,3))]])).
+messages([]).

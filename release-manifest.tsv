@@ -1,5 +1,5 @@
 meta	schema	v1
-meta	compiler	62b552c845926cdbb719c3b9bcd710fef58803070eb4f5a01afaa50f4c588104
+meta	compiler	77eae52e5cfcd52fe2e8753d381d088344cb21ce989e9b1d0c8c7ecada7655dc
 meta	base-lexicon	2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec
 meta	swipl	9.2.9
 meta	verify	sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt
@@ -11,12 +11,12 @@ meta	generated	manifest-sha256.txt
 meta	generated	tagmanifest-sha256.txt
 member	LICENSE	a518c888aba7765db6bb0974a385e00afdd89196342fcc8d8cecd12b5ef84c28	12242
 member	NOTICE	d9ed734ad82b5c34f60d7d95513d3fce86ef5a03620fcfa2f8d835a55eadb361	1401
-member	README-dist.md	1720b956bd876ee6fb89a3bc29421cf7594bb5c19c7facada12bfbb90adc4528	48729
+member	README-dist.md	7ee035a7e21a76accf4b3ad025a8cd7cc59ba51749ff3100afbe28f36bdcf1b6	48966
 member	bagit.txt	1712ecfb074bf29c4188ad3421032509159a09739fd604f8fe57038b4ddefcc9	54
 member	data/guidelines/cdc-2022-opioid/README.md	4be14593e84fd8b33433f2145f978d8f7a5a09d1a296cca354acc7548e2bb758	14006
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp01.ace	6e0aebe35e96bdf3da641fb34355287c16b504575c5262febeafc343bc3490b1	342
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp02.ace	827a00f98cf682a8da35fcff8042c867380d23707454ddfe780f52bb84ae81c0	231
-member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp03.ace	8ae2b3b1dd404f80436814e9fecce91a9e5c828428070ec7cc56d861d415f17c	578
+member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp03.ace	16cccf2dfa1c08700a12f9630f7b4429f4836fa03ec9c6302c6bd5cb13bdce13	618
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp04.ace	35d0ac323bfada3b413b0d89203cc88a5ddc36c3914a4479b184fc184469eecb	594
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp05.ace	2eab4291abcf9620b34d0319178763b008423cf89dbebd3af088660ee8b8fb68	797
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp06.ace	8be23f53f2672d460bda9252dc2a11b093521a18593846fcb424b05802de9841	619
@@ -201,7 +201,7 @@ member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s21-03.ace	0cb4f6320d2
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s21-05.ace	b0bbe6137c98493d79eee6388d610a44fcd1b87def071a037d28b07e70070e25	152
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s22-02.ace	35864c537f6fdf582c08ba9db5fbf767cc7f46ac88ea3e44d2cf0f8be6cefa7e	1537
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s22-04.ace	b27d6fc74ca124fa53d5f4ff68c4c46ed8a41f396c04a2aa104dc6879c6bc65c	658
-member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s22-05.ace	5efced355ab314277987e904b7d0eb6dac9595270b19c280a9a68a1da6e08273	658
+member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s22-05.ace	addf231155949000ad1b1910974ce13da67929d5ead0749db142b5b78c9db74a	698
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s22-07.ace	041208f0792f4b82614a29e68b7cd4be19ddc52f4022118c0a5e92b7428e3f9b	639
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s22-08.ace	89011b7743a03b22fcca6907f18a6a6d7d6046e5f622a3fd13e0c6a7e7034146	407
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s22-11.ace	bed13f5c554d41f56a31f7ba540798ce461dce3797d43ce6c223554086524bb7	240
@@ -255,7 +255,7 @@ member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s30-02.ace	1c99fb49d50
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s30-03.ace	a6ddf11c2d084f0a4c6a08417a972e2566503ab6bac870fa7d32a702ba554d30	146
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s30-05.ace	d74f3e85ba4cacc29d2b68be97029718cdee3c81b9704e6d30b5ca2e4fa051af	223
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s30-06.ace	337700aad4380438109675df74fd34765ebe2137d21139fef5d7f75119d519e6	463
-member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s30-07.ace	5f6535e8fd6ab6c4998cb0d4d100f655844bf6e3b9c29434c8ec1cefa88427d3	308
+member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s30-07.ace	8c6a54826383a05e5c1783bb56161ddc1cf699165ac0ac117c32a79c3c827d23	316
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s30-08.ace	7492b03cdba012e63dfe3c3be5e188cd9d3e927d9213f0abcac119071ecda83c	240
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s31-04.ace	10a81c66ab9cca08269f155203196828fe5585b3385ad3828d085547b29165b1	704
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s32-02.ace	34e7bfe454658c77aef1f7419d523f0c62345bfefc0cb29cb7a10b05a7c0a0eb	327
@@ -403,7 +403,7 @@ member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s9-04.ace	d2694e97cea7
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s9-05.ace	4aaf8c5bdee6435713eb4a7f0a701863d5f33b0e1186d380d9508e9fb5021e86	1281
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01-imp01.tsv	4b0da985255208b5a368852d07395e51c8d72dfb70827112e5d7b928894af0d6	597
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01-imp02.tsv	69bd1b07c71e4a4b528d8cfb682069a20c1e43907e7f003a0e9f37c58a408c24	552
-member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01-imp03.tsv	8c08143a325b3e19f283dc0625903fff912d38408dc8b41e3ba0967a8abc2558	1154
+member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01-imp03.tsv	8a73245f03ef751c094b9c0281493eac23bafaa736d687cdff9b165ab5c00f4e	1194
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01-imp04.tsv	97bf7b0759a7ef404455c4c5a746416eb224b68e8632afd373395f8f316e9888	1029
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01-imp05.tsv	4153ab7da439f546a90ed14bd9d0efe45725c19da529e1867ce68b93dde6693a	1259
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-rec01-imp06.tsv	85a5163c5a900cbb04164c848f40261536f8050078ddf105be630fc2d533bfde	1183
@@ -588,7 +588,7 @@ member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s21-03.tsv	f88e69fe4
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s21-05.tsv	9b97938c9e8797250ae676fc2dc0a18c18b00c78e7708fb4b469e70db2b3d050	290
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s22-02.tsv	d64ca6cdba6b8ef7ec619cf467f74d481ed7004664b89dc71a03c6cce3851016	2211
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s22-04.tsv	b77894e6fbaa7961463e973708e329645c46af135b12c2ec82457567caf6f15d	1060
-member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s22-05.tsv	d985d66515ad426b840315c304688f53ff072e300a5c7e18ee8435d3b32990e9	1320
+member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s22-05.tsv	3514d90e9a88ae73923246f9f25f588d2dded9242f775cbfa5559dfa58379459	1360
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s22-07.tsv	8c54e701929547de81c9a798b5cf77c9c609d7d48ed6e99dadae23291e374681	1113
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s22-08.tsv	52d8bc8bd273ff869bf2d2b466052a6df862b64bce6f14dcf2af17055a50a997	608
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s22-11.tsv	70e1df26eac9d87ffb430b9d18fe0a0d198f32549380bbf5c2af30dcac17f36f	495
@@ -642,7 +642,7 @@ member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s30-02.tsv	8a78a28b1
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s30-03.tsv	14d049d510195ee38f899f8a563320141caa3cf43d112c702444053c7c589c15	386
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s30-05.tsv	486189bf4ae7ae5047a3bf53a976e0a22fabc20e765cee207154baf2331a71bb	379
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s30-06.tsv	096d2885514be97d5a43fc23b6950420538f1678fd16245e7ec6ec43cf28d2da	672
-member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s30-07.tsv	7cd151f469d1a84173ce1050f97d319c5ea443b33885f412719c4301f4208d7d	589
+member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s30-07.tsv	81c1b040cec8d8eb803789145fffccea5207f5a17f3d643c3f21ec252c47fb10	597
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s30-08.tsv	e5ec4eec6b9917a466e85c7ba6154766c1d2eec6ad9d20f8ab8841a6654ddff0	323
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s31-04.tsv	777451f3451851e9ad9c76d81338ac27daf21ef352800cb752776569331dc7b0	1483
 member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s32-02.tsv	f17e2ff14794ffbd2d172a7acccc31115651fbd428869f580e0c3f635415e8b3	836
@@ -791,13 +791,13 @@ member	data/guidelines/cdc-2022-opioid/align/cdc2022-opioid-s9-05.tsv	ebc2e49169
 member	data/guidelines/cdc-2022-opioid/audit/census-map.tsv	49f0f096a3a166733bb673733a03b047c3c52b755e6421e4bc07b50862c3e91c	18815
 member	data/guidelines/cdc-2022-opioid/audit/lexicon-rejects.tsv	f4d37d1f4baa1bff8dfddf45b007eef7509a1db2d1dc06afad87170e90bc9761	26
 member	data/guidelines/cdc-2022-opioid/audit/lexicon-shadow.tsv	e5d99a9a163290e6c7c68d088712d1633eed9fd410ab7e2f240cff4a431e1577	3562
-member	data/guidelines/cdc-2022-opioid/audit/projection-notes.tsv	3ecc4df3c2ec1bec43837797e8a73a4b7b2780b385d48acfee1fb04b4a0d95fa	190674
-member	data/guidelines/cdc-2022-opioid/audit/review-manifest.tsv	350ea7ad25cf70723bef00316f26d84cea2aa6f5711b844d1b452026634f0001	135299
+member	data/guidelines/cdc-2022-opioid/audit/projection-notes.tsv	5022d00eda6a8d03a263872c31cc5c8750cf5022bdb5ffce77ae276866dc2e13	190424
+member	data/guidelines/cdc-2022-opioid/audit/review-manifest.tsv	ce00b40f3535f361eafdcdcc3afa04edb8a7ba1e5f5f494cdd72e0d4b5961d0a	135299
 member	data/guidelines/cdc-2022-opioid/coverage.tsv	dd28555d2f9cbdae36b3e59a7d7ac96d6632fc86b93a9d80540a026254b5b2e1	88135
 member	data/guidelines/cdc-2022-opioid/lexicon.ulex	0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552	83336
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01-imp01.pl	839fe39f913d48ab57f873650a5230ef19cad52dbf61e236dd49c756b76a6ab9	9030
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01-imp02.pl	35d31303c900e0ae7631798cbe96aa8fc0bc695da8eba0283e08c55bcf03be85	12536
-member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01-imp03.pl	cd3db3c542ebf667ce8252d2e63f95b026e7d8fb750e7547c9922a029222bc4a	21398
+member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01-imp03.pl	78485c1e8f2945400cdbd9a9efe57b50bcb776eda9b4487ff5c45d7b233fc666	21461
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01-imp04.pl	c84de85a927e74cf5aaff3c8a3925dfd99e50844b1af9c81d7cc39ee2d31c9c4	23793
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01-imp05.pl	b40f8343f5a628dc1d7afb8bbffe61cbd140ab25b81a2fe6b08116cc84ac371a	33586
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec01-imp06.pl	f709505e5e3893a00300bb68fd59715557d38dc78bc708851bb34c9ef86e5799	22956
@@ -982,7 +982,7 @@ member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s21-03.pl	fc2a1cf953732
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s21-05.pl	41bcb488545db6052d24db9623aa12caaf074ddf0e37309a784a4d680360141c	7181
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s22-02.pl	f649601c37d824b4f9c10abb55eab3f244754ad3a4b095dcc175cc707da50442	46352
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s22-04.pl	f069505b0700deac376de739a0a3d39209a1e0940ed835f25324c877b1f5360f	15796
-member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s22-05.pl	af9d18b39d8f8d46e1c59887d6c4589e2fc3c135fb8ccdb480cf2a5facaea83f	23130
+member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s22-05.pl	2e829d7a835a7fa3f2ae7e2168a829122eff76bcc95ad4ce4728227cebd30458	23191
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s22-07.pl	29f3fda4c2d0663cec5eb349d873eebef37b00ab59b1510071c38482f8cb7432	18673
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s22-08.pl	1d95cfc572106fcd7e251f5f7591f6948b092b85ec918de30da2ccec358668a3	12419
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s22-11.pl	6389de1a058eff00edf46f479986cccbbf56c157b66a9c927a5e63266ed81f3c	6947
@@ -1036,7 +1036,7 @@ member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s30-02.pl	ac5908196d301
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s30-03.pl	80c2f7423507433d5123710016d0d67d7d35645a0a71a1046339eb96188e2d73	4352
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s30-05.pl	a2a9b081ad9ab40a74bb25595b82b1190b38e489ef39d407c9deba49d0031564	8487
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s30-06.pl	1867fcef03b66ecab75adc731a24eb42cc7d4d89f9e01efec262f47e6ac8a480	15334
-member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s30-07.pl	ca7383822a1f0782d6dc2f4b4979dd53b9e97d9c4c8db8b1cd0ed63e67a9fab3	7371
+member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s30-07.pl	5810e078b629b27c97dc8c95ecfd73441b3b4fad4e8e9dbc395584672b7c241a	7384
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s30-08.pl	2028d4e7fa4fa642b466022fe741efd11aebf68e6195875403a074b0a81b7fd2	7716
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s31-04.pl	335375fc047be06b8216eeece5a6f145de04d82c6571866132c94c1dfc3401a3	16672
 member	data/guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s32-02.pl	d470dd706963e0493b472eefb8ca3c7ccba377dedd929dcab3c395ad7c3ba8a8	10887
@@ -1187,7 +1187,7 @@ member	data/guidelines/cdc-2022-opioid/queries/answers/dosage-reduction-content.
 member	data/guidelines/cdc-2022-opioid/queries/answers/evidence-type-1-recommendation.pl	bbf931329e4079e78d88e03bf8f2cf5c1f9d671b638dbe1b8fe58cfc5e65e7ad	328
 member	data/guidelines/cdc-2022-opioid/queries/answers/long-term-therapy-onset.pl	1fa1b54a704f4169a7ef282495fe218080a6c50ceee403f19795aef6f7b41abb	320
 member	data/guidelines/cdc-2022-opioid/queries/answers/recommendation-exists.pl	0365260444b906d02ad6dff4dc4de8da929701656d3f35cb9f7d99a2011fac08	236
-member	data/guidelines/cdc-2022-opioid/queries/answers/tablet-use-spacing.pl	0c7ee8f37f02aeb148d74fd6712bc3c5a4c19526f9e48b5890e8c22559dac894	519
+member	data/guidelines/cdc-2022-opioid/queries/answers/tablet-use-spacing.pl	44ac073de35f5cc1ac298fe29cc258c955bdf0971da28001e4fea09f60a8d4d2	519
 member	data/guidelines/cdc-2022-opioid/queries/category-a-recommendations.ace	e1a55c47923fd26d266c56eb8b19cefba225d57e9095a2bfaec155bd392ff541	53
 member	data/guidelines/cdc-2022-opioid/queries/dosage-reduction-content.ace	a690fc31ba3d8f4a33072957b321d16d1b9b8807dc4b60a5f7433e9a807c3c0e	35
 member	data/guidelines/cdc-2022-opioid/queries/evidence-type-1-recommendation.ace	faeb2a82d1512ecc03939e815f8c54338c3b99418cedc28f2fd1d784fd188ce1	59
@@ -1197,15 +1197,15 @@ member	data/guidelines/cdc-2022-opioid/queries/pl/dosage-reduction-content.pl	5c
 member	data/guidelines/cdc-2022-opioid/queries/pl/evidence-type-1-recommendation.pl	d5a988012e4eccad29d4d4cea529e80d6fb1a60156d17d7d834af4954c6ab280	875
 member	data/guidelines/cdc-2022-opioid/queries/pl/long-term-therapy-onset.pl	cb638f26614595e4168f051037a9e3e0bd222500f55bdb2cf600cd2aa386aa28	941
 member	data/guidelines/cdc-2022-opioid/queries/pl/recommendation-exists.pl	767a3f307ac9996c3e7f74b91f5019537b079b93cf86e2316aac075d8a5a08ce	565
-member	data/guidelines/cdc-2022-opioid/queries/pl/tablet-use-spacing.pl	d4c5ced386f6b7f0f1c54ab424e63263f3a06b3206ae11a57ada98fa974d6de2	988
+member	data/guidelines/cdc-2022-opioid/queries/pl/tablet-use-spacing.pl	e295010a5a1bc10f9d64be88c33c6a518c6916f60cf7b450b76900f804f3de2f	1035
 member	data/guidelines/cdc-2022-opioid/queries/recommendation-exists.ace	bbded3642c874f0bcef1d6cddd8a8fddaf22b31f5ada9a8c9d501ac5b6cb93d3	27
-member	data/guidelines/cdc-2022-opioid/queries/tablet-use-spacing.ace	5e8a791eaeb08349c96dda4478f16140dcb705c5bce02197cd40502cc0831c5a	55
+member	data/guidelines/cdc-2022-opioid/queries/tablet-use-spacing.ace	579c98957d91e5f8d2e0c82321c5cd1b04881b344ec3ac61995fc20ab3510568	63
 member	data/guidelines/cdc-2022-opioid/queries/traces/category-a-recommendations.pl	7c6d43720d61dc06d46e1ebcd40090f1a4e45d7935fe70b8baefcc320c8e8732	7112
 member	data/guidelines/cdc-2022-opioid/queries/traces/dosage-reduction-content.pl	922043623f219d1508903037547907670f7e7816fc3a98f3d9236925471decd0	1825
 member	data/guidelines/cdc-2022-opioid/queries/traces/evidence-type-1-recommendation.pl	7c677499079b88d71ffaf37fab3ad8484314adc51847dcaeef5be48db4bbbdf6	1306
 member	data/guidelines/cdc-2022-opioid/queries/traces/long-term-therapy-onset.pl	0c42e9b66cbe88044f5a5ae464630732ab25aa7f500694a675d76b8c9c8461ef	1874
 member	data/guidelines/cdc-2022-opioid/queries/traces/recommendation-exists.pl	77b0b046392264481d2c7fbd7646453fa6e695081b77cd9aaa5346e0ffd17793	581
-member	data/guidelines/cdc-2022-opioid/queries/traces/tablet-use-spacing.pl	e91f00680fb6481dbacc034bc061e0300e16b4d1d2dfab1116cecd2f97764d42	6593
+member	data/guidelines/cdc-2022-opioid/queries/traces/tablet-use-spacing.pl	84b6f258130476cdba6855c7ab59dc2b5165d3aeeab703489d94c39e676064fc	6815
 member	data/guidelines/cdc-2022-opioid/rights.tsv	84848a2832ed0f3bcb7ced3dbbdc3acc9ea1ff78e2cab96d16fea70eb6dd0797	375
 member	data/guidelines/cdc-2022-opioid/source/box3-extraction.txt	6776a52087f893b462c1f1092c1ed8799353438809368e0cfd123ca4244d0ac5	6495
 member	data/guidelines/cdc-2022-opioid/source/front-matter-extraction.txt	aa3306c0eeb15dac65c55103bfdcbf4d64c46c85b5c82bc1c0dd40867281168b	19009

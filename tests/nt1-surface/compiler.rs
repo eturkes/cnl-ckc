@@ -595,12 +595,6 @@ struct Results {
 fn red_cases() -> Vec<(&'static str, &'static str, &'static str, &'static str)> {
     vec![
         (
-            "root-exactly",
-            "doc",
-            "A man sees exactly 2 dogs.\n",
-            "root_condition(",
-        ),
-        (
             "root-leq",
             "doc",
             "A man sees at most 2 dogs.\n",
@@ -762,7 +756,7 @@ fn p3_oracle_inverse_and_own_bad_inputs() {
     assert_eq!(cases.len(), 287);
     assert_eq!(cases.iter().filter(|p| p.query.is_none()).count(), 226);
     assert_eq!(cases.iter().filter(|p| rejected_query(p)).count(), 6);
-    assert_eq!((red_cases().len(), self_blocked().len()), (8, 4));
+    assert_eq!((red_cases().len(), self_blocked().len()), (7, 4));
     let mut census = BTreeMap::new();
     for p in &cases {
         *census.entry(p.row).or_insert(0usize) += 1;
@@ -920,6 +914,47 @@ fn p3_rejects_keep_upper_root_range_and_about_boundaries() {
     checks.finish("P3 reject boundaries");
 }
 
+// root-exact: the root `exactly N` group (N >= 1) that `red_cases` once rejected compiles as
+// facts that keep their literals; product ordinals follow APE's list order (see before dog),
+// which `source_order` (raw referent = ordinal) does not model, so heads stay in emitted order.
+#[test]
+fn p3_root_exactly_admitted_as_literal_facts() {
+    let scratch = Scratch::new("root-exactly");
+    let compiler = Compiler::new(&scratch.0);
+    let id = "nt-root-exactly";
+    let mut ts = obj(1, "man", "eq", 1);
+    ts.extend(event(2, "see", &[1, 3]));
+    ts.extend(obj(3, "dog", "exactly", 2));
+    let heads = ts
+        .iter()
+        .map(|t| {
+            t.substitute(&|x| {
+                if let Term::V(n) = x {
+                    Some(gid("product", id, n[1..].parse().unwrap(), Term::L(vec![])))
+                } else {
+                    None
+                }
+            })
+        })
+        .collect();
+    let probe = Probe {
+        row: "root-exact",
+        id: id.into(),
+        ace: "A man sees exactly 2 dogs.\n".into(),
+        table: false,
+        groups: vec![Group {
+            heads,
+            body: vec![],
+            refs: vec![],
+            variant: 1,
+        }],
+        query: None,
+        alias: false,
+    };
+    let got = compiler.run(&scratch.0.join("doc"), id, "doc", &probe.ace, false);
+    assert!(got.ok(), "{id} rc={:?} stderr={:?}", got.rc, got.stderr);
+    assert_eq!(got.stdout, probe.expected(true), "{id}");
+}
 #[test]
 fn p3_naf_inclusion_rejects_self_blocked_witnesses() {
     let results = results();

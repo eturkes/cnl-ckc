@@ -1,0 +1,50 @@
+% root-exact-stable-modal.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+guideline_schema_version(1).
+guideline_document('root-exact-stable-modal',ace_sha256(cf18d663376f63039464e3aaaa03bd5184c5be32839d3ee29d4efcd74da47bd7),ulex(sha256('9cfaa91b8eb133f080bf5e9cd8d9c1ba4a8204918639a392eb9a5352ee7ab0d0')),vocabulary(none)).
+% S1: A man can see exactly 2 dogs.
+guideline_entity(actual,'$guideline_id'(product,'root-exact-stable-modal',1,ref(1),[]),man,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact-stable-modal',1,ref(1),[]),na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'root-exact-stable-modal',1,box(1),[]),can).
+guideline_event('$guideline_id'(context,'root-exact-stable-modal',1,box(1),[]),'$guideline_id'(product,'root-exact-stable-modal',1,ref(2),[]),see).
+guideline_arg('$guideline_id'(context,'root-exact-stable-modal',1,box(1),[]),'$guideline_id'(product,'root-exact-stable-modal',1,ref(2),[]),1,'$guideline_id'(product,'root-exact-stable-modal',1,ref(1),[])).
+guideline_arg('$guideline_id'(context,'root-exact-stable-modal',1,box(1),[]),'$guideline_id'(product,'root-exact-stable-modal',1,ref(2),[]),2,'$guideline_id'(product,'root-exact-stable-modal',1,ref(3),[])).
+guideline_entity('$guideline_id'(context,'root-exact-stable-modal',1,box(1),[]),'$guideline_id'(product,'root-exact-stable-modal',1,ref(3),[]),dog,countable).
+guideline_cardinality('$guideline_id'(context,'root-exact-stable-modal',1,box(1),[]),'$guideline_id'(product,'root-exact-stable-modal',1,ref(3),[]),na,exactly,2).

@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s22-05',ace_sha256('5efced355ab314277987e904b7d0eb6dac9595270b19c280a9a68a1da6e08273'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s22-05',ace_sha256(addf231155949000ad1b1910974ce13da67929d5ead0749db142b5b78c9db74a),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should work with a patient for a prolonged-opioid-use-prevention.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s22-05',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s22-05',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s22-05',1,ref(2),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -70,49 +70,49 @@ guideline_arg('$guideline_id'(context,'cdc2022-opioid-s22-05',2,box(2),[A]),'$gu
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s22-05',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s22-05',2,ref(7),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',2,ref(5),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s22-05',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s22-05',2,ref(7),[A]),'instead-of','$guideline_id'(product,'cdc2022-opioid-s22-05',2,ref(6),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_preference('$guideline_id'(context,'cdc2022-opioid-s22-05',2,box(2),[A]),'$guideline_id'(product,'cdc2022-opioid-s22-05',2,ref(7),[A]),'$guideline_id'(product,'cdc2022-opioid-s22-05',2,ref(5),[A]),'$guideline_id'(product,'cdc2022-opioid-s22-05',2,ref(6),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-% S3: An as-needed-opioid-example contains 5 hydrocodone-milligrams and contains 325 acetaminophen-milligrams and uses 1 tablet at an interval of at least 4 hours for a moderate-to-severe-pain.
+% S3: An as-needed-opioid-example contains exactly 5 hydrocodone-milligrams and contains exactly 325 acetaminophen-milligrams and uses exactly 1 tablet at an interval of at least 4 hours for a moderate-to-severe-pain.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[]),'as-needed-opioid-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(2),[]),'hydrocodone-milligram',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(2),[]),na,eq,5).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(3),[]),contain).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(2),[])).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(4),[]),'acetaminophen-milligram',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(4),[]),na,eq,325).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(5),[]),contain).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(4),[])).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),tablet,countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(2),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(2),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(3),[]),'hydrocodone-milligram',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(3),[]),na,exactly,5).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(4),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(5),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(5),[]),'acetaminophen-milligram',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(5),[]),na,exactly,325).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),at,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(7),[])).
+guideline_recurrence(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),hour).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),for,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(8),[])).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),use).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(9),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(8),[]),'moderate-to-severe-pain',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(8),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),na,geq,4).
+guideline_unit(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),hour).
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(7),[]),interval,countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(7),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(8),[]),hour,countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(8),[]),na,geq,4).
-guideline_unit(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(8),[]),hour).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(9),[]),'moderate-to-severe-pain',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(9),[]),na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),use).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(6),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),for,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(9),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),at,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(7),[])).
-guideline_recurrence(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(10),[]),'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(8),[]),hour).
-% S4: A scheduled-opioid-example uses 1 tablet at an interval of 4 hours.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(9),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',3,ref(9),[]),na,exactly,1).
+% S4: A scheduled-opioid-example uses exactly 1 tablet at an interval of exactly 4 hours.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(1),[]),'scheduled-opioid-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[]),tablet,countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[]),at,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(3),[])).
+guideline_recurrence(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[]),'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),hour).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[]),use).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),na,exactly,4).
+guideline_unit(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),hour).
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(3),[]),interval,countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(3),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(4),[]),hour,countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(4),[]),na,eq,4).
-guideline_unit(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(4),[]),hour).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),use).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(2),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),at,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(3),[])).
-guideline_recurrence(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(5),[]),'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(4),[]),hour).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(4),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-05',4,ref(4),[]),na,exactly,1).
 % S5: If a patient has a prolonged-around-the-clock-opioid-use for a few-day-period then every clinician should encourage an opioid-taper and should include an opioid-taper.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s22-05',5,box(1),[A,B,C,D,E]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'prolonged-around-the-clock-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'few-day-period',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,have), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,for,C), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s22-05',5,box(1),[A,B,C,D,E]),'$guideline_id'(product,'cdc2022-opioid-s22-05',5,ref(6),[A,B,C,D,E]),'opioid-taper',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'prolonged-around-the-clock-opioid-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'few-day-period',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,have), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,for,C), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1).

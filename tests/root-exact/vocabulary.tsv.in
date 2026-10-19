@@ -1,0 +1,7 @@
+# format: kind	lemma	value
+unit	hour	hour
+unit	day	day
+relation	for	duration
+spacing	at	interval
+qualifier	usually	usuality
+approximation	approximate	about

@@ -1,0 +1,52 @@
+% root-exact--plain.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+guideline_schema_version(1).
+guideline_document('root-exact--plain',ace_sha256('06b47a381baf7bf4131f4b66d06f25d11378d0ae1ade283163c56a5e1cf00d3b'),ulex(none),vocabulary(none)).
+% S1: A man sees exactly 1 dog.
+guideline_entity(actual,'$guideline_id'(product,'root-exact--plain',1,ref(1),[]),man,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact--plain',1,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'root-exact--plain',1,ref(2),[]),see).
+guideline_arg(actual,'$guideline_id'(product,'root-exact--plain',1,ref(2),[]),1,'$guideline_id'(product,'root-exact--plain',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'root-exact--plain',1,ref(2),[]),2,'$guideline_id'(product,'root-exact--plain',1,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'root-exact--plain',1,ref(3),[]),dog,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact--plain',1,ref(3),[]),na,exactly,1).
+% S2: The dog sleeps.
+guideline_event(actual,'$guideline_id'(product,'root-exact--plain',2,ref(1),[]),sleep).
+guideline_arg(actual,'$guideline_id'(product,'root-exact--plain',2,ref(1),[]),1,'$guideline_id'(product,'root-exact--plain',1,ref(3),[])).

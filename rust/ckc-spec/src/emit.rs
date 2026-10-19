@@ -163,7 +163,61 @@ pub open spec fn inner_sentence(t: Term) -> Option<int> {
     }
 }
 
-// Root condition classes (document mode): anchored fact, rule, operator box.
+// Root exact group (contract root-exact D1). APE wraps an upper-bounded quantifier's
+// scope in a list. A root list joins its sentence's facts when every upper-bounded
+// object among its root-context leaves (anchored conditions reached through list
+// spines alone; a box, NAF, rule or disjunction keeps its own law in the flatten)
+// states `exactly N` with N >= 1, and one does: such a count implies that the counted
+// things exist, while `at most`, `less than` and `exactly 0` allow zero.
+pub open spec fn group_leaves(t: Term) -> Seq<Term>
+    decreases t, 0int,
+{
+    match anchor_s(t) {
+        Option::Some(_) => seq![arg(t, 0)],
+        Option::None => match t {
+            Term::Comp(name, args) => if name == cons_name() && args.len() == 2 {
+                group_leaves_all(args)
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        },
+    }
+}
+
+pub open spec fn group_leaves_all(ts: Seq<Term>) -> Seq<Term>
+    decreases ts, 1int,
+{
+    if ts.len() == 0 {
+        Seq::empty()
+    } else {
+        group_leaves(ts[0]) + group_leaves_all(ts.drop_first())
+    }
+}
+
+pub open spec fn upper_object(c: Term) -> bool {
+    is_comp(c, "object"@, 6) && (arg(c, 4) == atom("exactly"@) || arg(c, 4) == atom("leq"@) || arg(
+        c,
+        4,
+    ) == atom("less"@))
+}
+
+pub open spec fn exact_object(c: Term) -> bool {
+    is_comp(c, "object"@, 6) && arg(c, 4) == atom("exactly"@) && match arg(c, 5) {
+        Term::Int(n) => n >= 1,
+        _ => false,
+    }
+}
+
+pub open spec fn exact_group(t: Term) -> bool {
+    let ls = group_leaves(t);
+    &&& list_items(t) is Some
+    &&& forall|i: int| 0 <= i < ls.len() && upper_object(#[trigger] ls[i]) ==> exact_object(ls[i])
+    &&& exists|i: int| 0 <= i < ls.len() && exact_object(#[trigger] ls[i])
+}
+
+// Root condition classes (document mode): anchored fact, rule, operator box
+// (an exact group rides the box form).
 pub ghost enum Root {
     Anchored(Term),
     Rule(Term, Term),
@@ -180,6 +234,11 @@ pub open spec fn tag(c: Term) -> Option<(int, Root)> {
                     Option::None => Option::None,
                 }
             } else if is_op(name) && args.len() == 1 {
+                match inner_sentence(c) {
+                    Option::Some(s) => Option::Some((s, Root::Boxed(c))),
+                    Option::None => Option::None,
+                }
+            } else if name == cons_name() && args.len() == 2 && exact_group(c) {
                 match inner_sentence(c) {
                     Option::Some(s) => Option::Some((s, Root::Boxed(c))),
                     Option::None => Option::None,

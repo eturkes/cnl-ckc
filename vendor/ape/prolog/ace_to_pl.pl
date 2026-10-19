@@ -58,7 +58,9 @@
 % admits copula/ground facts and Horn rules plus modal/classical-negation
 % operator wrappers (reified as guideline_operator/3 edges over context
 % ids), consequent currying, antecedent Horn splits over one disjunction,
-% and executable negation-as-failure for top-level antecedent NAF boxes.
+% and executable negation-as-failure for top-level antecedent NAF boxes;
+% a root condition list joins its sentence's facts when its root-context
+% upper bounds are all `exactly N`, N >= 1 (contract root-exact).
 % Translation is total: a sentence yields an ordered bundle of one or
 % more clauses; any unrecognized shape rejects the whole document, and
 % authored questions reject (class unsupported,
@@ -1774,7 +1776,7 @@ vocabulary_record(Record0, Record) :-
    See docs/REFERENCE.md "Compiled Prolog schema". */
 
 /* Uniform declaration block (F2, c1 D2, s1 D1, s2 D1): every document
-   declares all 18 indicators regardless of population or table. */
+   declares all 19 indicators regardless of population or table. */
 v1_indicators([
     guideline_schema_version/1,
     guideline_document/4,
@@ -1879,8 +1881,63 @@ v1_tag_condition(Cond, S, _) :-
     !,
     inner_sentence(Cond, S),
     reject(unsupported, forbidden_operator(root, naf, S)).
+v1_tag_condition(Cond, S, boxed(Cond)) :-
+    v1_exact_group(Cond),
+    !,
+    inner_sentence(Cond, S).
 v1_tag_condition(Cond, _, _) :-
     reject(unsupported, root_condition(Cond)).
+
+/* Root exact group (contract root-exact D1). APE wraps an upper-bounded
+   quantifier's scope in a list. A root list joins its sentence's facts
+   when every upper-bounded object among its root-context leaves
+   (anchored conditions reached through list spines alone; a box, NAF,
+   rule or disjunction keeps its own law in the flatten) states
+   `exactly N` with N >= 1, and one does: such a count implies that the
+   counted things exist, while `at most`, `less than` and `exactly 0`
+   admit zero. Tagged boxed(List), the existing flatten unwraps it
+   without an operator edge. */
+v1_exact_group(Cond) :-
+    nonvar(Cond),
+    is_list(Cond),
+    Cond \== [],
+    v1_group_leaves(Cond, Leaves, []),
+    forall(member(Leaf, Leaves),
+        ( v1_upper_object(Leaf) -> v1_exact_object(Leaf) ; true )),
+    once(( member(Leaf, Leaves), v1_exact_object(Leaf) )).
+
+v1_group_leaves(T, [Inner|L], L) :-
+    nonvar(T),
+    functor(T, -, 2),
+    arg(2, T, Anchor),
+    anchor_sentence(Anchor, _),
+    !,
+    arg(1, T, Inner).
+v1_group_leaves(T, L0, L) :-
+    nonvar(T),
+    functor(T, '[|]', 2),
+    !,
+    arg(1, T, Head),
+    arg(2, T, Tail),
+    v1_group_leaves(Head, L0, L1),
+    v1_group_leaves(Tail, L1, L).
+v1_group_leaves(_, L, L).
+
+v1_upper_object(C) :-
+    nonvar(C),
+    functor(C, object, 6),
+    arg(5, C, Op),
+    atom(Op),
+    memberchk(Op, [exactly, leq, less]).
+
+v1_exact_object(C) :-
+    nonvar(C),
+    functor(C, object, 6),
+    arg(5, C, Op),
+    Op == exactly,
+    arg(6, C, N),
+    integer(N),
+    N >= 1.
 
 /* Reserved vocabulary: any source lemma beginning `guideline_` or
    `$guideline_`, and any source compound whose functor name begins

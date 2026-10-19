@@ -1,0 +1,47 @@
+% root-exact-stable-rule.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+guideline_schema_version(1).
+guideline_document('root-exact-stable-rule',ace_sha256('69596e5c3e310505cdabbfb7a4f72f550f3602fe1a0c29da0a89719cb6ef1804'),ulex(sha256('9cfaa91b8eb133f080bf5e9cd8d9c1ba4a8204918639a392eb9a5352ee7ab0d0')),vocabulary(sha256(d93917b1ea581dec1d41f868203541d13a33acb597dda3bd23246020bdd6712b))).
+% S1: If a man sleeps then the man sees exactly 2 dogs.
+guideline_event(actual,'$guideline_id'(product,'root-exact-stable-rule',1,ref(3),[A,B]),see) :- guideline_entity(actual,A,man,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,B,sleep), guideline_arg(actual,B,1,A).
+guideline_arg(actual,'$guideline_id'(product,'root-exact-stable-rule',1,ref(3),[A,B]),1,A) :- guideline_entity(actual,A,man,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,B,sleep), guideline_arg(actual,B,1,A).
+guideline_arg(actual,'$guideline_id'(product,'root-exact-stable-rule',1,ref(3),[A,B]),2,'$guideline_id'(product,'root-exact-stable-rule',1,ref(4),[A,B])) :- guideline_entity(actual,A,man,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,B,sleep), guideline_arg(actual,B,1,A).
+guideline_entity(actual,'$guideline_id'(product,'root-exact-stable-rule',1,ref(4),[A,B]),dog,countable) :- guideline_entity(actual,A,man,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,B,sleep), guideline_arg(actual,B,1,A).
+guideline_cardinality(actual,'$guideline_id'(product,'root-exact-stable-rule',1,ref(4),[A,B]),na,exactly,2) :- guideline_entity(actual,A,man,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,B,sleep), guideline_arg(actual,B,1,A).

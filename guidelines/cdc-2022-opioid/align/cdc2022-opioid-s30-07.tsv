@@ -2,11 +2,11 @@
 1	ace	26	medication-combination
 2	ace	58	patient-specific-comorbidity-and-benefit-risk-selection
 7	ace	117	medication-combination-example
-3	ace	157	2 nonopioid-medications
-4	ace	186	differ in a mechanism-of-action
-7	ace	221	medication-combination-example
-5	ace	263	nonopioid-medication
-6	ace	300	opioid
+3	ace	157	exactly 2 nonopioid-medications
+4	ace	194	differ in a mechanism-of-action
+7	ace	229	medication-combination-example
+5	ace	271	nonopioid-medication
+6	ace	308	opioid
 2	src	13	patient comorbidities and benefit-to-risk ratios in individual patients
 1	src	86	combinations of medications
 7	src	115	e.g.

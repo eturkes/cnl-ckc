@@ -415,6 +415,235 @@ pub open spec fn tag_view(t: Option<ETag>) -> Option<(int, spec::Root)> {
     }
 }
 
+pub proof fn cons_symbol()
+    ensures
+        crate::m6_symbols::symbol(&Sym::Cons) == ckc_spec::v1text::cons_name(),
+{
+    reveal_strlit("[|]");
+    reveal(ckc_spec::v1text::ascii);
+    assert_seqs_equal!(ckc_spec::v1text::ascii("[|]"@) == ckc_spec::v1text::cons_name());
+}
+
+pub proof fn leaves_concat(a: Seq<Term>, b: Seq<Term>)
+    ensures
+        spec::group_leaves_all(a + b) == spec::group_leaves_all(a) + spec::group_leaves_all(b),
+    decreases a.len(),
+{
+    if a.len() > 0 {
+        assert((a + b).drop_first() == a.drop_first() + b);
+        leaves_concat(a.drop_first(), b);
+    }
+    reveal_with_fuel(spec::group_leaves_all, 2);
+}
+
+pub fn group_leaves(arena: &ETermArena, t: &T) -> (out: Vec<T>)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, t),
+    ensures
+        valid_all(arena.nodes@, out@),
+        models(out@) == spec::group_leaves(t@),
+{
+    let mut todo = Vec::new();
+    todo.push(t.cp());
+    let mut out: Vec<T> = Vec::new();
+    proof {
+        reveal_with_fuel(spec::group_leaves_all, 2);
+        assert(models(todo@) == seq![t@]);
+        assert(models(out@) == Seq::<Term>::empty());
+        assert(spec::group_leaves_all(seq![t@]) == spec::group_leaves(t@) + spec::group_leaves_all(
+            Seq::<Term>::empty(),
+        ));
+        assert(Seq::<Term>::empty() + spec::group_leaves(t@) == spec::group_leaves(t@));
+    }
+    while todo.len() > 0
+        invariant
+            arena_ok(arena),
+            valid(arena.nodes@, t),
+            valid_all(arena.nodes@, todo@),
+            valid_all(arena.nodes@, out@),
+            models(out@) + spec::group_leaves_all(models(todo@)) == spec::group_leaves(t@),
+        decreases crate::k2_engine::terms_size(models(todo@)),
+    {
+        let ghost before = todo@;
+        let current = todo.remove(0);
+        proof {
+            assert(todo@ == before.drop_first());
+            assert(current == before[0]);
+            assert(models(before)[0] == current@);
+            assert(models(before).drop_first() == models(todo@));
+            reveal_with_fuel(spec::group_leaves_all, 1);
+            reveal_with_fuel(crate::k2_engine::terms_size, 1);
+            assert(crate::k2_engine::terms_size(models(before)) == crate::k2_engine::term_size(
+                current@,
+            ) + crate::k2_engine::terms_size(models(todo@)));
+            assert(spec::group_leaves_all(models(before)) == spec::group_leaves(current@)
+                + spec::group_leaves_all(models(todo@)));
+            assert(models(out@) + spec::group_leaves(current@) + spec::group_leaves_all(
+                models(todo@),
+            ) == spec::group_leaves(t@));
+        }
+        match anchor(arena, &current) {
+            Some(_) => {
+                let a = args(arena, &current);
+                let ghost previous = out@;
+                out.push(a[0].cp());
+                proof {
+                    reveal_with_fuel(spec::group_leaves, 1);
+                    assert(a[0]@ == ckc_spec::replay::arg(current@, 0));
+                    assert(spec::group_leaves(current@) == seq![a[0]@]);
+                    assert_seqs_equal!(models(out@) == models(previous).push(a[0]@));
+                    assert forall|j: int| 0 <= j < out.len() implies valid(
+                        arena.nodes@,
+                        #[trigger] &out@[j],
+                    ) by {
+                        if j < previous.len() {
+                            assert(out@[j] == previous[j]);
+                        }
+                    }
+                    reveal(crate::k2_engine::term_size);
+                    assert_seqs_equal!(models(out@) + spec::group_leaves_all(models(todo@))
+                        == models(previous) + spec::group_leaves(current@) + spec::group_leaves_all(
+                        models(todo@),
+                    ));
+                }
+            },
+            None => {
+                match parts(arena, &current) {
+                    Some((name, children)) => {
+                        proof {
+                            assert(current@ == Term::Comp(name@, models(children@)));
+                            cons_symbol();
+                        }
+                        if has_name(&name, &Sym::Cons) && children.len() == 2 {
+                            proof {
+                                leaves_concat(models(children@), models(todo@));
+                                sizes_concat(models(children@), models(todo@));
+                                reveal_with_fuel(spec::group_leaves, 1);
+                                reveal(crate::k2_engine::term_size);
+                            }
+                            todo = concat(&children, &todo);
+                        } else {
+                            proof {
+                                reveal_with_fuel(spec::group_leaves, 1);
+                                reveal(crate::k2_engine::term_size);
+                            }
+                        }
+                    },
+                    None => {
+                        proof {
+                            reveal_with_fuel(spec::group_leaves, 1);
+                            reveal(crate::k2_engine::term_size);
+                        }
+                    },
+                }
+            },
+        }
+    }
+    proof {
+        reveal(spec::group_leaves_all);
+        assert(models(out@) + Seq::<Term>::empty() == models(out@));
+    }
+    out
+}
+
+pub fn upper_object(arena: &ETermArena, c: &T) -> (out: bool)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, c),
+    ensures
+        out == spec::upper_object(c@),
+{
+    if !crate::m6_term::is_comp(arena, c, &Sym::Object, 6) {
+        return false;
+    }
+    let op = crate::m7_annotate::arg_at(arena, c, 4);
+    crate::m6_term::is_atom(arena, &op, &Sym::Exactly) || crate::m6_term::is_atom(
+        arena,
+        &op,
+        &Sym::Leq,
+    ) || crate::m6_term::is_atom(arena, &op, &Sym::Less)
+}
+
+pub fn exact_object(arena: &ETermArena, c: &T) -> (out: bool)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, c),
+    ensures
+        out == spec::exact_object(c@),
+{
+    if !crate::m6_term::is_comp(arena, c, &Sym::Object, 6) {
+        return false;
+    }
+    let op = crate::m7_annotate::arg_at(arena, c, 4);
+    if !crate::m6_term::is_atom(arena, &op, &Sym::Exactly) {
+        return false;
+    }
+    let n = crate::m7_annotate::arg_at(arena, c, 5);
+    crate::m7_annotate::int_cmp(arena, &n, false)
+}
+
+pub fn exact_group(arena: &ETermArena, t: &T) -> (out: bool)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, t),
+    ensures
+        out == spec::exact_group(t@),
+{
+    if crate::m6_term::items(arena, t).is_none() {
+        return false;
+    }
+    let ls = group_leaves(arena, t);
+    let ghost m = models(ls@);
+    let mut found = false;
+    let mut i = 0usize;
+    while i < ls.len()
+        invariant
+            arena_ok(arena),
+            valid_all(arena.nodes@, ls@),
+            m == models(ls@),
+            m == spec::group_leaves(t@),
+            i <= ls.len(),
+            forall|j: int|
+                0 <= j < i && spec::upper_object(#[trigger] m[j]) ==> spec::exact_object(m[j]),
+            found == (exists|j: int| 0 <= j < i && spec::exact_object(#[trigger] m[j])),
+        decreases ls.len() - i,
+    {
+        proof {
+            assert(m[i as int] == ls@[i as int]@);
+        }
+        let up = upper_object(arena, &ls[i]);
+        let ex = exact_object(arena, &ls[i]);
+        if up && !ex {
+            proof {
+                assert(spec::upper_object(m[i as int]) && !spec::exact_object(m[i as int]));
+            }
+            return false;
+        }
+        proof {
+            if found {
+                let j0 = choose|j: int| 0 <= j < i && spec::exact_object(#[trigger] m[j]);
+                assert(0 <= j0 < i + 1 && spec::exact_object(m[j0]));
+            }
+            if ex {
+                assert(spec::exact_object(m[i as int]));
+            }
+            if !found && !ex {
+                assert forall|j: int| 0 <= j < i + 1 implies !spec::exact_object(
+                    #[trigger] m[j],
+                ) by {
+                    if j < i {
+                        assert(!(exists|k: int| 0 <= k < i && spec::exact_object(#[trigger] m[k])));
+                    }
+                }
+            }
+        }
+        found = found || ex;
+        i += 1;
+    }
+    found
+}
+
 pub fn tag(arena: &ETermArena, t: &T) -> (out: Option<ETag>)
     requires
         arena_ok(arena),
@@ -429,6 +658,9 @@ pub fn tag(arena: &ETermArena, t: &T) -> (out: Option<ETag>)
     }
     match parts(arena, t) {
         Some((name, a)) => {
+            proof {
+                cons_symbol();
+            }
             if has_name(&name, &Sym::Implies) && a.len() == 2 {
                 match inner_sentence(arena, t) {
                     Some(sentence) => Some(
@@ -437,6 +669,11 @@ pub fn tag(arena: &ETermArena, t: &T) -> (out: Option<ETag>)
                     None => None,
                 }
             } else if op(&name) && a.len() == 1 {
+                match inner_sentence(arena, t) {
+                    Some(sentence) => Some(ETag { sentence, root: ERoot::Boxed(t.cp()) }),
+                    None => None,
+                }
+            } else if has_name(&name, &Sym::Cons) && a.len() == 2 && exact_group(arena, t) {
                 match inner_sentence(arena, t) {
                     Some(sentence) => Some(ETag { sentence, root: ERoot::Boxed(t.cp()) }),
                     None => None,
