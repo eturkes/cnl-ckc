@@ -14,7 +14,10 @@ verus! {
 // clause scan + head unification), one comparison built-in, one cut, one
 // pruned goal or one recorded solution — the rust cost model of R15 (+ nt1
 // D5); SWI's outer run limit
-// counts the same events at 10x, so the per-call limit alone binds.
+// counts the same events at 10x, so the per-call limit alone binds. A
+// negation succeeds only after its inner search fails with no depth cut
+// inside; an inner search that fails after a cut ends the search incomplete
+// (contract cs0, `fail`).
 // --- R8 constants ---
 pub open spec fn replay_depth() -> nat {
     4000
@@ -294,6 +297,9 @@ pub ghost struct Alt {  // choicepoint: the configuration to resume; ci = next c
     pub sol: Seq<Term>,
     pub fresh: nat,
     pub ci: nat,
+    // a negation frame (its continuation): the run's prune flag at site entry
+    // (contract cs0); None = a clause choicepoint
+    pub naf: Option<bool>,
 }
 
 pub ghost struct Cfg {
@@ -302,7 +308,7 @@ pub ghost struct Cfg {
     pub alts: Seq<Alt>,
     pub fresh: nat,  // every live variable index is below fresh
     pub ci: nat,  // clause index the selected goal resumes from
-    pub pruned: bool,  // some branch hit depth 0
+    pub pruned: bool,  // some branch hit depth 0 (inside a negation site: since its entry, cs0)
     pub rows: Seq<Seq<Term>>,  // collected solutions
     pub collect: bool,  // true = findall, false = stop at the first solution
 }
@@ -432,22 +438,56 @@ pub open spec fn selected(stack: Seq<Goal>) -> nat
     }
 }
 
-// Backtrack: resume the newest choicepoint, or end the search.
+// Backtrack: resume the newest choicepoint, or end the search. A negation
+// frame resumes when its inner search exhausted (contract cs0): with no prune
+// inside, the negation holds and the flag returns to its site-entry value; a
+// prune inside leaves the negation undecided, so the search ends incomplete
+// whatever choicepoints remain (fail closed, as the trace machine's `tfail`).
 pub open spec fn fail(c: Cfg) -> Step {
     if c.alts.len() == 0 {
         Step::Done(c)
     } else {
         let a = c.alts.last();
-        Step::Next(
-            Cfg {
-                stack: a.stack,
-                sol: a.sol,
-                fresh: a.fresh,
-                ci: a.ci,
-                alts: c.alts.drop_last(),
-                ..c
+        match a.naf {
+            Option::Some(entry) => if c.pruned {
+                Step::Done(c)
+            } else {
+                Step::Next(
+                    Cfg {
+                        stack: a.stack,
+                        sol: a.sol,
+                        fresh: a.fresh,
+                        ci: a.ci,
+                        alts: c.alts.drop_last(),
+                        pruned: entry,
+                        ..c
+                    },
+                )
             },
-        )
+            Option::None => Step::Next(
+                Cfg {
+                    stack: a.stack,
+                    sol: a.sol,
+                    fresh: a.fresh,
+                    ci: a.ci,
+                    alts: c.alts.drop_last(),
+                    ..c
+                },
+            ),
+        }
+    }
+}
+
+// The prune flag a naf cut at frame level `lvl` restores: the frame's
+// site-entry value (prunes inside a refuted negation are absorbed).
+pub open spec fn entry_pruned(c: Cfg, lvl: nat) -> bool {
+    if lvl < c.alts.len() {
+        match c.alts[lvl as int].naf {
+            Option::Some(entry) => entry,
+            Option::None => c.pruned,
+        }
+    } else {
+        c.pruned
     }
 }
 
@@ -482,7 +522,13 @@ pub open spec fn call(
                 UOut::Ok(stack, sol) => Step::Next(
                     Cfg {
                         alts: c.alts.push(
-                            Alt { stack: c.stack, sol: c.sol, fresh: c.fresh, ci: m + 1 },
+                            Alt {
+                                stack: c.stack,
+                                sol: c.sol,
+                                fresh: c.fresh,
+                                ci: m + 1,
+                                naf: Option::None,
+                            },
                         ),
                         stack,
                         sol,
@@ -511,7 +557,10 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
         let rest = c.stack.skip(k as int + 1);
         // a naf cut or a negation ends the run, so it is selected at the front (k = 0)
         match c.stack[k as int] {
-            Goal::NafCut(lvl) => fail(Cfg { alts: c.alts.take(lvl as int), ..c }),
+            // the negation's inner proof succeeded: the site fails; prunes inside it are absorbed
+            Goal::NafCut(lvl) => fail(
+                Cfg { alts: c.alts.take(lvl as int), pruned: entry_pruned(c, lvl), ..c },
+            ),
             Goal::Lit(g, d) => if d == 0 {
                 fail(Cfg { pruned: true, ..c })
             } else {
@@ -525,18 +574,26 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
                             },
                         )
                     } else if name == naf_name() && args.len() == 1 {
-                        // \+ G: prove G once at the next depth; its success cuts back to
-                        // the choicepoint pushed here and fails, its finite failure
-                        // resumes that choicepoint = the continuation.
+                        // \+ G: prove G once at the next depth, with the prune flag
+                        // cleared and its entry value kept in the frame pushed here; its
+                        // success cuts back to that frame and fails, its exhaustion
+                        // resumes the frame (`fail`).
                         Step::Next(
                             Cfg {
                                 alts: c.alts.push(
-                                    Alt { stack: rest, sol: c.sol, fresh: c.fresh, ci: 0 },
+                                    Alt {
+                                        stack: rest,
+                                        sol: c.sol,
+                                        fresh: c.fresh,
+                                        ci: 0,
+                                        naf: Option::Some(c.pruned),
+                                    },
                                 ),
                                 stack: seq![
                                     Goal::Lit(args[0], (d - 1) as nat),
                                     Goal::NafCut(c.alts.len()),
                                 ] + rest,
+                                pruned: false,
                                 ..c
                             },
                         )

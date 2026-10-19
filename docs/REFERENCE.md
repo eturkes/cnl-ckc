@@ -462,7 +462,9 @@ nothing, by design. `Heads` is that group's clause heads under the same
 substitution. The compiler asserts each witness ahead of the document's
 rule clauses, proves every head under bounded search, then retracts.
 The bounds are depth 4000 inside 1,000,000 inferences; a search that
-exceeds either bound counts as underivable. A group whose heads stay
+exceeds either bound counts as underivable. This per-document replay
+runs in SWI-Prolog, whose `call_with_depth_limit` lets a negation
+succeed when the depth bound cuts its inner search. A group whose heads stay
 non-ground under its own witness rejects with
 `proof, nonground_obligation(…)`. A group whose heads do not derive
 rejects with `proof, underivable_obligation(…)`. Both exit 1. Witness terms carry the document's own document, sentence, and variant coordinates, so a witness never collides with another document's constructed terms. Success
@@ -474,7 +476,10 @@ composition in the verified Rust engine. The manifest is strict: one `<compiled-
 file means the empty composition. The engine loads every document
 into one composition; any load diagnostic is a failure. It checks that the
 distinct document records equal the manifest row count. It then
-re-derives every obligation against the whole batch. Co-loading therefore cannot break a document's derivations, and the engine evaluates negation-as-failure against the composition it will actually run in. The replay does not isolate documents: a rule in one document can derive another document's obligation head, so the per-document replay above is the check that each document's own clauses suffice. The check reports
+re-derives every obligation against the whole batch. In this engine a
+negation succeeds only when its inner search fails and no bound cut
+that search: the replay never proves an obligation through a negation
+that stays undecided in the loaded composition. Co-loading therefore cannot break a document's derivations, and the engine evaluates negation-as-failure against the composition it will actually run in. The replay does not isolate documents: a rule in one document can derive another document's obligation head, so the per-document replay above is the check that each document's own clauses suffice. The check reports
 `ace_to_pl aggregate ok <N> documents <G> obligations`.
 
 `ckc v1 recursion-check <manifest>` loads that same composition and
@@ -994,7 +999,7 @@ present), `R` is `solutions(Sols)`, or `indeterminate(limit)` when a
 bound trips. Each distinct solution contributes one `sol(Values)`
 row; rows follow the standard order of terms, and values follow the
 answer-manifest order. For a yes-no query
-(`answers([])`), the first proof is conclusive. `R` is `yes` when a proof is found, `no(finite_failure)` when the search ends without a proof and without a tripped bound, and `indeterminate(limit)` when it ends without a proof after a bound tripped. Inside a negated goal, a bound that cuts the inner search counts as the inner goal's failure, so the negation can succeed and the query can answer `yes`. A nonground solution rejects
+(`answers([])`), the first proof is conclusive. `R` is `yes` when a proof is found, `no(finite_failure)` when the search ends without a proof and without a tripped bound, and `indeterminate(limit)` when it ends without a proof after a bound tripped. A negated goal succeeds only when its inner search ends without a proof and no bound cut that search. When the inner search finds a proof, the negation fails, even if a bound cut another branch of that search. When the inner search ends without a proof after a bound cut it, the negation stays undecided: the whole search ends, and `R` is `indeterminate(limit)`, for a yes-no query and for a wh query. A nonground solution rejects
 with class `proof` as `nonground_solution(Qid)`. A malformed query
 file rejects with class `check_load` as `query_file(<why>)`. Manifest
 and composition load failures keep the aggregate classes and details.

@@ -2941,6 +2941,7 @@ pub struct EAlt {
     pub sol: Vec<usize>,
     pub fresh: usize,
     pub ci: usize,
+    pub naf: Option<bool>,
 }
 
 pub struct ECfg {
@@ -2974,6 +2975,7 @@ pub open spec fn alt_view(nodes: Seq<ENode>, alt: &EAlt) -> ckc_spec::engine::Al
         sol: root_terms(nodes, alt.sol@),
         fresh: alt.fresh as nat,
         ci: alt.ci as nat,
+        naf: alt.naf,
     }
 }
 
@@ -3177,6 +3179,14 @@ pub fn fail(arena: &ETermArena, mut c: ECfg) -> (step: EStep)
     let ghost prior = c.alts@;
     proof {
         assert(alt_valid(arena.nodes@, &prior[prior.len() - 1], (prior.len() - 1) as nat));
+        assert(alts_view(arena.nodes@, prior).last() == alt_view(
+            arena.nodes@,
+            &prior[prior.len() - 1],
+        ));
+    }
+    let frame = c.alts[c.alts.len() - 1].naf;
+    if frame.is_some() && c.pruned {
+        return EStep::Done(c);
     }
     let alt = c.alts.pop().unwrap();
     proof {
@@ -3191,6 +3201,10 @@ pub fn fail(arena: &ETermArena, mut c: ECfg) -> (step: EStep)
     c.sol = alt.sol;
     c.fresh = alt.fresh;
     c.ci = alt.ci;
+    match frame {
+        Some(entry) => c.pruned = entry,
+        None => {},
+    }
     proof {
         assert forall|i: int| 0 <= i < c.alts.len() implies {
             &&& alt_valid(arena.nodes@, &c.alts@[i], i as nat)
@@ -3808,8 +3822,26 @@ pub fn step_simple(
                 assert(goal_level_valid(&c.stack@[0], c.alts@.len()));
                 reveal(goal_level_valid);
             }
+            let restored = if level < c.alts.len() {
+                match c.alts[level].naf {
+                    Some(entry) => entry,
+                    None => c.pruned,
+                }
+            } else {
+                c.pruned
+            };
+            proof {
+                if level < c.alts.len() {
+                    assert(alts_view(arena.nodes@, c.alts@)[level as int] == alt_view(
+                        arena.nodes@,
+                        &c.alts@[level as int],
+                    ));
+                }
+                assert(restored == ckc_spec::engine::entry_pruned(before, level as nat));
+            }
             let ghost old_alts = c.alts@;
             c.alts.truncate(level);
+            c.pruned = restored;
             proof {
                 assert forall|i: int| 0 <= i < c.alts.len() implies {
                     &&& alt_valid(arena.nodes@, &c.alts@[i], i as nat)
@@ -3827,6 +3859,7 @@ pub fn step_simple(
                     == alts_view(arena.nodes@, old_alts).take(level as int));
                 assert(cfg_view(arena.nodes@, &c) == ckc_spec::engine::Cfg {
                     alts: before.alts.take(level as int),
+                    pruned: ckc_spec::engine::entry_pruned(before, level as nat),
                     ..before
                 });
                 assert(before.stack.len() > 0);
@@ -3931,6 +3964,7 @@ pub fn step_simple(
                             sol: c.sol.clone(),
                             fresh: c.fresh,
                             ci: 0,
+                            naf: Some(c.pruned),
                         };
                         let ghost old_alts = c.alts@;
                         proof {
@@ -3938,6 +3972,7 @@ pub fn step_simple(
                             goals_levels_weaken(rest@, level as nat, level as nat + 1);
                         }
                         c.alts.push(continuation);
+                        c.pruned = false;
                         let mut next = Vec::new();
                         next.push(EGoal::Lit { root: child_roots[0], depth: depth - 1 });
                         next.push(EGoal::NafCut { level });
@@ -3956,6 +3991,7 @@ pub fn step_simple(
                                     ckc_spec::engine::Alt {
                                         stack: rest_model, sol: before.sol,
                                         fresh: before.fresh, ci: 0,
+                                        naf: Option::Some(before.pruned),
                                     }));
                         }
                         proof {
@@ -4755,6 +4791,7 @@ fn enter_clause(
                         sol: cfg_view(arena.nodes@, &initial).sol,
                         fresh: initial.fresh as nat,
                         ci: next as nat,
+                        naf: Option::None,
                     },
                 ),
                 ..cfg_view(arena.nodes@, &initial)
@@ -4772,6 +4809,7 @@ fn enter_clause(
         sol: c.sol.clone(),
         fresh: c.fresh,
         ci: next,
+        naf: None,
     };
     let ghost prior = c.alts@;
     proof {
@@ -4813,6 +4851,7 @@ fn enter_clause(
         assert_seqs_equal!(alts_view(arena.nodes@, c.alts@)
             == before.alts.push(ckc_spec::engine::Alt {
                 stack: before.stack, sol: before.sol, fresh: before.fresh, ci: next as nat,
+                naf: Option::None,
             }));
     }
     EStep::Next(c)
@@ -4881,6 +4920,7 @@ proof fn call_match(
                             sol: c.sol,
                             fresh: c.fresh,
                             ci: matched + 1,
+                            naf: Option::None,
                         },
                     ),
                     ..c
