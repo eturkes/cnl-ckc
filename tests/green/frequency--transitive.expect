@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('frequency--transitive',ace_sha256('0a0caf03c019e23f1b1cc130efd02ebf345ec3c69390e5c11eacdab38eec8675'),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256(c058a3dfa8cf288d37e663be0948539f77e302371f329257103e927753ce14f9))).
 % S1: A man reads 2 books per 1 day.

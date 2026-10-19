@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s44-08',ace_sha256(a16c2933453bdbc3124349a123cacf6a60a3ba6146ff51043b6ae3d653831d41),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician should reassess a patient-pain and should reassess a patient-function and should reassess a treatment-course.

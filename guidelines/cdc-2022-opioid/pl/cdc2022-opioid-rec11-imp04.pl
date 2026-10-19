@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec11-imp04',ace_sha256('6cf32989285f345b943a8a0bf01686944908d0e7a7828ca90f6c0247ea15b08e'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has an other-clinician-concurrent-controlled-medication-prescription then every clinician should check a state-PDMP-record for the patient.

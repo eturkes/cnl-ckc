@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s18-06',ace_sha256(ce7bef5f0494748e2e3e73f9e50949557022dac69936dcd9365578b54034e1cf),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: A multimodal-and-multidisciplinary-pain-management-approach is critical.

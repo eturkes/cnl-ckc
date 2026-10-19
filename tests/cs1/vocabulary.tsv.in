@@ -1,0 +1,7 @@
+# format: kind	lemma	value
+scope	recommendation	alpha
+exclusion	apply	scope
+unit	day	day
+unit	year	year
+relation	for	duration
+relation	before	before

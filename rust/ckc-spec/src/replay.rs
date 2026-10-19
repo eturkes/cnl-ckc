@@ -700,6 +700,71 @@ pub open spec fn first_left_recursive(rs: Seq<DocClause>) -> Option<DocClause>
     }
 }
 
+// --- guard scan (contract cs1 D6) ---
+// A goal that could resolve against a scope-guarded edge clause: a
+// `guideline_operator/3` goal whose operator is should, must, may or a variable.
+pub open spec fn edge_goal(t: Term) -> bool
+    decreases t,
+{
+    match t {
+        Term::Comp(name, args) => if name == comma_name() && args.len() == 2 {
+            edge_goal(args[0]) || edge_goal(args[1])
+        } else {
+            name == ascii("guideline_operator"@) && args.len() == 3 && match args[2] {
+                Term::Atom(op) => op == ascii("should"@) || op == ascii("must"@) || op == ascii(
+                    "may"@,
+                ),
+                Term::Var(_) => true,
+                _ => false,
+            }
+        },
+        _ => false,
+    }
+}
+
+pub open spec fn any_edge(gs: Seq<Term>) -> bool
+    decreases gs.len(),
+{
+    gs.len() > 0 && (edge_goal(gs[0]) || any_edge(gs.drop_first()))
+}
+
+pub open spec fn item_edge(it: BodyItem) -> bool {
+    match it {
+        BodyItem::Pos(l) => edge_goal(l),
+        BodyItem::Naf(gs) => any_edge(gs),
+    }
+}
+
+pub open spec fn items_edge(items: Seq<BodyItem>) -> bool
+    decreases items.len(),
+{
+    items.len() > 0 && (item_edge(items[0]) || items_edge(items.drop_first()))
+}
+
+pub open spec fn body_edge(c: DocClause) -> bool {
+    items_edge(c.body)
+}
+
+pub open spec fn holds_exclusion(cs: Seq<DocClause>) -> bool {
+    exists|i: int|
+        0 <= i < cs.len() && lit_fa((#[trigger] cs[i]).head) == Option::Some(
+            (ascii("guideline_exclusion"@), 1nat),
+        )
+}
+
+// The first clause (db order) whose body names a guarded edge.
+pub open spec fn first_edge_condition(cs: Seq<DocClause>) -> Option<DocClause>
+    decreases cs.len(),
+{
+    if cs.len() == 0 {
+        Option::None
+    } else if body_edge(cs[0]) {
+        Option::Some(cs[0])
+    } else {
+        first_edge_condition(cs.drop_first())
+    }
+}
+
 pub open spec fn rec_meter(rows: nat, rules: nat) -> Seq<u8> {
     ascii("ace_to_pl recursion ok "@) + udec_bytes(rows) + ascii(" documents "@) + udec_bytes(rules)
         + ascii(" rule clauses\n"@)
@@ -719,7 +784,8 @@ pub open spec fn recursion_output(
             match load_stage(rows, pls) {
                 Result::Err(o) => o,
                 Result::Ok(docs) => {
-                    let rs = rules(db_of(docs));
+                    let db = db_of(docs);
+                    let rs = rules(db);
                     match first_left_recursive(rs) {
                         Option::Some(c) => match c.head {  // heads are compounds (wf_literal)
                             Term::Comp(name, args) => proof_fail(
@@ -730,7 +796,16 @@ pub open spec fn recursion_output(
                             ),
                             _ => ok(rec_meter(rows.len(), rs.len())),
                         },
-                        Option::None => ok(rec_meter(rows.len(), rs.len())),
+                        Option::None => if holds_exclusion(db) {
+                            match first_edge_condition(db) {
+                                Option::Some(c) => proof_fail(
+                                    Term::Comp(ascii("scope_condition"@), seq![site(c)]),
+                                ),
+                                Option::None => ok(rec_meter(rows.len(), rs.len())),
+                            }
+                        } else {
+                            ok(rec_meter(rows.len(), rs.len()))
+                        },
                     }
                 },
             }

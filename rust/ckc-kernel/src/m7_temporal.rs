@@ -23,6 +23,8 @@ pub struct EVocabulary {
     pub preferences: Vec<Vec<u8>>,
     pub alternatives: Vec<Vec<u8>>,
     pub qualifiers: Vec<(Vec<u8>, Vec<u8>)>,
+    pub scopes: Vec<(Vec<u8>, Vec<u8>)>,
+    pub exclusions: Vec<Vec<u8>>,
 }
 
 pub open spec fn pairs_view(v: Seq<(Vec<u8>, Vec<u8>)>) -> Seq<(Seq<u8>, Seq<u8>)> {
@@ -50,6 +52,8 @@ impl View for EVocabulary {
             preferences: lemmas_view(self.preferences@),
             alternatives: lemmas_view(self.alternatives@),
             qualifiers: pairs_view(self.qualifiers@),
+            scopes: pairs_view(self.scopes@),
+            exclusions: lemmas_view(self.exclusions@),
         }
     }
 }
@@ -239,6 +243,56 @@ proof fn literals()
     reveal_byteslit(b"vocabulary");
     reveal_strlit("vocabulary");
     assert(b"vocabulary"@ =~= ascii("vocabulary"@));
+}
+
+proof fn scope_literals()
+    ensures
+        b"scope"@ == ascii("scope"@),
+        b"scope value"@ == ascii("scope value"@),
+        b"duplicate scope"@ == ascii("duplicate scope"@),
+        b"exclusion"@ == ascii("exclusion"@),
+        b"exclusion value"@ == ascii("exclusion value"@),
+        b"duplicate exclusion"@ == ascii("duplicate exclusion"@),
+        b"scope without exclusion at row "@ == ascii("scope without exclusion at row "@),
+        b"exclusion without scope at row "@ == ascii("exclusion without scope at row "@),
+        b"scope key at row "@ == ascii("scope key at row "@),
+        b"guidelines/"@ == ascii("guidelines/"@),
+        b"/vocabulary.tsv"@ == ascii("/vocabulary.tsv"@),
+{
+    reveal(ascii);
+    reveal_byteslit(b"scope");
+    reveal_strlit("scope");
+    assert(b"scope"@ =~= ascii("scope"@));
+    reveal_byteslit(b"scope value");
+    reveal_strlit("scope value");
+    assert(b"scope value"@ =~= ascii("scope value"@));
+    reveal_byteslit(b"duplicate scope");
+    reveal_strlit("duplicate scope");
+    assert(b"duplicate scope"@ =~= ascii("duplicate scope"@));
+    reveal_byteslit(b"exclusion");
+    reveal_strlit("exclusion");
+    assert(b"exclusion"@ =~= ascii("exclusion"@));
+    reveal_byteslit(b"exclusion value");
+    reveal_strlit("exclusion value");
+    assert(b"exclusion value"@ =~= ascii("exclusion value"@));
+    reveal_byteslit(b"duplicate exclusion");
+    reveal_strlit("duplicate exclusion");
+    assert(b"duplicate exclusion"@ =~= ascii("duplicate exclusion"@));
+    reveal_byteslit(b"scope without exclusion at row ");
+    reveal_strlit("scope without exclusion at row ");
+    assert(b"scope without exclusion at row "@ =~= ascii("scope without exclusion at row "@));
+    reveal_byteslit(b"exclusion without scope at row ");
+    reveal_strlit("exclusion without scope at row ");
+    assert(b"exclusion without scope at row "@ =~= ascii("exclusion without scope at row "@));
+    reveal_byteslit(b"scope key at row ");
+    reveal_strlit("scope key at row ");
+    assert(b"scope key at row "@ =~= ascii("scope key at row "@));
+    reveal_byteslit(b"guidelines/");
+    reveal_strlit("guidelines/");
+    assert(b"guidelines/"@ =~= ascii("guidelines/"@));
+    reveal_byteslit(b"/vocabulary.tsv");
+    reveal_strlit("/vocabulary.tsv");
+    assert(b"/vocabulary.tsv"@ =~= ascii("/vocabulary.tsv"@));
 }
 
 pub fn lemma_ok_exec(l: &[u8]) -> (r: bool)
@@ -727,6 +781,13 @@ pub fn grade_noun_in(t: &EVocabulary, k: &[u8]) -> (r: bool)
     a || b
 }
 
+pub fn typed_noun_exec(t: &EVocabulary, k: &[u8]) -> (r: bool)
+    ensures
+        r == typed_noun(t@, k@),
+{
+    key_in(&t.units, k) || frame_in(t, k) || grade_noun_in(t, k) || key_in(&t.scopes, k)
+}
+
 // time_prepositions(t).contains(k): a relation, spacing, window, frequency or range preposition.
 pub fn time_prep_in(t: &EVocabulary, k: &[u8]) -> (r: bool)
     ensures
@@ -770,6 +831,8 @@ pub fn clone_tab(t: &EVocabulary) -> (r: EVocabulary)
         preferences: clone_lemmas(&t.preferences),
         alternatives: clone_lemmas(&t.alternatives),
         qualifiers: clone_pairs(&t.qualifiers),
+        scopes: clone_pairs(&t.scopes),
+        exclusions: clone_lemmas(&t.exclusions),
     }
 }
 
@@ -780,6 +843,7 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
     let f = split(line, 0x09);
     proof {
         literals();
+        scope_literals();
         assert(byte_rows(f@).len() == f@.len());
     }
     if line.len() > 0 && line[0] == 0x23 {
@@ -801,7 +865,7 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !unit_id_ok(&f[2]) {
             return why(b"unit id");
         }
-        if key_in(&t.units, &f[1]) || frame_in(t, &f[1]) || grade_noun_in(t, &f[1]) {
+        if typed_noun_exec(t, &f[1]) {
             return why(b"duplicate noun");
         }
         let mut r = clone_tab(t);
@@ -832,7 +896,7 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if pair_in(&t.spacings, &f[1], &f[2]) || pair_in(&t.windows, &f[1], &f[2]) || key_in(
             &t.units,
             &f[2],
-        ) || grade_noun_in(t, &f[2]) {
+        ) || grade_noun_in(t, &f[2]) || key_in(&t.scopes, &f[2]) {
             return why(b"duplicate noun");
         }
         if seq_in(&t.alternatives, &f[1]) {
@@ -903,7 +967,7 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         if !strength && !evidence_id_ok(&f[2]) {
             return why(b"evidence value");
         }
-        if grade_noun_in(t, &f[1]) || key_in(&t.units, &f[1]) || frame_in(t, &f[1]) {
+        if typed_noun_exec(t, &f[1]) {
             return why(b"duplicate noun");
         }
         let mut r = clone_tab(t);
@@ -968,8 +1032,177 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
             assert(pairs_view(r.qualifiers@) =~= pairs_view(t.qualifiers@).push((f@[1]@, f@[2]@)));
         }
         Ok(r)
+    } else if eq(&f[0], b"scope") {
+        if !crate::v1_term_impl::name_ok_exec(&f[2]) {
+            return why(b"scope value");
+        }
+        if t.scopes.len() > 0 {
+            return why(b"duplicate scope");
+        }
+        if typed_noun_exec(t, &f[1]) {
+            return why(b"duplicate noun");
+        }
+        let mut r = clone_tab(t);
+        r.scopes.push((copy(&f[1]), copy(&f[2])));
+        proof {
+            assert(pairs_view(r.scopes@) =~= pairs_view(t.scopes@).push((f@[1]@, f@[2]@)));
+        }
+        Ok(r)
+    } else if eq(&f[0], b"exclusion") {
+        if !eq(&f[2], b"scope") {
+            return why(b"exclusion value");
+        }
+        if t.exclusions.len() > 0 {
+            return why(b"duplicate exclusion");
+        }
+        let mut r = clone_tab(t);
+        r.exclusions.push(copy(&f[1]));
+        proof {
+            assert(lemmas_view(r.exclusions@) =~= lemmas_view(t.exclusions@).push(f@[1]@));
+        }
+        Ok(r)
     } else {
         why(b"kind")
+    }
+}
+
+pub fn kind_row_exec(rows: &Vec<Vec<u8>>, n: usize, kind: &[u8]) -> (r: usize)
+    requires
+        n <= rows.len(),
+    ensures
+        r as nat == kind_row(byte_rows(rows@).take(n as int), kind@, 1),
+{
+    hide(kind_row);
+    let ghost rs = byte_rows(rows@).take(n as int);
+    let mut i = 0usize;
+    proof {
+        assert(rs.skip(0) =~= rs);
+    }
+    while i < n
+        invariant
+            i <= n <= rows.len(),
+            rs == byte_rows(rows@).take(n as int),
+            kind_row(rs, kind@, 1) == kind_row(rs.skip(i as int), kind@, (i + 1) as nat),
+        decreases n - i,
+    {
+        let fields = split(&rows[i], 0x09);
+        proof {
+            assert(rs.skip(i as int)[0] == rows@[i as int]@);
+            assert(rs.skip(i as int).drop_first() =~= rs.skip(i + 1));
+            assert(fields@[0]@ == split_on(rows@[i as int]@, 0x09)[0]);
+            reveal_with_fuel(kind_row, 1);
+        }
+        if eq(&fields[0], kind) {
+            return i + 1;
+        }
+        i += 1;
+    }
+    proof {
+        assert(rs.skip(n as int).len() == 0);
+        reveal_with_fuel(kind_row, 1);
+    }
+    0
+}
+
+fn scope_row_why(prefix: &[u8], rows: &Vec<Vec<u8>>, n: usize, kind: &[u8]) -> (r: Vec<u8>)
+    requires
+        n <= rows.len(),
+    ensures
+        r@ == prefix@ + udec_bytes(kind_row(byte_rows(rows@).take(n as int), kind@, 1)),
+{
+    let row = kind_row_exec(rows, n, kind);
+    let mut out = copy(prefix);
+    let count = crate::k2_manifest::udec_vec(row);
+    append(&mut out, &count);
+    out
+}
+
+fn pairing_exec(t: &EVocabulary, rows: &Vec<Vec<u8>>, n: usize) -> (r: Option<Vec<u8>>)
+    requires
+        n <= rows.len(),
+    ensures
+        (match r {
+            Some(why) => Some(why@),
+            None => None,
+        }) == pairing(t@, byte_rows(rows@).take(n as int)),
+{
+    proof {
+        scope_literals();
+    }
+    if t.scopes.len() > 0 && t.exclusions.len() == 0 {
+        Some(scope_row_why(b"scope without exclusion at row ", rows, n, b"scope"))
+    } else if t.exclusions.len() > 0 && t.scopes.len() == 0 {
+        Some(scope_row_why(b"exclusion without scope at row ", rows, n, b"exclusion"))
+    } else {
+        None
+    }
+}
+
+pub fn guideline_of_exec(path: &[u8]) -> (r: Option<Vec<u8>>)
+    ensures
+        (match r {
+            Some(id) => Some(id@),
+            None => None,
+        }) == guideline_of(path@),
+{
+    let pre: &[u8] = b"guidelines/";
+    let post: &[u8] = b"/vocabulary.tsv";
+    proof {
+        scope_literals();
+        reveal_byteslit(b"guidelines/");
+        reveal_byteslit(b"/vocabulary.tsv");
+    }
+    if path.len() <= pre.len() + post.len() || !starts_with(path, pre)
+        || !crate::k4_bytes::ends_with(path, post) {
+        return None;
+    }
+    let id = slice_subrange(path, pre.len(), path.len() - post.len());
+    if crate::k4_bytes::has(id, 0x2F) {
+        proof {
+            assert(!all_in(id@, |b: u8| b != 0x2F));
+        }
+        None
+    } else {
+        proof {
+            assert(all_in(id@, |b: u8| b != 0x2F));
+        }
+        Some(copy(id))
+    }
+}
+
+fn key_law_exec(path: &[u8], t: &EVocabulary, bytes: &[u8]) -> (r: Option<Vec<u8>>)
+    requires
+        bytes.len() >= vocabulary_header().len(),
+    ensures
+        (match r {
+            Some(why) => Some(why@),
+            None => None,
+        }) == key_law(path@, t@, bytes@),
+{
+    let h: &[u8] = b"# format: kind\tlemma\tvalue\n";
+    proof {
+        scope_literals();
+        reveal_byteslit(b"# format: kind\tlemma\tvalue\n");
+        reveal_strlit("# format: kind\tlemma\tvalue\n");
+        reveal(ascii);
+        assert(h@ =~= vocabulary_header());
+    }
+    match guideline_of_exec(path) {
+        Some(id) => {
+            if t.scopes.len() > 0 && !eq(&t.scopes[0].1, &id) {
+                let body = slice_subrange(bytes, h.len(), bytes.len());
+                let rows = split(body, 0x0A);
+                let n = rows.len() - 1;
+                proof {
+                    assert(byte_rows(rows@).take(n as int) =~= body_lines(body@));
+                    assert(body@ =~= bytes@.skip(vocabulary_header().len() as int));
+                }
+                Some(scope_row_why(b"scope key at row ", &rows, n, b"scope"))
+            } else {
+                None
+            }
+        },
+        None => None,
     }
 }
 
@@ -1024,7 +1257,13 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
     proof {
         assert(rows =~= byte_rows(lines@).drop_last());
         assert(body@.last() == 0x0A);
-        assert(parse_vocabulary(bytes@) == add_rows(e0, rows, 1));
+        assert(parse_vocabulary(bytes@) == match add_rows(e0, rows, 1) {
+            Err(why) => Err(why),
+            Ok(t) => match pairing(t, rows) {
+                Some(why) => Err(why),
+                None => Ok(t),
+            },
+        });
     }
     let mut t = EVocabulary {
         units: Vec::new(),
@@ -1039,6 +1278,8 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         preferences: Vec::new(),
         alternatives: Vec::new(),
         qualifiers: Vec::new(),
+        scopes: Vec::new(),
+        exclusions: Vec::new(),
     };
     let mut i = 0usize;
     proof {
@@ -1054,6 +1295,8 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         assert(t@.preferences =~= Seq::<Seq<u8>>::empty());
         assert(t@.alternatives =~= Seq::<Seq<u8>>::empty());
         assert(t@.qualifiers =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
+        assert(t@.scopes =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
+        assert(t@.exclusions =~= Seq::<Seq<u8>>::empty());
         assert(t@ == e0);
         assert(rows.skip(0) =~= rows);
     }
@@ -1064,7 +1307,13 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
             rows == byte_rows(lines@).drop_last(),
             add_rows(e0, rows, 1) == add_rows(t@, rows.skip(i as int), (i + 1) as nat),
             row_count(t@) == i,
-            parse_vocabulary(bytes@) == add_rows(e0, rows, 1),
+            parse_vocabulary(bytes@) == match add_rows(e0, rows, 1) {
+                Err(why) => Err(why),
+                Ok(t) => match pairing(t, rows) {
+                    Some(why) => Err(why),
+                    None => Ok(t),
+                },
+            },
         decreases n - i,
     {
         proof {
@@ -1103,7 +1352,13 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
     proof {
         assert(rows.skip(n as int).len() == 0);
     }
-    Ok((t, n))
+    proof {
+        assert(byte_rows(lines@).take(n as int) =~= rows);
+    }
+    match pairing_exec(&t, &lines, n) {
+        Some(why) => Err(why),
+        None => Ok((t, n)),
+    }
 }
 
 pub fn check_vocabulary_impl(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EVerdict)
@@ -1114,7 +1369,13 @@ pub fn check_vocabulary_impl(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::
         literals();
     }
     match parse_vocabulary_exec(bytes) {
-        Ok((_, count)) => {
+        Ok((t, count)) => {
+            if let Some(why) = key_law_exec(path, &t, bytes) {
+                let mut d = copy(path);
+                append(&mut d, b": ");
+                append(&mut d, &why);
+                return ckc_spec::check::EVerdict::Fail(copy(b"vocabulary"), d);
+            }
             let mut m = copy(b"ckc: vocabulary ok ");
             append(&mut m, path);
             append(&mut m, b" ");

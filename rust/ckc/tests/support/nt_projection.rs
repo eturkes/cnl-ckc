@@ -1,9 +1,9 @@
-// nt1 D2/D3 inverse for frozen projections. Only a removed time noun/class comes
-// from the source occurrence; bounds, referents, links and every other byte stay observed.
+// nt1 D2/D3 inverse for frozen projections (+ the cs1 D2 declaration pair, which an
+// unscoped document adds alone). Only a removed time noun/class comes from the source
+// occurrence; bounds, referents, links and every other byte stay observed.
 use std::collections::BTreeMap;
 
-pub const DECLARATIONS: &str =
-    ":- multifile(guideline_unit/3).\n:- discontiguous(guideline_unit/3).\n";
+pub const DECLARATIONS: &str = ":- multifile(guideline_unit/3).\n:- discontiguous(guideline_unit/3).\n:- multifile(guideline_exclusion/1).\n:- discontiguous(guideline_exclusion/1).\n";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Term {

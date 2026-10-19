@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s42-16',ace_sha256('86ac9053b0a76516c2a6b6960b5cfede565d1b620400376545123c979b6764b9'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has a continuous-opioid-use that lasts for at least 1 week for less than 1 month then every clinician may consider a gradual-taper for the patient and may reduce a daily-opioid-dosage by 20 approximate percent at an interval of 2 days for the patient.

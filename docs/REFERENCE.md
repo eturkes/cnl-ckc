@@ -337,11 +337,13 @@ The six time annotations (`guideline_interval/6`,
 `guideline_recurrence/4`, `guideline_frequency/5`, `guideline_order/4`,
 `guideline_recurrence_window/7`, `guideline_range/3`), the three
 strength annotations (`guideline_grade/5`, `guideline_preference/4`,
-`guideline_qualifier/4`) and the unit annotation `guideline_unit/3`
-complete the vocabulary. The comparison built-ins
+`guideline_qualifier/4`), the unit annotation `guideline_unit/3` and
+the scope exclusion record `guideline_exclusion/1` complete the
+vocabulary. The comparison built-ins
 `guideline_satisfies/4` and `guideline_satisfies/6` test the conditions
 of rules and questions; the section "Comparison conditions" below defines
-them. The sections "Vocabulary table and time
+them. The section "Scope exclusions" below defines the exclusion record
+and the guard that it adds to recommendation rules. The sections "Vocabulary table and time
 annotations" and "Strength annotations" below define them. In the record, `H` is the SHA-256 of the raw ACE bytes,
 `U` the SHA-256 of the guideline's user lexicon, and `T` the SHA-256
 of its raw `vocabulary.tsv` bytes. `none` means that the file does not
@@ -411,7 +413,7 @@ document-local. Negation-as-failure in a consequent or a root fact
 rejects; assertion-by-absence is meaningless.
 
 A universally quantified sentence becomes one Horn clause per
-consequent condition. All clauses of a rule variant share one logical body; each clause line renders it with its own canonical variable letters, so two lines of one variant are equal up to variable renaming. A nested `if … then if … then …` consequent curries into
+consequent condition. All clauses of a rule variant share one logical body; each clause line renders it with its own canonical variable letters, so two lines of one variant are equal up to variable renaming. In a document whose vocabulary table names a scope, each `should`, `must` or `may` operator edge clause ends with one more goal, the scope guard (section "Scope exclusions"). A nested `if … then if … then …` consequent curries into
 one rule whose antecedent concatenates the nested domains. An
 antecedent that contains one disjunction splits into two variants whose
 bodies are the shared conditions plus that arm. The bundle keeps one
@@ -435,7 +437,7 @@ one vocabulary, a rule body consumes another document's facts or heads
 by ordinary resolution.
 
 Every document opens with the same declaration block: `multifile`
-and `discontiguous` for all 19 indicators, whether or not it
+and `discontiguous` for all 20 indicators, whether or not it
 populates them. After the block come `guideline_schema_version(1).`,
 the document record, and then, per sentence, a
 `% S<n>: <verbatim sentence>` comment with that sentence's contiguous
@@ -584,6 +586,8 @@ preference	preferred	preferred
 alternative	instead-of	alternative
 qualifier	ideally	ideality
 qualifier	feasible	applicability
+scope	recommendation	cdc-2022-opioid
+exclusion	apply	scope
 ```
 
 The header line is fixed bytes. The table holds at least one row, and
@@ -614,11 +618,19 @@ its value is always `alternative`. A `qualifier` row maps an adverb,
 or the adjective of a copula, onto the function class of a qualifier:
 `usuality`, `ideality`, `focus`, `manner`, `force`, `possibility` or
 `applicability`. The section "Strength annotations" below uses these
-rows.
+rows. A `scope` row names the noun that stands for the recommendations
+of the guideline as a whole, and its value is the key of the guideline.
+The key uses the document-identifier grammar, and in a guideline
+folder it must equal the name of that folder. An `exclusion` row names
+the verb that an exclusion denies of that noun; its value is always
+`scope`. A table holds at most one row of each of these two kinds, and
+it holds both rows or neither. The section "Scope exclusions" below
+uses them.
 
 A lemma is one or more bytes above 0x20, none of them 0x7F, that form
-valid UTF-8. A noun occurs in at most one `unit`, `strength` or
-`evidence` row, and a noun in such a row is never also a frame noun. A
+valid UTF-8. A noun occurs in at most one `unit`, `strength`,
+`evidence` or `scope` row, and a noun in such a row is never also a
+frame noun. A
 pair of a preposition and a frame noun occurs once across the `spacing`
 and `window` rows. A preposition occurs in at most one `relation`,
 `frequency` or `range` row. A preposition in an `alternative` row
@@ -626,7 +638,8 @@ occurs in no `relation`, `spacing`, `window`, `frequency` or `range`
 row. A lemma occurs in at most one `approximation`,
 `preference` or `qualifier` row. The later row of a conflict reports
 it. The checks run in row order: comment, field count, lemma, kind,
-value, duplicates. `ckc check` rejects any
+value, duplicates; a `scope` or `exclusion` row without its partner
+reports last. `ckc check` rejects any
 other table with `ckc: vocabulary: <path>: <why>`, where `<why>` names the
 broken law and, for a row law, ends with `at row <n>`. The compiler, and
 so `ckc compile`, rejects it with class `vocabulary_load` (below). A
@@ -916,6 +929,87 @@ minimum, not an interval of values: its upper end and every count-per-
 period period keep exact matching. An `about` quantity carries no
 tolerance and meets no comparison.
 
+### Scope exclusions
+
+A guideline often states where its recommendations do not apply, for
+example "The recommendations do not apply to pain related to sickle
+cell disease or cancer". A scope exclusion makes such a statement
+active: when its condition holds, no recommendation of the guideline
+derives. The `scope` and `exclusion` rows of the vocabulary table
+(section "Vocabulary table and time annotations") opt a guideline in.
+A document that is compiled with both rows is a scoped document.
+
+An exclusion is a rule whose consequent says that a recommendation does
+not apply:
+
+```
+If a patient has a cancer-related-pain then it is false that a recommendation applies to the patient.
+If a patient receives a hospital-care and the patient does not provably receive a pain-management-prescription at a facility-discharge then it is false that a recommendation applies to the patient.
+```
+
+The consequent must hold exactly one negation, and the negation must
+hold exactly the following conditions: the scope noun as a plain
+indefinite (`a recommendation`), the exclusion verb without an object,
+and prepositional phrases whose objects come from the condition. The
+condition of the rule can be any rule antecedent. A `does not provably`
+condition states an exception to the exclusion, as the discharge
+prescription in the second example does.
+
+| Predicate | Meaning |
+| --- | --- |
+| `guideline_exclusion(Key)` | an exclusion of the guideline `Key` holds: its recommendations do not apply in this composition |
+
+An exclusion compiles to its usual clauses and, after them, one record
+clause with the same body:
+`guideline_exclusion('cdc-2022-opioid') :- <the condition>.` In a
+scoped document, every clause whose head is a `should`, `must` or `may`
+operator edge ends with the scope guard
+`\+ guideline_exclusion(Key)`. No other clause changes: the payload
+clauses of a box, the `-` and `can` edges, facts and questions stay as
+they are. The guard and the record hold no variables, so a standard
+Prolog engine loads the documents without warnings.
+
+When an exclusion holds, no `should`, `must` or `may` edge of that
+guideline derives. A program that follows the operator edges from
+`actual`, as section "Compiled Prolog schema" describes, then finds no
+recommendation of that guideline. The payload clauses of a blocked box
+still derive, but no edge from `actual` reaches them. A `can` box whose
+only content is a blocked edge stays as an empty possibility. The
+guard has no patient argument: one composition must hold the facts of
+one patient, because an exclusion that holds for any loaded patient
+blocks the guideline for all of them. The absence of an exclusion is
+not proof that a patient belongs to the population of the guideline.
+Statements about the population or the audience of a guideline stay
+data. A negation whose inner search the bounds of the engine of this
+repository cut makes the result `indeterminate(limit)`, so a deep
+exclusion never passes silently (section "Query answers").
+
+These shapes reject in a scoped document with class `unsupported` as
+`scope_shape(Why, S)`. The checks run after the other checks of the
+sentence, in this order:
+
+| `Why` | Shape |
+| --- | --- |
+| `deontic_condition` | a `should`, `must` or `may` box in the condition of a rule |
+| `negated_deontic` | a `should`, `must` or `may` box inside a negation in the consequent of a rule |
+| `root_deontic` | a `should`, `must` or `may` box in a fact |
+| `root` | a fact that denies that a recommendation applies (an unconditional exclusion) |
+| `subject` | an exclusion whose subject comes from the condition, as in `Every recommendation does not apply …`, or is another noun than the scope noun |
+| `consequent` | any other consequent that denies the exclusion verb of the scope noun: more conditions, a count or a comparison on the subject (`2 recommendations`, `at most 2 recommendations`), an object of the verb, or a prepositional object inside the negation |
+
+The `subject` and `consequent` checks read the first negation of the consequent that denies the exclusion verb. A second such negation counts as one more condition.
+
+`ckc v1 recursion-check` adds one composition check. When the
+composition holds an exclusion record, no clause body may hold a
+`guideline_operator/3` goal whose operator is `should`, `must`, `may`
+or a variable; the check rejects with class `proof` as
+`scope_condition(Site)`. The guards then add no loop: no clause can
+depend on a guarded edge, so an exclusion depends only on clauses
+without a guard. The check covers the composition that it reads; a
+program that loads another set of documents must run it again on that
+set. It does not prove that the other negations of the documents
+terminate.
+
 ### Question projection
 
 The compiler's `question` mode compiles one ACE question against the
@@ -984,7 +1078,7 @@ must name readable files, and the mode never parses payload terms. A
 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/5`
 record, then the `'$guideline_query_projection'/2` term. A query names
-any of the 17 semantic predicates and the comparison built-ins, and it
+any of the 18 semantic predicates and the comparison built-ins, and it
 runs against any composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 

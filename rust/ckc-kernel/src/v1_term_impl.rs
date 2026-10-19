@@ -16800,7 +16800,7 @@ proof fn decls_end(out: Seq<u8>)
 fn decls_block() -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::v1text::decls_from(0),
-        r@.len() == 1434,
+        r@.len() == 1512,
 {
     let mut out: Vec<u8> = Vec::new();
     proof {
@@ -17019,7 +17019,16 @@ fn decls_block() -> (r: Vec<u8>)
     proof {
         decls_step(before, 18);
     }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_exclusion";
     proof {
+        reveal_strlit("guideline_exclusion");
+        reveal_byteslit(b"guideline_exclusion");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_exclusion"@));
+    }
+    push_decl_pair(&mut out, name, 1, Ghost(19int));
+    proof {
+        decls_step(before, 19);
         decls_end(out@);
     }
     out
@@ -18021,6 +18030,20 @@ fn unit_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     arity == 3 && vec_slice_equal(name, unit)
 }
 
+fn exclusion_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
+    ensures
+        r == (ckc_spec::v1text::indicator(19) == (name@, arity as nat)),
+{
+    let exclusion: &[u8] = b"guideline_exclusion";
+    proof {
+        reveal_strlit("guideline_exclusion");
+        reveal_byteslit(b"guideline_exclusion");
+        reveal(ckc_spec::v1text::ascii);
+        assert(exclusion@ == ckc_spec::v1text::ascii("guideline_exclusion"@));
+    }
+    arity == 1 && vec_slice_equal(name, exclusion)
+}
+
 fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
@@ -18030,11 +18053,12 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     let q12 = q12_pred_exec(name, arity);
     let s1 = strength_pred_exec(name, arity);
     let unit = unit_pred_exec(name, arity);
+    let exclusion = exclusion_pred_exec(name, arity);
     proof {
         reveal(ckc_spec::v1text::is_semantic_pred);
         if ckc_spec::v1text::is_semantic_pred(name@, arity as nat) {
             let i = choose|i: int|
-                2 <= i < 19 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
+                2 <= i < 20 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             if i < 9 {
                 assert(base);
             } else if i < 11 {
@@ -18043,12 +18067,14 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
                 assert(q12);
             } else if i < 18 {
                 assert(s1);
-            } else {
+            } else if i == 18 {
                 assert(unit);
+            } else {
+                assert(exclusion);
             }
         }
     }
-    base || ann || q12 || s1 || unit
+    base || ann || q12 || s1 || unit || exclusion
 }
 
 pub open spec fn literal_wf(term: Term, body: bool) -> bool {
@@ -18080,7 +18106,12 @@ fn literal_exec(term: &EParsedTerm, body: bool) -> (r: bool)
         reveal(ckc_spec::term::wf_term);
         reveal(ckc_spec::term::no_dollar_var);
         match term@ {
-            Term::Comp(_, _) => {},
+            Term::Comp(name, args) => {
+                if ckc_spec::v1text::is_semantic_pred(name, args.len()) {
+                    semantic_pred_name_first(name, args.len());
+                    assert(name != ckc_spec::term::dollar_var_name());
+                }
+            },
             _ => {},
         }
     }
@@ -18252,7 +18283,7 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
         name[0] == 0x67,
 {
     reveal(ckc_spec::v1text::is_semantic_pred);
-    let i = choose|i: int| 2 <= i < 19 && ckc_spec::v1text::indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 20 && ckc_spec::v1text::indicator(i) == (name, arity);
     reveal(ckc_spec::v1text::indicator);
     if i == 2 {
         reveal_strlit("guideline_entity");
@@ -18302,9 +18333,12 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
     } else if i == 17 {
         reveal_strlit("guideline_qualifier");
         reveal(ckc_spec::v1text::ascii);
-    } else {
-        assert(i == 18);
+    } else if i == 18 {
         reveal_strlit("guideline_unit");
+        reveal(ckc_spec::v1text::ascii);
+    } else {
+        assert(i == 19);
+        reveal_strlit("guideline_exclusion");
         reveal(ckc_spec::v1text::ascii);
     }
 }
@@ -21959,6 +21993,8 @@ fn semantic_arity(name: &[u8]) -> (r: Option<usize>) {
         Some(4)
     } else if crate::k4_bytes::eq(name, b"guideline_unit") {
         Some(3)
+    } else if crate::k4_bytes::eq(name, b"guideline_exclusion") {
+        Some(1)
     } else {
         None
     }
@@ -22061,6 +22097,7 @@ fn pred_name_reject_at(bytes: &[u8], start: usize, body: bool) -> (r: usize)
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_preference", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_qualifier", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_unit", 0x28), bytes.len());
+    raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_exclusion", 0x28), bytes.len());
     if body {
         raise_at(
             &mut best,
@@ -22112,7 +22149,8 @@ fn literal_name_at(bytes: &[u8], start: usize, body: bool) -> (r: bool) {
     let strength = crate::k4_bytes::starts_with(rest, b"guideline_grade(")
         || crate::k4_bytes::starts_with(rest, b"guideline_preference(")
         || crate::k4_bytes::starts_with(rest, b"guideline_qualifier(");
-    base || timing || strength || crate::k4_bytes::starts_with(rest, b"guideline_unit(") || body
+    base || timing || strength || crate::k4_bytes::starts_with(rest, b"guideline_unit(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_exclusion(") || body
         && crate::k4_bytes::starts_with(rest, b"guideline_satisfies(")
 }
 

@@ -7,7 +7,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-const INDICATORS: [(&str, usize); 19] = [
+const INDICATORS: [(&str, usize); 20] = [
     ("guideline_schema_version", 1),
     ("guideline_document", 4),
     ("guideline_entity", 4),
@@ -27,6 +27,7 @@ const INDICATORS: [(&str, usize); 19] = [
     ("guideline_preference", 4),
     ("guideline_qualifier", 4),
     ("guideline_unit", 3),
+    ("guideline_exclusion", 1),
 ];
 const TABLE: &str = "# format: kind\tlemma\tvalue\nunit\thour\thour\nrelation\tfor\tduration\n";
 const SIMPLE: &str = "guideline_entity(actual,a,patient,countable)";
@@ -105,7 +106,7 @@ fn document(
 ) -> String {
     format!(
         "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{}",
-        declarations(19, 4),
+        declarations(20, 4),
         atom(id),
         atom(&sha(ace)),
         digest(ulex),
@@ -148,8 +149,8 @@ fn legacy_document(version: usize) -> String {
     let h = sha(TABLE);
     let d = plain_doc(None, (version != 1).then_some(h.as_str()));
     let d = d.replace(
-        &declarations(19, 4),
-        &declarations([0, 9, 11, 19][version], if version == 1 { 3 } else { 4 }),
+        &declarations(20, 4),
+        &declarations([0, 9, 11, 20][version], if version == 1 { 3 } else { 4 }),
     );
     let d = d.replace(
         "guideline_schema_version(1).",
@@ -380,7 +381,7 @@ fn a05_all_semantic_indicators_in_every_clause_position() {
             }
         }
     }
-    assert_eq!(c.total, 544);
+    assert_eq!(c.total, 576);
     c.finish();
 }
 
@@ -780,7 +781,8 @@ fn members(shape: &[(&str, bool)]) -> Vec<Member> {
 
 fn attributed_literal(name: &str, arity: usize) -> String {
     let mut args = vec!["x".to_owned(); arity];
-    args[1] = gid("alpha", 1);
+    // An arity-1 indicator (cs1 guideline_exclusion/1) carries the identity in its only slot.
+    args[usize::from(arity > 1)] = gid("alpha", 1);
     format!("{name}({})", args.join(","))
 }
 

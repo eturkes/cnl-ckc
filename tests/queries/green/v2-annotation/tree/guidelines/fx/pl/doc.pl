@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256(e1b497038774f29540d369419e71988662932bc7328ebf9f177897d947daf92f),ulex(none),vocabulary(sha256('4d554e69a44f325ae34f930739183f4abd6a6019b7ebe43057cc2b65462c7c21'))).
 % S1: A man waits for 3 days.

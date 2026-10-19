@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s59-03',ace_sha256('8349030b1c5eef828d335feb82ea12d80ef88481f97b775cfa05bd028e497f44'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient does not have an objective-opioid-withdrawal-sign and there is a clinician then it is recommended that the clinician does not generally conduct a standard-buprenorphine-initiation for the patient.

@@ -9,7 +9,7 @@ use std::sync::OnceLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-const INDICATORS: [(&str, usize); 19] = [
+const INDICATORS: [(&str, usize); 20] = [
     ("guideline_schema_version", 1),
     ("guideline_document", 4),
     ("guideline_entity", 4),
@@ -29,6 +29,7 @@ const INDICATORS: [(&str, usize); 19] = [
     ("guideline_preference", 4),
     ("guideline_qualifier", 4),
     ("guideline_unit", 3),
+    ("guideline_exclusion", 1),
 ];
 static SERIAL: AtomicUsize = AtomicUsize::new(0);
 
@@ -311,12 +312,12 @@ fn a01_seventeen_indicators_and_r9_boundaries() {
         "doc",
         &["guideline_entity(actual,a,patient,countable)".into()],
     );
-    c.check("19-pair block", &text);
+    c.check("20-pair block", &text);
     let pairs: Vec<_> = INDICATORS
         .iter()
         .map(|(n, a)| format!(":- multifile({n}/{a}).\n:- discontiguous({n}/{a}).\n"))
         .collect();
-    for count in [15, 16, 17, 18] {
+    for count in [15, 16, 17, 18, 19] {
         c.mutation(
             &format!("{count}-pair block"),
             &text,
@@ -325,7 +326,7 @@ fn a01_seventeen_indicators_and_r9_boundaries() {
         );
     }
     c.mutation(
-        "20-pair block",
+        "21-pair block",
         &text,
         &declarations(),
         &(declarations() + &pairs[17]),
@@ -414,7 +415,7 @@ fn a02_new_literals_are_structural_in_every_position() {
             }
         }
     }
-    assert_eq!(c.total, 1024);
+    assert_eq!(c.total, 1280);
     c.finish();
 }
 #[test]
@@ -435,7 +436,13 @@ fn a03_raw_typed_questions_load_and_answer() {
             0,
         );
         for n in [arity - 1, arity + 1] {
-            let q = query("typed", &compound(name, &vec!["x"; n]), "[]");
+            // A zero-arity goal is canonically the bare atom (cs1: arity - 1 of guideline_exclusion/1).
+            let goal = if n == 0 {
+                name.to_owned()
+            } else {
+                compound(name, &vec!["x"; n])
+            };
+            let q = query("typed", &goal, "[]");
             c.write("query.pl", &q);
             c.expect(
                 "query wrong arity",
@@ -1029,7 +1036,7 @@ fn a10_aggregate_replay_and_recursion_cover_typed_clauses() {
     }
     for &(name, arity) in &INDICATORS[15..] {
         let mut args = vec!["x".into(); arity];
-        args[1] = gid("recursive", 1, 1);
+        args[usize::from(arity > 1)] = gid("recursive", 1, 1);
         let head = format!("{name}({})", args.join(","));
         install(
             &c,

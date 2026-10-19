@@ -183,6 +183,7 @@ mod m6_query_markers;
 mod m6_refs;
 mod m6_rules;
 mod m6_safety;
+mod m6_scope;
 mod m6_symbols;
 mod m6_term;
 mod m6_vars;

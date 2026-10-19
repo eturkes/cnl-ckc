@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec05-imp05',ace_sha256(cc114aabb91884ac8f44b9b1e80f03c24190c9051987bcf1fc17e38de816c72c),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician does not reach a benefit-risk-consensus with a patient then the clinician should acknowledge a discordance and should express an empathetic-response and should implement a patient-centered-treatment-change and should avoid a patient-abandonment.

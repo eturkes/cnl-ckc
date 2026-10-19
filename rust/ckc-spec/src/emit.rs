@@ -3065,6 +3065,286 @@ pub open spec fn group_clauses(gs: Seq<Group>) -> Seq<DocClause> {
     gs.map_values(|g: Group| g.clauses).flatten()
 }
 
+// --- scope exclusions (contract cs1 D2–D5: documents with a scope + exclusion pair) ---
+// An exclusion rule denies that the guideline's recommendations (the scope
+// noun) apply (the exclusion verb) under its condition; it compiles to its own
+// clauses + one ground record `guideline_exclusion(Key)`, and every
+// should|must|may edge clause of the document ends with `\+ guideline_exclusion(Key)`.
+pub open spec fn deontic(name: Seq<u8>) -> bool {
+    name == ascii("should"@) || name == ascii("must"@) || name == ascii("may"@)
+}
+
+// A should|must|may box anywhere inside t.
+pub open spec fn has_deontic(t: Term) -> bool
+    decreases t, 0int,
+{
+    match t {
+        Term::Comp(name, args) => (deontic(name) && args.len() == 1) || has_deontic_all(args),
+        _ => false,
+    }
+}
+
+pub open spec fn has_deontic_all(ts: Seq<Term>) -> bool
+    decreases ts, 1int,
+{
+    ts.len() > 0 && (has_deontic(ts[0]) || has_deontic_all(ts.drop_first()))
+}
+
+// A classical negation box anywhere inside t that holds a should|must|may box.
+pub open spec fn negated_deontic(t: Term) -> bool
+    decreases t, 0int,
+{
+    match t {
+        Term::Comp(name, args) => if name == ascii("-"@) && args.len() == 1 {
+            has_deontic(args[0])
+        } else {
+            negated_deontic_all(args)
+        },
+        _ => false,
+    }
+}
+
+pub open spec fn negated_deontic_all(ts: Seq<Term>) -> bool
+    decreases ts, 1int,
+{
+    ts.len() > 0 && (negated_deontic(ts[0]) || negated_deontic_all(ts.drop_first()))
+}
+
+// The anchor-stripped leaves of a box's conditions, when every condition is an
+// anchored leaf (None: a box, list or other condition stands in it).
+pub open spec fn leaves_of(conds: Seq<Term>) -> Option<Seq<Term>>
+    decreases conds.len(),
+{
+    if conds.len() == 0 {
+        Option::Some(Seq::empty())
+    } else {
+        match anchor_s(conds[0]) {
+            Option::None => Option::None,
+            Option::Some(_) => match leaves_of(conds.drop_first()) {
+                Option::None => Option::None,
+                Option::Some(rest) => Option::Some(seq![arg(conds[0], 0)] + rest),
+            },
+        }
+    }
+}
+
+// ls = the box's leaves through upper-bound groups (`group_leaves` of its
+// condition list): `exactly|at most|less than N recommendations` sits in a
+// group, and must reach `consequent`, never compile as plain data.
+// Some leaf is an exclusion-verb `predicate/3..5` (a transitive one reaches
+// D3, which then rejects it as `consequent`).
+pub open spec fn names_verb(tab: Vocabulary, ls: Seq<Term>) -> bool {
+    exists|i: int|
+        0 <= i < ls.len() && is_pred(#[trigger] ls[i]) && arg(ls[i], 1) == Term::Atom(
+            tab.exclusions[0],
+        )
+}
+
+// The first such leaf.
+pub open spec fn verb_leaf(tab: Vocabulary, ls: Seq<Term>) -> Term
+    decreases ls.len(),
+{
+    if ls.len() == 0 {
+        Term::Nil
+    } else if is_pred(ls[0]) && arg(ls[0], 1) == Term::Atom(tab.exclusions[0]) {
+        ls[0]
+    } else {
+        verb_leaf(tab, ls.drop_first())
+    }
+}
+
+// The noun of referent x's first `object/6` leaf.
+pub open spec fn noun_in(ls: Seq<Term>, x: Term) -> Option<Term>
+    decreases ls.len(),
+{
+    if ls.len() == 0 {
+        Option::None
+    } else if is_comp(ls[0], "object"@, 6) && arg(ls[0], 0) == x {
+        Option::Some(arg(ls[0], 1))
+    } else {
+        noun_in(ls.drop_first(), x)
+    }
+}
+
+pub open spec fn pps_ok(ls: Seq<Term>, e: Term, dom: Seq<Term>) -> bool {
+    forall|i: int|
+        0 <= i < ls.len() ==> is_comp(#[trigger] ls[i], "modifier_pp"@, 3) && arg(ls[i], 0) == e
+            && !dom.contains(arg(ls[i], 2))
+}
+
+// D3: the box's leaves = a plain indefinite scope-noun subject, the
+// exclusion verb's `predicate/3` on it, then pps on that event whose objects
+// lie outside the box.
+pub open spec fn exclusion_box(tab: Vocabulary, dom: Seq<Term>, conds: Seq<Term>) -> bool {
+    match leaves_of(conds) {
+        Option::None => false,
+        Option::Some(ls) => {
+            &&& ls.len() >= 2
+            &&& is_comp(ls[0], "object"@, 6)
+            &&& arg(ls[0], 1) == Term::Atom(tab.scopes[0].0)
+            &&& arg(ls[0], 2) == atom("countable"@)
+            &&& arg(ls[0], 3) == atom("na"@)
+            &&& arg(ls[0], 4) == atom("eq"@)
+            &&& arg(ls[0], 5) == Term::Int(1)
+            &&& is_comp(ls[1], "predicate"@, 3)
+            &&& arg(ls[1], 1) == Term::Atom(tab.exclusions[0])
+            &&& arg(ls[1], 2) == arg(ls[0], 0)
+            &&& dom.contains(arg(ls[0], 0))
+            &&& dom.contains(arg(ls[1], 0))
+            &&& pps_ok(ls.skip(2), arg(ls[1], 0), dom)
+        },
+    }
+}
+
+// A top-level classical negation box of the conditions holding the exclusion verb.
+pub open spec fn verb_box(tab: Vocabulary, cs: Seq<Term>) -> Option<Term>
+    decreases cs.len(),
+{
+    if cs.len() == 0 {
+        Option::None
+    } else if is_comp(cs[0], "-"@, 1) && match box_parts(arg(cs[0], 0)) {
+        Option::Some((_, l)) => list_items(l) is Some && names_verb(tab, group_leaves(l)),
+        Option::None => false,
+    } {
+        Option::Some(arg(cs[0], 0))
+    } else {
+        verb_box(tab, cs.drop_first())
+    }
+}
+
+pub ghost enum Scope {
+    Plain,
+    Exclusion,
+    Reject(Seq<char>),
+}
+
+// A rule sentence's scope class (D4 order: deontic_condition, negated_deontic,
+// subject, consequent).
+pub open spec fn rule_scope(tab: Vocabulary, ante: Term, cons: Term) -> Scope {
+    match curry(ante, cons, 64) {
+        Result::Err(_) => Scope::Plain,
+        Result::Ok((segs, fcons)) => if exists|i: int|
+            0 <= i < segs.len() && has_deontic(#[trigger] segs[i].conds) {
+            Scope::Reject("deontic_condition"@)
+        } else if negated_deontic(fcons) {
+            Scope::Reject("negated_deontic"@)
+        } else {
+            match box_parts(fcons) {
+                Option::None => Scope::Plain,
+                Option::Some((_, l)) => match list_items(l) {
+                    Option::None => Scope::Plain,
+                    Option::Some(cs) => match verb_box(tab, cs) {
+                        Option::None => Scope::Plain,
+                        Option::Some(b) => match box_parts(b) {
+                            Option::None => Scope::Plain,
+                            Option::Some((dom, bl)) => match list_items(bl) {
+                                Option::None => Scope::Plain,
+                                Option::Some(bcs) => {
+                                    let ls = group_leaves(bl);
+                                    let x = arg(verb_leaf(tab, ls), 2);
+                                    if !dom.contains(x) || noun_in(ls, x) != Option::Some(
+                                        Term::Atom(tab.scopes[0].0),
+                                    ) {
+                                        Scope::Reject("subject"@)
+                                    } else if cs.len() == 1 && exclusion_box(tab, dom, bcs) {
+                                        Scope::Exclusion
+                                    } else {
+                                        Scope::Reject("consequent"@)
+                                    }
+                                },
+                            },
+                        },
+                    },
+                },
+            }
+        },
+    }
+}
+
+// A root sentence's scope class (D4 order: root_deontic, root).
+pub open spec fn root_scope(tab: Vocabulary, roots: Seq<Root>) -> Scope {
+    if exists|i: int|
+        0 <= i < roots.len() && match #[trigger] roots[i] {
+            Root::Anchored(c) => has_deontic(c),
+            Root::Boxed(c) => has_deontic(c),
+            Root::Rule(_, _) => false,
+        } {
+        Scope::Reject("root_deontic"@)
+    } else if exists|i: int|
+        0 <= i < roots.len() && match #[trigger] roots[i] {
+            Root::Boxed(c) => verb_box(tab, seq![c]) is Some,
+            _ => false,
+        } {
+        Scope::Reject("root"@)
+    } else {
+        Scope::Plain
+    }
+}
+
+pub open spec fn exclusion_record(key: Seq<u8>) -> Term {
+    lit("guideline_exclusion"@, seq![Term::Atom(key)])
+}
+
+pub open spec fn deontic_edge(h: Term) -> bool {
+    is_comp(h, "guideline_operator"@, 3) && match arg(h, 2) {
+        Term::Atom(op) => deontic(op),
+        _ => false,
+    }
+}
+
+// D5: a should|must|may edge clause ends with the guard.
+pub open spec fn guard(c: DocClause, key: Seq<u8>) -> DocClause {
+    if deontic_edge(c.head) {
+        DocClause { head: c.head, body: c.body.push(BodyItem::Naf(seq![exclusion_record(key)])) }
+    } else {
+        c
+    }
+}
+
+// D3 + D5 over one group: guards on its edges; an exclusion's record ends it.
+pub open spec fn scoped_group(g: Group, key: Seq<u8>, excl: bool) -> Group {
+    let cs = g.clauses.map_values(|c: DocClause| guard(c, key));
+    Group {
+        clauses: if excl && g.clauses.len() > 0 {
+            cs.push(DocClause { head: exclusion_record(key), body: g.clauses[0].body })
+        } else {
+            cs
+        },
+        ..g
+    }
+}
+
+// The scope pass over one translated sentence (after its existing translation
+// + the duplicate-grade check, so every existing reject reports first).
+pub open spec fn scope_pass(tab: Option<Env>, roots: Seq<Root>, gs: Seq<Group>) -> Result<
+    Seq<Group>,
+    Term,
+> {
+    match tab {
+        Option::None => Result::Ok(gs),
+        Option::Some(env) => if !crate::vocabulary::scoped(env.tab) {
+            Result::Ok(gs)
+        } else {
+            let key = env.tab.scopes[0].1;
+            let class = if roots.len() == 1 && roots[0] is Rule {
+                match roots[0] {
+                    Root::Rule(a, c) => rule_scope(env.tab, a, c),
+                    _ => Scope::Plain,
+                }
+            } else {
+                root_scope(env.tab, roots)
+            };
+            match class {
+                Scope::Reject(why) => Result::Err(s1_shape("scope_shape"@, why)),
+                Scope::Exclusion => Result::Ok(
+                    gs.map_values(|g: Group| scoped_group(g, key, true)),
+                ),
+                Scope::Plain => Result::Ok(gs.map_values(|g: Group| scoped_group(g, key, false))),
+            }
+        },
+    }
+}
+
 // --- canonical variable numbering per emitted line ---
 pub open spec fn renumber(t: Term, fs: Seq<nat>) -> Term
     decreases t,
@@ -3138,16 +3418,30 @@ pub open spec fn project_from(
     } else {
         match sentence_groups(of_sentence(tagged, s as int), s, docid, map, base, tab) {
             Result::Err(e) => Result::Err(err_at(s, e)),
-            Result::Ok((gs, map2)) => {
-                let dims2 = dims + grade_dims(group_clauses(gs));
-                if group_clauses(gs).len() == 0 {
+            Result::Ok((gs0, map2)) => {
+                let dims2 = dims + grade_dims(group_clauses(gs0));
+                if group_clauses(gs0).len() == 0 {
                     Result::Err(err_at(s, atom("sentence_shape"@)))
                 } else if !dims2.no_duplicates() {
                     Result::Err(err_at(s, s1_shape("grade_shape"@, "duplicate_dimension"@)))
                 } else {
-                    match project_from(tagged, s + 1, count, docid, map2, base, tab, dims2) {
-                        Result::Err(e) => Result::Err(e),
-                        Result::Ok(rest) => Result::Ok(seq![Projected { s, groups: gs }] + rest),
+                    match scope_pass(tab, of_sentence(tagged, s as int), gs0) {
+                        Result::Err(e) => Result::Err(err_at(s, e)),
+                        Result::Ok(gs) => match project_from(
+                            tagged,
+                            s + 1,
+                            count,
+                            docid,
+                            map2,
+                            base,
+                            tab,
+                            dims2,
+                        ) {
+                            Result::Err(e) => Result::Err(e),
+                            Result::Ok(rest) => Result::Ok(
+                                seq![Projected { s, groups: gs }] + rest,
+                            ),
+                        },
                     }
                 }
             },

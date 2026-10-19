@@ -19,7 +19,9 @@ verus! {
 // adjective that marks the preferred option on a copula, alternative rows the
 // preposition that joins the option a preference names as its alternative;
 // qualifier rows map an adverb, or the adjective of a copula, to the function
-// class of the qualifier it carries.
+// class of the qualifier it carries; the scope row names the noun that stands
+// for the guideline's recommendations as a whole + the guideline's key, the
+// exclusion row the verb an exclusion denies of that noun (contract cs1 D1).
 pub ghost struct Vocabulary {
     pub units: Seq<(Seq<u8>, Seq<u8>)>,
     pub relations: Seq<(Seq<u8>, Seq<u8>)>,
@@ -33,6 +35,8 @@ pub ghost struct Vocabulary {
     pub preferences: Seq<Seq<u8>>,  // adjective lemmas
     pub alternatives: Seq<Seq<u8>>,  // preposition lemmas
     pub qualifiers: Seq<(Seq<u8>, Seq<u8>)>,  // adverb | copula adjective → class
+    pub scopes: Seq<(Seq<u8>, Seq<u8>)>,  // scope noun → guideline key (at most one)
+    pub exclusions: Seq<Seq<u8>>,  // exclusion verb lemmas (at most one)
 }
 
 pub open spec fn vocabulary_header() -> Seq<u8> {
@@ -97,6 +101,13 @@ pub open spec fn grade_nouns(t: Vocabulary) -> Seq<Seq<u8>> {
     keys(t.strengths) + keys(t.evidences)
 }
 
+// A noun in a row that types it: a unit, frame, grade or scope noun.
+pub open spec fn typed_noun(t: Vocabulary, n: Seq<u8>) -> bool {
+    keys(t.units).contains(n) || frames(t).contains(n) || grade_nouns(t).contains(n) || keys(
+        t.scopes,
+    ).contains(n)
+}
+
 // Every preposition a row names outside the alternative kind.
 pub open spec fn time_prepositions(t: Vocabulary) -> Seq<Seq<u8>> {
     keys(t.relations) + keys(t.spacings) + keys(t.windows) + t.frequencies + t.ranges
@@ -105,7 +116,8 @@ pub open spec fn time_prepositions(t: Vocabulary) -> Seq<Seq<u8>> {
 pub open spec fn row_count(t: Vocabulary) -> nat {
     t.units.len() + t.relations.len() + t.spacings.len() + t.windows.len() + t.frequencies.len()
         + t.approximations.len() + t.ranges.len() + t.strengths.len() + t.evidences.len()
-        + t.preferences.len() + t.alternatives.len() + t.qualifiers.len()
+        + t.preferences.len() + t.alternatives.len() + t.qualifiers.len() + t.scopes.len()
+        + t.exclusions.len()
 }
 
 pub open spec fn empty_table() -> Vocabulary {
@@ -122,6 +134,8 @@ pub open spec fn empty_table() -> Vocabulary {
         preferences: Seq::empty(),
         alternatives: Seq::empty(),
         qualifiers: Seq::empty(),
+        scopes: Seq::empty(),
+        exclusions: Seq::empty(),
     }
 }
 
@@ -133,7 +147,7 @@ pub open spec fn frame_row(t: Vocabulary, f: Seq<Seq<u8>>) -> Option<Seq<u8>> {
         Option::Some(ascii("frame lemma"@))
     } else if t.spacings.contains((f[1], f[2])) || t.windows.contains((f[1], f[2])) || keys(
         t.units,
-    ).contains(f[2]) || grade_nouns(t).contains(f[2]) {
+    ).contains(f[2]) || grade_nouns(t).contains(f[2]) || keys(t.scopes).contains(f[2]) {
         Option::Some(ascii("duplicate noun"@))
     } else if t.alternatives.contains(f[1]) {
         Option::Some(ascii("duplicate preposition"@))
@@ -152,9 +166,7 @@ pub open spec fn grade_row(
 ) -> Option<Seq<u8>> {
     if !ids.contains(f[2]) {
         Option::Some(value_why)
-    } else if grade_nouns(t).contains(f[1]) || keys(t.units).contains(f[1]) || frames(t).contains(
-        f[1],
-    ) {
+    } else if typed_noun(t, f[1]) {
         Option::Some(ascii("duplicate noun"@))
     } else {
         Option::None
@@ -179,9 +191,7 @@ pub open spec fn add_row(t: Vocabulary, line: Seq<u8>) -> Result<Vocabulary, Seq
     } else if f[0] == ascii("unit"@) {
         if !unit_ids().contains(f[2]) {
             Result::Err(ascii("unit id"@))
-        } else if keys(t.units).contains(f[1]) || frames(t).contains(f[1]) || grade_nouns(
-            t,
-        ).contains(f[1]) {
+        } else if typed_noun(t, f[1]) {
             Result::Err(ascii("duplicate noun"@))
         } else {
             Result::Ok(Vocabulary { units: t.units.push((f[1], f[2])), ..t })
@@ -275,9 +285,64 @@ pub open spec fn add_row(t: Vocabulary, line: Seq<u8>) -> Result<Vocabulary, Seq
         } else {
             Result::Ok(Vocabulary { qualifiers: t.qualifiers.push((f[1], f[2])), ..t })
         }
+    } else if f[0] == ascii("scope"@) {
+        if !name_ok(f[2]) {
+            Result::Err(ascii("scope value"@))
+        } else if t.scopes.len() > 0 {
+            Result::Err(ascii("duplicate scope"@))
+        } else if typed_noun(t, f[1]) {
+            Result::Err(ascii("duplicate noun"@))
+        } else {
+            Result::Ok(Vocabulary { scopes: t.scopes.push((f[1], f[2])), ..t })
+        }
+    } else if f[0] == ascii("exclusion"@) {
+        if f[2] != ascii("scope"@) {
+            Result::Err(ascii("exclusion value"@))
+        } else if t.exclusions.len() > 0 {
+            Result::Err(ascii("duplicate exclusion"@))
+        } else {
+            Result::Ok(Vocabulary { exclusions: t.exclusions.push(f[1]), ..t })
+        }
     } else {
         Result::Err(ascii("kind"@))
     }
+}
+
+// The 1-based row of the first body line of kind `kind` (0 = none).
+pub open spec fn kind_row(rows: Seq<Seq<u8>>, kind: Seq<u8>, n: nat) -> nat
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
+        0
+    } else if split_on(rows[0], 0x09)[0] == kind {
+        n
+    } else {
+        kind_row(rows.drop_first(), kind, n + 1)
+    }
+}
+
+// cs1 D1: a scope row and an exclusion row come as a pair; a lone row reports.
+pub open spec fn pairing(t: Vocabulary, rows: Seq<Seq<u8>>) -> Option<Seq<u8>> {
+    if t.scopes.len() > 0 && t.exclusions.len() == 0 {
+        Option::Some(
+            ascii("scope without exclusion at row "@) + udec_bytes(
+                kind_row(rows, ascii("scope"@), 1),
+            ),
+        )
+    } else if t.exclusions.len() > 0 && t.scopes.len() == 0 {
+        Option::Some(
+            ascii("exclusion without scope at row "@) + udec_bytes(
+                kind_row(rows, ascii("exclusion"@), 1),
+            ),
+        )
+    } else {
+        Option::None
+    }
+}
+
+// cs1 D1: a scoped table holds the scope + exclusion pair.
+pub open spec fn scoped(t: Vocabulary) -> bool {
+    t.scopes.len() > 0 && t.exclusions.len() > 0
 }
 
 pub open spec fn add_rows(t: Vocabulary, rows: Seq<Seq<u8>>, n: nat) -> Result<Vocabulary, Seq<u8>>
@@ -304,19 +369,65 @@ pub open spec fn parse_vocabulary(bytes: Seq<u8>) -> Result<Vocabulary, Seq<u8>>
         } else if body.last() != 0x0A {
             Result::Err(ascii("final newline"@))
         } else {
-            add_rows(empty_table(), body_lines(body), 1)
+            match add_rows(empty_table(), body_lines(body), 1) {
+                Result::Err(why) => Result::Err(why),
+                Result::Ok(t) => match pairing(t, body_lines(body)) {
+                    Option::Some(why) => Result::Err(why),
+                    Option::None => Result::Ok(t),
+                },
+            }
         }
+    }
+}
+
+// cs1 D1: the guideline id a corpus table path names (`guidelines/<id>/vocabulary.tsv`).
+pub open spec fn guideline_of(path: Seq<u8>) -> Option<Seq<u8>> {
+    let pre = ascii("guidelines/"@);
+    let post = ascii("/vocabulary.tsv"@);
+    if path.len() > pre.len() + post.len() && path.take(pre.len() as int) == pre && path.skip(
+        path.len() - post.len(),
+    ) == post {
+        let id = path.subrange(pre.len() as int, path.len() - post.len());
+        if all_in(id, |b: u8| b != 0x2F) {
+            Option::Some(id)
+        } else {
+            Option::None
+        }
+    } else {
+        Option::None
+    }
+}
+
+// The key law (cs1 D1): a corpus table's scope key names its own guideline.
+pub open spec fn key_law(path: Seq<u8>, t: Vocabulary, bytes: Seq<u8>) -> Option<Seq<u8>> {
+    match guideline_of(path) {
+        Option::Some(id) => if t.scopes.len() > 0 && t.scopes[0].1 != id {
+            Option::Some(
+                ascii("scope key at row "@) + udec_bytes(
+                    kind_row(
+                        body_lines(bytes.skip(vocabulary_header().len() as int)),
+                        ascii("scope"@),
+                        1,
+                    ),
+                ),
+            )
+        } else {
+            Option::None
+        },
+        Option::None => Option::None,
     }
 }
 
 // `ckc check` section: path = the repo-relative table path.
 pub open spec fn vocabulary_check(path: Seq<u8>, bytes: Seq<u8>) -> Verdict {
     match parse_vocabulary(bytes) {
-        Result::Ok(t) => Verdict::Ok(
-            ascii("ckc: vocabulary ok "@) + path + ascii(" "@) + udec_bytes(row_count(t)) + ascii(
-                " rows\n"@,
+        Result::Ok(t) => match key_law(path, t, bytes) {
+            Option::Some(why) => fail("vocabulary"@, path + ascii(": "@) + why),
+            Option::None => Verdict::Ok(
+                ascii("ckc: vocabulary ok "@) + path + ascii(" "@) + udec_bytes(row_count(t))
+                    + ascii(" rows\n"@),
             ),
-        ),
+        },
         Result::Err(why) => fail("vocabulary"@, path + ascii(": "@) + why),
     }
 }

@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s59-14',ace_sha256(b6a401b1c44d9db0c6257e4b0ebcd927c4d23b6357c802aba106882a1d509913),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient does not have a very-limited-oral-naltrexone-circumstance and there is a clinician then it is recommended that the clinician does not use an oral-naltrexone-treatment for the patient.

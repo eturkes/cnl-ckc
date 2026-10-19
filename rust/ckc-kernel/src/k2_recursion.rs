@@ -19,7 +19,7 @@ verus! {
 
 pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
     requires
-        i < 19,
+        i < 20,
     ensures
         (out.0@, out.1 as nat) == indicator(i as int),
 {
@@ -42,10 +42,11 @@ pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
         15 => b"guideline_grade",
         16 => b"guideline_preference",
         17 => b"guideline_qualifier",
-        _ => b"guideline_unit",
+        18 => b"guideline_unit",
+        _ => b"guideline_exclusion",
     };
     let arity: usize = match i {
-        0 => 1,
+        0 | 19 => 1,
         4 | 8 | 14 | 18 => 3,
         3 | 11 | 15 => 5,
         9 => 6,
@@ -91,6 +92,8 @@ pub fn indicator_exec(i: usize) -> (out: (Vec<u8>, usize))
         reveal_strlit("guideline_qualifier");
         reveal_byteslit(b"guideline_unit");
         reveal_strlit("guideline_unit");
+        reveal_byteslit(b"guideline_exclusion");
+        reveal_strlit("guideline_exclusion");
         reveal(ckc_spec::v1text::ascii);
         assert(name@ == indicator(i as int).0);
     }
@@ -119,7 +122,7 @@ fn indicator_step(
         arena_ok(arena),
         db_valid(arena.nodes@, db@),
         index < db.len(),
-        which < 19,
+        which < 20,
         rule_indices_ok(db@, out@),
         indexed_clauses(arena.nodes@, db@, out@) == indicator_rules(
             db_view(arena.nodes@, db@).take(index as int),
@@ -173,9 +176,9 @@ pub open spec fn buckets_ok(
     buckets: Seq<Vec<usize>>,
     done: nat,
 ) -> bool {
-    buckets.len() == 19 && forall|j: int|
+    buckets.len() == 20 && forall|j: int|
         #![trigger buckets[j]]
-        0 <= j < 19 ==> {
+        0 <= j < 20 ==> {
             &&& rule_indices_ok(db, buckets[j]@)
             &&& indexed_clauses(nodes, db, buckets[j]@) == indicator_rules(
                 db_view(nodes, db).take(done as int),
@@ -200,15 +203,15 @@ fn census_row(
 {
     reveal(buckets_ok);
     let mut j = 0usize;
-    while j < 19
+    while j < 20
         invariant
             arena_ok(arena),
             db_valid(arena.nodes@, db@),
             index < db.len(),
-            j <= 19,
-            buckets.len() == 19,
+            j <= 20,
+            buckets.len() == 20,
             forall|k: int|
-                0 <= k < 19 ==> {
+                0 <= k < 20 ==> {
                     &&& rule_indices_ok(db@, buckets@[k]@)
                     &&& indexed_clauses(arena.nodes@, db@, buckets@[k]@) == indicator_rules(
                         db_view(arena.nodes@, db@).take(
@@ -221,14 +224,14 @@ fn census_row(
                         k,
                     )
                 },
-        decreases 19 - j,
+        decreases 20 - j,
     {
         let ghost previous = buckets@;
         let bucket = buckets.remove(j);
         let updated = indicator_step(arena, db, bucket, index, j);
         buckets.insert(j, updated);
         proof {
-            assert forall|k: int| 0 <= k < 19 implies {
+            assert forall|k: int| 0 <= k < 20 implies {
                 &&& rule_indices_ok(db@, buckets@[k]@)
                 &&& indexed_clauses(arena.nodes@, db@, buckets@[k]@) == indicator_rules(
                     db_view(arena.nodes@, db@).take(
@@ -264,19 +267,19 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
     reveal(buckets_ok);
     let mut buckets: Vec<Vec<usize>> = Vec::new();
     let mut j = 0usize;
-    while j < 19
+    while j < 20
         invariant
-            j <= 19,
+            j <= 20,
             buckets.len() == j,
             forall|k: int| 0 <= k < j ==> buckets@[k].len() == 0,
-        decreases 19 - j,
+        decreases 20 - j,
     {
         buckets.push(Vec::new());
         j += 1;
     }
     proof {
         assert_seqs_equal!(db_view(arena.nodes@, db@).take(0) == Seq::empty());
-        assert forall|k: int| 0 <= k < 19 implies indexed_clauses(arena.nodes@, db@, buckets@[k]@)
+        assert forall|k: int| 0 <= k < 20 implies indexed_clauses(arena.nodes@, db@, buckets@[k]@)
             == indicator_rules(db_view(arena.nodes@, db@).take(0), k) by {
             assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, buckets@[k]@) == Seq::empty());
         }
@@ -294,7 +297,7 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
         c += 1;
     }
     let ghost cs = db_view(arena.nodes@, db@);
-    let ghost parts = Seq::new(19, |i: int| indicator_rules(cs, i));
+    let ghost parts = Seq::new(20, |i: int| indicator_rules(cs, i));
     let mut out = Vec::new();
     let mut i = 0usize;
     proof {
@@ -302,17 +305,17 @@ pub fn rule_census(arena: &ETermArena, db: &Vec<EClause>) -> (out: Vec<usize>)
         assert_seqs_equal!(indexed_clauses(arena.nodes@, db@, out@) == Seq::empty());
         assert_seqs_equal!(parts.take(0) == Seq::empty());
     }
-    while i < 19
+    while i < 20
         invariant
             arena_ok(arena),
             db_valid(arena.nodes@, db@),
-            i <= 19,
+            i <= 20,
             buckets_ok(arena.nodes@, db@, buckets@, db.len() as nat),
             cs == db_view(arena.nodes@, db@),
-            parts == Seq::new(19, |j: int| indicator_rules(cs, j)),
+            parts == Seq::new(20, |j: int| indicator_rules(cs, j)),
             rule_indices_ok(db@, out@),
             indexed_clauses(arena.nodes@, db@, out@) == parts.take(i as int).flatten(),
-        decreases 19 - i,
+        decreases 20 - i,
     {
         proof {
             assert(rule_indices_ok(db@, buckets@[i as int]@));
@@ -500,6 +503,390 @@ pub fn first_recursive(arena: &mut ETermArena, db: &Vec<EClause>, indices: &Vec<
     let (out, mut owned) = first_recursive_inner(owned, db, indices);
     std::mem::swap(arena, &mut owned);
     out
+}
+
+proof fn scope_scan_literals()
+    ensures
+        b","@ == ckc_spec::engine::comma_name(),
+        b"guideline_operator"@ == ckc_spec::v1text::ascii("guideline_operator"@),
+        b"guideline_exclusion"@ == ckc_spec::v1text::ascii("guideline_exclusion"@),
+        b"should"@ == ckc_spec::v1text::ascii("should"@),
+        b"must"@ == ckc_spec::v1text::ascii("must"@),
+        b"may"@ == ckc_spec::v1text::ascii("may"@),
+        b"scope_condition"@ == ckc_spec::v1text::ascii("scope_condition"@),
+{
+    reveal(ckc_spec::v1text::ascii);
+    reveal_byteslit(b",");
+    reveal_strlit(",");
+    assert(b","@ =~= ckc_spec::engine::comma_name());
+    reveal_byteslit(b"guideline_operator");
+    reveal_strlit("guideline_operator");
+    assert(b"guideline_operator"@ =~= ckc_spec::v1text::ascii("guideline_operator"@));
+    reveal_byteslit(b"guideline_exclusion");
+    reveal_strlit("guideline_exclusion");
+    assert(b"guideline_exclusion"@ =~= ckc_spec::v1text::ascii("guideline_exclusion"@));
+    reveal_byteslit(b"should");
+    reveal_strlit("should");
+    assert(b"should"@ =~= ckc_spec::v1text::ascii("should"@));
+    reveal_byteslit(b"must");
+    reveal_strlit("must");
+    assert(b"must"@ =~= ckc_spec::v1text::ascii("must"@));
+    reveal_byteslit(b"may");
+    reveal_strlit("may");
+    assert(b"may"@ =~= ckc_spec::v1text::ascii("may"@));
+    reveal_byteslit(b"scope_condition");
+    reveal_strlit("scope_condition");
+    assert(b"scope_condition"@ =~= ckc_spec::v1text::ascii("scope_condition"@));
+}
+
+spec fn edge_roots(nodes: Seq<ENode>, roots: Seq<usize>) -> bool
+    decreases roots.len(),
+{
+    roots.len() > 0 && (ckc_spec::replay::edge_goal(nodes[roots.last() as int].term@) || edge_roots(
+        nodes,
+        roots.drop_last(),
+    ))
+}
+
+proof fn scope_work_push(nodes: Seq<ENode>, roots: Seq<usize>, root: usize)
+    ensures
+        crate::k2_engine::roots_work(nodes, roots.push(root)) == crate::k2_engine::roots_work(
+            nodes,
+            roots,
+        ) + crate::k2_engine::term_size(nodes[root as int].term@),
+{
+    crate::k2_engine::roots_work_concat(nodes, roots, seq![root]);
+    assert(roots + seq![root] =~= roots.push(root));
+    reveal_with_fuel(crate::k2_engine::roots_work, 2);
+}
+
+proof fn scope_terms_size_two(ts: Seq<ckc_spec::term::Term>)
+    requires
+        ts.len() == 2,
+    ensures
+        crate::k2_engine::terms_size(ts) == crate::k2_engine::term_size(ts[0])
+            + crate::k2_engine::term_size(ts[1]),
+{
+    reveal_with_fuel(crate::k2_engine::terms_size, 3);
+    assert(ts.drop_first().drop_first() =~= Seq::<ckc_spec::term::Term>::empty());
+}
+
+fn edge_op_exec(arena: &ETermArena, root: usize) -> (r: bool)
+    requires
+        crate::k2_term::root_ok(arena, root),
+    ensures
+        r == match arena@[root as int] {
+            ckc_spec::term::Term::Atom(op) => op == ckc_spec::v1text::ascii("should"@) || op
+                == ckc_spec::v1text::ascii("must"@) || op == ckc_spec::v1text::ascii("may"@),
+            ckc_spec::term::Term::Var(_) => true,
+            _ => false,
+        },
+{
+    proof {
+        scope_scan_literals();
+        assert(crate::k2_term::node_ok(arena.nodes@, root as int));
+    }
+    match &arena.nodes[root].kind {
+        crate::k2_term::ENodeKind::Atom { name } => crate::k4_bytes::eq(name, b"should")
+            || crate::k4_bytes::eq(name, b"must") || crate::k4_bytes::eq(name, b"may"),
+        crate::k2_term::ENodeKind::Var { .. } => true,
+        _ => false,
+    }
+}
+
+pub fn edge_goal_exec(arena: &ETermArena, root: usize) -> (r: bool)
+    requires
+        crate::k2_term::root_ok(arena, root),
+    ensures
+        r == ckc_spec::replay::edge_goal(arena@[root as int]),
+{
+    hide(ckc_spec::replay::edge_goal);
+    hide(edge_roots);
+    let mut pending: Vec<usize> = Vec::new();
+    pending.push(root);
+    proof {
+        scope_scan_literals();
+        assert(pending@.drop_last() =~= Seq::<usize>::empty());
+        reveal_with_fuel(edge_roots, 2);
+    }
+    while pending.len() > 0
+        invariant
+            crate::k2_term::root_ok(arena, root),
+            crate::k2_engine::roots_valid(arena.nodes@, pending@),
+            ckc_spec::replay::edge_goal(arena@[root as int]) == edge_roots(arena.nodes@, pending@),
+        decreases crate::k2_engine::roots_work(arena.nodes@, pending@),
+    {
+        let ghost before = pending@;
+        let current = pending.pop().unwrap();
+        let ghost rest = pending@;
+        let ghost t = arena@[current as int];
+        proof {
+            scope_scan_literals();
+            assert(rest == before.drop_last());
+            assert(current == before.last());
+            assert(rest.push(current) =~= before);
+            scope_work_push(arena.nodes@, rest, current);
+            assert(crate::k2_term::node_ok(arena.nodes@, current as int));
+            reveal_with_fuel(edge_roots, 1);
+            reveal_with_fuel(ckc_spec::replay::edge_goal, 1);
+            reveal(crate::k2_engine::term_size);
+            assert(crate::k2_engine::term_size(t) >= 1);
+        }
+        match &arena.nodes[current].kind {
+            crate::k2_term::ENodeKind::Comp { name, child_roots, .. } => {
+                let ghost args = crate::k2_term::child_terms(arena.nodes@, child_roots@);
+                proof {
+                    crate::k2_engine::node_comp_model(
+                        arena.nodes@,
+                        current as int,
+                        name@,
+                        child_roots@,
+                    );
+                    assert(t == ckc_spec::term::Term::Comp(name@, args));
+                }
+                if child_roots.len() == 2 && crate::k4_bytes::eq(name, b",") {
+                    let left = child_roots[0];
+                    let right = child_roots[1];
+                    proof {
+                        assert(args.len() == 2);
+                        assert(args[0] == arena@[left as int]);
+                        assert(args[1] == arena@[right as int]);
+                        reveal(crate::k2_engine::term_size);
+                        scope_terms_size_two(args);
+                        assert(crate::k2_engine::term_size(t) == 1 + crate::k2_engine::term_size(
+                            args[0],
+                        ) + crate::k2_engine::term_size(args[1]));
+                    }
+                    pending.push(left);
+                    let ghost mid = pending@;
+                    pending.push(right);
+                    proof {
+                        scope_work_push(arena.nodes@, rest, left);
+                        scope_work_push(arena.nodes@, mid, right);
+                        assert(pending@.drop_last() =~= mid);
+                        assert(mid.drop_last() =~= rest);
+                        reveal_with_fuel(edge_roots, 2);
+                    }
+                } else if child_roots.len() == 3 && crate::k4_bytes::eq(
+                    name,
+                    b"guideline_operator",
+                ) {
+                    let op = child_roots[2];
+                    proof {
+                        assert(args[2] == arena@[op as int]);
+                    }
+                    if edge_op_exec(arena, op) {
+                        return true;
+                    }
+                }
+            },
+            _ => {},
+        }
+    }
+    proof {
+        reveal_with_fuel(edge_roots, 1);
+    }
+    false
+}
+
+pub fn any_edge_exec(arena: &ETermArena, roots: &Vec<usize>) -> (r: bool)
+    requires
+        arena_ok(arena),
+        crate::k2_engine::roots_valid(arena.nodes@, roots@),
+    ensures
+        r == ckc_spec::replay::any_edge(crate::k2_engine::root_terms(arena.nodes@, roots@)),
+{
+    hide(ckc_spec::replay::any_edge);
+    let ghost gs = crate::k2_engine::root_terms(arena.nodes@, roots@);
+    let mut i = 0usize;
+    proof {
+        assert(gs.skip(0) =~= gs);
+    }
+    while i < roots.len()
+        invariant
+            arena_ok(arena),
+            crate::k2_engine::roots_valid(arena.nodes@, roots@),
+            gs == crate::k2_engine::root_terms(arena.nodes@, roots@),
+            i <= roots.len(),
+            ckc_spec::replay::any_edge(gs) == ckc_spec::replay::any_edge(gs.skip(i as int)),
+        decreases roots.len() - i,
+    {
+        proof {
+            assert(gs.skip(i as int)[0] == arena@[roots@[i as int] as int]);
+            assert(gs.skip(i as int).drop_first() =~= gs.skip(i + 1));
+            reveal_with_fuel(ckc_spec::replay::any_edge, 1);
+        }
+        if edge_goal_exec(arena, roots[i]) {
+            return true;
+        }
+        i += 1;
+    }
+    proof {
+        assert(gs.skip(i as int).len() == 0);
+        reveal_with_fuel(ckc_spec::replay::any_edge, 1);
+    }
+    false
+}
+
+pub fn item_edge_exec(arena: &ETermArena, item: &EBodyItem) -> (r: bool)
+    requires
+        arena_ok(arena),
+        crate::k2_engine::body_item_valid(arena.nodes@, item),
+    ensures
+        r == ckc_spec::replay::item_edge(crate::k2_engine::body_item_view(arena.nodes@, item)),
+{
+    match item {
+        EBodyItem::Pos { root } => edge_goal_exec(arena, *root),
+        EBodyItem::Naf { roots } => any_edge_exec(arena, roots),
+    }
+}
+
+pub fn body_edge_exec(arena: &ETermArena, clause: &EClause) -> (r: bool)
+    requires
+        arena_ok(arena),
+        crate::k2_engine::clause_valid(arena.nodes@, clause),
+    ensures
+        r == ckc_spec::replay::body_edge(clause_view(arena.nodes@, clause)),
+{
+    hide(ckc_spec::replay::items_edge);
+    let ghost items = clause_view(arena.nodes@, clause).body;
+    let mut i = 0usize;
+    proof {
+        assert(items.skip(0) =~= items);
+    }
+    while i < clause.body.len()
+        invariant
+            arena_ok(arena),
+            crate::k2_engine::clause_valid(arena.nodes@, clause),
+            items == clause_view(arena.nodes@, clause).body,
+            i <= clause.body.len(),
+            ckc_spec::replay::items_edge(items) == ckc_spec::replay::items_edge(
+                items.skip(i as int),
+            ),
+        decreases clause.body.len() - i,
+    {
+        proof {
+            assert(crate::k2_engine::body_item_valid(arena.nodes@, &clause.body@[i as int]));
+            assert(items.skip(i as int)[0] == crate::k2_engine::body_item_view(
+                arena.nodes@,
+                &clause.body@[i as int],
+            ));
+            assert(items.skip(i as int).drop_first() =~= items.skip(i + 1));
+            reveal_with_fuel(ckc_spec::replay::items_edge, 1);
+        }
+        if item_edge_exec(arena, &clause.body[i]) {
+            return true;
+        }
+        i += 1;
+    }
+    proof {
+        assert(items.skip(i as int).len() == 0);
+        reveal_with_fuel(ckc_spec::replay::items_edge, 1);
+    }
+    false
+}
+
+pub fn holds_exclusion_exec(arena: &ETermArena, db: &Vec<EClause>) -> (r: bool)
+    requires
+        arena_ok(arena),
+        db_valid(arena.nodes@, db@),
+    ensures
+        r == ckc_spec::replay::holds_exclusion(db_view(arena.nodes@, db@)),
+{
+    let name = slice_to_vec(b"guideline_exclusion");
+    proof {
+        scope_scan_literals();
+    }
+    let mut i = 0usize;
+    while i < db.len()
+        invariant
+            arena_ok(arena),
+            db_valid(arena.nodes@, db@),
+            name@ == ckc_spec::v1text::ascii("guideline_exclusion"@),
+            i <= db.len(),
+            forall|j: int|
+                0 <= j < i ==> lit_fa(db_view(arena.nodes@, db@)[j].head) != Some((name@, 1nat)),
+        decreases db.len() - i,
+    {
+        proof {
+            assert(crate::k2_engine::clause_valid(arena.nodes@, &db@[i as int]));
+            assert(db_view(arena.nodes@, db@)[i as int].head == arena@[db@[i as int].head as int]);
+        }
+        if literal_matches(arena, db[i].head, &name, 1) {
+            return true;
+        }
+        i += 1;
+    }
+    false
+}
+
+pub fn first_edge_condition_exec(arena: &ETermArena, db: &Vec<EClause>) -> (r: Option<usize>)
+    requires
+        arena_ok(arena),
+        db_valid(arena.nodes@, db@),
+    ensures
+        r matches Some(i) ==> i < db.len(),
+        recursive_clause_view(arena.nodes@, db@, r) == ckc_spec::replay::first_edge_condition(
+            db_view(arena.nodes@, db@),
+        ),
+{
+    hide(ckc_spec::replay::first_edge_condition);
+    let ghost cs = db_view(arena.nodes@, db@);
+    let mut i = 0usize;
+    proof {
+        assert(cs.skip(0) =~= cs);
+    }
+    while i < db.len()
+        invariant
+            arena_ok(arena),
+            db_valid(arena.nodes@, db@),
+            cs == db_view(arena.nodes@, db@),
+            i <= db.len(),
+            ckc_spec::replay::first_edge_condition(cs) == ckc_spec::replay::first_edge_condition(
+                cs.skip(i as int),
+            ),
+        decreases db.len() - i,
+    {
+        proof {
+            assert(crate::k2_engine::clause_valid(arena.nodes@, &db@[i as int]));
+            assert(cs[i as int] == clause_view(arena.nodes@, &db@[i as int]));
+            assert(cs.skip(i as int).drop_first() =~= cs.skip(i + 1));
+            reveal_with_fuel(ckc_spec::replay::first_edge_condition, 1);
+        }
+        if body_edge_exec(arena, &db[i]) {
+            return Some(i);
+        }
+        i += 1;
+    }
+    proof {
+        assert(cs.skip(i as int).len() == 0);
+        reveal_with_fuel(ckc_spec::replay::first_edge_condition, 1);
+    }
+    None
+}
+
+pub fn scope_condition_error(arena: &mut ETermArena, clause: &EClause) -> (out:
+    ckc_spec::replay::EOut)
+    requires
+        arena_ok(old(arena)),
+        crate::k2_engine::clause_valid(old(arena).nodes@, clause),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        out@ == ckc_spec::replay::proof_fail(
+            ckc_spec::term::Term::Comp(
+                ckc_spec::v1text::ascii("scope_condition"@),
+                seq![ckc_spec::replay::site(clause_view(old(arena).nodes@, clause))],
+            ),
+        ),
+{
+    let site = site_root(arena, clause);
+    let label: &[u8] = b"scope_condition";
+    proof {
+        scope_scan_literals();
+    }
+    let detail = crate::k2_output::comp1(arena, label, site);
+    crate::k2_output::error_out(arena, detail, true)
 }
 
 fn site_root(arena: &mut ETermArena, clause: &EClause) -> (out: usize)

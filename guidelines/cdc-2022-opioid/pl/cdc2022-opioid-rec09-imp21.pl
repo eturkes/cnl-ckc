@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec09-imp21',ace_sha256('198eabfdb8491de9eb9893c9f0fb9571a5dd938f98a1045d222a93ff6f06751b'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has an opioid-diversion-risk and the opioid-diversion-risk possibly is likely then every clinician may consider a toxicology-testing for the patient and may assess a withdrawal-risk during an opioid-discontinuation for the patient.

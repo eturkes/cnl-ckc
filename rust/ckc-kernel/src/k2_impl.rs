@@ -116,6 +116,13 @@ pub fn v1_recursion_check_impl(mpath: &[u8], m: &ESrc, pls: &Vec<ESrc>, pys: &Ve
         ) {
             return out;
         }
+    } else if crate::k2_recursion::holds_exclusion_exec(&arena, &loaded.db) {
+        if let Some(index) = crate::k2_recursion::first_edge_condition_exec(&arena, &loaded.db) {
+            proof {
+                assert(crate::k2_engine::clause_valid(arena.nodes@, &loaded.db@[index as int]));
+            }
+            return crate::k2_recursion::scope_condition_error(&mut arena, &loaded.db[index]);
+        }
     }
     crate::k2_output::meter_out(rows.len(), indices.len(), true)
 }

@@ -4,6 +4,14 @@ use vstd::slice::slice_to_vec;
 verus! {
 
 pub enum Sym {
+    GuidelineExclusion,
+    ScopeShape,
+    DeonticCondition,
+    NegatedDeontic,
+    RootDeontic,
+    Root,
+    Subject,
+    Consequent,
     DollarGuideline,
     DollarGuidelineBound,
     DollarGuidelineMeasure,
@@ -163,6 +171,14 @@ pub enum Sym {
 
 pub open spec fn symbol(s: &Sym) -> Seq<u8> {
     match s {
+        Sym::GuidelineExclusion => ckc_spec::v1text::ascii("guideline_exclusion"@),
+        Sym::ScopeShape => ckc_spec::v1text::ascii("scope_shape"@),
+        Sym::DeonticCondition => ckc_spec::v1text::ascii("deontic_condition"@),
+        Sym::NegatedDeontic => ckc_spec::v1text::ascii("negated_deontic"@),
+        Sym::RootDeontic => ckc_spec::v1text::ascii("root_deontic"@),
+        Sym::Root => ckc_spec::v1text::ascii("root"@),
+        Sym::Subject => ckc_spec::v1text::ascii("subject"@),
+        Sym::Consequent => ckc_spec::v1text::ascii("consequent"@),
         Sym::DollarGuideline => ckc_spec::v1text::ascii("$guideline_"@),
         Sym::DollarGuidelineBound => ckc_spec::v1text::ascii("$guideline_bound"@),
         Sym::DollarGuidelineMeasure => ckc_spec::v1text::ascii("$guideline_measure"@),
@@ -334,6 +350,14 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         out@ == symbol(s),
 {
     match s {
+        Sym::GuidelineExclusion => bytes_guidelineexclusion(),
+        Sym::ScopeShape => bytes_scopeshape(),
+        Sym::DeonticCondition => bytes_deonticcondition(),
+        Sym::NegatedDeontic => bytes_negateddeontic(),
+        Sym::RootDeontic => bytes_rootdeontic(),
+        Sym::Root => bytes_root(),
+        Sym::Subject => bytes_subject(),
+        Sym::Consequent => bytes_consequent(),
         Sym::DollarGuideline => bytes_dollarguideline(),
         Sym::DollarGuidelineBound => bytes_dollarguidelinebound(),
         Sym::DollarGuidelineMeasure => bytes_dollarguidelinemeasure(),
@@ -490,6 +514,118 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::ZeroBound => bytes_zerobound(),
         Sym::Naf => bytes_naf(),
     }
+}
+
+fn bytes_guidelineexclusion() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("guideline_exclusion"@),
+{
+    let b: &[u8] = b"guideline_exclusion";
+    proof {
+        reveal_byteslit(b"guideline_exclusion");
+        reveal_strlit("guideline_exclusion");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_exclusion"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_scopeshape() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("scope_shape"@),
+{
+    let b: &[u8] = b"scope_shape";
+    proof {
+        reveal_byteslit(b"scope_shape");
+        reveal_strlit("scope_shape");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("scope_shape"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_deonticcondition() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("deontic_condition"@),
+{
+    let b: &[u8] = b"deontic_condition";
+    proof {
+        reveal_byteslit(b"deontic_condition");
+        reveal_strlit("deontic_condition");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("deontic_condition"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_negateddeontic() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("negated_deontic"@),
+{
+    let b: &[u8] = b"negated_deontic";
+    proof {
+        reveal_byteslit(b"negated_deontic");
+        reveal_strlit("negated_deontic");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("negated_deontic"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_rootdeontic() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("root_deontic"@),
+{
+    let b: &[u8] = b"root_deontic";
+    proof {
+        reveal_byteslit(b"root_deontic");
+        reveal_strlit("root_deontic");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("root_deontic"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_root() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("root"@),
+{
+    let b: &[u8] = b"root";
+    proof {
+        reveal_byteslit(b"root");
+        reveal_strlit("root");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("root"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_subject() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("subject"@),
+{
+    let b: &[u8] = b"subject";
+    proof {
+        reveal_byteslit(b"subject");
+        reveal_strlit("subject");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("subject"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_consequent() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("consequent"@),
+{
+    let b: &[u8] = b"consequent";
+    proof {
+        reveal_byteslit(b"consequent");
+        reveal_strlit("consequent");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("consequent"@));
+    }
+    slice_to_vec(b)
 }
 
 fn bytes_dollarguidelinebound() -> (out: Vec<u8>)

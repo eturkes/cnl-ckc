@@ -24,6 +24,7 @@ pub const INDICATORS: &[(&str, usize)] = &[
     ("guideline_preference", 4),
     ("guideline_qualifier", 4),
     ("guideline_unit", 3),
+    ("guideline_exclusion", 1),
 ];
 pub fn declarations(nt: bool) -> String {
     INDICATORS

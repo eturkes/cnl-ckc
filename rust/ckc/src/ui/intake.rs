@@ -442,9 +442,17 @@ fn vocabulary(root: &Path, gid: &str) -> Result<Option<Vec<u8>>> {
         return Ok(None);
     }
     let bytes = load_text(root, gid, "vocabulary.tsv")?;
-    match ckc_kernel::contract::check_vocabulary(b"vocabulary.tsv", &bytes) {
+    // The logical corpus path lets the scope-key law (cs1 D1) see the guideline id;
+    // the message keeps its short table name.
+    let logical = format!("guidelines/{gid}/");
+    let path = format!("{logical}vocabulary.tsv");
+    match ckc_kernel::contract::check_vocabulary(path.as_bytes(), &bytes) {
         EVerdict::Ok(_) => Ok(Some(bytes)),
-        EVerdict::Fail(_, detail) => Err(format!("ui: viewmodel: {gid} {}", text(&detail))),
+        EVerdict::Fail(_, detail) => {
+            let detail = text(&detail);
+            let short = detail.strip_prefix(&logical).unwrap_or(&detail);
+            Err(format!("ui: viewmodel: {gid} {short}"))
+        }
     }
 }
 fn guideline(root: &Path, gid: &str) -> Result<(EGuideline, Vec<Option<String>>)> {

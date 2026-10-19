@@ -440,6 +440,7 @@ pub fn project_all(
 {
     hide(spec::sentence_groups);
     hide(spec::group_clauses);
+    hide(spec::scope_pass);
     let ghost start = arena.nodes@;
     let mut out = Vec::new();
     let mut map = Vec::new();
@@ -518,6 +519,7 @@ pub fn project_all(
             tags_prefix(middle, arena.nodes@, tagged@);
             projections_prefix(middle, arena.nodes@, out@);
             prefix_all(middle, arena.nodes@, dims@);
+            roots_prefix(middle, arena.nodes@, roots@);
         }
         let (groups, map2) = match result {
             Ok(pair) => pair,
@@ -553,6 +555,19 @@ pub fn project_all(
             }
             return Err(err_at(arena, s, &e, Ghost(start)));
         }
+        let ghost before_scope = arena.nodes@;
+        let scoped = crate::m6_scope::scope_pass(arena, tab, &roots, groups);
+        proof {
+            crate::k2_load::prefix_chain(start, before_scope, arena.nodes@);
+            tags_prefix(before_scope, arena.nodes@, tagged@);
+            projections_prefix(before_scope, arena.nodes@, out@);
+            map_prefix(before_scope, arena.nodes@, map2@);
+            prefix_all(before_scope, arena.nodes@, dims2@);
+        }
+        let groups = match scoped {
+            Ok(gs) => gs,
+            Err(e) => return Err(err_at(arena, s, &e, Ghost(start))),
+        };
         let p = Projected { s, groups };
         let ghost future = spec::project_from(
             tag_models(tagged@),

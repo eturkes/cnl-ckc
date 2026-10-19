@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('fx-doc',ace_sha256('35cc01e601e3b8402cc61ca8ae4d094a32b67a2c697909ba2fe75fe15511b680'),ulex(none),vocabulary(none)).
 % S1: Every patient is a person.

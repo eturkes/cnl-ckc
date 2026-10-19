@@ -37,9 +37,12 @@
 %   a guideline_unit/3 literal after every time quantity of its unit rows and,
 %   in antecedents + questions, value comparisons through guideline_satisfies/4|6
 %   (contract nt1; the nt1_ prefix; definitions = guidelines/schema.pl),
+%   with its scope + exclusion pair an exclusion rule's record
+%   guideline_exclusion(Key) and \+ guideline_exclusion(Key) on every
+%   should/must/may edge clause (contract cs1; the cs1_ prefix),
 %   and admits relation/3 leaves + upper-bound condition lists in questions;
 %   rejects add unsupported temporal_shape(Why,S), grade_shape(Why,S),
-%   preference_shape(Why,S), qualifier_shape(Why,S) and the load class
+%   preference_shape(Why,S), qualifier_shape(Why,S), scope_shape(Why,S) and the load class
 %   vocabulary_load (exit 2). Law = docs/REFERENCE.md "Compiled Prolog schema".
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
@@ -764,9 +767,20 @@ read_vocabulary(File, table(Units, Relations, Spacings, Windows, Frequencies,
     ( Body \== [] -> true ; v2_bad(no_rows) ),
     ( append(Lines, [0'\n], Body) -> true ; v2_bad(final_newline) ),
     split_lf(Lines, Rows),
-    v2_rows(Rows, 1, t([], [], [], [], [], [], [], k([], [], [], [], [])),
+    v2_rows(Rows, 1, t([], [], [], [], [], [], [], k([], [], [], [], [], [], [])),
         t(Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges,
-          Strength)).
+          Strength)),
+    v2_pairing(Strength).
+
+/* cs1 D1: the scope + exclusion rows come as a pair; a lone row reports
+   after the last row. */
+v2_pairing(k(_, _, _, _, _, Sc, Ex)) :-
+    ( Sc = [scope(_, _, N)], Ex == [] ->
+        v2_bad(row(N, scope_without_exclusion))
+    ; Ex = [exclusion(_, N)], Sc == [] ->
+        v2_bad(row(N, exclusion_without_scope))
+    ; true
+    ).
 
 v2_bad(Why) :-
     throw(error(vocabulary(Why), context(ace_to_pl:read_vocabulary/2, _))).
@@ -782,10 +796,12 @@ v2_rows([Row|Rows], N, T0, T) :-
    two-line header fails at row 1. A noun is one of unit, frame and grade
    noun; a preposition maps to at most one of relation, frequency and range,
    and an alternative preposition to no other kind; a lemma is at most one of
-   an approximation, a preference and a qualifier (s1 D2, s2 D2). K =
-   k(Strengths, Evidences, Preferences, Alternatives, Qualifiers). */
+   an approximation, a preference and a qualifier (s1 D2, s2 D2); one scope
+   row (a noun that is no unit, frame or grade noun + the guideline key) and
+   one exclusion row (its verb) (cs1 D1). K = k(Strengths, Evidences,
+   Preferences, Alternatives, Qualifiers, Scope, Exclusion). */
 v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
-    K0 = k(GS0, GE0, P0, Alt0, Q0),
+    K0 = k(GS0, GE0, P0, Alt0, Q0, Sc0, Ex0),
     ( Row = [0'#|_] -> v2_bad(row(N, comment)) ; true ),
     v2_split_tab(Row, Fields),
     ( Fields = [K, L, V] -> true ; v2_bad(row(N, field_count)) ),
@@ -797,7 +813,8 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; v2_bad(row(N, unit_id))
         ),
         ( ( memberchk(Lemma-_, U0) ; memberchk(_-Lemma, S0) ; memberchk(_-Lemma, W0)
-          ; memberchk(Lemma-_, GS0) ; memberchk(Lemma-_, GE0) ) ->
+          ; memberchk(Lemma-_, GS0) ; memberchk(Lemma-_, GE0)
+          ; memberchk(scope(Lemma, _, _), Sc0) ) ->
             v2_bad(row(N, duplicate_noun))
         ; true
         ),
@@ -818,7 +835,8 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
     ; ( Kind == spacing ; Kind == window ) ->
         ( v2_lemma(V, Frame) -> true ; v2_bad(row(N, frame_lemma)) ),
         ( ( memberchk(Lemma-Frame, S0) ; memberchk(Lemma-Frame, W0)
-          ; memberchk(Frame-_, U0) ; memberchk(Frame-_, GS0) ; memberchk(Frame-_, GE0) ) ->
+          ; memberchk(Frame-_, U0) ; memberchk(Frame-_, GS0) ; memberchk(Frame-_, GE0)
+          ; memberchk(scope(Frame, _, _), Sc0) ) ->
             v2_bad(row(N, duplicate_noun))
         ; true
         ),
@@ -862,15 +880,16 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ),
         ( v2_closed_id(V, Ids, Value) -> true ; v2_bad(row(N, Why)) ),
         ( ( memberchk(Lemma-_, GS0) ; memberchk(Lemma-_, GE0) ; memberchk(Lemma-_, U0)
-          ; memberchk(_-Lemma, S0) ; memberchk(_-Lemma, W0) ) ->
+          ; memberchk(_-Lemma, S0) ; memberchk(_-Lemma, W0)
+          ; memberchk(scope(Lemma, _, _), Sc0) ) ->
             v2_bad(row(N, duplicate_noun))
         ; true
         ),
         ( Kind == strength ->
             append(GS0, [Lemma-Value], GS),
-            T = t(U0, R0, S0, W0, F0, A0, G0, k(GS, GE0, P0, Alt0, Q0))
+            T = t(U0, R0, S0, W0, F0, A0, G0, k(GS, GE0, P0, Alt0, Q0, Sc0, Ex0))
         ; append(GE0, [Lemma-Value], GE),
-          T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE, P0, Alt0, Q0))
+          T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE, P0, Alt0, Q0, Sc0, Ex0))
         )
     ; Kind == preference ->
         ( atom_codes(preferred, V) -> true ; v2_bad(row(N, preference_value)) ),
@@ -879,7 +898,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(P0, [Lemma], P),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P, Alt0, Q0))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P, Alt0, Q0, Sc0, Ex0))
     ; Kind == alternative ->
         ( atom_codes(alternative, V) -> true ; v2_bad(row(N, alternative_value)) ),
         ( ( memberchk(Lemma, Alt0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma-_, S0)
@@ -888,7 +907,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(Alt0, [Lemma], Alt),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt, Q0))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt, Q0, Sc0, Ex0))
     ; Kind == qualifier ->
         ( v2_closed_id(V, [usuality, ideality, focus, manner, force, possibility,
               applicability], Class) ->
@@ -901,9 +920,30 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(Q0, [Lemma-Class], Q),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt0, Q))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt0, Q, Sc0, Ex0))
+    ; Kind == scope ->
+        ( v2_scope_key(V, Key) -> true ; v2_bad(row(N, scope_value)) ),
+        ( Sc0 \== [] -> v2_bad(row(N, duplicate_scope)) ; true ),
+        ( ( memberchk(Lemma-_, U0) ; memberchk(_-Lemma, S0) ; memberchk(_-Lemma, W0)
+          ; memberchk(Lemma-_, GS0) ; memberchk(Lemma-_, GE0) ) ->
+            v2_bad(row(N, duplicate_noun))
+        ; true
+        ),
+        T = t(U0, R0, S0, W0, F0, A0, G0,
+            k(GS0, GE0, P0, Alt0, Q0, [scope(Lemma, Key, N)], Ex0))
+    ; Kind == exclusion ->
+        ( atom_codes(scope, V) -> true ; v2_bad(row(N, exclusion_value)) ),
+        ( Ex0 \== [] -> v2_bad(row(N, duplicate_exclusion)) ; true ),
+        T = t(U0, R0, S0, W0, F0, A0, G0,
+            k(GS0, GE0, P0, Alt0, Q0, Sc0, [exclusion(Lemma, N)]))
     ; v2_bad(row(N, kind))
     ).
+
+/* cs1 D1: a guideline key = the docid grammar (spec v1text name_ok). */
+v2_scope_key([C|Cs], Key) :-
+    C =\= 0'-,
+    forall(member(X, [C|Cs]), docid_code(X)),
+    atom_codes(Key, [C|Cs]).
 
 v2_split_tab(Codes, [Field|Fields]) :-
     ( append(Field, [0'\t|Rest], Codes) ->
@@ -1237,7 +1277,7 @@ s1_item(Item, T, K, S, Where, Scope, Out) :-
       functor(Inner, modifier_pp, 3),
       arg(2, Inner, Prep),
       atom(Prep),
-      K = k(_, _, _, Alt, _),
+      K = k(_, _, _, Alt, _, _, _),
       memberchk(Prep, Alt) ->
         arg(1, Inner, E),
         ( s1_event_pred(Scope, Ctx, E, Pred),
@@ -1249,7 +1289,7 @@ s1_item(Item, T, K, S, Where, Scope, Out) :-
       functor(Inner, modifier_adv, 3),
       arg(2, Inner, Adv),
       atom(Adv),
-      K = k(_, _, _, _, Quals),
+      K = k(_, _, _, _, Quals, _, _),
       memberchk(Adv-Class, Quals) ->
         arg(1, Inner, E),
         arg(3, Inner, Degree),
@@ -1297,7 +1337,7 @@ s2_edge([Item|Items], Ctx, Outer, Op) :-
 /* s2 D3.2: one qualifier per same-context property(P, Adj, pos) of a copula
    be(X, P) whose complement P names no thing (no object declaration) and
    whose Adj is a qualifier lemma, in item order. */
-s2_copula_qualifiers(k(_, _, _, _, Quals), Scope, Ctx, Pred, Qs) :-
+s2_copula_qualifiers(k(_, _, _, _, Quals, _, _), Scope, Ctx, Pred, Qs) :-
     ( functor(Pred, predicate, 4),
       arg(2, Pred, Verb),
       Verb == be,
@@ -1389,7 +1429,7 @@ s1_alternatives([Item|Items], Alt, Ctx, E, Objs) :-
 /* D4: some(Preferred, Alternative | none), none, or err(Why). A preference
    copula be(X, P) (P a preference property) prefers X; any other event with
    one alternative pp prefers its second participant. */
-s1_preference_of(T, k(_, _, Prefs, Alt, _), Scope, Ctx, Pred, Result) :-
+s1_preference_of(T, k(_, _, Prefs, Alt, _, _, _), Scope, Ctx, Pred, Result) :-
     arg(1, Pred, E),
     s1_alternatives(Scope, Alt, Ctx, E, Alts),
     length(Alts, NA),
@@ -1417,7 +1457,7 @@ s1_preference_of(T, k(_, _, Prefs, Alt, _), Scope, Ctx, Pred, Result) :-
 
 /* D3: the grade of a root-fact copula be(R, L) in context actual whose
    complement's noun is a grade noun. */
-s1_grade(T, k(Strengths, Evidences, _, _, _), Ctx, Pred, Dim, Value) :-
+s1_grade(T, k(Strengths, Evidences, _, _, _, _, _), Ctx, Pred, Dim, Value) :-
     Ctx == actual,
     functor(Pred, predicate, 4),
     arg(2, Pred, Verb),
@@ -1775,8 +1815,8 @@ vocabulary_record(Record0, Record) :-
    invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
    See docs/REFERENCE.md "Compiled Prolog schema". */
 
-/* Uniform declaration block (F2, c1 D2, s1 D1, s2 D1): every document
-   declares all 19 indicators regardless of population or table. */
+/* Uniform declaration block (F2, c1 D2, s1 D1, s2 D1, nt1 D2, cs1 D2): every
+   document declares all 20 indicators regardless of population or table. */
 v1_indicators([
     guideline_schema_version/1,
     guideline_document/4,
@@ -1796,7 +1836,8 @@ v1_indicators([
     guideline_grade/5,
     guideline_preference/4,
     guideline_qualifier/4,
-    guideline_unit/3
+    guideline_unit/3,
+    guideline_exclusion/1
 ]).
 
 v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
@@ -1994,18 +2035,237 @@ v1_reserved_atom(Atom) :-
 v1_translate_groups([], _, _, _, []).
 v1_translate_groups([S-Group|Groups], DocId, Map0, Dims0,
         [bundle(S, SGroups)|Bundles]) :-
-    v1_sentence(Group, S, DocId, Map0, Map, SGroups),
-    v1_groups_clause_count(SGroups, ClauseCount),
+    v1_sentence(Group, S, DocId, Map0, Map, SGroups0),
+    v1_groups_clause_count(SGroups0, ClauseCount),
     ( ClauseCount =:= 0 ->
         reject(unsupported, sentence_shape(Group))
     ; true
     ),
-    s1_grade_dims(SGroups, Dims0, Dims),
+    s1_grade_dims(SGroups0, Dims0, Dims),
     ( is_set(Dims) ->
         true
     ; reject(unsupported, grade_shape(duplicate_dimension, S))
     ),
+    cs1_scope_pass(Group, S, SGroups0, SGroups),
     v1_translate_groups(Groups, DocId, Map, Dims, Bundles).
+
+/* ---------- cs1 scope exclusions (contract cs1 D2-D5: a table with the
+   scope + exclusion pair) ----------
+   After a sentence's translation and the duplicate-grade check (so every
+   earlier reject reports first): an exclusion rule (`If C then it is false
+   that a <scope noun> <exclusion verb>s ...`) gains one record clause
+   guideline_exclusion(Key) :- Body after its clauses; every
+   should|must|may edge clause ends with \+ guideline_exclusion(Key);
+   rejects scope_shape(Why, S). DRS read via arg/3 + == only. */
+cs1_scope(Noun, Verb, Key) :-
+    nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _,
+        k(_, _, _, _, _, [scope(Noun, Key, _)], [exclusion(Verb, _)]), _)).
+
+cs1_scope_pass(Group, S, SGroups0, SGroups) :-
+    ( cs1_scope(Noun, Verb, Key) ->
+        cs1_class(Group, Noun, Verb, Class),
+        ( Class = reject(Why) ->
+            reject(unsupported, scope_shape(Why, S))
+        ; Class == exclusion ->
+            maplist(cs1_group(Key, true), SGroups0, SGroups)
+        ; maplist(cs1_group(Key, false), SGroups0, SGroups)
+        )
+    ; SGroups = SGroups0
+    ).
+
+/* D4 order: rules deontic_condition, negated_deontic, subject, consequent;
+   roots root_deontic, root. */
+cs1_class([rule(Ante, Cons)], Noun, Verb, Class) :-
+    !,
+    v1_curry(Ante, Cons, Segs, FinalCons),
+    ( member(seg(_, Conds), Segs),
+      cs1_has_deontic(Conds) ->
+        Class = reject(deontic_condition)
+    ; cs1_negated_deontic(FinalCons) ->
+        Class = reject(negated_deontic)
+    ; arg(2, FinalCons, CConds),
+      cs1_verb_box(CConds, Verb, BDom, BConds) ->
+        cs1_verb_leaf(BConds, Verb, Pred),
+        arg(3, Pred, X),
+        ( \+ cs1_var_member(X, BDom) ->
+            Class = reject(subject)
+        ; \+ cs1_noun_in(BConds, X, Noun) ->
+            Class = reject(subject)
+        ; CConds = [_],
+          cs1_exclusion_box(BDom, BConds, Noun, Verb) ->
+            Class = exclusion
+        ; Class = reject(consequent)
+        )
+    ; Class = plain
+    ).
+cs1_class(Group, _, Verb, Class) :-
+    ( member(Item, Group),
+      cs1_root_deontic(Item) ->
+        Class = reject(root_deontic)
+    ; member(Item, Group),
+      nonvar(Item),
+      Item = boxed(C),
+      cs1_box_names_verb(C, Verb) ->
+        Class = reject(root)
+    ; Class = plain
+    ).
+
+cs1_deontic_box(T) :-
+    compound(T),
+    functor(T, Op, 1),
+    memberchk(Op, [should, must, may]).
+
+cs1_has_deontic(T) :-
+    sub_term(Sub, T),
+    nonvar(Sub),
+    cs1_deontic_box(Sub),
+    !.
+
+cs1_negated_deontic(T) :-
+    sub_term(Sub, T),
+    nonvar(Sub),
+    compound(Sub),
+    functor(Sub, -, 1),
+    arg(1, Sub, Box),
+    cs1_has_deontic(Box),
+    !.
+
+cs1_root_deontic(anchored(Inner)) :-
+    cs1_has_deontic(Inner).
+cs1_root_deontic(boxed(C)) :-
+    cs1_has_deontic(C).
+
+cs1_leaf(C, Leaf) :-
+    nonvar(C),
+    functor(C, -, 2),
+    arg(2, C, Anchor),
+    nonvar(Anchor),
+    anchor_sentence(Anchor, _),
+    arg(1, C, Leaf).
+
+cs1_var_member(X, Dom) :-
+    member(V, Dom),
+    V == X,
+    !.
+
+/* A predicate/3..5 leaf of the exclusion verb (a transitive one reaches
+   D3, which rejects it as consequent); D3 itself requires arity 3. */
+cs1_verb_pred(Leaf, Verb) :-
+    nonvar(Leaf),
+    functor(Leaf, predicate, Arity),
+    Arity >= 3,
+    Arity =< 5,
+    arg(2, Leaf, V),
+    V == Verb.
+
+/* A box's leaves through upper-bound group lists (spec group_leaves:
+   anchored conditions via list spines alone), so `exactly|at most|less than
+   N <scope noun>s` reaches consequent instead of compiling as plain data. */
+cs1_group_leaves(T, Leaves) :-
+    ( cs1_leaf(T, Leaf) ->
+        Leaves = [Leaf]
+    ; compound(T),
+      compound_name_arity(T, '[|]', 2) ->
+        arg(1, T, H),
+        arg(2, T, Tl),
+        cs1_group_leaves(H, L1),
+        cs1_group_leaves(Tl, L2),
+        append(L1, L2, Leaves)
+    ; Leaves = []
+    ).
+
+cs1_names_verb(BConds, Verb) :-
+    cs1_group_leaves(BConds, Leaves),
+    member(Leaf, Leaves),
+    cs1_verb_pred(Leaf, Verb),
+    !.
+
+/* The first top-level classical negation box of the consequent that names
+   the exclusion verb. */
+cs1_verb_box(CConds, Verb, BDom, BConds) :-
+    member(C, CConds),
+    cs1_box_names_verb(C, Verb),
+    !,
+    arg(1, C, Box),
+    arg(1, Box, BDom),
+    arg(2, Box, BConds).
+
+cs1_box_names_verb(C, Verb) :-
+    nonvar(C),
+    functor(C, -, 1),
+    arg(1, C, Box),
+    nonvar(Box),
+    functor(Box, drs, 2),
+    arg(2, Box, BConds),
+    is_list(BConds),
+    cs1_names_verb(BConds, Verb).
+
+cs1_verb_leaf(BConds, Verb, Leaf) :-
+    cs1_group_leaves(BConds, Leaves),
+    member(Leaf, Leaves),
+    cs1_verb_pred(Leaf, Verb),
+    !.
+
+/* The noun of X's first object leaf is the scope noun. */
+cs1_noun_in(BConds, X, Noun) :-
+    cs1_group_leaves(BConds, Leaves),
+    member(Leaf, Leaves),
+    nonvar(Leaf),
+    functor(Leaf, object, 6),
+    arg(1, Leaf, X1),
+    X1 == X,
+    !,
+    arg(2, Leaf, N),
+    N == Noun.
+
+/* D3: object(X, Noun, countable, na, eq, 1), predicate(E, Verb, X), then
+   modifier_pp(E, _, Y) leaves with Y outside the box. */
+cs1_exclusion_box(BDom, BConds, Noun, Verb) :-
+    cs1_leaves(BConds, Leaves),
+    Leaves = [O, P|Pps],
+    functor(O, object, 6),
+    arg(1, O, X),
+    arg(2, O, N), N == Noun,
+    arg(3, O, Cl), Cl == countable,
+    arg(4, O, U), U == na,
+    arg(5, O, Cmp), Cmp == eq,
+    arg(6, O, Cnt), Cnt == 1,
+    functor(P, predicate, 3),
+    cs1_verb_pred(P, Verb),
+    arg(1, P, E),
+    arg(3, P, X2), X2 == X,
+    cs1_var_member(X, BDom),
+    cs1_var_member(E, BDom),
+    forall(member(Pp, Pps),
+        ( nonvar(Pp),
+          functor(Pp, modifier_pp, 3),
+          arg(1, Pp, E1), E1 == E,
+          arg(3, Pp, Y),
+          \+ cs1_var_member(Y, BDom)
+        )).
+
+cs1_leaves([], []).
+cs1_leaves([C|Cs], [Leaf|Leaves]) :-
+    cs1_leaf(C, Leaf),
+    cs1_leaves(Cs, Leaves).
+
+cs1_group(Key, Excl, group(Kind, K, Pairs, Clauses0),
+        group(Kind, K, Pairs, Clauses)) :-
+    maplist(cs1_guard(Key), Clauses0, Clauses1),
+    ( Excl == true,
+      Clauses0 = [clause(_, Body)|_] ->
+        append(Clauses1, [clause(guideline_exclusion(Key), Body)], Clauses)
+    ; Clauses = Clauses1
+    ).
+
+cs1_guard(Key, clause(Head, Goals), clause(Head, Goals2)) :-
+    ( functor(Head, guideline_operator, 3),
+      arg(3, Head, Op),
+      atom(Op),
+      memberchk(Op, [should, must, may]) ->
+        append(Goals, [naf([], [guideline_exclusion(Key)])], Goals2)
+    ; Goals2 = Goals
+    ).
 
 v1_groups_clause_count([], 0).
 v1_groups_clause_count([group(_, _, _, Clauses)|Groups], Count) :-

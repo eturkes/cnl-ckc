@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec10-imp09',ace_sha256('15439a0398bdff7f23eab972255d24ea3e7301db823e44bf5c368ee187135d10'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a clinician works in a practice-context and the practice-context uses a toxicology-screening-panel and the toxicology-screening-panel includes a drug then the clinician should know the drug and should understand a toxicology-result-interpretation for the drug.

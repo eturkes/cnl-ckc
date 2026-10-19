@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec03-imp05',ace_sha256('550ad10e9551d601ae9fd4bf25b147aaedcb346b66be3b58b4da323454fda718'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has a renal-dysfunction and a clinician prescribes an ER-LA-opioid to the patient then the clinician should prescribe the ER-LA-opioid cautiously to the patient and should consider a longer-dosing-interval.

@@ -48,9 +48,9 @@ fn terms() -> Vec<String> {
 fn p1_nineteen_declarations_and_exact_block_boundaries() {
     let mut c = Cases::new("P1-declarations");
     let text = document("doc", &["guideline_event(actual,e,wait)".into()]);
-    c.check("19 declarations", &text);
+    c.check("20 declarations", &text);
     let pairs: Vec<_> = INDICATORS.iter().map(|&(n, a)| pair(n, a)).collect();
-    for count in 0..19 {
+    for count in 0..20 {
         c.mutation(
             &format!("{count} declarations"),
             &text,
@@ -62,7 +62,7 @@ fn p1_nineteen_declarations_and_exact_block_boundaries() {
         c.mutation(&format!("missing pair {i}"), &text, pair, "");
         c.mutation(&format!("duplicate pair {i}"), &text, pair, &pair.repeat(2));
     }
-    for i in 0..18 {
+    for i in 0..19 {
         c.mutation(
             &format!("swapped pairs {i}"),
             &text,

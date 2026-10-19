@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('root-exact-stable-rule',ace_sha256('69596e5c3e310505cdabbfb7a4f72f550f3602fe1a0c29da0a89719cb6ef1804'),ulex(sha256('9cfaa91b8eb133f080bf5e9cd8d9c1ba4a8204918639a392eb9a5352ee7ab0d0')),vocabulary(none)).
 % S1: If a man sleeps then the man sees exactly 2 dogs.

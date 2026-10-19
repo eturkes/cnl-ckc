@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec03-imp04',ace_sha256('2e990ff89ca79da8ddba4851d3121ae36883fddbbb3a98eecfe7a3036a71cdd4'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: If a patient has a different-immediate-release-opioid-history and a clinician initiates an ER-LA-opioid for the patient then the clinician should consult a product-labeling and should reduce a total-daily-dosage for an incomplete-cross-tolerance.

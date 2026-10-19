@@ -37,6 +37,8 @@
 :- discontiguous(guideline_qualifier/4).
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
 guideline_document('fx-timed',ace_sha256('64bade3c6bbf6b91ffdf8312515958f83db8ad4534f77ac3dab65d6bc3e25d1f'),ulex(none),vocabulary(sha256(ada5ef3853ade7e4a96fd314aa931e2e49918987ab479c35724611017741e816))).
 % S1: Every patient waits for at most 2 hours.
