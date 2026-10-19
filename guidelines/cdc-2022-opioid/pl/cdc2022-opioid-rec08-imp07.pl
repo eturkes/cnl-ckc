@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec08-imp07',ace_sha256(d7993e37a33b12588a98d8460521a3b60e2b2e07f29fcfb79ddd1d019be17490),ulex(sha256(ebe2d3db8559958f9ed44ec7a76cb2fb6ea75017f9f9437c3ea03b07092b0e75)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec08-imp07',ace_sha256(d7993e37a33b12588a98d8460521a3b60e2b2e07f29fcfb79ddd1d019be17490),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every clinician may facilitate a naloxone-access for a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec08-imp07',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec08-imp07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec08-imp07',1,ref(2),[A]),'naloxone-access',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

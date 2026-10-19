@@ -1095,6 +1095,7 @@ noun_sg('scheduled-opioid-example','scheduled-opioid-example',neutr).
 noun_sg('medication-combination-example','medication-combination-example',neutr).
 noun_sg('mechanism-of-action','mechanism-of-action',neutr).
 noun_sg('benzodiazepine-class','benzodiazepine-class',neutr).
+noun_sg('prolonged-opioid-use-prevention','prolonged-opioid-use-prevention',neutr).
 adj_itr(addressable,addressable).
 adj_itr('first-line','first-line').
 tv_infpl(calibrate,calibrate).

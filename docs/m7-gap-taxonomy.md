@@ -34,7 +34,7 @@ the first class to implement. Each class is a separate feature unit.
 
 Strength status: the table's grade nouns give the 12 recommendation
 documents 24 grade records, one strength and one evidence value each.
-13 documents type 26 preferences: `preferred` and `first-line` copulas
+14 documents type 28 preferences: `preferred` and `first-line` copulas
 and `instead-of` alternatives. Two of them, `cdc2022-opioid-s22-02` and
 `cdc2022-opioid-s37-09`, are new documents for regions that earlier
 restated a recommendation without its preference. The table's 56
@@ -56,7 +56,7 @@ and stay in the nouns of the ACE. Two emphasize a whole prohibition
 `cdc2022-opioid-s51-11`); they stay untyped, and the projection notes
 record them.
 
-Temporal status: 55 of the CDC guideline's 385 documents carry
+Temporal status: 56 of the CDC guideline's 387 documents carry
 annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
 whose sources state a bound that the interval and recurrence
@@ -85,8 +85,8 @@ after without a quantity (`during a visit`), a window anchored on a
 start or end point that the source does not name, and a measured
 number such as `3 d` stay outside the schema.
 
-Numeric-threshold status: 30 of the CDC guideline's 385 documents
-compare a quantity with a number, and 33 state a time quantity with its
+Numeric-threshold status: 30 of the CDC guideline's 387 documents
+compare a quantity with a number, and 34 state a time quantity with its
 unit. The 19 documents that stated a comparison in ACE before the
 comparison built-ins compile it as a value comparison without an ACE
 change. A census of the 702 regions outside Box 3

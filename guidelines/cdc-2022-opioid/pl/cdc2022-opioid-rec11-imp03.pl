@@ -38,7 +38,7 @@
 :- multifile(guideline_unit/3).
 :- discontiguous(guideline_unit/3).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec11-imp03',ace_sha256('066222eab7439fd0752a675d7c3b6567010f7829beda1156bdf1074bd581197f'),ulex(sha256(ebe2d3db8559958f9ed44ec7a76cb2fb6ea75017f9f9437c3ea03b07092b0e75)),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec11-imp03',ace_sha256('066222eab7439fd0752a675d7c3b6567010f7829beda1156bdf1074bd581197f'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
 % S1: Every buprenorphine-treatment is an opioid-use-disorder-medication-treatment.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec11-imp03',1,ref(2),[A]),'opioid-use-disorder-medication-treatment',countable) :- guideline_entity(actual,A,'buprenorphine-treatment',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec11-imp03',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'buprenorphine-treatment',countable), guideline_cardinality(actual,A,na,eq,1).

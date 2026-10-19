@@ -74,7 +74,7 @@ that it was published with.
     behavioral-health specialists serving as taper-support team members).
 - `ace/cdc2022-opioid-<region-id>.ace` — one ACE document per formalized
   front-matter or recommendation 1–5 supporting-rationale region outside
-  the implementation-consideration lists (130 documents; docid = the
+  the implementation-consideration lists (132 documents; docid = the
   region id lowercased, S25-04 → `s25-04`). These documents follow the
   same knowledge-only projection contract and
   `audit/projection-notes.tsv` discipline as the implementation
@@ -106,12 +106,12 @@ that it was published with.
 - `pl/cdc2022-opioid-recNN.pl` — Prolog that
   `vendor/ape/prolog/ace_to_pl.pl` compiled from the ACE. Regenerate it
   with `ckc compile cdc-2022-opioid`; the compiler is
-  the sole author of these files. Under the full-Clex base lexicon, six
-  documents (s8-06, s26-07, s34-10, s37-15, s38-17, s39-12) read verb
-  `to`-complements as ditransitive third arguments
-  (`guideline_arg(...,3,...)`). The trimmed demo lexicon yielded
-  `guideline_pp(...,to,...)` there. The project reviewed and accepted the
-  ditransitive reading as the tighter subcategorized one. Same-surface
+  the sole author of these files. Under the full-Clex base lexicon, a
+  verb that Clex subcategorizes as ditransitive reads its `to`-complement
+  as a third argument (`guideline_arg(...,3,...)`). The trimmed demo
+  lexicon yielded `guideline_pp(...,to,...)` in six documents (s8-06,
+  s26-07, s34-10, s37-15, s38-17, s39-12). The project reviewed and
+  accepted the ditransitive reading as the tighter subcategorized one. Same-surface
   ulex/Clex coexistence rulings live in `audit/lexicon-shadow.tsv`.
 
 These derivatives are project-authored formal projections. Present them as
@@ -139,7 +139,7 @@ guideline conclusions.
   parenthetical and simplified action rules. It adds one document per
   formalized recommendation 1–5 implementation-consideration region
   (67 documents). It adds one document per formalized front-matter and
-  recommendation 1–5 rationale region (130 documents). It adds one
+  recommendation 1–5 rationale region (132 documents). It adds one
   document per formalized recommendation 6–12 body,
   implementation-consideration, special-populations, and conclusion
   region (176 documents). The rules encode
@@ -149,9 +149,9 @@ guideline conclusions.
   region.
 - `coverage.tsv` records one status row per payload region (all 718), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (385);
+  - `ace(<docid>)` — formalized (387);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
-    region (214);
+    region (212);
   - `uncovered(<class>: <reason>)` — deliberately not formalized (119;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet

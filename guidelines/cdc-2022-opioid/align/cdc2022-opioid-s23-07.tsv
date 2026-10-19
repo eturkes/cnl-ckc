@@ -1,0 +1,16 @@
+1	ace	29	around-the-clock-opioid-use
+2	ace	63	few-day-period
+0	ace	89	clinician
+3	ace	106	provide
+5	ace	117	opioid-taper-plan
+6	ace	156	withdrawal-minimization
+4	ace	191	discuss
+5	ace	202	opioid-taper-plan
+6	ace	243	withdrawal-minimization
+6	src	3	minimize withdrawal symptoms
+0	src	33	clinicians
+3	src	51	provide
+4	src	63	discuss
+5	src	74	opioid tapering plan
+1	src	100	opioids will be used around the clock
+2	src	142	more than a few days
