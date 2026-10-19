@@ -980,9 +980,10 @@ one patient, because an exclusion that holds for any loaded patient
 blocks the guideline for all of them. The absence of an exclusion is
 not proof that a patient belongs to the population of the guideline.
 Statements about the population or the audience of a guideline stay
-data. A negation whose inner search the bounds of the engine of this
-repository cut makes the result `indeterminate(limit)`, so a deep
-exclusion never passes silently (section "Query answers").
+data. When the bounds of the engine of this repository cut the inner
+search of a negation and that search then ends without a proof, the
+result is `indeterminate(limit)`, so a deep exclusion never passes
+silently (section "Query answers").
 
 These shapes reject in a scoped document with class `unsupported` as
 `scope_shape(Why, S)`. The checks run after the other checks of the

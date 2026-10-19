@@ -20,10 +20,10 @@ rec03-imp07	5	a clinician does not consider an electrocardiographic-monitoring	d
 rec03-imp08	1	a clinician does not understand a transdermal-fentanyl-dosing	does not provably	prerequisite competence
 rec03-imp08	2	a clinician does not understand a transdermal-fentanyl-absorption	does not provably	prerequisite competence
 rec03-imp08	3	a clinician does not prepare a patient-education	does not provably	prerequisite step
-rec04-imp05	1	a patient does not take an opioid	does not provably	opioid-naive = no record of opioid use
-rec04-imp05	2	a patient does not take an opioid	does not provably	opioid-naive
-rec04-imp05	3	a patient does not take an opioid	does not provably	opioid-naive
-rec04-imp05	4	a patient does not take an opioid	does not provably	opioid-naive
+rec04-imp05	1	a patient does not take an opioid	classical	actual status, not a missing record (reviewer-3 F2)
+rec04-imp05	2	a patient does not take an opioid	classical	actual status, not a missing record (reviewer-3 F2)
+rec04-imp05	3	a patient does not take an opioid	classical	actual status, not a missing record (reviewer-3 F2)
+rec04-imp05	4	a patient does not take an opioid	classical	actual status, not a missing record (reviewer-3 F2)
 rec05	5	a benefit does not outweigh a risk	classical	benefit-risk judgment
 rec05	6	a benefit does not outweigh a risk	classical	benefit-risk judgment
 rec05-imp05	1	a clinician does not reach a benefit-risk-consensus	classical	observed outcome of a discussion
@@ -32,7 +32,7 @@ rec05-imp22	2	a patient cannot taper an opioid	classical	observed inability
 rec07-imp15	2	the patient does not have a meaningful-sustained-pain-improvement …	classical	observed lack of improvement
 rec07-imp15	3	the patient does not have an evidence-of-opioid-benefit	does not provably	absence of evidence of benefit
 rec07-imp15	4	the patient does not have an evidence-of-opioid-benefit	does not provably	absence of evidence of benefit
-rec09-imp12	1	the clinicians do not coordinate a care for the patient	does not provably	no record of care coordination
+rec09-imp12	1	the clinicians do not coordinate a care for the patient	classical	actual status, not a missing record (reviewer-3 F2)
 rec10-imp10	6	a standard-immunoassay does not identify the drug	classical	observed negative test finding
 rec12-imp07	7	a clinician cannot provide an opioid-use-disorder-treatment	classical	observed inability
 rec12-imp07	8	a clinician cannot provide an opioid-use-disorder-treatment	classical	observed inability
@@ -57,7 +57,7 @@ s31-04	2	a patient does not receive a certain-daily-immediate-release-opioid-dos
 s32-06	3	a clinician does not understand a transdermal-fentanyl-dosing	does not provably	prerequisite competence
 s32-06	4	a clinician does not understand a transdermal-fentanyl-absorption	does not provably	prerequisite competence
 s32-06	5	a clinician does not prepare a patient-education	does not provably	prerequisite step
-s37-13	1	a patient does not take a prescribed-opioid	does not provably	no record of a prescribed opioid
+s37-13	1	a patient does not take a prescribed-opioid	classical	actual status, not a missing record (reviewer-3 F2)
 s37-19	1	a patient does not have an imminent-opioid-regimen-harm-risk	classical	clinical judgment of risk
 s48-12	1	a tricyclic-antidepressant is not contraindicated for the patient	does not provably	no record of a contraindication
 s48-12	2	an SNRI-antidepressant is not contraindicated for the patient	does not provably	no record of a contraindication
@@ -66,8 +66,8 @@ s54-08	6	the unexpected-…-result does not have an other-explanation	does not p
 s59-03	1	a patient does not have an objective-opioid-withdrawal-sign	classical	observed clinical finding
 s59-12	2	a patient does not have a naltrexone-initiation-opioid-free-interval	does not provably	prerequisite interval: no record
 s59-14	1	a patient does not have a very-limited-oral-naltrexone-circumstance	does not provably	no record of the qualifying circumstance
-s60-08	1	does not have an opioid-use-disorder	does not provably	no record of an OUD diagnosis
+s60-08	1	does not have an opioid-use-disorder	classical	assessed criteria finding (reviewer-3 F1)
 s60-09	1	cannot taper an opioid	classical	observed inability
 s60-09	2	cannot taper an opioid	classical	observed inability
 s60-10	1	does not have an opioid-use-disorder-diagnosis	does not provably	no record of a diagnosis
-s60-13	1	does not receive an opioid-use-disorder-treatment	does not provably	no record of treatment
+s60-13	1	does not receive an opioid-use-disorder-treatment	classical	actual status, not a missing record (reviewer-3 F2)

@@ -15,7 +15,7 @@ S19-12	r2-036	carried	"only as needed" = the as-needed (PRN) regimen, typed as t
 S22-05	r2-044	carried	as S19-12
 S23-06	r2-047	re-author	If a patient uses a stool-softener and the patient does not provably use an additional-laxative then every clinician should avoid the stool-softener for the patient. (+ the fiber-laxative rule; the compound nouns retire)
 S29-09	r2-065	re-author	restates(S23-06) keeps; S23-06's rules carry it
-S29-02	r2-064	re-author	If a clinician does not provably provide a clinical-oversight for a patient then it is recommended that the clinician does not initiate an opioid-therapy for the patient. (prerequisite reading; projection note)
+S29-02	r2-064	re-author	the oversight clause = the rationale of the review duties: four need facts 'Every opioid-initiation | opioid-continuation | pain-treatment-initiation | pain-treatment-continuation needs a clinical-oversight.', no prohibition (reviewer-3 F5)
 S30-02	r2-066	not-class	performer qualification, no only-if prerequisite
 S30-10	r2-068	carried	prohibitions name the pain inside the prohibited action (typed)
 S30-10	r2-069	carried	as above
@@ -24,9 +24,9 @@ S31-02	r2-077	carried	restates(S30-10)
 S31-03	r2-078	carried	restates(S30-10)
 S30-11	r2-070	re-author	If a patient has a pain and the pain is not a severe-continuous-pain and there is a clinician then it is recommended that the clinician does not prescribe an ER-LA-opioid for the pain. (classical: the pain's classification is an observed finding)
 S31-04	r2-079	re-author	the same rule in s31-04
-S34-07	r2-089	re-author	If a clinician treats an opioid-naive-outpatient for an acute-pain and the clinician does not provably closely monitor the opioid-naive-outpatient then it is recommended that the clinician does not increase an opioid-dosage for the opioid-naive-outpatient.
+S34-07	r2-089	re-author	If a clinician conducts an acute-pain-treatment with an opioid for an opioid-naive-patient during a few-day-period and the clinician does not provably closely monitor the opioid-naive-patient then it is recommended that the clinician does not increase an opioid-dosage for the opioid-naive-patient. (short-course scope kept; outpatient carried by the S7-02 exclusions: reviewer-3 F4)
 S39-15	r2-108	re-author	restates(S39-16) keeps; S39-16 carries it
-S39-16	r2-109	re-author	If a patient transitions from a full-agonist-opioid to a buprenorphine and the patient does not have a mild-to-moderate-full-agonist-opioid-withdrawal and there is a clinician then it is recommended that the clinician does not administer a first-buprenorphine-dose to the patient. (classical: withdrawal = observed finding)
+S39-16	r2-109	re-author	If a patient takes a full-agonist-opioid and the patient does not have a mild-to-moderate-full-agonist-opioid-withdrawal and there is a clinician then it is recommended that the clinician does not conduct a standard-buprenorphine-initiation for the patient. (classical: withdrawal = observed finding; low-dose initiation, S59-05, outside: reviewer-3 F7)
 S40-14	r3-001	re-author	If a patient receives an opioid-therapy for an acute-pain during at least 1 month and a clinician does not provably reassess the opioid-therapy then it is recommended that the clinician does not continue the opioid-therapy for the patient.
 S42-09	r3-004	re-author	restates(S40-14) keeps
 S41-03	r3-003	re-author	in rec01-imp04: If a patient has a long-term-opioid-use and receives an additional-opioid and the patient does not need the additional-opioid for a severe-acute-pain and there is a clinician then it is recommended that the clinician does not continue the additional-opioid. (classical: need = observed)
@@ -38,9 +38,9 @@ S58-16	r3-045	re-author	restates(B3-16) keeps
 S56-17	r3-039	re-author	in rec12-imp08: If a clinician does not provably have a buprenorphine-prescribing-waiver then it is recommended that the clinician does not prescribe a buprenorphine-treatment for an opioid-use-disorder.
 S60-06	r3-063	re-author	restates(S56-17) keeps
 S32-10	r2-085	data	recommendation-level scope stated as applicability facts; the dosage rules already condition on initiation/increase (verify) — population statement = data (ruling 1)
-S36-04	r2-094	data	Recommendation 5 audience preface = audience statement (ruling 1)
+S36-04	r2-094	re-author	Recommendation 5 audience typed as data in rec05-imp26: 'A recommendation-5 applies during a long-term-opioid-therapy for a subacute-pain | chronic-pain.' (reviewer-3 F6)
 S36-04	r2-095	carried	principle-relevance facts
-S37-13	r2-099	re-author	72-list rewrite (does not provably take a prescribed-opioid)
+S37-13	r2-099	carried	classical kept: prescribed-opioid nonuse is actual status (reviewer-3 F2)
 S47-18	r3-014	carried	already a rule (arrange a local delivery under an undue travel burden)
 S50-08	r3-018	data	universal-application statement (ruling 1)
 S52-04	r3-023	data	as S50-08
