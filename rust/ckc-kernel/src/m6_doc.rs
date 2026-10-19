@@ -75,6 +75,13 @@ pub fn certify_doc_impl(
     hide(spec::first_mismatch);
     hide(spec::obligations);
     hide(spec::first_nonground);
+    hide(spec::dump_accepts);
+    hide(spec::the_dump);
+    hide(spec::table_of);
+    hide(spec::nonempty_lines);
+    hide(spec::sentence_count);
+    hide(v1text::accepts);
+    hide(replay::the_v1);
     hide(replay::print_payload);
     // wf_doc's ordering quantifier chains along the bundles (q12: rlimit).
     hide(v1text::wf_doc);
