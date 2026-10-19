@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s12-02',ace_sha256('3322bd1746dd66de3fbb29de27046d3551f0065bc40f3e13308184cc68a14ebb'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s12-02',ace_sha256('3322bd1746dd66de3fbb29de27046d3551f0065bc40f3e13308184cc68a14ebb'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: If a recommendation is a category-B-recommendation then the recommendation possibly can be inapplicable to an addressed-person.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s12-02',1,box(1),[A,B,C]),can) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'category-B-recommendation',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s12-02',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s12-02',1,ref(4),[A,B,C]),'addressed-person',countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'category-B-recommendation',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
@@ -58,7 +58,7 @@ guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s12-02',2,ref(3),
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s12-02',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,'category-B-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s12-02',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s12-02',2,ref(2),[A])) :- guideline_entity(actual,A,'category-B-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
 % S3: Every clinician should base a category-B-decision on a patient-circumstance.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s12-02',3,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s12-02',3,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s12-02',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s12-02',3,ref(2),[A]),'category-B-decision',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s12-02',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s12-02',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s12-02',3,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s12-02',3,ref(3),[A]),'patient-circumstance',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

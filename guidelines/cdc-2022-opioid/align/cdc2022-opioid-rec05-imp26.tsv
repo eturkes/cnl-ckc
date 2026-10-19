@@ -10,6 +10,16 @@
 3	ace	273	slower-taper-principle
 4	ace	299	relevant
 5	ace	317	shorter-duration-opioid-discontinuation
+6	ace	360	recommendation-5
+7	ace	394	long-term-opioid-therapy
+8	ace	425	subacute-pain
+6	ace	442	recommendation-5
+7	ace	476	long-term-opioid-therapy
+9	ace	507	chronic-pain
+6	src	9	Recommendation 5
+7	src	64	long-term opioid therapy
+8	src	93	subacute
+9	src	105	chronic pain
 0	src	217	communication with patients
 1	src	246	pain management
 2	src	263	behavioral support

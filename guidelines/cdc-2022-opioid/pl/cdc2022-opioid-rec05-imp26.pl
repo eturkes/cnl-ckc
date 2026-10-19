@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp26',ace_sha256('9f3fb807e00941484f647cbbbb1986b61ea4188c3340fe600b62cefb694a3c64'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec05-imp26',ace_sha256(ef6880ecddcf8214eab4c60ed3ac4c8759459374cf812a854a9c7846dc65b6cf),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: A communication-principle is relevant during a shorter-duration-opioid-discontinuation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(1),[]),'communication-principle',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(1),[]),na,eq,1).
@@ -81,3 +81,25 @@ guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,re
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(3),[])).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(2),[])).
+% S5: A recommendation-5 applies during a long-term-opioid-therapy for a subacute-pain.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(1),[]),'recommendation-5',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(2),[]),'long-term-opioid-therapy',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(2),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(3),[]),'subacute-pain',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(3),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),apply).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),for,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(3),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(2),[])).
+% S6: A recommendation-5 applies during a long-term-opioid-therapy for a chronic-pain.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(1),[]),'recommendation-5',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(2),[]),'long-term-opioid-therapy',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(2),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(3),[]),'chronic-pain',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(3),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),apply).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),for,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(3),[])).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(2),[])).

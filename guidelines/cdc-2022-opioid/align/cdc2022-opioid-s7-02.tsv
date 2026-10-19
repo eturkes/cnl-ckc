@@ -1,15 +1,28 @@
-0	ace	6	recommendation
-1	ace	21	does not apply
-2	ace	45	hospital-care
-0	ace	66	recommendation
-1	ace	81	does not apply
-3	ace	106	emergency-department-care
-0	ace	139	recommendation
-1	ace	154	does not apply
-4	ace	179	observational-setting-care
-5	ace	213	possible-inpatient-admission
+6	ace	5	patient
+2	ace	24	hospital-care
+6	ace	46	patient
+1	ace	140	it is false that
+0	ace	159	recommendation
+1	ace	174	applies
+6	ace	189	patient
+6	ace	203	patient
+3	ace	223	emergency-department-care
+6	ace	257	patient
+1	ace	351	it is false that
+0	ace	370	recommendation
+1	ace	385	applies
+6	ace	400	patient
+6	ace	414	patient
+4	ace	434	observational-setting-care
+5	ace	468	possible-inpatient-admission
+6	ace	505	patient
+1	ace	599	it is false that
+0	ace	618	recommendation
+1	ace	633	applies
+6	ace	648	patient
 0	src	4	recommendations
 1	src	20	do not apply
+6	src	54	patients
 2	src	71	hospitalized
 3	src	93	emergency department
 4	src	123	observational setting

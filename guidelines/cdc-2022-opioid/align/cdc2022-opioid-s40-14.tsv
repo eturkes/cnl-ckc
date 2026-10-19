@@ -9,6 +9,10 @@
 9	ace	212	prevent
 8	ace	223	unintentional
 7	ace	237	long-term-opioid-therapy
+1	ace	310	acute-pain
+2	ace	328	at least 1 month
+10	ace	361	does not provably
+6	ace	379	reassess
 0	src	3	opioids
 2	src	29	≥1 month
 3	src	39	clinicians
@@ -20,4 +24,5 @@
 9	src	172	does not
 8	src	181	unintentionally
 7	src	204	long-term opioid therapy
+10	src	270	without
 6	src	278	reassessment

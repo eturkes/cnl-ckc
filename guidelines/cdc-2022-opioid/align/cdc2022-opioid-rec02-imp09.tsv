@@ -4,14 +4,14 @@
 3	ace	73	does not improve
 1	ace	94	chronic-low-back-pain
 0	ace	124	patient
-4	ace	148	contraindication
-5	ace	176	clinician
-9	ace	186	may
-6	ace	190	consider
-7	ace	202	NSAID
-9	ace	212	may
-6	ace	216	consider
-8	ace	227	duloxetine
+4	ace	157	contraindication
+5	ace	185	clinician
+9	ace	195	may
+6	ace	199	consider
+7	ace	211	NSAID
+9	ace	221	may
+6	ace	225	consider
+8	ace	236	duloxetine
 0	src	5	patients
 1	src	19	chronic low back pain
 3	src	53	insufficient response

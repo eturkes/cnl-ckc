@@ -40,9 +40,9 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp12',ace_sha256('1ecba20ed2775a3f8d19321580fd8101858b8850d8e66e6be0b8cade6f02b9c3'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-rec10-imp12',ace_sha256('1ecba20ed2775a3f8d19321580fd8101858b8850d8e66e6be0b8cade6f02b9c3'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: Every clinician should nonjudgmentally discuss an unexpected-toxicology-result with a patient.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(2),[A]),'unexpected-toxicology-result',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(3),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -53,7 +53,7 @@ guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A])
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(4),[A]),with,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 % S2: Every clinician should avoid a potentially-stigmatizing-language during a nonjudgmental-unexpected-result-discussion.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(2),[A]),'potentially-stigmatizing-language',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(3),[A]),'nonjudgmental-unexpected-result-discussion',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

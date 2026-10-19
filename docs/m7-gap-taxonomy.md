@@ -28,7 +28,7 @@ the first class to implement. Each class is a separate feature unit.
 | dose-arithmetic | weight-based dosing, multiplication | 28 | 6 | schema revision: arithmetic built-ins |
 | derived-measure | quantities computed from measurements | — | 3 | schema revision: arithmetic built-ins |
 | probability | numeric likelihood, probabilistic update | 53 | 0 | companion target (ProbLog), deferred |
-| condition-scope | exceptions and prerequisites | 96 | — | ACE extension (exception clauses) |
+| condition-scope | exceptions and prerequisites | 96 | — | implemented: scope exclusions that gate the should, must and may statements of a guideline, and exceptions and prerequisites as rule conditions, with `does not provably` for the absence of a record (`docs/REFERENCE.md` § Scope exclusions) |
 | quantification | set scope, example generalized to rule | 68 | — | ACE extension (group coordination) |
 | relation-structure | cause and purpose links | 209 | — | authoring fidelity, ACE extension |
 
@@ -105,6 +105,8 @@ and a month never compare. A bare calendar adverb (`daily`) still carries
 no bound. A dose rate such as `MME-units-per-day` compares as a count of
 its unit noun; a conversion between dose units stays in the
 dose-arithmetic class.
+
+Condition-scope status: the scope and exclusion rows of the CDC table make all 386 documents scoped. Twelve exclusion rules gate the 1,151 should, must and may edge clauses of the guideline: four care contexts (S3-03, restated by S9-01), three facility settings with the discharge exception (S7-02), and patients younger than 18 years (S10-04, with the adult audience of S9-05). Thirty-eight absence conditions in 18 documents read `does not provably`, for example a contraindication or a prerequisite step without a record. Observed negative findings and actual status stay classical negations. Eleven census rows gain rule conditions, prohibitions or data. Population and audience statements stay data.
 
 The CDC counts record what the projections lost or approximated, not
 proven limits of v1: v1 already carries Horn prerequisites and

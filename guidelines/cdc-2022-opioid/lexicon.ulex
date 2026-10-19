@@ -359,7 +359,6 @@ noun_sg('family-planning','family-planning',neutr).
 noun_sg(fetus,fetus,neutr).
 noun_sg('few-day-period','few-day-period',neutr).
 noun_sg('few-joint-osteoarthritis','few-joint-osteoarthritis',neutr).
-noun_sg('fiber-laxative-without-another-laxative','fiber-laxative-without-another-laxative',neutr).
 noun_sg(fibromyalgia,fibromyalgia,neutr).
 noun_sg('first-buprenorphine-dose','first-buprenorphine-dose',neutr).
 noun_sg('first-choice-ER-LA-decision','first-choice-ER-LA-decision',neutr).
@@ -826,7 +825,6 @@ noun_sg('quality-of-life','quality-of-life',neutr).
 noun_sg('rapid-opioid-taper','rapid-opioid-taper',neutr).
 noun_sg('rapid-taper','rapid-taper',neutr).
 noun_sg('realistic-benefit','realistic-benefit',neutr).
-noun_sg('recommended-treatment','recommended-treatment',neutr).
 noun_sg('regular-buprenorphine-dosage','regular-buprenorphine-dosage',neutr).
 noun_sg('relatively-inexpensive-presumptive-immunoassay-panel','relatively-inexpensive-presumptive-immunoassay-panel',neutr).
 noun_sg('relaxation-technique-education','relaxation-technique-education',neutr).
@@ -899,7 +897,6 @@ noun_sg('standard-immunoassay','standard-immunoassay',neutr).
 noun_sg('state-MME-threshold-policy','state-MME-threshold-policy',neutr).
 noun_sg('state-PDMP-record','state-PDMP-record',neutr).
 noun_sg('statewide-naloxone-protocol','statewide-naloxone-protocol',neutr).
-noun_sg('stool-softener-without-another-laxative','stool-softener-without-another-laxative',neutr).
 noun_sg('state-clinical-protocol','state-clinical-protocol',neutr).
 noun_sg('subacute-pain','subacute-pain',neutr).
 noun_sg('substance-use','substance-use',neutr).
@@ -1088,7 +1085,6 @@ noun_sg(antiemetic,antiemetic,neutr).
 noun_sg('certain-daily-immediate-release-opioid-dosage','certain-daily-immediate-release-opioid-dosage',neutr).
 noun_sg('equianalgesic-immediate-release-opioid-dosage','equianalgesic-immediate-release-opioid-dosage',neutr).
 noun_sg('negative-test','negative-test',neutr).
-noun_sg('opioid-pain-medication-use','opioid-pain-medication-use',neutr).
 noun_sg('immediate-release-oral-morphine-dosage','immediate-release-oral-morphine-dosage',neutr).
 noun_sg('immediate-release-oral-oxycodone-dosage','immediate-release-oral-oxycodone-dosage',neutr).
 noun_sg('scheduled-opioid-example','scheduled-opioid-example',neutr).
@@ -1125,3 +1121,9 @@ adv(punitively,punitively).
 adv(realistically,realistically).
 adv(typically,typically).
 adv('very-gradually','very-gradually').
+noun_sg('additional-laxative','additional-laxative',neutr).
+noun_sg('clinical-oversight','clinical-oversight',neutr).
+noun_sg('fiber-laxative','fiber-laxative',neutr).
+noun_sg('full-agonist-opioid','full-agonist-opioid',neutr).
+noun_sg('recommendation-5','recommendation-5',neutr).
+noun_sg('stool-softener','stool-softener',neutr).

@@ -1,3 +1,3 @@
-Every recommendation does not apply during a hospital-care.
-Every recommendation does not apply during an emergency-department-care.
-Every recommendation does not apply during an observational-setting-care with a possible-inpatient-admission.
+If a patient receives a hospital-care and the patient does not provably receive a pain-management-prescription at a facility-discharge then it is false that a recommendation applies to the patient.
+If a patient receives an emergency-department-care and the patient does not provably receive a pain-management-prescription at a facility-discharge then it is false that a recommendation applies to the patient.
+If a patient receives an observational-setting-care with a possible-inpatient-admission and the patient does not provably receive a pain-management-prescription at a facility-discharge then it is false that a recommendation applies to the patient.

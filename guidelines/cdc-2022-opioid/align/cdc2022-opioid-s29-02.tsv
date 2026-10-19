@@ -14,8 +14,18 @@
 1	ace	302	care-access-consideration
 5	ace	337	pain-treatment
 3	ace	352	continuation
+11	ace	390	needs
+10	ace	398	clinical-oversight
+11	ace	444	needs
+10	ace	452	clinical-oversight
+11	ace	504	needs
+10	ace	512	clinical-oversight
+11	ace	566	needs
+10	ace	574	clinical-oversight
 0	src	0	Review
 1	src	7	considerations related to access to care
+10	src	63	clinical oversight
+11	src	82	needed
 2	src	92	initiate
 3	src	105	continue
 4	src	114	opioid therapy

@@ -1,18 +1,31 @@
-0	ace	6	recommendation
-1	ace	30	apply
-2	ace	45	sickle-cell-disease-pain
-0	ace	77	recommendation
-1	ace	101	apply
-3	ace	116	cancer-related-pain
-0	ace	143	recommendation
-1	ace	167	apply
-4	ace	182	palliative-care
-0	ace	205	recommendation
-1	ace	229	apply
-5	ace	245	end-of-life-care
+2	ace	19	sickle-cell-disease-pain
+8	ace	49	it is false that
+0	ace	68	recommendation
+1	ace	83	applies
+3	ace	126	cancer-related-pain
+8	ace	151	it is false that
+0	ace	170	recommendation
+1	ace	185	applies
+6	ace	214	patient
+7	ace	222	receives
+4	ace	233	palliative-care
+8	ace	254	it is false that
+0	ace	273	recommendation
+1	ace	288	applies
+6	ace	303	patient
+6	ace	317	patient
+7	ace	325	receives
+5	ace	337	end-of-life-care
+8	ace	359	it is false that
+0	ace	378	recommendation
+1	ace	393	applies
+6	ace	408	patient
 0	src	4	recommendations
+8	src	20	do not
 1	src	27	apply
 2	src	36	pain related to sickle cell disease
 3	src	75	cancer
+6	src	88	patients
+7	src	97	receiving
 4	src	107	palliative
 5	src	121	end-of-life care

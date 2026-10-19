@@ -15,11 +15,18 @@
 6	ace	354	closely
 8	ace	362	monitor
 0	ace	374	opioid-naive-patient
+0	ace	466	opioid-naive-patient
+2	ace	496	few-day-period
+10	ace	529	does not provably
+6	ace	547	closely
+8	ace	555	monitor
+3	ace	639	increase an opioid-dosage
 0	src	4	opioid-naïve outpatients
 1	src	34	acute pain treated with an opioid
 2	src	72	a few days or less
 3	src	92	dosage increases
 5	src	113	usually
 7	src	121	unnecessary
+10	src	161	without
 6	src	169	close
 8	src	175	monitoring

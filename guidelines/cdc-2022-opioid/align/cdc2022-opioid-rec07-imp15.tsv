@@ -19,61 +19,61 @@
 4	ace	478	at least
 4	ace	487	50 MME-units-per-day
 1	ace	516	patient
-5	ace	541	evidence-of-opioid-benefit
-1	ace	577	patient
-17	ace	599	taper
-1	ace	622	patient
-6	ace	630	takes an opioid with a benzodiazepine
-1	ace	676	patient
-5	ace	701	evidence-of-opioid-benefit
-1	ace	737	patient
-17	ace	759	taper
-1	ace	782	patient
-7	ace	797	unfavorable-continued-opioid-benefit-risk-assessment
-1	ace	859	patient
-17	ace	881	taper
-1	ace	904	patient
-18	ace	912	requests
-8	ace	923	dosage-reduction
-1	ace	949	patient
-17	ace	971	taper
-1	ace	994	patient
-18	ace	1002	requests
-9	ace	1014	opioid-discontinuation
-1	ace	1046	patient
-17	ace	1068	taper
-1	ace	1091	patient
-19	ace	1099	experiences
-10	ace	1114	overdose
-1	ace	1132	patient
-17	ace	1154	taper
-1	ace	1177	patient
-19	ace	1185	experiences
-11	ace	1199	serious-opioid-adverse-event
-1	ace	1237	patient
-17	ace	1259	taper
-1	ace	1282	patient
-17	ace	1304	taper
-0	ace	1332	clinician
-12	ace	1349	collaborate with
-1	ace	1370	patient
-17	ace	1395	taper
-1	ace	1407	patient
-17	ace	1429	taper
-14	ace	1453	opioid-dosage-reduction
-16	ace	1480	possible
-1	ace	1497	patient
-0	ace	1516	clinician
-14	ace	1530	reduce an opioid-dosage
-1	ace	1562	patient
-1	ace	1576	patient
-17	ace	1598	taper
-9	ace	1622	opioid-discontinuation
-16	ace	1648	possible
-1	ace	1665	patient
-0	ace	1684	clinician
-15	ace	1698	discontinue an opioid
-1	ace	1728	patient
+5	ace	550	evidence-of-opioid-benefit
+1	ace	586	patient
+17	ace	608	taper
+1	ace	631	patient
+6	ace	639	takes an opioid with a benzodiazepine
+1	ace	685	patient
+5	ace	719	evidence-of-opioid-benefit
+1	ace	755	patient
+17	ace	777	taper
+1	ace	800	patient
+7	ace	815	unfavorable-continued-opioid-benefit-risk-assessment
+1	ace	877	patient
+17	ace	899	taper
+1	ace	922	patient
+18	ace	930	requests
+8	ace	941	dosage-reduction
+1	ace	967	patient
+17	ace	989	taper
+1	ace	1012	patient
+18	ace	1020	requests
+9	ace	1032	opioid-discontinuation
+1	ace	1064	patient
+17	ace	1086	taper
+1	ace	1109	patient
+19	ace	1117	experiences
+10	ace	1132	overdose
+1	ace	1150	patient
+17	ace	1172	taper
+1	ace	1195	patient
+19	ace	1203	experiences
+11	ace	1217	serious-opioid-adverse-event
+1	ace	1255	patient
+17	ace	1277	taper
+1	ace	1300	patient
+17	ace	1322	taper
+0	ace	1350	clinician
+12	ace	1367	collaborate with
+1	ace	1388	patient
+17	ace	1413	taper
+1	ace	1425	patient
+17	ace	1447	taper
+14	ace	1471	opioid-dosage-reduction
+16	ace	1498	possible
+1	ace	1515	patient
+0	ace	1534	clinician
+14	ace	1548	reduce an opioid-dosage
+1	ace	1580	patient
+1	ace	1594	patient
+17	ace	1616	taper
+9	ace	1640	opioid-discontinuation
+16	ace	1666	possible
+1	ace	1683	patient
+0	ace	1702	clinician
+15	ace	1716	discontinue an opioid
+1	ace	1746	patient
 2	src	3	risks outweigh benefits of continued opioid therapy
 1	src	65	patients
 3	src	92	meaningful, sustained improvements in pain and function

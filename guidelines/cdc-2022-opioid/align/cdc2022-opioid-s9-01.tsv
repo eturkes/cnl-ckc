@@ -27,16 +27,20 @@
 8	ace	844	policy
 0	ace	858	opioid-pain-clinical-practice-guideline
 10	ace	908	FDA-approved-labeling-substitute
-0	ace	948	opioid-pain-clinical-practice-guideline
-11	ace	1012	sickle-cell-disease-pain
-0	ace	1044	opioid-pain-clinical-practice-guideline
-12	ace	1108	cancer-related-pain
-0	ace	1135	opioid-pain-clinical-practice-guideline
-13	ace	1199	palliative-care
-0	ace	1222	opioid-pain-clinical-practice-guideline
-14	ace	1287	end-of-life-care
-0	ace	1311	opioid-pain-clinical-practice-guideline
-15	ace	1361	opioid-use-disorder-medication-guideline
+11	ace	961	sickle-cell-disease-pain
+17	ace	991	it is false that
+19	ace	1025	applies
+12	ace	1068	cancer-related-pain
+17	ace	1093	it is false that
+19	ace	1127	applies
+13	ace	1175	palliative-care
+17	ace	1196	it is false that
+19	ace	1230	applies
+14	ace	1279	end-of-life-care
+17	ace	1301	it is false that
+19	ace	1335	applies
+0	ace	1365	opioid-pain-clinical-practice-guideline
+15	ace	1415	opioid-use-disorder-medication-guideline
 0	src	5	clinical practice guideline
 17	src	36	not
 1	src	42	replacement for clinical judgment
@@ -51,6 +55,7 @@
 8	src	425	policy
 9	src	437	dictates clinical practice
 10	src	472	substitute for Food and Drug Administration–approved labeling
+19	src	535	applicable
 11	src	549	management of pain related to sickle cell disease
 12	src	600	management of cancer-related pain
 13	src	638	palliative care

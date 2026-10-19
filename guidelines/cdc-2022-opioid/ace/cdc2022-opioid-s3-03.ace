@@ -1,4 +1,4 @@
-Every recommendation does not apply during a sickle-cell-disease-pain.
-Every recommendation does not apply during a cancer-related-pain.
-Every recommendation does not apply during a palliative-care.
-Every recommendation does not apply during an end-of-life-care.
+If a patient has a sickle-cell-disease-pain then it is false that a recommendation applies to the patient.
+If a patient has a cancer-related-pain then it is false that a recommendation applies to the patient.
+If a patient receives a palliative-care then it is false that a recommendation applies to the patient.
+If a patient receives an end-of-life-care then it is false that a recommendation applies to the patient.

@@ -1,0 +1,73 @@
+# doc	S	negated condition	ruling	reason
+rec01	3	an opioid-benefit does not likely outweigh an opioid-risk	classical	benefit-risk judgment (ruling 4 example)
+rec02	6	an opioid-benefit does not likely outweigh an opioid-risk	classical	benefit-risk judgment
+rec02	11	an opioid-benefit does not outweigh an opioid-risk	classical	benefit-risk judgment
+rec02-imp03	3	a pain that does not improve with a low-intensity-exercise	classical	observed lack of improvement (ruling 4 example)
+rec02-imp06	1	a nonpharmacologic-intervention does not improve the pain	classical	observed lack of improvement
+rec02-imp06	2	a nonpharmacologic-intervention does not improve the pain	classical	observed lack of improvement
+rec02-imp07	2	a topical-NSAID does not control the osteoarthritis-pain	classical	observed treatment failure
+rec02-imp09	1	a nonpharmacologic-approach does not improve …; the patient does not have a contraindication	mixed: improve classical; contraindication → does not provably	no record of a contraindication
+rec02-imp18	1	a clinician does not consider an exit-strategy with a patient	does not provably	prerequisite step: no record that it happened
+rec02-imp21	2	a clinician does not make an intentional-benefit-risk-decision	does not provably	prerequisite step
+rec02-imp21	3	a clinician does not conduct an informed-discussion	does not provably	prerequisite step
+rec02-imp21	4	a clinician does not use a comprehensive-pain-management	does not provably	prerequisite step
+rec02-imp25	3	a patient does not have a health-insurance	classical	recorded patient status (uninsured), an observation
+rec03-imp07	1	a clinician does not understand a methadone-risk-profile	does not provably	prerequisite competence: no record
+rec03-imp07	2	a clinician does not prepare a patient-education	does not provably	prerequisite step
+rec03-imp07	3	a clinician does not prepare a close-patient-monitoring	does not provably	prerequisite step
+rec03-imp07	4	a clinician does not assess a QT-prolongation-risk	does not provably	prerequisite step
+rec03-imp07	5	a clinician does not consider an electrocardiographic-monitoring	does not provably	prerequisite step
+rec03-imp08	1	a clinician does not understand a transdermal-fentanyl-dosing	does not provably	prerequisite competence
+rec03-imp08	2	a clinician does not understand a transdermal-fentanyl-absorption	does not provably	prerequisite competence
+rec03-imp08	3	a clinician does not prepare a patient-education	does not provably	prerequisite step
+rec04-imp05	1	a patient does not take an opioid	does not provably	opioid-naive = no record of opioid use
+rec04-imp05	2	a patient does not take an opioid	does not provably	opioid-naive
+rec04-imp05	3	a patient does not take an opioid	does not provably	opioid-naive
+rec04-imp05	4	a patient does not take an opioid	does not provably	opioid-naive
+rec05	5	a benefit does not outweigh a risk	classical	benefit-risk judgment
+rec05	6	a benefit does not outweigh a risk	classical	benefit-risk judgment
+rec05-imp05	1	a clinician does not reach a benefit-risk-consensus	classical	observed outcome of a discussion
+rec05-imp22	1	a patient cannot taper an opioid	classical	observed inability
+rec05-imp22	2	a patient cannot taper an opioid	classical	observed inability
+rec07-imp15	2	the patient does not have a meaningful-sustained-pain-improvement …	classical	observed lack of improvement
+rec07-imp15	3	the patient does not have an evidence-of-opioid-benefit	does not provably	absence of evidence of benefit
+rec07-imp15	4	the patient does not have an evidence-of-opioid-benefit	does not provably	absence of evidence of benefit
+rec09-imp12	1	the clinicians do not coordinate a care for the patient	does not provably	no record of care coordination
+rec10-imp10	6	a standard-immunoassay does not identify the drug	classical	observed negative test finding
+rec12-imp07	7	a clinician cannot provide an opioid-use-disorder-treatment	classical	observed inability
+rec12-imp07	8	a clinician cannot provide an opioid-use-disorder-treatment	classical	observed inability
+rec12-imp07	9	a clinician cannot provide an opioid-use-disorder-treatment	classical	observed inability
+rec12-imp08	2	the community does not have a sufficient-…-capacity	classical	observed situation
+s20-12	1	the patient does not have an NSAID-contraindication	does not provably	no record of a contraindication
+s21-02	1	the patient does not have a contraindication	does not provably	no record of a contraindication
+s21-02	2	the patient does not have a contraindication	does not provably	no record of a contraindication
+s21-02	3	the patient does not have a contraindication	does not provably	no record of a contraindication
+s21-02	4	the patient does not have a contraindication	does not provably	no record of a contraindication
+s21-02	5	the patient does not have a contraindication	does not provably	no record of a contraindication
+s21-02	6	the patient does not have a contraindication	does not provably	no record of a contraindication
+s21-02	7	the patient does not have a contraindication	does not provably	no record of a contraindication
+s25-04	3	a diagnostic-testing is not indicated during the pain-evaluation	classical	clinical judgment (not indicated)
+s25-08	1	the clinician does not conduct a patient-specific-medication-assessment	does not provably	prerequisite step
+s25-08	2	the clinician does not make an expected-benefit-over-risk-determination	does not provably	prerequisite step
+s27-02	2	a topical-NSAID does not completely control the osteoarthritis-pain	classical	observed treatment failure
+s27-05	1	does not have a current-gastrointestinal-bleeding and does not have a previous-gastrointestinal-bleeding	does not provably	no record of a contraindicating history
+s27-05	2	does not have a current-gastrointestinal-bleeding and does not have a previous-gastrointestinal-bleeding	does not provably	no record of a contraindicating history
+s28-05	1	a clinician does not consider an exit-strategy with a patient	does not provably	prerequisite step
+s31-04	2	a patient does not receive a certain-daily-immediate-release-opioid-dosage during at least 1 week	does not provably	opioid-tolerance prerequisite: no record
+s32-06	3	a clinician does not understand a transdermal-fentanyl-dosing	does not provably	prerequisite competence
+s32-06	4	a clinician does not understand a transdermal-fentanyl-absorption	does not provably	prerequisite competence
+s32-06	5	a clinician does not prepare a patient-education	does not provably	prerequisite step
+s37-13	1	a patient does not take a prescribed-opioid	does not provably	no record of a prescribed opioid
+s37-19	1	a patient does not have an imminent-opioid-regimen-harm-risk	classical	clinical judgment of risk
+s48-12	1	a tricyclic-antidepressant is not contraindicated for the patient	does not provably	no record of a contraindication
+s48-12	2	an SNRI-antidepressant is not contraindicated for the patient	does not provably	no record of a contraindication
+s54-08	5	a standard-immunoassay does not identify the opioid	classical	observed negative test finding
+s54-08	6	the unexpected-…-result does not have an other-explanation	does not provably	no record of another explanation
+s59-03	1	a patient does not have an objective-opioid-withdrawal-sign	classical	observed clinical finding
+s59-12	2	a patient does not have a naltrexone-initiation-opioid-free-interval	does not provably	prerequisite interval: no record
+s59-14	1	a patient does not have a very-limited-oral-naltrexone-circumstance	does not provably	no record of the qualifying circumstance
+s60-08	1	does not have an opioid-use-disorder	does not provably	no record of an OUD diagnosis
+s60-09	1	cannot taper an opioid	classical	observed inability
+s60-09	2	cannot taper an opioid	classical	observed inability
+s60-10	1	does not have an opioid-use-disorder-diagnosis	does not provably	no record of a diagnosis
+s60-13	1	does not receive an opioid-use-disorder-treatment	does not provably	no record of treatment

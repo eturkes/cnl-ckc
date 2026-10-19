@@ -1,13 +1,13 @@
 0	ace	6	naltrexone-initiation-opioid-free-interval
 0	ace	56	last for at least 7 days to 10 days
 0	ace	111	not
-0	ace	122	naltrexone-initiation-opioid-free-interval
-0	ace	201	recommended
-0	ace	237	not
-1	ace	241	administer
-1	ace	254	first-naltrexone-dose
-0	ace	311	naltrexone-initiation-opioid-free-interval
-1	ace	379	administer
-1	ace	392	first-naltrexone-dose
+0	ace	131	naltrexone-initiation-opioid-free-interval
+0	ace	210	recommended
+0	ace	246	not
+1	ace	250	administer
+1	ace	263	first-naltrexone-dose
+0	ace	320	naltrexone-initiation-opioid-free-interval
+1	ace	388	administer
+1	ace	401	first-naltrexone-dose
 0	src	0	A minimum of 7–10 days free of opioids is recommended before
 1	src	65	first naltrexone dose

@@ -1,0 +1,392 @@
+region	file:line	coverage	scope
+B3-01	source/box3-extraction.txt:12	uncovered(heading: structural label without directive)	none
+B3-02	source/box3-extraction.txt:13	ace(cdc2022-opioid-rec01)	1
+B3-03	source/box3-extraction.txt:14	ace(cdc2022-opioid-rec02)	1
+B3-04	source/box3-extraction.txt:16	uncovered(heading: structural label without directive)	none
+B3-05	source/box3-extraction.txt:17	ace(cdc2022-opioid-rec03)	none
+B3-06	source/box3-extraction.txt:18	ace(cdc2022-opioid-rec04)	none
+B3-07	source/box3-extraction.txt:19	ace(cdc2022-opioid-rec05)	1
+B3-08	source/box3-extraction.txt:21	uncovered(heading: structural label without directive)	none
+B3-09	source/box3-extraction.txt:22	ace(cdc2022-opioid-rec06)	none
+B3-10	source/box3-extraction.txt:23	ace(cdc2022-opioid-rec07)	none
+B3-11	source/box3-extraction.txt:25	uncovered(heading: structural label without directive)	none
+B3-12	source/box3-extraction.txt:26	ace(cdc2022-opioid-rec08)	none
+B3-13	source/box3-extraction.txt:27	ace(cdc2022-opioid-rec09)	none
+B3-14	source/box3-extraction.txt:28	ace(cdc2022-opioid-rec10)	none
+B3-15	source/box3-extraction.txt:29	ace(cdc2022-opioid-rec11)	none
+B3-16	source/box3-extraction.txt:30	ace(cdc2022-opioid-rec12)	none
+S3-01	source/front-matter-extraction.txt:10	ace(cdc2022-opioid-s3-01)	none
+S3-02	source/front-matter-extraction.txt:13	ace(cdc2022-opioid-s3-02)	1
+S3-03	source/front-matter-extraction.txt:16	ace(cdc2022-opioid-s3-03)	1
+S4-01	source/front-matter-extraction.txt:19	uncovered(aim: states an aspiration without operative directive)	none
+S4-02	source/front-matter-extraction.txt:22	uncovered(aim: states an aspiration without operative directive)	none
+S4-03	source/front-matter-extraction.txt:25	uncovered(aim: states an aspiration without operative directive)	none
+S4-04	source/front-matter-extraction.txt:28	uncovered(descriptive: states context without an operative directive)	none
+S4-05	source/front-matter-extraction.txt:31	uncovered(aim: states an aspiration without operative directive)	none
+S4-06	source/front-matter-extraction.txt:34	uncovered(external: reports third-party guidance or policy)	none
+S5-01	source/front-matter-extraction.txt:37	uncovered(aim: states an aspiration without operative directive)	none
+S5-02	source/front-matter-extraction.txt:40	uncovered(external: reports third-party guidance or policy)	none
+S5-03	source/front-matter-extraction.txt:43	uncovered(external: reports third-party guidance or policy)	none
+S5-04	source/front-matter-extraction.txt:46	uncovered(external: reports third-party guidance or policy)	none
+S6-01	source/front-matter-extraction.txt:49	restates(S8-12)	none
+S6-02	source/front-matter-extraction.txt:52	ace(cdc2022-opioid-s6-02)	none
+S6-03	source/front-matter-extraction.txt:55	uncovered(aim: states an aspiration without operative directive)	none
+S7-01	source/front-matter-extraction.txt:58	restates(S3-03)	1
+S7-02	source/front-matter-extraction.txt:61	ace(cdc2022-opioid-s7-02)	1
+S7-03	source/front-matter-extraction.txt:64	ace(cdc2022-opioid-s7-03)	1
+S8-01	source/front-matter-extraction.txt:67	uncovered(descriptive: states context without an operative directive)	1
+S8-02	source/front-matter-extraction.txt:70	restates(B3-02)	none
+S8-03	source/front-matter-extraction.txt:73	restates(B3-03)	none
+S8-04	source/front-matter-extraction.txt:76	uncovered(descriptive: fuses recommendations 4, 5, and 6 without adding a directive; canonical at B3-06, B3-07, B3-09)	none
+S8-05	source/front-matter-extraction.txt:79	ace(cdc2022-opioid-s8-05)	none
+S8-06	source/front-matter-extraction.txt:82	ace(cdc2022-opioid-s8-06)	none
+S8-07	source/front-matter-extraction.txt:85	restates(B3-16)	none
+S8-08	source/front-matter-extraction.txt:88	restates(S3-01)	none
+S8-09	source/front-matter-extraction.txt:91	ace(cdc2022-opioid-s8-09)	none
+S8-10	source/front-matter-extraction.txt:94	ace(cdc2022-opioid-s8-10)	none
+S8-11	source/front-matter-extraction.txt:97	ace(cdc2022-opioid-s8-11)	1
+S8-12	source/front-matter-extraction.txt:100	ace(cdc2022-opioid-s8-12)	none
+S8-13	source/front-matter-extraction.txt:103	restates(S3-02)	1
+S9-01	source/front-matter-extraction.txt:106	ace(cdc2022-opioid-s9-01)	3
+S9-02	source/front-matter-extraction.txt:109	restates(S3-02)	1
+S9-03	source/front-matter-extraction.txt:112	restates(S3-02)	1
+S9-04	source/front-matter-extraction.txt:115	ace(cdc2022-opioid-s9-04)	none
+S9-05	source/front-matter-extraction.txt:118	ace(cdc2022-opioid-s9-05)	1
+S9-06	source/front-matter-extraction.txt:121	restates(S7-02)	1
+S9-07	source/front-matter-extraction.txt:124	restates(S7-03)	1
+S10-01	source/front-matter-extraction.txt:127	uncovered(descriptive: states context without an operative directive)	none
+S10-02	source/front-matter-extraction.txt:130	uncovered(external: reports third-party guidance or policy)	none
+S10-03	source/front-matter-extraction.txt:133	uncovered(descriptive: states context without an operative directive)	1
+S10-04	source/front-matter-extraction.txt:136	ace(cdc2022-opioid-s10-04)	1
+S10-05	source/front-matter-extraction.txt:139	restates(S3-03)	1
+S10-06	source/front-matter-extraction.txt:142	restates(S3-03)	1
+S11-01	source/front-matter-extraction.txt:145	ace(cdc2022-opioid-s11-01)	2
+S12-01	source/front-matter-extraction.txt:148	ace(cdc2022-opioid-s12-01)	1
+S12-02	source/front-matter-extraction.txt:151	ace(cdc2022-opioid-s12-02)	1
+S12-03	source/front-matter-extraction.txt:154	ace(cdc2022-opioid-s12-03)	none
+S14-01	source/front-matter-extraction.txt:157	restates(S12-01)	1
+S14-02	source/front-matter-extraction.txt:160	restates(S12-02)	none
+S14-03	source/front-matter-extraction.txt:163	restates(S12-03)	none
+S14-04	source/front-matter-extraction.txt:166	uncovered(process: reports guideline-development procedure)	none
+S15-01	source/front-matter-extraction.txt:169	uncovered(process: reports guideline-development procedure)	none
+S15-02	source/front-matter-extraction.txt:172	uncovered(process: reports guideline-development procedure)	none
+S16-01	source/front-matter-extraction.txt:175	uncovered(process: reports guideline-development procedure)	none
+S17-01	source/front-matter-extraction.txt:178	uncovered(process: reports guideline-development procedure)	none
+S17-02	source/front-matter-extraction.txt:181	restates(S3-02)	1
+S17-03	source/front-matter-extraction.txt:184	uncovered(descriptive: restates the category definitions without adding a directive; canonical at S12-01, S12-02, S12-03)	none
+S18-01	source/front-matter-extraction.txt:187	ace(cdc2022-opioid-s18-01)	1
+S18-02	source/front-matter-extraction.txt:190	uncovered(heading: structural label without directive)	none
+S18-03	source/front-matter-extraction.txt:193	ace(cdc2022-opioid-s18-03)	1
+S18-04	source/front-matter-extraction.txt:196	restates(S8-12)	none
+S18-05	source/front-matter-extraction.txt:199	restates(S6-03)	none
+S18-06	source/front-matter-extraction.txt:202	ace(cdc2022-opioid-s18-06)	none
+S18-07	source/front-matter-extraction.txt:205	ace(cdc2022-opioid-s18-07)	1
+S19-01	source/rec01-05-body-extraction.txt:10	restates(S18-03)	1
+S19-02	source/rec01-05-body-extraction.txt:12	restates(S8-12)	none
+S19-03	source/rec01-05-body-extraction.txt:14	restates(S6-03)	none
+S19-04	source/rec01-05-body-extraction.txt:16	restates(S18-06)	none
+S19-05	source/rec01-05-body-extraction.txt:18	restates(S18-07)	1
+S19-06	source/rec01-05-body-extraction.txt:20	restates(S19-07)	none
+S19-07	source/rec01-05-body-extraction.txt:22	ace(cdc2022-opioid-s19-07)	none
+S19-08	source/rec01-05-body-extraction.txt:24	ace(cdc2022-opioid-s19-08)	none
+S19-09	source/rec01-05-body-extraction.txt:26	restates(B3-02)	1
+S19-10	source/rec01-05-body-extraction.txt:28	ace(cdc2022-opioid-rec01-imp01)	none
+S19-11	source/rec01-05-body-extraction.txt:30	ace(cdc2022-opioid-rec01-imp02)	none
+S19-12	source/rec01-05-body-extraction.txt:32	ace(cdc2022-opioid-rec01-imp03)	1
+S19-13	source/rec01-05-body-extraction.txt:34	ace(cdc2022-opioid-rec01-imp06)	1
+S20-01	source/rec01-05-body-extraction.txt:36	ace(cdc2022-opioid-rec01-imp04)	1
+S20-02	source/rec01-05-body-extraction.txt:38	ace(cdc2022-opioid-rec01-imp05)	none
+S20-03	source/rec01-05-body-extraction.txt:40	uncovered(aim: states an aspiration without operative directive)	none
+S20-04	source/rec01-05-body-extraction.txt:42	ace(cdc2022-opioid-s20-04)	none
+S20-05	source/rec01-05-body-extraction.txt:44	uncovered(external: reports third-party guidance or policy)	none
+S20-06	source/rec01-05-body-extraction.txt:46	uncovered(external: reports third-party guidance or policy)	none
+S20-07	source/rec01-05-body-extraction.txt:48	restates(S24-02)	none
+S20-08	source/rec01-05-body-extraction.txt:50	restates(S19-10)	none
+S20-09	source/rec01-05-body-extraction.txt:52	uncovered(external: reports third-party guidance or policy)	none
+S20-10	source/rec01-05-body-extraction.txt:54	uncovered(external: reports third-party guidance or policy)	1
+S20-11	source/rec01-05-body-extraction.txt:56	uncovered(external: reports third-party guidance or policy)	none
+S20-12	source/rec01-05-body-extraction.txt:58	ace(cdc2022-opioid-s20-12)	1
+S21-01	source/rec01-05-body-extraction.txt:60	uncovered(aim: states an aspiration without operative directive)	none
+S21-02	source/rec01-05-body-extraction.txt:62	ace(cdc2022-opioid-s21-02)	1
+S21-03	source/rec01-05-body-extraction.txt:64	ace(cdc2022-opioid-s21-03)	none
+S21-04	source/rec01-05-body-extraction.txt:66	uncovered(descriptive: states context without an operative directive)	1
+S21-05	source/rec01-05-body-extraction.txt:68	ace(cdc2022-opioid-s21-05)	none
+S21-06	source/rec01-05-body-extraction.txt:70	uncovered(external: reports third-party guidance or policy)	none
+S21-07	source/rec01-05-body-extraction.txt:72	uncovered(external: reports third-party guidance or policy)	none
+S21-08	source/rec01-05-body-extraction.txt:74	uncovered(external: reports third-party guidance or policy)	none
+S21-09	source/rec01-05-body-extraction.txt:76	uncovered(external: reports third-party guidance or policy)	none
+S21-10	source/rec01-05-body-extraction.txt:78	uncovered(external: reports third-party guidance or policy)	none
+S21-11	source/rec01-05-body-extraction.txt:80	uncovered(external: reports third-party guidance or policy)	none
+S21-12	source/rec01-05-body-extraction.txt:82	uncovered(external: reports third-party guidance or policy)	none
+S22-01	source/rec01-05-body-extraction.txt:84	uncovered(external: reports third-party guidance or policy)	1
+S22-02	source/rec01-05-body-extraction.txt:86	ace(cdc2022-opioid-s22-02)	none
+S22-03	source/rec01-05-body-extraction.txt:88	restates(S19-11)	none
+S22-04	source/rec01-05-body-extraction.txt:90	ace(cdc2022-opioid-s22-04)	none
+S22-05	source/rec01-05-body-extraction.txt:92	ace(cdc2022-opioid-s22-05)	1
+S22-06	source/rec01-05-body-extraction.txt:94	uncovered(descriptive: fuses recommendations 8, 9, and 11 duties without adding a directive; canonical at B3-12, B3-13, B3-15)	none
+S22-07	source/rec01-05-body-extraction.txt:96	ace(cdc2022-opioid-s22-07)	none
+S22-08	source/rec01-05-body-extraction.txt:98	ace(cdc2022-opioid-s22-08)	none
+S22-09	source/rec01-05-body-extraction.txt:100	restates(S20-01)	none
+S22-10	source/rec01-05-body-extraction.txt:102	restates(S20-01)	1
+S22-11	source/rec01-05-body-extraction.txt:104	ace(cdc2022-opioid-s22-11)	none
+S22-12	source/rec01-05-body-extraction.txt:106	restates(S20-02)	none
+S22-13	source/rec01-05-body-extraction.txt:108	ace(cdc2022-opioid-s22-13)	none
+S22-14	source/rec01-05-body-extraction.txt:110	restates(S19-13)	1
+S23-01	source/rec01-05-body-extraction.txt:112	ace(cdc2022-opioid-s23-01)	none
+S23-02	source/rec01-05-body-extraction.txt:114	ace(cdc2022-opioid-s23-02)	none
+S23-03	source/rec01-05-body-extraction.txt:116	ace(cdc2022-opioid-s23-03)	none
+S23-04	source/rec01-05-body-extraction.txt:118	ace(cdc2022-opioid-s23-04)	none
+S23-05	source/rec01-05-body-extraction.txt:120	ace(cdc2022-opioid-s23-05)	none
+S23-06	source/rec01-05-body-extraction.txt:122	ace(cdc2022-opioid-s23-06)	1
+S23-07	source/rec01-05-body-extraction.txt:124	ace(cdc2022-opioid-s23-07)	none
+S23-08	source/rec01-05-body-extraction.txt:126	ace(cdc2022-opioid-s23-08)	none
+S23-09	source/rec01-05-body-extraction.txt:128	ace(cdc2022-opioid-s23-09)	none
+S23-10	source/rec01-05-body-extraction.txt:130	ace(cdc2022-opioid-s23-10)	none
+S23-11	source/rec01-05-body-extraction.txt:132	ace(cdc2022-opioid-s23-11)	none
+S23-12	source/rec01-05-body-extraction.txt:134	ace(cdc2022-opioid-s23-12)	none
+S23-13	source/rec01-05-body-extraction.txt:136	ace(cdc2022-opioid-s23-13)	none
+S23-14	source/rec01-05-body-extraction.txt:138	ace(cdc2022-opioid-s23-14)	none
+S23-15	source/rec01-05-body-extraction.txt:140	ace(cdc2022-opioid-s23-15)	none
+S23-16	source/rec01-05-body-extraction.txt:142	ace(cdc2022-opioid-s23-16)	none
+S23-17	source/rec01-05-body-extraction.txt:144	restates(B3-03)	1
+S23-18	source/rec01-05-body-extraction.txt:146	ace(cdc2022-opioid-rec02-imp01)	none
+S23-19	source/rec01-05-body-extraction.txt:148	ace(cdc2022-opioid-rec02-imp02)	none
+S24-01	source/rec01-05-body-extraction.txt:150	ace(cdc2022-opioid-rec02-imp03)	none
+S24-02	source/rec01-05-body-extraction.txt:152	ace(cdc2022-opioid-rec02-imp04)	none
+S24-03	source/rec01-05-body-extraction.txt:154	ace(cdc2022-opioid-rec02-imp05)	none
+S24-04	source/rec01-05-body-extraction.txt:156	ace(cdc2022-opioid-rec02-imp06)	none
+S24-05	source/rec01-05-body-extraction.txt:158	ace(cdc2022-opioid-rec02-imp07)	none
+S24-06	source/rec01-05-body-extraction.txt:160	ace(cdc2022-opioid-rec02-imp08)	none
+S24-07	source/rec01-05-body-extraction.txt:162	ace(cdc2022-opioid-rec02-imp09)	1
+S24-08	source/rec01-05-body-extraction.txt:164	ace(cdc2022-opioid-rec02-imp10)	none
+S24-09	source/rec01-05-body-extraction.txt:166	ace(cdc2022-opioid-rec02-imp11)	none
+S24-11	source/rec01-05-body-extraction.txt:168	ace(cdc2022-opioid-rec02-imp13)	none
+S24-12	source/rec01-05-body-extraction.txt:170	ace(cdc2022-opioid-rec02-imp14)	none
+S24-13	source/rec01-05-body-extraction.txt:172	ace(cdc2022-opioid-rec02-imp15)	1
+S24-14	source/rec01-05-body-extraction.txt:174	ace(cdc2022-opioid-rec02-imp16)	none
+S24-15	source/rec01-05-body-extraction.txt:176	ace(cdc2022-opioid-rec02-imp17)	1
+S24-16	source/rec01-05-body-extraction.txt:178	ace(cdc2022-opioid-rec02-imp18)	1
+S24-17	source/rec01-05-body-extraction.txt:180	ace(cdc2022-opioid-rec02-imp19)	none
+S24-18	source/rec01-05-body-extraction.txt:182	ace(cdc2022-opioid-rec02-imp20)	1
+S24-19	source/rec01-05-body-extraction.txt:184	ace(cdc2022-opioid-rec02-imp21)	1
+S24-20	source/rec01-05-body-extraction.txt:186	ace(cdc2022-opioid-rec02-imp22)	none
+S24-21	source/rec01-05-body-extraction.txt:188	ace(cdc2022-opioid-rec02-imp23)	none
+S24-22	source/rec01-05-body-extraction.txt:190	ace(cdc2022-opioid-rec02-imp24)	none
+S25-01	source/rec01-05-body-extraction.txt:192	ace(cdc2022-opioid-rec02-imp25)	none
+S25-02	source/rec01-05-body-extraction.txt:194	ace(cdc2022-opioid-rec02-imp26)	none
+S25-03	source/rec01-05-body-extraction.txt:196	restates(S20-04)	none
+S25-04	source/rec01-05-body-extraction.txt:198	ace(cdc2022-opioid-s25-04)	1
+S25-05	source/rec01-05-body-extraction.txt:200	ace(cdc2022-opioid-s25-05)	none
+S25-06	source/rec01-05-body-extraction.txt:202	restates(S24-08)	none
+S25-07	source/rec01-05-body-extraction.txt:204	uncovered(descriptive: states context without an operative directive)	none
+S25-08	source/rec01-05-body-extraction.txt:206	ace(cdc2022-opioid-s25-08)	1
+S25-09	source/rec01-05-body-extraction.txt:208	ace(cdc2022-opioid-s25-09)	none
+S25-10	source/rec01-05-body-extraction.txt:210	uncovered(external: reports third-party guidance or policy)	none
+S25-11	source/rec01-05-body-extraction.txt:212	uncovered(external: reports third-party guidance or policy)	none
+S26-01	source/rec01-05-body-extraction.txt:214	ace(cdc2022-opioid-s26-01)	none
+S26-02	source/rec01-05-body-extraction.txt:216	restates(S24-02)	none
+S26-03	source/rec01-05-body-extraction.txt:218	uncovered(descriptive: states context without an operative directive)	none
+S26-04	source/rec01-05-body-extraction.txt:220	uncovered(external: reports third-party guidance or policy)	none
+S26-05	source/rec01-05-body-extraction.txt:222	uncovered(descriptive: states context without an operative directive)	none
+S26-06	source/rec01-05-body-extraction.txt:224	restates(S24-01)	none
+S26-07	source/rec01-05-body-extraction.txt:226	ace(cdc2022-opioid-s26-07)	none
+S26-08	source/rec01-05-body-extraction.txt:228	ace(cdc2022-opioid-s26-08)	none
+S26-09	source/rec01-05-body-extraction.txt:230	ace(cdc2022-opioid-s26-09)	none
+S26-10	source/rec01-05-body-extraction.txt:232	restates(S21-05)	none
+S26-11	source/rec01-05-body-extraction.txt:234	uncovered(descriptive: states context without an operative directive)	none
+S27-01	source/rec01-05-body-extraction.txt:236	restates(S24-04)	none
+S27-02	source/rec01-05-body-extraction.txt:238	ace(cdc2022-opioid-s27-02)	none
+S27-03	source/rec01-05-body-extraction.txt:240	ace(cdc2022-opioid-s27-03)	none
+S27-04	source/rec01-05-body-extraction.txt:242	restates(S24-06)	none
+S27-05	source/rec01-05-body-extraction.txt:244	ace(cdc2022-opioid-s27-05)	1
+S27-06	source/rec01-05-body-extraction.txt:246	restates(S24-07)	1
+S27-07	source/rec01-05-body-extraction.txt:248	uncovered(descriptive: states context without an operative directive)	none
+S27-08	source/rec01-05-body-extraction.txt:250	restates(S24-08)	none
+S27-09	source/rec01-05-body-extraction.txt:252	ace(cdc2022-opioid-s27-09)	none
+S27-10	source/rec01-05-body-extraction.txt:254	uncovered(descriptive: reports common practice and hedged endorsement without a guideline directive)	none
+S27-11	source/rec01-05-body-extraction.txt:256	ace(cdc2022-opioid-s27-11)	none
+S28-01	source/rec01-05-body-extraction.txt:258	restates(S24-12)	none
+S28-02	source/rec01-05-body-extraction.txt:260	restates(S24-13)	1
+S28-03	source/rec01-05-body-extraction.txt:262	restates(S24-14)	none
+S28-04	source/rec01-05-body-extraction.txt:264	restates(S24-15)	1
+S28-05	source/rec01-05-body-extraction.txt:266	ace(cdc2022-opioid-s28-05)	1
+S28-06	source/rec01-05-body-extraction.txt:268	restates(S24-17)	none
+S28-07	source/rec01-05-body-extraction.txt:270	uncovered(aim: states an aspiration without operative directive)	none
+S28-08	source/rec01-05-body-extraction.txt:272	uncovered(descriptive: states goal-flexibility context without an operative directive)	none
+S28-09	source/rec01-05-body-extraction.txt:274	uncovered(descriptive: states context without an operative directive)	none
+S28-10	source/rec01-05-body-extraction.txt:276	ace(cdc2022-opioid-s28-10)	none
+S28-11	source/rec01-05-body-extraction.txt:278	ace(cdc2022-opioid-s28-11)	none
+S28-12	source/rec01-05-body-extraction.txt:280	uncovered(descriptive: states context without an operative directive)	none
+S28-13	source/rec01-05-body-extraction.txt:282	ace(cdc2022-opioid-s28-13)	none
+S28-14	source/rec01-05-body-extraction.txt:284	restates(S24-18)	1
+S28-15	source/rec01-05-body-extraction.txt:286	restates(S24-19)	1
+S28-16	source/rec01-05-body-extraction.txt:288	restates(S24-20)	none
+S28-17	source/rec01-05-body-extraction.txt:290	restates(S24-21)	none
+S28-18	source/rec01-05-body-extraction.txt:292	restates(S24-22)	none
+S29-01	source/rec01-05-body-extraction.txt:294	restates(S25-01)	none
+S29-02	source/rec01-05-body-extraction.txt:296	ace(cdc2022-opioid-s29-02)	1
+S29-03	source/rec01-05-body-extraction.txt:298	ace(cdc2022-opioid-s29-03)	none
+S29-04	source/rec01-05-body-extraction.txt:300	ace(cdc2022-opioid-s29-04)	none
+S29-05	source/rec01-05-body-extraction.txt:302	restates(S23-02)	none
+S29-06	source/rec01-05-body-extraction.txt:304	restates(S23-03)	none
+S29-07	source/rec01-05-body-extraction.txt:306	restates(S23-04)	none
+S29-08	source/rec01-05-body-extraction.txt:308	ace(cdc2022-opioid-s29-08)	none
+S29-09	source/rec01-05-body-extraction.txt:310	restates(S23-06)	1
+S29-10	source/rec01-05-body-extraction.txt:312	restates(S23-08)	none
+S29-11	source/rec01-05-body-extraction.txt:314	ace(cdc2022-opioid-s29-11)	none
+S29-12	source/rec01-05-body-extraction.txt:316	restates(S23-11)	none
+S29-13	source/rec01-05-body-extraction.txt:318	restates(S23-12)	none
+S29-14	source/rec01-05-body-extraction.txt:320	restates(S23-13)	none
+S29-15	source/rec01-05-body-extraction.txt:322	restates(S23-14)	none
+S29-16	source/rec01-05-body-extraction.txt:324	restates(S23-15)	none
+S29-17	source/rec01-05-body-extraction.txt:326	ace(cdc2022-opioid-s29-17)	none
+S29-18	source/rec01-05-body-extraction.txt:328	restates(S23-16)	none
+S29-19	source/rec01-05-body-extraction.txt:330	ace(cdc2022-opioid-s29-19)	none
+S29-20	source/rec01-05-body-extraction.txt:332	ace(cdc2022-opioid-s29-20)	none
+S29-21	source/rec01-05-body-extraction.txt:334	ace(cdc2022-opioid-s29-21)	none
+S29-22	source/rec01-05-body-extraction.txt:336	uncovered(descriptive: states context without an operative directive)	none
+S29-23	source/rec01-05-body-extraction.txt:338	uncovered(descriptive: states context without an operative directive)	none
+S30-01	source/rec01-05-body-extraction.txt:340	uncovered(aim: states an aspiration without operative directive)	none
+S30-02	source/rec01-05-body-extraction.txt:342	ace(cdc2022-opioid-s30-02)	1
+S30-03	source/rec01-05-body-extraction.txt:344	ace(cdc2022-opioid-s30-03)	none
+S30-04	source/rec01-05-body-extraction.txt:346	uncovered(descriptive: states context without an operative directive)	1
+S30-05	source/rec01-05-body-extraction.txt:348	ace(cdc2022-opioid-s30-05)	none
+S30-06	source/rec01-05-body-extraction.txt:350	ace(cdc2022-opioid-s30-06)	none
+S30-07	source/rec01-05-body-extraction.txt:352	ace(cdc2022-opioid-s30-07)	none
+S30-08	source/rec01-05-body-extraction.txt:354	ace(cdc2022-opioid-s30-08)	none
+S30-09	source/rec01-05-body-extraction.txt:356	restates(B3-05)	none
+S30-10	source/rec01-05-body-extraction.txt:358	ace(cdc2022-opioid-rec03-imp01)	2
+S30-11	source/rec01-05-body-extraction.txt:360	ace(cdc2022-opioid-rec03-imp02)	1
+S30-12	source/rec01-05-body-extraction.txt:362	uncovered(external: reports third-party guidance or policy)	1
+S30-13	source/rec01-05-body-extraction.txt:364	ace(cdc2022-opioid-rec03-imp04)	none
+S30-14	source/rec01-05-body-extraction.txt:366	ace(cdc2022-opioid-rec03-imp05)	none
+S30-15	source/rec01-05-body-extraction.txt:368	ace(cdc2022-opioid-rec03-imp06)	none
+S30-16	source/rec01-05-body-extraction.txt:370	ace(cdc2022-opioid-rec03-imp07)	1
+S30-17	source/rec01-05-body-extraction.txt:372	ace(cdc2022-opioid-rec03-imp08)	1
+S31-01	source/rec01-05-body-extraction.txt:374	uncovered(external: reports third-party guidance or policy)	2
+S31-02	source/rec01-05-body-extraction.txt:376	restates(S30-10)	2
+S31-03	source/rec01-05-body-extraction.txt:378	restates(S30-10)	1
+S31-04	source/rec01-05-body-extraction.txt:380	ace(cdc2022-opioid-s31-04)	2
+S31-06	source/rec01-05-body-extraction.txt:382	uncovered(external: reports third-party guidance or policy)	1
+S32-01	source/rec01-05-body-extraction.txt:384	restates(S30-14)	none
+S32-02	source/rec01-05-body-extraction.txt:386	ace(cdc2022-opioid-s32-02)	none
+S32-03	source/rec01-05-body-extraction.txt:388	ace(cdc2022-opioid-s32-03)	none
+S32-04	source/rec01-05-body-extraction.txt:390	restates(S30-15)	none
+S32-05	source/rec01-05-body-extraction.txt:392	restates(S30-16)	1
+S32-06	source/rec01-05-body-extraction.txt:394	ace(cdc2022-opioid-s32-06)	1
+S32-07	source/rec01-05-body-extraction.txt:396	restates(B3-06)	none
+S32-08	source/rec01-05-body-extraction.txt:398	ace(cdc2022-opioid-rec04-imp01)	1
+S32-09	source/rec01-05-body-extraction.txt:400	restates(B3-06)	none
+S32-10	source/rec01-05-body-extraction.txt:402	ace(cdc2022-opioid-rec04-imp03)	1
+S32-11	source/rec01-05-body-extraction.txt:404	restates(B3-06)	none
+S32-12	source/rec01-05-body-extraction.txt:406	ace(cdc2022-opioid-rec04-imp05)	none
+S32-13	source/rec01-05-body-extraction.txt:408	ace(cdc2022-opioid-s32-13)	none
+S32-14	source/rec01-05-body-extraction.txt:410	ace(cdc2022-opioid-rec04-imp07)	none
+S32-15	source/rec01-05-body-extraction.txt:412	ace(cdc2022-opioid-rec04-imp08)	none
+S32-17	source/rec01-05-body-extraction.txt:414	ace(cdc2022-opioid-rec04-imp09)	none
+S33-01	source/rec01-05-body-extraction.txt:416	ace(cdc2022-opioid-s33-01)	none
+S33-02	source/rec01-05-body-extraction.txt:418	uncovered(heading: structural label without directive)	none
+S33-03	source/rec01-05-body-extraction.txt:420	ace(cdc2022-opioid-s33-03)	1
+S33-04	source/rec01-05-body-extraction.txt:422	ace(cdc2022-opioid-s33-04)	none
+S33-05	source/rec01-05-body-extraction.txt:424	ace(cdc2022-opioid-s33-05)	none
+S33-06	source/rec01-05-body-extraction.txt:426	ace(cdc2022-opioid-s33-06)	1
+S33-07	source/rec01-05-body-extraction.txt:428	restates(S32-08)	1
+S34-01	source/rec01-05-body-extraction.txt:430	restates(B3-06)	none
+S34-02	source/rec01-05-body-extraction.txt:432	restates(S32-12)	none
+S34-03	source/rec01-05-body-extraction.txt:434	uncovered(external: reports third-party guidance or policy)	none
+S34-04	source/rec01-05-body-extraction.txt:436	ace(cdc2022-opioid-s34-04)	none
+S34-05	source/rec01-05-body-extraction.txt:438	ace(cdc2022-opioid-s34-05)	none
+S34-06	source/rec01-05-body-extraction.txt:440	ace(cdc2022-opioid-s34-06)	none
+S34-07	source/rec01-05-body-extraction.txt:442	ace(cdc2022-opioid-s34-07)	1
+S34-08	source/rec01-05-body-extraction.txt:444	restates(B3-10)	none
+S34-09	source/rec01-05-body-extraction.txt:446	ace(cdc2022-opioid-s34-09)	none
+S34-10	source/rec01-05-body-extraction.txt:448	ace(cdc2022-opioid-s34-10)	none
+S34-11	source/rec01-05-body-extraction.txt:450	restates(S32-17)	none
+S34-12	source/rec01-05-body-extraction.txt:452	uncovered(external: reports third-party guidance or policy)	1
+S34-13	source/rec01-05-body-extraction.txt:454	uncovered(external: reports third-party guidance or policy)	1
+S34-14	source/rec01-05-body-extraction.txt:456	ace(cdc2022-opioid-s34-14)	none
+S34-15	source/rec01-05-body-extraction.txt:458	restates(B3-07)	1
+S35-01	source/rec01-05-body-extraction.txt:460	ace(cdc2022-opioid-s35-01)	none
+S35-02	source/rec01-05-body-extraction.txt:462	restates(B3-07)	none
+S35-03	source/rec01-05-body-extraction.txt:464	restates(B3-07)	none
+S35-04	source/rec01-05-body-extraction.txt:466	ace(cdc2022-opioid-rec05-imp04)	none
+S35-05	source/rec01-05-body-extraction.txt:468	ace(cdc2022-opioid-rec05-imp05)	none
+S35-06	source/rec01-05-body-extraction.txt:470	ace(cdc2022-opioid-rec05-imp06)	none
+S35-07	source/rec01-05-body-extraction.txt:472	ace(cdc2022-opioid-rec05-imp07)	none
+S35-08	source/rec01-05-body-extraction.txt:474	ace(cdc2022-opioid-rec05-imp08)	none
+S35-09	source/rec01-05-body-extraction.txt:476	ace(cdc2022-opioid-rec05-imp09)	none
+S35-10	source/rec01-05-body-extraction.txt:478	ace(cdc2022-opioid-rec05-imp10)	none
+S35-11	source/rec01-05-body-extraction.txt:480	ace(cdc2022-opioid-rec05-imp11)	none
+S35-12	source/rec01-05-body-extraction.txt:482	ace(cdc2022-opioid-rec05-imp12)	none
+S35-13	source/rec01-05-body-extraction.txt:484	ace(cdc2022-opioid-rec05-imp13)	none
+S35-14	source/rec01-05-body-extraction.txt:486	ace(cdc2022-opioid-rec05-imp14)	none
+S35-15	source/rec01-05-body-extraction.txt:488	ace(cdc2022-opioid-rec05-imp15)	none
+S35-16	source/rec01-05-body-extraction.txt:490	ace(cdc2022-opioid-rec05-imp16)	none
+S35-17	source/rec01-05-body-extraction.txt:492	uncovered(aim: states an aspiration without operative directive)	none
+S35-18	source/rec01-05-body-extraction.txt:494	ace(cdc2022-opioid-rec05-imp18)	none
+S35-19	source/rec01-05-body-extraction.txt:496	ace(cdc2022-opioid-rec05-imp19)	none
+S35-20	source/rec01-05-body-extraction.txt:498	ace(cdc2022-opioid-rec05-imp20)	none
+S35-21	source/rec01-05-body-extraction.txt:500	ace(cdc2022-opioid-rec05-imp21)	none
+S35-22	source/rec01-05-body-extraction.txt:502	ace(cdc2022-opioid-rec05-imp22)	none
+S35-23	source/rec01-05-body-extraction.txt:504	ace(cdc2022-opioid-rec05-imp27)	none
+S36-01	source/rec01-05-body-extraction.txt:506	ace(cdc2022-opioid-rec05-imp23)	none
+S36-02	source/rec01-05-body-extraction.txt:508	ace(cdc2022-opioid-rec05-imp24)	none
+S36-03	source/rec01-05-body-extraction.txt:510	ace(cdc2022-opioid-rec05-imp25)	1
+S36-04	source/rec01-05-body-extraction.txt:512	ace(cdc2022-opioid-rec05-imp26)	2
+S37-01	source/rec01-05-body-extraction.txt:514	ace(cdc2022-opioid-s37-01)	none
+S37-02	source/rec01-05-body-extraction.txt:516	restates(B3-07)	1
+S37-03	source/rec01-05-body-extraction.txt:518	restates(S35-04)	none
+S37-04	source/rec01-05-body-extraction.txt:520	restates(S35-05)	none
+S37-05	source/rec01-05-body-extraction.txt:522	ace(cdc2022-opioid-s37-05)	1
+S37-06	source/rec01-05-body-extraction.txt:524	restates(B3-07)	none
+S37-07	source/rec01-05-body-extraction.txt:526	ace(cdc2022-opioid-s37-07)	1
+S37-08	source/rec01-05-body-extraction.txt:528	restates(S35-19)	none
+S37-09	source/rec01-05-body-extraction.txt:530	ace(cdc2022-opioid-s37-09)	none
+S37-10	source/rec01-05-body-extraction.txt:532	ace(cdc2022-opioid-s37-10)	none
+S37-11	source/rec01-05-body-extraction.txt:534	ace(cdc2022-opioid-s37-11)	none
+S37-12	source/rec01-05-body-extraction.txt:536	ace(cdc2022-opioid-s37-12)	none
+S37-13	source/rec01-05-body-extraction.txt:538	ace(cdc2022-opioid-s37-13)	1
+S37-14	source/rec01-05-body-extraction.txt:540	uncovered(external: reports third-party guidance or policy)	none
+S37-15	source/rec01-05-body-extraction.txt:542	ace(cdc2022-opioid-s37-15)	none
+S37-16	source/rec01-05-body-extraction.txt:544	ace(cdc2022-opioid-s37-16)	none
+S37-17	source/rec01-05-body-extraction.txt:546	ace(cdc2022-opioid-s37-17)	none
+S37-18	source/rec01-05-body-extraction.txt:548	restates(B3-07)	none
+S37-19	source/rec01-05-body-extraction.txt:550	ace(cdc2022-opioid-s37-19)	none
+S38-01	source/rec01-05-body-extraction.txt:552	restates(S35-07)	none
+S38-02	source/rec01-05-body-extraction.txt:554	ace(cdc2022-opioid-s38-02)	1
+S38-03	source/rec01-05-body-extraction.txt:556	ace(cdc2022-opioid-s38-03)	none
+S38-04	source/rec01-05-body-extraction.txt:558	ace(cdc2022-opioid-s38-04)	none
+S38-05	source/rec01-05-body-extraction.txt:560	ace(cdc2022-opioid-s38-05)	none
+S38-06	source/rec01-05-body-extraction.txt:562	restates(S35-20)	none
+S38-07	source/rec01-05-body-extraction.txt:564	restates(S35-20)	none
+S38-08	source/rec01-05-body-extraction.txt:566	ace(cdc2022-opioid-s38-08)	1
+S38-09	source/rec01-05-body-extraction.txt:568	restates(S35-06)	none
+S38-10	source/rec01-05-body-extraction.txt:570	restates(S35-06)	1
+S38-11	source/rec01-05-body-extraction.txt:572	ace(cdc2022-opioid-s38-11)	none
+S38-12	source/rec01-05-body-extraction.txt:574	ace(cdc2022-opioid-s38-12)	none
+S38-13	source/rec01-05-body-extraction.txt:576	restates(S35-21)	none
+S38-14	source/rec01-05-body-extraction.txt:578	restates(S35-08)	none
+S38-15	source/rec01-05-body-extraction.txt:580	restates(S35-09)	none
+S38-16	source/rec01-05-body-extraction.txt:582	ace(cdc2022-opioid-s38-16)	none
+S38-17	source/rec01-05-body-extraction.txt:584	ace(cdc2022-opioid-s38-17)	none
+S38-18	source/rec01-05-body-extraction.txt:586	restates(S35-12)	none
+S38-19	source/rec01-05-body-extraction.txt:588	restates(S35-10)	none
+S38-20	source/rec01-05-body-extraction.txt:590	ace(cdc2022-opioid-s38-20)	none
+S38-21	source/rec01-05-body-extraction.txt:592	restates(S35-11)	none
+S38-22	source/rec01-05-body-extraction.txt:594	restates(S35-23)	none
+S39-01	source/rec01-05-body-extraction.txt:596	ace(cdc2022-opioid-s39-01)	none
+S39-02	source/rec01-05-body-extraction.txt:598	restates(S35-13)	none
+S39-03	source/rec01-05-body-extraction.txt:600	restates(S35-14)	none
+S39-04	source/rec01-05-body-extraction.txt:602	restates(S35-15)	none
+S39-05	source/rec01-05-body-extraction.txt:604	restates(S35-16)	none
+S39-06	source/rec01-05-body-extraction.txt:606	restates(S35-18)	none
+S39-07	source/rec01-05-body-extraction.txt:608	ace(cdc2022-opioid-s39-07)	1
+S39-08	source/rec01-05-body-extraction.txt:610	restates(B3-07)	1
+S39-09	source/rec01-05-body-extraction.txt:612	ace(cdc2022-opioid-s39-09)	1
+S39-10	source/rec01-05-body-extraction.txt:614	ace(cdc2022-opioid-s39-10)	none
+S39-11	source/rec01-05-body-extraction.txt:616	uncovered(descriptive: states context without an operative directive)	none
+S39-12	source/rec01-05-body-extraction.txt:618	ace(cdc2022-opioid-s39-12)	none
+S39-13	source/rec01-05-body-extraction.txt:620	uncovered(descriptive: states context without an operative directive)	none
+S39-14	source/rec01-05-body-extraction.txt:622	uncovered(external: reports third-party guidance or policy)	2
+S39-15	source/rec01-05-body-extraction.txt:624	restates(S39-16)	1
+S39-16	source/rec01-05-body-extraction.txt:626	ace(cdc2022-opioid-s39-16)	1

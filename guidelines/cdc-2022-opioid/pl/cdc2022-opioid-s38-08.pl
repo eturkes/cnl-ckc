@@ -40,9 +40,9 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s38-08',ace_sha256('48775fdcf13532a16f79ae7b730bb2758b23b5c0f5a82b4c05d1553afdfdbd1a'),ulex(sha256('0037ea725bdd10cf000798ce586d3739368b01cba88ac29668dbf1e4c9414552')),vocabulary(sha256('9d7632637554f8cbfe72e7d34a9b9d14c29eb8593aebb1c128a870c5dcf77ead'))).
+guideline_document('cdc2022-opioid-s38-08',ace_sha256('48775fdcf13532a16f79ae7b730bb2758b23b5c0f5a82b4c05d1553afdfdbd1a'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: Every clinician should establish a function-improvement-and-pain-reduction-commitment with a patient during an opioid-taper.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',1,ref(2),[A]),'function-improvement-and-pain-reduction-commitment',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',1,ref(3),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -55,7 +55,7 @@ guideline_arg('$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),'$gu
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',1,ref(5),[A]),during,'$guideline_id'(product,'cdc2022-opioid-s38-08',1,ref(4),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s38-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',1,ref(5),[A]),with,'$guideline_id'(product,'cdc2022-opioid-s38-08',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 % S2: Every clinician should establish a function-improvement-and-pain-reduction-commitment with a patient during a continued-opioid-therapy.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-08',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-08',2,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-08',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',2,ref(2),[A]),'function-improvement-and-pain-reduction-commitment',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s38-08',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-08',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-08',2,ref(3),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
