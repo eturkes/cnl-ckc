@@ -1,7 +1,7 @@
-# generator	target	input	target_sha256
-k5-sound-chrome	rust/ckc-kernel/src/k5_sound_chrome.rs	rust/ckc-spec/src/ui.rs	4a583ccbbf988e24ada5b021b899d7622382fd7dea12bb7a7a1358f87a9df9c8
-k5-sound-encoding	rust/ckc-kernel/src/k5_sound_encoding.rs	rust/ckc-spec/src/ui.rs	31e9039ec817e6c11f6a228f8e1e5f032ff034da05533c8b32b562d9041eaea5
-k5-sound-literals	rust/ckc-kernel/src/k5_sound_literals.rs	rust/ckc-spec/src/ui.rs	7ece6a972338bc82ff8dc28a9193301c929b3ee27852cf1fb031688c51367b29
-k5-sound-patterns	rust/ckc-kernel/src/k5_sound_patterns.rs	rust/ckc-spec/src/ui.rs	0e8a43fc613e8dc48043b948f7db2b2b17be3acd52d5f6deebaf5fe9e22a05b2
-k5-sound-registry	rust/ckc-kernel/src/k5_sound_registry.rs	rust/ckc-spec/src/ui.rs	85e29dd8a7c36a83ef3771d55e0d419016838c47cd4228cfab515346370e79bd
-m6-symbols	rust/ckc-kernel/src/m6_symbols.rs	rust/ckc-spec/src/emit.rs	3a064e2d457e404a466889c1e20064259880c0543ca69eef10cb4beccffddfaf
+# generator	target	input
+k5-sound-chrome	rust/ckc-kernel/src/k5_sound_chrome.rs	rust/ckc-spec/src/ui.rs
+k5-sound-encoding	rust/ckc-kernel/src/k5_sound_encoding.rs	rust/ckc-spec/src/ui.rs
+k5-sound-literals	rust/ckc-kernel/src/k5_sound_literals.rs	rust/ckc-spec/src/ui.rs
+k5-sound-patterns	rust/ckc-kernel/src/k5_sound_patterns.rs	rust/ckc-spec/src/ui.rs
+k5-sound-registry	rust/ckc-kernel/src/k5_sound_registry.rs	rust/ckc-spec/src/ui.rs
+m6-symbols	rust/ckc-kernel/src/m6_symbols.rs	rust/ckc-spec/src/emit.rs

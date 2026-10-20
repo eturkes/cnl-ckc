@@ -11,7 +11,7 @@ export RUSTUP_HOME="$root/.toolchain/rustup" CARGO_HOME="$root/.toolchain/cargo"
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 git -C "$root" archive "$rev" rust/ckc-spec rust/ckc-kernel | tar -x -C "$t"
 rc=0
-while IFS=$'\t' read -r gen target _input _sha; do
+while IFS=$'\t' read -r gen target _input; do
     [[ "$gen" == \#* ]] && continue
     rm -f "$t/$target"
     if [[ "$gen" == k5-sound-* ]]; then
