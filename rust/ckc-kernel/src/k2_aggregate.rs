@@ -935,6 +935,7 @@ fn unproved_inner(
     let ghost database = crate::k2_engine::db_view(origin, db@);
     let ghost models = obs_view(origin, obs@);
     let mut arena = input_arena;
+    let ix = crate::k2_index::build_index(&arena, db);
     let mut i = 0usize;
     proof {
         assert_seqs_equal!(models.skip(0) == models);
@@ -942,6 +943,7 @@ fn unproved_inner(
     while i < obs.len()
         invariant
             arena_ok(&arena),
+            crate::k2_index::index_over(ix, database),
             origin == input_arena.nodes@,
             origin.is_prefix_of(arena.nodes@),
             crate::k2_engine::db_valid(arena.nodes@, db@),
@@ -965,7 +967,20 @@ fn unproved_inner(
             assert_seqs_equal!(models.skip(i as int).drop_first() == models.skip(i as int + 1));
         }
         let witnessed = crate::k2_bridge::witness_db_exec(&arena, &obs[i].facts, db);
-        let proved = crate::k2_engine::heads_proved(&mut arena, &witnessed, &obs[i].heads);
+        proof {
+            // the witness facts precede the composition (contract cix D5)
+            let facts = root_terms(arena.nodes@, obs@[i as int].facts@);
+            let w = ckc_spec::engine::witness_db(facts, database);
+            assert(facts.len() == obs@[i as int].facts@.len());
+            assert(w.skip(obs@[i as int].facts@.len() as int) =~= database);
+        }
+        let proved = crate::k2_engine::heads_proved(
+            &mut arena,
+            &witnessed,
+            &ix,
+            obs[i].facts.len(),
+            &obs[i].heads,
+        );
         proof {
             crate::k2_engine::db_models_prefix(before, arena.nodes@, db@);
             obs_prefix(before, arena.nodes@, obs@);

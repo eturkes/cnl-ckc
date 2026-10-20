@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Contract cix P1: `ckc v1 aggregate-check` CPU time (user + system) of a unit binary over the
+# guarded corpus vs a base binary over the pre-guard corpus (the same ACE compiled with the
+# table minus its scope + exclusion rows), on a fixed interleaved schedule.
+# usage: cix-aggregate <repo-root> <base-bin> <unit-bin> [rounds=5] [guideline=cdc-2022-opioid]
+# rc 0 = every report equals the base binary's on that manifest and
+#        median(unit guarded) <= 2 x median(base pre-guard); rc 1 = otherwise; rc 2 = setup.
+# Payloads = fork proof mode, staged as `ckc check` stages it (vendor/ape + Clex, fit_to_plp).
+set -uo pipefail
+[ $# -ge 3 ] || { echo "usage: cix-aggregate <repo-root> <base-bin> <unit-bin> [rounds] [guideline]" >&2; exit 2; }
+root=$(readlink -f "$1"); base=$(readlink -f "$2"); unit=$(readlink -f "$3"); rounds=${4:-5}; gid=${5:-cdc-2022-opioid}
+G=$root/guidelines/$gid
+export PATH="$root/.toolchain/bin:$PATH" LC_ALL=C.UTF-8
+w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+cp -a "$root/vendor/ape" "$w/stage" && cp "$root/vendor/clex/clex_lexicon.pl" "$w/stage/prolog/lexicon/clex_lexicon.pl" || exit 2
+swipl -O -f none -F none -g "working_directory(_, '$w/stage/prolog/parser'), [fit_to_plp], halt." -t halt >/dev/null 2>&1 || exit 2
+grep -v -E '^(scope|exclusion)	' "$G/vocabulary.tsv" > "$w/pre.tsv"
+fork() { swipl -q -f none -F none -s "$w/stage/prolog/ace_to_pl.pl" -g main -t 'halt(9)' -- "$w/stage" "$@"; }
+one() { # <id>: pre-guard pl + both payloads
+    fork "$1" "$w/pre.tsv" "$G/lexicon.ulex" < "$G/ace/$1.ace" > "$w/pre/$1.pl" &&
+    fork "$1" "$w/pre.tsv" "$G/lexicon.ulex" proof < "$G/ace/$1.ace" > "$w/pre/$1.proof" &&
+    fork "$1" "$G/vocabulary.tsv" "$G/lexicon.ulex" proof < "$G/ace/$1.ace" > "$w/guarded/$1.proof"
+}
+export -f one fork; export w G
+mkdir -p "$w/pre" "$w/guarded"
+ids=$(cd "$G/ace" && ls -- *.ace | sed 's/\.ace$//')
+printf '%s\n' $ids | xargs -P "${CIX_JOBS:-$(nproc)}" -I{} bash -c 'one {}' || { echo "cix-aggregate: payload generation failed" >&2; exit 2; }
+for id in $ids; do printf '%s\t%s\n' "$w/pre/$id.pl" "$w/pre/$id.proof" >> "$w/pre.manifest"; printf '%s\t%s\n' "$G/pl/$id.pl" "$w/guarded/$id.proof" >> "$w/guarded.manifest"; done
+digest() { sha256sum "$@" | cut -c1-64 | sha256sum | cut -c1-64; }
+echo "cix-aggregate: root $root guideline $gid documents $(printf '%s\n' $ids | wc -l) rounds $rounds"
+echo "cix-aggregate: base $(sha256sum < "$base" | cut -c1-64) unit $(sha256sum < "$unit" | cut -c1-64)"
+echo "cix-aggregate: inputs pre $(digest "$w"/pre/*) guarded $(digest "$G"/pl/*.pl "$w"/guarded/*)"
+run() { # <label> <round> <bin> <kind>: one raw line; CPU seconds → $w/<label>.cpu
+    local out="$w/out.$1.$2" l0 l1 rc e u s
+    l0=$(cut -d' ' -f1 /proc/loadavg)
+    /usr/bin/time -f '%e %U %S' -o "$w/t" "$3" v1 aggregate-check "$w/$4.manifest" > "$out" 2>&1; rc=$?
+    l1=$(cut -d' ' -f1 /proc/loadavg)
+    read -r e u s < <(tail -1 "$w/t")
+    awk -v u="$u" -v s="$s" 'BEGIN { printf "%.2f\n", u + s }' >> "$w/$1.cpu"
+    echo "run $1 round $2 rc $rc wall $e user $u sys $s load $l0 $l1 report $(head -c 100 "$out" | tr '\n' ' ')"
+    [ "$rc" = 0 ] || touch "$w/bad"
+}
+for r in $(seq 1 "$rounds"); do
+    order="base-pre:$base:pre unit-guarded:$unit:guarded base-guarded:$base:guarded unit-pre:$unit:pre"
+    [ $((r % 2)) = 0 ] && order=$(printf '%s\n' $order | tac | tr '\n' ' ')
+    for job in $order; do IFS=: read -r label bin kind <<< "$job"; run "$label" "$r" "$bin" "$kind"; done
+done
+for kind in pre guarded; do # every report = the first base report on that manifest, an ok report
+    ref="$w/out.base-$kind.1"
+    grep -q '^ace_to_pl aggregate ok ' "$ref" || touch "$w/bad"
+    for out in "$w"/out.*-"$kind".*; do cmp -s "$out" "$ref" || { echo "cix-aggregate: report differs: ${out##*/out.}" >&2; touch "$w/bad"; }; done
+done
+median() { sort -n "$w/$1.cpu" | awk '{ a[NR] = $1 } END { if (NR % 2) print a[(NR + 1) / 2]; else printf "%.2f\n", (a[NR / 2] + a[NR / 2 + 1]) / 2 }'; }
+for label in base-pre unit-guarded base-guarded unit-pre; do echo "median $label $(median "$label") s cpu"; done
+bp=$(median base-pre); ug=$(median unit-guarded)
+verdict=$(awk -v ug="$ug" -v bp="$bp" 'BEGIN { printf "%s %.3f", (ug <= 2 * bp) ? "pass" : "fail", ug / bp }')
+echo "cix-aggregate: ratio unit-guarded/base-pre ${verdict#* } (bound 2) → ${verdict%% *}"
+[ ! -e "$w/bad" ] && [ "${verdict%% *}" = pass ]

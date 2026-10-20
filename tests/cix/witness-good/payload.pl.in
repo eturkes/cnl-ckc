@@ -1,0 +1,1 @@
+'$guideline_proof'(cix,1,variant(1),witness([guideline_property(7,token,tag,pos),guideline_property([],token,tag,pos),guideline_property(f(a),token,tag,pos),guideline_property(bad,token,tag,pos),guideline_property(good,token,tag,pos)]),prove([guideline_entity(actual,'$guideline_id'(product,cix,1,ref(1),[]),probe,countable),guideline_event(actual,ok,result)])).

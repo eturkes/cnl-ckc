@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+"""Regenerate P3(a) inputs + pins with the frozen base binary."""
+
+import hashlib
+import pathlib
+import shutil
+import subprocess
+import sys
+
+HERE = pathlib.Path(__file__).resolve().parent
+BASE_SHA = "3564e28e7d0ccb43f360d2aae137bfd611a8085824904c77c32fdf03d39e168c"
+SITE = "guideline_entity(actual,'$guideline_id'(product,cix,1,ref(1),[]),probe,countable)"
+
+
+def prop(context, label, kind="value"):
+    return f"guideline_property({context},{label},{kind},pos)"
+
+
+def fixture(name, clauses, queries, payload=""):
+    directory = HERE / name
+    directory.mkdir(exist_ok=True)
+    document = (HERE / "document.pl.in").read_text().replace("@DOC@", "cix")
+    if name.startswith("witness-"):
+        clauses = [SITE, *clauses]
+    document = document.replace("@CLAUSES@", "\n".join(f"{c}." for c in clauses) + "\n")
+    (directory / "doc.pl.in").write_text(document)
+    (directory / "payload.pl.in").write_text(payload)
+    (directory / "manifest.tsv.in").write_text("doc.pl\tpayload.pl\n")
+    for label, goal, answers in queries:
+        query = (HERE / "query.pl.in").read_text()
+        query = query.replace("@GOAL@", goal).replace("@ANSWERS@", answers)
+        (directory / f"{label}.pl.in").write_text(query)
+    return name, [label for label, _, _ in queries]
+
+
+def proof(facts, heads, variant=1):
+    heads = [SITE, *heads]
+    return (
+        f"'$guideline_proof'(cix,1,variant({variant}),"
+        f"witness([{','.join(facts)}]),prove([{','.join(heads)}])).\n"
+    )
+
+
+def inputs():
+    wh_a = "[answer(A,wh(what))]"
+    wh_b = "[answer(B,wh(what))]"
+    classes = [
+        prop("A", "wild_before"),
+        "guideline_event(actual,noise,event)",
+        prop("alpha", "atom_first"),
+        prop("7", "int_first"),
+        prop("[]", "nil_first"),
+        prop("f(a)", "comp_f1"),
+        "guideline_entity(actual,noise,n,countable)",
+        prop("beta", "atom_other"),
+        prop("f(a,b)", "comp_f2"),
+        prop("g(a)", "comp_g1"),
+        prop("A", "wild_middle"),
+        prop("alpha", "atom_first"),
+        prop("alpha", "atom_last"),
+        prop("-2", "int_negative"),
+        prop("0", "int_zero"),
+        prop("f(b)", "comp_child"),
+        prop("A", "shared_wild_first"),
+        prop("alpha", "shared_wild_first"),
+        prop("alpha", "shared_class_first"),
+        prop("A", "shared_class_first"),
+        prop("A", "wild_end"),
+        "guideline_event(actual,f(a),bind)",
+    ]
+    class_queries = [("variable", prop("A", "B"), wh_b)]
+    for label, value in [
+        ("int", "7"),
+        ("negative", "-2"),
+        ("zero", "0"),
+        ("int_absent", "8"),
+        ("nil", "[]"),
+        ("alpha", "alpha"),
+        ("beta", "beta"),
+        ("atom_absent", "absent"),
+        ("f1", "f(a)"),
+        ("f1_child", "f(b)"),
+        ("f2", "f(a,b)"),
+        ("g1", "g(a)"),
+        ("comp_absent", "z(a)"),
+        ("arity_absent", "f(a,b,c)"),
+    ]:
+        class_queries.append((label, prop(value, "A"), wh_a))
+    class_queries.append(
+        ("bound_later", f"','(guideline_event(actual,A,bind),{prop('A', 'B')})", wh_b)
+    )
+    cases = [fixture("classes", classes, class_queries)]
+    cases.append(
+        fixture(
+            "redo",
+            [
+                prop("g(a)", "clash", "probe"),
+                prop("f(a)", "same_class_wrong", "probe"),
+                prop("f(A)", "A", "probe"),
+                prop("f(z)", "f(z)", "probe"),
+                prop("f(z)", "f(z)", "probe"),
+                prop("A", "tail", "probe"),
+            ],
+            [
+                ("occurs", prop("f(A)", "f(A)", "probe"), wh_a),
+                ("child_clash", prop("f(b)", "A", "probe"), wh_a),
+                ("finite_failure", prop("g(z)", "not_tail", "probe"), "[]"),
+            ],
+        )
+    )
+    selection = [
+        "guideline_event(actual,A,selected) :- guideline_operator(actual,B,may), "
+        + prop("B", "A", "item")
+        + ", \\+ "
+        + prop("B", "A", "blocked"),
+        "guideline_operator(actual,f(box1),may)",
+        "guideline_operator(actual,g(box2),may)",
+        prop("f(box1)", "zeta", "item"),
+        prop("g(box2)", "alpha", "item"),
+        prop("A", "wild", "item"),
+        prop("g(box2)", "alpha", "blocked"),
+        prop("f(box1)", "missing", "blocked"),
+    ]
+    cases.append(
+        fixture(
+            "selection",
+            selection,
+            [
+                ("body", "guideline_event(actual,A,selected)", wh_a),
+                (
+                    "question",
+                    f"','(guideline_operator(actual,A,may),{prop('A', 'B', 'item')})",
+                    wh_b,
+                ),
+            ],
+        )
+    )
+    bounded = [
+        "guideline_event(actual,early,result)",
+        "guideline_event(actual,candidate,result) :- \\+ " + prop("alpha", "node0", "step"),
+    ]
+    bounded.extend(
+        f"{prop('alpha', f'node{i}', 'step')} :- {prop('alpha', f'node{i+1}', 'step')}"
+        for i in range(102)
+    )
+    bounded.append("guideline_event(actual,late,result)")
+    cases.append(
+        fixture(
+            "bounds",
+            bounded,
+            [
+                ("wh", "guideline_event(actual,A,result)", wh_a),
+                ("yesno", "guideline_event(actual,candidate,result)", "[]"),
+            ],
+        )
+    )
+    cases.append(
+        fixture("nonground", [prop("alpha", "A")], [("answer", prop("alpha", "A"), wh_a)])
+    )
+    matrix_facts = [prop(t, "token", "tag") for t in ["alpha", "beta", "7", "[]", "f(a)"]]
+    cases.append(
+        fixture(
+            "witness-matrix",
+            [f"{prop('A', 'token', 'tag')} :- {prop('A', 'token', 'tag')}"] ,
+            [],
+            proof(matrix_facts, matrix_facts)
+            + proof([prop("g(a)", "token", "tag")], [prop("g(a)", "token", "tag")], 2),
+        )
+    )
+    head = "guideline_event(actual,ok,result)"
+    order_clauses = [
+        f"{head} :- {prop('A', 'token', 'tag')}, \\+ {prop('A', 'token', 'blocked')}",
+        f"{prop('bad', 'token', 'blocked')} :- {prop('bad', 'token', 'blocked')}",
+    ]
+    for name, tail in [("witness-good", ["bad", "good"]), ("witness-bad", ["good", "bad"])]:
+        facts = [prop(t, "token", "tag") for t in ["7", "[]", "f(a)", *tail]]
+        cases.append(fixture(name, order_clauses, [], proof(facts, [head])))
+    return cases
+
+
+def main():
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: python3 tests/cix/generate <base-binary>")
+    binary = pathlib.Path(sys.argv[1]).resolve()
+    digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+    if digest != BASE_SHA:
+        raise SystemExit(f"base binary digest differs: {digest}")
+    cases = inputs()
+    rows = ["case\tmode\tquery\tpin\n"]
+    stage = HERE / ".record"
+    if stage.exists():
+        raise SystemExit(f"recording directory already exists: {stage}")
+    stage.mkdir()
+    try:
+        for name, queries in cases:
+            source = HERE / name
+            directory = stage / name
+            directory.mkdir()
+            for path in source.glob("*.in"):
+                shutil.copyfile(path, directory / path.name.removesuffix(".in"))
+            pins = source / "expect"
+            pins.mkdir(exist_ok=True)
+
+            def run(mode, args, pin):
+                command = [str(binary), "v1", mode, *args]
+                print(f"cd {directory} && {' '.join(command)}", flush=True)
+                result = subprocess.run(command, cwd=directory, capture_output=True, timeout=20)
+                (pins / f"{pin}.stdout").write_bytes(result.stdout)
+                (pins / f"{pin}.stderr").write_bytes(result.stderr)
+                (pins / f"{pin}.rc").write_text(f"{result.returncode}\n")
+                rows.append(f"{name}\t{mode}\t{args[1] if len(args) > 1 else '-'}\t{pin}\n")
+                return result
+
+            for file in ["doc.pl", *(f"{query}.pl" for query in queries)]:
+                checked = subprocess.run(
+                    [str(binary), "v1", "check", file], cwd=directory, capture_output=True
+                )
+                if checked.returncode != 0:
+                    raise SystemExit(f"{name}/{file}: {checked.stderr.decode()}")
+            for query in queries:
+                answer = run("answer", ["manifest.tsv", f"{query}.pl"], f"{query}.answer")
+                if name != "nonground" and answer.returncode != 0:
+                    raise SystemExit(f"{name}/{query}: {answer.stderr.decode()}")
+                if answer.returncode == 0:
+                    (directory / "answers.pl").write_bytes(answer.stdout)
+                    traced = run(
+                        "trace", ["manifest.tsv", f"{query}.pl", "answers.pl"], f"{query}.trace"
+                    )
+                    if traced.returncode != 0:
+                        raise SystemExit(f"{name}/{query} trace: {traced.stderr.decode()}")
+            if name.startswith("witness-"):
+                result = run("aggregate-check", ["manifest.tsv"], "aggregate")
+                want = 1 if name == "witness-bad" else 0
+                if result.returncode != want:
+                    raise SystemExit(f"{name}: rc {result.returncode}, expected {want}: {result.stderr.decode()}")
+        (HERE / "cases.tsv").write_text("".join(rows))
+    finally:
+        shutil.rmtree(stage)
+
+
+if __name__ == "__main__":
+    main()

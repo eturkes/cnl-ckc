@@ -4857,6 +4857,204 @@ fn enter_clause(
     EStep::Next(c)
 }
 
+// next_match facts (contract cix D4): a gap without the predicate leaves the
+// match unchanged; a match is the least position of the predicate.
+proof fn next_match_none_gap(
+    db: Seq<ckc_spec::v1text::DocClause>,
+    name: Seq<u8>,
+    arity: nat,
+    from: nat,
+)
+    requires
+        ckc_spec::engine::next_match(db, name, arity, from) is None,
+    ensures
+        forall|j: int|
+            from <= j < db.len() ==> ckc_spec::engine::lit_fa((#[trigger] db[j]).head) != Some(
+                (name, arity),
+            ),
+    decreases db.len() - from,
+{
+    reveal(ckc_spec::engine::next_match);
+    if from < db.len() {
+        next_match_none_gap(db, name, arity, from + 1);
+    }
+}
+
+proof fn next_match_some_gap(
+    db: Seq<ckc_spec::v1text::DocClause>,
+    name: Seq<u8>,
+    arity: nat,
+    from: nat,
+    m: nat,
+)
+    requires
+        ckc_spec::engine::next_match(db, name, arity, from) == Some(m),
+    ensures
+        from <= m < db.len(),
+        ckc_spec::engine::lit_fa(db[m as int].head) == Some((name, arity)),
+        forall|j: int|
+            from <= j < m ==> ckc_spec::engine::lit_fa((#[trigger] db[j]).head) != Some(
+                (name, arity),
+            ),
+    decreases db.len() - from,
+{
+    reveal(ckc_spec::engine::next_match);
+    if from < db.len() && ckc_spec::engine::lit_fa(db[from as int].head) != Some((name, arity)) {
+        next_match_some_gap(db, name, arity, from + 1, m);
+    }
+}
+
+proof fn next_match_skip(
+    db: Seq<ckc_spec::v1text::DocClause>,
+    name: Seq<u8>,
+    arity: nat,
+    from: nat,
+    to: nat,
+)
+    requires
+        from <= to,
+        forall|j: int|
+            from <= j < to && j < db.len() ==> ckc_spec::engine::lit_fa((#[trigger] db[j]).head)
+                != Some((name, arity)),
+    ensures
+        ckc_spec::engine::next_match(db, name, arity, from) == ckc_spec::engine::next_match(
+            db,
+            name,
+            arity,
+            to,
+        ),
+    decreases to - from,
+{
+    reveal(ckc_spec::engine::next_match);
+    if from < to && from < db.len() {
+        next_match_skip(db, name, arity, from + 1, to);
+    }
+}
+
+proof fn candidate_matches(db: Seq<ckc_spec::v1text::DocClause>, name: Seq<u8>, arity: nat, m: nat)
+    requires
+        m < db.len(),
+        ckc_spec::engine::lit_fa(db[m as int].head) == Some((name, arity)),
+    ensures
+        ckc_spec::engine::next_match(db, name, arity, m) == Some(m),
+{
+    reveal(ckc_spec::engine::next_match);
+}
+
+// A clause of the goal's predicate that is no candidate (contract cix D2)
+// clashes on the first argument pair after renaming apart.
+proof fn noncandidate_clash(
+    cl: ckc_spec::v1text::DocClause,
+    name: Seq<u8>,
+    args: Seq<Term>,
+    off: nat,
+)
+    requires
+        ckc_spec::engine::lit_fa(cl.head) == Some((name, args.len())),
+        !crate::k2_index::candidate(cl, name, args.len(), crate::k2_index::first_class(args)),
+    ensures
+        pair_clash(
+            ckc_spec::engine::zip(
+                args,
+                ckc_spec::engine::args_of(ckc_spec::engine::shift(cl.head, off)),
+            ),
+        ),
+{
+    reveal(ckc_spec::engine::lit_fa);
+    reveal(ckc_spec::engine::args_of);
+    match cl.head {
+        Term::Comp(n, hs) => {
+            let a = args[0];
+            let h = hs[0];
+            reveal_with_fuel(rigid_clash, 1);
+            assert(rigid_clash((a, h)));
+            clash_under_shift(a, h, off);
+            reveal_with_fuel(ckc_spec::engine::shift, 1);
+            shift_all_map(hs, off);
+            let pairs = ckc_spec::engine::zip(
+                args,
+                ckc_spec::engine::args_of(ckc_spec::engine::shift(cl.head, off)),
+            );
+            assert(ckc_spec::engine::args_of(ckc_spec::engine::shift(cl.head, off))
+                == ckc_spec::engine::shift_all(hs, off));
+            assert(pairs[0] == (a, ckc_spec::engine::shift(h, off)));
+            assert(rigid_clash(pairs[0]));
+        },
+        _ => {},
+    }
+}
+
+// Skipping non-candidates leaves the spec's `call` unchanged (contract cix D4).
+proof fn call_skip(
+    db: Seq<ckc_spec::v1text::DocClause>,
+    c: ckc_spec::engine::Cfg,
+    name: Seq<u8>,
+    args: Seq<Term>,
+    depth: nat,
+    pre: Seq<ckc_spec::engine::Goal>,
+    rest: Seq<ckc_spec::engine::Goal>,
+    from: nat,
+    to: nat,
+)
+    requires
+        from <= to <= db.len(),
+        forall|j: int|
+            from <= j < to ==> !crate::k2_index::candidate(
+                #[trigger] db[j],
+                name,
+                args.len(),
+                crate::k2_index::first_class(args),
+            ),
+    ensures
+        ckc_spec::engine::call(db, c, name, args, depth, pre, rest, from) == ckc_spec::engine::call(
+            db,
+            c,
+            name,
+            args,
+            depth,
+            pre,
+            rest,
+            to,
+        ),
+    decreases to - from,
+{
+    if from < to {
+        match ckc_spec::engine::next_match(db, name, args.len(), from) {
+            None => {
+                next_match_none_gap(db, name, args.len(), from);
+                next_match_skip(db, name, args.len(), from, to);
+                reveal(ckc_spec::engine::call);
+            },
+            Some(m) => {
+                next_match_some_gap(db, name, args.len(), from, m);
+                if m >= to {
+                    next_match_skip(db, name, args.len(), from, to);
+                    reveal(ckc_spec::engine::call);
+                } else {
+                    let u = ckc_spec::engine::UState {
+                        pairs: ckc_spec::engine::zip(
+                            args,
+                            ckc_spec::engine::args_of(
+                                ckc_spec::engine::shift(db[m as int].head, c.fresh),
+                            ),
+                        ),
+                        stack: pre + ckc_spec::engine::body_goals(
+                            db[m as int].body,
+                            c.fresh,
+                            (depth - 1) as nat,
+                        ) + rest,
+                        sol: c.sol,
+                    };
+                    noncandidate_clash(db[m as int], name, args, c.fresh);
+                    clash_fails(u);
+                    call_match(db, c, name, args, depth, pre, rest, from, m, u);
+                    call_skip(db, c, name, args, depth, pre, rest, m + 1, to);
+                }
+            },
+        }
+    }
+}
+
 proof fn call_no_match(
     db: Seq<ckc_spec::v1text::DocClause>,
     c: ckc_spec::engine::Cfg,
@@ -4993,6 +5191,8 @@ fn prefix_state(
 pub fn call(
     arena: &mut ETermArena,
     db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
     initial: ECfg,
     name: Vec<u8>,
     args: Vec<usize>,
@@ -5011,6 +5211,7 @@ pub fn call(
         goals_valid(old(arena).nodes@, rest@),
         goals_levels(rest@, initial.alts@.len()),
         depth > 0,
+        crate::k2_index::index_valid(*ix, db_view(old(arena).nodes@, db@), front as nat),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -5050,6 +5251,7 @@ pub fn call(
             goals_levels(rest@, initial.alts@.len()),
             depth > 0,
             model_db == db_view(base, db@),
+            crate::k2_index::index_valid(*ix, model_db, front as nat),
             c == cfg_view(base, &initial),
             actual_args == root_terms(base, args@),
             prefix == goals_view(base, pre@),
@@ -5082,11 +5284,11 @@ pub fn call(
             goals_models_prefix(base, arena.nodes@, pre@);
             goals_models_prefix(base, arena.nodes@, rest@);
         }
-        let matched = next_match(arena, db, &name, args.len(), ci);
+        let matched = crate::k2_index::next_candidate(arena, db, ix, front, &name, &args, ci);
         match matched {
             None => {
                 proof {
-                    call_no_match(
+                    call_skip(
                         model_db,
                         c,
                         name@,
@@ -5095,12 +5297,35 @@ pub fn call(
                         prefix,
                         continuation,
                         ci as nat,
+                        db.len() as nat,
+                    );
+                    call_no_match(
+                        model_db,
+                        c,
+                        name@,
+                        actual_args,
+                        depth as nat,
+                        prefix,
+                        continuation,
+                        db.len() as nat,
                     );
                 }
                 return fail(arena, initial);
             },
             Some(m) => {
                 proof {
+                    call_skip(
+                        model_db,
+                        c,
+                        name@,
+                        actual_args,
+                        depth as nat,
+                        prefix,
+                        continuation,
+                        ci as nat,
+                        m as nat,
+                    );
+                    candidate_matches(model_db, name@, actual_args.len(), m as nat);
                     assert(clause_valid(arena.nodes@, &db@[m as int]));
                     reveal(ckc_spec::engine::lit_fa);
                 }
@@ -5129,7 +5354,7 @@ pub fn call(
                             depth as nat,
                             prefix,
                             continuation,
-                            ci as nat,
+                            m as nat,
                             m as nat,
                             u,
                         );
@@ -5188,7 +5413,7 @@ pub fn call(
                         depth as nat,
                         prefix,
                         continuation,
-                        ci as nat,
+                        m as nat,
                         m as nat,
                         u,
                     );
@@ -5305,11 +5530,18 @@ fn predicate_parts(arena: &ETermArena, c: &ECfg) -> (out: Option<(Vec<u8>, Vec<u
     }
 }
 
-pub fn step(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: EStep)
+pub fn step(
+    arena: &mut ETermArena,
+    db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
+    initial: ECfg,
+) -> (out: EStep)
     requires
         arena_ok(old(arena)),
         db_valid(old(arena).nodes@, db@),
         cfg_valid(old(arena).nodes@, &initial),
+        crate::k2_index::index_valid(*ix, db_view(old(arena).nodes@, db@), front as nat),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -5329,7 +5561,7 @@ pub fn step(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: E
         proof {
             crate::k2_select::selected_facts(before.stack);
         }
-        return step_selected(arena, db, initial, k);
+        return step_selected(arena, db, ix, front, initial, k);
     }
     match predicate_parts(arena, &initial) {
         None => step_simple(arena, initial, Ghost(db_view(arena.nodes@, db@))),
@@ -5369,7 +5601,7 @@ pub fn step(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: E
                     fail(arena, initial)
                 }
             } else {
-                call(arena, db, initial, name, args, depth, pre, rest, from)
+                call(arena, db, ix, front, initial, name, args, depth, pre, rest, from)
             }
         },
     }
@@ -5378,11 +5610,19 @@ pub fn step(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: E
 // A goal selected past the front (contract eso D3): a predicate literal is
 // resolved in place, a conjunction splits in place.
 #[verifier::rlimit(5000)]
-fn step_selected(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg, k: usize) -> (out: EStep)
+fn step_selected(
+    arena: &mut ETermArena,
+    db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
+    initial: ECfg,
+    k: usize,
+) -> (out: EStep)
     requires
         arena_ok(old(arena)),
         db_valid(old(arena).nodes@, db@),
         cfg_valid(old(arena).nodes@, &initial),
+        crate::k2_index::index_valid(*ix, db_view(old(arena).nodes@, db@), front as nat),
         0 < k < initial.stack.len(),
         k == ckc_spec::engine::selected(cfg_view(old(arena).nodes@, &initial).stack),
         crate::k2_select::run_goal(cfg_view(old(arena).nodes@, &initial).stack[k as int]),
@@ -5557,7 +5797,7 @@ fn step_selected(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg, k: us
                 return fail(arena, initial);
             }
             let from = initial.ci;
-            call(arena, db, initial, name, args, depth, pre, rest, from)
+            call(arena, db, ix, front, initial, name, args, depth, pre, rest, from)
         },
         EGoal::NafCut { .. } => {
             proof {
@@ -5589,14 +5829,19 @@ fn finish(arena: &mut ETermArena, c: ECfg, complete: bool, floor: usize) -> (out
 }
 
 #[verifier::rlimit(5000)]
-fn run_inner(input: ETermArena, db: &Vec<EClause>, initial: ECfg, fuel: usize) -> (out: (
-    ETermArena,
-    EROut,
-))
+fn run_inner(
+    input: ETermArena,
+    db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
+    initial: ECfg,
+    fuel: usize,
+) -> (out: (ETermArena, EROut))
     requires
         arena_ok(&input),
         db_valid(input.nodes@, db@),
         cfg_valid(input.nodes@, &initial),
+        crate::k2_index::index_valid(*ix, db_view(input.nodes@, db@), front as nat),
         initial.base == input.nodes.len(),
     ensures
         arena_ok(&out.0),
@@ -5627,6 +5872,7 @@ fn run_inner(input: ETermArena, db: &Vec<EClause>, initial: ECfg, fuel: usize) -
             db_valid(arena.nodes@, db@),
             model_db == db_view(arena.nodes@, db@),
             model_db == db_view(base, db@),
+            crate::k2_index::index_valid(*ix, model_db, front as nat),
             cfg_valid(arena.nodes@, &c),
             start == cfg_view(base, &initial),
             expected == ckc_spec::engine::run(model_db, start, fuel as nat),
@@ -5639,7 +5885,7 @@ fn run_inner(input: ETermArena, db: &Vec<EClause>, initial: ECfg, fuel: usize) -
     {
         let ghost before = arena.nodes@;
         let ghost model = cfg_view(before, &c);
-        let next = step(&mut arena, db, c);
+        let next = step(&mut arena, db, ix, front, c);
         proof {
             crate::k2_load::prefix_chain(base, before, arena.nodes@);
             db_models_prefix(before, arena.nodes@, db@);
@@ -5684,11 +5930,19 @@ fn run_inner(input: ETermArena, db: &Vec<EClause>, initial: ECfg, fuel: usize) -
     (arena, result)
 }
 
-pub fn run(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg, fuel: usize) -> (out: EROut)
+pub fn run(
+    arena: &mut ETermArena,
+    db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
+    initial: ECfg,
+    fuel: usize,
+) -> (out: EROut)
     requires
         arena_ok(old(arena)),
         db_valid(old(arena).nodes@, db@),
         cfg_valid(old(arena).nodes@, &initial),
+        crate::k2_index::index_valid(*ix, db_view(old(arena).nodes@, db@), front as nat),
         initial.base == old(arena).nodes.len(),
     ensures
         arena_ok(final(arena)),
@@ -5702,11 +5956,12 @@ pub fn run(arena: &mut ETermArena, db: &Vec<EClause>, initial: ECfg, fuel: usize
 {
     let mut owned = crate::k2_reject::empty_arena();
     core::mem::swap(arena, &mut owned);
-    let (mut owned, out) = run_inner(owned, db, initial, fuel);
+    let (mut owned, out) = run_inner(owned, db, ix, front, initial, fuel);
     core::mem::swap(arena, &mut owned);
     out
 }
 
+// One query (answers): the composition's index is built once here (contract cix D5).
 pub fn solve(
     arena: &mut ETermArena,
     db: &Vec<EClause>,
@@ -5720,6 +5975,42 @@ pub fn solve(
         root_ok(old(arena), goal),
         db_valid(old(arena).nodes@, db@),
         roots_valid(old(arena).nodes@, sol@),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        rout_valid(final(arena).nodes@, &out),
+        rout_view(final(arena).nodes@, &out) == ckc_spec::engine::solve(
+            db_view(old(arena).nodes@, db@),
+            old(arena)@[goal as int],
+            depth as nat,
+            root_terms(old(arena).nodes@, sol@),
+            collect,
+            fuel as nat,
+        ),
+{
+    let ix = crate::k2_index::build_index(arena, db);
+    proof {
+        assert(db_view(arena.nodes@, db@).skip(0) =~= db_view(arena.nodes@, db@));
+    }
+    solve_in(arena, db, &ix, 0, goal, depth, sol, collect, fuel)
+}
+
+pub fn solve_in(
+    arena: &mut ETermArena,
+    db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
+    goal: usize,
+    depth: usize,
+    sol: Vec<usize>,
+    collect: bool,
+    fuel: usize,
+) -> (out: EROut)
+    requires
+        root_ok(old(arena), goal),
+        db_valid(old(arena).nodes@, db@),
+        roots_valid(old(arena).nodes@, sol@),
+        crate::k2_index::index_valid(*ix, db_view(old(arena).nodes@, db@), front as nat),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -5765,17 +6056,24 @@ pub fn solve(
         assert_seqs_equal!(rows_view(initial.saved.nodes@, initial.rows@) == Seq::empty());
         reveal(ckc_spec::engine::solve);
     }
-    let out = run(arena, db, initial, fuel);
+    let out = run(arena, db, ix, front, initial, fuel);
     proof {
         assert(base.is_prefix_of(arena.nodes@));
     }
     out
 }
 
-pub fn head_proved(arena: &mut ETermArena, db: &Vec<EClause>, head: usize) -> (out: bool)
+pub fn head_proved(
+    arena: &mut ETermArena,
+    db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
+    head: usize,
+) -> (out: bool)
     requires
         root_ok(old(arena), head),
         db_valid(old(arena).nodes@, db@),
+        crate::k2_index::index_valid(*ix, db_view(old(arena).nodes@, db@), front as nat),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -5789,7 +6087,7 @@ pub fn head_proved(arena: &mut ETermArena, db: &Vec<EClause>, head: usize) -> (o
     proof {
         assert_seqs_equal!(root_terms(arena.nodes@, empty@) == Seq::empty());
     }
-    let result = solve(arena, db, head, 4000, empty, false, 1000000);
+    let result = solve_in(arena, db, ix, front, head, 4000, empty, false, 1000000);
     proof {
         reveal(ckc_spec::engine::head_proved);
         reveal(ckc_spec::engine::replay_depth);
@@ -5803,11 +6101,18 @@ pub fn head_proved(arena: &mut ETermArena, db: &Vec<EClause>, head: usize) -> (o
     proved
 }
 
-pub fn heads_proved(arena: &mut ETermArena, db: &Vec<EClause>, heads: &Vec<usize>) -> (out: bool)
+pub fn heads_proved(
+    arena: &mut ETermArena,
+    db: &Vec<EClause>,
+    ix: &crate::k2_index::EClauseIndex,
+    front: usize,
+    heads: &Vec<usize>,
+) -> (out: bool)
     requires
         arena_ok(old(arena)),
         db_valid(old(arena).nodes@, db@),
         roots_valid(old(arena).nodes@, heads@),
+        crate::k2_index::index_valid(*ix, db_view(old(arena).nodes@, db@), front as nat),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -5825,6 +6130,7 @@ pub fn heads_proved(arena: &mut ETermArena, db: &Vec<EClause>, heads: &Vec<usize
             base.is_prefix_of(arena.nodes@),
             db_valid(base, db@),
             roots_valid(base, heads@),
+            crate::k2_index::index_valid(*ix, db_view(base, db@), front as nat),
             i <= heads@.len(),
             forall|j: int|
                 0 <= j < i ==> ckc_spec::engine::head_proved(
@@ -5837,7 +6143,7 @@ pub fn heads_proved(arena: &mut ETermArena, db: &Vec<EClause>, heads: &Vec<usize
             db_models_prefix(base, arena.nodes@, db@);
             roots_models_prefix(base, arena.nodes@, heads@);
         }
-        let proved = head_proved(arena, db, heads[i]);
+        let proved = head_proved(arena, db, ix, front, heads[i]);
         proof {
             assert(base.is_prefix_of(arena.nodes@));
         }

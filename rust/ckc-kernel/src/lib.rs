@@ -38,6 +38,8 @@
 // every other module = uninspected impl+proofs whose sole review is
 // `cargo verus verify`.
 mod align_impl;
+#[cfg(test)]
+mod cix_tests;
 mod compare_decimal;
 mod compare_impl;
 mod compare_schema;
@@ -47,6 +49,7 @@ mod k2_answers;
 mod k2_bridge;
 mod k2_engine;
 mod k2_impl;
+mod k2_index;
 mod k2_load;
 mod k2_manifest;
 mod k2_output;

@@ -1,0 +1,4 @@
+% cix compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,cix,ace_sha256('561b7e6b7138e4620521cd7fc0d8937cfe2dd6ae487236ad16f89b0c92f615b4'),ulex(none),vocabulary(none)).
+% Q1: Does the clause-index probe hold?
+'$guideline_query_projection'(goal(guideline_property(f(A),f(A),probe,pos)),answers([answer(A,wh(what))])).

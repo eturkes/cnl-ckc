@@ -1,0 +1,2 @@
+% cix traced against the loaded composition by ckc queries; do not edit.
+'$guideline_traces'(v1,cix,query_sha256('59f88ab0c9f8950d0709a90e0572df76f386df05bfcbabf065b83a7797a28715'),answers_sha256(d076c317b77ada887187b74e0e2015130f1a1b7e90733069c31f38e6c20a0b90),result(solutions([sol([b],proved([clause(sentence(cix,1),clause_sha256('996b670785900255d968f88b22479e3427c7a5789d6909329f1d35f11c54e6a8'),[])])),sol([tail],proved([clause(sentence(cix,1),clause_sha256(de6527bb2a1296efb575003271028ff731085ba7af42837056484ab4fbcbfc38),[])]))]))).
