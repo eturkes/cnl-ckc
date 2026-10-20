@@ -374,9 +374,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     hide(u::state);
     hide(u::tally);
     hide(u::class_counts);
-    hide(u::words_section);
-    hide(u::strength_words_section);
-    hide(u::qualifier_words_section);
+    hide(u::meanings_section);
     let m = model::prepare(g);
     let title = titles::title(g);
     let stats = status_rows(g, &m);
@@ -450,31 +448,10 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     body.push(h::cat(h::cat(h::fixed("<tbody>"), h::lines(&stats)), h::fixed("</tbody>")));
     body.push(h::fixed("</table>"));
     body.push(h::fixed("</section>"));
-    let ghost head = h::pages(body@);
-    let mut words = crate::k5_words::words_section_exec(g);
-    let ghost mid = h::pages(words@);
-    body.append(&mut words);
-    proof {
-        assert(h::pages(body@) =~= head + mid);
-    }
-    let mut strength = crate::k5_strength_words::strength_words_section_exec(g, true);
     let ghost first = h::pages(body@);
-    let ghost second = h::pages(strength@);
-    body.append(&mut strength);
-    proof {
-        assert(h::pages(body@) =~= first + second);
-    }
-    let mut strength = crate::k5_strength_words::strength_words_section_exec(g, false);
-    let ghost first = h::pages(body@);
-    let ghost second = h::pages(strength@);
-    body.append(&mut strength);
-    proof {
-        assert(h::pages(body@) =~= first + second);
-    }
-    let mut qualifiers = crate::k5_qualifier_words::qualifier_words_section_exec(g);
-    let ghost first = h::pages(body@);
-    let ghost second = h::pages(qualifiers@);
-    body.append(&mut qualifiers);
+    let mut meanings = crate::k5_meanings::meanings_section_exec(g);
+    let ghost second = h::pages(meanings@);
+    body.append(&mut meanings);
     proof {
         assert(h::pages(body@) =~= first + second);
     }
@@ -511,10 +488,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
             ),
             u::fixed_bytes(u::table_close()),
             u::fixed_bytes(u::section_close()),
-        ] + u::words_section(g@.vocabulary) + u::strength_words_section(g@.vocabulary, true)
-            + u::strength_words_section(g@.vocabulary, false) + u::qualifier_words_section(
-            g@.vocabulary,
-        ) + seq![
+        ] + u::meanings_section(g@.vocabulary) + seq![
             u::fixed_bytes(u::section_open()),
             u::fixed_bytes(u::h2_open_documents_h2_close()),
             u::fixed_bytes(u::table_open_2()),

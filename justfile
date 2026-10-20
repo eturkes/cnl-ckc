@@ -653,6 +653,18 @@ mobile:
     }
     red no-viewport-meta '<meta name="viewport" content="width=device-width, initial-scale=1">' "$n"
     red no-narrow-table-rule '@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }' 1
+    cp -a tests/ur-ui/browser/tree "$w/reading-tree"
+    while IFS= read -r -d '' input; do mv "$input" "${input%.in}"; done < <(find "$w/reading-tree" -name '*.pl.in' -print0)
+    "$bin" derive-review-manifest "$w/reading-tree/guidelines/alpha" > "$w/reading-tree/guidelines/alpha/audit/review-manifest.tsv"
+    "$bin" ui render "$w/reading-pages" "$w/reading-tree" >/dev/null
+    reading() { "{{ TOOLCHAIN }}/bin/node" tools/ui-reading-probe.mjs "{{ TOOLCHAIN }}/bin/chrome-headless-shell" "$1"; }
+    reading "$w/reading-pages"
+    "{{ TOOLCHAIN }}/bin/node" tools/ui-reading-probe.mjs --strip-handler "$w/reading-pages" "$w/no-reading-handler"
+    rc=0; out=$(reading "$w/no-reading-handler") || rc=$?
+    bad=$(sed -n 's/^ui-reading: [0-9]* transitions, \([0-9]*\) failures$/\1/p' <<< "$out")
+    [ "$rc" = 1 ] && [ "${bad:-0}" -gt 0 ] && grep -qF 'visible reading' <<< "$out" \
+        || { printf '%s\n' "$out" >&2; echo "mobile: no-reading-handler: rc $rc, $bad failed transitions (rc 1 + reading failures expected)" >&2; exit 1; }
+    echo "mobile: red input no-reading-handler: $bad failed transitions"
     echo "gate: mobile ok"
 
 # Corpus chain: `.agent/spec-lint` (spec.md shape, the template's byte copy),

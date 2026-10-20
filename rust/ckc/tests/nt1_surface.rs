@@ -7,5 +7,3 @@ mod model;
 mod release;
 #[path = "../../../tests/nt1-surface/support.rs"]
 mod support;
-#[path = "../../../tests/nt1-surface/ui.rs"]
-mod ui;

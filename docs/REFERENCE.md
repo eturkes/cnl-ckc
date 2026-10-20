@@ -227,42 +227,23 @@ each side. A file that breaks these rules stops the render. Whether
 an alignment is helpful is a judgment for the reviewer, who sees it
 on the page beside the texts it describes.
 
-A guideline with a `vocabulary.tsv` table shows its time limits in two places.
-A document page with a typed time limit lists the limits that the
-compiler read from its ACE text, in the table "Timing as compiled".
-The table also lists each order with no stated time, each
-count per period with its counted item, and each recurrence inside a
-time window with the window's length and reference point. An
-approximate time limit reads `about`, as in `lasts about 2 hours`. A
-minimum stated as a range reads `a minimum of 8 to 12 hours` in the row
-of its interval.
-The guideline page lists the rows of `vocabulary.tsv` under "Time
-words", after the status table. Each row names one word and how the
-compiler reads it. A word reads as a unit of time, as a time relation,
-or as the spacing of repeats. A word can also read as the frame of
-a time window, as the word of a count per period, as the mark of an
-approximate time limit, or as the upper end of a ranged minimum. The compiler reads
-a time limit only through these words. A table that fails the `ckc check` grammar stops the
-interface with `ui: viewmodel: <id> vocabulary.tsv: <why>`.
-
-A guideline with grade, preference or qualifier rows in `vocabulary.tsv`
-shows the strength of its statements in the same two places. A document
-page with a grade shows the table "Grade as compiled": the measure, the
-value and the label in the source. A document page with a preference or
-a qualifier shows the tables "Preferences as compiled" and "Qualifiers
-as compiled". Each row names its sentence and the part of the sentence
-that holds it. The column "Stated as" gives the operators of the
-statement, outermost first. Thus `should not` recommends against the
-action, and `not should` states only that no duty exists. A statement
-without an operator reads `as a fact`. The column "Action" names the
-verb. A copula has no verb of its own, so its row names the noun of its
-subject. In the qualifier table, the action also names the object of the
-verb, and the column "Kind" names the function of the word: How often,
-Best case, Emphasis, Manner, Strength of wording, Possibility or
-Condition of use. Identical rows of one sentence show once. The
-guideline page lists the grade, preference and qualifier rows of
-`vocabulary.tsv` under "Grade words", "Preference words" and "Qualifier
-words", after the time words.
+The guideline page lists the meanings of the grade, evidence, preference,
+alternative, qualifier and scope words of `vocabulary.tsv` in the table
+"Word meanings", after the status table. Each row names one word and
+how the compiler reads it in every document of the guideline, for
+example `category-B-recommendation` as a conditional recommendation. On
+a document page, each such word in the ACE text has a thin solid
+underline. Select the word with a click or a tap, or reach it with Tab
+and press Enter or Space. The line under the ACE text then shows its
+reading, for example "In this guideline, the compiler reads usually as
+a qualifier: How often." Select the word again, or press Escape, to show
+the hint again. The line states how the table reads the word. It does
+not state that this occurrence compiled that way. The two scope words
+have their reading only in the sentences that the compiler read as
+scope exclusions. Time words have no reading, because they mean what
+they say. Every typed fact reads in the ACE text itself, so no page
+repeats the compiled tables. A table that fails the `ckc check` grammar
+stops the interface with `ui: viewmodel: <id> vocabulary.tsv: <why>`.
 
 The interface reads committed files. When the working tree holds
 uncommitted guideline changes, the pages render the last commit
@@ -293,7 +274,7 @@ compare-and-swap through a same-directory temporary file, a flush, an
 verified ledger validator that the gate uses approves the new ledger
 bytes before the rename, so the gate and the interface cannot drift
 apart. Pages carry one fixed script, which
-drives the click emphasis on highlights. The `Content-Security-Policy`
+drives the click emphasis on highlights and the line of word readings. The `Content-Security-Policy`
 header names that script by hash, so the browser runs no other
 script, and the page check rejects any other script element.
 

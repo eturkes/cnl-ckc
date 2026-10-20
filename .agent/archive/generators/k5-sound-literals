@@ -11,7 +11,7 @@ def copy_table(s):
     rows = re.findall(r'^\s+([a-z0-9_]+)(?: = ("(?:[^"\\]|\\.)*"))?;$', block, re.M)
     entries = [_Entry(lit or None, None if lit else name) for name, lit in rows]
     return entries, {name: ast.literal_eval(lit) for name, lit in rows if lit}
-entries,names=copy_table(s); assert len(entries)==345
+entries,names=copy_table(s); assert len(entries)==277
 fixed=set()
 for call in re.finditer(r'\bfixed_bytes\(',s):
     depth=1;end=call.end()
@@ -43,7 +43,7 @@ for i,m in enumerate(entries):
     value=ast.literal_eval(m.group(1)); lit=m.group(1)
     if value not in fixed:continue
     raw=value.encode(); bs='bs!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']' if raw else 'Seq::<u8>::empty()'
-    a=2 if value in ['\">','\"></option>','\">PDF</a>','\" required>'] else 4 if value==' -->' else 5 if value=='</style>' else 0
+    a=2 if value in ['\">','\"></option>','\">PDF</a>','\" required>','\" hidden>In this guideline, the compiler reads '] else 4 if value==' -->' else 5 if value=='</style>' else 0
     z=scan(raw,a)
     newline=value=='\n'; frm='ctx' if newline else str(a); end='ctx' if newline else str(z)
     out += [f'pub proof fn f{i:03}(inputs:Seq<u::Bytes>'+(',ctx:int)' if newline else ')'),f'    ensures h::fragment(u::fixed({lit}@),inputs,{frm},{end}), u::copy_registry()[{i}]=={expr},','{','    hide(u::copy_registry); hide(u::copy_derived);',f'    l{i:03}(inputs);',f'    reveal_strlit({lit});']

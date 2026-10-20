@@ -1,0 +1,11 @@
+Reading fixture evidence
+Region authority: identify the 3 payloads below
+
+[r1 | p1 | Reading fixture]
+usually and ideally appear in the source.
+
+[r2 | p1 | Reading fixture]
+linked-first linked-second
+
+[r3 | p1 | Reading fixture]
+linked-first linked-second

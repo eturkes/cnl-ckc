@@ -1,0 +1,7 @@
+# format: docid<TAB>region<TAB>kept<TAB>dropped
+# per-document projection loss record: what each minimal rule keeps from its verbatim source
+# region and what it drops or interprets. Header bytes, row shape and per-document row
+# coverage are validated by ckc check; kept/dropped prose stays document-owned.
+reading-only	r1	word readings	no material detail
+highlight-only	r2	word readings	no material detail
+combined	r3	word readings	no material detail

@@ -5468,8 +5468,7 @@ pub proof fn literal_242()
 }
 
 pub open spec fn data_243() -> Seq<nat> {
-    ns![60u32,104,51,62,84,105,109,105,110,103,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
-    |x: u32| x as nat)
+    ns![110u32,111,116,32,115,116,97,116,101,100].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_243()
@@ -5482,15 +5481,15 @@ pub proof fn literal_243()
     hide(n::clean);
     l::l243(Seq::empty());
     p::all();
-    reveal_strlit("<h3>Timing as compiled</h3>");
-    assert(n::codes("<h3>Timing as compiled</h3>"@) =~= data_243());
+    reveal_strlit("not stated");
+    assert(n::codes("not stated"@) =~= data_243());
     assert(n::clean(data_243(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<h3>Timing as compiled</h3>"@);
+    n::clean_bridge("not stated"@);
 }
 
 pub open spec fn data_244() -> Seq<nat> {
-    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,116,105,109,101,32,108,105,109,105,116,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,99,111,114,100,115,32,116,104,101,115,101,32,108,105,109,105,116,115,32,97,110,100,32,100,111,101,115,32,110,111,116,32,99,97,108,99,117,108,97,116,101,32,100,97,116,101,115,46,60,47,112,62].map_values(
+    ns![60u32,109,101,116,97,32,110,97,109,101,61,34,118,105,101,119,112,111,114,116,34,32,99,111,110,116,101,110,116,61,34,119,105,100,116,104,61,100,101,118,105,99,101,45,119,105,100,116,104,44,32,105,110,105,116,105,97,108,45,115,99,97,108,101,61,49,34,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -5504,21 +5503,16 @@ pub proof fn literal_244()
     hide(n::clean);
     l::l244(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<p>Each row is one time limit that the compiler read from the ACE text. The compiler records these limits and does not calculate dates.</p>",
-    );
-    assert(n::codes(
-        "<p>Each row is one time limit that the compiler read from the ACE text. The compiler records these limits and does not calculate dates.</p>"@,
-    ) =~= data_244());
+    reveal_strlit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
+    assert(n::codes("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@)
+        =~= data_244());
     assert(n::clean(data_244(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<p>Each row is one time limit that the compiler read from the ACE text. The compiler records these limits and does not calculate dates.</p>"@,
-    );
+    n::clean_bridge("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@);
 }
 
 pub open spec fn data_245() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,84,105,109,105,110,103,60,47,116,104,62,60,116,104,62,82,101,102,101,114,101,110,99,101,32,112,111,105,110,116,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
+    ns![60u32,112,32,99,108,97,115,115,61,34,112,114,111,118,101,110,97,110,99,101,34,62].map_values(
     |x: u32| x as nat)
 }
 
@@ -5532,21 +5526,15 @@ pub proof fn literal_245()
     hide(n::clean);
     l::l245(Seq::empty());
     p::all();
-    reveal_strlit(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Action</th><th>Timing</th><th>Reference point</th></tr></thead>",
-    );
-    assert(n::codes(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Action</th><th>Timing</th><th>Reference point</th></tr></thead>"@,
-    ) =~= data_245());
+    reveal_strlit("<p class=\"provenance\">");
+    assert(n::codes("<p class=\"provenance\">"@) =~= data_245());
     assert(n::clean(data_245(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Action</th><th>Timing</th><th>Reference point</th></tr></thead>"@,
-    );
+    n::clean_bridge("<p class=\"provenance\">"@);
 }
 
 pub open spec fn data_246() -> Seq<nat> {
-    ns![115u32,116,97,116,101,109,101,110,116].map_values(|x: u32| x as nat)
+    ns![60u32,115,112,97,110,62].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_246()
@@ -5559,15 +5547,15 @@ pub proof fn literal_246()
     hide(n::clean);
     l::l246(Seq::empty());
     p::all();
-    reveal_strlit("statement");
-    assert(n::codes("statement"@) =~= data_246());
+    reveal_strlit("<span>");
+    assert(n::codes("<span>"@) =~= data_246());
     assert(n::clean(data_246(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("statement"@);
+    n::clean_bridge("<span>"@);
 }
 
 pub open spec fn data_247() -> Seq<nat> {
-    ns![99u32,111,110,100,105,116,105,111,110].map_values(|x: u32| x as nat)
+    ns![80u32,97,115,115,97,103,101,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_247()
@@ -5580,17 +5568,15 @@ pub proof fn literal_247()
     hide(n::clean);
     l::l247(Seq::empty());
     p::all();
-    reveal_strlit("condition");
-    assert(n::codes("condition"@) =~= data_247());
+    reveal_strlit("Passage ");
+    assert(n::codes("Passage "@) =~= data_247());
     assert(n::clean(data_247(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("condition"@);
+    n::clean_bridge("Passage "@);
 }
 
 pub open spec fn data_248() -> Seq<nat> {
-    ns![101u32,120,99,108,117,100,101,100,32,99,111,110,100,105,116,105,111,110].map_values(
-        |x: u32| x as nat,
-    )
+    ns![72u32,111,119,32,111,102,116,101,110].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_248()
@@ -5603,15 +5589,15 @@ pub proof fn literal_248()
     hide(n::clean);
     l::l248(Seq::empty());
     p::all();
-    reveal_strlit("excluded condition");
-    assert(n::codes("excluded condition"@) =~= data_248());
+    reveal_strlit("How often");
+    assert(n::codes("How often"@) =~= data_248());
     assert(n::clean(data_248(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("excluded condition"@);
+    n::clean_bridge("How often"@);
 }
 
 pub open spec fn data_249() -> Seq<nat> {
-    ns![110u32,111,116,32,115,116,97,116,101,100].map_values(|x: u32| x as nat)
+    ns![66u32,101,115,116,32,99,97,115,101].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_249()
@@ -5624,15 +5610,15 @@ pub proof fn literal_249()
     hide(n::clean);
     l::l249(Seq::empty());
     p::all();
-    reveal_strlit("not stated");
-    assert(n::codes("not stated"@) =~= data_249());
+    reveal_strlit("Best case");
+    assert(n::codes("Best case"@) =~= data_249());
     assert(n::clean(data_249(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("not stated"@);
+    n::clean_bridge("Best case"@);
 }
 
 pub open spec fn data_250() -> Seq<nat> {
-    ns![101u32,120,97,99,116,108,121,32].map_values(|x: u32| x as nat)
+    ns![69u32,109,112,104,97,115,105,115].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_250()
@@ -5645,15 +5631,15 @@ pub proof fn literal_250()
     hide(n::clean);
     l::l250(Seq::empty());
     p::all();
-    reveal_strlit("exactly ");
-    assert(n::codes("exactly "@) =~= data_250());
+    reveal_strlit("Emphasis");
+    assert(n::codes("Emphasis"@) =~= data_250());
     assert(n::clean(data_250(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("exactly "@);
+    n::clean_bridge("Emphasis"@);
 }
 
 pub open spec fn data_251() -> Seq<nat> {
-    ns![97u32,116,32,108,101,97,115,116,32].map_values(|x: u32| x as nat)
+    ns![77u32,97,110,110,101,114].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_251()
@@ -5666,15 +5652,17 @@ pub proof fn literal_251()
     hide(n::clean);
     l::l251(Seq::empty());
     p::all();
-    reveal_strlit("at least ");
-    assert(n::codes("at least "@) =~= data_251());
+    reveal_strlit("Manner");
+    assert(n::codes("Manner"@) =~= data_251());
     assert(n::clean(data_251(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("at least "@);
+    n::clean_bridge("Manner"@);
 }
 
 pub open spec fn data_252() -> Seq<nat> {
-    ns![109u32,111,114,101,32,116,104,97,110,32].map_values(|x: u32| x as nat)
+    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,119,111,114,100,105,110,103].map_values(
+        |x: u32| x as nat,
+    )
 }
 
 pub proof fn literal_252()
@@ -5687,15 +5675,15 @@ pub proof fn literal_252()
     hide(n::clean);
     l::l252(Seq::empty());
     p::all();
-    reveal_strlit("more than ");
-    assert(n::codes("more than "@) =~= data_252());
+    reveal_strlit("Strength of wording");
+    assert(n::codes("Strength of wording"@) =~= data_252());
     assert(n::clean(data_252(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("more than "@);
+    n::clean_bridge("Strength of wording"@);
 }
 
 pub open spec fn data_253() -> Seq<nat> {
-    ns![97u32,116,32,109,111,115,116,32].map_values(|x: u32| x as nat)
+    ns![80u32,111,115,115,105,98,105,108,105,116,121].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_253()
@@ -5708,15 +5696,17 @@ pub proof fn literal_253()
     hide(n::clean);
     l::l253(Seq::empty());
     p::all();
-    reveal_strlit("at most ");
-    assert(n::codes("at most "@) =~= data_253());
+    reveal_strlit("Possibility");
+    assert(n::codes("Possibility"@) =~= data_253());
     assert(n::clean(data_253(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("at most "@);
+    n::clean_bridge("Possibility"@);
 }
 
 pub open spec fn data_254() -> Seq<nat> {
-    ns![108u32,101,115,115,32,116,104,97,110,32].map_values(|x: u32| x as nat)
+    ns![67u32,111,110,100,105,116,105,111,110,32,111,102,32,117,115,101].map_values(
+        |x: u32| x as nat,
+    )
 }
 
 pub proof fn literal_254()
@@ -5729,15 +5719,16 @@ pub proof fn literal_254()
     hide(n::clean);
     l::l254(Seq::empty());
     p::all();
-    reveal_strlit("less than ");
-    assert(n::codes("less than "@) =~= data_254());
+    reveal_strlit("Condition of use");
+    assert(n::codes("Condition of use"@) =~= data_254());
     assert(n::clean(data_254(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("less than "@);
+    n::clean_bridge("Condition of use"@);
 }
 
 pub open spec fn data_255() -> Seq<nat> {
-    ns![108u32,97,115,116,115,32].map_values(|x: u32| x as nat)
+    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,116,104,62,82,101,97,100,32,97,115,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_255()
@@ -5750,11 +5741,11 @@ pub proof fn literal_255()
     hide(n::clean);
     l::l255(Seq::empty());
     p::all();
-    reveal_strlit("lasts ");
-    assert(n::codes("lasts "@) =~= data_255());
+    reveal_strlit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>");
+    assert(n::codes("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@) =~= data_255());
     assert(n::clean(data_255(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("lasts "@);
+    n::clean_bridge("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@);
 }
 
 } // verus!
@@ -5770,7 +5761,8 @@ pub mod batch_256 {
     verus! {
 
 pub open spec fn data_256() -> Seq<nat> {
-    ns![119u32,105,116,104,105,110,32].map_values(|x: u32| x as nat)
+    ns![60u32,104,50,62,87,111,114,100,32,109,101,97,110,105,110,103,115,60,47,104,50,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_256()
@@ -5783,15 +5775,16 @@ pub proof fn literal_256()
     hide(n::clean);
     l::l256(Seq::empty());
     p::all();
-    reveal_strlit("within ");
-    assert(n::codes("within "@) =~= data_256());
+    reveal_strlit("<h2>Word meanings</h2>");
+    assert(n::codes("<h2>Word meanings</h2>"@) =~= data_256());
     assert(n::clean(data_256(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("within "@);
+    n::clean_bridge("<h2>Word meanings</h2>"@);
 }
 
 pub open spec fn data_257() -> Seq<nat> {
-    ns![114u32,101,112,101,97,116,115,32].map_values(|x: u32| x as nat)
+    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,101,97,99,104,32,119,111,114,100,32,105,110,32,116,104,105,115,32,116,97,98,108,101,32,97,115,32,115,104,111,119,110,44,32,105,110,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,111,102,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,73,110,32,116,104,101,32,65,67,69,32,116,101,120,116,32,111,102,32,97,32,100,111,99,117,109,101,110,116,32,112,97,103,101,44,32,115,101,108,101,99,116,32,97,32,119,111,114,100,32,119,105,116,104,32,97,32,115,111,108,105,100,32,117,110,100,101,114,108,105,110,101,32,116,111,32,115,101,101,32,105,116,115,32,114,101,97,100,105,110,103,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_257()
@@ -5804,15 +5797,22 @@ pub proof fn literal_257()
     hide(n::clean);
     l::l257(Seq::empty());
     p::all();
-    reveal_strlit("repeats ");
-    assert(n::codes("repeats "@) =~= data_257());
+    reveal_strlit(
+        "<p>The compiler reads each word in this table as shown, in every document of this guideline. In the ACE text of a document page, select a word with a solid underline to see its reading.</p>",
+    );
+    assert(n::codes(
+        "<p>The compiler reads each word in this table as shown, in every document of this guideline. In the ACE text of a document page, select a word with a solid underline to see its reading.</p>"@,
+    ) =~= data_257());
     assert(n::clean(data_257(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("repeats "@);
+    n::clean_bridge(
+        "<p>The compiler reads each word in this table as shown, in every document of this guideline. In the ACE text of a document page, select a word with a solid underline to see its reading.</p>"@,
+    );
 }
 
 pub open spec fn data_258() -> Seq<nat> {
-    ns![32u32,97,102,116,101,114].map_values(|x: u32| x as nat)
+    ns![32u32,104,97,118,101,32,97,32,115,111,108,105,100,32,117,110,100,101,114,108,105,110,101,32,111,110,108,121,32,105,110,32,116,104,101,32,115,101,110,116,101,110,99,101,115,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,115,32,115,99,111,112,101,32,101,120,99,108,117,115,105,111,110,115,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_258()
@@ -5825,15 +5825,22 @@ pub proof fn literal_258()
     hide(n::clean);
     l::l258(Seq::empty());
     p::all();
-    reveal_strlit(" after");
-    assert(n::codes(" after"@) =~= data_258());
+    reveal_strlit(
+        " have a solid underline only in the sentences that the compiler read as scope exclusions.</p>",
+    );
+    assert(n::codes(
+        " have a solid underline only in the sentences that the compiler read as scope exclusions.</p>"@,
+    ) =~= data_258());
     assert(n::clean(data_258(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" after"@);
+    n::clean_bridge(
+        " have a solid underline only in the sentences that the compiler read as scope exclusions.</p>"@,
+    );
 }
 
 pub open spec fn data_259() -> Seq<nat> {
-    ns![32u32,98,101,102,111,114,101].map_values(|x: u32| x as nat)
+    ns![97u32,32,115,116,114,111,110,103,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_259()
@@ -5846,15 +5853,16 @@ pub proof fn literal_259()
     hide(n::clean);
     l::l259(Seq::empty());
     p::all();
-    reveal_strlit(" before");
-    assert(n::codes(" before"@) =~= data_259());
+    reveal_strlit("a strong recommendation");
+    assert(n::codes("a strong recommendation"@) =~= data_259());
     assert(n::clean(data_259(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" before"@);
+    n::clean_bridge("a strong recommendation"@);
 }
 
 pub open spec fn data_260() -> Seq<nat> {
-    ns![32u32,111,102].map_values(|x: u32| x as nat)
+    ns![97u32,32,99,111,110,100,105,116,105,111,110,97,108,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_260()
@@ -5867,15 +5875,16 @@ pub proof fn literal_260()
     hide(n::clean);
     l::l260(Seq::empty());
     p::all();
-    reveal_strlit(" of");
-    assert(n::codes(" of"@) =~= data_260());
+    reveal_strlit("a conditional recommendation");
+    assert(n::codes("a conditional recommendation"@) =~= data_260());
     assert(n::clean(data_260(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" of"@);
+    n::clean_bridge("a conditional recommendation"@);
 }
 
 pub open spec fn data_261() -> Seq<nat> {
-    ns![32u32,97,112,97,114,116].map_values(|x: u32| x as nat)
+    ns![104u32,105,103,104,32,99,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_261()
@@ -5888,15 +5897,16 @@ pub proof fn literal_261()
     hide(n::clean);
     l::l261(Seq::empty());
     p::all();
-    reveal_strlit(" apart");
-    assert(n::codes(" apart"@) =~= data_261());
+    reveal_strlit("high certainty of the evidence");
+    assert(n::codes("high certainty of the evidence"@) =~= data_261());
     assert(n::clean(data_261(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" apart"@);
+    n::clean_bridge("high certainty of the evidence"@);
 }
 
 pub open spec fn data_262() -> Seq<nat> {
-    ns![32u32,115,101,99,111,110,100].map_values(|x: u32| x as nat)
+    ns![109u32,111,100,101,114,97,116,101,32,99,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_262()
@@ -5909,15 +5919,16 @@ pub proof fn literal_262()
     hide(n::clean);
     l::l262(Seq::empty());
     p::all();
-    reveal_strlit(" second");
-    assert(n::codes(" second"@) =~= data_262());
+    reveal_strlit("moderate certainty of the evidence");
+    assert(n::codes("moderate certainty of the evidence"@) =~= data_262());
     assert(n::clean(data_262(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" second"@);
+    n::clean_bridge("moderate certainty of the evidence"@);
 }
 
 pub open spec fn data_263() -> Seq<nat> {
-    ns![32u32,115,101,99,111,110,100,115].map_values(|x: u32| x as nat)
+    ns![108u32,111,119,32,99,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_263()
@@ -5930,15 +5941,16 @@ pub proof fn literal_263()
     hide(n::clean);
     l::l263(Seq::empty());
     p::all();
-    reveal_strlit(" seconds");
-    assert(n::codes(" seconds"@) =~= data_263());
+    reveal_strlit("low certainty of the evidence");
+    assert(n::codes("low certainty of the evidence"@) =~= data_263());
     assert(n::clean(data_263(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" seconds"@);
+    n::clean_bridge("low certainty of the evidence"@);
 }
 
 pub open spec fn data_264() -> Seq<nat> {
-    ns![32u32,109,105,110,117,116,101].map_values(|x: u32| x as nat)
+    ns![118u32,101,114,121,32,108,111,119,32,99,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_264()
@@ -5951,15 +5963,16 @@ pub proof fn literal_264()
     hide(n::clean);
     l::l264(Seq::empty());
     p::all();
-    reveal_strlit(" minute");
-    assert(n::codes(" minute"@) =~= data_264());
+    reveal_strlit("very low certainty of the evidence");
+    assert(n::codes("very low certainty of the evidence"@) =~= data_264());
     assert(n::clean(data_264(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" minute"@);
+    n::clean_bridge("very low certainty of the evidence"@);
 }
 
 pub open spec fn data_265() -> Seq<nat> {
-    ns![32u32,109,105,110,117,116,101,115].map_values(|x: u32| x as nat)
+    ns![116u32,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_265()
@@ -5972,15 +5985,16 @@ pub proof fn literal_265()
     hide(n::clean);
     l::l265(Seq::empty());
     p::all();
-    reveal_strlit(" minutes");
-    assert(n::codes(" minutes"@) =~= data_265());
+    reveal_strlit("the preferred option");
+    assert(n::codes("the preferred option"@) =~= data_265());
     assert(n::clean(data_265(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" minutes"@);
+    n::clean_bridge("the preferred option"@);
 }
 
 pub open spec fn data_266() -> Seq<nat> {
-    ns![32u32,104,111,117,114].map_values(|x: u32| x as nat)
+    ns![116u32,104,101,32,97,108,116,101,114,110,97,116,105,118,101,32,116,111,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_266()
@@ -5993,15 +6007,15 @@ pub proof fn literal_266()
     hide(n::clean);
     l::l266(Seq::empty());
     p::all();
-    reveal_strlit(" hour");
-    assert(n::codes(" hour"@) =~= data_266());
+    reveal_strlit("the alternative to the preferred option");
+    assert(n::codes("the alternative to the preferred option"@) =~= data_266());
     assert(n::clean(data_266(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" hour"@);
+    n::clean_bridge("the alternative to the preferred option"@);
 }
 
 pub open spec fn data_267() -> Seq<nat> {
-    ns![32u32,104,111,117,114,115].map_values(|x: u32| x as nat)
+    ns![97u32,32,113,117,97,108,105,102,105,101,114,58,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_267()
@@ -6014,15 +6028,16 @@ pub proof fn literal_267()
     hide(n::clean);
     l::l267(Seq::empty());
     p::all();
-    reveal_strlit(" hours");
-    assert(n::codes(" hours"@) =~= data_267());
+    reveal_strlit("a qualifier: ");
+    assert(n::codes("a qualifier: "@) =~= data_267());
     assert(n::clean(data_267(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" hours"@);
+    n::clean_bridge("a qualifier: "@);
 }
 
 pub open spec fn data_268() -> Seq<nat> {
-    ns![32u32,100,97,121].map_values(|x: u32| x as nat)
+    ns![101u32,118,101,114,121,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,32,111,102,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_268()
@@ -6035,15 +6050,16 @@ pub proof fn literal_268()
     hide(n::clean);
     l::l268(Seq::empty());
     p::all();
-    reveal_strlit(" day");
-    assert(n::codes(" day"@) =~= data_268());
+    reveal_strlit("every recommendation of this guideline");
+    assert(n::codes("every recommendation of this guideline"@) =~= data_268());
     assert(n::clean(data_268(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" day"@);
+    n::clean_bridge("every recommendation of this guideline"@);
 }
 
 pub open spec fn data_269() -> Seq<nat> {
-    ns![32u32,100,97,121,115].map_values(|x: u32| x as nat)
+    ns![116u32,104,101,32,118,101,114,98,32,111,102,32,97,32,115,99,111,112,101,32,101,120,99,108,117,115,105,111,110,58,32,119,104,101,110,32,105,116,115,32,99,111,110,100,105,116,105,111,110,32,104,111,108,100,115,44,32,110,111,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,32,111,102,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,32,97,112,112,108,105,101,115,32,116,111,32,116,104,101,32,112,97,116,105,101,110,116].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_269()
@@ -6056,15 +6072,22 @@ pub proof fn literal_269()
     hide(n::clean);
     l::l269(Seq::empty());
     p::all();
-    reveal_strlit(" days");
-    assert(n::codes(" days"@) =~= data_269());
+    reveal_strlit(
+        "the verb of a scope exclusion: when its condition holds, no recommendation of this guideline applies to the patient",
+    );
+    assert(n::codes(
+        "the verb of a scope exclusion: when its condition holds, no recommendation of this guideline applies to the patient"@,
+    ) =~= data_269());
     assert(n::clean(data_269(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" days"@);
+    n::clean_bridge(
+        "the verb of a scope exclusion: when its condition holds, no recommendation of this guideline applies to the patient"@,
+    );
 }
 
 pub open spec fn data_270() -> Seq<nat> {
-    ns![32u32,119,101,101,107].map_values(|x: u32| x as nat)
+    ns![60u32,98,117,116,116,111,110,32,116,121,112,101,61,34,98,117,116,116,111,110,34,32,99,108,97,115,115,61,34,114,119,34,32,97,114,105,97,45,112,114,101,115,115,101,100,61,34,102,97,108,115,101,34,32,100,97,116,97,45,119,61,34].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_270()
@@ -6077,15 +6100,16 @@ pub proof fn literal_270()
     hide(n::clean);
     l::l270(Seq::empty());
     p::all();
-    reveal_strlit(" week");
-    assert(n::codes(" week"@) =~= data_270());
+    reveal_strlit("<button type=\"button\" class=\"rw\" aria-pressed=\"false\" data-w=\"");
+    assert(n::codes("<button type=\"button\" class=\"rw\" aria-pressed=\"false\" data-w=\""@)
+        =~= data_270());
     assert(n::clean(data_270(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" week"@);
+    n::clean_bridge("<button type=\"button\" class=\"rw\" aria-pressed=\"false\" data-w=\""@);
 }
 
 pub open spec fn data_271() -> Seq<nat> {
-    ns![32u32,119,101,101,107,115].map_values(|x: u32| x as nat)
+    ns![60u32,47,98,117,116,116,111,110,62].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_271()
@@ -6098,11 +6122,11 @@ pub proof fn literal_271()
     hide(n::clean);
     l::l271(Seq::empty());
     p::all();
-    reveal_strlit(" weeks");
-    assert(n::codes(" weeks"@) =~= data_271());
+    reveal_strlit("</button>");
+    assert(n::codes("</button>"@) =~= data_271());
     assert(n::clean(data_271(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" weeks"@);
+    n::clean_bridge("</button>"@);
 }
 
 } // verus!
@@ -6118,7 +6142,8 @@ pub mod batch_272 {
     verus! {
 
 pub open spec fn data_272() -> Seq<nat> {
-    ns![32u32,109,111,110,116,104].map_values(|x: u32| x as nat)
+    ns![60u32,112,32,99,108,97,115,115,61,34,114,101,97,100,105,110,103,34,32,97,114,105,97,45,108,105,118,101,61,34,112,111,108,105,116,101,34,62,60,115,112,97,110,32,100,97,116,97,45,119,61,34,34,62,83,101,108,101,99,116,32,97,32,119,111,114,100,32,119,105,116,104,32,97,32,115,111,108,105,100,32,117,110,100,101,114,108,105,110,101,32,116,111,32,115,101,101,32,104,111,119,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,105,116,46,60,47,115,112,97,110,62].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_272()
@@ -6131,15 +6156,21 @@ pub proof fn literal_272()
     hide(n::clean);
     l::l272(Seq::empty());
     p::all();
-    reveal_strlit(" month");
-    assert(n::codes(" month"@) =~= data_272());
+    reveal_strlit(
+        "<p class=\"reading\" aria-live=\"polite\"><span data-w=\"\">Select a word with a solid underline to see how the compiler reads it.</span>",
+    );
+    assert(n::codes(
+        "<p class=\"reading\" aria-live=\"polite\"><span data-w=\"\">Select a word with a solid underline to see how the compiler reads it.</span>"@,
+    ) =~= data_272());
     assert(n::clean(data_272(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" month"@);
+    n::clean_bridge(
+        "<p class=\"reading\" aria-live=\"polite\"><span data-w=\"\">Select a word with a solid underline to see how the compiler reads it.</span>"@,
+    );
 }
 
 pub open spec fn data_273() -> Seq<nat> {
-    ns![32u32,109,111,110,116,104,115].map_values(|x: u32| x as nat)
+    ns![60u32,115,112,97,110,32,100,97,116,97,45,119,61,34].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_273()
@@ -6152,15 +6183,16 @@ pub proof fn literal_273()
     hide(n::clean);
     l::l273(Seq::empty());
     p::all();
-    reveal_strlit(" months");
-    assert(n::codes(" months"@) =~= data_273());
+    reveal_strlit("<span data-w=\"");
+    assert(n::codes("<span data-w=\""@) =~= data_273());
     assert(n::clean(data_273(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" months"@);
+    n::clean_bridge("<span data-w=\""@);
 }
 
 pub open spec fn data_274() -> Seq<nat> {
-    ns![32u32,121,101,97,114].map_values(|x: u32| x as nat)
+    ns![34u32,32,104,105,100,100,101,110,62,73,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,44,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32].map_values(
+    |x: u32| x as nat)
 }
 
 pub proof fn literal_274()
@@ -6173,15 +6205,15 @@ pub proof fn literal_274()
     hide(n::clean);
     l::l274(Seq::empty());
     p::all();
-    reveal_strlit(" year");
-    assert(n::codes(" year"@) =~= data_274());
+    reveal_strlit("\" hidden>In this guideline, the compiler reads ");
+    assert(n::codes("\" hidden>In this guideline, the compiler reads "@) =~= data_274());
     assert(n::clean(data_274(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" year"@);
+    n::clean_bridge("\" hidden>In this guideline, the compiler reads "@);
 }
 
 pub open spec fn data_275() -> Seq<nat> {
-    ns![32u32,121,101,97,114,115].map_values(|x: u32| x as nat)
+    ns![32u32,97,115,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_275()
@@ -6194,17 +6226,15 @@ pub proof fn literal_275()
     hide(n::clean);
     l::l275(Seq::empty());
     p::all();
-    reveal_strlit(" years");
-    assert(n::codes(" years"@) =~= data_275());
+    reveal_strlit(" as ");
+    assert(n::codes(" as "@) =~= data_275());
     assert(n::clean(data_275(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge(" years"@);
+    n::clean_bridge(" as "@);
 }
 
 pub open spec fn data_276() -> Seq<nat> {
-    ns![60u32,104,50,62,84,105,109,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
-        |x: u32| x as nat,
-    )
+    ns![60u32,112,62,84,104,101,32,119,111,114,100,115,32].map_values(|x: u32| x as nat)
 }
 
 pub proof fn literal_276()
@@ -6217,1600 +6247,11 @@ pub proof fn literal_276()
     hide(n::clean);
     l::l276(Seq::empty());
     p::all();
-    reveal_strlit("<h2>Time words</h2>");
-    assert(n::codes("<h2>Time words</h2>"@) =~= data_276());
+    reveal_strlit("<p>The words ");
+    assert(n::codes("<p>The words "@) =~= data_276());
     assert(n::clean(data_276(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
         by (compute_only);
-    n::clean_bridge("<h2>Time words</h2>"@);
-}
-
-pub open spec fn data_277() -> Seq<nat> {
-    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,116,105,109,101,32,108,105,109,105,116,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,84,105,109,105,110,103,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_277()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[277]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l277(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>",
-    );
-    assert(n::codes(
-        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
-    ) =~= data_277());
-    assert(n::clean(data_277(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>"@,
-    );
-}
-
-pub open spec fn data_278() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,116,104,62,82,101,97,100,32,97,115,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_278()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[278]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l278(Seq::empty());
-    p::all();
-    reveal_strlit("<thead><tr><th>Word</th><th>Read as</th></tr></thead>");
-    assert(n::codes("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@) =~= data_278());
-    assert(n::clean(data_278(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<thead><tr><th>Word</th><th>Read as</th></tr></thead>"@);
-}
-
-pub open spec fn data_279() -> Seq<nat> {
-    ns![117u32,110,105,116,32,111,102,32,116,105,109,101,58].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_279()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[279]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l279(Seq::empty());
-    p::all();
-    reveal_strlit("unit of time:");
-    assert(n::codes("unit of time:"@) =~= data_279());
-    assert(n::clean(data_279(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("unit of time:"@);
-}
-
-pub open spec fn data_280() -> Seq<nat> {
-    ns![104u32,111,119,32,108,111,110,103,32,116,104,101,32,97,99,116,105,111,110,32,108,97,115,116,115].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_280()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[280]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l280(Seq::empty());
-    p::all();
-    reveal_strlit("how long the action lasts");
-    assert(n::codes("how long the action lasts"@) =~= data_280());
-    assert(n::clean(data_280(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("how long the action lasts"@);
-}
-
-pub open spec fn data_281() -> Seq<nat> {
-    ns![104u32,111,119,32,102,97,114,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101,115,32,102,114,111,109,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,44,32,98,101,102,111,114,101,32,111,114,32,97,102,116,101,114,32,105,116].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_281()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[281]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l281(Seq::empty());
-    p::all();
-    reveal_strlit("how far the action lies from a reference point, before or after it");
-    assert(n::codes("how far the action lies from a reference point, before or after it"@)
-        =~= data_281());
-    assert(n::clean(data_281(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("how far the action lies from a reference point, before or after it"@);
-}
-
-pub open spec fn data_282() -> Seq<nat> {
-    ns![104u32,111,119,32,102,97,114,32,97,112,97,114,116,32,114,101,112,101,97,116,115,32,111,102,32,116,104,101,32,97,99,116,105,111,110,32,108,105,101].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_282()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[282]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l282(Seq::empty());
-    p::all();
-    reveal_strlit("how far apart repeats of the action lie");
-    assert(n::codes("how far apart repeats of the action lie"@) =~= data_282());
-    assert(n::clean(data_282(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("how far apart repeats of the action lie"@);
-}
-
-pub open spec fn data_283() -> Seq<nat> {
-    ns![119u32,105,116,104,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_283()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[283]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l283(Seq::empty());
-    p::all();
-    reveal_strlit("with ");
-    assert(n::codes("with "@) =~= data_283());
-    assert(n::clean(data_283(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("with "@);
-}
-
-pub open spec fn data_284() -> Seq<nat> {
-    ns![104u32,111,119,32,108,111,110,103,32,97,102,116,101,114,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,97,102,116,101,114,32,105,116].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_284()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[284]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l284(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "how long after a reference point the action occurs, or only that it occurs after it",
-    );
-    assert(n::codes(
-        "how long after a reference point the action occurs, or only that it occurs after it"@,
-    ) =~= data_284());
-    assert(n::clean(data_284(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "how long after a reference point the action occurs, or only that it occurs after it"@,
-    );
-}
-
-pub open spec fn data_285() -> Seq<nat> {
-    ns![104u32,111,119,32,108,111,110,103,32,98,101,102,111,114,101,32,97,32,114,101,102,101,114,101,110,99,101,32,112,111,105,110,116,32,116,104,101,32,97,99,116,105,111,110,32,111,99,99,117,114,115,44,32,111,114,32,111,110,108,121,32,116,104,97,116,32,105,116,32,111,99,99,117,114,115,32,98,101,102,111,114,101,32,105,116].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_285()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[285]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l285(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "how long before a reference point the action occurs, or only that it occurs before it",
-    );
-    assert(n::codes(
-        "how long before a reference point the action occurs, or only that it occurs before it"@,
-    ) =~= data_285());
-    assert(n::clean(data_285(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "how long before a reference point the action occurs, or only that it occurs before it"@,
-    );
-}
-
-pub open spec fn data_286() -> Seq<nat> {
-    ns![116u32,104,101,32,116,105,109,101,32,119,105,110,100,111,119,32,105,110,32,119,104,105,99,104,32,116,104,101,32,115,112,97,99,105,110,103,32,111,102,32,114,101,112,101,97,116,115,32,104,111,108,100,115].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_286()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[286]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l286(Seq::empty());
-    p::all();
-    reveal_strlit("the time window in which the spacing of repeats holds");
-    assert(n::codes("the time window in which the spacing of repeats holds"@) =~= data_286());
-    assert(n::clean(data_286(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("the time window in which the spacing of repeats holds"@);
-}
-
-pub open spec fn data_287() -> Seq<nat> {
-    ns![104u32,111,119,32,109,97,110,121,32,111,102,32,97,110,32,105,116,101,109,32,116,104,101,32,97,99,116,105,111,110,32,105,110,118,111,108,118,101,115,32,105,110,32,101,97,99,104,32,112,101,114,105,111,100].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_287()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[287]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l287(Seq::empty());
-    p::all();
-    reveal_strlit("how many of an item the action involves in each period");
-    assert(n::codes("how many of an item the action involves in each period"@) =~= data_287());
-    assert(n::clean(data_287(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("how many of an item the action involves in each period"@);
-}
-
-} // verus!
-}
-pub mod batch_288 {
-    use crate::{
-        k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
-        k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
-    };
-    use ckc_spec::ui as u;
-    use vstd::prelude::*;
-    use vstd::utf8::*;
-    verus! {
-
-pub open spec fn data_288() -> Seq<nat> {
-    ns![98u32,101,102,111,114,101].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_288()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[288]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l288(Seq::empty());
-    p::all();
-    reveal_strlit("before");
-    assert(n::codes("before"@) =~= data_288());
-    assert(n::clean(data_288(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("before"@);
-}
-
-pub open spec fn data_289() -> Seq<nat> {
-    ns![97u32,102,116,101,114].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_289()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[289]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l289(Seq::empty());
-    p::all();
-    reveal_strlit("after");
-    assert(n::codes("after"@) =~= data_289());
-    assert(n::clean(data_289(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("after"@);
-}
-
-pub open spec fn data_290() -> Seq<nat> {
-    ns![32u32,112,101,114,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_290()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[290]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l290(Seq::empty());
-    p::all();
-    reveal_strlit(" per ");
-    assert(n::codes(" per "@) =~= data_290());
-    assert(n::clean(data_290(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(" per "@);
-}
-
-pub open spec fn data_291() -> Seq<nat> {
-    ns![44u32,32,99,111,117,110,116,101,100,32,105,116,101,109,58,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_291()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[291]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l291(Seq::empty());
-    p::all();
-    reveal_strlit(", counted item: ");
-    assert(n::codes(", counted item: "@) =~= data_291());
-    assert(n::clean(data_291(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(", counted item: "@);
-}
-
-pub open spec fn data_292() -> Seq<nat> {
-    ns![32u32,97,112,97,114,116,32,100,117,114,105,110,103,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_292()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[292]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l292(Seq::empty());
-    p::all();
-    reveal_strlit(" apart during ");
-    assert(n::codes(" apart during "@) =~= data_292());
-    assert(n::clean(data_292(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(" apart during "@);
-}
-
-pub open spec fn data_293() -> Seq<nat> {
-    ns![32u32,102,114,111,109].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_293()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[293]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l293(Seq::empty());
-    p::all();
-    reveal_strlit(" from");
-    assert(n::codes(" from"@) =~= data_293());
-    assert(n::clean(data_293(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(" from"@);
-}
-
-pub open spec fn data_294() -> Seq<nat> {
-    ns![97u32,98,111,117,116,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_294()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[294]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l294(Seq::empty());
-    p::all();
-    reveal_strlit("about ");
-    assert(n::codes("about "@) =~= data_294());
-    assert(n::clean(data_294(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("about "@);
-}
-
-pub open spec fn data_295() -> Seq<nat> {
-    ns![97u32,32,109,105,110,105,109,117,109,32,111,102,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_295()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[295]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l295(Seq::empty());
-    p::all();
-    reveal_strlit("a minimum of ");
-    assert(n::codes("a minimum of "@) =~= data_295());
-    assert(n::clean(data_295(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("a minimum of "@);
-}
-
-pub open spec fn data_296() -> Seq<nat> {
-    ns![32u32,116,111,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_296()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[296]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l296(Seq::empty());
-    p::all();
-    reveal_strlit(" to ");
-    assert(n::codes(" to "@) =~= data_296());
-    assert(n::clean(data_296(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(" to "@);
-}
-
-pub open spec fn data_297() -> Seq<nat> {
-    ns![109u32,97,114,107,115,32,97,32,116,105,109,101,32,108,105,109,105,116,32,97,115,32,97,112,112,114,111,120,105,109,97,116,101].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_297()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[297]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l297(Seq::empty());
-    p::all();
-    reveal_strlit("marks a time limit as approximate");
-    assert(n::codes("marks a time limit as approximate"@) =~= data_297());
-    assert(n::clean(data_297(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("marks a time limit as approximate"@);
-}
-
-pub open spec fn data_298() -> Seq<nat> {
-    ns![106u32,111,105,110,115,32,116,104,101,32,117,112,112,101,114,32,101,110,100,32,111,102,32,97,32,109,105,110,105,109,117,109,32,116,104,97,116,32,105,115,32,115,116,97,116,101,100,32,97,115,32,97,32,114,97,110,103,101].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_298()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[298]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l298(Seq::empty());
-    p::all();
-    reveal_strlit("joins the upper end of a minimum that is stated as a range");
-    assert(n::codes("joins the upper end of a minimum that is stated as a range"@) =~= data_298());
-    assert(n::clean(data_298(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("joins the upper end of a minimum that is stated as a range"@);
-}
-
-pub open spec fn data_299() -> Seq<nat> {
-    ns![60u32,109,101,116,97,32,110,97,109,101,61,34,118,105,101,119,112,111,114,116,34,32,99,111,110,116,101,110,116,61,34,119,105,100,116,104,61,100,101,118,105,99,101,45,119,105,100,116,104,44,32,105,110,105,116,105,97,108,45,115,99,97,108,101,61,49,34,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_299()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[299]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l299(Seq::empty());
-    p::all();
-    reveal_strlit("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-    assert(n::codes("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@)
-        =~= data_299());
-    assert(n::clean(data_299(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"@);
-}
-
-pub open spec fn data_300() -> Seq<nat> {
-    ns![60u32,112,32,99,108,97,115,115,61,34,112,114,111,118,101,110,97,110,99,101,34,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_300()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[300]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l300(Seq::empty());
-    p::all();
-    reveal_strlit("<p class=\"provenance\">");
-    assert(n::codes("<p class=\"provenance\">"@) =~= data_300());
-    assert(n::clean(data_300(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<p class=\"provenance\">"@);
-}
-
-pub open spec fn data_301() -> Seq<nat> {
-    ns![60u32,115,112,97,110,62].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_301()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[301]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l301(Seq::empty());
-    p::all();
-    reveal_strlit("<span>");
-    assert(n::codes("<span>"@) =~= data_301());
-    assert(n::clean(data_301(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<span>"@);
-}
-
-pub open spec fn data_302() -> Seq<nat> {
-    ns![80u32,97,115,115,97,103,101,32].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_302()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[302]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l302(Seq::empty());
-    p::all();
-    reveal_strlit("Passage ");
-    assert(n::codes("Passage "@) =~= data_302());
-    assert(n::clean(data_302(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Passage "@);
-}
-
-pub open spec fn data_303() -> Seq<nat> {
-    ns![60u32,104,51,62,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_303()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[303]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l303(Seq::empty());
-    p::all();
-    reveal_strlit("<h3>Grade as compiled</h3>");
-    assert(n::codes("<h3>Grade as compiled</h3>"@) =~= data_303());
-    assert(n::clean(data_303(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<h3>Grade as compiled</h3>"@);
-}
-
-} // verus!
-}
-pub mod batch_304 {
-    use crate::{
-        k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
-        k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
-    };
-    use ckc_spec::ui as u;
-    use vstd::prelude::*;
-    use vstd::utf8::*;
-    verus! {
-
-pub open spec fn data_304() -> Seq<nat> {
-    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,105,115,32,100,111,99,117,109,101,110,116,46,32,65,32,103,114,97,100,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,115,116,97,116,101,109,101,110,116,32,111,102,32,116,104,101,32,100,111,99,117,109,101,110,116,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_304()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[304]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l304(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>",
-    );
-    assert(n::codes(
-        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
-    ) =~= data_304());
-    assert(n::clean(data_304(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>"@,
-    );
-}
-
-pub open spec fn data_305() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,77,101,97,115,117,114,101,60,47,116,104,62,60,116,104,62,86,97,108,117,101,60,47,116,104,62,60,116,104,62,76,97,98,101,108,32,105,110,32,116,104,101,32,115,111,117,114,99,101,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_305()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[305]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l305(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>",
-    );
-    assert(n::codes(
-        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
-    ) =~= data_305());
-    assert(n::clean(data_305(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>"@,
-    );
-}
-
-pub open spec fn data_306() -> Seq<nat> {
-    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_306()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[306]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l306(Seq::empty());
-    p::all();
-    reveal_strlit("Strength of the recommendation");
-    assert(n::codes("Strength of the recommendation"@) =~= data_306());
-    assert(n::clean(data_306(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Strength of the recommendation"@);
-}
-
-pub open spec fn data_307() -> Seq<nat> {
-    ns![67u32,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_307()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[307]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l307(Seq::empty());
-    p::all();
-    reveal_strlit("Certainty of the evidence");
-    assert(n::codes("Certainty of the evidence"@) =~= data_307());
-    assert(n::clean(data_307(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Certainty of the evidence"@);
-}
-
-pub open spec fn data_308() -> Seq<nat> {
-    ns![115u32,116,114,111,110,103].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_308()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[308]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l308(Seq::empty());
-    p::all();
-    reveal_strlit("strong");
-    assert(n::codes("strong"@) =~= data_308());
-    assert(n::clean(data_308(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("strong"@);
-}
-
-pub open spec fn data_309() -> Seq<nat> {
-    ns![99u32,111,110,100,105,116,105,111,110,97,108].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_309()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[309]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l309(Seq::empty());
-    p::all();
-    reveal_strlit("conditional");
-    assert(n::codes("conditional"@) =~= data_309());
-    assert(n::clean(data_309(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("conditional"@);
-}
-
-pub open spec fn data_310() -> Seq<nat> {
-    ns![104u32,105,103,104].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_310()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[310]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l310(Seq::empty());
-    p::all();
-    reveal_strlit("high");
-    assert(n::codes("high"@) =~= data_310());
-    assert(n::clean(data_310(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("high"@);
-}
-
-pub open spec fn data_311() -> Seq<nat> {
-    ns![109u32,111,100,101,114,97,116,101].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_311()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[311]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l311(Seq::empty());
-    p::all();
-    reveal_strlit("moderate");
-    assert(n::codes("moderate"@) =~= data_311());
-    assert(n::clean(data_311(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("moderate"@);
-}
-
-pub open spec fn data_312() -> Seq<nat> {
-    ns![108u32,111,119].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_312()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[312]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l312(Seq::empty());
-    p::all();
-    reveal_strlit("low");
-    assert(n::codes("low"@) =~= data_312());
-    assert(n::clean(data_312(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("low"@);
-}
-
-pub open spec fn data_313() -> Seq<nat> {
-    ns![118u32,101,114,121,32,108,111,119].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_313()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[313]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l313(Seq::empty());
-    p::all();
-    reveal_strlit("very low");
-    assert(n::codes("very low"@) =~= data_313());
-    assert(n::clean(data_313(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("very low"@);
-}
-
-pub open spec fn data_314() -> Seq<nat> {
-    ns![60u32,104,51,62,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_314()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[314]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l314(Seq::empty());
-    p::all();
-    reveal_strlit("<h3>Preferences as compiled</h3>");
-    assert(n::codes("<h3>Preferences as compiled</h3>"@) =~= data_314());
-    assert(n::clean(data_314(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<h3>Preferences as compiled</h3>"@);
-}
-
-pub open spec fn data_315() -> Seq<nat> {
-    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,112,114,101,102,101,114,101,110,99,101,32,110,97,109,101,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,115,111,117,114,99,101,32,112,114,101,102,101,114,115,46,32,73,116,32,100,111,101,115,32,110,111,116,32,102,111,114,98,105,100,32,116,104,101,32,111,116,104,101,114,32,111,112,116,105,111,110,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_315()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[315]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l315(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>",
-    );
-    assert(n::codes(
-        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
-    ) =~= data_315());
-    assert(n::clean(data_315(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>"@,
-    );
-}
-
-pub open spec fn data_316() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,80,114,101,102,101,114,114,101,100,60,47,116,104,62,60,116,104,62,73,110,115,116,101,97,100,32,111,102,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_316()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[316]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l316(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>",
-    );
-    assert(n::codes(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
-    ) =~= data_316());
-    assert(n::clean(data_316(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>"@,
-    );
-}
-
-pub open spec fn data_317() -> Seq<nat> {
-    ns![115u32,104,111,117,108,100].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_317()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[317]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l317(Seq::empty());
-    p::all();
-    reveal_strlit("should");
-    assert(n::codes("should"@) =~= data_317());
-    assert(n::clean(data_317(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("should"@);
-}
-
-pub open spec fn data_318() -> Seq<nat> {
-    ns![109u32,117,115,116].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_318()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[318]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l318(Seq::empty());
-    p::all();
-    reveal_strlit("must");
-    assert(n::codes("must"@) =~= data_318());
-    assert(n::clean(data_318(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("must"@);
-}
-
-pub open spec fn data_319() -> Seq<nat> {
-    ns![99u32,97,110].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_319()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[319]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l319(Seq::empty());
-    p::all();
-    reveal_strlit("can");
-    assert(n::codes("can"@) =~= data_319());
-    assert(n::clean(data_319(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("can"@);
-}
-
-} // verus!
-}
-pub mod batch_320 {
-    use crate::{
-        k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
-        k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
-    };
-    use ckc_spec::ui as u;
-    use vstd::prelude::*;
-    use vstd::utf8::*;
-    verus! {
-
-pub open spec fn data_320() -> Seq<nat> {
-    ns![109u32,97,121].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_320()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[320]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l320(Seq::empty());
-    p::all();
-    reveal_strlit("may");
-    assert(n::codes("may"@) =~= data_320());
-    assert(n::clean(data_320(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("may"@);
-}
-
-pub open spec fn data_321() -> Seq<nat> {
-    ns![110u32,111,116].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_321()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[321]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l321(Seq::empty());
-    p::all();
-    reveal_strlit("not");
-    assert(n::codes("not"@) =~= data_321());
-    assert(n::clean(data_321(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("not"@);
-}
-
-pub open spec fn data_322() -> Seq<nat> {
-    ns![97u32,115,32,97,32,102,97,99,116].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_322()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[322]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l322(Seq::empty());
-    p::all();
-    reveal_strlit("as a fact");
-    assert(n::codes("as a fact"@) =~= data_322());
-    assert(n::clean(data_322(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("as a fact"@);
-}
-
-pub open spec fn data_323() -> Seq<nat> {
-    ns![110u32,111,110,101,32,110,97,109,101,100].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_323()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[323]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l323(Seq::empty());
-    p::all();
-    reveal_strlit("none named");
-    assert(n::codes("none named"@) =~= data_323());
-    assert(n::clean(data_323(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("none named"@);
-}
-
-pub open spec fn data_324() -> Seq<nat> {
-    ns![32u32,].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_324()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[324]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l324(Seq::empty());
-    p::all();
-    reveal_strlit(" ");
-    assert(n::codes(" "@) =~= data_324());
-    assert(n::clean(data_324(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(" "@);
-}
-
-pub open spec fn data_325() -> Seq<nat> {
-    ns![60u32,104,50,62,71,114,97,100,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
-        |x: u32| x as nat,
-    )
-}
-
-pub proof fn literal_325()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[325]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l325(Seq::empty());
-    p::all();
-    reveal_strlit("<h2>Grade words</h2>");
-    assert(n::codes("<h2>Grade words</h2>"@) =~= data_325());
-    assert(n::clean(data_325(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<h2>Grade words</h2>"@);
-}
-
-pub open spec fn data_326() -> Seq<nat> {
-    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,116,104,101,32,103,114,97,100,101,32,111,102,32,97,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,103,114,97,100,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,71,114,97,100,101,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_326()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[326]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l326(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>",
-    );
-    assert(n::codes(
-        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
-    ) =~= data_326());
-    assert(n::clean(data_326(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>"@,
-    );
-}
-
-pub open spec fn data_327() -> Seq<nat> {
-    ns![115u32,116,114,101,110,103,116,104,32,111,102,32,116,104,101,32,114,101,99,111,109,109,101,110,100,97,116,105,111,110,58,32].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_327()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[327]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l327(Seq::empty());
-    p::all();
-    reveal_strlit("strength of the recommendation: ");
-    assert(n::codes("strength of the recommendation: "@) =~= data_327());
-    assert(n::clean(data_327(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("strength of the recommendation: "@);
-}
-
-pub open spec fn data_328() -> Seq<nat> {
-    ns![99u32,101,114,116,97,105,110,116,121,32,111,102,32,116,104,101,32,101,118,105,100,101,110,99,101,58,32].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_328()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[328]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l328(Seq::empty());
-    p::all();
-    reveal_strlit("certainty of the evidence: ");
-    assert(n::codes("certainty of the evidence: "@) =~= data_328());
-    assert(n::clean(data_328(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("certainty of the evidence: "@);
-}
-
-pub open spec fn data_329() -> Seq<nat> {
-    ns![60u32,104,50,62,80,114,101,102,101,114,101,110,99,101,32,119,111,114,100,115,60,47,104,50,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_329()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[329]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l329(Seq::empty());
-    p::all();
-    reveal_strlit("<h2>Preference words</h2>");
-    assert(n::codes("<h2>Preference words</h2>"@) =~= data_329());
-    assert(n::clean(data_329(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<h2>Preference words</h2>"@);
-}
-
-pub open spec fn data_330() -> Seq<nat> {
-    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,112,114,101,102,101,114,101,110,99,101,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,112,114,101,102,101,114,101,110,99,101,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,80,114,101,102,101,114,101,110,99,101,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_330()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[330]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l330(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>",
-    );
-    assert(n::codes(
-        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
-    ) =~= data_330());
-    assert(n::clean(data_330(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>"@,
-    );
-}
-
-pub open spec fn data_331() -> Seq<nat> {
-    ns![109u32,97,114,107,115,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_331()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[331]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l331(Seq::empty());
-    p::all();
-    reveal_strlit("marks the preferred option");
-    assert(n::codes("marks the preferred option"@) =~= data_331());
-    assert(n::clean(data_331(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("marks the preferred option"@);
-}
-
-pub open spec fn data_332() -> Seq<nat> {
-    ns![106u32,111,105,110,115,32,116,104,101,32,111,112,116,105,111,110,32,116,104,97,116,32,116,104,101,32,112,114,101,102,101,114,114,101,100,32,111,112,116,105,111,110,32,114,101,112,108,97,99,101,115].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_332()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[332]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l332(Seq::empty());
-    p::all();
-    reveal_strlit("joins the option that the preferred option replaces");
-    assert(n::codes("joins the option that the preferred option replaces"@) =~= data_332());
-    assert(n::clean(data_332(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("joins the option that the preferred option replaces"@);
-}
-
-pub open spec fn data_333() -> Seq<nat> {
-    ns![60u32,104,51,62,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,60,47,104,51,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_333()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[333]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l333(Seq::empty());
-    p::all();
-    reveal_strlit("<h3>Qualifiers as compiled</h3>");
-    assert(n::codes("<h3>Qualifiers as compiled</h3>"@) =~= data_333());
-    assert(n::clean(data_333(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<h3>Qualifiers as compiled</h3>"@);
-}
-
-pub open spec fn data_334() -> Seq<nat> {
-    ns![60u32,112,62,69,97,99,104,32,114,111,119,32,105,115,32,111,110,101,32,113,117,97,108,105,102,105,101,114,32,119,111,114,100,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,102,114,111,109,32,116,104,101,32,65,67,69,32,116,101,120,116,46,32,65,32,113,117,97,108,105,102,105,101,114,32,100,101,115,99,114,105,98,101,115,32,116,104,101,32,119,111,114,100,105,110,103,32,111,102,32,105,116,115,32,97,99,116,105,111,110,32,111,114,32,99,111,110,100,105,116,105,111,110,46,32,65,32,113,117,97,108,105,102,105,101,114,32,111,110,32,97,32,99,111,110,100,105,116,105,111,110,32,109,117,115,116,32,97,108,115,111,32,104,111,108,100,32,105,110,32,116,104,101,32,102,97,99,116,115,32,116,104,97,116,32,109,101,101,116,32,116,104,101,32,99,111,110,100,105,116,105,111,110,46,32,65,110,32,101,120,99,108,117,100,101,100,32,99,111,110,100,105,116,105,111,110,32,116,101,115,116,115,32,116,104,101,32,99,111,110,100,105,116,105,111,110,32,116,111,103,101,116,104,101,114,32,119,105,116,104,32,105,116,115,32,113,117,97,108,105,102,105,101,114,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_334()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[334]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l334(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>",
-    );
-    assert(n::codes(
-        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
-    ) =~= data_334());
-    assert(n::clean(data_334(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>"@,
-    );
-}
-
-pub open spec fn data_335() -> Seq<nat> {
-    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,83,101,110,116,101,110,99,101,60,47,116,104,62,60,116,104,62,80,97,114,116,60,47,116,104,62,60,116,104,62,83,116,97,116,101,100,32,97,115,60,47,116,104,62,60,116,104,62,65,99,116,105,111,110,60,47,116,104,62,60,116,104,62,75,105,110,100,60,47,116,104,62,60,116,104,62,87,111,114,100,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_335()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[335]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l335(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>",
-    );
-    assert(n::codes(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
-    ) =~= data_335());
-    assert(n::clean(data_335(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>"@,
-    );
-}
-
-} // verus!
-}
-pub mod batch_336 {
-    use crate::{
-        k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
-        k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
-    };
-    use ckc_spec::ui as u;
-    use vstd::prelude::*;
-    use vstd::utf8::*;
-    verus! {
-
-pub open spec fn data_336() -> Seq<nat> {
-    ns![72u32,111,119,32,111,102,116,101,110].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_336()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[336]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l336(Seq::empty());
-    p::all();
-    reveal_strlit("How often");
-    assert(n::codes("How often"@) =~= data_336());
-    assert(n::clean(data_336(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("How often"@);
-}
-
-pub open spec fn data_337() -> Seq<nat> {
-    ns![66u32,101,115,116,32,99,97,115,101].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_337()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[337]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l337(Seq::empty());
-    p::all();
-    reveal_strlit("Best case");
-    assert(n::codes("Best case"@) =~= data_337());
-    assert(n::clean(data_337(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Best case"@);
-}
-
-pub open spec fn data_338() -> Seq<nat> {
-    ns![69u32,109,112,104,97,115,105,115].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_338()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[338]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l338(Seq::empty());
-    p::all();
-    reveal_strlit("Emphasis");
-    assert(n::codes("Emphasis"@) =~= data_338());
-    assert(n::clean(data_338(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Emphasis"@);
-}
-
-pub open spec fn data_339() -> Seq<nat> {
-    ns![77u32,97,110,110,101,114].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_339()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[339]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l339(Seq::empty());
-    p::all();
-    reveal_strlit("Manner");
-    assert(n::codes("Manner"@) =~= data_339());
-    assert(n::clean(data_339(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Manner"@);
-}
-
-pub open spec fn data_340() -> Seq<nat> {
-    ns![83u32,116,114,101,110,103,116,104,32,111,102,32,119,111,114,100,105,110,103].map_values(
-        |x: u32| x as nat,
-    )
-}
-
-pub proof fn literal_340()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[340]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l340(Seq::empty());
-    p::all();
-    reveal_strlit("Strength of wording");
-    assert(n::codes("Strength of wording"@) =~= data_340());
-    assert(n::clean(data_340(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Strength of wording"@);
-}
-
-pub open spec fn data_341() -> Seq<nat> {
-    ns![80u32,111,115,115,105,98,105,108,105,116,121].map_values(|x: u32| x as nat)
-}
-
-pub proof fn literal_341()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[341]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l341(Seq::empty());
-    p::all();
-    reveal_strlit("Possibility");
-    assert(n::codes("Possibility"@) =~= data_341());
-    assert(n::clean(data_341(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Possibility"@);
-}
-
-pub open spec fn data_342() -> Seq<nat> {
-    ns![67u32,111,110,100,105,116,105,111,110,32,111,102,32,117,115,101].map_values(
-        |x: u32| x as nat,
-    )
-}
-
-pub proof fn literal_342()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[342]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l342(Seq::empty());
-    p::all();
-    reveal_strlit("Condition of use");
-    assert(n::codes("Condition of use"@) =~= data_342());
-    assert(n::clean(data_342(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("Condition of use"@);
-}
-
-pub open spec fn data_343() -> Seq<nat> {
-    ns![60u32,104,50,62,81,117,97,108,105,102,105,101,114,32,119,111,114,100,115,60,47,104,50,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_343()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[343]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l343(Seq::empty());
-    p::all();
-    reveal_strlit("<h2>Qualifier words</h2>");
-    assert(n::codes("<h2>Qualifier words</h2>"@) =~= data_343());
-    assert(n::clean(data_343(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge("<h2>Qualifier words</h2>"@);
-}
-
-pub open spec fn data_344() -> Seq<nat> {
-    ns![60u32,112,62,84,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,115,32,97,32,113,117,97,108,105,102,105,101,114,32,111,110,108,121,32,116,104,114,111,117,103,104,32,116,104,101,32,119,111,114,100,115,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,32,84,104,101,32,116,97,98,108,101,32,97,112,112,108,105,101,115,32,116,111,32,101,118,101,114,121,32,100,111,99,117,109,101,110,116,32,105,110,32,116,104,105,115,32,103,117,105,100,101,108,105,110,101,46,32,69,97,99,104,32,113,117,97,108,105,102,105,101,114,32,116,104,97,116,32,116,104,101,32,99,111,109,112,105,108,101,114,32,114,101,97,100,32,97,112,112,101,97,114,115,32,111,110,32,105,116,115,32,100,111,99,117,109,101,110,116,32,112,97,103,101,32,117,110,100,101,114,32,81,117,97,108,105,102,105,101,114,115,32,97,115,32,99,111,109,112,105,108,101,100,46,60,47,112,62].map_values(
-    |x: u32| x as nat)
-}
-
-pub proof fn literal_344()
-    ensures
-        u::copy_literal_ok(u::copy_registry()[344]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_derived);
-    hide(u::copy_literal_ok);
-    hide(n::clean);
-    l::l344(Seq::empty());
-    p::all();
-    reveal_strlit(
-        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>",
-    );
-    assert(n::codes(
-        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
-    ) =~= data_344());
-    assert(n::clean(data_344(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
-        by (compute_only);
-    n::clean_bridge(
-        "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>"@,
-    );
+    n::clean_bridge("<p>The words "@);
 }
 
 } // verus!
@@ -7845,7 +6286,7 @@ pub closed spec fn window_038_0() -> Seq<nat> {
 
 pub proof fn bind_038_0()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(0, 288) == window_038_0(),
         window_038_0().len() == 288,
 {
@@ -7925,7 +6366,7 @@ pub closed spec fn window_038_1() -> Seq<nat> {
 
 pub proof fn bind_038_1()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(255, 544) == window_038_1(),
         window_038_1().len() == 289,
 {
@@ -8005,7 +6446,7 @@ pub closed spec fn window_038_2() -> Seq<nat> {
 
 pub proof fn bind_038_2()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(511, 800) == window_038_2(),
         window_038_2().len() == 289,
 {
@@ -8085,7 +6526,7 @@ pub closed spec fn window_038_3() -> Seq<nat> {
 
 pub proof fn bind_038_3()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(767, 1056) == window_038_3(),
         window_038_3().len() == 289,
 {
@@ -8165,7 +6606,7 @@ pub closed spec fn window_038_4() -> Seq<nat> {
 
 pub proof fn bind_038_4()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(1023, 1312) == window_038_4(),
         window_038_4().len() == 289,
 {
@@ -8245,7 +6686,7 @@ pub closed spec fn window_038_5() -> Seq<nat> {
 
 pub proof fn bind_038_5()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(1279, 1568) == window_038_5(),
         window_038_5().len() == 289,
 {
@@ -8325,7 +6766,7 @@ pub closed spec fn window_038_6() -> Seq<nat> {
 
 pub proof fn bind_038_6()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(1535, 1824) == window_038_6(),
         window_038_6().len() == 289,
 {
@@ -8405,7 +6846,7 @@ pub closed spec fn window_038_7() -> Seq<nat> {
 
 pub proof fn bind_038_7()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(1791, 2080) == window_038_7(),
         window_038_7().len() == 289,
 {
@@ -8485,7 +6926,7 @@ pub closed spec fn window_038_8() -> Seq<nat> {
 
 pub proof fn bind_038_8()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(2047, 2336) == window_038_8(),
         window_038_8().len() == 289,
 {
@@ -8565,7 +7006,7 @@ pub closed spec fn window_038_9() -> Seq<nat> {
 
 pub proof fn bind_038_9()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(2303, 2592) == window_038_9(),
         window_038_9().len() == 289,
 {
@@ -8645,7 +7086,7 @@ pub closed spec fn window_038_10() -> Seq<nat> {
 
 pub proof fn bind_038_10()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(2559, 2848) == window_038_10(),
         window_038_10().len() == 289,
 {
@@ -8725,7 +7166,7 @@ pub closed spec fn window_038_11() -> Seq<nat> {
 
 pub proof fn bind_038_11()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(2815, 3104) == window_038_11(),
         window_038_11().len() == 289,
 {
@@ -8805,7 +7246,7 @@ pub closed spec fn window_038_12() -> Seq<nat> {
 
 pub proof fn bind_038_12()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(3071, 3360) == window_038_12(),
         window_038_12().len() == 289,
 {
@@ -8885,7 +7326,7 @@ pub closed spec fn window_038_13() -> Seq<nat> {
 
 pub proof fn bind_038_13()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(3327, 3616) == window_038_13(),
         window_038_13().len() == 289,
 {
@@ -8965,7 +7406,7 @@ pub closed spec fn window_038_14() -> Seq<nat> {
 
 pub proof fn bind_038_14()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(3583, 3872) == window_038_14(),
         window_038_14().len() == 289,
 {
@@ -9045,7 +7486,7 @@ pub closed spec fn window_038_15() -> Seq<nat> {
 
 pub proof fn bind_038_15()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(3839, 4128) == window_038_15(),
         window_038_15().len() == 289,
 {
@@ -9125,7 +7566,7 @@ pub closed spec fn window_038_16() -> Seq<nat> {
 
 pub proof fn bind_038_16()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(4095, 4384) == window_038_16(),
         window_038_16().len() == 289,
 {
@@ -9205,7 +7646,7 @@ pub closed spec fn window_038_17() -> Seq<nat> {
 
 pub proof fn bind_038_17()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(4351, 4640) == window_038_17(),
         window_038_17().len() == 289,
 {
@@ -9285,7 +7726,7 @@ pub closed spec fn window_038_18() -> Seq<nat> {
 
 pub proof fn bind_038_18()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(4607, 4896) == window_038_18(),
         window_038_18().len() == 289,
 {
@@ -9365,7 +7806,7 @@ pub closed spec fn window_038_19() -> Seq<nat> {
 
 pub proof fn bind_038_19()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(4863, 5152) == window_038_19(),
         window_038_19().len() == 289,
 {
@@ -9445,7 +7886,7 @@ pub closed spec fn window_038_20() -> Seq<nat> {
 
 pub proof fn bind_038_20()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(5119, 5408) == window_038_20(),
         window_038_20().len() == 289,
 {
@@ -9525,7 +7966,7 @@ pub closed spec fn window_038_21() -> Seq<nat> {
 
 pub proof fn bind_038_21()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(5375, 5664) == window_038_21(),
         window_038_21().len() == 289,
 {
@@ -9605,7 +8046,7 @@ pub closed spec fn window_038_22() -> Seq<nat> {
 
 pub proof fn bind_038_22()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(5631, 5920) == window_038_22(),
         window_038_22().len() == 289,
 {
@@ -9685,7 +8126,7 @@ pub closed spec fn window_038_23() -> Seq<nat> {
 
 pub proof fn bind_038_23()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(5887, 6176) == window_038_23(),
         window_038_23().len() == 289,
 {
@@ -9765,7 +8206,7 @@ pub closed spec fn window_038_24() -> Seq<nat> {
 
 pub proof fn bind_038_24()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(6143, 6432) == window_038_24(),
         window_038_24().len() == 289,
 {
@@ -9845,7 +8286,7 @@ pub closed spec fn window_038_25() -> Seq<nat> {
 
 pub proof fn bind_038_25()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(6399, 6688) == window_038_25(),
         window_038_25().len() == 289,
 {
@@ -9925,7 +8366,7 @@ pub closed spec fn window_038_26() -> Seq<nat> {
 
 pub proof fn bind_038_26()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(6655, 6944) == window_038_26(),
         window_038_26().len() == 289,
 {
@@ -10005,7 +8446,7 @@ pub closed spec fn window_038_27() -> Seq<nat> {
 
 pub proof fn bind_038_27()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(6911, 7200) == window_038_27(),
         window_038_27().len() == 289,
 {
@@ -10085,7 +8526,7 @@ pub closed spec fn window_038_28() -> Seq<nat> {
 
 pub proof fn bind_038_28()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(7167, 7456) == window_038_28(),
         window_038_28().len() == 289,
 {
@@ -10165,7 +8606,7 @@ pub closed spec fn window_038_29() -> Seq<nat> {
 
 pub proof fn bind_038_29()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(7423, 7712) == window_038_29(),
         window_038_29().len() == 289,
 {
@@ -10245,7 +8686,7 @@ pub closed spec fn window_038_30() -> Seq<nat> {
 
 pub proof fn bind_038_30()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(7679, 7968) == window_038_30(),
         window_038_30().len() == 289,
 {
@@ -10325,7 +8766,7 @@ pub closed spec fn window_038_31() -> Seq<nat> {
 
 pub proof fn bind_038_31()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(7935, 8224) == window_038_31(),
         window_038_31().len() == 289,
 {
@@ -10405,7 +8846,7 @@ pub closed spec fn window_038_32() -> Seq<nat> {
 
 pub proof fn bind_038_32()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(8191, 8480) == window_038_32(),
         window_038_32().len() == 289,
 {
@@ -10485,7 +8926,7 @@ pub closed spec fn window_038_33() -> Seq<nat> {
 
 pub proof fn bind_038_33()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(8447, 8736) == window_038_33(),
         window_038_33().len() == 289,
 {
@@ -10565,7 +9006,7 @@ pub closed spec fn window_038_34() -> Seq<nat> {
 
 pub proof fn bind_038_34()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(8703, 8992) == window_038_34(),
         window_038_34().len() == 289,
 {
@@ -10645,7 +9086,7 @@ pub closed spec fn window_038_35() -> Seq<nat> {
 
 pub proof fn bind_038_35()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(8959, 9248) == window_038_35(),
         window_038_35().len() == 289,
 {
@@ -10725,7 +9166,7 @@ pub closed spec fn window_038_36() -> Seq<nat> {
 
 pub proof fn bind_038_36()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(9215, 9504) == window_038_36(),
         window_038_36().len() == 289,
 {
@@ -10796,7 +9237,7 @@ pub proof fn check_038_36()
         verus! {
 
 pub closed spec fn bytes_038_37() -> u::Bytes {
-    ns![45u8,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,57,99,97,51,97,102,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99,107,32,123,32,99,111,108,111,114,58,32,35,49,49,49,56,50,55,59,32,125,10,98,111,100,121,58,104,97,115,40,105,110,112,117,116,46,104,108,45,116,111,103,103,108,101,58,110,111,116,40,58,99,104,101,99,107,101,100,41,41,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,110,111,110,101,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,98,111,100,121,58,104,97,115,40,105,110,112,117,116,46,104,108,45,116,111,103,103,108,101,58,110,111,116,40,58,99,104,101,99,107,101,100,41,41,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,64,109,101,100,105,97,32,115,99,114,101,101]
+    ns![45u8,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,57,99,97,51,97,102,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99,107,32,123,32,99,111,108,111,114,58,32,35,49,49,49,56,50,55,59,32,125,10,98,111,100,121,58,104,97,115,40,105,110,112,117,116,46,104,108,45,116,111,103,103,108,101,58,110,111,116,40,58,99,104,101,99,107,101,100,41,41,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,110,111,110,101,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,98,111,100,121,58,104,97,115,40,105,110,112,117,116,46,104,108,45,116,111,103,103,108,101,58,110,111,116,40,58,99,104,101,99,107,101,100,41,41,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,98,117,116,116,111,110,46,114,119,32,123,32]
 }
 
 pub closed spec fn window_038_37() -> Seq<nat> {
@@ -10805,7 +9246,7 @@ pub closed spec fn window_038_37() -> Seq<nat> {
 
 pub proof fn bind_038_37()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(9471, 9760) == window_038_37(),
         window_038_37().len() == 289,
 {
@@ -10876,7 +9317,7 @@ pub proof fn check_038_37()
         verus! {
 
 pub closed spec fn bytes_038_38() -> u::Bytes {
-    ns![32u8,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,64,109,101,100,105,97,32,115,99,114,101,101,110,32,97,110,100,32,40,109,97,120,45,119,105,100,116,104,58,32,52,48,114,101,109,41,32,123,32,116,97,98,108,101,32,123,32,100,105,115,112,108,97,121,58,32,98,108,111,99,107,59,32,111,118,101,114,102,108,111,119,45,120,58,32,97,117,116,111,59,32,125,32,125,10,64,109,101,100,105,97,32,112,114,105,110,116,32,123,10,98,111,100,121,32,123,32,109,97,120,45,119,105,100,116,104,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48,59,32,125,10,110,97,118,46,99,114,117,109,98,115,44,32,110,97,118,46,100,111,99,110,97,118,44,32,46,115,107,105,112,44,32,102,111,114,109,44,32,46,118,101,114,100,105,99,116,45,101,110,116,114,121,44,32,46,104,108,45,110,111,116,101,32,123,32,100,105,115,112,108,97,121,58,32,110,111,110,101,59,32,125,10,109,97,114,107,44,32,109,97,114,107,91,99,108,97,115,115,93,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97]
+    ns![32u8,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,98,117,116,116,111,110,46,114,119,32,123,32,109,97,114,103,105,110,58,32,48,59,32,112,97,100,100,105,110,103,58,32,48,59,32,98,111,114,100,101,114,58,32,48,59,32,102,111,110,116,58,32,105,110,104,101,114,105,116,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,99,117,114,115,111,114,58,32,112,111,105,110,116,101,114,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,117,110,100,101,114,108,105,110,101,32,115,111,108,105,100,32,35,49,100,52,101,100,56,32,49,112,120,59,32,116,101,120,116,45,117,110,100,101,114,108,105,110,101,45,111,102,102,115,101,116,58,32,48,46,51,53,101,109,59,32,125,10,98,117,116,116,111,110,46,114,119,91,97,114,105,97,45,112,114,101,115,115,101,100,61,34,116,114,117,101,34,93,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,116,104,105,99,107,110,101,115,115,58,32,51,112,120,59,32,125,10,112,46,114,101,97,100,105,110,103,32]
 }
 
 pub closed spec fn window_038_38() -> Seq<nat> {
@@ -10885,7 +9326,7 @@ pub closed spec fn window_038_38() -> Seq<nat> {
 
 pub proof fn bind_038_38()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(9727, 10016) == window_038_38(),
         window_038_38().len() == 289,
 {
@@ -10956,7 +9397,7 @@ pub proof fn check_038_38()
         verus! {
 
 pub closed spec fn bytes_038_39() -> u::Bytes {
-    ns![93u8,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,44,32,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99,107,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,58,110,111,116,40,46,104,108,45,112,105,99,107,41,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,100,101,116,97,105,108,115,58,58,100,101,116,97,105,108,115,45,99,111,110,116,101,110,116]
+    ns![116u8,105,111,110,45,116,104,105,99,107,110,101,115,115,58,32,51,112,120,59,32,125,10,112,46,114,101,97,100,105,110,103,32,123,32,109,105,110,45,104,101,105,103,104,116,58,32,49,46,53,53,101,109,59,32,109,97,114,103,105,110,58,32,48,46,53,114,101,109,32,48,32,48,59,32,111,118,101,114,102,108,111,119,45,119,114,97,112,58,32,97,110,121,119,104,101,114,101,59,32,125,10,112,46,114,101,97,100,105,110,103,32,115,112,97,110,91,100,97,116,97,45,119,61,34,34,93,32,123,32,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,64,109,101,100,105,97,32,115,99,114,101,101,110,32,97,110,100,32,40,109,97,120,45,119,105,100,116,104,58,32,52,48,114,101,109,41,32,123,32,116,97,98,108,101,32,123,32,100,105,115,112,108,97,121,58,32,98,108,111,99,107,59,32,111,118,101,114,102,108,111,119,45,120,58,32,97,117,116,111,59,32,125,32,125,10,64,109,101,100,105,97,32,112,114,105,110,116,32,123,10,98,111,100,121,32,123,32,109,97,120,45,119,105,100,116,104,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48,59,32,125,10,110,97,118]
 }
 
 pub closed spec fn window_038_39() -> Seq<nat> {
@@ -10965,7 +9406,7 @@ pub closed spec fn window_038_39() -> Seq<nat> {
 
 pub proof fn bind_038_39()
     ensures
-        data_038().len() == 10501,
+        data_038().len() == 10950,
         data_038().subrange(9983, 10272) == window_038_39(),
         window_038_39().len() == 289,
 {
@@ -11036,7 +9477,7 @@ pub proof fn check_038_39()
         verus! {
 
 pub closed spec fn bytes_038_40() -> u::Bytes {
-    ns![98u8,53,53,54,51,59,32,125,10,100,101,116,97,105,108,115,58,58,100,101,116,97,105,108,115,45,99,111,110,116,101,110,116,32,123,32,99,111,110,116,101,110,116,45,118,105,115,105,98,105,108,105,116,121,58,32,118,105,115,105,98,108,101,59,32,125,10,112,114,101,32,123,32,98,111,114,100,101,114,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48,59,32,119,104,105,116,101,45,115,112,97,99,101,58,32,112,114,101,45,119,114,97,112,59,32,111,118,101,114,102,108,111,119,45,120,58,32,118,105,115,105,98,108,101,59,32,125,10,97,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,110,111,110,101,59,32,125,10,46,99,104,105,112,32,123,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,49,49,49,56,50,55,59,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,125]
+    ns![97u8,120,45,119,105,100,116,104,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48,59,32,125,10,110,97,118,46,99,114,117,109,98,115,44,32,110,97,118,46,100,111,99,110,97,118,44,32,46,115,107,105,112,44,32,102,111,114,109,44,32,46,118,101,114,100,105,99,116,45,101,110,116,114,121,44,32,46,104,108,45,110,111,116,101,32,123,32,100,105,115,112,108,97,121,58,32,110,111,110,101,59,32,125,10,109,97,114,107,44,32,109,97,114,107,91,99,108,97,115,115,93,32,123,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,44,32,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99,107,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32]
 }
 
 pub closed spec fn window_038_40() -> Seq<nat> {
@@ -11045,16 +9486,16 @@ pub closed spec fn window_038_40() -> Seq<nat> {
 
 pub proof fn bind_038_40()
     ensures
-        data_038().len() == 10501,
-        data_038().subrange(10239, 10501) == window_038_40(),
-        window_038_40().len() == 262,
+        data_038().len() == 10950,
+        data_038().subrange(10239, 10528) == window_038_40(),
+        window_038_40().len() == 289,
 {
     hide(data_038);
     hide(ch::css_text_bytes);
     shape_038();
-    assert(ch::css_text_bytes().subrange(10239, 10501) == bytes_038_40()) by (compute_only);
-    assert(bytes_038_40().len() == 262) by (compute_only);
-    scan::byte_codes_subrange(ch::css_text_bytes(), 10239, 10501);
+    assert(ch::css_text_bytes().subrange(10239, 10528) == bytes_038_40()) by (compute_only);
+    assert(bytes_038_40().len() == 289) by (compute_only);
+    scan::byte_codes_subrange(ch::css_text_bytes(), 10239, 10528);
     assert(data_038() == scan::byte_codes(ch::css_text_bytes())) by {
         reveal(data_038);
     };
@@ -11095,7 +9536,7 @@ pub proof fn check_038_40()
         p::marketing_codes(),
         p::relative_codes(),
         10239,
-        10501,
+        10528,
         10240,
         10496,
     );
@@ -11116,7 +9557,7 @@ pub proof fn check_038_40()
         verus! {
 
 pub closed spec fn bytes_038_41() -> u::Bytes {
-    ns![116u8,59,32,125,10,125]
+    ns![104u8,101,114,105,116,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,58,110,111,116,40,46,104,108,45,112,105,99,107,41,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,100,101,116,97,105,108,115,58,58,100,101,116,97,105,108,115,45,99,111,110,116,101,110,116,32,123,32,99,111,110,116,101,110,116,45,118,105,115,105,98,105,108,105,116,121,58,32,118,105,115,105,98,108,101,59,32,125,10,112,114,101,32,123,32,98,111,114,100,101,114,58,32,110,111,110,101,59,32,112,97,100,100,105,110,103,58,32,48,59,32,119,104,105,116,101,45,115,112,97,99,101,58,32,112,114,101,45,119,114,97,112,59,32,111,118,101,114,102,108,111,119,45,120,58,32,118,105,115,105,98,108,101,59,32,125,10,97,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105]
 }
 
 pub closed spec fn window_038_41() -> Seq<nat> {
@@ -11125,16 +9566,16 @@ pub closed spec fn window_038_41() -> Seq<nat> {
 
 pub proof fn bind_038_41()
     ensures
-        data_038().len() == 10501,
-        data_038().subrange(10495, 10501) == window_038_41(),
-        window_038_41().len() == 6,
+        data_038().len() == 10950,
+        data_038().subrange(10495, 10784) == window_038_41(),
+        window_038_41().len() == 289,
 {
     hide(data_038);
     hide(ch::css_text_bytes);
     shape_038();
-    assert(ch::css_text_bytes().subrange(10495, 10501) == bytes_038_41()) by (compute_only);
-    assert(bytes_038_41().len() == 6) by (compute_only);
-    scan::byte_codes_subrange(ch::css_text_bytes(), 10495, 10501);
+    assert(ch::css_text_bytes().subrange(10495, 10784) == bytes_038_41()) by (compute_only);
+    assert(bytes_038_41().len() == 289) by (compute_only);
+    scan::byte_codes_subrange(ch::css_text_bytes(), 10495, 10784);
     assert(data_038() == scan::byte_codes(ch::css_text_bytes())) by {
         reveal(data_038);
     };
@@ -11151,7 +9592,7 @@ pub proof fn check_038_41()
             p::marketing_codes(),
             p::relative_codes(),
             10496,
-            10501,
+            10752,
         ),
 {
     hide(data_038);
@@ -11167,7 +9608,7 @@ pub proof fn check_038_41()
         p::marketing_codes(),
         p::relative_codes(),
         1,
-        6,
+        257,
     )) by (compute_only);
     scan::clean_window(
         data_038(),
@@ -11175,9 +9616,89 @@ pub proof fn check_038_41()
         p::marketing_codes(),
         p::relative_codes(),
         10495,
-        10501,
+        10784,
         10496,
-        10501,
+        10752,
+    );
+}
+
+} // verus!
+    }
+    pub mod window_42 {
+        #[cfg(verus_keep_ghost)]
+        use super::{data_038, shape_038};
+        use crate::{
+            k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
+            k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
+        };
+        use ckc_spec::ui as u;
+        use vstd::prelude::*;
+        use vstd::utf8::*;
+        verus! {
+
+pub closed spec fn bytes_038_42() -> u::Bytes {
+    ns![119u8,45,120,58,32,118,105,115,105,98,108,101,59,32,125,10,97,32,123,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,110,111,110,101,59,32,125,10,46,99,104,105,112,32,123,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,49,49,49,56,50,55,59,32,98,97,99,107,103,114,111,117,110,100,58,32,110,111,110,101,59,32,99,111,108,111,114,58,32,105,110,104,101,114,105,116,59,32,125,10,98,117,116,116,111,110,46,114,119,32,123,32,116,101,120,116,45,100,101,99,111,114,97,116,105,111,110,58,32,110,111,110,101,59,32,125,10,112,46,114,101,97,100,105,110,103,32,123,32,100,105,115,112,108,97,121,58,32,110,111,110,101,59,32,125,10,125]
+}
+
+pub closed spec fn window_038_42() -> Seq<nat> {
+    scan::byte_codes(bytes_038_42())
+}
+
+pub proof fn bind_038_42()
+    ensures
+        data_038().len() == 10950,
+        data_038().subrange(10751, 10950) == window_038_42(),
+        window_038_42().len() == 199,
+{
+    hide(data_038);
+    hide(ch::css_text_bytes);
+    shape_038();
+    assert(ch::css_text_bytes().subrange(10751, 10950) == bytes_038_42()) by (compute_only);
+    assert(bytes_038_42().len() == 199) by (compute_only);
+    scan::byte_codes_subrange(ch::css_text_bytes(), 10751, 10950);
+    assert(data_038() == scan::byte_codes(ch::css_text_bytes())) by {
+        reveal(data_038);
+    };
+    assert(window_038_42() == scan::byte_codes(bytes_038_42())) by {
+        reveal(window_038_42);
+    };
+}
+
+pub proof fn check_038_42()
+    ensures
+        scan::clean_range(
+            data_038(),
+            p::css_codes(),
+            p::marketing_codes(),
+            p::relative_codes(),
+            10752,
+            10950,
+        ),
+{
+    hide(data_038);
+    hide(scan::clean_range);
+    hide(p::css_codes);
+    hide(p::marketing_codes);
+    hide(p::relative_codes);
+    bind_038_42();
+    p::bounds();
+    assert(scan::clean_range(
+        window_038_42(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        1,
+        199,
+    )) by (compute_only);
+    scan::clean_window(
+        data_038(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        10751,
+        10950,
+        10752,
+        10950,
     );
 }
 
@@ -11191,11 +9712,11 @@ pub open spec fn data_038() -> Seq<nat> {
 
 pub proof fn shape_038()
     ensures
-        data_038().len() == 10501,
-        ch::css_text_bytes().len() == 10501,
+        data_038().len() == 10950,
+        ch::css_text_bytes().len() == 10950,
 {
     hide(ch::css_text_bytes);
-    assert(ch::css_text_bytes().len() == 10501) by (compute_only);
+    assert(ch::css_text_bytes().len() == 10950) by (compute_only);
 }
 
 pub proof fn clean_038()
@@ -11625,7 +10146,17 @@ pub proof fn clean_038()
         p::relative_codes(),
         0,
         10496,
-        10501,
+        10752,
+    );
+    window_42::check_038_42();
+    scan::clean_join(
+        data_038(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        0,
+        10752,
+        10950,
     );
     scan::clean_full(data_038(), p::css_codes(), p::marketing_codes(), p::relative_codes());
 }
@@ -11647,7 +10178,7 @@ pub proof fn literal_038()
     enc::css_text_encoding();
     assert forall|j: int| 0 <= j < enc::css_text_chars().len() implies '\x00'
         <= #[trigger] enc::css_text_chars()[j] <= '\x7f' by {
-        enc::css_text_range_0_165(j);
+        enc::css_text_range_0_172(j);
     }
     scan::ascii_input(enc::css_text_chars());
     assert(n::codes(enc::css_text_chars()) == data_038());
@@ -11678,7 +10209,7 @@ pub mod script {
         verus! {
 
 pub closed spec fn bytes_039_0() -> u::Bytes {
-    ns![60u8,115,99,114,105,112,116,62,10,40,102,117,110,99,116,105,111,110,32,40,41,32,123,10,34,117,115,101,32,115,116,114,105,99,116,34,59,10,118,97,114,32,112,105,99,107,101,100,32,61,32,34,34,59,10,102,117,110,99,116,105,111,110,32,103,114,111,117,112,79,102,40,110,111,100,101,41,32,123,10,105,102,32,40,110,111,100,101,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,32,34,34,59,32,125,10,118,97,114,32,109,32,61,32,110,111,100,101,46,99,108,111,115,101,115,116,40,34,109,97,114,107,34,41,59,10,105,102,32,40,109,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,32,34,34,59,32,125,10,118,97,114,32,110,97,109,101,32,61,32,109,46,99,108,97,115,115,76,105,115,116,46,105,116,101,109,40,48,41,59,10,105,102,32,40,110,97,109,101,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,32,34,34,59,32,125,10,114,101,116,117,114,110,32,110,97,109,101,59,10,125,10,102,117,110,99,116,105,111,110,32,99,108,101,97,114,80,105,99,107,40,41,32,123,10,105,102,32,40,112,105,99,107,101]
+    ns![60u8,115,99,114,105,112,116,62,10,40,102,117,110,99,116,105,111,110,32,40,41,32,123,10,34,117,115,101,32,115,116,114,105,99,116,34,59,10,118,97,114,32,112,105,99,107,101,100,32,61,32,34,34,59,10,118,97,114,32,115,104,111,119,110,32,61,32,34,34,59,10,102,117,110,99,116,105,111,110,32,103,114,111,117,112,79,102,40,110,111,100,101,41,32,123,10,105,102,32,40,110,111,100,101,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,32,34,34,59,32,125,10,118,97,114,32,109,32,61,32,110,111,100,101,46,99,108,111,115,101,115,116,40,34,109,97,114,107,34,41,59,10,105,102,32,40,109,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,32,34,34,59,32,125,10,118,97,114,32,110,97,109,101,32,61,32,109,46,99,108,97,115,115,76,105,115,116,46,105,116,101,109,40,48,41,59,10,105,102,32,40,110,97,109,101,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,32,34,34,59,32,125,10,114,101,116,117,114,110,32,110,97,109,101,59,10,125,10,102,117,110,99,116,105,111,110,32,99,108,101,97,114,80,105]
 }
 
 pub closed spec fn window_039_0() -> Seq<nat> {
@@ -11687,7 +10218,7 @@ pub closed spec fn window_039_0() -> Seq<nat> {
 
 pub proof fn bind_039_0()
     ensures
-        data_039().len() == 1479,
+        data_039().len() == 2255,
         data_039().subrange(0, 288) == window_039_0(),
         window_039_0().len() == 288,
 {
@@ -11758,7 +10289,7 @@ pub proof fn check_039_0()
         verus! {
 
 pub closed spec fn bytes_039_1() -> u::Bytes {
-    ns![10u8,102,117,110,99,116,105,111,110,32,99,108,101,97,114,80,105,99,107,40,41,32,123,10,105,102,32,40,112,105,99,107,101,100,32,61,61,61,32,34,34,41,32,123,32,114,101,116,117,114,110,59,32,125,10,100,111,99,117,109,101,110,116,46,103,101,116,69,108,101,109,101,110,116,66,121,73,100,40,34,109,97,105,110,34,41,46,99,108,97,115,115,76,105,115,116,46,114,101,109,111,118,101,40,34,104,108,45,99,108,105,99,107,34,41,59,10,118,97,114,32,109,97,114,107,115,32,61,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,65,108,108,40,34,109,97,114,107,46,104,108,45,112,105,99,107,34,41,59,10,118,97,114,32,105,32,61,32,48,59,10,119,104,105,108,101,32,40,105,32,60,32,109,97,114,107,115,46,108,101,110,103,116,104,41,32,123,32,109,97,114,107,115,91,105,93,46,99,108,97,115,115,76,105,115,116,46,114,101,109,111,118,101,40,34,104,108,45,112,105,99,107,34,41,59,32,105,32,43,61,32,49,59,32,125,10,112,105,99,107,101,100,32,61,32,34,34,59,10,125,10,102,117,110,99,116,105,111,110,32,116,111,103,103,108,101,66]
+    ns![125u8,10,114,101,116,117,114,110,32,110,97,109,101,59,10,125,10,102,117,110,99,116,105,111,110,32,99,108,101,97,114,80,105,99,107,40,41,32,123,10,105,102,32,40,112,105,99,107,101,100,32,61,61,61,32,34,34,41,32,123,32,114,101,116,117,114,110,59,32,125,10,100,111,99,117,109,101,110,116,46,103,101,116,69,108,101,109,101,110,116,66,121,73,100,40,34,109,97,105,110,34,41,46,99,108,97,115,115,76,105,115,116,46,114,101,109,111,118,101,40,34,104,108,45,99,108,105,99,107,34,41,59,10,118,97,114,32,109,97,114,107,115,32,61,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,65,108,108,40,34,109,97,114,107,46,104,108,45,112,105,99,107,34,41,59,10,118,97,114,32,105,32,61,32,48,59,10,119,104,105,108,101,32,40,105,32,60,32,109,97,114,107,115,46,108,101,110,103,116,104,41,32,123,32,109,97,114,107,115,91,105,93,46,99,108,97,115,115,76,105,115,116,46,114,101,109,111,118,101,40,34,104,108,45,112,105,99,107,34,41,59,32,105,32,43,61,32,49,59,32,125,10,112,105,99,107,101,100,32,61,32,34,34,59,10,125,10]
 }
 
 pub closed spec fn window_039_1() -> Seq<nat> {
@@ -11767,7 +10298,7 @@ pub closed spec fn window_039_1() -> Seq<nat> {
 
 pub proof fn bind_039_1()
     ensures
-        data_039().len() == 1479,
+        data_039().len() == 2255,
         data_039().subrange(255, 544) == window_039_1(),
         window_039_1().len() == 289,
 {
@@ -11838,7 +10369,7 @@ pub proof fn check_039_1()
         verus! {
 
 pub closed spec fn bytes_039_2() -> u::Bytes {
-    ns![125u8,10,112,105,99,107,101,100,32,61,32,34,34,59,10,125,10,102,117,110,99,116,105,111,110,32,116,111,103,103,108,101,66,111,120,40,41,32,123,32,114,101,116,117,114,110,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,40,34,105,110,112,117,116,46,104,108,45,116,111,103,103,108,101,34,41,59,32,125,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,99,108,105,99,107,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,118,97,114,32,110,97,109,101,32,61,32,103,114,111,117,112,79,102,40,101,118,46,116,97,114,103,101,116,41,59,10,105,102,32,40,110,97,109,101,32,61,61,61,32,34,34,41,32,123,32,114,101,116,117,114,110,59,32,125,10,118,97,114,32,98,111,120,32,61,32,116,111,103,103,108,101,66,111,120,40,41,59,10,105,102,32,40,98,111,120,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,98,111,120,46,99,104,101,99,107,101,100,32,61,61,61,32,102,97,108,115,101,41,32,123,32,114,101,116,117]
+    ns![112u8,105,99,107,34,41,59,32,105,32,43,61,32,49,59,32,125,10,112,105,99,107,101,100,32,61,32,34,34,59,10,125,10,102,117,110,99,116,105,111,110,32,116,111,103,103,108,101,66,111,120,40,41,32,123,32,114,101,116,117,114,110,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,40,34,105,110,112,117,116,46,104,108,45,116,111,103,103,108,101,34,41,59,32,125,10,102,117,110,99,116,105,111,110,32,115,104,111,119,82,101,97,100,105,110,103,40,119,111,114,100,41,32,123,10,118,97,114,32,108,105,110,101,115,32,61,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,65,108,108,40,34,112,46,114,101,97,100,105,110,103,32,115,112,97,110,34,41,59,10,118,97,114,32,105,32,61,32,48,59,10,119,104,105,108,101,32,40,105,32,60,32,108,105,110,101,115,46,108,101,110,103,116,104,41,32,123,32,108,105,110,101,115,91,105,93,46,104,105,100,100,101,110,32,61,32,108,105,110,101,115,91,105,93,46,103,101,116,65,116,116,114,105,98,117,116,101,40,34,100,97,116,97,45,119,34,41,32,33,61,61,32,119,111,114]
 }
 
 pub closed spec fn window_039_2() -> Seq<nat> {
@@ -11847,7 +10378,7 @@ pub closed spec fn window_039_2() -> Seq<nat> {
 
 pub proof fn bind_039_2()
     ensures
-        data_039().len() == 1479,
+        data_039().len() == 2255,
         data_039().subrange(511, 800) == window_039_2(),
         window_039_2().len() == 289,
 {
@@ -11918,7 +10449,7 @@ pub proof fn check_039_2()
         verus! {
 
 pub closed spec fn bytes_039_3() -> u::Bytes {
-    ns![105u8,102,32,40,98,111,120,46,99,104,101,99,107,101,100,32,61,61,61,32,102,97,108,115,101,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,112,105,99,107,101,100,32,61,61,61,32,110,97,109,101,41,32,123,32,99,108,101,97,114,80,105,99,107,40,41,59,32,114,101,116,117,114,110,59,32,125,10,99,108,101,97,114,80,105,99,107,40,41,59,10,118,97,114,32,109,97,114,107,115,32,61,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,65,108,108,40,34,109,97,114,107,46,34,32,43,32,110,97,109,101,41,59,10,118,97,114,32,105,32,61,32,48,59,10,119,104,105,108,101,32,40,105,32,60,32,109,97,114,107,115,46,108,101,110,103,116,104,41,32,123,32,109,97,114,107,115,91,105,93,46,99,108,97,115,115,76,105,115,116,46,97,100,100,40,34,104,108,45,112,105,99,107,34,41,59,32,105,32,43,61,32,49,59,32,125,10,100,111,99,117,109,101,110,116,46,103,101,116,69,108,101,109,101,110,116,66,121,73,100,40,34,109,97,105,110,34,41,46,99,108,97,115,115,76,105,115,116,46,97,100,100,40,34,104,108,45,99,108,105]
+    ns![105u8,93,46,103,101,116,65,116,116,114,105,98,117,116,101,40,34,100,97,116,97,45,119,34,41,32,33,61,61,32,119,111,114,100,59,32,105,32,43,61,32,49,59,32,125,10,118,97,114,32,119,111,114,100,115,32,61,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,65,108,108,40,34,98,117,116,116,111,110,46,114,119,34,41,59,10,105,32,61,32,48,59,10,119,104,105,108,101,32,40,105,32,60,32,119,111,114,100,115,46,108,101,110,103,116,104,41,32,123,32,119,111,114,100,115,91,105,93,46,115,101,116,65,116,116,114,105,98,117,116,101,40,34,97,114,105,97,45,112,114,101,115,115,101,100,34,44,32,119,111,114,100,115,91,105,93,46,103,101,116,65,116,116,114,105,98,117,116,101,40,34,100,97,116,97,45,119,34,41,32,61,61,61,32,119,111,114,100,32,63,32,34,116,114,117,101,34,32,58,32,34,102,97,108,115,101,34,41,59,32,105,32,43,61,32,49,59,32,125,10,115,104,111,119,110,32,61,32,119,111,114,100,59,10,125,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,99,108,105,99]
 }
 
 pub closed spec fn window_039_3() -> Seq<nat> {
@@ -11927,7 +10458,7 @@ pub closed spec fn window_039_3() -> Seq<nat> {
 
 pub proof fn bind_039_3()
     ensures
-        data_039().len() == 1479,
+        data_039().len() == 2255,
         data_039().subrange(767, 1056) == window_039_3(),
         window_039_3().len() == 289,
 {
@@ -11998,7 +10529,7 @@ pub proof fn check_039_3()
         verus! {
 
 pub closed spec fn bytes_039_4() -> u::Bytes {
-    ns![121u8,73,100,40,34,109,97,105,110,34,41,46,99,108,97,115,115,76,105,115,116,46,97,100,100,40,34,104,108,45,99,108,105,99,107,34,41,59,10,112,105,99,107,101,100,32,61,32,110,97,109,101,59,10,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,109,111,117,115,101,111,117,116,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,105,102,32,40,112,105,99,107,101,100,32,61,61,61,32,34,34,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,103,114,111,117,112,79,102,40,101,118,46,116,97,114,103,101,116,41,32,33,61,61,32,112,105,99,107,101,100,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,103,114,111,117,112,79,102,40,101,118,46,114,101,108,97,116,101,100,84,97,114,103,101,116,41,32,61,61,61,32,112,105,99,107,101,100,41,32,123,32,114,101,116,117,114,110,59,32,125,10,99,108,101,97,114,80,105,99,107,40,41,59,10,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,99]
+    ns![125u8,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,99,108,105,99,107,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,118,97,114,32,119,111,114,100,32,61,32,101,118,46,116,97,114,103,101,116,46,99,108,111,115,101,115,116,40,34,98,117,116,116,111,110,46,114,119,34,41,59,10,105,102,32,40,119,111,114,100,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,59,32,125,10,118,97,114,32,119,32,61,32,119,111,114,100,46,103,101,116,65,116,116,114,105,98,117,116,101,40,34,100,97,116,97,45,119,34,41,59,10,105,102,32,40,115,104,111,119,110,32,61,61,61,32,119,41,32,123,32,115,104,111,119,82,101,97,100,105,110,103,40,34,34,41,59,32,125,32,101,108,115,101,32,123,32,115,104,111,119,82,101,97,100,105,110,103,40,119,41,59,32,125,10,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,99,108,105,99,107,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,118,97,114,32,110,97,109]
 }
 
 pub closed spec fn window_039_4() -> Seq<nat> {
@@ -12007,7 +10538,7 @@ pub closed spec fn window_039_4() -> Seq<nat> {
 
 pub proof fn bind_039_4()
     ensures
-        data_039().len() == 1479,
+        data_039().len() == 2255,
         data_039().subrange(1023, 1312) == window_039_4(),
         window_039_4().len() == 289,
 {
@@ -12078,7 +10609,7 @@ pub proof fn check_039_4()
         verus! {
 
 pub closed spec fn bytes_039_5() -> u::Bytes {
-    ns![10u8,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,99,104,97,110,103,101,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,118,97,114,32,98,111,120,32,61,32,116,111,103,103,108,101,66,111,120,40,41,59,10,105,102,32,40,98,111,120,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,101,118,46,116,97,114,103,101,116,32,61,61,61,32,98,111,120,41,32,123,32,105,102,32,40,98,111,120,46,99,104,101,99,107,101,100,32,61,61,61,32,102,97,108,115,101,41,32,123,32,99,108,101,97,114,80,105,99,107,40,41,59,32,125,32,125,10,125,41,59,10,125,41,40,41,59,10,60,47,115,99,114,105,112,116,62]
+    ns![40u8,34,99,108,105,99,107,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,118,97,114,32,110,97,109,101,32,61,32,103,114,111,117,112,79,102,40,101,118,46,116,97,114,103,101,116,41,59,10,105,102,32,40,110,97,109,101,32,61,61,61,32,34,34,41,32,123,32,114,101,116,117,114,110,59,32,125,10,118,97,114,32,98,111,120,32,61,32,116,111,103,103,108,101,66,111,120,40,41,59,10,105,102,32,40,98,111,120,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,98,111,120,46,99,104,101,99,107,101,100,32,61,61,61,32,102,97,108,115,101,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,112,105,99,107,101,100,32,61,61,61,32,110,97,109,101,41,32,123,32,99,108,101,97,114,80,105,99,107,40,41,59,32,114,101,116,117,114,110,59,32,125,10,99,108,101,97,114,80,105,99,107,40,41,59,10,118,97,114,32,109,97,114,107,115,32,61,32,100,111,99,117,109,101,110,116,46,113,117,101,114,121,83,101,108,101,99,116,111,114,65,108,108,40,34,109,97,114,107,46,34,32,43,32,110,97,109,101]
 }
 
 pub closed spec fn window_039_5() -> Seq<nat> {
@@ -12087,16 +10618,16 @@ pub closed spec fn window_039_5() -> Seq<nat> {
 
 pub proof fn bind_039_5()
     ensures
-        data_039().len() == 1479,
-        data_039().subrange(1279, 1479) == window_039_5(),
-        window_039_5().len() == 200,
+        data_039().len() == 2255,
+        data_039().subrange(1279, 1568) == window_039_5(),
+        window_039_5().len() == 289,
 {
     hide(data_039);
     hide(ch::script_html_bytes);
     shape_039();
-    assert(ch::script_html_bytes().subrange(1279, 1479) == bytes_039_5()) by (compute_only);
-    assert(bytes_039_5().len() == 200) by (compute_only);
-    scan::byte_codes_subrange(ch::script_html_bytes(), 1279, 1479);
+    assert(ch::script_html_bytes().subrange(1279, 1568) == bytes_039_5()) by (compute_only);
+    assert(bytes_039_5().len() == 289) by (compute_only);
+    scan::byte_codes_subrange(ch::script_html_bytes(), 1279, 1568);
     assert(data_039() == scan::byte_codes(ch::script_html_bytes())) by {
         reveal(data_039);
     };
@@ -12113,7 +10644,7 @@ pub proof fn check_039_5()
             p::marketing_codes(),
             p::relative_codes(),
             1280,
-            1479,
+            1536,
         ),
 {
     hide(data_039);
@@ -12129,7 +10660,7 @@ pub proof fn check_039_5()
         p::marketing_codes(),
         p::relative_codes(),
         1,
-        200,
+        257,
     )) by (compute_only);
     scan::clean_window(
         data_039(),
@@ -12137,9 +10668,249 @@ pub proof fn check_039_5()
         p::marketing_codes(),
         p::relative_codes(),
         1279,
-        1479,
+        1568,
         1280,
-        1479,
+        1536,
+    );
+}
+
+} // verus!
+    }
+    pub mod window_6 {
+        #[cfg(verus_keep_ghost)]
+        use super::{data_039, shape_039};
+        use crate::{
+            k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
+            k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
+        };
+        use ckc_spec::ui as u;
+        use vstd::prelude::*;
+        use vstd::utf8::*;
+        verus! {
+
+pub closed spec fn bytes_039_6() -> u::Bytes {
+    ns![116u8,46,113,117,101,114,121,83,101,108,101,99,116,111,114,65,108,108,40,34,109,97,114,107,46,34,32,43,32,110,97,109,101,41,59,10,118,97,114,32,105,32,61,32,48,59,10,119,104,105,108,101,32,40,105,32,60,32,109,97,114,107,115,46,108,101,110,103,116,104,41,32,123,32,109,97,114,107,115,91,105,93,46,99,108,97,115,115,76,105,115,116,46,97,100,100,40,34,104,108,45,112,105,99,107,34,41,59,32,105,32,43,61,32,49,59,32,125,10,100,111,99,117,109,101,110,116,46,103,101,116,69,108,101,109,101,110,116,66,121,73,100,40,34,109,97,105,110,34,41,46,99,108,97,115,115,76,105,115,116,46,97,100,100,40,34,104,108,45,99,108,105,99,107,34,41,59,10,112,105,99,107,101,100,32,61,32,110,97,109,101,59,10,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,107,101,121,100,111,119,110,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,105,102,32,40,101,118,46,107,101,121,32,61,61,61,32,34,69,115,99,97,112,101,34,41,32,123,32,105,102,32,40,115,104,111,119,110,32,33,61]
+}
+
+pub closed spec fn window_039_6() -> Seq<nat> {
+    scan::byte_codes(bytes_039_6())
+}
+
+pub proof fn bind_039_6()
+    ensures
+        data_039().len() == 2255,
+        data_039().subrange(1535, 1824) == window_039_6(),
+        window_039_6().len() == 289,
+{
+    hide(data_039);
+    hide(ch::script_html_bytes);
+    shape_039();
+    assert(ch::script_html_bytes().subrange(1535, 1824) == bytes_039_6()) by (compute_only);
+    assert(bytes_039_6().len() == 289) by (compute_only);
+    scan::byte_codes_subrange(ch::script_html_bytes(), 1535, 1824);
+    assert(data_039() == scan::byte_codes(ch::script_html_bytes())) by {
+        reveal(data_039);
+    };
+    assert(window_039_6() == scan::byte_codes(bytes_039_6())) by {
+        reveal(window_039_6);
+    };
+}
+
+pub proof fn check_039_6()
+    ensures
+        scan::clean_range(
+            data_039(),
+            p::css_codes(),
+            p::marketing_codes(),
+            p::relative_codes(),
+            1536,
+            1792,
+        ),
+{
+    hide(data_039);
+    hide(scan::clean_range);
+    hide(p::css_codes);
+    hide(p::marketing_codes);
+    hide(p::relative_codes);
+    bind_039_6();
+    p::bounds();
+    assert(scan::clean_range(
+        window_039_6(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        1,
+        257,
+    )) by (compute_only);
+    scan::clean_window(
+        data_039(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        1535,
+        1824,
+        1536,
+        1792,
+    );
+}
+
+} // verus!
+    }
+    pub mod window_7 {
+        #[cfg(verus_keep_ghost)]
+        use super::{data_039, shape_039};
+        use crate::{
+            k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
+            k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
+        };
+        use ckc_spec::ui as u;
+        use vstd::prelude::*;
+        use vstd::utf8::*;
+        verus! {
+
+pub closed spec fn bytes_039_7() -> u::Bytes {
+    ns![46u8,107,101,121,32,61,61,61,32,34,69,115,99,97,112,101,34,41,32,123,32,105,102,32,40,115,104,111,119,110,32,33,61,61,32,34,34,41,32,123,32,115,104,111,119,82,101,97,100,105,110,103,40,34,34,41,59,32,125,32,125,10,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,109,111,117,115,101,111,117,116,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,105,102,32,40,112,105,99,107,101,100,32,61,61,61,32,34,34,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,103,114,111,117,112,79,102,40,101,118,46,116,97,114,103,101,116,41,32,33,61,61,32,112,105,99,107,101,100,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,103,114,111,117,112,79,102,40,101,118,46,114,101,108,97,116,101,100,84,97,114,103,101,116,41,32,61,61,61,32,112,105,99,107,101,100,41,32,123,32,114,101,116,117,114,110,59,32,125,10,99,108,101,97,114,80,105,99,107,40,41,59,10,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115]
+}
+
+pub closed spec fn window_039_7() -> Seq<nat> {
+    scan::byte_codes(bytes_039_7())
+}
+
+pub proof fn bind_039_7()
+    ensures
+        data_039().len() == 2255,
+        data_039().subrange(1791, 2080) == window_039_7(),
+        window_039_7().len() == 289,
+{
+    hide(data_039);
+    hide(ch::script_html_bytes);
+    shape_039();
+    assert(ch::script_html_bytes().subrange(1791, 2080) == bytes_039_7()) by (compute_only);
+    assert(bytes_039_7().len() == 289) by (compute_only);
+    scan::byte_codes_subrange(ch::script_html_bytes(), 1791, 2080);
+    assert(data_039() == scan::byte_codes(ch::script_html_bytes())) by {
+        reveal(data_039);
+    };
+    assert(window_039_7() == scan::byte_codes(bytes_039_7())) by {
+        reveal(window_039_7);
+    };
+}
+
+pub proof fn check_039_7()
+    ensures
+        scan::clean_range(
+            data_039(),
+            p::css_codes(),
+            p::marketing_codes(),
+            p::relative_codes(),
+            1792,
+            2048,
+        ),
+{
+    hide(data_039);
+    hide(scan::clean_range);
+    hide(p::css_codes);
+    hide(p::marketing_codes);
+    hide(p::relative_codes);
+    bind_039_7();
+    p::bounds();
+    assert(scan::clean_range(
+        window_039_7(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        1,
+        257,
+    )) by (compute_only);
+    scan::clean_window(
+        data_039(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        1791,
+        2080,
+        1792,
+        2048,
+    );
+}
+
+} // verus!
+    }
+    pub mod window_8 {
+        #[cfg(verus_keep_ghost)]
+        use super::{data_039, shape_039};
+        use crate::{
+            k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
+            k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
+        };
+        use ckc_spec::ui as u;
+        use vstd::prelude::*;
+        use vstd::utf8::*;
+        verus! {
+
+pub closed spec fn bytes_039_8() -> u::Bytes {
+    ns![114u8,80,105,99,107,40,41,59,10,125,41,59,10,100,111,99,117,109,101,110,116,46,97,100,100,69,118,101,110,116,76,105,115,116,101,110,101,114,40,34,99,104,97,110,103,101,34,44,32,102,117,110,99,116,105,111,110,32,40,101,118,41,32,123,10,118,97,114,32,98,111,120,32,61,32,116,111,103,103,108,101,66,111,120,40,41,59,10,105,102,32,40,98,111,120,32,61,61,61,32,110,117,108,108,41,32,123,32,114,101,116,117,114,110,59,32,125,10,105,102,32,40,101,118,46,116,97,114,103,101,116,32,61,61,61,32,98,111,120,41,32,123,32,105,102,32,40,98,111,120,46,99,104,101,99,107,101,100,32,61,61,61,32,102,97,108,115,101,41,32,123,32,99,108,101,97,114,80,105,99,107,40,41,59,32,125,32,125,10,125,41,59,10,125,41,40,41,59,10,60,47,115,99,114,105,112,116,62]
+}
+
+pub closed spec fn window_039_8() -> Seq<nat> {
+    scan::byte_codes(bytes_039_8())
+}
+
+pub proof fn bind_039_8()
+    ensures
+        data_039().len() == 2255,
+        data_039().subrange(2047, 2255) == window_039_8(),
+        window_039_8().len() == 208,
+{
+    hide(data_039);
+    hide(ch::script_html_bytes);
+    shape_039();
+    assert(ch::script_html_bytes().subrange(2047, 2255) == bytes_039_8()) by (compute_only);
+    assert(bytes_039_8().len() == 208) by (compute_only);
+    scan::byte_codes_subrange(ch::script_html_bytes(), 2047, 2255);
+    assert(data_039() == scan::byte_codes(ch::script_html_bytes())) by {
+        reveal(data_039);
+    };
+    assert(window_039_8() == scan::byte_codes(bytes_039_8())) by {
+        reveal(window_039_8);
+    };
+}
+
+pub proof fn check_039_8()
+    ensures
+        scan::clean_range(
+            data_039(),
+            p::css_codes(),
+            p::marketing_codes(),
+            p::relative_codes(),
+            2048,
+            2255,
+        ),
+{
+    hide(data_039);
+    hide(scan::clean_range);
+    hide(p::css_codes);
+    hide(p::marketing_codes);
+    hide(p::relative_codes);
+    bind_039_8();
+    p::bounds();
+    assert(scan::clean_range(
+        window_039_8(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        1,
+        208,
+    )) by (compute_only);
+    scan::clean_window(
+        data_039(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        2047,
+        2255,
+        2048,
+        2255,
     );
 }
 
@@ -12153,11 +10924,11 @@ pub open spec fn data_039() -> Seq<nat> {
 
 pub proof fn shape_039()
     ensures
-        data_039().len() == 1479,
-        ch::script_html_bytes().len() == 1479,
+        data_039().len() == 2255,
+        ch::script_html_bytes().len() == 2255,
 {
     hide(ch::script_html_bytes);
-    assert(ch::script_html_bytes().len() == 1479) by (compute_only);
+    assert(ch::script_html_bytes().len() == 2255) by (compute_only);
 }
 
 pub proof fn clean_039()
@@ -12227,7 +10998,37 @@ pub proof fn clean_039()
         p::relative_codes(),
         0,
         1280,
-        1479,
+        1536,
+    );
+    window_6::check_039_6();
+    scan::clean_join(
+        data_039(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        0,
+        1536,
+        1792,
+    );
+    window_7::check_039_7();
+    scan::clean_join(
+        data_039(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        0,
+        1792,
+        2048,
+    );
+    window_8::check_039_8();
+    scan::clean_join(
+        data_039(),
+        p::css_codes(),
+        p::marketing_codes(),
+        p::relative_codes(),
+        0,
+        2048,
+        2255,
     );
     scan::clean_full(data_039(), p::css_codes(), p::marketing_codes(), p::relative_codes());
 }
@@ -12249,7 +11050,7 @@ pub proof fn literal_039()
     enc::script_html_encoding();
     assert forall|j: int| 0 <= j < enc::script_html_chars().len() implies '\x00'
         <= #[trigger] enc::script_html_chars()[j] <= '\x7f' by {
-        enc::script_html_range_0_24(j);
+        enc::script_html_range_0_36(j);
     }
     scan::ascii_input(enc::script_html_chars());
     assert(n::codes(enc::script_html_chars()) == data_039());
@@ -12994,7 +11795,7 @@ pub proof fn block_256(i: int)
 
 pub proof fn block_272(i: int)
     requires
-        272 <= i < 288,
+        272 <= i < 277,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -13008,194 +11809,14 @@ pub proof fn block_272(i: int)
         batch_272::literal_274();
     } else if i == 275 {
         batch_272::literal_275();
-    } else if i == 276 {
+    } else {
         batch_272::literal_276();
-    } else if i == 277 {
-        batch_272::literal_277();
-    } else if i == 278 {
-        batch_272::literal_278();
-    } else if i == 279 {
-        batch_272::literal_279();
-    } else if i == 280 {
-        batch_272::literal_280();
-    } else if i == 281 {
-        batch_272::literal_281();
-    } else if i == 282 {
-        batch_272::literal_282();
-    } else if i == 283 {
-        batch_272::literal_283();
-    } else if i == 284 {
-        batch_272::literal_284();
-    } else if i == 285 {
-        batch_272::literal_285();
-    } else if i == 286 {
-        batch_272::literal_286();
-    } else {
-        batch_272::literal_287();
-    }
-}
-
-pub proof fn block_288(i: int)
-    requires
-        288 <= i < 304,
-    ensures
-        u::copy_literal_ok(u::copy_registry()[i]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_literal_ok);
-    if i == 288 {
-        batch_288::literal_288();
-    } else if i == 289 {
-        batch_288::literal_289();
-    } else if i == 290 {
-        batch_288::literal_290();
-    } else if i == 291 {
-        batch_288::literal_291();
-    } else if i == 292 {
-        batch_288::literal_292();
-    } else if i == 293 {
-        batch_288::literal_293();
-    } else if i == 294 {
-        batch_288::literal_294();
-    } else if i == 295 {
-        batch_288::literal_295();
-    } else if i == 296 {
-        batch_288::literal_296();
-    } else if i == 297 {
-        batch_288::literal_297();
-    } else if i == 298 {
-        batch_288::literal_298();
-    } else if i == 299 {
-        batch_288::literal_299();
-    } else if i == 300 {
-        batch_288::literal_300();
-    } else if i == 301 {
-        batch_288::literal_301();
-    } else if i == 302 {
-        batch_288::literal_302();
-    } else {
-        batch_288::literal_303();
-    }
-}
-
-pub proof fn block_304(i: int)
-    requires
-        304 <= i < 320,
-    ensures
-        u::copy_literal_ok(u::copy_registry()[i]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_literal_ok);
-    if i == 304 {
-        batch_304::literal_304();
-    } else if i == 305 {
-        batch_304::literal_305();
-    } else if i == 306 {
-        batch_304::literal_306();
-    } else if i == 307 {
-        batch_304::literal_307();
-    } else if i == 308 {
-        batch_304::literal_308();
-    } else if i == 309 {
-        batch_304::literal_309();
-    } else if i == 310 {
-        batch_304::literal_310();
-    } else if i == 311 {
-        batch_304::literal_311();
-    } else if i == 312 {
-        batch_304::literal_312();
-    } else if i == 313 {
-        batch_304::literal_313();
-    } else if i == 314 {
-        batch_304::literal_314();
-    } else if i == 315 {
-        batch_304::literal_315();
-    } else if i == 316 {
-        batch_304::literal_316();
-    } else if i == 317 {
-        batch_304::literal_317();
-    } else if i == 318 {
-        batch_304::literal_318();
-    } else {
-        batch_304::literal_319();
-    }
-}
-
-pub proof fn block_320(i: int)
-    requires
-        320 <= i < 336,
-    ensures
-        u::copy_literal_ok(u::copy_registry()[i]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_literal_ok);
-    if i == 320 {
-        batch_320::literal_320();
-    } else if i == 321 {
-        batch_320::literal_321();
-    } else if i == 322 {
-        batch_320::literal_322();
-    } else if i == 323 {
-        batch_320::literal_323();
-    } else if i == 324 {
-        batch_320::literal_324();
-    } else if i == 325 {
-        batch_320::literal_325();
-    } else if i == 326 {
-        batch_320::literal_326();
-    } else if i == 327 {
-        batch_320::literal_327();
-    } else if i == 328 {
-        batch_320::literal_328();
-    } else if i == 329 {
-        batch_320::literal_329();
-    } else if i == 330 {
-        batch_320::literal_330();
-    } else if i == 331 {
-        batch_320::literal_331();
-    } else if i == 332 {
-        batch_320::literal_332();
-    } else if i == 333 {
-        batch_320::literal_333();
-    } else if i == 334 {
-        batch_320::literal_334();
-    } else {
-        batch_320::literal_335();
-    }
-}
-
-pub proof fn block_336(i: int)
-    requires
-        336 <= i < 345,
-    ensures
-        u::copy_literal_ok(u::copy_registry()[i]),
-{
-    hide(u::copy_registry);
-    hide(u::copy_literal_ok);
-    if i == 336 {
-        batch_336::literal_336();
-    } else if i == 337 {
-        batch_336::literal_337();
-    } else if i == 338 {
-        batch_336::literal_338();
-    } else if i == 339 {
-        batch_336::literal_339();
-    } else if i == 340 {
-        batch_336::literal_340();
-    } else if i == 341 {
-        batch_336::literal_341();
-    } else if i == 342 {
-        batch_336::literal_342();
-    } else if i == 343 {
-        batch_336::literal_343();
-    } else {
-        batch_336::literal_344();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 345,
+        0 <= i < 277,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -13235,22 +11856,14 @@ pub proof fn literal(i: int)
         block_240(i);
     } else if i < 272 {
         block_256(i);
-    } else if i < 288 {
-        block_272(i);
-    } else if i < 304 {
-        block_288(i);
-    } else if i < 320 {
-        block_304(i);
-    } else if i < 336 {
-        block_320(i);
     } else {
-        block_336(i);
+        block_272(i);
     }
 }
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 345,
+        u::copy_registry().len() == 277,
 {
     hide(u::lit);
     hide(u::css_text);

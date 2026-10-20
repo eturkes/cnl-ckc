@@ -1,0 +1,6 @@
+# format: id<TAB>file<TAB>page<TAB>section<TAB>status
+# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending
+# uncovered classes: heading | process | external | aim | descriptive | notice | inexpressible
+r1	source/evidence.txt	p1	Reading fixture	ace(reading-only)
+r2	source/evidence.txt	p1	Reading fixture	ace(highlight-only)
+r3	source/evidence.txt	p1	Reading fixture	ace(combined)

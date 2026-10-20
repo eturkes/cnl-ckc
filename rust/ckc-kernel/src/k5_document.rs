@@ -1,7 +1,7 @@
 use crate::{
     k5_bytes as b, k5_chrome as chrome, k5_document_data as data, k5_frame as frame,
-    k5_highlight as bytes, k5_html as h, k5_model as model, k5_payload as payload,
-    k5_records as records, k5_titles as titles, k5_url as url,
+    k5_highlight as bytes, k5_html as h, k5_meanings as meanings, k5_model as model,
+    k5_payload as payload, k5_records as records, k5_titles as titles, k5_url as url,
 };
 use ckc_spec::check as ck;
 use ckc_spec::ui::{self as u, EDocument, EGuideline, EPage};
@@ -336,6 +336,8 @@ pub open spec fn body_spec(
             u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
         ]
+    } else if u::reading_words(g, d).len() > 0 {
+        seq![u::fixed_bytes(u::script_html())]
     } else {
         Seq::empty()
     }) + seq![
@@ -347,12 +349,13 @@ pub open spec fn body_spec(
         u::fixed_bytes(u::section_close()),
         u::fixed_bytes(u::section_open()),
         u::fixed_bytes(u::h3_open_attempto_controlled_english_ace_h3_close()),
-        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, true) + u::fixed_bytes(
-            u::pre_close(),
-        ),
-        u::fixed_bytes(u::section_close()),
-    ] + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(d.pl, false)
-        + u::qualifier_section(d.pl) + form_spec(g, d, token, commit) + seq![
+        u::fixed_bytes(u::pre_open()) + u::ace_html(g, d) + u::fixed_bytes(u::pre_close()),
+    ] + u::reading_line(g, d) + seq![u::fixed_bytes(u::section_close())] + form_spec(
+        g,
+        d,
+        token,
+        commit,
+    ) + seq![
         u::fixed_bytes(u::section_open()),
         u::fixed_bytes(u::details_open()),
         u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
@@ -388,11 +391,10 @@ pub proof fn decomposition(
     hide(u::lit);
     hide(u::title);
     hide(u::document_title);
-    hide(u::timing_section);
-    hide(u::strength_section);
-    hide(u::qualifier_section);
     hide(u::alignment);
     hide(u::aligned_text);
+    hide(u::ace_html);
+    hide(u::reading_line);
     hide(u::tally);
     hide(u::tally_text);
     hide(u::state);
@@ -474,6 +476,8 @@ pub proof fn decomposition(
             u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
         ]
+    } else if u::reading_words(g, d).len() > 0 {
+        seq![u::fixed_bytes(u::script_html())]
     } else {
         Seq::empty()
     }) + seq![
@@ -485,12 +489,9 @@ pub proof fn decomposition(
         u::fixed_bytes(u::section_close()),
         u::fixed_bytes(u::section_open()),
         u::fixed_bytes(u::h3_open_attempto_controlled_english_ace_h3_close()),
-        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, true) + u::fixed_bytes(
-            u::pre_close(),
-        ),
+        u::fixed_bytes(u::pre_open()) + u::ace_html(g, d) + u::fixed_bytes(u::pre_close()),
+    ] + u::reading_line(g, d) + seq![
         u::fixed_bytes(u::section_close()),
-    ] + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(d.pl, false)
-        + u::qualifier_section(d.pl) + seq![
         u::fixed_bytes(u::section_open_3()),
         u::fixed_bytes(u::h3_open_record_a_decision_h3_close()),
         u::fixed_bytes(u::p_open_does_the_ace_representation_appropriately()),
@@ -576,6 +577,8 @@ pub open spec fn leading_spec(g: u::Guideline, d: u::Document, shown: bool) -> S
             u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
         ]
+    } else if u::reading_words(g, d).len() > 0 {
+        seq![u::fixed_bytes(u::script_html())]
     } else {
         Seq::empty()
     })
@@ -591,11 +594,8 @@ pub open spec fn passages_spec(g: u::Guideline, d: u::Document) -> Seq<u::Html> 
         u::fixed_bytes(u::section_close()),
         u::fixed_bytes(u::section_open()),
         u::fixed_bytes(u::h3_open_attempto_controlled_english_ace_h3_close()),
-        u::fixed_bytes(u::pre_open()) + u::aligned_text(g, d, true) + u::fixed_bytes(
-            u::pre_close(),
-        ),
-        u::fixed_bytes(u::section_close()),
-    ]
+        u::fixed_bytes(u::pre_open()) + u::ace_html(g, d) + u::fixed_bytes(u::pre_close()),
+    ] + u::reading_line(g, d) + seq![u::fixed_bytes(u::section_close())]
 }
 
 pub open spec fn compiled_spec(d: u::Document, prev: u::Bytes, next: u::Bytes) -> Seq<u::Html> {
@@ -633,23 +633,15 @@ pub proof fn body_groups(
         body_spec(g, d, prev, next, token, commit) == leading_spec(g, d, shown) + passages_spec(
             g,
             d,
-        ) + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(
-            d.pl,
-            false,
-        ) + u::qualifier_section(d.pl) + form_spec(g, d, token, commit) + compiled_spec(
-            d,
-            prev,
-            next,
-        ),
+        ) + form_spec(g, d, token, commit) + compiled_spec(d, prev, next),
 {
     hide(u::lit);
     hide(u::title);
     hide(u::document_title);
-    hide(u::timing_section);
-    hide(u::strength_section);
-    hide(u::qualifier_section);
     hide(u::alignment);
     hide(u::aligned_text);
+    hide(u::ace_html);
+    hide(u::reading_line);
     hide(u::tally);
     hide(u::tally_text);
     hide(u::state);
@@ -659,17 +651,14 @@ pub proof fn body_groups(
     assert(body_spec(g, d, prev, next, token, commit) =~= leading_spec(g, d, shown) + passages_spec(
         g,
         d,
-    ) + u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(d.pl, false)
-        + u::qualifier_section(d.pl) + form_spec(g, d, token, commit) + compiled_spec(
-        d,
-        prev,
-        next,
-    ));
+    ) + form_spec(g, d, token, commit) + compiled_spec(d, prev, next));
 }
 
-pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool) -> (out: Vec<EPage>)
+pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool, words: bool) -> (out:
+    Vec<EPage>)
     requires
         model::bound(m, g@),
+        words == (u::reading_words(g@, d@).len() > 0),
     ensures
         h::pages(out@) == leading_spec(g@, d@, shown),
 {
@@ -751,6 +740,8 @@ pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool) -> 
             ),
         );
         body.push(h::fixed_bytes(&chrome::script_html()));
+    } else if words {
+        body.push(h::fixed_bytes(&chrome::script_html()));
     }
     proof {
         assert(h::pages(body@) =~= leading_spec(g@, d@, shown));
@@ -763,14 +754,18 @@ pub fn passages(
     d: &EDocument,
     source: &[u8],
     alignment: &Option<ckc_spec::align::EModel>,
+    words: &Vec<meanings::EReading>,
 ) -> (out: Vec<EPage>)
     requires
         source@ == u::payload(g@, d@.bundle.docid),
         data::alignment_view(*alignment) == u::alignment(g@, d@),
+        meanings::readings(words@) == u::reading_words(g@, d@),
     ensures
         h::pages(out@) == passages_spec(g@, d@),
 {
     hide(u::aligned_text);
+    hide(u::ace_html);
+    hide(u::reading_line);
     hide(u::lit);
     let mut body = Vec::new();
     body.push(h::fixed("<section>"));
@@ -789,10 +784,17 @@ pub fn passages(
     body.push(h::fixed("<h3>Attempto Controlled English (ACE)</h3>"));
     body.push(
         h::cat(
-            h::cat(h::fixed("<pre class=\"prose\">"), data::aligned(g, d, source, alignment, true)),
+            h::cat(
+                h::fixed("<pre class=\"prose\">"),
+                meanings::ace_exec(g, d, source, alignment, words),
+            ),
             h::fixed("</pre>"),
         ),
     );
+    let ghost first = h::pages(body@);
+    let mut line = meanings::reading_line_exec(g, d, words);
+    let ghost second = h::pages(line@);
+    body.append(&mut line);
     body.push(h::fixed("</section>"));
     proof {
         assert(h::pages(body@) =~= passages_spec(g@, d@));
@@ -850,9 +852,6 @@ pub fn page(
     hide(passages_spec);
     hide(form_spec);
     hide(compiled_spec);
-    hide(u::timing_section);
-    hide(u::strength_section);
-    hide(u::qualifier_section);
     let m = model::prepare(g);
     let source = payload::payload(g, &d.bundle.docid);
     let alignment = data::alignment(g, d, &source);
@@ -860,39 +859,16 @@ pub fn page(
         Some(a) => a.count > 0,
         None => false,
     };
-    let mut body = leading(g, d, &m, shown);
-    let mut part = passages(g, d, &source, &alignment);
+    let words = meanings::reading_words_exec(g, d);
+    let any = words.len() > 0;
+    proof {
+        assert(any == (u::reading_words(g@, d@).len() > 0));
+    }
+    let mut body = leading(g, d, &m, shown, any);
+    let mut part = passages(g, d, &source, &alignment, &words);
     let ghost first = h::pages(body@);
     let ghost second = h::pages(part@);
     body.append(&mut part);
-    proof {
-        assert(h::pages(body@) =~= first + second);
-    }
-    let mut timing = crate::k5_timing::timing_section_exec(&d.pl);
-    let ghost first = h::pages(body@);
-    let ghost second = h::pages(timing@);
-    body.append(&mut timing);
-    proof {
-        assert(h::pages(body@) =~= first + second);
-    }
-    let mut strength = crate::k5_strength::strength_section_exec(&d.pl, true);
-    let ghost first = h::pages(body@);
-    let ghost second = h::pages(strength@);
-    body.append(&mut strength);
-    proof {
-        assert(h::pages(body@) =~= first + second);
-    }
-    let mut strength = crate::k5_strength::strength_section_exec(&d.pl, false);
-    let ghost first = h::pages(body@);
-    let ghost second = h::pages(strength@);
-    body.append(&mut strength);
-    proof {
-        assert(h::pages(body@) =~= first + second);
-    }
-    let mut qualifiers = crate::k5_qualifier::qualifier_section_exec(&d.pl);
-    let ghost first = h::pages(body@);
-    let ghost second = h::pages(qualifiers@);
-    body.append(&mut qualifiers);
     proof {
         assert(h::pages(body@) =~= first + second);
     }

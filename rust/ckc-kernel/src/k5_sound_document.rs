@@ -67,7 +67,7 @@ pub open spec fn head_parts(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
     let heading = u::text(u::title(g)) + pdf;
     let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     let prov = (if region.len() > 0 {
-        seq![b::f(301) + b::f(302) + u::text(region) + b::f(24)]
+        seq![b::f(246) + b::f(247) + u::text(region) + b::f(24)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
@@ -89,7 +89,7 @@ pub open spec fn head_parts(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
         b::f(97) + heading + b::f(98),
         b::f(114) + u::text(u::document_title(g, id)) + b::f(36) + u::chip(k) + b::f(115),
     ] + (if prov.len() > 0 {
-        seq![b::f(300) + provenance + b::f(126)]
+        seq![b::f(245) + provenance + b::f(126)]
     } else {
         Seq::empty()
     }) + seq![
@@ -103,18 +103,49 @@ pub open spec fn head_parts(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
         Seq::empty()
     }) + (if shown {
         seq![b::f(150), u::fixed_bytes(u::script_html())]
+    } else if u::reading_words(g, d).len() > 0 {
+        seq![u::fixed_bytes(u::script_html())]
     } else {
         Seq::empty()
-    }) + seq![
+    })
+}
+
+// The passage + ACE literal of document_html (its association kept: the page
+// proof matches the spec's concatenation tree term by term).
+pub open spec fn mid_parts(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
+    seq![
         b::f(80),
         b::f(151),
         b::f(152) + u::aligned_text(g, d, false) + b::f(153),
         b::f(86),
         b::f(80),
         b::f(154),
-        b::f(152) + u::aligned_text(g, d, true) + b::f(153),
-        b::f(86),
+        b::f(152) + u::ace_html(g, d) + b::f(153),
     ]
+}
+
+proof fn mid_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
+    requires
+        corpus::sources(g, inputs),
+        g.documents.contains(d),
+    ensures
+        crate::k5_sound_meanings::all_sound(mid_parts(g, d), inputs),
+{
+    hide(h::fragment);
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::aligned_text);
+    hide(u::ace_html);
+    l::f080(inputs);
+    l::f086(inputs);
+    l::f151(inputs);
+    l::f152(inputs);
+    l::f153(inputs);
+    l::f154(inputs);
+    hl::aligned(g, d, false, inputs);
+    crate::k5_sound_meanings::ace(g, d, inputs);
+    three(b::f(152), u::aligned_text(g, d, false), b::f(153), inputs);
+    three(b::f(152), u::ace_html(g, d), b::f(153), inputs);
 }
 
 pub open spec fn tail_parts(
@@ -137,6 +168,7 @@ pub open spec fn tail_parts(
     let name = u::latest_name(u::records(g), u::empty(), u::empty());
     let count = u::splitline_count(u::chars(d.pl), false);
     seq![
+        b::f(86),
         b::f(155),
         b::f(156),
         b::f(157),
@@ -176,7 +208,7 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
         corpus::sources(g, inputs),
         g.documents.contains(d),
     ensures
-        crate::k5_sound_timing::all_sound(head_parts(g, d), inputs),
+        crate::k5_sound_meanings::all_sound(head_parts(g, d), inputs),
 {
     hide(h::fragment);
     hide(u::lit);
@@ -195,6 +227,8 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     hide(u::latest_name);
     hide(u::alignment);
     hide(u::aligned_text);
+    hide(u::ace_html);
+    hide(u::reading_line);
     hide(u::roster);
     hide(u::url_seg);
     hide(u::splitline_count);
@@ -207,9 +241,6 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     hide(u::frame);
     hide(u::css_text);
     hide(u::script_html);
-    hide(u::timing_section);
-    hide(u::strength_section);
-    hide(u::qualifier_section);
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let region = u::coverage_field(g, id, 0);
@@ -222,7 +253,7 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     let heading = u::text(u::title(g)) + pdf;
     let source = u::unprefix(u::coverage_field(g, id, 1), u::source_dir());
     let prov = (if region.len() > 0 {
-        seq![b::f(301) + b::f(302) + u::text(region) + b::f(24)]
+        seq![b::f(246) + b::f(247) + u::text(region) + b::f(24)]
     } else {
         Seq::empty()
     }) + (if g.source_names.contains(source) {
@@ -243,9 +274,9 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     l::f137(inputs);
     l::f138(inputs);
     l::f141(inputs);
-    l::f300(inputs);
-    l::f301(inputs);
-    l::f302(inputs);
+    l::f245(inputs);
+    l::f246(inputs);
+    l::f247(inputs);
     l::f024(inputs);
     l::f147(inputs);
     l::f150(inputs);
@@ -273,8 +304,8 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     m::coverage_field(g, id, 0, inputs);
     m::copy(region, inputs);
     h::text(region, inputs);
-    b::add(b::f(301), b::f(302), inputs);
-    three(b::f(301) + b::f(302), u::text(region), b::f(24), inputs);
+    b::add(b::f(246), b::f(247), inputs);
+    three(b::f(246) + b::f(247), u::text(region), b::f(24), inputs);
     h::empty(inputs, 0);
     if pdfs.len() == 1 {
         hl::attribute(b::f(137), u::url_seg(pdfs[0]), b::f(138), inputs);
@@ -287,11 +318,9 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     h::text(u::tally_text(u::tally(g, id)), inputs);
     b::chip(k, inputs);
     chrome::script_html(inputs);
-    hl::aligned(g, d, false, inputs);
-    hl::aligned(g, d, true, inputs);
     three(b::f(97), heading, b::f(98), inputs);
     five(b::f(114), u::text(u::document_title(g, id)), b::f(36), u::chip(k), b::f(115), inputs);
-    three(b::f(300), provenance, b::f(126), inputs);
+    three(b::f(245), provenance, b::f(126), inputs);
     five(
         b::f(99),
         u::text(u::tally_text(u::tally(g, id))),
@@ -300,8 +329,6 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
         b::f(126),
         inputs,
     );
-    three(b::f(152), u::aligned_text(g, d, false), b::f(153), inputs);
-    three(b::f(152), u::aligned_text(g, d, true), b::f(153), inputs);
 }
 
 proof fn tail_sound(
@@ -317,7 +344,7 @@ proof fn tail_sound(
         corpus::sources(g, inputs),
         g.documents.contains(d),
     ensures
-        crate::k5_sound_timing::all_sound(tail_parts(g, d, prev, next, token, commit), inputs),
+        crate::k5_sound_meanings::all_sound(tail_parts(g, d, prev, next, token, commit), inputs),
 {
     hide(h::fragment);
     hide(u::lit);
@@ -336,6 +363,8 @@ proof fn tail_sound(
     hide(u::latest_name);
     hide(u::alignment);
     hide(u::aligned_text);
+    hide(u::ace_html);
+    hide(u::reading_line);
     hide(u::roster);
     hide(u::url_seg);
     hide(u::splitline_count);
@@ -348,9 +377,6 @@ proof fn tail_sound(
     hide(u::frame);
     hide(u::css_text);
     hide(u::script_html);
-    hide(u::timing_section);
-    hide(u::strength_section);
-    hide(u::qualifier_section);
     let id = d.bundle.docid;
     let nav = (if prev.len() > 0 {
         seq![u::link(u::url_seg(prev) + u::html_ext(), b::f(144))]
@@ -449,6 +475,8 @@ pub proof fn page(
     hide(u::latest_name);
     hide(u::alignment);
     hide(u::aligned_text);
+    hide(u::ace_html);
+    hide(u::reading_line);
     hide(u::roster);
     hide(u::url_seg);
     hide(u::splitline_count);
@@ -461,9 +489,6 @@ pub proof fn page(
     hide(u::frame);
     hide(u::css_text);
     hide(u::script_html);
-    hide(u::timing_section);
-    hide(u::strength_section);
-    hide(u::qualifier_section);
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let region = u::coverage_field(g, id, 0);
@@ -473,9 +498,9 @@ pub proof fn page(
     l::f137(inputs);
     l::f138(inputs);
     l::f141(inputs);
-    l::f300(inputs);
-    l::f301(inputs);
-    l::f302(inputs);
+    l::f245(inputs);
+    l::f246(inputs);
+    l::f247(inputs);
     l::f024(inputs);
     l::f147(inputs);
     l::f150(inputs);
@@ -529,35 +554,16 @@ pub proof fn page(
     l::f181(inputs);
     head_sound(g, d, inputs);
     tail_sound(g, d, prev, next, token, commit, inputs);
+    mid_sound(g, d, inputs);
+    crate::k5_sound_meanings::line(g, d, inputs);
     let head = head_parts(g, d);
+    let mid = mid_parts(g, d);
+    let line = u::reading_line(g, d);
     let tail = tail_parts(g, d, prev, next, token, commit);
-    assert(crate::k5_sound_timing::all_sound(u::timing_section(d.pl), inputs)) by {
-        corpus::document(g, d, inputs);
-        m::own(d.pl, inputs);
-        crate::k5_sound_timing::section(d.pl, inputs);
-    }
-    corpus::document(g, d, inputs);
-    m::own(d.pl, inputs);
-    crate::k5_sound_strength::section(d.pl, true, inputs);
-    crate::k5_sound_strength::section(d.pl, false, inputs);
-    crate::k5_sound_qualifier::section(d.pl, inputs);
-    let earlier = u::timing_section(d.pl) + u::strength_section(d.pl, true) + u::strength_section(
-        d.pl,
-        false,
-    );
-    crate::k5_sound_timing::cat3(
-        u::timing_section(d.pl),
-        u::strength_section(d.pl, true),
-        u::strength_section(d.pl, false),
-        inputs,
-    );
-    let middle = earlier + u::qualifier_section(d.pl);
-    crate::k5_sound_timing::cat3(earlier, u::qualifier_section(d.pl), Seq::empty(), inputs);
-    assert(middle =~= earlier + u::qualifier_section(d.pl) + Seq::<u::Html>::empty());
-    crate::k5_sound_timing::cat3(head, middle, tail, inputs);
-    let parts = head + u::timing_section(d.pl) + u::strength_section(d.pl, true)
-        + u::strength_section(d.pl, false) + u::qualifier_section(d.pl) + tail;
-    assert(parts =~= head + middle + tail);
+    crate::k5_sound_meanings::cat3(head, mid, line, inputs);
+    crate::k5_sound_meanings::cat3(head + mid + line, tail, Seq::empty(), inputs);
+    let parts = head + mid + line + tail;
+    assert(parts =~= head + mid + line + tail + Seq::<u::Html>::empty());
     b::lines(parts, inputs);
     let crumbs = b::f(180) + u::text(u::title(g)) + b::f(181) + u::text(region);
     assert(h::sound(crumbs, inputs)) by {

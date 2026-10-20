@@ -23,6 +23,7 @@ use crate::engine::*;
 use crate::replay::Src;
 use crate::term::Term;
 use crate::v1text::{self, *};
+use crate::vocabulary::{self, Vocabulary};
 use vstd::prelude::*;
 use vstd::utf8::*;
 
@@ -600,6 +601,10 @@ main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-c
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
+button.rw { margin: 0; padding: 0; border: 0; font: inherit; color: inherit; background: none; cursor: pointer; text-decoration: underline solid #1d4ed8 1px; text-underline-offset: 0.35em; }
+button.rw[aria-pressed="true"] { text-decoration-thickness: 3px; }
+p.reading { min-height: 1.55em; margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+p.reading span[data-w=""] { color: #4b5563; }
 @media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }
 @media print {
 body { max-width: none; padding: 0; }
@@ -612,6 +617,8 @@ details::details-content { content-visibility: visible; }
 pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
 a { color: inherit; text-decoration: none; }
 .chip { border: 1px solid #111827; background: none; color: inherit; }
+button.rw { text-decoration: none; }
+p.reading { display: none; }
 }"##@,
     )
 }
@@ -623,6 +630,7 @@ pub open spec fn script_html() -> Bytes {
 (function () {
 "use strict";
 var picked = "";
+var shown = "";
 function groupOf(node) {
 if (node === null) { return ""; }
 var m = node.closest("mark");
@@ -640,6 +648,21 @@ while (i < marks.length) { marks[i].classList.remove("hl-pick"); i += 1; }
 picked = "";
 }
 function toggleBox() { return document.querySelector("input.hl-toggle"); }
+function showReading(word) {
+var lines = document.querySelectorAll("p.reading span");
+var i = 0;
+while (i < lines.length) { lines[i].hidden = lines[i].getAttribute("data-w") !== word; i += 1; }
+var words = document.querySelectorAll("button.rw");
+i = 0;
+while (i < words.length) { words[i].setAttribute("aria-pressed", words[i].getAttribute("data-w") === word ? "true" : "false"); i += 1; }
+shown = word;
+}
+document.addEventListener("click", function (ev) {
+var word = ev.target.closest("button.rw");
+if (word === null) { return; }
+var w = word.getAttribute("data-w");
+if (shown === w) { showReading(""); } else { showReading(w); }
+});
 document.addEventListener("click", function (ev) {
 var name = groupOf(ev.target);
 if (name === "") { return; }
@@ -653,6 +676,9 @@ var i = 0;
 while (i < marks.length) { marks[i].classList.add("hl-pick"); i += 1; }
 document.getElementById("main").classList.add("hl-click");
 picked = name;
+});
+document.addEventListener("keydown", function (ev) {
+if (ev.key === "Escape") { if (shown !== "") { showReading(""); } }
 });
 document.addEventListener("mouseout", function (ev) {
 if (picked === "") { return; }
@@ -830,195 +856,9 @@ pub open spec fn region_status(r: Row) -> Bytes {
     }
 }
 
-// --- Time words (contracts q14, c1 D9): the guideline's vocabulary.tsv rows in
-// plain language — units, relations, spacings, windows, frequencies,
-// approximations, ranges, each kind in file order. A lemma renders only when its
-// bytes stand verbatim in the table; unit words are the timing table's copy.
-// Before/after also read an order with no stated time (contract q12 D11).
-pub open spec fn role_html(r: Bytes) -> Html {
-    if r == lit("duration"@) {
-        fixed_bytes(how_long_the_action_lasts())
-    } else if r == lit("within"@) {
-        fixed_bytes(how_far_the_action_lies_from_a())
-    } else if r == lit("after"@) {
-        fixed_bytes(how_long_after_or_only_after())
-    } else if r == lit("before"@) {
-        fixed_bytes(how_long_before_or_only_before())
-    } else {
-        fixed_bytes(not_stated())
-    }
-}
-
+// A two-cell table row (Word meanings, contract ur D4).
 pub open spec fn word_row(a: Html, b: Html) -> Html {
     row(seq![cell(a), cell(b)])
-}
-
-pub open spec fn framed_word(raw: Bytes, p: Bytes, f: Bytes) -> Html {
-    pl_word(raw, p) + fixed_bytes(paren_open_sep()) + fixed_bytes(with_sp()) + pl_word(raw, f)
-        + fixed_bytes(paren_close())
-}
-
-#[verifier::opaque]
-pub open spec fn word_rows(t: Option<Bytes>) -> Seq<Html> {
-    match t {
-        Option::Some(raw) => match crate::vocabulary::parse_vocabulary(raw) {
-            Result::Ok(m) => m.units.map_values(
-                |u: (Bytes, Bytes)|
-                    word_row(
-                        pl_word(raw, u.0),
-                        fixed_bytes(unit_of_time()) + match unit_html(u.1, true) {
-                            Option::Some(w) => w,
-                            Option::None => fixed_bytes(not_stated()),
-                        },
-                    ),
-            ) + m.relations.map_values(
-                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), role_html(r.1)),
-            ) + m.spacings.map_values(
-                |s: (Bytes, Bytes)|
-                    word_row(
-                        framed_word(raw, s.0, s.1),
-                        fixed_bytes(how_far_apart_repeats_of_the_action_lie()),
-                    ),
-            ) + m.windows.map_values(
-                |w: (Bytes, Bytes)|
-                    word_row(
-                        framed_word(raw, w.0, w.1),
-                        fixed_bytes(the_time_window_in_which_the_spacing()),
-                    ),
-            ) + m.frequencies.map_values(
-                |f: Bytes| word_row(pl_word(raw, f), fixed_bytes(how_many_of_an_item_the_action())),
-            ) + m.approximations.map_values(
-                |a: Bytes|
-                    word_row(pl_word(raw, a), fixed_bytes(marks_a_time_limit_as_approximate())),
-            ) + m.ranges.map_values(
-                |r: Bytes|
-                    word_row(pl_word(raw, r), fixed_bytes(joins_the_upper_end_of_a_minimum())),
-            ),
-            Result::Err(_) => Seq::empty(),
-        },
-        Option::None => Seq::empty(),
-    }
-}
-
-pub open spec fn words_section(t: Option<Bytes>) -> Seq<Html> {
-    let rows = word_rows(t);
-    if rows.len() == 0 {
-        Seq::empty()
-    } else {
-        seq![
-            fixed_bytes(section_open()),
-            fixed_bytes(h2_open_time_words_h2_close()),
-            fixed_bytes(p_open_the_compiler_reads_a_time_limit()),
-            fixed_bytes(table_open_2()),
-            fixed_bytes(thead_open_tr_open_th_open_word_th_close_th_open()),
-            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
-            fixed_bytes(table_close()),
-            fixed_bytes(section_close()),
-        ]
-    }
-}
-
-// --- Grade + preference words (contract s1 D8): the table's strength,
-// evidence, preference and alternative rows in plain language, each kind in
-// file order; a group without rows renders nothing.
-#[verifier::opaque]
-pub open spec fn strength_word_rows(t: Option<Bytes>, grades: bool) -> Seq<Html> {
-    match t {
-        Option::Some(raw) => match crate::vocabulary::parse_vocabulary(raw) {
-            Result::Ok(m) => if grades {
-                m.strengths.map_values(
-                    |r: (Bytes, Bytes)|
-                        word_row(
-                            pl_word(raw, r.0),
-                            fixed_bytes(strength_of_the_recommendation_sep()) + grade_value_html(
-                                r.1,
-                            ),
-                        ),
-                ) + m.evidences.map_values(
-                    |r: (Bytes, Bytes)|
-                        word_row(
-                            pl_word(raw, r.0),
-                            fixed_bytes(certainty_of_the_evidence_sep()) + grade_value_html(r.1),
-                        ),
-                )
-            } else {
-                m.preferences.map_values(
-                    |a: Bytes| word_row(pl_word(raw, a), fixed_bytes(marks_the_preferred_option())),
-                ) + m.alternatives.map_values(
-                    |a: Bytes|
-                        word_row(
-                            pl_word(raw, a),
-                            fixed_bytes(joins_the_option_that_the_preferred()),
-                        ),
-                )
-            },
-            Result::Err(_) => Seq::empty(),
-        },
-        Option::None => Seq::empty(),
-    }
-}
-
-pub open spec fn strength_words_section(t: Option<Bytes>, grades: bool) -> Seq<Html> {
-    let rows = strength_word_rows(t, grades);
-    if rows.len() == 0 {
-        Seq::empty()
-    } else {
-        seq![
-            fixed_bytes(section_open()),
-            fixed_bytes(
-                if grades {
-                    h2_open_grade_words_h2_close()
-                } else {
-                    h2_open_preference_words_h2_close()
-                },
-            ),
-            fixed_bytes(
-                if grades {
-                    p_open_the_compiler_reads_a_grade()
-                } else {
-                    p_open_the_compiler_reads_a_preference()
-                },
-            ),
-            fixed_bytes(table_open_2()),
-            fixed_bytes(thead_open_tr_open_th_open_word_th_close_th_open()),
-            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
-            fixed_bytes(table_close()),
-            fixed_bytes(section_close()),
-        ]
-    }
-}
-
-// --- Qualifier words (contract s2 D7): the table's qualifier rows in file
-// order, each word with its kind; a table without one renders nothing.
-#[verifier::opaque]
-pub open spec fn qualifier_word_rows(t: Option<Bytes>) -> Seq<Html> {
-    match t {
-        Option::Some(raw) => match crate::vocabulary::parse_vocabulary(raw) {
-            Result::Ok(m) => m.qualifiers.map_values(
-                |r: (Bytes, Bytes)| word_row(pl_word(raw, r.0), kind_html(r.1)),
-            ),
-            Result::Err(_) => Seq::empty(),
-        },
-        Option::None => Seq::empty(),
-    }
-}
-
-pub open spec fn qualifier_words_section(t: Option<Bytes>) -> Seq<Html> {
-    let rows = qualifier_word_rows(t);
-    if rows.len() == 0 {
-        Seq::empty()
-    } else {
-        seq![
-            fixed_bytes(section_open()),
-            fixed_bytes(h2_open_qualifier_words_h2_close()),
-            fixed_bytes(p_open_the_compiler_reads_a_qualifier()),
-            fixed_bytes(table_open_2()),
-            fixed_bytes(thead_open_tr_open_th_open_word_th_close_th_open()),
-            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
-            fixed_bytes(table_close()),
-            fixed_bytes(section_close()),
-        ]
-    }
 }
 
 pub open spec fn guideline_html(g: Guideline) -> Html {
@@ -1090,9 +930,7 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
             fixed_bytes(tbody_open()) + lines(status_rows) + fixed_bytes(tbody_close()),
             fixed_bytes(table_close()),
             fixed_bytes(section_close()),
-        ] + words_section(g.vocabulary) + strength_words_section(g.vocabulary, true)
-            + strength_words_section(g.vocabulary, false) + qualifier_words_section(g.vocabulary)
-            + seq![
+        ] + meanings_section(g.vocabulary) + seq![
             fixed_bytes(section_open()),
             fixed_bytes(h2_open_documents_h2_close()),
             fixed_bytes(table_open_2()),
@@ -1405,62 +1243,8 @@ pub open spec fn splitline_count(cs: Seq<char>, pending: bool) -> nat
     }
 }
 
-// --- Timing as compiled (contracts m7t D10, c1 D9): one table row per temporal
-// annotation literal of a document, joined to its event lemma, quantity
-// bound and reference noun. Joins read the annotation's own clause, then every
-// clause head in order; a word renders only when its bytes stand verbatim in
-// the pl, so every visible slot is a copied pl span, declared copy or a decimal.
-pub open spec fn clause_lits(c: DocClause) -> Seq<(Term, int)> {
-    seq![(c.head, 0int)] + c.body.map_values(
-        |it: BodyItem|
-            match it {
-                BodyItem::Pos(l) => seq![(l, 1int)],
-                BodyItem::Naf(gs) => gs.map_values(|g: Term| (g, 2int)),
-            },
-    ).flatten()
-}
-
-pub open spec fn doc_heads(d: DocFile) -> Seq<Term> {
-    d.bundles.map_values(|b: v1text::Bundle| b.clauses.map_values(|c: DocClause| c.head)).flatten()
-}
-
-pub open spec fn join_terms(d: DocFile, c: DocClause) -> Seq<Term> {
-    clause_lits(c).map_values(|p: (Term, int)| p.0) + doc_heads(d)
-}
-
-// The arguments of the first `name/arity` literal whose argument `at` is `key`.
-pub open spec fn first_with(
-    ts: Seq<Term>,
-    name: Seq<char>,
-    arity: nat,
-    at: int,
-    key: Term,
-) -> Option<Seq<Term>>
-    decreases ts.len(),
-{
-    if ts.len() == 0 {
-        Option::None
-    } else {
-        match ts[0] {
-            Term::Comp(n, args) => if n == lit(name) && args.len() == arity && args[at] == key {
-                Option::Some(args)
-            } else {
-                first_with(ts.drop_first(), name, arity, at, key)
-            },
-            _ => first_with(ts.drop_first(), name, arity, at, key),
-        }
-    }
-}
-
-pub open spec fn atom_name(t: Term) -> Bytes {
-    match t {
-        Term::Atom(a) => a,
-        _ => empty(),
-    }
-}
-
-// A word of `pl` (a document's pl, or a time-word table) as visible text, else
-// `not stated`.
+// A word of table bytes `raw` as visible text when its bytes stand verbatim in
+// `raw`, else `not stated`, so every visible slot is a copied table span.
 pub open spec fn pl_word(pl: Bytes, w: Bytes) -> Html {
     if w.len() > 0 && check::first_sub(pl, w, 0) + w.len() <= pl.len() {
         text(w)
@@ -1469,669 +1253,7 @@ pub open spec fn pl_word(pl: Bytes, w: Bytes) -> Html {
     }
 }
 
-pub open spec fn cmp_html(c: Term) -> Option<Html> {
-    let a = atom_name(c);
-    if !(c is Atom) {
-        Option::None
-    } else if a == lit("eq"@) {
-        Option::Some(Seq::empty())
-    } else if a == lit("exactly"@) {
-        Option::Some(fixed_bytes(exactly_sp()))
-    } else if a == lit("geq"@) {
-        Option::Some(fixed_bytes(at_least_sp()))
-    } else if a == lit("greater"@) {
-        Option::Some(fixed_bytes(more_than_sp()))
-    } else if a == lit("leq"@) {
-        Option::Some(fixed_bytes(at_most_sp()))
-    } else if a == lit("less"@) {
-        Option::Some(fixed_bytes(less_than_sp()))
-    } else if a == lit("about"@) {
-        Option::Some(fixed_bytes(about_sp()))
-    } else {
-        Option::None
-    }
-}
-
-pub open spec fn unit_html(u: Bytes, one: bool) -> Option<Html> {
-    if u == lit("second"@) {
-        Option::Some(
-            if one {
-                fixed_bytes(sp_second())
-            } else {
-                fixed_bytes(sp_seconds())
-            },
-        )
-    } else if u == lit("minute"@) {
-        Option::Some(
-            if one {
-                fixed_bytes(sp_minute())
-            } else {
-                fixed_bytes(sp_minutes())
-            },
-        )
-    } else if u == lit("hour"@) {
-        Option::Some(
-            if one {
-                fixed_bytes(sp_hour())
-            } else {
-                fixed_bytes(sp_hours())
-            },
-        )
-    } else if u == lit("day"@) {
-        Option::Some(
-            if one {
-                fixed_bytes(sp_day())
-            } else {
-                fixed_bytes(sp_days())
-            },
-        )
-    } else if u == lit("week"@) {
-        Option::Some(
-            if one {
-                fixed_bytes(sp_week())
-            } else {
-                fixed_bytes(sp_weeks())
-            },
-        )
-    } else if u == lit("month"@) {
-        Option::Some(
-            if one {
-                fixed_bytes(sp_month())
-            } else {
-                fixed_bytes(sp_months())
-            },
-        )
-    } else if u == lit("year"@) {
-        Option::Some(
-            if one {
-                fixed_bytes(sp_year())
-            } else {
-                fixed_bytes(sp_years())
-            },
-        )
-    } else {
-        Option::None
-    }
-}
-
-// The comparison built-in over a converted cardinality's comparison variables.
-pub open spec fn filter_of(ts: Seq<Term>, cv: Term, nv: Term) -> Option<Seq<Term>>
-    decreases ts.len(),
-{
-    if ts.len() == 0 {
-        Option::None
-    } else {
-        match ts[0] {
-            Term::Comp(n, args) => if n == lit("guideline_satisfies"@) && (args.len() == 4
-                || args.len() == 6) && args[0] == cv && args[1] == nv {
-                Option::Some(args)
-            } else {
-                filter_of(ts.drop_first(), cv, nv)
-            },
-            _ => filter_of(ts.drop_first(), cv, nv),
-        }
-    }
-}
-
-// A quantity's stated bound: (comparison, count, unit of the bound when the
-// condition compares time units). A condition's bound sits in its comparison
-// built-in (contract nt1 D11); a fact's in its cardinality literal.
-pub open spec fn bound_of(d: DocFile, c: DocClause, q: Term) -> Option<(Term, Term, Option<Term>)> {
-    match first_with(join_terms(d, c), "guideline_cardinality"@, 5, 1, q) {
-        Option::Some(args) => if args[3] is Var {
-            match filter_of(join_terms(d, c), args[3], args[4]) {
-                Option::Some(f) => if f.len() == 4 {
-                    Option::Some((f[2], f[3], Option::None))
-                } else {
-                    Option::Some((f[3], f[4], Option::Some(f[5])))
-                },
-                Option::None => Option::None,
-            }
-        } else {
-            Option::Some((args[3], args[4], Option::None))
-        },
-        Option::None => Option::None,
-    }
-}
-
-// `<cmp> N <unit>` from the quantity's bound; a converted condition names the
-// bound's unit, its annotation a unit variable.
-pub open spec fn bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Option<Html> {
-    match bound_of(d, c, q) {
-        Option::Some((op, count, bu)) => match (cmp_html(op), count) {
-            (Option::Some(cmp), Term::Int(n)) => if n < 0 {
-                Option::None
-            } else {
-                let unit = match bu {
-                    Option::Some(b) => b,
-                    Option::None => u,
-                };
-                match unit_html(atom_name(unit), n == 1) {
-                    Option::Some(w) => Option::Some(cmp + text(v1text::udec_bytes(n as nat)) + w),
-                    Option::None => Option::None,
-                }
-            },
-            _ => Option::None,
-        },
-        Option::None => Option::None,
-    }
-}
-
-// q13 D8: an interval quantity q that a `guideline_range(_, q, h)` literal names
-// as its low end renders `a minimum of N to M <unit>` (q at least N, h exactly M);
-// any other quantity renders bound_html.
-pub open spec fn range_bound_html(d: DocFile, c: DocClause, q: Term, u: Term) -> Option<Html> {
-    match first_with(join_terms(d, c), "guideline_range"@, 3, 1, q) {
-        Option::None => bound_html(d, c, q, u),
-        Option::Some(r) => match (bound_of(d, c, q), bound_of(d, c, r[2])) {
-            (Option::Some(lo), Option::Some(hi)) => match (lo.1, hi.1) {
-                (Term::Int(n), Term::Int(m)) => if lo.0 == Term::Atom(lit("geq"@)) && hi.0
-                    == Term::Atom(lit("eq"@)) && 0 <= n && 0 <= m {
-                    match unit_html(
-                        atom_name(
-                            match lo.2 {
-                                Option::Some(b) => b,
-                                Option::None => u,
-                            },
-                        ),
-                        m == 1,
-                    ) {
-                        Option::Some(w) => Option::Some(
-                            fixed_bytes(a_minimum_of_sp()) + text(v1text::udec_bytes(n as nat))
-                                + fixed_bytes(sp_to_sp()) + text(v1text::udec_bytes(m as nat)) + w,
-                        ),
-                        Option::None => Option::None,
-                    }
-                } else {
-                    Option::None
-                },
-                _ => Option::None,
-            },
-            _ => Option::None,
-        },
-    }
-}
-
-pub open spec fn timing_html(role: Bytes, b: Option<Html>) -> Html {
-    match b {
-        Option::None => fixed_bytes(not_stated()),
-        Option::Some(h) => if role == lit("duration"@) {
-            fixed_bytes(lasts_sp()) + h
-        } else if role == lit("after"@) {
-            h + fixed_bytes(sp_after())
-        } else if role == lit("before"@) {
-            h + fixed_bytes(sp_before())
-        } else if role == lit("within"@) {
-            fixed_bytes(within_sp()) + h + fixed_bytes(sp_of())
-        } else if role == lit("recurrence"@) {
-            fixed_bytes(repeats_sp()) + h + fixed_bytes(sp_apart())
-        } else {
-            fixed_bytes(not_stated())
-        },
-    }
-}
-
-pub open spec fn joined_word(
-    pl: Bytes,
-    d: DocFile,
-    c: DocClause,
-    name: Seq<char>,
-    arity: nat,
-    key: Term,
-    at: int,
-) -> Html {
-    match first_with(join_terms(d, c), name, arity, 1, key) {
-        Option::Some(args) => pl_word(pl, atom_name(args[at])),
-        Option::None => fixed_bytes(not_stated()),
-    }
-}
-
-// --- q12 timing rows (contract q12 D11) ---
-pub open spec fn order_html(role: Bytes) -> Html {
-    if role == lit("before"@) {
-        fixed_bytes(before())
-    } else if role == lit("after"@) {
-        fixed_bytes(after())
-    } else {
-        fixed_bytes(not_stated())
-    }
-}
-
-// `<cmp> N` from a referent's bound (no unit word).
-pub open spec fn count_html(d: DocFile, c: DocClause, q: Term) -> Option<Html> {
-    match bound_of(d, c, q) {
-        Option::Some((op, count, _)) => match (cmp_html(op), count) {
-            (Option::Some(cmp), Term::Int(n)) => if n < 0 {
-                Option::None
-            } else {
-                Option::Some(cmp + text(v1text::udec_bytes(n as nat)))
-            },
-            _ => Option::None,
-        },
-        Option::None => Option::None,
-    }
-}
-
-// guideline_frequency(Ctx, E, C, W, Unit): `<cmp> N per <cmp> M <unit>, counted item: <noun>`.
-pub open spec fn frequency_html(pl: Bytes, d: DocFile, c: DocClause, args: Seq<Term>) -> Html {
-    match (count_html(d, c, args[2]), bound_html(d, c, args[3], args[4])) {
-        (Option::Some(n), Option::Some(w)) => n + fixed_bytes(sp_per_sp()) + w + fixed_bytes(
-            counted_item_sep(),
-        ) + joined_word(pl, d, c, "guideline_entity"@, 4, args[2], 2),
-        _ => fixed_bytes(not_stated()),
-    }
-}
-
-// guideline_recurrence_window(Ctx, E, Q, QUnit, A, L, LUnit):
-// `repeats <gap> apart during <length> from`.
-pub open spec fn window_html(d: DocFile, c: DocClause, args: Seq<Term>) -> Html {
-    match (bound_html(d, c, args[2], args[3]), bound_html(d, c, args[5], args[6])) {
-        (Option::Some(g), Option::Some(l)) => fixed_bytes(repeats_sp()) + g + fixed_bytes(
-            sp_apart_during_sp(),
-        ) + l + fixed_bytes(sp_from()),
-        _ => fixed_bytes(not_stated()),
-    }
-}
-
-pub open spec fn part_html(part: int) -> Html {
-    if part == 0 {
-        fixed_bytes(statement_2())
-    } else if part == 1 {
-        fixed_bytes(condition_2())
-    } else {
-        fixed_bytes(excluded_condition())
-    }
-}
-
-pub open spec fn timing_row(
-    pl: Bytes,
-    d: DocFile,
-    s: nat,
-    c: DocClause,
-    l: Term,
-    part: int,
-) -> Option<Html> {
-    match l {
-        Term::Comp(name, args) => if name == lit("guideline_interval"@) && args.len() == 6 {
-            let role = atom_name(args[2]);
-            Option::Some(
-                row(
-                    seq![
-                        cell(text(v1text::udec_bytes(s))),
-                        cell(part_html(part)),
-                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
-                        cell(timing_html(role, range_bound_html(d, c, args[3], args[4]))),
-                        cell(
-                            if role == lit("duration"@) {
-                                Seq::empty()
-                            } else if args[5] == Term::Atom(lit("none"@)) {
-                                fixed_bytes(not_stated())
-                            } else {
-                                joined_word(pl, d, c, "guideline_entity"@, 4, args[5], 2)
-                            },
-                        ),
-                    ],
-                ),
-            )
-        } else if name == lit("guideline_recurrence"@) && args.len() == 4 {
-            Option::Some(
-                row(
-                    seq![
-                        cell(text(v1text::udec_bytes(s))),
-                        cell(part_html(part)),
-                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
-                        cell(timing_html(lit("recurrence"@), bound_html(d, c, args[2], args[3]))),
-                        cell(Seq::empty()),
-                    ],
-                ),
-            )
-        } else if name == lit("guideline_order"@) && args.len() == 4 {
-            Option::Some(
-                row(
-                    seq![
-                        cell(text(v1text::udec_bytes(s))),
-                        cell(part_html(part)),
-                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
-                        cell(order_html(atom_name(args[2]))),
-                        cell(joined_word(pl, d, c, "guideline_entity"@, 4, args[3], 2)),
-                    ],
-                ),
-            )
-        } else if name == lit("guideline_frequency"@) && args.len() == 5 {
-            Option::Some(
-                row(
-                    seq![
-                        cell(text(v1text::udec_bytes(s))),
-                        cell(part_html(part)),
-                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
-                        cell(frequency_html(pl, d, c, args)),
-                        cell(Seq::empty()),
-                    ],
-                ),
-            )
-        } else if name == lit("guideline_recurrence_window"@) && args.len() == 7 {
-            Option::Some(
-                row(
-                    seq![
-                        cell(text(v1text::udec_bytes(s))),
-                        cell(part_html(part)),
-                        cell(joined_word(pl, d, c, "guideline_event"@, 3, args[1], 2)),
-                        cell(window_html(d, c, args)),
-                        cell(joined_word(pl, d, c, "guideline_entity"@, 4, args[4], 2)),
-                    ],
-                ),
-            )
-        } else {
-            Option::None
-        },
-        _ => Option::None,
-    }
-}
-
-pub open spec fn somes(xs: Seq<Option<Html>>) -> Seq<Html>
-    decreases xs.len(),
-{
-    if xs.len() == 0 {
-        Seq::empty()
-    } else {
-        somes(xs.drop_last()) + match xs.last() {
-            Option::Some(h) => seq![h],
-            Option::None => Seq::empty(),
-        }
-    }
-}
-
-// First occurrence of each row kept.
-pub open spec fn first_rows(xs: Seq<Html>) -> Seq<Html>
-    decreases xs.len(),
-{
-    if xs.len() == 0 {
-        Seq::empty()
-    } else if xs.drop_last().contains(xs.last()) {
-        first_rows(xs.drop_last())
-    } else {
-        first_rows(xs.drop_last()).push(xs.last())
-    }
-}
-
-pub open spec fn bundle_rows(pl: Bytes, d: DocFile, b: v1text::Bundle) -> Seq<Html> {
-    first_rows(
-        somes(
-            b.clauses.map_values(
-                |c: DocClause|
-                    clause_lits(c).map_values(|p: (Term, int)| timing_row(pl, d, b.s, c, p.0, p.1)),
-            ).flatten(),
-        ),
-    )
-}
-
-#[verifier::opaque]
-pub open spec fn timing_rows(pl: Bytes) -> Seq<Html> {
-    if v1text::accepts(pl) {
-        match crate::replay::the_v1(pl) {
-            V1File::Doc(d) => d.bundles.map_values(
-                |b: v1text::Bundle| bundle_rows(pl, d, b),
-            ).flatten(),
-            _ => Seq::empty(),
-        }
-    } else {
-        Seq::empty()
-    }
-}
-
-pub open spec fn timing_section(pl: Bytes) -> Seq<Html> {
-    let rows = timing_rows(pl);
-    if rows.len() == 0 {
-        Seq::empty()
-    } else {
-        seq![
-            fixed_bytes(section_open()),
-            fixed_bytes(h3_open_timing_as_compiled_h3_close()),
-            fixed_bytes(p_open_each_row_is_one_time_limit()),
-            fixed_bytes(table_open()),
-            fixed_bytes(thead_open_tr_open_th_open_sentence_th_close_th_open()),
-            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
-            fixed_bytes(table_close()),
-            fixed_bytes(section_close()),
-        ]
-    }
-}
-
-// --- Grade + preferences as compiled (contract s1 D8): one row per strength
-// literal of a document, joined as the timing table (the literal's own clause,
-// then every clause head in order); a word renders only when its bytes stand in
-// the pl, so every visible slot is a copied pl span, declared copy or a decimal.
-// A converted time quantity keeps no entity literal: it reads as its bound's
-// unit word (contract nt1 D11).
-pub open spec fn noun_html(pl: Bytes, d: DocFile, c: DocClause, r: Term) -> Html {
-    match first_with(join_terms(d, c), "guideline_entity"@, 4, 1, r) {
-        Option::Some(args) => pl_word(pl, atom_name(args[2])),
-        Option::None => match bound_of(d, c, r) {
-            Option::Some((_, Term::Int(n), Option::Some(b))) => match unit_html(
-                atom_name(b),
-                n == 1,
-            ) {
-                Option::Some(w) => w,
-                Option::None => fixed_bytes(not_stated()),
-            },
-            _ => fixed_bytes(not_stated()),
-        },
-    }
-}
-
-pub open spec fn grade_value_html(v: Bytes) -> Html {
-    if v == lit("strong"@) {
-        fixed_bytes(grade_strong())
-    } else if v == lit("conditional"@) {
-        fixed_bytes(grade_conditional())
-    } else if v == lit("high"@) {
-        fixed_bytes(grade_high())
-    } else if v == lit("moderate"@) {
-        fixed_bytes(grade_moderate())
-    } else if v == lit("low"@) {
-        fixed_bytes(grade_low())
-    } else if v == lit("very_low"@) {
-        fixed_bytes(grade_very_low())
-    } else {
-        fixed_bytes(not_stated())
-    }
-}
-
-pub open spec fn dimension_html(dim: Bytes) -> Html {
-    if dim == lit("strength"@) {
-        fixed_bytes(strength_of_the_recommendation())
-    } else if dim == lit("evidence"@) {
-        fixed_bytes(certainty_of_the_evidence())
-    } else {
-        fixed_bytes(not_stated())
-    }
-}
-
-pub open spec fn grade_row(pl: Bytes, d: DocFile, c: DocClause, l: Term) -> Option<Html> {
-    match l {
-        Term::Comp(name, args) => if name == lit("guideline_grade"@) && args.len() == 5 {
-            Option::Some(
-                row(
-                    seq![
-                        cell(dimension_html(atom_name(args[2]))),
-                        cell(grade_value_html(atom_name(args[3]))),
-                        cell(noun_html(pl, d, c, args[4])),
-                    ],
-                ),
-            )
-        } else {
-            Option::None
-        },
-        _ => Option::None,
-    }
-}
-
-pub open spec fn op_html(op: Bytes) -> Html {
-    if op == lit("should"@) {
-        fixed_bytes(op_should())
-    } else if op == lit("must"@) {
-        fixed_bytes(op_must())
-    } else if op == lit("can"@) {
-        fixed_bytes(op_can())
-    } else if op == lit("may"@) {
-        fixed_bytes(op_may())
-    } else if op == lit("-"@) {
-        fixed_bytes(op_not())
-    } else {
-        fixed_bytes(not_stated())
-    }
-}
-
-// The operators from `actual` to context ctx, outermost first: each step reads
-// the `guideline_operator(Outer, Ctx, Op)` literal that opens ctx.
-pub open spec fn stated_ops(ts: Seq<Term>, ctx: Term, fuel: nat) -> Seq<Html>
-    decreases fuel,
-{
-    if fuel == 0 || ctx == Term::Atom(lit("actual"@)) {
-        Seq::empty()
-    } else {
-        match first_with(ts, "guideline_operator"@, 3, 1, ctx) {
-            Option::Some(args) => stated_ops(ts, args[0], (fuel - 1) as nat).push(
-                op_html(atom_name(args[2])),
-            ),
-            Option::None => Seq::empty(),
-        }
-    }
-}
-
-pub open spec fn spaced(xs: Seq<Html>) -> Html
-    decreases xs.len(),
-{
-    if xs.len() == 0 {
-        Seq::empty()
-    } else if xs.len() == 1 {
-        xs[0]
-    } else {
-        spaced(xs.drop_last()) + fixed_bytes(word_sep()) + xs.last()
-    }
-}
-
-pub open spec fn stated_html(d: DocFile, c: DocClause, ctx: Term) -> Html {
-    let ts = join_terms(d, c);
-    let ops = stated_ops(ts, ctx, ts.len());
-    if ops.len() == 0 {
-        fixed_bytes(as_a_fact())
-    } else {
-        spaced(ops)
-    }
-}
-
-pub open spec fn preference_row(
-    pl: Bytes,
-    d: DocFile,
-    s: nat,
-    c: DocClause,
-    l: Term,
-    part: int,
-) -> Option<Html> {
-    match l {
-        Term::Comp(name, args) => if name == lit("guideline_preference"@) && args.len() == 4 {
-            Option::Some(
-                row(
-                    seq![
-                        cell(text(v1text::udec_bytes(s))),
-                        cell(part_html(part)),
-                        cell(stated_html(d, c, args[0])),
-                        cell(verb_html(pl, d, c, args[1])),
-                        cell(noun_html(pl, d, c, args[2])),
-                        cell(
-                            if args[3] == Term::Atom(lit("none"@)) {
-                                fixed_bytes(none_named())
-                            } else {
-                                noun_html(pl, d, c, args[3])
-                            },
-                        ),
-                    ],
-                ),
-            )
-        } else {
-            Option::None
-        },
-        _ => Option::None,
-    }
-}
-
-pub open spec fn strength_bundle_rows(
-    pl: Bytes,
-    d: DocFile,
-    b: v1text::Bundle,
-    grades: bool,
-) -> Seq<Html> {
-    first_rows(
-        somes(
-            b.clauses.map_values(
-                |c: DocClause|
-                    clause_lits(c).map_values(
-                        |p: (Term, int)|
-                            if grades {
-                                grade_row(pl, d, c, p.0)
-                            } else {
-                                preference_row(pl, d, b.s, c, p.0, p.1)
-                            },
-                    ),
-            ).flatten(),
-        ),
-    )
-}
-
-#[verifier::opaque]
-pub open spec fn strength_rows(pl: Bytes, grades: bool) -> Seq<Html> {
-    if v1text::accepts(pl) {
-        match crate::replay::the_v1(pl) {
-            V1File::Doc(d) => d.bundles.map_values(
-                |b: v1text::Bundle| strength_bundle_rows(pl, d, b, grades),
-            ).flatten(),
-            _ => Seq::empty(),
-        }
-    } else {
-        Seq::empty()
-    }
-}
-
-pub open spec fn strength_section(pl: Bytes, grades: bool) -> Seq<Html> {
-    let rows = strength_rows(pl, grades);
-    if rows.len() == 0 {
-        Seq::empty()
-    } else {
-        seq![
-            fixed_bytes(section_open()),
-            fixed_bytes(
-                if grades {
-                    h3_open_grade_as_compiled_h3_close()
-                } else {
-                    h3_open_preferences_as_compiled_h3_close()
-                },
-            ),
-            fixed_bytes(
-                if grades {
-                    p_open_each_row_is_one_grade()
-                } else {
-                    p_open_each_row_is_one_preference()
-                },
-            ),
-            fixed_bytes(table_open()),
-            fixed_bytes(
-                if grades {
-                    thead_open_tr_open_th_open_measure()
-                } else {
-                    thead_open_tr_open_th_open_sentence_stated()
-                },
-            ),
-            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
-            fixed_bytes(table_close()),
-            fixed_bytes(section_close()),
-        ]
-    }
-}
-
-// --- Qualifiers as compiled (contract s2 D7): one row per qualifier literal of
-// a document, joined as the timing table; Action = the event lemma, then the
-// noun of its second participant where it names one.
+// A qualifier class as its kind word (user ruling, contract s2 D7).
 pub open spec fn kind_html(k: Bytes) -> Html {
     if k == lit("usuality"@) {
         fixed_bytes(kind_how_often())
@@ -2152,110 +1274,173 @@ pub open spec fn kind_html(k: Bytes) -> Html {
     }
 }
 
-// Participant `n` of event e: the first `guideline_arg(_, e, n, X)`.
-pub open spec fn participant(ts: Seq<Term>, e: Term, n: int) -> Option<Term>
-    decreases ts.len(),
-{
-    if ts.len() == 0 {
-        Option::None
+// --- Word meanings + reading words (contract ur; Decisions `Review UI`): the
+// table-level reading of each strength, evidence, preference, alternative,
+// qualifier, scope and exclusion row — on the guideline page in one table, on a
+// document page behind each ACE token that spells a row's lemma. A reading states
+// how the table reads the word in every document, never that one occurrence
+// compiled that way.
+pub open spec fn reading_of(kind: int, v: Bytes) -> Html {
+    if kind == 0 && v == lit("strong"@) {
+        fixed_bytes(a_strong_recommendation())
+    } else if kind == 0 && v == lit("conditional"@) {
+        fixed_bytes(a_conditional_recommendation())
+    } else if kind == 1 && v == lit("high"@) {
+        fixed_bytes(high_certainty_of_the_evidence())
+    } else if kind == 1 && v == lit("moderate"@) {
+        fixed_bytes(moderate_certainty_of_the_evidence())
+    } else if kind == 1 && v == lit("low"@) {
+        fixed_bytes(low_certainty_of_the_evidence())
+    } else if kind == 1 && v == lit("very_low"@) {
+        fixed_bytes(very_low_certainty_of_the_evidence())
+    } else if kind == 2 {
+        fixed_bytes(the_preferred_option())
+    } else if kind == 3 {
+        fixed_bytes(the_alternative_to_the_preferred_option())
+    } else if kind == 4 {
+        fixed_bytes(a_qualifier_sep()) + kind_html(v)
+    } else if kind == 5 {
+        fixed_bytes(every_recommendation_of_this_guideline())
+    } else if kind == 6 {
+        fixed_bytes(the_verb_of_a_scope_exclusion())
     } else {
-        match ts[0] {
-            Term::Comp(name, args) => if name == lit("guideline_arg"@) && args.len() == 4 && args[1]
-                == e && args[2] == Term::Int(n) {
-                Option::Some(args[3])
-            } else {
-                participant(ts.drop_first(), e, n)
-            },
-            _ => participant(ts.drop_first(), e, n),
-        }
+        fixed_bytes(not_stated())
     }
 }
 
-// The action word of event e: its lemma, except that a copula (`be`) names its
-// subject's noun, the thing that the row judges (user ruling at the phase close).
-pub open spec fn verb_html(pl: Bytes, d: DocFile, c: DocClause, e: Term) -> Html {
-    match first_with(join_terms(d, c), "guideline_event"@, 3, 1, e) {
-        Option::Some(args) => if atom_name(args[2]) == lit("be"@) {
-            match participant(join_terms(d, c), e, 1) {
-                Option::Some(x) => noun_html(pl, d, c, x),
-                Option::None => fixed_bytes(not_stated()),
-            }
-        } else {
-            pl_word(pl, atom_name(args[2]))
-        },
-        Option::None => fixed_bytes(not_stated()),
+// (lemma, reading) per reading row: strength, evidence, preference, alternative,
+// qualifier, scope, exclusion rows, each kind in file order.
+pub open spec fn reading_rows(t: Vocabulary) -> Seq<(Bytes, Html)> {
+    t.strengths.map_values(|r: (Bytes, Bytes)| (r.0, reading_of(0, r.1))) + t.evidences.map_values(
+        |r: (Bytes, Bytes)| (r.0, reading_of(1, r.1)),
+    ) + t.preferences.map_values(|a: Bytes| (a, reading_of(2, empty())))
+        + t.alternatives.map_values(|a: Bytes| (a, reading_of(3, empty())))
+        + t.qualifiers.map_values(|r: (Bytes, Bytes)| (r.0, reading_of(4, r.1)))
+        + t.scopes.map_values(|r: (Bytes, Bytes)| (r.0, reading_of(5, empty())))
+        + t.exclusions.map_values(|a: Bytes| (a, reading_of(6, empty())))
+}
+
+// The reading of lemma `l`: its first reading row's.
+pub open spec fn first_reading(rs: Seq<(Bytes, Html)>, l: Bytes) -> Html
+    decreases rs.len(),
+{
+    if rs.len() == 0 {
+        fixed_bytes(not_stated())
+    } else if rs[0].0 == l {
+        rs[0].1
+    } else {
+        first_reading(rs.drop_first(), l)
     }
 }
 
-pub open spec fn action_html(pl: Bytes, d: DocFile, c: DocClause, e: Term) -> Html {
-    let verb = verb_html(pl, d, c, e);
-    match participant(join_terms(d, c), e, 2) {
-        Option::Some(x) => match first_with(join_terms(d, c), "guideline_entity"@, 4, 1, x) {
-            Option::Some(args) => verb + fixed_bytes(word_sep()) + pl_word(pl, atom_name(args[2])),
-            Option::None => match bound_of(d, c, x) {
-                Option::Some((_, Term::Int(n), Option::Some(b))) => match unit_html(
-                    atom_name(b),
-                    n == 1,
-                ) {
-                    Option::Some(w) => verb + w,
-                    Option::None => verb,
-                },
-                _ => verb,
-            },
-        },
-        Option::None => verb,
-    }
+// Lemmas that read in any sentence: every reading row outside the scope pair.
+pub open spec fn plain_lemmas(t: Vocabulary) -> Seq<Bytes> {
+    vocabulary::keys(t.strengths) + vocabulary::keys(t.evidences) + t.preferences + t.alternatives
+        + vocabulary::keys(t.qualifiers)
 }
 
-pub open spec fn qualifier_row(
-    pl: Bytes,
-    d: DocFile,
-    s: nat,
-    c: DocClause,
-    l: Term,
-    part: int,
-) -> Option<Html> {
-    match l {
-        Term::Comp(name, args) => if name == lit("guideline_qualifier"@) && args.len() == 4 {
-            Option::Some(
-                row(
+// The exclusion verb as an ACE sentence can spell it: display lookups for the
+// lemma, never a claim about the token's own lemma.
+pub open spec fn verb_forms(v: Bytes) -> Seq<Bytes> {
+    seq![v, v + lit("s"@), v + lit("es"@)] + (if v.len() > 0 && v.last() == 121u8 {
+        seq![v.drop_last() + lit("ies"@)]
+    } else {
+        Seq::empty()
+    })
+}
+
+// The scope sentence of Word meanings holds only when no plain lemma shadows the pair.
+pub open spec fn scope_shown(t: Vocabulary) -> bool {
+    vocabulary::scoped(t) && !plain_lemmas(t).contains(t.scopes[0].0) && verb_forms(
+        t.exclusions[0],
+    ).filter(|f: Bytes| plain_lemmas(t).contains(f)).len() == 0
+}
+
+pub open spec fn meanings_section(t: Option<Bytes>) -> Seq<Html> {
+    match t {
+        Option::Some(raw) => match vocabulary::parse_vocabulary(raw) {
+            Result::Ok(m) => {
+                let rows = reading_rows(m);
+                if rows.len() == 0 {
+                    Seq::empty()
+                } else {
                     seq![
-                        cell(text(v1text::udec_bytes(s))),
-                        cell(part_html(part)),
-                        cell(stated_html(d, c, args[0])),
-                        cell(action_html(pl, d, c, args[1])),
-                        cell(kind_html(atom_name(args[2]))),
-                        cell(pl_word(pl, atom_name(args[3]))),
-                    ],
-                ),
-            )
-        } else {
-            Option::None
+                        fixed_bytes(section_open()),
+                        fixed_bytes(h2_open_word_meanings_h2_close()),
+                        fixed_bytes(p_open_the_compiler_reads_each_word()),
+                    ] + (if scope_shown(m) {
+                        seq![
+                            fixed_bytes(p_open_the_words_sp()) + pl_word(raw, m.scopes[0].0)
+                                + fixed_bytes(sp_and_sp()) + pl_word(raw, m.exclusions[0])
+                                + fixed_bytes(sp_have_a_solid_underline_only_in()),
+                        ]
+                    } else {
+                        Seq::empty()
+                    }) + seq![
+                        fixed_bytes(table_open_2()),
+                        fixed_bytes(thead_open_tr_open_th_open_word_th_close_th_open()),
+                        fixed_bytes(tbody_open()) + lines(
+                            rows.map_values(|r: (Bytes, Html)| word_row(pl_word(raw, r.0), r.1)),
+                        ) + fixed_bytes(tbody_close()),
+                        fixed_bytes(table_close()),
+                        fixed_bytes(section_close()),
+                    ]
+                }
+            },
+            Result::Err(_) => Seq::empty(),
         },
-        _ => Option::None,
+        Option::None => Seq::empty(),
     }
 }
 
-pub open spec fn qualifier_bundle_rows(pl: Bytes, d: DocFile, b: v1text::Bundle) -> Seq<Html> {
-    first_rows(
-        somes(
-            b.clauses.map_values(
-                |c: DocClause|
-                    clause_lits(c).map_values(
-                        |p: (Term, int)| qualifier_row(pl, d, b.s, c, p.0, p.1),
-                    ),
-            ).flatten(),
-        ),
-    )
+// A reading word: characters [start, end) of the ACE text.
+pub ghost struct Reading {
+    pub start: int,
+    pub end: int,
+    pub lemma: Bytes,
 }
 
+pub open spec fn token_char(c: char) -> bool {
+    ('0' <= c <= '9') || ('A' <= c <= 'Z') || ('a' <= c <= 'z')
+}
+
+// keyword_html's token scan over characters.
+pub open spec fn char_token_end(cs: Seq<char>, i: int) -> int
+    decreases cs.len() - i,
+{
+    if 0 <= i < cs.len() && token_char(cs[i]) {
+        char_token_end(cs, i + 1)
+    } else if 0 <= i && i + 1 < cs.len() && cs[i] == '-' && token_char(cs[i + 1]) {
+        char_token_end(cs, i + 2)
+    } else {
+        i
+    }
+}
+
+// A bundle holding a clause that the compiler emitted as the scope exclusion
+// record of `key`.
+pub open spec fn has_record(b: v1text::Bundle, key: Bytes) -> bool {
+    exists|i: int|
+        0 <= i < b.clauses.len() && (#[trigger] b.clauses[i]).head == crate::emit::exclusion_record(
+            key,
+        )
+}
+
+// A bundle paired with its ACE line: the s-th nonempty LF-delimited line (the
+// certification line law) equals the bundle's sentence text.
+pub open spec fn paired(ace: Bytes, b: v1text::Bundle) -> bool {
+    let ls = crate::emit::nonempty_lines(ace);
+    1 <= b.s <= ls.len() && ls[b.s - 1] == b.text
+}
+
+// The nonempty-line ordinals of the exclusion sentences.
 #[verifier::opaque]
-pub open spec fn qualifier_rows(pl: Bytes) -> Seq<Html> {
-    if v1text::accepts(pl) {
-        match crate::replay::the_v1(pl) {
-            V1File::Doc(d) => d.bundles.map_values(
-                |b: v1text::Bundle| qualifier_bundle_rows(pl, d, b),
-            ).flatten(),
+pub open spec fn exclusion_lines(d: Document, key: Bytes) -> Seq<nat> {
+    if v1text::accepts(d.pl) {
+        match crate::replay::the_v1(d.pl) {
+            V1File::Doc(f) => f.bundles.filter(
+                |b: v1text::Bundle| has_record(b, key) && paired(d.ace, b),
+            ).map_values(|b: v1text::Bundle| b.s),
             _ => Seq::empty(),
         }
     } else {
@@ -2263,21 +1448,180 @@ pub open spec fn qualifier_rows(pl: Bytes) -> Seq<Html> {
     }
 }
 
-pub open spec fn qualifier_section(pl: Bytes) -> Seq<Html> {
-    let rows = qualifier_rows(pl);
-    if rows.len() == 0 {
-        Seq::empty()
+// First match: a plain lemma anywhere; inside an exclusion sentence the scope
+// noun, then a form of the exclusion verb (read as the verb's lemma).
+pub open spec fn word_lemma(t: Vocabulary, w: Bytes, exclusion: bool) -> Option<Bytes> {
+    if plain_lemmas(t).contains(w) {
+        Option::Some(w)
+    } else if exclusion && vocabulary::scoped(t) && w == t.scopes[0].0 {
+        Option::Some(w)
+    } else if exclusion && vocabulary::scoped(t) && verb_forms(t.exclusions[0]).contains(w) {
+        Option::Some(t.exclusions[0])
     } else {
-        seq![
-            fixed_bytes(section_open()),
-            fixed_bytes(h3_open_qualifiers_as_compiled_h3_close()),
-            fixed_bytes(p_open_each_row_is_one_qualifier()),
-            fixed_bytes(table_open()),
-            fixed_bytes(thead_open_tr_open_th_open_sentence_kind()),
-            fixed_bytes(tbody_open()) + lines(rows) + fixed_bytes(tbody_close()),
-            fixed_bytes(table_close()),
-            fixed_bytes(section_close()),
-        ]
+        Option::None
+    }
+}
+
+// The reading words of cs[i..]: `line` = the ordinal of the last nonempty line
+// begun, `fresh` = at a line start, `ex` = the exclusion ordinals.
+pub open spec fn reading_scan(
+    cs: Seq<char>,
+    i: int,
+    line: nat,
+    fresh: bool,
+    t: Vocabulary,
+    ex: Seq<nat>,
+) -> Seq<Reading>
+    decreases cs.len() - i,
+{
+    if i < 0 || i >= cs.len() {
+        Seq::empty()
+    } else if cs[i] == '\n' {
+        reading_scan(cs, i + 1, line, true, t, ex)
+    } else {
+        let n = if fresh {
+            line + 1
+        } else {
+            line
+        };
+        if token_char(cs[i]) {
+            let e = char_token_end(cs, i + 1);
+            let end = if i < e <= cs.len() {
+                e
+            } else {
+                i + 1
+            };
+            (match word_lemma(t, encode_utf8(cs.subrange(i, end)), ex.contains(n)) {
+                Option::Some(l) => seq![Reading { start: i, end, lemma: l }],
+                Option::None => Seq::empty(),
+            }) + reading_scan(cs, end, n, false, t, ex)
+        } else {
+            reading_scan(cs, i + 1, n, false, t, ex)
+        }
+    }
+}
+
+#[verifier::opaque]
+pub open spec fn reading_words(g: Guideline, d: Document) -> Seq<Reading> {
+    match g.vocabulary {
+        Option::Some(raw) => match vocabulary::parse_vocabulary(raw) {
+            Result::Ok(t) => reading_scan(
+                chars(d.ace),
+                0,
+                0,
+                true,
+                t,
+                if vocabulary::scoped(t) {
+                    exclusion_lines(d, t.scopes[0].1)
+                } else {
+                    Seq::empty()
+                },
+            ),
+            Result::Err(_) => Seq::empty(),
+        },
+        Option::None => Seq::empty(),
+    }
+}
+
+// The marks over characters [a, b), clipped + shifted to the piece.
+pub open spec fn clip(spans: Seq<align::OutSpan>, a: int, b: int) -> Seq<align::OutSpan> {
+    spans.filter(
+        |p: align::OutSpan|
+            (if p.start < a {
+                a
+            } else {
+                p.start
+            }) < (if p.end < b {
+                p.end
+            } else {
+                b
+            }),
+    ).map_values(
+        |p: align::OutSpan|
+            align::OutSpan {
+                start: (if p.start < a {
+                    a
+                } else {
+                    p.start
+                }) - a,
+                end: (if p.end < b {
+                    p.end
+                } else {
+                    b
+                }) - a,
+                index: p.index,
+            },
+    )
+}
+
+pub open spec fn piece_html(s: Bytes, spans: Seq<align::OutSpan>, a: int, b: int) -> Html {
+    marked_html(slice_text(s, a, b), clip(spans, a, b), true, 0)
+}
+
+pub open spec fn words_html(
+    s: Bytes,
+    spans: Seq<align::OutSpan>,
+    ws: Seq<Reading>,
+    cursor: int,
+) -> Html
+    decreases ws.len(),
+{
+    if ws.len() == 0 {
+        piece_html(s, spans, cursor, chars(s).len() as int)
+    } else {
+        piece_html(s, spans, cursor, ws[0].start) + fixed_bytes(button_open_rw()) + attr(
+            ws[0].lemma,
+        ) + fixed_bytes(attr_end()) + piece_html(s, spans, ws[0].start, ws[0].end) + fixed_bytes(
+            button_close(),
+        ) + words_html(s, spans, ws.drop_first(), ws[0].end)
+    }
+}
+
+// The ACE box: today's rendering, or the reading words over it.
+pub open spec fn ace_html(g: Guideline, d: Document) -> Html {
+    let ws = reading_words(g, d);
+    if ws.len() == 0 {
+        aligned_text(g, d, true)
+    } else {
+        words_html(
+            d.ace,
+            match alignment(g, d) {
+                Option::Some(m) => m.ace,
+                Option::None => Seq::empty(),
+            },
+            ws,
+            0,
+        )
+    }
+}
+
+pub open spec fn reading_span(raw: Bytes, t: Vocabulary, l: Bytes) -> Html {
+    fixed_bytes(span_data_w()) + attr(l) + fixed_bytes(
+        hidden_in_this_guideline_the_compiler_reads(),
+    ) + pl_word(raw, l) + fixed_bytes(sp_as_sp()) + first_reading(reading_rows(t), l) + fixed_bytes(
+        period(),
+    ) + fixed_bytes(span_close())
+}
+
+// The reserved line under the ACE box: the hint, then one hidden span per lemma.
+pub open spec fn reading_line(g: Guideline, d: Document) -> Seq<Html> {
+    let ws = reading_words(g, d);
+    match g.vocabulary {
+        Option::Some(raw) => match vocabulary::parse_vocabulary(raw) {
+            Result::Ok(t) => if ws.len() == 0 {
+                Seq::empty()
+            } else {
+                seq![
+                    fixed_bytes(p_class_reading_open_hint()) + check::dedup_bytes(
+                        ws.map_values(|w: Reading| w.lemma),
+                    ).map_values(|l: Bytes| reading_span(raw, t, l)).flatten() + fixed_bytes(
+                        p_close(),
+                    ),
+                ]
+            },
+            Result::Err(_) => Seq::empty(),
+        },
+        Option::None => Seq::empty(),
     }
 }
 
@@ -2361,6 +1705,8 @@ pub open spec fn document_html(
                 fixed_bytes(p_open_label_open_input_open_highlighting_label_close_try()),
                 fixed_bytes(script_html()),
             ]
+        } else if reading_words(g, d).len() > 0 {
+            seq![fixed_bytes(script_html())]
         } else {
             Seq::empty()
         }) + seq![
@@ -2370,10 +1716,9 @@ pub open spec fn document_html(
             fixed_bytes(section_close()),
             fixed_bytes(section_open()),
             fixed_bytes(h3_open_attempto_controlled_english_ace_h3_close()),
-            fixed_bytes(pre_open()) + aligned_text(g, d, true) + fixed_bytes(pre_close()),
+            fixed_bytes(pre_open()) + ace_html(g, d) + fixed_bytes(pre_close()),
+        ] + reading_line(g, d) + seq![
             fixed_bytes(section_close()),
-        ] + timing_section(d.pl) + strength_section(d.pl, true) + strength_section(d.pl, false)
-            + qualifier_section(d.pl) + seq![
             fixed_bytes(section_open_3()),
             fixed_bytes(h3_open_record_a_decision_h3_close()),
             fixed_bytes(p_open_does_the_ace_representation_appropriately()),
@@ -3509,99 +2854,11 @@ copy_table! {
     commit_2 = "commit";
     ui_verdict_invalid_commit = "ui: verdict: invalid commit";
     ui_verdict_commit_does_not_hold = "ui: verdict: commit does not hold the reviewed bundle";
-    h3_open_timing_as_compiled_h3_close = "<h3>Timing as compiled</h3>";
-    p_open_each_row_is_one_time_limit = "<p>Each row is one time limit that the compiler read from the ACE text. The compiler records these limits and does not calculate dates.</p>";
-    thead_open_tr_open_th_open_sentence_th_close_th_open = "<thead><tr><th>Sentence</th><th>Part</th><th>Action</th><th>Timing</th><th>Reference point</th></tr></thead>";
-    statement_2 = "statement";
-    condition_2 = "condition";
-    excluded_condition = "excluded condition";
     not_stated = "not stated";
-    exactly_sp = "exactly ";
-    at_least_sp = "at least ";
-    more_than_sp = "more than ";
-    at_most_sp = "at most ";
-    less_than_sp = "less than ";
-    lasts_sp = "lasts ";
-    within_sp = "within ";
-    repeats_sp = "repeats ";
-    sp_after = " after";
-    sp_before = " before";
-    sp_of = " of";
-    sp_apart = " apart";
-    sp_second = " second";
-    sp_seconds = " seconds";
-    sp_minute = " minute";
-    sp_minutes = " minutes";
-    sp_hour = " hour";
-    sp_hours = " hours";
-    sp_day = " day";
-    sp_days = " days";
-    sp_week = " week";
-    sp_weeks = " weeks";
-    sp_month = " month";
-    sp_months = " months";
-    sp_year = " year";
-    sp_years = " years";
-    h2_open_time_words_h2_close = "<h2>Time words</h2>";
-    p_open_the_compiler_reads_a_time_limit = "<p>The compiler reads a time limit from the ACE text only through the words in this table. The table applies to every document in this guideline. Each time limit that the compiler read appears on its document page under Timing as compiled.</p>";
-    thead_open_tr_open_th_open_word_th_close_th_open = "<thead><tr><th>Word</th><th>Read as</th></tr></thead>";
-    unit_of_time = "unit of time:";
-    how_long_the_action_lasts = "how long the action lasts";
-    how_far_the_action_lies_from_a = "how far the action lies from a reference point, before or after it";
-    how_far_apart_repeats_of_the_action_lie = "how far apart repeats of the action lie";
-    with_sp = "with ";
-    how_long_after_or_only_after = "how long after a reference point the action occurs, or only that it occurs after it";
-    how_long_before_or_only_before = "how long before a reference point the action occurs, or only that it occurs before it";
-    the_time_window_in_which_the_spacing = "the time window in which the spacing of repeats holds";
-    how_many_of_an_item_the_action = "how many of an item the action involves in each period";
-    before = "before";
-    after = "after";
-    sp_per_sp = " per ";
-    counted_item_sep = ", counted item: ";
-    sp_apart_during_sp = " apart during ";
-    sp_from = " from";
-    about_sp = "about ";
-    a_minimum_of_sp = "a minimum of ";
-    sp_to_sp = " to ";
-    marks_a_time_limit_as_approximate = "marks a time limit as approximate";
-    joins_the_upper_end_of_a_minimum = "joins the upper end of a minimum that is stated as a range";
     meta_viewport = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
     p_class_provenance_open = "<p class=\"provenance\">";
     span_plain_open = "<span>";
     passage_cap_sp = "Passage ";
-    h3_open_grade_as_compiled_h3_close = "<h3>Grade as compiled</h3>";
-    p_open_each_row_is_one_grade = "<p>Each row is one grade that the compiler read from this document. A grade applies to every statement of the document.</p>";
-    thead_open_tr_open_th_open_measure = "<thead><tr><th>Measure</th><th>Value</th><th>Label in the source</th></tr></thead>";
-    strength_of_the_recommendation = "Strength of the recommendation";
-    certainty_of_the_evidence = "Certainty of the evidence";
-    grade_strong = "strong";
-    grade_conditional = "conditional";
-    grade_high = "high";
-    grade_moderate = "moderate";
-    grade_low = "low";
-    grade_very_low = "very low";
-    h3_open_preferences_as_compiled_h3_close = "<h3>Preferences as compiled</h3>";
-    p_open_each_row_is_one_preference = "<p>Each row is one preference that the compiler read from the ACE text. A preference names the option that the source prefers. It does not forbid the other option.</p>";
-    thead_open_tr_open_th_open_sentence_stated = "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Preferred</th><th>Instead of</th></tr></thead>";
-    op_should = "should";
-    op_must = "must";
-    op_can = "can";
-    op_may = "may";
-    op_not = "not";
-    as_a_fact = "as a fact";
-    none_named = "none named";
-    word_sep = " ";
-    h2_open_grade_words_h2_close = "<h2>Grade words</h2>";
-    p_open_the_compiler_reads_a_grade = "<p>The compiler reads the grade of a recommendation only through the words in this table. The table applies to every document in this guideline. Each grade that the compiler read appears on its document page under Grade as compiled.</p>";
-    strength_of_the_recommendation_sep = "strength of the recommendation: ";
-    certainty_of_the_evidence_sep = "certainty of the evidence: ";
-    h2_open_preference_words_h2_close = "<h2>Preference words</h2>";
-    p_open_the_compiler_reads_a_preference = "<p>The compiler reads a preference only through the words in this table. The table applies to every document in this guideline. Each preference that the compiler read appears on its document page under Preferences as compiled.</p>";
-    marks_the_preferred_option = "marks the preferred option";
-    joins_the_option_that_the_preferred = "joins the option that the preferred option replaces";
-    h3_open_qualifiers_as_compiled_h3_close = "<h3>Qualifiers as compiled</h3>";
-    p_open_each_row_is_one_qualifier = "<p>Each row is one qualifier word that the compiler read from the ACE text. A qualifier describes the wording of its action or condition. A qualifier on a condition must also hold in the facts that meet the condition. An excluded condition tests the condition together with its qualifier.</p>";
-    thead_open_tr_open_th_open_sentence_kind = "<thead><tr><th>Sentence</th><th>Part</th><th>Stated as</th><th>Action</th><th>Kind</th><th>Word</th></tr></thead>";
     kind_how_often = "How often";
     kind_best_case = "Best case";
     kind_emphasis = "Emphasis";
@@ -3609,8 +2866,28 @@ copy_table! {
     kind_strength_of_wording = "Strength of wording";
     kind_possibility = "Possibility";
     kind_condition_of_use = "Condition of use";
-    h2_open_qualifier_words_h2_close = "<h2>Qualifier words</h2>";
-    p_open_the_compiler_reads_a_qualifier = "<p>The compiler reads a qualifier only through the words in this table. The table applies to every document in this guideline. Each qualifier that the compiler read appears on its document page under Qualifiers as compiled.</p>";
+    thead_open_tr_open_th_open_word_th_close_th_open = "<thead><tr><th>Word</th><th>Read as</th></tr></thead>";
+    h2_open_word_meanings_h2_close = "<h2>Word meanings</h2>";
+    p_open_the_compiler_reads_each_word = "<p>The compiler reads each word in this table as shown, in every document of this guideline. In the ACE text of a document page, select a word with a solid underline to see its reading.</p>";
+    sp_have_a_solid_underline_only_in = " have a solid underline only in the sentences that the compiler read as scope exclusions.</p>";
+    a_strong_recommendation = "a strong recommendation";
+    a_conditional_recommendation = "a conditional recommendation";
+    high_certainty_of_the_evidence = "high certainty of the evidence";
+    moderate_certainty_of_the_evidence = "moderate certainty of the evidence";
+    low_certainty_of_the_evidence = "low certainty of the evidence";
+    very_low_certainty_of_the_evidence = "very low certainty of the evidence";
+    the_preferred_option = "the preferred option";
+    the_alternative_to_the_preferred_option = "the alternative to the preferred option";
+    a_qualifier_sep = "a qualifier: ";
+    every_recommendation_of_this_guideline = "every recommendation of this guideline";
+    the_verb_of_a_scope_exclusion = "the verb of a scope exclusion: when its condition holds, no recommendation of this guideline applies to the patient";
+    button_open_rw = "<button type=\"button\" class=\"rw\" aria-pressed=\"false\" data-w=\"";
+    button_close = "</button>";
+    p_class_reading_open_hint = "<p class=\"reading\" aria-live=\"polite\"><span data-w=\"\">Select a word with a solid underline to see how the compiler reads it.</span>";
+    span_data_w = "<span data-w=\"";
+    hidden_in_this_guideline_the_compiler_reads = "\" hidden>In this guideline, the compiler reads ";
+    sp_as_sp = " as ";
+    p_open_the_words_sp = "<p>The words ";
 }
 
 verus! {

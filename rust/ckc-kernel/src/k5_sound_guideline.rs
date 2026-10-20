@@ -1,7 +1,6 @@
 use crate::{
     k5_sound_build as b, k5_sound_corpus as corpus, k5_sound_escape as h, k5_sound_literals as l,
-    k5_sound_model as m, k5_sound_summary as summary, k5_sound_timing as t,
-    k5_sound_words as words,
+    k5_sound_meanings as t, k5_sound_model as m, k5_sound_summary as summary,
 };
 use ckc_spec::{check as ck, ui as u};
 use vstd::prelude::*;
@@ -321,9 +320,7 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     hide(u::lines);
     hide(u::number);
     hide(u::url_seg);
-    hide(u::words_section);
-    hide(u::strength_words_section);
-    hide(u::qualifier_words_section);
+    hide(u::meanings_section);
     l::l080(inputs);
     l::l083(inputs);
     l::l084(inputs);
@@ -343,30 +340,12 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     l::f108(inputs);
     head_sound(g, inputs);
     tail_sound(g, inputs);
-    words::section(g, inputs);
+    t::section(g, inputs);
     let head = head_parts(g);
+    let meanings = u::meanings_section(g.vocabulary);
     let tail = tail_parts(g);
-    crate::k5_sound_strength_words::section(g, true, inputs);
-    crate::k5_sound_strength_words::section(g, false, inputs);
-    crate::k5_sound_qualifier_words::section(g, inputs);
-    let earlier = u::words_section(g.vocabulary) + u::strength_words_section(g.vocabulary, true)
-        + u::strength_words_section(g.vocabulary, false);
-    t::cat3(
-        u::words_section(g.vocabulary),
-        u::strength_words_section(g.vocabulary, true),
-        u::strength_words_section(g.vocabulary, false),
-        inputs,
-    );
-    let middle = earlier + u::qualifier_words_section(g.vocabulary);
-    t::cat3(earlier, u::qualifier_words_section(g.vocabulary), Seq::empty(), inputs);
-    assert(middle =~= earlier + u::qualifier_words_section(g.vocabulary) + Seq::<u::Html>::empty());
-    t::cat3(head, middle, tail, inputs);
-    let parts = head + u::words_section(g.vocabulary) + u::strength_words_section(
-        g.vocabulary,
-        true,
-    ) + u::strength_words_section(g.vocabulary, false) + u::qualifier_words_section(g.vocabulary)
-        + tail;
-    assert(parts =~= head + middle + tail);
+    t::cat3(head, meanings, tail, inputs);
+    let parts = head + meanings + tail;
     b::lines(parts, inputs);
     corpus::title(g, inputs);
     h::text(u::title(g), inputs);

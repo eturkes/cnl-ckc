@@ -1,6 +1,6 @@
 HTTP 405
 Content-Type: text/html; charset=utf-8
-Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-ceqWjP6N4e7DIvYMclbfnBzryu3YAwfoDBRiNcC8+hw='
+Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-tviKvuob1PVK51yhma4eljUQf6go1NNWiWZqPNpsB1I='
 X-Content-Type-Options: nosniff
 Referrer-Policy: no-referrer
 Cache-Control: no-store
@@ -141,6 +141,10 @@ main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-c
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
+button.rw { margin: 0; padding: 0; border: 0; font: inherit; color: inherit; background: none; cursor: pointer; text-decoration: underline solid #1d4ed8 1px; text-underline-offset: 0.35em; }
+button.rw[aria-pressed="true"] { text-decoration-thickness: 3px; }
+p.reading { min-height: 1.55em; margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+p.reading span[data-w=""] { color: #4b5563; }
 @media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }
 @media print {
 body { max-width: none; padding: 0; }
@@ -153,6 +157,8 @@ details::details-content { content-visibility: visible; }
 pre { border: none; padding: 0; white-space: pre-wrap; overflow-x: visible; }
 a { color: inherit; text-decoration: none; }
 .chip { border: 1px solid #111827; background: none; color: inherit; }
+button.rw { text-decoration: none; }
+p.reading { display: none; }
 }
 </style>
 </head>
