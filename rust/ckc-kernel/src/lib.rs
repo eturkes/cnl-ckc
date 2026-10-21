@@ -39,6 +39,8 @@
 // `cargo verus verify`.
 mod align_impl;
 #[cfg(test)]
+mod cix2_tests;
+#[cfg(test)]
 mod cix_tests;
 mod compare_decimal;
 mod compare_impl;

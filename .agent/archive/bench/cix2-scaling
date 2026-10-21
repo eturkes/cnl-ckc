@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# cix2 P1: three CPU samples per size; every build median <= 1 s.
+# Each probe owns a heavy slot. A completed build > 10 s or a 120 s wall
+# timeout stops that case, including its remaining repetitions (rc 1).
+# Contention at any run start requires two blocks; both must pass.
+set -euo pipefail
+[ "$#" = 1 ] || { echo 'usage: cix2-scaling <repo-root>' >&2; exit 2; }
+root=$(readlink -f "$1")
+[ -f "$root/rust/Cargo.toml" ] || { echo 'cix2-scaling: missing workspace' >&2; exit 2; }
+toolchain=${CKC_TOOLCHAIN:-$root/.toolchain}
+# A missing pinned toolchain would fall through to any cargo on PATH.
+[ -x "$toolchain/cargo/bin/cargo" ] || { echo "cix2-scaling: no pinned toolchain at $toolchain (set CKC_TOOLCHAIN)" >&2; exit 2; }
+export CKC_TOOLCHAIN=$toolchain RUSTUP_HOME=$toolchain/rustup CARGO_HOME=$toolchain/cargo
+export PATH="$toolchain/bin:$toolchain/verus-x86-linux:$toolchain/cargo/bin:$PATH" LC_ALL=C
+cd "$root/rust"
+mkdir -p target
+work=$(mktemp -d "$root/rust/target/cix2-scaling.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+# The host's CPU-slot wrapper where it exists, else a direct run.
+slot() { if command -v heavy > /dev/null; then heavy "$@"; else "$@"; fi; }
+
+# Compile before the timeout; record exactly the executable cargo selected.
+if slot cargo test --locked --offline -p ckc-kernel --lib cix2_ --no-run --message-format=json > "$work/build.json" 2> "$work/build.stderr"; then
+    build_rc=0
+else
+    build_rc=$?
+fi
+cat "$work/build.stderr"
+printf 'cix2-build-rc %s\n' "$build_rc"
+[ "$build_rc" = 0 ] || exit 2
+binary=$(jq -r 'select(.reason == "compiler-artifact" and .target.name == "ckc_kernel" and .profile.test and .executable != null) | .executable' "$work/build.json")
+[ -x "$binary" ] && [[ "$binary" != *$'\n'* ]] || { echo 'cix2-scaling: missing unique test binary' >&2; exit 2; }
+revision=$(git -C "$root" rev-parse HEAD)
+digest=$(sha256sum "$binary")
+printf 'cix2-revision %s\ncix2-binary %s\n' "$revision" "$digest"
+printf 'cix2-batch lookups 10000 from 0 goals evenly spaced across db\n'
+printf 'cix2-limits build-median-cpu 1 completed-build-cpu 10 run-wall 120\n'
+
+median() { printf '%s\n' "$@" | sort -n | awk 'NR == 2 { printf "%.2f", $1 }'; }
+above() { awk -v value="$1" -v bound="$2" 'BEGIN { print (value > bound) ? 1 : 0 }'; }
+contended=0
+block_results=()
+for block in 1 2; do
+    [ "$block" = 1 ] || [ "$contended" = 1 ] || break
+    block_bad=0
+    printf 'cix2-block %s begin\n' "$block"
+    for case in classes predicates; do
+        if [ "$case" = classes ]; then sizes=(1000 10000 100000); else sizes=(100 1000); fi
+        stopped=0
+        reason=none
+        previous_size=
+        previous_build=
+        for size in "${sizes[@]}"; do
+            builds=()
+            lookups=()
+            for round in 1 2 3; do
+                if [ "$stopped" = 1 ]; then
+                    printf 'cix2-unrun block %s %s %s round %s reason %s\n' "$block" "$case" "$size" "$round" "$reason"
+                    continue
+                fi
+                log="$work/$block.$case.$size.$round"
+                printf 'cix2-run block %s %s %s round %s\n' "$block" "$case" "$size" "$round"
+                if CIX2_CASE=$case CIX2_SIZE=$size slot timeout 120 cargo test --locked --offline -p ckc-kernel --lib cix2_ -- --ignored --nocapture --test-threads 1 > "$log" 2>&1; then
+                    rc=0
+                else
+                    rc=$?
+                fi
+                cat "$log"
+                printf 'cix2-run-rc block %s %s %s round %s rc %s\n' "$block" "$case" "$size" "$round" "$rc"
+                # The start row also survives a timeout, so that block still records load.
+                if start=$(awk -v c="$case" -v s="$size" '
+                    $1 == "cix2-start" && $2 == c && $3 == s && $4 == "load" && $6 == "holders" && NF == 7 && $5 ~ /^[0-9]+([.][0-9]+)?$/ && $7 ~ /^[0-9]+$/ { count++; loadavg=$5; holders=$7 }
+                    END { if (count != 1 || holders < 1) exit 1; print loadavg, holders }
+                ' "$log"); then
+                    read -r loadavg holders <<< "$start"
+                    crowded=$(awk -v loadavg="$loadavg" -v holders="$holders" 'BEGIN { print (loadavg >= 2 || holders > 1) ? 1 : 0 }')
+                    if [ "$crowded" = 1 ]; then contended=1; fi
+                else
+                    printf 'cix2-invalid start-metadata block %s %s %s round %s\n' "$block" "$case" "$size" "$round"
+                    contended=1
+                    block_bad=1
+                fi
+                if [ "$rc" != 0 ]; then
+                    stopped=1
+                    block_bad=1
+                    if [ "$rc" = 124 ]; then reason=wall-timeout-120; else reason=probe-rc-$rc; fi
+                    continue
+                fi
+                if values=$(awk -v c="$case" -v s="$size" '
+                    $1 == "cix2-clock-ticks" && $2 == 100 && NF == 2 { ticks++ }
+                    $1 == "cix2-probe" && $2 == c && $3 == s && $4 == "build" && $6 == "lookup" && NF == 7 && $5 ~ /^[0-9]+[.][0-9]+$/ && $7 ~ /^[0-9]+[.][0-9]+$/ { count++; build=$5; lookup=$7 }
+                    END { if (ticks != 1 || count != 1) exit 1; print build, lookup }
+                ' "$log"); then
+                    read -r build lookup <<< "$values"
+                    builds+=("$build")
+                    lookups+=("$lookup")
+                    exceeded=$(above "$build" 10)
+                    if [ "$exceeded" = 1 ]; then
+                        stopped=1
+                        block_bad=1
+                        reason=completed-build-over-10
+                    fi
+                else
+                    printf 'cix2-invalid probe-output block %s %s %s round %s\n' "$block" "$case" "$size" "$round"
+                    stopped=1
+                    block_bad=1
+                    reason=invalid-output
+                fi
+            done
+            if [ "${#builds[@]}" = 3 ]; then
+                build_median=$(median "${builds[@]}")
+                lookup_median=$(median "${lookups[@]}")
+                printf 'cix2-median block %s %s %s build %s lookup %s samples 3\n' "$block" "$case" "$size" "$build_median" "$lookup_median"
+                if [ -n "$previous_size" ]; then
+                    if [ -n "$previous_build" ]; then
+                        growth=$(awk -v now="$build_median" -v before="$previous_build" 'BEGIN { if (before == 0) print "unresolved-zero-tick"; else printf "%.3f", now / before }')
+                    else
+                        growth=unavailable
+                    fi
+                    printf 'cix2-growth block %s %s %s/%s size-factor 10 build-ratio %s\n' "$block" "$case" "$size" "$previous_size" "$growth"
+                fi
+                previous_size=$size
+                previous_build=$build_median
+                exceeded=$(above "$build_median" 1)
+                if [ "$exceeded" = 1 ]; then block_bad=1; fi
+            else
+                printf 'cix2-median block %s %s %s unavailable samples %s\n' "$block" "$case" "$size" "${#builds[@]}"
+                if [ -n "$previous_size" ]; then
+                    printf 'cix2-growth block %s %s %s/%s size-factor 10 build-ratio unavailable\n' "$block" "$case" "$size" "$previous_size"
+                fi
+                previous_size=$size
+                previous_build=
+                block_bad=1
+            fi
+        done
+    done
+    block_results+=("$block_bad")
+    printf 'cix2-block %s rc %s\n' "$block" "$block_bad"
+done
+verdict=pass
+rc=0
+for result in "${block_results[@]}"; do
+    if [ "$result" != 0 ]; then verdict=fail; rc=1; fi
+done
+if [ "${#block_results[@]}" = 2 ] && [ "${block_results[0]}" != "${block_results[1]}" ]; then verdict=inconclusive; fi
+printf 'cix2-scaling %s blocks %s contended %s rc %s\n' "$verdict" "${#block_results[@]}" "$contended" "$rc"
+exit "$rc"

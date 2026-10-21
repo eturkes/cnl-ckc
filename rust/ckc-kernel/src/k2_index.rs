@@ -14,6 +14,7 @@ use ckc_spec::engine::{args_of, lit_fa};
 #[cfg(verus_keep_ghost)]
 use ckc_spec::term::Term;
 use ckc_spec::v1text::DocClause;
+use std::collections::BTreeMap;
 use vstd::prelude::*;
 
 verus! {
@@ -120,45 +121,175 @@ pub struct EPredIndex {
     pub all: Vec<usize>,
     pub wild: Vec<usize>,
     pub classes: Vec<EClassList>,
+    // class hash -> indices into `classes` (contract cix2 D2)
+    pub routes: BTreeMap<u64, Vec<usize>>,
 }
 
 pub struct EClauseIndex {
     pub preds: Vec<EPredIndex>,
+    // predicate hash -> indices into `preds` (contract cix2 D2)
+    pub routes: BTreeMap<u64, Vec<usize>>,
 }
 
-// Each list exact over `b`; every classed clause of the predicate has its class list.
-pub open spec fn pred_over(p: EPredIndex, b: Seq<DocClause>) -> bool {
-    &&& exact(p.all@, b, b.len(), p.name@, p.arity as nat, Sel::All)
-    &&& exact(p.wild@, b, b.len(), p.name@, p.arity as nat, Sel::Wild)
+// Every index sits exactly once in its own hash's bucket; every bucket entry is
+// in range and hashes to its bucket (contract cix2 D2).
+pub open spec fn routes_ok(routes: Map<u64, Vec<usize>>, hashes: Seq<u64>) -> bool {
+    &&& forall|i: int|
+        0 <= i < hashes.len() ==> #[trigger] routes.contains_key(hashes[i])
+            && routes[hashes[i]]@.contains(i as usize)
+    &&& forall|h: u64, k: int|
+        routes.contains_key(h) && 0 <= k < routes[h]@.len() ==> (#[trigger] routes[h]@[k] as int)
+            < hashes.len() && hashes[routes[h]@[k] as int] == h
+    &&& forall|h: u64| routes.contains_key(h) ==> (#[trigger] routes[h]@).no_duplicates()
+}
+
+pub open spec fn class_hashes(p: EPredIndex) -> Seq<u64> {
+    p.classes@.map_values(|c: EClassList| class_hash(class_view(c.class)))
+}
+
+pub open spec fn pred_hashes(ix: EClauseIndex) -> Seq<u64> {
+    ix.preds@.map_values(|e: EPredIndex| pred_hash(e.name@, e.arity as nat))
+}
+
+pub open spec fn classes_distinct(p: EPredIndex) -> bool {
+    forall|q: int, r: int|
+        0 <= q < r < p.classes@.len() ==> class_view(p.classes@[q].class) != class_view(
+            p.classes@[r].class,
+        )
+}
+
+pub open spec fn preds_distinct(ix: EClauseIndex) -> bool {
+    forall|q: int, r: int|
+        0 <= q < r < ix.preds@.len() ==> (ix.preds@[q].name@, ix.preds@[q].arity) != (
+            ix.preds@[r].name@,
+            ix.preds@[r].arity,
+        )
+}
+
+// The entry's lists exact over the first `n` clauses of `b`, every classed clause
+// among them in its class list, class keys distinct + routed.
+pub open spec fn pred_upto(p: EPredIndex, b: Seq<DocClause>, n: nat) -> bool {
+    &&& exact(p.all@, b, n, p.name@, p.arity as nat, Sel::All)
+    &&& exact(p.wild@, b, n, p.name@, p.arity as nat, Sel::Wild)
     &&& forall|q: int|
         0 <= q < p.classes@.len() ==> exact(
             (#[trigger] p.classes@[q]).list@,
             b,
-            b.len(),
+            n,
             p.name@,
             p.arity as nat,
             Sel::Class(class_view(p.classes@[q].class)),
         )
     &&& forall|j: int|
-        0 <= j < b.len() && #[trigger] selects(b[j], p.name@, p.arity as nat, Sel::All)
-            && head_class(b[j]) is Some ==> exists|q: int|
+        0 <= j < n && #[trigger] selects(b[j], p.name@, p.arity as nat, Sel::All) && head_class(
+            b[j],
+        ) is Some ==> exists|q: int|
             0 <= q < p.classes@.len() && Some(class_view(p.classes@[q].class)) == head_class(b[j])
+    &&& classes_distinct(p)
+    &&& routes_ok(p.routes@, class_hashes(p))
+}
+
+pub open spec fn pred_over(p: EPredIndex, b: Seq<DocClause>) -> bool {
+    pred_upto(p, b, b.len())
+}
+
+pub open spec fn index_upto(ix: EClauseIndex, b: Seq<DocClause>, n: nat) -> bool {
+    &&& forall|p: int| 0 <= p < ix.preds@.len() ==> pred_upto(#[trigger] ix.preds@[p], b, n)
+    &&& forall|j: int|
+        0 <= j < n && #[trigger] lit_fa(b[j].head) is Some ==> exists|p: int|
+            0 <= p < ix.preds@.len() && lit_fa(b[j].head) == Some(
+                (ix.preds@[p].name@, ix.preds@[p].arity as nat),
+            )
+    &&& preds_distinct(ix)
+    &&& routes_ok(ix.routes@, pred_hashes(ix))
 }
 
 // Every entry exact over `b`; every compound head has its predicate's entry.
 pub open spec fn index_over(ix: EClauseIndex, b: Seq<DocClause>) -> bool {
-    &&& forall|p: int| 0 <= p < ix.preds@.len() ==> pred_over(#[trigger] ix.preds@[p], b)
-    &&& forall|j: int|
-        0 <= j < b.len() && #[trigger] lit_fa(b[j].head) is Some ==> exists|p: int|
-            0 <= p < ix.preds@.len() && lit_fa(b[j].head) == Some(
-                (ix.preds@[p].name@, ix.preds@[p].arity as nat),
-            )
+    index_upto(ix, b, b.len())
 }
 
 // The index covers db[front..]; positions below `front` (aggregate witness
 // facts) are scanned directly.
 pub open spec fn index_valid(ix: EClauseIndex, db: Seq<DocClause>, front: nat) -> bool {
     front <= db.len() && index_over(ix, db.skip(front as int))
+}
+
+// --- key hash (contract cix2 D1) ---
+// h <- h * 31 + b mod 2^64 per byte: a hash only routes a lookup; the exact key
+// comparison decides every match. Equal-length keys whose byte polynomials agree
+// collide (`Aa` / `BB`).
+pub open spec fn mix(h: u64, b: u8) -> u64 {
+    vstd::wrapping::u64_specs::wrapping_add(
+        vstd::wrapping::u64_specs::wrapping_mul(h, 31),
+        b as u64,
+    )
+}
+
+pub open spec fn fold_bytes(s: Seq<u8>, h: u64) -> u64
+    decreases s.len(),
+{
+    if s.len() == 0 {
+        h
+    } else {
+        fold_bytes(s.drop_first(), mix(h, s[0]))
+    }
+}
+
+pub open spec fn pred_hash(name: Seq<u8>, arity: nat) -> u64 {
+    fold_bytes(name, ((arity + 1) % 0x1_0000_0000_0000_0000) as u64)
+}
+
+pub open spec fn class_hash(c: SClass) -> u64 {
+    match c {
+        SClass::Atom(name) => fold_bytes(name, 1),
+        SClass::Comp(name, arity) => fold_bytes(
+            name,
+            ((arity + 2) % 0x1_0000_0000_0000_0000) as u64,
+        ),
+    }
+}
+
+fn fold_exec(bytes: &Vec<u8>, seed: u64) -> (h: u64)
+    ensures
+        h == fold_bytes(bytes@, seed),
+{
+    let mut h = seed;
+    let mut i = 0usize;
+    while i < bytes.len()
+        invariant
+            i <= bytes.len(),
+            fold_bytes(bytes@, seed) == fold_bytes(bytes@.skip(i as int), h),
+        decreases bytes.len() - i,
+    {
+        proof {
+            assert(bytes@.skip(i as int).drop_first() =~= bytes@.skip(i as int + 1));
+            assert(bytes@.skip(i as int)[0] == bytes@[i as int]);
+        }
+        h = h.wrapping_mul(31).wrapping_add(bytes[i] as u64);
+        i += 1;
+    }
+    proof {
+        assert(bytes@.skip(i as int) =~= Seq::<u8>::empty());
+    }
+    h
+}
+
+pub fn hash_pred(name: &Vec<u8>, arity: usize) -> (h: u64)
+    ensures
+        h == pred_hash(name@, arity as nat),
+{
+    fold_exec(name, (arity as u64).wrapping_add(1))
+}
+
+pub fn hash_class(c: &EClass) -> (h: u64)
+    ensures
+        h == class_hash(class_view(*c)),
+{
+    match c {
+        EClass::Atom(name) => fold_exec(name, 1),
+        EClass::Comp(name, arity) => fold_exec(name, (*arity as u64).wrapping_add(2)),
+    }
 }
 
 // --- list lemmas ---
@@ -219,59 +350,6 @@ proof fn exact_step(
             assert(next[i] == list[i]);
         } else {
             assert(next[list.len() as int] == n as usize);
-        }
-    }
-}
-
-// A stretch of unselected positions extends the bound.
-proof fn exact_jump(
-    list: Seq<usize>,
-    b: Seq<DocClause>,
-    n: nat,
-    m: nat,
-    name: Seq<u8>,
-    arity: nat,
-    sel: Sel,
-)
-    requires
-        exact(list, b, n, name, arity, sel),
-        n <= m <= b.len(),
-        forall|j: int| n <= j < m ==> !selects(#[trigger] b[j], name, arity, sel),
-    ensures
-        exact(list, b, m, name, arity, sel),
-{
-    assert forall|j: int|
-        0 <= j < m && #[trigger] selects(b[j], name, arity, sel) implies list.contains(
-        j as usize,
-    ) by {
-        if j >= n {
-            assert(!selects(b[j], name, arity, sel));
-        }
-    }
-}
-
-// Between consecutive entries of an exact `all` list nothing of the predicate lies.
-proof fn all_gap(all: Seq<usize>, b: Seq<DocClause>, name: Seq<u8>, arity: nat, i: int, j: int)
-    requires
-        exact(all, b, b.len(), name, arity, Sel::All),
-        0 <= i <= all.len(),
-        0 <= j < b.len(),
-        i > 0 ==> all[i - 1] < j,
-        i < all.len() ==> j < all[i],
-    ensures
-        !selects(b[j], name, arity, Sel::All),
-{
-    if selects(b[j], name, arity, Sel::All) {
-        assert(all.contains(j as usize));
-        let k = choose|k: int| 0 <= k < all.len() && all[k] == j as usize;
-        if k < i {
-            if k < i - 1 {
-                assert(all[k] < all[i - 1]);
-            }
-        } else {
-            if k > i {
-                assert(all[i] < all[k]);
-            }
         }
     }
 }
@@ -408,28 +486,6 @@ fn same_class(arena: &ETermArena, a: usize, b: usize) -> (out: bool)
     }
 }
 
-fn class_clone(c: &EClass) -> (out: EClass)
-    ensures
-        class_view(out) == class_view(*c),
-{
-    match c {
-        EClass::Atom(name) => {
-            let copy = name.clone();
-            proof {
-                assert(copy@ =~= name@);
-            }
-            EClass::Atom(copy)
-        },
-        EClass::Comp(name, arity) => {
-            let copy = name.clone();
-            proof {
-                assert(copy@ =~= name@);
-            }
-            EClass::Comp(copy, *arity)
-        },
-    }
-}
-
 // The root of the head's first argument; none for a head without arguments.
 fn head_first(arena: &ETermArena, head: usize) -> (out: Option<usize>)
     requires
@@ -458,39 +514,6 @@ fn head_first(arena: &ETermArena, head: usize) -> (out: Option<usize>)
             }
         },
         _ => None,
-    }
-}
-
-// selects(the clause, name, arity, Wild | Class(c)): `class` none = Wild.
-fn selects_exec(
-    arena: &ETermArena,
-    clause: &EClause,
-    name: &Vec<u8>,
-    arity: usize,
-    class: Option<&EClass>,
-) -> (out: bool)
-    requires
-        arena_ok(arena),
-        clause_valid(arena.nodes@, clause),
-    ensures
-        out == selects(
-            clause_view(arena.nodes@, clause),
-            name@,
-            arity as nat,
-            match class {
-                None => Sel::Wild,
-                Some(c) => Sel::Class(class_view(*c)),
-            },
-        ),
-{
-    if !literal_matches(arena, clause.head, name, arity) {
-        return false;
-    }
-    match (head_first(arena, clause.head), class) {
-        (None, None) => true,
-        (None, Some(_)) => false,
-        (Some(r), None) => classless(arena, r),
-        (Some(r), Some(c)) => class_matches(arena, r, c),
     }
 }
 
@@ -524,186 +547,6 @@ fn is_candidate(arena: &ETermArena, clause: &EClause, name: &Vec<u8>, args: &Vec
     }
 }
 
-// --- build (D3) ---
-fn positions_all(arena: &ETermArena, db: &Vec<EClause>, name: &Vec<u8>, arity: usize) -> (out: Vec<
-    usize,
->)
-    requires
-        arena_ok(arena),
-        db_valid(arena.nodes@, db@),
-    ensures
-        exact(out@, db_view(arena.nodes@, db@), db.len() as nat, name@, arity as nat, Sel::All),
-{
-    let ghost b = db_view(arena.nodes@, db@);
-    let mut out: Vec<usize> = Vec::new();
-    let mut j = 0usize;
-    while j < db.len()
-        invariant
-            arena_ok(arena),
-            db_valid(arena.nodes@, db@),
-            b == db_view(arena.nodes@, db@),
-            j <= db.len(),
-            exact(out@, b, j as nat, name@, arity as nat, Sel::All),
-        decreases db.len() - j,
-    {
-        proof {
-            assert(clause_valid(arena.nodes@, &db@[j as int]));
-        }
-        let hit = literal_matches(arena, db[j].head, name, arity);
-        proof {
-            exact_step(out@, b, j as nat, name@, arity as nat, Sel::All, hit);
-        }
-        if hit {
-            out.push(j);
-        }
-        j += 1;
-    }
-    out
-}
-
-// The positions of `all` whose clause `class` selects (none = Wild), in order.
-fn refine(
-    arena: &ETermArena,
-    db: &Vec<EClause>,
-    all: &Vec<usize>,
-    name: &Vec<u8>,
-    arity: usize,
-    class: Option<&EClass>,
-) -> (out: Vec<usize>)
-    requires
-        arena_ok(arena),
-        db_valid(arena.nodes@, db@),
-        exact(all@, db_view(arena.nodes@, db@), db.len() as nat, name@, arity as nat, Sel::All),
-    ensures
-        exact(
-            out@,
-            db_view(arena.nodes@, db@),
-            db.len() as nat,
-            name@,
-            arity as nat,
-            match class {
-                None => Sel::Wild,
-                Some(c) => Sel::Class(class_view(*c)),
-            },
-        ),
-{
-    let ghost b = db_view(arena.nodes@, db@);
-    let ghost sel = match class {
-        None => Sel::Wild,
-        Some(c) => Sel::Class(class_view(*c)),
-    };
-    let mut out: Vec<usize> = Vec::new();
-    let mut i = 0usize;
-    proof {
-        let lim = if all@.len() > 0 {
-            all@[0] as nat
-        } else {
-            b.len()
-        };
-        assert forall|j: int| 0 <= j < lim implies !selects(
-            #[trigger] b[j],
-            name@,
-            arity as nat,
-            sel,
-        ) by {
-            all_gap(all@, b, name@, arity as nat, 0, j);
-        }
-        exact_jump(out@, b, 0, lim, name@, arity as nat, sel);
-    }
-    while i < all.len()
-        invariant
-            arena_ok(arena),
-            db_valid(arena.nodes@, db@),
-            b == db_view(arena.nodes@, db@),
-            sel == match class {
-                None => Sel::Wild,
-                Some(c) => Sel::Class(class_view(*c)),
-            },
-            exact(all@, b, b.len(), name@, arity as nat, Sel::All),
-            i <= all.len(),
-            exact(
-                out@,
-                b,
-                if i < all@.len() {
-                    all@[i as int] as nat
-                } else {
-                    b.len()
-                },
-                name@,
-                arity as nat,
-                sel,
-            ),
-        decreases all.len() - i,
-    {
-        let v = all[i];
-        proof {
-            assert(clause_valid(arena.nodes@, &db@[v as int]));
-        }
-        let hit = selects_exec(arena, &db[v], name, arity, class);
-        proof {
-            exact_step(out@, b, v as nat, name@, arity as nat, sel, hit);
-            let next = if hit {
-                out@.push(v)
-            } else {
-                out@
-            };
-            let lim = if i + 1 < all@.len() {
-                all@[i + 1] as nat
-            } else {
-                b.len()
-            };
-            if i + 1 < all@.len() {
-                assert(all@[i as int] < all@[i + 1]);
-            }
-            assert forall|j: int| v + 1 <= j < lim implies !selects(
-                #[trigger] b[j],
-                name@,
-                arity as nat,
-                sel,
-            ) by {
-                all_gap(all@, b, name@, arity as nat, i + 1, j);
-            }
-            exact_jump(next, b, v as nat + 1, lim, name@, arity as nat, sel);
-        }
-        if hit {
-            out.push(v);
-        }
-        i += 1;
-    }
-    out
-}
-
-fn find_kind(arena: &ETermArena, root: usize, kinds: &Vec<EClass>) -> (out: Option<usize>)
-    requires
-        root_ok(arena, root),
-    ensures
-        out matches Some(q) ==> q < kinds@.len() && class_of(arena@[root as int]) == Some(
-            class_view(kinds@[q as int]),
-        ),
-        out is None ==> forall|q: int|
-            0 <= q < kinds@.len() ==> class_of(arena@[root as int]) != Some(
-                class_view(#[trigger] kinds@[q]),
-            ),
-{
-    let mut q = 0usize;
-    while q < kinds.len()
-        invariant
-            root_ok(arena, root),
-            q <= kinds@.len(),
-            forall|k: int|
-                0 <= k < q ==> class_of(arena@[root as int]) != Some(
-                    class_view(#[trigger] kinds@[k]),
-                ),
-        decreases kinds.len() - q,
-    {
-        if class_matches(arena, root, &kinds[q]) {
-            return Some(q);
-        }
-        q += 1;
-    }
-    None
-}
-
 // head_class of a clause = the class of its head's first argument node.
 proof fn head_class_node(arena: &ETermArena, clause: &EClause, first: Option<usize>)
     requires
@@ -724,189 +567,426 @@ proof fn head_class_node(arena: &ETermArena, clause: &EClause, first: Option<usi
     assert(clause_view(arena.nodes@, clause).head == arena@[clause.head as int]);
 }
 
-// One class per classed head among the clauses at `all` (first-occurrence order).
-fn classes_of(arena: &ETermArena, db: &Vec<EClause>, all: &Vec<usize>) -> (out: Vec<EClass>)
+// --- build (contract cix2 D3) ---
+// A clause of another predicate leaves every list of an entry exact one step further.
+proof fn pred_upto_skip(e: EPredIndex, b: Seq<DocClause>, n: nat)
     requires
-        arena_ok(arena),
-        db_valid(arena.nodes@, db@),
-        forall|i: int| 0 <= i < all@.len() ==> #[trigger] all@[i] < db.len(),
+        pred_upto(e, b, n),
+        n < b.len(),
+        lit_fa(b[n as int].head) != Some((e.name@, e.arity as nat)),
     ensures
-        forall|i: int|
-            0 <= i < all@.len() && head_class(
-                db_view(arena.nodes@, db@)[#[trigger] all@[i] as int],
-            ) is Some ==> exists|q: int|
-                0 <= q < out@.len() && Some(class_view(out@[q])) == head_class(
-                    db_view(arena.nodes@, db@)[all@[i] as int],
-                ),
+        pred_upto(e, b, n + 1),
 {
-    let ghost b = db_view(arena.nodes@, db@);
-    let mut out: Vec<EClass> = Vec::new();
-    let mut i = 0usize;
-    while i < all.len()
-        invariant
-            arena_ok(arena),
-            db_valid(arena.nodes@, db@),
-            b == db_view(arena.nodes@, db@),
-            forall|k: int| 0 <= k < all@.len() ==> #[trigger] all@[k] < db.len(),
-            i <= all.len(),
-            forall|k: int|
-                0 <= k < i && head_class(b[#[trigger] all@[k] as int]) is Some ==> exists|q: int|
-                    0 <= q < out@.len() && Some(class_view(out@[q])) == head_class(
-                        b[all@[k] as int],
-                    ),
-        decreases all.len() - i,
-    {
-        let v = all[i];
-        let ghost before = out@;
-        proof {
-            assert(clause_valid(arena.nodes@, &db@[v as int]));
-            assert(b[v as int] == clause_view(arena.nodes@, &db@[v as int]));
+    exact_step(e.all@, b, n, e.name@, e.arity as nat, Sel::All, false);
+    exact_step(e.wild@, b, n, e.name@, e.arity as nat, Sel::Wild, false);
+    assert forall|q: int| 0 <= q < e.classes@.len() implies exact(
+        (#[trigger] e.classes@[q]).list@,
+        b,
+        n + 1,
+        e.name@,
+        e.arity as nat,
+        Sel::Class(class_view(e.classes@[q].class)),
+    ) by {
+        exact_step(
+            e.classes@[q].list@,
+            b,
+            n,
+            e.name@,
+            e.arity as nat,
+            Sel::Class(class_view(e.classes@[q].class)),
+            false,
+        );
+    }
+}
+
+proof fn routes_elim(routes: Map<u64, Vec<usize>>, hashes: Seq<u64>, i: int)
+    requires
+        routes_ok(routes, hashes),
+        0 <= i < hashes.len(),
+    ensures
+        routes.contains_key(hashes[i]),
+        routes[hashes[i]]@.contains(i as usize),
+{
+}
+
+// Appending index t = |hashes| with hash h to h's bucket keeps the routing valid.
+proof fn routes_append(
+    old: Map<u64, Vec<usize>>,
+    new: Map<u64, Vec<usize>>,
+    hashes: Seq<u64>,
+    h: u64,
+    t: usize,
+)
+    requires
+        routes_ok(old, hashes),
+        t as int == hashes.len(),
+        new.contains_key(h),
+        new[h]@ == (if old.contains_key(h) {
+            old[h]@
+        } else {
+            Seq::<usize>::empty()
+        }).push(t),
+        forall|g: u64|
+            g != h ==> (#[trigger] new.contains_key(g) == old.contains_key(g)) && (old.contains_key(
+                g,
+            ) ==> new[g] == old[g]),
+    ensures
+        routes_ok(new, hashes.push(h)),
+{
+    let hs = hashes.push(h);
+    let n = hashes.len();
+    let prior = if old.contains_key(h) {
+        old[h]@
+    } else {
+        Seq::<usize>::empty()
+    };
+    assert forall|i: int| 0 <= i < hs.len() implies #[trigger] new.contains_key(hs[i])
+        && new[hs[i]]@.contains(i as usize) by {
+        assert(i <= t as int);
+        if i < n {
+            assert(hs[i] == hashes[i]);
+            routes_elim(old, hashes, i);
+            if hashes[i] == h {
+                assert(hs[i] == h);
+                let k = choose|k: int| 0 <= k < old[h]@.len() && old[h]@[k] == i as usize;
+                assert(new[h]@[k] == i as usize);
+            } else {
+                assert(new.contains_key(hashes[i]) == old.contains_key(hashes[i]));
+                assert(new[hashes[i]] == old[hashes[i]]);
+            }
+        } else {
+            assert(hs[i] == h);
+            assert(i as usize == t);
+            assert(new[h]@[prior.len() as int] == t);
         }
-        let first = head_first(arena, db[v].head);
-        proof {
-            head_class_node(arena, &db@[v as int], first);
+    }
+    assert forall|g: u64, k: int| new.contains_key(g) && 0 <= k < new[g]@.len() implies (
+    #[trigger] new[g]@[k] as int) < hs.len() && hs[new[g]@[k] as int] == g by {
+        if g == h {
+            if k < prior.len() {
+                assert(new[h]@[k] == old[h]@[k]);
+                assert(old.contains_key(h));
+            }
+        } else {
+            assert(old.contains_key(g) && new[g] == old[g]);
         }
-        if let Some(r) = first {
-            if !classless(arena, r) {
-                if let Some(q) = find_kind(arena, r, &out) {
-                    proof {
-                        assert(Some(class_view(out@[q as int])) == head_class(b[v as int]));
-                    }
+    }
+    assert forall|g: u64| new.contains_key(g) implies (#[trigger] new[g]@).no_duplicates() by {
+        if g == h {
+            assert forall|x: int, y: int| 0 <= x < y < new[h]@.len() implies new[h]@[x]
+                != new[h]@[y] by {
+                if y == prior.len() {
+                    assert(old.contains_key(h));
+                    assert((old[h]@[x] as int) < n);
                 } else {
-                    if let Some(c) = node_class(arena, r) {
-                        out.push(c);
-                        proof {
-                            assert(Some(class_view(out@[before.len() as int])) == head_class(
-                                b[v as int],
-                            ));
-                        }
-                    }
+                    assert(old.contains_key(h));
+                    assert(old[h]@.no_duplicates());
                 }
             }
+        } else {
+            assert(old.contains_key(g) && new[g] == old[g]);
         }
-        proof {
-            assert forall|k: int|
-                0 <= k < i + 1 && head_class(b[#[trigger] all@[k] as int]) is Some implies exists|
-                q: int,
-            |
-                0 <= q < out@.len() && Some(class_view(out@[q])) == head_class(
-                    b[all@[k] as int],
-                ) by {
-                if k < i {
-                    let q = choose|q: int|
-                        0 <= q < before.len() && Some(class_view(before[q])) == head_class(
-                            b[all@[k] as int],
-                        );
-                    assert(out@[q] == before[q]);
-                }
-            }
-        }
-        i += 1;
     }
-    out
 }
 
-fn find_key(keys: &Vec<(Vec<u8>, usize)>, name: &Vec<u8>, arity: usize) -> (out: Option<usize>)
+// Push x onto h's bucket (the bucket's earlier entries kept).
+fn route_push(routes: &mut BTreeMap<u64, Vec<usize>>, h: u64, x: usize)
     ensures
-        out matches Some(p) ==> p < keys@.len() && keys@[p as int].0@ == name@ && keys@[p as int].1
-            == arity,
-        out is None ==> forall|p: int|
-            0 <= p < keys@.len() ==> !((#[trigger] keys@[p]).0@ == name@ && keys@[p].1 == arity),
+        final(routes)@.contains_key(h),
+        final(routes)@[h]@ == (if old(routes)@.contains_key(h) {
+            old(routes)@[h]@
+        } else {
+            Seq::<usize>::empty()
+        }).push(x),
+        forall|g: u64|
+            g != h ==> (#[trigger] final(routes)@.contains_key(g) == old(routes)@.contains_key(g))
+                && (old(routes)@.contains_key(g) ==> final(routes)@[g] == old(routes)@[g]),
 {
-    let mut p = 0usize;
-    while p < keys.len()
-        invariant
-            p <= keys@.len(),
-            forall|k: int|
-                0 <= k < p ==> !((#[trigger] keys@[k]).0@ == name@ && keys@[k].1 == arity),
-        decreases keys.len() - p,
-    {
-        if keys[p].1 == arity && vec_equal(&keys[p].0, name) {
-            return Some(p);
-        }
-        p += 1;
-    }
-    None
+    let mut chain = match routes.remove(&h) {
+        Some(c) => c,
+        None => Vec::new(),
+    };
+    chain.push(x);
+    routes.insert(h, chain);
 }
 
-// One (name, arity) per predicate some compound head names (first-occurrence order).
-fn collect_keys(arena: &ETermArena, db: &Vec<EClause>) -> (keys: Vec<(Vec<u8>, usize)>)
+// The entry for the predicate (name, arity), created (empty, routed) when absent.
+fn pred_slot(
+    ix: &mut EClauseIndex,
+    name: &Vec<u8>,
+    arity: usize,
+    Ghost(b): Ghost<Seq<DocClause>>,
+    Ghost(n): Ghost<nat>,
+) -> (p: usize)
     requires
-        arena_ok(arena),
-        db_valid(arena.nodes@, db@),
+        index_upto(*old(ix), b, n),
+        n <= b.len() <= usize::MAX,
     ensures
-        forall|j: int|
-            0 <= j < db.len() && #[trigger] lit_fa(db_view(arena.nodes@, db@)[j].head) is Some
-                ==> exists|p: int|
-                0 <= p < keys@.len() && lit_fa(db_view(arena.nodes@, db@)[j].head) == Some(
-                    (keys@[p].0@, keys@[p].1 as nat),
-                ),
+        p < final(ix).preds@.len(),
+        final(ix).preds@[p as int].name@ == name@,
+        final(ix).preds@[p as int].arity == arity,
+        index_upto(*final(ix), b, n),
+        old(ix).preds@.len() <= final(ix).preds@.len() <= old(ix).preds@.len() + 1,
+        forall|q: int|
+            0 <= q < old(ix).preds@.len() ==> #[trigger] final(ix).preds@[q] == old(ix).preds@[q],
 {
-    let ghost b = db_view(arena.nodes@, db@);
-    let mut keys: Vec<(Vec<u8>, usize)> = Vec::new();
-    let mut j = 0usize;
-    while j < db.len()
-        invariant
-            arena_ok(arena),
-            db_valid(arena.nodes@, db@),
-            b == db_view(arena.nodes@, db@),
-            j <= db.len(),
-            forall|k: int|
-                0 <= k < j && #[trigger] lit_fa(b[k].head) is Some ==> exists|p: int|
-                    0 <= p < keys@.len() && lit_fa(b[k].head) == Some(
-                        (keys@[p].0@, keys@[p].1 as nat),
-                    ),
-        decreases db.len() - j,
-    {
-        let head = db[j].head;
-        proof {
-            assert(clause_valid(arena.nodes@, &db@[j as int]));
-            assert(node_ok(arena.nodes@, head as int));
-        }
-        match &arena.nodes[head].kind {
-            ENodeKind::Comp { name, child_roots, .. } => {
+    let h = hash_pred(name, arity);
+    let ghost hashes = pred_hashes(*ix);
+    let plen = ix.preds.len();
+    match ix.routes.get(&h) {
+        Some(chain) => {
+            let mut k = 0usize;
+            while k < chain.len()
+                invariant
+                    index_upto(*ix, b, n),
+                    ix.routes@.contains_key(h),
+                    chain@ == ix.routes@[h]@,
+                    k <= chain.len(),
+                    forall|t: int|
+                        0 <= t < k ==> !((#[trigger] ix.preds@[chain@[t] as int]).name@ == name@
+                            && ix.preds@[chain@[t] as int].arity == arity),
+                decreases chain.len() - k,
+            {
+                let q = chain[k];
                 proof {
-                    node_comp_model(arena.nodes@, head as int, name@, child_roots@);
+                    assert((ix.routes@[h]@[k as int] as int) < pred_hashes(*ix).len());
                 }
-                let found = find_key(&keys, name, child_roots.len());
-                if let Some(p) = found {
-                    proof {
-                        assert(lit_fa(b[j as int].head) == Some(
-                            (keys@[p as int].0@, keys@[p as int].1 as nat),
-                        ));
-                    }
-                } else {
-                    let copy = name.clone();
-                    proof {
-                        assert(copy@ =~= name@);
-                    }
-                    let ghost before = keys@;
-                    keys.push((copy, child_roots.len()));
-                    proof {
-                        assert forall|k: int|
-                            0 <= k < j && #[trigger] lit_fa(b[k].head) is Some implies exists|
-                            p2: int,
-                        |
-                            0 <= p2 < keys@.len() && lit_fa(b[k].head) == Some(
-                                (keys@[p2].0@, keys@[p2].1 as nat),
-                            ) by {
-                            let p2 = choose|p2: int|
-                                0 <= p2 < before.len() && lit_fa(b[k].head) == Some(
-                                    (before[p2].0@, before[p2].1 as nat),
-                                );
-                            assert(keys@[p2] == before[p2]);
-                        }
-                        assert(lit_fa(b[j as int].head) == Some(
-                            (keys@[before.len() as int].0@, keys@[before.len() as int].1 as nat),
-                        ));
+                if ix.preds[q].arity == arity && vec_equal(&ix.preds[q].name, name) {
+                    return q;
+                }
+                k += 1;
+            }
+            proof {
+                assert forall|q: int| 0 <= q < ix.preds@.len() implies !((
+                #[trigger] ix.preds@[q]).name@ == name@ && ix.preds@[q].arity == arity) by {
+                    if ix.preds@[q].name@ == name@ && ix.preds@[q].arity == arity {
+                        assert(pred_hashes(*ix)[q] == h);
+                        routes_elim(ix.routes@, pred_hashes(*ix), q);
+                        let w = choose|w: int| 0 <= w < chain@.len() && chain@[w] == q as usize;
+                        assert(0 <= q < plen as int);
+                        assert(chain@[w] as int == q);
                     }
                 }
-            },
-            _ => {},
-        }
-        j += 1;
+            }
+        },
+        None => {
+            proof {
+                assert forall|q: int| 0 <= q < ix.preds@.len() implies !((
+                #[trigger] ix.preds@[q]).name@ == name@ && ix.preds@[q].arity == arity) by {
+                    if ix.preds@[q].name@ == name@ && ix.preds@[q].arity == arity {
+                        assert(pred_hashes(*ix)[q] == h);
+                        routes_elim(ix.routes@, pred_hashes(*ix), q);
+                    }
+                }
+            }
+        },
     }
-    keys
+    let ghost before = *ix;
+    let q = ix.preds.len();
+    let copy = name.clone();
+    proof {
+        assert(copy@ =~= name@);
+    }
+    ix.preds.push(
+        EPredIndex {
+            name: copy,
+            arity,
+            all: Vec::new(),
+            wild: Vec::new(),
+            classes: Vec::new(),
+            routes: BTreeMap::new(),
+        },
+    );
+    let ghost grown = *ix;
+    route_push(&mut ix.routes, h, q);
+    proof {
+        let e = ix.preds@[q as int];
+        assert(pred_hashes(*ix) =~= pred_hashes(before).push(h));
+        routes_append(before.routes@, ix.routes@, pred_hashes(before), h, q);
+        assert(class_hashes(e) =~= Seq::<u64>::empty());
+        // no earlier clause names this predicate: its entry would exist
+        assert forall|j: int| 0 <= j < n implies !(#[trigger] selects(
+            b[j],
+            name@,
+            arity as nat,
+            Sel::All,
+        )) by {
+            if selects(b[j], name@, arity as nat, Sel::All) {
+                assert(lit_fa(b[j].head) is Some);
+                let r = choose|r: int|
+                    0 <= r < before.preds@.len() && lit_fa(b[j].head) == Some(
+                        (before.preds@[r].name@, before.preds@[r].arity as nat),
+                    );
+                assert(before.preds@[r].name@ == name@ && before.preds@[r].arity == arity);
+            }
+        }
+        assert(exact(e.all@, b, n, e.name@, e.arity as nat, Sel::All));
+        assert(exact(e.wild@, b, n, e.name@, e.arity as nat, Sel::Wild));
+        assert(pred_upto(e, b, n));
+        assert forall|r: int| 0 <= r < ix.preds@.len() implies pred_upto(
+            #[trigger] ix.preds@[r],
+            b,
+            n,
+        ) by {
+            if r < before.preds@.len() {
+                assert(ix.preds@[r] == before.preds@[r]);
+            }
+        }
+        assert forall|j: int| 0 <= j < n && #[trigger] lit_fa(b[j].head) is Some implies exists|
+            r: int,
+        |
+            0 <= r < ix.preds@.len() && lit_fa(b[j].head) == Some(
+                (ix.preds@[r].name@, ix.preds@[r].arity as nat),
+            ) by {
+            let r = choose|r: int|
+                0 <= r < before.preds@.len() && lit_fa(b[j].head) == Some(
+                    (before.preds@[r].name@, before.preds@[r].arity as nat),
+                );
+            assert(ix.preds@[r] == before.preds@[r]);
+        }
+    }
+    q
+}
+
+// The class list of the root's class in entry `e`, created (empty, routed) when absent.
+fn class_slot(
+    e: &mut EPredIndex,
+    arena: &ETermArena,
+    root: usize,
+    Ghost(b): Ghost<Seq<DocClause>>,
+    Ghost(n): Ghost<nat>,
+) -> (q: usize)
+    requires
+        pred_upto(*old(e), b, n),
+        n <= b.len() <= usize::MAX,
+        root_ok(arena, root),
+        class_of(arena@[root as int]) is Some,
+    ensures
+        q < final(e).classes@.len(),
+        Some(class_view(final(e).classes@[q as int].class)) == class_of(arena@[root as int]),
+        final(e).name@ == old(e).name@,
+        final(e).arity == old(e).arity,
+        final(e).all@ == old(e).all@,
+        final(e).wild@ == old(e).wild@,
+        pred_upto(*final(e), b, n),
+        old(e).classes@.len() <= final(e).classes@.len() <= old(e).classes@.len() + 1,
+        forall|t: int|
+            0 <= t < old(e).classes@.len() ==> #[trigger] final(e).classes@[t] == old(
+                e,
+            ).classes@[t],
+{
+    let c = match node_class(arena, root) {
+        Some(c) => c,
+        None => {
+            proof {
+                assert(false);
+            }
+            EClass::Atom(Vec::new())
+        },
+    };
+    let h = hash_class(&c);
+    let clen = e.classes.len();
+    match e.routes.get(&h) {
+        Some(chain) => {
+            let mut k = 0usize;
+            while k < chain.len()
+                invariant
+                    pred_upto(*e, b, n),
+                    root_ok(arena, root),
+                    Some(class_view(c)) == class_of(arena@[root as int]),
+                    e.routes@.contains_key(h),
+                    chain@ == e.routes@[h]@,
+                    k <= chain.len(),
+                    forall|t: int|
+                        0 <= t < k ==> class_of(arena@[root as int]) != Some(
+                            class_view((#[trigger] e.classes@[chain@[t] as int]).class),
+                        ),
+                decreases chain.len() - k,
+            {
+                let t = chain[k];
+                proof {
+                    assert((e.routes@[h]@[k as int] as int) < class_hashes(*e).len());
+                }
+                if class_matches(arena, root, &e.classes[t].class) {
+                    return t;
+                }
+                k += 1;
+            }
+            proof {
+                assert forall|t: int| 0 <= t < e.classes@.len() implies class_of(
+                    arena@[root as int],
+                ) != Some(class_view((#[trigger] e.classes@[t]).class)) by {
+                    if class_of(arena@[root as int]) == Some(class_view(e.classes@[t].class)) {
+                        assert(class_hashes(*e)[t] == h);
+                        routes_elim(e.routes@, class_hashes(*e), t);
+                        let w = choose|w: int| 0 <= w < chain@.len() && chain@[w] == t as usize;
+                        assert(0 <= t < clen as int);
+                        assert(chain@[w] as int == t);
+                    }
+                }
+            }
+        },
+        None => {
+            proof {
+                assert forall|t: int| 0 <= t < e.classes@.len() implies class_of(
+                    arena@[root as int],
+                ) != Some(class_view((#[trigger] e.classes@[t]).class)) by {
+                    if class_of(arena@[root as int]) == Some(class_view(e.classes@[t].class)) {
+                        assert(class_hashes(*e)[t] == h);
+                        routes_elim(e.routes@, class_hashes(*e), t);
+                    }
+                }
+            }
+        },
+    }
+    let ghost before = *e;
+    let t = e.classes.len();
+    e.classes.push(EClassList { class: c, list: Vec::new() });
+    route_push(&mut e.routes, h, t);
+    proof {
+        assert(class_hashes(*e) =~= class_hashes(before).push(h));
+        routes_append(before.routes@, e.routes@, class_hashes(before), h, t);
+        let k = class_view(c);
+        // no earlier clause of the predicate carries this class: its list would exist
+        assert forall|j: int| 0 <= j < n implies !(#[trigger] selects(
+            b[j],
+            e.name@,
+            e.arity as nat,
+            Sel::Class(k),
+        )) by {
+            if selects(b[j], e.name@, e.arity as nat, Sel::Class(k)) {
+                assert(selects(b[j], e.name@, e.arity as nat, Sel::All));
+                let r = choose|r: int|
+                    0 <= r < before.classes@.len() && Some(class_view(before.classes@[r].class))
+                        == head_class(b[j]);
+            }
+        }
+        assert forall|r: int| 0 <= r < e.classes@.len() implies exact(
+            (#[trigger] e.classes@[r]).list@,
+            b,
+            n,
+            e.name@,
+            e.arity as nat,
+            Sel::Class(class_view(e.classes@[r].class)),
+        ) by {
+            if r < before.classes@.len() {
+                assert(e.classes@[r] == before.classes@[r]);
+            }
+        }
+        assert forall|j: int|
+            0 <= j < n && #[trigger] selects(b[j], e.name@, e.arity as nat, Sel::All) && head_class(
+                b[j],
+            ) is Some implies exists|r: int|
+            0 <= r < e.classes@.len() && Some(class_view(e.classes@[r].class)) == head_class(
+                b[j],
+            ) by {
+            let r = choose|r: int|
+                0 <= r < before.classes@.len() && Some(class_view(before.classes@[r].class))
+                    == head_class(b[j]);
+            assert(e.classes@[r] == before.classes@[r]);
+        }
+    }
+    t
 }
 
 pub fn build_index(arena: &ETermArena, db: &Vec<EClause>) -> (ix: EClauseIndex)
@@ -917,101 +997,285 @@ pub fn build_index(arena: &ETermArena, db: &Vec<EClause>) -> (ix: EClauseIndex)
         index_over(ix, db_view(arena.nodes@, db@)),
 {
     let ghost b = db_view(arena.nodes@, db@);
-    let keys = collect_keys(arena, db);
-    let mut preds: Vec<EPredIndex> = Vec::new();
-    let mut p = 0usize;
-    while p < keys.len()
+    let mut ix = EClauseIndex { preds: Vec::new(), routes: BTreeMap::new() };
+    proof {
+        assert(pred_hashes(ix) =~= Seq::<u64>::empty());
+    }
+    let mut j = 0usize;
+    while j < db.len()
         invariant
             arena_ok(arena),
             db_valid(arena.nodes@, db@),
             b == db_view(arena.nodes@, db@),
-            p <= keys.len(),
-            preds@.len() == p,
-            forall|q: int| 0 <= q < p ==> pred_over(#[trigger] preds@[q], b),
-            forall|q: int|
-                0 <= q < p ==> (#[trigger] preds@[q]).name@ == keys@[q].0@ && preds@[q].arity
-                    == keys@[q].1,
-        decreases keys.len() - p,
+            j <= db.len(),
+            ix.preds@.len() <= j,
+            index_upto(ix, b, j as nat),
+        decreases db.len() - j,
     {
-        let name = keys[p].0.clone();
-        let arity = keys[p].1;
+        let head = db[j].head;
         proof {
-            assert(name@ =~= keys@[p as int].0@);
+            assert(clause_valid(arena.nodes@, &db@[j as int]));
+            assert(node_ok(arena.nodes@, head as int));
+            assert(b[j as int] == clause_view(arena.nodes@, &db@[j as int]));
         }
-        let all = positions_all(arena, db, &name, arity);
-        let wild = refine(arena, db, &all, &name, arity, None);
-        proof {
-            assert forall|i: int| 0 <= i < all@.len() implies #[trigger] all@[i] < db.len() by {}
-        }
-        let kinds = classes_of(arena, db, &all);
-        let mut classes: Vec<EClassList> = Vec::new();
-        let mut q = 0usize;
-        while q < kinds.len()
-            invariant
-                arena_ok(arena),
-                db_valid(arena.nodes@, db@),
-                b == db_view(arena.nodes@, db@),
-                exact(all@, b, b.len(), name@, arity as nat, Sel::All),
-                q <= kinds.len(),
-                classes@.len() == q,
-                forall|r: int|
-                    0 <= r < q ==> exact(
-                        (#[trigger] classes@[r]).list@,
+        let ghost before = ix;
+        match &arena.nodes[head].kind {
+            ENodeKind::Comp { name, child_roots, .. } => {
+                proof {
+                    node_comp_model(arena.nodes@, head as int, name@, child_roots@);
+                }
+                let arity = child_roots.len();
+                let p = pred_slot(&mut ix, name, arity, Ghost(b), Ghost(j as nat));
+                let ghost mid = ix;
+                let first = head_first(arena, head);
+                proof {
+                    head_class_node(arena, &db@[j as int], first);
+                }
+                let mut e = EPredIndex {
+                    name: Vec::new(),
+                    arity: 0,
+                    all: Vec::new(),
+                    wild: Vec::new(),
+                    classes: Vec::new(),
+                    routes: BTreeMap::new(),
+                };
+                ix.preds.set_and_swap(p, &mut e);
+                let ghost taken = e;
+                let mut target: Option<usize> = None;
+                if let Some(r) = first {
+                    if !classless(arena, r) {
+                        target = Some(class_slot(&mut e, arena, r, Ghost(b), Ghost(j as nat)));
+                    }
+                }
+                let ghost slotted = e;
+                e.all.push(j);
+                match target {
+                    Some(q) => {
+                        let mut cl = EClassList {
+                            class: EClass::Atom(Vec::new()),
+                            list: Vec::new(),
+                        };
+                        e.classes.set_and_swap(q, &mut cl);
+                        cl.list.push(j);
+                        e.classes.set_and_swap(q, &mut cl);
+                    },
+                    None => {
+                        e.wild.push(j);
+                    },
+                }
+                proof {
+                    build_entry_step(slotted, e, b, j as nat, target);
+                }
+                ix.preds.set_and_swap(p, &mut e);
+                proof {
+                    build_index_step(mid, ix, b, j as nat, p as int);
+                }
+            },
+            _ => {
+                proof {
+                    assert(lit_fa(b[j as int].head) is None);
+                    assert forall|r: int| 0 <= r < ix.preds@.len() implies pred_upto(
+                        #[trigger] ix.preds@[r],
                         b,
-                        b.len(),
-                        name@,
-                        arity as nat,
-                        Sel::Class(class_view(classes@[r].class)),
-                    ),
-                forall|r: int|
-                    0 <= r < q ==> class_view((#[trigger] classes@[r]).class) == class_view(
-                        kinds@[r],
-                    ),
-            decreases kinds.len() - q,
-        {
-            let list = refine(arena, db, &all, &name, arity, Some(&kinds[q]));
-            let class = class_clone(&kinds[q]);
-            classes.push(EClassList { class, list });
-            q += 1;
+                        j as nat + 1,
+                    ) by {
+                        pred_upto_skip(ix.preds@[r], b, j as nat);
+                    }
+                }
+            },
         }
-        let entry = EPredIndex { name, arity, all, wild, classes };
-        proof {
-            assert forall|j: int|
-                0 <= j < b.len() && #[trigger] selects(
-                    b[j],
-                    entry.name@,
-                    entry.arity as nat,
-                    Sel::All,
-                ) && head_class(b[j]) is Some implies exists|r: int|
-                0 <= r < entry.classes@.len() && Some(class_view(entry.classes@[r].class))
-                    == head_class(b[j]) by {
-                assert(entry.all@.contains(j as usize));
-                let i = choose|i: int| 0 <= i < entry.all@.len() && entry.all@[i] == j as usize;
-                assert(head_class(b[entry.all@[i] as int]) is Some);
-                let r = choose|r: int|
-                    0 <= r < kinds@.len() && Some(class_view(kinds@[r])) == head_class(
-                        b[entry.all@[i] as int],
-                    );
-                assert(class_view(entry.classes@[r].class) == class_view(kinds@[r]));
-            }
-            assert(pred_over(entry, b));
-        }
-        preds.push(entry);
-        p += 1;
-    }
-    let ix = EClauseIndex { preds };
-    proof {
-        assert forall|j: int|
-            0 <= j < b.len() && #[trigger] lit_fa(b[j].head) is Some implies exists|q: int|
-            0 <= q < ix.preds@.len() && lit_fa(b[j].head) == Some(
-                (ix.preds@[q].name@, ix.preds@[q].arity as nat),
-            ) by {
-            let q = choose|q: int|
-                0 <= q < keys@.len() && lit_fa(b[j].head) == Some((keys@[q].0@, keys@[q].1 as nat));
-            assert(ix.preds@[q].name@ == keys@[q].0@);
-        }
+        j += 1;
     }
     ix
+}
+
+// The entry that clause n joins: `all` gains n; its class list (or `wild`) gains n.
+proof fn build_entry_step(
+    old: EPredIndex,
+    new: EPredIndex,
+    b: Seq<DocClause>,
+    n: nat,
+    target: Option<usize>,
+)
+    requires
+        pred_upto(old, b, n),
+        n < b.len(),
+        lit_fa(b[n as int].head) == Some((old.name@, old.arity as nat)),
+        new.name@ == old.name@,
+        new.arity == old.arity,
+        new.routes@ == old.routes@,
+        new.all@ == old.all@.push(n as usize),
+        new.classes@.len() == old.classes@.len(),
+        match target {
+            Some(q) => {
+                &&& q < old.classes@.len()
+                &&& Some(class_view(old.classes@[q as int].class)) == head_class(b[n as int])
+                &&& new.wild@ == old.wild@
+                &&& new.classes@[q as int].list@ == old.classes@[q as int].list@.push(n as usize)
+                &&& class_view(new.classes@[q as int].class) == class_view(
+                    old.classes@[q as int].class,
+                )
+                &&& forall|t: int|
+                    0 <= t < old.classes@.len() && t != q ==> #[trigger] new.classes@[t]
+                        == old.classes@[t]
+            },
+            None => {
+                &&& head_class(b[n as int]) is None
+                &&& new.wild@ == old.wild@.push(n as usize)
+                &&& forall|t: int|
+                    0 <= t < old.classes@.len() ==> #[trigger] new.classes@[t] == old.classes@[t]
+            },
+        },
+    ensures
+        pred_upto(new, b, n + 1),
+{
+    let name = old.name@;
+    let arity = old.arity as nat;
+    exact_step(old.all@, b, n, name, arity, Sel::All, true);
+    exact_step(old.wild@, b, n, name, arity, Sel::Wild, target is None);
+    assert forall|t: int| 0 <= t < new.classes@.len() implies exact(
+        (#[trigger] new.classes@[t]).list@,
+        b,
+        n + 1,
+        name,
+        arity,
+        Sel::Class(class_view(new.classes@[t].class)),
+    ) by {
+        let k = class_view(old.classes@[t].class);
+        let hit = selects(b[n as int], name, arity, Sel::Class(k));
+        exact_step(old.classes@[t].list@, b, n, name, arity, Sel::Class(k), hit);
+        match target {
+            Some(q) => {
+                if t != q {
+                    assert(new.classes@[t] == old.classes@[t]);
+                    assert(class_view(old.classes@[t].class) != class_view(
+                        old.classes@[q as int].class,
+                    ));
+                }
+            },
+            None => {
+                assert(new.classes@[t] == old.classes@[t]);
+            },
+        }
+    }
+    assert(class_hashes(new) =~= class_hashes(old)) by {
+        assert forall|t: int| 0 <= t < new.classes@.len() implies class_view(new.classes@[t].class)
+            == class_view(old.classes@[t].class) by {
+            match target {
+                Some(q) => {
+                    if t != q {
+                        assert(new.classes@[t] == old.classes@[t]);
+                    }
+                },
+                None => {
+                    assert(new.classes@[t] == old.classes@[t]);
+                },
+            }
+        }
+    }
+    assert forall|x: int, y: int| 0 <= x < y < new.classes@.len() implies class_view(
+        new.classes@[x].class,
+    ) != class_view(new.classes@[y].class) by {
+        assert(class_hashes(new)[x] == class_hashes(old)[x]);
+    }
+    assert forall|j: int|
+        0 <= j < n + 1 && #[trigger] selects(b[j], name, arity, Sel::All) && head_class(
+            b[j],
+        ) is Some implies exists|t: int|
+        0 <= t < new.classes@.len() && Some(class_view(new.classes@[t].class)) == head_class(
+            b[j],
+        ) by {
+        if j < n {
+            let t = choose|t: int|
+                0 <= t < old.classes@.len() && Some(class_view(old.classes@[t].class))
+                    == head_class(b[j]);
+            match target {
+                Some(q) => {
+                    if t != q {
+                        assert(new.classes@[t] == old.classes@[t]);
+                    }
+                },
+                None => {
+                    assert(new.classes@[t] == old.classes@[t]);
+                },
+            }
+        } else {
+            if let Some(q) = target {
+                assert(class_view(new.classes@[q as int].class) == class_view(
+                    old.classes@[q as int].class,
+                ));
+            }
+        }
+    }
+}
+
+// Restoring the grown entry at p: every entry exact over n + 1, index coverage, keys + routes kept.
+proof fn build_index_step(mid: EClauseIndex, new: EClauseIndex, b: Seq<DocClause>, n: nat, p: int)
+    requires
+        index_upto(mid, b, n),
+        n < b.len(),
+        0 <= p < mid.preds@.len(),
+        lit_fa(b[n as int].head) == Some((mid.preds@[p].name@, mid.preds@[p].arity as nat)),
+        new.routes@ == mid.routes@,
+        new.preds@.len() == mid.preds@.len(),
+        pred_upto(new.preds@[p], b, n + 1),
+        new.preds@[p].name@ == mid.preds@[p].name@,
+        new.preds@[p].arity == mid.preds@[p].arity,
+        forall|r: int|
+            0 <= r < mid.preds@.len() && r != p ==> #[trigger] new.preds@[r] == mid.preds@[r],
+    ensures
+        index_upto(new, b, n + 1),
+{
+    assert forall|r: int| 0 <= r < new.preds@.len() implies pred_upto(
+        #[trigger] new.preds@[r],
+        b,
+        n + 1,
+    ) by {
+        if r != p {
+            assert(new.preds@[r] == mid.preds@[r]);
+            assert((mid.preds@[r].name@, mid.preds@[r].arity) != (
+                mid.preds@[p].name@,
+                mid.preds@[p].arity,
+            ));
+            pred_upto_skip(mid.preds@[r], b, n);
+        }
+    }
+    assert(pred_hashes(new) =~= pred_hashes(mid)) by {
+        assert forall|r: int| 0 <= r < new.preds@.len() implies new.preds@[r].name@
+            == mid.preds@[r].name@ && new.preds@[r].arity == mid.preds@[r].arity by {
+            if r != p {
+                assert(new.preds@[r] == mid.preds@[r]);
+            }
+        }
+    }
+    assert forall|j: int| 0 <= j < n + 1 && #[trigger] lit_fa(b[j].head) is Some implies exists|
+        r: int,
+    |
+        0 <= r < new.preds@.len() && lit_fa(b[j].head) == Some(
+            (new.preds@[r].name@, new.preds@[r].arity as nat),
+        ) by {
+        if j < n {
+            let r = choose|r: int|
+                0 <= r < mid.preds@.len() && lit_fa(b[j].head) == Some(
+                    (mid.preds@[r].name@, mid.preds@[r].arity as nat),
+                );
+            if r != p {
+                assert(new.preds@[r] == mid.preds@[r]);
+            }
+        }
+    }
+    assert forall|q: int, r: int| 0 <= q < r < new.preds@.len() implies (
+        new.preds@[q].name@,
+        new.preds@[q].arity,
+    ) != (new.preds@[r].name@, new.preds@[r].arity) by {
+        assert(pred_hashes(new)[q] == pred_hashes(mid)[q]);
+        if q != p {
+            assert(new.preds@[q] == mid.preds@[q]);
+        }
+        if r != p {
+            assert(new.preds@[r] == mid.preds@[r]);
+        }
+    }
 }
 
 // --- lookup (D4) ---
@@ -1074,6 +1338,8 @@ fn lower_bound(list: &Vec<usize>, x: usize) -> (out: Option<usize>)
 }
 
 fn find_pred(ix: &EClauseIndex, name: &Vec<u8>, arity: usize) -> (out: Option<usize>)
+    requires
+        routes_ok(ix.routes@, pred_hashes(*ix)),
     ensures
         out matches Some(p) ==> {
             &&& p < ix.preds@.len()
@@ -1084,26 +1350,88 @@ fn find_pred(ix: &EClauseIndex, name: &Vec<u8>, arity: usize) -> (out: Option<us
             0 <= p < ix.preds@.len() ==> !((#[trigger] ix.preds@[p]).name@ == name@
                 && ix.preds@[p].arity == arity),
 {
-    let mut p = 0usize;
-    while p < ix.preds.len()
-        invariant
-            p <= ix.preds@.len(),
-            forall|q: int|
-                0 <= q < p ==> !((#[trigger] ix.preds@[q]).name@ == name@ && ix.preds@[q].arity
-                    == arity),
-        decreases ix.preds.len() - p,
-    {
-        if ix.preds[p].arity == arity && vec_equal(&ix.preds[p].name, name) {
-            return Some(p);
-        }
-        p += 1;
+    let h = hash_pred(name, arity);
+    let plen = ix.preds.len();
+    match ix.routes.get(&h) {
+        Some(chain) => {
+            let mut k = 0usize;
+            while k < chain.len()
+                invariant
+                    routes_ok(ix.routes@, pred_hashes(*ix)),
+                    ix.routes@.contains_key(h),
+                    chain@ == ix.routes@[h]@,
+                    k <= chain.len(),
+                    forall|t: int|
+                        0 <= t < k ==> !((#[trigger] ix.preds@[chain@[t] as int]).name@ == name@
+                            && ix.preds@[chain@[t] as int].arity == arity),
+                decreases chain.len() - k,
+            {
+                let q = chain[k];
+                proof {
+                    assert((ix.routes@[h]@[k as int] as int) < pred_hashes(*ix).len());
+                }
+                if ix.preds[q].arity == arity && vec_equal(&ix.preds[q].name, name) {
+                    return Some(q);
+                }
+                k += 1;
+            }
+            proof {
+                assert forall|q: int| 0 <= q < ix.preds@.len() implies !((ix.preds@[q]).name@
+                    == name@ && ix.preds@[q].arity == arity) by {
+                    if !(!((ix.preds@[q]).name@ == name@ && ix.preds@[q].arity == arity)) {
+                        assert(pred_hashes(*ix)[q] == h);
+                        routes_elim(ix.routes@, pred_hashes(*ix), q);
+                        let w = choose|w: int| 0 <= w < chain@.len() && chain@[w] == q as usize;
+                        assert(0 <= q < plen as int);
+                        assert(chain@[w] as int == q);
+                    }
+                }
+            }
+            None
+        },
+        None => {
+            proof {
+                assert forall|q: int| 0 <= q < ix.preds@.len() implies !((ix.preds@[q]).name@
+                    == name@ && ix.preds@[q].arity == arity) by {
+                    if !(!((ix.preds@[q]).name@ == name@ && ix.preds@[q].arity == arity)) {
+                        assert(pred_hashes(*ix)[q] == h);
+                        routes_elim(ix.routes@, pred_hashes(*ix), q);
+
+                    }
+                }
+            }
+            None
+        },
     }
-    None
+}
+
+// The class hash of the node at `root` (none = classless), without copying its name.
+fn node_class_hash(arena: &ETermArena, root: usize) -> (out: Option<u64>)
+    requires
+        root_ok(arena, root),
+    ensures
+        out is None <==> class_of(arena@[root as int]) is None,
+        out matches Some(h) ==> h == class_hash(class_of(arena@[root as int])->0),
+{
+    proof {
+        assert(node_ok(arena.nodes@, root as int));
+    }
+    match &arena.nodes[root].kind {
+        ENodeKind::Atom { name } => Some(fold_exec(name, 1)),
+        ENodeKind::Comp { name, child_roots, .. } => {
+            proof {
+                node_comp_model(arena.nodes@, root as int, name@, child_roots@);
+            }
+            Some(fold_exec(name, (child_roots.len() as u64).wrapping_add(2)))
+        },
+        _ => None,
+    }
 }
 
 fn find_class(arena: &ETermArena, entry: &EPredIndex, root: usize) -> (out: Option<usize>)
     requires
         root_ok(arena, root),
+        routes_ok(entry.routes@, class_hashes(*entry)),
     ensures
         out matches Some(q) ==> {
             &&& q < entry.classes@.len()
@@ -1114,23 +1442,72 @@ fn find_class(arena: &ETermArena, entry: &EPredIndex, root: usize) -> (out: Opti
                 class_view((#[trigger] entry.classes@[q]).class),
             ),
 {
-    let mut q = 0usize;
-    while q < entry.classes.len()
-        invariant
-            root_ok(arena, root),
-            q <= entry.classes@.len(),
-            forall|k: int|
-                0 <= k < q ==> class_of(arena@[root as int]) != Some(
-                    class_view((#[trigger] entry.classes@[k]).class),
-                ),
-        decreases entry.classes.len() - q,
-    {
-        if class_matches(arena, root, &entry.classes[q].class) {
-            return Some(q);
-        }
-        q += 1;
+    let h = match node_class_hash(arena, root) {
+        Some(h) => h,
+        None => {
+            return None;
+        },
+    };
+    let clen = entry.classes.len();
+    match entry.routes.get(&h) {
+        Some(chain) => {
+            let mut k = 0usize;
+            while k < chain.len()
+                invariant
+                    root_ok(arena, root),
+                    routes_ok(entry.routes@, class_hashes(*entry)),
+                    entry.routes@.contains_key(h),
+                    chain@ == entry.routes@[h]@,
+                    k <= chain.len(),
+                    forall|t: int|
+                        0 <= t < k ==> class_of(arena@[root as int]) != Some(
+                            class_view((#[trigger] entry.classes@[chain@[t] as int]).class),
+                        ),
+                decreases chain.len() - k,
+            {
+                let q = chain[k];
+                proof {
+                    assert((entry.routes@[h]@[k as int] as int) < class_hashes(*entry).len());
+                }
+                if class_matches(arena, root, &entry.classes[q].class) {
+                    return Some(q);
+                }
+                k += 1;
+            }
+            proof {
+                assert forall|q: int| 0 <= q < entry.classes@.len() implies class_of(
+                    arena@[root as int],
+                ) != Some(class_view((entry.classes@[q]).class)) by {
+                    if !(class_of(arena@[root as int]) != Some(
+                        class_view((entry.classes@[q]).class),
+                    )) {
+                        assert(class_hashes(*entry)[q] == h);
+                        routes_elim(entry.routes@, class_hashes(*entry), q);
+                        let w = choose|w: int| 0 <= w < chain@.len() && chain@[w] == q as usize;
+                        assert(0 <= q < clen as int);
+                        assert(chain@[w] as int == q);
+                    }
+                }
+            }
+            None
+        },
+        None => {
+            proof {
+                assert forall|q: int| 0 <= q < entry.classes@.len() implies class_of(
+                    arena@[root as int],
+                ) != Some(class_view((entry.classes@[q]).class)) by {
+                    if !(class_of(arena@[root as int]) != Some(
+                        class_view((entry.classes@[q]).class),
+                    )) {
+                        assert(class_hashes(*entry)[q] == h);
+                        routes_elim(entry.routes@, class_hashes(*entry), q);
+
+                    }
+                }
+            }
+            None
+        },
     }
-    None
 }
 
 // The first candidate in [from, front) by a direct scan.
