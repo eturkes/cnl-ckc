@@ -298,9 +298,13 @@ pub fn split_variants(
     adom: &Vec<T>,
     env: &Env,
     map: &Vec<Binding>,
+    src: &crate::m6_numeral::ESrc,
+    an: &Vec<crate::m6_formula::EAnch>,
 ) -> (out: Result<Vec<Group>, T>)
     requires
         arena_ok(old(arena)),
+        crate::m6_numeral::src_valid(old(arena).nodes@, src),
+        crate::m6_formula::anchs_valid(old(arena).nodes@, an@),
         valid_all(old(arena).nodes@, shared@),
         valid_all(old(arena).nodes@, dom1@),
         valid_all(old(arena).nodes@, dom2@),
@@ -326,6 +330,8 @@ pub fn split_variants(
             map_model(map@),
             env.base as nat,
             crate::m7_annotate::tab_view(&env.tab),
+            src@,
+            crate::m6_formula::anch_models(an@),
         ),
 {
     hide(spec::flatten_seq);
@@ -396,8 +402,10 @@ pub fn split_variants(
         prefix(n3, n4, &deps1);
         prefix(n3, n4, &deps2);
         map_prefix(start, n4, map@);
+        prefix_all(start, n4, src.toks@);
+        crate::m6_formula::anchs_prefix(start, n4, an@);
     }
-    let g1_result = variant(arena, &a1, &c1.items, &ordered, map, &deps1, env, 1, cb);
+    let g1_result = variant(arena, &a1, &c1.items, &ordered, map, &deps1, env, 1, cb, src, an);
     let ghost n5 = arena.nodes@;
     proof {
         crate::k2_load::prefix_chain(start, n4, n5);
@@ -412,8 +420,10 @@ pub fn split_variants(
         prefix_all(n4, n5, ordered@);
         map_prefix(n4, n5, map@);
         prefix(n4, n5, &deps2);
+        prefix_all(n4, n5, src.toks@);
+        crate::m6_formula::anchs_prefix(n4, n5, an@);
     }
-    let g2_result = variant(arena, &a2, &c2.items, &ordered, map, &deps2, env, 2, cb);
+    let g2_result = variant(arena, &a2, &c2.items, &ordered, map, &deps2, env, 2, cb, src, an);
     let ghost n6 = arena.nodes@;
     proof {
         crate::k2_load::prefix_chain(start, n5, n6);
@@ -432,6 +442,8 @@ pub open spec fn unsplit_relation(
     cconds: Term,
     env: &Env,
     map: Seq<(Term, Term)>,
+    src: spec::Src,
+    an: Seq<(Term, int)>,
 ) -> Result<Seq<spec::Group>, Term> {
     match spec::flatten_seq(
         shared,
@@ -464,6 +476,8 @@ pub open spec fn unsplit_relation(
                     env.docid@,
                     1,
                     env.base as nat + fc.n,
+                    src,
+                    an,
                 ) {
                     Err(e) => Err(e),
                     Ok(g) => Ok(seq![g]),
@@ -480,9 +494,13 @@ pub fn unsplit(
     cconds: &T,
     env: &Env,
     map: &Vec<Binding>,
+    src: &crate::m6_numeral::ESrc,
+    an: &Vec<crate::m6_formula::EAnch>,
 ) -> (out: Result<Vec<Group>, T>)
     requires
         arena_ok(old(arena)),
+        crate::m6_numeral::src_valid(old(arena).nodes@, src),
+        crate::m6_formula::anchs_valid(old(arena).nodes@, an@),
         valid_all(old(arena).nodes@, shared@),
         valid_all(old(arena).nodes@, adom@),
         valid(old(arena).nodes@, cconds),
@@ -497,6 +515,8 @@ pub fn unsplit(
             cconds@,
             env,
             map_model(map@),
+            src@,
+            crate::m6_formula::anch_models(an@),
         ),
 {
     hide(spec::flatten_seq);
@@ -545,9 +565,11 @@ pub fn unsplit(
         assert_seqs_equal!(models(empty@) == Seq::<Term>::empty());
         prefix(n2, n3, &deps);
         map_prefix(start, n3, map@);
+        prefix_all(start, n3, src.toks@);
+        crate::m6_formula::anchs_prefix(start, n3, an@);
     }
     let ordered = first_vars(arena, &refs, &empty);
-    let g_result = variant(arena, &fa.items, &fc.items, &ordered, map, &deps, env, 1, cb);
+    let g_result = variant(arena, &fa.items, &fc.items, &ordered, map, &deps, env, 1, cb, src, an);
     proof {
         crate::k2_load::prefix_chain(start, n3, arena.nodes@);
     }
@@ -563,9 +585,11 @@ pub fn rule_groups(
     cons: &T,
     env: &Env,
     map: &Vec<Binding>,
+    src: &crate::m6_numeral::ESrc,
 ) -> (out: Result<Vec<Group>, T>)
     requires
         arena_ok(old(arena)),
+        crate::m6_numeral::src_valid(old(arena).nodes@, src),
         valid(old(arena).nodes@, ante),
         valid(old(arena).nodes@, cons),
         map_valid(old(arena).nodes@, map@),
@@ -581,6 +605,7 @@ pub fn rule_groups(
             map_model(map@),
             env.base as nat,
             crate::m7_annotate::tab_view(&env.tab),
+            src@,
         ),
 {
     hide(spec::curry);
@@ -590,6 +615,13 @@ pub fn rule_groups(
     hide(spec::flatten_cons);
     hide(spec::variant);
     let ghost start = arena.nodes@;
+    let mut both = Vec::new();
+    both.push(ante.cp());
+    both.push(cons.cp());
+    proof {
+        assert(models(both@) == seq![ante@, cons@]);
+    }
+    let an = crate::m6_formula::anchored(arena, &both);
     let c = match curry(arena, ante, cons, 64) {
         Ok(c) => c,
         Err(e) => return Err(e),
@@ -607,7 +639,7 @@ pub fn rule_groups(
         None => return Err(error(arena, &Sym::InvalidDrsShape, Ghost(start))),
     };
     if split.arms.len() == 0 {
-        return unsplit(arena, &split.shared, &adom, &b.conds, env, map);
+        return unsplit(arena, &split.shared, &adom, &b.conds, env, map, src, &an);
     }
     if split.arms.len() != 1 {
         return Err(error(arena, &Sym::DisjunctiveAntecedent, Ghost(start)));
@@ -636,6 +668,8 @@ pub fn rule_groups(
                 &adom,
                 env,
                 map,
+                src,
+                &an,
             )
         },
         _ => Err(error(arena, &Sym::InvalidDrsShape, Ghost(start))),

@@ -193,9 +193,11 @@ pub fn sentence_groups(
     roots: &Vec<ERoot>,
     env: &Env,
     map: &Vec<Binding>,
+    src: &crate::m6_numeral::ESrc,
 ) -> (out: Result<(Vec<Group>, Vec<Binding>), T>)
     requires
         arena_ok(old(arena)),
+        crate::m6_numeral::src_valid(old(arena).nodes@, src),
         roots_valid(old(arena).nodes@, roots@),
         map_valid(old(arena).nodes@, map@),
     ensures
@@ -209,6 +211,7 @@ pub fn sentence_groups(
             map_model(map@),
             env.base as nat,
             crate::m7_annotate::tab_view(&env.tab),
+            src@,
         ),
 {
     hide(spec::rule_groups);
@@ -219,7 +222,7 @@ pub fn sentence_groups(
             proof {
                 assert(root_valid(arena.nodes@, &roots@[0]));
             }
-            return match rule_groups(arena, a, c, env, map) {
+            return match rule_groups(arena, a, c, env, map, src) {
                 Err(e) => Err(e),
                 Ok(gs) => {
                     proof {
@@ -418,10 +421,13 @@ pub fn project_all(
     count: usize,
     base: usize,
     tab: &Option<crate::m7_q12::EEnv>,
+    srcs: &Vec<crate::m6_numeral::ESrc>,
 ) -> (out: Result<Vec<Projected>, T>)
     requires
         arena_ok(old(arena)),
         tagged_valid(old(arena).nodes@, tagged@),
+        crate::m6_numeral::srcs_valid(old(arena).nodes@, srcs@),
+        srcs.len() == count,
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -436,6 +442,7 @@ pub fn project_all(
             base as nat,
             crate::m7_annotate::tab_view(tab),
             Seq::empty(),
+            crate::m6_numeral::src_models(srcs@),
         ),
 {
     hide(spec::sentence_groups);
@@ -459,6 +466,7 @@ pub fn project_all(
             base as nat,
             crate::m7_annotate::tab_view(tab),
             Seq::empty(),
+            crate::m6_numeral::src_models(srcs@),
         ) {
             Ok(_) => {},
             Err(_) => {},
@@ -470,6 +478,8 @@ pub fn project_all(
             start == old(arena).nodes@,
             start.is_prefix_of(arena.nodes@),
             tagged_valid(arena.nodes@, tagged@),
+            crate::m6_numeral::srcs_valid(arena.nodes@, srcs@),
+            srcs.len() == count,
             projections_valid(arena.nodes@, out@),
             map_valid(arena.nodes@, map@),
             valid_all(arena.nodes@, dims@),
@@ -484,6 +494,7 @@ pub fn project_all(
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
                 Seq::empty(),
+                crate::m6_numeral::src_models(srcs@),
             ) == project_prefix(
                 project_models(out@),
                 spec::project_from(
@@ -495,6 +506,7 @@ pub fn project_all(
                     base as nat,
                     crate::m7_annotate::tab_view(tab),
                     models(dims@),
+                    crate::m6_numeral::src_models(srcs@),
                 ),
             ),
         decreases count - i,
@@ -507,16 +519,22 @@ pub fn project_all(
         proof {
             crate::k2_load::prefix_chain(start, before, middle);
             tags_prefix(before, middle, tagged@);
+            crate::m6_numeral::srcs_prefix(before, middle, srcs@);
             projections_prefix(before, middle, out@);
             map_prefix(before, middle, map@);
             prefix_all(before, middle, dims@);
             reveal_with_fuel(spec::project_from, 1);
         }
         let roots = of_sentence(arena, tagged, &sn);
-        let result = sentence_groups(arena, &roots, &env, &map);
+        proof {
+            assert(crate::m6_numeral::src_valid(arena.nodes@, &srcs@[i as int]));
+            assert(crate::m6_numeral::src_models(srcs@)[s as int - 1] == srcs@[i as int]@);
+        }
+        let result = sentence_groups(arena, &roots, &env, &map, &srcs[i]);
         proof {
             crate::k2_load::prefix_chain(start, middle, arena.nodes@);
             tags_prefix(middle, arena.nodes@, tagged@);
+            crate::m6_numeral::srcs_prefix(middle, arena.nodes@, srcs@);
             projections_prefix(middle, arena.nodes@, out@);
             prefix_all(middle, arena.nodes@, dims@);
             roots_prefix(middle, arena.nodes@, roots@);
@@ -560,6 +578,7 @@ pub fn project_all(
         proof {
             crate::k2_load::prefix_chain(start, before_scope, arena.nodes@);
             tags_prefix(before_scope, arena.nodes@, tagged@);
+            crate::m6_numeral::srcs_prefix(before_scope, arena.nodes@, srcs@);
             projections_prefix(before_scope, arena.nodes@, out@);
             map_prefix(before_scope, arena.nodes@, map2@);
             prefix_all(before_scope, arena.nodes@, dims2@);
@@ -578,6 +597,7 @@ pub fn project_all(
             base as nat,
             crate::m7_annotate::tab_view(tab),
             models(dims2@),
+            crate::m6_numeral::src_models(srcs@),
         );
         proof {
             match future {
@@ -593,6 +613,7 @@ pub fn project_all(
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
                 models(dims@),
+                crate::m6_numeral::src_models(srcs@),
             ) == project_prefix(seq![p@], future));
             project_prefix_assoc(
                 project_models(out@),
@@ -606,6 +627,7 @@ pub fn project_all(
                     base as nat,
                     crate::m7_annotate::tab_view(tab),
                     models(dims2@),
+                    crate::m6_numeral::src_models(srcs@),
                 ),
             );
             assert(spec::project_from(
@@ -617,6 +639,7 @@ pub fn project_all(
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
                 Seq::empty(),
+                crate::m6_numeral::src_models(srcs@),
             ) == project_prefix(project_models(out@) + seq![p@], future));
         }
         let ghost previous = out@;
@@ -636,6 +659,7 @@ pub fn project_all(
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
                 models(dims@),
+                crate::m6_numeral::src_models(srcs@),
             ));
             assert(spec::project_from(
                 tag_models(tagged@),
@@ -646,6 +670,7 @@ pub fn project_all(
                 base as nat,
                 crate::m7_annotate::tab_view(tab),
                 Seq::empty(),
+                crate::m6_numeral::src_models(srcs@),
             ) == project_prefix(project_models(out@), future));
             assert forall|j: int| 0 <= j < out.len() implies #[trigger] projected_valid(
                 arena.nodes@,
@@ -670,10 +695,13 @@ pub fn project(
     docid: &Vec<u8>,
     count: usize,
     tab: &Option<crate::m7_temporal::EVocabulary>,
+    srcs: &Vec<crate::m6_numeral::ESrc>,
 ) -> (out: Result<Vec<Projected>, T>)
     requires
         arena_ok(old(arena)),
         valid(old(arena).nodes@, drs),
+        crate::m6_numeral::srcs_valid(old(arena).nodes@, srcs@),
+        srcs.len() == count,
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -684,6 +712,7 @@ pub fn project(
             docid@,
             count as nat,
             crate::m7_q12::ttab_view(tab),
+            crate::m6_numeral::src_models(srcs@),
         ),
 {
     hide(spec::project_from);
@@ -720,7 +749,10 @@ pub fn project(
         crate::k2_load::prefix_chain(start, middle, before_project);
         tags_prefix(start, before_project, tagged@);
     }
-    let out = project_all(arena, &tagged, docid, count, base, &env);
+    proof {
+        crate::m6_numeral::srcs_prefix(old(arena).nodes@, arena.nodes@, srcs@);
+    }
+    let out = project_all(arena, &tagged, docid, count, base, &env, srcs);
     proof {
         crate::k2_load::prefix_chain(start, before_project, arena.nodes@);
     }

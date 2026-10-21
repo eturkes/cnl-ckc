@@ -599,6 +599,41 @@ pub fn condition(
             } else if has_name(&name, &Sym::DollarGuidelineScaled) && args.len() == 6 {
                 let t = crate::m6_term::c(arena, &Sym::GuidelineSatisfies, &args);
                 Ok(one_term(arena, t))
+            } else if has_name(&name, &Sym::DollarGuidelineAmount) && args.len() == 6 {
+                let r = match resolve(arena, &args[0], map, sko) {
+                    Ok(t) => t,
+                    Err(x) => return Err(x),
+                };
+                let entity = lit4(arena, &Sym::GuidelineEntity, ctx, &r, &args[1], &args[2]);
+                let ghost n1 = arena.nodes@;
+                proof {
+                    prefix(start, n1, ctx);
+                    prefix(start, n1, &r);
+                    prefix_all(start, n1, args@);
+                }
+                let card = lit5(
+                    arena,
+                    &Sym::GuidelineCardinality,
+                    ctx,
+                    &r,
+                    &args[3],
+                    &args[4],
+                    &args[5],
+                );
+                proof {
+                    crate::k2_load::prefix_chain(start, n1, arena.nodes@);
+                    prefix(n1, arena.nodes@, &entity);
+                }
+                let mut out = Vec::new();
+                out.push(entity);
+                out.push(card);
+                proof {
+                    assert_seqs_equal!(models(out@) == seq![entity@, card@]);
+                }
+                Ok(out)
+            } else if has_name(&name, &Sym::Formula) && args.len() == 3 {
+                let why = named(arena, &Sym::Position);
+                Err(crate::m6_term::c1(arena, &Sym::FormulaShape, &why))
             } else {
                 Err(named(arena, &Sym::ConditionShape))
             }

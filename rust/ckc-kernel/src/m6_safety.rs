@@ -543,6 +543,103 @@ pub fn all_naf_safe(arena: &ETermArena, cs: &Vec<Clause>, ds: &Vec<Vec<T>>) -> (
     true
 }
 
+// Domains past the last NAF item are never read (da2: the formula chain
+// = Pos goals appended after the expanded antecedent).
+pub proof fn naf_safe_pad(
+    c: v1text::DocClause,
+    ds: Seq<Seq<Term>>,
+    pad: Seq<Seq<Term>>,
+    i: nat,
+    bound: Set<nat>,
+)
+    requires
+        ds.len() <= c.body.len(),
+        forall|j: int| ds.len() <= j < c.body.len() ==> (#[trigger] c.body[j]) is Pos,
+    ensures
+        spec::naf_safe(c, ds, i, bound) == spec::naf_safe(c, ds + pad, i, bound),
+    decreases c.body.len() - i,
+{
+    reveal_with_fuel(spec::naf_safe, 1);
+    if i < c.body.len() {
+        match c.body[i as int] {
+            v1text::BodyItem::Pos(t) => {
+                naf_safe_pad(c, ds, pad, i + 1, bound.union(spec::vars_of(t)));
+            },
+            v1text::BodyItem::Naf(gs) => {
+                assert((ds + pad)[i as int] == ds[i as int]);
+                naf_safe_pad(c, ds, pad, i + 1, bound);
+            },
+        }
+    }
+}
+
+pub proof fn all_naf_safe_pad(cs: Seq<v1text::DocClause>, ds: Seq<Seq<Term>>, pad: Seq<Seq<Term>>)
+    requires
+        forall|i: int|
+            0 <= i < cs.len() ==> ds.len() <= (#[trigger] cs[i]).body.len() && forall|j: int|
+                ds.len() <= j < cs[i].body.len() ==> (#[trigger] cs[i].body[j]) is Pos,
+    ensures
+        spec::all_naf_safe(cs, ds) == spec::all_naf_safe(cs, ds + pad),
+{
+    reveal(spec::all_naf_safe);
+    assert forall|i: int| 0 <= i < cs.len() implies spec::naf_safe(
+        #[trigger] cs[i],
+        ds,
+        0,
+        Set::empty(),
+    ) == spec::naf_safe(cs[i], ds + pad, 0, Set::empty()) by {
+        naf_safe_pad(cs[i], ds, pad, 0, Set::empty());
+    }
+}
+
+// ds + n empty domains.
+pub fn pad_doms(ds: Vec<Vec<T>>, n: usize) -> (out: Vec<Vec<T>>)
+    ensures
+        dom_models(out@) == dom_models(ds@) + Seq::new(n as nat, |i: int| Seq::<Term>::empty()),
+        forall|nodes: Seq<ENode>| doms_valid(nodes, ds@) ==> #[trigger] doms_valid(nodes, out@),
+{
+    let mut out = ds;
+    let ghost base = out@;
+    let mut i = 0usize;
+    proof {
+        assert_seqs_equal!(dom_models(out@) == dom_models(base) + Seq::new(0, |i: int| Seq::<Term>::empty()));
+    }
+    while i < n
+        invariant
+            i <= n,
+            out@.len() == base.len() + i,
+            forall|x: int| 0 <= x < base.len() ==> #[trigger] out@[x] == base[x],
+            forall|x: int| base.len() <= x < out@.len() ==> (#[trigger] out@[x])@.len() == 0,
+        decreases n - i,
+    {
+        out.push(Vec::new());
+        i += 1;
+    }
+    proof {
+        assert_seqs_equal!(dom_models(out@) == dom_models(base) + Seq::new(n as nat, |i: int| Seq::<Term>::empty()), x => {
+            if x >= base.len() {
+                assert(models(out@[x]@) =~= Seq::<Term>::empty());
+            }
+        });
+        assert forall|nodes: Seq<ENode>| doms_valid(nodes, base) implies #[trigger] doms_valid(
+            nodes,
+            out@,
+        ) by {
+            assert forall|x: int| 0 <= x < out@.len() implies #[trigger] valid_all(
+                nodes,
+                out@[x]@,
+            ) by {
+                if x < base.len() {
+                    assert(out@[x] == base[x]);
+                } else {
+                    assert(out@[x]@.len() == 0);
+                }
+            }
+        }
+    }
+    out
+}
+
 pub proof fn participants_len(
     ctx: Term,
     e: Term,
@@ -568,11 +665,19 @@ pub proof fn condition_len(ctx: Term, inner: Term, map: Seq<(Term, Term)>, sko: 
         ),
 {
     reveal(spec::condition);
+    // `$guideline_amount` + `$guideline_scaled`: both arity 6, both 17 bytes.
+    reveal_strlit("$guideline_amount");
+    reveal_strlit("$guideline_scaled");
+    assert(v1text::ascii("$guideline_amount"@)[11] != v1text::ascii("$guideline_scaled"@)[11]);
     if let Term::Comp(name, args) = inner {
         if name == v1text::ascii("predicate"@) && 3 <= args.len() <= 5 {
             if let Ok(e) = spec::resolve(args[0], map, sko) {
                 participants_len(ctx, e, args.skip(2), 1, map, sko);
             }
+        } else if name == v1text::ascii("$guideline_amount"@) && args.len() == 6 {
+            reveal_strlit("object");
+            reveal_strlit("predicate");
+            reveal_strlit("$guideline_recurrence_window");
         }
     }
 }
@@ -616,6 +721,8 @@ pub fn expanded_len(arena: &ETermArena, inner: &T) -> (out: usize)
                 2
             } else if has_name(&name, &Sym::DollarGuidelineBound) && args.len() == 8 {
                 3
+            } else if has_name(&name, &Sym::DollarGuidelineAmount) && args.len() == 6 {
+                2
             } else if has_name(&name, &Sym::Predicate) && args.len() >= 3 {
                 args.len() - 1
             } else {

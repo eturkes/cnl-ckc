@@ -16,6 +16,7 @@ use ckc_spec::emit as spec;
 use ckc_spec::replay::{self, EOut};
 use ckc_spec::term::Term;
 use ckc_spec::v1text::{self, DocFile, V1File};
+use vstd::assert_seqs_equal;
 use vstd::prelude::*;
 
 verus! {
@@ -49,6 +50,126 @@ proof fn wf_doc_fields(d: DocFile)
     reveal(v1text::wf_doc);
 }
 
+// Each sentence's APE tokens beside its ACE line (spec `srcs_of`).
+fn srcs_of(arena: &ETermArena, sentences: &T, lines: &Vec<Vec<u8>>) -> (out: Vec<
+    crate::m6_numeral::ESrc,
+>)
+    requires
+        arena_ok(arena),
+        valid(arena.nodes@, sentences),
+    ensures
+        crate::m6_numeral::srcs_valid(arena.nodes@, out@),
+        crate::m6_numeral::src_models(out@) == spec::srcs_of(
+            sentences@,
+            crate::m6_custody::lines_model(lines@),
+        ),
+        out.len() == lines.len(),
+{
+    let ss = match items(arena, sentences) {
+        Some(ss) => ss,
+        None => Vec::new(),
+    };
+    let ghost sm = match ckc_spec::answers::list_items(sentences@) {
+        Option::Some(x) => x,
+        Option::None => Seq::<Term>::empty(),
+    };
+    proof {
+        assert(models(ss@) == sm);
+    }
+    let mut out: Vec<crate::m6_numeral::ESrc> = Vec::new();
+    let mut i = 0usize;
+    while i < lines.len()
+        invariant
+            arena_ok(arena),
+            valid_all(arena.nodes@, ss@),
+            models(ss@) == sm,
+            sm == match ckc_spec::answers::list_items(sentences@) {
+                Option::Some(x) => x,
+                Option::None => Seq::<Term>::empty(),
+            },
+            i <= lines.len(),
+            out.len() == i,
+            crate::m6_numeral::srcs_valid(arena.nodes@, out@),
+            forall|x: int|
+                0 <= x < i ==> (#[trigger] out@[x])@ == spec::srcs_of(
+                    sentences@,
+                    crate::m6_custody::lines_model(lines@),
+                )[x],
+        decreases lines.len() - i,
+    {
+        let ghost want_toks = if (i as int) < sm.len() {
+            match ckc_spec::answers::list_items(sm[i as int]) {
+                Option::Some(ts) => ts,
+                Option::None => Seq::<Term>::empty(),
+            }
+        } else {
+            Seq::<Term>::empty()
+        };
+        let toks = if i < ss.len() {
+            proof {
+                assert(valid(arena.nodes@, &ss@[i as int]));
+                assert(models(ss@)[i as int] == ss@[i as int]@);
+            }
+            let o = items(arena, &ss[i]);
+            let r = match o {
+                Some(ts) => ts,
+                None => Vec::new(),
+            };
+            proof {
+                assert(models(r@) == want_toks);
+            }
+            r
+        } else {
+            let r = Vec::new();
+            proof {
+                assert(models(r@) =~= want_toks);
+            }
+            r
+        };
+        let line = lines[i].clone();
+        proof {
+            assert(line@ =~= lines@[i as int]@);
+            assert(crate::m6_custody::lines_model(lines@)[i as int] == lines@[i as int]@);
+        }
+        proof {
+            assert(models(toks@) == want_toks);
+        }
+        let src = crate::m6_numeral::ESrc { toks, line };
+        let ghost sv = src@;
+        let ghost prev = out@;
+        out.push(src);
+        proof {
+            let want = spec::srcs_of(sentences@, crate::m6_custody::lines_model(lines@));
+            assert(want.len() == lines.len());
+            assert(want[i as int].toks == want_toks);
+            assert(want[i as int].line == lines@[i as int]@);
+            assert(sv.toks == want_toks && sv.line == lines@[i as int]@);
+            assert(sv == want[i as int]);
+            assert forall|x: int| 0 <= x < out.len() implies crate::m6_numeral::src_valid(
+                arena.nodes@,
+                #[trigger] &out@[x],
+            ) by {
+                if x < prev.len() {
+                    assert(out@[x] == prev[x]);
+                }
+            }
+            assert forall|x: int| 0 <= x < i + 1 implies (#[trigger] out@[x])@ == want[x] by {
+                if x < prev.len() {
+                    assert(out@[x] == prev[x]);
+                } else {
+                    assert(out@[x]@ == sv);
+                }
+            }
+        }
+        i += 1;
+    }
+    proof {
+        assert_seqs_equal!(crate::m6_numeral::src_models(out@) == spec::srcs_of(sentences@, crate::m6_custody::lines_model(lines@)));
+    }
+    out
+}
+
+#[verifier::spinoff_prover]
 pub fn certify_doc_impl(
     ace: &[u8],
     asha: &[u8],
@@ -72,6 +193,7 @@ pub fn certify_doc_impl(
         ),
 {
     hide(spec::project);
+    hide(spec::srcs_of);
     hide(spec::first_mismatch);
     hide(spec::obligations);
     hide(spec::first_nonground);
@@ -151,8 +273,10 @@ pub fn certify_doc_impl(
         return reject_sym(&mut arena, docid, &Sym::BundleCount);
     }
     let drs = from_root(&arena, d.drs);
+    let sentences = from_root(&arena, d.sentences);
+    let srcs = srcs_of(&arena, &sentences, &lines);
     let ghost before_project = arena.nodes@;
-    let ps = match project(&mut arena, &drs, &parsed.docid, lines.len(), &tab) {
+    let ps = match project(&mut arena, &drs, &parsed.docid, lines.len(), &tab, &srcs) {
         Ok(ps) => ps,
         Err(e) => {
             let why = c1(&mut arena, &Sym::Unsupported, &e);

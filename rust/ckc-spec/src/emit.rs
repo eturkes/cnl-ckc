@@ -474,7 +474,7 @@ pub open spec fn cond_refs(inner: Term) -> Seq<Term> {
             seq![args[0]]
         } else if (name == ascii("$guideline_bound"@) && args.len() == 8) || (name == ascii(
             "$guideline_measure"@,
-        ) && args.len() == 4) {
+        ) && args.len() == 4) || (name == ascii("$guideline_amount"@) && args.len() == 6) {
             seq![args[0]]
         } else {
             Seq::empty()
@@ -791,6 +791,20 @@ pub open spec fn condition(
             }
         } else if name == ascii("$guideline_scaled"@) && args.len() == 6 {
             Result::Ok(seq![lit("guideline_satisfies"@, args)])
+        } else if name == ascii("$guideline_amount"@) && args.len() == 6 {
+            // contract da2 D3: a formula quantity's count as a variable pair
+            match resolve(args[0], map, sko) {
+                Result::Err(er) => Result::Err(er),
+                Result::Ok(r) => Result::Ok(
+                    seq![
+                        lit("guideline_entity"@, seq![ctx, r, args[1], args[2]]),
+                        lit("guideline_cardinality"@, seq![ctx, r, args[3], args[4], args[5]]),
+                    ],
+                ),
+            }
+        } else if name == ascii("formula"@) && args.len() == 3 {
+            // the formula pass takes every formula it admits out of the items first
+            Result::Err(fshape("position"@))
         } else {
             Result::Err(atom("condition_shape"@))
         },
@@ -954,6 +968,8 @@ pub open spec fn expanded_len(inner: Term) -> nat {
             2
         } else if name == ascii("$guideline_bound"@) && args.len() == 8 {
             3
+        } else if name == ascii("$guideline_amount"@) && args.len() == 6 {
+            2
         } else if name == ascii("predicate"@) && args.len() >= 3 {
             (args.len() - 1) as nat
         } else {
@@ -2513,6 +2529,768 @@ pub open spec fn is_builtin_lit(t: Term) -> bool {
     }
 }
 
+// --- dose arithmetic formulas (contract da2): rule consequents ---
+// A formula `Y = E` at the top level of a rule's final consequent computes
+// the count of its target Y from antecedent quantities and literals through
+// the arithmetic built-ins (contract da1). The chain follows every antecedent
+// goal; its result is the target's cardinality head. For formula quantities
+// alone, a unit-noun amount stands for its count and `some` sets no bound
+// (APE reads `some` + plural as at least 2). A literal's value comes from the
+// numeral bytes of the ACE line: APE's floats lose the source spelling.
+// The sentence's APE token list (index 0 = `^`; anchors index it) + its ACE line.
+pub ghost struct Src {
+    pub toks: Seq<Term>,
+    pub line: Seq<u8>,
+}
+
+pub open spec fn fshape(why: Seq<char>) -> Term {
+    Term::Comp(ascii("formula_shape"@), seq![atom(why)])
+}
+
+pub open spec fn is_formula(t: Term) -> bool {
+    is_comp(t, "formula"@, 3)
+}
+
+// Anchored conditions reachable through carriers, each with its token index.
+pub open spec fn anchored(t: Term) -> Seq<(Term, int)>
+    decreases t, 0int,
+{
+    match anchor_s(t) {
+        Option::Some(_) => match arg(arg(t, 1), 1) {
+            Term::Int(k) => seq![(arg(t, 0), k)] + anchored(arg(t, 0)),
+            _ => Seq::empty(),
+        },
+        Option::None => match t {
+            Term::Comp(name, args) => if is_carrier(name, args.len()) {
+                anchored_all(args)
+            } else {
+                Seq::empty()
+            },
+            _ => Seq::empty(),
+        },
+    }
+}
+
+pub open spec fn anchored_all(ts: Seq<Term>) -> Seq<(Term, int)>
+    decreases ts, 1int,
+{
+    if ts.len() == 0 {
+        Seq::empty()
+    } else {
+        anchored(ts[0]) + anchored_all(ts.drop_first())
+    }
+}
+
+// The token index of r's object.
+pub open spec fn object_token(an: Seq<(Term, int)>, r: Term) -> Option<int>
+    decreases an.len(),
+{
+    if an.len() == 0 {
+        Option::None
+    } else if is_comp(an[0].0, "object"@, 6) && arg(an[0].0, 0) == r {
+        Option::Some(an[0].1)
+    } else {
+        object_token(an.drop_first(), r)
+    }
+}
+
+// The token index of the formula f (its `=`).
+pub open spec fn formula_token(an: Seq<(Term, int)>, f: Term) -> Option<int>
+    decreases an.len(),
+{
+    if an.len() == 0 {
+        Option::None
+    } else if an[0].0 == f {
+        Option::Some(an[0].1)
+    } else {
+        formula_token(an.drop_first(), f)
+    }
+}
+
+// The token before r's noun is `some` (no adjective between).
+pub open spec fn some_before(src: Src, an: Seq<(Term, int)>, r: Term) -> bool {
+    match object_token(an, r) {
+        Option::Some(k) => 1 <= k <= src.toks.len() && src.toks[k - 1] == atom("some"@),
+        Option::None => false,
+    }
+}
+
+// A numeral token's text: an integer's spelling, sign included, or the
+// driver's `'$decimal'(Text)` (the float as SWI prints it).
+pub open spec fn numeral(t: Term) -> Option<Seq<u8>> {
+    match t {
+        Term::Int(n) => Option::Some(dec_bytes(n)),
+        Term::Comp(name, args) => if name == ascii("$decimal"@) && args.len() == 1 {
+            match args[0] {
+                Term::Atom(a) => Option::Some(a),
+                _ => Option::None,
+            }
+        } else {
+            Option::None
+        },
+        _ => Option::None,
+    }
+}
+
+pub open spec fn is_literal(t: Term) -> bool {
+    is_comp(t, "int"@, 1) || is_comp(t, "real"@, 1)
+}
+
+// A byte that continues a word: an ASCII letter, a digit, `_` or `-`.
+pub open spec fn wordy(b: u8) -> bool {
+    is_alnum_b(b) || b == 0x2D
+}
+
+pub open spec fn digits_end(l: Seq<u8>, i: int) -> int
+    decreases l.len() - i,
+{
+    if 0 <= i < l.len() && is_digit_b(l[i]) {
+        digits_end(l, i + 1)
+    } else {
+        i
+    }
+}
+
+// The end of the numeral run at i: digits, then `.` + digits when present.
+pub open spec fn run_end(l: Seq<u8>, i: int) -> int {
+    let j = digits_end(l, i);
+    if 0 <= j && j + 1 < l.len() && l[j] == 0x2E && is_digit_b(l[j + 1]) {
+        digits_end(l, j + 1)
+    } else {
+        j
+    }
+}
+
+// A numeral lexeme starts at i: a digit run that no word byte or `.` precedes
+// and no word byte follows (so `X1`, `covid-19` and `2-week` hold none).
+pub open spec fn lexeme_at(l: Seq<u8>, i: int) -> bool {
+    &&& 0 <= i < l.len() && is_digit_b(l[i])
+    &&& i == 0 || !(wordy(l[i - 1]) || l[i - 1] == 0x2E)
+    &&& run_end(l, i) == l.len() || !wordy(l[run_end(l, i)])
+}
+
+pub open spec fn lexemes_from(l: Seq<u8>, i: int) -> Seq<int>
+    decreases l.len() - i,
+{
+    if i < 0 || i >= l.len() {
+        Seq::empty()
+    } else if lexeme_at(l, i) {
+        seq![i] + lexemes_from(l, i + 1)
+    } else {
+        lexemes_from(l, i + 1)
+    }
+}
+
+pub open spec fn lexeme_starts(l: Seq<u8>) -> Seq<int> {
+    lexemes_from(l, 0)
+}
+
+pub open spec fn numeral_toks(toks: Seq<Term>) -> Seq<Term> {
+    toks.filter(|t: Term| numeral(t) is Some)
+}
+
+// The numeral tokens spell the line's lexemes, one to one, in order.
+pub open spec fn numerals_match(src: Src) -> bool {
+    let ns = numeral_toks(src.toks);
+    let ls = lexeme_starts(src.line);
+    &&& ns.len() == ls.len()
+    &&& forall|g: int|
+        0 <= g < ns.len() ==> numeral(#[trigger] ns[g]) == Option::Some(
+            src.line.subrange(ls[g], run_end(src.line, ls[g])),
+        )
+}
+
+// A `-` or `+` token right before a numeral token (APE folds it into the value).
+pub open spec fn signed(toks: Seq<Term>) -> bool {
+    exists|i: int|
+        0 <= i && i + 1 < toks.len() && ((#[trigger] toks[i]) == atom("-"@) || toks[i] == atom(
+            "+"@,
+        )) && numeral(toks[i + 1]) is Some
+}
+
+// The referent leaves of an expression, in token order.
+pub open spec fn var_leaves(e: Term) -> Seq<Term>
+    decreases e,
+{
+    match e {
+        Term::Comp(name, args) => if name == ascii("expr"@) && args.len() == 3 {
+            var_leaves(args[1]) + var_leaves(args[2])
+        } else {
+            Seq::empty()
+        },
+        Term::Var(_) => seq![e],
+        _ => Seq::empty(),
+    }
+}
+
+// The literal leaves of an expression, in token order.
+pub open spec fn lit_leaves(e: Term) -> Seq<Term>
+    decreases e,
+{
+    match e {
+        Term::Comp(name, args) => if name == ascii("expr"@) && args.len() == 3 {
+            lit_leaves(args[1]) + lit_leaves(args[2])
+        } else if is_literal(e) {
+            seq![e]
+        } else {
+            Seq::empty()
+        },
+        _ => Seq::empty(),
+    }
+}
+
+// Every node is `*` or `/`; every leaf a referent or a literal.
+pub open spec fn ops_ok(e: Term) -> bool
+    decreases e,
+{
+    match e {
+        Term::Comp(name, args) => if name == ascii("expr"@) && args.len() == 3 {
+            (args[0] == atom("*"@) || args[0] == atom("/"@)) && ops_ok(args[1]) && ops_ok(args[2])
+        } else {
+            is_literal(e)
+        },
+        Term::Var(_) => true,
+        _ => false,
+    }
+}
+
+pub open spec fn pow10(n: nat) -> int
+    decreases n,
+{
+    if n == 0 {
+        1
+    } else {
+        10 * pow10((n - 1) as nat)
+    }
+}
+
+// The exact value of the lexeme at i: `I` or `I.F` = (I·10^|F| + F) / 10^|F|.
+pub open spec fn lexeme_value(l: Seq<u8>, i: int) -> Term {
+    let j = digits_end(l, i);
+    let k = run_end(l, i);
+    let whole = crate::check::dec_of(l.subrange(i, j)) as int;
+    if k == j {
+        Term::Int(whole)
+    } else {
+        let f = l.subrange(j + 1, k);
+        crate::arith::canon(whole * pow10(f.len()) + crate::check::dec_of(f) as int, pow10(f.len()))
+    }
+}
+
+// A literal lexeme ends the line or stands before a space, `)`, `*`, `/` or
+// the final `.` (APE reads `50%` as 50 and drops the `%`).
+pub open spec fn literal_end_ok(l: Seq<u8>, k: int) -> bool {
+    k == l.len() || (0 <= k < l.len() && (l[k] == 0x20 || l[k] == 0x29 || l[k] == 0x2A || l[k]
+        == 0x2F || (l[k] == 0x2E && k + 1 == l.len())))
+}
+
+// The values of a formula's literal leaves, in token order: with the numeral
+// tokens matched to the line's lexemes, the m-th leaf pairs with numeral g0 + m
+// (g0 = the numeral tokens up to the formula's `=` token at kf), spells like
+// it, and takes its lexeme's value (contract da2 D2).
+pub open spec fn literal_values(src: Src, kf: int, lits: Seq<Term>) -> Option<Seq<Term>> {
+    let ns = numeral_toks(src.toks);
+    let ls = lexeme_starts(src.line);
+    let g0 = numeral_toks(src.toks.take(kf + 1)).len() as int;
+    if kf < 0 || kf >= src.toks.len() || !numerals_match(src) || signed(src.toks) || g0 + lits.len()
+        > ns.len() {
+        Option::None
+    } else if forall|m: int|
+        0 <= m < lits.len() ==> numeral(arg(#[trigger] lits[m], 0)) == numeral(ns[g0 + m])
+            && literal_end_ok(src.line, run_end(src.line, ls[g0 + m])) {
+        Option::Some(Seq::new(lits.len(), |m: int| lexeme_value(src.line, ls[g0 + m])))
+    } else {
+        Option::None
+    }
+}
+
+// The top-level (context `actual`) object on y.
+pub open spec fn top_object(items: Seq<Item>, y: Term) -> Option<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Option::None
+    } else {
+        match items[0] {
+            Item::Anch(c, inner) => if c == actual() && is_comp(inner, "object"@, 6) && arg(
+                inner,
+                0,
+            ) == y {
+                Option::Some(inner)
+            } else {
+                top_object(items.drop_first(), y)
+            },
+            _ => top_object(items.drop_first(), y),
+        }
+    }
+}
+
+// The top-level antecedent object or nt1 bound item on r.
+pub open spec fn operand_item(items: Seq<Item>, r: Term) -> Option<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Option::None
+    } else {
+        match items[0] {
+            Item::Anch(c, inner) => if c == actual() && (is_comp(inner, "object"@, 6) || is_comp(
+                inner,
+                "$guideline_bound"@,
+                8,
+            )) && arg(inner, 0) == r {
+                Option::Some(inner)
+            } else {
+                operand_item(items.drop_first(), r)
+            },
+            _ => operand_item(items.drop_first(), r),
+        }
+    }
+}
+
+// D1's operand law on a leaf referent: a top-level antecedent count
+// (countable, Unit `na`, so no APE measurement) that is no time quantity (a
+// plain-number one keeps its object beside `'$guideline_unit'`).
+pub open spec fn operand_ok(aitems: Seq<Item>, r: Term) -> bool {
+    match operand_item(aitems, r) {
+        Option::Some(c) => r is Var && arg(c, 2) == atom("countable"@) && arg(c, 3) == atom("na"@)
+            && unit_of(aitems, r) is None,
+        Option::None => false,
+    }
+}
+
+pub open spec fn operands_ok(aitems: Seq<Item>, rs: Seq<Term>) -> bool
+    decreases rs.len(),
+{
+    rs.len() == 0 || (operand_ok(aitems, rs[0]) && operands_ok(aitems, rs.drop_first()))
+}
+
+// The (S, N) pair of an operand leaf (nt1's pair of a `some` or comparison
+// item), else the reject.
+pub open spec fn operand_pair(aitems: Seq<Item>, r: Term) -> Result<(Term, Term), Term> {
+    match operand_item(aitems, r) {
+        Option::Some(c) => if is_comp(c, "$guideline_bound"@, 8) {
+            Result::Ok((arg(c, 4), arg(c, 5)))
+        } else {
+            Result::Err(fshape("operand_bound"@))
+        },
+        Option::None => Result::Err(fshape("operand"@)),
+    }
+}
+
+pub open spec fn bound_pairs(aitems: Seq<Item>, rs: Seq<Term>) -> Result<
+    Seq<(Term, (Term, Term))>,
+    Term,
+>
+    decreases rs.len(),
+{
+    if rs.len() == 0 {
+        Result::Ok(Seq::empty())
+    } else {
+        match (operand_pair(aitems, rs[0]), bound_pairs(aitems, rs.drop_first())) {
+            (Result::Err(e), _) => Result::Err(e),
+            (_, Result::Err(e)) => Result::Err(e),
+            (Result::Ok(p), Result::Ok(ps)) => Result::Ok(seq![(rs[0], p)] + ps),
+        }
+    }
+}
+
+// Every leaf's operand law before any leaf's bound (contract da2 D5).
+#[verifier::opaque]
+pub open spec fn operand_pairs(aitems: Seq<Item>, rs: Seq<Term>) -> Result<
+    Seq<(Term, (Term, Term))>,
+    Term,
+> {
+    if operands_ok(aitems, rs) {
+        bound_pairs(aitems, rs)
+    } else {
+        Result::Err(fshape("operand"@))
+    }
+}
+
+pub open spec fn pair_of(ps: Seq<(Term, (Term, Term))>, r: Term) -> (Term, Term)
+    decreases ps.len(),
+{
+    if ps.len() == 0 {
+        (Term::Nil, Term::Nil)
+    } else if ps[0].0 == r {
+        ps[0].1
+    } else {
+        pair_of(ps.drop_first(), r)
+    }
+}
+
+pub ghost struct Chain {
+    pub goals: Seq<Term>,
+    pub out: (Term, Term),
+    pub v: nat,  // next fresh variable
+    pub m: nat,  // literal leaves used
+}
+
+// The postorder built-in chain of E: an operand leaf = its pair, the m-th
+// literal leaf = (exactly, vals[m]); node i owns the fresh variables v, v + 1.
+pub open spec fn chain(
+    e: Term,
+    ps: Seq<(Term, (Term, Term))>,
+    vals: Seq<Term>,
+    v: nat,
+    m: nat,
+) -> Chain
+    decreases e,
+{
+    match e {
+        Term::Comp(name, args) => if name == ascii("expr"@) && args.len() == 3 {
+            let l = chain(args[1], ps, vals, v, m);
+            let r = chain(args[2], ps, vals, l.v, l.m);
+            let op = if args[0] == atom("*"@) {
+                ascii("guideline_product"@)
+            } else {
+                ascii("guideline_quotient"@)
+            };
+            let out = (Term::Var(r.v), Term::Var(r.v + 1));
+            Chain {
+                goals: l.goals + r.goals + seq![
+                    Term::Comp(op, seq![l.out.0, l.out.1, r.out.0, r.out.1, out.0, out.1]),
+                ],
+                out,
+                v: r.v + 2,
+                m: r.m,
+            }
+        } else {
+            Chain { goals: Seq::empty(), out: (atom("exactly"@), vals[m as int]), v, m: m + 1 }
+        },
+        _ => Chain { goals: Seq::empty(), out: pair_of(ps, e), v, m },
+    }
+}
+
+// Witness values of the chain outputs, node by node (contract da2 D4); None
+// when a node derives nothing on the witness.
+pub open spec fn chain_pairs(goals: Seq<Term>, pairs: Seq<(Term, Term)>) -> Option<
+    Seq<(Term, Term)>,
+>
+    decreases goals.len(),
+{
+    if goals.len() == 0 {
+        Option::Some(pairs)
+    } else {
+        match crate::arith::arith_result(bind_all(goals[0], pairs)) {
+            Option::Some((sv, nv)) => chain_pairs(
+                goals.drop_first(),
+                pairs.push((arg(goals[0], 4), sv)).push((arg(goals[0], 5), nv)),
+            ),
+            Option::None => Option::None,
+        }
+    }
+}
+
+// An operand's witness: an exact nonzero value its condition admits, where one
+// exists (contract da2 D4).
+pub open spec fn operand_witness(op: Term, count: Term) -> Term {
+    match count {
+        Term::Int(n) => Term::Int(
+            if op == atom("geq"@) && n == 0 {
+                1
+            } else if op == atom("leq"@) && n == 0 {
+                -1
+            } else if op == atom("greater"@) {
+                if n + 1 == 0 {
+                    n + 2
+                } else {
+                    n + 1
+                }
+            } else if op == atom("less"@) {
+                if n - 1 == 0 {
+                    n - 2
+                } else {
+                    n - 1
+                }
+            } else {
+                n
+            },
+        ),
+        _ => count,
+    }
+}
+
+// Formula leaves that are referents, across the formulas.
+pub open spec fn formula_refs(fs: Seq<Term>) -> Seq<Term>
+    decreases fs.len(),
+{
+    if fs.len() == 0 {
+        Seq::empty()
+    } else {
+        var_leaves(arg(fs[0], 2)) + formula_refs(fs.drop_first())
+    }
+}
+
+// The formulas whose target is y.
+pub open spec fn targets(fs: Seq<Term>, y: Term) -> nat
+    decreases fs.len(),
+{
+    if fs.len() == 0 {
+        0
+    } else {
+        (if arg(fs[0], 0) == y {
+            1nat
+        } else {
+            0nat
+        }) + targets(fs.drop_first(), y)
+    }
+}
+
+// A `some` operand loses its nt1 filter (extension 2); the target's object
+// becomes its computed amount.
+pub open spec fn free_operand(src: Src, an: Seq<(Term, int)>, ops: Seq<Term>, inner: Term) -> bool {
+    &&& is_comp(inner, "$guideline_bound"@, 8)
+    &&& ops.contains(arg(inner, 0))
+    &&& arg(inner, 6) == atom("geq"@) && arg(inner, 7) == Term::Int(2)
+    &&& some_before(src, an, arg(inner, 0))
+}
+
+pub open spec fn amount(inner: Term, sv: Term, nv: Term) -> Term {
+    comp(
+        "$guideline_amount"@,
+        seq![arg(inner, 0), arg(inner, 1), arg(inner, 2), arg(inner, 3), sv, nv],
+    )
+}
+
+pub open spec fn free_items(
+    src: Src,
+    an: Seq<(Term, int)>,
+    ops: Seq<Term>,
+    items: Seq<Item>,
+) -> Seq<Item>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            match items[0] {
+                Item::Anch(c, inner) => if c == actual() && free_operand(src, an, ops, inner) {
+                    Item::Anch(c, amount(inner, arg(inner, 4), arg(inner, 5)))
+                } else {
+                    items[0]
+                },
+                _ => items[0],
+            },
+        ] + free_items(src, an, ops, items.drop_first())
+    }
+}
+
+// The target's object becomes its computed amount.
+pub open spec fn rewrite_target(items: Seq<Item>, y: Term, sv: Term, nv: Term) -> Seq<Item>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            match items[0] {
+                Item::Anch(c, inner) => if c == actual() && is_comp(inner, "object"@, 6) && arg(
+                    inner,
+                    0,
+                ) == y {
+                    Item::Anch(c, amount(inner, sv, nv))
+                } else {
+                    items[0]
+                },
+                _ => items[0],
+            },
+        ] + rewrite_target(items.drop_first(), y, sv, nv)
+    }
+}
+
+// A formula anywhere but the top level of the consequent (contract da2 D5).
+pub open spec fn misplaced_item(it: Item, top_ok: bool) -> bool
+    decreases it, 0int,
+{
+    match it {
+        Item::Anch(c, inner) => is_formula(inner) && !(top_ok && c == actual()),
+        Item::Naf(_, payload) => misplaced(payload, false),
+        Item::Op(_, _, _, _) => false,
+    }
+}
+
+pub open spec fn misplaced(items: Seq<Item>, top_ok: bool) -> bool
+    decreases items, 1int,
+{
+    items.len() > 0 && (misplaced_item(items[0], top_ok) || misplaced(items.drop_first(), top_ok))
+}
+
+pub open spec fn top_formula(it: Item) -> bool {
+    match it {
+        Item::Anch(c, inner) => c == actual() && is_formula(inner),
+        _ => false,
+    }
+}
+
+// The consequent object that a formula's target names, as D1 requires it.
+pub open spec fn target_ok(src: Src, an: Seq<(Term, int)>, citems: Seq<Item>, y: Term) -> bool {
+    match top_object(citems, y) {
+        Option::Some(o) => arg(o, 2) == atom("countable"@) && arg(o, 3) == atom("na"@) && arg(o, 4)
+            == atom("geq"@) && arg(o, 5) == Term::Int(2) && some_before(src, an, y),
+        Option::None => false,
+    }
+}
+
+pub ghost struct FPass {
+    pub aitems: Seq<Item>,
+    pub citems: Seq<Item>,
+    pub chain: Seq<Term>,
+    pub pairs: Seq<(Term, Term)>,  // the chain outputs' witness values
+}
+
+// One formula after the earlier ones (contract da2 D1–D5): checks in order,
+// then its chain, its target rewritten, its witness evaluated.
+pub open spec fn formula_step(
+    src: Src,
+    an: Seq<(Term, int)>,
+    fs: Seq<Term>,
+    f: Term,
+    aitems: Seq<Item>,
+    acc: FPass,
+    v: nat,
+) -> Result<(FPass, nat), Term> {
+    let y = arg(f, 0);
+    let e = arg(f, 2);
+    if arg(f, 1) != atom("="@) {
+        Result::Err(fshape("relation"@))
+    } else if !is_comp(e, "expr"@, 3) || !ops_ok(e) {
+        Result::Err(fshape("operator"@))
+    } else if !(y is Var) || formula_refs(fs).contains(y) || targets(fs, y) != 1 || !target_ok(
+        src,
+        an,
+        acc.citems,
+        y,
+    ) {
+        Result::Err(fshape("target"@))
+    } else {
+        match operand_pairs(aitems, var_leaves(e)) {
+            Result::Err(r) => Result::Err(r),
+            Result::Ok(ps) => match formula_token(an, f) {
+                Option::None => Result::Err(fshape("literal"@)),
+                Option::Some(kf) => match literal_values(src, kf, lit_leaves(e)) {
+                    Option::None => Result::Err(fshape("literal"@)),
+                    Option::Some(vals) => {
+                        let ch = chain(e, ps, vals, v, 0);
+                        match chain_pairs(ch.goals, acc.pairs) {
+                            Option::None => Result::Err(fshape("witness"@)),
+                            Option::Some(pairs) => Result::Ok(
+                                (
+                                    FPass {
+                                        aitems: acc.aitems,
+                                        citems: rewrite_target(acc.citems, y, ch.out.0, ch.out.1),
+                                        chain: acc.chain + ch.goals,
+                                        pairs,
+                                    },
+                                    ch.v,
+                                ),
+                            ),
+                        }
+                    },
+                },
+            },
+        }
+    }
+}
+
+pub open spec fn formula_steps(
+    src: Src,
+    an: Seq<(Term, int)>,
+    fs: Seq<Term>,
+    i: nat,
+    aitems: Seq<Item>,
+    acc: FPass,
+    v: nat,
+) -> Result<FPass, Term>
+    decreases fs.len() - i,
+{
+    if i >= fs.len() {
+        Result::Ok(acc)
+    } else {
+        match formula_step(src, an, fs, fs[i as int], aitems, acc, v) {
+            Result::Err(e) => Result::Err(e),
+            Result::Ok((acc2, v2)) => formula_steps(src, an, fs, i + 1, aitems, acc2, v2),
+        }
+    }
+}
+
+pub open spec fn top_formulas(items: Seq<Item>) -> Seq<Term>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        match items[0] {
+            Item::Anch(c, inner) => if c == actual() && is_formula(inner) {
+                seq![inner] + top_formulas(items.drop_first())
+            } else {
+                top_formulas(items.drop_first())
+            },
+            _ => top_formulas(items.drop_first()),
+        }
+    }
+}
+
+pub open spec fn drop_formulas(items: Seq<Item>) -> Seq<Item>
+    decreases items.len(),
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else if top_formula(items[0]) {
+        drop_formulas(items.drop_first())
+    } else {
+        seq![items[0]] + drop_formulas(items.drop_first())
+    }
+}
+
+// The formula pass of one variant (contract da2 D3): `aitems` = the converted
+// antecedent (nt1 first), `v` = the first variable past nt1's block. The
+// consequent loses its formulas, a `some` operand its filter; the witness
+// pairs cover the antecedent, then the chain outputs.
+pub open spec fn formula_pass(
+    src: Src,
+    an: Seq<(Term, int)>,
+    aitems: Seq<Item>,
+    citems: Seq<Item>,
+    ordered: Seq<Term>,
+    map: Seq<(Term, Term)>,
+    docid: Seq<u8>,
+    s: nat,
+    k: nat,
+    v: nat,
+) -> Result<FPass, Term> {
+    let fs = top_formulas(citems);
+    let free = free_items(src, an, formula_refs(fs), aitems);
+    if misplaced(aitems, false) || misplaced(citems, true) {
+        Result::Err(fshape("position"@))
+    } else {
+        formula_steps(
+            src,
+            an,
+            fs,
+            0,
+            aitems,
+            FPass {
+                aitems: free,
+                citems: drop_formulas(citems),
+                chain: Seq::empty(),
+                pairs: witness_pairs(
+                    free,
+                    ordered,
+                    map,
+                    docid,
+                    s,
+                    k,
+                    formula_refs(fs),
+                    Seq::empty(),
+                ),
+            },
+            v,
+        )
+    }
+}
+
 // --- groups: fact clusters and rule variants ---
 pub ghost struct Group {
     pub k: nat,  // variant ordinal (1 for facts)
@@ -2732,6 +3510,7 @@ pub open spec fn witness_pairs(
     docid: Seq<u8>,
     s: nat,
     k: nat,
+    ops: Seq<Term>,
     acc: Seq<(Term, Term)>,
 ) -> Seq<(Term, Term)>
     decreases items.len(),
@@ -2748,9 +3527,16 @@ pub open spec fn witness_pairs(
             Item::Naf(_, _) => acc,
             Item::Anch(_, inner) => {
                 let acc0 = witness_refs(cond_refs(inner), ordered, map, docid, s, k, acc);
-                // nt1 D4: a converted condition's witness states its own bound
-                if is_comp(inner, "$guideline_bound"@, 8) {
+                // nt1 D4: a converted condition's witness states its own bound;
+                // da2 D4: a formula operand's, an exact nonzero value it admits
+                if is_comp(inner, "$guideline_bound"@, 8) && ops.contains(arg(inner, 0)) {
+                    acc0.push((arg(inner, 4), atom("exactly"@))).push(
+                        (arg(inner, 5), operand_witness(arg(inner, 6), arg(inner, 7))),
+                    )
+                } else if is_comp(inner, "$guideline_bound"@, 8) {
                     acc0.push((arg(inner, 4), arg(inner, 6))).push((arg(inner, 5), arg(inner, 7)))
+                } else if is_comp(inner, "$guideline_amount"@, 6) {
+                    acc0.push((arg(inner, 4), atom("exactly"@))).push((arg(inner, 5), Term::Int(1)))
                 } else if is_comp(inner, "$guideline_scaled"@, 6) {
                     acc0.push((arg(inner, 0), arg(inner, 3))).push(
                         (arg(inner, 1), arg(inner, 4)),
@@ -2760,7 +3546,7 @@ pub open spec fn witness_pairs(
                 }
             },
         };
-        witness_pairs(items.drop_first(), ordered, map, docid, s, k, acc1)
+        witness_pairs(items.drop_first(), ordered, map, docid, s, k, ops, acc1)
     }
 }
 
@@ -2793,10 +3579,10 @@ pub open spec fn witness_refs(
 }
 
 // One Horn variant: body = antecedent items (comparison conditions converted,
-// nt1 D3), one clause per consequent head.
+// nt1 D3) + the formula chains (da2 D3), one clause per consequent head.
 pub open spec fn variant(
     aitems0: Seq<Item>,
-    citems: Seq<Item>,
+    citems0: Seq<Item>,
     ordered: Seq<Term>,
     map: Seq<(Term, Term)>,
     deps: Term,
@@ -2804,33 +3590,42 @@ pub open spec fn variant(
     docid: Seq<u8>,
     k: nat,
     cb: nat,
+    src: Src,
+    an: Seq<(Term, int)>,
 ) -> Result<Group, Term> {
     let ante_refs = first_vars(ref_slots(aitems0), Seq::empty());
     let sko = skolem(cons_locals(ordered, ante_refs, map), ordered, deps, s, docid);
-    let aitems = compared(aitems0, cb);
-    match (expand(aitems, map, sko), expand(citems, map, sko)) {
-        (Result::Ok(goals), Result::Ok(heads)) => if goals.len() == 0 {
-            Result::Err(atom("rule_without_antecedent"@))
-        } else if heads.len() == 0 || !all_pos(heads) {
-            Result::Err(atom("rule_without_consequent"@))
-        } else {
-            let cs = rule_clauses(pos_terms(heads), goals);
-            if !all_naf_safe(cs, body_doms(aitems)) {
-                Result::Err(atom("naf_safety"@))
-            } else if !all_head_safe(cs) {
-                Result::Err(atom("head_variable_not_bound_in_body"@))
+    match formula_pass(
+        src,
+        an,
+        compared(aitems0, cb),
+        citems0,
+        ordered,
+        map,
+        docid,
+        s,
+        k,
+        cb + 3 * conv_refs(aitems0).len(),
+    ) {
+        Result::Err(e) => Result::Err(e),
+        Result::Ok(fp) => match (expand(fp.aitems, map, sko), expand(fp.citems, map, sko)) {
+            (Result::Ok(goals), Result::Ok(heads)) => if goals.len() == 0 {
+                Result::Err(atom("rule_without_antecedent"@))
+            } else if heads.len() == 0 || !all_pos(heads) {
+                Result::Err(atom("rule_without_consequent"@))
             } else {
-                Result::Ok(
-                    Group {
-                        k,
-                        pairs: witness_pairs(aitems, ordered, map, docid, s, k, Seq::empty()),
-                        clauses: cs,
-                    },
-                )
-            }
+                let cs = rule_clauses(pos_terms(heads), goals + pos_all(fp.chain));
+                if !all_naf_safe(cs, body_doms(fp.aitems)) {
+                    Result::Err(atom("naf_safety"@))
+                } else if !all_head_safe(cs) {
+                    Result::Err(atom("head_variable_not_bound_in_body"@))
+                } else {
+                    Result::Ok(Group { k, pairs: fp.pairs, clauses: cs })
+                }
+            },
+            (Result::Err(e), _) => Result::Err(e),
+            (_, Result::Err(e)) => Result::Err(e),
         },
-        (Result::Err(e), _) => Result::Err(e),
-        (_, Result::Err(e)) => Result::Err(e),
     }
 }
 
@@ -2857,7 +3652,9 @@ pub open spec fn rule_groups(
     map: Seq<(Term, Term)>,
     base: nat,
     tab: Option<Env>,
+    src: Src,
 ) -> Result<Seq<Group>, Term> {
+    let an = anchored_all(seq![ante, cons]);
     match curry(ante, cons, 64) {
         Result::Err(e) => Result::Err(e),
         Result::Ok((segs, fcons)) => match box_parts(fcons) {
@@ -2894,6 +3691,8 @@ pub open spec fn rule_groups(
                                         docid,
                                         1,
                                         base + fc.n,
+                                        src,
+                                        an,
                                     ) {
                                         Result::Err(e) => Result::Err(e),
                                         Result::Ok(g) => Result::Ok(seq![g]),
@@ -2922,6 +3721,8 @@ pub open spec fn rule_groups(
                                     map,
                                     base,
                                     tab,
+                                    src,
+                                    an,
                                 )
                             },
                             _ => Result::Err(atom("invalid_drs_shape"@)),
@@ -2948,6 +3749,8 @@ pub open spec fn split_variants(
     map: Seq<(Term, Term)>,
     base: nat,
     tab: Option<Env>,
+    src: Src,
+    an: Seq<(Term, int)>,
 ) -> Result<Seq<Group>, Term> {
     match flatten_seq(shared, s, docid, 1, base, tab) {
         Result::Err(e) => Result::Err(e),
@@ -3000,6 +3803,8 @@ pub open spec fn split_variants(
                                     docid,
                                     1,
                                     base + c1.n,
+                                    src,
+                                    an,
                                 ),
                                 variant(
                                     fs.items + f2.items,
@@ -3011,6 +3816,8 @@ pub open spec fn split_variants(
                                     docid,
                                     2,
                                     base + c1.n,
+                                    src,
+                                    an,
                                 ),
                             ) {
                                 (Result::Ok(g1), Result::Ok(g2)) => Result::Ok(seq![g1, g2]),
@@ -3042,10 +3849,11 @@ pub open spec fn sentence_groups(
     map: Seq<(Term, Term)>,
     base: nat,
     tab: Option<Env>,
+    src: Src,
 ) -> Result<(Seq<Group>, Seq<(Term, Term)>), Term> {
     if roots.len() == 1 && roots[0] is Rule {
         match roots[0] {
-            Root::Rule(a, c) => match rule_groups(a, c, s, docid, map, base, tab) {
+            Root::Rule(a, c) => match rule_groups(a, c, s, docid, map, base, tab, src) {
                 Result::Err(e) => Result::Err(e),
                 Result::Ok(gs) => Result::Ok((gs, map)),
             },
@@ -3410,13 +4218,22 @@ pub open spec fn project_from(
     base: nat,
     tab: Option<Env>,
     dims: Seq<Term>,
+    srcs: Seq<Src>,
 ) -> Result<Seq<Projected>, Term>
     decreases count + 1 - s,
 {
     if s > count {
         Result::Ok(Seq::empty())
     } else {
-        match sentence_groups(of_sentence(tagged, s as int), s, docid, map, base, tab) {
+        match sentence_groups(
+            of_sentence(tagged, s as int),
+            s,
+            docid,
+            map,
+            base,
+            tab,
+            srcs[s - 1],
+        ) {
             Result::Err(e) => Result::Err(err_at(s, e)),
             Result::Ok((gs0, map2)) => {
                 let dims2 = dims + grade_dims(group_clauses(gs0));
@@ -3436,6 +4253,7 @@ pub open spec fn project_from(
                             base,
                             tab,
                             dims2,
+                            srcs,
                         ) {
                             Result::Err(e) => Result::Err(e),
                             Result::Ok(rest) => Result::Ok(
@@ -3490,11 +4308,15 @@ pub open spec fn collides_all(ts: Seq<Term>) -> bool
 }
 
 // project(drs, docid, count) = the sentence bundles' groups, or the first
-// sentence-attributed reason the fork's law admits no projection.
-pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat, tab: Option<Vocabulary>) -> Result<
-    Seq<Projected>,
-    Term,
-> {
+// sentence-attributed reason the fork's law admits no projection; `srcs` = each
+// sentence's tokens + ACE line (formula literals, da2 D2).
+pub open spec fn project(
+    drs: Term,
+    docid: Seq<u8>,
+    count: nat,
+    tab: Option<Vocabulary>,
+    srcs: Seq<Src>,
+) -> Result<Seq<Projected>, Term> {
     match box_parts(drs) {
         Option::None => Result::Err(atom("invalid_drs_shape"@)),
         Option::Some((_, conds)) => if collides(drs) {
@@ -3516,6 +4338,7 @@ pub open spec fn project(drs: Term, docid: Seq<u8>, count: nat, tab: Option<Voca
                             nvars(drs),
                             env_of(tab, drs),
                             Seq::empty(),
+                            srcs,
                         )
                     },
                 },
@@ -3608,6 +4431,29 @@ pub open spec fn ulex_of(usha: Option<Seq<u8>>) -> Option<Seq<u8>> {
     usha
 }
 
+// Each sentence's APE tokens beside its ACE line.
+pub open spec fn srcs_of(sentences: Term, lines: Seq<Seq<u8>>) -> Seq<Src> {
+    let ss = match list_items(sentences) {
+        Option::Some(ss) => ss,
+        Option::None => Seq::empty(),
+    };
+    Seq::new(
+        lines.len(),
+        |i: int|
+            Src {
+                toks: if i < ss.len() {
+                    match list_items(ss[i]) {
+                        Option::Some(ts) => ts,
+                        Option::None => Seq::empty(),
+                    }
+                } else {
+                    Seq::empty()
+                },
+                line: lines[i],
+            },
+    )
+}
+
 // Bundle s of the committed document = the projected groups' clauses,
 // canonically numbered, under the ACE line as its marker text.
 pub open spec fn bundle_matches(b: Bundle, p: Projected, line: Seq<u8>) -> bool {
@@ -3669,7 +4515,13 @@ pub open spec fn certify_doc(
                 } else if doc.bundles.len() != lines.len() {
                     Result::Err(atom("bundle_count"@))
                 } else {
-                    match project(d.drs, docid, lines.len(), table_of(traw, tsha).unwrap()) {
+                    match project(
+                        d.drs,
+                        docid,
+                        lines.len(),
+                        table_of(traw, tsha).unwrap(),
+                        srcs_of(d.sentences, lines),
+                    ) {
                         Result::Err(e) => Result::Err(Term::Comp(ascii("unsupported"@), seq![e])),
                         Result::Ok(ps) => match first_mismatch(doc.bundles, ps, lines, 0) {
                             Option::Some(s) => Result::Err(

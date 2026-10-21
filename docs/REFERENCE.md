@@ -957,6 +957,81 @@ Prolog can then search without end. Tabling ends the search for the
 conversion rules of this repository but proves no general termination. The
 engine of this repository is bounded and reports `indeterminate(limit)`.
 
+#### Formulas in ACE
+
+A rule can compute a quantity with a formula. The formula is the last part
+of the consequent:
+
+```
+If an opioid-dosage contains some oxycodone-milligrams-per-day X then the opioid-dosage includes some MME-units-per-day Y and Y = X * 1.5.
+```
+
+The compiler reads two extensions of ACE in a formula. These extensions are
+specific to cnl-ckc, and they apply only to formulas:
+
+- A quantity noun in a formula stands for the count of the quantity. In the
+  example, X is the number of milligrams per day.
+- The word `some` directly before the noun of a quantity in a formula sets
+  no bound on its count. APE alone reads `some` before a plural noun as at
+  least 2. When a word stands between `some` and the noun, as in
+  `some red cats X`, the quantity keeps the reading of APE.
+
+A formula must obey these rules:
+
+- The formula stands at the top level of the last consequent of a rule,
+  outside each negation, modal box and alternative. One rule can hold more
+  than one formula, each for a different quantity.
+- The left side names a quantity of the consequent that `some` introduces.
+  This quantity is the target. A target is not an operand of a formula, and
+  no other formula names it.
+- The relation is `=`. The expression uses `*` and `/`, and it holds at
+  least one operation. Parentheses group the operations.
+- An operand is a quantity of the condition, at the top level of the rule,
+  that `some` or a comparison introduces, for example `exactly 40` or
+  `at least 40`. Its noun is countable. A time quantity and a measurement,
+  for example `at least 2 kg of apples`, are not operands. A condition with
+  a comparison keeps its comparison. A plain number, `a`, `about` and a
+  quantity without a number are not operands.
+- A number in the expression is an integer or a decimal number. The compiler
+  takes the value from the ACE text, so the value is exact. Each number of
+  the sentence must keep its spelling when APE reads it: `1.50`, `02`, a
+  decimal number with more digits than APE keeps and a decimal number that
+  APE writes with an exponent reject. A sign before a number of the sentence
+  rejects, and so does a character after a number of the formula other than
+  a space, `)`, `*`, `/` or the final period.
+
+The compiler emits one arithmetic built-in for each operation of the
+expression, inner operations first. The built-ins stand after all other
+conditions of the rule. The count of the target takes the result of the
+last built-in:
+
+```
+guideline_cardinality(actual,'$guideline_id'(product,…,ref(4),…),na,F,G) :-
+    …, guideline_entity(actual,B,'oxycodone-milligram-per-day',countable),
+    guideline_cardinality(actual,B,na,C,D), …,
+    guideline_product(C,D,exactly,rational(3,2),F,G).
+```
+
+An operand with `some` directly before its noun keeps no
+`guideline_satisfies` condition. The proof obligation of the rule gives each
+operand one exact value that is not zero: 1 for such an operand, n for
+`exactly n` and `at least n`, n + 1 for `more than n`, n for `at most n`,
+and n − 1 for `less than n`. When this value is 0, the
+obligation takes the next integer in the direction that the condition
+allows, for example 1 for `at least 0` and −1 for `less than 1`. Only
+`exactly 0` keeps 0. The obligation computes the built-ins with these
+values, and the head of the rule takes the result. When a built-in derives
+nothing for these values, for example for a divisor of 0, the sentence
+rejects.
+
+A formula that breaks a rule rejects with `formula_shape(Why, S)`, class
+`unsupported`. The reason names the first check that fails, in this order:
+`position`, `relation`, `operator`, `target`, `operand`, `operand_bound`,
+`literal`, `witness`. The check `operand` covers each operand of the formula
+before the check `operand_bound` starts. A question cannot hold a formula.
+The certifier derives each formula again from the DRS and the ACE text and
+reports a reject as `unsupported(sentence(S, formula_shape(Why)))`.
+
 ### Scope exclusions
 
 A guideline often states where its recommendations do not apply, for

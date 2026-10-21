@@ -40,9 +40,13 @@
 %   with its scope + exclusion pair an exclusion rule's record
 %   guideline_exclusion(Key) and \+ guideline_exclusion(Key) on every
 %   should/must/may edge clause (contract cs1; the cs1_ prefix),
+%   and, with or without a table, a rule consequent's formula `Y = E` as a
+%   guideline_product/6 | guideline_quotient/6 chain whose result is Y's
+%   cardinality (contract da2; the da2_ prefix),
 %   and admits relation/3 leaves + upper-bound condition lists in questions;
 %   rejects add unsupported temporal_shape(Why,S), grade_shape(Why,S),
-%   preference_shape(Why,S), qualifier_shape(Why,S), scope_shape(Why,S) and the load class
+%   preference_shape(Why,S), qualifier_shape(Why,S), scope_shape(Why,S),
+%   formula_shape(Why,S) and the load class
 %   vocabulary_load (exit 2). Law = docs/REFERENCE.md "Compiled Prolog schema".
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
@@ -1859,6 +1863,7 @@ v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
     ; reject(sentence_lines, counts(lines(LineCount), sentences(SentenceCount)))
     ),
     crypto_data_hash(Bytes, AceDigest, [algorithm(sha256), encoding(octet)]),
+    b_setval(da2_src, Sentences-Lines),
     v1_ulex_reserved_check,
     v1_collision_scan(Conds),
     v1_tag_conditions(Conds, Tagged),
@@ -2035,6 +2040,7 @@ v1_reserved_atom(Atom) :-
 v1_translate_groups([], _, _, _, []).
 v1_translate_groups([S-Group|Groups], DocId, Map0, Dims0,
         [bundle(S, SGroups)|Bundles]) :-
+    b_setval(da2_sentence, S),
     v1_sentence(Group, S, DocId, Map0, Map, SGroups0),
     v1_groups_clause_count(SGroups0, ClauseCount),
     ( ClauseCount =:= 0 ->
@@ -2411,6 +2417,8 @@ nt1_builtin_goal(Goal) :-
     nonvar(Goal),
     ( functor(Goal, guideline_satisfies, 4)
     ; functor(Goal, guideline_satisfies, 6)
+    ; functor(Goal, guideline_product, 6)
+    ; functor(Goal, guideline_quotient, 6)
     ),
     !.
 
@@ -2573,16 +2581,59 @@ nt1_relink(Vars, Times, Inner, Out) :-
 nt1_unit_slot(Vars, Times, Q, U0, U) :-
     ( strict_member(Q, Times) -> v1_lookup(Vars, Q, v(_, _, U)) ; U = U0 ).
 
-/* The per-document replay module states the comparison built-ins over
-   integer counts; on those, its verdicts equal guidelines/schema.pl's
-   (contract nt1 D9, D10). */
+/* The per-document replay module + the formula witness state the comparison
+   and arithmetic built-ins exactly as guidelines/schema.pl does, clause for
+   clause (contracts nt1 D9, D10, da1 D10, da2 D7). */
 nt1_schema_clauses([
-    (guideline_satisfies(S, N, B, M) :-
-        atom(S), integer(N), atom(B), integer(M), guideline_within(S, N, B, M)),
-    (guideline_satisfies(S, N, U, B, M, V) :-
-        atom(S), integer(N), atom(U), atom(B), integer(M), atom(V),
-        guideline_scale(U, G, R), guideline_scale(V, G, Q),
-        X is N * R, Y is M * Q, guideline_within(S, X, B, Y)),
+    (guideline_satisfies(S, N, B, M) :- atom(S), atom(B), guideline_number(N, P, Q), guideline_number(M, R, T), X is P * T, Y is R * Q, guideline_within(S, X, B, Y)),
+    (guideline_satisfies(S, N, U, B, M, V) :- atom(S), atom(U), atom(B), atom(V), guideline_number(N, P, Q), guideline_number(M, R, T), guideline_scale(U, G, A), guideline_scale(V, G, C), X is P * A * T, Y is R * C * Q, guideline_within(S, X, B, Y)),
+    (guideline_product(S1, N1, S2, N2, S, N) :- guideline_set(S1, N1, A), guideline_set(S2, N2, B), guideline_times(A, B, C), guideline_spell(C, S0, N0), S = S0, N = N0),
+    (guideline_quotient(S1, N1, S2, N2, S, N) :- guideline_set(S1, N1, A), guideline_set(S2, N2, B), guideline_inverse(B, D), guideline_times(A, D, C), guideline_spell(C, S0, N0), S = S0, N = N0),
+    (guideline_number(N, N, 1) :- integer(N)),
+    (guideline_number(N, P, Q) :- compound(N), functor(N, rational, 2), arg(1, N, P), arg(2, N, Q), integer(P), integer(Q), Q >= 2, A is abs(P), guideline_gcd(A, Q, 1)),
+    guideline_gcd(A, 0, A),
+    (guideline_gcd(A, B, G) :- B > 0, C is A mod B, guideline_gcd(B, C, G)),
+    (guideline_set(S, N, V) :- atom(S), guideline_number(N, P, Q), guideline_ray(S, P, Q, V)),
+    guideline_ray(exactly, P, Q, point(P, Q)),
+    guideline_ray(eq, P, Q, lower(P, Q, true)),
+    guideline_ray(geq, P, Q, lower(P, Q, true)),
+    guideline_ray(greater, P, Q, lower(P, Q, false)),
+    guideline_ray(leq, P, Q, upper(P, Q, true)),
+    guideline_ray(less, P, Q, upper(P, Q, false)),
+    (guideline_times(point(X, _), _, point(0, 1)) :- X =:= 0),
+    (guideline_times(A, point(Y, _), point(0, 1)) :- Y =:= 0, guideline_nonzero(A)),
+    (guideline_times(point(X, D), B, C) :- X =\= 0, guideline_nonzero(B), guideline_stretch(X, D, B, C)),
+    (guideline_times(A, point(Y, E), C) :- Y =\= 0, guideline_ray_kind(A), guideline_stretch(Y, E, A, C)),
+    (guideline_times(lower(X, D, F), lower(Y, E, G), lower(Z, W, K)) :- X >= 0, Y >= 0, Z is X * Y, W is D * E, guideline_att(X, F, Y, G, K)),
+    (guideline_times(upper(X, D, F), upper(Y, E, G), lower(Z, W, K)) :- X =< 0, Y =< 0, Z is X * Y, W is D * E, guideline_att(X, F, Y, G, K)),
+    (guideline_times(lower(X, D, F), upper(Y, E, G), upper(Z, W, K)) :- X >= 0, Y =< 0, Z is X * Y, W is D * E, guideline_att(X, F, Y, G, K)),
+    (guideline_times(upper(X, D, F), lower(Y, E, G), upper(Z, W, K)) :- X =< 0, Y >= 0, Z is X * Y, W is D * E, guideline_att(X, F, Y, G, K)),
+    (guideline_nonzero(point(X, _)) :- X =\= 0),
+    guideline_nonzero(lower(_, _, _)),
+    guideline_nonzero(upper(_, _, _)),
+    guideline_ray_kind(lower(_, _, _)),
+    guideline_ray_kind(upper(_, _, _)),
+    (guideline_stretch(X, D, point(Y, E), point(Z, W)) :- Z is X * Y, W is D * E),
+    (guideline_stretch(X, D, lower(Y, E, F), lower(Z, W, F)) :- X > 0, Z is X * Y, W is D * E),
+    (guideline_stretch(X, D, lower(Y, E, F), upper(Z, W, F)) :- X < 0, Z is X * Y, W is D * E),
+    (guideline_stretch(X, D, upper(Y, E, F), upper(Z, W, F)) :- X > 0, Z is X * Y, W is D * E),
+    (guideline_stretch(X, D, upper(Y, E, F), lower(Z, W, F)) :- X < 0, Z is X * Y, W is D * E),
+    guideline_att(_, true, _, true, true),
+    (guideline_att(X, true, _, false, K) :- guideline_zero(X, K)),
+    (guideline_att(_, false, Y, true, K) :- guideline_zero(Y, K)),
+    guideline_att(_, false, _, false, false),
+    (guideline_zero(X, true) :- X =:= 0),
+    (guideline_zero(X, false) :- X =\= 0),
+    (guideline_inverse(point(Y, E), point(E, Y)) :- Y > 0),
+    (guideline_inverse(point(Y, E), point(F, Z)) :- Y < 0, F is -E, Z is -Y),
+    (guideline_spell(point(P, Q), exactly, N) :- guideline_canon(P, Q, N)),
+    (guideline_spell(lower(P, Q, true), geq, N) :- guideline_canon(P, Q, N)),
+    (guideline_spell(lower(P, Q, false), greater, N) :- guideline_canon(P, Q, N)),
+    (guideline_spell(upper(P, Q, true), leq, N) :- guideline_canon(P, Q, N)),
+    (guideline_spell(upper(P, Q, false), less, N) :- guideline_canon(P, Q, N)),
+    (guideline_canon(P, Q, N) :- A is abs(P), guideline_gcd(A, Q, G), R is P // G, T is Q // G, guideline_make(R, T, N)),
+    guideline_make(P, 1, P),
+    (guideline_make(P, Q, rational(P, Q)) :- Q > 1),
     (guideline_within(eq, X, geq, Y) :- X >= Y),
     (guideline_within(exactly, X, geq, Y) :- X >= Y),
     (guideline_within(geq, X, geq, Y) :- X >= Y),
@@ -2611,6 +2662,569 @@ nt1_assert_schema :-
     nt1_schema_clauses(Clauses),
     forall(member(C, Clauses), assertz(ace_to_pl_proof_world:C)).
 
+/* ---------- dose arithmetic formulas (contract da2) ----------
+   A formula `Y = E` at the top level of a rule's final consequent computes
+   its target's count from antecedent quantities and literals through the
+   schema's guideline_product/6 + guideline_quotient/6 (contract da1): the
+   chain follows every antecedent goal and its result is the target's
+   cardinality head. For formula quantities alone, a unit-noun amount stands
+   for its count and `some` sets no bound (APE reads `some` + plural as at
+   least 2). A literal's value comes from the numeral bytes of the ACE line:
+   APE's floats lose the source spelling. Spec = emit.rs § dose arithmetic
+   formulas; rejects formula_shape(Why, S); DRS read via arg/3 + == only. */
+
+da2_seg_conds(seg(_, Conds), Conds).
+
+/* Raw = the rule's antecedent + consequent condition terms (anchor search);
+   Ordered/Map/DocId/K feed the witness pairs of the converted antecedent. */
+da2_formula_pass(Raw, S, AItems, CItems, Ordered, Map, DocId, K,
+        AFree, CRest, Chain, Pairs) :-
+    ( ( da2_misplaced(AItems, false) ; da2_misplaced(CItems, true) ) ->
+        reject(unsupported, formula_shape(position, S))
+    ; true
+    ),
+    da2_top_formulas(CItems, Fs),
+    da2_formula_refs(Fs, Ops),
+    da2_anchored_list(Raw, [], Rev),
+    reverse(Rev, An),
+    b_getval(da2_src, Sentences-Lines),
+    nth1(S, Sentences, Toks),
+    nth1(S, Lines, Line),
+    da2_free_items(AItems, Ops, Toks, An, AFree),
+    exclude(da2_top_formula, CItems, CItems1),
+    v1_witness_pairs(AFree, Ordered, Map, DocId, S, K, Ops, Pairs0),
+    da2_steps(Fs, Fs, S, Toks, Line, An, AItems, CItems1, CRest, [], Chain,
+        Pairs0, Pairs).
+
+da2_misplaced([Item|Items], TopOk) :-
+    ( da2_misplaced_item(Item, TopOk) ->
+        true
+    ; da2_misplaced(Items, TopOk)
+    ).
+
+da2_misplaced_item(anchored(C, Inner), TopOk) :-
+    nonvar(Inner),
+    functor(Inner, formula, 3),
+    \+ ( TopOk == true, C == actual ).
+da2_misplaced_item(naf(_, Payload), _) :-
+    da2_misplaced(Payload, false).
+
+da2_top_formula(Item) :-
+    nonvar(Item),
+    functor(Item, anchored, 2),
+    arg(1, Item, C),
+    C == actual,
+    arg(2, Item, Inner),
+    nonvar(Inner),
+    functor(Inner, formula, 3).
+
+da2_top_formulas([], []).
+da2_top_formulas([Item|Items], Fs) :-
+    ( da2_top_formula(Item) ->
+        arg(2, Item, F),
+        Fs = [F|Fs1]
+    ; Fs = Fs1
+    ),
+    da2_top_formulas(Items, Fs1).
+
+% Formula leaves that are referents, across the formulas.
+da2_formula_refs([], []).
+da2_formula_refs([F|Fs], Ops) :-
+    arg(3, F, E),
+    da2_leaves(E, Ls),
+    include(var, Ls, Vs),
+    da2_formula_refs(Fs, Rest),
+    append(Vs, Rest, Ops).
+
+da2_leaves(E, Ls) :-
+    ( nonvar(E),
+      functor(E, expr, 3) ->
+        arg(2, E, L),
+        arg(3, E, R),
+        da2_leaves(L, LL),
+        da2_leaves(R, RL),
+        append(LL, RL, Ls)
+    ; Ls = [E]
+    ).
+
+/* Anchored conditions reachable through carriers, each with its token
+   index, in preorder (reversed accumulator). */
+da2_anchored_list([], Acc, Acc).
+da2_anchored_list([T|Ts], Acc0, Acc) :-
+    da2_anchored(T, Acc0, Acc1),
+    da2_anchored_list(Ts, Acc1, Acc).
+
+da2_anchored(T, Acc0, Acc) :-
+    ( var(T) ->
+        Acc = Acc0
+    ; da2_anchor(T, Inner, K) ->
+        da2_anchored(Inner, [Inner-K|Acc0], Acc)
+    ; da2_carrier(T) ->
+        T =.. [_|Args],
+        da2_anchored_list(Args, Acc0, Acc)
+    ; Acc = Acc0
+    ).
+
+da2_anchor(T, Inner, K) :-
+    compound(T),
+    functor(T, -, 2),
+    arg(2, T, A),
+    nonvar(A),
+    functor(A, /, 2),
+    arg(1, A, Sn),
+    integer(Sn),
+    arg(2, A, K),
+    integer(K),
+    arg(1, T, Inner).
+
+da2_carrier(T) :-
+    compound(T),
+    compound_name_arity(T, N, A),
+    da2_carrier(N, A),
+    !.
+
+da2_carrier(drs, 2).
+da2_carrier(question, 1).
+da2_carrier(should, 1).
+da2_carrier(must, 1).
+da2_carrier(can, 1).
+da2_carrier(may, 1).
+da2_carrier(-, 1).
+da2_carrier(~, 1).
+da2_carrier(=>, 2).
+da2_carrier(v, 2).
+da2_carrier('[|]', 2).
+
+da2_object_token([Inner-K0|An], R, K) :-
+    ( nonvar(Inner),
+      functor(Inner, object, 6),
+      arg(1, Inner, R1),
+      R1 == R ->
+        K = K0
+    ; da2_object_token(An, R, K)
+    ).
+
+da2_formula_token([Inner-K0|An], F, K) :-
+    ( Inner == F ->
+        K = K0
+    ; da2_formula_token(An, F, K)
+    ).
+
+% The token before R's noun is `some` (no adjective between).
+da2_some_before(Toks, An, R) :-
+    da2_object_token(An, R, K),
+    K >= 1,
+    P is K - 1,
+    nth0(P, Toks, T),
+    T == some.
+
+/* A `some` operand loses its nt1 filter (extension 2). */
+da2_free_items([], _, _, _, []).
+da2_free_items([Item|Items], Ops, Toks, An, [Item1|Items1]) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, C),
+      C == actual,
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, '$guideline_bound', 8),
+      arg(1, Inner, R),
+      strict_member(R, Ops),
+      arg(7, Inner, Op),
+      Op == geq,
+      arg(8, Inner, Count),
+      Count == 2,
+      da2_some_before(Toks, An, R) ->
+        arg(2, Inner, Noun),
+        arg(3, Inner, Class),
+        arg(4, Inner, Unit),
+        arg(5, Inner, SV),
+        arg(6, Inner, NV),
+        Item1 = anchored(C, '$guideline_amount'(R, Noun, Class, Unit, SV, NV))
+    ; Item1 = Item
+    ),
+    da2_free_items(Items, Ops, Toks, An, Items1).
+
+da2_steps([], _, _, _, _, _, _, CItems, CItems, Chain, Chain, Pairs, Pairs).
+da2_steps([F|Fs], All, S, Toks, Line, An, AItems, CItems0, CItems, Chain0,
+        Chain, Pairs0, Pairs) :-
+    da2_step(F, All, S, Toks, Line, An, AItems, CItems0, CItems1, Goals,
+        Pairs0, Pairs1),
+    append(Chain0, Goals, Chain1),
+    da2_steps(Fs, All, S, Toks, Line, An, AItems, CItems1, CItems, Chain1,
+        Chain, Pairs1, Pairs).
+
+/* One formula after the earlier ones: checks in contract order, then its
+   chain, its witness, its target rewritten. */
+da2_step(F, All, S, Toks, Line, An, AItems, CItems0, CItems, Goals, Pairs0,
+        Pairs) :-
+    arg(1, F, Y),
+    arg(2, F, Rel),
+    arg(3, F, E),
+    ( Rel == (=) ->
+        true
+    ; reject(unsupported, formula_shape(relation, S))
+    ),
+    ( nonvar(E),
+      functor(E, expr, 3),
+      da2_ops_ok(E) ->
+        true
+    ; reject(unsupported, formula_shape(operator, S))
+    ),
+    ( var(Y),
+      da2_formula_refs(All, Refs),
+      \+ strict_member(Y, Refs),
+      da2_targets(All, Y, 1),
+      da2_target_ok(CItems0, Toks, An, Y) ->
+        true
+    ; reject(unsupported, formula_shape(target, S))
+    ),
+    da2_leaves(E, Leaves),
+    include(var, Leaves, Vars),
+    da2_operand_pairs(Vars, AItems, S, Ps),
+    include(da2_literal, Leaves, Lits),
+    ( da2_formula_token(An, F, KF),
+      da2_literal_values(Toks, Line, KF, Lits, Vals) ->
+        true
+    ; reject(unsupported, formula_shape(literal, S))
+    ),
+    da2_chain(E, Ps, Vals, _, Goals, Out),
+    da2_chain_pairs(Goals, Pairs0, S, Pairs),
+    da2_rewrite_target(CItems0, Y, Out, CItems).
+
+da2_ops_ok(E) :-
+    var(E),
+    !.
+da2_ops_ok(E) :-
+    functor(E, expr, 3),
+    !,
+    arg(1, E, Op),
+    ( Op == (*) -> true ; Op == (/) ),
+    arg(2, E, L),
+    arg(3, E, R),
+    da2_ops_ok(L),
+    da2_ops_ok(R).
+da2_ops_ok(E) :-
+    da2_literal(E).
+
+da2_literal(E) :-
+    nonvar(E),
+    ( functor(E, int, 1) ; functor(E, real, 1) ),
+    !.
+
+da2_targets([], _, 0).
+da2_targets([F|Fs], Y, N) :-
+    da2_targets(Fs, Y, N0),
+    arg(1, F, Y1),
+    ( Y1 == Y -> N is N0 + 1 ; N = N0 ).
+
+da2_target_ok(CItems, Toks, An, Y) :-
+    da2_top_object(CItems, Y, O),
+    arg(3, O, Class),
+    Class == countable,
+    arg(4, O, Unit),
+    Unit == na,
+    arg(5, O, Op),
+    Op == geq,
+    arg(6, O, N),
+    N == 2,
+    da2_some_before(Toks, An, Y).
+
+da2_top_object([Item|Items], Y, O) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, C),
+      C == actual,
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, object, 6),
+      arg(1, Inner, R),
+      R == Y ->
+        O = Inner
+    ; da2_top_object(Items, Y, O)
+    ).
+
+/* The (S, N) pair of each operand leaf, else the reject: every leaf's
+   operand law before any leaf's bound. */
+da2_operand_pairs(Rs, AItems, S, Ps) :-
+    ( da2_operands_ok(Rs, AItems) ->
+        true
+    ; reject(unsupported, formula_shape(operand, S))
+    ),
+    da2_bound_pairs(Rs, AItems, S, Ps).
+
+/* A top-level antecedent count (countable, Unit na, so no APE measurement)
+   that is no time quantity (a plain-number one keeps its object beside
+   '$guideline_unit'). */
+da2_operands_ok([], _).
+da2_operands_ok([R|Rs], AItems) :-
+    da2_operand_item(AItems, R, C),
+    arg(3, C, Class),
+    Class == countable,
+    arg(4, C, Unit),
+    Unit == na,
+    \+ nt1_unit_of(AItems, R, _),
+    da2_operands_ok(Rs, AItems).
+
+da2_bound_pairs([], _, _, []).
+da2_bound_pairs([R|Rs], AItems, S, [R-Pair|Ps]) :-
+    da2_operand_item(AItems, R, C),
+    ( functor(C, '$guideline_bound', 8) ->
+        arg(5, C, SV),
+        arg(6, C, NV),
+        Pair = SV-NV
+    ; reject(unsupported, formula_shape(operand_bound, S))
+    ),
+    da2_bound_pairs(Rs, AItems, S, Ps).
+
+da2_operand_item([Item|Items], R, C) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, Ctx),
+      Ctx == actual,
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      ( functor(Inner, object, 6) ; functor(Inner, '$guideline_bound', 8) ),
+      arg(1, Inner, R1),
+      R1 == R ->
+        C = Inner
+    ; da2_operand_item(Items, R, C)
+    ).
+
+/* The postorder built-in chain: an operand leaf = its pair, a literal leaf
+   = (exactly, value); fresh output variables per node. */
+da2_chain(E, Ps, Vals0, Vals, Goals, Out) :-
+    ( nonvar(E),
+      functor(E, expr, 3) ->
+        arg(1, E, Op),
+        arg(2, E, L),
+        arg(3, E, R),
+        da2_chain(L, Ps, Vals0, Vals1, LG, LS-LN),
+        da2_chain(R, Ps, Vals1, Vals, RG, RS-RN),
+        ( Op == (*) -> Name = guideline_product ; Name = guideline_quotient ),
+        G =.. [Name, LS, LN, RS, RN, OS, ON],
+        append(LG, RG, G0),
+        append(G0, [G], Goals),
+        Out = OS-ON
+    ; da2_literal(E) ->
+        Vals0 = [V|Vals],
+        Goals = [],
+        Out = exactly-V
+    ; da2_pair_of(Ps, E, Out),
+      Vals = Vals0,
+      Goals = []
+    ).
+
+da2_pair_of([R-Pair|Ps], E, Out) :-
+    ( R == E -> Out = Pair ; da2_pair_of(Ps, E, Out) ).
+
+/* Witness values of the chain outputs: the chain runs, node by node, on a
+   copy whose antecedent variables hold their witness values. */
+da2_chain_pairs(Goals, Pairs0, S, Pairs) :-
+    copy_term(Goals-Pairs0, GoalsC-PairsC),
+    v1_bind_witness(PairsC),
+    ( da2_call_all(GoalsC) ->
+        da2_out_pairs(Goals, GoalsC, Outs),
+        append(Pairs0, Outs, Pairs)
+    ; reject(unsupported, formula_shape(witness, S))
+    ).
+
+da2_call_all([]).
+da2_call_all([G|Gs]) :-
+    da2_arith(G),
+    da2_call_all(Gs).
+
+da2_out_pairs([], [], []).
+da2_out_pairs([G|Gs], [C|Cs], [SV-SVal, NV-NVal|Rest]) :-
+    arg(5, G, SV),
+    arg(6, G, NV),
+    arg(5, C, SVal),
+    arg(6, C, NVal),
+    da2_out_pairs(Gs, Cs, Rest).
+
+% The schema clauses, loaded once into a private module.
+da2_arith(Goal) :-
+    ( nb_current(da2_arith_loaded, true) ->
+        true
+    ; nt1_schema_clauses(Clauses),
+      forall(member(C, Clauses), assertz(ace_to_pl_arith:C)),
+      nb_setval(da2_arith_loaded, true)
+    ),
+    call(ace_to_pl_arith:Goal).
+
+da2_rewrite_target([], _, _, []).
+da2_rewrite_target([Item|Items], Y, OS-ON, [Item1|Items1]) :-
+    ( nonvar(Item),
+      functor(Item, anchored, 2),
+      arg(1, Item, C),
+      C == actual,
+      arg(2, Item, Inner),
+      nonvar(Inner),
+      functor(Inner, object, 6),
+      arg(1, Inner, R),
+      R == Y ->
+        arg(2, Inner, Noun),
+        arg(3, Inner, Class),
+        arg(4, Inner, Unit),
+        Item1 = anchored(C, '$guideline_amount'(Y, Noun, Class, Unit, OS, ON))
+    ; Item1 = Item
+    ),
+    da2_rewrite_target(Items, Y, OS-ON, Items1).
+
+% An operand's witness: an exact nonzero value its condition admits.
+da2_operand_witness(Op, Count, W) :-
+    ( integer(Count) ->
+        ( Op == geq, Count =:= 0 -> W = 1
+        ; Op == leq, Count =:= 0 -> W = -1
+        ; Op == greater -> W0 is Count + 1, ( W0 =:= 0 -> W is Count + 2 ; W = W0 )
+        ; Op == less -> W0 is Count - 1, ( W0 =:= 0 -> W is Count - 2 ; W = W0 )
+        ; W = Count
+        )
+    ; W = Count
+    ).
+
+/* Literal values (contract da2 D2): the numeral tokens spell the line's
+   lexemes one to one, no sign token precedes a numeral, and the m-th literal
+   leaf pairs with the m-th numeral token after the formula's `=` token,
+   spells like it, ends its lexeme before a space, `)`, `*`, `/` or the final
+   `.`, and takes the lexeme's exact value. */
+da2_literal_values(Toks, Line, KF, Lits, Vals) :-
+    include(number, Toks, NTs),
+    maplist(da2_numeral, NTs, Texts),
+    da2_lexemes(Line, Lexs),
+    maplist(da2_lexeme_text, Lexs, LTexts),
+    Texts == LTexts,
+    \+ da2_signed(Toks),
+    findall(J, ( nth0(J, Toks, T), J > KF, number(T) ), Js),
+    length(Lits, NL),
+    length(Js, NJ),
+    NJ >= NL,
+    da2_lit_values(Lits, Js, Toks, Lexs, Line, Vals).
+
+da2_lexeme_text(Text-_, Text).
+
+da2_lit_values([], _, _, _, _, []).
+da2_lit_values([Lit|Lits], [J|Js], Toks, Lexs, Line, [V|Vs]) :-
+    nth0(J, Toks, T),
+    da2_numeral(T, TT),
+    arg(1, Lit, LV),
+    da2_numeral(LV, LT),
+    LT == TT,
+    length(Pre, J),
+    append(Pre, _, Toks),
+    include(number, Pre, NPre),
+    length(NPre, G),
+    nth0(G, Lexs, Text-End),
+    da2_literal_end_ok(Line, End),
+    da2_lexeme_value(Text, V),
+    da2_lit_values(Lits, Js, Toks, Lexs, Line, Vs).
+
+% A numeral token's text: an integer's digits (sign included) or the float as
+% SWI prints it (the driver's '$decimal' text).
+da2_numeral(T, Text) :-
+    integer(T),
+    !,
+    number_codes(T, Text).
+da2_numeral(T, Text) :-
+    float(T),
+    with_output_to(codes(Text), write_term(T, [quoted(true),
+        character_escapes(true), ignore_ops(true), numbervars(true)])).
+
+da2_signed(Toks) :-
+    append(_, [T, N|_], Toks),
+    ( T == (-) ; T == (+) ),
+    number(N),
+    !.
+
+da2_lexemes(Line, Lexs) :-
+    length(Line, Len),
+    Max is Len - 1,
+    findall(Text-End,
+        ( between(0, Max, I),
+          da2_lexeme_at(Line, Len, I, End),
+          da2_slice(Line, I, End, Text) ),
+        Lexs).
+
+da2_lexeme_at(Line, Len, I, End) :-
+    nth0(I, Line, C),
+    da2_digit(C),
+    ( I =:= 0 ->
+        true
+    ; P is I - 1,
+      nth0(P, Line, B),
+      \+ da2_wordy(B),
+      B =\= 0'.
+    ),
+    da2_run_end(Line, Len, I, End),
+    ( End =:= Len ->
+        true
+    ; nth0(End, Line, F),
+      \+ da2_wordy(F)
+    ).
+
+da2_digit(C) :-
+    C >= 0'0,
+    C =< 0'9.
+
+da2_wordy(C) :-
+    ( C >= 0'a, C =< 0'z
+    ; C >= 0'A, C =< 0'Z
+    ; da2_digit(C)
+    ; C =:= 0'_
+    ; C =:= 0'-
+    ),
+    !.
+
+da2_digits_end(Line, Len, I, End) :-
+    ( I < Len,
+      nth0(I, Line, C),
+      da2_digit(C) ->
+        I1 is I + 1,
+        da2_digits_end(Line, Len, I1, End)
+    ; End = I
+    ).
+
+da2_run_end(Line, Len, I, End) :-
+    da2_digits_end(Line, Len, I, J),
+    ( J + 1 < Len,
+      nth0(J, Line, 0'.),
+      J1 is J + 1,
+      nth0(J1, Line, D),
+      da2_digit(D) ->
+        da2_digits_end(Line, Len, J1, End)
+    ; End = J
+    ).
+
+da2_slice(Line, I, End, Text) :-
+    N is End - I,
+    length(Pre, I),
+    append(Pre, Rest, Line),
+    length(Text, N),
+    append(Text, _, Rest).
+
+da2_literal_end_ok(Line, End) :-
+    length(Line, Len),
+    ( End =:= Len ->
+        true
+    ; nth0(End, Line, C),
+      ( memberchk(C, [0' , 0'), 0'*, 0'/]) ->
+          true
+      ; C =:= 0'.,
+        End + 1 =:= Len
+      )
+    ).
+
+da2_lexeme_value(Text, V) :-
+    ( append(I, [0'.|F], Text) ->
+        number_codes(IN, I),
+        number_codes(FN, F),
+        length(F, L),
+        Q is 10^L,
+        P is IN * Q + FN,
+        da2_arith(guideline_canon(P, Q, V))
+    ; number_codes(V, Text)
+    ).
+
 v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_seg_items(Segs, S, DocId, 1, N1, AItems0),
     v2_annotate(S, AItems0, AItems1),
@@ -2623,8 +3237,11 @@ v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     v1_cons_locals(Ordered, AnteRefs, Map, ConsLocals),
     v1_skolem_map(ConsLocals, Ordered, ADom, S, DocId, Sko),
     nt1_compare(AItems, AItemsC),
-    v1_variant(AItemsC, CItems, Map, Sko, S, Clauses),
-    v1_witness_pairs(AItemsC, Ordered, Map, DocId, S, 1, Pairs),
+    maplist(da2_seg_conds, Segs, SegConds),
+    append(SegConds, [CConds], Raw),
+    da2_formula_pass(Raw, S, AItemsC, CItems, Ordered, Map, DocId, 1,
+        AItemsF, CItemsF, Chain, Pairs),
+    v1_variant(AItemsF, CItemsF, Chain, Map, Sko, S, Clauses),
     SGroups = [group(rule, 1, Pairs, Clauses)].
 
 v1_seg_items([], _, _, N, N, []).
@@ -2675,10 +3292,13 @@ v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, SGroups) :-
     append(SharedItems, Arm2Items, Ante20),
     nt1_compare(Ante10, Ante1),
     nt1_compare(Ante20, Ante2),
-    v1_variant(Ante1, CItems1, Map, Sko1, S, Clauses1),
-    v1_variant(Ante2, CItems2, Map, Sko2, S, Clauses2),
-    v1_witness_pairs(Ante1, Ordered, Map, DocId, S, 1, Pairs1),
-    v1_witness_pairs(Ante2, Ordered, Map, DocId, S, 2, Pairs2),
+    Raw = [Shared, Arm1, Arm2, CConds],
+    da2_formula_pass(Raw, S, Ante1, CItems1, Ordered, Map, DocId, 1,
+        Ante1F, CItems1F, Chain1, Pairs1),
+    v1_variant(Ante1F, CItems1F, Chain1, Map, Sko1, S, Clauses1),
+    da2_formula_pass(Raw, S, Ante2, CItems2, Ordered, Map, DocId, 2,
+        Ante2F, CItems2F, Chain2, Pairs2),
+    v1_variant(Ante2F, CItems2F, Chain2, Map, Sko2, S, Clauses2),
     SGroups = [group(rule, 1, Pairs1, Clauses1),
                group(rule, 2, Pairs2, Clauses2)].
 
@@ -2697,9 +3317,10 @@ v1_ante_refs(AItems, CItems, _, Ordered, AnteRefs) :-
     v1_first_occurrence(Slots, [], Ordered),
     v1_first_occurrence(AnteSlots, [], AnteRefs).
 
-v1_variant(AItems, CItems, Map, Sko, S, Clauses) :-
-    v1_expand_items(AItems, Map, Sko, Goals),
-    ( Goals == [] ->
+v1_variant(AItems, CItems, Chain, Map, Sko, S, Clauses) :-
+    v1_expand_items(AItems, Map, Sko, Goals0),
+    append(Goals0, Chain, Goals),
+    ( Goals0 == [] ->
         reject(unsupported, sentence_shape(rule_without_antecedent(S)))
     ; true
     ),
@@ -3050,6 +3671,20 @@ v1_condition(_, Inner, _, _, [guideline_satisfies(S, N, V, Op, Count, Unit)]) :-
     functor(Inner, '$guideline_scaled', 6),
     !,
     Inner = '$guideline_scaled'(S, N, V, Op, Count, Unit).
+v1_condition(Context, Inner, Map, Sko,
+        [guideline_entity(Context, Ref, Noun, Class),
+         guideline_cardinality(Context, Ref, UnitField, S, N)]) :-
+    nonvar(Inner),
+    functor(Inner, '$guideline_amount', 6),
+    !,
+    Inner = '$guideline_amount'(Ref0, Noun, Class, UnitField, S, N),
+    v1_ref(Ref0, Map, Sko, Ref).
+v1_condition(_, Inner, _, _, _) :-
+    nonvar(Inner),
+    functor(Inner, formula, 3),
+    !,
+    b_getval(da2_sentence, S),
+    reject(unsupported, formula_shape(position, S)).
 v1_condition(_, Inner, _, _, _) :-
     reject(unsupported, condition_shape(Inner)).
 
@@ -3129,6 +3764,7 @@ v1_cond_refs(Inner, [R]) :-
     nonvar(Inner),
     ( functor(Inner, '$guideline_bound', 8)
     ; functor(Inner, '$guideline_measure', 4)
+    ; functor(Inner, '$guideline_amount', 6)
     ),
     !,
     arg(1, Inner, R).
@@ -3177,13 +3813,13 @@ v1_nth_var([X|Xs], V, K, N) :-
    existential context variable to the recorded box(B), NAF items
    contribute nothing (controlled absence). Document-map definites stay
    ground product identities and take no pair. */
-v1_witness_pairs(Items, Ordered, Map, DocId, S, K, Pairs) :-
-    v1_witness_items(Items, Ordered, Map, DocId, S, K, [], Rev),
+v1_witness_pairs(Items, Ordered, Map, DocId, S, K, Ops, Pairs) :-
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Ops, [], Rev),
     reverse(Rev, Pairs).
 
-v1_witness_items([], _, _, _, _, _, Acc, Acc).
+v1_witness_items([], _, _, _, _, _, _, Acc, Acc).
 v1_witness_items([operator(B, _, Inner, _)|Items], Ordered, Map, DocId, S,
-        K, Acc0, Acc) :-
+        K, Ops, Acc0, Acc) :-
     !,
     ( var(Inner),
       \+ v1_pair_member(Inner, Acc0) ->
@@ -3191,21 +3827,38 @@ v1_witness_items([operator(B, _, Inner, _)|Items], Ordered, Map, DocId, S,
             variant(K))|Acc0]
     ; Acc1 = Acc0
     ),
-    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc1, Acc).
-v1_witness_items([naf(_, _)|Items], Ordered, Map, DocId, S, K, Acc0, Acc) :-
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Ops, Acc1, Acc).
+v1_witness_items([naf(_, _)|Items], Ordered, Map, DocId, S, K, Ops, Acc0,
+        Acc) :-
     !,
-    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc0, Acc).
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Ops, Acc0, Acc).
 v1_witness_items([anchored(_, Inner)|Items], Ordered, Map, DocId, S, K,
-        Acc0, Acc) :-
+        Ops, Acc0, Acc) :-
     v1_cond_refs(Inner, Refs),
     v1_witness_refs(Refs, Ordered, Map, DocId, S, K, Acc0, Acc1),
-    nt1_witness(Inner, Acc1, Acc2),
-    v1_witness_items(Items, Ordered, Map, DocId, S, K, Acc2, Acc).
+    nt1_witness(Inner, Ops, Acc1, Acc2),
+    v1_witness_items(Items, Ordered, Map, DocId, S, K, Ops, Acc2, Acc).
 
 /* nt1 D4: a converted condition's witness states its own bound, so its
-   comparison holds reflexively. */
-nt1_witness(Inner, Acc0, Acc) :-
+   comparison holds reflexively; da2 D4: a formula operand's witness is an
+   exact nonzero value its condition admits, a `some` operand's exactly 1. */
+nt1_witness(Inner, Ops, Acc0, Acc) :-
     ( nonvar(Inner),
+      functor(Inner, '$guideline_bound', 8),
+      arg(1, Inner, R),
+      strict_member(R, Ops) ->
+        arg(5, Inner, CV),
+        arg(6, Inner, NV),
+        arg(7, Inner, Op),
+        arg(8, Inner, Count),
+        da2_operand_witness(Op, Count, W),
+        Acc = [NV-W, CV-exactly|Acc0]
+    ; nonvar(Inner),
+      functor(Inner, '$guideline_amount', 6) ->
+        arg(5, Inner, CV),
+        arg(6, Inner, NV),
+        Acc = [NV-1, CV-exactly|Acc0]
+    ; nonvar(Inner),
       functor(Inner, '$guideline_bound', 8) ->
         arg(5, Inner, CV),
         arg(6, Inner, NV),

@@ -9,7 +9,7 @@ w = Path(sys.argv[1]).resolve()
 spec = (w / "rust/ckc-spec/src/emit.rs").read_text()
 values = sorted(set(re.findall(r'"([^"\\]+)"@', spec)) | {"$guideline_id", "$guideline_proof", ","})
 values = [v for v in values if not any(c.isspace() for c in v)]
-punctuation = {"-": "Minus", "/": "Slash", "=>": "Implies", "~": "Naf", "[|]": "Cons", ",": "Comma"}
+punctuation = {"-": "Minus", "/": "Slash", "=>": "Implies", "~": "Naf", "[|]": "Cons", ",": "Comma", "*": "Star", "=": "Equals", "+": "Plus", "some": "SomeWord"}
 names = {v: punctuation.get(v, "".join(s.capitalize() for s in v.replace("$", "Dollar_").split("_"))) for v in values}
 assert len(set(names.values())) == len(values)
 chunks = ["use vstd::prelude::*;\nuse vstd::slice::slice_to_vec;\n\nverus! {\n", "pub enum Sym {\n"]

@@ -1,0 +1,17 @@
+:- use_module(library(readutil)).
+
+same_clauses([], []).
+same_clauses([A|As], [B|Bs]) :- A =@= B, same_clauses(As, Bs).
+
+probe_main :-
+    current_prolog_flag(argv, [Compiler, Schema]),
+    load_files(Compiler, [silent(true)]),
+    read_file_to_terms(Schema, Expected, []),
+    ace_to_pl:nt1_schema_clauses(Actual),
+    length(Expected, N),
+    (same_clauses(Actual, Expected) -> format('schema: same ~d~n', [N]); writeln('schema: different')),
+    Expected = [A, B | Rest],
+    (same_clauses([B|Rest], Expected) -> writeln('plant: drop missed'); writeln('plant: drop caught')),
+    (same_clauses([B,A|Rest], Expected) -> writeln('plant: reorder missed'); writeln('plant: reorder caught')),
+    (same_clauses([guideline_product(exactly,2,exactly,3,exactly,7),B|Rest], Expected) -> writeln('plant: alter missed'); writeln('plant: alter caught')),
+    halt(0).

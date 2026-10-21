@@ -9,9 +9,9 @@ use crate::m6_expand::{all_pos, expand, pos_terms};
 use crate::m6_flat::{Env, flatten_list};
 use crate::m6_model::*;
 use crate::m6_refs::{first_vars, ref_slots};
+use crate::m6_safety::{all_head_safe, all_naf_safe, body_doms, pad_doms};
 #[cfg(verus_keep_ghost)]
-use crate::m6_safety::expand_len;
-use crate::m6_safety::{all_head_safe, all_naf_safe, body_doms};
+use crate::m6_safety::{all_naf_safe_pad, dom_models, doms_valid, expand_len};
 use crate::m6_symbols::Sym;
 #[cfg(verus_keep_ghost)]
 use crate::m6_symbols::symbol;
@@ -139,6 +139,66 @@ pub fn rule_clauses(arena: &ETermArena, heads: &Vec<T>, body: &Vec<Body>) -> (ou
     out
 }
 
+fn append_pos(arena: &ETermArena, goals: Vec<Body>, chain: &Vec<T>) -> (out: Vec<Body>)
+    requires
+        arena_ok(arena),
+        bodies_valid(arena.nodes@, goals@),
+        valid_all(arena.nodes@, chain@),
+    ensures
+        bodies_valid(arena.nodes@, out@),
+        body_models(out@) == body_models(goals@) + spec::pos_all(models(chain@)),
+{
+    let mut out = goals;
+    let ghost base = goals@;
+    let mut i = 0usize;
+    proof {
+        assert_seqs_equal!(body_models(out@) == body_models(base) + spec::pos_all(models(chain@).take(0)));
+    }
+    while i < chain.len()
+        invariant
+            arena_ok(arena),
+            valid_all(arena.nodes@, chain@),
+            bodies_valid(arena.nodes@, out@),
+            i <= chain.len(),
+            body_models(out@) == body_models(base) + spec::pos_all(models(chain@).take(i as int)),
+        decreases chain.len() - i,
+    {
+        let ghost prev = out@;
+        proof {
+            assert(valid(arena.nodes@, &chain@[i as int]));
+        }
+        let b = Body::Pos(chain[i].cp());
+        let ghost bm = b@;
+        out.push(b);
+        proof {
+            let t = models(chain@).take(i as int);
+            assert(models(chain@).take(i as int + 1) == t.push(chain@[i as int]@));
+            assert(bm == BodyItem::Pos(chain@[i as int]@));
+            assert_seqs_equal!(spec::pos_all(t.push(chain@[i as int]@)) == spec::pos_all(t).push(bm));
+            assert_seqs_equal!(body_models(out@) == body_models(prev).push(bm), x => {
+                if x < prev.len() {
+                    assert(out@[x] == prev[x]);
+                }
+            });
+            assert_seqs_equal!((body_models(base) + spec::pos_all(t)).push(bm) == body_models(base)
+                + spec::pos_all(t).push(bm));
+            assert forall|x: int| 0 <= x < out.len() implies #[trigger] body_valid(
+                arena.nodes@,
+                &out@[x],
+            ) by {
+                if x < prev.len() {
+                    assert(out@[x] == prev[x]);
+                }
+            }
+        }
+        i += 1;
+    }
+    proof {
+        assert(models(chain@).take(chain.len() as int) == models(chain@));
+    }
+    out
+}
+
 pub fn variant(
     arena: &mut ETermArena,
     aitems0: &Vec<I>,
@@ -149,6 +209,8 @@ pub fn variant(
     env: &Env,
     k: usize,
     cb: usize,
+    src: &crate::m6_numeral::ESrc,
+    an: &Vec<crate::m6_formula::EAnch>,
 ) -> (out: Result<Group, T>)
     requires
         arena_ok(old(arena)),
@@ -157,6 +219,8 @@ pub fn variant(
         valid_all(old(arena).nodes@, ordered@),
         map_valid(old(arena).nodes@, map@),
         valid(old(arena).nodes@, deps),
+        crate::m6_numeral::src_valid(old(arena).nodes@, src),
+        crate::m6_formula::anchs_valid(old(arena).nodes@, an@),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -171,6 +235,8 @@ pub fn variant(
             env.docid@,
             k as nat,
             cb as nat,
+            src@,
+            crate::m6_formula::anch_models(an@),
         ),
 {
     hide(spec::expand);
@@ -180,6 +246,7 @@ pub fn variant(
     hide(spec::cons_locals);
     hide(spec::all_head_safe);
     hide(spec::all_naf_safe);
+    hide(spec::formula_pass);
     let ghost start = arena.nodes@;
     let empty = Vec::new();
     proof {
@@ -193,54 +260,201 @@ pub fn variant(
     proof {
         items_prefix(start, ns, aitems0@);
     }
+    let conv = crate::m6_compare_refs::conv_refs(arena, aitems0);
     let converted = crate::m6_compare::compared(arena, aitems0, cb);
-    let aitems = &converted;
+    let ghost n0 = arena.nodes@;
+    let c1 = crate::m6_flat::add(arena, cb, conv.len());
+    let c2 = crate::m6_flat::add(arena, c1, conv.len());
+    let v0 = crate::m6_flat::add(arena, c2, conv.len());
     let ghost n1 = arena.nodes@;
     proof {
-        crate::k2_load::prefix_chain(start, ns, n1);
+        crate::k2_load::prefix_chain(start, ns, n0);
+        crate::k2_load::prefix_chain(start, n0, n1);
         items_prefix(start, n1, citems@);
+        items_prefix(n0, n1, converted@);
+        prefix_all(start, n1, ordered@);
         map_prefix(start, n1, map@);
         map_prefix(ns, n1, sko@);
+        prefix_all(start, n1, src.toks@);
+        assert forall|x: int| 0 <= x < an.len() implies valid(n1, &(#[trigger] an@[x]).inner)
+            && valid(n1, &an@[x].k) && an@[x].k@ is Int by {
+            prefix(start, n1, &an@[x].inner);
+            prefix(start, n1, &an@[x].k);
+        }
+        assert(v0 as nat == cb as nat + 3 * spec::conv_refs(item_models(aitems0@)).len());
     }
-    let goals_result = expand(arena, aitems, map, &sko);
+    let fp = match crate::m6_formula::formula_pass(
+        arena,
+        src,
+        an,
+        &converted,
+        citems,
+        ordered,
+        map,
+        env,
+        k,
+        v0,
+    ) {
+        Ok(p) => p,
+        Err(e) => return Err(e),
+    };
     let ghost n2 = arena.nodes@;
     proof {
         crate::k2_load::prefix_chain(start, n1, n2);
+        map_prefix(n1, n2, map@);
+        map_prefix(n1, n2, sko@);
     }
-    let goals = match goals_result {
+    let goals_result = expand(arena, &fp.aitems, map, &sko);
+    let ghost n3 = arena.nodes@;
+    proof {
+        crate::k2_load::prefix_chain(start, n2, n3);
+    }
+    let goals0 = match goals_result {
         Ok(g) => g,
         Err(e) => return Err(e),
     };
     proof {
-        items_prefix(n1, n2, citems@);
-        map_prefix(n1, n2, map@);
-        map_prefix(n1, n2, sko@);
+        items_prefix(n2, n3, fp.citems@);
+        map_prefix(n2, n3, map@);
+        map_prefix(n2, n3, sko@);
     }
-    let heads_result = expand(arena, citems, map, &sko);
-    let ghost n3 = arena.nodes@;
+    let heads_result = expand(arena, &fp.citems, map, &sko);
+    let ghost n4 = arena.nodes@;
     proof {
-        crate::k2_load::prefix_chain(start, n2, n3);
-        crate::k2_load::prefix_chain(n1, n2, n3);
-        bodies_prefix(n2, n3, goals@);
+        crate::k2_load::prefix_chain(start, n3, n4);
+        crate::k2_load::prefix_chain(n2, n3, n4);
+        bodies_prefix(n3, n4, goals0@);
+        prefix_all(n2, n4, fp.chain@);
     }
     let heads = match heads_result {
         Ok(h) => h,
         Err(e) => return Err(e),
     };
+    proof {
+        items_prefix(n2, n4, fp.aitems@);
+        expand_len(item_models(fp.aitems@), map_model(map@), map_model(sko@));
+    }
+    let cs = match group_clauses(arena, goals0, &heads, &fp.chain, &fp.aitems) {
+        Ok(cs) => cs,
+        Err(e) => {
+            proof {
+                crate::k2_load::prefix_chain(start, n4, arena.nodes@);
+            }
+            return Err(e);
+        },
+    };
+    proof {
+        crate::k2_load::prefix_chain(start, n4, arena.nodes@);
+        map_prefix(n2, arena.nodes@, fp.pairs@);
+    }
+    Ok(Group { k, pairs: fp.pairs, clauses: cs })
+}
+
+// The clause checks of `spec::variant` after both expansions.
+pub open spec fn variant_tail(
+    goals: Seq<BodyItem>,
+    heads: Seq<BodyItem>,
+    chain: Seq<Term>,
+    aitems: Seq<spec::Item>,
+) -> Result<Seq<DocClause>, Term> {
     if goals.len() == 0 {
+        Err(ckc_spec::replay::atom("rule_without_antecedent"@))
+    } else if heads.len() == 0 || !spec::all_pos(heads) {
+        Err(ckc_spec::replay::atom("rule_without_consequent"@))
+    } else {
+        let cs = spec::rule_clauses(spec::pos_terms(heads), goals + spec::pos_all(chain));
+        if !spec::all_naf_safe(cs, spec::body_doms(aitems)) {
+            Err(ckc_spec::replay::atom("naf_safety"@))
+        } else if !spec::all_head_safe(cs) {
+            Err(ckc_spec::replay::atom("head_variable_not_bound_in_body"@))
+        } else {
+            Ok(cs)
+        }
+    }
+}
+
+fn group_clauses(
+    arena: &mut ETermArena,
+    goals0: Vec<Body>,
+    heads: &Vec<Body>,
+    chain: &Vec<T>,
+    aitems: &Vec<I>,
+) -> (out: Result<Vec<Clause>, T>)
+    requires
+        arena_ok(old(arena)),
+        bodies_valid(old(arena).nodes@, goals0@),
+        bodies_valid(old(arena).nodes@, heads@),
+        valid_all(old(arena).nodes@, chain@),
+        items_valid(old(arena).nodes@, aitems@),
+        goals0.len() == spec::body_doms(item_models(aitems@)).len(),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        match &out {
+            Ok(cs) => clauses_valid(final(arena).nodes@, cs@),
+            Err(e) => valid(final(arena).nodes@, e),
+        },
+        match &out {
+            Ok(cs) => Ok::<Seq<DocClause>, Term>(clause_models(cs@)),
+            Err(e) => Err::<Seq<DocClause>, Term>(e@),
+        } == variant_tail(
+            body_models(goals0@),
+            body_models(heads@),
+            models(chain@),
+            item_models(aitems@),
+        ),
+{
+    hide(spec::all_head_safe);
+    hide(spec::all_naf_safe);
+    let ghost start = arena.nodes@;
+    proof {
+        reveal_strlit("rule_without_antecedent");
+        reveal_strlit("rule_without_consequent");
+        reveal_strlit("naf_safety");
+        reveal_strlit("head_variable_not_bound_in_body");
+    }
+    if goals0.len() == 0 {
         return Err(error(arena, &Sym::RuleWithoutAntecedent, Ghost(start)));
     }
-    if heads.len() == 0 || !all_pos(&heads) {
+    if heads.len() == 0 || !all_pos(heads) {
         return Err(error(arena, &Sym::RuleWithoutConsequent, Ghost(start)));
     }
-    let hterms = pos_terms(arena, &heads);
+    let ghost g0 = body_models(goals0@);
+    let goals = append_pos(arena, goals0, chain);
+    let hterms = pos_terms(arena, heads);
     let cs = rule_clauses(arena, &hterms, &goals);
+    let ds0 = body_doms(arena, aitems);
+    let ghost d0 = dom_models(ds0@);
+    let ghost pad = Seq::new(chain.len() as nat, |i: int| Seq::<Term>::empty());
     proof {
-        items_prefix(n1, n3, aitems@);
+        assert(doms_valid(arena.nodes@, ds0@));
     }
-    let ds = body_doms(arena, aitems);
+    let ds = pad_doms(ds0, chain.len());
     proof {
-        expand_len(item_models(aitems@), map_model(map@), map_model(sko@));
+        let cms = clause_models(cs@);
+        let body = body_models(goals@);
+        assert(body == g0 + spec::pos_all(models(chain@)));
+        assert(d0.len() == g0.len());
+        assert forall|i: int| 0 <= i < cms.len() implies d0.len() <= (#[trigger] cms[i]).body.len()
+            && forall|j: int|
+            d0.len() <= j < cms[i].body.len() ==> (#[trigger] cms[i].body[j]) is Pos by {
+            assert(cms[i].body == body);
+            assert forall|j: int| d0.len() <= j < cms[i].body.len() implies (
+            #[trigger] cms[i].body[j]) is Pos by {
+                assert(body[j] == spec::pos_all(models(chain@))[j - g0.len()]);
+            }
+        }
+        all_naf_safe_pad(cms, d0, pad);
+        assert(dom_models(ds@) == d0 + pad);
+        assert(dom_models(ds@).len() == ds@.len());
+        assert(d0.len() == ds0@.len());
+        assert(body_models(goals@).len() == goals@.len());
+        assert(spec::pos_all(models(chain@)).len() == chain@.len());
+        assert(ds.len() == goals.len());
+        assert forall|i: int| 0 <= i < cs.len() implies (#[trigger] cs@[i]).body.len()
+            == ds.len() by {
+            assert(cs@[i].body.len() == goals.len());
+        }
     }
     if !all_naf_safe(arena, &cs, &ds) {
         return Err(error(arena, &Sym::NafSafety, Ghost(start)));
@@ -248,20 +462,7 @@ pub fn variant(
     if !all_head_safe(arena, &cs) {
         return Err(error(arena, &Sym::HeadVariableNotBoundInBody, Ghost(start)));
     }
-    proof {
-        prefix_all(start, n3, ordered@);
-        map_prefix(start, n3, map@);
-    }
-    let acc = Vec::new();
-    proof {
-        assert_seqs_equal!(map_model(acc@) == Seq::<(Term, Term)>::empty());
-    }
-    let pairs = witness_pairs(arena, aitems, ordered, map, env, k, &acc);
-    proof {
-        crate::k2_load::prefix_chain(start, n3, arena.nodes@);
-        clauses_prefix(n3, arena.nodes@, cs@);
-    }
-    Ok(Group { k, pairs, clauses: cs })
+    Ok(cs)
 }
 
 pub open spec fn root_condition_model(r: spec::Root) -> Option<Term> {

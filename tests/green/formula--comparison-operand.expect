@@ -1,0 +1,49 @@
+% formula--comparison-operand.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+guideline_schema_version(1).
+guideline_document('formula--comparison-operand',ace_sha256(e3b46149c99500c2613528d8f674126f114f0bffc91552f5fb67ebff6e291556),ulex(none),vocabulary(sha256(a90693af0fd8988dcfb5dccf97a1d10ac1df3ef87e603d37617f4316daf494ff))).
+% S1: If a patient receives exactly 40 milligrams X then the patient receives some doses Y and Y = X / 20.
+guideline_entity(actual,'$guideline_id'(product,'formula--comparison-operand',1,ref(4),[A,B,C]),dose,countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,C,receive), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,B,milligram,countable), guideline_cardinality(actual,B,na,D,E), guideline_satisfies(D,E,exactly,40), guideline_quotient(D,E,exactly,20,F,G).
+guideline_cardinality(actual,'$guideline_id'(product,'formula--comparison-operand',1,ref(4),[A,B,C]),na,D,E) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,C,receive), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,B,milligram,countable), guideline_cardinality(actual,B,na,F,G), guideline_satisfies(F,G,exactly,40), guideline_quotient(F,G,exactly,20,D,E).
+guideline_event(actual,'$guideline_id'(product,'formula--comparison-operand',1,ref(5),[A,B,C]),receive) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,C,receive), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,B,milligram,countable), guideline_cardinality(actual,B,na,D,E), guideline_satisfies(D,E,exactly,40), guideline_quotient(D,E,exactly,20,F,G).
+guideline_arg(actual,'$guideline_id'(product,'formula--comparison-operand',1,ref(5),[A,B,C]),1,A) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,C,receive), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,B,milligram,countable), guideline_cardinality(actual,B,na,D,E), guideline_satisfies(D,E,exactly,40), guideline_quotient(D,E,exactly,20,F,G).
+guideline_arg(actual,'$guideline_id'(product,'formula--comparison-operand',1,ref(5),[A,B,C]),2,'$guideline_id'(product,'formula--comparison-operand',1,ref(4),[A,B,C])) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_event(actual,C,receive), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,B,milligram,countable), guideline_cardinality(actual,B,na,D,E), guideline_satisfies(D,E,exactly,40), guideline_quotient(D,E,exactly,20,F,G).

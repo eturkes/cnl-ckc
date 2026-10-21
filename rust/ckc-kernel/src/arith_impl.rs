@@ -612,8 +612,12 @@ fn signed_spelling(neg: bool, magnitude: &Vec<u8>) -> (out: Vec<u8>)
     }
 }
 
-fn push_value(arena: &mut ETermArena, neg: bool, magnitude: Vec<u8>, value: Ghost<int>) -> (root:
-    usize)
+pub(crate) fn push_value(
+    arena: &mut ETermArena,
+    neg: bool,
+    magnitude: Vec<u8>,
+    value: Ghost<int>,
+) -> (root: usize)
     requires
         arena_ok(old(arena)),
         neg == (value@ < 0),

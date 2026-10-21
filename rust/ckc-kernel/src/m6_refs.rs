@@ -206,7 +206,8 @@ pub fn cond_refs(arena: &ETermArena, inner: &T) -> (out: Vec<T>)
             } else if (has_name(&name, &Sym::DollarGuidelineBound) && args.len() == 8) || (has_name(
                 &name,
                 &Sym::DollarGuidelineMeasure,
-            ) && args.len() == 4) {
+            ) && args.len() == 4) || (has_name(&name, &Sym::DollarGuidelineAmount) && args.len()
+                == 6) {
                 out.push(args[0].cp());
             }
         },

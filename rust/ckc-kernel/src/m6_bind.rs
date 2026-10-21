@@ -460,6 +460,7 @@ pub fn witness_pairs(
     map: &Vec<Binding>,
     env: &Env,
     k: usize,
+    ops: &Vec<T>,
     acc: &Vec<Binding>,
 ) -> (out: Vec<Binding>)
     requires
@@ -468,6 +469,7 @@ pub fn witness_pairs(
         valid_all(old(arena).nodes@, ordered@),
         map_valid(old(arena).nodes@, map@),
         map_valid(old(arena).nodes@, acc@),
+        valid_all(old(arena).nodes@, ops@),
     ensures
         arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
@@ -479,6 +481,7 @@ pub fn witness_pairs(
             env.docid@,
             env.s as nat,
             k as nat,
+            models(ops@),
             map_model(acc@),
         ),
 {
@@ -489,6 +492,7 @@ pub fn witness_pairs(
         prefix_all(start, arena.nodes@, ordered@);
         map_prefix(start, arena.nodes@, map@);
         map_prefix(start, arena.nodes@, acc@);
+        prefix_all(start, arena.nodes@, ops@);
     }
     let mut out = copy_map(arena, acc);
     let mut i = 0usize;
@@ -505,6 +509,7 @@ pub fn witness_pairs(
             map_valid(arena.nodes@, map@),
             map_valid(arena.nodes@, acc@),
             map_valid(arena.nodes@, out@),
+            valid_all(arena.nodes@, ops@),
             valid(arena.nodes@, &variant),
             variant@ == spec::variant_slot(k as nat),
             i <= items.len(),
@@ -515,6 +520,7 @@ pub fn witness_pairs(
                 env.docid@,
                 env.s as nat,
                 k as nat,
+                models(ops@),
                 map_model(acc@),
             ) == spec::witness_pairs(
                 item_models(items@).skip(i as int),
@@ -523,6 +529,7 @@ pub fn witness_pairs(
                 env.docid@,
                 env.s as nat,
                 k as nat,
+                models(ops@),
                 map_model(out@),
             ),
         decreases items.len() - i,
@@ -553,11 +560,46 @@ pub fn witness_pairs(
                 out = witness_refs(arena, &refs, ordered, map, env, k, &out);
                 proof {
                     prefix(before, arena.nodes@, inner);
+                    prefix_all(before, arena.nodes@, ops@);
                 }
+                let ghost mid = arena.nodes@;
                 if is_comp(arena, inner, &Sym::DollarGuidelineBound, 8) {
                     let xs = args(arena, inner);
-                    out = push_binding(arena, out, &xs[4], xs[6].cp());
-                    out = push_binding(arena, out, &xs[5], xs[7].cp());
+                    if contains(arena, ops, &xs[0]) {
+                        let ex = named(arena, &Sym::Exactly);
+                        proof {
+                            map_prefix(mid, arena.nodes@, out@);
+                            prefix_all(mid, arena.nodes@, xs@);
+                            reveal_strlit("exactly");
+                        }
+                        out = push_binding(arena, out, &xs[4], ex);
+                        let ghost m2 = arena.nodes@;
+                        let w = crate::m6_numeral::operand_witness(arena, &xs[6], &xs[7]);
+                        proof {
+                            map_prefix(m2, arena.nodes@, out@);
+                            prefix_all(m2, arena.nodes@, xs@);
+                        }
+                        out = push_binding(arena, out, &xs[5], w);
+                    } else {
+                        out = push_binding(arena, out, &xs[4], xs[6].cp());
+                        out = push_binding(arena, out, &xs[5], xs[7].cp());
+                    }
+                } else if is_comp(arena, inner, &Sym::DollarGuidelineAmount, 6) {
+                    let xs = args(arena, inner);
+                    let ex = named(arena, &Sym::Exactly);
+                    proof {
+                        map_prefix(mid, arena.nodes@, out@);
+                        prefix_all(mid, arena.nodes@, xs@);
+                        reveal_strlit("exactly");
+                    }
+                    out = push_binding(arena, out, &xs[4], ex);
+                    let ghost m2 = arena.nodes@;
+                    let one = crate::m6_term::int(arena, 1);
+                    proof {
+                        map_prefix(m2, arena.nodes@, out@);
+                        prefix_all(m2, arena.nodes@, xs@);
+                    }
+                    out = push_binding(arena, out, &xs[5], one);
                 } else if is_comp(arena, inner, &Sym::DollarGuidelineScaled, 6) {
                     let xs = args(arena, inner);
                     out = push_binding(arena, out, &xs[0], xs[3].cp());
@@ -572,6 +614,7 @@ pub fn witness_pairs(
             prefix_all(before, arena.nodes@, ordered@);
             map_prefix(before, arena.nodes@, map@);
             map_prefix(before, arena.nodes@, acc@);
+            prefix_all(before, arena.nodes@, ops@);
             prefix(before, arena.nodes@, &variant);
         }
         i += 1;
