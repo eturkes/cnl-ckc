@@ -44,10 +44,13 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 ## Tasks
 
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s (the N8 bump's rerun: rc 124 at 1200 s).
-- [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): #3147, #3158, #3159, #3160 fixed + canary cases in the N8 bump; waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3154–#3157.
+- [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): #3147, #3158, #3159, #3160 fixed + canary cases in the N8 bump; waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3154–#3157 (#3157 closed on Verus main by PR 3271, unreleased).
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling); the CDC guideline until the first publication, other guidelines after it (Publication scope).
 - Deferral queue = `.agent/deferred.md` (each row above + ruled deferrals; one entry + acceptance check each).
 
 ## Phase
 
-MAINTAIN — the whole product
+IMPLEMENT — M7 gap class dose-arithmetic
+> M7 gap coverage, class dose-arithmetic (user pick; phase IMPLEMENT per `CLAUDE.md` `Routing`: a schema revision that re-derives the whole corpus, past one session, as numeric-threshold + condition-scope were): weight-based dosing, multiplication + the conversion between dose units that numeric-threshold left to this class; ruled disposition = a schema revision, arithmetic built-ins (taxonomy, counts + dispositions = `docs/m7-gap-taxonomy.md`: 28 CDC documents, 6 sample statements). Measured: `cdc2022-opioid-s33-01` (an opioid's dosage × its conversion factor = its MME dosage) keeps the conversion-factor values + the arithmetic identity outside its rule (`guidelines/cdc-2022-opioid/audit/projection-notes.tsv`). Accept: the class's disposition implemented under its own unit contract, with ≥1 corpus statement of that class previously approximated now compiled and certified.
+> User ruling (AskUserQuestion, dq13 queue run): "dose-arithmetic (Recommended)" — route the class as its own request; a session routes one request ⇒ the deontic row's IMPLEMENT route waits for a later session.
+Suspended: MAINTAIN — the whole product
