@@ -355,7 +355,9 @@ fn retired_assertion(path: &Path, line: &str, before: &Files) -> bool {
     assert_eq!(fields[2].len() % 2, 0, "baseline assertion hex pairs");
     let needle: Vec<_> = fields[2]
         .as_bytes()
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect();
     let needle = String::from_utf8(needle).unwrap();

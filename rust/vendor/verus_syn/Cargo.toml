@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "verus_syn"
-version = "0.0.0-2026-08-02-0125"
+version = "0.0.0-2026-09-06-0133"
 authors = [
     "David Tolnay <dtolnay@gmail.com>",
     "The Verus Contributors",

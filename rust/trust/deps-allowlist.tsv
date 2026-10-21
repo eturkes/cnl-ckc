@@ -25,9 +25,9 @@ syn	2.0.119
 synstructure	0.13.2
 typenum	1.20.1
 unicode-ident	1.0.27
-verus_builtin	0.0.0-2026-08-30-0159
-verus_builtin_macros	0.0.0-2026-08-30-0159
-verus_prettyplease	0.0.0-2026-08-09-0044
-verus_state_machines_macros	0.0.0-2026-08-02-0125
-verus_syn	0.0.0-2026-08-02-0125
-vstd	0.0.0-2026-08-30-0159
+verus_builtin	0.0.0-2026-10-11-0230
+verus_builtin_macros	0.0.0-2026-10-18-0147
+verus_prettyplease	0.0.0-2026-09-06-0133
+verus_state_machines_macros	0.0.0-2026-10-18-0147
+verus_syn	0.0.0-2026-09-06-0133
+vstd	0.0.0-2026-10-18-0147

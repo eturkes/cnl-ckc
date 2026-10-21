@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "verus_builtin"
-version = "0.0.0-2026-08-30-0159"
+version = "0.0.0-2026-10-11-0230"
 build = false
 autolib = false
 autobins = false

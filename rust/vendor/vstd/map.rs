@@ -4,8 +4,8 @@ use super::pervasive::*;
 use super::prelude::*;
 use super::set::*;
 
-use verus as verus_; // skip verusfmt due to unhandled return-value-pattern
-verus_! {
+use verus as verus_skip_verusfmt; // skip verusfmt due to unhandled return-value-pattern
+verus_skip_verusfmt! {
 
 broadcast use {
     super::set::group_set_lemmas,
@@ -211,10 +211,10 @@ impl<K, V> Map<K, V> {
             out_map == old(self).restrict(keys),
     ;
 
-    /// Merge a map into a tracked map.
+    /// Consume a tracked map and merge its entries into this tracked map.
     ///
-    /// The new (key, value) pairs take precendece.
-    pub axiom fn tracked_union_prefer_right(tracked &mut self, right: Self)
+    /// The new (key, value) pairs take precedence.
+    pub axiom fn tracked_union_prefer_right(tracked &mut self, tracked right: Self)
         ensures
             *final(self) == old(self).union_prefer_right(right),
     ;
@@ -226,6 +226,12 @@ pub broadcast axiom fn axiom_map_index_decreases<K, V>(m: Map<K, V>, key: K)
         m.dom().contains(key),
     ensures
         #[trigger](decreases_to!(m => m[key]));
+
+pub broadcast axiom fn axiom_map_decreases_to_entry<K, V>(m: Map<K, V>, key: K)
+    requires
+        m.dom().contains(key),
+    ensures
+        #[trigger](decreases_to!(m => (key, m[key])));
 
 /// Since `Map::new` is uninterpret, this broadcast lemma is needed to establish
 /// that it produces a map with the given set as its domain.
@@ -328,6 +334,7 @@ pub broadcast proof fn axiom_map_ext_equal_deep<K, V>(m1: Map<K, V>, m2: Map<K, 
 
 pub broadcast group group_map_lemmas {
     axiom_map_index_decreases,
+    axiom_map_decreases_to_entry,
     lemma_map_new_domain,
     lemma_map_new_index,
     lemma_map_empty,
@@ -463,7 +470,7 @@ pub use assert_maps_equal;
 
 } // verus!
 
-verus_! { // skip verusfmt, issue with 'final'
+verus_skip_verusfmt! { // skip verusfmt, issue with 'final'
 
 impl<K, V> Map<K, V> {
     pub proof fn tracked_map_keys_in_place(tracked &mut self, key_map: Map<K, K>)

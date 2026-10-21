@@ -8,7 +8,7 @@ resolver = "2"
 members = ["ckc-spec", "ckc-kernel", "ckc"]
 
 [workspace.dependencies]
-vstd = "=0.0.0-2026-08-30-0159"
+vstd = "=0.0.0-2026-10-18-0147"
 
 # vstd's macros expand to cfg(verus_keep_ghost)-family gates; declared so
 # unexpected_cfgs stays quiet for them and live for anything else.

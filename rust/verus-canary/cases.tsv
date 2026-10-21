@@ -1,0 +1,30 @@
+case	expect	diagnostic	upstream_pr
+choose_different_predicates_compute_only	reject	assert_by_compute_only failed to simplify down to true	3046
+closures	verify	-	3046
+fn_calls_good	verify	-	3046
+if_equality_branches_agree	verify	-	3049
+if_equality_compute_only_then_matches	reject	assert_by_compute_only failed to simplify down to true	3049
+choose_spec_function_arguments	reject	assert_by_compute_only failed to simplify down to true	3108
+residual_call_lambda_spec_function_arguments	reject	assert_by_compute_only failed to simplify down to true	3108
+choose_const_generic_spec_function_arguments	verify	-	3108
+residual_call_lambda_argument_inequality	reject	assert_by_compute_only failed to simplify down to true	3108
+symbolic_spec_function_arguments	verify	-	3108
+scope_quantifier_equality_after_unfold	verify	-	3126
+scope_nested_quantifier_equality_after_unfold	verify	-	3126
+scope_quantifier_equality_free_capture	reject	assert_by_compute_only failed to simplify down to true	3126
+scope_quantifier_equality_memoized_free_vars	reject	assert_by_compute_only failed to simplify down to true	3126
+scope_quantifier_capture	reject	assertion failed	3126
+scope_closure_capture	reject	assert_by_compute_only failed to simplify down to true	3126
+const_generic_signed_boundaries	verify	-	3126
+const_generic_recursive_arch_range	reject	assert_by_compute_only failed to simplify down to true	3126
+scope_const_generic_capture	reject	assert_by_compute_only failed to simplify down to true	3126
+scope_const_generic_fallback	verify	-	3126
+scope_closure_lexical_capture	verify	-	3126
+scope_const_generic_forwarding	verify	-	3126
+scope_const_generic_closure_capture	verify	-	3126
+scope_quantifier_lexical_capture	verify	-	3126
+trivial_compute_only	verify	-	-
+mode_attr_exec_proof_fn	reject	conflicting mode attributes: `exec` and `proof`	3203
+format_width_precision_bounds	reject	precondition not satisfied	3202
+verify_only_module_partial	partial	-	3162
+no_cheating_pervasive_assume	reject	cannot find function `assume` in module `vstd::pervasive`	3265

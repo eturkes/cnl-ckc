@@ -332,11 +332,13 @@ clippy:
     cd "{{ ROOT }}/rust" && cargo clippy --workspace --locked --offline --all-targets -q -- -D warnings
     @echo "gate: clippy ok"
 
-# Verus gate: warm vstd plain, then re-verify every first-party crate under --no-cheating.
+# Verus gate: verifier canary, warm vstd plain, then re-verify every first-party crate under --no-cheating.
 verify:
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}/rust"
+    # The pinned verifier must reject every known false proof first.
+    bash "{{ ROOT }}/rust/verus-canary/run.sh" "{{ TOOLCHAIN }}/verus-x86-linux/verus"
     # vstd axiomatizes std and cannot pass --no-cheating, so its cache warms
     # plain through ckc-spec; cargo then skips unchanged crates whatever the
     # verifier flag, so the first-party crates are cleaned to force the check.
@@ -530,6 +532,11 @@ outdated:
     echo "outdated: $pins pins, $drift drift, $held held, $errors errors"
     [ "$errors" -eq 0 ] || exit 2
     [ "$drift" -eq 0 ] || exit 1
+
+# Verifier canary: the Verus build rejects every known false proof + verifies every control
+# (default = the pinned one, which `just verify` runs first).
+canary verus=(TOOLCHAIN / "verus-x86-linux/verus"):
+    bash "{{ ROOT }}/rust/verus-canary/run.sh" "{{ verus }}"
 
 # Secondary bounded gate (Kani 0.68.0 over the kernel's public exec surface;
 # harnesses stay outside the Verus workspace). Bootstrap = rust/kani.lock.

@@ -2,8 +2,8 @@ use super::super::prelude::*;
 use super::super::raw_ptr::MemContents;
 use core::mem::MaybeUninit;
 
-use verus as verus_;
-verus_! {
+use verus as verus_skip_verusfmt;
+verus_skip_verusfmt! {
 
 #[verifier::external_type_specification]
 #[verifier::external_body]
@@ -51,6 +51,13 @@ pub assume_specification<T>[ MaybeUninit::<T>::assume_init_ref ](m: &MaybeUninit
 pub assume_specification<T>[ MaybeUninit::<T>::assume_init_mut ](m: &mut MaybeUninit<T>) -> (ret: &mut T)
     requires m.mem_contents().is_init(),
     ensures *ret == old(m).mem_contents().value(),
+        final(m).mem_contents().is_init(),
+        final(m).mem_contents().value() == *final(ret),
+    opens_invariants none
+    no_unwind;
+
+pub assume_specification<T>[ MaybeUninit::<T>::write ](m: &mut MaybeUninit<T>, val: T) -> (ret: &mut T)
+    ensures *ret == val,
         final(m).mem_contents().is_init(),
         final(m).mem_contents().value() == *final(ret),
     opens_invariants none

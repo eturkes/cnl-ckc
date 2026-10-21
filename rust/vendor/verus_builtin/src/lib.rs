@@ -6,8 +6,12 @@
     feature(negative_impls),
     feature(unboxed_closures),
     feature(fn_traits),
+    feature(tuple_trait)
+)]
+#![cfg_attr(
+    // register_tool is only allowed at crate root. Disable this trait during `test_is_core`:
+    all(verus_keep_ghost, not(verus_verify_core)),
     feature(register_tool),
-    feature(tuple_trait),
     register_tool(verus),
     register_tool(verifier)
 )]
@@ -1955,15 +1959,17 @@ impl_ieee_float_cast!(u16, [f32 f64]);
 impl_ieee_float_cast!(u32, [f32 f64]);
 impl_ieee_float_cast!(u64, [f32 f64]);
 impl_ieee_float_cast!(u128, [f32 f64]);
+impl_ieee_float_cast!(usize, [f32 f64]);
 impl_ieee_float_cast!(i8, [f32 f64]);
 impl_ieee_float_cast!(i16, [f32 f64]);
 impl_ieee_float_cast!(i32, [f32 f64]);
 impl_ieee_float_cast!(i64, [f32 f64]);
 impl_ieee_float_cast!(i128, [f32 f64]);
-impl_ieee_float_cast!(f32, [u8 u16 u32 u64 u128]);
-impl_ieee_float_cast!(f32, [i8 i16 i32 i64 i128]);
-impl_ieee_float_cast!(f64, [u8 u16 u32 u64 u128]);
-impl_ieee_float_cast!(f64, [i8 i16 i32 i64 i128]);
+impl_ieee_float_cast!(isize, [f32 f64]);
+impl_ieee_float_cast!(f32, [u8 u16 u32 u64 u128 usize]);
+impl_ieee_float_cast!(f32, [i8 i16 i32 i64 i128 isize]);
+impl_ieee_float_cast!(f64, [u8 u16 u32 u64 u128 usize]);
+impl_ieee_float_cast!(f64, [i8 i16 i32 i64 i128 isize]);
 
 //
 //
@@ -1980,6 +1986,13 @@ pub fn f32_to_bits(_f: f32) -> u32 {
 #[verifier::spec]
 #[rustc_diagnostic_item = "verus::verus_builtin::f64_to_bits"]
 pub fn f64_to_bits(_f: f64) -> u64 {
+    unimplemented!()
+}
+
+#[cfg(verus_keep_ghost)]
+#[rustc_diagnostic_item = "verus::verus_builtin::strslice_new_strlit"]
+#[verifier::spec]
+pub fn strslice_new_strlit(_id: int) -> &'static str {
     unimplemented!()
 }
 
@@ -2330,7 +2343,7 @@ pub fn unsigned_max(_word_bits: nat) -> nat {
 
 #[cfg(verus_keep_ghost)]
 #[rustc_diagnostic_item = "verus::verus_builtin::signed_min"]
-pub fn signed_min(_word_bits: nat) -> nat {
+pub fn signed_min(_word_bits: nat) -> int {
     unimplemented!();
 }
 
