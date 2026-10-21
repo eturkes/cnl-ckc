@@ -1,4 +1,4 @@
-use crate::k2_engine::EClause;
+use crate::k2_engine::{EClause, EPair};
 #[cfg(verus_keep_ghost)]
 use crate::k2_engine::{clause_valid, db_valid, db_view, root_terms, roots_valid};
 use crate::k2_term::{ENode, ENodeKind, ETermArena};
@@ -214,6 +214,165 @@ fn enter_builtin(
     }
     c.stack = stack;
     EStep::Next(c)
+}
+
+// The spec's arithmetic branch of `tstep` (contract da1 D8).
+pub open spec fn arith_model(
+    c: TCfg,
+    name: Seq<u8>,
+    args: Seq<Term>,
+    pre: Seq<TGoal>,
+    rest: Seq<TGoal>,
+    path: Seq<nat>,
+) -> TStep {
+    match ckc_spec::arith::arith_result(Term::Comp(name, args)) {
+        Option::Some((s, n)) => match tunify(
+            ckc_spec::engine::zip(args, args.take(4) + seq![s, n]),
+            pre + rest,
+        ) {
+            TUni::Ok(stack) => TStep::Next(
+                TCfg {
+                    stack,
+                    log: if in_naf(c.stack) {
+                        c.log
+                    } else {
+                        c.log.push(
+                            (path, TEv::Builtin(Term::Comp(name, args.take(4) + seq![s, n]))),
+                        )
+                    },
+                    ..c
+                },
+            ),
+            TUni::Fail => tfail(c),
+            TUni::Out => TStep::Limit,
+        },
+        Option::None => tfail(c),
+    }
+}
+
+// An arithmetic goal: bind its outputs, record the goal with its outputs bound.
+#[verifier::rlimit(5000)]
+fn arith_enter(
+    input: ETermArena,
+    initial: ECfg,
+    name: &Vec<u8>,
+    args: &Vec<usize>,
+    pre: Vec<EGoal>,
+    rest: Vec<EGoal>,
+    path: Vec<usize>,
+    Ghost(db_len): Ghost<nat>,
+) -> (out: (ETermArena, EStep))
+    requires
+        arena_ok(&input),
+        cfg_valid(input.nodes@, db_len, &initial),
+        roots_valid(input.nodes@, args@),
+        args@.len() == 6,
+        ckc_spec::arith::is_arith(name@, 6),
+        goals_valid(input.nodes@, pre@),
+        goals_levels(pre@, initial.alts.len() as nat),
+        goals_valid(input.nodes@, rest@),
+        goals_levels(rest@, initial.alts.len() as nat),
+    ensures
+        arena_ok(&out.0),
+        input.nodes@.is_prefix_of(out.0.nodes@),
+        step_valid(out.0.nodes@, db_len, &out.1),
+        step_view(out.0.nodes@, &out.1) == arith_model(
+            cfg_view(input.nodes@, &initial),
+            name@,
+            root_terms(input.nodes@, args@),
+            goals_view(input.nodes@, pre@),
+            goals_view(input.nodes@, rest@),
+            path_view(path@),
+        ),
+{
+    let ghost base = input.nodes@;
+    let ghost terms = root_terms(base, args@);
+    let ghost prefix = goals_view(base, pre@);
+    let ghost continuation = goals_view(base, rest@);
+    let level = initial.alts.len();
+    let mut arena = input;
+    let res = crate::arith_impl::arith_result_exec(&mut arena, name, args);
+    proof {
+        cfg_prefix(base, arena.nodes@, db_len, &initial);
+        crate::k2_engine::roots_models_prefix(base, arena.nodes@, args@);
+        goals_prefix(base, arena.nodes@, pre@);
+        goals_prefix(base, arena.nodes@, rest@);
+    }
+    match res {
+        Option::None => {
+            let result = fail(&arena, initial, Ghost(db_len));
+            (arena, result)
+        },
+        Option::Some((s, n)) => {
+            let ghost mid = arena.nodes@;
+            let mut kids: Vec<usize> = Vec::new();
+            kids.push(args[0]);
+            kids.push(args[1]);
+            kids.push(args[2]);
+            kids.push(args[3]);
+            kids.push(s);
+            kids.push(n);
+            proof {
+                reveal(roots_valid);
+            }
+            let kids_copy = kids.clone();
+            let leaf = crate::k2_term::push_comp(&mut arena, name.clone(), kids);
+            proof {
+                reveal(crate::k2_term::child_terms);
+                assert(crate::k2_term::child_terms(mid, kids@) =~= terms.take(4) + seq![
+                    mid[s as int].term@,
+                    mid[n as int].term@,
+                ]);
+                crate::k2_term::arena_prefix_stable(mid, &arena);
+                cfg_prefix(base, arena.nodes@, db_len, &initial);
+                crate::k2_engine::roots_models_prefix(base, arena.nodes@, args@);
+                goals_prefix(base, arena.nodes@, pre@);
+                goals_prefix(base, arena.nodes@, rest@);
+            }
+            let ghost with_leaf = arena.nodes@;
+            let mut stack = pre;
+            let mut tail = rest;
+            proof {
+                goals_concat(with_leaf, stack@, tail@, level as nat);
+            }
+            stack.append(&mut tail);
+            proof {
+                crate::k2_engine::roots_models_prefix(mid, arena.nodes@, kids_copy@);
+                assert(root_terms(arena.nodes@, kids_copy@) =~= terms.take(4) + seq![
+                    mid[s as int].term@,
+                    mid[n as int].term@,
+                ]);
+            }
+            let pairs = crate::k2_engine::zip_pairs(&arena, args, &kids_copy);
+            proof {
+                assert(crate::k2_engine::pairs_view(with_leaf, pairs@) == ckc_spec::engine::zip(
+                    terms,
+                    terms.take(4) + seq![mid[s as int].term@, mid[n as int].term@],
+                ));
+                assert(goals_view(with_leaf, stack@) =~= prefix + continuation);
+            }
+            let result = crate::k3_adapter::tunify_exec(
+                &mut arena,
+                pairs,
+                stack,
+                Ghost(level as nat),
+            );
+            proof {
+                cfg_prefix(base, arena.nodes@, db_len, &initial);
+                crate::k2_term::arena_prefix_stable(with_leaf, &arena);
+            }
+            match result {
+                EUni::Ok(stack) => {
+                    let out = enter_builtin(&arena, initial, stack, leaf, path, Ghost(db_len));
+                    (arena, out)
+                },
+                EUni::Fail => {
+                    let out = fail(&arena, initial, Ghost(db_len));
+                    (arena, out)
+                },
+            }
+        },
+    }
 }
 
 proof fn call_none(
@@ -849,6 +1008,22 @@ fn step(input: ETermArena, db: &Vec<EClause>, initial: ECfg) -> (out: (ETermAren
             proof {
                 assert(goals_view(input.nodes@, pre@) =~= before.stack.take(0));
             }
+            if crate::compare_impl::is_arith_exec(&name, args.len()) {
+                proof {
+                    reveal(tstep);
+                    assert(goals_view(input.nodes@, rest@) =~= before.stack.skip(1));
+                }
+                return arith_enter(
+                    input,
+                    initial,
+                    &name,
+                    &args,
+                    pre,
+                    rest,
+                    path,
+                    Ghost(db.len() as nat),
+                );
+            }
             if crate::compare_impl::is_builtin_exec(&name, args.len()) {
                 if crate::compare_impl::holds_exec(&input, &name, &args) {
                     let root = match &initial.stack[0] {
@@ -1014,6 +1189,9 @@ fn step_selected(input: ETermArena, db: &Vec<EClause>, initial: ECfg, k: usize) 
             ] + before.stack.skip(k as int + 1));
         }
         return (input, EStep::Next(c));
+    }
+    if crate::compare_impl::is_arith_exec(&name, args.len()) {
+        return arith_enter(input, initial, &name, &args, pre, rest, path, Ghost(db.len() as nat));
     }
     if crate::compare_impl::is_builtin_exec(&name, args.len()) {
         if crate::compare_impl::holds_exec(&input, &name, &args) {

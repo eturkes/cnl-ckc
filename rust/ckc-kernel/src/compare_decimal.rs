@@ -15,7 +15,7 @@ use vstd::prelude::*;
 
 verus! {
 
-proof fn decimal_shape(n: nat)
+pub(crate) proof fn decimal_shape(n: nat)
     ensures
         udec_bytes(n).len() > 0,
         (udec_bytes(n).len() == 1) == (n < 10),
@@ -223,74 +223,6 @@ proof fn scale_order(order: &EOrder, a: int, b: int, factor: int)
                     factor > 0,
             ;
         },
-    }
-}
-
-// Units in each group form a divisibility chain: scale only the coarser side.
-pub fn scaled_order(
-    am: &Vec<u8>,
-    an: bool,
-    a: Ghost<int>,
-    bm: &Vec<u8>,
-    bn: bool,
-    b: Ghost<int>,
-    ar: usize,
-    br: usize,
-) -> (order: EOrder)
-    requires
-        am@ == udec_bytes(magnitude_of(a@)),
-        an == (a@ < 0),
-        bm@ == udec_bytes(magnitude_of(b@)),
-        bn == (b@ < 0),
-        1 <= ar <= 604800,
-        1 <= br <= 604800,
-        ar >= br ==> ar % br == 0,
-        ar < br ==> br % ar == 0,
-    ensures
-        int_order_ok(&order, a@ * ar, b@ * br),
-{
-    if ar == br {
-        let order = int_order(am, an, a, bm, bn, b);
-        proof {
-            scale_order(&order, a@, b@, ar as int);
-        }
-        order
-    } else if ar > br {
-        let factor = ar / br;
-        proof {
-            lemma_div_non_zero(ar as int, br as int);
-            lemma_div_nonincreasing(ar as int, br as int);
-            positive_scale(a@, factor as int);
-        }
-        let scaled = multiply(am, factor, Ghost(magnitude_of(a@)));
-        let order = int_order(&scaled, an, Ghost(a@ * factor), bm, bn, b);
-        proof {
-            lemma_fundamental_div_mod(ar as int, br as int);
-            scale_order(&order, a@ * factor, b@, br as int);
-            assert(a@ * factor * br == a@ * ar) by (nonlinear_arith)
-                requires
-                    ar == factor * br,
-            ;
-        }
-        order
-    } else {
-        let factor = br / ar;
-        proof {
-            lemma_div_non_zero(br as int, ar as int);
-            lemma_div_nonincreasing(br as int, ar as int);
-            positive_scale(b@, factor as int);
-        }
-        let scaled = multiply(bm, factor, Ghost(magnitude_of(b@)));
-        let order = int_order(am, an, a, &scaled, bn, Ghost(b@ * factor));
-        proof {
-            lemma_fundamental_div_mod(br as int, ar as int);
-            scale_order(&order, a@, b@ * factor, ar as int);
-            assert(b@ * factor * ar == b@ * br) by (nonlinear_arith)
-                requires
-                    br == factor * ar,
-            ;
-        }
-        order
     }
 }
 

@@ -323,7 +323,9 @@ the scope exclusion record `guideline_exclusion/1` complete the
 vocabulary. The comparison built-ins
 `guideline_satisfies/4` and `guideline_satisfies/6` test the conditions
 of rules and questions; the section "Comparison conditions" below defines
-them. The section "Scope exclusions" below defines the exclusion record
+them. The arithmetic built-ins `guideline_product/6` and
+`guideline_quotient/6` compute a quantity from other quantities; the
+section "Arithmetic built-ins" below defines them. The section "Scope exclusions" below defines the exclusion record
 and the guard that it adds to recommendation rules. The sections "Vocabulary table and time
 annotations" and "Strength annotations" below define them. In the record, `H` is the SHA-256 of the raw ACE bytes,
 `U` the SHA-256 of the guideline's user lexicon, and `T` the SHA-256
@@ -854,7 +856,8 @@ met by `at most 70`, `about 60` or a quantity without a number. A condition
 is met when every value that the stated quantity allows is a value that
 the condition allows. A plain number allows that count or more, `exactly`
 allows the count alone, `geq` and `leq` include their bound, and `greater`
-and `less` exclude it. Counts are integers, and the comparison treats the
+and `less` exclude it. Counts are integers or exact rational numbers
+(section "Arithmetic built-ins" below), and the comparison treats the
 values between them as possible. The comparison is therefore safe and can
 miss an entailment that holds only for whole counts: `more than 49` does
 not meet `at least 50`.
@@ -892,8 +895,9 @@ does not.
 The built-ins are no document predicates. No clause heads them, and no
 declaration names them. The verified engine evaluates them, and
 `guidelines/schema.pl` states them in ISO Prolog for other engines. An
-engine gives exact results when its integers can hold each count
-multiplied by 604800, the number of seconds in one week. SWI-Prolog
+engine gives exact results when its integers can hold the absolute value
+of each numerator and each numerator multiplied by the other count's
+denominator and by 604800, the number of seconds in one week. SWI-Prolog
 9.2.9 has unbounded integers. A consumer loads that file with the
 documents. `ckc compile` writes the
 file, `ckc check` rejects a missing or stale copy, and the release
@@ -909,6 +913,49 @@ states an exact value as `exactly n` with n of at least 1; a root
 minimum, not an interval of values: its upper end and every count-per-
 period period keep exact matching. An `about` quantity carries no
 tolerance and meets no comparison.
+
+### Arithmetic built-ins
+
+The arithmetic built-ins compute a quantity from other quantities. The
+built-in `guideline_product(S1, N1, S2, N2, S, N)` multiplies, and
+`guideline_quotient(S1, N1, S2, N2, S, N)` divides. The first four
+arguments are inputs: two pairs of a comparison and a count. The last two
+arguments are outputs: the comparison and the count of the result.
+
+A count is an integer or an exact rational number. A rational number that
+is not an integer has the form `rational(P, Q)`: Q is at least 2, and P and
+Q have no common divisor other than 1. For example, 70.5 is
+`rational(141, 2)` and 0.15 is `rational(3, 20)`. Each number has exactly
+one such form, so two equal numbers always unify. The schema has no
+floating-point numbers.
+
+A pair of a comparison and a count states a set of values: `exactly x` is
+the value x; `eq x` and `geq x` are the values from x up; `greater x` is
+the values above x; `leq x` is the values up to x; `less x` is the values
+below x. A built-in multiplies the two sets. When the result is one value
+or a set that one comparison can state, the built-in binds the outputs to
+it. For example, `geq 60` times `exactly rational(3, 2)` gives `geq 90`. The
+result never uses `eq`.
+
+A built-in derives nothing in these cases:
+
+- the product of the two sets contains every number, for example
+  `geq -1` times `geq 3`;
+- the divisor is zero or is not an exact value;
+- an input count is not a number, or its comparison is `about` or `na`.
+
+A built-in that derives nothing does not state that the arithmetic is false.
+The verified kernel proves that a derived result never excludes a true
+product or quotient of input values (the theorem `arith_result_sound`). `guidelines/schema.pl` states the same
+built-ins in ISO Prolog; a consumer loads it with the documents. The
+results are exact when the integers of the engine can hold every
+intermediate integer, absolute values and products included. SWI-Prolog 9.2.9 has unbounded integers.
+
+An emitted rule can feed its own condition, for example a rule whose
+condition and result both use the verb `include`. Plain left-to-right
+Prolog can then search without end. Tabling ends the search for the
+conversion rules of this repository but proves no general termination. The
+engine of this repository is bounded and reports `indeterminate(limit)`.
 
 ### Scope exclusions
 
@@ -1060,8 +1107,8 @@ must name readable files, and the mode never parses payload terms. A
 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/5`
 record, then the `'$guideline_query_projection'/2` term. A query names
-any of the 18 semantic predicates and the comparison built-ins, and it
-runs against any composition. The mode
+any of the 18 semantic predicates, the comparison built-ins and the
+arithmetic built-ins, and it runs against any composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 
 Success emits a two-line artifact on stdout: a generated-file
@@ -1085,9 +1132,10 @@ runs the leftmost goal first, with one exception. An operator goal
 `guideline_operator(Outer, Inner, Op)` waits when `Inner` is still a
 variable and a later goal names that variable as its first argument.
 Such a later goal is part of the box content, so its result binds the
-box context. A comparison built-in never names a box context, and one
-whose arguments are not bound yet ends the run as a negation does, so a
-waiting operator goal never lets a comparison run before its values.
+box context. A built-in never names a box context. A built-in with an
+argument that is not bound yet ends the run as a negation does; for an
+arithmetic built-in, the outputs count too. A waiting operator goal
+therefore never lets a built-in run before its values.
 Only the goals before the next negation-as-failure goal
 count, and a conjunction counts with its parts. The engine runs the
 leftmost goal that does not wait. The clause body that resolves this
@@ -1111,7 +1159,9 @@ search ends, and which proof the engine finds first.
 Each step of the search costs one inference: a call or a retry of a
 goal (the clause scan and the head unification included), the split of
 a conjunction, the entry into a negation, the cut that ends a
-negation, a comparison built-in, a pruned goal, and a recorded solution. The step that
+negation, a comparison built-in, an arithmetic built-in (also when it
+derives nothing or its outputs do not unify), a pruned goal, and a recorded solution. A built-in
+leaves no choice point. The step that
 reports a yes-no proof costs one inference too.
 
 The compiled Prolog keeps the body order that the compiler writes, so
@@ -1163,8 +1213,11 @@ clause_sha256(Hex), Children)`. It names the resolved clause by its document and
 that clause's rendered document line with its newline. A re-checked
 negation-as-failure goal freezes as a `naf(Goal)` leaf among a
 clause node's children. A comparison built-in that held freezes as a
-`builtin(Goal)` leaf, the goal as called, with no clause digest. Root
-nodes are clause nodes or `builtin(Goal)` leaves. The
+`builtin(Goal)` leaf, the goal as called, with no clause digest. An
+arithmetic built-in that computed a result freezes as a `builtin(Goal)`
+leaf too, with its outputs bound to the result, and the trace check
+computes the result again. Root nodes are clause nodes or
+`builtin(Goal)` leaves. The
 prover is a directed first-proof interpreter over the loaded
 clauses. It selects goals as the answer mode does: an operator goal
 waits for its box content. The goals of a row are separate roots, and

@@ -176,7 +176,9 @@ pub ghost enum TGoal {
 pub ghost enum TEv {
     Clause(nat),  // the resolving clause = db index
     Naf(Term),  // the negation succeeded: its inner goal as it stood at the site
-    Builtin(Term),  // a comparison built-in held: the goal as called (ground)
+    Builtin(
+        Term,
+    ),  // a built-in held: a comparison as called, an arithmetic goal with its outputs bound (ground)
 }
 
 pub ghost enum TAlt {
@@ -413,6 +415,36 @@ pub open spec fn tstep(db: Seq<DocClause>, c: TCfg) -> TStep {
                                 ..c
                             },
                         )
+                    } else if crate::arith::is_arith(name, args.len()) {
+                        // contract da1 D8: bind the outputs, record the evaluated goal
+                        match crate::arith::arith_result(g) {
+                            Option::Some((s, n)) => match tunify(
+                                zip(args, args.take(4) + seq![s, n]),
+                                pre + rest,
+                            ) {
+                                TUni::Ok(stack) => TStep::Next(
+                                    TCfg {
+                                        stack,
+                                        log: if in_naf(c.stack) {
+                                            c.log
+                                        } else {
+                                            c.log.push(
+                                                (
+                                                    path,
+                                                    TEv::Builtin(
+                                                        Term::Comp(name, args.take(4) + seq![s, n]),
+                                                    ),
+                                                ),
+                                            )
+                                        },
+                                        ..c
+                                    },
+                                ),
+                                TUni::Fail => tfail(c),
+                                TUni::Out => TStep::Limit,
+                            },
+                            Option::None => tfail(c),
+                        }
                     } else if crate::compare::is_builtin(name, args.len()) {
                         if crate::compare::holds(g) {
                             TStep::Next(

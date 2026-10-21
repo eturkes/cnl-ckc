@@ -38,6 +38,9 @@
 // every other module = uninspected impl+proofs whose sole review is
 // `cargo verus verify`.
 mod align_impl;
+mod arith_impl;
+mod arith_mag;
+mod arith_sound;
 #[cfg(test)]
 mod cix2_tests;
 #[cfg(test)]

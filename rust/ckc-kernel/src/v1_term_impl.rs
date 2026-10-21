@@ -13891,6 +13891,9 @@ proof fn query_projection_parts_flat(goal: Term, answers: Term)
     reveal(query_projection_stage);
 }
 
+// Own solver process: in the module's shared session this small proof's
+// cost depends on the queries before it.
+#[verifier::spinoff_prover]
 proof fn query_parts_flat(q: ckc_spec::v1text::QueryFile)
     ensures
         query_parts(q).flatten() == query_flat(q),
@@ -18395,8 +18398,14 @@ proof fn wf_body_literal_term_prefix_safe(term: Term)
     } else {
         reveal(ckc_spec::v1text::wf_body_literal);
         reveal(ckc_spec::compare::is_builtin);
+        reveal(ckc_spec::compare::is_compare);
         reveal(ckc_spec::compare::satisfies_name);
+        reveal(ckc_spec::arith::is_arith);
+        reveal(ckc_spec::arith::product_name);
+        reveal(ckc_spec::arith::quotient_name);
         reveal_strlit("guideline_satisfies");
+        reveal_strlit("guideline_product");
+        reveal_strlit("guideline_quotient");
         reveal(ckc_spec::v1text::ascii);
         reveal(ckc_spec::v1text::atom_bytes);
         reveal_with_fuel(ckc_spec::v1text::term_bytes, 1);
@@ -22010,6 +22019,11 @@ fn literal_arity(name: &[u8], arity: usize, body: bool) -> (r: Option<usize>) {
                 6
             },
         )
+    } else if body && (crate::k4_bytes::eq(name, b"guideline_product") || crate::k4_bytes::eq(
+        name,
+        b"guideline_quotient",
+    )) {
+        Some(6)
     } else {
         semantic_arity(name)
     }
@@ -22104,6 +22118,12 @@ fn pred_name_reject_at(bytes: &[u8], start: usize, body: bool) -> (r: usize)
             fixed_reject_at(bytes, start, b"guideline_satisfies", 0x28),
             bytes.len(),
         );
+        raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_product", 0x28), bytes.len());
+        raise_at(
+            &mut best,
+            fixed_reject_at(bytes, start, b"guideline_quotient", 0x28),
+            bytes.len(),
+        );
     }
     best
 }
@@ -22150,8 +22170,11 @@ fn literal_name_at(bytes: &[u8], start: usize, body: bool) -> (r: bool) {
         || crate::k4_bytes::starts_with(rest, b"guideline_preference(")
         || crate::k4_bytes::starts_with(rest, b"guideline_qualifier(");
     base || timing || strength || crate::k4_bytes::starts_with(rest, b"guideline_unit(")
-        || crate::k4_bytes::starts_with(rest, b"guideline_exclusion(") || body
-        && crate::k4_bytes::starts_with(rest, b"guideline_satisfies(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_exclusion(") || body && (
+    crate::k4_bytes::starts_with(rest, b"guideline_satisfies(") || crate::k4_bytes::starts_with(
+        rest,
+        b"guideline_product(",
+    ) || crate::k4_bytes::starts_with(rest, b"guideline_quotient("))
 }
 
 // R9 offset of a hex digest atom that starts at `at`: its first non-hex byte, or

@@ -1,4 +1,3 @@
-use crate::compare_decimal::scaled_order;
 use crate::compare_schema::{ascii_eq, schema_bytes};
 #[cfg(verus_keep_ghost)]
 use crate::k2_engine::{root_terms, roots_valid};
@@ -8,7 +7,7 @@ use ckc_spec::compare as c;
 #[cfg(verus_keep_ghost)]
 use ckc_spec::term::Term;
 #[cfg(verus_keep_ghost)]
-use ckc_spec::v1text::ascii;
+use ckc_spec::v1text::{ascii, udec_bytes};
 use vstd::prelude::*;
 
 verus! {
@@ -27,7 +26,10 @@ pub fn is_builtin_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     proof {
         reveal_strlit("guideline_satisfies");
     }
-    (arity == 4 || arity == 6) && ascii_eq(name, "guideline_satisfies")
+    (arity == 4 || arity == 6) && ascii_eq(name, "guideline_satisfies") || is_arith_exec(
+        name,
+        arity,
+    )
 }
 
 proof fn operator_cases(x: int, y: int)
@@ -186,34 +188,52 @@ fn unit_scale(u: &Vec<u8>) -> (r: Option<(bool, usize)>)
     }
 }
 
+// p/q as a signed decimal times the positive integer m: (magnitude, sign).
+fn scaled_value(r: &crate::arith_impl::ERat, m: &Vec<u8>, mv: Ghost<nat>) -> (out: (Vec<u8>, bool))
+    requires
+        crate::arith_impl::rat_ok(r),
+        m@ == udec_bytes(mv@),
+        mv@ >= 1,
+    ensures
+        out.0@ == udec_bytes(ckc_spec::arith::abs(r.n@ * mv@)),
+        out.1 == (r.n@ * mv@ < 0),
+{
+    let mag = crate::arith_mag::mag_mul(&r.num, Ghost(ckc_spec::arith::abs(r.n@)), m, mv);
+    proof {
+        assert(ckc_spec::arith::abs(r.n@ * mv@) == ckc_spec::arith::abs(r.n@) * mv@)
+            by (nonlinear_arith)
+            requires
+                mv@ >= 1,
+        ;
+        assert((r.n@ * mv@ < 0) == (r.n@ < 0)) by (nonlinear_arith)
+            requires
+                mv@ >= 1,
+        ;
+    }
+    (mag, r.neg)
+}
+
 fn holds4(arena: &ETermArena, args: &Vec<usize>) -> (r: bool)
     requires
         arena_ok(arena),
         roots_valid(arena.nodes@, args@),
         args.len() == 4,
     ensures
-        r == c::holds(Term::Comp(c::satisfies_name(), root_terms(arena.nodes@, args@))),
+        r == c::compare_holds(Term::Comp(c::satisfies_name(), root_terms(arena.nodes@, args@))),
 {
     proof {
         assert(node_ok(arena.nodes@, args@[0] as int));
-        assert(node_ok(arena.nodes@, args@[1] as int));
         assert(node_ok(arena.nodes@, args@[2] as int));
-        assert(node_ok(arena.nodes@, args@[3] as int));
     }
-    match (
-        &arena.nodes[args[0]].kind,
-        &arena.nodes[args[1]].kind,
-        &arena.nodes[args[2]].kind,
-        &arena.nodes[args[3]].kind,
-    ) {
-        (
-            ENodeKind::Atom { name: s },
-            ENodeKind::Int { magnitude: am, negative: an, value: a, .. },
-            ENodeKind::Atom { name: b },
-            ENodeKind::Int { magnitude: bm, negative: bn, value: y, .. },
-        ) => {
-            let order = int_order(am, *an, Ghost(a@), bm, *bn, Ghost(y@));
-            within_order(s, b, &order, Ghost(a@), Ghost(y@))
+    let x = crate::arith_impl::decode_number(arena, args[1]);
+    let y = crate::arith_impl::decode_number(arena, args[3]);
+    match (&arena.nodes[args[0]].kind, x, &arena.nodes[args[2]].kind, y) {
+        (ENodeKind::Atom { name: s }, Some(p), ENodeKind::Atom { name: b }, Some(q)) => {
+            // p.n/p.d against q.n/q.d compares p.n·q.d with q.n·p.d
+            let (xm, xn) = scaled_value(&p, &q.den, q.d);
+            let (ym, yn) = scaled_value(&q, &p.den, p.d);
+            let order = int_order(&xm, xn, Ghost(p.n@ * q.d@), &ym, yn, Ghost(q.n@ * p.d@));
+            within_order(s, b, &order, Ghost(p.n@ * q.d@), Ghost(q.n@ * p.d@))
         },
         _ => false,
     }
@@ -225,32 +245,32 @@ fn holds6(arena: &ETermArena, args: &Vec<usize>) -> (r: bool)
         roots_valid(arena.nodes@, args@),
         args.len() == 6,
     ensures
-        r == c::holds(Term::Comp(c::satisfies_name(), root_terms(arena.nodes@, args@))),
+        r == c::compare_holds(Term::Comp(c::satisfies_name(), root_terms(arena.nodes@, args@))),
 {
     proof {
         assert(node_ok(arena.nodes@, args@[0] as int));
-        assert(node_ok(arena.nodes@, args@[1] as int));
         assert(node_ok(arena.nodes@, args@[2] as int));
         assert(node_ok(arena.nodes@, args@[3] as int));
-        assert(node_ok(arena.nodes@, args@[4] as int));
         assert(node_ok(arena.nodes@, args@[5] as int));
         reveal_strlit("time");
         reveal_strlit("calendar");
     }
+    let x = crate::arith_impl::decode_number(arena, args[1]);
+    let y = crate::arith_impl::decode_number(arena, args[4]);
     match (
         &arena.nodes[args[0]].kind,
-        &arena.nodes[args[1]].kind,
+        x,
         &arena.nodes[args[2]].kind,
         &arena.nodes[args[3]].kind,
-        &arena.nodes[args[4]].kind,
+        y,
         &arena.nodes[args[5]].kind,
     ) {
         (
             ENodeKind::Atom { name: s },
-            ENodeKind::Int { magnitude: am, negative: an, value: a, .. },
+            Some(p),
             ENodeKind::Atom { name: u },
             ENodeKind::Atom { name: b },
-            ENodeKind::Int { magnitude: bm, negative: bn, value: y, .. },
+            Some(q),
             ENodeKind::Atom { name: v },
         ) => {
             match (unit_scale(u), unit_scale(v)) {
@@ -263,8 +283,48 @@ fn holds6(arena: &ETermArena, args: &Vec<usize>) -> (r: bool)
                         }
                         return false;
                     }
-                    let order = scaled_order(am, *an, Ghost(a@), bm, *bn, Ghost(y@), ar, br);
-                    within_order(s, b, &order, Ghost(a@ * ar), Ghost(y@ * br))
+                    // p.n·ar·q.d against q.n·br·p.d
+
+                    let ghost xv = p.n@ * ar as int * q.d@;
+                    let ghost yv = q.n@ * br as int * p.d@;
+                    let xs = crate::arith_mag::mag_mul(
+                        &q.den,
+                        q.d,
+                        &crate::k2_manifest::udec_vec(ar),
+                        Ghost(ar as nat),
+                    );
+                    let ys = crate::arith_mag::mag_mul(
+                        &p.den,
+                        p.d,
+                        &crate::k2_manifest::udec_vec(br),
+                        Ghost(br as nat),
+                    );
+                    proof {
+                        assert(q.d@ * (ar as nat) >= 1) by (nonlinear_arith)
+                            requires
+                                q.d@ >= 1,
+                                ar >= 1,
+                        ;
+                        assert(p.d@ * (br as nat) >= 1) by (nonlinear_arith)
+                            requires
+                                p.d@ >= 1,
+                                br >= 1,
+                        ;
+                    }
+                    let (xm, xn) = scaled_value(&p, &xs, Ghost(q.d@ * ar as nat));
+                    let (ym, yn) = scaled_value(&q, &ys, Ghost(p.d@ * br as nat));
+                    proof {
+                        assert(p.n@ * (q.d@ * ar as nat) == xv) by (nonlinear_arith)
+                            requires
+                                xv == p.n@ * ar as int * q.d@,
+                        ;
+                        assert(q.n@ * (p.d@ * br as nat) == yv) by (nonlinear_arith)
+                            requires
+                                yv == q.n@ * br as int * p.d@,
+                        ;
+                    }
+                    let order = int_order(&xm, xn, Ghost(xv), &ym, yn, Ghost(yv));
+                    within_order(s, b, &order, Ghost(xv), Ghost(yv))
                 },
                 _ => false,
             }
@@ -273,15 +333,33 @@ fn holds6(arena: &ETermArena, args: &Vec<usize>) -> (r: bool)
     }
 }
 
+pub fn is_arith_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
+    ensures
+        r == ckc_spec::arith::is_arith(name@, arity as nat),
+{
+    proof {
+        reveal_strlit("guideline_product");
+        reveal_strlit("guideline_quotient");
+    }
+    arity == 6 && (ascii_eq(name, "guideline_product") || ascii_eq(name, "guideline_quotient"))
+}
+
+// A comparison goal holds (an arithmetic goal goes through
+// `arith_impl::arith_result_exec` and unification instead).
 pub fn holds_exec(arena: &ETermArena, name: &Vec<u8>, args: &Vec<usize>) -> (r: bool)
     requires
         arena_ok(arena),
         roots_valid(arena.nodes@, args@),
+        !ckc_spec::arith::is_arith(name@, args@.len() as nat),
     ensures
         r == ckc_spec::compare::holds(
             ckc_spec::term::Term::Comp(name@, root_terms(arena.nodes@, args@)),
         ),
 {
+    proof {
+        reveal(ckc_spec::arith::arith_holds);
+        reveal(ckc_spec::arith::arith_result);
+    }
     if !is_builtin_exec(name, args.len()) {
         return false;
     }

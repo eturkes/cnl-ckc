@@ -221,6 +221,97 @@ pub proof fn tcall_preserves(
     }
 }
 
+pub proof fn arith_preserves(
+    db: Seq<DocClause>,
+    roots: Seq<Term>,
+    c: TCfg,
+    aux: Aux,
+    name: Seq<u8>,
+    args: Seq<Term>,
+    depth: nat,
+    pre: Seq<TGoal>,
+    rest: Seq<TGoal>,
+    path: Seq<nat>,
+    k: int,
+)
+    requires
+        bodies_wf(db),
+        aux_valid(db, roots, c, aux),
+        0 <= k < c.stack.len(),
+        pre == c.stack.take(k),
+        rest == c.stack.skip(k + 1),
+        c.stack[k] == TGoal::Lit(Term::Comp(name, args), depth, path),
+        c.stack == pre + seq![c.stack[k]] + rest,
+    ensures
+        continued(db, roots, crate::k3_machine::arith_model(c, name, args, pre, rest, path)),
+{
+    let g = Term::Comp(name, args);
+    match ckc_spec::arith::arith_result(g) {
+        Option::None => tfail_preserves(db, roots, c, aux.saved),
+        Option::Some((sv, nv)) => {
+            super::log::arith_head(name, args);
+            let hs = args.take(4) + seq![sv, nv];
+            let head = Term::Comp(name, hs);
+            let pairs = zip(args, hs);
+            match tunify(pairs, pre + rest) {
+                TUni::Fail => tfail_preserves(db, roots, c, aux.saved),
+                TUni::Out => {},
+                TUni::Ok(out) => {
+                    let log = if in_naf(c.stack) {
+                        c.log
+                    } else {
+                        c.log.push((path, TEv::Builtin(head)))
+                    };
+                    let nc = TCfg { stack: out, log, ..c };
+                    super::select::cuts_parts(c.stack, k, c.alts.len());
+                    cuts_add(pre, rest, c.alts.len());
+                    tunify_frames(pairs, pre + rest);
+                    cuts_frames(pre + rest, out, c.alts.len());
+                    match aux.current {
+                        Option::Some(cert) => {
+                            outer_no_naf(db, roots, snapshot(c), cert);
+                            record_arith(
+                                db,
+                                roots,
+                                snapshot(c),
+                                cert,
+                                name,
+                                args,
+                                depth,
+                                path,
+                                pre,
+                                rest,
+                                head,
+                                out,
+                            );
+                            let after = choose|after: Cert| #[trigger]
+                                outer_valid(
+                                    db,
+                                    roots,
+                                    Snapshot {
+                                        stack: out,
+                                        fresh: c.fresh,
+                                        log: c.log.push((path, TEv::Builtin(head))),
+                                    },
+                                    after,
+                                );
+                            let na = Aux { current: Option::Some(after), saved: aux.saved };
+                            continued_next(db, roots, nc, na);
+                        },
+                        Option::None => {
+                            super::select::in_naf_splice(pre, c.stack[k], rest, seq![]);
+                            assert(pre + seq![] + rest =~= pre + rest);
+                            in_naf_frames(pre + rest, out);
+                            let na = Aux { current: Option::None, saved: aux.saved };
+                            continued_next(db, roots, nc, na);
+                        },
+                    }
+                },
+            }
+        },
+    }
+}
+
 pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux: Aux)
     requires
         bodies_wf(db),
@@ -323,6 +414,20 @@ pub proof fn tstep_preserves(db: Seq<DocClause>, roots: Seq<Term>, c: TCfg, aux:
                                 assert(aux_valid(db, roots, nc, na));
                                 continued_next(db, roots, nc, na);
                                 assert(tstep(db, c) == TStep::Next(nc));
+                            } else if ckc_spec::arith::is_arith(name, args.len()) {
+                                arith_preserves(
+                                    db,
+                                    roots,
+                                    c,
+                                    aux,
+                                    name,
+                                    args,
+                                    depth,
+                                    pre,
+                                    rest,
+                                    path,
+                                    k as int,
+                                );
                             } else if ckc_spec::compare::is_builtin(name, args.len()) {
                                 if ckc_spec::compare::holds(g) {
                                     let log = if in_naf(c.stack) {

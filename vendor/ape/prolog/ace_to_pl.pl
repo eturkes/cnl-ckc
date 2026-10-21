@@ -2573,8 +2573,9 @@ nt1_relink(Vars, Times, Inner, Out) :-
 nt1_unit_slot(Vars, Times, Q, U0, U) :-
     ( strict_member(Q, Times) -> v1_lookup(Vars, Q, v(_, _, U)) ; U = U0 ).
 
-/* The per-document replay module states the comparison built-ins exactly as
-   guidelines/schema.pl does (contract nt1 D9, D10). */
+/* The per-document replay module states the comparison built-ins over
+   integer counts; on those, its verdicts equal guidelines/schema.pl's
+   (contract nt1 D9, D10). */
 nt1_schema_clauses([
     (guideline_satisfies(S, N, B, M) :-
         atom(S), integer(N), atom(B), integer(M), guideline_within(S, N, B, M)),

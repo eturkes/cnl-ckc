@@ -414,6 +414,147 @@ pub proof fn record_builtin(
     assert(outer_valid(db, roots, next, nc));
 }
 
+// An arithmetic goal resolves against its evaluated ground instance `head`
+// (contract da1 D8): a clause step with a ground head, no body and no fresh
+// variables, recorded as a builtin leaf.
+pub proof fn record_arith(
+    db: Seq<DocClause>,
+    roots: Seq<Term>,
+    v: Snapshot,
+    cert: Cert,
+    name: Seq<u8>,
+    args: Seq<Term>,
+    depth: nat,
+    path: Seq<nat>,
+    pre: Seq<TGoal>,
+    rest: Seq<TGoal>,
+    head: Term,
+    out: Seq<TGoal>,
+)
+    requires
+        bodies_wf(db),
+        outer_valid(db, roots, v, cert),
+        v.stack == pre + seq![TGoal::Lit(Term::Comp(name, args), depth, path)] + rest,
+        head == Term::Comp(name, args_of(head)),
+        args_of(head).len() == args.len(),
+        ground(head),
+        ckc_spec::compare::holds(head),
+        tunify(zip(args, args_of(head)), pre + rest) == TUni::Ok(out),
+    ensures
+        exists|nc: Cert| #[trigger]
+            outer_valid(
+                db,
+                roots,
+                Snapshot {
+                    stack: out,
+                    fresh: v.fresh,
+                    log: v.log.push((path, TEv::Builtin(head))),
+                },
+                nc,
+            ),
+{
+    let fresh = v.fresh;
+    let pairs = zip(args, args_of(head));
+    let body: Seq<TGoal> = seq![];
+    let stack2 = pre + rest;
+    let n = pre.len();
+    let oldfront = paths(v.stack);
+    let lead = paths(pre);
+    let tail = paths(rest);
+    let sel = seq![TGoal::Lit(Term::Comp(name, args), depth, path)];
+    paths_add(pre, sel);
+    paths_add(pre + sel, rest);
+    assert(paths(sel) =~= seq![path]);
+    assert(oldfront == lead + seq![path] + tail);
+    assert(v.stack[n as int] == TGoal::Lit(Term::Comp(name, args), depth, path));
+    assert(open_position(db, roots, v.log, oldfront[n as int]));
+    assert(oldfront[n as int] == path);
+    assert(slot_valid(db, roots, v, cert, v.stack[n as int]));
+    super::log::holds_ground(head);
+    assert(nvars_all(args) <= fresh);
+    assert(nvars(head) == 0);
+    assert(nvars_all(args_of(head)) <= fresh) by {
+        reveal_with_fuel(nvars, 2);
+    }
+    pairs_decomp(args, args_of(head), seq![], fresh);
+    assert(pairs + seq![] =~= pairs);
+    assert(pre + body + rest =~= stack2);
+    tunify_within(pairs, stack2, fresh);
+    let s = choose|s: Seq<(nat, Term)>|
+        tunifier_witness(pairs, stack2, tunify(pairs, stack2), fresh, s) && within(s, pairs);
+    assert(out == tapply_all(stack2, s));
+    let ev = TEv::Builtin(head);
+    let extra = seq![(path, ev)];
+    let more = seq![0nat];
+    let next = Snapshot { stack: out, fresh, log: v.log.push((path, ev)) };
+    let nc = Cert { theta: cert.theta + s, offsets: cert.offsets.push(0) };
+    assert(v.log + extra =~= next.log);
+    assert(cert.offsets + more =~= nc.offsets);
+    cert_positioned(db, roots, v.log, cert.offsets, cert.theta);
+    frontier_replace(db, roots, v.log, lead, path, ev, tail);
+    cover_replace(db, roots, v.log, lead, path, ev, tail);
+    log_push_unique(v.log, path, ev);
+    paths_apply(stack2, s);
+    paths_add(pre, rest);
+    assert(paths(next.stack) == lead + event_children(db, path, ev) + tail);
+    raw_append(db, roots, v.log, cert.offsets, extra, more, path);
+    position_append(db, roots, v.log, extra, path);
+    solves_comp(name, args, args_of(head), seq![], s);
+    let raw = raw_at(db, roots, v.log, cert.offsets, path);
+    apply_append(raw, cert.theta, s);
+    super::log::builtin_fixed(head, s);
+    assert(weak_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
+    assert(cert_event(db, roots, next.log, nc.offsets, nc.theta, path, ev));
+    assert(tgoal_term(v.stack[n as int]) == Term::Comp(name, args));
+    assert(v.stack == pre + seq![v.stack[n as int]] + rest);
+    assert forall|x: nat| x < fresh implies !occurs(x, head) by {
+        if occurs(x, head) {
+            occurs_below(x, head);
+        }
+    }
+    clear_after_call(v.log, v.stack, fresh, fresh, name, args, name, head, pre, body, rest, s);
+    cert_push(db, roots, v.log, cert.offsets, cert.theta, path, ev, 0, s);
+    binds_append(cert.theta, s, fresh);
+    assert forall|i: int| 0 <= i < out.len() implies #[trigger] slot_valid(
+        db,
+        roots,
+        next,
+        nc,
+        out[i],
+    ) by {
+        if i < n {
+            assert(v.stack[i] == pre[i]);
+            assert(slot_valid(db, roots, v, cert, v.stack[i]));
+            assert(open_position(db, roots, v.log, oldfront[i]));
+            assert(goal_frame(pre[i]).2 == oldfront[i]);
+            slot_extend(db, roots, v, cert, next, nc, extra, more, s, pre[i]);
+            assert(out[i] == tapply(pre[i], s));
+        } else {
+            let j = i - n;
+            assert(stack2[i] == rest[j]);
+            assert(v.stack[n + 1 + j] == rest[j]);
+            assert(slot_valid(db, roots, v, cert, v.stack[n + 1 + j]));
+            assert(open_position(db, roots, v.log, oldfront[n + 1 + j]));
+            assert(goal_frame(rest[j]).2 == oldfront[n + 1 + j]);
+            slot_extend(db, roots, v, cert, next, nc, extra, more, s, rest[j]);
+            assert(out[i] == tapply(rest[j], s));
+        }
+    }
+    assert forall|i: int| 0 <= i < next.log.len() implies #[trigger] clear_event(
+        next.log[i].1,
+        out,
+        fresh,
+    ) by {
+        if i < v.log.len() {
+            assert(next.log[i] == v.log[i]);
+            assert(clear_event(v.log[i].1, out, fresh));
+        } else {
+            assert(next.log[i] == (path, ev));
+        }
+    }
+    assert(outer_valid(db, roots, next, nc));
+}
+
 pub proof fn record_clause(
     db: Seq<DocClause>,
     roots: Seq<Term>,

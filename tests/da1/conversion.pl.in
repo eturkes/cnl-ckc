@@ -1,0 +1,46 @@
+% conversion.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+guideline_schema_version(1).
+guideline_document(conversion,ace_sha256('50d37c6003b789975dc29ca154c819734f6145121deade51ec69075f7a1396e0'),ulex(none),vocabulary(none)).
+% S1: A structural clause.
+guideline_cardinality(actual,A,na,B,C) :- guideline_cardinality(source,A,na,D,E), guideline_product(D,E,exactly,rational(3,2),B,C).
+guideline_cardinality(half,A,na,B,C) :- guideline_cardinality(actual,A,na,D,E), guideline_quotient(D,E,exactly,2,B,C).

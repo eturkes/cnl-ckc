@@ -1825,7 +1825,9 @@ proof fn comp_pair_vars_equal(
 }
 
 #[verifier::rlimit(5000)]
-fn zip_pairs(arena: &ETermArena, left: &Vec<usize>, right: &Vec<usize>) -> (out: Vec<EPair>)
+pub(crate) fn zip_pairs(arena: &ETermArena, left: &Vec<usize>, right: &Vec<usize>) -> (out: Vec<
+    EPair,
+>)
     requires
         arena_ok(arena),
         left@.len() == right@.len(),
@@ -4857,6 +4859,178 @@ fn enter_clause(
     EStep::Next(c)
 }
 
+// The spec's arithmetic branch of `step` (contract da1 D7).
+pub open spec fn arith_model(
+    c: ckc_spec::engine::Cfg,
+    g: Term,
+    pre: Seq<ckc_spec::engine::Goal>,
+    rest: Seq<ckc_spec::engine::Goal>,
+) -> ckc_spec::engine::Step {
+    match ckc_spec::arith::arith_result(g) {
+        Option::Some((s, n)) => match ckc_spec::engine::unify(
+            ckc_spec::engine::UState {
+                pairs: ckc_spec::engine::zip(
+                    ckc_spec::engine::args_of(g),
+                    ckc_spec::engine::args_of(g).take(4) + seq![s, n],
+                ),
+                stack: pre + rest,
+                sol: c.sol,
+            },
+        ) {
+            ckc_spec::engine::UOut::Ok(stack, sol) => ckc_spec::engine::Step::Next(
+                ckc_spec::engine::Cfg { stack, sol, ..c },
+            ),
+            ckc_spec::engine::UOut::Fail => ckc_spec::engine::fail(c),
+            ckc_spec::engine::UOut::Out => ckc_spec::engine::Step::Stuck,
+        },
+        Option::None => ckc_spec::engine::fail(c),
+    }
+}
+
+// An arithmetic goal: bind its outputs to the computed pair in place, as head
+// unification binds; no choicepoint.
+#[verifier::rlimit(5000)]
+fn arith_step(
+    arena: &mut ETermArena,
+    initial: ECfg,
+    name: &Vec<u8>,
+    args: &Vec<usize>,
+    pre: Vec<EGoal>,
+    rest: Vec<EGoal>,
+) -> (out: EStep)
+    requires
+        arena_ok(old(arena)),
+        cfg_valid(old(arena).nodes@, &initial),
+        roots_valid(old(arena).nodes@, args@),
+        args@.len() == 6,
+        ckc_spec::arith::is_arith(name@, 6),
+        goals_valid(old(arena).nodes@, pre@),
+        goals_levels(pre@, initial.alts@.len()),
+        goals_valid(old(arena).nodes@, rest@),
+        goals_levels(rest@, initial.alts@.len()),
+    ensures
+        arena_ok(final(arena)),
+        old(arena).nodes@.is_prefix_of(final(arena).nodes@),
+        step_valid(final(arena).nodes@, &out),
+        step_base(&out, initial.base),
+        step_view(final(arena).nodes@, &out) == arith_model(
+            cfg_view(old(arena).nodes@, &initial),
+            Term::Comp(name@, root_terms(old(arena).nodes@, args@)),
+            goals_view(old(arena).nodes@, pre@),
+            goals_view(old(arena).nodes@, rest@),
+        ),
+{
+    let ghost nodes0 = arena.nodes@;
+    let ghost c0 = cfg_view(nodes0, &initial);
+    let ghost terms = root_terms(nodes0, args@);
+    let ghost prefix = goals_view(nodes0, pre@);
+    let ghost continuation = goals_view(nodes0, rest@);
+    let res = crate::arith_impl::arith_result_exec(arena, name, args);
+    proof {
+        cfg_models_prefix(nodes0, arena.nodes@, &initial);
+        roots_models_prefix(nodes0, arena.nodes@, args@);
+        goals_models_prefix(nodes0, arena.nodes@, pre@);
+        goals_models_prefix(nodes0, arena.nodes@, rest@);
+        reveal(ckc_spec::engine::args_of);
+        assert(ckc_spec::engine::args_of(Term::Comp(name@, terms)) == terms);
+    }
+    match res {
+        Option::None => fail(arena, initial),
+        Option::Some((s, n)) => {
+            let ghost mid = arena.nodes@;
+            let mut stack = pre;
+            let mut tail = rest;
+            let ghost head = stack@;
+            let ghost back = tail@;
+            stack.append(&mut tail);
+            let mut kids: Vec<usize> = Vec::new();
+            kids.push(args[0]);
+            kids.push(args[1]);
+            kids.push(args[2]);
+            kids.push(args[3]);
+            kids.push(s);
+            kids.push(n);
+            let pairs = zip_pairs(arena, args, &kids);
+            let state = EBoundState { pairs, stack, sol: initial.sol.clone() };
+            proof {
+                reveal(cfg_valid);
+                reveal(roots_valid);
+                assert(state.stack@ == head + back);
+                goals_view_concat(mid, head, back);
+                assert(pair_roots_valid(mid, state.pairs@)) by {
+                    reveal(pair_roots_valid);
+                }
+                assert(goals_valid(mid, state.stack@)) by {
+                    reveal(goals_valid);
+                    assert forall|i: int| 0 <= i < state.stack@.len() implies goal_valid(
+                        mid,
+                        &state.stack@[i],
+                    ) by {
+                        if i < head.len() {
+                            assert(state.stack@[i] == head[i]);
+                        } else {
+                            assert(state.stack@[i] == back[i - head.len()]);
+                        }
+                    }
+                }
+                assert(root_terms(mid, kids@) =~= terms.take(4) + seq![
+                    mid[s as int].term@,
+                    mid[n as int].term@,
+                ]);
+                assert(bound_state_view(mid, &state) == ckc_spec::engine::UState {
+                    pairs: ckc_spec::engine::zip(
+                        terms,
+                        terms.take(4) + seq![mid[s as int].term@, mid[n as int].term@],
+                    ),
+                    stack: prefix + continuation,
+                    sol: c0.sol,
+                });
+                goals_levels_model(mid, head + back, initial.alts@.len());
+                assert(goals_levels(head + back, initial.alts@.len())) by {
+                    assert forall|i: int| 0 <= i < (head + back).len() implies goal_level_valid(
+                        &(head + back)[i],
+                        initial.alts@.len(),
+                    ) by {
+                        if i < head.len() {
+                            assert((head + back)[i] == head[i]);
+                        } else {
+                            assert((head + back)[i] == back[i - head.len()]);
+                        }
+                    }
+                }
+                unify_preserves_levels(bound_state_view(mid, &state), initial.alts@.len());
+            }
+            let result = unify(arena, state);
+            proof {
+                cfg_models_prefix(nodes0, arena.nodes@, &initial);
+            }
+            match result {
+                EUResult::Ok { stack, sol } => {
+                    proof {
+                        goals_levels_model(arena.nodes@, stack@, initial.alts@.len());
+                        reveal(cfg_valid);
+                        reveal(cfg_storage_valid);
+                        reveal(alt_valid);
+                    }
+                    let mut c = initial;
+                    c.stack = stack;
+                    c.sol = sol;
+                    c.mark = arena.nodes.len();
+                    proof {
+                        assert(cfg_storage_valid(arena.nodes@, &c));
+                        assert_seqs_equal!(arena.nodes@.take(c.mark as int) == arena.nodes@);
+                        assert(goals_valid(arena.nodes@.take(c.mark as int), c.stack@));
+                        assert(roots_valid(arena.nodes@.take(c.mark as int), c.sol@));
+                        assert(cfg_valid(arena.nodes@, &c));
+                    }
+                    EStep::Next(c)
+                },
+                EUResult::Fail => fail(arena, initial),
+            }
+        },
+    }
+}
+
 // next_match facts (contract cix D4): a gap without the predicate leaves the
 // match unchanged; a match is the least position of the predicate.
 proof fn next_match_none_gap(
@@ -5577,6 +5751,14 @@ pub fn step(
                 reveal(ckc_spec::engine::step);
                 reveal(predicate_dispatch);
             }
+            if crate::compare_impl::is_arith_exec(&name, args.len()) {
+                proof {
+                    reveal(ckc_spec::engine::step);
+                    assert(goals_view(arena.nodes@, pre@) =~= before.stack.take(0));
+                    assert(goals_view(arena.nodes@, rest@) =~= before.stack.skip(1));
+                }
+                return arith_step(arena, initial, &name, &args, pre, rest);
+            }
             if crate::compare_impl::is_builtin_exec(&name, args.len()) {
                 if crate::compare_impl::holds_exec(arena, &name, &args) {
                     let mut c = initial;
@@ -5763,6 +5945,9 @@ fn step_selected(
                         ] + before.stack.skip(k as int + 1));
                 }
                 return EStep::Next(c);
+            }
+            if crate::compare_impl::is_arith_exec(&name, args.len()) {
+                return arith_step(arena, initial, &name, &args, pre, rest);
             }
             if crate::compare_impl::is_builtin_exec(&name, args.len()) {
                 if crate::compare_impl::holds_exec(arena, &name, &args) {

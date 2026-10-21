@@ -11,9 +11,10 @@ verus! {
 // (contract eso, `selected` below), under two bounds: a depth budget per goal (call_with_depth_limit) and
 // one fuel of machine transitions (call_with_inference_limit). A
 // transition = one goal dispatch (call or redo, including its whole
-// clause scan + head unification), one comparison built-in, one cut, one
-// pruned goal or one recorded solution — the rust cost model of R15 (+ nt1
-// D5); SWI's outer run limit
+// clause scan + head unification), one built-in (a comparison, or an
+// arithmetic goal + its output unification), one cut, one pruned goal or one
+// recorded solution — the rust cost model of R15 (+ nt1 D5, da1 D7); SWI's
+// outer run limit
 // counts the same events at 10x, so the per-call limit alone binds. A
 // negation succeeds only after its inner search fails with no depth cut
 // inside; an inner search that fails after a cut ends the search incomplete
@@ -365,7 +366,7 @@ pub proof fn next_match_bound(db: Seq<DocClause>, name: Seq<u8>, arity: nat, fro
 // inner context is still a variable waits while a later goal of its run binds
 // that context: a predicate literal whose first argument is the variable, or
 // a conjunction that holds one. The run = the leading goals that are compound
-// terms other than a negation or a nonground comparison built-in; such a goal,
+// terms other than a negation or a nonground built-in; such a goal,
 // a naf cut or any other goal ends it. The machine selects the leftmost goal
 // that does not wait, and the selected goal's clause body (or its two
 // conjuncts) takes its place. A waiting goal is followed by a run goal, so the
@@ -383,8 +384,9 @@ pub open spec fn operator_name() -> Seq<u8> {
     ascii("guideline_operator"@)
 }
 
-// A comparison built-in binds nothing: it filters values earlier goals bound
-// (contract nt1 D5), so it never makes an operator goal wait.
+// A built-in never binds a box context: a comparison filters values earlier
+// goals bound (contract nt1 D5), an arithmetic goal binds only its numeric
+// outputs (da1 D7), so neither makes an operator goal wait.
 pub open spec fn binds(t: Term, x: Term) -> bool
     decreases t,
 {
@@ -398,9 +400,10 @@ pub open spec fn binds(t: Term, x: Term) -> bool
     }
 }
 
-// A nonground comparison built-in ends the run as a negation does (contract
-// nt1 D5): an operator goal never waits past an unbound filter, so the filter
-// never runs before a goal that leftmost order runs first.
+// A nonground built-in (an unbound comparison argument or arithmetic output
+// included) ends the run as a negation does (contracts nt1 D5, da1 D7): an
+// operator goal never waits past it, so it never runs before a goal that
+// leftmost order runs first; a ground built-in is scanned past.
 pub open spec fn run_binds(gs: Seq<Goal>, x: Term) -> bool
     decreases gs.len(),
 {
@@ -597,6 +600,24 @@ pub open spec fn step(db: Seq<DocClause>, c: Cfg) -> Step {
                                 ..c
                             },
                         )
+                    } else if crate::arith::is_arith(name, args.len()) {
+                        // an arithmetic built-in (contract da1 D7): one transition unifies
+                        // the goal with its evaluated ground instance (inputs kept, outputs
+                        // = the computed pair), as a clause head with no body would
+                        match crate::arith::arith_result(g) {
+                            Option::Some((s, n)) => match unify(
+                                UState {
+                                    pairs: zip(args, args.take(4) + seq![s, n]),
+                                    stack: pre + rest,
+                                    sol: c.sol,
+                                },
+                            ) {
+                                UOut::Ok(stack, sol) => Step::Next(Cfg { stack, sol, ..c }),
+                                UOut::Fail => fail(c),
+                                UOut::Out => Step::Stuck,
+                            },
+                            Option::None => fail(c),
+                        }
                     } else if crate::compare::is_builtin(name, args.len()) {
                         // a comparison built-in: one transition, no clause, no choicepoint
                         if crate::compare::holds(g) {

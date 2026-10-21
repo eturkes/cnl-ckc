@@ -1,5 +1,5 @@
 meta	schema	v1
-meta	compiler	dcbd2a36d4219d3242df51e4dac84f91a621d44e58e6c9f53228126f3847dd12
+meta	compiler	d152854cf35b25f908b1327998389218bc647b4918cc833a623f564e9edcd5e6
 meta	base-lexicon	2996fabfe0cf5a402b9ff7d76e09cb6e2fbedda51e917367c0b9f81fde6266ec
 meta	swipl	9.2.9
 meta	verify	sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt
@@ -11,7 +11,7 @@ meta	generated	manifest-sha256.txt
 meta	generated	tagmanifest-sha256.txt
 member	LICENSE	a518c888aba7765db6bb0974a385e00afdd89196342fcc8d8cecd12b5ef84c28	12242
 member	NOTICE	d9ed734ad82b5c34f60d7d95513d3fce86ef5a03620fcfa2f8d835a55eadb361	1401
-member	README-dist.md	71a4d9f65caf40e3ccb6135eb49733126dd47292cfec5620973bb48bd98da6c5	55298
+member	README-dist.md	ef857887f99f291992df370244c8420f6d4741285a7ab221e2be386312c59b3b	58312
 member	bagit.txt	1712ecfb074bf29c4188ad3421032509159a09739fd604f8fe57038b4ddefcc9	54
 member	data/guidelines/cdc-2022-opioid/README.md	4be14593e84fd8b33433f2145f978d8f7a5a09d1a296cca354acc7548e2bb758	14006
 member	data/guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec01-imp01.ace	6e0aebe35e96bdf3da641fb34355287c16b504575c5262febeafc343bc3490b1	342
@@ -1210,7 +1210,7 @@ member	data/guidelines/cdc-2022-opioid/source/rec01-05-body-extraction.txt	31fbc
 member	data/guidelines/cdc-2022-opioid/source/rec06-12-body-extraction.txt	0b6b3f1f2612e3d8ee17f0aa19a244dbeabeae2fee3b7ad7a9b214ab8d4857d6	94958
 member	data/guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf	f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d	1418584
 member	data/guidelines/cdc-2022-opioid/vocabulary.tsv	b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac	2427
-member	data/guidelines/schema.pl	f0b9d988593d972729eb7b738506b25d7c5062cb8c69dae141d7f6b14d40c6b2	1471
+member	data/guidelines/schema.pl	be70f359fc73fd7f418e59db7097ad3ccc59a18cbd2be4bb72113c954c4caa0d	5059
 label	cdc2022-opioid-rec01	unreviewed
 label	cdc2022-opioid-rec01-imp01	unreviewed
 label	cdc2022-opioid-rec01-imp02	unreviewed

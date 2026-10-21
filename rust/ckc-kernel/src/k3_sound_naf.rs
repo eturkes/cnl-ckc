@@ -156,6 +156,50 @@ pub proof fn rename_ground(t: Term, base: nat, delta: nat)
     }
 }
 
+pub proof fn ground_all_index(ts: Seq<Term>)
+    requires
+        forall|i: int| 0 <= i < ts.len() ==> ground(#[trigger] ts[i]),
+    ensures
+        ground_all(ts),
+    decreases ts,
+{
+    if ts.len() > 0 {
+        assert forall|i: int| 0 <= i < ts.drop_first().len() implies ground(
+            #[trigger] ts.drop_first()[i],
+        ) by {
+            assert(ts.drop_first()[i] == ts[i + 1]);
+        }
+        ground_all_index(ts.drop_first());
+        assert(ground(ts[0]));
+    }
+}
+
+pub proof fn rename_ground_id(t: Term, base: nat, delta: nat)
+    requires
+        ground(t),
+    ensures
+        rename(t, base, delta) == t,
+    decreases t,
+{
+    if let Term::Comp(n, ts) = t {
+        rename_all_ground_id(ts, base, delta);
+    }
+}
+
+pub proof fn rename_all_ground_id(ts: Seq<Term>, base: nat, delta: nat)
+    requires
+        ground_all(ts),
+    ensures
+        rename_all(ts, base, delta) == ts,
+    decreases ts,
+{
+    if ts.len() > 0 {
+        rename_ground_id(ts[0], base, delta);
+        rename_all_ground_id(ts.drop_first(), base, delta);
+        assert(rename_all(ts, base, delta) =~= ts);
+    }
+}
+
 pub proof fn rename_all_ground(ts: Seq<Term>, base: nat, delta: nat)
     ensures
         ground_all(rename_all(ts, base, delta)) == ground_all(ts),
@@ -182,21 +226,21 @@ proof fn scalar_rename(t: Term, base: nat, delta: nat)
 {
 }
 
+// A built-in that holds is ground (contract da1: numbers, comparison atoms and
+// computed outputs carry no variable), so renaming leaves the verdict alone.
 pub proof fn builtin_rename(t: Term, base: nat, delta: nat)
     ensures
         ckc_spec::compare::holds(rename(t, base, delta)) == ckc_spec::compare::holds(t),
 {
-    if let Term::Comp(_, ts) = t {
-        rename_all_index(ts, base, delta);
-        if ts.len() == 4 || ts.len() == 6 {
-            scalar_rename(ts[0], base, delta);
-            scalar_rename(ts[1], base, delta);
-            scalar_rename(ts[2], base, delta);
-            scalar_rename(ts[3], base, delta);
-            if ts.len() == 6 {
-                scalar_rename(ts[4], base, delta);
-                scalar_rename(ts[5], base, delta);
-            }
+    rename_ground(t, base, delta);
+    if ground(t) {
+        rename_ground_id(t, base, delta);
+    } else {
+        if ckc_spec::compare::holds(t) {
+            super::log::holds_ground(t);
+        }
+        if ckc_spec::compare::holds(rename(t, base, delta)) {
+            super::log::holds_ground(rename(t, base, delta));
         }
     }
 }
@@ -1477,6 +1521,32 @@ pub proof fn tstep_wf(db: Seq<DocClause>, c: TCfg)
                                 assert(stack_cuts(rest, alts, alts.len()));
                                 stack_bound_join(front, rest, c.fresh);
                                 stack_cuts_join(front, rest, alts, alts.len());
+                            } else if ckc_spec::arith::is_arith(name, args.len()) {
+                                assert(c.ci == 0);
+                                stack_bound_join(pre, rest, c.fresh);
+                                stack_cuts_join(pre, rest, c.alts, c.alts.len());
+                                match ckc_spec::arith::arith_result(g) {
+                                    Option::Some((sv, nv)) => {
+                                        super::log::arith_result_ground(g);
+                                        let pairs = zip(args, args.take(4) + seq![sv, nv]);
+                                        assert forall|i: int|
+                                            0 <= i < pairs.len() implies #[trigger] nvars(
+                                            pairs[i].0,
+                                        ) <= c.fresh && nvars(pairs[i].1) <= c.fresh by {
+                                            nvars_all_index(args, i);
+                                            if i < 4 {
+                                                assert(pairs[i].1 == args[i]);
+                                            }
+                                        }
+                                        tunify_bounded(pairs, pre + rest, c.fresh);
+                                        tunify_cuts(pairs, pre + rest, c.alts, c.alts.len());
+                                        match tunify(pairs, pre + rest) {
+                                            TUni::Fail => tfail_wf(c),
+                                            _ => {},
+                                        }
+                                    },
+                                    Option::None => tfail_wf(c),
+                                }
                             } else if ckc_spec::compare::is_builtin(name, args.len()) {
                                 if ckc_spec::compare::holds(g) {
                                     assert(c.ci == 0);
@@ -2003,6 +2073,103 @@ pub proof fn project_call(
     }
 }
 
+proof fn number_rename(t: Term, base: nat, delta: nat)
+    ensures
+        ckc_spec::arith::number(rename(t, base, delta)) == ckc_spec::arith::number(t),
+{
+    if let Term::Comp(n, ts) = t {
+        rename_all_index(ts, base, delta);
+        if ts.len() == 2 {
+            scalar_rename(ts[0], base, delta);
+            scalar_rename(ts[1], base, delta);
+        }
+    }
+}
+
+proof fn vset_rename(x: Term, y: Term, base: nat, delta: nat)
+    ensures
+        ckc_spec::arith::vset(rename(x, base, delta), rename(y, base, delta))
+            == ckc_spec::arith::vset(x, y),
+{
+    number_rename(y, base, delta);
+    scalar_rename(x, base, delta);
+}
+
+// An arithmetic goal reads only its inputs, numbers and comparison atoms that
+// renaming leaves alone.
+pub proof fn arith_result_rename(name: Seq<u8>, args: Seq<Term>, base: nat, delta: nat)
+    ensures
+        ckc_spec::arith::arith_result(Term::Comp(name, rename_all(args, base, delta)))
+            == ckc_spec::arith::arith_result(Term::Comp(name, args)),
+{
+    rename_all_index(args, base, delta);
+    if args.len() == 6 {
+        vset_rename(args[0], args[1], base, delta);
+        vset_rename(args[2], args[3], base, delta);
+    }
+}
+
+pub proof fn project_arith(
+    a: TCfg,
+    b: TCfg,
+    name: Seq<u8>,
+    args: Seq<Term>,
+    qa: Seq<TGoal>,
+    qb: Seq<TGoal>,
+    ra: Seq<TGoal>,
+    rb: Seq<TGoal>,
+    pa: Seq<nat>,
+    pb: Seq<nat>,
+    base: nat,
+    delta: nat,
+    off: nat,
+)
+    requires
+        proj_cfg(a, b, base, delta, off),
+        proj_prefix(qa, qb, base, delta, off),
+        proj_stack(ra, rb, base, delta, off),
+        args.len() == 6,
+    ensures
+        proj_step(
+            crate::k3_machine::arith_model(a, name, args, qa, ra, pa),
+            crate::k3_machine::arith_model(b, name, rename_all(args, base, delta), qb, rb, pb),
+            base,
+            delta,
+            off,
+        ),
+{
+    let other = rename_all(args, base, delta);
+    rename_all_index(args, base, delta);
+    arith_result_rename(name, args, base, delta);
+    match ckc_spec::arith::arith_result(Term::Comp(name, args)) {
+        Option::None => project_fail(a, b, base, delta, off),
+        Option::Some((sv, nv)) => {
+            super::log::arith_result_ground(Term::Comp(name, args));
+            rename_ground_id(sv, base, delta);
+            rename_ground_id(nv, base, delta);
+            let ap = zip(args, args.take(4) + seq![sv, nv]);
+            let bp = zip(other, other.take(4) + seq![sv, nv]);
+            assert(pairs_rel(ap, bp, base, delta)) by {
+                assert forall|i: int| 0 <= i < ap.len() implies #[trigger] bp[i] == (
+                    rename(ap[i].0, base, delta),
+                    rename(ap[i].1, base, delta),
+                ) by {
+                    if i < 4 {
+                        assert(ap[i] == (args[i], args[i]));
+                        assert(bp[i] == (other[i], other[i]));
+                    }
+                }
+            }
+            proj_prefix_join(qa, qb, ra, rb, base, delta, off);
+            project_unify(ap, bp, qa + ra, qb + rb, base, delta, off);
+            match (tunify(ap, qa + ra), tunify(bp, qb + rb)) {
+                (TUni::Fail, TUni::Fail) => project_fail(a, b, base, delta, off),
+                _ => {},
+            }
+        },
+    }
+}
+
 // Its own z3 process: in the shared module session the query outgrew its rlimit
 // once the comparison branch joined (whole-workspace run; alone it verified).
 #[verifier::spinoff_prover]
@@ -2145,6 +2312,22 @@ pub proof fn project_transition(
                                     off,
                                 ) by {};
                                 proj_stack_join(ah, bh, ra, rb, base, delta, off);
+                            } else if ckc_spec::arith::is_arith(name, args.len()) {
+                                project_arith(
+                                    a,
+                                    b,
+                                    name,
+                                    args,
+                                    qa,
+                                    qb,
+                                    ra,
+                                    rb,
+                                    pa,
+                                    pb,
+                                    base,
+                                    delta,
+                                    off,
+                                );
                             } else if ckc_spec::compare::is_builtin(name, args.len()) {
                                 builtin_rename(g, base, delta);
                                 if ckc_spec::compare::holds(g) {
@@ -2687,6 +2870,25 @@ pub proof fn tstep_logs(db: Seq<DocClause>, c: TCfg)
                                         pruned: c.pruned,
                                     },
                                 );
+                            } else if ckc_spec::arith::is_arith(name, args.len()) {
+                                match ckc_spec::arith::arith_result(g) {
+                                    Option::Some((sv, nv)) => match tunify(
+                                        zip(args, args.take(4) + seq![sv, nv]),
+                                        pre + rest,
+                                    ) {
+                                        TUni::Ok(_) => log_safe_push(
+                                            db,
+                                            c.log,
+                                            path,
+                                            TEv::Builtin(
+                                                Term::Comp(name, args.take(4) + seq![sv, nv]),
+                                            ),
+                                        ),
+                                        TUni::Fail => tfail_logs(db, c),
+                                        TUni::Out => {},
+                                    },
+                                    Option::None => tfail_logs(db, c),
+                                }
                             } else if ckc_spec::compare::is_builtin(name, args.len()) {
                                 if ckc_spec::compare::holds(g) {
                                     log_safe_push(db, c.log, path, TEv::Builtin(g));

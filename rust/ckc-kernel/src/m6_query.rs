@@ -191,6 +191,8 @@ pub fn project_query(
         query_result(out) == spec::project_query(drs@, qid@, crate::m7_q12::ttab_view(tab)),
 {
     hide(spec::collides);
+    hide(ckc_spec::compare::is_builtin);
+    hide(ckc_spec::arith::is_arith);
     hide(spec::scan_box);
     hide(spec::box_markers);
     hide(spec::answers_of);
