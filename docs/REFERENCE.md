@@ -573,8 +573,11 @@ patient make the rules apply. For example, plain left-to-right search
 over the CDC documents and a patient of three sentences does not
 answer whether an opioid dosage includes at least 50 MME per day. With
 the declaration, SWI-Prolog 9.2.9 answers that question in seconds,
-lists every "should" statement for the patient, and gives each
-committed question its committed answer.
+lists every "should" statement that the composition derives, and gives
+each committed question its committed answer. Some rules derive an
+entity of their own, such as a patient in their conclusion, so a
+derived statement can concern that entity and not the patient of the
+loaded facts. Match each statement to the referents of the patient.
 
 The documents use `\+` for negation as failure. Under tabling, `\+` is
 correct when no goal depends on its own negation. For a recursion
