@@ -47,7 +47,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s (the N8 bump's rerun: rc 124 at 1200 s).
 - [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): #3147, #3158, #3159, #3160 fixed + canary cases in the N8 bump; waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3154–#3157 (#3157 closed on Verus main by PR 3271, unreleased).
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling); the CDC guideline until the first publication, other guidelines after it (Publication scope).
-- [ ] PR0 offload audit (owner request relayed by the offload session): pool gate form + host-labelled durations in `.claude/rules/`.
+- [x] c5642c39 PR0 offload audit (owner request relayed by the offload session): pool gate form + host-labelled durations in `.claude/rules/`.
 - [ ] PR1 CI rust job without SWI-Prolog: red on every push since 07f1060e (SWI-backed harnesses since 9092662f, runner without `swipl`; `check` + `certify` skipped) → `just swipl` in the job, cached on its pin.
 - [ ] PR2 README assurance wording (deferred row).
 - [ ] PR3 consumer recipe (contract `cr`): the CDC corpus + one patient diverges in plain Prolog and trips the native engine's bounds → a gated tabling recipe for consumers.

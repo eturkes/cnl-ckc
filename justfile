@@ -85,9 +85,10 @@ tools:
     fi
     echo "tools: ok rustc=$tc verus=$(lock verus_release) $(awk -F'\t' 'NR>1{printf "%s=%s ", $1, $2}' "{{ ROOT }}/rust/tools.lock")"
 
-# The system swipl is too new; CI runs the digest-pinned swipl:9.2.9 container. Shims: swipl → this
-# prefix, python3 → uv cpython 3.13 (scratch + archived migration scripts only); .pin = tarball sha256.
-# Dev-workstation SWI-Prolog 9.2.9: digest-verified source build into the toolchain dir (idempotent).
+# The system swipl is too new; CI's corpus jobs run the digest-pinned swipl:9.2.9 container, its rust
+# job this recipe. Shims: swipl → this prefix, python3 → uv cpython 3.13 where uv supplies it (scratch +
+# archived migration scripts only); .pin = tarball sha256.
+# SWI-Prolog 9.2.9: digest-verified source build into the toolchain dir (idempotent).
 swipl:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -107,10 +108,9 @@ swipl:
         rm -rf "$P"; step install.log ninja -C "$b/build" install
         printf '%s\n' "$sha" > "$P/.pin"
     fi
-    # Probes run as assignments: set -e ignores a failed command substitution inside an argument.
-    py=$(uv python find 3.13)
     ln -sfn "../swipl-$v/bin/swipl" "$T/bin/swipl"
-    ln -sfn "$py" "$T/bin/python3"
+    if py=$(uv python find 3.13 2>/dev/null); then ln -sfn "$py" "$T/bin/python3"; fi
+    # Probes run as assignments: set -e ignores a failed command substitution inside an argument.
     ver=$("$T/bin/swipl" --version)
     echo "swipl: ok $ver"
 

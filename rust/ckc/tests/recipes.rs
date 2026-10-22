@@ -295,6 +295,22 @@ fn swipl_version_probe_fails_the_recipe() {
         "the planted pre-fix swipl recipe no longer slips through: {}",
         show(&out)
     );
+    // A uv that supplies no CPython 3.13 (the CI runner has no uv): swipl installs, python3 stays unlinked.
+    let fx = Fixture::new(&s, "no-python", &text);
+    let prefix = fx.toolchain.join(format!("swipl-{version}"));
+    put(&prefix.join(".pin"), format!("{pin}\n"));
+    probe(&prefix.join("bin/swipl"), &line, false);
+    put_exec(&fx.mock.join("uv"), "#!/usr/bin/env bash\nexit 2\n");
+    let out = fx.run("swipl", &[]);
+    assert_eq!(out.status.code(), Some(0), "no-python: {}", show(&out));
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        format!("swipl: ok {line}\n")
+    );
+    assert!(
+        fs::symlink_metadata(fx.toolchain.join("bin/python3")).is_err(),
+        "a python3 shim without uv's CPython"
+    );
 }
 
 #[test]

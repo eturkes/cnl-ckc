@@ -16,8 +16,9 @@ jobs:
   # build, trust-audit, tests, cargo-deny, gitleaks, zizmor; then the phone-layout
   # check (`just mobile`: the pinned headless Chrome, whose libraries the runner image
   # carries). Tools + toolchain come from the sha256-pinned locks (rust/verus.lock,
-  # rust/tools.lock) via `just tools`. The container jobs run its static musl binary
-  # (`just build-static`).
+  # rust/tools.lock) via `just tools`; the SWI-backed test harnesses use the pinned
+  # SWI-Prolog source build of `just swipl`, cached on its pin. The container jobs run
+  # its static musl binary (`just build-static`).
   rust:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
@@ -45,10 +46,40 @@ jobs:
           path: |
             .toolchain
             !.toolchain/dl
+            !.toolchain/swipl-*
           key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
 
       - name: Install pinned tools
         run: just tools
+
+      # Key = the swipl recipe's version + source sha256.
+      - name: Read SWI-Prolog pin
+        id: swipl-pin
+        run: |
+          set -eu
+          pin=$(grep -oE 'v=[0-9.]+; sha=[0-9a-f]{64}' justfile | head -n 1)
+          [ -n "$pin" ]
+          v=${pin#v=}; v=${v%%;*}
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "sha=${pin##*sha=}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache SWI-Prolog
+        id: swipl-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .toolchain/swipl-${{ steps.swipl-pin.outputs.version }}
+          key: swipl-${{ runner.os }}-${{ steps.swipl-pin.outputs.version }}-${{ steps.swipl-pin.outputs.sha }}
+
+      - name: Install SWI-Prolog build dependencies
+        if: steps.swipl-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libarchive-dev libdb-dev libedit-dev \
+            libgmp-dev libossp-uuid-dev libpcre2-dev libreadline-dev libssl-dev libyaml-dev \
+            ncurses-dev zlib1g-dev
+
+      - name: Install SWI-Prolog (just swipl)
+        run: just swipl
 
       - name: Rust gate
         run: just rust
@@ -136,8 +167,8 @@ jobs:
           test -z "$(git status --porcelain)"
 
   # Emission certification (M6, R83) = `just certify` over the rust job's static
-  # binary inside the pinned swipl container: the swipl image carries no linker and
-  # the rust runner no SWI-Prolog, so the artifact is the seam.
+  # binary inside the pinned swipl container (the reference runtime): the swipl image
+  # carries no linker, so the artifact is the seam.
   certify:
     if: github.event_name != 'schedule'
     needs: rust
